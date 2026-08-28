@@ -46,6 +46,62 @@ release:
     owner: co2-lab
     name: anchors
 
+# ── Linux: pacotes nativos ─────────────────────────────────────────────────────
+# Gerados do mesmo binário, sem repositório extra a manter: quem usa Debian/Ubuntu ou
+# Fedora baixa o .deb/.rpm da própria release e instala com o gerenciador do sistema.
+nfpms:
+  - id: default
+    package_name: anchors
+    vendor: co2lab
+    homepage: https://anchors.co2lab.io
+    maintainer: co2lab <contato@co2lab.io>
+    description: "Anchors — framework spec-first de continuidade para desenvolvimento assistido por IA"
+    license: Elastic License 2.0
+    formats:
+      - deb
+      - rpm
+      - apk
+
+# ── Windows: Scoop ─────────────────────────────────────────────────────────────
+# Precisa de um repositório `co2-lab/scoop-bucket` (crie vazio; o goreleaser escreve o
+# manifesto nele). Usa o mesmo token do tap do Homebrew.
+scoops:
+  - name: anchors
+    repository:
+      owner: co2-lab
+      name: scoop-bucket
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: https://anchors.co2lab.io
+    description: "Anchors — framework spec-first de continuidade para desenvolvimento assistido por IA"
+    license: Elastic License 2.0
+
+# ── Windows: Winget ────────────────────────────────────────────────────────────
+# Publicar no Winget é abrir PR no repositório da Microsoft a partir de um FORK — daí
+# `repository` apontar para o fork (co2-lab/winget-pkgs) e `pull_request` para o upstream.
+#
+# `skip_upload: auto` não abre PR em pré-release: uma v0.1.0-rc não deve chegar ao
+# catálogo público antes de a versão estável existir.
+winget:
+  - name: anchors
+    publisher: co2lab
+    short_description: "Framework spec-first de continuidade para desenvolvimento assistido por IA"
+    license: Elastic-2.0
+    homepage: https://anchors.co2lab.io
+    publisher_support_url: https://github.com/co2-lab/anchors/issues
+    skip_upload: auto
+    repository:
+      owner: co2-lab
+      name: winget-pkgs
+      branch: "anchors-{{ .Version }}"
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+      pull_request:
+        enabled: true
+        draft: false
+        base:
+          owner: microsoft
+          name: winget-pkgs
+          branch: master
+
 homebrew_casks:
   - name: anchors
     binaries:
