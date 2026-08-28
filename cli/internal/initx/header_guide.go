@@ -83,6 +83,21 @@ func RenderHeaderGuide(preset Preset, moduleNames []string) string {
 	b.WriteString("- `code` é o mínimo obrigatório (gate `header-conforme`).\n")
 	b.WriteString("- `updated_at` bate com o dia do último commit (gate `updated-at-atual`; `--fix` conserta).\n")
 	b.WriteString("- Opt-out sempre com um porquê ao lado.\n\n")
+	// A seção de conformidade não é ornamento: o gate `guide-checklist` a exige, e um
+	// guide semeado pelo init que reprova o próprio gate do init é a pior primeira
+	// impressão possível — medido num projeto real, foi o primeiro achado bloqueante.
+	//
+	// Ela existe por um motivo mais fundo que o gate: um guide em prosa é lido e
+	// interpretado; um guide com pontos CK é CONFRONTÁVEL. É o que separa "siga o
+	// padrão" de "estes cinco itens são verificáveis um a um".
+	b.WriteString("## Pontos de conformidade\n\n")
+	b.WriteString("Cada item é verificável em um arquivo, isoladamente. É o que um gate de\n")
+	b.WriteString("julgamento confronta — e o que impede o julgamento de virar heurística.\n\n")
+	b.WriteString("- **CK1** — o bloco está no TOPO do arquivo, antes de qualquer código.\n")
+	b.WriteString("- **CK2** — há uma linha `code:` com um único código de identidade.\n")
+	b.WriteString("- **CK3** — o dialeto do comentário é o da linguagem do arquivo.\n")
+	b.WriteString("- **CK4** — `updated_at`, quando presente, é o dia do último commit que tocou o arquivo.\n")
+	b.WriteString("- **CK5** — todo opt-out (`@no-…`, `@allow-…`) carrega o porquê na mesma linha.\n\n")
 	b.WriteString("_(Régua completa e universal: `anchors guide header`.)_\n")
 	return b.String()
 }
