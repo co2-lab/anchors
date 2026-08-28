@@ -1,0 +1,31 @@
+# HIPAA — Health Insurance Portability and Accountability Act (EUA)
+#
+# O vocabulário aqui é `carries: phi` (Protected Health Information) e NÃO
+# `personal-data`: PHI é um subconjunto com deveres próprios e mais estritos. Um projeto
+# de saúde nos EUA costuma precisar dos dois packs — o dado do paciente é pessoal E é
+# PHI, e cada regime cobra o seu.
+name: hipaa
+domain: health
+jurisdiction: us
+authority: "45 CFR Parts 160 and 164 (HIPAA)"
+
+requires:
+  - audit_log
+  - access_control
+
+obligations:
+  # §164.312(b) — audit controls. Registrar e examinar a atividade sobre PHI.
+  - name: hipaa-audit-controls
+    article: "§164.312(b)"
+    when: "carries: phi"
+    must_appear_in: ["{{audit_log}}"]
+    because: "audit controls — record and examine activity in systems that contain protected health information"
+
+  # §164.312(a)(1) — access control. PHI não é alcançável sem passar pelo controle de
+  # acesso; é o dever que separa "o dado está protegido" de "o dado está protegido e eu
+  # sei provar por qual caminho".
+  - name: hipaa-access-control
+    article: "§164.312(a)(1)"
+    when: "carries: phi"
+    must_appear_in: ["{{access_control}}"]
+    because: "access control — technical policies must limit PHI access to authorized persons"

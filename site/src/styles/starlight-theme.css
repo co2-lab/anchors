@@ -1,0 +1,68 @@
+/* Unifica as docs (Starlight) com o design system da landing — mapeia as
+   variáveis --sl-* para os tokens em ./tokens.css. Ver DESIGN-AUDIT.md débito
+   #12 (landing e docs eram dois sistemas visuais isolados). */
+@import "./tokens.css";
+
+:root {
+	--sl-font: var(--font-sans);
+	--sl-font-mono: var(--font-mono);
+
+	/* light mode (default do :root do Starlight) */
+	--sl-color-accent-low: var(--red-100);
+	--sl-color-accent: var(--red-500);
+	--sl-color-accent-high: var(--red-700);
+
+	--sl-color-text: var(--text-primary);
+	--sl-color-text-accent: var(--text-accent);
+	--sl-color-bg: var(--surface-page);
+	--sl-color-bg-nav: var(--surface-raised);
+	--sl-color-bg-sidebar: var(--surface-raised);
+	--sl-color-bg-inline-code: var(--surface-inset);
+	--sl-color-hairline-light: var(--border-hairline);
+	--sl-color-hairline: var(--border-hairline);
+	--sl-color-hairline-shade: var(--border-strong);
+}
+
+:root[data-theme="dark"] {
+	--sl-color-accent-low: var(--red-800);
+	--sl-color-accent: var(--red-500);
+	--sl-color-accent-high: var(--red-300);
+
+	--sl-color-text: var(--text-primary);
+	--sl-color-text-accent: var(--text-accent);
+	--sl-color-bg: var(--surface-page);
+	--sl-color-bg-nav: var(--surface-raised);
+	--sl-color-bg-sidebar: var(--surface-raised);
+	--sl-color-bg-inline-code: var(--surface-inset);
+	--sl-color-hairline-light: var(--border-hairline);
+	--sl-color-hairline: var(--border-hairline);
+	--sl-color-hairline-shade: var(--border-strong);
+}
+
+/* item ativo do sidebar e botões do hero splash: sobrescreve direto (não via
+   variáveis --sl-color-text-invert/--sl-color-black — elas perdem a cascata
+   para as declarações default do Starlight dentro de @layer starlight.base,
+   que vêm depois no bundle final, mesmo redefinidas em :root fora de layer). */
+nav[aria-label] a[aria-current="page"],
+nav[aria-label] a[aria-current="page"]:hover,
+nav[aria-label] a[aria-current="page"]:focus {
+	color: #fff !important;
+}
+
+.sl-link-button.primary,
+.sl-link-button.primary:hover {
+	background: var(--red-500) !important;
+	border-color: var(--red-500) !important;
+	color: #fff !important;
+}
+.sl-link-button.secondary {
+	border-color: var(--border-strong) !important;
+	color: var(--text-primary) !important;
+}
+
+/* headings do corpo das docs seguem a mesma régua tipográfica da landing */
+.sl-markdown-content h1 { font-weight: var(--weight-display); letter-spacing: var(--tracking-tight); }
+.sl-markdown-content h2,
+.sl-markdown-content h3 { font-weight: var(--weight-bold); letter-spacing: var(--tracking-tight); }
+
+[data-theme="dark"] .sl-markdown-content a { border-bottom-color: var(--red-800); }

@@ -1,0 +1,38 @@
+# LGPD — Lei Geral de Proteção de Dados (Brasil)
+#
+# O que este pack traz: os DEVERES que a lei impõe ao código, na forma que o Anchors
+# confronta. O que ele NÃO traz: onde eles vivem no seu projeto — isso é `pack_values:`.
+#
+# Os gatilhos usam vocabulário CANÔNICO (`carries: personal-data`), compartilhado com os
+# outros packs de privacidade. Isso é deliberado: um app que opera no Brasil e na UE
+# declara o dado UMA vez e satisfaz os dois regimes. Se cada pack inventasse o seu
+# atributo, o mesmo modelo precisaria de N declarações dizendo a mesma coisa.
+name: lgpd
+domain: privacy
+jurisdiction: br
+authority: "Lei 13.709/2018 (LGPD)"
+
+# O projeto precisa dizer ONDE isso vive nele. Sem estes valores o pack não carrega —
+# um dever que não aponta para lugar nenhum passaria verde sem verificar nada.
+requires:
+  - erasure_handler    # onde a exclusão de conta apaga os dados
+  - export_handler     # onde a portabilidade monta o pacote do titular
+
+obligations:
+  # Art. 18, VI — eliminação. O titular pede, e o dado tem de sumir. Um modelo que
+  # carrega dado pessoal e não é alcançado pelo handler de exclusão é dado que nunca
+  # será apagado — e ninguém percebe, porque tudo compila e todos os testes passam.
+  - name: lgpd-eliminacao
+    article: "Art. 18, VI"
+    when: "carries: personal-data"
+    must_appear_in: ["{{erasure_handler}}"]
+    because: "o titular tem direito à eliminação dos dados pessoais tratados com seu consentimento"
+
+  # Art. 18, V — portabilidade. Simétrico da eliminação, e o par que mais se separa na
+  # prática: é comum apagar o que não se exporta (o titular perde o dado sem nunca ter
+  # podido levá-lo). Medido num projeto real: 18 tabelas apagadas e não exportáveis.
+  - name: lgpd-portabilidade
+    article: "Art. 18, V"
+    when: "carries: personal-data"
+    must_appear_in: ["{{export_handler}}"]
+    because: "o titular tem direito de levar seus dados — apagar o que não se exporta é retirar o dado sem nunca tê-lo entregado"

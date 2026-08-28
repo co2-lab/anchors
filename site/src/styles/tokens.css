@@ -1,0 +1,10 @@
+/* Design system do Anchors — tokens + camada de componentes.
+   Fonte: gerado no Claude Design a partir do DESIGN-AUDIT.md, portado para o site. */
+@import "./tokens/fonts.css";
+@import "./tokens/colors.css";
+@import "./tokens/typography.css";
+@import "./tokens/spacing.css";
+@import "./tokens/shape.css";
+@import "./tokens/motion.css";
+@import "./tokens/base.css";
+@import "./tokens/components.css";

@@ -1,0 +1,58 @@
+version: 2
+
+project_name: anchors
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - main: ./cmd/anchors
+    binary: anchors
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{.Version}} -X main.commit={{.Commit}} -X main.date={{.Date}}
+
+archives:
+  - id: default
+    formats: [tar.gz]
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+      - '^chore:'
+
+release:
+  github:
+    owner: co2-lab
+    name: anchors
+
+homebrew_casks:
+  - name: anchors
+    binaries:
+      - anchors
+    repository:
+      owner: co2-lab
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    homepage: https://anchors.co2lab.io
+    description: "Anchors — framework spec-first de continuidade para desenvolvimento assistido por IA"

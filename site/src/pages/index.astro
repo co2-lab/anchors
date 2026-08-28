@@ -1,0 +1,22 @@
+---
+// Landing — locale DEFAULT (português), servida em `/`.
+// Todo o conteúdo vem do componente multilíngue `Landing.astro` + dicionário i18n.
+import Landing from '../components/Landing.astro';
+import { useTranslations } from '../i18n/ui';
+import '../styles/landing.css';
+const t = useTranslations('pt');
+---
+
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{t('meta.title')}</title>
+		<meta name="description" content={t('meta.description')} />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+	</head>
+	<body>
+		<Landing lang="pt" />
+	</body>
+</html>

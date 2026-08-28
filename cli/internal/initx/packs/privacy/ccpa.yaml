@@ -1,0 +1,37 @@
+# CCPA/CPRA — California Consumer Privacy Act (Califórnia, EUA)
+#
+# Mesmo gatilho canônico dos outros packs de privacidade, e um dever que os outros não
+# têm: o direito de RECUSAR a venda/compartilhamento do dado. É a diferença regulatória
+# real entre o regime americano e o europeu — e por isso tem gatilho próprio: só dispara
+# em quem declara que compartilha com terceiro.
+name: ccpa
+domain: privacy
+jurisdiction: us-ca
+authority: "California Civil Code §1798.100 (CCPA/CPRA)"
+
+requires:
+  - erasure_handler
+  - export_handler
+  - opt_out_handler     # onde o titular recusa o compartilhamento com terceiros
+
+obligations:
+  - name: ccpa-deletion
+    article: "§1798.105"
+    when: "carries: personal-data"
+    must_appear_in: ["{{erasure_handler}}"]
+    because: "right to delete — the consumer may request deletion of personal information collected"
+
+  - name: ccpa-access
+    article: "§1798.110"
+    when: "carries: personal-data"
+    must_appear_in: ["{{export_handler}}"]
+    because: "right to know — the consumer may request the specific pieces of information collected"
+
+  # §1798.120 — opt-out of sale/sharing. Dispara SÓ em quem declara compartilhamento
+  # com terceiro: exigir isto de todo dado pessoal geraria falso positivo em massa, e um
+  # gate que erra na maioria é desligado no primeiro dia.
+  - name: ccpa-opt-out
+    article: "§1798.120"
+    when: "shared-with: third-party"
+    must_appear_in: ["{{opt_out_handler}}"]
+    because: "right to opt out of the sale or sharing of personal information with third parties"

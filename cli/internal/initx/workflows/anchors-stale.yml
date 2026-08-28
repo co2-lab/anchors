@@ -1,0 +1,84 @@
+# Anchors — pipeline de CARDS ÓRFÃOS
+#
+# Um agente pode reivindicar um card e desaparecer: a sessão termina, a máquina desliga.
+# O card fica com dono, e por isso ninguém o pega — mas o dono não existe mais. Sem este
+# pipeline, o trabalho para ali e nada acusa a causa.
+#
+# A liberação é um comentário novo, nunca uma edição: `anchors-owner: (liberado)` passa a
+# ser o último, e o card volta à fila. O HISTÓRICO PERMANECE — dá para ver quem tinha
+# pegado, quando, e que foi liberado por inatividade e não por decisão de alguém.
+name: anchors · liberar cards parados
+
+on:
+  schedule:
+    # De 30 em 30 minutos. A frequência define a LATÊNCIA da detecção, não o critério:
+    # quem decide se um card está parado é `HORAS_ATE_STALE`, abaixo.
+    #
+    # O `schedule` do GitHub Actions não é pontual — sob carga o disparo atrasa, e
+    # agendamentos muito frequentes podem ser descartados. Se a latência vier a incomodar,
+    # o caminho confiável não é apertar o cron: é o agente disparar este workflow
+    # (`workflow_dispatch`) quando não acha card livre — aí a verificação acontece
+    # exatamente quando alguém precisa de trabalho.
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: anchors-stale
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+  repository-projects: write
+
+jobs:
+  liberar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Liberar cards sem progresso
+        env:
+          GH_TOKEN: ${{ secrets.ANCHORS_PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+          LABEL: anchors
+          PROJECT: ${{ vars.ANCHORS_PROJECT_NUMBER }}
+          OWNER: ${{ github.repository_owner }}
+          # Quantas horas sem QUALQUER atualização fazem um card ser considerado parado.
+          # Ajuste ao ritmo do time: baixo demais rouba o card de quem está trabalhando
+          # devagar; alto demais deixa trabalho parado sem ninguém olhando.
+          HORAS_ATE_STALE: "6"
+        run: |
+          set -euo pipefail
+
+          limite=$(date -u -d "-${HORAS_ATE_STALE} hours" +%Y-%m-%dT%H:%M:%SZ)
+
+          # Um card é candidato quando tem dono (último `anchors-owner` não liberado) e
+          # não recebe atualização desde o limite. `updatedAt` cobre commit referenciado,
+          # comentário e mudança de label — qualquer sinal de vida conta como progresso.
+          # `--label "$LABEL"` não é detalhe: o board é compartilhado, e sem o filtro
+          # este pipeline "liberaria" cards de outros fluxos — mexendo em trabalho que
+          # não é do Anchors e cujo dono não se registra por `anchors-owner`.
+          gh issue list --state open --label "$LABEL" --limit 200 \
+            --json number,updatedAt,comments \
+            --jq "[.[] | select(.updatedAt < \"$limite\") | select(
+                    ([.comments[].body | select(startswith(\"anchors-owner:\"))] | last // \"\")
+                    | (. != \"\" and (endswith(\"(liberado)\") | not))
+                  )] | .[].number" |
+          while read -r n; do
+            [ -n "$n" ] || continue
+            dono=$(gh issue view "$n" --json comments \
+              --jq '[.comments[].body | select(startswith("anchors-owner:"))] | last')
+            gh issue comment "$n" --body "anchors-owner: (liberado) — sem progresso desde ${limite}; dono anterior: ${dono#anchors-owner: }"
+
+            # Volta para `TO DO`: a coluna é o estado (BOOTSTRAP.md §7.13), e um card sem
+            # dono parado em `IN PROGRESS` seria invisível para quem procura trabalho.
+            item=$(gh project item-list "$PROJECT" --owner "$OWNER" --format json \
+              --jq ".items[] | select(.content.number == $n) | .id")
+            campo=$(gh project field-list "$PROJECT" --owner "$OWNER" --format json \
+              --jq '.fields[] | select(.name == "Status")')
+            gh project item-edit \
+              --id "$item" \
+              --project-id "$(gh project view "$PROJECT" --owner "$OWNER" --format json --jq .id)" \
+              --field-id "$(echo "$campo" | jq -r .id)" \
+              --single-select-option-id "$(echo "$campo" | jq -r '.options[] | select(.name == "TO DO") | .id')"
+
+            echo "liberado: #$n (era de ${dono#anchors-owner: })"
+          done

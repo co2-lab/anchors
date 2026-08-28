@@ -1,0 +1,341 @@
+---
+// Landing de marketing do Anchors — componente multilíngue (5 idiomas).
+// Recebe `lang` e lê todo o texto do dicionário em `src/i18n/ui.ts`.
+// Renderizada por `src/pages/index.astro` (pt) e `src/pages/[lang]/index.astro`.
+// Sistema visual: tokens do design system em `src/styles/tokens.css` — acento
+// único vermelho (marca), pilares numerados sem cor própria, terminal com
+// output real do CLI. Ver DESIGN-AUDIT.md para o levantamento que originou a
+// revisão, e temp/site/ (não versionado) para o protótipo de referência.
+import { useTranslations, languages, defaultLang, type Lang } from '../i18n/ui';
+
+interface Props {
+	lang: Lang;
+}
+const { lang } = Astro.props;
+const t = useTranslations(lang);
+
+const year = new Date().getFullYear();
+const repoUrl = 'https://github.com/co2-lab/anchors';
+const orgUrl = 'https://co2lab.io/';
+
+const base = lang === defaultLang ? '' : `/${lang}`;
+const docsHref = lang === defaultLang ? '/docs' : `/${lang}/docs`;
+
+const langLinks = (Object.keys(languages) as Lang[]).map((code) => ({
+	code,
+	href: code === defaultLang ? '/' : `/${code}/`,
+	active: code === lang,
+}));
+
+const PILLARS = ['1', '2', '3', '4', '5', '6'] as const;
+const THESES = ['1', '2', '3', '4'] as const;
+const FLOW = ['1', '2', '3', '4', '5', '6'] as const;
+
+// Diagrama circular do ciclo do CLI: 6 nós distribuídos ao redor de um
+// círculo (começando no topo, sentido horário — planejar no topo, o ciclo
+// fecha de "confrontar" de volta a "planejar"). Coordenadas em espaço SVG
+// 0–400 (quadrado), raio do anel de nós vs. raio do arco de conexão
+// levemente menor para a seta não colidir com o próprio nó.
+const CX = 200;
+const CY = 200;
+const NODE_R = 160;
+const ARC_R = 105;
+const ANGLE_STEP = (2 * Math.PI) / FLOW.length;
+const START_ANGLE = -Math.PI / 2; // topo
+
+function pointOn(radius: number, index: number) {
+	const angle = START_ANGLE + index * ANGLE_STEP;
+	return { x: CX + radius * Math.cos(angle), y: CY + radius * Math.sin(angle) };
+}
+
+const flowNodes = FLOW.map((n, i) => ({ n, ...pointOn(NODE_R, i) }));
+
+// Um arco curto entre nó i e nó i+1 (mod 6), no raio ARC_R (menor, "por
+// dentro"), com uma seta na ponta — SVG <path> com arco elíptico (A).
+const flowArcs = FLOW.map((_, i) => {
+	const from = pointOn(ARC_R, i);
+	const to = pointOn(ARC_R, (i + 1) % FLOW.length);
+	return { d: `M ${from.x} ${from.y} A ${ARC_R} ${ARC_R} 0 0 1 ${to.x} ${to.y}` };
+});
+
+const githubIcon =
+	'<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>';
+---
+
+<header style="border-bottom: var(--border-width-strong) solid var(--border-strong)">
+	<div class="container nav-row">
+		<a class="brand" href={base + '/'}>
+			<img src="/anchors-mark-red.svg" width="24" height="25" alt="" />
+			<span>ANCHORS</span>
+		</a>
+		<nav class="nav-links">
+			<a href="#problema">{t('nav.problem')}</a>
+			<a href="#solucao">{t('nav.solution')}</a>
+			<a href="#pilares">{t('nav.philosophy')}</a>
+			<a href="#cli">{t('nav.numbers')}</a>
+		</nav>
+		<div style="margin-left: auto; display: flex; gap: var(--space-3); align-items: center">
+			<span class="lang-list">
+				{langLinks.map((l, i) => (
+					<>
+						{i > 0 && ' · '}
+						<a href={l.href} class={l.active ? 'active' : ''}>{l.code.toUpperCase()}</a>
+					</>
+				))}
+			</span>
+			<a class="btn btn-secondary btn-sm" href={docsHref}>{t('nav.docs')}</a>
+		</div>
+	</div>
+</header>
+
+<!-- HERO -->
+<section class="container" style="padding-block: var(--space-20)">
+	<div class="hero-grid">
+		<div>
+			<div style="display: flex; gap: var(--space-2); flex-wrap: wrap">
+				<span class="tag tag-accent">spec-first</span>
+				<span class="tag tag-live">{t('hero.badge')}</span>
+			</div>
+			<h1 style="margin-top: var(--space-5); font-size: var(--text-6xl)">
+				{t('hero.title.1')}<br />
+				<span style="color: var(--text-accent)">{t('hero.title.2')}</span>
+			</h1>
+			<p style="margin-top: var(--space-6); font-size: var(--text-lg); color: var(--text-secondary); max-width: var(--measure-lead)">
+				{t('hero.sub')}
+			</p>
+			<div style="display: flex; gap: var(--space-3); margin-top: var(--space-8)">
+				<a class="btn btn-primary" href={docsHref}>{t('hero.cta.start')}</a>
+				<a class="btn btn-secondary" href={repoUrl}>{t('hero.cta.github')}</a>
+			</div>
+			<p style="margin-top: var(--space-8); padding-top: var(--space-5); border-top: 1px solid var(--border-hairline); font-size: var(--text-sm); color: var(--text-faint); max-width: 52ch">
+				{t('hero.note.1')}<strong style="color: var(--text-secondary)">{t('hero.note.strong')}</strong>{t('hero.note.2')}
+			</p>
+		</div>
+		<div class="term">
+			<div class="term-bar"><span class="term-dot term-dot-live"></span><span>anchors check --all</span></div>
+			<pre class="term-body" style="font-size: var(--text-xs)">  spec-completeness   bloqueante  <span class="mark-ok">✓12</span> <span class="mark-fail">✗3</span> <span class="mark-indet">~1</span>
+  test-coverage       julgamento  <span class="mark-pending">⏳2</span> pendente(s) de IA
+
+<span class="term-dim">~ 1 indeterminado — não é falha:
+  o gate não teve o que confrontar</span>
+
+3 issue(s) — divergências registradas:
+  <span class="mark-fail">✗ [BLOQUEIA]</span> spec-completeness @ Foo.spec.md
+      <span class="term-dim">faltam 2 cenários sem teste correspondente</span>
+
+<span class="mark-fail">✗ barrado — 1 gate(s) bloqueante(s) reprovaram</span></pre>
+		</div>
+	</div>
+</section>
+
+<!-- SPEC-FIRST -->
+<section id="spec-first" class="container" style="padding-block: var(--space-20)">
+	<header class="section-head">
+		<span class="eyebrow">{t('specfirst.eyebrow')}</span>
+		<h2>{t('specfirst.title')}</h2>
+		<p class="lead">{t('specfirst.lead')}</p>
+	</header>
+	<div class="grid grid-3">
+		{(['1', '2', '3'] as const).map((n) => (
+			<article class="card">
+				<h3 class="card-title">{t(`specfirst.${n}.title` as any)}</h3>
+				<p class="card-body">{t(`specfirst.${n}.body` as any)}</p>
+			</article>
+		))}
+	</div>
+</section>
+
+<!-- A METÁFORA -->
+<section id="metafora" style="background: var(--surface-inset); padding-block: var(--space-20)">
+	<div class="container">
+		<header class="section-head">
+			<span class="eyebrow">{t('climb.eyebrow')}</span>
+			<h2>{t('climb.title')}</h2>
+			<p class="lead">{t('climb.lead')}</p>
+		</header>
+		<div class="grid grid-3">
+			{(['1', '2', '3'] as const).map((n) => (
+				<article class="card">
+					<span class="card-index">0{n}</span>
+					<h3 class="card-title">{t(`climb.${n}.title` as any)}</h3>
+					<p class="card-body" style="margin-bottom: var(--space-3)">
+						<strong style="color: var(--text-primary)">{t('climb.label.climbing' as any)}</strong> {t(`climb.${n}.climbing` as any)}
+					</p>
+					<p class="card-body">
+						<strong style="color: var(--text-accent)">{t('climb.label.anchors' as any)}</strong> {t(`climb.${n}.dev` as any)}
+					</p>
+				</article>
+			))}
+		</div>
+	</div>
+</section>
+
+<!-- O PROBLEMA -->
+<section id="problema" class="container" style="padding-bottom: var(--space-20)">
+	<header class="section-head">
+		<span class="eyebrow">{t('problem.eyebrow')}</span>
+		<h2>{t('problem.title')}</h2>
+	</header>
+	<div class="grid grid-3">
+		<article class="card card-interactive">
+			<span class="card-index">01</span>
+			<h3 class="card-title">{t('problem.1.title')}</h3>
+			<p class="card-body">{t('problem.1.body')}</p>
+		</article>
+		<article class="card card-interactive">
+			<span class="card-index">02</span>
+			<h3 class="card-title">{t('problem.2.title')}</h3>
+			<p class="card-body">{t('problem.2.body')}</p>
+		</article>
+		<article class="card card-interactive">
+			<span class="card-index">03</span>
+			<h3 class="card-title">{t('problem.3.title')}</h3>
+			<p class="card-body">{t('problem.3.body')}</p>
+		</article>
+	</div>
+	<p style="margin-top: var(--space-10); font-size: var(--text-lg); max-width: 58ch">
+		{t('problem.punch.1')}<strong>{t('problem.punch.strong')}</strong>{t('problem.punch.2')}
+	</p>
+</section>
+
+<!-- A SOLUÇÃO -->
+<section id="solucao" style="background: var(--surface-inset); padding-block: var(--space-20)">
+	<div class="container">
+		<header class="section-head">
+			<span class="eyebrow">{t('solution.eyebrow')}</span>
+			<h2>{t('solution.title')}</h2>
+			<p class="lead">{t('solution.lead')}</p>
+		</header>
+		<div class="sol-grid">
+			<div class="term">
+				<div class="term-bar"><span class="term-dot"></span><span>ciclo.sh</span></div>
+				<pre class="term-body"><span class="term-dim"># planejar: a IA lê o guide de plano, decide o norte</span>
+<span class="term-prompt">$</span> anchors guide plan
+
+<span class="term-dim"># spec — a origem da verdade: o requisito ganha um código de cenário</span>
+SPCR-V01: usuário autentica com e-mail e senha
+
+<span class="term-dim"># map — rastreabilidade: liga spec → feature → teste → código</span>
+<span class="term-prompt">$</span> anchors map build
+
+<span class="term-dim"># check — qualidade: gates determinísticos + julgamento por IA</span>
+<span class="term-prompt">$</span> anchors check <span class="term-flag">--all</span></pre>
+			</div>
+			<div>
+				<ol class="flow">
+					{(['1', '2', '3', '4'] as const).map((n) => (
+						<li>
+							<span class="flow-num">0{n}</span>
+							<span class="flow-name">{t(`flow.${n}.name` as any)}</span>
+							<span class="flow-what">{t(`flow.${n}.what` as any)}</span>
+						</li>
+					))}
+				</ol>
+				<aside class="callout callout-accent" style="margin-top: var(--space-6)">
+					{t('solution.caption.1')}{t('solution.caption.2')}
+				</aside>
+			</div>
+		</div>
+	</div>
+</section>
+
+<!-- OS PILARES -->
+<section id="pilares" class="container" style="padding-block: var(--space-20)">
+	<header class="section-head">
+		<span class="eyebrow">{t('thesis.eyebrow')}</span>
+		<h2>{t('thesis.title')}</h2>
+		<p class="lead">
+			{t('thesis.lead.pre')}<em>{t('thesis.lead.1')}</em> <strong>{t('thesis.lead.em')}</strong>{t('thesis.lead.2')}
+		</p>
+	</header>
+	<div class="grid grid-3">
+		{PILLARS.map((n) => (
+			<div class="pillar">
+				<span class="pillar-num">0{n}</span>
+				<span class="pillar-name">{t(`pillar.${n}.name` as any)}</span>
+				<p class="pillar-body">{t(`pillar.${n}.body` as any)}</p>
+			</div>
+		))}
+	</div>
+	<div class="grid grid-2" style="margin-top: var(--space-16)">
+		{THESES.map((n) => (
+			<article class="card">
+				<h3 class="card-title">{t(`thesis.card.${n}.title` as any)}</h3>
+				<p class="card-body">{t(`thesis.card.${n}.body` as any)}</p>
+			</article>
+		))}
+	</div>
+</section>
+
+<!-- O CLI -->
+<section id="cli" class="cli-section" data-theme="dark">
+	<div class="container">
+		<header class="section-head">
+			<span class="eyebrow">{t('proof.eyebrow')}</span>
+			<h2>{t('proof.title')}</h2>
+		</header>
+		<div class="cli-flow-circle">
+			<svg viewBox="0 0 400 400" class="cli-flow-svg" role="img" aria-label={t('proof.title')}>
+				<defs>
+					<marker id="flow-arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+						<path d="M0,0 L10,5 L0,10 Z" fill="var(--red-500)" />
+					</marker>
+				</defs>
+				{flowArcs.map((arc) => (
+					<path d={arc.d} fill="none" stroke="var(--red-500)" stroke-width="2" marker-end="url(#flow-arrow)" opacity="0.85" />
+				))}
+			</svg>
+			<ol class="cli-flow-nodes">
+				{flowNodes.map(({ n, x, y }) => (
+					<li class="cli-flow-step" style={`left: ${(x / 400) * 100}%; top: ${(y / 400) * 100}%`}>
+						<span class="cli-flow-phase">{t(`flow2.${n}.phase` as any)}</span>
+						<code class="cli-flow-cmd">{t(`flow2.${n}.cmd` as any)}</code>
+						<span class="cli-flow-artifact">{t(`flow2.${n}.artifact` as any)}</span>
+					</li>
+				))}
+			</ol>
+		</div>
+		<p style="margin-top: var(--space-10); font-size: var(--text-sm); max-width: 62ch">
+			{t('proof.note')}
+		</p>
+	</div>
+</section>
+
+<!-- CTA FINAL -->
+<section class="container" style="padding-block: var(--space-20)">
+	<div style="border-top: var(--border-width-strong) solid var(--border-strong); padding-top: var(--space-8); display: flex; gap: var(--space-10); align-items: flex-start; flex-wrap: wrap">
+		<div style="flex: 1 1 380px">
+			<h2>{t('cta.title')}</h2>
+			<p style="margin-top: var(--space-4); color: var(--text-secondary)">{t('cta.body')}</p>
+		</div>
+		<div style="display: flex; gap: var(--space-3)">
+			<a class="btn btn-primary" href={docsHref}>{t('cta.docs')}</a>
+			<a class="btn btn-secondary" href={repoUrl}><Fragment set:html={githubIcon} /> {t('cta.github')}</a>
+		</div>
+	</div>
+</section>
+
+<!-- FOOTER -->
+<footer style="border-top: var(--border-width) solid var(--border-hairline); padding-block: var(--space-10)">
+	<div class="container" style="display: flex; gap: var(--space-8); flex-wrap: wrap; align-items: flex-start">
+		<div style="flex: 1 1 320px">
+			<img src="/anchors-lockup-black.svg" width="150" height="37" alt="Anchors" />
+			<p style="margin-top: var(--space-4); font-size: var(--text-sm); color: var(--text-secondary); max-width: 46ch">
+				{t('footer.tagline')}
+			</p>
+		</div>
+		<div style="display: flex; flex-direction: column; align-items: flex-end; gap: var(--space-3)">
+			<a class="footer-org-brand" href={orgUrl}>
+				<span>{t('footer.project')}</span>
+				<span class="footer-org-logo">
+					<img src="/co2lab.png" alt="CO2 Lab" width="36" height="36" />
+				</span>
+			</a>
+			<div class="footer-org">
+				<div>© {year} · <a href={orgUrl}>CO2 Lab</a></div>
+				<div>{t('footer.opensource')}</div>
+				<div><a href={repoUrl}>GitHub</a></div>
+			</div>
+		</div>
+	</div>
+</footer>

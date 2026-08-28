@@ -1,0 +1,4 @@
+/* Archivo — a fonte do lockup ANCHORS. JetBrains Mono — a fonte do terminal.
+   Carregadas do Google Fonts: nenhum binario de fonte existe no repo do produto.
+   Para self-host, baixe os woff2 e troque este @import por regras @font-face. */
+@import url("https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap");

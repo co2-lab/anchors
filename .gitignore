@@ -1,0 +1,22 @@
+# binários compilados do CLI
+/cli/anchors
+/cli/anchors-*
+*.exe
+
+# artefatos que o próprio Anchors gera num projeto (não versionar aqui)
+anchors.graph.yaml
+.anchors/
+
+# Go
+*.test
+*.out
+
+# SO / editor
+.DS_Store
+*.swp
+
+# achados de adocao em projetos internos — documento de trabalho, nao do framework
+FINDINGS-*.md
+
+# capturas de sessao do Playwright MCP — contem dominios e ids de conta reais
+.playwright-mcp/

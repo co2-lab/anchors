@@ -1,0 +1,30 @@
+---
+// Landing nos locales secundários: /en/, /es/, /ja/, /zh/ (o /pt fica na raiz).
+import Landing from '../../components/Landing.astro';
+import { useTranslations, languages, defaultLang, type Lang } from '../../i18n/ui';
+import '../../styles/landing.css';
+
+export function getStaticPaths() {
+	return (Object.keys(languages) as Lang[])
+		.filter((lang) => lang !== defaultLang)
+		.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang as Lang;
+const t = useTranslations(lang);
+const htmlLang = lang === 'zh' ? 'zh-CN' : lang === 'ja' ? 'ja' : lang === 'es' ? 'es' : lang;
+---
+
+<!doctype html>
+<html lang={htmlLang} data-theme="light">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{t('meta.title')}</title>
+		<meta name="description" content={t('meta.description')} />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+	</head>
+	<body>
+		<Landing lang={lang} />
+	</body>
+</html>

@@ -1,0 +1,92 @@
+:root {
+  /* --- Rampa neutra (quente, derivada do #201e1d do lockup) --- */
+  --ink-950: #100e0d;
+  --ink-900: #161413;
+  --ink-800: #201e1d;
+  --ink-700: #2e2b29;
+  --ink-600: #45403d;
+  --ink-500: #5e5854;
+  --ink-400: #837b76;
+  --ink-300: #a8a09b;
+  --ink-200: #cdc7c2;
+  --ink-100: #e6e2df;
+  --ink-050: #f2efec;
+  --ink-000: #faf8f6;
+
+  /* --- Rampa de marca (do vermelho da ancora, #ec3013) --- */
+  --red-900: #4d1006;
+  --red-800: #7a1a08;
+  --red-700: #a8210b;
+  --red-600: #cc2810;
+  --red-500: #ec3013;
+  --red-400: #f4613f;
+  --red-300: #f8907a;
+  --red-200: #fbbfb2;
+  --red-100: #fde3dc;
+  --red-050: #fef2ef;
+
+  /* --- Estado: usadas SO para veredito, nunca para decoracao --- */
+  --ok-700: #146b41;
+  --ok-500: #1f8f56;
+  --ok-100: #dff0e6;
+  --warn-700: #8a5c07;
+  --warn-500: #b8800f;
+  --warn-100: #f8ecd3;
+  --info-700: #2a5578;
+  --info-500: #3d7aa8;
+  --info-100: #e0edf5;
+
+  /* --- Superficies --- */
+  --surface-page: var(--ink-000);
+  --surface-raised: #ffffff;
+  --surface-inset: var(--ink-050);
+  --surface-inverse: var(--ink-900);
+  --surface-terminal: #14110f; /* fixo: o terminal e escuro nos dois temas */
+  --surface-accent: var(--red-500);
+  --surface-accent-tint: var(--red-050);
+
+  /* --- Texto --- */
+  --text-primary: var(--ink-800);
+  --text-secondary: var(--ink-500);
+  --text-faint: var(--ink-400);
+  --text-inverse: var(--ink-000);
+  --text-accent: var(--red-700); /* texto em tamanho de corpo usa o passo 700, nunca o 500 */
+  --text-terminal: #ded7d0;
+  --text-terminal-dim: #8b827b;
+
+  /* --- Bordas --- */
+  --border-hairline: var(--ink-200);
+  --border-strong: var(--ink-800);
+  --border-accent: var(--red-500);
+  --border-terminal: #2a2523;
+
+  /* --- Papeis semanticos de estado --- */
+  --state-ok: var(--ok-500);
+  --state-fail: var(--red-500);
+  --state-warn: var(--warn-500);
+  --state-info: var(--info-500);
+  --state-idle: var(--ink-400);
+
+  --focus-ring: var(--red-500);
+}
+
+[data-theme="dark"] {
+  --surface-page: var(--ink-950);
+  --surface-raised: var(--ink-900);
+  --surface-inset: var(--ink-800);
+  --surface-inverse: var(--ink-000);
+  --surface-accent-tint: rgba(236, 48, 19, 0.12);
+
+  --text-primary: var(--ink-050);
+  --text-secondary: var(--ink-300);
+  --text-faint: var(--ink-400);
+  --text-inverse: var(--ink-900);
+  --text-accent: var(--red-400); /* no fundo escuro o passo claro e que tem contraste */
+
+  --border-hairline: #2c2825;
+  --border-strong: var(--ink-100);
+
+  --state-ok: #35b075;
+  --state-warn: #d9a33a;
+  --state-info: #62a3ce;
+}

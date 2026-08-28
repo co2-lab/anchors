@@ -1,0 +1,4 @@
+# anchors.yaml — configuração do projeto Anchors
+# A seção `layers` é a Estrutura de Projeto (o grafo virtual).
+version: 1
+layers: {}

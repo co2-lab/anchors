@@ -1,0 +1,236 @@
+# anchors.yaml — o Anchors governando o próprio Anchors.
+#
+# Este arquivo é também um EXPERIMENTO de adoção: o Anchors nasceu para ser posto em
+# projeto que já existe, e nunca foi posto num. Cada atrito encontrado aqui é defeito de
+# produto, não do repositório — as anotações `# ATRITO:` marcam o que doeu.
+#
+# ATRITO 1 — `anchors init` sem TTY escreve `layers: {}` e imprime "✓ anchors.yaml escrito
+# (0 camadas)". Sucesso aparente com resultado inútil: quem roda em CI, script ou pipe fica
+# com um arquivo que carrega e não governa nada. Deveria falhar pedindo `--yes`/modo não
+# interativo, ou inferir do escaneamento que ele mesmo acabou de fazer (ele JÁ detectou
+# "código em: [cli/internal cli/cmd]" — e não usou).
+version: 1
+
+layers:
+  # ── A DOUTRINA ──────────────────────────────────────────────────────────────────
+  # Os 11 documentos que definem o que o Anchors é. Não são "docs": são a fonte das
+  # regras que o CLI implementa, e por isso governam o código (ver `governs` abaixo).
+  doutrina:
+    pattern: "*.md"
+    kind: guide
+    tags: [doutrina, guide]
+    exclude: ["README.md", "DESIGN-AUDIT.md", "PLANNING.md"]
+
+  # README é porta de entrada e PLANNING/DESIGN-AUDIT são registro de processo — nenhum
+  # rege artefato. Ficam reconhecidos como doc para não caírem em "não regido".
+  doc:
+    pattern: "{README,DESIGN-AUDIT,PLANNING}.md"
+    kind: doc
+    tags: [doc]
+
+  # ── O CLI ───────────────────────────────────────────────────────────────────────
+  # Um comando por arquivo, e o comando é o ponto de entrada do usuário — a INTERFACE
+  # do framework, no vocabulário do próprio Anchors.
+  comando:
+    pattern: "cli/cmd/anchors/*.go"
+    kind: code
+    tags: [cli, comando]
+    exclude: ["**/*_test.go", "cli/cmd/anchors/main.go", "cli/cmd/anchors/root.go"]
+
+  # ── AS REGRAS ───────────────────────────────────────────────────────────────────
+  # Cada gate é uma REGRA do framework, com doutrina no cabeçalho do arquivo. É a
+  # camada mais densa em decisão por linha — e a que mais se paga em spec.
+  gate:
+    pattern: "cli/internal/gate/*.go"
+    kind: code
+    tags: [regra, gate]
+    exclude: ["**/*_test.go"]
+
+  # ── O NÚCLEO ────────────────────────────────────────────────────────────────────
+  # A hierarquia abaixo é a REAL, medida por import (não suposta):
+  #   config → (nada)   scan → config   mapx → config+scan   gate → config+scan+mapx+…
+  config:
+    pattern: "cli/internal/config/*.go"
+    kind: code
+    tags: [nucleo, config]
+    exclude: ["**/*_test.go"]
+
+  scan:
+    pattern: "cli/internal/scan/*.go"
+    kind: code
+    tags: [nucleo, scan]
+    exclude: ["**/*_test.go"]
+
+  mapa:
+    pattern: "cli/internal/mapx/*.go"
+    kind: code
+    tags: [nucleo, mapa]
+    exclude: ["**/*_test.go"]
+
+  # ── INFRA ───────────────────────────────────────────────────────────────────────
+  # Os pacotes de apoio: materializam artefato (issue, change, suggestion), leem
+  # ambiente (gitmeta, daemon), medem (similarity, testsig, health) ou orquestram
+  # (queue, recode, initx, pack, code, checklog). RECONHECIDA: não origina regra.
+  infra:
+    pattern: "cli/internal/{change,checklog,code,daemon,gitmeta,health,initx,issue,pack,queue,recode,similarity,suggestion,testsig}/*.go"
+    kind: code
+    tags: [infra]
+    regime: declarativo
+    exclude: ["**/*_test.go"]
+
+  # ── A TRINCA ────────────────────────────────────────────────────────────────────
+  teste:
+    pattern: "cli/**/*_test.go"
+    kind: test
+    tags: [test]
+
+  spec:
+    pattern: "cli/**/*.spec.md"
+    kind: spec
+    tags: [spec]
+
+  feature:
+    pattern: "cli/**/*.feature"
+    kind: feature
+    tags: [feature]
+
+  # Os guides que o próprio Anchors distribui (semeados no projeto do usuário).
+  guide-distribuido:
+    pattern: "cli/guides/*.md"
+    kind: guide
+    tags: [guide]
+
+# ── FRONTEIRAS ────────────────────────────────────────────────────────────────────
+# Todas declaram o que HOJE NÃO ACONTECE (verificado por import), para que continue
+# assim. Fronteira que já está violada não é fronteira: é dívida com nome bonito.
+boundaries:
+  - layer: gate
+    forbid: "co2-lab/anchors/cmd"
+    because: "gate é biblioteca de regras — quem conhece CLI é o comando, não a regra. Um gate que importa cmd não é testável sem subir o cobra."
+
+  - layer: config
+    forbid: "co2-lab/anchors/internal/(mapx|scan|gate)"
+    because: "config é a base da pilha (não importa ninguém hoje). Depender de mapx/scan criaria ciclo: os três já importam config."
+
+  - layer: scan
+    forbid: "co2-lab/anchors/internal/(mapx|gate)"
+    because: "scan lê TEXTO e classifica em camadas; o mapa é construído A PARTIR dele. Inverter faria o scan precisar do mapa que ele alimenta."
+
+  - layer: mapa
+    forbid: "co2-lab/anchors/internal/gate"
+    because: "o mapa é o dado; o gate é quem o confronta. O gate importa mapx, nunca o contrário."
+
+  # A regra que o próprio projeto mais repete na doutrina: o CLI não parseia código.
+  - layer: scan
+    forbid: "go/(ast|parser|types)"
+    because: "STRUCTURE/D2: o Anchors é agnóstico de linguagem e nunca parseia código — lê texto e âncora em comentário. Um parser aqui amarraria o engine a Go."
+
+# ── GOVERNS ───────────────────────────────────────────────────────────────────────
+# A doutrina rege o código que a implementa. É a aresta que faz `anchors impact` num
+# documento responder "estes gates dependem desta decisão".
+governs:
+  # ATRITO 2 — escrevi este bloco como `guide:`/`tags:` (plural) e o `map build` aceitou em
+  # SILÊNCIO: 222 nós, 0 arestas, nenhum aviso. O formato real é `from`/`governs` com UMA
+  # tag. Chave desconhecida em YAML é ignorada, e quem adota não tem como saber que a
+  # declaração dele não fez nada — o mapa só fica pobre. Deveria avisar (chave não
+  # reconhecida em `governs[0]`) ou falhar.
+  - from: TRACEABILITY.md
+    governs: mapa
+  - from: TRACEABILITY.md
+    governs: scan
+  - from: QUALITY.md
+    governs: regra
+  - from: STRUCTURE.md
+    governs: config
+  - from: SPEC.md
+    governs: spec
+  - from: SPEC_TYPES.md
+    governs: spec
+  - from: PROPAGATION.md
+    governs: mapa
+  - from: CONCEPT.md
+    governs: nucleo
+  - from: WORKFLOW.md
+    governs: infra
+
+# ── GATES ─────────────────────────────────────────────────────────────────────────
+# ATRITO 3 — `anchors init` não semeia NENHUM gate, e `anchors check` morre com "nenhum
+# gate declarado". Quem adota sai do init com um arquivo que não permite rodar o comando
+# principal do framework: init → map build → check → erro. O init deveria semear ao menos
+# o conjunto mínimo (os que não exigem trinca), ou dizer o que falta.
+#
+# A ordem aqui é deliberada: primeiro os que medem a ESTRUTURA (valem desde o dia zero,
+# sem escrever spec nenhuma), depois os da trinca — que só passam a fazer sentido conforme
+# as specs nascem. Ligar tudo de uma vez num projeto existente produz centenas de issues
+# no primeiro dia e ninguém lê a lista.
+gates:
+  # ESTRUTURA — medem o código como ele está, sem exigir spec.
+  - name: layer-boundary
+    blocking: true
+    measures: "as fronteiras entre camadas do CLI, verificadas por import real"
+
+  - name: codigo-catalogado
+    blocking: false
+
+  - name: code-reference-valid
+    blocking: false
+
+  # TRINCA — informativos por enquanto: o projeto tem 0 specs para 127 arquivos de código,
+  # e promovê-los a bloqueante hoje barraria todo commit. Sobem conforme a adoção avança.
+  - name: trinca-completa
+    blocking: false
+
+  - name: spec-tem-codigo
+    blocking: false
+
+  - name: spec-completa
+    blocking: false
+
+  - name: feature-nao-vazia
+    blocking: false
+
+  - name: teste-rastreavel
+    blocking: false
+
+  # ── FERRAMENTA GO — `run:`, não `check:` ─────────────────────────────────────────
+  # O Anchors não reimplementa o que a ferramenta do stack já faz: ele CHAMA e lê o
+  # veredito. `scope: repo` roda o comando UMA vez por varredura, não por arquivo — sem
+  # isso, `go build` rodaria 125 vezes num check --all.
+  - name: build
+    run: "go build ./..."
+    scope: project
+    blocking: true
+    measures: "o projeto compila"
+
+  - name: vet
+    run: "go vet ./..."
+    scope: project
+    blocking: true
+    measures: "o `go vet` não acusa nada (a régua que vem com a linguagem)"
+
+  - name: testes-passam
+    run: "go test ./..."
+    scope: project
+    blocking: true
+    measures: "os 85 arquivos de teste passam"
+
+  # ── PROVA DE TESTE ──────────────────────────────────────────────────────────────
+  # `mutation-score` é o único gate que responde "o teste PROVA a linha?" — todos os
+  # outros respondem "a linha executou?" ou "a peça existe?". O catálogo do framework diz
+  # que ele "nasce com o projeto", e o Anchors tem 85 arquivos de teste sem essa medição.
+  #
+  # Informativo e Pending até alguém ingerir o relatório: o Anchors não roda a ferramenta
+  # de mutação (depende do stack — para Go, `go-mutesting` ou `gremlins`). Fica declarado
+  # para que a ausência da medição seja VISÍVEL, em vez de silêncio.
+  - name: mutation-score
+    blocking: false
+
+  - name: line-coverage
+    blocking: false
+
+  # ── CABEÇALHO ───────────────────────────────────────────────────────────────────
+  # Cada pacote do Anchors JÁ tem doutrina no cabeçalho (`// Package X faz Y porque Z`) —
+  # é a convenção mais consistente do repositório. O gate transforma hábito em régua.
+  # Informativo primeiro: 125 arquivos de código, e nem todos seguem o formato `@anchors`.
+  - name: header-conforme
+    blocking: false

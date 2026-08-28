@@ -1,0 +1,159 @@
+# Anchors — pipeline de IDENTIFICAÇÃO
+#
+# A regra que ele materializa: um artefato chegou ao repositório e não tem card que o
+# governe → cria o card. É o que faz o ciclo (plano → specs → código → teste) avançar
+# sozinho, sem alguém lembrar de abrir a próxima issue.
+#
+# A identidade vem do CÓDIGO que o Anchors gera para cada artefato, registrado no TÍTULO
+# da issue entre colchetes: `[XXXXX-001] Implementar tal coisa`. É isso que torna
+# "artefato sem card" uma consulta com resposta, e não um palpite.
+#
+# SEQUENCIAL, nunca paralelo. Duas execuções simultâneas veriam o mesmo artefato órfão e
+# criariam dois cards para ele. A idempotência não vem de esperteza no código — vem de
+# nunca haver duas instâncias decidindo ao mesmo tempo.
+#
+# E porque é sequencial, ele PRECISA ser rápido: cada execução lenta segura a fila
+# inteira, e o gargalo cresce com o projeto. Por isso ele olha só os arquivos que o PUSH
+# mudou, não o projeto todo — um artefato só pode ficar órfão quando aparece, e quando
+# aparece ele está no diff. A varredura completa continua disponível sob demanda
+# (`workflow_dispatch` com `tudo: true`), para quando se quer reconciliar o passado.
+name: anchors · identificar trabalho
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tudo:
+        description: "varrer o projeto INTEIRO (reconciliação; mais lento)"
+        type: boolean
+        default: false
+
+# A serialização que o desenho inteiro pressupõe. `cancel-in-progress: false` é
+# deliberado: cancelar a execução em curso poderia matá-la DEPOIS de ela ter criado
+# metade dos cards, e o push seguinte não saberia o que ficou pela metade.
+concurrency:
+  group: anchors-identify
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+  repository-projects: write
+
+jobs:
+  identificar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # o mapa precisa do histórico para carimbar updated_at
+
+      - name: Instalar o Anchors
+        run: |
+          go install github.com/co2-lab/anchors/cmd/anchors@latest
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+
+      # O mapa chega pronto no push: `anchors.graph.yaml` é versionado, e o pre-commit
+      # (`anchors install-hooks`) o mantém em dia. Reconstruí-lo a cada execução custaria
+      # o projeto inteiro — medido: 0,45s em 332 arquivos, 12,7s em 3.587 nós — e como
+      # este workflow é SERIALIZADO, esse tempo não é do push, é da fila toda.
+      #
+      # Então: VERIFICA o barato, e só reconstrói se precisar. A verificação olha apenas
+      # os arquivos do CHANGE (os que este push mudou estão no mapa?), e é o caminho
+      # normal — quase de graça. Se algum ficou de fora, o mapa commitado está velho, e aí
+      # sim roda o `map build` COMPLETO: o mapa é um grafo, e as arestas ligam unidades
+      # diferentes (`governs`, propagação), então não existe reconstruir "só o pedaço".
+      - name: Garantir que o mapa cobre o que mudou
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+
+          precisa_rebuild=0
+          if [ ! -f anchors.graph.yaml ]; then
+            echo "não há mapa no repositório"
+            precisa_rebuild=1
+          else
+            git diff --name-only "${BEFORE}" "${GITHUB_SHA}" > /tmp/mudados.txt 2>/dev/null || \
+              git show --name-only --format= "${GITHUB_SHA}" > /tmp/mudados.txt
+            while read -r f; do
+              [ -n "$f" ] || continue
+              [ -f "$f" ] || continue          # deletado: sumir do mapa é o esperado
+              case "$f" in .github/*) continue ;; esac
+              if ! grep -qF "id: $f" anchors.graph.yaml; then
+                echo "fora do mapa: $f"
+                precisa_rebuild=1
+              fi
+            done < /tmp/mudados.txt
+          fi
+
+          if [ "$precisa_rebuild" = "1" ]; then
+            echo "::warning::o anchors.graph.yaml commitado está defasado — reconstruindo."
+            echo "  (o pre-commit deveria tê-lo mantido em dia: rode \`anchors install-hooks\`)"
+            anchors map build
+          else
+            echo "mapa em dia para os arquivos deste push"
+          fi
+
+      - name: Criar card para cada artefato sem card
+        env:
+          GH_TOKEN: ${{ secrets.ANCHORS_PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+          LABEL: anchors
+          PROJECT: ${{ vars.ANCHORS_PROJECT_NUMBER }}
+          OWNER: ${{ github.repository_owner }}
+          # O ponto de partida do diff. Num push normal é o commit anterior; no primeiro
+          # push de um branch o GitHub manda zeros, e aí o fallback (`git show`) olha só o
+          # commit atual.
+          BEFORE: ${{ github.event.before }}
+          TUDO: ${{ inputs.tudo }}
+        run: |
+          set -euo pipefail
+
+          # Os códigos que JÁ têm card. Lê issues abertas E fechadas: um artefato cujo
+          # trabalho terminou não pode ganhar card novo a cada push.
+          gh issue list --state all --limit 1000 --json title \
+            --jq '.[].title | capture("^\\[(?<c>[^]]+)\\]").c' \
+            | sort -u > /tmp/com-card.txt
+
+          # Os códigos que existem no projeto. `anchors code list` lê a identidade do
+          # MAPA (não faz grep no texto), e `--json` separa o código das pastas — no TSV
+          # elas vêm juntas por ", ", que se confunde com uma vírgula dentro do caminho.
+          anchors code list --json > /tmp/codigos.json
+
+          # O RECORTE que mantém este pipeline rápido: só as unidades que o push tocou.
+          # Um artefato só fica órfão quando APARECE, e quando aparece ele está no diff —
+          # varrer o projeto inteiro a cada push refaz o mesmo trabalho para centenas de
+          # códigos que já têm card, e como este workflow é serializado, o custo vira fila.
+          if [ "${TUDO:-false}" = "true" ]; then
+            cp /tmp/codigos.json /tmp/alvo.json
+            echo "modo reconciliação: varrendo o projeto inteiro"
+          else
+            git diff --name-only "${BEFORE}" "${GITHUB_SHA}" > /tmp/mudados.txt || \
+              git show --name-only --format= "${GITHUB_SHA}" > /tmp/mudados.txt
+            # Uma unidade entra se QUALQUER arquivo mudado está sob a pasta dela.
+            jq --rawfile mudados /tmp/mudados.txt \
+              '[ ($mudados | split("\n") | map(select(length > 0))) as $m
+                 | .[] | select([.onde[] as $o | $m[] | startswith($o + "/")] | any) ]' \
+              /tmp/codigos.json > /tmp/alvo.json
+            echo "$(jq length /tmp/alvo.json) unidade(s) tocada(s) neste push"
+          fi
+
+          jq -r '.[] | [.code, (.onde | join(", "))] | @tsv' /tmp/alvo.json |
+          while IFS=$'\t' read -r code onde; do
+            [ -n "$code" ] || continue
+            if grep -qxF "$code" /tmp/com-card.txt; then
+              continue
+            fi
+            url=$(gh issue create \
+              --title "[$code] Implementar $onde" \
+              --label "$LABEL" \
+              --body "$(printf 'Unidade: `%s`\nCódigo: `%s`\n\nCard criado pelo pipeline de identificação do Anchors: o artefato existe no repositório e não havia issue para ele.\n\nAntes de começar, rode `anchors status` para ver onde o projeto está, e o `anchors guide` do artefato que você vai escrever.\n\n**Prioridade do board: da DIREITA para a ESQUERDA.** Termine o que está mais adiantado antes de pegar coisa nova — trabalho pela metade não entrega nada e envelhece até o contexto se perder.' "$onde" "$code")")
+
+            # A issue precisa ENTRAR no board: o estado é a coluna (BOOTSTRAP.md §7.13),
+            # e um card fora do Project é invisível para o pipeline de claim — ficaria
+            # aberto para sempre sem ninguém pegar. Nasce em `TODO`, o default do campo.
+            gh project item-add "$PROJECT" --owner "$OWNER" --url "$url"
+
+            echo "criado: [$code] $onde → $url"
+          done

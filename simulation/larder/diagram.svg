@@ -1,0 +1,193 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1320 1000" font-family="-apple-system, Segoe UI, Roboto, sans-serif">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#5a45cc"/>
+    </marker>
+    <marker id="arrowGray" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#8a8a8a"/>
+    </marker>
+    <marker id="arrowCycle" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#2D9A4E"/>
+    </marker>
+    <style>
+      .pillar { fill:#7B61FF; }
+      .pillarLabel { fill:#fff; font-weight:700; font-size:15px; }
+      .agent { fill:#2D9A4E; }
+      .agentLabel { fill:#fff; font-size:12px; font-weight:600; }
+      .artifact { fill:#5CB8E4; }
+      .artifactLabel { fill:#08344a; font-size:11px; }
+      .issue { fill:#E05252; }
+      .note { fill:#555; font-size:11px; }
+      .title { fill:#1a1a2e; font-weight:700; font-size:22px; }
+      .sub { fill:#666; font-size:13px; }
+      .band { fill:#f4f2ff; stroke:#e3ddff; }
+      .health { fill:#F5A623; }
+      .watch { fill:#0e7c86; }
+      .watchLabel { fill:#fff; font-size:12px; font-weight:600; }
+    </style>
+  </defs>
+
+  <rect width="1320" height="1000" fill="#ffffff"/>
+  <text x="40" y="46" class="title">Larder — ciclo de vida no Anchors</text>
+  <text x="40" y="70" class="sub">Atores = modelos de IA operando cada pilar. Cinza = artefato/âncora. Verde = ator. Turquesa = watcher. Laranja = validador de saúde.</text>
+
+  <!-- ===== WATCHER INTELIGENTE (coluna central, atravessa as faixas) ===== -->
+  <rect x="600" y="96" width="150" height="690" rx="10" class="watch" opacity="0.10"/>
+  <rect x="608" y="104" width="134" height="60" rx="10" class="watch"/>
+  <text x="675" y="128" text-anchor="middle" class="watchLabel">WATCHER</text>
+  <text x="675" y="145" text-anchor="middle" class="watchLabel" font-size="10" font-weight="400">sabe o mapa +</text>
+  <text x="675" y="158" text-anchor="middle" class="watchLabel" font-size="10" font-weight="400">inter-relação dos pilares</text>
+  <text x="675" y="182" text-anchor="middle" class="note" font-style="italic">consulta o grafo virtual (bootstrap)</text>
+  <text x="675" y="196" text-anchor="middle" class="note" font-style="italic">e o mapa; despacha o agente certo</text>
+
+  <!-- ===== PILAR 1: ESTRUTURA ===== -->
+  <rect x="30" y="212" width="540" height="80" rx="8" class="band"/>
+  <rect x="44" y="226" width="140" height="52" rx="8" class="pillar"/>
+  <text x="114" y="248" text-anchor="middle" class="pillarLabel">Estrutura</text>
+  <text x="114" y="266" text-anchor="middle" class="pillarLabel" font-size="11" font-weight="400">de Projeto</text>
+  <rect x="200" y="228" width="140" height="48" rx="16" class="agent"/>
+  <text x="270" y="256" text-anchor="middle" class="agentLabel">🤖 Architect-AI</text>
+  <rect x="356" y="230" width="200" height="44" rx="6" class="artifact"/>
+  <text x="456" y="250" text-anchor="middle" class="artifactLabel">camadas + ordem + patterns</text>
+  <text x="456" y="266" text-anchor="middle" class="artifactLabel" font-size="10">= GRAFO VIRTUAL (o esperado)</text>
+
+  <!-- ===== PILAR 2: PLANEJAMENTO ===== -->
+  <rect x="30" y="300" width="540" height="80" rx="8" class="band"/>
+  <rect x="44" y="314" width="140" height="52" rx="8" class="pillar"/>
+  <text x="114" y="336" text-anchor="middle" class="pillarLabel">Planejamento</text>
+  <text x="114" y="354" text-anchor="middle" class="pillarLabel" font-size="11" font-weight="400">a origem</text>
+  <rect x="200" y="316" width="140" height="48" rx="16" class="agent"/>
+  <text x="270" y="344" text-anchor="middle" class="agentLabel">🤖 Planner-AI</text>
+  <rect x="356" y="318" width="200" height="44" rx="6" class="artifact"/>
+  <text x="456" y="338" text-anchor="middle" class="artifactLabel">plan.md — semeia specs</text>
+  <text x="456" y="354" text-anchor="middle" class="artifactLabel" font-size="10">gate: validação de plano (review-IA)</text>
+
+  <!-- ===== PILAR 3: SPEC ===== -->
+  <rect x="30" y="388" width="540" height="80" rx="8" class="band"/>
+  <rect x="44" y="402" width="140" height="52" rx="8" class="pillar"/>
+  <text x="114" y="424" text-anchor="middle" class="pillarLabel">Spec</text>
+  <text x="114" y="442" text-anchor="middle" class="pillarLabel" font-size="11" font-weight="400">a verdade</text>
+  <rect x="200" y="392" width="140" height="30" rx="14" class="agent"/>
+  <text x="270" y="412" text-anchor="middle" class="agentLabel">🤖 Spec-AI</text>
+  <rect x="200" y="428" width="140" height="30" rx="14" class="agent"/>
+  <text x="270" y="448" text-anchor="middle" class="agentLabel">🤖 Feature-AI</text>
+  <rect x="356" y="394" width="200" height="30" rx="6" class="artifact"/>
+  <text x="456" y="414" text-anchor="middle" class="artifactLabel">spec.md (APIT-*) + regime/req.</text>
+  <rect x="356" y="430" width="200" height="30" rx="6" class="artifact"/>
+  <text x="456" y="450" text-anchor="middle" class="artifactLabel">.feature (nasce a identidade)</text>
+
+  <!-- ===== PILAR 4: RASTREABILIDADE ===== -->
+  <rect x="30" y="476" width="540" height="86" rx="8" class="band"/>
+  <rect x="44" y="490" width="140" height="58" rx="8" class="pillar"/>
+  <text x="114" y="513" text-anchor="middle" class="pillarLabel">Rastreabili-</text>
+  <text x="114" y="531" text-anchor="middle" class="pillarLabel">dade</text>
+  <text x="114" y="548" text-anchor="middle" class="pillarLabel" font-size="10" font-weight="400">a cola / o mapa</text>
+  <rect x="200" y="494" width="140" height="50" rx="16" class="agent"/>
+  <text x="270" y="516" text-anchor="middle" class="agentLabel">🤖 (todo agente</text>
+  <text x="270" y="532" text-anchor="middle" class="agentLabel">atualiza o mapa)</text>
+  <rect x="356" y="490" width="200" height="58" rx="6" class="artifact"/>
+  <text x="456" y="511" text-anchor="middle" class="artifactLabel">anchors.graph.yaml = GRAFO</text>
+  <text x="456" y="527" text-anchor="middle" class="artifactLabel" font-size="10">MATERIAL — nós(rev,updated_at)</text>
+  <text x="456" y="541" text-anchor="middle" class="artifactLabel" font-size="10">+ arestas(carimbo) · lei de manutenção</text>
+
+  <!-- ===== PILAR 5: PROPAGAÇÃO ===== -->
+  <rect x="30" y="570" width="540" height="80" rx="8" class="band"/>
+  <rect x="44" y="584" width="140" height="52" rx="8" class="pillar"/>
+  <text x="114" y="606" text-anchor="middle" class="pillarLabel">Propagação</text>
+  <text x="114" y="624" text-anchor="middle" class="pillarLabel" font-size="11" font-weight="400">o motor</text>
+  <rect x="200" y="586" width="140" height="48" rx="16" class="agent"/>
+  <text x="270" y="608" text-anchor="middle" class="agentLabel">🤖 Propagator-AI</text>
+  <text x="270" y="624" text-anchor="middle" class="agentLabel" font-size="10">cria E mapeia</text>
+  <rect x="356" y="588" width="200" height="44" rx="6" class="artifact"/>
+  <text x="456" y="608" text-anchor="middle" class="artifactLabel">caminho de impacto (onda)</text>
+  <text x="456" y="624" text-anchor="middle" class="artifactLabel" font-size="10">local (baixo grau) vs. global (guide)</text>
+
+  <!-- ===== PILAR 6: QUALIDADE ===== -->
+  <rect x="30" y="658" width="540" height="128" rx="8" class="band"/>
+  <rect x="44" y="672" width="140" height="100" rx="8" class="pillar"/>
+  <text x="114" y="720" text-anchor="middle" class="pillarLabel">Qualidade</text>
+  <text x="114" y="738" text-anchor="middle" class="pillarLabel" font-size="11" font-weight="400">a régua</text>
+  <rect x="200" y="666" width="140" height="30" rx="14" class="agent"/>
+  <text x="270" y="686" text-anchor="middle" class="agentLabel">⚙ gates determin.</text>
+  <rect x="200" y="700" width="140" height="30" rx="14" class="agent"/>
+  <text x="270" y="720" text-anchor="middle" class="agentLabel">🤖 Review-AI</text>
+  <rect x="200" y="734" width="140" height="30" rx="14" class="agent"/>
+  <text x="270" y="754" text-anchor="middle" class="agentLabel">🤖 gates de fluxo</text>
+  <rect x="356" y="664" width="200" height="30" rx="6" class="artifact"/>
+  <text x="456" y="684" text-anchor="middle" class="artifactLabel">artefato: lint·test·arch·conformid.</text>
+  <rect x="356" y="698" width="200" height="30" rx="6" class="artifact"/>
+  <text x="456" y="718" text-anchor="middle" class="artifactLabel">fluxo: plano·doc·mapa-fiel</text>
+  <rect x="356" y="732" width="96" height="34" rx="6" class="issue"/>
+  <text x="404" y="752" text-anchor="middle" class="agentLabel">issue</text>
+  <rect x="458" y="732" width="98" height="34" rx="6" fill="#F5A623"/>
+  <text x="507" y="748" text-anchor="middle" class="agentLabel" font-size="11">bloqueio</text>
+  <text x="507" y="761" text-anchor="middle" class="agentLabel" font-size="9">(--no-block)</text>
+
+  <!-- setas do watcher para cada pilar -->
+  <line x1="608" y1="150" x2="358" y2="252" stroke="#0e7c86" stroke-width="1.4" opacity="0.5" marker-end="url(#arrowGray)"/>
+  <line x1="608" y1="150" x2="358" y2="340" stroke="#0e7c86" stroke-width="1.4" opacity="0.5" marker-end="url(#arrowGray)"/>
+  <line x1="608" y1="150" x2="358" y2="424" stroke="#0e7c86" stroke-width="1.4" opacity="0.5" marker-end="url(#arrowGray)"/>
+  <line x1="608" y1="150" x2="360" y2="520" stroke="#0e7c86" stroke-width="1.4" opacity="0.5" marker-end="url(#arrowGray)"/>
+  <line x1="608" y1="150" x2="358" y2="610" stroke="#0e7c86" stroke-width="1.4" opacity="0.5" marker-end="url(#arrowGray)"/>
+  <line x1="608" y1="150" x2="358" y2="700" stroke="#0e7c86" stroke-width="1.4" opacity="0.5" marker-end="url(#arrowGray)"/>
+
+  <!-- cascata descendente entre pilares -->
+  <line x1="114" y1="278" x2="114" y2="314" stroke="#5a45cc" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="114" y1="366" x2="114" y2="402" stroke="#5a45cc" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="114" y1="454" x2="114" y2="490" stroke="#5a45cc" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="114" y1="548" x2="114" y2="584" stroke="#5a45cc" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="114" y1="636" x2="114" y2="672" stroke="#5a45cc" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <!-- DOC terminal -->
+  <rect x="356" y="800" width="200" height="40" rx="6" class="artifact"/>
+  <text x="456" y="820" text-anchor="middle" class="artifactLabel">🤖 Docs-AI → doc (stakeholders)</text>
+  <text x="456" y="834" text-anchor="middle" class="artifactLabel" font-size="10">elo terminal · gate de frescor (review-IA)</text>
+  <line x1="456" y1="766" x2="456" y2="800" stroke="#5a45cc" stroke-width="1.6" marker-end="url(#arrow)"/>
+
+  <!-- CICLO issue -> plano (3 rotas) -->
+  <path d="M 404 766 C 300 830 180 800 180 500 C 180 400 260 366 356 342" fill="none" stroke="#2D9A4E" stroke-width="1.8" stroke-dasharray="7,5" marker-end="url(#arrowCycle)"/>
+  <text x="150" y="640" class="note" font-style="italic" transform="rotate(-90 150 640)">issue → 3 rotas do usuário: resolver · delegar a agente · converter em PLANO</text>
+
+  <!-- ===== VALIDADOR DE SAÚDE (à direita, visão global) ===== -->
+  <rect x="800" y="300" width="480" height="330" rx="10" class="health" opacity="0.08"/>
+  <rect x="820" y="320" width="220" height="60" rx="10" class="health"/>
+  <text x="930" y="345" text-anchor="middle" class="agentLabel" font-size="13">🩺 VALIDADOR DE SAÚDE</text>
+  <text x="930" y="363" text-anchor="middle" class="agentLabel" font-size="10" font-weight="400">= anchors doctor / status</text>
+  <text x="820" y="410" class="note" font-weight="700">meta-gate de visão GLOBAL (sob demanda)</text>
+  <text x="820" y="432" class="note">• laço issue→plano que nunca fechou</text>
+  <text x="820" y="452" class="note">• integridade global do mapa (sem ilhas/ciclos)</text>
+  <text x="820" y="472" class="note">• pilar frouxo (camada sem spec, spec sem gate)</text>
+  <text x="820" y="492" class="note">• gate que deveria existir e não foi declarado</text>
+  <text x="820" y="524" class="note" font-style="italic">apresenta o veredito + abre issues sistêmicas;</text>
+  <text x="820" y="540" class="note" font-style="italic">NÃO bloqueia (detecta e apresenta, não arbitra)</text>
+  <text x="820" y="572" class="note" font-weight="700">= encarnação executável da MATURIDADE</text>
+  <text x="820" y="592" class="note">"os pilares estão íntegros e integrados?</text>
+  <text x="820" y="608" class="note">o projeto está maduro?"</text>
+  <!-- seta do validador varrendo os pilares -->
+  <path d="M 820 400 C 640 440 600 480 572 520" fill="none" stroke="#c07a00" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrowGray)"/>
+  <text x="620" y="466" class="note" font-size="10" fill="#c07a00">varre o estado de todos os pilares</text>
+
+  <!-- ===== OPT-OUT HONESTO (nota) ===== -->
+  <rect x="800" y="658" width="480" height="86" rx="8" fill="#f7f7f7" stroke="#ddd"/>
+  <text x="820" y="682" class="note" font-weight="700">Opt-out honesto (dispensa explícita, registrada, datada)</text>
+  <text x="820" y="702" class="note">@no-test (dispensa teste) · --no-block (dispensa bloqueio) · maturação (dispensa rigor)</text>
+  <text x="820" y="722" class="note">dispensa a exigência, NUNCA o registro. Decisão do usuário — o framework não cobra.</text>
+  <text x="820" y="738" class="note" font-style="italic">a porta legítima de sair da cobertura (o oposto do buraco silencioso)</text>
+
+  <!-- legenda -->
+  <rect x="40" y="864" width="16" height="16" rx="3" class="pillar"/>
+  <text x="62" y="877" class="note">pilar</text>
+  <rect x="120" y="864" width="16" height="16" rx="16" class="agent"/>
+  <text x="142" y="877" class="note">ator (modelo de IA)</text>
+  <rect x="270" y="864" width="16" height="16" rx="3" class="watch"/>
+  <text x="292" y="877" class="note">watcher</text>
+  <rect x="360" y="864" width="16" height="16" rx="3" class="artifact"/>
+  <text x="382" y="877" class="note">artefato / âncora</text>
+  <rect x="490" y="864" width="16" height="16" rx="3" class="health"/>
+  <text x="512" y="877" class="note">validador de saúde</text>
+  <rect x="640" y="864" width="16" height="16" rx="3" class="issue"/>
+  <text x="662" y="877" class="note">issue</text>
+
+  <text x="40" y="915" class="sub">Cascata: watcher despacha o agente certo → cada agente cria artefatos E atualiza o mapa → doc é o elo terminal. Issue tem 3 rotas (uma delas: virar plano → ciclo).</text>
+  <text x="40" y="938" class="sub">Gates: de artefato (validam âncora) + de fluxo (validam passo). Pontas locais → gates; pontas sistêmicas → validador de saúde. Detalhe em fluxos.md e cobertura.md.</text>
+</svg>
