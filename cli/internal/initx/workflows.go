@@ -58,13 +58,37 @@ var WorkflowsDoFluxo = []Workflow{
 // DirWorkflows é onde os pipelines moram no projeto.
 const DirWorkflows = ".github/workflows"
 
-// ColunasDoBoard são os valores do campo `Status` do GitHub Project, na ordem do fluxo.
-// O estado do trabalho é a COLUNA — não uma label (ver BOOTSTRAP.md §7.13): estado em
-// dois lugares dessincroniza, e um board que mente sobre onde o trabalho está vira
-// trabalho duplicado, porque é olhando o board que os agentes escolhem o que pegar.
+// EstadosDoTrabalho são as LABELS que carregam o estado de um card, na ordem do fluxo.
 //
-// O par `READY TO X` / `IN X` é o que torna a fila legível: um diz "disponível para
+// O estado é uma LABEL, e não a coluna do Project (ver BOOTSTRAP.md §7.13). A escolha
+// anterior foi a coluna, e ela cobrava um preço que só apareceu no uso: escrever num
+// Project de organização exige um PAT com escopo `project`, que o `GITHUB_TOKEN` da
+// Action não tem — então todo projeto que adotasse o fluxo precisaria criar e manter um
+// token pessoal antes de o primeiro card se mover. Atrito de adoção por uma decisão de
+// visualização.
+//
+// Com label, o `GITHUB_TOKEN` basta e nada precisa ser configurado. E o board não some:
+// o GitHub Projects tem automação nativa que move o card quando a label muda — a
+// sincronia acontece do lado deles, e só UM lado escreve (nós na label, eles no board),
+// que era a preocupação original de ter estado em dois lugares.
+//
+// O par `ready-to-x` / `in-x` é o que torna a fila legível: um diz "disponível para
 // alguém pegar", o outro "alguém está fazendo".
+var EstadosDoTrabalho = []string{
+	"anchors:to-do",
+	"anchors:in-progress",
+	"anchors:ready-to-review",
+	"anchors:in-review",
+	"anchors:ready-to-test",
+	"anchors:in-test",
+	"anchors:ready-to-release",
+	"anchors:production",
+}
+
+// ColunasDoBoard são os nomes das colunas do Project que ESPELHAM os estados acima.
+// O board é opcional: quem o quiser cria as colunas com estes nomes e liga a automação
+// nativa do Projects (label adicionada → move para a coluna). Quem não quiser trabalha
+// só com issues, e o fluxo funciona igual.
 var ColunasDoBoard = []string{
 	"TO DO",
 	"IN PROGRESS",
@@ -89,6 +113,18 @@ var ColunasDoBoard = []string{
 var ColunasDisponiveis = []string{
 	"READY TO REVIEW",
 	"TO DO",
+}
+
+// EstadoFinalDoAnchors é o último estado que o Anchors ESCREVE.
+const EstadoFinalDoAnchors = "anchors:ready-to-test"
+
+// EstadosDisponiveis são os estados de onde um agente TIRA trabalho, em ORDEM DE
+// PRIORIDADE: da direita para a esquerda do fluxo. O trabalho mais ADIANTADO vem
+// primeiro — terminar o que está quase pronto antes de começar coisa nova é o que impede
+// o board de encher de trabalho pela metade.
+var EstadosDisponiveis = []string{
+	"anchors:ready-to-review",
+	"anchors:to-do",
 }
 
 // ColunaFinalDoAnchors é a última coluna que o Anchors ESCREVE. Da seguinte em diante

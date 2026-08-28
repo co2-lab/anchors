@@ -39,7 +39,6 @@ concurrency:
 permissions:
   contents: read
   issues: write
-  repository-projects: write
 
 jobs:
   identificar:
@@ -112,10 +111,8 @@ jobs:
 
       - name: Criar card para cada artefato sem card
         env:
-          GH_TOKEN: ${{ secrets.ANCHORS_PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LABEL: anchors
-          PROJECT: ${{ vars.ANCHORS_PROJECT_NUMBER }}
-          OWNER: ${{ github.repository_owner }}
           # O ponto de partida do diff. Num push normal é o commit anterior; no primeiro
           # push de um branch o GitHub manda zeros, e aí o fallback (`git show`) olha só o
           # commit atual.
@@ -162,12 +159,8 @@ jobs:
             url=$(gh issue create \
               --title "[$code] Implementar $onde" \
               --label "$LABEL" \
+              --label "anchors:to-do" \
               --body "$(printf 'Unidade: `%s`\nCódigo: `%s`\n\nCard criado pelo pipeline de identificação do Anchors: o artefato existe no repositório e não havia issue para ele.\n\nAntes de começar, rode `anchors status` para ver onde o projeto está, e o `anchors guide` do artefato que você vai escrever.\n\n**Prioridade do board: da DIREITA para a ESQUERDA.** Termine o que está mais adiantado antes de pegar coisa nova — trabalho pela metade não entrega nada e envelhece até o contexto se perder.' "$onde" "$code")")
-
-            # A issue precisa ENTRAR no board: o estado é a coluna (BOOTSTRAP.md §7.13),
-            # e um card fora do Project é invisível para o pipeline de claim — ficaria
-            # aberto para sempre sem ninguém pegar. Nasce em `TODO`, o default do campo.
-            gh project item-add "$PROJECT" --owner "$OWNER" --url "$url"
 
             echo "criado: [$code] $onde → $url"
           done

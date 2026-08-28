@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -136,12 +137,52 @@ func repararAmbiente(root string, cfg *config.Config) error {
 		}
 		fmt.Println("  revise, commite e configure `vars.ANCHORS_PROJECT_NUMBER` no repositório.")
 	}
-	// O que o --fix NÃO faz precisa aparecer aqui, junto do que ele fez: um usuário que
-	// vê "✓ pronto" e não lê o resto conclui que o ambiente está completo.
-	fmt.Println("\n  o BOARD não é criado pelo --fix (é estrutura compartilhada do time).")
-	fmt.Printf("  crie um GitHub Project com o campo `Status` contendo, nesta ordem:\n    %s\n",
-		strings.Join(initx.ColunasDoBoard, " · "))
-	fmt.Printf("  o Anchors move até `%s`; as seguintes são dos pipelines de entrega do projeto.\n",
-		initx.ColunaFinalDoAnchors)
+	// As LABELS de estado são o único pré-requisito real do fluxo — e criá-las é seguro:
+	// label é do repositório, reversível, e não afeta ninguém fora dele.
+	if err := criaLabelsDeEstado(cfg); err != nil {
+		fmt.Printf("⚠  não deu para criar as labels de estado: %v\n", err)
+	}
+
+	// O BOARD é OPCIONAL: o estado vive na label, e o Project só espelha. Dizê-lo aqui
+	// evita que alguém conclua que falta configurar algo.
+	fmt.Println("\n  o board é OPCIONAL — o estado do trabalho vive nas labels acima.")
+	fmt.Println("  para ter um: crie um GitHub Project com estas colunas e ligue a automação")
+	fmt.Println("  nativa do Projects (label adicionada → move para a coluna):")
+	fmt.Printf("    %s\n", strings.Join(initx.ColunasDoBoard, " · "))
+	fmt.Printf("  o Anchors escreve até `%s`; as seguintes são dos pipelines de entrega.\n",
+		initx.EstadoFinalDoAnchors)
+	return nil
+}
+
+// criaLabelsDeEstado garante as labels que carregam o estado do trabalho. São o único
+// pré-requisito do fluxo que não é arquivo — e sem elas o `identify` cria cards que o
+// `claim` nunca encontra.
+func criaLabelsDeEstado(cfg *config.Config) error {
+	if _, err := exec.LookPath("gh"); err != nil {
+		return fmt.Errorf("o `gh` não está no PATH")
+	}
+	repo := cfg.Workflow.Repo
+	// Cores por família: a fila em cinza, o trabalho em curso em azul, o que saiu da
+	// alçada do Anchors em verde.
+	cor := map[string]string{
+		"anchors:to-do": "ededed", "anchors:ready-to-review": "ededed",
+		"anchors:in-progress": "1d76db", "anchors:in-review": "1d76db",
+		"anchors:ready-to-test": "0e8a16", "anchors:in-test": "0e8a16",
+		"anchors:ready-to-release": "0e8a16", "anchors:production": "0e8a16",
+	}
+	var criadas int
+	for _, e := range append([]string{cfg.Workflow.Labels[0]}, initx.EstadosDoTrabalho...) {
+		c := cor[e]
+		if c == "" {
+			c = "5319e7" // a label do próprio Anchors
+		}
+		out, err := exec.Command("gh", "label", "create", e,
+			"--repo", repo, "--color", c, "--force").CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("%s: %s", e, strings.TrimSpace(string(out)))
+		}
+		criadas++
+	}
+	fmt.Printf("✓ %d label(s) de estado garantidas em %s\n", criadas, repo)
 	return nil
 }

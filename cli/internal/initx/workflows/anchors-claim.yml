@@ -28,13 +28,11 @@ concurrency:
   group: anchors-claim
   cancel-in-progress: false
 
+# Só o que o GITHUB_TOKEN da própria Action já dá. Nada a configurar: o estado do
+# trabalho é uma LABEL, e escrever label é permissão nativa de `issues: write`.
 permissions:
   contents: read
   issues: write
-  # O estado do trabalho é a COLUNA do Project, não uma label — então este workflow
-  # precisa escrever no board. Num Project de organização, o GITHUB_TOKEN não basta:
-  # use um PAT com escopo `project` em `secrets.ANCHORS_PROJECT_TOKEN`.
-  repository-projects: write
 
 jobs:
   atribuir:
@@ -42,12 +40,12 @@ jobs:
     steps:
       - name: Escolher um card livre e atribuí-lo
         env:
-          GH_TOKEN: ${{ secrets.ANCHORS_PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Sem `actions/checkout` (não precisamos do código), o `gh` não descobre o
+          # repositório pelo git local — `GH_REPO` é o que o diz.
+          GH_REPO: ${{ github.repository }}
           AGENT: ${{ inputs.agent }}
           LABEL: anchors
-          # O número do Project no owner (github.com/orgs/<owner>/projects/<N>).
-          PROJECT: ${{ vars.ANCHORS_PROJECT_NUMBER }}
-          OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
 
@@ -62,35 +60,18 @@ jobs:
             exit 0
           fi
 
-          # Os candidatos vêm das colunas `READY TO ...` do board — o estado é a coluna
-          # (BOOTSTRAP.md §7.13). O par `READY TO X` / `IN X` é o que torna a fila
-          # legível: `READY TO` é trabalho disponível, `IN` é alguém fazendo.
-          #
-          # A PRIORIDADE É DA DIREITA PARA A ESQUERDA DO BOARD: o trabalho mais adiantado
-          # vem primeiro. Terminar o que está quase pronto antes de começar coisa nova é o
-          # que impede o board de encher de trabalho pela metade — e trabalho pela metade
-          # não entrega nada, ocupa revisor, e envelhece até o contexto de quem o escreveu
-          # se perder. Daí `READY TO REVIEW` antes de `TO DO`.
-          gh project item-list "$PROJECT" --owner "$OWNER" --limit 500 --format json \
-            > /tmp/board.json
+          # Os candidatos vêm das LABELS de estado — o board não é consultado, e nem
+          # precisa existir. A PRIORIDADE É DA DIREITA PARA A ESQUERDA DO FLUXO: o
+          # trabalho mais adiantado vem primeiro. Terminar o que está quase pronto antes
+          # de começar coisa nova é o que impede o board de encher de trabalho pela
+          # metade — e trabalho pela metade não entrega nada, ocupa revisor, e envelhece
+          # até o contexto de quem o escreveu se perder.
+          : > /tmp/disponiveis.txt
+          for estado in "anchors:ready-to-review" "anchors:to-do"; do
+            gh issue list --state open --label "$LABEL" --label "$estado" \
+              --limit 200 --json number --jq '.[].number' >> /tmp/disponiveis.txt
+          done
 
-          # O board é COMPARTILHADO: ele carrega issues de produto, de infraestrutura, do
-          # que o time quiser. Só os cards do Anchors podem ser tocados por este fluxo —
-          # sem este filtro, um agente comentaria `anchors-owner` numa issue de produto e
-          # a moveria para `IN PROGRESS`, sequestrando trabalho que não é dele.
-          #
-          # A label do `workflow.labels` é o que marca a posse do fluxo (WORKFLOW.md §2).
-          gh issue list --state open --label "$LABEL" --limit 500 --json number \
-            --jq '.[].number' | sort -u > /tmp/sao-do-anchors.txt
-
-          jq -r '[.items[] | select(.status == "READY TO REVIEW") | .content.number] | .[]' \
-            /tmp/board.json | grep -xFf /tmp/sao-do-anchors.txt > /tmp/disponiveis.txt || true
-          jq -r '[.items[] | select(.status == "TO DO") | .content.number] | .[]' \
-            /tmp/board.json | grep -xFf /tmp/sao-do-anchors.txt >> /tmp/disponiveis.txt || true
-
-          # Entre os da coluna, o LIVRE é o que ninguém tem: nunca teve `anchors-owner`,
-          # ou o último o liberou. Ordem de criação — o mais antigo primeiro, para que
-          # nada envelheça no fundo da fila.
           # Entre os disponíveis, o LIVRE é o que ninguém tem: nunca teve `anchors-owner`,
           # ou o último o liberou. A ordem de /tmp/disponiveis.txt é a prioridade (review
           # antes de implementação).
@@ -99,8 +80,12 @@ jobs:
             [ -n "$n" ] || continue
             dono=$(gh issue view "$n" --json comments \
               --jq '[.comments[].body | select(startswith("anchors-owner:"))] | last // ""')
+            # O coringa no FIM é necessário: o pipeline de stale escreve o motivo depois
+            # do marcador (`anchors-owner: (liberado) — sem progresso desde …`), e sem ele
+            # o padrão exigiria que a linha TERMINASSE em "(liberado)" — nenhum card
+            # liberado voltaria à fila, e o board travaria em silêncio.
             case "$dono" in
-              ""|*"(liberado)") livre="$n"; break ;;
+              ""|*"(liberado)"*) livre="$n"; break ;;
             esac
           done < /tmp/disponiveis.txt
 
@@ -112,31 +97,19 @@ jobs:
           # A atribuição. O comentário é a posse; o assignee fica para a pessoa, no uso
           # normal do GitHub.
           gh issue comment "$livre" --body "anchors-owner: $AGENT"
-
-          # A COLUNA é o estado (ver BOOTSTRAP.md §7.13). O item do Project e o campo
-          # `Status` são achados pelo número da issue; mover é setar o valor do campo.
-          item=$(gh project item-list "$PROJECT" --owner "$OWNER" --format json \
-            --jq ".items[] | select(.content.number == $livre) | .id")
-          if [ -z "$item" ]; then
-            echo "::error::a issue #$livre não está no Project $PROJECT — o board é a fonte do estado."
-            exit 1
+          # Cada `ready-to-x` tem seu `in-x`: quem sai de `to-do` vai implementar, quem
+          # sai de `ready-to-review` vai revisar. Mover para o estado errado faria o
+          # board descrever um trabalho que não é o que está acontecendo.
+          # `--jq index(...)` devolve VAZIO quando não acha (o gh engole o `null`), e
+          # testar vazio com grep se comporta de forma imprevisível — foi assim que um
+          # card em `to-do` foi movido para `in-review` na primeira execução real.
+          # Listar as labels e procurar a linha exata não tem essa ambiguidade.
+          if gh issue view "$livre" --json labels --jq '.labels[].name' \
+               | grep -qx "anchors:ready-to-review"; then
+            de="anchors:ready-to-review"; para="anchors:in-review"
+          else
+            de="anchors:to-do"; para="anchors:in-progress"
           fi
-          # Cada `READY TO X` tem seu `IN X`: quem sai de `TO DO` vai implementar, quem
-          # sai de `READY TO REVIEW` vai revisar. Mover para a coluna errada faria o board
-          # descrever um trabalho que não é o que está acontecendo.
-          origem=$(jq -r --argjson n "$livre" \
-            '.items[] | select(.content.number == $n) | .status' /tmp/board.json)
-          case "$origem" in
-            "READY TO REVIEW") destino="IN REVIEW" ;;
-            *)                 destino="IN PROGRESS" ;;
-          esac
+          gh issue edit "$livre" --remove-label "$de" --add-label "$para"
 
-          campo=$(gh project field-list "$PROJECT" --owner "$OWNER" --format json \
-            --jq '.fields[] | select(.name == "Status")')
-          gh project item-edit \
-            --id "$item" \
-            --project-id "$(gh project view "$PROJECT" --owner "$OWNER" --format json --jq .id)" \
-            --field-id "$(echo "$campo" | jq -r .id)" \
-            --single-select-option-id "$(echo "$campo" | jq -r --arg d "$destino" '.options[] | select(.name == $d) | .id')"
-
-          echo "card #$livre atribuído a $AGENT: $origem → $destino"
+          echo "card #$livre atribuído a $AGENT: $de → $para"

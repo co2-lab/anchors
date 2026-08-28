@@ -328,28 +328,28 @@ sequenceDiagram
     Note over P: concurrency: uma instância por vez.<br/>Sem corrida, porque sem concorrência.
     P->>GH: há card livre?
     GH-->>P: [XXXXX-001] Implementar o plano
-    P->>GH: comenta `anchors-owner: máquina/sessão`<br/>+ move para `doing`
+    P->>GH: comenta `anchors-owner: máquina/sessão`<br/>+ label `in-progress`
     DEV->>GH: qual card é meu?
     GH-->>DEV: [XXXXX-001]
 
     DEV->>A: anchors guide spec / new spec
     DEV->>R: escreve as specs + PR
-    DEV->>GH: move o card para `READY TO REVIEW`
+    DEV->>GH: move o card para `ready-to-review`
 
     participant REV as 🤖 Agente revisor
-    REV->>P: pede trabalho (o claim atende<br/>`TO DO` e `READY TO REVIEW`)
+    REV->>P: pede trabalho (o claim atende<br/>`to-do` e `ready-to-review`)
     P->>GH: move para `IN REVIEW`
     REV->>R: revisa o PR
 
     alt aprovado sem defeito
-        REV->>GH: card → READY TO TEST
+        REV->>GH: card → `ready-to-test`
     else aprovado com defeito
-        REV->>GH: card → READY TO TEST + abre card do defeito
+        REV->>GH: card → `ready-to-test` + abre card do defeito
     else rejeitado
-        REV->>GH: card → TO DO, dono = o original<br/>(reaproveita o contexto da sessão)
+        REV->>GH: card → `to-do`, dono = o original<br/>(reaproveita o contexto da sessão)
     end
 
-    Note over GH: daqui em diante (IN TEST, READY TO RELEASE,<br/>PRODUCTION) quem move são os pipelines do projeto —<br/>o Anchors lê, não escreve
+    Note over GH: daqui em diante (`in-test`, `ready-to-release`,<br/>`production`) quem move são os pipelines do projeto —<br/>o Anchors lê, não escreve
 
     Note over R,P: mesmo padrão, um nível abaixo
 
@@ -512,95 +512,88 @@ O `status` mostra o que o modo em vigor tem para mostrar: no `github`, os cards 
 no `local`, a fila em `.anchors/tasks/` e as issues em `issues/todo|doing|done`. É a mesma
 pergunta — *onde o projeto está?* — respondida com a fonte que aquele modo declara.
 
-### 7.13 A estrutura do GitHub Project
+### 7.13 O estado do trabalho é uma LABEL
 
-**O estado do trabalho é a COLUNA do Project** — não uma label. É a decisão que define o
-resto: quem quiser saber onde um trabalho está lê o campo `Status` do item no board, e é
-esse campo que os pipelines escrevem.
+**O estado de um card vive numa label**, e o GitHub Project é um espelho **opcional**.
 
-Não é a escolha mais barata (exige escopo `project` em cada dev e no CI, e a API é
-GraphQL, bem mais verbosa que `gh issue edit --add-label`), mas é a única em que o estado
-mora num lugar só. Espelhar labels para colunas duplicaria o estado, e uma dessincronia
-faria o board mentir sobre onde o trabalho está — num fluxo em que agentes decidem o que
-pegar olhando o board, essa mentira vira trabalho duplicado.
+> **Esta decisão foi invertida no uso.** A primeira versão pôs o estado na COLUNA do
+> Project, com o argumento de que estado em dois lugares dessincroniza. O argumento
+> continua válido — mas o custo só apareceu quando o fluxo rodou pela primeira vez:
+> escrever num Project de organização exige um PAT com escopo `project`, que o
+> `GITHUB_TOKEN` da Action **não tem**. Todo projeto que adotasse o fluxo precisaria criar
+> e manter um token pessoal antes de o primeiro card se mover — atrito de adoção cobrado
+> por uma decisão de visualização.
+>
+> Com label, o `GITHUB_TOKEN` basta e não há nada a configurar. E o board não some: a
+> automação nativa do Projects move o card quando a label muda. A preocupação original
+> some junto, porque **só um lado escreve** — nós na label, o GitHub no board.
 
-#### As colunas (campo `Status`)
+#### Os estados (labels `anchors:*`)
 
-Oito colunas, e elas seguem um par: **`READY TO X`** é trabalho disponível para alguém
-pegar; **`IN X`** é alguém fazendo. É esse par que torna a fila legível — o pipeline de
-claim procura nas colunas `READY TO`, e nunca precisa adivinhar se um card em andamento
-está parado ou ativo.
+Oito, e seguem um par: **`ready-to-x`** é trabalho disponível para alguém pegar; **`in-x`**
+é alguém fazendo. É esse par que torna a fila legível — o claim procura nos `ready-to`, e
+nunca precisa adivinhar se um card em andamento está parado ou ativo.
 
-| coluna | significa | quem move para cá |
+| label | significa | quem move para cá |
 | --- | --- | --- |
-| `TO DO` | implementação disponível, sem dono | identificação (ao criar) · revisor (ao rejeitar) · stale (ao liberar) |
-| `IN PROGRESS` | um agente está implementando | o pipeline de claim |
-| `READY TO REVIEW` | PR aberto, esperando revisor | o agente que implementou |
-| `IN REVIEW` | um agente está revisando | o pipeline de claim |
-| **`READY TO TEST`** | **aceito no review — o fim da alçada do Anchors** | o agente revisor, ao aprovar |
-| `IN TEST` | em teste | *pipeline do usuário* |
-| `READY TO RELEASE` | teste passou | *pipeline do usuário* |
-| `PRODUCTION` | no ar | *pipeline do usuário* |
+| `anchors:to-do` | implementação disponível, sem dono | identificação (ao criar) · revisor (ao rejeitar) · stale (ao liberar) |
+| `anchors:in-progress` | um agente está implementando | o pipeline de claim |
+| `anchors:ready-to-review` | PR aberto, esperando revisor | o agente que implementou |
+| `anchors:in-review` | um agente está revisando | o pipeline de claim |
+| **`anchors:ready-to-test`** | **aceito no review — o fim da alçada do Anchors** | o agente revisor, ao aprovar |
+| `anchors:in-test` | em teste | *pipeline do usuário* |
+| `anchors:ready-to-release` | teste passou | *pipeline do usuário* |
+| `anchors:production` | no ar | *pipeline do usuário* |
 
-**O Anchors move até `READY TO TEST`, e para.** As três últimas colunas pertencem ao
-pipeline de entrega do projeto — cada time tem o seu, e o Anchors não tem o que dizer
-sobre quando um teste de aceitação passou ou quando um deploy aconteceu. Ele continua
-LENDO essas colunas (o `anchors status` mostra onde cada trabalho está), mas não escreve
-nelas.
+**O Anchors escreve até `ready-to-test`, e para.** Os três últimos pertencem ao pipeline
+de entrega do projeto — cada time tem o seu, e o Anchors não tem o que dizer sobre quando
+um teste de aceitação passou ou um deploy aconteceu. Ele continua LENDO esses estados (o
+`anchors status` mostra onde cada trabalho está), mas não escreve neles.
 
-O caminho é de mão única, com uma exceção: **`IN REVIEW` volta para `TO DO`** quando o
+O caminho é de mão única, com uma exceção: **`in-review` volta para `to-do`** quando o
 revisor rejeita — e volta com o dono original registrado, para reaproveitar o contexto da
 sessão que escreveu aquele código (§7.9).
 
-#### Os campos
+#### O board, se você quiser um
 
-| campo | tipo | para que serve |
-| --- | --- | --- |
-| `Status` | single-select | a coluna; os oito valores acima |
-| `Anchors Code` | text | o código do artefato (`XXXXX-001`), espelhando o título — permite filtrar e cruzar sem parsear o título |
+Crie um GitHub Project com uma coluna por estado (`TO DO`, `IN PROGRESS`, `READY TO
+REVIEW`, `IN REVIEW`, `READY TO TEST`, `IN TEST`, `READY TO RELEASE`, `PRODUCTION`) e
+ligue a automação nativa: *label adicionada → move para a coluna*. Uma vez, pela UI.
 
-O **dono-agente NÃO é um campo do Project**: vive num comentário `anchors-owner:
-<maquina>/<sessao>` (§7.6). O motivo é o histórico — um campo guarda só o valor atual, e
-saber quem passou pelo card, quando, e se foi liberado por inatividade ou por decisão é o
-que permite auditar o fluxo. O `assignee` nativo continua sendo da **pessoa**.
+Nenhum pipeline toca o Project — e há teste que impede a volta: um `gh project` num
+workflow reintroduz o PAT e o atrito.
 
-#### A label: o que separa os cards do Anchors dos demais
+#### O que NÃO é label
 
-Com o estado nas colunas, a label fica com um papel só — e ele é essencial: **dizer que
-este card é do Anchors**.
+O **dono-agente** vive num comentário `anchors-owner: <maquina>/<sessao>` (§7.6), não numa
+label, porque o histórico importa: quem passou pelo card, quando, e se saiu por decisão ou
+por inatividade. Label guarda só o valor atual.
 
-**O board é compartilhado.** Ele carrega issues de produto, de infraestrutura, do que o
-time quiser pôr ali. Um agente do Anchors que lesse a coluna `TO DO` sem filtrar pegaria
-uma issue de produto, comentaria `anchors-owner` nela e a moveria para `IN PROGRESS` —
-sequestrando trabalho que não é dele, e de um jeito que o dono real não tem como perceber:
-ninguém procura um campo do Anchors numa issue que não é do Anchors.
+O **`assignee` nativo** continua sendo da pessoa, no uso normal do GitHub.
 
-Então **todo pipeline que escreve em cards filtra pela label** do `workflow.labels`
-(`WORKFLOW.md` §2). O caso mais exposto é o `claim`: ele lê o BOARD (que é de todos), e
-não a lista de issues do Anchors — a interseção com a label é o que o mantém no seu
-quintal.
+#### A label que separa os cards do Anchors dos demais
 
-| pipeline | o que a label protege |
-| --- | --- |
-| `identify` | cria os cards já com a label — é o que os torna reconhecíveis depois |
-| `claim` | cruza o board com a lista de issues do Anchors antes de escolher |
-| `stale` | só libera cards do Anchors: outro fluxo não registra dono por `anchors-owner` |
+O repositório é compartilhado: ele carrega issues de produto, de infraestrutura, do que o
+time quiser. Um agente que lesse só o estado pegaria uma issue de produto que alguém
+tivesse rotulado igual.
+
+Por isso **todo pipeline cruza DUAS labels**: a do `workflow.labels` (o quintal do
+Anchors) e a do estado (a fila). Uma sem a outra não basta.
 
 #### O que o `doctor` confere
 
 | peça | como | escopo |
 | --- | --- | --- |
-| o Project existe e está linkado ao repo | `gh project list` | `read:project` |
-| campo `Status` com os 8 valores exatos | GraphQL `ProjectV2SingleSelectField` | `read:project` |
-| campo `Anchors Code` | GraphQL `ProjectV2Field` | `read:project` |
-| labels do `workflow.labels` | `gh label list` | `repo` |
 | os 3 workflows em `.github/workflows/` | ler o disco | nenhum |
 | `concurrency` sem cancelamento nos 3 | ler o YAML | nenhum |
+| as labels de estado | `anchors doctor --fix` as cria | `repo` |
+
+O board **não** é conferido: é opcional, e cobrar uma peça que o fluxo não usa produziria
+um achado que ninguém precisa resolver.
 
 ### 7.14 O ambiente precisa estar configurado — e alguém tem de garantir isso
 
-Todo o fluxo da §7 pressupõe um GitHub Project com as colunas certas e os pipelines no
-lugar. Se qualquer peça faltar, o fluxo não falha ruidosamente: **ele simplesmente não
+Todo o fluxo da §7 pressupõe os três pipelines no lugar e as labels de estado criadas. Se qualquer peça faltar, o fluxo não falha ruidosamente: **ele simplesmente não
 acontece**. Um pipeline de identificação ausente não gera erro — gera silêncio, e os
 artefatos ficam sem card para sempre. É a mesma classe de problema que a falta de git, e
 merece o mesmo tratamento: `init` e `doctor` avisam com antecedência.
@@ -613,23 +606,11 @@ que falta. É o precedente do `check --fix`, que já existe no projeto.
 
 O que ele pode criar sozinho, e o que não pode:
 
-- **Cria**: os workflows (são arquivos do repo, versionados e revisáveis num diff) e as
-  labels (triviais e reversíveis).
-- **Não cria sem confirmação**: o Project e suas colunas — é estrutura compartilhada pelo
-  time, e um board criado por engano polui a organização inteira.
+**Cria** os workflows (arquivos do repo, versionados e revisáveis num diff) e as labels
+de estado (triviais e reversíveis, e o único pré-requisito do fluxo que não é arquivo).
 
-**Quando falta o escopo `project` no token**, o `doctor` verifica o que dá (workflows,
-labels) e **diz que não conseguiu conferir o resto**:
-
-```
-⚠ project-nao-verificado — não deu para conferir o Project: falta o escopo `read:project`
-  no token. Rode `gh auth refresh -s read:project`. O board pode estar correto ou não —
-  isto não é um "está tudo certo".
-```
-
-A régua é a mesma do `gitmeta` (§ do `DirtyCount`): **não afirmar o que não se verificou**.
-Um doctor que cala sobre o board por falta de escopo é lido como "board OK", e é o pior
-tipo de silêncio.
+**Não toca o board** — ele é opcional (§7.13), e a automação que o mantém em dia é
+configurada uma vez pela UI do Projects.
 
 ### 7.15 Os dois fluxos: convergir aos poucos
 

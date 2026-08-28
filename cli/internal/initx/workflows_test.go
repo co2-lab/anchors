@@ -157,32 +157,41 @@ func TestTodoPipelineAceitaExecucaoManual(t *testing.T) {
 	}
 }
 
-// A decisão da §7.13: o estado do trabalho é a COLUNA do Project, não uma label. Uma
-// label de estado em paralelo duplicaria a verdade, e a dessincronia faria o board mentir
-// sobre onde o trabalho está — num fluxo em que agentes escolhem o que pegar olhando o
-// board, essa mentira vira trabalho duplicado.
-func TestEstadoVivenoBoardNaoEmLabel(t *testing.T) {
+// O estado do trabalho é uma LABEL, e nenhum pipeline toca o Project.
+//
+// A decisão anterior era a coluna do board, e ela cobrava um preço que só apareceu no
+// uso: escrever num Project de organização exige um PAT com escopo `project` — que o
+// GITHUB_TOKEN da Action não tem —, então todo projeto que adotasse o fluxo precisaria
+// criar e manter um token pessoal antes de o primeiro card se mover.
+//
+// Este teste é o que impede a volta: um `gh project` num pipeline reintroduz o atrito.
+func TestEstadoVivenaLabelSemTocarOBoard(t *testing.T) {
 	for _, w := range WorkflowsDoFluxo {
 		b, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {
 			t.Fatalf("%s: %v", w.Arquivo, err)
 		}
 		texto := string(b)
-		for _, proibido := range []string{`--add-label "doing"`, `--remove-label "doing"`} {
-			if strings.Contains(texto, proibido) {
-				t.Errorf("%s usa %s — o estado é a coluna do Project, não uma label", w.Arquivo, proibido)
-			}
+		if strings.Contains(texto, "gh project ") {
+			t.Errorf("%s escreve no Project — isso exige PAT e vira atrito de adoção", w.Arquivo)
+		}
+		if strings.Contains(texto, "ANCHORS_PROJECT_TOKEN") {
+			t.Errorf("%s ainda pede token de Project", w.Arquivo)
+		}
+		if strings.Contains(texto, "repository-projects: write") {
+			t.Errorf("%s pede permissão de Project que não usa mais", w.Arquivo)
 		}
 	}
-	// E o card criado tem de ENTRAR no board: fora dele, o claim nunca o encontra.
+
+	// O card nasce COM o estado inicial: sem label, ele não aparece para o claim.
 	b, _ := fs.ReadFile(workflowsFS, "workflows/anchors-identify.yml")
-	if !strings.Contains(string(b), "gh project item-add") {
-		t.Error("a issue criada precisa entrar no Project — fora do board ela é invisível ao claim")
+	if !strings.Contains(string(b), `--label "anchors:to-do"`) {
+		t.Error("a issue criada precisa nascer com o estado inicial")
 	}
-	// E o claim tem de escolher das colunas `READY TO ...`.
+	// E o claim escolhe pelas labels de estado.
 	b, _ = fs.ReadFile(workflowsFS, "workflows/anchors-claim.yml")
-	if !strings.Contains(string(b), `select(.status == "TO DO")`) {
-		t.Error("o claim tem de tirar candidatos da coluna `TO DO`")
+	if !strings.Contains(string(b), "anchors:ready-to-review") {
+		t.Error("o claim tem de tirar candidatos das labels de estado")
 	}
 }
 
@@ -191,7 +200,7 @@ func TestEstadoVivenoBoardNaoEmLabel(t *testing.T) {
 // a opção, o card não se move, e o trabalho some do fluxo em silêncio.
 func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 	valida := map[string]bool{}
-	for _, c := range ColunasDoBoard {
+	for _, c := range EstadosDoTrabalho {
 		valida[c] = true
 	}
 	for _, w := range WorkflowsDoFluxo {
@@ -199,11 +208,9 @@ func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s: %v", w.Arquivo, err)
 		}
-		for _, m := range regexp.MustCompile(`\.status == "([^"]+)"|select\(\.name == \$?d?\)|"(TO DO|IN PROGRESS|READY TO [A-Z]+|IN REVIEW|IN TEST|PRODUCTION)"`).FindAllStringSubmatch(string(b), -1) {
-			for _, g := range m[1:] {
-				if g != "" && !valida[g] {
-					t.Errorf("%s usa a coluna %q, que não está em ColunasDoBoard", w.Arquivo, g)
-				}
+		for _, m := range regexp.MustCompile(`"(anchors:[a-z-]+)"`).FindAllStringSubmatch(string(b), -1) {
+			if !valida[m[1]] {
+				t.Errorf("%s usa o estado %q, que não está em EstadosDoTrabalho", w.Arquivo, m[1])
 			}
 		}
 	}
@@ -213,23 +220,22 @@ func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 // de entrega do projeto. Um pipeline do Anchors que movesse para lá passaria por cima de
 // uma decisão que não é dele (quando um teste passou, quando um deploy aconteceu).
 func TestAnchorsNaoEscreveAlemDeReadyToTest(t *testing.T) {
-	naoNossas := map[string]bool{"IN TEST": true, "READY TO RELEASE": true, "PRODUCTION": true}
+	naoNossas := map[string]bool{
+		"anchors:in-test": true, "anchors:ready-to-release": true, "anchors:production": true,
+	}
 	for _, w := range WorkflowsDoFluxo {
 		b, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {
 			t.Fatal(err)
 		}
-		for coluna := range naoNossas {
-			if strings.Contains(string(b), `select(.name == "`+coluna+`")`) {
-				t.Errorf("%s move para %q — além da alçada do Anchors", w.Arquivo, coluna)
+		for estado := range naoNossas {
+			if strings.Contains(string(b), `--add-label "`+estado+`"`) {
+				t.Errorf("%s move para %q — além da alçada do Anchors", w.Arquivo, estado)
 			}
 		}
 	}
-	if ColunaFinalDoAnchors != "READY TO TEST" {
-		t.Errorf("a última coluna que o Anchors escreve mudou: %q", ColunaFinalDoAnchors)
-	}
-	if n := len(ColunasQueOAnchorsEscreve()); n != 5 {
-		t.Errorf("o Anchors escreve em 5 colunas (TO DO..READY TO TEST), a lista diz %d", n)
+	if EstadoFinalDoAnchors != "anchors:ready-to-test" {
+		t.Errorf("o último estado que o Anchors escreve mudou: %q", EstadoFinalDoAnchors)
 	}
 }
 
@@ -250,14 +256,15 @@ func TestPipelinesSoTocamCardsDoAnchors(t *testing.T) {
 		}
 	}
 
-	// O claim é o caso mais exposto: ele lê o BOARD (que é de todos), não a lista de
-	// issues do Anchors. A interseção com a label tem de ser explícita.
+	// O claim seleciona por DUAS labels ao mesmo tempo: a do Anchors (o quintal) e a do
+	// estado (a fila). Consultar só o estado pegaria uma issue de produto que alguém
+	// tivesse rotulado igual.
 	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-claim.yml")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(b), "sao-do-anchors") {
-		t.Error("o claim seleciona do board compartilhado: precisa cruzar com a label antes de escolher")
+	if !strings.Contains(string(b), `--label "$LABEL" --label "$estado"`) {
+		t.Error("o claim precisa cruzar a label do Anchors com a do estado")
 	}
 }
 

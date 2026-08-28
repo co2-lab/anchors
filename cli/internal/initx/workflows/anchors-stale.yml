@@ -29,7 +29,6 @@ concurrency:
 permissions:
   contents: read
   issues: write
-  repository-projects: write
 
 jobs:
   liberar:
@@ -37,10 +36,11 @@ jobs:
     steps:
       - name: Liberar cards sem progresso
         env:
-          GH_TOKEN: ${{ secrets.ANCHORS_PROJECT_TOKEN || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Sem `actions/checkout` (não precisamos do código), o `gh` não descobre o
+          # repositório pelo git local — `GH_REPO` é o que o diz.
+          GH_REPO: ${{ github.repository }}
           LABEL: anchors
-          PROJECT: ${{ vars.ANCHORS_PROJECT_NUMBER }}
-          OWNER: ${{ github.repository_owner }}
           # Quantas horas sem QUALQUER atualização fazem um card ser considerado parado.
           # Ajuste ao ritmo do time: baixo demais rouba o card de quem está trabalhando
           # devagar; alto demais deixa trabalho parado sem ninguém olhando.
@@ -68,17 +68,11 @@ jobs:
               --jq '[.comments[].body | select(startswith("anchors-owner:"))] | last')
             gh issue comment "$n" --body "anchors-owner: (liberado) — sem progresso desde ${limite}; dono anterior: ${dono#anchors-owner: }"
 
-            # Volta para `TO DO`: a coluna é o estado (BOOTSTRAP.md §7.13), e um card sem
-            # dono parado em `IN PROGRESS` seria invisível para quem procura trabalho.
-            item=$(gh project item-list "$PROJECT" --owner "$OWNER" --format json \
-              --jq ".items[] | select(.content.number == $n) | .id")
-            campo=$(gh project field-list "$PROJECT" --owner "$OWNER" --format json \
-              --jq '.fields[] | select(.name == "Status")')
-            gh project item-edit \
-              --id "$item" \
-              --project-id "$(gh project view "$PROJECT" --owner "$OWNER" --format json --jq .id)" \
-              --field-id "$(echo "$campo" | jq -r .id)" \
-              --single-select-option-id "$(echo "$campo" | jq -r '.options[] | select(.name == "TO DO") | .id')"
+            # Volta para `to-do`: o estado é a label (BOOTSTRAP.md §7.13), e um card sem
+            # dono parado em `in-progress` seria invisível para quem procura trabalho.
+            gh issue edit "$n" \
+              --remove-label "anchors:in-progress" --remove-label "anchors:in-review" \
+              --add-label "anchors:to-do"
 
             echo "liberado: #$n (era de ${dono#anchors-owner: })"
           done

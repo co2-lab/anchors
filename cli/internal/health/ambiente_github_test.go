@@ -99,22 +99,25 @@ func TestFixSatisfazOQueODoctorCobra(t *testing.T) {
 	}
 }
 
-// Quando não dá para conferir o board (falta escopo, `gh` ausente), o doctor DIZ que não
-// conferiu. Calar seria lido como "board OK" — o tipo de silêncio que tranquiliza sem ter
-// olhado, a mesma régua do `DirtyCount`.
-func TestBoardNaoVerificadoNuncaViraSilencio(t *testing.T) {
-	// `gh` ausente é o caminho determinístico de testar: PATH vazio.
-	t.Setenv("PATH", "")
-
-	fs := checkBoard(cfgGitHub())
-
-	if len(fs) != 1 {
-		t.Fatalf("sem `gh` o doctor tem de reportar que não conferiu, veio %d", len(fs))
+// O board NÃO é conferido, e é deliberado: o estado do trabalho é uma label, e o
+// Project é espelho opcional (BOOTSTRAP.md §7.13). A decisão anterior — estado na coluna
+// — exigia um PAT com escopo `project` de todo adotante, e isso era atrito de adoção por
+// uma escolha de visualização.
+//
+// Este teste é o que impede a volta: cobrar board faria o doctor pedir uma peça que o
+// fluxo não usa.
+func TestDoctorNaoCobraBoard(t *testing.T) {
+	dir := t.TempDir()
+	if _, err := initx.SemeiaWorkflows(dir); err != nil {
+		t.Fatal(err)
 	}
-	if fs[0].Check != "board-nao-verificado" {
-		t.Errorf("achado errado: %+v", fs[0])
-	}
-	if !strings.Contains(fs[0].Detail, "gh") {
-		t.Errorf("a mensagem deveria nomear a causa: %s", fs[0].Detail)
+
+	fs := checkAmbienteGitHub(cfgGitHub(), dir)
+
+	for _, f := range fs {
+		if strings.Contains(strings.ToLower(f.Check), "board") ||
+			strings.Contains(strings.ToLower(f.Detail), "project") {
+			t.Errorf("o doctor cobra board, que virou opcional: %+v", f)
+		}
 	}
 }
