@@ -29,6 +29,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+          WINGET_GITHUB_TOKEN: ${{ secrets.WINGET_GITHUB_TOKEN }}
 
   # ── Winget ─────────────────────────────────────────────────────────────────
   # Job SEPARADO, e não uma seção do goreleaser: publicar no Winget exige sincronizar o
@@ -42,8 +43,14 @@ jobs:
     name: Publicar no Winget
     needs: goreleaser
     runs-on: ubuntu-latest
+    # O token ambiente não é usado por este job (a action recebe o PAT explicitamente),
+    # então não há motivo para ele carregar permissão nenhuma sobre este repositório.
+    permissions: {}
     steps:
-      - uses: vedantmgoyal9/winget-releaser@v2
+      # SHA fixo, não `@v2`: a action recebe um PAT CLÁSSICO, que tem poder amplo sobre
+      # os repositórios da organização. Uma tag é móvel — quem controlasse a action
+      # poderia trocar o código sob esse token sem que nada aqui mudasse.
+      - uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
         with:
           identifier: co2lab.Anchors
           # PAT CLÁSSICO: o fine-grained não serve para operações de fork.

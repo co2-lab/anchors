@@ -63,14 +63,19 @@ nfpms:
       - apk
 
 # ── Windows: Scoop ─────────────────────────────────────────────────────────────
-# Precisa de um repositório `co2-lab/scoop-bucket` (crie vazio; o goreleaser escreve o
-# manifesto nele). Usa o mesmo token do tap do Homebrew.
+# O manifesto vai para `co2-lab/scoop-bucket`.
 scoops:
   - name: anchors
     repository:
       owner: co2-lab
       name: scoop-bucket
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+      # PAT CLÁSSICO, e não o fine-grained do tap: aquele token foi emitido ANTES de o
+      # bucket existir, então não o tem na lista de repositórios — LÊ (200) e não ESCREVE
+      # (403). Medido na v0.1.1, que caiu exatamente aqui.
+      #
+      # O caminho de menor privilégio seria emitir um fine-grained próprio do Anchors com
+      # os três repositórios; fica registrado como dívida.
+      token: "{{ .Env.WINGET_GITHUB_TOKEN }}"
     homepage: https://anchors.co2lab.io
     description: "Anchors — framework spec-first de continuidade para desenvolvimento assistido por IA"
     license: Elastic License 2.0
