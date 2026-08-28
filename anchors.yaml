@@ -164,6 +164,51 @@ governs:
 # as specs nascem. Ligar tudo de uma vez num projeto existente produz centenas de issues
 # no primeiro dia e ninguém lê a lista.
 gates:
+  # SEGURANÇA — a leva que existe para o que não tem volta.
+  #
+  # Só o `secret-nao-vazado` nasce BLOQUEANTE, e o motivo é a assimetria: segredo vazado é
+  # o único achado desta lista sem conserto barato — rotacionar chave custa, e o histórico
+  # do git guarda a original. Os demais são informativos porque um achado deles é uma
+  # PERGUNTA sobre contexto, e bloquear no primeiro dia treina a equipe a ignorar.
+
+  - name: secret-nao-vazado
+    on: [code, test, doc, spec, feature, guide, plan]
+    scope: batch
+    scope_full: project
+    run: "bash scripts/anchors-secrets.sh"
+    needs_tool: gitleaks
+    install_hint: "brew install gitleaks"
+    blocking: true
+    when: [pre-commit, pre-push, ci]
+    cost: fast
+    category: security
+    measures: "nenhum segredo entra no repositório (gitleaks; allowlist declarada em .gitleaks.toml)"
+
+  - name: dependencia-vulneravel
+    on: [code]
+    scope: project
+    run: "bash scripts/anchors-deps-vuln.sh"
+    needs_tool: osv-scanner
+    install_hint: "brew install osv-scanner"
+    blocking: false
+    when: [pre-push, ci]
+    cost: fast
+    category: security
+    measures: "quantas CVEs conhecidas o go.mod carrega, por severidade (osv-scanner)"
+
+  - name: padrao-inseguro
+    on: [code]
+    scope: batch
+    scope_full: project
+    run: "bash scripts/anchors-semgrep.sh {{files}}"
+    needs_tool: semgrep
+    install_hint: "brew install semgrep"
+    blocking: false
+    when: [pre-push, ci]
+    cost: fast
+    category: security
+    measures: "padrões inseguros conhecidos em Go (semgrep p/gosec)"
+
   # ESTRUTURA — medem o código como ele está, sem exigir spec.
   - name: layer-boundary
     blocking: true
