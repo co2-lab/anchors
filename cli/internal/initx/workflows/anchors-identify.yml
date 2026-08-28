@@ -81,36 +81,33 @@ jobs:
       # normal — quase de graça. Se algum ficou de fora, o mapa commitado está velho, e aí
       # sim roda o `map build` COMPLETO: o mapa é um grafo, e as arestas ligam unidades
       # diferentes (`governs`, propagação), então não existe reconstruir "só o pedaço".
-      - name: Garantir que o mapa cobre o que mudou
-        env:
-          BEFORE: ${{ github.event.before }}
+      # O mapa chega pronto no push: `anchors.graph.yaml` é versionado, e o pre-commit
+      # (`anchors install-hooks`) o mantém em dia.
+      #
+      # A pergunta certa NÃO é "os arquivos do diff estão no mapa?" — a primeira versão
+      # perguntava isso e produzia falso positivo em todo `.gitignore`, `PROJECT.md` ou
+      # no próprio grafo: eles não estão no mapa porque NÃO SÃO REGIDOS, não porque o
+      # mapa envelheceu. Medido no primeiro push real: 4 falsos positivos, e o rebuild
+      # devolveu exatamente o mesmo mapa.
+      #
+      # A pergunta certa é "o mapa mudaria se eu o reconstruísse?". Construir num arquivo
+      # temporário e comparar responde exatamente isso, e o `map build` só é ADOTADO
+      # quando a resposta é sim — nas outras vezes o mapa commitado segue valendo.
+      - name: Garantir que o mapa está em dia
         run: |
           set -euo pipefail
-
-          precisa_rebuild=0
           if [ ! -f anchors.graph.yaml ]; then
-            echo "não há mapa no repositório"
-            precisa_rebuild=1
-          else
-            git diff --name-only "${BEFORE}" "${GITHUB_SHA}" > /tmp/mudados.txt 2>/dev/null || \
-              git show --name-only --format= "${GITHUB_SHA}" > /tmp/mudados.txt
-            while read -r f; do
-              [ -n "$f" ] || continue
-              [ -f "$f" ] || continue          # deletado: sumir do mapa é o esperado
-              case "$f" in .github/*) continue ;; esac
-              if ! grep -qF "id: $f" anchors.graph.yaml; then
-                echo "fora do mapa: $f"
-                precisa_rebuild=1
-              fi
-            done < /tmp/mudados.txt
-          fi
-
-          if [ "$precisa_rebuild" = "1" ]; then
-            echo "::warning::o anchors.graph.yaml commitado está defasado — reconstruindo."
-            echo "  (o pre-commit deveria tê-lo mantido em dia: rode \`anchors install-hooks\`)"
+            echo "não há mapa no repositório — construindo"
             anchors map build
+            exit 0
+          fi
+          anchors map build --out /tmp/mapa-conferido.yaml >/dev/null
+          if diff -q anchors.graph.yaml /tmp/mapa-conferido.yaml >/dev/null 2>&1; then
+            echo "mapa em dia"
           else
-            echo "mapa em dia para os arquivos deste push"
+            echo "::warning::o anchors.graph.yaml commitado está defasado — usando o reconstruído."
+            echo "  (o pre-commit deveria mantê-lo em dia: rode \`anchors install-hooks\`)"
+            cp /tmp/mapa-conferido.yaml anchors.graph.yaml
           fi
 
       - name: Criar card para cada artefato sem card

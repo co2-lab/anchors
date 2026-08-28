@@ -108,11 +108,15 @@ func TestIdentifyVerificaAntesDeReconstruirOMapa(t *testing.T) {
 	if !strings.Contains(texto, "gh release download") {
 		t.Error("o binário tem de vir da release")
 	}
-	if !strings.Contains(texto, "precisa_rebuild") {
-		t.Error("o rebuild tem de ser CONDICIONAL — o caminho normal é o mapa já estar em dia")
+	// A comparação é entre o mapa COMMITADO e o que o `map build` produziria — e não
+	// entre os arquivos do diff e o mapa. A primeira versão fazia isso e acusava todo
+	// arquivo NÃO REGIDO (.gitignore, PROJECT.md, o próprio grafo) como "mapa
+	// desatualizado": 4 falsos positivos no primeiro push real, com rebuild à toa.
+	if !strings.Contains(texto, "diff -q anchors.graph.yaml") {
+		t.Error("a verificação tem de comparar o mapa commitado com o reconstruído")
 	}
-	if !strings.Contains(texto, "grep -qF \"id: $f\" anchors.graph.yaml") {
-		t.Error("a verificação tem de olhar só os arquivos do change contra o mapa commitado")
+	if strings.Contains(texto, `grep -qF "id: $f"`) {
+		t.Error("perguntar se o arquivo do diff está no mapa confunde `não regido` com `mapa velho`")
 	}
 	// E quando está defasado, conserta em vez de mandar o dev consertar: o pipeline tem o
 	// repositório na mão, e falhar aqui pararia a fila por algo que ele resolve sozinho.
