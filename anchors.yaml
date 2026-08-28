@@ -19,12 +19,12 @@ layers:
     pattern: "*.md"
     kind: guide
     tags: [doutrina, guide]
-    exclude: ["README.md", "DESIGN-AUDIT.md", "PLANNING.md"]
+    exclude: ["README.md", "PLANNING.md"]
 
-  # README é porta de entrada e PLANNING/DESIGN-AUDIT são registro de processo — nenhum
-  # rege artefato. Ficam reconhecidos como doc para não caírem em "não regido".
+  # README é porta de entrada e PLANNING é registro de processo — nenhum rege artefato.
+  # Ficam reconhecidos como doc para não caírem em "não regido".
   doc:
-    pattern: "{README,DESIGN-AUDIT,PLANNING}.md"
+    pattern: "{README,PLANNING}.md"
     kind: doc
     tags: [doc]
 
