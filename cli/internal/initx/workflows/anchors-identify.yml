@@ -150,14 +150,28 @@ jobs:
             echo "$(jq length /tmp/alvo.json) unidade(s) tocada(s) neste push"
           fi
 
-          jq -r '.[] | [.code, (.onde | join(", "))] | @tsv' /tmp/alvo.json |
-          while IFS=$'\t' read -r code onde; do
+          jq -r '.[] | [.code, (.onde | join(", ")), .kind, .titulo] | @tsv' /tmp/alvo.json |
+          while IFS=$'\t' read -r code onde kind titulo; do
             [ -n "$code" ] || continue
             if grep -qxF "$code" /tmp/com-card.txt; then
               continue
             fi
+
+            # O título diz O QUE FAZER, com que TIPO de artefato, e SOBRE O QUÊ:
+            #   [FNDTN] Implementar plan — Plano 0001 — Fundação
+            #
+            # O verbo importa: o card é uma tarefa, não um rótulo do arquivo. E o CAMINHO
+            # não entra — `onde` é a PASTA da unidade, e 16 planos em `plans/` sairiam com
+            # o mesmo título. Ele já está no corpo do card.
+            if [ -n "$titulo" ]; then
+              titulo="Implementar ${kind:-artefato} — $titulo"
+            else
+              # Sem `# título` (um arquivo de código, por exemplo), a pasta é o que há.
+              titulo="Implementar ${kind:-artefato} em $onde"
+            fi
+
             url=$(gh issue create \
-              --title "[$code] Implementar $onde" \
+              --title "[$code] $titulo" \
               --label "$LABEL" \
               --label "anchors:to-do" \
               --body "$(printf 'Unidade: `%s`\nCódigo: `%s`\n\nCard criado pelo pipeline de identificação do Anchors: o artefato existe no repositório e não havia issue para ele.\n\nAntes de começar, rode `anchors status` para ver onde o projeto está, e o `anchors guide` do artefato que você vai escrever.\n\n**Prioridade do board: da DIREITA para a ESQUERDA.** Termine o que está mais adiantado antes de pegar coisa nova — trabalho pela metade não entrega nada e envelhece até o contexto se perder.' "$onde" "$code")")

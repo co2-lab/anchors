@@ -350,13 +350,29 @@ reporta, e aqui ela fica visível de graça.`,
 			// Vai para stdout inteiro, sem o resumo em stderr: um consumidor quer um
 			// documento JSON válido, não um fluxo com anexo.
 			if emJSON {
+				// `arquivo`, `kind` e `titulo` existem porque quem consome isto precisa
+				// NOMEAR o trabalho — e `onde` é a PASTA da unidade, não o arquivo: 16
+				// planos em `plans/` têm o mesmo `onde`. Sem estes campos, o consumidor
+				// teria de parsear o grafo por conta própria (medido: um pipeline tentou,
+				// com `grep -B1`, e falhou porque o `code:` está 3 linhas abaixo do `id:`).
 				type saida struct {
-					Code string   `json:"code"`
-					Onde []string `json:"onde"`
+					Code    string   `json:"code"`
+					Onde    []string `json:"onde"`
+					Arquivo string   `json:"arquivo,omitempty"`
+					Kind    string   `json:"kind,omitempty"`
+					Titulo  string   `json:"titulo,omitempty"`
 				}
+				kinds := kindPorArquivo(mapPath)
 				out := make([]saida, 0, len(linhas))
 				for _, l := range linhas {
-					out = append(out, saida{Code: l.code, Onde: l.onde})
+					arq := codeFile[l.code]
+					out = append(out, saida{
+						Code:    l.code,
+						Onde:    l.onde,
+						Arquivo: arq,
+						Kind:    kinds[arq],
+						Titulo:  tituloDoArquivo(absRoot, arq),
+					})
 				}
 				b, jerr := json.MarshalIndent(out, "", "  ")
 				if jerr != nil {
@@ -383,6 +399,47 @@ reporta, e aqui ela fica visível de graça.`,
 	cmd.Flags().BoolVar(&corrigir, "fix", false, "com --check: aplica o conserto via `anchors recode` (propaga por spec/feature/teste/mapa)")
 	cmd.Flags().BoolVar(&emJSON, "json", false, "emite a lista em JSON (para consumo por script/pipeline)")
 	return cmd
+}
+
+// kindPorArquivo devolve o kind de cada nó do mapa. Serve ao `--json`: quem consome
+// precisa dizer que TIPO de artefato o trabalho é ("Implementar plan — Fundação").
+func kindPorArquivo(mapPath string) map[string]string {
+	out := map[string]string{}
+	g, err := mapx.Load(mapPath)
+	if err != nil {
+		return out
+	}
+	for _, n := range g.Nodes {
+		out[n.ID] = string(n.Kind)
+	}
+	return out
+}
+
+// tituloDoArquivo lê o primeiro `# título` de um markdown. É o nome que o AUTOR deu ao
+// artefato — melhor do que qualquer coisa derivada do caminho. Vazio para arquivo que
+// não é markdown ou não tem título, e aí quem consome decide o que fazer.
+func tituloDoArquivo(root, rel string) string {
+	if rel == "" || !strings.HasSuffix(rel, ".md") {
+		return ""
+	}
+	b, err := os.ReadFile(filepath.Join(root, rel))
+	if err != nil {
+		return ""
+	}
+	for _, linha := range strings.Split(string(b), "\n") {
+		t, ok := strings.CutPrefix(strings.TrimSpace(linha), "# ")
+		if !ok {
+			continue
+		}
+		// Um título costuma repetir o tipo e o número que já estão em outro lugar
+		// ("Plano 0001 — Fundação"). Quem consome já tem o kind e o código, e a
+		// repetição só faz o texto crescer: sobra a parte que de fato nomeia.
+		if _, depois, achou := strings.Cut(t, "—"); achou {
+			t = depois
+		}
+		return strings.TrimSpace(t)
+	}
+	return ""
 }
 
 // takenCodes lê o mapa e devolve o conjunto de códigos em uso + quem os usa (por

@@ -102,3 +102,29 @@ func TestCodeListFiltroSemResultadoNaoMenteVazio(t *testing.T) {
 		t.Errorf("a mensagem deve citar o filtro que não casou, veio:\n%s", out)
 	}
 }
+
+// O título do artefato serve para NOMEAR o trabalho num card, e por isso a parte que
+// repete o tipo e o número ("Plano 0001 — ") sai: quem consome já tem o kind e o código,
+// e a repetição só faz o texto crescer.
+func TestTituloDoArquivoTiraOPrefixoRedundante(t *testing.T) {
+	dir := t.TempDir()
+	casos := map[string]string{
+		"# Login\n":                       "Login",
+		"# Plano 0001 — Fundação\n":       "Fundação",
+		"# Spec 0042 — Recuperação\n":     "Recuperação",
+		"sem titulo\n":                    "",
+		"<!-- @anchors -->\n\n# Depois\n": "Depois",
+	}
+	for conteudo, esperado := range casos {
+		if err := os.WriteFile(filepath.Join(dir, "a.md"), []byte(conteudo), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if got := tituloDoArquivo(dir, "a.md"); got != esperado {
+			t.Errorf("%q → %q, queria %q", conteudo, got, esperado)
+		}
+	}
+	// Arquivo que não é markdown não tem título a extrair.
+	if got := tituloDoArquivo(dir, "x.go"); got != "" {
+		t.Errorf("arquivo não-markdown devolveu %q", got)
+	}
+}

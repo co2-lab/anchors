@@ -85,6 +85,28 @@ func TestIdentifyUsaSaidaEstruturada(t *testing.T) {
 	}
 }
 
+// O título do card vem do TÍTULO do artefato, não do caminho. `anchors code list`
+// devolve a PASTA da unidade — com 16 planos em `plans/`, todo card sairia como
+// "Implementar plans", indistinguível dos outros. E o caminho já está no corpo.
+func TestIdentifyUsaOTituloDoArtefato(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-identify.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+	if !strings.Contains(texto, `--title "[$code] $titulo"`) {
+		t.Error("o título do card tem de nomear o trabalho")
+	}
+	// O verbo importa: o card é uma TAREFA, não um rótulo do arquivo.
+	if !strings.Contains(texto, `titulo="Implementar ${kind:-artefato} — $titulo"`) {
+		t.Error("o título tem de dizer o que fazer, com que tipo de artefato, e sobre o quê")
+	}
+	// E precisa de reserva: um arquivo de código não tem `# título`.
+	if !strings.Contains(texto, `titulo="Implementar ${kind:-artefato} em $onde"`) {
+		t.Error("sem título no artefato, o card precisa de um nome mesmo assim")
+	}
+}
+
 // O pipeline é SERIALIZADO, então cada segundo dele é fila para todos. Reconstruir o
 // mapa SEMPRE custaria 12,7s num projeto de 3.587 nós (medido), e o mapa já chega pronto
 // no push — é versionado, e o pre-commit o mantém em dia.
