@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gate"
 	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/initx"
 	"github.com/co2-lab/anchors/internal/mapx"
@@ -105,6 +107,21 @@ func runStatus(root string) error {
 		return nil
 	}
 	fmt.Printf("✓ mapa (%d nós, %d arestas)\n", len(g.Nodes), len(g.Edges))
+
+	// 3.5. MATURAÇÃO — o gate informativo que já está limpo (QUALITY §7).
+	//
+	// Aparece aqui, e não só no `check`, porque o `status` é o comando de quem RETOMA: é
+	// onde se pergunta "o que falta?", e um gate que mede sem defender é exatamente isso.
+	if prom := gate.GatesPromoviveis(
+		gate.Aggregate(gate.RunWithConfig(cfg.Gates, g.Nodes, root, g, cfg)),
+	); len(prom) > 0 {
+		nomes := make([]string, 0, len(prom))
+		for _, x := range prom {
+			nomes = append(nomes, x.Gate)
+		}
+		fmt.Printf("○ %d gate(s) informativo(s) LIMPO(s): %s\n", len(prom), strings.Join(nomes, ", "))
+		fmt.Println("  medem e não defendem — promova a `blocking: true` no anchors.yaml")
+	}
 
 	// 4. O TRABALHO — a fila mora onde o modo declara (WORKFLOW.md §2).
 	fmt.Println()

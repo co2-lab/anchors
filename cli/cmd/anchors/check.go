@@ -948,6 +948,42 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 		}
 		fmt.Println()
 	}
+
+	lembraMaturacao(p, onlyIssues)
+}
+
+// lembraMaturacao avisa sobre gate informativo que já está LIMPO.
+//
+// A maturação (QUALITY §7) tem uma metade que o Anchors não cobrava: um gate nasce
+// informativo porque o projeto ainda não cumpre o limiar, e quando passa a cumprir,
+// ninguém volta ao anchors.yaml para promovê-lo. O gate fica medindo sem defender — e o
+// projeto acha que está protegido por algo que não barra nada.
+//
+// A promoção continua sendo decisão humana; o que muda é que ela deixa de depender de
+// alguém lembrar sozinho. E o lembrete aparece AQUI, onde a pessoa acabou de ler os
+// vereditos — um aviso que exige rodar outro comando é um aviso que ninguém vê.
+func lembraMaturacao(p gate.Profile, onlyIssues bool) {
+	prom := gate.GatesPromoviveis(p)
+	if len(prom) == 0 {
+		return
+	}
+	// Com `--only-issues` a pessoa pediu para NÃO ver o que está limpo. Nomear os gates
+	// aqui contradiria a flag — mas omiti-los por completo esconderia a maturação
+	// pendente, que é justamente o que ela precisa saber. Então: conta, não lista.
+	if onlyIssues {
+		fmt.Printf("\n○ %d gate(s) informativo(s) limpo(s) — `anchors status` mostra quais\n", len(prom))
+		return
+	}
+	fmt.Printf("\n○ %d gate(s) informativo(s) LIMPO(s) — prontos para virar bloqueantes:\n", len(prom))
+	for i, g := range prom {
+		if i == 6 {
+			fmt.Printf("    … e mais %d\n", len(prom)-6)
+			break
+		}
+		fmt.Printf("    %-26s %d nó(s) aprovado(s), 0 reprovado(s)\n", g.Gate, g.Passou)
+	}
+	fmt.Println("  Informativo mede e não defende. Enquanto ele não for `blocking: true` no")
+	fmt.Println("  anchors.yaml, nada impede o próximo commit de desfazer o que já está conforme.")
 }
 
 // indent prefixa cada linha de s com pad — para o detalhe do gate (que pode ensinar

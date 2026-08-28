@@ -2,14 +2,38 @@ package initx
 
 import "github.com/co2-lab/anchors/internal/config"
 
+// dependemDeSinalIngerido são os gates que só têm o que medir depois de `anchors ingest`
+// receber um relatório de teste, cobertura ou mutação. Bloquear com base num sinal que
+// ainda não existe barraria o commit por ausência de dado — não por defeito.
+//
+// Ficam informativos mesmo em projeto novo, e o usuário os promove quando a suíte
+// estiver rodando no CI.
+var dependemDeSinalIngerido = map[string]bool{
+	"tests-green": true, "line-coverage": true, "coverage-delta": true,
+	"mutation-score": true, "scenario-coverage": true, "sbom-gerado": true,
+	"dependencia-vulneravel": true, "sem-duplicacao": true,
+}
+
 // DefaultGates devolve os gates que um projeto deve NASCER com, conforme os artefatos
 // que ele usa. É o que amarra os sinais de teste ao ciclo de vida: se o projeto tem
-// testes, o ciclo já nasce cobrando execução + cobertura, em vez de o usuário
-// escrever tudo à mão. Todos começam INFORMATIVOS (maturação, QUALITY §7) — o usuário
-// promove a bloqueante quando o projeto alcança o limiar.
+// testes, o ciclo já nasce cobrando execução + cobertura, em vez de o usuário escrever
+// tudo à mão.
+//
+// `projetoNovo` decide o estado de maturação, e a distinção é o ponto:
+//
+//   - projeto EXISTENTE → informativo (QUALITY §7). A doutrina é explícita: "impor o
+//     gate como bloqueante imediatamente pararia o projeto", porque um projeto real
+//     quase nunca cumpre, no dia um, o limiar que quer atingir.
+//   - projeto NOVO → BLOQUEANTE. Ali a premissa se inverte: não há débito a acomodar,
+//     e o gate não para nada — ele impede o PRIMEIRO desvio, que é quando corrigir
+//     custa menos. Nascer informativo adiaria uma cobrança que nunca vai ser mais
+//     barata do que agora.
+//
+// A exceção são os gates que dependem de sinal ingerido: sem relatório, eles barrariam
+// por ausência de dado, não por defeito.
 //
 // `chosen` são os artefatos escolhidos no init (spec/feature/test/guide/plan).
-func DefaultGates(chosen map[string]bool) []config.Gate {
+func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	var gates []config.Gate
 
 	if chosen["spec"] {
@@ -444,6 +468,13 @@ func DefaultGates(chosen map[string]bool) []config.Gate {
 			Blocking: config.Bool(false), Measures: "o guide tem a seção de pontos de conformidade (CKn)",
 		})
 	}
+	if projetoNovo {
+		for i := range gates {
+			if !dependemDeSinalIngerido[gates[i].Name] {
+				gates[i].Blocking = config.Bool(true)
+			}
+		}
+	}
 	return gates
 }
 
@@ -464,10 +495,11 @@ func CanonicalGate(name string) (config.Gate, bool) {
 // canonicalCatalog materializa a lista completa (todos os artefatos). Os gates são
 // nomeados de forma única, então ligar tudo não gera colisão — só a união.
 func canonicalCatalog() []config.Gate {
+	// `false`: aqui só importa QUAIS gates existem, não o estado de maturação deles.
 	return DefaultGates(map[string]bool{
 		"spec": true, "feature": true, "test": true,
 		"code": true, "guide": true, "plan": true,
-	})
+	}, false)
 }
 
 // init registra o catálogo canônico no pacote `config`, que o usa para completar os

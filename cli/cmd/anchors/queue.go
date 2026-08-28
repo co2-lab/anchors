@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/co2-lab/anchors/internal/scan"
 	"os"
 	"path/filepath"
+
+	"github.com/co2-lab/anchors/internal/scan"
 
 	"github.com/co2-lab/anchors/internal/config"
 
@@ -131,6 +132,12 @@ Se a fila está vazia, imprime isso e sai com código 0.`,
 			fmt.Printf("Execute o passo (veja `anchors guide`). Para o detalhe fino do que\n")
 			fmt.Printf("propagar, rode: anchors impact %s\n", t.Changed)
 			fmt.Printf("Ao terminar:    anchors done %s\n", t.ID)
+
+			// A maturação (QUALITY §7) aparece aqui de forma BARATA: o `next` é chamado
+			// pelo worker a cada task e precisa ser rápido, então não roda os gates —
+			// só conta quantos estão declarados como informativos. Quem quer saber
+			// quais estão limpos roda `anchors status` ou `check`, que já medem.
+			lembraMaturacaoBarato(absRoot)
 			return nil
 		},
 	}
@@ -358,4 +365,31 @@ func seedExiste(root, seed string, files []scan.File) bool {
 		}
 	}
 	return achou == 1
+}
+
+// lembraMaturacaoBarato conta os gates informativos sem RODAR nenhum.
+//
+// O `next` é chamado pelo worker a cada task, e rodar a suíte de gates ali dobraria o
+// custo de puxar trabalho. O que ele pode fazer sem custo é ler a declaração: se há gate
+// informativo, existe maturação pendente — e quem quiser saber QUAIS estão limpos roda
+// `anchors status`, que já mede.
+//
+// É um lembrete mais fraco de propósito. Um lembrete caro num comando de laço quente é
+// um lembrete que alguém vai querer desligar.
+func lembraMaturacaoBarato(root string) {
+	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
+	if err != nil {
+		return
+	}
+	var informativos int
+	for _, g := range cfg.Gates {
+		if !g.IsBlocking() {
+			informativos++
+		}
+	}
+	if informativos == 0 {
+		return
+	}
+	fmt.Printf("\n○ %d gate(s) informativo(s) declarado(s) — medem e não defendem.\n", informativos)
+	fmt.Println("  `anchors status` mostra quais já estão limpos e podem virar bloqueantes.")
 }

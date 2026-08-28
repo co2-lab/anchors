@@ -180,7 +180,10 @@ func aplicaRespostas(root string, p *initx.Proposal, status []initx.StatusRespos
 	})
 
 	if sim, _ := valor("gates").(bool); sim {
-		cfg.Gates = initx.DefaultGates(artefatos)
+		// Projeto novo (sem código nem artefato no disco) nasce com os gates
+		// BLOQUEANTES — ver DefaultGates para o porquê da distinção.
+		novo := len(p.CodeDirs) == 0 && !p.HasSpecMD && !p.HasFeature && !p.HasTest
+		cfg.Gates = initx.DefaultGates(artefatos, novo)
 	}
 	colocado, _ := valor("colocation").(bool)
 	initx.ApplyColocation(cfg, colocado, artefatos)

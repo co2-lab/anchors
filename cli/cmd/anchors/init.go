@@ -175,7 +175,10 @@ func runInit(root string) error {
 	// 1.5) GATES PADRÃO — o ciclo nasce com os gates dos artefatos escolhidos
 	// (spec-completa, tests-green, scenario-coverage, …), todos INFORMATIVOS. É o que
 	// amarra os sinais de teste ao ciclo de vida sem o usuário escrever tudo à mão.
-	if gates := initx.DefaultGates(chosenArtifacts); len(gates) > 0 {
+	// `empty` é o projeto SEM código, spec, feature nem teste — e é ele que decide o
+	// estado de maturação: num projeto novo os gates nascem BLOQUEANTES, porque não há
+	// débito a acomodar e o primeiro desvio é o mais barato de impedir (ver DefaultGates).
+	if gates := initx.DefaultGates(chosenArtifacts, empty); len(gates) > 0 {
 		names := make([]string, len(gates))
 		for i, g := range gates {
 			names[i] = g.Name
