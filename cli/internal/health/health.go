@@ -66,6 +66,7 @@ func Diagnose(g *mapx.Graph, cfg *config.Config, root string) Report {
 	r.Findings = append(r.Findings, checkFerramentasAusentes(cfg)...)
 	r.Findings = append(r.Findings, checkGitAusente(cfg, root)...)
 	r.Findings = append(r.Findings, checkAmbienteGitHub(cfg, root)...)
+	r.Findings = append(r.Findings, checkNeedsDosPlanos(g)...)
 	r.Findings = append(r.Findings, checkSinaisAusentes(g)...)
 	sortFindings(r.Findings)
 	return r
@@ -498,4 +499,86 @@ func temRepo(root string) bool {
 		}
 		dir = pai
 	}
+}
+
+// --- `needs` quebrado e CICLO entre planos (BOOTSTRAP.md §7) ---
+//
+// O `needs:` de um plano declara ORDEM DE TRABALHO: "não comece antes daquele terminar".
+// É o que permite escrever a sequência inteira de planos de uma vez e liberar aos poucos
+// — o arquivo existe, mas o card só nasce quando o pré-requisito fecha.
+//
+// Duas formas de quebrar, e as duas são silenciosas sem este check:
+//
+//   - apontar para um plano que NÃO EXISTE: a dependência simplesmente não é respeitada,
+//     e o trabalho começa fora de ordem sem nada acusar;
+//   - CICLO (A precisa de B, B precisa de A): nenhum dos dois pode começar, nunca, e o
+//     board fica com dois cards que ninguém pega sem que se saiba por quê.
+func checkNeedsDosPlanos(g *mapx.Graph) []Finding {
+	planos := map[string]bool{}
+	for _, n := range g.Nodes {
+		if n.Kind == mapx.KindPlan {
+			planos[n.ID] = true
+		}
+	}
+	if len(planos) == 0 {
+		return nil
+	}
+
+	// As arestas `needs` que o mapa conseguiu ligar.
+	depende := map[string][]string{}
+	for _, e := range g.Edges {
+		if e.Type == mapx.EdgeNeeds {
+			depende[e.From] = append(depende[e.From], e.To)
+		}
+	}
+
+	var out []Finding
+
+	// `needs` para plano inexistente: o mapa DESCARTA essas arestas (não liga a nada),
+	// então a ausência é invisível no grafo — e o efeito é a dependência simplesmente
+	// não valer, com o trabalho começando fora de ordem sem nada acusar.
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindPlan {
+			continue
+		}
+		for _, alvo := range n.Needs {
+			if !planos[alvo] {
+				out = append(out, Finding{"needs-quebrado", Warn, n.ID,
+					"`needs: " + alvo + "` aponta para um plano que não existe — a ordem de " +
+						"trabalho declarada não vale, e o card nasce antes da base"})
+			}
+		}
+	}
+
+	// Ciclo: uma busca em profundidade por nó, marcando o caminho em curso.
+	estado := map[string]int{} // 0=novo, 1=no caminho, 2=fechado
+	var caminho []string
+	var visita func(string) bool
+	visita = func(p string) bool {
+		estado[p] = 1
+		caminho = append(caminho, p)
+		for _, alvo := range depende[p] {
+			if estado[alvo] == 1 {
+				out = append(out, Finding{"needs-ciclo", Warn, p,
+					"ciclo de `needs` entre planos (" + strings.Join(caminho, " → ") + " → " + alvo +
+						") — nenhum deles pode começar, e o board fica com cards que ninguém pega"})
+				return true
+			}
+			if estado[alvo] == 0 && visita(alvo) {
+				return true
+			}
+		}
+		caminho = caminho[:len(caminho)-1]
+		estado[p] = 2
+		return false
+	}
+	for p := range planos {
+		if estado[p] == 0 {
+			caminho = nil
+			if visita(p) {
+				break // um ciclo relatado basta: o segundo seria o mesmo problema
+			}
+		}
+	}
+	return out
 }

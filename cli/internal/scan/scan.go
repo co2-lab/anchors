@@ -87,6 +87,13 @@ type File struct {
 	// Seeds: os caminhos de spec que um PLANO semeia. Extraídos aqui porque o scan já tem
 	// o conteúdo em mãos — o mapa não precisa reabrir o arquivo só para isso.
 	Seeds []string
+	// Needs: os planos que precisam TERMINAR antes deste começar (`needs:` no header).
+	//
+	// É diferente de `Deps`: aquele diz "consumo este arquivo", este diz "não comece
+	// antes daquele trabalho acabar". A distinção existe porque com vários agentes
+	// puxando cards de uma fila comum, alguém pegaria o plano de uma feature antes de a
+	// fundação existir — e descobriria isso ao tentar criar o primeiro arquivo.
+	Needs []string
 }
 
 // Dep é uma linha da Tabela de Dependências de uma spec consumidora (SPEC_TYPES §5):
@@ -155,6 +162,7 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 			Codes:         extractCodes(content),
 			HeaderCode:    extractHeaderCode(string(content)),
 			Seeds:         extractSeeds(kind, string(content)),
+			Needs:         needsFor(kind, content, root, rel),
 			NoPropagation: noPropRE.Match(content),
 			SharedCode:    sharedCodeRE.Match(content),
 			Deps:          depsFor(kind, content, root, rel),
@@ -399,6 +407,39 @@ var depCodeRE = regexp.MustCompile(`^DEP\d+$`)
 // spec declaram aqui os ARQUIVOS de que dependem — a "Tabela de Dependências inline",
 // já que não têm .spec.md). Aceita 1+ caminhos separados por vírgula.
 var headerDepRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*dep:\s*(.+)$`)
+
+// headerNeedsRE captura a linha `needs:` do cabeçalho @anchors de um PLANO: os planos
+// que precisam terminar antes deste começar. Aceita 1+ caminhos separados por vírgula.
+var headerNeedsRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*needs:\s*(.+)$`)
+
+// needsFor só lê `needs:` de um PLANO. Num arquivo de outro kind a linha seria a
+// pergunta errada — uma spec não espera trabalho terminar, ela É o trabalho.
+func needsFor(kind string, content []byte, root, rel string) []string {
+	if kind != "plan" {
+		return nil
+	}
+	return extractNeeds(content, root, rel)
+}
+
+// extractNeeds lê a linha `needs:` e resolve cada caminho relativo à raiz. Só faz
+// sentido em plano — um `needs:` numa spec seria a pergunta errada: spec não espera
+// trabalho terminar, ela É o trabalho.
+func extractNeeds(content []byte, root, rel string) []string {
+	m := headerNeedsRE.FindSubmatch(content)
+	if m == nil {
+		return nil
+	}
+	raw := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(m[1])), "-->"))
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		p := stripInlineCode(strings.TrimSpace(part))
+		if p == "" {
+			continue
+		}
+		out = append(out, resolveDepPath(root, rel, p))
+	}
+	return out
+}
 
 // depsFor extrai as dependências de reúso conforme o papel do arquivo:
 //   - SPEC → a Tabela de Dependências markdown (SPEC_TYPES §5).

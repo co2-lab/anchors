@@ -44,6 +44,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 			Regime:        regime,
 			NoPropagation: f.NoPropagation,
 			SharedCode:    f.SharedCode,
+			Needs:         f.Needs,
 		})
 	}
 
@@ -130,6 +131,14 @@ func seedEdges(files []scan.File) []Edge {
 				}
 			}
 			edges = append(edges, Edge{From: f.Path, To: destino, Type: EdgeSeeds, Origin: OriginDeclared})
+		}
+		// `needs:` — a ordem de trabalho entre planos. A aresta aponta do dependente para
+		// o pré-requisito, e um alvo que não existe NÃO vira aresta: o doctor a reporta
+		// como `needs-quebrado`, que é mais útil do que uma aresta morta.
+		for _, alvo := range f.Needs {
+			if exists[alvo] {
+				edges = append(edges, Edge{From: f.Path, To: alvo, Type: EdgeNeeds, Origin: OriginDeclared})
+			}
 		}
 	}
 	return edges

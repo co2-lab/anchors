@@ -109,7 +109,7 @@ func runStatus(root string) error {
 	// 4. O TRABALHO — a fila mora onde o modo declara (WORKFLOW.md §2).
 	fmt.Println()
 	if cfg.ModoGitHub() {
-		statusGitHub(root, cfg)
+		statusGitHub(root, cfg, g)
 	} else {
 		statusLocal(root, g)
 	}
@@ -118,7 +118,7 @@ func runStatus(root string) error {
 
 // statusGitHub descreve a fila do modo `github`: ela mora nas issues do repositório, e o
 // estado de cada trabalho é a COLUNA do board (BOOTSTRAP.md §7.13).
-func statusGitHub(root string, cfg *config.Config) {
+func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 	fmt.Printf("fila: GitHub (%s, label %v)\n", cfg.Workflow.Repo, cfg.Workflow.Labels)
 
 	// O ambiente precisa estar montado antes de a fila fazer sentido — e o doctor é
@@ -130,6 +130,14 @@ func statusGitHub(root string, cfg *config.Config) {
 	}
 	fmt.Println("✓ pipelines do fluxo no lugar")
 	fmt.Println()
+
+	// Um projeto sem trabalho não tem card a pedir: o passo é criar o primeiro plano,
+	// e mandar pedir trabalho aqui daria uma instrução que não devolve nada.
+	if semTrabalhoReal(g) {
+		imprimePrimeiroPlano()
+		return
+	}
+
 	fmt.Println("  → PRÓXIMO PASSO: peça trabalho ao pipeline de claim —")
 	fmt.Println("    `gh workflow run anchors-claim.yml -f agent=$(hostname)/<sessao>`")
 	fmt.Println()
@@ -160,15 +168,39 @@ func statusLocal(root string, g *mapx.Graph) {
 		fmt.Println("  → PRÓXIMO PASSO: `anchors next` puxa a próxima task da fila.")
 	case semTrabalhoReal(g):
 		// "Nada pendente" com o projeto vazio seria uma resposta enganosa: não há nada
-		// pendente porque não há nada. Contar só os guides semeados pelo `init` como
-		// projeto começado faria o status dizer que está tudo em ordem quando o próximo
-		// passo (o primeiro plano) sequer aconteceu.
-		fmt.Println("  → PRÓXIMO PASSO: o projeto está montado e ainda sem trabalho. Crie o")
-		fmt.Println("    primeiro plano (`anchors guide plan`) — é ele que semeia as specs e dá")
-		fmt.Println("    início ao ciclo.")
+		// pendente porque não há nada.
+		imprimePrimeiroPlano()
 	default:
 		fmt.Println("  → nada pendente. `anchors doctor` mostra as pontas sistêmicas.")
 	}
+}
+
+// imprimePrimeiroPlano orienta o primeiro plano de um projeto sem código.
+//
+// Diz os OBJETIVOS, não um template: o que a fundação precisa responder é universal
+// (onde o código mora, o que formata, como se roda o teste, o que o CI executa), mas o
+// COMO muda por stack — e o PROJECT.md já decidiu isso. Um template cravaria ESLint num
+// projeto Python. É a mesma régua da fase DESCOBRIR, que fixa etapas e objetivos e não
+// as perguntas.
+func imprimePrimeiroPlano() {
+	fmt.Println("  → PRÓXIMO PASSO: o projeto está montado e ainda sem trabalho.")
+	fmt.Println()
+	fmt.Println("  O primeiro plano é o de FUNDAÇÃO, e vem antes de qualquer feature: sem")
+	fmt.Println("  estrutura de pastas, linter, formatador e teste rodando, o primeiro plano")
+	fmt.Println("  de produto esbarra nisso no primeiro arquivo — e cada agente resolve à sua")
+	fmt.Println("  maneira. Ele precisa responder, com o que o PROJECT.md decidiu:")
+	fmt.Println()
+	fmt.Println("    · onde o código mora — a árvore que o `anchors.yaml` declara")
+	fmt.Println("    · o que formata e o que linta, e a configuração de cada um")
+	fmt.Println("    · como se roda o teste, e como o sinal chega ao `anchors ingest`")
+	fmt.Println("    · o que o CI executa a cada push")
+	fmt.Println()
+	fmt.Println("  Rode `anchors guide plan` para a régua.")
+	fmt.Println()
+	fmt.Println("  Vale escrever a SEQUÊNCIA inteira de planos de uma vez — é o que permite")
+	fmt.Println("  reconciliar escopo entre eles — e liberar aos poucos: declare `needs:` no")
+	fmt.Println("  header de cada um e commite só o que já pode ser trabalhado. Um plano cujo")
+	fmt.Println("  `needs` não terminou não vira card.")
 }
 
 // semTrabalhoReal diz se o mapa só tem o que o próprio `init` semeou (os guides). Um

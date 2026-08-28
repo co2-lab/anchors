@@ -41,6 +41,15 @@ const (
 	// Informativa, não bloqueante: um plano cita specs que ainda VÃO nascer, e cobrar a
 	// existência delas transformaria todo plano em erro até a última fase terminar.
 	EdgeSeeds EdgeType = "seeds"
+
+	// EdgeNeeds — este PLANO precisa que outro TERMINE antes de começar (`needs:` no
+	// header). Diferente de `depends-on`, que diz "consumo este arquivo": aqui a
+	// pergunta é de ORDEM DE TRABALHO, não de reúso.
+	//
+	// Existe porque vários agentes puxam de uma fila comum. Sem ela, alguém pega o card
+	// de uma feature antes de a fundação existir, e descobre isso ao tentar criar o
+	// primeiro arquivo — depois de já ter reivindicado o trabalho.
+	EdgeNeeds EdgeType = "needs"
 )
 
 // Origin — como a aresta entrou no mapa (TRACEABILITY §4).
@@ -83,6 +92,11 @@ type Node struct {
 	// SharedCode: o arquivo declarou `@anchors-shared-code` — seus códigos de cenário
 	// pertencem a outra unidade de propósito; não contam como colisão de identidade.
 	SharedCode bool `yaml:"shared_code,omitempty"`
+
+	// Needs — os planos que precisam TERMINAR antes deste começar (`needs:` no header).
+	// Guardado no NÓ, e não só como aresta, porque um `needs` para plano inexistente não
+	// vira aresta nenhuma — e é justamente esse caso que o doctor precisa reportar.
+	Needs []string `yaml:"needs,omitempty"`
 	// Signal — sinais de qualidade INGERIDOS do runner (o Anchors não roda o teste;
 	// consome o artefato que o projeto já gera). Preenchido por `anchors ingest`.
 	Signal *TestSignal `yaml:"signal,omitempty"`
