@@ -156,6 +156,19 @@ ROOT="$(git rev-parse --show-toplevel)"
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$STAGED" ] && exit 0
 
+# DISPENSA POR REGRA — ANCHORS_SKIP_RULES="id=motivo[,id=motivo]"
+#
+# O git commit nao repassa flags ao pre-commit, então a dispensa chega por ambiente:
+#
+#   ANCHORS_SKIP_RULES="trinca-completa=a feature ainda e um card" git commit -m "..."
+#
+# E POR REGRA, e nao por commit: dispensar trinca-completa deixa passar a spec que
+# nasce sozinha, e os outros gates continuam barrando. Um bypass global calaria também o
+# gate que achou defeito de verdade.
+#
+# O motivo é obrigatório — sem justificativa escrita, uma dispensa é indistinguível de
+# alguém fugindo de um gate.
+
 FAIL=0
 # Uma invocação para TODOS os arquivos staged: config e mapa carregam uma vez, e os
 # gates relacionais confrontam a unidade uma vez (antes, o loop por arquivo repetia

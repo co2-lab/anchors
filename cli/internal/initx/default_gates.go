@@ -39,11 +39,11 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	if chosen["spec"] {
 		gates = append(gates,
 			config.Gate{
-				Name: "spec-completa", On: []string{"spec"}, Check: "spec-sections",
+				Name: "spec-completa", ID: "spec-completa", On: []string{"spec"}, Check: "spec-sections",
 				Blocking: config.Bool(false), Measures: "a spec tem ao menos um estado/regra, sem placeholder",
 			},
 			config.Gate{
-				Name: "spec-tem-codigo", On: []string{"spec"}, Check: "has-code",
+				Name: "spec-tem-codigo", ID: "spec-tem-codigo", On: []string{"spec"}, Check: "has-code",
 				Blocking: config.Bool(false), Measures: "a spec carrega um código de cenário (identidade)",
 			},
 			// A spec sozinha atravessa TODOS os gates relacionais — eles falham ABERTO
@@ -51,7 +51,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// promover" sobre trabalho que não existe. Este gate pergunta o oposto: as
 			// peças EXISTEM? Nasce informativo porque quase todo projeto tem débito.
 			config.Gate{
-				Name: "trinca-completa", On: []string{"spec"}, Check: "trinca-completa",
+				Name: "trinca-completa", ID: "trinca-completa", On: []string{"spec"}, Check: "trinca-completa",
 				Blocking: config.Bool(false), Measures: "a spec tem código, feature e teste que a realizam",
 			},
 			// A metade que o determinístico NÃO alcança.
@@ -69,7 +69,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// fica verde, e a prova não existe. Determinístico prova que a referência
 			// RESOLVE; julgamento prova que ela VALE.
 			config.Gate{
-				Name: "no-test-prova-real", On: []string{"spec"},
+				Name: "no-test-prova-real", ID: "no-test-prova-real", On: []string{"spec"},
 				// Só as specs que DISPENSARAM o teste têm o que julgar. Sem o filtro, o
 				// gate enfileirava uma pergunta de IA para toda spec do projeto — 583
 				// alvos onde 16 dispensaram — e o contador de pendências passava a medir
@@ -97,7 +97,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// implementar; só o julgamento seria caro demais para cada commit. Rodando em
 			// momentos diferentes, eles se complementam.
 			config.Gate{
-				Name: "regra-cumprida", On: []string{"spec"},
+				Name: "regra-cumprida", ID: "regra-cumprida", On: []string{"spec"},
 				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
 				Ask: "Cada regra desta spec está marcada no código por um comentário com o " +
 					"código dela (`// ABCDX-B01: …`). Leia a regra e o trecho que ela marca e " +
@@ -119,18 +119,18 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// pelas 5 restantes. A dispensa por símbolo (`@no-rule: <razão>`) cobre o
 			// caso legítimo: nem toda exportação carrega decisão de negócio.
 			config.Gate{
-				Name: "codigo-catalogado", On: []string{"spec"}, Check: "codigo-catalogado",
+				Name: "codigo-catalogado", ID: "codigo-catalogado", On: []string{"spec"}, Check: "codigo-catalogado",
 				Blocking: config.Bool(false),
 				Measures: "todo símbolo exportado tem regra na spec ou dispensa escrita",
 			},
 			config.Gate{
-				Name: "rule-types", On: []string{"spec"}, Check: "rule-types",
+				Name: "rule-types", ID: "rule-types", On: []string{"spec"}, Check: "rule-types",
 				Blocking: config.Bool(false), Measures: "toda letra de código é declarada no vocabulário, sem conflito",
 			},
 			// A Tabela de Dependências promete símbolos; o código precisa usá-los.
 			// Pega a divergência que o feature-test-match não vê (a aresta spec→código).
 			config.Gate{
-				Name: "dependency-honored", On: []string{"spec"}, Check: "dependency-honored",
+				Name: "dependency-honored", ID: "dependency-honored", On: []string{"spec"}, Check: "dependency-honored",
 				Blocking: config.Bool(false), Measures: "os métodos declarados na Tabela de Dependências são usados no código",
 			},
 			// O padrão mais repetido de uma auditoria de 51 divergências spec×código
@@ -146,18 +146,18 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// cobra: regra que afirma "espelha"/"fonte única" com um arquivo citado
 			// exige que o código IMPORTE aquele arquivo.
 			config.Gate{
-				Name: "prova-cruza-fronteira", On: []string{"spec"}, Check: "prova-cruza-fronteira",
+				Name: "prova-cruza-fronteira", ID: "prova-cruza-fronteira", On: []string{"spec"}, Check: "prova-cruza-fronteira",
 				Blocking: config.Bool(false), Measures: "regra que afirma relação com outra unidade tem o código importando aquela unidade",
 			},
 			config.Gate{
-				Name: "contract-status-declared", On: []string{"spec"}, Check: "contract-status-declared",
+				Name: "contract-status-declared", ID: "contract-status-declared", On: []string{"spec"}, Check: "contract-status-declared",
 				Blocking: config.Bool(false), Measures: "os status do Contrato de Saída são os que o handler devolve — e só eles",
 			},
 			// O dever que um artefato contrai com um lugar que ele NÃO conhece (LGPD,
 			// i18n, a11y, auditoria). Só age se o projeto declarar `obligations:` — sem
 			// declaração, o gate é inerte. Nasce ligado para que a categoria exista.
 			config.Gate{
-				Name: "obligation-honored", On: []string{"spec"}, Check: "obligation-honored",
+				Name: "obligation-honored", ID: "obligation-honored", On: []string{"spec"}, Check: "obligation-honored",
 				Blocking: config.Bool(false), Measures: "o artefato cumpre as obrigações transversais que contrai",
 			},
 		)
@@ -166,7 +166,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	// quase sempre esquecimento. Detectável sem entender o domínio — é assimetria.
 	if chosen["test"] || chosen["spec"] {
 		gates = append(gates, config.Gate{
-			Name: "sibling-guard", On: []string{"code"}, Check: "sibling-guard",
+			Name: "sibling-guard", ID: "sibling-guard", On: []string{"code"}, Check: "sibling-guard",
 			Blocking: config.Bool(false), Measures: "funções irmãs tratam o mesmo parâmetro de forma consistente",
 		})
 	}
@@ -174,13 +174,13 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	// executa gastar uma rodada descobrindo a contradição. A origem é checável.
 	if chosen["plan"] {
 		gates = append(gates, config.Gate{
-			Name: "plan-seeds-valid", On: []string{"plan"}, Check: "plan-seeds-valid",
+			Name: "plan-seeds-valid", ID: "plan-seeds-valid", On: []string{"plan"}, Check: "plan-seeds-valid",
 			Blocking: config.Bool(false), Measures: "o plano só semeia spec em camada que tem spec",
 		})
 	}
 	if chosen["feature"] {
 		gates = append(gates, config.Gate{
-			Name: "feature-nao-vazia", On: []string{"feature"}, Check: "non-empty",
+			Name: "feature-nao-vazia", ID: "feature-nao-vazia", On: []string{"feature"}, Check: "non-empty",
 			Blocking: config.Bool(false), Measures: "a feature não é um esqueleto vazio",
 		})
 		// scenario-asserts vai além do 'não está vazio': o passo de RESULTADO precisa
@@ -190,7 +190,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		// features de um projeto real, e foi a razão estrutural pela qual uma regra ficou
 		// sem caso discriminante.
 		gates = append(gates, config.Gate{
-			Name: "scenario-asserts", On: []string{"feature"}, Check: "scenario-asserts",
+			Name: "scenario-asserts", ID: "scenario-asserts", On: []string{"feature"}, Check: "scenario-asserts",
 			Blocking: config.Bool(false), Measures: "o passo de resultado afirma um resultado observável",
 		})
 	}
@@ -204,12 +204,12 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// segundo teste do mesmo comportamento. Medido duas vezes num projeto real
 			// (códigos invertidos em 3 telas; store com 5 casos sem código nenhum).
 			config.Gate{
-				Name: "teste-rastreavel", On: []string{"test"}, Check: "teste-rastreavel",
+				Name: "teste-rastreavel", ID: "teste-rastreavel", On: []string{"test"}, Check: "teste-rastreavel",
 				Blocking: config.Bool(false),
 				Measures: "o teste cita o código do que prova (é visível aos gates relacionais)",
 			},
 			config.Gate{
-				Name: "tests-green", On: []string{"test"}, Check: "tests-pass",
+				Name: "tests-green", ID: "tests-green", On: []string{"test"}, Check: "tests-pass",
 				Blocking: config.Bool(false), Measures: "os testes deste arquivo passam (do resultado ingerido)",
 			},
 			// O PAR que ataca PROVA FALSA, e não ausência de prova: um dublê que não
@@ -232,7 +232,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// dublê do ecossistema. Daí ser julgamento — e daí a sugestão vir como
 			// patch: quem julga já leu o suficiente para propor o `mock_detect` correto.
 			config.Gate{
-				Name: "mock-detect-cobre-o-dialeto", On: []string{"test"},
+				Name: "mock-detect-cobre-o-dialeto", ID: "mock-detect-cobre-o-dialeto", On: []string{"test"},
 				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
 				Ask: "O projeto declara `derived.mock_detect` — o regex que reconhece um " +
 					"dublê de teste neste ecossistema. Leia este arquivo de teste e responda: " +
@@ -244,21 +244,21 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 					"como patch do `anchors.yaml`.",
 			},
 			config.Gate{
-				Name: "mock-carimbado", On: []string{"test"}, Check: "mock-carimbado",
+				Name: "mock-carimbado", ID: "mock-carimbado", On: []string{"test"}, Check: "mock-carimbado",
 				Blocking: config.Bool(false),
 				Measures: "o carimbo do dublê corresponde ao trecho real (recalculado, não só validado)",
 			},
 			config.Gate{
-				Name: "mock-tipado", On: []string{"test"}, Check: "mock-tipado",
+				Name: "mock-tipado", ID: "mock-tipado", On: []string{"test"}, Check: "mock-tipado",
 				Blocking: config.Bool(false),
 				Measures: "o dublê de teste deriva do módulo real (não é cópia congelada do contrato)",
 			},
 			config.Gate{
-				Name: "line-coverage", On: []string{"code"}, Check: "line-coverage",
+				Name: "line-coverage", ID: "line-coverage", On: []string{"code"}, Check: "line-coverage",
 				Blocking: config.Bool(false), Measures: "cobertura de linha >= limiar (do lcov ingerido)",
 			},
 			config.Gate{
-				Name: "coverage-delta", On: []string{"code"}, Check: "coverage-delta",
+				Name: "coverage-delta", ID: "coverage-delta", On: []string{"code"}, Check: "coverage-delta",
 				Blocking: config.Bool(false), Measures: "a cobertura de linha não caiu vs. a ingestão anterior",
 			},
 			// mutation-score nasce com o projeto porque é o ÚNICO gate que responde "o
@@ -271,7 +271,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// esconder o que se perde sem ela: o doctor alerta, e o projeto decide
 			// quando virar blocking.
 			config.Gate{
-				Name: "mutation-score", On: []string{"code"}, Check: "mutation-score",
+				Name: "mutation-score", ID: "mutation-score", On: []string{"code"}, Check: "mutation-score",
 				Blocking: config.Bool(false), Measures: "o teste PROVA a linha: mutantes mortos >= limiar (do relatório de mutação ingerido)",
 			},
 		)
@@ -280,7 +280,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		// entre eles uma listagem de importação de extrato que perde silenciosamente as
 		// transações além do 1º MB — o usuário importa o arquivo e parte some sem erro.
 		gates = append(gates, config.Gate{
-			Name: "pagination-honored", On: []string{"code"}, Check: "pagination-honored",
+			Name: "pagination-honored", ID: "pagination-honored", On: []string{"code"}, Check: "pagination-honored",
 			Blocking: config.Bool(false), Measures: "função que promete o conjunto não devolve a primeira página em silêncio",
 		})
 	}
@@ -297,7 +297,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	// (e o teste de que projeto sem artefato não semeia gate algum pegou isso).
 	if chosen["code"] {
 		gates = append(gates, config.Gate{
-			Name: "layer-boundary", On: []string{"code"}, Check: "layer-boundary",
+			Name: "layer-boundary", ID: "layer-boundary", On: []string{"code"}, Check: "layer-boundary",
 			Blocking: config.Bool(false), Measures: "a camada não alcança o que não é dela (`boundaries:`)",
 		})
 	}
@@ -318,17 +318,17 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		// de spec com 7 afirmações numéricas, onde adicionar UM modelo tornava 10 frases
 		// obsoletas. A spec declara COMO conferir; o engine não adivinha o que contar.
 		gates = append(gates, config.Gate{
-			Name: "count-honored", On: []string{"spec"}, Check: "count-honored",
+			Name: "count-honored", ID: "count-honored", On: []string{"spec"}, Check: "count-honored",
 			Blocking: config.Bool(false), Measures: "o número que a spec afirma bate com o código",
 		})
 
 		gates = append(gates, config.Gate{
-			Name: "domain-declared", On: []string{"spec"}, Check: "domain-declared",
+			Name: "domain-declared", ID: "domain-declared", On: []string{"spec"}, Check: "domain-declared",
 			Blocking: config.Bool(false), Measures: "a spec declara o que aceita e quem garante a fronteira",
 		})
 
 		gates = append(gates, config.Gate{
-			Name: "open-questions-resolved", On: []string{"spec"}, Check: "open-questions-resolved",
+			Name: "open-questions-resolved", ID: "open-questions-resolved", On: []string{"spec"}, Check: "open-questions-resolved",
 			Blocking: config.Bool(false), Measures: "a spec não tem pergunta em aberto — implementar não é adivinhar",
 		})
 	}
@@ -349,26 +349,26 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	// Condicionado a `spec`: sem spec no projeto não há `code:` para o `ref:` resolver.
 	if chosen["spec"] {
 		gates = append(gates, config.Gate{
-			Name: "ref-resolves", On: []string{"code", "feature", "test"}, Check: "ref-resolves",
+			Name: "ref-resolves", ID: "ref-resolves", On: []string{"code", "feature", "test"}, Check: "ref-resolves",
 			Blocking: config.Bool(false), Measures: "o `ref:` aponta para o `code:` da spec irmã",
 		})
 	}
 
 	if chosen["spec"] {
 		gates = append(gates, config.Gate{
-			Name: "code-reference-valid", On: []string{"spec"}, Check: "code-reference-valid",
+			Name: "code-reference-valid", ID: "code-reference-valid", On: []string{"spec"}, Check: "code-reference-valid",
 			Blocking: config.Bool(false), Measures: "todo código citado pela spec existe no projeto",
 		})
 	}
 
 	if chosen["spec"] && chosen["feature"] {
 		gates = append(gates, config.Gate{
-			Name: "spec-feature-match", On: []string{"spec"}, Check: "spec-feature-match",
+			Name: "spec-feature-match", ID: "spec-feature-match", On: []string{"spec"}, Check: "spec-feature-match",
 			Blocking: config.Bool(false), Measures: "todo requisito declarado na spec tem cenário na feature",
 		})
 		if chosen["spec"] {
 			gates = append(gates, config.Gate{
-				Name: "scenario-coverage", On: []string{"spec"}, Check: "scenario-coverage",
+				Name: "scenario-coverage", ID: "scenario-coverage", On: []string{"spec"}, Check: "scenario-coverage",
 				Blocking: config.Bool(false), Measures: "cada cenário da spec tem um teste que passou (cobertura semântica)",
 			})
 		}
@@ -392,7 +392,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// histórico do git guarda a original. Por isso é o único da leva que nasce
 			// bloqueante — os outros dois informam.
 			config.Gate{
-				Name: "secret-nao-vazado", On: []string{"code"},
+				Name: "secret-nao-vazado", ID: "secret-nao-vazado", On: []string{"code"},
 				Scope: config.ScopeBatch, ScopeFull: config.ScopeProject,
 				Run:       "gitleaks git --no-banner --redact -v",
 				NeedsTool: "gitleaks", InstallHint: "brew install gitleaks",
@@ -403,7 +403,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// Informativo: a CVE nova aparece sem ninguém mexer no código, então bloquear
 			// pararia um merge por algo que o autor não causou nem pode resolver na hora.
 			config.Gate{
-				Name: "dependencia-vulneravel", On: []string{"code"},
+				Name: "dependencia-vulneravel", ID: "dependencia-vulneravel", On: []string{"code"},
 				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
 				Run:       "osv-scanner scan source -r .",
 				NeedsTool: "osv-scanner", InstallHint: "brew install osv-scanner",
@@ -439,7 +439,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// medição, é ruído — e ruído treina a equipe a ignorar o gate (levando os outros
 			// junto).
 			config.Gate{
-				Name: "sem-duplicacao", On: []string{"code"},
+				Name: "sem-duplicacao", ID: "sem-duplicacao", On: []string{"code"},
 				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
 				Run:       "npx --yes jscpd . --reporters console --silent",
 				NeedsTool: "npx", InstallHint: "instale Node.js (npx acompanha)",
@@ -450,7 +450,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// Procedência: responde "o que exatamente foi entregue" — a pergunta que só
 			// se faz depois do incidente, quando reconstruir a resposta já é impossível.
 			config.Gate{
-				Name: "sbom-gerado", On: []string{"code"},
+				Name: "sbom-gerado", ID: "sbom-gerado", On: []string{"code"},
 				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
 				Run:       "syft scan dir:. -o cyclonedx-json=.anchors/sbom.json -q",
 				NeedsTool: "syft", InstallHint: "brew install syft",
@@ -464,7 +464,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	// O guide, se houver, deve destilar seus pontos de conformidade (determinístico).
 	if chosen["guide"] {
 		gates = append(gates, config.Gate{
-			Name: "guide-checklist", On: []string{"guide"}, Check: "guide-has-checklist",
+			Name: "guide-checklist", ID: "guide-checklist", On: []string{"guide"}, Check: "guide-has-checklist",
 			Blocking: config.Bool(false), Measures: "o guide tem a seção de pontos de conformidade (CKn)",
 		})
 	}

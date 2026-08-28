@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gate"
 )
 
 func nomes(gs []config.Gate) []string {
@@ -21,7 +22,7 @@ func TestFiltrarGatesSkipOnEhPermissivoPorOmissao(t *testing.T) {
 	gates := []config.Gate{{Name: "sem-declaracao"}}
 
 	for _, p := range []string{config.PerspectiveChange, config.PerspectiveAll} {
-		got := filtrarGates(gates, "", "", false, p)
+		got := filtrarGates(gates, "", "", false, p, gate.Dispensa{})
 		if len(got) != 1 {
 			t.Errorf("perspectiva %q: gate sem `skip_on` deve rodar, veio %v", p, nomes(got))
 		}
@@ -37,12 +38,12 @@ func TestFiltrarGatesSkipOnChange(t *testing.T) {
 		{Name: "sempre"},
 	}
 
-	noChange := filtrarGates(gates, "", "", false, config.PerspectiveChange)
+	noChange := filtrarGates(gates, "", "", false, config.PerspectiveChange, gate.Dispensa{})
 	if len(noChange) != 1 || noChange[0].Name != "sempre" {
 		t.Errorf("`skip_on: [change]` deve sair do --changed, veio %v", nomes(noChange))
 	}
 
-	noAll := filtrarGates(gates, "", "", false, config.PerspectiveAll)
+	noAll := filtrarGates(gates, "", "", false, config.PerspectiveAll, gate.Dispensa{})
 	if len(noAll) != 2 {
 		t.Errorf("`skip_on: [change]` deve continuar no --all, veio %v", nomes(noAll))
 	}
@@ -53,10 +54,10 @@ func TestFiltrarGatesSkipOnChange(t *testing.T) {
 func TestFiltrarGatesSkipOnAll(t *testing.T) {
 	gates := []config.Gate{{Name: "so-no-recorte", SkipOn: []string{config.PerspectiveAll}}}
 
-	if got := filtrarGates(gates, "", "", false, config.PerspectiveAll); len(got) != 0 {
+	if got := filtrarGates(gates, "", "", false, config.PerspectiveAll, gate.Dispensa{}); len(got) != 0 {
 		t.Errorf("`skip_on: [all]` deve sair do --all, veio %v", nomes(got))
 	}
-	if got := filtrarGates(gates, "", "", false, config.PerspectiveChange); len(got) != 1 {
+	if got := filtrarGates(gates, "", "", false, config.PerspectiveChange, gate.Dispensa{}); len(got) != 1 {
 		t.Errorf("`skip_on: [all]` deve continuar no --changed, veio %v", nomes(got))
 	}
 }
@@ -70,7 +71,7 @@ func TestFiltrarGatesSkipOnAmbasDesliga(t *testing.T) {
 	}}
 
 	for _, p := range []string{config.PerspectiveChange, config.PerspectiveAll} {
-		if got := filtrarGates(gates, "", "", false, p); len(got) != 0 {
+		if got := filtrarGates(gates, "", "", false, p, gate.Dispensa{}); len(got) != 0 {
 			t.Errorf("perspectiva %q: deveria estar desligado, veio %v", p, nomes(got))
 		}
 	}
@@ -85,10 +86,10 @@ func TestFiltrarGatesEixosIndependentes(t *testing.T) {
 	}
 
 	// no --all o lento entra; com --skip-slow, sai por CUSTO, não por perspectiva.
-	if got := filtrarGates(gates, "", "", false, config.PerspectiveAll); len(got) != 2 {
+	if got := filtrarGates(gates, "", "", false, config.PerspectiveAll, gate.Dispensa{}); len(got) != 2 {
 		t.Errorf("sem skip-slow os dois entram no --all, veio %v", nomes(got))
 	}
-	if got := filtrarGates(gates, "", "", true, config.PerspectiveAll); len(got) != 1 {
+	if got := filtrarGates(gates, "", "", true, config.PerspectiveAll, gate.Dispensa{}); len(got) != 1 {
 		t.Errorf("skip-slow deve remover o lento, veio %v", nomes(got))
 	}
 }

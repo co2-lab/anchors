@@ -30,7 +30,16 @@ const (
 
 // Result é o veredito de um gate sobre UM alvo.
 type Result struct {
-	Gate     string // nome do gate
+	Gate string // nome do gate
+	// Regra identifica QUAL verificação dentro do gate produziu este veredito.
+	//
+	// Um gate cobra mais de uma coisa (`spec-completa` cobra "sem placeholder" E "tem
+	// regra catalogada"), e sem este campo dois defeitos diferentes eram indistinguíveis
+	// — o leitor tinha de inferir pela mensagem, que muda. É também o que permite
+	// dispensar UMA verificação sem descartar o resto do gate.
+	//
+	// Vazio quando o gate faz uma verificação só, e aí o nome do gate já a identifica.
+	Regra    string
 	Target   string // nó confrontado (ID)
 	Verdict  Verdict
 	Blocking bool   // se este gate bloqueia (da config)
@@ -180,7 +189,7 @@ func RunCompleto(gates []config.Gate, nodes []mapx.Node, root string, graph *map
 // entre eles. O laudo (stdout da ferramenta) é que nomeia arquivo e linha.
 func runAgregado(g config.Gate, alvos []mapx.Node, root string, completa bool, graph *mapx.Graph, cfg *config.Config) Result {
 	escopo := g.ScopeParaVarredura(completa)
-	r := Result{Gate: g.Name, Target: "(" + escopo + ")", Blocking: g.IsBlocking()}
+	r := Result{Gate: g.Name, Regra: idDoGate(g), Target: "(" + escopo + ")", Blocking: g.IsBlocking()}
 	// Um gate agregado pode ser INTERNO: a pergunta é sobre o conjunto, mas quem
 	// responde é o próprio CLI, não uma ferramenta de fora. É o caso de
 	// `testid-consultado-existe`, que confronta as duas pontas do projeto de uma vez —
@@ -213,7 +222,7 @@ func runAgregado(g config.Gate, alvos []mapx.Node, root string, completa bool, g
 
 // runOne executa um gate contra um alvo — despacha para interno ou externo.
 func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) Result {
-	r := Result{Gate: g.Name, Target: n.ID, Blocking: g.IsBlocking()}
+	r := Result{Gate: g.Name, Regra: idDoGate(g), Target: n.ID, Blocking: g.IsBlocking()}
 	switch {
 	case g.IsJudgment():
 		// gate de julgamento por IA: o CLI NÃO computa. Ele só sabe se ALGUÉM já
@@ -304,4 +313,17 @@ func ferramentaAusente(g config.Gate) (string, bool) {
 		return g.NeedsTool, true
 	}
 	return "", false
+}
+
+// idDoGate devolve o ID declarado, ou o nome quando ele falta.
+//
+// A ausência é tolerada por compatibilidade — um projeto que já funcionava não pode
+// quebrar por um campo novo —, e o nome do gate é um identificador razoável enquanto o ID
+// não foi declarado. A validação da carga garante que, de um jeito ou de outro, ele é
+// único.
+func idDoGate(g config.Gate) string {
+	if g.ID != "" {
+		return g.ID
+	}
+	return g.Name
 }

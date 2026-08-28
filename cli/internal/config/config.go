@@ -417,9 +417,23 @@ type Recode struct {
 //   - INTERNO: `check` nomeia uma verificação embutida do CLI (ex.: "spec-sections",
 //     "scenario-covered") — o CLI a executa lendo texto.
 type Gate struct {
-	Name  string   `yaml:"name"`            // identificador do gate
-	On    []string `yaml:"on"`              // kinds de nó que este gate confronta (spec, code, feature…)
-	Tags  []string `yaml:"tags,omitempty"`  // se presente, restringe aos nós com QUALQUER destas tags
+	Name string `yaml:"name"` // identificador do gate
+	// ID é o identificador ESTÁVEL da regra que este gate verifica.
+	//
+	// Diferente de `Name`, que é o rótulo legível e pode ser renomeado, o ID é o que
+	// outros lugares citam: o relatório o imprime, e é por ele que se dispensa UMA
+	// verificação sem descartar as demais.
+	//
+	// Existe porque um gate cobra mais de uma coisa — `spec-completa` cobra "sem
+	// placeholder" E "tem regra catalogada" — e sem ID as duas eram indistinguíveis:
+	// quem quisesse dispensar a primeira perdia a segunda junto.
+	//
+	// Os gates CANÔNICOS têm ID fixo (ver o catálogo em initx). Um gate declarado pelo
+	// projeto precisa de um ID ÚNICO — a validação o cobra na carga, porque dois gates
+	// com o mesmo ID fazem toda citação apontar para dois lugares.
+	ID   string   `yaml:"id,omitempty"`
+	On   []string `yaml:"on"`             // kinds de nó que este gate confronta (spec, code, feature…)
+	Tags []string `yaml:"tags,omitempty"` // se presente, restringe aos nós com QUALQUER destas tags
 	// ExcludeTags: o filtro NEGATIVO que faltava. `tags` diz a quem o gate se aplica; não
 	// havia como dizer a quem ele NÃO se aplica, e a diferença aparece quando a exceção é
 	// uma camada inteira no meio de um universo grande — listar todas as outras tags no
@@ -433,8 +447,8 @@ type Gate struct {
 	// Um nó com QUALQUER destas tags fica fora do gate. Vazio = sem exclusão, para que o
 	// silêncio nunca desligue gate existente.
 	ExcludeTags []string `yaml:"exclude_tags,omitempty"`
-	Run   string   `yaml:"run,omitempty"`   // comando externo (modo externo)
-	Check string   `yaml:"check,omitempty"` // verificação interna nomeada (modo interno)
+	Run         string   `yaml:"run,omitempty"`   // comando externo (modo externo)
+	Check       string   `yaml:"check,omitempty"` // verificação interna nomeada (modo interno)
 	// Blocking: bloqueante vs. informativo (maturação, QUALITY §7).
 	//
 	// PONTEIRO de propósito. Como `bool`, o campo omitido e o `blocking: false`
@@ -935,6 +949,9 @@ func Load(path string) (*Config, error) {
 	for i := range c.Gates {
 		c.Gates[i] = mergeCanonical(c.Gates[i])
 	}
+	if err := c.validarIDsDeGate(); err != nil {
+		return nil, err
+	}
 	if err := c.validarWorkflow(); err != nil {
 		return nil, err
 	}
@@ -980,6 +997,32 @@ func SetSlotsHook(f func([]int)) { setSlots = f }
 // cai no default por nó; um `when` com typo tira o gate da fase que o autor queria cobrar;
 // um `cost` inválido faz o gate ser tratado como rápido e entrar num loop apertado que
 // deveria evitar. Nos três, o efeito é proteção que o arquivo afirma e não existe.
+// validarIDsDeGate cobra ID único em cada gate — na CARGA, não no uso.
+//
+// O ID é o que outros lugares citam: o relatório o imprime, e é por ele que se dispensa
+// uma regra. Dois gates com o mesmo ID fazem toda citação apontar para dois lugares, e
+// uma dispensa desligar o que ninguém pediu.
+//
+// A ausência é tolerada por compatibilidade — um projeto que já funcionava não pode
+// quebrar por um campo novo —, e aí o nome do gate serve de ID. Mas a COLISÃO nunca é
+// tolerada: ela é sempre erro, e falhar na carga é o que impede o achado errado.
+func (c *Config) validarIDsDeGate() error {
+	vistos := map[string]string{} // id → nome do primeiro gate que o usou
+	for _, g := range c.Gates {
+		id := g.ID
+		if id == "" {
+			id = g.Name // sem ID declarado, o nome identifica
+		}
+		if anterior, ok := vistos[id]; ok {
+			return fmt.Errorf("gate %q: `id: %q` já é usado pelo gate %q — o ID é o que o "+
+				"relatório imprime e o que uma dispensa cita; repetido, ele aponta para dois "+
+				"lugares e desliga o que ninguém pediu", g.Name, id, anterior)
+		}
+		vistos[id] = g.Name
+	}
+	return nil
+}
+
 func (c *Config) validarEnumsDeGate() error {
 	escopos := map[string]bool{ScopeNode: true, ScopeBatch: true, ScopeProject: true}
 	custos := map[string]bool{CostFast: true, CostSlow: true}

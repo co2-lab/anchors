@@ -23,6 +23,7 @@ func newCheckCmd() *cobra.Command {
 	var root, mapPath, phase, category string
 	var changed []string
 	var all, noRecord, fix, deterministic, skipSlow, onlyIssues, showDrift bool
+	var skipRegras string
 	cmd := &cobra.Command{
 		Use:   "check",
 		Short: "Roda os gates de qualidade (o pipeline)",
@@ -70,7 +71,19 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			if all {
 				perspective = config.PerspectiveAll
 			}
-			cfg.Gates = filtrarGates(cfg.Gates, phase, category, skipSlow, perspective)
+			// A dispensa vem da flag OU do ambiente — o hook do git passa por variável,
+			// porque `git commit` não repassa flags ao pre-commit.
+			bruto := skipRegras
+			if bruto == "" {
+				bruto = os.Getenv("ANCHORS_SKIP_RULES")
+			}
+			dispensa, erros := gate.ParseDispensa(bruto)
+			if len(erros) > 0 {
+				return fmt.Errorf("--skip-rule inválido:\n  %s\n\nO motivo é obrigatório: uma "+
+					"dispensa sem justificativa escrita é indistinguível de alguém fugindo de um "+
+					"gate que achou defeito", strings.Join(erros, "\n  "))
+			}
+			cfg.Gates = filtrarGates(cfg.Gates, phase, category, skipSlow, perspective, dispensa)
 			if len(cfg.Gates) == 0 {
 				fmt.Printf("nenhum gate a rodar para este recorte (fase=%q categoria=%q).\n", phase, category)
 				return nil
@@ -167,6 +180,8 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 	cmd.Flags().StringVar(&phase, "phase", "", "cobra só os gates desta fase (pre-commit|pre-push|ci|manual)")
 	cmd.Flags().StringVar(&category, "category", "", "cobra só os gates desta natureza (types|style|traceability…)")
 	cmd.Flags().BoolVar(&skipSlow, "skip-slow", false, "pula os gates declarados `cost: slow`")
+	cmd.Flags().StringVar(&skipRegras, "skip-rule", "",
+		"dispensa regras nesta execução: `id=motivo[,id=motivo]`. O motivo é obrigatório")
 	cmd.Flags().BoolVar(&onlyIssues, "only-issues", false, "omite da tabela os gates que passaram em tudo e não deixaram pendência (o total continua no rodapé)")
 	cmd.Flags().BoolVar(&showDrift, "show-drift", false, "lista TODAS as pendências (⚠) com o endereço de cada uma; sem a flag, só o contador da tabela")
 	return cmd
@@ -180,7 +195,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 // Todos os filtros são permissivos por omissão: gate sem `when`/`cost`/`category`/
 // `skip_on` continua rodando como antes. É o que torna a categorização adotável aos
 // poucos — declarar um eixo num gate não muda o comportamento dos outros 30.
-func filtrarGates(gates []config.Gate, phase, category string, skipSlow bool, perspective string) []config.Gate {
+func filtrarGates(gates []config.Gate, phase, category string, skipSlow bool, perspective string, dispensa gate.Dispensa) []config.Gate {
 	out := gates[:0:0]
 	for _, g := range gates {
 		if !g.RunsIn(phase) {
@@ -195,6 +210,15 @@ func filtrarGates(gates []config.Gate, phase, category string, skipSlow bool, pe
 		// A perspectiva NÃO é escolha do usuário: vem de COMO o check foi chamado
 		// (`--all` ou `--changed`). O gate declara em qual delas ele se abstém.
 		if g.SkipsOn(perspective) {
+			continue
+		}
+		// DISPENSA por ID: o usuário declarou, com motivo, que esta regra não deve ser
+		// confrontada nesta execução. Diferente de `skip_on`, que é decisão do gate sobre
+		// perspectiva, esta é decisão de quem chama sobre uma regra específica — e é o que
+		// permite commitar a primeira spec de uma unidade (a feature ainda é um card) sem
+		// desligar os gates que verificam outra coisa.
+		if motivo, ok := dispensa.Dispensou(gate.RegraID(idDoGateCmd(g))); ok {
+			fmt.Printf("○ dispensado: %s — %s\n", idDoGateCmd(g), motivo)
 			continue
 		}
 		out = append(out, g)
@@ -1174,4 +1198,14 @@ func pecasDaUnidade(target string) []string {
 		}
 	}
 	return out
+}
+
+// idDoGateCmd devolve o ID de um gate (ou o nome, quando o ID falta). Duplica a lógica
+// de `internal/gate` de propósito: exportá-la só para isto acoplaria os dois pacotes por
+// uma função de três linhas.
+func idDoGateCmd(g config.Gate) string {
+	if g.ID != "" {
+		return g.ID
+	}
+	return g.Name
 }
