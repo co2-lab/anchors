@@ -75,33 +75,6 @@ scoops:
     description: "Anchors — framework spec-first de continuidade para desenvolvimento assistido por IA"
     license: Elastic License 2.0
 
-# ── Windows: Winget ────────────────────────────────────────────────────────────
-# Publicar no Winget é abrir PR no repositório da Microsoft a partir de um FORK — daí
-# `repository` apontar para o fork (co2-lab/winget-pkgs) e `pull_request` para o upstream.
-#
-# `skip_upload: auto` não abre PR em pré-release: uma v0.1.0-rc não deve chegar ao
-# catálogo público antes de a versão estável existir.
-winget:
-  - name: anchors
-    publisher: co2lab
-    short_description: "Framework spec-first de continuidade para desenvolvimento assistido por IA"
-    license: Elastic-2.0
-    homepage: https://anchors.co2lab.io
-    publisher_support_url: https://github.com/co2-lab/anchors/issues
-    skip_upload: auto
-    repository:
-      owner: co2-lab
-      name: winget-pkgs
-      branch: "anchors-{{ .Version }}"
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-      pull_request:
-        enabled: true
-        draft: false
-        base:
-          owner: microsoft
-          name: winget-pkgs
-          branch: master
-
 homebrew_casks:
   - name: anchors
     binaries:

@@ -29,3 +29,25 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           HOMEBREW_TAP_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TAP_GITHUB_TOKEN }}
+
+  # ── Winget ─────────────────────────────────────────────────────────────────
+  # Job SEPARADO, e não uma seção do goreleaser: publicar no Winget exige sincronizar o
+  # fork com o upstream da Microsoft, e o goreleaser faz isso por `merge-upstream` — uma
+  # API que PAT fine-grained não acessa (medido na v0.1.0: 403, e a release inteira caiu
+  # junto, levando o Scoop que ainda não tinha rodado).
+  #
+  # A `winget-releaser` é a ferramenta especializada nisso, e já é a que publica o Polvo.
+  # `needs: goreleaser` porque ela lê os binários DA release — que precisa existir antes.
+  publicar-winget:
+    name: Publicar no Winget
+    needs: goreleaser
+    runs-on: ubuntu-latest
+    steps:
+      - uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          identifier: co2lab.Anchors
+          # PAT CLÁSSICO: o fine-grained não serve para operações de fork.
+          token: ${{ secrets.WINGET_GITHUB_TOKEN }}
+          release-tag: ${{ github.ref_name }}
+          fork-user: co2-lab
+          installers-regex: '_windows_\w+\.zip$'
