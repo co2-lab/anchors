@@ -99,6 +99,15 @@ func TestIdentifyVerificaAntesDeReconstruirOMapa(t *testing.T) {
 		t.Fatal(err)
 	}
 	texto := string(b)
+	// O binário vem da RELEASE, não de `go install`: o módulo declara o caminho da raiz
+	// mas vive em `cli/`, então nenhum caminho de install resolve — e baixar o binário é
+	// mais rápido num pipeline serializado, onde cada segundo é fila.
+	if strings.Contains(texto, "go install github.com/co2-lab/anchors") {
+		t.Error("`go install` não resolve neste repositório (go.mod em cli/ declara a raiz)")
+	}
+	if !strings.Contains(texto, "gh release download") {
+		t.Error("o binário tem de vir da release")
+	}
 	if !strings.Contains(texto, "precisa_rebuild") {
 		t.Error("o rebuild tem de ser CONDICIONAL — o caminho normal é o mapa já estar em dia")
 	}

@@ -49,10 +49,27 @@ jobs:
         with:
           fetch-depth: 0 # o mapa precisa do histórico para carimbar updated_at
 
+      # Baixa o BINÁRIO da release, não compila. É a forma como o projeto se distribui
+      # (goreleaser, 6 plataformas), e num pipeline serializado o tempo economizado —
+      # sem toolchain Go, sem baixar dependências — é fila que não se forma.
       - name: Instalar o Anchors
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Fixe uma versão (`v1.2.3`) quando quiser que o pipeline pare de mudar sozinho:
+          # `latest` faz o comportamento do CI depender de quando ele rodou.
+          ANCHORS_VERSION: latest
         run: |
-          go install github.com/co2-lab/anchors/cmd/anchors@latest
-          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          set -euo pipefail
+          if [ "$ANCHORS_VERSION" = "latest" ]; then
+            TAG=$(gh release view --repo co2-lab/anchors --json tagName --jq .tagName)
+          else
+            TAG="$ANCHORS_VERSION"
+          fi
+          gh release download "$TAG" --repo co2-lab/anchors \
+            --pattern 'anchors_*_linux_amd64.tar.gz' --output /tmp/anchors.tar.gz --clobber
+          tar -xzf /tmp/anchors.tar.gz -C /tmp anchors
+          sudo install /tmp/anchors /usr/local/bin/anchors
+          anchors --version
 
       # O mapa chega pronto no push: `anchors.graph.yaml` é versionado, e o pre-commit
       # (`anchors install-hooks`) o mantém em dia. Reconstruí-lo a cada execução custaria
