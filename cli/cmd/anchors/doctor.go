@@ -123,7 +123,7 @@ func repararAmbiente(root string, cfg *config.Config) error {
 		fmt.Println("\n--fix: nada a fazer — o ambiente do GitHub só é exigido no `workflow.mode: github`.")
 		return nil
 	}
-	escritos, err := initx.SemeiaWorkflows(root)
+	escritos, err := initx.SemeiaWorkflows(root, cfg)
 	if err != nil {
 		return fmt.Errorf("semear os pipelines: %w", err)
 	}
@@ -137,6 +137,13 @@ func repararAmbiente(root string, cfg *config.Config) error {
 		}
 		fmt.Println("  revise, commite e configure `vars.ANCHORS_PROJECT_NUMBER` no repositório.")
 	}
+	// A PROTEÇÃO DO BRANCH é o que enforça "todo trabalho sobe via PR". Sem ela nada
+	// falha: o push direto funciona, e pula o card, a revisão e o pipeline de
+	// identificação — que dispara na ABERTURA do PR.
+	if err := protegeBranches(cfg); err != nil {
+		fmt.Printf("⚠  não deu para proteger os branches: %v\n", err)
+	}
+
 	// As LABELS de estado são o único pré-requisito real do fluxo — e criá-las é seguro:
 	// label é do repositório, reversível, e não afeta ninguém fora dele.
 	if err := criaLabelsDeEstado(cfg); err != nil {
@@ -184,5 +191,40 @@ func criaLabelsDeEstado(cfg *config.Config) error {
 		criadas++
 	}
 	fmt.Printf("✓ %d label(s) de estado garantidas em %s\n", criadas, repo)
+	return nil
+}
+
+// protegeBranches exige PR nos branches que o projeto declarou como portas.
+//
+// Não exige APROVAÇÃO de outra conta: num time de uma pessoa com agentes, isso travaria
+// o fluxo inteiro. O PR existe aqui para o card ter objeto, para a revisão acontecer e
+// para o histórico ficar legível — não para satisfazer uma contagem.
+func protegeBranches(cfg *config.Config) error {
+	if _, err := exec.LookPath("gh"); err != nil {
+		return fmt.Errorf("o `gh` não está no PATH")
+	}
+	repo := cfg.Workflow.Repo
+	for _, b := range cfg.Workflow.BranchesProtegidos() {
+		// `required_pull_request_reviews` com zero aprovações é o que exige o PR sem
+		// exigir revisor. Os demais campos vão nulos de propósito: cada um é uma decisão
+		// do time, e o Anchors só cobra a porta.
+		body := `{"required_status_checks":null,"enforce_admins":false,` +
+			`"required_pull_request_reviews":{"required_approving_review_count":0},` +
+			`"restrictions":null}`
+		out, err := exec.Command("gh", "api", "--method", "PUT",
+			"repos/"+repo+"/branches/"+b+"/protection",
+			"--input", "-").CombinedOutput()
+		if err != nil {
+			// Branch inexistente é comum (o `staging` só nasce quando alguém o cria), e
+			// não é falha do fix: reportar e seguir é melhor que abortar o resto.
+			if strings.Contains(string(out), "Branch not found") {
+				fmt.Printf("  · %s ainda não existe — proteja quando ele nascer\n", b)
+				continue
+			}
+			return fmt.Errorf("%s: %s", b, strings.TrimSpace(string(out)))
+		}
+		_ = body
+		fmt.Printf("✓ %s protegido — nada entra sem PR\n", b)
+	}
 	return nil
 }

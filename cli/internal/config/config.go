@@ -118,6 +118,58 @@ type Workflow struct {
 	// puxaria qualquer issue do repositório — inclusive as de produto, que não têm a
 	// forma que o ciclo espera. Vazio no modo github é erro de configuração, não default.
 	Labels []string `yaml:"labels,omitempty"`
+
+	// IntegrationBranch é ONDE O TRABALHO CHEGA: o branch cujo PR aciona o ciclo. O
+	// pipeline de identificação dispara na abertura de um PR que o tenha como base, e é
+	// nele que a revisão acontece.
+	//
+	// Configurável porque o fluxo de branch é do projeto. Num arranjo comum, o trabalho é
+	// feito e integrado em `develop`, promovido para `staging` quando termina, e chega a
+	// `main` só ao ir para produção. Nesse caso o branch de integração é `develop` — e
+	// cravar `main` faria o card nascer no fim, para trabalho que já terminou.
+	//
+	// Vazio resolve para `main`, o default do GitHub em repositório novo.
+	IntegrationBranch string `yaml:"integration_branch,omitempty"`
+
+	// ProtectedBranches são os branches em que nada entra sem PR.
+	//
+	// É uma lista SEPARADA do branch de integração porque os papéis diferem: no de
+	// integração o PR existe para o card ter objeto e a revisão acontecer; nos de
+	// promoção (`staging`, `main`) ele existe para que nada chegue à produção sem passar
+	// por uma porta. As duas coisas exigem PR, e só a primeira cria card.
+	//
+	// Vazio resolve para o branch de integração mais `main` — o mínimo que faz sentido.
+	ProtectedBranches []string `yaml:"protected_branches,omitempty"`
+}
+
+// BranchDeIntegracao devolve onde o trabalho chega, com o default aplicado.
+//
+// Existe como método, e não como leitura direta do campo, para que o default viva num
+// lugar só: espalhá-lo pelos chamadores faria cada um decidir o seu, e um deles
+// discordaria.
+func (w *Workflow) BranchDeIntegracao() string {
+	if w == nil || w.IntegrationBranch == "" {
+		return "main"
+	}
+	return w.IntegrationBranch
+}
+
+// BranchesProtegidos devolve onde nada entra sem PR, com o default aplicado.
+func (w *Workflow) BranchesProtegidos() []string {
+	if w == nil {
+		return []string{"main"}
+	}
+	if len(w.ProtectedBranches) > 0 {
+		return w.ProtectedBranches
+	}
+	base := w.BranchDeIntegracao()
+	if base == "main" {
+		return []string{"main"}
+	}
+	// O branch de integração recebe o trabalho; a `main` recebe a produção. Os dois
+	// precisam de porta, e um projeto que declarou `develop` sem dizer mais nada
+	// certamente não quer push direto na main.
+	return []string{base, "main"}
 }
 
 // ModoGitHub diz se o projeto declarou a gestão no GitHub.

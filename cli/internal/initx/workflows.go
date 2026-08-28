@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/co2-lab/anchors/internal/config"
 )
 
 // workflowsFS carrega os pipelines que o modo `github` do fluxo de trabalho pressupõe.
@@ -54,6 +56,27 @@ var WorkflowsDoFluxo = []Workflow{
 		ExigeSerial: true,
 	},
 }
+
+// ProtecaoDeBranch é o que o modo `github` exige da `main`: nada entra sem PR.
+//
+// É o que torna o ciclo de revisão possível. A §7.9 do BOOTSTRAP diz que o agente sobe o
+// código e ABRE O PR, e o card vai para `ready-to-review` — sem PR não há o que revisar,
+// e o estado `in-review` fica sem objeto.
+//
+// E é o que o pipeline de identificação pressupõe: ele dispara na abertura do PR, porque
+// o push na main acontece DEPOIS do merge, quando o trabalho já terminou. Push direto na
+// main pula o card, pula a revisão, e pula o pipeline.
+type ProtecaoDeBranch struct {
+	// ExigePR — nada entra na main sem pull request.
+	ExigePR bool
+	// RevisoesNecessarias — quantas aprovações. Zero é legítimo num time de uma pessoa
+	// com agentes: o PR existe para o card ter objeto e para o histórico ficar legível,
+	// e exigir aprovação de outra conta travaria o fluxo inteiro.
+	RevisoesNecessarias int
+}
+
+// ProtecaoExigida é o mínimo que o fluxo pressupõe.
+var ProtecaoExigida = ProtecaoDeBranch{ExigePR: true, RevisoesNecessarias: 0}
 
 // DirWorkflows é onde os pipelines moram no projeto.
 const DirWorkflows = ".github/workflows"
@@ -189,7 +212,10 @@ func SemConcurrency(root string) []Workflow {
 // stale, uma permissão a mais, um passo de build próprio — é trabalho deliberado, e
 // reescrevê-lo pelo padrão apagaria a customização sem avisar. É a régua que o
 // `install-hooks` já usa com um pre-commit alheio.
-func SemeiaWorkflows(root string) ([]string, error) {
+// Recebe o CONFIG, e não o branch já extraído: as regras de branch moram no anchors.yaml,
+// e quem precisa delas as lê de lá. Passar o valor pronto espalharia a decisão por cada
+// chamador, e bastaria um deles ler de outro lugar para o projeto ter dois fluxos.
+func SemeiaWorkflows(root string, cfg *config.Config) ([]string, error) {
 	dir := filepath.Join(root, DirWorkflows)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, fmt.Errorf("criar %s: %w", DirWorkflows, err)
@@ -204,6 +230,7 @@ func SemeiaWorkflows(root string) ([]string, error) {
 		if err != nil {
 			return escritos, fmt.Errorf("ler o template %s: %w", w.Arquivo, err)
 		}
+		conteudo = aplicaBranchDeIntegracao(conteudo, cfg.Workflow.BranchDeIntegracao())
 		if err := os.WriteFile(dest, conteudo, 0o644); err != nil {
 			return escritos, fmt.Errorf("escrever %s: %w", dest, err)
 		}
@@ -211,4 +238,22 @@ func SemeiaWorkflows(root string) ([]string, error) {
 	}
 	sort.Strings(escritos)
 	return escritos, nil
+}
+
+// aplicaBranchDeIntegracao troca o branch cravado no template pelo que o projeto
+// declarou. A linha alvo é marcada com `# anchors:integration-branch` — um marcador, e
+// não uma busca por "main", porque "main" aparece em comentário e em outros contextos, e
+// substituir a ocorrência errada quebraria o pipeline de um jeito difícil de ver.
+func aplicaBranchDeIntegracao(conteudo []byte, branch string) []byte {
+	if branch == "" || branch == "main" {
+		return conteudo
+	}
+	linhas := strings.Split(string(conteudo), "\n")
+	for i, l := range linhas {
+		if strings.Contains(l, "# anchors:integration-branch") {
+			indent := l[:len(l)-len(strings.TrimLeft(l, " "))]
+			linhas[i] = indent + "branches: [" + branch + "] # anchors:integration-branch"
+		}
+	}
+	return []byte(strings.Join(linhas, "\n"))
 }

@@ -19,9 +19,27 @@
 # (`workflow_dispatch` com `tudo: true`), para quando se quer reconciliar o passado.
 name: anchors · identificar trabalho
 
+# Dispara na ABERTURA DO PR, não no push da main.
+#
+# Todo trabalho entra por PR, e o push na main acontece DEPOIS do merge — criar o card
+# ali o faria nascer para trabalho que já terminou. Na abertura do PR os artefatos novos
+# existem e o trabalho que vem deles ainda não: é o momento em que o card serve.
+#
+# `synchronize` cobre o commit adicionado ao PR já aberto: uma spec nova numa revisão
+# seguinte também precisa de card.
 on:
-  push:
-    branches: [main]
+  pull_request:
+    # O BRANCH DE INTEGRAÇÃO — onde o trabalho chega. `anchors doctor --fix` substitui
+    # esta linha pelo `workflow.integration_branch` do anchors.yaml.
+    #
+    # Não é sempre `main`: num fluxo em que o trabalho é integrado em `develop`,
+    # promovido para `staging` e só chega à `main` em produção, o card precisa nascer no
+    # PR para `develop` — na `main` ele nasceria no fim, para trabalho que já terminou.
+    #
+    # Um PR entre branches de feature não entra: é trabalho em curso, e criaria card para
+    # artefato que talvez nem seja integrado.
+    branches: [main] # anchors:integration-branch
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
       tudo:
@@ -113,10 +131,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           LABEL: anchors
-          # O ponto de partida do diff. Num push normal é o commit anterior; no primeiro
-          # push de um branch o GitHub manda zeros, e aí o fallback (`git show`) olha só o
-          # commit atual.
-          BEFORE: ${{ github.event.before }}
+          # O ponto de partida do diff é a BASE do PR: tudo que o PR acrescenta em
+          # relação a ela é o que pode ter chegado sem card. Num `workflow_dispatch` não
+          # há PR, e aí o fallback (`git show`) olha o commit atual.
+          BEFORE: ${{ github.event.pull_request.base.sha }}
           TUDO: ${{ inputs.tudo }}
         run: |
           set -euo pipefail

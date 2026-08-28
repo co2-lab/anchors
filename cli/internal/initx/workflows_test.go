@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
 )
 
 // Todo pipeline declarado na lista precisa EXISTIR embutido. A lista é o que o doctor
@@ -314,7 +316,7 @@ func TestFaltaWorkflowVeOQueNaoExiste(t *testing.T) {
 		t.Fatalf("projeto vazio: esperava %d faltando, veio %d", len(WorkflowsDoFluxo), len(faltam))
 	}
 
-	escritos, err := SemeiaWorkflows(dir)
+	escritos, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}})
 	if err != nil {
 		t.Fatalf("semear: %v", err)
 	}
@@ -344,7 +346,7 @@ func TestSemeiaNaoSobrescreveOQueOTimeEditou(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	escritos, err := SemeiaWorkflows(dir)
+	escritos, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}})
 	if err != nil {
 		t.Fatalf("semear: %v", err)
 	}

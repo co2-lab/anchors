@@ -146,6 +146,16 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 		return
 	}
 	fmt.Println("✓ pipelines do fluxo no lugar")
+
+	// O FLUXO DO PR, dito onde quem retoma o trabalho vai ler. Todo trabalho sobe por
+	// PR: é o que dá objeto à revisão e o que faz o card nascer (o pipeline de
+	// identificação dispara na ABERTURA do PR, não no push).
+	base := cfg.Workflow.BranchDeIntegracao()
+	fmt.Printf("  trabalho entra por PR para `%s`", base)
+	if p := cfg.Workflow.BranchesProtegidos(); len(p) > 1 {
+		fmt.Printf(" · protegidos: %s", strings.Join(p, ", "))
+	}
+	fmt.Println()
 	fmt.Println()
 
 	// Um projeto sem trabalho não tem card a pedir: o passo é criar o primeiro plano,

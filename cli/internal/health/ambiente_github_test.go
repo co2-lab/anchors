@@ -59,7 +59,7 @@ func TestAmbienteAvisaPipelineAusente(t *testing.T) {
 // próprio, e nunca contado como "ausente".
 func TestAmbientePegaPipelineSemSerializacao(t *testing.T) {
 	dir := t.TempDir()
-	if _, err := initx.SemeiaWorkflows(dir); err != nil {
+	if _, err := initx.SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}}); err != nil {
 		t.Fatal(err)
 	}
 	// Estraga um: tira a serialização, mantém o arquivo.
@@ -90,7 +90,7 @@ func TestFixSatisfazOQueODoctorCobra(t *testing.T) {
 		t.Fatal("preparo: o projeto vazio deveria ter achados")
 	}
 
-	if _, err := initx.SemeiaWorkflows(dir); err != nil {
+	if _, err := initx.SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -108,7 +108,7 @@ func TestFixSatisfazOQueODoctorCobra(t *testing.T) {
 // fluxo não usa.
 func TestDoctorNaoCobraBoard(t *testing.T) {
 	dir := t.TempDir()
-	if _, err := initx.SemeiaWorkflows(dir); err != nil {
+	if _, err := initx.SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}}); err != nil {
 		t.Fatal(err)
 	}
 

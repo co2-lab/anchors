@@ -1,6 +1,9 @@
 package health
 
 import (
+	"os/exec"
+	"strings"
+
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/initx"
 )
@@ -25,7 +28,8 @@ func checkAmbienteGitHub(cfg *config.Config, root string) []Finding {
 	// o Project é só espelho opcional (ver BOOTSTRAP.md §7.13). Cobrar um board que o
 	// fluxo não precisa produziria um achado que ninguém precisa resolver — e ruído
 	// recorrente treina a equipe a ignorar o doctor.
-	return checkPipelines(root)
+	out := checkPipelines(root)
+	return append(out, checkProtecaoDeBranch(cfg)...)
 }
 
 // checkPipelines confere o que dá para conferir lendo o disco: os três workflows existem,
@@ -48,4 +52,35 @@ func checkPipelines(root string) []Finding {
 				"ou criar o mesmo card duas vezes"})
 	}
 	return out
+}
+
+// checkProtecaoDeBranch confere que a `main` exige PR.
+//
+// É a regra que o fluxo inteiro pressupõe, e a única cuja ausência não produz erro em
+// lugar nenhum: sem proteção, um push direto na main funciona — e pula o card, pula a
+// revisão, e pula o pipeline de identificação (que dispara na ABERTURA do PR, porque o
+// push na main acontece depois do merge, quando o trabalho já terminou).
+//
+// O silêncio aqui é o mais caro do fluxo: tudo parece funcionar, e o ciclo de governança
+// simplesmente não acontece.
+func checkProtecaoDeBranch(cfg *config.Config) []Finding {
+	if _, err := exec.LookPath("gh"); err != nil {
+		return nil // sem `gh` o doctor já reclama noutro achado; não duplicar
+	}
+	repo := cfg.Workflow.Repo
+	out, err := exec.Command("gh", "api",
+		"repos/"+repo+"/branches/main/protection",
+		"--jq", ".required_pull_request_reviews != null").Output()
+	if err != nil {
+		// 404 é a resposta para branch sem proteção — e é o achado, não um erro.
+		return []Finding{{"main-sem-protecao", Warn, repo,
+			"a `main` não exige pull request — um push direto nela pula o card, a revisão " +
+				"e o pipeline de identificação (que dispara na ABERTURA do PR). Nada falha: " +
+				"o ciclo de governança simplesmente não acontece. Rode `anchors doctor --fix`"}}
+	}
+	if strings.TrimSpace(string(out)) != "true" {
+		return []Finding{{"main-sem-protecao", Warn, repo,
+			"a `main` tem proteção, mas não exige pull request — ver `anchors doctor --fix`"}}
+	}
+	return nil
 }
