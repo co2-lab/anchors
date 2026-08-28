@@ -20,3 +20,6 @@ FINDINGS-*.md
 
 # capturas de sessao do Playwright MCP — contem dominios e ids de conta reais
 .playwright-mcp/
+
+# relatorios gerados por gates (SBOM etc)
+reports/

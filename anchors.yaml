@@ -196,6 +196,30 @@ gates:
     category: security
     measures: "quantas CVEs conhecidas o go.mod carrega, por severidade (osv-scanner)"
 
+  - name: licenca-compativel
+    on: [code]
+    scope: project
+    run: "bash scripts/anchors-licencas.sh"
+    needs_tool: go-licenses
+    install_hint: "go install github.com/google/go-licenses@latest"
+    blocking: true
+    when: [pre-push, ci]
+    cost: fast
+    category: security
+    measures: "nenhuma dependência copyleft forte no binário (incompatível com a ELv2)"
+
+  - name: sbom-gerado
+    on: [code]
+    scope: project
+    run: "bash scripts/anchors-sbom.sh"
+    needs_tool: syft
+    install_hint: "brew install syft"
+    blocking: false
+    when: [ci]
+    cost: slow
+    category: security
+    measures: "o inventário de componentes do binário, para quem audita o que distribuímos"
+
   - name: padrao-inseguro
     on: [code]
     scope: batch

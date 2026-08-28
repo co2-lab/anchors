@@ -250,6 +250,14 @@ Traduzir mal destruiria exatamente isso.
 
 ---
 
+## Licença
+
+[Elastic License 2.0](./LICENSE) — o código é aberto para ler, usar, modificar e
+distribuir, inclusive comercialmente. A única restrição relevante: não oferecer o Anchors
+a terceiros como serviço hospedado ou gerenciado.
+
+---
+
 <div align="center">
 <sub>O conceito é independente de qualquer ferramenta. Ele permanece verdadeiro sem elas.</sub>
 </div>
