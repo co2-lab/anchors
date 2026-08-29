@@ -64,6 +64,42 @@
          border: 1px solid var(--fazendo); border-radius: 6px; padding: .3rem .6rem; }
   .doc:hover { background: var(--fazendo); color: #fff; }
   .prioridade { color: var(--fraco); font-size: .8rem; margin-bottom: 1rem; }
+  .abas { display: flex; gap: .25rem; margin: .75rem 0 1rem;
+          border-bottom: 1px solid var(--linha); }
+  .abas button { border: none; border-bottom: 2px solid transparent; border-radius: 0;
+                 background: none; padding: .5rem .9rem; font-size: .85rem; }
+  .abas button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--marca);
+                                       font-weight: 500; }
+  .abas button:hover { color: var(--fg); }
+  /* A ÁRVORE. `ul`/`li` de verdade, e não divs indentados: um leitor de tela anuncia
+     "lista de 3 itens, nível 2", que é exatamente a informação que a indentação dá
+     visualmente. */
+  .arv, .arv ul { list-style: none; margin: 0; padding: 0; }
+  .arv ul { margin-left: 1.1rem; padding-left: .9rem; border-left: 1px solid var(--linha); }
+  .arv li { margin: .3rem 0; }
+  .no { display: flex; align-items: center; gap: .5rem; padding: .45rem .6rem;
+        background: var(--card); border: 1px solid var(--linha); border-radius: 6px;
+        width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+  .no:hover { border-color: var(--fazendo); }
+  .no.fase { background: var(--bg); border-style: dashed; cursor: default; }
+  .no.fase:hover { border-color: var(--linha); }
+  .no .cod { font-family: ui-monospace, monospace; font-size: .7rem; font-weight: 600;
+             color: var(--fazendo); flex: none; }
+  .no.fase .cod { color: var(--marca); }
+  .no .nome { font-size: .82rem; overflow: hidden; text-overflow: ellipsis;
+              white-space: nowrap; }
+  .no .est { margin-left: auto; font-size: .68rem; color: var(--fraco); flex: none;
+             padding: .1rem .4rem; border: 1px solid var(--linha); border-radius: 4px; }
+  /* PRONTO PARA PEGAR: o item cujas dependências fecharam. É a resposta que a árvore
+     existe para dar, e ela precisa saltar aos olhos — sem isso o leitor teria de
+     percorrer a hierarquia conferindo estado por estado. */
+  .no.livre { border-color: var(--pronto); }
+  .no.livre .cod { color: var(--pronto); }
+  .no.bloqueado { opacity: .55; }
+  .legenda { display: flex; gap: 1.2rem; flex-wrap: wrap; font-size: .72rem;
+             color: var(--fraco); margin-bottom: 1rem; }
+  .legenda span { display: flex; align-items: center; gap: .35rem; }
+  .amostra { width: .7rem; height: .7rem; border-radius: 3px; border: 1px solid var(--linha); }
   .colunas { display: flex; gap: .75rem; overflow-x: auto; padding-bottom: 1rem; }
   .coluna { flex: 0 0 15rem; background: var(--card); border: 1px solid var(--linha);
             border-radius: 8px; padding: .75rem; }
@@ -182,11 +218,30 @@
   Este board é a fotografia das <em>issues</em> deste repositório — sem banco, sem servidor,
   sem GitHub Projects.
 </p>
+<nav class="abas" role="tablist">
+  <button role="tab" id="aba-board" aria-selected="true" aria-controls="v-board">Board</button>
+  <button role="tab" id="aba-arvore" aria-selected="false" aria-controls="v-arvore">Árvore</button>
+</nav>
+
+<section id="v-board" role="tabpanel" aria-labelledby="aba-board">
 <p class="prioridade">
   A prioridade é da <strong>direita para a esquerda</strong>: termine o que está mais
   adiantado antes de pegar coisa nova.
 </p>
 <div class="colunas" id="colunas"></div>
+</section>
+
+<!-- A ÁRVORE em aba separada, e não indentada dentro do board.
+     São duas perguntas diferentes: o board responde "em que estado está o trabalho?" e
+     a árvore responde "o que depende do quê?". Misturá-las degrada as duas — a coluna
+     fica estreita para hierarquia, e a hierarquia não cabe em oito colunas. -->
+<section id="v-arvore" role="tabpanel" aria-labelledby="aba-arvore" hidden>
+  <p class="prioridade">
+    A ordem de trabalho declarada: um item só pode ser pego quando tudo de que ele
+    <strong>depende</strong> estiver concluído.
+  </p>
+  <div id="arvore"></div>
+</section>
 
 <!-- `<dialog>` nativo: o navegador já dá o fechamento por Esc, o foco preso dentro e o
      fundo inerte. Reimplementar isso em JS é como se erra acessibilidade sem perceber. -->
@@ -306,8 +361,7 @@ function desenha(d) {
           ${esc(nome)}<span class="qtd">${cards.length}</span></div>
         <div class="oquee">${esc(oquee)}</div>
         ${cards.length === 0 ? '<div class="vazia">vazia</div>' : cards.map((c) => `
-          <button class="card" type="button" data-numero="${c.numero}"
-                  style="margin-left:${Math.min(NIVEIS.nivel?.[c.codigo] || 0, 3) * 0.75}rem">
+          <button class="card" type="button" data-numero="${c.numero}">
             ${c.codigo ? `<div class="codigo">${esc(c.codigo)}</div>` : ""}
             <h3>${esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</h3>
             ${(c.needs || []).length ? `<div class="dep" title="depende de">↳ ${
@@ -316,6 +370,7 @@ function desenha(d) {
           </button>`).join("")}
       </section>`;
     }).join("");
+    desenhaArvore(d);
 }
 
 function carrega() {
@@ -376,6 +431,98 @@ function rotula() {
 btnAuto.onclick = () => { pref.auto = !pref.auto; rotula(); agenda(); if (pref.auto) carrega(); };
 btnCd.onclick = () => { pref.cd = !pref.cd; rotula(); carrega(); };
 
+// --- a ÁRVORE ---
+//
+// A raiz são os itens SEM dependência; abaixo de cada nó vêm os que dependem dele. A
+// relação é a mesma do board (o `needs`), desenhada pelo lado oposto: lá o nível era
+// indentação numa coluna, aqui é a estrutura.
+//
+// Um item com VÁRIAS dependências aparece sob CADA UMA. É deliberado: ele está bloqueado
+// pelas duas, e escondê-lo sob uma só faria a outra parecer irrelevante. A duplicação
+// mostra a verdade — a mesma coisa depende de dois lugares.
+function desenhaArvore(d) {
+  const alvo = document.getElementById("arvore");
+  const itens = (d.itens || []).filter((i) => i.codigo);
+  const fases = d.fases || [];
+  if (!itens.length && !fases.length) {
+    alvo.innerHTML = '<p class="vazia">Nada a mostrar.</p>';
+    return;
+  }
+
+  // Todos os nós: cards e fases juntos. A fase não tem card, e sem ela a árvore ficaria
+  // com buracos onde deveria haver o agrupamento.
+  const nos = {};
+  for (const f of fases) nos[f.codigo] = { ...f, tipo: "fase" };
+  for (const i of itens) nos[i.codigo] = { ...i, tipo: "card" };
+
+  const filhos = {};
+  const raizes = [];
+  for (const cod of Object.keys(nos)) {
+    const pais = (nos[cod].needs || []).filter((n) => nos[n]);
+    if (!pais.length) { raizes.push(cod); continue; }
+    for (const p of pais) (filhos[p] ||= []).push(cod);
+  }
+
+  // Uma fase está concluída quando os CARDS dela estão. A fase seguinte não conta: ela é
+  // o que vem depois, não parte desta — e incluí-la faria a fase 1 só fechar quando o
+  // plano inteiro terminasse.
+  const concluido = (n) => n.tipo === "fase"
+    ? (filhos[n.codigo] || []).filter((f) => nos[f].tipo === "card")
+        .every((f) => concluido(nos[f]))
+    : ["anchors:ready-to-test", "anchors:in-test", "anchors:ready-to-release",
+       "anchors:production"].includes(n.estado);
+
+  // LIVRE = todas as dependências concluídas. É a resposta que a árvore existe para dar.
+  const livre = (n) => (n.needs || []).filter((x) => nos[x]).every((x) => concluido(nos[x]));
+
+  function no(cod, vistos) {
+    // CICLO: `needs` circular não pode pendurar o navegador. O gate `fase-ordenada` já o
+    // reprova no repositório; aqui a defesa é só para a página sobreviver a um.
+    if (vistos.has(cod)) return "";
+    const n = nos[cod];
+    const kids = (filhos[cod] || []).sort();
+    const cls = n.tipo === "fase" ? "fase"
+      : concluido(n) ? "" : livre(n) ? "livre" : "bloqueado";
+    // O progresso da fase conta só os CARDS, não as fases-filhas: a fase seguinte não é
+    // trabalho desta. Contando-a, `F03` mostrava "1/2" tendo um único card, e o 1 era a
+    // fase `F04` vazia — um progresso que media a estrutura em vez do trabalho.
+    const cards = kids.filter((k) => nos[k].tipo === "card");
+    const est = n.tipo === "fase"
+      ? (cards.length ? `${cards.filter((k) => concluido(nos[k])).length}/${cards.length}`
+                      : "sem card")
+      : (n.estado || "").replace("anchors:", "");
+    return `<li>
+      <button class="no ${cls}" type="button" ${n.numero ? `data-numero="${n.numero}"` : "disabled"}>
+        <span class="cod">${esc(cod)}</span>
+        <span class="nome">${esc((n.titulo || "").replace(/^\[[^\]]+\]\s*/, ""))}</span>
+        <span class="est">${esc(est)}</span>
+      </button>
+      ${kids.length ? `<ul>${kids.map((k) => no(k, new Set([...vistos, cod]))).join("")}</ul>` : ""}
+    </li>`;
+  }
+
+  alvo.innerHTML = `
+    <div class="legenda">
+      <span><i class="amostra" style="border-color:var(--pronto)"></i> pronto para pegar</span>
+      <span><i class="amostra" style="opacity:.55"></i> bloqueado por dependência</span>
+      <span><i class="amostra" style="border-style:dashed;border-color:var(--marca)"></i> fase do plano</span>
+    </div>
+    <ul class="arv">${raizes.sort().map((r) => no(r, new Set())).join("")}</ul>`;
+}
+
+// --- as abas ---
+const ABAS = [["aba-board", "v-board"], ["aba-arvore", "v-arvore"]];
+function mostraAba(id) {
+  for (const [aba, painel] of ABAS) {
+    const sel = aba === id;
+    document.getElementById(aba).setAttribute("aria-selected", String(sel));
+    document.getElementById(painel).hidden = !sel;
+  }
+  localStorage.setItem("anchors:aba", id);
+}
+for (const [aba] of ABAS) document.getElementById(aba).onclick = () => mostraAba(aba);
+mostraAba(localStorage.getItem("anchors:aba") || "aba-board");
+
 // --- a modal ---
 //
 // O clique no card abre os detalhes em vez de navegar. O motivo é o contexto: sair para o
@@ -389,12 +536,14 @@ const dlgCorpo = document.getElementById("detalhe-corpo");
 
 // DELEGADO no container: as colunas são reescritas a cada 5s, e um listener por card
 // morreria no primeiro refresh.
-document.getElementById("colunas").addEventListener("click", (ev) => {
-  const alvo = ev.target.closest(".card");
+for (const cont of ["colunas", "arvore"]) {
+document.getElementById(cont).addEventListener("click", (ev) => {
+  const alvo = ev.target.closest(".card, .no[data-numero]");
   if (!alvo) return;
   const c = (ULTIMO.itens || []).find((i) => String(i.numero) === alvo.dataset.numero);
   if (c) abre(c);
 });
+}
 
 // "atualizado 29/08/2026, 17:55:14" ocupa uma tag inteira para dizer pouco. O que
 // importa num board é a IDADE do card — "há 2h" responde de relance.
