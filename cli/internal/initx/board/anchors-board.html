@@ -77,6 +77,26 @@
   .arv, .arv ul { list-style: none; margin: 0; padding: 0; }
   .arv ul { margin-left: 1.1rem; padding-left: .9rem; border-left: 1px solid var(--linha); }
   .arv li { margin: .3rem 0; }
+  /* O marcador padrão do `<summary>` fica ANTES do conteúdo e desalinha a linha; o
+     triângulo é redesenhado dentro do botão, onde ele pertence. */
+  .arv summary { list-style: none; cursor: pointer; }
+  .arv summary::-webkit-details-marker { display: none; }
+  .arv summary .no::before { content: "▸"; font-size: .6rem; color: var(--fraco);
+                             flex: none; transition: transform .12s; display: inline-block; }
+  .arv details[open] > summary .no::before { transform: rotate(90deg); }
+  /* A FOLHA ganha o mesmo recuo do triângulo: sem isto, nós com e sem filho ficam com o
+     texto desalinhado e a árvore parece torta. */
+  .arv li.folha .no { padding-left: 1.35rem; }
+  .filtro { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+            margin-bottom: 1rem; }
+  .filtro-rotulo { font-size: .78rem; color: var(--fraco); }
+  .chips { display: flex; gap: .35rem; flex-wrap: wrap; }
+  .chip { font-size: .72rem; padding: .2rem .55rem; border-radius: 999px;
+          border: 1px solid var(--linha); background: var(--card); color: var(--fraco); }
+  .chip[aria-pressed="true"] { border-color: var(--fazendo); color: var(--fazendo);
+                               background: var(--bg); }
+  .controles { display: flex; gap: .5rem; margin-bottom: .75rem; }
+  .controles button { font-size: .72rem; padding: .25rem .55rem; }
   .no { display: flex; align-items: center; gap: .5rem; padding: .45rem .6rem;
         background: var(--card); border: 1px solid var(--linha); border-radius: 6px;
         width: 100%; text-align: left; font: inherit; color: inherit; cursor: pointer; }
@@ -223,6 +243,15 @@
   <button role="tab" id="aba-arvore" aria-selected="false" aria-controls="v-arvore">Árvore</button>
 </nav>
 
+<!-- O FILTRO fica FORA das abas, de propósito: ele vale para as duas, e duplicá-lo faria
+     o leitor escolher de novo ao trocar de aba — ou pior, ver resultados diferentes sem
+     entender por quê. -->
+<div class="filtro" id="filtro" hidden>
+  <span class="filtro-rotulo">Filtrar:</span>
+  <div class="chips" id="chips"></div>
+  <button type="button" id="limpar-filtro" hidden>limpar</button>
+</div>
+
 <section id="v-board" role="tabpanel" aria-labelledby="aba-board">
 <p class="prioridade">
   A prioridade é da <strong>direita para a esquerda</strong>: termine o que está mais
@@ -354,8 +383,9 @@ function desenha(d) {
       d.repo + " · foto de " + new Date(d.quando).toLocaleString();
     const visiveis = COLUNAS.filter(([, , , , cd]) => pref.cd || !cd);
     NIVEIS = calculaNiveis(d);
+    rotulasFiltro(d);
     document.getElementById("colunas").innerHTML = visiveis.map(([id, nome, oquee, cor]) => {
-      const cards = (d.itens || []).filter((i) => i.estado === id);
+      const cards = (d.itens || []).filter((i) => i.estado === id && passaNoFiltro(i));
       return `<section class="coluna">
         <div class="titulo"><span class="bola" style="background:${cor}"></span>
           ${esc(nome)}<span class="qtd">${cards.length}</span></div>
@@ -431,6 +461,56 @@ function rotula() {
 btnAuto.onclick = () => { pref.auto = !pref.auto; rotula(); agenda(); if (pref.auto) carrega(); };
 btnCd.onclick = () => { pref.cd = !pref.cd; rotula(); carrega(); };
 
+// --- o FILTRO por label ---
+//
+// As labels de ESTADO (`anchors:*`) ficam de fora: o estado já é a coluna do board e o
+// selo da árvore, e oferecê-lo aqui daria duas maneiras de fazer a mesma coisa — com o
+// agravante de poder contradizê-las (filtrar `to-do` esvaziaria as outras sete colunas).
+//
+// O que sobra é o que o TIME acrescentou: `bug`, `urgente`, a label de uma squad. É por
+// isso que se filtra um board.
+const filtroAtivo = new Set();
+
+function rotulasFiltro(d) {
+  const cont = document.getElementById("filtro");
+  const chips = document.getElementById("chips");
+  const todas = new Set();
+  for (const i of d.itens || []) {
+    for (const l of i.labels || []) if (!l.startsWith("anchors:")) todas.add(l);
+  }
+  if (todas.size === 0) { cont.hidden = true; return; }
+  cont.hidden = false;
+  // Recria só quando o CONJUNTO muda: reescrever a cada 5s perderia o foco de quem está
+  // navegando pelos chips com o teclado.
+  const assinatura = [...todas].sort().join("|");
+  if (chips.dataset.assinatura !== assinatura) {
+    chips.dataset.assinatura = assinatura;
+    chips.innerHTML = [...todas].sort().map((l) =>
+      `<button class="chip" type="button" data-label="${esc(l)}"
+               aria-pressed="${filtroAtivo.has(l)}">${esc(l)}</button>`).join("");
+  }
+  for (const b of chips.querySelectorAll(".chip")) {
+    b.setAttribute("aria-pressed", String(filtroAtivo.has(b.dataset.label)));
+  }
+  document.getElementById("limpar-filtro").hidden = filtroAtivo.size === 0;
+}
+
+document.getElementById("chips").addEventListener("click", (ev) => {
+  const b = ev.target.closest(".chip");
+  if (!b) return;
+  const l = b.dataset.label;
+  filtroAtivo.has(l) ? filtroAtivo.delete(l) : filtroAtivo.add(l);
+  desenha(ULTIMO);
+});
+document.getElementById("limpar-filtro").onclick = () => { filtroAtivo.clear(); desenha(ULTIMO); };
+
+// OU, e não E: marcar `bug` e `urgente` mostra os dois, que é o que quem clica espera.
+// Exigir as duas na mesma issue esvaziaria a tela na segunda seleção.
+function passaNoFiltro(i) {
+  if (filtroAtivo.size === 0) return true;
+  return (i.labels || []).some((l) => filtroAtivo.has(l));
+}
+
 // --- a ÁRVORE ---
 //
 // A raiz são os itens SEM dependência; abaixo de cada nó vêm os que dependem dele. A
@@ -442,7 +522,10 @@ btnCd.onclick = () => { pref.cd = !pref.cd; rotula(); carrega(); };
 // mostra a verdade — a mesma coisa depende de dois lugares.
 function desenhaArvore(d) {
   const alvo = document.getElementById("arvore");
-  const itens = (d.itens || []).filter((i) => i.codigo);
+  // As FASES sobrevivem ao filtro: elas são a estrutura, e removê-las deixaria os itens
+  // filtrados órfãos na raiz — a árvore viraria uma lista, que é justamente o que a outra
+  // aba já faz.
+  const itens = (d.itens || []).filter((i) => i.codigo && passaNoFiltro(i));
   const fases = d.fases || [];
   if (!itens.length && !fases.length) {
     alvo.innerHTML = '<p class="vazia">Nada a mostrar.</p>';
@@ -475,12 +558,23 @@ function desenhaArvore(d) {
   // LIVRE = todas as dependências concluídas. É a resposta que a árvore existe para dar.
   const livre = (n) => (n.needs || []).filter((x) => nos[x]).every((x) => concluido(nos[x]));
 
+  // Uma fase só aparece se ela ou algum descendente tiver card visível. Sem isto, filtrar
+  // por `bug` deixaria a árvore inteira de fases vazias na tela — a casca da hierarquia
+  // sem nada dentro.
+  function temConteudo(cod, vistos = new Set()) {
+    if (vistos.has(cod)) return false;
+    const n = nos[cod];
+    if (!n) return false;
+    if (n.tipo === "card") return true;
+    return (filhos[cod] || []).some((k) => temConteudo(k, new Set([...vistos, cod])));
+  }
+
   function no(cod, vistos) {
     // CICLO: `needs` circular não pode pendurar o navegador. O gate `fase-ordenada` já o
     // reprova no repositório; aqui a defesa é só para a página sobreviver a um.
     if (vistos.has(cod)) return "";
     const n = nos[cod];
-    const kids = (filhos[cod] || []).sort();
+    const kids = (filhos[cod] || []).sort().filter((k) => temConteudo(k));
     const cls = n.tipo === "fase" ? "fase"
       : concluido(n) ? "" : livre(n) ? "livre" : "bloqueado";
     // O progresso da fase conta só os CARDS, não as fases-filhas: a fase seguinte não é
@@ -491,23 +585,61 @@ function desenhaArvore(d) {
       ? (cards.length ? `${cards.filter((k) => concluido(nos[k])).length}/${cards.length}`
                       : "sem card")
       : (n.estado || "").replace("anchors:", "");
-    return `<li>
-      <button class="no ${cls}" type="button" ${n.numero ? `data-numero="${n.numero}"` : "disabled"}>
+    const linha = `<button class="no ${cls}" type="button" ${
+      n.numero ? `data-numero="${n.numero}"` : "disabled"}>
         <span class="cod">${esc(cod)}</span>
         <span class="nome">${esc((n.titulo || "").replace(/^\[[^\]]+\]\s*/, ""))}</span>
         <span class="est">${esc(est)}</span>
-      </button>
-      ${kids.length ? `<ul>${kids.map((k) => no(k, new Set([...vistos, cod]))).join("")}</ul>` : ""}
-    </li>`;
+      </button>`;
+    if (!kids.length) return `<li class="folha">${linha}</li>`;
+    // `<details>` NATIVO: o navegador já dá o teclado (Enter/Espaço), a semântica de
+    // expandido/recolhido para leitor de tela, e o Ctrl+F que abre o nó ao achar texto
+    // dentro dele. Reimplementar isso com um botão e `display:none` perde as três.
+    //
+    // Um nó CONCLUÍDO nasce recolhido: o que já terminou não é o que se procura numa
+    // árvore de dependências, e mantê-lo aberto empurra para baixo o trabalho que
+    // importa. Os demais nascem abertos — esconder o que está bloqueado esconderia
+    // justamente a explicação de por que algo não pode ser pego.
+    const aberto = concluido(n) ? "" : " open";
+    return `<li><details${aberto}>
+      <summary>${linha}</summary>
+      <ul>${kids.map((k) => no(k, new Set([...vistos, cod]))).join("")}</ul>
+    </details></li>`;
   }
 
+  // O estado de cada nó é PRESERVADO entre os refreshes de 5s: sem isto, recolher um
+  // ramo para enxergar o resto seria desfeito cinco segundos depois.
+  const abertosAntes = new Set(
+    [...alvo.querySelectorAll("details[open] > summary .cod")].map((e) => e.textContent));
+  const fechadosAntes = new Set(
+    [...alvo.querySelectorAll("details:not([open]) > summary .cod")].map((e) => e.textContent));
+
   alvo.innerHTML = `
+    <div class="controles">
+      <button type="button" id="expandir">expandir tudo</button>
+      <button type="button" id="recolher">recolher tudo</button>
+    </div>
     <div class="legenda">
       <span><i class="amostra" style="border-color:var(--pronto)"></i> pronto para pegar</span>
       <span><i class="amostra" style="opacity:.55"></i> bloqueado por dependência</span>
       <span><i class="amostra" style="border-style:dashed;border-color:var(--marca)"></i> fase do plano</span>
     </div>
-    <ul class="arv">${raizes.sort().map((r) => no(r, new Set())).join("")}</ul>`;
+    <ul class="arv">${raizes.sort().filter((r) => temConteudo(r)).map((r) => no(r, new Set())).join("")}</ul>`;
+
+  // Restaura o que o leitor tinha aberto ou fechado. Um nó NOVO (que não estava na foto
+  // anterior) mantém o padrão — o leitor nunca decidiu nada sobre ele.
+  for (const d of alvo.querySelectorAll("details")) {
+    const cod = d.querySelector("summary .cod")?.textContent;
+    if (abertosAntes.has(cod)) d.open = true;
+    else if (fechadosAntes.has(cod)) d.open = false;
+  }
+
+  alvo.querySelector("#expandir").onclick = () => {
+    for (const d of alvo.querySelectorAll("details")) d.open = true;
+  };
+  alvo.querySelector("#recolher").onclick = () => {
+    for (const d of alvo.querySelectorAll("details")) d.open = false;
+  };
 }
 
 // --- as abas ---
