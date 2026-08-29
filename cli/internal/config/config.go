@@ -380,11 +380,17 @@ func normalizaTitulo(s string) string {
 // Quem altera `Realizes` no catálogo de seções (`new_templates.go`) tem de conferir esta
 // lista: são as duas metades da mesma decisão, e elas divergiram sem que nada acusasse.
 //
+// `F` (Phase/Fase) é a FASE de um plano — o agrupamento que ordena o trabalho dentro
+// dele. Entrou junto com o `parent:`, e sem ela o gate `rule-types` reprova toda spec
+// que declare `needs: CODE-F01`: o próprio Anchors passaria a recusar a convenção que
+// ele acabou de criar. É a terceira vez que a lista fica para trás de uma letra nova —
+// ver a nota acima sobre conferir as duas metades.
+//
 // `Q` (Question) é a DECISÃO EM ABERTO. Ela não é uma regra — é a ausência de uma —, e
 // ainda assim precisa de identidade: sem código, a pergunta não vira issue rastreável,
 // não sobrevive a uma reescrita da spec, e não dá para dizer que a regra `X-B03` nasceu
 // da pergunta `X-Q01`. É a peça que faltava para a pergunta durar mais que a sessão.
-var DefaultRuleLetters = "SRVAXBNMDEIQ"
+var DefaultRuleLetters = "SRVAXBNMDEIQF"
 
 // CodeLengths são os comprimentos de código de identidade que o engine reconhece.
 //

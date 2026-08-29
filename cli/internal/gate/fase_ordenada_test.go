@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -150,5 +151,22 @@ func TestParentSemCiclo(t *testing.T) {
 	}
 	if !strings.Contains(msg, "ciclo") {
 		t.Errorf("a mensagem deveria nomear o ciclo: %s", msg)
+	}
+}
+
+// A letra `F` da FASE tem de estar nas canônicas. Sem ela, o `rule-types` reprova toda
+// spec que declare `needs: CODE-F01` — o Anchors recusaria a convenção que ele mesmo
+// criou, e foi o que aconteceu: as 5 specs do projeto de referência reprovaram no commit.
+//
+// É a terceira vez que a lista de letras fica para trás de uma convenção nova (`I` e `E`
+// do catálogo de seções foram as outras duas), e por isso o teste existe.
+func TestLetraDaFaseEhCanonica(t *testing.T) {
+	if !strings.Contains(config.DefaultRuleLetters, "F") {
+		t.Errorf("`F` (fase) não está em %s — toda spec com `needs: CODE-F01` reprovaria "+
+			"no rule-types", config.DefaultRuleLetters)
+	}
+	// E o regex que casa a fase precisa aceitar o código que o gate produz.
+	if !faseRE().MatchString("### ABCDX-F01 — a fase") {
+		t.Error("o regex de fase não casa o formato que o próprio gate documenta")
 	}
 }
