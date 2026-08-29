@@ -109,6 +109,8 @@
           border: 1px solid var(--linha); background: var(--card); color: var(--fraco); }
   .chip[aria-pressed="true"] { border-color: var(--fazendo); color: var(--fazendo);
                                background: var(--bg); }
+  .apos { font-size: .68rem; color: var(--fraco); font-family: ui-monospace, monospace;
+          flex: none; padding: .1rem .4rem; border-radius: 4px; background: var(--bg); }
   .controles { display: flex; gap: .5rem; margin-bottom: .75rem; }
   .controles button { font-size: .72rem; padding: .25rem .55rem; }
   .no { display: flex; align-items: center; gap: .5rem; padding: .45rem .6rem;
@@ -563,12 +565,27 @@ function desenhaArvore(d) {
   for (const f of fases) nos[f.codigo] = { ...f, tipo: "fase" };
   for (const i of itens) nos[i.codigo] = { ...i, tipo: "card" };
 
+  // A ÁRVORE LÊ `parent`, e não infere pertencimento a partir de `needs`.
+  //
+  // São relações diferentes: `needs` é ORDEM ("vem depois de"), `parent` é PERTENCIMENTO
+  // ("está dentro de"). A fase 2 vem depois da fase 1 e NÃO está dentro dela — as duas
+  // pertencem ao mesmo plano. Inferir uma da outra desenhava as quatro fases de um plano
+  // encaixadas como escada.
+  //
+  // A fase sem `parent` declarado cai no plano homônimo: `FNDTN-F01` pertence a `FNDTN`,
+  // e o código já diz isso. É a única inferência que sobra, e ela é segura porque o
+  // código da fase é DERIVADO do plano.
   const filhos = {};
   const raizes = [];
   for (const cod of Object.keys(nos)) {
-    const pais = (nos[cod].needs || []).filter((n) => nos[n]);
-    if (!pais.length) { raizes.push(cod); continue; }
-    for (const p of pais) (filhos[p] ||= []).push(cod);
+    const n = nos[cod];
+    let pai = n.parent || "";
+    if (!pai && n.tipo === "fase") {
+      const plano = cod.split("-")[0];
+      if (nos[plano]) pai = plano;
+    }
+    if (!pai || !nos[pai]) { raizes.push(cod); continue; }
+    (filhos[pai] ||= []).push(cod);
   }
 
   // Uma fase está concluída quando os CARDS dela estão. A fase seguinte não conta: ela é
@@ -599,7 +616,14 @@ function desenhaArvore(d) {
     // reprova no repositório; aqui a defesa é só para a página sobreviver a um.
     if (vistos.has(cod)) return "";
     const n = nos[cod];
-    const kids = (filhos[cod] || []).sort().filter((k) => temConteudo(k));
+    // As FASES vêm primeiro e em ordem de sequência (F01, F02, …), e os cards depois:
+    // a fase é a estrutura do plano, e misturá-la com o trabalho na ordem alfabética
+    // esconderia a sequência que ela existe para mostrar.
+    const kids = (filhos[cod] || []).filter((k) => temConteudo(k)).sort((a, b) => {
+      const fa = nos[a].tipo === "fase", fb = nos[b].tipo === "fase";
+      if (fa !== fb) return fa ? -1 : 1;
+      return a.localeCompare(b);
+    });
     const cls = n.tipo === "fase" ? "fase"
       : concluido(n) ? "" : livre(n) ? "livre" : "bloqueado";
     // O progresso da fase conta só os CARDS, não as fases-filhas: a fase seguinte não é
@@ -610,8 +634,13 @@ function desenhaArvore(d) {
       ? (cards.length ? `${cards.filter((k) => concluido(nos[k])).length}/${cards.length}`
                       : "sem card")
       : (n.estado || "").replace("anchors:", "");
+    // A ORDEM aparece como texto, já que deixou de ser aninhamento: "depois de F01" diz o
+    // que a escada dizia, sem mentir que uma fase está dentro da outra.
+    const depois = (n.needs || []).filter((x) => nos[x] && nos[x].tipo === "fase");
     const corpo = `<span class="cod">${esc(cod)}</span>
         <span class="nome">${esc((n.titulo || "").replace(/^\[[^\]]+\]\s*/, ""))}</span>
+        ${depois.length ? `<span class="apos">depois de ${
+          depois.map(esc).join(", ")}</span>` : ""}
         <span class="est">${esc(est)}</span>`;
     const linha = `<button class="no ${cls}" type="button" ${
       n.numero ? `data-numero="${n.numero}"` : "disabled"}>${corpo}</button>`;

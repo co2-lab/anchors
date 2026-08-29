@@ -94,6 +94,10 @@ type File struct {
 	// puxando cards de uma fila comum, alguém pegaria o plano de uma feature antes de a
 	// fundação existir — e descobriria isso ao tentar criar o primeiro arquivo.
 	Needs []string
+	// Parent é o CÓDIGO do artefato que contém este — a fase de um card, o plano de uma
+	// fase. Um só: pertencimento é uma relação de um pai, ao contrário de `needs`, que é
+	// lista porque uma coisa pode depender de várias.
+	Parent string
 }
 
 // Dep é uma linha da Tabela de Dependências de uma spec consumidora (SPEC_TYPES §5):
@@ -163,6 +167,7 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 			HeaderCode:    extractHeaderCode(string(content)),
 			Seeds:         extractSeeds(kind, string(content)),
 			Needs:         needsFor(kind, content, root, rel),
+			Parent:        parentDe(content),
 			NoPropagation: noPropRE.Match(content),
 			SharedCode:    sharedCodeRE.Match(content),
 			Deps:          depsFor(kind, content, root, rel),
@@ -412,6 +417,16 @@ var headerDepRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*dep:\s*(.+)$`)
 // que precisam terminar antes deste começar. Aceita 1+ caminhos separados por vírgula.
 var headerNeedsRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*needs:\s*(.+)$`)
 
+// headerParentRE captura a linha `parent:` — QUEM É O PAI deste artefato.
+//
+// `parent` e `needs` são relações DIFERENTES, e confundi-las produz uma árvore errada:
+// `needs` é ORDEM ("vem depois de"), `parent` é PERTENCIMENTO ("está dentro de"). A fase 2
+// vem depois da fase 1 e NÃO está dentro dela — as duas pertencem ao mesmo plano.
+//
+// Enquanto só havia `needs`, a árvore inferia o pai a partir da ordem, e desenhava as
+// quatro fases de um plano encaixadas uma na outra como uma escada.
+var headerParentRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*parent:\s*(.+)$`)
+
 // needsFor lê `needs:` de um PLANO (caminhos de outros planos) ou de uma SPEC (o CÓDIGO
 // da fase que precisa fechar antes).
 //
@@ -431,6 +446,20 @@ func needsFor(kind string, content []byte, root, rel string) []string {
 		return extractNeedsCodigo(content)
 	}
 	return nil
+}
+
+// parentDe lê o `parent:` do header — o código de quem contém este artefato.
+//
+// Vale para qualquer kind: uma spec pertence a uma fase, uma fase a um plano, e um plano
+// pode pertencer a outro num projeto que agrupe por épico. A hierarquia é livre porque a
+// forma de organizar trabalho varia, e o Anchors não tem por que impor uma.
+func parentDe(content []byte) string {
+	m := headerParentRE.FindSubmatch(content)
+	if m == nil {
+		return ""
+	}
+	raw := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(m[1])), "-->"))
+	return stripInlineCode(raw)
 }
 
 // extractNeedsCodigo lê o `needs:` de uma spec, onde o valor é o código da fase.

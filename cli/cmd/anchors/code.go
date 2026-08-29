@@ -369,9 +369,14 @@ reporta, e aqui ela fica visível de graça.`,
 					// mesmo caminho que já falhou antes com `grep -B1` e que motivou os
 					// campos acima.
 					Needs []string `json:"needs,omitempty"`
+					// Parent é o PERTENCIMENTO — quem contém este artefato. Sai junto com
+					// `needs` porque quem monta uma árvore precisa das duas: `parent` dá
+					// a estrutura, `needs` dá a ordem dentro dela.
+					Parent string `json:"parent,omitempty"`
 				}
 				kinds := kindPorArquivo(mapPath)
 				needs := needsPorArquivo(mapPath)
+				parents := parentPorArquivo(mapPath)
 				out := make([]saida, 0, len(linhas))
 				for _, l := range linhas {
 					arq := codeFile[l.code]
@@ -382,6 +387,7 @@ reporta, e aqui ela fica visível de graça.`,
 						Kind:    kinds[arq],
 						Titulo:  tituloDoArquivo(absRoot, arq),
 						Needs:   needs[arq],
+						Parent:  parents[arq],
 					})
 				}
 				b, jerr := json.MarshalIndent(out, "", "  ")
@@ -524,6 +530,22 @@ func needsPorArquivo(mapPath string) map[string][]string {
 	for _, n := range g.Nodes {
 		if len(n.Needs) > 0 {
 			out[n.ID] = n.Needs
+		}
+	}
+	return out
+}
+
+// parentPorArquivo devolve o pertencimento declarado por cada arquivo do mapa — o código
+// de quem o contém.
+func parentPorArquivo(mapPath string) map[string]string {
+	out := map[string]string{}
+	g, err := mapx.Load(mapPath)
+	if err != nil {
+		return out
+	}
+	for _, n := range g.Nodes {
+		if n.Parent != "" {
+			out[n.ID] = n.Parent
 		}
 	}
 	return out

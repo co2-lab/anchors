@@ -105,6 +105,12 @@ type Node struct {
 	// Guardado no NÓ, e não só como aresta, porque um `needs` para plano inexistente não
 	// vira aresta nenhuma — e é justamente esse caso que o doctor precisa reportar.
 	Needs []string `yaml:"needs,omitempty"`
+	// Parent — o CÓDIGO do artefato que CONTÉM este (`parent:` no header).
+	//
+	// Distinto de `Needs`, que é ordem: a fase 2 vem DEPOIS da fase 1 e não está DENTRO
+	// dela. Com só uma das duas relações, quem monta a árvore precisa inferir a outra — e
+	// inferir pertencimento a partir de ordem encaixa as fases de um plano numa escada.
+	Parent string `yaml:"parent,omitempty"`
 	// Signal — sinais de qualidade INGERIDOS do runner (o Anchors não roda o teste;
 	// consome o artefato que o projeto já gera). Preenchido por `anchors ingest`.
 	Signal *TestSignal `yaml:"signal,omitempty"`

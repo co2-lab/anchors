@@ -160,3 +160,71 @@ func checkFaseExiste(content string, n mapx.Node, root string, g *mapx.Graph, cf
 	}
 	return Pass, ""
 }
+
+// checkParentValido confronta o `parent:` contra o que existe.
+//
+// Um `parent` que aponta para o nada não produz erro em lugar nenhum — produz SILÊNCIO: o
+// item some da árvore (ninguém o contém) ou fica pendurado numa raiz que não deveria
+// existir. É a mesma classe de defeito do `needs` quebrado, e recebe o mesmo tratamento.
+//
+// Aceita como pai o CÓDIGO de um artefato (`FNDTN`) ou de uma fase (`FNDTN-F01`) — a
+// hierarquia é livre porque a forma de organizar trabalho varia entre projetos.
+func checkParentValido(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Parent == "" {
+		return Skip, "sem `parent:` declarado — nada a confrontar"
+	}
+	if g == nil {
+		return Pending, "sem mapa não dá para achar o pai"
+	}
+	if n.Parent == n.Code {
+		return Fail, fmt.Sprintf("`%s` declara a si mesmo como pai — um item contido em si "+
+			"não tem lugar na árvore, e quem a monta entra em laço", n.Code)
+	}
+
+	// Os códigos que existem: artefatos do mapa e fases catalogadas nos planos.
+	existe := map[string]bool{}
+	for _, o := range g.Nodes {
+		if o.Code != "" {
+			existe[o.Code] = true
+		}
+		if o.Kind != mapx.KindPlan {
+			continue
+		}
+		b, err := os.ReadFile(filepath.Join(root, o.ID))
+		if err != nil {
+			continue
+		}
+		for _, f := range FasesDoPlano(string(b)) {
+			existe[f] = true
+		}
+	}
+	if !existe[n.Parent] {
+		return Fail, fmt.Sprintf("declara `parent: %s`, que não existe — nenhum artefato "+
+			"tem esse código e nenhum plano cataloga essa fase. Um pai inexistente não "+
+			"falha em lugar nenhum: o item simplesmente SOME da árvore, ou fica pendurado "+
+			"numa raiz que não deveria existir", n.Parent)
+	}
+
+	// CICLO: A contém B contém A. Percorre a cadeia até a raiz.
+	visto := map[string]bool{n.Code: true}
+	atual := n.Parent
+	for i := 0; i < 64 && atual != ""; i++ {
+		if visto[atual] {
+			return Fail, fmt.Sprintf("a cadeia de `parent` volta a `%s` — a hierarquia tem "+
+				"um ciclo, e quem a percorre nunca chega à raiz", atual)
+		}
+		visto[atual] = true
+		atual = paiDe(g, atual)
+	}
+	return Pass, ""
+}
+
+// paiDe devolve o `parent` do nó com este código, ou vazio.
+func paiDe(g *mapx.Graph, code string) string {
+	for _, n := range g.Nodes {
+		if n.Code == code {
+			return n.Parent
+		}
+	}
+	return "" // fase não é nó do mapa: a cadeia termina nela
+}

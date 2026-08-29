@@ -88,3 +88,67 @@ func TestFaseExisteAceitaVarias(t *testing.T) {
 		t.Errorf("a fase que EXISTE não pode aparecer como ausente: %s", msg)
 	}
 }
+
+// `parent` é PERTENCIMENTO e `needs` é ORDEM. Um pai que não existe não falha em lugar
+// nenhum — o item SOME da árvore, e é por isso que o gate precisa dizer.
+func TestParentValido(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, "plans"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	plano := "### FNDTN-F01 — a árvore\n\n### FNDTN-F02 — a régua\n"
+	if err := os.WriteFile(filepath.Join(dir, "plans/0001.md"), []byte(plano), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "plans/0001.md", Kind: mapx.KindPlan, Code: "FNDTN"},
+		{ID: "a.spec.md", Kind: mapx.KindSpec, Code: "WRKSP", Parent: "FNDTN-F01"},
+	}}
+
+	// Pai que É uma fase catalogada.
+	ok := mapx.Node{Kind: mapx.KindSpec, Code: "WRKSP", Parent: "FNDTN-F01"}
+	if v, msg := checkParentValido("", ok, dir, g, nil); v != Pass {
+		t.Errorf("fase catalogada é pai válido: %v — %s", v, msg)
+	}
+
+	// Pai que é o CÓDIGO de um artefato.
+	if v, msg := checkParentValido("", mapx.Node{Code: "X", Parent: "FNDTN"}, dir, g, nil); v != Pass {
+		t.Errorf("artefato do mapa é pai válido: %v — %s", v, msg)
+	}
+
+	// Pai INEXISTENTE: o item sumiria da árvore em silêncio.
+	v, msg := checkParentValido("", mapx.Node{Code: "X", Parent: "FNDTN-F09"}, dir, g, nil)
+	if v != Fail {
+		t.Fatalf("pai inexistente deveria reprovar, veio %v", v)
+	}
+	if !strings.Contains(msg, "SOME da árvore") {
+		t.Errorf("a mensagem deveria dizer o que acontece na prática: %s", msg)
+	}
+
+	// Pai de si mesmo: quem monta a árvore entra em laço.
+	if v, _ := checkParentValido("", mapx.Node{Code: "WRKSP", Parent: "WRKSP"}, dir, g, nil); v != Fail {
+		t.Errorf("ser pai de si mesmo deveria reprovar, veio %v", v)
+	}
+
+	// Sem `parent` não há o que confrontar — e isso não é falha: a maioria dos artefatos
+	// não pertence a nada.
+	if v, _ := checkParentValido("", mapx.Node{Code: "X"}, dir, g, nil); v != Skip {
+		t.Errorf("sem parent deveria pular, veio %v", v)
+	}
+}
+
+// CICLO na cadeia: A contém B contém A. Quem percorre nunca chega à raiz.
+func TestParentSemCiclo(t *testing.T) {
+	dir := t.TempDir()
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "a.md", Code: "AAAAA", Parent: "BBBBB"},
+		{ID: "b.md", Code: "BBBBB", Parent: "AAAAA"},
+	}}
+	v, msg := checkParentValido("", g.Nodes[0], dir, g, nil)
+	if v != Fail {
+		t.Fatalf("ciclo deveria reprovar, veio %v", v)
+	}
+	if !strings.Contains(msg, "ciclo") {
+		t.Errorf("a mensagem deveria nomear o ciclo: %s", msg)
+	}
+}
