@@ -68,6 +68,7 @@ func Diagnose(g *mapx.Graph, cfg *config.Config, root string) Report {
 	r.Findings = append(r.Findings, checkAmbienteGitHub(cfg, root)...)
 	r.Findings = append(r.Findings, checkNeedsDosPlanos(g)...)
 	r.Findings = append(r.Findings, checkSinaisAusentes(g)...)
+	r.Findings = append(r.Findings, checkDecisoesPendentes(g, root, cfg)...)
 	sortFindings(r.Findings)
 	return r
 }

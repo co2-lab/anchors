@@ -379,7 +379,12 @@ func normalizaTitulo(s string) string {
 //
 // Quem altera `Realizes` no catálogo de seções (`new_templates.go`) tem de conferir esta
 // lista: são as duas metades da mesma decisão, e elas divergiram sem que nada acusasse.
-var DefaultRuleLetters = "SRVAXBNMDEI"
+//
+// `Q` (Question) é a DECISÃO EM ABERTO. Ela não é uma regra — é a ausência de uma —, e
+// ainda assim precisa de identidade: sem código, a pergunta não vira issue rastreável,
+// não sobrevive a uma reescrita da spec, e não dá para dizer que a regra `X-B03` nasceu
+// da pergunta `X-Q01`. É a peça que faltava para a pergunta durar mais que a sessão.
+var DefaultRuleLetters = "SRVAXBNMDEIQ"
 
 // CodeLengths são os comprimentos de código de identidade que o engine reconhece.
 //

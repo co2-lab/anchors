@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -174,5 +175,88 @@ func TestOpenQuestionsSoSpec(t *testing.T) {
 				t.Fatalf("kind %s deveria ser Skip, foi %s", k, v)
 			}
 		})
+	}
+}
+
+// A pergunta precisa de CÓDIGO. Sem identidade ela não vira issue rastreável, não
+// sobrevive a uma reescrita da spec, e nada liga depois a regra à pergunta que a originou.
+func TestOpenQuestions_cobraCodigoNaPergunta(t *testing.T) {
+	base := "## Decisões em aberto\n\n| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n"
+
+	// SEM código na primeira célula: achado próprio, distinto de "há pendência".
+	anonima := base + "| | Fuso do vencimento: UTC ou local? | Produto | `PARCX-R04` |\n"
+	v, d := rodaAberto(t, anonima)
+	if v != Pending {
+		t.Fatalf("pergunta anônima é pendência, foi %s", v)
+	}
+	if !strings.Contains(d, "SEM CÓDIGO") {
+		t.Errorf("o achado deveria ser o da identidade ausente, veio: %s", d)
+	}
+
+	// COM código: volta a ser a pendência normal, e a mensagem traz código E assunto.
+	comCodigo := base + "| `PARCX-Q01` | Fuso do vencimento: UTC ou local? | Produto | `PARCX-R04` |\n"
+	v, d = rodaAberto(t, comCodigo)
+	if v != Pending {
+		t.Fatalf("pergunta identificada continua sendo pendência, foi %s", v)
+	}
+	if strings.Contains(d, "SEM CÓDIGO") {
+		t.Errorf("a pergunta tem código; não podia ser cobrada por identidade: %s", d)
+	}
+	if !strings.Contains(d, "PARCX-Q01") {
+		t.Errorf("a mensagem deveria nomear a pergunta pelo código: %s", d)
+	}
+	if !strings.Contains(d, "Fuso") {
+		t.Errorf("só o código faria abrir a spec para saber do que se trata: %s", d)
+	}
+}
+
+// O código da coluna "Vira" é a REGRA FUTURA, não a identidade da pergunta. Lê-lo como
+// identidade daria por identificada justamente a pergunta mais bem escrita — a que já
+// declarou seu destino.
+func TestOpenQuestions_naoConfundeViraComIdentidade(t *testing.T) {
+	base := "## Decisões em aberto\n\n| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n"
+	semIdentidadeMasComDestino := base + "| | Fuso do vencimento? | Produto | `PARCX-R04` |\n"
+
+	_, d := rodaAberto(t, semIdentidadeMasComDestino)
+	if !strings.Contains(d, "SEM CÓDIGO") {
+		t.Errorf("`PARCX-R04` está na coluna Vira e não identifica a pergunta: %s", d)
+	}
+}
+
+// O TÍTULO DA SEÇÃO é do projeto, não do framework. A lista de variantes cravada no gate
+// cobria português e inglês; uma spec em qualquer outro idioma caía no ramo "a spec não
+// declara a seção" TENDO a seção com perguntas dentro — o gate afirmava ausência onde
+// havia conteúdo, que é a falha mais cara que ele pode ter.
+func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
+	espanhol := "## Decisiones pendientes\n\n| Código | Pregunta | Quién decide |\n| --- | --- | --- |\n" +
+		"| `PARCX-Q01` | ¿Zona horaria del vencimiento? | Producto |\n"
+
+	// SEM declarar: o framework não conhece o título, e o gate reporta a seção como
+	// ausente — dívida, não defeito, e por isso Pending e não Fail.
+	corpo, achou := seçãoDecisõesEmAbertoCfg(espanhol, nil, "")
+	if achou {
+		t.Errorf("sem declaração, o framework não tem como conhecer o título: %q", corpo)
+	}
+
+	// DECLARANDO `section_titles.open`, o gate encontra a seção e conta a pergunta.
+	cfg := &config.Config{SectionTitles: config.SectionTitles{"open": "Decisiones pendientes"}}
+	if n := DecisõesEmAberto(espanhol, cfg, ""); n != 1 {
+		t.Errorf("com o título declarado, a pergunta deveria ser contada; veio %d", n)
+	}
+
+	// O GATE, e não só o contador, respeita o título: ele recebia o cfg na assinatura e
+	// passava nil adiante — a correção não alcançaria o caminho principal.
+	cfgEs := &config.Config{SectionTitles: config.SectionTitles{"open": "Decisiones pendientes"}}
+	if v, d := checkOpenQuestions(espanhol, mapx.Node{Kind: mapx.KindSpec}, "", nil, cfgEs); v != Pending || !strings.Contains(d, "PARCX-Q01") {
+		t.Errorf("o gate deveria achar a seção declarada e nomear a pergunta: %s — %s", v, d)
+	}
+
+	// E o título declarado VENCE o padrão do framework: um projeto que renomeia a seção
+	// não pode ser cobrado pelo nome que o framework usaria.
+	misto := "## Decisões em aberto\n\nnenhuma\n\n## Pendências de produto\n\n" +
+		"| Código | Pergunta |\n| --- | --- |\n| `PARCX-Q01` | Fuso? |\n"
+	cfgProduto := &config.Config{SectionTitles: config.SectionTitles{"open": "Pendências de produto"}}
+	if n := DecisõesEmAberto(misto, cfgProduto, ""); n != 1 {
+		t.Errorf("a seção declarada é a que vale, e ela tem 1 pergunta; veio %d", n)
 	}
 }

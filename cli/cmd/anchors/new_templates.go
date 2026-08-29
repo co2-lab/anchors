@@ -169,9 +169,9 @@ var specTemplate = template{
 		// justamente o que ela existe para revelar. Quem não tem dúvida gasta uma palavra
 		// ("nenhuma"); quem tem, ganha um lugar declarado para ela em vez de um comentário
 		// de PR que morre no merge.
-		{Key: "open", Title: "Decisões em aberto (o que a spec ainda NÃO decide)", Default: true,
-			Purpose: "O que quem implementa vai precisar e a spec não responde. Enquanto houver item aqui, implementar é adivinhar — e a adivinhação não é confrontada por gate nenhum, porque todas as peças existem. Quando a resposta vier, PROMOVA-A a regra (com código) e marque o item como resolvido; a pergunta fica no rastro, não é varrida.",
-			Body:    "## Decisões em aberto\n\n| Pergunta | Quem decide | Vira |\n| --- | --- | --- |\n\nnenhuma\n\n"},
+		{Key: "open", Title: "Decisões em aberto (o que a spec ainda NÃO decide)", Default: true, Realizes: "Q",
+			Purpose: "O que quem implementa vai precisar e a spec não responde. Enquanto houver item aqui, implementar é adivinhar — e a adivinhação não é confrontada por gate nenhum, porque todas as peças existem. Cada pergunta ganha um CÓDIGO (`{CODE}-Q01`): sem identidade ela não vira issue rastreável nem sobrevive a uma reescrita da spec. Quando a resposta vier, PROMOVA-A a regra (com código) e marque o item como resolvido citando a regra que nasceu dela; a pergunta fica no rastro, não é varrida.",
+			Body:    "## Decisões em aberto\n\n| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n\nnenhuma\n\n"},
 		{Key: "notes", Title: "Notas de implementação", Default: false,
 			Purpose: "Decisão técnica não-óbvia que o código não explica sozinho (por que assim, e não do jeito esperado).",
 			Body:    "## Notas de Implementação\nTODO: o que um leitor futuro precisa saber.\n\n"},
