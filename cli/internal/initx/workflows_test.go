@@ -393,3 +393,57 @@ func TestSemConcurrencyPegaPipelineQuePareceOK(t *testing.T) {
 		}
 	}
 }
+
+// O BOARD NÃO PODE SUBSTITUIR O SITE. `actions/deploy-pages` publica o artefato como o
+// site INTEIRO — num projeto que já tem landing page ou documentação no Pages, isso
+// trocaria o site pelo board. A perda é silenciosa: só se descobre quando alguém abre o
+// endereço e o site sumiu.
+//
+// Este teste é o que impede a volta ao deploy direto, que é o caminho óbvio e errado.
+func TestBoardNaoSubstituiOSiteExistente(t *testing.T) {
+	b, err := workflowsFS.ReadFile("workflows/anchors-board.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Só as linhas EXECUTÁVEIS: o template explica em comentário por que não usa
+	// `deploy-pages`, e casar o texto inteiro reprovaria a própria explicação.
+	var exec []string
+	for _, l := range strings.Split(string(b), "\n") {
+		if t := strings.TrimSpace(l); t != "" && !strings.HasPrefix(t, "#") {
+			exec = append(exec, l)
+		}
+	}
+	texto := strings.Join(exec, "\n")
+	for _, proibido := range []string{"deploy-pages", "upload-pages-artifact"} {
+		if strings.Contains(texto, proibido) {
+			t.Errorf("o board usa `%s`, que publica o artefato como o site INTEIRO — "+
+				"um projeto com site existente o perderia", proibido)
+		}
+	}
+	// E a escrita tem de ser numa SUBPASTA, não na raiz do branch.
+	if !strings.Contains(texto, "SUBPASTA") {
+		t.Error("o board deveria escrever numa subpasta, para não tocar no resto do site")
+	}
+}
+
+// A PÁGINA acompanha o pipeline que a publica: semear um sem o outro deixa o fluxo pela
+// metade — o workflow roda e falha ao copiar um arquivo que não existe.
+func TestSemeiaEscreveAPaginaDoBoard(t *testing.T) {
+	dir := t.TempDir()
+	if _, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}}); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(dir, ArquivoDoBoard))
+	if err != nil {
+		t.Fatalf("a página do board não foi semeada: %v", err)
+	}
+	if !strings.Contains(string(b), MarcadorDeTemplate) {
+		t.Error("a página deveria trazer o marcador — sem ele o `--fix` nunca a atualiza")
+	}
+	// O HTML fica FORA de `.github/workflows/`: o GitHub executa tudo que está lá, e um
+	// HTML naquele diretório vira um workflow inválido — erro de sintaxe permanente no
+	// repositório de quem adotou.
+	if strings.Contains(ArquivoDoBoard, DirWorkflows) {
+		t.Errorf("a página não pode morar em %s: o GitHub tentaria executá-la", DirWorkflows)
+	}
+}

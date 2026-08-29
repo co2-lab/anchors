@@ -1,0 +1,104 @@
+<!doctype html>
+<!-- anchors:template — gerado pelo `anchors`. Enquanto este comentário existir, o
+     `anchors doctor --fix` mantém o arquivo atualizado. Ao editar, REMOVA esta linha:
+     é o que diz ao Anchors que a página passou a ser sua. -->
+<meta charset="utf-8">
+<title>Board — Anchors</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #f6f8fa; --fg: #1f2328; --card: #fff; --linha: #d1d9e0; --fraco: #59636e;
+    --todo: #8b949e; --fazendo: #0969da; --pronto: #1a7f37; --alerta: #9a6700;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d1117; --fg: #e6edf3; --card: #151b23; --linha: #3d444d; --fraco: #9198a1;
+      --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 1.5rem; background: var(--bg); color: var(--fg);
+         font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.25rem;
+           flex-wrap: wrap; }
+  h1 { font-size: 1.25rem; margin: 0; }
+  .quando { color: var(--fraco); font-size: .8rem; }
+  .prioridade { color: var(--fraco); font-size: .8rem; margin-bottom: 1rem; }
+  .colunas { display: flex; gap: .75rem; overflow-x: auto; padding-bottom: 1rem; }
+  .coluna { flex: 0 0 15rem; background: var(--card); border: 1px solid var(--linha);
+            border-radius: 8px; padding: .75rem; }
+  .titulo { display: flex; align-items: center; gap: .4rem; font-weight: 600;
+            font-size: .8rem; text-transform: uppercase; letter-spacing: .02em;
+            margin-bottom: .25rem; }
+  .bola { width: .6rem; height: .6rem; border-radius: 50%; flex: none; }
+  .qtd { margin-left: auto; color: var(--fraco); font-weight: 400; }
+  .oquee { color: var(--fraco); font-size: .75rem; margin-bottom: .75rem; }
+  .card { display: block; background: var(--bg); border: 1px solid var(--linha);
+          border-radius: 6px; padding: .6rem; margin-bottom: .5rem; text-decoration: none;
+          color: inherit; }
+  .card:hover { border-color: var(--fazendo); }
+  .codigo { font-family: ui-monospace, SFMono-Regular, monospace; font-size: .72rem;
+            color: var(--fazendo); font-weight: 600; }
+  .card h3 { font-size: .82rem; margin: .2rem 0 0; font-weight: 500; }
+  .dono { display: inline-block; margin-top: .4rem; font-size: .7rem; color: var(--fraco);
+          font-family: ui-monospace, monospace; }
+  .vazia { color: var(--fraco); font-size: .75rem; font-style: italic; padding: .5rem 0; }
+  .erro { background: var(--card); border: 1px solid var(--alerta); border-radius: 8px;
+          padding: 1rem; }
+</style>
+<header>
+  <h1>Board</h1>
+  <span class="quando" id="quando"></span>
+</header>
+<p class="prioridade">
+  A prioridade é da <strong>direita para a esquerda</strong>: termine o que está mais
+  adiantado antes de pegar coisa nova.
+</p>
+<div class="colunas" id="colunas"></div>
+
+<script>
+// A ordem é a do FLUXO, e a leitura é da direita para a esquerda — o mais adiantado
+// primeiro. É a mesma regra que o pipeline de claim aplica ao escolher trabalho.
+const COLUNAS = [
+  ["anchors:to-do",            "TO DO",            "trabalho disponível, sem dono",     "var(--todo)"],
+  ["anchors:in-progress",      "IN PROGRESS",      "um agente está implementando",      "var(--fazendo)"],
+  ["anchors:ready-to-review",  "READY TO REVIEW",  "PR verde, esperando revisor",       "var(--todo)"],
+  ["anchors:in-review",        "IN REVIEW",        "um agente está revisando",          "var(--fazendo)"],
+  ["anchors:ready-to-test",    "READY TO TEST",    "aceito — fim da alçada do Anchors", "var(--pronto)"],
+  ["anchors:in-test",          "IN TEST",          "em teste",                          "var(--pronto)"],
+  ["anchors:ready-to-release", "READY TO RELEASE", "teste passou",                      "var(--pronto)"],
+  ["anchors:production",       "PRODUCTION",       "no ar",                             "var(--pronto)"],
+];
+
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+fetch("board.json?" + Date.now())
+  .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+  .then((d) => {
+    document.getElementById("quando").textContent =
+      d.repo + " · foto de " + new Date(d.quando).toLocaleString();
+    document.getElementById("colunas").innerHTML = COLUNAS.map(([id, nome, oquee, cor]) => {
+      const cards = (d.itens || []).filter((i) => i.estado === id);
+      return `<section class="coluna">
+        <div class="titulo"><span class="bola" style="background:${cor}"></span>
+          ${esc(nome)}<span class="qtd">${cards.length}</span></div>
+        <div class="oquee">${esc(oquee)}</div>
+        ${cards.length === 0 ? '<div class="vazia">vazia</div>' : cards.map((c) => `
+          <a class="card" href="${esc(c.url)}">
+            ${c.codigo ? `<div class="codigo">${esc(c.codigo)}</div>` : ""}
+            <h3>${esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</h3>
+            ${c.dono ? `<span class="dono">◆ ${esc(c.dono)}</span>` : ""}
+          </a>`).join("")}
+      </section>`;
+    }).join("");
+  })
+  .catch((e) => {
+    // O ERRO é dito, e não engolido: um board em branco é indistinguível de um board
+    // vazio, e o leitor concluiria que não há trabalho.
+    document.getElementById("colunas").innerHTML =
+      `<div class="erro"><strong>Não deu para ler o board.</strong><br>
+       O <code>board.json</code> não foi encontrado (${esc(e)}). Ele é publicado pelo
+       pipeline <code>anchors · publicar o board</code> — verifique se ele rodou.</div>`;
+  });
+</script>

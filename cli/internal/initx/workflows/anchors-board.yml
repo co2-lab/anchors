@@ -1,0 +1,145 @@
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
+# Anchors — o BOARD publicado no Pages
+#
+# O board do GitHub Projects é uma ENTIDADE SEPARADA das issues: um item do Project é uma
+# referência, criada explicitamente, e o campo `Status` dele não é a label. Nada liga um
+# ao outro sozinho — medido num projeto real, com as 8 colunas corretamente configuradas
+# e o board VAZIO, porque a automação nativa move o que já está lá, não adiciona.
+#
+# Ligar os dois exigiria um PAT com escopo `project` de todo adotante, que é o atrito que
+# o desenho por labels existe para eliminar (BOOTSTRAP §7.13).
+#
+# Este pipeline resolve por outro caminho: as issues JÁ são o estado, e uma página estática
+# as apresenta em colunas. Sem Projects, sem PAT — o `GITHUB_TOKEN` da própria Action lê
+# issues do repositório, que é tudo que o board precisa.
+name: anchors · publicar o board
+
+on:
+  # DISPARADO PELO FIM DOS OUTROS: quem altera issue é pipeline, e o board é a fotografia
+  # do resultado. Reagir ao FIM (e não ao mesmo evento que eles) garante que a foto é
+  # tirada depois da mudança, não durante.
+  workflow_run:
+    workflows:
+      - "anchors · identificar trabalho"
+      - "anchors · atribuir trabalho"
+      - "anchors · PR verde move o card"
+      - "anchors · liberar cards parados"
+    types: [completed]
+  # E POR MUDANÇA DIRETA na issue: uma label movida à mão na interface não passa por
+  # pipeline nenhum, e sem isto o board mentiria até o próximo pipeline rodar.
+  issues:
+    types: [opened, closed, reopened, labeled, unlabeled, edited]
+  workflow_dispatch:
+
+# Serializado: quatro pipelines podem terminar quase juntos, e duas publicações
+# simultâneas do mesmo site é uma sobrescrevendo a outra. `cancel-in-progress: true` aqui
+# é DELIBERADO e diferente dos outros pipelines — o board é estado DERIVADO, e a execução
+# mais nova sempre produz uma foto melhor que a que está no meio do caminho.
+concurrency:
+  group: anchors-board
+  cancel-in-progress: true
+
+# `contents: write` porque o board é COMMITADO num branch próprio, e não publicado por
+# deploy direto — ver o comentário do passo de publicação.
+permissions:
+  contents: write
+  issues: read
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Gerar o board a partir das issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          LABEL: anchors
+        run: |
+          set -euo pipefail
+          mkdir -p _board
+
+          # O JSON é DERIVADO do estado atual, e nunca acumulado por edições
+          # incrementais: se um pipeline falhar no meio, a próxima publicação conserta
+          # sozinha. Um arquivo editado a cada mudança ficaria errado para sempre.
+          #
+          # E não é COMMITADO: estado derivado versionado enche o histórico de ruído e —
+          # pior — cada commit dispararia o pipeline de identificação de novo, num laço.
+          gh issue list --state open --label "$LABEL" --limit 500 \
+            --json number,title,url,labels,comments,updatedAt \
+            --jq '[.[] | {
+                    numero: .number,
+                    titulo: .title,
+                    url: .url,
+                    atualizado: .updatedAt,
+                    codigo: (.title | capture("^\\[(?<c>[^]]+)\\]").c? // ""),
+                    estado: ([.labels[].name | select(startswith("anchors:"))] | .[0] // "anchors:to-do"),
+                    dono: ([.comments[].body | select(startswith("anchors-owner:"))] | last // "" |
+                           sub("^anchors-owner: *";"") | select(test("\\(liberado\\)") | not))
+                  }]' > _board/board.json
+
+          # O carimbo de quando a foto foi tirada. Um board sem isso não se distingue de
+          # um board que parou de atualizar — e o leitor confia num dado velho.
+          jq -n --slurpfile itens _board/board.json \
+                --arg quando "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+                --arg repo "$GH_REPO" \
+                '{quando: $quando, repo: $repo, itens: $itens[0]}' > _board/dados.json
+          mv _board/dados.json _board/board.json
+          echo "$(jq '.itens | length' _board/board.json) card(s) no board"
+
+      - name: Montar a página
+        run: cp .github/anchors-board.html _board/index.html
+
+      # O BOARD NÃO PUBLICA O SITE — ele ACRESCENTA uma pasta ao que já existe.
+      #
+      # `deploy-pages` substitui o site INTEIRO pelo artefato enviado. Num projeto que já
+      # tem landing page, documentação ou qualquer coisa no Pages, publicar o board por
+      # deploy direto TROCARIA o site pelo board — uma perda que ninguém pediu e que só se
+      # descobre quando alguém abre o endereço.
+      #
+      # Então o board escreve numa SUBPASTA do branch que serve o Pages, e não toca em
+      # mais nada. Quem já tem site continua com ele em `/`, e ganha o board em
+      # `/anchors-board/`. Quem não tem, o Pages passa a servir a subpasta e a raiz fica
+      # livre para o site que vier depois.
+      - name: Publicar em uma subpasta, sem tocar no resto do site
+        env:
+          BRANCH_PAGES: ${{ vars.ANCHORS_PAGES_BRANCH || 'gh-pages' }}
+          SUBPASTA: anchors-board
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # O branch pode não existir ainda: nesse caso ele nasce ÓRFÃO, sem herdar o
+          # histórico do código — um branch de publicação que carrega o repositório
+          # inteiro é peso morto em todo clone.
+          if git ls-remote --exit-code --heads origin "$BRANCH_PAGES" >/dev/null 2>&1; then
+            git fetch origin "$BRANCH_PAGES" --depth=1
+            git checkout "$BRANCH_PAGES"
+          else
+            git checkout --orphan "$BRANCH_PAGES"
+            git rm -rf . >/dev/null 2>&1 || true
+            echo "branch $BRANCH_PAGES criado (não existia)"
+          fi
+
+          # `rm -rf` da SUBPASTA e só dela: o resto do branch — o site de quem já tinha um
+          # — não é tocado.
+          rm -rf "$SUBPASTA"
+          mkdir -p "$SUBPASTA"
+          cp _board/board.json _board/index.html "$SUBPASTA/"
+          # `.nojekyll` porque o Jekyll ignora pastas iniciadas por `_` e reescreve o que
+          # não entende. O board é HTML puro e não quer processamento nenhum.
+          touch .nojekyll
+
+          git add "$SUBPASTA" .nojekyll
+          if git diff --cached --quiet; then
+            echo "board sem mudança — nada a publicar"
+            exit 0
+          fi
+          git commit -m "anchors: board $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push origin "$BRANCH_PAGES"
+          echo "board em https://$(echo "$GITHUB_REPOSITORY" | cut -d/ -f1).github.io/$(echo "$GITHUB_REPOSITORY" | cut -d/ -f2)/$SUBPASTA/"

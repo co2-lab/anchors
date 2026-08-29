@@ -24,6 +24,18 @@ import (
 //go:embed workflows
 var workflowsFS embed.FS
 
+// boardFS carrega a PÁGINA do board. Fica fora de `workflows/` porque não é um pipeline:
+// o GitHub executa tudo que está em `.github/workflows/`, e um HTML ali seria um arquivo
+// de workflow inválido — o repositório passa a exibir um erro de sintaxe permanente.
+//
+//go:embed board
+var boardFS embed.FS
+
+// ArquivoDoBoard é onde a página mora, relativa à raiz do projeto. Em `.github/` e não em
+// `docs/`: é infraestrutura do fluxo, não documentação do produto, e misturá-la com o que
+// o time escreve convida a alguém a editá-la sem saber que o `--fix` a mantém.
+const ArquivoDoBoard = ".github/anchors-board.html"
+
 // Workflow é um pipeline do fluxo GitHub, com o que o Anchors precisa saber para
 // verificar (doctor) e semear (doctor --fix).
 type Workflow struct {
@@ -56,6 +68,15 @@ var WorkflowsDoFluxo = []Workflow{
 		Papel: "move o card para revisão quando os checks do PR passam (e SÓ quando " +
 			"passam)",
 		ExigeSerial: true,
+	},
+	{
+		Arquivo: "anchors-board.yml",
+		Papel:   "publica o board no Pages a partir das issues (sem Projects e sem PAT)",
+		// O ÚNICO que não exige serialização sem cancelamento: o board é estado DERIVADO,
+		// e a execução mais nova sempre produz uma foto melhor que a que está no meio do
+		// caminho. Cancelar aqui não perde trabalho — evita publicar uma foto velha por
+		// cima de uma nova.
+		ExigeSerial: false,
 	},
 	{
 		Arquivo:     "anchors-stale.yml",
@@ -236,7 +257,11 @@ func SemConcurrency(root string) []Workflow {
 // alcançava quem já tinha instalado — o projeto ficava com o pipeline defeituoso para
 // sempre, e nada avisava. Foi assim que um `stale` que reciclava trabalho pronto
 // continuou rodando depois de corrigido na fonte.
-const MarcadorDeTemplate = "# anchors:template"
+// Sem o `#`: o marcador vive tanto num YAML (`# anchors:template`) quanto num HTML
+// (`<!-- anchors:template -->`), e prendê-lo à sintaxe de comentário de uma linguagem
+// faria a página do board nunca casar — o `--fix` a trataria como editada pelo time e
+// jamais a atualizaria, em silêncio.
+const MarcadorDeTemplate = "anchors:template"
 
 // ÉTemplateIntacto diz se o pipeline instalado ainda é o do Anchors.
 //
@@ -312,8 +337,31 @@ func SemeiaWorkflows(root string, cfg *config.Config) ([]string, error) {
 		}
 		escritos = append(escritos, w.Arquivo)
 	}
+	// A PÁGINA do board acompanha o pipeline que a publica: semear um sem o outro deixa o
+	// fluxo pela metade — o workflow roda e falha ao copiar um arquivo que não existe.
+	if err := semeiaBoard(root); err != nil {
+		return escritos, err
+	}
 	sort.Strings(escritos)
 	return escritos, nil
+}
+
+// semeiaBoard escreve a página do board, e a mantém atualizada pela mesma régua dos
+// pipelines: intocada pelo marcador, o Anchors a atualiza; editada, ela passa a ser do
+// time.
+func semeiaBoard(root string) error {
+	dest := filepath.Join(root, ArquivoDoBoard)
+	conteudo, err := fs.ReadFile(boardFS, "board/anchors-board.html")
+	if err != nil {
+		return fmt.Errorf("ler o template do board: %w", err)
+	}
+	if b, err := os.ReadFile(dest); err == nil && !strings.Contains(string(b), MarcadorDeTemplate) {
+		return nil // existe e é do time
+	}
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(dest, conteudo, 0o644)
 }
 
 // aplicaBranchDeIntegracao troca o branch cravado no template pelo que o projeto
