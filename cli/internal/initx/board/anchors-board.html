@@ -77,16 +77,30 @@
   .arv, .arv ul { list-style: none; margin: 0; padding: 0; }
   .arv ul { margin-left: 1.1rem; padding-left: .9rem; border-left: 1px solid var(--linha); }
   .arv li { margin: .3rem 0; }
-  /* O marcador padrão do `<summary>` fica ANTES do conteúdo e desalinha a linha; o
-     triângulo é redesenhado dentro do botão, onde ele pertence. */
-  .arv summary { list-style: none; cursor: pointer; }
+  /* O summary é a LINHA: o triângulo mora dentro dela, não ao lado. */
+  .arv summary { list-style: none; display: flex; align-items: center; gap: .4rem; }
   .arv summary::-webkit-details-marker { display: none; }
-  .arv summary .no::before { content: "▸"; font-size: .6rem; color: var(--fraco);
-                             flex: none; transition: transform .12s; display: inline-block; }
-  .arv details[open] > summary .no::before { transform: rotate(90deg); }
-  /* A FOLHA ganha o mesmo recuo do triângulo: sem isto, nós com e sem filho ficam com o
-     texto desalinhado e a árvore parece torta. */
-  .arv li.folha .no { padding-left: 1.35rem; }
+  .arv summary > .no { flex: 1; min-width: 0; }
+  /* O TRIÂNGULO é um alvo de clique de verdade — 1.6rem, e não os 0.6rem de antes, que na
+     tela viravam quase um ponto. A recomendação de 24px de alvo tátil existe para isto:
+     um controle que exige mira não é usado, é evitado. */
+  .arv .tri { flex: none; width: 1.6rem; height: 1.6rem; display: flex;
+              align-items: center; justify-content: center; border-radius: 5px;
+              cursor: pointer; user-select: none; }
+  .arv .tri::before { content: "▸"; font-size: .95rem; color: var(--fraco);
+                      transition: transform .15s; display: block; line-height: 1; }
+  .arv .tri:hover { background: var(--linha); }
+  .arv .tri:hover::before { color: var(--fg); }
+  .arv details[open] > summary .tri::before { transform: rotate(90deg); }
+  /* A FOLHA reserva o mesmo espaço do triângulo, senão o texto dos nós com e sem filho
+     fica desalinhado e a árvore parece torta. */
+  .arv li.folha { padding-left: 2rem; }
+  /* O `display` explícito no `> ul` VENCE o ocultamento nativo do `<details>`, que só age
+     enquanto o conteúdo não tem display próprio. Sem o par de regras abaixo, recolher
+     virava um triângulo que girava e nada mais — os filhos continuavam na tela.
+     Medido: `details.open === false` com o `<ul>` a 251px de altura. */
+  .arv details > ul { margin-left: 1.9rem; }
+  .arv details:not([open]) > ul { display: none; }
   .filtro { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
             margin-bottom: 1rem; }
   .filtro-rotulo { font-size: .78rem; color: var(--fraco); }
@@ -495,6 +509,17 @@ function rotulasFiltro(d) {
   document.getElementById("limpar-filtro").hidden = filtroAtivo.size === 0;
 }
 
+// O TRIÂNGULO tem `tabindex`, então precisa responder ao teclado — um controle
+// alcançável por Tab que não reage a Enter é pior que um não alcançável: ele promete
+// interação e não cumpre.
+document.getElementById("arvore").addEventListener("keydown", (ev) => {
+  const tri = ev.target.closest(".tri");
+  if (!tri || (ev.key !== "Enter" && ev.key !== " ")) return;
+  ev.preventDefault();
+  const d = tri.closest("details");
+  if (d) d.open = !d.open;
+});
+
 document.getElementById("chips").addEventListener("click", (ev) => {
   const b = ev.target.closest(".chip");
   if (!b) return;
@@ -585,12 +610,11 @@ function desenhaArvore(d) {
       ? (cards.length ? `${cards.filter((k) => concluido(nos[k])).length}/${cards.length}`
                       : "sem card")
       : (n.estado || "").replace("anchors:", "");
-    const linha = `<button class="no ${cls}" type="button" ${
-      n.numero ? `data-numero="${n.numero}"` : "disabled"}>
-        <span class="cod">${esc(cod)}</span>
+    const corpo = `<span class="cod">${esc(cod)}</span>
         <span class="nome">${esc((n.titulo || "").replace(/^\[[^\]]+\]\s*/, ""))}</span>
-        <span class="est">${esc(est)}</span>
-      </button>`;
+        <span class="est">${esc(est)}</span>`;
+    const linha = `<button class="no ${cls}" type="button" ${
+      n.numero ? `data-numero="${n.numero}"` : "disabled"}>${corpo}</button>`;
     if (!kids.length) return `<li class="folha">${linha}</li>`;
     // `<details>` NATIVO: o navegador já dá o teclado (Enter/Espaço), a semântica de
     // expandido/recolhido para leitor de tela, e o Ctrl+F que abre o nó ao achar texto
@@ -601,8 +625,22 @@ function desenhaArvore(d) {
     // importa. Os demais nascem abertos — esconder o que está bloqueado esconderia
     // justamente a explicação de por que algo não pode ser pego.
     const aberto = concluido(n) ? "" : " open";
+    // A LINHA INTEIRA fica dentro do `<summary>`, com o triângulo como primeiro filho.
+    //
+    // Antes o summary era só o triângulo, posicionado ABSOLUTO ao lado — e isso produziu
+    // três defeitos de uma vez: o triângulo aparecia fora do item, o conteúdo sumia ao
+    // recolher (o `<ul>` estava fora do summary mas o layout dependia dele), e os nós com
+    // filho não abriam a modal.
+    //
+    // Dentro do summary, o `<details>` nativo faria a linha inteira recolher. O
+    // `preventDefault` no clique do nó é o que devolve o significado certo a cada alvo: o
+    // triângulo recolhe, o resto abre os detalhes.
     return `<li><details${aberto}>
-      <summary>${linha}</summary>
+      <summary>
+        <span class="tri" role="button" tabindex="0"
+              aria-label="recolher ou expandir ${esc(cod)}"></span>
+        ${linha}
+      </summary>
       <ul>${kids.map((k) => no(k, new Set([...vistos, cod]))).join("")}</ul>
     </details></li>`;
   }
@@ -610,9 +648,9 @@ function desenhaArvore(d) {
   // O estado de cada nó é PRESERVADO entre os refreshes de 5s: sem isto, recolher um
   // ramo para enxergar o resto seria desfeito cinco segundos depois.
   const abertosAntes = new Set(
-    [...alvo.querySelectorAll("details[open] > summary .cod")].map((e) => e.textContent));
+    [...alvo.querySelectorAll("details[open] > .linha .cod")].map((e) => e.textContent));
   const fechadosAntes = new Set(
-    [...alvo.querySelectorAll("details:not([open]) > summary .cod")].map((e) => e.textContent));
+    [...alvo.querySelectorAll("details:not([open]) > .linha .cod")].map((e) => e.textContent));
 
   alvo.innerHTML = `
     <div class="controles">
@@ -629,7 +667,7 @@ function desenhaArvore(d) {
   // Restaura o que o leitor tinha aberto ou fechado. Um nó NOVO (que não estava na foto
   // anterior) mantém o padrão — o leitor nunca decidiu nada sobre ele.
   for (const d of alvo.querySelectorAll("details")) {
-    const cod = d.querySelector("summary .cod")?.textContent;
+    const cod = d.querySelector(":scope > .linha .cod")?.textContent;
     if (abertosAntes.has(cod)) d.open = true;
     else if (fechadosAntes.has(cod)) d.open = false;
   }
@@ -670,6 +708,16 @@ const dlgCorpo = document.getElementById("detalhe-corpo");
 // morreria no primeiro refresh.
 for (const cont of ["colunas", "arvore"]) {
 document.getElementById(cont).addEventListener("click", (ev) => {
+  // O TRIÂNGULO recolhe, e só ele. `preventDefault` no resto do summary é o que impede o
+  // `<details>` nativo de recolher quando o clique era para abrir os detalhes.
+  const tri = ev.target.closest(".tri");
+  if (tri) {
+    ev.preventDefault();
+    const d = tri.closest("details");
+    if (d) d.open = !d.open;
+    return;
+  }
+  if (ev.target.closest("summary")) ev.preventDefault();
   const alvo = ev.target.closest(".card, .no[data-numero]");
   if (!alvo) return;
   const c = (ULTIMO.itens || []).find((i) => String(i.numero) === alvo.dataset.numero);
