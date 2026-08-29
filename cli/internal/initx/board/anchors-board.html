@@ -111,7 +111,9 @@
                                background: var(--bg); }
   .apos { font-size: .68rem; color: var(--fraco); font-family: ui-monospace, monospace;
           flex: none; padding: .1rem .4rem; border-radius: 4px; background: var(--bg); }
-  .controles { display: flex; gap: .5rem; margin-bottom: .75rem; }
+  .controles { display: flex; gap: .5rem; margin-bottom: .75rem; align-items: center;
+               flex-wrap: wrap; }
+  .sep { width: 1px; height: 1.1rem; background: var(--linha); margin: 0 .15rem; }
   .controles button { font-size: .72rem; padding: .25rem .55rem; }
   .no { display: flex; align-items: center; gap: .5rem; padding: .45rem .6rem;
         background: var(--card); border: 1px solid var(--linha); border-radius: 6px;
@@ -486,6 +488,11 @@ btnCd.onclick = () => { pref.cd = !pref.cd; rotula(); carrega(); };
 // O que sobra é o que o TIME acrescentou: `bug`, `urgente`, a label de uma squad. É por
 // isso que se filtra um board.
 const filtroAtivo = new Set();
+// O filtro por ESTADO vale só na ÁRVORE. No board o estado É a coluna: filtrar `to-do`
+// esvaziaria as outras sete, e o resultado seria uma coluna só — que é a lista que a
+// árvore já dá melhor. Na árvore o estado é um selo, e filtrar por ele responde "o que
+// está em andamento nesta hierarquia?" sem destruir a estrutura.
+const estadoAtivo = new Set();
 
 function rotulasFiltro(d) {
   const cont = document.getElementById("filtro");
@@ -533,6 +540,12 @@ document.getElementById("limpar-filtro").onclick = () => { filtroAtivo.clear(); 
 
 // OU, e não E: marcar `bug` e `urgente` mostra os dois, que é o que quem clica espera.
 // Exigir as duas na mesma issue esvaziaria a tela na segunda seleção.
+// OU entre estados, como no filtro de label: marcar `to-do` e `in-progress` mostra os
+// dois. E vazio significa TODOS — não "nenhum".
+function passaNoEstado(i) {
+  return estadoAtivo.size === 0 || estadoAtivo.has(i.estado);
+}
+
 function passaNoFiltro(i) {
   if (filtroAtivo.size === 0) return true;
   return (i.labels || []).some((l) => filtroAtivo.has(l));
@@ -552,7 +565,7 @@ function desenhaArvore(d) {
   // As FASES sobrevivem ao filtro: elas são a estrutura, e removê-las deixaria os itens
   // filtrados órfãos na raiz — a árvore viraria uma lista, que é justamente o que a outra
   // aba já faz.
-  const itens = (d.itens || []).filter((i) => i.codigo && passaNoFiltro(i));
+  const itens = (d.itens || []).filter((i) => i.codigo && passaNoFiltro(i) && passaNoEstado(i));
   const fases = d.fases || [];
   if (!itens.length && !fases.length) {
     alvo.innerHTML = '<p class="vazia">Nada a mostrar.</p>';
@@ -564,6 +577,18 @@ function desenhaArvore(d) {
   const nos = {};
   for (const f of fases) nos[f.codigo] = { ...f, tipo: "fase" };
   for (const i of itens) nos[i.codigo] = { ...i, tipo: "card" };
+
+  // O conjunto COMPLETO (antes do filtro) existe só para o progresso das fases: ele mede
+  // a fase, não o recorte que o leitor escolheu ver.
+  const nosCompletos = { ...nos };
+  const todosOsFilhos = {};
+  for (const i of d.itens || []) if (i.codigo) nosCompletos[i.codigo] = { ...i, tipo: "card" };
+  for (const cod of Object.keys(nosCompletos)) {
+    const n = nosCompletos[cod];
+    let pai = n.parent || "";
+    if (!pai && n.tipo === "fase") pai = cod.split("-")[0];
+    if (pai) (todosOsFilhos[pai] ||= []).push(cod);
+  }
 
   // A ÁRVORE LÊ `parent`, e não infere pertencimento a partir de `needs`.
   //
@@ -629,10 +654,15 @@ function desenhaArvore(d) {
     // O progresso da fase conta só os CARDS, não as fases-filhas: a fase seguinte não é
     // trabalho desta. Contando-a, `F03` mostrava "1/2" tendo um único card, e o 1 era a
     // fase `F04` vazia — um progresso que media a estrutura em vez do trabalho.
+    // O PROGRESSO conta TODOS os cards da fase, não os que sobraram do filtro. Filtrar
+    // por `in-progress` faria "0/1" onde há "1/4" concluídos — o filtro mudaria o
+    // progresso, e o número deixaria de responder "quanto falta desta fase?".
+    const todosDaFase = (todosOsFilhos[cod] || []).filter((k) => nosCompletos[k]?.tipo === "card");
     const cards = kids.filter((k) => nos[k].tipo === "card");
     const est = n.tipo === "fase"
-      ? (cards.length ? `${cards.filter((k) => concluido(nos[k])).length}/${cards.length}`
-                      : "sem card")
+      ? (todosDaFase.length
+          ? `${todosDaFase.filter((k) => concluido(nosCompletos[k])).length}/${todosDaFase.length}`
+          : "sem card")
       : (n.estado || "").replace("anchors:", "");
     // A ORDEM aparece como texto, já que deixou de ser aninhamento: "depois de F01" diz o
     // que a escada dizia, sem mentir que uma fase está dentro da outra.
@@ -681,10 +711,21 @@ function desenhaArvore(d) {
   const fechadosAntes = new Set(
     [...alvo.querySelectorAll("details:not([open]) > .linha .cod")].map((e) => e.textContent));
 
+  // Só os estados PRESENTES viram chip — oferecer os oito sempre daria botões que não
+  // filtram nada. Mas a conta é sobre TODOS os itens, e não sobre os que sobraram do
+  // filtro: com o recorte, o chip do estado escolhido seria o único a existir, e não
+  // haveria como somar outro nem desmarcar o que se marcou.
+  const presentes = COLUNAS.filter(([id]) =>
+    (d.itens || []).some((i) => i.codigo && passaNoFiltro(i) && i.estado === id));
+
   alvo.innerHTML = `
     <div class="controles">
       <button type="button" id="expandir">expandir tudo</button>
       <button type="button" id="recolher">recolher tudo</button>
+      ${presentes.length > 1 ? `<span class="sep"></span>${presentes.map(([id, nome]) =>
+        `<button class="chip est-chip" type="button" data-estado="${esc(id)}"
+                 aria-pressed="${estadoAtivo.has(id)}">${esc(nome.toLowerCase())}</button>`
+      ).join("")}${estadoAtivo.size ? '<button type="button" id="limpar-estado">limpar</button>' : ""}` : ""}
     </div>
     <div class="legenda">
       <span><i class="amostra" style="border-color:var(--pronto)"></i> pronto para pegar</span>
@@ -700,6 +741,16 @@ function desenhaArvore(d) {
     if (abertosAntes.has(cod)) d.open = true;
     else if (fechadosAntes.has(cod)) d.open = false;
   }
+
+  for (const b of alvo.querySelectorAll(".est-chip")) {
+    b.onclick = () => {
+      const e = b.dataset.estado;
+      estadoAtivo.has(e) ? estadoAtivo.delete(e) : estadoAtivo.add(e);
+      desenhaArvore(ULTIMO);
+    };
+  }
+  const limpar = alvo.querySelector("#limpar-estado");
+  if (limpar) limpar.onclick = () => { estadoAtivo.clear(); desenhaArvore(ULTIMO); };
 
   alvo.querySelector("#expandir").onclick = () => {
     for (const d of alvo.querySelectorAll("details")) d.open = true;
