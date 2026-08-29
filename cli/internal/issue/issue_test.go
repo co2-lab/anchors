@@ -230,3 +230,74 @@ func TestAchadoNovoNaoSomeEmSilencio(t *testing.T) {
 		t.Errorf("`Laudo B` deve aparecer 1x; apareceu %d", strings.Count(string(corpo2), "Laudo B"))
 	}
 }
+
+// DE QUEM é a issue é um eixo INDEPENDENTE do kind: uma `violation` costuma ser do agente
+// e uma `decision` é sempre do usuário, mas a correspondência não é fixa — o agente que
+// esbarra numa pergunta que só uma pessoa responde precisa passar a issue adiante SEM que
+// ela deixe de ser a violação que era.
+func TestDonoFiltraEReatribui(t *testing.T) {
+	root := t.TempDir()
+
+	daAgente := Issue{Kind: Violation, Target: "src/a.ts", Gate: "layer-boundary",
+		Detail: "importou o que não devia", Date: "2026-08-29"}
+	doUsuario := Issue{Kind: Decision, Target: "src/b.spec.md", Gate: "open-questions-resolved",
+		Detail: "1 decisão em aberto", Date: "2026-08-29", Dono: DonoUsuário}
+	for _, i := range []Issue{daAgente, doUsuario} {
+		if _, _, err := Open(root, i); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// O FILTRO é o que torna a lista utilizável: a de quem decide não pode vir misturada
+	// com o trabalho do agente, ou as duas deixam de ser lidas.
+	doUser, err := ListaPorDono(root, Todo, DonoUsuário)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(doUser) != 1 || !strings.Contains(doUser[0], "b.spec.md") {
+		t.Fatalf("o filtro por usuário deveria trazer só a decisão, veio %v", doUser)
+	}
+	doAgente, _ := ListaPorDono(root, Todo, DonoAgente)
+	if len(doAgente) != 1 || !strings.Contains(doAgente[0], "a.ts") {
+		t.Fatalf("o filtro por agente deveria trazer só a violação, veio %v", doAgente)
+	}
+
+	// REATRIBUIR: o agente tentou, esbarrou, e passa adiante. A issue continua sendo a
+	// violação que era — muda o dono, não o kind.
+	if err := Reatribui(root, Todo, doAgente[0], DonoUsuário,
+		"a fronteira depende de qual camada é dona do cache, e isso não está decidido"); err != nil {
+		t.Fatal(err)
+	}
+	depois, _ := ListaPorDono(root, Todo, DonoUsuário)
+	if len(depois) != 2 {
+		t.Errorf("as duas deveriam estar com o usuário agora, veio %d", len(depois))
+	}
+	if restou, _ := ListaPorDono(root, Todo, DonoAgente); len(restou) != 0 {
+		t.Errorf("o agente não deveria ter mais nada, veio %v", restou)
+	}
+	// O PORQUÊ vai junto: quem recebe a issue sem contexto pergunta o que já se tentou.
+	b, _ := os.ReadFile(filepath.Join(root, Dir, string(Todo), doAgente[0]))
+	if !strings.Contains(string(b), "dona do cache") {
+		t.Error("a razão da passagem deveria ficar registrada na issue")
+	}
+	if !strings.Contains(string(b), "violation") {
+		t.Error("mudou o dono, não o kind — continua sendo a violação que era")
+	}
+}
+
+// Issue gravada ANTES do campo existir é do agente, que era o único caso. Lê-la como do
+// usuário encheria a lista de quem decide com trabalho que não é dele.
+func TestDonoAusenteEhDoAgente(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, Dir, string(Todo))
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	antiga := filepath.Join(dir, "2026-01-01--violation--x--y.md")
+	if err := os.WriteFile(antiga, []byte("# VIOLATION: y\n\n- **kind:** violation\n- **alvo (regido):** y\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if d := DonoDoArquivo(antiga); d != DonoAgente {
+		t.Errorf("issue sem o campo é do agente, veio %q", d)
+	}
+}

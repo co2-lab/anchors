@@ -68,6 +68,14 @@ type Node struct {
 	Rev       string `yaml:"rev"`                  // revisão do conteúdo (hash) — a "versão do arquivo"
 	UpdatedAt string `yaml:"updated_at,omitempty"` // carimbo de alteração (ISO8601)
 	Code      string `yaml:"code,omitempty"`       // código de cenário/identidade, se houver
+	// Layer é a camada que este arquivo casou na Estrutura (`layers:` do anchors.yaml).
+	//
+	// Existe porque a config resolve decisões POR CAMADA — `section_titles` é a primeira,
+	// e o léxico de seções quase nunca é global (medido: "Modelo de Dado" em 50 specs de
+	// uma camada e em 1 das outras 588). Quem lê o grafo depois do scan — o `doctor`, um
+	// relatório — não tinha como resolver isso e caía no nível do projeto, contando zero
+	// numa spec cuja seção se chama outra coisa naquela camada.
+	Layer string `yaml:"layer,omitempty"`
 	// CodeDeclarado distingue identidade DECLARADA (o `code:` do header @anchors, ou a
 	// tabela/cabeçalho de regra numa spec) de identidade INFERIDA (o primeiro código que
 	// apareceu no texto, quando não havia declaração).

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -172,9 +173,35 @@ func renderIssues(ctx reportCtx) string {
 	done, _ := issue.List(ctx.root, issue.Done)
 	fmt.Fprintf(&b, "| estado | qtd |\n|---|---:|\n| future | %d |\n| todo | %d |\n| doing | %d |\n| done | %d |\n\n",
 		len(future), len(todo), len(doing), len(done))
-	if len(todo)+len(doing) > 0 {
+	// SEPARADAS POR DONO, pelo mesmo motivo que `future/` fica à parte: o que espera uma
+	// PESSOA e o que o agente resolve sozinho são listas com leitores diferentes, e
+	// misturá-las faz as duas pararem de ser lidas. A do usuário vem primeiro — é a que
+	// trava o resto, porque ninguém além dele pode destravá-la.
+	abertas := append(append([]string{}, doing...), todo...)
+	var deQuemDecide, doAgente []string
+	for _, id := range abertas {
+		st := issue.Todo
+		if contémNome(doing, id) {
+			st = issue.Doing
+		}
+		if issue.DonoDoArquivo(filepath.Join(ctx.root, issue.Dir, string(st), id)) == issue.DonoUsuário {
+			deQuemDecide = append(deQuemDecide, id)
+			continue
+		}
+		doAgente = append(doAgente, id)
+	}
+	if len(deQuemDecide) > 0 {
+		b.WriteString("### Esperando VOCÊ (o agente não pode resolver)\n\n")
+		b.WriteString("Uma decisão de produto, uma resposta que não está no código. " +
+			"Enquanto durar, quem implementar vai adivinhar.\n\n")
+		for _, id := range deQuemDecide {
+			fmt.Fprintf(&b, "- %s\n", strings.TrimSuffix(id, ".md"))
+		}
+		b.WriteString("\n")
+	}
+	if len(doAgente) > 0 {
 		b.WriteString("### Abertas (o trabalho de agora)\n\n")
-		for _, id := range append(append([]string{}, doing...), todo...) {
+		for _, id := range doAgente {
 			fmt.Fprintf(&b, "- %s\n", strings.TrimSuffix(id, ".md"))
 		}
 		b.WriteString("\n")
@@ -305,4 +332,15 @@ func sortedKindKeys(m map[mapx.Kind]int) []mapx.Kind {
 	}
 	sort.Slice(ks, func(i, j int) bool { return ks[i] < ks[j] })
 	return ks
+}
+
+// contémNome diz se o nome está na lista — para saber de qual estado a issue veio, já que
+// `doing` e `todo` são concatenadas antes de separar por dono.
+func contémNome(lista []string, nome string) bool {
+	for _, n := range lista {
+		if n == nome {
+			return true
+		}
+	}
+	return false
 }

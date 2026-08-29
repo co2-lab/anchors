@@ -53,6 +53,15 @@ type Result struct {
 	// exatamente o tipo de acoplamento a texto que envelhece na primeira reescrita da
 	// mensagem.
 	Divida bool
+	// Decisão marca o Pending que é DECISÃO EM ABERTO — a spec declarou que não decidiu
+	// algo de que o código precisa.
+	//
+	// Campo próprio, e não um caso de `Divida`: dívida tem dono e vencimento ("sei o que
+	// devo e quando pago"), e a decisão em aberto é o oposto — não se sabe a resposta,
+	// não se sabe quando, e depende de outra pessoa. Os destinos também diferem: dívida
+	// vai para `future/` (o que vence depois), e a pergunta vai para `todo/`, porque só
+	// é resolvida se alguém a VIR e a levar a quem decide.
+	Decisão bool
 	// Prazo é só o "quando" de cada dívida — o que vem depois de "DÍVIDA ASSUMIDA:".
 	// Separado de Detail porque quem lê a issue quer saber QUANDO ela vence sem
 	// reprocessar o laudo inteiro do gate.
@@ -276,6 +285,11 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 		if r.Verdict == Pending && g.Check == "open-questions-resolved" &&
 			strings.Contains(r.Detail, "que a spec ainda NÃO tomou") {
 			r.Impede = true
+			// E vira ISSUE. A mesma distinção decide as duas coisas: "há decisão por
+			// tomar" é achado que precisa sobreviver à sessão; "a spec nasceu antes da
+			// prática" é dívida de migração, e abrir issue para as 586 specs que nunca
+			// tiveram a seção afogaria `todo/` com o que ninguém escreveu errado.
+			r.Decisão = true
 		}
 	case g.Run != "":
 		r.Verdict, r.Detail = runExternal(g.Run, n, root)

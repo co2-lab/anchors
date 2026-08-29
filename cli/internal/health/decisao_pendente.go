@@ -42,11 +42,7 @@ func checkDecisoesPendentes(g *mapx.Graph, root string, cfg *config.Config) []Fi
 		if err != nil {
 			continue // o mapa conhece o nó e o arquivo sumiu: outro achado cobre isso
 		}
-		// Camada VAZIA: o grafo não guarda a camada do nó (ela só existe durante o scan),
-		// então a resolução do título cai em projeto > framework. Um projeto que declara
-		// `section_titles` por CAMADA e não no topo não é alcançado aqui — o gate, que
-		// roda com a camada em mãos, continua correto.
-		if q := gate.DecisõesEmAberto(string(b), cfg, ""); q > 0 {
+		if q := gate.DecisõesEmAberto(string(b), cfg, n.Layer); q > 0 {
 			achados = append(achados, pendencia{n.ID, q})
 			total += q
 		}

@@ -38,6 +38,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 			Kind:          Kind(f.Kind),
 			Rev:           f.Rev,
 			UpdatedAt:     updatedAt[f.Path],
+			Layer:         f.Layer,
 			Code:          nodeCode(f),
 			CodeDeclarado: codeDeclarado(f),
 			Tags:          tags,

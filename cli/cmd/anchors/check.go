@@ -380,6 +380,32 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile) error {
 		// AGORA" — afogar essa lista com o que só vence depois é o caminho mais curto
 		// para ninguém mais olhar nenhuma das duas.
 		if r.Verdict == gate.Pending {
+			// DECISÃO EM ABERTO vira issue em `todo/`, e não em `future/`: ela só é
+			// resolvida se alguém a VIR e a levar a quem decide. `future/` é o que vence
+			// depois — a pergunta não vence, ela trava quem for implementar.
+			//
+			// É a issue que o usuário fecha: respondendo direto nela, ou pedindo à IA que
+			// liste as perguntas abertas. Quando a resposta virar regra e o item sair da
+			// spec, o `Pass` do próximo confronto a resolve sozinho, pelo mesmo caminho
+			// que já fecha as violações.
+			if r.Decisão {
+				issDec := iss
+				issDec.Kind = issue.Decision
+				// DO USUÁRIO: a resposta não está no código, e o agente não a tem. Deixá-la
+				// como dele faria o agente retentá-la para sempre — ou, pior, decidir por
+				// conta própria, que é exatamente o que este gate existe para evitar.
+				issDec.Dono = issue.DonoUsuário
+				created, at, err := issue.Open(root, issDec)
+				if err != nil {
+					return fmt.Errorf("abrir issue de decisão: %w", err)
+				}
+				if created {
+					opened++
+				} else if at != issue.Todo {
+					fmt.Printf("   (decisão de %s já em %s/)\n", r.Target, at)
+				}
+				continue
+			}
 			if !r.Divida {
 				continue // indeterminado, não é dívida de ninguém
 			}
@@ -415,6 +441,20 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile) error {
 			}
 		case gate.Pass:
 			// passou: se havia issue aberta para este (gate, alvo), fecha-a.
+			//
+			// O KIND faz parte da chave, e o `iss` acima nasce como `violation`. Um gate
+			// que abre issue de outro kind precisa fechá-la pelo kind com que abriu — sem
+			// isto a issue de decisão nunca fechava: o gate voltava a ✓ e a pergunta
+			// continuava em `todo/` para sempre, que é pior que não ter aberto.
+			if d := iss; d.Gate == "open-questions-resolved" {
+				d.Kind = issue.Decision
+				if ok, err := issue.Resolve(root, d.Key()); err != nil {
+					return fmt.Errorf("resolver issue de decisão: %w", err)
+				} else if ok {
+					resolved++
+					fmt.Printf("   ✓ decisão resolvida: %s → issues/done/\n", r.Target)
+				}
+			}
 			ok, err := issue.Resolve(root, iss.Key())
 			if err != nil {
 				return fmt.Errorf("resolver issue: %w", err)

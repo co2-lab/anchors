@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
@@ -25,6 +26,15 @@ const (
 	Stale     Kind = "stale"     // uma ponta da aresta avançou de rev
 	Conflict  Kind = "conflict"  // âncoras bloqueantes discordam do mesmo alvo
 	Violation Kind = "violation" // o confronto rodou e o alvo viola a âncora
+	// Decision é a DECISÃO EM ABERTO: a spec declara que não decidiu algo que o código
+	// vai precisar. Não é violação — ninguém escreveu nada errado —, e não é dívida
+	// assumida, que tem dono e vencimento ("sei o que devo e quando pago"). É o oposto:
+	// alguém PRECISA decidir, não se sabe quando, e depende de outra pessoa.
+	//
+	// Vira issue porque é o achado que mais precisa sobreviver à sessão: depende de humano
+	// e pode levar semanas. Enquanto era só uma linha no `check`, a pergunta existia
+	// apenas para quem abrisse a spec.
+	Decision Kind = "decision"
 )
 
 // State — o ciclo de vida, codificado na pasta.
@@ -63,6 +73,41 @@ type Issue struct {
 	// Prazo é o "quando" de uma DÍVIDA ASSUMIDA (`obligation_pending: <nome> — <quando>`).
 	// Preenchido, a issue nasce em `future/` e o corpo diz quando ela vence.
 	Prazo string
+	// Dono é DE QUEM é a issue: do agente, que a resolve confrontando código, ou do
+	// USUÁRIO, que precisa decidir ou responder algo que o agente não pode.
+	//
+	// É um eixo INDEPENDENTE do kind, e por isso um campo e não um kind novo. Uma
+	// `violation` costuma ser do agente e uma `decision` é sempre do usuário, mas a
+	// correspondência não é fixa: o agente que tenta resolver uma violação e esbarra numa
+	// pergunta que só o usuário responde precisa PASSAR a issue adiante, sem que ela deixe
+	// de ser a violação que era.
+	//
+	// Filtrável (`anchors issues --dono usuario`): é a lista que se leva para a conversa
+	// com quem decide, e misturá-la com o trabalho do agente faz as duas serem ignoradas.
+	Dono Dono
+}
+
+// Dono diz quem consegue resolver a issue.
+type Dono string
+
+const (
+	// DonoAgente é o padrão: a issue se resolve mexendo no repositório, e o próximo
+	// confronto a fecha sozinho.
+	DonoAgente Dono = "agente"
+	// DonoUsuário é a issue que ESPERA UMA PESSOA: uma decisão de produto, uma resposta
+	// que não está em lugar nenhum do código. O agente não a resolve por mais que tente —
+	// e tentar é o defeito, porque decidir por conta própria é o que a decisão em aberto
+	// existe para evitar.
+	DonoUsuário Dono = "usuario"
+)
+
+// DonoDe devolve o dono declarado, com o padrão aplicado. Uma issue antiga, gravada antes
+// do campo existir, não tem o valor no disco — e é do agente, que era o único caso.
+func DonoDe(d Dono) Dono {
+	if d == "" {
+		return DonoAgente
+	}
+	return d
 }
 
 // Key é a IDENTIDADE ESTÁVEL da issue no tempo: <kind>--<aresta>, sem data nem hash.
@@ -106,6 +151,9 @@ func (i Issue) Body() string {
 	if i.Gate != "" {
 		fmt.Fprintf(&b, "- **gate:** %s\n", i.Gate)
 	}
+	// O DONO no cabeçalho é o que permite filtrar sem abrir cada arquivo — e é a
+	// pergunta que quem lê a pasta faz primeiro: "o que aqui é meu?".
+	fmt.Fprintf(&b, "- **dono:** %s\n", DonoDe(i.Dono))
 	fmt.Fprintf(&b, "- **detectada em:** %s\n\n", i.Date)
 	// Cabeçalho da seção do corpo — omitido quando o Detail já traz seus próprios
 	// cabeçalhos markdown (um laudo estruturado da IA), para não duplicar.
@@ -118,6 +166,8 @@ func (i Issue) Body() string {
 			b.WriteString("## Quem está atrás de quem\n\n")
 		case Conflict:
 			b.WriteString("## A discordância\n\n")
+		case Decision:
+			b.WriteString("## A pergunta em aberto\n\n")
 		}
 	}
 	if i.Detail != "" {
@@ -125,6 +175,19 @@ func (i Issue) Body() string {
 		b.WriteString("\n")
 	}
 	b.WriteString("\n---\n")
+	if i.Kind == Decision {
+		// O RODAPÉ diz como fechar. É a issue que o usuário resolve — sozinho, ou pedindo
+		// à IA que liste as perguntas abertas —, e sem isto ele teria a pergunta sem o
+		// procedimento: o caminho errado (apagar o item) é mais curto que o certo.
+		b.WriteString("_Decisão em aberto, registrada pelo Anchors. Não é defeito: é a spec " +
+			"dizendo a verdade sobre o que ainda não sabe.\n\n" +
+			"**Como fechar:** leve a pergunta a quem decide e PROMOVA a resposta a regra " +
+			"(com código) na spec. Marque o item como resolvido (`[x]`) citando a regra que " +
+			"nasceu dele — o `anchors check` fecha esta issue sozinho no próximo confronto.\n\n" +
+			"**O que NÃO fazer:** apagar o item sem regra nova. O gate não distingue isso de " +
+			"ter decidido, e quem apaga assume a decisão silenciosamente._\n")
+		return b.String()
+	}
 	if i.Prazo != "" {
 		fmt.Fprintf(&b, "**Quando será paga:**\n\n- %s\n\n", i.Prazo)
 		b.WriteString("_Dívida ASSUMIDA, registrada pelo Anchors. Não é defeito: é um dever " +
@@ -274,4 +337,69 @@ func Reabrir(root string, i Issue) (reaberta bool, err error) {
 		return false, err
 	}
 	return true, nil
+}
+
+// donoRE lê o dono do cabeçalho de uma issue já gravada.
+var donoRE = regexp.MustCompile(`(?m)^- \*\*dono:\*\*\s*(\S+)\s*$`)
+
+// DonoDoArquivo lê de quem é a issue, sem carregar o resto.
+//
+// Uma issue gravada ANTES do campo existir não o traz, e é do agente — que era o único
+// caso. Devolver "usuário" nesse caso encheria a lista de quem decide com trabalho que
+// não é dele, e o efeito seria a lista deixar de ser lida.
+func DonoDoArquivo(caminho string) Dono {
+	b, err := os.ReadFile(caminho)
+	if err != nil {
+		return DonoAgente
+	}
+	if m := donoRE.FindSubmatch(b); m != nil {
+		return DonoDe(Dono(m[1]))
+	}
+	return DonoAgente
+}
+
+// ListaPorDono filtra as issues de um estado por dono. É a lista que se leva para a
+// conversa com quem decide (`usuario`), ou a fila de trabalho do agente.
+func ListaPorDono(root string, st State, dono Dono) ([]string, error) {
+	nomes, err := List(root, st)
+	if err != nil {
+		return nil, err
+	}
+	var out []string
+	for _, n := range nomes {
+		if DonoDoArquivo(filepath.Join(root, Dir, string(st), n)) == DonoDe(dono) {
+			out = append(out, n)
+		}
+	}
+	return out, nil
+}
+
+// Reatribui muda o dono de uma issue JÁ ABERTA, preservando o resto do arquivo.
+//
+// É o caminho para o agente que tentou resolver uma issue sua e esbarrou em algo que só
+// uma pessoa responde: a issue continua sendo a violação que era, e passa a esperar quem
+// pode resolvê-la. Sem isto, ela ficaria em `todo/` do agente sendo retentada para sempre,
+// ou seria fechada sem que o problema tivesse sido resolvido.
+func Reatribui(root string, st State, nome string, para Dono, porque string) error {
+	caminho := filepath.Join(root, Dir, string(st), nome)
+	b, err := os.ReadFile(caminho)
+	if err != nil {
+		return err
+	}
+	texto := string(b)
+	linha := "- **dono:** " + string(DonoDe(para))
+	if donoRE.MatchString(texto) {
+		texto = donoRE.ReplaceAllString(texto, linha)
+	} else {
+		// Issue anterior ao campo: insere depois do kind, que sempre existe.
+		texto = strings.Replace(texto, "\n- **alvo", "\n"+linha+"\n- **alvo", 1)
+	}
+	// O PORQUÊ é obrigatório na prática: uma issue que muda de dono sem explicação chega
+	// a quem decide sem contexto, e a primeira coisa que essa pessoa faz é perguntar o
+	// que já se tentou.
+	if porque != "" {
+		texto = strings.TrimRight(texto, "\n") + "\n\n---\n**Passou a ser do " +
+			string(DonoDe(para)) + ":** " + porque + "\n"
+	}
+	return os.WriteFile(caminho, []byte(texto), 0o644)
 }
