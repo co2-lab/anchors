@@ -132,7 +132,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// `all` chega até os gates: é o que permite ao gate que sabe varrer sozinho
 			// (`scope_full`) rodar UMA vez sem receber a lista, em vez de receber o projeto
 			// inteiro em lotes.
-			results := gate.RunCompleto(cfg.Gates, nodes, absRoot, g, cfg, all)
+			results := gate.RunComDispensa(cfg.Gates, nodes, absRoot, g, cfg, all, dispensa)
 			profile := gate.Aggregate(results)
 			printProfile(profile, onlyIssues, showDrift)
 			avisarGatesSemAlvo(cfg.Gates, profile)
