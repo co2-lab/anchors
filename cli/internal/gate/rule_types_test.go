@@ -121,13 +121,15 @@ func TestRuleTypesConfrontaCanonicasSemVocabulario(t *testing.T) {
 		t.Errorf("`B` é canônica e deveria passar: %v — %s", v, msg)
 	}
 
-	// Letra fora das canônicas: reprova, e nomeia a letra.
-	fora := "## Regras\n\n### ABCDX-I01 — invariante\n\nTexto.\n"
+	// Letra fora das canônicas: reprova, e nomeia a letra. `P` (política) é um tipo que o
+	// framework não conhece — o exemplo antes era `I`, que passou a ser canônica quando se
+	// descobriu que o `anchors new` já a emitia.
+	fora := "## Regras\n\n### ABCDX-P01 — política\n\nTexto.\n"
 	v, msg := checkRuleTypes(fora, mapx.Node{}, "", nil, semVocabulario)
 	if v != Fail {
-		t.Errorf("`I` não está em %s e deveria reprovar, veio %v", config.DefaultRuleLetters, v)
+		t.Errorf("`P` não está em %s e deveria reprovar, veio %v", config.DefaultRuleLetters, v)
 	}
-	if !strings.Contains(msg, "I") || !strings.Contains(msg, "rule_types") {
+	if !strings.Contains(msg, "P") || !strings.Contains(msg, "rule_types") {
 		t.Errorf("a mensagem deveria nomear a letra E onde declará-la: %s", msg)
 	}
 

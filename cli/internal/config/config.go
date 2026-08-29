@@ -369,7 +369,17 @@ func normalizaTitulo(s string) string {
 
 // DefaultRuleLetters são as letras canônicas, usadas quando o projeto não declara
 // `rule_types`. Mantém compatibilidade com projetos anteriores ao registro.
-var DefaultRuleLetters = "SRVAXBNMD"
+//
+// A LISTA TEM DE COBRIR o que o `anchors new` emite. Ela não cobria: o catálogo de seções
+// declara `invariants` com a letra `I` e `errors` com `E`, e nenhuma das duas estava aqui.
+// O framework emitia uma spec que ele mesmo recusava — bastava o usuário escolher
+// Invariantes no `anchors new` para a spec nascer com uma regra invisível para a
+// rastreabilidade (o `feature-test-match` não a enxerga, mesmo com feature e teste
+// escritos), e agora que o gate `rule-types` confronta as canônicas, também reprovando.
+//
+// Quem altera `Realizes` no catálogo de seções (`new_templates.go`) tem de conferir esta
+// lista: são as duas metades da mesma decisão, e elas divergiram sem que nada acusasse.
+var DefaultRuleLetters = "SRVAXBNMDEI"
 
 // CodeLengths são os comprimentos de código de identidade que o engine reconhece.
 //

@@ -13,7 +13,7 @@ import (
 func TestLetraDeclaradaPeloProjetoEhVista(t *testing.T) {
 	defer SetRuleLetters(config.DefaultRuleLetters) // não vazar para outros testes
 
-	feature := "@ABCDX-I01 @nivel-unit\n  Cenário: a invariante vale sempre\n"
+	feature := "@ABCDX-P01 @nivel-unit\n  Cenário: a política vale sempre\n"
 
 	// antes de declarar: a letra não é do vocabulário, então não é vista — correto.
 	SetRuleLetters(config.DefaultRuleLetters)
@@ -23,11 +23,11 @@ func TestLetraDeclaradaPeloProjetoEhVista(t *testing.T) {
 
 	// depois de declarar: passa a ser vista.
 	cfg := &config.Config{RuleTypes: []config.RuleType{
-		{Letter: "B", Term: "Behavior"}, {Letter: "I", Term: "Invariant"},
+		{Letter: "B", Term: "Behavior"}, {Letter: "P", Term: "Policy"},
 	}}
 	SetRuleLetters(cfg.RuleLetters())
 	got := parseFeatureScenarios(feature)
-	if len(got) != 1 || got[0].Code != "ABCDX-I01" {
+	if len(got) != 1 || got[0].Code != "ABCDX-P01" {
 		t.Fatalf("cenário da letra declarada continua invisível: %+v", got)
 	}
 }

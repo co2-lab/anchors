@@ -194,14 +194,14 @@ func TestDepsForHeaderVsTable(t *testing.T) {
 func TestVocabularioDoProjetoEhEnxergadoPeloScan(t *testing.T) {
 	defer SetRuleLetters(config.DefaultRuleLetters)
 
-	const texto = "cenário KVALX-I01: a chave é imutável"
+	const texto = "cenário KVALX-P01: a chave é imutável"
 	if got := extractCodes([]byte(texto)); len(got) != 0 {
 		t.Fatalf("com o vocabulário canônico, `I` não é letra válida — veio %v", got)
 	}
 
-	SetRuleLetters("SRVAXBNMDI") // o projeto declarou `I` de Invariante
+	SetRuleLetters("SRVAXBNMDEIP") // o projeto declarou `P` de Política
 	got := extractCodes([]byte(texto))
-	if len(got) != 1 || got[0] != "KVALX-I01" {
+	if len(got) != 1 || got[0] != "KVALX-P01" {
 		t.Errorf("o scan deve enxergar a letra DECLARADA pelo projeto; veio %v", got)
 	}
 }
