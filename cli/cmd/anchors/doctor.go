@@ -209,6 +209,21 @@ func criaLabelsDeEstado(cfg *config.Config) error {
 	return nil
 }
 
+// corpoDeProtecao monta o JSON que a API de proteção de branch exige.
+//
+// `required_pull_request_reviews` com zero aprovações é o que exige o PR sem exigir
+// revisor. Os demais campos vão nulos de propósito: cada um é uma decisão do time, e o
+// Anchors só cobra a porta.
+//
+// Os três são OBRIGATÓRIOS no corpo, mesmo nulos — a API responde 422 se qualquer um
+// faltar, e é separada em função para que um teste possa confrontar isso sem falar com o
+// GitHub.
+func corpoDeProtecao() string {
+	return `{"required_status_checks":null,"enforce_admins":false,` +
+		`"required_pull_request_reviews":{"required_approving_review_count":0},` +
+		`"restrictions":null}`
+}
+
 // protegeBranches exige PR nos branches que o projeto declarou como portas.
 //
 // Não exige APROVAÇÃO de outra conta: num time de uma pessoa com agentes, isso travaria
@@ -220,15 +235,15 @@ func protegeBranches(cfg *config.Config) error {
 	}
 	repo := cfg.Workflow.Repo
 	for _, b := range cfg.Workflow.BranchesProtegidos() {
-		// `required_pull_request_reviews` com zero aprovações é o que exige o PR sem
-		// exigir revisor. Os demais campos vão nulos de propósito: cada um é uma decisão
-		// do time, e o Anchors só cobra a porta.
-		body := `{"required_status_checks":null,"enforce_admins":false,` +
-			`"required_pull_request_reviews":{"required_approving_review_count":0},` +
-			`"restrictions":null}`
-		out, err := exec.Command("gh", "api", "--method", "PUT",
+		body := corpoDeProtecao()
+		// `--input -` LÊ do stdin, e é preciso de fato escrever nele: sem isso o corpo
+		// chega vazio e a API responde 422 reclamando de um campo obrigatório nulo — que
+		// foi o que aconteceu enquanto o `body` era montado e descartado logo abaixo.
+		cmd := exec.Command("gh", "api", "--method", "PUT",
 			"repos/"+repo+"/branches/"+b+"/protection",
-			"--input", "-").CombinedOutput()
+			"--input", "-")
+		cmd.Stdin = strings.NewReader(body)
+		out, err := cmd.CombinedOutput()
 		if err != nil {
 			// Branch inexistente é comum (o `staging` só nasce quando alguém o cria), e
 			// não é falha do fix: reportar e seguir é melhor que abortar o resto.
@@ -238,7 +253,6 @@ func protegeBranches(cfg *config.Config) error {
 			}
 			return fmt.Errorf("%s: %s", b, strings.TrimSpace(string(out)))
 		}
-		_ = body
 		fmt.Printf("✓ %s protegido — nada entra sem PR\n", b)
 	}
 	return nil
