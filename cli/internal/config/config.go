@@ -809,7 +809,18 @@ type Layer struct {
 // (extensão da âncora), {{module}} (o dir-pai — útil quando o basename é genérico, ex.
 // `handler` em functions/<module>/handler.ts → o módulo é <module>).
 type Derived struct {
-	Anchor    string            `yaml:"anchor"`              // a camada-âncora (ex.: "code")
+	// Anchor é o KIND que ancora a trinca. É `spec`, e a doutrina não admite outro: "a
+	// spec é a ORIGEM DA VERDADE de uma unidade… da spec nascem o código, a feature e o
+	// teste" (`anchors guide spec`).
+	//
+	// Até a v0.1 isto era `code`, e o efeito era o oposto do declarado: a spec aparecia
+	// como DERIVADA do código, e um projeto com 200 arquivos e zero specs tinha 200 nós
+	// ancorados — o mapa afirmava trinca onde não havia origem.
+	//
+	// Com `spec`, um projeto sem spec não tem aresta de co-location. É o comportamento
+	// correto: sem spec não há trinca, e o mapa dizer isso é honesto. O `doctor` já
+	// reporta o código sem spec como órfão.
+	Anchor    string            `yaml:"anchor"`              // a camada-âncora (canônico: "spec")
 	Files     map[string]string `yaml:"files"`               // default (co-location): camada-derivada → template
 	Overrides []DerivedOverride `yaml:"overrides,omitempty"` // padrões por camada-âncora (não co-localizado)
 	// Regimes — o de-para do vocabulário de REGIME de teste do PROJETO para o regime

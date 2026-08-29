@@ -45,7 +45,7 @@ func (p *Proposal) buildConfig() *config.Config {
 		if p.HasTest {
 			files["test"] = "{{dir}}/{{name}}.test.{{ext}}"
 		}
-		c.Derived = &config.Derived{Anchor: "code", Files: files}
+		c.Derived = &config.Derived{Anchor: "spec", Files: files}
 	}
 
 	// test_handle: como o projeto marca elementos para alcance externo. Só é escrito
@@ -55,7 +55,7 @@ func (p *Proposal) buildConfig() *config.Config {
 	// inteiro de um projeto que nunca prometeu essa convenção.
 	if p.TestHandle != "" {
 		if c.Derived == nil {
-			c.Derived = &config.Derived{Anchor: "code"}
+			c.Derived = &config.Derived{Anchor: "spec"}
 		}
 		c.Derived.TestHandle = p.TestHandle
 	}

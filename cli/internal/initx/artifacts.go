@@ -82,17 +82,23 @@ func ArtifactNames() []string {
 }
 
 // ApplyColocation monta ou remove o `derived` do cfg conforme a escolha do usuário.
-// Se use=true, cria templates de co-location apenas para os artefatos escolhidos
-// que se co-localizam (spec/feature/test — não guide). Puro. `ext` é o placeholder
-// da extensão do teste ({{ext}} é resolvido no build por arquivo).
+// Se use=true, cria os templates de co-location a partir da ÂNCORA, que é a spec.
+//
+// A spec não aparece entre os derivados — ela é a origem, e da origem nascem o código, a
+// feature e o teste. Sem `spec` escolhido não há âncora, e a co-location não se declara:
+// um projeto sem spec não tem trinca a localizar.
+//
+// A extensão do código é declarada, não inferida: `{{ext}}` valia quando o código ancorava
+// (a extensão vinha dele), e da spec não há de onde tirá-la. `ext` é o que o projeto
+// decidiu no PROJECT.md.
 func ApplyColocation(cfg *config.Config, use bool, chosenArtifacts map[string]bool) {
-	if !use {
+	if !use || !chosenArtifacts["spec"] {
 		cfg.Derived = nil
 		return
 	}
 	files := map[string]string{}
-	if chosenArtifacts["spec"] {
-		files["spec"] = "{{dir}}/{{name}}.spec.md"
+	if chosenArtifacts["code"] {
+		files["code"] = "{{dir}}/{{name}}.{{ext}}"
 	}
 	if chosenArtifacts["feature"] {
 		files["feature"] = "{{dir}}/{{name}}.feature"
@@ -104,5 +110,5 @@ func ApplyColocation(cfg *config.Config, use bool, chosenArtifacts map[string]bo
 		cfg.Derived = nil
 		return
 	}
-	cfg.Derived = &config.Derived{Anchor: "code", Files: files}
+	cfg.Derived = &config.Derived{Anchor: "spec", Files: files}
 }

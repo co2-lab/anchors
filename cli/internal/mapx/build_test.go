@@ -243,3 +243,43 @@ func TestSeedResolvidaPorNome(t *testing.T) {
 		t.Error("nome duplicado é ambíguo — não pode gerar aresta")
 	}
 }
+
+func TestBuild_ancoraSpec(t *testing.T) {
+	// A spec ancorando, que é a forma canônica: os arquivos derivam dela. A extensão do
+	// código NÃO está no nome da spec (`Login.spec.md`), então o template do derivado
+	// precisa declará-la literalmente — {{ext}} aqui seria vazio.
+	cfg := &config.Config{
+		Version: 1,
+		Layers: map[string]config.Layer{
+			"spec":   {Kind: "spec", Tags: []string{"spec"}},
+			"screen": {Kind: "code", Tags: []string{"frontend"}},
+			"test":   {Kind: "test"},
+		},
+		Derived: &config.Derived{
+			Anchor: "spec",
+			Files: map[string]string{
+				"code": "{{dir}}/{{name}}.ts",
+				"test": "{{dir}}/{{name}}.test.ts",
+			},
+		},
+	}
+	files := []scan.File{
+		{Path: "src/Login.spec.md", Layer: "spec", Kind: "spec", Rev: "a"},
+		{Path: "src/Login.ts", Layer: "screen", Kind: "code", Rev: "b"},
+		{Path: "src/Login.test.ts", Layer: "test", Kind: "test", Rev: "c"},
+	}
+	g := Build(files, cfg, nil)
+
+	if !hasEdge(g, "src/Login.spec.md", "src/Login.ts", EdgeSpecifies) {
+		t.Error("a spec âncora deveria especificar o código derivado")
+	}
+	// Sem feature declarada, o teste deriva direto da spec — do contrário um projeto que
+	// não usa feature perderia a ligação spec→teste inteira.
+	if !hasEdge(g, "src/Login.spec.md", "src/Login.test.ts", EdgeTestedBy) {
+		t.Error("sem feature, a spec deveria ligar direto ao teste")
+	}
+	// E a direção NÃO se inverte: o código não especifica a spec.
+	if hasEdge(g, "src/Login.ts", "src/Login.spec.md", EdgeSpecifies) {
+		t.Error("o código não pode especificar a spec — a spec é a âncora")
+	}
+}

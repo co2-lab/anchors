@@ -168,7 +168,7 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 		// passa por Clean e devolve "functions\run-audits": o caminho montado não casa
 		// id nenhum e a co-location inteira deixa de ligar spec/feature/teste.
 		dir := filepath.ToSlash(filepath.Dir(f.Path))
-		name, ext := stemName(f.Path)
+		name, ext := stemDaAncora(f.Path)
 		module := filepath.Base(dir) // {{module}} — o dir-pai (ex.: run-audits em .../run-audits/handler.ts)
 		// Templates efetivos = default sobrescrito pelos overrides cuja `when` casa a
 		// camada da âncora (STRUCTURE.md §2.2: padrão de localização por camada quando
@@ -193,17 +193,31 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 				derived[layer] = want
 			}
 		}
-		spec := derived["spec"]
+		// A ÂNCORA é a spec, e os derivados saem dela. Até a v0.1 a âncora era o código e
+		// a spec vinha em `derived["spec"]` — direção invertida em relação à doutrina
+		// ("da spec nascem o código, a feature e o teste").
+		//
+		// O código segue aceito como âncora, e aí a spec volta a ser derivada: um projeto
+		// que declarou `anchor: code` não pode perder as arestas por causa desta mudança.
+		spec, codigo := f.Path, derived["code"]
+		if cfg.Derived.Anchor != "spec" {
+			spec, codigo = derived["spec"], f.Path
+		}
 		feat := derived["feature"]
 		test := derived["test"]
-		if spec != "" {
-			edges = append(edges, Edge{From: spec, To: f.Path, Type: EdgeSpecifies, Origin: OriginConvention})
+		if spec != "" && codigo != "" {
+			edges = append(edges, Edge{From: spec, To: codigo, Type: EdgeSpecifies, Origin: OriginConvention})
 		}
 		if spec != "" && feat != "" {
 			edges = append(edges, Edge{From: spec, To: feat, Type: EdgeCoveredBy, Origin: OriginConvention})
 		}
 		if feat != "" && test != "" {
 			edges = append(edges, Edge{From: feat, To: test, Type: EdgeTestedBy, Origin: OriginConvention})
+		}
+		// Sem feature declarada, o teste ainda deriva da spec. Um projeto que não usa
+		// feature (o próprio Anchors é um) perderia a ligação spec→teste de outro modo.
+		if feat == "" && spec != "" && test != "" {
+			edges = append(edges, Edge{From: spec, To: test, Type: EdgeTestedBy, Origin: OriginConvention})
 		}
 	}
 	return edges
@@ -299,6 +313,28 @@ func governsEdges(files []scan.File, cfg *config.Config) []Edge {
 
 // stemName devolve o nome-base sem extensão e a extensão (sem ponto).
 // dir/Login.tsx → ("Login", "tsx").
+// stemDaAncora extrai o nome da unidade a partir do caminho da ÂNCORA.
+//
+// A âncora é a spec (`Login.spec.md`), e dela o nome da unidade é `Login` — não
+// `Login.spec`, que é o que um corte na última extensão devolveria. Os sufixos de
+// artefato são compostos, e cortá-los é o que faz `{{name}}` valer para os derivados.
+//
+// O `{{ext}}` sai VAZIO de propósito: a extensão do código não está na spec, e inventá-la
+// (`.ts`? `.tsx`? `.go`?) escolheria por um projeto que não declarou. Um template que
+// precise dela declara a extensão literalmente — `{{dir}}/{{name}}.test.ts` —, e assim a
+// decisão fica escrita onde se lê.
+func stemDaAncora(path string) (name, ext string) {
+	base := filepath.Base(path)
+	for _, suf := range []string{".spec.md", ".feature"} {
+		if b, ok := strings.CutSuffix(base, suf); ok {
+			return b, ""
+		}
+	}
+	// Não é um artefato de sufixo composto: cai no comportamento antigo, que serve a
+	// qualquer âncora que um projeto venha a declarar.
+	return stemName(path)
+}
+
 func stemName(path string) (name, ext string) {
 	base := filepath.Base(path)
 	if i := strings.LastIndex(base, "."); i >= 0 {

@@ -70,10 +70,27 @@ func TestApplyArtifactChoice_planLayer(t *testing.T) {
 
 func TestApplyColocation(t *testing.T) {
 	cfg := &config.Config{}
-	// com spec+feature+test escolhidos → derived com os 3
-	ApplyColocation(cfg, true, map[string]bool{"spec": true, "feature": true, "test": true})
+	// A ÂNCORA é a spec, e ela não aparece entre os derivados: da spec nascem o código,
+	// a feature e o teste. Com os quatro escolhidos, sobram TRÊS derivados.
+	ApplyColocation(cfg, true, map[string]bool{
+		"spec": true, "code": true, "feature": true, "test": true,
+	})
 	if cfg.Derived == nil || len(cfg.Derived.Files) != 3 {
 		t.Fatalf("esperava derived com 3 arquivos, got %+v", cfg.Derived)
+	}
+	if cfg.Derived.Anchor != "spec" {
+		t.Errorf("a âncora é a spec, veio %q", cfg.Derived.Anchor)
+	}
+	if _, ehDerivada := cfg.Derived.Files["spec"]; ehDerivada {
+		t.Error("a spec é a ORIGEM — listá-la como derivada inverte a doutrina")
+	}
+
+	// Sem spec escolhida não há âncora, e a co-location não se declara: um projeto sem
+	// spec não tem trinca a localizar.
+	semSpec := &config.Config{}
+	ApplyColocation(semSpec, true, map[string]bool{"code": true, "test": true})
+	if semSpec.Derived != nil {
+		t.Error("sem spec não há âncora — não deveria haver derived")
 	}
 	// desligar co-location → derived some
 	ApplyColocation(cfg, false, map[string]bool{"spec": true})
