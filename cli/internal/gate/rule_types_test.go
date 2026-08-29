@@ -60,9 +60,16 @@ func TestRuleTypes_conflitoDeLetra(t *testing.T) {
 	}
 }
 
-func TestRuleTypes_semVocabularioPula(t *testing.T) {
-	if v, _ := checkRuleTypes("## X\n| `HOMEX-P01` | x |\n", mapx.Node{}, "", nil, &config.Config{}); v != Skip {
-		t.Errorf("sem rule_types declarado, esperava Skip, got %v", v)
+// Este teste travava o Skip — o gate canônico que nunca media nada. Passou a confrontar
+// as letras canônicas: `P` não está em SRVAXBNMD, e uma letra que o engine não reconhece é
+// invisível para a rastreabilidade, com ou sem vocabulário declarado.
+func TestRuleTypes_semVocabularioUsaAsCanonicas(t *testing.T) {
+	v, msg := checkRuleTypes("## X\n| `HOMEX-P01` | x |\n", mapx.Node{}, "", nil, &config.Config{})
+	if v != Fail {
+		t.Errorf("`P` está fora das canônicas e deveria reprovar, got %v", v)
+	}
+	if !strings.Contains(msg, "canônico") {
+		t.Errorf("a mensagem deveria dizer que confronta o vocabulário canônico: %q", msg)
 	}
 }
 
@@ -99,5 +106,34 @@ func TestRuleTypes_secaoQueDEFINEcodigoEmTabelaConta(t *testing.T) {
 	content := "## Regras Inventadas\n| Regra | Descrição |\n| `HOMEX-S02` | define algo |\n"
 	if v, _ := checkRuleTypes(content, mapx.Node{}, "", nil, vocab()); v != Fail {
 		t.Errorf("seção que DEFINE regra sob título não declarado deveria reprovar, got %v", v)
+	}
+}
+
+// Sem `rule_types` declarado o gate media NADA: fazia Skip e reportava indeterminado para
+// sempre — um gate canônico, semeado pelo `init` em todo projeto, que nunca confrontou
+// coisa alguma. É a impressão de defesa que não existe.
+func TestRuleTypesConfrontaCanonicasSemVocabulario(t *testing.T) {
+	semVocabulario := &config.Config{}
+
+	// Letra canônica: passa.
+	spec := "## Regras\n\n### ABCDX-B01 — regra\n\nTexto.\n"
+	if v, msg := checkRuleTypes(spec, mapx.Node{}, "", nil, semVocabulario); v != Pass {
+		t.Errorf("`B` é canônica e deveria passar: %v — %s", v, msg)
+	}
+
+	// Letra fora das canônicas: reprova, e nomeia a letra.
+	fora := "## Regras\n\n### ABCDX-I01 — invariante\n\nTexto.\n"
+	v, msg := checkRuleTypes(fora, mapx.Node{}, "", nil, semVocabulario)
+	if v != Fail {
+		t.Errorf("`I` não está em %s e deveria reprovar, veio %v", config.DefaultRuleLetters, v)
+	}
+	if !strings.Contains(msg, "I") || !strings.Contains(msg, "rule_types") {
+		t.Errorf("a mensagem deveria nomear a letra E onde declará-la: %s", msg)
+	}
+
+	// Sem código nenhum não há o que confrontar — e isso NÃO é falha deste gate: quem
+	// cobra a existência de regra catalogada é o `spec-completa`.
+	if v, _ := checkRuleTypes("## Visão Geral\n\nProsa.\n", mapx.Node{}, "", nil, semVocabulario); v != Pass {
+		t.Errorf("spec sem código não é problema do rule-types: %v", v)
 	}
 }

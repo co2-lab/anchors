@@ -329,7 +329,83 @@ func checkSpecSections(content string, _ mapx.Node) (Verdict, string) {
 			"`| ABCDX-V01 | ... |`, ou bullet-negrito `- **ABCDX-V01** ...`. (Menção solta " +
 			"em prosa não conta.)"
 	}
+	// "Ao menos uma" é o piso, e sozinho ele deixa passar o caso mais comum: a spec que
+	// cataloga a primeira regra e escreve as outras nove em prosa. As nove ficam
+	// invisíveis para TODOS os gates de identidade — não por estarem erradas, mas por não
+	// terem código, e um gate que não enxerga a regra reporta verde sobre o que não
+	// conferiu.
+	if msg := irmasSemCodigo(content); msg != "" {
+		return Fail, msg
+	}
 	return Pass, ""
+}
+
+// secaoComNivelRE casa um cabeçalho e captura o nível (para agrupar por pai) e o título.
+var secaoComNivelRE = regexp.MustCompile(`^(#{2,4})\s+(.+?)\s*$`)
+
+// irmasSemCodigo acha a seção que DEVERIA catalogar e não cataloga.
+//
+// O difícil é separar "seção de regra sem código" de "seção de prosa" — `## Visão Geral`
+// e `## Restrições` não catalogam nada e não devem ser cobradas. A pergunta não se
+// responde pelo título (cada projeto nomeia como quer), e sim pela VIZINHANÇA: entre as
+// seções irmãs sob o mesmo pai, se algumas catalogam com código e outras não, as sem
+// código destoam do padrão que a própria spec estabeleceu.
+//
+// É o mesmo princípio do `unclaimedSections` no `rule-types`: a spec declara sua forma, e
+// o gate cobra coerência com ela — não com um formato que o Anchors imponha.
+func irmasSemCodigo(content string) string {
+	type sec struct {
+		titulo string
+		nivel  int
+		linhas []string
+	}
+	var secoes []sec
+	for _, l := range strings.Split(content, "\n") {
+		if m := secaoComNivelRE.FindStringSubmatch(l); m != nil {
+			secoes = append(secoes, sec{titulo: m[2], nivel: len(m[1])})
+			continue
+		}
+		if len(secoes) > 0 {
+			secoes[len(secoes)-1].linhas = append(secoes[len(secoes)-1].linhas, l)
+		}
+	}
+	// Agrupa por PAI: o `##` que precede cada bloco de `###`.
+	pai := ""
+	grupos := map[string][]sec{}
+	for _, s := range secoes {
+		if s.nivel == 2 {
+			pai = s.titulo
+			continue
+		}
+		grupos[pai] = append(grupos[pai], s)
+	}
+	for _, irmas := range grupos {
+		if len(irmas) < 2 {
+			continue // sem irmã não há padrão a comparar
+		}
+		var comCodigo, semCodigo []string
+		for _, s := range irmas {
+			// O código pode estar no TÍTULO (`### CODE-B01 — ...`) ou no corpo (tabela,
+			// bullet). As duas formas contam: o gate cobra identidade, não posição.
+			corpo := s.titulo + "\n" + strings.Join(s.linhas, "\n")
+			if anyCodeRE.MatchString(corpo) {
+				comCodigo = append(comCodigo, s.titulo)
+			} else {
+				semCodigo = append(semCodigo, s.titulo)
+			}
+		}
+		// Só acusa quando a MAIORIA das irmãs cataloga: um grupo em que só uma tem código
+		// não estabeleceu padrão nenhum, e cobrar as outras seria inventar um.
+		if len(comCodigo) > len(semCodigo) && len(semCodigo) > 0 {
+			return fmt.Sprintf("seção(ões) sem código sob irmãs que catalogam: %s. "+
+				"As irmãs (%s) têm código e estas não — uma regra sem código é invisível "+
+				"para os gates de identidade, e eles reportam verde sobre o que não "+
+				"conferiram. Dê um código a cada uma, ou mova o texto para uma seção de "+
+				"prosa (`## Restrições`, `## Notas`) se não for regra.",
+				strings.Join(semCodigo, ", "), strings.Join(comCodigo, ", "))
+		}
+	}
+	return ""
 }
 
 // has-code: o arquivo carrega um código de cenário (a identidade). Sem código, a

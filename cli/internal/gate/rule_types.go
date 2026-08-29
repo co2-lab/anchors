@@ -30,12 +30,57 @@ func ruleCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`\b[A-Z0-9]` + config.CodeLengthPattern() + `-([A-Z])\d{2}\b`)
 }
 
+// letrasCanonicas confronta a spec contra `config.DefaultRuleLetters` — o que o gate faz
+// quando o projeto não declarou vocabulário próprio.
+//
+// Uma letra fora das canônicas é invisível para a rastreabilidade: o `feature-test-match`
+// não a enxerga, mesmo com feature e teste escritos. O achado é o mesmo do modo declarado;
+// muda só o conserto sugerido, porque aqui o projeto ainda não tem onde declarar.
+func letrasCanonicas(content string) (Verdict, string) {
+	canonicas := map[string]bool{}
+	for _, l := range config.DefaultRuleLetters {
+		canonicas[string(l)] = true
+	}
+	var fora []string
+	visto := map[string]bool{}
+	for _, m := range ruleCodeRE().FindAllStringSubmatch(content, -1) {
+		l := m[1]
+		if canonicas[l] || visto[l] {
+			continue
+		}
+		visto[l] = true
+		fora = append(fora, l)
+	}
+	if len(fora) == 0 {
+		return Pass, ""
+	}
+	sort.Strings(fora)
+	return Fail, fmt.Sprintf("usa tipo(s) de regra fora do vocabulário canônico (%s): %s. "+
+		"Uma letra que o engine não reconhece é invisível para a rastreabilidade — o "+
+		"feature-test-match não a enxerga, mesmo com feature e teste escritos. Declare o "+
+		"vocabulário do projeto em `rule_types` no anchors.yaml (letra + termo + seções), "+
+		"ou use uma letra canônica.",
+		config.DefaultRuleLetters, strings.Join(fora, ", "))
+}
+
 // specSectionRE captura os títulos de seção (## / ### / ####) de uma spec.
 var specSectionRE = regexp.MustCompile(`(?m)^#{2,4}\s+(.+?)\s*$`)
 
 func checkRuleTypes(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	// SEM `rule_types` declarado o gate confronta as LETRAS CANÔNICAS.
+	//
+	// Ele fazia `Skip` aqui, e o efeito era que um gate CANÔNICO — semeado pelo `init` em
+	// todo projeto — nunca media nada: aparecia na tabela do `check`, ocupava linha, e
+	// reportava indeterminado para sempre. É o silêncio que o Anchors combate em todo
+	// resto: um gate declarado que não confronta nada dá a impressão de defesa que não
+	// existe.
+	//
+	// Só a verificação (1) — letra fora do vocabulário — tem o que fazer nesse modo. As
+	// outras duas dependem de SEÇÕES e TERMOS, que só existem quando o projeto declara o
+	// vocabulário; cobrá-las contra um vocabulário implícito seria inventar regra que
+	// ninguém escreveu.
 	if cfg == nil || len(cfg.RuleTypes) == 0 {
-		return Skip, "" // projeto sem vocabulário declarado — nada a confrontar
+		return letrasCanonicas(content)
 	}
 
 	// (3) CONFLITO no próprio vocabulário: mesma letra reivindicada por seções distintas.
