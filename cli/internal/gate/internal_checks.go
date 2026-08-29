@@ -66,6 +66,8 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"trinca-completa":          checkTrincaCompleta,
 	"plan-seeds-valid":         checkPlanSeedsValid,
 	"fase-ordenada":            checkFaseOrdenada,
+	"fase-existe":              checkFaseExiste,
+	"parent-valido":            checkParentValido,
 	"obligation-honored":       checkObligationHonored,
 	"sibling-guard":            checkSiblingGuard,
 	"pagination-honored":       checkPaginationHonored,

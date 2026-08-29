@@ -177,6 +177,37 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Name: "plan-seeds-valid", ID: "plan-seeds-valid", On: []string{"plan"}, Check: "plan-seeds-valid",
 			Blocking: config.Bool(false), Measures: "o plano só semeia spec em camada que tem spec",
 		})
+		// A ORDEM dentro do plano. Um plano sem fases catalogadas passa (elas são
+		// opcionais); o gate só cobra a coerência de quem as declarou.
+		gates = append(gates, config.Gate{
+			Name: "fase-ordenada", ID: "fase-ordenada", On: []string{"plan"}, Check: "fase-ordenada",
+			Blocking: config.Bool(projetoNovo),
+			Measures: "as fases do plano não dependem do que vem depois delas",
+		})
+	}
+	// PERTENCIMENTO vale para qualquer artefato com header, não só para spec: uma fase
+	// pertence a um plano, e um plano pode pertencer a outro. Mas SÓ ENTRA se o projeto
+	// tem algum desses artefatos — um projeto vazio não semeia gate nenhum, e um gate que
+	// nasce sem nada para medir é a impressão de defesa que não existe.
+	if chosen["spec"] || chosen["plan"] || chosen["code"] {
+		var onde []string
+		for _, k := range []string{"spec", "plan", "code"} {
+			if chosen[k] {
+				onde = append(onde, k)
+			}
+		}
+		gates = append(gates, config.Gate{
+			Name: "parent-valido", ID: "parent-valido", On: onde,
+			Check: "parent-valido", Blocking: config.Bool(projetoNovo),
+			Measures: "o `parent:` declarado aponta para algo que existe, sem ciclo",
+		})
+	}
+	if chosen["spec"] {
+		gates = append(gates, config.Gate{
+			Name: "fase-existe", ID: "fase-existe", On: []string{"spec"}, Check: "fase-existe",
+			Blocking: config.Bool(projetoNovo),
+			Measures: "o `needs:` da spec aponta para uma fase que algum plano cataloga",
+		})
 	}
 	if chosen["feature"] {
 		gates = append(gates, config.Gate{
