@@ -66,9 +66,21 @@ jobs:
           # mais adiantado é de outra pessoa, e mandar este agente para lá abandonaria o
           # que ele já começou — que é exatamente o trabalho pela metade que a regra de
           # prioridade existe para evitar.
+          # Só os estados DA ALÇADA DO AGENTE. A busca olhava apenas o dono, e o dono
+          # continua registrado depois que o trabalho termina — um card aprovado e movido
+          # para `ready-to-test` era retomado e REGREDIA para `in-progress`, desfazendo a
+          # aprovação. Medido no primeiro uso: o card #1 voltou de `ready-to-test` para
+          # `in-progress` no claim seguinte.
+          #
+          # De `ready-to-test` em diante quem move são os pipelines de entrega do projeto,
+          # e o agente não tem mais o que fazer ali.
           meu=$(gh issue list --state open --label "$LABEL" --limit 200 \
-            --json number,comments \
-            --jq "[.[] | select([.comments[].body | select(startswith(\"anchors-owner:\"))] | last == \"anchors-owner: $AGENT\")] | .[0].number // empty")
+            --json number,comments,labels \
+            --jq "[.[]
+                   | select([.labels[].name] | any(. == \"anchors:to-do\" or . == \"anchors:in-progress\"
+                             or . == \"anchors:ready-to-review\" or . == \"anchors:in-review\"))
+                   | select([.comments[].body | select(startswith(\"anchors-owner:\"))] | last == \"anchors-owner: $AGENT\")]
+                  | .[0].number // empty")
 
           # Os candidatos vêm das LABELS de estado — o board não é consultado, e nem
           # precisa existir. A PRIORIDADE É DA DIREITA PARA A ESQUERDA DO FLUXO: o

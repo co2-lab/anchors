@@ -412,14 +412,50 @@ var headerDepRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*dep:\s*(.+)$`)
 // que precisam terminar antes deste começar. Aceita 1+ caminhos separados por vírgula.
 var headerNeedsRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*needs:\s*(.+)$`)
 
-// needsFor só lê `needs:` de um PLANO. Num arquivo de outro kind a linha seria a
-// pergunta errada — uma spec não espera trabalho terminar, ela É o trabalho.
+// needsFor lê `needs:` de um PLANO (caminhos de outros planos) ou de uma SPEC (o CÓDIGO
+// da fase que precisa fechar antes).
+//
+// Na spec o `needs:` era recusado, com o argumento de que "uma spec não espera trabalho
+// terminar, ela É o trabalho". Isso vale para a spec como DOCUMENTO — mas não para o
+// trabalho de implementá-la, que é o que vira card. A ordem dentro de um plano vivia em
+// prosa ("Fase 3 — depende da Fase 2"), e prosa não é confrontável: as specs de um plano
+// nasciam todas disponíveis, e o agente pegava a da fase 3 com a fase 1 em aberto.
+//
+// Na spec o valor é um CÓDIGO (`FNDTN-F02`), não um caminho — a fase não é um arquivo, é
+// um item catalogado dentro do plano. Por isso a resolução de caminho não se aplica aqui.
 func needsFor(kind string, content []byte, root, rel string) []string {
-	if kind != "plan" {
+	switch kind {
+	case "plan":
+		return extractNeeds(content, root, rel)
+	case "spec":
+		return extractNeedsCodigo(content)
+	}
+	return nil
+}
+
+// extractNeedsCodigo lê o `needs:` de uma spec, onde o valor é o código da fase.
+func extractNeedsCodigo(content []byte) []string {
+	m := headerNeedsRE.FindSubmatch(content)
+	if m == nil {
 		return nil
 	}
-	return extractNeeds(content, root, rel)
+	raw := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(m[1])), "-->"))
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		p := stripInlineCode(strings.TrimSpace(part))
+		// Só o que PARECE código de fase. Um caminho aqui é engano de quem escreveu (a
+		// spec depende de uma FASE, não de um arquivo), e aceitá-lo em silêncio deixaria
+		// a dependência sem efeito — o gate não a encontraria no plano.
+		if p == "" || !codigoDeFaseRE.MatchString(p) {
+			continue
+		}
+		out = append(out, p)
+	}
+	return out
 }
+
+// codigoDeFaseRE casa `FNDTN-F02` — o código de uma fase de plano.
+var codigoDeFaseRE = regexp.MustCompile(`^[A-Z0-9]` + config.CodeLengthPattern() + `-F\d{2}$`)
 
 // extractNeeds lê a linha `needs:` e resolve cada caminho relativo à raiz. Só faz
 // sentido em plano — um `needs:` numa spec seria a pergunta errada: spec não espera

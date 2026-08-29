@@ -361,8 +361,17 @@ reporta, e aqui ela fica visível de graça.`,
 					Arquivo string   `json:"arquivo,omitempty"`
 					Kind    string   `json:"kind,omitempty"`
 					Titulo  string   `json:"titulo,omitempty"`
+					// Needs é a ORDEM DE TRABALHO: as fases de plano que precisam fechar
+					// antes desta unidade poder ser trabalhada.
+					//
+					// Sai aqui porque é o pipeline de claim que precisa dela, e a
+					// alternativa seria ele fazer grep no header de cada markdown — o
+					// mesmo caminho que já falhou antes com `grep -B1` e que motivou os
+					// campos acima.
+					Needs []string `json:"needs,omitempty"`
 				}
 				kinds := kindPorArquivo(mapPath)
+				needs := needsPorArquivo(mapPath)
 				out := make([]saida, 0, len(linhas))
 				for _, l := range linhas {
 					arq := codeFile[l.code]
@@ -372,6 +381,7 @@ reporta, e aqui ela fica visível de graça.`,
 						Arquivo: arq,
 						Kind:    kinds[arq],
 						Titulo:  tituloDoArquivo(absRoot, arq),
+						Needs:   needs[arq],
 					})
 				}
 				b, jerr := json.MarshalIndent(out, "", "  ")
@@ -501,4 +511,20 @@ func joinLens(ls []int) string {
 		return "não declarado"
 	}
 	return strings.Join(partes, " ou ")
+}
+
+// needsPorArquivo devolve a ordem de trabalho declarada por cada arquivo do mapa — as
+// fases de plano que precisam fechar antes dele.
+func needsPorArquivo(mapPath string) map[string][]string {
+	out := map[string][]string{}
+	g, err := mapx.Load(mapPath)
+	if err != nil {
+		return out
+	}
+	for _, n := range g.Nodes {
+		if len(n.Needs) > 0 {
+			out[n.ID] = n.Needs
+		}
+	}
+	return out
 }

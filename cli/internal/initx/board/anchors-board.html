@@ -81,6 +81,10 @@
   .codigo { font-family: ui-monospace, SFMono-Regular, monospace; font-size: .72rem;
             color: var(--fazendo); font-weight: 600; }
   .card h3 { font-size: .82rem; margin: .2rem 0 0; font-weight: 500; }
+  /* A DEPENDÊNCIA no card responde "por que isto ainda não posso pegar?" sem abrir nada.
+     A indentação sozinha mostra que há profundidade, mas não diz de quê ela vem. */
+  .dep { font-size: .68rem; color: var(--fraco); margin-top: .35rem; line-height: 1.4;
+         padding-left: .1rem; }
   .dono { display: inline-block; margin-top: .4rem; font-size: .7rem; color: var(--fraco);
           font-family: ui-monospace, monospace; }
   .vazia { color: var(--fraco); font-size: .75rem; font-style: italic; padding: .5rem 0; }
@@ -242,12 +246,59 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 let ULTIMO = { itens: [] };
+let NIVEIS = {};
+
+// --- a ÁRVORE, derivada do `needs` ---
+//
+// A hierarquia não é declarada no GitHub: ela SAI da ordem de trabalho. `needs` diz "isto
+// vem depois daquilo", e a profundidade de um item é quantos passos ele está da raiz.
+//
+// Foi a escolha entre isto e as sub-issues nativas do GitHub. Sub-issue é uma relação
+// pai/filho ÚNICA — e um item pode depender de VÁRIAS coisas (a spec de teste precisa da
+// árvore E da régua de tipos). Uma hierarquia rígida obrigaria a escolher um pai e perder
+// os outros; o grafo representa os dois.
+//
+// O nível é o CAMINHO MAIS LONGO até a raiz, e não o mais curto: um item que depende de
+// F01 e F03 pertence visualmente depois de F03 — usar o mais curto o desenharia como se
+// estivesse pronto antes de estar.
+function calculaNiveis(d) {
+  const porCodigo = {};
+  for (const i of d.itens || []) if (i.codigo) porCodigo[i.codigo] = i;
+  // As fases são nós do grafo mesmo sem card próprio: elas agrupam, e sem elas os itens
+  // que dependem de uma fase ficariam todos no mesmo nível.
+  const fases = {};
+  for (const f of d.fases || []) fases[f.codigo] = f;
+
+  const nivel = {};
+  const visitando = new Set();
+  function profundidade(cod) {
+    if (nivel[cod] !== undefined) return nivel[cod];
+    // CICLO: `needs` circular não deve travar a página. O gate `fase-ordenada` já o
+    // reprova no repositório; aqui a defesa é só para não pendurar o navegador.
+    if (visitando.has(cod)) return 0;
+    visitando.add(cod);
+    // O `needs` pode vir do ITEM (um card) ou da FASE — e a fase também depende de fase,
+    // que é o que forma a cadeia F03 → F02 → F01. Sem olhar os dois, tudo cai no nível 1.
+    const dono = porCodigo[cod] || fases[cod];
+    const pais = (dono?.needs || []).filter((n) => porCodigo[n] || fases[n]);
+    const n = pais.length === 0 ? 0 : 1 + Math.max(...pais.map(profundidade));
+    visitando.delete(cod);
+    nivel[cod] = n;
+    return n;
+  }
+  // As FASES primeiro: elas formam a espinha da cadeia, e um item só sabe seu nível
+  // depois que a fase de que depende souber o dela.
+  for (const cod of Object.keys(fases)) profundidade(cod);
+  for (const cod of Object.keys(porCodigo)) profundidade(cod);
+  return { nivel, fases, porCodigo };
+}
 
 function desenha(d) {
     ULTIMO = d;
     document.getElementById("quando").textContent =
       d.repo + " · foto de " + new Date(d.quando).toLocaleString();
     const visiveis = COLUNAS.filter(([, , , , cd]) => pref.cd || !cd);
+    NIVEIS = calculaNiveis(d);
     document.getElementById("colunas").innerHTML = visiveis.map(([id, nome, oquee, cor]) => {
       const cards = (d.itens || []).filter((i) => i.estado === id);
       return `<section class="coluna">
@@ -255,9 +306,12 @@ function desenha(d) {
           ${esc(nome)}<span class="qtd">${cards.length}</span></div>
         <div class="oquee">${esc(oquee)}</div>
         ${cards.length === 0 ? '<div class="vazia">vazia</div>' : cards.map((c) => `
-          <button class="card" type="button" data-numero="${c.numero}">
+          <button class="card" type="button" data-numero="${c.numero}"
+                  style="margin-left:${Math.min(NIVEIS.nivel?.[c.codigo] || 0, 3) * 0.75}rem">
             ${c.codigo ? `<div class="codigo">${esc(c.codigo)}</div>` : ""}
             <h3>${esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</h3>
+            ${(c.needs || []).length ? `<div class="dep" title="depende de">↳ ${
+              c.needs.map((n) => esc(NIVEIS.fases?.[n]?.titulo || n)).join(" · ")}</div>` : ""}
             ${c.dono ? `<span class="dono">◆ ${esc(c.dono)}</span>` : ""}
           </button>`).join("")}
       </section>`;
