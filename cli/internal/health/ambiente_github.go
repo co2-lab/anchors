@@ -10,7 +10,7 @@ import (
 
 // --- ambiente do modo `github` (BOOTSTRAP.md §7.13/§7.14) ---
 //
-// O fluxo do modo `github` pressupõe três pipelines no lugar. Se
+// O fluxo do modo `github` pressupõe quatro pipelines no lugar. Se
 // qualquer peça faltar, nada falha ruidosamente: o fluxo simplesmente NÃO ACONTECE. Um
 // pipeline de identificação ausente não gera erro — gera silêncio, e os artefatos ficam
 // sem card para sempre.

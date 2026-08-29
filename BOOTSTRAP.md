@@ -322,11 +322,13 @@ sequenceDiagram
     P->>R: detecta plano novo
     P->>GH: plano sem card? → cria issue<br/>"implementar o plano 00XX"
 
-    Note over DEV,P: o agente PEDE, não pega —<br/>o pipeline serializado é quem atribui
+    Note over DEV,P: o agente PEDE, não pega —<br/>o pipeline serializado é quem atribui.<br/>Card DELE vem antes da prioridade do board.
 
     DEV->>P: gh workflow run claim.yml<br/>-f agent=máquina/sessão
     Note over P: concurrency: uma instância por vez.<br/>Sem corrida, porque sem concorrência.
-    P->>GH: há card livre?
+    P->>GH: este agente já tem card?
+    GH-->>P: não
+    P->>GH: então: há card livre?<br/>(`ready-to-review` antes de `to-do`)
     GH-->>P: [XXXXX-001] Implementar o plano
     P->>GH: comenta `anchors-owner: máquina/sessão`<br/>+ label `in-progress`
     DEV->>GH: qual card é meu?
@@ -334,7 +336,13 @@ sequenceDiagram
 
     DEV->>A: anchors guide spec / new spec
     DEV->>R: escreve as specs + PR
-    DEV->>GH: move o card para `ready-to-review`
+    Note over DEV,P: o agente NÃO move label.<br/>A obrigação dele é olhar o resultado<br/>dos checks e consertar o que reprovar.
+    P->>P: os checks do PR terminaram?
+    alt verde
+        P->>GH: card → `ready-to-review`
+    else reprovou
+        P->>GH: card FICA em `in-progress`<br/>(trabalho quebrado não entra na fila de revisão)
+    end
 
     participant REV as 🤖 Agente revisor
     REV->>P: pede trabalho (o claim atende<br/>`to-do` e `ready-to-review`)
@@ -461,9 +469,21 @@ fixo e sem cancelamento).
 
 ### 7.9 O ciclo de revisão
 
-O agente que implementa não fecha o próprio trabalho. Ao subir o código e abrir o PR, ele
-**move o card para `READY TO REVIEW`** — e outro agente o pega (pelo mesmo pipeline de
-claim, que também atende essa coluna), movendo-o para `IN REVIEW`. Três desfechos:
+O agente que implementa não fecha o próprio trabalho, e não move o próprio card. Ao subir
+o código e abrir o PR, ele espera: **quem move para `READY TO REVIEW` é o pipeline de PR,
+e só quando os checks PASSAM.**
+
+A obrigação de quem abriu o PR passa a ser uma só — olhar o resultado e consertar o que
+reprovou. Enquanto houver check vermelho, o card fica em `IN PROGRESS`, porque é a
+verdade: o trabalho não terminou.
+
+Isso vale mais pelo que impede do que pelo que automatiza. Com o agente movendo a label,
+`READY TO REVIEW` significava "alguém achou que estava pronto" — e um PR que nem passa nos
+checks entrava na fila de revisão, gastando o revisor com o que a máquina já sabia
+reprovar. Agora a coluna significa "os checks passaram".
+
+Dali, outro agente o pega (pelo mesmo pipeline de claim, que também atende essa coluna),
+movendo-o para `IN REVIEW`. Três desfechos:
 
 | desfecho | o que acontece com o card |
 | --- | --- |
@@ -538,7 +558,7 @@ nunca precisa adivinhar se um card em andamento está parado ou ativo.
 | --- | --- | --- |
 | `anchors:to-do` | implementação disponível, sem dono | identificação (ao criar) · revisor (ao rejeitar) · stale (ao liberar) |
 | `anchors:in-progress` | um agente está implementando | o pipeline de claim |
-| `anchors:ready-to-review` | PR aberto, esperando revisor | o agente que implementou |
+| `anchors:ready-to-review` | PR **verde**, esperando revisor | o pipeline de PR (só quando os checks passam) |
 | `anchors:in-review` | um agente está revisando | o pipeline de claim |
 | **`anchors:ready-to-test`** | **aceito no review — o fim da alçada do Anchors** | o agente revisor, ao aprovar |
 | `anchors:in-test` | em teste | *pipeline do usuário* |
@@ -593,7 +613,7 @@ um achado que ninguém precisa resolver.
 
 ### 7.14 O ambiente precisa estar configurado — e alguém tem de garantir isso
 
-Todo o fluxo da §7 pressupõe os três pipelines no lugar e as labels de estado criadas. Se qualquer peça faltar, o fluxo não falha ruidosamente: **ele simplesmente não
+Todo o fluxo da §7 pressupõe os quatro pipelines no lugar e as labels de estado criadas. Se qualquer peça faltar, o fluxo não falha ruidosamente: **ele simplesmente não
 acontece**. Um pipeline de identificação ausente não gera erro — gera silêncio, e os
 artefatos ficam sem card para sempre. É a mesma classe de problema que a falta de git, e
 merece o mesmo tratamento: `init` e `doctor` avisam com antecedência.

@@ -52,6 +52,12 @@ var WorkflowsDoFluxo = []Workflow{
 		ExigeSerial: true,
 	},
 	{
+		Arquivo: "anchors-pr-checks.yml",
+		Papel: "move o card para revisão quando os checks do PR passam (e SÓ quando " +
+			"passam)",
+		ExigeSerial: true,
+	},
+	{
 		Arquivo:     "anchors-stale.yml",
 		Papel:       "libera cards cujo dono sumiu, preservando o histórico",
 		ExigeSerial: true,

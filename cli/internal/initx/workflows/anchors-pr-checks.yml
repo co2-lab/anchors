@@ -1,0 +1,133 @@
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
+# Anchors — o PR VERDE move o card para revisão
+#
+# Antes, quem movia o card para `ready-to-review` era o agente que implementou. Isso tem
+# dois defeitos, e o segundo é o caro:
+#
+#   • ESQUECIMENTO — o PR sobe e o card fica em `in-progress`; ninguém revisa, e nada
+#     acusa, porque o board diz que alguém ainda está trabalhando.
+#   • TRABALHO QUEBRADO NA FILA DE REVISÃO — o agente move a label mesmo com os checks
+#     reprovando, e o revisor pega um PR que nem passa. `ready-to-review` deixava de
+#     significar "pronto para alguém olhar" e passava a significar "alguém achou que
+#     estava".
+#
+# Com este pipeline, `ready-to-review` PASSA A SIGNIFICAR "os checks passaram". O agente
+# que abriu o PR não escreve label nenhuma: a obrigação dele é olhar o resultado e
+# consertar o que reprovou.
+name: anchors · PR verde move o card
+
+on:
+  # `check_suite` cobre o caso real: os checks terminam DEPOIS do push, e é o fim deles
+  # que interessa — não a abertura do PR.
+  check_suite:
+    types: [completed]
+  # `pull_request` cobre a reabertura e o caso em que não há check algum configurado.
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches: [main] # anchors:integration-branch
+  # À MÃO, para quando algo travar: um card que ficou em `in-progress` porque o evento se
+  # perdeu não tem outra saída — e um pipeline sem escape manual transforma um percalço
+  # em trabalho parado sem remédio.
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: "número do PR a reavaliar"
+        required: true
+        type: string
+
+# Serializado: dois eventos do mesmo PR (o check_suite e o synchronize) podem chegar
+# juntos, e mover o mesmo card duas vezes escreve estado em cima de estado.
+concurrency:
+  group: anchors-pr-checks
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: read
+  checks: read
+
+jobs:
+  mover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Mover o card quando o PR ficar verde
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          LABEL: anchors
+        run: |
+          set -euo pipefail
+
+          # O PR do evento. `check_suite` não traz o número, então ele é procurado pelo
+          # SHA — um check_suite pode não ter PR nenhum (push direto), e aí não há o que
+          # fazer.
+          pr="${{ inputs.pr }}"
+          if [ -z "$pr" ]; then
+            pr=$(gh api "repos/$GH_REPO/commits/${{ github.event.check_suite.head_sha || github.event.pull_request.head.sha }}/pulls" \
+              --jq '.[0].number // empty' 2>/dev/null || true)
+          fi
+          if [ -z "$pr" ]; then
+            echo "nenhum PR para este evento — nada a mover"
+            exit 0
+          fi
+
+          # TODOS os checks precisam ter terminado E passado. Um PR com check ainda em
+          # curso não é "verde": mover agora colocaria na fila de revisão um trabalho que
+          # ainda pode reprovar, que é o defeito que este pipeline existe para eliminar.
+          #
+          # `SKIPPED` e `NEUTRAL` contam como OK: um job que não se aplica àquele PR não
+          # é reprovação, e tratá-lo como tal travaria todo PR que não toca certas áreas.
+          estado=$(gh pr checks "$pr" --json bucket --jq '[.[].bucket] | unique | join(",")' 2>/dev/null || echo "")
+          if echo "$estado" | grep -q "pending"; then
+            echo "PR #$pr ainda tem check em curso ($estado) — espero o fim"
+            exit 0
+          fi
+          if echo "$estado" | grep -qE "fail|cancel"; then
+            echo "PR #$pr reprovou ($estado) — o card FICA em in-progress."
+            echo "Quem abriu o PR conserta o que reprovou; o card não avança com trabalho quebrado."
+            exit 0
+          fi
+
+          # O CARD vem do título do PR, que carrega o código do artefato — a mesma
+          # convenção que o pipeline de identificação usa ao criar (`[XXXXX] ...`).
+          #
+          # Sem código no título não há como saber qual card é este PR, e ADIVINHAR seria
+          # pior que não fazer nada: mover o card errado tira da fila um trabalho que
+          # ninguém terminou.
+          titulo=$(gh pr view "$pr" --json title --jq .title)
+          codigo=$(echo "$titulo" | sed -n 's/^\[\([^]]*\)\].*/\1/p')
+          if [ -z "$codigo" ]; then
+            echo "::warning::o PR #$pr não traz o código do artefato no título (\`[XXXXX] …\`)"
+            echo "  sem ele não dá para saber qual card avançar — o card fica onde está."
+            exit 0
+          fi
+
+          card=$(gh issue list --state open --label "$LABEL" --limit 200 \
+            --json number,title --jq "[.[] | select(.title | startswith(\"[$codigo]\"))] | .[0].number // empty")
+          if [ -z "$card" ]; then
+            echo "nenhum card aberto para o código [$codigo] — nada a mover"
+            exit 0
+          fi
+
+          # Só avança quem está EM IMPLEMENTAÇÃO. Um card em `in-review` já passou por
+          # aqui (o revisor está com ele), e um em `to-do` não tem dono — mover qualquer
+          # um dos dois faria o board descrever um trabalho que não é o que acontece.
+          if ! gh issue view "$card" --json labels --jq '.labels[].name' | grep -qx "anchors:in-progress"; then
+            echo "card #$card não está em in-progress — nada a fazer"
+            exit 0
+          fi
+
+          # Remoção e adição em chamadas SEPARADAS: `gh issue edit` que remove e adiciona
+          # a mesma label numa chamada só aplica a remoção.
+          for e in anchors:to-do anchors:in-progress anchors:in-review \
+                   anchors:ready-to-test anchors:in-test \
+                   anchors:ready-to-release anchors:production; do
+            gh issue edit "$card" --remove-label "$e" >/dev/null 2>&1 || true
+          done
+          gh issue edit "$card" --add-label "anchors:ready-to-review"
+          gh issue comment "$card" --body "Os checks do PR #$pr passaram — card em \`ready-to-review\`."
+          echo "card #$card → ready-to-review (PR #$pr verde)"

@@ -53,16 +53,22 @@ jobs:
         run: |
           set -euo pipefail
 
-          # Um agente por vez, um card por vez: se este agente já tem trabalho, não recebe
-          # outro. Dois cards abertos no mesmo agente significam um deles parado sem
-          # ninguém olhando.
-          ja_tem=$(gh issue list --state open --label "$LABEL" --limit 200 \
+          # O CARD DO PRÓPRIO AGENTE VEM PRIMEIRO — antes da prioridade do board.
+          #
+          # Um agente por vez, um card por vez: dois cards abertos no mesmo agente
+          # significam um deles parado sem ninguém olhando. Mas a conclusão daqui era
+          # abortar com "nada a atribuir", e isso devolvia o agente de mãos vazias
+          # justamente quando ele TINHA trabalho — um card que ele pegou e que voltou a
+          # `to-do` (pelo stale, ou porque a sessão anterior parou no meio) continua sendo
+          # dele, com o contexto já construído.
+          #
+          # Retomar o próprio trabalho vence a prioridade do board: o `ready-to-review`
+          # mais adiantado é de outra pessoa, e mandar este agente para lá abandonaria o
+          # que ele já começou — que é exatamente o trabalho pela metade que a regra de
+          # prioridade existe para evitar.
+          meu=$(gh issue list --state open --label "$LABEL" --limit 200 \
             --json number,comments \
-            --jq "[.[] | select([.comments[].body | select(startswith(\"anchors-owner:\"))] | last == \"anchors-owner: $AGENT\")] | length")
-          if [ "$ja_tem" -gt 0 ]; then
-            echo "o agente $AGENT já tem card em andamento — nada a atribuir"
-            exit 0
-          fi
+            --jq "[.[] | select([.comments[].body | select(startswith(\"anchors-owner:\"))] | last == \"anchors-owner: $AGENT\")] | .[0].number // empty")
 
           # Os candidatos vêm das LABELS de estado — o board não é consultado, e nem
           # precisa existir. A PRIORIDADE É DA DIREITA PARA A ESQUERDA DO FLUXO: o
@@ -93,6 +99,14 @@ jobs:
             esac
           done < /tmp/disponiveis.txt
 
+          # O próprio card vence o que a varredura achou: ele foi procurado primeiro e só
+          # não interrompeu o fluxo para que a mensagem final saiba distinguir "retomei o
+          # meu" de "peguei um novo".
+          retomado=""
+          if [ -n "$meu" ]; then
+            livre="$meu"; retomado="sim"
+          fi
+
           if [ -z "$livre" ]; then
             echo "nenhum card livre"
             exit 0
@@ -108,9 +122,16 @@ jobs:
           # testar vazio com grep se comporta de forma imprevisível — foi assim que um
           # card em `to-do` foi movido para `in-review` na primeira execução real.
           # Listar as labels e procurar a linha exata não tem essa ambiguidade.
-          if gh issue view "$livre" --json labels --jq '.labels[].name' \
-               | grep -qx "anchors:ready-to-review"; then
+          labels_atuais=$(gh issue view "$livre" --json labels --jq '.labels[].name')
+          if echo "$labels_atuais" | grep -qx "anchors:ready-to-review"; then
             de="anchors:ready-to-review"; para="anchors:in-review"
+          elif echo "$labels_atuais" | grep -qx "anchors:in-review"; then
+            # RETOMADA de um card que já estava em revisão: o estado não regride. Sem
+            # este ramo o card cairia no `else` e voltaria para `in-progress` — o board
+            # passaria a descrever implementação onde há revisão em curso.
+            de="anchors:in-review"; para="anchors:in-review"
+          elif echo "$labels_atuais" | grep -qx "anchors:in-progress"; then
+            de="anchors:in-progress"; para="anchors:in-progress"
           else
             de="anchors:to-do"; para="anchors:in-progress"
           fi
@@ -118,15 +139,21 @@ jobs:
           # card que por qualquer motivo carregue dois estados manteria o outro colado
           # aqui. A remoção parcial não apenas falha em limpar — ela PERPETUA o estado
           # duplicado, porque cada transição seguinte também só remove um.
-          gh issue edit "$livre" \
-            --remove-label "anchors:to-do" \
-            --remove-label "anchors:in-progress" \
-            --remove-label "anchors:ready-to-review" \
-            --remove-label "anchors:in-review" \
-            --remove-label "anchors:ready-to-test" \
-            --remove-label "anchors:in-test" \
-            --remove-label "anchors:ready-to-release" \
-            --remove-label "anchors:production" \
-            --add-label "$para"
+          #
+          # A remoção e a adição vão em CHAMADAS SEPARADAS, e a remoção pula o estado de
+          # destino: numa retomada `de == para`, e o `gh issue edit` que remove e adiciona
+          # a MESMA label na mesma chamada aplica a remoção — o card ficava sem estado
+          # nenhum, só com a label do Anchors. Medido no primeiro uso real da retomada.
+          for e in anchors:to-do anchors:in-progress anchors:ready-to-review \
+                   anchors:in-review anchors:ready-to-test anchors:in-test \
+                   anchors:ready-to-release anchors:production; do
+            [ "$e" = "$para" ] && continue
+            gh issue edit "$livre" --remove-label "$e" >/dev/null 2>&1 || true
+          done
+          gh issue edit "$livre" --add-label "$para"
 
-          echo "card #$livre atribuído a $AGENT: $de → $para"
+          if [ -n "$retomado" ]; then
+            echo "card #$livre RETOMADO por $AGENT (já era dele): $de → $para"
+          else
+            echo "card #$livre atribuído a $AGENT: $de → $para"
+          fi
