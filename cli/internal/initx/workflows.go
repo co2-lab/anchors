@@ -1,6 +1,7 @@
 package initx
 
 import (
+	"bytes"
 	"embed"
 	"fmt"
 	"io/fs"
@@ -141,6 +142,22 @@ var ColunasDisponiveis = []string{
 // EstadoFinalDoAnchors é o último estado que o Anchors ESCREVE.
 const EstadoFinalDoAnchors = "anchors:ready-to-test"
 
+// EstadosRecicláveis são os únicos estados de onde o `stale` tira um card.
+//
+// A distinção é entre trabalho TRAVADO e trabalho ESPERANDO. Um card em `in-progress`
+// sem sinal de vida é um agente que morreu — reciclar devolve o trabalho à fila. Um card
+// em `ready-to-review` está parado POR DEFINIÇÃO: ele terminou e aguarda um revisor
+// humano, e ninguém comenta enquanto isso. Reciclá-lo joga trabalho pronto de volta em
+// `to-do`, como se nunca tivesse sido feito — e o agente seguinte o refaz.
+//
+// Só entram aqui os estados de trabalho ATIVO, aqueles em que alguém deveria estar
+// mexendo agora. Os `ready-to-*` são filas de espera, e esperar não é estar travado.
+var EstadosRecicláveis = []string{
+	"anchors:in-progress",
+	"anchors:in-review",
+	"anchors:in-test",
+}
+
 // EstadosDisponiveis são os estados de onde um agente TIRA trabalho, em ORDEM DE
 // PRIORIDADE: da direita para a esquerda do fluxo. O trabalho mais ADIANTADO vem
 // primeiro — terminar o que está quase pronto antes de começar coisa nova é o que impede
@@ -205,13 +222,66 @@ func SemConcurrency(root string) []Workflow {
 	return quebrados
 }
 
-// SemeiaWorkflows copia para `.github/workflows/` os pipelines que faltam. Devolve os
-// nomes escritos.
+// MarcadorDeTemplate identifica um pipeline que ainda é o do Anchors — não editado pelo
+// time. É o que separa "customizado" de "desatualizado".
 //
-// NUNCA sobrescreve um arquivo existente. Um pipeline que o time editou — outro ritmo de
-// stale, uma permissão a mais, um passo de build próprio — é trabalho deliberado, e
-// reescrevê-lo pelo padrão apagaria a customização sem avisar. É a régua que o
-// `install-hooks` já usa com um pre-commit alheio.
+// Sem essa distinção, `--fix` só sabia que o arquivo EXISTIA, e tratava as duas
+// situações igual: preservava as duas. O efeito era que uma correção no template nunca
+// alcançava quem já tinha instalado — o projeto ficava com o pipeline defeituoso para
+// sempre, e nada avisava. Foi assim que um `stale` que reciclava trabalho pronto
+// continuou rodando depois de corrigido na fonte.
+const MarcadorDeTemplate = "# anchors:template"
+
+// ÉTemplateIntacto diz se o pipeline instalado ainda é o do Anchors.
+//
+// A prova é o marcador que o template carrega. Editar o arquivo pede que se remova a
+// linha — e quem edita sem removê-la perde a customização na próxima atualização. É uma
+// troca deliberada: o marcador é explícito no arquivo e diz exatamente isso, e a
+// alternativa (hash do conteúdo) marcaria como "customizado" qualquer arquivo que o
+// próprio Anchors gerou com um branch de integração diferente.
+func ÉTemplateIntacto(root, arquivo string) bool {
+	b, err := os.ReadFile(filepath.Join(root, DirWorkflows, arquivo))
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(b), MarcadorDeTemplate)
+}
+
+// WorkflowsDesatualizados diz quais pipelines instalados são do Anchors (marcador
+// intacto) e diferem do template atual — os que `--fix` pode e deve atualizar.
+//
+// Um pipeline SEM o marcador não entra aqui mesmo que difira: é do time, e a diferença é
+// a customização dele.
+func WorkflowsDesatualizados(root string, cfg *config.Config) []Workflow {
+	var velhos []Workflow
+	for _, w := range WorkflowsDoFluxo {
+		if !ÉTemplateIntacto(root, w.Arquivo) {
+			continue
+		}
+		atual, err := os.ReadFile(filepath.Join(root, DirWorkflows, w.Arquivo))
+		if err != nil {
+			continue
+		}
+		esperado, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
+		if err != nil {
+			continue
+		}
+		esperado = aplicaBranchDeIntegracao(esperado, cfg.Workflow.BranchDeIntegracao())
+		if !bytes.Equal(atual, esperado) {
+			velhos = append(velhos, w)
+		}
+	}
+	return velhos
+}
+
+// SemeiaWorkflows escreve em `.github/workflows/` os pipelines que faltam, e ATUALIZA os
+// que ainda são do Anchors e ficaram para trás. Devolve os nomes escritos.
+//
+// Nunca sobrescreve um pipeline que o time editou — outro ritmo de stale, uma permissão a
+// mais, um passo de build próprio é trabalho deliberado, e reescrevê-lo apagaria a
+// customização sem avisar. É a régua que o `install-hooks` já usa com um pre-commit
+// alheio. A diferença é que agora "editado pelo time" é uma pergunta que se responde
+// (o marcador), e não uma suposição a partir da mera existência do arquivo.
 // Recebe o CONFIG, e não o branch já extraído: as regras de branch moram no anchors.yaml,
 // e quem precisa delas as lê de lá. Passar o valor pronto espalharia a decisão por cada
 // chamador, e bastaria um deles ler de outro lugar para o projeto ter dois fluxos.
@@ -223,8 +293,8 @@ func SemeiaWorkflows(root string, cfg *config.Config) ([]string, error) {
 	var escritos []string
 	for _, w := range WorkflowsDoFluxo {
 		dest := filepath.Join(dir, w.Arquivo)
-		if _, err := os.Stat(dest); err == nil {
-			continue // já existe: é do time, não nosso
+		if _, err := os.Stat(dest); err == nil && !ÉTemplateIntacto(root, w.Arquivo) {
+			continue // existe e o marcador saiu: é do time, não nosso
 		}
 		conteudo, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {

@@ -123,19 +123,34 @@ func repararAmbiente(root string, cfg *config.Config) error {
 		fmt.Println("\n--fix: nada a fazer — o ambiente do GitHub só é exigido no `workflow.mode: github`.")
 		return nil
 	}
-	escritos, err := initx.SemeiaWorkflows(root, cfg)
-	if err != nil {
+	// Lido ANTES de semear: depois da escrita os arquivos já casam o template, e não
+	// haveria como dizer quais foram ATUALIZADOS em vez de criados.
+	faltavam := initx.FaltaWorkflow(root)
+	desatualizados := initx.WorkflowsDesatualizados(root, cfg)
+	if _, err := initx.SemeiaWorkflows(root, cfg); err != nil {
 		return fmt.Errorf("semear os pipelines: %w", err)
 	}
 	fmt.Println()
-	if len(escritos) == 0 {
-		fmt.Println("--fix: os pipelines já existem (nenhum foi sobrescrito).")
-	} else {
-		fmt.Printf("✓ %d pipeline(s) criados em %s:\n", len(escritos), initx.DirWorkflows)
-		for _, e := range escritos {
-			fmt.Printf("    %s\n", e)
+	if len(faltavam) == 0 && len(desatualizados) == 0 {
+		fmt.Println("--fix: os pipelines já existem e estão atualizados.")
+	}
+	if len(faltavam) > 0 {
+		fmt.Printf("✓ %d pipeline(s) criados em %s:\n", len(faltavam), initx.DirWorkflows)
+		for _, w := range faltavam {
+			fmt.Printf("    %s\n", w.Arquivo)
 		}
 		fmt.Println("  revise, commite e configure `vars.ANCHORS_PROJECT_NUMBER` no repositório.")
+	}
+	// Atualizado é distinto de criado, e a mensagem separa os dois: um arquivo que MUDOU
+	// sozinho no repositório de alguém precisa ser lido antes de subir — dizer só
+	// "criados" faria o diff parecer coisa que o time não fez.
+	if len(desatualizados) > 0 {
+		fmt.Printf("✓ %d pipeline(s) ATUALIZADOS em %s (eram o template do Anchors e ficaram para trás):\n",
+			len(desatualizados), initx.DirWorkflows)
+		for _, w := range desatualizados {
+			fmt.Printf("    %s\n", w.Arquivo)
+		}
+		fmt.Println("  revise o diff e commite — a correção só passa a valer depois de subir.")
 	}
 	// A PROTEÇÃO DO BRANCH é o que enforça "todo trabalho sobe via PR". Sem ela nada
 	// falha: o push direto funciona, e pula o card, a revisão e o pipeline de

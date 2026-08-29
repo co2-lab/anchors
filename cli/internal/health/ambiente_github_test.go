@@ -34,7 +34,7 @@ func TestAmbienteNaoCobraNadaNoModoLocal(t *testing.T) {
 func TestAmbienteAvisaPipelineAusente(t *testing.T) {
 	dir := t.TempDir()
 
-	fs := checkPipelines(dir)
+	fs := checkPipelines(dir, cfgGitHub())
 
 	if len(fs) != len(initx.WorkflowsDoFluxo) {
 		t.Fatalf("esperava %d achados, veio %d", len(initx.WorkflowsDoFluxo), len(fs))
@@ -68,7 +68,7 @@ func TestAmbientePegaPipelineSemSerializacao(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fs := checkPipelines(dir)
+	fs := checkPipelines(dir, cfgGitHub())
 
 	if len(fs) != 1 {
 		t.Fatalf("esperava 1 achado (o pipeline quebrado), veio %d: %+v", len(fs), fs)
@@ -86,7 +86,7 @@ func TestAmbientePegaPipelineSemSerializacao(t *testing.T) {
 // que ele mesmo acabou de criar.
 func TestFixSatisfazOQueODoctorCobra(t *testing.T) {
 	dir := t.TempDir()
-	if fs := checkPipelines(dir); len(fs) == 0 {
+	if fs := checkPipelines(dir, cfgGitHub()); len(fs) == 0 {
 		t.Fatal("preparo: o projeto vazio deveria ter achados")
 	}
 
@@ -94,7 +94,7 @@ func TestFixSatisfazOQueODoctorCobra(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if fs := checkPipelines(dir); len(fs) != 0 {
+	if fs := checkPipelines(dir, cfgGitHub()); len(fs) != 0 {
 		t.Errorf("o --fix criou os pipelines e o doctor ainda reclama: %+v", fs)
 	}
 }
@@ -118,6 +118,47 @@ func TestDoctorNaoCobraBoard(t *testing.T) {
 		if strings.Contains(strings.ToLower(f.Check), "board") ||
 			strings.Contains(strings.ToLower(f.Detail), "project") {
 			t.Errorf("o doctor cobra board, que virou opcional: %+v", f)
+		}
+	}
+}
+
+// O pipeline DESATUALIZADO é como uma correção no desenho do fluxo chega a quem já
+// instalou. Sem este achado, um defeito corrigido na fonte continua rodando no projeto
+// para sempre — e nada avisa, porque o arquivo ESTÁ lá.
+func TestAmbienteAvisaPipelineDesatualizado(t *testing.T) {
+	dir := t.TempDir()
+	if _, err := initx.SemeiaWorkflows(dir, cfgGitHub()); err != nil {
+		t.Fatal(err)
+	}
+	// Envelhece um pipeline: conteúdo diferente do template, marcador INTACTO.
+	alvo := filepath.Join(dir, initx.DirWorkflows, initx.WorkflowsDoFluxo[0].Arquivo)
+	b, err := os.ReadFile(alvo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(alvo, append(b, []byte("\n# deriva\n")...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	var achou bool
+	for _, f := range checkPipelines(dir, cfgGitHub()) {
+		if f.Check == "pipeline-desatualizado" {
+			achou = true
+		}
+	}
+	if !achou {
+		t.Error("o pipeline ficou para trás e o doctor não avisou")
+	}
+
+	// Agora SEM o marcador: o time adotou o arquivo, e a diferença passa a ser
+	// customização dele — avisar aqui seria cobrar que ele desfaça o próprio trabalho.
+	semMarcador := strings.ReplaceAll(string(b), initx.MarcadorDeTemplate, "# editado pelo time")
+	if err := os.WriteFile(alvo, []byte(semMarcador+"\n# deriva\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range checkPipelines(dir, cfgGitHub()) {
+		if f.Check == "pipeline-desatualizado" {
+			t.Error("pipeline sem marcador é do time — não pode ser cobrado como desatualizado")
 		}
 	}
 }

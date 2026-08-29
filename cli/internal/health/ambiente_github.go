@@ -28,19 +28,32 @@ func checkAmbienteGitHub(cfg *config.Config, root string) []Finding {
 	// o Project é só espelho opcional (ver BOOTSTRAP.md §7.13). Cobrar um board que o
 	// fluxo não precisa produziria um achado que ninguém precisa resolver — e ruído
 	// recorrente treina a equipe a ignorar o doctor.
-	out := checkPipelines(root)
+	out := checkPipelines(root, cfg)
 	return append(out, checkProtecaoDeBranch(cfg)...)
 }
 
 // checkPipelines confere o que dá para conferir lendo o disco: os três workflows existem,
 // e os que precisam de serialização a declaram.
-func checkPipelines(root string) []Finding {
+func checkPipelines(root string, cfg *config.Config) []Finding {
 	var out []Finding
 	for _, w := range initx.FaltaWorkflow(root) {
 		out = append(out, Finding{"pipeline-ausente", Warn, w.Arquivo,
 			"pipeline do fluxo não existe em " + initx.DirWorkflows + " — sem ele, " +
 				w.Papel + " não acontece (e não falha: só não acontece). " +
 				"Rode `anchors doctor --fix`"})
+	}
+	// DESATUALIZADO: o pipeline é do Anchors (marcador intacto) e o template mudou desde
+	// que ele foi instalado. É como uma correção chega a quem já instalou — sem isto, um
+	// defeito corrigido na fonte continua rodando no projeto para sempre, e nada avisa.
+	//
+	// Só vale para pipeline NÃO editado: um que o time customizou é dele, e a diferença
+	// em relação ao template é a customização, não atraso.
+	for _, w := range initx.WorkflowsDesatualizados(root, cfg) {
+		out = append(out, Finding{"pipeline-desatualizado", Warn, w.Arquivo,
+			"o pipeline é o template do Anchors e ficou para trás — uma correção no " +
+				"desenho do fluxo não chegou a este projeto. Rode `anchors doctor --fix` " +
+				"(se você editou o arquivo, remova a linha `# anchors:template` e ele " +
+				"passa a ser seu)"})
 	}
 	// PRESENTE mas sem serialização é o pior caso: parece configurado, e devolve a
 	// corrida que o pipeline existia para eliminar — em silêncio, porque o arquivo ESTÁ

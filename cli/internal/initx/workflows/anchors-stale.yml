@@ -7,6 +7,10 @@
 # A liberação é um comentário novo, nunca uma edição: `anchors-owner: (liberado)` passa a
 # ser o último, e o card volta à fila. O HISTÓRICO PERMANECE — dá para ver quem tinha
 # pegado, quando, e que foi liberado por inatividade e não por decisão de alguém.
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
 name: anchors · liberar cards parados
 
 on:
@@ -56,9 +60,17 @@ jobs:
           # `--label "$LABEL"` não é detalhe: o board é compartilhado, e sem o filtro
           # este pipeline "liberaria" cards de outros fluxos — mexendo em trabalho que
           # não é do Anchors e cujo dono não se registra por `anchors-owner`.
+          # RECICLÁVEIS são só os estados de trabalho ATIVO. A distinção é entre travado
+          # e esperando: um card em `in-progress` sem sinal de vida é um agente que
+          # morreu, e reciclar devolve o trabalho à fila; um card em `ready-to-review`
+          # está parado POR DEFINIÇÃO — terminou e aguarda revisor humano, e ninguém
+          # comenta enquanto isso. Sem este filtro, o stale joga trabalho PRONTO de volta
+          # em `to-do` e o próximo agente o refaz do zero.
           gh issue list --state open --label "$LABEL" --limit 200 \
-            --json number,updatedAt,comments \
-            --jq "[.[] | select(.updatedAt < \"$limite\") | select(
+            --json number,updatedAt,comments,labels \
+            --jq "[.[] | select(.updatedAt < \"$limite\")
+                  | select([.labels[].name] | any(. == \"anchors:in-progress\" or . == \"anchors:in-review\" or . == \"anchors:in-test\"))
+                  | select(
                     ([.comments[].body | select(startswith(\"anchors-owner:\"))] | last // \"\")
                     | (. != \"\" and (endswith(\"(liberado)\") | not))
                   )] | .[].number" |
@@ -70,8 +82,20 @@ jobs:
 
             # Volta para `to-do`: o estado é a label (BOOTSTRAP.md §7.13), e um card sem
             # dono parado em `in-progress` seria invisível para quem procura trabalho.
+            #
+            # Remove TODOS os estados antes de escrever o novo, e não só os que se espera
+            # encontrar: o estado é a label, então duas labels de estado são dois estados
+            # ao mesmo tempo. Uma lista parcial de remoção deixa o estado anterior colado
+            # no card — e aí o `identify` continua achando em `to-do` um card que já
+            # avançou, e o reprocessa para sempre.
             gh issue edit "$n" \
-              --remove-label "anchors:in-progress" --remove-label "anchors:in-review" \
+              --remove-label "anchors:in-progress" \
+              --remove-label "anchors:ready-to-review" \
+              --remove-label "anchors:in-review" \
+              --remove-label "anchors:ready-to-test" \
+              --remove-label "anchors:in-test" \
+              --remove-label "anchors:ready-to-release" \
+              --remove-label "anchors:production" \
               --add-label "anchors:to-do"
 
             echo "liberado: #$n (era de ${dono#anchors-owner: })"

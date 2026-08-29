@@ -17,6 +17,10 @@
 # mudou, não o projeto todo — um artefato só pode ficar órfão quando aparece, e quando
 # aparece ele está no diff. A varredura completa continua disponível sob demanda
 # (`workflow_dispatch` com `tudo: true`), para quando se quer reconciliar o passado.
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
 name: anchors · identificar trabalho
 
 # Dispara na ABERTURA DO PR, não no push da main.

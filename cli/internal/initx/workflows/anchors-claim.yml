@@ -12,6 +12,10 @@
 # agentes na mesma máquina têm o mesmo usuário do GitHub. O dono-agente vive num
 # comentário `anchors-owner: <maquina>/<sessao>` — comentários têm `created_at`, então a
 # ordem é contratual, e o histórico de quem passou pelo card fica registrado com data.
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
 name: anchors · atribuir trabalho
 
 on:
@@ -110,6 +114,19 @@ jobs:
           else
             de="anchors:to-do"; para="anchors:in-progress"
           fi
-          gh issue edit "$livre" --remove-label "$de" --add-label "$para"
+          # Remove TODOS os estados, e não só o `$de` detectado: o estado é a label, e um
+          # card que por qualquer motivo carregue dois estados manteria o outro colado
+          # aqui. A remoção parcial não apenas falha em limpar — ela PERPETUA o estado
+          # duplicado, porque cada transição seguinte também só remove um.
+          gh issue edit "$livre" \
+            --remove-label "anchors:to-do" \
+            --remove-label "anchors:in-progress" \
+            --remove-label "anchors:ready-to-review" \
+            --remove-label "anchors:in-review" \
+            --remove-label "anchors:ready-to-test" \
+            --remove-label "anchors:in-test" \
+            --remove-label "anchors:ready-to-release" \
+            --remove-label "anchors:production" \
+            --add-label "$para"
 
           echo "card #$livre atribuído a $AGENT: $de → $para"
