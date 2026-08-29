@@ -69,17 +69,30 @@ jobs:
           #
           # E não é COMMITADO: estado derivado versionado enche o histórico de ruído e —
           # pior — cada commit dispararia o pipeline de identificação de novo, num laço.
+          # O CORPO e o HISTÓRICO de posse vão no JSON: a página abre os detalhes do card
+          # sem sair do board, e ir ao GitHub passa a ser escolha, não pedágio.
+          #
+          # O corpo é CORTADO em 4000 caracteres: um board com 500 cards de corpo inteiro
+          # vira um JSON de megabytes que trava a página no primeiro carregamento — e a
+          # modal é um resumo, não o lugar de ler uma issue inteira.
           gh issue list --state open --label "$LABEL" --limit 500 \
-            --json number,title,url,labels,comments,updatedAt \
+            --json number,title,url,labels,comments,updatedAt,body,createdAt,author \
             --jq '[.[] | {
                     numero: .number,
                     titulo: .title,
                     url: .url,
                     atualizado: .updatedAt,
+                    criado: .createdAt,
+                    autor: (.author.login // ""),
+                    corpo: (.body // "" | .[0:4000]),
+                    labels: [.labels[].name],
                     codigo: (.title | capture("^\\[(?<c>[^]]+)\\]").c? // ""),
                     estado: ([.labels[].name | select(startswith("anchors:"))] | .[0] // "anchors:to-do"),
                     dono: ([.comments[].body | select(startswith("anchors-owner:"))] | last // "" |
-                           sub("^anchors-owner: *";"") | select(test("\\(liberado\\)") | not))
+                           sub("^anchors-owner: *";"") | select(test("\\(liberado\\)") | not)),
+                    posse: [.comments[].body | select(startswith("anchors-owner:")) |
+                            sub("^anchors-owner: *";"")],
+                    comentarios: (.comments | length)
                   }]' > _board/board.json
 
           # O carimbo de quando a foto foi tirada. Um board sem isso não se distingue de

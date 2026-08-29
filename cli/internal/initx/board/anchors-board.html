@@ -5,24 +5,64 @@
 <meta charset="utf-8">
 <title>Board — Anchors</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- ANTES do estilo, de propósito: aplicar o tema no fim do script faz a página pintar
+     no tema do sistema e trocar depois — o flash branco que quem escolheu escuro leva a
+     cada carregamento. Este trecho roda antes do primeiro pixel. -->
+<script>
+  try {
+    const t = localStorage.getItem("anchors:tema");
+    if (t) document.documentElement.setAttribute("data-tema", t);
+  } catch (e) { /* localStorage bloqueado: segue no tema do sistema */ }
+</script>
 <style>
   :root {
     --bg: #f6f8fa; --fg: #1f2328; --card: #fff; --linha: #d1d9e0; --fraco: #59636e;
     --todo: #8b949e; --fazendo: #0969da; --pronto: #1a7f37; --alerta: #9a6700;
+    /* O vermelho da identidade (#ec3013) e o quase-preto da wordmark, do kit oficial. */
+    --marca: #ec3013; --wordmark: #201e1d;
   }
+  /* O escuro vale em dois casos, e cada um precisa da sua regra:
+     — o sistema pede escuro E ninguém escolheu claro à mão (o `:not` é o que faz a
+       escolha manual vencer a preferência do sistema);
+     — alguém escolheu escuro à mão, com o sistema em claro. */
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not([data-tema="claro"]) {
       --bg: #0d1117; --fg: #e6edf3; --card: #151b23; --linha: #3d444d; --fraco: #9198a1;
       --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922;
+      /* No escuro o vermelho da marca é clareado: #ec3013 sobre #0d1117 não alcança
+         contraste de leitura, e a wordmark preta desapareceria. */
+      --marca: #ff5c3d; --wordmark: #e6edf3;
     }
+  }
+  :root[data-tema="escuro"] {
+    --bg: #0d1117; --fg: #e6edf3; --card: #151b23; --linha: #3d444d; --fraco: #9198a1;
+    --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922;
+    --marca: #ff5c3d; --wordmark: #e6edf3;
   }
   * { box-sizing: border-box; }
   body { margin: 0; padding: 1.5rem; background: var(--bg); color: var(--fg);
          font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-  header { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 1.25rem;
+  header { display: flex; align-items: center; gap: 1rem; margin-bottom: .6rem;
            flex-wrap: wrap; }
-  h1 { font-size: 1.25rem; margin: 0; }
+  .marca { display: flex; align-items: center; gap: .5rem; text-decoration: none;
+           padding-right: 1rem; border-right: 1px solid var(--linha); }
+  .marca:hover { opacity: .8; }
+  /* Archivo 800 com letter-spacing negativo é a wordmark do kit. A pilha de fallback
+     importa: a fonte não é embutida (uma URL externa quebraria num Pages privado), e sem
+     alternativa próxima a marca cairia numa serifada. */
+  .marca .nome { font-family: Archivo, "Helvetica Neue", Arial, sans-serif;
+                 font-weight: 800; font-size: 1.1rem; letter-spacing: -.04em;
+                 color: var(--wordmark); }
+  .titulo-bloco { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+  h1 { font-size: 1.1rem; margin: 0; font-weight: 500; color: var(--fraco); }
   .quando { color: var(--fraco); font-size: .8rem; }
+  .tagline { color: var(--fraco); font-size: .85rem; margin: 0 0 .35rem; max-width: 46rem;
+             line-height: 1.6; }
+  .tagline strong { color: var(--fg); font-weight: 600; }
+  .tagline em { font-style: normal; color: var(--fg); }
+  .doc { font-size: .78rem; color: var(--fazendo); text-decoration: none;
+         border: 1px solid var(--fazendo); border-radius: 6px; padding: .3rem .6rem; }
+  .doc:hover { background: var(--fazendo); color: #fff; }
   .prioridade { color: var(--fraco); font-size: .8rem; margin-bottom: 1rem; }
   .colunas { display: flex; gap: .75rem; overflow-x: auto; padding-bottom: 1rem; }
   .coluna { flex: 0 0 15rem; background: var(--card); border: 1px solid var(--linha);
@@ -33,9 +73,10 @@
   .bola { width: .6rem; height: .6rem; border-radius: 50%; flex: none; }
   .qtd { margin-left: auto; color: var(--fraco); font-weight: 400; }
   .oquee { color: var(--fraco); font-size: .75rem; margin-bottom: .75rem; }
-  .card { display: block; background: var(--bg); border: 1px solid var(--linha);
+  .card { display: block; width: 100%; text-align: left; font: inherit;
+          background: var(--bg); border: 1px solid var(--linha);
           border-radius: 6px; padding: .6rem; margin-bottom: .5rem; text-decoration: none;
-          color: inherit; }
+          color: inherit; cursor: pointer; }
   .card:hover { border-color: var(--fazendo); }
   .codigo { font-family: ui-monospace, SFMono-Regular, monospace; font-size: .72rem;
             color: var(--fazendo); font-weight: 600; }
@@ -45,60 +86,309 @@
   .vazia { color: var(--fraco); font-size: .75rem; font-style: italic; padding: .5rem 0; }
   .erro { background: var(--card); border: 1px solid var(--alerta); border-radius: 8px;
           padding: 1rem; }
+  .botoes { margin-left: auto; display: flex; gap: .5rem; }
+  button { font: inherit; font-size: .78rem; color: var(--fraco); background: var(--card);
+           border: 1px solid var(--linha); border-radius: 6px; padding: .3rem .6rem;
+           cursor: pointer; }
+  button:hover { border-color: var(--fazendo); color: var(--fg); }
+  /* Ligado tem cor: um botão de alternância que não muda de aparência obriga a ler o
+     texto para saber em que estado está. */
+  button[aria-pressed="true"] { color: var(--fazendo); border-color: var(--fazendo); }
+  dialog { max-width: 40rem; width: calc(100vw - 2rem); border: 1px solid var(--linha);
+           border-radius: 12px; background: var(--card); color: var(--fg); padding: 0;
+           overflow: hidden; }
+  dialog::backdrop { background: rgba(0,0,0,.55); backdrop-filter: blur(2px); }
+  /* O CABEÇALHO recebe um fundo próprio: sem ele o código, o título e as tags viravam
+     três blocos soltos no branco, e a hierarquia sumia. */
+  .d-topo { background: var(--bg); border-bottom: 1px solid var(--linha);
+            padding: 1.25rem 1.5rem 1rem; position: relative; }
+  .fechar { position: absolute; top: .9rem; right: .9rem; width: 1.75rem; height: 1.75rem;
+            padding: 0; line-height: 1; border-radius: 6px; font-size: .9rem; }
+  /* O código é a IDENTIDADE do artefato: em caixa própria, com a cor da marca, ele para
+     de competir com o `#8` do GitHub — que é só o número da issue. */
+  .d-codigo { display: inline-block; font-family: ui-monospace, SFMono-Regular, monospace;
+              font-size: .72rem; font-weight: 700; letter-spacing: .04em;
+              color: var(--marca); border: 1px solid var(--marca); border-radius: 4px;
+              padding: .1rem .4rem; margin-bottom: .6rem; }
+  dialog h2 { font-size: 1.1rem; line-height: 1.35; margin: 0 0 .9rem;
+              padding-right: 2rem; font-weight: 600; letter-spacing: -.01em; }
+  .d-meta { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+  /* Tags menores e sem borda: quatro pílulas grandes pesavam mais que o título. */
+  .tag { font-size: .7rem; padding: .12rem .5rem; border-radius: 4px;
+         background: var(--card); border: 1px solid var(--linha); color: var(--fraco); }
+  .tag.estado { color: var(--fazendo); border-color: var(--fazendo); font-weight: 500; }
+  .tag.dono { font-family: ui-monospace, monospace; }
+  .d-conteudo { padding: 1.25rem 1.5rem; }
+  .d-corpo { font-size: .85rem; line-height: 1.65; max-height: 40vh; overflow-y: auto;
+             white-space: pre-wrap; word-wrap: break-word; color: var(--fraco); }
+  .d-posse { font-size: .72rem; color: var(--fraco); margin-top: 1rem;
+             padding-top: .8rem; border-top: 1px solid var(--linha); }
+  .d-posse strong { display: block; margin-bottom: .3rem; color: var(--fg);
+                    font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; }
+  .d-posse div { font-family: ui-monospace, monospace; padding: .1rem 0; }
+  /* O RODAPÉ da modal, com fundo: o botão precisava de um chão. Solto no branco e sem
+     padding vertical, ele parecia texto selecionado. */
+  .d-acoes { display: flex; gap: .5rem; align-items: center; padding: .9rem 1.5rem;
+             background: var(--bg); border-top: 1px solid var(--linha); }
+  .ir { background: var(--fazendo); color: #fff; border: 1px solid var(--fazendo);
+        border-radius: 6px; padding: .45rem .9rem; font-size: .8rem; font-weight: 500;
+        text-decoration: none; display: inline-flex; align-items: center; gap: .35rem; }
+  .ir:hover { filter: brightness(1.1); color: #fff; }
+  .d-numero { margin-left: auto; font-size: .75rem; color: var(--fraco);
+              font-family: ui-monospace, monospace; }
+  footer { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--linha);
+           color: var(--fraco); font-size: .8rem; max-width: 46rem; }
+  .pitch { margin: 0 0 .75rem; line-height: 1.6; }
+  .pitch strong { color: var(--fg); }
+  .pitch em { font-style: normal; color: var(--fg); }
+  .links { display: flex; gap: 1rem; flex-wrap: wrap; }
+  .links a { color: var(--fazendo); text-decoration: none; }
+  .links a:hover { text-decoration: underline; }
 </style>
 <header>
-  <h1>Board</h1>
-  <span class="quando" id="quando"></span>
+  <!-- A marca ANTES do título: o board é a vitrine do Anchors em todo projeto que o
+       adota, e quem abre este endereço muitas vezes nunca ouviu o nome.
+       O SVG é o do kit oficial (`anchors-mark-red.svg`), inline: uma URL externa
+       quebraria num Pages privado atrás de login. `currentColor` no traço deixa a marca
+       herdar o tema — no escuro o vermelho da identidade some sobre o fundo. -->
+  <a class="marca" href="https://anchors.co2lab.io" target="_blank" rel="noopener"
+     aria-label="Anchors">
+    <svg viewBox="0 0 100 104" width="28" height="29" aria-hidden="true">
+      <g fill="none" stroke="var(--marca)" stroke-width="12" stroke-linecap="round"
+         stroke-linejoin="round">
+        <path d="M 69.4 60 L 56.5 24 Q 50 6 43.5 24 L 22 84 Q 16 96 28 96 L 72 96 Q 84 96 78 84 L 72.6 69"/>
+        <path d="M 29 64 L 71 64"/>
+      </g>
+    </svg>
+    <span class="nome">ANCHORS</span>
+  </a>
+  <div class="titulo-bloco">
+    <h1>Board</h1>
+    <span class="quando" id="quando"></span>
+  </div>
+  <div class="botoes">
+    <button id="tema" type="button" title="tema"></button>
+    <button id="auto" type="button" aria-pressed="true"></button>
+    <button id="cd" type="button" aria-pressed="false"></button>
+    <a class="doc" href="https://anchors.co2lab.io/pt/" target="_blank" rel="noopener">Documentação ↗</a>
+  </div>
 </header>
+<p class="tagline">
+  A <strong>spec é a âncora</strong>, o código deriva dela, e os gates confrontam os dois.
+  Este board é a fotografia das <em>issues</em> deste repositório — sem banco, sem servidor,
+  sem GitHub Projects.
+</p>
 <p class="prioridade">
   A prioridade é da <strong>direita para a esquerda</strong>: termine o que está mais
   adiantado antes de pegar coisa nova.
 </p>
 <div class="colunas" id="colunas"></div>
 
+<!-- `<dialog>` nativo: o navegador já dá o fechamento por Esc, o foco preso dentro e o
+     fundo inerte. Reimplementar isso em JS é como se erra acessibilidade sem perceber. -->
+<footer>
+  <!-- O rodapé NÃO repete a marca: ela subiu para o header. Aqui fica só o que o leitor
+       procura depois de já saber o que é — o pitch de uma linha e para onde ir. -->
+  <p class="pitch">
+    <strong>Anchors</strong> — framework de continuidade para desenvolvimento assistido
+    por IA. Publicado por um pipeline a cada mudança nas issues.
+  </p>
+  <div class="links">
+    <a href="https://anchors.co2lab.io" target="_blank" rel="noopener">Site</a>
+    <a href="https://anchors.co2lab.io/pt/" target="_blank" rel="noopener">Documentação</a>
+    <a href="https://github.com/co2-lab/anchors" target="_blank" rel="noopener">GitHub</a>
+  </div>
+</footer>
+
+<dialog id="detalhe"><div id="detalhe-corpo"></div></dialog>
+
 <script>
 // A ordem é a do FLUXO, e a leitura é da direita para a esquerda — o mais adiantado
 // primeiro. É a mesma regra que o pipeline de claim aplica ao escolher trabalho.
+// A quinta coluna (`READY TO TEST`) é o FIM DA ALÇADA DO ANCHORS: dali em diante quem
+// move são os pipelines de entrega do projeto. É onde a linha de corte cai — as colunas
+// de CD ficam ocultas por padrão, porque um board com quatro colunas sempre vazias ensina
+// a ignorar o board.
+//
+// `cd: true` marca quem some. Não é "não existe": o Anchors continua LENDO essas colunas,
+// e o botão as traz de volta.
 const COLUNAS = [
-  ["anchors:to-do",            "TO DO",            "trabalho disponível, sem dono",     "var(--todo)"],
-  ["anchors:in-progress",      "IN PROGRESS",      "um agente está implementando",      "var(--fazendo)"],
-  ["anchors:ready-to-review",  "READY TO REVIEW",  "PR verde, esperando revisor",       "var(--todo)"],
-  ["anchors:in-review",        "IN REVIEW",        "um agente está revisando",          "var(--fazendo)"],
-  ["anchors:ready-to-test",    "READY TO TEST",    "aceito — fim da alçada do Anchors", "var(--pronto)"],
-  ["anchors:in-test",          "IN TEST",          "em teste",                          "var(--pronto)"],
-  ["anchors:ready-to-release", "READY TO RELEASE", "teste passou",                      "var(--pronto)"],
-  ["anchors:production",       "PRODUCTION",       "no ar",                             "var(--pronto)"],
+  ["anchors:to-do",            "TO DO",            "trabalho disponível, sem dono",     "var(--todo)",    false],
+  ["anchors:in-progress",      "IN PROGRESS",      "um agente está implementando",      "var(--fazendo)", false],
+  ["anchors:ready-to-review",  "READY TO REVIEW",  "PR verde, esperando revisor",       "var(--todo)",    false],
+  ["anchors:in-review",        "IN REVIEW",        "um agente está revisando",          "var(--fazendo)", false],
+  ["anchors:ready-to-test",    "READY TO TEST",    "aceito — fim da alçada do Anchors", "var(--pronto)",  false],
+  ["anchors:in-test",          "IN TEST",          "em teste",                          "var(--pronto)",  true],
+  ["anchors:ready-to-release", "READY TO RELEASE", "teste passou",                      "var(--pronto)",  true],
+  ["anchors:production",       "PRODUCTION",       "no ar",                             "var(--pronto)",  true],
 ];
+
+// As duas preferências ficam no navegador de quem lê: o board é publicado uma vez e lido
+// por várias pessoas, e a escolha de uma não pode virar a de todas.
+const pref = {
+  get auto()  { return localStorage.getItem("anchors:auto") !== "0"; },
+  set auto(v) { localStorage.setItem("anchors:auto", v ? "1" : "0"); },
+  get cd()    { return localStorage.getItem("anchors:cd") === "1"; },
+  set cd(v)   { localStorage.setItem("anchors:cd", v ? "1" : "0"); },
+  // TRÊS estados, e não dois: "seguir o sistema" é o padrão e precisa ser recuperável.
+  // Um toggle de dois estados obriga quem trocou por curiosidade a adivinhar qual dos
+  // dois era o do sistema — e a escolha passa a valer para sempre.
+  get tema()  { return localStorage.getItem("anchors:tema") || "auto"; },
+  set tema(v) { v === "auto" ? localStorage.removeItem("anchors:tema")
+                             : localStorage.setItem("anchors:tema", v); },
+};
 
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-fetch("board.json?" + Date.now())
-  .then((r) => r.ok ? r.json() : Promise.reject(r.status))
-  .then((d) => {
+let ULTIMO = { itens: [] };
+
+function desenha(d) {
+    ULTIMO = d;
     document.getElementById("quando").textContent =
       d.repo + " · foto de " + new Date(d.quando).toLocaleString();
-    document.getElementById("colunas").innerHTML = COLUNAS.map(([id, nome, oquee, cor]) => {
+    const visiveis = COLUNAS.filter(([, , , , cd]) => pref.cd || !cd);
+    document.getElementById("colunas").innerHTML = visiveis.map(([id, nome, oquee, cor]) => {
       const cards = (d.itens || []).filter((i) => i.estado === id);
       return `<section class="coluna">
         <div class="titulo"><span class="bola" style="background:${cor}"></span>
           ${esc(nome)}<span class="qtd">${cards.length}</span></div>
         <div class="oquee">${esc(oquee)}</div>
         ${cards.length === 0 ? '<div class="vazia">vazia</div>' : cards.map((c) => `
-          <a class="card" href="${esc(c.url)}">
+          <button class="card" type="button" data-numero="${c.numero}">
             ${c.codigo ? `<div class="codigo">${esc(c.codigo)}</div>` : ""}
             <h3>${esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</h3>
             ${c.dono ? `<span class="dono">◆ ${esc(c.dono)}</span>` : ""}
-          </a>`).join("")}
+          </button>`).join("")}
       </section>`;
     }).join("");
-  })
-  .catch((e) => {
+}
+
+function carrega() {
+  return fetch("board.json?" + Date.now())
+    .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+    .then(desenha)
+    .catch((e) => {
     // O ERRO é dito, e não engolido: um board em branco é indistinguível de um board
     // vazio, e o leitor concluiria que não há trabalho.
-    document.getElementById("colunas").innerHTML =
-      `<div class="erro"><strong>Não deu para ler o board.</strong><br>
-       O <code>board.json</code> não foi encontrado (${esc(e)}). Ele é publicado pelo
-       pipeline <code>anchors · publicar o board</code> — verifique se ele rodou.</div>`;
-  });
+      document.getElementById("colunas").innerHTML =
+        `<div class="erro"><strong>Não deu para ler o board.</strong><br>
+         O <code>board.json</code> não foi encontrado (${esc(e)}). Ele é publicado pelo
+         pipeline <code>anchors · publicar o board</code> — verifique se ele rodou.</div>`;
+    });
+}
+
+// --- o refresh, e o que ele NÃO faz ---
+//
+// Recarregar a PÁGINA a cada 5s descartaria a rolagem e o foco de quem está lendo. Só o
+// JSON é buscado, e só o conteúdo das colunas é reescrito.
+//
+// E ele PARA quando a aba não está visível: um board aberto num monitor esquecido faria
+// 17 mil requisições por dia sem ninguém olhando. Ao voltar, busca na hora — quem
+// retoma a aba quer o estado de agora, não o de cinco segundos adiante.
+let timer = null;
+function agenda() {
+  clearInterval(timer);
+  if (pref.auto) timer = setInterval(() => { if (!document.hidden) carrega(); }, 5000);
+}
+document.addEventListener("visibilitychange", () => { if (!document.hidden && pref.auto) carrega(); });
+
+const TEMAS = { auto: ["◐", "tema: sistema"], claro: ["☀", "tema: claro"], escuro: ["☾", "tema: escuro"] };
+const btnTema = document.getElementById("tema");
+function aplicaTema() {
+  const t = pref.tema;
+  // `auto` REMOVE o atributo em vez de escrever "auto": é a ausência dele que devolve a
+  // decisão ao `prefers-color-scheme`.
+  if (t === "auto") document.documentElement.removeAttribute("data-tema");
+  else document.documentElement.setAttribute("data-tema", t);
+  const [icone, rotulo] = TEMAS[t] || TEMAS.auto;
+  btnTema.textContent = icone;
+  btnTema.title = rotulo;
+  btnTema.setAttribute("aria-label", rotulo);
+}
+btnTema.onclick = () => {
+  pref.tema = { auto: "claro", claro: "escuro", escuro: "auto" }[pref.tema] || "claro";
+  aplicaTema();
+};
+
+const btnAuto = document.getElementById("auto");
+const btnCd = document.getElementById("cd");
+function rotula() {
+  btnAuto.textContent = pref.auto ? "⟳ atualizando a cada 5s" : "⏸ atualização pausada";
+  btnAuto.setAttribute("aria-pressed", String(pref.auto));
+  btnCd.textContent = pref.cd ? "ocultar colunas de entrega" : "mostrar colunas de entrega";
+  btnCd.setAttribute("aria-pressed", String(pref.cd));
+}
+btnAuto.onclick = () => { pref.auto = !pref.auto; rotula(); agenda(); if (pref.auto) carrega(); };
+btnCd.onclick = () => { pref.cd = !pref.cd; rotula(); carrega(); };
+
+// --- a modal ---
+//
+// O clique no card abre os detalhes em vez de navegar. O motivo é o contexto: sair para o
+// GitHub descarta o board, e voltar custa uma navegação e a rolagem perdida — quando na
+// maioria das vezes a pergunta ("de quem é? o que pede?") se responde aqui.
+//
+// Ir para a issue continua a um clique, e agora é ESCOLHA: quem precisa comentar ou fechar
+// vai; quem só queria ver, não paga o pedágio.
+const dlg = document.getElementById("detalhe");
+const dlgCorpo = document.getElementById("detalhe-corpo");
+
+// DELEGADO no container: as colunas são reescritas a cada 5s, e um listener por card
+// morreria no primeiro refresh.
+document.getElementById("colunas").addEventListener("click", (ev) => {
+  const alvo = ev.target.closest(".card");
+  if (!alvo) return;
+  const c = (ULTIMO.itens || []).find((i) => String(i.numero) === alvo.dataset.numero);
+  if (c) abre(c);
+});
+
+// "atualizado 29/08/2026, 17:55:14" ocupa uma tag inteira para dizer pouco. O que
+// importa num board é a IDADE do card — "há 2h" responde de relance.
+function quando(iso) {
+  const seg = Math.floor((Date.now() - new Date(iso)) / 1000);
+  if (seg < 60) return "agora";
+  if (seg < 3600) return `há ${Math.floor(seg / 60)}min`;
+  if (seg < 86400) return `há ${Math.floor(seg / 3600)}h`;
+  return `há ${Math.floor(seg / 86400)}d`;
+}
+
+function abre(c) {
+  const estado = (c.estado || "").replace("anchors:", "");
+  dlgCorpo.innerHTML = `
+    <div class="d-topo">
+      <button class="fechar" type="button" aria-label="fechar">✕</button>
+      ${c.codigo ? `<div class="d-codigo">${esc(c.codigo)}</div>` : ""}
+      <h2>${esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</h2>
+      <div class="d-meta">
+        <span class="tag estado">${esc(estado)}</span>
+        ${c.dono ? `<span class="tag dono">◆ ${esc(c.dono)}</span>`
+                 : '<span class="tag">sem dono</span>'}
+        ${c.comentarios ? `<span class="tag">${esc(c.comentarios)} comentário(s)</span>` : ""}
+        <span class="tag">${esc(quando(c.atualizado))}</span>
+      </div>
+    </div>
+    <div class="d-conteudo">
+      ${c.corpo ? `<div class="d-corpo">${esc(c.corpo)}</div>`
+                : '<div class="d-corpo">Sem descrição.</div>'}
+      ${(c.posse || []).length ? `<div class="d-posse"><strong>Histórico de posse</strong>
+        ${c.posse.map((p) => `<div>${esc(p)}</div>`).join("")}</div>` : ""}
+    </div>
+    <div class="d-acoes">
+      <a class="ir" href="${esc(c.url)}" target="_blank" rel="noopener">abrir no GitHub ↗</a>
+      <span class="d-numero">#${esc(c.numero)}</span>
+    </div>`;
+  dlg.showModal();
+}
+
+// DELEGADO: o botão de fechar é reescrito a cada abertura, e um `onclick` preso ao
+// elemento antigo morreria na segunda vez.
+dlg.addEventListener("click", (ev) => { if (ev.target.closest(".fechar")) dlg.close(); });
+// Clique no fundo fecha: `showModal` faz o ::backdrop ser o PRÓPRIO dialog, então o alvo
+// ser o dialog significa que o clique caiu fora do conteúdo.
+dlg.addEventListener("click", (ev) => { if (ev.target === dlg) dlg.close(); });
+
+aplicaTema();
+rotula();
+agenda();
+carrega();
 </script>
