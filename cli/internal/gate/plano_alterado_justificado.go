@@ -2,6 +2,7 @@ package gate
 
 import (
 	"fmt"
+	"os/exec"
 	"regexp"
 	"strconv"
 	"strings"
@@ -82,6 +83,17 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 	// saída barata vira desligá-lo.
 	if cfg == nil || !mudouDeFato(n.ID, cfg.Alterados) {
 		return Skip, "não está entre os arquivos alterados (só foi alcançado pelo raio de impacto)"
+	}
+
+	// E O GIT CONFIRMA. `--changed X` é uma AFIRMAÇÃO de quem chama, não uma medição:
+	// quem roda à mão passa o caminho para testar algo, e o pre-commit passa TODO arquivo
+	// staged — inclusive os que entraram por rebase ou merge sem ninguém os ter editado.
+	//
+	// Cobrar justificativa de quem não mexeu é o pior defeito possível num gate
+	// bloqueante: ele barra trabalho correto, e a saída barata vira desligá-lo.
+	if !gitDizQueMudou(root, n.ID) {
+		return Skip, "o git não vê mudança neste arquivo — `--changed` o incluiu, mas o " +
+			"conteúdo é igual ao do último commit"
 	}
 
 	codigo := n.Code
@@ -179,4 +191,21 @@ func seExplicaPorRevisao(content string) bool {
 		}
 	}
 	return false
+}
+
+// gitDizQueMudou confronta a lista recebida com o que o git de fato vê.
+//
+// Conta o que está no índice E na árvore de trabalho: o pre-commit roda com o arquivo já
+// staged, e olhar só um dos dois deixaria passar metade dos casos.
+//
+// Sem git (ou fora de repositório), devolve `true` e deixa a decisão com quem chamou —
+// negar ali silenciaria o gate onde ele não tem como medir.
+func gitDizQueMudou(root, path string) bool {
+	cmd := exec.Command("git", "status", "--porcelain", "--", path)
+	cmd.Dir = root
+	out, err := cmd.Output()
+	if err != nil {
+		return true
+	}
+	return len(strings.TrimSpace(string(out))) > 0
 }

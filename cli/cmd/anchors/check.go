@@ -174,9 +174,15 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				// gates de JULGAMENTO: enfileira uma task `judge` por alvo pendente,
 				// para uma IA confrontar e reportar com `anchors judge`.
 				if n := enqueueJudgments(absRoot, cfg, profile); n > 0 {
-					pendentes = n
 					fmt.Printf("%d alvo(s) aguardam julgamento de IA — rode `anchors next` (ou `anchors judge --pending`)\n", n)
 				}
+				// PENDENTES é o que está NA FILA, não o que acabou de ser enfileirado.
+				//
+				// `enqueueJudgments` conta só as tasks CRIADAS agora — na segunda
+				// execução ela devolve 0 porque a task já existia. Barrar por esse número
+				// deixaria passar exatamente o caso que importa: rodar o check, não
+				// julgar, e commitar. Medido no projeto de referência.
+				pendentes = julgamentosNaFila(absRoot)
 			}
 
 			if c := espelho.Caminho(); c != "" {
@@ -1317,4 +1323,19 @@ func normalizaAlterados(changed []string, root string) []string {
 		out = append(out, filepath.ToSlash(filepath.Clean(p)))
 	}
 	return out
+}
+
+// julgamentosNaFila conta os julgamentos que AGUARDAM resposta.
+func julgamentosNaFila(root string) int {
+	tasks, err := queue.List(root)
+	if err != nil {
+		return 0
+	}
+	n := 0
+	for _, t := range tasks {
+		if t.SuggestedNext == "judge" {
+			n++
+		}
+	}
+	return n
 }

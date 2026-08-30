@@ -14,7 +14,7 @@ import (
 func TestAlterado_semRevisaoReprova(t *testing.T) {
 	v, d := checkPlanoAlteradoJustificado(
 		"# Plano 0001 — Fundação\n\n## Objetivo\n\nTexto corrigido sem dizer nada.\n",
-		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md"))
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
 	if v != Fail {
 		t.Fatalf("plano alterado sem revisão deve reprovar, veio %v: %s", v, d)
 	}
@@ -33,7 +33,7 @@ func TestAlterado_semRevisaoReprova(t *testing.T) {
 func TestAlterado_comRevisaoPassa(t *testing.T) {
 	v, d := checkPlanoAlteradoJustificado(
 		"# Plano 0001\n\n> **FNDTN-R0001:** o exemplo citava um pacote que não existe.\n",
-		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md"))
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
 	if v != Pass {
 		t.Fatalf("revisão declarada deveria passar, veio %v: %s", v, d)
 	}
@@ -44,7 +44,7 @@ func TestAlterado_comRevisaoPassa(t *testing.T) {
 func TestAlterado_revisaoDeOutroNaoConta(t *testing.T) {
 	v, _ := checkPlanoAlteradoJustificado(
 		"# Plano 0017\n\nComo explica a `MTUAO-R0001`, o CI mudou.\n",
-		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md"))
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
 	if v != Fail {
 		t.Fatalf("revisão de outro código não justifica a mudança deste, veio %v", v)
 	}
@@ -55,7 +55,7 @@ func TestAlterado_revisaoDeOutroNaoConta(t *testing.T) {
 func TestAlterado_numeracaoComBuracoReprova(t *testing.T) {
 	v, d := checkPlanoAlteradoJustificado(
 		"> **FNDTN-R0001:** primeira.\n\n> **FNDTN-R0007:** pulou do 1 para o 7.\n",
-		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md"))
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
 	if v != Fail {
 		t.Fatalf("numeração com buraco deve reprovar, veio %v: %s", v, d)
 	}
@@ -64,7 +64,7 @@ func TestAlterado_numeracaoComBuracoReprova(t *testing.T) {
 func TestAlterado_variasRevisoesSequenciaisPassam(t *testing.T) {
 	v, d := checkPlanoAlteradoJustificado(
 		"> **FNDTN-R0001:** primeira.\n\n> **FNDTN-R0002:** segunda.\n\n> **FNDTN-R0003:** terceira.\n",
-		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md"))
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
 	if v != Pass {
 		t.Fatalf("três revisões sequenciais deveriam passar, veio %v: %s", v, d)
 	}
@@ -77,7 +77,7 @@ func TestAlterado_variasRevisoesSequenciaisPassam(t *testing.T) {
 // Sem código não há como saber de quem é a revisão. Skip, e não Fail: quem cobra o código
 // é outro gate, e reprovar aqui daria dois achados para um defeito só.
 func TestAlterado_semCodigoPula(t *testing.T) {
-	v, _ := checkPlanoAlteradoJustificado("# Plano\n", mapx.Node{ID: "plans/0001.md"}, "", nil, cfgAlterado("plans/0001.md"))
+	v, _ := checkPlanoAlteradoJustificado("# Plano\n", mapx.Node{ID: "plans/0001.md"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
 	if v != Skip {
 		t.Fatalf("sem código o gate deve pular, veio %v", v)
 	}
@@ -92,7 +92,7 @@ func TestAlterado_formasDeEscreverAMarca(t *testing.T) {
 		"> [!NOTE]\n> FNDTN-R0001: dentro de um alerta do GitHub",
 		"**FNDTN-R0001**: negrito antes dos dois-pontos",
 	} {
-		if v, d := checkPlanoAlteradoJustificado(forma, mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md")); v != Pass {
+		if v, d := checkPlanoAlteradoJustificado(forma, mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md")); v != Pass {
 			t.Errorf("deveria aceitar %q, veio %v: %s", forma, v, d)
 		}
 	}
@@ -113,7 +113,7 @@ func TestAlterado_noRaioDeImpactoMasIntocadoPula(t *testing.T) {
 	v, d := checkPlanoAlteradoJustificado(
 		"# Spec que ninguém tocou\n",
 		mapx.Node{ID: "packages/shared/Workspace.spec.md", Code: "WKSPC"},
-		"", nil, cfgAlterado("plans/0001-fundacao.md"))
+		semGit(t), nil, cfgAlterado("plans/0001-fundacao.md"))
 	if v != Skip {
 		t.Fatalf("nó alcançado só pelo raio de impacto não tem o que justificar, veio %v: %s", v, d)
 	}
@@ -123,7 +123,7 @@ func TestAlterado_noRaioDeImpactoMasIntocadoPula(t *testing.T) {
 // é exatamente o defeito que ele acabou de corrigir.
 func TestAlterado_semListaDeAlteradosPula(t *testing.T) {
 	v, _ := checkPlanoAlteradoJustificado("# Plano\n",
-		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, nil)
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, nil)
 	if v != Skip {
 		t.Fatalf("sem saber o que mudou, o gate deve se calar, veio %v", v)
 	}
@@ -142,10 +142,37 @@ func TestAlterado_jaExplicadoPorRevisaoDePlanoPassa(t *testing.T) {
 		"# Plano 0001\n\n> [!WARNING]\n> `@amended-by: plans/0017-mutacao.md`\n",
 	} {
 		v, d := checkPlanoAlteradoJustificado(conteudo,
-			mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md"))
+			mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
 		if v != Pass {
 			t.Errorf("já explicado pelo mecanismo de revisão deveria passar, veio %v: %s\n%s",
 				v, d, conteudo)
 		}
 	}
+}
+
+// `--changed X` é uma AFIRMAÇÃO de quem chama, não uma medição — e o gate não pode
+// acreditar nela sozinho.
+//
+// Medido: rodei `check --changed Workspace.spec.md` para testar outra coisa, com o
+// arquivo INTOCADO, e o gate cobrou justificativa. O mesmo vale no pre-commit, que passa
+// todo arquivo staged — inclusive os que entraram por rebase ou merge sem ninguém os ter
+// editado. Cobrar de quem não mexeu é o pior defeito num gate bloqueante: barra trabalho
+// correto, e a saída barata vira desligá-lo.
+func TestAlterado_gitDesmenteAListaRecebida(t *testing.T) {
+	// Diretório sem git: o gate NÃO pode se calar por não conseguir medir — ali ele
+	// devolve o benefício da dúvida a quem chamou.
+	if !gitDizQueMudou(t.TempDir(), "qualquer.md") {
+		t.Error("sem git não há como desmentir a lista: o gate deve confiar em quem chamou, " +
+			"senão se silencia justamente onde não consegue medir")
+	}
+}
+
+// semGit devolve um diretório FORA de repositório git.
+//
+// Sem isto os testes rodavam com `root: ""` — o diretório do próprio Anchors, um repo de
+// verdade onde `plans/0001.md` não existe e o git diz, com razão, que nada mudou. O teste
+// media o repositório errado.
+func semGit(t *testing.T) string {
+	t.Helper()
+	return t.TempDir()
 }
