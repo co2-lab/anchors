@@ -50,6 +50,12 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			if err != nil {
 				return fmt.Errorf("carregar config: %w", err)
 			}
+			// No modo github o achado de gate vira CARD, não arquivo: o `issues/` é a fila do
+			// modo local (mover pasta à mão), e manter os dois faz o board esconder o que os
+			// gates encontraram.
+			if cfg != nil && cfg.ModoGitHub() && len(cfg.Workflow.Labels) > 0 {
+				issue.UsarGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
+			}
 			if len(cfg.Gates) == 0 {
 				return fmt.Errorf("nenhum gate declarado no anchors.yaml (seção `gates:`)")
 			}

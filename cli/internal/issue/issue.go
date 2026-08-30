@@ -233,6 +233,9 @@ func Exists(root, key string) (State, bool) {
 // existe), não faz nada e devolve resolved=false. Este é o fechamento do loop: a
 // issue deixa de mentir sobre o estado quando o problema é corrigido.
 func Resolve(root, key string) (resolved bool, err error) {
+	if destino != nil {
+		return destino.Resolve(key)
+	}
 	st, name, ok := byKey(root, key)
 	if !ok || st == Done {
 		return false, nil
@@ -262,6 +265,9 @@ func Open(root string, i Issue) (created bool, at State, err error) {
 // A dedup continua valendo entre TODOS os estados: uma dívida que virou trabalho de agora
 // (movida para `todo/`) não é recriada em `future/` no confronto seguinte.
 func OpenAt(root string, i Issue, nasce State) (created bool, at State, err error) {
+	if destino != nil {
+		return destino.Open(i, nasce)
+	}
 	if st, ok := Exists(root, i.Key()); ok {
 		return false, st, nil // já existe (em qualquer estado) — não duplica
 	}
@@ -307,6 +313,12 @@ func List(root string, state State) ([]string, error) {
 // um problema DIFERENTE no mesmo lugar. A diferença está no corpo, e por isso ele é
 // comparado antes de decidir.
 func Reabrir(root string, i Issue) (reaberta bool, err error) {
+	// No github o REABRIR está dentro do Open: ele acha o card fechado, reabre e
+	// acrescenta o laudo novo. Separar os dois faria duas buscas para uma decisão.
+	if destino != nil {
+		r, _, err := destino.Open(i, Todo)
+		return r, err
+	}
 	st, name, ok := byKey(root, i.Key())
 	if !ok {
 		return false, nil
@@ -403,3 +415,21 @@ func Reatribui(root string, st State, nome string, para Dono, porque string) err
 	}
 	return os.WriteFile(caminho, []byte(texto), 0o644)
 }
+
+// --- o destino do achado: arquivo ou card ---
+//
+// Quem chama não decide, e não deveria: são oito pontos entre `check` e `judge`, e
+// espalhar `if modoGitHub` por eles garantiria que o próximo ponto a nascer esquecesse.
+// O destino é configurado UMA vez, no começo do comando.
+//
+// `nil` mantém o comportamento de arquivo — é o modo local, e também o que vale para
+// qualquer chamador que não configurou nada.
+var destino *GitHub
+
+// UsarGitHub roteia o ciclo de vida das issues para os cards do repositório.
+func UsarGitHub(repo, label string) {
+	destino = &GitHub{Repo: repo, Label: label}
+}
+
+// UsarArquivos volta a gravar em `issues/` — usado pelos testes, que não falam com a rede.
+func UsarArquivos() { destino = nil }
