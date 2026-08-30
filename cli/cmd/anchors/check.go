@@ -407,7 +407,7 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile) error {
 	for i, v := range gv {
 		verdicts[i] = mapx.NodeVerdict{ID: v.ID, Failed: v.Failed}
 	}
-	// A DATA, e não o instante. `last_validated` responde "quando esta relação foi
+	// A DATA, e não o instante. `changed_at` responde "quando esta relação foi
 	// confrontada" — uma pergunta de auditoria — e não entra na regra de staleness, que
 	// compara `rev` (ver PROPAGATION.md §3). Com precisão de segundo, cada `anchors
 	// check` reescrevia as 26 linhas de carimbo do mapa: conflito em todo PR onde duas

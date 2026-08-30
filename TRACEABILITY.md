@@ -237,20 +237,26 @@ que a Propagação precisa fazer:
 |---|---|
 | `from` · `to` · `type` | quem depende/rege quem (`CONCEPT.md` §3) |
 | `origin` | como a aresta entrou no mapa (abaixo) |
-| **carimbo de validação** (`validated_from_rev`, `validated_to_rev`, `last_validated`, `verdict`) | *"contra que versões de cada ponta esta relação foi confrontada, quando, e com que veredito?"* |
+| **carimbo de validação** (`validated_from_rev`, `validated_to_rev`, `changed_at`, `verdict`) | *"contra que versões de cada ponta esta relação foi confrontada, quando, e com que veredito?"* |
 
 Este é o conjunto completo de campos do carimbo — a Rastreabilidade é a fonte-única
 dele. O `verdict` (`ok`/`issue`/`pending`) é escrito pelo gate que confronta a
 aresta (`QUALITY.md`) e lido pela Propagação; os campos `validated_*` e
-`last_validated` guardam contra o quê e quando.
+`changed_at` guardam contra o quê e quando.
 
-O `last_validated` é uma **data** (`2026-08-30`), e não um instante. Ele responde a
-uma pergunta de auditoria — *"quando isto foi confrontado?"* — e **não entra na
-regra de staleness**, que compara `rev` (`PROPAGATION.md` §3): o segundo não decide
-nada. Com precisão de segundo, cada `anchors check` reescrevia todas as linhas de
-carimbo do mapa — conflito em qualquer PR onde duas pessoas rodaram o check, e um
-diff que muda sozinho sem dizer nada. Com a data, o mapa só muda quando o
-**veredito** ou a **`rev`** mudam, que é quando há o que registrar.
+O `changed_at` responde *"desde quando esta relação está como está"* — a data em que
+a `rev` de uma ponta ou o veredito mudaram pela última vez. **Não** é "quando foi
+validado": o confronto acontece muitas vezes por dia, e confrontar de novo achando o
+mesmo resultado não é fato novo.
+
+A distinção não é semântica. Enquanto o campo registrava cada validação, o mapa
+mudava sozinho a cada `anchors check` — 26 linhas por execução no projeto de
+referência, conflito em qualquer PR onde duas pessoas rodaram o check, e `git
+status` sujo o tempo todo. O campo tampouco entra na regra de staleness, que compara
+`rev` (`PROPAGATION.md` §3), então nada dependia daquela precisão.
+
+Um carimbo **sem** data adota a de hoje, em vez de preservar o vazio: sem isso o
+buraco se perpetuaria justamente porque nada muda.
 
 A **versão do nó** e o **carimbo da aresta** são a matéria-prima da sincronia: a
 Propagação (`PROPAGATION.md` §3) compara `rev` atual do nó com a `rev` que o carimbo

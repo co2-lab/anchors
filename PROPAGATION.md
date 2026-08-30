@@ -70,7 +70,7 @@ mesmo tempo atrasada em relação à arquitetura que a rege. Dois vereditos, mes
 spec, duas arestas. Por isso o carimbo de validação pendura na **aresta**, não no
 nó.
 
-Os campos do carimbo (`validated_from_rev`, `validated_to_rev`, `last_validated`,
+Os campos do carimbo (`validated_from_rev`, `validated_to_rev`, `changed_at`,
 `verdict`) são definidos e mantidos pela Rastreabilidade, que é a dona do mapa —
 ver a enumeração completa em `TRACEABILITY.md` §4. A Propagação os **lê** para
 calcular staleness; é esse uso que este pilar descreve.

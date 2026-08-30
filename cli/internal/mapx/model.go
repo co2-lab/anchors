@@ -237,8 +237,14 @@ type LayerExec struct {
 type Stamp struct {
 	ValidatedFromRev string `yaml:"validated_from_rev,omitempty"`
 	ValidatedToRev   string `yaml:"validated_to_rev,omitempty"`
-	LastValidated    string `yaml:"last_validated,omitempty"`
-	Verdict          string `yaml:"verdict,omitempty"` // ok | issue | pending
+	// ChangedAt: DESDE QUANDO esta relação está como está — a data em que a rev de uma
+	// ponta ou o veredito mudaram pela última vez.
+	//
+	// Não é "quando foi validado": o confronto acontece muitas vezes por dia, e registrar
+	// cada um fazia o mapa mudar sozinho sem dizer nada. Confrontar de novo e achar o
+	// mesmo resultado não é fato novo; a MUDANÇA é.
+	ChangedAt string `yaml:"changed_at,omitempty"`
+	Verdict   string `yaml:"verdict,omitempty"` // ok | issue | pending
 
 	// Gate: qual gate produziu este veredito. Vazio no carimbo do `check` (que
 	// confronta muitos gates de uma vez e resume o pior veredito); preenchido pelo
@@ -260,7 +266,7 @@ type Julgamento struct {
 	Verdict          string `yaml:"verdict"` // ok | issue
 	ValidatedFromRev string `yaml:"validated_from_rev,omitempty"`
 	ValidatedToRev   string `yaml:"validated_to_rev,omitempty"`
-	LastValidated    string `yaml:"last_validated,omitempty"`
+	ChangedAt        string `yaml:"changed_at,omitempty"`
 }
 
 // Edge — uma relação dirigida (identidade ou dependência).

@@ -17,6 +17,31 @@ type NodeVerdict struct {
 // `verdicts`. Uma aresta recebe verdict "issue" se qualquer ponta falhou, senão
 // "ok". `now` é a data (carimbada por quem chama — o pacote não inventa tempo).
 // Devolve quantas arestas foram carimbadas.
+
+// carimbo monta o Stamp preservando a data quando NADA mudou.
+//
+// A regra vale nos três pontos que carimbam (`StampEdges`, `StampEdge`, `StampNode`), e
+// por isso mora aqui: repetida em cada um, ela se perderia no próximo que nascesse — foi
+// assim que o `StampNodeByGate` passou despercebido na primeira tentativa.
+func carimbo(anterior *Stamp, fromRev, toRev, verdict, now string) *Stamp {
+	quando := now
+	// `anterior.ChangedAt != ""` não é detalhe: um carimbo SEM data (mapa gerado por uma
+	// versão anterior, ou campo renomeado) preservaria o vazio para sempre — o buraco se
+	// perpetuaria justamente porque nada muda. Sem data, a de hoje é a melhor resposta
+	// disponível: é quando se soube que a relação estava assim.
+	if anterior != nil && anterior.ChangedAt != "" &&
+		anterior.ValidatedFromRev == fromRev &&
+		anterior.ValidatedToRev == toRev && anterior.Verdict == verdict {
+		quando = anterior.ChangedAt
+	}
+	return &Stamp{
+		ValidatedFromRev: fromRev,
+		ValidatedToRev:   toRev,
+		ChangedAt:        quando,
+		Verdict:          verdict,
+	}
+}
+
 func (g *Graph) StampEdges(verdicts []NodeVerdict, now string) int {
 	failed := map[string]bool{}
 	seen := map[string]bool{}
@@ -37,12 +62,7 @@ func (g *Graph) StampEdges(verdicts []NodeVerdict, now string) int {
 		if failed[e.From] || failed[e.To] {
 			verdict = "issue"
 		}
-		e.Stamp = &Stamp{
-			ValidatedFromRev: g.nodeRev(e.From),
-			ValidatedToRev:   g.nodeRev(e.To),
-			LastValidated:    now,
-			Verdict:          verdict,
-		}
+		e.Stamp = carimbo(e.Stamp, g.nodeRev(e.From), g.nodeRev(e.To), verdict, now)
 		stamped++
 	}
 	return stamped
@@ -56,12 +76,7 @@ func (g *Graph) StampEdge(from, to, verdict, now string) bool {
 	for i := range g.Edges {
 		e := &g.Edges[i]
 		if e.From == from && e.To == to {
-			e.Stamp = &Stamp{
-				ValidatedFromRev: g.nodeRev(e.From),
-				ValidatedToRev:   g.nodeRev(e.To),
-				LastValidated:    now,
-				Verdict:          verdict,
-			}
+			e.Stamp = carimbo(e.Stamp, g.nodeRev(e.From), g.nodeRev(e.To), verdict, now)
 			return true
 		}
 	}
@@ -102,20 +117,28 @@ func (g *Graph) StampNodeByGate(id, verdict, now, gateName string) int {
 		if e.From != id && e.To != id {
 			continue
 		}
-		e.Stamp = &Stamp{
-			ValidatedFromRev: g.nodeRev(e.From),
-			ValidatedToRev:   g.nodeRev(e.To),
-			LastValidated:    now,
-			Verdict:          verdict,
-			Gate:             gateName,
-		}
+		// O `Gate` entra depois: o helper decide a data, e o gate é de quem julgou.
+		// Um gate diferente sobre o mesmo estado NÃO é mudança da relação — é outra
+		// pergunta sobre ela —, então ele não faz a data avançar.
+		st := carimbo(e.Stamp, g.nodeRev(e.From), g.nodeRev(e.To), verdict, now)
+		st.Gate = gateName
+		e.Stamp = st
 		if gateName != "" {
 			j := Julgamento{
 				Gate:             gateName,
 				Verdict:          verdict,
 				ValidatedFromRev: g.nodeRev(e.From),
 				ValidatedToRev:   g.nodeRev(e.To),
-				LastValidated:    now,
+				ChangedAt:        now,
+			}
+			// Mesma regra do carimbo: rejulgar e achar o mesmo não é fato novo. Sem
+			// isto, cada `anchors judge` reescreveria a data de todos os julgamentos.
+			for k := range e.Julgamentos {
+				a := e.Julgamentos[k]
+				if a.Gate == gateName && a.Verdict == verdict &&
+					a.ValidatedFromRev == j.ValidatedFromRev && a.ValidatedToRev == j.ValidatedToRev {
+					j.ChangedAt = a.ChangedAt
+				}
 			}
 			trocou := false
 			for k := range e.Julgamentos {
