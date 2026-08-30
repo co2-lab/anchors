@@ -87,6 +87,20 @@ func runInstallHooks(root string, force bool) error {
 		}
 	}
 
+	// O COMMIT-MSG acompanha o pre-commit, e existe por um motivo só: é o único hook que
+	// RECEBE a mensagem. Medido: o git não grava `.git/COMMIT_EDITMSG` antes do
+	// pre-commit — nem com `-m` —, e lê-lo ali devolve a mensagem do commit ANTERIOR.
+	//
+	// Sem este hook, os marcadores `[skip-regra@CODIGO: motivo]` não teriam efeito: a
+	// dispensa escrita na mensagem seria lida do commit errado, em silêncio.
+	msgHook := filepath.Join(hooksDir, "commit-msg")
+	if existing, rerr := os.ReadFile(msgHook); rerr == nil &&
+		!strings.Contains(string(existing), hookMarker) && !force {
+		fmt.Printf("⚠  %s existe e não foi escrito pelo anchors — não sobrescrito.\n", msgHook)
+	} else if err := os.WriteFile(msgHook, []byte(commitMsgScript), 0o755); err != nil {
+		return fmt.Errorf("escrever %s: %w", msgHook, err)
+	}
+
 	if err := os.WriteFile(hookPath, []byte(preCommitScript), 0o755); err != nil {
 		return fmt.Errorf("escrever %s: %w", hookPath, err)
 	}
@@ -190,6 +204,23 @@ elif [ "$STATUS" -ne 0 ]; then
 fi
 
 if [ "$FAIL" -ne 0 ]; then
+  # A DECISÃO FINAL é do 'commit-msg', e não daqui.
+  #
+  # A mensagem NÃO EXISTE no pre-commit: o git só a grava depois, e '.git/COMMIT_EDITMSG'
+  # aqui carrega a do commit ANTERIOR (medido, e confirmado na documentação do githooks).
+  # Barrar agora impediria toda dispensa declarada na mensagem de ter efeito — o commit
+  # morreria antes de alguém poder ler o '[skip-regra@CODIGO: motivo]'.
+  #
+  # Então este hook REPORTA e deixa seguir; o 'commit-msg' reconfronta com a mensagem em
+  # mãos e barra se a dispensa não cobrir o que reprovou. Quem não usa dispensa nenhuma vê
+  # o mesmo resultado, um passo depois.
+  if [ -x "$ROOT/.git/hooks/commit-msg" ]; then
+    echo "──────────────────────────────────────────────────────────────"
+    echo "· gates reprovaram. Se for deliberado, declare na mensagem do commit:"
+    echo "    [skip-<regra>@<CODIGO>: por quê]"
+    echo "  Sem isso, o commit-msg barra."
+    exit 0
+  fi
   echo "──────────────────────────────────────────────────────────────"
   echo "✗ commit BARRADO pelos gates do anchors. Corrija acima e recommite."
   exit 1
@@ -209,4 +240,44 @@ if [ -d "$HOOK_D" ]; then
   done
 fi
 exit 0
+`
+
+// commitMsgScript roda os gates COM a mensagem em mãos.
+//
+// O pre-commit não pode fazer isso: medido, o git não grava `.git/COMMIT_EDITMSG` antes
+// dele — nem com `-m`. Só o `commit-msg` RECEBE o arquivo, como primeiro argumento.
+//
+// Por que rodar de novo, e não só aqui: o pre-commit é a barreira que pega o caso comum
+// (nada dispensado) o mais cedo possível, antes de o autor escrever a mensagem. Este hook
+// existe para o caso em que a mensagem MUDA o veredito — e ele só reexecuta quando há
+// marcador, para não pagar o custo duas vezes em todo commit.
+const commitMsgScript = `#!/usr/bin/env bash
+# anchors:hook — instalado por 'anchors install-hooks'
+set -euo pipefail
+
+MSG_FILE="$1"
+ROOT="$(git rev-parse --show-toplevel)"
+
+# Roda SEMPRE, e não só quando há marcador: é aqui que o veredito vale. O pre-commit
+# reporta cedo (útil para ver o problema antes de escrever a mensagem), mas não pode
+# barrar — sem a mensagem, ele não tem como saber se a reprovação foi dispensada.
+command -v anchors >/dev/null 2>&1 || exit 0
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$STAGED" ] && exit 0
+
+echo "· commit-msg: confrontando com a mensagem em mãos"
+set +e
+(cd "$ROOT" && anchors verify --phase pre-commit --staged --no-record --commit-msg "$MSG_FILE")
+STATUS=$?
+set -e
+if [ "$STATUS" -eq 3 ]; then
+  exit 0
+elif [ "$STATUS" -ne 0 ]; then
+  echo "──────────────────────────────────────────────────────────────"
+  echo "✗ commit BARRADO pelos gates do anchors."
+  echo "  Se a reprovação for deliberada, declare na mensagem:"
+  echo "    [skip-<regra>@<CODIGO>: por quê]"
+  exit 1
+fi
 `

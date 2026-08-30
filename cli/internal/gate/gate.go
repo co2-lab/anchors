@@ -196,7 +196,7 @@ func RunComDispensa(gates []config.Gate, nodes []mapx.Node, root string, graph *
 				// DISPENSA POR ALVO: o gate roda, e só este nó é poupado. O veredito é
 				// `Skip` com o motivo escrito — some do placar de reprovações sem sumir
 				// do relatório, que é a diferença entre dispensar e esconder.
-				if motivo, ok := disp.DispensouAlvo(RegraID(idDoGate(g)), n.ID, n.Code); ok {
+				if motivo, ok := disp.DispensouAlvo(RegraID(idDoGate(g)), n.Code); ok {
 					results = append(results, Result{
 						Gate: g.Name, Regra: idDoGate(g), Target: n.ID,
 						Verdict: Skip, Blocking: g.IsBlocking(),

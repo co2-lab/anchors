@@ -1,6 +1,9 @@
 package gate
 
-import "strings"
+import (
+	"regexp"
+	"strings"
+)
 
 // --- a REGRA dentro do gate ---
 //
@@ -56,6 +59,13 @@ type Dispensa struct {
 	// PorRegra mapeia o ID (`spec-completa/sem-placeholder`) ou o nome do gate inteiro
 	// (`trinca-completa`) para o motivo.
 	PorRegra map[string]string
+	// MotivoPorAlvo guarda o motivo de CADA alvo, quando a dispensa nomeia vários.
+	//
+	// `PorRegra` guarda um motivo por regra, e duas dispensas da mesma regra faziam a
+	// segunda sobrescrever a primeira: o relatório mostrava o mesmo motivo para os dois
+	// alvos. Medido — `FRMTT` e `TSHRT` dispensados por razões diferentes apareciam
+	// ambos com a do segundo, e o registro deixava de dizer a verdade sobre um deles.
+	MotivoPorAlvo map[string]string
 	// Alvos restringe a dispensa a caminhos específicos, por ID de regra.
 	//
 	// Sem isso, dispensar `trinca-completa` para commitar 4 specs novas apagava o gate
@@ -63,10 +73,9 @@ type Dispensa struct {
 	// passava junto, sem que nada acusasse. O mascaramento que a dispensa por regra
 	// existe para evitar, um nível acima.
 	//
-	// A forma é `regra@alvo=motivo`, onde o alvo é o CÓDIGO do artefato (`WRKSP`) ou o
-	// caminho dele. Um ID sem `@` continua valendo para tudo: é a saída grossa, e há
-	// casos legítimos (um gate recém-declarado num projeto que ainda não o cumpre em
-	// lugar nenhum).
+	// A forma é `regra@CODIGO=motivo`. Um ID sem `@` continua valendo para tudo: é a
+	// saída grossa, e há casos legítimos (um gate recém-declarado num projeto que ainda
+	// não o cumpre em lugar nenhum).
 	Alvos map[string][]string
 }
 
@@ -92,17 +101,19 @@ func (d Dispensa) Dispensou(id RegraID) (string, bool) {
 
 // DispensouAlvo diz se ESTA regra está dispensada para ESTE alvo.
 //
-// O alvo é identificado por CÓDIGO (`WRKSP`) ou por CAMINHO
-// (`packages/shared/Workspace.spec.md`), e as duas formas valem.
+// O alvo é o CÓDIGO do artefato (`WRKSP`), e SÓ ele. Caminho não é aceito, e a recusa é
+// deliberada:
 //
-// O código é a forma preferida, e a razão é a estabilidade: ele é a identidade do
-// artefato e sobrevive a mover ou renomear o arquivo. Uma dispensa presa ao caminho
-// deixa de valer silenciosamente quando alguém reorganiza pastas — e o commit seguinte
-// reprova sem que nada explique o que mudou.
-//
-// O caminho continua aceito porque nem todo alvo tem código: um `package.json`, um
-// arquivo de configuração, um teste sem identidade declarada.
-func (d Dispensa) DispensouAlvo(id RegraID, alvo, codigo string) (string, bool) {
+//   - o caminho não é identidade. Ele muda quando alguém reorganiza pastas, e a dispensa
+//     deixa de valer em SILÊNCIO — o commit seguinte reprova sem que nada explique o quê
+//     mudou;
+//   - o caminho é ambíguo por natureza. Aceitá-lo convida a formas amplas ("dispensa
+//     tudo em packages/") que reconstroem o problema que a granularidade por alvo veio
+//     resolver;
+//   - e o que NÃO tem código não deveria estar sendo dispensado por aqui. Um artefato
+//     sem identidade é um problema anterior — o `codigo-catalogado` é quem cobra isso, e
+//     dar uma saída lateral esconderia a causa.
+func (d Dispensa) DispensouAlvo(id RegraID, codigo string) (string, bool) {
 	motivo, ok := d.dispensouRegra(id)
 	if !ok {
 		return "", false
@@ -111,8 +122,15 @@ func (d Dispensa) DispensouAlvo(id RegraID, alvo, codigo string) (string, bool) 
 	if len(alvos) == 0 {
 		return motivo, true
 	}
+	if codigo == "" {
+		return "", false // sem identidade não há como dispensar um alvo específico
+	}
 	for _, a := range alvos {
-		if a == alvo || (codigo != "" && a == codigo) {
+		if a == codigo {
+			// O motivo DESTE alvo, quando declarado — e não o último da regra.
+			if m, ok := d.MotivoPorAlvo[string(id)+"@"+codigo]; ok {
+				return m, true
+			}
 			return motivo, true
 		}
 	}
@@ -151,7 +169,7 @@ func (d Dispensa) alvosDe(id RegraID) []string {
 // a única coisa que separa dispensa deliberada de gate ignorado, e aceitá-lo ausente
 // esvaziaria a garantia.
 func ParseDispensa(bruto string) (Dispensa, []string) {
-	d := Dispensa{PorRegra: map[string]string{}, Alvos: map[string][]string{}}
+	d := Dispensa{PorRegra: map[string]string{}, Alvos: map[string][]string{}, MotivoPorAlvo: map[string]string{}}
 	var erros []string
 	for _, parte := range strings.Split(bruto, ",") {
 		parte = strings.TrimSpace(parte)
@@ -166,7 +184,16 @@ func ParseDispensa(bruto string) (Dispensa, []string) {
 		if r, a, temAlvo := strings.Cut(regra, "@"); temAlvo {
 			regra, alvo = strings.TrimSpace(r), strings.TrimSpace(a)
 			if alvo == "" {
-				erros = append(erros, "`"+parte+"` — falta o caminho depois do `@`")
+				erros = append(erros, "`"+parte+"` — falta o código depois do `@`")
+				continue
+			}
+			// CAMINHO é recusado explicitamente. A alternativa — aceitá-lo em silêncio e
+			// nunca casar — produziria uma dispensa que não dispensa, e o commit
+			// reprovaria sem explicação aparente. O erro nomeia o que fazer.
+			if strings.ContainsAny(alvo, "/\\.*") {
+				erros = append(erros, "`"+parte+"` — o alvo é o CÓDIGO do artefato "+
+					"(ex.: `WRKSP`), não o caminho: o caminho muda quando alguém "+
+					"reorganiza pastas, e a dispensa deixaria de valer em silêncio")
 				continue
 			}
 		}
@@ -181,7 +208,71 @@ func ParseDispensa(bruto string) (Dispensa, []string) {
 		d.PorRegra[regra] = motivo
 		if alvo != "" {
 			d.Alvos[regra] = append(d.Alvos[regra], alvo)
+			d.MotivoPorAlvo[regra+"@"+alvo] = motivo
 		}
 	}
 	return d, erros
+}
+
+// marcadorNaMensagem casa `[skip-<regra>@<CODIGO>: motivo]` na mensagem de commit.
+//
+// O motivo vem depois de `:` e é obrigatório, como na forma por variável — uma dispensa
+// sem justificativa escrita é indistinguível de alguém fugindo de um gate.
+var marcadorNaMensagem = regexp.MustCompile(
+	`\[skip-([a-z0-9][a-z0-9/-]*)(?:@([A-Z0-9-]+))?\s*:\s*([^\]]+)\]`)
+
+// DispensaDaMensagem lê as dispensas declaradas na MENSAGEM DE COMMIT.
+//
+// A forma é `[skip-trinca-completa@WRKSP: spec nova do plano 0007]`, e ela é melhor que a
+// variável de ambiente por três razões que só aparecem no uso:
+//
+//   - a variável NÃO FICA NO HISTÓRICO. A dispensa some junto com o shell, e quem ler o
+//     commit meses depois vê um gate que não rodou, sem saber por quê nem quem decidiu;
+//   - a variável é fácil de deixar EXPORTADA por engano, e aí ela dispensa os commits
+//     seguintes sem que ninguém peça;
+//   - e ela exige lembrar o nome exato de uma variável, enquanto o marcador está no
+//     mesmo lugar onde já se escreve o porquê da mudança.
+//
+// A variável continua aceita: um hook de CI que não controla a mensagem precisa dela.
+func DispensaDaMensagem(msg string) (Dispensa, []string) {
+	d := Dispensa{PorRegra: map[string]string{}, Alvos: map[string][]string{}, MotivoPorAlvo: map[string]string{}}
+	var erros []string
+	for _, m := range marcadorNaMensagem.FindAllStringSubmatch(msg, -1) {
+		regra, codigo, motivo := m[1], m[2], strings.TrimSpace(m[3])
+		if motivo == "" {
+			erros = append(erros, "`"+m[0]+"` — falta o motivo depois dos dois-pontos")
+			continue
+		}
+		d.PorRegra[regra] = motivo
+		if codigo != "" {
+			d.Alvos[regra] = append(d.Alvos[regra], codigo)
+			d.MotivoPorAlvo[regra+"@"+codigo] = motivo
+		}
+	}
+	return d, erros
+}
+
+// Mescla junta duas dispensas. A da mensagem de commit e a da variável de ambiente
+// convivem: um projeto pode ter um hook de CI que usa a variável e um autor que escreve
+// o marcador, e recusar a combinação obrigaria a escolher sem motivo.
+func (d Dispensa) Mescla(outra Dispensa) Dispensa {
+	if d.PorRegra == nil {
+		d.PorRegra = map[string]string{}
+	}
+	if d.Alvos == nil {
+		d.Alvos = map[string][]string{}
+	}
+	for k, v := range outra.PorRegra {
+		d.PorRegra[k] = v
+	}
+	for k, v := range outra.Alvos {
+		d.Alvos[k] = append(d.Alvos[k], v...)
+	}
+	if d.MotivoPorAlvo == nil {
+		d.MotivoPorAlvo = map[string]string{}
+	}
+	for k, v := range outra.MotivoPorAlvo {
+		d.MotivoPorAlvo[k] = v
+	}
+	return d
 }

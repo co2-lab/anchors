@@ -24,6 +24,7 @@ func newCheckCmd() *cobra.Command {
 	var changed []string
 	var all, noRecord, fix, deterministic, skipSlow, onlyIssues, showDrift bool
 	var skipRegras string
+	var msgPath string
 	cmd := &cobra.Command{
 		Use:   "check",
 		Short: "Roda os gates de qualidade (o pipeline)",
@@ -78,6 +79,20 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				bruto = os.Getenv("ANCHORS_SKIP_RULES")
 			}
 			dispensa, erros := gate.ParseDispensa(bruto)
+			// A MENSAGEM DE COMMIT também dispensa: `[skip-trinca-completa@WRKSP: motivo]`.
+			//
+			// O caminho vem por `--commit-msg`, e não de `.git/COMMIT_EDITMSG`: MEDIDO, o
+			// git NÃO grava esse arquivo antes do `pre-commit` — nem com `-m`. Lê-lo ali
+			// devolve a mensagem do commit ANTERIOR, e a dispensa passa a valer para o
+			// commit errado, em silêncio. É o hook `commit-msg` que recebe o arquivo, e é
+			// ele quem passa este caminho.
+			if msgPath != "" {
+				if msg, err := os.ReadFile(msgPath); err == nil {
+					daMsg, errosMsg := gate.DispensaDaMensagem(string(msg))
+					dispensa = dispensa.Mescla(daMsg)
+					erros = append(erros, errosMsg...)
+				}
+			}
 			if len(erros) > 0 {
 				return fmt.Errorf("--skip-rule inválido:\n  %s\n\nO motivo é obrigatório: uma "+
 					"dispensa sem justificativa escrita é indistinguível de alguém fugindo de um "+
@@ -182,6 +197,8 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 	cmd.Flags().BoolVar(&skipSlow, "skip-slow", false, "pula os gates declarados `cost: slow`")
 	cmd.Flags().StringVar(&skipRegras, "skip-rule", "",
 		"dispensa regras nesta execução: `id=motivo[,id=motivo]`. O motivo é obrigatório")
+	cmd.Flags().StringVar(&msgPath, "commit-msg", "",
+		"caminho do arquivo de mensagem de commit, de onde ler os marcadores `[skip-regra@CODIGO: motivo]`")
 	cmd.Flags().BoolVar(&onlyIssues, "only-issues", false, "omite da tabela os gates que passaram em tudo e não deixaram pendência (o total continua no rodapé)")
 	cmd.Flags().BoolVar(&showDrift, "show-drift", false, "lista TODAS as pendências (⚠) com o endereço de cada uma; sem a flag, só o contador da tabela")
 	return cmd

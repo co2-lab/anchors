@@ -1,6 +1,9 @@
 package gate
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // O motivo é a única coisa que separa dispensa DELIBERADA de gate ignorado. Aceitá-lo
 // ausente esvaziaria a garantia — e o relatório passaria a mostrar "dispensado" sem
@@ -75,8 +78,8 @@ func TestRegraIDSeparaGateDeRegra(t *testing.T) {
 // acima.
 func TestDispensaPorAlvoNaoApagaOResto(t *testing.T) {
 	d, erros := ParseDispensa(
-		"trinca-completa@packages/novo/A.spec.md=spec nova do plano 0007," +
-			"trinca-completa@packages/novo/B.spec.md=spec nova do plano 0007")
+		"trinca-completa@NOVOA=spec nova do plano 0007," +
+			"trinca-completa@NOVOB=spec nova do plano 0007")
 	if len(erros) > 0 {
 		t.Fatalf("não deveria haver erro: %v", erros)
 	}
@@ -84,15 +87,15 @@ func TestDispensaPorAlvoNaoApagaOResto(t *testing.T) {
 	id := RegraID("trinca-completa")
 
 	// Os alvos NOMEADOS estão dispensados.
-	for _, alvo := range []string{"packages/novo/A.spec.md", "packages/novo/B.spec.md"} {
-		if motivo, ok := d.DispensouAlvo(id, alvo, ""); !ok || motivo == "" {
-			t.Errorf("%s deveria estar dispensado com motivo", alvo)
+	for _, cod := range []string{"NOVOA", "NOVOB"} {
+		if motivo, ok := d.DispensouAlvo(id, cod); !ok || motivo == "" {
+			t.Errorf("%s deveria estar dispensado com motivo", cod)
 		}
 	}
 
 	// E O RESTO CONTINUA SENDO CONFRONTADO. É o ponto inteiro do recurso: a trinca que
-	// quebrou por descuido em `packages/antigo` não pode passar de carona.
-	if _, ok := d.DispensouAlvo(id, "packages/antigo/Quebrada.spec.md", "QBRDA"); ok {
+	// quebrou por descuido noutra unidade não pode passar de carona.
+	if _, ok := d.DispensouAlvo(id, "QBRDA"); ok {
 		t.Error("um alvo não nomeado NÃO pode ser dispensado — é o mascaramento que este " +
 			"recurso existe para impedir")
 	}
@@ -113,7 +116,7 @@ func TestDispensaSemAlvoValeParaTudo(t *testing.T) {
 	if _, ok := d.Dispensou(id); !ok {
 		t.Error("sem alvo declarado, a dispensa vale para o gate inteiro")
 	}
-	if _, ok := d.DispensouAlvo(id, "qualquer/coisa.spec.md", ""); !ok {
+	if _, ok := d.DispensouAlvo(id, "QUALQ"); !ok {
 		t.Error("sem alvo declarado, qualquer caminho está dispensado")
 	}
 }
@@ -127,30 +130,96 @@ func TestDispensaAlvoVazioEhRecusada(t *testing.T) {
 	}
 }
 
-// O CÓDIGO como alvo é a forma preferida: ele é a identidade do artefato e sobrevive a
-// mover ou renomear o arquivo. Uma dispensa presa ao caminho deixa de valer em silêncio
-// quando alguém reorganiza pastas, e o commit seguinte reprova sem explicação.
-func TestDispensaAceitaCodigoComoAlvo(t *testing.T) {
-	d, erros := ParseDispensa("trinca-completa@WRKSP=spec nova do plano 0007")
+// O CAMINHO é RECUSADO como alvo, e a recusa é o ponto: ele não é identidade. Muda
+// quando alguém reorganiza pastas, e a dispensa deixaria de valer em silêncio — o commit
+// seguinte reprovaria sem que nada explicasse o que mudou.
+//
+// Aceitá-lo e nunca casar seria pior: uma dispensa que não dispensa, sem erro visível.
+func TestDispensaRecusaCaminhoComoAlvo(t *testing.T) {
+	for _, bruto := range []string{
+		"trinca-completa@packages/shared/Workspace.spec.md=motivo",
+		"trinca-completa@packages/*=motivo",
+		"trinca-completa@arquivo.spec.md=motivo",
+	} {
+		_, erros := ParseDispensa(bruto)
+		if len(erros) == 0 {
+			t.Errorf("%q deveria ser recusado: o alvo é o CÓDIGO, não o caminho", bruto)
+			continue
+		}
+		if !strings.Contains(erros[0], "CÓDIGO") {
+			t.Errorf("o erro deveria dizer o que usar no lugar: %s", erros[0])
+		}
+	}
+}
+
+// Um alvo SEM CÓDIGO não é alcançado por uma dispensa restrita. Artefato sem identidade
+// é um problema anterior — quem cobra isso é o `codigo-catalogado`, e dar uma saída
+// lateral aqui esconderia a causa.
+func TestDispensaPorAlvoNaoAlcancaQuemNaoTemCodigo(t *testing.T) {
+	d, _ := ParseDispensa("trinca-completa@WRKSP=spec nova")
+	if _, ok := d.DispensouAlvo(RegraID("trinca-completa"), ""); ok {
+		t.Error("sem código não há alvo a dispensar")
+	}
+}
+
+// A MENSAGEM DE COMMIT é a forma preferida de dispensar: ela fica no histórico, ao lado
+// do porquê da mudança. A variável de ambiente some junto com o shell — quem ler o commit
+// meses depois vê um gate que não rodou, sem saber por quê nem quem decidiu.
+func TestDispensaDaMensagemDeCommit(t *testing.T) {
+	msg := `feat(plano): libera o plano 0007
+
+As specs nascem antes do código, como sempre na primeira rodada.
+
+[skip-trinca-completa@NOVOA: spec nova do plano 0007]
+[skip-trinca-completa@NOVOB: spec nova do plano 0007]`
+
+	d, erros := DispensaDaMensagem(msg)
 	if len(erros) > 0 {
 		t.Fatalf("não deveria haver erro: %v", erros)
 	}
 	id := RegraID("trinca-completa")
+	for _, cod := range []string{"NOVOA", "NOVOB"} {
+		if motivo, ok := d.DispensouAlvo(id, cod); !ok || motivo != "spec nova do plano 0007" {
+			t.Errorf("%s deveria estar dispensado com o motivo escrito, veio %q/%v", cod, motivo, ok)
+		}
+	}
+	// E o resto continua confrontado — é o mesmo ponto da dispensa por alvo.
+	if _, ok := d.DispensouAlvo(id, "QBRDA"); ok {
+		t.Error("um código não nomeado não pode ser dispensado")
+	}
+}
 
-	// Casa pelo CÓDIGO, seja qual for o caminho — inclusive um que mudou de lugar.
-	if _, ok := d.DispensouAlvo(id, "packages/shared/Workspace.spec.md", "WRKSP"); !ok {
-		t.Error("deveria dispensar pelo código")
+// Sem o motivo o marcador é recusado: é a mesma garantia da forma por variável, e
+// aceitá-lo vazio faria o relatório dizer "dispensado" sem dizer por quê.
+func TestMarcadorSemMotivoEhRecusado(t *testing.T) {
+	if _, erros := DispensaDaMensagem("fix: algo\n\n[skip-trinca-completa@WRKSP: ]"); len(erros) == 0 {
+		t.Error("marcador sem motivo deveria ser recusado")
 	}
-	if _, ok := d.DispensouAlvo(id, "outro/lugar/Workspace.spec.md", "WRKSP"); !ok {
-		t.Error("o código sobrevive a mover o arquivo — é o motivo de preferi-lo")
+}
+
+// O marcador SEM código dispensa a regra inteira — a saída grossa continua existindo,
+// para o gate recém-declarado que o projeto ainda não cumpre em lugar nenhum.
+func TestMarcadorSemCodigoValeParaTudo(t *testing.T) {
+	d, _ := DispensaDaMensagem("chore: liga o gate\n\n[skip-header-conforme: nenhum arquivo tem header ainda]")
+	if _, ok := d.Dispensou(RegraID("header-conforme")); !ok {
+		t.Error("sem código, o marcador vale para a regra inteira")
 	}
-	// E não alcança outro artefato.
-	if _, ok := d.DispensouAlvo(id, "packages/shared/Outra.spec.md", "OUTRA"); ok {
-		t.Error("o código dispensa UM artefato, não os vizinhos")
+}
+
+// Cada alvo carrega o SEU motivo. `PorRegra` guarda um motivo por regra, e duas
+// dispensas da mesma regra faziam a segunda sobrescrever a primeira — o relatório
+// mostrava o mesmo motivo para os dois alvos, e deixava de dizer a verdade sobre um.
+func TestMotivoEhPorAlvo(t *testing.T) {
+	d, _ := DispensaDaMensagem(`chore: libera duas
+
+[skip-trinca-completa@FRMTT: spec nova, é o card #6]
+[skip-trinca-completa@TSHRT: spec nova, é o card #8]`)
+
+	id := RegraID("trinca-completa")
+	if m, _ := d.DispensouAlvo(id, "FRMTT"); m != "spec nova, é o card #6" {
+		t.Errorf("FRMTT deveria trazer o motivo dele, veio %q", m)
 	}
-	// Um alvo sem código declarado (um package.json, um config) não é alcançado por
-	// engano quando a dispensa é por código.
-	if _, ok := d.DispensouAlvo(id, "package.json", ""); ok {
-		t.Error("alvo sem código não pode casar uma dispensa por código")
+	if m, _ := d.DispensouAlvo(id, "TSHRT"); m != "spec nova, é o card #8" {
+		t.Errorf("TSHRT deveria trazer o motivo dele, veio %q", m)
 	}
 }

@@ -26,6 +26,7 @@ import (
 // sobre o que cada gate mede, quanto custa e em que momento é cobrado.
 func newVerifyCmd() *cobra.Command {
 	var root, phase, category string
+	var commitMsg string
 	var changed []string
 	var staged, all, skipSlow, noRecord bool
 
@@ -80,6 +81,12 @@ commit só de README não dispara o typecheck do monorepo.`,
 			if phase != "" {
 				sub = append(sub, "--phase", phase)
 			}
+			// A MENSAGEM DE COMMIT, quando o hook `commit-msg` a passa. Só ele a tem: o
+			// git não grava `.git/COMMIT_EDITMSG` antes do `pre-commit` — a mensagem
+			// ainda não existe ali, e o arquivo carrega a do commit ANTERIOR.
+			if commitMsg != "" {
+				sub = append(sub, "--commit-msg", commitMsg)
+			}
 			if category != "" {
 				sub = append(sub, "--category", category)
 			}
@@ -99,6 +106,8 @@ commit só de README não dispara o typecheck do monorepo.`,
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
 	cmd.Flags().StringVar(&phase, "phase", "", "a fase a cobrar (pre-commit|pre-push|ci|manual)")
+	cmd.Flags().StringVar(&commitMsg, "commit-msg", "",
+		"caminho do arquivo de mensagem de commit (o hook `commit-msg` o passa)")
 	cmd.Flags().StringVar(&category, "category", "", "cobra só os gates desta natureza (types|style|traceability…)")
 	cmd.Flags().StringSliceVar(&changed, "changed", nil, "arquivo(s) a verificar (repetível)")
 	cmd.Flags().BoolVar(&staged, "staged", false, "usa os arquivos staged no git (o modo do pre-commit)")
