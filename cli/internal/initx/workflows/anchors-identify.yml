@@ -114,6 +114,24 @@ jobs:
       # A pergunta certa é "o mapa mudaria se eu o reconstruísse?". Construir num arquivo
       # temporário e comparar responde exatamente isso, e o `map build` só é ADOTADO
       # quando a resposta é sim — nas outras vezes o mapa commitado segue valendo.
+      # O PIPELINE está atualizado?
+      #
+      # Um pipeline desatualizado falha em SILÊNCIO: ele roda, faz o que a versão dele
+      # sabia fazer, e o que foi corrigido depois simplesmente não acontece. Medido — um
+      # passo novo deste arquivo não rodou por três execuções sem que nada acusasse, e só
+      # apareceu quando alguém foi ler o log procurando outra coisa.
+      #
+      # Não BARRA, e a escolha é deliberada: o pipeline desatualizado ainda faz o trabalho
+      # antigo, e derrubá-lo trocaria "faz menos do que devia" por "não faz nada". O aviso
+      # aparece no resumo do run, onde quem investiga já vai olhar.
+      - name: Conferir se este pipeline está atualizado
+        continue-on-error: true
+        run: |
+          if ! anchors doctor --check-pipelines; then
+            echo "::warning::Este pipeline está desatualizado — ele roda, mas o que foi corrigido depois NÃO acontece. Rode \`anchors doctor --fix\`, commite e suba."
+          fi
+
+
       - name: Garantir que o mapa está em dia
         run: |
           set -euo pipefail

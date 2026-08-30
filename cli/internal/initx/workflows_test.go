@@ -527,3 +527,33 @@ func TestScriptsDosPipelinesSaoBashValido(t *testing.T) {
 		}
 	}
 }
+
+// UM PIPELINE DESATUALIZADO falha em silêncio: ele roda, faz o que a versão dele sabia
+// fazer, e o que foi corrigido depois simplesmente não acontece. Medido — um passo novo do
+// `identify` não rodou por três execuções sem que nada acusasse.
+//
+// Os pipelines que TÊM o Anchors instalado devem se autoverificar. Os que não têm ficam de
+// fora de propósito: instalar o binário só para a conferência os tornaria mais lentos a
+// cada execução, e o `claim` é chamado a cada pedido de trabalho.
+func TestPipelinesComAnchorsSeAutoverificam(t *testing.T) {
+	for _, w := range WorkflowsDoFluxo {
+		b, err := workflowsFS.ReadFile("workflows/" + w.Arquivo)
+		if err != nil {
+			t.Fatal(err)
+		}
+		texto := string(b)
+		if !strings.Contains(texto, "Instalar o Anchors") {
+			continue // sem o binário, não há como conferir
+		}
+		if !strings.Contains(texto, "--check-pipelines") {
+			t.Errorf("%s instala o Anchors e não confere se está atualizado — "+
+				"um pipeline velho roda e o que foi corrigido depois não acontece", w.Arquivo)
+		}
+		// E a conferência NÃO barra: o pipeline desatualizado ainda faz o trabalho antigo,
+		// e derrubá-lo trocaria "faz menos do que devia" por "não faz nada".
+		i := strings.Index(texto, "--check-pipelines")
+		if !strings.Contains(texto[max(0, i-400):i], "continue-on-error: true") {
+			t.Errorf("%s: a conferência não pode BARRAR o pipeline", w.Arquivo)
+		}
+	}
+}

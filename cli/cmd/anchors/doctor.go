@@ -16,6 +16,7 @@ import (
 func newDoctorCmd() *cobra.Command {
 	var root, mapPath string
 	var corrigir bool
+	var soPipelines bool
 	cmd := &cobra.Command{
 		Use: "doctor",
 
@@ -28,6 +29,20 @@ identidade ausente), camadas frouxas, e buracos de cobertura de gates.
 
 APRESENTA e REGISTRA, mas NÃO bloqueia — é diagnóstico, roda sob demanda.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// `--check-pipelines` responde UMA pergunta e sai: o pipeline que roda no CI
+			// está atualizado?
+			//
+			// Existe porque o pipeline DESATUALIZADO falha em SILÊNCIO — ele roda, faz o
+			// que a versão dele sabia fazer, e o que foi corrigido depois simplesmente não
+			// acontece. Medido: um passo novo do `identify` não rodou por três execuções
+			// sem que nada acusasse, e só apareceu quando fui ler o log procurando outra
+			// coisa.
+			//
+			// O raio-X completo seria ruído no CI: ele responde dezenas de perguntas, e
+			// quem chama daqui quer uma.
+			if soPipelines {
+				return verificaPipelines(cmd)
+			}
 			absRoot, err := config.AbsRaiz(root)
 			if err != nil {
 				return err
@@ -55,6 +70,8 @@ APRESENTA e REGISTRA, mas NÃO bloqueia — é diagnóstico, roda sob demanda.`,
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
 	cmd.Flags().StringVar(&mapPath, "map", "", "caminho do mapa")
 	cmd.Flags().BoolVar(&corrigir, "fix", false, "cria o que falta no ambiente do modo `github` (pipelines)")
+	cmd.Flags().BoolVar(&soPipelines, "check-pipelines", false,
+		"sai com 1 se algum pipeline do Anchors estiver desatualizado (para o CI se autoverificar)")
 	return cmd
 }
 
@@ -292,4 +309,43 @@ func protegeBranches(cfg *config.Config) error {
 		fmt.Printf("✓ %s protegido — nada entra sem PR\n", b)
 	}
 	return nil
+}
+
+// verificaPipelines é o `doctor --check-pipelines`: uma pergunta, um código de saída.
+//
+// Sai com 1 quando algo está desatualizado ou faltando, para o CI poder barrar. Um aviso
+// que não muda o código de saída seria ignorado pelo próprio pipeline que o emitiu.
+func verificaPipelines(cmd *cobra.Command) error {
+	root := config.RaizDoProjeto(".")
+	cfg, err := config.Load(filepath.Join(root, "anchors.yaml"))
+	if err != nil {
+		return err
+	}
+	if !cfg.ModoGitHub() {
+		fmt.Println("· modo local — não há pipeline do fluxo a verificar.")
+		return nil
+	}
+
+	faltam := initx.FaltaWorkflow(root)
+	velhos := initx.WorkflowsDesatualizados(root, cfg)
+	if len(faltam) == 0 && len(velhos) == 0 {
+		fmt.Printf("✓ os %d pipelines do fluxo estão no lugar e atualizados (anchors %s).\n",
+			len(initx.WorkflowsDoFluxo), version)
+		return nil
+	}
+
+	for _, w := range faltam {
+		fmt.Printf("✗ %s AUSENTE — %s não acontece\n", w.Arquivo, w.Papel)
+	}
+	// DESATUALIZADO é o caso que motivou o comando, e a mensagem diz o que ninguém vê
+	// olhando o log: o pipeline RODOU, e fez o que a versão dele sabia fazer.
+	for _, w := range velhos {
+		fmt.Printf("✗ %s DESATUALIZADO — ele roda, e o que foi corrigido depois não acontece\n",
+			w.Arquivo)
+	}
+	fmt.Println()
+	fmt.Println("  Rode `anchors doctor --fix` na sua máquina, commite e suba.")
+	fmt.Printf("  O binário deste CI é o anchors %s — se ele for mais novo que o seu, atualize antes.\n", version)
+	cmd.SilenceUsage = true
+	return fmt.Errorf("%d pipeline(s) desatualizado(s) ou ausente(s)", len(faltam)+len(velhos))
 }

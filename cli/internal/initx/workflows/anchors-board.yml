@@ -74,6 +74,18 @@ jobs:
           tar -xzf /tmp/anchors.tar.gz -C /tmp anchors
           sudo install /tmp/anchors /usr/local/bin/anchors
 
+      # O PIPELINE está atualizado? Ver a nota em `anchors-identify.yml`.
+      #
+      # A verificação roda aqui TAMBÉM porque o board é disparado por schedule e por
+      # `workflow_run`: ele executa mesmo quando ninguém abre PR, e é o caminho que alcança
+      # um repositório parado — justamente onde o pipeline envelhece sem que ninguém veja.
+      - name: Conferir se este pipeline está atualizado
+        continue-on-error: true
+        run: |
+          if ! anchors doctor --check-pipelines; then
+            echo "::warning::Os pipelines do Anchors estão desatualizados — eles rodam, mas o que foi corrigido depois NÃO acontece. Rode \`anchors doctor --fix\`, commite e suba."
+          fi
+
       - name: Gerar o board a partir das issues
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
