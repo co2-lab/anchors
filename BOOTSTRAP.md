@@ -483,7 +483,29 @@ checks entrava na fila de revisão, gastando o revisor com o que a máquina já 
 reprovar. Agora a coluna significa "os checks passaram".
 
 Dali, outro agente o pega (pelo mesmo pipeline de claim, que também atende essa coluna),
-movendo-o para `IN REVIEW`. Três desfechos:
+movendo-o para `IN REVIEW`.
+
+**O revisor corrige o que é defeito de execução.** Marcação no lugar errado, opção
+faltando, teste que não cobre o caso: ele já sabe qual é o certo, e devolver faria outro
+agente descobrir o que ele acabou de descobrir. O card volta para `READY TO REVIEW` — quem
+corrige vira autor daquele trecho, e não aprova o próprio conserto.
+
+**Devolve o que é defeito de entendimento.** A spec foi lida errado, a abordagem não
+serve: aqui corrigir seria pior que moroso, porque esconderia que o autor entendeu errado,
+e o mesmo erro volta no próximo card que ele pegar.
+
+A aritmética favorece o primeiro caminho, e é o argumento que decide: quando há correção,
+são DOIS reviews de qualquer forma. A diferença é que o convencional (revisor comenta →
+autor corrige → outro revisa) tem mais dois `claim` e uma releitura no meio — e o autor,
+que já tinha descarregado o contexto, precisa reconstruí-lo para uma correção que o
+revisor sabia fazer.
+
+O risco do caminho novo é o card circular entre revisores para sempre, cada volta
+parecendo progresso. Por isso o pipeline CONTA as revisões e avisa a partir da terceira:
+quando a revisão não converge, o problema costuma estar antes do código — a spec não
+decide o que precisava decidir, e cada revisor lê o vazio de um jeito.
+
+Três desfechos:
 
 | desfecho | o que acontece com o card |
 | --- | --- |

@@ -245,6 +245,31 @@ jobs:
             # A indentação do heredoc é exigida pelo YAML (o bloco `run:` a
             # define), e o `sed` a remove antes de escrever o arquivo — sem
             # isso o markdown chega ao GitHub como bloco de código.
+            # AS VOLTAS DE REVISÃO são contadas, porque o desfecho "corrija você mesmo"
+            # abre a possibilidade de dois revisores corrigirem um ao outro para sempre —
+            # e cada volta PARECE progresso, então ninguém percebe.
+            #
+            # Três é onde a conversa deixou de convergir. O número não vem de medição, e
+            # está aqui para ser ajustado por quem observar o time; o que ele produz não é
+            # bloqueio, é um aviso no card com o histórico à vista.
+            voltas=$(gh issue view "$livre" --json comments \
+              --jq '[.comments[].body | select(startswith("## Revisão"))] | length')
+            if [ "${voltas:-0}" -ge 3 ]; then
+              sed 's/^              //' > /tmp/aviso.md <<'AVISO'
+              ⚠ **Muitas revisões neste card.**
+
+              Quando a revisão não converge, o problema costuma estar ANTES do código: a
+              spec não decide o que precisava decidir, e cada revisor lê o vazio de um
+              jeito.
+
+              Antes de revisar de novo, leia as revisões anteriores e pergunte se o
+              desacordo é sobre o CÓDIGO ou sobre o que a SPEC pede. Se for o segundo, o
+              caminho é abrir uma decisão em aberto na spec — não uma quarta rodada.
+              AVISO
+              gh issue comment "$livre" --body-file /tmp/aviso.md
+            fi
+
+
             sed 's/^            //' > /tmp/instrucao.md <<'INSTRUCAO'
             ## Revisão — o que fazer
 
@@ -261,9 +286,30 @@ jobs:
 
             3. **Confronte cada regra** da spec contra o que o PR entrega, rodando o que dá para
                rodar em vez de só ler.
-            4. **Comente o resultado no PR** e mova o card:
-               - aceito → `anchors:ready-to-test`
-               - rejeitado → `anchors:to-do`, devolvendo a posse a quem implementou
+            4. **Comente o resultado no PR**, começando com `## Revisão` — é por esse título
+               que o pipeline conta as voltas e avisa quando a revisão deixa de convergir.
+               Depois escolha o desfecho:
+
+               - **aceito** → mova o card para `anchors:ready-to-test`.
+
+               - **defeito de EXECUÇÃO** (marcação no lugar errado, opção faltando, teste que
+                 não cobre o caso) → **corrija você mesmo**, no mesmo PR, e passe o card para
+                 `anchors:ready-to-review` liberando a posse. Outro agente revisa o conjunto.
+
+                 Você já sabe qual é o certo: devolver faria outro descobrir o que você
+                 acabou de descobrir. E quando há correção são DOIS reviews de qualquer
+                 forma — a diferença é que aqui não há dois `claim` e uma releitura no meio.
+
+               - **defeito de ENTENDIMENTO** (a spec foi lida errado, a abordagem não serve)
+                 → **devolva**: card para `anchors:to-do`, posse para quem implementou, e o
+                 comentário dizendo o que a spec pede que o código não faz.
+
+                 Aqui corrigir seria pior que moroso: esconderia que o autor entendeu errado,
+                 e o mesmo erro volta no próximo card que ele pegar.
+
+            > **Quem corrige não aprova o próprio conserto.** Ao corrigir, você vira autor
+            > daquele trecho — por isso o card volta para `ready-to-review` em vez de seguir
+            > para `ready-to-test`. É a mesma regra que já vale para quem implementa.
 
             ### Se o card voltou para `ready-to-review` enquanto você revisava
 
