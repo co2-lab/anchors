@@ -179,6 +179,14 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		})
 		// A ORDEM dentro do plano. Um plano sem fases catalogadas passa (elas são
 		// opcionais); o gate só cobra a coerência de quem as declarou.
+		// O PLANO REVISADO avisa quem o lê. Sem isso, quem abre um plano antigo segue uma
+		// decisão que foi revista — e o plano parece coerente, porque ele É o registro
+		// coerente do que se decidiu na época.
+		gates = append(gates, config.Gate{
+			Name: "plano-revisado", ID: "plano-revisado", On: []string{"plan"},
+			Check: "plano-revisado", Blocking: config.Bool(projetoNovo),
+			Measures: "o plano revisado por outro avisa quem o lê",
+		})
 		gates = append(gates, config.Gate{
 			Name: "fase-ordenada", ID: "fase-ordenada", On: []string{"plan"}, Check: "fase-ordenada",
 			Blocking: config.Bool(projetoNovo),

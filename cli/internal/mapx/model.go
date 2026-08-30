@@ -111,6 +111,8 @@ type Node struct {
 	// dela. Com só uma das duas relações, quem monta a árvore precisa inferir a outra — e
 	// inferir pertencimento a partir de ordem encaixa as fases de um plano numa escada.
 	Parent string `yaml:"parent,omitempty"`
+	// Supersedes — os planos que ESTE revisa (`supersedes:` no header).
+	Supersedes []string `yaml:"supersedes,omitempty"`
 	// Signal — sinais de qualidade INGERIDOS do runner (o Anchors não roda o teste;
 	// consome o artefato que o projeto já gera). Preenchido por `anchors ingest`.
 	Signal *TestSignal `yaml:"signal,omitempty"`

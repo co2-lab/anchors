@@ -98,6 +98,8 @@ type File struct {
 	// fase. Um só: pertencimento é uma relação de um pai, ao contrário de `needs`, que é
 	// lista porque uma coisa pode depender de várias.
 	Parent string
+	// Supersedes são os planos que ESTE revisa — caminhos, como o `needs`.
+	Supersedes []string
 }
 
 // Dep é uma linha da Tabela de Dependências de uma spec consumidora (SPEC_TYPES §5):
@@ -168,6 +170,7 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 			Seeds:         extractSeeds(kind, string(content)),
 			Needs:         needsFor(kind, content, root, rel),
 			Parent:        parentDe(content),
+			Supersedes:    supersedesDe(kind, content, root, rel),
 			NoPropagation: noPropRE.Match(content),
 			SharedCode:    sharedCodeRE.Match(content),
 			Deps:          depsFor(kind, content, root, rel),
@@ -427,6 +430,23 @@ var headerNeedsRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*needs:\s*(.+
 // quatro fases de um plano encaixadas uma na outra como uma escada.
 var headerParentRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*parent:\s*(.+)$`)
 
+// headerSupersedesRE captura `supersedes:` — o plano que REVISA outro.
+//
+// Planejar erra, e o erro aparece quando o trabalho começa: uma fase que faltava, uma
+// decisão que não cabia. Há dois caminhos, e a escolha não é de gosto:
+//
+//   - EDITAR o plano antigo perde o registro. Um plano é ÂNCORA, como a spec — e editar
+//     um plano já implementado faz o registro descrever algo que não foi o que aconteceu.
+//     Quem ler depois vê um plano coerente e não sabe que ele mudou no meio.
+//
+//   - UM PLANO NOVO que declara `supersedes:` preserva os dois lados. O antigo continua
+//     dizendo o que se decidiu na época; o novo diz o que mudou e por quê.
+//
+// O custo do segundo é a leitura fora de ordem — quem abre o plano antigo não sabe que
+// existe um mais novo. Por isso o `supersedes` é confrontado por gate: o plano revisado
+// ganha um aviso no topo apontando para quem o revisou.
+var headerSupersedesRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*supersedes:\s*(.+)$`)
+
 // needsFor lê `needs:` de um PLANO (caminhos de outros planos) ou de uma SPEC (o CÓDIGO
 // da fase que precisa fechar antes).
 //
@@ -446,6 +466,27 @@ func needsFor(kind string, content []byte, root, rel string) []string {
 		return extractNeedsCodigo(content)
 	}
 	return nil
+}
+
+// supersedesDe lê o `supersedes:` — só de PLANO, porque revisar planejamento é o que
+// planos fazem. Uma spec que "revisa" outra é outra coisa: ou a unidade mudou (e a spec é
+// editada, porque descreve o presente), ou virou outra unidade (e tem código próprio).
+func supersedesDe(kind string, content []byte, root, rel string) []string {
+	if kind != "plan" {
+		return nil
+	}
+	m := headerSupersedesRE.FindSubmatch(content)
+	if m == nil {
+		return nil
+	}
+	raw := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(m[1])), "-->"))
+	var out []string
+	for _, part := range strings.Split(raw, ",") {
+		if p := stripInlineCode(strings.TrimSpace(part)); p != "" {
+			out = append(out, resolveDepPath(root, rel, p))
+		}
+	}
+	return out
 }
 
 // parentDe lê o `parent:` do header — o código de quem contém este artefato.

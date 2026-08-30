@@ -40,6 +40,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 			UpdatedAt:     updatedAt[f.Path],
 			Layer:         f.Layer,
 			Parent:        f.Parent,
+			Supersedes:    f.Supersedes,
 			Code:          nodeCode(f),
 			CodeDeclarado: codeDeclarado(f),
 			Tags:          tags,

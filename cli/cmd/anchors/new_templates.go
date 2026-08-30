@@ -17,6 +17,7 @@ var templates = map[string]template{
 	"spec":    specTemplate,
 	"feature": featureTemplate,
 	"test":    testTemplate,
+	"plan":    planTemplate,
 }
 
 // ─── header helpers (dialeto de comentário por artefato, HEADER_GUIDE) ──────────
@@ -413,4 +414,64 @@ var specPresets = map[string]presetDef{
 type presetDef struct {
 	Desc     string
 	Sections []string
+}
+
+// planTemplate — o esqueleto de um PLANO.
+//
+// Faltava, e a ausência tinha custo: quem escreve um plano copia o anterior, e o que o
+// anterior esqueceu se propaga. As três coisas que este esqueleto força são as que os
+// planos escritos à mão mais omitem — as fases com código, a ordem entre elas, e o que
+// fica de fora.
+var planTemplate = template{
+	kind:     "plan",
+	ext:      ".md",
+	idField:  "code",
+	headerFn: mdHeader("code"),
+	sections: []section{
+		{Key: "title", Title: "Cabeçalho com código + objetivo", Default: true,
+			Body: "# {name}\n\n> **Código**: `{id}`\n\n"},
+
+		{Key: "objective", Title: "Objetivo (o que este plano entrega)", Default: true,
+			Purpose: "O ESTADO que o repositório alcança quando o plano fecha — não a lista de tarefas. " +
+				"Um objetivo que descreve atividade (\"criar os arquivos X e Y\") não diz quando parar; " +
+				"um que descreve estado (\"o teste roda e o sinal chega ao mapa\") diz.",
+			Body: "## Objetivo\n\nTODO: o estado que o repositório alcança quando este plano fechar.\n\n"},
+
+		{Key: "why", Title: "Motivo (por que agora, e por que assim)", Default: true,
+			Purpose: "O que acontece se este plano NÃO for feito, ou for feito depois. É o que " +
+				"permite despriorizá-lo com consciência em vez de por esquecimento.",
+			Body: "## Motivo\n\nTODO: o que quebra sem isto, ou o que fica mais caro depois.\n\n"},
+
+		{Key: "phases", Title: "Fases (com código e ordem)", Default: true,
+			Realizes: "F",
+			Purpose: "Cada fase é um item CATALOGADO (`{id}-F01`), e a ordem entre elas é declarada — " +
+				"`(depende de {id}-F01)`. Sem o código, a ordem vive em prosa e o pipeline não a " +
+				"confronta: as specs semeadas nascem todas disponíveis, e o agente pega a da fase 3 " +
+				"com a fase 1 em aberto. Cada spec declara `parent: {id}-F0N` (a que fase pertence) " +
+				"e `needs:` (de qual depende).",
+			Body: "## Fases\n\n### {id}-F01 — TODO nome da primeira fase\n\n" +
+				"TODO: o que esta fase entrega, e as specs que ela semeia.\n\n" +
+				"- [ ] `caminho/Unidade.spec.md` — TODO o que ela descreve\n\n" +
+				"### {id}-F02 — TODO nome da segunda fase (depende de {id}-F01)\n\n" +
+				"TODO: por que esta fase só começa depois da anterior.\n\n"},
+
+		{Key: "out-of-scope", Title: "Fora de escopo (o que este plano NÃO faz)", Default: true,
+			Purpose: "O que alguém razoavelmente esperaria daqui e não vai encontrar, com o lugar " +
+				"onde está. Sem isto, o plano seguinte é escrito assumindo que o anterior cobriu.",
+			Body: "## Fora de escopo\n\n- TODO: o que fica para outro plano, e qual.\n\n"},
+
+		{Key: "done", Title: "Definição de pronto", Default: true,
+			Purpose: "O que se confere para dizer que o plano fechou, em termos VERIFICÁVEIS — um " +
+				"comando que roda, um gate que passa. \"Está funcionando\" não é definição de pronto.",
+			Body: "## Definição de pronto\n\n- TODO: o comando que passa, ou o gate que fica verde.\n\n"},
+
+		{Key: "revision", Title: "Revisão de outro plano (quando este revisa)", Default: false,
+			Purpose: "Só quando este plano REVISA outro. Declare `supersedes: plans/00XX-nome.md` no " +
+				"header, e escreva aqui o que muda e por quê. O plano revisado NÃO é editado — ele " +
+				"continua sendo o registro do que se decidiu na época —, mas ganha no topo um aviso " +
+				"apontando para cá, senão quem o lê fora de ordem segue uma decisão revista.",
+			Body: "## O que este plano revisa\n\nRevisa `plans/00XX-nome.md`.\n\n" +
+				"**O que muda:** TODO\n\n**Por quê:** TODO — o que se aprendeu depois de escrever aquele.\n\n" +
+				"**O que continua valendo:** TODO — para quem leu o anterior saber o que não mudou.\n\n"},
+	},
 }
