@@ -128,3 +128,24 @@ func TestAlterado_semListaDeAlteradosPula(t *testing.T) {
 		t.Fatalf("sem saber o que mudou, o gate deve se calar, veio %v", v)
 	}
 }
+
+// O DEFEITO QUE O EXERCÍCIO REVELOU: os planos do PR de mutação já diziam por que mudaram
+// — um com `revises:`, o outro com `@revised-by` —, e o gate reprovava os dois por não
+// usarem a notação `-R0001`.
+//
+// Exigir a mesma informação em duas notações ensina a satisfazer o gate em vez de
+// comunicar, que é o oposto do que ele existe para fazer.
+func TestAlterado_jaExplicadoPorRevisaoDePlanoPassa(t *testing.T) {
+	for _, conteudo := range []string{
+		"<!-- @anchors\n  revises: plans/0001-fundacao.md\n-->\n# Plano 0017\n",
+		"# Plano 0001\n\n> [!IMPORTANT]\n> `@revised-by: plans/0017-mutacao.md`\n",
+		"# Plano 0001\n\n> [!WARNING]\n> `@amended-by: plans/0017-mutacao.md`\n",
+	} {
+		v, d := checkPlanoAlteradoJustificado(conteudo,
+			mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md"))
+		if v != Pass {
+			t.Errorf("já explicado pelo mecanismo de revisão deveria passar, veio %v: %s\n%s",
+				v, d, conteudo)
+		}
+	}
+}

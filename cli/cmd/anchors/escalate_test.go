@@ -11,7 +11,7 @@ import (
 // destravar. Sem ela o card fica parado esperando alguém adivinhar o protocolo.
 func TestEscalada_dizPorQueParouEComoDestravar(t *testing.T) {
 	corpo := corpoDaEscalada("A spec pede cache; o plano diz que não haveria cache.",
-		"plans/0001-fundacao.md", "12")
+		"plans/0001-fundacao.md", "12", true)
 
 	for _, exigido := range []string{
 		"A spec pede cache",         // o motivo, com as palavras de quem viu
@@ -29,7 +29,7 @@ func TestEscalada_dizPorQueParouEComoDestravar(t *testing.T) {
 // Sem `--card` o comando ainda serve: nem toda incoerência é achada com um card na mão
 // (o revisor lendo um PR, por exemplo). O corpo não pode citar um card que não existe.
 func TestEscalada_semCardNaoInventaReferencia(t *testing.T) {
-	corpo := corpoDaEscalada("O plano contradiz a si mesmo entre F02 e F04.", "", "")
+	corpo := corpoDaEscalada("O plano contradiz a si mesmo entre F02 e F04.", "", "", true)
 	if strings.Contains(corpo, "#") && strings.Contains(corpo, "Trabalho parado") {
 		t.Errorf("sem --card não pode citar card; veio:\n%s", corpo)
 	}
@@ -52,5 +52,42 @@ func TestEscalada_tituloCabeEmUmaLinha(t *testing.T) {
 	// Motivo de várias linhas: o título é a primeira.
 	if got := primeiraLinhaDoMotivo("primeira linha\nsegunda linha"); got != "primeira linha" {
 		t.Errorf("o título é a primeira linha, veio %q", got)
+	}
+}
+
+// A SAÍDA PADRÃO é card comum, e ela tem de ser visivelmente diferente da decisão: se as
+// duas issues lessem igual, quem abre a lista não saberia qual espera por ele.
+func TestEscalada_cardComumNaoPedeDecisao(t *testing.T) {
+	corpo := corpoDaEscalada("O plano não cobre configuração e execução de migrations.",
+		"plans/0001-fundacao.md", "12", false)
+
+	if strings.Contains(corpo, initx.LabelPrecisaDoUsuario) {
+		t.Errorf("card comum não pode mandar remover a label de decisão; veio:\n%s", corpo)
+	}
+	if strings.Contains(corpo, "Trabalho parado") {
+		t.Errorf("card comum NÃO para o trabalho; veio:\n%s", corpo)
+	}
+	// E tem de ensinar a saída de emergência: quem for mexer pode descobrir, ao mexer,
+	// que a mudança era maior do que quem abriu julgou.
+	if !strings.Contains(corpo, "--para-usuario") {
+		t.Errorf("o card comum deve dizer o que fazer se a mudança se revelar de direção; "+
+			"veio:\n%s", corpo)
+	}
+	if !strings.Contains(corpo, "migrations") {
+		t.Error("o motivo tem de sobreviver na saída padrão")
+	}
+}
+
+// O caso que motivou a revisão do desenho: o gatilho não é só incoerência. Uma LACUNA
+// (plano coerente, mas incompleto) segue o mesmo fluxo, e o texto não pode sugerir que
+// só serve para contradição — um agente que lesse isso concluiria que o mecanismo não é
+// para o caso dele.
+func TestEscalada_naoPressupoeIncoerencia(t *testing.T) {
+	for _, paraUsuario := range []bool{true, false} {
+		corpo := corpoDaEscalada("O plano não previu migrations.", "plans/0001.md", "", paraUsuario)
+		if strings.Contains(corpo, "correção mudaria") {
+			t.Errorf("o corpo não pode pressupor que houve erro a corrigir (para-usuario=%v):\n%s",
+				paraUsuario, corpo)
+		}
 	}
 }

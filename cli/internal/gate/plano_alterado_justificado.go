@@ -98,6 +98,20 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 		}
 	}
 
+	// JÁ SE EXPLICA por outro mecanismo? Então não há o que cobrar.
+	//
+	// Medido no PR do plano de mutação: os dois planos alterados diziam por que mudaram —
+	// o revisado com `@revised-by`/`@amended-by`, o que revisa com `revises:` no header —
+	// e este gate reprovou os dois, exigindo que dissessem de novo em outra notação.
+	//
+	// Exigir a mesma informação duas vezes não protege nada: ensina a satisfazer o gate
+	// em vez de comunicar, que é o oposto do que ele existe para fazer.
+	if seExplicaPorRevisao(content) {
+		return Pass, "a mudança já está explicada pelo mecanismo de revisão de planos " +
+			"(`revises:` / `@revised-by`), e cobrar a mesma coisa em duas notações não " +
+			"protegeria nada"
+	}
+
 	if len(minhas) == 0 {
 		return Fail, fmt.Sprintf(
 			"foi ALTERADO e não diz por quê. Planejar erra, e quem descobre o erro é quem "+
@@ -105,10 +119,11 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 				"destino que ninguém escolheu, e nenhum gate de estado vê isso (o plano "+
 				"corrigido fica válido). Registre a revisão no próprio arquivo:\n"+
 				"    > **%s-R0001:** <o que mudou e por quê>\n"+
-				"Se a correção MUDA A DIREÇÃO do projeto, ou se você tem dúvida se muda, NÃO "+
-				"corrija — a avaliação do impacto é sua, e esta saída existe para quando "+
-				"ela dá `muda`:\n"+
-				"    anchors escalate \"<o que está incoerente>\" --sobre %s --card <n>", codigo, n.ID)
+				"Se a mudança IMPACTA A DIREÇÃO do projeto, ou se você tem dúvida, não a "+
+				"faça aqui — a interpretação do impacto é sua, e ela escolhe a saída:\n"+
+				"    anchors escalate \"<o que precisa mudar>\" --sobre %s --para-usuario\n"+
+				"Se não impacta a direção mas também não é para agora, vira card comum:\n"+
+				"    anchors escalate \"<o que precisa mudar>\" --sobre %s", codigo, n.ID, n.ID)
 	}
 
 	// A numeração tem de ser sequencial a partir de 1. Sem isso ela não responderia
@@ -146,6 +161,20 @@ func primeiraLinha(s string) string {
 func mudouDeFato(id string, alterados []string) bool {
 	for _, a := range alterados {
 		if a == id {
+			return true
+		}
+	}
+	return false
+}
+
+// seExplicaPorRevisao diz se o arquivo já declara a mudança pelo mecanismo de revisão
+// entre planos — o `revises:` de quem revisa, e o aviso de quem foi revisado.
+//
+// São marcadores ESTÁVEIS, não prosa: o `plano-revisado` já os usa, e casar texto corrido
+// quebraria em projeto escrito noutro idioma.
+func seExplicaPorRevisao(content string) bool {
+	for _, marca := range []string{"revises:", "@revised-by", "@amended-by"} {
+		if strings.Contains(content, marca) {
 			return true
 		}
 	}
