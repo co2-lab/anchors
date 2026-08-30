@@ -835,6 +835,81 @@ granularidades diferentes.
 
 ---
 
+## 8.1 A mensagem de commit também é confrontada
+
+O `commit-msg` é o segundo ponto de imposição local, e ele existe por uma razão que
+não é estética: **o changelog nasce dos commits**.
+
+Um assunto fora do formato não some do histórico — some do **changelog**. E isso só
+se descobre quando alguém gera a primeira versão e o que faltou já está a centenas
+de commits de distância. Commit já feito não se conserta.
+
+### O caso que motivou
+
+O squash de um PR entrou como:
+
+```
+[MTUAO] Plano 0017 — mutação, revisando o plano 0001
+```
+
+O GitHub usa o **título do PR** como mensagem do squash, e o título estava no
+formato do card. Esse commit — o que introduzia o plano inteiro — não apareceria no
+changelog.
+
+Isso mostra por que a régua fica no hook e não num prompt interativo (`commitizen`
+e afins): a mensagem do squash **não passa por terminal nenhum**. Um prompt ajuda a
+escrever; só o `commit-msg` garante, porque é por onde toda mensagem passa.
+
+### A régua
+
+Conventional Commits, e não uma convenção nossa — é o que as ferramentas de
+changelog já sabem ler. Inventar formato daria trabalho duas vezes.
+
+```
+tipo(escopo)!: o que mudou
+```
+
+| conferência | o que protege |
+|---|---|
+| tipo da lista fechada | tipo livre vira sinônimo (`bugfix`, `hotfix`) e desfaz o agrupamento |
+| tipo em minúsculas | `Feat` e `feat` viram grupos **separados** na mesma versão |
+| escopo não vazio | `feat(): x` parece que alguém ia dizer algo e parou |
+| assunto ≤ 100 | acima disso é cortado na lista de commits e no changelog |
+| sem ponto final | o changelog emenda o assunto a marcadores, e o ponto sobra |
+
+Cada defeito tem **laudo próprio**. Um "formato inválido" genérico obrigaria quem
+foi barrado a adivinhar qual regra quebrou — e adivinhar três vezes é o que faz
+alguém desligar o hook.
+
+O que o **git** gera passa (`Merge`, `Revert`, `fixup!`, `squash!`): ninguém
+escreveu aquilo, e barrá-lo quebraria operações normais em vez de melhorar o
+histórico. Mas só o formato exato escapa — `Mergeando o trabalho` é humano e não
+passa, senão o prefixo vira brecha.
+
+### Relação com o commitlint
+
+O [commitlint](https://commitlint.js.org) é a ferramenta madura desta régua, e a
+implementação embutida foi confrontada com ela caso a caso: **9 de 10 assuntos
+recebem o mesmo veredito**.
+
+O único divergente é `feat(): x` — o commitlint aceita escopo vazio, o Anchors
+barra. A **direção** dessa divergência é deliberada e está fixada por teste: ser
+mais estrito é seguro, porque o que passa aqui passa lá. Um projeto que troque a
+régua embutida pelo commitlint não descobre um histórico que a ferramenta nova
+reprova; o contrário produziria exatamente isso.
+
+Uma regra do commitlint fica de fora: `subject-case`, que barra assunto começando
+com maiúscula. Ela reprova `feat: SBOM sai da pasta ignorada` — não distingue sigla
+legítima de frase capitalizada. Num projeto que fala de SBOM, CI e PR isso é atrito
+sem ganho, e barrar sem razão empurra para o mesmo lugar de sempre: desligar o hook.
+
+**Onde há Node, use o commitlint** — mais regras, mais configurável, e é o que o
+ecossistema de changelog espera encontrar. A régua embutida existe para o projeto
+que não tem: exigir um runtime inteiro para validar uma linha de texto contradiria
+a proposta de funcionar em qualquer stack.
+
+---
+
 ## 9. Resumo do pilar
 
 - **Gate = âncora de qualidade.** Guia um limiar medido, confronta executando a

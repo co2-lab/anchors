@@ -229,6 +229,79 @@ verdade dele é *datada* ("isto foi feito"), não *atual*. Por isso é camada RE
 não semeia trabalho e não é confrontada. Deixá-lo em `plans/` faria o watcher reabrir
 trabalho entregue a cada edição, e a fila mostraria como pendente o que acabou.
 
+## 6.2 Quando o plano precisa mudar
+
+Planejar erra, e quem descobre o erro é **quem implementa** — o plano só encontra a
+realidade quando alguém tenta segui-lo.
+
+O gatilho não é só incoerência. O plano pode estar perfeitamente **coerente e
+incompleto**: a falta não aparece no texto, porque o que falta não está escrito em
+lugar nenhum. Um plano de fundação que não previu migrations é coerente do começo ao
+fim — e ninguém veria isso lendo o plano.
+
+Incoerência e lacuna são descobertas diferentes com o **mesmo fluxo**.
+
+### Quem interpreta é quem descobriu
+
+O agente que achou avalia o impacto, e a interpretação escolhe a saída. O gate não
+decide isso, e não deveria: ele só valida que a decisão foi tomada e ficou escrita.
+
+| interpretação | saída | o card de origem |
+|---|---|---|
+| **muda a direção** do projeto, ou há dúvida | issue com `anchors:precisa-do-usuario` | **para** |
+| não muda a direção | issue comum, nasce em `to-do` | **segue** |
+| trivial, e já estou editando o arquivo | corrige e registra a revisão | — |
+
+```console
+$ anchors escalate "o plano não cobre migrations" --sobre plans/0001.md --card 12
+$ anchors escalate "..." --sobre plans/0001.md --para-usuario
+```
+
+O card de origem seguir na issue comum é deliberado: a mudança não impacta a
+direção, e travar o trabalho seria efeito colateral que ninguém pediu.
+
+Isto é **ergonomia**, e aqui ela decide o resultado: enquanto abrir a issue certa for
+mais trabalhoso que corrigir em silêncio, o agente corrige em silêncio.
+
+### A revisão fica no próprio documento
+
+```markdown
+> **FNDTN-R0001:** o exemplo citava um pacote que não existe.
+```
+
+O formato é `{CÓDIGO}-R000N`, e segue o vocabulário que já existe (`FNDTN-F04` para
+fase). A **numeração** é o que uma marca solta não daria: `-R0003` responde *"mudou
+três vezes"*, e o gate cobra que seja sequencial — com buraco, ela deixa de
+responder isso.
+
+Não se usa o `revises:` para isto: ele serve para **plano revisa plano**, e criar um
+plano inteiro para corrigir uma redação seria desproporcional.
+
+### O gate `plano-alterado-justificado`
+
+Um plano corrigido em silêncio faz o projeto caminhar para um destino que ninguém
+escolheu — e **nenhum gate de estado vê isso**, porque o plano corrigido fica
+perfeitamente válido: a incoerência foi removida. O que denuncia não é o estado do
+arquivo, é a **mudança sem justificativa**.
+
+Por isso o gate se ancora na perspectiva `--changed` e se abstém em `--all`: ali não
+existe "alterado", e cobrar revisão de todo plano acusaria quem acertou de primeira.
+
+Duas conferências evitam que ele acuse inocente:
+
+- **`--changed` entrega o raio de impacto**, não só o nó alterado — as specs que o
+  plano semeia entram no escopo sem terem mudado. Sem separar os dois, alterar um
+  plano acusava oito arquivos.
+- **`--changed X` é uma afirmação de quem chama**, não uma medição. O pre-commit
+  passa todo arquivo staged, inclusive os que entraram por rebase ou merge. O git
+  confirma antes de o gate cobrar.
+
+E quem já se explica por outro mecanismo passa: um plano com `revises:` ou
+`@revised-by` não precisa dizer a mesma coisa em duas notações — exigir isso ensina
+a satisfazer o gate em vez de comunicar, que é o oposto do que ele existe para fazer.
+
+---
+
 ## 7. Relação com os outros pilares
 
 - **Usa a Estrutura de Projeto** (`STRUCTURE.md`): as camadas em que o plano se

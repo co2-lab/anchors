@@ -192,6 +192,77 @@ $ anchors doctor --check-pipelines
 Ele responde **uma** pergunta e sai com o código certo. O `doctor` completo responde
 dezenas, e num pipeline isso é ruído: quem chama de lá quer uma resposta, não um raio-X.
 
+## 7.1 O achado vai para onde alguém o vê
+
+No modo local, o achado de gate vira arquivo em `issues/` e o protocolo é mover a
+pasta à mão: `todo/` → `doing/` → `done/`. É assim que se pega trabalho sem GitHub.
+
+No modo github isso é duplicação — e a parte grave não é o arquivo sobrando.
+Medido: **onze achados** (`trinca-completa`, `rule-types`, `guide-checklist`)
+existiam só em arquivo local, e **nenhum** virou card. O board mostrava o trabalho
+planejado e escondia o que os gates tinham encontrado. Quem olhasse o board
+concluiria que não havia nada a corrigir.
+
+O ciclo de vida é o mesmo, com outro substrato:
+
+| local | github |
+|---|---|
+| arquivo em `todo/` | issue aberta, com a label do fluxo e `anchors:to-do` |
+| mover para `done/` | issue **fechada** |
+| reabrir de `done/` | issue **reaberta**, com o novo laudo em comentário |
+| `future/` (dívida) | issue **sem** estado de fluxo — fica fora do board até vencer |
+
+A **deduplicação**, que no local vem de procurar o arquivo pelas pastas, aqui vem de
+um marcador estável no corpo:
+
+```html
+<!-- anchors-issue-key: gate:alvo:kind -->
+```
+
+A busca do GitHub é por texto e devolve aproximações — a confirmação é o marcador
+exato. Sem ela, um achado sobre `Foo.spec.md` casaria o card de `FooBar.spec.md`, e
+o Anchors fecharia o card errado.
+
+O roteamento fica no pacote, não nos chamadores: são oito pontos entre `check` e
+`judge`, e espalhar `if modoGitHub` por eles garantiria que o próximo ponto a nascer
+esquecesse. O destino **padrão** continua sendo arquivo — quem não configurou nada
+não pode acabar falando com a rede sem pedir.
+
+> **Limitação conhecida:** se o **alvo** do achado é removido, o card não fecha
+> sozinho. O `Resolve` só dispara quando um gate que reprovou volta a *passar*, e um
+> arquivo apagado não deixa nó a confrontar. Vale para o modo local do mesmo jeito.
+
+### O julgamento é a exceção, e não vira card
+
+A task de julgamento (`.anchors/tasks/`) **não** vai para o GitHub, e a razão é que
+ela é trabalho do **commit atual**: quem mexeu no arquivo é quem tem o contexto para
+responder. Mandá-la ao board empurraria para outro alguém uma pergunta que só quem
+editou sabe responder — e ela sumiria no meio das outras.
+
+Por isso ela é resolvida **antes** de o trabalho sair da máquina:
+
+```console
+$ anchors check --changed <arquivo>
+✗ barrado — 1 alvo(s) aguardam julgamento.
+$ anchors judge <alvo> --gate <g> --verdict pass --reason "..."
+$ anchors check --changed <arquivo>     # destravado
+```
+
+Barra em `--changed` (a perspectiva do pre-commit) e não em `--all`: o `--all` é a
+foto do projeto inteiro, e derrubá-lo por pendência acumulada tornaria impossível
+medir um projeto que já tem.
+
+O `.anchors/` inteiro fica no `.gitignore` — ele guarda o que descreve uma
+**execução**, não o projeto. Um julgamento pendente num PR passa a ser sinal de que
+alguém contornou o gate.
+
+O que descreve o **projeto** nasce fora dali. O SBOM é o exemplo: ele estava em
+`.anchors/sbom.json` prometendo, no próprio gate, ser *"gerado e versionável"* —
+enquanto era gravado numa pasta destinada a ser ignorada. Hoje nasce na raiz. A
+distinção não é *quem gerou* o arquivo, é **o que ele descreve**.
+
+---
+
 ## 8. O que existe hoje
 
 - `config.Workflow` com `Mode`/`Repo`/`Labels` e `Config.ModoGitHub()`
