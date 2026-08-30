@@ -466,7 +466,7 @@ var planTemplate = template{
 			Body: "## Definição de pronto\n\n- TODO: o comando que passa, ou o gate que fica verde.\n\n"},
 
 		{Key: "revision", Title: "Revisão de outro plano (quando este revisa)", Default: true,
-			Purpose: "Só quando este plano REVISA outro. Declare `supersedes: plans/00XX-nome.md` no " +
+			Purpose: "Só quando este plano REVISA outro. Declare `revises: plans/00XX-nome.md` no " +
 				"header, e escreva aqui o que muda e por quê. O plano revisado NÃO é editado — ele " +
 				"continua sendo o registro do que se decidiu na época —, mas ganha no topo um aviso " +
 				"apontando para cá, senão quem o lê fora de ordem segue uma decisão revista.",
@@ -475,16 +475,49 @@ var planTemplate = template{
 				"**O que continua valendo:** TODO — para quem leu o anterior saber o que não mudou.\n\n" +
 				"> ⚠ **Falta um passo, e ele é no OUTRO arquivo.**\n" +
 				">\n" +
-				"> Declare `supersedes: plans/00XX-nome.md` no header DESTE plano, e escreva no\n" +
+				"> Declare `revises: plans/00XX-nome.md` no header DESTE plano, e escreva no\n" +
 				"> **topo daquele**:\n" +
 				">\n" +
 				"> ```\n" +
-				"> > **Revisado por** `plans/00YY-este.md` — <o que mudou e por quê>\n" +
+				"> > [!IMPORTANT]\n" +
+				"> > Revisado por `plans/00YY-este.md` — <o que mudou e por quê>\n" +
+				"> >\n" +
+				"> > (ou `@revised-by: plans/00YY-este.md`, a forma buscável por grep)\n" +
 				"> ```\n" +
 				">\n" +
 				"> Sem isso, quem abrir o plano antigo segue uma decisão que foi revista: ele\n" +
 				"> continua parecendo coerente, porque É o registro coerente do que se decidiu na\n" +
-				"> época. O gate `plano-revisado` reprova até o aviso existir — e apagar esta\n" +
-				"> caixa depois de cumprir os dois passos.\n\n"},
+				"> época. O gate `plano-revisado` reprova até o aviso existir.\n" +
+				">\n" +
+				"> **E marque as PARTES atingidas, não só o topo.** O aviso de topo diz que o\n" +
+				"> plano mudou; ele não diz ONDE. Quem lê a fase 3 não sabe se ela é uma das que\n" +
+				"> mudaram — e o custo de descobrir é reler o plano inteiro procurando.\n" +
+				">\n" +
+				"> A marcação depende do que já aconteceu:\n" +
+				">\n" +
+				"> - **parte JÁ IMPLEMENTADA** — o texto FICA como está: ele descreve o que foi\n" +
+				">   feito, e reescrevê-lo faria o registro mentir sobre o passado. Acrescente\n" +
+				">   abaixo dele:\n" +
+				">\n" +
+				">   ```\n" +
+				">   > [!WARNING]\n" +
+				">   > Alterado por `plans/00YY-este.md` — <o que muda daqui em diante>.\n" +
+				">   > O texto acima descreve o que FOI implementado.\n" +
+				">   ```\n" +
+				">\n" +
+				"> - **parte AINDA NÃO implementada** — reescreva o texto com o comportamento\n" +
+				">   novo, e preserve o antigo ao lado:\n" +
+				">\n" +
+				">   ```\n" +
+				">   > [!WARNING]\n" +
+				">   > Alterado por `plans/00YY-este.md`.\n" +
+				">   > **Era:** <o texto original>\n" +
+				">   > **Por quê:** <o que se aprendeu>\n" +
+				">   ```\n" +
+				">\n" +
+				"> A diferença é o que o registro precisa preservar: no primeiro caso, o que se\n" +
+				"> fez; no segundo, o que se pretendia fazer e por que mudou.\n" +
+				">\n" +
+				"> Apague esta caixa depois de cumprir os passos.\n\n"},
 	},
 }
