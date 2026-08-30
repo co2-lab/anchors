@@ -666,7 +666,36 @@ sobra — a regra do artefato órfão, a prioridade da direita para a esquerda, 
 disso é projetar a abstração sem saber quais operações realmente importam — e a §7 ainda
 tem pontos abertos que só o uso responde.
 
-### 7.16 O que ainda não está resolvido
+### 7.16 O CI roda o binário PUBLICADO, não o seu
+
+Duas armadilhas da mesma família, e as duas mordem em silêncio: **o que vale no seu
+terminal não vale no CI até você publicar.**
+
+**O binário.** Os pipelines baixam o release (`ANCHORS_VERSION: latest`), e não compilam
+do fonte. Toda mudança no *schema* do `anchors.yaml` — um campo novo, um valor que passa a
+aceitar lista — exige um release antes de valer no CI. Sem ele, o pipeline falha com
+`field X not found`, ou pior: **lê o arquivo e ignora o campo que não conhece**, e o mapa
+sai incompleto sem que nada acuse.
+
+Aconteceu três vezes numa sessão. A terceira foi a mais cara de ver, porque não deu erro:
+o board publicava as fases mas com `parent` vazio em todos os cards, e a árvore saía
+plana. O binário antigo simplesmente não lia o campo.
+
+**O branch.** Workflow agendado (`schedule`) e `workflow_run` rodam do **branch padrão**,
+não do que você está trabalhando. Uma correção de pipeline só passa a valer quando chega
+lá — e enquanto não chega, a versão defeituosa continua rodando a cada 30 minutos.
+
+Foi o que manteve um `stale` quebrado reciclando trabalho pronto por horas, depois de
+corrigido na develop.
+
+**O que fazer:**
+
+- mudou o schema do `anchors.yaml`? publique o release ANTES de esperar o CI funcionar;
+- corrigiu um pipeline agendado? ele só vale depois de mesclar no branch padrão;
+- e quando um pipeline "funciona mas o resultado está errado", suspeite da VERSÃO antes
+  de procurar o defeito no código.
+
+### 7.17 O que ainda não está resolvido
 
 - **Como o agente sabe QUAL card recebeu**, sem ficar consultando em laço? O
   `workflow_dispatch` não devolve resultado ao chamador; o agente precisa consultar depois,
