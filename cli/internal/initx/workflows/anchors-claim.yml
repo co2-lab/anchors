@@ -89,9 +89,14 @@ jobs:
           # metade — e trabalho pela metade não entrega nada, ocupa revisor, e envelhece
           # até o contexto de quem o escreveu se perder.
           : > /tmp/disponiveis.txt
+          # `--label` repetido é E, não OU: o card precisa ter a do Anchors E a de estado.
+          # O ESCALADO fica de fora — enquanto espera decisão humana, entregá-lo a um
+          # agente produziria a revisão que já se sabe que não vai convergir.
           for estado in "anchors:ready-to-review" "anchors:to-do"; do
             gh issue list --state open --label "$LABEL" --label "$estado" \
-              --limit 200 --json number --jq '.[].number' >> /tmp/disponiveis.txt
+              --limit 200 --json number,labels \
+              --jq '.[] | select([.labels[].name] | index("anchors:precisa-do-usuario") | not) | .number' \
+              >> /tmp/disponiveis.txt
           done
 
           # A ORDEM DE TRABALHO: um card cuja dependência não fechou não pode ser
@@ -245,26 +250,62 @@ jobs:
             # A indentação do heredoc é exigida pelo YAML (o bloco `run:` a
             # define), e o `sed` a remove antes de escrever o arquivo — sem
             # isso o markdown chega ao GitHub como bloco de código.
-            # AS VOLTAS DE REVISÃO são contadas, porque o desfecho "corrija você mesmo"
-            # abre a possibilidade de dois revisores corrigirem um ao outro para sempre —
-            # e cada volta PARECE progresso, então ninguém percebe.
+            # AS VOLTAS DE REVISÃO são contadas e ANOTADAS no card, porque o desfecho
+            # "corrija você mesmo" abre a possibilidade de dois revisores corrigirem um ao
+            # outro para sempre — e cada volta PARECE progresso, então ninguém percebe.
             #
-            # Três é onde a conversa deixou de convergir. O número não vem de medição, e
-            # está aqui para ser ajustado por quem observar o time; o que ele produz não é
-            # bloqueio, é um aviso no card com o histórico à vista.
+            # O número aparece SEMPRE, e não só no limite: quem pega a revisão precisa
+            # saber se é a primeira ou a sétima antes de começar. Uma sétima merece ler o
+            # histórico antes de opinar; uma primeira, não.
             voltas=$(gh issue view "$livre" --json comments \
               --jq '[.comments[].body | select(startswith("## Revisão"))] | length')
-            if [ "${voltas:-0}" -ge 3 ]; then
-              sed 's/^              //' > /tmp/aviso.md <<'AVISO'
-              ⚠ **Muitas revisões neste card.**
+            voltas=${voltas:-0}
+            proxima=$((voltas + 1))
 
-              Quando a revisão não converge, o problema costuma estar ANTES do código: a
-              spec não decide o que precisava decidir, e cada revisor lê o vazio de um
-              jeito.
+            # DEZ é o limite, e aí o card sai da alçada dos agentes.
+            #
+            # Não é bloqueio arbitrário: dez revisões sem convergir não é problema de
+            # código, é decisão que ninguém tomou. Continuar rodando produziria a décima
+            # primeira, e o custo já foi pago nove vezes.
+            #
+            # A label é um EIXO à parte do estado: o card fica onde está, e o que muda é
+            # quem pode destravá-lo. Fosse estado, ele sairia da coluna onde o trabalho
+            # realmente parou.
+            if [ "$voltas" -ge 10 ]; then
+              gh issue edit "$livre" --add-label "anchors:precisa-do-usuario" >/dev/null 2>&1 || true
+              sed 's/^                //' > /tmp/escala.md <<'ESCALA'
+                🛑 **Este card precisa de uma decisão humana.**
+
+                São 10 revisões sem convergir, e isso deixou de ser problema de código: é
+                uma decisão que ninguém tomou. A décima primeira revisão produziria a
+                décima segunda — o custo já foi pago nove vezes.
+
+                **O que costuma estar por trás:** a spec não decide o que precisava
+                decidir, e cada revisor lê o vazio de um jeito. Leia as revisões
+                anteriores e procure o ponto em que elas discordam sobre o que a spec
+                PEDE, não sobre o que o código faz.
+
+                **Como destravar:** decida o ponto e escreva a decisão NA SPEC (uma regra
+                nova, com código). Depois remova a label `anchors:precisa-do-usuario` e o
+                fluxo segue.
+
+                Enquanto a label estiver aqui, o pipeline de claim não entrega este card.
+                ESCALA
+              gh issue comment "$livre" --body-file /tmp/escala.md
+              echo "· #$livre ESCALADO ao usuário — $voltas revisões sem convergir"
+              exit 0
+            fi
+
+            if [ "$voltas" -ge 3 ]; then
+              sed 's/^              //' > /tmp/aviso.md <<'AVISO'
+              ⚠ **A revisão não está convergindo.**
+
+              Quando isso acontece, o problema costuma estar ANTES do código: a spec não
+              decide o que precisava decidir, e cada revisor lê o vazio de um jeito.
 
               Antes de revisar de novo, leia as revisões anteriores e pergunte se o
               desacordo é sobre o CÓDIGO ou sobre o que a SPEC pede. Se for o segundo, o
-              caminho é abrir uma decisão em aberto na spec — não uma quarta rodada.
+              caminho é abrir uma decisão em aberto na spec — não mais uma rodada.
               AVISO
               gh issue comment "$livre" --body-file /tmp/aviso.md
             fi
@@ -333,7 +374,12 @@ jobs:
             > `gh pr merge <n> --merge --admin`; quem não for, roda `anchors doctor --fix` para
             > desligar a exigência (a revisão continua sendo cobrada pelo estado do card).
             INSTRUCAO
-            gh issue comment "$livre" --body-file /tmp/instrucao.md
+            # A CONTAGEM entra no topo da instrução: quem pega a sétima revisão precisa
+            # saber disso ANTES de começar a ler, para procurar o desacordo em vez de
+            # opinar do zero.
+            printf '## Revisão %s deste card — o que fazer\n' "$proxima" > /tmp/cabecalho.md
+            tail -n +2 /tmp/instrucao.md >> /tmp/cabecalho.md
+            gh issue comment "$livre" --body-file /tmp/cabecalho.md
           fi
 
           if [ -n "$retomado" ]; then

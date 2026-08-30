@@ -136,6 +136,17 @@ var EstadosDoTrabalho = []string{
 	"anchors:production",
 }
 
+// LabelPrecisaDoUsuario marca o card que ESPERA UMA PESSOA.
+//
+// Não é um estado do fluxo, e por isso não entra em `EstadosDoTrabalho`: o card continua
+// onde está (`in-review`, `to-do`), e o que muda é QUEM pode destravá-lo. Fosse estado,
+// um card escalado sairia da coluna onde o trabalho realmente parou, e o board deixaria
+// de mostrar onde o fluxo travou.
+//
+// É a mesma distinção que `issue.DonoUsuário` faz para as issues em `issues/`: o dono é
+// um eixo independente do estado.
+const LabelPrecisaDoUsuario = "anchors:precisa-do-usuario"
+
 // ColunasDoBoard são os nomes das colunas do Project que ESPELHAM os estados acima.
 // O board é opcional: quem o quiser cria as colunas com estes nomes e liga a automação
 // nativa do Projects (label adicionada → move para a coluna). Quem não quiser trabalha

@@ -212,9 +212,18 @@ func criaLabelsDeEstado(cfg *config.Config) error {
 		"anchors:in-progress": "1d76db", "anchors:in-review": "1d76db",
 		"anchors:ready-to-test": "0e8a16", "anchors:in-test": "0e8a16",
 		"anchors:ready-to-release": "0e8a16", "anchors:production": "0e8a16",
+		// VERMELHO, e é o único: o card escalado é o que ninguém no fluxo destrava, e
+		// precisa saltar num board cheio de cinza e azul.
+		initx.LabelPrecisaDoUsuario: "d73a4a",
 	}
 	var criadas int
-	for _, e := range append([]string{cfg.Workflow.Labels[0]}, initx.EstadosDoTrabalho...) {
+	// A label de ESCALAÇÃO entra junto: sem ela criada, o pipeline que escala um card
+	// falha ao aplicá-la — e falha em silêncio, porque `gh issue edit` com label
+	// inexistente não é erro fatal. O card ficaria travado sem o sinalizador que diz por
+	// quê.
+	todas := append([]string{cfg.Workflow.Labels[0], initx.LabelPrecisaDoUsuario},
+		initx.EstadosDoTrabalho...)
+	for _, e := range todas {
 		c := cor[e]
 		if c == "" {
 			c = "5319e7" // a label do próprio Anchors

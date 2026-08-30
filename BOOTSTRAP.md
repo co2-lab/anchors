@@ -501,9 +501,20 @@ que já tinha descarregado o contexto, precisa reconstruí-lo para uma correçã
 revisor sabia fazer.
 
 O risco do caminho novo é o card circular entre revisores para sempre, cada volta
-parecendo progresso. Por isso o pipeline CONTA as revisões e avisa a partir da terceira:
-quando a revisão não converge, o problema costuma estar antes do código — a spec não
-decide o que precisava decidir, e cada revisor lê o vazio de um jeito.
+parecendo progresso. Por isso o pipeline CONTA as revisões e escreve o número no card —
+quem pega a sétima precisa saber disso antes de começar a ler, para procurar o desacordo
+em vez de opinar do zero.
+
+Na terceira, um aviso: quando a revisão não converge, o problema costuma estar antes do
+código — a spec não decide o que precisava decidir, e cada revisor lê o vazio de um jeito.
+
+Na **décima**, o card sai da alçada dos agentes. Ganha `anchors:precisa-do-usuario` e o
+claim deixa de entregá-lo: dez revisões sem convergir não é problema de código, é uma
+decisão que ninguém tomou, e a décima primeira produziria a décima segunda.
+
+A label é um EIXO à parte do estado — o card continua na coluna onde o trabalho parou, e
+o que muda é quem pode destravá-lo. Fosse estado, o card sairia dessa coluna e o board
+deixaria de mostrar onde o fluxo travou.
 
 Três desfechos:
 

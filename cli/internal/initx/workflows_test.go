@@ -227,6 +227,10 @@ func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 	for _, c := range EstadosDoTrabalho {
 		valida[c] = true
 	}
+	// A label de ESCALAÇÃO é válida sem ser estado: ela marca QUEM destrava o card, e o
+	// card continua na coluna onde o trabalho parou. Tratá-la como estado a faria sair
+	// dessa coluna, e o board deixaria de mostrar onde o fluxo travou.
+	valida[LabelPrecisaDoUsuario] = true
 	for _, w := range WorkflowsDoFluxo {
 		b, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {
@@ -445,5 +449,36 @@ func TestSemeiaEscreveAPaginaDoBoard(t *testing.T) {
 	// repositório de quem adotou.
 	if strings.Contains(ArquivoDoBoard, DirWorkflows) {
 		t.Errorf("a página não pode morar em %s: o GitHub tentaria executá-la", DirWorkflows)
+	}
+}
+
+// O CARD ESCALADO sai da fila. Sem isso a escalação não teria efeito: o pipeline
+// entregaria a um agente o card que já se sabe que não converge, e a décima primeira
+// revisão produziria a décima segunda.
+func TestClaimPulaCardEscalado(t *testing.T) {
+	b, err := workflowsFS.ReadFile("workflows/anchors-claim.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+	if !strings.Contains(texto, `index("`+LabelPrecisaDoUsuario+`") | not`) {
+		t.Error("o claim precisa EXCLUIR o card escalado da lista de disponíveis — " +
+			"senão a escalação vira só um rótulo")
+	}
+	// E precisa escalar em algum limite: contar sem agir deixaria o ciclo rodando.
+	if !strings.Contains(texto, "--add-label \""+LabelPrecisaDoUsuario+"\"") {
+		t.Error("o claim precisa APLICAR a label ao atingir o limite")
+	}
+}
+
+// A label de escalação tem de ser CRIADA no repositório. `gh issue edit` com label
+// inexistente não é erro fatal — ele falha em silêncio, e o card ficaria travado sem o
+// sinalizador que diz por quê.
+func TestLabelDeEscalacaoNaoEhEstado(t *testing.T) {
+	for _, e := range EstadosDoTrabalho {
+		if e == LabelPrecisaDoUsuario {
+			t.Fatal("a escalação NÃO é estado: o card continua na coluna onde o trabalho " +
+				"parou, e o que muda é quem pode destravá-lo")
+		}
 	}
 }
