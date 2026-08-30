@@ -117,6 +117,18 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				return fmt.Errorf("carregar mapa: %w (rode `anchors map build`)", err)
 			}
 
+			// BINÁRIO MAIS VELHO QUE O MAPA. Ele não falha — grava o formato que conhece,
+			// e desfaz o que a versão nova escreveu. Medido: um build local anterior a um
+			// rename de campo revertia 26 linhas a cada `check`, e o mapa ficava oscilando
+			// entre dois formatos, com conflito a cada PR.
+			//
+			// O aviso não barra: o binário velho ainda faz o trabalho da versão dele, e
+			// derrubar o CI trocaria "faz menos do que devia" por "não faz nada" — a mesma
+			// razão do `doctor --check-pipelines`.
+			if avisoDeBinarioVelho(g.GeradoPor, version) != "" {
+				fmt.Fprintln(os.Stderr, avisoDeBinarioVelho(g.GeradoPor, version))
+			}
+
 			// Os arquivos que de fato MUDARAM, distintos do raio de impacto que o
 			// `selectNodes` devolve. Um gate que julga a mudança precisa dos primeiros;
 			// os demais, do raio. Ver Config.Alterados.
@@ -1346,4 +1358,20 @@ func julgamentosNaFila(root string) int {
 		}
 	}
 	return n
+}
+
+// avisoDeBinarioVelho compara quem gravou o mapa com quem está rodando.
+//
+// Compara por IGUALDADE, e não por ordem: "dev" não é ordenável contra "0.1.9", e os dois
+// builds locais que produziram o defeito se chamavam "dev" — ordenar não teria pego
+// nenhum deles. Diferente já é o suficiente para avisar; QUAL é mais novo, quem lê decide.
+func avisoDeBinarioVelho(gravouMapa, rodando string) string {
+	if gravouMapa == "" || gravouMapa == rodando {
+		return ""
+	}
+	return fmt.Sprintf("⚠ o mapa foi gravado por `anchors %s` e este é o %s.\n"+
+		"  Versões diferentes escrevem o mapa de jeitos diferentes: a mais velha DESFAZ o\n"+
+		"  que a mais nova gravou, e o mapa passa a oscilar — conflito a cada PR, sem\n"+
+		"  ninguém errar nada. Atualize o binário (ou rode `anchors map build` com o novo\n"+
+		"  e commite) antes de seguir.", gravouMapa, rodando)
 }

@@ -4,6 +4,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/co2-lab/anchors/internal/mapx"
 	"os"
 )
 
@@ -15,6 +16,9 @@ var (
 )
 
 func main() {
+	// O mapa registra QUEM o escreveu, para que um binário mais velho seja acusado em vez
+	// de reverter em silêncio o que a versão nova gravou (ver mapx.GeradoPor).
+	mapx.GeradoPor = version
 	if err := newRootCmd().Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "erro:", err)
 		// "não é regido" sai com código PRÓPRIO: quem automatiza (pre-commit, CI)

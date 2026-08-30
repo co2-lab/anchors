@@ -290,9 +290,13 @@ type Edge struct {
 
 // Graph — o mapa material inteiro. É o anchors.graph.yaml.
 type Graph struct {
-	Version int    `yaml:"version"`
-	Nodes   []Node `yaml:"nodes"`
-	Edges   []Edge `yaml:"edges"`
+	Version int `yaml:"version"`
+	// GeradoPor: a versão do binário que escreveu este mapa. Ver mapx.GeradoPor —
+	// é o que permite ao `check` acusar um binário mais VELHO que o mapa, que
+	// silenciosamente desfaz o que a versão nova escreveu.
+	GeradoPor string `yaml:"gerado_por,omitempty"`
+	Nodes     []Node `yaml:"nodes"`
+	Edges     []Edge `yaml:"edges"`
 }
 
 // Stale devolve true se a aresta está desatualizada dado o estado atual dos nós.

@@ -9,8 +9,20 @@ import (
 // DefaultPath é onde o mapa material vive na raiz do projeto.
 const DefaultPath = "anchors.graph.yaml"
 
+// GeradoPor é a versão do binário que escreve o mapa, preenchida pelo `main` no início.
+//
+// Existe porque um binário DESATUALIZADO não avisa — ele grava o formato que conhece, e
+// desfaz o que a versão nova escreveu. Medido: depois de renomear um campo do carimbo, o
+// `anchors` do PATH (build local anterior) revertia as 26 linhas a cada `check`, e o mapa
+// ficava oscilando entre os dois formatos, com conflito a cada PR.
+//
+// O `--version` não denunciava: os dois builds locais se identificam como "dev". Só o
+// diff do mapa mostrava, e para isso alguém precisa estar olhando.
+var GeradoPor string
+
 // Save escreve o grafo como YAML material e versionável.
 func Save(g *Graph, path string) error {
+	g.GeradoPor = GeradoPor
 	data, err := yaml.Marshal(g)
 	if err != nil {
 		return err
