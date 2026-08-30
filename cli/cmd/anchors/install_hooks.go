@@ -271,6 +271,14 @@ ROOT="$(git rev-parse --show-toplevel)"
 # barrar — sem a mensagem, ele não tem como saber se a reprovação foi dispensada.
 command -v anchors >/dev/null 2>&1 || exit 0
 
+# A MENSAGEM primeiro, e independente de haver arquivo staged: ela é matéria-prima do
+# changelog, e o changelog nasce dos commits. Um assunto fora do formato não some do
+# histórico — some do CHANGELOG, e isso só se descobre quando alguém gera a primeira
+# versão e o que faltou já está a centenas de commits de distância.
+if ! anchors commit-msg "$MSG_FILE"; then
+  exit 1
+fi
+
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$STAGED" ] && exit 0
 
