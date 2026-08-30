@@ -1,0 +1,96 @@
+package gate
+
+import (
+	"strings"
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// O CASO QUE MOTIVOU O GATE: alguém achou uma inconsistência no plano e corrigiu em
+// silêncio. O arquivo fica VÁLIDO — a inconsistência foi removida —, e é por isso que
+// nenhum gate de estado o pega. O que denuncia é a mudança sem justificativa.
+func TestAlterado_semRevisaoReprova(t *testing.T) {
+	v, d := checkPlanoAlteradoJustificado(
+		"# Plano 0001 — Fundação\n\n## Objetivo\n\nTexto corrigido sem dizer nada.\n",
+		mapx.Node{Code: "FNDTN"}, "", nil, nil)
+	if v != Fail {
+		t.Fatalf("plano alterado sem revisão deve reprovar, veio %v: %s", v, d)
+	}
+	// O laudo tem de ENSINAR as duas saídas, senão o agente escolhe a errada por não
+	// saber que a outra existe.
+	if !strings.Contains(d, "FNDTN-R0001") {
+		t.Errorf("o laudo deve mostrar o formato com o código do arquivo; veio: %s", d)
+	}
+	if !strings.Contains(d, "precisa-do-usuario") {
+		t.Errorf("o laudo deve dizer o que fazer quando a correção MUDA A DIREÇÃO; veio: %s", d)
+	}
+}
+
+func TestAlterado_comRevisaoPassa(t *testing.T) {
+	v, d := checkPlanoAlteradoJustificado(
+		"# Plano 0001\n\n> **FNDTN-R0001:** o exemplo citava um pacote que não existe.\n",
+		mapx.Node{Code: "FNDTN"}, "", nil, nil)
+	if v != Pass {
+		t.Fatalf("revisão declarada deveria passar, veio %v: %s", v, d)
+	}
+}
+
+// A revisão de OUTRO documento não justifica a mudança deste. Sem isto, bastaria citar a
+// revisão alheia ao explicar o contexto para o gate calar.
+func TestAlterado_revisaoDeOutroNaoConta(t *testing.T) {
+	v, _ := checkPlanoAlteradoJustificado(
+		"# Plano 0017\n\nComo explica a `MTUAO-R0001`, o CI mudou.\n",
+		mapx.Node{Code: "FNDTN"}, "", nil, nil)
+	if v != Fail {
+		t.Fatalf("revisão de outro código não justifica a mudança deste, veio %v", v)
+	}
+}
+
+// A NUMERAÇÃO é o que uma marca solta não daria: quantas vezes o documento mudou. Com
+// buraco ela para de responder isso.
+func TestAlterado_numeracaoComBuracoReprova(t *testing.T) {
+	v, d := checkPlanoAlteradoJustificado(
+		"> **FNDTN-R0001:** primeira.\n\n> **FNDTN-R0007:** pulou do 1 para o 7.\n",
+		mapx.Node{Code: "FNDTN"}, "", nil, nil)
+	if v != Fail {
+		t.Fatalf("numeração com buraco deve reprovar, veio %v: %s", v, d)
+	}
+}
+
+func TestAlterado_variasRevisoesSequenciaisPassam(t *testing.T) {
+	v, d := checkPlanoAlteradoJustificado(
+		"> **FNDTN-R0001:** primeira.\n\n> **FNDTN-R0002:** segunda.\n\n> **FNDTN-R0003:** terceira.\n",
+		mapx.Node{Code: "FNDTN"}, "", nil, nil)
+	if v != Pass {
+		t.Fatalf("três revisões sequenciais deveriam passar, veio %v: %s", v, d)
+	}
+	// O laudo cita a ÚLTIMA — é a que explica a mudança que está sendo confrontada.
+	if !strings.Contains(d, "R0003") {
+		t.Errorf("o laudo deve citar a revisão mais recente; veio: %s", d)
+	}
+}
+
+// Sem código não há como saber de quem é a revisão. Skip, e não Fail: quem cobra o código
+// é outro gate, e reprovar aqui daria dois achados para um defeito só.
+func TestAlterado_semCodigoPula(t *testing.T) {
+	v, _ := checkPlanoAlteradoJustificado("# Plano\n", mapx.Node{}, "", nil, nil)
+	if v != Skip {
+		t.Fatalf("sem código o gate deve pular, veio %v", v)
+	}
+}
+
+// O marcador tem de sobreviver às formas que as pessoas escrevem markdown: dentro de
+// alerta, em negrito, como item de lista.
+func TestAlterado_formasDeEscreverAMarca(t *testing.T) {
+	for _, forma := range []string{
+		"> **FNDTN-R0001:** dentro de citação e negrito",
+		"FNDTN-R0001: cru, no começo da linha",
+		"> [!NOTE]\n> FNDTN-R0001: dentro de um alerta do GitHub",
+		"**FNDTN-R0001**: negrito antes dos dois-pontos",
+	} {
+		if v, d := checkPlanoAlteradoJustificado(forma, mapx.Node{Code: "FNDTN"}, "", nil, nil); v != Pass {
+			t.Errorf("deveria aceitar %q, veio %v: %s", forma, v, d)
+		}
+	}
+}

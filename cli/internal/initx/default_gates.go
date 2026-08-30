@@ -187,6 +187,19 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "plano-revisado", Blocking: config.Bool(projetoNovo),
 			Measures: "o plano revisado por outro avisa quem o lê",
 		})
+		// O PLANO ALTERADO diz por que mudou. Quem implementa é quem descobre o erro do
+		// plano, e corrigi-lo em silêncio faz o projeto caminhar para um destino que
+		// ninguém escolheu — deriva que nenhum gate de ESTADO vê, porque o plano
+		// corrigido fica válido.
+		//
+		// `skip_on: [all]` não é detalhe: em `--all` não existe "alterado", e cobrar
+		// revisão de todo plano acusaria quem acertou de primeira.
+		gates = append(gates, config.Gate{
+			Name: "plano-alterado-justificado", ID: "plano-alterado-justificado",
+			On: []string{"plan", "spec"}, Check: "plano-alterado-justificado",
+			Blocking: config.Bool(projetoNovo), SkipOn: []string{"all"},
+			Measures: "o plano/spec alterado registra a revisão que diz por que mudou",
+		})
 		gates = append(gates, config.Gate{
 			Name: "fase-ordenada", ID: "fase-ordenada", On: []string{"plan"}, Check: "fase-ordenada",
 			Blocking: config.Bool(projetoNovo),
