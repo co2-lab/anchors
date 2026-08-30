@@ -200,3 +200,108 @@ jobs:
 
             echo "criado: [$code] $onde → $url"
           done
+
+      - name: Avisar os cards que a revisão de plano atinge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          LABEL: anchors
+        run: |
+          set -euo pipefail
+
+          # UM PLANO REVISADO deixa cards DESATUALIZADOS, e nada avisava.
+          #
+          # O card diz "implementar a spec X", e a spec X mudou de exigência. Quem o pegar
+          # implementa a versão antiga sem saber — e descobre na revisão, ou nunca.
+          #
+          # O que este passo faz depende de ONDE o card está, e a distinção evita tanto o
+          # silêncio quanto o ruído:
+          #
+          #   • `to-do` — comenta. O trabalho não começou, e quem pegar lê o card antes.
+          #   • `in-progress` / `in-review` — comenta E marca com `anchors:precisa-do-usuario`:
+          #     alguém está trabalhando AGORA sobre uma régua que mudou, e isso é decisão
+          #     (continuar? refazer?) que o agente não toma sozinho.
+          #   • `ready-to-test` em diante — NÃO mexe. O trabalho foi entregue sob a régua da
+          #     época, e reabri-lo apagaria a entrega. O que mudou vira trabalho NOVO, e o
+          #     plano que revisa semeia as specs dele.
+
+          # Os planos que declaram `revises`, e as specs que eles semeiam.
+          anchors code list --json > /tmp/todos.json 2>/dev/null || echo '[]' > /tmp/todos.json
+          revisados=$(jq -r '[.[] | select(.kind == "plan") | .needs // [], .revises // []]
+                             | flatten | .[]' /tmp/todos.json 2>/dev/null | sort -u || true)
+          [ -z "$revisados" ] && exit 0
+
+          for plano in $revisados; do
+            # O CÓDIGO do plano revisado, e as specs que pertencem a ele (`parent`).
+            cod=$(jq -r --arg p "$plano" '.[] | select(.arquivo == $p) | .code' /tmp/todos.json)
+            [ -n "$cod" ] || continue
+
+            # AS FASES ATINGIDAS, e não o plano inteiro.
+            #
+            # `revises` diz que o plano mudou; as marcações de parte dizem ONDE. Avisar
+            # todas as specs do plano por causa de uma fase alterada é o ruído que faz o
+            # aviso deixar de ser lido — e o custo é alto, porque quem recebe um aviso que
+            # não se aplica aprende a ignorar o próximo, que se aplica.
+            #
+            # A fase atingida é a que CONTÉM a marcação — a última declarada antes dela.
+            #
+            # Uma janela de linhas em volta do `[!WARNING]` não serve: ela alcança o
+            # cabeçalho da fase ANTERIOR e avisa cards que a revisão não toca. Medido: 3
+            # fases acusadas onde só 2 mudaram.
+            fases=$(awk -v cod="$cod" '
+              $0 ~ ("^#+ +" cod "-F[0-9][0-9]") { match($0, cod "-F[0-9][0-9]"); atual=substr($0, RSTART, RLENGTH) }
+              /\[!WARNING\]|@amended-by/ && atual != "" { print atual }
+            ' "$plano" 2>/dev/null | sort -u || true)
+            if [ -z "$fases" ]; then
+              echo "· $plano é revisado e não marca fase nenhuma — nenhum card a avisar"
+              continue
+            fi
+            afetadas=""
+            for f in $fases; do
+              afetadas="$afetadas $(jq -r --arg f "$f" \
+                '.[] | select((.parent // "") == $f) | .code' /tmp/todos.json || true)"
+            done
+
+            for spec in $afetadas; do
+              n=$(gh issue list --state open --label "$LABEL" --limit 200 --json number,title \
+                --jq "[.[] | select(.title | startswith(\"[$spec]\"))] | .[0].number // empty")
+              [ -n "$n" ] || continue
+
+              # JÁ AVISADO? Um pipeline que repete o aviso a cada push transforma o card
+              # num mural, e ninguém lê mural.
+              if gh issue view "$n" --json comments \
+                   --jq '[.comments[].body | select(contains("plano revisado"))] | length' \
+                 | grep -qv '^0$'; then
+                continue
+              fi
+
+              estado=$(gh issue view "$n" --json labels --jq \
+                '[.labels[].name | select(startswith("anchors:"))] | .[0] // ""')
+              case "$estado" in
+                anchors:ready-to-test|anchors:in-test|anchors:ready-to-release|anchors:production)
+                  # Entregue sob a régua da época: não se reabre.
+                  continue ;;
+              esac
+
+              printf '%s\n' \
+                '⚠ **O plano que rege esta unidade foi revisado.**' '' \
+                "O plano \`$plano\` foi revisado por outro, e o que se espera desta spec pode" \
+                'ter mudado. Leia o aviso no topo dele e as marcações de parte antes de' \
+                'continuar.' \
+                > /tmp/aviso-rev.md
+
+              case "$estado" in
+                anchors:in-progress|anchors:in-review)
+                  printf '%s\n' '' \
+                    '**Este card está em andamento**, e por isso ele espera uma decisão:' \
+                    'continuar como está (a mudança não atinge o que você já fez) ou refazer' \
+                    'sob a régua nova. Não é decisão de agente — o trabalho já custou.' \
+                    >> /tmp/aviso-rev.md
+                  gh issue edit "$n" --add-label "anchors:precisa-do-usuario" >/dev/null 2>&1 || true
+                  ;;
+              esac
+
+              gh issue comment "$n" --body-file /tmp/aviso-rev.md
+              echo "avisado: #$n ($spec) — plano $plano revisado, card em ${estado#anchors:}"
+            done
+          done

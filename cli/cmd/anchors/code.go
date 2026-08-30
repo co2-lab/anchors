@@ -373,10 +373,15 @@ reporta, e aqui ela fica visível de graça.`,
 					// `needs` porque quem monta uma árvore precisa das duas: `parent` dá
 					// a estrutura, `needs` dá a ordem dentro dela.
 					Parent string `json:"parent,omitempty"`
+					// Revises: os planos que ESTE revisa. Sai aqui porque o pipeline de
+					// identificação precisa saber quais planos foram revisados para avisar
+					// os cards que a revisão atinge — e ele não lê o mapa por conta própria.
+					Revises []string `json:"revises,omitempty"`
 				}
 				kinds := kindPorArquivo(mapPath)
 				needs := needsPorArquivo(mapPath)
 				parents := parentPorArquivo(mapPath)
+				revs := revisesPorArquivo(mapPath)
 				out := make([]saida, 0, len(linhas))
 				for _, l := range linhas {
 					arq := codeFile[l.code]
@@ -388,6 +393,7 @@ reporta, e aqui ela fica visível de graça.`,
 						Titulo:  tituloDoArquivo(absRoot, arq),
 						Needs:   needs[arq],
 						Parent:  parents[arq],
+						Revises: revs[arq],
 					})
 				}
 				b, jerr := json.MarshalIndent(out, "", "  ")
@@ -546,6 +552,21 @@ func parentPorArquivo(mapPath string) map[string]string {
 	for _, n := range g.Nodes {
 		if n.Parent != "" {
 			out[n.ID] = n.Parent
+		}
+	}
+	return out
+}
+
+// revisesPorArquivo devolve os planos que cada arquivo do mapa revisa.
+func revisesPorArquivo(mapPath string) map[string][]string {
+	out := map[string][]string{}
+	g, err := mapx.Load(mapPath)
+	if err != nil {
+		return out
+	}
+	for _, n := range g.Nodes {
+		if len(n.Revises) > 0 {
+			out[n.ID] = n.Revises
 		}
 	}
 	return out
