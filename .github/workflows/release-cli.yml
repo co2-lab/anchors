@@ -43,23 +43,41 @@ jobs:
     name: Publicar no Winget
     needs: goreleaser
     runs-on: ubuntu-latest
-    # NÃO derruba a release. Enquanto o pacote não existir no `winget-pkgs`, a action
-    # recusa com "Package does not exist — add at least one version before using this
-    # action": ela ATUALIZA um pacote publicado, e o primeiro envio é um PR manual que a
-    # Microsoft revisa (microsoft/winget-pkgs#425738, aberto e com validação passada).
-    #
-    # É ovo e galinha do primeiro lançamento, e não defeito nosso. Sem isto, TODA release
-    # fica vermelha por um job que se sabe que vai falhar — e um vermelho que se aprende a
-    # ignorar deixa de sinalizar quando algo real quebrar.
-    continue-on-error: true
+
     # O token ambiente não é usado por este job (a action recebe o PAT explicitamente),
     # então não há motivo para ele carregar permissão nenhuma sobre este repositório.
     permissions: {}
     steps:
+      # O PACOTE JÁ EXISTE no winget-pkgs?
+      #
+      # A action ATUALIZA um pacote publicado — ela recusa com "Package does not exist"
+      # enquanto o primeiro envio (um PR manual que a Microsoft revisa) não entrar. É ovo
+      # e galinha do primeiro lançamento, e não defeito nosso.
+      #
+      # Verificar ANTES em vez de `continue-on-error`: aquele engoliria também a falha
+      # REAL — um PAT expirado, o upstream fora do ar — e a release passaria a mentir que
+      # publicou. Aqui a distinção fica explícita: "ainda não dá" pula com aviso, e
+      # qualquer outro erro derruba o job, como deve.
+      - id: existe
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # O manifesto vive num caminho derivado do identificador:
+          # manifests/<inicial>/<Publisher>/<Package>/
+          caminho="manifests/c/co2lab/Anchors"
+          if gh api "repos/microsoft/winget-pkgs/contents/$caminho" --jq '.[0].name' >/dev/null 2>&1; then
+            echo "publicado=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publicado=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::O pacote ainda não está no winget-pkgs — o primeiro envio é um PR manual que a Microsoft revisa. Publicação no Winget PULADA (as demais plataformas seguem)."
+          fi
+
       # SHA fixo, não `@v2`: a action recebe um PAT CLÁSSICO, que tem poder amplo sobre
       # os repositórios da organização. Uma tag é móvel — quem controlasse a action
       # poderia trocar o código sob esse token sem que nada aqui mudasse.
-      - uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
+      - if: steps.existe.outputs.publicado == 'true'
+        uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
         with:
           identifier: co2lab.Anchors
           # PAT CLÁSSICO: o fine-grained não serve para operações de fork.
