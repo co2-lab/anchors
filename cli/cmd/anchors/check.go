@@ -166,6 +166,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// "registrar": grava o veredito por aresta no mapa (destrava stale) e
 			// abre uma issue de violation por fail bloqueante (sobrevive à sessão).
 			// Opt-out honesto: --no-record só reporta, não registra.
+			pendentes := 0
 			if !noRecord {
 				if err := recordCheck(absRoot, mapPath, g, profile); err != nil {
 					fmt.Fprintf(os.Stderr, "aviso: falha ao registrar (carimbo/issue): %v\n", err)
@@ -173,6 +174,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				// gates de JULGAMENTO: enfileira uma task `judge` por alvo pendente,
 				// para uma IA confrontar e reportar com `anchors judge`.
 				if n := enqueueJudgments(absRoot, cfg, profile); n > 0 {
+					pendentes = n
 					fmt.Printf("%d alvo(s) aguardam julgamento de IA — rode `anchors next` (ou `anchors judge --pending`)\n", n)
 				}
 			}
@@ -183,6 +185,29 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 					rel = c
 				}
 				fmt.Printf("\nsaída espelhada em %s — releia daqui em vez de rodar de novo.\n", rel)
+			}
+
+			// JULGAMENTO PENDENTE BARRA O COMMIT, e só o commit — não o `--all`.
+			//
+			// A task de julgamento é trabalho DO COMMIT ATUAL, não da fila do projeto:
+			// quem mexeu no arquivo é quem tem o contexto para responder. Deixá-la
+			// passar empurra para outro alguém uma pergunta que só quem editou sabe
+			// responder — e ela some no meio das outras.
+			//
+			// Por isso ela não vira card: é resolvida ANTES de o trabalho sair da
+			// máquina, e o `.anchors/` fica no `.gitignore`. O PR nasce sem pendência.
+			//
+			// Barra em `--changed` (a perspectiva do pre-commit) e não em `--all`: o
+			// `--all` é a foto do projeto inteiro, e derrubá-lo por um julgamento que
+			// ninguém acabou de criar tornaria impossível medir um projeto que já tem
+			// pendência acumulada.
+			if pendentes > 0 && !all {
+				fmt.Printf("\n✗ barrado — %d alvo(s) aguardam julgamento.\n", pendentes)
+				fmt.Println("  O julgamento é do commit ATUAL: quem mexeu no arquivo é quem tem o")
+				fmt.Println("  contexto para responder. Resolva antes de commitar:")
+				fmt.Println("      anchors judge --pending")
+				espelho.Fechar()
+				os.Exit(1)
 			}
 
 			if !profile.Passed {

@@ -138,9 +138,19 @@ const GitignorePadrão = `# sistema
 .DS_Store
 Thumbs.db
 
-# gerado pelo Anchors
-.anchors/cache/
-.anchors/reports/
+# gerado pelo Anchors — a área de TRABALHO não sobe.
+#
+# O .anchors/ guarda o que descreve uma EXECUÇÃO, não o projeto: a fila de julgamento
+# pendente, o espelho da última saída do check, o cache. Versionar isso põe no diff um
+# ruído que muda sozinho a cada comando.
+#
+# A fila de julgamento em especial não deve subir: ela é trabalho do commit ATUAL, e o
+# check barra enquanto houver pendência. Um arquivo de julgamento pendente num PR é
+# sinal de que alguém contornou o gate.
+#
+# O que descreve o PROJETO fica FORA daqui — o SBOM, por exemplo, nasce na raiz. Assim
+# esta regra não precisa de exceção, e exceção em .gitignore é onde o silêncio mora.
+.anchors/
 `
 
 // MensagemPrimeiroCommit é o assunto do commit inicial. Diz o que é, não o que faz:

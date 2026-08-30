@@ -504,7 +504,17 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			config.Gate{
 				Name: "sbom-gerado", ID: "sbom-gerado", On: []string{"code"},
 				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
-				Run:       "syft scan dir:. -o cyclonedx-json=.anchors/sbom.json -q",
+				// NA RAIZ, e não em `.anchors/`: o SBOM descreve o PROJETO (quais
+				// dependências entraram), não uma execução. O `.anchors/` é área de
+				// trabalho da máquina de quem edita e está inteiro no `.gitignore` —
+				// deixá-lo ali obrigaria a uma exceção frágil (`.anchors/` com barra
+				// exclui o diretório e o git nem desce nele para avaliar a negação,
+				// então o arquivo sumia em silêncio).
+				//
+				// Na raiz ele é achável por quem procura, que é metade da razão de
+				// existir: o SBOM é a resposta a "o que exatamente foi entregue", e essa
+				// pergunta só se faz depois do incidente.
+				Run:       "syft scan dir:. -o cyclonedx-json=sbom.json -q",
 				NeedsTool: "syft", InstallHint: "brew install syft",
 				Blocking: config.Bool(false), When: []string{"ci"}, Cost: "slow",
 				Category: "provenance",

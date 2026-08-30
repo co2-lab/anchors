@@ -155,14 +155,48 @@ func TestGitComoArquivoEhPronto(t *testing.T) {
 // O .gitignore semeado cobre o que o PRÓPRIO Anchors gera. Não adivinha stack: neste
 // ponto do init o preset ainda não foi escolhido.
 func TestGitignoreCobreOQueOAnchorsGera(t *testing.T) {
-	for _, esperado := range []string{".DS_Store", ".anchors/cache/"} {
+	for _, esperado := range []string{".DS_Store", ".anchors/"} {
 		if !strings.Contains(GitignorePadrão, esperado) {
 			t.Errorf(".gitignore padrão deveria ignorar %q", esperado)
 		}
 	}
+	// SEM EXCEÇÃO dentro de `.anchors/`. Uma negação ali é frágil de um jeito silencioso:
+	// `.anchors/` exclui o DIRETÓRIO, o git nem desce nele, e o arquivo "salvo" pela
+	// negação some sem erro nenhum. O que precisa ser versionado nasce FORA — foi o que
+	// se fez com o sbom.json, que hoje é gerado na raiz.
+	if strings.Contains(GitignorePadrão, "!.anchors/") {
+		t.Error("exceção dentro de `.anchors/` não funciona (o diretório é excluído antes) " +
+			"e some em silêncio: o artefato versionável deve nascer fora da área de trabalho")
+	}
 	for _, stack := range []string{"node_modules", "target/", "vendor/"} {
 		if strings.Contains(GitignorePadrão, stack) {
 			t.Errorf(".gitignore não deve chutar stack (%q): o preset ainda não foi escolhido", stack)
+		}
+	}
+}
+
+// O QUE DESCREVE O PROJETO NÃO NASCE EM `.anchors/`.
+//
+// A distinção não é "quem gerou" — é o que o arquivo DESCREVE. O `.anchors/` guarda
+// execução (fila de julgamento, espelho do check, cache) e está inteiro no `.gitignore`.
+// O que descreve o PROJETO tem de nascer fora, ou é engolido.
+//
+// Aconteceu com o SBOM: o gate dizia `Measures: "... é gerado e versionável"` enquanto o
+// `Run` o escrevia em `.anchors/sbom.json` — a contradição estava a duas linhas de
+// distância e sobreviveu ao commit inicial. A saída seria uma exceção no `.gitignore`, e
+// exceção ali é onde o silêncio mora: `.anchors/` com barra exclui o DIRETÓRIO, o git nem
+// desce nele para avaliar a negação, e o arquivo some sem erro.
+func TestArtefatoVersionavelNaoNasceNaAreaDeTrabalho(t *testing.T) {
+	for _, g := range DefaultGates(map[string]bool{"code": true, "spec": true}, true) {
+		if g.Run == "" || !strings.Contains(g.Run, ".anchors/") {
+			continue
+		}
+		// Um gate que grava em `.anchors/` e se diz versionável está se contradizendo:
+		// aquilo nunca vai chegar ao repositório.
+		if strings.Contains(g.Measures, "versionável") || strings.Contains(g.Measures, "versionavel") {
+			t.Errorf("gate %q grava em `.anchors/` (ignorado) e promete algo VERSIONÁVEL — "+
+				"o arquivo nunca chegaria ao repositório. Grave na raiz.\n  run: %s\n  measures: %s",
+				g.ID, g.Run, g.Measures)
 		}
 	}
 }
