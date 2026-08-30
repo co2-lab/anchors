@@ -41,6 +41,7 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 	root.AddCommand(newNextCmd())
 	root.AddCommand(newDoneCmd())
 	root.AddCommand(newDropCmd())
+	root.AddCommand(newEscalateCmd())
 	root.AddCommand(newReclaimCmd())
 	root.AddCommand(newStaleCmd())
 	root.AddCommand(newCodeCmd())

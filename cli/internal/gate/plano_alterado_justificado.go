@@ -95,8 +95,9 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 				"corrigido fica válido). Registre a revisão no próprio arquivo:\n"+
 				"    > **%s-R0001:** <o que mudou e por quê>\n"+
 				"Se a correção MUDA A DIREÇÃO do projeto, ou se você tem dúvida se muda, NÃO "+
-				"corrija: abra issue com a label `anchors:precisa-do-usuario` e deixe a "+
-				"decisão com quem pode tomá-la.", codigo)
+				"corrija — a avaliação do impacto é sua, e esta saída existe para quando "+
+				"ela dá `muda`:\n"+
+				"    anchors escalate \"<o que está incoerente>\" --sobre %s --card <n>", codigo, n.ID)
 	}
 
 	// A numeração tem de ser sequencial a partir de 1. Sem isso ela não responderia

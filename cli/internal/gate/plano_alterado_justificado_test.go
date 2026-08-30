@@ -22,8 +22,10 @@ func TestAlterado_semRevisaoReprova(t *testing.T) {
 	if !strings.Contains(d, "FNDTN-R0001") {
 		t.Errorf("o laudo deve mostrar o formato com o código do arquivo; veio: %s", d)
 	}
-	if !strings.Contains(d, "precisa-do-usuario") {
-		t.Errorf("o laudo deve dizer o que fazer quando a correção MUDA A DIREÇÃO; veio: %s", d)
+	if !strings.Contains(d, "anchors escalate") {
+		t.Errorf("o laudo deve dar a SAÍDA para quando a correção MUDA A DIREÇÃO — nomear a "+
+			"label não basta, o comando é o que torna escalar tão barato quanto corrigir; "+
+			"veio: %s", d)
 	}
 }
 
