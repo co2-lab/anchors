@@ -170,11 +170,19 @@ ROOT="$(git rev-parse --show-toplevel)"
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$STAGED" ] && exit 0
 
-# DISPENSA POR REGRA — ANCHORS_SKIP_RULES="id=motivo[,id=motivo]"
+# DISPENSA — na MENSAGEM DO COMMIT:
 #
-# O git commit nao repassa flags ao pre-commit, então a dispensa chega por ambiente:
+#   [skip-trinca-completa@WRKSP: a feature ainda e um card]
 #
-#   ANCHORS_SKIP_RULES="trinca-completa=a feature ainda e um card" git commit -m "..."
+# O alvo e o CODIGO do artefato, e so ele fica dispensado: os outros continuam sendo
+# confrontados. Dispensar a regra inteira apagaria o gate para o repositorio todo, e uma
+# quebra por descuido noutro lugar passaria junto.
+#
+# Quem barra e o hook commit-msg, nao este: a mensagem NAO EXISTE no pre-commit (o git so
+# a grava depois). Este hook reporta cedo, para o problema aparecer antes de escrever a
+# mensagem.
+#
+# ANCHORS_SKIP_RULES="id=motivo" ainda funciona, para um CI que nao controla a mensagem.
 #
 # E POR REGRA, e nao por commit: dispensar trinca-completa deixa passar a spec que
 # nasce sozinha, e os outros gates continuam barrando. Um bypass global calaria também o
