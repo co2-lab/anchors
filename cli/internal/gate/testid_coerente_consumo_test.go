@@ -131,7 +131,7 @@ func TestTestIDHonored_flowE2EContaComoConsumidor(t *testing.T) {
 	cfg := &config.Config{Derived: &config.Derived{
 		Anchor: "code", TestHandle: "testID",
 		Surfaces: map[string]string{"e2e": "e2e"},
-		Files:    map[string]string{"e2e": "e2e/{{name}}.yaml"},
+		Files:    map[string]config.Padroes{"e2e": {"e2e/{{name}}.yaml"}},
 	}}
 	if v, msg := checkTestIDCoerente(secaoOK, spec, root, g, cfg); v != Pass {
 		t.Errorf("id usado só pelo flow e2e não é órfão: %v (%s)", v, msg)
@@ -211,7 +211,7 @@ func TestTestIDHonored_vizinhoValeMesmoComFlows(t *testing.T) {
 	cfg := &config.Config{Derived: &config.Derived{
 		Anchor: "code", TestHandle: "testID",
 		Surfaces: map[string]string{"e2e": "e2e"},
-		Files:    map[string]string{"e2e": "e2e/{{name}}.yaml"},
+		Files:    map[string]config.Padroes{"e2e": {"e2e/{{name}}.yaml"}},
 	}}
 	if v, msg := checkTestIDCoerente(secaoOK, spec, root, g, cfg); v != Pass {
 		t.Errorf("teste vizinho deve valer mesmo havendo flows: %v (%s)", v, msg)

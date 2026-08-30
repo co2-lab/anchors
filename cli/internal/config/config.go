@@ -841,9 +841,12 @@ type Derived struct {
 	// Com `spec`, um projeto sem spec não tem aresta de co-location. É o comportamento
 	// correto: sem spec não há trinca, e o mapa dizer isso é honesto. O `doctor` já
 	// reporta o código sem spec como órfão.
-	Anchor    string            `yaml:"anchor"`              // a camada-âncora (canônico: "spec")
-	Files     map[string]string `yaml:"files"`               // default (co-location): camada-derivada → template
-	Overrides []DerivedOverride `yaml:"overrides,omitempty"` // padrões por camada-âncora (não co-localizado)
+	Anchor string `yaml:"anchor"` // a camada-âncora (canônico: "spec")
+	// Files: camada-derivada → padrão(ões). Aceita string (um arquivo, o caso comum) ou
+	// LISTA — a spec de configuração governa vários (`TypeScriptConfig` descreve seis
+	// `tsconfig.json`), e com um padrão só a trinca dela nunca fecharia.
+	Files     map[string]Padroes `yaml:"files"`               // default (co-location)
+	Overrides []DerivedOverride  `yaml:"overrides,omitempty"` // padrões por camada-âncora (não co-localizado)
 	// Regimes — o de-para do vocabulário de REGIME de teste do PROJETO para o regime
 	// CANÔNICO do framework (unit|integration|e2e|vr). Chave = a tag do projeto (sem @,
 	// ex.: "nivel-unit"); valor = o regime canônico. Um cenário de feature declara sua
@@ -978,8 +981,21 @@ type Derived struct {
 // DerivedOverride — para âncoras cuja tag casa `When`, os templates em `Files`
 // SOBRESCREVEM os do default (só as camadas presentes; as demais herdam o default).
 type DerivedOverride struct {
-	When  string            `yaml:"when"`  // a tag/camada da âncora a que este override se aplica (ex.: handler)
-	Files map[string]string `yaml:"files"` // camada-derivada → template de região (aceita {{module}})
+	// When é a CAMADA da âncora a que este override se aplica (ex.: `handler`). Todas as
+	// specs daquela camada passam a usar os padrões declarados aqui.
+	When string `yaml:"when"`
+	// Code é o CÓDIGO de UMA spec (ex.: `TSCTY`). É a granularidade menor: `when` cobre
+	// uma camada inteira, e há casos em que só uma unidade difere.
+	//
+	// A spec de CONFIGURAÇÃO é o caso: `TypeScriptConfig` governa seis `tsconfig.json`
+	// espalhados, `Workspace` governa o `pnpm-workspace.yaml` e quatro `package.json`. As
+	// duas são da mesma camada e descrevem conjuntos DIFERENTES — um override por camada
+	// faria cada uma governar os arquivos da outra, e o mapa afirmaria o que não é.
+	//
+	// `code` vence `when` quando os dois casam: o mais específico ganha, que é a
+	// precedência que o resto do framework já usa (camada > projeto > framework).
+	Code  string             `yaml:"code,omitempty"`
+	Files map[string]Padroes `yaml:"files"` // camada-derivada → padrão(ões)
 }
 
 // GovernRule — uma aresta vertical declarada: a régua `from` rege os nós de TODAS

@@ -17,10 +17,10 @@ func testCfg() *config.Config {
 		},
 		Derived: &config.Derived{
 			Anchor: "code",
-			Files: map[string]string{
-				"spec":    "{{dir}}/{{name}}.spec.md",
-				"feature": "{{dir}}/{{name}}.feature",
-				"test":    "{{dir}}/{{name}}.test.{{ext}}",
+			Files: map[string]config.Padroes{
+				"spec":    {"{{dir}}/{{name}}.spec.md"},
+				"feature": {"{{dir}}/{{name}}.feature"},
+				"test":    {"{{dir}}/{{name}}.test.{{ext}}"},
 			},
 		},
 		Governs: []config.GovernRule{
@@ -82,14 +82,14 @@ func TestBuild_derivedOverride(t *testing.T) {
 		},
 		Derived: &config.Derived{
 			Anchor: "code",
-			Files: map[string]string{
-				"spec":    "{{dir}}/{{name}}.spec.md",
-				"feature": "{{dir}}/{{name}}.feature",
-				"test":    "{{dir}}/{{name}}.test.{{ext}}",
+			Files: map[string]config.Padroes{
+				"spec":    {"{{dir}}/{{name}}.spec.md"},
+				"feature": {"{{dir}}/{{name}}.feature"},
+				"test":    {"{{dir}}/{{name}}.test.{{ext}}"},
 			},
 			Overrides: []config.DerivedOverride{
-				{When: "handler", Files: map[string]string{
-					"test": "__tests__/unit/lambdas/{{module}}.test.ts",
+				{When: "handler", Files: map[string]config.Padroes{
+					"test": {"__tests__/unit/lambdas/{{module}}.test.ts"},
 				}},
 			},
 		},
@@ -257,9 +257,9 @@ func TestBuild_ancoraSpec(t *testing.T) {
 		},
 		Derived: &config.Derived{
 			Anchor: "spec",
-			Files: map[string]string{
-				"code": "{{dir}}/{{name}}.ts",
-				"test": "{{dir}}/{{name}}.test.ts",
+			Files: map[string]config.Padroes{
+				"code": {"{{dir}}/{{name}}.ts"},
+				"test": {"{{dir}}/{{name}}.test.ts"},
 			},
 		},
 	}

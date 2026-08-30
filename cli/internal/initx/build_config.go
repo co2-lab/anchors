@@ -35,15 +35,15 @@ func (p *Proposal) buildConfig() *config.Config {
 
 	// derived: co-location, se detectada
 	if p.Colocated {
-		files := map[string]string{}
+		files := map[string]config.Padroes{}
 		if p.HasSpecMD {
-			files["spec"] = "{{dir}}/{{name}}.spec.md"
+			files["spec"] = config.Padroes{"{{dir}}/{{name}}.spec.md"}
 		}
 		if p.HasFeature {
-			files["feature"] = "{{dir}}/{{name}}.feature"
+			files["feature"] = config.Padroes{"{{dir}}/{{name}}.feature"}
 		}
 		if p.HasTest {
-			files["test"] = "{{dir}}/{{name}}.test.{{ext}}"
+			files["test"] = config.Padroes{"{{dir}}/{{name}}.test.{{ext}}"}
 		}
 		c.Derived = &config.Derived{Anchor: "spec", Files: files}
 	}

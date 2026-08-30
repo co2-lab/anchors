@@ -96,15 +96,15 @@ func ApplyColocation(cfg *config.Config, use bool, chosenArtifacts map[string]bo
 		cfg.Derived = nil
 		return
 	}
-	files := map[string]string{}
+	files := map[string]config.Padroes{}
 	if chosenArtifacts["code"] {
-		files["code"] = "{{dir}}/{{name}}.{{ext}}"
+		files["code"] = config.Padroes{"{{dir}}/{{name}}.{{ext}}"}
 	}
 	if chosenArtifacts["feature"] {
-		files["feature"] = "{{dir}}/{{name}}.feature"
+		files["feature"] = config.Padroes{"{{dir}}/{{name}}.feature"}
 	}
 	if chosenArtifacts["test"] {
-		files["test"] = "{{dir}}/{{name}}.test.{{ext}}"
+		files["test"] = config.Padroes{"{{dir}}/{{name}}.test.{{ext}}"}
 	}
 	if len(files) == 0 {
 		cfg.Derived = nil

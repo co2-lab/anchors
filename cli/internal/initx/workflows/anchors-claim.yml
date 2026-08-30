@@ -94,12 +94,82 @@ jobs:
               --limit 200 --json number --jq '.[].number' >> /tmp/disponiveis.txt
           done
 
-          # Entre os disponíveis, o LIVRE é o que ninguém tem: nunca teve `anchors-owner`,
-          # ou o último o liberou. A ordem de /tmp/disponiveis.txt é a prioridade (review
-          # antes de implementação).
+          # A ORDEM DE TRABALHO: um card cuja dependência não fechou não pode ser
+          # entregue. Aconteceu no primeiro uso real — recebi a spec de test harness
+          # (fase 3) com as fases 1 e 2 abertas, sem `package.json` sequer. Só não virou
+          # trabalho perdido porque fui LER o plano.
+          #
+          # O `needs` vem do MAPA (`anchors.graph.yaml`), lido via API em vez de baixado:
+          # este pipeline não faz checkout de propósito — ele roda a cada pedido de
+          # trabalho, e clonar o repositório a cada vez o tornaria o gargalo que a
+          # serialização já ameaça ser.
+          gh api "repos/$GH_REPO/contents/anchors.graph.yaml" \
+            --jq '.content' 2>/dev/null | base64 -d > /tmp/mapa.yaml || : > /tmp/mapa.yaml
+
+          # Os códigos CONCLUÍDOS: os cards que já saíram da alçada do agente. Um `needs`
+          # só está satisfeito quando o que ele aponta chegou até aqui.
+          : > /tmp/concluidos.txt
+          for e in "anchors:ready-to-test" "anchors:in-test" "anchors:ready-to-release" "anchors:production"; do
+            gh issue list --state all --label "$LABEL" --label "$e" --limit 200 \
+              --json title --jq '.[].title | capture("^\\[(?<c>[^]]+)\\]").c' >> /tmp/concluidos.txt 2>/dev/null || true
+          done
+          # Issue FECHADA também conta como concluída: fechar é o desfecho final, e exigir
+          # a label depois disso deixaria a dependência presa para sempre.
+          gh issue list --state closed --label "$LABEL" --limit 200 \
+            --json title --jq '.[].title | capture("^\\[(?<c>[^]]+)\\]").c' >> /tmp/concluidos.txt 2>/dev/null || true
+
+          # Entre os disponíveis, o LIVRE é o que ninguém tem E cujas dependências
+          # fecharam. A ordem de /tmp/disponiveis.txt é a prioridade (review antes de
+          # implementação).
           livre=""
           while read -r n; do
             [ -n "$n" ] || continue
+
+            # BLOQUEADO por dependência? O código do card sai do título (`[XXXXX] ...`),
+            # e o `needs` dele, do mapa.
+            cod=$(gh issue view "$n" --json title --jq '.title | capture("^\\[(?<c>[^]]+)\\]").c' 2>/dev/null || true)
+            if [ -n "$cod" ] && [ -s /tmp/mapa.yaml ]; then
+              # As fases de um plano não são nós do mapa: elas vivem no markdown. Um
+              # `needs` que aponta para fase é resolvido pelos CARDS que pertencem a ela —
+              # se todos fecharam, a fase fechou.
+              # O mapa indenta os nós com 4 espaços e escreve `needs:` como LISTA em
+              # linhas separadas. Os padrões refletem isso — medi contra o arquivo real
+              # antes de confiar: a primeira versão usava `^- id:` e `^  code:`, não
+              # casava nada, e devolvia "sem dependência" para todo card.
+              deps=$(awk -v alvo="$cod" '
+                /^ *- id:/ { cod=""; emNeeds=0 }
+                /^ *code: / { cod=$2 }
+                /^ *needs:/ { emNeeds=1; next }
+                /^ *[a-z_]+:/ { emNeeds=0 }
+                emNeeds && /^ *- / && cod == alvo { print $2 }
+              ' /tmp/mapa.yaml | grep -E '^[A-Z0-9]{4,5}(-F[0-9]{2})?$' || true)
+              bloqueado=""
+              for d in $deps; do
+                # Uma dependência de FASE está satisfeita quando todo card daquela fase
+                # concluiu. Um card sem nenhum card na fase não bloqueia: não há trabalho
+                # declarado ali para esperar.
+                if echo "$d" | grep -qE -- '-F[0-9]{2}$'; then
+                  # `parent` vem DEPOIS de `code` no nó, então o código é guardado e
+                  # impresso quando o parent casa.
+                  pend=$(awk -v fase="$d" '
+                    /^ *- id:/ { cod="" }
+                    /^ *code: / { cod=$2 }
+                    /^ *parent: / && $2 == fase && cod != "" { print cod }
+                  ' /tmp/mapa.yaml | while read -r c; do
+                    grep -qxF "$c" /tmp/concluidos.txt || echo "$c"
+                  done)
+                  [ -n "$pend" ] && bloqueado="$d"
+                else
+                  grep -qxF "$d" /tmp/concluidos.txt || bloqueado="$d"
+                fi
+                [ -n "$bloqueado" ] && break
+              done
+              if [ -n "$bloqueado" ]; then
+                echo "· #$n ($cod) espera $bloqueado — pulando"
+                continue
+              fi
+            fi
+
             dono=$(gh issue view "$n" --json comments \
               --jq '[.comments[].body | select(startswith("anchors-owner:"))] | last // ""')
             # O coringa no FIM é necessário: o pipeline de stale escreve o motivo depois

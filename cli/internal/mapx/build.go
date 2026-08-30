@@ -175,24 +175,50 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 		// Templates efetivos = default sobrescrito pelos overrides cuja `when` casa a
 		// camada da âncora (STRUCTURE.md §2.2: padrão de localização por camada quando
 		// não co-localizado). Só as camadas presentes no override sobrescrevem.
-		tmpls := map[string]string{}
+		tmpls := map[string]config.Padroes{}
 		for layer, tmpl := range cfg.Derived.Files {
 			tmpls[layer] = tmpl
 		}
+		// PRECEDÊNCIA: camada primeiro, código depois. O override por CÓDIGO é o mais
+		// específico e precisa vencer — duas specs da mesma camada podem governar
+		// conjuntos diferentes de arquivos (a de `tsconfig` e a de `package.json`), e sem
+		// essa granularidade cada uma governaria os arquivos da outra.
 		for _, ov := range cfg.Derived.Overrides {
-			if ov.When != f.Layer {
+			if ov.Code != "" || ov.When != f.Layer {
 				continue
 			}
 			for layer, tmpl := range ov.Files {
 				tmpls[layer] = tmpl
 			}
 		}
-		// resolve o caminho esperado de cada derivado e liga se existir
-		derived := map[string]string{} // camada → caminho existente
-		for layer, tmpl := range tmpls {
-			want := resolveTemplateM(tmpl, dir, name, ext, module)
-			if _, ok := byPath[want]; ok {
-				derived[layer] = want
+		for _, ov := range cfg.Derived.Overrides {
+			if ov.Code == "" || ov.Code != nodeCode(f) {
+				continue
+			}
+			// O override por código SUBSTITUI a camada inteira, e não a completa: uma
+			// spec de configuração não tem o `{{name}}.ts` da co-location, e herdá-lo
+			// faria o mapa procurar um arquivo que ninguém vai escrever.
+			tmpls = map[string]config.Padroes{}
+			for layer, tmpl := range ov.Files {
+				tmpls[layer] = tmpl
+			}
+			break
+		}
+		// Resolve o caminho esperado de cada derivado e liga se existir.
+		//
+		// Uma camada pode ter VÁRIOS padrões: a spec de configuração governa vários
+		// arquivos (`TypeScriptConfig` descreve seis `tsconfig.json`), e ligar só o
+		// primeiro deixaria os outros órfãos no mapa.
+		derived := map[string]string{} // camada → PRIMEIRO caminho existente (a trinca)
+		todos := map[string][]string{} // camada → TODOS os que existem (as arestas)
+		for layer, padroes := range tmpls {
+			for _, tmpl := range padroes {
+				for _, want := range expandePadrao(resolveTemplateM(tmpl, dir, name, ext, module), byPath) {
+					if derived[layer] == "" {
+						derived[layer] = want
+					}
+					todos[layer] = append(todos[layer], want)
+				}
 			}
 		}
 		// A ÂNCORA é a spec, e os derivados saem dela. Até a v0.1 a âncora era o código e
@@ -208,7 +234,16 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 		feat := derived["feature"]
 		test := derived["test"]
 		if spec != "" && codigo != "" {
-			edges = append(edges, Edge{From: spec, To: codigo, Type: EdgeSpecifies, Origin: OriginConvention})
+			// TODOS os arquivos que a spec governa, e não só o primeiro: uma spec de
+			// configuração descreve vários, e ligar um deixaria os outros órfãos — o
+			// `doctor` os reportaria como código sem spec, que é falso.
+			alvos := todos["code"]
+			if cfg.Derived.Anchor != "spec" {
+				alvos = []string{codigo}
+			}
+			for _, alvo := range alvos {
+				edges = append(edges, Edge{From: spec, To: alvo, Type: EdgeSpecifies, Origin: OriginConvention})
+			}
 		}
 		if spec != "" && feat != "" {
 			edges = append(edges, Edge{From: spec, To: feat, Type: EdgeCoveredBy, Origin: OriginConvention})
@@ -470,4 +505,26 @@ func preservarSinais(novo, antigo *Graph) {
 			n.Signal = s
 		}
 	}
+}
+
+// expandePadrao devolve os caminhos do mapa que casam o padrão.
+//
+// Sem curinga, é uma busca exata — o caminho existe ou não. Com `*`, casa vários: a spec
+// de configuração descreve `packages/*/tsconfig.json`, e enumerar os pacotes na config
+// obrigaria a editá-la a cada pacote novo, que é o tipo de manutenção que se esquece.
+func expandePadrao(padrao string, byPath map[string]scan.File) []string {
+	if !strings.ContainsAny(padrao, "*?[") {
+		if _, ok := byPath[padrao]; ok {
+			return []string{padrao}
+		}
+		return nil
+	}
+	var out []string
+	for p := range byPath {
+		if ok, err := filepath.Match(padrao, p); err == nil && ok {
+			out = append(out, p)
+		}
+	}
+	sort.Strings(out) // ordem estável: o mapa não pode mudar entre execuções
+	return out
 }

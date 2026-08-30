@@ -999,7 +999,11 @@ func caminhosDerivados(rel, layer string, cfg *config.Config) (map[string]string
 	module := filepath.Base(dir)
 	bruto := map[string]string{}
 	for k, v := range cfg.Derived.Files {
-		bruto[k] = v
+		// O PRIMEIRO padrão: este prompt mostra ONDE escrever cada peça, e uma lista de
+		// caminhos alternativos no lugar de um responderia a pergunta com outra.
+		if len(v) > 0 {
+			bruto[k] = v[0]
+		}
 	}
 	// OVERRIDE da camada vence a co-location. Resolvê-lo aqui é o ponto do comando:
 	// mandar o leitor "conferir os overrides" seria devolver a ele exatamente a
@@ -1009,7 +1013,10 @@ func caminhosDerivados(rel, layer string, cfg *config.Config) (map[string]string
 			continue
 		}
 		for k, v := range ov.Files {
-			bruto[k] = v
+			if len(v) == 0 {
+				continue
+			}
+			bruto[k] = v[0]
 			overridden[k] = true
 		}
 	}

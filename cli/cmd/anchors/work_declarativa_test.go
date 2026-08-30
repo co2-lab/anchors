@@ -18,7 +18,7 @@ func cfgComDeclarativa() *config.Config {
 		// derivar (e diz isso). A fixture precisa dele para exercitar o caminho comum.
 		Derived: &config.Derived{
 			Anchor: "code",
-			Files:  map[string]string{"spec": "{{dir}}/{{name}}.spec.md"},
+			Files:  map[string]config.Padroes{"spec": {"{{dir}}/{{name}}.spec.md"}},
 		},
 	}
 }

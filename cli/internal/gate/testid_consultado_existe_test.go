@@ -27,7 +27,7 @@ func fixtureConsultado(t *testing.T, codigo, flow string) (string, *config.Confi
 	cfg := &config.Config{Derived: &config.Derived{
 		TestHandle: "testID",
 		Surfaces:   map[string]string{"e2e": "e2e"},
-		Files:      map[string]string{"e2e": "flows"},
+		Files:      map[string]config.Padroes{"e2e": {"flows"}},
 	}}
 	return root, cfg
 }
@@ -198,7 +198,7 @@ func TestConsultadoExiste_semHandleDeclaradoPula(t *testing.T) {
 // é "está limpo".
 func TestConsultadoExiste_semSuperficieE2EPula(t *testing.T) {
 	root, cfg := fixtureConsultado(t, `<View testID=":abcd-tela" />`, "- tapOn:\n    id: ':abcd-x'\n")
-	cfg.Derived.Files = map[string]string{}
+	cfg.Derived.Files = map[string]config.Padroes{}
 	v, _ := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
 	if v != Skip {
 		t.Fatalf("sem superfície declarada o gate deve pular, veio %v", v)
