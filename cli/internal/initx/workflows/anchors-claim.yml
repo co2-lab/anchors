@@ -234,6 +234,59 @@ jobs:
           done
           gh issue edit "$livre" --add-label "$para"
 
+          # QUEM VAI REVISAR recebe as instruções no próprio card.
+          #
+          # O gate de JULGAMENTO faz a pergunta que nenhum verificador mecânico responde —
+          # "o trecho REALIZA o que a regra descreve?" — e por isso ela fica pendente,
+          # esperando alguém que esteja lendo spec e código ao mesmo tempo. A revisão é
+          # exatamente esse momento: pedir o julgamento aqui aproveita a leitura que o
+          # revisor já vai fazer, e pedir noutro lugar significaria ler duas vezes.
+          if [ "$para" = "anchors:in-review" ]; then
+            # A indentação do heredoc é exigida pelo YAML (o bloco `run:` a
+            # define), e o `sed` a remove antes de escrever o arquivo — sem
+            # isso o markdown chega ao GitHub como bloco de código.
+            sed 's/^            //' > /tmp/instrucao.md <<'INSTRUCAO'
+            ## Revisão — o que fazer
+
+            1. **Leia** a spec e o código que ela governa.
+            2. **Rode os gates de julgamento** pendentes:
+
+               ```
+               anchors judge --pending
+               anchors judge <alvo> --gate <gate> --verdict pass|fail --reason "..."
+               ```
+
+               Eles fazem a pergunta que nenhum verificador mecânico responde: se o código REALIZA
+               o que a regra descreve. Você já vai estar lendo os dois.
+
+            3. **Confronte cada regra** da spec contra o que o PR entrega, rodando o que dá para
+               rodar em vez de só ler.
+            4. **Comente o resultado no PR** e mova o card:
+               - aceito → `anchors:ready-to-test`
+               - rejeitado → `anchors:to-do`, devolvendo a posse a quem implementou
+
+            ### Se o card voltou para `to-do` enquanto você revisava
+
+            O `stale` libera card sem sinal de vida, e revisar é justamente ler e pensar sem
+            tocar no repositório — uma revisão longa (ou uma noite de sono) atravessa o prazo.
+            Não é defeito: o pipeline não tem como distinguir "pensando" de "sumiu".
+
+            A recuperação depende de UMA pergunta — o card ainda é seu?
+
+            - **último `anchors-owner:` é você** (ou `(liberado)`) → retome: comente
+              `anchors-owner: <você>`, mova para `anchors:in-review` e siga de onde parou.
+            - **outro agente pegou** → deixe pra lá. Ele já está com o contexto, e disputar o
+              card produziria dois revisores no mesmo trabalho. Peça outro com
+              `gh workflow run anchors-claim.yml -f agent=<você>`.
+
+            > O GitHub recusa `approve` no próprio PR, e os agentes desta máquina usam a mesma
+            > conta. Se o merge estiver bloqueado por isso, quem for admin usa
+            > `gh pr merge <n> --merge --admin`; quem não for, roda `anchors doctor --fix` para
+            > desligar a exigência (a revisão continua sendo cobrada pelo estado do card).
+            INSTRUCAO
+            gh issue comment "$livre" --body-file /tmp/instrucao.md
+          fi
+
           if [ -n "$retomado" ]; then
             echo "card #$livre RETOMADO por $AGENT (já era dele): $de → $para"
           else

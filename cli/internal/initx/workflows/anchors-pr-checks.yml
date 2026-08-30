@@ -167,5 +167,14 @@ jobs:
             gh issue edit "$card" --remove-label "$e" >/dev/null 2>&1 || true
           done
           gh issue edit "$card" --add-label "anchors:ready-to-review"
-          gh issue comment "$card" --body "Os checks do PR #$pr passaram — card em \`ready-to-review\`."
+          # LIBERA A POSSE. O card muda de MÃO aqui: quem implementou terminou, e quem
+          # revisa é outro agente — o desenho inteiro depende disso ("o agente que
+          # implementa não fecha o próprio trabalho", BOOTSTRAP §7.9).
+          #
+          # Sem liberar, o card fica com o dono anterior e NINGUÉM o pega: o claim só
+          # entrega o que está livre, então ele pula o `ready-to-review` e vai para o
+          # `to-do` seguinte. Medido — a fila de revisão parou de ser atendida sem que
+          # nada acusasse, e a prioridade direita-para-esquerda deixou de valer na prática.
+          gh issue comment "$card" --body "anchors-owner: (liberado) — implementação concluída; o card espera REVISÃO de outro agente"
+          gh issue comment "$card" --body "Os checks do PR #$pr passaram — card em \`ready-to-review\`, esperando revisor."
           echo "card #$card → ready-to-review (PR #$pr verde)"

@@ -29,7 +29,8 @@ func checkAmbienteGitHub(cfg *config.Config, root string) []Finding {
 	// fluxo não precisa produziria um achado que ninguém precisa resolver — e ruído
 	// recorrente treina a equipe a ignorar o doctor.
 	out := checkPipelines(root, cfg)
-	return append(out, checkProtecaoDeBranch(cfg)...)
+	out = append(out, checkProtecaoDeBranch(cfg)...)
+	return append(out, checkAprovacaoAlcancavel(cfg)...)
 }
 
 // checkPipelines confere o que dá para conferir lendo o disco: os três workflows existem,

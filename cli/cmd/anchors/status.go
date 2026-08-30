@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -165,6 +166,25 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 		return
 	}
 
+	// O CARD QUE JÁ É SEU vem antes de pedir outro. Quem volta de uma pausa não sabe se
+	// ainda tem trabalho — e a resposta muda o próximo passo por inteiro: pedir um card
+	// novo com um seu em aberto produz dois trabalhos pela metade.
+	//
+	// Importa mais depois que o `stale` age: ele libera card sem sinal de vida, e uma
+	// revisão longa (ou uma noite) atravessa o prazo. O card volta para `to-do` sem dono,
+	// e quem retoma precisa VER isso para saber que dá para retomar.
+	if meus := cardsDoAgente(cfg); len(meus) > 0 {
+		fmt.Println("  → VOCÊ JÁ TEM TRABALHO:")
+		for _, c := range meus {
+			fmt.Printf("    #%s %s [%s]\n", c.numero, c.titulo, c.estado)
+		}
+		fmt.Println()
+		fmt.Println("  Termine antes de pedir outro. Se o card voltou para `to-do`, o stale o")
+		fmt.Println("  liberou por inatividade — retome comentando `anchors-owner: <você>` e")
+		fmt.Println("  movendo de volta ao estado em que estava.")
+		return
+	}
+
 	fmt.Println("  → PRÓXIMO PASSO: peça trabalho ao pipeline de claim —")
 	fmt.Println("    `gh workflow run anchors-claim.yml -f agent=$(hostname)/<sessao>`")
 	fmt.Println()
@@ -256,4 +276,42 @@ func contaArquivos(dir string) int {
 		}
 	}
 	return n
+}
+
+// cardDoAgente é um card que carrega o nome deste agente no último `anchors-owner`.
+type cardDoAgente struct{ numero, titulo, estado string }
+
+// cardsDoAgente devolve os cards cujo último dono é este agente.
+//
+// A identidade vem de `ANCHORS_AGENT`, e não do usuário do git: agentes na mesma máquina
+// compartilham a conta do GitHub — foi por isso que a posse virou comentário
+// (`anchors-owner:`) em vez de assignee. Sem a variável não há como saber quem pergunta,
+// e devolver os cards de OUTRO agente seria pior que não responder.
+func cardsDoAgente(cfg *config.Config) []cardDoAgente {
+	agente := strings.TrimSpace(os.Getenv("ANCHORS_AGENT"))
+	if agente == "" || cfg == nil || cfg.Workflow == nil {
+		return nil
+	}
+	if _, err := exec.LookPath("gh"); err != nil {
+		return nil
+	}
+	out, err := exec.Command("gh", "issue", "list",
+		"--repo", cfg.Workflow.Repo,
+		"--state", "open", "--label", cfg.Workflow.Labels[0], "--limit", "200",
+		"--json", "number,title,labels,comments",
+		"--jq", `[.[] | select([.comments[].body | select(startswith("anchors-owner:"))] | last == "anchors-owner: `+agente+`")
+		         | {n: .number, t: .title, e: ([.labels[].name | select(startswith("anchors:"))] | .[0] // "")}] | .[] | "\(.n)\t\(.t)\t\(.e)"`,
+	).Output()
+	if err != nil {
+		return nil
+	}
+	var cards []cardDoAgente
+	for _, l := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		p := strings.Split(l, "\t")
+		if len(p) != 3 || p[0] == "" {
+			continue
+		}
+		cards = append(cards, cardDoAgente{p[0], p[1], strings.TrimPrefix(p[2], "anchors:")})
+	}
+	return cards
 }

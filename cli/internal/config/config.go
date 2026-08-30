@@ -140,6 +140,15 @@ type Workflow struct {
 	//
 	// Vazio resolve para o branch de integração mais `main` — o mínimo que faz sentido.
 	ProtectedBranches []string `yaml:"protected_branches,omitempty"`
+	// RequiredApprovals: quantas aprovações o PR precisa para poder ser mesclado.
+	//
+	// O padrão é 1, e não 0: o fluxo do modo `github` pressupõe que OUTRO agente revise —
+	// "o agente que implementa não fecha o próprio trabalho" (BOOTSTRAP §7.9). Com zero,
+	// o merge acontece sem revisão e a etapa vira decoração.
+	//
+	// Declarável porque há projetos onde isso não cabe: um repositório de exemplo, ou um
+	// time que revisa fora do GitHub. Quem declara `0` está dizendo que sabe.
+	RequiredApprovals *int `yaml:"required_approvals,omitempty"`
 }
 
 // BranchDeIntegracao devolve onde o trabalho chega, com o default aplicado.
@@ -152,6 +161,18 @@ func (w *Workflow) BranchDeIntegracao() string {
 		return "main"
 	}
 	return w.IntegrationBranch
+}
+
+// AprovacoesExigidas devolve quantas aprovações o PR precisa, com o default (1) aplicado.
+//
+// Ponteiro no campo para distinguir "não declarou" (vale 1) de "declarou zero"
+// (deliberado). Com int simples, o zero-value seria indistinguível da ausência — e o
+// padrão nunca valeria.
+func (w *Workflow) AprovacoesExigidas() int {
+	if w == nil || w.RequiredApprovals == nil {
+		return 1
+	}
+	return *w.RequiredApprovals
 }
 
 // BranchesProtegidos devolve onde nada entra sem PR, com o default aplicado.
