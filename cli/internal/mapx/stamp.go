@@ -25,10 +25,15 @@ type NodeVerdict struct {
 // assim que o `StampNodeByGate` passou despercebido na primeira tentativa.
 func carimbo(anterior *Stamp, fromRev, toRev, verdict, now string) *Stamp {
 	quando := now
-	// `anterior.ChangedAt != ""` não é detalhe: um carimbo SEM data (mapa gerado por uma
-	// versão anterior, ou campo renomeado) preservaria o vazio para sempre — o buraco se
-	// perpetuaria justamente porque nada muda. Sem data, a de hoje é a melhor resposta
-	// disponível: é quando se soube que a relação estava assim.
+	// `anterior.ChangedAt != ""` não é detalhe: um carimbo SEM data preservaria o vazio
+	// para sempre — o buraco se perpetuaria justamente porque nada muda, e o campo sumiria
+	// do mapa (`omitempty`). Sem data, a de hoje é a melhor resposta disponível: é quando
+	// se soube que a relação estava assim.
+	//
+	// É o que também faz o mapa de uma versão anterior (quando o campo se chamava
+	// `last_validated`) se converter sozinho no primeiro `check`. Mas a conferência NÃO é
+	// código de migração e não tem prazo: ela vale para qualquer carimbo sem data, venha
+	// de onde vier.
 	if anterior != nil && anterior.ChangedAt != "" &&
 		anterior.ValidatedFromRev == fromRev &&
 		anterior.ValidatedToRev == toRev && anterior.Verdict == verdict {
