@@ -428,7 +428,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 		"logo acima), datada pelo git e visível para quem ler depois:\n\n")
 	switch artifact {
 	case "spec":
-		b.WriteString("- `@no-code: <razão>` na linha de uma regra que NÃO terá trecho de código " +
+		b.WriteString("- `@no-mark: <razão>` na linha de uma regra que NÃO terá marcação no código " +
 			"(restrição satisfeita pela ausência, invariante provada por teste). " +
 			"**Se ao implementar a razão não se sustentar** — a regra afinal precisa de código, " +
 			"ou não deveria existir —, isso não é detalhe de formatação: é a spec estar errada " +

@@ -172,3 +172,90 @@ func TestRegraImplementada_marcacaoExigidaNaoPuneQuemMarca(t *testing.T) {
 		t.Errorf("quem marca a regra passa: %v (%s)", v, msg)
 	}
 }
+
+// O ALVO entre colchetes nomeia a quem a dispensa se aplica.
+//
+// Sem ele, o marcador vale para a regra da linha — e isso basta quando cada regra está na
+// sua. Mas uma spec pode ter seis regras marcadas no código e duas que não têm onde ser
+// marcadas: declarar as duas numa linha só, nomeando-as, é mais legível que espalhar o
+// marcador por linhas que não falam disso.
+func TestNoMarkComAlvoNomeado(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "u.ts"), []byte("// MTVRX-B01: resolve\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	base := "<!-- @anchors\ncode: MTVRX\n-->\n\n## Regras\n\n" +
+		"| Regra | Efeito |\n| --- | --- |\n" +
+		"| `MTVRX-B01` | resolve a versão |\n" +
+		"| `MTVRX-X01` | NÃO faz I/O |\n" +
+		"| `MTVRX-X02` | NÃO toca no relógio |\n"
+	n := mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}
+
+	// Sem dispensa, as duas reprovam.
+	if v, _ := checkRegraImplementada(base, n, root, nil, nil); v != Fail {
+		t.Fatal("preparo: X01 e X02 sem código deveriam reprovar")
+	}
+
+	// UMA linha nomeando AS DUAS fecha a conta das duas.
+	agrupada := base + "\n> `@no-mark:[MTVRX-X01, MTVRX-X02]` satisfeitas pela AUSÊNCIA de código\n"
+	if v, msg := checkRegraImplementada(agrupada, n, root, nil, nil); v != Pass {
+		t.Errorf("a declaração agrupada deveria dispensar as duas; veio %v (%s)", v, msg)
+	}
+
+	// E o alvo MANDA: nomear X01 numa linha que fala de X02 dispensa X01, não X02.
+	soUma := base + "\n> `@no-mark:[MTVRX-X01]` só esta\n"
+	v, msg := checkRegraImplementada(soUma, n, root, nil, nil)
+	if v != Fail {
+		t.Fatalf("X02 continua sem dispensa e deve reprovar; veio %v", v)
+	}
+	if !strings.Contains(msg, "MTVRX-X02") {
+		t.Errorf("a mensagem deveria acusar X02, não X01: %s", msg)
+	}
+	if strings.Contains(msg, "MTVRX-X01") {
+		t.Errorf("X01 foi dispensada e não pode aparecer no achado: %s", msg)
+	}
+}
+
+// `@no-code` continua valendo: quem já escreveu não pode ver a spec quebrar por uma
+// renomeação. O nome mudou porque o antigo mente — o código EXISTE (um `tsconfig.json`
+// decide como tudo compila); o que não existe é a MARCAÇÃO.
+func TestNomeAntigoNoCodeContinuaValendo(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "u.ts"), []byte("// MTVRX-B01: resolve\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	spec := "<!-- @anchors\ncode: MTVRX\n-->\n\n## Regras\n\n" +
+		"| Regra | Efeito |\n| --- | --- |\n" +
+		"| `MTVRX-B01` | resolve a versão |\n" +
+		"| `MTVRX-X01` | NÃO faz I/O @no-code: satisfeita pela ausência |\n"
+	if v, msg := checkRegraImplementada(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Pass {
+		t.Errorf("`@no-code` deveria continuar dispensando; veio %v (%s)", v, msg)
+	}
+}
+
+// SEM alvo, o marcador vale para a spec INTEIRA — equivale a `[all]`.
+//
+// É a saída de quem tem uma unidade em que NADA se marca: nomear todas as regras seria
+// repetir a mesma razão N vezes, e repetição em declaração é onde a divergência começa.
+// A forma é mais forte que a nomeada, e por isso a razão importa mais: ela dispensa o
+// gate inteiro para aquele arquivo.
+func TestNoMarkSemAlvoValeParaTodas(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "u.ts"), []byte("nada marcado aqui\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	spec := "<!-- @anchors\ncode: MTVRX\n-->\n\n## Regras\n\n" +
+		"| Regra | Efeito |\n| --- | --- |\n" +
+		"| `MTVRX-B01` | resolve a versão |\n" +
+		"| `MTVRX-X01` | NÃO faz I/O |\n" +
+		"\n> `@no-mark:` esta unidade descreve configuração, e nada nela recebe marcação\n"
+	n := mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}
+	if v, msg := checkRegraImplementada(spec, n, root, nil, nil); v != Pass {
+		t.Errorf("sem alvo deveria dispensar todas; veio %v (%s)", v, msg)
+	}
+	// `[all]` explícito é a mesma coisa, escrita para quem prefere ver a intenção.
+	explicito := strings.Replace(spec, "@no-mark:", "@no-mark:[all]", 1)
+	if v, msg := checkRegraImplementada(explicito, n, root, nil, nil); v != Pass {
+		t.Errorf("`[all]` explícito deveria dispensar todas; veio %v (%s)", v, msg)
+	}
+}

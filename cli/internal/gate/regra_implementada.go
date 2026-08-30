@@ -41,7 +41,7 @@ import (
 // dispensa, com razão escrita:
 //
 //	| `MTVRX-B01` | resolve a versão vigente do ciclo |
-//	| `MTVRX-X01` | NÃO faz I/O @no-code: satisfeita pela ausência de import |
+//	| `MTVRX-X01` | NÃO faz I/O @no-mark: satisfeita pela ausência de import |
 //
 // O gate deixa de estimar e passa a confrontar uma afirmação. E o `anchors work` diz o que
 // fazer quando a afirmação não se sustenta na hora de implementar: **abrir issue**, porque
@@ -117,7 +117,7 @@ func checkRegraImplementada(content string, n mapx.Node, root string, g *mapx.Gr
 			"nenhuma das %d regra(s) da spec aparece no código, e este projeto exige a "+
 				"marcação (`derived.rule_marking: required`).\n\nMarque no código o trecho "+
 				"que realiza cada regra (`// %s-B01: …`) ou dispense na linha dela "+
-				"(`@no-code: <razão>`). Se NENHUMA regra tem código, verifique antes se a "+
+				"(`@no-mark: <razão>`). Se NENHUMA regra tem código, verifique antes se a "+
 				"spec descreve mesmo esta unidade — é o sintoma de spec que fala de outra coisa",
 			len(regras), unidade)
 	}
@@ -126,7 +126,7 @@ func checkRegraImplementada(content string, n mapx.Node, root string, g *mapx.Gr
 		return Pending, fmt.Sprintf("%d regra(s) catalogada(s) e nenhuma declarada — esta "+
 			"unidade é anterior à prática de ligar regra↔código. Ao tocá-la, marque no código "+
 			"a regra que cada trecho realiza (`// %s-B01: …`) ou dispense na linha dela "+
-			"(`@no-code: <razão>`); aí o gate passa a confrontar de verdade",
+			"(`@no-mark: <razão>`); aí o gate passa a confrontar de verdade",
 			len(regras), unidade)
 	}
 	sort.Strings(faltando)
@@ -139,7 +139,7 @@ func checkRegraImplementada(content string, n mapx.Node, root string, g *mapx.Gr
 		"o código existe, os dois se referenciam pelo header, e todos os gates ficam verdes "+
 		"sobre trabalho que não foi feito.\n\n"+
 		"Duas saídas, e as duas são honestas: marque no código o trecho que realiza a regra "+
-		"(`// %s-B01: …`), ou declare na linha dela `@no-code: <razão>` — para o que é "+
+		"(`// %s-B01: …`), ou declare na linha dela `@no-mark: <razão>` (ou `@no-code`, o nome antigo) — para o que é "+
 		"satisfeito pela AUSÊNCIA de código (restrição, limite de escopo).\n\n"+
 		"Se ao implementar a razão da dispensa não se sustentar, isso não é detalhe de "+
 		"formatação: é a spec estar errada sobre a própria unidade. Abra issue "+
@@ -152,24 +152,61 @@ func checkRegraImplementada(content string, n mapx.Node, root string, g *mapx.Gr
 // noCodeRE: a dispensa DECLARADA de que uma regra apareça no código. Vai na linha da
 // regra, e exige razão escrita — marcador nu não dispensa nada.
 //
-//	| `MTVRX-X01` | NÃO faz I/O @no-code: satisfeita pela ausência de import |
+//	| `MTVRX-X01` | NÃO faz I/O @no-mark: satisfeita pela ausência de import |
 //
 // O padrão é o do `@no-scenario` (CONCEPT §5.1): a dispensa fica À VISTA, na linha do que
 // ela dispensa, versionada pelo git e legível para quem abrir a spec depois. Escondê-la
 // num Skip do gate seria a mesma decisão sem a mesma prestação de contas.
-// A razão tem de ser TEXTO, não o fechamento da célula: `@no-code: |` num markdown de
+// A razão tem de ser TEXTO, não o fechamento da célula: `@no-mark: |` num markdown de
 // tabela satisfaria um `\S+` ingênuo e dispensaria a regra sem dizer nada. Marcador nu não
 // dispensa — é o que separa prestar contas de calar o gate.
-var noCodeRE = regexp.MustCompile(`@no-code[^\S\n]*:[^\S\n]*[^\s|]\S*`)
+//
+// DUAS GRANULARIDADES, e o alvo entre colchetes é o que as separa:
+//
+//	@no-mark:[TSCTY-I01] verificado rodando o compilador, não há linha que o realize
+//	@no-mark:[WRKSP-B02, WRKSP-B04] satisfeitas pela AUSÊNCIA de dependência
+//	@no-mark: esta spec inteira descreve configuração, e nada nela recebe marcação
+//
+// COM alvo, dispensa só as regras nomeadas. SEM alvo, equivale a `[all]`: vale para a
+// spec inteira — é a saída de quem tem uma unidade em que NADA se marca, e nomear todas
+// seria repetir a mesma razão N vezes.
+//
+// A escolha entre as duas é a diferença entre "estas duas não têm onde ser marcadas" e
+// "esta unidade não é marcável". A segunda é mais forte, e por isso a razão importa mais:
+// ela dispensa o gate inteiro para aquele arquivo.
+//
+// `@no-code` continua aceito e continua significando o que sempre significou. O nome novo
+// existe porque o antigo mente NESTE caso: o código EXISTE — um `tsconfig.json` decide
+// como tudo compila —, e o que falta é a MARCAÇÃO.
+var noMarkRE = regexp.MustCompile(
+	`@no-(?:mark|code)[^\S\n]*(?:\[([^\]]*)\])?[^\S\n]*:[^\S\n]*(?:\[([^\]]*)\])?[^\S\n]*([^\s|]\S*)`)
 
 // dispensada diz se a LINHA que declara a regra carrega a dispensa.
 //
-// A dispensa é da linha, não do arquivo: um `@no-code` solto no topo da spec dispensaria
+// A dispensa é da linha, não do arquivo: um `@no-mark` solto no topo da spec dispensaria
 // tudo de uma vez, que é o oposto de prestar contas.
+//
+// Com ALVO declarado, ele manda: `@no-mark:[X-I01]` numa linha que fala de `X-B02` vale
+// para `X-I01`, e não para a regra onde está escrito. É o que permite agrupar várias numa
+// declaração só sem que o gate confunda quem está dispensando.
+//
+// SEM alvo, vale para a spec inteira (`[all]`) — a unidade em que nada se marca.
 func dispensada(content, regra string) bool {
 	for _, linha := range strings.Split(content, "\n") {
-		if strings.Contains(linha, regra) && noCodeRE.MatchString(linha) {
-			return true
+		m := noMarkRE.FindStringSubmatch(linha)
+		if m == nil {
+			continue
+		}
+		// O alvo casa em m[1] (antes dos dois-pontos) ou m[2] (depois): as duas formas
+		// são naturais de escrever, e recusar uma seria pegadinha de sintaxe.
+		alvos := strings.TrimSpace(m[1] + m[2])
+		if alvos == "" || strings.EqualFold(alvos, "all") {
+			return true // sem alvo = todas
+		}
+		for _, a := range strings.Split(alvos, ",") {
+			if strings.TrimSpace(a) == regra {
+				return true
+			}
 		}
 	}
 	return false
