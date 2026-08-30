@@ -26,7 +26,11 @@ on:
     types: [completed]
   # `pull_request` cobre a reabertura e o caso em que não há check algum configurado.
   pull_request:
-    types: [opened, reopened, synchronize]
+    # `closed` cobre o MERGE: sem ele o card fica em `ready-to-review` para sempre, mesmo
+    # depois de o trabalho entrar. E o efeito não é só cosmético — o claim usa o estado
+    # para saber se uma fase fechou, e uma fase que nunca fecha bloqueia tudo o que
+    # depende dela.
+    types: [opened, reopened, synchronize, closed]
     branches: [main] # anchors:integration-branch
   # À MÃO, para quando algo travar: um card que ficou em `in-progress` porque o evento se
   # perdeu não tem outra saída — e um pipeline sem escape manual transforma um percalço
@@ -81,7 +85,14 @@ jobs:
           #
           # `SKIPPED` e `NEUTRAL` contam como OK: um job que não se aplica àquele PR não
           # é reprovação, e tratá-lo como tal travaria todo PR que não toca certas áreas.
-          estado=$(gh pr checks "$pr" --json bucket --jq '[.[].bucket] | unique | join(",")' 2>/dev/null || echo "")
+          # No MERGE não se confere check: o trabalho JÁ entrou, e a decisão de mesclar
+          # foi de quem tinha a informação. Conferir aqui deixaria o card parado quando um
+          # check ficou vermelho depois do merge (um scan noturno, um serviço fora do ar) —
+          # e o board passaria a contradizer o repositório.
+          estado=""
+          if [ "${{ github.event.action }}" != "closed" ]; then
+            estado=$(gh pr checks "$pr" --json bucket --jq '[.[].bucket] | unique | join(",")' 2>/dev/null || echo "")
+          fi
           if echo "$estado" | grep -q "pending"; then
             echo "PR #$pr ainda tem check em curso ($estado) — espero o fim"
             exit 0
@@ -110,6 +121,33 @@ jobs:
             --json number,title --jq "[.[] | select(.title | startswith(\"[$codigo]\"))] | .[0].number // empty")
           if [ -z "$card" ]; then
             echo "nenhum card aberto para o código [$codigo] — nada a mover"
+            exit 0
+          fi
+
+          # PR MERGEADO: o trabalho entrou, e o card avança para o fim da alçada do
+          # Anchors. Daí em diante quem move são os pipelines de entrega do projeto.
+          #
+          # PR fechado SEM merge não avança nada: o trabalho não entrou, e tratar os dois
+          # igual marcaria como pronto o que foi abandonado.
+          if [ "${{ github.event.action }}" = "closed" ]; then
+            if [ "${{ github.event.pull_request.merged }}" != "true" ]; then
+              echo "PR #$pr foi fechado sem merge — o card fica onde está"
+              exit 0
+            fi
+            estado_atual=$(gh issue view "$card" --json labels --jq '.labels[].name' |
+              grep -E '^anchors:(in-progress|ready-to-review|in-review)$' | head -1 || true)
+            if [ -z "$estado_atual" ]; then
+              echo "card #$card não está em trabalho ativo — nada a fazer"
+              exit 0
+            fi
+            for e in anchors:to-do anchors:in-progress anchors:ready-to-review \
+                     anchors:in-review anchors:in-test anchors:ready-to-release \
+                     anchors:production; do
+              gh issue edit "$card" --remove-label "$e" >/dev/null 2>&1 || true
+            done
+            gh issue edit "$card" --add-label "anchors:ready-to-test"
+            gh issue comment "$card" --body "PR #$pr mergeado — card em \`ready-to-test\`, o fim da alçada do Anchors."
+            echo "card #$card → ready-to-test (PR #$pr mergeado)"
             exit 0
           fi
 
