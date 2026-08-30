@@ -179,7 +179,7 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 			fmt.Printf("    #%s %s [%s]\n", c.numero, c.titulo, c.estado)
 		}
 		fmt.Println()
-		fmt.Println("  Termine antes de pedir outro. Se o card voltou para `to-do`, o stale o")
+		fmt.Println("  Termine antes de pedir outro. Se o card voltou de estado, o stale o")
 		fmt.Println("  liberou por inatividade — retome comentando `anchors-owner: <você>` e")
 		fmt.Println("  movendo de volta ao estado em que estava.")
 		return

@@ -265,11 +265,14 @@ jobs:
                - aceito → `anchors:ready-to-test`
                - rejeitado → `anchors:to-do`, devolvendo a posse a quem implementou
 
-            ### Se o card voltou para `to-do` enquanto você revisava
+            ### Se o card voltou para `ready-to-review` enquanto você revisava
 
             O `stale` libera card sem sinal de vida, e revisar é justamente ler e pensar sem
             tocar no repositório — uma revisão longa (ou uma noite de sono) atravessa o prazo.
-            Não é defeito: o pipeline não tem como distinguir "pensando" de "sumiu".
+            Não é defeito: o pipeline não distingue "pensando" de "sumiu".
+
+            Ele devolve o card a `ready-to-review`, e não a `to-do`: o PR está aberto e verde,
+            a implementação terminou — só a revisão não aconteceu.
 
             A recuperação depende de UMA pergunta — o card ainda é seu?
 

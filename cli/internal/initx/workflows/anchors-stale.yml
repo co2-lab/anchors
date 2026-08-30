@@ -78,25 +78,41 @@ jobs:
             [ -n "$n" ] || continue
             dono=$(gh issue view "$n" --json comments \
               --jq '[.comments[].body | select(startswith("anchors-owner:"))] | last')
-            gh issue comment "$n" --body "anchors-owner: (liberado) — sem progresso desde ${limite}; dono anterior: ${dono#anchors-owner: }"
-
-            # Volta para `to-do`: o estado é a label (BOOTSTRAP.md §7.13), e um card sem
-            # dono parado em `in-progress` seria invisível para quem procura trabalho.
+            # PARA ONDE VOLTAR depende de ONDE ESTAVA, e a distinção evita trabalho
+            # refeito:
             #
+            #   • `in-review` → `ready-to-review`. O PR está aberto e VERDE (é o que o
+            #     pr-checks exige para mover para lá), então a implementação terminou —
+            #     só o revisor sumiu. Mandar para `to-do` faria o próximo agente
+            #     REIMPLEMENTAR o que já existe.
+            #
+            #   • `in-progress`/`in-test` → `to-do`. Aqui o trabalho NÃO terminou: não há
+            #     PR, ou os checks não passaram. Devolver à fila de revisão gastaria o
+            #     revisor com o que a máquina já sabe que não está pronto.
+            estado_anterior=$(gh issue view "$n" --json labels --jq '.labels[].name' |
+              grep -E '^anchors:(in-progress|in-review|in-test)$' | head -1 || true)
+            case "$estado_anterior" in
+              "anchors:in-review") destino="anchors:ready-to-review" ;;
+              *) destino="anchors:to-do" ;;
+            esac
+
             # Remove TODOS os estados antes de escrever o novo, e não só os que se espera
             # encontrar: o estado é a label, então duas labels de estado são dois estados
             # ao mesmo tempo. Uma lista parcial de remoção deixa o estado anterior colado
             # no card — e aí o `identify` continua achando em `to-do` um card que já
             # avançou, e o reprocessa para sempre.
-            gh issue edit "$n" \
-              --remove-label "anchors:in-progress" \
-              --remove-label "anchors:ready-to-review" \
-              --remove-label "anchors:in-review" \
-              --remove-label "anchors:ready-to-test" \
-              --remove-label "anchors:in-test" \
-              --remove-label "anchors:ready-to-release" \
-              --remove-label "anchors:production" \
-              --add-label "anchors:to-do"
+            for e in anchors:to-do anchors:in-progress anchors:ready-to-review \
+                     anchors:in-review anchors:ready-to-test anchors:in-test \
+                     anchors:ready-to-release anchors:production; do
+              [ "$e" = "$destino" ] && continue
+              gh issue edit "$n" --remove-label "$e" >/dev/null 2>&1 || true
+            done
+            gh issue edit "$n" --add-label "$destino"
 
-            echo "liberado: #$n (era de ${dono#anchors-owner: })"
+            # A LIBERAÇÃO é comentada DEPOIS de saber o destino, para o registro dizer
+            # onde o card foi parar. Um "liberado" sem destino obriga quem lê a conferir
+            # as labels para entender o que aconteceu.
+            gh issue comment "$n" --body "anchors-owner: (liberado) — sem progresso desde ${limite}; dono anterior: ${dono#anchors-owner: }; voltou para \`${destino#anchors:}\`"
+
+            echo "liberado: #$n → $destino (era de ${dono#anchors-owner: })"
           done
