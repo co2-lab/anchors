@@ -111,6 +111,10 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				return fmt.Errorf("carregar mapa: %w (rode `anchors map build`)", err)
 			}
 
+			// Os arquivos que de fato MUDARAM, distintos do raio de impacto que o
+			// `selectNodes` devolve. Um gate que julga a mudança precisa dos primeiros;
+			// os demais, do raio. Ver Config.Alterados.
+			cfg.Alterados = normalizaAlterados(changed, absRoot)
 			nodes, scope, err := selectNodes(g, cfg, all, changed, absRoot)
 			if err != nil {
 				return err
@@ -1265,4 +1269,21 @@ func idDoGateCmd(g config.Gate) string {
 		return g.ID
 	}
 	return g.Name
+}
+
+// normalizaAlterados põe os caminhos na mesma forma que os IDs do mapa (relativos à raiz),
+// para que a comparação não dependa de como o chamador escreveu o caminho — o pre-commit
+// passa relativo, e quem roda à mão costuma passar absoluto.
+func normalizaAlterados(changed []string, root string) []string {
+	out := make([]string, 0, len(changed))
+	for _, c := range changed {
+		p := c
+		if filepath.IsAbs(p) {
+			if rel, err := filepath.Rel(root, p); err == nil {
+				p = rel
+			}
+		}
+		out = append(out, filepath.ToSlash(filepath.Clean(p)))
+	}
+	return out
 }

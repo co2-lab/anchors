@@ -18,13 +18,22 @@ const DefaultFile = "anchors.yaml"
 // de Projeto (o grafo virtual, STRUCTURE §2.1); gates, providers etc. crescem aqui
 // depois. Ver DECISIONS.md D1.
 type Config struct {
-	Version  int                 `yaml:"version"`
-	Comments map[string][]string `yaml:"comments,omitempty"` // override/extensão dos marcadores (D4)
-	Layers   map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
-	Derived  *Derived            `yaml:"derived,omitempty"`  // co-location dos derivados
-	Governs  []GovernRule        `yaml:"governs,omitempty"`  // dimensão vertical (arestas de alto grau)
-	Gates    []Gate              `yaml:"gates,omitempty"`    // os gates de qualidade (QUALITY §3-§5)
-	Recode   *Recode             `yaml:"recode,omitempty"`   // convenções de projeto p/ `anchors recode`
+	// Alterados são os arquivos que de fato MUDARAM nesta execução, quando o check roda
+	// com `--changed`. Não é configuração: não vem do YAML e não vai para ele.
+	//
+	// Existe porque `--changed X` seleciona o RAIO DE IMPACTO de X — todo nó que depende
+	// dele —, e isso é o comportamento certo para quase todo gate: quem quebrou por
+	// tabela tem de ser confrontado. Mas um gate que julga a MUDANÇA precisa separar
+	// "mudou" de "foi afetado por quem mudou", e a perspectiva sozinha não distingue os
+	// dois. Medido: o `plano-alterado-justificado` acusou 8 arquivos quando 1 mudara.
+	Alterados []string            `yaml:"-"`
+	Version   int                 `yaml:"version"`
+	Comments  map[string][]string `yaml:"comments,omitempty"` // override/extensão dos marcadores (D4)
+	Layers    map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
+	Derived   *Derived            `yaml:"derived,omitempty"`  // co-location dos derivados
+	Governs   []GovernRule        `yaml:"governs,omitempty"`  // dimensão vertical (arestas de alto grau)
+	Gates     []Gate              `yaml:"gates,omitempty"`    // os gates de qualidade (QUALITY §3-§5)
+	Recode    *Recode             `yaml:"recode,omitempty"`   // convenções de projeto p/ `anchors recode`
 	// Tests e Mutation declaram COMO este projeto produz sinal de teste: o comando é
 	// do projeto, a amarração ao mapa é do Anchors. Ver Suite.
 	Tests    []Suite `yaml:"tests,omitempty"`

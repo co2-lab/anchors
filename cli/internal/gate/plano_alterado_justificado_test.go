@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/config"
 	"strings"
 	"testing"
 
@@ -13,7 +14,7 @@ import (
 func TestAlterado_semRevisaoReprova(t *testing.T) {
 	v, d := checkPlanoAlteradoJustificado(
 		"# Plano 0001 — Fundação\n\n## Objetivo\n\nTexto corrigido sem dizer nada.\n",
-		mapx.Node{Code: "FNDTN"}, "", nil, nil)
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md"))
 	if v != Fail {
 		t.Fatalf("plano alterado sem revisão deve reprovar, veio %v: %s", v, d)
 	}
@@ -32,7 +33,7 @@ func TestAlterado_semRevisaoReprova(t *testing.T) {
 func TestAlterado_comRevisaoPassa(t *testing.T) {
 	v, d := checkPlanoAlteradoJustificado(
 		"# Plano 0001\n\n> **FNDTN-R0001:** o exemplo citava um pacote que não existe.\n",
-		mapx.Node{Code: "FNDTN"}, "", nil, nil)
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md"))
 	if v != Pass {
 		t.Fatalf("revisão declarada deveria passar, veio %v: %s", v, d)
 	}
@@ -43,7 +44,7 @@ func TestAlterado_comRevisaoPassa(t *testing.T) {
 func TestAlterado_revisaoDeOutroNaoConta(t *testing.T) {
 	v, _ := checkPlanoAlteradoJustificado(
 		"# Plano 0017\n\nComo explica a `MTUAO-R0001`, o CI mudou.\n",
-		mapx.Node{Code: "FNDTN"}, "", nil, nil)
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md"))
 	if v != Fail {
 		t.Fatalf("revisão de outro código não justifica a mudança deste, veio %v", v)
 	}
@@ -54,7 +55,7 @@ func TestAlterado_revisaoDeOutroNaoConta(t *testing.T) {
 func TestAlterado_numeracaoComBuracoReprova(t *testing.T) {
 	v, d := checkPlanoAlteradoJustificado(
 		"> **FNDTN-R0001:** primeira.\n\n> **FNDTN-R0007:** pulou do 1 para o 7.\n",
-		mapx.Node{Code: "FNDTN"}, "", nil, nil)
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md"))
 	if v != Fail {
 		t.Fatalf("numeração com buraco deve reprovar, veio %v: %s", v, d)
 	}
@@ -63,7 +64,7 @@ func TestAlterado_numeracaoComBuracoReprova(t *testing.T) {
 func TestAlterado_variasRevisoesSequenciaisPassam(t *testing.T) {
 	v, d := checkPlanoAlteradoJustificado(
 		"> **FNDTN-R0001:** primeira.\n\n> **FNDTN-R0002:** segunda.\n\n> **FNDTN-R0003:** terceira.\n",
-		mapx.Node{Code: "FNDTN"}, "", nil, nil)
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md"))
 	if v != Pass {
 		t.Fatalf("três revisões sequenciais deveriam passar, veio %v: %s", v, d)
 	}
@@ -76,7 +77,7 @@ func TestAlterado_variasRevisoesSequenciaisPassam(t *testing.T) {
 // Sem código não há como saber de quem é a revisão. Skip, e não Fail: quem cobra o código
 // é outro gate, e reprovar aqui daria dois achados para um defeito só.
 func TestAlterado_semCodigoPula(t *testing.T) {
-	v, _ := checkPlanoAlteradoJustificado("# Plano\n", mapx.Node{}, "", nil, nil)
+	v, _ := checkPlanoAlteradoJustificado("# Plano\n", mapx.Node{ID: "plans/0001.md"}, "", nil, cfgAlterado("plans/0001.md"))
 	if v != Skip {
 		t.Fatalf("sem código o gate deve pular, veio %v", v)
 	}
@@ -91,8 +92,39 @@ func TestAlterado_formasDeEscreverAMarca(t *testing.T) {
 		"> [!NOTE]\n> FNDTN-R0001: dentro de um alerta do GitHub",
 		"**FNDTN-R0001**: negrito antes dos dois-pontos",
 	} {
-		if v, d := checkPlanoAlteradoJustificado(forma, mapx.Node{Code: "FNDTN"}, "", nil, nil); v != Pass {
+		if v, d := checkPlanoAlteradoJustificado(forma, mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, cfgAlterado("plans/0001.md")); v != Pass {
 			t.Errorf("deveria aceitar %q, veio %v: %s", forma, v, d)
 		}
+	}
+}
+
+// cfgAlterado monta o config com a lista do que MUDOU nesta execução.
+func cfgAlterado(paths ...string) *config.Config {
+	return &config.Config{Alterados: paths}
+}
+
+// O CASO QUE O GATE ACUSAVA ERRADO, e que os outros testes não pegavam por passarem só o
+// nó alterado: `--changed X` entrega o RAIO DE IMPACTO de X, e as specs que X semeia
+// entram no escopo sem terem mudado.
+//
+// Medido no blue-eyes: alterar UM plano acusava 8 arquivos, 7 intocados. Um gate
+// bloqueante que acusa inocente é pior que gate nenhum — a saída barata vira desligá-lo.
+func TestAlterado_noRaioDeImpactoMasIntocadoPula(t *testing.T) {
+	v, d := checkPlanoAlteradoJustificado(
+		"# Spec que ninguém tocou\n",
+		mapx.Node{ID: "packages/shared/Workspace.spec.md", Code: "WKSPC"},
+		"", nil, cfgAlterado("plans/0001-fundacao.md"))
+	if v != Skip {
+		t.Fatalf("nó alcançado só pelo raio de impacto não tem o que justificar, veio %v: %s", v, d)
+	}
+}
+
+// Sem a lista (chamada que não passou config) o gate se cala: acusar sem saber o que mudou
+// é exatamente o defeito que ele acabou de corrigir.
+func TestAlterado_semListaDeAlteradosPula(t *testing.T) {
+	v, _ := checkPlanoAlteradoJustificado("# Plano\n",
+		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, "", nil, nil)
+	if v != Skip {
+		t.Fatalf("sem saber o que mudou, o gate deve se calar, veio %v", v)
 	}
 }

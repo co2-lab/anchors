@@ -73,6 +73,17 @@ func RevisoesDe(content string) []Revisao {
 // de primeira. Rodando com `--changed`, todo nó que ele recebe JÁ é um arquivo alterado —
 // por isso não precisa da lista, e não a recebe.
 func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	// SÓ o que de fato MUDOU. O `--changed X` entrega o RAIO DE IMPACTO de X — todo nó
+	// que depende dele —, e isso é certo para quase todo gate: quem quebrou por tabela tem
+	// de ser confrontado. Aqui não: um plano que não mudou não tem o que justificar.
+	//
+	// Medido no blue-eyes: sem esta conferência, alterar UM plano acusava 8 arquivos, 7
+	// deles intocados. Um gate bloqueante que acusa inocente é pior que gate nenhum — a
+	// saída barata vira desligá-lo.
+	if cfg == nil || !mudouDeFato(n.ID, cfg.Alterados) {
+		return Skip, "não está entre os arquivos alterados (só foi alcançado pelo raio de impacto)"
+	}
+
 	codigo := n.Code
 	if codigo == "" {
 		return Skip, "o arquivo não tem código — quem cobra isso é o `spec-tem-codigo`"
@@ -129,4 +140,14 @@ func primeiraLinha(s string) string {
 		return s[:87] + "..."
 	}
 	return s
+}
+
+// mudouDeFato diz se o nó está na lista dos que mudaram.
+func mudouDeFato(id string, alterados []string) bool {
+	for _, a := range alterados {
+		if a == id {
+			return true
+		}
+	}
+	return false
 }
