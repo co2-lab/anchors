@@ -81,3 +81,95 @@ func TestLaudoEnsinaOFormato(t *testing.T) {
 		t.Error("o texto deve dizer POR QUE o formato importa, não só que é obrigatório")
 	}
 }
+
+// CONFRONTADO COM O COMMITLINT, que é a ferramenta madura desta régua. Cada caso aqui foi
+// verificado nos dois: o veredito tem de bater, senão a régua embutida ensina um formato
+// e o projeto com Node cobra outro.
+func TestReguaBateComOCommitlint(t *testing.T) {
+	casos := []struct {
+		assunto string
+		passa   bool
+		porque  string
+	}{
+		{"feat: ok", true, ""},
+		{"fix(board): a contagem do refresh", true, ""},
+		{"feat(gate)!: muda o contrato", true, ""},
+		{"Feat: maiúscula no tipo", false, "`Feat` e `feat` viram grupos separados no changelog"},
+		{"feat(): escopo vazio", false, "escopo vazio parece que alguém ia dizer algo"},
+		{"feat: termina em ponto.", false, "o changelog emenda o assunto a outros textos"},
+		{"bugfix: tipo que não existe", false, "tipo livre vira sinônimo e desfaz o agrupamento"},
+		{"[MTUAO] Plano 0017", false, "sumiria do changelog — o caso real"},
+		// A SIGLA passa, e é onde esta régua DIVERGE do commitlint de propósito: o
+		// `subject-case` dele reprova isto, sem distinguir sigla de frase capitalizada.
+		{"feat: SBOM sai da pasta ignorada", true, "sigla legítima não é frase capitalizada"},
+	}
+	for _, c := range casos {
+		got := problemaNoAssunto(c.assunto) == ""
+		if got != c.passa {
+			verbo := "deveria passar"
+			if !c.passa {
+				verbo = "deveria barrar"
+			}
+			t.Errorf("%q %s — %s (laudo: %q)", c.assunto, verbo, c.porque,
+				problemaNoAssunto(c.assunto))
+		}
+	}
+}
+
+// O ASSUNTO LONGO é cortado na lista de commits e no changelog. O detalhe vai no corpo,
+// que não tem limite — e o laudo tem de dizer isso, senão quem foi barrado só encurta e
+// perde a informação.
+func TestAssuntoLongoBarraEExplicaOndeCabeODetalhe(t *testing.T) {
+	longo := "feat(x): " + strings.Repeat("a", LimiteDoAssunto)
+	p := problemaNoAssunto(longo)
+	if p == "" {
+		t.Fatalf("assunto de %d caracteres deveria barrar (limite %d)", len(longo), LimiteDoAssunto)
+	}
+	if !strings.Contains(p, "CORPO") {
+		t.Errorf("o laudo deve dizer que o detalhe cabe no corpo; veio: %s", p)
+	}
+	// E o que está no limite passa: barrar em cima da linha seria arbitrário.
+	noLimite := "feat: " + strings.Repeat("a", LimiteDoAssunto-6)
+	if p := problemaNoAssunto(noLimite); p != "" {
+		t.Errorf("assunto de exatamente %d deveria passar; veio: %s", LimiteDoAssunto, p)
+	}
+}
+
+// CADA DEFEITO tem laudo PRÓPRIO. Um "formato inválido" genérico obriga quem foi barrado a
+// adivinhar qual das seis regras quebrou — e adivinhar três vezes é o que faz alguém
+// desligar o hook.
+func TestCadaDefeitoTemLaudoProprio(t *testing.T) {
+	vistos := map[string]string{}
+	for _, a := range []string{
+		"Feat: x", "feat(): x", "feat: x.", "bugfix: x", "sem formato nenhum",
+	} {
+		p := problemaNoAssunto(a)
+		if p == "" {
+			t.Fatalf("%q deveria ter defeito", a)
+		}
+		if antes, repetido := vistos[p]; repetido {
+			t.Errorf("%q e %q recebem o MESMO laudo (%q) — o laudo tem de dizer o que "+
+				"consertar", a, antes, p)
+		}
+		vistos[p] = a
+	}
+}
+
+// A DIREÇÃO DA DIVERGÊNCIA importa mais que o número dela.
+//
+// Confrontado com o commitlint, o único caso em que os dois discordam é `feat(): x`:
+// ele aceita escopo vazio, esta régua barra. Ser MAIS estrita é seguro — o que passa aqui
+// passa lá —, então um projeto que troque esta régua pelo commitlint não descobre um
+// histórico que a ferramenta nova reprova. O contrário produziria exatamente isso.
+func TestOndeDivergeEhParaOLadoMaisEstrito(t *testing.T) {
+	if problemaNoAssunto("feat(): x") == "" {
+		t.Error("escopo vazio deve barrar: parece que alguém ia dizer algo e parou")
+	}
+	// E as formas que o commitlint aceita continuam aceitas aqui — divergir para o lado
+	// FROUXO seria o problema.
+	for _, ok := range []string{"feat: x", "feat(a): x", "feat(a)!: x", "feat!: x"} {
+		if p := problemaNoAssunto(ok); p != "" {
+			t.Errorf("%q passa no commitlint e tem de passar aqui; veio: %s", ok, p)
+		}
+	}
+}
