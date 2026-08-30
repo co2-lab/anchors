@@ -565,3 +565,30 @@ func TestPipelinesComAnchorsSeAutoverificam(t *testing.T) {
 		}
 	}
 }
+
+// UM `select` NO FIM DE UM PIPE não filtra o CAMPO — filtra o objeto inteiro: quando ele
+// reprova, o jq não produz valor nenhum, e o item some do array.
+//
+// Medido no blue-eyes: o board publicava 3 de 7 cards. Os 4 ausentes eram exatamente os
+// de dono LIBERADO — que é o estado normal de quem terminou o trabalho. O board apagava o
+// trabalho concluído, e como ele ainda mostrava ALGUNS cards, parecia estar funcionando.
+func TestBoardNaoDerrubaCardPeloFiltroDeDono(t *testing.T) {
+	b, err := workflowsFS.ReadFile("workflows/anchors-board.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+	i := strings.Index(texto, "dono:")
+	if i < 0 {
+		t.Fatal("o board deixou de extrair o dono — se isso é intencional, remova este teste")
+	}
+	expr := texto[i:min(len(texto), i+400)]
+	if strings.Contains(expr, "select(test(") {
+		t.Error("`select` na expressão do `dono` derruba o CARD inteiro quando o dono está " +
+			"liberado, e liberado é o estado normal de quem terminou. Use `if/then/else`, " +
+			"que devolve \"\" e preserva o item")
+	}
+	if !strings.Contains(expr, "if test(") {
+		t.Error("o dono liberado deve virar campo VAZIO (if/then/else), não sumir")
+	}
+}

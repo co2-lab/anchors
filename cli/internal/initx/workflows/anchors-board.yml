@@ -124,7 +124,8 @@ jobs:
                     codigo: (.title | capture("^\\[(?<c>[^]]+)\\]").c? // ""),
                     estado: ([.labels[].name | select(startswith("anchors:"))] | .[0] // "anchors:to-do"),
                     dono: ([.comments[].body | select(startswith("anchors-owner:"))] | last // "" |
-                           sub("^anchors-owner: *";"") | select(test("\\(liberado\\)") | not)),
+                           sub("^anchors-owner: *";"") |
+                           if test("\\(liberado\\)") then "" else . end),
                     posse: [.comments[].body | select(startswith("anchors-owner:")) |
                             sub("^anchors-owner: *";"")],
                     comentarios: (.comments | length)

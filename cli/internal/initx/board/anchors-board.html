@@ -422,6 +422,10 @@ function desenha(d) {
 }
 
 function carrega() {
+  // A contagem REINICIA a cada busca — inclusive nas que não vêm do temporizador (o
+  // botão, o retorno à aba). Sem isto os dois relógios divergem, e o botão anunciaria
+  // uma busca que já aconteceu.
+  faltam = 5;
   return fetch("board.json?" + Date.now())
     .then((r) => r.ok ? r.json() : Promise.reject(r.status))
     .then(desenha)
@@ -443,10 +447,21 @@ function carrega() {
 // E ele PARA quando a aba não está visível: um board aberto num monitor esquecido faria
 // 17 mil requisições por dia sem ninguém olhando. Ao voltar, busca na hora — quem
 // retoma a aba quer o estado de agora, não o de cinco segundos adiante.
-let timer = null;
+let timer = null, tique = null, faltam = 5;
 function agenda() {
   clearInterval(timer);
-  if (pref.auto) timer = setInterval(() => { if (!document.hidden) carrega(); }, 5000);
+  clearInterval(tique);
+  faltam = 5;
+  if (!pref.auto) { rotula(); return; }
+  timer = setInterval(() => { if (!document.hidden) carrega(); }, 5000);
+  // A CONTAGEM é o sinal de vida do board. Ela conta em segundo separado do `timer`
+  // para não empurrar a busca: quem atrasa é o navegador com a aba em segundo plano, e
+  // somar erro de temporizador faria a contagem divergir do que de fato acontece.
+  tique = setInterval(() => {
+    if (document.hidden) return;
+    faltam = faltam > 1 ? faltam - 1 : 5;
+    rotula();
+  }, 1000);
 }
 document.addEventListener("visibilitychange", () => { if (!document.hidden && pref.auto) carrega(); });
 
@@ -471,12 +486,12 @@ btnTema.onclick = () => {
 const btnAuto = document.getElementById("auto");
 const btnCd = document.getElementById("cd");
 function rotula() {
-  btnAuto.textContent = pref.auto ? "⟳ atualizando a cada 5s" : "⏸ atualização pausada";
+  btnAuto.textContent = pref.auto ? `⟳ atualizando em ${faltam}s` : "⏸ atualização pausada";
   btnAuto.setAttribute("aria-pressed", String(pref.auto));
   btnCd.textContent = pref.cd ? "ocultar colunas de entrega" : "mostrar colunas de entrega";
   btnCd.setAttribute("aria-pressed", String(pref.cd));
 }
-btnAuto.onclick = () => { pref.auto = !pref.auto; rotula(); agenda(); if (pref.auto) carrega(); };
+btnAuto.onclick = () => { pref.auto = !pref.auto; agenda(); if (pref.auto) carrega(); };
 btnCd.onclick = () => { pref.cd = !pref.cd; rotula(); carrega(); };
 
 // --- o FILTRO por label ---
