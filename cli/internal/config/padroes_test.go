@@ -29,12 +29,13 @@ files:
 	}
 }
 
-// `patterns` VENCE `files` quando os dois declaram a mesma camada — mas MESCLA o resto.
+// `patterns` é uma chave DENTRO de `files`, irmã de `code`/`feature`/`test`, e substitui
+// o `code` quando declarada — mas o resto de `files` sobrevive.
 //
-// Um override pode querer padrões só para o código e continuar usando o `feature`/`test`
-// da co-location. Substituir o mapa inteiro obrigaria a repetir o que não mudou, e
-// repetição em config é onde a divergência começa.
-func TestPatternsVenceFilesEMesclaOResto(t *testing.T) {
+// Uma spec de configuração pode ter `patterns` para o código e continuar querendo o
+// `feature`/`test` da co-location. Descartar o mapa inteiro obrigaria a repetir o que não
+// mudou, e repetição em config é onde a divergência começa.
+func TestPatternsSubstituiCodeEMantemOResto(t *testing.T) {
 	var d Derived
 	if err := yaml.Unmarshal([]byte(`
 anchor: spec
@@ -42,8 +43,7 @@ files:
   code: "{{dir}}/{{name}}.ts"
   feature: "{{dir}}/{{name}}.feature"
   test: "{{dir}}/{{name}}.test.ts"
-patterns:
-  code:
+  patterns:
     - "tsconfig.base.json"
     - "packages/*/tsconfig.json"
 `), &d); err != nil {
@@ -52,14 +52,16 @@ patterns:
 	got := d.PadroesDe()
 	// O código vem de `patterns`.
 	if len(got["code"]) != 2 || got["code"][0] != "tsconfig.base.json" {
-		t.Errorf("`patterns` deveria vencer para `code`, veio %v", got["code"])
+		t.Errorf("`patterns` deveria substituir `code`, veio %v", got["code"])
 	}
-	// E o que `patterns` não declarou continua vindo de `files`.
+	// E o resto continua vindo de `files`.
 	if len(got["feature"]) != 1 || got["feature"][0] != "{{dir}}/{{name}}.feature" {
-		t.Errorf("`feature` deveria vir de `files`, veio %v", got["feature"])
+		t.Errorf("`feature` deveria sobreviver, veio %v", got["feature"])
 	}
-	if len(got["test"]) != 1 {
-		t.Errorf("`test` deveria vir de `files`, veio %v", got["test"])
+	// `patterns` NÃO é uma camada: não pode virar um derivado com esse nome, ou o mapa
+	// passaria a procurar um arquivo "patterns" que ninguém escreveu.
+	if _, virouCamada := got[ChavePatterns]; virouCamada {
+		t.Error("`patterns` não é camada e não pode sobrar no mapa de derivados")
 	}
 }
 

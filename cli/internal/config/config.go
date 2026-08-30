@@ -844,19 +844,10 @@ type Derived struct {
 	Anchor string `yaml:"anchor"` // a camada-âncora (canônico: "spec")
 	// Files: camada-derivada → padrão de caminho. `code`, `feature` e `test` são as três
 	// pontas da trinca, e cada uma diz onde aquela peça mora.
-	Files map[string]Padroes `yaml:"files,omitempty"`
-	// Patterns são os padrões de QUEM NÃO SEGUE a co-location, e VENCEM `files` quando
-	// declarados.
 	//
-	// `files` responde "onde mora o código desta spec?" com um template — e isso cobre a
-	// unidade normal: uma tela, um handler. A spec de CONFIGURAÇÃO não tem um arquivo,
-	// tem um CONJUNTO: `TypeScriptConfig` descreve seis `tsconfig.json` espalhados. Não é
-	// um template que falha, é uma pergunta diferente.
-	//
-	// Por isso os dois convivem em vez de um substituir o outro: `files` continua sendo o
-	// caso comum, e `patterns` é a exceção declarada. Quem tem `patterns` não precisa
-	// fingir um `{{name}}.ts` que ninguém vai escrever.
-	Patterns  map[string]Padroes `yaml:"patterns,omitempty"`
+	// A chave `patterns` é RESERVADA e não é uma camada: ela declara o CONJUNTO de
+	// arquivos que a spec governa, e substitui `code` quando presente. Ver ChavePatterns.
+	Files     map[string]Padroes `yaml:"files,omitempty"`
 	Overrides []DerivedOverride  `yaml:"overrides,omitempty"` // padrões por camada-âncora (não co-localizado)
 	// Regimes — o de-para do vocabulário de REGIME de teste do PROJETO para o regime
 	// CANÔNICO do framework (unit|integration|e2e|vr). Chave = a tag do projeto (sem @,
@@ -995,16 +986,39 @@ func (d *Derived) PadroesDe() map[string]Padroes {
 	if d == nil {
 		return nil
 	}
-	if len(d.Patterns) == 0 {
-		return d.Files
+	return resolvePatterns(d.Files)
+}
+
+// ChavePatterns é a chave RESERVADA dentro de `files`: o conjunto de arquivos que a spec
+// governa, quando ela não segue a co-location.
+//
+// `files.code` responde "onde mora o código desta spec?" com um template, e isso cobre a
+// unidade normal — uma tela, um handler. A spec de CONFIGURAÇÃO não tem um arquivo, tem
+// um CONJUNTO: `TypeScriptConfig` descreve seis `tsconfig.json` espalhados. Não é um
+// template que falha; é outra pergunta.
+//
+// Fica DENTRO de `files` e não ao lado porque é a MESMA decisão — onde estão os derivados
+// — expressa de outra forma. Ao lado, seriam dois lugares para responder uma pergunta só.
+const ChavePatterns = "patterns"
+
+// resolvePatterns troca `code` pelo conteúdo de `patterns`, quando declarado.
+//
+// O resto de `files` sobrevive: uma spec de configuração pode ter `patterns` para o
+// código e continuar querendo o `feature`/`test` da co-location. Descartar o mapa inteiro
+// obrigaria a repetir o que não mudou, e repetição em config é onde a divergência começa.
+func resolvePatterns(files map[string]Padroes) map[string]Padroes {
+	ps, tem := files[ChavePatterns]
+	if !tem || len(ps) == 0 {
+		return files
 	}
 	out := map[string]Padroes{}
-	for k, v := range d.Files {
+	for k, v := range files {
+		if k == ChavePatterns {
+			continue // não é camada: não pode virar um derivado chamado "patterns"
+		}
 		out[k] = v
 	}
-	for k, v := range d.Patterns {
-		out[k] = v
-	}
+	out["code"] = ps
 	return out
 }
 
@@ -1027,8 +1041,6 @@ type DerivedOverride struct {
 	Code string `yaml:"code,omitempty"`
 	// Files: camada-derivada → template de região (aceita {{module}}).
 	Files map[string]Padroes `yaml:"files,omitempty"`
-	// Patterns vence `files` quando declarado. Ver `Derived.Patterns`.
-	Patterns map[string]Padroes `yaml:"patterns,omitempty"`
 }
 
 // PadroesDe devolve os padrões declarados, seja pelo nome novo ou pelo antigo.
@@ -1037,20 +1049,7 @@ type DerivedOverride struct {
 // `if Patterns != nil else Files` por cada leitor garantiria que um deles ficasse de fora
 // numa mudança futura, e o efeito seria um padrão silenciosamente ignorado.
 func (o DerivedOverride) PadroesDe() map[string]Padroes {
-	if len(o.Patterns) == 0 {
-		return o.Files
-	}
-	// MESCLA, e não substitui: um override pode declarar `patterns` só para o código e
-	// continuar querendo o `feature`/`test` de `files`. Trocar o mapa inteiro obrigaria a
-	// repetir o que não mudou.
-	out := map[string]Padroes{}
-	for k, v := range o.Files {
-		out[k] = v
-	}
-	for k, v := range o.Patterns {
-		out[k] = v
-	}
-	return out
+	return resolvePatterns(o.Files)
 }
 
 // GovernRule — uma aresta vertical declarada: a régua `from` rege os nós de TODAS
