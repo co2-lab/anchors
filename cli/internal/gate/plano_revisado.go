@@ -2,6 +2,8 @@ package gate
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -67,6 +69,29 @@ func checkPlanoRevisado(content string, n mapx.Node, root string, g *mapx.Graph,
 				"mapa. Uma revisão que aponta para o nada não avisa ninguém — e o plano que "+
 				"se pretendia revisar continua sendo lido como vigente",
 				strings.Join(ausentes, ", "))
+		}
+		// QUEM REVISA é lembrado do passo que falta, e ele é no OUTRO arquivo.
+		//
+		// O gate cobra o aviso do lado do plano revisado, e quem escreve o revisor só
+		// descobre isso quando o outro reprova — num arquivo que ele talvez nem tenha
+		// aberto. Dizer aqui alcança a pessoa no momento em que ela está fazendo a
+		// revisão.
+		// Só cobra os que AINDA não avisam: um lembrete que não some vira ruído
+		// permanente, e ruído permanente é o que treina a equipe a ignorar o gate.
+		var semAviso []string
+		for _, alvo := range n.Supersedes {
+			b, err := os.ReadFile(filepath.Join(root, alvo))
+			if err != nil || !avisoDeRevisaoRE.MatchString(topo(string(b))) {
+				semAviso = append(semAviso, alvo)
+			}
+		}
+		if len(semAviso) > 0 {
+			return Pending, fmt.Sprintf("revisa %s, e o plano revisado precisa AVISAR quem "+
+				"o lê. Escreva no topo de %s:\n    > **Revisado por** `%s` — <o que mudou e "+
+				"por quê>\nSem isso, quem abrir o plano antigo segue uma decisão que foi "+
+				"revista — ele continua parecendo coerente, porque É o registro do que se "+
+				"decidiu na época",
+				strings.Join(semAviso, ", "), semAviso[0], n.ID)
 		}
 		return Skip, "nenhum plano revisa este"
 	}

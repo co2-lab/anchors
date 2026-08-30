@@ -465,13 +465,26 @@ var planTemplate = template{
 				"comando que roda, um gate que passa. \"Está funcionando\" não é definição de pronto.",
 			Body: "## Definição de pronto\n\n- TODO: o comando que passa, ou o gate que fica verde.\n\n"},
 
-		{Key: "revision", Title: "Revisão de outro plano (quando este revisa)", Default: false,
+		{Key: "revision", Title: "Revisão de outro plano (quando este revisa)", Default: true,
 			Purpose: "Só quando este plano REVISA outro. Declare `supersedes: plans/00XX-nome.md` no " +
 				"header, e escreva aqui o que muda e por quê. O plano revisado NÃO é editado — ele " +
 				"continua sendo o registro do que se decidiu na época —, mas ganha no topo um aviso " +
 				"apontando para cá, senão quem o lê fora de ordem segue uma decisão revista.",
 			Body: "## O que este plano revisa\n\nRevisa `plans/00XX-nome.md`.\n\n" +
 				"**O que muda:** TODO\n\n**Por quê:** TODO — o que se aprendeu depois de escrever aquele.\n\n" +
-				"**O que continua valendo:** TODO — para quem leu o anterior saber o que não mudou.\n\n"},
+				"**O que continua valendo:** TODO — para quem leu o anterior saber o que não mudou.\n\n" +
+				"> ⚠ **Falta um passo, e ele é no OUTRO arquivo.**\n" +
+				">\n" +
+				"> Declare `supersedes: plans/00XX-nome.md` no header DESTE plano, e escreva no\n" +
+				"> **topo daquele**:\n" +
+				">\n" +
+				"> ```\n" +
+				"> > **Revisado por** `plans/00YY-este.md` — <o que mudou e por quê>\n" +
+				"> ```\n" +
+				">\n" +
+				"> Sem isso, quem abrir o plano antigo segue uma decisão que foi revista: ele\n" +
+				"> continua parecendo coerente, porque É o registro coerente do que se decidiu na\n" +
+				"> época. O gate `plano-revisado` reprova até o aviso existir — e apagar esta\n" +
+				"> caixa depois de cumprir os dois passos.\n\n"},
 	},
 }
