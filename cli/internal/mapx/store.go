@@ -2,6 +2,7 @@ package mapx
 
 import (
 	"os"
+	"regexp"
 
 	"gopkg.in/yaml.v3"
 )
@@ -27,9 +28,22 @@ func Save(g *Graph, path string) error {
 	if err != nil {
 		return err
 	}
+	// SE SÓ O `gerado_por` MUDOU, não reescreve. Sem isto o campo causaria justamente a
+	// oscilação que existe para denunciar: o build local grava "dev", o CI grava "0.1.10",
+	// e cada um desfaz o do outro a cada execução.
+	//
+	// A comparação é do CONTEÚDO — o mapa é derivado, e reescrevê-lo idêntico não é
+	// operação neutra: muda o mtime, e é o diff que importa.
 	header := []byte("# anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)\n" +
 		"# Material e versionado. Fonte de verdade do grafo; índices em memória são cache.\n")
-	return os.WriteFile(path, append(header, data...), 0o644)
+	completo := append(header, data...)
+	// A comparação é com o arquivo COMPLETO, header incluído. A primeira versão comparava
+	// só o YAML contra o arquivo em disco — e como o disco tem o header, nunca eram
+	// iguais: a guarda não guardava nada, e só o teste isolado mostrou.
+	if igualIgnorandoGeradoPor(path, completo) {
+		return nil
+	}
+	return os.WriteFile(path, completo, 0o644)
 }
 
 // Load lê um grafo existente do disco.
@@ -43,4 +57,19 @@ func Load(path string) (*Graph, error) {
 		return nil, err
 	}
 	return &g, nil
+}
+
+// igualIgnorandoGeradoPor diz se o mapa em disco é o mesmo, desconsiderando quem o gerou.
+func igualIgnorandoGeradoPor(path string, novo []byte) bool {
+	atual, err := os.ReadFile(path)
+	if err != nil {
+		return false // não existe ainda: há o que escrever
+	}
+	return semGeradoPor(atual) == semGeradoPor(novo)
+}
+
+var geradoPorLinhaRE = regexp.MustCompile(`(?m)^gerado_por:.*\n`)
+
+func semGeradoPor(b []byte) string {
+	return geradoPorLinhaRE.ReplaceAllString(string(b), "")
 }
