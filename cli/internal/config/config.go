@@ -149,6 +149,16 @@ type Workflow struct {
 	// Declarável porque há projetos onde isso não cabe: um repositório de exemplo, ou um
 	// time que revisa fora do GitHub. Quem declara `0` está dizendo que sabe.
 	RequiredApprovals *int `yaml:"required_approvals,omitempty"`
+	// StalePipelineBlocks: um pipeline desatualizado BARRA o CI, em vez de só avisar.
+	//
+	// O padrão é `false`, e a razão é que barrar troca um problema por outro: o pipeline
+	// velho ainda faz o trabalho antigo, e derrubá-lo passa de "faz menos do que devia"
+	// para "não faz nada". Num time que descobre o aviso e age, avisar basta.
+	//
+	// Mas há projetos onde o aviso não é lido — CI com muitos jobs, equipe que não olha o
+	// resumo do run — e ali o silêncio é pior que a interrupção. Quem declara `true` está
+	// dizendo que prefere o CI vermelho a um pipeline que finge funcionar.
+	StalePipelineBlocks bool `yaml:"stale_pipeline_blocks,omitempty"`
 }
 
 // BranchDeIntegracao devolve onde o trabalho chega, com o default aplicado.
@@ -173,6 +183,15 @@ func (w *Workflow) AprovacoesExigidas() int {
 		return 1
 	}
 	return *w.RequiredApprovals
+}
+
+// PipelineVelhoBarra diz se um pipeline desatualizado deve derrubar o CI.
+//
+// Bool simples, e não ponteiro como `RequiredApprovais`: aqui o zero-value É o padrão
+// desejado (avisar), então não há o que distinguir entre "não declarou" e "declarou
+// false" — as duas querem a mesma coisa.
+func (w *Workflow) PipelineVelhoBarra() bool {
+	return w != nil && w.StalePipelineBlocks
 }
 
 // BranchesProtegidos devolve onde nada entra sem PR, com o default aplicado.

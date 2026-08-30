@@ -549,11 +549,19 @@ func TestPipelinesComAnchorsSeAutoverificam(t *testing.T) {
 			t.Errorf("%s instala o Anchors e não confere se está atualizado — "+
 				"um pipeline velho roda e o que foi corrigido depois não acontece", w.Arquivo)
 		}
-		// E a conferência NÃO barra: o pipeline desatualizado ainda faz o trabalho antigo,
-		// e derrubá-lo trocaria "faz menos do que devia" por "não faz nada".
+		// E quem decide se isto BARRA é o projeto, pelo `stale_pipeline_blocks` — não o
+		// YAML. As duas formas de decidir aqui dentro estão proibidas, e por motivos
+		// opostos: `continue-on-error: true` engoliria a escolha de quem prefere barrar,
+		// e um `exit 1` escrito à mão barraria todo mundo, inclusive quem quer só o aviso.
 		i := strings.Index(texto, "--check-pipelines")
-		if !strings.Contains(texto[max(0, i-400):i], "continue-on-error: true") {
-			t.Errorf("%s: a conferência não pode BARRAR o pipeline", w.Arquivo)
+		passo := texto[max(0, i-400):min(len(texto), i+400)]
+		if regexp.MustCompile(`(?m)^\s*continue-on-error\s*:`).MatchString(passo) {
+			t.Errorf("%s: `continue-on-error` anula quem declarou `stale_pipeline_blocks: "+
+				"true` — a decisão é do anchors.yaml, não do YAML do pipeline", w.Arquivo)
+		}
+		if strings.Contains(passo, "exit 1") {
+			t.Errorf("%s: `exit 1` à mão barra todo mundo — o comando já sai com o código "+
+				"certo conforme o projeto declarou", w.Arquivo)
 		}
 	}
 }

@@ -125,8 +125,11 @@ jobs:
       # antigo, e derrubá-lo trocaria "faz menos do que devia" por "não faz nada". O aviso
       # aparece no resumo do run, onde quem investiga já vai olhar.
       - name: Conferir se este pipeline está atualizado
-        continue-on-error: true
         run: |
+          # SEM `continue-on-error`: quem decide se isto barra é o PROJETO, pelo
+          # `stale_pipeline_blocks` no anchors.yaml. O padrão do comando é avisar e sair
+          # com 0 — e um `continue-on-error` aqui anularia a escolha de quem declarou que
+          # prefere barrar.
           if ! anchors doctor --check-pipelines; then
             echo "::warning::Este pipeline está desatualizado — ele roda, mas o que foi corrigido depois NÃO acontece. Rode \`anchors doctor --fix\`, commite e suba."
           fi

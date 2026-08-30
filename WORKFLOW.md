@@ -138,7 +138,61 @@ Perguntas abertas, a resolver testando num projeto real:
 - **`anchors next` deve inicializar projeto novo?** Levantado e não decidido: o primeiro
   comando útil depende de o projeto já estar iniciado ou não.
 
-## 7. O que existe hoje
+## 7. Os pipelines se autoverificam
+
+Um pipeline desatualizado falha em **silêncio**. Ele roda, faz o que a versão dele sabia
+fazer, e o que foi corrigido depois simplesmente não acontece — sem erro, sem vermelho, sem
+nada. O CI fica verde dizendo que fez um trabalho que ele não faz mais.
+
+Isto foi medido, não previsto: um passo novo do `identify` não rodou por três execuções
+porque o pipeline instalado era o antigo. Nada acusou. Só apareceu quando fui ler o log
+procurando outra coisa — e até ali eu achava que o mecanismo estava quebrado, e quase
+"consertei" o que já funcionava.
+
+Os pipelines que **já têm o Anchors instalado** conferem a si mesmos:
+
+| pipeline | confere | por quê |
+|---|---|---|
+| `identify` | ✅ | roda a cada PR — o caminho quente |
+| `board` | ✅ | roda por schedule, e alcança o repositório **parado** |
+| `claim`, `pr-checks`, `stale` | — | não instalam o binário |
+
+Os três de fora ficam de fora de propósito: instalar o binário só para conferir os tornaria
+mais lentos a cada execução, e o `claim` é chamado a cada pedido de trabalho.
+
+O `board` importa mais do que parece. Ele roda por `schedule`, então alcança o projeto onde
+ninguém abre PR — que é justamente onde o pipeline envelhece sem ninguém ver.
+
+### Avisa por padrão, barra se você pedir
+
+```yaml
+workflow:
+  stale_pipeline_blocks: true   # padrão: false
+```
+
+O padrão **avisa** (`::warning::` no resumo do run) e deixa o CI seguir. A razão é que
+barrar troca um problema por outro: o pipeline velho ainda faz o trabalho antigo, e
+derrubá-lo passa de *"faz menos do que devia"* para *"não faz nada"*.
+
+Mas há projetos onde o aviso não é lido — CI com dezenas de jobs, equipe que não abre o
+resumo do run — e ali o silêncio é pior que a interrupção. Quem declara `true` está dizendo
+que prefere o CI vermelho a um pipeline que finge funcionar.
+
+Quem decide é o `anchors.yaml`, nunca o YAML do pipeline. Por isso o passo **não** tem
+`continue-on-error` (engoliria a escolha de quem quer barrar) e **não** tem `exit 1` escrito
+à mão (barraria quem quer só o aviso) — os dois são proibidos por teste.
+
+O mesmo comando serve na sua máquina:
+
+```console
+$ anchors doctor --check-pipelines
+✓ os 5 pipelines do fluxo estão no lugar e atualizados (anchors v0.1.6).
+```
+
+Ele responde **uma** pergunta e sai com o código certo. O `doctor` completo responde
+dezenas, e num pipeline isso é ruído: quem chama de lá quer uma resposta, não um raio-X.
+
+## 8. O que existe hoje
 
 - `config.Workflow` com `Mode`/`Repo`/`Labels` e `Config.ModoGitHub()`
 - validação completa no `Load`, com 7 testes que cobrem cada mensagem de erro

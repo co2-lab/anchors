@@ -80,8 +80,11 @@ jobs:
       # `workflow_run`: ele executa mesmo quando ninguém abre PR, e é o caminho que alcança
       # um repositório parado — justamente onde o pipeline envelhece sem que ninguém veja.
       - name: Conferir se este pipeline está atualizado
-        continue-on-error: true
         run: |
+          # SEM `continue-on-error`: quem decide se isto barra é o PROJETO, pelo
+          # `stale_pipeline_blocks` no anchors.yaml. O padrão do comando é avisar e sair
+          # com 0 — e um `continue-on-error` aqui anularia a escolha de quem declarou que
+          # prefere barrar.
           if ! anchors doctor --check-pipelines; then
             echo "::warning::Os pipelines do Anchors estão desatualizados — eles rodam, mas o que foi corrigido depois NÃO acontece. Rode \`anchors doctor --fix\`, commite e suba."
           fi

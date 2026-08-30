@@ -346,6 +346,16 @@ func verificaPipelines(cmd *cobra.Command) error {
 	fmt.Println()
 	fmt.Println("  Rode `anchors doctor --fix` na sua máquina, commite e suba.")
 	fmt.Printf("  O binário deste CI é o anchors %s — se ele for mais novo que o seu, atualize antes.\n", version)
+	// BARRAR é opt-in. O padrão avisa, porque o pipeline velho ainda faz o trabalho antigo
+	// e derrubá-lo troca "faz menos do que devia" por "não faz nada". Quem declara
+	// `stale_pipeline_blocks: true` decidiu que, no CI dele, o aviso não seria lido.
+	if !cfg.Workflow.PipelineVelhoBarra() {
+		fmt.Println()
+		fmt.Println("  (aviso — o CI segue. Para BARRAR, declare `stale_pipeline_blocks: true`")
+		fmt.Println("   em `workflow:` no anchors.yaml.)")
+		return nil
+	}
 	cmd.SilenceUsage = true
-	return fmt.Errorf("%d pipeline(s) desatualizado(s) ou ausente(s)", len(faltam)+len(velhos))
+	return fmt.Errorf("%d pipeline(s) desatualizado(s) ou ausente(s) — e o projeto declarou "+
+		"`stale_pipeline_blocks: true`", len(faltam)+len(velhos))
 }
