@@ -244,6 +244,14 @@ dele. O `verdict` (`ok`/`issue`/`pending`) é escrito pelo gate que confronta a
 aresta (`QUALITY.md`) e lido pela Propagação; os campos `validated_*` e
 `last_validated` guardam contra o quê e quando.
 
+O `last_validated` é uma **data** (`2026-08-30`), e não um instante. Ele responde a
+uma pergunta de auditoria — *"quando isto foi confrontado?"* — e **não entra na
+regra de staleness**, que compara `rev` (`PROPAGATION.md` §3): o segundo não decide
+nada. Com precisão de segundo, cada `anchors check` reescrevia todas as linhas de
+carimbo do mapa — conflito em qualquer PR onde duas pessoas rodaram o check, e um
+diff que muda sozinho sem dizer nada. Com a data, o mapa só muda quando o
+**veredito** ou a **`rev`** mudam, que é quando há o que registrar.
+
 A **versão do nó** e o **carimbo da aresta** são a matéria-prima da sincronia: a
 Propagação (`PROPAGATION.md` §3) compara `rev` atual do nó com a `rev` que o carimbo
 guarda — se avançou, a relação está stale. A Rastreabilidade **descreve e mantém**

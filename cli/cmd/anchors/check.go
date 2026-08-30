@@ -407,7 +407,15 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile) error {
 	for i, v := range gv {
 		verdicts[i] = mapx.NodeVerdict{ID: v.ID, Failed: v.Failed}
 	}
-	stamped := g.StampEdges(verdicts, now.Format(time.RFC3339))
+	// A DATA, e não o instante. `last_validated` responde "quando esta relação foi
+	// confrontada" — uma pergunta de auditoria — e não entra na regra de staleness, que
+	// compara `rev` (ver PROPAGATION.md §3). Com precisão de segundo, cada `anchors
+	// check` reescrevia as 26 linhas de carimbo do mapa: conflito em todo PR onde duas
+	// pessoas rodaram o check, e um diff que muda sozinho sem dizer nada.
+	//
+	// Com a data, o mapa só muda quando o VEREDITO ou a `rev` mudam — que é quando há o
+	// que registrar.
+	stamped := g.StampEdges(verdicts, now.Format(time.DateOnly))
 	if err := mapx.Save(g, mapPath); err != nil {
 		return fmt.Errorf("salvar mapa carimbado: %w", err)
 	}

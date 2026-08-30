@@ -144,7 +144,7 @@ se houver, vira observação registrada).`,
 			//    alvo) com o veredito da IA. Se o gate declara guide, carimba essa
 			//    aresta; senão, cai para o carimbo por-nó (todas as arestas do alvo).
 			stamped := 0
-			if gc.Guide != "" && g.StampEdge(gc.Guide, target, verdictStr, now.Format(time.RFC3339)) {
+			if gc.Guide != "" && g.StampEdge(gc.Guide, target, verdictStr, now.Format(time.DateOnly)) {
 				stamped = 1
 			} else {
 				// Carimbo por NÓ: o `judge` julga uma UNIDADE, e o `StampEdges` exige as
@@ -153,7 +153,7 @@ se houver, vira observação registrada).`,
 				// e não tocava o grafo: um `check` posterior não via o achado.
 				// leva o NOME do gate: é ele que permite ao `check` posterior saber que
 				// este julgamento foi respondido, em vez de perguntar de novo.
-				stamped = g.StampNodeByGate(target, verdictStr, now.Format(time.RFC3339), gateName)
+				stamped = g.StampNodeByGate(target, verdictStr, now.Format(time.DateOnly), gateName)
 			}
 			if err := mapx.Save(g, mapPath); err != nil {
 				return fmt.Errorf("salvar carimbo: %w", err)

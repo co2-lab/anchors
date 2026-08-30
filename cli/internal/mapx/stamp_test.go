@@ -114,3 +114,37 @@ func TestStaleEdgesListing(t *testing.T) {
 		t.Fatalf("após carimbar 1, resta 1 stale, veio %d", got)
 	}
 }
+
+// O CARIMBO NÃO PODE MUDAR SOZINHO.
+//
+// `last_validated` responde "quando esta relação foi confrontada" — pergunta de auditoria
+// — e NÃO entra na regra de staleness, que compara `rev` (PROPAGATION.md §3). Com
+// precisão de segundo, cada `anchors check` reescrevia as 26 linhas de carimbo do mapa:
+// conflito em todo PR onde duas pessoas rodaram o check, e um diff que muda sozinho sem
+// dizer nada.
+//
+// Duas validações no MESMO DIA, com o mesmo veredito e as mesmas revs, têm de produzir o
+// mesmo mapa. O que muda o carimbo é o veredito ou a rev — que é quando há o que registrar.
+func TestCarimboIgualNaoReescreveOMapa(t *testing.T) {
+	monta := func() *Graph {
+		return &Graph{
+			Nodes: []Node{{ID: "a", Rev: "r1"}, {ID: "b", Rev: "r1"}},
+			Edges: []Edge{{From: "a", To: "b", Type: EdgeSpecifies}},
+		}
+	}
+	g1, g2 := monta(), monta()
+	v := []NodeVerdict{{ID: "a"}, {ID: "b"}}
+
+	// Mesmo DIA, instantes diferentes — é o caso real: dois `check` seguidos.
+	g1.StampEdges(v, "2026-08-30")
+	g2.StampEdges(v, "2026-08-30")
+
+	if g1.Edges[0].Stamp.LastValidated != g2.Edges[0].Stamp.LastValidated {
+		t.Fatalf("mesmo dia deveria produzir o mesmo carimbo: %q vs %q",
+			g1.Edges[0].Stamp.LastValidated, g2.Edges[0].Stamp.LastValidated)
+	}
+	// E o campo não pode ficar vazio: perder a resposta seria trocar um problema por outro.
+	if g1.Edges[0].Stamp.LastValidated == "" {
+		t.Error("o carimbo ainda tem de dizer QUANDO — reduzir a precisão não é apagar")
+	}
+}
