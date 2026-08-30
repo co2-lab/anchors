@@ -209,21 +209,30 @@ jobs:
         run: |
           set -euo pipefail
 
-          # UM PLANO REVISADO deixa cards DESATUALIZADOS, e nada avisava.
+          # UM PLANO REVISADO deixa cards DESATUALIZADOS, e o que fazer depende de quanto
+          # trabalho já foi investido — não de quanto o Anchors sabe.
           #
-          # O card diz "implementar a spec X", e a spec X mudou de exigência. Quem o pegar
-          # implementa a versão antiga sem saber — e descobre na revisão, ou nunca.
+          #   • `to-do` — FECHA. Ninguém pegou, e o plano que revisa vai semear a spec
+          #     nova: manter o card aberto convida alguém a fazer trabalho que será
+          #     descartado. Fechar com a razão escrita é mais honesto que avisar e deixar
+          #     na fila.
           #
-          # O que este passo faz depende de ONDE o card está, e a distinção evita tanto o
-          # silêncio quanto o ruído:
+          #   • `in-progress` — COMENTA e deixa seguir. Alguém está codificando, e o
+          #     trabalho vai passar por review de qualquer forma. É LÁ que a decisão cabe:
+          #     o revisor tem o trabalho pronto à vista e consegue estimar se aceitar dá
+          #     menos trabalho que rejeitar — quem for implementar o plano revisado herda
+          #     o que entrar. Escalar antes disso pediria decisão sobre algo que ninguém
+          #     viu, e pararia o trabalho para obtê-la.
           #
-          #   • `to-do` — comenta. O trabalho não começou, e quem pegar lê o card antes.
-          #   • `in-progress` / `in-review` — comenta E marca com `anchors:precisa-do-usuario`:
-          #     alguém está trabalhando AGORA sobre uma régua que mudou, e isso é decisão
-          #     (continuar? refazer?) que o agente não toma sozinho.
-          #   • `ready-to-test` em diante — NÃO mexe. O trabalho foi entregue sob a régua da
-          #     época, e reabri-lo apagaria a entrega. O que mudou vira trabalho NOVO, e o
-          #     plano que revisa semeia as specs dele.
+          #   • `ready-to-review` / `in-review` — COMENTA. A revisão acontece de todo
+          #     jeito, e o comentário é o que o revisor precisa para decidir com contexto.
+          #
+          #   • `ready-to-test` em diante — NADA. Já foi mesclado. O que mudou vira
+          #     trabalho novo, e reabrir apagaria a entrega.
+          #
+          # Em nenhum caso o card é ESCALADO ao usuário: a decisão tem um lugar natural no
+          # fluxo (o review), e criar um segundo lugar para ela só a antecipa sem
+          # informação.
 
           # Os planos que declaram `revises`, e as specs que eles semeiam.
           anchors code list --json > /tmp/todos.json 2>/dev/null || echo '[]' > /tmp/todos.json
@@ -283,6 +292,14 @@ jobs:
                   continue ;;
               esac
 
+              # `to-do` FECHA: o plano que revisa semeia a spec nova, e um card aberto
+              # sobre a régua antiga é convite a trabalho descartável.
+              if [ "$estado" = "anchors:to-do" ]; then
+                gh issue close "$n" --reason "not planned" --comment "$(printf '⚠ **Fechado: o plano que rege esta unidade foi revisado.**\n\nO plano `%s` foi revisado, e a fase a que esta spec pertence mudou. Como ninguém tinha pego este card, o trabalho será feito sob a régua nova — o plano que revisa semeia a spec, e o pipeline de identificação cria o card correspondente.\n\nFechar em vez de avisar é o que impede alguém de implementar a versão antiga.' "$plano")" >/dev/null 2>&1
+                echo "fechado: #$n ($spec) — plano $plano revisado, o trabalho volta sob a régua nova"
+                continue
+              fi
+
               printf '%s\n' \
                 '⚠ **O plano que rege esta unidade foi revisado.**' '' \
                 "O plano \`$plano\` foi revisado por outro, e o que se espera desta spec pode" \
@@ -291,13 +308,19 @@ jobs:
                 > /tmp/aviso-rev.md
 
               case "$estado" in
-                anchors:in-progress|anchors:in-review)
+                anchors:in-progress)
                   printf '%s\n' '' \
-                    '**Este card está em andamento**, e por isso ele espera uma decisão:' \
-                    'continuar como está (a mudança não atinge o que você já fez) ou refazer' \
-                    'sob a régua nova. Não é decisão de agente — o trabalho já custou.' \
+                    '**Siga em frente.** O trabalho vai passar por review de qualquer forma, e é' \
+                    'lá que a decisão cabe — com o que você fez à vista, o revisor consegue' \
+                    'estimar se aceitar dá menos trabalho que rejeitar.' \
                     >> /tmp/aviso-rev.md
-                  gh issue edit "$n" --add-label "anchors:precisa-do-usuario" >/dev/null 2>&1 || true
+                  ;;
+                anchors:ready-to-review|anchors:in-review)
+                  printf '%s\n' '' \
+                    '**Para quem revisa:** a régua mudou depois que este trabalho começou. A' \
+                    'pergunta não é "está certo?", é "aceitar dá menos trabalho que rejeitar?" —' \
+                    'quem for implementar o plano revisado herda o que entrar aqui.' \
+                    >> /tmp/aviso-rev.md
                   ;;
               esac
 

@@ -699,7 +699,34 @@ sobra — a regra do artefato órfão, a prioridade da direita para a esquerda, 
 disso é projetar a abstração sem saber quais operações realmente importam — e a §7 ainda
 tem pontos abertos que só o uso responde.
 
-### 7.16 O CI roda o binário PUBLICADO, não o seu
+### 7.16 Um plano revisado, e os cards que já estão no board
+
+Revisar um plano deixa cards descrevendo trabalho sob a régua antiga. O que fazer com cada
+um depende de **quanto trabalho já foi investido** — e a resposta não é a mesma em todas
+as colunas:
+
+| coluna | ação | por quê |
+| --- | --- | --- |
+| `TO DO` | **fecha** | ninguém pegou, e o plano que revisa semeia a spec nova. Um card aberto sobre a régua antiga é convite a trabalho descartável |
+| `IN PROGRESS` | comenta | alguém está codificando, e isso vai passar por review de qualquer forma |
+| `READY TO REVIEW` · `IN REVIEW` | comenta | a revisão acontece de todo jeito; o comentário é o contexto que o revisor precisa |
+| `READY TO TEST` em diante | **nada** | já foi mesclado. O que mudou vira trabalho novo, e reabrir apagaria a entrega |
+
+**A decisão tem um lugar, e é o review.** Um card em andamento não é escalado a ninguém: o
+revisor terá o trabalho pronto à vista, e a pergunta que ele responde não é "está certo?"
+— é *"aceitar dá menos trabalho que rejeitar?"*, porque quem for implementar o plano
+revisado herda o que entrar.
+
+Escalar antes disso pediria uma decisão sobre algo que ninguém viu, e pararia o trabalho
+para obtê-la. Criar um segundo lugar para uma decisão que já tem lugar natural só a
+antecipa sem informação.
+
+**O aviso vai só para as fases atingidas.** O `revises` diz que o plano mudou; as marcações
+de parte dizem onde. Avisar todas as specs por causa de uma fase alterada é o ruído que
+faz o aviso deixar de ser lido — e quem recebe um aviso que não se aplica aprende a
+ignorar o próximo, que se aplica.
+
+### 7.17 O CI roda o binário PUBLICADO, não o seu
 
 Duas armadilhas da mesma família, e as duas mordem em silêncio: **o que vale no seu
 terminal não vale no CI até você publicar.**
@@ -728,7 +755,7 @@ corrigido na develop.
 - e quando um pipeline "funciona mas o resultado está errado", suspeite da VERSÃO antes
   de procurar o defeito no código.
 
-### 7.17 O que ainda não está resolvido
+### 7.18 O que ainda não está resolvido
 
 - **Como o agente sabe QUAL card recebeu**, sem ficar consultando em laço? O
   `workflow_dispatch` não devolve resultado ao chamador; o agente precisa consultar depois,
