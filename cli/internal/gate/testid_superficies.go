@@ -52,14 +52,14 @@ func lerSuperficieE2E(root string, cfg *config.Config) []string {
 	// O PRIMEIRO padrão da camada: este gate resolve UM caminho de superfície, e uma
 	// camada com vários padrões não muda o que ele pergunta.
 	var padrao string
-	if ps := cfg.Derived.Files[chave]; len(ps) > 0 {
+	if ps := cfg.Derived.PadroesDe()[chave]; len(ps) > 0 {
 		padrao = ps[0]
 	}
 	if padrao == "" {
 		// Sem template de arquivo para a superfície, procuramos por override — a
 		// mesma precedência que o resto do framework usa.
 		for _, ov := range cfg.Derived.Overrides {
-			if ps := ov.Files[chave]; len(ps) > 0 {
+			if ps := ov.PadroesDe()[chave]; len(ps) > 0 {
 				padrao = ps[0]
 				break
 			}

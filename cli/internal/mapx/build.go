@@ -176,7 +176,7 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 		// camada da âncora (STRUCTURE.md §2.2: padrão de localização por camada quando
 		// não co-localizado). Só as camadas presentes no override sobrescrevem.
 		tmpls := map[string]config.Padroes{}
-		for layer, tmpl := range cfg.Derived.Files {
+		for layer, tmpl := range cfg.Derived.PadroesDe() {
 			tmpls[layer] = tmpl
 		}
 		// PRECEDÊNCIA: camada primeiro, código depois. O override por CÓDIGO é o mais
@@ -187,7 +187,7 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 			if ov.Code != "" || ov.When != f.Layer {
 				continue
 			}
-			for layer, tmpl := range ov.Files {
+			for layer, tmpl := range ov.PadroesDe() {
 				tmpls[layer] = tmpl
 			}
 		}
@@ -199,7 +199,7 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 			// spec de configuração não tem o `{{name}}.ts` da co-location, e herdá-lo
 			// faria o mapa procurar um arquivo que ninguém vai escrever.
 			tmpls = map[string]config.Padroes{}
-			for layer, tmpl := range ov.Files {
+			for layer, tmpl := range ov.PadroesDe() {
 				tmpls[layer] = tmpl
 			}
 			break

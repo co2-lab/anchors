@@ -842,10 +842,21 @@ type Derived struct {
 	// correto: sem spec não há trinca, e o mapa dizer isso é honesto. O `doctor` já
 	// reporta o código sem spec como órfão.
 	Anchor string `yaml:"anchor"` // a camada-âncora (canônico: "spec")
-	// Files: camada-derivada → padrão(ões). Aceita string (um arquivo, o caso comum) ou
-	// LISTA — a spec de configuração governa vários (`TypeScriptConfig` descreve seis
-	// `tsconfig.json`), e com um padrão só a trinca dela nunca fecharia.
-	Files     map[string]Padroes `yaml:"files"`               // default (co-location)
+	// Files: camada-derivada → padrão de caminho. `code`, `feature` e `test` são as três
+	// pontas da trinca, e cada uma diz onde aquela peça mora.
+	Files map[string]Padroes `yaml:"files,omitempty"`
+	// Patterns são os padrões de QUEM NÃO SEGUE a co-location, e VENCEM `files` quando
+	// declarados.
+	//
+	// `files` responde "onde mora o código desta spec?" com um template — e isso cobre a
+	// unidade normal: uma tela, um handler. A spec de CONFIGURAÇÃO não tem um arquivo,
+	// tem um CONJUNTO: `TypeScriptConfig` descreve seis `tsconfig.json` espalhados. Não é
+	// um template que falha, é uma pergunta diferente.
+	//
+	// Por isso os dois convivem em vez de um substituir o outro: `files` continua sendo o
+	// caso comum, e `patterns` é a exceção declarada. Quem tem `patterns` não precisa
+	// fingir um `{{name}}.ts` que ninguém vai escrever.
+	Patterns  map[string]Padroes `yaml:"patterns,omitempty"`
 	Overrides []DerivedOverride  `yaml:"overrides,omitempty"` // padrões por camada-âncora (não co-localizado)
 	// Regimes — o de-para do vocabulário de REGIME de teste do PROJETO para o regime
 	// CANÔNICO do framework (unit|integration|e2e|vr). Chave = a tag do projeto (sem @,
@@ -978,6 +989,25 @@ type Derived struct {
 	MockDetect string `yaml:"mock_detect,omitempty"`
 }
 
+// PadroesDe devolve os padrões declarados, seja pelo nome novo (`patterns`) ou pelo
+// antigo (`files`).
+func (d *Derived) PadroesDe() map[string]Padroes {
+	if d == nil {
+		return nil
+	}
+	if len(d.Patterns) == 0 {
+		return d.Files
+	}
+	out := map[string]Padroes{}
+	for k, v := range d.Files {
+		out[k] = v
+	}
+	for k, v := range d.Patterns {
+		out[k] = v
+	}
+	return out
+}
+
 // DerivedOverride — para âncoras cuja tag casa `When`, os templates em `Files`
 // SOBRESCREVEM os do default (só as camadas presentes; as demais herdam o default).
 type DerivedOverride struct {
@@ -994,8 +1024,33 @@ type DerivedOverride struct {
 	//
 	// `code` vence `when` quando os dois casam: o mais específico ganha, que é a
 	// precedência que o resto do framework já usa (camada > projeto > framework).
-	Code  string             `yaml:"code,omitempty"`
-	Files map[string]Padroes `yaml:"files"` // camada-derivada → padrão(ões)
+	Code string `yaml:"code,omitempty"`
+	// Files: camada-derivada → template de região (aceita {{module}}).
+	Files map[string]Padroes `yaml:"files,omitempty"`
+	// Patterns vence `files` quando declarado. Ver `Derived.Patterns`.
+	Patterns map[string]Padroes `yaml:"patterns,omitempty"`
+}
+
+// PadroesDe devolve os padrões declarados, seja pelo nome novo ou pelo antigo.
+//
+// Existe para que nenhum consumidor precise saber que houve renomeação: espalhar o
+// `if Patterns != nil else Files` por cada leitor garantiria que um deles ficasse de fora
+// numa mudança futura, e o efeito seria um padrão silenciosamente ignorado.
+func (o DerivedOverride) PadroesDe() map[string]Padroes {
+	if len(o.Patterns) == 0 {
+		return o.Files
+	}
+	// MESCLA, e não substitui: um override pode declarar `patterns` só para o código e
+	// continuar querendo o `feature`/`test` de `files`. Trocar o mapa inteiro obrigaria a
+	// repetir o que não mudou.
+	out := map[string]Padroes{}
+	for k, v := range o.Files {
+		out[k] = v
+	}
+	for k, v := range o.Patterns {
+		out[k] = v
+	}
+	return out
 }
 
 // GovernRule — uma aresta vertical declarada: a régua `from` rege os nós de TODAS

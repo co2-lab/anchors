@@ -130,12 +130,12 @@ func arquivosDaSuperficieE2E(root string, cfg *config.Config) []arquivoE2E {
 	// O PRIMEIRO padrão da camada: este gate resolve UM caminho esperado, e uma spec com
 	// vários padrões (a de configuração) não muda o que ele pergunta.
 	var padrao string
-	if ps := cfg.Derived.Files[chave]; len(ps) > 0 {
+	if ps := cfg.Derived.PadroesDe()[chave]; len(ps) > 0 {
 		padrao = ps[0]
 	}
 	if padrao == "" {
 		for _, ov := range cfg.Derived.Overrides {
-			if ps := ov.Files[chave]; len(ps) > 0 {
+			if ps := ov.PadroesDe()[chave]; len(ps) > 0 {
 				padrao = ps[0]
 				break
 			}

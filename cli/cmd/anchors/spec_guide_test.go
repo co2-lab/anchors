@@ -15,8 +15,8 @@ func TestSpecGuideTemExemploCompleto(t *testing.T) {
 	g := renderSpecGuide(&config.Config{}, "LOGIX")
 	for _, obrigatorio := range []string{
 		"<!-- @anchors", // o cabeçalho, que é o mais fácil de errar
-		"code: LOGIX",    // com o código no lugar certo
-		"### LOGIX-S01",  // o formato exato de regra catalogada
+		"code: LOGIX",   // com o código no lugar certo
+		"### LOGIX-S01", // o formato exato de regra catalogada
 		"## Decisões em aberto",
 		"anchors new spec", // o comando que resolve, ANTES da doutrina
 		"--list-sections",  // e o que lista as seções com critério de escolha

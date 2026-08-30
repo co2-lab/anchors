@@ -998,7 +998,7 @@ func caminhosDerivados(rel, layer string, cfg *config.Config) (map[string]string
 	// (ex.: `packages/backend/__tests__/unit/lambdas/{{module}}.test.ts`).
 	module := filepath.Base(dir)
 	bruto := map[string]string{}
-	for k, v := range cfg.Derived.Files {
+	for k, v := range cfg.Derived.PadroesDe() {
 		// O PRIMEIRO padrão: este prompt mostra ONDE escrever cada peça, e uma lista de
 		// caminhos alternativos no lugar de um responderia a pergunta com outra.
 		if len(v) > 0 {
@@ -1012,7 +1012,7 @@ func caminhosDerivados(rel, layer string, cfg *config.Config) (map[string]string
 		if ov.When != layer {
 			continue
 		}
-		for k, v := range ov.Files {
+		for k, v := range ov.PadroesDe() {
 			if len(v) == 0 {
 				continue
 			}

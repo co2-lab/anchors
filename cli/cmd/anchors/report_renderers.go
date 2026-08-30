@@ -151,7 +151,7 @@ func renderConfig(ctx reportCtx) string {
 	if ctx.cfg.Derived == nil {
 		b.WriteString("não configurado\n")
 	} else {
-		fmt.Fprintf(&b, "âncora `%s`, %d template(s)\n", ctx.cfg.Derived.Anchor, len(ctx.cfg.Derived.Files))
+		fmt.Fprintf(&b, "âncora `%s`, %d template(s)\n", ctx.cfg.Derived.Anchor, len(ctx.cfg.Derived.PadroesDe()))
 	}
 	// o que falta — recorte do health por checks estruturais de config
 	rep := health.Diagnose(ctx.g, ctx.cfg, ctx.root)
