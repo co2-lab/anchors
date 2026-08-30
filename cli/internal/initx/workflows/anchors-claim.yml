@@ -273,107 +273,109 @@ jobs:
             # realmente parou.
             if [ "$voltas" -ge 10 ]; then
               gh issue edit "$livre" --add-label "anchors:precisa-do-usuario" >/dev/null 2>&1 || true
-              sed 's/^                //' > /tmp/escala.md <<'ESCALA'
-                🛑 **Este card precisa de uma decisão humana.**
-
-                São 10 revisões sem convergir, e isso deixou de ser problema de código: é
-                uma decisão que ninguém tomou. A décima primeira revisão produziria a
-                décima segunda — o custo já foi pago nove vezes.
-
-                **O que costuma estar por trás:** a spec não decide o que precisava
-                decidir, e cada revisor lê o vazio de um jeito. Leia as revisões
-                anteriores e procure o ponto em que elas discordam sobre o que a spec
-                PEDE, não sobre o que o código faz.
-
-                **Como destravar:** decida o ponto e escreva a decisão NA SPEC (uma regra
-                nova, com código). Depois remova a label `anchors:precisa-do-usuario` e o
-                fluxo segue.
-
-                Enquanto a label estiver aqui, o pipeline de claim não entrega este card.
-                ESCALA
+              # `printf` em vez de heredoc: o bash exige o delimitador de fecho na COLUNA
+              # ZERO, e o YAML exige que tudo dentro de `run:` fique indentado. Os dois não
+              # podem ser satisfeitos ao mesmo tempo — medido: o script quebrou com
+              # "here-document delimited by end-of-file".
+              printf '%s\n' \
+                '🛑 **Este card precisa de uma decisão humana.**' '' \
+                "São $voltas revisões sem convergir, e isso deixou de ser problema de código:" \
+                'é uma decisão que ninguém tomou. A próxima revisão produziria a seguinte —' \
+                'o custo já foi pago nove vezes.' '' \
+                '**O que costuma estar por trás:** a spec não decide o que precisava decidir,' \
+                'e cada revisor lê o vazio de um jeito. Leia as revisões anteriores e procure' \
+                'o ponto em que elas discordam sobre o que a spec PEDE, não sobre o que o' \
+                'código faz.' '' \
+                '**Como destravar:** decida o ponto e escreva a decisão NA SPEC (uma regra' \
+                'nova, com código). Depois remova a label `anchors:precisa-do-usuario` e o' \
+                'fluxo segue.' '' \
+                'Enquanto a label estiver aqui, o pipeline de claim não entrega este card.' \
+                > /tmp/escala.md
               gh issue comment "$livre" --body-file /tmp/escala.md
               echo "· #$livre ESCALADO ao usuário — $voltas revisões sem convergir"
               exit 0
             fi
 
             if [ "$voltas" -ge 3 ]; then
-              sed 's/^              //' > /tmp/aviso.md <<'AVISO'
-              ⚠ **A revisão não está convergindo.**
-
-              Quando isso acontece, o problema costuma estar ANTES do código: a spec não
-              decide o que precisava decidir, e cada revisor lê o vazio de um jeito.
-
-              Antes de revisar de novo, leia as revisões anteriores e pergunte se o
-              desacordo é sobre o CÓDIGO ou sobre o que a SPEC pede. Se for o segundo, o
-              caminho é abrir uma decisão em aberto na spec — não mais uma rodada.
-              AVISO
+              printf '%s\n' \
+                '⚠ **A revisão não está convergindo.**' '' \
+                'Quando isso acontece, o problema costuma estar ANTES do código: a spec não' \
+                'decide o que precisava decidir, e cada revisor lê o vazio de um jeito.' '' \
+                'Antes de revisar de novo, leia as revisões anteriores e pergunte se o' \
+                'desacordo é sobre o CÓDIGO ou sobre o que a SPEC pede. Se for o segundo, o' \
+                'caminho é abrir uma decisão em aberto na spec — não mais uma rodada.' \
+                > /tmp/aviso.md
               gh issue comment "$livre" --body-file /tmp/aviso.md
             fi
 
 
-            sed 's/^            //' > /tmp/instrucao.md <<'INSTRUCAO'
-            ## Revisão — o que fazer
-
-            1. **Leia** a spec e o código que ela governa.
-            2. **Rode os gates de julgamento** pendentes:
-
-               ```
-               anchors judge --pending
-               anchors judge <alvo> --gate <gate> --verdict pass|fail --reason "..."
-               ```
-
-               Eles fazem a pergunta que nenhum verificador mecânico responde: se o código REALIZA
-               o que a regra descreve. Você já vai estar lendo os dois.
-
-            3. **Confronte cada regra** da spec contra o que o PR entrega, rodando o que dá para
-               rodar em vez de só ler.
-            4. **Comente o resultado no PR**, começando com `## Revisão` — é por esse título
-               que o pipeline conta as voltas e avisa quando a revisão deixa de convergir.
-               Depois escolha o desfecho:
-
-               - **aceito** → mova o card para `anchors:ready-to-test`.
-
-               - **defeito de EXECUÇÃO** (marcação no lugar errado, opção faltando, teste que
-                 não cobre o caso) → **corrija você mesmo**, no mesmo PR, e passe o card para
-                 `anchors:ready-to-review` liberando a posse. Outro agente revisa o conjunto.
-
-                 Você já sabe qual é o certo: devolver faria outro descobrir o que você
-                 acabou de descobrir. E quando há correção são DOIS reviews de qualquer
-                 forma — a diferença é que aqui não há dois `claim` e uma releitura no meio.
-
-               - **defeito de ENTENDIMENTO** (a spec foi lida errado, a abordagem não serve)
-                 → **devolva**: card para `anchors:to-do`, posse para quem implementou, e o
-                 comentário dizendo o que a spec pede que o código não faz.
-
-                 Aqui corrigir seria pior que moroso: esconderia que o autor entendeu errado,
-                 e o mesmo erro volta no próximo card que ele pegar.
-
-            > **Quem corrige não aprova o próprio conserto.** Ao corrigir, você vira autor
-            > daquele trecho — por isso o card volta para `ready-to-review` em vez de seguir
-            > para `ready-to-test`. É a mesma regra que já vale para quem implementa.
-
-            ### Se o card voltou para `ready-to-review` enquanto você revisava
-
-            O `stale` libera card sem sinal de vida, e revisar é justamente ler e pensar sem
-            tocar no repositório — uma revisão longa (ou uma noite de sono) atravessa o prazo.
-            Não é defeito: o pipeline não distingue "pensando" de "sumiu".
-
-            Ele devolve o card a `ready-to-review`, e não a `to-do`: o PR está aberto e verde,
-            a implementação terminou — só a revisão não aconteceu.
-
-            A recuperação depende de UMA pergunta — o card ainda é seu?
-
-            - **último `anchors-owner:` é você** (ou `(liberado)`) → retome: comente
-              `anchors-owner: <você>`, mova para `anchors:in-review` e siga de onde parou.
-            - **outro agente pegou** → deixe pra lá. Ele já está com o contexto, e disputar o
-              card produziria dois revisores no mesmo trabalho. Peça outro com
-              `gh workflow run anchors-claim.yml -f agent=<você>`.
-
-            > O GitHub recusa `approve` no próprio PR, e os agentes desta máquina usam a mesma
-            > conta. Se o merge estiver bloqueado por isso, quem for admin usa
-            > `gh pr merge <n> --merge --admin`; quem não for, roda `anchors doctor --fix` para
-            > desligar a exigência (a revisão continua sendo cobrada pelo estado do card).
-            INSTRUCAO
+            # `printf` em vez de heredoc: o bash exige o delimitador de fecho na COLUNA
+            # ZERO, e o YAML exige que tudo dentro de `run:` fique indentado — os dois não
+            # podem ser satisfeitos ao mesmo tempo. Medido: o script quebrou em produção
+            # com "here-document delimited by end-of-file".
+            printf '%s\n' \
+              '## Revisão — o que fazer' \
+              '' \
+              '1. **Leia** a spec e o código que ela governa.' \
+              '2. **Rode os gates de julgamento** pendentes:' \
+              '' \
+              '   ```' \
+              '   anchors judge --pending' \
+              '   anchors judge <alvo> --gate <gate> --verdict pass|fail --reason "..."' \
+              '   ```' \
+              '' \
+              '   Eles fazem a pergunta que nenhum verificador mecânico responde: se o código REALIZA' \
+              '   o que a regra descreve. Você já vai estar lendo os dois.' \
+              '' \
+              '3. **Confronte cada regra** da spec contra o que o PR entrega, rodando o que dá para' \
+              '   rodar em vez de só ler.' \
+              '4. **Comente o resultado no PR**, começando com `## Revisão` — é por esse título' \
+              '   que o pipeline conta as voltas e avisa quando a revisão deixa de convergir.' \
+              '   Depois escolha o desfecho:' \
+              '' \
+              '   - **aceito** → mova o card para `anchors:ready-to-test`.' \
+              '' \
+              '   - **defeito de EXECUÇÃO** (marcação no lugar errado, opção faltando, teste que' \
+              '     não cobre o caso) → **corrija você mesmo**, no mesmo PR, e passe o card para' \
+              '     `anchors:ready-to-review` liberando a posse. Outro agente revisa o conjunto.' \
+              '' \
+              '     Você já sabe qual é o certo: devolver faria outro descobrir o que você' \
+              '     acabou de descobrir. E quando há correção são DOIS reviews de qualquer' \
+              '     forma — a diferença é que aqui não há dois `claim` e uma releitura no meio.' \
+              '' \
+              '   - **defeito de ENTENDIMENTO** (a spec foi lida errado, a abordagem não serve)' \
+              '     → **devolva**: card para `anchors:to-do`, posse para quem implementou, e o' \
+              '     comentário dizendo o que a spec pede que o código não faz.' \
+              '' \
+              '     Aqui corrigir seria pior que moroso: esconderia que o autor entendeu errado,' \
+              '     e o mesmo erro volta no próximo card que ele pegar.' \
+              '' \
+              '> **Quem corrige não aprova o próprio conserto.** Ao corrigir, você vira autor' \
+              '> daquele trecho — por isso o card volta para `ready-to-review` em vez de seguir' \
+              '> para `ready-to-test`. É a mesma regra que já vale para quem implementa.' \
+              '' \
+              '### Se o card voltou para `ready-to-review` enquanto você revisava' \
+              '' \
+              'O `stale` libera card sem sinal de vida, e revisar é justamente ler e pensar sem' \
+              'tocar no repositório — uma revisão longa (ou uma noite de sono) atravessa o prazo.' \
+              'Não é defeito: o pipeline não distingue "pensando" de "sumiu".' \
+              '' \
+              'Ele devolve o card a `ready-to-review`, e não a `to-do`: o PR está aberto e verde,' \
+              'a implementação terminou — só a revisão não aconteceu.' \
+              '' \
+              'A recuperação depende de UMA pergunta — o card ainda é seu?' \
+              '' \
+              '- **último `anchors-owner:` é você** (ou `(liberado)`) → retome: comente' \
+              '  `anchors-owner: <você>`, mova para `anchors:in-review` e siga de onde parou.' \
+              '- **outro agente pegou** → deixe pra lá. Ele já está com o contexto, e disputar o' \
+              '  card produziria dois revisores no mesmo trabalho. Peça outro com' \
+              '  `gh workflow run anchors-claim.yml -f agent=<você>`.' \
+              '' \
+              '> O GitHub recusa `approve` no próprio PR, e os agentes desta máquina usam a mesma' \
+              '> conta. Se o merge estiver bloqueado por isso, quem for admin usa' \
+              '> `gh pr merge <n> --merge --admin`; quem não for, roda `anchors doctor --fix` para' \
+              '> desligar a exigência (a revisão continua sendo cobrada pelo estado do card).' \
+              > /tmp/instrucao.md
             # A CONTAGEM entra no topo da instrução: quem pega a sétima revisão precisa
             # saber disso ANTES de começar a ler, para procurar o desacordo em vez de
             # opinar do zero.

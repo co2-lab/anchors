@@ -1,8 +1,10 @@
 package initx
 
 import (
+	"gopkg.in/yaml.v3"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -479,6 +481,49 @@ func TestLabelDeEscalacaoNaoEhEstado(t *testing.T) {
 		if e == LabelPrecisaDoUsuario {
 			t.Fatal("a escalação NÃO é estado: o card continua na coluna onde o trabalho " +
 				"parou, e o que muda é quem pode destravá-lo")
+		}
+	}
+}
+
+// O SCRIPT de cada pipeline tem de ser bash VÁLIDO, e isso não é óbvio: o YAML valida a
+// estrutura do arquivo e não olha o conteúdo de `run:`. Um erro de sintaxe passa por
+// todos os testes e só aparece quando o pipeline roda — em produção, com um card já
+// atribuído pela metade.
+//
+// Medido: um heredoc com o delimitador de fecho INDENTADO (o YAML exige a indentação; o
+// bash exige a coluna zero) quebrou o claim com "here-document delimited by end-of-file",
+// depois de já ter comentado no card.
+func TestScriptsDosPipelinesSaoBashValido(t *testing.T) {
+	if _, err := exec.LookPath("bash"); err != nil {
+		t.Skip("sem bash no PATH")
+	}
+	for _, w := range WorkflowsDoFluxo {
+		b, err := workflowsFS.ReadFile("workflows/" + w.Arquivo)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var doc struct {
+			Jobs map[string]struct {
+				Steps []struct {
+					Name string `yaml:"name"`
+					Run  string `yaml:"run"`
+				} `yaml:"steps"`
+			} `yaml:"jobs"`
+		}
+		if err := yaml.Unmarshal(b, &doc); err != nil {
+			t.Fatalf("%s: %v", w.Arquivo, err)
+		}
+		for _, job := range doc.Jobs {
+			for _, s := range job.Steps {
+				if strings.TrimSpace(s.Run) == "" {
+					continue
+				}
+				cmd := exec.Command("bash", "-n")
+				cmd.Stdin = strings.NewReader(s.Run)
+				if out, err := cmd.CombinedOutput(); err != nil {
+					t.Errorf("%s / %q: script inválido:\n%s", w.Arquivo, s.Name, out)
+				}
+			}
 		}
 	}
 }
