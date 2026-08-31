@@ -137,7 +137,11 @@ jobs:
           # e o gate leu como declaração real. Se um achado de verdade estivesse faltando,
           # o exemplo o teria mascarado.
           fora_de_bloco=$(printf '%s' "$corpo" | awk '/^```/ {dentro = !dentro; next} !dentro {print}')
-          raiz=$(printf '%s' "$fora_de_bloco" | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+' | grep -oE '[0-9]+' | paste -sd, -)
+          # `|| true` no fim: com `set -o pipefail` um `grep` que não casa derruba o
+          # PIPE INTEIRO, e o script morre sem imprimir nada — foi o que fez este passo
+          # sair com 1 num PR que simplesmente não declara card. O caso "não encontrou" é
+          # normal aqui, não é erro.
+          raiz=$(printf '%s' "$fora_de_bloco" | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+' | grep -oE '[0-9]+' | paste -sd, - || true)
           if [ -z "$raiz" ]; then
             echo "· o PR não declara card — nada a conferir"
             exit 0
