@@ -105,37 +105,40 @@ jobs:
           fi
           echo "✓ o mapa commitado corresponde ao repositório"
 
-      - name: O PR fecha o card com a palavra que o GitHub entende?
+      - name: Os cards deste trabalho vão fechar?
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          # O GitHub reconhece SÓ `close/closes/closed`, `fix/fixes/fixed` e
-          # `resolve/resolves/resolved`. Uma tradução ("Fecha #44") é ignorada em
-          # SILÊNCIO: o PR mescla, o card fica aberto, e o board passa a mentir sobre o
-          # que está pendente.
+          # A régua NÃO é "o corpo tem a palavra em inglês" — isso seria uma exigência da
+          # PLATAFORMA vazando para dentro da doutrina, e o Anchors é multi-idioma. A
+          # primeira versão deste passo fazia isso, e estava errada pelo mesmo motivo que
+          # tiramos match de prosa dos gates.
           #
-          # Medido: um PR dizia "Fecha #44, #49, #50" e os três continuaram abertos
-          # depois do merge. Ninguém teria notado sem a conferência à mão.
-          #
-          # AVISA e não barra: há PR legítimo sem card (uma correção de pipeline, um
-          # ajuste de configuração), e exigir vínculo de todos criaria card de mentira só
-          # para satisfazer o gate.
-          # SEM `|| echo ""`: engolir a falha faz a conferência dizer "o PR não cita card"
-          # quando na verdade ela não conseguiu LER o card. Silenciar o erro aqui é o
-          # mesmo defeito que este passo existe para evitar — reportar sobre o que não se
-          # mediu.
+          # A régua é: os cards que este trabalho fecha estão declarados no corpo, na
+          # sintaxe que a plataforma entende? Quem sabe QUAIS cards é o Anchors (o
+          # `anchors-owner:` e a label `anchors:sob-<n>`); quem sabe a SINTAXE é o
+          # `anchors pr-body`. O corpo é confrontado com o que ele mesmo geraria.
           if ! corpo=$(gh pr view "${{ github.event.pull_request.number }}" --repo "$GH_REPO" --json body --jq .body 2>&1); then
-            echo "::warning::não consegui ler o corpo do PR — a conferência da palavra-chave não aconteceu: $corpo"
+            echo "::warning::não consegui ler o corpo do PR — a conferência não aconteceu: $corpo"
             exit 0
           fi
-          if printf '%s' "$corpo" | grep -qiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+'; then
-            echo "✓ o PR fecha card com a palavra-chave que o GitHub entende"
-          elif printf '%s' "$corpo" | grep -qE '#[0-9]+'; then
-            echo "::warning::O PR cita issue mas não usa a palavra-chave do GitHub — o card NÃO vai fechar no merge. Use \`Closes #N\` (em inglês; \`Fecha\` e traduções são ignoradas em silêncio)."
+          # Sem `ANCHORS_AGENT` o Anchors não sabe qual card é deste trabalho, e adivinhar
+          # pelo branch seria inventar vínculo. Aí não há o que confrontar.
+          if ! esperado=$(anchors pr-body 2>/dev/null) || [ -z "$esperado" ]; then
+            echo "· não há card atribuído a este trabalho — nada a conferir"
+            exit 0
+          fi
+          faltando=""
+          while IFS= read -r linha; do
+            [ -z "$linha" ] && continue
+            printf '%s' "$corpo" | grep -qF "$linha" || faltando="$faltando $linha"
+          done <<< "$esperado"
+          if [ -n "$faltando" ]; then
+            echo "::warning::O corpo do PR não fecha:$faltando — esses cards ficariam abertos depois do merge. Rode \`anchors pr-body\` e cole a saída no corpo do PR."
           else
-            echo "· o PR não cita card — nada a conferir"
+            echo "✓ os cards deste trabalho estão declarados no corpo do PR"
           fi
 
       - name: Confrontar os gates

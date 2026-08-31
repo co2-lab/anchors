@@ -670,28 +670,29 @@ func TestCardApontaOGuiaDeTrabalho(t *testing.T) {
 	}
 }
 
-// A PALAVRA QUE FECHA O CARD É EM INGLÊS, e errá-la não dá erro nenhum.
+// O VÍNCULO CARD↔PR É DO ANCHORS; A PALAVRA-CHAVE É DA PLATAFORMA.
 //
-// O GitHub reconhece só `close/closes/closed`, `fix/fixes/fixed` e
-// `resolve/resolves/resolved`. Uma tradução ("Fecha #44") é ignorada em SILÊNCIO: o PR
-// mescla, o card fica aberto, e o board passa a mentir sobre o que está pendente.
+// A primeira versão deste passo casava `closes|fixes|resolves` no corpo — uma exigência
+// da PLATAFORMA vazando para dentro da doutrina. Estava errada pelo mesmo motivo que
+// tiramos match de prosa dos gates: o Anchors é multi-idioma, e obrigar o texto do PR a
+// estar em inglês não é régua do Anchors.
 //
-// Medido: um PR dizia "Fecha #44, #49, #50" e os três continuaram abertos depois do
-// merge — descoberto só porque fui conferir os cards à mão.
-func TestPipelineAvisaQuandoOPRNaoFechaOCard(t *testing.T) {
+// A régua é: os cards que este trabalho fecha estão declarados? Quem sabe QUAIS é o
+// Anchors (`anchors-owner:` e `anchors:sob-<n>`); quem sabe a SINTAXE é o `pr-body`.
+func TestPipelineConfrontaOVinculoENaoAPalavra(t *testing.T) {
 	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-gates.yml")
 	if err != nil {
 		t.Fatal(err)
 	}
 	texto := string(b)
-	if !strings.Contains(texto, "close[sd]?") {
-		t.Error("nenhum pipeline confere a palavra-chave de fechamento — errá-la é " +
-			"silencioso, e o board passa a mentir sobre o que está pendente")
+	if !strings.Contains(texto, "anchors pr-body") {
+		t.Error("o pipeline deve confrontar o corpo com o que o `anchors pr-body` geraria — " +
+			"é o que mantém a sintaxe da plataforma fora da doutrina")
 	}
-	// AVISA e não barra: há PR legítimo sem card (uma correção de pipeline), e exigir
-	// vínculo de todos criaria card de mentira só para satisfazer o gate.
-	i := strings.Index(texto, "close[sd]?")
-	if !strings.Contains(texto[max(0, i-900):min(len(texto), i+900)], "::warning::") {
-		t.Error("a conferência da palavra-chave deve AVISAR, não barrar")
+	// A palavra em inglês NÃO pode estar hardcoded no pipeline: ela vive no `pr-body`,
+	// que é quem conhece a plataforma.
+	if strings.Contains(texto, "close[sd]?") || strings.Contains(texto, "Closes #") {
+		t.Error("a sintaxe de fechamento não pode estar no pipeline: ela é da PLATAFORMA " +
+			"e vive no `anchors pr-body`, que é quem a conhece")
 	}
 }

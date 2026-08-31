@@ -55,23 +55,21 @@ commit, e quem mexeu no arquivo é quem tem contexto para responder:
     anchors judge --pending
     anchors judge <alvo> --gate <g> --verdict pass|fail --reason "..."
 
-## Ao abrir o PR: a palavra que FECHA o card é em inglês
+## Ao abrir o PR: o Anchors escreve as linhas de fechamento
 
-    Closes #44
+    anchors pr-body
 
-O GitHub reconhece só ` + "`close/closes/closed`" + `, ` + "`fix/fixes/fixed`" + ` e
-` + "`resolve/resolves/resolved`" + `. Escrever "Fecha #44" — ou qualquer tradução — é
-ignorado em SILÊNCIO: o PR mescla, o card fica aberto, e o board passa a mentir sobre o
-que está pendente.
+Ele imprime as linhas que fecham o card que você pegou E os achados que nasceram sob
+ele (` + "`anchors:sob-<n>`" + `). Cole no corpo do PR.
 
-Aconteceu num PR que dizia "Fecha #44, #49, #50": os três continuaram abertos depois do
-merge, e ninguém teria notado se não fosse a conferência à mão.
+Você NÃO precisa saber a sintaxe da plataforma — e é justamente ela que se erra em
+silêncio. O GitHub reconhece a palavra de fechamento só em INGLÊS: escrever "Fecha
+#44" num projeto em português é ignorado sem erro nenhum, o PR mescla, e o card fica
+aberto. Aconteceu: um PR dizia "Fecha #44, #49, #50" e os três continuaram abertos.
 
-Os achados que nasceram sob o card (` + "`anchors:sob-<n>`" + `) entram na MESMA lista:
-
-    Closes #44
-    Closes #49
-    Closes #50
+O vínculo é declarado no vocabulário do Anchors — o card que você pegou e os achados
+sob ele. A palavra que a plataforma entende é DERIVADA disso, e muda com a
+plataforma, não com o idioma do projeto.
 
 ## A spec nasce antes do código
 
