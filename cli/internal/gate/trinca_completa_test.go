@@ -238,3 +238,51 @@ func TestTrincaCompleta_noFeatureNaoExigeReferencia(t *testing.T) {
 		t.Errorf("`@no-feature` dispensa sem exigir referência: %v (%s)", v, msg)
 	}
 }
+
+// `@TBD` (TO BE DEVELOPED) e `@no-test` dizem coisas DIFERENTES, e a diferença é o tempo.
+//
+// A spec nasce ANTES do código — é o fluxo normal do Anchors, já que a spec é a âncora.
+// Sem o `@TBD`, quem escreve uma spec nova tem duas saídas e ambas são ruins: barrar o
+// commit de todo trabalho em andamento, ou declarar `@no-test` mentindo — e aí a cobrança
+// some PARA SEMPRE justamente na unidade que mais vai precisar dela.
+func TestTBDDispensaSoOQueFoiDeclarado(t *testing.T) {
+	casos := []struct {
+		marca   string
+		quer    []string
+		naoQuer []string
+	}{
+		{"@TBD: code", []string{string(mapx.EdgeSpecifies)},
+			[]string{string(mapx.EdgeTestedBy), string(mapx.EdgeCoveredBy)}},
+		{"@TBD: code,test", []string{string(mapx.EdgeSpecifies), string(mapx.EdgeTestedBy)},
+			[]string{string(mapx.EdgeCoveredBy)}},
+		{"@TBD: code, feature, test",
+			[]string{string(mapx.EdgeSpecifies), string(mapx.EdgeCoveredBy), string(mapx.EdgeTestedBy)},
+			nil},
+	}
+	for _, c := range casos {
+		got := pecasPorDesenvolver("# Spec\n\n> " + c.marca + " — em andamento\n")
+		for _, q := range c.quer {
+			if !got[q] {
+				t.Errorf("%q deveria dispensar %q", c.marca, q)
+			}
+		}
+		for _, n := range c.naoQuer {
+			if got[n] {
+				t.Errorf("%q NÃO pode dispensar %q — o alvo é obrigatório justamente para "+
+					"que a marca não vire interruptor geral do gate", c.marca, n)
+			}
+		}
+	}
+}
+
+// Sem `@TBD` nenhum, nada é dispensado — o marcador é opt-in.
+func TestSemTBDNadaEhDispensado(t *testing.T) {
+	if len(pecasPorDesenvolver("# Spec sem marca nenhuma\n")) != 0 {
+		t.Error("sem `@TBD` o gate cobra tudo, como sempre cobrou")
+	}
+	// E `@TBD` sem alvo não dispensa nada: "está em andamento" sem dizer o quê seria
+	// um interruptor geral, que é o oposto do que este marcador é.
+	if len(pecasPorDesenvolver("# Spec\n\n> @TBD\n")) != 0 {
+		t.Error("`@TBD` sem alvo não pode dispensar nada")
+	}
+}

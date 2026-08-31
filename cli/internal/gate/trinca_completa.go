@@ -222,6 +222,26 @@ func optionalPieces(n mapx.Node, cfg *config.Config, g *mapx.Graph) map[string]b
 var (
 	noTestRE    = regexp.MustCompile(`@no-test[^\S\n]*:[^\S\n]*\S+`)
 	noFeatureRE = regexp.MustCompile(`@no-feature[^\S\n]*:[^\S\n]*\S+`)
+
+	// `@TBD` — TO BE DEVELOPED: a peça está decidida e AINDA NÃO foi escrita.
+	//
+	// A diferença para `@no-test` é o TEMPO, e ela é o motivo de o marcador existir.
+	// `@no-test` afirma "esta unidade NÃO PRECISA de teste" — decisão permanente, que
+	// fica escrita para quem ler a spec depois. `@TBD` afirma "falta escrever", e vence
+	// sozinho: no instante em que a peça aparece no mapa, a dispensa deixa de valer sem
+	// ninguém remover nada.
+	//
+	// Também não é "a decidir": o que a peça vai fazer já está na spec — é justamente
+	// isso que a spec É. O que falta é o arquivo.
+	//
+	// Sem esta distinção, a spec que nasce ANTES do código — que é o fluxo normal do
+	// Anchors, já que a spec é a âncora — tinha duas saídas, ambas ruins: barrar o
+	// commit de todo trabalho em andamento, ou declarar `@no-test` mentindo, e aí a
+	// cobrança some para sempre justamente na unidade que mais vai precisar dela.
+	//
+	// O ALVO é obrigatório (`@TBD: code`, `@TBD: code,test`): "está em andamento" sem
+	// dizer o quê viraria um interruptor geral do gate.
+	tbdRE = regexp.MustCompile(`(?i)@TBD[^\S\n]*:[^\S\n]*([a-z,\s]+)`)
 )
 
 // referenciaRE — o CÓDIGO do cenário que prova esta unidade, entre crases, dentro do
@@ -326,6 +346,9 @@ func dispensasDaSpec(content string) map[string]bool {
 		out[string(mapx.EdgeCoveredBy)] = true
 		out[string(mapx.EdgeTestedBy)] = true
 	}
+	for peca := range pecasPorDesenvolver(content) {
+		out[peca] = true
+	}
 	return out
 }
 
@@ -353,3 +376,26 @@ func cenariosDaFeatureLigada(n mapx.Node, root string, g *mapx.Graph) (int, stri
 // cenarioRE — o Gherkin do projeto pode estar em pt ou en; ambos abrem o cenário no
 // início da linha.
 var cenarioRE = regexp.MustCompile(`(?m)^\s*(?:Cenário|Cenario|Scenario|Esquema do Cenário|Scenario Outline):`)
+
+// pecasPorDesenvolver lê o `@TBD:` e devolve as arestas cuja peça ainda não foi escrita.
+//
+// O vocabulário é o do TRABALHO (`code`, `feature`, `test`), e não o das arestas do mapa:
+// quem escreve a spec pensa em peças, não em `covered_by`.
+func pecasPorDesenvolver(content string) map[string]bool {
+	out := map[string]bool{}
+	m := tbdRE.FindStringSubmatch(content)
+	if m == nil {
+		return out
+	}
+	for _, peca := range strings.Split(m[1], ",") {
+		switch strings.TrimSpace(peca) {
+		case "code", "codigo", "código":
+			out[string(mapx.EdgeSpecifies)] = true
+		case "feature":
+			out[string(mapx.EdgeCoveredBy)] = true
+		case "test", "teste":
+			out[string(mapx.EdgeTestedBy)] = true
+		}
+	}
+	return out
+}

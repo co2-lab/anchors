@@ -196,6 +196,43 @@ registrado e com justificativa datada (a tag carrega o *porquê* não se testa).
 Assim a cadeia da Rastreabilidade permanece **universal** — não há ramo especial
 para declarativas; o que existe é um teste de tipo diferente e um opt-out explícito.
 
+### `@TBD` — o que ainda não foi desenvolvido
+
+`@no-test` afirma **"esta unidade não precisa de teste"**. É decisão permanente, e
+fica escrita para quem ler a spec depois.
+
+Mas a spec **nasce antes do código** — é o fluxo normal, já que ela é a âncora. E
+aí existe uma segunda pergunta, que o opt-out não responde: *"e enquanto a peça não
+existe?"*
+
+```markdown
+> **@TBD: code,feature,test** — as peças que realizam esta spec são a fase em andamento.
+```
+
+`@TBD` é *to be developed*: a peça **está decidida e ainda não foi escrita**. Não é
+"a decidir" — o que ela vai fazer já está na spec, que é justamente o que a spec
+**é**. Falta o arquivo.
+
+A diferença entre os dois é o **tempo**, e é o que torna o `@TBD` honesto:
+
+| marca | afirma | vence? |
+|---|---|---|
+| `@no-test:` | esta unidade não precisa de teste | **não** — é permanente |
+| `@TBD: test` | falta escrever | **sim** — no instante em que a peça aparece no mapa |
+
+O `@TBD` **vence sozinho**: ninguém precisa lembrar de removê-lo. No momento em que
+a peça nasce, o gate volta a confrontá-la — e se a marca continuar lá, ela não
+protege mais nada, porque a peça existe.
+
+**O alvo é obrigatório.** `@TBD` sem dizer o quê viraria um interruptor geral do
+gate, e é exatamente isso que ele não pode ser. Declarar `code` dispensa o código e
+**continua cobrando** feature e teste.
+
+Sem esta distinção, quem escreve uma spec nova tem duas saídas e ambas são ruins:
+barrar o commit de todo trabalho em andamento, ou declarar `@no-test` mentindo — e
+aí a cobrança some **para sempre**, justamente na unidade que mais vai precisar
+dela.
+
 O eixo é ortogonal ao tipo: um mesmo artefato pode ter partes dos dois regimes (um
 pipeline de CI é declarativo na definição de stages, comportamental nos gates). A
 spec declara seu regime — e o regime determina *qual tipo de teste* o requisito
@@ -252,6 +289,11 @@ que medem *governo e completude*, não outra dimensão:
 | **spec completa** | a spec tem as seções obrigatórias, sem placeholder? | safepoint meio-cravado |
 | **spec-first honrada** | a spec descreve o quê (não o como), sem código? | segunda fonte de verdade |
 | **cobertura declarada** | tudo que a spec declara (estados, regras) virou identidade rastreável? | requisito que a spec promete mas não ancora |
+
+A **trinca completa** (spec + código + prova) é cobrada pelo mesmo modelo, com dois
+opt-outs que dizem coisas diferentes: `@no-test`/`@no-feature` para a peça que **não
+existirá**, e `@TBD` para a que **ainda não foi escrita** (§6). O segundo vence
+sozinho quando a peça nasce; o primeiro é permanente.
 
 Esses gates seguem o modelo comum: rodam sobre o caminho de impacto da Propagação
 (`PROPAGATION.md` §3), emitem issues materiais quando falham, e maturam de
