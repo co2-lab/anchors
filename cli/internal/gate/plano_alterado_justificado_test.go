@@ -2,6 +2,9 @@ package gate
 
 import (
 	"github.com/co2-lab/anchors/internal/config"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -175,4 +178,26 @@ func TestAlterado_gitDesmenteAListaRecebida(t *testing.T) {
 func semGit(t *testing.T) string {
 	t.Helper()
 	return t.TempDir()
+}
+
+// ARQUIVO NOVO não tem o que justificar — ele não existia, então nada foi ALTERADO.
+//
+// Medido ao escrever as duas primeiras specs de uma fase: o gate cobrou `-R0001` de
+// arquivos que nasciam naquele commit. Num arquivo novo o texto INTEIRO é a decisão;
+// exigir uma revisão de si mesmo no primeiro commit é ruído puro, e ruído em gate
+// bloqueante é o que faz alguém desligá-lo.
+func TestAlterado_arquivoNovoNaoTemOQueJustificar(t *testing.T) {
+	dir := t.TempDir()
+	if out, err := exec.Command("git", "-C", dir, "init", "-q").CombinedOutput(); err != nil {
+		t.Skipf("sem git: %v — %s", err, out)
+	}
+	novo := filepath.Join(dir, "nova.spec.md")
+	if err := os.WriteFile(novo, []byte("# Spec nova\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	v, d := checkPlanoAlteradoJustificado("# Spec nova\n",
+		mapx.Node{ID: "nova.spec.md", Code: "NOVAA"}, dir, nil, cfgAlterado("nova.spec.md"))
+	if v != Skip {
+		t.Fatalf("arquivo que nunca foi commitado não tem alteração a justificar, veio %v: %s", v, d)
+	}
 }

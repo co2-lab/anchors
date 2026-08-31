@@ -91,6 +91,13 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 	//
 	// Cobrar justificativa de quem não mexeu é o pior defeito possível num gate
 	// bloqueante: ele barra trabalho correto, e a saída barata vira desligá-lo.
+	// ARQUIVO NOVO não tem o que justificar: ele não existia, então nada foi ALTERADO.
+	// A revisão registra por que o texto mudou — e num arquivo que nasce agora, o texto
+	// inteiro é a decisão. Cobrar `-R0001` aqui obrigaria toda spec nova a declarar uma
+	// revisão de si mesma no primeiro commit, que é ruído puro.
+	if gitDizQueEhNovo(root, n.ID) {
+		return Skip, "arquivo novo — não há alteração a justificar"
+	}
 	if !gitDizQueMudou(root, n.ID) {
 		return Skip, "o git não vê mudança neste arquivo — `--changed` o incluiu, mas o " +
 			"conteúdo é igual ao do último commit"
@@ -208,4 +215,37 @@ func gitDizQueMudou(root, path string) bool {
 		return true
 	}
 	return len(strings.TrimSpace(string(out))) > 0
+}
+
+// gitDizQueEhNovo diz se o arquivo ainda não existe no histórico.
+//
+// `git log -1 -- <path>` vazio significa que nenhum commit o tocou — é a diferença entre
+// "mudou" e "nasceu". O status porcelain não serve aqui: ele marca `??` para não
+// rastreado e `A ` para staged, e um arquivo novo já adicionado ao índice apareceria como
+// alteração.
+func gitDizQueEhNovo(root, path string) bool {
+	// `git ls-files` e não `git log`: num repositório SEM NENHUM COMMIT o log falha
+	// ("does not have any commits yet") em vez de devolver vazio, e tratar o erro como
+	// "não é novo" fazia o gate cobrar justificativa de todo arquivo do primeiro commit —
+	// justamente onde nada pode ter sido alterado.
+	//
+	// `ls-files` responde o que interessa: o arquivo é RASTREADO? Se não é, ele nasce
+	// agora, com ou sem histórico no repositório.
+	//
+	// FORA de repositório a resposta é NÃO: ali o gate não tem como medir, e afirmar
+	// "é novo" o silenciaria em todo projeto sem git — que é o caso dos testes de unidade
+	// e de quem roda o Anchors fora de um repositório.
+	if !emRepositorio(root) {
+		return false
+	}
+	cmd := exec.Command("git", "ls-files", "--error-unmatch", "--", path)
+	cmd.Dir = root
+	return cmd.Run() != nil // erro = não rastreado = nasce agora
+}
+
+// emRepositorio diz se `root` está dentro de um repositório git.
+func emRepositorio(root string) bool {
+	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
+	cmd.Dir = root
+	return cmd.Run() == nil
 }
