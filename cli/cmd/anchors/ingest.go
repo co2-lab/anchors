@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -17,6 +18,14 @@ import (
 // cobertura de linha (lcov → % por arquivo). Daí deriva a cobertura por CENÁRIO
 // (cada código de cenário da spec tem um teste que PASSOU?). O sinal leva a rev do
 // nó — fica stale se o arquivo mudar depois (não confie em teste de versão antiga).
+// viaAnchorsTest é ligado pelo `anchors test`/`anchors mutation` antes de ingerir.
+//
+// A distinção é o ponto: aqueles comandos rodam a suíte E ingerem numa operação só, então
+// o sinal corresponde à execução que acabou de acontecer. Quem chama `ingest` direto pode
+// estar ingerindo um relatório de uma hora atrás — e o mapa passa a afirmar uma cobertura
+// que já não vale.
+var viaAnchorsTest bool
+
 func newIngestCmd() *cobra.Command {
 	var root, mapPath, junit, lcov, mutation, layer, scope string
 	cmd := &cobra.Command{
@@ -61,6 +70,9 @@ Rode 'anchors coverage' depois para ver os requisitos de spec sem teste verde.`,
 // nem invocar o próprio binário de novo. É o que fecha o par "rodar" / "ingerir" que
 // antes exigia um humano no meio.
 func ingereArtefatos(absRoot, mapPath, junit, lcov, mutation, layer, scope string) error {
+	if err := avisaSeIngestManual(absRoot); err != nil {
+		return err
+	}
 	{
 		{
 			if mapPath == "" {
@@ -165,4 +177,39 @@ func ingereArtefatos(absRoot, mapPath, junit, lcov, mutation, layer, scope strin
 			return nil
 		}
 	}
+}
+
+// avisaSeIngestManual reclama de uma ingestão feita fora do `anchors test`.
+//
+// AVISA por padrão e só BARRA quando o projeto declara `manual_ingest_blocks: true`. A
+// razão de não barrar sempre é que há usos legítimos — um CI que rodou a suíte noutro
+// job, uma ferramenta que o `tests:` não cobre —, e derrubá-los tiraria a saída de quem
+// tem razão.
+func avisaSeIngestManual(absRoot string) error {
+	if viaAnchorsTest {
+		return nil
+	}
+	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	if err != nil {
+		return nil // sem config não há o que exigir
+	}
+	// Sem `tests:` declarado o `anchors test` não roda, e exigir que se use o que não
+	// existe seria mandar o projeto para um beco sem saída.
+	if len(cfg.Tests) == 0 && len(cfg.Mutation) == 0 {
+		return nil
+	}
+	if cfg.Workflow.IngestManualBarra() {
+		return fmt.Errorf("ingestão MANUAL recusada — este projeto declara " +
+			"`manual_ingest_blocks: true`.\n" +
+			"  Use `anchors test` (ou `anchors mutation`): ele roda a suíte E ingere numa " +
+			"operação só, e é isso que garante que o sinal no mapa corresponde à última " +
+			"execução.\n" +
+			"  Ingerindo à mão dá para rodar a suíte, editar o código e ingerir o " +
+			"relatório velho — e o mapa passa a afirmar uma cobertura que já não vale")
+	}
+	fmt.Fprintln(os.Stderr, "⚠ ingestão MANUAL: o sinal pode não corresponder à última execução.")
+	fmt.Fprintln(os.Stderr, "  `anchors test` roda a suíte e ingere numa operação só — é o que")
+	fmt.Fprintln(os.Stderr, "  garante que o mapa reflete o que acabou de rodar. Para RECUSAR a")
+	fmt.Fprintln(os.Stderr, "  ingestão manual, declare `manual_ingest_blocks: true` em `workflow:`.")
+	return nil
 }

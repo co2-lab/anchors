@@ -250,6 +250,10 @@ func rodaSuites(cs comandoSuite, suites []config.Suite, absRoot, target string, 
 // faltando), o relatório da rodada ANTERIOR continua no disco — ingeri-lo gravaria no
 // mapa um número velho como se fosse o de agora, que é pior que não ter número nenhum.
 func ingereSeRecente(absRoot, junit, lcov, mutation string, s config.Suite, inicio time.Time) error {
+	// A ingestão vem do `anchors test`: a suíte ACABOU de rodar, e o sinal corresponde a
+	// ela. É o que distingue esta chamada de um `ingest` à mão.
+	viaAnchorsTest = true
+	defer func() { viaAnchorsTest = false }()
 	recente := func(p string) string {
 		if p == "" {
 			return ""

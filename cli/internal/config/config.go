@@ -168,6 +168,22 @@ type Workflow struct {
 	// resumo do run — e ali o silêncio é pior que a interrupção. Quem declara `true` está
 	// dizendo que prefere o CI vermelho a um pipeline que finge funcionar.
 	StalePipelineBlocks bool `yaml:"stale_pipeline_blocks,omitempty"`
+	// ManualIngestBlocks: `anchors ingest` chamado À MÃO é RECUSADO, em vez de só avisar.
+	//
+	// O `anchors test` roda a suíte e ingere numa operação só — é isso que garante que o
+	// sinal no mapa corresponde à última execução. Quem chama `ingest` direto quebra essa
+	// garantia sem perceber: dá para rodar a suíte, editar código, ingerir o relatório
+	// velho, e o mapa afirmar uma cobertura que já não vale.
+	//
+	// Medido: o `line-coverage` aprovava 1 nó quando havia 2 cobertos. O gate estava
+	// certo — ele reporta o que o mapa sabe —, e o sinal é que estava velho. Um gate
+	// verde sobre sinal velho afirma o que não mediu.
+	//
+	// O padrão AVISA porque há usos legítimos: um CI que já rodou a suíte noutro job, uma
+	// ferramenta que o `tests:` não cobre. Barrar todos por causa do caso comum tiraria a
+	// saída de quem tem razão. Quem declara `true` decidiu que, no projeto dele, ingestão
+	// fora do `anchors test` é sempre engano.
+	ManualIngestBlocks bool `yaml:"manual_ingest_blocks,omitempty"`
 }
 
 // BranchDeIntegracao devolve onde o trabalho chega, com o default aplicado.
@@ -201,6 +217,11 @@ func (w *Workflow) AprovacoesExigidas() int {
 // false" — as duas querem a mesma coisa.
 func (w *Workflow) PipelineVelhoBarra() bool {
 	return w != nil && w.StalePipelineBlocks
+}
+
+// IngestManualBarra diz se `anchors ingest` fora do `anchors test` deve ser recusado.
+func (w *Workflow) IngestManualBarra() bool {
+	return w != nil && w.ManualIngestBlocks
 }
 
 // BranchesProtegidos devolve onde nada entra sem PR, com o default aplicado.

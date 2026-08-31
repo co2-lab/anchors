@@ -835,6 +835,44 @@ granularidades diferentes.
 
 ---
 
+## 8.0 O sinal chega pelo `anchors test`, não à mão
+
+O gate de cobertura reporta o que o **mapa** sabe. Se o sinal no mapa for de uma
+execução anterior, o gate fica verde sobre o que não mediu — e não há como
+distinguir isso de "passou".
+
+```yaml
+tests:
+  - layer: unit
+    run: pnpm test
+    run_changed: pnpm test -- --findRelatedTests {{files}}
+    junit: .test-results/junit.xml
+    lcov: .test-results/coverage/lcov.info
+```
+
+Declarado, `anchors test` **roda a suíte e ingere numa operação só**. É a operação
+única que garante a correspondência: o sinal é daquela execução, e de nenhuma outra.
+
+`anchors ingest` chamado direto quebra essa garantia sem avisar — dá para rodar a
+suíte, editar o código, ingerir o relatório velho, e o mapa passa a afirmar uma
+cobertura que já não vale. Aconteceu: o `line-coverage` aprovava um nó quando havia
+dois cobertos, e o gate estava certo — o sinal é que estava velho.
+
+Por isso o `ingest` manual **avisa**, e pode ser **recusado**:
+
+```yaml
+workflow:
+  manual_ingest_blocks: true   # padrão: false
+```
+
+O padrão avisa porque há usos legítimos — um CI que rodou a suíte noutro job, uma
+ferramenta que o `tests:` não cobre. Barrar todos por causa do caso comum tiraria a
+saída de quem tem razão. E sem `tests:` declarado nada é exigido: o `ingest` é a
+única forma de o sinal chegar ao mapa, e exigir o que não existe seria um beco sem
+saída.
+
+---
+
 ## 8.1 A mensagem de commit também é confrontada
 
 O `commit-msg` é o segundo ponto de imposição local, e ele existe por uma razão que
