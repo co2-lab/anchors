@@ -322,9 +322,14 @@ func checkHeaderConforme(content string, n mapx.Node) (Verdict, string) {
 }
 
 func checkSpecSections(content string, _ mapx.Node) (Verdict, string) {
-	if strings.Contains(content, "[Descreva aqui]") || strings.Contains(content, "TODO: descrever") {
-		return Fail, "spec contém placeholder não preenchido"
-	}
+	// O PLACEHOLDER não é cobrado aqui, e antes era: este gate casava as frases dos
+	// templates em português ("[Descreva aqui]", "TODO: descrever"), o que quebraria na
+	// tradução — e, pior, duplicava o gate `placeholder-preenchido`, que faz o mesmo
+	// confronto com o vocabulário universal (`TODO`/`FIXME`/`XXX`/`campo: <valor>`) e
+	// sabe distinguir o marcador real do exemplo de sintaxe.
+	//
+	// Dois gates sobre o mesmo defeito produzem dois achados para um problema, e quem
+	// corrige um continua barrado pelo outro sem entender por quê.
 	catalogued := specHeadingRE().MatchString(content) ||
 		specTableRE().MatchString(content) ||
 		specBoldBulletRE().MatchString(content)
@@ -705,3 +710,10 @@ func ehBinario(content string) bool {
 	}
 	return strings.IndexByte(content[:n], 0) >= 0
 }
+
+// placeholderProsaRE: o marcador solto no corpo da spec — `TODO`, `FIXME`, `XXX` ou um
+// `<placeholder entre sinais>`, com ou sem o texto que o acompanha.
+//
+// O vocabulário é o mesmo do gate `placeholder-preenchido`, e é universal: nenhum projeto
+// traduz `TODO`. A frase que vem depois dele ("descrever", "describe", "escribir") pode
+// mudar com o idioma do template, e por isso não entra na régua.

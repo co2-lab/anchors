@@ -301,10 +301,11 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 		// da prática, e barrá-las reprovaria o projeto inteiro por algo que ninguém
 		// escreveu errado.
 		//
-		// A distinção sai do próprio gate, que já escreve os dois casos diferente: um
-		// nomeia as decisões, o outro pede que a seção seja aberta.
+		// A distinção sai do próprio gate, pelo MARCADOR que ele põe no laudo. Antes era
+		// por prosa ("que a spec ainda NÃO tomou"), e isso quebraria na tradução do
+		// laudo — sem erro, sem aviso: o gate simplesmente pararia de barrar.
 		if r.Verdict == Pending && g.Check == "open-questions-resolved" &&
-			strings.Contains(r.Detail, "que a spec ainda NÃO tomou") {
+			strings.Contains(r.Detail, MarcaDecisaoEmAberto) {
 			r.Impede = true
 			// E vira ISSUE. A mesma distinção decide as duas coisas: "há decisão por
 			// tomar" é achado que precisa sobreviver à sessão; "a spec nasceu antes da

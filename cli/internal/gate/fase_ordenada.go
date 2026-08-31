@@ -61,8 +61,14 @@ func checkFaseOrdenada(content string, n mapx.Node, root string, g *mapx.Graph, 
 	if len(fases) == 0 {
 		// Um plano sem fases catalogadas não está errado: plano pequeno não precisa de
 		// fase. Pendência, e não falha — é dívida de quem quiser a ordem confrontável.
-		if strings.Contains(strings.ToLower(content), "fase") {
-			return Pending, "o plano fala em FASE na prosa mas não cataloga nenhuma com " +
+		// A pergunta é ESTRUTURAL, não lexical: o plano tem seções de terceiro nível que
+		// PARECEM fase (`### <algo> — <título>`) e nenhuma catalogada?
+		//
+		// Antes isto casava a palavra "fase" no texto. Num plano em inglês ("Phase 1") o
+		// gate nunca disparava — e foi assim que o plano da Plataforma passou meses com
+		// `### Fase 1` sem código, com a ordem existindo só para quem lê.
+		if temSecaoQueParereFase(content) {
+			return Pending, "o plano tem seções que parecem FASE mas não cataloga nenhuma com " +
 				"código (`### " + strings.ToUpper(n.Code) + "-F01 — …`). Sem código, a ordem " +
 				"existe para quem lê e não para quem confronta: as specs semeadas nascem " +
 				"todas disponíveis, e o agente pega a da fase 3 com a fase 1 em aberto"
@@ -227,4 +233,17 @@ func paiDe(g *mapx.Graph, code string) string {
 		}
 	}
 	return "" // fase não é nó do mapa: a cadeia termina nela
+}
+
+// secaoNivel3RE casa `### <qualquer coisa> — <título>`: a FORMA de uma fase, sem depender
+// da palavra usada para nomeá-la.
+var secaoNivel3RE = regexp.MustCompile(`(?m)^#{3}\s+\S.*$`)
+
+// temSecaoQueParereFase diz se o plano organiza o trabalho em seções de terceiro nível.
+//
+// É a estrutura, e não o vocabulário: um plano em inglês ("Phase"), em espanhol ("Fase"),
+// ou que chame de "Etapa" cai igual. O que se pergunta é se existe ORDEM declarada que o
+// gate não consegue confrontar por falta de código.
+func temSecaoQueParereFase(content string) bool {
+	return secaoNivel3RE.MatchString(content)
 }

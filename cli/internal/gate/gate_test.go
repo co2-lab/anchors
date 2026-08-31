@@ -131,7 +131,9 @@ func TestInternalCheckers(t *testing.T) {
 		{"spec-sections", "- **HRMCX-S01** rótulo do mês no topo", Pass},                   // bullet-negrito conta
 		{"spec-sections", "só um título\nsem estados", Fail},
 		{"spec-sections", "menção solta BADEX-X01 em prosa", Fail}, // prosa não conta
-		{"spec-sections", "### LOGIX-S01\n[Descreva aqui]", Fail},  // placeholder
+		// O placeholder saiu daqui: quem o confronta é o `placeholder-preenchido`, com o
+		// vocabulário universal. Aqui a régua é a SEÇÃO catalogada.
+		{"spec-sections", "### LOGIX-S01\nUma regra escrita de verdade.", Pass},  // placeholder
 		{"has-code", "it('LOGIX-A01: ...')", Pass},
 		{"has-code", "sem identidade nenhuma", Fail},
 		{"header-conforme", "// @anchors\n//   code: LGNNX\nconst x = 1", Pass}, // dono (code)

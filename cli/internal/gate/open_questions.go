@@ -9,6 +9,14 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
+// MarcaDecisaoEmAberto distingue, no laudo, o Pending que BARRA (há decisão por tomar) do
+// que é dívida de migração (a spec nasceu antes da prática). Os dois são `Pending`, e só
+// o primeiro impede a promoção e vira issue.
+//
+// É um marcador ESTÁVEL, não prosa: o gate que o consulta não pode depender da redação —
+// nem do idioma — do texto que ele mesmo escreveu.
+const MarcaDecisaoEmAberto = "[decisao-em-aberto]"
+
 // open-questions-resolved: uma spec com pergunta em aberto NÃO está pronta para implementar.
 //
 // A classe de defeito é a AMBIGUIDADE NÃO RESOLVIDA, e ela é a mais barata de evitar e a
@@ -123,7 +131,15 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 	// diferente de "não tive o que confrontar", e só o primeiro impede a promoção. Culpa
 	// e prontidão são eixos distintos — declarar o que não se sabe não é defeito, e ainda
 	// assim não deixa a spec pronta.
-	return Pending, fmt.Sprintf("%d decisão(ões) que a spec ainda NÃO tomou, e o código vai "+
+	// O MARCADOR `[decisao-em-aberto]` é o que o `gate.go` consulta para saber que este
+	// Pending BARRA e vira issue. Antes ele casava a prosa ("que a spec ainda NÃO tomou"),
+	// e isso é uma bomba-relógio: no dia em que o laudo for traduzido — ou só reescrito —
+	// o gate para de barrar e de abrir issue, em silêncio, e ninguém liga uma coisa à
+	// outra.
+	//
+	// Marcador e não campo novo porque a assinatura do check é `(Verdict, string)` e é
+	// compartilhada por dezenas de gates; mudá-la para um caso obrigaria a tocar todos.
+	return Pending, fmt.Sprintf(MarcaDecisaoEmAberto+" %d decisão(ões) que a spec ainda NÃO tomou, e o código vai "+
 		"precisar: %s. Registrá-las aqui é o certo — o defeito seria decidir por conta "+
 		"própria na hora de implementar. O caminho de saída é UM: leve a pergunta a quem "+
 		"decide e PROMOVA a resposta a regra (com código). Apagar o item sem regra nova é "+
