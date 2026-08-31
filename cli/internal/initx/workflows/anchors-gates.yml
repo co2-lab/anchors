@@ -83,13 +83,20 @@ jobs:
           # aqui esconderia justamente o que se quer denunciar.
           cp anchors.graph.yaml /tmp/mapa-commitado.yaml
           anchors map build >/dev/null 2>&1 || true
-          # O `gerado_por` é ignorado: ele muda com a versão do binário, e isso não é o
-          # mapa estar velho (ver mapx.GeradoPor).
-          if ! diff -q <(grep -v '^gerado_por:' /tmp/mapa-commitado.yaml) \
-                       <(grep -v '^gerado_por:' anchors.graph.yaml) >/dev/null; then
+          # DOIS campos são ignorados, e por razões diferentes:
+          #
+          #   • `gerado_por` muda com a versão do binário, e isso não é mapa velho.
+          #
+          #   • `updated_at` é a data do ÚLTIMO COMMIT do arquivo, e o mapa é gerado
+          #     ANTES do commit que o carrega. Quem escreve um arquivo hoje gera o mapa
+          #     com a data anterior, commita os dois juntos, e no CI o `map build` já vê
+          #     a data nova. É um ciclo que nenhum `map build` fecha — todo PR que toca
+          #     arquivo governado cairia aqui.
+          filtra() { grep -vE '^ *(gerado_por|updated_at):' "$1"; }
+          if ! diff -q <(filtra /tmp/mapa-commitado.yaml) \
+                       <(filtra anchors.graph.yaml) >/dev/null; then
             echo "::error::O \`anchors.graph.yaml\` commitado não corresponde ao repositório. Rode \`anchors map build\`, commite e suba — sem isso os gates confrontam uma foto velha."
-            diff <(grep -v '^gerado_por:' /tmp/mapa-commitado.yaml) \
-                 <(grep -v '^gerado_por:' anchors.graph.yaml) | head -40
+            diff <(filtra /tmp/mapa-commitado.yaml) <(filtra anchors.graph.yaml) | head -40
             exit 1
           fi
           echo "✓ o mapa commitado corresponde ao repositório"
