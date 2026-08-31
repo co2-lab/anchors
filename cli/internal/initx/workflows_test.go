@@ -689,10 +689,19 @@ func TestPipelineConfrontaOVinculoENaoAPalavra(t *testing.T) {
 		t.Error("o pipeline deve confrontar o corpo com o que o `anchors pr-body` geraria — " +
 			"é o que mantém a sintaxe da plataforma fora da doutrina")
 	}
-	// A palavra em inglês NÃO pode estar hardcoded no pipeline: ela vive no `pr-body`,
-	// que é quem conhece a plataforma.
-	if strings.Contains(texto, "close[sd]?") || strings.Contains(texto, "Closes #") {
-		t.Error("a sintaxe de fechamento não pode estar no pipeline: ela é da PLATAFORMA " +
-			"e vive no `anchors pr-body`, que é quem a conhece")
+	// LER a sintaxe é diferente de EXIGI-LA. O pipeline extrai do corpo os cards que o
+	// PR declara — e para isso precisa reconhecer a forma que a plataforma usa. O que não
+	// pode é ele MANDAR escrever daquele jeito: essa é a exigência que vazaria para a
+	// doutrina, e quem a resolve é o `pr-body`, gerando a linha pronta.
+	//
+	// A distinção está na mensagem: o aviso fala do que FALTA declarar, não da palavra.
+	if strings.Contains(texto, "Use \\`Closes #N\\`") {
+		t.Error("o pipeline não pode MANDAR escrever a palavra em inglês: num projeto " +
+			"noutro idioma isso é a plataforma vazando para a doutrina. Mande rodar o " +
+			"`anchors pr-body`, que gera a linha pronta")
+	}
+	if !strings.Contains(texto, "--so-sob") {
+		t.Error("o pipeline deve conferir o que FALTA (os achados sob os cards declarados), " +
+			"e não repetir o que o corpo já diz")
 	}
 }

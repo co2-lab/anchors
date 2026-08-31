@@ -43,6 +43,7 @@ var sintaxeDeFechamento = map[string]string{
 
 func newPRBodyCmd() *cobra.Command {
 	var root, cards string
+	var sob bool
 	cmd := &cobra.Command{
 		Use:   "pr-body",
 		Short: "Escreve as linhas que fecham os cards deste trabalho, na sintaxe da plataforma",
@@ -89,8 +90,10 @@ o card fica aberto.
 			// Cada card ARRASTA o que nasceu sob ele: o achado foi descoberto fazendo
 			// aquele trabalho, e os dois se entregam juntos. Esquecer um deixaria o board
 			// afirmando que há trabalho pendente que já foi feito.
+			raizesPedidas := map[string]bool{}
 			todos := map[string]bool{}
 			for _, c := range raizes {
+				raizesPedidas[c] = true
 				todos[c] = true
 				for _, sob := range cardsSob(cfg, c) {
 					todos[sob] = true
@@ -106,6 +109,12 @@ o card fica aberto.
 				return a < b
 			})
 			for _, c := range ordenados {
+				// `--so-sob` serve a quem JÁ declarou os cards raiz e quer saber o que
+				// mais precisa entrar: o CI, que lê os cards do corpo do PR e precisa
+				// conferir se os achados sob eles também estão lá.
+				if sob && raizesPedidas[c] {
+					continue
+				}
 				fmt.Printf(sintaxe+"\n", c)
 			}
 			return nil
@@ -113,6 +122,8 @@ o card fica aberto.
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
 	cmd.Flags().StringVar(&cards, "cards", "", "número(s) do(s) card(s), separados por vírgula")
+	cmd.Flags().BoolVar(&sob, "so-sob", false,
+		"só os achados que nasceram sob os cards informados, sem eles próprios")
 	return cmd
 }
 

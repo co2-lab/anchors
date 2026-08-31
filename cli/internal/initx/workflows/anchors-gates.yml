@@ -124,10 +124,23 @@ jobs:
             echo "::warning::não consegui ler o corpo do PR — a conferência não aconteceu: $corpo"
             exit 0
           fi
-          # Sem `ANCHORS_AGENT` o Anchors não sabe qual card é deste trabalho, e adivinhar
-          # pelo branch seria inventar vínculo. Aí não há o que confrontar.
-          if ! esperado=$(anchors pr-body 2>/dev/null) || [ -z "$esperado" ]; then
-            echo "· não há card atribuído a este trabalho — nada a conferir"
+          # OS CARDS RAIZ saem do próprio corpo: o CI não tem `ANCHORS_AGENT` (a
+          # identidade é de quem trabalha, não do runner), e adivinhar pelo branch seria
+          # inventar vínculo.
+          #
+          # Sem isto o passo era decorativo: o `pr-body` devolvia vazio em toda execução e
+          # a conferência nunca acontecia. Um gate que nunca confronta é pior que nenhum —
+          # ele dá a impressão de que alguém está olhando.
+          raiz=$(printf '%s' "$corpo" | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+' | grep -oE '[0-9]+' | paste -sd, -)
+          if [ -z "$raiz" ]; then
+            echo "· o PR não declara card — nada a conferir"
+            exit 0
+          fi
+          # E o que se confere é o que FALTA: os achados que nasceram sob os cards
+          # declarados. Eles se entregam no mesmo PR, e esquecê-los deixa o board
+          # afirmando que há trabalho pendente que já foi feito.
+          if ! esperado=$(anchors pr-body --cards "$raiz" --so-sob 2>/dev/null) || [ -z "$esperado" ]; then
+            echo "✓ os cards declarados não têm achados pendentes sob eles"
             exit 0
           fi
           faltando=""
@@ -136,9 +149,9 @@ jobs:
             printf '%s' "$corpo" | grep -qF "$linha" || faltando="$faltando $linha"
           done <<< "$esperado"
           if [ -n "$faltando" ]; then
-            echo "::warning::O corpo do PR não fecha:$faltando — esses cards ficariam abertos depois do merge. Rode \`anchors pr-body\` e cole a saída no corpo do PR."
+            echo "::warning::Nasceram SOB os cards deste PR e não estão declarados:$faltando — ficariam abertos depois do merge. Rode \`anchors pr-body --cards $raiz\` e cole a saída no corpo do PR."
           else
-            echo "✓ os cards deste trabalho estão declarados no corpo do PR"
+            echo "✓ os cards deste trabalho e o que nasceu sob eles estão declarados"
           fi
 
       - name: Confrontar os gates
