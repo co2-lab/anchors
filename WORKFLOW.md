@@ -232,6 +232,46 @@ não pode acabar falando com a rede sem pedir.
 > sozinho. O `Resolve` só dispara quando um gate que reprovou volta a *passar*, e um
 > arquivo apagado não deixa nó a confrontar. Vale para o modo local do mesmo jeito.
 
+### O que o gate NÃO vê: o achado do agente
+
+O roteamento acima cobre o que o **gate** detecta. Falta o outro cenário, e ele é o
+mais comum: o agente descobre algo errado enquanto implementa outra coisa.
+
+Uma config que contradiz a doutrina do próprio projeto. Um caminho que ninguém
+documentou. Um arquivo no lugar errado. **Nenhum gate vê isso** — e o caminho barato
+é consertar na hora e seguir, o que faz o conserto sumir do histórico.
+
+Aconteceu ao implementar a primeira spec de código de um projeto: três achados, e só
+um virou card — justamente o que um gate detectou. Os outros dois existiam só na
+narração de quem os corrigiu.
+
+```console
+$ anchors escalate "o jest mede só packages/*/src/, mas o código vive ao lado da spec" \
+    --sobre jest.config.js --card 44
+achado registrado: https://github.com/acme/projeto/issues/49
+```
+
+O card nasce **sob** o de origem, com a label `anchors:sob-44`:
+
+```console
+$ gh issue list --label anchors:sob-44
+  #50 Nada indica ONDE o código de uma spec deve nascer
+  #49 O `jest.config.js` mede cobertura só de packages/*/src/
+```
+
+Os dois se entregam no **mesmo PR**: o achado apareceu fazendo aquele trabalho, e
+separá-los faria um dos dois esperar sem razão.
+
+**Por que label, e não texto no corpo.** A primeira versão escrevia *"descoberto
+durante o card #44"* na descrição, e isso não se consulta — não dá para listar o que
+pende sob um trabalho, nem para saber o que precisa entrar no mesmo PR. Label é
+filtrável, aparece na lista e sobrevive a qualquer reescrita do texto.
+
+**Por que não a sub-issue nativa do GitHub.** Ela aceita **um** nível, e a hierarquia
+deste fluxo tem mais: plano → fase → spec → achado. A árvore do board se monta pelo
+`parent:` do header do artefato (§7 do `PLANNING.md`), e é multinível. A label
+`sob-` resolve o caso que aquela não alcança — o achado que **não tem artefato**.
+
 ### O julgamento é a exceção, e não vira card
 
 A task de julgamento (`.anchors/tasks/`) **não** vai para o GitHub, e a razão é que

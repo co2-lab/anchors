@@ -639,3 +639,37 @@ func TestAlgumPipelineConfrontaOsGatesNoPR(t *testing.T) {
 			"`--no-verify`, e sem isto 'nada sobe se não passar' é só uma frase")
 	}
 }
+
+// O CARD ENSINA O QUE FAZER COM O ACHADO QUE NÃO É DELE.
+//
+// O gate abre issue do que ELE detecta. O que o agente descobre sozinho — uma config que
+// contradiz a doutrina, um caminho que ninguém documentou — não tem quem registre, e o
+// caminho barato é consertar na hora: o conserto some do histórico.
+//
+// Medido ao implementar a primeira spec de código de um projeto: três achados, e só um
+// virou card — justamente o que um gate detectou. Os outros dois existiam só na narração
+// de quem os corrigiu.
+//
+// A instrução vive no CORPO DO CARD porque é ali que o agente olha ao pegar trabalho. Num
+// documento que ele talvez leia, ela não alcança quem precisa.
+func TestCardEnsinaARegistrarOAchadoDoAgente(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-identify.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+	if !strings.Contains(texto, "anchors escalate") {
+		t.Error("o card não diz como registrar um achado — sem isso o agente corrige em " +
+			"silêncio, que é o caminho barato")
+	}
+	// E tem de dizer que o achado se entrega JUNTO: um card solto na fila espera sem
+	// razão, porque quem o descobriu já estava com o contexto na mão.
+	if !strings.Contains(texto, "MESMO PR") {
+		t.Error("o card deve dizer que o achado se entrega no mesmo PR")
+	}
+	// O `--card` é o que cria o vínculo. Sem ele o achado nasce solto, e a instrução
+	// ensinaria a perder a relação.
+	if !strings.Contains(texto, "--card") {
+		t.Error("a instrução deve incluir `--card`, senão o achado nasce sem vínculo")
+	}
+}
