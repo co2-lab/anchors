@@ -728,7 +728,7 @@ ignorar o próximo, que se aplica.
 
 ### 7.17 O CI roda o binário PUBLICADO, não o seu
 
-Duas armadilhas da mesma família, e as duas mordem em silêncio: **o que vale no seu
+Três armadilhas da mesma família, e as três mordem em silêncio: **o que vale no seu
 terminal não vale no CI até você publicar.**
 
 **O binário.** Os pipelines baixam o release (`ANCHORS_VERSION: latest`), e não compilam
@@ -748,8 +748,20 @@ lá — e enquanto não chega, a versão defeituosa continua rodando a cada 30 m
 Foi o que manteve um `stale` quebrado reciclando trabalho pronto por horas, depois de
 corrigido na develop.
 
+**O tempo entre marcar e publicar.** A tag não é o release: o `goreleaser` leva minutos
+para compilar e publicar os artefatos. Abrir o PR logo depois de `git push --tags` faz o
+CI baixar a versão ANTERIOR — a que ainda tem o defeito que você acabou de corrigir.
+
+Medido: um job de gates rodou às `04:12:08` e a release publicou às `04:12:51`.
+**Quarenta e três segundos**, e o resultado foi eu ler o log, ver o defeito ainda lá, e
+começar a suspeitar da correção. Quem denunciou foi o aviso de `gerado_por` — *"o mapa foi
+gravado por `anchors 0.1.14` e este é o 0.1.13"* —, que estava ali dizendo qual versão
+tinha de fato rodado.
+
 **O que fazer:**
 
+- marcou a tag? ESPERE a release publicar antes de abrir o PR — `gh release view <tag>`
+  responde se ela já existe, e um rerun conserta quando o PR foi aberto cedo demais;
 - mudou o schema do `anchors.yaml`? publique o release ANTES de esperar o CI funcionar;
 - corrigiu um pipeline agendado? ele só vale depois de mesclar no branch padrão;
 - e quando um pipeline "funciona mas o resultado está errado", suspeite da VERSÃO antes
