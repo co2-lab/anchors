@@ -163,7 +163,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			))
 			defer espelho.Fechar()
 
-			warnIfMapStale(absRoot, mapPath, cfg)
+			warnIfMapStale(absRoot, mapPath, cfg, g)
 			fmt.Printf("check %s — %d nós, %d gates\n\n", scope, len(nodes), len(cfg.Gates))
 
 			// `all` chega até os gates: é o que permite ao gate que sabe varrer sozinho
@@ -1242,30 +1242,42 @@ func skipReasons(p gate.Profile) []gate.Result {
 // check — e o verde passa a não significar nada (o gate não roda sobre o que não está
 // no mapa). É a diferença entre "passou" e "não foi olhado".
 //
-// Heurística barata e honesta: compara o mtime do anchors.graph.yaml com o mtime dos
-// arquivos-fonte varridos. Não tenta ser exato (renames, deleções) — só levanta a mão.
-func warnIfMapStale(root, mapPath string, cfg *config.Config) {
-	mi, err := os.Stat(mapPath)
-	if err != nil {
+// A conferência é sobre CONTEÚDO — quais arquivos governados o mapa não conhece —, e
+// não sobre mtime.
+//
+// A primeira versão comparava o mtime do `anchors.graph.yaml` com o dos arquivos-fonte.
+// Barato, e errado em CI: o `checkout` escreve TODO o repositório no instante do clone,
+// então cada arquivo fica microssegundos mais novo que o mapa e o aviso disparava em toda
+// execução. Medido no primeiro run do pipeline de gates — 26 arquivos "mudaram" num
+// repositório onde nada mudara, e o log do mesmo job dizia, duas linhas acima, que o mapa
+// correspondia ao repositório.
+//
+// Ruído assim custa mais do que parece: um aviso que aparece em todo PR verde ensina a
+// ignorá-lo, e aí ele não serve quando for verdadeiro.
+//
+// Arquivo governado que não está no mapa é INVISÍVEL ao check, e é isso que o aviso
+// existe para dizer — a diferença entre "passou" e "não foi olhado".
+func warnIfMapStale(root, mapPath string, cfg *config.Config, g *mapx.Graph) {
+	if g == nil {
 		return
 	}
-	mapTime := mi.ModTime()
 	files, err := scan.Walk(root, cfg)
 	if err != nil {
 		return
 	}
+	noMapa := make(map[string]bool, len(g.Nodes))
+	for _, n := range g.Nodes {
+		noMapa[filepath.ToSlash(n.ID)] = true
+	}
 	newer := 0
 	var sample string
 	for _, f := range files {
-		fi, err := os.Stat(filepath.Join(root, f.Path))
-		if err != nil {
+		if noMapa[filepath.ToSlash(f.Path)] {
 			continue
 		}
-		if fi.ModTime().After(mapTime) {
-			newer++
-			if sample == "" {
-				sample = f.Path
-			}
+		newer++
+		if sample == "" {
+			sample = f.Path
 		}
 	}
 	if newer == 0 {
@@ -1275,7 +1287,10 @@ func warnIfMapStale(root, mapPath string, cfg *config.Config) {
 	if newer > 1 {
 		extra = fmt.Sprintf(" (e mais %d)", newer-1)
 	}
-	fmt.Printf("⚠ mapa DESATUALIZADO: %d arquivo(s) mudaram desde o último `map build` — ex.: %s%s\n"+
+	// A mensagem diz o que foi MEDIDO: "não está no mapa", e não "mudou". Dizer "mudou"
+	// mandaria quem lê procurar uma alteração que pode não existir — o caso comum é
+	// arquivo NOVO, que nunca esteve lá.
+	fmt.Printf("⚠ mapa DESATUALIZADO: %d arquivo(s) governado(s) não estão no mapa — ex.: %s%s\n"+
 		"  Os gates só enxergam o que está no mapa; rode `anchors map build` antes de confiar neste resultado.\n\n",
 		newer, sample, extra)
 }
