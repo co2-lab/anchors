@@ -1,0 +1,103 @@
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
+# Anchors — os GATES no PR: a fronteira real
+#
+# O pre-commit roda os gates na máquina de quem commita, e isso é rápido e útil — mas
+# não é fronteira. `git commit --no-verify` o contorna com uma flag, e o trabalho entra
+# no repositório sem passar por gate nenhum. Medido no projeto de referência: os quatro
+# checks do PR estavam verdes e NENHUM confrontava os gates.
+#
+# Este pipeline é o que torna verdadeira a frase da doutrina: "nada sobe se não passar".
+# O gate local dá agilidade; este dá a garantia (QUALITY.md §8).
+#
+# Roda `--all`, e não `--changed`: um PR pode QUEBRAR um arquivo que ele não tocou —
+# renomear um símbolo, mover uma spec, mudar uma regra que outra unidade cita. O
+# `--changed` seguiria o raio de impacto do que mudou, e o raio é calculado sobre o mapa,
+# que pode estar velho justamente por causa deste PR.
+name: anchors · gates
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+  # À MÃO: um PR cujo evento se perdeu, ou uma conferência que alguém quer refazer sem
+  # empurrar commit vazio. Pipeline sem escape manual transforma percalço em trabalho
+  # parado sem remédio.
+  workflow_dispatch:
+
+# NÃO é serializado, diferente dos pipelines que escrevem label: este só LÊ o repositório
+# e reporta. Serializar faria cada PR esperar a fila dos outros sem necessidade.
+concurrency:
+  group: anchors-gates-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  gates:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # O histórico inteiro: gates que confrontam a MUDANÇA (`plano-alterado-justificado`)
+          # perguntam ao git o que mudou, e com clone raso a resposta é sempre "tudo".
+          fetch-depth: 0
+
+      - name: Instalar o Anchors
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Fixe uma versão (`v1.2.3`) quando quiser que o pipeline pare de mudar sozinho:
+          # `latest` faz o comportamento do CI depender de quando ele rodou.
+          ANCHORS_VERSION: latest
+        run: |
+          set -euo pipefail
+          if [ "$ANCHORS_VERSION" = "latest" ]; then
+            TAG=$(gh release list --repo co2-lab/anchors --limit 1 --json tagName --jq '.[0].tagName')
+          else
+            TAG="$ANCHORS_VERSION"
+          fi
+          gh release download "$TAG" --repo co2-lab/anchors \
+            --pattern 'anchors_*_linux_amd64.tar.gz' --output /tmp/anchors.tar.gz --clobber
+          tar -xzf /tmp/anchors.tar.gz -C /tmp anchors
+          sudo install /tmp/anchors /usr/local/bin/anchors
+          anchors --version
+
+      - name: Conferir se este pipeline está atualizado
+        run: |
+          # SEM `continue-on-error`: quem decide se isto barra é o PROJETO, pelo
+          # `stale_pipeline_blocks` no anchors.yaml.
+          if ! anchors doctor --check-pipelines; then
+            echo "::warning::Este pipeline está desatualizado — ele roda, mas o que foi corrigido depois NÃO acontece. Rode \`anchors doctor --fix\`, commite e suba."
+          fi
+
+      - name: O mapa está em dia?
+        run: |
+          set -euo pipefail
+          # O mapa é VERSIONADO e chega pronto no push. Se ele estiver velho, os gates
+          # confrontariam uma foto que não é a deste PR — e reportariam verde sobre o que
+          # não mediram, que é pior que reprovar.
+          #
+          # `map build` sobre uma cópia: comparar é a conferência, e reescrever o arquivo
+          # aqui esconderia justamente o que se quer denunciar.
+          cp anchors.graph.yaml /tmp/mapa-commitado.yaml
+          anchors map build >/dev/null 2>&1 || true
+          # O `gerado_por` é ignorado: ele muda com a versão do binário, e isso não é o
+          # mapa estar velho (ver mapx.GeradoPor).
+          if ! diff -q <(grep -v '^gerado_por:' /tmp/mapa-commitado.yaml) \
+                       <(grep -v '^gerado_por:' anchors.graph.yaml) >/dev/null; then
+            echo "::error::O \`anchors.graph.yaml\` commitado não corresponde ao repositório. Rode \`anchors map build\`, commite e suba — sem isso os gates confrontam uma foto velha."
+            diff <(grep -v '^gerado_por:' /tmp/mapa-commitado.yaml) \
+                 <(grep -v '^gerado_por:' anchors.graph.yaml) | head -40
+            exit 1
+          fi
+          echo "✓ o mapa commitado corresponde ao repositório"
+
+      - name: Confrontar os gates
+        run: |
+          set -euo pipefail
+          # `--no-record` porque este pipeline NÃO escreve: ele reporta. Registrar daqui
+          # abriria cards a cada push de PR — inclusive de trabalho que o autor ainda vai
+          # corrigir na próxima revisão —, e o board viraria ruído.
+          anchors check --all --no-record

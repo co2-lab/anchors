@@ -59,6 +59,13 @@ var WorkflowsDoFluxo = []Workflow{
 		ExigeSerial: true,
 	},
 	{
+		Arquivo: "anchors-gates.yml",
+		Papel:   "confronta os gates a cada PR (é a fronteira: nada sobe sem passar)",
+		// NÃO serializa: só lê e reporta. Serializar faria cada PR esperar a fila dos
+		// outros sem necessidade — o `concurrency` dele é por PR, não global.
+		ExigeSerial: false,
+	},
+	{
 		Arquivo:     "anchors-claim.yml",
 		Papel:       "atribui trabalho aos agentes (é o que elimina a corrida por um card)",
 		ExigeSerial: true,

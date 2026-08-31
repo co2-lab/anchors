@@ -281,6 +281,12 @@ func TestPipelinesSoTocamCardsDoAnchors(t *testing.T) {
 			t.Fatalf("%s: %v", w.Arquivo, err)
 		}
 		texto := string(b)
+		// A regra vale para quem MEXE em issue. Um pipeline que só lê o repositório e
+		// reporta (o `gates`) não tem card a filtrar — exigir a label dele obrigaria a
+		// escrever uma consulta que ele não faz, só para satisfazer o teste.
+		if !strings.Contains(texto, "gh issue") {
+			continue
+		}
 		if !strings.Contains(texto, `--label "$LABEL"`) {
 			t.Errorf("%s não filtra pela label do Anchors — pode tocar card de outro fluxo", w.Arquivo)
 		}
@@ -590,5 +596,46 @@ func TestBoardNaoDerrubaCardPeloFiltroDeDono(t *testing.T) {
 	}
 	if !strings.Contains(expr, "if test(") {
 		t.Error("o dono liberado deve virar campo VAZIO (if/then/else), não sumir")
+	}
+}
+
+// A FRONTEIRA REAL: alguém tem de confrontar os gates no PR.
+//
+// O pre-commit roda na máquina de quem commita, e `git commit --no-verify` o contorna
+// com uma flag. Medido no projeto de referência: os quatro checks do PR estavam VERDES e
+// nenhum deles confrontava gate algum — a frase "nada sobe se não passar" (QUALITY.md §8)
+// não era verdade ali.
+func TestAlgumPipelineConfrontaOsGatesNoPR(t *testing.T) {
+	achou := false
+	for _, w := range WorkflowsDoFluxo {
+		b, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
+		if err != nil {
+			t.Fatal(err)
+		}
+		texto := string(b)
+		if !strings.Contains(texto, "anchors check") {
+			continue
+		}
+		achou = true
+		if !strings.Contains(texto, "pull_request") {
+			t.Errorf("%s roda os gates mas não no PR — a fronteira é ali", w.Arquivo)
+		}
+		// `--all` e não `--changed`: um PR pode QUEBRAR arquivo que não tocou (renomear
+		// símbolo, mover spec), e o raio de impacto do `--changed` é calculado sobre o
+		// mapa — que pode estar velho justamente por causa deste PR.
+		if !strings.Contains(texto, "check --all") {
+			t.Errorf("%s deveria confrontar `--all`: o `--changed` não alcança o que o PR "+
+				"quebrou sem tocar", w.Arquivo)
+		}
+		// NÃO registra: abrir card a cada push de PR encheria o board de trabalho que o
+		// autor ainda vai corrigir na revisão seguinte.
+		if !strings.Contains(texto, "--no-record") {
+			t.Errorf("%s registra a partir do PR — o board viraria ruído; use `--no-record`",
+				w.Arquivo)
+		}
+	}
+	if !achou {
+		t.Error("nenhum pipeline confronta os gates: o pre-commit é contornável com " +
+			"`--no-verify`, e sem isto 'nada sobe se não passar' é só uma frase")
 	}
 }
