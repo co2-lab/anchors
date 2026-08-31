@@ -131,7 +131,13 @@ jobs:
           # Sem isto o passo era decorativo: o `pr-body` devolvia vazio em toda execução e
           # a conferência nunca acontecia. Um gate que nunca confronta é pior que nenhum —
           # ele dá a impressão de que alguém está olhando.
-          raiz=$(printf '%s' "$corpo" | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+' | grep -oE '[0-9]+' | paste -sd, -)
+          # BLOCOS DE CÓDIGO ficam de fora: um PR que DOCUMENTA a sintaxe (`anchors
+          # pr-body` mostrando `Closes #44` como exemplo) não está declarando aqueles
+          # cards. Medido — o primeiro PR a usar este passo tinha o exemplo na descrição,
+          # e o gate leu como declaração real. Se um achado de verdade estivesse faltando,
+          # o exemplo o teria mascarado.
+          fora_de_bloco=$(printf '%s' "$corpo" | awk '/^```/ {dentro = !dentro; next} !dentro {print}')
+          raiz=$(printf '%s' "$fora_de_bloco" | grep -oiE '(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+' | grep -oE '[0-9]+' | paste -sd, -)
           if [ -z "$raiz" ]; then
             echo "· o PR não declara card — nada a conferir"
             exit 0
@@ -146,7 +152,7 @@ jobs:
           faltando=""
           while IFS= read -r linha; do
             [ -z "$linha" ] && continue
-            printf '%s' "$corpo" | grep -qF "$linha" || faltando="$faltando $linha"
+            printf '%s' "$fora_de_bloco" | grep -qF "$linha" || faltando="$faltando $linha"
           done <<< "$esperado"
           if [ -n "$faltando" ]; then
             echo "::warning::Nasceram SOB os cards deste PR e não estão declarados:$faltando — ficariam abertos depois do merge. Rode \`anchors pr-body --cards $raiz\` e cole a saída no corpo do PR."

@@ -283,6 +283,7 @@ Subcomandos imprimem os guias das réguas específicas:
 		},
 	}
 	cmd.AddCommand(
+		newGuideSubCmd("review", "como revisar um PR: o que é seu e o que o check já mediu", reviewGuide),
 		newGuideSubCmd("work", "como trabalhar um card: a ordem, o que fazer com o achado que não é dele", workGuide),
 		newGuideSubCmd("project", "como descobrir um projeto que ainda não existe (PROJECT.md + INSIGHTS.md)", projectGuide),
 		newGuidePlanCmd(),
