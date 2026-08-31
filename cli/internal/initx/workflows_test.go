@@ -669,3 +669,29 @@ func TestCardApontaOGuiaDeTrabalho(t *testing.T) {
 			"congela — use `anchors guide work`, que acompanha a versão do binário")
 	}
 }
+
+// A PALAVRA QUE FECHA O CARD É EM INGLÊS, e errá-la não dá erro nenhum.
+//
+// O GitHub reconhece só `close/closes/closed`, `fix/fixes/fixed` e
+// `resolve/resolves/resolved`. Uma tradução ("Fecha #44") é ignorada em SILÊNCIO: o PR
+// mescla, o card fica aberto, e o board passa a mentir sobre o que está pendente.
+//
+// Medido: um PR dizia "Fecha #44, #49, #50" e os três continuaram abertos depois do
+// merge — descoberto só porque fui conferir os cards à mão.
+func TestPipelineAvisaQuandoOPRNaoFechaOCard(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-gates.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+	if !strings.Contains(texto, "close[sd]?") {
+		t.Error("nenhum pipeline confere a palavra-chave de fechamento — errá-la é " +
+			"silencioso, e o board passa a mentir sobre o que está pendente")
+	}
+	// AVISA e não barra: há PR legítimo sem card (uma correção de pipeline), e exigir
+	// vínculo de todos criaria card de mentira só para satisfazer o gate.
+	i := strings.Index(texto, "close[sd]?")
+	if !strings.Contains(texto[max(0, i-900):min(len(texto), i+900)], "::warning::") {
+		t.Error("a conferência da palavra-chave deve AVISAR, não barrar")
+	}
+}

@@ -55,6 +55,24 @@ commit, e quem mexeu no arquivo é quem tem contexto para responder:
     anchors judge --pending
     anchors judge <alvo> --gate <g> --verdict pass|fail --reason "..."
 
+## Ao abrir o PR: a palavra que FECHA o card é em inglês
+
+    Closes #44
+
+O GitHub reconhece só ` + "`close/closes/closed`" + `, ` + "`fix/fixes/fixed`" + ` e
+` + "`resolve/resolves/resolved`" + `. Escrever "Fecha #44" — ou qualquer tradução — é
+ignorado em SILÊNCIO: o PR mescla, o card fica aberto, e o board passa a mentir sobre o
+que está pendente.
+
+Aconteceu num PR que dizia "Fecha #44, #49, #50": os três continuaram abertos depois do
+merge, e ninguém teria notado se não fosse a conferência à mão.
+
+Os achados que nasceram sob o card (` + "`anchors:sob-<n>`" + `) entram na MESMA lista:
+
+    Closes #44
+    Closes #49
+    Closes #50
+
 ## A spec nasce antes do código
 
 É o fluxo normal: a spec é a âncora. Enquanto as peças não existem, declare o que falta:

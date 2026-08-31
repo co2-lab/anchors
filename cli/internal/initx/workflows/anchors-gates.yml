@@ -101,6 +101,32 @@ jobs:
           fi
           echo "✓ o mapa commitado corresponde ao repositório"
 
+      - name: O PR fecha o card com a palavra que o GitHub entende?
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          # O GitHub reconhece SÓ `close/closes/closed`, `fix/fixes/fixed` e
+          # `resolve/resolves/resolved`. Uma tradução ("Fecha #44") é ignorada em
+          # SILÊNCIO: o PR mescla, o card fica aberto, e o board passa a mentir sobre o
+          # que está pendente.
+          #
+          # Medido: um PR dizia "Fecha #44, #49, #50" e os três continuaram abertos
+          # depois do merge. Ninguém teria notado sem a conferência à mão.
+          #
+          # AVISA e não barra: há PR legítimo sem card (uma correção de pipeline, um
+          # ajuste de configuração), e exigir vínculo de todos criaria card de mentira só
+          # para satisfazer o gate.
+          corpo=$(gh pr view "${{ github.event.pull_request.number }}" --repo "$GH_REPO" --json body --jq .body 2>/dev/null || echo "")
+          if printf '%s' "$corpo" | grep -qiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+'; then
+            echo "✓ o PR fecha card com a palavra-chave que o GitHub entende"
+          elif printf '%s' "$corpo" | grep -qE '#[0-9]+'; then
+            echo "::warning::O PR cita issue mas não usa a palavra-chave do GitHub — o card NÃO vai fechar no merge. Use \`Closes #N\` (em inglês; \`Fecha\` e traduções são ignoradas em silêncio)."
+          else
+            echo "· o PR não cita card — nada a conferir"
+          fi
+
       - name: Confrontar os gates
         run: |
           set -euo pipefail
