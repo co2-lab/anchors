@@ -143,6 +143,27 @@ var EstadosDoTrabalho = []string{
 	"anchors:production",
 }
 
+// PrefixoLabelSob liga um card ao trabalho de onde ele NASCEU: `anchors:sob-44`.
+//
+// O achado que aparece enquanto se implementa outra coisa precisa de duas coisas ao mesmo
+// tempo — existir por si (para não se perder) e estar amarrado ao trabalho em curso (para
+// ser entregue junto). Sem a amarra, ele vira um card solto que ninguém relaciona; sem a
+// existência própria, vira uma frase no corpo de outra issue.
+//
+// É LABEL, e não texto no corpo. A primeira versão escrevia "Descoberto durante o card
+// #44" na descrição, e isso não se consulta: não dá para listar o que pende sob um card,
+// nem para o board desenhar a relação. Label é filtrável (`--label anchors:sob-44`),
+// aparece na lista de issues e sobrevive a qualquer reescrita do texto.
+//
+// Também NÃO é a sub-issue nativa do GitHub: ela só aceita um nível, e a hierarquia deste
+// fluxo tem mais (plano → fase → spec → achado). A árvore do board já se monta pelo
+// `parent:` do artefato; esta label é o que amarra o achado que NÃO tem artefato — uma
+// config, um pipeline, um arquivo que nenhuma spec governa.
+const PrefixoLabelSob = "anchors:sob-"
+
+// LabelSob devolve a label que liga um card ao trabalho de origem.
+func LabelSob(card string) string { return PrefixoLabelSob + card }
+
 // LabelPrecisaDoUsuario marca o card que ESPERA UMA PESSOA.
 //
 // Não é um estado do fluxo, e por isso não entra em `EstadosDoTrabalho`: o card continua

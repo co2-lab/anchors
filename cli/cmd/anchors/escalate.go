@@ -111,6 +111,12 @@ card para trocar uma palavra é burocracia.`,
 				titulo = "[decisão] " + primeiraLinhaDoMotivo(motivo)
 				labels = append(labels, initx.LabelPrecisaDoUsuario)
 			}
+			// SOB o card de origem, como LABEL — o que permite listar o que pende sob um
+			// trabalho (`--label anchors:sob-44`) e entregá-lo no mesmo PR. Uma frase no
+			// corpo ("descoberto durante o card #44") não se consulta.
+			if card != "" {
+				labels = append(labels, initx.LabelSob(card))
+			}
 			argv := []string{"issue", "create",
 				"--repo", cfg.Workflow.Repo,
 				"--title", titulo,
@@ -119,13 +125,31 @@ card para trocar uma palavra é burocracia.`,
 			for _, l := range labels {
 				argv = append(argv, "--label", l)
 			}
+			// A label `sob-<n>` é criada SOB DEMANDA: ela é uma por card, e pré-criar
+			// todas seria impossível. `gh issue create` falha se a label não existe, então
+			// a criação vem antes — e o erro é ignorado de propósito, porque "já existe" é
+			// o caso comum a partir do segundo achado do mesmo card.
+			if card != "" {
+				_ = exec.Command("gh", "label", "create", initx.LabelSob(card),
+					"--repo", cfg.Workflow.Repo,
+					"--color", "c5def5",
+					"--description", "achado que nasceu durante o trabalho do card #"+card,
+				).Run()
+			}
 			out, err := exec.Command("gh", argv...).CombinedOutput()
 			if err != nil {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("abrir a issue: %v — %s", err, strings.TrimSpace(string(out)))
 			}
 			url := strings.TrimSpace(string(out))
-			fmt.Printf("decisão aberta: %s\n", url)
+			// A palavra acompanha a SAÍDA: "decisão" para o que espera uma pessoa,
+			// "achado" para o card comum. Dizer "decisão aberta" nos dois casos fez eu
+			// mesmo conferir a label achando que tinha escalado sem querer.
+			que := "achado registrado"
+			if paraUsuario {
+				que = "decisão aberta"
+			}
+			fmt.Printf("%s: %s\n", que, url)
 
 			// O CARD só é parado quando a decisão é do usuário. Numa issue comum o
 			// trabalho SEGUE: a mudança não impacta a direção, e travar o card seria
@@ -215,7 +239,9 @@ func corpoDaEscalada(motivo, sobre, card string, paraUsuario bool) string {
 		"próprio arquivo (`{CODIGO}-R0001: o que mudou e por quê`). Se ao mexer você " +
 		"concluir que isto MUDA A DIREÇÃO, não siga: `anchors escalate ... --para-usuario`.\n\n")
 	if card != "" {
-		b.WriteString(fmt.Sprintf("Descoberto durante o card #%s, que segue normalmente.\n", card))
+		b.WriteString(fmt.Sprintf("Nasceu SOB o card #%s (label `%s`), que segue normalmente. "+
+			"Os dois se entregam no mesmo PR: o achado apareceu fazendo aquele trabalho, e "+
+			"separá-los faria um dos dois esperar sem razão.\n", card, initx.LabelSob(card)))
 	}
 	return b.String()
 }
