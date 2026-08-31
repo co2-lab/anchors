@@ -34,6 +34,10 @@ concurrency:
 
 permissions:
   contents: read
+  # LER O PR exige permissão própria: com `contents: read` sozinho, o `gh pr view`
+  # devolve VAZIO em vez de erro, e a conferência da palavra-chave concluía "o PR não
+  # cita card" em todo PR. Medido na primeira execução do passo.
+  pull-requests: read
 
 jobs:
   gates:
@@ -118,7 +122,14 @@ jobs:
           # AVISA e não barra: há PR legítimo sem card (uma correção de pipeline, um
           # ajuste de configuração), e exigir vínculo de todos criaria card de mentira só
           # para satisfazer o gate.
-          corpo=$(gh pr view "${{ github.event.pull_request.number }}" --repo "$GH_REPO" --json body --jq .body 2>/dev/null || echo "")
+          # SEM `|| echo ""`: engolir a falha faz a conferência dizer "o PR não cita card"
+          # quando na verdade ela não conseguiu LER o card. Silenciar o erro aqui é o
+          # mesmo defeito que este passo existe para evitar — reportar sobre o que não se
+          # mediu.
+          if ! corpo=$(gh pr view "${{ github.event.pull_request.number }}" --repo "$GH_REPO" --json body --jq .body 2>&1); then
+            echo "::warning::não consegui ler o corpo do PR — a conferência da palavra-chave não aconteceu: $corpo"
+            exit 0
+          fi
           if printf '%s' "$corpo" | grep -qiE '\b(close[sd]?|fix(e[sd])?|resolve[sd]?) +#[0-9]+'; then
             echo "✓ o PR fecha card com a palavra-chave que o GitHub entende"
           elif printf '%s' "$corpo" | grep -qE '#[0-9]+'; then
