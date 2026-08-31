@@ -217,7 +217,7 @@ jobs:
               --title "[$code] $titulo" \
               --label "$LABEL" \
               --label "anchors:to-do" \
-              --body "$(printf 'Unidade: `%s`\nCódigo: `%s`\n\nCard criado pelo pipeline de identificação do Anchors: o artefato existe no repositório e não havia issue para ele.\n\nAntes de começar, rode `anchors status` para ver onde o projeto está, e o `anchors guide` do artefato que você vai escrever.\n\n**Prioridade do board: da DIREITA para a ESQUERDA.** Termine o que está mais adiantado antes de pegar coisa nova — trabalho pela metade não entrega nada e envelhece até o contexto se perder.\n\n**Achou algo errado que não é este card?** Registre em vez de só consertar:\n\n    anchors escalate "<o que está errado>" --sobre <arquivo> --card <número deste card>\n\nO gate abre issue do que ELE detecta. O que você descobre sozinho — uma config que contradiz a doutrina, um caminho que ninguém documentou — não tem quem registre, e corrigir em silêncio faz o conserto sumir do histórico. O achado nasce com a label `anchors:sob-<número>` e se entrega no MESMO PR deste card.' "$onde" "$code")")
+              --body "$(printf 'Unidade: `%s`\nCódigo: `%s`\n\nCard criado pelo pipeline de identificação do Anchors: o artefato existe no repositório e não havia issue para ele.\n\n**Antes de começar, rode:**\n\n    anchors guide work\n\nEle diz a ordem do board, o que fazer com o achado que NÃO é deste card, e o que o `anchors check` cobra antes do commit. E `anchors guide <artefato>` (spec, code, feature, test) diz como escrever o que você vai escrever.' "$onde" "$code")")
 
             echo "criado: [$code] $onde → $url"
           done

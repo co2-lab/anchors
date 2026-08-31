@@ -237,6 +237,11 @@ não pode acabar falando com a rede sem pedir.
 O roteamento acima cobre o que o **gate** detecta. Falta o outro cenário, e ele é o
 mais comum: o agente descobre algo errado enquanto implementa outra coisa.
 
+A instrução vive em `anchors guide work`, e o card só a APONTA. Copiá-la no corpo de
+cada issue seria repetição — e, pior, texto copiado **congela**: um card criado hoje
+carrega a instrução de hoje, e quando ela muda, os antigos passam a ensinar o errado
+sem que nada acuse. No binário, o guia acompanha a versão.
+
 Uma config que contradiz a doutrina do próprio projeto. Um caminho que ninguém
 documentou. Um arquivo no lugar errado. **Nenhum gate vê isso** — e o caminho barato
 é consertar na hora e seguir, o que faz o conserto sumir do histórico.
