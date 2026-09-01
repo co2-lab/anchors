@@ -63,8 +63,11 @@ func checkCodigoCatalogado(content string, n mapx.Node, root string, g *mapx.Gra
 	return Fail, fmt.Sprintf(
 		"%d símbolo(s) exportado(s) por `%s` que a spec não cataloga: %s.\n\nUm símbolo "+
 			"fora do catálogo atravessa o pipeline sem regra a confrontar — ninguém sabe o "+
-			"que ele deveria fazer. Catalogue-o na spec, ou declare na linha dele que não "+
-			"carrega regra (`// @no-rule: <razão>`)",
+			"que ele deveria fazer.\n\nDuas saídas: catalogue-o na spec (basta o NOME "+
+			"aparecer no texto de uma regra), ou declare que ele não carrega regra — na "+
+			"linha do símbolo, ou no comentário logo acima dela:\n"+
+			"    // @no-rule: <por que este símbolo não tem regra>\n"+
+			"    export function algo() { … }",
 		len(orfaos), alvo, primeiros(orfaos, 5))
 }
 
@@ -97,10 +100,17 @@ func simbolosComLinha(codigo string) []simboloExportado {
 		if m == nil {
 			continue
 		}
-		ctx := l
-		if i > 0 {
-			ctx = linhas[i-1] + "\n" + l
-		}
+		// O CONTEXTO é o símbolo mais o BLOCO DE COMENTÁRIO imediatamente acima, e não
+		// só a linha anterior.
+		//
+		// A declaração `@no-rule` é documentação: quem a escreve a põe junto com a
+		// explicação, e a explicação raramente cabe numa linha. Olhar só `i-1` fazia o
+		// gate ignorar a declaração e seguir acusando — medido num arquivo onde ela
+		// estava na segunda linha de um comentário de duas.
+		//
+		// Pior: o mesmo arquivo passava em OUTRO símbolo por acaso, porque o nome dele
+		// aparecia no texto da spec. A declaração nunca era lida, e ninguém notava.
+		ctx := contextoDoSimbolo(linhas, i)
 		out = append(out, simboloExportado{nome: m[1], linha: ctx, num: i + 1})
 	}
 	return out
@@ -119,4 +129,42 @@ func alvoDaSpec(n mapx.Node, root string, g *mapx.Graph) (alvo, texto string, ok
 		return e.To, string(b), true
 	}
 	return "", "", false
+}
+
+// contextoDoSimbolo devolve a linha do símbolo mais o bloco de comentário acima dela.
+//
+// Sobe enquanto encontrar comentário (`//`, `*`, `/*`, `*/`) ou linha em branco DENTRO do
+// bloco — a branco separa parágrafos de um mesmo comentário, e parar nela cortaria a
+// explicação ao meio. A primeira linha de código encerra a subida.
+func contextoDoSimbolo(linhas []string, i int) string {
+	inicio := i
+	for j := i - 1; j >= 0; j-- {
+		t := strings.TrimSpace(linhas[j])
+		ehComentario := strings.HasPrefix(t, "//") || strings.HasPrefix(t, "*") ||
+			strings.HasPrefix(t, "/*") || strings.HasSuffix(t, "*/") || strings.HasPrefix(t, "#")
+		if !ehComentario && t != "" {
+			break
+		}
+		// Linha em branco só continua a subida se ainda houver comentário acima — senão
+		// o "bloco" engoliria o arquivo inteiro até o topo.
+		if t == "" {
+			if j == 0 || !ehComentarioAcima(linhas, j) {
+				break
+			}
+		}
+		inicio = j
+	}
+	return strings.Join(linhas[inicio:i+1], "\n")
+}
+
+func ehComentarioAcima(linhas []string, j int) bool {
+	for k := j - 1; k >= 0; k-- {
+		t := strings.TrimSpace(linhas[k])
+		if t == "" {
+			continue
+		}
+		return strings.HasPrefix(t, "//") || strings.HasPrefix(t, "*") ||
+			strings.HasPrefix(t, "/*") || strings.HasSuffix(t, "*/") || strings.HasPrefix(t, "#")
+	}
+	return false
 }
