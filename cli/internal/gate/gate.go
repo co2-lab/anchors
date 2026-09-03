@@ -230,7 +230,7 @@ func runAgregado(g config.Gate, alvos []mapx.Node, root string, completa bool, g
 	// checkers agregados leem `root`/`cfg`, nunca o conteúdo de um arquivo — e é por
 	// isso que este caminho não tenta lê-lo, ao contrário do `runInternal`.
 	if g.Check != "" {
-		r.Verdict, r.Detail = runInternalAgregado(g.Check, root, graph, cfg)
+		r.Verdict, r.Detail = runInternalAgregado(g, root, graph, cfg)
 		return r
 	}
 	if g.Run == "" {

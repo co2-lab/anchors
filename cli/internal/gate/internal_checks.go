@@ -104,16 +104,29 @@ func runInternal(name string, n mapx.Node, root string, graph *mapx.Graph, cfg *
 	return fn(string(content), n)
 }
 
+// checkersComGate: os agregados que precisam saber QUAL instância os invocou.
+//
+// Os demais checkers respondem a mesma pergunta sempre, e por isso `cfg` lhes basta. Um
+// gate GENÉRICO não: `marker-parity` só sabe o que procurar depois de ler o próprio
+// `marker_prefix`, e um projeto declara vários deles. Sem o `config.Gate` aqui, todas as
+// instâncias veriam a mesma configuração — ou nenhuma.
+var checkersComGate = map[string]func(g config.Gate, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string){
+	"marker-parity": checkMarkerParity,
+}
+
 // runInternalAgregado executa um checker interno de escopo batch/project.
 //
 // Difere do `runInternal` num ponto que não é detalhe: NÃO há arquivo para ler. O
 // escopo é o conjunto, então o checker recebe um nó vazio e se orienta por `root` e
 // `cfg`. Tentar ler o conteúdo de um alvo aqui (como o runInternal faz) devolveria
 // erro de leitura e o gate reprovaria por um arquivo que nunca existiu.
-func runInternalAgregado(name, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
-	fn, ok := checkersWithGraph[name]
+func runInternalAgregado(g config.Gate, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if fn, ok := checkersComGate[g.Check]; ok {
+		return fn(g, root, graph, cfg)
+	}
+	fn, ok := checkersWithGraph[g.Check]
 	if !ok {
-		return Pending, "checker interno agregado desconhecido: " + name
+		return Pending, "checker interno agregado desconhecido: " + g.Check
 	}
 	return fn("", mapx.Node{}, root, graph, cfg)
 }
