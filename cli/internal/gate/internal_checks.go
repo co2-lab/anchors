@@ -388,6 +388,11 @@ func seçãoVazia(linhas []string) bool {
 	return true
 }
 
+// noContentRE: a dispensa honesta da SEÇÃO. Exige motivo — `@no-content` sozinho não
+// conta, pelo mesmo princípio de `@no-rule`: dispensa sem porquê é a dispensa que ninguém
+// revisa depois.
+var noContentRE = regexp.MustCompile(`@no-content[^\S\n]*:[^\S\n]*\S+`)
+
 var sepTabelaRE = regexp.MustCompile(`^\|[\s:|-]+\|?$`)
 
 // secaoComNivelRE casa um cabeçalho e captura o nível (para agrupar por pai) e o título.
@@ -433,7 +438,7 @@ func irmasSemCodigo(content string) string {
 		if len(irmas) < 2 {
 			continue // sem irmã não há padrão a comparar
 		}
-		var comCodigo, semCodigo []string
+		var comCodigo, semCodigo, semConteudo []string
 		for _, s := range irmas {
 			// O código pode estar no TÍTULO (`### CODE-B01 — ...`) ou no corpo (tabela,
 			// bullet). As duas formas contam: o gate cobra identidade, não posição.
@@ -445,25 +450,51 @@ func irmasSemCodigo(content string) string {
 			// SEÇÃO VAZIA não é seção sem código: não há regra alguma a codificar, e
 			// mandar "dê um código a cada uma" pede o impossível.
 			//
-			// São dois estados opostos que a busca por código não distingue:
-			//   • a seção com regras escritas em prosa   → o defeito que este gate pega
-			//   • a seção só com o esqueleto da tabela   → nada foi escrito ainda
+			// Mas vazia sozinha NÃO absolve — são dois estados que se parecem e não são
+			// o mesmo:
+			//   • vazia porque NÃO SE APLICA  → decisão, e o autor a declara
+			//   • vazia porque ninguém escreveu → esquecimento, e o gate tem de pegar
 			//
-			// O caso real: seis telas de onboarding estáticas herdaram o cabeçalho de
-			// "Comportamentos Automáticos" do modelo de spec, e não têm comportamento
-			// automático nenhum (zero efeitos no código). O gate as barrava pedindo
-			// códigos para uma tabela sem linhas.
+			// Aceitar as duas em silêncio trocaria um falso positivo por um falso
+			// negativo, e o segundo é pior: o gate passaria a reportar verde sobre
+			// seção que ninguém preencheu.
 			//
-			// Quem cobra o esqueleto vazio é `placeholder-preenchido`, que sabe
-			// distinguir o marcador real do exemplo de sintaxe. Dois gates sobre o mesmo
-			// defeito produzem dois achados para um problema.
+			// A saída é a dispensa HONESTA que o resto do vocabulário já usa
+			// (`@no-rule`, `@no-code`, `@no-scenario`, `@no-mark`): a seção fica, e
+			// quem decidiu que ela não tem conteúdo escreve o motivo.
+			//
+			//     ### Comportamentos Automáticos
+			//
+			//     @no-content: tela estática — não há efeito, timer nem carga.
+			//
+			// A seção PERMANECE, que é o ponto: há seções obrigatórias por exigência
+			// regulatória, e apagá-las para calar o gate destruiria a obrigação junto
+			// com o aviso.
+			// A declaração vem PRIMEIRO: ela é texto, e por isso a seção que a carrega
+			// não conta como vazia. Perguntar "está vazia?" antes rejeitaria justamente
+			// quem fez a coisa certa.
+			if noContentRE.MatchString(strings.Join(s.linhas, "\n")) {
+				continue
+			}
 			if seçãoVazia(s.linhas) {
+				semConteudo = append(semConteudo, s.titulo)
 				continue
 			}
 			semCodigo = append(semCodigo, s.titulo)
 		}
 		// Só acusa quando a MAIORIA das irmãs cataloga: um grupo em que só uma tem código
 		// não estabeleceu padrão nenhum, e cobrar as outras seria inventar um.
+		// Seção VAZIA e sem declaração: o autor não disse se decidiu ou esqueceu, e o
+		// gate não tem como saber. Pede a declaração — que custa uma linha e resolve
+		// para sempre.
+		if len(comCodigo) > 0 && len(semConteudo) > 0 && len(semCodigo) == 0 {
+			return fmt.Sprintf("seção(ões) VAZIA(s) sob irmãs que catalogam: %s. "+
+				"As irmãs (%s) têm regra e estas não têm nada — e vazio não diz se a "+
+				"seção NÃO SE APLICA ou se ninguém a preencheu. Se não se aplica, "+
+				"declare na própria seção: `@no-content: <por quê>` (a seção FICA, que "+
+				"importa quando ela é obrigatória). Se falta escrever, escreva.",
+				strings.Join(semConteudo, ", "), strings.Join(comCodigo, ", "))
+		}
 		if len(comCodigo) > len(semCodigo) && len(semCodigo) > 0 {
 			return fmt.Sprintf("seção(ões) sem código sob irmãs que catalogam: %s. "+
 				"As irmãs (%s) têm código e estas não — uma regra sem código é invisível "+

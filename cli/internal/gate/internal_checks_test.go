@@ -169,10 +169,46 @@ const specComSecaoVazia = `# Tela
 ---
 `
 
-func TestIrmasSemCodigoIgnoraSecaoVazia(t *testing.T) {
+// Vazia SEM declaração: o gate não sabe se foi decisão ou esquecimento, e pede que
+// alguém diga. Trocar o falso positivo antigo por um falso negativo seria pior — o gate
+// passaria a reportar verde sobre seção que ninguém preencheu.
+func TestSecaoVaziaSemDeclaracaoPedeQueAlguemDiga(t *testing.T) {
 	comCodigosDe4(t)
-	if d := irmasSemCodigo(specComSecaoVazia); d != "" {
-		t.Fatalf("seção VAZIA não tem regra a codificar; não devia acusar. Veio: %s", d)
+	d := irmasSemCodigo(specComSecaoVazia)
+	if d == "" {
+		t.Fatal("vazia sem declaração tem de ser cobrada — senão o esquecimento passa")
+	}
+	if !strings.Contains(d, "@no-content") {
+		t.Fatalf("o laudo tem de ENSINAR a saída; veio: %s", d)
+	}
+	// e NÃO pode pedir código para uma tabela sem linhas
+	if strings.Contains(d, "Dê um código a cada uma") {
+		t.Fatalf("não há 'cada uma' numa seção vazia; veio: %s", d)
+	}
+}
+
+// Vazia COM declaração: a seção FICA (importa quando é obrigatória por regulação) e o
+// gate absolve, porque alguém decidiu e escreveu o porquê.
+func TestSecaoVaziaComNoContentEAceita(t *testing.T) {
+	comCodigosDe4(t)
+	spec := strings.Replace(specComSecaoVazia,
+		"### Comportamentos Automáticos\n\n| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
+		"### Comportamentos Automáticos\n\n@no-content: tela estática — não há efeito, timer nem carga.\n",
+		1)
+	if d := irmasSemCodigo(spec); d != "" {
+		t.Fatalf("declarada, a seção vazia é aceita. Veio: %s", d)
+	}
+}
+
+// `@no-content` SEM motivo não conta — dispensa sem porquê é a que ninguém revisa depois.
+func TestNoContentExigeMotivo(t *testing.T) {
+	comCodigosDe4(t)
+	spec := strings.Replace(specComSecaoVazia,
+		"### Comportamentos Automáticos\n\n| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
+		"### Comportamentos Automáticos\n\n@no-content:\n",
+		1)
+	if d := irmasSemCodigo(spec); d == "" {
+		t.Fatal("`@no-content` sem motivo não pode absolver")
 	}
 }
 
