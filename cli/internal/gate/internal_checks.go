@@ -363,6 +363,33 @@ func checkSpecSections(content string, _ mapx.Node) (Verdict, string) {
 	return Pass, ""
 }
 
+// seçãoVazia diz se a seção não tem CONTEÚDO — só o esqueleto.
+//
+// Conta como vazio: linha em branco, separador de tabela (`|---|---|`), cabeçalho de
+// tabela (a linha de rótulos que precede o separador) e o divisor `---`. Qualquer outra
+// coisa é conteúdo, e aí a ausência de código volta a ser o defeito que o gate pega.
+func seçãoVazia(linhas []string) bool {
+	for i, l := range linhas {
+		t := strings.TrimSpace(l)
+		if t == "" || t == "---" {
+			continue
+		}
+		if sepTabelaRE.MatchString(t) {
+			continue
+		}
+		// Cabeçalho de tabela: linha de `|` cujo SUCESSOR imediato é o separador. Sem
+		// olhar o sucessor, uma linha de dados seria confundida com rótulo.
+		if strings.HasPrefix(t, "|") && i+1 < len(linhas) &&
+			sepTabelaRE.MatchString(strings.TrimSpace(linhas[i+1])) {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+var sepTabelaRE = regexp.MustCompile(`^\|[\s:|-]+\|?$`)
+
 // secaoComNivelRE casa um cabeçalho e captura o nível (para agrupar por pai) e o título.
 var secaoComNivelRE = regexp.MustCompile(`^(#{2,4})\s+(.+?)\s*$`)
 
@@ -413,9 +440,27 @@ func irmasSemCodigo(content string) string {
 			corpo := s.titulo + "\n" + strings.Join(s.linhas, "\n")
 			if anyCodeRE.MatchString(corpo) {
 				comCodigo = append(comCodigo, s.titulo)
-			} else {
-				semCodigo = append(semCodigo, s.titulo)
+				continue
 			}
+			// SEÇÃO VAZIA não é seção sem código: não há regra alguma a codificar, e
+			// mandar "dê um código a cada uma" pede o impossível.
+			//
+			// São dois estados opostos que a busca por código não distingue:
+			//   • a seção com regras escritas em prosa   → o defeito que este gate pega
+			//   • a seção só com o esqueleto da tabela   → nada foi escrito ainda
+			//
+			// O caso real: seis telas de onboarding estáticas herdaram o cabeçalho de
+			// "Comportamentos Automáticos" do modelo de spec, e não têm comportamento
+			// automático nenhum (zero efeitos no código). O gate as barrava pedindo
+			// códigos para uma tabela sem linhas.
+			//
+			// Quem cobra o esqueleto vazio é `placeholder-preenchido`, que sabe
+			// distinguir o marcador real do exemplo de sintaxe. Dois gates sobre o mesmo
+			// defeito produzem dois achados para um problema.
+			if seçãoVazia(s.linhas) {
+				continue
+			}
+			semCodigo = append(semCodigo, s.titulo)
 		}
 		// Só acusa quando a MAIORIA das irmãs cataloga: um grupo em que só uma tem código
 		// não estabeleceu padrão nenhum, e cobrar as outras seria inventar um.

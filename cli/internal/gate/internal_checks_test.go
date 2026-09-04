@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -120,5 +121,85 @@ Texto.
 `
 	if v, msg := checkSpecSections(spec, mapx.Node{}); v != Pass {
 		t.Errorf("uma irmã só não estabelece padrão: %v — %s", v, msg)
+	}
+}
+
+// ── seção VAZIA × seção sem código ───────────────────────────────────────────
+//
+// São dois estados opostos que a busca por código não distingue sozinha, e confundi-los
+// inverte o gate: ele passa a pedir "dê um código a cada uma" para uma tabela que não tem
+// nenhuma linha.
+//
+// O caso real que originou: seis telas de onboarding ESTÁTICAS (zero efeitos no código)
+// herdaram o cabeçalho de "Comportamentos Automáticos" do modelo de spec. O gate as
+// barrava por não catalogarem regras que não existem.
+
+func comCodigosDe4(t *testing.T) {
+	t.Helper()
+	orig := config.CodeLengths
+	config.CodeLengths = []int{4}
+	SetRuleLetters(config.DefaultRuleLetters)
+	t.Cleanup(func() {
+		config.CodeLengths = orig
+		SetRuleLetters(config.DefaultRuleLetters)
+	})
+}
+
+const specComSecaoVazia = `# Tela
+
+## Rules
+
+### Permissões e Acesso
+
+| Regra | Descrição |
+| ---------- | --------- |
+| ` + "`PHA1-R01`" + ` | Pública |
+
+### Ações Permitidas
+
+| Regra | Ação | Resultado |
+| ---------- | ---- | --------- |
+| ` + "`PHA1-A01`" + ` | Toque | Navega |
+
+### Comportamentos Automáticos
+
+| Regra | Gatilho | Ação Automática |
+| ---------- | ------- | --------------- |
+
+---
+`
+
+func TestIrmasSemCodigoIgnoraSecaoVazia(t *testing.T) {
+	comCodigosDe4(t)
+	if d := irmasSemCodigo(specComSecaoVazia); d != "" {
+		t.Fatalf("seção VAZIA não tem regra a codificar; não devia acusar. Veio: %s", d)
+	}
+}
+
+// O defeito REAL continua pego: a seção que tem regra escrita em prosa, sem código.
+func TestIrmasSemCodigoAindaPegaRegraSemCodigo(t *testing.T) {
+	comCodigosDe4(t)
+	spec := strings.Replace(specComSecaoVazia,
+		"| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
+		"| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n| — | Abertura | Carrega o perfil |\n",
+		1)
+	d := irmasSemCodigo(spec)
+	if d == "" {
+		t.Fatal("regra SEM código tem de ser acusada — é o defeito que o gate existe para pegar")
+	}
+	if !strings.Contains(d, "Comportamentos Automáticos") {
+		t.Fatalf("o laudo tem de NOMEAR a seção; veio: %s", d)
+	}
+}
+
+// Prosa também é conteúdo: a seção com texto e sem código segue acusada.
+func TestIrmasSemCodigoPegaSecaoComProsa(t *testing.T) {
+	comCodigosDe4(t)
+	spec := strings.Replace(specComSecaoVazia,
+		"### Comportamentos Automáticos\n\n| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
+		"### Comportamentos Automáticos\n\nAo abrir, a tela carrega o perfil do usuário.\n",
+		1)
+	if d := irmasSemCodigo(spec); d == "" {
+		t.Fatal("regra em prosa sem código tem de ser acusada")
 	}
 }
