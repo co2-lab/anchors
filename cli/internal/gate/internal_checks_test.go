@@ -239,3 +239,23 @@ func TestIrmasSemCodigoPegaSecaoComProsa(t *testing.T) {
 		t.Fatal("regra em prosa sem código tem de ser acusada")
 	}
 }
+
+// O `####` e CONTEUDO do `###` que o precede, nao irmao dele.
+//
+// Tratando-os como irmaos, a linha de conteudo ia para a ULTIMA secao vista — o `####`
+// roubava as linhas do pai, e o `###` aparecia VAZIO. Medido em `SplashScreen.spec.md`:
+// `### Caminhos Condicionais` tem tres linhas de tabela dentro de `#### destination`, e o
+// gate acusava o pai de vazio com o conteudo logo abaixo.
+func TestSubsecaoNaoEsvaziaOPai(t *testing.T) {
+	comCodigosDe4(t)
+	spec := "# Tela\n\n## Rules\n\n" +
+		"### Comportamentos Automáticos\n\n" +
+		"| Regra | Gatilho |\n| --- | --- |\n| `SPAX-B01` | Abertura |\n\n" +
+		"### Caminhos Condicionais\n\n" +
+		"#### `destination` — rota de destino\n\n" +
+		"| Data State | Condição |\n| --- | --- |\n| `DS-dest-main` | autenticado |\n\n---\n"
+
+	if d := irmasSemCodigo(spec); d != "" {
+		t.Fatalf("o `###` tem conteúdo no `####` filho; não devia acusar. Veio: %s", d)
+	}
+}

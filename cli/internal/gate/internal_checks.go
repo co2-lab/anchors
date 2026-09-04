@@ -425,14 +425,32 @@ func irmasSemCodigo(content string) string {
 		}
 	}
 	// Agrupa por PAI: o `##` que precede cada bloco de `###`.
+	//
+	// O `####` NÃO entra no grupo — ele é conteúdo do `###` que o precede, não irmão
+	// dele. Tratá-los como irmãos produzia um falso positivo silencioso: a linha de
+	// conteúdo vai sempre para a ÚLTIMA seção vista, então o `####` roubava as linhas
+	// do pai e o `###` aparecia vazio.
+	//
+	// Medido em `SplashScreen.spec.md`: `### Caminhos Condicionais` tem três linhas de
+	// tabela, todas dentro de `#### destination`. O gate acusava o pai de estar vazio
+	// enquanto o conteúdo estava logo abaixo.
 	pai := ""
 	grupos := map[string][]sec{}
-	for _, s := range secoes {
+	for i, s := range secoes {
 		if s.nivel == 2 {
 			pai = s.titulo
 			continue
 		}
-		grupos[pai] = append(grupos[pai], s)
+		if s.nivel > 3 {
+			continue // conteúdo do `###`, não irmão dele
+		}
+		// O `###` herda as linhas dos `####` que o seguem: são o corpo dele.
+		filhas := s
+		for j := i + 1; j < len(secoes) && secoes[j].nivel > 3; j++ {
+			filhas.linhas = append(filhas.linhas, secoes[j].titulo)
+			filhas.linhas = append(filhas.linhas, secoes[j].linhas...)
+		}
+		grupos[pai] = append(grupos[pai], filhas)
 	}
 	for _, irmas := range grupos {
 		if len(irmas) < 2 {
