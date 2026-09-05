@@ -26,7 +26,7 @@ func TestKeyIsStableAcrossDates(t *testing.T) {
 	}
 	// gate diferente → Key diferente (mesmo alvo pode violar dois gates)
 	c := viol()
-	c.Gate = "spec-tem-codigo"
+	c.Gate = "spec-has-code"
 	if a.Key() == c.Key() {
 		t.Fatal("gates distintos deveriam gerar Keys distintas")
 	}

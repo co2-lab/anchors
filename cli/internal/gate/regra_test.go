@@ -9,12 +9,12 @@ import (
 // ausente esvaziaria a garantia — e o relatório passaria a mostrar "dispensado" sem
 // dizer por quê.
 func TestDispensaExigeMotivo(t *testing.T) {
-	_, erros := ParseDispensa("trinca-completa")
+	_, erros := ParseDispensa("triad-complete")
 
 	if len(erros) != 1 {
 		t.Fatalf("dispensa sem motivo tem de ser recusada, veio %d erro(s)", len(erros))
 	}
-	if _, erros := ParseDispensa("trinca-completa="); len(erros) != 1 {
+	if _, erros := ParseDispensa("triad-complete="); len(erros) != 1 {
 		t.Error("motivo vazio é o mesmo que ausente")
 	}
 }
@@ -22,22 +22,22 @@ func TestDispensaExigeMotivo(t *testing.T) {
 // Dispensar o GATE cobre todas as regras dele; dispensar a REGRA preserva o resto. As
 // duas granularidades existem porque quem não conhece as regras precisa da saída grossa.
 func TestDispensaAceitaAsDuasGranularidades(t *testing.T) {
-	d, erros := ParseDispensa("spec-completa/sem-placeholder=a spec nasce em rascunho")
+	d, erros := ParseDispensa("spec-complete/sem-placeholder=a spec nasce em rascunho")
 	if len(erros) != 0 {
 		t.Fatalf("erros inesperados: %v", erros)
 	}
 
-	if _, ok := d.Dispensou("spec-completa/sem-placeholder"); !ok {
+	if _, ok := d.Dispensou("spec-complete/sem-placeholder"); !ok {
 		t.Error("a regra dispensada não foi reconhecida")
 	}
 	// A OUTRA regra do mesmo gate continua valendo — é o ponto de dispensar por regra.
-	if _, ok := d.Dispensou("spec-completa/tem-regra-catalogada"); ok {
+	if _, ok := d.Dispensou("spec-complete/tem-regra-catalogada"); ok {
 		t.Error("dispensar uma regra não pode desligar as demais do mesmo gate")
 	}
 
 	// E dispensar o gate inteiro cobre as regras dele.
-	dg, _ := ParseDispensa("spec-completa=projeto em bootstrap")
-	if _, ok := dg.Dispensou("spec-completa/sem-placeholder"); !ok {
+	dg, _ := ParseDispensa("spec-complete=projeto em bootstrap")
+	if _, ok := dg.Dispensou("spec-complete/sem-placeholder"); !ok {
 		t.Error("dispensar o gate tem de cobrir suas regras")
 	}
 }
@@ -45,7 +45,7 @@ func TestDispensaAceitaAsDuasGranularidades(t *testing.T) {
 // Um gate que não foi dispensado precisa continuar rodando — o erro que mais custaria
 // aqui é uma dispensa vazando para o que ninguém pediu.
 func TestDispensaNaoAlcancaOQueNaoFoiPedido(t *testing.T) {
-	d, _ := ParseDispensa("trinca-completa=a feature ainda é um card")
+	d, _ := ParseDispensa("triad-complete=a feature ainda é um card")
 
 	if _, ok := d.Dispensou("guide-checklist"); ok {
 		t.Error("a dispensa alcançou um gate que ninguém dispensou")
@@ -56,11 +56,11 @@ func TestDispensaNaoAlcancaOQueNaoFoiPedido(t *testing.T) {
 }
 
 func TestRegraIDSeparaGateDeRegra(t *testing.T) {
-	id := NovaRegraID("spec-completa", "sem-placeholder")
-	if id != "spec-completa/sem-placeholder" {
+	id := NovaRegraID("spec-complete", "sem-placeholder")
+	if id != "spec-complete/sem-placeholder" {
 		t.Errorf("ID montado errado: %q", id)
 	}
-	if id.Gate() != "spec-completa" || id.Regra() != "sem-placeholder" {
+	if id.Gate() != "spec-complete" || id.Regra() != "sem-placeholder" {
 		t.Errorf("decomposição errada: gate=%q regra=%q", id.Gate(), id.Regra())
 	}
 	// Gate com uma verificação só: o nome já a identifica, e não há barra a inventar.
@@ -78,13 +78,13 @@ func TestRegraIDSeparaGateDeRegra(t *testing.T) {
 // acima.
 func TestDispensaPorAlvoNaoApagaOResto(t *testing.T) {
 	d, erros := ParseDispensa(
-		"trinca-completa@NOVOA=spec nova do plano 0007," +
-			"trinca-completa@NOVOB=spec nova do plano 0007")
+		"triad-complete@NOVOA=spec nova do plano 0007," +
+			"triad-complete@NOVOB=spec nova do plano 0007")
 	if len(erros) > 0 {
 		t.Fatalf("não deveria haver erro: %v", erros)
 	}
 
-	id := RegraID("trinca-completa")
+	id := RegraID("triad-complete")
 
 	// Os alvos NOMEADOS estão dispensados.
 	for _, cod := range []string{"NOVOA", "NOVOB"} {
@@ -111,8 +111,8 @@ func TestDispensaPorAlvoNaoApagaOResto(t *testing.T) {
 // A dispensa SEM alvo continua valendo para tudo: há casos legítimos, como um gate
 // recém-declarado que o projeto ainda não cumpre em lugar nenhum.
 func TestDispensaSemAlvoValeParaTudo(t *testing.T) {
-	d, _ := ParseDispensa("trinca-completa=gate novo, nenhuma unidade o cumpre ainda")
-	id := RegraID("trinca-completa")
+	d, _ := ParseDispensa("triad-complete=gate novo, nenhuma unidade o cumpre ainda")
+	id := RegraID("triad-complete")
 	if _, ok := d.Dispensou(id); !ok {
 		t.Error("sem alvo declarado, a dispensa vale para o gate inteiro")
 	}
@@ -124,7 +124,7 @@ func TestDispensaSemAlvoValeParaTudo(t *testing.T) {
 // `@` sem caminho é engano de digitação, e aceitá-lo em silêncio produziria uma dispensa
 // que não dispensa nada — o commit reprovaria sem explicação aparente.
 func TestDispensaAlvoVazioEhRecusada(t *testing.T) {
-	_, erros := ParseDispensa("trinca-completa@=motivo qualquer")
+	_, erros := ParseDispensa("triad-complete@=motivo qualquer")
 	if len(erros) == 0 {
 		t.Error("`regra@=motivo` deveria ser recusado: falta o caminho")
 	}
@@ -137,9 +137,9 @@ func TestDispensaAlvoVazioEhRecusada(t *testing.T) {
 // Aceitá-lo e nunca casar seria pior: uma dispensa que não dispensa, sem erro visível.
 func TestDispensaRecusaCaminhoComoAlvo(t *testing.T) {
 	for _, bruto := range []string{
-		"trinca-completa@packages/shared/Workspace.spec.md=motivo",
-		"trinca-completa@packages/*=motivo",
-		"trinca-completa@arquivo.spec.md=motivo",
+		"triad-complete@packages/shared/Workspace.spec.md=motivo",
+		"triad-complete@packages/*=motivo",
+		"triad-complete@arquivo.spec.md=motivo",
 	} {
 		_, erros := ParseDispensa(bruto)
 		if len(erros) == 0 {
@@ -156,8 +156,8 @@ func TestDispensaRecusaCaminhoComoAlvo(t *testing.T) {
 // é um problema anterior — quem cobra isso é o `codigo-catalogado`, e dar uma saída
 // lateral aqui esconderia a causa.
 func TestDispensaPorAlvoNaoAlcancaQuemNaoTemCodigo(t *testing.T) {
-	d, _ := ParseDispensa("trinca-completa@WRKSP=spec nova")
-	if _, ok := d.DispensouAlvo(RegraID("trinca-completa"), ""); ok {
+	d, _ := ParseDispensa("triad-complete@WRKSP=spec nova")
+	if _, ok := d.DispensouAlvo(RegraID("triad-complete"), ""); ok {
 		t.Error("sem código não há alvo a dispensar")
 	}
 }
@@ -170,14 +170,14 @@ func TestDispensaDaMensagemDeCommit(t *testing.T) {
 
 As specs nascem antes do código, como sempre na primeira rodada.
 
-[skip-trinca-completa@NOVOA: spec nova do plano 0007]
-[skip-trinca-completa@NOVOB: spec nova do plano 0007]`
+[skip-triad-complete@NOVOA: spec nova do plano 0007]
+[skip-triad-complete@NOVOB: spec nova do plano 0007]`
 
 	d, erros := DispensaDaMensagem(msg)
 	if len(erros) > 0 {
 		t.Fatalf("não deveria haver erro: %v", erros)
 	}
-	id := RegraID("trinca-completa")
+	id := RegraID("triad-complete")
 	for _, cod := range []string{"NOVOA", "NOVOB"} {
 		if motivo, ok := d.DispensouAlvo(id, cod); !ok || motivo != "spec nova do plano 0007" {
 			t.Errorf("%s deveria estar dispensado com o motivo escrito, veio %q/%v", cod, motivo, ok)
@@ -192,7 +192,7 @@ As specs nascem antes do código, como sempre na primeira rodada.
 // Sem o motivo o marcador é recusado: é a mesma garantia da forma por variável, e
 // aceitá-lo vazio faria o relatório dizer "dispensado" sem dizer por quê.
 func TestMarcadorSemMotivoEhRecusado(t *testing.T) {
-	if _, erros := DispensaDaMensagem("fix: algo\n\n[skip-trinca-completa@WRKSP: ]"); len(erros) == 0 {
+	if _, erros := DispensaDaMensagem("fix: algo\n\n[skip-triad-complete@WRKSP: ]"); len(erros) == 0 {
 		t.Error("marcador sem motivo deveria ser recusado")
 	}
 }
@@ -212,10 +212,10 @@ func TestMarcadorSemCodigoValeParaTudo(t *testing.T) {
 func TestMotivoEhPorAlvo(t *testing.T) {
 	d, _ := DispensaDaMensagem(`chore: libera duas
 
-[skip-trinca-completa@FRMTT: spec nova, é o card #6]
-[skip-trinca-completa@TSHRT: spec nova, é o card #8]`)
+[skip-triad-complete@FRMTT: spec nova, é o card #6]
+[skip-triad-complete@TSHRT: spec nova, é o card #8]`)
 
-	id := RegraID("trinca-completa")
+	id := RegraID("triad-complete")
 	if m, _ := d.DispensouAlvo(id, "FRMTT"); m != "spec nova, é o card #6" {
 		t.Errorf("FRMTT deveria trazer o motivo dele, veio %q", m)
 	}

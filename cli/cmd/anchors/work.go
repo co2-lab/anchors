@@ -881,7 +881,7 @@ func exigenciasDosGates(artifact string, cfg *config.Config) []string {
 			"marcador no teste errado cria rastreabilidade falsa, e todo gate relacional passa " +
 			"a confrontar o par errado com tudo verde.",
 		"non-empty":          "O arquivo **não pode ser um esqueleto vazio**.",
-		"trinca-completa":    "A unidade precisa da **trinca completa** (spec + feature + teste).",
+		"triad-complete":     "A unidade precisa da **trinca completa** (spec + feature + teste).",
 		"ref-resolves":       "O `ref:` precisa apontar para o **`code:` da spec irmã** — não para outra.",
 		"pagination-honored": "Função que promete um conjunto **não devolve a primeira página** em silêncio.",
 		"layer-boundary":     "Respeite as **fronteiras de camada** declaradas em `boundaries:`.",

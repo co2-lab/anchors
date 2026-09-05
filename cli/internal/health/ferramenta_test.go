@@ -12,7 +12,7 @@ import (
 // este aviso o projeto ficaria descoberto exatamente na medida em que ninguém notasse.
 func TestDoctorAvisaFerramentaAusenteComoWarn(t *testing.T) {
 	cfg := &config.Config{Gates: []config.Gate{
-		{Name: "secret-nao-vazado", NeedsTool: "binario-inexistente-xyz", InstallHint: "brew install foo"},
+		{Name: "no-secret-leaked", NeedsTool: "binario-inexistente-xyz", InstallHint: "brew install foo"},
 		{Name: "gate-sem-exigencia"},
 		{Name: "gate-com-ferramenta", NeedsTool: "sh"},
 	}}
@@ -24,7 +24,7 @@ func TestDoctorAvisaFerramentaAusenteComoWarn(t *testing.T) {
 	if fs[0].Severity != Warn {
 		t.Errorf("a cobertura declarada não é a real — isso é Warn, veio %q", fs[0].Severity)
 	}
-	if fs[0].Subject != "secret-nao-vazado" {
+	if fs[0].Subject != "no-secret-leaked" {
 		t.Errorf("o achado deve apontar o GATE desabilitado, veio %q", fs[0].Subject)
 	}
 	// O aviso tem de terminar em ação: sem o hint o leitor sabe do problema e não do

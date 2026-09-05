@@ -196,7 +196,7 @@ gates:
     category: security
     measures: "quantas CVEs conhecidas o go.mod carrega, por severidade (osv-scanner)"
 
-  - name: licenca-compativel
+  - name: license-compatible
     on: [code]
     scope: project
     run: "bash scripts/anchors-licencas.sh"
