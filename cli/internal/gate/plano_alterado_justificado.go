@@ -224,13 +224,21 @@ func gitDizQueMudou(root, path string) bool {
 // rastreado e `A ` para staged, e um arquivo novo já adicionado ao índice apareceria como
 // alteração.
 func gitDizQueEhNovo(root, path string) bool {
-	// `git ls-files` e não `git log`: num repositório SEM NENHUM COMMIT o log falha
-	// ("does not have any commits yet") em vez de devolver vazio, e tratar o erro como
-	// "não é novo" fazia o gate cobrar justificativa de todo arquivo do primeiro commit —
-	// justamente onde nada pode ter sido alterado.
+	// A pergunta é "este arquivo existe no ÚLTIMO COMMIT?", e não "ele é rastreado?".
 	//
-	// `ls-files` responde o que interessa: o arquivo é RASTREADO? Se não é, ele nasce
-	// agora, com ou sem histórico no repositório.
+	// A diferença decide o gate. `git ls-files` consulta o INDEX, e o pre-commit roda com
+	// tudo já STAGED — então um arquivo que nasce neste commit aparece como rastreado, a
+	// guarda não dispara, e o gate cobra revisão de arquivo recém-nascido. Medido no
+	// blue-eyes: a `MutationHarness.spec.md` estava em `A` no `git status` e foi acusada
+	// de "foi ALTERADO e não diz por quê"; o arquivo que de fato mudou (`M`) não foi.
+	//
+	// Reproduzido isolado: `git ls-files --error-unmatch novo.md` erra antes do `git add`
+	// e ACERTA depois — sem nenhum commit no meio.
+	//
+	// `git cat-file -e HEAD:<path>` responde a pergunta certa: o caminho existe na árvore
+	// do último commit. E não sofre o problema que trouxe o `ls-files` para cá — num
+	// repositório sem commit algum, `HEAD` não resolve e o comando erra, que é a resposta
+	// correta ("não existia antes") em vez da falha do `git log`.
 	//
 	// FORA de repositório a resposta é NÃO: ali o gate não tem como medir, e afirmar
 	// "é novo" o silenciaria em todo projeto sem git — que é o caso dos testes de unidade
@@ -238,9 +246,9 @@ func gitDizQueEhNovo(root, path string) bool {
 	if !emRepositorio(root) {
 		return false
 	}
-	cmd := exec.Command("git", "ls-files", "--error-unmatch", "--", path)
+	cmd := exec.Command("git", "cat-file", "-e", "HEAD:"+path)
 	cmd.Dir = root
-	return cmd.Run() != nil // erro = não rastreado = nasce agora
+	return cmd.Run() != nil // erro = não existe no último commit = nasce agora
 }
 
 // emRepositorio diz se `root` está dentro de um repositório git.

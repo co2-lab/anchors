@@ -642,6 +642,21 @@ type Gate struct {
 	// procurar; "falta gitleaks (brew install gitleaks)" resolve.
 	InstallHint string `yaml:"install_hint,omitempty"`
 
+	// MarkerPrefix, MarkerCount e MarkerScopes configuram o gate GENÉRICO
+	// `marker-parity` (ver internal/gate/marker_parity.go).
+	//
+	// Existem no `Gate` — e não num catálogo — porque o gate é genérico por desenho: um
+	// projeto declara VÁRIOS, cada um com o seu prefixo e o seu `id`. O que ele confronta
+	// (quais regras vivem em duas pontas) é decisão do projeto, e não cabe num catálogo
+	// universal. Um gate canônico responderia a mesma pergunta para todo mundo; este
+	// pergunta o que cada projeto declarou.
+	//
+	// Vazios = o gate se declara Pending e diz o que falta, em vez de aprovar em
+	// silêncio — um prefixo não declarado não pode passar por "nada a confrontar".
+	MarkerPrefix string   `yaml:"marker_prefix,omitempty"`
+	MarkerCount  int      `yaml:"marker_count,omitempty"`
+	MarkerScopes []string `yaml:"marker_scopes,omitempty"`
+
 	// Scope diz sobre QUANTO o gate roda de uma vez. O default histórico (e o único que
 	// existia) é por NÓ: o comando roda uma vez para cada alvo que casa `on`/`tags`.
 	// Isso está certo para o que mede um arquivo isolado, e errado para toda ferramenta

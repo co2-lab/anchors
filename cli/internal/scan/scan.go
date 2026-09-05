@@ -152,6 +152,18 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 		if ig.SkipFile(rel) {
 			return nil
 		}
+		// O ARQUIVO DE PROGRESSO fica fora do mapa, mesmo casando a camada do plano.
+		//
+		// Ele é ESTADO, e existe para mudar: uma fase que termina é um `[x]` novo. Todo
+		// gate que cobra justificativa de mudança — `plano-alterado-justificado` à frente
+		// — o acusaria a cada avanço, e a única saída seria escrever uma revisão dizendo
+		// "o trabalho andou". Ruído em gate bloqueante é o que faz alguém desligá-lo.
+		//
+		// Ele VAI para o git (é o histórico do trabalho); o que não vai é para o mapa. Por
+		// isso a exclusão mora aqui, e não no `.gitignore`.
+		if EhArquivoDeProgresso(rel) {
+			return nil
+		}
 		layer, kind := classify(rel, cfg)
 		if layer == "" {
 			return nil // não pertence a nenhuma camada declarada

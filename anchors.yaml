@@ -265,20 +265,38 @@ gates:
   # O Anchors não reimplementa o que a ferramenta do stack já faz: ele CHAMA e lê o
   # veredito. `scope: repo` roda o comando UMA vez por varredura, não por arquivo — sem
   # isso, `go build` rodaria 125 vezes num check --all.
+  # ATRITO 4: os tres gates abaixo nasceram `blocking: true` e NUNCA rodaram. Dois
+  # defeitos empilhados, um mascarando o outro:
+  #
+  # 1. sem `on:`. O guard `len(alvos) == 0` (gate/gate.go) descarta o gate ANTES do
+  #    switch de escopo, entao `scope: project` nao salva. E o merge canonico nao tinha
+  #    de onde herdar: `build`/`vet`/`testes-passam` nao existem no catalogo do
+  #    `initx/default_gates.go` (ao contrario de `layer-boundary`, que herda `on: [code]`
+  #    e por isso sempre funcionou). Gate declarado com nome que o catalogo nao conhece
+  #    e sem `on:` proprio e aceito EM SILENCIO e nunca mede nada.
+  # 2. `./...` a partir da raiz. O modulo Go vive em `cli/`, nao na raiz — quando o
+  #    `on:` foi corrigido os tres passaram a reprovar com "directory prefix . does not
+  #    contain main module". O `cd cli &&` e o mesmo padrao que o MIF usa em `tests:`.
+  #
+  # Enquanto isso: nada — nem CI (so ha deploy-site e release-cli), nem o pre-commit —
+  # verificava que o Anchors compila ou que a suite passa.
   - name: build
-    run: "go build ./..."
+    on: [code]
+    run: "cd cli && go build ./..."
     scope: project
     blocking: true
     measures: "o projeto compila"
 
   - name: vet
-    run: "go vet ./..."
+    on: [code]
+    run: "cd cli && go vet ./..."
     scope: project
     blocking: true
     measures: "o `go vet` não acusa nada (a régua que vem com a linguagem)"
 
   - name: testes-passam
-    run: "go test ./..."
+    on: [code]
+    run: "cd cli && go test ./..."
     scope: project
     blocking: true
     measures: "os 85 arquivos de teste passam"
