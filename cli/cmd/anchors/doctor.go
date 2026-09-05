@@ -43,7 +43,7 @@ APRESENTA e REGISTRA, mas NÃO bloqueia — é diagnóstico, roda sob demanda.`,
 			if soPipelines {
 				return verificaPipelines(cmd)
 			}
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

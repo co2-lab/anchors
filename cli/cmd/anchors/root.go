@@ -112,7 +112,7 @@ func recusaSeCongelado(cmd *cobra.Command) error {
 	if f := cmd.Flags().Lookup("root"); f != nil && f.Value.String() != "" {
 		root = f.Value.String()
 	}
-	absRoot, err := config.AbsRaiz(root)
+	absRoot, err := config.AbsRoot(root)
 	if err != nil {
 		return nil
 	}

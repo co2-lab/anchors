@@ -12,7 +12,7 @@ import (
 func TestCabecalhoNaoAfirmaArvoreLimpaSemSaber(t *testing.T) {
 	quando := time.Date(2026, 8, 28, 10, 0, 0, 0, time.UTC)
 
-	h := Cabecalho("anchors check", "abc123", "assunto", -1, quando)
+	h := Header("anchors check", "abc123", "assunto", -1, quando)
 
 	if strings.Contains(h, "árvore: limpa") {
 		t.Errorf("afirmou limpeza sem ter conseguido contar: %s", h)
@@ -26,13 +26,13 @@ func TestCabecalhoNaoAfirmaArvoreLimpaSemSaber(t *testing.T) {
 func TestCabecalhoRelataContagemReal(t *testing.T) {
 	quando := time.Date(2026, 8, 28, 10, 0, 0, 0, time.UTC)
 
-	if h := Cabecalho("c", "h", "a", 0, quando); !strings.Contains(h, "árvore: limpa") {
+	if h := Header("c", "h", "a", 0, quando); !strings.Contains(h, "árvore: limpa") {
 		t.Errorf("0 sujos É árvore limpa: %s", h)
 	}
-	if h := Cabecalho("c", "h", "a", 1, quando); !strings.Contains(h, "1 arquivo modificado") {
+	if h := Header("c", "h", "a", 1, quando); !strings.Contains(h, "1 arquivo modificado") {
 		t.Errorf("1 sujo: %s", h)
 	}
-	if h := Cabecalho("c", "h", "a", 5, quando); !strings.Contains(h, "5 arquivos modificados") {
+	if h := Header("c", "h", "a", 5, quando); !strings.Contains(h, "5 arquivos modificados") {
 		t.Errorf("5 sujos: %s", h)
 	}
 }

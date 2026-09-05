@@ -118,7 +118,7 @@ func novoComandoSuite(cs comandoSuite) *cobra.Command {
 		Short: cs.curto,
 		Long:  cs.usoLongo,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -140,7 +140,7 @@ func novoComandoSuite(cs comandoSuite) *cobra.Command {
 			if len(ausentes) > 0 {
 				return fmt.Errorf("não declarado em `%s:`: %s\n  camadas declaradas:    %s\n  workspaces declarados: %s\n  escopos declarados:    %s",
 					cs.secao, strings.Join(ausentes, ", "),
-					strings.Join(config.CamadasDeclaradas(declaradas), ", "),
+					strings.Join(config.DeclaredLayers(declaradas), ", "),
 					juntaOuTraco(config.WorkspacesDeclarados(declaradas)),
 					juntaOuTraco(config.EscoposDeclarados(declaradas)))
 			}

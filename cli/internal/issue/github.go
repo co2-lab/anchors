@@ -54,12 +54,12 @@ type cardEncontrado struct {
 	State  string `json:"state"`
 }
 
-// acha procura o card de um achado pela chave no corpo.
+// find procura o card de um achado pela chave no corpo.
 //
 // Busca em `--state all` de propósito: uma issue FECHADA ainda é memória — é o que
 // distingue "achado novo" de "achado que voltou", e sem ela o segundo perderia o laudo
 // anterior.
-func (g GitHub) acha(key string) (cardEncontrado, bool, error) {
+func (g GitHub) find(key string) (cardEncontrado, bool, error) {
 	marca := fmt.Sprintf(MarcadorChave, key)
 	out, err := g.gh("issue", "list", "--state", "all", "--limit", "500",
 		"--search", key, "--json", "number,state,body")
@@ -91,7 +91,7 @@ func (g GitHub) acha(key string) (cardEncontrado, bool, error) {
 // um card novo perderia o histórico de quando ele apareceu antes.
 func (g GitHub) Open(i Issue, nasce State) (created bool, at State, err error) {
 	key := i.Key()
-	c, existe, err := g.acha(key)
+	c, existe, err := g.find(key)
 	if err != nil {
 		return false, "", err
 	}
@@ -111,7 +111,7 @@ func (g GitHub) Open(i Issue, nasce State) (created bool, at State, err error) {
 
 	corpo := i.Body() + "\n\n" + fmt.Sprintf(MarcadorChave, key) + "\n"
 	argv := []string{"issue", "create",
-		"--title", g.titulo(i),
+		"--title", g.title(i),
 		"--body", corpo,
 		"--label", g.Label,
 	}
@@ -132,7 +132,7 @@ func (g GitHub) Open(i Issue, nasce State) (created bool, at State, err error) {
 
 // Resolve FECHA o card quando o confronto que o gerou volta a passar.
 func (g GitHub) Resolve(key string) (bool, error) {
-	c, existe, err := g.acha(key)
+	c, existe, err := g.find(key)
 	if err != nil || !existe || c.State != "OPEN" {
 		return false, err
 	}
@@ -141,8 +141,8 @@ func (g GitHub) Resolve(key string) (bool, error) {
 	return err == nil, err
 }
 
-// titulo nomeia o card pelo que ele é, sem depender do formato da chave.
-func (g GitHub) titulo(i Issue) string {
+// title nomeia o card pelo que ele é, sem depender do formato da chave.
+func (g GitHub) title(i Issue) string {
 	que := "Violação"
 	switch i.Kind {
 	case Decision:

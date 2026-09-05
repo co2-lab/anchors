@@ -59,7 +59,7 @@ hooks — o freio existe para impedir trabalho por INÉRCIA, não o conserto que
 destrava.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -158,7 +158,7 @@ O commit e o push saem com --no-verify pelo mesmo motivo do freeze: enquanto o
 remoto ainda diz 'congelado', os hooks recusariam o próprio descongelamento.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

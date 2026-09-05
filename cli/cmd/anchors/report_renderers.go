@@ -184,7 +184,7 @@ func renderIssues(ctx reportCtx) string {
 		if contémNome(doing, id) {
 			st = issue.Doing
 		}
-		if issue.DonoDoArquivo(filepath.Join(ctx.root, issue.Dir, string(st), id)) == issue.DonoUsuário {
+		if issue.FileOwner(filepath.Join(ctx.root, issue.Dir, string(st), id)) == issue.DonoUsuário {
 			deQuemDecide = append(deQuemDecide, id)
 			continue
 		}

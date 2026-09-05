@@ -101,7 +101,7 @@ func checkCenarioTipoAlinhado(content string, n mapx.Node, _ string, _ *mapx.Gra
 // letraDoCodigo extrai a letra de natureza de `ABCDX-S01` (ou `ABCDX-S01#02`). Devolve
 // vazio para códigos que não seguem a forma (`ABCDX-DS-alguma-coisa`, `ABCDX-VR`).
 func letraDoCodigo(code string) string {
-	raiz := CodeRaiz(code)
+	raiz := RootCode(code)
 	i := strings.LastIndex(raiz, "-")
 	if i < 0 || i+1 >= len(raiz) {
 		return ""

@@ -34,7 +34,7 @@ func newMapShowCmd() *cobra.Command {
   anchors map show --orphans   — nós sem nenhuma aresta (ilhas)
   anchors map show --stats     — resumo (nós por kind, arestas por tipo)`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -127,7 +127,7 @@ func newMapBuildCmd() *cobra.Command {
 arestas do mapa por co-location (nomes de arquivo) e por código de cenário
 (a identidade estável que atravessa spec→feature→teste). Grava anchors.graph.yaml.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

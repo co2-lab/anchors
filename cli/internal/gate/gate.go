@@ -148,7 +148,7 @@ func RunWithConfig(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 // chamadores seguem por RunWithConfig, que passa `completa: false` — o comportamento de
 // sempre para recorte incremental.
 func RunCompleto(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool) []Result {
-	return RunComDispensa(gates, nodes, root, graph, cfg, completa, Dispensa{})
+	return RunComDispensa(gates, nodes, root, graph, cfg, completa, Waiver{})
 }
 
 // RunComDispensa é o Run que honra dispensa POR ALVO.
@@ -157,7 +157,7 @@ func RunCompleto(gates []config.Gate, nodes []mapx.Node, root string, graph *map
 // ela valia para tudo. Uma dispensa restrita a caminhos não pode sair por ali: o gate
 // precisa RODAR e confrontar os outros alvos — senão dispensar 4 specs novas apagaria o
 // gate para o repositório inteiro, e uma trinca quebrada por descuido passaria junto.
-func RunComDispensa(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool, disp Dispensa) []Result {
+func RunComDispensa(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool, disp Waiver) []Result {
 	// A gramática do código de cenário segue o vocabulário do projeto (`rule_types`).
 	SetRuleLetters(cfg.RuleLetters())
 	// índice kind por nó já vem em node.Kind
@@ -196,7 +196,7 @@ func RunComDispensa(gates []config.Gate, nodes []mapx.Node, root string, graph *
 				// DISPENSA POR ALVO: o gate roda, e só este nó é poupado. O veredito é
 				// `Skip` com o motivo escrito — some do placar de reprovações sem sumir
 				// do relatório, que é a diferença entre dispensar e esconder.
-				if motivo, ok := disp.DispensouAlvo(RegraID(idDoGate(g)), n.Code); ok {
+				if motivo, ok := disp.WaivedTarget(RuleID(idDoGate(g)), n.Code); ok {
 					results = append(results, Result{
 						Gate: g.Name, Regra: idDoGate(g), Target: n.ID,
 						Verdict: Skip, Blocking: g.IsBlocking(),

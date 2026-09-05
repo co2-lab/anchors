@@ -131,7 +131,7 @@ func checkTestIDCoerente(content string, n mapx.Node, root string, g *mapx.Graph
 			continue // coerente nas pontas que dá para conferir
 		}
 		linhas = append(linhas, fmt.Sprintf("  %s\n      código %s   spec %s   feature %s   consultado %s",
-			id, marca(noCodigo), marca(naSpec), marca(naFeature), marcaConsulta(consultado, temConsumidor)))
+			id, mark(noCodigo), mark(naSpec), mark(naFeature), marcaConsulta(consultado, temConsumidor)))
 	}
 
 	if len(linhas) == 0 {
@@ -153,7 +153,7 @@ func checkTestIDCoerente(content string, n mapx.Node, root string, g *mapx.Graph
 		len(linhas), arquivo, strings.Join(linhas, "\n"))
 }
 
-func marca(ok bool) string {
+func mark(ok bool) string {
 	if ok {
 		return "✓"
 	}
@@ -167,14 +167,14 @@ func marcaConsulta(ok, temConsumidor bool) string {
 	if !temConsumidor {
 		return "—"
 	}
-	return marca(ok)
+	return mark(ok)
 }
 
 // cobertoPor: algum item da lista cobre este id? Delega a `cobre`, que trata a marca e
 // o curinga — as duas formas em que o MESMO handle se escreve diferente entre pontas.
 func cobertoPor(xs []string, id string) bool {
 	for _, x := range xs {
-		if cobre(x, id) || cobre(id, x) {
+		if covers(x, id) || covers(id, x) {
 			return true
 		}
 	}

@@ -105,13 +105,13 @@ func (e *Espelho) Caminho() string {
 	return e.arq.Name()
 }
 
-// Cabecalho monta as linhas de contexto do topo do arquivo: quando rodou, sobre
+// Header monta as linhas de contexto do topo do arquivo: quando rodou, sobre
 // qual commit, com quantas mudanças pendentes e com que argumentos.
 //
 // O estado da árvore importa tanto quanto o commit: um check rodado com 40
 // arquivos modificados descreve algo que não está em lugar nenhum do histórico,
 // e quem relê precisa saber disso.
-func Cabecalho(comando, head, assunto string, sujos int, quando time.Time) string {
+func Header(comando, head, assunto string, sujos int, quando time.Time) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# %s\n", comando)
 	fmt.Fprintf(&b, "# quando: %s\n", quando.Format("2006-01-02 15:04:05 -0700"))

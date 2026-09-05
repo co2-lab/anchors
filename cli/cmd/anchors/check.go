@@ -42,7 +42,7 @@ os computáveis. É o modo do PRE-COMMIT: um gate judge não pode barrar um comm
 (não dá para esperar a IA) nem deve enfileirar julgamento a cada commit (lixo
 repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -84,7 +84,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			if bruto == "" {
 				bruto = os.Getenv("ANCHORS_SKIP_RULES")
 			}
-			dispensa, erros := gate.ParseDispensa(bruto)
+			dispensa, erros := gate.ParseWaiver(bruto)
 			// A MENSAGEM DE COMMIT também dispensa: `[skip-trinca-completa@WRKSP: motivo]`.
 			//
 			// O caminho vem por `--commit-msg`, e não de `.git/COMMIT_EDITMSG`: MEDIDO, o
@@ -94,7 +94,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// ele quem passa este caminho.
 			if msgPath != "" {
 				if msg, err := os.ReadFile(msgPath); err == nil {
-					daMsg, errosMsg := gate.DispensaDaMensagem(string(msg))
+					daMsg, errosMsg := gate.WaiverFromMessage(string(msg))
 					dispensa = dispensa.Mescla(daMsg)
 					erros = append(erros, errosMsg...)
 				}
@@ -157,7 +157,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// invocação (config ausente, mapa ilegível), que não é relatório —
 			// gravá-lo sobrescreveria uma foto boa com uma mensagem de erro.
 			head, assunto, _ := gitmeta.Head(absRoot)
-			espelho := checklog.Abrir(absRoot, all, checklog.Cabecalho(
+			espelho := checklog.Abrir(absRoot, all, checklog.Header(
 				"anchors "+strings.Join(os.Args[1:], " "),
 				head, assunto, gitmeta.DirtyCount(absRoot), time.Now(),
 			))
@@ -265,7 +265,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 // Todos os filtros são permissivos por omissão: gate sem `when`/`cost`/`category`/
 // `skip_on` continua rodando como antes. É o que torna a categorização adotável aos
 // poucos — declarar um eixo num gate não muda o comportamento dos outros 30.
-func filtrarGates(gates []config.Gate, phase, category string, skipSlow bool, perspective string, dispensa gate.Dispensa) []config.Gate {
+func filtrarGates(gates []config.Gate, phase, category string, skipSlow bool, perspective string, dispensa gate.Waiver) []config.Gate {
 	out := gates[:0:0]
 	for _, g := range gates {
 		if !g.RunsIn(phase) {
@@ -287,7 +287,7 @@ func filtrarGates(gates []config.Gate, phase, category string, skipSlow bool, pe
 		// perspectiva, esta é decisão de quem chama sobre uma regra específica — e é o que
 		// permite commitar a primeira spec de uma unidade (a feature ainda é um card) sem
 		// desligar os gates que verificam outra coisa.
-		if motivo, ok := dispensa.Dispensou(gate.RegraID(idDoGateCmd(g))); ok {
+		if motivo, ok := dispensa.Waived(gate.RuleID(idDoGateCmd(g))); ok {
 			fmt.Printf("○ dispensado: %s — %s\n", idDoGateCmd(g), motivo)
 			continue
 		}

@@ -25,7 +25,7 @@ Estrutura, e confirma/ajusta com você via perguntas — chegando a um anchors.y
 correto. O grosso é inferido; as perguntas cobrem só as decisões humanas
 (co-location, granularidade das camadas, e quais guides regem quais tags).`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

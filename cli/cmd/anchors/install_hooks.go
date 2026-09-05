@@ -39,7 +39,7 @@ Incremental: valida só o que o commit toca. Não grava no mapa nem abre issues
 (--no-record). Idempotente — reinstalar é seguro; use --force para sobrescrever um
 pre-commit existente que não foi escrito por este comando.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

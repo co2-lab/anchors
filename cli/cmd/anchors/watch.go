@@ -47,7 +47,7 @@ Roda em BACKGROUND — o terminal fica livre. Controle com os subcomandos:
 // rootFlag resolve a raiz absoluta a partir da flag --root de um subcomando.
 func absRootFlag(cmd *cobra.Command) (string, error) {
 	root, _ := cmd.Flags().GetString("root")
-	return config.AbsRaiz(root)
+	return config.AbsRoot(root)
 }
 
 func addRootFlag(cmd *cobra.Command) {

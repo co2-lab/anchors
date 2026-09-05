@@ -143,7 +143,7 @@ func TestVocabularioEhDoProjeto(t *testing.T) {
 // TestListasNaoRepetemNomes — as listas são o que se mostra a quem errou; `unit`
 // aparecendo duas vezes (uma por workspace) faria a mensagem parecer um dump.
 func TestListasNaoRepetemNomes(t *testing.T) {
-	if got := strings.Join(CamadasDeclaradas(suites()), ","); got != "unit,integration,e2e" {
+	if got := strings.Join(DeclaredLayers(suites()), ","); got != "unit,integration,e2e" {
 		t.Errorf("camadas repetidas ou fora de ordem: %q", got)
 	}
 	if got := strings.Join(WorkspacesDeclarados(suites()), ","); got != "backend,mobile" {

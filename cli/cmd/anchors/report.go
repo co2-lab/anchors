@@ -132,7 +132,7 @@ func newReportAllCmd() *cobra.Command {
 }
 
 func loadReportCtx(root, mapPath string) (reportCtx, error) {
-	absRoot, err := config.AbsRaiz(root)
+	absRoot, err := config.AbsRoot(root)
 	if err != nil {
 		return reportCtx{}, err
 	}

@@ -60,7 +60,7 @@ func TestCodeRaizSeparaRegraDeCenario(t *testing.T) {
 		"MNMTX-DS-kv":  "MNMTX-DS-kv",
 	}
 	for entrada, quer := range casos {
-		if got := CodeRaiz(entrada); got != quer {
+		if got := RootCode(entrada); got != quer {
 			t.Errorf("CodeRaiz(%q) = %q, queria %q", entrada, got, quer)
 		}
 	}

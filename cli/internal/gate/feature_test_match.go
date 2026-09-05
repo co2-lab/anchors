@@ -215,8 +215,8 @@ func codeRaizRE() *regexp.Regexp {
 	return regexp.MustCompile(`^([A-Z0-9]` + config.CodeLengthPattern() + `-[A-Za-z0-9-]+?)(#\d{2})?$`)
 }
 
-// CodeRaiz devolve o código sem o sufixo de cenário.
-func CodeRaiz(code string) string {
+// RootCode devolve o código sem o sufixo de cenário.
+func RootCode(code string) string {
 	if m := codeRaizRE().FindStringSubmatch(code); m != nil {
 		return m[1]
 	}

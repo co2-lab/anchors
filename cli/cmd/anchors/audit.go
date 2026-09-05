@@ -37,7 +37,7 @@ Pensado para varredura PARALELA: um agente por arquivo, 'anchors audit <arquivo>
 conserta todas as pendências de uma vez (header, spec, identidade, cobertura…).`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

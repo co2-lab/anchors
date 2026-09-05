@@ -92,10 +92,10 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 			// acusar de repente todo requisito que ganhou mais de um caso.
 			for _, c := range sc.Codes {
 				cobertos[c] = true
-				cobertos[CodeRaiz(c)] = true
+				cobertos[RootCode(c)] = true
 			}
 			cobertos[sc.Code] = true
-			cobertos[CodeRaiz(sc.Code)] = true
+			cobertos[RootCode(sc.Code)] = true
 		}
 	}
 

@@ -20,42 +20,42 @@ import (
 // princípio que a doutrina já aplica ao artefato (`WRKSP-B01`): um identificador estável
 // é o que permite falar de uma decisão sem descrevê-la de novo.
 
-// RegraID é o identificador estável de uma verificação dentro de um gate.
+// RuleID é o identificador estável de uma verificação dentro de um gate.
 //
 // O formato é `<gate>/<regra>`, e o `<gate>` faz parte de propósito: nomes de regra
 // curtos ("sem-placeholder", "tem-codigo") se repetiriam entre gates, e um ID que colide
 // não identifica nada.
-type RegraID string
+type RuleID string
 
 // Gate devolve a parte de gate do ID — o que vem antes da barra.
-func (r RegraID) Gate() string {
+func (r RuleID) Gate() string {
 	g, _, _ := strings.Cut(string(r), "/")
 	return g
 }
 
-// Regra devolve a parte de regra do ID. Vazio quando o gate não declarou regras (o
+// Rule devolve a parte de regra do ID. Vazio quando o gate não declarou regras (o
 // veredito é do gate como um todo), e aí o ID é só o nome do gate.
-func (r RegraID) Regra() string {
+func (r RuleID) Rule() string {
 	_, reg, _ := strings.Cut(string(r), "/")
 	return reg
 }
 
-// NovaRegraID monta o ID. Um `regra` vazio devolve só o gate: é o caso de um gate que
+// NewRuleID monta o ID. Um `regra` vazio devolve só o gate: é o caso de um gate que
 // faz uma verificação só, e para o qual dividir em regras não acrescentaria nada.
-func NovaRegraID(gate, regra string) RegraID {
+func NewRuleID(gate, regra string) RuleID {
 	if regra == "" {
-		return RegraID(gate)
+		return RuleID(gate)
 	}
-	return RegraID(gate + "/" + regra)
+	return RuleID(gate + "/" + regra)
 }
 
-// Dispensa é o conjunto de regras que o usuário pediu para não confrontar nesta execução,
+// Waiver é o conjunto de regras que o usuário pediu para não confrontar nesta execução,
 // com o motivo de cada dispensa.
 //
 // O motivo é parte do dado, e não um comentário à parte: uma dispensa sem justificativa
 // escrita é indistinguível de alguém fugindo de um gate que achou defeito. Com o motivo,
 // o relatório diz o que foi pulado E por quê — e quem ler depois não precisa adivinhar.
-type Dispensa struct {
+type Waiver struct {
 	// PorRegra mapeia o ID (`spec-completa/sem-placeholder`) ou o nome do gate inteiro
 	// (`trinca-completa`) para o motivo.
 	PorRegra map[string]string
@@ -79,12 +79,12 @@ type Dispensa struct {
 	Alvos map[string][]string
 }
 
-// Dispensou diz se esta regra foi dispensada, e devolve o motivo.
+// Waived diz se esta regra foi dispensada, e devolve o motivo.
 //
 // Aceita as duas granularidades: dispensar `spec-completa` cobre todas as regras dele,
 // e dispensar `spec-completa/sem-placeholder` cobre só aquela. A primeira é a saída
 // grossa para quem não conhece as regras; a segunda é a que preserva o resto do gate.
-func (d Dispensa) Dispensou(id RegraID) (string, bool) {
+func (d Waiver) Waived(id RuleID) (string, bool) {
 	motivo, ok := d.dispensouRegra(id)
 	if !ok {
 		return "", false
@@ -99,7 +99,7 @@ func (d Dispensa) Dispensou(id RegraID) (string, bool) {
 	return motivo, true
 }
 
-// DispensouAlvo diz se ESTA regra está dispensada para ESTE alvo.
+// WaivedTarget diz se ESTA regra está dispensada para ESTE alvo.
 //
 // O alvo é o CÓDIGO do artefato (`WRKSP`), e SÓ ele. Caminho não é aceito, e a recusa é
 // deliberada:
@@ -113,7 +113,7 @@ func (d Dispensa) Dispensou(id RegraID) (string, bool) {
 //   - e o que NÃO tem código não deveria estar sendo dispensado por aqui. Um artefato
 //     sem identidade é um problema anterior — o `codigo-catalogado` é quem cobra isso, e
 //     dar uma saída lateral esconderia a causa.
-func (d Dispensa) DispensouAlvo(id RegraID, codigo string) (string, bool) {
+func (d Waiver) WaivedTarget(id RuleID, codigo string) (string, bool) {
 	motivo, ok := d.dispensouRegra(id)
 	if !ok {
 		return "", false
@@ -138,7 +138,7 @@ func (d Dispensa) DispensouAlvo(id RegraID, codigo string) (string, bool) {
 }
 
 // dispensouRegra procura o motivo pelo ID exato e, depois, pelo gate inteiro.
-func (d Dispensa) dispensouRegra(id RegraID) (string, bool) {
+func (d Waiver) dispensouRegra(id RuleID) (string, bool) {
 	if len(d.PorRegra) == 0 {
 		return "", false
 	}
@@ -152,7 +152,7 @@ func (d Dispensa) dispensouRegra(id RegraID) (string, bool) {
 }
 
 // alvosDe devolve os caminhos a que a dispensa desta regra está restrita.
-func (d Dispensa) alvosDe(id RegraID) []string {
+func (d Waiver) alvosDe(id RuleID) []string {
 	if len(d.Alvos) == 0 {
 		return nil
 	}
@@ -162,14 +162,14 @@ func (d Dispensa) alvosDe(id RegraID) []string {
 	return d.Alvos[id.Gate()]
 }
 
-// ParseDispensa lê a forma textual `regra=motivo,regra=motivo` — o que chega por flag ou
+// ParseWaiver lê a forma textual `regra=motivo,regra=motivo` — o que chega por flag ou
 // por variável de ambiente.
 //
 // Uma entrada sem `=` é recusada, e não aceita em silêncio com motivo vazio: o motivo é
 // a única coisa que separa dispensa deliberada de gate ignorado, e aceitá-lo ausente
 // esvaziaria a garantia.
-func ParseDispensa(bruto string) (Dispensa, []string) {
-	d := Dispensa{PorRegra: map[string]string{}, Alvos: map[string][]string{}, MotivoPorAlvo: map[string]string{}}
+func ParseWaiver(bruto string) (Waiver, []string) {
+	d := Waiver{PorRegra: map[string]string{}, Alvos: map[string][]string{}, MotivoPorAlvo: map[string]string{}}
 	var erros []string
 	for _, parte := range strings.Split(bruto, ",") {
 		parte = strings.TrimSpace(parte)
@@ -221,7 +221,7 @@ func ParseDispensa(bruto string) (Dispensa, []string) {
 var marcadorNaMensagem = regexp.MustCompile(
 	`\[skip-([a-z0-9][a-z0-9/-]*)(?:@([A-Z0-9-]+))?\s*:\s*([^\]]+)\]`)
 
-// DispensaDaMensagem lê as dispensas declaradas na MENSAGEM DE COMMIT.
+// WaiverFromMessage lê as dispensas declaradas na MENSAGEM DE COMMIT.
 //
 // A forma é `[skip-trinca-completa@WRKSP: spec nova do plano 0007]`, e ela é melhor que a
 // variável de ambiente por três razões que só aparecem no uso:
@@ -234,8 +234,8 @@ var marcadorNaMensagem = regexp.MustCompile(
 //     mesmo lugar onde já se escreve o porquê da mudança.
 //
 // A variável continua aceita: um hook de CI que não controla a mensagem precisa dela.
-func DispensaDaMensagem(msg string) (Dispensa, []string) {
-	d := Dispensa{PorRegra: map[string]string{}, Alvos: map[string][]string{}, MotivoPorAlvo: map[string]string{}}
+func WaiverFromMessage(msg string) (Waiver, []string) {
+	d := Waiver{PorRegra: map[string]string{}, Alvos: map[string][]string{}, MotivoPorAlvo: map[string]string{}}
 	var erros []string
 	for _, m := range marcadorNaMensagem.FindAllStringSubmatch(msg, -1) {
 		regra, codigo, motivo := m[1], m[2], strings.TrimSpace(m[3])
@@ -255,7 +255,7 @@ func DispensaDaMensagem(msg string) (Dispensa, []string) {
 // Mescla junta duas dispensas. A da mensagem de commit e a da variável de ambiente
 // convivem: um projeto pode ter um hook de CI que usa a variável e um autor que escreve
 // o marcador, e recusar a combinação obrigaria a escolher sem motivo.
-func (d Dispensa) Mescla(outra Dispensa) Dispensa {
+func (d Waiver) Mescla(outra Waiver) Waiver {
 	if d.PorRegra == nil {
 		d.PorRegra = map[string]string{}
 	}

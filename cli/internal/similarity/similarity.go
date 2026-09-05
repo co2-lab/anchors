@@ -96,7 +96,7 @@ func Weights(corpus []string) map[string]float64 {
 // Jaccard NÃO-ponderado. Sem isso, um corpus de um item devolveria 0 para textos
 // idênticos — o pior erro possível para quem lê o resultado.
 func Score(a, b string, weights map[string]float64) float64 {
-	ta, tb := conjunto(a), conjunto(b)
+	ta, tb := set(a), set(b)
 	if len(ta) == 0 || len(tb) == 0 {
 		return 0
 	}
@@ -132,7 +132,7 @@ func Score(a, b string, weights map[string]float64) float64 {
 // É por isso que as duas juntas valem mais que qualquer uma sozinha: onde
 // discordam, o par é limítrofe, e dizer isso é mais honesto que fingir um veredito.
 func Cosseno(a, b string, weights map[string]float64) float64 {
-	ta, tb := conjunto(a), conjunto(b)
+	ta, tb := set(a), set(b)
 	if len(ta) == 0 || len(tb) == 0 {
 		return 0
 	}
@@ -165,7 +165,7 @@ func Cosseno(a, b string, weights map[string]float64) float64 {
 	return num / (math.Sqrt(na) * math.Sqrt(nb))
 }
 
-func conjunto(s string) map[string]bool {
+func set(s string) map[string]bool {
 	out := map[string]bool{}
 	for _, t := range Tokenize(s) {
 		out[t] = true
@@ -255,19 +255,19 @@ func Classifica(a, b string, weights map[string]float64) (Veredito, float64) {
 
 	switch {
 	case jSim && cSim:
-		return Similar, maior(j, c)
+		return Similar, largest(j, c)
 	case jSim != cSim:
-		return Limitrofe, maior(j, c)
+		return Limitrofe, largest(j, c)
 	case compartilhaTokenRaro(ta, tb, weights):
 		// Nenhuma das duas alcançou o limiar, mas há um termo RARO em comum — só
 		// esses dois textos o usam no arquivo inteiro. É evidência estrutural, de
 		// natureza diferente da contagem, e por isso ela desempata.
-		return Similar, maior(j, c)
+		return Similar, largest(j, c)
 	}
-	return Divergente, maior(j, c)
+	return Divergente, largest(j, c)
 }
 
-func maior(a, b float64) float64 {
+func largest(a, b float64) float64 {
 	if a > b {
 		return a
 	}

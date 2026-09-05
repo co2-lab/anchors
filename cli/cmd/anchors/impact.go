@@ -26,7 +26,7 @@ func newImpactCmd() *cobra.Command {
 É só consulta — não abre issue nem altera nada.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

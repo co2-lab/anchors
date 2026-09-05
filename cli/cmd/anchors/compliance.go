@@ -41,7 +41,7 @@ Um dever com nós sujeitos e nenhum cumprindo costuma ser desconexão (o alvo mu
 caminho e o pack aponta para o lugar antigo), não 100% de violação — e o relatório
 sinaliza isso em vez de deixar você concluir errado.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

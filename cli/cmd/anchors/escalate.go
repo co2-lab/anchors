@@ -63,7 +63,7 @@ corrija e registre a revisão ('{CODIGO}-R0001: o que mudou e por quê'). Abrir
 card para trocar uma palavra é burocracia.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

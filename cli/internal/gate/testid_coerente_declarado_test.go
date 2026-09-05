@@ -175,13 +175,13 @@ func TestTestIDDeclared_prefixoMontadoNoFilho(t *testing.T) {
 func TestTestIDDeclared_curingaCasaNosDoisSentidos(t *testing.T) {
 	// Exposto genérico cobre declarado concreto, e vice-versa — a forma genérica tanto
 	// nasce no código (template) quanto na spec.
-	if !cobre("abcd-item-*", "abcd-item-3") {
+	if !covers("abcd-item-*", "abcd-item-3") {
 		t.Error("curinga exposto deveria cobrir o id concreto")
 	}
-	if cobre("abcd-item-3", "abcd-item-*") {
+	if covers("abcd-item-3", "abcd-item-*") {
 		t.Error("id concreto NÃO cobre o curinga (só o inverso)")
 	}
-	if !cobre("abcd-x", "abcd-x") || cobre("abcd-x", "abcd-y") {
+	if !covers("abcd-x", "abcd-x") || covers("abcd-x", "abcd-y") {
 		t.Error("igualdade exata deveria valer, e só ela")
 	}
 }

@@ -183,11 +183,11 @@ func celulasDaLinha(linha string) []string {
 
 // diferenca devolve o que está em `a` e não em `b`, comparando sem o `:` de marcação
 // — a spec pode citar `bdgt-screen` ou `:bdgt-screen` e as duas dizem a mesma coisa.
-// O curinga casa dos DOIS lados: exposto `otp-input-*` cobre o declarado
-// `otp-input-0`, e declarado `abcd-item-*` cobre o exposto `abcd-item-3`. Sem isso o
+// O curinga casa dos DOIS lados: exposto `otp-input-*` covers o declarado
+// `otp-input-0`, e declarado `abcd-item-*` covers o exposto `abcd-item-3`. Sem isso o
 // gate acusaria em ambos os sentidos um id que o outro lado descreve corretamente —
 // só que na forma genérica em vez da concreta, ou vice-versa.
-func cobre(padrao, id string) bool {
+func covers(padrao, id string) bool {
 	p := strings.TrimPrefix(padrao, ":")
 	i := strings.TrimPrefix(id, ":")
 	if p == i {
@@ -206,7 +206,7 @@ func diferenca(a, b []string) []string {
 		for _, t := range b {
 			// Nos dois sentidos: o curinga pode estar em qualquer lado, porque a forma
 			// genérica tanto é exposta pelo código (template) quanto declarada na spec.
-			if cobre(t, s) || cobre(s, t) {
+			if covers(t, s) || covers(s, t) {
 				coberto = true
 				break
 			}
