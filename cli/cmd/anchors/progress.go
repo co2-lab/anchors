@@ -69,7 +69,7 @@ func progressPath(plano string) string {
 //
 // Construído por CHAMADA, não em `var`: a config é carregada depois da inicialização do
 // pacote, e um regex montado no init congelaria o default.
-func faseNoCabecalhoRE() *regexp.Regexp {
+func phaseInHeaderRE() *regexp.Regexp {
 	return regexp.MustCompile(`(?m)^#{2,4}[^\S\n]+([A-Z0-9]` +
 		config.CodeLengthPattern() + `-F\d{2})\b[^\S\n]*—?[^\S\n]*(.*)$`)
 }
@@ -81,7 +81,7 @@ type planPhase struct {
 
 func planPhases(conteudo string) []planPhase {
 	var out []planPhase
-	for _, m := range faseNoCabecalhoRE().FindAllStringSubmatch(conteudo, -1) {
+	for _, m := range phaseInHeaderRE().FindAllStringSubmatch(conteudo, -1) {
 		out = append(out, planPhase{Codigo: m[1], Titulo: strings.TrimSpace(m[2])})
 	}
 	return out

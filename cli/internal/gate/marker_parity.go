@@ -149,7 +149,7 @@ func scanMarkings(root, prefixo string, escopos []string, cfg *config.Config) (m
 			}
 			return nil
 		}
-		if !textoProvavel(d.Name()) {
+		if !likelyText(d.Name()) {
 			return nil
 		}
 		rel, relErr := filepath.Rel(root, caminho)
@@ -166,7 +166,7 @@ func scanMarkings(root, prefixo string, escopos []string, cfg *config.Config) (m
 		if len(achados) == 0 {
 			return nil
 		}
-		esc := escopoDe(rel, escopos)
+		esc := scopeOf(rel, escopos)
 		for _, m := range achados {
 			nome := m[1]
 			if ocorr[nome] == nil {
@@ -182,9 +182,9 @@ func scanMarkings(root, prefixo string, escopos []string, cfg *config.Config) (m
 	return ocorr, err
 }
 
-// escopoDe diz a QUAL escopo declarado o arquivo pertence. Sem escopos declarados (ou
+// scopeOf diz a QUAL escopo declarado o arquivo pertence. Sem escopos declarados (ou
 // sem casar nenhum), cai num balde único — é o modo "só contagem".
-func escopoDe(rel string, escopos []string) string {
+func scopeOf(rel string, escopos []string) string {
 	for _, e := range escopos {
 		if ok, _ := doublestar.Match(e, rel); ok {
 			return e
@@ -211,11 +211,11 @@ func ignored(nome string) bool {
 	return false
 }
 
-// textoProvavel evita ler binário. A lista é por EXTENSÃO porque é onde a marcação vive:
+// likelyText evita ler binário. A lista é por EXTENSÃO porque é onde a marcação vive:
 // código e documentação. Um arquivo sem extensão conhecida é pulado — o custo de errar
 // para menos aqui é o gate não ver uma marcação em lugar exótico, e o de errar para mais
 // é ler megabytes de imagem a cada varredura.
-func textoProvavel(nome string) bool {
+func likelyText(nome string) bool {
 	switch strings.ToLower(filepath.Ext(nome)) {
 	case ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".go", ".py", ".rb", ".java",
 		".kt", ".swift", ".rs", ".php", ".cs", ".md", ".yaml", ".yml", ".sql", ".sh":

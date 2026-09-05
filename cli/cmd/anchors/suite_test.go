@@ -14,7 +14,7 @@ import (
 // alvo. Substituir por vazio faria `npx stryker run --mutate ` mutar o PROJETO INTEIRO:
 // horas de rodada, e nada do que se pediu. Falhar aqui custa um segundo.
 func TestTargetObrigatorioQuandoDeclarado(t *testing.T) {
-	_, err := montaComando("npx stryker run --mutate {{target}}", "")
+	_, err := buildCommand("npx stryker run --mutate {{target}}", "")
 	if err == nil {
 		t.Fatal("sem --target, o comando com {{target}} tem de falhar")
 	}
@@ -24,7 +24,7 @@ func TestTargetObrigatorioQuandoDeclarado(t *testing.T) {
 }
 
 func TestTargetSubstitui(t *testing.T) {
-	got, err := montaComando("stryker run --mutate {{target}}", "business-logic/dedup.ts")
+	got, err := buildCommand("stryker run --mutate {{target}}", "business-logic/dedup.ts")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +36,7 @@ func TestTargetSubstitui(t *testing.T) {
 // TestComandoSemPlaceholderIgnoraTarget — a maioria das suítes não recebe alvo (`yarn
 // test:unit` roda tudo). Exigir --target nelas, ou anexá-lo ao fim, quebraria o comando.
 func TestComandoSemPlaceholderIgnoraTarget(t *testing.T) {
-	got, err := montaComando("yarn test:unit", "qualquer/coisa.ts")
+	got, err := buildCommand("yarn test:unit", "qualquer/coisa.ts")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +100,7 @@ func TestSuiteQuePassaSemRelatorioNaoQuebra(t *testing.T) {
 	cs := suiteCommand{nome: "test", secao: "tests"}
 	s := []config.Suite{{Layer: "unit", Run: "printf ok > " + filepath.ToSlash(marca)}}
 
-	if err := rodaSuites(cs, s, raiz, "", nil); err != nil {
+	if err := runSuites(cs, s, raiz, "", nil); err != nil {
 		t.Fatalf("suíte sem relatório não devia falhar: %v", err)
 	}
 	if _, err := os.Stat(marca); err != nil {
@@ -120,7 +120,7 @@ func TestSuiteQueFalhaInterrompe(t *testing.T) {
 		{Layer: "e2e", Run: "printf x > " + filepath.ToSlash(depois)},
 	}
 
-	err := rodaSuites(cs, s, raiz, "", nil)
+	err := runSuites(cs, s, raiz, "", nil)
 	if err == nil {
 		t.Fatal("a falha da unit tinha de interromper")
 	}

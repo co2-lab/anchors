@@ -145,7 +145,7 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 			// que muda — e sim a identidade da unidade, que não muda.
 			for _, mm := range codigoDeRegraAlvoRE().FindAllStringSubmatch(texto, -1) {
 				unidadeAlvo := mm[1]
-				if unidadeAlvo == regraUnidade(regra) {
+				if unidadeAlvo == unitRule(regra) {
 					continue // auto-referência: a própria unidade não é o outro lado
 				}
 				arquivos := unitFiles(g, unidadeAlvo)
@@ -265,7 +265,7 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 
 	var quebradas []string
 	for _, ex := range exigencias {
-		if importaUnidade(code, ex.arquivo) {
+		if importsUnit(code, ex.arquivo) {
 			continue
 		}
 		quebradas = append(quebradas, fmt.Sprintf("%s → `%s`", ex.regra, ex.arquivo))
@@ -290,12 +290,12 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 	return Pass, ""
 }
 
-// importaUnidade decide se `code` traz a unidade `alvo` por import. Compara pelo
+// importsUnit decide se `code` traz a unidade `alvo` por import. Compara pelo
 // NOME BASE sem extensão, não pelo caminho: a mesma unidade é citada na spec como
 // `packages/backend/business-logic/orgBilling.ts` e importada no código como
 // `@backend/business-logic/orgBilling` — alias e extensão variam por projeto, o
 // nome do módulo não.
-func importaUnidade(code, alvo string) bool {
+func importsUnit(code, alvo string) bool {
 	base := strings.TrimSuffix(filepath.Base(alvo), filepath.Ext(alvo))
 	if base == "" {
 		return false
@@ -315,8 +315,8 @@ func importaUnidade(code, alvo string) bool {
 	return false
 }
 
-// regraUnidade extrai o código da UNIDADE de um código de regra (`SEATX-B01` → `SEAT`).
-func regraUnidade(regra string) string {
+// unitRule extrai o código da UNIDADE de um código de regra (`SEATX-B01` → `SEAT`).
+func unitRule(regra string) string {
 	if i := strings.IndexByte(regra, '-'); i > 0 {
 		return regra[:i]
 	}

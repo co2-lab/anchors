@@ -33,7 +33,7 @@ func checkPlaceholderFilled(content string, n mapx.Node, root string, g *mapx.Gr
 	if n.Kind != mapx.KindSpec && n.Kind != mapx.KindFeature {
 		return Skip, "o esqueleto com placeholder é o que o `anchors new` emite — spec e feature"
 	}
-	achados := placeholdersAbertos(content, cfg)
+	achados := openPlaceholders(content, cfg)
 	if len(achados) == 0 {
 		return Pass, ""
 	}
@@ -58,14 +58,14 @@ var placeholderCelulaRE = regexp.MustCompile(`(?m)^\s*\|[^|\n]*\|[^|\n]*\bTODO\b
 // (`# X — TODO propósito`, `TODO: o que a unidade faz`).
 var placeholderTituloRE = regexp.MustCompile(`(?m)^(?:#{1,6}\s+.*—\s*TODO\b.*|TODO[: ].*)$`)
 
-// placeholdersAbertos acha os marcadores que o GERADOR deixou, e só eles.
+// openPlaceholders acha os marcadores que o GERADOR deixou, e só eles.
 //
 // A distinção que evita o falso positivo: uma seção `## TODOs` (lista de pendências que o
 // autor escreveu de propósito) é legítima e comum — medido, 77 specs de um projeto real a
 // têm. O gate não pode confundir "o autor listou o que falta" com "o autor não escreveu
 // nada". Por isso só conta o marcador em POSIÇÃO DE VALOR: campo de header, célula de
 // tabela, título de regra.
-func placeholdersAbertos(content string, cfg *config.Config) []string {
+func openPlaceholders(content string, cfg *config.Config) []string {
 	var out []string
 	visto := map[string]bool{}
 	add := func(s string) {

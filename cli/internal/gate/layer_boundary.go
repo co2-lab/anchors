@@ -91,7 +91,7 @@ func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph,
 			if waiverSnippet(linhas, ini, fim) || lineBeforeWaiver(linhas, ini) {
 				continue
 			}
-			achado := fmt.Sprintf("linha %d: %s", ini+1, descreveFronteira(b))
+			achado := fmt.Sprintf("linha %d: %s", ini+1, describeBoundary(b))
 			if b.Severity == "warn" {
 				avisos = append(avisos, achado)
 			} else {
@@ -117,7 +117,7 @@ func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph,
 		"`@allow-boundary: <razão>`: a exceção fica visível no código, não numa lista distante"
 }
 
-func descreveFronteira(b config.Boundary) string {
+func describeBoundary(b config.Boundary) string {
 	quem := "esta camada"
 	if b.Layer != "" {
 		quem = "a camada `" + b.Layer + "`"

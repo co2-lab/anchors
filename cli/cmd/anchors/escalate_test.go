@@ -10,7 +10,7 @@ import (
 // A ISSUE tem de responder três coisas, e a terceira é a que costuma faltar: como
 // destravar. Sem ela o card fica parado esperando alguém adivinhar o protocolo.
 func TestEscalada_dizPorQueParouEComoDestravar(t *testing.T) {
-	corpo := corpoDaEscalada("A spec pede cache; o plano diz que não haveria cache.",
+	corpo := escalationBody("A spec pede cache; o plano diz que não haveria cache.",
 		"plans/0001-fundacao.md", "12", true)
 
 	for _, exigido := range []string{
@@ -29,7 +29,7 @@ func TestEscalada_dizPorQueParouEComoDestravar(t *testing.T) {
 // Sem `--card` o comando ainda serve: nem toda incoerência é achada com um card na mão
 // (o revisor lendo um PR, por exemplo). O corpo não pode citar um card que não existe.
 func TestEscalada_semCardNaoInventaReferencia(t *testing.T) {
-	corpo := corpoDaEscalada("O plano contradiz a si mesmo entre F02 e F04.", "", "", true)
+	corpo := escalationBody("O plano contradiz a si mesmo entre F02 e F04.", "", "", true)
 	if strings.Contains(corpo, "#") && strings.Contains(corpo, "Trabalho parado") {
 		t.Errorf("sem --card não pode citar card; veio:\n%s", corpo)
 	}
@@ -58,7 +58,7 @@ func TestEscalada_tituloCabeEmUmaLinha(t *testing.T) {
 // A SAÍDA PADRÃO é card comum, e ela tem de ser visivelmente diferente da decisão: se as
 // duas issues lessem igual, quem abre a lista não saberia qual espera por ele.
 func TestEscalada_cardComumNaoPedeDecisao(t *testing.T) {
-	corpo := corpoDaEscalada("O plano não cobre configuração e execução de migrations.",
+	corpo := escalationBody("O plano não cobre configuração e execução de migrations.",
 		"plans/0001-fundacao.md", "12", false)
 
 	if strings.Contains(corpo, initx.LabelPrecisaDoUsuario) {
@@ -84,7 +84,7 @@ func TestEscalada_cardComumNaoPedeDecisao(t *testing.T) {
 // para o caso dele.
 func TestEscalada_naoPressupoeIncoerencia(t *testing.T) {
 	for _, paraUsuario := range []bool{true, false} {
-		corpo := corpoDaEscalada("O plano não previu migrations.", "plans/0001.md", "", paraUsuario)
+		corpo := escalationBody("O plano não previu migrations.", "plans/0001.md", "", paraUsuario)
 		if strings.Contains(corpo, "correção mudaria") {
 			t.Errorf("o corpo não pode pressupor que houve erro a corrigir (para-usuario=%v):\n%s",
 				paraUsuario, corpo)
@@ -105,7 +105,7 @@ func TestVinculoComOTrabalhoDeOrigemEhLabel(t *testing.T) {
 		t.Fatalf("a label liga o achado ao card; veio %q", got)
 	}
 	// E o corpo NOMEIA a relação, para quem lê a issue saber que ela não é solta.
-	corpo := corpoDaEscalada("o jest mede só src/", "jest.config.js", "44", false)
+	corpo := escalationBody("o jest mede só src/", "jest.config.js", "44", false)
 	if !strings.Contains(corpo, "anchors:under-44") {
 		t.Errorf("o corpo deve citar a label, senão quem lê não sabe como achar as irmãs;\n%s", corpo)
 	}

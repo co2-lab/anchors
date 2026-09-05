@@ -50,7 +50,7 @@ func TestDescartaJulgamentosObsoletos(t *testing.T) {
 		{Gate: "no-test-proof-real", Target: "a.spec.md"},
 	}}
 	gatesDeJulgamentoConhecidos = []string{"no-test-proof-real"}
-	descartaJulgamentosObsoletos(root, cfg, p)
+	dropStaleJudgments(root, cfg, p)
 
 	restou := map[string]bool{}
 	tasks, err := queue.List(root)

@@ -62,7 +62,7 @@ APRESENTA e REGISTRA, mas NÃO bloqueia — é diagnóstico, roda sob demanda.`,
 			rep := health.Diagnose(g, cfg, absRoot)
 			printReport(rep)
 			if corrigir {
-				return repararAmbiente(absRoot, cfg)
+				return repairEnvironment(absRoot, cfg)
 			}
 			return nil // doctor NUNCA bloqueia — só reporta
 		},
@@ -124,7 +124,7 @@ func printReport(r health.Report) {
 	fmt.Println("(diagnóstico — nada foi bloqueado; decida o que conciliar)")
 }
 
-// repararAmbiente cria o que falta no ambiente do modo `github`. É o `--fix` do doctor,
+// repairEnvironment cria o que falta no ambiente do modo `github`. É o `--fix` do doctor,
 // no precedente do `check --fix`: sem a flag, o doctor segue sendo diagnóstico puro
 // ("nada foi bloqueado; decida o que conciliar"), e com ela ele age.
 //
@@ -135,7 +135,7 @@ func printReport(r health.Report) {
 // COMPARTILHADA pelo time e vive fora do repositório — um board criado por engano polui a
 // organização inteira e não se desfaz com `git checkout`. O doctor diz o que falta; criar
 // é decisão de quem opera.
-func repararAmbiente(root string, cfg *config.Config) error {
+func repairEnvironment(root string, cfg *config.Config) error {
 	if !cfg.ModoGitHub() {
 		fmt.Println("\n--fix: nada a fazer — o ambiente do GitHub só é exigido no `workflow.mode: github`.")
 		return nil
@@ -172,7 +172,7 @@ func repararAmbiente(root string, cfg *config.Config) error {
 	// A PROTEÇÃO DO BRANCH é o que enforça "todo trabalho sobe via PR". Sem ela nada
 	// falha: o push direto funciona, e pula o card, a revisão e o pipeline de
 	// identificação — que dispara na ABERTURA do PR.
-	if err := protegeBranches(cfg); err != nil {
+	if err := protectBranches(cfg); err != nil {
 		fmt.Printf("⚠  não deu para proteger os branches: %v\n", err)
 	}
 
@@ -199,7 +199,7 @@ func repararAmbiente(root string, cfg *config.Config) error {
 
 	// As LABELS de estado são o único pré-requisito real do fluxo — e criá-las é seguro:
 	// label é do repositório, reversível, e não afeta ninguém fora dele.
-	if err := criaLabelsDeEstado(cfg); err != nil {
+	if err := createStateLabels(cfg); err != nil {
 		fmt.Printf("⚠  não deu para criar as labels de estado: %v\n", err)
 	}
 
@@ -214,10 +214,10 @@ func repararAmbiente(root string, cfg *config.Config) error {
 	return nil
 }
 
-// criaLabelsDeEstado garante as labels que carregam o estado do trabalho. São o único
+// createStateLabels garante as labels que carregam o estado do trabalho. São o único
 // pré-requisito do fluxo que não é arquivo — e sem elas o `identify` cria cards que o
 // `claim` nunca encontra.
-func criaLabelsDeEstado(cfg *config.Config) error {
+func createStateLabels(cfg *config.Config) error {
 	if _, err := exec.LookPath("gh"); err != nil {
 		return fmt.Errorf("o `gh` não está no PATH")
 	}
@@ -277,12 +277,12 @@ func protectionBody(aprovacoes int) string {
 		`"restrictions":null}`, aprovacoes)
 }
 
-// protegeBranches exige PR nos branches que o projeto declarou como portas.
+// protectBranches exige PR nos branches que o projeto declarou como portas.
 //
 // Não exige APROVAÇÃO de outra conta: num time de uma pessoa com agentes, isso travaria
 // o fluxo inteiro. O PR existe aqui para o card ter objeto, para a revisão acontecer e
 // para o histórico ficar legível — não para satisfazer uma contagem.
-func protegeBranches(cfg *config.Config) error {
+func protectBranches(cfg *config.Config) error {
 	if _, err := exec.LookPath("gh"); err != nil {
 		return fmt.Errorf("o `gh` não está no PATH")
 	}

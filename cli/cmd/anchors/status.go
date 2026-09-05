@@ -162,7 +162,7 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 	// Um projeto sem trabalho não tem card a pedir: o passo é criar o primeiro plano,
 	// e mandar pedir trabalho aqui daria uma instrução que não devolve nada.
 	if semTrabalhoReal(g) {
-		imprimePrimeiroPlano()
+		printFirstPlan()
 		return
 	}
 
@@ -216,20 +216,20 @@ func statusLocal(root string, g *mapx.Graph) {
 	case semTrabalhoReal(g):
 		// "Nada pendente" com o projeto vazio seria uma resposta enganosa: não há nada
 		// pendente porque não há nada.
-		imprimePrimeiroPlano()
+		printFirstPlan()
 	default:
 		fmt.Println("  → nada pendente. `anchors doctor` mostra as pontas sistêmicas.")
 	}
 }
 
-// imprimePrimeiroPlano orienta o primeiro plano de um projeto sem código.
+// printFirstPlan orienta o primeiro plano de um projeto sem código.
 //
 // Diz os OBJETIVOS, não um template: o que a fundação precisa responder é universal
 // (onde o código mora, o que formata, como se roda o teste, o que o CI executa), mas o
 // COMO muda por stack — e o PROJECT.md já decidiu isso. Um template cravaria ESLint num
 // projeto Python. É a mesma régua da fase DESCOBRIR, que fixa etapas e objetivos e não
 // as perguntas.
-func imprimePrimeiroPlano() {
+func printFirstPlan() {
 	fmt.Println("  → PRÓXIMO PASSO: o projeto está montado e ainda sem trabalho.")
 	fmt.Println()
 	fmt.Println("  O primeiro plano é o de FUNDAÇÃO, e vem antes de qualquer feature: sem")

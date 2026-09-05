@@ -49,7 +49,7 @@ func checkScenarioIdentity(content string, n mapx.Node, _ string, _ *mapx.Graph,
 			continue
 		}
 		repetidos = append(repetidos, fmt.Sprintf("%s (%d cenários: %s)",
-			cod, len(titulos), strings.Join(resumirTitulos(titulos), " / ")))
+			cod, len(titulos), strings.Join(summarizeTitles(titulos), " / ")))
 	}
 	if len(repetidos) == 0 {
 		return Pass, ""
@@ -63,9 +63,9 @@ func checkScenarioIdentity(content string, n mapx.Node, _ string, _ *mapx.Graph,
 		firstCode(repetidos), firstCode(repetidos))
 }
 
-// resumirTitulos encurta os títulos para a mensagem caber — o endereço é o código,
+// summarizeTitles encurta os títulos para a mensagem caber — o endereço é o código,
 // o título só ajuda a reconhecer qual cenário é qual.
-func resumirTitulos(ts []string) []string {
+func summarizeTitles(ts []string) []string {
 	out := make([]string, 0, len(ts))
 	for _, t := range ts {
 		if len([]rune(t)) > 40 {

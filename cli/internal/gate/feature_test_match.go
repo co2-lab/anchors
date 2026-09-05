@@ -115,7 +115,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		//   divergente → assuntos diferentes: decida qual dos dois está velho.
 		titulo, temTitulo := testTitleFor(body, sc.Code)
 		switch {
-		case temTitulo && !tituloCompartilhado(body, sc.Code):
+		case temTitulo && !sharedTitle(body, sc.Code):
 			if v, score := similarity.Classify(sc.Title, titulo, pesos); v != similarity.Identico {
 				driftDesc = append(driftDesc, fmt.Sprintf("%s (%s, %.0f%%)", sc.Code, v, score*100))
 			}
@@ -418,11 +418,11 @@ var testTitleReCache = map[string]*regexp.Regexp{}
 // `it("CODE — título")` — e devolve ok=false quando o código aparece só em
 // comentário ou num teste que prova vários cenários de uma vez: nesses casos não
 // há UM título para comparar, e forçar a comparação inventaria divergência.
-// tituloCompartilhado diz se o `it` que cita `code` cita OUTRO código também.
+// sharedTitle diz se o `it` que cita `code` cita OUTRO código também.
 //
 // Um título com vários códigos descreve o conjunto, não cada um: comparar o
 // título com cada cenário por igualdade condenaria N-1 deles sempre.
-func tituloCompartilhado(body, code string) bool {
+func sharedTitle(body, code string) bool {
 	re, ok := tituloIrmaosReCache[code]
 	if !ok {
 		cod := regexp.QuoteMeta(code)

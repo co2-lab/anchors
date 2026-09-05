@@ -47,9 +47,9 @@ func regexDeHandle(attr string) (literal, template *regexp.Regexp) {
 		regexp.MustCompile(a + "\\s*[=:]\\s*\\{?`(:?[a-zA-Z][a-zA-Z0-9._-]*)\\$?\\{?")
 }
 
-// testIDsExpostos devolve os handles que a unidade oferece ao mundo. O template
+// exposedTestIDs devolve os handles que a unidade oferece ao mundo. O template
 // entra na forma `prefixo-*`, que é como a spec o declara.
-func testIDsExpostos(src string, attr string) []string {
+func exposedTestIDs(src string, attr string) []string {
 	testIDExpostoRE, testIDTemplateRE := regexDeHandle(attr)
 	visto := map[string]bool{}
 	var out []string
@@ -123,8 +123,8 @@ var testIDDeclaradoRE = regexp.MustCompile("`(:?[a-zA-Z][a-zA-Z0-9._-]*(?:-\\*)?
 // declarar nada — reprovando justamente as que documentam melhor.
 var secaoSuperficieRE = regexp.MustCompile(`(?im)^#{1,6}\s*(?:superf[íi]cie de teste|test\s*ids?)\b.*$`)
 
-// testIDsDeclarados lê o inventário DENTRO da seção de Superfície de Teste.
-func testIDsDeclarados(spec, attr string) []string {
+// declaredTestIDs lê o inventário DENTRO da seção de Superfície de Teste.
+func declaredTestIDs(spec, attr string) []string {
 	loc := secaoSuperficieRE.FindStringIndex(spec)
 	if loc == nil {
 		return nil

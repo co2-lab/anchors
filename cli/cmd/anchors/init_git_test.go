@@ -50,14 +50,14 @@ func TestIniciaGitDeixaRepoComHEAD(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := iniciaGit(dir, initx.GitNaoIniciado); err != nil {
+	if err := initGit(dir, initx.GitNaoIniciado); err != nil {
 		t.Fatalf("iniciaGit: %v", err)
 	}
 
 	if e := initx.DetectaGit(dir, true); e != initx.GitPronto {
 		t.Fatalf("depois de iniciar, o estado tem de ser GitPronto, foi %v", e)
 	}
-	out, err := rodaGit(dir, "log", "-1", "--format=%s")
+	out, err := runGit(dir, "log", "-1", "--format=%s")
 	if err != nil {
 		t.Fatalf("git log falhou — não há HEAD: %v (%s)", err, out)
 	}
@@ -85,7 +85,7 @@ func TestIniciaGitNaoSobrescreveGitignoreExistente(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := iniciaGit(dir, initx.GitNaoIniciado); err != nil {
+	if err := initGit(dir, initx.GitNaoIniciado); err != nil {
 		t.Fatalf("iniciaGit: %v", err)
 	}
 
@@ -103,11 +103,11 @@ func TestIniciaGitSoCommitaQuandoRepoJaExiste(t *testing.T) {
 	}
 	identidadeGitNoTeste(t)
 	dir := t.TempDir()
-	if out, err := rodaGit(dir, "init"); err != nil {
+	if out, err := runGit(dir, "init"); err != nil {
 		t.Fatalf("preparo: %s", out)
 	}
 
-	if err := iniciaGit(dir, initx.GitSemCommit); err != nil {
+	if err := initGit(dir, initx.GitSemCommit); err != nil {
 		t.Fatalf("iniciaGit: %v", err)
 	}
 	if e := initx.DetectaGit(dir, true); e != initx.GitPronto {

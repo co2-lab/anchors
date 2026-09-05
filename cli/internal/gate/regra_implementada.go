@@ -55,7 +55,7 @@ func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Grap
 	if unidade == "" {
 		return Skip, "a spec não declara `code:` no header — sem identidade não há o que confrontar"
 	}
-	regras := regrasDeclaradas(content, unidade)
+	regras := declaredRules(content, unidade)
 	if len(regras) == 0 {
 		return Skip, "a spec não cataloga nenhuma regra com código"
 	}
@@ -110,7 +110,7 @@ func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Grap
 	// indistinguível de "ninguém olhou". Medido: uma spec descrevia uma unidade que o
 	// código não implementava, o gate viu a regra ausente, caiu aqui e devolveu
 	// pendência. O defeito atravessou os 44 gates.
-	if len(faltando) == len(regras) && !temAlgumaDeclaracao(content, texto, regras) &&
+	if len(faltando) == len(regras) && !hasAnyDeclaration(content, texto, regras) &&
 		requiresMarking(cfg) {
 		sort.Strings(faltando)
 		return Fail, fmt.Sprintf(
@@ -122,7 +122,7 @@ func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Grap
 			len(regras), unidade)
 	}
 
-	if len(faltando) == len(regras) && !temAlgumaDeclaracao(content, texto, regras) {
+	if len(faltando) == len(regras) && !hasAnyDeclaration(content, texto, regras) {
 		return Pending, fmt.Sprintf("%d regra(s) catalogada(s) e nenhuma declarada — esta "+
 			"unidade é anterior à prática de ligar regra↔código. Ao tocá-la, marque no código "+
 			"a regra que cada trecho realiza (`// %s-B01: …`) ou dispense na linha dela "+
@@ -146,7 +146,7 @@ func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Grap
 		"(`anchors judge %s --gate review --verdict fail --reason \"…\"`) em vez de "+
 		"apagar a regra ou inventar um comentário para calar o gate",
 		len(faltando), alvo, strings.Join(mostra, ", "),
-		sufixoResto(len(faltando)-len(mostra)), unidade, n.ID)
+		suffixRest(len(faltando)-len(mostra)), unidade, n.ID)
 }
 
 // noCodeRE: a dispensa DECLARADA de que uma regra apareça no código. Vai na linha da
@@ -227,10 +227,10 @@ func specCode(content string) string {
 	return ""
 }
 
-// regrasDeclaradas devolve as regras que a spec CATALOGA — as que abrem linha, em tabela,
+// declaredRules devolve as regras que a spec CATALOGA — as que abrem linha, em tabela,
 // lista ou título. Uma citação no meio de um parágrafo é referência, não declaração, e
 // contá-la faria o gate cobrar do código regras que pertencem a outra unidade.
-func regrasDeclaradas(content, unidade string) []string {
+func declaredRules(content, unidade string) []string {
 	re := regexp.MustCompile(`(?m)^\s*(?:\|\s*|-\s*|#{2,4}\s+)` + "`?" + `(` + unidade + `-[A-Z]\d{2})` + "`?")
 	visto := map[string]bool{}
 	var out []string
@@ -257,17 +257,17 @@ func specTargetOnDisk(root, specID string) (string, bool) {
 	return "", false
 }
 
-func sufixoResto(n int) string {
+func suffixRest(n int) string {
 	if n <= 0 {
 		return ""
 	}
 	return fmt.Sprintf(" e mais %d", n)
 }
 
-// temAlgumaDeclaracao diz se a unidade JÁ ENTROU na prática — se alguma regra foi marcada
+// hasAnyDeclaration diz se a unidade JÁ ENTROU na prática — se alguma regra foi marcada
 // no código ou dispensada na spec. É o que separa a dívida de migração (ninguém declarou
 // nada, porque a prática não existia) do defeito (declarou umas, esqueceu outras).
-func temAlgumaDeclaracao(spec, codigo string, regras []string) bool {
+func hasAnyDeclaration(spec, codigo string, regras []string) bool {
 	for _, r := range regras {
 		if strings.Contains(codigo, r) || waived(spec, r) {
 			return true

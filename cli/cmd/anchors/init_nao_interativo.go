@@ -28,10 +28,10 @@ type flagsInit struct {
 	labels     []string
 }
 
-// respostasDeFlags converte as flags em Respostas, consultando quais foram REALMENTE
+// flagAnswers converte as flags em Respostas, consultando quais foram REALMENTE
 // passadas. `cmd.Flags().Changed` é o que permite não confundir o zero-value de um bool
 // com uma escolha deliberada de `false`.
-func respostasDeFlags(cmd *cobra.Command, f *flagsInit) (initx.Respostas, error) {
+func flagAnswers(cmd *cobra.Command, f *flagsInit) (initx.Respostas, error) {
 	var r initx.Respostas
 	if cmd.Flags().Changed("preset") {
 		r.Preset = &f.preset
@@ -73,7 +73,7 @@ func respostasDeFlags(cmd *cobra.Command, f *flagsInit) (initx.Respostas, error)
 	return r, nil
 }
 
-// runInitNaoInterativo é o `init` para quem não tem terminal: um agente operando o CLI.
+// runInitNonInteractive é o `init` para quem não tem terminal: um agente operando o CLI.
 //
 // Sem ele, o fluxo em que o usuário pede a uma IA para iniciar o projeto (BOOTSTRAP.md
 // §5) trava no comando central — a guarda de TTY aborta, e o agente fica sem como
@@ -84,14 +84,14 @@ func respostasDeFlags(cmd *cobra.Command, f *flagsInit) (initx.Respostas, error)
 //  1. `--questions` devolve as perguntas em JSON, com opções, default inferido do disco,
 //     e o que cada resposta MUDA no projeto;
 //  2. as respostas voltam em flags, e a saída traz o veredito de CADA uma.
-func runInitNaoInterativo(cmd *cobra.Command, root string, f *flagsInit, aceitarDefaults bool) error {
+func runInitNonInteractive(cmd *cobra.Command, root string, f *flagsInit, aceitarDefaults bool) error {
 	p, err := initx.Infer(root)
 	if err != nil {
 		return fmt.Errorf("inferência: %w", err)
 	}
 	qs := initx.Perguntas(p, initx.PresetNames())
 
-	r, err := respostasDeFlags(cmd, f)
+	r, err := flagAnswers(cmd, f)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func runInitNaoInterativo(cmd *cobra.Command, root string, f *flagsInit, aceitar
 	//
 	// Aceitar os defaults continua possível, mas tem de ser DITO (`--defaults`):
 	// assim "não respondi" e "aceito tudo" nunca são a mesma coisa.
-	if !respondeuAlgo(r) && !aceitarDefaults {
+	if !answeredSomething(r) && !aceitarDefaults {
 		return emitJSON(map[string]any{
 			"projeto":           root,
 			"precisa_descobrir": initx.PrecisaDescobrir(root, p),
@@ -135,13 +135,13 @@ func runInitNaoInterativo(cmd *cobra.Command, root string, f *flagsInit, aceitar
 		"escrito":       true,
 		"arquivo":       filepath.Join(root, config.DefaultFile),
 		"respostas":     status,
-		"proximo_passo": proximoPassoApos(root, p),
+		"proximo_passo": nextStepAfter(root, p),
 	})
 }
 
-// respondeuAlgo diz se veio ao menos uma resposta. É o que separa "quero as perguntas"
+// answeredSomething diz se veio ao menos uma resposta. É o que separa "quero as perguntas"
 // de "aqui estão as respostas" — sem precisar de uma flag para cada intenção.
-func respondeuAlgo(r initx.Respostas) bool {
+func answeredSomething(r initx.Respostas) bool {
 	return r.Preset != nil || r.Header != nil || r.Artifacts != nil || r.Gates != nil ||
 		r.Colocation != nil || r.Layers != nil || len(r.Governs) > 0 ||
 		r.Workflow != nil || r.Repo != nil || r.Labels != nil
@@ -228,9 +228,9 @@ func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta)
 	return nil
 }
 
-// proximoPassoApos diz ao agente o que fazer em seguida. Um comando que termina sem
+// nextStepAfter diz ao agente o que fazer em seguida. Um comando que termina sem
 // dizer isso obriga quem o chamou a adivinhar a ordem do ciclo.
-func proximoPassoApos(root string, p *initx.Proposal) string {
+func nextStepAfter(root string, p *initx.Proposal) string {
 	if initx.PrecisaDescobrir(root, p) {
 		return "a fase DESCOBRIR não aconteceu: rode `anchors guide project` e conduza a " +
 			"entrevista com o usuário antes de escrever qualquer código"

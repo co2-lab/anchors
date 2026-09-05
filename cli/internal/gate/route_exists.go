@@ -33,7 +33,7 @@ func checkRouteExists(content string, n mapx.Node, root string, g *mapx.Graph, c
 	if n.Kind != mapx.KindSpec {
 		return Skip, "a rota é DECLARADA pela spec — é ela que promete o caminho"
 	}
-	rota := rotaDeclarada(content)
+	rota := declaredRoute(content)
 	if rota == "" {
 		// Sem rota declarada não há o que confrontar. Cobrar a declaração é trabalho do
 		// `route-declared`; duplicá-lo aqui produziria dois gates acusando o mesmo.
@@ -47,7 +47,7 @@ func checkRouteExists(content string, n mapx.Node, root string, g *mapx.Graph, c
 		return Pending, "o projeto não declara `route_registry:` no anchors.yaml — sem " +
 			"saber onde as rotas são registradas, não há como confrontar `" + rota + "`"
 	}
-	conhecidas, err := rotasRegistradas(root, globs)
+	conhecidas, err := registeredRoutes(root, globs)
 	if err != nil {
 		return Pending, "não foi possível ler o registro de rotas: " + err.Error()
 	}
@@ -78,7 +78,7 @@ func checkRouteExists(content string, n mapx.Node, root string, g *mapx.Graph, c
 // aparecem no mesmo projeto.
 var rotaDeclaradaRE = regexp.MustCompile("(?mi)^>?\\s*\\*{0,2}(?:rota|route)\\*{0,2}\\s*:\\s*`?(?:(?:GET|POST|PUT|PATCH|DELETE)\\s+)?(/[a-z0-9][a-z0-9/_-]*|[A-Za-z][A-Za-z0-9_]*)`?")
 
-func rotaDeclarada(content string) string {
+func declaredRoute(content string) string {
 	if m := rotaDeclaradaRE.FindStringSubmatch(content); m != nil {
 		return m[1]
 	}
@@ -95,8 +95,8 @@ func rotaDeclarada(content string) string {
 // e 59 rotas HTTP viviam apenas na terceira forma.
 var nomeDeRotaRE = regexp.MustCompile(`name="([A-Za-z][A-Za-z0-9_]*)"|(?m)^\s{2,}([A-Za-z][A-Za-z0-9_]*)\s*:\s*(?:undefined|\{)|addResource\('([a-z0-9][a-z0-9/_-]*)'`)
 
-// rotasRegistradas lê os arquivos de registro de rota do projeto e devolve os nomes.
-func rotasRegistradas(root string, globs []string) (map[string]bool, error) {
+// registeredRoutes lê os arquivos de registro de rota do projeto e devolve os nomes.
+func registeredRoutes(root string, globs []string) (map[string]bool, error) {
 	out := map[string]bool{}
 	fsys := os.DirFS(root)
 	for _, glob := range globs {

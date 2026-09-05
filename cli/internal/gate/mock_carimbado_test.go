@@ -54,7 +54,7 @@ func carimboDe(t *testing.T, corpo, ancora string, qtd int) string {
 			if fim > len(linhas) {
 				fim = len(linhas)
 			}
-			return hashDoTrecho(strings.Join(linhas[i:fim], "\n"))
+			return snippetHash(strings.Join(linhas[i:fim], "\n"))
 		}
 	}
 	t.Fatalf("âncora não achada no fixture: %q", ancora)

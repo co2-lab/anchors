@@ -101,7 +101,7 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 	// referência ali seria pedir o endereço de algo que a spec acabou de dizer que não
 	// existe.
 	if noTestRE.MatchString(content) && !noFeatureRE.MatchString(content) {
-		alvo, temRef := provaApontadaPeloNoTest(content)
+		alvo, temRef := proofPointedByNoTest(content)
 		if !temRef {
 			return Fail, "a spec declara `@no-test` mas não aponta QUAL cenário prova esta " +
 				"unidade. A dispensa afirma que o comportamento é provado em outro lugar " +
@@ -111,7 +111,7 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 				"Cite o CÓDIGO do cenário entre crases no bloco do `@no-test`, ex.: " +
 				"`@no-test: repassa ao handler, provado por `SGHBX-B01``"
 		}
-		if _, achou := testeQueProva(alvo, root, g); !achou {
+		if _, achou := provingTest(alvo, root, g); !achou {
 			return Fail, fmt.Sprintf(
 				"o `@no-test` aponta a prova em `%s`, mas nenhum teste do projeto menciona "+
 					"esse código. Uma referência que não resolve é pior que nenhuma: ela passa "+
@@ -259,7 +259,7 @@ var (
 // `rule_types` do projeto. Um regex próprio com as letras canônicas fixas rejeitaria o
 // código de uma letra que o projeto declarou (ex.: `-I01`, de Invariant) — o Anchors
 // passaria a exigir uma referência que ele mesmo se recusa a reconhecer.
-func referenciaNoBloco(bloco string) (string, bool) {
+func referenceInBlock(bloco string) (string, bool) {
 	for _, m := range crasesRE.FindAllStringSubmatch(bloco, -1) {
 		if code := scan.ScenarioCodeRE().FindString(m[1]); code != "" {
 			return code, true
@@ -277,7 +277,7 @@ var crasesRE = regexp.MustCompile("`([^`]+)`")
 // exigência e o gate voltaria a aceitar prosa.
 var blocoNoTestRE = regexp.MustCompile(`(?ms)^@no-test:.*?(?:\n\n|\n@|\z)`)
 
-// provaApontadaPeloNoTest extrai o caminho que a dispensa alega conter a prova.
+// proofPointedByNoTest extrai o caminho que a dispensa alega conter a prova.
 //
 // `@no-test` afirma algo mais forte que as outras dispensas: NÃO que o comportamento
 // seja inobservável (isso é `@no-feature`), mas que a prova dele existe EM OUTRO LUGAR —
@@ -290,15 +290,15 @@ var blocoNoTestRE = regexp.MustCompile(`(?ms)^@no-test:.*?(?:\n\n|\n@|\z)`)
 // que aquele teste prova ESTE comportamento — isso é julgamento, terreno do
 // `feature-test-match`. É a diferença entre "a referência não é fantasia" e "a prova
 // está correta"; só a primeira é determinística, e é só ela que este gate promete.
-func provaApontadaPeloNoTest(content string) (codigo string, temReferencia bool) {
+func proofPointedByNoTest(content string) (codigo string, temReferencia bool) {
 	bloco := blocoNoTestRE.FindString(content)
 	if bloco == "" {
 		return "", false
 	}
-	return referenciaNoBloco(bloco)
+	return referenceInBlock(bloco)
 }
 
-// testeQueProva procura, entre os TESTES do mapa, algum que mencione o código alegado.
+// provingTest procura, entre os TESTES do mapa, algum que mencione o código alegado.
 //
 // Determinístico de ponta a ponta: o conjunto de testes vem do mapa (não de um glob que
 // eu chutaria aqui) e a busca é textual pelo código. O que ele responde é "existe um
@@ -315,7 +315,7 @@ func provaApontadaPeloNoTest(content string) (codigo string, temReferencia bool)
 // recusar — por isso ela é coberta pelo gate de JULGAMENTO `no-test-prova-real`, que
 // pergunta se o teste exercita o comportamento em vez de só mencioná-lo. Determinístico
 // prova que a referência resolve; julgamento prova que ela vale.
-func testeQueProva(codigo, root string, g *mapx.Graph) (arquivo string, achou bool) {
+func provingTest(codigo, root string, g *mapx.Graph) (arquivo string, achou bool) {
 	if g == nil {
 		return "", false
 	}
@@ -346,7 +346,7 @@ func specWaivers(content string) map[string]bool {
 		out[string(mapx.EdgeCoveredBy)] = true
 		out[string(mapx.EdgeTestedBy)] = true
 	}
-	for peca := range pecasPorDesenvolver(content) {
+	for peca := range piecesToDevelop(content) {
 		out[peca] = true
 	}
 	return out
@@ -377,11 +377,11 @@ func linkedFeatureScenarios(n mapx.Node, root string, g *mapx.Graph) (int, strin
 // início da linha.
 var cenarioRE = regexp.MustCompile(`(?m)^\s*(?:Cenário|Cenario|Scenario|Esquema do Cenário|Scenario Outline):`)
 
-// pecasPorDesenvolver lê o `@TBD:` e devolve as arestas cuja peça ainda não foi escrita.
+// piecesToDevelop lê o `@TBD:` e devolve as arestas cuja peça ainda não foi escrita.
 //
 // O vocabulário é o do TRABALHO (`code`, `feature`, `test`), e não o das arestas do mapa:
 // quem escreve a spec pensa em peças, não em `covered_by`.
-func pecasPorDesenvolver(content string) map[string]bool {
+func piecesToDevelop(content string) map[string]bool {
 	out := map[string]bool{}
 	m := tbdRE.FindStringSubmatch(content)
 	if m == nil {

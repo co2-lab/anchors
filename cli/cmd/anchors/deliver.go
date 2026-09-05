@@ -92,7 +92,7 @@ Depois disto, o watcher enfileira a task de review.`,
 			// que não se aceita é registrar entrega de unidade que não existe em peça
 			// nenhuma — aí não há trabalho, e o `deliver` ainda mandaria revisá-lo.
 			relUnit := relTo(absRoot, unit)
-			if peca, ok := pecaExistente(absRoot, relUnit); ok {
+			if peca, ok := existingPiece(absRoot, relUnit); ok {
 				if peca != relUnit {
 					fmt.Printf("   (registrando a unidade por `%s`, a peça que já existe nesta etapa)\n", peca)
 				}
@@ -139,7 +139,7 @@ Depois disto, o watcher enfileira a task de review.`,
 			// Confronta o declarado contra o disco ANTES de o registro virar material do
 			// revisor. Ver deliver_confront.go: as duas checagens nasceram de divergências
 			// reais medidas na primeira rodada em que este fluxo funcionou.
-			confrontarEntrega(absRoot, files, c.Unit)
+			confrontDelivery(absRoot, files, c.Unit)
 
 			if len(decisions) == 0 && len(uncovered) == 0 {
 				fmt.Println("  nota: você declarou ZERO decisões livres e ZERO lacunas de prova.\n" +
@@ -168,10 +168,10 @@ func watcherAtivo(root string) bool {
 	return err == nil
 }
 
-// pecaExistente devolve a peça da unidade que está no disco: o próprio alvo, se existir,
+// existingPiece devolve a peça da unidade que está no disco: o próprio alvo, se existir,
 // ou a primeira peça derivada dele que exista. É o que permite `deliver --stage spec`
 // funcionar na primeira entrega, quando só o `.spec.md` nasceu.
-func pecaExistente(root, rel string) (string, bool) {
+func existingPiece(root, rel string) (string, bool) {
 	if _, err := os.Stat(filepath.Join(root, rel)); err == nil {
 		return rel, true
 	}

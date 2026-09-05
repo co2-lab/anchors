@@ -70,7 +70,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 		if err != nil {
 			continue
 		}
-		for _, sigla := range siglasDeTestID(string(b)) {
+		for _, sigla := range testIDAcronyms(string(b)) {
 			if strings.EqualFold(sigla, code) || conhecidos[strings.ToUpper(sigla)] {
 				continue
 			}
@@ -87,7 +87,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 	base := strings.TrimSuffix(n.ID, ".spec.md")
 	pngs, _ := doublestar.Glob(os.DirFS(root), base+".*-VR*.png")
 	for _, p := range pngs {
-		if sigla := siglaDeBaseline(filepath.Base(p)); sigla != "" && !strings.EqualFold(sigla, code) {
+		if sigla := baselineAcronym(filepath.Base(p)); sigla != "" && !strings.EqualFold(sigla, code) {
 			orfas = append(orfas, fmt.Sprintf("baseline `%s` (%s)", sigla, filepath.Base(p)))
 		}
 	}
@@ -125,10 +125,10 @@ func mapCodes(g *mapx.Graph) map[string]bool {
 // confrontado do mesmo jeito.
 var siglaTestIDRE = regexp.MustCompile("testID=\\{?[`\"']:?([A-Za-z]{4,5})-")
 
-// siglasDeTestID devolve os prefixos com FORMA DE CÓDIGO (4-5 letras) usados como
+// testIDAcronyms devolve os prefixos com FORMA DE CÓDIGO (4-5 letras) usados como
 // testID. A forma é o primeiro filtro; quem decide se a sigla é órfã é o chamador,
 // confrontando-a com os códigos do mapa.
-func siglasDeTestID(src string) []string {
+func testIDAcronyms(src string) []string {
 	visto := map[string]bool{}
 	var out []string
 	for _, m := range siglaTestIDRE.FindAllStringSubmatch(src, -1) {
@@ -141,8 +141,8 @@ func siglasDeTestID(src string) []string {
 	return out
 }
 
-// siglaDeBaseline extrai o código de `<Unidade>.<CODE>-VR-<variante>.png`.
-func siglaDeBaseline(nome string) string {
+// baselineAcronym extrai o código de `<Unidade>.<CODE>-VR-<variante>.png`.
+func baselineAcronym(nome string) string {
 	partes := strings.Split(nome, ".")
 	if len(partes) < 2 {
 		return ""

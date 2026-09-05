@@ -67,10 +67,10 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 	// adoção, e opt-out por unidade com razão escrita onde a decisão for deliberada.
 	var semCarimbo []string
 	for _, modulo := range detectedDoubles(content, detector) {
-		if !ehModuloRegido(modulo, g) {
+		if !isGovernedModule(modulo, g) {
 			continue // biblioteca de terceiro não é cobrada (ver `ehModuloRegido`)
 		}
-		if !moduloTemCarimbo(modulo, carimbos) {
+		if !moduleHasStamp(modulo, carimbos) {
 			semCarimbo = append(semCarimbo, modulo)
 		}
 	}
@@ -88,7 +88,7 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 
 	var divergentes []string
 	for _, c := range carimbos {
-		atual, err := recalculaCarimbo(root, c)
+		atual, err := recomputeStamp(root, c)
 		if err != nil {
 			divergentes = append(divergentes, fmt.Sprintf("%s (%v)", c.ancora, err))
 			continue
@@ -110,13 +110,13 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 		len(divergentes), strings.Join(divergentes, "\n  - "))
 }
 
-// moduloTemCarimbo liga o dublê ao carimbo pelo CAMINHO do arquivo carimbado.
+// moduleHasStamp liga o dublê ao carimbo pelo CAMINHO do arquivo carimbado.
 //
 // O especificador do dublê (`@/src/hooks/useX`) e o caminho do carimbo
 // (`apps/mobile/src/hooks/useX.ts`) descrevem o mesmo arquivo por vias diferentes —
 // alias e caminho de disco. Casar pelo sufixo sem extensão resolve os dois sem
 // precisar de um resolvedor de alias, que seria específico do ecossistema.
-func moduloTemCarimbo(modulo string, carimbos []declaredStamp) bool {
+func moduleHasStamp(modulo string, carimbos []declaredStamp) bool {
 	alvo := withoutExtension(strings.TrimPrefix(modulo, "./"))
 	for strings.HasPrefix(alvo, "../") {
 		alvo = strings.TrimPrefix(alvo, "../")
@@ -166,12 +166,12 @@ func declaredStamps(content string) []declaredStamp {
 	return out
 }
 
-// recalculaCarimbo lê o módulo real e devolve o hash do trecho HOJE.
+// recomputeStamp lê o módulo real e devolve o hash do trecho HOJE.
 //
 // A âncora é procurada por CONTEÚDO — é o que torna o carimbo imune a deslocamento.
 // Duas ocorrências da mesma linha tornam o alvo ambíguo, e o gate prefere acusar a
 // escolher uma: um carimbo que aponta para "alguma das duas" não prova nada.
-func recalculaCarimbo(root string, c declaredStamp) (string, error) {
+func recomputeStamp(root string, c declaredStamp) (string, error) {
 	b, err := os.ReadFile(filepath.Join(root, c.arquivo))
 	if err != nil {
 		return "", fmt.Errorf("módulo não encontrado: %s", c.arquivo)
@@ -202,13 +202,13 @@ func recalculaCarimbo(root string, c declaredStamp) (string, error) {
 	if fim > len(linhas) {
 		fim = len(linhas)
 	}
-	return hashDoTrecho(strings.Join(linhas[idx:fim], "\n")), nil
+	return snippetHash(strings.Join(linhas[idx:fim], "\n")), nil
 }
 
-// hashDoTrecho — sha256 truncado em 8 hex. Truncado porque o carimbo mora numa linha de
+// snippetHash — sha256 truncado em 8 hex. Truncado porque o carimbo mora numa linha de
 // comentário e é lido por humano; 32 bits bastam para detectar mudança acidental, que é
 // o que este gate persegue (não há adversário forjando colisão contra o próprio teste).
-func hashDoTrecho(s string) string {
+func snippetHash(s string) string {
 	h := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(h[:])[:8]
 }
