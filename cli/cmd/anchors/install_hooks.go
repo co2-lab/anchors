@@ -101,6 +101,18 @@ func runInstallHooks(root string, force bool) error {
 		return fmt.Errorf("escrever %s: %w", msgHook, err)
 	}
 
+	// O PRE-PUSH é a rede de segurança do pre-commit: quem commitou antes do
+	// congelamento, ou com `--no-verify`, ainda esbarra nele antes de o trabalho sair da
+	// máquina. E ele confere SEM cache — o push é raro o bastante para pagar o fetch, e é
+	// o último momento em que a informação ainda muda o desfecho.
+	pushHook := filepath.Join(hooksDir, "pre-push")
+	if existing, rerr := os.ReadFile(pushHook); rerr == nil &&
+		!strings.Contains(string(existing), hookMarker) && !force {
+		fmt.Printf("⚠  %s existe e não foi escrito pelo anchors — não sobrescrito.\n", pushHook)
+	} else if err := os.WriteFile(pushHook, []byte(prePushScript), 0o755); err != nil {
+		return fmt.Errorf("escrever %s: %w", pushHook, err)
+	}
+
 	if err := os.WriteFile(hookPath, []byte(preCommitScript), 0o755); err != nil {
 		return fmt.Errorf("escrever %s: %w", hookPath, err)
 	}
@@ -112,6 +124,8 @@ func runInstallHooks(root string, force bool) error {
 	}
 	fmt.Println("  o hook roda `anchors check --changed` nos arquivos staged; gate bloqueante barra o commit.")
 	fmt.Println("  arquivo REGIDO fora do mapa também barra (rode `anchors map build`); não-regido é ignorado.")
+	fmt.Printf("✓ pre-push instalado em %s\n", pushHook)
+	fmt.Println("  os dois conferem se o projeto está CONGELADO no remoto antes de deixar o trabalho seguir.")
 	return nil
 }
 
@@ -167,6 +181,92 @@ if ! command -v anchors >/dev/null 2>&1; then
 fi
 
 ROOT="$(git rev-parse --show-toplevel)"
+
+# O PROJETO ESTÁ CONGELADO? — a conferência vem ANTES de qualquer trabalho.
+#
+# Aqui e não só no pre-push porque o custo de descobrir tarde é a tarde inteira: quem só
+# soubesse ao empurrar já teria escrito o código. O commit é o primeiro momento em que o
+# Anchors tem a pessoa na frente.
+#
+# O CACHE é o que torna isto viável. Um 'git fetch' custa ~1.7s, e o pre-commit roda
+# dezenas de vezes por dia — pagar isso a cada commit é o tipo de atrito que faz alguém
+# desligar o hook, e um hook desligado não protege nada. A rede é consultada no máximo uma
+# vez a cada 10 minutos; no resto, vale o que ficou guardado.
+#
+# O cache vive em .git/, que não é versionado: ele é estado da MÁQUINA, não do projeto.
+CACHE="$ROOT/.git/anchors-freeze-cache"
+JANELA=600
+
+congelado=""
+motivo=""
+agora=$(date +%s)
+carimbo=0
+[ -f "$CACHE" ] && carimbo=$(head -1 "$CACHE" 2>/dev/null || echo 0)
+
+if [ $((agora - carimbo)) -ge "$JANELA" ]; then
+  base=""
+  for b in develop main master; do
+    if git ls-remote --exit-code --heads origin "$b" >/dev/null 2>&1; then base="$b"; break; fi
+  done
+  if [ -n "$base" ] && git fetch --quiet origin "$base" 2>/dev/null; then
+    remota=$(git show "origin/$base:anchors.yaml" 2>/dev/null || true)
+    if printf '%s' "$remota" | grep -qE '^enabled:[[:space:]]*false[[:space:]]*$'; then
+      congelado="sim"
+      motivo=$(printf '%s' "$remota" | sed -n 's/^freeze_reason:[[:space:]]*//p' | head -1)
+    fi
+    printf '%s\n%s\n%s\n' "$agora" "$congelado" "$motivo" > "$CACHE"
+  fi
+  # Sem rede: segue. Um hook que barra por não conseguir consultar transformaria trabalho
+  # offline em impossível, e o freio de verdade é o ruleset no remoto.
+else
+  congelado=$(sed -n 2p "$CACHE" 2>/dev/null || true)
+  motivo=$(sed -n 3p "$CACHE" 2>/dev/null || true)
+
+  # O CACHE É ASSIMÉTRICO, e isto não é detalhe.
+  #
+  # Guardar "não congelado" por 10 minutos custa, no pior caso, alguns commits que
+  # deveriam ter sido barrados — e o pre-push os pega antes de saírem da máquina.
+  #
+  # Guardar "CONGELADO" custa o contrário: o projeto é liberado e a pessoa continua
+  # barrada por até 10 minutos, sem entender por quê e sem nada que ela possa fazer.
+  # Medido: descongelei o remoto e o dev seguiu recusado com o motivo antigo.
+  #
+  # Então o cache POSITIVO não vale: quando ele diz "congelado", a rede é consultada de
+  # novo para confirmar. O custo é pagar o fetch enquanto durar o congelamento — que é
+  # exatamente quando ninguém deveria estar commitando de qualquer forma.
+  if [ -n "$congelado" ]; then
+    base=""
+    for b in develop main master; do
+      if git ls-remote --exit-code --heads origin "$b" >/dev/null 2>&1; then base="$b"; break; fi
+    done
+    if [ -n "$base" ] && git fetch --quiet origin "$base" 2>/dev/null; then
+      remota=$(git show "origin/$base:anchors.yaml" 2>/dev/null || true)
+      if printf '%s' "$remota" | grep -qE '^enabled:[[:space:]]*false[[:space:]]*$'; then
+        motivo=$(printf '%s' "$remota" | sed -n 's/^freeze_reason:[[:space:]]*//p' | head -1)
+      else
+        congelado=""; motivo=""
+      fi
+      printf '%s\n%s\n%s\n' "$agora" "$congelado" "$motivo" > "$CACHE"
+    fi
+  fi
+fi
+
+if [ -n "$congelado" ]; then
+  echo ""
+  echo "🛑 COMMIT RECUSADO — o projeto está CONGELADO."
+  echo ""
+  [ -n "$motivo" ] && echo "   Motivo: $motivo" || \
+    echo "   (nenhum motivo declarado no anchors.yaml do origin)"
+  echo ""
+  echo "   Pare o trabalho que estiver fazendo: ele não vai poder ser entregue até o"
+  echo "   descongelamento, e o que se produz agora envelhece contra o conserto que vem."
+  echo ""
+  echo "   Se você é quem vai CONSERTAR o que causou o congelamento, use --no-verify —"
+  echo "   o freio existe para impedir trabalho por inércia, não o próprio conserto."
+  echo ""
+  exit 1
+fi
+
 STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
 [ -z "$STAGED" ] && exit 0
 
@@ -296,4 +396,83 @@ elif [ "$STATUS" -ne 0 ]; then
   echo "    [skip-<regra>@<CODIGO>: por quê]"
   exit 1
 fi
+`
+
+// --- pre-push: o freio ALCANÇA a máquina de quem já clonou ---
+//
+// O congelamento (`enabled: false` no anchors.yaml) mora no repositório, e o repositório
+// remoto é o que está atualizado. Um dev com clone de ontem não tem o campo — e sem este
+// hook, ele trabalharia a tarde inteira sem saber que o projeto está parado.
+//
+// O hook confronta o `anchors.yaml` LOCAL com o do remoto ANTES de deixar o push sair.
+// Não é um `pull` automático: puxar por conta própria mudaria a árvore de quem está no
+// meio de um trabalho, e um hook que altera o que a pessoa está fazendo é pior que o
+// problema que resolve. Ele RECUSA e diz o que fazer.
+//
+// A verificação é barata: um `git fetch` do arquivo, não do repositório inteiro.
+//
+// O QUE ELE NÃO GARANTE, e é honesto dizer: um hook local é contornável (`--no-verify`),
+// e quem clona depois do congelamento não passa por ele até instalar os hooks. Por isso
+// ele é a SEGUNDA camada — a primeira é o ruleset no remoto, que ninguém contorna de
+// dentro. Este existe para que a pessoa DESCUBRA cedo, não para ser inviolável.
+const prePushScript = `#!/usr/bin/env bash
+# managed-by: anchors install-hooks
+# Recusa o push quando o projeto está CONGELADO no remoto, ou quando o anchors.yaml
+# local está atrasado em relação a ele.
+# Reinstale/atualize com: anchors install-hooks --force
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+CFG="anchors.yaml"
+[ -f "$ROOT/$CFG" ] || exit 0
+
+remoto="${1:-origin}"
+
+# O branch de INTEGRAÇÃO é a referência, não o branch atual: o congelamento é declarado
+# lá, e um branch de trabalho não o teria mesmo estando em dia.
+base=""
+for b in develop main master; do
+  if git ls-remote --exit-code --heads "$remoto" "$b" >/dev/null 2>&1; then base="$b"; break; fi
+done
+[ -n "$base" ] || exit 0
+
+# Só o ARQUIVO, não o repositório: barato o bastante para rodar a cada push.
+if ! git fetch --quiet "$remoto" "$base" 2>/dev/null; then
+  echo "⚠  pre-push: não consegui falar com '$remoto' — seguindo sem conferir o congelamento."
+  exit 0
+fi
+
+remota=$(git show "$remoto/$base:$CFG" 2>/dev/null || true)
+[ -n "$remota" ] || exit 0
+
+# CONGELADO NO REMOTO: barra, e mostra o motivo que está escrito lá.
+if printf '%s' "$remota" | grep -qE '^enabled:[[:space:]]*false[[:space:]]*$'; then
+  motivo=$(printf '%s' "$remota" | sed -n 's/^freeze_reason:[[:space:]]*//p' | head -1)
+  echo ""
+  echo "🛑 PUSH RECUSADO — o projeto está CONGELADO."
+  echo ""
+  [ -n "$motivo" ] && echo "   Motivo: $motivo" || \
+    echo "   (nenhum motivo declarado no anchors.yaml do $remoto/$base)"
+  echo ""
+  echo "   O trabalho não se perde: ele fica no seu branch local até o descongelamento."
+  echo "   Acompanhe a issue de congelamento no repositório."
+  echo ""
+  echo "   Se você é quem vai CONSERTAR o que causou o congelamento, use --no-verify"
+  echo "   — o freio existe para impedir trabalho por inércia, não o próprio conserto."
+  echo ""
+  exit 1
+fi
+
+# NÃO congelado, mas o local está ATRASADO: avisa sem barrar.
+#
+# Barrar aqui seria exigir que todo push viesse de uma árvore sincronizada, e isso quebra
+# o trabalho paralelo legítimo. O que importa é a pessoa SABER que o anchors.yaml mudou —
+# porque é lá que o congelamento apareceria.
+local_cfg=$(cat "$ROOT/$CFG")
+if [ "$local_cfg" != "$remota" ]; then
+  echo "⚠  pre-push: seu $CFG difere do $remoto/$base."
+  echo "   Rode 'git pull --rebase $remoto $base' para ver o que mudou — é lá que um"
+  echo "   congelamento seria declarado."
+fi
+exit 0
 `
