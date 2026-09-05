@@ -103,25 +103,97 @@ jobs:
             exit 0
           fi
 
-          # O CARD vem do título do PR, que carrega o código do artefato — a mesma
-          # convenção que o pipeline de identificação usa ao criar (`[XXXXX] ...`).
+          # QUAL CARD ESTE PR AVANÇA — duas fontes, e a ordem importa.
           #
-          # Sem código no título não há como saber qual card é este PR, e ADIVINHAR seria
-          # pior que não fazer nada: mover o card errado tira da fila um trabalho que
-          # ninguém terminou.
-          titulo=$(gh pr view "$pr" --json title --jq .title)
-          codigo=$(echo "$titulo" | sed -n 's/^\[\([^]]*\)\].*/\1/p')
-          if [ -z "$codigo" ]; then
-            echo "::warning::o PR #$pr não traz o código do artefato no título (\`[XXXXX] …\`)"
-            echo "  sem ele não dá para saber qual card avançar — o card fica onde está."
-            exit 0
-          fi
+          # 1) o VÍNCULO DECLARADO no corpo (`Closes #N`), que é o que o `anchors pr-body`
+          #    escreve. É a fonte primária porque é a que o fluxo ENSINA: o `guide work`
+          #    descreve o `pr-body` em detalhe e não menciona o título em lugar nenhum.
+          #    Exigir o título era uma segunda convenção para a mesma pergunta, e quem
+          #    seguia o guia satisfazia só uma — em silêncio.
+          #
+          # 2) o CÓDIGO no título (`[XXXXX] ...`), como fallback. Continua valendo para PR
+          #    escrito à mão, sem `pr-body`.
+          #
+          # ADIVINHAR continua fora de questão: sem nenhuma das duas, o card fica onde
+          # está. Mover o card errado tira da fila um trabalho que ninguém terminou.
+          corpo=$(gh pr view "$pr" --json body --jq '.body // ""')
+          # Só as linhas que COMEÇAM com a palavra de fechamento: um `Closes #12` citado
+          # no meio de uma frase ("o #12 não é fechado por este PR") não é vínculo.
+          #
+          # E FORA DE BLOCO DE CÓDIGO, onde um exemplo não é declaração. O `awk` rastreia
+          # a cerca em vez de filtrar as linhas que a formam: um `grep -v` sobre "```"
+          # remove a cerca e DEIXA o conteúdo entre elas — medido, um `Closes #55` dentro
+          # de um exemplo era capturado. Bloco indentado (4 espaços) também sai.
+          #
+          # Este mesmo defeito já foi corrigido uma vez no pipeline de gates, lendo
+          # `Closes #N` de dentro de bloco de código. Aqui ele voltou por outro caminho.
+          card=$(printf '%s\n' "$corpo" \
+            | sed 's/\r$//' \
+            | awk '
+                /^[[:space:]]*```/ { emBloco = !emBloco; next }
+                emBloco { next }
+                /^[[:space:]]{4}/ { next }
+                { print }
+              ' \
+            | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+' \
+            | grep -oE '[0-9]+' | head -1 || true)
 
-          card=$(gh issue list --state open --label "$LABEL" --limit 200 \
-            --json number,title --jq "[.[] | select(.title | startswith(\"[$codigo]\"))] | .[0].number // empty")
-          if [ -z "$card" ]; then
-            echo "nenhum card aberto para o código [$codigo] — nada a mover"
-            exit 0
+          if [ -n "$card" ]; then
+            echo "card #$card veio do vínculo declarado no corpo do PR (o que o \`anchors pr-body\` escreve)"
+          else
+            titulo=$(gh pr view "$pr" --json title --jq .title)
+            codigo=$(echo "$titulo" | sed -n 's/^\[\([^]]*\)\].*/\1/p')
+            if [ -z "$codigo" ]; then
+              echo "::warning::o PR #$pr não declara card no corpo (\`Closes #N\`) nem traz código no título (\`[XXXXX] …\`)"
+              echo "  sem um dos dois não dá para saber qual card avançar — o card fica onde está."
+              echo "  o caminho prescrito é \`anchors pr-body\`, que escreve as linhas de fechamento."
+              # O RESULTADO PRECISA APARECER SEM ABRIR O LOG.
+              #
+              # Este passo termina com sucesso de propósito: um PR sem card é legítimo
+              # (infraestrutura, correção de pipeline), e falhar barraria trabalho que
+              # ninguém errou. Mas "verde" sozinho AFIRMA que o trabalho foi feito, e aqui
+              # ele não foi — é a família de defeito que este projeto já mediu quatro
+              # vezes, e a mais cara: o check passa anunciando, só no log, que não fez
+              # nada.
+              #
+              # O summary é o que a interface mostra ao lado do check, sem clicar.
+              {
+                echo "### ⚠ Nenhum card foi movido"
+                echo ""
+                echo "Este PR não declara qual card ele avança, e o card (se houver) **fica onde está**."
+                echo ""
+                echo "O caminho prescrito é o \`anchors pr-body\`, que escreve as linhas de fechamento:"
+                echo ""
+                echo '```'
+                echo "anchors pr-body --cards <n>"
+                echo '```'
+                echo ""
+                echo "Alternativa: o código do artefato no título, \`[XXXXX] …\`."
+                echo ""
+                echo "_Este passo não falha: PR sem card é legítimo (infraestrutura, pipeline). O aviso existe para o caso em que era para haver card._"
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            # `--state all` e não `open`: no evento de MERGE o `Closes #N` do corpo já
+            # fechou o card ANTES deste pipeline rodar, e procurar só entre os abertos não
+            # o encontrava. Medido: "nenhum card aberto para o código [MTUAO] — nada a
+            # mover", com o card fechado e a label parada em `ready-to-review`. Era uma
+            # corrida entre dois mecanismos do próprio fluxo, e o pipeline reportava
+            # sucesso enquanto não fazia nada.
+            card=$(gh issue list --state all --label "$LABEL" --limit 200 \
+              --json number,title --jq "[.[] | select(.title | startswith(\"[$codigo]\"))] | .[0].number // empty")
+            if [ -z "$card" ]; then
+              echo "nenhum card para o código [$codigo] — nada a mover"
+              {
+                echo "### ⚠ Nenhum card foi movido"
+                echo ""
+                echo "O título declara o código \`[$codigo]\`, e não há card com esse código —"
+                echo "nem aberto nem fechado."
+                echo ""
+                echo "Ou o código está errado, ou o card nunca foi criado."
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
           fi
 
           # PR MERGEADO: o trabalho entrou, e o card avança para o fim da alçada do
