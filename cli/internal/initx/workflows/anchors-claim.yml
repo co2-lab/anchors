@@ -127,6 +127,9 @@ jobs:
           # fecharam. A ordem de /tmp/disponiveis.txt é a prioridade (review antes de
           # implementação).
           livre=""
+          # Quem soltou o card antes desta atribuição. Preenchido só quando a varredura
+          # acha um card `(liberado)`; alimenta o aviso de papel acumulado.
+          liberou_antes=""
           while read -r n; do
             [ -n "$n" ] || continue
 
@@ -182,7 +185,18 @@ jobs:
             # o padrão exigiria que a linha TERMINASSE em "(liberado)" — nenhum card
             # liberado voltaria à fila, e o board travaria em silêncio.
             case "$dono" in
-              ""|*"(liberado)"*) livre="$n"; break ;;
+              ""|*"(liberado)"*)
+                livre="$n"
+                # QUEM LIBEROU o card é o penúltimo `anchors-owner:` — o último é o
+                # `(liberado)`. Guardado para o aviso lá embaixo: entregar o card de volta
+                # a quem acabou de soltá-lo é legítimo num time de um, mas precisa APARECER.
+                liberou_antes=$(gh issue view "$n" --json comments \
+                  --jq '[.comments[].body
+                         | select(startswith("anchors-owner:"))
+                         | sub("^anchors-owner:[ ]*"; "")
+                         | sub("[ ]*—.*$"; "")]
+                        | map(select(. != "(liberado)")) | last // ""')
+                break ;;
             esac
           done < /tmp/disponiveis.txt
 
@@ -202,6 +216,38 @@ jobs:
           # A atribuição. O comentário é a posse; o assignee fica para a pessoa, no uso
           # normal do GitHub.
           gh issue comment "$livre" --body "anchors-owner: $AGENT"
+
+          # PAPEL ACUMULADO: este agente está pegando de volta o card que ele mesmo
+          # acabou de soltar.
+          #
+          # A régua do `guide review` diz que quem corrige não aprova o próprio conserto —
+          # e ela é CERTA: é o que faz um defeito atravessar duas cabeças diferentes. Mas
+          # ela pressupõe que exista uma segunda cabeça. Num time de um, não existe, e
+          # travar o card não a produz: só para o trabalho.
+          #
+          # Então avisa e entrega. A alternativa — recusar — travaria o board de quem
+          # opera sozinho, que é o caso normal de um projeto começando. E a alternativa
+          # silenciosa (entregar sem dizer nada) é pior que as duas: o card ficaria
+          # idêntico ao de uma revisão independente, e é justamente essa diferença que
+          # precisa aparecer para quem ler o histórico depois.
+          #
+          # Decidido em blue-eyes#82.
+          if [ -n "$liberou_antes" ] && [ "$liberou_antes" = "$AGENT" ]; then
+            printf '%s\n' \
+              '⚠ **Mesmo agente nos dois papéis.**' '' \
+              "Este card foi solto por \`$AGENT\` e acaba de voltar para o MESMO agente." '' \
+              'O `anchors guide review` diz que quem corrige não aprova o próprio conserto —' \
+              'a revisão vale porque um segundo par de olhos vê o que o primeiro não viu.' \
+              'Aqui não há segundo par: é a mesma cabeça relendo o próprio trabalho.' '' \
+              'Isso NÃO barra o fluxo — num time de um é o que vai acontecer sempre, e' \
+              'travar o card não produziria o revisor que falta. Mas fica registrado: quem' \
+              'ler este card depois precisa saber que a segunda revisão não foi' \
+              'independente.' '' \
+              'Se houver outro agente disponível, prefira passá-lo adiante.' \
+              > /tmp/papel-acumulado.md
+            gh issue comment "$livre" --body-file /tmp/papel-acumulado.md
+            echo "⚠ #$livre volta ao MESMO agente que o liberou ($AGENT) — avisado no card"
+          fi
           # Cada `ready-to-x` tem seu `in-x`: quem sai de `to-do` vai implementar, quem
           # sai de `ready-to-review` vai revisar. Mover para o estado errado faria o
           # board descrever um trabalho que não é o que está acontecendo.
@@ -367,6 +413,11 @@ jobs:
               '> **Quem corrige não aprova o próprio conserto.** Ao corrigir, você vira autor' \
               '> daquele trecho — por isso o card volta para `ready-to-review` em vez de seguir' \
               '> para `ready-to-test`. É a mesma regra que já vale para quem implementa.' \
+              '>' \
+              '> **Time de um:** a regra pressupõe uma segunda cabeça, e às vezes ela não existe.' \
+              '> Quando o card volta para o MESMO agente, o claim AVISA e entrega — travar não' \
+              '> produziria o revisor que falta, só pararia o trabalho. O aviso fica no card para' \
+              '> quem ler depois saber que a segunda revisão não foi independente.' \
               '' \
               '### Se o card voltou para `ready-to-review` enquanto você revisava' \
               '' \
