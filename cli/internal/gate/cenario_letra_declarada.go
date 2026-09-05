@@ -60,7 +60,7 @@ func checkScenarioLetterDeclared(content string, n mapx.Node, _ string, _ *mapx.
 			continue
 		}
 		raiz := m[1] + "-" + m[2] + m[3]
-		if !contemStr(porLetra[l], raiz) {
+		if !containsStr(porLetra[l], raiz) {
 			porLetra[l] = append(porLetra[l], raiz)
 		}
 	}
@@ -87,7 +87,7 @@ func checkScenarioLetterDeclared(content string, n mapx.Node, _ string, _ *mapx.
 		len(letras), strings.Join(partes, "; "))
 }
 
-func contemStr(xs []string, s string) bool {
+func containsStr(xs []string, s string) bool {
 	for _, x := range xs {
 		if x == s {
 			return true

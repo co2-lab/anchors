@@ -55,7 +55,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 		return Skip, "spec sem código declarado — a ausência é cobrada por `spec-tem-codigo`"
 	}
 
-	conhecidos := codigosDoMapa(g)
+	conhecidos := mapCodes(g)
 	var orfas []string
 
 	// ── Superfície 1: o testID exposto pela unidade de código ────────────────
@@ -96,7 +96,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 		return Pass, ""
 	}
 	sort.Strings(orfas)
-	orfas = dedupOrdenado(orfas)
+	orfas = dedupSorted(orfas)
 	return Fail, fmt.Sprintf(
 		"identidade divergente: a spec declara `%s`, mas a mesma unidade aparece como %s. "+
 			"Nenhuma dessas siglas é código de unidade alguma do mapa — então o dicionário de "+
@@ -108,9 +108,9 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 		code, strings.Join(orfas, "; "))
 }
 
-// codigosDoMapa — todas as identidades declaradas no projeto. É o conjunto que
+// mapCodes — todas as identidades declaradas no projeto. É o conjunto que
 // distingue reuso deliberado (prefixo que É código de alguém) de identidade órfã.
-func codigosDoMapa(g *mapx.Graph) map[string]bool {
+func mapCodes(g *mapx.Graph) map[string]bool {
 	out := map[string]bool{}
 	for _, n := range g.Nodes {
 		if c := strings.ToUpper(strings.TrimSpace(n.Code)); c != "" {
@@ -154,7 +154,7 @@ func siglaDeBaseline(nome string) string {
 	return ""
 }
 
-func dedupOrdenado(in []string) []string {
+func dedupSorted(in []string) []string {
 	visto := map[string]bool{}
 	out := in[:0]
 	for _, s := range in {

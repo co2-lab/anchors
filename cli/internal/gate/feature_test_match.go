@@ -116,7 +116,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		titulo, temTitulo := testTitleFor(body, sc.Code)
 		switch {
 		case temTitulo && !tituloCompartilhado(body, sc.Code):
-			if v, score := similarity.Classifica(sc.Title, titulo, pesos); v != similarity.Identico {
+			if v, score := similarity.Classify(sc.Title, titulo, pesos); v != similarity.Identico {
 				driftDesc = append(driftDesc, fmt.Sprintf("%s (%s, %.0f%%)", sc.Code, v, score*100))
 			}
 		case !descriptionMatches(sc.Title, bodyNorm):

@@ -1267,7 +1267,7 @@ func Load(path string) (*Config, error) {
 	// Um idioma fora da lista é ERRO de carga, não aviso: o projeto declarou algo que o
 	// Anchors não sabe entregar, e seguir em inglês em silêncio faria a pessoa achar que
 	// a tradução não existe quando o que há é um código errado (`pt` em vez de `pt-BR`).
-	if err := i18n.Definir(c.Lang); err != nil {
+	if err := i18n.Set(c.Lang); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	// O VOCABULÁRIO ANTIGO ainda funciona, e é convertido na carga.

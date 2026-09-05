@@ -115,9 +115,9 @@ func iniciaGit(root string, estado initx.EstadoGit) error {
 			return fmt.Errorf("o git não sabe quem é você — rode:\n"+
 				"     git config --global user.name  \"Seu Nome\"\n"+
 				"     git config --global user.email \"voce@exemplo.com\"\n"+
-				"   (detalhe: %s)", primeiraLinha(out))
+				"   (detalhe: %s)", firstLine(out))
 		}
-		return fmt.Errorf("git commit: %s", primeiraLinha(out))
+		return fmt.Errorf("git commit: %s", firstLine(out))
 	}
 	fmt.Printf("✓ primeiro commit (%s)\n\n", initx.MensagemPrimeiroCommit)
 	return nil
@@ -132,7 +132,7 @@ func rodaGit(root string, args ...string) (string, error) {
 	return strings.TrimSpace(string(out)), err
 }
 
-func primeiraLinha(s string) string {
+func firstLine(s string) string {
 	if i := strings.IndexByte(s, '\n'); i >= 0 {
 		return s[:i]
 	}

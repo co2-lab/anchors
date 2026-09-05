@@ -102,7 +102,7 @@ func TestNoRuleValeNoComentarioAcima(t *testing.T) {
 		"doc comment":          "/**\n * @no-rule: forma de entrada\n */\nexport function x() {}\n",
 	}
 	for nome, codigo := range casos {
-		simbolos := simbolosComLinha(codigo)
+		simbolos := symbolsWithLine(codigo)
 		if len(simbolos) == 0 {
 			t.Fatalf("%s: nenhum símbolo reconhecido", nome)
 		}
@@ -118,7 +118,7 @@ func TestNoRuleValeNoComentarioAcima(t *testing.T) {
 // inteiro, que é o oposto do que ele é.
 func TestNoRuleNaoVazaEntreSimbolos(t *testing.T) {
 	codigo := "// @no-rule: este sim\nexport function comDeclaracao() {}\n\nexport function semDeclaracao() {}\n"
-	simbolos := simbolosComLinha(codigo)
+	simbolos := symbolsWithLine(codigo)
 	if len(simbolos) != 2 {
 		t.Fatalf("esperava 2 símbolos, veio %d", len(simbolos))
 	}

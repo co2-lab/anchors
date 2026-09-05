@@ -104,7 +104,7 @@ func linhaDeRegraRE() *regexp.Regexp {
 // (contrato de rede, arquivo gerado, valor que vive num provedor externo).
 var dispensaFronteiraRE = regexp.MustCompile(`@no-cross(?:-boundary)?\s*:\s*\S`)
 
-func checkProvaCruzaFronteira(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, "não é uma spec — a afirmação de relação vive na regra catalogada"
 	}

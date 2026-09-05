@@ -47,11 +47,11 @@ import (
 // fazer quando a afirmação não se sustenta na hora de implementar: **abrir issue**, porque
 // aí a spec está errada sobre a própria unidade — não é detalhe de formatação, e apagar a
 // regra ou inventar um comentário para calar o gate esconde o defeito em vez de tratá-lo.
-func checkRegraImplementada(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, "quem cataloga a regra é a spec — é dela que o confronto parte"
 	}
-	unidade := codigoDaSpec(content)
+	unidade := specCode(content)
 	if unidade == "" {
 		return Skip, "a spec não declara `code:` no header — sem identidade não há o que confrontar"
 	}
@@ -82,7 +82,7 @@ func checkRegraImplementada(content string, n mapx.Node, root string, g *mapx.Gr
 		if strings.Contains(texto, r) {
 			continue
 		}
-		if dispensada(content, r) {
+		if waived(content, r) {
 			continue
 		}
 		faltando = append(faltando, r)
@@ -111,7 +111,7 @@ func checkRegraImplementada(content string, n mapx.Node, root string, g *mapx.Gr
 	// código não implementava, o gate viu a regra ausente, caiu aqui e devolveu
 	// pendência. O defeito atravessou os 44 gates.
 	if len(faltando) == len(regras) && !temAlgumaDeclaracao(content, texto, regras) &&
-		exigeMarcacao(cfg) {
+		requiresMarking(cfg) {
 		sort.Strings(faltando)
 		return Fail, fmt.Sprintf(
 			"nenhuma das %d regra(s) da spec aparece no código, e este projeto exige a "+
@@ -181,7 +181,7 @@ func checkRegraImplementada(content string, n mapx.Node, root string, g *mapx.Gr
 var noMarkRE = regexp.MustCompile(
 	`@no-(?:mark|code)[^\S\n]*(?:\[([^\]]*)\])?[^\S\n]*:[^\S\n]*(?:\[([^\]]*)\])?[^\S\n]*([^\s|]\S*)`)
 
-// dispensada diz se a LINHA que declara a regra carrega a dispensa.
+// waived diz se a LINHA que declara a regra carrega a dispensa.
 //
 // A dispensa é da linha, não do arquivo: um `@no-mark` solto no topo da spec dispensaria
 // tudo de uma vez, que é o oposto de prestar contas.
@@ -191,7 +191,7 @@ var noMarkRE = regexp.MustCompile(
 // declaração só sem que o gate confunda quem está dispensando.
 //
 // SEM alvo, vale para a spec inteira (`[all]`) — a unidade em que nada se marca.
-func dispensada(content, regra string) bool {
+func waived(content, regra string) bool {
 	for _, linha := range strings.Split(content, "\n") {
 		m := noMarkRE.FindStringSubmatch(linha)
 		if m == nil {
@@ -220,7 +220,7 @@ func codigoRE() *regexp.Regexp {
 	return regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
 }
 
-func codigoDaSpec(content string) string {
+func specCode(content string) string {
 	if m := codigoRE().FindStringSubmatch(content); m != nil {
 		return m[1]
 	}
@@ -269,16 +269,16 @@ func sufixoResto(n int) string {
 // nada, porque a prática não existia) do defeito (declarou umas, esqueceu outras).
 func temAlgumaDeclaracao(spec, codigo string, regras []string) bool {
 	for _, r := range regras {
-		if strings.Contains(codigo, r) || dispensada(spec, r) {
+		if strings.Contains(codigo, r) || waived(spec, r) {
 			return true
 		}
 	}
 	return false
 }
 
-// exigeMarcacao diz se o projeto declarou que a marcação regra↔código é obrigatória.
+// requiresMarking diz se o projeto declarou que a marcação regra↔código é obrigatória.
 // Vazio = migração em curso (a pendência vale); "required" = a migração acabou.
-func exigeMarcacao(cfg *config.Config) bool {
+func requiresMarking(cfg *config.Config) bool {
 	return cfg != nil && cfg.Derived != nil &&
 		strings.EqualFold(strings.TrimSpace(cfg.Derived.RuleMarking), "required")
 }

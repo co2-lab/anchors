@@ -318,7 +318,7 @@ func coverageDiff(root, ref, diffFile, lcov string, threshold float64) error {
 	if err != nil {
 		// A cobertura DE DIFF pergunta "as linhas que você mudou estão cobertas?" — a
 		// pergunta inteira depende de haver histórico contra o que comparar.
-		if msg := gitmeta.Explica(gitmeta.Verifica(root), "obter o diff"); msg != "" {
+		if msg := gitmeta.Explain(gitmeta.Check(root), "obter o diff"); msg != "" {
 			return errors.New(msg + "\n  (o `--diff-file` aceita um unified diff de qualquer fonte, se você tiver um)")
 		}
 		return fmt.Errorf("obter o diff: %w", err)

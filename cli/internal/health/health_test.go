@@ -161,7 +161,7 @@ func TestCheckSkipOnValido(t *testing.T) {
 		{Name: "sem-declaracao"},
 	}}
 
-	fs := checkSkipOnValido(cfg)
+	fs := checkSkipOnValid(cfg)
 	if len(fs) != 1 {
 		t.Fatalf("só o typo deveria ser acusado, veio %d: %+v", len(fs), fs)
 	}

@@ -17,7 +17,7 @@ import (
 // sobre o arquivo, que mandava o autor investigar exatamente onde o problema não está.
 func TestUpdatedAtSemRepoNaoCulpaOArquivo(t *testing.T) {
 	dir := t.TempDir()
-	if gitmeta.Verifica(dir) == gitmeta.Disponível {
+	if gitmeta.Check(dir) == gitmeta.Disponível {
 		t.Skipf("o diretório temporário %s está dentro de um repo git", dir)
 	}
 	conteudo := "// @anchors\n// updated_at: 2026-01-01\n"

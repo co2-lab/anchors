@@ -215,7 +215,7 @@ func gitMove(root, from, to string) error {
 	if dir := filepath.Dir(filepath.Join(root, to)); dir != "" {
 		_ = os.MkdirAll(dir, 0o755)
 	}
-	if gitmeta.Verifica(root) != gitmeta.Disponível {
+	if gitmeta.Check(root) != gitmeta.Disponível {
 		// Sem git ou sem repositório: o rename é o único caminho, e é o correto.
 		return os.Rename(filepath.Join(root, from), filepath.Join(root, to))
 	}

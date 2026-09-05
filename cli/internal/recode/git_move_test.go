@@ -32,7 +32,7 @@ func prepararRepo(t *testing.T) string {
 // e exigir git ali seria transformar uma degradação legítima em bloqueio.
 func TestMoveSemRepoUsaRenameSimples(t *testing.T) {
 	dir := t.TempDir()
-	if gitmeta.Verifica(dir) == gitmeta.Disponível {
+	if gitmeta.Check(dir) == gitmeta.Disponível {
 		t.Skipf("o diretório temporário %s está dentro de um repo git", dir)
 	}
 	if err := os.WriteFile(filepath.Join(dir, "a.go"), []byte("package a\n"), 0o644); err != nil {

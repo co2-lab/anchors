@@ -22,12 +22,12 @@ import (
 // contornos que dependem de quem opera. O papel do doctor é DETECTAR a situação e dizer
 // qual dos dois cabe — em vez de deixar alguém descobrir no meio de um merge.
 
-// PodeIgnorarProtecao diz se a conta atual consegue mesclar por cima da exigência de
+// CanBypassProtection diz se a conta atual consegue mesclar por cima da exigência de
 // aprovação: precisa ser admin do repositório E a proteção não pode alcançar admins.
 //
 // São duas condições porque `enforce_admins: true` é o modo em que o dono do repositório
 // escolheu não ter escape — e nesse caso ser admin não ajuda.
-func PodeIgnorarProtecao(repo, branch string) (bool, string) {
+func CanBypassProtection(repo, branch string) (bool, string) {
 	if _, err := exec.LookPath("gh"); err != nil {
 		return false, "o `gh` não está no PATH"
 	}
@@ -53,9 +53,9 @@ func PodeIgnorarProtecao(repo, branch string) (bool, string) {
 	return true, ""
 }
 
-// checkAprovacaoAlcancavel avisa quando a exigência de aprovação não tem como ser
+// checkApprovalReachable avisa quando a exigência de aprovação não tem como ser
 // cumprida: o autor não pode aprovar o próprio PR, e não há escape configurado.
-func checkAprovacaoAlcancavel(cfg *config.Config) []Finding {
+func checkApprovalReachable(cfg *config.Config) []Finding {
 	if cfg == nil || cfg.Workflow == nil || cfg.Workflow.AprovacoesExigidas() == 0 {
 		return nil // zero exigido: não há o que ficar inalcançável
 	}
@@ -65,7 +65,7 @@ func checkAprovacaoAlcancavel(cfg *config.Config) []Finding {
 	repo := cfg.Workflow.Repo
 	branch := cfg.Workflow.BranchDeIntegracao()
 
-	if ok, _ := PodeIgnorarProtecao(repo, branch); ok {
+	if ok, _ := CanBypassProtection(repo, branch); ok {
 		// Admin com escape: o fluxo funciona, e o merge usa `gh pr merge --admin`. Não é
 		// achado — é o contorno previsto, e repeti-lo a cada `doctor` viraria ruído.
 		return nil
@@ -85,7 +85,7 @@ func checkAprovacaoAlcancavel(cfg *config.Config) []Finding {
 // O `anchors.yaml` continua sendo a fonte da verdade — quem quiser a exigência de volta
 // declara `required_approvals: 1` e roda o fix de novo. Aqui só se ajusta o GitHub para
 // não travar um fluxo que ele mesmo impede de cumprir.
-func DesligaExigenciaDeAprovacao(repo, branch string) error {
+func DisableApprovalRequirement(repo, branch string) error {
 	body := `{"required_status_checks":null,"enforce_admins":false,` +
 		`"required_pull_request_reviews":{"required_approving_review_count":0},` +
 		`"restrictions":null}`
@@ -98,9 +98,9 @@ func DesligaExigenciaDeAprovacao(repo, branch string) error {
 	return nil
 }
 
-// aprovacaoAtual lê quantas aprovações o branch exige hoje. Devolve -1 quando não dá para
+// currentApproval lê quantas aprovações o branch exige hoje. Devolve -1 quando não dá para
 // saber — que é diferente de zero, e o chamador não pode confundir os dois.
-func aprovacaoAtual(repo, branch string) int {
+func currentApproval(repo, branch string) int {
 	out, err := exec.Command("gh", "api",
 		"repos/"+repo+"/branches/"+branch+"/protection",
 		"--jq", ".required_pull_request_reviews.required_approving_review_count").Output()

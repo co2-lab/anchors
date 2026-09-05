@@ -19,30 +19,30 @@ import (
 //go:embed locales/*.json
 var files embed.FS
 
-// Suportados são os idiomas que o Anchors aceita em `lang:`.
+// SupportedLangs são os idiomas que o Anchors aceita em `lang:`.
 //
 // A lista é FECHADA de propósito. Aceitar qualquer código produziria projetos declarando
 // idiomas que não existem no catálogo, e o erro apareceria só quando alguém lesse a
 // primeira mensagem — em inglês, sem entender por quê. Fechar a lista faz o `anchors init`
 // e o `check` recusarem na hora, dizendo quais existem.
-var Suportados = []string{"pt-BR", "en", "es"}
+var SupportedLangs = []string{"pt-BR", "en", "es"}
 
-// Padrao é o idioma quando o projeto não declara `lang:`.
+// Default é o idioma quando o projeto não declara `lang:`.
 //
 // Inglês, e não português: um projeto que não declarou nada é provavelmente um projeto
 // novo de alguém que encontrou o Anchors — e o inglês é o que mais gente lê. Quem quer
 // português declara.
-const Padrao = "en"
+const Default = "en"
 
 var (
 	mu       sync.RWMutex
-	atual    = Padrao
+	atual    = Default
 	catalogo = map[string]map[string]string{}
 )
 
-// Suportado diz se o idioma está na lista fechada.
-func Suportado(lang string) bool {
-	for _, l := range Suportados {
+// IsSupported diz se o idioma está na lista fechada.
+func IsSupported(lang string) bool {
+	for _, l := range SupportedLangs {
 		if l == lang {
 			return true
 		}
@@ -50,15 +50,15 @@ func Suportado(lang string) bool {
 	return false
 }
 
-// Definir troca o idioma corrente. Um idioma fora da lista é recusado com a lista junto —
+// Set troca o idioma corrente. Um idioma fora da lista é recusado com a lista junto —
 // quem errou o código precisa saber quais existem, não só que errou.
-func Definir(lang string) error {
+func Set(lang string) error {
 	if lang == "" {
-		lang = Padrao
+		lang = Default
 	}
-	if !Suportado(lang) {
+	if !IsSupported(lang) {
 		return fmt.Errorf("idioma %q não é suportado — os disponíveis são: %s",
-			lang, strings.Join(Suportados, ", "))
+			lang, strings.Join(SupportedLangs, ", "))
 	}
 	mu.Lock()
 	defer mu.Unlock()
@@ -66,8 +66,8 @@ func Definir(lang string) error {
 	return nil
 }
 
-// Atual devolve o idioma corrente.
-func Atual() string {
+// Current devolve o idioma corrente.
+func Current() string {
 	mu.RLock()
 	defer mu.RUnlock()
 	return atual
@@ -88,11 +88,11 @@ func T(chave string, args ...any) string {
 	lang := atual
 	mu.RUnlock()
 
-	if s, ok := busca(lang, chave); ok {
+	if s, ok := lookup(lang, chave); ok {
 		return format(s, args...)
 	}
-	if lang != Padrao {
-		if s, ok := busca(Padrao, chave); ok {
+	if lang != Default {
+		if s, ok := lookup(Default, chave); ok {
 			return format(s, args...)
 		}
 	}
@@ -106,7 +106,7 @@ func format(s string, args ...any) string {
 	return fmt.Sprintf(s, args...)
 }
 
-func busca(lang, chave string) (string, bool) {
+func lookup(lang, chave string) (string, bool) {
 	mu.RLock()
 	c, carregado := catalogo[lang]
 	mu.RUnlock()
@@ -136,10 +136,10 @@ func load(lang string) map[string]string {
 	return c
 }
 
-// Chaves devolve todas as chaves de um idioma. Serve ao gate que confronta os catálogos
+// Keys devolve todas as chaves de um idioma. Serve ao gate que confronta os catálogos
 // entre si — uma chave que existe em `en` e falta em `es` é tradução pendente, e sem isso
 // ela sairia em inglês sem ninguém notar.
-func Chaves(lang string) []string {
+func Keys(lang string) []string {
 	c := load(lang)
 	out := make([]string, 0, len(c))
 	for k := range c {

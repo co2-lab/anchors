@@ -22,7 +22,7 @@ func TestDoctorReportaDecisaoPendente(t *testing.T) {
 	}
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}}}
 
-	fs := checkDecisoesPendentes(g, dir, nil)
+	fs := checkPendingDecisions(g, dir, nil)
 
 	if len(fs) != 1 {
 		t.Fatalf("esperava 1 achado (a spec com pendências), veio %d", len(fs))
@@ -39,7 +39,7 @@ func TestDoctorReportaDecisaoPendente(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, "u.spec.md"), []byte(fechada), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if fs := checkDecisoesPendentes(g, dir, nil); len(fs) != 0 {
+	if fs := checkPendingDecisions(g, dir, nil); len(fs) != 0 {
 		t.Errorf("seção fechada com `nenhuma` não é pendência: %+v", fs)
 	}
 }

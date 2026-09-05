@@ -40,7 +40,7 @@ func checkMockTyped(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 	if n.Kind != mapx.KindTest {
 		return Skip, "o dublê vive no teste — é dele que a amarra é cobrada"
 	}
-	forma := contratoDeMock(cfg)
+	forma := mockContract(cfg)
 	if forma == "" {
 		// Sem a forma declarada não há o que procurar. Inferir uma (`Partial<typeof …>`)
 		// seria assumir TypeScript e reportar VERDE sobre o que não se conferiu em
@@ -48,9 +48,9 @@ func checkMockTyped(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 		return Skip, "o projeto não declara `derived.mock_contract` — não há amarra de dublê a confrontar"
 	}
 
-	todos := dublesDeclarados(content)
+	todos := declaredDoubles(content)
 	// Só o que o PROJETO rege é cobrado. Ver `ehModuloRegido`.
-	var dubles []dubleDeclarado
+	var dubles []declaredDouble
 	for _, d := range todos {
 		if ehModuloRegido(d.modulo, g) {
 			dubles = append(dubles, d)
@@ -84,8 +84,8 @@ func checkMockTyped(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 		len(soltos), strings.Join(soltos, ", "), forma)
 }
 
-// contratoDeMock lê a forma de amarra declarada pelo projeto.
-func contratoDeMock(cfg *config.Config) string {
+// mockContract lê a forma de amarra declarada pelo projeto.
+func mockContract(cfg *config.Config) string {
 	// `Derived` é opcional na config — um projeto que não declara superfície de trinca
 	// o deixa nil, e desreferenciá-lo derrubaria o check inteiro em vez de pular.
 	if cfg == nil || cfg.Derived == nil {
@@ -94,7 +94,7 @@ func contratoDeMock(cfg *config.Config) string {
 	return strings.TrimSpace(cfg.Derived.MockContract)
 }
 
-type dubleDeclarado struct {
+type declaredDouble struct {
 	modulo   string
 	amarrado bool
 }
@@ -139,16 +139,16 @@ func ehModuloRegido(spec string, g *mapx.Graph) bool {
 		return false
 	}
 	for _, n := range g.Nodes {
-		if semExtensao(n.ID) == alvo || strings.HasSuffix(semExtensao(n.ID), "/"+alvo) {
+		if withoutExtension(n.ID) == alvo || strings.HasSuffix(withoutExtension(n.ID), "/"+alvo) {
 			return true
 		}
 	}
 	return false
 }
 
-// semExtensao tira a extensão final do caminho (`x/y.ts` → `x/y`), para o nó do mapa
+// withoutExtension tira a extensão final do caminho (`x/y.ts` → `x/y`), para o nó do mapa
 // poder ser comparado com um especificador de import, que nunca a carrega.
-func semExtensao(id string) string {
+func withoutExtension(id string) string {
 	if i := strings.LastIndex(id, "."); i > strings.LastIndex(id, "/") {
 		return id[:i]
 	}
@@ -166,20 +166,20 @@ func semExtensao(id string) string {
 var mockComFabricaRE = regexp.MustCompile(
 	`(?:jest|vi)\s*\.\s*mock\s*\(\s*['"` + "`" + `]([^'"` + "`" + `]+)['"` + "`" + `]\s*,([^=]*)=>`)
 
-// dublesDeclarados inventaria os dublês do arquivo e diz quais têm amarra.
+// declaredDoubles inventaria os dublês do arquivo e diz quais têm amarra.
 //
 // "Ter amarra" é o trecho entre a vírgula e a seta mencionar o módulo dublado por um
 // tipo — o que a forma declarada descreve. A checagem é pela presença de uma ANOTAÇÃO
 // (`:` seguido de tipo) que referencie o módulo, não pela igualdade literal com o
 // template: o projeto escreve `Partial<typeof Real>` com o alias que quiser, e exigir o
 // texto exato transformaria o gate num verificador de estilo.
-func dublesDeclarados(content string) []dubleDeclarado {
-	var out []dubleDeclarado
+func declaredDoubles(content string) []declaredDouble {
+	var out []declaredDouble
 	for _, m := range mockComFabricaRE.FindAllStringSubmatch(content, -1) {
 		modulo, cabeca := m[1], m[2]
-		out = append(out, dubleDeclarado{
+		out = append(out, declaredDouble{
 			modulo:   modulo,
-			amarrado: temAnotacaoDeTipo(cabeca),
+			amarrado: hasTypeAnnotation(cabeca),
 		})
 	}
 	return out
@@ -190,6 +190,6 @@ func dublesDeclarados(content string) []dubleDeclarado {
 // este gate. Aqui só se verifica que a amarra FOI ESCRITA.
 var anotacaoRE = regexp.MustCompile(`\)\s*:\s*\S`)
 
-func temAnotacaoDeTipo(cabeca string) bool {
+func hasTypeAnnotation(cabeca string) bool {
 	return anotacaoRE.MatchString(cabeca)
 }

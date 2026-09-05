@@ -60,7 +60,7 @@ func checkScenarioTypeAligned(content string, n mapx.Node, _ string, _ *mapx.Gra
 
 	var achados []string
 	for _, sc := range cenarios {
-		letra := letraDoCodigo(sc.Code)
+		letra := codeLetter(sc.Code)
 		if letra == "" {
 			continue
 		}
@@ -70,7 +70,7 @@ func checkScenarioTypeAligned(content string, n mapx.Node, _ string, _ *mapx.Gra
 		// isso, e "corrigi-los" trocaria uma classificação certa por outra.
 		letras := map[string]bool{letra: true}
 		for _, c := range sc.Codes {
-			if l := letraDoCodigo(c); l != "" {
+			if l := codeLetter(c); l != "" {
 				letras[l] = true
 			}
 		}
@@ -98,9 +98,9 @@ func checkScenarioTypeAligned(content string, n mapx.Node, _ string, _ *mapx.Gra
 		len(achados), strings.Join(achados, "; "))
 }
 
-// letraDoCodigo extrai a letra de natureza de `ABCDX-S01` (ou `ABCDX-S01#02`). Devolve
+// codeLetter extrai a letra de natureza de `ABCDX-S01` (ou `ABCDX-S01#02`). Devolve
 // vazio para códigos que não seguem a forma (`ABCDX-DS-alguma-coisa`, `ABCDX-VR`).
-func letraDoCodigo(code string) string {
+func codeLetter(code string) string {
 	raiz := RootCode(code)
 	i := strings.LastIndex(raiz, "-")
 	if i < 0 || i+1 >= len(raiz) {

@@ -22,7 +22,7 @@ var corpusReal = []string{
 // honesto: os dois provavelmente falam do mesmo, e vale a leitura humana.
 func TestVocabularioDiferenteEhLimitrofe(t *testing.T) {
 	w := Weights(corpusReal)
-	v, score := Classifica(
+	v, score := Classify(
 		"rounded verdadeiro aplica raio de pílula",
 		"rounded aplica borderRadius 9999", w)
 	if v != Limitrofe {
@@ -35,7 +35,7 @@ func TestVocabularioDiferenteEhLimitrofe(t *testing.T) {
 func TestLimitrofeEhDiscordanciaEntreAsReguas(t *testing.T) {
 	w := Weights(corpusReal)
 	a, b := "rounded verdadeiro aplica raio de pílula", "rounded aplica borderRadius 9999"
-	j, c := Score(a, b, w), Cosseno(a, b, w)
+	j, c := Score(a, b, w), Cosine(a, b, w)
 	if (j >= limiarSimilar) == (c >= limiarSimilar) {
 		t.Fatalf("as réguas concordam (jaccard %.2f, cosseno %.2f) — o caso deixou de ser limítrofe", j, c)
 	}
@@ -45,7 +45,7 @@ func TestLimitrofeEhDiscordanciaEntreAsReguas(t *testing.T) {
 // qual lado está velho.
 func TestAssuntosDiferentesSaoDivergentes(t *testing.T) {
 	w := Weights(corpusReal)
-	v, score := Classifica(
+	v, score := Classify(
 		"Estado vazio exibe a mensagem de nenhuma conta cadastrada",
 		"tocar copiar abre o sheet de cópia seletiva", w)
 	if v != Divergente {
@@ -56,7 +56,7 @@ func TestAssuntosDiferentesSaoDivergentes(t *testing.T) {
 // Igualdade é a régua; a similaridade nem entra em campo.
 func TestTextoIgualEhIdentico(t *testing.T) {
 	w := Weights(corpusReal)
-	if v, _ := Classifica("Toque no card dispara onPress", "toque no card dispara onPress!", w); v != Identico {
+	if v, _ := Classify("Toque no card dispara onPress", "toque no card dispara onPress!", w); v != Identico {
 		t.Errorf("veredito %v, queria idêntico — só caixa e pontuação diferem", v)
 	}
 }
@@ -71,7 +71,7 @@ func TestTokenRaroCompartilhadoPuxaParaSimilar(t *testing.T) {
 		"Estado vazio da lista",
 	}
 	w := Weights(corpus)
-	v, score := Classifica(
+	v, score := Classify(
 		"Editar o campo personalizado dispara onCustomUnit",
 		"onCustomUnit recebe o texto digitado", w)
 	if v != Similar {

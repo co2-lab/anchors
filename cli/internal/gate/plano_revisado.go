@@ -68,8 +68,8 @@ func changedByRE() *regexp.Regexp {
 		config.CodeLengthPattern() + `\b|@amended-by[^\S\n]*:?[^\S\n]*\S)`)
 }
 
-// checkPlanoRevisado confronta os dois lados do `revises`.
-func checkPlanoRevisado(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+// checkPlanRevised confronta os dois lados do `revises`.
+func checkPlanRevised(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindPlan {
 		return Skip, "só plano revisa plano"
 	}

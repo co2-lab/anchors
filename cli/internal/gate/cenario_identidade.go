@@ -60,7 +60,7 @@ func checkScenarioIdentity(content string, n mapx.Node, _ string, _ *mapx.Graph,
 		"numere com o sufixo `#NN` (`@%s#01`, `@%s#02`), que mantém a regra legível no "+
 		"prefixo e torna o par cenário↔teste um-para-um",
 		len(repetidos), strings.Join(repetidos, "; "),
-		primeiroCodigo(repetidos), primeiroCodigo(repetidos))
+		firstCode(repetidos), firstCode(repetidos))
 }
 
 // resumirTitulos encurta os títulos para a mensagem caber — o endereço é o código,
@@ -76,9 +76,9 @@ func resumirTitulos(ts []string) []string {
 	return out
 }
 
-// primeiroCodigo extrai o código do primeiro achado, para o exemplo da mensagem
+// firstCode extrai o código do primeiro achado, para o exemplo da mensagem
 // falar do caso REAL do projeto em vez de um genérico.
-func primeiroCodigo(repetidos []string) string {
+func firstCode(repetidos []string) string {
 	if len(repetidos) == 0 {
 		return "XXXXX-B01"
 	}

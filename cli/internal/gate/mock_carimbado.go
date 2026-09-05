@@ -35,7 +35,7 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 	if n.Kind != mapx.KindTest {
 		return Skip, "o carimbo vive no teste, ao lado do dublê que ele cobre"
 	}
-	detector, err := detectorDeDuble(cfg)
+	detector, err := doubleDetector(cfg)
 	if err != nil {
 		// Regex inválido é erro de CONFIGURAÇÃO, não do arquivo sob análise — e precisa
 		// falhar alto: silenciá-lo faria o gate varrer zero dublês e reportar verde.
@@ -66,7 +66,7 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 	// O legado se resolve com o vocabulário que já existe: `blocking: false` durante a
 	// adoção, e opt-out por unidade com razão escrita onde a decisão for deliberada.
 	var semCarimbo []string
-	for _, modulo := range dublesDetectados(content, detector) {
+	for _, modulo := range detectedDoubles(content, detector) {
 		if !ehModuloRegido(modulo, g) {
 			continue // biblioteca de terceiro não é cobrada (ver `ehModuloRegido`)
 		}
@@ -117,7 +117,7 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 // alias e caminho de disco. Casar pelo sufixo sem extensão resolve os dois sem
 // precisar de um resolvedor de alias, que seria específico do ecossistema.
 func moduloTemCarimbo(modulo string, carimbos []declaredStamp) bool {
-	alvo := semExtensao(strings.TrimPrefix(modulo, "./"))
+	alvo := withoutExtension(strings.TrimPrefix(modulo, "./"))
 	for strings.HasPrefix(alvo, "../") {
 		alvo = strings.TrimPrefix(alvo, "../")
 	}
@@ -127,7 +127,7 @@ func moduloTemCarimbo(modulo string, carimbos []declaredStamp) bool {
 		}
 	}
 	for _, c := range carimbos {
-		arq := semExtensao(c.arquivo)
+		arq := withoutExtension(c.arquivo)
 		if arq == alvo || strings.HasSuffix(arq, "/"+alvo) {
 			return true
 		}
@@ -213,12 +213,12 @@ func hashDoTrecho(s string) string {
 	return hex.EncodeToString(h[:])[:8]
 }
 
-// detectorDeDuble compila o regex que ESTE projeto usa para escrever um dublê.
+// doubleDetector compila o regex que ESTE projeto usa para escrever um dublê.
 //
 // Devolve (nil, nil) quando o projeto não declara — e é o que desliga o gate. A
 // alternativa (embutir o padrão jest/vitest como default) faria o gate rodar num
 // projeto Python, casar zero dublês e reportar VERDE sobre o que não conferiu.
-func detectorDeDuble(cfg *config.Config) (*regexp.Regexp, error) {
+func doubleDetector(cfg *config.Config) (*regexp.Regexp, error) {
 	if cfg == nil || cfg.Derived == nil {
 		return nil, nil
 	}
@@ -236,8 +236,8 @@ func detectorDeDuble(cfg *config.Config) (*regexp.Regexp, error) {
 	return re, nil
 }
 
-// dublesDetectados aplica o padrão do projeto e devolve os módulos dublados.
-func dublesDetectados(content string, re *regexp.Regexp) []string {
+// detectedDoubles aplica o padrão do projeto e devolve os módulos dublados.
+func detectedDoubles(content string, re *regexp.Regexp) []string {
 	var out []string
 	for _, m := range re.FindAllStringSubmatch(content, -1) {
 		if len(m) > 1 && strings.TrimSpace(m[1]) != "" {

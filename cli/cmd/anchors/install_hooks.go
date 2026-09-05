@@ -66,7 +66,7 @@ func runInstallHooks(root string, force bool) error {
 	if err != nil {
 		// O pre-commit VIVE dentro do repositório: sem ele não há onde instalar. Dizer
 		// isso aqui evita que o usuário procure o problema no anchors.yaml.
-		if msg := gitmeta.Explica(gitmeta.Verifica(root), "instalar o pre-commit"); msg != "" {
+		if msg := gitmeta.Explain(gitmeta.Check(root), "instalar o pre-commit"); msg != "" {
 			return errors.New(msg)
 		}
 		return fmt.Errorf("localizar o diretório de hooks do git: %w", err)

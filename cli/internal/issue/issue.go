@@ -301,7 +301,7 @@ func List(root string, state State) ([]string, error) {
 	return out, nil
 }
 
-// Reabrir move uma issue de `done/` de volta para `todo/` e ACRESCENTA o novo laudo ao
+// Reopen move uma issue de `done/` de volta para `todo/` e ACRESCENTA o novo laudo ao
 // corpo, preservando o anterior.
 //
 // Existe porque um achado NOVO sobre uma unidade já revisada sumia em silêncio: o `Open`
@@ -312,7 +312,7 @@ func List(root string, state State) ([]string, error) {
 // Idempotência é a política certa para o MESMO problema detectado duas vezes; não é para
 // um problema DIFERENTE no mesmo lugar. A diferença está no corpo, e por isso ele é
 // comparado antes de decidir.
-func Reabrir(root string, i Issue) (reaberta bool, err error) {
+func Reopen(root string, i Issue) (reaberta bool, err error) {
 	// No github o REABRIR está dentro do Open: ele acha o card fechado, reabre e
 	// acrescenta o laudo novo. Separar os dois faria duas buscas para uma decisão.
 	if target != nil {
@@ -370,9 +370,9 @@ func FileOwner(caminho string) Owner {
 	return DonoAgente
 }
 
-// ListaPorDono filtra as issues de um estado por dono. É a lista que se leva para a
+// ListByOwner filtra as issues de um estado por dono. É a lista que se leva para a
 // conversa com quem decide (`usuario`), ou a fila de trabalho do agente.
-func ListaPorDono(root string, st State, dono Owner) ([]string, error) {
+func ListByOwner(root string, st State, dono Owner) ([]string, error) {
 	nomes, err := List(root, st)
 	if err != nil {
 		return nil, err
@@ -386,13 +386,13 @@ func ListaPorDono(root string, st State, dono Owner) ([]string, error) {
 	return out, nil
 }
 
-// Reatribui muda o dono de uma issue JÁ ABERTA, preservando o resto do arquivo.
+// Reassign muda o dono de uma issue JÁ ABERTA, preservando o resto do arquivo.
 //
 // É o caminho para o agente que tentou resolver uma issue sua e esbarrou em algo que só
 // uma pessoa responde: a issue continua sendo a violação que era, e passa a esperar quem
 // pode resolvê-la. Sem isto, ela ficaria em `todo/` do agente sendo retentada para sempre,
 // ou seria fechada sem que o problema tivesse sido resolvido.
-func Reatribui(root string, st State, nome string, para Owner, porque string) error {
+func Reassign(root string, st State, nome string, para Owner, porque string) error {
 	caminho := filepath.Join(root, Dir, string(st), nome)
 	b, err := os.ReadFile(caminho)
 	if err != nil {
@@ -431,5 +431,5 @@ func UsarGitHub(repo, label string) {
 	target = &GitHub{Repo: repo, Label: label}
 }
 
-// UsarArquivos volta a gravar em `issues/` — usado pelos testes, que não falam com a rede.
-func UsarArquivos() { target = nil }
+// UseFiles volta a gravar em `issues/` — usado pelos testes, que não falam com a rede.
+func UseFiles() { target = nil }

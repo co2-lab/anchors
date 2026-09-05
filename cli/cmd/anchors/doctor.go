@@ -184,8 +184,8 @@ func repararAmbiente(root string, cfg *config.Config) error {
 	// continua sendo cobrada — pelo estado do card, que é o que o Anchors controla.
 	if cfg.Workflow.AprovacoesExigidas() > 0 {
 		repo, branch := cfg.Workflow.Repo, cfg.Workflow.BranchDeIntegracao()
-		if ok, _ := health.PodeIgnorarProtecao(repo, branch); !ok {
-			if err := health.DesligaExigenciaDeAprovacao(repo, branch); err != nil {
+		if ok, _ := health.CanBypassProtection(repo, branch); !ok {
+			if err := health.DisableApprovalRequirement(repo, branch); err != nil {
 				fmt.Printf("⚠  não deu para desligar a exigência de aprovação: %v\n", err)
 			} else {
 				fmt.Println("✓ exigência de aprovação DESLIGADA no GitHub —")

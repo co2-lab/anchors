@@ -88,7 +88,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 	var anonimos []string
 	for _, it := range itens {
 		if códigoDoItem(it) == "" {
-			anonimos = append(anonimos, "«"+resumir(it)+"»")
+			anonimos = append(anonimos, "«"+summarize(it)+"»")
 		}
 	}
 	if len(anonimos) > 0 {
@@ -108,7 +108,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 		// CÓDIGO e assunto juntos: o código identifica (e não muda quando alguém
 		// reescreve a frase), o texto diz do que se trata. Só o código faria o relatório
 		// exigir abrir a spec para saber o que se perguntou.
-		nums = append(nums, códigoDoItem(it)+" «"+resumir(it)+"»")
+		nums = append(nums, códigoDoItem(it)+" «"+summarize(it)+"»")
 	}
 	// PENDING, não FAIL. A distinção é o ponto do gate, e errá-la o inverte:
 	//
@@ -254,8 +254,8 @@ func códigoDoItem(item string) string {
 	return anyCodeRE.FindString(primeira)
 }
 
-// resumir corta o item para caber na mensagem do gate sem perder o assunto.
-func resumir(s string) string {
+// summarize corta o item para caber na mensagem do gate sem perder o assunto.
+func summarize(s string) string {
 	// Numa linha de tabela o ASSUNTO é a célula seguinte ao código — a primeira passou a
 	// ser a identidade. Sem isto o resumo devolve o próprio código, e a mensagem fica
 	// "PARCX-Q01 «PARCX-Q01»": o leitor precisa abrir a spec para saber o que se

@@ -10,7 +10,7 @@ import (
 func foraDeRepo(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
-	if Verifica(dir) == Disponível {
+	if Check(dir) == Disponível {
 		t.Skipf("o diretório temporário %s está dentro de um repo git", dir)
 	}
 	return dir

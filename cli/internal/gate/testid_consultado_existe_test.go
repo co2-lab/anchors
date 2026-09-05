@@ -36,7 +36,7 @@ func TestConsultadoExiste_handleQueExistePassa(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		`<View testID=":abcd-tela" />`,
 		"- assertVisible:\n    id: ':abcd-tela'\n")
-	v, d := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Pass {
 		t.Fatalf("handle exposto pelo código deveria passar, veio %v: %s", v, d)
 	}
@@ -47,7 +47,7 @@ func TestConsultadoExiste_handleInventadoReprova(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		`<View testID=":abcd-tela" />`,
 		"- tapOn:\n    id: ':abcd-botao-que-ninguem-expoe'\n")
-	v, d := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Fail {
 		t.Fatalf("handle inexistente deveria reprovar, veio %v: %s", v, d)
 	}
@@ -65,7 +65,7 @@ func TestConsultadoExiste_assertNotVisibleVacuoReprova(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		`<View testID=":abcd-tela" />`,
 		"- assertNotVisible:\n    id: ':abcd-controles-de-edicao'\n")
-	v, _ := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Fail {
 		t.Fatalf("assertNotVisible sobre id inexistente é verde-por-vacuidade e deve reprovar, veio %v", v)
 	}
@@ -77,7 +77,7 @@ func TestConsultadoExiste_templateCobreInstancia(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		"<View testID={`:abcd-item-${id}`} />",
 		"- tapOn:\n    id: ':abcd-item-3'\n")
-	v, d := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Pass {
 		t.Fatalf("instância de template exposto deveria passar, veio %v: %s", v, d)
 	}
@@ -88,7 +88,7 @@ func TestConsultadoExiste_regexDoFlowCasaCabeca(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		"<View testID={`:abcd-linha-${i}`} />",
 		"- tapOn:\n    id: ':abcd-linha-.*maestro-001'\n")
-	v, d := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Pass {
 		t.Fatalf("regex do flow deve casar a cabeça exposta, veio %v: %s", v, d)
 	}
@@ -100,7 +100,7 @@ func TestConsultadoExiste_interpolacaoDoFlowNaoAcusa(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		`<View testID=":abcd-tela" />`,
 		"- tapOn:\n    id: \"${':abcd-x-' + output.data.ns}\"\n")
-	v, d := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Pass {
 		t.Fatalf("id interpolado pelo runner não é confrontável e não deve acusar, veio %v: %s", v, d)
 	}
@@ -112,7 +112,7 @@ func TestConsultadoExiste_handleEmTabelaConta(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		"const rotas = { Family: ':abcd-navigate-to-family' }",
 		"- tapOn:\n    id: ':abcd-navigate-to-family'\n")
-	v, d := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Pass {
 		t.Fatalf("handle em tabela de consulta existe no código e não deve acusar, veio %v: %s", v, d)
 	}
@@ -123,7 +123,7 @@ func TestConsultadoExiste_templateAtrasDeFallbackConta(t *testing.T) {
 	root, cfg := fixtureConsultado(t,
 		"<Btn testID={btn.testID ?? `:abcd-alert-sheet-button-${i}`} />",
 		"- tapOn:\n    id: ':abcd-alert-sheet-button-1'\n")
-	v, d := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Pass {
 		t.Fatalf("template atrás de `??` existe no código e não deve acusar, veio %v: %s", v, d)
 	}
@@ -142,7 +142,7 @@ func TestConsultadoExiste_sufixoCompostoNoFilhoConta(t *testing.T) {
 		[]byte("<Row testID={testID ? `${testID}-row-${index}` : undefined} />"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	v, d := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Pass {
 		t.Fatalf("sufixo composto no filho existe em runtime e não deve acusar, veio %v: %s", v, d)
 	}
@@ -161,7 +161,7 @@ func TestConsultadoExiste_sufixoTerminalConta(t *testing.T) {
 		[]byte("<Btn testID={testID ? `${testID}-toggle` : undefined} />"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	v, d := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Pass {
 		t.Fatalf("sufixo terminal composto existe em runtime e não deve acusar, veio %v: %s", v, d)
 	}
@@ -177,7 +177,7 @@ func TestConsultadoExiste_testeNaoContaComoExposicao(t *testing.T) {
 		[]byte(`getByTestId(':abcd-fantasma')`), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	v, _ := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Fail {
 		t.Fatalf("id presente só em arquivo de teste não está exposto e deve reprovar, veio %v", v)
 	}
@@ -188,7 +188,7 @@ func TestConsultadoExiste_testeNaoContaComoExposicao(t *testing.T) {
 func TestConsultadoExiste_semHandleDeclaradoPula(t *testing.T) {
 	root, cfg := fixtureConsultado(t, `<View testID=":abcd-tela" />`, "- tapOn:\n    id: ':abcd-x'\n")
 	cfg.Derived.TestHandle = ""
-	v, _ := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Skip {
 		t.Fatalf("sem atributo declarado o gate deve pular, veio %v", v)
 	}
@@ -199,7 +199,7 @@ func TestConsultadoExiste_semHandleDeclaradoPula(t *testing.T) {
 func TestConsultadoExiste_semSuperficieE2EPula(t *testing.T) {
 	root, cfg := fixtureConsultado(t, `<View testID=":abcd-tela" />`, "- tapOn:\n    id: ':abcd-x'\n")
 	cfg.Derived.Files = map[string]config.Padroes{}
-	v, _ := checkTestIDConsultadoExiste("", mapx.Node{}, root, nil, cfg)
+	v, _ := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
 	if v != Skip {
 		t.Fatalf("sem superfície declarada o gate deve pular, veio %v", v)
 	}

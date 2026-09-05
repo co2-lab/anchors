@@ -37,7 +37,7 @@ func TestNeedsParaPlanoInexistenteEhReportado(t *testing.T) {
 		mapx.Node{ID: "plans/0002-feature.md", Needs: []string{"plans/0099-nao-existe.md"}},
 	)
 
-	fs := checkNeedsDosPlanos(g)
+	fs := checkPlanNeeds(g)
 
 	if len(fs) != 1 || fs[0].Check != "needs-quebrado" {
 		t.Fatalf("esperava needs-quebrado, veio %+v", fs)
@@ -55,7 +55,7 @@ func TestCicloDeNeedsEhReportadoComOCaminho(t *testing.T) {
 		mapx.Node{ID: "plans/b.md", Needs: []string{"plans/a.md"}},
 	)
 
-	fs := checkNeedsDosPlanos(g)
+	fs := checkPlanNeeds(g)
 
 	if len(fs) != 1 || fs[0].Check != "needs-ciclo" {
 		t.Fatalf("esperava needs-ciclo, veio %+v", fs)
@@ -76,14 +76,14 @@ func TestCadeiaLegitimaNaoEhAchado(t *testing.T) {
 		mapx.Node{ID: "plans/0003-tela.md", Needs: []string{"plans/0002-backend.md"}},
 	)
 
-	if fs := checkNeedsDosPlanos(g); len(fs) != 0 {
+	if fs := checkPlanNeeds(g); len(fs) != 0 {
 		t.Errorf("cadeia em ordem não é achado: %+v", fs)
 	}
 }
 
 // Projeto sem plano nenhum: nada a conferir.
 func TestSemPlanosNaoReporta(t *testing.T) {
-	if fs := checkNeedsDosPlanos(&mapx.Graph{}); len(fs) != 0 {
+	if fs := checkPlanNeeds(&mapx.Graph{}); len(fs) != 0 {
 		t.Errorf("sem planos não há needs a conferir: %+v", fs)
 	}
 }

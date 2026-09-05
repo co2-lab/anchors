@@ -36,7 +36,7 @@ const secaoOK = "## Superfície de Teste\n\n| id | papel |\n| -- | ----- |\n| `:
 
 func TestTestIDDeclared_inventarioCompletoPassa(t *testing.T) {
 	n, g, root := inventarioFixture(t, `<View testID=":abcd-screen" />`)
-	if v, msg := checkTestIDCoerente(secaoOK, n, root, g, cfgHandle("testID")); v != Pass {
+	if v, msg := checkTestIDCoherent(secaoOK, n, root, g, cfgHandle("testID")); v != Pass {
 		t.Errorf("inventário batendo com o código deveria passar: %v (%s)", v, msg)
 	}
 }
@@ -45,7 +45,7 @@ func TestTestIDDeclared_expostoSemDeclararReprova(t *testing.T) {
 	// Sentido código → spec: superfície não-contratada. É por onde a divergência de
 	// identidade entra sem ninguém ver.
 	n, g, root := inventarioFixture(t, `<View testID=":abcd-screen" /><View testID=":abcd-oculto" />`)
-	v, msg := checkTestIDCoerente(secaoOK, n, root, g, cfgHandle("testID"))
+	v, msg := checkTestIDCoherent(secaoOK, n, root, g, cfgHandle("testID"))
 	if v != Fail {
 		t.Fatalf("exposto sem declarar deveria reprovar: %v", v)
 	}
@@ -59,7 +59,7 @@ func TestTestIDDeclared_declaradoSemExporReprova(t *testing.T) {
 	// não existe. É a metade que um gate de sentido único não pega.
 	n, g, root := inventarioFixture(t, `<View testID=":abcd-screen" />`)
 	spec := secaoOK + "| `:abcd-fantasma` | sumiu no refactor |\n"
-	v, msg := checkTestIDCoerente(spec, n, root, g, cfgHandle("testID"))
+	v, msg := checkTestIDCoherent(spec, n, root, g, cfgHandle("testID"))
 	if v != Fail {
 		t.Fatalf("declarado sem expor deveria reprovar: %v", v)
 	}
@@ -73,7 +73,7 @@ func TestTestIDDeclared_semHandleDeclaradoPula(t *testing.T) {
 	// Inferir `testID` por default faria o gate reportar VERDE sobre o que não
 	// conferiu — num projeto Android, em qualquer backend.
 	n, g, root := inventarioFixture(t, `<View testID=":abcd-screen" />`)
-	if v, _ := checkTestIDCoerente("", n, root, g, &config.Config{}); v != Skip {
+	if v, _ := checkTestIDCoherent("", n, root, g, &config.Config{}); v != Skip {
 		t.Errorf("sem test_handle o gate deve pular: %v", v)
 	}
 }
@@ -83,7 +83,7 @@ func TestTestIDDeclared_atributoDeOutroEcossistema(t *testing.T) {
 	// cravado em `testID`, este caso passaria vazio (falso verde).
 	n, g, root := inventarioFixture(t, `<div data-testid="abcd-root" /><div data-testid="abcd-item" />`)
 	spec := "## Superfície de Teste\n\n- `abcd-root`\n"
-	v, msg := checkTestIDCoerente(spec, n, root, g, cfgHandle("data-testid"))
+	v, msg := checkTestIDCoherent(spec, n, root, g, cfgHandle("data-testid"))
 	if v != Fail || !strings.Contains(msg, "abcd-item") {
 		t.Errorf("deveria acusar o id web não declarado: %v (%s)", v, msg)
 	}
@@ -94,7 +94,7 @@ func TestTestIDDeclared_templateDeclaraPrefixo(t *testing.T) {
 	// seria exigir que ela declare o dado; declara-se o prefixo com a marca `-*`.
 	n, g, root := inventarioFixture(t, "<View testID={`:abcd-item-${id}`} />")
 	spec := "## Superfície de Teste\n\n- `:abcd-item-*`\n"
-	if v, msg := checkTestIDCoerente(spec, n, root, g, cfgHandle("testID")); v != Pass {
+	if v, msg := checkTestIDCoherent(spec, n, root, g, cfgHandle("testID")); v != Pass {
 		t.Errorf("prefixo dinâmico declarado com `-*` deveria passar: %v (%s)", v, msg)
 	}
 }
@@ -103,7 +103,7 @@ func TestTestIDDeclared_unidadeSemHandleNaoEhOfensa(t *testing.T) {
 	// Nem todo componente tem superfície de teste. Cobrar inventário de quem não
 	// marca elemento algum viraria ruído sobre toda unidade de apresentação pura.
 	n, g, root := inventarioFixture(t, `<View />`)
-	if v, _ := checkTestIDCoerente("", n, root, g, cfgHandle("testID")); v != Skip {
+	if v, _ := checkTestIDCoherent("", n, root, g, cfgHandle("testID")); v != Skip {
 		t.Errorf("unidade que não expõe handle não tem contrato a declarar: %v", v)
 	}
 }
@@ -114,7 +114,7 @@ func TestTestIDDeclared_tituloComQualificador(t *testing.T) {
 	// a seção e acusar de "não declara nada" justamente as specs mais bem documentadas.
 	n, g, root := inventarioFixture(t, `<View testID=":abcd-screen" />`)
 	spec := "## Test IDs (Maestro)\n\n| testID | Elemento |\n| -- | -- |\n| `abcd-screen` | raiz |\n"
-	if v, msg := checkTestIDCoerente(spec, n, root, g, cfgHandle("testID")); v != Pass {
+	if v, msg := checkTestIDCoherent(spec, n, root, g, cfgHandle("testID")); v != Pass {
 		t.Errorf("título com qualificador é a mesma seção: %v (%s)", v, msg)
 	}
 }
@@ -125,7 +125,7 @@ func TestTestIDDeclared_craseForaDaSecaoNaoConta(t *testing.T) {
 	// é pior que reprovar por engano.
 	n, g, root := inventarioFixture(t, `<View testID=":abcd-screen" />`)
 	spec := "## Notas\n\nA raiz usa `:abcd-screen` e a classe `text-mute`.\n"
-	v, msg := checkTestIDCoerente(spec, n, root, g, cfgHandle("testID"))
+	v, msg := checkTestIDCoherent(spec, n, root, g, cfgHandle("testID"))
 	if v != Fail {
 		t.Fatalf("menção em prosa não é inventário: %v (%s)", v, msg)
 	}
@@ -140,7 +140,7 @@ func TestTestIDDeclared_soAPrimeiraColunaEhOID(t *testing.T) {
 	spec := "## Test IDs (Maestro)\n\n" +
 		"| testID | Elemento | Usado em |\n| -- | -- | -- |\n" +
 		"| `abcd-screen` | Raiz do `TouchableOpacity` | `ABCDX-VR` |\n"
-	v, msg := checkTestIDCoerente(spec, n, root, g, cfgHandle("testID"))
+	v, msg := checkTestIDCoherent(spec, n, root, g, cfgHandle("testID"))
 	if v != Pass {
 		t.Errorf("só a 1ª célula é o id; as outras são descrição: %v (%s)", v, msg)
 	}
@@ -156,7 +156,7 @@ func TestTestIDDeclared_propDerivadaEhHandle(t *testing.T) {
 	n, g, root := inventarioFixture(t,
 		`<Header backTestID=":abcd-back" /><Alert buttons={[{ confirmTestID: ':abcd-ok' }]} />`)
 	spec := "## Test IDs\n\n- `abcd-back`\n- `abcd-ok`\n"
-	if v, msg := checkTestIDCoerente(spec, n, root, g, cfgHandle("testID")); v != Pass {
+	if v, msg := checkTestIDCoherent(spec, n, root, g, cfgHandle("testID")); v != Pass {
 		t.Errorf("prop derivada carrega handle: %v (%s)", v, msg)
 	}
 }
@@ -167,7 +167,7 @@ func TestTestIDDeclared_prefixoMontadoNoFilho(t *testing.T) {
 	// nunca aparece, e acusaria de inexistentes os `otp-input-N` que 6 flows usam.
 	n, g, root := inventarioFixture(t, `<Otp testIDPrefix=":otp-input" />`)
 	spec := "## Test IDs\n\n- `otp-input-0`\n- `otp-input-5`\n"
-	if v, msg := checkTestIDCoerente(spec, n, root, g, cfgHandle("testID")); v != Pass {
+	if v, msg := checkTestIDCoherent(spec, n, root, g, cfgHandle("testID")); v != Pass {
 		t.Errorf("prefixo montado cobre os ids concretos: %v (%s)", v, msg)
 	}
 }
@@ -193,7 +193,7 @@ func TestTestIDDeclared_ternarioIgnoraACondicao(t *testing.T) {
 	n, g, root := inventarioFixture(t,
 		`<V testID={k === 'push' ? ':abcd-toggle' : undefined} /><V testID={i === 0 ? ':abcd-first' : undefined} />`)
 	spec := "## Test IDs\n\n- `abcd-toggle`\n- `abcd-first`\n"
-	if v, msg := checkTestIDCoerente(spec, n, root, g, cfgHandle("testID")); v != Pass {
+	if v, msg := checkTestIDCoherent(spec, n, root, g, cfgHandle("testID")); v != Pass {
 		t.Errorf("condição não é handle; os dois ramos sim: %v (%s)", v, msg)
 	}
 }
@@ -204,7 +204,7 @@ func TestTestIDDeclared_nomeDoAtributoNaoEhID(t *testing.T) {
 	// este" — cobrá-lo exigiria do átomo um id fixo, o oposto de ser reusável.
 	n, g, root := inventarioFixture(t, `<Touchable testID={testID} />`)
 	spec := "## Test IDs\n\n| testID | Elemento |\n| -- | -- |\n| `testID` (prop) | Raiz |\n"
-	if v, msg := checkTestIDCoerente(spec, n, root, g, cfgHandle("testID")); v != Skip && v != Pass {
+	if v, msg := checkTestIDCoherent(spec, n, root, g, cfgHandle("testID")); v != Skip && v != Pass {
 		t.Errorf("o nome do atributo não é um id declarado: %v (%s)", v, msg)
 	}
 }

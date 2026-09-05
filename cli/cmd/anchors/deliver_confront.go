@@ -38,7 +38,7 @@ func confrontarEntrega(root string, files []string, unit string) {
 		// comando: a ausência de aviso é lida como "os arquivos declarados conferem",
 		// que é uma afirmação que ninguém verificou.
 		fmt.Println("\n⚠ não deu para confrontar os arquivos declarados contra o que mudou:")
-		fmt.Println("  " + gitmeta.Explica(gitmeta.Verifica(root), "ler o estado do working tree"))
+		fmt.Println("  " + gitmeta.Explain(gitmeta.Check(root), "ler o estado do working tree"))
 		fmt.Println("  a entrega segue, mas ninguém verificou se você fez o que declarou.")
 	}
 	if len(avisos) > 0 {

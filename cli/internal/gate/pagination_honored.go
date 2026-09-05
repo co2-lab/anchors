@@ -107,7 +107,7 @@ func checkPaginationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 		if !prometeConjunto(f.name, d) || !consulta.MatchString(f.body) {
 			continue
 		}
-		if paginaTudo(f.body, d) || dispensaExplicita(f.body) {
+		if paginaTudo(f.body, d) || explicitWaiver(f.body) {
 			continue
 		}
 		// NÃO existe regra de "cursor descartado" aqui, e a ausência é uma decisão medida.
@@ -256,4 +256,4 @@ func limiteEscondido(body string, params []string) (string, bool) {
 // passaria, que é exatamente o que a dispensa não pode permitir.
 var noPaginateRE = regexp.MustCompile(`@no-paginate[^\S\n]*:[^\S\n]*\S+`)
 
-func dispensaExplicita(body string) bool { return noPaginateRE.MatchString(body) }
+func explicitWaiver(body string) bool { return noPaginateRE.MatchString(body) }

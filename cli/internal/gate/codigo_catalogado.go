@@ -46,7 +46,7 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 
 	// Os símbolos que a spec já nomeia ou que o código dispensa saem da conta.
 	var orfaos []string
-	for _, s := range simbolosComLinha(texto) {
+	for _, s := range symbolsWithLine(texto) {
 		if strings.Contains(content, s.nome) {
 			continue
 		}
@@ -84,17 +84,17 @@ var noRuleRE = regexp.MustCompile(`@no-rule[^\S\n]*:[^\S\n]*\S+`)
 var exportadoRE = regexp.MustCompile(
 	`(?m)^\s*export\s+(?:async\s+)?(?:function|const|let|var|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)`)
 
-type simboloExportado struct {
+type exportedSymbol struct {
 	nome  string
 	linha string // a linha da declaração + a anterior (onde o comentário de dispensa vive)
 	num   int    // número da linha da declaração (1-based) — o endereço para quem vai corrigir
 }
 
-// simbolosComLinha devolve cada símbolo exportado junto do contexto onde a dispensa
+// symbolsWithLine devolve cada símbolo exportado junto do contexto onde a dispensa
 // poderia estar escrita — a própria linha ou a de cima, que é onde o comentário fica.
-func simbolosComLinha(codigo string) []simboloExportado {
+func symbolsWithLine(codigo string) []exportedSymbol {
 	linhas := strings.Split(codigo, "\n")
-	var out []simboloExportado
+	var out []exportedSymbol
 	for i, l := range linhas {
 		m := exportadoRE.FindStringSubmatch(l)
 		if m == nil {
@@ -110,8 +110,8 @@ func simbolosComLinha(codigo string) []simboloExportado {
 		//
 		// Pior: o mesmo arquivo passava em OUTRO símbolo por acaso, porque o nome dele
 		// aparecia no texto da spec. A declaração nunca era lida, e ninguém notava.
-		ctx := contextoDoSimbolo(linhas, i)
-		out = append(out, simboloExportado{nome: m[1], linha: ctx, num: i + 1})
+		ctx := symbolContext(linhas, i)
+		out = append(out, exportedSymbol{nome: m[1], linha: ctx, num: i + 1})
 	}
 	return out
 }
@@ -131,12 +131,12 @@ func specTarget(n mapx.Node, root string, g *mapx.Graph) (alvo, texto string, ok
 	return "", "", false
 }
 
-// contextoDoSimbolo devolve a linha do símbolo mais o bloco de comentário acima dela.
+// symbolContext devolve a linha do símbolo mais o bloco de comentário acima dela.
 //
 // Sobe enquanto encontrar comentário (`//`, `*`, `/*`, `*/`) ou linha em branco DENTRO do
 // bloco — a branco separa parágrafos de um mesmo comentário, e parar nela cortaria a
 // explicação ao meio. A primeira linha de código encerra a subida.
-func contextoDoSimbolo(linhas []string, i int) string {
+func symbolContext(linhas []string, i int) string {
 	inicio := i
 	for j := i - 1; j >= 0; j-- {
 		t := strings.TrimSpace(linhas[j])
@@ -148,7 +148,7 @@ func contextoDoSimbolo(linhas []string, i int) string {
 		// Linha em branco só continua a subida se ainda houver comentário acima — senão
 		// o "bloco" engoliria o arquivo inteiro até o topo.
 		if t == "" {
-			if j == 0 || !ehComentarioAcima(linhas, j) {
+			if j == 0 || !isCommentAbove(linhas, j) {
 				break
 			}
 		}
@@ -157,7 +157,7 @@ func contextoDoSimbolo(linhas []string, i int) string {
 	return strings.Join(linhas[inicio:i+1], "\n")
 }
 
-func ehComentarioAcima(linhas []string, j int) bool {
+func isCommentAbove(linhas []string, j int) bool {
 	for k := j - 1; k >= 0; k-- {
 		t := strings.TrimSpace(linhas[k])
 		if t == "" {

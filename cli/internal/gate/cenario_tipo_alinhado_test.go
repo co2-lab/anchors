@@ -73,7 +73,7 @@ func TestLetraDoCodigoIgnoraCodigosSemNatureza(t *testing.T) {
 		"BUGEX-VR":                 "",
 	}
 	for entrada, quer := range casos {
-		if got := letraDoCodigo(entrada); got != quer {
+		if got := codeLetter(entrada); got != quer {
 			t.Errorf("letraDoCodigo(%q) = %q, queria %q", entrada, got, quer)
 		}
 	}

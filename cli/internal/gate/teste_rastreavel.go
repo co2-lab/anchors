@@ -34,7 +34,7 @@ import (
 // A régua é a mais fraca possível de propósito: basta UM código da unidade aparecer no
 // arquivo. Não se cobra um código por caso de teste — isso é do `feature-test-match`, que
 // já o faz por cenário. Aqui a pergunta é só "este teste se declara?".
-func checkTesteRastreavel(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkTestTraceable(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindTest {
 		return Skip, "a rastreabilidade é cobrada do teste — é ele que precisa se declarar"
 	}
@@ -49,7 +49,7 @@ func checkTesteRastreavel(content string, n mapx.Node, root string, g *mapx.Grap
 		return Skip, "teste sem feature ligada — não há cenário a citar"
 	}
 
-	codigos := codigosDaFeature(root, feature)
+	codigos := featureCodes(root, feature)
 	if len(codigos) == 0 {
 		return Skip, "a feature ligada não declara código de cenário — nada a citar"
 	}
@@ -78,8 +78,8 @@ func featureQueOTesteProva(n mapx.Node, g *mapx.Graph) (string, bool) {
 	return "", false
 }
 
-// codigosDaFeature lê os códigos de cenário que a feature declara.
-func codigosDaFeature(root, feature string) []string {
+// featureCodes lê os códigos de cenário que a feature declara.
+func featureCodes(root, feature string) []string {
 	b, err := os.ReadFile(filepath.Join(root, feature))
 	if err != nil {
 		return nil

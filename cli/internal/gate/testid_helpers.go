@@ -199,7 +199,7 @@ func covers(padrao, id string) bool {
 	return false
 }
 
-func diferenca(a, b []string) []string {
+func difference(a, b []string) []string {
 	var out []string
 	for _, s := range a {
 		coberto := false
@@ -219,8 +219,8 @@ func diferenca(a, b []string) []string {
 	return out
 }
 
-// listar formata a lista de ids, truncando para a mensagem não virar despejo.
-func listar(ids []string) string {
+// list formata a lista de ids, truncando para a mensagem não virar despejo.
+func list(ids []string) string {
 	const max = 8
 	if len(ids) <= max {
 		return "`" + strings.Join(ids, "`, `") + "`"
