@@ -1,0 +1,97 @@
+# CI de PR — o que é incondicionalmente verdadeiro sobre este projeto Go.
+#
+# Existe porque não existia, e a ausência tinha consequência medida. Até aqui os únicos
+# workflows eram `deploy-site` (push em main) e `release-cli` (tags): NADA rodava em PR.
+# Descoberto ao aplicar o Passo zero do `anchors guide review` no PR #2 — o guia manda
+# conferir se os checks existem antes de confiar neles, e a resposta foi "no checks
+# reported".
+#
+# O que a ausência custou: os PRs #2 e #4 introduziram um defeito cada (um regex com o
+# tamanho do código hardcoded onde devia vir da config; um `switch` que classificava
+# `dispensado` como divergência). Os dois só foram pegos por leitura humana no review.
+# Nenhum era invisível ao `go test` — o primeiro precisava de um teste que não existia, e
+# é justamente o tipo de coisa que um CI cobrando a suíte torna barato de escrever.
+#
+# O QUE ESTE WORKFLOW NÃO FAZ, E POR QUÊ
+#
+# Não roda `anchors check` sobre o próprio Anchors. O produto ainda não está totalmente
+# instrumentado, e cobrá-lo de si mesmo antes disso produziria reprovação que ninguém
+# pode consertar sem antes terminar o produto — e a saída barata seria desligar o gate.
+# Decisão do mantenedor.
+#
+# Pelo mesmo motivo ficam de fora os gates que o `anchors.yaml` declara com `when: [ci]`
+# (`secret-nao-vazado`, `licenca-compativel`, e os três informativos): eles dependem de
+# ferramenta externa (gitleaks, go-licenses, osv-scanner, semgrep) e do Anchors instalado.
+# Continuam declarados e não rodando — o que é uma dívida CONHECIDA, registrada em
+# co2-lab/anchors#3, não um esquecimento.
+#
+# O que sobra aqui é o que não depende de nada disso: o código compila, o vet não acusa,
+# a suíte passa, e a formatação é a canônica. É pouco, e é mais do que zero.
+name: CI
+
+on:
+  pull_request:
+  # `push` em main também: um merge com `--admin` contorna o check do PR por desenho (é o
+  # escape para não podermos aprovar o próprio PR), e sem isto a main poderia receber
+  # código que nada confrontou. Aqui o resultado é histórico — não barra nada —, mas
+  # aparece, e aparecer é a diferença entre saber e não saber.
+  push:
+    branches: [main]
+
+# Um PR que recebe vários pushes seguidos não precisa da suíte de cada um: só o último
+# estado importa. Sem isto, correções em sequência empilham execuções que já nasceram
+# obsoletas.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Só leitura. Este workflow não comenta, não move card, não publica nada.
+permissions:
+  contents: read
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@v4
+
+      # `go-version-file` e não uma versão fixa: a régua é o `go.mod`, e duas fontes
+      # discordando sobre a versão do Go é o tipo de divergência que aparece como erro de
+      # compilação sem relação aparente com o PR.
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+          cache-dependency-path: cli/go.sum
+
+      # A ORDEM É DELIBERADA, do mais barato ao mais caro, e cada passo falha o job:
+      # descobrir que não compila depois de esperar a suíte inteira é tempo jogado fora.
+      - name: Compila
+        run: go build ./...
+
+      - name: Vet
+        run: go vet ./...
+
+      # `gofmt -l` lista os arquivos fora do padrão e sai com 0 — ele NÃO falha sozinho.
+      # Um `run: gofmt -l .` passaria sempre, verde, sem conferir nada: é a família de
+      # defeito que este projeto já mediu três vezes (check verde que não fez o trabalho).
+      # Por isso o teste explícito da saída.
+      - name: Formatação
+        run: |
+          fora=$(gofmt -l .)
+          if [ -n "$fora" ]; then
+            echo "✗ arquivos fora do gofmt:"
+            echo "$fora"
+            echo ""
+            echo "  rode: gofmt -w ."
+            exit 1
+          fi
+          echo "✓ formatação canônica"
+
+      # `-race` porque a suíte tem código concorrente (watcher, workflow) e uma corrida só
+      # aparece sob carga — no CI, que roda em máquina diferente da de quem escreveu, é
+      # onde ela tem mais chance de se manifestar.
+      - name: Testes
+        run: go test -race ./...
