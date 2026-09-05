@@ -42,7 +42,7 @@ func TestEscalada_semCardNaoInventaReferencia(t *testing.T) {
 // lista de issues, que é onde o usuário vai encontrá-lo.
 func TestEscalada_tituloCabeEmUmaLinha(t *testing.T) {
 	longo := strings.Repeat("uma explicação bem detalhada da incoerência ", 5)
-	got := primeiraLinhaDoMotivo(longo)
+	got := firstLineOfReason(longo)
 	if len(got) > 70 {
 		t.Errorf("título com %d chars; deveria caber em 70: %q", len(got), got)
 	}
@@ -50,7 +50,7 @@ func TestEscalada_tituloCabeEmUmaLinha(t *testing.T) {
 		t.Errorf("o corte deve sinalizar que há mais: %q", got)
 	}
 	// Motivo de várias linhas: o título é a primeira.
-	if got := primeiraLinhaDoMotivo("primeira linha\nsegunda linha"); got != "primeira linha" {
+	if got := firstLineOfReason("primeira linha\nsegunda linha"); got != "primeira linha" {
 		t.Errorf("o título é a primeira linha, veio %q", got)
 	}
 }

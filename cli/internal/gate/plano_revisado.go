@@ -58,12 +58,12 @@ func avisoDeTopoRE() *regexp.Regexp {
 		config.CodeLengthPattern() + `\b|@revised-by[^\S\n]*:?[^\S\n]*\S)`)
 }
 
-// alteradoPorRE casa a marcação de UMA PARTE atingida pela revisão.
+// changedByRE casa a marcação de UMA PARTE atingida pela revisão.
 //
 // Distinta do aviso de topo de propósito: aquele diz que o plano mudou, este diz ONDE. Um
 // plano revisado sem nenhuma marcação de parte obriga quem lê a reler tudo procurando o
 // que mudou — o mesmo custo de não haver aviso.
-func alteradoPorRE() *regexp.Regexp {
+func changedByRE() *regexp.Regexp {
 	return regexp.MustCompile(`(?i)(>\s*\[!WARNING\][\s\S]{0,400}?[A-Z0-9]` +
 		config.CodeLengthPattern() + `\b|@amended-by[^\S\n]*:?[^\S\n]*\S)`)
 }
@@ -145,7 +145,7 @@ func checkPlanoRevisado(content string, n mapx.Node, root string, g *mapx.Graph,
 	// A cobrança é PENDENTE, não falha: nem toda revisão atinge uma parte nomeável (um
 	// plano pode ser revisado por inteiro), e transformar isso em reprovação obrigaria a
 	// inventar marcação onde ela não cabe.
-	if avisoDeTopoRE().MatchString(topo(content)) && !alteradoPorRE().MatchString(content) {
+	if avisoDeTopoRE().MatchString(topo(content)) && !changedByRE().MatchString(content) {
 		return Pending, fmt.Sprintf("avisa que foi revisado por %s, e não marca QUAIS partes "+
 			"mudaram. Quem lê a fase 3 não sabe se ela é uma delas, e descobrir custa reler "+
 			"o plano inteiro. Marque cada parte atingida:\n"+

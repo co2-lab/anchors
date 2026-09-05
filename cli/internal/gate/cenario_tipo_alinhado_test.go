@@ -25,7 +25,7 @@ Funcionalidade: Seção
     Então devo ver o texto de intro
 `
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
-	v, detail := checkCenarioTipoAlinhado(feat, n, "", nil, cfgComTags())
+	v, detail := checkScenarioTypeAligned(feat, n, "", nil, cfgComTags())
 	if v != Pending {
 		t.Fatalf("esperava Pending, veio %v: %s", v, detail)
 	}
@@ -48,7 +48,7 @@ Funcionalidade: Seção
     Então devo ver os termos
 `
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
-	if v, detail := checkCenarioTipoAlinhado(feat, n, "", nil, cfgComTags()); v != Pass {
+	if v, detail := checkScenarioTypeAligned(feat, n, "", nil, cfgComTags()); v != Pass {
 		t.Errorf("esperava Pass, veio %v: %s", v, detail)
 	}
 }
@@ -59,7 +59,7 @@ func TestCenarioTipoAlinhado_semMapaFicaEmSilencio(t *testing.T) {
 	cfg := &config.Config{RuleTypes: []config.RuleType{{Letter: "S", Term: "State"}}}
 	feat := "# language: pt\n\n  @comportamento @LGSTX-S01 @P2\n  Cenário: x\n    Então y\n"
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
-	if v, _ := checkCenarioTipoAlinhado(feat, n, "", nil, cfg); v != Skip {
+	if v, _ := checkScenarioTypeAligned(feat, n, "", nil, cfg); v != Skip {
 		t.Errorf("esperava Skip sem mapa tag→letra, veio %v", v)
 	}
 }
@@ -99,7 +99,7 @@ Funcionalidade: Badge
     Então não devo ver a pílula
 `
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
-	if v, detail := checkCenarioTipoAlinhado(feat, n, "", nil, cfg); v != Pass {
+	if v, detail := checkScenarioTypeAligned(feat, n, "", nil, cfg); v != Pass {
 		t.Errorf("esperava Pass — a tag cabe nas duas letras: %v %s", v, detail)
 	}
 }
@@ -120,7 +120,7 @@ Funcionalidade: Banner
     Então devo ver o rótulo "Processando..."
 `
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
-	if v, detail := checkCenarioTipoAlinhado(feat, n, "", nil, cfg); v != Pass {
+	if v, detail := checkScenarioTypeAligned(feat, n, "", nil, cfg); v != Pass {
 		t.Errorf("esperava Pass — a tag descreve o código secundário: %v %s", v, detail)
 	}
 }

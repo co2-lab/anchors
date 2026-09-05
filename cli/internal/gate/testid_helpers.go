@@ -143,7 +143,7 @@ func testIDsDeclarados(spec, attr string) []string {
 		// e `ATLNX-VR` (coluna "Usado em") como se fossem testIDs declarados, e depois
 		// acusá-los de órfãos — inventando dívida a partir da própria documentação.
 		alvo := linha
-		if celulas := celulasDaLinha(linha); celulas != nil {
+		if celulas := rowCells(linha); celulas != nil {
 			alvo = celulas[0]
 		}
 		for _, m := range testIDDeclaradoRE.FindAllStringSubmatch(alvo, -1) {
@@ -164,9 +164,9 @@ func testIDsDeclarados(spec, attr string) []string {
 	return out
 }
 
-// celulasDaLinha devolve as células de uma linha de tabela Markdown, ou nil se a
+// rowCells devolve as células de uma linha de tabela Markdown, ou nil se a
 // linha não for tabela. Separador (`| --- |`) não tem conteúdo e devolve nil.
-func celulasDaLinha(linha string) []string {
+func rowCells(linha string) []string {
 	t := strings.TrimSpace(linha)
 	if !strings.HasPrefix(t, "|") {
 		return nil

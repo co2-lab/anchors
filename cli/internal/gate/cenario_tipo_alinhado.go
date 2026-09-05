@@ -32,7 +32,7 @@ import (
 //
 // PENDING e não FAIL: o desacordo é dívida herdada em qualquer base que adote o gate
 // depois de escrever features, e a correção pede julgamento caso a caso.
-func checkCenarioTipoAlinhado(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkScenarioTypeAligned(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindFeature {
 		return Skip, "" // a tag e o código moram na feature
 	}
@@ -79,7 +79,7 @@ func checkCenarioTipoAlinhado(content string, n mapx.Node, _ string, _ *mapx.Gra
 			declaradas, conhecida := cfg.LetrasDaTag(nome)
 			// Uma tag pode caber sob mais de uma letra (ver LetrasDaTag): basta que a
 			// letra do código esteja entre elas para não haver discordância.
-			if !conhecida || alguma(declaradas, letras) {
+			if !conhecida || any(declaradas, letras) {
 				continue
 			}
 			achados = append(achados, fmt.Sprintf("%s é `%s` mas o cenário se declara `@%s` (letra %s): %q",
@@ -130,8 +130,8 @@ func corta(s string, n int) string {
 	return string([]rune(s)[:n]) + "…"
 }
 
-// alguma diz se alguma das letras declaradas para a tag está entre as do cenário.
-func alguma(declaradas []string, letras map[string]bool) bool {
+// any diz se any das letras declaradas para a tag está entre as do cenário.
+func any(declaradas []string, letras map[string]bool) bool {
 	for _, d := range declaradas {
 		if letras[d] {
 			return true

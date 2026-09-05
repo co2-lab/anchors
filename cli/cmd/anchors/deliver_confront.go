@@ -32,7 +32,7 @@ import (
 // O confronto não BLOQUEIA o registro: ele imprime. Bloquear empurraria o autor a
 // declarar menos — e o valor do registro está em ele declarar mais.
 func confrontarEntrega(root string, files []string, unit string) {
-	avisos, confrontou := arquivosNaoTocados(root, files)
+	avisos, confrontou := untouchedFiles(root, files)
 	if !confrontou {
 		// Sem git este confronto NÃO ACONTECEU. Calar aqui era o pior silêncio do
 		// comando: a ausência de aviso é lida como "os arquivos declarados conferem",
@@ -63,13 +63,13 @@ func confrontarEntrega(root string, files []string, unit string) {
 	}
 }
 
-// arquivosNaoTocados devolve os arquivos declarados que o git não vê como modificados
+// untouchedFiles devolve os arquivos declarados que o git não vê como modificados
 // nem como novos. Usa o git porque é a única fonte que sabe o que MUDOU — não basta o
 // arquivo existir.
 // O segundo retorno diz se o confronto ACONTECEU. Sem ele, "nenhum arquivo suspeito"
 // e "não tive como olhar" seriam o mesmo `nil` — e quem lê a saída concluiria que está
 // tudo certo por não ver aviso nenhum.
-func arquivosNaoTocados(root string, files []string) (avisos []string, confrontou bool) {
+func untouchedFiles(root string, files []string) (avisos []string, confrontou bool) {
 	out, err := exec.Command("git", "-C", root, "status", "--porcelain").Output()
 	if err != nil {
 		return nil, false // sem git: não há como confrontar, e inventar seria pior

@@ -256,7 +256,7 @@ func criaLabelsDeEstado(cfg *config.Config) error {
 	return nil
 }
 
-// corpoDeProtecao monta o JSON que a API de proteção de branch exige.
+// protectionBody monta o JSON que a API de proteção de branch exige.
 //
 // `required_approving_review_count` era ZERO, com o argumento de que exigir aprovação de
 // outra conta travaria um time de uma pessoa. Isso valia quando quem aprovava era gente —
@@ -271,7 +271,7 @@ func criaLabelsDeEstado(cfg *config.Config) error {
 // cobra a porta. Os três são OBRIGATÓRIOS no corpo, mesmo nulos — a API responde 422 se
 // qualquer um faltar, e a função é separada para que um teste confronte isso sem falar
 // com o GitHub.
-func corpoDeProtecao(aprovacoes int) string {
+func protectionBody(aprovacoes int) string {
 	return fmt.Sprintf(`{"required_status_checks":null,"enforce_admins":false,`+
 		`"required_pull_request_reviews":{"required_approving_review_count":%d},`+
 		`"restrictions":null}`, aprovacoes)
@@ -288,7 +288,7 @@ func protegeBranches(cfg *config.Config) error {
 	}
 	repo := cfg.Workflow.Repo
 	for _, b := range cfg.Workflow.BranchesProtegidos() {
-		body := corpoDeProtecao(cfg.Workflow.AprovacoesExigidas())
+		body := protectionBody(cfg.Workflow.AprovacoesExigidas())
 		// `--input -` LÊ do stdin, e é preciso de fato escrever nele: sem isso o corpo
 		// chega vazio e a API responde 422 reclamando de um campo obrigatório nulo — que
 		// foi o que aconteceu enquanto o `body` era montado e descartado logo abaixo.

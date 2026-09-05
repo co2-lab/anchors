@@ -59,7 +59,7 @@ func checkRegraImplementada(content string, n mapx.Node, root string, g *mapx.Gr
 	if len(regras) == 0 {
 		return Skip, "a spec não cataloga nenhuma regra com código"
 	}
-	alvo, achou := alvoDaSpecNoDisco(root, n.ID)
+	alvo, achou := specTargetOnDisk(root, n.ID)
 	if !achou {
 		// Sem código, quem acusa é o `trinca-completa` — este gate confronta o código que
 		// existe, e duplicar a cobrança produziria dois gates apontando o mesmo dedo.
@@ -243,8 +243,8 @@ func regrasDeclaradas(content, unidade string) []string {
 	return out
 }
 
-// alvoDaSpecNoDisco acha o arquivo de código que a spec descreve, pelo nome.
-func alvoDaSpecNoDisco(root, specID string) (string, bool) {
+// specTargetOnDisk acha o arquivo de código que a spec descreve, pelo nome.
+func specTargetOnDisk(root, specID string) (string, bool) {
 	base := strings.TrimSuffix(specID, ".spec.md")
 	if base == specID {
 		return "", false

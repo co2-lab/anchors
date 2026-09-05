@@ -139,25 +139,25 @@ func Run(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph)
 // relacionais que consultam a Estrutura (de-para de regimes, superfícies da trinca).
 // `Run` delega a ela com cfg nil (checkers relacionais tratam nil como sem-de-para).
 func RunWithConfig(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) []Result {
-	return RunCompleto(gates, nodes, root, graph, cfg, false)
+	return RunFull(gates, nodes, root, graph, cfg, false)
 }
 
-// RunCompleto é o Run que também sabe se a varredura é o PROJETO INTEIRO (`check --all`).
+// RunFull é o Run que também sabe se a varredura é o PROJETO INTEIRO (`check --all`).
 // Só isso permite honrar o `scope_full` do gate: no full, quem sabe varrer sozinho roda
 // UMA vez sem receber a lista, em vez de receber os milhares de alvos em lotes. Os demais
 // chamadores seguem por RunWithConfig, que passa `completa: false` — o comportamento de
 // sempre para recorte incremental.
-func RunCompleto(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool) []Result {
-	return RunComDispensa(gates, nodes, root, graph, cfg, completa, Waiver{})
+func RunFull(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool) []Result {
+	return RunWithWaiver(gates, nodes, root, graph, cfg, completa, Waiver{})
 }
 
-// RunComDispensa é o Run que honra dispensa POR ALVO.
+// RunWithWaiver é o Run que honra dispensa POR ALVO.
 //
 // A dispensa por regra era aplicada FILTRANDO o gate da lista, e isso bastava enquanto
 // ela valia para tudo. Uma dispensa restrita a caminhos não pode sair por ali: o gate
 // precisa RODAR e confrontar os outros alvos — senão dispensar 4 specs novas apagaria o
 // gate para o repositório inteiro, e uma trinca quebrada por descuido passaria junto.
-func RunComDispensa(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool, disp Waiver) []Result {
+func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool, disp Waiver) []Result {
 	// A gramática do código de cenário segue o vocabulário do projeto (`rule_types`).
 	SetRuleLetters(cfg.RuleLetters())
 	// índice kind por nó já vem em node.Kind

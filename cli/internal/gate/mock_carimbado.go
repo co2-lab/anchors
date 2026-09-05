@@ -31,7 +31,7 @@ import (
 // O gate RECALCULA em vez de validar formato. Um carimbo que ninguém confronta é
 // teatro: quem edita o teste o regeneraria para casar com o próprio mock, e ele passaria
 // a certificar a si mesmo. Recalcular é o que torna o mecanismo à prova de quem escreve.
-func checkMockCarimbado(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindTest {
 		return Skip, "o carimbo vive no teste, ao lado do dublê que ele cobre"
 	}
@@ -46,7 +46,7 @@ func checkMockCarimbado(content string, n mapx.Node, root string, g *mapx.Graph,
 			"reconhecer um dublê neste ecossistema, e adivinhar reportaria verde sobre o que não conferiu"
 	}
 
-	carimbos := carimbosDeclarados(content)
+	carimbos := declaredStamps(content)
 
 	// AUSÊNCIA de carimbo é acusada, não pulada — e isto é a metade mais importante do
 	// gate.
@@ -116,7 +116,7 @@ func checkMockCarimbado(content string, n mapx.Node, root string, g *mapx.Graph,
 // (`apps/mobile/src/hooks/useX.ts`) descrevem o mesmo arquivo por vias diferentes —
 // alias e caminho de disco. Casar pelo sufixo sem extensão resolve os dois sem
 // precisar de um resolvedor de alias, que seria específico do ecossistema.
-func moduloTemCarimbo(modulo string, carimbos []carimboDeclarado) bool {
+func moduloTemCarimbo(modulo string, carimbos []declaredStamp) bool {
 	alvo := semExtensao(strings.TrimPrefix(modulo, "./"))
 	for strings.HasPrefix(alvo, "../") {
 		alvo = strings.TrimPrefix(alvo, "../")
@@ -135,8 +135,8 @@ func moduloTemCarimbo(modulo string, carimbos []carimboDeclarado) bool {
 	return false
 }
 
-// carimboDeclarado — o que o teste afirma sobre o trecho que dubla.
-type carimboDeclarado struct {
+// declaredStamp — o que o teste afirma sobre o trecho que dubla.
+type declaredStamp struct {
 	arquivo string // caminho do módulo, relativo à raiz
 	ancora  string // a LINHA INTEIRA que abre o trecho (conteúdo, nunca número)
 	qtd     int    // quantas linhas a partir da âncora entram no hash
@@ -152,14 +152,14 @@ type carimboDeclarado struct {
 var carimboRE = regexp.MustCompile(
 	`@contract:\s*([^|\n]+?)\s*\|\s*(.+?)\s*\|\s*(\d+)\s*\|\s*([0-9a-f]+)`)
 
-func carimbosDeclarados(content string) []carimboDeclarado {
-	var out []carimboDeclarado
+func declaredStamps(content string) []declaredStamp {
+	var out []declaredStamp
 	for _, m := range carimboRE.FindAllStringSubmatch(content, -1) {
 		qtd, err := strconv.Atoi(m[3])
 		if err != nil || qtd <= 0 {
 			continue
 		}
-		out = append(out, carimboDeclarado{
+		out = append(out, declaredStamp{
 			arquivo: m[1], ancora: m[2], qtd: qtd, hash: m[4],
 		})
 	}
@@ -171,7 +171,7 @@ func carimbosDeclarados(content string) []carimboDeclarado {
 // A âncora é procurada por CONTEÚDO — é o que torna o carimbo imune a deslocamento.
 // Duas ocorrências da mesma linha tornam o alvo ambíguo, e o gate prefere acusar a
 // escolher uma: um carimbo que aponta para "alguma das duas" não prova nada.
-func recalculaCarimbo(root string, c carimboDeclarado) (string, error) {
+func recalculaCarimbo(root string, c declaredStamp) (string, error) {
 	b, err := os.ReadFile(filepath.Join(root, c.arquivo))
 	if err != nil {
 		return "", fmt.Errorf("módulo não encontrado: %s", c.arquivo)

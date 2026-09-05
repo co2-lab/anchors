@@ -40,7 +40,7 @@ func TestLarguraEPorColuna(t *testing.T) {
 		gate.GateSummary{Gate: "a", Pass: 1116, Fail: 0, Skip: 0},
 		gate.GateSummary{Gate: "b", Pass: 1, Fail: 1, Skip: 582},
 	)
-	w := calcularLarguras(p)
+	w := computeWidths(p)
 
 	if w.pass != 4 {
 		t.Errorf("pass: %d, queria 4 (por causa de 1116)", w.pass)
@@ -56,7 +56,7 @@ func TestLarguraEPorColuna(t *testing.T) {
 // As colunas SEMPRE presentes têm piso 1: `%*d` com largura 0 imprimiria colado
 // no símbolo. A do drift é a exceção — ela nasce 0 e só abre com drift real.
 func TestLarguraMinimaEUm(t *testing.T) {
-	w := calcularLarguras(perfil(gate.GateSummary{Gate: "a"}))
+	w := computeWidths(perfil(gate.GateSummary{Gate: "a"}))
 	for nome, got := range map[string]int{
 		"pass": w.pass, "fail": w.fail, "skip": w.skip, "judge": w.judge,
 	} {

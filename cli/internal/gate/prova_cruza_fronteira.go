@@ -148,7 +148,7 @@ func checkProvaCruzaFronteira(content string, n mapx.Node, root string, g *mapx.
 				if unidadeAlvo == regraUnidade(regra) {
 					continue // auto-referência: a própria unidade não é o outro lado
 				}
-				arquivos := arquivosDaUnidade(g, unidadeAlvo)
+				arquivos := unitFiles(g, unidadeAlvo)
 				if len(arquivos) == 0 {
 					suspeitas = append(suspeitas, regra+" → `"+mm[0]+
 						"` (o código da regra-alvo não resolve para nenhuma unidade no mapa — "+
@@ -323,7 +323,7 @@ func regraUnidade(regra string) string {
 	return regra
 }
 
-// arquivosDaUnidade resolve um código de unidade (`PPAO`) para os arquivos de CÓDIGO
+// unitFiles resolve um código de unidade (`PPAO`) para os arquivos de CÓDIGO
 // daquela trinca. É o que permite o alvo ser declarado por código de regra em vez de
 // caminho de arquivo — o código é identidade estável, o caminho não.
 //
@@ -331,7 +331,7 @@ func regraUnidade(regra string) string {
 // declara `ref:`, e o mapa não o indexa por código). Da spec, a aresta `specifies`
 // leva ao código regido — que é o que precisa ser importado. Importar a spec ou o
 // teste não faria sentido.
-func arquivosDaUnidade(g *mapx.Graph, unidade string) []string {
+func unitFiles(g *mapx.Graph, unidade string) []string {
 	var out []string
 	for _, n := range g.Nodes {
 		if n.Code != unidade || n.Kind != mapx.KindSpec {

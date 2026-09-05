@@ -104,7 +104,7 @@ func runInitNaoInterativo(cmd *cobra.Command, root string, f *flagsInit, aceitar
 	// Aceitar os defaults continua possível, mas tem de ser DITO (`--defaults`):
 	// assim "não respondi" e "aceito tudo" nunca são a mesma coisa.
 	if !respondeuAlgo(r) && !aceitarDefaults {
-		return emiteJSON(map[string]any{
+		return emitJSON(map[string]any{
 			"projeto":           root,
 			"precisa_descobrir": initx.PrecisaDescobrir(root, p),
 			"escrito":           false,
@@ -120,7 +120,7 @@ func runInitNaoInterativo(cmd *cobra.Command, root string, f *flagsInit, aceitar
 	// anchors.yaml que ninguém decidiu por completo — e um arquivo assim carrega sem
 	// erro, governa errado, e não acusa a causa.
 	if !initx.TudoAceito(status) {
-		_ = emiteJSON(map[string]any{
+		_ = emitJSON(map[string]any{
 			"escrito":   false,
 			"respostas": status,
 			"erro":      "há respostas inválidas — nada foi escrito",
@@ -128,10 +128,10 @@ func runInitNaoInterativo(cmd *cobra.Command, root string, f *flagsInit, aceitar
 		return fmt.Errorf("respostas inválidas; nada foi escrito")
 	}
 
-	if err := aplicaRespostas(root, p, status); err != nil {
+	if err := applyAnswers(root, p, status); err != nil {
 		return err
 	}
-	return emiteJSON(map[string]any{
+	return emitJSON(map[string]any{
 		"escrito":       true,
 		"arquivo":       filepath.Join(root, config.DefaultFile),
 		"respostas":     status,
@@ -147,9 +147,9 @@ func respondeuAlgo(r initx.Respostas) bool {
 		r.Workflow != nil || r.Repo != nil || r.Labels != nil
 }
 
-// aplicaRespostas monta o anchors.yaml a partir dos status já validados, na mesma ordem
+// applyAnswers monta o anchors.yaml a partir dos status já validados, na mesma ordem
 // da TUI — cada decisão restringe a seguinte.
-func aplicaRespostas(root string, p *initx.Proposal, status []initx.StatusResposta) error {
+func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta) error {
 	cfg := p.Config
 	valor := func(id string) any {
 		for _, s := range status {
@@ -171,7 +171,7 @@ func aplicaRespostas(root string, p *initx.Proposal, status []initx.StatusRespos
 	}
 
 	artefatos := map[string]bool{}
-	for _, a := range comoLista(valor("artifacts")) {
+	for _, a := range asList(valor("artifacts")) {
 		artefatos[a] = true
 	}
 	initx.ApplyArtifactChoice(cfg, artefatos, map[string]string{
@@ -188,7 +188,7 @@ func aplicaRespostas(root string, p *initx.Proposal, status []initx.StatusRespos
 	colocado, _ := valor("colocation").(bool)
 	initx.ApplyColocation(cfg, colocado, artefatos)
 
-	if l := comoLista(valor("layers")); len(l) > 0 {
+	if l := asList(valor("layers")); len(l) > 0 {
 		keep := map[string]bool{}
 		for _, n := range l {
 			keep[n] = true
@@ -204,7 +204,7 @@ func aplicaRespostas(root string, p *initx.Proposal, status []initx.StatusRespos
 		cfg.Workflow = &config.Workflow{
 			Mode:   config.ModeGitHub,
 			Repo:   repo,
-			Labels: comoLista(valor("labels")),
+			Labels: asList(valor("labels")),
 		}
 	}
 
@@ -238,7 +238,7 @@ func proximoPassoApos(root string, p *initx.Proposal) string {
 	return "`anchors map build` — sem o mapa, nenhum arquivo existe para os gates"
 }
 
-func comoLista(v any) []string {
+func asList(v any) []string {
 	switch t := v.(type) {
 	case []string:
 		return t
@@ -254,9 +254,9 @@ func comoLista(v any) []string {
 	return nil
 }
 
-// emiteJSON escreve na saída padrão. Indentado: quem lê isto é um agente, mas um humano
+// emitJSON escreve na saída padrão. Indentado: quem lê isto é um agente, mas um humano
 // depurando o fluxo lê a mesma saída.
-func emiteJSON(v any) error {
+func emitJSON(v any) error {
 	b, err := json.MarshalIndent(v, "", "  ")
 	if err != nil {
 		return err

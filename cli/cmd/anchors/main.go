@@ -25,7 +25,7 @@ func main() {
 		// precisa distinguir "não tenho jurisdição sobre este arquivo" de "este
 		// arquivo reprovou". Sem isso, só resta grepar a mensagem — e foi assim que
 		// o pre-commit passou a deixar arquivo regido novo escapar sem trinca.
-		var nr errNaoRegido
+		var nr errNotGoverned
 		if errors.As(err, &nr) {
 			os.Exit(ExitNaoRegido)
 		}

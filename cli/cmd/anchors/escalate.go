@@ -105,10 +105,10 @@ card para trocar uma palavra é burocracia.`,
 			// label do fluxo E um estado, o pipeline de claim não a enxerga (ele filtra
 			// por `--label $LABEL --label anchors:to-do`), e ela fica no repositório sem
 			// nunca chegar a ninguém.
-			titulo := "[plano] " + primeiraLinhaDoMotivo(motivo)
+			titulo := "[plano] " + firstLineOfReason(motivo)
 			labels := []string{cfg.Workflow.Labels[0], "anchors:to-do"}
 			if paraUsuario {
-				titulo = "[decisão] " + primeiraLinhaDoMotivo(motivo)
+				titulo = "[decisão] " + firstLineOfReason(motivo)
 				labels = append(labels, initx.LabelPrecisaDoUsuario)
 			}
 			// SOB o card de origem, como LABEL — o que permite listar o que pende sob um
@@ -195,8 +195,8 @@ card para trocar uma palavra é burocracia.`,
 	return cmd
 }
 
-// primeiraLinhaDoMotivo faz o título da issue, que é uma linha.
-func primeiraLinhaDoMotivo(s string) string {
+// firstLineOfReason faz o título da issue, que é uma linha.
+func firstLineOfReason(s string) string {
 	if i := strings.IndexByte(s, '\n'); i >= 0 {
 		s = s[:i]
 	}

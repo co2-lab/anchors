@@ -17,7 +17,7 @@ func TestExitNaoRegidoAtravessaOSubprocesso(t *testing.T) {
 	// `false` sai com 1; `sh -c 'exit 3'` reproduz o código do filho.
 	err := traduzSaidaDoFilho(exec.Command("sh", "-c", "exit 3").Run())
 
-	var nr errNaoRegido
+	var nr errNotGoverned
 	if !errors.As(err, &nr) {
 		t.Fatalf("exit 3 do filho não virou errNaoRegido: %v (%T)", err, err)
 	}
@@ -27,7 +27,7 @@ func TestExitNaoRegidoAtravessaOSubprocesso(t *testing.T) {
 func TestOutrosCodigosContinuamSendoFalha(t *testing.T) {
 	err := traduzSaidaDoFilho(exec.Command("sh", "-c", "exit 1").Run())
 
-	var nr errNaoRegido
+	var nr errNotGoverned
 	if errors.As(err, &nr) {
 		t.Errorf("exit 1 foi tratado como não-regido — reprovação estaria sendo engolida")
 	}

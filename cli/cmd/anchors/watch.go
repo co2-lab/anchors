@@ -636,7 +636,7 @@ func pecaJaExiste(root, rel, peca string, cfg *config.Config) bool {
 		}
 	}
 	layer, _ := scan.Classify(alvo, cfg)
-	files, _ := caminhosDerivados(alvo, layer, cfg)
+	files, _ := derivedPaths(alvo, layer, cfg)
 	caminho := files[peca]
 	if caminho == "" {
 		return false

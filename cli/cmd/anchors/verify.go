@@ -53,7 +53,7 @@ Um gate de escopo project/batch só roda se HOUVER arquivo relevante no recorte:
 commit só de README não dispara o typecheck do monorepo.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if staged {
-				lista, err := arquivosStaged(root)
+				lista, err := stagedFiles(root)
 				if err != nil {
 					return err
 				}
@@ -117,10 +117,10 @@ commit só de README não dispara o typecheck do monorepo.`,
 	return cmd
 }
 
-// arquivosStaged lista o que está no índice do git (ACMR — sem deleções, que não há
+// stagedFiles lista o que está no índice do git (ACMR — sem deleções, que não há
 // como verificar). É a mesma lista que o pre-commit usava, agora obtida pelo próprio
 // anchors: o hook deixa de precisar saber a sintaxe do git.
-func arquivosStaged(root string) ([]string, error) {
+func stagedFiles(root string) ([]string, error) {
 	cmd := exec.Command("git", "diff", "--cached", "--name-only", "--diff-filter=ACMR")
 	cmd.Dir = root
 	out, err := cmd.Output()
@@ -170,7 +170,7 @@ func traduzSaidaDoFilho(err error) error {
 	// que é exatamente o caso que o código 3 existe para permitir.
 	var ee *exec.ExitError
 	if errors.As(err, &ee) && ee.ExitCode() == ExitNaoRegido {
-		return errNaoRegido{target: "os arquivos staged"}
+		return errNotGoverned{target: "os arquivos staged"}
 	}
 	return err
 }

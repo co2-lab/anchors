@@ -36,7 +36,7 @@ import (
 // de semântica mantendo a assinatura, o dublê segue mentindo e nenhum compilador vê.
 // Para esse resto existe julgamento (`mock-nao-replica-regra`) e teste de integração na
 // borda; prometer mais do que a forma seria vender o verde que este gate não dá.
-func checkMockTipado(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkMockTyped(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindTest {
 		return Skip, "o dublê vive no teste — é dele que a amarra é cobrada"
 	}

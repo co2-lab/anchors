@@ -33,7 +33,7 @@ import (
 // o Anchors o executa sem saber o que é eslint.
 
 func newTestCmd() *cobra.Command {
-	return novoComandoSuite(comandoSuite{
+	return novoComandoSuite(suiteCommand{
 		nome:  "test",
 		curto: "Roda as suítes de teste declaradas no anchors.yaml e ingere os relatórios",
 		secao: "tests",
@@ -70,7 +70,7 @@ e amarra o ` + "`junit:`" + `/` + "`lcov:`" + ` ao mapa, que é o passo que cost
 }
 
 func newMutationCmd() *cobra.Command {
-	return novoComandoSuite(comandoSuite{
+	return novoComandoSuite(suiteCommand{
 		nome:  "mutation",
 		curto: "Roda as suítes de mutação declaradas no anchors.yaml e ingere os relatórios",
 		secao: "mutation",
@@ -100,9 +100,9 @@ em vez de ela ser provada pelos dependentes.`,
 	})
 }
 
-// comandoSuite descreve o que muda entre `test` e `mutation` — o resto é idêntico, e
+// suiteCommand descreve o que muda entre `test` e `mutation` — o resto é idêntico, e
 // duplicar os dois faria a mensagem de "não configurado" divergir com o tempo.
-type comandoSuite struct {
+type suiteCommand struct {
 	nome     string
 	curto    string
 	secao    string // o nome da seção no anchors.yaml, usado nas mensagens
@@ -110,7 +110,7 @@ type comandoSuite struct {
 	usoLongo string
 }
 
-func novoComandoSuite(cs comandoSuite) *cobra.Command {
+func novoComandoSuite(cs suiteCommand) *cobra.Command {
 	var root, target, then string
 	var workspaces, changed, escopos []string
 	cmd := &cobra.Command{
@@ -166,7 +166,7 @@ func novoComandoSuite(cs comandoSuite) *cobra.Command {
 				if selErr != nil {
 					return selErr
 				}
-				alvos = arquivosDoImpacto(nodes, cs.secao, absRoot)
+				alvos = impactFiles(nodes, cs.secao, absRoot)
 				if len(alvos) == 0 {
 					fmt.Printf("o caminho de impacto não alcança arquivo de %s — nada a rodar.\n",
 						map[bool]string{true: "código", false: "código ou teste"}[cs.secao == "mutation"])
@@ -181,7 +181,7 @@ func novoComandoSuite(cs comandoSuite) *cobra.Command {
 			// O encadeamento é OPT-IN e só acontece depois do sucesso: um `check` sobre
 			// sinal que não foi produzido diria o mesmo de antes, e um sobre suíte que
 			// falhou culparia o gate por um teste vermelho.
-			return executaEncadeados(then, absRoot)
+			return runChained(then, absRoot)
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
@@ -199,9 +199,9 @@ func novoComandoSuite(cs comandoSuite) *cobra.Command {
 // rodaSuites executa cada suíte e ingere o que ela deixou. Para na primeira que falhar:
 // as camadas costumam depender umas das outras (não faz sentido rodar e2e depois de a
 // unit quebrar), e seguir adiante só produziria ruído sobre uma base já vermelha.
-func rodaSuites(cs comandoSuite, suites []config.Suite, absRoot, target string, alvos []string) error {
+func rodaSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, alvos []string) error {
 	for _, s := range suites {
-		linha, err := escolheComando(s, alvos, target)
+		linha, err := pickCommand(s, alvos, target)
 		if err != nil {
 			return fmt.Errorf("camada %q: %w", s.Layer, err)
 		}
@@ -215,9 +215,9 @@ func rodaSuites(cs comandoSuite, suites []config.Suite, absRoot, target string, 
 		}
 
 		inicio := time.Now()
-		errRun := execNaRaiz(linha, absRoot)
+		errRun := execAtRoot(linha, absRoot)
 
-		junit, lcov, mutation := caminhoAbs(absRoot, s.JUnit), caminhoAbs(absRoot, s.Lcov), caminhoAbs(absRoot, s.Report)
+		junit, lcov, mutation := absPath(absRoot, s.JUnit), absPath(absRoot, s.Lcov), absPath(absRoot, s.Report)
 		// A ingestão acontece MESMO se o comando saiu != 0, e essa é a regra menos
 		// óbvia daqui. Um runner sai != 0 exatamente quando há o que reportar: o jest
 		// quando um teste falha, o Stryker quando o score fica abaixo do próprio
@@ -296,11 +296,11 @@ func rotuloEscopo(s config.Suite) string {
 	return " " + s.Scope
 }
 
-// escolheComando decide entre os dois modos que o Anchors já tem em toda parte:
+// pickCommand decide entre os dois modos que o Anchors já tem em toda parte:
 // COMPLETO (o projeto inteiro) e INCREMENTAL (só o caminho de impacto do que mudou).
 // A simetria com o `check --all` / `check --changed` é o ponto: sem ela, o ciclo de
 // quem alterou um arquivo teria um passo barato para os gates e um caro para os testes.
-func escolheComando(s config.Suite, alvos []string, target string) (string, error) {
+func pickCommand(s config.Suite, alvos []string, target string) (string, error) {
 	if len(alvos) == 0 {
 		return montaComando(s.Run, target)
 	}
@@ -322,7 +322,7 @@ func primeiraPalavra(s string) string {
 	return strings.TrimSpace(s)
 }
 
-// arquivosDoImpacto traduz os nós do caminho de impacto nos ARQUIVOS que fazem sentido
+// impactFiles traduz os nós do caminho de impacto nos ARQUIVOS que fazem sentido
 // para cada comando. A filtragem por kind não é opinião sobre a stack: passar um
 // `.spec.md` para um runner de teste ou para um mutador não significa nada, e o
 // caminho de impacto do Anchors carrega a trinca inteira (spec, feature, teste, código).
@@ -339,7 +339,7 @@ func primeiraPalavra(s string) string {
 // mesmo — por leniencia do jest. Outro runner falharia calado, ou rodaria a suite
 // inteira achando que nao recebeu recorte. O Anchors nao tem como saber para onde o
 // comando vai fazer cd, entao entrega o caminho que vale de qualquer lugar.
-func arquivosDoImpacto(nodes []mapx.Node, secao, absRoot string) []string {
+func impactFiles(nodes []mapx.Node, secao, absRoot string) []string {
 	var out []string
 	// ToSlash no fim, e não é cosmético: o comando roda dentro de `sh -c`, onde a barra
 	// invertida é ESCAPE. Medido: com o separador nativo, "C:\Users\...\dedup.ts" chega
@@ -397,20 +397,20 @@ func montaComando(run, target string) (string, error) {
 	return strings.ReplaceAll(run, "{{target}}", target), nil
 }
 
-// execNaRaiz roda via `sh -c`, como os gates externos: o comando é do projeto e pode ter
+// execAtRoot roda via `sh -c`, como os gates externos: o comando é do projeto e pode ter
 // pipe, `&&`, variável — interpretá-lo aqui seria reimplementar um shell pela metade.
 // A saída vai direto para o terminal, sem captura: quem roda teste quer ver o teste
 // rodando, e engolir a saída para reimprimir no fim quebra qualquer barra de progresso.
-func execNaRaiz(linha, absRoot string) error {
+func execAtRoot(linha, absRoot string) error {
 	cmd := exec.Command("sh", "-c", linha) //nolint:gosec // o comando é declarado pelo projeto, como no `run:` dos gates
 	cmd.Dir = absRoot
 	cmd.Stdout, cmd.Stderr, cmd.Stdin = os.Stdout, os.Stderr, os.Stdin
 	return cmd.Run()
 }
 
-// caminhoAbs resolve o relatório contra a raiz. Vazio continua vazio — é o sinal de
+// absPath resolve o relatório contra a raiz. Vazio continua vazio — é o sinal de
 // "esta suíte não declara este artefato".
-func caminhoAbs(absRoot, p string) string {
+func absPath(absRoot, p string) string {
 	if strings.TrimSpace(p) == "" {
 		return ""
 	}
@@ -420,10 +420,10 @@ func caminhoAbs(absRoot, p string) string {
 	return filepath.Join(absRoot, filepath.FromSlash(p))
 }
 
-// executaEncadeados roda os comandos do Anchors pedidos em `--then`, no processo atual
+// runChained roda os comandos do Anchors pedidos em `--then`, no processo atual
 // (não re-invoca o binário: o mapa acabou de ser salvo, e um subprocesso só pagaria
 // carregamento de novo).
-func executaEncadeados(then, absRoot string) error {
+func runChained(then, absRoot string) error {
 	for _, nome := range strings.Split(then, ",") {
 		nome = strings.ToLower(strings.TrimSpace(nome))
 		if nome == "" {
@@ -450,7 +450,7 @@ func executaEncadeados(then, absRoot string) error {
 // imprimeComoConfigurar é a resposta a "não configurado": mostrar o que declarar, não
 // reclamar que falta. Quem chega aqui não sabe que a seção existe — mandá-lo para a
 // documentação seria transferir o trabalho de descobrir.
-func imprimeComoConfigurar(cs comandoSuite) {
+func imprimeComoConfigurar(cs suiteCommand) {
 	fmt.Printf(`
 Nenhuma suíte de %s declarada — o Anchors não adivinha como este projeto roda teste,
 porque a stack é sua. Declare no %s:

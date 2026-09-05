@@ -28,7 +28,7 @@ func TestNewTemplate_specIsBornConforming(t *testing.T) {
 		"## Visão Geral\nTODO: o que a unidade faz e para quem.\n\n" +
 		"## Regras\n\n### LGNOX-B01 — TODO regra\nDescreva o comportamento (não a implementação).\n\n"
 
-	if v, msg := checkHeaderConforme(spec, mapx.Node{ID: "x/Login.spec.md", Kind: "spec"}); v != Pass {
+	if v, msg := checkHeaderConforms(spec, mapx.Node{ID: "x/Login.spec.md", Kind: "spec"}); v != Pass {
 		t.Fatalf("spec do `new` reprova header-conforme: %s", msg)
 	}
 	if v, msg := checkSpecSections(spec, mapx.Node{ID: "x/Login.spec.md"}); v != Pass {
@@ -41,7 +41,7 @@ func TestNewTemplate_featureIsBornConforming(t *testing.T) {
 		"\n@LGNOX\nFuncionalidade: Login\n\n" +
 		"  @LGNOX-B01 @nivel-unit @P2\n  Cenário: TODO\n    Dado TODO\n    Quando TODO\n    Então o efeito LGNOX-B01 se verifica\n\n"
 
-	if v, msg := checkHeaderConforme(feat, headerNode(mapx.KindFeature)); v != Pass {
+	if v, msg := checkHeaderConforms(feat, headerNode(mapx.KindFeature)); v != Pass {
 		t.Fatalf("feature do `new` reprova header-conforme: %s", msg)
 	}
 	// non-empty: a feature tem conteúdo além do header.
@@ -54,7 +54,7 @@ func TestNewTemplate_testIsBornConforming(t *testing.T) {
 	test := "// @anchors\n//   ref: LGNOX\n//   updated_at: TODO\n//   layer: test\n" +
 		"\ndescribe('Login', () => {\n  it('[LGNOX-B01] TODO', () => {\n    // TODO\n  })\n})\n"
 
-	if v, msg := checkHeaderConforme(test, headerNode(mapx.KindTest)); v != Pass {
+	if v, msg := checkHeaderConforms(test, headerNode(mapx.KindTest)); v != Pass {
 		t.Fatalf("test do `new` reprova header-conforme: %s", msg)
 	}
 }

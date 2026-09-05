@@ -95,7 +95,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			if msgPath != "" {
 				if msg, err := os.ReadFile(msgPath); err == nil {
 					daMsg, errosMsg := gate.WaiverFromMessage(string(msg))
-					dispensa = dispensa.Mescla(daMsg)
+					dispensa = dispensa.Merge(daMsg)
 					erros = append(erros, errosMsg...)
 				}
 			}
@@ -169,7 +169,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// `all` chega até os gates: é o que permite ao gate que sabe varrer sozinho
 			// (`scope_full`) rodar UMA vez sem receber a lista, em vez de receber o projeto
 			// inteiro em lotes.
-			results := gate.RunComDispensa(cfg.Gates, nodes, absRoot, g, cfg, all, dispensa)
+			results := gate.RunWithWaiver(cfg.Gates, nodes, absRoot, g, cfg, all, dispensa)
 			profile := gate.Aggregate(results)
 			printProfile(profile, onlyIssues, showDrift)
 			avisarGatesSemAlvo(cfg.Gates, profile)
@@ -562,11 +562,11 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile) error {
 // assim que elas compartilharam uma mensagem — e o furo entrou por aí.
 const ExitNaoRegido = 3
 
-// errNaoRegido sinaliza o caminho não-regido. Carrega o alvo para a mensagem, e é
+// errNotGoverned sinaliza o caminho não-regido. Carrega o alvo para a mensagem, e é
 // reconhecida em main() para virar ExitNaoRegido em vez do exit 1 genérico.
-type errNaoRegido struct{ target string }
+type errNotGoverned struct{ target string }
 
-func (e errNaoRegido) Error() string {
+func (e errNotGoverned) Error() string {
 	return fmt.Sprintf("%q não é regido pela Estrutura (não casa nenhuma camada do `layers:`) — nada a confrontar", e.target)
 }
 
@@ -592,7 +592,7 @@ func selectNodes(g *mapx.Graph, cfg *config.Config, all bool, changed []string, 
 	for _, c := range changed {
 		ids, err := impactoDe(g, cfg, c, root)
 		if err != nil {
-			var nr errNaoRegido
+			var nr errNotGoverned
 			if errors.As(err, &nr) {
 				// Não-regido não contamina o lote: o Anchors só não tem jurisdição sobre
 				// ele. Com TODOS não-regidos, o erro sobe (o chamador decide o exit 3).
@@ -616,7 +616,7 @@ func selectNodes(g *mapx.Graph, cfg *config.Config, all bool, changed []string, 
 		if len(changed) > 1 {
 			alvo = fmt.Sprintf("%s (e mais %d)", changed[0], len(changed)-1)
 		}
-		return nil, "", errNaoRegido{target: alvo}
+		return nil, "", errNotGoverned{target: alvo}
 	}
 	for _, n := range g.Nodes {
 		if vistos[n.ID] {
@@ -654,13 +654,13 @@ func impactoDe(g *mapx.Graph, cfg *config.Config, changed, root string) ([]strin
 		// decisão é sobre o DIRETÓRIO-RAIZ do caminho (`issues/…`, `changes/…`).
 		ig := scan.LoadIgnoreFor(root, cfg)
 		if raiz, _, achou := strings.Cut(filepath.ToSlash(target), "/"); achou && ig.SkipDir(raiz, raiz) {
-			return nil, errNaoRegido{target: target}
+			return nil, errNotGoverned{target: target}
 		}
 		if ig.SkipFile(target) {
-			return nil, errNaoRegido{target: target}
+			return nil, errNotGoverned{target: target}
 		}
 		if layer, _ := scan.Classify(target, cfg); layer == "" {
-			return nil, errNaoRegido{target: target}
+			return nil, errNotGoverned{target: target}
 		}
 		return nil, fmt.Errorf("%q é REGIDO (camada do `layers:`) mas não está no mapa — "+
 			"rode `anchors map build` primeiro (é o passo que registra o arquivo novo). "+
@@ -725,7 +725,7 @@ type largurasContador struct{ pass, fail, drift, skip, judge int }
 
 func casas(n int) int { return len(fmt.Sprint(n)) }
 
-func calcularLarguras(p gate.Profile) largurasContador {
+func computeWidths(p gate.Profile) largurasContador {
 	// `drift` nasce em 0 — e continua 0 se nenhum gate tiver drift, que é o
 	// sinal para a coluna inteira não existir. Os outros têm piso 1: eles sempre
 	// aparecem, e `%*d` com largura 0 imprimiria colado no símbolo.
@@ -939,7 +939,7 @@ func avisarGatesSemAlvo(declarados []config.Gate, p gate.Profile) {
 func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 	nomes := p.GateNames()
 	wn := larguraDoNome(nomes)
-	w := calcularLarguras(p)
+	w := computeWidths(p)
 	limpos := 0
 
 	// perfil por gate
@@ -1105,7 +1105,7 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 // alguém lembrar sozinho. E o lembrete aparece AQUI, onde a pessoa acabou de ler os
 // vereditos — um aviso que exige rodar outro comando é um aviso que ninguém vê.
 func lembraMaturacao(p gate.Profile, onlyIssues bool) {
-	prom := gate.GatesPromoviveis(p)
+	prom := gate.PromotableGates(p)
 	if len(prom) == 0 {
 		return
 	}

@@ -29,7 +29,7 @@ Funcionalidade: Recorrências
     Então devo ver o texto de vazio
 `
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
-	v, detail := checkCenarioLetraDeclarada(feat, n, "", nil, cfgLetras())
+	v, detail := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras())
 	if v != Pending {
 		t.Fatalf("esperava Pending, veio %v: %s", v, detail)
 	}
@@ -44,7 +44,7 @@ Funcionalidade: Recorrências
 func TestCenarioLetraDeclarada_passaComVocabularioRespeitado(t *testing.T) {
 	feat := "# language: pt\n\n  @estado @ABCDX-S01 @P2\n  Cenário: x\n    Então y\n\n  @comportamento @ABCDX-B01#02 @P2\n  Cenário: z\n    Então w\n"
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
-	if v, detail := checkCenarioLetraDeclarada(feat, n, "", nil, cfgLetras()); v != Pass {
+	if v, detail := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras()); v != Pass {
 		t.Errorf("esperava Pass, veio %v: %s", v, detail)
 	}
 }
@@ -54,7 +54,7 @@ func TestCenarioLetraDeclarada_passaComVocabularioRespeitado(t *testing.T) {
 func TestCenarioLetraDeclarada_agrupaPorLetra(t *testing.T) {
 	feat := "# language: pt\n\n  @x @ABCDX-FP01 @P2\n  Cenário: a\n    Então y\n\n  @x @ABCDX-FP02 @P2\n  Cenário: b\n    Então y\n"
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
-	_, detail := checkCenarioLetraDeclarada(feat, n, "", nil, cfgLetras())
+	_, detail := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras())
 	if !strings.HasPrefix(detail, "1 letra(s)") {
 		t.Errorf("esperava uma única letra acusada, veio: %s", detail)
 	}

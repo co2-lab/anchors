@@ -15,7 +15,7 @@ import (
 // que a proteção existia para fechar.
 func TestCorpoDeProtecaoTemOsCamposObrigatorios(t *testing.T) {
 	var corpo map[string]any
-	if err := json.Unmarshal([]byte(corpoDeProtecao(1)), &corpo); err != nil {
+	if err := json.Unmarshal([]byte(protectionBody(1)), &corpo); err != nil {
 		t.Fatalf("o corpo não é JSON válido: %v", err)
 	}
 	// A API recusa (422) se qualquer um destes faltar, mesmo que o valor seja nulo.
@@ -58,7 +58,7 @@ func TestAprovacoesExigidasPadraoEhUma(t *testing.T) {
 		t.Errorf("zero declarado deveria valer, veio %d", got)
 	}
 	// E o corpo enviado à API reflete o número.
-	if !strings.Contains(corpoDeProtecao(2), `"required_approving_review_count":2`) {
+	if !strings.Contains(protectionBody(2), `"required_approving_review_count":2`) {
 		t.Error("o corpo deveria carregar o número de aprovações")
 	}
 }

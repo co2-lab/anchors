@@ -31,7 +31,7 @@ import (
 //
 // A razão é obrigatória pelo mesmo motivo de sempre: um marcador nu vira um jeito
 // silencioso de calar o gate, e some o rastro de que houve decisão.
-func checkCodigoCatalogado(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, "a spec é o catálogo — é dela que o confronto parte"
 	}
@@ -39,7 +39,7 @@ func checkCodigoCatalogado(content string, n mapx.Node, root string, g *mapx.Gra
 		return Pending, "sem mapa carregado — o gate relacional precisa do grafo"
 	}
 
-	alvo, texto, ok := alvoDaSpec(n, root, g)
+	alvo, texto, ok := specTarget(n, root, g)
 	if !ok {
 		return Skip, "spec sem código ligado (`specifies`) — a ausência é do gate trinca-completa"
 	}
@@ -116,8 +116,8 @@ func simbolosComLinha(codigo string) []simboloExportado {
 	return out
 }
 
-// alvoDaSpec lê o arquivo que a spec descreve (aresta `specifies`).
-func alvoDaSpec(n mapx.Node, root string, g *mapx.Graph) (alvo, texto string, ok bool) {
+// specTarget lê o arquivo que a spec descreve (aresta `specifies`).
+func specTarget(n mapx.Node, root string, g *mapx.Graph) (alvo, texto string, ok bool) {
 	for _, e := range g.Neighbors(n.ID).Out {
 		if e.Type != mapx.EdgeSpecifies {
 			continue

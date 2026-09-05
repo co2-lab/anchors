@@ -121,7 +121,7 @@ func checkTrincaCompleta(content string, n mapx.Node, root string, g *mapx.Graph
 	}
 
 	if dispensas[string(mapx.EdgeTestedBy)] {
-		if qtd, feat := cenariosDaFeatureLigada(n, root, g); qtd > 0 {
+		if qtd, feat := linkedFeatureScenarios(n, root, g); qtd > 0 {
 			return Fail, fmt.Sprintf(
 				"a spec declara `@no-test` mas a feature ligada (`%s`) tem %d cenário(s). "+
 					"São afirmações contraditórias: a dispensa diz que não há o que provar, e o "+
@@ -352,9 +352,9 @@ func dispensasDaSpec(content string) map[string]bool {
 	return out
 }
 
-// cenariosDaFeatureLigada conta os cenários da feature que a spec cobre, e devolve
+// linkedFeatureScenarios conta os cenários da feature que a spec cobre, e devolve
 // o caminho dela. Zero quando não há feature ligada — aí não existe contradição.
-func cenariosDaFeatureLigada(n mapx.Node, root string, g *mapx.Graph) (int, string) {
+func linkedFeatureScenarios(n mapx.Node, root string, g *mapx.Graph) (int, string) {
 	if g == nil {
 		return 0, ""
 	}

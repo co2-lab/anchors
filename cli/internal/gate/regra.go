@@ -93,7 +93,7 @@ func (d Waiver) Waived(id RuleID) (string, bool) {
 	// alvo a alvo, e quem pergunta sem dizer o alvo recebe "não dispensado". É o que
 	// impede o filtro de gates de remover o gate da lista e apagá-lo para todo o
 	// repositório.
-	if len(d.alvosDe(id)) > 0 {
+	if len(d.targetsOf(id)) > 0 {
 		return "", false
 	}
 	return motivo, true
@@ -118,7 +118,7 @@ func (d Waiver) WaivedTarget(id RuleID, codigo string) (string, bool) {
 	if !ok {
 		return "", false
 	}
-	alvos := d.alvosDe(id)
+	alvos := d.targetsOf(id)
 	if len(alvos) == 0 {
 		return motivo, true
 	}
@@ -151,8 +151,8 @@ func (d Waiver) dispensouRegra(id RuleID) (string, bool) {
 	return "", false
 }
 
-// alvosDe devolve os caminhos a que a dispensa desta regra está restrita.
-func (d Waiver) alvosDe(id RuleID) []string {
+// targetsOf devolve os caminhos a que a dispensa desta regra está restrita.
+func (d Waiver) targetsOf(id RuleID) []string {
 	if len(d.Alvos) == 0 {
 		return nil
 	}
@@ -252,10 +252,10 @@ func WaiverFromMessage(msg string) (Waiver, []string) {
 	return d, erros
 }
 
-// Mescla junta duas dispensas. A da mensagem de commit e a da variável de ambiente
+// Merge junta duas dispensas. A da mensagem de commit e a da variável de ambiente
 // convivem: um projeto pode ter um hook de CI que usa a variável e um autor que escreve
 // o marcador, e recusar a combinação obrigaria a escolher sem motivo.
-func (d Waiver) Mescla(outra Waiver) Waiver {
+func (d Waiver) Merge(outra Waiver) Waiver {
 	if d.PorRegra == nil {
 		d.PorRegra = map[string]string{}
 	}
