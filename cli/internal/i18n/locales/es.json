@@ -14,21 +14,25 @@
   "thaw.not_frozen": "○ el proyecto no está congelado — nada que hacer.",
   "thaw.done": "✓ PROYECTO LIBERADO — el trabajo vuelve.",
   "thaw.cache_warning": "  Quien tenga la caché del hook caliente puede tardar hasta 10 minutos en\n  notarlo — o ejecutar `git fetch` para forzarlo.",
-
   "lang.unsupported": "el idioma %q no está soportado — los disponibles son: %s",
-
   "check.can_promote": "✓ se puede promover (ningún gate falló)",
   "check.blocked_by_gates": "✗ bloqueado — %d gate(s) bloqueante(s) fallaron",
-  "check.blocked_by_judgment": "✗ bloqueado — %d objetivo(s) esperan juicio.",
+  "check.blocked_by_judgment": "✗ bloqueado — %d objetivo(s) esperan juicio.\n  El juicio es de ESTE commit: quien tocó el archivo es quien tiene el\n  contexto para responder. Resuélvelo antes de hacer commit:\n      anchors judge --pending",
   "check.pending_note": "Pendiente no es defecto: es el gate diciendo que algo fue declarado y aún no decidido. No bloquea, y no desaparece solo.",
   "check.legend.pass": "pasó",
   "check.legend.fail": "falló — se convierte en issue",
   "check.legend.warn": "divergió, pero no bloquea",
   "check.legend.skip": "indeterminado — el gate no tuvo qué confrontar",
-
   "map.built": "mapa construido: %d nodos, %d aristas",
   "map.written_to": "  escrito en %s",
   "map.version_mismatch": "⚠ el mapa fue escrito por `anchors %s` y este es %s.\n  Versiones distintas escriben el mapa de formas distintas: la más vieja DESHACE lo que la más nueva escribió, y el mapa empieza a oscilar — conflicto en cada PR, sin que nadie se equivoque.\n  Actualiza el binario (o ejecuta `anchors map build` con el nuevo y haz commit) antes de seguir.",
-
-  "not_governed": "%q no está regido por la Estructura (no coincide con ninguna capa de `layers:`) — nada que confrontar"
+  "not_governed": "%q no está regido por la Estructura (no coincide con ninguna capa de `layers:`) — nada que confrontar",
+  "check.no_deterministic_gate": "ningún gate determinista que ejecutar (todos son de juicio).",
+  "check.no_gate_for_slice": "ningún gate que ejecutar para este recorte (fase=%q categoría=%q).",
+  "check.awaiting_ai_judgment": "%d objetivo(s) esperan juicio de IA — ejecuta `anchors next` (o `anchors judge --pending`)",
+  "check.output_mirrored": "salida reflejada en %s — léela desde ahí en vez de ejecutar de nuevo.",
+  "status.header": "anchors status — %s",
+  "status.git_missing": "⚠ git no está instalado — el sello de cambio, `coverage --diff` y los\n  hooks quedan apagados. Instala git.",
+  "status.no_git_repo": "⚠ sin repositorio git.\n  → PRÓXIMO PASO: `git init` (o ejecuta `anchors init`, que ofrece hacerlo)",
+  "status.not_started": "○ proyecto aún no iniciado: sin PROJECT.md y sin anchors.yaml.\n\n  → PRÓXIMO PASO: la fase DESCUBRIR — una entrevista de 5 etapas que decide\n    stack, arquitectura, estructura y convenciones, y escribe PROJECT.md.\n    Quien la conduce es una IA: ejecuta `anchors guide project` para la regla,\n    o `anchors init`, que reconoce el estado e instruye."
 }

@@ -14,21 +14,25 @@
   "thaw.not_frozen": "○ the project is not frozen — nothing to do.",
   "thaw.done": "✓ PROJECT RELEASED — work resumes.",
   "thaw.cache_warning": "  Anyone with a warm hook cache may take up to 10 minutes to notice —\n  or run `git fetch` to force it.",
-
   "lang.unsupported": "language %q is not supported — available: %s",
-
   "check.can_promote": "✓ can promote (no gate failed)",
   "check.blocked_by_gates": "✗ blocked — %d blocking gate(s) failed",
-  "check.blocked_by_judgment": "✗ blocked — %d target(s) awaiting judgment.",
+  "check.blocked_by_judgment": "✗ blocked — %d target(s) awaiting judgment.\n  The judgment belongs to THIS commit: whoever touched the file is the one\n  holding the context to answer. Resolve before committing:\n      anchors judge --pending",
   "check.pending_note": "Pending is not a defect: it is the gate saying something was declared and not yet decided. It does not block, and it does not go away on its own.",
   "check.legend.pass": "passed",
   "check.legend.fail": "failed — becomes an issue",
   "check.legend.warn": "diverged, but does not block",
   "check.legend.skip": "indeterminate — the gate had nothing to confront",
-
   "map.built": "map built: %d nodes, %d edges",
   "map.written_to": "  written to %s",
   "map.version_mismatch": "⚠ the map was written by `anchors %s` and this is %s.\n  Different versions write the map differently: the older one UNDOES what the newer wrote, and the map starts oscillating — a conflict on every PR, with nobody at fault.\n  Update the binary (or run `anchors map build` with the new one and commit) before going on.",
-
-  "not_governed": "%q is not governed by the Structure (matches no layer in `layers:`) — nothing to confront"
+  "not_governed": "%q is not governed by the Structure (matches no layer in `layers:`) — nothing to confront",
+  "check.no_deterministic_gate": "no deterministic gate to run (all of them are judgment gates).",
+  "check.no_gate_for_slice": "no gate to run for this slice (phase=%q category=%q).",
+  "check.awaiting_ai_judgment": "%d target(s) awaiting AI judgment — run `anchors next` (or `anchors judge --pending`)",
+  "check.output_mirrored": "output mirrored to %s — read it from there instead of running again.",
+  "status.header": "anchors status — %s",
+  "status.git_missing": "⚠ git not installed — the change stamp, `coverage --diff` and the\n  hooks are off. Install git.",
+  "status.no_git_repo": "⚠ no git repository.\n  → NEXT STEP: `git init` (or run `anchors init`, which offers to do it)",
+  "status.not_started": "○ project not started yet: no PROJECT.md and no anchors.yaml.\n\n  → NEXT STEP: the DISCOVER phase — a 5-step interview that decides\n    stack, architecture, structure and conventions, and writes PROJECT.md.\n    An AI runs it: use `anchors guide project` for the rule,\n    or `anchors init`, which recognizes the state and instructs."
 }

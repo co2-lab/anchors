@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"path/filepath"
 	"strings"
@@ -69,7 +70,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				}
 				cfg.Gates = kept
 				if len(cfg.Gates) == 0 {
-					fmt.Println("nenhum gate determinístico a rodar (todos são de julgamento).")
+					fmt.Println(i18n.T("check.no_deterministic_gate"))
 					return nil
 				}
 			}
@@ -106,7 +107,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			}
 			cfg.Gates = filterGates(cfg.Gates, phase, category, skipSlow, perspective, dispensa)
 			if len(cfg.Gates) == 0 {
-				fmt.Printf("nenhum gate a rodar para este recorte (fase=%q categoria=%q).\n", phase, category)
+				fmt.Println(i18n.T("check.no_gate_for_slice", phase, category))
 				return nil
 			}
 			if mapPath == "" {
@@ -186,7 +187,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				// gates de JULGAMENTO: enfileira uma task `judge` por alvo pendente,
 				// para uma IA confrontar e reportar com `anchors judge`.
 				if n := enqueueJudgments(absRoot, cfg, profile); n > 0 {
-					fmt.Printf("%d alvo(s) aguardam julgamento de IA — rode `anchors next` (ou `anchors judge --pending`)\n", n)
+					fmt.Println(i18n.T("check.awaiting_ai_judgment", n))
 				}
 				// PENDENTES é o que está NA FILA, não o que acabou de ser enfileirado.
 				//
@@ -202,7 +203,8 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				if err != nil {
 					rel = c
 				}
-				fmt.Printf("\nsaída espelhada em %s — releia daqui em vez de rodar de novo.\n", rel)
+				fmt.Println()
+				fmt.Println(i18n.T("check.output_mirrored", rel))
 			}
 
 			// JULGAMENTO PENDENTE BARRA O COMMIT, e só o commit — não o `--all`.
@@ -220,10 +222,8 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// ninguém acabou de criar tornaria impossível medir um projeto que já tem
 			// pendência acumulada.
 			if pendentes > 0 && !all {
-				fmt.Printf("\n✗ barrado — %d alvo(s) aguardam julgamento.\n", pendentes)
-				fmt.Println("  O julgamento é do commit ATUAL: quem mexeu no arquivo é quem tem o")
-				fmt.Println("  contexto para responder. Resolva antes de commitar:")
-				fmt.Println("      anchors judge --pending")
+				fmt.Println()
+				fmt.Println(i18n.T("check.blocked_by_judgment", pendentes))
 				espelho.Close()
 				os.Exit(1)
 			}
