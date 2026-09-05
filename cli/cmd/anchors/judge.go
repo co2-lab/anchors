@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"path/filepath"
 	"strings"
@@ -221,15 +222,15 @@ está declarada.`,
 				// alvo foi verificado e aprovado — a mesma confusão que o `pass`
 				// mentiroso produzia, agora vinda do próprio comando.
 				if ok, _ := issue.Resolve(absRoot, iss.Key()); ok {
-					fmt.Printf("○ julgado DISPENSADO — não havia o que confrontar; issue anterior resolvida (→ %s/done/)\n", issue.Dir)
+					fmt.Println(i18n.T("judge.waived_resolved", issue.Dir))
 				} else {
-					fmt.Printf("○ julgado DISPENSADO — não havia o que confrontar\n")
+					fmt.Println(i18n.T("judge.waived"))
 				}
 			} else {
 				if ok, _ := issue.Resolve(absRoot, iss.Key()); ok {
-					fmt.Printf("✓ julgado PASS — issue anterior resolvida (→ %s/done/)\n", issue.Dir)
+					fmt.Println(i18n.T("judge.pass_resolved", issue.Dir))
 				} else {
-					fmt.Printf("✓ julgado PASS\n")
+					fmt.Println(i18n.T("judge.pass"))
 				}
 			}
 			fmt.Printf("  carimbado: %d aresta(s) com o veredito de IA (gate '%s')\n", stamped, gc.Name)
