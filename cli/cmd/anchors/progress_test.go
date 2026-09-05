@@ -170,8 +170,8 @@ func TestJudge_aceitaDispensadoEExigeMotivo(t *testing.T) {
 	}{
 		{"pass", "", false, "pass sem motivo é aceito (aprovação não precisa de laudo)"},
 		{"fail", "", true, "fail sem motivo não é acionável"},
-		{"dispensado", "", true, "dispensado sem a ausência nomeada é indistinguível de gate desligado"},
-		{"dispensado", "a spec declara @TBD: code e MTHRN não existe", false, "dispensado com motivo é aceito"},
+		{"waived", "", true, "dispensado sem a ausência nomeada é indistinguível de gate desligado"},
+		{"waived", "a spec declara @TBD: code e MTHRN não existe", false, "dispensado com motivo é aceito"},
 		{"inventado", "x", true, "veredito fora dos três é recusado"},
 	} {
 		err := validaVeredito(c.verdict, c.reason)

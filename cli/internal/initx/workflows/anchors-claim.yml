@@ -125,7 +125,7 @@ jobs:
           for estado in "anchors:ready-to-review" "anchors:to-do"; do
             gh issue list --state open --label "$LABEL" --label "$estado" \
               --limit 200 --json number,labels \
-              --jq '.[] | select([.labels[].name] | index("anchors:precisa-do-usuario") | not) | .number' \
+              --jq '.[] | select([.labels[].name] | (index("anchors:needs-user") or index("anchors:precisa-do-usuario")) | not) | .number' \
               >> /tmp/disponiveis.txt
           done
 
@@ -348,7 +348,7 @@ jobs:
             # quem pode destravá-lo. Fosse estado, ele sairia da coluna onde o trabalho
             # realmente parou.
             if [ "$voltas" -ge 10 ]; then
-              gh issue edit "$livre" --add-label "anchors:precisa-do-usuario" >/dev/null 2>&1 || true
+              gh issue edit "$livre" --add-label "anchors:needs-user" >/dev/null 2>&1 || true
               # `printf` em vez de heredoc: o bash exige o delimitador de fecho na COLUNA
               # ZERO, e o YAML exige que tudo dentro de `run:` fique indentado. Os dois não
               # podem ser satisfeitos ao mesmo tempo — medido: o script quebrou com
@@ -363,7 +363,7 @@ jobs:
                 'o ponto em que elas discordam sobre o que a spec PEDE, não sobre o que o' \
                 'código faz.' '' \
                 '**Como destravar:** decida o ponto e escreva a decisão NA SPEC (uma regra' \
-                'nova, com código). Depois remova a label `anchors:precisa-do-usuario` e o' \
+                'nova, com código). Depois remova a label `anchors:needs-user` e o' \
                 'fluxo segue.' '' \
                 'Enquanto a label estiver aqui, o pipeline de claim não entrega este card.' \
                 > /tmp/escala.md

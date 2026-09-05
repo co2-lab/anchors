@@ -23,7 +23,7 @@ import (
 // Incoerência e lacuna são descobertas diferentes com o MESMO fluxo: quem achou
 // interpreta o impacto, e a interpretação escolhe a saída.
 //
-//	--para-usuario  a mudança impacta a DIREÇÃO do projeto. Vira decisão de quem o
+//	--for-user  a mudança impacta a DIREÇÃO do projeto. Vira decisão de quem o
 //	                planejou, com `anchors:precisa-do-usuario`, e o claim não entrega
 //	                o card enquanto ela não sair.
 //
@@ -50,7 +50,7 @@ texto se contradiz) ou por LACUNA (o plano está coerente e não cobriu algo).
 
 Quem descobriu interpreta o impacto, e a interpretação escolhe a saída:
 
-  --para-usuario   a mudança impacta a DIREÇÃO do projeto, ou você tem dúvida se
+  --for-user   a mudança impacta a DIREÇÃO do projeto, ou você tem dúvida se
                    impacta. Vira decisão de quem planejou: a issue nasce com
                    'anchors:precisa-do-usuario', e o claim não entrega o card
                    enquanto a decisão não sair.
@@ -183,10 +183,15 @@ card para trocar uma palavra é burocracia.`,
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
-	cmd.Flags().StringVar(&sobre, "sobre", "", "o plano ou spec onde está a incoerência")
+	cmd.Flags().StringVar(&sobre, "about", "", "o plano ou spec onde está a incoerência")
 	cmd.Flags().StringVar(&card, "card", "", "número do card onde a necessidade foi descoberta")
-	cmd.Flags().BoolVar(&paraUsuario, "para-usuario", false,
+	cmd.Flags().BoolVar(&paraUsuario, "for-user", false,
 		"a mudança impacta a DIREÇÃO do projeto: vira decisão do usuário e para o card")
+	aliasDeFlag(cmd, "about", "sobre")
+	aliasDeFlag(cmd, "for-user", "para-usuario")
+	cmd.PreRunE = func(c *cobra.Command, _ []string) error {
+		return resolveAliases(c, map[string]string{"about": "sobre", "for-user": "para-usuario"})
+	}
 	return cmd
 }
 
@@ -237,7 +242,7 @@ func corpoDaEscalada(motivo, sobre, card string, paraUsuario bool) string {
 		"Entra na fila como qualquer outro trabalho.\n\n")
 	b.WriteString("**O que fazer:** altere o plano ou a spec e registre a revisão no " +
 		"próprio arquivo (`{CODIGO}-R0001: o que mudou e por quê`). Se ao mexer você " +
-		"concluir que isto MUDA A DIREÇÃO, não siga: `anchors escalate ... --para-usuario`.\n\n")
+		"concluir que isto MUDA A DIREÇÃO, não siga: `anchors escalate ... --for-user`.\n\n")
 	if card != "" {
 		b.WriteString(fmt.Sprintf("Nasceu SOB o card #%s (label `%s`), que segue normalmente. "+
 			"Os dois se entregam no mesmo PR: o achado apareceu fazendo aquele trabalho, e "+

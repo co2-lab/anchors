@@ -69,7 +69,7 @@ func TestEscalada_cardComumNaoPedeDecisao(t *testing.T) {
 	}
 	// E tem de ensinar a saída de emergência: quem for mexer pode descobrir, ao mexer,
 	// que a mudança era maior do que quem abriu julgou.
-	if !strings.Contains(corpo, "--para-usuario") {
+	if !strings.Contains(corpo, "--for-user") {
 		t.Errorf("o card comum deve dizer o que fazer se a mudança se revelar de direção; "+
 			"veio:\n%s", corpo)
 	}
@@ -101,12 +101,12 @@ func TestEscalada_naoPressupoeIncoerencia(t *testing.T) {
 // Também não é a sub-issue nativa do GitHub: ela aceita UM nível, e a hierarquia deste
 // fluxo tem mais (plano → fase → spec → achado).
 func TestVinculoComOTrabalhoDeOrigemEhLabel(t *testing.T) {
-	if got := initx.LabelSob("44"); got != "anchors:sob-44" {
+	if got := initx.LabelSob("44"); got != "anchors:under-44" {
 		t.Fatalf("a label liga o achado ao card; veio %q", got)
 	}
 	// E o corpo NOMEIA a relação, para quem lê a issue saber que ela não é solta.
 	corpo := corpoDaEscalada("o jest mede só src/", "jest.config.js", "44", false)
-	if !strings.Contains(corpo, "anchors:sob-44") {
+	if !strings.Contains(corpo, "anchors:under-44") {
 		t.Errorf("o corpo deve citar a label, senão quem lê não sabe como achar as irmãs;\n%s", corpo)
 	}
 	if !strings.Contains(corpo, "mesmo PR") {

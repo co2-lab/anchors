@@ -6,7 +6,7 @@ import (
 )
 
 // O motivo é a única coisa que separa dispensa DELIBERADA de gate ignorado. Aceitá-lo
-// ausente esvaziaria a garantia — e o relatório passaria a mostrar "dispensado" sem
+// ausente esvaziaria a garantia — e o relatório passaria a mostrar "waived" sem
 // dizer por quê.
 func TestDispensaExigeMotivo(t *testing.T) {
 	_, erros := ParseDispensa("triad-complete")
@@ -190,7 +190,7 @@ As specs nascem antes do código, como sempre na primeira rodada.
 }
 
 // Sem o motivo o marcador é recusado: é a mesma garantia da forma por variável, e
-// aceitá-lo vazio faria o relatório dizer "dispensado" sem dizer por quê.
+// aceitá-lo vazio faria o relatório dizer "waived" sem dizer por quê.
 func TestMarcadorSemMotivoEhRecusado(t *testing.T) {
 	if _, erros := DispensaDaMensagem("fix: algo\n\n[skip-triad-complete@WRKSP: ]"); len(erros) == 0 {
 		t.Error("marcador sem motivo deveria ser recusado")

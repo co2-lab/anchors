@@ -48,7 +48,7 @@ func newFreezeCmd() *cobra.Command {
   2. cria um ruleset no remoto que barra push e merge em todos os branches
   3. abre uma issue com o motivo, para quem esbarrar no freio saber o que houve
 
-O --motivo é OBRIGATÓRIO. Um congelamento sem razão escrita é indistinguível de
+O --reason é OBRIGATÓRIO. Um congelamento sem razão escrita é indistinguível de
 configuração quebrada, e quem esbarra nele tenta contornar em vez de ler.
 
 O commit e o push são feitos com --no-verify, de propósito: os hooks que este
@@ -130,9 +130,17 @@ destrava.`,
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
-	cmd.Flags().StringVar(&motivo, "motivo", "", "por que o projeto está sendo congelado (obrigatório)")
-	cmd.Flags().BoolVar(&semRuleset, "sem-ruleset", false, "não cria o ruleset no remoto (só o freio local)")
-	cmd.Flags().BoolVar(&semPush, "sem-push", false, "não commita nem empurra o anchors.yaml")
+	cmd.Flags().StringVar(&motivo, "reason", "", "por que o projeto está sendo congelado (obrigatório)")
+	cmd.Flags().BoolVar(&semRuleset, "no-ruleset", false, "não cria o ruleset no remoto (só o freio local)")
+	cmd.Flags().BoolVar(&semPush, "no-push", false, "não commita nem empurra o anchors.yaml")
+	aliasDeFlag(cmd, "reason", "motivo")
+	aliasDeFlag(cmd, "no-ruleset", "sem-ruleset")
+	aliasDeFlag(cmd, "no-push", "sem-push")
+	cmd.PreRunE = func(c *cobra.Command, _ []string) error {
+		return resolveAliases(c, map[string]string{
+			"reason": "motivo", "no-ruleset": "sem-ruleset", "no-push": "sem-push",
+		})
+	}
 	return cmd
 }
 
@@ -200,7 +208,11 @@ remoto ainda diz 'congelado', os hooks recusariam o próprio descongelamento.`,
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
-	cmd.Flags().BoolVar(&semPush, "sem-push", false, "não commita nem empurra o anchors.yaml")
+	cmd.Flags().BoolVar(&semPush, "no-push", false, "não commita nem empurra o anchors.yaml")
+	aliasDeFlag(cmd, "no-push", "sem-push")
+	cmd.PreRunE = func(c *cobra.Command, _ []string) error {
+		return resolveAliases(c, map[string]string{"no-push": "sem-push"})
+	}
 	return cmd
 }
 

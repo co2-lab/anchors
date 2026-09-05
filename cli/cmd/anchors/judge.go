@@ -31,7 +31,7 @@ func newJudgeCmd() *cobra.Command {
 dupla saída de um gate determinístico (carimbo no mapa + issue).
 
   anchors judge --pending                      lista os alvos aguardando julgamento
-  anchors judge <alvo> --gate <g> --verdict pass|fail|dispensado --reason "..."
+  anchors judge <alvo> --gate <g> --verdict pass|fail|waived --reason "..."
 
 O fluxo: o 'anchors check' marca os alvos de um gate 'measures: judgment' como
 pendentes e os enfileira. A IA (worker) lê o guide do gate, confronta o alvo, e
@@ -149,8 +149,8 @@ está declarada.`,
 			switch v {
 			case "fail":
 				verdictStr = "issue"
-			case "dispensado":
-				verdictStr = "dispensado"
+			case "waived":
+				verdictStr = "waived"
 			}
 			// 1) CARIMBO — marca a aresta guide→alvo (o confronto da régua contra o
 			//    alvo) com o veredito da IA. Se o gate declara guide, carimba essa
@@ -215,7 +215,7 @@ está declarada.`,
 				} else {
 					fmt.Printf("✗ julgado FAIL — mesmo achado já registrado (%s/), nada a fazer\n", at)
 				}
-			} else if v == "dispensado" {
+			} else if v == "waived" {
 				// A palavra IMPORTA aqui. Anunciar "PASS" desfaria o ponto inteiro do
 				// terceiro veredito: quem lê a saída ficaria com a impressão de que o
 				// alvo foi verificado e aprovado — a mesma confusão que o `pass`
@@ -273,7 +273,7 @@ func listPendingJudgments(root string) error {
 	if n == 0 {
 		fmt.Println("nenhum alvo aguardando julgamento (rode `anchors check` para descobrir)")
 	} else {
-		fmt.Printf("\n%d alvo(s) — julgue com: anchors judge <alvo> --gate <g> --verdict pass|fail|dispensado --reason ...\n", n)
+		fmt.Printf("\n%d alvo(s) — julgue com: anchors judge <alvo> --gate <g> --verdict pass|fail|waived --reason ...\n", n)
 	}
 	return nil
 }
@@ -314,7 +314,15 @@ func pecaExistenteDaUnidade(g *mapx.Graph, target string) string {
 // havia o que medir. Funcionou uma vez e ensina o hábito errado — carimbar julgamento sem
 // olhar é o que corrói o valor de `measures: judgment`.
 func validaVeredito(v, reason string) error {
-	if v != "pass" && v != "fail" && v != "dispensado" {
+	// O VALOR ANTIGO ainda é aceito, e vira o canônico.
+	//
+	// `dispensado` já está em mapas commitados (`verdict: dispensado`) e em scripts.
+	// Recusá-lo faria o `check` reperguntar julgamentos que alguém já respondeu — e o
+	// carimbo antigo continuaria no mapa, sem que nada os ligasse.
+	if v == "dispensado" {
+		v = "waived"
+	}
+	if v != "pass" && v != "fail" && v != "waived" {
 		return fmt.Errorf("--verdict deve ser 'pass', 'fail' ou 'dispensado' " +
 			"(dispensado: o alvo da pergunta não existe — a spec o declara `@TBD`)")
 	}
@@ -327,7 +335,7 @@ func validaVeredito(v, reason string) error {
 	switch v {
 	case "fail":
 		return fmt.Errorf("--reason é obrigatório num veredito 'fail' (explique a violação)")
-	case "dispensado":
+	case "waived":
 		return fmt.Errorf("--reason é obrigatório num veredito 'dispensado' " +
 			"(nomeie a ausência: qual peça falta, e onde está declarada)")
 	}
