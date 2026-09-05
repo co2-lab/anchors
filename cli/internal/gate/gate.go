@@ -272,6 +272,16 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 				case "ok":
 					r.Verdict = Pass
 					r.Detail = "julgado por IA: aprovado"
+				case "dispensado":
+					// `Skip`, e não `Pass`: o gate NÃO MEDIU — o alvo da pergunta não
+					// existe (a spec o declara `@TBD`). `Pass` afirmaria aprovação, que é
+					// a mentira que o veredito `dispensado` existe para evitar; `Pending`
+					// o classificaria como divergência, que também não é o caso.
+					//
+					// `Skip` é a categoria certa e já existe: "não se aplica a este alvo".
+					r.Verdict = Skip
+					r.Detail = "julgado por IA: DISPENSADO — o alvo da pergunta não existe " +
+						"(peça declarada `@TBD`)"
 				default:
 					r.Verdict = Pending
 					r.Detail = "julgado por IA com veredito " + v
