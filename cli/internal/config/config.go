@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/i18n"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -46,6 +48,18 @@ type Config struct {
 	// "não acontece por inércia", e a segunda é a que se quer: um freio que ninguém pode
 	// contornar impede o próprio conserto.
 	Enabled *bool `yaml:"enabled,omitempty"`
+
+	// Lang: o idioma das mensagens que uma PESSOA lê.
+	//
+	// O produto é multi-idioma, e a lista de suportados é FECHADA (ver `internal/i18n`).
+	// Vazio cai no padrão — um projeto que não declarou nada é o caso comum, e recusar ali
+	// impediria adotar o Anchors sem antes escolher idioma.
+	//
+	// O que NÃO se traduz é o VOCABULÁRIO: nomes de gate, labels de board, flags. Eles são
+	// identificadores, e traduzi-los faria o `anchors.yaml` de um projeto deixar de
+	// funcionar num time de outro idioma — além de quebrar todo tutorial e toda resposta
+	// de fórum que os cite. Traduz-se o que se LÊ, não o que se ESCREVE na configuração.
+	Lang string `yaml:"lang,omitempty"`
 
 	// FreezeReason: por que o projeto está congelado. Só faz sentido com `enabled: false`.
 	//
@@ -1244,6 +1258,17 @@ func Load(path string) (*Config, error) {
 	}
 	if err := c.validarWorkflow(); err != nil {
 		return nil, err
+	}
+	// O IDIOMA vale a partir da CARGA, e não de cada comando.
+	//
+	// Ligá-lo aqui é o que faz toda mensagem sair no idioma certo sem que cada comando
+	// precise lembrar — e um comando novo nasce traduzido por construção.
+	//
+	// Um idioma fora da lista é ERRO de carga, não aviso: o projeto declarou algo que o
+	// Anchors não sabe entregar, e seguir em inglês em silêncio faria a pessoa achar que
+	// a tradução não existe quando o que há é um código errado (`pt` em vez de `pt-BR`).
+	if err := i18n.Definir(c.Lang); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if err := c.validarEnumsDeGate(); err != nil {
 		return nil, err
