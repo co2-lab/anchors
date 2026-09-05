@@ -138,6 +138,39 @@ jobs:
             | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+' \
             | grep -oE '[0-9]+' | head -1 || true)
 
+          # O NÚMERO DO CORPO PRECISA SER CONFERIDO — ele é texto que alguém digitou.
+          #
+          # O caminho pelo TÍTULO já confere sem querer: ele procura na lista de issues com
+          # a label do Anchors, então uma issue que não existe ou que não é card
+          # simplesmente não aparece. O caminho pelo corpo pega o número direto, e sem esta
+          # conferência dois casos passariam:
+          #
+          #   `Closes #99999`  — issue que não existe
+          #   `Closes #12`     — issue REAL, mas não é card do Anchors (um bug report, uma
+          #                      discussão). O pipeline tentaria mover labels de estado numa
+          #                      issue que não participa do fluxo.
+          #
+          # O segundo é o perigoso: falha silenciosamente para o lado errado — o PR parece
+          # ter avançado um card, e o card de verdade fica parado.
+          if [ -n "$card" ]; then
+            temLabel=$(gh issue view "$card" --json labels \
+              --jq "[.labels[].name] | index(\"$LABEL\") // empty" 2>/dev/null || true)
+            if [ -z "$temLabel" ]; then
+              echo "::warning::o corpo do PR #$pr declara \`#$card\`, que não é um card do Anchors (sem a label \`$LABEL\`)"
+              echo "  pode ser uma issue comum, ou um número errado — caindo para o título."
+              {
+                echo "### ⚠ O vínculo do corpo não é um card"
+                echo ""
+                echo "O corpo declara \`#$card\`, e essa issue não tem a label \`$LABEL\` —"
+                echo "ou não existe."
+                echo ""
+                echo "Se era para ser um card, confira o número. O \`anchors pr-body\` escreve"
+                echo "as linhas certas a partir do card que você pegou."
+              } >> "$GITHUB_STEP_SUMMARY"
+              card=""
+            fi
+          fi
+
           if [ -n "$card" ]; then
             echo "card #$card veio do vínculo declarado no corpo do PR (o que o \`anchors pr-body\` escreve)"
           else
