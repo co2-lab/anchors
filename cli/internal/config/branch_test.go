@@ -6,10 +6,10 @@ import "testing"
 // GitHub já dá a um repositório novo.
 func TestBranchDefaultNaoAssumeFluxo(t *testing.T) {
 	var w *Workflow
-	if b := w.BranchDeIntegracao(); b != "main" {
+	if b := w.IntegrationBranchOrDefault(); b != "main" {
 		t.Errorf("sem config, o branch de integração é `main`, veio %q", b)
 	}
-	if p := w.BranchesProtegidos(); len(p) != 1 || p[0] != "main" {
+	if p := w.ProtectedBranchesOrDefault(); len(p) != 1 || p[0] != "main" {
 		t.Errorf("sem config, só a main é protegida, veio %v", p)
 	}
 }
@@ -22,10 +22,10 @@ func TestFluxoDeTresBranchesEhConfiguravel(t *testing.T) {
 		ProtectedBranches: []string{"develop", "staging", "main"},
 	}
 
-	if b := w.BranchDeIntegracao(); b != "develop" {
+	if b := w.IntegrationBranchOrDefault(); b != "develop" {
 		t.Errorf("o trabalho chega em develop, veio %q", b)
 	}
-	if p := w.BranchesProtegidos(); len(p) != 3 {
+	if p := w.ProtectedBranchesOrDefault(); len(p) != 3 {
 		t.Errorf("os três branches são portas, veio %v", p)
 	}
 }
@@ -35,7 +35,7 @@ func TestFluxoDeTresBranchesEhConfiguravel(t *testing.T) {
 func TestIntegracaoNaoMainProtegeMainTambem(t *testing.T) {
 	w := &Workflow{IntegrationBranch: "develop"}
 
-	p := w.BranchesProtegidos()
+	p := w.ProtectedBranchesOrDefault()
 	tem := map[string]bool{}
 	for _, b := range p {
 		tem[b] = true

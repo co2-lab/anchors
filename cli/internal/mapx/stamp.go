@@ -129,7 +129,7 @@ func (g *Graph) StampNodeByGate(id, verdict, now, gateName string) int {
 		st.Gate = gateName
 		e.Stamp = st
 		if gateName != "" {
-			j := Julgamento{
+			j := Judgment{
 				Gate:             gateName,
 				Verdict:          verdict,
 				ValidatedFromRev: g.nodeRev(e.From),
@@ -162,13 +162,13 @@ func (g *Graph) StampNodeByGate(id, verdict, now, gateName string) int {
 	return stamped
 }
 
-// JulgadoPor diz se o nó já recebeu veredito DESTE gate e se ele ainda vale — isto é,
+// JudgedBy diz se o nó já recebeu veredito DESTE gate e se ele ainda vale — isto é,
 // se nenhuma das pontas mudou desde o julgamento.
 //
 // Basta UMA aresta viva: o `judge` registra em todas as que tocam o alvo, então
 // qualquer uma responde. Se o alvo mudou depois, o veredito envelhece e volta a ser
 // pergunta — julgamento não é selo permanente, é leitura datada.
-func (g *Graph) JulgadoPor(id, gateName string) (verdict string, valido bool) {
+func (g *Graph) JudgedBy(id, gateName string) (verdict string, valido bool) {
 	for _, e := range g.Edges {
 		if e.From != id && e.To != id {
 			continue

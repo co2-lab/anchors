@@ -151,16 +151,16 @@ func runSubcommand(args []string) error {
 	}
 	c := exec.Command(exe, args...)
 	c.Stdout, c.Stderr, c.Stdin = os.Stdout, os.Stderr, os.Stdin
-	return traduzSaidaDoFilho(c.Run())
+	return translateChildOutput(c.Run())
 }
 
-// traduzSaidaDoFilho converte o resultado bruto de um subprocesso no erro que o
+// translateChildOutput converte o resultado bruto de um subprocesso no erro que o
 // `main` sabe interpretar.
 //
 // Existe separada para ser TESTÁVEL: exercitar isto pelo `rodarSubcomando`
 // exigiria reexecutar o binário do anchors contra um projeto de verdade em
 // disco, e o que está sob teste é a tradução do código, não o comando.
-func traduzSaidaDoFilho(err error) error {
+func translateChildOutput(err error) error {
 	// O código de saída do FILHO precisa atravessar a fronteira do processo.
 	//
 	// `c.Run()` devolve um `*exec.ExitError` genérico, e o `main` — que converte

@@ -54,7 +54,7 @@ func TestIniciaGitDeixaRepoComHEAD(t *testing.T) {
 		t.Fatalf("iniciaGit: %v", err)
 	}
 
-	if e := initx.DetectaGit(dir, true); e != initx.GitPronto {
+	if e := initx.DetectGit(dir, true); e != initx.GitPronto {
 		t.Fatalf("depois de iniciar, o estado tem de ser GitPronto, foi %v", e)
 	}
 	out, err := runGit(dir, "log", "-1", "--format=%s")
@@ -110,7 +110,7 @@ func TestIniciaGitSoCommitaQuandoRepoJaExiste(t *testing.T) {
 	if err := initGit(dir, initx.GitSemCommit); err != nil {
 		t.Fatalf("iniciaGit: %v", err)
 	}
-	if e := initx.DetectaGit(dir, true); e != initx.GitPronto {
+	if e := initx.DetectGit(dir, true); e != initx.GitPronto {
 		t.Fatalf("estado final = %v, queria GitPronto", e)
 	}
 }

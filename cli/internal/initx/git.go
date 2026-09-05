@@ -33,11 +33,11 @@ const (
 	GitPronto
 )
 
-// DetectaGit classifica a raiz. `gitNoPath` é injetado (e não consultado aqui) para
+// DetectGit classifica a raiz. `gitNoPath` é injetado (e não consultado aqui) para
 // manter esta função pura e testável sem depender do que está instalado na máquina de
 // quem roda o teste — a suíte precisa cobrir o caso "sem git" mesmo rodando numa
 // máquina com git.
-func DetectaGit(root string, gitNoPath bool) EstadoGit {
+func DetectGit(root string, gitNoPath bool) EstadoGit {
 	if !gitNoPath {
 		return GitNaoInstalado
 	}
@@ -123,10 +123,10 @@ func AvisoGit(e EstadoGit) string {
 	}
 }
 
-// OfereceAcao diz se o Anchors tem algo a PROPOR neste estado. É a distinção que
+// OfferAction diz se o Anchors tem algo a PROPOR neste estado. É a distinção que
 // separa "não há git" instalado de não iniciado: sem o binário não há oferta nenhuma
 // a fazer, e perguntar seria prometer uma ação que falharia ao ser aceita.
-func OfereceAcao(e EstadoGit) bool {
+func OfferAction(e EstadoGit) bool {
 	return e == GitNaoIniciado || e == GitSemCommit
 }
 

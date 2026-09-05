@@ -8,7 +8,7 @@ import "testing"
 // projeto que nunca declarou o campo nascer CONGELADO. Quem estivesse adotando o Anchors
 // veria todos os comandos recusarem, sem ter pedido nada.
 func TestCongelado_ausenteNaoCongela(t *testing.T) {
-	if (&Config{}).Congelado() {
+	if (&Config{}).Frozen() {
 		t.Fatal("config sem `enabled` está congelada — todo projeto que nunca declarou o " +
 			"campo nasceria parado")
 	}
@@ -16,10 +16,10 @@ func TestCongelado_ausenteNaoCongela(t *testing.T) {
 
 func TestCongelado_soOFalseExplicitoCongela(t *testing.T) {
 	sim, nao := false, true
-	if !(&Config{Enabled: &sim}).Congelado() {
+	if !(&Config{Enabled: &sim}).Frozen() {
 		t.Error("`enabled: false` não congelou")
 	}
-	if (&Config{Enabled: &nao}).Congelado() {
+	if (&Config{Enabled: &nao}).Frozen() {
 		t.Error("`enabled: true` congelou")
 	}
 }
@@ -30,10 +30,10 @@ func TestCongelado_soOFalseExplicitoCongela(t *testing.T) {
 // quem investiga para o lado errado — ele procuraria um freeze que ninguém declarou.
 func TestCongelado_configNilNaoCongela(t *testing.T) {
 	var c *Config
-	if c.Congelado() {
+	if c.Frozen() {
 		t.Fatal("config nil respondeu congelado")
 	}
-	if c.MotivoDoCongelamento() != "" {
+	if c.FreezeReasonText() != "" {
 		t.Fatal("config nil devolveu motivo")
 	}
 }
@@ -44,7 +44,7 @@ func TestCongelado_configNilNaoCongela(t *testing.T) {
 // esbarra nele tenta contornar em vez de ler.
 func TestCongelado_semMotivoCobraQuemCongelou(t *testing.T) {
 	sim := false
-	m := (&Config{Enabled: &sim}).MotivoDoCongelamento()
+	m := (&Config{Enabled: &sim}).FreezeReasonText()
 	if m == "" {
 		t.Fatal("congelado sem `freeze_reason` devolveu motivo vazio — a recusa ficaria " +
 			"sem explicação")
@@ -58,7 +58,7 @@ func TestCongelado_motivoDeclaradoEhOQueAparece(t *testing.T) {
 	sim := false
 	c := &Config{Enabled: &sim, FreezeReason: "  o plano 0002 aponta para spec inexistente  "}
 	// Espaço em volta não é conteúdo: o texto vai para uma mensagem de terminal.
-	if got := c.MotivoDoCongelamento(); got != "o plano 0002 aponta para spec inexistente" {
+	if got := c.FreezeReasonText(); got != "o plano 0002 aponta para spec inexistente" {
 		t.Errorf("motivo: %q", got)
 	}
 }
@@ -67,7 +67,7 @@ func TestCongelado_motivoDeclaradoEhOQueAparece(t *testing.T) {
 // vazia onde deveria estar a explicação.
 func TestCongelado_motivoEmBrancoContaComoAusente(t *testing.T) {
 	sim := false
-	if m := (&Config{Enabled: &sim, FreezeReason: "   \n  "}).MotivoDoCongelamento(); !contemFreezeReason(m) {
+	if m := (&Config{Enabled: &sim, FreezeReason: "   \n  "}).FreezeReasonText(); !contemFreezeReason(m) {
 		t.Errorf("motivo em branco não caiu no aviso: %q", m)
 	}
 }

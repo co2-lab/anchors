@@ -115,7 +115,7 @@ func TestVocabulario_arquivoJaMigradoNaoAcusaNada(t *testing.T) {
 // Um nome desconhecido passa intacto: o projeto pode ter gates próprios, e converter o
 // que não está no de-para renomearia gate de terceiro.
 func TestVocabulario_nomeDesconhecidoPassaIntacto(t *testing.T) {
-	if n, mudou := CanonicalizaNome("meu-gate-proprio"); mudou || n != "meu-gate-proprio" {
+	if n, mudou := CanonicalName("meu-gate-proprio"); mudou || n != "meu-gate-proprio" {
 		t.Errorf("nome próprio foi convertido: %q (mudou=%v)", n, mudou)
 	}
 }

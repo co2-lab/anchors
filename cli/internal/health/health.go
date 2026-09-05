@@ -478,7 +478,7 @@ func gitMissing(cfg *config.Config, root string, instalado bool) []Finding {
 		"`coverage --diff` e `install-hooks` não têm como funcionar; rode `git init`"
 	// No modo `github` isso deixa de ser débito e vira impedimento: a fila de trabalho
 	// mora nas issues de um repositório, e sem repo não há de onde puxar.
-	if cfg.ModoGitHub() {
+	if cfg.GitHubMode() {
 		det = "o `workflow.mode: github` exige repositório, e este projeto não está sob " +
 			"git — a fila de trabalho não tem de onde ser puxada; rode `git init`"
 	}

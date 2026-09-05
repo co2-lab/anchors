@@ -390,7 +390,7 @@ reporta, e aqui ela fica visível de graça.`,
 						Onde:    l.onde,
 						Arquivo: arq,
 						Kind:    kinds[arq],
-						Titulo:  tituloDoArquivo(absRoot, arq),
+						Titulo:  fileTitle(absRoot, arq),
 						Needs:   needs[arq],
 						Parent:  parents[arq],
 						Revises: revs[arq],
@@ -437,10 +437,10 @@ func kindByFile(mapPath string) map[string]string {
 	return out
 }
 
-// tituloDoArquivo lê o primeiro `# título` de um markdown. É o nome que o AUTOR deu ao
+// fileTitle lê o primeiro `# título` de um markdown. É o nome que o AUTOR deu ao
 // artefato — melhor do que qualquer coisa derivada do caminho. Vazio para arquivo que
 // não é markdown ou não tem título, e aí quem consome decide o que fazer.
-func tituloDoArquivo(root, rel string) string {
+func fileTitle(root, rel string) string {
 	if rel == "" || !strings.HasSuffix(rel, ".md") {
 		return ""
 	}

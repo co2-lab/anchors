@@ -53,7 +53,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// No modo github o achado de gate vira CARD, não arquivo: o `issues/` é a fila do
 			// modo local (mover pasta à mão), e manter os dois faz o board esconder o que os
 			// gates encontraram.
-			if cfg != nil && cfg.ModoGitHub() && len(cfg.Workflow.Labels) > 0 {
+			if cfg != nil && cfg.GitHubMode() && len(cfg.Workflow.Labels) > 0 {
 				issue.UsarGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
 			}
 			if len(cfg.Gates) == 0 {
@@ -778,7 +778,7 @@ func driftColumn(drift, largura int) string {
 
 // separador some junto com a coluna: sem isso, a tabela sem drift ficaria com
 // dois espaços a mais entre `✗` e `~`.
-func separadorDrift(largura int) string {
+func driftSeparator(largura int) string {
 	if largura == 0 {
 		return ""
 	}
@@ -969,7 +969,7 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 		// desce a lista comparando números que não estão na mesma vertical.
 		fmt.Printf("  %-*s  %-11s  ✓%*d  ✗%*d%s%s  ~%*d\n", wn, name, tag,
 			w.pass, s.Pass, w.fail, s.Fail,
-			separadorDrift(w.drift), driftColumn(drift, w.drift),
+			driftSeparator(w.drift), driftColumn(drift, w.drift),
 			w.skip, s.Skip+s.Pending-drift)
 	}
 	// O gate omitido continua tendo rodado, e o número diz isso. Sem esta linha o

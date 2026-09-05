@@ -21,7 +21,7 @@ import (
 // Devolve false só quando um prompt não pôde rodar (sem TTY) — o chamador aborta antes
 // de tocar o disco, pela mesma régua que já protege o anchors.yaml de nascer vazio.
 func gitStep(root string) bool {
-	estado := initx.DetectaGit(root, gitInstalled())
+	estado := initx.DetectGit(root, gitInstalled())
 	if estado == initx.GitPronto {
 		return true
 	}
@@ -32,7 +32,7 @@ func gitStep(root string) bool {
 	// `git init` que a pergunta prometeria falharia ao ser aceito. O aviso ainda vale —
 	// `init` e `doctor` são os comandos cujo trabalho é justamente antecipar o problema,
 	// antes que ele apareça deslocado no meio de outra coisa. O init segue normalmente.
-	if !initx.OfereceAcao(estado) {
+	if !initx.OfferAction(estado) {
 		fmt.Println()
 		return true
 	}

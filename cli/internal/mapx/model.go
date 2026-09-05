@@ -252,7 +252,7 @@ type Stamp struct {
 	Gate string `yaml:"gate,omitempty"`
 }
 
-// Julgamento é o veredito de UM gate de julgamento sobre esta aresta.
+// Judgment é o veredito de UM gate de julgamento sobre esta aresta.
 //
 // Campo SEPARADO do `Stamp`, e a separação é necessária: o `check` reescreve o Stamp
 // inteiro a cada rodada (ele resume o pior veredito de todos os gates daquele nó),
@@ -261,7 +261,7 @@ type Stamp struct {
 //
 // Guarda as revs das pontas pelo mesmo motivo do Stamp: o veredito envelhece se o
 // alvo mudar, e aí volta a ser pergunta.
-type Julgamento struct {
+type Judgment struct {
 	Gate             string `yaml:"gate"`
 	Verdict          string `yaml:"verdict"` // ok | issue
 	ValidatedFromRev string `yaml:"validated_from_rev,omitempty"`
@@ -275,9 +275,9 @@ type Edge struct {
 	To   string `yaml:"to"`
 	// Julgamentos: um por gate de julgamento que já respondeu sobre esta aresta.
 	// Preservado entre rodadas do `check` — ver o tipo Julgamento.
-	Julgamentos []Julgamento `yaml:"julgamentos,omitempty"`
-	Type        EdgeType     `yaml:"type"`
-	Origin      Origin       `yaml:"origin"`
+	Julgamentos []Judgment `yaml:"julgamentos,omitempty"`
+	Type        EdgeType   `yaml:"type"`
+	Origin      Origin     `yaml:"origin"`
 	// Method — metadado da aresta `depends-on`: o método/símbolo consumido do alvo
 	// (SPEC_TYPES §5). Vazio nas demais arestas. Habilita impacto fino ("mudou signIn
 	// → só as telas que usam signIn").

@@ -142,7 +142,7 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 					cs.secao, strings.Join(ausentes, ", "),
 					strings.Join(config.DeclaredLayers(declaradas), ", "),
 					joinOrDash(config.WorkspacesDeclarados(declaradas)),
-					joinOrDash(config.EscoposDeclarados(declaradas)))
+					joinOrDash(config.DeclaredScopes(declaradas)))
 			}
 			// Combinação válida mas vazia não é erro de digitação — é "não existe essa
 			// suíte". Dizer isso com clareza evita a leitura de que o comando rodou e

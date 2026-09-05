@@ -71,8 +71,8 @@ destrava.`,
 			if err != nil {
 				return fmt.Errorf("carregar %s: %w", config.DefaultFile, err)
 			}
-			if cfg.Congelado() {
-				fmt.Println(i18n.T("freeze.already", cfg.MotivoDoCongelamento()))
+			if cfg.Frozen() {
+				fmt.Println(i18n.T("freeze.already", cfg.FreezeReasonText()))
 				fmt.Println(i18n.T("freeze.already.retry"))
 				return nil
 			}
@@ -104,7 +104,7 @@ destrava.`,
 			}
 
 			// 3) O RULESET e a ISSUE — só no modo github, onde há remoto a trancar.
-			if cfg.ModoGitHub() && cfg.Workflow.Repo != "" {
+			if cfg.GitHubMode() && cfg.Workflow.Repo != "" {
 				if !semRuleset {
 					if err := createRuleset(cfg.Workflow.Repo, motivo); err != nil {
 						fmt.Printf("⚠ ruleset não criado: %v\n", err)
@@ -167,7 +167,7 @@ remoto ainda diz 'congelado', os hooks recusariam o próprio descongelamento.`,
 			if err != nil {
 				return fmt.Errorf("carregar %s: %w", config.DefaultFile, err)
 			}
-			if !cfg.Congelado() {
+			if !cfg.Frozen() {
 				fmt.Println(i18n.T("thaw.not_frozen"))
 				return nil
 			}
@@ -186,7 +186,7 @@ remoto ainda diz 'congelado', os hooks recusariam o próprio descongelamento.`,
 				}
 			}
 
-			if cfg.ModoGitHub() && cfg.Workflow.Repo != "" {
+			if cfg.GitHubMode() && cfg.Workflow.Repo != "" {
 				if err := deleteRuleset(cfg.Workflow.Repo); err != nil {
 					fmt.Printf("⚠ ruleset não removido: %v\n", err)
 					fmt.Println("  o remoto continua barrando push e merge — remova à mão.")

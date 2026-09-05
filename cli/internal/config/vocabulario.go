@@ -57,27 +57,27 @@ var checksAntigos = map[string]string{
 	"trinca-completa":            "triad-complete",
 }
 
-// CanonicalizaNome devolve o nome canônico e se houve conversão.
+// CanonicalName devolve o nome canônico e se houve conversão.
 //
 // O segundo retorno é o que permite ao `doctor` avisar sem que o `Load` precise imprimir:
 // carregar a configuração não é lugar de escrever na tela.
-func CanonicalizaNome(n string) (string, bool) {
+func CanonicalName(n string) (string, bool) {
 	if c, ok := nomesAntigos[n]; ok {
 		return c, true
 	}
 	return n, false
 }
 
-// CanonicalizaCheck faz o mesmo para o campo `check:`.
-func CanonicalizaCheck(c string) (string, bool) {
+// CanonicalCheck faz o mesmo para o campo `check:`.
+func CanonicalCheck(c string) (string, bool) {
 	if n, ok := checksAntigos[c]; ok {
 		return n, true
 	}
 	return c, false
 }
 
-// NomesAntigos devolve o de-para inteiro, para o `doctor` listar o que migrar.
-func NomesAntigos() map[string]string {
+// LegacyNames devolve o de-para inteiro, para o `doctor` listar o que migrar.
+func LegacyNames() map[string]string {
 	out := make(map[string]string, len(nomesAntigos))
 	for k, v := range nomesAntigos {
 		out[k] = v
@@ -96,7 +96,7 @@ func (c *Config) canonicalizaVocabulario() {
 		return
 	}
 	for i := range c.Gates {
-		if n, mudou := CanonicalizaNome(c.Gates[i].Name); mudou {
+		if n, mudou := CanonicalName(c.Gates[i].Name); mudou {
 			c.Gates[i].Name = n
 			// O ID acompanha o nome quando eram iguais: o ID é a identidade estável do
 			// gate, e um projeto que não o declarou explicitamente tinha os dois iguais.
@@ -106,10 +106,10 @@ func (c *Config) canonicalizaVocabulario() {
 				c.Gates[i].ID = n
 			}
 		}
-		if id, mudou := CanonicalizaNome(c.Gates[i].ID); mudou {
+		if id, mudou := CanonicalName(c.Gates[i].ID); mudou {
 			c.Gates[i].ID = id
 		}
-		if ch, mudou := CanonicalizaCheck(c.Gates[i].Check); mudou {
+		if ch, mudou := CanonicalCheck(c.Gates[i].Check); mudou {
 			c.Gates[i].Check = ch
 		}
 	}
@@ -150,8 +150,8 @@ var defaultGateNames func() []string
 // RegistraNomesDeGate liga a lista de gates default ao pacote config.
 func RegistraNomesDeGate(f func() []string) { defaultGateNames = f }
 
-// DefaultGatesParaTeste devolve os nomes registrados, ou nil se ninguém registrou.
-func DefaultGatesParaTeste() []string {
+// DefaultGateNamesForTest devolve os nomes registrados, ou nil se ninguém registrou.
+func DefaultGateNamesForTest() []string {
 	if defaultGateNames == nil {
 		return nil
 	}

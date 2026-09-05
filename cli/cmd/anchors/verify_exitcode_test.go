@@ -15,7 +15,7 @@ import (
 // de configuração: exatamente o caso que o código 3 existe para permitir.
 func TestExitNaoRegidoAtravessaOSubprocesso(t *testing.T) {
 	// `false` sai com 1; `sh -c 'exit 3'` reproduz o código do filho.
-	err := traduzSaidaDoFilho(exec.Command("sh", "-c", "exit 3").Run())
+	err := translateChildOutput(exec.Command("sh", "-c", "exit 3").Run())
 
 	var nr errNotGoverned
 	if !errors.As(err, &nr) {
@@ -25,7 +25,7 @@ func TestExitNaoRegidoAtravessaOSubprocesso(t *testing.T) {
 
 // Qualquer outro código continua sendo falha: só o 3 tem tratamento próprio.
 func TestOutrosCodigosContinuamSendoFalha(t *testing.T) {
-	err := traduzSaidaDoFilho(exec.Command("sh", "-c", "exit 1").Run())
+	err := translateChildOutput(exec.Command("sh", "-c", "exit 1").Run())
 
 	var nr errNotGoverned
 	if errors.As(err, &nr) {
@@ -37,7 +37,7 @@ func TestOutrosCodigosContinuamSendoFalha(t *testing.T) {
 }
 
 func TestSucessoNaoDevolveErro(t *testing.T) {
-	if err := traduzSaidaDoFilho(exec.Command("sh", "-c", "exit 0").Run()); err != nil {
+	if err := translateChildOutput(exec.Command("sh", "-c", "exit 0").Run()); err != nil {
 		t.Errorf("exit 0 devolveu erro: %v", err)
 	}
 }

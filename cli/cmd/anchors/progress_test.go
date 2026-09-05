@@ -17,7 +17,7 @@ import (
 // pelos gates, reintroduzindo em silêncio o defeito que a separação removeu. Nenhum teste
 // de comportamento pegaria isso: os dois lados funcionariam, cada um com a sua régua.
 func TestProgresso_sufixoBateComOScan(t *testing.T) {
-	if !scan.EhArquivoDeProgresso("plans/0001-x" + progressSuffix) {
+	if !scan.IsProgressFile("plans/0001-x" + progressSuffix) {
 		t.Fatalf("o sufixo do comando (%q) não é reconhecido pelo scan — o `new` criaria "+
 			"um arquivo que o mapa NÃO exclui, e os gates voltariam a confrontá-lo",
 			progressSuffix)
@@ -174,7 +174,7 @@ func TestJudge_aceitaDispensadoEExigeMotivo(t *testing.T) {
 		{"waived", "a spec declara @TBD: code e MTHRN não existe", false, "dispensado com motivo é aceito"},
 		{"inventado", "x", true, "veredito fora dos três é recusado"},
 	} {
-		err := validaVeredito(c.verdict, c.reason)
+		err := validateVerdict(c.verdict, c.reason)
 		if (err != nil) != c.querErr {
 			t.Errorf("verdict=%q reason=%q: err=%v, queria erro=%v (%s)",
 				c.verdict, c.reason, err, c.querErr, c.porque)

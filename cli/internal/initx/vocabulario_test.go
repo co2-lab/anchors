@@ -24,7 +24,7 @@ func TestVocabularioAntigoApontaParaGateQueExiste(t *testing.T) {
 		t.Fatal("nenhum gate default — o teste não confrontaria nada")
 	}
 
-	depara := config.NomesAntigos()
+	depara := config.LegacyNames()
 	if len(depara) == 0 {
 		t.Fatal("o de-para está vazio — ou a migração não aconteceu, ou o teste perdeu o alvo")
 	}
@@ -43,7 +43,7 @@ func TestVocabularioAntigoApontaParaGateQueExiste(t *testing.T) {
 // voltaria a se misturar — que é o que esta migração inteira existe para resolver.
 func TestNenhumGateDefaultTemNomeEmPortugues(t *testing.T) {
 	// Os nomes ANTIGOS são exatamente a lista do que não pode mais aparecer.
-	proibidos := config.NomesAntigos()
+	proibidos := config.LegacyNames()
 	for _, g := range DefaultGates(todosOsArtefatos(), false) {
 		if novo, ehAntigo := proibidos[g.Name]; ehAntigo {
 			t.Errorf("o gate default %q ainda usa o nome antigo — deveria ser %q", g.Name, novo)

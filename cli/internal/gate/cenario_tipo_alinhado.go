@@ -76,7 +76,7 @@ func checkScenarioTypeAligned(content string, n mapx.Node, _ string, _ *mapx.Gra
 		}
 		for _, tag := range sc.Tags {
 			nome := strings.TrimPrefix(tag, "@")
-			declaradas, conhecida := cfg.LetrasDaTag(nome)
+			declaradas, conhecida := cfg.TagLetters(nome)
 			// Uma tag pode caber sob mais de uma letra (ver LetrasDaTag): basta que a
 			// letra do código esteja entre elas para não haver discordância.
 			if !conhecida || any(declaradas, letras) {

@@ -113,7 +113,7 @@ Se a fila está vazia, imprime isso e sai com código 0.`,
 				// perguntando "o que faço agora", e é essa pergunta que o plano parado
 				// responde. Um `anchors plan start` seria mais um passo para lembrar — e o
 				// que ninguém lembra de rodar não existe.
-				if n, err := semearDosPlanos(absRoot); err == nil && n > 0 {
+				if n, err := seedFromPlans(absRoot); err == nil && n > 0 {
 					fmt.Printf("fila vazia — semeada com %d plano(s) que ainda têm trabalho\n\n", n)
 					if t, err = queue.Claim(absRoot, worker, nowStamp()); err != nil {
 						return err
@@ -287,13 +287,13 @@ func reclaimFn(force bool) func(string) (int, error) {
 	return queue.Reclaim
 }
 
-// semearDosPlanos enfileira uma task por PLANO que ainda tem spec por nascer.
+// seedFromPlans enfileira uma task por PLANO que ainda tem spec por nascer.
 //
 // "Ainda tem trabalho" é medido pelo disco, não por checkbox: um plano cujas specs
 // semeadas TODAS existem já foi cumprido, e enfileirá-lo seria o ruído que faz a fila
 // perder a confiança de quem a puxa. O que ele semeia sai do mesmo lugar que o gate
 // `plan-seeds-valid` lê — os caminhos `.spec.md` citados no texto.
-func semearDosPlanos(root string) (int, error) {
+func seedFromPlans(root string) (int, error) {
 	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
 	if err != nil {
 		return 0, err
@@ -309,7 +309,7 @@ func semearDosPlanos(root string) (int, error) {
 		}
 		faltam := 0
 		for _, s := range f.Seeds {
-			if seedExiste(root, s, files) {
+			if seedExists(root, s, files) {
 				continue
 			}
 			faltam++
@@ -344,7 +344,7 @@ func semearDosPlanos(root string) (int, error) {
 	return n, nil
 }
 
-// seedExiste diz se a spec que o plano semeia já está no repositório.
+// seedExists diz se a spec que o plano semeia já está no repositório.
 //
 // O plano cita de duas formas legítimas: pelo caminho, ou só pelo NOME do arquivo — que é
 // como se escreve em prosa ("a spec de `SubscriptionScreen.spec.md`"). Medido: 10 das 26
@@ -353,7 +353,7 @@ func semearDosPlanos(root string) (int, error) {
 //
 // Por nome, só quando ele é ÚNICO: dois arquivos homônimos tornam a citação ambígua, e
 // escolher um seria decidir pelo autor.
-func seedExiste(root, seed string, files []scan.File) bool {
+func seedExists(root, seed string, files []scan.File) bool {
 	if _, err := os.Stat(filepath.Join(root, seed)); err == nil {
 		return true
 	}

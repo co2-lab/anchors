@@ -33,7 +33,7 @@ func TestWorkRedirecionaPecaDerivada(t *testing.T) {
 		"src/metadataVersioning.test.ts",
 	} {
 		t.Run(peca, func(t *testing.T) {
-			got, achou := unidadeDaPecaDerivada(dir, peca, cfgUnidade(), nil)
+			got, achou := derivedPieceUnit(dir, peca, cfgUnidade(), nil)
 			if !achou {
 				t.Fatalf("não reconheceu %q como peça derivada", peca)
 			}
@@ -49,7 +49,7 @@ func TestWorkNaoRedirecionaAUnidade(t *testing.T) {
 	dir := t.TempDir()
 	os.MkdirAll(filepath.Join(dir, "src"), 0o755)
 	os.WriteFile(filepath.Join(dir, "src/x.ts"), []byte("x\n"), 0o644)
-	if _, achou := unidadeDaPecaDerivada(dir, "src/x.ts", cfgUnidade(), nil); achou {
+	if _, achou := derivedPieceUnit(dir, "src/x.ts", cfgUnidade(), nil); achou {
 		t.Fatal("o código é a unidade — não deveria redirecionar")
 	}
 }
@@ -60,7 +60,7 @@ func TestWorkUsaOMapaQuandoExiste(t *testing.T) {
 	g := &mapx.Graph{Edges: []mapx.Edge{
 		{From: "a/nome-diferente.spec.md", To: "b/outroNome.ts", Type: "specifies"},
 	}}
-	got, achou := unidadeDaPecaDerivada(t.TempDir(), "a/nome-diferente.spec.md", cfgUnidade(), g)
+	got, achou := derivedPieceUnit(t.TempDir(), "a/nome-diferente.spec.md", cfgUnidade(), g)
 	if !achou || got != "b/outroNome.ts" {
 		t.Fatalf("o mapa deveria resolver o alvo: got=%q achou=%v", got, achou)
 	}
@@ -69,7 +69,7 @@ func TestWorkUsaOMapaQuandoExiste(t *testing.T) {
 // Peça derivada cuja unidade não existe: não inventa alvo (quem chama segue com o
 // original e o resto do prompt explica o que falta).
 func TestWorkSemUnidadeNaoInventa(t *testing.T) {
-	if _, achou := unidadeDaPecaDerivada(t.TempDir(), "src/fantasma.spec.md", cfgUnidade(), nil); achou {
+	if _, achou := derivedPieceUnit(t.TempDir(), "src/fantasma.spec.md", cfgUnidade(), nil); achou {
 		t.Fatal("sem código no disco e sem mapa, não há alvo a deduzir")
 	}
 }

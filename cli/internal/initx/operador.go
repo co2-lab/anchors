@@ -39,14 +39,14 @@ var agentesConhecidos = map[string]string{
 	"CODEX_SANDBOX":          "Codex",
 }
 
-// DetectaOperador diz quem está operando. `temTTY` é injetado (não consultado aqui)
+// DetectOperator diz quem está operando. `temTTY` é injetado (não consultado aqui)
 // para manter a função pura e testável: a suíte precisa cobrir os dois lados sem
 // depender de como o teste foi invocado.
 //
 // A ordem das evidências importa. Uma variável de agente é declaração EXPLÍCITA de
 // quem está rodando, e vale mais que a ausência de TTY — que é só um indício, e um
 // indício que um pipe qualquer também produz.
-func DetectaOperador(temTTY bool, env func(string) string) Operador {
+func DetectOperator(temTTY bool, env func(string) string) Operador {
 	if env == nil {
 		env = os.Getenv
 	}
@@ -86,9 +86,9 @@ func nomeDoAgente(env func(string) string) string {
 	return ""
 }
 
-// NomeDoAgente é a versão exportada, para a mensagem poder dizer "abrir o Claude Code"
+// AgentName é a versão exportada, para a mensagem poder dizer "abrir o Claude Code"
 // em vez de "abrir sua IA".
-func NomeDoAgente(env func(string) string) string { return nomeDoAgente(env) }
+func AgentName(env func(string) string) string { return nomeDoAgente(env) }
 
 // PrecisaDescobrir diz se a fase DESCOBRIR ainda não aconteceu neste projeto: não há
 // PROJECT.md, e não há código de onde o `init` pudesse inferir a Estrutura.
@@ -130,7 +130,7 @@ const PromptDescobrir = `Rode "anchors guide project" e siga essa régua à risc
 	`resposta antes da próxima. No fim, faça a revisão de inconsistências e escreva ` +
 	`PROJECT.md e INSIGHTS.md na raiz. Depois disso rodamos "anchors init".`
 
-// ComandoParaAbrirIA devolve o argv que abre a IA detectada já com o prompt, ou nil
+// CommandToOpenAI devolve o argv que abre a IA detectada já com o prompt, ou nil
 // quando não há como saber qual abrir. Só ferramentas cuja invocação por linha de comando
 // é estável entram aqui: oferecer um comando que não existe é pior do que não oferecer
 // nada.
@@ -138,7 +138,7 @@ const PromptDescobrir = `Rode "anchors guide project" e siga essa régua à risc
 // Devolve ARGV, não uma linha de shell. O prompt tem aspas, parênteses e setas — passá-lo
 // por `sh -c` exigiria escapá-lo certo, e um escape errado ou vira comando torto ou
 // executa o que não devia. Com argv, o texto é um argumento e ponto.
-func ComandoParaAbrirIA(env func(string) string) []string {
+func CommandToOpenAI(env func(string) string) []string {
 	switch nomeDoAgente(env) {
 	case "Claude Code":
 		return []string{"claude", PromptDescobrir}
