@@ -64,7 +64,7 @@ func carimboDe(t *testing.T, corpo, ancora string, qtd int) string {
 func rodaCarimbo(t *testing.T, root, teste string) (Verdict, string) {
 	t.Helper()
 	n := mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest}
-	return checkMockCarimbado(teste, n, root, &mapx.Graph{}, cfgComCarimbo())
+	return checkMockStamped(teste, n, root, &mapx.Graph{}, cfgComCarimbo())
 }
 
 const ancora = "export function useMonthlySummary("
@@ -167,7 +167,7 @@ func TestMockCarimbado_semDeclaracaoPula(t *testing.T) {
 	n := mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest}
 	teste := "// @contract: src/mod.ts | " + ancora + " | 5 | deadbeef"
 
-	v, msg := checkMockCarimbado(teste, n, root, &mapx.Graph{}, &config.Config{})
+	v, msg := checkMockStamped(teste, n, root, &mapx.Graph{}, &config.Config{})
 	if v != Skip {
 		t.Errorf("sem declaração não há o que confrontar: %v", v)
 	}
@@ -214,7 +214,7 @@ func TestMockCarimbado_ausenciaDeCarimboReprova(t *testing.T) {
 	root := escreveModulo(t, moduloBase)
 	teste := "jest.mock('src/mod', () => ({ useMonthlySummary: jest.fn() }))"
 
-	v, msg := checkMockCarimbado(teste, mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest},
+	v, msg := checkMockStamped(teste, mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest},
 		root, grafoComMod(), cfgComCarimbo())
 	if v != Fail {
 		t.Fatalf("dublê sem carimbo deve reprovar: %v (%s)", v, msg)
@@ -230,7 +230,7 @@ func TestMockCarimbado_terceiroSemCarimboNaoEhCobrado(t *testing.T) {
 	root := escreveModulo(t, moduloBase)
 	teste := "jest.mock('@gorhom/bottom-sheet', () => ({ BottomSheet: 'View' }))"
 
-	if v, msg := checkMockCarimbado(teste, mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest},
+	if v, msg := checkMockStamped(teste, mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest},
 		root, grafoComMod(), cfgComCarimbo()); v != Skip {
 		t.Errorf("dublê de fora do projeto não exige carimbo: %v (%s)", v, msg)
 	}
@@ -243,7 +243,7 @@ func TestMockCarimbado_carimboPresenteSatisfazAmbas(t *testing.T) {
 	teste := "// @contract: src/mod.ts | " + ancora + " | 5 | " + h +
 		"\njest.mock('src/mod', () => ({ useMonthlySummary: jest.fn() }))"
 
-	if v, msg := checkMockCarimbado(teste, mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest},
+	if v, msg := checkMockStamped(teste, mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest},
 		root, grafoComMod(), cfgComCarimbo()); v != Pass {
 		t.Errorf("dublê carimbado e correspondente deve passar: %v (%s)", v, msg)
 	}
@@ -253,7 +253,7 @@ func TestMockCarimbado_carimboPresenteSatisfazAmbas(t *testing.T) {
 // zero dublês e reportar verde — o pior desfecho possível num medidor.
 func TestMockCarimbado_detectorInvalidoReprova(t *testing.T) {
 	cfg := &config.Config{Derived: &config.Derived{MockDetect: `jest\.mock\(([`}}
-	v, msg := checkMockCarimbado("jest.mock('src/mod')",
+	v, msg := checkMockStamped("jest.mock('src/mod')",
 		mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest}, t.TempDir(), grafoComMod(), cfg)
 	if v != Fail {
 		t.Fatalf("padrão que não compila deve reprovar: %v", v)
@@ -267,7 +267,7 @@ func TestMockCarimbado_detectorInvalidoReprova(t *testing.T) {
 // não arquivo defeituoso.
 func TestMockCarimbado_detectorSemCapturaReprova(t *testing.T) {
 	cfg := &config.Config{Derived: &config.Derived{MockDetect: `jest\.mock`}}
-	v, msg := checkMockCarimbado("jest.mock('src/mod')",
+	v, msg := checkMockStamped("jest.mock('src/mod')",
 		mapx.Node{ID: "x.test.ts", Kind: mapx.KindTest}, t.TempDir(), grafoComMod(), cfg)
 	if v != Fail {
 		t.Fatalf("padrão sem captura deve reprovar: %v", v)
@@ -284,7 +284,7 @@ func TestMockCarimbado_detectorDeOutroDialeto(t *testing.T) {
 		MockDetect: `(?:mock\.)?patch\(['"]([^'"]+)`,
 	}}
 	root := escreveModulo(t, moduloBase)
-	v, msg := checkMockCarimbado("@patch('src/mod')\ndef test_x(): pass",
+	v, msg := checkMockStamped("@patch('src/mod')\ndef test_x(): pass",
 		mapx.Node{ID: "x_test.py", Kind: mapx.KindTest}, root, grafoComMod(), cfg)
 	if v != Fail {
 		t.Fatalf("dublê Python sem carimbo deve reprovar: %v (%s)", v, msg)

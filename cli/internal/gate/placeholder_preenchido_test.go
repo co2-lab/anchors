@@ -29,7 +29,7 @@ TODO: o que a unidade faz e para quem.
 | --- | --- |
 | ` + "`CRUXX-B01`" + ` | TODO |
 `
-	v, msg := checkPlaceholderPreenchido(cru, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
+	v, msg := checkPlaceholderFilled(cru, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
 	if v != Fail {
 		t.Fatalf("esqueleto cru deve reprovar; veio %v (%s)", v, msg)
 	}
@@ -61,7 +61,7 @@ func TestSecaoDeTodosLegitimaNaoEhAcusada(t *testing.T) {
 - migrar para o novo formato de data
 - TODO: avaliar cache
 `
-	if v, msg := checkPlaceholderPreenchido(spec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil); v != Pass {
+	if v, msg := checkPlaceholderFilled(spec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil); v != Pass {
 		t.Errorf("seção de pendências do autor é legítima; veio %v (%s)", v, msg)
 	}
 }

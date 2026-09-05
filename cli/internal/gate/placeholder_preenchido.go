@@ -29,7 +29,7 @@ import (
 // Medido antes de ligar, contra o repositório real: 0 achados em 590 specs. Nenhuma spec
 // viva carrega placeholder do gerador — o que confirma que quem escreve, preenche, e que
 // o gate cobra apenas o que ficou pelo caminho.
-func checkPlaceholderPreenchido(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkPlaceholderFilled(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec && n.Kind != mapx.KindFeature {
 		return Skip, "o esqueleto com placeholder é o que o `anchors new` emite — spec e feature"
 	}

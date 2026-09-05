@@ -37,7 +37,7 @@ import (
 // `plano-alterado-justificado` cobrando revisão de um arquivo cuja única função é mudar.
 // Ele é estado, não decisão: ninguém precisa justificar por que o estado avançou.
 
-// sufixoProgresso liga o arquivo de estado ao plano: mesmo nome, sufixo fixo.
+// progressSuffix liga o arquivo de estado ao plano: mesmo nome, sufixo fixo.
 //
 // A definição CANÔNICA é a do `scan` — é ele que precisa manter o arquivo fora do mapa,
 // e uma segunda constante aqui poderia divergir dela em silêncio. Esta é a mesma string,
@@ -46,12 +46,12 @@ import (
 // A colocação ao lado (em vez de uma pasta `progress/`) é o que faz os dois serem lidos
 // juntos: quem abre o plano vê o companheiro na mesma listagem, e um plano cujo progresso
 // não existe fica visível pela ausência.
-const sufixoProgresso = "-progress.md"
+const progressSuffix = "-progress.md"
 
-// caminhoDeProgresso devolve o arquivo de progresso de um plano.
-func caminhoDeProgresso(plano string) string {
+// progressPath devolve o arquivo de progresso de um plano.
+func progressPath(plano string) string {
 	ext := filepath.Ext(plano)
-	return strings.TrimSuffix(plano, ext) + sufixoProgresso
+	return strings.TrimSuffix(plano, ext) + progressSuffix
 }
 
 // fasesDoPlano lê os códigos de fase declarados nos cabeçalhos do plano.
@@ -74,26 +74,26 @@ func faseNoCabecalhoRE() *regexp.Regexp {
 		config.CodeLengthPattern() + `-F\d{2})\b[^\S\n]*—?[^\S\n]*(.*)$`)
 }
 
-type faseDoPlano struct {
+type planPhase struct {
 	Codigo string
 	Titulo string
 }
 
-func fasesDoPlano(conteudo string) []faseDoPlano {
-	var out []faseDoPlano
+func planPhases(conteudo string) []planPhase {
+	var out []planPhase
 	for _, m := range faseNoCabecalhoRE().FindAllStringSubmatch(conteudo, -1) {
-		out = append(out, faseDoPlano{Codigo: m[1], Titulo: strings.TrimSpace(m[2])})
+		out = append(out, planPhase{Codigo: m[1], Titulo: strings.TrimSpace(m[2])})
 	}
 	return out
 }
 
-// escreveProgressoInicial cria o `-progress.md` de um plano, com uma linha por fase.
+// writeInitialProgress cria o `-progress.md` de um plano, com uma linha por fase.
 //
 // Não sobrescreve: o arquivo guarda o estado do trabalho, e regravá-lo apagaria o que já
 // foi registrado. Um plano que ganha fase nova tem a linha acrescentada à mão — o comando
 // não reescreve estado que não é dele.
-func escreveProgressoInicial(planoPath, conteudoPlano, codigo string) (string, error) {
-	destino := caminhoDeProgresso(planoPath)
+func writeInitialProgress(planoPath, conteudoPlano, codigo string) (string, error) {
+	destino := progressPath(planoPath)
 	if _, err := os.Stat(destino); err == nil {
 		return "", fmt.Errorf("%s já existe — o progresso é estado, e não sobrescrevo", destino)
 	}
@@ -108,7 +108,7 @@ func escreveProgressoInicial(planoPath, conteudoPlano, codigo string) (string, e
 	b.WriteString("Marque `[x]` aqui, nunca no plano.\n-->\n\n")
 	b.WriteString("# Progresso — " + codigo + "\n\n")
 
-	fases := fasesDoPlano(conteudoPlano)
+	fases := planPhases(conteudoPlano)
 	if len(fases) == 0 {
 		b.WriteString("TODO: o plano ainda não declara fases. Quando declarar, acrescente uma\n")
 		b.WriteString("seção por fase aqui, com um item por spec semeada.\n")

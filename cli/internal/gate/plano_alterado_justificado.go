@@ -47,22 +47,22 @@ func revisaoRE() *regexp.Regexp {
 		config.CodeLengthPattern() + `)-R(\d{4})(?:\*\*)?[^\S\n]*:[^\S\n]*(\S.*)$`)
 }
 
-// Revisao é uma alteração registrada no próprio documento.
-type Revisao struct {
+// Revision é uma alteração registrada no próprio documento.
+type Revision struct {
 	Codigo     string // o código do arquivo revisado (`FNDTN`)
 	Numero     int    // sequencial: 1, 2, 3...
 	Explicacao string
 }
 
-// RevisoesDe devolve as revisões declaradas no conteúdo, na ordem em que aparecem.
-func RevisoesDe(content string) []Revisao {
-	var out []Revisao
+// RevisionsOf devolve as revisões declaradas no conteúdo, na ordem em que aparecem.
+func RevisionsOf(content string) []Revision {
+	var out []Revision
 	for _, m := range revisaoRE().FindAllStringSubmatch(content, -1) {
 		n, err := strconv.Atoi(m[2])
 		if err != nil {
 			continue
 		}
-		out = append(out, Revisao{Codigo: m[1], Numero: n, Explicacao: strings.TrimSpace(m[3])})
+		out = append(out, Revision{Codigo: m[1], Numero: n, Explicacao: strings.TrimSpace(m[3])})
 	}
 	return out
 }
@@ -110,8 +110,8 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 
 	// Só contam as revisões DESTE documento. Um plano pode citar a revisão de outro ao
 	// explicar o contexto, e isso não justifica a própria mudança.
-	var minhas []Revisao
-	for _, r := range RevisoesDe(content) {
+	var minhas []Revision
+	for _, r := range RevisionsOf(content) {
 		if r.Codigo == codigo {
 			minhas = append(minhas, r)
 		}

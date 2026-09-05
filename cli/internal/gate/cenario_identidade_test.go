@@ -12,7 +12,7 @@ func featNode() mapx.Node { return mapx.Node{Kind: mapx.KindFeature, ID: "x.feat
 // Dois cenários com o MESMO código são indistinguíveis: nada liga um deles a um
 // teste específico, e os gates relacionais comparam N títulos contra o mesmo teste.
 func TestCenarioIdentidadeAcusaCodigoRepetido(t *testing.T) {
-	v, msg := checkCenarioIdentidade(`
+	v, msg := checkScenarioIdentity(`
   @USBPX-B01 @nivel-unit
   Cenário: busca pontos por userId+month
     Então o repository é consultado
@@ -36,7 +36,7 @@ func TestCenarioIdentidadeAcusaCodigoRepetido(t *testing.T) {
 
 // Numerados, os dois cenários passam a ter identidade própria — que é o ponto.
 func TestCenarioIdentidadeAceitaSufixo(t *testing.T) {
-	v, msg := checkCenarioIdentidade(`
+	v, msg := checkScenarioIdentity(`
   @USBPX-B01#01 @nivel-unit
   Cenário: busca pontos por userId+month
     Então o repository é consultado
@@ -53,7 +53,7 @@ func TestCenarioIdentidadeAceitaSufixo(t *testing.T) {
 
 // Uma regra com UM cenário é o caso comum: não pode acusar nada.
 func TestCenarioIdentidadeNaoAcusaCodigoUnico(t *testing.T) {
-	v, _ := checkCenarioIdentidade(`
+	v, _ := checkScenarioIdentity(`
   @SAUTX-B01 @nivel-unit
   Cenário: Hidratar carrega a sessão
     Então o usuário fica disponível
@@ -69,7 +69,7 @@ func TestCenarioIdentidadeNaoAcusaCodigoUnico(t *testing.T) {
 
 // O gate só fala de feature. Um nó de código ou spec não é assunto dele.
 func TestCenarioIdentidadeSoOlhaFeature(t *testing.T) {
-	v, _ := checkCenarioIdentidade("qualquer coisa", mapx.Node{Kind: mapx.KindCode}, "", nil, nil)
+	v, _ := checkScenarioIdentity("qualquer coisa", mapx.Node{Kind: mapx.KindCode}, "", nil, nil)
 	if v != Skip {
 		t.Errorf("veredito %v, queria Skip para nó que não é feature", v)
 	}

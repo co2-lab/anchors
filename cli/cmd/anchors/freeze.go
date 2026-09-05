@@ -82,7 +82,7 @@ destrava.`,
 			// Regravar o YAML inteiro reordenaria chaves e comeria comentários, e o
 			// anchors.yaml deste projeto é documentação tanto quanto configuração. Duas
 			// linhas no topo bastam, e o diff fica legível para quem revisar depois.
-			if err := escreveCongelamento(cfgPath, motivo); err != nil {
+			if err := writeFreeze(cfgPath, motivo); err != nil {
 				return err
 			}
 			fmt.Printf("✓ %s: enabled: false\n", config.DefaultFile)
@@ -94,7 +94,7 @@ destrava.`,
 			// depender de a suíte estar verde: o motivo do congelamento pode ser
 			// justamente que ela não está.
 			if !semPush {
-				if err := commitaEEmpurra(absRoot, motivo); err != nil {
+				if err := commitAndPush(absRoot, motivo); err != nil {
 					fmt.Printf("⚠ não consegui empurrar: %v\n", err)
 					fmt.Println("  o arquivo local está congelado; empurre à mão para o freio alcançar o time:")
 					fmt.Println("    git add anchors.yaml && git commit --no-verify -m 'freeze' && git push --no-verify")
@@ -106,14 +106,14 @@ destrava.`,
 			// 3) O RULESET e a ISSUE — só no modo github, onde há remoto a trancar.
 			if cfg.ModoGitHub() && cfg.Workflow.Repo != "" {
 				if !semRuleset {
-					if err := criaRuleset(cfg.Workflow.Repo, motivo); err != nil {
+					if err := createRuleset(cfg.Workflow.Repo, motivo); err != nil {
 						fmt.Printf("⚠ ruleset não criado: %v\n", err)
 						fmt.Println("  o freio local vale; o remoto continua aceitando push de quem contornar os hooks.")
 					} else {
 						fmt.Println("✓ ruleset `anchors-freeze` ativo — push e merge barrados no remoto")
 					}
 				}
-				if url, err := abreIssueDeCongelamento(cfg.Workflow.Repo, motivo); err != nil {
+				if url, err := openFreezeIssue(cfg.Workflow.Repo, motivo); err != nil {
 					fmt.Printf("⚠ issue não aberta: %v\n", err)
 				} else {
 					fmt.Printf("✓ issue do congelamento: %s\n", url)
@@ -172,13 +172,13 @@ remoto ainda diz 'congelado', os hooks recusariam o próprio descongelamento.`,
 				return nil
 			}
 
-			if err := removeCongelamento(cfgPath); err != nil {
+			if err := removeFreeze(cfgPath); err != nil {
 				return err
 			}
 			fmt.Printf("✓ %s: congelamento removido\n", config.DefaultFile)
 
 			if !semPush {
-				if err := commitaEEmpurra(absRoot, "thaw"); err != nil {
+				if err := commitAndPush(absRoot, "thaw"); err != nil {
 					fmt.Printf("⚠ não consegui empurrar: %v\n", err)
 					fmt.Println("  empurre à mão — enquanto o remoto disser congelado, o time segue barrado.")
 				} else {
@@ -187,13 +187,13 @@ remoto ainda diz 'congelado', os hooks recusariam o próprio descongelamento.`,
 			}
 
 			if cfg.ModoGitHub() && cfg.Workflow.Repo != "" {
-				if err := removeRuleset(cfg.Workflow.Repo); err != nil {
+				if err := deleteRuleset(cfg.Workflow.Repo); err != nil {
 					fmt.Printf("⚠ ruleset não removido: %v\n", err)
 					fmt.Println("  o remoto continua barrando push e merge — remova à mão.")
 				} else {
 					fmt.Println("✓ ruleset removido")
 				}
-				if err := fechaIssueDeCongelamento(cfg.Workflow.Repo); err != nil {
+				if err := closeFreezeIssue(cfg.Workflow.Repo); err != nil {
 					fmt.Printf("⚠ issue não fechada: %v\n", err)
 				} else {
 					fmt.Println("✓ issue do congelamento fechada")
@@ -216,11 +216,11 @@ remoto ainda diz 'congelado', os hooks recusariam o próprio descongelamento.`,
 	return cmd
 }
 
-// escreveCongelamento põe `enabled: false` e o motivo no TOPO do arquivo.
+// writeFreeze põe `enabled: false` e o motivo no TOPO do arquivo.
 //
 // No topo porque é a primeira coisa que quem abrir o arquivo tem de ver, e porque
 // `version:` já mora ali — é onde as declarações de projeto inteiro vivem.
-func escreveCongelamento(path, motivo string) error {
+func writeFreeze(path, motivo string) error {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -231,8 +231,8 @@ func escreveCongelamento(path, motivo string) error {
 	return os.WriteFile(path, append([]byte(bloco), b...), 0o644)
 }
 
-// removeCongelamento apaga as duas linhas, e SÓ elas.
-func removeCongelamento(path string) error {
+// removeFreeze apaga as duas linhas, e SÓ elas.
+func removeFreeze(path string) error {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
@@ -248,14 +248,14 @@ func removeCongelamento(path string) error {
 	return os.WriteFile(path, []byte(strings.Join(out, "\n")), 0o644)
 }
 
-// commitaEEmpurra grava o anchors.yaml no remoto, contornando os hooks.
+// commitAndPush grava o anchors.yaml no remoto, contornando os hooks.
 //
 // `--no-verify` nos dois: o pre-commit roda os gates, e um congelamento urgente não pode
 // depender de a suíte estar verde — o motivo do congelamento pode ser justamente que ela
 // não está. E o pre-push consultaria o remoto, que ainda diz o contrário do que estamos
 // gravando.
-func commitaEEmpurra(root, motivo string) error {
-	msg := "chore(anchors): freeze — " + primeiraLinhaDoMotivo(motivo)
+func commitAndPush(root, motivo string) error {
+	msg := "chore(anchors): freeze — " + firstLineOfReason(motivo)
 	if motivo == "thaw" {
 		msg = "chore(anchors): thaw — o projeto volta a aceitar trabalho"
 	}
@@ -276,7 +276,7 @@ func commitaEEmpurra(root, motivo string) error {
 // nomeDoRuleset é fixo: é assim que o `thaw` encontra o que o `freeze` criou.
 const nomeDoRuleset = "anchors-freeze"
 
-// criaRuleset tranca push e merge em TODOS os branches.
+// createRuleset tranca push e merge em TODOS os branches.
 //
 // Um ruleset e não branch protection: ele cobre `~ALL` num objeto só, liga e desliga sem
 // tocar na configuração de cada branch, e o histórico de quem o criou fica no audit log
@@ -285,7 +285,7 @@ const nomeDoRuleset = "anchors-freeze"
 // `bypass_actors` com o admin (role_id 5) é deliberado: quem vai consertar precisa
 // mesclar o PR que conserta, e um freio que impede o próprio conserto se torna o
 // problema. O contorno é explícito e fica registrado.
-func criaRuleset(repo, motivo string) error {
+func createRuleset(repo, motivo string) error {
 	corpo := fmt.Sprintf(`{
   "name": %q,
   "target": "branch",
@@ -304,8 +304,8 @@ func criaRuleset(repo, motivo string) error {
 	return nil
 }
 
-func removeRuleset(repo string) error {
-	id, err := idDoRuleset(repo)
+func deleteRuleset(repo string) error {
+	id, err := rulesetID(repo)
 	if err != nil {
 		return err
 	}
@@ -320,7 +320,7 @@ func removeRuleset(repo string) error {
 	return nil
 }
 
-func idDoRuleset(repo string) (string, error) {
+func rulesetID(repo string) (string, error) {
 	out, err := exec.Command("gh", "api", "repos/"+repo+"/rulesets",
 		"--jq", fmt.Sprintf(`.[] | select(.name == %q) | .id`, nomeDoRuleset)).Output()
 	if err != nil {
@@ -332,7 +332,7 @@ func idDoRuleset(repo string) (string, error) {
 // tituloDaIssueDeCongelamento é fixo: é assim que o `thaw` a encontra.
 const tituloDaIssueDeCongelamento = "[congelado] o projeto está parado"
 
-func abreIssueDeCongelamento(repo, motivo string) (string, error) {
+func openFreezeIssue(repo, motivo string) (string, error) {
 	corpo := "🛑 **O projeto está CONGELADO.**\n\n" +
 		"**Motivo:** " + motivo + "\n\n" +
 		"Enquanto esta issue estiver aberta:\n\n" +
@@ -356,7 +356,7 @@ func abreIssueDeCongelamento(repo, motivo string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-func fechaIssueDeCongelamento(repo string) error {
+func closeFreezeIssue(repo string) error {
 	out, err := exec.Command("gh", "issue", "list",
 		"--repo", repo, "--state", "open", "--limit", "50",
 		"--search", tituloDaIssueDeCongelamento,

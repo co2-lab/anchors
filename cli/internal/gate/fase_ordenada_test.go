@@ -17,39 +17,39 @@ func TestFaseOrdenada(t *testing.T) {
 	plano := mapx.Node{Kind: mapx.KindPlan, Code: "FNDTN"}
 
 	ok := "### FNDTN-F01 — a árvore\n\n### FNDTN-F02 — a régua (depende de FNDTN-F01)\n"
-	if v, msg := checkFaseOrdenada(ok, plano, "", nil, nil); v != Pass {
+	if v, msg := checkPhaseOrdered(ok, plano, "", nil, nil); v != Pass {
 		t.Errorf("ordem válida deveria passar: %v — %s", v, msg)
 	}
 
 	// Depender do que vem DEPOIS é impossível de cumprir.
 	invertida := "### FNDTN-F01 — a árvore (depende de FNDTN-F02)\n\n### FNDTN-F02 — a régua\n"
-	v, msg := checkFaseOrdenada(invertida, plano, "", nil, nil)
+	v, msg := checkPhaseOrdered(invertida, plano, "", nil, nil)
 	if v != Fail || !strings.Contains(msg, "DEPOIS") {
 		t.Errorf("depender do que vem depois deveria reprovar: %v — %s", v, msg)
 	}
 
 	// Fase que não existe no plano.
 	fantasma := "### FNDTN-F01 — a árvore (depende de FNDTN-F09)\n"
-	if v, msg := checkFaseOrdenada(fantasma, plano, "", nil, nil); v != Fail || !strings.Contains(msg, "não está catalogada") {
+	if v, msg := checkPhaseOrdered(fantasma, plano, "", nil, nil); v != Fail || !strings.Contains(msg, "não está catalogada") {
 		t.Errorf("fase inexistente deveria reprovar: %v — %s", v, msg)
 	}
 
 	// Código repetido: duas fases com o mesmo código tornam impossível dizer de qual uma
 	// spec depende.
 	repetida := "### FNDTN-F01 — a árvore\n\n### FNDTN-F01 — outra\n"
-	if v, _ := checkFaseOrdenada(repetida, plano, "", nil, nil); v != Fail {
+	if v, _ := checkPhaseOrdered(repetida, plano, "", nil, nil); v != Fail {
 		t.Errorf("código repetido deveria reprovar, veio %v", v)
 	}
 
 	// PROSA sem código: pendência, não falha — é dívida de quem quiser a ordem
 	// confrontável, e não erro de quem escreveu um plano pequeno.
 	prosa := "## Fases\n\n### Fase 1 — a árvore\n\n### Fase 2 — depende da Fase 1\n"
-	if v, msg := checkFaseOrdenada(prosa, plano, "", nil, nil); v != Pending || !strings.Contains(msg, "não cataloga") {
+	if v, msg := checkPhaseOrdered(prosa, plano, "", nil, nil); v != Pending || !strings.Contains(msg, "não cataloga") {
 		t.Errorf("fase em prosa é pendência: %v — %s", v, msg)
 	}
 
 	// Plano sem fase nenhuma não está errado: plano pequeno não precisa de fase.
-	if v, _ := checkFaseOrdenada("## Objetivo\n\nTexto.\n", plano, "", nil, nil); v != Skip {
+	if v, _ := checkPhaseOrdered("## Objetivo\n\nTexto.\n", plano, "", nil, nil); v != Skip {
 		t.Errorf("plano sem fases não deveria ser cobrado, veio %v", v)
 	}
 }
@@ -71,14 +71,14 @@ func TestFaseExisteAceitaVarias(t *testing.T) {
 
 	// DUAS fases, ambas existentes.
 	spec := mapx.Node{Kind: mapx.KindSpec, Needs: []string{"FNDTN-F01", "FNDTN-F02"}}
-	if v, msg := checkFaseExiste("", spec, dir, g, nil); v != Pass {
+	if v, msg := checkPhaseExists("", spec, dir, g, nil); v != Pass {
 		t.Errorf("duas fases existentes deveriam passar: %v — %s", v, msg)
 	}
 
 	// Uma existe e a outra não: reprova, e NOMEIA só a que falta — dizer "alguma está
 	// errada" obrigaria a conferir as duas à mão.
 	meio := mapx.Node{Kind: mapx.KindSpec, Needs: []string{"FNDTN-F01", "FNDTN-F09"}}
-	v, msg := checkFaseExiste("", meio, dir, g, nil)
+	v, msg := checkPhaseExists("", meio, dir, g, nil)
 	if v != Fail {
 		t.Fatalf("uma fase inexistente entre duas deveria reprovar, veio %v", v)
 	}
@@ -108,17 +108,17 @@ func TestParentValido(t *testing.T) {
 
 	// Pai que É uma fase catalogada.
 	ok := mapx.Node{Kind: mapx.KindSpec, Code: "WRKSP", Parent: "FNDTN-F01"}
-	if v, msg := checkParentValido("", ok, dir, g, nil); v != Pass {
+	if v, msg := checkParentValid("", ok, dir, g, nil); v != Pass {
 		t.Errorf("fase catalogada é pai válido: %v — %s", v, msg)
 	}
 
 	// Pai que é o CÓDIGO de um artefato.
-	if v, msg := checkParentValido("", mapx.Node{Code: "X", Parent: "FNDTN"}, dir, g, nil); v != Pass {
+	if v, msg := checkParentValid("", mapx.Node{Code: "X", Parent: "FNDTN"}, dir, g, nil); v != Pass {
 		t.Errorf("artefato do mapa é pai válido: %v — %s", v, msg)
 	}
 
 	// Pai INEXISTENTE: o item sumiria da árvore em silêncio.
-	v, msg := checkParentValido("", mapx.Node{Code: "X", Parent: "FNDTN-F09"}, dir, g, nil)
+	v, msg := checkParentValid("", mapx.Node{Code: "X", Parent: "FNDTN-F09"}, dir, g, nil)
 	if v != Fail {
 		t.Fatalf("pai inexistente deveria reprovar, veio %v", v)
 	}
@@ -127,13 +127,13 @@ func TestParentValido(t *testing.T) {
 	}
 
 	// Pai de si mesmo: quem monta a árvore entra em laço.
-	if v, _ := checkParentValido("", mapx.Node{Code: "WRKSP", Parent: "WRKSP"}, dir, g, nil); v != Fail {
+	if v, _ := checkParentValid("", mapx.Node{Code: "WRKSP", Parent: "WRKSP"}, dir, g, nil); v != Fail {
 		t.Errorf("ser pai de si mesmo deveria reprovar, veio %v", v)
 	}
 
 	// Sem `parent` não há o que confrontar — e isso não é falha: a maioria dos artefatos
 	// não pertence a nada.
-	if v, _ := checkParentValido("", mapx.Node{Code: "X"}, dir, g, nil); v != Skip {
+	if v, _ := checkParentValid("", mapx.Node{Code: "X"}, dir, g, nil); v != Skip {
 		t.Errorf("sem parent deveria pular, veio %v", v)
 	}
 }
@@ -145,7 +145,7 @@ func TestParentSemCiclo(t *testing.T) {
 		{ID: "a.md", Code: "AAAAA", Parent: "BBBBB"},
 		{ID: "b.md", Code: "BBBBB", Parent: "AAAAA"},
 	}}
-	v, msg := checkParentValido("", g.Nodes[0], dir, g, nil)
+	v, msg := checkParentValid("", g.Nodes[0], dir, g, nil)
 	if v != Fail {
 		t.Fatalf("ciclo deveria reprovar, veio %v", v)
 	}

@@ -30,7 +30,7 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 		// comando que escapa do freio o torna decorativo. O `PersistentPreRunE` roda antes
 		// de todo subcomando, inclusive dos que ainda não existem.
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
-			return recusaSeCongelado(cmd)
+			return refuseIfFrozen(cmd)
 		},
 	}
 	root.AddCommand(newGuideCmd())
@@ -88,13 +88,13 @@ var comandosQueRodamCongelado = map[string]bool{
 	"help": true, "completion": true, "coverage": true, "impact": true,
 }
 
-// recusaSeCongelado barra o comando quando o projeto declara `enabled: false`.
+// refuseIfFrozen barra o comando quando o projeto declara `enabled: false`.
 //
 // A config é lida do disco em vez de vir do comando: cada um a carrega do seu jeito (uns
 // com `--root`, outros do cwd), e depender disso deixaria buracos. Se ela não carregar,
 // o comando segue — a ausência de config é outro problema, e responder "congelado" ali
 // mandaria quem investiga para o lado errado.
-func recusaSeCongelado(cmd *cobra.Command) error {
+func refuseIfFrozen(cmd *cobra.Command) error {
 	// A CADEIA inteira, não só o nome do comando invocado.
 	//
 	// `cmd.Name()` de `anchors guide work` devolve "work", não "guide" — e o guia é

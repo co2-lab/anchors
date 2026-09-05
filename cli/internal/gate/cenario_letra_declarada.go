@@ -29,7 +29,7 @@ import (
 //
 // PENDING e não FAIL: descobrir que uma natureza foi usada sem registro é informação,
 // e decidir entre adotá-la ou remapeá-la é trabalho de quem conhece o domínio.
-func checkCenarioLetraDeclarada(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkScenarioLetterDeclared(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindFeature {
 		return Skip, ""
 	}

@@ -28,7 +28,7 @@ var internalCheckers = map[string]func(content string, n mapx.Node) (Verdict, st
 	"coverage-delta":      checkCoverageDelta,
 	"mutation-score":      checkMutationScore,
 	"tests-pass":          checkTestsPass,
-	"header-conforme":     checkHeaderConforme,
+	"header-conforme":     checkHeaderConforms,
 	"route-declared":      checkRouteDeclared,
 }
 
@@ -45,9 +45,9 @@ var checkersWithRoot = map[string]func(content string, n mapx.Node, root string)
 // no teste ligado, roteado pelo regime do cenário?).
 var checkersWithGraph = map[string]func(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string){
 	"feature-test-match":       checkFeatureTestMatch,
-	"cenario-identidade":       checkCenarioIdentidade,
-	"cenario-tipo-alinhado":    checkCenarioTipoAlinhado,
-	"cenario-letra-declarada":  checkCenarioLetraDeclarada,
+	"cenario-identidade":       checkScenarioIdentity,
+	"cenario-tipo-alinhado":    checkScenarioTypeAligned,
+	"cenario-letra-declarada":  checkScenarioLetterDeclared,
 	"spec-feature-match":       checkSpecFeatureMatch,
 	"code-reference-valid":     checkCodeReferenceValid,
 	"scenario-asserts":         checkScenarioAsserts,
@@ -55,7 +55,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"count-honored":            checkCountHonored,
 	"trigger-declared":         checkTriggerDeclared,
 	"route-exists":             checkRouteExists,
-	"placeholder-preenchido":   checkPlaceholderPreenchido,
+	"placeholder-preenchido":   checkPlaceholderFilled,
 	"regra-implementada":       checkRegraImplementada,
 	"vr-baseline":              checkVRBaseline,
 	"ref-resolves":             checkRefResolves,
@@ -65,9 +65,9 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"proof-crosses-boundary":   checkProvaCruzaFronteira,
 	"triad-complete":           checkTrincaCompleta,
 	"plan-seeds-valid":         checkPlanSeedsValid,
-	"phase-ordered":            checkFaseOrdenada,
-	"phase-exists":             checkFaseExiste,
-	"parent-valid":             checkParentValido,
+	"phase-ordered":            checkPhaseOrdered,
+	"phase-exists":             checkPhaseExists,
+	"parent-valid":             checkParentValid,
 	"plan-revised":             checkPlanoRevisado,
 	"plan-change-justified":    checkPlanoAlteradoJustificado,
 	"obligation-honored":       checkObligationHonored,
@@ -80,10 +80,10 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"evidence-fresh":           checkEvidenceFresh,
 	"testid-coerente":          checkTestIDCoerente,
 	"testid-consultado-existe": checkTestIDConsultadoExiste,
-	"mock-typed":               checkMockTipado,
-	"mock-stamped":             checkMockCarimbado,
+	"mock-typed":               checkMockTyped,
+	"mock-stamped":             checkMockStamped,
 	"test-traceable":           checkTesteRastreavel,
-	"code-cataloged":           checkCodigoCatalogado,
+	"code-cataloged":           checkCodeCataloged,
 }
 
 func runInternal(name string, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
@@ -290,7 +290,7 @@ func ehRoteiroExecutavel(n mapx.Node) bool {
 	return strings.HasSuffix(n.ID, ".yaml") || strings.HasSuffix(n.ID, ".yml")
 }
 
-func checkHeaderConforme(content string, n mapx.Node) (Verdict, string) {
+func checkHeaderConforms(content string, n mapx.Node) (Verdict, string) {
 	// Arquivo BINÁRIO não carrega cabeçalho — não há sintaxe de comentário num PNG.
 	// A identidade dele está no NOME (`<Unidade>.<CODE>-VR-<variante>.png`), que é o
 	// que o `identity-consistent` confronta. Cobrar header aqui exigiria o impossível

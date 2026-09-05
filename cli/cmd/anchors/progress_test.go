@@ -17,16 +17,16 @@ import (
 // pelos gates, reintroduzindo em silêncio o defeito que a separação removeu. Nenhum teste
 // de comportamento pegaria isso: os dois lados funcionariam, cada um com a sua régua.
 func TestProgresso_sufixoBateComOScan(t *testing.T) {
-	if !scan.EhArquivoDeProgresso("plans/0001-x" + sufixoProgresso) {
+	if !scan.EhArquivoDeProgresso("plans/0001-x" + progressSuffix) {
 		t.Fatalf("o sufixo do comando (%q) não é reconhecido pelo scan — o `new` criaria "+
 			"um arquivo que o mapa NÃO exclui, e os gates voltariam a confrontá-lo",
-			sufixoProgresso)
+			progressSuffix)
 	}
 }
 
 func TestProgresso_caminhoFicaAoLadoDoPlano(t *testing.T) {
-	got := caminhoDeProgresso("plans/0017-mutacao.md")
-	want := "plans/0017-mutacao" + sufixoProgresso
+	got := progressPath("plans/0017-mutacao.md")
+	want := "plans/0017-mutacao" + progressSuffix
 	if got != want {
 		t.Fatalf("caminho: %q, queria %q", got, want)
 	}
@@ -54,7 +54,7 @@ func TestProgresso_umaSecaoPorFaseDoPlano(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	destino, err := escreveProgressoInicial(p, plano, "MTUAO")
+	destino, err := writeInitialProgress(p, plano, "MTUAO")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -88,15 +88,15 @@ func TestProgresso_naoSobrescreveEstadoExistente(t *testing.T) {
 		t.Fatal(err)
 	}
 	jaFeito := "# Progresso — ABCDE\n\n## ABCDE-F01\n\n- [x] feito\n"
-	if err := os.WriteFile(caminhoDeProgresso(p), []byte(jaFeito), 0o644); err != nil {
+	if err := os.WriteFile(progressPath(p), []byte(jaFeito), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := escreveProgressoInicial(p, "# Plano\n\n### ABCDE-F01 — fase\n", "ABCDE"); err == nil {
+	if _, err := writeInitialProgress(p, "# Plano\n\n### ABCDE-F01 — fase\n", "ABCDE"); err == nil {
 		t.Fatal("sobrescreveu o progresso existente — o `[x]` de quem trabalhou seria apagado")
 	}
 
-	b, _ := os.ReadFile(caminhoDeProgresso(p))
+	b, _ := os.ReadFile(progressPath(p))
 	if string(b) != jaFeito {
 		t.Fatalf("o conteúdo mudou:\n%s", b)
 	}
@@ -110,7 +110,7 @@ func TestProgresso_planoSemFasesDizOQueFazer(t *testing.T) {
 	if err := os.WriteFile(p, []byte(plano), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	destino, err := escreveProgressoInicial(p, plano, "YYYYY")
+	destino, err := writeInitialProgress(p, plano, "YYYYY")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -141,7 +141,7 @@ func TestProgresso_respeitaCodeLengthsDoProjeto(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	destino, err := escreveProgressoInicial(p, plano, "ABC")
+	destino, err := writeInitialProgress(p, plano, "ABC")
 	if err != nil {
 		t.Fatal(err)
 	}

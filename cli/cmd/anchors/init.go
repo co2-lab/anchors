@@ -54,13 +54,13 @@ correto. O grosso é inferido; as perguntas cobrem só as decisões humanas
 	return cmd
 }
 
-// erroSemTTY é a mensagem de quando o `init` interativo não tem terminal. Nomeia a
+// errNoTTY é a mensagem de quando o `init` interativo não tem terminal. Nomeia a
 // SAÍDA, e não só o problema: existe um modo não-interativo, e quem cai aqui (um agente,
 // um pipe, o CI) tem como prosseguir — sem esta indicação, o comando parece um beco.
 //
 // `contexto` diz o que já aconteceu antes da falha, porque isso muda o que o leitor
 // precisa saber: se o git foi tocado, se algo foi escrito.
-func erroSemTTY(contexto string) error {
+func errNoTTY(contexto string) error {
 	return fmt.Errorf("`anchors init` e interativo e nao ha terminal disponivel "+
 		"(sem TTY: pipe, CI ou agente sem shell interativo).\n"+
 		"%s\n\n"+
@@ -97,7 +97,7 @@ func runInit(root string) error {
 	// falha ruidosamente. Vem primeiro para que tudo que o init escrever daqui em
 	// diante já nasça sob versionamento.
 	if !etapaGit(root) {
-		return erroSemTTY("Nada foi escrito, e o git nao foi tocado.")
+		return errNoTTY("Nada foi escrito, e o git nao foi tocado.")
 	}
 
 	fmt.Println("Escaneando o projeto…")
@@ -111,7 +111,7 @@ func runInit(root string) error {
 	// DESCOBRIR ainda não aconteceu. Sem PROJECT.md e sem código, as perguntas abaixo
 	// saem sem resposta boa; o que muda é só QUEM recebe a instrução (pessoa ou IA).
 	if !etapaDescobrir(root, p) {
-		return erroSemTTY("Nada foi escrito.")
+		return errNoTTY("Nada foi escrito.")
 	}
 
 	cfg := p.Config
@@ -214,7 +214,7 @@ func runInit(root string) error {
 	// outro. Perguntada aqui, e não no começo, porque só faz sentido depois de o projeto
 	// ter forma — mas ANTES de salvar, porque muda o arquivo.
 	if askConfirmDefault("A fila de trabalho vai morar nas issues do GitHub (em vez de local)?", false) {
-		repo := askTexto("Qual repositório? (owner/nome — nunca inferido do remote)")
+		repo := askText("Qual repositório? (owner/nome — nunca inferido do remote)")
 		if repo != "" {
 			cfg.Workflow = &config.Workflow{
 				Mode:   config.ModeGitHub,
@@ -246,7 +246,7 @@ func runInit(root string) error {
 	// Vai antes da guarda de TTY de propósito? NÃO: depois. Um init abortado não deve
 	// deixar arquivo, e o header já é um resíduo conhecido — não vamos criar um segundo.
 	if erroDePrompt {
-		return erroSemTTY("Nada foi escrito: um `anchors.yaml` gerado sem as respostas " +
+		return errNoTTY("Nada foi escrito: um `anchors.yaml` gerado sem as respostas " +
 			"sairia com 0 camadas e 0 gates, carregaria sem erro e nao governaria nada.")
 	}
 	if err := config.Save(cfg, outPath); err != nil {
@@ -281,9 +281,9 @@ func runInit(root string) error {
 // [cli/internal cli/cmd]" na tela, e escreveu `layers: {}` — descartou a própria detecção.
 var erroDePrompt bool
 
-// askTexto coleta uma resposta livre. Usado pelo `repo` do modo github, que não tem
+// askText coleta uma resposta livre. Usado pelo `repo` do modo github, que não tem
 // conjunto de opções para escolher.
-func askTexto(title string) string {
+func askText(title string) string {
 	var v string
 	if err := huh.NewInput().Title(title).Value(&v).Run(); err != nil {
 		erroDePrompt = true

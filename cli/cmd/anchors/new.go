@@ -152,7 +152,7 @@ ganham um REF (apontam para a spec). Use --code para fixar a identidade à mão.
 			// Um plano sem companheiro convida a marcar `[x]` no próprio plano — que é o
 			// caminho que já existia e o que se está removendo.
 			if kind == "plan" {
-				prog, err := escreveProgressoInicial(outPath, content, id)
+				prog, err := writeInitialProgress(outPath, content, id)
 				if err != nil {
 					// Não é falha do `new`: o plano nasceu. O progresso se cria à mão.
 					fmt.Printf("  ⚠ progresso não criado: %v\n", err)
@@ -234,7 +234,7 @@ func renderArtifact(t template, name, id, outPath, root string, chosen map[strin
 	// preset, vale a ordem do catálogo.
 	// O léxico de seções é da CAMADA do alvo (ver `section_titles`): resolver uma vez,
 	// fora do loop.
-	camadaDoArtefato := camadaDoAlvo(root, outPath, cfg)
+	camadaDoArtefato := targetLayer(root, outPath, cfg)
 	for _, s := range ordenaSecoes(t, chosen, ordem) {
 		body := strings.NewReplacer("{name}", name, "{id}", id).Replace(s.Body)
 		// Traduz o título GENÉRICO para o nome que ESTE projeto usa, quando `rule_types`
@@ -583,10 +583,10 @@ func traduzTitulo(body string, s section, cfg *config.Config, camada string) str
 
 var tituloSecaoRE = regexp.MustCompile(`(?m)^(#{2,4})\s+([^\n]+)\n`)
 
-// camadaDoAlvo resolve a camada da unidade que este artefato descreve — usada para achar
+// targetLayer resolve a camada da unidade que este artefato descreve — usada para achar
 // o léxico de seções DAQUELA camada (`section_titles`). O alvo é o irmão sem o sufixo de
 // peça derivada; sem alvo reconhecível, devolve vazio e vale o padrão do framework.
-func camadaDoAlvo(root, outPath string, cfg *config.Config) string {
+func targetLayer(root, outPath string, cfg *config.Config) string {
 	if cfg == nil {
 		return ""
 	}

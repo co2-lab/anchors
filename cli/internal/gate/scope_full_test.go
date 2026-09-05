@@ -58,7 +58,7 @@ func TestScopeFullRodaUmaVezSemAlvos(t *testing.T) {
 		Run:       gravaContagem(t, root, saida),
 	}
 
-	RunCompleto([]config.Gate{g}, nós(300), root, nil, &config.Config{}, true)
+	RunFull([]config.Gate{g}, nós(300), root, nil, &config.Config{}, true)
 
 	got := lines(t, saida)
 	if len(got) != 1 {
@@ -84,7 +84,7 @@ func TestSemScopeFullContinuaEmLotes(t *testing.T) {
 		Run:   gravaContagem(t, root, saida),
 	}
 
-	RunCompleto([]config.Gate{g}, nós(300), root, nil, &config.Config{}, true)
+	RunFull([]config.Gate{g}, nós(300), root, nil, &config.Config{}, true)
 
 	got := lines(t, saida)
 	if len(got) == 0 {
@@ -121,7 +121,7 @@ func TestScopeFullNaoValeNoIncremental(t *testing.T) {
 		Run:       gravaContagem(t, root, saida),
 	}
 
-	RunCompleto([]config.Gate{g}, nós(3), root, nil, &config.Config{}, false)
+	RunFull([]config.Gate{g}, nós(3), root, nil, &config.Config{}, false)
 
 	got := lines(t, saida)
 	if len(got) != 1 || got[0] != "3" {

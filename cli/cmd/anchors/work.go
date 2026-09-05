@@ -397,7 +397,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// `spec`, o `.ts` do alvo em geral ainda não existe, e o `check` aborta sem conferir
 	// nada. Prescrever um comando que a própria etapa impede de funcionar é a régua se
 	// contradizendo dentro do mesmo prompt.
-	alvo := alvoDaVerificacao(rel, artifact, layer, cfg)
+	alvo := verificationTarget(rel, artifact, layer, cfg)
 	fmt.Fprintf(&b, "anchors check --changed %s --no-record --deterministic\n```\n\n", alvo)
 	b.WriteString("Todos os gates **bloqueantes** devem sair com `✗0`. Um `~` não é falha — é o " +
 		"gate dizendo que não teve o que confrontar (o motivo vem escrito). Se um gate reprovar, " +
@@ -506,7 +506,7 @@ func writeTrincaPaths(b *strings.Builder, rel, artifact, layer string, cfg *conf
 			"olhando os vizinhos da camada.\n")
 		return
 	}
-	files, overridden := caminhosDerivados(rel, layer, cfg)
+	files, overridden := derivedPaths(rel, layer, cfg)
 	dispensadas := pecasDispensadas(layer, cfg)
 	order := []string{"spec", "feature", "test"}
 	for _, k := range order {
@@ -974,7 +974,7 @@ func writeDeliveryRecord(b *strings.Builder, root, rel string) {
 		"como confrontar o que ele ACHA que fez contra o que fez. Registre isso no relatório.\n")
 }
 
-// caminhosDerivados resolve, para um alvo e sua camada, ONDE cada peça da trinca nasce —
+// derivedPaths resolve, para um alvo e sua camada, ONDE cada peça da trinca nasce —
 // aplicando co-location e os overrides do `derived:`, com os placeholders já substituídos.
 //
 // Existe separada porque duas coisas precisam da mesma resposta: a seção que MOSTRA os
@@ -987,7 +987,7 @@ func writeDeliveryRecord(b *strings.Builder, root, rel string) {
 // O mesmo prompt dizia "não escreva código nesta etapa" e prescrevia um comando que só
 // funciona com o código escrito. Os dois agentes de spec de um E2E real bateram nisso,
 // independentemente.
-func caminhosDerivados(rel, layer string, cfg *config.Config) (map[string]string, map[string]bool) {
+func derivedPaths(rel, layer string, cfg *config.Config) (map[string]string, map[string]bool) {
 	files, overridden := map[string]string{}, map[string]bool{}
 	if cfg.Derived == nil {
 		return files, overridden
@@ -1035,13 +1035,13 @@ func caminhosDerivados(rel, layer string, cfg *config.Config) (map[string]string
 	return files, overridden
 }
 
-// alvoDaVerificacao devolve o caminho que o `anchors check --changed` deve receber nesta
+// verificationTarget devolve o caminho que o `anchors check --changed` deve receber nesta
 // etapa: a peça que ELA produz, não o alvo da unidade. Cai no alvo quando a etapa não
 // produz peça derivada (código, review).
-func alvoDaVerificacao(rel, artifact, layer string, cfg *config.Config) string {
+func verificationTarget(rel, artifact, layer string, cfg *config.Config) string {
 	switch artifact {
 	case "spec", "feature", "test":
-		if files, _ := caminhosDerivados(rel, layer, cfg); files[artifact] != "" {
+		if files, _ := derivedPaths(rel, layer, cfg); files[artifact] != "" {
 			return files[artifact]
 		}
 	}

@@ -11,9 +11,9 @@ package gate
 // no `check`, no `status`, no `next`. Um aviso que exige rodar um comando específico para
 // ser visto é um aviso que ninguém vê.
 
-// Promovivel é um gate informativo cujo veredito está limpo: ele mede algo que o projeto
+// Promotable é um gate informativo cujo veredito está limpo: ele mede algo que o projeto
 // já cumpre, e promovê-lo a bloqueante passaria a DEFENDER isso sem custo nenhum hoje.
-type Promovivel struct {
+type Promotable struct {
 	// Gate é o nome, como declarado no anchors.yaml.
 	Gate string
 	// Passou é quantos nós ele aprovou. Zero significa que ele não teve o que medir —
@@ -21,7 +21,7 @@ type Promovivel struct {
 	Passou int
 }
 
-// GatesPromoviveis devolve os gates informativos que estão limpos no perfil dado.
+// PromotableGates devolve os gates informativos que estão limpos no perfil dado.
 //
 // Três condições, e cada uma existe para não sugerir promoção enganosa:
 //
@@ -30,14 +30,14 @@ type Promovivel struct {
 //   - ao menos uma aprovação — um gate que nunca teve o que medir não está "limpo", está
 //     sem dado. Promovê-lo daria a impressão de defesa que não existe, e é exatamente o
 //     silêncio que o Anchors combate em outros lugares.
-func GatesPromoviveis(p Profile) []Promovivel {
-	var out []Promovivel
+func PromotableGates(p Profile) []Promotable {
+	var out []Promotable
 	for _, nome := range p.GateNames() {
 		s := p.ByGate[nome]
 		if s.Blocking || s.Fail > 0 || s.Pass == 0 {
 			continue
 		}
-		out = append(out, Promovivel{Gate: nome, Passou: s.Pass})
+		out = append(out, Promotable{Gate: nome, Passou: s.Pass})
 	}
 	return out
 }

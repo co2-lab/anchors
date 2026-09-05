@@ -95,7 +95,7 @@ o card fica aberto.
 			for _, c := range raizes {
 				raizesPedidas[c] = true
 				todos[c] = true
-				for _, sob := range cardsSob(cfg, c) {
+				for _, sob := range cardsUnder(cfg, c) {
 					todos[sob] = true
 				}
 			}
@@ -148,14 +148,14 @@ func cardsPedidos(cards string, cfg *config.Config) []string {
 		return out
 	}
 	var out []string
-	for _, c := range cardsDoAgente(cfg) {
+	for _, c := range agentCards(cfg) {
 		out = append(out, c.numero)
 	}
 	return out
 }
 
-// cardsSob lista os achados que nasceram durante o trabalho de um card.
-func cardsSob(cfg *config.Config, card string) []string {
+// cardsUnder lista os achados que nasceram durante o trabalho de um card.
+func cardsUnder(cfg *config.Config, card string) []string {
 	out, err := exec.Command("gh", "issue", "list",
 		"--repo", cfg.Workflow.Repo,
 		"--state", "open",

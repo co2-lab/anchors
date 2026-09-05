@@ -113,7 +113,7 @@ func runStatus(root string) error {
 	//
 	// Aparece aqui, e não só no `check`, porque o `status` é o comando de quem RETOMA: é
 	// onde se pergunta "o que falta?", e um gate que mede sem defender é exatamente isso.
-	if prom := gate.GatesPromoviveis(
+	if prom := gate.PromotableGates(
 		gate.Aggregate(gate.RunWithConfig(cfg.Gates, g.Nodes, root, g, cfg)),
 	); len(prom) > 0 {
 		nomes := make([]string, 0, len(prom))
@@ -173,7 +173,7 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 	// Importa mais depois que o `stale` age: ele libera card sem sinal de vida, e uma
 	// revisão longa (ou uma noite) atravessa o prazo. O card volta para `to-do` sem dono,
 	// e quem retoma precisa VER isso para saber que dá para retomar.
-	if meus := cardsDoAgente(cfg); len(meus) > 0 {
+	if meus := agentCards(cfg); len(meus) > 0 {
 		fmt.Println("  → VOCÊ JÁ TEM TRABALHO:")
 		for _, c := range meus {
 			fmt.Printf("    #%s %s [%s]\n", c.numero, c.titulo, c.estado)
@@ -197,9 +197,9 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 func statusLocal(root string, g *mapx.Graph) {
 	fmt.Println("fila: local")
 
-	tasks := contaArquivos(filepath.Join(root, ".anchors", "tasks"))
-	todo := contaArquivos(filepath.Join(root, "issues", "todo"))
-	doing := contaArquivos(filepath.Join(root, "issues", "doing"))
+	tasks := countFiles(filepath.Join(root, ".anchors", "tasks"))
+	todo := countFiles(filepath.Join(root, "issues", "todo"))
+	doing := countFiles(filepath.Join(root, "issues", "doing"))
 
 	fmt.Printf("  tasks pendentes: %d\n", tasks)
 	fmt.Printf("  issues: %d em todo, %d em doing\n", todo, doing)
@@ -262,9 +262,9 @@ func semTrabalhoReal(g *mapx.Graph) bool {
 	return true
 }
 
-// contaArquivos conta entradas de arquivo num diretório. Diretório ausente é 0 — no modo
+// countFiles conta entradas de arquivo num diretório. Diretório ausente é 0 — no modo
 // local, `issues/doing` só existe depois que alguém pega o primeiro trabalho.
-func contaArquivos(dir string) int {
+func countFiles(dir string) int {
 	entradas, err := os.ReadDir(dir)
 	if err != nil {
 		return 0
@@ -278,16 +278,16 @@ func contaArquivos(dir string) int {
 	return n
 }
 
-// cardDoAgente é um card que carrega o nome deste agente no último `anchors-owner`.
-type cardDoAgente struct{ numero, titulo, estado string }
+// agentCard é um card que carrega o nome deste agente no último `anchors-owner`.
+type agentCard struct{ numero, titulo, estado string }
 
-// cardsDoAgente devolve os cards cujo último dono é este agente.
+// agentCards devolve os cards cujo último dono é este agente.
 //
 // A identidade vem de `ANCHORS_AGENT`, e não do usuário do git: agentes na mesma máquina
 // compartilham a conta do GitHub — foi por isso que a posse virou comentário
 // (`anchors-owner:`) em vez de assignee. Sem a variável não há como saber quem pergunta,
 // e devolver os cards de OUTRO agente seria pior que não responder.
-func cardsDoAgente(cfg *config.Config) []cardDoAgente {
+func agentCards(cfg *config.Config) []agentCard {
 	agente := strings.TrimSpace(os.Getenv("ANCHORS_AGENT"))
 	if agente == "" || cfg == nil || cfg.Workflow == nil {
 		return nil
@@ -305,13 +305,13 @@ func cardsDoAgente(cfg *config.Config) []cardDoAgente {
 	if err != nil {
 		return nil
 	}
-	var cards []cardDoAgente
+	var cards []agentCard
 	for _, l := range strings.Split(strings.TrimSpace(string(out)), "\n") {
 		p := strings.Split(l, "\t")
 		if len(p) != 3 || p[0] == "" {
 			continue
 		}
-		cards = append(cards, cardDoAgente{p[0], p[1], strings.TrimPrefix(p[2], "anchors:")})
+		cards = append(cards, agentCard{p[0], p[1], strings.TrimPrefix(p[2], "anchors:")})
 	}
 	return cards
 }

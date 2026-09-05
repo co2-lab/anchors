@@ -66,14 +66,14 @@ func TestHeaderConformeIsentaRoteiroExecutavel(t *testing.T) {
 	// isenção, trazer os roteiros para o grafo (camada e2e-flow, para que a execução deixe
 	// carimbo) transformaria 717 arquivos preexistentes em defeitos retroativos.
 	flow := mapx.Node{ID: "apps/mobile/.maestro/screens/auth/LoginScreen/LOGIX-A01.yaml", Kind: mapx.KindTest}
-	v, msg := checkHeaderConforme("appId: com.acme.exemplo\ntags:\n  - LOGIX-A01\n", flow)
+	v, msg := checkHeaderConforms("appId: com.acme.exemplo\ntags:\n  - LOGIX-A01\n", flow)
 	if v != Skip {
 		t.Fatalf("roteiro .yaml tem de ser Skip, veio %v — %s", v, msg)
 	}
 	// Um teste em código NOSSO continua obrigado: a isenção é da forma do arquivo, não do
 	// papel de "ser teste".
 	tsx := mapx.Node{ID: "src/features/auth/screens/LoginScreen.test.tsx", Kind: mapx.KindTest}
-	if v, _ := checkHeaderConforme("describe('x', () => {})\n", tsx); v != Fail {
+	if v, _ := checkHeaderConforms("describe('x', () => {})\n", tsx); v != Fail {
 		t.Errorf(".test.tsx sem header tem de falhar, veio %v", v)
 	}
 }

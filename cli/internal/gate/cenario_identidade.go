@@ -27,7 +27,7 @@ import (
 //
 // PENDING e não FAIL: numerar cenários é migração, e o gate nasce sobre uma base que
 // não conhecia a notação. Quem já migrou fica verde; quem não, vê o que falta.
-func checkCenarioIdentidade(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkScenarioIdentity(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindFeature {
 		return Skip, "" // só confronta features
 	}
