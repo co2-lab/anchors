@@ -38,8 +38,8 @@ func gateDePara() config.Gate {
 
 func TestMarkerParityPassaComAsDuasPontas(t *testing.T) {
 	root := arvore(t, map[string]string{
-		"web/scopes.ts":    "// @data-purge-rule-conta: o que a página promete apagar\n",
-		"server/purge.ts":  "// @data-purge-rule-conta: o que o handler apaga\n",
+		"web/scopes.ts":   "// @data-purge-rule-conta: o que a página promete apagar\n",
+		"server/purge.ts": "// @data-purge-rule-conta: o que o handler apaga\n",
 	})
 	v, d := checkMarkerParity(gateDePara(), root, nil, nil)
 	if v != Pass {
@@ -128,7 +128,7 @@ func TestMarkerParitySemEscoposUsaContagem(t *testing.T) {
 // A marcação vale em qualquer linguagem da árvore — o de-para cruza fronteira.
 func TestMarkerParityCruzaLinguagens(t *testing.T) {
 	root := arvore(t, map[string]string{
-		"web/scopes.ts": "// @data-purge-rule-conta: promete\n",
+		"web/scopes.ts":   "// @data-purge-rule-conta: promete\n",
 		"server/purge.go": "// @data-purge-rule-conta: apaga\n",
 	})
 	if v, d := checkMarkerParity(gateDePara(), root, nil, nil); v != Pass {
@@ -138,9 +138,9 @@ func TestMarkerParityCruzaLinguagens(t *testing.T) {
 
 func TestMarkerParityIgnoraNodeModules(t *testing.T) {
 	root := arvore(t, map[string]string{
-		"web/scopes.ts":                    "// @data-purge-rule-conta: promete\n",
-		"server/purge.ts":                  "// @data-purge-rule-conta: apaga\n",
-		"node_modules/lixo/index.ts":       "// @data-purge-rule-conta: ruido\n",
+		"web/scopes.ts":              "// @data-purge-rule-conta: promete\n",
+		"server/purge.ts":            "// @data-purge-rule-conta: apaga\n",
+		"node_modules/lixo/index.ts": "// @data-purge-rule-conta: ruido\n",
 	})
 	if v, d := checkMarkerParity(gateDePara(), root, nil, nil); v != Pass {
 		t.Fatalf("node_modules nao pode contar; veio %v: %s", v, d)

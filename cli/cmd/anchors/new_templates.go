@@ -448,10 +448,12 @@ var planTemplate = template{
 				"`(depende de {id}-F01)`. Sem o código, a ordem vive em prosa e o pipeline não a " +
 				"confronta: as specs semeadas nascem todas disponíveis, e o agente pega a da fase 3 " +
 				"com a fase 1 em aberto. Cada spec declara `parent: {id}-F0N` (a que fase pertence) " +
-				"e `needs:` (de qual depende).",
+				"e `needs:` (de qual depende). O PROGRESSO não mora aqui: ele vive no " +
+				"`-progress.md` ao lado, porque o plano é DECISÃO e alterá-lo tem de significar " +
+				"que a decisão mudou.",
 			Body: "## Fases\n\n### {id}-F01 — TODO nome da primeira fase\n\n" +
 				"TODO: o que esta fase entrega, e as specs que ela semeia.\n\n" +
-				"- [ ] `caminho/Unidade.spec.md` — TODO o que ela descreve\n\n" +
+				"- `caminho/Unidade.spec.md` — TODO o que ela descreve\n\n" +
 				"### {id}-F02 — TODO nome da segunda fase (depende de {id}-F01)\n\n" +
 				"TODO: por que esta fase só começa depois da anterior.\n\n"},
 

@@ -143,6 +143,25 @@ ganham um REF (apontam para a spec). Use --code para fixar a identidade à mão.
 				return err
 			}
 			fmt.Printf("✓ %s criado (%s: %s)\n", outPath, tpl.idField, id)
+
+			// O PLANO nasce com o companheiro de progresso. Ver `progress.go`: o
+			// checkbox no plano fazia "terminei uma fase" ser indistinguível de "mudei a
+			// decisão", e derrubava o julgamento da spec que a fase entregou.
+			//
+			// Criar aqui, e não pedir ao usuário, é o que faz a separação ser o default.
+			// Um plano sem companheiro convida a marcar `[x]` no próprio plano — que é o
+			// caminho que já existia e o que se está removendo.
+			if kind == "plan" {
+				prog, err := escreveProgressoInicial(outPath, content, id)
+				if err != nil {
+					// Não é falha do `new`: o plano nasceu. O progresso se cria à mão.
+					fmt.Printf("  ⚠ progresso não criado: %v\n", err)
+				} else {
+					fmt.Printf("✓ %s criado (o ESTADO do plano; marque `[x]` aqui, nunca no plano)\n",
+						relTo(absRoot, prog))
+				}
+			}
+
 			fmt.Println("  preencha as seções e rode `anchors check --changed " + relTo(absRoot, outPath) + "`")
 			return nil
 		},
