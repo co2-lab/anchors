@@ -235,7 +235,7 @@ func renderArtifact(t template, name, id, outPath, root string, chosen map[strin
 	// O léxico de seções é da CAMADA do alvo (ver `section_titles`): resolver uma vez,
 	// fora do loop.
 	camadaDoArtefato := targetLayer(root, outPath, cfg)
-	for _, s := range ordenaSecoes(t, chosen, ordem) {
+	for _, s := range sortSections(t, chosen, ordem) {
 		body := strings.NewReplacer("{name}", name, "{id}", id).Replace(s.Body)
 		// Traduz o título GENÉRICO para o nome que ESTE projeto usa, quando `rule_types`
 		// declara um. Sem isso o preset emitia "Restrições" num projeto cujas 50 specs
@@ -334,10 +334,10 @@ func resolveSectionsWithPreset(t template, preset string, with, without []string
 	return chosen, def.Sections, nil
 }
 
-// ordenaSecoes devolve as seções escolhidas na ORDEM do preset (quando há um), com as
+// sortSections devolve as seções escolhidas na ORDEM do preset (quando há um), com as
 // adicionadas por --with logo depois — na ordem do catálogo, que é o único critério
 // disponível para quem o preset não previu.
-func ordenaSecoes(t template, chosen map[string]bool, ordem []string) []section {
+func sortSections(t template, chosen map[string]bool, ordem []string) []section {
 	porChave := map[string]section{}
 	for _, s := range t.sections {
 		porChave[s.Key] = s

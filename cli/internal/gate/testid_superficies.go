@@ -17,10 +17,10 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 )
 
-// idConsultado — o id aparece em alguma superfície consumidora? Para o template
+// queriedID — o id aparece em alguma superfície consumidora? Para o template
 // (`bdgt-item-*`), basta o PREFIXO ser consultado: o sufixo é dado de runtime, e o
 // flow que casa `bdgt-item-.*` ou constrói `bdgt-item-${id}` está usando o contrato.
-func idConsultado(blob, id string) bool {
+func queriedID(blob, id string) bool {
 	nu := strings.TrimPrefix(id, ":")
 	if strings.HasSuffix(nu, "-*") {
 		return strings.Contains(blob, strings.TrimSuffix(nu, "*"))
@@ -30,7 +30,7 @@ func idConsultado(blob, id string) bool {
 	return strings.Contains(blob, nu) || strings.Contains(blob, ":"+nu)
 }
 
-// lerSuperficieE2E lê os flows de ponta a ponta declarados pelo projeto.
+// readE2ESurface lê os flows de ponta a ponta declarados pelo projeto.
 //
 // A resolução é em DOIS passos, e confundi-los custa caro: `surfaces[e2e]` devolve a
 // CHAVE da superfície (ex.: "e2e"), não um caminho — quem tem o caminho é
@@ -41,7 +41,7 @@ func idConsultado(blob, id string) bool {
 // Quando o projeto declara o regime mas não o arquivo (o app de referência hoje: `e2e: e2e` sem
 // `files.e2e`), não há onde procurar. Devolver vazio aqui é honesto; o gate trata a
 // falta de consumidor conhecido como Skip, não como reprovação.
-func lerSuperficieE2E(root string, cfg *config.Config) []string {
+func readE2ESurface(root string, cfg *config.Config) []string {
 	if cfg == nil || cfg.Derived == nil {
 		return nil
 	}
@@ -70,7 +70,7 @@ func lerSuperficieE2E(root string, cfg *config.Config) []string {
 	}
 	// A superfície é declarada como template de região (ex.: `apps/mobile/.maestro`);
 	// aqui interessa a RAIZ dela, varrida por inteiro.
-	dir := filepath.Join(root, primeiroSegmentoEstatico(padrao))
+	dir := filepath.Join(root, firstStaticSegment(padrao))
 	var out []string
 	_ = filepath.Walk(dir, func(p string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
@@ -84,7 +84,7 @@ func lerSuperficieE2E(root string, cfg *config.Config) []string {
 	return out
 }
 
-// lerTestesVizinhos lê os testes da MESMA pasta e os da pasta-IRMÃ dentro do módulo.
+// readNeighborTests lê os testes da MESMA pasta e os da pasta-IRMÃ dentro do módulo.
 //
 // A pasta sozinha não basta, e o caso que mostra isso é o componente: `CategoryCard`
 // vive em `trends/components/` e quem o exercita é `TrendsScreen.test.tsx`, em
@@ -93,7 +93,7 @@ func lerSuperficieE2E(root string, cfg *config.Config) []string {
 //
 // Sobe UM nível só (o módulo da feature), não a árvore inteira: ler tudo tornaria
 // qualquer menção do repositório uma prova de consumo, e o gate deixaria de medir.
-func lerTestesVizinhos(root, specID string) []string {
+func readNeighborTests(root, specID string) []string {
 	dir := filepath.Join(root, filepath.Dir(specID))
 	dirs := []string{dir}
 	// As irmãs dentro do módulo (`features/trends/{components,screens,hooks}`).
@@ -128,7 +128,7 @@ func lerTestesVizinhos(root, specID string) []string {
 // `{unit}`), devolvendo o prefixo fixo — a raiz que dá para varrer.
 var placeholderRE = regexp.MustCompile(`\{\{?[a-zA-Z_]+\}?\}`)
 
-func primeiroSegmentoEstatico(padrao string) string {
+func firstStaticSegment(padrao string) string {
 	if loc := placeholderRE.FindStringIndex(padrao); loc != nil {
 		padrao = padrao[:loc[0]]
 	}

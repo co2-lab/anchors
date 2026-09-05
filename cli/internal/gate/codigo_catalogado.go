@@ -68,7 +68,7 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 			"linha do símbolo, ou no comentário logo acima dela:\n"+
 			"    // @no-rule: <por que este símbolo não tem regra>\n"+
 			"    export function algo() { … }",
-		len(orfaos), alvo, primeiros(orfaos, 5))
+		len(orfaos), alvo, firstOnes(orfaos, 5))
 }
 
 // noRuleRE — a dispensa por SÍMBOLO, com razão obrigatória. Mesmo padrão do

@@ -77,10 +77,10 @@ o card fica aberto.
 			if !ok {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("não sei a sintaxe de fechamento de `%s` — as conhecidas "+
-					"são: %s", cfg.Workflow.Mode, strings.Join(plataformasConhecidas(), ", "))
+					"são: %s", cfg.Workflow.Mode, strings.Join(knownPlatforms(), ", "))
 			}
 
-			raizes := cardsPedidos(cards, cfg)
+			raizes := requestedCards(cards, cfg)
 			if len(raizes) == 0 {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("nenhum card: informe `--cards 44` ou defina `ANCHORS_AGENT` " +
@@ -127,7 +127,7 @@ o card fica aberto.
 	return cmd
 }
 
-func plataformasConhecidas() []string {
+func knownPlatforms() []string {
 	out := make([]string, 0, len(sintaxeDeFechamento))
 	for k := range sintaxeDeFechamento {
 		out = append(out, k)
@@ -136,8 +136,8 @@ func plataformasConhecidas() []string {
 	return out
 }
 
-// cardsPedidos resolve o que foi passado em `--cards`, ou descobre pelo agente.
-func cardsPedidos(cards string, cfg *config.Config) []string {
+// requestedCards resolve o que foi passado em `--cards`, ou descobre pelo agente.
+func requestedCards(cards string, cfg *config.Config) []string {
 	if s := strings.TrimSpace(cards); s != "" {
 		var out []string
 		for _, c := range strings.Split(s, ",") {

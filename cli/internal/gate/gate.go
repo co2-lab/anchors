@@ -180,7 +180,7 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 		// quando quem falta é o binário. O aviso não se perde: o `doctor` levanta a ausência
 		// (health.checkFerramentasAusentes), que é onde ela pode ser lida uma vez e resolvida,
 		// em vez de repetida a cada alvo de cada varredura.
-		if faltando, ok := ferramentaAusente(g); ok {
+		if faltando, ok := missingTool(g); ok {
 			results = append(results, Result{
 				Gate: g.Name, Target: "(" + string(g.ScopeParaVarredura(completa)) + ")",
 				Verdict: Skip, Blocking: g.IsBlocking(),
@@ -305,7 +305,7 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 		// demais Pending são "não tive o que confrontar", que não é dívida de ninguém.
 		if r.Verdict == Pending && g.Check == "obligation-honored" {
 			r.Divida = true
-			r.Prazo = prazosDeclarados(r.Detail)
+			r.Prazo = declaredDeadlines(r.Detail)
 		}
 		// Decisão em aberto IMPEDE: a spec declara que não decidiu algo que o código vai
 		// precisar, e quem implementar vai adivinhar. Dívida assumida NÃO impede — ela
@@ -339,8 +339,8 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 // concatena com ";". O nome da obrigação vem entre colchetes no início de cada trecho.
 var prazoRE = regexp.MustCompile(`\[([a-z0-9-]+)\][^;]*?DÍVIDA ASSUMIDA: ([^;]+)`)
 
-// prazosDeclarados extrai, do laudo do gate, apenas os vencimentos — um por obrigação.
-func prazosDeclarados(detail string) string {
+// declaredDeadlines extrai, do laudo do gate, apenas os vencimentos — um por obrigação.
+func declaredDeadlines(detail string) string {
 	var out []string
 	for _, m := range prazoRE.FindAllStringSubmatch(detail, -1) {
 		out = append(out, "`"+m[1]+"` — "+strings.TrimSpace(m[2]))
@@ -351,11 +351,11 @@ func prazosDeclarados(detail string) string {
 	return strings.Join(out, "\n- ")
 }
 
-// ferramentaAusente diz se o gate exige um binário que não está no PATH.
+// missingTool diz se o gate exige um binário que não está no PATH.
 //
 // `exec.LookPath` é a mesma resolução que o `sh` faria ao rodar o comando, então a
 // resposta aqui e o comportamento real do gate não podem divergir.
-func ferramentaAusente(g config.Gate) (string, bool) {
+func missingTool(g config.Gate) (string, bool) {
 	if g.NeedsTool == "" {
 		return "", false
 	}

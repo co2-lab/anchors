@@ -52,7 +52,7 @@ Rode 'anchors coverage' depois para ver os requisitos de spec sem teste verde.`,
 			if err != nil {
 				return err
 			}
-			return ingereArtefatos(absRoot, mapPath, junit, lcov, mutation, layer, scope)
+			return ingestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope)
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
@@ -65,12 +65,12 @@ Rode 'anchors coverage' depois para ver os requisitos de spec sem teste verde.`,
 	return cmd
 }
 
-// ingereArtefatos é o miolo da ingestão, separado do comando para que `anchors test` e
+// ingestArtifacts é o miolo da ingestão, separado do comando para que `anchors test` e
 // `anchors mutation` possam ingerir o que acabaram de produzir sem reimplementar nada
 // nem invocar o próprio binário de novo. É o que fecha o par "rodar" / "ingerir" que
 // antes exigia um humano no meio.
-func ingereArtefatos(absRoot, mapPath, junit, lcov, mutation, layer, scope string) error {
-	if err := avisaSeIngestManual(absRoot); err != nil {
+func ingestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope string) error {
+	if err := warnIfManualIngest(absRoot); err != nil {
 		return err
 	}
 	{
@@ -179,13 +179,13 @@ func ingereArtefatos(absRoot, mapPath, junit, lcov, mutation, layer, scope strin
 	}
 }
 
-// avisaSeIngestManual reclama de uma ingestão feita fora do `anchors test`.
+// warnIfManualIngest reclama de uma ingestão feita fora do `anchors test`.
 //
 // AVISA por padrão e só BARRA quando o projeto declara `manual_ingest_blocks: true`. A
 // razão de não barrar sempre é que há usos legítimos — um CI que rodou a suíte noutro
 // job, uma ferramenta que o `tests:` não cobre —, e derrubá-los tiraria a saída de quem
 // tem razão.
-func avisaSeIngestManual(absRoot string) error {
+func warnIfManualIngest(absRoot string) error {
 	if viaAnchorsTest {
 		return nil
 	}

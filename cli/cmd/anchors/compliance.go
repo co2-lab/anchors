@@ -65,7 +65,7 @@ sinaliza isso em vez de deixar você concluir errado.`,
 			obrigacoes := gate.ObligationsInForce(absRoot, cfg)
 			if len(obrigacoes) == 0 {
 				fmt.Println("Nenhum dever declarado.")
-				printDisponiveis(cfg)
+				printAvailable(cfg)
 				return nil
 			}
 
@@ -152,7 +152,7 @@ sinaliza isso em vez de deixar você concluir errado.`,
 			if !verbose && totalCumpre < totalSujeitos {
 				fmt.Println("(use --verbose para ver quais nós faltam em cada dever)")
 			}
-			printDisponiveis(cfg)
+			printAvailable(cfg)
 			return nil
 		},
 	}
@@ -161,10 +161,10 @@ sinaliza isso em vez de deixar você concluir errado.`,
 	return cmd
 }
 
-// printDisponiveis mostra os packs que existem no disco e o projeto NÃO adotou. Não é
+// printAvailable mostra os packs que existem no disco e o projeto NÃO adotou. Não é
 // sugestão de adotar — é a diferença entre "não se aplica a mim" e "esqueci", que só o
 // projeto sabe qual é, mas precisa poder ver.
-func printDisponiveis(cfg *config.Config) {
+func printAvailable(cfg *config.Config) {
 	adotado := map[string]bool{}
 	for _, p := range cfg.Packs {
 		adotado[strings.TrimSuffix(strings.TrimPrefix(p, "./packs/"), ".yaml")] = true

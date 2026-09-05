@@ -89,7 +89,7 @@ card para trocar uma palavra é burocracia.`,
 			}
 
 			motivo := strings.Join(args, " ")
-			corpoTexto := corpoDaEscalada(motivo, sobre, card, paraUsuario)
+			corpoTexto := escalationBody(motivo, sobre, card, paraUsuario)
 
 			tmp, err := os.CreateTemp("", "anchors-escalate-*.md")
 			if err != nil {
@@ -207,12 +207,12 @@ func firstLineOfReason(s string) string {
 	return s
 }
 
-// corpoDaEscalada monta o texto da issue.
+// escalationBody monta o texto da issue.
 //
 // Separado do comando porque é ELE o que precisa ser confrontado: o valor está em dizer
 // por que o trabalho parou e como destravar. Um teste que precisasse do `gh` para ler
 // isso não rodaria em máquina nenhuma, e o texto ficaria sem régua.
-func corpoDaEscalada(motivo, sobre, card string, paraUsuario bool) string {
+func escalationBody(motivo, sobre, card string, paraUsuario bool) string {
 	var b strings.Builder
 	if paraUsuario {
 		b.WriteString("🛑 **Esta decisão não é do agente.**\n\n")

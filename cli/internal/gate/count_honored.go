@@ -40,7 +40,7 @@ func checkCountHonored(content string, n mapx.Node, root string, g *mapx.Graph, 
 		return Skip, "a afirmação numérica é da spec — é ela que descreve o código"
 	}
 
-	decls := contagensDeclaradas(content)
+	decls := declaredCounts(content)
 	if len(decls) == 0 {
 		// Ausência não é falha: nem toda spec afirma número, e exigir a marcação de toda
 		// spec seria ritual. O gate cobra quem DECLAROU como conferir — e quem escreve uma
@@ -61,7 +61,7 @@ func checkCountHonored(content string, n mapx.Node, root string, g *mapx.Graph, 
 		// "50 cláusulas de autorização" — o gate ficava ✓ e a spec mentia para quem a
 		// abrisse. Conferir só a marcação é conferir a metade que ninguém lê.
 		if real == d.Esperado && d.Rotulo != "" {
-			if divergentes := prosaDivergente(content, d, real); len(divergentes) > 0 {
+			if divergentes := divergentProse(content, d, real); len(divergentes) > 0 {
 				erros = append(erros, fmt.Sprintf(
 					"o marcador de `%s` bate (%d), mas a PROSA diz %s — é a frase que o leitor "+
 						"lê, e ela está errada", d.Rotulo, real, strings.Join(divergentes, " e ")))
@@ -75,7 +75,7 @@ func checkCountHonored(content string, n mapx.Node, root string, g *mapx.Graph, 
 			}
 			erros = append(erros, fmt.Sprintf(
 				"a spec afirma **%d %s**, o código tem **%d** (`%s`%s)",
-				d.Esperado, rotulo, real, d.Glob, sufixoPadrao(d.Padrao)))
+				d.Esperado, rotulo, real, d.Glob, defaultSuffix(d.Padrao)))
 		}
 	}
 	if len(erros) == 0 {
@@ -103,7 +103,7 @@ type count struct {
 // separação glob↔regex é feita pelo espaço antes da `/` de abertura: `<glob> /<regex>/`.
 var countRE = regexp.MustCompile(`@anchors-count:\s*(\d+)\s*([^=\n]*?)\s*=\s*(\S+)(?:\s+/(.+?)/)?\s*(?:-->)?\s*$`)
 
-func contagensDeclaradas(content string) []count {
+func declaredCounts(content string) []count {
 	var out []count
 	for _, linha := range strings.Split(content, "\n") {
 		m := countRE.FindStringSubmatch(linha)
@@ -154,17 +154,17 @@ func countOf(root string, d count) (int, error) {
 	return total, nil
 }
 
-func sufixoPadrao(p string) string {
+func defaultSuffix(p string) string {
 	if p == "" {
 		return ""
 	}
 	return ", contando `/" + p + "/`"
 }
 
-// prosaDivergente acha, no texto, afirmações "<N> <rótulo>" cujo número não bate com o
+// divergentProse acha, no texto, afirmações "<N> <rótulo>" cujo número não bate com o
 // real. Só olha o MESMO rótulo que a marcação declara — é o que evita acusar o "90 dias"
 // de retenção que nada tem a ver com contagem de código.
-func prosaDivergente(content string, d count, real int) []string {
+func divergentProse(content string, d count, real int) []string {
 	rot := regexp.QuoteMeta(d.Rotulo)
 	// `\*{0,2}` aceita a forma em negrito (`**50 modelos**`), que é como o número
 	// costuma aparecer quando o autor quer destacá-lo.

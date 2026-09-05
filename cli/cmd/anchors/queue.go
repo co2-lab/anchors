@@ -137,7 +137,7 @@ Se a fila está vazia, imprime isso e sai com código 0.`,
 			// pelo worker a cada task e precisa ser rápido, então não roda os gates —
 			// só conta quantos estão declarados como informativos. Quem quer saber
 			// quais estão limpos roda `anchors status` ou `check`, que já medem.
-			lembraMaturacaoBarato(absRoot)
+			rememberMaturationCheap(absRoot)
 			return nil
 		},
 	}
@@ -367,7 +367,7 @@ func seedExiste(root, seed string, files []scan.File) bool {
 	return achou == 1
 }
 
-// lembraMaturacaoBarato conta os gates informativos sem RODAR nenhum.
+// rememberMaturationCheap conta os gates informativos sem RODAR nenhum.
 //
 // O `next` é chamado pelo worker a cada task, e rodar a suíte de gates ali dobraria o
 // custo de puxar trabalho. O que ele pode fazer sem custo é ler a declaração: se há gate
@@ -376,7 +376,7 @@ func seedExiste(root, seed string, files []scan.File) bool {
 //
 // É um lembrete mais fraco de propósito. Um lembrete caro num comando de laço quente é
 // um lembrete que alguém vai querer desligar.
-func lembraMaturacaoBarato(root string) {
+func rememberMaturationCheap(root string) {
 	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
 	if err != nil {
 		return

@@ -101,7 +101,7 @@ commit só de README não dispara o typecheck do monorepo.`,
 			if phase != "" && phase != "manual" {
 				sub = append(sub, "--deterministic")
 			}
-			return rodarSubcomando(sub)
+			return runSubcommand(sub)
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
@@ -141,10 +141,10 @@ func stagedFiles(root string) ([]string, error) {
 	return lista, nil
 }
 
-// rodarSubcomando reexecuta o próprio binário. Reusar o pipeline do `check` por
+// runSubcommand reexecuta o próprio binário. Reusar o pipeline do `check` por
 // processo (em vez de refatorar o RunE dele para uma função compartilhada) mantém
 // UMA implementação do que é verificar — e o custo é um fork, não N.
-func rodarSubcomando(args []string) error {
+func runSubcommand(args []string) error {
 	exe, err := os.Executable()
 	if err != nil {
 		return err

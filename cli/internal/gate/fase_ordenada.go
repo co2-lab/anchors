@@ -67,7 +67,7 @@ func checkPhaseOrdered(content string, n mapx.Node, root string, g *mapx.Graph, 
 		// Antes isto casava a palavra "fase" no texto. Num plano em inglês ("Phase 1") o
 		// gate nunca disparava — e foi assim que o plano da Plataforma passou meses com
 		// `### Fase 1` sem código, com a ordem existindo só para quem lê.
-		if temSecaoQueParereFase(content) {
+		if hasPhaseLikeSection(content) {
 			return Pending, "o plano tem seções que parecem FASE mas não cataloga nenhuma com " +
 				"código (`### " + strings.ToUpper(n.Code) + "-F01 — …`). Sem código, a ordem " +
 				"existe para quem lê e não para quem confronta: as specs semeadas nascem " +
@@ -220,13 +220,13 @@ func checkParentValid(content string, n mapx.Node, root string, g *mapx.Graph, c
 				"um ciclo, e quem a percorre nunca chega à raiz", atual)
 		}
 		visto[atual] = true
-		atual = paiDe(g, atual)
+		atual = parentOf(g, atual)
 	}
 	return Pass, ""
 }
 
-// paiDe devolve o `parent` do nó com este código, ou vazio.
-func paiDe(g *mapx.Graph, code string) string {
+// parentOf devolve o `parent` do nó com este código, ou vazio.
+func parentOf(g *mapx.Graph, code string) string {
 	for _, n := range g.Nodes {
 		if n.Code == code {
 			return n.Parent
@@ -239,11 +239,11 @@ func paiDe(g *mapx.Graph, code string) string {
 // da palavra usada para nomeá-la.
 var secaoNivel3RE = regexp.MustCompile(`(?m)^#{3}\s+\S.*$`)
 
-// temSecaoQueParereFase diz se o plano organiza o trabalho em seções de terceiro nível.
+// hasPhaseLikeSection diz se o plano organiza o trabalho em seções de terceiro nível.
 //
 // É a estrutura, e não o vocabulário: um plano em inglês ("Phase"), em espanhol ("Fase"),
 // ou que chame de "Etapa" cai igual. O que se pergunta é se existe ORDEM declarada que o
 // gate não consegue confrontar por falta de código.
-func temSecaoQueParereFase(content string) bool {
+func hasPhaseLikeSection(content string) bool {
 	return secaoNivel3RE.MatchString(content)
 }

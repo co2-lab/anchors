@@ -130,7 +130,7 @@ func TestOrdemDasSecoesVemDoPreset(t *testing.T) {
 		t.Fatal(err)
 	}
 	var chaves []string
-	for _, s := range ordenaSecoes(specTemplate, chosen, ordem) {
+	for _, s := range sortSections(specTemplate, chosen, ordem) {
 		chaves = append(chaves, s.Key)
 	}
 	pos := func(k string) int {
@@ -161,7 +161,7 @@ func TestOrdemComSecaoExtra(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	got := ordenaSecoes(specTemplate, chosen, ordem)
+	got := sortSections(specTemplate, chosen, ordem)
 	var achouAuth bool
 	for _, s := range got {
 		if s.Key == "auth" {

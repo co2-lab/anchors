@@ -174,7 +174,7 @@ const specComSecaoVazia = `# Tela
 // passaria a reportar verde sobre seção que ninguém preencheu.
 func TestSecaoVaziaSemDeclaracaoPedeQueAlguemDiga(t *testing.T) {
 	comCodigosDe4(t)
-	d := irmasSemCodigo(specComSecaoVazia)
+	d := siblingsWithoutCode(specComSecaoVazia)
 	if d == "" {
 		t.Fatal("vazia sem declaração tem de ser cobrada — senão o esquecimento passa")
 	}
@@ -195,7 +195,7 @@ func TestSecaoVaziaComNoContentEAceita(t *testing.T) {
 		"### Comportamentos Automáticos\n\n| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
 		"### Comportamentos Automáticos\n\n@no-content: tela estática — não há efeito, timer nem carga.\n",
 		1)
-	if d := irmasSemCodigo(spec); d != "" {
+	if d := siblingsWithoutCode(spec); d != "" {
 		t.Fatalf("declarada, a seção vazia é aceita. Veio: %s", d)
 	}
 }
@@ -207,7 +207,7 @@ func TestNoContentExigeMotivo(t *testing.T) {
 		"### Comportamentos Automáticos\n\n| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
 		"### Comportamentos Automáticos\n\n@no-content:\n",
 		1)
-	if d := irmasSemCodigo(spec); d == "" {
+	if d := siblingsWithoutCode(spec); d == "" {
 		t.Fatal("`@no-content` sem motivo não pode absolver")
 	}
 }
@@ -219,7 +219,7 @@ func TestIrmasSemCodigoAindaPegaRegraSemCodigo(t *testing.T) {
 		"| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
 		"| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n| — | Abertura | Carrega o perfil |\n",
 		1)
-	d := irmasSemCodigo(spec)
+	d := siblingsWithoutCode(spec)
 	if d == "" {
 		t.Fatal("regra SEM código tem de ser acusada — é o defeito que o gate existe para pegar")
 	}
@@ -235,7 +235,7 @@ func TestIrmasSemCodigoPegaSecaoComProsa(t *testing.T) {
 		"### Comportamentos Automáticos\n\n| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
 		"### Comportamentos Automáticos\n\nAo abrir, a tela carrega o perfil do usuário.\n",
 		1)
-	if d := irmasSemCodigo(spec); d == "" {
+	if d := siblingsWithoutCode(spec); d == "" {
 		t.Fatal("regra em prosa sem código tem de ser acusada")
 	}
 }
@@ -255,7 +255,7 @@ func TestSubsecaoNaoEsvaziaOPai(t *testing.T) {
 		"#### `destination` — rota de destino\n\n" +
 		"| Data State | Condição |\n| --- | --- |\n| `DS-dest-main` | autenticado |\n\n---\n"
 
-	if d := irmasSemCodigo(spec); d != "" {
+	if d := siblingsWithoutCode(spec); d != "" {
 		t.Fatalf("o `###` tem conteúdo no `####` filho; não devia acusar. Veio: %s", d)
 	}
 }

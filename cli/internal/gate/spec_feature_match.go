@@ -70,7 +70,7 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		return Skip, "a spec declara `@no-feature` — sem feature não há cenário a cobrar de requisito nenhum"
 	}
 
-	declarados := requisitosDefinidos(content)
+	declarados := definedRequirements(content)
 	if len(declarados) == 0 {
 		return Skip, "a spec não define requisito com código — nada a cobrir"
 	}
@@ -123,7 +123,7 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		len(faltando), strings.Join(mostra, ", "), sufixo)
 }
 
-// requisitosDefinidos extrai os códigos que a spec DEFINE — não os que ela cita.
+// definedRequirements extrai os códigos que a spec DEFINE — não os que ela cita.
 //
 // A distinção é a mesma que o gate `rule-types` já faz, e é o que separa um gate útil de
 // um gerador de ruído: uma spec cita códigos de outras unidades o tempo todo (na Tabela
@@ -131,7 +131,7 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 // isso. Define quem coloca o código no INÍCIO de uma linha, de um item de lista, de um
 // título de seção, ou na PRIMEIRA célula de uma tabela — as formas em que uma régua
 // enuncia um requisito.
-func requisitosDefinidos(content string) []string {
+func definedRequirements(content string) []string {
 	vistos := map[string]bool{}
 	var out []string
 	for _, linha := range strings.Split(content, "\n") {

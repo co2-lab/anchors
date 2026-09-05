@@ -378,10 +378,10 @@ reporta, e aqui ela fica visível de graça.`,
 					// os cards que a revisão atinge — e ele não lê o mapa por conta própria.
 					Revises []string `json:"revises,omitempty"`
 				}
-				kinds := kindPorArquivo(mapPath)
-				needs := needsPorArquivo(mapPath)
-				parents := parentPorArquivo(mapPath)
-				revs := revisesPorArquivo(mapPath)
+				kinds := kindByFile(mapPath)
+				needs := needsByFile(mapPath)
+				parents := parentByFile(mapPath)
+				revs := revisesByFile(mapPath)
 				out := make([]saida, 0, len(linhas))
 				for _, l := range linhas {
 					arq := codeFile[l.code]
@@ -423,9 +423,9 @@ reporta, e aqui ela fica visível de graça.`,
 	return cmd
 }
 
-// kindPorArquivo devolve o kind de cada nó do mapa. Serve ao `--json`: quem consome
+// kindByFile devolve o kind de cada nó do mapa. Serve ao `--json`: quem consome
 // precisa dizer que TIPO de artefato o trabalho é ("Implementar plan — Fundação").
-func kindPorArquivo(mapPath string) map[string]string {
+func kindByFile(mapPath string) map[string]string {
 	out := map[string]string{}
 	g, err := mapx.Load(mapPath)
 	if err != nil {
@@ -525,9 +525,9 @@ func joinLens(ls []int) string {
 	return strings.Join(partes, " ou ")
 }
 
-// needsPorArquivo devolve a ordem de trabalho declarada por cada arquivo do mapa — as
+// needsByFile devolve a ordem de trabalho declarada por cada arquivo do mapa — as
 // fases de plano que precisam fechar antes dele.
-func needsPorArquivo(mapPath string) map[string][]string {
+func needsByFile(mapPath string) map[string][]string {
 	out := map[string][]string{}
 	g, err := mapx.Load(mapPath)
 	if err != nil {
@@ -541,9 +541,9 @@ func needsPorArquivo(mapPath string) map[string][]string {
 	return out
 }
 
-// parentPorArquivo devolve o pertencimento declarado por cada arquivo do mapa — o código
+// parentByFile devolve o pertencimento declarado por cada arquivo do mapa — o código
 // de quem o contém.
-func parentPorArquivo(mapPath string) map[string]string {
+func parentByFile(mapPath string) map[string]string {
 	out := map[string]string{}
 	g, err := mapx.Load(mapPath)
 	if err != nil {
@@ -557,8 +557,8 @@ func parentPorArquivo(mapPath string) map[string]string {
 	return out
 }
 
-// revisesPorArquivo devolve os planos que cada arquivo do mapa revisa.
-func revisesPorArquivo(mapPath string) map[string][]string {
+// revisesByFile devolve os planos que cada arquivo do mapa revisa.
+func revisesByFile(mapPath string) map[string][]string {
 	out := map[string][]string{}
 	g, err := mapx.Load(mapPath)
 	if err != nil {

@@ -126,7 +126,7 @@ func checkRuleTypes(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 	// projeto real: 48 specs com "Eventos / Callbacks" preenchida e sem um único
 	// código, e os cenários que provavam esses eventos emprestaram o código do
 	// estado vizinho (um `-S` regendo comportamento).
-	if msg := secoesSemCodigo(content, cfg.RuleTypes); msg != "" {
+	if msg := sectionsWithoutCode(content, cfg.RuleTypes); msg != "" {
 		return Pending, msg
 	}
 	return Pass, ""
@@ -219,13 +219,13 @@ func normalizeSection(s string) string {
 var linhaDeTabelaRE = regexp.MustCompile(`^\s*\|[^|]*\|`)
 var separadorTabelaRE = regexp.MustCompile(`^\s*\|[\s:|-]+\|?\s*$`)
 
-// secoesSemCodigo acha seção declarada `requires_code` que tem tabela preenchida e
+// sectionsWithoutCode acha seção declarada `requires_code` que tem tabela preenchida e
 // nenhum código de regra.
 //
 // Só olha TABELA: uma seção pode ter prosa explicativa sem catalogar nada. O que
 // caracteriza catálogo é a linha de tabela — e é lá que o código deveria estar, na
 // primeira célula, como as outras seções fazem.
-func secoesSemCodigo(content string, types []config.RuleType) string {
+func sectionsWithoutCode(content string, types []config.RuleType) string {
 	exige := map[string]string{} // título normalizado → letra
 	for _, rt := range types {
 		for _, s := range rt.RequiresCode {

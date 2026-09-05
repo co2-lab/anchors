@@ -33,7 +33,7 @@ import (
 // o Anchors o executa sem saber o que é eslint.
 
 func newTestCmd() *cobra.Command {
-	return novoComandoSuite(suiteCommand{
+	return newSuiteCommand(suiteCommand{
 		nome:  "test",
 		curto: "Roda as suítes de teste declaradas no anchors.yaml e ingere os relatórios",
 		secao: "tests",
@@ -70,7 +70,7 @@ e amarra o ` + "`junit:`" + `/` + "`lcov:`" + ` ao mapa, que é o passo que cost
 }
 
 func newMutationCmd() *cobra.Command {
-	return novoComandoSuite(suiteCommand{
+	return newSuiteCommand(suiteCommand{
 		nome:  "mutation",
 		curto: "Roda as suítes de mutação declaradas no anchors.yaml e ingere os relatórios",
 		secao: "mutation",
@@ -110,7 +110,7 @@ type suiteCommand struct {
 	usoLongo string
 }
 
-func novoComandoSuite(cs suiteCommand) *cobra.Command {
+func newSuiteCommand(cs suiteCommand) *cobra.Command {
 	var root, target, then string
 	var workspaces, changed, escopos []string
 	cmd := &cobra.Command{
@@ -132,7 +132,7 @@ func novoComandoSuite(cs suiteCommand) *cobra.Command {
 				declaradas = cfg.Mutation
 			}
 			if len(declaradas) == 0 {
-				imprimeComoConfigurar(cs)
+				printHowToConfigure(cs)
 				return fmt.Errorf("nenhuma suíte declarada em `%s:` no %s", cs.secao, config.DefaultFile)
 			}
 
@@ -141,15 +141,15 @@ func novoComandoSuite(cs suiteCommand) *cobra.Command {
 				return fmt.Errorf("não declarado em `%s:`: %s\n  camadas declaradas:    %s\n  workspaces declarados: %s\n  escopos declarados:    %s",
 					cs.secao, strings.Join(ausentes, ", "),
 					strings.Join(config.DeclaredLayers(declaradas), ", "),
-					juntaOuTraco(config.WorkspacesDeclarados(declaradas)),
-					juntaOuTraco(config.EscoposDeclarados(declaradas)))
+					joinOrDash(config.WorkspacesDeclarados(declaradas)),
+					joinOrDash(config.EscoposDeclarados(declaradas)))
 			}
 			// Combinação válida mas vazia não é erro de digitação — é "não existe essa
 			// suíte". Dizer isso com clareza evita a leitura de que o comando rodou e
 			// tudo passou, que é o que um silêncio com exit 0 comunicaria.
 			if len(sel) == 0 {
 				return fmt.Errorf("nenhuma suíte combina camada(s) %s, workspace(s) %s e escopo(s) %s em `%s:`",
-					juntaOuTraco(args), juntaOuTraco(workspaces), juntaOuTraco(escopos), cs.secao)
+					joinOrDash(args), joinOrDash(workspaces), joinOrDash(escopos), cs.secao)
 			}
 
 			// O caminho de impacto sai da MESMA função que o `check --changed` usa: se
@@ -175,7 +175,7 @@ func novoComandoSuite(cs suiteCommand) *cobra.Command {
 				fmt.Printf("incremental: %d arquivo(s) no caminho de impacto\n\n", len(alvos))
 			}
 
-			if err := rodaSuites(cs, sel, absRoot, target, alvos); err != nil {
+			if err := runSuites(cs, sel, absRoot, target, alvos); err != nil {
 				return err
 			}
 			// O encadeamento é OPT-IN e só acontece depois do sucesso: um `check` sobre
@@ -196,18 +196,18 @@ func novoComandoSuite(cs suiteCommand) *cobra.Command {
 	return cmd
 }
 
-// rodaSuites executa cada suíte e ingere o que ela deixou. Para na primeira que falhar:
+// runSuites executa cada suíte e ingere o que ela deixou. Para na primeira que falhar:
 // as camadas costumam depender umas das outras (não faz sentido rodar e2e depois de a
 // unit quebrar), e seguir adiante só produziria ruído sobre uma base já vermelha.
-func rodaSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, alvos []string) error {
+func runSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, alvos []string) error {
 	for _, s := range suites {
 		linha, err := pickCommand(s, alvos, target)
 		if err != nil {
 			return fmt.Errorf("camada %q: %w", s.Layer, err)
 		}
-		fmt.Printf("━━━ %s [%s%s%s] ━━━\n%s\n\n", cs.nome, rotuloWorkspace(s), s.Layer, rotuloEscopo(s), linha)
+		fmt.Printf("━━━ %s [%s%s%s] ━━━\n%s\n\n", cs.nome, workspaceLabel(s), s.Layer, scopeLabel(s), linha)
 
-		if teto := limiteArgvSuite(); len(linha) > teto {
+		if teto := suiteArgvLimit(); len(linha) > teto {
 			return fmt.Errorf("camada %q: a linha de comando ficou com %d caracteres (teto %d nesta plataforma).\n"+
 				"  O caminho de impacto é grande demais para uma invocação só. Rode o modo completo,\n"+
 				"  reduza o --changed, ou ajuste ANCHORS_ARGV_MAX se souber que o seu shell aguenta",
@@ -226,7 +226,7 @@ func rodaSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, 
 		// sobre a única que já se sabe ruim, e o vermelho pareceria ausência de medida.
 		//
 		// O relatório é a evidência do que aconteceu, não um prêmio por ter passado.
-		if err := ingereSeRecente(absRoot, junit, lcov, mutation, s, inicio); err != nil {
+		if err := ingestIfRecent(absRoot, junit, lcov, mutation, s, inicio); err != nil {
 			return fmt.Errorf("camada %q: ingerir relatório: %w", s.Layer, err)
 		}
 		if errRun != nil {
@@ -245,11 +245,11 @@ func rodaSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, 
 	return nil
 }
 
-// ingereSeRecente só ingere o relatório que ESTA rodada produziu. A checagem de mtime
+// ingestIfRecent só ingere o relatório que ESTA rodada produziu. A checagem de mtime
 // não é zelo: quando o comando morre antes de escrever (erro de config, dependência
 // faltando), o relatório da rodada ANTERIOR continua no disco — ingeri-lo gravaria no
 // mapa um número velho como se fosse o de agora, que é pior que não ter número nenhum.
-func ingereSeRecente(absRoot, junit, lcov, mutation string, s config.Suite, inicio time.Time) error {
+func ingestIfRecent(absRoot, junit, lcov, mutation string, s config.Suite, inicio time.Time) error {
 	// A ingestão vem do `anchors test`: a suíte ACABOU de rodar, e o sinal corresponde a
 	// ela. É o que distingue esta chamada de um `ingest` à mão.
 	viaAnchorsTest = true
@@ -274,22 +274,22 @@ func ingereSeRecente(absRoot, junit, lcov, mutation string, s config.Suite, inic
 	if j == "" && l == "" && m == "" {
 		return nil
 	}
-	return ingereArtefatos(absRoot, "", j, l, m, s.Layer, s.Scope)
+	return ingestArtifacts(absRoot, "", j, l, m, s.Layer, s.Scope)
 }
 
-// rotuloWorkspace prefixa o workspace no cabeçalho quando existe. Sem ele, duas suítes
+// workspaceLabel prefixa o workspace no cabeçalho quando existe. Sem ele, duas suítes
 // `unit` de workspaces diferentes imprimem o mesmo título e a saída fica ilegível.
-func rotuloWorkspace(s config.Suite) string {
+func workspaceLabel(s config.Suite) string {
 	if s.Workspace == "" {
 		return ""
 	}
 	return s.Workspace + "/"
 }
 
-// rotuloEscopo sufixa o escopo no cabeçalho. Sem ele, as duas rodadas da mesma unidade
+// scopeLabel sufixa o escopo no cabeçalho. Sem ele, as duas rodadas da mesma unidade
 // (isolada e completa) imprimem títulos idênticos e a saída fica ilegível — justamente
 // quando as duas rodam em sequência, que é o default.
-func rotuloEscopo(s config.Suite) string {
+func scopeLabel(s config.Suite) string {
 	if s.Scope == "" {
 		return ""
 	}
@@ -302,7 +302,7 @@ func rotuloEscopo(s config.Suite) string {
 // quem alterou um arquivo teria um passo barato para os gates e um caro para os testes.
 func pickCommand(s config.Suite, alvos []string, target string) (string, error) {
 	if len(alvos) == 0 {
-		return montaComando(s.Run, target)
+		return buildCommand(s.Run, target)
 	}
 	if strings.TrimSpace(s.RunChanged) == "" {
 		// Cair para a rodada completa aqui seria o pior dos mundos: caro, e mentindo
@@ -312,7 +312,7 @@ func pickCommand(s config.Suite, alvos []string, target string) (string, error) 
 			"    run_changed: \"%s --findRelatedTests {{files}}\"   (exemplo de jest)", firstWord(s.Run))
 	}
 	linha := strings.ReplaceAll(s.RunChanged, "{{files}}", strings.Join(alvos, " "))
-	return montaComando(linha, target)
+	return buildCommand(linha, target)
 }
 
 func firstWord(s string) string {
@@ -366,13 +366,13 @@ func impactFiles(nodes []mapx.Node, secao, absRoot string) []string {
 	return out
 }
 
-// limiteArgvSuite e o mesmo teto que os gates externos usam, pela mesma razao: no
+// suiteArgvLimit e o mesmo teto que os gates externos usam, pela mesma razao: no
 // Windows o CreateProcess corta em 32767 caracteres, e o sh do MSYS2 ainda converte
 // relativos em absolutos antes de chamar o .exe, multiplicando o que medimos aqui. Um
 // caminho de impacto grande estoura isso com facilidade — e o modo como estoura e o
 // pior possivel: o comando falha sem escrever nada, e a falha se parece com "o teste
 // reprovou". Melhor dizer o que aconteceu e o que fazer.
-func limiteArgvSuite() int {
+func suiteArgvLimit() int {
 	if v := os.Getenv("ANCHORS_ARGV_MAX"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {
 			return n
@@ -384,10 +384,10 @@ func limiteArgvSuite() int {
 	return 100000
 }
 
-// montaComando substitui `{{target}}`. O erro quando falta o alvo é deliberado: rodar
+// buildCommand substitui `{{target}}`. O erro quando falta o alvo é deliberado: rodar
 // com o placeholder vazio faria o Stryker mutar o projeto INTEIRO em vez do arquivo
 // pedido — caro e nada do que se pediu.
-func montaComando(run, target string) (string, error) {
+func buildCommand(run, target string) (string, error) {
 	if !strings.Contains(run, "{{target}}") {
 		return run, nil
 	}
@@ -447,10 +447,10 @@ func runChained(then, absRoot string) error {
 	return nil
 }
 
-// imprimeComoConfigurar é a resposta a "não configurado": mostrar o que declarar, não
+// printHowToConfigure é a resposta a "não configurado": mostrar o que declarar, não
 // reclamar que falta. Quem chega aqui não sabe que a seção existe — mandá-lo para a
 // documentação seria transferir o trabalho de descobrir.
-func imprimeComoConfigurar(cs suiteCommand) {
+func printHowToConfigure(cs suiteCommand) {
 	fmt.Printf(`
 Nenhuma suíte de %s declarada — o Anchors não adivinha como este projeto roda teste,
 porque a stack é sua. Declare no %s:
@@ -465,20 +465,20 @@ Cada entrada tem três partes, e as três importam:
 Feito isso, `+"`anchors %s`"+` roda e INGERE numa passada — que é o passo que costuma
 ficar para trás e faz o gate seguir acusando "sem sinal ingerido" mesmo depois de a
 suíte ter passado.
-`, cs.secao, config.DefaultFile, cs.exemplo, cs.nome, linhaRelatorio(cs.secao), cs.nome)
+`, cs.secao, config.DefaultFile, cs.exemplo, cs.nome, reportLine(cs.secao), cs.nome)
 }
 
-func linhaRelatorio(secao string) string {
+func reportLine(secao string) string {
 	if secao == "mutation" {
 		return "report: o JSON de mutação que a rodada deixa (Mutation Testing Elements)"
 	}
 	return "junit:/lcov: os relatórios que a rodada deixa, para o Anchors amarrar ao mapa"
 }
 
-// juntaOuTraco imprime uma lista de filtros, ou "—" quando o eixo não foi filtrado. O
+// joinOrDash imprime uma lista de filtros, ou "—" quando o eixo não foi filtrado. O
 // traço é melhor que a string vazia numa mensagem de erro: "camada(s) — com
 // workspace(s) web" se lê como "qualquer camada do workspace web", que é o pedido real.
-func juntaOuTraco(vs []string) string {
+func joinOrDash(vs []string) string {
 	if len(vs) == 0 {
 		return "—"
 	}

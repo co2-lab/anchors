@@ -144,7 +144,7 @@ func TestTestIDDeclared_soAPrimeiraColunaEhOID(t *testing.T) {
 	if v != Pass {
 		t.Errorf("só a 1ª célula é o id; as outras são descrição: %v (%s)", v, msg)
 	}
-	if ids := testIDsDeclarados(spec, "testID"); len(ids) != 1 || ids[0] != "abcd-screen" {
+	if ids := declaredTestIDs(spec, "testID"); len(ids) != 1 || ids[0] != "abcd-screen" {
 		t.Errorf("inventário deveria ter só o id da 1ª coluna, veio: %v", ids)
 	}
 }

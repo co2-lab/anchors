@@ -438,13 +438,13 @@ func TestPaginationPrefixoDeProvedorNaoEscondeAPromessa(t *testing.T) {
 	cfgTS := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
 	d := cfgTS.DialectFor()
 	for _, nome := range []string{"cognitoListDevices", "s3ListObjects", "listDevices"} {
-		if !prometeConjunto(nome, d) {
+		if !promisesSet(nome, d) {
 			t.Errorf("%s promete conjunto e não foi reconhecido", nome)
 		}
 	}
 	// E o verbo tem de ser palavra: `all` interno não conta, senão vira falso positivo.
 	for _, nome := range []string{"allocateSlot", "callbackUrl", "getUserById"} {
-		if prometeConjunto(nome, d) {
+		if promisesSet(nome, d) {
 			t.Errorf("%s NÃO promete conjunto — falso positivo", nome)
 		}
 	}

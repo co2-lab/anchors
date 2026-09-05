@@ -373,7 +373,7 @@ func handleChange(root string, cfg *config.Config, g *mapx.Graph, rel string) {
 		// Os dois níveis são complementares, não redundantes: o de unidade garante a
 		// parcial (e chega cedo, quando corrigir é barato); o de plano garante o conjunto
 		// (e é o único que vê a costura entre as peças).
-		if planoDeEntrega(root, rel) {
+		if deliveryPlan(root, rel) {
 			enqueueTask(root, rel, "change", "review-plan",
 				"um PLANO foi entregue — REVISE O CONJUNTO (`anchors work review-plan --for "+
 					unidade+"`). O review por unidade já garantiu cada peça; este garante a "+
@@ -391,7 +391,7 @@ func handleChange(root string, cfg *config.Config, g *mapx.Graph, rel string) {
 		//
 		// Então a entrega de uma peça isolada REGISTRA e espera; o review entra quando a
 		// trinca fecha. O sinal de que fechou é a peça que nasce por último: o TESTE.
-		if faltaPecaParaRevisar(root, unidade, cfg) {
+		if missingPieceToReview(root, unidade, cfg) {
 			fmt.Printf("● %s [change] — entrega registrada; o review espera a trinca fechar "+
 				"(falta código e/ou teste em `%s`)\n", rel, unidade)
 			return
@@ -431,8 +431,8 @@ func handleChange(root string, cfg *config.Config, g *mapx.Graph, rel string) {
 	// Pular para a etapa seguinte preserva a cadeia — quem dispensa a feature ainda quer
 	// o teste (ou o review), e parar a corrente na peça dispensada deixaria a unidade sem
 	// próxima etapa nenhuma.
-	if camada := camadaDoAlvoDaPeca(root, rel, cfg); camada != "" {
-		disp := pecasDispensadas(camada, cfg)
+	if camada := pieceTargetLayer(root, rel, cfg); camada != "" {
+		disp := waivedPieces(camada, cfg)
 		// Pula a peça DISPENSADA pela camada e a que JÁ EXISTE no disco.
 		//
 		// A segunda foi relatada em três execuções: a fila mandava "descreva o
@@ -445,7 +445,7 @@ func handleChange(root string, cfg *config.Config, g *mapx.Graph, rel string) {
 		// coberto: quem enfileira ali é o `stale`, pela aresta com rev avançada, não
 		// esta sugestão de cadeia.
 		for i := 0; i < 3 && next != ""; i++ {
-			if !disp[next] && !pecaJaExiste(root, rel, next, cfg) {
+			if !disp[next] && !pieceExists(root, rel, next, cfg) {
 				break
 			}
 			next, reason = queue.SuggestNext(next)
@@ -457,13 +457,13 @@ func handleChange(root string, cfg *config.Config, g *mapx.Graph, rel string) {
 	enqueueTask(root, rel, kind, next, reason)
 }
 
-// camadaDoAlvoDaPeca resolve a camada da UNIDADE a partir de qualquer peça dela.
+// pieceTargetLayer resolve a camada da UNIDADE a partir de qualquer peça dela.
 //
 // É preciso porque a dispensa é declarada na camada do CÓDIGO (`schema-model`, `dao`),
 // enquanto o evento chega numa peça derivada — e um `.spec.md` casa a camada `spec`, que
 // não declara dispensa nenhuma. Classificar o caminho recebido devolveria sempre a camada
 // errada.
-func camadaDoAlvoDaPeca(root, rel string, cfg *config.Config) string {
+func pieceTargetLayer(root, rel string, cfg *config.Config) string {
 	if cfg == nil {
 		return ""
 	}
@@ -566,8 +566,8 @@ func enqueueTask(root, rel, kind, next, reason string) {
 	}
 }
 
-// planoDeEntrega diz se o registro é o fecho de um PLANO (não de uma unidade).
-func planoDeEntrega(root, rel string) bool {
+// deliveryPlan diz se o registro é o fecho de um PLANO (não de uma unidade).
+func deliveryPlan(root, rel string) bool {
 	b, err := os.ReadFile(filepath.Join(root, rel))
 	if err != nil {
 		return false
@@ -575,13 +575,13 @@ func planoDeEntrega(root, rel string) bool {
 	return regexp.MustCompile(`(?m)^\s*stage:\s*plan\b`).Match(b)
 }
 
-// faltaPecaParaRevisar diz se a unidade ainda não tem o material que o review ATACA:
+// missingPieceToReview diz se a unidade ainda não tem o material que o review ATACA:
 // código e teste. Sem eles, o procedimento do review (mutar a regra, rodar a suíte) não
 // tem alvo — e mandar alguém mutar um arquivo inexistente é pior que não disparar.
 //
 // Não usa o mapa: o arquivo pode ter nascido depois do último `map build`, e o review
 // atrasaria por um detalhe de sincronização. Olha o disco, que é a verdade.
-func faltaPecaParaRevisar(root, unidade string, cfg *config.Config) bool {
+func missingPieceToReview(root, unidade string, cfg *config.Config) bool {
 	if unidade == "" {
 		return false // sem unidade legível: não bloqueia o review, que decidirá o que fazer
 	}
@@ -616,10 +616,10 @@ func faltaPecaParaRevisar(root, unidade string, cfg *config.Config) bool {
 	return true
 }
 
-// pecaJaExiste diz se a peça que a fila ia sugerir já está escrita. Resolve o caminho pelo
+// pieceExists diz se a peça que a fila ia sugerir já está escrita. Resolve o caminho pelo
 // `derived:` do projeto — a mesma fonte que o `anchors work` usa para dizer onde a peça
 // nasce, para que fila e prompt não discordem sobre o mesmo arquivo.
-func pecaJaExiste(root, rel, peca string, cfg *config.Config) bool {
+func pieceExists(root, rel, peca string, cfg *config.Config) bool {
 	if peca != "spec" && peca != "feature" && peca != "test" {
 		return false // `code` e `review` não são peça derivada com caminho previsível
 	}

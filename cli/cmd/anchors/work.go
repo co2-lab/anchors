@@ -137,7 +137,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// **feature**" e o roteiro completo de produção, e a dispensa aparecia quatro linhas
 	// abaixo, como item de uma lista. Um worker que segue a manchete cria o arquivo
 	// proibido — e a régua tinha dito as duas coisas.
-	if hasLayer && pecasDispensadas(layer, cfg)[artifact] {
+	if hasLayer && waivedPieces(layer, cfg)[artifact] {
 		fmt.Fprintf(&b, "## PARE\n\n`%s` — a camada **%s** DISPENSA a peça `%s` "+
 			"(`trinca_opcional` no anchors.yaml).\n\nA dispensa é declarada, não um "+
 			"esquecimento: esta camada não prova comportamento com esta peça. Criá-la "+
@@ -255,7 +255,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// agente sem chão — ou pior, o convence a criar a spec proibida.
 	passos := procedureFor(artifact, cfg)
 	if hasLayer && l.Regime == "declarativo" {
-		passos = procedureDeclarativa(rel)
+		passos = declarativeProcedure(rel)
 	}
 	for i, s := range passos {
 		fmt.Fprintf(&b, "%d. %s\n", i+1, s)
@@ -274,7 +274,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// vizinhos, não porque a régua tenha dito. Um requisito que o autor só conhece depois
 	// de reprovar é um requisito mal comunicado — o gate SABE o que exige, então dizer
 	// antes custa nada e economiza uma rodada.
-	if regras := exigenciasDosGates(artifact, cfg); len(regras) > 0 {
+	if regras := gateRequirements(artifact, cfg); len(regras) > 0 {
 		b.WriteString("\n## O que os gates vão cobrar (leia ANTES de escrever)\n\n")
 		for _, r := range regras {
 			fmt.Fprintf(&b, "- %s\n", r)
@@ -507,7 +507,7 @@ func writeTrincaPaths(b *strings.Builder, rel, artifact, layer string, cfg *conf
 		return
 	}
 	files, overridden := derivedPaths(rel, layer, cfg)
-	dispensadas := pecasDispensadas(layer, cfg)
+	dispensadas := waivedPieces(layer, cfg)
 	order := []string{"spec", "feature", "test"}
 	for _, k := range order {
 		tpl, ok := files[k]
@@ -718,7 +718,7 @@ func procedureFor(artifact string, cfg *config.Config) []string {
 		return []string{
 			"Leia a spec inteira antes de escrever a primeira linha; ela é a régua.",
 			"Leia 1–2 arquivos vizinhos da mesma camada para seguir o padrão local (imports, erro, estilo).",
-			marcacaoDaRegra(cfg),
+			ruleMarking(cfg),
 			"Se a spec prometer um símbolo na Tabela de Dependências, USE esse símbolo — o gate `dependency-honored` confronta.",
 		}
 	case "feature":
@@ -785,7 +785,7 @@ func unidadeDaPecaDerivada(root, rel string, cfg *config.Config, g *mapx.Graph) 
 
 	// 1) pelo mapa: a spec APONTA o código (`specifies`); feature/test chegam via a spec.
 	if g != nil {
-		if alvo := alvoPorAresta(g, rel, "specifies"); alvo != "" {
+		if alvo := targetByEdge(g, rel, "specifies"); alvo != "" {
 			return alvo, true
 		}
 		// feature/test → sobe até a spec (`covered-by`/`tested-by` chegam NELES)
@@ -794,7 +794,7 @@ func unidadeDaPecaDerivada(root, rel string, cfg *config.Config, g *mapx.Graph) 
 				continue
 			}
 			if e.Type == "covered-by" || e.Type == "tested-by" {
-				if alvo := alvoPorAresta(g, e.From, "specifies"); alvo != "" {
+				if alvo := targetByEdge(g, e.From, "specifies"); alvo != "" {
 					return alvo, true
 				}
 			}
@@ -821,7 +821,7 @@ func unidadeDaPecaDerivada(root, rel string, cfg *config.Config, g *mapx.Graph) 
 	return "", false
 }
 
-func alvoPorAresta(g *mapx.Graph, from, tipo string) string {
+func targetByEdge(g *mapx.Graph, from, tipo string) string {
 	for _, e := range g.Edges {
 		if e.From == from && string(e.Type) == tipo {
 			return e.To
@@ -830,11 +830,11 @@ func alvoPorAresta(g *mapx.Graph, from, tipo string) string {
 	return ""
 }
 
-// procedureDeclarativa é o procedimento de uma camada RECONHECIDA (`regime: declarativo`).
+// declarativeProcedure é o procedimento de uma camada RECONHECIDA (`regime: declarativo`).
 // Não há spec para ler — a régua é o CONTRATO da camada vizinha que este arquivo serve, e
 // o dialeto dos irmãos. O risco característico aqui não é divergir de uma spec: é a camada
 // declarativa DECIDIR alguma coisa, virando regra escondida onde ninguém procura.
-func procedureDeclarativa(rel string) []string {
+func declarativeProcedure(rel string) []string {
 	return []string{
 		"Esta camada **não tem spec**: a régua é o contrato de quem consome este arquivo, " +
 			"mais o dialeto dos vizinhos. Leia 2–3 irmãos da mesma camada ANTES de escrever.",
@@ -849,10 +849,10 @@ func procedureDeclarativa(rel string) []string {
 	}
 }
 
-// exigenciasDosGates traduz, em requisitos legíveis, o que os gates INTERNOS declarados
+// gateRequirements traduz, em requisitos legíveis, o que os gates INTERNOS declarados
 // para este artefato vão confrontar. Só descreve gate que o projeto realmente declarou —
 // prometer cobrança que não existe é tão ruim quanto esconder a que existe.
-func exigenciasDosGates(artifact string, cfg *config.Config) []string {
+func gateRequirements(artifact string, cfg *config.Config) []string {
 	// o que cada checker interno exige, em uma frase acionável
 	porChecker := map[string]string{
 		"spec-sections": "**Toda regra precisa estar CATALOGADA** — código + lugar estruturado. " +
@@ -1048,10 +1048,10 @@ func verificationTarget(rel, artifact, layer string, cfg *config.Config) string 
 	return rel
 }
 
-// pecasDispensadas traduz o `trinca_opcional` da camada (declarado por ARESTA) para as
+// waivedPieces traduz o `trinca_opcional` da camada (declarado por ARESTA) para as
 // PEÇAS que ele dispensa. `covered-by` é a aresta spec→feature, logo dispensa a feature;
 // `tested-by` é feature→test, logo dispensa o teste.
-func pecasDispensadas(layer string, cfg *config.Config) map[string]bool {
+func waivedPieces(layer string, cfg *config.Config) map[string]bool {
 	out := map[string]bool{}
 	if cfg == nil || layer == "" {
 		return out
@@ -1104,7 +1104,7 @@ func writeIssuesAbertas(b *strings.Builder, root, rel string) {
 		"Uma issue que ninguém lê é um defeito que o pipeline já viu e deixou passar.\n")
 }
 
-// marcacaoDaRegra emite o passo de ligar regra↔código conforme o projeto a EXIGE ou não.
+// ruleMarking emite o passo de ligar regra↔código conforme o projeto a EXIGE ou não.
 //
 // A ressalva "se o projeto usa esse padrão" existia para não impor a prática a quem não
 // a adotou — mas ela também dava saída a quem a adotou: quem implementa lê "se", decide
@@ -1113,7 +1113,7 @@ func writeIssuesAbertas(b *strings.Builder, root, rel string) {
 //
 // Com `derived.rule_marking: required` declarado, o passo vira obrigação — e o
 // procedimento passa a ensinar ANTES o que o gate cobra DEPOIS.
-func marcacaoDaRegra(cfg *config.Config) string {
+func ruleMarking(cfg *config.Config) string {
 	if cfg != nil && cfg.Derived != nil &&
 		strings.EqualFold(strings.TrimSpace(cfg.Derived.RuleMarking), "required") {
 		return "Implemente cada regra da spec e MARQUE no código o trecho que a realiza " +

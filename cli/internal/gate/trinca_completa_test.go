@@ -260,7 +260,7 @@ func TestTBDDispensaSoOQueFoiDeclarado(t *testing.T) {
 			nil},
 	}
 	for _, c := range casos {
-		got := pecasPorDesenvolver("# Spec\n\n> " + c.marca + " — em andamento\n")
+		got := piecesToDevelop("# Spec\n\n> " + c.marca + " — em andamento\n")
 		for _, q := range c.quer {
 			if !got[q] {
 				t.Errorf("%q deveria dispensar %q", c.marca, q)
@@ -277,12 +277,12 @@ func TestTBDDispensaSoOQueFoiDeclarado(t *testing.T) {
 
 // Sem `@TBD` nenhum, nada é dispensado — o marcador é opt-in.
 func TestSemTBDNadaEhDispensado(t *testing.T) {
-	if len(pecasPorDesenvolver("# Spec sem marca nenhuma\n")) != 0 {
+	if len(piecesToDevelop("# Spec sem marca nenhuma\n")) != 0 {
 		t.Error("sem `@TBD` o gate cobra tudo, como sempre cobrou")
 	}
 	// E `@TBD` sem alvo não dispensa nada: "está em andamento" sem dizer o quê seria
 	// um interruptor geral, que é o oposto do que este marcador é.
-	if len(pecasPorDesenvolver("# Spec\n\n> @TBD\n")) != 0 {
+	if len(piecesToDevelop("# Spec\n\n> @TBD\n")) != 0 {
 		t.Error("`@TBD` sem alvo não pode dispensar nada")
 	}
 }

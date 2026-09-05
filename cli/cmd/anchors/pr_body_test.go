@@ -32,18 +32,18 @@ func TestSintaxeDeFechamentoEhPorPlataforma(t *testing.T) {
 func TestCardsPedidosAceitaAsFormasQueSeEscreve(t *testing.T) {
 	cfg := &config.Config{}
 	for _, entrada := range []string{"44", "#44", " 44 ", "#44 "} {
-		got := cardsPedidos(entrada, cfg)
+		got := requestedCards(entrada, cfg)
 		if len(got) != 1 || got[0] != "44" {
 			t.Errorf("%q deveria virar [44], veio %v", entrada, got)
 		}
 	}
 	// Vários de uma vez: o trabalho fecha o card E os achados que nasceram sob ele.
-	if got := cardsPedidos("44, #49,50", cfg); len(got) != 3 {
+	if got := requestedCards("44, #49,50", cfg); len(got) != 3 {
 		t.Errorf("três cards deveriam virar três entradas, veio %v", got)
 	}
 	// Vazio não inventa card: sem `--cards` e sem agente, quem chama recebe erro em vez
 	// de um PR que não fecha nada.
-	if got := cardsPedidos("  ", cfg); len(got) != 0 {
+	if got := requestedCards("  ", cfg); len(got) != 0 {
 		t.Errorf("entrada vazia não pode inventar card, veio %v", got)
 	}
 }

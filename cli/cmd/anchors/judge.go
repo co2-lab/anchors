@@ -103,7 +103,7 @@ está declarada.`,
 			// Cair para a peça que EXISTE preserva a identidade (spec e código são a mesma
 			// unidade) e mantém o comando prescrito funcionando desde a primeira etapa.
 			if !nodeExists(g, target) {
-				if alt := pecaExistenteDaUnidade(g, target); alt != "" {
+				if alt := unitExistingPiece(g, target); alt != "" {
 					fmt.Printf("   (o alvo ainda não existe; registrando em `%s`, a peça desta unidade que já está no mapa)\n", alt)
 					target = alt
 				}
@@ -284,9 +284,9 @@ func closeJudgeTask(root, gateName, target string) {
 	_ = queue.MarkDone(root, id)
 }
 
-// pecaExistenteDaUnidade acha, para um alvo ausente do mapa, outra peça da MESMA unidade
+// unitExistingPiece acha, para um alvo ausente do mapa, outra peça da MESMA unidade
 // que já esteja lá — a spec, tipicamente, quando o código ainda não nasceu.
-func pecaExistenteDaUnidade(g *mapx.Graph, target string) string {
+func unitExistingPiece(g *mapx.Graph, target string) string {
 	base := strings.TrimSuffix(target, filepath.Ext(target))
 	for _, suf := range []string{".spec.md", ".feature", ".test.ts", ".test.tsx", ".ts", ".tsx"} {
 		if cand := base + suf; cand != target && nodeExists(g, cand) {

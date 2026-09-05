@@ -75,7 +75,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 			"escreva o que ainda não está decidido"
 	}
 
-	itens := itensEmAberto(corpo)
+	itens := openItems(corpo)
 	if len(itens) == 0 {
 		return Pass, ""
 	}
@@ -177,19 +177,19 @@ func seçãoDecisõesEmAbertoCfg(content string, cfg *config.Config, camada stri
 	// não pode ser cobrado pelo nome que o framework usaria.
 	if t := cfg.TituloDaSecao("open", "", camada); t != "" {
 		if loc := tituloDeclaradoRE(t).FindStringIndex(content); loc != nil {
-			return corpoAPartirDe(content, loc[1]), true
+			return bodyFrom(content, loc[1]), true
 		}
 	}
 	loc := decisõesRE.FindStringIndex(content)
 	if loc == nil {
 		return "", false
 	}
-	return corpoAPartirDe(content, loc[1]), true
+	return bodyFrom(content, loc[1]), true
 }
 
-// corpoAPartirDe devolve o corpo da seção que começa em `ini`, até o próximo cabeçalho de
+// bodyFrom devolve o corpo da seção que começa em `ini`, até o próximo cabeçalho de
 // mesmo nível ou acima.
-func corpoAPartirDe(content string, ini int) string {
+func bodyFrom(content string, ini int) string {
 	resto := content[ini:]
 	// a seção vai até o próximo cabeçalho de mesmo nível ou acima
 	if fim := regexp.MustCompile(`(?m)^#{1,4}\s`).FindStringIndex(resto); fim != nil {
@@ -205,7 +205,7 @@ var fechadaRE = regexp.MustCompile(`(?i)^\s*[-*]?\s*(nenhuma|nenhum|none|n/?a|se
 // conta — senão o texto de abertura viraria uma pendência fantasma.
 var itemRE = regexp.MustCompile(`(?m)^\s*(?:[-*+]\s+|\d+[.)]\s+|\|)`)
 
-func itensEmAberto(corpo string) []string {
+func openItems(corpo string) []string {
 	var itens []string
 	for _, linha := range strings.Split(corpo, "\n") {
 		if strings.TrimSpace(linha) == "" || fechadaRE.MatchString(linha) {
@@ -291,5 +291,5 @@ func DecisõesEmAberto(content string, cfg *config.Config, camada string) int {
 	if !achou {
 		return 0
 	}
-	return len(itensEmAberto(corpo))
+	return len(openItems(corpo))
 }

@@ -125,7 +125,7 @@ func checkPlanChangeJustified(content string, n mapx.Node, root string, g *mapx.
 	//
 	// Exigir a mesma informação duas vezes não protege nada: ensina a satisfazer o gate
 	// em vez de comunicar, que é o oposto do que ele existe para fazer.
-	if seExplicaPorRevisao(content) {
+	if explainedByRevision(content) {
 		return Pass, "a mudança já está explicada pelo mecanismo de revisão de planos " +
 			"(`revises:` / `@revised-by`), e cobrar a mesma coisa em duas notações não " +
 			"protegeria nada"
@@ -186,12 +186,12 @@ func actuallyChanged(id string, alterados []string) bool {
 	return false
 }
 
-// seExplicaPorRevisao diz se o arquivo já declara a mudança pelo mecanismo de revisão
+// explainedByRevision diz se o arquivo já declara a mudança pelo mecanismo de revisão
 // entre planos — o `revises:` de quem revisa, e o aviso de quem foi revisado.
 //
 // São marcadores ESTÁVEIS, não prosa: o `plano-revisado` já os usa, e casar texto corrido
 // quebraria em projeto escrito noutro idioma.
-func seExplicaPorRevisao(content string) bool {
+func explainedByRevision(content string) bool {
 	for _, marca := range []string{"revises:", "@revised-by", "@amended-by"} {
 		if strings.Contains(content, marca) {
 			return true

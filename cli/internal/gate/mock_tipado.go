@@ -52,7 +52,7 @@ func checkMockTyped(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 	// Só o que o PROJETO rege é cobrado. Ver `ehModuloRegido`.
 	var dubles []declaredDouble
 	for _, d := range todos {
-		if ehModuloRegido(d.modulo, g) {
+		if isGovernedModule(d.modulo, g) {
 			dubles = append(dubles, d)
 		}
 	}
@@ -99,7 +99,7 @@ type declaredDouble struct {
 	amarrado bool
 }
 
-// ehModuloRegido diz se o especificador do dublê aponta para código DO PROJETO.
+// isGovernedModule diz se o especificador do dublê aponta para código DO PROJETO.
 //
 // A cobrança vale para o que o projeto rege, e não para biblioteca de terceiro. O drift
 // que este gate persegue é "o vizinho mudou e o dublê não soube" — e o vizinho que muda
@@ -116,7 +116,7 @@ type declaredDouble struct {
 // resolve para um nó do mapa. Isso não pede configuração nova (o mapa já existe), não
 // assume convenção de alias (`@/`, `~/`, `src/` variam por ecossistema) e acompanha o
 // projeto sozinho — código que nasce entra no mapa e passa a ser cobrado.
-func ehModuloRegido(spec string, g *mapx.Graph) bool {
+func isGovernedModule(spec string, g *mapx.Graph) bool {
 	if g == nil {
 		return false
 	}

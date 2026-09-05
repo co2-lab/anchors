@@ -192,7 +192,7 @@ func TestImportaUnidade(t *testing.T) {
 		{"import multilinha", "import {\n  contaNoSaldo,\n} from '@backend/balanceReconciliation'\n", "balanceReconciliation.ts", true},
 	}
 	for _, c := range casos {
-		if got := importaUnidade(c.code, c.alvo); got != c.match {
+		if got := importsUnit(c.code, c.alvo); got != c.match {
 			t.Errorf("%s: importaUnidade = %v, quer %v", c.nome, got, c.match)
 		}
 	}

@@ -10,7 +10,7 @@ import (
 // carimbo: o build local anterior revertia 26 linhas a cada `check`, e o mapa oscilava
 // entre dois formatos com conflito a cada PR.
 func TestAvisaQuandoQuemGravouEhOutro(t *testing.T) {
-	a := avisoDeBinarioVelho("0.1.9", "0.1.8")
+	a := staleBinaryWarning("0.1.9", "0.1.8")
 	if a == "" {
 		t.Fatal("versões diferentes têm de avisar")
 	}
@@ -30,13 +30,13 @@ func TestAvisaQuandoQuemGravouEhOutro(t *testing.T) {
 func TestDoisDevDiferentesSaoIndistinguiveis(t *testing.T) {
 	// Mesmo nome, ainda que sejam builds distintos: aqui não há o que fazer, e é a
 	// limitação conhecida. O que NÃO pode é o inverso — calar quando os nomes diferem.
-	if avisoDeBinarioVelho("dev", "dev") != "" {
+	if staleBinaryWarning("dev", "dev") != "" {
 		t.Error("nomes iguais não têm como ser distinguidos — avisar aqui seria ruído em todo build local")
 	}
-	if avisoDeBinarioVelho("dev", "0.1.9") == "" {
+	if staleBinaryWarning("dev", "0.1.9") == "" {
 		t.Error("mapa gravado por build local e binário publicado é justamente o caso a avisar")
 	}
-	if avisoDeBinarioVelho("0.1.9", "dev") == "" {
+	if staleBinaryWarning("0.1.9", "dev") == "" {
 		t.Error("o inverso também: quem roda build local sobre mapa publicado precisa saber")
 	}
 }
@@ -45,7 +45,7 @@ func TestDoisDevDiferentesSaoIndistinguiveis(t *testing.T) {
 // `gerado_por`, e acusá-los faria o primeiro `check` de todo projeto existente gritar
 // sobre algo que ninguém pode consertar.
 func TestMapaAntigoNaoAcusa(t *testing.T) {
-	if avisoDeBinarioVelho("", "0.1.9") != "" {
+	if staleBinaryWarning("", "0.1.9") != "" {
 		t.Error("mapa sem `gerado_por` é o de toda versão anterior — avisar seria acusar quem não errou")
 	}
 }

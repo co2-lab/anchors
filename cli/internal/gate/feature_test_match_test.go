@@ -268,10 +268,10 @@ describe('x', () => {
 
 	// E o compartilhamento é detectado como tal.
 	corpo := `it('DDTDX-B01 / DDTDX-B02: texto', () => {})`
-	if !tituloCompartilhado(corpo, "DDTDX-B01") {
+	if !sharedTitle(corpo, "DDTDX-B01") {
 		t.Error("DDTDX-B01: título com dois códigos deveria contar como compartilhado")
 	}
-	if tituloCompartilhado(`it('DDTDX-B01: texto', () => {})`, "DDTDX-B01") {
+	if sharedTitle(`it('DDTDX-B01: texto', () => {})`, "DDTDX-B01") {
 		t.Error("título com um só código NÃO é compartilhado")
 	}
 }

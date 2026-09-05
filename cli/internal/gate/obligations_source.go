@@ -56,7 +56,7 @@ func allObligations(root string, cfg *config.Config) []config.Obligation {
 				// A norma entra no PORQUÊ. É o que faz a mensagem do gate citar a fonte do
 				// dever em vez de só afirmá-lo — e o que permite responder a um auditor
 				// "onde estou em relação ao Art. 17".
-				Because: comFonte(ob.Because, p.Authority, ob.Article),
+				Because: withSource(ob.Because, p.Authority, ob.Article),
 			})
 		}
 	}
@@ -64,8 +64,8 @@ func allObligations(root string, cfg *config.Config) []config.Obligation {
 	return append(append([]config.Obligation{}, doPack...), cfg.Obligations...)
 }
 
-// comFonte compõe o motivo com a norma que o origina.
-func comFonte(because, authority, article string) string {
+// withSource compõe o motivo com a norma que o origina.
+func withSource(because, authority, article string) string {
 	fonte := article
 	if authority != "" && article != "" {
 		fonte = authority + ", " + article

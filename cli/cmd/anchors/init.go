@@ -33,7 +33,7 @@ correto. O grosso é inferido; as perguntas cobrem só as decisões humanas
 			// aborta e o fluxo em que o usuário pede a uma IA para iniciar o projeto
 			// (BOOTSTRAP.md §5) trava no comando central.
 			if naoInterativo {
-				return runInitNaoInterativo(cmd, absRoot, &f, aceitarDefaults)
+				return runInitNonInteractive(cmd, absRoot, &f, aceitarDefaults)
 			}
 			return runInit(absRoot)
 		},
@@ -96,7 +96,7 @@ func runInit(root string) error {
 	// alteração, a cobertura de diff e o pre-commit ficam desligados, e nenhum deles
 	// falha ruidosamente. Vem primeiro para que tudo que o init escrever daqui em
 	// diante já nasça sob versionamento.
-	if !etapaGit(root) {
+	if !gitStep(root) {
 		return errNoTTY("Nada foi escrito, e o git nao foi tocado.")
 	}
 
@@ -110,7 +110,7 @@ func runInit(root string) error {
 	// 0.4) A FASE ANTERIOR — antes de perguntar qualquer coisa, reconhecer se a fase
 	// DESCOBRIR ainda não aconteceu. Sem PROJECT.md e sem código, as perguntas abaixo
 	// saem sem resposta boa; o que muda é só QUEM recebe a instrução (pessoa ou IA).
-	if !etapaDescobrir(root, p) {
+	if !discoverStep(root, p) {
 		return errNoTTY("Nada foi escrito.")
 	}
 
