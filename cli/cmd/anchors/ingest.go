@@ -48,7 +48,7 @@ Rode 'anchors coverage' depois para ver os requisitos de spec sem teste verde.`,
 			if junit == "" && lcov == "" && mutation == "" {
 				return fmt.Errorf("informe --junit <arquivo>, --lcov <arquivo> e/ou --mutation <arquivo>")
 			}
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

@@ -31,7 +31,7 @@ o impacto completo use 'anchors impact <guide>'). Guides que regem o MESMO conju
 sinalizam redundância (candidatos a afinar por tag).`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

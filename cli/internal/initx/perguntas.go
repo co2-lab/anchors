@@ -226,11 +226,11 @@ func ValidaRespostas(qs []Pergunta, r Respostas) []StatusResposta {
 			st.Valor, st.UsouPada = valorTexto(r.Repo, q.Default)
 			// A exigência é do MODO, não do campo: no `local` um `repo` declarado faz quem
 			// lê o arquivo concluir que a integração está ativa (WORKFLOW.md §2).
-			if modoGitHub(r) && vazio(r.Repo) {
+			if modoGitHub(r) && empty(r.Repo) {
 				st.Aceita = false
 				st.Detalhe = "obrigatório no modo `github` — sem ele, o fluxo não sabe de qual repositório puxar"
 			}
-			if !modoGitHub(r) && !vazio(r.Repo) {
+			if !modoGitHub(r) && !empty(r.Repo) {
 				st.Aceita = false
 				st.Detalhe = "só vale no modo `github`; no `local` este campo faz o arquivo mentir sobre a integração estar ativa"
 			}
@@ -268,7 +268,7 @@ func modoGitHub(r Respostas) bool {
 	return r.Workflow != nil && *r.Workflow == "github"
 }
 
-func vazio(p *string) bool { return p == nil || *p == "" }
+func empty(p *string) bool { return p == nil || *p == "" }
 
 func valorTexto(p *string, def any) (any, bool) {
 	if p == nil {

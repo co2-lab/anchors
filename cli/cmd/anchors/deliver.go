@@ -64,7 +64,7 @@ Depois disto, o watcher enfileira a task de review.`,
 				return fmt.Errorf("informe --intent: o registro sem a intenção declarada não dá " +
 					"ao revisor o que confrontar contra o disco")
 			}
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

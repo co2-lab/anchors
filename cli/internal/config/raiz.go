@@ -37,12 +37,12 @@ func RaizDoProjeto(inicio string) string {
 	}
 }
 
-// AbsRaiz resolve a raiz do projeto a partir do valor de `--root`: absolutiza e, quando o
+// AbsRoot resolve a raiz do projeto a partir do valor de `--root`: absolutiza e, quando o
 // usuário não passou nada (o default "."), sobe até o diretório que tem o `anchors.yaml`.
 //
 // Um `--root` EXPLÍCITO é respeitado como dado: quem aponta para um diretório específico
 // está dizendo onde quer trabalhar, e subir por cima disso seria ignorar a instrução.
-func AbsRaiz(root string) (string, error) {
+func AbsRoot(root string) (string, error) {
 	abs, err := filepath.Abs(root)
 	if err != nil {
 		return "", err

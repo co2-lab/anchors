@@ -68,7 +68,7 @@ O conteúdo é COMPOSTO do anchors.yaml — nada é inventado aqui.`,
 				return fmt.Errorf("informe o alvo com --for <caminho> " +
 					"(ex.: --for packages/backend/repositories/metadata.ts)")
 			}
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

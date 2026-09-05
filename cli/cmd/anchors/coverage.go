@@ -48,7 +48,7 @@ Três perguntas complementares:
   código todo coberto no diff, mas derrubou a cobertura de outra parte)`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

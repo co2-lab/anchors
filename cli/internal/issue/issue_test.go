@@ -297,7 +297,7 @@ func TestDonoAusenteEhDoAgente(t *testing.T) {
 	if err := os.WriteFile(antiga, []byte("# VIOLATION: y\n\n- **kind:** violation\n- **alvo (regido):** y\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if d := DonoDoArquivo(antiga); d != DonoAgente {
+	if d := FileOwner(antiga); d != DonoAgente {
 		t.Errorf("issue sem o campo é do agente, veio %q", d)
 	}
 }

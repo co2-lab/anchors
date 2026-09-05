@@ -33,7 +33,7 @@ func TestTituloDizOQueEhSemAChave(t *testing.T) {
 		Stale:     "Desatualizado",
 		Conflict:  "Conflito",
 	} {
-		got := g.titulo(Issue{Kind: kind, Gate: "triad-complete", Target: "a/b.spec.md"})
+		got := g.title(Issue{Kind: kind, Gate: "triad-complete", Target: "a/b.spec.md"})
 		if !strings.Contains(got, esperado) {
 			t.Errorf("título de %s deveria dizer %q, veio %q", kind, esperado, got)
 		}
@@ -47,11 +47,11 @@ func TestTituloDizOQueEhSemAChave(t *testing.T) {
 // nada, não pode acabar falando com a rede sem pedir.
 func TestDestinoPadraoEhArquivo(t *testing.T) {
 	UsarArquivos()
-	if destino != nil {
+	if target != nil {
 		t.Fatal("sem configurar, o destino tem de ser o arquivo")
 	}
 	UsarGitHub("acme/x", "anchors")
-	if destino == nil || destino.Repo != "acme/x" {
+	if target == nil || target.Repo != "acme/x" {
 		t.Fatal("UsarGitHub deveria rotear para o repositório declarado")
 	}
 	UsarArquivos() // não vaza para os outros testes do pacote

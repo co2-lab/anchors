@@ -32,7 +32,7 @@ enfileirou ao ver mudanças. É só leitura; não reivindica nada.
 A IA-conversa e o humano usam isto para SABER o que há para fazer, sem se prender.
 Para pegar trabalho, use 'anchors next' (idealmente num worker/subagente).`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -91,7 +91,7 @@ então você pode rodar 'anchors next' em paralelo em várias sessões.
 Ao TERMINAR o passo (código escrito, check passou), feche com 'anchors done <id>'.
 Se a fila está vazia, imprime isso e sai com código 0.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -166,7 +166,7 @@ a fila chegou a 26+ tasks para 8 entregas, e fechar uma a uma fez o orquestrador
 desistir — a fila virou paisagem, que é o oposto do que ela existe para ser.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -224,7 +224,7 @@ obsoletas, duplicatas, ou um plano que caiu como 'triage' e você não quer trat
 Diferente de 'done' (que arquiva em done/): drop apaga, não vira histórico.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -249,7 +249,7 @@ func newReclaimCmd() *cobra.Command {
 órfã de um worker que morreu sem fechar com 'done'. Rode após um crash para o
 trabalho não ficar preso. As tasks voltam a ser puxáveis por 'anchors next'.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

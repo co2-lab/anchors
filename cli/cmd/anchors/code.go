@@ -42,7 +42,7 @@ O algoritmo (Camada 2 do SPEC_GUIDE: compressão do nome; Camada 3: resolução 
 colisão) é agnóstico. Prefixos de módulo (Camada 1) são dialeto de projeto — se o seu
 usa, escolha o código à mão e valide com --check.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -177,7 +177,7 @@ Saída: "código<TAB>onde", uma por linha; o resumo vai para stderr, então a li
 em pipe sem sujeira. Um código com VÁRIAS pastas é colisão de identidade — o doctor a
 reporta, e aqui ela fica visível de graça.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

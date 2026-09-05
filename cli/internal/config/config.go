@@ -1646,10 +1646,10 @@ func SelecionaSuites(suites []Suite, camadas, workspaces, escopos []string) (sel
 
 func strconvQuote(s string) string { return `"` + s + `"` }
 
-// CamadasDeclaradas e WorkspacesDeclarados listam o vocabulário do projeto, sem
+// DeclaredLayers e WorkspacesDeclarados listam o vocabulário do projeto, sem
 // repetir, na ordem de declaração — é o que se mostra a quem pediu um nome que não
 // existe, e a ordem do arquivo é como a pessoa vai reencontrá-los lá.
-func CamadasDeclaradas(suites []Suite) []string {
+func DeclaredLayers(suites []Suite) []string {
 	return distintos(suites, func(s Suite) string { return s.Layer })
 }
 

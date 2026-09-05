@@ -66,7 +66,7 @@ regra (e o carimbo fica no mapa parecendo verificação real), 'fail' reprova tr
 ninguém errou. O --reason é obrigatório e nomeia a ausência: qual peça falta, e onde
 está declarada.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

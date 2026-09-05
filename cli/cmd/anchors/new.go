@@ -63,7 +63,7 @@ ganham um REF (apontam para a spec). Use --code para fixar a identidade à mão.
 			}
 			name := args[1]
 
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

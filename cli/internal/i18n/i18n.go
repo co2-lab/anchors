@@ -17,7 +17,7 @@ import (
 )
 
 //go:embed locales/*.json
-var arquivos embed.FS
+var files embed.FS
 
 // Suportados são os idiomas que o Anchors aceita em `lang:`.
 //
@@ -111,25 +111,25 @@ func busca(lang, chave string) (string, bool) {
 	c, carregado := catalogo[lang]
 	mu.RUnlock()
 	if !carregado {
-		c = carrega(lang)
+		c = load(lang)
 	}
 	s, ok := c[chave]
 	return s, ok
 }
 
-// carrega lê o JSON do idioma UMA vez e o guarda.
+// load lê o JSON do idioma UMA vez e o guarda.
 //
 // Um catálogo ausente vira mapa vazio, não erro: o binário tem de rodar mesmo que um
 // arquivo de tradução falte, caindo para o fallback. Falhar aqui derrubaria o CLI inteiro
 // por causa de uma tradução.
-func carrega(lang string) map[string]string {
+func load(lang string) map[string]string {
 	mu.Lock()
 	defer mu.Unlock()
 	if c, ok := catalogo[lang]; ok {
 		return c
 	}
 	c := map[string]string{}
-	if b, err := arquivos.ReadFile("locales/" + lang + ".json"); err == nil {
+	if b, err := files.ReadFile("locales/" + lang + ".json"); err == nil {
 		_ = json.Unmarshal(b, &c)
 	}
 	catalogo[lang] = c
@@ -140,7 +140,7 @@ func carrega(lang string) map[string]string {
 // entre si — uma chave que existe em `en` e falta em `es` é tradução pendente, e sem isso
 // ela sairia em inglês sem ninguém notar.
 func Chaves(lang string) []string {
-	c := carrega(lang)
+	c := load(lang)
 	out := make([]string, 0, len(c))
 	for k := range c {
 		out = append(out, k)

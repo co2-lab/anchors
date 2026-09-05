@@ -37,7 +37,7 @@ plano? há trabalho em andamento? E, para cada estado, qual é o passo seguinte.
 
 Não altera nada.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

@@ -60,7 +60,7 @@ o card fica aberto.
     anchors pr-body --cards 44          # o card e tudo que nasceu sob ele
     anchors pr-body                     # descobre pelo ANCHORS_AGENT`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

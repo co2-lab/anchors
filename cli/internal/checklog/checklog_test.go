@@ -111,7 +111,7 @@ func TestFalhaAoAbrirNaoDerruba(t *testing.T) {
 
 func TestCabecalhoRegistraContexto(t *testing.T) {
 	quando := time.Date(2026, 8, 18, 14, 32, 0, 0, time.UTC)
-	h := Cabecalho("anchors check --all", "abc1234", "fix: algo", 3, quando)
+	h := Header("anchors check --all", "abc1234", "fix: algo", 3, quando)
 
 	for _, quer := range []string{
 		"anchors check --all",
@@ -124,11 +124,11 @@ func TestCabecalhoRegistraContexto(t *testing.T) {
 		}
 	}
 
-	if limpa := Cabecalho("c", "abc", "s", 0, quando); !strings.Contains(limpa, "árvore: limpa") {
+	if limpa := Header("c", "abc", "s", 0, quando); !strings.Contains(limpa, "árvore: limpa") {
 		t.Errorf("árvore limpa não registrada:\n%s", limpa)
 	}
 	// Sem git (repo novo, ou git ausente) o cabeçalho não pode inventar um HEAD.
-	if semGit := Cabecalho("c", "", "", 0, quando); strings.Contains(semGit, "HEAD:") {
+	if semGit := Header("c", "", "", 0, quando); strings.Contains(semGit, "HEAD:") {
 		t.Errorf("HEAD inventado sem git:\n%s", semGit)
 	}
 }
