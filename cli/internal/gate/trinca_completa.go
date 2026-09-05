@@ -31,7 +31,7 @@ import (
 //   - specs cuja camada dispensa alguma peça por de-para do projeto (ex.: repository, que
 //     no app de referência é provado por teste de integração central, não por teste co-localizado).
 //     Isso é declarado com `trinca_opcional` na camada do anchors.yaml.
-func checkTrincaCompleta(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, "não é uma spec — a trinca é cobrada da spec (a dona do código)"
 	}
@@ -80,7 +80,7 @@ func checkTrincaCompleta(content string, n mapx.Node, root string, g *mapx.Graph
 	// Aqui a decisão é da UNIDADE e fica escrita nela, com razão obrigatória: quem lê
 	// a spec vê por que aquele arquivo não tem teste, em vez de descobrir num
 	// `trinca_opcional` distante que removeu a exigência da camada inteira.
-	dispensas := dispensasDaSpec(content)
+	dispensas := specWaivers(content)
 	for peca := range dispensas {
 		optional[peca] = true
 	}
@@ -334,8 +334,8 @@ func testeQueProva(codigo, root string, g *mapx.Graph) (arquivo string, achou bo
 	return "", false
 }
 
-// dispensasDaSpec devolve as ARESTAS dispensadas pela própria spec.
-func dispensasDaSpec(content string) map[string]bool {
+// specWaivers devolve as ARESTAS dispensadas pela própria spec.
+func specWaivers(content string) map[string]bool {
 	out := map[string]bool{}
 	if noTestRE.MatchString(content) {
 		out[string(mapx.EdgeTestedBy)] = true

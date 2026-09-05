@@ -56,20 +56,20 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"trigger-declared":         checkTriggerDeclared,
 	"route-exists":             checkRouteExists,
 	"placeholder-preenchido":   checkPlaceholderFilled,
-	"regra-implementada":       checkRegraImplementada,
+	"regra-implementada":       checkRuleImplemented,
 	"vr-baseline":              checkVRBaseline,
 	"ref-resolves":             checkRefResolves,
 	"layer-boundary":           checkLayerBoundary,
 	"dependency-honored":       checkDependencyHonored,
 	"contract-status-declared": checkContractStatusDeclared,
-	"proof-crosses-boundary":   checkProvaCruzaFronteira,
-	"triad-complete":           checkTrincaCompleta,
+	"proof-crosses-boundary":   checkProofCrossesBoundary,
+	"triad-complete":           checkTriadComplete,
 	"plan-seeds-valid":         checkPlanSeedsValid,
 	"phase-ordered":            checkPhaseOrdered,
 	"phase-exists":             checkPhaseExists,
 	"parent-valid":             checkParentValid,
-	"plan-revised":             checkPlanoRevisado,
-	"plan-change-justified":    checkPlanoAlteradoJustificado,
+	"plan-revised":             checkPlanRevised,
+	"plan-change-justified":    checkPlanChangeJustified,
 	"obligation-honored":       checkObligationHonored,
 	"sibling-guard":            checkSiblingGuard,
 	"pagination-honored":       checkPaginationHonored,
@@ -78,11 +78,11 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"identity-consistent":      checkIdentityConsistent,
 	"region-pair-honored":      checkRegionPairHonored,
 	"evidence-fresh":           checkEvidenceFresh,
-	"testid-coerente":          checkTestIDCoerente,
-	"testid-consultado-existe": checkTestIDConsultadoExiste,
+	"testid-coerente":          checkTestIDCoherent,
+	"testid-consultado-existe": checkQueriedTestIDExists,
 	"mock-typed":               checkMockTyped,
 	"mock-stamped":             checkMockStamped,
-	"test-traceable":           checkTesteRastreavel,
+	"test-traceable":           checkTestTraceable,
 	"code-cataloged":           checkCodeCataloged,
 }
 
@@ -295,7 +295,7 @@ func checkHeaderConforms(content string, n mapx.Node) (Verdict, string) {
 	// A identidade dele está no NOME (`<Unidade>.<CODE>-VR-<variante>.png`), que é o
 	// que o `identity-consistent` confronta. Cobrar header aqui exigiria o impossível
 	// e barraria todo commit de baseline visual.
-	if ehBinario(content) {
+	if isBinary(content) {
 		return Skip, "arquivo binário — a identidade está no nome, não em cabeçalho"
 	}
 	// ROTEIRO de teste executável (.yaml do runner e2e): mesma razão do binário acima,
@@ -806,11 +806,11 @@ func checkGuideHasChecklist(content string, _ mapx.Node) (Verdict, string) {
 	return Pass, ""
 }
 
-// ehBinario decide se o conteúdo é binário pela presença de byte NUL nos primeiros
+// isBinary decide se o conteúdo é binário pela presença de byte NUL nos primeiros
 // 8 KB — a mesma heurística que o git usa para decidir se mostra o diff. Os gates
 // que leem TEXTO (header, spellcheck, asserções) não têm o que fazer com esses
 // arquivos, e cobrá-los produz uma exigência impossível de cumprir.
-func ehBinario(content string) bool {
+func isBinary(content string) bool {
 	n := len(content)
 	if n > 8000 {
 		n = 8000

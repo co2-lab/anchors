@@ -11,7 +11,7 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// checkTestIDCoerente — o testID é UM contrato com QUATRO pontas, e este gate as
+// checkTestIDCoherent — o testID é UM contrato com QUATRO pontas, e este gate as
 // confronta de uma vez.
 //
 // Os gates que este substitui (`testid-declared`, `testid-honored`) cobriam três
@@ -42,7 +42,7 @@ import (
 //
 // Parte da spec (`on: [spec]`) porque é ela que declara o inventário — o mesmo ponto de
 // partida dos gates que substitui.
-func checkTestIDCoerente(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, "o inventário de testID é declarado na spec — é dela que o confronto parte"
 	}

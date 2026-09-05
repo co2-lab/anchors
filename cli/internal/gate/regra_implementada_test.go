@@ -20,7 +20,7 @@ func rodaRegraImpl(t *testing.T, spec, codigo string) (Verdict, string) {
 	if strings.Contains(spec, "AAAAX-") {
 		cabecalho = "<!-- @anchors\n  code: AAAAX\n-->\n"
 	}
-	return checkRegraImplementada(cabecalho+spec,
+	return checkRuleImplemented(cabecalho+spec,
 		mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil)
 }
 
@@ -47,7 +47,7 @@ func TestSpecQueFalaSozinhaEhAcusada(t *testing.T) {
 | ` + "`MRHMX-B04`" + ` | aciona a migração |
 | ` + "`MRHMX-B05`" + ` | a ordem é migrar depois mudar o estado |
 `
-	v, msg := checkRegraImplementada(spec, mapx.Node{Kind: mapx.KindSpec, ID: "h.spec.md"}, root, nil, nil)
+	v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "h.spec.md"}, root, nil, nil)
 	if v != Fail {
 		t.Fatalf("spec com regra que o código ignora deve reprovar; veio %v (%s)", v, msg)
 	}
@@ -72,7 +72,7 @@ func TestDispensaDeclaradaFechaAConta(t *testing.T) {
 | ` + "`MTVRX-B01`" + ` | resolve a versão |
 | ` + "`MTVRX-X01`" + ` | NÃO faz I/O |
 `
-	v, msg := checkRegraImplementada(semDispensa, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil)
+	v, msg := checkRuleImplemented(semDispensa, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil)
 	if v != Fail {
 		t.Fatalf("X01 sem código e sem dispensa deve reprovar; veio %v (%s)", v, msg)
 	}
@@ -83,14 +83,14 @@ func TestDispensaDeclaradaFechaAConta(t *testing.T) {
 	comDispensa := strings.Replace(semDispensa,
 		"| `MTVRX-X01` | NÃO faz I/O |",
 		"| `MTVRX-X01` | NÃO faz I/O @no-code: satisfeita pela ausência de import |", 1)
-	if v, msg := checkRegraImplementada(comDispensa, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Pass {
+	if v, msg := checkRuleImplemented(comDispensa, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Pass {
 		t.Errorf("dispensa declarada COM razão fecha a conta; veio %v (%s)", v, msg)
 	}
 
 	// Marcador nu não dispensa nada — a razão escrita é o que torna a dispensa uma
 	// prestação de contas em vez de um jeito de calar o gate.
 	nu := strings.Replace(semDispensa, "| `MTVRX-X01` | NÃO faz I/O |", "| `MTVRX-X01` | NÃO faz I/O @no-code: |", 1)
-	if v, _ := checkRegraImplementada(nu, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Fail {
+	if v, _ := checkRuleImplemented(nu, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Fail {
 		t.Errorf("`@no-code:` sem razão não pode dispensar; veio %v", v)
 	}
 }
@@ -103,7 +103,7 @@ func TestUnidadeAnteriorAPraticaEhPendencia(t *testing.T) {
 	must(t, os.WriteFile(filepath.Join(root, "v.ts"), []byte("export const f = 1\n"), 0o644))
 	spec := "<!-- @anchors\n  code: ANTGX\n-->\n| `ANTGX-B01` | faz algo |\n| `ANTGX-B02` | faz outro |\n"
 
-	v, msg := checkRegraImplementada(spec, mapx.Node{Kind: mapx.KindSpec, ID: "v.spec.md"}, root, nil, nil)
+	v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "v.spec.md"}, root, nil, nil)
 	if v != Pending {
 		t.Errorf("nenhuma regra declarada = dívida de migração (Pending); veio %v (%s)", v, msg)
 	}
@@ -116,7 +116,7 @@ func TestUnidadeAnteriorAPraticaEhPendencia(t *testing.T) {
 // gates apontando o mesmo dedo.
 func TestSemCodigoNaoEhAssunto(t *testing.T) {
 	spec := "<!-- @anchors\n  code: NOVAX\n-->\n| `NOVAX-B01` | faz algo |\n"
-	if v, _ := checkRegraImplementada(spec, mapx.Node{Kind: mapx.KindSpec, ID: "x.spec.md"}, t.TempDir(), nil, nil); v != Skip {
+	if v, _ := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "x.spec.md"}, t.TempDir(), nil, nil); v != Skip {
 		t.Errorf("sem código, Skip; veio %v", v)
 	}
 }
@@ -143,13 +143,13 @@ func TestRegraImplementada_marcacaoExigidaVenceAPendencia(t *testing.T) {
 	n := mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}
 
 	// Sem declaração: migração em curso, pendência (o comportamento de hoje).
-	if v, _ := checkRegraImplementada(spec, n, root, nil, nil); v != Pending {
+	if v, _ := checkRuleImplemented(spec, n, root, nil, nil); v != Pending {
 		t.Errorf("sem `rule_marking` a dívida é pendência: %v", v)
 	}
 
 	// Declarado: a migração acabou, e a unidade é cobrada como qualquer outra.
 	cfg := &config.Config{Derived: &config.Derived{RuleMarking: "required"}}
-	v, msg := checkRegraImplementada(spec, n, root, nil, cfg)
+	v, msg := checkRuleImplemented(spec, n, root, nil, cfg)
 	if v != Fail {
 		t.Fatalf("com `rule_marking: required` a pendência vira reprovação: %v", v)
 	}
@@ -167,7 +167,7 @@ func TestRegraImplementada_marcacaoExigidaNaoPuneQuemMarca(t *testing.T) {
 	spec := "<!-- @anchors\n  code: SBNKX\n-->\n| `SBNKX-B01` | incluir conta | acrescenta à lista |\n"
 	cfg := &config.Config{Derived: &config.Derived{RuleMarking: "required"}}
 
-	if v, msg := checkRegraImplementada(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"},
+	if v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"},
 		root, nil, cfg); v != Pass {
 		t.Errorf("quem marca a regra passa: %v (%s)", v, msg)
 	}
@@ -192,19 +192,19 @@ func TestNoMarkComAlvoNomeado(t *testing.T) {
 	n := mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}
 
 	// Sem dispensa, as duas reprovam.
-	if v, _ := checkRegraImplementada(base, n, root, nil, nil); v != Fail {
+	if v, _ := checkRuleImplemented(base, n, root, nil, nil); v != Fail {
 		t.Fatal("preparo: X01 e X02 sem código deveriam reprovar")
 	}
 
 	// UMA linha nomeando AS DUAS fecha a conta das duas.
 	agrupada := base + "\n> `@no-mark:[MTVRX-X01, MTVRX-X02]` satisfeitas pela AUSÊNCIA de código\n"
-	if v, msg := checkRegraImplementada(agrupada, n, root, nil, nil); v != Pass {
+	if v, msg := checkRuleImplemented(agrupada, n, root, nil, nil); v != Pass {
 		t.Errorf("a declaração agrupada deveria dispensar as duas; veio %v (%s)", v, msg)
 	}
 
 	// E o alvo MANDA: nomear X01 numa linha que fala de X02 dispensa X01, não X02.
 	soUma := base + "\n> `@no-mark:[MTVRX-X01]` só esta\n"
-	v, msg := checkRegraImplementada(soUma, n, root, nil, nil)
+	v, msg := checkRuleImplemented(soUma, n, root, nil, nil)
 	if v != Fail {
 		t.Fatalf("X02 continua sem dispensa e deve reprovar; veio %v", v)
 	}
@@ -228,7 +228,7 @@ func TestNomeAntigoNoCodeContinuaValendo(t *testing.T) {
 		"| Regra | Efeito |\n| --- | --- |\n" +
 		"| `MTVRX-B01` | resolve a versão |\n" +
 		"| `MTVRX-X01` | NÃO faz I/O @no-code: satisfeita pela ausência |\n"
-	if v, msg := checkRegraImplementada(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Pass {
+	if v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Pass {
 		t.Errorf("`@no-code` deveria continuar dispensando; veio %v (%s)", v, msg)
 	}
 }
@@ -250,12 +250,12 @@ func TestNoMarkSemAlvoValeParaTodas(t *testing.T) {
 		"| `MTVRX-X01` | NÃO faz I/O |\n" +
 		"\n> `@no-mark:` esta unidade descreve configuração, e nada nela recebe marcação\n"
 	n := mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}
-	if v, msg := checkRegraImplementada(spec, n, root, nil, nil); v != Pass {
+	if v, msg := checkRuleImplemented(spec, n, root, nil, nil); v != Pass {
 		t.Errorf("sem alvo deveria dispensar todas; veio %v (%s)", v, msg)
 	}
 	// `[all]` explícito é a mesma coisa, escrita para quem prefere ver a intenção.
 	explicito := strings.Replace(spec, "@no-mark:", "@no-mark:[all]", 1)
-	if v, msg := checkRegraImplementada(explicito, n, root, nil, nil); v != Pass {
+	if v, msg := checkRuleImplemented(explicito, n, root, nil, nil); v != Pass {
 		t.Errorf("`[all]` explícito deveria dispensar todas; veio %v (%s)", v, msg)
 	}
 }

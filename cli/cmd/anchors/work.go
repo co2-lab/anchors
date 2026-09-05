@@ -60,7 +60,7 @@ O conteúdo é COMPOSTO do anchors.yaml — nada é inventado aqui.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			artifact := strings.ToLower(args[0])
-			if !queue.ArtefatoDeTrabalhoValido(artifact) {
+			if !queue.ValidWorkArtifact(artifact) {
 				return fmt.Errorf("artefato desconhecido %q — use: %s", artifact,
 					strings.Join(queue.ArtefatosDeTrabalho, ", "))
 			}

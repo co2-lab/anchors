@@ -20,7 +20,7 @@ import (
 //
 // Só roda no modo `github`. Cobrar board de um projeto que declarou `mode: local` seria
 // ruído garantido — e ruído recorrente treina a equipe a ignorar o doctor.
-func checkAmbienteGitHub(cfg *config.Config, root string) []Finding {
+func checkGitHubEnv(cfg *config.Config, root string) []Finding {
 	if cfg == nil || !cfg.ModoGitHub() {
 		return nil
 	}
@@ -29,8 +29,8 @@ func checkAmbienteGitHub(cfg *config.Config, root string) []Finding {
 	// fluxo não precisa produziria um achado que ninguém precisa resolver — e ruído
 	// recorrente treina a equipe a ignorar o doctor.
 	out := checkPipelines(root, cfg)
-	out = append(out, checkProtecaoDeBranch(cfg)...)
-	return append(out, checkAprovacaoAlcancavel(cfg)...)
+	out = append(out, checkBranchProtection(cfg)...)
+	return append(out, checkApprovalReachable(cfg)...)
 }
 
 // checkPipelines confere o que dá para conferir lendo o disco: os três workflows existem,
@@ -68,7 +68,7 @@ func checkPipelines(root string, cfg *config.Config) []Finding {
 	return out
 }
 
-// checkProtecaoDeBranch confere que a `main` exige PR.
+// checkBranchProtection confere que a `main` exige PR.
 //
 // É a regra que o fluxo inteiro pressupõe, e a única cuja ausência não produz erro em
 // lugar nenhum: sem proteção, um push direto na main funciona — e pula o card, pula a
@@ -77,7 +77,7 @@ func checkPipelines(root string, cfg *config.Config) []Finding {
 //
 // O silêncio aqui é o mais caro do fluxo: tudo parece funcionar, e o ciclo de governança
 // simplesmente não acontece.
-func checkProtecaoDeBranch(cfg *config.Config) []Finding {
+func checkBranchProtection(cfg *config.Config) []Finding {
 	if _, err := exec.LookPath("gh"); err != nil {
 		return nil // sem `gh` o doctor já reclama noutro achado; não duplicar
 	}

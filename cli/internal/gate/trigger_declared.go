@@ -52,7 +52,7 @@ func checkTriggerDeclared(content string, n mapx.Node, root string, g *mapx.Grap
 			continue
 		}
 		erros = append(erros, fmt.Sprintf("`%s: %s` não é gatilho de nenhum pack%s",
-			c.chave, c.valor, sugestao(c.valor, declarados)))
+			c.chave, c.valor, suggestion(c.valor, declarados)))
 	}
 	for _, ob := range obrigacoesCitadas(content) {
 		if !obrigacoes[ob] {
@@ -153,9 +153,9 @@ func vocabularioDeclarado(root string, cfg *config.Config) (map[string]bool, map
 	return gatilhos, obrigacoes
 }
 
-// sugestao aponta o gatilho declarado mais parecido — a correção costuma ser um sinônimo
+// suggestion aponta o gatilho declarado mais parecido — a correção costuma ser um sinônimo
 // (`pii` onde o canônico é `personal-data`), e dizer qual economiza a busca.
-func sugestao(errado string, declarados map[string]bool) string {
+func suggestion(errado string, declarados map[string]bool) string {
 	var melhor string
 	for d := range declarados {
 		if strings.Contains(d, errado) || strings.Contains(errado, d) {

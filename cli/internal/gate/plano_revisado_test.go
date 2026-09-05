@@ -23,7 +23,7 @@ func TestPlanoRevisadoAvisa(t *testing.T) {
 
 	// SEM o aviso, reprova — e a mensagem diz o que escrever.
 	semAviso := "# Plano 0001\n\n## Objetivo\n\nFazer algo.\n"
-	v, msg := checkPlanoRevisado(semAviso, antigo, "", g, nil)
+	v, msg := checkPlanRevised(semAviso, antigo, "", g, nil)
 	if v != Fail {
 		t.Fatalf("plano revisado sem aviso deveria reprovar; veio %v", v)
 	}
@@ -35,14 +35,14 @@ func TestPlanoRevisadoAvisa(t *testing.T) {
 	// mudou e não diz ONDE — quem lê a fase 3 não sabe se ela é uma das que mudaram, e
 	// descobrir custa reler o plano inteiro.
 	soTopo := "# Plano 0001\n\n> `@revised-by: plans/0007.md` — a fase 2 mudou de ordem.\n\n## Objetivo\n"
-	if v, msg := checkPlanoRevisado(soTopo, antigo, "", g, nil); v != Pending {
+	if v, msg := checkPlanRevised(soTopo, antigo, "", g, nil); v != Pending {
 		t.Errorf("aviso de topo sem marcar as partes é pendência; veio %v (%s)", v, msg)
 	}
 
 	// COM o aviso E a parte marcada, passa.
 	completo := soTopo + "\n## Fases\n\n### ANTGO-F02 — a régua\n\n" +
 		"> `@amended-by: plans/0007.md` — esta fase passou a vir depois da F03.\n"
-	if v, msg := checkPlanoRevisado(completo, antigo, "", g, nil); v != Pass {
+	if v, msg := checkPlanRevised(completo, antigo, "", g, nil); v != Pass {
 		t.Errorf("com aviso e parte marcada deveria passar; veio %v (%s)", v, msg)
 	}
 
@@ -51,7 +51,7 @@ func TestPlanoRevisadoAvisa(t *testing.T) {
 	tarde := "# Plano 0001\n" + strings.Repeat("\ntexto\n", 30) +
 		"\n> `@revised-by: plans/0007.md` — tarde demais.\n" +
 		"> `@amended-by: plans/0007.md` — a parte está marcada; o problema é o topo.\n"
-	if v, _ := checkPlanoRevisado(tarde, antigo, "", g, nil); v != Fail {
+	if v, _ := checkPlanRevised(tarde, antigo, "", g, nil); v != Fail {
 		t.Errorf("aviso fora do topo não avisa ninguém; veio %v", v)
 	}
 }
@@ -62,7 +62,7 @@ func TestRevisesParaPlanoInexistente(t *testing.T) {
 	orfao := mapx.Node{ID: "plans/0007.md", Kind: mapx.KindPlan,
 		Revises: []string{"plans/nao-existe.md"}}
 	g := &mapx.Graph{Nodes: []mapx.Node{orfao}}
-	v, msg := checkPlanoRevisado("# Plano\n", orfao, "", g, nil)
+	v, msg := checkPlanRevised("# Plano\n", orfao, "", g, nil)
 	if v != Fail {
 		t.Fatalf("revises órfão deveria reprovar; veio %v", v)
 	}
@@ -75,7 +75,7 @@ func TestRevisesParaPlanoInexistente(t *testing.T) {
 func TestPlanoSemRevisaoPula(t *testing.T) {
 	n := mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}
 	g := &mapx.Graph{Nodes: []mapx.Node{n}}
-	if v, _ := checkPlanoRevisado("# Plano\n", n, "", g, nil); v != Skip {
+	if v, _ := checkPlanRevised("# Plano\n", n, "", g, nil); v != Skip {
 		t.Errorf("plano sem revisão deveria pular; veio %v", v)
 	}
 }
@@ -93,7 +93,7 @@ func TestQuemRevisaEhLembradoDoAviso(t *testing.T) {
 
 	// O plano REVISOR recebe o lembrete — é pendência, não falha: ele não fez nada de
 	// errado, só falta um passo que está noutro arquivo.
-	v, msg := checkPlanoRevisado("# Plano 0007\n", novo, "", g, nil)
+	v, msg := checkPlanRevised("# Plano 0007\n", novo, "", g, nil)
 	if v != Pending {
 		t.Fatalf("quem revisa deveria receber PENDING com o lembrete; veio %v", v)
 	}
@@ -108,7 +108,7 @@ func TestQuemRevisaEhLembradoDoAviso(t *testing.T) {
 	// verificamos que o revisor não fica pendente para sempre por causa disso.
 	comAviso := "# Plano 0001\n\n> `@revised-by: plans/0007.md` — mudou a ordem.\n\n" +
 		"### ANTGO-F02\n\n> `@amended-by: plans/0007.md` — esta fase mudou de ordem.\n"
-	if v, _ := checkPlanoRevisado(comAviso, antigo, "", g, nil); v != Pass {
+	if v, _ := checkPlanRevised(comAviso, antigo, "", g, nil); v != Pass {
 		t.Errorf("o plano revisado com aviso e parte marcada deveria passar; veio %v", v)
 	}
 }
@@ -131,7 +131,7 @@ func TestLembreteSomeQuandoOAvisoExiste(t *testing.T) {
 		[]byte("# Plano 0001\n\n## Objetivo\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if v, _ := checkPlanoRevisado("# Plano 0007\n", novo, root, g, nil); v != Pending {
+	if v, _ := checkPlanRevised("# Plano 0007\n", novo, root, g, nil); v != Pending {
 		t.Fatalf("sem o aviso, o revisor deveria receber o lembrete; veio %v", v)
 	}
 
@@ -140,7 +140,7 @@ func TestLembreteSomeQuandoOAvisoExiste(t *testing.T) {
 		[]byte("# Plano 0001\n\n> `@revised-by: plans/0007.md` — mudou.\n\n> `@amended-by: plans/0007.md` — a F01.\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if v, msg := checkPlanoRevisado("# Plano 0007\n", novo, root, g, nil); v == Pending {
+	if v, msg := checkPlanRevised("# Plano 0007\n", novo, root, g, nil); v == Pending {
 		t.Errorf("com o aviso escrito, o lembrete não pode continuar; veio %v (%s)", v, msg)
 	}
 }
@@ -163,7 +163,7 @@ func TestMarcacaoDeParteAceitaAsDuasFormas(t *testing.T) {
 	implementada := topo + "## Fases\n\n### ANTGO-F01 — a árvore\n\nCria os pacotes.\n\n" +
 		"> `@amended-by: plans/0007.md` — daqui em diante os pacotes ganham mutação.\n" +
 		"> O texto acima descreve o que FOI implementado.\n"
-	if v, msg := checkPlanoRevisado(implementada, antigo, "", g, nil); v != Pass {
+	if v, msg := checkPlanRevised(implementada, antigo, "", g, nil); v != Pass {
 		t.Errorf("parte implementada com aviso abaixo deveria passar; veio %v (%s)", v, msg)
 	}
 
@@ -172,7 +172,7 @@ func TestMarcacaoDeParteAceitaAsDuasFormas(t *testing.T) {
 		"> `@amended-by: plans/0007.md`.\n" +
 		"> **Era:** o CI roda instalar, lint, build e teste.\n" +
 		"> **Por quê:** cobertura não responde se o teste PROVA a linha.\n"
-	if v, msg := checkPlanoRevisado(futura, antigo, "", g, nil); v != Pass {
+	if v, msg := checkPlanRevised(futura, antigo, "", g, nil); v != Pass {
 		t.Errorf("parte futura com o original preservado deveria passar; veio %v (%s)", v, msg)
 	}
 }

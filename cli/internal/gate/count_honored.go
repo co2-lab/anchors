@@ -51,7 +51,7 @@ func checkCountHonored(content string, n mapx.Node, root string, g *mapx.Graph, 
 
 	var erros []string
 	for _, d := range decls {
-		real, err := contar(root, d)
+		real, err := countOf(root, d)
 		if err != nil {
 			erros = append(erros, fmt.Sprintf("`%s`: %v", d.Glob, err))
 			continue
@@ -89,8 +89,8 @@ func checkCountHonored(content string, n mapx.Node, root string, g *mapx.Graph, 
 		len(erros), strings.Join(erros, "; "))
 }
 
-// contagem declarada na spec.
-type contagem struct {
+// count declarada na spec.
+type count struct {
 	Esperado int
 	Rotulo   string // "modelos", "cláusulas" — só para a mensagem
 	Glob     string
@@ -103,8 +103,8 @@ type contagem struct {
 // separação glob↔regex é feita pelo espaço antes da `/` de abertura: `<glob> /<regex>/`.
 var countRE = regexp.MustCompile(`@anchors-count:\s*(\d+)\s*([^=\n]*?)\s*=\s*(\S+)(?:\s+/(.+?)/)?\s*(?:-->)?\s*$`)
 
-func contagensDeclaradas(content string) []contagem {
-	var out []contagem
+func contagensDeclaradas(content string) []count {
+	var out []count
 	for _, linha := range strings.Split(content, "\n") {
 		m := countRE.FindStringSubmatch(linha)
 		if m == nil {
@@ -114,7 +114,7 @@ func contagensDeclaradas(content string) []contagem {
 		if err != nil {
 			continue
 		}
-		out = append(out, contagem{
+		out = append(out, count{
 			Esperado: n,
 			Rotulo:   strings.TrimSpace(m[2]),
 			Glob:     strings.TrimSpace(m[3]),
@@ -124,9 +124,9 @@ func contagensDeclaradas(content string) []contagem {
 	return out
 }
 
-// contar resolve a contagem contra o disco: arquivos que casam o glob, ou ocorrências do
+// countOf resolve a contagem contra o disco: arquivos que casam o glob, ou ocorrências do
 // padrão dentro deles.
-func contar(root string, d contagem) (int, error) {
+func countOf(root string, d count) (int, error) {
 	arquivos, err := doublestar.Glob(os.DirFS(root), d.Glob)
 	if err != nil {
 		return 0, fmt.Errorf("glob inválido: %w", err)
@@ -164,7 +164,7 @@ func sufixoPadrao(p string) string {
 // prosaDivergente acha, no texto, afirmações "<N> <rótulo>" cujo número não bate com o
 // real. Só olha o MESMO rótulo que a marcação declara — é o que evita acusar o "90 dias"
 // de retenção que nada tem a ver com contagem de código.
-func prosaDivergente(content string, d contagem, real int) []string {
+func prosaDivergente(content string, d count, real int) []string {
 	rot := regexp.QuoteMeta(d.Rotulo)
 	// `\*{0,2}` aceita a forma em negrito (`**50 modelos**`), que é como o número
 	// costuma aparecer quando o autor quer destacá-lo.
@@ -186,7 +186,7 @@ func prosaDivergente(content string, d contagem, real int) []string {
 		if err != nil || n == real || vistos[m[1]] {
 			continue
 		}
-		if qualificado(m[2]) {
+		if qualified(m[2]) {
 			continue // fala de um recorte, não do total
 		}
 		vistos[m[1]] = true
@@ -196,7 +196,7 @@ func prosaDivergente(content string, d contagem, real int) []string {
 	return out
 }
 
-// qualificado diz se a frase fala de um SUBCONJUNTO em vez do total.
+// qualified diz se a frase fala de um SUBCONJUNTO em vez do total.
 //
 // Distinguir isso é SEMÂNTICA, e o gate só resolve o caso inequívoco. Medido no texto
 // real: "50 cláusulas DE AUTORIZAÇÃO" fala do total, "16 modelos DE DADO FINANCEIRO" fala
@@ -211,7 +211,7 @@ func prosaDivergente(content string, d contagem, real int) []string {
 // e um gate que acusa a maioria é desligado no primeiro dia — levando junto os que
 // funcionam. (QUALITY: "antes de escrever um gate, meça o falso-positivo contra o
 // repositório real".)
-func qualificado(resto string) bool {
+func qualified(resto string) bool {
 	// o negrito pode fechar DEPOIS do complemento (`**3 cláusulas de autorização**`),
 	// então os asteriscos não fazem parte do complemento.
 	r := strings.TrimSpace(strings.Trim(strings.TrimSpace(resto), "*"))

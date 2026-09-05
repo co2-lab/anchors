@@ -30,13 +30,13 @@ func ruleCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`\b[A-Z0-9]` + config.CodeLengthPattern() + `-([A-Z])\d{2}\b`)
 }
 
-// letrasCanonicas confronta a spec contra `config.DefaultRuleLetters` — o que o gate faz
+// canonicalLetters confronta a spec contra `config.DefaultRuleLetters` — o que o gate faz
 // quando o projeto não declarou vocabulário próprio.
 //
 // Uma letra fora das canônicas é invisível para a rastreabilidade: o `feature-test-match`
 // não a enxerga, mesmo com feature e teste escritos. O achado é o mesmo do modo declarado;
 // muda só o conserto sugerido, porque aqui o projeto ainda não tem onde declarar.
-func letrasCanonicas(content string) (Verdict, string) {
+func canonicalLetters(content string) (Verdict, string) {
 	canonicas := map[string]bool{}
 	for _, l := range config.DefaultRuleLetters {
 		canonicas[string(l)] = true
@@ -80,7 +80,7 @@ func checkRuleTypes(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 	// vocabulário; cobrá-las contra um vocabulário implícito seria inventar regra que
 	// ninguém escreveu.
 	if cfg == nil || len(cfg.RuleTypes) == 0 {
-		return letrasCanonicas(content)
+		return canonicalLetters(content)
 	}
 
 	// (3) CONFLITO no próprio vocabulário: mesma letra reivindicada por seções distintas.

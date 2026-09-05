@@ -157,11 +157,11 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// invocação (config ausente, mapa ilegível), que não é relatório —
 			// gravá-lo sobrescreveria uma foto boa com uma mensagem de erro.
 			head, assunto, _ := gitmeta.Head(absRoot)
-			espelho := checklog.Abrir(absRoot, all, checklog.Header(
+			espelho := checklog.Open(absRoot, all, checklog.Header(
 				"anchors "+strings.Join(os.Args[1:], " "),
 				head, assunto, gitmeta.DirtyCount(absRoot), time.Now(),
 			))
-			defer espelho.Fechar()
+			defer espelho.Close()
 
 			warnIfMapStale(absRoot, mapPath, cfg, g)
 			fmt.Printf("check %s — %d nós, %d gates\n\n", scope, len(nodes), len(cfg.Gates))
@@ -197,7 +197,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				pendentes = julgamentosNaFila(absRoot)
 			}
 
-			if c := espelho.Caminho(); c != "" {
+			if c := espelho.Path(); c != "" {
 				rel, err := filepath.Rel(absRoot, c)
 				if err != nil {
 					rel = c
@@ -224,7 +224,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				fmt.Println("  O julgamento é do commit ATUAL: quem mexeu no arquivo é quem tem o")
 				fmt.Println("  contexto para responder. Resolva antes de commitar:")
 				fmt.Println("      anchors judge --pending")
-				espelho.Fechar()
+				espelho.Close()
 				os.Exit(1)
 			}
 
@@ -232,7 +232,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				// `os.Exit` não roda os `defer`: sem fechar aqui, o espelho perderia
 				// o fim do relatório exatamente no caso em que ele mais importa — o
 				// da reprovação.
-				espelho.Fechar()
+				espelho.Close()
 				os.Exit(1) // barra: há fail bloqueante
 			}
 			return nil

@@ -55,7 +55,7 @@ func runStatus(root string) error {
 	fmt.Printf("anchors status — %s\n\n", root)
 
 	// 1. GIT — o substrato. Sem ele, metade do framework fica desligada em silêncio.
-	switch gitmeta.Verifica(root) {
+	switch gitmeta.Check(root) {
 	case gitmeta.SemBinário:
 		fmt.Println("⚠ git não instalado — o carimbo de alteração, `coverage --diff` e os")
 		fmt.Println("  hooks ficam desligados. Instale o git.")

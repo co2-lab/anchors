@@ -67,13 +67,13 @@ func RevisionsOf(content string) []Revision {
 	return out
 }
 
-// checkPlanoAlteradoJustificado confronta o plano/spec ALTERADO com a revisão declarada.
+// checkPlanChangeJustified confronta o plano/spec ALTERADO com a revisão declarada.
 //
 // O gate se abstém em `--all` (via `skip_on: [all]` no anchors.yaml). Ali não existe
 // "alterado": reprovar todo plano que nunca precisou de revisão seria acusar quem acertou
 // de primeira. Rodando com `--changed`, todo nó que ele recebe JÁ é um arquivo alterado —
 // por isso não precisa da lista, e não a recebe.
-func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkPlanChangeJustified(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	// SÓ o que de fato MUDOU. O `--changed X` entrega o RAIO DE IMPACTO de X — todo nó
 	// que depende dele —, e isso é certo para quase todo gate: quem quebrou por tabela tem
 	// de ser confrontado. Aqui não: um plano que não mudou não tem o que justificar.
@@ -81,7 +81,7 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 	// Medido no blue-eyes: sem esta conferência, alterar UM plano acusava 8 arquivos, 7
 	// deles intocados. Um gate bloqueante que acusa inocente é pior que gate nenhum — a
 	// saída barata vira desligá-lo.
-	if cfg == nil || !mudouDeFato(n.ID, cfg.Alterados) {
+	if cfg == nil || !actuallyChanged(n.ID, cfg.Alterados) {
 		return Skip, "não está entre os arquivos alterados (só foi alcançado pelo raio de impacto)"
 	}
 
@@ -95,10 +95,10 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 	// A revisão registra por que o texto mudou — e num arquivo que nasce agora, o texto
 	// inteiro é a decisão. Cobrar `-R0001` aqui obrigaria toda spec nova a declarar uma
 	// revisão de si mesma no primeiro commit, que é ruído puro.
-	if gitDizQueEhNovo(root, n.ID) {
+	if gitSaysIsNew(root, n.ID) {
 		return Skip, "arquivo novo — não há alteração a justificar"
 	}
-	if !gitDizQueMudou(root, n.ID) {
+	if !gitSaysChanged(root, n.ID) {
 		return Skip, "o git não vê mudança neste arquivo — `--changed` o incluiu, mas o " +
 			"conteúdo é igual ao do último commit"
 	}
@@ -176,8 +176,8 @@ func primeiraLinha(s string) string {
 	return s
 }
 
-// mudouDeFato diz se o nó está na lista dos que mudaram.
-func mudouDeFato(id string, alterados []string) bool {
+// actuallyChanged diz se o nó está na lista dos que mudaram.
+func actuallyChanged(id string, alterados []string) bool {
 	for _, a := range alterados {
 		if a == id {
 			return true
@@ -200,14 +200,14 @@ func seExplicaPorRevisao(content string) bool {
 	return false
 }
 
-// gitDizQueMudou confronta a lista recebida com o que o git de fato vê.
+// gitSaysChanged confronta a lista recebida com o que o git de fato vê.
 //
 // Conta o que está no índice E na árvore de trabalho: o pre-commit roda com o arquivo já
 // staged, e olhar só um dos dois deixaria passar metade dos casos.
 //
 // Sem git (ou fora de repositório), devolve `true` e deixa a decisão com quem chamou —
 // negar ali silenciaria o gate onde ele não tem como medir.
-func gitDizQueMudou(root, path string) bool {
+func gitSaysChanged(root, path string) bool {
 	cmd := exec.Command("git", "status", "--porcelain", "--", path)
 	cmd.Dir = root
 	out, err := cmd.Output()
@@ -217,13 +217,13 @@ func gitDizQueMudou(root, path string) bool {
 	return len(strings.TrimSpace(string(out))) > 0
 }
 
-// gitDizQueEhNovo diz se o arquivo ainda não existe no histórico.
+// gitSaysIsNew diz se o arquivo ainda não existe no histórico.
 //
 // `git log -1 -- <path>` vazio significa que nenhum commit o tocou — é a diferença entre
 // "mudou" e "nasceu". O status porcelain não serve aqui: ele marca `??` para não
 // rastreado e `A ` para staged, e um arquivo novo já adicionado ao índice apareceria como
 // alteração.
-func gitDizQueEhNovo(root, path string) bool {
+func gitSaysIsNew(root, path string) bool {
 	// A pergunta é "este arquivo existe no ÚLTIMO COMMIT?", e não "ele é rastreado?".
 	//
 	// A diferença decide o gate. `git ls-files` consulta o INDEX, e o pre-commit roda com
@@ -243,7 +243,7 @@ func gitDizQueEhNovo(root, path string) bool {
 	// FORA de repositório a resposta é NÃO: ali o gate não tem como medir, e afirmar
 	// "é novo" o silenciaria em todo projeto sem git — que é o caso dos testes de unidade
 	// e de quem roda o Anchors fora de um repositório.
-	if !emRepositorio(root) {
+	if !inRepository(root) {
 		return false
 	}
 	cmd := exec.Command("git", "cat-file", "-e", "HEAD:"+path)
@@ -251,8 +251,8 @@ func gitDizQueEhNovo(root, path string) bool {
 	return cmd.Run() != nil // erro = não existe no último commit = nasce agora
 }
 
-// emRepositorio diz se `root` está dentro de um repositório git.
-func emRepositorio(root string) bool {
+// inRepository diz se `root` está dentro de um repositório git.
+func inRepository(root string) bool {
 	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
 	cmd.Dir = root
 	return cmd.Run() == nil

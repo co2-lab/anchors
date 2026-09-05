@@ -309,13 +309,13 @@ func pickCommand(s config.Suite, alvos []string, target string) (string, error) 
 		// sobre o que rodou — o usuário leria "passou" achando que foi o recorte dele.
 		return "", fmt.Errorf("a suíte não declara `run_changed:` — sem ele não há modo incremental.\n"+
 			"  Declare o comando que recebe os arquivos, com {{files}}:\n"+
-			"    run_changed: \"%s --findRelatedTests {{files}}\"   (exemplo de jest)", primeiraPalavra(s.Run))
+			"    run_changed: \"%s --findRelatedTests {{files}}\"   (exemplo de jest)", firstWord(s.Run))
 	}
 	linha := strings.ReplaceAll(s.RunChanged, "{{files}}", strings.Join(alvos, " "))
 	return montaComando(linha, target)
 }
 
-func primeiraPalavra(s string) string {
+func firstWord(s string) string {
 	if i := strings.IndexByte(strings.TrimSpace(s), ' '); i > 0 {
 		return strings.TrimSpace(s)[:i]
 	}

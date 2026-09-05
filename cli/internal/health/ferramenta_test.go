@@ -17,7 +17,7 @@ func TestDoctorAvisaFerramentaAusenteComoWarn(t *testing.T) {
 		{Name: "gate-com-ferramenta", NeedsTool: "sh"},
 	}}
 
-	fs := checkFerramentasAusentes(cfg)
+	fs := checkMissingTools(cfg)
 	if len(fs) != 1 {
 		t.Fatalf("só o gate com ferramenta AUSENTE devia render achado; vieram %d: %+v", len(fs), fs)
 	}

@@ -49,7 +49,7 @@ func (g GitHub) gh(args ...string) ([]byte, error) {
 	return out, nil
 }
 
-type cardEncontrado struct {
+type foundCard struct {
 	Number int    `json:"number"`
 	State  string `json:"state"`
 }
@@ -59,12 +59,12 @@ type cardEncontrado struct {
 // Busca em `--state all` de propósito: uma issue FECHADA ainda é memória — é o que
 // distingue "achado novo" de "achado que voltou", e sem ela o segundo perderia o laudo
 // anterior.
-func (g GitHub) find(key string) (cardEncontrado, bool, error) {
+func (g GitHub) find(key string) (foundCard, bool, error) {
 	marca := fmt.Sprintf(MarcadorChave, key)
 	out, err := g.gh("issue", "list", "--state", "all", "--limit", "500",
 		"--search", key, "--json", "number,state,body")
 	if err != nil {
-		return cardEncontrado{}, false, err
+		return foundCard{}, false, err
 	}
 	var todas []struct {
 		Number int    `json:"number"`
@@ -72,17 +72,17 @@ func (g GitHub) find(key string) (cardEncontrado, bool, error) {
 		Body   string `json:"body"`
 	}
 	if err := json.Unmarshal(out, &todas); err != nil {
-		return cardEncontrado{}, false, fmt.Errorf("ler a busca: %w", err)
+		return foundCard{}, false, fmt.Errorf("ler a busca: %w", err)
 	}
 	// A busca do GitHub é por texto e devolve aproximações: a CONFIRMAÇÃO é o marcador
 	// exato no corpo. Sem ela um achado sobre `Foo.spec.md` casaria o card de
 	// `FooBar.spec.md`, e o Anchors fecharia o card errado.
 	for _, c := range todas {
 		if strings.Contains(c.Body, marca) {
-			return cardEncontrado{Number: c.Number, State: c.State}, true, nil
+			return foundCard{Number: c.Number, State: c.State}, true, nil
 		}
 	}
-	return cardEncontrado{}, false, nil
+	return foundCard{}, false, nil
 }
 
 // Open abre o card do achado, ou não faz nada se ele já existe.

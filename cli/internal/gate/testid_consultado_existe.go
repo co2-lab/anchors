@@ -12,7 +12,7 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// checkTestIDConsultadoExiste — a QUARTA aresta do contrato de testID, a que nenhum
+// checkQueriedTestIDExists — a QUARTA aresta do contrato de testID, a que nenhum
 // gate cobria: o flow de ponta a ponta CONSULTA um handle que o código não expõe.
 //
 // Por que não cabe no `testid-coerente`: aquele gate parte de UMA spec, e a superfície
@@ -37,7 +37,7 @@ import (
 // nenhum flow consulta) NÃO é ofensa: nem todo elemento marcado precisa de cenário
 // automatizado, e o `testid-coerente` já reporta o consumo por spec, onde a pergunta
 // tem dono.
-func checkTestIDConsultadoExiste(_ string, _ mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkQueriedTestIDExists(_ string, _ mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	attr := handleDeTeste(cfg)
 	if attr == "" {
 		// Inferir `testID` por default faria o gate reportar VERDE sobre o que não

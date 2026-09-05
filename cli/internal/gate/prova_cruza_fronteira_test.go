@@ -19,7 +19,7 @@ func rodaProvaCruzada(t *testing.T, spec, codigo string) (Verdict, string) {
 		Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: "u.ts", Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
 	}
-	return checkProvaCruzaFronteira(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	return checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
 }
 
 // O CASO QUE MOTIVOU O GATE, e ele está vivo no app de referência sem ter divergido ainda.
@@ -218,7 +218,7 @@ func rodaComMapa(t *testing.T, spec, codigo string) (Verdict, string) {
 		},
 		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
 	}
-	return checkProvaCruzaFronteira(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	return checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
 }
 
 // A FORMA PREFERIDA: o alvo é o CÓDIGO DA REGRA, não o caminho do arquivo. O código

@@ -209,7 +209,7 @@ func TestAchadoNovoNaoSomeEmSilencio(t *testing.T) {
 	// achado DIFERENTE no mesmo alvo: acrescenta, preservando o anterior
 	segundo := base
 	segundo.Detail = "## Laudo B\ncontradição entre duas regras"
-	reaberta, err := Reabrir(root, segundo)
+	reaberta, err := Reopen(root, segundo)
 	if err != nil || !reaberta {
 		t.Fatalf("achado novo deveria reabrir: reaberta=%v err=%v", reaberta, err)
 	}
@@ -222,7 +222,7 @@ func TestAchadoNovoNaoSomeEmSilencio(t *testing.T) {
 	}
 
 	// MESMO achado de novo: idempotente, não duplica
-	if reaberta, _ := Reabrir(root, segundo); reaberta {
+	if reaberta, _ := Reopen(root, segundo); reaberta {
 		t.Error("o mesmo achado não pode ser acrescentado duas vezes")
 	}
 	corpo2, _ := os.ReadFile(pathFor(root, Todo, name))
@@ -250,29 +250,29 @@ func TestDonoFiltraEReatribui(t *testing.T) {
 
 	// O FILTRO é o que torna a lista utilizável: a de quem decide não pode vir misturada
 	// com o trabalho do agente, ou as duas deixam de ser lidas.
-	doUser, err := ListaPorDono(root, Todo, DonoUsuário)
+	doUser, err := ListByOwner(root, Todo, DonoUsuário)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(doUser) != 1 || !strings.Contains(doUser[0], "b.spec.md") {
 		t.Fatalf("o filtro por usuário deveria trazer só a decisão, veio %v", doUser)
 	}
-	doAgente, _ := ListaPorDono(root, Todo, DonoAgente)
+	doAgente, _ := ListByOwner(root, Todo, DonoAgente)
 	if len(doAgente) != 1 || !strings.Contains(doAgente[0], "a.ts") {
 		t.Fatalf("o filtro por agente deveria trazer só a violação, veio %v", doAgente)
 	}
 
 	// REATRIBUIR: o agente tentou, esbarrou, e passa adiante. A issue continua sendo a
 	// violação que era — muda o dono, não o kind.
-	if err := Reatribui(root, Todo, doAgente[0], DonoUsuário,
+	if err := Reassign(root, Todo, doAgente[0], DonoUsuário,
 		"a fronteira depende de qual camada é dona do cache, e isso não está decidido"); err != nil {
 		t.Fatal(err)
 	}
-	depois, _ := ListaPorDono(root, Todo, DonoUsuário)
+	depois, _ := ListByOwner(root, Todo, DonoUsuário)
 	if len(depois) != 2 {
 		t.Errorf("as duas deveriam estar com o usuário agora, veio %d", len(depois))
 	}
-	if restou, _ := ListaPorDono(root, Todo, DonoAgente); len(restou) != 0 {
+	if restou, _ := ListByOwner(root, Todo, DonoAgente); len(restou) != 0 {
 		t.Errorf("o agente não deveria ter mais nada, veio %v", restou)
 	}
 	// O PORQUÊ vai junto: quem recebe a issue sem contexto pergunta o que já se tentou.

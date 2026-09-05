@@ -127,7 +127,7 @@ func stagedFiles(root string) ([]string, error) {
 	if err != nil {
 		// `--staged` é o modo do pre-commit: sem git não há índice, e o erro cru do git
 		// (`exit status 128`) não diz qual das duas faltas é.
-		if msg := gitmeta.Explica(gitmeta.Verifica(root), "listar os arquivos staged"); msg != "" {
+		if msg := gitmeta.Explain(gitmeta.Check(root), "listar os arquivos staged"); msg != "" {
 			return nil, errors.New(msg)
 		}
 		return nil, fmt.Errorf("listar arquivos staged: %w", err)

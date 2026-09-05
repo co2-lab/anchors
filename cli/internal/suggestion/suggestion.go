@@ -133,14 +133,14 @@ func Decide(root, id string, to State, reason string, autoJudged bool) error {
 		return err
 	}
 	carimbo := fmt.Sprintf("\n\n## Decisão\n\n- **estado:** %s\n- **em:** %s\n- **por:** %s\n\n%s\n",
-		to, time.Now().Format("2006-01-02"), decisor(autoJudged), reason)
+		to, time.Now().Format("2006-01-02"), decider(autoJudged), reason)
 	if err := os.WriteFile(filepath.Join(destDir, id+".md"), append(b, []byte(carimbo)...), 0o644); err != nil {
 		return err
 	}
 	return os.Remove(origem)
 }
 
-func decisor(auto bool) string {
+func decider(auto bool) string {
 	if auto {
 		return "IA (auto_judgment)"
 	}

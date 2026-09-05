@@ -39,7 +39,7 @@ func honraFixture(t *testing.T, testSrc string) (mapx.Node, *mapx.Graph, string)
 
 func TestTestIDHonored_idConsultadoPassa(t *testing.T) {
 	n, g, root := honraFixture(t, `getByTestId(':abcd-screen')`)
-	if v, msg := checkTestIDCoerente(secaoOK, n, root, g, cfgHandle("testID")); v != Pass {
+	if v, msg := checkTestIDCoherent(secaoOK, n, root, g, cfgHandle("testID")); v != Pass {
 		t.Errorf("id consultado pelo teste deveria passar: %v (%s)", v, msg)
 	}
 }
@@ -48,7 +48,7 @@ func TestTestIDHonored_idOrfaoReprova(t *testing.T) {
 	// Declarado, exposto e ninguém consulta: custo sem contrapartida. E pior que
 	// inútil — parece cobertura, porque a superfície está lá e o inventário completo.
 	n, g, root := honraFixture(t, `render(<X />)`)
-	v, msg := checkTestIDCoerente(secaoOK, n, root, g, cfgHandle("testID"))
+	v, msg := checkTestIDCoherent(secaoOK, n, root, g, cfgHandle("testID"))
 	if v != Fail {
 		t.Fatalf("id que ninguém consulta deveria reprovar: %v", v)
 	}
@@ -68,7 +68,7 @@ func TestTestIDHonored_prefixoDinamicoBastaOPrefixo(t *testing.T) {
 		t.Fatal(err)
 	}
 	spec := "## Superfície de Teste\n\n- `:abcd-item-*`\n"
-	if v, msg := checkTestIDCoerente(spec, n, root, g, cfgHandle("testID")); v != Pass {
+	if v, msg := checkTestIDCoherent(spec, n, root, g, cfgHandle("testID")); v != Pass {
 		t.Errorf("prefixo consultado honra o contrato dinâmico: %v (%s)", v, msg)
 	}
 }
@@ -80,7 +80,7 @@ func TestTestIDCoerente_semInventarioAcusaOExposto(t *testing.T) {
 	// gate só não há o que duplicar — e pular deixaria escapar exatamente o caso em que
 	// o código expõe handle nenhum declarado, que é a superfície não-contratada.
 	n, g, root := honraFixture(t, `render(<X />)`)
-	v, msg := checkTestIDCoerente("", n, root, g, cfgHandle("testID"))
+	v, msg := checkTestIDCoherent("", n, root, g, cfgHandle("testID"))
 	if v != Fail {
 		t.Fatalf("spec sem inventário e código expondo handle deve reprovar: %v (%s)", v, msg)
 	}
@@ -91,7 +91,7 @@ func TestTestIDCoerente_semInventarioAcusaOExposto(t *testing.T) {
 
 func TestTestIDHonored_semHandleDeclaradoPula(t *testing.T) {
 	n, g, root := honraFixture(t, `render(<X />)`)
-	if v, _ := checkTestIDCoerente(secaoOK, n, root, g, &config.Config{}); v != Skip {
+	if v, _ := checkTestIDCoherent(secaoOK, n, root, g, &config.Config{}); v != Skip {
 		t.Errorf("sem test_handle o gate deve pular: %v", v)
 	}
 }
@@ -133,7 +133,7 @@ func TestTestIDHonored_flowE2EContaComoConsumidor(t *testing.T) {
 		Surfaces: map[string]string{"e2e": "e2e"},
 		Files:    map[string]config.Padroes{"e2e": {"e2e/{{name}}.yaml"}},
 	}}
-	if v, msg := checkTestIDCoerente(secaoOK, spec, root, g, cfg); v != Pass {
+	if v, msg := checkTestIDCoherent(secaoOK, spec, root, g, cfg); v != Pass {
 		t.Errorf("id usado só pelo flow e2e não é órfão: %v (%s)", v, msg)
 	}
 }
@@ -149,7 +149,7 @@ func TestTestIDHonored_surfaceSemFilesNaoInventaCaminho(t *testing.T) {
 		Anchor: "code", TestHandle: "testID",
 		Surfaces: map[string]string{"e2e": "e2e"}, // sem files["e2e"]
 	}}
-	if v, msg := checkTestIDCoerente(secaoOK, n, root, g, cfg); v != Pass {
+	if v, msg := checkTestIDCoherent(secaoOK, n, root, g, cfg); v != Pass {
 		t.Errorf("superfície sem caminho declarado não deve virar acusação: %v (%s)", v, msg)
 	}
 }
@@ -174,7 +174,7 @@ func TestTestIDHonored_testeCompartilhadoContaComoConsumidor(t *testing.T) {
 		Nodes: []mapx.Node{spec, {ID: "x.tsx", Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: "x.spec.md", To: "x.tsx", Type: mapx.EdgeSpecifies}},
 	} // sem aresta p/ teste — é o ponto
-	if v, msg := checkTestIDCoerente(secaoOK, spec, root, g, cfgHandle("testID")); v != Pass {
+	if v, msg := checkTestIDCoherent(secaoOK, spec, root, g, cfgHandle("testID")); v != Pass {
 		t.Errorf("teste vizinho que consulta o id honra o contrato: %v (%s)", v, msg)
 	}
 }
@@ -213,7 +213,7 @@ func TestTestIDHonored_vizinhoValeMesmoComFlows(t *testing.T) {
 		Surfaces: map[string]string{"e2e": "e2e"},
 		Files:    map[string]config.Padroes{"e2e": {"e2e/{{name}}.yaml"}},
 	}}
-	if v, msg := checkTestIDCoerente(secaoOK, spec, root, g, cfg); v != Pass {
+	if v, msg := checkTestIDCoherent(secaoOK, spec, root, g, cfg); v != Pass {
 		t.Errorf("teste vizinho deve valer mesmo havendo flows: %v (%s)", v, msg)
 	}
 }
@@ -246,7 +246,7 @@ func TestTestIDHonored_componenteExercitadoPelaTela(t *testing.T) {
 		Nodes: []mapx.Node{spec, {ID: cod, Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: spec.ID, To: cod, Type: mapx.EdgeSpecifies}},
 	}
-	if v, msg := checkTestIDCoerente(secaoOK, spec, root, g, cfgHandle("testID")); v != Pass {
+	if v, msg := checkTestIDCoherent(secaoOK, spec, root, g, cfgHandle("testID")); v != Pass {
 		t.Errorf("teste da tela irmã exercita o componente: %v (%s)", v, msg)
 	}
 }

@@ -205,7 +205,7 @@ está declarada.`,
 				}
 				if created {
 					fmt.Printf("✗ julgado FAIL — issue aberta em %s/todo/\n", issue.Dir)
-				} else if reaberta, rerr := issue.Reabrir(absRoot, iss); rerr != nil {
+				} else if reaberta, rerr := issue.Reopen(absRoot, iss); rerr != nil {
 					return rerr
 				} else if reaberta {
 					// Achado NOVO sobre unidade já revisada: reabre e acrescenta o laudo.

@@ -59,7 +59,7 @@ func checkDomainDeclared(content string, n mapx.Node, root string, g *mapx.Graph
 	var semDono []string
 	for _, l := range linhas {
 		if dono := donoDaEntrada(l); dono == "" {
-			semDono = append(semDono, primeiraCelula(l))
+			semDono = append(semDono, firstCell(l))
 		}
 	}
 	if len(semDono) == 0 {
@@ -152,7 +152,7 @@ var naoEhDonoRE = regexp.MustCompile(`(?i)(^\s*[-—]+\s*$)|(^\s*(n/?a|ningu[ée
 	`n[ãa]o\s+(é|eh|e)\s+(meu|daqui|desta)|n[ãa]o\s+valid\w*|n[ãa]o\s+se\s+aplica|` +
 	`fora\s+de\s+escopo|delegado|outra\s+camada)\b)`)
 
-func primeiraCelula(linha string) string {
+func firstCell(linha string) string {
 	cels := strings.Split(strings.Trim(linha, "|"), "|")
 	if len(cels) == 0 {
 		return "?"

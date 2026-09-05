@@ -46,7 +46,7 @@ func TestTituloDizOQueEhSemAChave(t *testing.T) {
 // O DESTINO PADRÃO é arquivo. Um projeto local, ou qualquer chamador que não configurou
 // nada, não pode acabar falando com a rede sem pedir.
 func TestDestinoPadraoEhArquivo(t *testing.T) {
-	UsarArquivos()
+	UseFiles()
 	if target != nil {
 		t.Fatal("sem configurar, o destino tem de ser o arquivo")
 	}
@@ -54,5 +54,5 @@ func TestDestinoPadraoEhArquivo(t *testing.T) {
 	if target == nil || target.Repo != "acme/x" {
 		t.Fatal("UsarGitHub deveria rotear para o repositório declarado")
 	}
-	UsarArquivos() // não vaza para os outros testes do pacote
+	UseFiles() // não vaza para os outros testes do pacote
 }

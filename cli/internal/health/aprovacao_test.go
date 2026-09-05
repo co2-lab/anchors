@@ -18,12 +18,12 @@ func TestAvisaQuandoAprovacaoEhInalcancavel(t *testing.T) {
 	cfg := &config.Config{Workflow: &config.Workflow{
 		Mode: config.ModeGitHub, Repo: "acme/x", RequiredApprovals: &zero,
 	}}
-	if fs := checkAprovacaoAlcancavel(cfg); len(fs) != 0 {
+	if fs := checkApprovalReachable(cfg); len(fs) != 0 {
 		t.Errorf("zero exigido não pode gerar achado: %+v", fs)
 	}
 
 	// Sem `gh` no PATH o doctor já reclama noutro achado — não duplicar.
-	if fs := checkAprovacaoAlcancavel(nil); len(fs) != 0 {
+	if fs := checkApprovalReachable(nil); len(fs) != 0 {
 		t.Errorf("config nula não deveria gerar achado: %+v", fs)
 	}
 }
@@ -35,7 +35,7 @@ func TestMensagemNomeiaAsDuasSaidas(t *testing.T) {
 	cfg := &config.Config{Workflow: &config.Workflow{
 		Mode: config.ModeGitHub, Repo: "repo/inexistente-de-proposito", RequiredApprovals: &um,
 	}}
-	fs := checkAprovacaoAlcancavel(cfg)
+	fs := checkApprovalReachable(cfg)
 	if len(fs) == 0 {
 		t.Skip("sem `gh` autenticado neste ambiente — o achado não é produzido")
 	}

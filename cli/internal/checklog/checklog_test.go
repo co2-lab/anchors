@@ -11,12 +11,12 @@ import (
 
 func TestEspelhoDuplicaSaidaNoArquivo(t *testing.T) {
 	dir := t.TempDir()
-	e := Abrir(dir, true, "# cabeçalho\n\n")
+	e := Open(dir, true, "# cabeçalho\n\n")
 	if e == nil {
 		t.Fatal("Abrir devolveu nil")
 	}
 	fmt.Println("linha do relatório")
-	e.Fechar()
+	e.Close()
 
 	b, err := os.ReadFile(filepath.Join(dir, Dir, "check-all.txt"))
 	if err != nil {
@@ -37,13 +37,13 @@ func TestEspelhoDuplicaSaidaNoArquivo(t *testing.T) {
 func TestEscoposNaoSeSobrescrevem(t *testing.T) {
 	dir := t.TempDir()
 
-	e := Abrir(dir, true, "# all\n")
+	e := Open(dir, true, "# all\n")
 	fmt.Println("foto completa")
-	e.Fechar()
+	e.Close()
 
-	e = Abrir(dir, false, "# changed\n")
+	e = Open(dir, false, "# changed\n")
 	fmt.Println("incremental")
-	e.Fechar()
+	e.Close()
 
 	all, err := os.ReadFile(filepath.Join(dir, Dir, "check-all.txt"))
 	if err != nil {
@@ -65,13 +65,13 @@ func TestEscoposNaoSeSobrescrevem(t *testing.T) {
 // do outro lado, o comando travaria ao escrever o próprio relatório.
 func TestSaidaLongaNaoTrava(t *testing.T) {
 	dir := t.TempDir()
-	e := Abrir(dir, true, "")
+	e := Open(dir, true, "")
 	linha := strings.Repeat("x", 200)
 	for i := 0; i < 2000; i++ { // ~400KB
 		fmt.Println(linha)
 	}
 	fim := make(chan struct{})
-	go func() { e.Fechar(); close(fim) }()
+	go func() { e.Close(); close(fim) }()
 	select {
 	case <-fim:
 	case <-time.After(10 * time.Second):
@@ -96,12 +96,12 @@ func TestFalhaAoAbrirNaoDerruba(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, Dir), []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	e := Abrir(dir, true, "# nada\n")
+	e := Open(dir, true, "# nada\n")
 	if e != nil {
 		t.Error("Abrir devolveu espelho onde não podia criar o diretório")
 	}
-	e.Fechar() // seguro com nil
-	if c := e.Caminho(); c != "" {
+	e.Close() // seguro com nil
+	if c := e.Path(); c != "" {
 		t.Errorf("Caminho() = %q, queria vazio", c)
 	}
 	if os.Stdout == nil {

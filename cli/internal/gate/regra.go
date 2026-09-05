@@ -85,7 +85,7 @@ type Waiver struct {
 // e dispensar `spec-completa/sem-placeholder` cobre só aquela. A primeira é a saída
 // grossa para quem não conhece as regras; a segunda é a que preserva o resto do gate.
 func (d Waiver) Waived(id RuleID) (string, bool) {
-	motivo, ok := d.dispensouRegra(id)
+	motivo, ok := d.waivedRule(id)
 	if !ok {
 		return "", false
 	}
@@ -114,7 +114,7 @@ func (d Waiver) Waived(id RuleID) (string, bool) {
 //     sem identidade é um problema anterior — o `codigo-catalogado` é quem cobra isso, e
 //     dar uma saída lateral esconderia a causa.
 func (d Waiver) WaivedTarget(id RuleID, codigo string) (string, bool) {
-	motivo, ok := d.dispensouRegra(id)
+	motivo, ok := d.waivedRule(id)
 	if !ok {
 		return "", false
 	}
@@ -137,8 +137,8 @@ func (d Waiver) WaivedTarget(id RuleID, codigo string) (string, bool) {
 	return "", false
 }
 
-// dispensouRegra procura o motivo pelo ID exato e, depois, pelo gate inteiro.
-func (d Waiver) dispensouRegra(id RuleID) (string, bool) {
+// waivedRule procura o motivo pelo ID exato e, depois, pelo gate inteiro.
+func (d Waiver) waivedRule(id RuleID) (string, bool) {
 	if len(d.PorRegra) == 0 {
 		return "", false
 	}

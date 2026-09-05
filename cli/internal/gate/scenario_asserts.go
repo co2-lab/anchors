@@ -60,7 +60,7 @@ func checkScenarioAsserts(content string, n mapx.Node, root string, g *mapx.Grap
 		if !thens[primeira] {
 			continue
 		}
-		if code, tautologico := ehTautologia(resto); tautologico {
+		if code, tautologico := isTautology(resto); tautologico {
 			vazios = append(vazios, code)
 		}
 	}
@@ -78,9 +78,9 @@ func checkScenarioAsserts(content string, n mapx.Node, root string, g *mapx.Grap
 		len(vazios), strings.Join(vazios, ", "), kw.Then)
 }
 
-// ehTautologia: o resto do passo é só o código da regra, cercado de palavras de ligação?
+// isTautology: o resto do passo é só o código da regra, cercado de palavras de ligação?
 // A régua é mecânica de propósito — julgar prosa é trabalho de outro gate.
-func ehTautologia(resto string) (string, bool) {
+func isTautology(resto string) (string, bool) {
 	m := tautoCodeRE().FindStringSubmatch(resto)
 	if m == nil {
 		return "", false

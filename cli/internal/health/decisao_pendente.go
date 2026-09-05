@@ -24,7 +24,7 @@ import (
 //
 // Importa mais em projeto que adota o Anchors DEPOIS de pronto: é onde as perguntas se
 // acumulam (o código existe, e ninguém lembra por quê), e era onde o doctor menos ajudava.
-func checkDecisoesPendentes(g *mapx.Graph, root string, cfg *config.Config) []Finding {
+func checkPendingDecisions(g *mapx.Graph, root string, cfg *config.Config) []Finding {
 	if g == nil {
 		return nil
 	}

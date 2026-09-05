@@ -136,7 +136,7 @@ func checkObligationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 // Como o waiver, exige a justificativa escrita: `obligation_pending: <nome> — <quando>`.
 // Um marcador nu não assume dívida nenhuma — só esconde melhor.
 func pendingFor(content, obligation string) string {
-	return declaracaoComMotivo(content, "obligation_pending", obligation)
+	return declarationWithReason(content, "obligation_pending", obligation)
 }
 
 // headerHasAttr diz se o header `@anchors` declara o atributo-gatilho (ex.:
@@ -159,13 +159,13 @@ func waiverFor(content, obligation string) string {
 	// que o próprio nome da obrigação fornecesse o separador: em `pii-purgavel`, o `-`
 	// interno faria o regex ler nome=`pii` e motivo=`purgavel`, auto-eximindo qualquer
 	// obrigação com hífen no nome.
-	return declaracaoComMotivo(content, "obligation_waived", obligation)
+	return declarationWithReason(content, "obligation_waived", obligation)
 }
 
-// declaracaoComMotivo lê `<campo>: <obrigação> — <motivo>` do header e devolve o motivo.
+// declarationWithReason lê `<campo>: <obrigação> — <motivo>` do header e devolve o motivo.
 // Compartilhado por `obligation_waived` (dispensa) e `obligation_pending` (dívida
 // assumida): as duas são declarações que só valem COM justificativa escrita.
-func declaracaoComMotivo(content, campo, obligation string) string {
+func declarationWithReason(content, campo, obligation string) string {
 	re := regexp.MustCompile(`(?mi)^\s*(?://|#|<!--|\*)?\s*` + regexp.QuoteMeta(campo) + `:\s*` +
 		regexp.QuoteMeta(obligation) + `\s*(?:—|\s-\s)\s*(\S.*?)\s*$`)
 	if m := re.FindStringSubmatch(headerOf(content)); m != nil {

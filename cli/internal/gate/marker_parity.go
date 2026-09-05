@@ -69,7 +69,7 @@ func checkMarkerParity(g config.Gate, root string, _ *mapx.Graph, cfg *config.Co
 			"não há como saber quantas ocorrências cada regra precisa ter"
 	}
 
-	ocorr, err := varrerMarcacoes(root, prefixo, escopos, cfg)
+	ocorr, err := scanMarkings(root, prefixo, escopos, cfg)
 	if err != nil {
 		return Fail, "não foi possível varrer as marcações: " + err.Error()
 	}
@@ -131,9 +131,9 @@ func checkMarkerParity(g config.Gate, root string, _ *mapx.Graph, cfg *config.Co
 		len(nomes), prefixo, esperado)
 }
 
-// varrerMarcacoes devolve, por NOME de regra, os arquivos onde ela aparece, agrupados
+// scanMarkings devolve, por NOME de regra, os arquivos onde ela aparece, agrupados
 // pelo escopo declarado que os contém.
-func varrerMarcacoes(root, prefixo string, escopos []string, cfg *config.Config) (map[string]map[string][]string, error) {
+func scanMarkings(root, prefixo string, escopos []string, cfg *config.Config) (map[string]map[string][]string, error) {
 	// O nome da regra é o que vem depois do prefixo: letras, dígitos, `-` e `_`. Para
 	// aqui de propósito — a marcação costuma ser seguida de `:` e da prosa que explica.
 	re := regexp.MustCompile(`@` + regexp.QuoteMeta(prefixo) + `-([A-Za-z0-9_-]+)`)
@@ -144,7 +144,7 @@ func varrerMarcacoes(root, prefixo string, escopos []string, cfg *config.Config)
 			return nil // diretório ilegível não derruba a varredura inteira
 		}
 		if d.IsDir() {
-			if ignorado(d.Name()) {
+			if ignored(d.Name()) {
 				return filepath.SkipDir
 			}
 			return nil
@@ -172,7 +172,7 @@ func varrerMarcacoes(root, prefixo string, escopos []string, cfg *config.Config)
 			if ocorr[nome] == nil {
 				ocorr[nome] = map[string][]string{}
 			}
-			if !contemArquivo(ocorr[nome][esc], rel) {
+			if !containsFile(ocorr[nome][esc], rel) {
 				ocorr[nome][esc] = append(ocorr[nome][esc], rel)
 			}
 		}
@@ -193,7 +193,7 @@ func escopoDe(rel string, escopos []string) string {
 	return "(fora dos escopos)"
 }
 
-func contemArquivo(lista []string, alvo string) bool {
+func containsFile(lista []string, alvo string) bool {
 	for _, x := range lista {
 		if x == alvo {
 			return true
@@ -202,8 +202,8 @@ func contemArquivo(lista []string, alvo string) bool {
 	return false
 }
 
-// ignorado: diretórios que nunca contêm marcação de regra e cuja varredura só custa.
-func ignorado(nome string) bool {
+// ignored: diretórios que nunca contêm marcação de regra e cuja varredura só custa.
+func ignored(nome string) bool {
 	switch nome {
 	case ".git", "node_modules", "dist", "build", ".next", "coverage", "vendor", ".anchors":
 		return true
