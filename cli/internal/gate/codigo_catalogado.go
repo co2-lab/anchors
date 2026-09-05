@@ -31,7 +31,7 @@ import (
 //
 // A razão é obrigatória pelo mesmo motivo de sempre: um marcador nu vira um jeito
 // silencioso de calar o gate, e some o rastro de que houve decisão.
-func checkCodigoCatalogado(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, "a spec é o catálogo — é dela que o confronto parte"
 	}
@@ -39,14 +39,14 @@ func checkCodigoCatalogado(content string, n mapx.Node, root string, g *mapx.Gra
 		return Pending, "sem mapa carregado — o gate relacional precisa do grafo"
 	}
 
-	alvo, texto, ok := alvoDaSpec(n, root, g)
+	alvo, texto, ok := specTarget(n, root, g)
 	if !ok {
 		return Skip, "spec sem código ligado (`specifies`) — a ausência é do gate trinca-completa"
 	}
 
 	// Os símbolos que a spec já nomeia ou que o código dispensa saem da conta.
 	var orfaos []string
-	for _, s := range simbolosComLinha(texto) {
+	for _, s := range symbolsWithLine(texto) {
 		if strings.Contains(content, s.nome) {
 			continue
 		}
@@ -68,35 +68,35 @@ func checkCodigoCatalogado(content string, n mapx.Node, root string, g *mapx.Gra
 			"linha do símbolo, ou no comentário logo acima dela:\n"+
 			"    // @no-rule: <por que este símbolo não tem regra>\n"+
 			"    export function algo() { … }",
-		len(orfaos), alvo, primeiros(orfaos, 5))
+		len(orfaos), alvo, firstOnes(orfaos, 5))
 }
 
 // noRuleRE — a dispensa por SÍMBOLO, com razão obrigatória. Mesmo padrão do
 // `@no-code`/`@no-scenario` (CONCEPT §5.1).
 var noRuleRE = regexp.MustCompile(`@no-rule[^\S\n]*:[^\S\n]*\S+`)
 
-// exportadoRE casa o nome de um símbolo exportado.
+// exportedRE casa o nome de um símbolo exportado.
 //
 // ⚠️ É sintaxe de TypeScript/JavaScript. Num projeto Python, Go ou Ruby ele casa ZERO
 // símbolos e o gate passa em silêncio — verde sobre o que não conferiu. A generalização
 // (o projeto declarar o padrão, como em `mock_detect`) está pendente; até lá este gate
 // só tem efeito real em projetos JS/TS.
-var exportadoRE = regexp.MustCompile(
+var exportedRE = regexp.MustCompile(
 	`(?m)^\s*export\s+(?:async\s+)?(?:function|const|let|var|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)`)
 
-type simboloExportado struct {
+type exportedSymbol struct {
 	nome  string
 	linha string // a linha da declaração + a anterior (onde o comentário de dispensa vive)
 	num   int    // número da linha da declaração (1-based) — o endereço para quem vai corrigir
 }
 
-// simbolosComLinha devolve cada símbolo exportado junto do contexto onde a dispensa
+// symbolsWithLine devolve cada símbolo exportado junto do contexto onde a dispensa
 // poderia estar escrita — a própria linha ou a de cima, que é onde o comentário fica.
-func simbolosComLinha(codigo string) []simboloExportado {
+func symbolsWithLine(codigo string) []exportedSymbol {
 	linhas := strings.Split(codigo, "\n")
-	var out []simboloExportado
+	var out []exportedSymbol
 	for i, l := range linhas {
-		m := exportadoRE.FindStringSubmatch(l)
+		m := exportedRE.FindStringSubmatch(l)
 		if m == nil {
 			continue
 		}
@@ -110,14 +110,14 @@ func simbolosComLinha(codigo string) []simboloExportado {
 		//
 		// Pior: o mesmo arquivo passava em OUTRO símbolo por acaso, porque o nome dele
 		// aparecia no texto da spec. A declaração nunca era lida, e ninguém notava.
-		ctx := contextoDoSimbolo(linhas, i)
-		out = append(out, simboloExportado{nome: m[1], linha: ctx, num: i + 1})
+		ctx := symbolContext(linhas, i)
+		out = append(out, exportedSymbol{nome: m[1], linha: ctx, num: i + 1})
 	}
 	return out
 }
 
-// alvoDaSpec lê o arquivo que a spec descreve (aresta `specifies`).
-func alvoDaSpec(n mapx.Node, root string, g *mapx.Graph) (alvo, texto string, ok bool) {
+// specTarget lê o arquivo que a spec descreve (aresta `specifies`).
+func specTarget(n mapx.Node, root string, g *mapx.Graph) (alvo, texto string, ok bool) {
 	for _, e := range g.Neighbors(n.ID).Out {
 		if e.Type != mapx.EdgeSpecifies {
 			continue
@@ -131,12 +131,12 @@ func alvoDaSpec(n mapx.Node, root string, g *mapx.Graph) (alvo, texto string, ok
 	return "", "", false
 }
 
-// contextoDoSimbolo devolve a linha do símbolo mais o bloco de comentário acima dela.
+// symbolContext devolve a linha do símbolo mais o bloco de comentário acima dela.
 //
 // Sobe enquanto encontrar comentário (`//`, `*`, `/*`, `*/`) ou linha em branco DENTRO do
 // bloco — a branco separa parágrafos de um mesmo comentário, e parar nela cortaria a
 // explicação ao meio. A primeira linha de código encerra a subida.
-func contextoDoSimbolo(linhas []string, i int) string {
+func symbolContext(linhas []string, i int) string {
 	inicio := i
 	for j := i - 1; j >= 0; j-- {
 		t := strings.TrimSpace(linhas[j])
@@ -148,7 +148,7 @@ func contextoDoSimbolo(linhas []string, i int) string {
 		// Linha em branco só continua a subida se ainda houver comentário acima — senão
 		// o "bloco" engoliria o arquivo inteiro até o topo.
 		if t == "" {
-			if j == 0 || !ehComentarioAcima(linhas, j) {
+			if j == 0 || !isCommentAbove(linhas, j) {
 				break
 			}
 		}
@@ -157,7 +157,7 @@ func contextoDoSimbolo(linhas []string, i int) string {
 	return strings.Join(linhas[inicio:i+1], "\n")
 }
 
-func ehComentarioAcima(linhas []string, j int) bool {
+func isCommentAbove(linhas []string, j int) bool {
 	for k := j - 1; k >= 0; k-- {
 		t := strings.TrimSpace(linhas[k])
 		if t == "" {

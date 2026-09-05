@@ -21,15 +21,30 @@ documentação escrita a posteriori. Tudo mais (plano, mapa de dependências,
 testes, gates de qualidade) deriva da spec e é confrontado contra ela. Veja o
 pilar [Spec](/docs/spec/) para a disciplina completa.
 
-## Duas partes
+## Três partes
 
-**A doutrina** — o conceito, agnóstico de ferramenta: os 6 pilares e o
-mecanismo comum. São os documentos desta seção.
+**A doutrina** — o conceito, agnóstico de ferramenta: os 6 pilares e o mecanismo
+comum.
 
-**O CLI** — a ferramenta em Go que uma IA opera para exercitar o ciclo. Veja
-[O CLI](/docs/cli/).
+**A operação** — como um dia de trabalho acontece, como configurar, e o que cada
+gate mede.
 
-## Por onde começar a ler
+**O CLI** — a ferramenta em Go que uma IA opera para exercitar o ciclo.
+
+## Por onde começar
+
+**Se você vai USAR o Anchors num projeto**, comece pela operação — a doutrina
+faz mais sentido depois de você ter visto o ciclo rodar:
+
+1. [**O CLI**](/docs/cli/) — instale, e rode os primeiros cinco minutos.
+2. [**O fluxo de trabalho**](/docs/fluxo-de-trabalho/) — como um dia de trabalho
+   acontece, do pedido de trabalho ao merge.
+3. [**O anchors.yaml**](/docs/anchors-yaml/) — o que cada bloco de configuração
+   decide.
+4. [**Os gates**](/docs/gates/) — o catálogo, e o que ligar em cada tipo de
+   projeto.
+
+**Se você quer ENTENDER o Anchors**, comece pela doutrina:
 
 1. [**Conceito**](/docs/conceito/) — a fundação: a âncora, a maturidade, o
    grafo, a sincronia, as issues. Todos os pilares o pressupõem.
@@ -37,4 +52,8 @@ mecanismo comum. São os documentos desta seção.
    [Planejamento](/docs/planejamento/) → [Spec](/docs/spec/) →
    [Rastreabilidade](/docs/rastreabilidade/) → [Propagação](/docs/propagacao/) →
    [Qualidade](/docs/qualidade/).
-3. [**O CLI**](/docs/cli/) — o estado da ferramenta, comando a comando.
+
+## Quando algo der errado
+
+- [**Congelar o projeto**](/docs/congelar/) — o botão de pânico: como parar todo
+  o trabalho quando um problema precisa ser resolvido antes.

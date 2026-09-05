@@ -31,10 +31,10 @@ var workflowsFS embed.FS
 //go:embed board
 var boardFS embed.FS
 
-// ArquivoDoBoard é onde a página mora, relativa à raiz do projeto. Em `.github/` e não em
+// BoardFile é onde a página mora, relativa à raiz do projeto. Em `.github/` e não em
 // `docs/`: é infraestrutura do fluxo, não documentação do produto, e misturá-la com o que
 // o time escreve convida a alguém a editá-la sem saber que o `--fix` a mantém.
-const ArquivoDoBoard = ".github/anchors-board.html"
+const BoardFile = ".github/anchors-board.html"
 
 // Workflow é um pipeline do fluxo GitHub, com o que o Anchors precisa saber para
 // verificar (doctor) e semear (doctor --fix).
@@ -92,7 +92,7 @@ var WorkflowsDoFluxo = []Workflow{
 	},
 }
 
-// ProtecaoDeBranch é o que o modo `github` exige da `main`: nada entra sem PR.
+// BranchProtection é o que o modo `github` exige da `main`: nada entra sem PR.
 //
 // É o que torna o ciclo de revisão possível. A §7.9 do BOOTSTRAP diz que o agente sobe o
 // código e ABRE O PR, e o card vai para `ready-to-review` — sem PR não há o que revisar,
@@ -101,7 +101,7 @@ var WorkflowsDoFluxo = []Workflow{
 // E é o que o pipeline de identificação pressupõe: ele dispara na abertura do PR, porque
 // o push na main acontece DEPOIS do merge, quando o trabalho já terminou. Push direto na
 // main pula o card, pula a revisão, e pula o pipeline.
-type ProtecaoDeBranch struct {
+type BranchProtection struct {
 	// ExigePR — nada entra na main sem pull request.
 	ExigePR bool
 	// RevisoesNecessarias — quantas aprovações. Zero é legítimo num time de uma pessoa
@@ -110,13 +110,13 @@ type ProtecaoDeBranch struct {
 	RevisoesNecessarias int
 }
 
-// ProtecaoExigida é o mínimo que o fluxo pressupõe.
-var ProtecaoExigida = ProtecaoDeBranch{ExigePR: true, RevisoesNecessarias: 0}
+// RequiredProtection é o mínimo que o fluxo pressupõe.
+var RequiredProtection = BranchProtection{ExigePR: true, RevisoesNecessarias: 0}
 
 // DirWorkflows é onde os pipelines moram no projeto.
 const DirWorkflows = ".github/workflows"
 
-// EstadosDoTrabalho são as LABELS que carregam o estado de um card, na ordem do fluxo.
+// WorkStates são as LABELS que carregam o estado de um card, na ordem do fluxo.
 //
 // O estado é uma LABEL, e não a coluna do Project (ver BOOTSTRAP.md §7.13). A escolha
 // anterior foi a coluna, e ela cobrava um preço que só apareceu no uso: escrever num
@@ -132,7 +132,7 @@ const DirWorkflows = ".github/workflows"
 //
 // O par `ready-to-x` / `in-x` é o que torna a fila legível: um diz "disponível para
 // alguém pegar", o outro "alguém está fazendo".
-var EstadosDoTrabalho = []string{
+var WorkStates = []string{
 	"anchors:to-do",
 	"anchors:in-progress",
 	"anchors:ready-to-review",
@@ -159,12 +159,19 @@ var EstadosDoTrabalho = []string{
 // fluxo tem mais (plano → fase → spec → achado). A árvore do board já se monta pelo
 // `parent:` do artefato; esta label é o que amarra o achado que NÃO tem artefato — uma
 // config, um pipeline, um arquivo que nenhuma spec governa.
-const PrefixoLabelSob = "anchors:sob-"
+const PrefixoLabelSob = "anchors:under-"
+
+// PrefixoLabelSobAntigo é o nome anterior, em português.
+//
+// Ele está em ISSUES do GitHub, não só em configuração: renomear a constante não renomeia
+// as labels que já existem. Os pipelines aceitam os dois enquanto durar a migração, e o
+// `anchors doctor --fix` renomeia as labels no board.
+const PrefixoLabelSobAntigo = "anchors:sob-"
 
 // LabelSob devolve a label que liga um card ao trabalho de origem.
 func LabelSob(card string) string { return PrefixoLabelSob + card }
 
-// LabelPrecisaDoUsuario marca o card que ESPERA UMA PESSOA.
+// LabelNeedsUser marca o card que ESPERA UMA PESSOA.
 //
 // Não é um estado do fluxo, e por isso não entra em `EstadosDoTrabalho`: o card continua
 // onde está (`in-review`, `to-do`), e o que muda é QUEM pode destravá-lo. Fosse estado,
@@ -173,7 +180,10 @@ func LabelSob(card string) string { return PrefixoLabelSob + card }
 //
 // É a mesma distinção que `issue.DonoUsuário` faz para as issues em `issues/`: o dono é
 // um eixo independente do estado.
-const LabelPrecisaDoUsuario = "anchors:precisa-do-usuario"
+const LabelNeedsUser = "anchors:needs-user"
+
+// LabelNeedsUserLegacy é o nome anterior. Ver PrefixoLabelSobAntigo.
+const LabelNeedsUserLegacy = "anchors:precisa-do-usuario"
 
 // ColunasDoBoard são os nomes das colunas do Project que ESPELHAM os estados acima.
 // O board é opcional: quem o quiser cria as colunas com estes nomes e liga a automação
@@ -205,10 +215,10 @@ var ColunasDisponiveis = []string{
 	"TO DO",
 }
 
-// EstadoFinalDoAnchors é o último estado que o Anchors ESCREVE.
-const EstadoFinalDoAnchors = "anchors:ready-to-test"
+// AnchorsFinalState é o último estado que o Anchors ESCREVE.
+const AnchorsFinalState = "anchors:ready-to-test"
 
-// EstadosRecicláveis são os únicos estados de onde o `stale` tira um card.
+// RecyclableStates são os únicos estados de onde o `stale` tira um card.
 //
 // A distinção é entre trabalho TRAVADO e trabalho ESPERANDO. Um card em `in-progress`
 // sem sinal de vida é um agente que morreu — reciclar devolve o trabalho à fila. Um card
@@ -218,17 +228,17 @@ const EstadoFinalDoAnchors = "anchors:ready-to-test"
 //
 // Só entram aqui os estados de trabalho ATIVO, aqueles em que alguém deveria estar
 // mexendo agora. Os `ready-to-*` são filas de espera, e esperar não é estar travado.
-var EstadosRecicláveis = []string{
+var RecyclableStates = []string{
 	"anchors:in-progress",
 	"anchors:in-review",
 	"anchors:in-test",
 }
 
-// EstadosDisponiveis são os estados de onde um agente TIRA trabalho, em ORDEM DE
+// AvailableStates são os estados de onde um agente TIRA trabalho, em ORDEM DE
 // PRIORIDADE: da direita para a esquerda do fluxo. O trabalho mais ADIANTADO vem
 // primeiro — terminar o que está quase pronto antes de começar coisa nova é o que impede
 // o board de encher de trabalho pela metade.
-var EstadosDisponiveis = []string{
+var AvailableStates = []string{
 	"anchors:ready-to-review",
 	"anchors:to-do",
 }
@@ -240,9 +250,9 @@ var EstadosDisponiveis = []string{
 // `anchors status` mostra), mas não escreve nelas.
 const ColunaFinalDoAnchors = "READY TO TEST"
 
-// ColunasQueOAnchorsEscreve são as que os pipelines do Anchors movem. Serve ao doctor:
+// ColumnsAnchorsWrites são as que os pipelines do Anchors movem. Serve ao doctor:
 // uma coluna ausente aqui quebra o fluxo; uma ausente depois é problema do time.
-func ColunasQueOAnchorsEscreve() []string {
+func ColumnsAnchorsWrites() []string {
 	for i, c := range ColunasDoBoard {
 		if c == ColunaFinalDoAnchors {
 			return ColunasDoBoard[:i+1]
@@ -251,9 +261,9 @@ func ColunasQueOAnchorsEscreve() []string {
 	return ColunasDoBoard
 }
 
-// FaltaWorkflow diz quais dos pipelines do fluxo não existem no projeto. Só presença —
+// MissingWorkflow diz quais dos pipelines do fluxo não existem no projeto. Só presença —
 // a coerência do conteúdo é outra pergunta, respondida por `SemConcurrency`.
-func FaltaWorkflow(root string) []Workflow {
+func MissingWorkflow(root string) []Workflow {
 	var faltam []Workflow
 	for _, w := range WorkflowsDoFluxo {
 		if _, err := os.Stat(filepath.Join(root, DirWorkflows, w.Arquivo)); err != nil {
@@ -317,12 +327,12 @@ func ÉTemplateIntacto(root, arquivo string) bool {
 	return strings.Contains(string(b), MarcadorDeTemplate)
 }
 
-// WorkflowsDesatualizados diz quais pipelines instalados são do Anchors (marcador
+// OutdatedWorkflows diz quais pipelines instalados são do Anchors (marcador
 // intacto) e diferem do template atual — os que `--fix` pode e deve atualizar.
 //
 // Um pipeline SEM o marcador não entra aqui mesmo que difira: é do time, e a diferença é
 // a customização dele.
-func WorkflowsDesatualizados(root string, cfg *config.Config) []Workflow {
+func OutdatedWorkflows(root string, cfg *config.Config) []Workflow {
 	var velhos []Workflow
 	for _, w := range WorkflowsDoFluxo {
 		if !ÉTemplateIntacto(root, w.Arquivo) {
@@ -336,7 +346,7 @@ func WorkflowsDesatualizados(root string, cfg *config.Config) []Workflow {
 		if err != nil {
 			continue
 		}
-		esperado = aplicaBranchDeIntegracao(esperado, cfg.Workflow.BranchDeIntegracao())
+		esperado = applyIntegrationBranch(esperado, cfg.Workflow.IntegrationBranchOrDefault())
 		if !bytes.Equal(atual, esperado) {
 			velhos = append(velhos, w)
 		}
@@ -370,7 +380,7 @@ func SemeiaWorkflows(root string, cfg *config.Config) ([]string, error) {
 		if err != nil {
 			return escritos, fmt.Errorf("ler o template %s: %w", w.Arquivo, err)
 		}
-		conteudo = aplicaBranchDeIntegracao(conteudo, cfg.Workflow.BranchDeIntegracao())
+		conteudo = applyIntegrationBranch(conteudo, cfg.Workflow.IntegrationBranchOrDefault())
 		if err := os.WriteFile(dest, conteudo, 0o644); err != nil {
 			return escritos, fmt.Errorf("escrever %s: %w", dest, err)
 		}
@@ -389,7 +399,7 @@ func SemeiaWorkflows(root string, cfg *config.Config) ([]string, error) {
 // pipelines: intocada pelo marcador, o Anchors a atualiza; editada, ela passa a ser do
 // time.
 func semeiaBoard(root string) error {
-	dest := filepath.Join(root, ArquivoDoBoard)
+	dest := filepath.Join(root, BoardFile)
 	conteudo, err := fs.ReadFile(boardFS, "board/anchors-board.html")
 	if err != nil {
 		return fmt.Errorf("ler o template do board: %w", err)
@@ -403,11 +413,11 @@ func semeiaBoard(root string) error {
 	return os.WriteFile(dest, conteudo, 0o644)
 }
 
-// aplicaBranchDeIntegracao troca o branch cravado no template pelo que o projeto
+// applyIntegrationBranch troca o branch cravado no template pelo que o projeto
 // declarou. A linha alvo é marcada com `# anchors:integration-branch` — um marcador, e
 // não uma busca por "main", porque "main" aparece em comentário e em outros contextos, e
 // substituir a ocorrência errada quebraria o pipeline de um jeito difícil de ver.
-func aplicaBranchDeIntegracao(conteudo []byte, branch string) []byte {
+func applyIntegrationBranch(conteudo []byte, branch string) []byte {
 	if branch == "" || branch == "main" {
 		return conteudo
 	}

@@ -23,7 +23,7 @@ func cfgGitHub() *config.Config {
 func TestAmbienteNaoCobraNadaNoModoLocal(t *testing.T) {
 	dir := t.TempDir()
 
-	if fs := checkAmbienteGitHub(&config.Config{}, dir); len(fs) != 0 {
+	if fs := checkGitHubEnv(&config.Config{}, dir); len(fs) != 0 {
 		t.Errorf("modo local não usa board nem pipelines: %+v", fs)
 	}
 }
@@ -112,7 +112,7 @@ func TestDoctorNaoCobraBoard(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fs := checkAmbienteGitHub(cfgGitHub(), dir)
+	fs := checkGitHubEnv(cfgGitHub(), dir)
 
 	for _, f := range fs {
 		if strings.Contains(strings.ToLower(f.Check), "board") ||

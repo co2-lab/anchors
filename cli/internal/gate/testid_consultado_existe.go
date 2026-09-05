@@ -12,7 +12,7 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// checkTestIDConsultadoExiste — a QUARTA aresta do contrato de testID, a que nenhum
+// checkQueriedTestIDExists — a QUARTA aresta do contrato de testID, a que nenhum
 // gate cobria: o flow de ponta a ponta CONSULTA um handle que o código não expõe.
 //
 // Por que não cabe no `testid-coerente`: aquele gate parte de UMA spec, e a superfície
@@ -37,14 +37,14 @@ import (
 // nenhum flow consulta) NÃO é ofensa: nem todo elemento marcado precisa de cenário
 // automatizado, e o `testid-coerente` já reporta o consumo por spec, onde a pergunta
 // tem dono.
-func checkTestIDConsultadoExiste(_ string, _ mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkQueriedTestIDExists(_ string, _ mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	attr := handleDeTeste(cfg)
 	if attr == "" {
 		// Inferir `testID` por default faria o gate reportar VERDE sobre o que não
 		// conferiu — a pior falha possível num medidor.
 		return Skip, "o projeto não declara `derived.test_handle` — não há atributo de ancoragem a confrontar"
 	}
-	flows := arquivosDaSuperficieE2E(root, cfg)
+	flows := e2eSurfaceFiles(root, cfg)
 	if len(flows) == 0 {
 		// Sem superfície declarada não há o que confrontar. Skip é honesto: "não medi"
 		// não é "está limpo".
@@ -55,7 +55,7 @@ func checkTestIDConsultadoExiste(_ string, _ mapx.Node, root string, g *mapx.Gra
 	// handle pode nascer num componente que nenhuma spec de tela reivindica (o
 	// `tabBarButtonTestID` do navegador é o caso real — `:tab-import` não pertence a
 	// tela nenhuma), e cobrar dele por ausência no grafo acusaria quem cumpre.
-	expostos := handlesExpostosNoProjeto(root, attr, cfg)
+	expostos := projectExposedHandles(root, attr, cfg)
 	if len(expostos) == 0 {
 		return Skip, "nenhum `" + attr + "` encontrado no código — sem lado para confrontar"
 	}
@@ -70,11 +70,11 @@ func checkTestIDConsultadoExiste(_ string, _ mapx.Node, root string, g *mapx.Gra
 			continue
 		}
 		rel, _ := filepath.Rel(root, f.path)
-		for _, id := range handlesConsultados(string(b)) {
+		for _, id := range queriedHandles(string(b)) {
 			if vistos[id+"|"+rel] {
 				continue
 			}
-			if handleExiste(expostos, id) {
+			if handleExists(expostos, id) {
 				continue
 			}
 			vistos[id+"|"+rel] = true
@@ -109,17 +109,17 @@ func checkTestIDConsultadoExiste(_ string, _ mapx.Node, root string, g *mapx.Gra
 		len(ordem), strings.Join(linhas, "\n"))
 }
 
-// arquivoE2E é um flow da superfície de ponta a ponta.
-type arquivoE2E struct{ path string }
+// e2eFile é um flow da superfície de ponta a ponta.
+type e2eFile struct{ path string }
 
-// arquivosDaSuperficieE2E devolve os CAMINHOS dos flows (o `lerSuperficieE2E` irmão
+// e2eSurfaceFiles devolve os CAMINHOS dos flows (o `lerSuperficieE2E` irmão
 // devolve só o conteúdo, e aqui o caminho é o que o laudo precisa nomear para o
 // achado ser acionável).
 //
 // A resolução é em DOIS passos e confundi-los custa caro: `surfaces[e2e]` devolve a
 // CHAVE da superfície (ex.: "e2e"), não um caminho — quem tem o caminho é
 // `files[chave]`.
-func arquivosDaSuperficieE2E(root string, cfg *config.Config) []arquivoE2E {
+func e2eSurfaceFiles(root string, cfg *config.Config) []e2eFile {
 	if cfg == nil || cfg.Derived == nil {
 		return nil
 	}
@@ -144,8 +144,8 @@ func arquivosDaSuperficieE2E(root string, cfg *config.Config) []arquivoE2E {
 	if padrao == "" {
 		return nil
 	}
-	dir := filepath.Join(root, primeiroSegmentoEstatico(padrao))
-	var out []arquivoE2E
+	dir := filepath.Join(root, firstStaticSegment(padrao))
+	var out []e2eFile
 	_ = filepath.Walk(dir, func(p string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return nil
@@ -155,13 +155,13 @@ func arquivosDaSuperficieE2E(root string, cfg *config.Config) []arquivoE2E {
 		if ext := strings.ToLower(filepath.Ext(p)); ext != ".yaml" && ext != ".yml" {
 			return nil
 		}
-		out = append(out, arquivoE2E{path: p})
+		out = append(out, e2eFile{path: p})
 		return nil
 	})
 	return out
 }
 
-// reHandleConsultado captura o valor de `id:` nos flows — a forma como o Maestro (e
+// queriedHandleRE captura o valor de `id:` nos flows — a forma como o Maestro (e
 // runners equivalentes) referenciam o handle.
 //
 // Aceita aspas simples e duplas em ALTERNÂNCIA, não por retrovisor: a RE2 do Go não
@@ -169,14 +169,14 @@ func arquivosDaSuperficieE2E(root string, cfg *config.Config) []arquivoE2E {
 // mutuamente exclusivos — o que casou é o que vem preenchido.
 // A aspa dupla é o caso da INTERPOLAÇÃO (`id: "${':bgcr-' + output.data.ns}"`),
 // descartada adiante.
-var reHandleConsultado = regexp.MustCompile(`(?m)^\s*id:\s*(?:'([^']*)'|"([^"]*)")\s*$`)
+var queriedHandleRE = regexp.MustCompile(`(?m)^\s*id:\s*(?:'([^']*)'|"([^"]*)")\s*$`)
 
-// handlesConsultados extrai os handles que um flow procura, descartando as formas em
+// queriedHandles extrai os handles que um flow procura, descartando as formas em
 // que o id é COMPOSTO em runtime — nelas o gate não tem como saber o valor final, e
 // acusar seria inventar defeito.
-func handlesConsultados(src string) []string {
+func queriedHandles(src string) []string {
 	var out []string
-	for _, m := range reHandleConsultado.FindAllStringSubmatch(src, -1) {
+	for _, m := range queriedHandleRE.FindAllStringSubmatch(src, -1) {
 		// Grupo 1 = aspa simples, grupo 2 = aspa dupla; só um vem preenchido.
 		bruto := strings.TrimSpace(m[1])
 		if bruto == "" {
@@ -210,7 +210,7 @@ func handlesConsultados(src string) []string {
 	return out
 }
 
-// handlesExpostosNoProjeto varre o código do projeto e devolve tudo que ele marca com
+// projectExposedHandles varre o código do projeto e devolve tudo que ele marca com
 // o atributo declarado.
 //
 // Varre por EXTENSÃO de fonte e ignora as pastas que não são código do projeto
@@ -218,7 +218,7 @@ func handlesConsultados(src string) []string {
 // (`.test.tsx`) NÃO conta como exposto: teste consulta handle, não o cria — e foi
 // exatamente assim que um id fantasma (`:recent-import-item` no app de referência) sobreviveu
 // referenciado por um teste de unidade.
-func handlesExpostosNoProjeto(root, attr string, cfg *config.Config) []string {
+func projectExposedHandles(root, attr string, cfg *config.Config) []string {
 	ignorar := map[string]bool{
 		"node_modules": true, ".git": true, "dist": true, "build": true,
 		".anchors": true, "coverage": true, "ios": true, "android": true,
@@ -249,7 +249,7 @@ func handlesExpostosNoProjeto(root, attr string, cfg *config.Config) []string {
 			return nil
 		}
 		src := string(b)
-		out = append(out, testIDsExpostos(src, attr)...)
+		out = append(out, exposedTestIDs(src, attr)...)
 		// O reconhecedor compartilhado é CONSERVADOR de propósito: ele responde "quem é
 		// o dono deste handle", e para isso só conta o que está colado ao atributo. Aqui
 		// a pergunta é outra — "este handle existe em ALGUM lugar do código?" — e as duas
@@ -262,20 +262,20 @@ func handlesExpostosNoProjeto(root, attr string, cfg *config.Config) []string {
 		// Num gate que ACUSA ausência, o erro de ser frouxo (deixar passar um id órfão)
 		// é muito menos grave que o de ser estrito (acusar quem cumpre) — por isso aqui
 		// colhemos todo literal com cara de handle do arquivo.
-		out = append(out, handlesLiteraisSoltos(src)...)
+		out = append(out, looseLiteralHandles(src)...)
 		out = append(out, sufixosCompostosDeProp(src)...)
 		return nil
 	})
 	return out
 }
 
-// handleExiste confronta um handle consultado contra o universo exposto.
+// handleExists confronta um handle consultado contra o universo exposto.
 //
 // Não é igualdade de string: o exposto pode ser um TEMPLATE (`item-*`, de
 // “ testID={`:item-${id}`} “) e o consultado uma instância — ou o inverso, quando o
 // flow procura por padrão. Ambos os lados podem carregar curinga, e os dois casam.
-func handleExiste(expostos []string, id string) bool {
-	if cobertoPor(expostos, id) {
+func handleExists(expostos []string, id string) bool {
+	if coveredBy(expostos, id) {
 		return true
 	}
 	// O consultado é a CABEÇA de um id composto no código: `:revi-review-tx` casa
@@ -315,9 +315,9 @@ func handleExiste(expostos []string, id string) bool {
 // no reconhecedor estrito, que é o comportamento correto por omissão.
 var reHandleLiteralSolto = regexp.MustCompile("[\"'`](:[a-zA-Z][a-zA-Z0-9._-]*)")
 
-// handlesLiteraisSoltos colhe os literais marcados do arquivo, normalizando o template
+// looseLiteralHandles colhe os literais marcados do arquivo, normalizando o template
 // (`:foo-${i}` vira `foo-*`) do mesmo jeito que o reconhecedor estrito faz.
-func handlesLiteraisSoltos(src string) []string {
+func looseLiteralHandles(src string) []string {
 	var out []string
 	for _, m := range reHandleLiteralSolto.FindAllStringSubmatch(src, -1) {
 		id := m[1]

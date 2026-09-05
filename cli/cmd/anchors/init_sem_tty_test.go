@@ -9,7 +9,7 @@ import (
 // Sem citar o modo não-interativo, o comando parece um beco: "é interativo e não há
 // terminal" descreve o problema e não oferece nada.
 func TestErroSemTTYOfereceOModoNaoInterativo(t *testing.T) {
-	msg := erroSemTTY("Nada foi escrito.").Error()
+	msg := errNoTTY("Nada foi escrito.").Error()
 
 	if !strings.Contains(msg, "--non-interactive") {
 		t.Errorf("a mensagem tem de nomear a saída:\n%s", msg)

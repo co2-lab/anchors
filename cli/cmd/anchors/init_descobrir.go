@@ -11,7 +11,7 @@ import (
 	"github.com/co2-lab/anchors/internal/initx"
 )
 
-// etapaDescobrir é o passo do `init` que reconhece a fase que ainda não aconteceu.
+// discoverStep é o passo do `init` que reconhece a fase que ainda não aconteceu.
 //
 // `anchors init` INFERE a Estrutura do disco. Num diretório vazio não há o que inferir —
 // e ele pergunta "quais diretórios de código tratar como camadas?", cuja resposta honesta
@@ -26,20 +26,20 @@ import (
 // executar, e a IA recebe um convite quando precisava de uma tarefa.
 //
 // Devolve false quando o `init` deve PARAR: só acontece quando um prompt não pôde rodar.
-func etapaDescobrir(root string, p *initx.Proposal) bool {
+func discoverStep(root string, p *initx.Proposal) bool {
 	if !initx.PrecisaDescobrir(root, p) {
 		return true
 	}
-	if initx.DetectaOperador(temTTY(), os.Getenv) == initx.OperadorIA {
-		imprimeOrdemDeServico()
+	if initx.DetectOperator(hasTTY(), os.Getenv) == initx.OperadorIA {
+		printWorkOrder()
 		return true
 	}
-	return instruiPessoa(root)
+	return instructPerson(root)
 }
 
-// imprimeOrdemDeServico é o texto para uma IA operando o CLI. Não pergunta nada: quem lê
+// printWorkOrder é o texto para uma IA operando o CLI. Não pergunta nada: quem lê
 // isto pode agir, e o que ela precisa é da TAREFA, com os passos na ordem.
-func imprimeOrdemDeServico() {
+func printWorkOrder() {
 	fmt.Println(`
 ┌─ A fase DESCOBRIR não aconteceu neste projeto ──────────────────────────────┐
 
@@ -65,10 +65,10 @@ responde, e delegar a um subagente que não fala com ele não produz resposta.
 	fmt.Println()
 }
 
-// instruiPessoa é o caminho de quem está sozinho no terminal. O Anchors não conduz a
+// instructPerson é o caminho de quem está sozinho no terminal. O Anchors não conduz a
 // entrevista (não embute modelo — `guide project` diz isso explicitamente), então ele
 // instrui e, quando sabe qual IA está instalada, oferece abri-la com o prompt pronto.
-func instruiPessoa(root string) bool {
+func instructPerson(root string) bool {
 	fmt.Println(`
 ⚠ A fase DESCOBRIR ainda não aconteceu neste projeto.
 
@@ -80,8 +80,8 @@ func instruiPessoa(root string) bool {
   → estrutura → ferramental), conduzida por uma IA, que produz PROJECT.md e
   INSIGHTS.md. O Anchors não a conduz: ele não embute modelo, só fornece a régua.`)
 
-	nome := initx.NomeDoAgente(os.Getenv)
-	comando := initx.ComandoParaAbrirIA(os.Getenv)
+	nome := initx.AgentName(os.Getenv)
+	comando := initx.CommandToOpenAI(os.Getenv)
 
 	if len(comando) > 0 {
 		fmt.Printf("\n  Detectei %s nesta máquina.\n", nome)
@@ -89,9 +89,9 @@ func instruiPessoa(root string) bool {
 			if erroDePrompt {
 				return false
 			}
-			if err := abreIA(root, comando); err != nil {
+			if err := openAI(root, comando); err != nil {
 				fmt.Printf("  ⚠ não deu para abrir: %v\n", err)
-				imprimePassoAPasso()
+				printStepByStep()
 			}
 			return true
 		}
@@ -99,13 +99,13 @@ func instruiPessoa(root string) bool {
 			return false
 		}
 	}
-	imprimePassoAPasso()
+	printStepByStep()
 	return true
 }
 
-// imprimePassoAPasso é a saída para quem prefere conduzir sozinho — ou para quando o
+// printStepByStep é a saída para quem prefere conduzir sozinho — ou para quando o
 // Anchors não sabe qual IA abrir. O prompt vai inteiro, pronto para colar.
-func imprimePassoAPasso() {
+func printStepByStep() {
 	fmt.Println(`
   Para fazer você mesmo:
 
@@ -115,28 +115,28 @@ func imprimePassoAPasso() {
     4. volte aqui e rode ` + "`anchors init`" + ` de novo.
 
   ── prompt ───────────────────────────────────────────────────────────────────`)
-	fmt.Printf("  %s\n", quebraEm(initx.PromptDescobrir, 76, "  "))
+	fmt.Printf("  %s\n", breakAt(initx.PromptDescobrir, 76, "  "))
 	fmt.Println("  ─────────────────────────────────────────────────────────────────────────────")
 	fmt.Println("\n  Seguindo com o init assim mesmo (as respostas ficarão sem base).")
 	fmt.Println()
 }
 
-// abreIA executa a ferramenta detectada com o prompt. Roda com os fluxos herdados: a
+// openAI executa a ferramenta detectada com o prompt. Roda com os fluxos herdados: a
 // entrevista É uma conversa, e capturar a saída deixaria o usuário diante de um processo
 // mudo que não dá para responder.
 //
 // Sem shell: o argv vai direto para o processo. O prompt tem aspas e parênteses, e passá-lo
 // por `sh -c` faria o escape ser a única coisa entre o texto e o interpretador.
-func abreIA(root string, argv []string) error {
+func openAI(root string, argv []string) error {
 	c := exec.Command(argv[0], argv[1:]...)
 	c.Dir = root
 	c.Stdin, c.Stdout, c.Stderr = os.Stdin, os.Stdout, os.Stderr
 	return c.Run()
 }
 
-// quebraEm reflui o texto numa largura, prefixando as linhas seguintes. Um prompt de 400
+// breakAt reflui o texto numa largura, prefixando as linhas seguintes. Um prompt de 400
 // caracteres numa linha só é impossível de ler no terminal e feio de copiar.
-func quebraEm(s string, largura int, prefixo string) string {
+func breakAt(s string, largura int, prefixo string) string {
 	var linhas []string
 	var atual string
 	for _, palavra := range strings.Fields(s) {
@@ -157,9 +157,9 @@ func quebraEm(s string, largura int, prefixo string) string {
 	return strings.Join(linhas, "\n"+prefixo)
 }
 
-// temTTY diz se há terminal interativo na entrada. É a evidência mais fraca de quem
+// hasTTY diz se há terminal interativo na entrada. É a evidência mais fraca de quem
 // opera (um pipe qualquer produz o mesmo resultado), por isso `DetectaOperador` só
 // recorre a ela depois de procurar as variáveis que um agente declara.
-func temTTY() bool {
+func hasTTY() bool {
 	return isatty.IsTerminal(os.Stdin.Fd()) || isatty.IsCygwinTerminal(os.Stdin.Fd())
 }

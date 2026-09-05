@@ -117,5 +117,5 @@ cria a impressão de que alguém conferiu.
 
 Achou algo que não é deste PR? Registre em vez de só comentar:
 
-    anchors escalate "<o que está errado>" --sobre <arquivo> --card <o card do PR>
+    anchors escalate "<o que está errado>" --about <arquivo> --card <o card do PR>
 `

@@ -45,9 +45,9 @@ func TestSelectNodesDistingueRegidoDeNaoRegido(t *testing.T) {
 		if err == nil {
 			t.Fatal("passou sem erro — arquivo regido fora do mapa tem de barrar o commit")
 		}
-		var nr errNaoRegido
+		var nr errNotGoverned
 		if errors.As(err, &nr) {
-			t.Fatalf("classificado como NÃO-REGIDO (sairia %d, o hook faria continue): %v", ExitNaoRegido, err)
+			t.Fatalf("classificado como NÃO-REGIDO (sairia %d, o hook faria continue): %v", ExitNotGoverned, err)
 		}
 		if !strings.Contains(err.Error(), "REGIDO") {
 			t.Fatalf("mensagem não diz que o arquivo é regido: %v", err)
@@ -59,7 +59,7 @@ func TestSelectNodesDistingueRegidoDeNaoRegido(t *testing.T) {
 		if err == nil {
 			t.Fatal("esperava o sinal de não-regido, veio nil")
 		}
-		var nr errNaoRegido
+		var nr errNotGoverned
 		if !errors.As(err, &nr) {
 			t.Fatalf("não sinalizou não-regido — o hook barraria package.json: %v", err)
 		}
@@ -72,7 +72,7 @@ func TestSelectNodesDistingueRegidoDeNaoRegido(t *testing.T) {
 		if err == nil {
 			t.Fatal("esperava erro para caminho inexistente")
 		}
-		var nr errNaoRegido
+		var nr errNotGoverned
 		if errors.As(err, &nr) {
 			t.Fatalf("caminho inexistente classificado como não-regido: %v", err)
 		}
@@ -87,9 +87,9 @@ func TestSelectNodesDistingueRegidoDeNaoRegido(t *testing.T) {
 		iss := "issues/done/2026-08-15--violation--x.md"
 		os.WriteFile(filepath.Join(dir, iss), []byte("# issue\n"), 0o644)
 		_, _, err := selectNodes(g, cfg, false, []string{iss}, dir)
-		var nr errNaoRegido
+		var nr errNotGoverned
 		if !errors.As(err, &nr) {
-			t.Fatalf("issues/ deveria ser não-regido (exit %d), veio: %v", ExitNaoRegido, err)
+			t.Fatalf("issues/ deveria ser não-regido (exit %d), veio: %v", ExitNotGoverned, err)
 		}
 	})
 }

@@ -41,7 +41,7 @@ func checkVRBaseline(content string, n mapx.Node, root string, g *mapx.Graph, cf
 	if n.Kind != mapx.KindFeature {
 		return Skip, "o cenário de regressão visual é declarado na feature — é dela que o confronto parte"
 	}
-	cenarios := cenariosVR(content, cfg)
+	cenarios := vrScenarios(content, cfg)
 	if len(cenarios) == 0 {
 		return Skip, "a feature não declara cenário de regressão visual"
 	}
@@ -71,12 +71,12 @@ func checkVRBaseline(content string, n mapx.Node, root string, g *mapx.Graph, cf
 		len(semImagem), strings.Join(semImagem, ", "), filepath.Base(base), semImagem[0])
 }
 
-// cenariosVR devolve os códigos de cenário marcados como regressão visual na feature.
+// vrScenarios devolve os códigos de cenário marcados como regressão visual na feature.
 //
 // O que é "regressão visual" vem do PROJETO (`derived.regimes` no anchors.yaml diz qual
 // tag nomeia esse regime), com `nivel-vr` como default — o Anchors não impõe a
 // nomenclatura, do mesmo modo que não impõe idioma nem nome de vendor.
-func cenariosVR(content string, cfg *config.Config) []string {
+func vrScenarios(content string, cfg *config.Config) []string {
 	tag := tagDeRegimeVisual(cfg)
 	var out []string
 	visto := map[string]bool{}

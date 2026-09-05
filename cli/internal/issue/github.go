@@ -28,11 +28,11 @@ import (
 // procurar a issue pela chave — que vai no corpo, num marcador estável. Sem isso cada
 // execução do `check` abriria um card novo para o mesmo achado.
 
-// MarcadorChave identifica a issue de um achado de gate no corpo do card.
+// KeyMarker identifica a issue de um achado de gate no corpo do card.
 //
 // Vai no CORPO e não no título: o título é o que a pessoa lê, e prendê-lo ao formato da
 // chave o tornaria ilegível ou frágil a qualquer mudança de redação.
-const MarcadorChave = "<!-- anchors-issue-key: %s -->"
+const KeyMarker = "<!-- anchors-issue-key: %s -->"
 
 // GitHub é o repositório e a label do fluxo, de `workflow:`.
 type GitHub struct {
@@ -49,22 +49,22 @@ func (g GitHub) gh(args ...string) ([]byte, error) {
 	return out, nil
 }
 
-type cardEncontrado struct {
+type foundCard struct {
 	Number int    `json:"number"`
 	State  string `json:"state"`
 }
 
-// acha procura o card de um achado pela chave no corpo.
+// find procura o card de um achado pela chave no corpo.
 //
 // Busca em `--state all` de propósito: uma issue FECHADA ainda é memória — é o que
 // distingue "achado novo" de "achado que voltou", e sem ela o segundo perderia o laudo
 // anterior.
-func (g GitHub) acha(key string) (cardEncontrado, bool, error) {
-	marca := fmt.Sprintf(MarcadorChave, key)
+func (g GitHub) find(key string) (foundCard, bool, error) {
+	marca := fmt.Sprintf(KeyMarker, key)
 	out, err := g.gh("issue", "list", "--state", "all", "--limit", "500",
 		"--search", key, "--json", "number,state,body")
 	if err != nil {
-		return cardEncontrado{}, false, err
+		return foundCard{}, false, err
 	}
 	var todas []struct {
 		Number int    `json:"number"`
@@ -72,17 +72,17 @@ func (g GitHub) acha(key string) (cardEncontrado, bool, error) {
 		Body   string `json:"body"`
 	}
 	if err := json.Unmarshal(out, &todas); err != nil {
-		return cardEncontrado{}, false, fmt.Errorf("ler a busca: %w", err)
+		return foundCard{}, false, fmt.Errorf("ler a busca: %w", err)
 	}
 	// A busca do GitHub é por texto e devolve aproximações: a CONFIRMAÇÃO é o marcador
 	// exato no corpo. Sem ela um achado sobre `Foo.spec.md` casaria o card de
 	// `FooBar.spec.md`, e o Anchors fecharia o card errado.
 	for _, c := range todas {
 		if strings.Contains(c.Body, marca) {
-			return cardEncontrado{Number: c.Number, State: c.State}, true, nil
+			return foundCard{Number: c.Number, State: c.State}, true, nil
 		}
 	}
-	return cardEncontrado{}, false, nil
+	return foundCard{}, false, nil
 }
 
 // Open abre o card do achado, ou não faz nada se ele já existe.
@@ -91,7 +91,7 @@ func (g GitHub) acha(key string) (cardEncontrado, bool, error) {
 // um card novo perderia o histórico de quando ele apareceu antes.
 func (g GitHub) Open(i Issue, nasce State) (created bool, at State, err error) {
 	key := i.Key()
-	c, existe, err := g.acha(key)
+	c, existe, err := g.find(key)
 	if err != nil {
 		return false, "", err
 	}
@@ -109,9 +109,9 @@ func (g GitHub) Open(i Issue, nasce State) (created bool, at State, err error) {
 		return true, Todo, nil
 	}
 
-	corpo := i.Body() + "\n\n" + fmt.Sprintf(MarcadorChave, key) + "\n"
+	corpo := i.Body() + "\n\n" + fmt.Sprintf(KeyMarker, key) + "\n"
 	argv := []string{"issue", "create",
-		"--title", g.titulo(i),
+		"--title", g.title(i),
 		"--body", corpo,
 		"--label", g.Label,
 	}
@@ -132,7 +132,7 @@ func (g GitHub) Open(i Issue, nasce State) (created bool, at State, err error) {
 
 // Resolve FECHA o card quando o confronto que o gerou volta a passar.
 func (g GitHub) Resolve(key string) (bool, error) {
-	c, existe, err := g.acha(key)
+	c, existe, err := g.find(key)
 	if err != nil || !existe || c.State != "OPEN" {
 		return false, err
 	}
@@ -141,8 +141,8 @@ func (g GitHub) Resolve(key string) (bool, error) {
 	return err == nil, err
 }
 
-// titulo nomeia o card pelo que ele é, sem depender do formato da chave.
-func (g GitHub) titulo(i Issue) string {
+// title nomeia o card pelo que ele é, sem depender do formato da chave.
+func (g GitHub) title(i Issue) string {
 	que := "Violação"
 	switch i.Kind {
 	case Decision:

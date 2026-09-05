@@ -55,7 +55,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 		return Skip, "spec sem código declarado — a ausência é cobrada por `spec-tem-codigo`"
 	}
 
-	conhecidos := codigosDoMapa(g)
+	conhecidos := mapCodes(g)
 	var orfas []string
 
 	// ── Superfície 1: o testID exposto pela unidade de código ────────────────
@@ -70,7 +70,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 		if err != nil {
 			continue
 		}
-		for _, sigla := range siglasDeTestID(string(b)) {
+		for _, sigla := range testIDAcronyms(string(b)) {
 			if strings.EqualFold(sigla, code) || conhecidos[strings.ToUpper(sigla)] {
 				continue
 			}
@@ -87,7 +87,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 	base := strings.TrimSuffix(n.ID, ".spec.md")
 	pngs, _ := doublestar.Glob(os.DirFS(root), base+".*-VR*.png")
 	for _, p := range pngs {
-		if sigla := siglaDeBaseline(filepath.Base(p)); sigla != "" && !strings.EqualFold(sigla, code) {
+		if sigla := baselineAcronym(filepath.Base(p)); sigla != "" && !strings.EqualFold(sigla, code) {
 			orfas = append(orfas, fmt.Sprintf("baseline `%s` (%s)", sigla, filepath.Base(p)))
 		}
 	}
@@ -96,7 +96,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 		return Pass, ""
 	}
 	sort.Strings(orfas)
-	orfas = dedupOrdenado(orfas)
+	orfas = dedupSorted(orfas)
 	return Fail, fmt.Sprintf(
 		"identidade divergente: a spec declara `%s`, mas a mesma unidade aparece como %s. "+
 			"Nenhuma dessas siglas é código de unidade alguma do mapa — então o dicionário de "+
@@ -108,9 +108,9 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 		code, strings.Join(orfas, "; "))
 }
 
-// codigosDoMapa — todas as identidades declaradas no projeto. É o conjunto que
+// mapCodes — todas as identidades declaradas no projeto. É o conjunto que
 // distingue reuso deliberado (prefixo que É código de alguém) de identidade órfã.
-func codigosDoMapa(g *mapx.Graph) map[string]bool {
+func mapCodes(g *mapx.Graph) map[string]bool {
 	out := map[string]bool{}
 	for _, n := range g.Nodes {
 		if c := strings.ToUpper(strings.TrimSpace(n.Code)); c != "" {
@@ -120,18 +120,18 @@ func codigosDoMapa(g *mapx.Graph) map[string]bool {
 	return out
 }
 
-// siglaTestIDRE captura o prefixo de um testID literal ou de template. O `:` de
+// testIDAcronymRE captura o prefixo de um testID literal ou de template. O `:` de
 // marcação é opcional: a convenção é do projeto, e um projeto sem ela deve ser
 // confrontado do mesmo jeito.
-var siglaTestIDRE = regexp.MustCompile("testID=\\{?[`\"']:?([A-Za-z]{4,5})-")
+var testIDAcronymRE = regexp.MustCompile("testID=\\{?[`\"']:?([A-Za-z]{4,5})-")
 
-// siglasDeTestID devolve os prefixos com FORMA DE CÓDIGO (4-5 letras) usados como
+// testIDAcronyms devolve os prefixos com FORMA DE CÓDIGO (4-5 letras) usados como
 // testID. A forma é o primeiro filtro; quem decide se a sigla é órfã é o chamador,
 // confrontando-a com os códigos do mapa.
-func siglasDeTestID(src string) []string {
+func testIDAcronyms(src string) []string {
 	visto := map[string]bool{}
 	var out []string
-	for _, m := range siglaTestIDRE.FindAllStringSubmatch(src, -1) {
+	for _, m := range testIDAcronymRE.FindAllStringSubmatch(src, -1) {
 		s := strings.ToUpper(m[1])
 		if !visto[s] {
 			visto[s] = true
@@ -141,8 +141,8 @@ func siglasDeTestID(src string) []string {
 	return out
 }
 
-// siglaDeBaseline extrai o código de `<Unidade>.<CODE>-VR-<variante>.png`.
-func siglaDeBaseline(nome string) string {
+// baselineAcronym extrai o código de `<Unidade>.<CODE>-VR-<variante>.png`.
+func baselineAcronym(nome string) string {
 	partes := strings.Split(nome, ".")
 	if len(partes) < 2 {
 		return ""
@@ -154,7 +154,7 @@ func siglaDeBaseline(nome string) string {
 	return ""
 }
 
-func dedupOrdenado(in []string) []string {
+func dedupSorted(in []string) []string {
 	visto := map[string]bool{}
 	out := in[:0]
 	for _, s := range in {

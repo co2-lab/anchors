@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -37,7 +38,7 @@ plano? há trabalho em andamento? E, para cada estado, qual é o passo seguinte.
 
 Não altera nada.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -52,32 +53,26 @@ Não altera nada.`,
 // Listar tudo que está pendente de uma vez faria o leitor escolher por onde começar —
 // e a ordem do ciclo é justamente o que ele não deveria ter de reconstruir sozinho.
 func runStatus(root string) error {
-	fmt.Printf("anchors status — %s\n\n", root)
+	fmt.Println(i18n.T("status.header", root))
+	fmt.Println()
 
 	// 1. GIT — o substrato. Sem ele, metade do framework fica desligada em silêncio.
-	switch gitmeta.Verifica(root) {
+	switch gitmeta.Check(root) {
 	case gitmeta.SemBinário:
-		fmt.Println("⚠ git não instalado — o carimbo de alteração, `coverage --diff` e os")
-		fmt.Println("  hooks ficam desligados. Instale o git.")
+		fmt.Println(i18n.T("status.git_missing"))
 	case gitmeta.SemRepo:
-		fmt.Println("⚠ sem repositório git.")
-		fmt.Println("  → PRÓXIMO PASSO: `git init` (ou rode `anchors init`, que oferece fazê-lo)")
+		fmt.Println(i18n.T("status.no_git_repo"))
 		return nil
 	}
 
 	// 2. A FASE DESCOBRIR — antes do init, e a única que o Anchors não executa.
-	temProject := initx.TemProjectMD(root)
+	temProject := initx.HasProjectMD(root)
 	cfgPath := filepath.Join(root, config.DefaultFile)
 	_, errCfg := os.Stat(cfgPath)
 	temConfig := errCfg == nil
 
 	if !temProject && !temConfig {
-		fmt.Println("○ projeto ainda não iniciado: sem PROJECT.md e sem anchors.yaml.")
-		fmt.Println()
-		fmt.Println("  → PRÓXIMO PASSO: a fase DESCOBRIR — uma entrevista de 5 etapas que decide")
-		fmt.Println("    stack, arquitetura, estrutura e convenções, e escreve PROJECT.md.")
-		fmt.Println("    Quem conduz é uma IA: rode `anchors guide project` para a régua,")
-		fmt.Println("    ou `anchors init`, que reconhece o estado e instrui.")
+		fmt.Println(i18n.T("status.not_started"))
 		return nil
 	}
 	if temProject {
@@ -113,7 +108,7 @@ func runStatus(root string) error {
 	//
 	// Aparece aqui, e não só no `check`, porque o `status` é o comando de quem RETOMA: é
 	// onde se pergunta "o que falta?", e um gate que mede sem defender é exatamente isso.
-	if prom := gate.GatesPromoviveis(
+	if prom := gate.PromotableGates(
 		gate.Aggregate(gate.RunWithConfig(cfg.Gates, g.Nodes, root, g, cfg)),
 	); len(prom) > 0 {
 		nomes := make([]string, 0, len(prom))
@@ -126,7 +121,7 @@ func runStatus(root string) error {
 
 	// 4. O TRABALHO — a fila mora onde o modo declara (WORKFLOW.md §2).
 	fmt.Println()
-	if cfg.ModoGitHub() {
+	if cfg.GitHubMode() {
 		statusGitHub(root, cfg, g)
 	} else {
 		statusLocal(root, g)
@@ -141,7 +136,7 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 
 	// O ambiente precisa estar montado antes de a fila fazer sentido — e o doctor é
 	// quem sabe conferir isso. Aqui basta apontar, sem repetir a verificação.
-	if faltam := initx.FaltaWorkflow(root); len(faltam) > 0 {
+	if faltam := initx.MissingWorkflow(root); len(faltam) > 0 {
 		fmt.Printf("⚠ %d pipeline(s) do fluxo ausentes — sem eles o ciclo não avança sozinho.\n", len(faltam))
 		fmt.Println("  → `anchors doctor --fix` cria os que faltam")
 		return
@@ -151,9 +146,9 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 	// O FLUXO DO PR, dito onde quem retoma o trabalho vai ler. Todo trabalho sobe por
 	// PR: é o que dá objeto à revisão e o que faz o card nascer (o pipeline de
 	// identificação dispara na ABERTURA do PR, não no push).
-	base := cfg.Workflow.BranchDeIntegracao()
+	base := cfg.Workflow.IntegrationBranchOrDefault()
 	fmt.Printf("  trabalho entra por PR para `%s`", base)
-	if p := cfg.Workflow.BranchesProtegidos(); len(p) > 1 {
+	if p := cfg.Workflow.ProtectedBranchesOrDefault(); len(p) > 1 {
 		fmt.Printf(" · protegidos: %s", strings.Join(p, ", "))
 	}
 	fmt.Println()
@@ -161,8 +156,8 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 
 	// Um projeto sem trabalho não tem card a pedir: o passo é criar o primeiro plano,
 	// e mandar pedir trabalho aqui daria uma instrução que não devolve nada.
-	if semTrabalhoReal(g) {
-		imprimePrimeiroPlano()
+	if noRealWork(g) {
+		printFirstPlan()
 		return
 	}
 
@@ -173,7 +168,7 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 	// Importa mais depois que o `stale` age: ele libera card sem sinal de vida, e uma
 	// revisão longa (ou uma noite) atravessa o prazo. O card volta para `to-do` sem dono,
 	// e quem retoma precisa VER isso para saber que dá para retomar.
-	if meus := cardsDoAgente(cfg); len(meus) > 0 {
+	if meus := agentCards(cfg); len(meus) > 0 {
 		fmt.Println("  → VOCÊ JÁ TEM TRABALHO:")
 		for _, c := range meus {
 			fmt.Printf("    #%s %s [%s]\n", c.numero, c.titulo, c.estado)
@@ -197,9 +192,9 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 func statusLocal(root string, g *mapx.Graph) {
 	fmt.Println("fila: local")
 
-	tasks := contaArquivos(filepath.Join(root, ".anchors", "tasks"))
-	todo := contaArquivos(filepath.Join(root, "issues", "todo"))
-	doing := contaArquivos(filepath.Join(root, "issues", "doing"))
+	tasks := countFiles(filepath.Join(root, ".anchors", "tasks"))
+	todo := countFiles(filepath.Join(root, "issues", "todo"))
+	doing := countFiles(filepath.Join(root, "issues", "doing"))
 
 	fmt.Printf("  tasks pendentes: %d\n", tasks)
 	fmt.Printf("  issues: %d em todo, %d em doing\n", todo, doing)
@@ -213,23 +208,23 @@ func statusLocal(root string, g *mapx.Graph) {
 		fmt.Println("  → PRÓXIMO PASSO: `issues/todo` tem trabalho — leia e escolha um.")
 	case tasks > 0:
 		fmt.Println("  → PRÓXIMO PASSO: `anchors next` puxa a próxima task da fila.")
-	case semTrabalhoReal(g):
+	case noRealWork(g):
 		// "Nada pendente" com o projeto vazio seria uma resposta enganosa: não há nada
 		// pendente porque não há nada.
-		imprimePrimeiroPlano()
+		printFirstPlan()
 	default:
 		fmt.Println("  → nada pendente. `anchors doctor` mostra as pontas sistêmicas.")
 	}
 }
 
-// imprimePrimeiroPlano orienta o primeiro plano de um projeto sem código.
+// printFirstPlan orienta o primeiro plano de um projeto sem código.
 //
 // Diz os OBJETIVOS, não um template: o que a fundação precisa responder é universal
 // (onde o código mora, o que formata, como se roda o teste, o que o CI executa), mas o
 // COMO muda por stack — e o PROJECT.md já decidiu isso. Um template cravaria ESLint num
 // projeto Python. É a mesma régua da fase DESCOBRIR, que fixa etapas e objetivos e não
 // as perguntas.
-func imprimePrimeiroPlano() {
+func printFirstPlan() {
 	fmt.Println("  → PRÓXIMO PASSO: o projeto está montado e ainda sem trabalho.")
 	fmt.Println()
 	fmt.Println("  O primeiro plano é o de FUNDAÇÃO, e vem antes de qualquer feature: sem")
@@ -250,10 +245,10 @@ func imprimePrimeiroPlano() {
 	fmt.Println("  `needs` não terminou não vira card.")
 }
 
-// semTrabalhoReal diz se o mapa só tem o que o próprio `init` semeou (os guides). Um
+// noRealWork diz se o mapa só tem o que o próprio `init` semeou (os guides). Um
 // projeto assim está montado, não começado — e a diferença é o que separa "nada pendente"
 // de "ainda não há o que fazer aqui".
-func semTrabalhoReal(g *mapx.Graph) bool {
+func noRealWork(g *mapx.Graph) bool {
 	for _, n := range g.Nodes {
 		if n.Kind != mapx.KindGuide {
 			return false
@@ -262,9 +257,9 @@ func semTrabalhoReal(g *mapx.Graph) bool {
 	return true
 }
 
-// contaArquivos conta entradas de arquivo num diretório. Diretório ausente é 0 — no modo
+// countFiles conta entradas de arquivo num diretório. Diretório ausente é 0 — no modo
 // local, `issues/doing` só existe depois que alguém pega o primeiro trabalho.
-func contaArquivos(dir string) int {
+func countFiles(dir string) int {
 	entradas, err := os.ReadDir(dir)
 	if err != nil {
 		return 0
@@ -278,16 +273,16 @@ func contaArquivos(dir string) int {
 	return n
 }
 
-// cardDoAgente é um card que carrega o nome deste agente no último `anchors-owner`.
-type cardDoAgente struct{ numero, titulo, estado string }
+// agentCard é um card que carrega o nome deste agente no último `anchors-owner`.
+type agentCard struct{ numero, titulo, estado string }
 
-// cardsDoAgente devolve os cards cujo último dono é este agente.
+// agentCards devolve os cards cujo último dono é este agente.
 //
 // A identidade vem de `ANCHORS_AGENT`, e não do usuário do git: agentes na mesma máquina
 // compartilham a conta do GitHub — foi por isso que a posse virou comentário
 // (`anchors-owner:`) em vez de assignee. Sem a variável não há como saber quem pergunta,
 // e devolver os cards de OUTRO agente seria pior que não responder.
-func cardsDoAgente(cfg *config.Config) []cardDoAgente {
+func agentCards(cfg *config.Config) []agentCard {
 	agente := strings.TrimSpace(os.Getenv("ANCHORS_AGENT"))
 	if agente == "" || cfg == nil || cfg.Workflow == nil {
 		return nil
@@ -305,13 +300,13 @@ func cardsDoAgente(cfg *config.Config) []cardDoAgente {
 	if err != nil {
 		return nil
 	}
-	var cards []cardDoAgente
+	var cards []agentCard
 	for _, l := range strings.Split(strings.TrimSpace(string(out)), "\n") {
 		p := strings.Split(l, "\t")
 		if len(p) != 3 || p[0] == "" {
 			continue
 		}
-		cards = append(cards, cardDoAgente{p[0], p[1], strings.TrimPrefix(p[2], "anchors:")})
+		cards = append(cards, agentCard{p[0], p[1], strings.TrimPrefix(p[2], "anchors:")})
 	}
 	return cards
 }

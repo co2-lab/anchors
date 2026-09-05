@@ -96,13 +96,13 @@ func Weights(corpus []string) map[string]float64 {
 // Jaccard NÃO-ponderado. Sem isso, um corpus de um item devolveria 0 para textos
 // idênticos — o pior erro possível para quem lê o resultado.
 func Score(a, b string, weights map[string]float64) float64 {
-	ta, tb := conjunto(a), conjunto(b)
+	ta, tb := set(a), set(b)
 	if len(ta) == 0 || len(tb) == 0 {
 		return 0
 	}
 	var inter, union float64
 	var interN, unionN int
-	for tok := range unir(ta, tb) {
+	for tok := range merge(ta, tb) {
 		p := weights[tok]
 		union += p
 		unionN++
@@ -120,7 +120,7 @@ func Score(a, b string, weights map[string]float64) float64 {
 	return inter / union
 }
 
-// Cosseno é a SEGUNDA régua: trata cada texto como vetor (uma dimensão por token,
+// Cosine é a SEGUNDA régua: trata cada texto como vetor (uma dimensão por token,
 // valor = peso IDF) e mede o ângulo entre eles.
 //
 // Ela conta uma coisa diferente do Jaccard. O Jaccard pergunta "que fração do
@@ -131,8 +131,8 @@ func Score(a, b string, weights map[string]float64) float64 {
 //
 // É por isso que as duas juntas valem mais que qualquer uma sozinha: onde
 // discordam, o par é limítrofe, e dizer isso é mais honesto que fingir um veredito.
-func Cosseno(a, b string, weights map[string]float64) float64 {
-	ta, tb := conjunto(a), conjunto(b)
+func Cosine(a, b string, weights map[string]float64) float64 {
+	ta, tb := set(a), set(b)
 	if len(ta) == 0 || len(tb) == 0 {
 		return 0
 	}
@@ -165,7 +165,7 @@ func Cosseno(a, b string, weights map[string]float64) float64 {
 	return num / (math.Sqrt(na) * math.Sqrt(nb))
 }
 
-func conjunto(s string) map[string]bool {
+func set(s string) map[string]bool {
 	out := map[string]bool{}
 	for _, t := range Tokenize(s) {
 		out[t] = true
@@ -173,7 +173,7 @@ func conjunto(s string) map[string]bool {
 	return out
 }
 
-func unir(a, b map[string]bool) map[string]bool {
+func merge(a, b map[string]bool) map[string]bool {
 	out := map[string]bool{}
 	for k := range a {
 		out[k] = true
@@ -186,7 +186,7 @@ func unir(a, b map[string]bool) map[string]bool {
 
 // ── Classificação ───────────────────────────────────────────────────────────
 
-// Veredito classifica um par de textos que DEVERIAM ser iguais e não são.
+// Verdict classifica um par de textos que DEVERIAM ser iguais e não são.
 //
 // A régua de igualdade é exata (o texto do cenário e o do teste têm de bater);
 // a similaridade não decide nada — ela diz ao leitor QUAL é o conserto:
@@ -196,16 +196,16 @@ func unir(a, b map[string]bool) map[string]bool {
 //   - Divergente→ falam de coisas diferentes. Ou o teste prova outra coisa, ou o
 //     cenário descreve o que o código não faz mais. Não é reescrita —
 //     é decidir qual dos dois está desatualizado.
-type Veredito int
+type Verdict int
 
 const (
-	Identico Veredito = iota
+	Identico Verdict = iota
 	Similar
 	Limitrofe
 	Divergente
 )
 
-func (v Veredito) String() string {
+func (v Verdict) String() string {
 	switch v {
 	case Identico:
 		return "idêntico"
@@ -226,7 +226,7 @@ func (v Veredito) String() string {
 // alguém que precisa DECIDIR qual lado está velho — desperdiça a leitura.
 const limiarSimilar = 0.5
 
-// Classifica compara dois textos que deveriam ser iguais.
+// Classify compara dois textos que deveriam ser iguais.
 //
 // Compõe três camadas, na ordem em que descartam mais barato (é o desenho da lib
 // de origem, onde o pré-filtro por data/valor evita medir texto à toa):
@@ -238,7 +238,7 @@ const limiarSimilar = 0.5
 //     sobem de "divergente" para "similar" mesmo com score baixo: um termo que só
 //     aparece nesses dois textos é evidência forte de que tratam do mesmo assunto,
 //     e ele se dilui num Jaccard cheio de palavras comuns.
-func Classifica(a, b string, weights map[string]float64) (Veredito, float64) {
+func Classify(a, b string, weights map[string]float64) (Verdict, float64) {
 	ta, tb := Tokenize(a), Tokenize(b)
 	if len(ta) > 0 && strings.Join(ta, " ") == strings.Join(tb, " ") {
 		return Identico, 1
@@ -250,24 +250,24 @@ func Classifica(a, b string, weights map[string]float64) (Veredito, float64) {
 	// firme. Quando divergem, o par é LIMÍTROFE — e dizer isso a quem vai
 	// consertar vale mais que escolher um número e fingir certeza.
 	j := Score(a, b, weights)
-	c := Cosseno(a, b, weights)
+	c := Cosine(a, b, weights)
 	jSim, cSim := j >= limiarSimilar, c >= limiarSimilar
 
 	switch {
 	case jSim && cSim:
-		return Similar, maior(j, c)
+		return Similar, largest(j, c)
 	case jSim != cSim:
-		return Limitrofe, maior(j, c)
-	case compartilhaTokenRaro(ta, tb, weights):
+		return Limitrofe, largest(j, c)
+	case sharesRareToken(ta, tb, weights):
 		// Nenhuma das duas alcançou o limiar, mas há um termo RARO em comum — só
 		// esses dois textos o usam no arquivo inteiro. É evidência estrutural, de
 		// natureza diferente da contagem, e por isso ela desempata.
-		return Similar, maior(j, c)
+		return Similar, largest(j, c)
 	}
-	return Divergente, maior(j, c)
+	return Divergente, largest(j, c)
 }
 
-func maior(a, b float64) float64 {
+func largest(a, b float64) float64 {
 	if a > b {
 		return a
 	}
@@ -278,7 +278,7 @@ func maior(a, b float64) float64 {
 // textos. `ln(4)` ≈ 1,39 — um termo em no máximo 1/4 do corpus.
 const pesoRaro = 1.38
 
-func compartilhaTokenRaro(a, b []string, weights map[string]float64) bool {
+func sharesRareToken(a, b []string, weights map[string]float64) bool {
 	sb := map[string]bool{}
 	for _, t := range b {
 		sb[t] = true

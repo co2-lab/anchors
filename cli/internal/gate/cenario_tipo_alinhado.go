@@ -32,7 +32,7 @@ import (
 //
 // PENDING e não FAIL: o desacordo é dívida herdada em qualquer base que adote o gate
 // depois de escrever features, e a correção pede julgamento caso a caso.
-func checkCenarioTipoAlinhado(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkScenarioTypeAligned(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindFeature {
 		return Skip, "" // a tag e o código moram na feature
 	}
@@ -60,7 +60,7 @@ func checkCenarioTipoAlinhado(content string, n mapx.Node, _ string, _ *mapx.Gra
 
 	var achados []string
 	for _, sc := range cenarios {
-		letra := letraDoCodigo(sc.Code)
+		letra := codeLetter(sc.Code)
 		if letra == "" {
 			continue
 		}
@@ -70,16 +70,16 @@ func checkCenarioTipoAlinhado(content string, n mapx.Node, _ string, _ *mapx.Gra
 		// isso, e "corrigi-los" trocaria uma classificação certa por outra.
 		letras := map[string]bool{letra: true}
 		for _, c := range sc.Codes {
-			if l := letraDoCodigo(c); l != "" {
+			if l := codeLetter(c); l != "" {
 				letras[l] = true
 			}
 		}
 		for _, tag := range sc.Tags {
 			nome := strings.TrimPrefix(tag, "@")
-			declaradas, conhecida := cfg.LetrasDaTag(nome)
+			declaradas, conhecida := cfg.TagLetters(nome)
 			// Uma tag pode caber sob mais de uma letra (ver LetrasDaTag): basta que a
 			// letra do código esteja entre elas para não haver discordância.
-			if !conhecida || alguma(declaradas, letras) {
+			if !conhecida || any(declaradas, letras) {
 				continue
 			}
 			achados = append(achados, fmt.Sprintf("%s é `%s` mas o cenário se declara `@%s` (letra %s): %q",
@@ -98,10 +98,10 @@ func checkCenarioTipoAlinhado(content string, n mapx.Node, _ string, _ *mapx.Gra
 		len(achados), strings.Join(achados, "; "))
 }
 
-// letraDoCodigo extrai a letra de natureza de `ABCDX-S01` (ou `ABCDX-S01#02`). Devolve
+// codeLetter extrai a letra de natureza de `ABCDX-S01` (ou `ABCDX-S01#02`). Devolve
 // vazio para códigos que não seguem a forma (`ABCDX-DS-alguma-coisa`, `ABCDX-VR`).
-func letraDoCodigo(code string) string {
-	raiz := CodeRaiz(code)
+func codeLetter(code string) string {
+	raiz := RootCode(code)
 	i := strings.LastIndex(raiz, "-")
 	if i < 0 || i+1 >= len(raiz) {
 		return ""
@@ -130,8 +130,8 @@ func corta(s string, n int) string {
 	return string([]rune(s)[:n]) + "…"
 }
 
-// alguma diz se alguma das letras declaradas para a tag está entre as do cenário.
-func alguma(declaradas []string, letras map[string]bool) bool {
+// any diz se any das letras declaradas para a tag está entre as do cenário.
+func any(declaradas []string, letras map[string]bool) bool {
 	for _, d := range declaradas {
 		if letras[d] {
 			return true

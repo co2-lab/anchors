@@ -15,7 +15,7 @@ import "strings"
 // é para o mapa.
 const sufixoProgresso = "-progress.md"
 
-// EhArquivoDeProgresso diz se o caminho é o companheiro de estado de um plano.
-func EhArquivoDeProgresso(caminho string) bool {
+// IsProgressFile diz se o caminho é o companheiro de estado de um plano.
+func IsProgressFile(caminho string) bool {
 	return strings.HasSuffix(caminho, sufixoProgresso)
 }

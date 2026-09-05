@@ -32,14 +32,14 @@ func prepararRepo(t *testing.T) string {
 // e exigir git ali seria transformar uma degradação legítima em bloqueio.
 func TestMoveSemRepoUsaRenameSimples(t *testing.T) {
 	dir := t.TempDir()
-	if gitmeta.Verifica(dir) == gitmeta.Disponível {
+	if gitmeta.Check(dir) == gitmeta.Disponível {
 		t.Skipf("o diretório temporário %s está dentro de um repo git", dir)
 	}
 	if err := os.WriteFile(filepath.Join(dir, "a.go"), []byte("package a\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	if err := gitMove(dir, "a.go", "sub/b.go"); err != nil {
+	if err := gitMoves(dir, "a.go", "sub/b.go"); err != nil {
 		t.Fatalf("sem repositório o rename deveria funcionar: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "sub", "b.go")); err != nil {
@@ -61,7 +61,7 @@ func TestMoveComRepoUsaGitMv(t *testing.T) {
 		}
 	}
 
-	if err := gitMove(dir, "a.go", "sub/b.go"); err != nil {
+	if err := gitMoves(dir, "a.go", "sub/b.go"); err != nil {
 		t.Fatalf("git mv deveria funcionar: %v", err)
 	}
 
@@ -87,7 +87,7 @@ func TestMoveDeArquivoNaoRastreadoAcontece(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := gitMove(dir, "solto.go", "sub/solto.go"); err != nil {
+	if err := gitMoves(dir, "solto.go", "sub/solto.go"); err != nil {
 		t.Fatalf("arquivo não rastreado deveria ser movido direto: %v", err)
 	}
 	if _, err := os.Stat(filepath.Join(dir, "sub", "solto.go")); err != nil {
@@ -105,7 +105,7 @@ func TestMoveQueRelataSucessoMoveuDeVerdade(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if err := gitMove(dir, "solto.go", "movido.go"); err != nil {
+	if err := gitMoves(dir, "solto.go", "movido.go"); err != nil {
 		t.Fatalf("gitMove: %v", err)
 	}
 
@@ -136,7 +136,7 @@ func TestMoveNaoContornaRecusaDoGit(t *testing.T) {
 	}
 
 	// Destino já existe e é rastreado: `git mv` recusa sem `-f`.
-	err := gitMove(dir, "a.go", "b.go")
+	err := gitMoves(dir, "a.go", "b.go")
 
 	if err == nil {
 		t.Fatal("git recusou o move — contorná-lo com os.Rename sobrescreveria um arquivo rastreado")

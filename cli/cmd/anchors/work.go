@@ -60,7 +60,7 @@ O conteúdo é COMPOSTO do anchors.yaml — nada é inventado aqui.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			artifact := strings.ToLower(args[0])
-			if !queue.ArtefatoDeTrabalhoValido(artifact) {
+			if !queue.ValidWorkArtifact(artifact) {
 				return fmt.Errorf("artefato desconhecido %q — use: %s", artifact,
 					strings.Join(queue.ArtefatosDeTrabalho, ", "))
 			}
@@ -68,7 +68,7 @@ O conteúdo é COMPOSTO do anchors.yaml — nada é inventado aqui.`,
 				return fmt.Errorf("informe o alvo com --for <caminho> " +
 					"(ex.: --for packages/backend/repositories/metadata.ts)")
 			}
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -88,7 +88,7 @@ O conteúdo é COMPOSTO do anchors.yaml — nada é inventado aqui.`,
 			// Redirecionar (em vez de recusar) porque a intenção é inequívoca: quem pediu
 			// `work feature --for x.spec.md` quer a feature da unidade que x.spec.md
 			// descreve. Dizer o que se fez mantém o usuário no controle.
-			if alvo, achou := unidadeDaPecaDerivada(absRoot, rel, cfg, g); achou {
+			if alvo, achou := derivedPieceUnit(absRoot, rel, cfg, g); achou {
 				fmt.Fprintf(os.Stderr, "nota: `%s` é uma peça derivada, não a unidade. "+
 					"Usando `%s` como alvo.\n\n", rel, alvo)
 				rel = alvo
@@ -137,7 +137,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// **feature**" e o roteiro completo de produção, e a dispensa aparecia quatro linhas
 	// abaixo, como item de uma lista. Um worker que segue a manchete cria o arquivo
 	// proibido — e a régua tinha dito as duas coisas.
-	if hasLayer && pecasDispensadas(layer, cfg)[artifact] {
+	if hasLayer && waivedPieces(layer, cfg)[artifact] {
 		fmt.Fprintf(&b, "## PARE\n\n`%s` — a camada **%s** DISPENSA a peça `%s` "+
 			"(`trinca_opcional` no anchors.yaml).\n\nA dispensa é declarada, não um "+
 			"esquecimento: esta camada não prova comportamento com esta peça. Criá-la "+
@@ -218,7 +218,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 		// do confronto. E vê o registro de entrega, que dá escopo e traz a intenção
 		// declarada pelo autor para ser confrontada contra o disco.
 		b.WriteString("\n## O que você vai confrontar\n\n")
-		writeTrincaPaths(&b, rel, artifact, layer, cfg, g)
+		writeTriadPaths(&b, rel, artifact, layer, cfg, g)
 		writeDeliveryRecord(&b, root, rel)
 	} else if hasLayer && l.Regime == "declarativo" {
 		b.WriteString("\n## As peças e onde nascem\n\n")
@@ -230,7 +230,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 			"a decisão esteja faltando lá — não que esta camada precise de uma.\n")
 	} else {
 		b.WriteString("\n## As peças e onde nascem\n\n")
-		writeTrincaPaths(&b, rel, artifact, layer, cfg, g)
+		writeTriadPaths(&b, rel, artifact, layer, cfg, g)
 	}
 
 	// REGIMES: as tags de nível que os cenários da feature DEVEM declarar. Estão no
@@ -255,7 +255,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// agente sem chão — ou pior, o convence a criar a spec proibida.
 	passos := procedureFor(artifact, cfg)
 	if hasLayer && l.Regime == "declarativo" {
-		passos = procedureDeclarativa(rel)
+		passos = declarativeProcedure(rel)
 	}
 	for i, s := range passos {
 		fmt.Fprintf(&b, "%d. %s\n", i+1, s)
@@ -274,7 +274,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// vizinhos, não porque a régua tenha dito. Um requisito que o autor só conhece depois
 	// de reprovar é um requisito mal comunicado — o gate SABE o que exige, então dizer
 	// antes custa nada e economiza uma rodada.
-	if regras := exigenciasDosGates(artifact, cfg); len(regras) > 0 {
+	if regras := gateRequirements(artifact, cfg); len(regras) > 0 {
 		b.WriteString("\n## O que os gates vão cobrar (leia ANTES de escrever)\n\n")
 		for _, r := range regras {
 			fmt.Fprintf(&b, "- %s\n", r)
@@ -315,7 +315,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// É a falha de memória do framework: o defeito foi encontrado, registrado, e some do
 	// caminho de quem poderia corrigi-lo. Trazê-lo para o prompt é o que fecha o laço entre
 	// quem acha e quem conserta.
-	writeIssuesAbertas(&b, root, rel)
+	writeOpenIssues(&b, root, rel)
 
 	// SINAIS DE EXECUÇÃO. Os gates que medem o que só a EXECUÇÃO revela (o teste passa? o
 	// teste PROVA a linha, ou só a executa?) leem de sinais ingeridos — e ficam `~` para
@@ -397,7 +397,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// `spec`, o `.ts` do alvo em geral ainda não existe, e o `check` aborta sem conferir
 	// nada. Prescrever um comando que a própria etapa impede de funcionar é a régua se
 	// contradizendo dentro do mesmo prompt.
-	alvo := alvoDaVerificacao(rel, artifact, layer, cfg)
+	alvo := verificationTarget(rel, artifact, layer, cfg)
 	fmt.Fprintf(&b, "anchors check --changed %s --no-record --deterministic\n```\n\n", alvo)
 	b.WriteString("Todos os gates **bloqueantes** devem sair com `✗0`. Um `~` não é falha — é o " +
 		"gate dizendo que não teve o que confrontar (o motivo vem escrito). Se um gate reprovar, " +
@@ -498,16 +498,16 @@ func guidesFor(l config.Layer, cfg *config.Config, artifact string) []string {
 	return out
 }
 
-// writeTrincaPaths mostra onde cada peça da trinca nasce para este alvo, usando o
+// writeTriadPaths mostra onde cada peça da trinca nasce para este alvo, usando o
 // `derived:` do projeto (co-location por padrão, overrides por camada).
-func writeTrincaPaths(b *strings.Builder, rel, artifact, layer string, cfg *config.Config, g *mapx.Graph) {
+func writeTriadPaths(b *strings.Builder, rel, artifact, layer string, cfg *config.Config, g *mapx.Graph) {
 	if cfg.Derived == nil {
 		b.WriteString("> O projeto não declara `derived:` — confirme onde as peças moram " +
 			"olhando os vizinhos da camada.\n")
 		return
 	}
-	files, overridden := caminhosDerivados(rel, layer, cfg)
-	dispensadas := pecasDispensadas(layer, cfg)
+	files, overridden := derivedPaths(rel, layer, cfg)
+	dispensadas := waivedPieces(layer, cfg)
 	order := []string{"spec", "feature", "test"}
 	for _, k := range order {
 		tpl, ok := files[k]
@@ -718,7 +718,7 @@ func procedureFor(artifact string, cfg *config.Config) []string {
 		return []string{
 			"Leia a spec inteira antes de escrever a primeira linha; ela é a régua.",
 			"Leia 1–2 arquivos vizinhos da mesma camada para seguir o padrão local (imports, erro, estilo).",
-			marcacaoDaRegra(cfg),
+			ruleMarking(cfg),
 			"Se a spec prometer um símbolo na Tabela de Dependências, USE esse símbolo — o gate `dependency-honored` confronta.",
 		}
 	case "feature":
@@ -767,10 +767,10 @@ func writeRegimes(b *strings.Builder, cfg *config.Config) {
 		"em vez de `@nivel-integration` faz o cenário não ser confrontado por nenhum gate.\n")
 }
 
-// unidadeDaPecaDerivada resolve a UNIDADE quando o alvo dado é uma peça derivada
+// derivedPieceUnit resolve a UNIDADE quando o alvo dado é uma peça derivada
 // (spec/feature/test). Prefere o mapa — a aresta `specifies` diz exatamente qual código a
 // spec descreve; sem mapa, cai na convenção de nome (tronco + extensões usuais).
-func unidadeDaPecaDerivada(root, rel string, cfg *config.Config, g *mapx.Graph) (string, bool) {
+func derivedPieceUnit(root, rel string, cfg *config.Config, g *mapx.Graph) (string, bool) {
 	layer, _ := scan.Classify(rel, cfg)
 	l, ok := cfg.Layers[layer]
 	if !ok {
@@ -785,7 +785,7 @@ func unidadeDaPecaDerivada(root, rel string, cfg *config.Config, g *mapx.Graph) 
 
 	// 1) pelo mapa: a spec APONTA o código (`specifies`); feature/test chegam via a spec.
 	if g != nil {
-		if alvo := alvoPorAresta(g, rel, "specifies"); alvo != "" {
+		if alvo := targetByEdge(g, rel, "specifies"); alvo != "" {
 			return alvo, true
 		}
 		// feature/test → sobe até a spec (`covered-by`/`tested-by` chegam NELES)
@@ -794,7 +794,7 @@ func unidadeDaPecaDerivada(root, rel string, cfg *config.Config, g *mapx.Graph) 
 				continue
 			}
 			if e.Type == "covered-by" || e.Type == "tested-by" {
-				if alvo := alvoPorAresta(g, e.From, "specifies"); alvo != "" {
+				if alvo := targetByEdge(g, e.From, "specifies"); alvo != "" {
 					return alvo, true
 				}
 			}
@@ -821,7 +821,7 @@ func unidadeDaPecaDerivada(root, rel string, cfg *config.Config, g *mapx.Graph) 
 	return "", false
 }
 
-func alvoPorAresta(g *mapx.Graph, from, tipo string) string {
+func targetByEdge(g *mapx.Graph, from, tipo string) string {
 	for _, e := range g.Edges {
 		if e.From == from && string(e.Type) == tipo {
 			return e.To
@@ -830,11 +830,11 @@ func alvoPorAresta(g *mapx.Graph, from, tipo string) string {
 	return ""
 }
 
-// procedureDeclarativa é o procedimento de uma camada RECONHECIDA (`regime: declarativo`).
+// declarativeProcedure é o procedimento de uma camada RECONHECIDA (`regime: declarativo`).
 // Não há spec para ler — a régua é o CONTRATO da camada vizinha que este arquivo serve, e
 // o dialeto dos irmãos. O risco característico aqui não é divergir de uma spec: é a camada
 // declarativa DECIDIR alguma coisa, virando regra escondida onde ninguém procura.
-func procedureDeclarativa(rel string) []string {
+func declarativeProcedure(rel string) []string {
 	return []string{
 		"Esta camada **não tem spec**: a régua é o contrato de quem consome este arquivo, " +
 			"mais o dialeto dos vizinhos. Leia 2–3 irmãos da mesma camada ANTES de escrever.",
@@ -849,10 +849,10 @@ func procedureDeclarativa(rel string) []string {
 	}
 }
 
-// exigenciasDosGates traduz, em requisitos legíveis, o que os gates INTERNOS declarados
+// gateRequirements traduz, em requisitos legíveis, o que os gates INTERNOS declarados
 // para este artefato vão confrontar. Só descreve gate que o projeto realmente declarou —
 // prometer cobrança que não existe é tão ruim quanto esconder a que existe.
-func exigenciasDosGates(artifact string, cfg *config.Config) []string {
+func gateRequirements(artifact string, cfg *config.Config) []string {
 	// o que cada checker interno exige, em uma frase acionável
 	porChecker := map[string]string{
 		"spec-sections": "**Toda regra precisa estar CATALOGADA** — código + lugar estruturado. " +
@@ -881,7 +881,7 @@ func exigenciasDosGates(artifact string, cfg *config.Config) []string {
 			"marcador no teste errado cria rastreabilidade falsa, e todo gate relacional passa " +
 			"a confrontar o par errado com tudo verde.",
 		"non-empty":          "O arquivo **não pode ser um esqueleto vazio**.",
-		"trinca-completa":    "A unidade precisa da **trinca completa** (spec + feature + teste).",
+		"triad-complete":     "A unidade precisa da **trinca completa** (spec + feature + teste).",
 		"ref-resolves":       "O `ref:` precisa apontar para o **`code:` da spec irmã** — não para outra.",
 		"pagination-honored": "Função que promete um conjunto **não devolve a primeira página** em silêncio.",
 		"layer-boundary":     "Respeite as **fronteiras de camada** declaradas em `boundaries:`.",
@@ -889,7 +889,7 @@ func exigenciasDosGates(artifact string, cfg *config.Config) []string {
 	var out []string
 	visto := map[string]bool{}
 	for _, gt := range cfg.Gates {
-		if !gateVale(gt, artifact) || visto[gt.Check] {
+		if !gateApplies(gt, artifact) || visto[gt.Check] {
 			continue
 		}
 		if frase, ok := porChecker[gt.Check]; ok {
@@ -903,7 +903,7 @@ func exigenciasDosGates(artifact string, cfg *config.Config) []string {
 	return out
 }
 
-// gateVale: este gate se aplica ao artefato que está sendo produzido?
+// gateApplies: este gate se aplica ao artefato que está sendo produzido?
 //
 // O `on:` do gate diz sobre QUAL NÓ ele roda; esta função responde outra pergunta — quem
 // precisa CONHECER a exigência ao escrever. Nem sempre é o mesmo.
@@ -913,7 +913,7 @@ func exigenciasDosGates(artifact string, cfg *config.Config) []string {
 // escrevia o teste não era avisado — medido, um agente escreveu 36 features corretas e
 // depois esbarrou num gate BLOQUEANTE vermelho sem entender por quê; a exigência só estava
 // legível no código-fonte do gate.
-func gateVale(gt config.Gate, artifact string) bool {
+func gateApplies(gt config.Gate, artifact string) bool {
 	for _, k := range gt.On {
 		if k == artifact {
 			return true
@@ -974,7 +974,7 @@ func writeDeliveryRecord(b *strings.Builder, root, rel string) {
 		"como confrontar o que ele ACHA que fez contra o que fez. Registre isso no relatório.\n")
 }
 
-// caminhosDerivados resolve, para um alvo e sua camada, ONDE cada peça da trinca nasce —
+// derivedPaths resolve, para um alvo e sua camada, ONDE cada peça da trinca nasce —
 // aplicando co-location e os overrides do `derived:`, com os placeholders já substituídos.
 //
 // Existe separada porque duas coisas precisam da mesma resposta: a seção que MOSTRA os
@@ -987,7 +987,7 @@ func writeDeliveryRecord(b *strings.Builder, root, rel string) {
 // O mesmo prompt dizia "não escreva código nesta etapa" e prescrevia um comando que só
 // funciona com o código escrito. Os dois agentes de spec de um E2E real bateram nisso,
 // independentemente.
-func caminhosDerivados(rel, layer string, cfg *config.Config) (map[string]string, map[string]bool) {
+func derivedPaths(rel, layer string, cfg *config.Config) (map[string]string, map[string]bool) {
 	files, overridden := map[string]string{}, map[string]bool{}
 	if cfg.Derived == nil {
 		return files, overridden
@@ -1035,23 +1035,23 @@ func caminhosDerivados(rel, layer string, cfg *config.Config) (map[string]string
 	return files, overridden
 }
 
-// alvoDaVerificacao devolve o caminho que o `anchors check --changed` deve receber nesta
+// verificationTarget devolve o caminho que o `anchors check --changed` deve receber nesta
 // etapa: a peça que ELA produz, não o alvo da unidade. Cai no alvo quando a etapa não
 // produz peça derivada (código, review).
-func alvoDaVerificacao(rel, artifact, layer string, cfg *config.Config) string {
+func verificationTarget(rel, artifact, layer string, cfg *config.Config) string {
 	switch artifact {
 	case "spec", "feature", "test":
-		if files, _ := caminhosDerivados(rel, layer, cfg); files[artifact] != "" {
+		if files, _ := derivedPaths(rel, layer, cfg); files[artifact] != "" {
 			return files[artifact]
 		}
 	}
 	return rel
 }
 
-// pecasDispensadas traduz o `trinca_opcional` da camada (declarado por ARESTA) para as
+// waivedPieces traduz o `trinca_opcional` da camada (declarado por ARESTA) para as
 // PEÇAS que ele dispensa. `covered-by` é a aresta spec→feature, logo dispensa a feature;
 // `tested-by` é feature→test, logo dispensa o teste.
-func pecasDispensadas(layer string, cfg *config.Config) map[string]bool {
+func waivedPieces(layer string, cfg *config.Config) map[string]bool {
 	out := map[string]bool{}
 	if cfg == nil || layer == "" {
 		return out
@@ -1069,9 +1069,9 @@ func pecasDispensadas(layer string, cfg *config.Config) map[string]bool {
 	return out
 }
 
-// writeIssuesAbertas traz para o prompt os achados ainda em aberto sobre esta unidade —
+// writeOpenIssues traz para o prompt os achados ainda em aberto sobre esta unidade —
 // de `issues/todo/` e `issues/doing/`, que são os estados vivos.
-func writeIssuesAbertas(b *strings.Builder, root, rel string) {
+func writeOpenIssues(b *strings.Builder, root, rel string) {
 	base := strings.TrimSuffix(rel, filepath.Ext(rel))
 	for _, suf := range []string{".spec.md", ".feature", ".test", ".spec"} {
 		base = strings.TrimSuffix(base, suf)
@@ -1104,7 +1104,7 @@ func writeIssuesAbertas(b *strings.Builder, root, rel string) {
 		"Uma issue que ninguém lê é um defeito que o pipeline já viu e deixou passar.\n")
 }
 
-// marcacaoDaRegra emite o passo de ligar regra↔código conforme o projeto a EXIGE ou não.
+// ruleMarking emite o passo de ligar regra↔código conforme o projeto a EXIGE ou não.
 //
 // A ressalva "se o projeto usa esse padrão" existia para não impor a prática a quem não
 // a adotou — mas ela também dava saída a quem a adotou: quem implementa lê "se", decide
@@ -1113,7 +1113,7 @@ func writeIssuesAbertas(b *strings.Builder, root, rel string) {
 //
 // Com `derived.rule_marking: required` declarado, o passo vira obrigação — e o
 // procedimento passa a ensinar ANTES o que o gate cobra DEPOIS.
-func marcacaoDaRegra(cfg *config.Config) string {
+func ruleMarking(cfg *config.Config) string {
 	if cfg != nil && cfg.Derived != nil &&
 		strings.EqualFold(strings.TrimSpace(cfg.Derived.RuleMarking), "required") {
 		return "Implemente cada regra da spec e MARQUE no código o trecho que a realiza " +

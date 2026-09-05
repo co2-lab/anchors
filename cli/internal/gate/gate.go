@@ -139,25 +139,25 @@ func Run(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph)
 // relacionais que consultam a Estrutura (de-para de regimes, superfícies da trinca).
 // `Run` delega a ela com cfg nil (checkers relacionais tratam nil como sem-de-para).
 func RunWithConfig(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) []Result {
-	return RunCompleto(gates, nodes, root, graph, cfg, false)
+	return RunFull(gates, nodes, root, graph, cfg, false)
 }
 
-// RunCompleto é o Run que também sabe se a varredura é o PROJETO INTEIRO (`check --all`).
+// RunFull é o Run que também sabe se a varredura é o PROJETO INTEIRO (`check --all`).
 // Só isso permite honrar o `scope_full` do gate: no full, quem sabe varrer sozinho roda
 // UMA vez sem receber a lista, em vez de receber os milhares de alvos em lotes. Os demais
 // chamadores seguem por RunWithConfig, que passa `completa: false` — o comportamento de
 // sempre para recorte incremental.
-func RunCompleto(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool) []Result {
-	return RunComDispensa(gates, nodes, root, graph, cfg, completa, Dispensa{})
+func RunFull(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool) []Result {
+	return RunWithWaiver(gates, nodes, root, graph, cfg, completa, Waiver{})
 }
 
-// RunComDispensa é o Run que honra dispensa POR ALVO.
+// RunWithWaiver é o Run que honra dispensa POR ALVO.
 //
 // A dispensa por regra era aplicada FILTRANDO o gate da lista, e isso bastava enquanto
 // ela valia para tudo. Uma dispensa restrita a caminhos não pode sair por ali: o gate
 // precisa RODAR e confrontar os outros alvos — senão dispensar 4 specs novas apagaria o
 // gate para o repositório inteiro, e uma trinca quebrada por descuido passaria junto.
-func RunComDispensa(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool, disp Dispensa) []Result {
+func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool, disp Waiver) []Result {
 	// A gramática do código de cenário segue o vocabulário do projeto (`rule_types`).
 	SetRuleLetters(cfg.RuleLetters())
 	// índice kind por nó já vem em node.Kind
@@ -180,23 +180,23 @@ func RunComDispensa(gates []config.Gate, nodes []mapx.Node, root string, graph *
 		// quando quem falta é o binário. O aviso não se perde: o `doctor` levanta a ausência
 		// (health.checkFerramentasAusentes), que é onde ela pode ser lida uma vez e resolvida,
 		// em vez de repetida a cada alvo de cada varredura.
-		if faltando, ok := ferramentaAusente(g); ok {
+		if faltando, ok := missingTool(g); ok {
 			results = append(results, Result{
-				Gate: g.Name, Target: "(" + string(g.ScopeParaVarredura(completa)) + ")",
+				Gate: g.Name, Target: "(" + string(g.ScopeForScan(completa)) + ")",
 				Verdict: Skip, Blocking: g.IsBlocking(),
 				Detail: "ferramenta ausente: " + faltando + " — gate não executado",
 			})
 			continue
 		}
-		switch g.ScopeParaVarredura(completa) {
+		switch g.ScopeForScan(completa) {
 		case config.ScopeBatch, config.ScopeProject:
-			results = append(results, runAgregado(g, alvos, root, completa, graph, cfg))
+			results = append(results, runAggregate(g, alvos, root, completa, graph, cfg))
 		default:
 			for _, n := range alvos {
 				// DISPENSA POR ALVO: o gate roda, e só este nó é poupado. O veredito é
 				// `Skip` com o motivo escrito — some do placar de reprovações sem sumir
 				// do relatório, que é a diferença entre dispensar e esconder.
-				if motivo, ok := disp.DispensouAlvo(RegraID(idDoGate(g)), n.Code); ok {
+				if motivo, ok := disp.WaivedTarget(RuleID(idDoGate(g)), n.Code); ok {
 					results = append(results, Result{
 						Gate: g.Name, Regra: idDoGate(g), Target: n.ID,
 						Verdict: Skip, Blocking: g.IsBlocking(),
@@ -211,14 +211,14 @@ func RunComDispensa(gates []config.Gate, nodes []mapx.Node, root string, graph *
 	return results
 }
 
-// runAgregado executa UMA vez um gate de escopo batch/project. O veredito é único:
+// runAggregate executa UMA vez um gate de escopo batch/project. O veredito é único:
 // a ferramenta olhou o conjunto e respondeu sobre ele.
 //
 // O alvo reportado é o próprio gate (não um arquivo): atribuir a falha do `tsc` a um
 // dos 63 arquivos seria mentira — o erro pode estar em qualquer um, ou na relação
 // entre eles. O laudo (stdout da ferramenta) é que nomeia arquivo e linha.
-func runAgregado(g config.Gate, alvos []mapx.Node, root string, completa bool, graph *mapx.Graph, cfg *config.Config) Result {
-	escopo := g.ScopeParaVarredura(completa)
+func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, graph *mapx.Graph, cfg *config.Config) Result {
+	escopo := g.ScopeForScan(completa)
 	r := Result{Gate: g.Name, Regra: idDoGate(g), Target: "(" + escopo + ")", Blocking: g.IsBlocking()}
 	// Um gate agregado pode ser INTERNO: a pergunta é sobre o conjunto, mas quem
 	// responde é o próprio CLI, não uma ferramenta de fora. É o caso de
@@ -230,7 +230,7 @@ func runAgregado(g config.Gate, alvos []mapx.Node, root string, completa bool, g
 	// checkers agregados leem `root`/`cfg`, nunca o conteúdo de um arquivo — e é por
 	// isso que este caminho não tenta lê-lo, ao contrário do `runInternal`.
 	if g.Check != "" {
-		r.Verdict, r.Detail = runInternalAgregado(g, root, graph, cfg)
+		r.Verdict, r.Detail = runInternalAggregate(g, root, graph, cfg)
 		return r
 	}
 	if g.Run == "" {
@@ -264,7 +264,7 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 		// as revs das pontas, então um veredito envelhece se o alvo mudar depois — e
 		// nesse caso volta a ser pergunta, que é o comportamento certo.
 		if graph != nil {
-			if v, ok := graph.JulgadoPor(n.ID, g.Name); ok {
+			if v, ok := graph.JudgedBy(n.ID, g.Name); ok {
 				switch v {
 				case "issue":
 					r.Verdict = Fail
@@ -272,7 +272,11 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 				case "ok":
 					r.Verdict = Pass
 					r.Detail = "julgado por IA: aprovado"
-				case "dispensado":
+				// `dispensado` é o valor ANTIGO, e continua sendo lido: ele está em
+				// mapas já commitados, e ignorá-lo faria o gate reperguntar um
+				// julgamento que alguém respondeu — com o carimbo ali, visível no
+				// arquivo, sem nada os ligando.
+				case "waived", "dispensado":
 					// `Skip`, e não `Pass`: o gate NÃO MEDIU — o alvo da pergunta não
 					// existe (a spec o declara `@TBD`). `Pass` afirmaria aprovação, que é
 					// a mentira que o veredito `dispensado` existe para evitar; `Pending`
@@ -301,7 +305,7 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 		// demais Pending são "não tive o que confrontar", que não é dívida de ninguém.
 		if r.Verdict == Pending && g.Check == "obligation-honored" {
 			r.Divida = true
-			r.Prazo = prazosDeclarados(r.Detail)
+			r.Prazo = declaredDeadlines(r.Detail)
 		}
 		// Decisão em aberto IMPEDE: a spec declara que não decidiu algo que o código vai
 		// precisar, e quem implementar vai adivinhar. Dívida assumida NÃO impede — ela
@@ -315,7 +319,7 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 		// por prosa ("que a spec ainda NÃO tomou"), e isso quebraria na tradução do
 		// laudo — sem erro, sem aviso: o gate simplesmente pararia de barrar.
 		if r.Verdict == Pending && g.Check == "open-questions-resolved" &&
-			strings.Contains(r.Detail, MarcaDecisaoEmAberto) {
+			strings.Contains(r.Detail, OpenDecisionMarker) {
 			r.Impede = true
 			// E vira ISSUE. A mesma distinção decide as duas coisas: "há decisão por
 			// tomar" é achado que precisa sobreviver à sessão; "a spec nasceu antes da
@@ -331,14 +335,14 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 	return r
 }
 
-// prazoRE captura o "quando" de cada dívida na mensagem do gate de obrigações, que as
+// deadlineRE captura o "quando" de cada dívida na mensagem do gate de obrigações, que as
 // concatena com ";". O nome da obrigação vem entre colchetes no início de cada trecho.
-var prazoRE = regexp.MustCompile(`\[([a-z0-9-]+)\][^;]*?DÍVIDA ASSUMIDA: ([^;]+)`)
+var deadlineRE = regexp.MustCompile(`\[([a-z0-9-]+)\][^;]*?DÍVIDA ASSUMIDA: ([^;]+)`)
 
-// prazosDeclarados extrai, do laudo do gate, apenas os vencimentos — um por obrigação.
-func prazosDeclarados(detail string) string {
+// declaredDeadlines extrai, do laudo do gate, apenas os vencimentos — um por obrigação.
+func declaredDeadlines(detail string) string {
 	var out []string
-	for _, m := range prazoRE.FindAllStringSubmatch(detail, -1) {
+	for _, m := range deadlineRE.FindAllStringSubmatch(detail, -1) {
 		out = append(out, "`"+m[1]+"` — "+strings.TrimSpace(m[2]))
 	}
 	if len(out) == 0 {
@@ -347,11 +351,11 @@ func prazosDeclarados(detail string) string {
 	return strings.Join(out, "\n- ")
 }
 
-// ferramentaAusente diz se o gate exige um binário que não está no PATH.
+// missingTool diz se o gate exige um binário que não está no PATH.
 //
 // `exec.LookPath` é a mesma resolução que o `sh` faria ao rodar o comando, então a
 // resposta aqui e o comportamento real do gate não podem divergir.
-func ferramentaAusente(g config.Gate) (string, bool) {
+func missingTool(g config.Gate) (string, bool) {
 	if g.NeedsTool == "" {
 		return "", false
 	}

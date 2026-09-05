@@ -191,7 +191,7 @@ func gitApply(root, patch string, check bool) error {
 	if out, err := c.CombinedOutput(); err != nil {
 		// Uma sugestão É um patch: sem git não há como aplicá-la, e o erro do git sobre
 		// um repo inexistente não menciona nem o patch nem a sugestão.
-		if msg := gitmeta.Explica(gitmeta.Verifica(root), "aplicar o patch da sugestão"); msg != "" {
+		if msg := gitmeta.Explain(gitmeta.Check(root), "aplicar o patch da sugestão"); msg != "" {
 			return errors.New(msg)
 		}
 		return fmt.Errorf("git apply: %s", strings.TrimSpace(string(out)))

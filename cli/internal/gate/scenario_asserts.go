@@ -56,11 +56,11 @@ func checkScenarioAsserts(content string, n mapx.Node, root string, g *mapx.Grap
 		if passo == "" || strings.HasPrefix(passo, "#") {
 			continue
 		}
-		primeira, resto := primeiraPalavra(passo)
+		primeira, resto := firstWord(passo)
 		if !thens[primeira] {
 			continue
 		}
-		if code, tautologico := ehTautologia(resto); tautologico {
+		if code, tautologico := isTautology(resto); tautologico {
 			vazios = append(vazios, code)
 		}
 	}
@@ -78,16 +78,16 @@ func checkScenarioAsserts(content string, n mapx.Node, root string, g *mapx.Grap
 		len(vazios), strings.Join(vazios, ", "), kw.Then)
 }
 
-// ehTautologia: o resto do passo é só o código da regra, cercado de palavras de ligação?
+// isTautology: o resto do passo é só o código da regra, cercado de palavras de ligação?
 // A régua é mecânica de propósito — julgar prosa é trabalho de outro gate.
-func ehTautologia(resto string) (string, bool) {
+func isTautology(resto string) (string, bool) {
 	m := tautoCodeRE().FindStringSubmatch(resto)
 	if m == nil {
 		return "", false
 	}
 	// Remove o código e as palavras de ligação; o que sobra é o conteúdo real do passo.
 	semCode := tautoCodeRE().ReplaceAllString(resto, " ")
-	conteudo := ligacaoRE.ReplaceAllString(strings.ToLower(semCode), " ")
+	conteudo := linkRE.ReplaceAllString(strings.ToLower(semCode), " ")
 	conteudo = strings.TrimSpace(regexp.MustCompile(`[^\p{L}\p{N}]+`).ReplaceAllString(conteudo, " "))
 	// Até duas palavras residuais ainda é tautologia ("o efeito X se verifica" →
 	// "efeito verifica"). Acima disso, o autor escreveu algo de próprio.
@@ -104,9 +104,9 @@ func tautoCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`\b([A-Z0-9]` + config.CodeLengthPattern() + `-[A-Z]\d{2})\b`)
 }
 
-// ligacaoRE são as palavras que só ligam — sem elas, o passo não perde afirmação. Cobre os
+// linkRE são as palavras que só ligam — sem elas, o passo não perde afirmação. Cobre os
 // idiomas do Gherkin que o Anchors conhece.
-var ligacaoRE = regexp.MustCompile(`\b(o|a|os|as|um|uma|de|do|da|se|e|que|the|a|an|of|is|are|el|la|los|las|del|se|le|les|du|de|der|die|das|` +
+var linkRE = regexp.MustCompile(`\b(o|a|os|as|um|uma|de|do|da|se|e|que|the|a|an|of|is|are|el|la|los|las|del|se|le|les|du|de|der|die|das|` +
 	`efeito|efeitos|regra|regras|comportamento|cenário|cenario|requisito|` +
 	`verifica|verificado|verificada|aplica|aplicado|aplicada|vale|válido|valido|ocorre|acontece|` +
 	`effect|rule|behavior|behaviour|verified|applies|holds|is met|met|satisfied|` +
@@ -114,7 +114,7 @@ var ligacaoRE = regexp.MustCompile(`\b(o|a|os|as|um|uma|de|do|da|se|e|que|the|a|
 	`effet|règle|vérifie|` +
 	`effekt|regel|gilt|erfüllt)\b`)
 
-func primeiraPalavra(s string) (string, string) {
+func firstWord(s string) (string, string) {
 	f := strings.Fields(s)
 	if len(f) == 0 {
 		return "", ""

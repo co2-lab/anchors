@@ -50,7 +50,7 @@ func raizComProva(t *testing.T, codigo string) string {
 
 func TestTrincaCompleta_trincaInteiraPassa(t *testing.T) {
 	g := trincaGraph(true, true, true)
-	if v, msg := checkTrincaCompleta("", specNode(), "", g, &config.Config{}); v != Pass {
+	if v, msg := checkTriadComplete("", specNode(), "", g, &config.Config{}); v != Pass {
 		t.Errorf("trinca completa deveria passar: %v (%s)", v, msg)
 	}
 }
@@ -59,7 +59,7 @@ func TestTrincaCompleta_testeAlcancadoEmDoisSaltos(t *testing.T) {
 	// A regressão que eu mesmo introduzi: procurar `tested-by` DIRETO na spec acusa
 	// falta de teste em todo projeto, porque a aresta nasce na FEATURE.
 	g := trincaGraph(true, true, true)
-	v, msg := checkTrincaCompleta("", specNode(), "", g, &config.Config{})
+	v, msg := checkTriadComplete("", specNode(), "", g, &config.Config{})
 	if v != Pass {
 		t.Fatalf("teste ligado à feature deveria contar p/ a spec: %v (%s)", v, msg)
 	}
@@ -67,7 +67,7 @@ func TestTrincaCompleta_testeAlcancadoEmDoisSaltos(t *testing.T) {
 
 func TestTrincaCompleta_semTesteReprova(t *testing.T) {
 	g := trincaGraph(true, true, false)
-	v, msg := checkTrincaCompleta("", specNode(), "", g, &config.Config{})
+	v, msg := checkTriadComplete("", specNode(), "", g, &config.Config{})
 	if v != Fail {
 		t.Fatalf("sem teste deveria reprovar, got %v", v)
 	}
@@ -79,7 +79,7 @@ func TestTrincaCompleta_semTesteReprova(t *testing.T) {
 func TestTrincaCompleta_specSozinhaReprovaCitandoAsTresPecas(t *testing.T) {
 	// o caso que motivou o gate: spec sem nada atravessava TODOS os gates.
 	g := trincaGraph(false, false, false)
-	v, msg := checkTrincaCompleta("", specNode(), "", g, &config.Config{})
+	v, msg := checkTriadComplete("", specNode(), "", g, &config.Config{})
 	if v != Fail {
 		t.Fatalf("spec sozinha deveria reprovar, got %v", v)
 	}
@@ -93,7 +93,7 @@ func TestTrincaCompleta_specSozinhaReprovaCitandoAsTresPecas(t *testing.T) {
 func TestTrincaCompleta_camadaReconhecidaPula(t *testing.T) {
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"dao"}}
 	g := trincaGraph(false, false, false)
-	if v, _ := checkTrincaCompleta("", n, "", g, &config.Config{}); v != Skip {
+	if v, _ := checkTriadComplete("", n, "", g, &config.Config{}); v != Skip {
 		t.Errorf("camada reconhecida não tem trinca a cobrar, esperava Skip, got %v", v)
 	}
 }
@@ -105,14 +105,14 @@ func TestTrincaCompleta_trincaOpcionalDispensaPeca(t *testing.T) {
 	}}
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"repository"}}
 	g := trincaGraph(true, true, false) // sem teste
-	if v, msg := checkTrincaCompleta("", n, "", g, cfg); v != Pass {
+	if v, msg := checkTriadComplete("", n, "", g, cfg); v != Pass {
 		t.Errorf("camada que dispensa tested-by deveria passar: %v (%s)", v, msg)
 	}
 }
 
 func TestTrincaCompleta_naoSpecPula(t *testing.T) {
 	n := mapx.Node{ID: "x.ts", Kind: mapx.KindCode}
-	if v, _ := checkTrincaCompleta("", n, "", trincaGraph(false, false, false), &config.Config{}); v != Skip {
+	if v, _ := checkTriadComplete("", n, "", trincaGraph(false, false, false), &config.Config{}); v != Skip {
 		t.Errorf("a trinca é cobrada da spec, esperava Skip p/ código, got %v", v)
 	}
 }
@@ -125,7 +125,7 @@ func TestTrincaCompleta_noTestDispensaPorUnidade(t *testing.T) {
 	g := trincaGraph(true, true, false) // sem teste
 	root := raizComProva(t, "AAAAX-B01")
 	spec := "@no-test: gateway de 1 linha sobre apiCall; provado por `AAAAX-B01`\n"
-	if v, msg := checkTrincaCompleta(spec, specNode(), root, g, &config.Config{}); v != Pass {
+	if v, msg := checkTriadComplete(spec, specNode(), root, g, &config.Config{}); v != Pass {
 		t.Errorf("`@no-test` com razão dispensa o teste daquela unidade: %v (%s)", v, msg)
 	}
 }
@@ -135,7 +135,7 @@ func TestTrincaCompleta_dispensaExigeRazao(t *testing.T) {
 	// calar o gate, que é o oposto do opt-out honesto.
 	g := trincaGraph(true, true, false)
 	for _, nu := range []string{"@no-test\n", "@no-test:\n", "@no-test:   \n"} {
-		if v, _ := checkTrincaCompleta(nu, specNode(), "", g, &config.Config{}); v != Fail {
+		if v, _ := checkTriadComplete(nu, specNode(), "", g, &config.Config{}); v != Fail {
 			t.Errorf("marcador sem razão (%q) NÃO pode dispensar: %v", nu, v)
 		}
 	}
@@ -146,7 +146,7 @@ func TestTrincaCompleta_noFeatureArrastaOTeste(t *testing.T) {
 	// algo que ninguém especificou.
 	g := trincaGraph(true, false, false)
 	spec := "@no-feature: wiring de infraestrutura, sem regra observável\n"
-	if v, msg := checkTrincaCompleta(spec, specNode(), "", g, &config.Config{}); v != Pass {
+	if v, msg := checkTriadComplete(spec, specNode(), "", g, &config.Config{}); v != Pass {
 		t.Errorf("`@no-feature` dispensa feature E teste: %v (%s)", v, msg)
 	}
 }
@@ -156,7 +156,7 @@ func TestTrincaCompleta_dispensaNaoApagaOCodigo(t *testing.T) {
 	// própria situação que este gate existe para pegar.
 	g := trincaGraph(false, true, true)
 	spec := "@no-test: qualquer razão\n@no-feature: qualquer razão\n"
-	if v, _ := checkTrincaCompleta(spec, specNode(), "", g, &config.Config{}); v != Fail {
+	if v, _ := checkTriadComplete(spec, specNode(), "", g, &config.Config{}); v != Fail {
 		t.Errorf("a dispensa não pode apagar a exigência do código: %v", v)
 	}
 }
@@ -174,7 +174,7 @@ func TestTrincaCompleta_noTestComCenarioNaFeatureEhContradicao(t *testing.T) {
 	g := trincaGraph(true, true, false)
 	spec := "@no-test: gateway de uma linha, provado por `AAAAX-B01`\n"
 
-	v, msg := checkTrincaCompleta(spec, specNode(), root, g, &config.Config{})
+	v, msg := checkTriadComplete(spec, specNode(), root, g, &config.Config{})
 	if v != Fail {
 		t.Fatalf("dispensa + cenário é contradição e deve reprovar: %v", v)
 	}
@@ -193,7 +193,7 @@ func TestTrincaCompleta_noTestSemCenarioPassa(t *testing.T) {
 	}
 	g := trincaGraph(true, true, false)
 	spec := "@no-test: gateway de uma linha, provado por `AAAAX-B01`\n"
-	if v, msg := checkTrincaCompleta(spec, specNode(), root, g, &config.Config{}); v != Pass {
+	if v, msg := checkTriadComplete(spec, specNode(), root, g, &config.Config{}); v != Pass {
 		t.Errorf("feature sem cenário não contradiz a dispensa: %v (%s)", v, msg)
 	}
 }
@@ -206,7 +206,7 @@ func TestTrincaCompleta_noTestComReferenciaOrfaReprova(t *testing.T) {
 	g := trincaGraph(true, true, false)
 	spec := "@no-test: provado por `AAAAX-B99`\n" // …mas a spec alega B99
 
-	v, msg := checkTrincaCompleta(spec, specNode(), root, g, &config.Config{})
+	v, msg := checkTriadComplete(spec, specNode(), root, g, &config.Config{})
 	if v != Fail {
 		t.Fatalf("referência que não resolve deve reprovar: %v", v)
 	}
@@ -222,7 +222,7 @@ func TestTrincaCompleta_noTestSemReferenciaReprova(t *testing.T) {
 	g := trincaGraph(true, true, false)
 	spec := "@no-test: gateway de uma linha, provado no teste de integração central\n"
 
-	if v, _ := checkTrincaCompleta(spec, specNode(), root, g, &config.Config{}); v != Fail {
+	if v, _ := checkTriadComplete(spec, specNode(), root, g, &config.Config{}); v != Fail {
 		t.Errorf("prosa sem código não é referência verificável: %v", v)
 	}
 }
@@ -234,7 +234,7 @@ func TestTrincaCompleta_noFeatureNaoExigeReferencia(t *testing.T) {
 	g := trincaGraph(true, false, false)
 	spec := "@no-feature: wiring de infraestrutura, sem regra observável\n"
 
-	if v, msg := checkTrincaCompleta(spec, specNode(), t.TempDir(), g, &config.Config{}); v != Pass {
+	if v, msg := checkTriadComplete(spec, specNode(), t.TempDir(), g, &config.Config{}); v != Pass {
 		t.Errorf("`@no-feature` dispensa sem exigir referência: %v (%s)", v, msg)
 	}
 }
@@ -260,7 +260,7 @@ func TestTBDDispensaSoOQueFoiDeclarado(t *testing.T) {
 			nil},
 	}
 	for _, c := range casos {
-		got := pecasPorDesenvolver("# Spec\n\n> " + c.marca + " — em andamento\n")
+		got := piecesToDevelop("# Spec\n\n> " + c.marca + " — em andamento\n")
 		for _, q := range c.quer {
 			if !got[q] {
 				t.Errorf("%q deveria dispensar %q", c.marca, q)
@@ -277,12 +277,12 @@ func TestTBDDispensaSoOQueFoiDeclarado(t *testing.T) {
 
 // Sem `@TBD` nenhum, nada é dispensado — o marcador é opt-in.
 func TestSemTBDNadaEhDispensado(t *testing.T) {
-	if len(pecasPorDesenvolver("# Spec sem marca nenhuma\n")) != 0 {
+	if len(piecesToDevelop("# Spec sem marca nenhuma\n")) != 0 {
 		t.Error("sem `@TBD` o gate cobra tudo, como sempre cobrou")
 	}
 	// E `@TBD` sem alvo não dispensa nada: "está em andamento" sem dizer o quê seria
 	// um interruptor geral, que é o oposto do que este marcador é.
-	if len(pecasPorDesenvolver("# Spec\n\n> @TBD\n")) != 0 {
+	if len(piecesToDevelop("# Spec\n\n> @TBD\n")) != 0 {
 		t.Error("`@TBD` sem alvo não pode dispensar nada")
 	}
 }

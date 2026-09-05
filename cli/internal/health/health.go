@@ -62,13 +62,13 @@ func Diagnose(g *mapx.Graph, cfg *config.Config, root string) Report {
 	r.Findings = append(r.Findings, checkDuplicateCodes(g)...)
 	r.Findings = append(r.Findings, checkLooseLayers(g, cfg)...)
 	r.Findings = append(r.Findings, checkGateCoverage(g, cfg)...)
-	r.Findings = append(r.Findings, checkSkipOnValido(cfg)...)
-	r.Findings = append(r.Findings, checkFerramentasAusentes(cfg)...)
-	r.Findings = append(r.Findings, checkGitAusente(cfg, root)...)
-	r.Findings = append(r.Findings, checkAmbienteGitHub(cfg, root)...)
-	r.Findings = append(r.Findings, checkNeedsDosPlanos(g)...)
-	r.Findings = append(r.Findings, checkSinaisAusentes(g)...)
-	r.Findings = append(r.Findings, checkDecisoesPendentes(g, root, cfg)...)
+	r.Findings = append(r.Findings, checkSkipOnValid(cfg)...)
+	r.Findings = append(r.Findings, checkMissingTools(cfg)...)
+	r.Findings = append(r.Findings, checkGitMissing(cfg, root)...)
+	r.Findings = append(r.Findings, checkGitHubEnv(cfg, root)...)
+	r.Findings = append(r.Findings, checkPlanNeeds(g)...)
+	r.Findings = append(r.Findings, checkMissingSignals(g)...)
+	r.Findings = append(r.Findings, checkPendingDecisions(g, root, cfg)...)
 	sortFindings(r.Findings)
 	return r
 }
@@ -303,7 +303,7 @@ func checkGateCoverage(g *mapx.Graph, cfg *config.Config) []Finding {
 	return out
 }
 
-// checkSinaisAusentes acusa os sinais de verificação que o projeto NÃO ingere.
+// checkMissingSignals acusa os sinais de verificação que o projeto NÃO ingere.
 //
 // A distinção que este check materializa: o Anchors pode EXIGIR que a spec decida e que
 // a peça exista — isso é dele. Não pode exigir que o projeto tenha uma ferramenta de
@@ -319,7 +319,7 @@ func checkGateCoverage(g *mapx.Graph, cfg *config.Config) []Finding {
 //   - execução (JUnit): Warn — sem ele nem se sabe se o teste passou.
 //   - cobertura (lcov): Warn — sem ela não se sabe se a linha rodou.
 //   - mutação: Info — o mais caro de adotar; a ausência é aceitável, a ignorância não.
-func checkSinaisAusentes(g *mapx.Graph) []Finding {
+func checkMissingSignals(g *mapx.Graph) []Finding {
 	var códigos, testes int
 	var comExec, comCov, comMut int
 	for _, n := range g.Nodes {
@@ -377,13 +377,13 @@ func sortFindings(fs []Finding) {
 	})
 }
 
-// checkSkipOnValido acusa perspectiva desconhecida em `skip_on`.
+// checkSkipOnValid acusa perspectiva desconhecida em `skip_on`.
 //
 // Vale porque o campo é uma lista de EXCLUSÃO por nome: um typo (`chnage`) não casa
 // perspectiva nenhuma, o gate segue rodando nas duas, e o autor acredita tê-lo
 // desligado numa delas. O erro é silencioso justamente do lado perigoso — quem escreveu
 // `skip_on` queria menos execução e recebeu mais, sem nenhum sinal.
-func checkSkipOnValido(cfg *config.Config) []Finding {
+func checkSkipOnValid(cfg *config.Config) []Finding {
 	if cfg == nil {
 		return nil
 	}
@@ -417,7 +417,7 @@ func checkSkipOnValido(cfg *config.Config) []Finding {
 // recorrente treina a equipe a ignorar, que é o oposto do que este aviso quer.
 //
 // Warn, não Info: a cobertura que o projeto DECLARA ter não é a que ele tem.
-func checkFerramentasAusentes(cfg *config.Config) []Finding {
+func checkMissingTools(cfg *config.Config) []Finding {
 	if cfg == nil {
 		return nil
 	}
@@ -452,8 +452,8 @@ func checkFerramentasAusentes(cfg *config.Config) []Finding {
 // Os dois casos são achados DIFERENTES porque o conserto é diferente: sem o binário,
 // instalar; sem o repositório, iniciar. Uma mensagem que colapse os dois manda o
 // usuário procurar o problema onde ele não está.
-func checkGitAusente(cfg *config.Config, root string) []Finding {
-	return gitAusente(cfg, root, gitNoPath())
+func checkGitMissing(cfg *config.Config, root string) []Finding {
+	return gitMissing(cfg, root, gitNoPath())
 }
 
 // gitNoPath é uma variável, e não uma chamada direta, para que o teste alcance o caso
@@ -465,30 +465,30 @@ var gitNoPath = func() bool {
 	return err == nil
 }
 
-func gitAusente(cfg *config.Config, root string, instalado bool) []Finding {
+func gitMissing(cfg *config.Config, root string, instalado bool) []Finding {
 	if !instalado {
 		return []Finding{{"git-ausente", Warn, "git",
 			"o git não está no PATH — o carimbo de alteração (updated_at), " +
 				"`coverage --diff` e o pre-commit ficam desligados, em silêncio"}}
 	}
-	if temRepo(root) {
+	if hasRepo(root) {
 		return nil
 	}
 	det := "este projeto não está sob git — o carimbo de alteração (updated_at), " +
 		"`coverage --diff` e `install-hooks` não têm como funcionar; rode `git init`"
 	// No modo `github` isso deixa de ser débito e vira impedimento: a fila de trabalho
 	// mora nas issues de um repositório, e sem repo não há de onde puxar.
-	if cfg.ModoGitHub() {
+	if cfg.GitHubMode() {
 		det = "o `workflow.mode: github` exige repositório, e este projeto não está sob " +
 			"git — a fila de trabalho não tem de onde ser puxada; rode `git init`"
 	}
 	return []Finding{{"git-ausente", Warn, "repositório", det}}
 }
 
-// temRepo sobe a árvore procurando `.git` (arquivo ou diretório: worktree e submódulo
+// hasRepo sobe a árvore procurando `.git` (arquivo ou diretório: worktree e submódulo
 // usam um ponteiro `gitdir:`). Não roda `git` — a resposta é sobre o DISCO, e serve
 // igual quando o binário não existe.
-func temRepo(root string) bool {
+func hasRepo(root string) bool {
 	dir := root
 	for {
 		if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
@@ -514,7 +514,7 @@ func temRepo(root string) bool {
 //     e o trabalho começa fora de ordem sem nada acusar;
 //   - CICLO (A precisa de B, B precisa de A): nenhum dos dois pode começar, nunca, e o
 //     board fica com dois cards que ninguém pega sem que se saiba por quê.
-func checkNeedsDosPlanos(g *mapx.Graph) []Finding {
+func checkPlanNeeds(g *mapx.Graph) []Finding {
 	planos := map[string]bool{}
 	for _, n := range g.Nodes {
 		if n.Kind == mapx.KindPlan {

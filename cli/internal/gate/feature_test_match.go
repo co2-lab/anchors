@@ -115,8 +115,8 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		//   divergente → assuntos diferentes: decida qual dos dois está velho.
 		titulo, temTitulo := testTitleFor(body, sc.Code)
 		switch {
-		case temTitulo && !tituloCompartilhado(body, sc.Code):
-			if v, score := similarity.Classifica(sc.Title, titulo, pesos); v != similarity.Identico {
+		case temTitulo && !sharedTitle(body, sc.Code):
+			if v, score := similarity.Classify(sc.Title, titulo, pesos); v != similarity.Identico {
 				driftDesc = append(driftDesc, fmt.Sprintf("%s (%s, %.0f%%)", sc.Code, v, score*100))
 			}
 		case !descriptionMatches(sc.Title, bodyNorm):
@@ -206,18 +206,18 @@ func featCodeREFor(letters string) *regexp.Regexp {
 	return regexp.MustCompile(`@([A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) + `]\d{2}|DS-[A-Za-z0-9-]+|VR))(#\d{2})?\b`)
 }
 
-// codeRaizRE separa a raiz (`USBPX-B01`) do sufixo de cenário (`#02`). Os gates que
+// rootCodeRE separa a raiz (`USBPX-B01`) do sufixo de cenário (`#02`). Os gates que
 // falam de REGRA usam a raiz; os que falam de CENÁRIO usam o código inteiro.
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
-func codeRaizRE() *regexp.Regexp {
+func rootCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`^([A-Z0-9]` + config.CodeLengthPattern() + `-[A-Za-z0-9-]+?)(#\d{2})?$`)
 }
 
-// CodeRaiz devolve o código sem o sufixo de cenário.
-func CodeRaiz(code string) string {
-	if m := codeRaizRE().FindStringSubmatch(code); m != nil {
+// RootCode devolve o código sem o sufixo de cenário.
+func RootCode(code string) string {
+	if m := rootCodeRE().FindStringSubmatch(code); m != nil {
 		return m[1]
 	}
 	return code
@@ -418,11 +418,11 @@ var testTitleReCache = map[string]*regexp.Regexp{}
 // `it("CODE — título")` — e devolve ok=false quando o código aparece só em
 // comentário ou num teste que prova vários cenários de uma vez: nesses casos não
 // há UM título para comparar, e forçar a comparação inventaria divergência.
-// tituloCompartilhado diz se o `it` que cita `code` cita OUTRO código também.
+// sharedTitle diz se o `it` que cita `code` cita OUTRO código também.
 //
 // Um título com vários códigos descreve o conjunto, não cada um: comparar o
 // título com cada cenário por igualdade condenaria N-1 deles sempre.
-func tituloCompartilhado(body, code string) bool {
+func sharedTitle(body, code string) bool {
 	re, ok := tituloIrmaosReCache[code]
 	if !ok {
 		cod := regexp.QuoteMeta(code)

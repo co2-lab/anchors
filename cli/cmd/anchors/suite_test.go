@@ -14,7 +14,7 @@ import (
 // alvo. Substituir por vazio faria `npx stryker run --mutate ` mutar o PROJETO INTEIRO:
 // horas de rodada, e nada do que se pediu. Falhar aqui custa um segundo.
 func TestTargetObrigatorioQuandoDeclarado(t *testing.T) {
-	_, err := montaComando("npx stryker run --mutate {{target}}", "")
+	_, err := buildCommand("npx stryker run --mutate {{target}}", "")
 	if err == nil {
 		t.Fatal("sem --target, o comando com {{target}} tem de falhar")
 	}
@@ -24,7 +24,7 @@ func TestTargetObrigatorioQuandoDeclarado(t *testing.T) {
 }
 
 func TestTargetSubstitui(t *testing.T) {
-	got, err := montaComando("stryker run --mutate {{target}}", "business-logic/dedup.ts")
+	got, err := buildCommand("stryker run --mutate {{target}}", "business-logic/dedup.ts")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -36,7 +36,7 @@ func TestTargetSubstitui(t *testing.T) {
 // TestComandoSemPlaceholderIgnoraTarget — a maioria das suítes não recebe alvo (`yarn
 // test:unit` roda tudo). Exigir --target nelas, ou anexá-lo ao fim, quebraria o comando.
 func TestComandoSemPlaceholderIgnoraTarget(t *testing.T) {
-	got, err := montaComando("yarn test:unit", "qualquer/coisa.ts")
+	got, err := buildCommand("yarn test:unit", "qualquer/coisa.ts")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +51,7 @@ func TestComandoSemPlaceholderIgnoraTarget(t *testing.T) {
 // subdiretório, como todo o resto do CLI já faz.
 func TestCaminhoDoRelatorioEhRelativoARaiz(t *testing.T) {
 	raiz := t.TempDir()
-	got := caminhoAbs(raiz, "packages/backend/reports/mutation.json")
+	got := absPath(raiz, "packages/backend/reports/mutation.json")
 	if !filepath.IsAbs(got) {
 		t.Fatalf("devia virar absoluto; veio %q", got)
 	}
@@ -63,7 +63,7 @@ func TestCaminhoDoRelatorioEhRelativoARaiz(t *testing.T) {
 // TestSemRelatorioNaoInventaCaminho — vazio tem de continuar vazio. Se virasse a própria
 // raiz, a ingestão tentaria ler um diretório como se fosse relatório.
 func TestSemRelatorioNaoInventaCaminho(t *testing.T) {
-	if got := caminhoAbs(t.TempDir(), "  "); got != "" {
+	if got := absPath(t.TempDir(), "  "); got != "" {
 		t.Errorf("relatório não declarado tem de continuar vazio; veio %q", got)
 	}
 }
@@ -72,7 +72,7 @@ func TestSemRelatorioNaoInventaCaminho(t *testing.T) {
 // depois de ingerir. Aceitar qualquer nome transformaria a flag num executor de shell
 // disfarçado, que é justamente o que estes comandos NÃO são.
 func TestEncadeamentoRecusaComandoDesconhecido(t *testing.T) {
-	err := executaEncadeados("deploy", t.TempDir())
+	err := runChained("deploy", t.TempDir())
 	if err == nil {
 		t.Fatal("--then deploy tinha de ser recusado")
 	}
@@ -83,10 +83,10 @@ func TestEncadeamentoRecusaComandoDesconhecido(t *testing.T) {
 
 // TestEncadeamentoVazioNaoFazNada — o opt-in é o default. Sem `--then`, roda e para.
 func TestEncadeamentoVazioNaoFazNada(t *testing.T) {
-	if err := executaEncadeados("", t.TempDir()); err != nil {
+	if err := runChained("", t.TempDir()); err != nil {
 		t.Errorf("sem --then não há encadeamento a fazer; veio %v", err)
 	}
-	if err := executaEncadeados("  ,  ", t.TempDir()); err != nil {
+	if err := runChained("  ,  ", t.TempDir()); err != nil {
 		t.Errorf("separadores vazios não são comando; veio %v", err)
 	}
 }
@@ -97,10 +97,10 @@ func TestEncadeamentoVazioNaoFazNada(t *testing.T) {
 func TestSuiteQuePassaSemRelatorioNaoQuebra(t *testing.T) {
 	raiz := t.TempDir()
 	marca := filepath.Join(raiz, "rodou.txt")
-	cs := comandoSuite{nome: "test", secao: "tests"}
+	cs := suiteCommand{nome: "test", secao: "tests"}
 	s := []config.Suite{{Layer: "unit", Run: "printf ok > " + filepath.ToSlash(marca)}}
 
-	if err := rodaSuites(cs, s, raiz, "", nil); err != nil {
+	if err := runSuites(cs, s, raiz, "", nil); err != nil {
 		t.Fatalf("suíte sem relatório não devia falhar: %v", err)
 	}
 	if _, err := os.Stat(marca); err != nil {
@@ -114,13 +114,13 @@ func TestSuiteQuePassaSemRelatorioNaoQuebra(t *testing.T) {
 func TestSuiteQueFalhaInterrompe(t *testing.T) {
 	raiz := t.TempDir()
 	depois := filepath.Join(raiz, "nao-devia-existir.txt")
-	cs := comandoSuite{nome: "test", secao: "tests"}
+	cs := suiteCommand{nome: "test", secao: "tests"}
 	s := []config.Suite{
 		{Layer: "unit", Run: "exit 3"},
 		{Layer: "e2e", Run: "printf x > " + filepath.ToSlash(depois)},
 	}
 
-	err := rodaSuites(cs, s, raiz, "", nil)
+	err := runSuites(cs, s, raiz, "", nil)
 	if err == nil {
 		t.Fatal("a falha da unit tinha de interromper")
 	}
@@ -137,7 +137,7 @@ func TestSuiteQueFalhaInterrompe(t *testing.T) {
 // TestSemChangedUsaOComandoCompleto — o default é a rodada completa, como no `check`.
 func TestSemChangedUsaOComandoCompleto(t *testing.T) {
 	s := config.Suite{Run: "jest", RunChanged: "jest --findRelatedTests {{files}}"}
-	got, err := escolheComando(s, nil, "")
+	got, err := pickCommand(s, nil, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -150,7 +150,7 @@ func TestSemChangedUsaOComandoCompleto(t *testing.T) {
 // não anexados no fim: a posição do recorte é do comando, não nossa.
 func TestChangedUsaOComandoIncremental(t *testing.T) {
 	s := config.Suite{Run: "jest", RunChanged: "jest --findRelatedTests {{files}} --ci"}
-	got, err := escolheComando(s, []string{"a/x.ts", "b/y.ts"}, "")
+	got, err := pickCommand(s, []string{"a/x.ts", "b/y.ts"}, "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -164,7 +164,7 @@ func TestChangedUsaOComandoIncremental(t *testing.T) {
 // achando que rodou o recorte dele.
 func TestChangedSemRunChangedRecusa(t *testing.T) {
 	s := config.Suite{Run: "yarn test:unit"}
-	_, err := escolheComando(s, []string{"a/x.ts"}, "")
+	_, err := pickCommand(s, []string{"a/x.ts"}, "")
 	if err == nil {
 		t.Fatal("sem run_changed, o modo incremental tem de recusar")
 	}
@@ -182,7 +182,7 @@ func TestMutacaoNaoMutaTeste(t *testing.T) {
 		{ID: "a/regra.spec.md", Kind: mapx.KindSpec},
 		{ID: "a/regra.feature", Kind: mapx.KindFeature},
 	}
-	if got := arquivosDoImpacto(nodes, "mutation", ""); len(got) != 1 || got[0] != "a/regra.ts" {
+	if got := impactFiles(nodes, "mutation", ""); len(got) != 1 || got[0] != "a/regra.ts" {
 		t.Errorf("mutação recebe só código; veio %v", got)
 	}
 }
@@ -195,7 +195,7 @@ func TestTesteRecebeCodigoETeste(t *testing.T) {
 		{ID: "a/regra.test.ts", Kind: mapx.KindTest},
 		{ID: "a/regra.spec.md", Kind: mapx.KindSpec},
 	}
-	got := arquivosDoImpacto(nodes, "tests", "")
+	got := impactFiles(nodes, "tests", "")
 	if len(got) != 2 || got[0] != "a/regra.ts" || got[1] != "a/regra.test.ts" {
 		t.Errorf("teste recebe código e teste, sem spec; veio %v", got)
 	}
@@ -207,7 +207,7 @@ func TestTesteRecebeCodigoETeste(t *testing.T) {
 // havia o que rodar". É o modo de falha mais caro: silencioso e otimista.
 func TestCaminhoDeImpactoNaoLevaBarraInvertida(t *testing.T) {
 	raiz := t.TempDir()
-	got := arquivosDoImpacto([]mapx.Node{{ID: "packages/backend/x.ts", Kind: mapx.KindCode}}, "tests", raiz)
+	got := impactFiles([]mapx.Node{{ID: "packages/backend/x.ts", Kind: mapx.KindCode}}, "tests", raiz)
 	if len(got) != 1 {
 		t.Fatalf("esperava 1 arquivo; veio %v", got)
 	}

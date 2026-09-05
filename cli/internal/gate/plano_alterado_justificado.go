@@ -47,33 +47,33 @@ func revisaoRE() *regexp.Regexp {
 		config.CodeLengthPattern() + `)-R(\d{4})(?:\*\*)?[^\S\n]*:[^\S\n]*(\S.*)$`)
 }
 
-// Revisao é uma alteração registrada no próprio documento.
-type Revisao struct {
+// Revision é uma alteração registrada no próprio documento.
+type Revision struct {
 	Codigo     string // o código do arquivo revisado (`FNDTN`)
 	Numero     int    // sequencial: 1, 2, 3...
 	Explicacao string
 }
 
-// RevisoesDe devolve as revisões declaradas no conteúdo, na ordem em que aparecem.
-func RevisoesDe(content string) []Revisao {
-	var out []Revisao
+// RevisionsOf devolve as revisões declaradas no conteúdo, na ordem em que aparecem.
+func RevisionsOf(content string) []Revision {
+	var out []Revision
 	for _, m := range revisaoRE().FindAllStringSubmatch(content, -1) {
 		n, err := strconv.Atoi(m[2])
 		if err != nil {
 			continue
 		}
-		out = append(out, Revisao{Codigo: m[1], Numero: n, Explicacao: strings.TrimSpace(m[3])})
+		out = append(out, Revision{Codigo: m[1], Numero: n, Explicacao: strings.TrimSpace(m[3])})
 	}
 	return out
 }
 
-// checkPlanoAlteradoJustificado confronta o plano/spec ALTERADO com a revisão declarada.
+// checkPlanChangeJustified confronta o plano/spec ALTERADO com a revisão declarada.
 //
 // O gate se abstém em `--all` (via `skip_on: [all]` no anchors.yaml). Ali não existe
 // "alterado": reprovar todo plano que nunca precisou de revisão seria acusar quem acertou
 // de primeira. Rodando com `--changed`, todo nó que ele recebe JÁ é um arquivo alterado —
 // por isso não precisa da lista, e não a recebe.
-func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkPlanChangeJustified(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	// SÓ o que de fato MUDOU. O `--changed X` entrega o RAIO DE IMPACTO de X — todo nó
 	// que depende dele —, e isso é certo para quase todo gate: quem quebrou por tabela tem
 	// de ser confrontado. Aqui não: um plano que não mudou não tem o que justificar.
@@ -81,7 +81,7 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 	// Medido no blue-eyes: sem esta conferência, alterar UM plano acusava 8 arquivos, 7
 	// deles intocados. Um gate bloqueante que acusa inocente é pior que gate nenhum — a
 	// saída barata vira desligá-lo.
-	if cfg == nil || !mudouDeFato(n.ID, cfg.Alterados) {
+	if cfg == nil || !actuallyChanged(n.ID, cfg.Alterados) {
 		return Skip, "não está entre os arquivos alterados (só foi alcançado pelo raio de impacto)"
 	}
 
@@ -95,10 +95,10 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 	// A revisão registra por que o texto mudou — e num arquivo que nasce agora, o texto
 	// inteiro é a decisão. Cobrar `-R0001` aqui obrigaria toda spec nova a declarar uma
 	// revisão de si mesma no primeiro commit, que é ruído puro.
-	if gitDizQueEhNovo(root, n.ID) {
+	if gitSaysIsNew(root, n.ID) {
 		return Skip, "arquivo novo — não há alteração a justificar"
 	}
-	if !gitDizQueMudou(root, n.ID) {
+	if !gitSaysChanged(root, n.ID) {
 		return Skip, "o git não vê mudança neste arquivo — `--changed` o incluiu, mas o " +
 			"conteúdo é igual ao do último commit"
 	}
@@ -110,8 +110,8 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 
 	// Só contam as revisões DESTE documento. Um plano pode citar a revisão de outro ao
 	// explicar o contexto, e isso não justifica a própria mudança.
-	var minhas []Revisao
-	for _, r := range RevisoesDe(content) {
+	var minhas []Revision
+	for _, r := range RevisionsOf(content) {
 		if r.Codigo == codigo {
 			minhas = append(minhas, r)
 		}
@@ -125,7 +125,7 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 	//
 	// Exigir a mesma informação duas vezes não protege nada: ensina a satisfazer o gate
 	// em vez de comunicar, que é o oposto do que ele existe para fazer.
-	if seExplicaPorRevisao(content) {
+	if explainedByRevision(content) {
 		return Pass, "a mudança já está explicada pelo mecanismo de revisão de planos " +
 			"(`revises:` / `@revised-by`), e cobrar a mesma coisa em duas notações não " +
 			"protegeria nada"
@@ -140,9 +140,9 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 				"    > **%s-R0001:** <o que mudou e por quê>\n"+
 				"Se a mudança IMPACTA A DIREÇÃO do projeto, ou se você tem dúvida, não a "+
 				"faça aqui — a interpretação do impacto é sua, e ela escolhe a saída:\n"+
-				"    anchors escalate \"<o que precisa mudar>\" --sobre %s --para-usuario\n"+
+				"    anchors escalate \"<o que precisa mudar>\" --about %s --for-user\n"+
 				"Se não impacta a direção mas também não é para agora, vira card comum:\n"+
-				"    anchors escalate \"<o que precisa mudar>\" --sobre %s", codigo, n.ID, n.ID)
+				"    anchors escalate \"<o que precisa mudar>\" --about %s", codigo, n.ID, n.ID)
 	}
 
 	// A numeração tem de ser sequencial a partir de 1. Sem isso ela não responderia
@@ -162,11 +162,11 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 
 	ult := minhas[len(minhas)-1]
 	return Pass, fmt.Sprintf("alterado, e a revisão `%s-R%04d` diz por quê: %s",
-		ult.Codigo, ult.Numero, primeiraLinha(ult.Explicacao))
+		ult.Codigo, ult.Numero, firstLine(ult.Explicacao))
 }
 
-// primeiraLinha encurta a explicação para o laudo, que é uma linha.
-func primeiraLinha(s string) string {
+// firstLine encurta a explicação para o laudo, que é uma linha.
+func firstLine(s string) string {
 	if i := strings.IndexByte(s, '\n'); i >= 0 {
 		s = s[:i]
 	}
@@ -176,8 +176,8 @@ func primeiraLinha(s string) string {
 	return s
 }
 
-// mudouDeFato diz se o nó está na lista dos que mudaram.
-func mudouDeFato(id string, alterados []string) bool {
+// actuallyChanged diz se o nó está na lista dos que mudaram.
+func actuallyChanged(id string, alterados []string) bool {
 	for _, a := range alterados {
 		if a == id {
 			return true
@@ -186,12 +186,12 @@ func mudouDeFato(id string, alterados []string) bool {
 	return false
 }
 
-// seExplicaPorRevisao diz se o arquivo já declara a mudança pelo mecanismo de revisão
+// explainedByRevision diz se o arquivo já declara a mudança pelo mecanismo de revisão
 // entre planos — o `revises:` de quem revisa, e o aviso de quem foi revisado.
 //
 // São marcadores ESTÁVEIS, não prosa: o `plano-revisado` já os usa, e casar texto corrido
 // quebraria em projeto escrito noutro idioma.
-func seExplicaPorRevisao(content string) bool {
+func explainedByRevision(content string) bool {
 	for _, marca := range []string{"revises:", "@revised-by", "@amended-by"} {
 		if strings.Contains(content, marca) {
 			return true
@@ -200,14 +200,14 @@ func seExplicaPorRevisao(content string) bool {
 	return false
 }
 
-// gitDizQueMudou confronta a lista recebida com o que o git de fato vê.
+// gitSaysChanged confronta a lista recebida com o que o git de fato vê.
 //
 // Conta o que está no índice E na árvore de trabalho: o pre-commit roda com o arquivo já
 // staged, e olhar só um dos dois deixaria passar metade dos casos.
 //
 // Sem git (ou fora de repositório), devolve `true` e deixa a decisão com quem chamou —
 // negar ali silenciaria o gate onde ele não tem como medir.
-func gitDizQueMudou(root, path string) bool {
+func gitSaysChanged(root, path string) bool {
 	cmd := exec.Command("git", "status", "--porcelain", "--", path)
 	cmd.Dir = root
 	out, err := cmd.Output()
@@ -217,13 +217,13 @@ func gitDizQueMudou(root, path string) bool {
 	return len(strings.TrimSpace(string(out))) > 0
 }
 
-// gitDizQueEhNovo diz se o arquivo ainda não existe no histórico.
+// gitSaysIsNew diz se o arquivo ainda não existe no histórico.
 //
 // `git log -1 -- <path>` vazio significa que nenhum commit o tocou — é a diferença entre
 // "mudou" e "nasceu". O status porcelain não serve aqui: ele marca `??` para não
 // rastreado e `A ` para staged, e um arquivo novo já adicionado ao índice apareceria como
 // alteração.
-func gitDizQueEhNovo(root, path string) bool {
+func gitSaysIsNew(root, path string) bool {
 	// A pergunta é "este arquivo existe no ÚLTIMO COMMIT?", e não "ele é rastreado?".
 	//
 	// A diferença decide o gate. `git ls-files` consulta o INDEX, e o pre-commit roda com
@@ -243,7 +243,7 @@ func gitDizQueEhNovo(root, path string) bool {
 	// FORA de repositório a resposta é NÃO: ali o gate não tem como medir, e afirmar
 	// "é novo" o silenciaria em todo projeto sem git — que é o caso dos testes de unidade
 	// e de quem roda o Anchors fora de um repositório.
-	if !emRepositorio(root) {
+	if !inRepository(root) {
 		return false
 	}
 	cmd := exec.Command("git", "cat-file", "-e", "HEAD:"+path)
@@ -251,8 +251,8 @@ func gitDizQueEhNovo(root, path string) bool {
 	return cmd.Run() != nil // erro = não existe no último commit = nasce agora
 }
 
-// emRepositorio diz se `root` está dentro de um repositório git.
-func emRepositorio(root string) bool {
+// inRepository diz se `root` está dentro de um repositório git.
+func inRepository(root string) bool {
 	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
 	cmd.Dir = root
 	return cmd.Run() == nil

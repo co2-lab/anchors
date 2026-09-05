@@ -23,7 +23,7 @@ import (
 // Incoerência e lacuna são descobertas diferentes com o MESMO fluxo: quem achou
 // interpreta o impacto, e a interpretação escolhe a saída.
 //
-//	--para-usuario  a mudança impacta a DIREÇÃO do projeto. Vira decisão de quem o
+//	--for-user  a mudança impacta a DIREÇÃO do projeto. Vira decisão de quem o
 //	                planejou, com `anchors:precisa-do-usuario`, e o claim não entrega
 //	                o card enquanto ela não sair.
 //
@@ -50,7 +50,7 @@ texto se contradiz) ou por LACUNA (o plano está coerente e não cobriu algo).
 
 Quem descobriu interpreta o impacto, e a interpretação escolhe a saída:
 
-  --para-usuario   a mudança impacta a DIREÇÃO do projeto, ou você tem dúvida se
+  --for-user   a mudança impacta a DIREÇÃO do projeto, ou você tem dúvida se
                    impacta. Vira decisão de quem planejou: a issue nasce com
                    'anchors:precisa-do-usuario', e o claim não entrega o card
                    enquanto a decisão não sair.
@@ -63,7 +63,7 @@ corrija e registre a revisão ('{CODIGO}-R0001: o que mudou e por quê'). Abrir
 card para trocar uma palavra é burocracia.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -76,12 +76,12 @@ card para trocar uma palavra é burocracia.`,
 			// Sem label do fluxo a issue nasceria órfã: o claim filtra por ela, e um card
 			// que ninguém enxerga é pior que nenhum card. O `Load` já exige isto no modo
 			// github — a conferência aqui é para o caso de a validação mudar.
-			if cfg.ModoGitHub() && len(cfg.Workflow.Labels) == 0 {
+			if cfg.GitHubMode() && len(cfg.Workflow.Labels) == 0 {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("`workflow.labels` está vazio: a issue nasceria sem a " +
 					"label que o pipeline de claim usa para achá-la, e ficaria órfã")
 			}
-			if !cfg.ModoGitHub() {
+			if !cfg.GitHubMode() {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("`escalate` existe no modo github (o card é uma issue). " +
 					"No modo local, escreva a dúvida no plano e pare o trabalho — não há " +
@@ -89,7 +89,7 @@ card para trocar uma palavra é burocracia.`,
 			}
 
 			motivo := strings.Join(args, " ")
-			corpoTexto := corpoDaEscalada(motivo, sobre, card, paraUsuario)
+			corpoTexto := escalationBody(motivo, sobre, card, paraUsuario)
 
 			tmp, err := os.CreateTemp("", "anchors-escalate-*.md")
 			if err != nil {
@@ -105,11 +105,11 @@ card para trocar uma palavra é burocracia.`,
 			// label do fluxo E um estado, o pipeline de claim não a enxerga (ele filtra
 			// por `--label $LABEL --label anchors:to-do`), e ela fica no repositório sem
 			// nunca chegar a ninguém.
-			titulo := "[plano] " + primeiraLinhaDoMotivo(motivo)
+			titulo := "[plano] " + firstLineOfReason(motivo)
 			labels := []string{cfg.Workflow.Labels[0], "anchors:to-do"}
 			if paraUsuario {
-				titulo = "[decisão] " + primeiraLinhaDoMotivo(motivo)
-				labels = append(labels, initx.LabelPrecisaDoUsuario)
+				titulo = "[decisão] " + firstLineOfReason(motivo)
+				labels = append(labels, initx.LabelNeedsUser)
 			}
 			// SOB o card de origem, como LABEL — o que permite listar o que pende sob um
 			// trabalho (`--label anchors:sob-44`) e entregá-lo no mesmo PR. Uma frase no
@@ -160,7 +160,7 @@ card para trocar uma palavra é burocracia.`,
 			if paraUsuario && card != "" {
 				if _, err := exec.Command("gh", "issue", "edit", card,
 					"--repo", cfg.Workflow.Repo,
-					"--add-label", initx.LabelPrecisaDoUsuario,
+					"--add-label", initx.LabelNeedsUser,
 				).CombinedOutput(); err != nil {
 					fmt.Printf("· aviso: não consegui rotular o card #%s — rotule à mão, "+
 						"senão outro agente pega o card e refaz o caminho\n", card)
@@ -183,15 +183,20 @@ card para trocar uma palavra é burocracia.`,
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
-	cmd.Flags().StringVar(&sobre, "sobre", "", "o plano ou spec onde está a incoerência")
+	cmd.Flags().StringVar(&sobre, "about", "", "o plano ou spec onde está a incoerência")
 	cmd.Flags().StringVar(&card, "card", "", "número do card onde a necessidade foi descoberta")
-	cmd.Flags().BoolVar(&paraUsuario, "para-usuario", false,
+	cmd.Flags().BoolVar(&paraUsuario, "for-user", false,
 		"a mudança impacta a DIREÇÃO do projeto: vira decisão do usuário e para o card")
+	aliasDeFlag(cmd, "about", "sobre")
+	aliasDeFlag(cmd, "for-user", "para-usuario")
+	cmd.PreRunE = func(c *cobra.Command, _ []string) error {
+		return resolveAliases(c, map[string]string{"about": "sobre", "for-user": "para-usuario"})
+	}
 	return cmd
 }
 
-// primeiraLinhaDoMotivo faz o título da issue, que é uma linha.
-func primeiraLinhaDoMotivo(s string) string {
+// firstLineOfReason faz o título da issue, que é uma linha.
+func firstLineOfReason(s string) string {
 	if i := strings.IndexByte(s, '\n'); i >= 0 {
 		s = s[:i]
 	}
@@ -202,12 +207,12 @@ func primeiraLinhaDoMotivo(s string) string {
 	return s
 }
 
-// corpoDaEscalada monta o texto da issue.
+// escalationBody monta o texto da issue.
 //
 // Separado do comando porque é ELE o que precisa ser confrontado: o valor está em dizer
 // por que o trabalho parou e como destravar. Um teste que precisasse do `gh` para ler
 // isso não rodaria em máquina nenhuma, e o texto ficaria sem régua.
-func corpoDaEscalada(motivo, sobre, card string, paraUsuario bool) string {
+func escalationBody(motivo, sobre, card string, paraUsuario bool) string {
 	var b strings.Builder
 	if paraUsuario {
 		b.WriteString("🛑 **Esta decisão não é do agente.**\n\n")
@@ -226,7 +231,7 @@ func corpoDaEscalada(motivo, sobre, card string, paraUsuario bool) string {
 		b.WriteString("**Como destravar:** decida, e registre a decisão onde ela vale — no " +
 			"plano ou na spec, como revisão (`{CODIGO}-R0001: o que mudou e por quê`). Se a " +
 			"mudança for grande, um plano novo com `revises:`. Depois remova a label `" +
-			initx.LabelPrecisaDoUsuario + "`.\n\n")
+			initx.LabelNeedsUser + "`.\n\n")
 		if card != "" {
 			b.WriteString(fmt.Sprintf("Trabalho parado no card #%s.\n", card))
 		}
@@ -237,7 +242,7 @@ func corpoDaEscalada(motivo, sobre, card string, paraUsuario bool) string {
 		"Entra na fila como qualquer outro trabalho.\n\n")
 	b.WriteString("**O que fazer:** altere o plano ou a spec e registre a revisão no " +
 		"próprio arquivo (`{CODIGO}-R0001: o que mudou e por quê`). Se ao mexer você " +
-		"concluir que isto MUDA A DIREÇÃO, não siga: `anchors escalate ... --para-usuario`.\n\n")
+		"concluir que isto MUDA A DIREÇÃO, não siga: `anchors escalate ... --for-user`.\n\n")
 	if card != "" {
 		b.WriteString(fmt.Sprintf("Nasceu SOB o card #%s (label `%s`), que segue normalmente. "+
 			"Os dois se entregam no mesmo PR: o achado apareceu fazendo aquele trabalho, e "+

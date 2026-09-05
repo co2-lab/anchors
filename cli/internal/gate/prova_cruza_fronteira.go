@@ -41,23 +41,23 @@ import (
 // símbolo prometido entre crases. Duplicação que ninguém nomeou não é alcançada; o
 // gate impede que ela VOLTE depois de nomeada.
 
-// marcaFonteUnicaRE é a MARCAÇÃO DECLARADA da relação: `***{fonte-unica}***`.
+// singleSourceMarkRE é a MARCAÇÃO DECLARADA da relação: `***{fonte-unica}***`.
 // Negrito+itálico para não colidir com a ênfase comum (`**email**`, `**puro**`,
 // que o repo já usa) — e porque no markdown renderizado ela salta da linha.
-var marcaFonteUnicaRE = regexp.MustCompile(`\*\*\*?\{fonte-unica\}\*\*\*?`)
+var singleSourceMarkRE = regexp.MustCompile(`\*\*\*?\{fonte-unica\}\*\*\*?`)
 
-// marcaDonoRE é o CARIMBO DE DONO: `(@fonte-unica)`, que só o arquivo que DETÉM o
+// ownerMarkRE é o CARIMBO DE DONO: `(@fonte-unica)`, que só o arquivo que DETÉM o
 // conceito carrega. Os que espelham trazem apenas `{fonte-unica}` + o alvo.
 //
 // A assimetria é o que dá ao gate uma pergunta que a marcação sozinha não daria:
 // quantos donos existem? Zero dono é conceito órfão (ninguém é a fonte, todos
 // espelham algo que não está declarado); dois donos é a divergência já instalada,
 // com os dois lados se achando a origem.
-var marcaDonoRE = regexp.MustCompile(`\(@fonte-unica\)`)
+var ownerMarkRE = regexp.MustCompile(`\(@fonte-unica\)`)
 
-// afirmacaoDeRelacaoRE são as formas em que uma regra afirma dependência de outra
+// relationClaimRE são as formas em que uma regra afirma dependência de outra
 // unidade. Português e inglês, porque a spec segue o idioma do projeto.
-var afirmacaoDeRelacaoRE = []*regexp.Regexp{
+var relationClaimRE = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)\bfonte[- ]única\b`),
 	regexp.MustCompile(`(?i)\bsingle[- ]source\b`),
 	regexp.MustCompile(`(?i)\bespelha(m|r)?\b`),
@@ -67,7 +67,7 @@ var afirmacaoDeRelacaoRE = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)\bmesma (regra|lógica|conta|fronteira|tabela)\b`),
 }
 
-// codigoDeRegraAlvoRE captura o ALVO como CÓDIGO DE REGRA (`RDSRX-B04`) — a forma
+// targetRuleCodeRE captura o ALVO como CÓDIGO DE REGRA (`RDSRX-B04`) — a forma
 // preferida. O código é identidade estável: já é usado em toda a aplicação (spec,
 // feature, teste, comentário no código), e sobrevive à refatoração que move ou
 // renomeia o arquivo.
@@ -78,33 +78,33 @@ var afirmacaoDeRelacaoRE = []*regexp.Regexp{
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
-func codigoDeRegraAlvoRE() *regexp.Regexp {
+func targetRuleCodeRE() *regexp.Regexp {
 	return regexp.MustCompile("`([A-Z0-9]" + config.CodeLengthPattern() + ")-[A-Z]\\d{2}(?:#\\d{2})?`")
 }
 
-// unidadeCitadaRE captura o ARQUIVO citado na regra: um caminho com extensão, entre
+// citedUnitRE captura o ARQUIVO citado na regra: um caminho com extensão, entre
 // crases ou solto. Forma ACEITA (não preferida) — ver codigoDeRegraAlvoRE.
 // A 2ª alternativa cobre o arquivo citado SEM caminho (`orgBilling.ts`), que é
 // como a maioria das regras o nomeia. A lista de extensões inclui `json`/`yaml`
 // porque contrato de provedor e schema entram aqui — e é justamente o caso que a
 // dispensa `@no-cross` atende.
-var unidadeCitadaRE = regexp.MustCompile("`?([\\w./@-]+/[\\w.-]+\\.\\w{2,4})`?|`([\\w.-]+\\.(?:ts|tsx|js|jsx|mjs|go|py|rb|kt|swift|json|ya?ml))`")
+var citedUnitRE = regexp.MustCompile("`?([\\w./@-]+/[\\w.-]+\\.\\w{2,4})`?|`([\\w.-]+\\.(?:ts|tsx|js|jsx|mjs|go|py|rb|kt|swift|json|ya?ml))`")
 
-// linhaDeRegraRE isola a linha de uma regra catalogada (`| \x60ABCD-B01\x60 | … |`).
+// ruleLineRE isola a linha de uma regra catalogada (`| \x60ABCD-B01\x60 | … |`).
 // A afirmação e o arquivo citado têm de estar na MESMA linha: é o que amarra a
 // exigência à regra, e não a um parágrafo de prosa em volta.
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
-func linhaDeRegraRE() *regexp.Regexp {
+func ruleLineRE() *regexp.Regexp {
 	return regexp.MustCompile("(?m)^\\s*\\|\\s*`([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2}(?:#\\d{2})?)`\\s*\\|(.+)$")
 }
 
-// dispensaFronteiraRE é a saída declarada: a relação existe mas não é importável
+// boundaryWaiverRE é a saída declarada: a relação existe mas não é importável
 // (contrato de rede, arquivo gerado, valor que vive num provedor externo).
-var dispensaFronteiraRE = regexp.MustCompile(`@no-cross(?:-boundary)?\s*:\s*\S`)
+var boundaryWaiverRE = regexp.MustCompile(`@no-cross(?:-boundary)?\s*:\s*\S`)
 
-func checkProvaCruzaFronteira(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, "não é uma spec — a afirmação de relação vive na regra catalogada"
 	}
@@ -121,16 +121,16 @@ func checkProvaCruzaFronteira(content string, n mapx.Node, root string, g *mapx.
 	dispensadas := 0
 	donos := 0
 
-	for _, m := range linhaDeRegraRE().FindAllStringSubmatch(content, -1) {
+	for _, m := range ruleLineRE().FindAllStringSubmatch(content, -1) {
 		regra, texto := m[1], m[2]
-		if dispensaFronteiraRE.MatchString(texto) {
+		if boundaryWaiverRE.MatchString(texto) {
 			dispensadas++
 			continue // a relação foi declarada como não-importável, com razão
 		}
-		marcado := marcaFonteUnicaRE.MatchString(texto)
+		marcado := singleSourceMarkRE.MatchString(texto)
 
 		// O DONO não espelha ninguém: ele É a fonte. Nada a importar.
-		if marcado && marcaDonoRE.MatchString(texto) {
+		if marcado && ownerMarkRE.MatchString(texto) {
 			donos++
 			continue
 		}
@@ -143,12 +143,12 @@ func checkProvaCruzaFronteira(content string, n mapx.Node, root string, g *mapx.
 			// PREFERIDO: o alvo por CÓDIGO DE REGRA. Resolve pelo mapa (o nó que
 			// declara `code: RDSR`), então a regra não carrega caminho de arquivo —
 			// que muda — e sim a identidade da unidade, que não muda.
-			for _, mm := range codigoDeRegraAlvoRE().FindAllStringSubmatch(texto, -1) {
+			for _, mm := range targetRuleCodeRE().FindAllStringSubmatch(texto, -1) {
 				unidadeAlvo := mm[1]
-				if unidadeAlvo == regraUnidade(regra) {
+				if unidadeAlvo == unitRule(regra) {
 					continue // auto-referência: a própria unidade não é o outro lado
 				}
-				arquivos := arquivosDaUnidade(g, unidadeAlvo)
+				arquivos := unitFiles(g, unidadeAlvo)
 				if len(arquivos) == 0 {
 					suspeitas = append(suspeitas, regra+" → `"+mm[0]+
 						"` (o código da regra-alvo não resolve para nenhuma unidade no mapa — "+
@@ -162,7 +162,7 @@ func checkProvaCruzaFronteira(content string, n mapx.Node, root string, g *mapx.
 				}
 			}
 
-			for _, mm := range unidadeCitadaRE.FindAllStringSubmatch(texto, -1) {
+			for _, mm := range citedUnitRE.FindAllStringSubmatch(texto, -1) {
 				alvo := mm[1]
 				if alvo == "" {
 					alvo = mm[2]
@@ -183,11 +183,11 @@ func checkProvaCruzaFronteira(content string, n mapx.Node, root string, g *mapx.
 		// Sem marcação: o VOCABULÁRIO só avisa. É o que faz a convenção ser adotada
 		// em vez de esquecida — quem escreveu "espelha o X.ts" em prosa provavelmente
 		// não sabia do marcador, e o aviso ensina sem barrar.
-		for _, re := range afirmacaoDeRelacaoRE {
+		for _, re := range relationClaimRE {
 			if !re.MatchString(texto) {
 				continue
 			}
-			for _, mm := range unidadeCitadaRE.FindAllStringSubmatch(texto, -1) {
+			for _, mm := range citedUnitRE.FindAllStringSubmatch(texto, -1) {
 				alvo := mm[1]
 				if alvo == "" {
 					alvo = mm[2]
@@ -265,7 +265,7 @@ func checkProvaCruzaFronteira(content string, n mapx.Node, root string, g *mapx.
 
 	var quebradas []string
 	for _, ex := range exigencias {
-		if importaUnidade(code, ex.arquivo) {
+		if importsUnit(code, ex.arquivo) {
 			continue
 		}
 		quebradas = append(quebradas, fmt.Sprintf("%s → `%s`", ex.regra, ex.arquivo))
@@ -290,12 +290,12 @@ func checkProvaCruzaFronteira(content string, n mapx.Node, root string, g *mapx.
 	return Pass, ""
 }
 
-// importaUnidade decide se `code` traz a unidade `alvo` por import. Compara pelo
+// importsUnit decide se `code` traz a unidade `alvo` por import. Compara pelo
 // NOME BASE sem extensão, não pelo caminho: a mesma unidade é citada na spec como
 // `packages/backend/business-logic/orgBilling.ts` e importada no código como
 // `@backend/business-logic/orgBilling` — alias e extensão variam por projeto, o
 // nome do módulo não.
-func importaUnidade(code, alvo string) bool {
+func importsUnit(code, alvo string) bool {
 	base := strings.TrimSuffix(filepath.Base(alvo), filepath.Ext(alvo))
 	if base == "" {
 		return false
@@ -315,15 +315,15 @@ func importaUnidade(code, alvo string) bool {
 	return false
 }
 
-// regraUnidade extrai o código da UNIDADE de um código de regra (`SEATX-B01` → `SEAT`).
-func regraUnidade(regra string) string {
+// unitRule extrai o código da UNIDADE de um código de regra (`SEATX-B01` → `SEAT`).
+func unitRule(regra string) string {
 	if i := strings.IndexByte(regra, '-'); i > 0 {
 		return regra[:i]
 	}
 	return regra
 }
 
-// arquivosDaUnidade resolve um código de unidade (`PPAO`) para os arquivos de CÓDIGO
+// unitFiles resolve um código de unidade (`PPAO`) para os arquivos de CÓDIGO
 // daquela trinca. É o que permite o alvo ser declarado por código de regra em vez de
 // caminho de arquivo — o código é identidade estável, o caminho não.
 //
@@ -331,7 +331,7 @@ func regraUnidade(regra string) string {
 // declara `ref:`, e o mapa não o indexa por código). Da spec, a aresta `specifies`
 // leva ao código regido — que é o que precisa ser importado. Importar a spec ou o
 // teste não faria sentido.
-func arquivosDaUnidade(g *mapx.Graph, unidade string) []string {
+func unitFiles(g *mapx.Graph, unidade string) []string {
 	var out []string
 	for _, n := range g.Nodes {
 		if n.Code != unidade || n.Kind != mapx.KindSpec {

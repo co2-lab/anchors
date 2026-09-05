@@ -287,7 +287,7 @@ func TestSugestaoDaFilaEhComponivelPeloWork(t *testing.T) {
 		if verbo == "" {
 			continue // kind sem próxima etapa é legítimo
 		}
-		if !ArtefatoDeTrabalhoValido(verbo) {
+		if !ValidWorkArtifact(verbo) {
 			t.Errorf("kind %q sugere %q, que o `anchors work` recusa — quem puxa a task não "+
 				"consegue compor o prompt", k, verbo)
 		}

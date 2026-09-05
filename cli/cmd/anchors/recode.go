@@ -44,7 +44,7 @@ Fora do escopo desta versão (fase 2): trocar prefixo de testID e renomear ARQUI
 cujo nome contém o código — dependem de convenção declarada no anchors.yaml.`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

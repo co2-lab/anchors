@@ -23,7 +23,7 @@ func newStaleCmd() *cobra.Command {
 ponta que avançou de rev desde o último carimbo do check. É a dívida de confronto —
 rode 'anchors check' sobre os alvos para reconciliá-las e recarimbar.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}

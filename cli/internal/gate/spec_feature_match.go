@@ -70,7 +70,7 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		return Skip, "a spec declara `@no-feature` — sem feature não há cenário a cobrar de requisito nenhum"
 	}
 
-	declarados := requisitosDefinidos(content)
+	declarados := definedRequirements(content)
 	if len(declarados) == 0 {
 		return Skip, "a spec não define requisito com código — nada a cobrir"
 	}
@@ -92,10 +92,10 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 			// acusar de repente todo requisito que ganhou mais de um caso.
 			for _, c := range sc.Codes {
 				cobertos[c] = true
-				cobertos[CodeRaiz(c)] = true
+				cobertos[RootCode(c)] = true
 			}
 			cobertos[sc.Code] = true
-			cobertos[CodeRaiz(sc.Code)] = true
+			cobertos[RootCode(sc.Code)] = true
 		}
 	}
 
@@ -123,7 +123,7 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		len(faltando), strings.Join(mostra, ", "), sufixo)
 }
 
-// requisitosDefinidos extrai os códigos que a spec DEFINE — não os que ela cita.
+// definedRequirements extrai os códigos que a spec DEFINE — não os que ela cita.
 //
 // A distinção é a mesma que o gate `rule-types` já faz, e é o que separa um gate útil de
 // um gerador de ruído: uma spec cita códigos de outras unidades o tempo todo (na Tabela
@@ -131,11 +131,11 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 // isso. Define quem coloca o código no INÍCIO de uma linha, de um item de lista, de um
 // título de seção, ou na PRIMEIRA célula de uma tabela — as formas em que uma régua
 // enuncia um requisito.
-func requisitosDefinidos(content string) []string {
+func definedRequirements(content string) []string {
 	vistos := map[string]bool{}
 	var out []string
 	for _, linha := range strings.Split(content, "\n") {
-		if dispensadoPorNoScenario(linha) {
+		if waivedByNoScenario(linha) {
 			continue
 		}
 		m := defineRuleCaptureRE.FindStringSubmatch(linha)
@@ -160,9 +160,9 @@ var defineRuleCaptureRE = regexp.MustCompile(
 // noScenarioRE — o opt-out por requisito, com razão obrigatória depois dos dois-pontos.
 var noScenarioRE = regexp.MustCompile(`@no-scenario[^\S\n]*:[^\S\n]*\S+`)
 
-// dispensadoPorNoScenario: o opt-out precisa de RAZÃO escrita. `[^\S\n]` = espaço/tab mas
+// waivedByNoScenario: o opt-out precisa de RAZÃO escrita. `[^\S\n]` = espaço/tab mas
 // não quebra de linha, senão a razão seria "achada" na linha seguinte e um marcador nu
 // passaria — que é justamente o que a dispensa não pode permitir.
-func dispensadoPorNoScenario(linha string) bool {
+func waivedByNoScenario(linha string) bool {
 	return noScenarioRE.MatchString(linha)
 }

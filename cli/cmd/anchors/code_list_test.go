@@ -119,12 +119,12 @@ func TestTituloDoArquivoTiraOPrefixoRedundante(t *testing.T) {
 		if err := os.WriteFile(filepath.Join(dir, "a.md"), []byte(conteudo), 0o644); err != nil {
 			t.Fatal(err)
 		}
-		if got := tituloDoArquivo(dir, "a.md"); got != esperado {
+		if got := fileTitle(dir, "a.md"); got != esperado {
 			t.Errorf("%q → %q, queria %q", conteudo, got, esperado)
 		}
 	}
 	// Arquivo que não é markdown não tem título a extrair.
-	if got := tituloDoArquivo(dir, "x.go"); got != "" {
+	if got := fileTitle(dir, "x.go"); got != "" {
 		t.Errorf("arquivo não-markdown devolveu %q", got)
 	}
 }

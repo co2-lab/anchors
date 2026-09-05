@@ -12,8 +12,8 @@ import (
 // achado sobre `Foo.spec.md` casaria o card de `FooBar.spec.md` — e o Anchors fecharia o
 // card errado, que é pior que não fechar nenhum.
 func TestMarcadorEhExatoENaoPrefixo(t *testing.T) {
-	corpoDeOutro := fmt.Sprintf(MarcadorChave, "trinca-completa:packages/Foo.spec.md:violation")
-	marcaProcurada := fmt.Sprintf(MarcadorChave, "trinca-completa:packages/Foo.spec.md")
+	corpoDeOutro := fmt.Sprintf(KeyMarker, "trinca-completa:packages/Foo.spec.md:violation")
+	marcaProcurada := fmt.Sprintf(KeyMarker, "trinca-completa:packages/Foo.spec.md")
 
 	// O marcador do outro card CONTÉM o prefixo do procurado, e mesmo assim não pode
 	// casar: são achados de alvos diferentes.
@@ -33,11 +33,11 @@ func TestTituloDizOQueEhSemAChave(t *testing.T) {
 		Stale:     "Desatualizado",
 		Conflict:  "Conflito",
 	} {
-		got := g.titulo(Issue{Kind: kind, Gate: "trinca-completa", Target: "a/b.spec.md"})
+		got := g.title(Issue{Kind: kind, Gate: "triad-complete", Target: "a/b.spec.md"})
 		if !strings.Contains(got, esperado) {
 			t.Errorf("título de %s deveria dizer %q, veio %q", kind, esperado, got)
 		}
-		if !strings.Contains(got, "a/b.spec.md") || !strings.Contains(got, "trinca-completa") {
+		if !strings.Contains(got, "a/b.spec.md") || !strings.Contains(got, "triad-complete") {
 			t.Errorf("o título deve nomear o gate e o alvo; veio %q", got)
 		}
 	}
@@ -46,13 +46,13 @@ func TestTituloDizOQueEhSemAChave(t *testing.T) {
 // O DESTINO PADRÃO é arquivo. Um projeto local, ou qualquer chamador que não configurou
 // nada, não pode acabar falando com a rede sem pedir.
 func TestDestinoPadraoEhArquivo(t *testing.T) {
-	UsarArquivos()
-	if destino != nil {
+	UseFiles()
+	if target != nil {
 		t.Fatal("sem configurar, o destino tem de ser o arquivo")
 	}
-	UsarGitHub("acme/x", "anchors")
-	if destino == nil || destino.Repo != "acme/x" {
+	UseGitHub("acme/x", "anchors")
+	if target == nil || target.Repo != "acme/x" {
 		t.Fatal("UsarGitHub deveria rotear para o repositório declarado")
 	}
-	UsarArquivos() // não vaza para os outros testes do pacote
+	UseFiles() // não vaza para os outros testes do pacote
 }

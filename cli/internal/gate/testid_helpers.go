@@ -47,9 +47,9 @@ func regexDeHandle(attr string) (literal, template *regexp.Regexp) {
 		regexp.MustCompile(a + "\\s*[=:]\\s*\\{?`(:?[a-zA-Z][a-zA-Z0-9._-]*)\\$?\\{?")
 }
 
-// testIDsExpostos devolve os handles que a unidade oferece ao mundo. O template
+// exposedTestIDs devolve os handles que a unidade oferece ao mundo. O template
 // entra na forma `prefixo-*`, que é como a spec o declara.
-func testIDsExpostos(src string, attr string) []string {
+func exposedTestIDs(src string, attr string) []string {
 	testIDExpostoRE, testIDTemplateRE := regexDeHandle(attr)
 	visto := map[string]bool{}
 	var out []string
@@ -108,12 +108,12 @@ func handleDeTeste(cfg *config.Config) string {
 	return strings.TrimSpace(cfg.Derived.TestHandle)
 }
 
-// testIDDeclaradoRE captura o id citado em crase na spec. Aceita as três formas
+// declaredTestIDRE captura o id citado em crase na spec. Aceita as três formas
 // catalogadas que o projeto já usa (SPEC_TYPES §5): linha de tabela, bullet e
 // cabeçalho — o que importa é o id estar em crase, não a moldura em volta.
-var testIDDeclaradoRE = regexp.MustCompile("`(:?[a-zA-Z][a-zA-Z0-9._-]*(?:-\\*)?)`")
+var declaredTestIDRE = regexp.MustCompile("`(:?[a-zA-Z][a-zA-Z0-9._-]*(?:-\\*)?)`")
 
-// secaoSuperficieRE delimita a seção de inventário. Sem ela, qualquer crase na prosa
+// surfaceSectionRE delimita a seção de inventário. Sem ela, qualquer crase na prosa
 // da spec (nome de classe CSS, de campo, de arquivo) contaria como declaração — e o
 // gate passaria a aprovar por acidente, que é pior que reprovar por engano.
 //
@@ -121,11 +121,11 @@ var testIDDeclaradoRE = regexp.MustCompile("`(:?[a-zA-Z][a-zA-Z0-9._-]*(?:-\\*)?
 // specs do app de referência nomeiam ali a superfície que consome os ids. Exigir fim-de-linha logo
 // após o título fazia o gate não enxergar a seção dessas specs e acusá-las de não
 // declarar nada — reprovando justamente as que documentam melhor.
-var secaoSuperficieRE = regexp.MustCompile(`(?im)^#{1,6}\s*(?:superf[íi]cie de teste|test\s*ids?)\b.*$`)
+var surfaceSectionRE = regexp.MustCompile(`(?im)^#{1,6}\s*(?:superf[íi]cie de teste|test\s*ids?)\b.*$`)
 
-// testIDsDeclarados lê o inventário DENTRO da seção de Superfície de Teste.
-func testIDsDeclarados(spec, attr string) []string {
-	loc := secaoSuperficieRE.FindStringIndex(spec)
+// declaredTestIDs lê o inventário DENTRO da seção de Superfície de Teste.
+func declaredTestIDs(spec, attr string) []string {
+	loc := surfaceSectionRE.FindStringIndex(spec)
 	if loc == nil {
 		return nil
 	}
@@ -143,10 +143,10 @@ func testIDsDeclarados(spec, attr string) []string {
 		// e `ATLNX-VR` (coluna "Usado em") como se fossem testIDs declarados, e depois
 		// acusá-los de órfãos — inventando dívida a partir da própria documentação.
 		alvo := linha
-		if celulas := celulasDaLinha(linha); celulas != nil {
+		if celulas := rowCells(linha); celulas != nil {
 			alvo = celulas[0]
 		}
-		for _, m := range testIDDeclaradoRE.FindAllStringSubmatch(alvo, -1) {
+		for _, m := range declaredTestIDRE.FindAllStringSubmatch(alvo, -1) {
 			// O PRÓPRIO nome do atributo não é um id. O átomo genérico (Button,
 			// Avatar, ActionLink) recebe o handle de fora e a spec o documenta como
 			// `testID` (prop) — declarar isso é dizer "aceito um handle", não "exponho
@@ -164,9 +164,9 @@ func testIDsDeclarados(spec, attr string) []string {
 	return out
 }
 
-// celulasDaLinha devolve as células de uma linha de tabela Markdown, ou nil se a
+// rowCells devolve as células de uma linha de tabela Markdown, ou nil se a
 // linha não for tabela. Separador (`| --- |`) não tem conteúdo e devolve nil.
-func celulasDaLinha(linha string) []string {
+func rowCells(linha string) []string {
 	t := strings.TrimSpace(linha)
 	if !strings.HasPrefix(t, "|") {
 		return nil
@@ -183,11 +183,11 @@ func celulasDaLinha(linha string) []string {
 
 // diferenca devolve o que está em `a` e não em `b`, comparando sem o `:` de marcação
 // — a spec pode citar `bdgt-screen` ou `:bdgt-screen` e as duas dizem a mesma coisa.
-// O curinga casa dos DOIS lados: exposto `otp-input-*` cobre o declarado
-// `otp-input-0`, e declarado `abcd-item-*` cobre o exposto `abcd-item-3`. Sem isso o
+// O curinga casa dos DOIS lados: exposto `otp-input-*` covers o declarado
+// `otp-input-0`, e declarado `abcd-item-*` covers o exposto `abcd-item-3`. Sem isso o
 // gate acusaria em ambos os sentidos um id que o outro lado descreve corretamente —
 // só que na forma genérica em vez da concreta, ou vice-versa.
-func cobre(padrao, id string) bool {
+func covers(padrao, id string) bool {
 	p := strings.TrimPrefix(padrao, ":")
 	i := strings.TrimPrefix(id, ":")
 	if p == i {
@@ -199,14 +199,14 @@ func cobre(padrao, id string) bool {
 	return false
 }
 
-func diferenca(a, b []string) []string {
+func difference(a, b []string) []string {
 	var out []string
 	for _, s := range a {
 		coberto := false
 		for _, t := range b {
 			// Nos dois sentidos: o curinga pode estar em qualquer lado, porque a forma
 			// genérica tanto é exposta pelo código (template) quanto declarada na spec.
-			if cobre(t, s) || cobre(s, t) {
+			if covers(t, s) || covers(s, t) {
 				coberto = true
 				break
 			}
@@ -219,8 +219,8 @@ func diferenca(a, b []string) []string {
 	return out
 }
 
-// listar formata a lista de ids, truncando para a mensagem não virar despejo.
-func listar(ids []string) string {
+// list formata a lista de ids, truncando para a mensagem não virar despejo.
+func list(ids []string) string {
 	const max = 8
 	if len(ids) <= max {
 		return "`" + strings.Join(ids, "`, `") + "`"

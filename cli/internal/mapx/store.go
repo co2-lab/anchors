@@ -10,7 +10,7 @@ import (
 // DefaultPath é onde o mapa material vive na raiz do projeto.
 const DefaultPath = "anchors.graph.yaml"
 
-// GeradoPor é a versão do binário que escreve o mapa, preenchida pelo `main` no início.
+// GeneratedBy é a versão do binário que escreve o mapa, preenchida pelo `main` no início.
 //
 // Existe porque um binário DESATUALIZADO não avisa — ele grava o formato que conhece, e
 // desfaz o que a versão nova escreveu. Medido: depois de renomear um campo do carimbo, o
@@ -19,11 +19,11 @@ const DefaultPath = "anchors.graph.yaml"
 //
 // O `--version` não denunciava: os dois builds locais se identificam como "dev". Só o
 // diff do mapa mostrava, e para isso alguém precisa estar olhando.
-var GeradoPor string
+var GeneratedBy string
 
 // Save escreve o grafo como YAML material e versionável.
 func Save(g *Graph, path string) error {
-	g.GeradoPor = GeradoPor
+	g.GeradoPor = GeneratedBy
 	data, err := yaml.Marshal(g)
 	if err != nil {
 		return err
@@ -40,7 +40,7 @@ func Save(g *Graph, path string) error {
 	// A comparação é com o arquivo COMPLETO, header incluído. A primeira versão comparava
 	// só o YAML contra o arquivo em disco — e como o disco tem o header, nunca eram
 	// iguais: a guarda não guardava nada, e só o teste isolado mostrou.
-	if igualIgnorandoGeradoPor(path, completo) {
+	if equalIgnoringGeneratedBy(path, completo) {
 		return nil
 	}
 	return os.WriteFile(path, completo, 0o644)
@@ -59,17 +59,17 @@ func Load(path string) (*Graph, error) {
 	return &g, nil
 }
 
-// igualIgnorandoGeradoPor diz se o mapa em disco é o mesmo, desconsiderando quem o gerou.
-func igualIgnorandoGeradoPor(path string, novo []byte) bool {
+// equalIgnoringGeneratedBy diz se o mapa em disco é o mesmo, desconsiderando quem o gerou.
+func equalIgnoringGeneratedBy(path string, novo []byte) bool {
 	atual, err := os.ReadFile(path)
 	if err != nil {
 		return false // não existe ainda: há o que escrever
 	}
-	return semGeradoPor(atual) == semGeradoPor(novo)
+	return withoutGeneratedBy(atual) == withoutGeneratedBy(novo)
 }
 
-var geradoPorLinhaRE = regexp.MustCompile(`(?m)^gerado_por:.*\n`)
+var generatedByLineRE = regexp.MustCompile(`(?m)^gerado_por:.*\n`)
 
-func semGeradoPor(b []byte) string {
-	return geradoPorLinhaRE.ReplaceAllString(string(b), "")
+func withoutGeneratedBy(b []byte) string {
+	return generatedByLineRE.ReplaceAllString(string(b), "")
 }

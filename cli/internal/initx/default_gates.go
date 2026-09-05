@@ -2,16 +2,16 @@ package initx
 
 import "github.com/co2-lab/anchors/internal/config"
 
-// dependemDeSinalIngerido são os gates que só têm o que medir depois de `anchors ingest`
+// dependOnIngestedSignal são os gates que só têm o que medir depois de `anchors ingest`
 // receber um relatório de teste, cobertura ou mutação. Bloquear com base num sinal que
 // ainda não existe barraria o commit por ausência de dado — não por defeito.
 //
 // Ficam informativos mesmo em projeto novo, e o usuário os promove quando a suíte
 // estiver rodando no CI.
-var dependemDeSinalIngerido = map[string]bool{
+var dependOnIngestedSignal = map[string]bool{
 	"tests-green": true, "line-coverage": true, "coverage-delta": true,
-	"mutation-score": true, "scenario-coverage": true, "sbom-gerado": true,
-	"dependencia-vulneravel": true, "sem-duplicacao": true,
+	"mutation-score": true, "scenario-coverage": true, "sbom-generated": true,
+	"dependency-vulnerable": true, "no-duplication": true,
 }
 
 // DefaultGates devolve os gates que um projeto deve NASCER com, conforme os artefatos
@@ -39,11 +39,11 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	if chosen["spec"] {
 		gates = append(gates,
 			config.Gate{
-				Name: "spec-completa", ID: "spec-completa", On: []string{"spec"}, Check: "spec-sections",
+				Name: "spec-complete", ID: "spec-complete", On: []string{"spec"}, Check: "spec-sections",
 				Blocking: config.Bool(false), Measures: "a spec tem ao menos um estado/regra, sem placeholder",
 			},
 			config.Gate{
-				Name: "spec-tem-codigo", ID: "spec-tem-codigo", On: []string{"spec"}, Check: "has-code",
+				Name: "spec-has-code", ID: "spec-has-code", On: []string{"spec"}, Check: "has-code",
 				Blocking: config.Bool(false), Measures: "a spec carrega um código de cenário (identidade)",
 			},
 			// A spec sozinha atravessa TODOS os gates relacionais — eles falham ABERTO
@@ -51,7 +51,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// promover" sobre trabalho que não existe. Este gate pergunta o oposto: as
 			// peças EXISTEM? Nasce informativo porque quase todo projeto tem débito.
 			config.Gate{
-				Name: "trinca-completa", ID: "trinca-completa", On: []string{"spec"}, Check: "trinca-completa",
+				Name: "triad-complete", ID: "triad-complete", On: []string{"spec"}, Check: "triad-complete",
 				Blocking: config.Bool(false), Measures: "a spec tem código, feature e teste que a realizam",
 			},
 			// A metade que o determinístico NÃO alcança.
@@ -69,7 +69,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// fica verde, e a prova não existe. Determinístico prova que a referência
 			// RESOLVE; julgamento prova que ela VALE.
 			config.Gate{
-				Name: "no-test-prova-real", ID: "no-test-prova-real", On: []string{"spec"},
+				Name: "no-test-proof-real", ID: "no-test-proof-real", On: []string{"spec"},
 				// Só as specs que DISPENSARAM o teste têm o que julgar. Sem o filtro, o
 				// gate enfileirava uma pergunta de IA para toda spec do projeto — 583
 				// alvos onde 16 dispensaram — e o contador de pendências passava a medir
@@ -97,7 +97,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// implementar; só o julgamento seria caro demais para cada commit. Rodando em
 			// momentos diferentes, eles se complementam.
 			config.Gate{
-				Name: "regra-cumprida", ID: "regra-cumprida", On: []string{"spec"},
+				Name: "rule-fulfilled", ID: "rule-fulfilled", On: []string{"spec"},
 				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
 				Ask: "Cada regra desta spec está marcada no código por um comentário com o " +
 					"código dela (`// ABCDX-B01: …`). Leia a regra e o trecho que ela marca e " +
@@ -107,7 +107,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 					"num lugar genérico (topo do arquivo, import) em vez do trecho que decide. " +
 					"A pergunta é sobre o que o código EXECUTA, não sobre o que o comentário " +
 					"afirma. Ao reprovar, PROPONHA a correção como patch. " +
-					instrucaoTBD("o código"),
+					tbdInstruction("o código"),
 			},
 			// O vocabulário de letras do código é do PROJETO (`rule_types`), mas o gate
 			// que impede conflito e letra não declarada é universal: uma letra fora do
@@ -120,7 +120,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// pelas 5 restantes. A dispensa por símbolo (`@no-rule: <razão>`) cobre o
 			// caso legítimo: nem toda exportação carrega decisão de negócio.
 			config.Gate{
-				Name: "codigo-catalogado", ID: "codigo-catalogado", On: []string{"spec"}, Check: "codigo-catalogado",
+				Name: "code-cataloged", ID: "code-cataloged", On: []string{"spec"}, Check: "code-cataloged",
 				Blocking: config.Bool(false),
 				Measures: "todo símbolo exportado tem regra na spec ou dispensa escrita",
 			},
@@ -147,7 +147,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// cobra: regra que afirma "espelha"/"fonte única" com um arquivo citado
 			// exige que o código IMPORTE aquele arquivo.
 			config.Gate{
-				Name: "prova-cruza-fronteira", ID: "prova-cruza-fronteira", On: []string{"spec"}, Check: "prova-cruza-fronteira",
+				Name: "proof-crosses-boundary", ID: "proof-crosses-boundary", On: []string{"spec"}, Check: "proof-crosses-boundary",
 				Blocking: config.Bool(false), Measures: "regra que afirma relação com outra unidade tem o código importando aquela unidade",
 			},
 			config.Gate{
@@ -184,8 +184,8 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		// decisão que foi revista — e o plano parece coerente, porque ele É o registro
 		// coerente do que se decidiu na época.
 		gates = append(gates, config.Gate{
-			Name: "plano-revisado", ID: "plano-revisado", On: []string{"plan"},
-			Check: "plano-revisado", Blocking: config.Bool(projetoNovo),
+			Name: "plan-revised", ID: "plan-revised", On: []string{"plan"},
+			Check: "plan-revised", Blocking: config.Bool(projetoNovo),
 			Measures: "o plano revisado por outro avisa quem o lê",
 		})
 		// O PLANO ALTERADO diz por que mudou. Quem implementa é quem descobre o erro do
@@ -196,13 +196,13 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		// `skip_on: [all]` não é detalhe: em `--all` não existe "alterado", e cobrar
 		// revisão de todo plano acusaria quem acertou de primeira.
 		gates = append(gates, config.Gate{
-			Name: "plano-alterado-justificado", ID: "plano-alterado-justificado",
-			On: []string{"plan", "spec"}, Check: "plano-alterado-justificado",
+			Name: "plan-change-justified", ID: "plan-change-justified",
+			On: []string{"plan", "spec"}, Check: "plan-change-justified",
 			Blocking: config.Bool(projetoNovo), SkipOn: []string{"all"},
 			Measures: "o plano/spec alterado registra a revisão que diz por que mudou",
 		})
 		gates = append(gates, config.Gate{
-			Name: "fase-ordenada", ID: "fase-ordenada", On: []string{"plan"}, Check: "fase-ordenada",
+			Name: "phase-ordered", ID: "phase-ordered", On: []string{"plan"}, Check: "phase-ordered",
 			Blocking: config.Bool(projetoNovo),
 			Measures: "as fases do plano não dependem do que vem depois delas",
 		})
@@ -219,21 +219,21 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			}
 		}
 		gates = append(gates, config.Gate{
-			Name: "parent-valido", ID: "parent-valido", On: onde,
-			Check: "parent-valido", Blocking: config.Bool(projetoNovo),
+			Name: "parent-valid", ID: "parent-valid", On: onde,
+			Check: "parent-valid", Blocking: config.Bool(projetoNovo),
 			Measures: "o `parent:` declarado aponta para algo que existe, sem ciclo",
 		})
 	}
 	if chosen["spec"] {
 		gates = append(gates, config.Gate{
-			Name: "fase-existe", ID: "fase-existe", On: []string{"spec"}, Check: "fase-existe",
+			Name: "phase-exists", ID: "phase-exists", On: []string{"spec"}, Check: "phase-exists",
 			Blocking: config.Bool(projetoNovo),
 			Measures: "o `needs:` da spec aponta para uma fase que algum plano cataloga",
 		})
 	}
 	if chosen["feature"] {
 		gates = append(gates, config.Gate{
-			Name: "feature-nao-vazia", ID: "feature-nao-vazia", On: []string{"feature"}, Check: "non-empty",
+			Name: "feature-not-empty", ID: "feature-not-empty", On: []string{"feature"}, Check: "non-empty",
 			Blocking: config.Bool(false), Measures: "a feature não é um esqueleto vazio",
 		})
 		// scenario-asserts vai além do 'não está vazio': o passo de RESULTADO precisa
@@ -257,7 +257,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// segundo teste do mesmo comportamento. Medido duas vezes num projeto real
 			// (códigos invertidos em 3 telas; store com 5 casos sem código nenhum).
 			config.Gate{
-				Name: "teste-rastreavel", ID: "teste-rastreavel", On: []string{"test"}, Check: "teste-rastreavel",
+				Name: "test-traceable", ID: "test-traceable", On: []string{"test"}, Check: "test-traceable",
 				Blocking: config.Bool(false),
 				Measures: "o teste cita o código do que prova (é visível aos gates relacionais)",
 			},
@@ -285,7 +285,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// dublê do ecossistema. Daí ser julgamento — e daí a sugestão vir como
 			// patch: quem julga já leu o suficiente para propor o `mock_detect` correto.
 			config.Gate{
-				Name: "mock-detect-cobre-o-dialeto", ID: "mock-detect-cobre-o-dialeto", On: []string{"test"},
+				Name: "mock-detect-covers-dialect", ID: "mock-detect-covers-dialect", On: []string{"test"},
 				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
 				Ask: "O projeto declara `derived.mock_detect` — o regex que reconhece um " +
 					"dublê de teste neste ecossistema. Leia este arquivo de teste e responda: " +
@@ -295,15 +295,15 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 					"membro). Um regex que casa zero faz o gate `mock-carimbado` reportar " +
 					"verde sem ter conferido nada. Ao reprovar, PROPONHA o padrão corrigido " +
 					"como patch do `anchors.yaml`." +
-					instrucaoTBD("o teste"),
+					tbdInstruction("o teste"),
 			},
 			config.Gate{
-				Name: "mock-carimbado", ID: "mock-carimbado", On: []string{"test"}, Check: "mock-carimbado",
+				Name: "mock-stamped", ID: "mock-stamped", On: []string{"test"}, Check: "mock-stamped",
 				Blocking: config.Bool(false),
 				Measures: "o carimbo do dublê corresponde ao trecho real (recalculado, não só validado)",
 			},
 			config.Gate{
-				Name: "mock-tipado", ID: "mock-tipado", On: []string{"test"}, Check: "mock-tipado",
+				Name: "mock-typed", ID: "mock-typed", On: []string{"test"}, Check: "mock-typed",
 				Blocking: config.Bool(false),
 				Measures: "o dublê de teste deriva do módulo real (não é cópia congelada do contrato)",
 			},
@@ -446,7 +446,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// histórico do git guarda a original. Por isso é o único da leva que nasce
 			// bloqueante — os outros dois informam.
 			config.Gate{
-				Name: "secret-nao-vazado", ID: "secret-nao-vazado", On: []string{"code"},
+				Name: "no-secret-leaked", ID: "no-secret-leaked", On: []string{"code"},
 				Scope: config.ScopeBatch, ScopeFull: config.ScopeProject,
 				Run:       "gitleaks git --no-banner --redact -v",
 				NeedsTool: "gitleaks", InstallHint: "brew install gitleaks",
@@ -457,7 +457,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// Informativo: a CVE nova aparece sem ninguém mexer no código, então bloquear
 			// pararia um merge por algo que o autor não causou nem pode resolver na hora.
 			config.Gate{
-				Name: "dependencia-vulneravel", ID: "dependencia-vulneravel", On: []string{"code"},
+				Name: "dependency-vulnerable", ID: "dependency-vulnerable", On: []string{"code"},
 				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
 				Run:       "osv-scanner scan source -r .",
 				NeedsTool: "osv-scanner", InstallHint: "brew install osv-scanner",
@@ -493,7 +493,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// medição, é ruído — e ruído treina a equipe a ignorar o gate (levando os outros
 			// junto).
 			config.Gate{
-				Name: "sem-duplicacao", ID: "sem-duplicacao", On: []string{"code"},
+				Name: "no-duplication", ID: "no-duplication", On: []string{"code"},
 				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
 				Run:       "npx --yes jscpd . --reporters console --silent",
 				NeedsTool: "npx", InstallHint: "instale Node.js (npx acompanha)",
@@ -504,7 +504,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// Procedência: responde "o que exatamente foi entregue" — a pergunta que só
 			// se faz depois do incidente, quando reconstruir a resposta já é impossível.
 			config.Gate{
-				Name: "sbom-gerado", ID: "sbom-gerado", On: []string{"code"},
+				Name: "sbom-generated", ID: "sbom-generated", On: []string{"code"},
 				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
 				// NA RAIZ, e não em `.anchors/`: o SBOM descreve o PROJETO (quais
 				// dependências entraram), não uma execução. O `.anchors/` é área de
@@ -534,7 +534,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	}
 	if projetoNovo {
 		for i := range gates {
-			if !dependemDeSinalIngerido[gates[i].Name] {
+			if !dependOnIngestedSignal[gates[i].Name] {
 				gates[i].Blocking = config.Bool(true)
 			}
 		}
@@ -575,3 +575,20 @@ func canonicalCatalog() []config.Gate {
 // comportaria diferente dos outros, que é o tipo de divergência silenciosa que o merge
 // existe para eliminar.
 func init() { config.SetCanonicalGateResolver(CanonicalGate) }
+
+// init liga a lista de nomes de gate ao pacote `config`, para o teste que confronta o
+// de-para do vocabulário antigo contra os gates que existem de verdade.
+//
+// Por injeção e não por import: `config` não pode importar `initx` (seria ciclo), e sem
+// a lista o teste do de-para não teria contra o que confrontar — um destino errado
+// passaria despercebido.
+func init() {
+	config.RegisterGateNames(func() []string {
+		todos := DefaultGates(map[string]bool{"spec": true, "feature": true, "test": true}, false)
+		out := make([]string, 0, len(todos))
+		for _, g := range todos {
+			out = append(out, g.Name)
+		}
+		return out
+	})
+}

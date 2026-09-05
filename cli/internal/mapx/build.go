@@ -42,7 +42,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 			Parent:        f.Parent,
 			Revises:       f.Revises,
 			Code:          nodeCode(f),
-			CodeDeclarado: codeDeclarado(f),
+			CodeDeclarado: declaredCode(f),
 			Tags:          tags,
 			Regime:        regime,
 			NoPropagation: f.NoPropagation,
@@ -406,9 +406,9 @@ func nodeCode(f scan.File) string {
 	return primaryCode(f.Codes)
 }
 
-// codeDeclarado diz se a identidade foi DECLARADA (header `code:`) ou apenas inferida do
+// declaredCode diz se a identidade foi DECLARADA (header `code:`) ou apenas inferida do
 // texto. Ver Node.CodeDeclarado para o porquê da distinção.
-func codeDeclarado(f scan.File) bool { return f.HeaderCode != "" }
+func declaredCode(f scan.File) bool { return f.HeaderCode != "" }
 
 func primaryCode(codes []string) string {
 	if len(codes) == 0 {
@@ -430,7 +430,7 @@ func sortGraph(g *Graph) {
 	})
 }
 
-// PreservarCarimbos transfere os carimbos de validação de um grafo ANTERIOR para o recém
+// PreserveStamps transfere os carimbos de validação de um grafo ANTERIOR para o recém
 // construído, para as arestas que sobreviveram ao rebuild.
 //
 // Sem isto, o carimbo é memória de uma execução só: o `Build` cria o grafo do zero, e o
@@ -443,7 +443,7 @@ func sortGraph(g *Graph) {
 // A aresta é identificada por (from, to, tipo) — o mesmo par ligado pelo mesmo motivo. Se
 // qualquer ponta mudou de rev, o `StaleEdges` continua acusando: preservar o carimbo não
 // é fingir que o confronto é atual, é lembrar QUANDO ele aconteceu.
-func PreservarCarimbos(novo, antigo *Graph) {
+func PreserveStamps(novo, antigo *Graph) {
 	preservarSinais(novo, antigo)
 	if novo == nil || antigo == nil {
 		return
@@ -452,7 +452,7 @@ func PreservarCarimbos(novo, antigo *Graph) {
 	// Os julgamentos de IA seguem o mesmo caminho do carimbo: reconstruir o mapa não
 	// pode apagar quem já leu. Sem isto, um `map build` entre o `judge` e o `check`
 	// desfazia o julgamento — e é exatamente essa a sequência que o `check --all` roda.
-	julgamentos := make(map[string][]Julgamento, len(antigo.Edges))
+	julgamentos := make(map[string][]Judgment, len(antigo.Edges))
 	for i := range antigo.Edges {
 		e := &antigo.Edges[i]
 		k := string(e.Type) + "\x00" + e.From + "\x00" + e.To

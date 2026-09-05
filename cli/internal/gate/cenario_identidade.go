@@ -27,7 +27,7 @@ import (
 //
 // PENDING e não FAIL: numerar cenários é migração, e o gate nasce sobre uma base que
 // não conhecia a notação. Quem já migrou fica verde; quem não, vê o que falta.
-func checkCenarioIdentidade(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkScenarioIdentity(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindFeature {
 		return Skip, "" // só confronta features
 	}
@@ -49,7 +49,7 @@ func checkCenarioIdentidade(content string, n mapx.Node, _ string, _ *mapx.Graph
 			continue
 		}
 		repetidos = append(repetidos, fmt.Sprintf("%s (%d cenários: %s)",
-			cod, len(titulos), strings.Join(resumirTitulos(titulos), " / ")))
+			cod, len(titulos), strings.Join(summarizeTitles(titulos), " / ")))
 	}
 	if len(repetidos) == 0 {
 		return Pass, ""
@@ -60,12 +60,12 @@ func checkCenarioIdentidade(content string, n mapx.Node, _ string, _ *mapx.Graph
 		"numere com o sufixo `#NN` (`@%s#01`, `@%s#02`), que mantém a regra legível no "+
 		"prefixo e torna o par cenário↔teste um-para-um",
 		len(repetidos), strings.Join(repetidos, "; "),
-		primeiroCodigo(repetidos), primeiroCodigo(repetidos))
+		firstCode(repetidos), firstCode(repetidos))
 }
 
-// resumirTitulos encurta os títulos para a mensagem caber — o endereço é o código,
+// summarizeTitles encurta os títulos para a mensagem caber — o endereço é o código,
 // o título só ajuda a reconhecer qual cenário é qual.
-func resumirTitulos(ts []string) []string {
+func summarizeTitles(ts []string) []string {
 	out := make([]string, 0, len(ts))
 	for _, t := range ts {
 		if len([]rune(t)) > 40 {
@@ -76,9 +76,9 @@ func resumirTitulos(ts []string) []string {
 	return out
 }
 
-// primeiroCodigo extrai o código do primeiro achado, para o exemplo da mensagem
+// firstCode extrai o código do primeiro achado, para o exemplo da mensagem
 // falar do caso REAL do projeto em vez de um genérico.
-func primeiroCodigo(repetidos []string) string {
+func firstCode(repetidos []string) string {
 	if len(repetidos) == 0 {
 		return "XXXXX-B01"
 	}

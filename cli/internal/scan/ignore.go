@@ -125,7 +125,7 @@ func LoadIgnore(root string) *Ignore {
 // material, e a suposição do framework cede à declaração.
 func LoadIgnoreFor(root string, cfg *config.Config) *Ignore {
 	ig := &Ignore{dirs: map[string]bool{}}
-	reabilitados := diretoriosReabilitadosPelaEstrutura(cfg)
+	reabilitados := dirsReenabledByStructure(cfg)
 	for d := range universalIgnored {
 		if !reabilitados[d] {
 			ig.dirs[d] = true
@@ -212,7 +212,7 @@ func (ig *Ignore) match(rel string, isDir bool) bool {
 		// diretório é ignorado e tudo abaixo dele vai junto. Pular todo arquivo aqui
 		// deixava `data/dump.json` visível mesmo com `data/` ignorado — e o custo é o
 		// oposto do bug anterior: material descartável voltando a virar trabalho.
-		if p.dirOnly && !isDir && !cobreAbaixo(p, rel) {
+		if p.dirOnly && !isDir && !coversBelow(p, rel) {
 			continue
 		}
 		if !casaGitignore(p.glob, rel, p.ancorado) {
@@ -251,9 +251,9 @@ func casaGitignore(glob, rel string, ancorado bool) bool {
 	return false
 }
 
-// cobreAbaixo diz se `rel` está DENTRO de um diretório que este padrão ignora. É o que
+// coversBelow diz se `rel` está DENTRO de um diretório que este padrão ignora. É o que
 // faz `data/` cobrir `data/dump.json` sem que o padrão precise casar o arquivo em si.
-func cobreAbaixo(p ignorePattern, rel string) bool {
+func coversBelow(p ignorePattern, rel string) bool {
 	dir := filepath.ToSlash(filepath.Dir(rel))
 	for dir != "." && dir != "/" && dir != "" {
 		if casaGitignore(p.glob, dir, p.ancorado) {
@@ -264,11 +264,11 @@ func cobreAbaixo(p ignorePattern, rel string) bool {
 	return false
 }
 
-// diretoriosReabilitadosPelaEstrutura devolve os nomes da lista embutida que alguma camada
+// dirsReenabledByStructure devolve os nomes da lista embutida que alguma camada
 // declara como material. O sinal é o pattern apontar PARA DENTRO do diretório: uma camada
 // `build/**/*.ts` diz que `build` é código; uma camada `**/*.ts` que por acaso o alcança,
 // não — senão qualquer catch-all reabilitaria `node_modules`.
-func diretoriosReabilitadosPelaEstrutura(cfg *config.Config) map[string]bool {
+func dirsReenabledByStructure(cfg *config.Config) map[string]bool {
 	out := map[string]bool{}
 	if cfg == nil {
 		return out

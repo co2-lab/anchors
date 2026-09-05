@@ -33,7 +33,7 @@ tests:
 // certo: ele reporta o que o mapa sabe.
 func TestIngestManualAvisaMasNaoBarra(t *testing.T) {
 	viaAnchorsTest = false
-	if err := avisaSeIngestManual(projetoCom(t, comSuite)); err != nil {
+	if err := warnIfManualIngest(projetoCom(t, comSuite)); err != nil {
 		t.Errorf("o padrão AVISA e deixa seguir: há usos legítimos (um CI que rodou a "+
 			"suíte noutro job), e barrá-los tiraria a saída de quem tem razão; veio: %v", err)
 	}
@@ -44,7 +44,7 @@ func TestIngestManualAvisaMasNaoBarra(t *testing.T) {
 func TestIngestManualBarraQuandoOProjetoPede(t *testing.T) {
 	viaAnchorsTest = false
 	yaml := strings.Replace(comSuite, "derived:", "workflow:\n  manual_ingest_blocks: true\nderived:", 1)
-	err := avisaSeIngestManual(projetoCom(t, yaml))
+	err := warnIfManualIngest(projetoCom(t, yaml))
 	if err == nil {
 		t.Fatal("com `manual_ingest_blocks: true` a ingestão manual deve ser recusada")
 	}
@@ -59,7 +59,7 @@ func TestViaAnchorsTestNuncaReclama(t *testing.T) {
 	viaAnchorsTest = true
 	defer func() { viaAnchorsTest = false }()
 	yaml := strings.Replace(comSuite, "derived:", "workflow:\n  manual_ingest_blocks: true\nderived:", 1)
-	if err := avisaSeIngestManual(projetoCom(t, yaml)); err != nil {
+	if err := warnIfManualIngest(projetoCom(t, yaml)); err != nil {
 		t.Errorf("o `anchors test` é o caminho CERTO — não pode ser barrado: %v", err)
 	}
 }
@@ -69,7 +69,7 @@ func TestViaAnchorsTestNuncaReclama(t *testing.T) {
 func TestSemSuiteDeclaradaNaoExige(t *testing.T) {
 	viaAnchorsTest = false
 	semSuite := "derived:\n  anchor: spec\n"
-	if err := avisaSeIngestManual(projetoCom(t, semSuite)); err != nil {
+	if err := warnIfManualIngest(projetoCom(t, semSuite)); err != nil {
 		t.Errorf("sem suíte declarada não há alternativa a exigir; veio: %v", err)
 	}
 }

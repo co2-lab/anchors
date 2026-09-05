@@ -63,7 +63,7 @@ ganham um REF (apontam para a spec). Use --code para fixar a identidade à mão.
 			}
 			name := args[1]
 
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -152,7 +152,7 @@ ganham um REF (apontam para a spec). Use --code para fixar a identidade à mão.
 			// Um plano sem companheiro convida a marcar `[x]` no próprio plano — que é o
 			// caminho que já existia e o que se está removendo.
 			if kind == "plan" {
-				prog, err := escreveProgressoInicial(outPath, content, id)
+				prog, err := writeInitialProgress(outPath, content, id)
 				if err != nil {
 					// Não é falha do `new`: o plano nasceu. O progresso se cria à mão.
 					fmt.Printf("  ⚠ progresso não criado: %v\n", err)
@@ -234,14 +234,14 @@ func renderArtifact(t template, name, id, outPath, root string, chosen map[strin
 	// preset, vale a ordem do catálogo.
 	// O léxico de seções é da CAMADA do alvo (ver `section_titles`): resolver uma vez,
 	// fora do loop.
-	camadaDoArtefato := camadaDoAlvo(root, outPath, cfg)
-	for _, s := range ordenaSecoes(t, chosen, ordem) {
+	camadaDoArtefato := targetLayer(root, outPath, cfg)
+	for _, s := range sortSections(t, chosen, ordem) {
 		body := strings.NewReplacer("{name}", name, "{id}", id).Replace(s.Body)
 		// Traduz o título GENÉRICO para o nome que ESTE projeto usa, quando `rule_types`
 		// declara um. Sem isso o preset emitia "Restrições" num projeto cujas 50 specs
 		// vizinhas escrevem "Modelo de Dado" — duas fontes da própria régua discordando,
 		// e o autor tendo de escolher entre obedecer o template ou os vizinhos.
-		body = traduzTitulo(body, s, cfg, camadaDoArtefato)
+		body = translateTitle(body, s, cfg, camadaDoArtefato)
 		// {TEST_BODY} é resolvido pelo DIALETO: o esqueleto de caso de teste tem sintaxe,
 		// e sintaxe é do projeto (ver testBody em new_templates.go).
 		if strings.Contains(body, "{TEST_BODY}") {
@@ -334,10 +334,10 @@ func resolveSectionsWithPreset(t template, preset string, with, without []string
 	return chosen, def.Sections, nil
 }
 
-// ordenaSecoes devolve as seções escolhidas na ORDEM do preset (quando há um), com as
+// sortSections devolve as seções escolhidas na ORDEM do preset (quando há um), com as
 // adicionadas por --with logo depois — na ordem do catálogo, que é o único critério
 // disponível para quem o preset não previu.
-func ordenaSecoes(t template, chosen map[string]bool, ordem []string) []section {
+func sortSections(t template, chosen map[string]bool, ordem []string) []section {
 	porChave := map[string]section{}
 	for _, s := range t.sections {
 		porChave[s.Key] = s
@@ -539,7 +539,7 @@ func codeDoHeaderSpec(content string) string {
 	return ""
 }
 
-// traduzTitulo substitui o cabeçalho `## <genérico>` pelo nome que o projeto usa para a
+// translateTitle substitui o cabeçalho `## <genérico>` pelo nome que o projeto usa para a
 // mesma letra de tipo de regra.
 //
 // A fonte é `rule_types[].sections` — que o projeto JÁ declara para o gate `rule-types`.
@@ -547,7 +547,7 @@ func codeDoHeaderSpec(content string) string {
 //
 // Usa o PRIMEIRO título declarado para a letra, que é a convenção dominante do projeto.
 // Se o projeto não declara a letra, o título genérico fica — o framework não inventa nome.
-func traduzTitulo(body string, s section, cfg *config.Config, camada string) string {
+func translateTitle(body string, s section, cfg *config.Config, camada string) string {
 	if cfg == nil {
 		return body
 	}
@@ -560,7 +560,7 @@ func traduzTitulo(body string, s section, cfg *config.Config, camada string) str
 	// "Modelo de Dado/Comportamentos/Notas de Implementação", e NENHUMA das três
 	// coincidia. Dois agentes escreveram em dialetos opostos, cada um obedecendo a uma
 	// fonte da régua, os dois verdes nos gates.
-	local := cfg.TituloDaSecao(s.Key, "", camada)
+	local := cfg.SectionTitle(s.Key, "", camada)
 	// 2) `rule_types.sections` continua valendo para as seções de regra — é onde o
 	// projeto já declarava o nome da seção junto com a letra que ela cataloga.
 	if local == "" && s.Realizes != "" {
@@ -574,19 +574,19 @@ func traduzTitulo(body string, s section, cfg *config.Config, camada string) str
 	if local == "" {
 		return body
 	}
-	m := tituloSecaoRE.FindStringSubmatch(body)
+	m := sectionTitleRE.FindStringSubmatch(body)
 	if m == nil || strings.EqualFold(strings.TrimSpace(m[2]), local) {
 		return body
 	}
 	return strings.Replace(body, m[0], m[1]+" "+local+"\n", 1)
 }
 
-var tituloSecaoRE = regexp.MustCompile(`(?m)^(#{2,4})\s+([^\n]+)\n`)
+var sectionTitleRE = regexp.MustCompile(`(?m)^(#{2,4})\s+([^\n]+)\n`)
 
-// camadaDoAlvo resolve a camada da unidade que este artefato descreve — usada para achar
+// targetLayer resolve a camada da unidade que este artefato descreve — usada para achar
 // o léxico de seções DAQUELA camada (`section_titles`). O alvo é o irmão sem o sufixo de
 // peça derivada; sem alvo reconhecível, devolve vazio e vale o padrão do framework.
-func camadaDoAlvo(root, outPath string, cfg *config.Config) string {
+func targetLayer(root, outPath string, cfg *config.Config) string {
 	if cfg == nil {
 		return ""
 	}

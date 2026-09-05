@@ -2,7 +2,7 @@ package initx
 
 import "strings"
 
-// Pergunta é uma decisão HUMANA do `init`, descrita de forma que um agente possa
+// Question é uma decisão HUMANA do `init`, descrita de forma que um agente possa
 // respondê-la sem ver a TUI.
 //
 // Existe porque o `init` é interativo e a guarda de TTY o aborta fora de um terminal —
@@ -11,7 +11,7 @@ import "strings"
 //
 // O contrato é de duas chamadas: a primeira devolve as perguntas (esta struct, em JSON),
 // a segunda traz as respostas em flags e devolve o veredito de cada uma.
-type Pergunta struct {
+type Question struct {
 	// ID é o nome da flag que responde esta pergunta (`--artifacts`, `--colocation`).
 	ID string `json:"id"`
 	// Texto é a pergunta como a TUI a faria — o agente a usa para explicar a escolha
@@ -58,10 +58,10 @@ type StatusResposta struct {
 	UsouPada bool   `json:"usou_default,omitempty"`
 }
 
-// Perguntas monta a lista a partir do que foi inferido do disco. A ordem é a mesma da
+// Questions monta a lista a partir do que foi inferido do disco. A ordem é a mesma da
 // TUI: cada resposta restringe a seguinte, e apresentá-las fora de ordem faria o agente
 // decidir camadas antes de saber se há co-location.
-func Perguntas(p *Proposal, presets []string) []Pergunta {
+func Questions(p *Proposal, presets []string) []Question {
 	artefatosDetectados := []string{}
 	if p != nil {
 		for nome, sim := range p.DetectedArtifacts() {
@@ -83,7 +83,7 @@ func Perguntas(p *Proposal, presets []string) []Pergunta {
 		}
 	}
 
-	qs := []Pergunta{
+	qs := []Question{
 		{
 			ID:      "preset",
 			Texto:   "Qual preset de stack usar?",
@@ -181,13 +181,13 @@ func Perguntas(p *Proposal, presets []string) []Pergunta {
 	return qs
 }
 
-// ValidaRespostas confere cada resposta contra as opções da pergunta e devolve o status
+// ValidateAnswers confere cada resposta contra as opções da pergunta e devolve o status
 // de TODAS — não só das inválidas.
 //
 // Reportar as sete, e não apenas os erros, é o que permite ao agente conferir que o
 // Anchors entendeu o que ele quis dizer. Uma resposta silenciosamente ignorada (flag
 // escrita errada, por exemplo) seria indistinguível de uma aceita.
-func ValidaRespostas(qs []Pergunta, r Respostas) []StatusResposta {
+func ValidateAnswers(qs []Question, r Respostas) []StatusResposta {
 	var out []StatusResposta
 	for _, q := range qs {
 		st := StatusResposta{ID: q.ID, Aceita: true}
@@ -209,9 +209,9 @@ func ValidaRespostas(qs []Pergunta, r Respostas) []StatusResposta {
 		case "colocation":
 			st.Valor, st.UsouPada = valorBool(r.Colocation, q.Default)
 		case "artifacts":
-			st.Valor, st.UsouPada, st.Aceita, st.Detalhe = valorLista(r.Artifacts, q)
+			st.Valor, st.UsouPada, st.Aceita, st.Detalhe = listValue(r.Artifacts, q)
 		case "layers":
-			st.Valor, st.UsouPada, st.Aceita, st.Detalhe = valorLista(r.Layers, q)
+			st.Valor, st.UsouPada, st.Aceita, st.Detalhe = listValue(r.Layers, q)
 		case "workflow":
 			if r.Workflow == nil {
 				st.Valor, st.UsouPada = q.Default, true
@@ -226,16 +226,16 @@ func ValidaRespostas(qs []Pergunta, r Respostas) []StatusResposta {
 			st.Valor, st.UsouPada = valorTexto(r.Repo, q.Default)
 			// A exigência é do MODO, não do campo: no `local` um `repo` declarado faz quem
 			// lê o arquivo concluir que a integração está ativa (WORKFLOW.md §2).
-			if modoGitHub(r) && vazio(r.Repo) {
+			if modoGitHub(r) && empty(r.Repo) {
 				st.Aceita = false
 				st.Detalhe = "obrigatório no modo `github` — sem ele, o fluxo não sabe de qual repositório puxar"
 			}
-			if !modoGitHub(r) && !vazio(r.Repo) {
+			if !modoGitHub(r) && !empty(r.Repo) {
 				st.Aceita = false
 				st.Detalhe = "só vale no modo `github`; no `local` este campo faz o arquivo mentir sobre a integração estar ativa"
 			}
 		case "labels":
-			st.Valor, st.UsouPada, st.Aceita, st.Detalhe = valorLista(r.Labels, q)
+			st.Valor, st.UsouPada, st.Aceita, st.Detalhe = listValue(r.Labels, q)
 			if st.Aceita && modoGitHub(r) && (r.Labels == nil || len(*r.Labels) == 0) {
 				st.Aceita = false
 				st.Detalhe = "obrigatório no modo `github` — sem ela, o fluxo pegaria qualquer issue do repositório, inclusive as de produto"
@@ -268,7 +268,7 @@ func modoGitHub(r Respostas) bool {
 	return r.Workflow != nil && *r.Workflow == "github"
 }
 
-func vazio(p *string) bool { return p == nil || *p == "" }
+func empty(p *string) bool { return p == nil || *p == "" }
 
 func valorTexto(p *string, def any) (any, bool) {
 	if p == nil {
@@ -284,7 +284,7 @@ func valorBool(p *bool, def any) (any, bool) {
 	return *p, false
 }
 
-func valorLista(p *[]string, q Pergunta) (valor any, usouDefault, aceita bool, detalhe string) {
+func listValue(p *[]string, q Question) (valor any, usouDefault, aceita bool, detalhe string) {
 	if p == nil {
 		return q.Default, true, true, ""
 	}

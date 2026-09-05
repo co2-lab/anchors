@@ -19,7 +19,7 @@ func rodaCatalogado(t *testing.T, spec, codigo string) (Verdict, string) {
 		Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: "u.ts", Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
 	}
-	return checkCodigoCatalogado(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	return checkCodeCataloged(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
 }
 
 // O caso real: a spec catalogava 2 regras para 7 funções exportadas, e nenhum gate
@@ -77,7 +77,7 @@ func TestCodigoCatalogado_tudoCatalogadoPassa(t *testing.T) {
 // Sem código ligado a ausência é de outro gate — acusar nos dois duplicaria o débito.
 func TestCodigoCatalogado_semCodigoLigadoPula(t *testing.T) {
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}}}
-	v, _ := checkCodigoCatalogado("| `X-B01` | x |", mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec},
+	v, _ := checkCodeCataloged("| `X-B01` | x |", mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec},
 		t.TempDir(), g, nil)
 	if v != Skip {
 		t.Errorf("ausência de código é do trinca-completa: %v", v)
@@ -102,7 +102,7 @@ func TestNoRuleValeNoComentarioAcima(t *testing.T) {
 		"doc comment":          "/**\n * @no-rule: forma de entrada\n */\nexport function x() {}\n",
 	}
 	for nome, codigo := range casos {
-		simbolos := simbolosComLinha(codigo)
+		simbolos := symbolsWithLine(codigo)
 		if len(simbolos) == 0 {
 			t.Fatalf("%s: nenhum símbolo reconhecido", nome)
 		}
@@ -118,7 +118,7 @@ func TestNoRuleValeNoComentarioAcima(t *testing.T) {
 // inteiro, que é o oposto do que ele é.
 func TestNoRuleNaoVazaEntreSimbolos(t *testing.T) {
 	codigo := "// @no-rule: este sim\nexport function comDeclaracao() {}\n\nexport function semDeclaracao() {}\n"
-	simbolos := simbolosComLinha(codigo)
+	simbolos := symbolsWithLine(codigo)
 	if len(simbolos) != 2 {
 		t.Fatalf("esperava 2 símbolos, veio %d", len(simbolos))
 	}

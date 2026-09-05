@@ -34,30 +34,30 @@ import (
 // da fase, e é confrontável — "esta spec pode ser trabalhada agora?" vira uma pergunta com
 // resposta, em vez de uma leitura.
 
-// faseRE casa o cabeçalho de uma fase catalogada: `### FNDTN-F01 — a árvore e o gerenciador`.
-func faseRE() *regexp.Regexp {
+// phaseRE casa o cabeçalho de uma fase catalogada: `### FNDTN-F01 — a árvore e o gerenciador`.
+func phaseRE() *regexp.Regexp {
 	return regexp.MustCompile(`(?m)^#{2,4}\s+([A-Z0-9]` + config.CodeLengthPattern() + `-F\d{2})\b`)
 }
 
-// FasesDoPlano devolve os códigos de fase catalogados no plano, na ordem em que aparecem.
-func FasesDoPlano(content string) []string {
+// PlanPhases devolve os códigos de fase catalogados no plano, na ordem em que aparecem.
+func PlanPhases(content string) []string {
 	var out []string
-	for _, m := range faseRE().FindAllStringSubmatch(content, -1) {
+	for _, m := range phaseRE().FindAllStringSubmatch(content, -1) {
 		out = append(out, m[1])
 	}
 	return out
 }
 
-// checkFaseOrdenada confronta a ORDEM declarada: uma fase não pode depender de outra que
+// checkPhaseOrdered confronta a ORDEM declarada: uma fase não pode depender de outra que
 // vem depois dela, nem de si mesma.
 //
 // Roda no PLANO, e não na spec: é o plano que declara as fases, e um ciclo entre elas é
 // erro de quem escreveu o plano — a spec só aponta para uma fase que já existe.
-func checkFaseOrdenada(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkPhaseOrdered(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindPlan {
 		return Skip, "só o plano declara fases"
 	}
-	fases := FasesDoPlano(content)
+	fases := PlanPhases(content)
 	if len(fases) == 0 {
 		// Um plano sem fases catalogadas não está errado: plano pequeno não precisa de
 		// fase. Pendência, e não falha — é dívida de quem quiser a ordem confrontável.
@@ -67,7 +67,7 @@ func checkFaseOrdenada(content string, n mapx.Node, root string, g *mapx.Graph, 
 		// Antes isto casava a palavra "fase" no texto. Num plano em inglês ("Phase 1") o
 		// gate nunca disparava — e foi assim que o plano da Plataforma passou meses com
 		// `### Fase 1` sem código, com a ordem existindo só para quem lê.
-		if temSecaoQueParereFase(content) {
+		if hasPhaseLikeSection(content) {
 			return Pending, "o plano tem seções que parecem FASE mas não cataloga nenhuma com " +
 				"código (`### " + strings.ToUpper(n.Code) + "-F01 — …`). Sem código, a ordem " +
 				"existe para quem lê e não para quem confronta: as specs semeadas nascem " +
@@ -93,7 +93,7 @@ func checkFaseOrdenada(content string, n mapx.Node, root string, g *mapx.Graph, 
 	var erros []string
 	secoes := regexp.MustCompile(`(?m)^#{2,4}\s+`).Split(content, -1)
 	for _, sec := range secoes {
-		m := faseRE().FindStringSubmatch("### " + sec)
+		m := phaseRE().FindStringSubmatch("### " + sec)
 		if m == nil {
 			continue
 		}
@@ -122,13 +122,13 @@ func checkFaseOrdenada(content string, n mapx.Node, root string, g *mapx.Graph, 
 	return Pass, ""
 }
 
-// checkFaseExiste confronta o `needs:` de uma SPEC contra as fases catalogadas nos planos.
+// checkPhaseExists confronta o `needs:` de uma SPEC contra as fases catalogadas nos planos.
 //
 // É o outro lado do par: `fase-ordenada` cobra a coerência DENTRO do plano, e este cobra
 // que a spec aponte para uma fase que existe. Um `needs: FNDTN-F09` num plano de quatro
 // fases é uma dependência que nunca fecha — a spec ficaria bloqueada para sempre, e nada
 // diria por quê.
-func checkFaseExiste(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkPhaseExists(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, "só a spec declara de qual fase depende"
 	}
@@ -148,7 +148,7 @@ func checkFaseExiste(content string, n mapx.Node, root string, g *mapx.Graph, cf
 		if err != nil {
 			continue
 		}
-		for _, f := range FasesDoPlano(string(b)) {
+		for _, f := range PlanPhases(string(b)) {
 			conhecidas[f] = p.ID
 		}
 	}
@@ -167,7 +167,7 @@ func checkFaseExiste(content string, n mapx.Node, root string, g *mapx.Graph, cf
 	return Pass, ""
 }
 
-// checkParentValido confronta o `parent:` contra o que existe.
+// checkParentValid confronta o `parent:` contra o que existe.
 //
 // Um `parent` que aponta para o nada não produz erro em lugar nenhum — produz SILÊNCIO: o
 // item some da árvore (ninguém o contém) ou fica pendurado numa raiz que não deveria
@@ -175,7 +175,7 @@ func checkFaseExiste(content string, n mapx.Node, root string, g *mapx.Graph, cf
 //
 // Aceita como pai o CÓDIGO de um artefato (`FNDTN`) ou de uma fase (`FNDTN-F01`) — a
 // hierarquia é livre porque a forma de organizar trabalho varia entre projetos.
-func checkParentValido(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkParentValid(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Parent == "" {
 		return Skip, "sem `parent:` declarado — nada a confrontar"
 	}
@@ -200,7 +200,7 @@ func checkParentValido(content string, n mapx.Node, root string, g *mapx.Graph, 
 		if err != nil {
 			continue
 		}
-		for _, f := range FasesDoPlano(string(b)) {
+		for _, f := range PlanPhases(string(b)) {
 			existe[f] = true
 		}
 	}
@@ -220,13 +220,13 @@ func checkParentValido(content string, n mapx.Node, root string, g *mapx.Graph, 
 				"um ciclo, e quem a percorre nunca chega à raiz", atual)
 		}
 		visto[atual] = true
-		atual = paiDe(g, atual)
+		atual = parentOf(g, atual)
 	}
 	return Pass, ""
 }
 
-// paiDe devolve o `parent` do nó com este código, ou vazio.
-func paiDe(g *mapx.Graph, code string) string {
+// parentOf devolve o `parent` do nó com este código, ou vazio.
+func parentOf(g *mapx.Graph, code string) string {
 	for _, n := range g.Nodes {
 		if n.Code == code {
 			return n.Parent
@@ -235,15 +235,15 @@ func paiDe(g *mapx.Graph, code string) string {
 	return "" // fase não é nó do mapa: a cadeia termina nela
 }
 
-// secaoNivel3RE casa `### <qualquer coisa> — <título>`: a FORMA de uma fase, sem depender
+// level3SectionRE casa `### <qualquer coisa> — <título>`: a FORMA de uma fase, sem depender
 // da palavra usada para nomeá-la.
-var secaoNivel3RE = regexp.MustCompile(`(?m)^#{3}\s+\S.*$`)
+var level3SectionRE = regexp.MustCompile(`(?m)^#{3}\s+\S.*$`)
 
-// temSecaoQueParereFase diz se o plano organiza o trabalho em seções de terceiro nível.
+// hasPhaseLikeSection diz se o plano organiza o trabalho em seções de terceiro nível.
 //
 // É a estrutura, e não o vocabulário: um plano em inglês ("Phase"), em espanhol ("Fase"),
 // ou que chame de "Etapa" cai igual. O que se pergunta é se existe ORDEM declarada que o
 // gate não consegue confrontar por falta de código.
-func temSecaoQueParereFase(content string) bool {
-	return secaoNivel3RE.MatchString(content)
+func hasPhaseLikeSection(content string) bool {
+	return level3SectionRE.MatchString(content)
 }

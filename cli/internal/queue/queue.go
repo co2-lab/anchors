@@ -79,8 +79,8 @@ var ArtefatosDeTrabalho = []string{
 	"spec", "code", "feature", "test", "review", "review-plan", "review-plan-draft",
 }
 
-// ArtefatoDeTrabalhoValido diz se o verbo é composível pelo `anchors work`.
-func ArtefatoDeTrabalhoValido(v string) bool {
+// ValidWorkArtifact diz se o verbo é composível pelo `anchors work`.
+func ValidWorkArtifact(v string) bool {
 	for _, a := range ArtefatosDeTrabalho {
 		if a == v {
 			return true
@@ -241,7 +241,7 @@ func List(root string) ([]Task, error) {
 		// orquestrador tinha de descartar à mão — e uma fila que exige triagem manual
 		// deixa de ser fila. Remover aqui (e não só filtrar) evita que ela reapareça no
 		// `list` seguinte.
-		if t.Changed != "" && !existeNaRaiz(root, t.Changed) {
+		if t.Changed != "" && !existsAtRoot(root, t.Changed) {
 			_ = os.Remove(filepath.Join(d, e.Name()))
 			continue
 		}
@@ -368,7 +368,7 @@ func reclaim(root string, force bool) (int, error) {
 		if t.State != Claimed {
 			continue
 		}
-		if !force && t.ClaimedBy != "" && !claimAntigo(t) {
+		if !force && t.ClaimedBy != "" && !staleClaim(t) {
 			continue // reivindicado há pouco: provavelmente alguém está nisto agora
 		}
 		from := filepath.Join(d, fileName(Claimed, t.ID))
@@ -412,7 +412,7 @@ func PendingCount(root string) (int, error) {
 // espera, e o `--force` resolve para quem tem certeza.
 const JanelaDeTrabalho = 4 * time.Hour
 
-func claimAntigo(t Task) bool {
+func staleClaim(t Task) bool {
 	if t.ClaimedAt == "" {
 		return true // sem carimbo: não há o que respeitar
 	}
@@ -423,8 +423,8 @@ func claimAntigo(t Task) bool {
 	return time.Since(quando) > JanelaDeTrabalho
 }
 
-// existeNaRaiz diz se o alvo de uma task ainda está no disco.
-func existeNaRaiz(root, rel string) bool {
+// existsAtRoot diz se o alvo de uma task ainda está no disco.
+func existsAtRoot(root, rel string) bool {
 	_, err := os.Stat(filepath.Join(root, rel))
 	return err == nil
 }

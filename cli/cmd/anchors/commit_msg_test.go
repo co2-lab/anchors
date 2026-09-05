@@ -12,7 +12,7 @@ func TestAssuntoAceitaOFormatoQueOChangelogLe(t *testing.T) {
 		"feat(gate)!: `--changed` passa a exigir caminho relativo",
 		"chore: sobe a versão",
 	} {
-		if !assuntoRE().MatchString(ok) {
+		if !subjectRE().MatchString(ok) {
 			t.Errorf("deveria aceitar %q", ok)
 		}
 	}
@@ -31,7 +31,7 @@ func TestAssuntoRecusaOQueSumiriaDoChangelog(t *testing.T) {
 		"feat:sem espaço depois",
 		"feat: ", // tipo certo, assunto vazio
 	} {
-		if assuntoRE().MatchString(ruim) {
+		if subjectRE().MatchString(ruim) {
 			t.Errorf("deveria recusar %q — sumiria do changelog", ruim)
 		}
 	}
@@ -47,13 +47,13 @@ func TestMensagemDoGitNaoEhBarrada(t *testing.T) {
 		"fixup! feat: a coisa",
 		"squash! fix: outra",
 	} {
-		if !geradaPeloGit(m) {
+		if !generatedByGit(m) {
 			t.Errorf("%q é gerada pelo git e não pode barrar", m)
 		}
 	}
 	// Mas uma mensagem HUMANA que começa parecido não escapa: "Mergeando o trabalho" não
 	// é do git, e passar por causa do prefixo abriria a porta para qualquer coisa.
-	if geradaPeloGit("Mergeando o trabalho da semana") {
+	if generatedByGit("Mergeando o trabalho da semana") {
 		t.Error("só o formato exato do git escapa — senão o prefixo vira brecha")
 	}
 }
@@ -63,11 +63,11 @@ func TestMensagemDoGitNaoEhBarrada(t *testing.T) {
 func TestAssuntoPulaOsComentariosDoGit(t *testing.T) {
 	arquivo := "\n# Please enter the commit message for your changes.\n#\n" +
 		"feat: a coisa\n\n# On branch main\n"
-	if got := primeiraLinhaUtil(arquivo); got != "feat: a coisa" {
+	if got := firstUsefulLine(arquivo); got != "feat: a coisa" {
 		t.Errorf("deveria achar o assunto entre os comentários, veio %q", got)
 	}
 	// Mensagem só de comentário (commit abortado): sem assunto, e quem barra é o git.
-	if got := primeiraLinhaUtil("# tudo comentado\n#\n"); got != "" {
+	if got := firstUsefulLine("# tudo comentado\n#\n"); got != "" {
 		t.Errorf("sem assunto deveria devolver vazio, veio %q", got)
 	}
 }
@@ -104,14 +104,14 @@ func TestReguaBateComOCommitlint(t *testing.T) {
 		{"feat: SBOM sai da pasta ignorada", true, "sigla legítima não é frase capitalizada"},
 	}
 	for _, c := range casos {
-		got := problemaNoAssunto(c.assunto) == ""
+		got := subjectProblem(c.assunto) == ""
 		if got != c.passa {
 			verbo := "deveria passar"
 			if !c.passa {
 				verbo = "deveria barrar"
 			}
 			t.Errorf("%q %s — %s (laudo: %q)", c.assunto, verbo, c.porque,
-				problemaNoAssunto(c.assunto))
+				subjectProblem(c.assunto))
 		}
 	}
 }
@@ -121,7 +121,7 @@ func TestReguaBateComOCommitlint(t *testing.T) {
 // perde a informação.
 func TestAssuntoLongoBarraEExplicaOndeCabeODetalhe(t *testing.T) {
 	longo := "feat(x): " + strings.Repeat("a", LimiteDoAssunto)
-	p := problemaNoAssunto(longo)
+	p := subjectProblem(longo)
 	if p == "" {
 		t.Fatalf("assunto de %d caracteres deveria barrar (limite %d)", len(longo), LimiteDoAssunto)
 	}
@@ -130,7 +130,7 @@ func TestAssuntoLongoBarraEExplicaOndeCabeODetalhe(t *testing.T) {
 	}
 	// E o que está no limite passa: barrar em cima da linha seria arbitrário.
 	noLimite := "feat: " + strings.Repeat("a", LimiteDoAssunto-6)
-	if p := problemaNoAssunto(noLimite); p != "" {
+	if p := subjectProblem(noLimite); p != "" {
 		t.Errorf("assunto de exatamente %d deveria passar; veio: %s", LimiteDoAssunto, p)
 	}
 }
@@ -143,7 +143,7 @@ func TestCadaDefeitoTemLaudoProprio(t *testing.T) {
 	for _, a := range []string{
 		"Feat: x", "feat(): x", "feat: x.", "bugfix: x", "sem formato nenhum",
 	} {
-		p := problemaNoAssunto(a)
+		p := subjectProblem(a)
 		if p == "" {
 			t.Fatalf("%q deveria ter defeito", a)
 		}
@@ -162,13 +162,13 @@ func TestCadaDefeitoTemLaudoProprio(t *testing.T) {
 // passa lá —, então um projeto que troque esta régua pelo commitlint não descobre um
 // histórico que a ferramenta nova reprova. O contrário produziria exatamente isso.
 func TestOndeDivergeEhParaOLadoMaisEstrito(t *testing.T) {
-	if problemaNoAssunto("feat(): x") == "" {
+	if subjectProblem("feat(): x") == "" {
 		t.Error("escopo vazio deve barrar: parece que alguém ia dizer algo e parou")
 	}
 	// E as formas que o commitlint aceita continuam aceitas aqui — divergir para o lado
 	// FROUXO seria o problema.
 	for _, ok := range []string{"feat: x", "feat(a): x", "feat(a)!: x", "feat!: x"} {
-		if p := problemaNoAssunto(ok); p != "" {
+		if p := subjectProblem(ok); p != "" {
 			t.Errorf("%q passa no commitlint e tem de passar aqui; veio: %s", ok, p)
 		}
 	}

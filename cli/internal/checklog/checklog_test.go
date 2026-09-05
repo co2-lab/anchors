@@ -11,12 +11,12 @@ import (
 
 func TestEspelhoDuplicaSaidaNoArquivo(t *testing.T) {
 	dir := t.TempDir()
-	e := Abrir(dir, true, "# cabeçalho\n\n")
+	e := Open(dir, true, "# cabeçalho\n\n")
 	if e == nil {
 		t.Fatal("Abrir devolveu nil")
 	}
 	fmt.Println("linha do relatório")
-	e.Fechar()
+	e.Close()
 
 	b, err := os.ReadFile(filepath.Join(dir, Dir, "check-all.txt"))
 	if err != nil {
@@ -37,13 +37,13 @@ func TestEspelhoDuplicaSaidaNoArquivo(t *testing.T) {
 func TestEscoposNaoSeSobrescrevem(t *testing.T) {
 	dir := t.TempDir()
 
-	e := Abrir(dir, true, "# all\n")
+	e := Open(dir, true, "# all\n")
 	fmt.Println("foto completa")
-	e.Fechar()
+	e.Close()
 
-	e = Abrir(dir, false, "# changed\n")
+	e = Open(dir, false, "# changed\n")
 	fmt.Println("incremental")
-	e.Fechar()
+	e.Close()
 
 	all, err := os.ReadFile(filepath.Join(dir, Dir, "check-all.txt"))
 	if err != nil {
@@ -65,13 +65,13 @@ func TestEscoposNaoSeSobrescrevem(t *testing.T) {
 // do outro lado, o comando travaria ao escrever o próprio relatório.
 func TestSaidaLongaNaoTrava(t *testing.T) {
 	dir := t.TempDir()
-	e := Abrir(dir, true, "")
+	e := Open(dir, true, "")
 	linha := strings.Repeat("x", 200)
 	for i := 0; i < 2000; i++ { // ~400KB
 		fmt.Println(linha)
 	}
 	fim := make(chan struct{})
-	go func() { e.Fechar(); close(fim) }()
+	go func() { e.Close(); close(fim) }()
 	select {
 	case <-fim:
 	case <-time.After(10 * time.Second):
@@ -96,12 +96,12 @@ func TestFalhaAoAbrirNaoDerruba(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(dir, Dir), []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	e := Abrir(dir, true, "# nada\n")
+	e := Open(dir, true, "# nada\n")
 	if e != nil {
 		t.Error("Abrir devolveu espelho onde não podia criar o diretório")
 	}
-	e.Fechar() // seguro com nil
-	if c := e.Caminho(); c != "" {
+	e.Close() // seguro com nil
+	if c := e.Path(); c != "" {
 		t.Errorf("Caminho() = %q, queria vazio", c)
 	}
 	if os.Stdout == nil {
@@ -111,7 +111,7 @@ func TestFalhaAoAbrirNaoDerruba(t *testing.T) {
 
 func TestCabecalhoRegistraContexto(t *testing.T) {
 	quando := time.Date(2026, 8, 18, 14, 32, 0, 0, time.UTC)
-	h := Cabecalho("anchors check --all", "abc1234", "fix: algo", 3, quando)
+	h := Header("anchors check --all", "abc1234", "fix: algo", 3, quando)
 
 	for _, quer := range []string{
 		"anchors check --all",
@@ -124,11 +124,11 @@ func TestCabecalhoRegistraContexto(t *testing.T) {
 		}
 	}
 
-	if limpa := Cabecalho("c", "abc", "s", 0, quando); !strings.Contains(limpa, "árvore: limpa") {
+	if limpa := Header("c", "abc", "s", 0, quando); !strings.Contains(limpa, "árvore: limpa") {
 		t.Errorf("árvore limpa não registrada:\n%s", limpa)
 	}
 	// Sem git (repo novo, ou git ausente) o cabeçalho não pode inventar um HEAD.
-	if semGit := Cabecalho("c", "", "", 0, quando); strings.Contains(semGit, "HEAD:") {
+	if semGit := Header("c", "", "", 0, quando); strings.Contains(semGit, "HEAD:") {
 		t.Errorf("HEAD inventado sem git:\n%s", semGit)
 	}
 }

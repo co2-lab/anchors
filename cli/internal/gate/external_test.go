@@ -18,7 +18,7 @@ func TestLoteNaoEstouraALinhaDeComando(t *testing.T) {
 	}
 
 	const teto = 24000
-	lotes := fatiarAlvos(alvos, teto)
+	lotes := sliceTargets(alvos, teto)
 	if len(lotes) < 2 {
 		t.Fatalf("85 KB de alvos precisam ser fatiados; veio %d lote(s)", len(lotes))
 	}
@@ -48,7 +48,7 @@ func TestLoteNaoEstouraALinhaDeComando(t *testing.T) {
 // e não recebe alvo. Devolver lote nenhum faria o gate não rodar — e um gate que não
 // roda passa por omissão, que é o oposto do que ele existe para fazer.
 func TestSemAlvosRodaUmaVez(t *testing.T) {
-	lotes := fatiarAlvos(nil, 24000)
+	lotes := sliceTargets(nil, 24000)
 	if len(lotes) != 1 {
 		t.Fatalf("sem alvos deve haver exatamente 1 execução; veio %d", len(lotes))
 	}
@@ -61,7 +61,7 @@ func TestSemAlvosRodaUmaVez(t *testing.T) {
 // de centenas de KB): onde já cabia numa execução, continua sendo uma só.
 func TestLoteCabendoNaoEhFatiado(t *testing.T) {
 	alvos := []string{"a.ts", "b.ts", "c.ts"}
-	lotes := fatiarAlvos(alvos, 24000)
+	lotes := sliceTargets(alvos, 24000)
 	if len(lotes) != 1 {
 		t.Fatalf("3 alvos curtos cabem numa execução; veio %d lotes", len(lotes))
 	}
@@ -74,7 +74,7 @@ func TestLoteCabendoNaoEhFatiado(t *testing.T) {
 // só no lote e o SO recusa com a mensagem dele; o que não pode é sumir em silêncio.
 func TestAlvoMaiorQueOTetoVaiSozinho(t *testing.T) {
 	gigante := strings.Repeat("x", 200)
-	lotes := fatiarAlvos([]string{"a.ts", gigante, "b.ts"}, 100)
+	lotes := sliceTargets([]string{"a.ts", gigante, "b.ts"}, 100)
 
 	var vistos int
 	for _, l := range lotes {

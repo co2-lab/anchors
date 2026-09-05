@@ -84,14 +84,14 @@ func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph,
 			continue
 		}
 		for _, loc := range re.FindAllStringIndex(content, -1) {
-			ini, fim := linhaDoOffset(content, loc[0]), linhaDoOffset(content, loc[1]-1)
+			ini, fim := lineAtOffset(content, loc[0]), lineAtOffset(content, loc[1]-1)
 			// A dispensa vale se estiver em QUALQUER linha do trecho casado (num import
 			// multilinha ela fica na linha do `from`, não na do `import`) ou na linha
 			// imediatamente acima.
-			if trechoDispensa(linhas, ini, fim) || linhaAnteriorDispensa(linhas, ini) {
+			if waiverSnippet(linhas, ini, fim) || lineBeforeWaiver(linhas, ini) {
 				continue
 			}
-			achado := fmt.Sprintf("linha %d: %s", ini+1, descreveFronteira(b))
+			achado := fmt.Sprintf("linha %d: %s", ini+1, describeBoundary(b))
 			if b.Severity == "warn" {
 				avisos = append(avisos, achado)
 			} else {
@@ -107,9 +107,9 @@ func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph,
 	// o projeto marca `severity: warn` no que ainda está migrando, sem desligar o gate
 	// inteiro nem perder o registro.
 	if len(erros) == 0 {
-		return Pending, "fronteira em migração (`severity: warn`): " + juntaAte(avisos, 5)
+		return Pending, "fronteira em migração (`severity: warn`): " + joinUpTo(avisos, 5)
 	}
-	msg := "fronteira de camada violada: " + juntaAte(erros, 5)
+	msg := "fronteira de camada violada: " + joinUpTo(erros, 5)
 	if len(avisos) > 0 {
 		msg += fmt.Sprintf(" — e mais %d aviso(s) de regra em migração", len(avisos))
 	}
@@ -117,7 +117,7 @@ func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph,
 		"`@allow-boundary: <razão>`: a exceção fica visível no código, não numa lista distante"
 }
 
-func descreveFronteira(b config.Boundary) string {
+func describeBoundary(b config.Boundary) string {
 	quem := "esta camada"
 	if b.Layer != "" {
 		quem = "a camada `" + b.Layer + "`"
@@ -129,7 +129,7 @@ func descreveFronteira(b config.Boundary) string {
 	return s
 }
 
-func juntaAte(xs []string, n int) string {
+func joinUpTo(xs []string, n int) string {
 	sort.Strings(xs)
 	if len(xs) > n {
 		return strings.Join(xs[:n], "; ") + fmt.Sprintf(" (e mais %d)", len(xs)-n)
@@ -141,26 +141,26 @@ func juntaAte(xs []string, n int) string {
 // de linha: sem isso a razão seria "achada" na linha seguinte e um marcador nu passaria.
 var allowBoundaryRE = regexp.MustCompile(`@allow-boundary[^\S\n]*:[^\S\n]*\S+`)
 
-// linhaAnteriorDispensa aceita a marcação no comentário ACIMA da linha, além de na
+// lineBeforeWaiver aceita a marcação no comentário ACIMA da linha, além de na
 // própria linha: em várias linguagens o import não tem onde receber um comentário de
 // fim de linha legível, e obrigar a marcação inline empurraria o autor a não marcar.
-func linhaAnteriorDispensa(linhas []string, i int) bool {
+func lineBeforeWaiver(linhas []string, i int) bool {
 	return i > 0 && allowBoundaryRE.MatchString(linhas[i-1])
 }
 
-// linhaDoOffset converte um offset em bytes no conteúdo para o índice da linha (0-based).
-func linhaDoOffset(content string, off int) int {
+// lineAtOffset converte um offset em bytes no conteúdo para o índice da linha (0-based).
+func lineAtOffset(content string, off int) int {
 	if off > len(content) {
 		off = len(content)
 	}
 	return strings.Count(content[:off], "\n")
 }
 
-// trechoDispensa aceita `@allow-boundary:` em qualquer linha do trecho casado. Num import
+// waiverSnippet aceita `@allow-boundary:` em qualquer linha do trecho casado. Num import
 // que o Prettier quebrou, a marcação natural fica na linha do `from` — cobrar que ela
 // esteja na primeira linha do casamento seria exigir que o autor soubesse onde o regex
 // começou a casar.
-func trechoDispensa(linhas []string, ini, fim int) bool {
+func waiverSnippet(linhas []string, ini, fim int) bool {
 	for i := ini; i <= fim && i < len(linhas); i++ {
 		if allowBoundaryRE.MatchString(linhas[i]) {
 			return true
