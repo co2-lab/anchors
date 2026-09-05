@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"path/filepath"
 	"strings"
@@ -47,6 +48,16 @@ func repoVazio(t *testing.T) string {
 // parou. Num projeto que ainda não começou, a resposta é a fase DESCOBRIR — e ela tem de
 // ser NOMEADA, senão o agente que abre a conversa começa adivinhando.
 func TestStatusApontaAFaseDescobrirNumProjetoNovo(t *testing.T) {
+	// O IDIOMA é fixado no teste, e não herdado.
+	//
+	// A saída agora passa pelo i18n, e um projeto sem `anchors.yaml` cai no padrão
+	// (inglês). Sem fixar, o teste passaria ou falharia conforme o que o teste ANTERIOR
+	// tivesse deixado no estado global — que é a pior forma de teste instável: ele
+	// depende da ordem.
+	t.Cleanup(func() { _ = i18n.Set(i18n.Default) })
+	if err := i18n.Set("pt-BR"); err != nil {
+		t.Fatal(err)
+	}
 	saida := capturaStatus(t, repoVazio(t))
 
 	if !strings.Contains(saida, "DESCOBRIR") {

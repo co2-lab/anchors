@@ -2,9 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/spf13/cobra"
 )
 
@@ -30,6 +34,15 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 		// comando que escapa do freio o torna decorativo. O `PersistentPreRunE` roda antes
 		// de todo subcomando, inclusive dos que ainda não existem.
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// O IDIOMA vem primeiro: a própria recusa por congelamento tem de sair no
+			// idioma do projeto.
+			//
+			// Definir aqui e não só no `config.Load` é o que faz TODA mensagem sair
+			// traduzida, inclusive as que um comando imprime ANTES de carregar a
+			// configuração. Medido: o `anchors status` confere o git antes de carregar
+			// o `anchors.yaml`, e um projeto com `lang: es` recebia essas linhas em
+			// inglês — a chave existia, o idioma é que ainda não valia.
+			aplicaIdiomaDoProjeto(cmd)
 			return refuseIfFrozen(cmd)
 		},
 	}
@@ -128,3 +141,37 @@ func refuseIfFrozen(cmd *cobra.Command) error {
 		"   Para investigar: `anchors status`, `anchors doctor` e `anchors guide` continuam valendo",
 		cmd.Name(), cfg.FreezeReasonText())
 }
+
+// aplicaIdiomaDoProjeto lê o `lang:` do anchors.yaml e o define, ANTES de qualquer saída.
+//
+// Falha em silêncio de propósito: um projeto sem configuração, ou com ela quebrada, tem
+// outro problema — e recusar aqui impediria o `anchors init` de rodar justamente onde
+// ainda não há o que ler. O idioma cai no padrão, e o comando segue.
+//
+// O `config.Load` também define o idioma, e isso não é redundância: ele valida o valor e
+// recusa um `lang:` que o Anchors não suporta. Aqui a leitura é frouxa, porque o objetivo
+// é só não imprimir em inglês antes de saber.
+func aplicaIdiomaDoProjeto(cmd *cobra.Command) {
+	root := "."
+	if f := cmd.Flags().Lookup("root"); f != nil && f.Value.String() != "" {
+		root = f.Value.String()
+	}
+	absRoot, err := config.AbsRoot(root)
+	if err != nil {
+		return
+	}
+	b, err := os.ReadFile(filepath.Join(absRoot, config.DefaultFile))
+	if err != nil {
+		return
+	}
+	if m := langNoYAML.FindSubmatch(b); m != nil {
+		_ = i18n.Set(strings.TrimSpace(string(m[1])))
+	}
+}
+
+// langNoYAML pega o `lang:` de topo do anchors.yaml.
+//
+// Por regex e não por parse: este ponto roda antes de tudo, e um YAML inválido não pode
+// impedir o comando de rodar — quem reclama do YAML é o `config.Load`, com a linha e a
+// chave. O `^` exige coluna zero, então um `lang:` aninhado noutro bloco não conta.
+var langNoYAML = regexp.MustCompile(`(?m)^lang:[ \t]*["']?([A-Za-z-]+)["']?[ \t]*$`)

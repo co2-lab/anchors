@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -52,16 +53,15 @@ Não altera nada.`,
 // Listar tudo que está pendente de uma vez faria o leitor escolher por onde começar —
 // e a ordem do ciclo é justamente o que ele não deveria ter de reconstruir sozinho.
 func runStatus(root string) error {
-	fmt.Printf("anchors status — %s\n\n", root)
+	fmt.Println(i18n.T("status.header", root))
+	fmt.Println()
 
 	// 1. GIT — o substrato. Sem ele, metade do framework fica desligada em silêncio.
 	switch gitmeta.Check(root) {
 	case gitmeta.SemBinário:
-		fmt.Println("⚠ git não instalado — o carimbo de alteração, `coverage --diff` e os")
-		fmt.Println("  hooks ficam desligados. Instale o git.")
+		fmt.Println(i18n.T("status.git_missing"))
 	case gitmeta.SemRepo:
-		fmt.Println("⚠ sem repositório git.")
-		fmt.Println("  → PRÓXIMO PASSO: `git init` (ou rode `anchors init`, que oferece fazê-lo)")
+		fmt.Println(i18n.T("status.no_git_repo"))
 		return nil
 	}
 
@@ -72,12 +72,7 @@ func runStatus(root string) error {
 	temConfig := errCfg == nil
 
 	if !temProject && !temConfig {
-		fmt.Println("○ projeto ainda não iniciado: sem PROJECT.md e sem anchors.yaml.")
-		fmt.Println()
-		fmt.Println("  → PRÓXIMO PASSO: a fase DESCOBRIR — uma entrevista de 5 etapas que decide")
-		fmt.Println("    stack, arquitetura, estrutura e convenções, e escreve PROJECT.md.")
-		fmt.Println("    Quem conduz é uma IA: rode `anchors guide project` para a régua,")
-		fmt.Println("    ou `anchors init`, que reconhece o estado e instrui.")
+		fmt.Println(i18n.T("status.not_started"))
 		return nil
 	}
 	if temProject {
