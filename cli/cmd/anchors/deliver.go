@@ -131,7 +131,7 @@ Depois disto, o watcher enfileira a task de review.`,
 			fmt.Println("   silenciosa de dado, regra sem teste que a prove, contradição entre duas")
 			fmt.Println("   regras da mesma spec) passaram com tudo verde. Nenhum foi achado por")
 			fmt.Println("   gate; os 7 vieram de revisão adversarial.")
-			if !watcherAtivo(absRoot) {
+			if !watcherActive(absRoot) {
 				fmt.Println("\n   (o watcher não está rodando — com `anchors watch start` esta")
 				fmt.Println("    entrega entra na fila sozinha, e `anchors next` a puxa)")
 			}
@@ -161,9 +161,9 @@ Depois disto, o watcher enfileira a task de review.`,
 	return cmd
 }
 
-// watcherAtivo diz se o daemon está rodando neste projeto. Serve só para não sugerir
+// watcherActive diz se o daemon está rodando neste projeto. Serve só para não sugerir
 // ligar o que já está ligado — ruído em instrução é o que faz a instrução ser ignorada.
-func watcherAtivo(root string) bool {
+func watcherActive(root string) bool {
 	_, err := os.Stat(filepath.Join(root, ".anchors", "watch.meta"))
 	return err == nil
 }

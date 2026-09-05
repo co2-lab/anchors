@@ -241,7 +241,7 @@ func renderArtifact(t template, name, id, outPath, root string, chosen map[strin
 		// declara um. Sem isso o preset emitia "Restrições" num projeto cujas 50 specs
 		// vizinhas escrevem "Modelo de Dado" — duas fontes da própria régua discordando,
 		// e o autor tendo de escolher entre obedecer o template ou os vizinhos.
-		body = traduzTitulo(body, s, cfg, camadaDoArtefato)
+		body = translateTitle(body, s, cfg, camadaDoArtefato)
 		// {TEST_BODY} é resolvido pelo DIALETO: o esqueleto de caso de teste tem sintaxe,
 		// e sintaxe é do projeto (ver testBody em new_templates.go).
 		if strings.Contains(body, "{TEST_BODY}") {
@@ -539,7 +539,7 @@ func codeDoHeaderSpec(content string) string {
 	return ""
 }
 
-// traduzTitulo substitui o cabeçalho `## <genérico>` pelo nome que o projeto usa para a
+// translateTitle substitui o cabeçalho `## <genérico>` pelo nome que o projeto usa para a
 // mesma letra de tipo de regra.
 //
 // A fonte é `rule_types[].sections` — que o projeto JÁ declara para o gate `rule-types`.
@@ -547,7 +547,7 @@ func codeDoHeaderSpec(content string) string {
 //
 // Usa o PRIMEIRO título declarado para a letra, que é a convenção dominante do projeto.
 // Se o projeto não declara a letra, o título genérico fica — o framework não inventa nome.
-func traduzTitulo(body string, s section, cfg *config.Config, camada string) string {
+func translateTitle(body string, s section, cfg *config.Config, camada string) string {
 	if cfg == nil {
 		return body
 	}

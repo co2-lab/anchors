@@ -86,7 +86,7 @@ está declarada.`,
 				return fmt.Errorf("--gate é obrigatório (o gate de julgamento que você está avaliando)")
 			}
 			v := strings.ToLower(verdict)
-			if err := validaVeredito(v, reason); err != nil {
+			if err := validateVerdict(v, reason); err != nil {
 				return err
 			}
 
@@ -119,7 +119,7 @@ está declarada.`,
 			// No modo github o achado de gate vira CARD, não arquivo: o `issues/` é a fila do
 			// modo local (mover pasta à mão), e manter os dois faz o board esconder o que os
 			// gates encontraram.
-			if cfg != nil && cfg.ModoGitHub() && len(cfg.Workflow.Labels) > 0 {
+			if cfg != nil && cfg.GitHubMode() && len(cfg.Workflow.Labels) > 0 {
 				issue.UsarGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
 			}
 			gc, ok := findJudgmentGate(cfg, gateName)
@@ -296,7 +296,7 @@ func unitExistingPiece(g *mapx.Graph, target string) string {
 	return ""
 }
 
-// validaVeredito confronta o veredito recebido e o motivo que o acompanha.
+// validateVerdict confronta o veredito recebido e o motivo que o acompanha.
 //
 // Extraída do `RunE` para ser TESTÁVEL: o contrato dos três vereditos é o que impede o
 // `pass` mentiroso, e um contrato sem teste é uma intenção.
@@ -313,7 +313,7 @@ func unitExistingPiece(g *mapx.Graph, target string) string {
 // Medido no blue-eyes (#76): a saída usada foi `pass`, com o motivo explicando que não
 // havia o que medir. Funcionou uma vez e ensina o hábito errado — carimbar julgamento sem
 // olhar é o que corrói o valor de `measures: judgment`.
-func validaVeredito(v, reason string) error {
+func validateVerdict(v, reason string) error {
 	// O VALOR ANTIGO ainda é aceito, e vira o canônico.
 	//
 	// `dispensado` já está em mapas commitados (`verdict: dispensado`) e em scripts.

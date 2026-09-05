@@ -76,12 +76,12 @@ card para trocar uma palavra é burocracia.`,
 			// Sem label do fluxo a issue nasceria órfã: o claim filtra por ela, e um card
 			// que ninguém enxerga é pior que nenhum card. O `Load` já exige isto no modo
 			// github — a conferência aqui é para o caso de a validação mudar.
-			if cfg.ModoGitHub() && len(cfg.Workflow.Labels) == 0 {
+			if cfg.GitHubMode() && len(cfg.Workflow.Labels) == 0 {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("`workflow.labels` está vazio: a issue nasceria sem a " +
 					"label que o pipeline de claim usa para achá-la, e ficaria órfã")
 			}
-			if !cfg.ModoGitHub() {
+			if !cfg.GitHubMode() {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("`escalate` existe no modo github (o card é uma issue). " +
 					"No modo local, escreva a dúvida no plano e pare o trabalho — não há " +

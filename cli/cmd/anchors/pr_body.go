@@ -68,7 +68,7 @@ o card fica aberto.
 			if err != nil {
 				return err
 			}
-			if !cfg.ModoGitHub() {
+			if !cfg.GitHubMode() {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("`pr-body` existe no modo github: no modo local não há " +
 					"card a fechar, e o trabalho se registra movendo a pasta em `issues/`")

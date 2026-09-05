@@ -250,9 +250,9 @@ var EstadosDisponiveis = []string{
 // `anchors status` mostra), mas não escreve nelas.
 const ColunaFinalDoAnchors = "READY TO TEST"
 
-// ColunasQueOAnchorsEscreve são as que os pipelines do Anchors movem. Serve ao doctor:
+// ColumnsAnchorsWrites são as que os pipelines do Anchors movem. Serve ao doctor:
 // uma coluna ausente aqui quebra o fluxo; uma ausente depois é problema do time.
-func ColunasQueOAnchorsEscreve() []string {
+func ColumnsAnchorsWrites() []string {
 	for i, c := range ColunasDoBoard {
 		if c == ColunaFinalDoAnchors {
 			return ColunasDoBoard[:i+1]
@@ -261,9 +261,9 @@ func ColunasQueOAnchorsEscreve() []string {
 	return ColunasDoBoard
 }
 
-// FaltaWorkflow diz quais dos pipelines do fluxo não existem no projeto. Só presença —
+// MissingWorkflow diz quais dos pipelines do fluxo não existem no projeto. Só presença —
 // a coerência do conteúdo é outra pergunta, respondida por `SemConcurrency`.
-func FaltaWorkflow(root string) []Workflow {
+func MissingWorkflow(root string) []Workflow {
 	var faltam []Workflow
 	for _, w := range WorkflowsDoFluxo {
 		if _, err := os.Stat(filepath.Join(root, DirWorkflows, w.Arquivo)); err != nil {
@@ -346,7 +346,7 @@ func WorkflowsDesatualizados(root string, cfg *config.Config) []Workflow {
 		if err != nil {
 			continue
 		}
-		esperado = aplicaBranchDeIntegracao(esperado, cfg.Workflow.BranchDeIntegracao())
+		esperado = aplicaBranchDeIntegracao(esperado, cfg.Workflow.IntegrationBranchOrDefault())
 		if !bytes.Equal(atual, esperado) {
 			velhos = append(velhos, w)
 		}
@@ -380,7 +380,7 @@ func SemeiaWorkflows(root string, cfg *config.Config) ([]string, error) {
 		if err != nil {
 			return escritos, fmt.Errorf("ler o template %s: %w", w.Arquivo, err)
 		}
-		conteudo = aplicaBranchDeIntegracao(conteudo, cfg.Workflow.BranchDeIntegracao())
+		conteudo = aplicaBranchDeIntegracao(conteudo, cfg.Workflow.IntegrationBranchOrDefault())
 		if err := os.WriteFile(dest, conteudo, 0o644); err != nil {
 			return escritos, fmt.Errorf("escrever %s: %w", dest, err)
 		}

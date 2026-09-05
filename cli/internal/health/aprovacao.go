@@ -63,7 +63,7 @@ func checkApprovalReachable(cfg *config.Config) []Finding {
 		return nil // sem `gh` o doctor já reclama noutro achado
 	}
 	repo := cfg.Workflow.Repo
-	branch := cfg.Workflow.BranchDeIntegracao()
+	branch := cfg.Workflow.IntegrationBranchOrDefault()
 
 	if ok, _ := CanBypassProtection(repo, branch); ok {
 		// Admin com escape: o fluxo funciona, e o merge usa `gh pr merge --admin`. Não é

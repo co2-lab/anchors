@@ -327,7 +327,7 @@ func TestStalePreservaOHistorico(t *testing.T) {
 func TestFaltaWorkflowVeOQueNaoExiste(t *testing.T) {
 	dir := t.TempDir()
 
-	if faltam := FaltaWorkflow(dir); len(faltam) != len(WorkflowsDoFluxo) {
+	if faltam := MissingWorkflow(dir); len(faltam) != len(WorkflowsDoFluxo) {
 		t.Fatalf("projeto vazio: esperava %d faltando, veio %d", len(WorkflowsDoFluxo), len(faltam))
 	}
 
@@ -338,7 +338,7 @@ func TestFaltaWorkflowVeOQueNaoExiste(t *testing.T) {
 	if len(escritos) != len(WorkflowsDoFluxo) {
 		t.Errorf("esperava %d escritos, veio %d", len(WorkflowsDoFluxo), len(escritos))
 	}
-	if faltam := FaltaWorkflow(dir); len(faltam) != 0 {
+	if faltam := MissingWorkflow(dir); len(faltam) != 0 {
 		t.Errorf("depois de semear nada deveria faltar: %v", faltam)
 	}
 	if quebrados := SemConcurrency(dir); len(quebrados) != 0 {
@@ -402,7 +402,7 @@ func TestSemConcurrencyPegaPipelineQuePareceOK(t *testing.T) {
 		t.Error("claim sem `concurrency` atribuiria o mesmo card a dois agentes — tem de ser achado")
 	}
 	// E não pode ser contado como ausente: o arquivo está lá.
-	for _, w := range FaltaWorkflow(dir) {
+	for _, w := range MissingWorkflow(dir) {
 		if w.Arquivo == "anchors-claim.yml" {
 			t.Error("o arquivo existe — contá-lo como ausente reportaria o mesmo problema duas vezes")
 		}

@@ -56,10 +56,10 @@ func checkPaginationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 	// Cada padrão ausente é um olho fechado. Pendente nomeia QUAL falta, para a correção
 	// ser uma linha de YAML e não uma investigação.
 	var faltando []string
-	if d.ExportedFunc == "" && !d.Dispensado("exported_func") {
+	if d.ExportedFunc == "" && !d.WaivedField("exported_func") {
 		faltando = append(faltando, "`exported_func` (como se reconhece uma função exportada)")
 	}
-	if d.CollectionQuery == "" && !d.Dispensado("collection_query") {
+	if d.CollectionQuery == "" && !d.WaivedField("collection_query") {
 		faltando = append(faltando, "`collection_query` (como se reconhece uma consulta que "+
 			"devolve muitos registros — não tem default porque depende do seu provedor de dados: "+
 			"`QueryCommand|ScanCommand` no DynamoDB, `SELECT` em SQL, `.find()` no Mongo)")

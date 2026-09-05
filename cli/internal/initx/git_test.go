@@ -26,20 +26,20 @@ func raizIsolada(t *testing.T) string {
 func TestGitNaoInstaladoNaoEhOMesmoQueNaoIniciado(t *testing.T) {
 	dir := raizIsolada(t)
 
-	semBinario := DetectaGit(dir, false)
+	semBinario := DetectGit(dir, false)
 	if semBinario != GitNaoInstalado {
 		t.Fatalf("sem o binário, o estado tem de ser GitNaoInstalado, foi %v", semBinario)
 	}
-	comBinario := DetectaGit(dir, true)
+	comBinario := DetectGit(dir, true)
 	if comBinario != GitNaoIniciado {
 		t.Fatalf("com o binário e sem repo, o estado tem de ser GitNaoIniciado, foi %v", comBinario)
 	}
 
 	// E a ação difere: só um dos dois tem o que oferecer.
-	if OfereceAcao(GitNaoInstalado) {
+	if OfferAction(GitNaoInstalado) {
 		t.Error("não há `git init` a oferecer numa máquina sem git — perguntar prometeria o que falharia")
 	}
-	if !OfereceAcao(GitNaoIniciado) {
+	if !OfferAction(GitNaoIniciado) {
 		t.Error("com git instalado e sem repo, a oferta de inicializar é justamente o passo")
 	}
 }
@@ -74,10 +74,10 @@ func TestRepoSemCommitNaoContaComoPronto(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if e := DetectaGit(dir, true); e != GitSemCommit {
+	if e := DetectGit(dir, true); e != GitSemCommit {
 		t.Fatalf("repo sem ref nenhuma tem de ser GitSemCommit, foi %v", e)
 	}
-	if !OfereceAcao(GitSemCommit) {
+	if !OfferAction(GitSemCommit) {
 		t.Error("falta o commit — e é isso que o Anchors tem a oferecer aqui")
 	}
 }
@@ -92,10 +92,10 @@ func TestRepoComCommitEhPronto(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if e := DetectaGit(dir, true); e != GitPronto {
+	if e := DetectGit(dir, true); e != GitPronto {
 		t.Fatalf("repo com ref em heads/ é pronto, foi %v", e)
 	}
-	if OfereceAcao(GitPronto) {
+	if OfferAction(GitPronto) {
 		t.Error("nada a oferecer num repo pronto")
 	}
 }
@@ -112,7 +112,7 @@ func TestRepoComRefsEmpacotadasEhPronto(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if e := DetectaGit(dir, true); e != GitPronto {
+	if e := DetectGit(dir, true); e != GitPronto {
 		t.Fatalf("refs empacotadas contam como commit, foi %v", e)
 	}
 }
@@ -134,7 +134,7 @@ func TestSubpastaDeRepoExistenteNaoOfereceRepoAninhado(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if e := DetectaGit(sub, true); e != GitPronto {
+	if e := DetectGit(sub, true); e != GitPronto {
 		t.Fatalf("subpasta de repo existente já está versionada, foi %v", e)
 	}
 }
@@ -147,7 +147,7 @@ func TestGitComoArquivoEhPronto(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if e := DetectaGit(dir, true); e != GitPronto {
+	if e := DetectGit(dir, true); e != GitPronto {
 		t.Fatalf("`.git` como arquivo é worktree/submódulo — repo real existe, foi %v", e)
 	}
 }

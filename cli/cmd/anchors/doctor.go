@@ -41,7 +41,7 @@ APRESENTA e REGISTRA, mas NÃO bloqueia — é diagnóstico, roda sob demanda.`,
 			// O raio-X completo seria ruído no CI: ele responde dezenas de perguntas, e
 			// quem chama daqui quer uma.
 			if soPipelines {
-				return verificaPipelines(cmd)
+				return checkPipelines(cmd)
 			}
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
@@ -136,13 +136,13 @@ func printReport(r health.Report) {
 // organização inteira e não se desfaz com `git checkout`. O doctor diz o que falta; criar
 // é decisão de quem opera.
 func repairEnvironment(root string, cfg *config.Config) error {
-	if !cfg.ModoGitHub() {
+	if !cfg.GitHubMode() {
 		fmt.Println("\n--fix: nada a fazer — o ambiente do GitHub só é exigido no `workflow.mode: github`.")
 		return nil
 	}
 	// Lido ANTES de semear: depois da escrita os arquivos já casam o template, e não
 	// haveria como dizer quais foram ATUALIZADOS em vez de criados.
-	faltavam := initx.FaltaWorkflow(root)
+	faltavam := initx.MissingWorkflow(root)
 	desatualizados := initx.WorkflowsDesatualizados(root, cfg)
 	if _, err := initx.SemeiaWorkflows(root, cfg); err != nil {
 		return fmt.Errorf("semear os pipelines: %w", err)
@@ -183,7 +183,7 @@ func repairEnvironment(root string, cfg *config.Config) error {
 	// NÃO TEM COMO ser cumprido, e quem opera descobriria no meio de um merge. A revisão
 	// continua sendo cobrada — pelo estado do card, que é o que o Anchors controla.
 	if cfg.Workflow.AprovacoesExigidas() > 0 {
-		repo, branch := cfg.Workflow.Repo, cfg.Workflow.BranchDeIntegracao()
+		repo, branch := cfg.Workflow.Repo, cfg.Workflow.IntegrationBranchOrDefault()
 		if ok, _ := health.CanBypassProtection(repo, branch); !ok {
 			if err := health.DisableApprovalRequirement(repo, branch); err != nil {
 				fmt.Printf("⚠  não deu para desligar a exigência de aprovação: %v\n", err)
@@ -287,7 +287,7 @@ func protectBranches(cfg *config.Config) error {
 		return fmt.Errorf("o `gh` não está no PATH")
 	}
 	repo := cfg.Workflow.Repo
-	for _, b := range cfg.Workflow.BranchesProtegidos() {
+	for _, b := range cfg.Workflow.ProtectedBranchesOrDefault() {
 		body := protectionBody(cfg.Workflow.AprovacoesExigidas())
 		// `--input -` LÊ do stdin, e é preciso de fato escrever nele: sem isso o corpo
 		// chega vazio e a API responde 422 reclamando de um campo obrigatório nulo — que
@@ -311,22 +311,22 @@ func protectBranches(cfg *config.Config) error {
 	return nil
 }
 
-// verificaPipelines é o `doctor --check-pipelines`: uma pergunta, um código de saída.
+// checkPipelines é o `doctor --check-pipelines`: uma pergunta, um código de saída.
 //
 // Sai com 1 quando algo está desatualizado ou faltando, para o CI poder barrar. Um aviso
 // que não muda o código de saída seria ignorado pelo próprio pipeline que o emitiu.
-func verificaPipelines(cmd *cobra.Command) error {
+func checkPipelines(cmd *cobra.Command) error {
 	root := config.RaizDoProjeto(".")
 	cfg, err := config.Load(filepath.Join(root, "anchors.yaml"))
 	if err != nil {
 		return err
 	}
-	if !cfg.ModoGitHub() {
+	if !cfg.GitHubMode() {
 		fmt.Println("· modo local — não há pipeline do fluxo a verificar.")
 		return nil
 	}
 
-	faltam := initx.FaltaWorkflow(root)
+	faltam := initx.MissingWorkflow(root)
 	velhos := initx.WorkflowsDesatualizados(root, cfg)
 	if len(faltam) == 0 && len(velhos) == 0 {
 		fmt.Printf("✓ os %d pipelines do fluxo estão no lugar e atualizados (anchors %s).\n",

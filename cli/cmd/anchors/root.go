@@ -117,7 +117,7 @@ func refuseIfFrozen(cmd *cobra.Command) error {
 		return nil
 	}
 	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
-	if err != nil || !cfg.Congelado() {
+	if err != nil || !cfg.Frozen() {
 		return nil
 	}
 	cmd.SilenceUsage = true
@@ -126,5 +126,5 @@ func refuseIfFrozen(cmd *cobra.Command) error {
 		"   O trabalho que você já fez continua no seu branch local.\n"+
 		"   Para liberar (quem congelou): `anchors thaw`\n"+
 		"   Para investigar: `anchors status`, `anchors doctor` e `anchors guide` continuam valendo",
-		cmd.Name(), cfg.MotivoDoCongelamento())
+		cmd.Name(), cfg.FreezeReasonText())
 }

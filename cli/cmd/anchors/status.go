@@ -126,7 +126,7 @@ func runStatus(root string) error {
 
 	// 4. O TRABALHO — a fila mora onde o modo declara (WORKFLOW.md §2).
 	fmt.Println()
-	if cfg.ModoGitHub() {
+	if cfg.GitHubMode() {
 		statusGitHub(root, cfg, g)
 	} else {
 		statusLocal(root, g)
@@ -141,7 +141,7 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 
 	// O ambiente precisa estar montado antes de a fila fazer sentido — e o doctor é
 	// quem sabe conferir isso. Aqui basta apontar, sem repetir a verificação.
-	if faltam := initx.FaltaWorkflow(root); len(faltam) > 0 {
+	if faltam := initx.MissingWorkflow(root); len(faltam) > 0 {
 		fmt.Printf("⚠ %d pipeline(s) do fluxo ausentes — sem eles o ciclo não avança sozinho.\n", len(faltam))
 		fmt.Println("  → `anchors doctor --fix` cria os que faltam")
 		return
@@ -151,9 +151,9 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 	// O FLUXO DO PR, dito onde quem retoma o trabalho vai ler. Todo trabalho sobe por
 	// PR: é o que dá objeto à revisão e o que faz o card nascer (o pipeline de
 	// identificação dispara na ABERTURA do PR, não no push).
-	base := cfg.Workflow.BranchDeIntegracao()
+	base := cfg.Workflow.IntegrationBranchOrDefault()
 	fmt.Printf("  trabalho entra por PR para `%s`", base)
-	if p := cfg.Workflow.BranchesProtegidos(); len(p) > 1 {
+	if p := cfg.Workflow.ProtectedBranchesOrDefault(); len(p) > 1 {
 		fmt.Printf(" · protegidos: %s", strings.Join(p, ", "))
 	}
 	fmt.Println()
@@ -161,7 +161,7 @@ func statusGitHub(root string, cfg *config.Config, g *mapx.Graph) {
 
 	// Um projeto sem trabalho não tem card a pedir: o passo é criar o primeiro plano,
 	// e mandar pedir trabalho aqui daria uma instrução que não devolve nada.
-	if semTrabalhoReal(g) {
+	if noRealWork(g) {
 		printFirstPlan()
 		return
 	}
@@ -213,7 +213,7 @@ func statusLocal(root string, g *mapx.Graph) {
 		fmt.Println("  → PRÓXIMO PASSO: `issues/todo` tem trabalho — leia e escolha um.")
 	case tasks > 0:
 		fmt.Println("  → PRÓXIMO PASSO: `anchors next` puxa a próxima task da fila.")
-	case semTrabalhoReal(g):
+	case noRealWork(g):
 		// "Nada pendente" com o projeto vazio seria uma resposta enganosa: não há nada
 		// pendente porque não há nada.
 		printFirstPlan()
@@ -250,10 +250,10 @@ func printFirstPlan() {
 	fmt.Println("  `needs` não terminou não vira card.")
 }
 
-// semTrabalhoReal diz se o mapa só tem o que o próprio `init` semeou (os guides). Um
+// noRealWork diz se o mapa só tem o que o próprio `init` semeou (os guides). Um
 // projeto assim está montado, não começado — e a diferença é o que separa "nada pendente"
 // de "ainda não há o que fazer aqui".
-func semTrabalhoReal(g *mapx.Graph) bool {
+func noRealWork(g *mapx.Graph) bool {
 	for _, n := range g.Nodes {
 		if n.Kind != mapx.KindGuide {
 			return false

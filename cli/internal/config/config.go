@@ -227,12 +227,12 @@ type Workflow struct {
 	ManualIngestBlocks bool `yaml:"manual_ingest_blocks,omitempty"`
 }
 
-// BranchDeIntegracao devolve onde o trabalho chega, com o default aplicado.
+// IntegrationBranchOrDefault devolve onde o trabalho chega, com o default aplicado.
 //
 // Existe como método, e não como leitura direta do campo, para que o default viva num
 // lugar só: espalhá-lo pelos chamadores faria cada um decidir o seu, e um deles
 // discordaria.
-func (w *Workflow) BranchDeIntegracao() string {
+func (w *Workflow) IntegrationBranchOrDefault() string {
 	if w == nil || w.IntegrationBranch == "" {
 		return "main"
 	}
@@ -265,15 +265,15 @@ func (w *Workflow) IngestManualBarra() bool {
 	return w != nil && w.ManualIngestBlocks
 }
 
-// BranchesProtegidos devolve onde nada entra sem PR, com o default aplicado.
-func (w *Workflow) BranchesProtegidos() []string {
+// ProtectedBranchesOrDefault devolve onde nada entra sem PR, com o default aplicado.
+func (w *Workflow) ProtectedBranchesOrDefault() []string {
 	if w == nil {
 		return []string{"main"}
 	}
 	if len(w.ProtectedBranches) > 0 {
 		return w.ProtectedBranches
 	}
-	base := w.BranchDeIntegracao()
+	base := w.IntegrationBranchOrDefault()
 	if base == "main" {
 		return []string{"main"}
 	}
@@ -284,22 +284,22 @@ func (w *Workflow) BranchesProtegidos() []string {
 }
 
 // ModoGitHub diz se o projeto declarou a gestão no GitHub.
-// Congelado diz se o projeto está com o Anchors desligado (`enabled: false`).
+// Frozen diz se o projeto está com o Anchors desligado (`enabled: false`).
 //
 // Nil-safe: uma config que não carregou não congela nada. O comando que a recebeu vazia
 // tem outro problema, e responder "congelado" ali mandaria quem investiga para o lado
 // errado.
-func (c *Config) Congelado() bool {
+func (c *Config) Frozen() bool {
 	return c != nil && c.Enabled != nil && !*c.Enabled
 }
 
-// MotivoDoCongelamento devolve o texto a mostrar quando um comando é recusado.
+// FreezeReasonText devolve o texto a mostrar quando um comando é recusado.
 //
 // O motivo é OBRIGATÓRIO na prática, e a mensagem o cobra quando falta: um congelamento
 // sem razão escrita é indistinguível de configuração quebrada, e quem esbarra nele tenta
 // contornar em vez de ler.
-func (c *Config) MotivoDoCongelamento() string {
-	if !c.Congelado() {
+func (c *Config) FreezeReasonText() string {
+	if !c.Frozen() {
 		return ""
 	}
 	if r := strings.TrimSpace(c.FreezeReason); r != "" {
@@ -308,7 +308,7 @@ func (c *Config) MotivoDoCongelamento() string {
 	return "(nenhum motivo declarado — quem congelou não escreveu `freeze_reason` no anchors.yaml)"
 }
 
-func (c *Config) ModoGitHub() bool {
+func (c *Config) GitHubMode() bool {
 	return c != nil && c.Workflow != nil && c.Workflow.Mode == ModeGitHub
 }
 
@@ -459,7 +459,7 @@ type RuleType struct {
 	Tags []string `yaml:"tags,omitempty"`
 }
 
-// LetrasDaTag devolve TODAS as letras que declaram a tag de cenário, e se a tag é
+// TagLetters devolve TODAS as letras que declaram a tag de cenário, e se a tag é
 // conhecida. Tags fora do vocabulário não são erro: o projeto usa `@smoke`, `@P1`,
 // `@nivel-e2e` e outras que não falam de natureza de regra.
 //
@@ -471,7 +471,7 @@ type RuleType struct {
 //
 // Devolver só a primeira faria o gate acusar a segunda para sempre, e a saída seria
 // escolher entre duas classificações corretas.
-func (c *Config) LetrasDaTag(tag string) ([]string, bool) {
+func (c *Config) TagLetters(tag string) ([]string, bool) {
 	if c == nil {
 		return nil, false
 	}
@@ -486,8 +486,8 @@ func (c *Config) LetrasDaTag(tag string) ([]string, bool) {
 	return out, len(out) > 0
 }
 
-// ExigeCodigo diz se a seção (pelo título) foi declarada como catalogadora de regra.
-func (r RuleType) ExigeCodigo(titulo string) bool {
+// RequiresCodeIn diz se a seção (pelo título) foi declarada como catalogadora de regra.
+func (r RuleType) RequiresCodeIn(titulo string) bool {
 	for _, s := range r.RequiresCode {
 		if normalizaTitulo(s) == normalizaTitulo(titulo) {
 			return true
@@ -1657,11 +1657,11 @@ func WorkspacesDeclarados(suites []Suite) []string {
 	return distintos(suites, func(s Suite) string { return s.Workspace })
 }
 
-// EscoposDeclarados é o terceiro eixo, e ele só existe na mutação: a MESMA unidade
+// DeclaredScopes é o terceiro eixo, e ele só existe na mutação: a MESMA unidade
 // medida contra o teste dela (`isolated`) e contra o de quem a importa (`full`). Não é
 // camada nem workspace — é a mesma suíte, com abrangência diferente, e o gate julga
 // pelo isolado quando os dois existem.
-func EscoposDeclarados(suites []Suite) []string {
+func DeclaredScopes(suites []Suite) []string {
 	return distintos(suites, func(s Suite) string { return s.Scope })
 }
 

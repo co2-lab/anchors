@@ -35,11 +35,11 @@ type Regiao struct {
 	Rev   string // sha256 curto do conteúdo do intervalo, incluindo os marcadores
 }
 
-// ErroRegiao — um defeito de pareamento. Não é o mesmo que ausência de região: um arquivo
+// RegionError — um defeito de pareamento. Não é o mesmo que ausência de região: um arquivo
 // sem nenhuma região é legítimo (a delimitação é OPCIONAL, e vale o rev do arquivo).
 // Região aberta e nunca fechada, fecho sem abertura, ou fecho com código diferente do que
 // abriu são erros de escrita — e é o que o gate `region-pair-honored` reprova.
-type ErroRegiao struct {
+type RegionError struct {
 	Linha int
 	Kind  string // "sem-fecho" | "fecho-orfao" | "fecho-trocado"
 	Code  string // o código da abertura (ou do fecho órfão)
@@ -72,7 +72,7 @@ func reRegiaoFecha() *regexp.Regexp {
 // Aninhamento é suportado por uma pilha: uma região interna fecha antes da externa, e o
 // fecho tem de casar com o topo. O `rev` de cada região cobre o intervalo INCLUINDO os
 // marcadores — mudar a descrição do próprio requisito é mudança do requisito.
-func Regioes(content string) ([]Regiao, []ErroRegiao) {
+func Regioes(content string) ([]Regiao, []RegionError) {
 	linhas := strings.Split(content, "\n")
 	type aberta struct {
 		code  string
@@ -80,7 +80,7 @@ func Regioes(content string) ([]Regiao, []ErroRegiao) {
 	}
 	var pilha []aberta
 	var out []Regiao
-	var erros []ErroRegiao
+	var erros []RegionError
 
 	for i, l := range linhas {
 		n := i + 1
@@ -88,7 +88,7 @@ func Regioes(content string) ([]Regiao, []ErroRegiao) {
 		// e testar na ordem inversa faria todo fecho parecer uma abertura sem código.
 		if m := reRegiaoFecha().FindStringSubmatch(l); m != nil {
 			if len(pilha) == 0 {
-				erros = append(erros, ErroRegiao{Linha: n, Kind: "fecho-orfao", Achou: m[1]})
+				erros = append(erros, RegionError{Linha: n, Kind: "fecho-orfao", Achou: m[1]})
 				continue
 			}
 			topo := pilha[len(pilha)-1]
@@ -96,7 +96,7 @@ func Regioes(content string) ([]Regiao, []ErroRegiao) {
 				// Erro REPORTADO mas não fatal: fechamos o topo de todo jeito, para que um
 				// fecho trocado não faça toda região seguinte parecer desbalanceada e
 				// produza uma cascata de erros derivados de um só defeito.
-				erros = append(erros, ErroRegiao{
+				erros = append(erros, RegionError{
 					Linha: n, Kind: "fecho-trocado", Code: topo.code, Achou: m[1],
 				})
 			}
@@ -115,7 +115,7 @@ func Regioes(content string) ([]Regiao, []ErroRegiao) {
 	}
 	// o que sobrou na pilha nunca fechou
 	for _, a := range pilha {
-		erros = append(erros, ErroRegiao{Linha: a.linha, Kind: "sem-fecho", Code: a.code})
+		erros = append(erros, RegionError{Linha: a.linha, Kind: "sem-fecho", Code: a.code})
 	}
 	return out, erros
 }

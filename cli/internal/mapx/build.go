@@ -452,7 +452,7 @@ func PreservarCarimbos(novo, antigo *Graph) {
 	// Os julgamentos de IA seguem o mesmo caminho do carimbo: reconstruir o mapa não
 	// pode apagar quem já leu. Sem isto, um `map build` entre o `judge` e o `check`
 	// desfazia o julgamento — e é exatamente essa a sequência que o `check --all` roda.
-	julgamentos := make(map[string][]Julgamento, len(antigo.Edges))
+	julgamentos := make(map[string][]Judgment, len(antigo.Edges))
 	for i := range antigo.Edges {
 		e := &antigo.Edges[i]
 		k := string(e.Type) + "\x00" + e.From + "\x00" + e.To

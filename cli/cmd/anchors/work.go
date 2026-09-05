@@ -88,7 +88,7 @@ O conteúdo é COMPOSTO do anchors.yaml — nada é inventado aqui.`,
 			// Redirecionar (em vez de recusar) porque a intenção é inequívoca: quem pediu
 			// `work feature --for x.spec.md` quer a feature da unidade que x.spec.md
 			// descreve. Dizer o que se fez mantém o usuário no controle.
-			if alvo, achou := unidadeDaPecaDerivada(absRoot, rel, cfg, g); achou {
+			if alvo, achou := derivedPieceUnit(absRoot, rel, cfg, g); achou {
 				fmt.Fprintf(os.Stderr, "nota: `%s` é uma peça derivada, não a unidade. "+
 					"Usando `%s` como alvo.\n\n", rel, alvo)
 				rel = alvo
@@ -315,7 +315,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// É a falha de memória do framework: o defeito foi encontrado, registrado, e some do
 	// caminho de quem poderia corrigi-lo. Trazê-lo para o prompt é o que fecha o laço entre
 	// quem acha e quem conserta.
-	writeIssuesAbertas(&b, root, rel)
+	writeOpenIssues(&b, root, rel)
 
 	// SINAIS DE EXECUÇÃO. Os gates que medem o que só a EXECUÇÃO revela (o teste passa? o
 	// teste PROVA a linha, ou só a executa?) leem de sinais ingeridos — e ficam `~` para
@@ -767,10 +767,10 @@ func writeRegimes(b *strings.Builder, cfg *config.Config) {
 		"em vez de `@nivel-integration` faz o cenário não ser confrontado por nenhum gate.\n")
 }
 
-// unidadeDaPecaDerivada resolve a UNIDADE quando o alvo dado é uma peça derivada
+// derivedPieceUnit resolve a UNIDADE quando o alvo dado é uma peça derivada
 // (spec/feature/test). Prefere o mapa — a aresta `specifies` diz exatamente qual código a
 // spec descreve; sem mapa, cai na convenção de nome (tronco + extensões usuais).
-func unidadeDaPecaDerivada(root, rel string, cfg *config.Config, g *mapx.Graph) (string, bool) {
+func derivedPieceUnit(root, rel string, cfg *config.Config, g *mapx.Graph) (string, bool) {
 	layer, _ := scan.Classify(rel, cfg)
 	l, ok := cfg.Layers[layer]
 	if !ok {
@@ -1069,9 +1069,9 @@ func waivedPieces(layer string, cfg *config.Config) map[string]bool {
 	return out
 }
 
-// writeIssuesAbertas traz para o prompt os achados ainda em aberto sobre esta unidade —
+// writeOpenIssues traz para o prompt os achados ainda em aberto sobre esta unidade —
 // de `issues/todo/` e `issues/doing/`, que são os estados vivos.
-func writeIssuesAbertas(b *strings.Builder, root, rel string) {
+func writeOpenIssues(b *strings.Builder, root, rel string) {
 	base := strings.TrimSuffix(rel, filepath.Ext(rel))
 	for _, suf := range []string{".spec.md", ".feature", ".test", ".spec"} {
 		base = strings.TrimSuffix(base, suf)

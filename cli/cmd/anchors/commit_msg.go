@@ -88,7 +88,7 @@ func subjectProblem(assunto string) string {
 		return fmt.Sprintf("o tipo `%s` tem maiúscula — use `%s`, senão o changelog cria "+
 			"dois grupos para a mesma coisa", tipo, strings.ToLower(tipo))
 	}
-	if !tipoConhecido(tipo) {
+	if !knownType(tipo) {
 		return fmt.Sprintf("`%s` não é um tipo conhecido. Tipos: %s",
 			tipo, strings.Join(tiposConvencionais, ", "))
 	}
@@ -115,7 +115,7 @@ func subjectProblem(assunto string) string {
 	return ""
 }
 
-func tipoConhecido(t string) bool {
+func knownType(t string) bool {
 	for _, v := range tiposConvencionais {
 		if v == t {
 			return true

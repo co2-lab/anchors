@@ -30,7 +30,7 @@ func discoverStep(root string, p *initx.Proposal) bool {
 	if !initx.PrecisaDescobrir(root, p) {
 		return true
 	}
-	if initx.DetectaOperador(temTTY(), os.Getenv) == initx.OperadorIA {
+	if initx.DetectOperator(hasTTY(), os.Getenv) == initx.OperadorIA {
 		printWorkOrder()
 		return true
 	}
@@ -80,8 +80,8 @@ func instructPerson(root string) bool {
   → estrutura → ferramental), conduzida por uma IA, que produz PROJECT.md e
   INSIGHTS.md. O Anchors não a conduz: ele não embute modelo, só fornece a régua.`)
 
-	nome := initx.NomeDoAgente(os.Getenv)
-	comando := initx.ComandoParaAbrirIA(os.Getenv)
+	nome := initx.AgentName(os.Getenv)
+	comando := initx.CommandToOpenAI(os.Getenv)
 
 	if len(comando) > 0 {
 		fmt.Printf("\n  Detectei %s nesta máquina.\n", nome)
@@ -157,9 +157,9 @@ func breakAt(s string, largura int, prefixo string) string {
 	return strings.Join(linhas, "\n"+prefixo)
 }
 
-// temTTY diz se há terminal interativo na entrada. É a evidência mais fraca de quem
+// hasTTY diz se há terminal interativo na entrada. É a evidência mais fraca de quem
 // opera (um pipe qualquer produz o mesmo resultado), por isso `DetectaOperador` só
 // recorre a ela depois de procurar as variáveis que um agente declara.
-func temTTY() bool {
+func hasTTY() bool {
 	return isatty.IsTerminal(os.Stdin.Fd()) || isatty.IsCygwinTerminal(os.Stdin.Fd())
 }

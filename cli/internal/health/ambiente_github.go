@@ -21,7 +21,7 @@ import (
 // Só roda no modo `github`. Cobrar board de um projeto que declarou `mode: local` seria
 // ruído garantido — e ruído recorrente treina a equipe a ignorar o doctor.
 func checkGitHubEnv(cfg *config.Config, root string) []Finding {
-	if cfg == nil || !cfg.ModoGitHub() {
+	if cfg == nil || !cfg.GitHubMode() {
 		return nil
 	}
 	// O BOARD não é conferido, e isso é deliberado: o estado do trabalho é uma LABEL, e
@@ -37,7 +37,7 @@ func checkGitHubEnv(cfg *config.Config, root string) []Finding {
 // e os que precisam de serialização a declaram.
 func checkPipelines(root string, cfg *config.Config) []Finding {
 	var out []Finding
-	for _, w := range initx.FaltaWorkflow(root) {
+	for _, w := range initx.MissingWorkflow(root) {
 		out = append(out, Finding{"pipeline-ausente", Warn, w.Arquivo,
 			"pipeline do fluxo não existe em " + initx.DirWorkflows + " — sem ele, " +
 				w.Papel + " não acontece (e não falha: só não acontece). " +

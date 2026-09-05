@@ -97,7 +97,7 @@ func untouchedFiles(root string, files []string) (avisos []string, confrontou bo
 	var faltando []string
 	for _, f := range files {
 		rel := relTo(root, f)
-		if tocado[rel] || sobPrefixo(rel, prefixos) {
+		if tocado[rel] || underPrefix(rel, prefixos) {
 			continue
 		}
 		faltando = append(faltando, rel)
@@ -187,8 +187,8 @@ func mutationNotMeasured(root, unit string) string {
 		"  ferramenta, rode-a e `anchors ingest --mutation <relatório>`."
 }
 
-// sobPrefixo diz se o caminho está sob algum diretório que o git reportou como novo.
-func sobPrefixo(rel string, prefixos []string) bool {
+// underPrefix diz se o caminho está sob algum diretório que o git reportou como novo.
+func underPrefix(rel string, prefixos []string) bool {
 	for _, p := range prefixos {
 		if strings.HasPrefix(rel, p) {
 			return true

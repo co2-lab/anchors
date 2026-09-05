@@ -23,7 +23,7 @@ func TestWorkflowAusenteEhLocal(t *testing.T) {
 	if err != nil {
 		t.Fatalf("config sem bloco workflow tem de carregar: %v", err)
 	}
-	if c.ModoGitHub() {
+	if c.GitHubMode() {
 		t.Error("sem declaração, o modo é local")
 	}
 }
@@ -50,7 +50,7 @@ func TestWorkflowGitHubValido(t *testing.T) {
 	if err != nil {
 		t.Fatalf("config completa tem de carregar: %v", err)
 	}
-	if !c.ModoGitHub() {
+	if !c.GitHubMode() {
 		t.Error("mode: github tem de ligar o ModoGitHub()")
 	}
 }
