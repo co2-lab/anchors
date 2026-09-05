@@ -60,7 +60,7 @@ files:
 	}
 	// `patterns` NÃO é uma camada: não pode virar um derivado com esse nome, ou o mapa
 	// passaria a procurar um arquivo "patterns" que ninguém escreveu.
-	if _, virouCamada := got[ChavePatterns]; virouCamada {
+	if _, virouCamada := got[PatternKey]; virouCamada {
 		t.Error("`patterns` não é camada e não pode sobrar no mapa de derivados")
 	}
 }

@@ -109,7 +109,7 @@ card para trocar uma palavra é burocracia.`,
 			labels := []string{cfg.Workflow.Labels[0], "anchors:to-do"}
 			if paraUsuario {
 				titulo = "[decisão] " + firstLineOfReason(motivo)
-				labels = append(labels, initx.LabelPrecisaDoUsuario)
+				labels = append(labels, initx.LabelNeedsUser)
 			}
 			// SOB o card de origem, como LABEL — o que permite listar o que pende sob um
 			// trabalho (`--label anchors:sob-44`) e entregá-lo no mesmo PR. Uma frase no
@@ -160,7 +160,7 @@ card para trocar uma palavra é burocracia.`,
 			if paraUsuario && card != "" {
 				if _, err := exec.Command("gh", "issue", "edit", card,
 					"--repo", cfg.Workflow.Repo,
-					"--add-label", initx.LabelPrecisaDoUsuario,
+					"--add-label", initx.LabelNeedsUser,
 				).CombinedOutput(); err != nil {
 					fmt.Printf("· aviso: não consegui rotular o card #%s — rotule à mão, "+
 						"senão outro agente pega o card e refaz o caminho\n", card)
@@ -231,7 +231,7 @@ func escalationBody(motivo, sobre, card string, paraUsuario bool) string {
 		b.WriteString("**Como destravar:** decida, e registre a decisão onde ela vale — no " +
 			"plano ou na spec, como revisão (`{CODIGO}-R0001: o que mudou e por quê`). Se a " +
 			"mudança for grande, um plano novo com `revises:`. Depois remova a label `" +
-			initx.LabelPrecisaDoUsuario + "`.\n\n")
+			initx.LabelNeedsUser + "`.\n\n")
 		if card != "" {
 			b.WriteString(fmt.Sprintf("Trabalho parado no card #%s.\n", card))
 		}

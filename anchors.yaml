@@ -321,5 +321,22 @@ gates:
   # Cada pacote do Anchors JÁ tem doutrina no cabeçalho (`// Package X faz Y porque Z`) —
   # é a convenção mais consistente do repositório. O gate transforma hábito em régua.
   # Informativo primeiro: 125 arquivos de código, e nem todos seguem o formato `@anchors`.
+  # O IDIOMA do código é o inglês, e este gate é o que impede a regressão.
+  #
+  # O Anchors nasceu misturando português e inglês nos identificadores e migrou por
+  # completo. Sem um gate, basta um PR de quem não sabe da regra — e ela não está em lugar
+  # nenhum que o compilador leia.
+  #
+  # Olha DECLARAÇÕES. Ignora comentários (que ficam no idioma do time, e carregam as
+  # medições e os porquês) e strings (que vão pelo i18n).
+  - name: code-language
+    on: [code]
+    scope: project
+    run: "bash scripts/anchors-idioma.sh"
+    blocking: true
+    when: [pre-commit, pre-push, ci]
+    category: consistency
+    measures: "nenhum identificador em português — o código é em inglês (comentários não contam)"
+
   - name: header-conforme
     blocking: false

@@ -185,11 +185,11 @@ func declaredDoubles(content string) []declaredDouble {
 	return out
 }
 
-// anotacaoRE — a fábrica anotada tem `): <Tipo>` entre os parâmetros e a seta. Aceita
+// annotationRE — a fábrica anotada tem `): <Tipo>` entre os parâmetros e a seta. Aceita
 // qualquer tipo: quem confere se ele bate com o módulo é o compilador da linguagem, não
 // este gate. Aqui só se verifica que a amarra FOI ESCRITA.
-var anotacaoRE = regexp.MustCompile(`\)\s*:\s*\S`)
+var annotationRE = regexp.MustCompile(`\)\s*:\s*\S`)
 
 func hasTypeAnnotation(cabeca string) bool {
-	return anotacaoRE.MatchString(cabeca)
+	return annotationRE.MatchString(cabeca)
 }

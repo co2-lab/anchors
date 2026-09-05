@@ -42,7 +42,7 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 			// configuração. Medido: o `anchors status` confere o git antes de carregar
 			// o `anchors.yaml`, e um projeto com `lang: es` recebia essas linhas em
 			// inglês — a chave existia, o idioma é que ainda não valia.
-			aplicaIdiomaDoProjeto(cmd)
+			applyProjectLang(cmd)
 			return refuseIfFrozen(cmd)
 		},
 	}
@@ -86,7 +86,7 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 	return root
 }
 
-// comandosQueRodamCongelado são os que continuam valendo com o projeto parado.
+// commandsAllowedWhileFrozen são os que continuam valendo com o projeto parado.
 //
 // A régua: um comando pode rodar congelado se ele NÃO PRODUZ estado do projeto. Ler é
 // permitido — quem está investigando o problema precisa do `status`, do `doctor`, dos
@@ -95,7 +95,7 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 //
 // `thaw` está aqui pelo motivo mais óbvio e mais fácil de esquecer: sem ele, o
 // congelamento seria irreversível pelo próprio Anchors.
-var comandosQueRodamCongelado = map[string]bool{
+var commandsAllowedWhileFrozen = map[string]bool{
 	"thaw": true, "freeze": true,
 	"status": true, "doctor": true, "guide": true, "version": true,
 	"help": true, "completion": true, "coverage": true, "impact": true,
@@ -117,7 +117,7 @@ func refuseIfFrozen(cmd *cobra.Command) error {
 	// Subir até a raiz cobre qualquer profundidade de subcomando, inclusive as que ainda
 	// não existem.
 	for c := cmd; c != nil; c = c.Parent() {
-		if comandosQueRodamCongelado[c.Name()] {
+		if commandsAllowedWhileFrozen[c.Name()] {
 			return nil
 		}
 	}
@@ -142,7 +142,7 @@ func refuseIfFrozen(cmd *cobra.Command) error {
 		cmd.Name(), cfg.FreezeReasonText())
 }
 
-// aplicaIdiomaDoProjeto lê o `lang:` do anchors.yaml e o define, ANTES de qualquer saída.
+// applyProjectLang lê o `lang:` do anchors.yaml e o define, ANTES de qualquer saída.
 //
 // Falha em silêncio de propósito: um projeto sem configuração, ou com ela quebrada, tem
 // outro problema — e recusar aqui impediria o `anchors init` de rodar justamente onde
@@ -151,7 +151,7 @@ func refuseIfFrozen(cmd *cobra.Command) error {
 // O `config.Load` também define o idioma, e isso não é redundância: ele valida o valor e
 // recusa um `lang:` que o Anchors não suporta. Aqui a leitura é frouxa, porque o objetivo
 // é só não imprimir em inglês antes de saber.
-func aplicaIdiomaDoProjeto(cmd *cobra.Command) {
+func applyProjectLang(cmd *cobra.Command) {
 	root := "."
 	if f := cmd.Flags().Lookup("root"); f != nil && f.Value.String() != "" {
 		root = f.Value.String()

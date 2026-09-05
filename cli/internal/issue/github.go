@@ -28,11 +28,11 @@ import (
 // procurar a issue pela chave — que vai no corpo, num marcador estável. Sem isso cada
 // execução do `check` abriria um card novo para o mesmo achado.
 
-// MarcadorChave identifica a issue de um achado de gate no corpo do card.
+// KeyMarker identifica a issue de um achado de gate no corpo do card.
 //
 // Vai no CORPO e não no título: o título é o que a pessoa lê, e prendê-lo ao formato da
 // chave o tornaria ilegível ou frágil a qualquer mudança de redação.
-const MarcadorChave = "<!-- anchors-issue-key: %s -->"
+const KeyMarker = "<!-- anchors-issue-key: %s -->"
 
 // GitHub é o repositório e a label do fluxo, de `workflow:`.
 type GitHub struct {
@@ -60,7 +60,7 @@ type foundCard struct {
 // distingue "achado novo" de "achado que voltou", e sem ela o segundo perderia o laudo
 // anterior.
 func (g GitHub) find(key string) (foundCard, bool, error) {
-	marca := fmt.Sprintf(MarcadorChave, key)
+	marca := fmt.Sprintf(KeyMarker, key)
 	out, err := g.gh("issue", "list", "--state", "all", "--limit", "500",
 		"--search", key, "--json", "number,state,body")
 	if err != nil {
@@ -109,7 +109,7 @@ func (g GitHub) Open(i Issue, nasce State) (created bool, at State, err error) {
 		return true, Todo, nil
 	}
 
-	corpo := i.Body() + "\n\n" + fmt.Sprintf(MarcadorChave, key) + "\n"
+	corpo := i.Body() + "\n\n" + fmt.Sprintf(KeyMarker, key) + "\n"
 	argv := []string{"issue", "create",
 		"--title", g.title(i),
 		"--body", corpo,

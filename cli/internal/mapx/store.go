@@ -10,7 +10,7 @@ import (
 // DefaultPath é onde o mapa material vive na raiz do projeto.
 const DefaultPath = "anchors.graph.yaml"
 
-// GeradoPor é a versão do binário que escreve o mapa, preenchida pelo `main` no início.
+// GeneratedBy é a versão do binário que escreve o mapa, preenchida pelo `main` no início.
 //
 // Existe porque um binário DESATUALIZADO não avisa — ele grava o formato que conhece, e
 // desfaz o que a versão nova escreveu. Medido: depois de renomear um campo do carimbo, o
@@ -19,11 +19,11 @@ const DefaultPath = "anchors.graph.yaml"
 //
 // O `--version` não denunciava: os dois builds locais se identificam como "dev". Só o
 // diff do mapa mostrava, e para isso alguém precisa estar olhando.
-var GeradoPor string
+var GeneratedBy string
 
 // Save escreve o grafo como YAML material e versionável.
 func Save(g *Graph, path string) error {
-	g.GeradoPor = GeradoPor
+	g.GeradoPor = GeneratedBy
 	data, err := yaml.Marshal(g)
 	if err != nil {
 		return err
@@ -68,8 +68,8 @@ func equalIgnoringGeneratedBy(path string, novo []byte) bool {
 	return withoutGeneratedBy(atual) == withoutGeneratedBy(novo)
 }
 
-var geradoPorLinhaRE = regexp.MustCompile(`(?m)^gerado_por:.*\n`)
+var generatedByLineRE = regexp.MustCompile(`(?m)^gerado_por:.*\n`)
 
 func withoutGeneratedBy(b []byte) string {
-	return geradoPorLinhaRE.ReplaceAllString(string(b), "")
+	return generatedByLineRE.ReplaceAllString(string(b), "")
 }

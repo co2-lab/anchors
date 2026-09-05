@@ -14,11 +14,11 @@ func TestEscalada_dizPorQueParouEComoDestravar(t *testing.T) {
 		"plans/0001-fundacao.md", "12", true)
 
 	for _, exigido := range []string{
-		"A spec pede cache",         // o motivo, com as palavras de quem viu
-		"plans/0001-fundacao.md",    // onde
-		"R0001",                     // como registrar a decisão
-		initx.LabelPrecisaDoUsuario, // o que remover para destravar
-		"#12",                       // onde o trabalho parou
+		"A spec pede cache",      // o motivo, com as palavras de quem viu
+		"plans/0001-fundacao.md", // onde
+		"R0001",                  // como registrar a decisão
+		initx.LabelNeedsUser,     // o que remover para destravar
+		"#12",                    // onde o trabalho parou
 	} {
 		if !strings.Contains(corpo, exigido) {
 			t.Errorf("o corpo da escalada deve conter %q; veio:\n%s", exigido, corpo)
@@ -61,7 +61,7 @@ func TestEscalada_cardComumNaoPedeDecisao(t *testing.T) {
 	corpo := escalationBody("O plano não cobre configuração e execução de migrations.",
 		"plans/0001-fundacao.md", "12", false)
 
-	if strings.Contains(corpo, initx.LabelPrecisaDoUsuario) {
+	if strings.Contains(corpo, initx.LabelNeedsUser) {
 		t.Errorf("card comum não pode mandar remover a label de decisão; veio:\n%s", corpo)
 	}
 	if strings.Contains(corpo, "Trabalho parado") {

@@ -77,10 +77,10 @@ type citedTrigger struct{ chave, valor string }
 // prosa solta ("carrega dado pessoal") não é citação e não é cobrada.
 var gatilhoRE = regexp.MustCompile("`([a-z][a-z-]*): ([a-z][a-z0-9-]*)`")
 
-// chavesDeGatilho são os predicados que abrem uma obrigação. Fechada de propósito: sem
+// triggerKeys são os predicados que abrem uma obrigação. Fechada de propósito: sem
 // isso o regex pegaria qualquer `chave: valor` entre crases (`layer: dao`, `code: ABCD`)
 // e o gate acusaria meio repositório.
-var chavesDeGatilho = map[string]bool{
+var triggerKeys = map[string]bool{
 	"carries": true, "processing": true, "renders": true, "shared-with": true,
 	"retains": true, "transfers": true,
 }
@@ -89,7 +89,7 @@ func citedTriggers(content string) []citedTrigger {
 	visto := map[string]bool{}
 	var out []citedTrigger
 	for _, m := range gatilhoRE.FindAllStringSubmatch(content, -1) {
-		if !chavesDeGatilho[m[1]] {
+		if !triggerKeys[m[1]] {
 			continue
 		}
 		k := m[1] + ":" + m[2]
@@ -102,14 +102,14 @@ func citedTriggers(content string) []citedTrigger {
 	return out
 }
 
-// obrigacaoRE casa a citação de uma obrigação pelo nome. Exige a palavra "obrigação" perto
+// obligationRE casa a citação de uma obrigação pelo nome. Exige a palavra "obrigação" perto
 // para não confundir com qualquer identificador entre crases.
-var obrigacaoRE = regexp.MustCompile("(?i)obriga[çc][õo]?[eé]?s?[^`\\n]{0,40}`([a-z][a-z0-9-]{2,})`")
+var obligationRE = regexp.MustCompile("(?i)obriga[çc][õo]?[eé]?s?[^`\\n]{0,40}`([a-z][a-z0-9-]{2,})`")
 
 func citedObligations(content string) []string {
 	visto := map[string]bool{}
 	var out []string
-	for _, m := range obrigacaoRE.FindAllStringSubmatch(content, -1) {
+	for _, m := range obligationRE.FindAllStringSubmatch(content, -1) {
 		if visto[m[1]] {
 			continue
 		}

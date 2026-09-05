@@ -26,11 +26,11 @@ const (
 	OperadorIA
 )
 
-// agentesConhecidos mapeia variável de ambiente → nome da ferramenta, para o caso em
+// knownAgents mapeia variável de ambiente → nome da ferramenta, para o caso em
 // que o Anchors precisa NOMEAR quem está operando. A lista é de reconhecimento, não de
 // suporte: uma IA fora dela ainda pode ser detectada por outros sinais, e nenhuma
 // funcionalidade depende de estar aqui.
-var agentesConhecidos = map[string]string{
+var knownAgents = map[string]string{
 	"CLAUDE_CODE_ENTRYPOINT": "Claude Code",
 	"CLAUDECODE":             "Claude Code",
 	"CURSOR_TRACE_ID":        "Cursor",
@@ -73,14 +73,14 @@ func agentName(env func(string) string) string {
 	if env == nil {
 		env = os.Getenv
 	}
-	chaves := make([]string, 0, len(agentesConhecidos))
-	for k := range agentesConhecidos {
+	chaves := make([]string, 0, len(knownAgents))
+	for k := range knownAgents {
 		chaves = append(chaves, k)
 	}
 	sort.Strings(chaves)
 	for _, k := range chaves {
 		if env(k) != "" {
-			return agentesConhecidos[k]
+			return knownAgents[k]
 		}
 	}
 	return ""

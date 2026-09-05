@@ -235,9 +235,9 @@ func parentOf(g *mapx.Graph, code string) string {
 	return "" // fase não é nó do mapa: a cadeia termina nela
 }
 
-// secaoNivel3RE casa `### <qualquer coisa> — <título>`: a FORMA de uma fase, sem depender
+// level3SectionRE casa `### <qualquer coisa> — <título>`: a FORMA de uma fase, sem depender
 // da palavra usada para nomeá-la.
-var secaoNivel3RE = regexp.MustCompile(`(?m)^#{3}\s+\S.*$`)
+var level3SectionRE = regexp.MustCompile(`(?m)^#{3}\s+\S.*$`)
 
 // hasPhaseLikeSection diz se o plano organiza o trabalho em seções de terceiro nível.
 //
@@ -245,5 +245,5 @@ var secaoNivel3RE = regexp.MustCompile(`(?m)^#{3}\s+\S.*$`)
 // ou que chame de "Etapa" cai igual. O que se pergunta é se existe ORDEM declarada que o
 // gate não consegue confrontar por falta de código.
 func hasPhaseLikeSection(content string) bool {
-	return secaoNivel3RE.MatchString(content)
+	return level3SectionRE.MatchString(content)
 }

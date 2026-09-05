@@ -41,23 +41,23 @@ import (
 // símbolo prometido entre crases. Duplicação que ninguém nomeou não é alcançada; o
 // gate impede que ela VOLTE depois de nomeada.
 
-// marcaFonteUnicaRE é a MARCAÇÃO DECLARADA da relação: `***{fonte-unica}***`.
+// singleSourceMarkRE é a MARCAÇÃO DECLARADA da relação: `***{fonte-unica}***`.
 // Negrito+itálico para não colidir com a ênfase comum (`**email**`, `**puro**`,
 // que o repo já usa) — e porque no markdown renderizado ela salta da linha.
-var marcaFonteUnicaRE = regexp.MustCompile(`\*\*\*?\{fonte-unica\}\*\*\*?`)
+var singleSourceMarkRE = regexp.MustCompile(`\*\*\*?\{fonte-unica\}\*\*\*?`)
 
-// marcaDonoRE é o CARIMBO DE DONO: `(@fonte-unica)`, que só o arquivo que DETÉM o
+// ownerMarkRE é o CARIMBO DE DONO: `(@fonte-unica)`, que só o arquivo que DETÉM o
 // conceito carrega. Os que espelham trazem apenas `{fonte-unica}` + o alvo.
 //
 // A assimetria é o que dá ao gate uma pergunta que a marcação sozinha não daria:
 // quantos donos existem? Zero dono é conceito órfão (ninguém é a fonte, todos
 // espelham algo que não está declarado); dois donos é a divergência já instalada,
 // com os dois lados se achando a origem.
-var marcaDonoRE = regexp.MustCompile(`\(@fonte-unica\)`)
+var ownerMarkRE = regexp.MustCompile(`\(@fonte-unica\)`)
 
-// afirmacaoDeRelacaoRE são as formas em que uma regra afirma dependência de outra
+// relationClaimRE são as formas em que uma regra afirma dependência de outra
 // unidade. Português e inglês, porque a spec segue o idioma do projeto.
-var afirmacaoDeRelacaoRE = []*regexp.Regexp{
+var relationClaimRE = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)\bfonte[- ]única\b`),
 	regexp.MustCompile(`(?i)\bsingle[- ]source\b`),
 	regexp.MustCompile(`(?i)\bespelha(m|r)?\b`),
@@ -82,13 +82,13 @@ func targetRuleCodeRE() *regexp.Regexp {
 	return regexp.MustCompile("`([A-Z0-9]" + config.CodeLengthPattern() + ")-[A-Z]\\d{2}(?:#\\d{2})?`")
 }
 
-// unidadeCitadaRE captura o ARQUIVO citado na regra: um caminho com extensão, entre
+// citedUnitRE captura o ARQUIVO citado na regra: um caminho com extensão, entre
 // crases ou solto. Forma ACEITA (não preferida) — ver codigoDeRegraAlvoRE.
 // A 2ª alternativa cobre o arquivo citado SEM caminho (`orgBilling.ts`), que é
 // como a maioria das regras o nomeia. A lista de extensões inclui `json`/`yaml`
 // porque contrato de provedor e schema entram aqui — e é justamente o caso que a
 // dispensa `@no-cross` atende.
-var unidadeCitadaRE = regexp.MustCompile("`?([\\w./@-]+/[\\w.-]+\\.\\w{2,4})`?|`([\\w.-]+\\.(?:ts|tsx|js|jsx|mjs|go|py|rb|kt|swift|json|ya?ml))`")
+var citedUnitRE = regexp.MustCompile("`?([\\w./@-]+/[\\w.-]+\\.\\w{2,4})`?|`([\\w.-]+\\.(?:ts|tsx|js|jsx|mjs|go|py|rb|kt|swift|json|ya?ml))`")
 
 // ruleLineRE isola a linha de uma regra catalogada (`| \x60ABCD-B01\x60 | … |`).
 // A afirmação e o arquivo citado têm de estar na MESMA linha: é o que amarra a
@@ -100,9 +100,9 @@ func ruleLineRE() *regexp.Regexp {
 	return regexp.MustCompile("(?m)^\\s*\\|\\s*`([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2}(?:#\\d{2})?)`\\s*\\|(.+)$")
 }
 
-// dispensaFronteiraRE é a saída declarada: a relação existe mas não é importável
+// boundaryWaiverRE é a saída declarada: a relação existe mas não é importável
 // (contrato de rede, arquivo gerado, valor que vive num provedor externo).
-var dispensaFronteiraRE = regexp.MustCompile(`@no-cross(?:-boundary)?\s*:\s*\S`)
+var boundaryWaiverRE = regexp.MustCompile(`@no-cross(?:-boundary)?\s*:\s*\S`)
 
 func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
@@ -123,14 +123,14 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 
 	for _, m := range ruleLineRE().FindAllStringSubmatch(content, -1) {
 		regra, texto := m[1], m[2]
-		if dispensaFronteiraRE.MatchString(texto) {
+		if boundaryWaiverRE.MatchString(texto) {
 			dispensadas++
 			continue // a relação foi declarada como não-importável, com razão
 		}
-		marcado := marcaFonteUnicaRE.MatchString(texto)
+		marcado := singleSourceMarkRE.MatchString(texto)
 
 		// O DONO não espelha ninguém: ele É a fonte. Nada a importar.
-		if marcado && marcaDonoRE.MatchString(texto) {
+		if marcado && ownerMarkRE.MatchString(texto) {
 			donos++
 			continue
 		}
@@ -162,7 +162,7 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 				}
 			}
 
-			for _, mm := range unidadeCitadaRE.FindAllStringSubmatch(texto, -1) {
+			for _, mm := range citedUnitRE.FindAllStringSubmatch(texto, -1) {
 				alvo := mm[1]
 				if alvo == "" {
 					alvo = mm[2]
@@ -183,11 +183,11 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 		// Sem marcação: o VOCABULÁRIO só avisa. É o que faz a convenção ser adotada
 		// em vez de esquecida — quem escreveu "espelha o X.ts" em prosa provavelmente
 		// não sabia do marcador, e o aviso ensina sem barrar.
-		for _, re := range afirmacaoDeRelacaoRE {
+		for _, re := range relationClaimRE {
 			if !re.MatchString(texto) {
 				continue
 			}
-			for _, mm := range unidadeCitadaRE.FindAllStringSubmatch(texto, -1) {
+			for _, mm := range citedUnitRE.FindAllStringSubmatch(texto, -1) {
 				alvo := mm[1]
 				if alvo == "" {
 					alvo = mm[2]

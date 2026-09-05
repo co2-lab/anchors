@@ -153,7 +153,7 @@ arestas do mapa por co-location (nomes de arquivo) e por código de cenário
 			// carimbo da anterior e o `anchors stale` acusava o repositório inteiro como
 			// "nunca validado".
 			if anterior, err := mapx.Load(outPath); err == nil {
-				mapx.PreservarCarimbos(g, anterior)
+				mapx.PreserveStamps(g, anterior)
 			}
 			if err := mapx.Save(g, outPath); err != nil {
 				return fmt.Errorf("save: %w", err)

@@ -161,7 +161,7 @@ func e2eSurfaceFiles(root string, cfg *config.Config) []e2eFile {
 	return out
 }
 
-// reHandleConsultado captura o valor de `id:` nos flows — a forma como o Maestro (e
+// queriedHandleRE captura o valor de `id:` nos flows — a forma como o Maestro (e
 // runners equivalentes) referenciam o handle.
 //
 // Aceita aspas simples e duplas em ALTERNÂNCIA, não por retrovisor: a RE2 do Go não
@@ -169,14 +169,14 @@ func e2eSurfaceFiles(root string, cfg *config.Config) []e2eFile {
 // mutuamente exclusivos — o que casou é o que vem preenchido.
 // A aspa dupla é o caso da INTERPOLAÇÃO (`id: "${':bgcr-' + output.data.ns}"`),
 // descartada adiante.
-var reHandleConsultado = regexp.MustCompile(`(?m)^\s*id:\s*(?:'([^']*)'|"([^"]*)")\s*$`)
+var queriedHandleRE = regexp.MustCompile(`(?m)^\s*id:\s*(?:'([^']*)'|"([^"]*)")\s*$`)
 
 // queriedHandles extrai os handles que um flow procura, descartando as formas em
 // que o id é COMPOSTO em runtime — nelas o gate não tem como saber o valor final, e
 // acusar seria inventar defeito.
 func queriedHandles(src string) []string {
 	var out []string
-	for _, m := range reHandleConsultado.FindAllStringSubmatch(src, -1) {
+	for _, m := range queriedHandleRE.FindAllStringSubmatch(src, -1) {
 		// Grupo 1 = aspa simples, grupo 2 = aspa dupla; só um vem preenchido.
 		bruto := strings.TrimSpace(m[1])
 		if bruto == "" {

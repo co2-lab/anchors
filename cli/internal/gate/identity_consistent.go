@@ -120,10 +120,10 @@ func mapCodes(g *mapx.Graph) map[string]bool {
 	return out
 }
 
-// siglaTestIDRE captura o prefixo de um testID literal ou de template. O `:` de
+// testIDAcronymRE captura o prefixo de um testID literal ou de template. O `:` de
 // marcação é opcional: a convenção é do projeto, e um projeto sem ela deve ser
 // confrontado do mesmo jeito.
-var siglaTestIDRE = regexp.MustCompile("testID=\\{?[`\"']:?([A-Za-z]{4,5})-")
+var testIDAcronymRE = regexp.MustCompile("testID=\\{?[`\"']:?([A-Za-z]{4,5})-")
 
 // testIDAcronyms devolve os prefixos com FORMA DE CÓDIGO (4-5 letras) usados como
 // testID. A forma é o primeiro filtro; quem decide se a sigla é órfã é o chamador,
@@ -131,7 +131,7 @@ var siglaTestIDRE = regexp.MustCompile("testID=\\{?[`\"']:?([A-Za-z]{4,5})-")
 func testIDAcronyms(src string) []string {
 	visto := map[string]bool{}
 	var out []string
-	for _, m := range siglaTestIDRE.FindAllStringSubmatch(src, -1) {
+	for _, m := range testIDAcronymRE.FindAllStringSubmatch(src, -1) {
 		s := strings.ToUpper(m[1])
 		if !visto[s] {
 			visto[s] = true

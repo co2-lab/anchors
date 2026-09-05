@@ -213,7 +213,7 @@ func repairEnvironment(root string, cfg *config.Config) error {
 	fmt.Println("  nativa do Projects (label adicionada → move para a coluna):")
 	fmt.Printf("    %s\n", strings.Join(initx.ColunasDoBoard, " · "))
 	fmt.Printf("  o Anchors escreve até `%s`; as seguintes são dos pipelines de entrega.\n",
-		initx.EstadoFinalDoAnchors)
+		initx.AnchorsFinalState)
 	return nil
 }
 
@@ -234,15 +234,15 @@ func createStateLabels(cfg *config.Config) error {
 		"anchors:ready-to-release": "0e8a16", "anchors:production": "0e8a16",
 		// VERMELHO, e é o único: o card escalado é o que ninguém no fluxo destrava, e
 		// precisa saltar num board cheio de cinza e azul.
-		initx.LabelPrecisaDoUsuario: "d73a4a",
+		initx.LabelNeedsUser: "d73a4a",
 	}
 	var criadas int
 	// A label de ESCALAÇÃO entra junto: sem ela criada, o pipeline que escala um card
 	// falha ao aplicá-la — e falha em silêncio, porque `gh issue edit` com label
 	// inexistente não é erro fatal. O card ficaria travado sem o sinalizador que diz por
 	// quê.
-	todas := append([]string{cfg.Workflow.Labels[0], initx.LabelPrecisaDoUsuario},
-		initx.EstadosDoTrabalho...)
+	todas := append([]string{cfg.Workflow.Labels[0], initx.LabelNeedsUser},
+		initx.WorkStates...)
 	for _, e := range todas {
 		c := cor[e]
 		if c == "" {

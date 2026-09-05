@@ -58,10 +58,10 @@ type StatusResposta struct {
 	UsouPada bool   `json:"usou_default,omitempty"`
 }
 
-// Perguntas monta a lista a partir do que foi inferido do disco. A ordem é a mesma da
+// Questions monta a lista a partir do que foi inferido do disco. A ordem é a mesma da
 // TUI: cada resposta restringe a seguinte, e apresentá-las fora de ordem faria o agente
 // decidir camadas antes de saber se há co-location.
-func Perguntas(p *Proposal, presets []string) []Question {
+func Questions(p *Proposal, presets []string) []Question {
 	artefatosDetectados := []string{}
 	if p != nil {
 		for nome, sim := range p.DetectedArtifacts() {

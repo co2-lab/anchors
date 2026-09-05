@@ -75,13 +75,13 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 // `@no-code`/`@no-scenario` (CONCEPT §5.1).
 var noRuleRE = regexp.MustCompile(`@no-rule[^\S\n]*:[^\S\n]*\S+`)
 
-// exportadoRE casa o nome de um símbolo exportado.
+// exportedRE casa o nome de um símbolo exportado.
 //
 // ⚠️ É sintaxe de TypeScript/JavaScript. Num projeto Python, Go ou Ruby ele casa ZERO
 // símbolos e o gate passa em silêncio — verde sobre o que não conferiu. A generalização
 // (o projeto declarar o padrão, como em `mock_detect`) está pendente; até lá este gate
 // só tem efeito real em projetos JS/TS.
-var exportadoRE = regexp.MustCompile(
+var exportedRE = regexp.MustCompile(
 	`(?m)^\s*export\s+(?:async\s+)?(?:function|const|let|var|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)`)
 
 type exportedSymbol struct {
@@ -96,7 +96,7 @@ func symbolsWithLine(codigo string) []exportedSymbol {
 	linhas := strings.Split(codigo, "\n")
 	var out []exportedSymbol
 	for i, l := range linhas {
-		m := exportadoRE.FindStringSubmatch(l)
+		m := exportedRE.FindStringSubmatch(l)
 		if m == nil {
 			continue
 		}

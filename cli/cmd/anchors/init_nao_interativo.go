@@ -89,7 +89,7 @@ func runInitNonInteractive(cmd *cobra.Command, root string, f *flagsInit, aceita
 	if err != nil {
 		return fmt.Errorf("inferência: %w", err)
 	}
-	qs := initx.Perguntas(p, initx.PresetNames())
+	qs := initx.Questions(p, initx.PresetNames())
 
 	r, err := flagAnswers(cmd, f)
 	if err != nil {

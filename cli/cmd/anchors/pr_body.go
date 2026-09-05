@@ -30,11 +30,11 @@ import (
 // que a plataforma entende é GERADA a partir dele. Quem escreve o PR não precisa saber a
 // palavra; quem muda de plataforma muda o gerador, não a doutrina.
 
-// sintaxeDeFechamento é como cada plataforma quer receber "este PR fecha aquele card".
+// closingSyntax é como cada plataforma quer receber "este PR fecha aquele card".
 //
 // Um mapa, e não um `if`: acrescentar uma plataforma é acrescentar uma linha, e o gerador
 // não precisa saber quantas existem.
-var sintaxeDeFechamento = map[string]string{
+var closingSyntax = map[string]string{
 	"github": "Closes #%s",
 	// GitLab aceita as mesmas palavras, mas com `#` só no mesmo projeto — a diferença
 	// aparece quando o card vive noutro repositório.
@@ -73,7 +73,7 @@ o card fica aberto.
 				return fmt.Errorf("`pr-body` existe no modo github: no modo local não há " +
 					"card a fechar, e o trabalho se registra movendo a pasta em `issues/`")
 			}
-			sintaxe, ok := sintaxeDeFechamento[cfg.Workflow.Mode]
+			sintaxe, ok := closingSyntax[cfg.Workflow.Mode]
 			if !ok {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("não sei a sintaxe de fechamento de `%s` — as conhecidas "+
@@ -128,8 +128,8 @@ o card fica aberto.
 }
 
 func knownPlatforms() []string {
-	out := make([]string, 0, len(sintaxeDeFechamento))
-	for k := range sintaxeDeFechamento {
+	out := make([]string, 0, len(closingSyntax))
+	for k := range closingSyntax {
 		out = append(out, k)
 	}
 	sort.Strings(out)

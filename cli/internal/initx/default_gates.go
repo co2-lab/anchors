@@ -2,13 +2,13 @@ package initx
 
 import "github.com/co2-lab/anchors/internal/config"
 
-// dependemDeSinalIngerido são os gates que só têm o que medir depois de `anchors ingest`
+// dependOnIngestedSignal são os gates que só têm o que medir depois de `anchors ingest`
 // receber um relatório de teste, cobertura ou mutação. Bloquear com base num sinal que
 // ainda não existe barraria o commit por ausência de dado — não por defeito.
 //
 // Ficam informativos mesmo em projeto novo, e o usuário os promove quando a suíte
 // estiver rodando no CI.
-var dependemDeSinalIngerido = map[string]bool{
+var dependOnIngestedSignal = map[string]bool{
 	"tests-green": true, "line-coverage": true, "coverage-delta": true,
 	"mutation-score": true, "scenario-coverage": true, "sbom-generated": true,
 	"dependency-vulnerable": true, "no-duplication": true,
@@ -534,7 +534,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	}
 	if projetoNovo {
 		for i := range gates {
-			if !dependemDeSinalIngerido[gates[i].Name] {
+			if !dependOnIngestedSignal[gates[i].Name] {
 				gates[i].Blocking = config.Bool(true)
 			}
 		}

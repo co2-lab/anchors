@@ -82,7 +82,7 @@ func gitInstalled() bool {
 
 // initGit leva a raiz de `estado` até ter um commit. Faz só o que falta: num repo já
 // criado (GitSemCommit), não roda `git init` de novo.
-func initGit(root string, estado initx.EstadoGit) error {
+func initGit(root string, estado initx.GitState) error {
 	if estado == initx.GitNaoIniciado {
 		if out, err := runGit(root, "init"); err != nil {
 			return fmt.Errorf("git init: %s", out)
@@ -108,7 +108,7 @@ func initGit(root string, estado initx.EstadoGit) error {
 	// caso normal, não um erro a reportar. `--allow-empty` dá o HEAD que o resto do
 	// Anchors precisa (gitmeta.Head, coverage --diff, o pre-commit) sem exigir que o
 	// projeto já tenha arquivo nenhum.
-	if out, err := runGit(root, "commit", "--allow-empty", "-m", initx.MensagemPrimeiroCommit); err != nil {
+	if out, err := runGit(root, "commit", "--allow-empty", "-m", initx.FirstCommitMessage); err != nil {
 		// Identidade não configurada é a falha mais provável aqui, e a mensagem crua do
 		// git é longa; vale nomear o conserto.
 		if strings.Contains(out, "user.email") || strings.Contains(out, "user.name") {
@@ -119,7 +119,7 @@ func initGit(root string, estado initx.EstadoGit) error {
 		}
 		return fmt.Errorf("git commit: %s", firstLine(out))
 	}
-	fmt.Printf("✓ primeiro commit (%s)\n\n", initx.MensagemPrimeiroCommit)
+	fmt.Printf("✓ primeiro commit (%s)\n\n", initx.FirstCommitMessage)
 	return nil
 }
 

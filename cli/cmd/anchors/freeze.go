@@ -329,8 +329,8 @@ func rulesetID(repo string) (string, error) {
 	return strings.TrimSpace(string(out)), nil
 }
 
-// tituloDaIssueDeCongelamento é fixo: é assim que o `thaw` a encontra.
-const tituloDaIssueDeCongelamento = "[congelado] o projeto está parado"
+// freezeIssueTitle é fixo: é assim que o `thaw` a encontra.
+const freezeIssueTitle = "[congelado] o projeto está parado"
 
 func openFreezeIssue(repo, motivo string) (string, error) {
 	corpo := "🛑 **O projeto está CONGELADO.**\n\n" +
@@ -347,7 +347,7 @@ func openFreezeIssue(repo, motivo string) (string, error) {
 
 	out, err := exec.Command("gh", "issue", "create",
 		"--repo", repo,
-		"--title", tituloDaIssueDeCongelamento,
+		"--title", freezeIssueTitle,
 		"--body", corpo,
 	).CombinedOutput()
 	if err != nil {
@@ -359,9 +359,9 @@ func openFreezeIssue(repo, motivo string) (string, error) {
 func closeFreezeIssue(repo string) error {
 	out, err := exec.Command("gh", "issue", "list",
 		"--repo", repo, "--state", "open", "--limit", "50",
-		"--search", tituloDaIssueDeCongelamento,
+		"--search", freezeIssueTitle,
 		"--json", "number,title",
-		"--jq", fmt.Sprintf(`[.[] | select(.title == %q)] | .[0].number // empty`, tituloDaIssueDeCongelamento),
+		"--jq", fmt.Sprintf(`[.[] | select(.title == %q)] | .[0].number // empty`, freezeIssueTitle),
 	).Output()
 	if err != nil {
 		return err

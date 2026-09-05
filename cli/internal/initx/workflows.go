@@ -31,10 +31,10 @@ var workflowsFS embed.FS
 //go:embed board
 var boardFS embed.FS
 
-// ArquivoDoBoard é onde a página mora, relativa à raiz do projeto. Em `.github/` e não em
+// BoardFile é onde a página mora, relativa à raiz do projeto. Em `.github/` e não em
 // `docs/`: é infraestrutura do fluxo, não documentação do produto, e misturá-la com o que
 // o time escreve convida a alguém a editá-la sem saber que o `--fix` a mantém.
-const ArquivoDoBoard = ".github/anchors-board.html"
+const BoardFile = ".github/anchors-board.html"
 
 // Workflow é um pipeline do fluxo GitHub, com o que o Anchors precisa saber para
 // verificar (doctor) e semear (doctor --fix).
@@ -110,13 +110,13 @@ type BranchProtection struct {
 	RevisoesNecessarias int
 }
 
-// ProtecaoExigida é o mínimo que o fluxo pressupõe.
-var ProtecaoExigida = BranchProtection{ExigePR: true, RevisoesNecessarias: 0}
+// RequiredProtection é o mínimo que o fluxo pressupõe.
+var RequiredProtection = BranchProtection{ExigePR: true, RevisoesNecessarias: 0}
 
 // DirWorkflows é onde os pipelines moram no projeto.
 const DirWorkflows = ".github/workflows"
 
-// EstadosDoTrabalho são as LABELS que carregam o estado de um card, na ordem do fluxo.
+// WorkStates são as LABELS que carregam o estado de um card, na ordem do fluxo.
 //
 // O estado é uma LABEL, e não a coluna do Project (ver BOOTSTRAP.md §7.13). A escolha
 // anterior foi a coluna, e ela cobrava um preço que só apareceu no uso: escrever num
@@ -132,7 +132,7 @@ const DirWorkflows = ".github/workflows"
 //
 // O par `ready-to-x` / `in-x` é o que torna a fila legível: um diz "disponível para
 // alguém pegar", o outro "alguém está fazendo".
-var EstadosDoTrabalho = []string{
+var WorkStates = []string{
 	"anchors:to-do",
 	"anchors:in-progress",
 	"anchors:ready-to-review",
@@ -171,7 +171,7 @@ const PrefixoLabelSobAntigo = "anchors:sob-"
 // LabelSob devolve a label que liga um card ao trabalho de origem.
 func LabelSob(card string) string { return PrefixoLabelSob + card }
 
-// LabelPrecisaDoUsuario marca o card que ESPERA UMA PESSOA.
+// LabelNeedsUser marca o card que ESPERA UMA PESSOA.
 //
 // Não é um estado do fluxo, e por isso não entra em `EstadosDoTrabalho`: o card continua
 // onde está (`in-review`, `to-do`), e o que muda é QUEM pode destravá-lo. Fosse estado,
@@ -180,10 +180,10 @@ func LabelSob(card string) string { return PrefixoLabelSob + card }
 //
 // É a mesma distinção que `issue.DonoUsuário` faz para as issues em `issues/`: o dono é
 // um eixo independente do estado.
-const LabelPrecisaDoUsuario = "anchors:needs-user"
+const LabelNeedsUser = "anchors:needs-user"
 
-// LabelPrecisaDoUsuarioAntiga é o nome anterior. Ver PrefixoLabelSobAntigo.
-const LabelPrecisaDoUsuarioAntiga = "anchors:precisa-do-usuario"
+// LabelNeedsUserLegacy é o nome anterior. Ver PrefixoLabelSobAntigo.
+const LabelNeedsUserLegacy = "anchors:precisa-do-usuario"
 
 // ColunasDoBoard são os nomes das colunas do Project que ESPELHAM os estados acima.
 // O board é opcional: quem o quiser cria as colunas com estes nomes e liga a automação
@@ -215,10 +215,10 @@ var ColunasDisponiveis = []string{
 	"TO DO",
 }
 
-// EstadoFinalDoAnchors é o último estado que o Anchors ESCREVE.
-const EstadoFinalDoAnchors = "anchors:ready-to-test"
+// AnchorsFinalState é o último estado que o Anchors ESCREVE.
+const AnchorsFinalState = "anchors:ready-to-test"
 
-// EstadosRecicláveis são os únicos estados de onde o `stale` tira um card.
+// RecyclableStates são os únicos estados de onde o `stale` tira um card.
 //
 // A distinção é entre trabalho TRAVADO e trabalho ESPERANDO. Um card em `in-progress`
 // sem sinal de vida é um agente que morreu — reciclar devolve o trabalho à fila. Um card
@@ -228,17 +228,17 @@ const EstadoFinalDoAnchors = "anchors:ready-to-test"
 //
 // Só entram aqui os estados de trabalho ATIVO, aqueles em que alguém deveria estar
 // mexendo agora. Os `ready-to-*` são filas de espera, e esperar não é estar travado.
-var EstadosRecicláveis = []string{
+var RecyclableStates = []string{
 	"anchors:in-progress",
 	"anchors:in-review",
 	"anchors:in-test",
 }
 
-// EstadosDisponiveis são os estados de onde um agente TIRA trabalho, em ORDEM DE
+// AvailableStates são os estados de onde um agente TIRA trabalho, em ORDEM DE
 // PRIORIDADE: da direita para a esquerda do fluxo. O trabalho mais ADIANTADO vem
 // primeiro — terminar o que está quase pronto antes de começar coisa nova é o que impede
 // o board de encher de trabalho pela metade.
-var EstadosDisponiveis = []string{
+var AvailableStates = []string{
 	"anchors:ready-to-review",
 	"anchors:to-do",
 }
@@ -399,7 +399,7 @@ func SemeiaWorkflows(root string, cfg *config.Config) ([]string, error) {
 // pipelines: intocada pelo marcador, o Anchors a atualiza; editada, ela passa a ser do
 // time.
 func semeiaBoard(root string) error {
-	dest := filepath.Join(root, ArquivoDoBoard)
+	dest := filepath.Join(root, BoardFile)
 	conteudo, err := fs.ReadFile(boardFS, "board/anchors-board.html")
 	if err != nil {
 		return fmt.Errorf("ler o template do board: %w", err)

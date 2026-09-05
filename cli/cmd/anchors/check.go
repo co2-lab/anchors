@@ -303,12 +303,12 @@ func enqueueJudgments(root string, cfg *config.Config, p gate.Profile) int {
 	// índice gate → (guide, ask) para enriquecer a task
 	guideOf := map[string]string{}
 	askOf := map[string]string{}
-	gatesDeJulgamentoConhecidos = gatesDeJulgamentoConhecidos[:0]
+	knownJudgmentGates = knownJudgmentGates[:0]
 	for _, g := range cfg.Gates {
 		if g.IsJudgment() {
 			guideOf[g.Name] = g.Guide
 			askOf[g.Name] = g.Ask
-			gatesDeJulgamentoConhecidos = append(gatesDeJulgamentoConhecidos, g.Name)
+			knownJudgmentGates = append(knownJudgmentGates, g.Name)
 		}
 	}
 	n := 0
@@ -391,7 +391,7 @@ func gateDaTaskJudge(id string) string {
 		return ""
 	}
 	resto := id[len(pref):]
-	for _, g := range gatesDeJulgamentoConhecidos {
+	for _, g := range knownJudgmentGates {
 		if strings.HasPrefix(resto, g+"-") {
 			return g
 		}
@@ -399,9 +399,9 @@ func gateDaTaskJudge(id string) string {
 	return ""
 }
 
-// gatesDeJulgamentoConhecidos é preenchido por enqueueJudgments a cada rodada — o
+// knownJudgmentGates é preenchido por enqueueJudgments a cada rodada — o
 // nome do gate vem da config, não de uma lista fixa.
-var gatesDeJulgamentoConhecidos []string
+var knownJudgmentGates []string
 
 // relSlug reduz um caminho a algo usável em ID de task.
 func relSlug(p string) string { return strings.TrimSuffix(p, filepath.Ext(p)) }
@@ -553,14 +553,14 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile) error {
 	return nil
 }
 
-// ExitNaoRegido é o código de saída para "este caminho não é regido pela Estrutura".
+// ExitNotGoverned é o código de saída para "este caminho não é regido pela Estrutura".
 // Não é uma reprovação — é a resposta "não tenho jurisdição sobre isto".
 //
 // Existe como CÓDIGO, e não como texto a ser grepado, porque o pre-commit precisa
 // distinguir isto de uma reprovação real. O hook antes fazia `grep "não está no mapa"`
 // na saída: um casamento de string frágil que passava a valer para as DUAS situações
 // assim que elas compartilharam uma mensagem — e o furo entrou por aí.
-const ExitNaoRegido = 3
+const ExitNotGoverned = 3
 
 // errNotGoverned sinaliza o caminho não-regido. Carrega o alvo para a mensagem, e é
 // reconhecida em main() para virar ExitNaoRegido em vez do exit 1 genérico.
@@ -1173,10 +1173,10 @@ func breakOccurrences(s string) string {
 	return strings.Join(out, "\n")
 }
 
-// limiarQuebraLista — abaixo disto a linha cabe na tela e não vale quebrar, seja
+// listBreakThreshold — abaixo disto a linha cabe na tela e não vale quebrar, seja
 // ela lista ou não. Escolhido para caber num terminal de 120 colunas com a
 // indentação do detalhe (6 a 8 espaços).
-const limiarQuebraLista = 110
+const listBreakThreshold = 110
 
 // isTokenList: a linha é uma enumeração de itens sem espaço interno?
 //
@@ -1185,7 +1185,7 @@ const limiarQuebraLista = 110
 // arquivo, código de regra e símbolo não têm; oração tem. Exige maioria dos itens
 // sem espaço para tolerar o último ("… e mais 3") e o texto que abre a lista.
 func isTokenList(linha string) bool {
-	if len([]rune(linha)) <= limiarQuebraLista {
+	if len([]rune(linha)) <= listBreakThreshold {
 		return false
 	}
 	partes := strings.Split(linha, ", ")

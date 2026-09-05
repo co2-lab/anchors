@@ -71,7 +71,7 @@ func TestGateSemSinalNaoBloqueiaNemEmProjetoNovo(t *testing.T) {
 	g := DefaultGates(map[string]bool{"spec": true, "feature": true, "test": true, "code": true}, true)
 
 	for _, gate := range g {
-		if !dependemDeSinalIngerido[gate.Name] {
+		if !dependOnIngestedSignal[gate.Name] {
 			continue
 		}
 		if gate.Blocking != nil && *gate.Blocking {

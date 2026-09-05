@@ -214,11 +214,11 @@ func ParseWaiver(bruto string) (Waiver, []string) {
 	return d, erros
 }
 
-// marcadorNaMensagem casa `[skip-<regra>@<CODIGO>: motivo]` na mensagem de commit.
+// markerInMessage casa `[skip-<regra>@<CODIGO>: motivo]` na mensagem de commit.
 //
 // O motivo vem depois de `:` e é obrigatório, como na forma por variável — uma dispensa
 // sem justificativa escrita é indistinguível de alguém fugindo de um gate.
-var marcadorNaMensagem = regexp.MustCompile(
+var markerInMessage = regexp.MustCompile(
 	`\[skip-([a-z0-9][a-z0-9/-]*)(?:@([A-Z0-9-]+))?\s*:\s*([^\]]+)\]`)
 
 // WaiverFromMessage lê as dispensas declaradas na MENSAGEM DE COMMIT.
@@ -237,7 +237,7 @@ var marcadorNaMensagem = regexp.MustCompile(
 func WaiverFromMessage(msg string) (Waiver, []string) {
 	d := Waiver{PorRegra: map[string]string{}, Alvos: map[string][]string{}, MotivoPorAlvo: map[string]string{}}
 	var erros []string
-	for _, m := range marcadorNaMensagem.FindAllStringSubmatch(msg, -1) {
+	for _, m := range markerInMessage.FindAllStringSubmatch(msg, -1) {
 		regra, codigo, motivo := m[1], m[2], strings.TrimSpace(m[3])
 		if motivo == "" {
 			erros = append(erros, "`"+m[0]+"` — falta o motivo depois dos dois-pontos")

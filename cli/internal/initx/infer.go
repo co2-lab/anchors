@@ -33,11 +33,11 @@ type Proposal struct {
 	TestHandle string
 }
 
-// handlesConhecidos — os atributos de ancoragem de teste dos ecossistemas correntes,
+// knownHandles — os atributos de ancoragem de teste dos ecossistemas correntes,
 // na ordem em que são procurados. A DETECÇÃO é por contagem no código real, não por
 // presença de dependência no manifesto: um projeto pode ter React Native instalado e
 // não marcar nada, e é o uso que decide se há contrato a cobrar.
-var handlesConhecidos = []string{"testID", "data-testid", "data-test-id", "contentDescription", "accessibilityIdentifier"}
+var knownHandles = []string{"testID", "data-testid", "data-test-id", "contentDescription", "accessibilityIdentifier"}
 
 var ignoredDirs = map[string]bool{
 	"node_modules": true, ".git": true, "dist": true, "build": true,
@@ -102,7 +102,7 @@ func Infer(root string) (*Proposal, error) {
 			if lidosParaHandle < maxAmostraHandle {
 				lidosParaHandle++
 				if b, e := os.ReadFile(path); e == nil {
-					for _, h := range handlesConhecidos {
+					for _, h := range knownHandles {
 						handleCount[h] += strings.Count(string(b), h+"=")
 					}
 				}
@@ -139,7 +139,7 @@ const minOcorrenciasHandle = 5
 // inventário pularem em vez de acusar.
 func handleDominante(cont map[string]int) string {
 	melhor, n := "", 0
-	for _, h := range handlesConhecidos { // ordem estável: empate resolve pelo 1º
+	for _, h := range knownHandles { // ordem estável: empate resolve pelo 1º
 		if cont[h] > n {
 			melhor, n = h, cont[h]
 		}

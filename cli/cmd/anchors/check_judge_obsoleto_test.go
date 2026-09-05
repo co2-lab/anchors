@@ -49,7 +49,7 @@ func TestDescartaJulgamentosObsoletos(t *testing.T) {
 	p := gate.Profile{Judged: []gate.Result{
 		{Gate: "no-test-proof-real", Target: "a.spec.md"},
 	}}
-	gatesDeJulgamentoConhecidos = []string{"no-test-proof-real"}
+	knownJudgmentGates = []string{"no-test-proof-real"}
 	dropStaleJudgments(root, cfg, p)
 
 	restou := map[string]bool{}
@@ -74,7 +74,7 @@ func TestDescartaJulgamentosObsoletos(t *testing.T) {
 // O ID é `judge-<gate>-<slug>`, e o nome do gate contém `-`: a leitura é por prefixo
 // conhecido, não por partir no separador.
 func TestGateDaTaskJudge(t *testing.T) {
-	gatesDeJulgamentoConhecidos = []string{"no-test-proof-real", "atomic-design"}
+	knownJudgmentGates = []string{"no-test-proof-real", "atomic-design"}
 	casos := map[string]string{
 		"judge-no-test-proof-real-apps-x-y.spec": "no-test-proof-real",
 		"judge-atomic-design-apps-x.tsx":         "atomic-design",

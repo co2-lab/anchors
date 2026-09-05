@@ -56,8 +56,8 @@ const (
 	Done   State = "done"  // tratada (fato datado)
 )
 
-// Estados é a ordem de leitura do ciclo de vida — usada na busca e nos relatórios.
-var Estados = []State{Future, Todo, Doing, Done}
+// States é a ordem de leitura do ciclo de vida — usada na busca e nos relatórios.
+var States = []State{Future, Todo, Doing, Done}
 
 // Issue é uma divergência registrada.
 type Issue struct {
@@ -209,7 +209,7 @@ func pathFor(root string, state State, id string) string {
 // É o coração da busca por identidade: a data no nome varia, a Key não.
 func byKey(root, key string) (State, string, bool) {
 	suffix := "--" + key + ".md"
-	for _, st := range Estados {
+	for _, st := range States {
 		names, _ := List(root, st)
 		for _, name := range names {
 			if strings.HasSuffix(name, suffix) {
@@ -351,8 +351,8 @@ func Reopen(root string, i Issue) (reaberta bool, err error) {
 	return true, nil
 }
 
-// donoRE lê o dono do cabeçalho de uma issue já gravada.
-var donoRE = regexp.MustCompile(`(?m)^- \*\*dono:\*\*\s*(\S+)\s*$`)
+// ownerRE lê o dono do cabeçalho de uma issue já gravada.
+var ownerRE = regexp.MustCompile(`(?m)^- \*\*dono:\*\*\s*(\S+)\s*$`)
 
 // FileOwner lê de quem é a issue, sem carregar o resto.
 //
@@ -364,7 +364,7 @@ func FileOwner(caminho string) Owner {
 	if err != nil {
 		return DonoAgente
 	}
-	if m := donoRE.FindSubmatch(b); m != nil {
+	if m := ownerRE.FindSubmatch(b); m != nil {
 		return OwnerOf(Owner(m[1]))
 	}
 	return DonoAgente
@@ -400,8 +400,8 @@ func Reassign(root string, st State, nome string, para Owner, porque string) err
 	}
 	texto := string(b)
 	linha := "- **dono:** " + string(OwnerOf(para))
-	if donoRE.MatchString(texto) {
-		texto = donoRE.ReplaceAllString(texto, linha)
+	if ownerRE.MatchString(texto) {
+		texto = ownerRE.ReplaceAllString(texto, linha)
 	} else {
 		// Issue anterior ao campo: insere depois do kind, que sempre existe.
 		texto = strings.Replace(texto, "\n- **alvo", "\n"+linha+"\n- **alvo", 1)

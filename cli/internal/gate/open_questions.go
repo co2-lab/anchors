@@ -9,13 +9,13 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// MarcaDecisaoEmAberto distingue, no laudo, o Pending que BARRA (há decisão por tomar) do
+// OpenDecisionMarker distingue, no laudo, o Pending que BARRA (há decisão por tomar) do
 // que é dívida de migração (a spec nasceu antes da prática). Os dois são `Pending`, e só
 // o primeiro impede a promoção e vira issue.
 //
 // É um marcador ESTÁVEL, não prosa: o gate que o consulta não pode depender da redação —
 // nem do idioma — do texto que ele mesmo escreveu.
-const MarcaDecisaoEmAberto = "[decisao-em-aberto]"
+const OpenDecisionMarker = "[decisao-em-aberto]"
 
 // open-questions-resolved: uma spec com pergunta em aberto NÃO está pronta para implementar.
 //
@@ -139,7 +139,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 	//
 	// Marcador e não campo novo porque a assinatura do check é `(Verdict, string)` e é
 	// compartilhada por dezenas de gates; mudá-la para um caso obrigaria a tocar todos.
-	return Pending, fmt.Sprintf(MarcaDecisaoEmAberto+" %d decisão(ões) que a spec ainda NÃO tomou, e o código vai "+
+	return Pending, fmt.Sprintf(OpenDecisionMarker+" %d decisão(ões) que a spec ainda NÃO tomou, e o código vai "+
 		"precisar: %s. Registrá-las aqui é o certo — o defeito seria decidir por conta "+
 		"própria na hora de implementar. O caminho de saída é UM: leve a pergunta a quem "+
 		"decide e PROMOVA a resposta a regra (com código). Apagar o item sem regra nova é "+
@@ -198,8 +198,8 @@ func bodyFrom(content string, ini int) string {
 	return resto
 }
 
-// fechadaRE reconhece o fechamento honesto: a afirmação de que se olhou e não há dúvida.
-var fechadaRE = regexp.MustCompile(`(?i)^\s*[-*]?\s*(nenhuma|nenhum|none|n/?a|sem\s+pend[êe]ncias?|vazio|—|-)\s*\.?\s*$`)
+// closedRE reconhece o fechamento honesto: a afirmação de que se olhou e não há dúvida.
+var closedRE = regexp.MustCompile(`(?i)^\s*[-*]?\s*(nenhuma|nenhum|none|n/?a|sem\s+pend[êe]ncias?|vazio|—|-)\s*\.?\s*$`)
 
 // itemRE: um item é uma linha de lista ou de tabela. Prosa solta explicando a seção não
 // conta — senão o texto de abertura viraria uma pendência fantasma.
@@ -208,7 +208,7 @@ var itemRE = regexp.MustCompile(`(?m)^\s*(?:[-*+]\s+|\d+[.)]\s+|\|)`)
 func openItems(corpo string) []string {
 	var itens []string
 	for _, linha := range strings.Split(corpo, "\n") {
-		if strings.TrimSpace(linha) == "" || fechadaRE.MatchString(linha) {
+		if strings.TrimSpace(linha) == "" || closedRE.MatchString(linha) {
 			continue
 		}
 		if !itemRE.MatchString(linha) {

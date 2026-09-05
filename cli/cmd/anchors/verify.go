@@ -169,7 +169,7 @@ func translateChildOutput(err error) error {
 	// pre-commit barrava um commit só de configuração (package.json, yarn.lock),
 	// que é exatamente o caso que o código 3 existe para permitir.
 	var ee *exec.ExitError
-	if errors.As(err, &ee) && ee.ExitCode() == ExitNaoRegido {
+	if errors.As(err, &ee) && ee.ExitCode() == ExitNotGoverned {
 		return errNotGoverned{target: "os arquivos staged"}
 	}
 	return err
