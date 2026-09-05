@@ -135,6 +135,67 @@ Anchors não reimplementa o que a ferramenta já faz, só lê o veredito. O `sco
 o comando roda por arquivo (`node`), com os arquivos como argumento (`batch`) ou uma vez
 sobre o projeto (`project`).
 
+### Gates GENÉRICOS (você declara quantos quiser)
+
+Os da tabela acima são canônicos: perguntam a mesma coisa em todo projeto. Alguns gates,
+porém, **só existem depois que você diz o que confrontar** — e por isso não têm entrada
+fixa no catálogo. Você declara um por assunto, cada um com o seu `id`.
+
+#### `marker-parity` — a mesma regra nas duas pontas
+
+A classe de defeito é o **de-para que se desfaz de um lado só**. Uma regra que vive em
+dois lugares — a promessa na interface e o cumprimento no servidor — não tem como ser
+conferida por nenhum gate de arquivo: cada lado, olhado sozinho, está impecável. O que
+falha é a **relação**, e ela some sem deixar erro.
+
+O caso real que o originou: uma página pública lista o que será apagado quando o titular
+pede exclusão de dados, e o backend apaga. As duas listas nasceram juntas e nada as ligava.
+Se um escopo passasse a apagar mais (ou menos), a página seguiria exibindo a versão antiga
+— e o titular consentiria com base nela.
+
+```yaml
+gates:
+  - name: paridade-exclusao-de-dados
+    id: data-purge-parity           # ÚNICO — é por ele que se cita e se dispensa
+    check: marker-parity
+    scope: project
+    blocking: true
+    marker_prefix: data-purge-rule  # o prefixo das marcações
+    marker_count: 2                 # quantas ocorrências cada regra precisa ter
+    marker_scopes:                  # e ONDE elas têm de estar (uma por escopo)
+      - apps/landing-page/**
+      - packages/backend/**
+```
+
+E no código, dos dois lados:
+
+```ts
+// @data-purge-rule-conta-completa: o que a página promete apagar
+```
+
+```ts
+// @data-purge-rule-conta-completa: o que o handler de fato apaga
+```
+
+O que vem **depois do prefixo** é o nome da regra, e é ele que emparelha as pontas. O
+sufixo é livre (letras, dígitos, `-`, `_`) e a marcação pode ser seguida de `:` e da prosa
+que explica.
+
+Três cuidados que o gate já toma por você:
+
+- **`marker_scopes` não é enfeite.** Sem ele o gate só conta, e duas marcações do
+  **mesmo lado** somariam 2 — exatamente o caso que ele existe para pegar. Com escopos,
+  a pergunta passa a ser "cada lado tem a sua?", e o laudo **nomeia** o lado que faltou.
+- **Ausência total não aprova.** Um prefixo que não aparece em lugar nenhum devolve
+  indeterminado, não ✓ — é quase sempre erro de digitação na declaração, e aprovar ali
+  faria o gate parecer vigilante sem vigiar nada.
+- **Regra órfã também reprova.** Se a regra foi apagada de um lado e esquecida no outro,
+  o gate acusa — some tanto o que falta quanto o que sobra.
+
+Declare **um gate por assunto**: `data-purge-parity`, `pricing-parity`,
+`consent-parity`. Cada um com o seu prefixo e o seu `id`, porque é pelo `id` que o
+relatório os distingue e que uma dispensa atinge um sem derrubar os outros.
+
 ## 5. O ciclo de trabalho
 
 ```

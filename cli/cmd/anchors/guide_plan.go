@@ -55,18 +55,31 @@ O coração do plano. Uma LISTA das specs que vão nascer ou mudar. Para cada um
 Não liste código, telas, endpoints. Se você sente falta de listar isso, é sinal de
 que a spec correspondente ainda não foi pensada — adicione a spec à lista.
 
-### 4. Fases (ordem, dependências e progresso)
+### 4. Fases (ordem e dependências)
 Agrupe as specs em FASES pequenas e independentemente entregáveis, na ordem em que
 devem nascer. Se uma spec depende de outra antes, ela vem numa fase posterior. O
-plano é uma sequência, não um balde. Marque o progresso com caixas — a IA (o worker)
-vira '[ ]' em '[x]' ao concluir cada spec, então o plano é também o placar do
-trabalho:
+plano é uma sequência, não um balde:
 
   ## Fase 1 — <nome>
-  - [ ] features/larder/AddItem.spec.md — cadastro de item
-  - [ ] features/larder/ItemCard.spec.md — cartão do item
+  - features/larder/AddItem.spec.md — cadastro de item
+  - features/larder/ItemCard.spec.md — cartão do item
   ## Fase 2 — <nome> (depende da Fase 1)
-  - [ ] features/larder/ExpiryAlert.spec.md — alerta de validade
+  - features/larder/ExpiryAlert.spec.md — alerta de validade
+
+**O PROGRESSO NÃO MORA AQUI.** Ele vive no arquivo companheiro terminado em
+'-progress.md', ao lado do plano, e é lá que se marca '[x]'. O 'anchors new' o cria
+junto.
+
+O motivo é a diferença que o plano precisa preservar: o plano é DECISÃO, e alterá-lo
+tem de significar que a decisão mudou. Enquanto os checkboxes viviam aqui, marcar uma
+fase concluída era ALTERAR o plano — e o gate que cobra justificativa de mudança não
+conseguia distinguir "terminei a fase 1" de "mudei a direção do projeto". Pior: o
+julgamento da spec que a fase entregou caía junto, porque ele guarda a rev do plano.
+Concluir a fase invalidava a verificação do que a fase produziu.
+
+O arquivo de progresso fica fora do mapa de propósito: ele existe para mudar, e
+nenhum gate deve cobrar justificativa de um arquivo cuja função é registrar que o
+trabalho andou.
 
 ### 5. Fora de escopo
 O que este plano deliberadamente NÃO faz. Fecha a porta para escopo que vaza. Cada

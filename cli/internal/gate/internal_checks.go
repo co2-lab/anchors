@@ -104,16 +104,29 @@ func runInternal(name string, n mapx.Node, root string, graph *mapx.Graph, cfg *
 	return fn(string(content), n)
 }
 
+// checkersComGate: os agregados que precisam saber QUAL instância os invocou.
+//
+// Os demais checkers respondem a mesma pergunta sempre, e por isso `cfg` lhes basta. Um
+// gate GENÉRICO não: `marker-parity` só sabe o que procurar depois de ler o próprio
+// `marker_prefix`, e um projeto declara vários deles. Sem o `config.Gate` aqui, todas as
+// instâncias veriam a mesma configuração — ou nenhuma.
+var checkersComGate = map[string]func(g config.Gate, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string){
+	"marker-parity": checkMarkerParity,
+}
+
 // runInternalAgregado executa um checker interno de escopo batch/project.
 //
 // Difere do `runInternal` num ponto que não é detalhe: NÃO há arquivo para ler. O
 // escopo é o conjunto, então o checker recebe um nó vazio e se orienta por `root` e
 // `cfg`. Tentar ler o conteúdo de um alvo aqui (como o runInternal faz) devolveria
 // erro de leitura e o gate reprovaria por um arquivo que nunca existiu.
-func runInternalAgregado(name, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
-	fn, ok := checkersWithGraph[name]
+func runInternalAgregado(g config.Gate, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if fn, ok := checkersComGate[g.Check]; ok {
+		return fn(g, root, graph, cfg)
+	}
+	fn, ok := checkersWithGraph[g.Check]
 	if !ok {
-		return Pending, "checker interno agregado desconhecido: " + name
+		return Pending, "checker interno agregado desconhecido: " + g.Check
 	}
 	return fn("", mapx.Node{}, root, graph, cfg)
 }
@@ -350,6 +363,38 @@ func checkSpecSections(content string, _ mapx.Node) (Verdict, string) {
 	return Pass, ""
 }
 
+// seçãoVazia diz se a seção não tem CONTEÚDO — só o esqueleto.
+//
+// Conta como vazio: linha em branco, separador de tabela (`|---|---|`), cabeçalho de
+// tabela (a linha de rótulos que precede o separador) e o divisor `---`. Qualquer outra
+// coisa é conteúdo, e aí a ausência de código volta a ser o defeito que o gate pega.
+func seçãoVazia(linhas []string) bool {
+	for i, l := range linhas {
+		t := strings.TrimSpace(l)
+		if t == "" || t == "---" {
+			continue
+		}
+		if sepTabelaRE.MatchString(t) {
+			continue
+		}
+		// Cabeçalho de tabela: linha de `|` cujo SUCESSOR imediato é o separador. Sem
+		// olhar o sucessor, uma linha de dados seria confundida com rótulo.
+		if strings.HasPrefix(t, "|") && i+1 < len(linhas) &&
+			sepTabelaRE.MatchString(strings.TrimSpace(linhas[i+1])) {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+// noContentRE: a dispensa honesta da SEÇÃO. Exige motivo — `@no-content` sozinho não
+// conta, pelo mesmo princípio de `@no-rule`: dispensa sem porquê é a dispensa que ninguém
+// revisa depois.
+var noContentRE = regexp.MustCompile(`@no-content[^\S\n]*:[^\S\n]*\S+`)
+
+var sepTabelaRE = regexp.MustCompile(`^\|[\s:|-]+\|?$`)
+
 // secaoComNivelRE casa um cabeçalho e captura o nível (para agrupar por pai) e o título.
 var secaoComNivelRE = regexp.MustCompile(`^(#{2,4})\s+(.+?)\s*$`)
 
@@ -380,32 +425,94 @@ func irmasSemCodigo(content string) string {
 		}
 	}
 	// Agrupa por PAI: o `##` que precede cada bloco de `###`.
+	//
+	// O `####` NÃO entra no grupo — ele é conteúdo do `###` que o precede, não irmão
+	// dele. Tratá-los como irmãos produzia um falso positivo silencioso: a linha de
+	// conteúdo vai sempre para a ÚLTIMA seção vista, então o `####` roubava as linhas
+	// do pai e o `###` aparecia vazio.
+	//
+	// Medido em `SplashScreen.spec.md`: `### Caminhos Condicionais` tem três linhas de
+	// tabela, todas dentro de `#### destination`. O gate acusava o pai de estar vazio
+	// enquanto o conteúdo estava logo abaixo.
 	pai := ""
 	grupos := map[string][]sec{}
-	for _, s := range secoes {
+	for i, s := range secoes {
 		if s.nivel == 2 {
 			pai = s.titulo
 			continue
 		}
-		grupos[pai] = append(grupos[pai], s)
+		if s.nivel > 3 {
+			continue // conteúdo do `###`, não irmão dele
+		}
+		// O `###` herda as linhas dos `####` que o seguem: são o corpo dele.
+		filhas := s
+		for j := i + 1; j < len(secoes) && secoes[j].nivel > 3; j++ {
+			filhas.linhas = append(filhas.linhas, secoes[j].titulo)
+			filhas.linhas = append(filhas.linhas, secoes[j].linhas...)
+		}
+		grupos[pai] = append(grupos[pai], filhas)
 	}
 	for _, irmas := range grupos {
 		if len(irmas) < 2 {
 			continue // sem irmã não há padrão a comparar
 		}
-		var comCodigo, semCodigo []string
+		var comCodigo, semCodigo, semConteudo []string
 		for _, s := range irmas {
 			// O código pode estar no TÍTULO (`### CODE-B01 — ...`) ou no corpo (tabela,
 			// bullet). As duas formas contam: o gate cobra identidade, não posição.
 			corpo := s.titulo + "\n" + strings.Join(s.linhas, "\n")
 			if anyCodeRE.MatchString(corpo) {
 				comCodigo = append(comCodigo, s.titulo)
-			} else {
-				semCodigo = append(semCodigo, s.titulo)
+				continue
 			}
+			// SEÇÃO VAZIA não é seção sem código: não há regra alguma a codificar, e
+			// mandar "dê um código a cada uma" pede o impossível.
+			//
+			// Mas vazia sozinha NÃO absolve — são dois estados que se parecem e não são
+			// o mesmo:
+			//   • vazia porque NÃO SE APLICA  → decisão, e o autor a declara
+			//   • vazia porque ninguém escreveu → esquecimento, e o gate tem de pegar
+			//
+			// Aceitar as duas em silêncio trocaria um falso positivo por um falso
+			// negativo, e o segundo é pior: o gate passaria a reportar verde sobre
+			// seção que ninguém preencheu.
+			//
+			// A saída é a dispensa HONESTA que o resto do vocabulário já usa
+			// (`@no-rule`, `@no-code`, `@no-scenario`, `@no-mark`): a seção fica, e
+			// quem decidiu que ela não tem conteúdo escreve o motivo.
+			//
+			//     ### Comportamentos Automáticos
+			//
+			//     @no-content: tela estática — não há efeito, timer nem carga.
+			//
+			// A seção PERMANECE, que é o ponto: há seções obrigatórias por exigência
+			// regulatória, e apagá-las para calar o gate destruiria a obrigação junto
+			// com o aviso.
+			// A declaração vem PRIMEIRO: ela é texto, e por isso a seção que a carrega
+			// não conta como vazia. Perguntar "está vazia?" antes rejeitaria justamente
+			// quem fez a coisa certa.
+			if noContentRE.MatchString(strings.Join(s.linhas, "\n")) {
+				continue
+			}
+			if seçãoVazia(s.linhas) {
+				semConteudo = append(semConteudo, s.titulo)
+				continue
+			}
+			semCodigo = append(semCodigo, s.titulo)
 		}
 		// Só acusa quando a MAIORIA das irmãs cataloga: um grupo em que só uma tem código
 		// não estabeleceu padrão nenhum, e cobrar as outras seria inventar um.
+		// Seção VAZIA e sem declaração: o autor não disse se decidiu ou esqueceu, e o
+		// gate não tem como saber. Pede a declaração — que custa uma linha e resolve
+		// para sempre.
+		if len(comCodigo) > 0 && len(semConteudo) > 0 && len(semCodigo) == 0 {
+			return fmt.Sprintf("seção(ões) VAZIA(s) sob irmãs que catalogam: %s. "+
+				"As irmãs (%s) têm regra e estas não têm nada — e vazio não diz se a "+
+				"seção NÃO SE APLICA ou se ninguém a preencheu. Se não se aplica, "+
+				"declare na própria seção: `@no-content: <por quê>` (a seção FICA, que "+
+				"importa quando ela é obrigatória). Se falta escrever, escreva.",
+				strings.Join(semConteudo, ", "), strings.Join(comCodigo, ", "))
+		}
 		if len(comCodigo) > len(semCodigo) && len(semCodigo) > 0 {
 			return fmt.Sprintf("seção(ões) sem código sob irmãs que catalogam: %s. "+
 				"As irmãs (%s) têm código e estas não — uma regra sem código é invisível "+

@@ -201,3 +201,86 @@ func TestAlterado_arquivoNovoNaoTemOQueJustificar(t *testing.T) {
 		t.Fatalf("arquivo que nunca foi commitado não tem alteração a justificar, veio %v: %s", v, d)
 	}
 }
+
+// ARQUIVO NOVO **STAGED** também não tem o que justificar — e este é o caso REAL.
+//
+// O teste acima escreve o arquivo e não o adiciona ao index, o que exercita só o caso
+// fácil (untracked). Mas o pre-commit roda com tudo já STAGED: é exatamente aí que o gate
+// precisa acertar, e é aí que ele errava.
+//
+// A guarda usava `git ls-files`, que consulta o INDEX — um arquivo novo staged aparece
+// como rastreado, a guarda não disparava, e o gate cobrava `-R0001` de arquivo
+// recém-nascido. Medido no blue-eyes: a `MutationHarness.spec.md` estava em `A` no
+// `git status` e foi acusada de "foi ALTERADO e não diz por quê"; o arquivo que de fato
+// mudou (`M`) não foi acusado.
+//
+// A pergunta certa é "existe no ÚLTIMO COMMIT?", não "é rastreado?".
+func TestAlterado_arquivoNovoSTAGEDNaoTemOQueJustificar(t *testing.T) {
+	dir := t.TempDir()
+	if out, err := exec.Command("git", "-C", dir, "init", "-q").CombinedOutput(); err != nil {
+		t.Skipf("sem git: %v — %s", err, out)
+	}
+	// Um commit base: sem ele o repositório não tem HEAD, e o teste não distinguiria
+	// "não existe no HEAD" de "não há HEAD" — que é outro caminho.
+	for _, args := range [][]string{
+		{"-C", dir, "config", "user.email", "t@t"},
+		{"-C", dir, "config", "user.name", "t"},
+		{"-C", dir, "commit", "-q", "--allow-empty", "-m", "base"},
+	} {
+		if out, err := exec.Command("git", args...).CombinedOutput(); err != nil {
+			t.Skipf("git %v: %v — %s", args, err, out)
+		}
+	}
+
+	novo := filepath.Join(dir, "nova.spec.md")
+	if err := os.WriteFile(novo, []byte("# Spec nova\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	// O PASSO QUE FALTAVA: o arquivo entra no index, como o pre-commit o encontra.
+	if out, err := exec.Command("git", "-C", dir, "add", "nova.spec.md").CombinedOutput(); err != nil {
+		t.Fatalf("git add: %v — %s", err, out)
+	}
+
+	v, d := checkPlanoAlteradoJustificado("# Spec nova\n",
+		mapx.Node{ID: "nova.spec.md", Code: "NOVAA"}, dir, nil, cfgAlterado("nova.spec.md"))
+	if v != Skip {
+		t.Fatalf("arquivo novo STAGED não tem alteração a justificar, veio %v: %s", v, d)
+	}
+}
+
+// E o arquivo que EXISTE no último commit e mudou continua sendo cobrado.
+//
+// Contraprova da correção acima: trocar `ls-files` por `cat-file -e HEAD:` não pode ter
+// silenciado o gate para todo mundo. Sem este teste, uma guarda que responde "é novo"
+// sempre passaria os dois casos anteriores e o gate não protegeria nada.
+func TestAlterado_arquivoQueJaExistiaNoCommitEMudouEhCobrado(t *testing.T) {
+	dir := t.TempDir()
+	if out, err := exec.Command("git", "-C", dir, "init", "-q").CombinedOutput(); err != nil {
+		t.Skipf("sem git: %v — %s", err, out)
+	}
+	arq := filepath.Join(dir, "plano.md")
+	if err := os.WriteFile(arq, []byte("# Plano\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range [][]string{
+		{"-C", dir, "config", "user.email", "t@t"},
+		{"-C", dir, "config", "user.name", "t"},
+		{"-C", dir, "add", "plano.md"},
+		{"-C", dir, "commit", "-q", "-m", "base"},
+	} {
+		if out, err := exec.Command("git", args...).CombinedOutput(); err != nil {
+			t.Skipf("git %v: %v — %s", args, err, out)
+		}
+	}
+
+	// Agora ele MUDA, sem declarar revisão.
+	if err := os.WriteFile(arq, []byte("# Plano\n\nmudou sem dizer por quê\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	v, d := checkPlanoAlteradoJustificado("# Plano\n\nmudou sem dizer por quê\n",
+		mapx.Node{ID: "plano.md", Code: "PLANO"}, dir, nil, cfgAlterado("plano.md"))
+	if v != Fail {
+		t.Fatalf("arquivo que existia no commit e mudou sem revisão tem de reprovar, veio %v: %s", v, d)
+	}
+}

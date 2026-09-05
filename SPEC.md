@@ -218,11 +218,39 @@ A diferença entre os dois é o **tempo**, e é o que torna o `@TBD` honesto:
 | marca | afirma | vence? |
 |---|---|---|
 | `@no-test:` | esta unidade não precisa de teste | **não** — é permanente |
+| `@no-content:` | esta SEÇÃO não tem conteúdo, e é decisão | **não** — é permanente |
 | `@TBD: test` | falta escrever | **sim** — no instante em que a peça aparece no mapa |
 
 O `@TBD` **vence sozinho**: ninguém precisa lembrar de removê-lo. No momento em que
 a peça nasce, o gate volta a confrontá-la — e se a marca continuar lá, ela não
 protege mais nada, porque a peça existe.
+
+### Seção sem conteúdo: `@no-content` como opt-out
+
+Uma seção **vazia** e uma seção **sem código** parecem iguais e não são:
+
+- vazia porque **não se aplica** — é decisão, e alguém a tomou
+- vazia porque **ninguém escreveu** — é esquecimento, e o gate tem de pegar
+
+O `spec-completa` não distingue os dois sozinho. Aceitar ambos em silêncio trocaria um
+falso positivo por um **falso negativo**, e o segundo é pior: o gate passaria a reportar
+verde sobre seção que ninguém preencheu.
+
+A saída é a mesma do resto do vocabulário — a seção **fica**, e quem decidiu escreve o
+porquê:
+
+```markdown
+### Comportamentos Automáticos
+
+@no-content: tela estática do funil de onboarding — sem efeito, timer ou carga de dados.
+```
+
+**A seção permanecer é o ponto.** Há seções obrigatórias por exigência regulatória, e
+apagá-las para calar o gate destruiria a obrigação junto com o aviso. O `@no-content`
+existe justamente para que a única saída não seja apagar.
+
+Exige **motivo**: `@no-content` sozinho não conta, pelo mesmo princípio de `@no-rule` —
+dispensa sem porquê é a que ninguém revisa depois.
 
 **O alvo é obrigatório.** `@TBD` sem dizer o quê viraria um interruptor geral do
 gate, e é exatamente isso que ele não pode ser. Declarar `code` dispensa o código e

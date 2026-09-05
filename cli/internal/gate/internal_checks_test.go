@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -120,5 +121,141 @@ Texto.
 `
 	if v, msg := checkSpecSections(spec, mapx.Node{}); v != Pass {
 		t.Errorf("uma irmã só não estabelece padrão: %v — %s", v, msg)
+	}
+}
+
+// ── seção VAZIA × seção sem código ───────────────────────────────────────────
+//
+// São dois estados opostos que a busca por código não distingue sozinha, e confundi-los
+// inverte o gate: ele passa a pedir "dê um código a cada uma" para uma tabela que não tem
+// nenhuma linha.
+//
+// O caso real que originou: seis telas de onboarding ESTÁTICAS (zero efeitos no código)
+// herdaram o cabeçalho de "Comportamentos Automáticos" do modelo de spec. O gate as
+// barrava por não catalogarem regras que não existem.
+
+func comCodigosDe4(t *testing.T) {
+	t.Helper()
+	orig := config.CodeLengths
+	config.CodeLengths = []int{4}
+	SetRuleLetters(config.DefaultRuleLetters)
+	t.Cleanup(func() {
+		config.CodeLengths = orig
+		SetRuleLetters(config.DefaultRuleLetters)
+	})
+}
+
+const specComSecaoVazia = `# Tela
+
+## Rules
+
+### Permissões e Acesso
+
+| Regra | Descrição |
+| ---------- | --------- |
+| ` + "`PHA1-R01`" + ` | Pública |
+
+### Ações Permitidas
+
+| Regra | Ação | Resultado |
+| ---------- | ---- | --------- |
+| ` + "`PHA1-A01`" + ` | Toque | Navega |
+
+### Comportamentos Automáticos
+
+| Regra | Gatilho | Ação Automática |
+| ---------- | ------- | --------------- |
+
+---
+`
+
+// Vazia SEM declaração: o gate não sabe se foi decisão ou esquecimento, e pede que
+// alguém diga. Trocar o falso positivo antigo por um falso negativo seria pior — o gate
+// passaria a reportar verde sobre seção que ninguém preencheu.
+func TestSecaoVaziaSemDeclaracaoPedeQueAlguemDiga(t *testing.T) {
+	comCodigosDe4(t)
+	d := irmasSemCodigo(specComSecaoVazia)
+	if d == "" {
+		t.Fatal("vazia sem declaração tem de ser cobrada — senão o esquecimento passa")
+	}
+	if !strings.Contains(d, "@no-content") {
+		t.Fatalf("o laudo tem de ENSINAR a saída; veio: %s", d)
+	}
+	// e NÃO pode pedir código para uma tabela sem linhas
+	if strings.Contains(d, "Dê um código a cada uma") {
+		t.Fatalf("não há 'cada uma' numa seção vazia; veio: %s", d)
+	}
+}
+
+// Vazia COM declaração: a seção FICA (importa quando é obrigatória por regulação) e o
+// gate absolve, porque alguém decidiu e escreveu o porquê.
+func TestSecaoVaziaComNoContentEAceita(t *testing.T) {
+	comCodigosDe4(t)
+	spec := strings.Replace(specComSecaoVazia,
+		"### Comportamentos Automáticos\n\n| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
+		"### Comportamentos Automáticos\n\n@no-content: tela estática — não há efeito, timer nem carga.\n",
+		1)
+	if d := irmasSemCodigo(spec); d != "" {
+		t.Fatalf("declarada, a seção vazia é aceita. Veio: %s", d)
+	}
+}
+
+// `@no-content` SEM motivo não conta — dispensa sem porquê é a que ninguém revisa depois.
+func TestNoContentExigeMotivo(t *testing.T) {
+	comCodigosDe4(t)
+	spec := strings.Replace(specComSecaoVazia,
+		"### Comportamentos Automáticos\n\n| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
+		"### Comportamentos Automáticos\n\n@no-content:\n",
+		1)
+	if d := irmasSemCodigo(spec); d == "" {
+		t.Fatal("`@no-content` sem motivo não pode absolver")
+	}
+}
+
+// O defeito REAL continua pego: a seção que tem regra escrita em prosa, sem código.
+func TestIrmasSemCodigoAindaPegaRegraSemCodigo(t *testing.T) {
+	comCodigosDe4(t)
+	spec := strings.Replace(specComSecaoVazia,
+		"| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
+		"| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n| — | Abertura | Carrega o perfil |\n",
+		1)
+	d := irmasSemCodigo(spec)
+	if d == "" {
+		t.Fatal("regra SEM código tem de ser acusada — é o defeito que o gate existe para pegar")
+	}
+	if !strings.Contains(d, "Comportamentos Automáticos") {
+		t.Fatalf("o laudo tem de NOMEAR a seção; veio: %s", d)
+	}
+}
+
+// Prosa também é conteúdo: a seção com texto e sem código segue acusada.
+func TestIrmasSemCodigoPegaSecaoComProsa(t *testing.T) {
+	comCodigosDe4(t)
+	spec := strings.Replace(specComSecaoVazia,
+		"### Comportamentos Automáticos\n\n| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
+		"### Comportamentos Automáticos\n\nAo abrir, a tela carrega o perfil do usuário.\n",
+		1)
+	if d := irmasSemCodigo(spec); d == "" {
+		t.Fatal("regra em prosa sem código tem de ser acusada")
+	}
+}
+
+// O `####` e CONTEUDO do `###` que o precede, nao irmao dele.
+//
+// Tratando-os como irmaos, a linha de conteudo ia para a ULTIMA secao vista — o `####`
+// roubava as linhas do pai, e o `###` aparecia VAZIO. Medido em `SplashScreen.spec.md`:
+// `### Caminhos Condicionais` tem tres linhas de tabela dentro de `#### destination`, e o
+// gate acusava o pai de vazio com o conteudo logo abaixo.
+func TestSubsecaoNaoEsvaziaOPai(t *testing.T) {
+	comCodigosDe4(t)
+	spec := "# Tela\n\n## Rules\n\n" +
+		"### Comportamentos Automáticos\n\n" +
+		"| Regra | Gatilho |\n| --- | --- |\n| `SPAX-B01` | Abertura |\n\n" +
+		"### Caminhos Condicionais\n\n" +
+		"#### `destination` — rota de destino\n\n" +
+		"| Data State | Condição |\n| --- | --- |\n| `DS-dest-main` | autenticado |\n\n---\n"
+
+	if d := irmasSemCodigo(spec); d != "" {
+		t.Fatalf("o `###` tem conteúdo no `####` filho; não devia acusar. Veio: %s", d)
 	}
 }

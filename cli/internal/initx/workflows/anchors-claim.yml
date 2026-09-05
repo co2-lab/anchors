@@ -316,6 +316,20 @@ jobs:
             printf '%s\n' \
               '## Revisão — o que fazer' \
               '' \
+              'A régua completa é `anchors guide review` — leia antes de começar. O que segue' \
+              'é a ordem dos passos; o guia diz o que procurar em cada um.' \
+              '' \
+              '0. **Os checks EXISTEM?** `gh pr checks <n>`. Um check que não rodou não aparece' \
+              '   como falha — ele não aparece, e o PR fica com a cara de PR limpo. Se os do' \
+              '   Anchors não estão na lista, dispare antes de revisar:' \
+              '' \
+              '   ```' \
+              '   gh workflow run anchors-gates.yml --ref <branch-do-PR>' \
+              '   ```' \
+              '' \
+              '   Não aprove PR cujos checks nunca rodaram: você é a fronteira que sobra quando' \
+              '   a automação falha em silêncio.' \
+              '' \
               '1. **Leia** a spec e o código que ela governa.' \
               '2. **Rode os gates de julgamento** pendentes:' \
               '' \
