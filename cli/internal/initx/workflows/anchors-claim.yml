@@ -53,6 +53,36 @@ jobs:
         run: |
           set -euo pipefail
 
+          # O PROJETO ESTÁ CONGELADO? — antes de tudo.
+          #
+          # Este é o freio que alcança o AGENTE. Os hooks de pre-commit e pre-push param
+          # quem já tem o repositório clonado; o ruleset para o push no servidor. Mas nada
+          # disso impede um agente de PEGAR trabalho — e um card atribuído durante o
+          # congelamento é trabalho que começa contra uma base que vai mudar.
+          #
+          # Lido pela API porque este pipeline não faz checkout de propósito: ele roda a
+          # cada pedido de trabalho, e clonar o repositório o tornaria o gargalo que a
+          # serialização já ameaça ser.
+          cfg=$(gh api "repos/$GH_REPO/contents/anchors.yaml" --jq '.content' 2>/dev/null \
+                | base64 -d 2>/dev/null || true)
+          if printf '%s' "$cfg" | grep -qE '^enabled:[[:space:]]*false[[:space:]]*$'; then
+            motivo=$(printf '%s' "$cfg" | sed -n 's/^freeze_reason:[[:space:]]*//p' | head -1)
+            echo "🛑 PROJETO CONGELADO — nenhum card será atribuído."
+            echo ""
+            if [ -n "$motivo" ]; then
+              echo "   Motivo: $motivo"
+            else
+              echo "   (nenhum motivo declarado no anchors.yaml)"
+            fi
+            echo ""
+            echo "   Procure a issue [congelado] no repositório para acompanhar."
+            echo "   Quem for CONSERTAR trabalha por fora do claim — o freio existe para"
+            echo "   impedir trabalho por inércia, não o conserto que o destrava."
+            # Sai com SUCESSO: o congelamento não é falha do pipeline, e um vermelho aqui
+            # se somaria ao ruído de quem já está investigando o problema de verdade.
+            exit 0
+          fi
+
           # O CARD DO PRÓPRIO AGENTE VEM PRIMEIRO — antes da prioridade do board.
           #
           # Um agente por vez, um card por vez: dois cards abertos no mesmo agente
