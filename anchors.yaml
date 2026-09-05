@@ -1,3 +1,5 @@
+# O idioma das mensagens. O Anchors suporta pt-BR, en e es.
+lang: pt-BR
 # anchors.yaml — o Anchors governando o próprio Anchors.
 #
 # Este arquivo é também um EXPERIMENTO de adoção: o Anchors nasceu para ser posto em
