@@ -246,7 +246,7 @@ func classify(rel string, cfg *config.Config) (layer, kind string) {
 	// o mesmo caminho tem de casar nas duas formas em QUALQUER máquina, porque o mapa é
 	// versionado e trafega entre elas.
 	rel = strings.ReplaceAll(rel, `\`, "/")
-	melhor := prioridade{prio: math.MinInt, tam: -1}
+	melhor := priority{prio: math.MinInt, tam: -1}
 	for name, l := range cfg.Layers {
 		if !matchGlob(l.Pattern, rel) {
 			continue
@@ -254,7 +254,7 @@ func classify(rel string, cfg *config.Config) (layer, kind string) {
 		if excluded(rel, l.Exclude) {
 			continue
 		}
-		p := prioridade{prio: l.Priority, tam: len(l.Pattern), nome: name}
+		p := priority{prio: l.Priority, tam: len(l.Pattern), nome: name}
 		if layer == "" || p.venceContra(melhor) {
 			melhor, layer, kind = p, name, l.Kind
 		}
@@ -262,14 +262,14 @@ func classify(rel string, cfg *config.Config) (layer, kind string) {
 	return layer, kind
 }
 
-// prioridade é a régua de desempate, em ordem: declarada > comprimento > nome.
-type prioridade struct {
+// priority é a régua de desempate, em ordem: declarada > comprimento > nome.
+type priority struct {
 	prio int
 	tam  int
 	nome string
 }
 
-func (a prioridade) venceContra(b prioridade) bool {
+func (a priority) venceContra(b priority) bool {
 	if a.prio != b.prio {
 		return a.prio > b.prio
 	}
@@ -296,12 +296,12 @@ type LayerAmbiguity struct {
 func Ambiguities(files []File, cfg *config.Config) []LayerAmbiguity {
 	var out []LayerAmbiguity
 	for _, f := range files {
-		var casam []prioridade
+		var casam []priority
 		for name, l := range cfg.Layers {
 			if !matchGlob(l.Pattern, f.Path) || excluded(f.Path, l.Exclude) {
 				continue
 			}
-			casam = append(casam, prioridade{prio: l.Priority, tam: len(l.Pattern), nome: name})
+			casam = append(casam, priority{prio: l.Priority, tam: len(l.Pattern), nome: name})
 		}
 		if len(casam) < 2 {
 			continue
@@ -475,7 +475,7 @@ func needsFor(kind string, content []byte, root, rel string) []string {
 	case "plan":
 		return extractNeeds(content, root, rel)
 	case "spec":
-		return extractNeedsCodigo(content)
+		return extractNeedsCode(content)
 	}
 	return nil
 }
@@ -515,8 +515,8 @@ func parentDe(content []byte) string {
 	return stripInlineCode(raw)
 }
 
-// extractNeedsCodigo lê o `needs:` de uma spec, onde o valor é o código da fase.
-func extractNeedsCodigo(content []byte) []string {
+// extractNeedsCode lê o `needs:` de uma spec, onde o valor é o código da fase.
+func extractNeedsCode(content []byte) []string {
 	m := headerNeedsRE.FindSubmatch(content)
 	if m == nil {
 		return nil

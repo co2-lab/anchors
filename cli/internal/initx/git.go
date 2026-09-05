@@ -52,16 +52,16 @@ func DetectGit(root string, gitNoPath bool) EstadoGit {
 	if !fi.IsDir() {
 		return GitPronto // worktree/submódulo: `.git` é ponteiro, o repo real é outro
 	}
-	if temCommit(dotGit) {
+	if hasCommit(dotGit) {
 		return GitPronto
 	}
 	return GitSemCommit
 }
 
-// temCommit diz se o repo já tem HEAD apontando para algo. Lê o disco em vez de rodar
+// hasCommit diz se o repo já tem HEAD apontando para algo. Lê o disco em vez de rodar
 // `git rev-parse`: num repo recém-criado o `.git/refs/heads` está vazio e não há
 // arquivo de ref nenhum — é o sinal mais direto de "ainda não há commit".
-func temCommit(dotGit string) bool {
+func hasCommit(dotGit string) bool {
 	heads := filepath.Join(dotGit, "refs", "heads")
 	var achou bool
 	_ = filepath.WalkDir(heads, func(_ string, d os.DirEntry, err error) error {

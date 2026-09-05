@@ -141,7 +141,7 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 				return fmt.Errorf("não declarado em `%s:`: %s\n  camadas declaradas:    %s\n  workspaces declarados: %s\n  escopos declarados:    %s",
 					cs.secao, strings.Join(ausentes, ", "),
 					strings.Join(config.DeclaredLayers(declaradas), ", "),
-					joinOrDash(config.WorkspacesDeclarados(declaradas)),
+					joinOrDash(config.DeclaredWorkspaces(declaradas)),
 					joinOrDash(config.DeclaredScopes(declaradas)))
 			}
 			// Combinação válida mas vazia não é erro de digitação — é "não existe essa

@@ -44,17 +44,17 @@ func TestCorpoDeProtecaoTemOsCamposObrigatorios(t *testing.T) {
 // sobre trabalho que já estava na develop.
 func TestAprovacoesExigidasPadraoEhUma(t *testing.T) {
 	var nulo *config.Workflow
-	if got := nulo.AprovacoesExigidas(); got != 1 {
+	if got := nulo.RequiredApprovalsOrDefault(); got != 1 {
 		t.Errorf("sem config, o padrão deveria ser 1, veio %d", got)
 	}
-	if got := (&config.Workflow{}).AprovacoesExigidas(); got != 1 {
+	if got := (&config.Workflow{}).RequiredApprovalsOrDefault(); got != 1 {
 		t.Errorf("sem declarar, o padrão deveria ser 1, veio %d", got)
 	}
 	// ZERO declarado é deliberado e precisa valer: há projetos onde a revisão acontece
 	// fora do GitHub. O ponteiro é o que distingue "não declarou" de "declarou zero" —
 	// com int simples, o zero-value seria indistinguível da ausência.
 	zero := 0
-	if got := (&config.Workflow{RequiredApprovals: &zero}).AprovacoesExigidas(); got != 0 {
+	if got := (&config.Workflow{RequiredApprovals: &zero}).RequiredApprovalsOrDefault(); got != 0 {
 		t.Errorf("zero declarado deveria valer, veio %d", got)
 	}
 	// E o corpo enviado à API reflete o número.

@@ -426,8 +426,8 @@ func Reassign(root string, st State, nome string, para Owner, porque string) err
 // qualquer chamador que não configurou nada.
 var target *GitHub
 
-// UsarGitHub roteia o ciclo de vida das issues para os cards do repositório.
-func UsarGitHub(repo, label string) {
+// UseGitHub roteia o ciclo de vida das issues para os cards do repositório.
+func UseGitHub(repo, label string) {
 	target = &GitHub{Repo: repo, Label: label}
 }
 

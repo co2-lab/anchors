@@ -135,7 +135,7 @@ func definedRequirements(content string) []string {
 	vistos := map[string]bool{}
 	var out []string
 	for _, linha := range strings.Split(content, "\n") {
-		if dispensadoPorNoScenario(linha) {
+		if waivedByNoScenario(linha) {
 			continue
 		}
 		m := defineRuleCaptureRE.FindStringSubmatch(linha)
@@ -160,9 +160,9 @@ var defineRuleCaptureRE = regexp.MustCompile(
 // noScenarioRE — o opt-out por requisito, com razão obrigatória depois dos dois-pontos.
 var noScenarioRE = regexp.MustCompile(`@no-scenario[^\S\n]*:[^\S\n]*\S+`)
 
-// dispensadoPorNoScenario: o opt-out precisa de RAZÃO escrita. `[^\S\n]` = espaço/tab mas
+// waivedByNoScenario: o opt-out precisa de RAZÃO escrita. `[^\S\n]` = espaço/tab mas
 // não quebra de linha, senão a razão seria "achada" na linha seguinte e um marcador nu
 // passaria — que é justamente o que a dispensa não pode permitir.
-func dispensadoPorNoScenario(linha string) bool {
+func waivedByNoScenario(linha string) bool {
 	return noScenarioRE.MatchString(linha)
 }

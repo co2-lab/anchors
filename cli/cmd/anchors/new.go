@@ -560,7 +560,7 @@ func translateTitle(body string, s section, cfg *config.Config, camada string) s
 	// "Modelo de Dado/Comportamentos/Notas de Implementação", e NENHUMA das três
 	// coincidia. Dois agentes escreveram em dialetos opostos, cada um obedecendo a uma
 	// fonte da régua, os dois verdes nos gates.
-	local := cfg.TituloDaSecao(s.Key, "", camada)
+	local := cfg.SectionTitle(s.Key, "", camada)
 	// 2) `rule_types.sections` continua valendo para as seções de regra — é onde o
 	// projeto já declarava o nome da seção junto com a letra que ela cataloga.
 	if local == "" && s.Realizes != "" {

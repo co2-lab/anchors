@@ -188,7 +188,7 @@ func (p *Plan) Apply(root string) (int, error) {
 		written++
 	}
 	for _, r := range p.Renames {
-		if err := gitMove(root, r.From, r.To); err != nil {
+		if err := gitMoves(root, r.From, r.To); err != nil {
 			return written, fmt.Errorf("renomear %s → %s: %w", r.From, r.To, err)
 		}
 		written++
@@ -196,7 +196,7 @@ func (p *Plan) Apply(root string) (int, error) {
 	return written, nil
 }
 
-// gitMove renomeia via `git mv` (preserva history + stage). FORA de um repositório,
+// gitMoves renomeia via `git mv` (preserva history + stage). FORA de um repositório,
 // cai num os.Rename simples — ali o rename É o comportamento certo, e não há histórico
 // a preservar.
 //
@@ -211,7 +211,7 @@ func (p *Plan) Apply(root string) (int, error) {
 // no meio de 40 renomeações para metade ir staged e metade ir untracked+deleted, com
 // `Apply` retornando sucesso — e o rastro que permitiria desfazer é exatamente o que
 // não foi criado.
-func gitMove(root, from, to string) error {
+func gitMoves(root, from, to string) error {
 	if dir := filepath.Dir(filepath.Join(root, to)); dir != "" {
 		_ = os.MkdirAll(dir, 0o755)
 	}

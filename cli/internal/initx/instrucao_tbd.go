@@ -31,12 +31,12 @@ package initx
 // distingue "declarou que o código não existe" de "declarou que falta o teste". Essa
 // leitura é o que nenhum filtro faz.
 
-// instrucaoTBD devolve a instrução a acrescentar ao `ask:` de um gate de julgamento.
+// tbdInstruction devolve a instrução a acrescentar ao `ask:` de um gate de julgamento.
 //
 // `peca` é o que o gate interroga, na forma como o `ask:` já fala dele ("o código", "o
 // teste") — o texto tem de soar como continuação da pergunta, não como aviso pregado ao
 // fim.
-func instrucaoTBD(peca string) string {
+func tbdInstruction(peca string) string {
 	return " ANTES DE RESPONDER, confira se esta unidade declara `@TBD` para a peça que " +
 		"esta pergunta interroga (`@TBD: code`, `@TBD: code,test`, …). Se declarar, " +
 		peca + " ainda NÃO existe por decisão registrada, e não há o que confrontar: " +

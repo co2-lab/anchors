@@ -34,15 +34,15 @@ import (
 // da fase, e é confrontável — "esta spec pode ser trabalhada agora?" vira uma pergunta com
 // resposta, em vez de uma leitura.
 
-// faseRE casa o cabeçalho de uma fase catalogada: `### FNDTN-F01 — a árvore e o gerenciador`.
-func faseRE() *regexp.Regexp {
+// phaseRE casa o cabeçalho de uma fase catalogada: `### FNDTN-F01 — a árvore e o gerenciador`.
+func phaseRE() *regexp.Regexp {
 	return regexp.MustCompile(`(?m)^#{2,4}\s+([A-Z0-9]` + config.CodeLengthPattern() + `-F\d{2})\b`)
 }
 
 // PlanPhases devolve os códigos de fase catalogados no plano, na ordem em que aparecem.
 func PlanPhases(content string) []string {
 	var out []string
-	for _, m := range faseRE().FindAllStringSubmatch(content, -1) {
+	for _, m := range phaseRE().FindAllStringSubmatch(content, -1) {
 		out = append(out, m[1])
 	}
 	return out
@@ -93,7 +93,7 @@ func checkPhaseOrdered(content string, n mapx.Node, root string, g *mapx.Graph, 
 	var erros []string
 	secoes := regexp.MustCompile(`(?m)^#{2,4}\s+`).Split(content, -1)
 	for _, sec := range secoes {
-		m := faseRE().FindStringSubmatch("### " + sec)
+		m := phaseRE().FindStringSubmatch("### " + sec)
 		if m == nil {
 			continue
 		}

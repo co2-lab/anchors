@@ -56,7 +56,7 @@ func checkScenarioAsserts(content string, n mapx.Node, root string, g *mapx.Grap
 		if passo == "" || strings.HasPrefix(passo, "#") {
 			continue
 		}
-		primeira, resto := primeiraPalavra(passo)
+		primeira, resto := firstWord(passo)
 		if !thens[primeira] {
 			continue
 		}
@@ -114,7 +114,7 @@ var ligacaoRE = regexp.MustCompile(`\b(o|a|os|as|um|uma|de|do|da|se|e|que|the|a|
 	`effet|règle|vérifie|` +
 	`effekt|regel|gilt|erfüllt)\b`)
 
-func primeiraPalavra(s string) (string, string) {
+func firstWord(s string) (string, string) {
 	f := strings.Fields(s)
 	if len(f) == 0 {
 		return "", ""

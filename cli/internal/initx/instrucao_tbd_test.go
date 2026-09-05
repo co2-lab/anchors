@@ -67,7 +67,7 @@ func TestJudgment_todoGateSobrePecaCarregaAInstrucaoTBD(t *testing.T) {
 // Um texto que só mencionasse `@TBD` passaria no teste acima sem resolver o problema: o
 // ponto inteiro é que a saída não seja `pass`.
 func TestInstrucaoTBD_proibeOPassEMandaNomearAAusencia(t *testing.T) {
-	got := instrucaoTBD("o código")
+	got := tbdInstruction("o código")
 	for _, exigido := range []string{"@TBD", "DISPENSADO", "pass"} {
 		if !strings.Contains(got, exigido) {
 			t.Errorf("a instrução não menciona %q:\n%s", exigido, got)
@@ -75,7 +75,7 @@ func TestInstrucaoTBD_proibeOPassEMandaNomearAAusencia(t *testing.T) {
 	}
 	// A peça entra no texto: sem isso a instrução falaria de "o código" num gate que
 	// interroga teste.
-	if !strings.Contains(instrucaoTBD("o teste"), "o teste") {
+	if !strings.Contains(tbdInstruction("o teste"), "o teste") {
 		t.Error("a instrução não usa a peça que recebeu")
 	}
 	// O `@TBD` desatualizado é a outra metade: uma peça que passou a existir com o

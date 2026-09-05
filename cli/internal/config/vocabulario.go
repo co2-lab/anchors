@@ -147,8 +147,8 @@ func VocabularioObsoleto(conteudoYAML string) map[string]string {
 
 var defaultGateNames func() []string
 
-// RegistraNomesDeGate liga a lista de gates default ao pacote config.
-func RegistraNomesDeGate(f func() []string) { defaultGateNames = f }
+// RegisterGateNames liga a lista de gates default ao pacote config.
+func RegisterGateNames(f func() []string) { defaultGateNames = f }
 
 // DefaultGateNamesForTest devolve os nomes registrados, ou nil se ninguém registrou.
 func DefaultGateNamesForTest() []string {

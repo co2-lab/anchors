@@ -120,7 +120,7 @@ está declarada.`,
 			// modo local (mover pasta à mão), e manter os dois faz o board esconder o que os
 			// gates encontraram.
 			if cfg != nil && cfg.GitHubMode() && len(cfg.Workflow.Labels) > 0 {
-				issue.UsarGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
+				issue.UseGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
 			}
 			gc, ok := findJudgmentGate(cfg, gateName)
 			// `review` é o julgamento do CICLO, não um gate do projeto: ele não roda sobre

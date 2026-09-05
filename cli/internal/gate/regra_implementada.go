@@ -212,16 +212,16 @@ func waived(content, regra string) bool {
 	return false
 }
 
-// codigoRE lê a identidade declarada no header da spec.
+// codeRE lê a identidade declarada no header da spec.
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
-func codigoRE() *regexp.Regexp {
+func codeRE() *regexp.Regexp {
 	return regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
 }
 
 func specCode(content string) string {
-	if m := codigoRE().FindStringSubmatch(content); m != nil {
+	if m := codeRE().FindStringSubmatch(content); m != nil {
 		return m[1]
 	}
 	return ""

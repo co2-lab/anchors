@@ -166,7 +166,7 @@ func TestLetraDaFaseEhCanonica(t *testing.T) {
 			"no rule-types", config.DefaultRuleLetters)
 	}
 	// E o regex que casa a fase precisa aceitar o código que o gate produz.
-	if !faseRE().MatchString("### ABCDX-F01 — a fase") {
+	if !phaseRE().MatchString("### ABCDX-F01 — a fase") {
 		t.Error("o regex de fase não casa o formato que o próprio gate documenta")
 	}
 }

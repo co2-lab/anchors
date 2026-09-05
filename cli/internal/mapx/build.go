@@ -42,7 +42,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 			Parent:        f.Parent,
 			Revises:       f.Revises,
 			Code:          nodeCode(f),
-			CodeDeclarado: codeDeclarado(f),
+			CodeDeclarado: declaredCode(f),
 			Tags:          tags,
 			Regime:        regime,
 			NoPropagation: f.NoPropagation,
@@ -406,9 +406,9 @@ func nodeCode(f scan.File) string {
 	return primaryCode(f.Codes)
 }
 
-// codeDeclarado diz se a identidade foi DECLARADA (header `code:`) ou apenas inferida do
+// declaredCode diz se a identidade foi DECLARADA (header `code:`) ou apenas inferida do
 // texto. Ver Node.CodeDeclarado para o porquê da distinção.
-func codeDeclarado(f scan.File) bool { return f.HeaderCode != "" }
+func declaredCode(f scan.File) bool { return f.HeaderCode != "" }
 
 func primaryCode(codes []string) string {
 	if len(codes) == 0 {

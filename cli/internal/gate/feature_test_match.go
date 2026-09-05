@@ -206,18 +206,18 @@ func featCodeREFor(letters string) *regexp.Regexp {
 	return regexp.MustCompile(`@([A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) + `]\d{2}|DS-[A-Za-z0-9-]+|VR))(#\d{2})?\b`)
 }
 
-// codeRaizRE separa a raiz (`USBPX-B01`) do sufixo de cenário (`#02`). Os gates que
+// rootCodeRE separa a raiz (`USBPX-B01`) do sufixo de cenário (`#02`). Os gates que
 // falam de REGRA usam a raiz; os que falam de CENÁRIO usam o código inteiro.
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
-func codeRaizRE() *regexp.Regexp {
+func rootCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`^([A-Z0-9]` + config.CodeLengthPattern() + `-[A-Za-z0-9-]+?)(#\d{2})?$`)
 }
 
 // RootCode devolve o código sem o sufixo de cenário.
 func RootCode(code string) string {
-	if m := codeRaizRE().FindStringSubmatch(code); m != nil {
+	if m := rootCodeRE().FindStringSubmatch(code); m != nil {
 		return m[1]
 	}
 	return code

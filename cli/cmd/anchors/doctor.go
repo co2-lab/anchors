@@ -143,7 +143,7 @@ func repairEnvironment(root string, cfg *config.Config) error {
 	// Lido ANTES de semear: depois da escrita os arquivos já casam o template, e não
 	// haveria como dizer quais foram ATUALIZADOS em vez de criados.
 	faltavam := initx.MissingWorkflow(root)
-	desatualizados := initx.WorkflowsDesatualizados(root, cfg)
+	desatualizados := initx.OutdatedWorkflows(root, cfg)
 	if _, err := initx.SemeiaWorkflows(root, cfg); err != nil {
 		return fmt.Errorf("semear os pipelines: %w", err)
 	}
@@ -182,7 +182,7 @@ func repairEnvironment(root string, cfg *config.Config) error {
 	// É deliberado o fix mexer aqui: deixar a exigência de pé seria manter um fluxo que
 	// NÃO TEM COMO ser cumprido, e quem opera descobriria no meio de um merge. A revisão
 	// continua sendo cobrada — pelo estado do card, que é o que o Anchors controla.
-	if cfg.Workflow.AprovacoesExigidas() > 0 {
+	if cfg.Workflow.RequiredApprovalsOrDefault() > 0 {
 		repo, branch := cfg.Workflow.Repo, cfg.Workflow.IntegrationBranchOrDefault()
 		if ok, _ := health.CanBypassProtection(repo, branch); !ok {
 			if err := health.DisableApprovalRequirement(repo, branch); err != nil {
@@ -288,7 +288,7 @@ func protectBranches(cfg *config.Config) error {
 	}
 	repo := cfg.Workflow.Repo
 	for _, b := range cfg.Workflow.ProtectedBranchesOrDefault() {
-		body := protectionBody(cfg.Workflow.AprovacoesExigidas())
+		body := protectionBody(cfg.Workflow.RequiredApprovalsOrDefault())
 		// `--input -` LÊ do stdin, e é preciso de fato escrever nele: sem isso o corpo
 		// chega vazio e a API responde 422 reclamando de um campo obrigatório nulo — que
 		// foi o que aconteceu enquanto o `body` era montado e descartado logo abaixo.
@@ -316,7 +316,7 @@ func protectBranches(cfg *config.Config) error {
 // Sai com 1 quando algo está desatualizado ou faltando, para o CI poder barrar. Um aviso
 // que não muda o código de saída seria ignorado pelo próprio pipeline que o emitiu.
 func checkPipelines(cmd *cobra.Command) error {
-	root := config.RaizDoProjeto(".")
+	root := config.ProjectRoot(".")
 	cfg, err := config.Load(filepath.Join(root, "anchors.yaml"))
 	if err != nil {
 		return err
@@ -327,7 +327,7 @@ func checkPipelines(cmd *cobra.Command) error {
 	}
 
 	faltam := initx.MissingWorkflow(root)
-	velhos := initx.WorkflowsDesatualizados(root, cfg)
+	velhos := initx.OutdatedWorkflows(root, cfg)
 	if len(faltam) == 0 && len(velhos) == 0 {
 		fmt.Printf("✓ os %d pipelines do fluxo estão no lugar e atualizados (anchors %s).\n",
 			len(initx.WorkflowsDoFluxo), version)

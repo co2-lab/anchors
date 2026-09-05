@@ -50,7 +50,7 @@ func TestDestinoPadraoEhArquivo(t *testing.T) {
 	if target != nil {
 		t.Fatal("sem configurar, o destino tem de ser o arquivo")
 	}
-	UsarGitHub("acme/x", "anchors")
+	UseGitHub("acme/x", "anchors")
 	if target == nil || target.Repo != "acme/x" {
 		t.Fatal("UsarGitHub deveria rotear para o repositório declarado")
 	}
