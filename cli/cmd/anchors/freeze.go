@@ -1,7 +1,9 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -62,8 +64,7 @@ destrava.`,
 				return err
 			}
 			if strings.TrimSpace(motivo) == "" {
-				return fmt.Errorf("--motivo é obrigatório: escreva o que aconteceu, porque é " +
-					"o texto que TODO comando recusado vai mostrar")
+				return errors.New(i18n.T("freeze.reason_required"))
 			}
 			cfgPath := filepath.Join(absRoot, config.DefaultFile)
 			cfg, err := config.Load(cfgPath)
@@ -71,8 +72,8 @@ destrava.`,
 				return fmt.Errorf("carregar %s: %w", config.DefaultFile, err)
 			}
 			if cfg.Congelado() {
-				fmt.Printf("○ o projeto JÁ está congelado: %s\n", cfg.MotivoDoCongelamento())
-				fmt.Println("  para trocar o motivo, rode `anchors thaw` e congele de novo.")
+				fmt.Println(i18n.T("freeze.already", cfg.MotivoDoCongelamento()))
+				fmt.Println(i18n.T("freeze.already.retry"))
 				return nil
 			}
 
@@ -120,11 +121,11 @@ destrava.`,
 			}
 
 			fmt.Println()
-			fmt.Println("🛑 PROJETO CONGELADO.")
-			fmt.Printf("   Motivo: %s\n", motivo)
+			fmt.Println(i18n.T("freeze.done"))
+			fmt.Println(i18n.T("freeze.blocked.reason", motivo))
 			fmt.Println()
-			fmt.Println("   Quem for CONSERTAR passa: `--no-verify` nos hooks, e o admin no ruleset.")
-			fmt.Println("   Para liberar: `anchors thaw`")
+			fmt.Println(i18n.T("freeze.done.bypass"))
+			fmt.Println(i18n.T("freeze.done.release"))
 			return nil
 		},
 	}
@@ -159,7 +160,7 @@ remoto ainda diz 'congelado', os hooks recusariam o próprio descongelamento.`,
 				return fmt.Errorf("carregar %s: %w", config.DefaultFile, err)
 			}
 			if !cfg.Congelado() {
-				fmt.Println("○ o projeto não está congelado — nada a fazer.")
+				fmt.Println(i18n.T("thaw.not_frozen"))
 				return nil
 			}
 
@@ -192,10 +193,9 @@ remoto ainda diz 'congelado', os hooks recusariam o próprio descongelamento.`,
 			}
 
 			fmt.Println()
-			fmt.Println("✓ PROJETO LIBERADO — o trabalho volta.")
+			fmt.Println(i18n.T("thaw.done"))
 			fmt.Println()
-			fmt.Println("  Quem tem o cache do hook quente pode levar até 10 minutos para")
-			fmt.Println("  perceber — ou rodar `git fetch` para forçar.")
+			fmt.Println(i18n.T("thaw.cache_warning"))
 			return nil
 		},
 	}

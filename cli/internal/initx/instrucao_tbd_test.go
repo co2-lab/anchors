@@ -24,7 +24,7 @@ func TestJudgment_todoGateSobrePecaCarregaAInstrucaoTBD(t *testing.T) {
 	// ("falta escrever"), e os dois não se sobrepõem: o gate já é filtrado por
 	// `Requires: "@no-test"`.
 	isentos := map[string]string{
-		"no-test-prova-real": "interroga a prova de uma dispensa permanente (@no-test), " +
+		"no-test-proof-real": "interroga a prova de uma dispensa permanente (@no-test), " +
 			"não uma peça que falta",
 	}
 

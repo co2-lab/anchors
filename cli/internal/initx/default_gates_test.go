@@ -12,7 +12,7 @@ func TestDefaultGates(t *testing.T) {
 			t.Errorf("gate %s deveria nascer informativo", x.Name)
 		}
 	}
-	for _, want := range []string{"spec-completa", "feature-nao-vazia", "tests-green", "line-coverage", "scenario-coverage"} {
+	for _, want := range []string{"spec-complete", "feature-not-empty", "tests-green", "line-coverage", "scenario-coverage"} {
 		if !names[want] {
 			t.Errorf("gate padrão %q faltando", want)
 		}

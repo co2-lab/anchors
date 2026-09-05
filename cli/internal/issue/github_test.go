@@ -33,11 +33,11 @@ func TestTituloDizOQueEhSemAChave(t *testing.T) {
 		Stale:     "Desatualizado",
 		Conflict:  "Conflito",
 	} {
-		got := g.titulo(Issue{Kind: kind, Gate: "trinca-completa", Target: "a/b.spec.md"})
+		got := g.titulo(Issue{Kind: kind, Gate: "triad-complete", Target: "a/b.spec.md"})
 		if !strings.Contains(got, esperado) {
 			t.Errorf("título de %s deveria dizer %q, veio %q", kind, esperado, got)
 		}
-		if !strings.Contains(got, "a/b.spec.md") || !strings.Contains(got, "trinca-completa") {
+		if !strings.Contains(got, "a/b.spec.md") || !strings.Contains(got, "triad-complete") {
 			t.Errorf("o título deve nomear o gate e o alvo; veio %q", got)
 		}
 	}
