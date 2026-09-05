@@ -31,7 +31,7 @@ func newJudgeCmd() *cobra.Command {
 dupla saída de um gate determinístico (carimbo no mapa + issue).
 
   anchors judge --pending                      lista os alvos aguardando julgamento
-  anchors judge <alvo> --gate <g> --verdict pass|fail --reason "..."
+  anchors judge <alvo> --gate <g> --verdict pass|fail|dispensado --reason "..."
 
 O fluxo: o 'anchors check' marca os alvos de um gate 'measures: judgment' como
 pendentes e os enfileira. A IA (worker) lê o guide do gate, confronta o alvo, e
@@ -56,7 +56,15 @@ depois só para saber o que arrumar. Ex.:
   )"
 
 'fail' abre a issue com esse laudo; 'pass' resolve a issue se havia uma (e o --reason,
-se houver, vira observação registrada).`,
+se houver, vira observação registrada).
+
+'dispensado' é para quando O ALVO DA PERGUNTA NÃO EXISTE. Uma spec que declara
+'@TBD: code' afirma que o código ainda não foi escrito — o fluxo normal, já que a spec
+é a âncora e nasce primeiro. Aí a pergunta "o trecho REALIZA o que a regra descreve?"
+não tem trecho, e os outros dois vereditos mentem: 'pass' afirma que o código realiza a
+regra (e o carimbo fica no mapa parecendo verificação real), 'fail' reprova trabalho que
+ninguém errou. O --reason é obrigatório e nomeia a ausência: qual peça falta, e onde
+está declarada.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			absRoot, err := config.AbsRaiz(root)
 			if err != nil {
@@ -78,11 +86,8 @@ se houver, vira observação registrada).`,
 				return fmt.Errorf("--gate é obrigatório (o gate de julgamento que você está avaliando)")
 			}
 			v := strings.ToLower(verdict)
-			if v != "pass" && v != "fail" {
-				return fmt.Errorf("--verdict deve ser 'pass' ou 'fail'")
-			}
-			if v == "fail" && strings.TrimSpace(reason) == "" {
-				return fmt.Errorf("--reason é obrigatório num veredito 'fail' (explique a violação)")
+			if err := validaVeredito(v, reason); err != nil {
+				return err
 			}
 
 			target := relTo(absRoot, args[0])
@@ -136,9 +141,16 @@ se houver, vira observação registrada).`,
 
 			now := time.Now()
 			failed := v == "fail"
+			// O carimbo distingue os três: `ok` afirma que foi verificado, `issue` que
+			// reprovou, e `dispensado` que NÃO HAVIA o que verificar. Gravar `ok` no
+			// terceiro caso perderia justamente a informação que importa — quem lesse o
+			// mapa depois veria uma verificação que não aconteceu.
 			verdictStr := "ok"
-			if failed {
+			switch v {
+			case "fail":
 				verdictStr = "issue"
+			case "dispensado":
+				verdictStr = "dispensado"
 			}
 			// 1) CARIMBO — marca a aresta guide→alvo (o confronto da régua contra o
 			//    alvo) com o veredito da IA. Se o gate declara guide, carimba essa
@@ -203,6 +215,16 @@ se houver, vira observação registrada).`,
 				} else {
 					fmt.Printf("✗ julgado FAIL — mesmo achado já registrado (%s/), nada a fazer\n", at)
 				}
+			} else if v == "dispensado" {
+				// A palavra IMPORTA aqui. Anunciar "PASS" desfaria o ponto inteiro do
+				// terceiro veredito: quem lê a saída ficaria com a impressão de que o
+				// alvo foi verificado e aprovado — a mesma confusão que o `pass`
+				// mentiroso produzia, agora vinda do próprio comando.
+				if ok, _ := issue.Resolve(absRoot, iss.Key()); ok {
+					fmt.Printf("○ julgado DISPENSADO — não havia o que confrontar; issue anterior resolvida (→ %s/done/)\n", issue.Dir)
+				} else {
+					fmt.Printf("○ julgado DISPENSADO — não havia o que confrontar\n")
+				}
 			} else {
 				if ok, _ := issue.Resolve(absRoot, iss.Key()); ok {
 					fmt.Printf("✓ julgado PASS — issue anterior resolvida (→ %s/done/)\n", issue.Dir)
@@ -251,7 +273,7 @@ func listPendingJudgments(root string) error {
 	if n == 0 {
 		fmt.Println("nenhum alvo aguardando julgamento (rode `anchors check` para descobrir)")
 	} else {
-		fmt.Printf("\n%d alvo(s) — julgue com: anchors judge <alvo> --gate <g> --verdict pass|fail --reason ...\n", n)
+		fmt.Printf("\n%d alvo(s) — julgue com: anchors judge <alvo> --gate <g> --verdict pass|fail|dispensado --reason ...\n", n)
 	}
 	return nil
 }
@@ -272,4 +294,42 @@ func pecaExistenteDaUnidade(g *mapx.Graph, target string) string {
 		}
 	}
 	return ""
+}
+
+// validaVeredito confronta o veredito recebido e o motivo que o acompanha.
+//
+// Extraída do `RunE` para ser TESTÁVEL: o contrato dos três vereditos é o que impede o
+// `pass` mentiroso, e um contrato sem teste é uma intenção.
+//
+// `dispensado` é o terceiro desfecho, e existe porque os outros dois MENTEM quando o alvo
+// da pergunta não existe.
+//
+// Uma spec que declara `@TBD: code` afirma que o código ainda não foi escrito — o fluxo
+// normal, já que a spec é a âncora e nasce primeiro. O gate `regra-cumprida` pergunta "o
+// trecho REALIZA o que a regra descreve?", e não há trecho. Com só `pass`/`fail`, quem
+// julga escolhe entre afirmar que o código realiza a regra (e o carimbo fica no mapa
+// parecendo verificação) ou reprovar trabalho que ninguém errou.
+//
+// Medido no blue-eyes (#76): a saída usada foi `pass`, com o motivo explicando que não
+// havia o que medir. Funcionou uma vez e ensina o hábito errado — carimbar julgamento sem
+// olhar é o que corrói o valor de `measures: judgment`.
+func validaVeredito(v, reason string) error {
+	if v != "pass" && v != "fail" && v != "dispensado" {
+		return fmt.Errorf("--verdict deve ser 'pass', 'fail' ou 'dispensado' " +
+			"(dispensado: o alvo da pergunta não existe — a spec o declara `@TBD`)")
+	}
+	// O motivo é obrigatório nos dois desfechos que NÃO são aprovação: um `fail` sem
+	// violação escrita não é acionável, e um `dispensado` sem a ausência nomeada é
+	// indistinguível de um gate desligado.
+	if strings.TrimSpace(reason) != "" {
+		return nil
+	}
+	switch v {
+	case "fail":
+		return fmt.Errorf("--reason é obrigatório num veredito 'fail' (explique a violação)")
+	case "dispensado":
+		return fmt.Errorf("--reason é obrigatório num veredito 'dispensado' " +
+			"(nomeie a ausência: qual peça falta, e onde está declarada)")
+	}
+	return nil
 }
