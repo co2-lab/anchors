@@ -2,7 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
 
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/spf13/cobra"
 )
 
@@ -22,11 +28,31 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 		// então o cobra silencia.
 		SilenceErrors: true,
 		Version:       fmt.Sprintf("%s (commit %s, built %s)", version, commit, date),
+		// O CONGELAMENTO é conferido AQUI, e não em cada comando.
+		//
+		// Espalhar a checagem por comando é garantir que o próximo nasça sem ela — e um
+		// comando que escapa do freio o torna decorativo. O `PersistentPreRunE` roda antes
+		// de todo subcomando, inclusive dos que ainda não existem.
+		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+			// O IDIOMA vem primeiro: a própria recusa por congelamento tem de sair no
+			// idioma do projeto.
+			//
+			// Definir aqui e não só no `config.Load` é o que faz TODA mensagem sair
+			// traduzida, inclusive as que um comando imprime ANTES de carregar a
+			// configuração. Medido: o `anchors status` confere o git antes de carregar
+			// o `anchors.yaml`, e um projeto com `lang: es` recebia essas linhas em
+			// inglês — a chave existia, o idioma é que ainda não valia.
+			applyProjectLang(cmd)
+			return refuseIfFrozen(cmd)
+		},
 	}
 	root.AddCommand(newGuideCmd())
 	root.AddCommand(newWorkCmd())
 	root.AddCommand(newInitCmd())
 	root.AddCommand(newInstallHooksCmd())
+	// O botão de pânico: congela e descongela o projeto inteiro.
+	root.AddCommand(newFreezeCmd())
+	root.AddCommand(newThawCmd())
 	root.AddCommand(newNewCmd())
 	root.AddCommand(newRecodeCmd())
 	root.AddCommand(newMapCmd())
@@ -59,3 +85,93 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 	root.AddCommand(newReportCmd())
 	return root
 }
+
+// commandsAllowedWhileFrozen são os que continuam valendo com o projeto parado.
+//
+// A régua: um comando pode rodar congelado se ele NÃO PRODUZ estado do projeto. Ler é
+// permitido — quem está investigando o problema precisa do `status`, do `doctor`, dos
+// guias. Escrever no mapa, julgar, ingerir sinal, abrir card: não, porque é isso que o
+// congelamento existe para parar.
+//
+// `thaw` está aqui pelo motivo mais óbvio e mais fácil de esquecer: sem ele, o
+// congelamento seria irreversível pelo próprio Anchors.
+var commandsAllowedWhileFrozen = map[string]bool{
+	"thaw": true, "freeze": true,
+	"status": true, "doctor": true, "guide": true, "version": true,
+	"help": true, "completion": true, "coverage": true, "impact": true,
+}
+
+// refuseIfFrozen barra o comando quando o projeto declara `enabled: false`.
+//
+// A config é lida do disco em vez de vir do comando: cada um a carrega do seu jeito (uns
+// com `--root`, outros do cwd), e depender disso deixaria buracos. Se ela não carregar,
+// o comando segue — a ausência de config é outro problema, e responder "congelado" ali
+// mandaria quem investiga para o lado errado.
+func refuseIfFrozen(cmd *cobra.Command) error {
+	// A CADEIA inteira, não só o nome do comando invocado.
+	//
+	// `cmd.Name()` de `anchors guide work` devolve "work", não "guide" — e o guia é
+	// justamente o que a pessoa precisa ler durante o congelamento. Medido: `guide work`
+	// era recusado enquanto `guide` sozinho passava.
+	//
+	// Subir até a raiz cobre qualquer profundidade de subcomando, inclusive as que ainda
+	// não existem.
+	for c := cmd; c != nil; c = c.Parent() {
+		if commandsAllowedWhileFrozen[c.Name()] {
+			return nil
+		}
+	}
+	root := "."
+	if f := cmd.Flags().Lookup("root"); f != nil && f.Value.String() != "" {
+		root = f.Value.String()
+	}
+	absRoot, err := config.AbsRoot(root)
+	if err != nil {
+		return nil
+	}
+	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	if err != nil || !cfg.Frozen() {
+		return nil
+	}
+	cmd.SilenceUsage = true
+	return fmt.Errorf("🛑 o projeto está CONGELADO — `%s` não roda.\n\n"+
+		"   Motivo: %s\n\n"+
+		"   O trabalho que você já fez continua no seu branch local.\n"+
+		"   Para liberar (quem congelou): `anchors thaw`\n"+
+		"   Para investigar: `anchors status`, `anchors doctor` e `anchors guide` continuam valendo",
+		cmd.Name(), cfg.FreezeReasonText())
+}
+
+// applyProjectLang lê o `lang:` do anchors.yaml e o define, ANTES de qualquer saída.
+//
+// Falha em silêncio de propósito: um projeto sem configuração, ou com ela quebrada, tem
+// outro problema — e recusar aqui impediria o `anchors init` de rodar justamente onde
+// ainda não há o que ler. O idioma cai no padrão, e o comando segue.
+//
+// O `config.Load` também define o idioma, e isso não é redundância: ele valida o valor e
+// recusa um `lang:` que o Anchors não suporta. Aqui a leitura é frouxa, porque o objetivo
+// é só não imprimir em inglês antes de saber.
+func applyProjectLang(cmd *cobra.Command) {
+	root := "."
+	if f := cmd.Flags().Lookup("root"); f != nil && f.Value.String() != "" {
+		root = f.Value.String()
+	}
+	absRoot, err := config.AbsRoot(root)
+	if err != nil {
+		return
+	}
+	b, err := os.ReadFile(filepath.Join(absRoot, config.DefaultFile))
+	if err != nil {
+		return
+	}
+	if m := langNoYAML.FindSubmatch(b); m != nil {
+		_ = i18n.Set(strings.TrimSpace(string(m[1])))
+	}
+}
+
+// langNoYAML pega o `lang:` de topo do anchors.yaml.
+//
+// Por regex e não por parse: este ponto roda antes de tudo, e um YAML inválido não pode
+// impedir o comando de rodar — quem reclama do YAML é o `config.Load`, com a linha e a
+// chave. O `^` exige coluna zero, então um `lang:` aninhado noutro bloco não conta.
+var langNoYAML = regexp.MustCompile(`(?m)^lang:[ \t]*["']?([A-Za-z-]+)["']?[ \t]*$`)

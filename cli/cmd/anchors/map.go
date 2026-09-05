@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"path/filepath"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -33,7 +34,7 @@ func newMapShowCmd() *cobra.Command {
   anchors map show --orphans   — nós sem nenhuma aresta (ilhas)
   anchors map show --stats     — resumo (nós por kind, arestas por tipo)`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -126,7 +127,7 @@ func newMapBuildCmd() *cobra.Command {
 arestas do mapa por co-location (nomes de arquivo) e por código de cenário
 (a identidade estável que atravessa spec→feature→teste). Grava anchors.graph.yaml.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -152,14 +153,14 @@ arestas do mapa por co-location (nomes de arquivo) e por código de cenário
 			// carimbo da anterior e o `anchors stale` acusava o repositório inteiro como
 			// "nunca validado".
 			if anterior, err := mapx.Load(outPath); err == nil {
-				mapx.PreservarCarimbos(g, anterior)
+				mapx.PreserveStamps(g, anterior)
 			}
 			if err := mapx.Save(g, outPath); err != nil {
 				return fmt.Errorf("save: %w", err)
 			}
 
-			fmt.Printf("mapa construído: %d nós, %d arestas\n", len(g.Nodes), len(g.Edges))
-			fmt.Printf("  escrito em %s\n", outPath)
+			fmt.Println(i18n.T("map.built", len(g.Nodes), len(g.Edges)))
+			fmt.Println(i18n.T("map.written_to", outPath))
 			printEdgeSummary(g)
 			return nil
 		},

@@ -15,7 +15,7 @@ import (
 func raizForaDeRepo(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
-	if temRepo(dir) {
+	if hasRepo(dir) {
 		t.Skipf("o diretório temporário %s está dentro de um repo git", dir)
 	}
 	return dir
@@ -29,7 +29,7 @@ func TestDoctorAvisaProjetoSemRepositorio(t *testing.T) {
 	}
 	dir := raizForaDeRepo(t)
 
-	fs := checkGitAusente(&config.Config{}, dir)
+	fs := checkGitMissing(&config.Config{}, dir)
 
 	if len(fs) != 1 {
 		t.Fatalf("esperava 1 achado, veio %d: %+v", len(fs), fs)
@@ -57,7 +57,7 @@ func TestDoctorNaoReclamaComRepositorio(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if fs := checkGitAusente(&config.Config{}, dir); len(fs) != 0 {
+	if fs := checkGitMissing(&config.Config{}, dir); len(fs) != 0 {
 		t.Errorf("repo presente não deveria gerar achado: %+v", fs)
 	}
 }
@@ -76,7 +76,7 @@ func TestDoctorNaoReclamaEmSubpastaDeRepo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if fs := checkGitAusente(&config.Config{}, sub); len(fs) != 0 {
+	if fs := checkGitMissing(&config.Config{}, sub); len(fs) != 0 {
 		t.Errorf("subpasta de repo já está versionada: %+v", fs)
 	}
 }
@@ -92,7 +92,7 @@ func TestDoctorAceitaGitComoArquivo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if fs := checkGitAusente(&config.Config{}, dir); len(fs) != 0 {
+	if fs := checkGitMissing(&config.Config{}, dir); len(fs) != 0 {
 		t.Errorf("`.git` como arquivo é worktree/submódulo — repo real existe: %+v", fs)
 	}
 }
@@ -111,7 +111,7 @@ func TestDoctorNoModoGitHubDizQueAFilaNaoTemDeOndeVir(t *testing.T) {
 		Labels: []string{"anchors"},
 	}}
 
-	fs := checkGitAusente(cfg, dir)
+	fs := checkGitMissing(cfg, dir)
 
 	if len(fs) != 1 {
 		t.Fatalf("esperava 1 achado, veio %d", len(fs))
@@ -128,7 +128,7 @@ func TestDoctorSemBinarioMandaInstalarNaoIniciar(t *testing.T) {
 	// `instalado=false` injetado: sem isto, este caso só rodaria numa máquina sem git,
 	// e ficaria eternamente em SKIP — justamente a metade da distinção que ninguém
 	// reproduz por acidente.
-	fs := gitAusente(&config.Config{}, t.TempDir(), false)
+	fs := gitMissing(&config.Config{}, t.TempDir(), false)
 
 	if len(fs) != 1 || fs[0].Subject != "git" {
 		t.Fatalf("esperava achado sobre o binário: %+v", fs)

@@ -28,7 +28,7 @@ var internalCheckers = map[string]func(content string, n mapx.Node) (Verdict, st
 	"coverage-delta":      checkCoverageDelta,
 	"mutation-score":      checkMutationScore,
 	"tests-pass":          checkTestsPass,
-	"header-conforme":     checkHeaderConforme,
+	"header-conforme":     checkHeaderConforms,
 	"route-declared":      checkRouteDeclared,
 }
 
@@ -44,46 +44,46 @@ var checkersWithRoot = map[string]func(content string, n mapx.Node, root string)
 // que atravessa a trinca — ex.: feature↔test (cada cenário da feature está implementado
 // no teste ligado, roteado pelo regime do cenário?).
 var checkersWithGraph = map[string]func(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string){
-	"feature-test-match":         checkFeatureTestMatch,
-	"cenario-identidade":         checkCenarioIdentidade,
-	"cenario-tipo-alinhado":      checkCenarioTipoAlinhado,
-	"cenario-letra-declarada":    checkCenarioLetraDeclarada,
-	"spec-feature-match":         checkSpecFeatureMatch,
-	"code-reference-valid":       checkCodeReferenceValid,
-	"scenario-asserts":           checkScenarioAsserts,
-	"domain-declared":            checkDomainDeclared,
-	"count-honored":              checkCountHonored,
-	"trigger-declared":           checkTriggerDeclared,
-	"route-exists":               checkRouteExists,
-	"placeholder-preenchido":     checkPlaceholderPreenchido,
-	"regra-implementada":         checkRegraImplementada,
-	"vr-baseline":                checkVRBaseline,
-	"ref-resolves":               checkRefResolves,
-	"layer-boundary":             checkLayerBoundary,
-	"dependency-honored":         checkDependencyHonored,
-	"contract-status-declared":   checkContractStatusDeclared,
-	"prova-cruza-fronteira":      checkProvaCruzaFronteira,
-	"trinca-completa":            checkTrincaCompleta,
-	"plan-seeds-valid":           checkPlanSeedsValid,
-	"fase-ordenada":              checkFaseOrdenada,
-	"fase-existe":                checkFaseExiste,
-	"parent-valido":              checkParentValido,
-	"plano-revisado":             checkPlanoRevisado,
-	"plano-alterado-justificado": checkPlanoAlteradoJustificado,
-	"obligation-honored":         checkObligationHonored,
-	"sibling-guard":              checkSiblingGuard,
-	"pagination-honored":         checkPaginationHonored,
-	"open-questions-resolved":    checkOpenQuestions,
-	"rule-types":                 checkRuleTypes,
-	"identity-consistent":        checkIdentityConsistent,
-	"region-pair-honored":        checkRegionPairHonored,
-	"evidence-fresh":             checkEvidenceFresh,
-	"testid-coerente":            checkTestIDCoerente,
-	"testid-consultado-existe":   checkTestIDConsultadoExiste,
-	"mock-tipado":                checkMockTipado,
-	"mock-carimbado":             checkMockCarimbado,
-	"teste-rastreavel":           checkTesteRastreavel,
-	"codigo-catalogado":          checkCodigoCatalogado,
+	"feature-test-match":       checkFeatureTestMatch,
+	"cenario-identidade":       checkScenarioIdentity,
+	"cenario-tipo-alinhado":    checkScenarioTypeAligned,
+	"cenario-letra-declarada":  checkScenarioLetterDeclared,
+	"spec-feature-match":       checkSpecFeatureMatch,
+	"code-reference-valid":     checkCodeReferenceValid,
+	"scenario-asserts":         checkScenarioAsserts,
+	"domain-declared":          checkDomainDeclared,
+	"count-honored":            checkCountHonored,
+	"trigger-declared":         checkTriggerDeclared,
+	"route-exists":             checkRouteExists,
+	"placeholder-preenchido":   checkPlaceholderFilled,
+	"regra-implementada":       checkRuleImplemented,
+	"vr-baseline":              checkVRBaseline,
+	"ref-resolves":             checkRefResolves,
+	"layer-boundary":           checkLayerBoundary,
+	"dependency-honored":       checkDependencyHonored,
+	"contract-status-declared": checkContractStatusDeclared,
+	"proof-crosses-boundary":   checkProofCrossesBoundary,
+	"triad-complete":           checkTriadComplete,
+	"plan-seeds-valid":         checkPlanSeedsValid,
+	"phase-ordered":            checkPhaseOrdered,
+	"phase-exists":             checkPhaseExists,
+	"parent-valid":             checkParentValid,
+	"plan-revised":             checkPlanRevised,
+	"plan-change-justified":    checkPlanChangeJustified,
+	"obligation-honored":       checkObligationHonored,
+	"sibling-guard":            checkSiblingGuard,
+	"pagination-honored":       checkPaginationHonored,
+	"open-questions-resolved":  checkOpenQuestions,
+	"rule-types":               checkRuleTypes,
+	"identity-consistent":      checkIdentityConsistent,
+	"region-pair-honored":      checkRegionPairHonored,
+	"evidence-fresh":           checkEvidenceFresh,
+	"testid-coerente":          checkTestIDCoherent,
+	"testid-consultado-existe": checkQueriedTestIDExists,
+	"mock-typed":               checkMockTyped,
+	"mock-stamped":             checkMockStamped,
+	"test-traceable":           checkTestTraceable,
+	"code-cataloged":           checkCodeCataloged,
 }
 
 func runInternal(name string, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
@@ -114,13 +114,13 @@ var checkersComGate = map[string]func(g config.Gate, root string, graph *mapx.Gr
 	"marker-parity": checkMarkerParity,
 }
 
-// runInternalAgregado executa um checker interno de escopo batch/project.
+// runInternalAggregate executa um checker interno de escopo batch/project.
 //
 // Difere do `runInternal` num ponto que não é detalhe: NÃO há arquivo para ler. O
 // escopo é o conjunto, então o checker recebe um nó vazio e se orienta por `root` e
 // `cfg`. Tentar ler o conteúdo de um alvo aqui (como o runInternal faz) devolveria
 // erro de leitura e o gate reprovaria por um arquivo que nunca existiu.
-func runInternalAgregado(g config.Gate, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func runInternalAggregate(g config.Gate, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if fn, ok := checkersComGate[g.Check]; ok {
 		return fn(g, root, graph, cfg)
 	}
@@ -280,22 +280,22 @@ func isRecognizedLayer(n mapx.Node, content string) bool {
 	return false
 }
 
-// ehRoteiroExecutavel — o nó é um roteiro do runner e2e (não um arquivo de teste em
+// isExecutableScript — o nó é um roteiro do runner e2e (não um arquivo de teste em
 // linguagem de programação). Reconhecido pela extensão de dado + kind test: um `.test.tsx`
 // é código nosso e carrega cabeçalho; um `.yaml` é entrada de um runner externo.
-func ehRoteiroExecutavel(n mapx.Node) bool {
+func isExecutableScript(n mapx.Node) bool {
 	if n.Kind != mapx.KindTest {
 		return false
 	}
 	return strings.HasSuffix(n.ID, ".yaml") || strings.HasSuffix(n.ID, ".yml")
 }
 
-func checkHeaderConforme(content string, n mapx.Node) (Verdict, string) {
+func checkHeaderConforms(content string, n mapx.Node) (Verdict, string) {
 	// Arquivo BINÁRIO não carrega cabeçalho — não há sintaxe de comentário num PNG.
 	// A identidade dele está no NOME (`<Unidade>.<CODE>-VR-<variante>.png`), que é o
 	// que o `identity-consistent` confronta. Cobrar header aqui exigiria o impossível
 	// e barraria todo commit de baseline visual.
-	if ehBinario(content) {
+	if isBinary(content) {
 		return Skip, "arquivo binário — a identidade está no nome, não em cabeçalho"
 	}
 	// ROTEIRO de teste executável (.yaml do runner e2e): mesma razão do binário acima,
@@ -308,7 +308,7 @@ func checkHeaderConforme(content string, n mapx.Node) (Verdict, string) {
 	// teve — e o gate só passou a vê-los porque a camada `e2e-flow` os trouxe para o
 	// grafo (para que a execução de E2E pudesse deixar carimbo). Cobrar deles um contrato
 	// escrito depois seria transformar a chegada ao mapa em 717 defeitos retroativos.
-	if ehRoteiroExecutavel(n) {
+	if isExecutableScript(n) {
 		return Skip, "roteiro de teste executável — a identidade está no nome do arquivo e nas tags do runner"
 	}
 	if !headerBlockRE.MatchString(content) {
@@ -357,7 +357,7 @@ func checkSpecSections(content string, _ mapx.Node) (Verdict, string) {
 	// invisíveis para TODOS os gates de identidade — não por estarem erradas, mas por não
 	// terem código, e um gate que não enxerga a regra reporta verde sobre o que não
 	// conferiu.
-	if msg := irmasSemCodigo(content); msg != "" {
+	if msg := siblingsWithoutCode(content); msg != "" {
 		return Fail, msg
 	}
 	return Pass, ""
@@ -395,10 +395,10 @@ var noContentRE = regexp.MustCompile(`@no-content[^\S\n]*:[^\S\n]*\S+`)
 
 var sepTabelaRE = regexp.MustCompile(`^\|[\s:|-]+\|?$`)
 
-// secaoComNivelRE casa um cabeçalho e captura o nível (para agrupar por pai) e o título.
-var secaoComNivelRE = regexp.MustCompile(`^(#{2,4})\s+(.+?)\s*$`)
+// leveledSectionRE casa um cabeçalho e captura o nível (para agrupar por pai) e o título.
+var leveledSectionRE = regexp.MustCompile(`^(#{2,4})\s+(.+?)\s*$`)
 
-// irmasSemCodigo acha a seção que DEVERIA catalogar e não cataloga.
+// siblingsWithoutCode acha a seção que DEVERIA catalogar e não cataloga.
 //
 // O difícil é separar "seção de regra sem código" de "seção de prosa" — `## Visão Geral`
 // e `## Restrições` não catalogam nada e não devem ser cobradas. A pergunta não se
@@ -408,7 +408,7 @@ var secaoComNivelRE = regexp.MustCompile(`^(#{2,4})\s+(.+?)\s*$`)
 //
 // É o mesmo princípio do `unclaimedSections` no `rule-types`: a spec declara sua forma, e
 // o gate cobra coerência com ela — não com um formato que o Anchors imponha.
-func irmasSemCodigo(content string) string {
+func siblingsWithoutCode(content string) string {
 	type sec struct {
 		titulo string
 		nivel  int
@@ -416,7 +416,7 @@ func irmasSemCodigo(content string) string {
 	}
 	var secoes []sec
 	for _, l := range strings.Split(content, "\n") {
-		if m := secaoComNivelRE.FindStringSubmatch(l); m != nil {
+		if m := leveledSectionRE.FindStringSubmatch(l); m != nil {
 			secoes = append(secoes, sec{titulo: m[2], nivel: len(m[1])})
 			continue
 		}
@@ -731,9 +731,9 @@ func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 			return Fail, fmt.Sprintf("score de mutação ISOLADO %.0f%% < %.0f%% — %s. "+
 				"%d mutante(s) sobrevivem ao teste da própria unidade; %s",
 				iso.Score, threshold, ctx, iso.Survived,
-				comparaDelta(delta))
+				compareDelta(delta))
 		}
-		if faixa := faixaDoMeio(iso.Score, threshold, desejavel, iso.Survived); faixa != "" {
+		if faixa := middleRange(iso.Score, threshold, desejavel, iso.Survived); faixa != "" {
 			return Pending, faixa + " — " + ctx
 		}
 		return Pass, ""
@@ -744,19 +744,19 @@ func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 			"alterações no código que os testes não perceberam",
 			n.Signal.MutationScore, threshold, n.Signal.MutantsSurvived)
 	}
-	if faixa := faixaDoMeio(n.Signal.MutationScore, threshold, desejavel, n.Signal.MutantsSurvived); faixa != "" {
+	if faixa := middleRange(n.Signal.MutationScore, threshold, desejavel, n.Signal.MutantsSurvived); faixa != "" {
 		return Pending, faixa
 	}
 	return Pass, ""
 }
 
-// faixaDoMeio devolve o laudo de ACEITÁVEL-MAS-NÃO-DESEJÁVEL, ou "" quando não se
+// middleRange devolve o laudo de ACEITÁVEL-MAS-NÃO-DESEJÁVEL, ou "" quando não se
 // aplica. Devolver Pending (não Fail) é o ponto: a unidade passou, e o que se está
 // dizendo é "dá para ir além", não "está errado".
 //
 // Sem `high` declarado, a faixa não existe e o gate volta ao comportamento de um limiar
 // só — nenhum projeto é obrigado a adotar o conceito para continuar usando o gate.
-func faixaDoMeio(score, minimo, desejavel float64, sobreviventes int) string {
+func middleRange(score, minimo, desejavel float64, sobreviventes int) string {
 	if desejavel <= 0 || desejavel <= minimo || score >= desejavel {
 		return ""
 	}
@@ -765,8 +765,8 @@ func faixaDoMeio(score, minimo, desejavel float64, sobreviventes int) string {
 		score, minimo, desejavel, desejavel-score, sobreviventes)
 }
 
-// comparaDelta traduz a diferença entre os escopos numa frase acionável.
-func comparaDelta(delta float64) string {
+// compareDelta traduz a diferença entre os escopos numa frase acionável.
+func compareDelta(delta float64) string {
 	switch {
 	case delta >= 40:
 		return "a suíte completa cobre muito mais, então o buraco é no teste da unidade: " +
@@ -806,11 +806,11 @@ func checkGuideHasChecklist(content string, _ mapx.Node) (Verdict, string) {
 	return Pass, ""
 }
 
-// ehBinario decide se o conteúdo é binário pela presença de byte NUL nos primeiros
+// isBinary decide se o conteúdo é binário pela presença de byte NUL nos primeiros
 // 8 KB — a mesma heurística que o git usa para decidir se mostra o diff. Os gates
 // que leem TEXTO (header, spellcheck, asserções) não têm o que fazer com esses
 // arquivos, e cobrá-los produz uma exigência impossível de cumprir.
-func ehBinario(content string) bool {
+func isBinary(content string) bool {
 	n := len(content)
 	if n > 8000 {
 		n = 8000

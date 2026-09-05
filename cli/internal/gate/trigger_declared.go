@@ -34,11 +34,11 @@ func checkTriggerDeclared(content string, n mapx.Node, root string, g *mapx.Grap
 	if n.Kind != mapx.KindSpec {
 		return Skip, "o vocabulário de gatilho é ensinado pela spec — é ela que o autor lê"
 	}
-	citados := gatilhosCitados(content)
+	citados := citedTriggers(content)
 	if len(citados) == 0 {
 		return Skip, "a spec não cita gatilho de obrigação"
 	}
-	declarados, obrigacoes := vocabularioDeclarado(root, cfg)
+	declarados, obrigacoes := declaredVocabulary(root, cfg)
 	if len(declarados) == 0 {
 		// Sem packs nem obrigações, não há vocabulário contra o que confrontar. Calar é o
 		// certo: acusar aqui seria cobrar de um projeto que não adotou compliance.
@@ -52,9 +52,9 @@ func checkTriggerDeclared(content string, n mapx.Node, root string, g *mapx.Grap
 			continue
 		}
 		erros = append(erros, fmt.Sprintf("`%s: %s` não é gatilho de nenhum pack%s",
-			c.chave, c.valor, sugestao(c.valor, declarados)))
+			c.chave, c.valor, suggestion(c.valor, declarados)))
 	}
-	for _, ob := range obrigacoesCitadas(content) {
+	for _, ob := range citedObligations(content) {
 		if !obrigacoes[ob] {
 			erros = append(erros, fmt.Sprintf("a obrigação `%s` não existe", ob))
 		}
@@ -70,26 +70,26 @@ func checkTriggerDeclared(content string, n mapx.Node, root string, g *mapx.Grap
 		len(erros), strings.Join(erros, "; "))
 }
 
-type gatilhoCitado struct{ chave, valor string }
+type citedTrigger struct{ chave, valor string }
 
 // gatilhoRE casa a citação de um gatilho no texto: `carries: personal-data`,
 // `shared-with: third-party`. A crase é o sinal de que o autor está citando um SÍMBOLO —
 // prosa solta ("carrega dado pessoal") não é citação e não é cobrada.
 var gatilhoRE = regexp.MustCompile("`([a-z][a-z-]*): ([a-z][a-z0-9-]*)`")
 
-// chavesDeGatilho são os predicados que abrem uma obrigação. Fechada de propósito: sem
+// triggerKeys são os predicados que abrem uma obrigação. Fechada de propósito: sem
 // isso o regex pegaria qualquer `chave: valor` entre crases (`layer: dao`, `code: ABCD`)
 // e o gate acusaria meio repositório.
-var chavesDeGatilho = map[string]bool{
+var triggerKeys = map[string]bool{
 	"carries": true, "processing": true, "renders": true, "shared-with": true,
 	"retains": true, "transfers": true,
 }
 
-func gatilhosCitados(content string) []gatilhoCitado {
+func citedTriggers(content string) []citedTrigger {
 	visto := map[string]bool{}
-	var out []gatilhoCitado
+	var out []citedTrigger
 	for _, m := range gatilhoRE.FindAllStringSubmatch(content, -1) {
-		if !chavesDeGatilho[m[1]] {
+		if !triggerKeys[m[1]] {
 			continue
 		}
 		k := m[1] + ":" + m[2]
@@ -97,19 +97,19 @@ func gatilhosCitados(content string) []gatilhoCitado {
 			continue
 		}
 		visto[k] = true
-		out = append(out, gatilhoCitado{chave: m[1], valor: m[2]})
+		out = append(out, citedTrigger{chave: m[1], valor: m[2]})
 	}
 	return out
 }
 
-// obrigacaoRE casa a citação de uma obrigação pelo nome. Exige a palavra "obrigação" perto
+// obligationRE casa a citação de uma obrigação pelo nome. Exige a palavra "obrigação" perto
 // para não confundir com qualquer identificador entre crases.
-var obrigacaoRE = regexp.MustCompile("(?i)obriga[çc][õo]?[eé]?s?[^`\\n]{0,40}`([a-z][a-z0-9-]{2,})`")
+var obligationRE = regexp.MustCompile("(?i)obriga[çc][õo]?[eé]?s?[^`\\n]{0,40}`([a-z][a-z0-9-]{2,})`")
 
-func obrigacoesCitadas(content string) []string {
+func citedObligations(content string) []string {
 	visto := map[string]bool{}
 	var out []string
-	for _, m := range obrigacaoRE.FindAllStringSubmatch(content, -1) {
+	for _, m := range obligationRE.FindAllStringSubmatch(content, -1) {
 		if visto[m[1]] {
 			continue
 		}
@@ -119,9 +119,9 @@ func obrigacoesCitadas(content string) []string {
 	return out
 }
 
-// vocabularioDeclarado reúne os gatilhos e os nomes de obrigação que o projeto de fato
+// declaredVocabulary reúne os gatilhos e os nomes de obrigação que o projeto de fato
 // tem — dos packs adotados e das obrigações escritas direto no `anchors.yaml`.
-func vocabularioDeclarado(root string, cfg *config.Config) (map[string]bool, map[string]bool) {
+func declaredVocabulary(root string, cfg *config.Config) (map[string]bool, map[string]bool) {
 	gatilhos, obrigacoes := map[string]bool{}, map[string]bool{}
 	if cfg == nil {
 		return gatilhos, obrigacoes
@@ -153,9 +153,9 @@ func vocabularioDeclarado(root string, cfg *config.Config) (map[string]bool, map
 	return gatilhos, obrigacoes
 }
 
-// sugestao aponta o gatilho declarado mais parecido — a correção costuma ser um sinônimo
+// suggestion aponta o gatilho declarado mais parecido — a correção costuma ser um sinônimo
 // (`pii` onde o canônico é `personal-data`), e dizer qual economiza a busca.
-func sugestao(errado string, declarados map[string]bool) string {
+func suggestion(errado string, declarados map[string]bool) string {
 	var melhor string
 	for d := range declarados {
 		if strings.Contains(d, errado) || strings.Contains(errado, d) {

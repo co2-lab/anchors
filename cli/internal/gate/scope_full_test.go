@@ -19,7 +19,7 @@ func gravaContagem(t *testing.T, root, saida string) string {
 	return "printf '%s\\n' \"$#\" >> " + saida
 }
 
-func linhas(t *testing.T, p string) []string {
+func lines(t *testing.T, p string) []string {
 	t.Helper()
 	b, err := os.ReadFile(p)
 	if err != nil {
@@ -58,9 +58,9 @@ func TestScopeFullRodaUmaVezSemAlvos(t *testing.T) {
 		Run:       gravaContagem(t, root, saida),
 	}
 
-	RunCompleto([]config.Gate{g}, nós(300), root, nil, &config.Config{}, true)
+	RunFull([]config.Gate{g}, nós(300), root, nil, &config.Config{}, true)
 
-	got := linhas(t, saida)
+	got := lines(t, saida)
 	if len(got) != 1 {
 		t.Fatalf("no full o gate devia rodar UMA vez; rodou %d", len(got))
 	}
@@ -84,9 +84,9 @@ func TestSemScopeFullContinuaEmLotes(t *testing.T) {
 		Run:   gravaContagem(t, root, saida),
 	}
 
-	RunCompleto([]config.Gate{g}, nós(300), root, nil, &config.Config{}, true)
+	RunFull([]config.Gate{g}, nós(300), root, nil, &config.Config{}, true)
 
-	got := linhas(t, saida)
+	got := lines(t, saida)
 	if len(got) == 0 {
 		t.Fatal("o gate batch tem de rodar")
 	}
@@ -121,9 +121,9 @@ func TestScopeFullNaoValeNoIncremental(t *testing.T) {
 		Run:       gravaContagem(t, root, saida),
 	}
 
-	RunCompleto([]config.Gate{g}, nós(3), root, nil, &config.Config{}, false)
+	RunFull([]config.Gate{g}, nós(3), root, nil, &config.Config{}, false)
 
-	got := linhas(t, saida)
+	got := lines(t, saida)
 	if len(got) != 1 || got[0] != "3" {
 		t.Errorf("no incremental o gate recebe os 3 alvos do recorte; veio %v", got)
 	}

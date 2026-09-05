@@ -26,11 +26,11 @@ const (
 	OperadorIA
 )
 
-// agentesConhecidos mapeia variável de ambiente → nome da ferramenta, para o caso em
+// knownAgents mapeia variável de ambiente → nome da ferramenta, para o caso em
 // que o Anchors precisa NOMEAR quem está operando. A lista é de reconhecimento, não de
 // suporte: uma IA fora dela ainda pode ser detectada por outros sinais, e nenhuma
 // funcionalidade depende de estar aqui.
-var agentesConhecidos = map[string]string{
+var knownAgents = map[string]string{
 	"CLAUDE_CODE_ENTRYPOINT": "Claude Code",
 	"CLAUDECODE":             "Claude Code",
 	"CURSOR_TRACE_ID":        "Cursor",
@@ -39,18 +39,18 @@ var agentesConhecidos = map[string]string{
 	"CODEX_SANDBOX":          "Codex",
 }
 
-// DetectaOperador diz quem está operando. `temTTY` é injetado (não consultado aqui)
+// DetectOperator diz quem está operando. `temTTY` é injetado (não consultado aqui)
 // para manter a função pura e testável: a suíte precisa cobrir os dois lados sem
 // depender de como o teste foi invocado.
 //
 // A ordem das evidências importa. Uma variável de agente é declaração EXPLÍCITA de
 // quem está rodando, e vale mais que a ausência de TTY — que é só um indício, e um
 // indício que um pipe qualquer também produz.
-func DetectaOperador(temTTY bool, env func(string) string) Operador {
+func DetectOperator(temTTY bool, env func(string) string) Operador {
 	if env == nil {
 		env = os.Getenv
 	}
-	if nomeDoAgente(env) != "" {
+	if agentName(env) != "" {
 		return OperadorIA
 	}
 	// `AI_AGENT` é genérica o bastante para valer como sinal sem estar na lista de
@@ -67,28 +67,28 @@ func DetectaOperador(temTTY bool, env func(string) string) Operador {
 	return OperadorHumano
 }
 
-// nomeDoAgente devolve o nome da ferramenta de IA detectada, ou "". Percorre em ordem
+// agentName devolve o nome da ferramenta de IA detectada, ou "". Percorre em ordem
 // estável para que a mensagem não mude entre execuções idênticas.
-func nomeDoAgente(env func(string) string) string {
+func agentName(env func(string) string) string {
 	if env == nil {
 		env = os.Getenv
 	}
-	chaves := make([]string, 0, len(agentesConhecidos))
-	for k := range agentesConhecidos {
+	chaves := make([]string, 0, len(knownAgents))
+	for k := range knownAgents {
 		chaves = append(chaves, k)
 	}
 	sort.Strings(chaves)
 	for _, k := range chaves {
 		if env(k) != "" {
-			return agentesConhecidos[k]
+			return knownAgents[k]
 		}
 	}
 	return ""
 }
 
-// NomeDoAgente é a versão exportada, para a mensagem poder dizer "abrir o Claude Code"
+// AgentName é a versão exportada, para a mensagem poder dizer "abrir o Claude Code"
 // em vez de "abrir sua IA".
-func NomeDoAgente(env func(string) string) string { return nomeDoAgente(env) }
+func AgentName(env func(string) string) string { return agentName(env) }
 
 // PrecisaDescobrir diz se a fase DESCOBRIR ainda não aconteceu neste projeto: não há
 // PROJECT.md, e não há código de onde o `init` pudesse inferir a Estrutura.
@@ -101,13 +101,13 @@ func PrecisaDescobrir(root string, p *Proposal) bool {
 	if p != nil && (len(p.CodeDirs) > 0 || p.HasSpecMD || p.HasFeature || p.HasTest) {
 		return false
 	}
-	return !TemProjectMD(root)
+	return !HasProjectMD(root)
 }
 
-// TemProjectMD diz se o PROJECT.md já existe na raiz. Aceita as duas grafias que
+// HasProjectMD diz se o PROJECT.md já existe na raiz. Aceita as duas grafias que
 // aparecem na prática — o guide escreve `PROJECT.md`, mas um projeto que já usava
 // `project.md` não deve ser mandado refazer a entrevista.
-func TemProjectMD(root string) bool {
+func HasProjectMD(root string) bool {
 	for _, nome := range []string{"PROJECT.md", "project.md", "Project.md"} {
 		if _, err := os.Stat(filepath.Join(root, nome)); err == nil {
 			return true
@@ -130,7 +130,7 @@ const PromptDescobrir = `Rode "anchors guide project" e siga essa régua à risc
 	`resposta antes da próxima. No fim, faça a revisão de inconsistências e escreva ` +
 	`PROJECT.md e INSIGHTS.md na raiz. Depois disso rodamos "anchors init".`
 
-// ComandoParaAbrirIA devolve o argv que abre a IA detectada já com o prompt, ou nil
+// CommandToOpenAI devolve o argv que abre a IA detectada já com o prompt, ou nil
 // quando não há como saber qual abrir. Só ferramentas cuja invocação por linha de comando
 // é estável entram aqui: oferecer um comando que não existe é pior do que não oferecer
 // nada.
@@ -138,8 +138,8 @@ const PromptDescobrir = `Rode "anchors guide project" e siga essa régua à risc
 // Devolve ARGV, não uma linha de shell. O prompt tem aspas, parênteses e setas — passá-lo
 // por `sh -c` exigiria escapá-lo certo, e um escape errado ou vira comando torto ou
 // executa o que não devia. Com argv, o texto é um argumento e ponto.
-func ComandoParaAbrirIA(env func(string) string) []string {
-	switch nomeDoAgente(env) {
+func CommandToOpenAI(env func(string) string) []string {
+	switch agentName(env) {
 	case "Claude Code":
 		return []string{"claude", PromptDescobrir}
 	case "Gemini CLI":

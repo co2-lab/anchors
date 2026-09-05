@@ -121,7 +121,7 @@ func TestWorkspaceEhOpcional(t *testing.T) {
 	if len(sel) != 1 || sel[0].Run != "u" || len(ausentes) != 0 {
 		t.Errorf("suíte sem workspace devia funcionar; veio %q / %v", comandos(sel), ausentes)
 	}
-	if ws := WorkspacesDeclarados(simples); len(ws) != 0 {
+	if ws := DeclaredWorkspaces(simples); len(ws) != 0 {
 		t.Errorf("sem workspace declarado, a lista é vazia; veio %v", ws)
 	}
 }
@@ -143,10 +143,10 @@ func TestVocabularioEhDoProjeto(t *testing.T) {
 // TestListasNaoRepetemNomes — as listas são o que se mostra a quem errou; `unit`
 // aparecendo duas vezes (uma por workspace) faria a mensagem parecer um dump.
 func TestListasNaoRepetemNomes(t *testing.T) {
-	if got := strings.Join(CamadasDeclaradas(suites()), ","); got != "unit,integration,e2e" {
+	if got := strings.Join(DeclaredLayers(suites()), ","); got != "unit,integration,e2e" {
 		t.Errorf("camadas repetidas ou fora de ordem: %q", got)
 	}
-	if got := strings.Join(WorkspacesDeclarados(suites()), ","); got != "backend,mobile" {
+	if got := strings.Join(DeclaredWorkspaces(suites()), ","); got != "backend,mobile" {
 		t.Errorf("workspaces repetidos ou fora de ordem: %q", got)
 	}
 }

@@ -26,7 +26,7 @@ func runExternal(command string, n mapx.Node, root string) (Verdict, string) {
 	return RunExternalArgs(command, []string{n.ID}, root)
 }
 
-// limiteArgv é quanto os alvos podem ocupar, em bytes, numa ÚNICA chamada do shell.
+// argvLimit é quanto os alvos podem ocupar, em bytes, numa ÚNICA chamada do shell.
 //
 // O Windows monta a linha de comando como uma string só e o CreateProcess a corta em
 // 32767 chars: um `scope: batch` sobre um projeto inteiro (1484 alvos ≈ 85 KB) falhava
@@ -45,7 +45,7 @@ func runExternal(command string, n mapx.Node, root string) (Verdict, string) {
 //
 // ANCHORS_ARGV_MAX ajusta o teto para quem empilha mais (ou menos) wrapper que isso —
 // o número certo é propriedade dos gates do projeto, não do Anchors.
-func limiteArgv() int {
+func argvLimit() int {
 	if v := os.Getenv("ANCHORS_ARGV_MAX"); v != "" {
 		if n, err := strconv.Atoi(v); err == nil && n > 0 {
 			return n
@@ -76,7 +76,7 @@ func RunExternalArgs(command string, targets []string, root string) (Verdict, st
 	script = strings.ReplaceAll(script, "{{files}}", `"$@"`)
 
 	var falhas []string
-	for _, lote := range fatiarAlvos(targets, limiteArgv()-len(script)) {
+	for _, lote := range sliceTargets(targets, argvLimit()-len(script)) {
 		out, err := execShell(script, lote, root)
 		if err == nil {
 			continue
@@ -118,13 +118,13 @@ func execShell(script string, targets []string, root string) (string, error) {
 	return string(out), err
 }
 
-// fatiarAlvos divide os alvos em lotes que cabem numa linha de comando.
+// sliceTargets divide os alvos em lotes que cabem numa linha de comando.
 //
 // Sem alvos devolve UM lote vazio, não lote nenhum: `scope: project` é justamente a
 // execução sem alvo, e devolver nada faria o gate não rodar (passando por omissão).
 // Um alvo sozinho maior que o teto vai só no seu lote — não há como parti-lo, e é
 // melhor deixar o SO recusar com a mensagem dele do que silenciar o alvo.
-func fatiarAlvos(targets []string, teto int) [][]string {
+func sliceTargets(targets []string, teto int) [][]string {
 	if len(targets) == 0 {
 		return [][]string{nil}
 	}

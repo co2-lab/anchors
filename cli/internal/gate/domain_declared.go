@@ -49,7 +49,7 @@ func checkDomainDeclared(content string, n mapx.Node, root string, g *mapx.Graph
 			"externa; abra-a quando houver valor que possa chegar errado"
 	}
 
-	linhas := linhasDeDominio(corpo)
+	linhas := domainLines(corpo)
 	if len(linhas) == 0 {
 		return Fail, "a seção `## Domínio` está vazia. Ou declare o que a unidade aceita " +
 			"(uma linha por entrada), ou remova a seção — uma seção vazia AFIRMA que se olhou " +
@@ -58,8 +58,8 @@ func checkDomainDeclared(content string, n mapx.Node, root string, g *mapx.Graph
 
 	var semDono []string
 	for _, l := range linhas {
-		if dono := donoDaEntrada(l); dono == "" {
-			semDono = append(semDono, primeiraCelula(l))
+		if dono := entryOwner(l); dono == "" {
+			semDono = append(semDono, firstCell(l))
 		}
 	}
 	if len(semDono) == 0 {
@@ -88,9 +88,9 @@ func seçãoDominio(content string) (string, bool) {
 	return resto, true
 }
 
-// linhasDeDominio extrai as linhas de DADOS da tabela — nem cabeçalho, nem separador,
+// domainLines extrai as linhas de DADOS da tabela — nem cabeçalho, nem separador,
 // nem a prosa explicativa que costuma acompanhar a seção.
-func linhasDeDominio(corpo string) []string {
+func domainLines(corpo string) []string {
 	var out []string
 	for _, l := range strings.Split(corpo, "\n") {
 		t := strings.TrimSpace(l)
@@ -115,10 +115,10 @@ var (
 	todoOnlyRE         = regexp.MustCompile(`(?i)^(\|\s*TODO[^|]*)+\|?\s*$`)
 )
 
-// donoDaEntrada devolve a última célula (a coluna `Quem garante`), vazia se ela não
+// entryOwner devolve a última célula (a coluna `Quem garante`), vazia se ela não
 // nomeia ninguém. "não é meu" e variações NÃO contam como dono — é justamente a resposta
 // que cria o órfão.
-func donoDaEntrada(linha string) string {
+func entryOwner(linha string) string {
 	cels := strings.Split(strings.Trim(linha, "|"), "|")
 	if len(cels) < 4 {
 		return "" // a tabela precisa das 4 colunas para ter dono
@@ -127,13 +127,13 @@ func donoDaEntrada(linha string) string {
 	if dono == "" || strings.HasPrefix(dono, "TODO") {
 		return ""
 	}
-	if naoEhDonoRE.MatchString(dono) {
+	if notOwnerRE.MatchString(dono) {
 		return ""
 	}
 	return dono
 }
 
-// naoEhDonoRE reconhece a NÃO-RESPOSTA — a frase que parece preencher a coluna e não
+// notOwnerRE reconhece a NÃO-RESPOSTA — a frase que parece preencher a coluna e não
 // nomeia ninguém.
 //
 // Não pode ancorar no fim da linha (`$`): o autor escreve "não valido (MTVRX-X04)", com a
@@ -148,11 +148,11 @@ func donoDaEntrada(linha string) string {
 //     autor escreve "não valido (MTVRX-X04)", com a referência à restrição ao lado. Foi
 //     exatamente assim que o dever ficou órfão em três specs reais; citar a própria
 //     restrição é dizer "não é meu" com fonte, e continua sendo não-resposta.
-var naoEhDonoRE = regexp.MustCompile(`(?i)(^\s*[-—]+\s*$)|(^\s*(n/?a|ningu[ée]m|nobody|none|nenhum|` +
+var notOwnerRE = regexp.MustCompile(`(?i)(^\s*[-—]+\s*$)|(^\s*(n/?a|ningu[ée]m|nobody|none|nenhum|` +
 	`n[ãa]o\s+(é|eh|e)\s+(meu|daqui|desta)|n[ãa]o\s+valid\w*|n[ãa]o\s+se\s+aplica|` +
 	`fora\s+de\s+escopo|delegado|outra\s+camada)\b)`)
 
-func primeiraCelula(linha string) string {
+func firstCell(linha string) string {
 	cels := strings.Split(strings.Trim(linha, "|"), "|")
 	if len(cels) == 0 {
 		return "?"

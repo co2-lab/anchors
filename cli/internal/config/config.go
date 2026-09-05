@@ -8,6 +8,8 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/i18n"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -26,14 +28,53 @@ type Config struct {
 	// tabela tem de ser confrontado. Mas um gate que julga a MUDANÇA precisa separar
 	// "mudou" de "foi afetado por quem mudou", e a perspectiva sozinha não distingue os
 	// dois. Medido: o `plano-alterado-justificado` acusou 8 arquivos quando 1 mudara.
-	Alterados []string            `yaml:"-"`
-	Version   int                 `yaml:"version"`
-	Comments  map[string][]string `yaml:"comments,omitempty"` // override/extensão dos marcadores (D4)
-	Layers    map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
-	Derived   *Derived            `yaml:"derived,omitempty"`  // co-location dos derivados
-	Governs   []GovernRule        `yaml:"governs,omitempty"`  // dimensão vertical (arestas de alto grau)
-	Gates     []Gate              `yaml:"gates,omitempty"`    // os gates de qualidade (QUALITY §3-§5)
-	Recode    *Recode             `yaml:"recode,omitempty"`   // convenções de projeto p/ `anchors recode`
+	Alterados []string `yaml:"-"`
+
+	// Enabled: o INTERRUPTOR do projeto. `enabled: false` congela o Anchors inteiro —
+	// nenhum comando que escreve roda, e os que leem avisam antes de responder.
+	//
+	// É PONTEIRO de propósito. Um `bool` teria zero-value `false`, e todo projeto que
+	// nunca declarou o campo nasceria congelado — o modo de falha mais caro possível para
+	// quem está adotando. Nil (ausente) significa HABILITADO; só o `false` EXPLÍCITO
+	// congela.
+	//
+	// Existe porque o freio da plataforma (o ruleset que barra push e merge) não alcança
+	// a máquina de quem já clonou: ali o `check`, o `judge` e o `ingest` continuariam
+	// rodando e gravando no mapa. Congelar significa parar de PRODUZIR estado, não só de
+	// entregá-lo.
+	//
+	// Quem precisa mexer no repositório durante o congelamento continua podendo — por
+	// fora do Anchors, deliberadamente e com esforço. É a diferença entre "impossível" e
+	// "não acontece por inércia", e a segunda é a que se quer: um freio que ninguém pode
+	// contornar impede o próprio conserto.
+	Enabled *bool `yaml:"enabled,omitempty"`
+
+	// Lang: o idioma das mensagens que uma PESSOA lê.
+	//
+	// O produto é multi-idioma, e a lista de suportados é FECHADA (ver `internal/i18n`).
+	// Vazio cai no padrão — um projeto que não declarou nada é o caso comum, e recusar ali
+	// impediria adotar o Anchors sem antes escolher idioma.
+	//
+	// O que NÃO se traduz é o VOCABULÁRIO: nomes de gate, labels de board, flags. Eles são
+	// identificadores, e traduzi-los faria o `anchors.yaml` de um projeto deixar de
+	// funcionar num time de outro idioma — além de quebrar todo tutorial e toda resposta
+	// de fórum que os cite. Traduz-se o que se LÊ, não o que se ESCREVE na configuração.
+	Lang string `yaml:"lang,omitempty"`
+
+	// FreezeReason: por que o projeto está congelado. Só faz sentido com `enabled: false`.
+	//
+	// Sem o motivo, o congelamento é indistinguível de configuração quebrada — e quem
+	// esbarra nele tenta contornar em vez de ler. O texto vai para a mensagem de TODO
+	// comando recusado.
+	FreezeReason string `yaml:"freeze_reason,omitempty"`
+
+	Version  int                 `yaml:"version"`
+	Comments map[string][]string `yaml:"comments,omitempty"` // override/extensão dos marcadores (D4)
+	Layers   map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
+	Derived  *Derived            `yaml:"derived,omitempty"`  // co-location dos derivados
+	Governs  []GovernRule        `yaml:"governs,omitempty"`  // dimensão vertical (arestas de alto grau)
+	Gates    []Gate              `yaml:"gates,omitempty"`    // os gates de qualidade (QUALITY §3-§5)
+	Recode   *Recode             `yaml:"recode,omitempty"`   // convenções de projeto p/ `anchors recode`
 	// Tests e Mutation declaram COMO este projeto produz sinal de teste: o comando é
 	// do projeto, a amarração ao mapa é do Anchors. Ver Suite.
 	Tests    []Suite `yaml:"tests,omitempty"`
@@ -186,24 +227,24 @@ type Workflow struct {
 	ManualIngestBlocks bool `yaml:"manual_ingest_blocks,omitempty"`
 }
 
-// BranchDeIntegracao devolve onde o trabalho chega, com o default aplicado.
+// IntegrationBranchOrDefault devolve onde o trabalho chega, com o default aplicado.
 //
 // Existe como método, e não como leitura direta do campo, para que o default viva num
 // lugar só: espalhá-lo pelos chamadores faria cada um decidir o seu, e um deles
 // discordaria.
-func (w *Workflow) BranchDeIntegracao() string {
+func (w *Workflow) IntegrationBranchOrDefault() string {
 	if w == nil || w.IntegrationBranch == "" {
 		return "main"
 	}
 	return w.IntegrationBranch
 }
 
-// AprovacoesExigidas devolve quantas aprovações o PR precisa, com o default (1) aplicado.
+// RequiredApprovalsOrDefault devolve quantas aprovações o PR precisa, com o default (1) aplicado.
 //
 // Ponteiro no campo para distinguir "não declarou" (vale 1) de "declarou zero"
 // (deliberado). Com int simples, o zero-value seria indistinguível da ausência — e o
 // padrão nunca valeria.
-func (w *Workflow) AprovacoesExigidas() int {
+func (w *Workflow) RequiredApprovalsOrDefault() int {
 	if w == nil || w.RequiredApprovals == nil {
 		return 1
 	}
@@ -224,15 +265,15 @@ func (w *Workflow) IngestManualBarra() bool {
 	return w != nil && w.ManualIngestBlocks
 }
 
-// BranchesProtegidos devolve onde nada entra sem PR, com o default aplicado.
-func (w *Workflow) BranchesProtegidos() []string {
+// ProtectedBranchesOrDefault devolve onde nada entra sem PR, com o default aplicado.
+func (w *Workflow) ProtectedBranchesOrDefault() []string {
 	if w == nil {
 		return []string{"main"}
 	}
 	if len(w.ProtectedBranches) > 0 {
 		return w.ProtectedBranches
 	}
-	base := w.BranchDeIntegracao()
+	base := w.IntegrationBranchOrDefault()
 	if base == "main" {
 		return []string{"main"}
 	}
@@ -243,7 +284,31 @@ func (w *Workflow) BranchesProtegidos() []string {
 }
 
 // ModoGitHub diz se o projeto declarou a gestão no GitHub.
-func (c *Config) ModoGitHub() bool {
+// Frozen diz se o projeto está com o Anchors desligado (`enabled: false`).
+//
+// Nil-safe: uma config que não carregou não congela nada. O comando que a recebeu vazia
+// tem outro problema, e responder "congelado" ali mandaria quem investiga para o lado
+// errado.
+func (c *Config) Frozen() bool {
+	return c != nil && c.Enabled != nil && !*c.Enabled
+}
+
+// FreezeReasonText devolve o texto a mostrar quando um comando é recusado.
+//
+// O motivo é OBRIGATÓRIO na prática, e a mensagem o cobra quando falta: um congelamento
+// sem razão escrita é indistinguível de configuração quebrada, e quem esbarra nele tenta
+// contornar em vez de ler.
+func (c *Config) FreezeReasonText() string {
+	if !c.Frozen() {
+		return ""
+	}
+	if r := strings.TrimSpace(c.FreezeReason); r != "" {
+		return r
+	}
+	return "(nenhum motivo declarado — quem congelou não escreveu `freeze_reason` no anchors.yaml)"
+}
+
+func (c *Config) GitHubMode() bool {
 	return c != nil && c.Workflow != nil && c.Workflow.Mode == ModeGitHub
 }
 
@@ -336,14 +401,14 @@ type Obligation struct {
 // jeito que não impõe idioma nem nomes de vendor (ver `dialect`).
 type SectionTitles map[string]string
 
-// TituloDaSecao devolve o título que o projeto usa para uma chave do catálogo, ou o
+// SectionTitle devolve o título que o projeto usa para uma chave do catálogo, ou o
 // padrão do framework quando ninguém renomeia.
 //
 // A precedência é CAMADA > projeto > framework, e a camada existe porque o dialeto quase
 // nunca é global. Medido num projeto real: "Modelo de Dado" e "Comportamentos" aparecem
 // em 50 specs de uma única camada e em 1 de todas as outras 588 — renomear no nível do
 // projeto teria trocado o título de 588 specs que estavam certas para consertar 50.
-func (c *Config) TituloDaSecao(chave, padrao, camada string) string {
+func (c *Config) SectionTitle(chave, padrao, camada string) string {
 	if c == nil {
 		return padrao
 	}
@@ -394,7 +459,7 @@ type RuleType struct {
 	Tags []string `yaml:"tags,omitempty"`
 }
 
-// LetrasDaTag devolve TODAS as letras que declaram a tag de cenário, e se a tag é
+// TagLetters devolve TODAS as letras que declaram a tag de cenário, e se a tag é
 // conhecida. Tags fora do vocabulário não são erro: o projeto usa `@smoke`, `@P1`,
 // `@nivel-e2e` e outras que não falam de natureza de regra.
 //
@@ -406,14 +471,14 @@ type RuleType struct {
 //
 // Devolver só a primeira faria o gate acusar a segunda para sempre, e a saída seria
 // escolher entre duas classificações corretas.
-func (c *Config) LetrasDaTag(tag string) ([]string, bool) {
+func (c *Config) TagLetters(tag string) ([]string, bool) {
 	if c == nil {
 		return nil, false
 	}
 	var out []string
 	for _, rt := range c.RuleTypes {
 		for _, t := range rt.Tags {
-			if normalizaTitulo(t) == normalizaTitulo(tag) {
+			if normalizeTitle(t) == normalizeTitle(tag) {
 				out = append(out, strings.ToUpper(strings.TrimSpace(rt.Letter)))
 			}
 		}
@@ -421,19 +486,19 @@ func (c *Config) LetrasDaTag(tag string) ([]string, bool) {
 	return out, len(out) > 0
 }
 
-// ExigeCodigo diz se a seção (pelo título) foi declarada como catalogadora de regra.
-func (r RuleType) ExigeCodigo(titulo string) bool {
+// RequiresCodeIn diz se a seção (pelo título) foi declarada como catalogadora de regra.
+func (r RuleType) RequiresCodeIn(titulo string) bool {
 	for _, s := range r.RequiresCode {
-		if normalizaTitulo(s) == normalizaTitulo(titulo) {
+		if normalizeTitle(s) == normalizeTitle(titulo) {
 			return true
 		}
 	}
 	return false
 }
 
-// normalizaTitulo compara títulos ignorando caixa e espaço de borda — o mesmo
+// normalizeTitle compara títulos ignorando caixa e espaço de borda — o mesmo
 // critério que o gate `rule-types` usa para casar seção com letra.
-func normalizaTitulo(s string) string {
+func normalizeTitle(s string) string {
 	return strings.ToLower(strings.TrimSpace(s))
 }
 
@@ -789,11 +854,11 @@ func (g Gate) EffectiveScope() string {
 	}
 }
 
-// ScopeParaVarredura devolve o escopo do gate para o tipo de varredura em curso: o
+// ScopeForScan devolve o escopo do gate para o tipo de varredura em curso: o
 // `scope_full` quando o recorte é o projeto inteiro e o gate declarou um, o `scope` de
 // sempre no resto. Só batch/project são aceitos como `scope_full` — `node` no full
 // significaria uma execução por arquivo do projeto, que é o oposto da intenção.
-func (g Gate) ScopeParaVarredura(completa bool) string {
+func (g Gate) ScopeForScan(completa bool) string {
 	if !completa {
 		return g.EffectiveScope()
 	}
@@ -1074,7 +1139,7 @@ func (d *Derived) PadroesDe() map[string]Padroes {
 	return resolvePatterns(d.Files)
 }
 
-// ChavePatterns é a chave RESERVADA dentro de `files`: o conjunto de arquivos que a spec
+// PatternKey é a chave RESERVADA dentro de `files`: o conjunto de arquivos que a spec
 // governa, quando ela não segue a co-location.
 //
 // `files.code` responde "onde mora o código desta spec?" com um template, e isso cobre a
@@ -1084,7 +1149,7 @@ func (d *Derived) PadroesDe() map[string]Padroes {
 //
 // Fica DENTRO de `files` e não ao lado porque é a MESMA decisão — onde estão os derivados
 // — expressa de outra forma. Ao lado, seriam dois lugares para responder uma pergunta só.
-const ChavePatterns = "patterns"
+const PatternKey = "patterns"
 
 // resolvePatterns troca `code` pelo conteúdo de `patterns`, quando declarado.
 //
@@ -1092,13 +1157,13 @@ const ChavePatterns = "patterns"
 // código e continuar querendo o `feature`/`test` da co-location. Descartar o mapa inteiro
 // obrigaria a repetir o que não mudou, e repetição em config é onde a divergência começa.
 func resolvePatterns(files map[string]Padroes) map[string]Padroes {
-	ps, tem := files[ChavePatterns]
+	ps, tem := files[PatternKey]
 	if !tem || len(ps) == 0 {
 		return files
 	}
 	out := map[string]Padroes{}
 	for k, v := range files {
-		if k == ChavePatterns {
+		if k == PatternKey {
 			continue // não é camada: não pode virar um derivado chamado "patterns"
 		}
 		out[k] = v
@@ -1194,6 +1259,28 @@ func Load(path string) (*Config, error) {
 	if err := c.validarWorkflow(); err != nil {
 		return nil, err
 	}
+	// O IDIOMA vale a partir da CARGA, e não de cada comando.
+	//
+	// Ligá-lo aqui é o que faz toda mensagem sair no idioma certo sem que cada comando
+	// precise lembrar — e um comando novo nasce traduzido por construção.
+	//
+	// Um idioma fora da lista é ERRO de carga, não aviso: o projeto declarou algo que o
+	// Anchors não sabe entregar, e seguir em inglês em silêncio faria a pessoa achar que
+	// a tradução não existe quando o que há é um código errado (`pt` em vez de `pt-BR`).
+	if err := i18n.Set(c.Lang); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
+	// O VOCABULÁRIO ANTIGO ainda funciona, e é convertido na carga.
+	//
+	// Os nomes de gate nasceram em português e foram para o inglês, porque são
+	// IDENTIFICADORES — vão para o `anchors.yaml` de cada projeto, e um arquivo escrito
+	// por um time brasileiro tem de funcionar num time espanhol.
+	//
+	// Converter aqui, e não recusar, é o que permite migrar quando o projeto quiser: o
+	// `doctor` avisa que há nome obsoleto e o `--fix` reescreve; até lá, tudo funciona.
+	// Recusar de saída quebraria todo projeto existente numa atualização de binário.
+	c.canonicalizaVocabulario()
+
 	if err := c.validarEnumsDeGate(); err != nil {
 		return nil, err
 	}
@@ -1559,22 +1646,22 @@ func SelecionaSuites(suites []Suite, camadas, workspaces, escopos []string) (sel
 
 func strconvQuote(s string) string { return `"` + s + `"` }
 
-// CamadasDeclaradas e WorkspacesDeclarados listam o vocabulário do projeto, sem
+// DeclaredLayers e WorkspacesDeclarados listam o vocabulário do projeto, sem
 // repetir, na ordem de declaração — é o que se mostra a quem pediu um nome que não
 // existe, e a ordem do arquivo é como a pessoa vai reencontrá-los lá.
-func CamadasDeclaradas(suites []Suite) []string {
+func DeclaredLayers(suites []Suite) []string {
 	return distintos(suites, func(s Suite) string { return s.Layer })
 }
 
-func WorkspacesDeclarados(suites []Suite) []string {
+func DeclaredWorkspaces(suites []Suite) []string {
 	return distintos(suites, func(s Suite) string { return s.Workspace })
 }
 
-// EscoposDeclarados é o terceiro eixo, e ele só existe na mutação: a MESMA unidade
+// DeclaredScopes é o terceiro eixo, e ele só existe na mutação: a MESMA unidade
 // medida contra o teste dela (`isolated`) e contra o de quem a importa (`full`). Não é
 // camada nem workspace — é a mesma suíte, com abrangência diferente, e o gate julga
 // pelo isolado quando os dois existem.
-func EscoposDeclarados(suites []Suite) []string {
+func DeclaredScopes(suites []Suite) []string {
 	return distintos(suites, func(s Suite) string { return s.Scope })
 }
 

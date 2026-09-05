@@ -63,7 +63,7 @@ func checkSiblingGuard(content string, n mapx.Node, root string, g *mapx.Graph, 
 		var comGuarda, semGuarda []string
 		for _, f := range irmas {
 			switch {
-			case guardaSobre(f.body, param):
+			case guardOver(f.body, param):
 				comGuarda = append(comGuarda, f.name)
 			case noGuardRE.MatchString(f.body):
 				// Opt-out HONESTO, com razão escrita. Esta função não precisa da guarda,
@@ -162,10 +162,10 @@ func exportedFuncs(content string, d config.Dialect) []exportedFunc {
 	return out
 }
 
-// guardaSobre diz se o corpo aplica alguma guarda RECONHECÍVEL sobre o parâmetro:
+// guardOver diz se o corpo aplica alguma guarda RECONHECÍVEL sobre o parâmetro:
 // filtrar, validar, lançar, ou retornar cedo por causa dele. Não entende semântica —
 // procura o parâmetro perto de uma construção de guarda.
-func guardaSobre(body, param string) bool {
+func guardOver(body, param string) bool {
 	p := regexp.QuoteMeta(param)
 	padroes := []string{
 		`\.filter\([^)]*` + p + `\b`,                              // versions.filter(v => v.key === key)

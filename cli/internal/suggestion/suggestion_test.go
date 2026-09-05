@@ -9,7 +9,7 @@ import (
 
 func nova(id string) Suggestion {
 	return Suggestion{
-		ID: id, Gate: "mock-detect-cobre-o-dialeto", Target: "anchors.yaml",
+		ID: id, Gate: "mock-detect-covers-dialect", Target: "anchors.yaml",
 		Origin: FromJudgment,
 		Why:    "o padrão declarado não casa `unittest.mock.patch`, usado em 12 testes",
 		Patch:  "--- a/anchors.yaml\n+++ b/anchors.yaml\n@@\n-  mock_detect: \"x\"\n+  mock_detect: \"y\"",

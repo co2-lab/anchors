@@ -29,7 +29,7 @@ import (
 //
 // PENDING e não FAIL: descobrir que uma natureza foi usada sem registro é informação,
 // e decidir entre adotá-la ou remapeá-la é trabalho de quem conhece o domínio.
-func checkCenarioLetraDeclarada(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkScenarioLetterDeclared(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindFeature {
 		return Skip, ""
 	}
@@ -46,7 +46,7 @@ func checkCenarioLetraDeclarada(content string, n mapx.Node, _ string, _ *mapx.G
 	// ficaria cego para o que existe para achar. Aqui a varredura é sobre a forma
 	// (`@ABCDX-XX99`), sem consultar o vocabulário, e o vocabulário entra depois, ao
 	// julgar cada letra encontrada.
-	todos := codigoDeCenarioLivreRE().FindAllStringSubmatch(content, -1)
+	todos := freeScenarioCodeRE().FindAllStringSubmatch(content, -1)
 	if len(todos) == 0 {
 		return Skip, "feature sem cenário com código — nada a confrontar"
 	}
@@ -60,7 +60,7 @@ func checkCenarioLetraDeclarada(content string, n mapx.Node, _ string, _ *mapx.G
 			continue
 		}
 		raiz := m[1] + "-" + m[2] + m[3]
-		if !contemStr(porLetra[l], raiz) {
+		if !containsStr(porLetra[l], raiz) {
 			porLetra[l] = append(porLetra[l], raiz)
 		}
 	}
@@ -87,7 +87,7 @@ func checkCenarioLetraDeclarada(content string, n mapx.Node, _ string, _ *mapx.G
 		len(letras), strings.Join(partes, "; "))
 }
 
-func contemStr(xs []string, s string) bool {
+func containsStr(xs []string, s string) bool {
 	for _, x := range xs {
 		if x == s {
 			return true
@@ -96,11 +96,11 @@ func contemStr(xs []string, s string) bool {
 	return false
 }
 
-// codigoDeCenarioLivreRE casa a FORMA de um código de cenário sem consultar o
+// freeScenarioCodeRE casa a FORMA de um código de cenário sem consultar o
 // vocabulário — é o que permite enxergar a letra que o projeto não declarou.
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
-func codigoDeCenarioLivreRE() *regexp.Regexp {
+func freeScenarioCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`@([A-Z0-9]` + config.CodeLengthPattern() + `)-([A-Z]{1,2})(\d{2})(?:#\d{2})?\b`)
 }

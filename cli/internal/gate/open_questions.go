@@ -9,13 +9,13 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// MarcaDecisaoEmAberto distingue, no laudo, o Pending que BARRA (há decisão por tomar) do
+// OpenDecisionMarker distingue, no laudo, o Pending que BARRA (há decisão por tomar) do
 // que é dívida de migração (a spec nasceu antes da prática). Os dois são `Pending`, e só
 // o primeiro impede a promoção e vira issue.
 //
 // É um marcador ESTÁVEL, não prosa: o gate que o consulta não pode depender da redação —
 // nem do idioma — do texto que ele mesmo escreveu.
-const MarcaDecisaoEmAberto = "[decisao-em-aberto]"
+const OpenDecisionMarker = "[decisao-em-aberto]"
 
 // open-questions-resolved: uma spec com pergunta em aberto NÃO está pronta para implementar.
 //
@@ -75,7 +75,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 			"escreva o que ainda não está decidido"
 	}
 
-	itens := itensEmAberto(corpo)
+	itens := openItems(corpo)
 	if len(itens) == 0 {
 		return Pass, ""
 	}
@@ -88,7 +88,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 	var anonimos []string
 	for _, it := range itens {
 		if códigoDoItem(it) == "" {
-			anonimos = append(anonimos, "«"+resumir(it)+"»")
+			anonimos = append(anonimos, "«"+summarize(it)+"»")
 		}
 	}
 	if len(anonimos) > 0 {
@@ -108,7 +108,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 		// CÓDIGO e assunto juntos: o código identifica (e não muda quando alguém
 		// reescreve a frase), o texto diz do que se trata. Só o código faria o relatório
 		// exigir abrir a spec para saber o que se perguntou.
-		nums = append(nums, códigoDoItem(it)+" «"+resumir(it)+"»")
+		nums = append(nums, códigoDoItem(it)+" «"+summarize(it)+"»")
 	}
 	// PENDING, não FAIL. A distinção é o ponto do gate, e errá-la o inverte:
 	//
@@ -139,7 +139,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 	//
 	// Marcador e não campo novo porque a assinatura do check é `(Verdict, string)` e é
 	// compartilhada por dezenas de gates; mudá-la para um caso obrigaria a tocar todos.
-	return Pending, fmt.Sprintf(MarcaDecisaoEmAberto+" %d decisão(ões) que a spec ainda NÃO tomou, e o código vai "+
+	return Pending, fmt.Sprintf(OpenDecisionMarker+" %d decisão(ões) que a spec ainda NÃO tomou, e o código vai "+
 		"precisar: %s. Registrá-las aqui é o certo — o defeito seria decidir por conta "+
 		"própria na hora de implementar. O caminho de saída é UM: leve a pergunta a quem "+
 		"decide e PROMOVA a resposta a regra (com código). Apagar o item sem regra nova é "+
@@ -163,8 +163,8 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 // nada: tirá-la quebraria as specs que já existem, e o padrão do framework é português.
 var decisõesRE = regexp.MustCompile(`(?im)^#{1,4}\s*(decis(ões|oes|ão|ao)\s+em\s+aberto|em\s+aberto|quest(ões|oes)\s+em\s+aberto|open\s+questions|pend(ências|encias)\s+de\s+decis(ão|ao))\b[^\n]*\n`)
 
-// tituloDeclaradoRE monta o casador para o título que o PROJETO declarou.
-func tituloDeclaradoRE(titulo string) *regexp.Regexp {
+// declaredTitleRE monta o casador para o título que o PROJETO declarou.
+func declaredTitleRE(titulo string) *regexp.Regexp {
 	return regexp.MustCompile(`(?im)^#{1,4}\s*` + regexp.QuoteMeta(titulo) + `\b[^\n]*\n`)
 }
 
@@ -175,21 +175,21 @@ func seçãoDecisõesEmAberto(content string) (string, bool) {
 func seçãoDecisõesEmAbertoCfg(content string, cfg *config.Config, camada string) (string, bool) {
 	// O título declarado VENCE: um projeto que chama a seção de "Pendências de produto"
 	// não pode ser cobrado pelo nome que o framework usaria.
-	if t := cfg.TituloDaSecao("open", "", camada); t != "" {
-		if loc := tituloDeclaradoRE(t).FindStringIndex(content); loc != nil {
-			return corpoAPartirDe(content, loc[1]), true
+	if t := cfg.SectionTitle("open", "", camada); t != "" {
+		if loc := declaredTitleRE(t).FindStringIndex(content); loc != nil {
+			return bodyFrom(content, loc[1]), true
 		}
 	}
 	loc := decisõesRE.FindStringIndex(content)
 	if loc == nil {
 		return "", false
 	}
-	return corpoAPartirDe(content, loc[1]), true
+	return bodyFrom(content, loc[1]), true
 }
 
-// corpoAPartirDe devolve o corpo da seção que começa em `ini`, até o próximo cabeçalho de
+// bodyFrom devolve o corpo da seção que começa em `ini`, até o próximo cabeçalho de
 // mesmo nível ou acima.
-func corpoAPartirDe(content string, ini int) string {
+func bodyFrom(content string, ini int) string {
 	resto := content[ini:]
 	// a seção vai até o próximo cabeçalho de mesmo nível ou acima
 	if fim := regexp.MustCompile(`(?m)^#{1,4}\s`).FindStringIndex(resto); fim != nil {
@@ -198,17 +198,17 @@ func corpoAPartirDe(content string, ini int) string {
 	return resto
 }
 
-// fechadaRE reconhece o fechamento honesto: a afirmação de que se olhou e não há dúvida.
-var fechadaRE = regexp.MustCompile(`(?i)^\s*[-*]?\s*(nenhuma|nenhum|none|n/?a|sem\s+pend[êe]ncias?|vazio|—|-)\s*\.?\s*$`)
+// closedRE reconhece o fechamento honesto: a afirmação de que se olhou e não há dúvida.
+var closedRE = regexp.MustCompile(`(?i)^\s*[-*]?\s*(nenhuma|nenhum|none|n/?a|sem\s+pend[êe]ncias?|vazio|—|-)\s*\.?\s*$`)
 
 // itemRE: um item é uma linha de lista ou de tabela. Prosa solta explicando a seção não
 // conta — senão o texto de abertura viraria uma pendência fantasma.
 var itemRE = regexp.MustCompile(`(?m)^\s*(?:[-*+]\s+|\d+[.)]\s+|\|)`)
 
-func itensEmAberto(corpo string) []string {
+func openItems(corpo string) []string {
 	var itens []string
 	for _, linha := range strings.Split(corpo, "\n") {
-		if strings.TrimSpace(linha) == "" || fechadaRE.MatchString(linha) {
+		if strings.TrimSpace(linha) == "" || closedRE.MatchString(linha) {
 			continue
 		}
 		if !itemRE.MatchString(linha) {
@@ -254,8 +254,8 @@ func códigoDoItem(item string) string {
 	return anyCodeRE.FindString(primeira)
 }
 
-// resumir corta o item para caber na mensagem do gate sem perder o assunto.
-func resumir(s string) string {
+// summarize corta o item para caber na mensagem do gate sem perder o assunto.
+func summarize(s string) string {
 	// Numa linha de tabela o ASSUNTO é a célula seguinte ao código — a primeira passou a
 	// ser a identidade. Sem isto o resumo devolve o próprio código, e a mensagem fica
 	// "PARCX-Q01 «PARCX-Q01»": o leitor precisa abrir a spec para saber o que se
@@ -291,5 +291,5 @@ func DecisõesEmAberto(content string, cfg *config.Config, camada string) int {
 	if !achou {
 		return 0
 	}
-	return len(itensEmAberto(corpo))
+	return len(openItems(corpo))
 }

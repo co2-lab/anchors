@@ -13,7 +13,7 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// confrontarEntrega confronta o que o autor DECLARA contra o que está no disco, na hora
+// confrontDelivery confronta o que o autor DECLARA contra o que está no disco, na hora
 // de registrar — antes de o registro virar material para o revisor.
 //
 // As duas verificações nasceram de divergências reais, medidas na primeira rodada em que
@@ -31,14 +31,14 @@ import (
 //
 // O confronto não BLOQUEIA o registro: ele imprime. Bloquear empurraria o autor a
 // declarar menos — e o valor do registro está em ele declarar mais.
-func confrontarEntrega(root string, files []string, unit string) {
-	avisos, confrontou := arquivosNaoTocados(root, files)
+func confrontDelivery(root string, files []string, unit string) {
+	avisos, confrontou := untouchedFiles(root, files)
 	if !confrontou {
 		// Sem git este confronto NÃO ACONTECEU. Calar aqui era o pior silêncio do
 		// comando: a ausência de aviso é lida como "os arquivos declarados conferem",
 		// que é uma afirmação que ninguém verificou.
 		fmt.Println("\n⚠ não deu para confrontar os arquivos declarados contra o que mudou:")
-		fmt.Println("  " + gitmeta.Explica(gitmeta.Verifica(root), "ler o estado do working tree"))
+		fmt.Println("  " + gitmeta.Explain(gitmeta.Check(root), "ler o estado do working tree"))
 		fmt.Println("  a entrega segue, mas ninguém verificou se você fez o que declarou.")
 	}
 	if len(avisos) > 0 {
@@ -49,10 +49,10 @@ func confrontarEntrega(root string, files []string, unit string) {
 		fmt.Println("  Ou você não fez o que declarou, ou já commitou — em qualquer caso, o")
 		fmt.Println("  registro está afirmando algo que o disco não confirma.")
 	}
-	if aviso := mutacaoNaoMedida(root, unit); aviso != "" {
+	if aviso := mutationNotMeasured(root, unit); aviso != "" {
 		fmt.Println("\n⚠ " + aviso)
 	}
-	if linhas := gatesVermelhos(root, files, unit); len(linhas) > 0 {
+	if linhas := redGates(root, files, unit); len(linhas) > 0 {
 		fmt.Println("\n⚠ gates INFORMATIVOS reprovando nos arquivos desta entrega:")
 		for _, l := range linhas {
 			fmt.Printf("    %s\n", l)
@@ -63,13 +63,13 @@ func confrontarEntrega(root string, files []string, unit string) {
 	}
 }
 
-// arquivosNaoTocados devolve os arquivos declarados que o git não vê como modificados
+// untouchedFiles devolve os arquivos declarados que o git não vê como modificados
 // nem como novos. Usa o git porque é a única fonte que sabe o que MUDOU — não basta o
 // arquivo existir.
 // O segundo retorno diz se o confronto ACONTECEU. Sem ele, "nenhum arquivo suspeito"
 // e "não tive como olhar" seriam o mesmo `nil` — e quem lê a saída concluiria que está
 // tudo certo por não ver aviso nenhum.
-func arquivosNaoTocados(root string, files []string) (avisos []string, confrontou bool) {
+func untouchedFiles(root string, files []string) (avisos []string, confrontou bool) {
 	out, err := exec.Command("git", "-C", root, "status", "--porcelain").Output()
 	if err != nil {
 		return nil, false // sem git: não há como confrontar, e inventar seria pior
@@ -97,7 +97,7 @@ func arquivosNaoTocados(root string, files []string) (avisos []string, confronto
 	var faltando []string
 	for _, f := range files {
 		rel := relTo(root, f)
-		if tocado[rel] || sobPrefixo(rel, prefixos) {
+		if tocado[rel] || underPrefix(rel, prefixos) {
 			continue
 		}
 		faltando = append(faltando, rel)
@@ -105,9 +105,9 @@ func arquivosNaoTocados(root string, files []string) (avisos []string, confronto
 	return faltando, true
 }
 
-// gatesVermelhos roda os gates do projeto sobre os arquivos entregues e devolve os que
+// redGates roda os gates do projeto sobre os arquivos entregues e devolve os que
 // reprovam — inclusive os INFORMATIVOS, que são justamente os que somem do relatório.
-func gatesVermelhos(root string, files []string, unit string) []string {
+func redGates(root string, files []string, unit string) []string {
 	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
 	if err != nil || len(cfg.Gates) == 0 {
 		return nil
@@ -143,7 +143,7 @@ func gatesVermelhos(root string, files []string, unit string) []string {
 	return out
 }
 
-// mutacaoNaoMedida avisa quando a unidade tem teste e nenhum sinal de mutação ingerido.
+// mutationNotMeasured avisa quando a unidade tem teste e nenhum sinal de mutação ingerido.
 //
 // A mutação MANUAL — que o `anchors work test` manda fazer — pega o que o autor lembra de
 // mutar. Medido numa rodada real: o autor mutou 6 pontos e matou os 6, e mesmo assim uma
@@ -153,7 +153,7 @@ func gatesVermelhos(root string, files []string, unit string) []string {
 // A ferramenta muta o que ninguém pensou. Este aviso não exige que exista uma (nem todo
 // stack tem), mas impede que a ausência passe como se o teste estivesse provado — que é o
 // que acontece hoje, com `mutation-score` em `~` no meio de outros indeterminados.
-func mutacaoNaoMedida(root, unit string) string {
+func mutationNotMeasured(root, unit string) string {
 	if unit == "" {
 		return ""
 	}
@@ -187,8 +187,8 @@ func mutacaoNaoMedida(root, unit string) string {
 		"  ferramenta, rode-a e `anchors ingest --mutation <relatório>`."
 }
 
-// sobPrefixo diz se o caminho está sob algum diretório que o git reportou como novo.
-func sobPrefixo(rel string, prefixos []string) bool {
+// underPrefix diz se o caminho está sob algum diretório que o git reportou como novo.
+func underPrefix(rel string, prefixos []string) bool {
 	for _, p := range prefixos {
 		if strings.HasPrefix(rel, p) {
 			return true

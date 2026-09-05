@@ -16,7 +16,7 @@ import (
 func TestDescartaJulgamentosObsoletos(t *testing.T) {
 	root := t.TempDir()
 	cfg := &config.Config{Gates: []config.Gate{
-		{Name: "no-test-prova-real", Measures: config.MeasuresJudgment},
+		{Name: "no-test-proof-real", Measures: config.MeasuresJudgment},
 	}}
 	// os alvos têm de existir: `queue.List` já descarta task de alvo apagado, e o que
 	// se testa aqui é o outro caso — alvo que existe e gate que não se aplica mais.
@@ -27,16 +27,16 @@ func TestDescartaJulgamentosObsoletos(t *testing.T) {
 	}
 
 	vivo := queue.Task{
-		ID: "judge-no-test-prova-real-a", Changed: "a.spec.md",
+		ID: "judge-no-test-proof-real-a", Changed: "a.spec.md",
 		Kind: "judgment", Origin: "check",
 	}
 	obsoleto := queue.Task{
-		ID: "judge-no-test-prova-real-b", Changed: "b.spec.md",
+		ID: "judge-no-test-proof-real-b", Changed: "b.spec.md",
 		Kind: "judgment", Origin: "check",
 	}
 	// trabalho de outra origem NÃO pode ser descartado por este caminho
 	alheio := queue.Task{
-		ID: "judge-no-test-prova-real-c", Changed: "c.spec.md",
+		ID: "judge-no-test-proof-real-c", Changed: "c.spec.md",
 		Kind: "judgment", Origin: "humano",
 	}
 	for _, tk := range []queue.Task{vivo, obsoleto, alheio} {
@@ -47,10 +47,10 @@ func TestDescartaJulgamentosObsoletos(t *testing.T) {
 
 	// o check desta rodada só enfileirou o `a`
 	p := gate.Profile{Judged: []gate.Result{
-		{Gate: "no-test-prova-real", Target: "a.spec.md"},
+		{Gate: "no-test-proof-real", Target: "a.spec.md"},
 	}}
-	gatesDeJulgamentoConhecidos = []string{"no-test-prova-real"}
-	descartaJulgamentosObsoletos(root, cfg, p)
+	knownJudgmentGates = []string{"no-test-proof-real"}
+	dropStaleJudgments(root, cfg, p)
 
 	restou := map[string]bool{}
 	tasks, err := queue.List(root)
@@ -74,9 +74,9 @@ func TestDescartaJulgamentosObsoletos(t *testing.T) {
 // O ID é `judge-<gate>-<slug>`, e o nome do gate contém `-`: a leitura é por prefixo
 // conhecido, não por partir no separador.
 func TestGateDaTaskJudge(t *testing.T) {
-	gatesDeJulgamentoConhecidos = []string{"no-test-prova-real", "atomic-design"}
+	knownJudgmentGates = []string{"no-test-proof-real", "atomic-design"}
 	casos := map[string]string{
-		"judge-no-test-prova-real-apps-x-y.spec": "no-test-prova-real",
+		"judge-no-test-proof-real-apps-x-y.spec": "no-test-proof-real",
 		"judge-atomic-design-apps-x.tsx":         "atomic-design",
 		"judge-gate-que-nao-existe-x":            "",
 		"outra-coisa":                            "",

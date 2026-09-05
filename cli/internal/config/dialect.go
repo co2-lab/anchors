@@ -336,13 +336,13 @@ func (d Dialect) Compile(pattern string) *regexp.Regexp {
 	return re
 }
 
-// Dispensado diz se o projeto declarou opt-out para um campo do dialeto.
+// WaivedField diz se o projeto declarou opt-out para um campo do dialeto.
 //
 // A comparação é sobre o NOME YAML do campo (`collection_query`), não o do Go: quem escreve
 // o opt-out está lendo o anchors.yaml, e pedir a tradução mental para `CollectionQuery`
 // convidaria ao erro silencioso — um nome que não casa nada é opt-out que não vale, e o
 // gate seguiria pendente sem explicar por quê.
-func (d Dialect) Dispensado(campoYAML string) bool {
+func (d Dialect) WaivedField(campoYAML string) bool {
 	for _, c := range d.OptOut {
 		if strings.EqualFold(strings.TrimSpace(c), campoYAML) {
 			return true

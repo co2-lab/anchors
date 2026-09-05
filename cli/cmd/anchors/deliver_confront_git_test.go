@@ -20,7 +20,7 @@ func TestConfrontoDizQuandoNaoTeveComoOlhar(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	avisos, confrontou := arquivosNaoTocados(dir, declarados)
+	avisos, confrontou := untouchedFiles(dir, declarados)
 
 	if confrontou {
 		t.Fatal("sem repositório não há como confrontar — dizer que confrontou é mentir")
@@ -61,7 +61,7 @@ func TestConfrontoAcusaArquivoDeclaradoENaoTocado(t *testing.T) {
 		}
 	}
 
-	avisos, confrontou := arquivosNaoTocados(dir, []string{quieto})
+	avisos, confrontou := untouchedFiles(dir, []string{quieto})
 
 	if !confrontou {
 		t.Fatal("com repositório o confronto tem de acontecer")

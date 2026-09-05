@@ -31,11 +31,11 @@ import (
 // O gate RECALCULA em vez de validar formato. Um carimbo que ninguém confronta é
 // teatro: quem edita o teste o regeneraria para casar com o próprio mock, e ele passaria
 // a certificar a si mesmo. Recalcular é o que torna o mecanismo à prova de quem escreve.
-func checkMockCarimbado(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindTest {
 		return Skip, "o carimbo vive no teste, ao lado do dublê que ele cobre"
 	}
-	detector, err := detectorDeDuble(cfg)
+	detector, err := doubleDetector(cfg)
 	if err != nil {
 		// Regex inválido é erro de CONFIGURAÇÃO, não do arquivo sob análise — e precisa
 		// falhar alto: silenciá-lo faria o gate varrer zero dublês e reportar verde.
@@ -46,7 +46,7 @@ func checkMockCarimbado(content string, n mapx.Node, root string, g *mapx.Graph,
 			"reconhecer um dublê neste ecossistema, e adivinhar reportaria verde sobre o que não conferiu"
 	}
 
-	carimbos := carimbosDeclarados(content)
+	carimbos := declaredStamps(content)
 
 	// AUSÊNCIA de carimbo é acusada, não pulada — e isto é a metade mais importante do
 	// gate.
@@ -66,11 +66,11 @@ func checkMockCarimbado(content string, n mapx.Node, root string, g *mapx.Graph,
 	// O legado se resolve com o vocabulário que já existe: `blocking: false` durante a
 	// adoção, e opt-out por unidade com razão escrita onde a decisão for deliberada.
 	var semCarimbo []string
-	for _, modulo := range dublesDetectados(content, detector) {
-		if !ehModuloRegido(modulo, g) {
+	for _, modulo := range detectedDoubles(content, detector) {
+		if !isGovernedModule(modulo, g) {
 			continue // biblioteca de terceiro não é cobrada (ver `ehModuloRegido`)
 		}
-		if !moduloTemCarimbo(modulo, carimbos) {
+		if !moduleHasStamp(modulo, carimbos) {
 			semCarimbo = append(semCarimbo, modulo)
 		}
 	}
@@ -88,7 +88,7 @@ func checkMockCarimbado(content string, n mapx.Node, root string, g *mapx.Graph,
 
 	var divergentes []string
 	for _, c := range carimbos {
-		atual, err := recalculaCarimbo(root, c)
+		atual, err := recomputeStamp(root, c)
 		if err != nil {
 			divergentes = append(divergentes, fmt.Sprintf("%s (%v)", c.ancora, err))
 			continue
@@ -110,14 +110,14 @@ func checkMockCarimbado(content string, n mapx.Node, root string, g *mapx.Graph,
 		len(divergentes), strings.Join(divergentes, "\n  - "))
 }
 
-// moduloTemCarimbo liga o dublê ao carimbo pelo CAMINHO do arquivo carimbado.
+// moduleHasStamp liga o dublê ao carimbo pelo CAMINHO do arquivo carimbado.
 //
 // O especificador do dublê (`@/src/hooks/useX`) e o caminho do carimbo
 // (`apps/mobile/src/hooks/useX.ts`) descrevem o mesmo arquivo por vias diferentes —
 // alias e caminho de disco. Casar pelo sufixo sem extensão resolve os dois sem
 // precisar de um resolvedor de alias, que seria específico do ecossistema.
-func moduloTemCarimbo(modulo string, carimbos []carimboDeclarado) bool {
-	alvo := semExtensao(strings.TrimPrefix(modulo, "./"))
+func moduleHasStamp(modulo string, carimbos []declaredStamp) bool {
+	alvo := withoutExtension(strings.TrimPrefix(modulo, "./"))
 	for strings.HasPrefix(alvo, "../") {
 		alvo = strings.TrimPrefix(alvo, "../")
 	}
@@ -127,7 +127,7 @@ func moduloTemCarimbo(modulo string, carimbos []carimboDeclarado) bool {
 		}
 	}
 	for _, c := range carimbos {
-		arq := semExtensao(c.arquivo)
+		arq := withoutExtension(c.arquivo)
 		if arq == alvo || strings.HasSuffix(arq, "/"+alvo) {
 			return true
 		}
@@ -135,43 +135,43 @@ func moduloTemCarimbo(modulo string, carimbos []carimboDeclarado) bool {
 	return false
 }
 
-// carimboDeclarado — o que o teste afirma sobre o trecho que dubla.
-type carimboDeclarado struct {
+// declaredStamp — o que o teste afirma sobre o trecho que dubla.
+type declaredStamp struct {
 	arquivo string // caminho do módulo, relativo à raiz
 	ancora  string // a LINHA INTEIRA que abre o trecho (conteúdo, nunca número)
 	qtd     int    // quantas linhas a partir da âncora entram no hash
 	hash    string // o hash gravado
 }
 
-// carimboRE casa a anotação:
+// stampRE casa a anotação:
 //
 //	// @contract: caminho/do/modulo.ts | export function useX( | 10 | 361280fb
 //
 // O separador é `|` porque a âncora é uma linha de código e pode conter vírgula, dois
 // pontos e parênteses — qualquer separador mais comum a partiria no meio.
-var carimboRE = regexp.MustCompile(
+var stampRE = regexp.MustCompile(
 	`@contract:\s*([^|\n]+?)\s*\|\s*(.+?)\s*\|\s*(\d+)\s*\|\s*([0-9a-f]+)`)
 
-func carimbosDeclarados(content string) []carimboDeclarado {
-	var out []carimboDeclarado
-	for _, m := range carimboRE.FindAllStringSubmatch(content, -1) {
+func declaredStamps(content string) []declaredStamp {
+	var out []declaredStamp
+	for _, m := range stampRE.FindAllStringSubmatch(content, -1) {
 		qtd, err := strconv.Atoi(m[3])
 		if err != nil || qtd <= 0 {
 			continue
 		}
-		out = append(out, carimboDeclarado{
+		out = append(out, declaredStamp{
 			arquivo: m[1], ancora: m[2], qtd: qtd, hash: m[4],
 		})
 	}
 	return out
 }
 
-// recalculaCarimbo lê o módulo real e devolve o hash do trecho HOJE.
+// recomputeStamp lê o módulo real e devolve o hash do trecho HOJE.
 //
 // A âncora é procurada por CONTEÚDO — é o que torna o carimbo imune a deslocamento.
 // Duas ocorrências da mesma linha tornam o alvo ambíguo, e o gate prefere acusar a
 // escolher uma: um carimbo que aponta para "alguma das duas" não prova nada.
-func recalculaCarimbo(root string, c carimboDeclarado) (string, error) {
+func recomputeStamp(root string, c declaredStamp) (string, error) {
 	b, err := os.ReadFile(filepath.Join(root, c.arquivo))
 	if err != nil {
 		return "", fmt.Errorf("módulo não encontrado: %s", c.arquivo)
@@ -202,23 +202,23 @@ func recalculaCarimbo(root string, c carimboDeclarado) (string, error) {
 	if fim > len(linhas) {
 		fim = len(linhas)
 	}
-	return hashDoTrecho(strings.Join(linhas[idx:fim], "\n")), nil
+	return snippetHash(strings.Join(linhas[idx:fim], "\n")), nil
 }
 
-// hashDoTrecho — sha256 truncado em 8 hex. Truncado porque o carimbo mora numa linha de
+// snippetHash — sha256 truncado em 8 hex. Truncado porque o carimbo mora numa linha de
 // comentário e é lido por humano; 32 bits bastam para detectar mudança acidental, que é
 // o que este gate persegue (não há adversário forjando colisão contra o próprio teste).
-func hashDoTrecho(s string) string {
+func snippetHash(s string) string {
 	h := sha256.Sum256([]byte(s))
 	return hex.EncodeToString(h[:])[:8]
 }
 
-// detectorDeDuble compila o regex que ESTE projeto usa para escrever um dublê.
+// doubleDetector compila o regex que ESTE projeto usa para escrever um dublê.
 //
 // Devolve (nil, nil) quando o projeto não declara — e é o que desliga o gate. A
 // alternativa (embutir o padrão jest/vitest como default) faria o gate rodar num
 // projeto Python, casar zero dublês e reportar VERDE sobre o que não conferiu.
-func detectorDeDuble(cfg *config.Config) (*regexp.Regexp, error) {
+func doubleDetector(cfg *config.Config) (*regexp.Regexp, error) {
 	if cfg == nil || cfg.Derived == nil {
 		return nil, nil
 	}
@@ -236,8 +236,8 @@ func detectorDeDuble(cfg *config.Config) (*regexp.Regexp, error) {
 	return re, nil
 }
 
-// dublesDetectados aplica o padrão do projeto e devolve os módulos dublados.
-func dublesDetectados(content string, re *regexp.Regexp) []string {
+// detectedDoubles aplica o padrão do projeto e devolve os módulos dublados.
+func detectedDoubles(content string, re *regexp.Regexp) []string {
 	var out []string
 	for _, m := range re.FindAllStringSubmatch(content, -1) {
 		if len(m) > 1 && strings.TrimSpace(m[1]) != "" {

@@ -18,7 +18,7 @@ func TestGuiaDeTrabalhoCobreOAchadoDoAgente(t *testing.T) {
 	for _, exigido := range []string{
 		"anchors escalate",        // como registrar o achado
 		"--card",                  // o vínculo, sem o qual ele nasce solto
-		"--para-usuario",          // a saída para quando muda a direção
+		"--for-user",              // a saída para quando muda a direção
 		"anchors judge --pending", // o que barra o commit
 		"@TBD",                    // a peça que ainda não nasceu
 		"anchors:sob-",            // a label que amarra o achado ao trabalho

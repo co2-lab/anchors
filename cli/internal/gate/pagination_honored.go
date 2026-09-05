@@ -56,10 +56,10 @@ func checkPaginationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 	// Cada padrão ausente é um olho fechado. Pendente nomeia QUAL falta, para a correção
 	// ser uma linha de YAML e não uma investigação.
 	var faltando []string
-	if d.ExportedFunc == "" && !d.Dispensado("exported_func") {
+	if d.ExportedFunc == "" && !d.WaivedField("exported_func") {
 		faltando = append(faltando, "`exported_func` (como se reconhece uma função exportada)")
 	}
-	if d.CollectionQuery == "" && !d.Dispensado("collection_query") {
+	if d.CollectionQuery == "" && !d.WaivedField("collection_query") {
 		faltando = append(faltando, "`collection_query` (como se reconhece uma consulta que "+
 			"devolve muitos registros — não tem default porque depende do seu provedor de dados: "+
 			"`QueryCommand|ScanCommand` no DynamoDB, `SELECT` em SQL, `.find()` no Mongo)")
@@ -97,17 +97,17 @@ func checkPaginationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 	// assimetria — o mesmo raciocínio do gate sibling-guard.
 	irmãsPaginam := 0
 	for _, f := range fns {
-		if paginaTudo(f.body, d) {
+		if paginatesAll(f.body, d) {
 			irmãsPaginam++
 		}
 	}
 
 	var achados []string
 	for _, f := range fns {
-		if !prometeConjunto(f.name, d) || !consulta.MatchString(f.body) {
+		if !promisesSet(f.name, d) || !consulta.MatchString(f.body) {
 			continue
 		}
-		if paginaTudo(f.body, d) || dispensaExplicita(f.body) {
+		if paginatesAll(f.body, d) || explicitWaiver(f.body) {
 			continue
 		}
 		// NÃO existe regra de "cursor descartado" aqui, e a ausência é uma decisão medida.
@@ -129,7 +129,7 @@ func checkPaginationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 		// limite em vez do cursor, o que é menos preciso, mas aponta a mesma função e o
 		// conserto (devolver o cursor) está entre as saídas que ela oferece.
 		// limite que o CHAMADOR escolhe é decisão dele; default escondido não é.
-		if lim, temDefault := limiteEscondido(f.body, f.params); lim != "" {
+		if lim, temDefault := hiddenLimit(f.body, f.params); lim != "" {
 			if !temDefault {
 				continue // o chamador passa o limite: página deliberada, sem promessa quebrada
 			}
@@ -160,14 +160,14 @@ func checkPaginationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 	return Fail, msg
 }
 
-// prometeConjunto: o NOME diz que devolve tudo? É o único lugar onde a promessa está
+// promisesSet: o NOME diz que devolve tudo? É o único lugar onde a promessa está
 // escrita — o tipo de retorno é idêntico para uma página e para o conjunto
 // (`Promise<T[]>`, `List<T>`, `[]T`… em toda linguagem).
 //
 // O padrão vem do dialeto, mas aqui o default do Anchors é forte: prefixos como `list`/
 // `getAll`/`find_all` são convenção de NOMENCLATURA difundida, não sintaxe de linguagem.
 // Um projeto que nomeia noutro idioma sobrepõe com `dialect.set_promise`.
-func prometeConjunto(name string, d config.Dialect) bool {
+func promisesSet(name string, d config.Dialect) bool {
 	promessa := d.Compile(d.SetPromise)
 	if promessa == nil || !promessa.MatchString(name) {
 		return false
@@ -180,11 +180,11 @@ func prometeConjunto(name string, d config.Dialect) bool {
 	return true
 }
 
-// paginaTudo: o corpo drena o cursor até o fim? O sinal é o cursor do provedor
+// paginatesAll: o corpo drena o cursor até o fim? O sinal é o cursor do provedor
 // realimentando um laço — em TS `do { … } while (lastKey)`, em Python
 // `while next_token:`, em Go `for { … if tok == "" { break } }`. A FORMA é do dialeto; o
 // que se procura (cursor realimentando laço) é universal.
-func paginaTudo(body string, d config.Dialect) bool {
+func paginatesAll(body string, d config.Dialect) bool {
 	cursor, laço := d.Compile(d.Cursor), d.Compile(d.Loop)
 	if cursor == nil || laço == nil {
 		return false
@@ -222,7 +222,7 @@ var tiposComuns = regexp.MustCompile(`(?i)^(number|int|integer|long|short|byte|f
 
 var limiteParamRE = regexp.MustCompile(limiteNome + `\s*[:=]\s*(\w+)`)
 
-func limiteEscondido(body string, params []string) (string, bool) {
+func hiddenLimit(body string, params []string) (string, bool) {
 	// default na assinatura: `limit = 100` — o chamador pode omitir e nem saber do corte.
 	if m := limiteDefaultRE.FindStringSubmatch(body); m != nil {
 		return m[1] + " = " + m[2], true
@@ -256,4 +256,4 @@ func limiteEscondido(body string, params []string) (string, bool) {
 // passaria, que é exatamente o que a dispensa não pode permitir.
 var noPaginateRE = regexp.MustCompile(`@no-paginate[^\S\n]*:[^\S\n]*\S+`)
 
-func dispensaExplicita(body string) bool { return noPaginateRE.MatchString(body) }
+func explicitWaiver(body string) bool { return noPaginateRE.MatchString(body) }

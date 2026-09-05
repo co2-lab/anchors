@@ -14,11 +14,11 @@ func TestHeaderConforme_binarioNaoCarregaCabecalho(t *testing.T) {
 	// commit de baseline visual. A identidade dele está no NOME do arquivo, que é o
 	// que o `identity-consistent` confronta.
 	png := "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00"
-	if v, msg := checkHeaderConforme(png, mapx.Node{ID: "X.ABCDX-VR-loaded.png", Kind: mapx.KindTest}); v != Skip {
+	if v, msg := checkHeaderConforms(png, mapx.Node{ID: "X.ABCDX-VR-loaded.png", Kind: mapx.KindTest}); v != Skip {
 		t.Errorf("binário não carrega cabeçalho: %v (%s)", v, msg)
 	}
 	// Texto sem header continua reprovando — a dispensa é só para binário.
-	if v, _ := checkHeaderConforme("const x = 1\n", mapx.Node{ID: "x.ts", Kind: mapx.KindCode}); v != Fail {
+	if v, _ := checkHeaderConforms("const x = 1\n", mapx.Node{ID: "x.ts", Kind: mapx.KindCode}); v != Fail {
 		t.Errorf("arquivo de texto sem header deve reprovar: %v", v)
 	}
 }
@@ -174,7 +174,7 @@ const specComSecaoVazia = `# Tela
 // passaria a reportar verde sobre seção que ninguém preencheu.
 func TestSecaoVaziaSemDeclaracaoPedeQueAlguemDiga(t *testing.T) {
 	comCodigosDe4(t)
-	d := irmasSemCodigo(specComSecaoVazia)
+	d := siblingsWithoutCode(specComSecaoVazia)
 	if d == "" {
 		t.Fatal("vazia sem declaração tem de ser cobrada — senão o esquecimento passa")
 	}
@@ -195,7 +195,7 @@ func TestSecaoVaziaComNoContentEAceita(t *testing.T) {
 		"### Comportamentos Automáticos\n\n| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
 		"### Comportamentos Automáticos\n\n@no-content: tela estática — não há efeito, timer nem carga.\n",
 		1)
-	if d := irmasSemCodigo(spec); d != "" {
+	if d := siblingsWithoutCode(spec); d != "" {
 		t.Fatalf("declarada, a seção vazia é aceita. Veio: %s", d)
 	}
 }
@@ -207,7 +207,7 @@ func TestNoContentExigeMotivo(t *testing.T) {
 		"### Comportamentos Automáticos\n\n| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
 		"### Comportamentos Automáticos\n\n@no-content:\n",
 		1)
-	if d := irmasSemCodigo(spec); d == "" {
+	if d := siblingsWithoutCode(spec); d == "" {
 		t.Fatal("`@no-content` sem motivo não pode absolver")
 	}
 }
@@ -219,7 +219,7 @@ func TestIrmasSemCodigoAindaPegaRegraSemCodigo(t *testing.T) {
 		"| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
 		"| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n| — | Abertura | Carrega o perfil |\n",
 		1)
-	d := irmasSemCodigo(spec)
+	d := siblingsWithoutCode(spec)
 	if d == "" {
 		t.Fatal("regra SEM código tem de ser acusada — é o defeito que o gate existe para pegar")
 	}
@@ -235,7 +235,7 @@ func TestIrmasSemCodigoPegaSecaoComProsa(t *testing.T) {
 		"### Comportamentos Automáticos\n\n| Regra | Gatilho | Ação Automática |\n| ---------- | ------- | --------------- |\n",
 		"### Comportamentos Automáticos\n\nAo abrir, a tela carrega o perfil do usuário.\n",
 		1)
-	if d := irmasSemCodigo(spec); d == "" {
+	if d := siblingsWithoutCode(spec); d == "" {
 		t.Fatal("regra em prosa sem código tem de ser acusada")
 	}
 }
@@ -255,7 +255,7 @@ func TestSubsecaoNaoEsvaziaOPai(t *testing.T) {
 		"#### `destination` — rota de destino\n\n" +
 		"| Data State | Condição |\n| --- | --- |\n| `DS-dest-main` | autenticado |\n\n---\n"
 
-	if d := irmasSemCodigo(spec); d != "" {
+	if d := siblingsWithoutCode(spec); d != "" {
 		t.Fatalf("o `###` tem conteúdo no `####` filho; não devia acusar. Veio: %s", d)
 	}
 }

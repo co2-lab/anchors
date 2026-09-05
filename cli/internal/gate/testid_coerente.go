@@ -11,7 +11,7 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// checkTestIDCoerente — o testID é UM contrato com QUATRO pontas, e este gate as
+// checkTestIDCoherent — o testID é UM contrato com QUATRO pontas, e este gate as
 // confronta de uma vez.
 //
 // Os gates que este substitui (`testid-declared`, `testid-honored`) cobriam três
@@ -42,7 +42,7 @@ import (
 //
 // Parte da spec (`on: [spec]`) porque é ela que declara o inventário — o mesmo ponto de
 // partida dos gates que substitui.
-func checkTestIDCoerente(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, "o inventário de testID é declarado na spec — é dela que o confronto parte"
 	}
@@ -64,7 +64,7 @@ func checkTestIDCoerente(content string, n mapx.Node, root string, g *mapx.Graph
 			continue
 		}
 		if b, err := os.ReadFile(filepath.Join(root, e.To)); err == nil {
-			expostos = append(expostos, testIDsExpostos(string(b), attr)...)
+			expostos = append(expostos, exposedTestIDs(string(b), attr)...)
 			arquivo = filepath.Base(e.To)
 		}
 	}
@@ -73,7 +73,7 @@ func checkTestIDCoerente(content string, n mapx.Node, root string, g *mapx.Graph
 	}
 
 	// PONTA 2 — a spec: o inventário declarado.
-	declarados := testIDsDeclarados(content, attr)
+	declarados := declaredTestIDs(content, attr)
 
 	if len(expostos) == 0 && len(declarados) == 0 {
 		// Nem toda unidade tem superfície de teste. Cobrar inventário de quem não marca
@@ -86,7 +86,7 @@ func checkTestIDCoerente(content string, n mapx.Node, root string, g *mapx.Graph
 	// perguntas diferentes: a feature DESCREVE o handle (documentação executável), o
 	// teste/flow o CONSULTA (verificação). Um id descrito e nunca consultado é cenário
 	// que ninguém automatizou; consultado e nunca descrito é verificação sem contrato.
-	blobConsulta, blobFeature, temConsumidor := superficiesConsumidoras(root, n.ID, g, cfg)
+	blobConsulta, blobFeature, temConsumidor := consumingSurfaces(root, n.ID, g, cfg)
 
 	// O confronto é por ID — a união de tudo que qualquer ponta menciona.
 	// A chave é NORMALIZADA (sem a marca): o código escreve `:idep-x` e a spec grava
@@ -120,18 +120,18 @@ func checkTestIDCoerente(content string, n mapx.Node, root string, g *mapx.Graph
 	// declara tudo corretamente, com o gate irmão passando limpo na mesma spec.
 	var linhas []string
 	for _, id := range universo {
-		noCodigo, naSpec := cobertoPor(expostos, id), cobertoPor(declarados, id)
-		consultado := temConsumidor && idConsultado(blobConsulta, id)
+		noCodigo, naSpec := coveredBy(expostos, id), coveredBy(declarados, id)
+		consultado := temConsumidor && queriedID(blobConsulta, id)
 		// A feature é OPCIONAL: nem todo handle precisa aparecer num cenário escrito
 		// (um contêiner de tela raramente aparece). Ausência aqui não é ofensa — por
 		// isso entra no laudo como informação, nunca como o motivo da reprovação.
-		naFeature := blobFeature != "" && idConsultado(blobFeature, id)
+		naFeature := blobFeature != "" && queriedID(blobFeature, id)
 
 		if noCodigo && naSpec && (consultado || !temConsumidor) {
 			continue // coerente nas pontas que dá para conferir
 		}
 		linhas = append(linhas, fmt.Sprintf("  %s\n      código %s   spec %s   feature %s   consultado %s",
-			id, marca(noCodigo), marca(naSpec), marca(naFeature), marcaConsulta(consultado, temConsumidor)))
+			id, mark(noCodigo), mark(naSpec), mark(naFeature), marksQuery(consultado, temConsumidor)))
 	}
 
 	if len(linhas) == 0 {
@@ -153,39 +153,39 @@ func checkTestIDCoerente(content string, n mapx.Node, root string, g *mapx.Graph
 		len(linhas), arquivo, strings.Join(linhas, "\n"))
 }
 
-func marca(ok bool) string {
+func mark(ok bool) string {
 	if ok {
 		return "✓"
 	}
 	return "✗"
 }
 
-// marcaConsulta distingue "ninguém consulta" de "não há onde procurar". Um traço onde
+// marksQuery distingue "ninguém consulta" de "não há onde procurar". Um traço onde
 // o projeto não declarou superfície consumidora é honesto; um ✗ ali acusaria o autor
 // por uma configuração ausente.
-func marcaConsulta(ok, temConsumidor bool) string {
+func marksQuery(ok, temConsumidor bool) string {
 	if !temConsumidor {
 		return "—"
 	}
-	return marca(ok)
+	return mark(ok)
 }
 
-// cobertoPor: algum item da lista cobre este id? Delega a `cobre`, que trata a marca e
+// coveredBy: algum item da lista cobre este id? Delega a `cobre`, que trata a marca e
 // o curinga — as duas formas em que o MESMO handle se escreve diferente entre pontas.
-func cobertoPor(xs []string, id string) bool {
+func coveredBy(xs []string, id string) bool {
 	for _, x := range xs {
-		if cobre(x, id) || cobre(id, x) {
+		if covers(x, id) || covers(id, x) {
 			return true
 		}
 	}
 	return false
 }
 
-// superficiesConsumidoras separa quem CONSULTA (teste ligado, teste vizinho, flows e2e)
+// consumingSurfaces separa quem CONSULTA (teste ligado, teste vizinho, flows e2e)
 // de quem DESCREVE (a feature). Devolve também se havia onde procurar — sem isso o gate
 // não distingue "ninguém consulta" de "o projeto não declarou superfície", e acusaria o
 // autor por uma configuração ausente.
-func superficiesConsumidoras(root, specID string, g *mapx.Graph, cfg *config.Config) (consulta, feature string, temConsumidor bool) {
+func consumingSurfaces(root, specID string, g *mapx.Graph, cfg *config.Config) (consulta, feature string, temConsumidor bool) {
 	var cs, fs []string
 	for _, e := range g.Neighbors(specID).Out {
 		if e.Type != mapx.EdgeCoveredBy {
@@ -204,9 +204,9 @@ func superficiesConsumidoras(root, specID string, g *mapx.Graph, cfg *config.Con
 			}
 		}
 	}
-	cs = append(cs, lerSuperficieE2E(root, cfg)...)
+	cs = append(cs, readE2ESurface(root, cfg)...)
 	// O teste COMPARTILHADO ou do PAI: um arquivo prova várias unidades e a aresta
 	// `tested-by` não alcança todas. Sem isto, handle consultado aparece como órfão.
-	cs = append(cs, lerTestesVizinhos(root, specID)...)
+	cs = append(cs, readNeighborTests(root, specID)...)
 	return strings.Join(cs, "\n"), strings.Join(fs, "\n"), len(cs) > 0
 }

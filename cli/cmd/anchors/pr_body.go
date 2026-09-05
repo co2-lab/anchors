@@ -30,11 +30,11 @@ import (
 // que a plataforma entende é GERADA a partir dele. Quem escreve o PR não precisa saber a
 // palavra; quem muda de plataforma muda o gerador, não a doutrina.
 
-// sintaxeDeFechamento é como cada plataforma quer receber "este PR fecha aquele card".
+// closingSyntax é como cada plataforma quer receber "este PR fecha aquele card".
 //
 // Um mapa, e não um `if`: acrescentar uma plataforma é acrescentar uma linha, e o gerador
 // não precisa saber quantas existem.
-var sintaxeDeFechamento = map[string]string{
+var closingSyntax = map[string]string{
 	"github": "Closes #%s",
 	// GitLab aceita as mesmas palavras, mas com `#` só no mesmo projeto — a diferença
 	// aparece quando o card vive noutro repositório.
@@ -60,7 +60,7 @@ o card fica aberto.
     anchors pr-body --cards 44          # o card e tudo que nasceu sob ele
     anchors pr-body                     # descobre pelo ANCHORS_AGENT`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -68,19 +68,19 @@ o card fica aberto.
 			if err != nil {
 				return err
 			}
-			if !cfg.ModoGitHub() {
+			if !cfg.GitHubMode() {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("`pr-body` existe no modo github: no modo local não há " +
 					"card a fechar, e o trabalho se registra movendo a pasta em `issues/`")
 			}
-			sintaxe, ok := sintaxeDeFechamento[cfg.Workflow.Mode]
+			sintaxe, ok := closingSyntax[cfg.Workflow.Mode]
 			if !ok {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("não sei a sintaxe de fechamento de `%s` — as conhecidas "+
-					"são: %s", cfg.Workflow.Mode, strings.Join(plataformasConhecidas(), ", "))
+					"são: %s", cfg.Workflow.Mode, strings.Join(knownPlatforms(), ", "))
 			}
 
-			raizes := cardsPedidos(cards, cfg)
+			raizes := requestedCards(cards, cfg)
 			if len(raizes) == 0 {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("nenhum card: informe `--cards 44` ou defina `ANCHORS_AGENT` " +
@@ -95,7 +95,7 @@ o card fica aberto.
 			for _, c := range raizes {
 				raizesPedidas[c] = true
 				todos[c] = true
-				for _, sob := range cardsSob(cfg, c) {
+				for _, sob := range cardsUnder(cfg, c) {
 					todos[sob] = true
 				}
 			}
@@ -127,17 +127,17 @@ o card fica aberto.
 	return cmd
 }
 
-func plataformasConhecidas() []string {
-	out := make([]string, 0, len(sintaxeDeFechamento))
-	for k := range sintaxeDeFechamento {
+func knownPlatforms() []string {
+	out := make([]string, 0, len(closingSyntax))
+	for k := range closingSyntax {
 		out = append(out, k)
 	}
 	sort.Strings(out)
 	return out
 }
 
-// cardsPedidos resolve o que foi passado em `--cards`, ou descobre pelo agente.
-func cardsPedidos(cards string, cfg *config.Config) []string {
+// requestedCards resolve o que foi passado em `--cards`, ou descobre pelo agente.
+func requestedCards(cards string, cfg *config.Config) []string {
 	if s := strings.TrimSpace(cards); s != "" {
 		var out []string
 		for _, c := range strings.Split(s, ",") {
@@ -148,14 +148,14 @@ func cardsPedidos(cards string, cfg *config.Config) []string {
 		return out
 	}
 	var out []string
-	for _, c := range cardsDoAgente(cfg) {
+	for _, c := range agentCards(cfg) {
 		out = append(out, c.numero)
 	}
 	return out
 }
 
-// cardsSob lista os achados que nasceram durante o trabalho de um card.
-func cardsSob(cfg *config.Config, card string) []string {
+// cardsUnder lista os achados que nasceram durante o trabalho de um card.
+func cardsUnder(cfg *config.Config, card string) []string {
 	out, err := exec.Command("gh", "issue", "list",
 		"--repo", cfg.Workflow.Repo,
 		"--state", "open",

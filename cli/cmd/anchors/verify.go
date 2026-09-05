@@ -53,7 +53,7 @@ Um gate de escopo project/batch só roda se HOUVER arquivo relevante no recorte:
 commit só de README não dispara o typecheck do monorepo.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if staged {
-				lista, err := arquivosStaged(root)
+				lista, err := stagedFiles(root)
 				if err != nil {
 					return err
 				}
@@ -101,7 +101,7 @@ commit só de README não dispara o typecheck do monorepo.`,
 			if phase != "" && phase != "manual" {
 				sub = append(sub, "--deterministic")
 			}
-			return rodarSubcomando(sub)
+			return runSubcommand(sub)
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
@@ -117,17 +117,17 @@ commit só de README não dispara o typecheck do monorepo.`,
 	return cmd
 }
 
-// arquivosStaged lista o que está no índice do git (ACMR — sem deleções, que não há
+// stagedFiles lista o que está no índice do git (ACMR — sem deleções, que não há
 // como verificar). É a mesma lista que o pre-commit usava, agora obtida pelo próprio
 // anchors: o hook deixa de precisar saber a sintaxe do git.
-func arquivosStaged(root string) ([]string, error) {
+func stagedFiles(root string) ([]string, error) {
 	cmd := exec.Command("git", "diff", "--cached", "--name-only", "--diff-filter=ACMR")
 	cmd.Dir = root
 	out, err := cmd.Output()
 	if err != nil {
 		// `--staged` é o modo do pre-commit: sem git não há índice, e o erro cru do git
 		// (`exit status 128`) não diz qual das duas faltas é.
-		if msg := gitmeta.Explica(gitmeta.Verifica(root), "listar os arquivos staged"); msg != "" {
+		if msg := gitmeta.Explain(gitmeta.Check(root), "listar os arquivos staged"); msg != "" {
 			return nil, errors.New(msg)
 		}
 		return nil, fmt.Errorf("listar arquivos staged: %w", err)
@@ -141,26 +141,26 @@ func arquivosStaged(root string) ([]string, error) {
 	return lista, nil
 }
 
-// rodarSubcomando reexecuta o próprio binário. Reusar o pipeline do `check` por
+// runSubcommand reexecuta o próprio binário. Reusar o pipeline do `check` por
 // processo (em vez de refatorar o RunE dele para uma função compartilhada) mantém
 // UMA implementação do que é verificar — e o custo é um fork, não N.
-func rodarSubcomando(args []string) error {
+func runSubcommand(args []string) error {
 	exe, err := os.Executable()
 	if err != nil {
 		return err
 	}
 	c := exec.Command(exe, args...)
 	c.Stdout, c.Stderr, c.Stdin = os.Stdout, os.Stderr, os.Stdin
-	return traduzSaidaDoFilho(c.Run())
+	return translateChildOutput(c.Run())
 }
 
-// traduzSaidaDoFilho converte o resultado bruto de um subprocesso no erro que o
+// translateChildOutput converte o resultado bruto de um subprocesso no erro que o
 // `main` sabe interpretar.
 //
 // Existe separada para ser TESTÁVEL: exercitar isto pelo `rodarSubcomando`
 // exigiria reexecutar o binário do anchors contra um projeto de verdade em
 // disco, e o que está sob teste é a tradução do código, não o comando.
-func traduzSaidaDoFilho(err error) error {
+func translateChildOutput(err error) error {
 	// O código de saída do FILHO precisa atravessar a fronteira do processo.
 	//
 	// `c.Run()` devolve um `*exec.ExitError` genérico, e o `main` — que converte
@@ -169,8 +169,8 @@ func traduzSaidaDoFilho(err error) error {
 	// pre-commit barrava um commit só de configuração (package.json, yarn.lock),
 	// que é exatamente o caso que o código 3 existe para permitir.
 	var ee *exec.ExitError
-	if errors.As(err, &ee) && ee.ExitCode() == ExitNaoRegido {
-		return errNaoRegido{target: "os arquivos staged"}
+	if errors.As(err, &ee) && ee.ExitCode() == ExitNotGoverned {
+		return errNotGoverned{target: "os arquivos staged"}
 	}
 	return err
 }

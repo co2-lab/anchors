@@ -33,7 +33,7 @@ func checkRouteExists(content string, n mapx.Node, root string, g *mapx.Graph, c
 	if n.Kind != mapx.KindSpec {
 		return Skip, "a rota é DECLARADA pela spec — é ela que promete o caminho"
 	}
-	rota := rotaDeclarada(content)
+	rota := declaredRoute(content)
 	if rota == "" {
 		// Sem rota declarada não há o que confrontar. Cobrar a declaração é trabalho do
 		// `route-declared`; duplicá-lo aqui produziria dois gates acusando o mesmo.
@@ -47,7 +47,7 @@ func checkRouteExists(content string, n mapx.Node, root string, g *mapx.Graph, c
 		return Pending, "o projeto não declara `route_registry:` no anchors.yaml — sem " +
 			"saber onde as rotas são registradas, não há como confrontar `" + rota + "`"
 	}
-	conhecidas, err := rotasRegistradas(root, globs)
+	conhecidas, err := registeredRoutes(root, globs)
 	if err != nil {
 		return Pending, "não foi possível ler o registro de rotas: " + err.Error()
 	}
@@ -66,7 +66,7 @@ func checkRouteExists(content string, n mapx.Node, root string, g *mapx.Graph, c
 		rota, len(conhecidas), strings.Join(globs, ", "))
 }
 
-// rotaDeclaradaRE casa a rota declarada pela spec, nas duas formas que aparecem:
+// declaredRouteRE casa a rota declarada pela spec, nas duas formas que aparecem:
 //   - NOME de tela: `> **Rota**: `MetadataEdit“
 //   - CAMINHO HTTP: `route: POST /manage-metadata` (interface de backend)
 //
@@ -76,16 +76,16 @@ func checkRouteExists(content string, n mapx.Node, root string, g *mapx.Graph, c
 // promessa não cumprida — a Lambda não tinha rota, env var nem grant na infra, e a spec
 // prometia a rota. O verbo HTTP é opcional e as crases também, porque as duas escritas
 // aparecem no mesmo projeto.
-var rotaDeclaradaRE = regexp.MustCompile("(?mi)^>?\\s*\\*{0,2}(?:rota|route)\\*{0,2}\\s*:\\s*`?(?:(?:GET|POST|PUT|PATCH|DELETE)\\s+)?(/[a-z0-9][a-z0-9/_-]*|[A-Za-z][A-Za-z0-9_]*)`?")
+var declaredRouteRE = regexp.MustCompile("(?mi)^>?\\s*\\*{0,2}(?:rota|route)\\*{0,2}\\s*:\\s*`?(?:(?:GET|POST|PUT|PATCH|DELETE)\\s+)?(/[a-z0-9][a-z0-9/_-]*|[A-Za-z][A-Za-z0-9_]*)`?")
 
-func rotaDeclarada(content string) string {
-	if m := rotaDeclaradaRE.FindStringSubmatch(content); m != nil {
+func declaredRoute(content string) string {
+	if m := declaredRouteRE.FindStringSubmatch(content); m != nil {
 		return m[1]
 	}
 	return ""
 }
 
-// nomeDeRotaRE reconhece as formas em que uma rota é registrada:
+// routeNameRE reconhece as formas em que uma rota é registrada:
 //   - `name="Perfil"` — a prop do navegador (React Navigation, Expo Router e afins);
 //   - `Perfil: undefined` / `Perfil: {` — a entrada no tipo do stack;
 //   - `addResource('signup')` — a rota HTTP de um backend (API Gateway e afins).
@@ -93,10 +93,10 @@ func rotaDeclarada(content string) string {
 // Todas contam porque projetos reais usam todas, e olhar só a primeira produz falso
 // positivo: medido, 9 das 96 telas de um projeto declaravam rota que só aparecia no tipo,
 // e 59 rotas HTTP viviam apenas na terceira forma.
-var nomeDeRotaRE = regexp.MustCompile(`name="([A-Za-z][A-Za-z0-9_]*)"|(?m)^\s{2,}([A-Za-z][A-Za-z0-9_]*)\s*:\s*(?:undefined|\{)|addResource\('([a-z0-9][a-z0-9/_-]*)'`)
+var routeNameRE = regexp.MustCompile(`name="([A-Za-z][A-Za-z0-9_]*)"|(?m)^\s{2,}([A-Za-z][A-Za-z0-9_]*)\s*:\s*(?:undefined|\{)|addResource\('([a-z0-9][a-z0-9/_-]*)'`)
 
-// rotasRegistradas lê os arquivos de registro de rota do projeto e devolve os nomes.
-func rotasRegistradas(root string, globs []string) (map[string]bool, error) {
+// registeredRoutes lê os arquivos de registro de rota do projeto e devolve os nomes.
+func registeredRoutes(root string, globs []string) (map[string]bool, error) {
 	out := map[string]bool{}
 	fsys := os.DirFS(root)
 	for _, glob := range globs {
@@ -109,7 +109,7 @@ func rotasRegistradas(root string, globs []string) (map[string]bool, error) {
 			if rerr != nil {
 				continue
 			}
-			for _, m := range nomeDeRotaRE.FindAllStringSubmatch(string(b), -1) {
+			for _, m := range routeNameRE.FindAllStringSubmatch(string(b), -1) {
 				if m[1] != "" {
 					out[m[1]] = true
 				}

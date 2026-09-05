@@ -30,13 +30,13 @@ func ruleCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`\b[A-Z0-9]` + config.CodeLengthPattern() + `-([A-Z])\d{2}\b`)
 }
 
-// letrasCanonicas confronta a spec contra `config.DefaultRuleLetters` — o que o gate faz
+// canonicalLetters confronta a spec contra `config.DefaultRuleLetters` — o que o gate faz
 // quando o projeto não declarou vocabulário próprio.
 //
 // Uma letra fora das canônicas é invisível para a rastreabilidade: o `feature-test-match`
 // não a enxerga, mesmo com feature e teste escritos. O achado é o mesmo do modo declarado;
 // muda só o conserto sugerido, porque aqui o projeto ainda não tem onde declarar.
-func letrasCanonicas(content string) (Verdict, string) {
+func canonicalLetters(content string) (Verdict, string) {
 	canonicas := map[string]bool{}
 	for _, l := range config.DefaultRuleLetters {
 		canonicas[string(l)] = true
@@ -80,7 +80,7 @@ func checkRuleTypes(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 	// vocabulário; cobrá-las contra um vocabulário implícito seria inventar regra que
 	// ninguém escreveu.
 	if cfg == nil || len(cfg.RuleTypes) == 0 {
-		return letrasCanonicas(content)
+		return canonicalLetters(content)
 	}
 
 	// (3) CONFLITO no próprio vocabulário: mesma letra reivindicada por seções distintas.
@@ -126,7 +126,7 @@ func checkRuleTypes(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 	// projeto real: 48 specs com "Eventos / Callbacks" preenchida e sem um único
 	// código, e os cenários que provavam esses eventos emprestaram o código do
 	// estado vizinho (um `-S` regendo comportamento).
-	if msg := secoesSemCodigo(content, cfg.RuleTypes); msg != "" {
+	if msg := sectionsWithoutCode(content, cfg.RuleTypes); msg != "" {
 		return Pending, msg
 	}
 	return Pass, ""
@@ -214,18 +214,18 @@ func normalizeSection(s string) string {
 	return strings.ToLower(strings.TrimSpace(s))
 }
 
-// linhaDeTabelaRE: linha de corpo de tabela markdown (não o cabeçalho nem o
+// tableRowRE: linha de corpo de tabela markdown (não o cabeçalho nem o
 // separador). Duas barras bastam para ser célula; o separador é `| --- |`.
-var linhaDeTabelaRE = regexp.MustCompile(`^\s*\|[^|]*\|`)
+var tableRowRE = regexp.MustCompile(`^\s*\|[^|]*\|`)
 var separadorTabelaRE = regexp.MustCompile(`^\s*\|[\s:|-]+\|?\s*$`)
 
-// secoesSemCodigo acha seção declarada `requires_code` que tem tabela preenchida e
+// sectionsWithoutCode acha seção declarada `requires_code` que tem tabela preenchida e
 // nenhum código de regra.
 //
 // Só olha TABELA: uma seção pode ter prosa explicativa sem catalogar nada. O que
 // caracteriza catálogo é a linha de tabela — e é lá que o código deveria estar, na
 // primeira célula, como as outras seções fazem.
-func secoesSemCodigo(content string, types []config.RuleType) string {
+func sectionsWithoutCode(content string, types []config.RuleType) string {
 	exige := map[string]string{} // título normalizado → letra
 	for _, rt := range types {
 		for _, s := range rt.RequiresCode {
@@ -262,7 +262,7 @@ func secoesSemCodigo(content string, types []config.RuleType) string {
 		if ruleCodeRE().MatchString(line) {
 			temCodigo = true
 		}
-		if linhaDeTabelaRE.MatchString(line) && !separadorTabelaRE.MatchString(line) &&
+		if tableRowRE.MatchString(line) && !separadorTabelaRE.MatchString(line) &&
 			!strings.Contains(strings.ToLower(line), "---") {
 			linhas++
 		}

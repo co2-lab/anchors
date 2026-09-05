@@ -56,8 +56,8 @@ const (
 	Done   State = "done"  // tratada (fato datado)
 )
 
-// Estados é a ordem de leitura do ciclo de vida — usada na busca e nos relatórios.
-var Estados = []State{Future, Todo, Doing, Done}
+// States é a ordem de leitura do ciclo de vida — usada na busca e nos relatórios.
+var States = []State{Future, Todo, Doing, Done}
 
 // Issue é uma divergência registrada.
 type Issue struct {
@@ -84,26 +84,26 @@ type Issue struct {
 	//
 	// Filtrável (`anchors issues --dono usuario`): é a lista que se leva para a conversa
 	// com quem decide, e misturá-la com o trabalho do agente faz as duas serem ignoradas.
-	Dono Dono
+	Dono Owner
 }
 
-// Dono diz quem consegue resolver a issue.
-type Dono string
+// Owner diz quem consegue resolver a issue.
+type Owner string
 
 const (
 	// DonoAgente é o padrão: a issue se resolve mexendo no repositório, e o próximo
 	// confronto a fecha sozinho.
-	DonoAgente Dono = "agente"
+	DonoAgente Owner = "agente"
 	// DonoUsuário é a issue que ESPERA UMA PESSOA: uma decisão de produto, uma resposta
 	// que não está em lugar nenhum do código. O agente não a resolve por mais que tente —
 	// e tentar é o defeito, porque decidir por conta própria é o que a decisão em aberto
 	// existe para evitar.
-	DonoUsuário Dono = "usuario"
+	DonoUsuário Owner = "usuario"
 )
 
-// DonoDe devolve o dono declarado, com o padrão aplicado. Uma issue antiga, gravada antes
+// OwnerOf devolve o dono declarado, com o padrão aplicado. Uma issue antiga, gravada antes
 // do campo existir, não tem o valor no disco — e é do agente, que era o único caso.
-func DonoDe(d Dono) Dono {
+func OwnerOf(d Owner) Owner {
 	if d == "" {
 		return DonoAgente
 	}
@@ -153,7 +153,7 @@ func (i Issue) Body() string {
 	}
 	// O DONO no cabeçalho é o que permite filtrar sem abrir cada arquivo — e é a
 	// pergunta que quem lê a pasta faz primeiro: "o que aqui é meu?".
-	fmt.Fprintf(&b, "- **dono:** %s\n", DonoDe(i.Dono))
+	fmt.Fprintf(&b, "- **dono:** %s\n", OwnerOf(i.Dono))
 	fmt.Fprintf(&b, "- **detectada em:** %s\n\n", i.Date)
 	// Cabeçalho da seção do corpo — omitido quando o Detail já traz seus próprios
 	// cabeçalhos markdown (um laudo estruturado da IA), para não duplicar.
@@ -209,7 +209,7 @@ func pathFor(root string, state State, id string) string {
 // É o coração da busca por identidade: a data no nome varia, a Key não.
 func byKey(root, key string) (State, string, bool) {
 	suffix := "--" + key + ".md"
-	for _, st := range Estados {
+	for _, st := range States {
 		names, _ := List(root, st)
 		for _, name := range names {
 			if strings.HasSuffix(name, suffix) {
@@ -233,8 +233,8 @@ func Exists(root, key string) (State, bool) {
 // existe), não faz nada e devolve resolved=false. Este é o fechamento do loop: a
 // issue deixa de mentir sobre o estado quando o problema é corrigido.
 func Resolve(root, key string) (resolved bool, err error) {
-	if destino != nil {
-		return destino.Resolve(key)
+	if target != nil {
+		return target.Resolve(key)
 	}
 	st, name, ok := byKey(root, key)
 	if !ok || st == Done {
@@ -265,8 +265,8 @@ func Open(root string, i Issue) (created bool, at State, err error) {
 // A dedup continua valendo entre TODOS os estados: uma dívida que virou trabalho de agora
 // (movida para `todo/`) não é recriada em `future/` no confronto seguinte.
 func OpenAt(root string, i Issue, nasce State) (created bool, at State, err error) {
-	if destino != nil {
-		return destino.Open(i, nasce)
+	if target != nil {
+		return target.Open(i, nasce)
 	}
 	if st, ok := Exists(root, i.Key()); ok {
 		return false, st, nil // já existe (em qualquer estado) — não duplica
@@ -301,7 +301,7 @@ func List(root string, state State) ([]string, error) {
 	return out, nil
 }
 
-// Reabrir move uma issue de `done/` de volta para `todo/` e ACRESCENTA o novo laudo ao
+// Reopen move uma issue de `done/` de volta para `todo/` e ACRESCENTA o novo laudo ao
 // corpo, preservando o anterior.
 //
 // Existe porque um achado NOVO sobre uma unidade já revisada sumia em silêncio: o `Open`
@@ -312,11 +312,11 @@ func List(root string, state State) ([]string, error) {
 // Idempotência é a política certa para o MESMO problema detectado duas vezes; não é para
 // um problema DIFERENTE no mesmo lugar. A diferença está no corpo, e por isso ele é
 // comparado antes de decidir.
-func Reabrir(root string, i Issue) (reaberta bool, err error) {
+func Reopen(root string, i Issue) (reaberta bool, err error) {
 	// No github o REABRIR está dentro do Open: ele acha o card fechado, reabre e
 	// acrescenta o laudo novo. Separar os dois faria duas buscas para uma decisão.
-	if destino != nil {
-		r, _, err := destino.Open(i, Todo)
+	if target != nil {
+		r, _, err := target.Open(i, Todo)
 		return r, err
 	}
 	st, name, ok := byKey(root, i.Key())
@@ -351,57 +351,57 @@ func Reabrir(root string, i Issue) (reaberta bool, err error) {
 	return true, nil
 }
 
-// donoRE lê o dono do cabeçalho de uma issue já gravada.
-var donoRE = regexp.MustCompile(`(?m)^- \*\*dono:\*\*\s*(\S+)\s*$`)
+// ownerRE lê o dono do cabeçalho de uma issue já gravada.
+var ownerRE = regexp.MustCompile(`(?m)^- \*\*dono:\*\*\s*(\S+)\s*$`)
 
-// DonoDoArquivo lê de quem é a issue, sem carregar o resto.
+// FileOwner lê de quem é a issue, sem carregar o resto.
 //
 // Uma issue gravada ANTES do campo existir não o traz, e é do agente — que era o único
 // caso. Devolver "usuário" nesse caso encheria a lista de quem decide com trabalho que
 // não é dele, e o efeito seria a lista deixar de ser lida.
-func DonoDoArquivo(caminho string) Dono {
+func FileOwner(caminho string) Owner {
 	b, err := os.ReadFile(caminho)
 	if err != nil {
 		return DonoAgente
 	}
-	if m := donoRE.FindSubmatch(b); m != nil {
-		return DonoDe(Dono(m[1]))
+	if m := ownerRE.FindSubmatch(b); m != nil {
+		return OwnerOf(Owner(m[1]))
 	}
 	return DonoAgente
 }
 
-// ListaPorDono filtra as issues de um estado por dono. É a lista que se leva para a
+// ListByOwner filtra as issues de um estado por dono. É a lista que se leva para a
 // conversa com quem decide (`usuario`), ou a fila de trabalho do agente.
-func ListaPorDono(root string, st State, dono Dono) ([]string, error) {
+func ListByOwner(root string, st State, dono Owner) ([]string, error) {
 	nomes, err := List(root, st)
 	if err != nil {
 		return nil, err
 	}
 	var out []string
 	for _, n := range nomes {
-		if DonoDoArquivo(filepath.Join(root, Dir, string(st), n)) == DonoDe(dono) {
+		if FileOwner(filepath.Join(root, Dir, string(st), n)) == OwnerOf(dono) {
 			out = append(out, n)
 		}
 	}
 	return out, nil
 }
 
-// Reatribui muda o dono de uma issue JÁ ABERTA, preservando o resto do arquivo.
+// Reassign muda o dono de uma issue JÁ ABERTA, preservando o resto do arquivo.
 //
 // É o caminho para o agente que tentou resolver uma issue sua e esbarrou em algo que só
 // uma pessoa responde: a issue continua sendo a violação que era, e passa a esperar quem
 // pode resolvê-la. Sem isto, ela ficaria em `todo/` do agente sendo retentada para sempre,
 // ou seria fechada sem que o problema tivesse sido resolvido.
-func Reatribui(root string, st State, nome string, para Dono, porque string) error {
+func Reassign(root string, st State, nome string, para Owner, porque string) error {
 	caminho := filepath.Join(root, Dir, string(st), nome)
 	b, err := os.ReadFile(caminho)
 	if err != nil {
 		return err
 	}
 	texto := string(b)
-	linha := "- **dono:** " + string(DonoDe(para))
-	if donoRE.MatchString(texto) {
-		texto = donoRE.ReplaceAllString(texto, linha)
+	linha := "- **dono:** " + string(OwnerOf(para))
+	if ownerRE.MatchString(texto) {
+		texto = ownerRE.ReplaceAllString(texto, linha)
 	} else {
 		// Issue anterior ao campo: insere depois do kind, que sempre existe.
 		texto = strings.Replace(texto, "\n- **alvo", "\n"+linha+"\n- **alvo", 1)
@@ -411,25 +411,25 @@ func Reatribui(root string, st State, nome string, para Dono, porque string) err
 	// que já se tentou.
 	if porque != "" {
 		texto = strings.TrimRight(texto, "\n") + "\n\n---\n**Passou a ser do " +
-			string(DonoDe(para)) + ":** " + porque + "\n"
+			string(OwnerOf(para)) + ":** " + porque + "\n"
 	}
 	return os.WriteFile(caminho, []byte(texto), 0o644)
 }
 
-// --- o destino do achado: arquivo ou card ---
+// --- o target do achado: arquivo ou card ---
 //
 // Quem chama não decide, e não deveria: são oito pontos entre `check` e `judge`, e
 // espalhar `if modoGitHub` por eles garantiria que o próximo ponto a nascer esquecesse.
-// O destino é configurado UMA vez, no começo do comando.
+// O target é configurado UMA vez, no começo do comando.
 //
 // `nil` mantém o comportamento de arquivo — é o modo local, e também o que vale para
 // qualquer chamador que não configurou nada.
-var destino *GitHub
+var target *GitHub
 
-// UsarGitHub roteia o ciclo de vida das issues para os cards do repositório.
-func UsarGitHub(repo, label string) {
-	destino = &GitHub{Repo: repo, Label: label}
+// UseGitHub roteia o ciclo de vida das issues para os cards do repositório.
+func UseGitHub(repo, label string) {
+	target = &GitHub{Repo: repo, Label: label}
 }
 
-// UsarArquivos volta a gravar em `issues/` — usado pelos testes, que não falam com a rede.
-func UsarArquivos() { destino = nil }
+// UseFiles volta a gravar em `issues/` — usado pelos testes, que não falam com a rede.
+func UseFiles() { target = nil }

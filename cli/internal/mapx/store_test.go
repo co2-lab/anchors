@@ -20,14 +20,14 @@ func TestGeradoPorSozinhoNaoReescreveOMapa(t *testing.T) {
 	p := filepath.Join(dir, "anchors.graph.yaml")
 	g := &Graph{Version: 1, Nodes: []Node{{ID: "a", Rev: "r1"}}}
 
-	GeradoPor = "0.1.10"
+	GeneratedBy = "0.1.10"
 	if err := Save(g, p); err != nil {
 		t.Fatal(err)
 	}
 	antes, _ := os.ReadFile(p)
 
 	// Outro binário, MESMO mapa: o arquivo tem de ficar intacto.
-	GeradoPor = "dev"
+	GeneratedBy = "dev"
 	if err := Save(g, p); err != nil {
 		t.Fatal(err)
 	}

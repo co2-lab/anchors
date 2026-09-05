@@ -5,8 +5,8 @@ import (
 	"testing"
 )
 
-func qsDeTeste() []Pergunta {
-	return Perguntas(&Proposal{Config: nil}, []string{"go", "nextjs"})
+func qsDeTeste() []Question {
+	return Questions(&Proposal{Config: nil}, []string{"go", "nextjs"})
 }
 
 // O contrato existe para um agente responder sem ver a TUI. Cada pergunta precisa trazer
@@ -51,7 +51,7 @@ func TestRespostaInvalidaRecusaTudo(t *testing.T) {
 	qs := qsDeTeste()
 	ruim := "preset-que-nao-existe"
 
-	st := ValidaRespostas(qs, Respostas{Preset: &ruim})
+	st := ValidateAnswers(qs, Respostas{Preset: &ruim})
 
 	if TudoAceito(st) {
 		t.Fatal("preset inexistente deveria recusar o conjunto")
@@ -81,7 +81,7 @@ func TestStatusReportaTodasAsRespostas(t *testing.T) {
 	qs := qsDeTeste()
 	sim := true
 
-	st := ValidaRespostas(qs, Respostas{Header: &sim})
+	st := ValidateAnswers(qs, Respostas{Header: &sim})
 
 	if len(st) != len(qs) {
 		t.Fatalf("esperava %d status (um por pergunta), veio %d", len(qs), len(st))
@@ -100,11 +100,11 @@ func TestStatusReportaTodasAsRespostas(t *testing.T) {
 // e "respondi vazio" (`--artifacts=""`, nenhum artefato) são decisões OPOSTAS, e um bool
 // zero-value não as separa.
 func TestNaoRespondidoNaoEhOMesmoQueRespondidoVazio(t *testing.T) {
-	qs := Perguntas(&Proposal{}, nil)
+	qs := Questions(&Proposal{}, nil)
 	vazio := []string{}
 
-	semResposta := ValidaRespostas(qs, Respostas{})
-	comVazio := ValidaRespostas(qs, Respostas{Artifacts: &vazio})
+	semResposta := ValidateAnswers(qs, Respostas{})
+	comVazio := ValidateAnswers(qs, Respostas{Artifacts: &vazio})
 
 	for _, s := range semResposta {
 		if s.ID == "artifacts" && !s.UsouPada {
@@ -145,7 +145,7 @@ func TestGitHubExigeRepoELabels(t *testing.T) {
 	qs := qsDeTeste()
 	github := "github"
 
-	st := ValidaRespostas(qs, Respostas{Workflow: &github})
+	st := ValidateAnswers(qs, Respostas{Workflow: &github})
 
 	if TudoAceito(st) {
 		t.Fatal("modo github sem repo nem labels deveria recusar")
@@ -169,7 +169,7 @@ func TestLocalRecusaCamposDoGitHub(t *testing.T) {
 	qs := qsDeTeste()
 	local, repo := "local", "owner/nome"
 
-	st := ValidaRespostas(qs, Respostas{Workflow: &local, Repo: &repo})
+	st := ValidateAnswers(qs, Respostas{Workflow: &local, Repo: &repo})
 
 	if TudoAceito(st) {
 		t.Error("`repo` no modo local faz o arquivo mentir sobre a integração estar ativa")
@@ -182,7 +182,7 @@ func TestGitHubCompletoEhAceito(t *testing.T) {
 	github, repo := "github", "acme/exemplo"
 	labels := []string{"anchors"}
 
-	st := ValidaRespostas(qs, Respostas{Workflow: &github, Repo: &repo, Labels: &labels})
+	st := ValidateAnswers(qs, Respostas{Workflow: &github, Repo: &repo, Labels: &labels})
 
 	if !TudoAceito(st) {
 		for _, s := range st {

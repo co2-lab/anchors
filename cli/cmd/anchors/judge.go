@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"path/filepath"
 	"strings"
@@ -31,7 +32,7 @@ func newJudgeCmd() *cobra.Command {
 dupla saída de um gate determinístico (carimbo no mapa + issue).
 
   anchors judge --pending                      lista os alvos aguardando julgamento
-  anchors judge <alvo> --gate <g> --verdict pass|fail|dispensado --reason "..."
+  anchors judge <alvo> --gate <g> --verdict pass|fail|waived --reason "..."
 
 O fluxo: o 'anchors check' marca os alvos de um gate 'measures: judgment' como
 pendentes e os enfileira. A IA (worker) lê o guide do gate, confronta o alvo, e
@@ -66,7 +67,7 @@ regra (e o carimbo fica no mapa parecendo verificação real), 'fail' reprova tr
 ninguém errou. O --reason é obrigatório e nomeia a ausência: qual peça falta, e onde
 está declarada.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -86,7 +87,7 @@ está declarada.`,
 				return fmt.Errorf("--gate é obrigatório (o gate de julgamento que você está avaliando)")
 			}
 			v := strings.ToLower(verdict)
-			if err := validaVeredito(v, reason); err != nil {
+			if err := validateVerdict(v, reason); err != nil {
 				return err
 			}
 
@@ -103,7 +104,7 @@ está declarada.`,
 			// Cair para a peça que EXISTE preserva a identidade (spec e código são a mesma
 			// unidade) e mantém o comando prescrito funcionando desde a primeira etapa.
 			if !nodeExists(g, target) {
-				if alt := pecaExistenteDaUnidade(g, target); alt != "" {
+				if alt := unitExistingPiece(g, target); alt != "" {
 					fmt.Printf("   (o alvo ainda não existe; registrando em `%s`, a peça desta unidade que já está no mapa)\n", alt)
 					target = alt
 				}
@@ -119,8 +120,8 @@ está declarada.`,
 			// No modo github o achado de gate vira CARD, não arquivo: o `issues/` é a fila do
 			// modo local (mover pasta à mão), e manter os dois faz o board esconder o que os
 			// gates encontraram.
-			if cfg != nil && cfg.ModoGitHub() && len(cfg.Workflow.Labels) > 0 {
-				issue.UsarGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
+			if cfg != nil && cfg.GitHubMode() && len(cfg.Workflow.Labels) > 0 {
+				issue.UseGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
 			}
 			gc, ok := findJudgmentGate(cfg, gateName)
 			// `review` é o julgamento do CICLO, não um gate do projeto: ele não roda sobre
@@ -149,8 +150,8 @@ está declarada.`,
 			switch v {
 			case "fail":
 				verdictStr = "issue"
-			case "dispensado":
-				verdictStr = "dispensado"
+			case "waived":
+				verdictStr = "waived"
 			}
 			// 1) CARIMBO — marca a aresta guide→alvo (o confronto da régua contra o
 			//    alvo) com o veredito da IA. Se o gate declara guide, carimba essa
@@ -205,7 +206,7 @@ está declarada.`,
 				}
 				if created {
 					fmt.Printf("✗ julgado FAIL — issue aberta em %s/todo/\n", issue.Dir)
-				} else if reaberta, rerr := issue.Reabrir(absRoot, iss); rerr != nil {
+				} else if reaberta, rerr := issue.Reopen(absRoot, iss); rerr != nil {
 					return rerr
 				} else if reaberta {
 					// Achado NOVO sobre unidade já revisada: reabre e acrescenta o laudo.
@@ -215,21 +216,21 @@ está declarada.`,
 				} else {
 					fmt.Printf("✗ julgado FAIL — mesmo achado já registrado (%s/), nada a fazer\n", at)
 				}
-			} else if v == "dispensado" {
+			} else if v == "waived" {
 				// A palavra IMPORTA aqui. Anunciar "PASS" desfaria o ponto inteiro do
 				// terceiro veredito: quem lê a saída ficaria com a impressão de que o
 				// alvo foi verificado e aprovado — a mesma confusão que o `pass`
 				// mentiroso produzia, agora vinda do próprio comando.
 				if ok, _ := issue.Resolve(absRoot, iss.Key()); ok {
-					fmt.Printf("○ julgado DISPENSADO — não havia o que confrontar; issue anterior resolvida (→ %s/done/)\n", issue.Dir)
+					fmt.Println(i18n.T("judge.waived_resolved", issue.Dir))
 				} else {
-					fmt.Printf("○ julgado DISPENSADO — não havia o que confrontar\n")
+					fmt.Println(i18n.T("judge.waived"))
 				}
 			} else {
 				if ok, _ := issue.Resolve(absRoot, iss.Key()); ok {
-					fmt.Printf("✓ julgado PASS — issue anterior resolvida (→ %s/done/)\n", issue.Dir)
+					fmt.Println(i18n.T("judge.pass_resolved", issue.Dir))
 				} else {
-					fmt.Printf("✓ julgado PASS\n")
+					fmt.Println(i18n.T("judge.pass"))
 				}
 			}
 			fmt.Printf("  carimbado: %d aresta(s) com o veredito de IA (gate '%s')\n", stamped, gc.Name)
@@ -273,7 +274,7 @@ func listPendingJudgments(root string) error {
 	if n == 0 {
 		fmt.Println("nenhum alvo aguardando julgamento (rode `anchors check` para descobrir)")
 	} else {
-		fmt.Printf("\n%d alvo(s) — julgue com: anchors judge <alvo> --gate <g> --verdict pass|fail|dispensado --reason ...\n", n)
+		fmt.Printf("\n%d alvo(s) — julgue com: anchors judge <alvo> --gate <g> --verdict pass|fail|waived --reason ...\n", n)
 	}
 	return nil
 }
@@ -284,9 +285,9 @@ func closeJudgeTask(root, gateName, target string) {
 	_ = queue.MarkDone(root, id)
 }
 
-// pecaExistenteDaUnidade acha, para um alvo ausente do mapa, outra peça da MESMA unidade
+// unitExistingPiece acha, para um alvo ausente do mapa, outra peça da MESMA unidade
 // que já esteja lá — a spec, tipicamente, quando o código ainda não nasceu.
-func pecaExistenteDaUnidade(g *mapx.Graph, target string) string {
+func unitExistingPiece(g *mapx.Graph, target string) string {
 	base := strings.TrimSuffix(target, filepath.Ext(target))
 	for _, suf := range []string{".spec.md", ".feature", ".test.ts", ".test.tsx", ".ts", ".tsx"} {
 		if cand := base + suf; cand != target && nodeExists(g, cand) {
@@ -296,7 +297,7 @@ func pecaExistenteDaUnidade(g *mapx.Graph, target string) string {
 	return ""
 }
 
-// validaVeredito confronta o veredito recebido e o motivo que o acompanha.
+// validateVerdict confronta o veredito recebido e o motivo que o acompanha.
 //
 // Extraída do `RunE` para ser TESTÁVEL: o contrato dos três vereditos é o que impede o
 // `pass` mentiroso, e um contrato sem teste é uma intenção.
@@ -313,8 +314,16 @@ func pecaExistenteDaUnidade(g *mapx.Graph, target string) string {
 // Medido no blue-eyes (#76): a saída usada foi `pass`, com o motivo explicando que não
 // havia o que medir. Funcionou uma vez e ensina o hábito errado — carimbar julgamento sem
 // olhar é o que corrói o valor de `measures: judgment`.
-func validaVeredito(v, reason string) error {
-	if v != "pass" && v != "fail" && v != "dispensado" {
+func validateVerdict(v, reason string) error {
+	// O VALOR ANTIGO ainda é aceito, e vira o canônico.
+	//
+	// `dispensado` já está em mapas commitados (`verdict: dispensado`) e em scripts.
+	// Recusá-lo faria o `check` reperguntar julgamentos que alguém já respondeu — e o
+	// carimbo antigo continuaria no mapa, sem que nada os ligasse.
+	if v == "dispensado" {
+		v = "waived"
+	}
+	if v != "pass" && v != "fail" && v != "waived" {
 		return fmt.Errorf("--verdict deve ser 'pass', 'fail' ou 'dispensado' " +
 			"(dispensado: o alvo da pergunta não existe — a spec o declara `@TBD`)")
 	}
@@ -327,7 +336,7 @@ func validaVeredito(v, reason string) error {
 	switch v {
 	case "fail":
 		return fmt.Errorf("--reason é obrigatório num veredito 'fail' (explique a violação)")
-	case "dispensado":
+	case "waived":
 		return fmt.Errorf("--reason é obrigatório num veredito 'dispensado' " +
 			"(nomeie a ausência: qual peça falta, e onde está declarada)")
 	}

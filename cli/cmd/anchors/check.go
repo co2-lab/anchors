@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"path/filepath"
 	"strings"
@@ -42,7 +43,7 @@ os computáveis. É o modo do PRE-COMMIT: um gate judge não pode barrar um comm
 (não dá para esperar a IA) nem deve enfileirar julgamento a cada commit (lixo
 repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -53,8 +54,8 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// No modo github o achado de gate vira CARD, não arquivo: o `issues/` é a fila do
 			// modo local (mover pasta à mão), e manter os dois faz o board esconder o que os
 			// gates encontraram.
-			if cfg != nil && cfg.ModoGitHub() && len(cfg.Workflow.Labels) > 0 {
-				issue.UsarGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
+			if cfg != nil && cfg.GitHubMode() && len(cfg.Workflow.Labels) > 0 {
+				issue.UseGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
 			}
 			if len(cfg.Gates) == 0 {
 				return fmt.Errorf("nenhum gate declarado no anchors.yaml (seção `gates:`)")
@@ -69,7 +70,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				}
 				cfg.Gates = kept
 				if len(cfg.Gates) == 0 {
-					fmt.Println("nenhum gate determinístico a rodar (todos são de julgamento).")
+					fmt.Println(i18n.T("check.no_deterministic_gate"))
 					return nil
 				}
 			}
@@ -84,7 +85,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			if bruto == "" {
 				bruto = os.Getenv("ANCHORS_SKIP_RULES")
 			}
-			dispensa, erros := gate.ParseDispensa(bruto)
+			dispensa, erros := gate.ParseWaiver(bruto)
 			// A MENSAGEM DE COMMIT também dispensa: `[skip-trinca-completa@WRKSP: motivo]`.
 			//
 			// O caminho vem por `--commit-msg`, e não de `.git/COMMIT_EDITMSG`: MEDIDO, o
@@ -94,8 +95,8 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// ele quem passa este caminho.
 			if msgPath != "" {
 				if msg, err := os.ReadFile(msgPath); err == nil {
-					daMsg, errosMsg := gate.DispensaDaMensagem(string(msg))
-					dispensa = dispensa.Mescla(daMsg)
+					daMsg, errosMsg := gate.WaiverFromMessage(string(msg))
+					dispensa = dispensa.Merge(daMsg)
 					erros = append(erros, errosMsg...)
 				}
 			}
@@ -104,9 +105,9 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 					"dispensa sem justificativa escrita é indistinguível de alguém fugindo de um "+
 					"gate que achou defeito", strings.Join(erros, "\n  "))
 			}
-			cfg.Gates = filtrarGates(cfg.Gates, phase, category, skipSlow, perspective, dispensa)
+			cfg.Gates = filterGates(cfg.Gates, phase, category, skipSlow, perspective, dispensa)
 			if len(cfg.Gates) == 0 {
-				fmt.Printf("nenhum gate a rodar para este recorte (fase=%q categoria=%q).\n", phase, category)
+				fmt.Println(i18n.T("check.no_gate_for_slice", phase, category))
 				return nil
 			}
 			if mapPath == "" {
@@ -125,14 +126,14 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// O aviso não barra: o binário velho ainda faz o trabalho da versão dele, e
 			// derrubar o CI trocaria "faz menos do que devia" por "não faz nada" — a mesma
 			// razão do `doctor --check-pipelines`.
-			if avisoDeBinarioVelho(g.GeradoPor, version) != "" {
-				fmt.Fprintln(os.Stderr, avisoDeBinarioVelho(g.GeradoPor, version))
+			if staleBinaryWarning(g.GeradoPor, version) != "" {
+				fmt.Fprintln(os.Stderr, staleBinaryWarning(g.GeradoPor, version))
 			}
 
 			// Os arquivos que de fato MUDARAM, distintos do raio de impacto que o
 			// `selectNodes` devolve. Um gate que julga a mudança precisa dos primeiros;
 			// os demais, do raio. Ver Config.Alterados.
-			cfg.Alterados = normalizaAlterados(changed, absRoot)
+			cfg.Alterados = normalizeChanged(changed, absRoot)
 			nodes, scope, err := selectNodes(g, cfg, all, changed, absRoot)
 			if err != nil {
 				return err
@@ -157,11 +158,11 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// invocação (config ausente, mapa ilegível), que não é relatório —
 			// gravá-lo sobrescreveria uma foto boa com uma mensagem de erro.
 			head, assunto, _ := gitmeta.Head(absRoot)
-			espelho := checklog.Abrir(absRoot, all, checklog.Cabecalho(
+			espelho := checklog.Open(absRoot, all, checklog.Header(
 				"anchors "+strings.Join(os.Args[1:], " "),
 				head, assunto, gitmeta.DirtyCount(absRoot), time.Now(),
 			))
-			defer espelho.Fechar()
+			defer espelho.Close()
 
 			warnIfMapStale(absRoot, mapPath, cfg, g)
 			fmt.Printf("check %s — %d nós, %d gates\n\n", scope, len(nodes), len(cfg.Gates))
@@ -169,10 +170,10 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// `all` chega até os gates: é o que permite ao gate que sabe varrer sozinho
 			// (`scope_full`) rodar UMA vez sem receber a lista, em vez de receber o projeto
 			// inteiro em lotes.
-			results := gate.RunComDispensa(cfg.Gates, nodes, absRoot, g, cfg, all, dispensa)
+			results := gate.RunWithWaiver(cfg.Gates, nodes, absRoot, g, cfg, all, dispensa)
 			profile := gate.Aggregate(results)
 			printProfile(profile, onlyIssues, showDrift)
-			avisarGatesSemAlvo(cfg.Gates, profile)
+			warnGatesWithoutTarget(cfg.Gates, profile)
 
 			// O LOOP: check → carimbo → issue. Deixa de "reportar" e passa a
 			// "registrar": grava o veredito por aresta no mapa (destrava stale) e
@@ -186,7 +187,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				// gates de JULGAMENTO: enfileira uma task `judge` por alvo pendente,
 				// para uma IA confrontar e reportar com `anchors judge`.
 				if n := enqueueJudgments(absRoot, cfg, profile); n > 0 {
-					fmt.Printf("%d alvo(s) aguardam julgamento de IA — rode `anchors next` (ou `anchors judge --pending`)\n", n)
+					fmt.Println(i18n.T("check.awaiting_ai_judgment", n))
 				}
 				// PENDENTES é o que está NA FILA, não o que acabou de ser enfileirado.
 				//
@@ -194,15 +195,16 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				// execução ela devolve 0 porque a task já existia. Barrar por esse número
 				// deixaria passar exatamente o caso que importa: rodar o check, não
 				// julgar, e commitar. Medido no projeto de referência.
-				pendentes = julgamentosNaFila(absRoot)
+				pendentes = queuedJudgments(absRoot)
 			}
 
-			if c := espelho.Caminho(); c != "" {
+			if c := espelho.Path(); c != "" {
 				rel, err := filepath.Rel(absRoot, c)
 				if err != nil {
 					rel = c
 				}
-				fmt.Printf("\nsaída espelhada em %s — releia daqui em vez de rodar de novo.\n", rel)
+				fmt.Println()
+				fmt.Println(i18n.T("check.output_mirrored", rel))
 			}
 
 			// JULGAMENTO PENDENTE BARRA O COMMIT, e só o commit — não o `--all`.
@@ -220,11 +222,9 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// ninguém acabou de criar tornaria impossível medir um projeto que já tem
 			// pendência acumulada.
 			if pendentes > 0 && !all {
-				fmt.Printf("\n✗ barrado — %d alvo(s) aguardam julgamento.\n", pendentes)
-				fmt.Println("  O julgamento é do commit ATUAL: quem mexeu no arquivo é quem tem o")
-				fmt.Println("  contexto para responder. Resolva antes de commitar:")
-				fmt.Println("      anchors judge --pending")
-				espelho.Fechar()
+				fmt.Println()
+				fmt.Println(i18n.T("check.blocked_by_judgment", pendentes))
+				espelho.Close()
 				os.Exit(1)
 			}
 
@@ -232,7 +232,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				// `os.Exit` não roda os `defer`: sem fechar aqui, o espelho perderia
 				// o fim do relatório exatamente no caso em que ele mais importa — o
 				// da reprovação.
-				espelho.Fechar()
+				espelho.Close()
 				os.Exit(1) // barra: há fail bloqueante
 			}
 			return nil
@@ -257,7 +257,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 	return cmd
 }
 
-// filtrarGates aplica a CATEGORIZAÇÃO: fase, natureza, custo e perspectiva. Cada eixo é
+// filterGates aplica a CATEGORIZAÇÃO: fase, natureza, custo e perspectiva. Cada eixo é
 // independente — `when` diz em que momento o gate é cobrado, `cost` diz se cabe num
 // loop apertado, `category` diz o que ele mede, `skip_on` diz sobre QUANTO do projeto a
 // resposta dele tem valor.
@@ -265,7 +265,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 // Todos os filtros são permissivos por omissão: gate sem `when`/`cost`/`category`/
 // `skip_on` continua rodando como antes. É o que torna a categorização adotável aos
 // poucos — declarar um eixo num gate não muda o comportamento dos outros 30.
-func filtrarGates(gates []config.Gate, phase, category string, skipSlow bool, perspective string, dispensa gate.Dispensa) []config.Gate {
+func filterGates(gates []config.Gate, phase, category string, skipSlow bool, perspective string, dispensa gate.Waiver) []config.Gate {
 	out := gates[:0:0]
 	for _, g := range gates {
 		if !g.RunsIn(phase) {
@@ -287,8 +287,8 @@ func filtrarGates(gates []config.Gate, phase, category string, skipSlow bool, pe
 		// perspectiva, esta é decisão de quem chama sobre uma regra específica — e é o que
 		// permite commitar a primeira spec de uma unidade (a feature ainda é um card) sem
 		// desligar os gates que verificam outra coisa.
-		if motivo, ok := dispensa.Dispensou(gate.RegraID(idDoGateCmd(g))); ok {
-			fmt.Printf("○ dispensado: %s — %s\n", idDoGateCmd(g), motivo)
+		if motivo, ok := dispensa.Waived(gate.RuleID(gateCmdID(g))); ok {
+			fmt.Printf("○ dispensado: %s — %s\n", gateCmdID(g), motivo)
 			continue
 		}
 		out = append(out, g)
@@ -303,12 +303,12 @@ func enqueueJudgments(root string, cfg *config.Config, p gate.Profile) int {
 	// índice gate → (guide, ask) para enriquecer a task
 	guideOf := map[string]string{}
 	askOf := map[string]string{}
-	gatesDeJulgamentoConhecidos = gatesDeJulgamentoConhecidos[:0]
+	knownJudgmentGates = knownJudgmentGates[:0]
 	for _, g := range cfg.Gates {
 		if g.IsJudgment() {
 			guideOf[g.Name] = g.Guide
 			askOf[g.Name] = g.Ask
-			gatesDeJulgamentoConhecidos = append(gatesDeJulgamentoConhecidos, g.Name)
+			knownJudgmentGates = append(knownJudgmentGates, g.Name)
 		}
 	}
 	n := 0
@@ -333,11 +333,11 @@ func enqueueJudgments(root string, cfg *config.Config, p gate.Profile) int {
 			n++
 		}
 	}
-	descartaJulgamentosObsoletos(root, cfg, p)
+	dropStaleJudgments(root, cfg, p)
 	return n
 }
 
-// descartaJulgamentosObsoletos tira da fila as tasks de julgamento cujo alvo o gate
+// dropStaleJudgments tira da fila as tasks de julgamento cujo alvo o gate
 // NÃO enfileirou nesta rodada.
 //
 // A fila é persistente e o conjunto de alvos aplicáveis não é: um gate que passa a
@@ -350,7 +350,7 @@ func enqueueJudgments(root string, cfg *config.Config, p gate.Profile) int {
 // Só mexe em task de julgamento vinda do check (`kind: judgment`, `origin: check`), e
 // só do gate que rodou nesta rodada — não toca trabalho de outra origem nem de gate
 // que não foi cobrado agora.
-func descartaJulgamentosObsoletos(root string, cfg *config.Config, p gate.Profile) {
+func dropStaleJudgments(root string, cfg *config.Config, p gate.Profile) {
 	rodou := map[string]bool{}
 	for _, g := range cfg.Gates {
 		if g.IsJudgment() {
@@ -391,7 +391,7 @@ func gateDaTaskJudge(id string) string {
 		return ""
 	}
 	resto := id[len(pref):]
-	for _, g := range gatesDeJulgamentoConhecidos {
+	for _, g := range knownJudgmentGates {
 		if strings.HasPrefix(resto, g+"-") {
 			return g
 		}
@@ -399,9 +399,9 @@ func gateDaTaskJudge(id string) string {
 	return ""
 }
 
-// gatesDeJulgamentoConhecidos é preenchido por enqueueJudgments a cada rodada — o
+// knownJudgmentGates é preenchido por enqueueJudgments a cada rodada — o
 // nome do gate vem da config, não de uma lista fixa.
-var gatesDeJulgamentoConhecidos []string
+var knownJudgmentGates []string
 
 // relSlug reduz um caminho a algo usável em ID de task.
 func relSlug(p string) string { return strings.TrimSuffix(p, filepath.Ext(p)) }
@@ -553,20 +553,20 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile) error {
 	return nil
 }
 
-// ExitNaoRegido é o código de saída para "este caminho não é regido pela Estrutura".
+// ExitNotGoverned é o código de saída para "este caminho não é regido pela Estrutura".
 // Não é uma reprovação — é a resposta "não tenho jurisdição sobre isto".
 //
 // Existe como CÓDIGO, e não como texto a ser grepado, porque o pre-commit precisa
 // distinguir isto de uma reprovação real. O hook antes fazia `grep "não está no mapa"`
 // na saída: um casamento de string frágil que passava a valer para as DUAS situações
 // assim que elas compartilharam uma mensagem — e o furo entrou por aí.
-const ExitNaoRegido = 3
+const ExitNotGoverned = 3
 
-// errNaoRegido sinaliza o caminho não-regido. Carrega o alvo para a mensagem, e é
+// errNotGoverned sinaliza o caminho não-regido. Carrega o alvo para a mensagem, e é
 // reconhecida em main() para virar ExitNaoRegido em vez do exit 1 genérico.
-type errNaoRegido struct{ target string }
+type errNotGoverned struct{ target string }
 
-func (e errNaoRegido) Error() string {
+func (e errNotGoverned) Error() string {
 	return fmt.Sprintf("%q não é regido pela Estrutura (não casa nenhuma camada do `layers:`) — nada a confrontar", e.target)
 }
 
@@ -590,9 +590,9 @@ func selectNodes(g *mapx.Graph, cfg *config.Config, all bool, changed []string, 
 	var ordem []string
 	var naoRegidos int
 	for _, c := range changed {
-		ids, err := impactoDe(g, cfg, c, root)
+		ids, err := impactOf(g, cfg, c, root)
 		if err != nil {
-			var nr errNaoRegido
+			var nr errNotGoverned
 			if errors.As(err, &nr) {
 				// Não-regido não contamina o lote: o Anchors só não tem jurisdição sobre
 				// ele. Com TODOS não-regidos, o erro sobe (o chamador decide o exit 3).
@@ -616,7 +616,7 @@ func selectNodes(g *mapx.Graph, cfg *config.Config, all bool, changed []string, 
 		if len(changed) > 1 {
 			alvo = fmt.Sprintf("%s (e mais %d)", changed[0], len(changed)-1)
 		}
-		return nil, "", errNaoRegido{target: alvo}
+		return nil, "", errNotGoverned{target: alvo}
 	}
 	for _, n := range g.Nodes {
 		if vistos[n.ID] {
@@ -629,9 +629,9 @@ func selectNodes(g *mapx.Graph, cfg *config.Config, all bool, changed []string, 
 	return nodes, fmt.Sprintf("--changed (%d arquivos)", len(changed)), nil
 }
 
-// impactoDe resolve UM arquivo alterado nos ids de nó que ele arrasta (o alvo, o que
+// impactOf resolve UM arquivo alterado nos ids de nó que ele arrasta (o alvo, o que
 // propaga a partir dele, o que o valida, e as peças da mesma unidade).
-func impactoDe(g *mapx.Graph, cfg *config.Config, changed, root string) ([]string, error) {
+func impactOf(g *mapx.Graph, cfg *config.Config, changed, root string) ([]string, error) {
 	target := relTo(root, changed)
 	if !nodeExists(g, target) {
 		if _, statErr := os.Stat(filepath.Join(root, target)); statErr != nil {
@@ -654,13 +654,13 @@ func impactoDe(g *mapx.Graph, cfg *config.Config, changed, root string) ([]strin
 		// decisão é sobre o DIRETÓRIO-RAIZ do caminho (`issues/…`, `changes/…`).
 		ig := scan.LoadIgnoreFor(root, cfg)
 		if raiz, _, achou := strings.Cut(filepath.ToSlash(target), "/"); achou && ig.SkipDir(raiz, raiz) {
-			return nil, errNaoRegido{target: target}
+			return nil, errNotGoverned{target: target}
 		}
 		if ig.SkipFile(target) {
-			return nil, errNaoRegido{target: target}
+			return nil, errNotGoverned{target: target}
 		}
 		if layer, _ := scan.Classify(target, cfg); layer == "" {
-			return nil, errNaoRegido{target: target}
+			return nil, errNotGoverned{target: target}
 		}
 		return nil, fmt.Errorf("%q é REGIDO (camada do `layers:`) mas não está no mapa — "+
 			"rode `anchors map build` primeiro (é o passo que registra o arquivo novo). "+
@@ -686,7 +686,7 @@ func impactoDe(g *mapx.Graph, cfg *config.Config, changed, root string) ([]strin
 	// não dispara `feature-test-match`, `feature-nao-vazia` nem `teste-nao-vazio`, e um
 	// worker que siga o comando prescrito pelo `anchors work` declara "todos os
 	// bloqueantes ✗0" sem jamais ter rodado o bloqueante mais importante da sua etapa.
-	for _, peca := range pecasDaUnidade(target) {
+	for _, peca := range unitPieces(target) {
 		if nodeExists(g, peca) {
 			ids[peca] = true
 		}
@@ -698,13 +698,13 @@ func impactoDe(g *mapx.Graph, cfg *config.Config, changed, root string) ([]strin
 	return out, nil
 }
 
-// larguraDoNome é a coluna do nome do gate: o maior nome presente, com um piso.
+// nameWidth é a coluna do nome do gate: o maior nome presente, com um piso.
 //
 // Era `%-20s` fixo, e cinco gates passam disso (`handler-ddb-inline-passivo` tem
 // 26). O nome mais longo empurrava a coluna do veredito e desalinhava a tabela
 // inteira — numa lista de 49 linhas, o desalinhamento é o que faz o olho perder
 // a coluna que importa.
-func larguraDoNome(nomes []string) int {
+func nameWidth(nomes []string) int {
 	w := 18
 	for _, n := range nomes {
 		if len([]rune(n)) > w {
@@ -721,17 +721,17 @@ func larguraDoNome(nomes []string) int {
 // obrigaria a coluna dos fails a reservar três casas para nada. Cada coluna com
 // a sua mantém os números alinhados à direita — que é o que permite compará-los
 // a olho — sem esticar a tabela.
-type largurasContador struct{ pass, fail, drift, skip, judge int }
+type counterWidths struct{ pass, fail, drift, skip, judge int }
 
-func casas(n int) int { return len(fmt.Sprint(n)) }
+func places(n int) int { return len(fmt.Sprint(n)) }
 
-func calcularLarguras(p gate.Profile) largurasContador {
+func computeWidths(p gate.Profile) counterWidths {
 	// `drift` nasce em 0 — e continua 0 se nenhum gate tiver drift, que é o
 	// sinal para a coluna inteira não existir. Os outros têm piso 1: eles sempre
 	// aparecem, e `%*d` com largura 0 imprimiria colado no símbolo.
-	w := largurasContador{pass: 1, fail: 1, drift: 0, skip: 1, judge: 1}
+	w := counterWidths{pass: 1, fail: 1, drift: 0, skip: 1, judge: 1}
 	max := func(atual, n int) int {
-		if c := casas(n); c > atual {
+		if c := places(n); c > atual {
 			return c
 		}
 		return atual
@@ -752,7 +752,7 @@ func calcularLarguras(p gate.Profile) largurasContador {
 	return w
 }
 
-// colunaDrift devolve a célula do ⚠. A decisão é da TABELA, não da linha:
+// driftColumn devolve a célula do ⚠. A decisão é da TABELA, não da linha:
 //
 //   - se algum gate tem drift, a coluna existe em TODAS as linhas — vazia vira
 //     branco do mesmo tamanho. Omiti-la só nas linhas sem drift empurraria o `~`
@@ -763,7 +763,7 @@ func calcularLarguras(p gate.Profile) largurasContador {
 //     inteira sem drift.
 //
 // `largura == 0` é o sinal de "a tabela não tem drift nenhum".
-func colunaDrift(drift, largura int) string {
+func driftColumn(drift, largura int) string {
 	if largura == 0 {
 		return ""
 	}
@@ -778,16 +778,16 @@ func colunaDrift(drift, largura int) string {
 
 // separador some junto com a coluna: sem isso, a tabela sem drift ficaria com
 // dois espaços a mais entre `✗` e `~`.
-func separadorDrift(largura int) string {
+func driftSeparator(largura int) string {
 	if largura == 0 {
 		return ""
 	}
 	return "  "
 }
 
-// gateLimpo: passou em tudo que olhou e não deixou nada pendente. É o gate que
+// cleanGate: passou em tudo que olhou e não deixou nada pendente. É o gate que
 // não pede nada de ninguém — o candidato a sumir sob `--only-issues`.
-func gateLimpo(s gate.GateSummary, drift int) bool {
+func cleanGate(s gate.GateSummary, drift int) bool {
 	return s.Fail == 0 && drift == 0 && s.Skip+s.Pending == 0 && s.Judge == 0
 }
 
@@ -871,7 +871,7 @@ func printDrift(drifts []gate.Result) {
 // confrontado e divergido; indeterminado é ele não ter tido o que confrontar.
 // Sem isso, `~582` parece um débito de 582 itens, quando é o contrário — é a
 // medida de quanto daquele gate não se aplica ali.
-func printLegenda(p gate.Profile, w largurasContador) {
+func printLegenda(p gate.Profile, w counterWidths) {
 	temJudge := false
 	for _, s := range p.ByGate {
 		if s.Judge > 0 {
@@ -899,7 +899,7 @@ func printLegenda(p gate.Profile, w largurasContador) {
 	}
 }
 
-// avisarGatesSemAlvo relata os gates DECLARADOS que não apareceram na tabela.
+// warnGatesWithoutTarget relata os gates DECLARADOS que não apareceram na tabela.
 //
 // A tabela é montada de `profile.GateNames()`, que só conhece gate AVALIADO. Um gate
 // declarado cujo `on:` não casa nenhum nó do mapa nunca é avaliado, então desaparece por
@@ -913,7 +913,7 @@ func printLegenda(p gate.Profile, w largurasContador) {
 //
 // Não é falha: é declaração sem alvo, e o conserto é do projeto (criar o artefato ou
 // remover o gate). Por isso avisa, não barra.
-func avisarGatesSemAlvo(declarados []config.Gate, p gate.Profile) {
+func warnGatesWithoutTarget(declarados []config.Gate, p gate.Profile) {
 	avaliados := map[string]bool{}
 	for _, n := range p.GateNames() {
 		avaliados[n] = true
@@ -938,8 +938,8 @@ func avisarGatesSemAlvo(declarados []config.Gate, p gate.Profile) {
 
 func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 	nomes := p.GateNames()
-	wn := larguraDoNome(nomes)
-	w := calcularLarguras(p)
+	wn := nameWidth(nomes)
+	w := computeWidths(p)
 	limpos := 0
 
 	// perfil por gate
@@ -959,7 +959,7 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 		// do teste divergiu). Somar tudo num número faz o drift parecer benigno — e é
 		// o oposto: é a única categoria acionável do balde. Separamos em ⚠.
 		drift := driftCount(p, name)
-		if onlyIssues && gateLimpo(s, drift) {
+		if onlyIssues && cleanGate(s, drift) {
 			limpos++
 			continue
 		}
@@ -969,7 +969,7 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 		// desce a lista comparando números que não estão na mesma vertical.
 		fmt.Printf("  %-*s  %-11s  ✓%*d  ✗%*d%s%s  ~%*d\n", wn, name, tag,
 			w.pass, s.Pass, w.fail, s.Fail,
-			separadorDrift(w.drift), colunaDrift(drift, w.drift),
+			driftSeparator(w.drift), driftColumn(drift, w.drift),
 			w.skip, s.Skip+s.Pending-drift)
 	}
 	// O gate omitido continua tendo rodado, e o número diz isso. Sem esta linha o
@@ -1091,10 +1091,10 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 		fmt.Println()
 	}
 
-	lembraMaturacao(p, onlyIssues)
+	rememberMaturation(p, onlyIssues)
 }
 
-// lembraMaturacao avisa sobre gate informativo que já está LIMPO.
+// rememberMaturation avisa sobre gate informativo que já está LIMPO.
 //
 // A maturação (QUALITY §7) tem uma metade que o Anchors não cobrava: um gate nasce
 // informativo porque o projeto ainda não cumpre o limiar, e quando passa a cumprir,
@@ -1104,8 +1104,8 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 // A promoção continua sendo decisão humana; o que muda é que ela deixa de depender de
 // alguém lembrar sozinho. E o lembrete aparece AQUI, onde a pessoa acabou de ler os
 // vereditos — um aviso que exige rodar outro comando é um aviso que ninguém vê.
-func lembraMaturacao(p gate.Profile, onlyIssues bool) {
-	prom := gate.GatesPromoviveis(p)
+func rememberMaturation(p gate.Profile, onlyIssues bool) {
+	prom := gate.PromotableGates(p)
 	if len(prom) == 0 {
 		return
 	}
@@ -1132,7 +1132,7 @@ func lembraMaturacao(p gate.Profile, onlyIssues bool) {
 // o formato esperado em várias linhas) sair legível sob a issue.
 func indent(s, pad string) string {
 	var b strings.Builder
-	for _, line := range strings.Split(strings.TrimRight(quebraOcorrencias(s), "\n"), "\n") {
+	for _, line := range strings.Split(strings.TrimRight(breakOccurrences(s), "\n"), "\n") {
 		b.WriteString(pad)
 		b.WriteString(line)
 		b.WriteByte('\n')
@@ -1140,7 +1140,7 @@ func indent(s, pad string) string {
 	return b.String()
 }
 
-// quebraOcorrencias põe cada ocorrência do detalhe na sua própria linha.
+// breakOccurrences põe cada ocorrência do detalhe na sua própria linha.
 //
 // Dez gates montam a mensagem com `strings.Join(achados, "; ")`, e cinco
 // violações no mesmo arquivo saíam numa linha de 800 caracteres: o leitor não
@@ -1150,7 +1150,7 @@ func indent(s, pad string) string {
 // A quebra é no separador que os gates JÁ usam, então nenhum deles precisa
 // mudar. Basta UM separador para quebrar: duas ocorrências já se confundem numa
 // linha só, e é o caso mais comum.
-func quebraOcorrencias(s string) string {
+func breakOccurrences(s string) string {
 	s = strings.ReplaceAll(s, "; ", ";\n")
 
 	// Listas longas separadas por vírgula também quebram — 17 gates montam a
@@ -1165,7 +1165,7 @@ func quebraOcorrencias(s string) string {
 	// como o caso a NÃO quebrar.
 	var out []string
 	for _, linha := range strings.Split(s, "\n") {
-		if ehListaDeTokens(linha) {
+		if isTokenList(linha) {
 			linha = strings.ReplaceAll(linha, ", ", ",\n")
 		}
 		out = append(out, linha)
@@ -1173,19 +1173,19 @@ func quebraOcorrencias(s string) string {
 	return strings.Join(out, "\n")
 }
 
-// limiarQuebraLista — abaixo disto a linha cabe na tela e não vale quebrar, seja
+// listBreakThreshold — abaixo disto a linha cabe na tela e não vale quebrar, seja
 // ela lista ou não. Escolhido para caber num terminal de 120 colunas com a
 // indentação do detalhe (6 a 8 espaços).
-const limiarQuebraLista = 110
+const listBreakThreshold = 110
 
-// ehListaDeTokens: a linha é uma enumeração de itens sem espaço interno?
+// isTokenList: a linha é uma enumeração de itens sem espaço interno?
 //
 // `a.spec.md, b.spec.md, c.spec.md` é lista; `a spec existe, o código existe, e
 // os dois se referenciam` é prosa. A distinção é o espaço DENTRO do item: nome de
 // arquivo, código de regra e símbolo não têm; oração tem. Exige maioria dos itens
 // sem espaço para tolerar o último ("… e mais 3") e o texto que abre a lista.
-func ehListaDeTokens(linha string) bool {
-	if len([]rune(linha)) <= limiarQuebraLista {
+func isTokenList(linha string) bool {
+	if len([]rune(linha)) <= listBreakThreshold {
 		return false
 	}
 	partes := strings.Split(linha, ", ")
@@ -1315,11 +1315,11 @@ func driftCount(p gate.Profile, gateName string) int {
 	return n
 }
 
-// pecasDaUnidade devolve os caminhos das outras peças da trinca de um alvo — spec,
+// unitPieces devolve os caminhos das outras peças da trinca de um alvo — spec,
 // feature, teste e código. É a vizinhança que a IDENTIDADE define, e não a que as arestas
 // registram: as duas costumam coincidir, mas a segunda depende de o mapa já ter ligado as
 // pontas, e o `check` precisa funcionar antes disso.
-func pecasDaUnidade(target string) []string {
+func unitPieces(target string) []string {
 	base := strings.TrimSuffix(target, filepath.Ext(target))
 	for _, suf := range []string{".spec.md", ".feature", ".test", ".spec"} {
 		base = strings.TrimSuffix(base, suf)
@@ -1333,20 +1333,20 @@ func pecasDaUnidade(target string) []string {
 	return out
 }
 
-// idDoGateCmd devolve o ID de um gate (ou o nome, quando o ID falta). Duplica a lógica
+// gateCmdID devolve o ID de um gate (ou o nome, quando o ID falta). Duplica a lógica
 // de `internal/gate` de propósito: exportá-la só para isto acoplaria os dois pacotes por
 // uma função de três linhas.
-func idDoGateCmd(g config.Gate) string {
+func gateCmdID(g config.Gate) string {
 	if g.ID != "" {
 		return g.ID
 	}
 	return g.Name
 }
 
-// normalizaAlterados põe os caminhos na mesma forma que os IDs do mapa (relativos à raiz),
+// normalizeChanged põe os caminhos na mesma forma que os IDs do mapa (relativos à raiz),
 // para que a comparação não dependa de como o chamador escreveu o caminho — o pre-commit
 // passa relativo, e quem roda à mão costuma passar absoluto.
-func normalizaAlterados(changed []string, root string) []string {
+func normalizeChanged(changed []string, root string) []string {
 	out := make([]string, 0, len(changed))
 	for _, c := range changed {
 		p := c
@@ -1360,8 +1360,8 @@ func normalizaAlterados(changed []string, root string) []string {
 	return out
 }
 
-// julgamentosNaFila conta os julgamentos que AGUARDAM resposta.
-func julgamentosNaFila(root string) int {
+// queuedJudgments conta os julgamentos que AGUARDAM resposta.
+func queuedJudgments(root string) int {
 	tasks, err := queue.List(root)
 	if err != nil {
 		return 0
@@ -1375,12 +1375,12 @@ func julgamentosNaFila(root string) int {
 	return n
 }
 
-// avisoDeBinarioVelho compara quem gravou o mapa com quem está rodando.
+// staleBinaryWarning compara quem gravou o mapa com quem está rodando.
 //
 // Compara por IGUALDADE, e não por ordem: "dev" não é ordenável contra "0.1.9", e os dois
 // builds locais que produziram o defeito se chamavam "dev" — ordenar não teria pego
 // nenhum deles. Diferente já é o suficiente para avisar; QUAL é mais novo, quem lê decide.
-func avisoDeBinarioVelho(gravouMapa, rodando string) string {
+func staleBinaryWarning(gravouMapa, rodando string) string {
 	if gravouMapa == "" || gravouMapa == rodando {
 		return ""
 	}

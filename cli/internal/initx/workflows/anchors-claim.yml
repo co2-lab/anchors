@@ -53,6 +53,36 @@ jobs:
         run: |
           set -euo pipefail
 
+          # O PROJETO ESTÁ CONGELADO? — antes de tudo.
+          #
+          # Este é o freio que alcança o AGENTE. Os hooks de pre-commit e pre-push param
+          # quem já tem o repositório clonado; o ruleset para o push no servidor. Mas nada
+          # disso impede um agente de PEGAR trabalho — e um card atribuído durante o
+          # congelamento é trabalho que começa contra uma base que vai mudar.
+          #
+          # Lido pela API porque este pipeline não faz checkout de propósito: ele roda a
+          # cada pedido de trabalho, e clonar o repositório o tornaria o gargalo que a
+          # serialização já ameaça ser.
+          cfg=$(gh api "repos/$GH_REPO/contents/anchors.yaml" --jq '.content' 2>/dev/null \
+                | base64 -d 2>/dev/null || true)
+          if printf '%s' "$cfg" | grep -qE '^enabled:[[:space:]]*false[[:space:]]*$'; then
+            motivo=$(printf '%s' "$cfg" | sed -n 's/^freeze_reason:[[:space:]]*//p' | head -1)
+            echo "🛑 PROJETO CONGELADO — nenhum card será atribuído."
+            echo ""
+            if [ -n "$motivo" ]; then
+              echo "   Motivo: $motivo"
+            else
+              echo "   (nenhum motivo declarado no anchors.yaml)"
+            fi
+            echo ""
+            echo "   Procure a issue [congelado] no repositório para acompanhar."
+            echo "   Quem for CONSERTAR trabalha por fora do claim — o freio existe para"
+            echo "   impedir trabalho por inércia, não o conserto que o destrava."
+            # Sai com SUCESSO: o congelamento não é falha do pipeline, e um vermelho aqui
+            # se somaria ao ruído de quem já está investigando o problema de verdade.
+            exit 0
+          fi
+
           # O CARD DO PRÓPRIO AGENTE VEM PRIMEIRO — antes da prioridade do board.
           #
           # Um agente por vez, um card por vez: dois cards abertos no mesmo agente
@@ -95,7 +125,7 @@ jobs:
           for estado in "anchors:ready-to-review" "anchors:to-do"; do
             gh issue list --state open --label "$LABEL" --label "$estado" \
               --limit 200 --json number,labels \
-              --jq '.[] | select([.labels[].name] | index("anchors:precisa-do-usuario") | not) | .number' \
+              --jq '.[] | select([.labels[].name] | (index("anchors:needs-user") or index("anchors:precisa-do-usuario")) | not) | .number' \
               >> /tmp/disponiveis.txt
           done
 
@@ -127,6 +157,9 @@ jobs:
           # fecharam. A ordem de /tmp/disponiveis.txt é a prioridade (review antes de
           # implementação).
           livre=""
+          # Quem soltou o card antes desta atribuição. Preenchido só quando a varredura
+          # acha um card `(liberado)`; alimenta o aviso de papel acumulado.
+          liberou_antes=""
           while read -r n; do
             [ -n "$n" ] || continue
 
@@ -182,7 +215,18 @@ jobs:
             # o padrão exigiria que a linha TERMINASSE em "(liberado)" — nenhum card
             # liberado voltaria à fila, e o board travaria em silêncio.
             case "$dono" in
-              ""|*"(liberado)"*) livre="$n"; break ;;
+              ""|*"(liberado)"*)
+                livre="$n"
+                # QUEM LIBEROU o card é o penúltimo `anchors-owner:` — o último é o
+                # `(liberado)`. Guardado para o aviso lá embaixo: entregar o card de volta
+                # a quem acabou de soltá-lo é legítimo num time de um, mas precisa APARECER.
+                liberou_antes=$(gh issue view "$n" --json comments \
+                  --jq '[.comments[].body
+                         | select(startswith("anchors-owner:"))
+                         | sub("^anchors-owner:[ ]*"; "")
+                         | sub("[ ]*—.*$"; "")]
+                        | map(select(. != "(liberado)")) | last // ""')
+                break ;;
             esac
           done < /tmp/disponiveis.txt
 
@@ -202,6 +246,38 @@ jobs:
           # A atribuição. O comentário é a posse; o assignee fica para a pessoa, no uso
           # normal do GitHub.
           gh issue comment "$livre" --body "anchors-owner: $AGENT"
+
+          # PAPEL ACUMULADO: este agente está pegando de volta o card que ele mesmo
+          # acabou de soltar.
+          #
+          # A régua do `guide review` diz que quem corrige não aprova o próprio conserto —
+          # e ela é CERTA: é o que faz um defeito atravessar duas cabeças diferentes. Mas
+          # ela pressupõe que exista uma segunda cabeça. Num time de um, não existe, e
+          # travar o card não a produz: só para o trabalho.
+          #
+          # Então avisa e entrega. A alternativa — recusar — travaria o board de quem
+          # opera sozinho, que é o caso normal de um projeto começando. E a alternativa
+          # silenciosa (entregar sem dizer nada) é pior que as duas: o card ficaria
+          # idêntico ao de uma revisão independente, e é justamente essa diferença que
+          # precisa aparecer para quem ler o histórico depois.
+          #
+          # Decidido em blue-eyes#82.
+          if [ -n "$liberou_antes" ] && [ "$liberou_antes" = "$AGENT" ]; then
+            printf '%s\n' \
+              '⚠ **Mesmo agente nos dois papéis.**' '' \
+              "Este card foi solto por \`$AGENT\` e acaba de voltar para o MESMO agente." '' \
+              'O `anchors guide review` diz que quem corrige não aprova o próprio conserto —' \
+              'a revisão vale porque um segundo par de olhos vê o que o primeiro não viu.' \
+              'Aqui não há segundo par: é a mesma cabeça relendo o próprio trabalho.' '' \
+              'Isso NÃO barra o fluxo — num time de um é o que vai acontecer sempre, e' \
+              'travar o card não produziria o revisor que falta. Mas fica registrado: quem' \
+              'ler este card depois precisa saber que a segunda revisão não foi' \
+              'independente.' '' \
+              'Se houver outro agente disponível, prefira passá-lo adiante.' \
+              > /tmp/papel-acumulado.md
+            gh issue comment "$livre" --body-file /tmp/papel-acumulado.md
+            echo "⚠ #$livre volta ao MESMO agente que o liberou ($AGENT) — avisado no card"
+          fi
           # Cada `ready-to-x` tem seu `in-x`: quem sai de `to-do` vai implementar, quem
           # sai de `ready-to-review` vai revisar. Mover para o estado errado faria o
           # board descrever um trabalho que não é o que está acontecendo.
@@ -272,7 +348,7 @@ jobs:
             # quem pode destravá-lo. Fosse estado, ele sairia da coluna onde o trabalho
             # realmente parou.
             if [ "$voltas" -ge 10 ]; then
-              gh issue edit "$livre" --add-label "anchors:precisa-do-usuario" >/dev/null 2>&1 || true
+              gh issue edit "$livre" --add-label "anchors:needs-user" >/dev/null 2>&1 || true
               # `printf` em vez de heredoc: o bash exige o delimitador de fecho na COLUNA
               # ZERO, e o YAML exige que tudo dentro de `run:` fique indentado. Os dois não
               # podem ser satisfeitos ao mesmo tempo — medido: o script quebrou com
@@ -287,7 +363,7 @@ jobs:
                 'o ponto em que elas discordam sobre o que a spec PEDE, não sobre o que o' \
                 'código faz.' '' \
                 '**Como destravar:** decida o ponto e escreva a decisão NA SPEC (uma regra' \
-                'nova, com código). Depois remova a label `anchors:precisa-do-usuario` e o' \
+                'nova, com código). Depois remova a label `anchors:needs-user` e o' \
                 'fluxo segue.' '' \
                 'Enquanto a label estiver aqui, o pipeline de claim não entrega este card.' \
                 > /tmp/escala.md
@@ -367,6 +443,11 @@ jobs:
               '> **Quem corrige não aprova o próprio conserto.** Ao corrigir, você vira autor' \
               '> daquele trecho — por isso o card volta para `ready-to-review` em vez de seguir' \
               '> para `ready-to-test`. É a mesma regra que já vale para quem implementa.' \
+              '>' \
+              '> **Time de um:** a regra pressupõe uma segunda cabeça, e às vezes ela não existe.' \
+              '> Quando o card volta para o MESMO agente, o claim AVISA e entrega — travar não' \
+              '> produziria o revisor que falta, só pararia o trabalho. O aviso fica no card para' \
+              '> quem ler depois saber que a segunda revisão não foi independente.' \
               '' \
               '### Se o card voltou para `ready-to-review` enquanto você revisava' \
               '' \

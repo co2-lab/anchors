@@ -226,13 +226,16 @@ func TestEstadoVivenaLabelSemTocarOBoard(t *testing.T) {
 // a opção, o card não se move, e o trabalho some do fluxo em silêncio.
 func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 	valida := map[string]bool{}
-	for _, c := range EstadosDoTrabalho {
+	for _, c := range WorkStates {
 		valida[c] = true
 	}
 	// A label de ESCALAÇÃO é válida sem ser estado: ela marca QUEM destrava o card, e o
 	// card continua na coluna onde o trabalho parou. Tratá-la como estado a faria sair
 	// dessa coluna, e o board deixaria de mostrar onde o fluxo travou.
-	valida[LabelPrecisaDoUsuario] = true
+	valida[LabelNeedsUser] = true
+	// A label ANTIGA continua válida enquanto durar a migração: os pipelines a aceitam
+	// para não abandonar as issues que já a carregam.
+	valida[LabelNeedsUserLegacy] = true
 	for _, w := range WorkflowsDoFluxo {
 		b, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {
@@ -264,8 +267,8 @@ func TestAnchorsNaoEscreveAlemDeReadyToTest(t *testing.T) {
 			}
 		}
 	}
-	if EstadoFinalDoAnchors != "anchors:ready-to-test" {
-		t.Errorf("o último estado que o Anchors escreve mudou: %q", EstadoFinalDoAnchors)
+	if AnchorsFinalState != "anchors:ready-to-test" {
+		t.Errorf("o último estado que o Anchors escreve mudou: %q", AnchorsFinalState)
 	}
 }
 
@@ -324,7 +327,7 @@ func TestStalePreservaOHistorico(t *testing.T) {
 func TestFaltaWorkflowVeOQueNaoExiste(t *testing.T) {
 	dir := t.TempDir()
 
-	if faltam := FaltaWorkflow(dir); len(faltam) != len(WorkflowsDoFluxo) {
+	if faltam := MissingWorkflow(dir); len(faltam) != len(WorkflowsDoFluxo) {
 		t.Fatalf("projeto vazio: esperava %d faltando, veio %d", len(WorkflowsDoFluxo), len(faltam))
 	}
 
@@ -335,7 +338,7 @@ func TestFaltaWorkflowVeOQueNaoExiste(t *testing.T) {
 	if len(escritos) != len(WorkflowsDoFluxo) {
 		t.Errorf("esperava %d escritos, veio %d", len(WorkflowsDoFluxo), len(escritos))
 	}
-	if faltam := FaltaWorkflow(dir); len(faltam) != 0 {
+	if faltam := MissingWorkflow(dir); len(faltam) != 0 {
 		t.Errorf("depois de semear nada deveria faltar: %v", faltam)
 	}
 	if quebrados := SemConcurrency(dir); len(quebrados) != 0 {
@@ -399,7 +402,7 @@ func TestSemConcurrencyPegaPipelineQuePareceOK(t *testing.T) {
 		t.Error("claim sem `concurrency` atribuiria o mesmo card a dois agentes — tem de ser achado")
 	}
 	// E não pode ser contado como ausente: o arquivo está lá.
-	for _, w := range FaltaWorkflow(dir) {
+	for _, w := range MissingWorkflow(dir) {
 		if w.Arquivo == "anchors-claim.yml" {
 			t.Error("o arquivo existe — contá-lo como ausente reportaria o mesmo problema duas vezes")
 		}
@@ -445,7 +448,7 @@ func TestSemeiaEscreveAPaginaDoBoard(t *testing.T) {
 	if _, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}}); err != nil {
 		t.Fatal(err)
 	}
-	b, err := os.ReadFile(filepath.Join(dir, ArquivoDoBoard))
+	b, err := os.ReadFile(filepath.Join(dir, BoardFile))
 	if err != nil {
 		t.Fatalf("a página do board não foi semeada: %v", err)
 	}
@@ -455,7 +458,7 @@ func TestSemeiaEscreveAPaginaDoBoard(t *testing.T) {
 	// O HTML fica FORA de `.github/workflows/`: o GitHub executa tudo que está lá, e um
 	// HTML naquele diretório vira um workflow inválido — erro de sintaxe permanente no
 	// repositório de quem adotou.
-	if strings.Contains(ArquivoDoBoard, DirWorkflows) {
+	if strings.Contains(BoardFile, DirWorkflows) {
 		t.Errorf("a página não pode morar em %s: o GitHub tentaria executá-la", DirWorkflows)
 	}
 }
@@ -469,12 +472,14 @@ func TestClaimPulaCardEscalado(t *testing.T) {
 		t.Fatal(err)
 	}
 	texto := string(b)
-	if !strings.Contains(texto, `index("`+LabelPrecisaDoUsuario+`") | not`) {
+	// O filtro aceita as DUAS labels durante a migração, então o teste confere que a
+	// NOVA está presente — a antiga é tolerância, não requisito.
+	if !strings.Contains(texto, `index("`+LabelNeedsUser+`")`) {
 		t.Error("o claim precisa EXCLUIR o card escalado da lista de disponíveis — " +
 			"senão a escalação vira só um rótulo")
 	}
 	// E precisa escalar em algum limite: contar sem agir deixaria o ciclo rodando.
-	if !strings.Contains(texto, "--add-label \""+LabelPrecisaDoUsuario+"\"") {
+	if !strings.Contains(texto, "--add-label \""+LabelNeedsUser+"\"") {
 		t.Error("o claim precisa APLICAR a label ao atingir o limite")
 	}
 }
@@ -483,8 +488,8 @@ func TestClaimPulaCardEscalado(t *testing.T) {
 // inexistente não é erro fatal — ele falha em silêncio, e o card ficaria travado sem o
 // sinalizador que diz por quê.
 func TestLabelDeEscalacaoNaoEhEstado(t *testing.T) {
-	for _, e := range EstadosDoTrabalho {
-		if e == LabelPrecisaDoUsuario {
+	for _, e := range WorkStates {
+		if e == LabelNeedsUser {
 			t.Fatal("a escalação NÃO é estado: o card continua na coluna onde o trabalho " +
 				"parou, e o que muda é quem pode destravá-lo")
 		}

@@ -42,7 +42,7 @@ func checkCodeReferenceValid(content string, n mapx.Node, root string, g *mapx.G
 	}
 
 	meu := codeDoHeader(content)
-	donos := donosDeCodigo(g, root)
+	donos := codeOwners(g, root)
 	if len(donos) == 0 {
 		return Pending, "nenhuma identidade no mapa — rode `anchors map build`"
 	}
@@ -98,10 +98,10 @@ func codeDoHeader(content string) string {
 	return ""
 }
 
-// donosDeCodigo varre as specs do mapa e coleta o código que cada uma DECLARA no header —
+// codeOwners varre as specs do mapa e coleta o código que cada uma DECLARA no header —
 // o universo de identidades vivas do projeto. Lê do disco porque o mapa guarda o nó, não
 // o conteúdo.
-func donosDeCodigo(g *mapx.Graph, root string) map[string]bool {
+func codeOwners(g *mapx.Graph, root string) map[string]bool {
 	out := map[string]bool{}
 	for _, n := range g.Nodes {
 		if n.Code != "" {

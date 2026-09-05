@@ -49,7 +49,7 @@ var tiposConvencionais = []string{
 	"feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "revert",
 }
 
-func assuntoRE() *regexp.Regexp {
+func subjectRE() *regexp.Regexp {
 	return regexp.MustCompile(`^(` + strings.Join(tiposConvencionais, "|") +
 		`)(\([^)]+\))?(!)?: .+`)
 }
@@ -62,21 +62,21 @@ func assuntoRE() *regexp.Regexp {
 // costume do git e cortaria assuntos que hoje passam.
 const LimiteDoAssunto = 100
 
-// cabecalhoRE separa as partes do assunto para confrontá-las uma a uma. Um `^...$` único
+// headerRE separa as partes do assunto para confrontá-las uma a uma. Um `^...$` único
 // diria só "não casou", e quem foi barrado precisa saber QUAL parte está errada.
-func cabecalhoRE() *regexp.Regexp {
+func headerRE() *regexp.Regexp {
 	return regexp.MustCompile(`^([A-Za-z]+)(\(([^)]*)\))?(!)?: *(.*)$`)
 }
 
-// problemaNoAssunto devolve o defeito e como consertá-lo, ou "" se o assunto está bom.
+// subjectProblem devolve o defeito e como consertá-lo, ou "" se o assunto está bom.
 //
 // A ordem das conferências é do mais estrutural ao mais cosmético: quem errou o tipo não
 // precisa ouvir sobre maiúscula na mesma volta.
-func problemaNoAssunto(assunto string) string {
+func subjectProblem(assunto string) string {
 	// O commitlint tem `header-trim`, e aqui ele não faz falta: o assunto já chega aparado
 	// (ver primeiraLinhaUtil) e o próprio git apara o cabeçalho ao gravar — o espaço não
 	// alcança o changelog. Conferir seria acusar um defeito que não existe.
-	m := cabecalhoRE().FindStringSubmatch(assunto)
+	m := headerRE().FindStringSubmatch(assunto)
 	if m == nil {
 		return "não está no formato `tipo(escopo): o que mudou`"
 	}
@@ -88,7 +88,7 @@ func problemaNoAssunto(assunto string) string {
 		return fmt.Sprintf("o tipo `%s` tem maiúscula — use `%s`, senão o changelog cria "+
 			"dois grupos para a mesma coisa", tipo, strings.ToLower(tipo))
 	}
-	if !tipoConhecido(tipo) {
+	if !knownType(tipo) {
 		return fmt.Sprintf("`%s` não é um tipo conhecido. Tipos: %s",
 			tipo, strings.Join(tiposConvencionais, ", "))
 	}
@@ -115,7 +115,7 @@ func problemaNoAssunto(assunto string) string {
 	return ""
 }
 
-func tipoConhecido(t string) bool {
+func knownType(t string) bool {
 	for _, v := range tiposConvencionais {
 		if v == t {
 			return true
@@ -126,7 +126,7 @@ func tipoConhecido(t string) bool {
 
 // mensagensQueOGitGera não são escritas por ninguém — barrá-las quebraria operações
 // normais do git em vez de melhorar o histórico.
-func geradaPeloGit(assunto string) bool {
+func generatedByGit(assunto string) bool {
 	for _, p := range []string{"Merge ", "Revert ", "fixup! ", "squash! ", "Reapply "} {
 		if strings.HasPrefix(assunto, p) {
 			return true
@@ -153,14 +153,14 @@ Mensagens geradas pelo git (merge, revert, fixup) passam: ninguém as escreveu.`
 			if err != nil {
 				return fmt.Errorf("ler a mensagem: %w", err)
 			}
-			assunto := primeiraLinhaUtil(string(b))
+			assunto := firstUsefulLine(string(b))
 			if assunto == "" {
 				return nil // mensagem vazia: quem barra é o git, e a mensagem dele é melhor
 			}
-			if geradaPeloGit(assunto) {
+			if generatedByGit(assunto) {
 				return nil
 			}
-			problema := problemaNoAssunto(assunto)
+			problema := subjectProblem(assunto)
 			if problema == "" {
 				return nil
 			}
@@ -180,8 +180,8 @@ Mensagens geradas pelo git (merge, revert, fixup) passam: ninguém as escreveu.`
 	return cmd
 }
 
-// primeiraLinhaUtil devolve o assunto, pulando os comentários que o git põe no arquivo.
-func primeiraLinhaUtil(s string) string {
+// firstUsefulLine devolve o assunto, pulando os comentários que o git põe no arquivo.
+func firstUsefulLine(s string) string {
 	for _, l := range strings.Split(s, "\n") {
 		t := strings.TrimSpace(l)
 		if t == "" || strings.HasPrefix(t, "#") {

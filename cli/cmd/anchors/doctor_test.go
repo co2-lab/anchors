@@ -15,7 +15,7 @@ import (
 // que a proteção existia para fechar.
 func TestCorpoDeProtecaoTemOsCamposObrigatorios(t *testing.T) {
 	var corpo map[string]any
-	if err := json.Unmarshal([]byte(corpoDeProtecao(1)), &corpo); err != nil {
+	if err := json.Unmarshal([]byte(protectionBody(1)), &corpo); err != nil {
 		t.Fatalf("o corpo não é JSON válido: %v", err)
 	}
 	// A API recusa (422) se qualquer um destes faltar, mesmo que o valor seja nulo.
@@ -44,21 +44,21 @@ func TestCorpoDeProtecaoTemOsCamposObrigatorios(t *testing.T) {
 // sobre trabalho que já estava na develop.
 func TestAprovacoesExigidasPadraoEhUma(t *testing.T) {
 	var nulo *config.Workflow
-	if got := nulo.AprovacoesExigidas(); got != 1 {
+	if got := nulo.RequiredApprovalsOrDefault(); got != 1 {
 		t.Errorf("sem config, o padrão deveria ser 1, veio %d", got)
 	}
-	if got := (&config.Workflow{}).AprovacoesExigidas(); got != 1 {
+	if got := (&config.Workflow{}).RequiredApprovalsOrDefault(); got != 1 {
 		t.Errorf("sem declarar, o padrão deveria ser 1, veio %d", got)
 	}
 	// ZERO declarado é deliberado e precisa valer: há projetos onde a revisão acontece
 	// fora do GitHub. O ponteiro é o que distingue "não declarou" de "declarou zero" —
 	// com int simples, o zero-value seria indistinguível da ausência.
 	zero := 0
-	if got := (&config.Workflow{RequiredApprovals: &zero}).AprovacoesExigidas(); got != 0 {
+	if got := (&config.Workflow{RequiredApprovals: &zero}).RequiredApprovalsOrDefault(); got != 0 {
 		t.Errorf("zero declarado deveria valer, veio %d", got)
 	}
 	// E o corpo enviado à API reflete o número.
-	if !strings.Contains(corpoDeProtecao(2), `"required_approving_review_count":2`) {
+	if !strings.Contains(protectionBody(2), `"required_approving_review_count":2`) {
 		t.Error("o corpo deveria carregar o número de aprovações")
 	}
 }

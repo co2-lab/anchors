@@ -161,7 +161,7 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 		//
 		// Ele VAI para o git (é o histórico do trabalho); o que não vai é para o mapa. Por
 		// isso a exclusão mora aqui, e não no `.gitignore`.
-		if EhArquivoDeProgresso(rel) {
+		if IsProgressFile(rel) {
 			return nil
 		}
 		layer, kind := classify(rel, cfg)
@@ -246,7 +246,7 @@ func classify(rel string, cfg *config.Config) (layer, kind string) {
 	// o mesmo caminho tem de casar nas duas formas em QUALQUER máquina, porque o mapa é
 	// versionado e trafega entre elas.
 	rel = strings.ReplaceAll(rel, `\`, "/")
-	melhor := prioridade{prio: math.MinInt, tam: -1}
+	melhor := priority{prio: math.MinInt, tam: -1}
 	for name, l := range cfg.Layers {
 		if !matchGlob(l.Pattern, rel) {
 			continue
@@ -254,7 +254,7 @@ func classify(rel string, cfg *config.Config) (layer, kind string) {
 		if excluded(rel, l.Exclude) {
 			continue
 		}
-		p := prioridade{prio: l.Priority, tam: len(l.Pattern), nome: name}
+		p := priority{prio: l.Priority, tam: len(l.Pattern), nome: name}
 		if layer == "" || p.venceContra(melhor) {
 			melhor, layer, kind = p, name, l.Kind
 		}
@@ -262,14 +262,14 @@ func classify(rel string, cfg *config.Config) (layer, kind string) {
 	return layer, kind
 }
 
-// prioridade é a régua de desempate, em ordem: declarada > comprimento > nome.
-type prioridade struct {
+// priority é a régua de desempate, em ordem: declarada > comprimento > nome.
+type priority struct {
 	prio int
 	tam  int
 	nome string
 }
 
-func (a prioridade) venceContra(b prioridade) bool {
+func (a priority) venceContra(b priority) bool {
 	if a.prio != b.prio {
 		return a.prio > b.prio
 	}
@@ -279,29 +279,29 @@ func (a prioridade) venceContra(b prioridade) bool {
 	return a.nome < b.nome // estabilidade: o map não tem ordem
 }
 
-// AmbiguidadeDeCamada é um arquivo cuja camada foi decidida por HEURÍSTICA — dois patterns
+// LayerAmbiguity é um arquivo cuja camada foi decidida por HEURÍSTICA — dois patterns
 // casaram, nenhum declarou `priority`, e o desempate foi o comprimento do pattern.
 //
 // Não é erro: na maioria das vezes o comprimento acerta. É um AVISO, porque é o ponto onde
 // o Anchors adivinhou a intenção do projeto, e adivinhação silenciosa é o que produz a
 // classificação errada que ninguém vê. Quem quiser resolver, declara `priority`.
-type AmbiguidadeDeCamada struct {
+type LayerAmbiguity struct {
 	Arquivo    string
 	Vencedora  string
 	Perdedoras []string
 }
 
-// Ambiguidades devolve os arquivos classificados por desempate heurístico — o material do
+// Ambiguities devolve os arquivos classificados por desempate heurístico — o material do
 // alerta em `check`/`doctor`.
-func Ambiguidades(files []File, cfg *config.Config) []AmbiguidadeDeCamada {
-	var out []AmbiguidadeDeCamada
+func Ambiguities(files []File, cfg *config.Config) []LayerAmbiguity {
+	var out []LayerAmbiguity
 	for _, f := range files {
-		var casam []prioridade
+		var casam []priority
 		for name, l := range cfg.Layers {
 			if !matchGlob(l.Pattern, f.Path) || excluded(f.Path, l.Exclude) {
 				continue
 			}
-			casam = append(casam, prioridade{prio: l.Priority, tam: len(l.Pattern), nome: name})
+			casam = append(casam, priority{prio: l.Priority, tam: len(l.Pattern), nome: name})
 		}
 		if len(casam) < 2 {
 			continue
@@ -312,7 +312,7 @@ func Ambiguidades(files []File, cfg *config.Config) []AmbiguidadeDeCamada {
 		if casam[0].prio > casam[1].prio {
 			continue
 		}
-		a := AmbiguidadeDeCamada{Arquivo: f.Path, Vencedora: casam[0].nome}
+		a := LayerAmbiguity{Arquivo: f.Path, Vencedora: casam[0].nome}
 		for _, p := range casam[1:] {
 			a.Perdedoras = append(a.Perdedoras, p.nome)
 		}
@@ -475,7 +475,7 @@ func needsFor(kind string, content []byte, root, rel string) []string {
 	case "plan":
 		return extractNeeds(content, root, rel)
 	case "spec":
-		return extractNeedsCodigo(content)
+		return extractNeedsCode(content)
 	}
 	return nil
 }
@@ -515,8 +515,8 @@ func parentDe(content []byte) string {
 	return stripInlineCode(raw)
 }
 
-// extractNeedsCodigo lê o `needs:` de uma spec, onde o valor é o código da fase.
-func extractNeedsCodigo(content []byte) []string {
+// extractNeedsCode lê o `needs:` de uma spec, onde o valor é o código da fase.
+func extractNeedsCode(content []byte) []string {
 	m := headerNeedsRE.FindSubmatch(content)
 	if m == nil {
 		return nil
@@ -528,7 +528,7 @@ func extractNeedsCodigo(content []byte) []string {
 		// Só o que PARECE código de fase. Um caminho aqui é engano de quem escreveu (a
 		// spec depende de uma FASE, não de um arquivo), e aceitá-lo em silêncio deixaria
 		// a dependência sem efeito — o gate não a encontraria no plano.
-		if p == "" || !codigoDeFaseRE.MatchString(p) {
+		if p == "" || !phaseCodeRE.MatchString(p) {
 			continue
 		}
 		out = append(out, p)
@@ -536,8 +536,8 @@ func extractNeedsCodigo(content []byte) []string {
 	return out
 }
 
-// codigoDeFaseRE casa `FNDTN-F02` — o código de uma fase de plano.
-var codigoDeFaseRE = regexp.MustCompile(`^[A-Z0-9]` + config.CodeLengthPattern() + `-F\d{2}$`)
+// phaseCodeRE casa `FNDTN-F02` — o código de uma fase de plano.
+var phaseCodeRE = regexp.MustCompile(`^[A-Z0-9]` + config.CodeLengthPattern() + `-F\d{2}$`)
 
 // extractNeeds lê a linha `needs:` e resolve cada caminho relativo à raiz. Só faz
 // sentido em plano — um `needs:` numa spec seria a pergunta errada: spec não espera

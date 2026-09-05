@@ -56,7 +56,7 @@ func setup(t *testing.T) (string, *mapx.Graph, *config.Config) {
 			"feature": {Kind: "feature"}, // declarada mas SEM arquivos → camada-vazia
 		},
 		Gates: []config.Gate{
-			{Name: "spec-completa", On: []string{"spec"}, Check: "non-empty"},
+			{Name: "spec-complete", On: []string{"spec"}, Check: "non-empty"},
 			// nenhum gate para "feature" nem "test" → kind-sem-gate (mas não há test/feature nós)
 		},
 	}
@@ -161,7 +161,7 @@ func TestCheckSkipOnValido(t *testing.T) {
 		{Name: "sem-declaracao"},
 	}}
 
-	fs := checkSkipOnValido(cfg)
+	fs := checkSkipOnValid(cfg)
 	if len(fs) != 1 {
 		t.Fatalf("só o typo deveria ser acusado, veio %d: %+v", len(fs), fs)
 	}

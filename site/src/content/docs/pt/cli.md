@@ -1,86 +1,220 @@
 ---
 title: O CLI
+description: A referência de todos os comandos, agrupados pelo que você está tentando fazer.
 ---
 
 CLI único do framework Anchors, em Go. É a ferramenta que uma IA opera para
 exercitar o ciclo — a IA não precisa saber o Anchors de cor, ela pergunta ao
-binário (`anchors guide`), aprende o fluxo, e opera com os comandos. O Anchors
-**não embute IA**: ele é a ferramenta que a IA usa, em qualquer cliente
-(Claude Code, GPT, Gemini…).
+binário (`anchors guide`), aprende o fluxo, e opera com os comandos.
+
+O Anchors **não embute IA**: ele é a ferramenta que a IA usa, em qualquer
+cliente.
+
+O CLI só lê **texto** — nunca parseia código. As anotações que ele entende vivem
+em comentários, e os marcadores por linguagem são configuráveis. É assim que ele
+é agnóstico de stack.
 
 ## Instalação
 
 ```sh
-git clone https://github.com/co2-lab/anchors.git
-cd anchors/cli
-go build -o anchors ./cmd/anchors
-./anchors --help
+brew install co2-lab/tap/anchors
 ```
 
-## Uso num projeto
+Ou compilando:
 
 ```sh
-anchors init            # configura o anchors.yaml (por P&R; sugere presets de stack)
-anchors map build       # constrói o mapa de dependências a partir dos arquivos
-anchors doctor          # saúde do ecossistema: órfãos, colisões, buracos de cobertura
-anchors check --all     # roda os gates de qualidade; abre issues; carimba o mapa
-anchors report all      # gera os relatórios em docs/anchors/
+git clone https://github.com/co2-lab/anchors.git
+cd anchors/cli && go install ./cmd/anchors
+anchors --help
 ```
 
-O CLI só lê **texto** — nunca parseia código. As anotações que ele entende
-(identidade, `@noPropagation`…) vivem em comentários; os marcadores por
-linguagem são configuráveis. Assim ele é agnóstico de stack.
+## Os primeiros cinco minutos
 
-## O fluxo, dirigido pela IA
-
-A IA lê `anchors guide` e opera este ciclo — o watcher **enfileira** o
-trabalho, a IA **puxa** da fila (a conversa nunca fica presa):
-
-```
-  planejar ──▶ especificar ──▶ mapear ──▶ implementar ──▶ testar ──▶ confrontar
-     │             │             │            │             │            │
- guia de plano   .spec.md    map build   código+feature  testes    check / doctor
-                                                                        │
-                                          issue ◀── divergência que a IA não resolve
+```sh
+anchors init            # configura o anchors.yaml, por perguntas e respostas
+anchors install-hooks   # instala os hooks de pre-commit e pre-push
+anchors map build       # constrói o mapa a partir dos arquivos
+anchors status          # onde o projeto está, e o próximo passo
 ```
 
-Cada arquivo salvo faz o watcher enfileirar a próxima task (spec→implementar,
-feature→testar…). A IA não precisa lembrar o que vem depois; a fila diz.
+O `status` é o comando a rodar quando você não sabe o que fazer. Ele responde
+onde o projeto está no ciclo e **qual é o próximo passo** — não é um relatório,
+é uma instrução.
 
-## O que o CLI faz hoje
+---
 
-| área | comandos | o que entrega |
-|---|---|---|
-| **Estrutura** | `init` | configura o `anchors.yaml`; presets de estrutura para ~17 stacks |
-| **Mapa** | `map build`, `map show`, `governs` | o grafo de dependências; quem rege quem |
-| **Propagação** | `impact`, `stale` | a onda de uma mudança; o que ficou desatualizado |
-| **Fila** | `watch`, `queue`, `next`, `done`, `drop`, `reclaim` | o watcher em background enfileira; a IA puxa |
-| **Qualidade** | `check`, `judge`, `doctor` | gates determinísticos **e de julgamento por IA**; saúde sistêmica |
-| **Identidade** | `code` | gera/valida um código de cenário único (evita colisões) |
-| **Confiança** | `ingest`, `coverage` | ingere JUnit/lcov do runner; cobertura por **cenário**, do **diff**, e **delta** |
-| **Relatórios** | `report` | 6 perspectivas em `docs/`: tests, quality, structure, config, issues, inconsistencies |
-| **A ponte IA** | `guide` (+ `guide plan/spec/code/feature/test/guide`) | o playbook e as réguas embutidas que a IA lê para operar |
+## Começar um projeto
 
-### O que dá confiança no entregável
+| comando | o que faz |
+| --- | --- |
+| `anchors init` | gera o `anchors.yaml` por P&R, sugerindo preset conforme a stack |
+| `anchors install-hooks` | instala o `pre-commit`, o `commit-msg` e o `pre-push` |
+| `anchors map build` | constrói o `anchors.graph.yaml` a partir dos arquivos |
 
-O melhor indicador de um ciclo bem-sucedido é **não ter bugs no final**. Além
-de exigir testes, o Anchors mede a *qualidade* deles a partir do artefato que
-o runner já gera:
+O `init` tem modo não-interativo, para script e CI:
 
-- **por cenário** — cada requisito da spec (`SPCR-V01`…) tem um teste que
-  **passou**? (semântico, não cobertura de linha)
-- **do diff** — as linhas que você **mudou** estão cobertas? (pega o bug na
-  linha nova)
-- **delta** — a cobertura **caiu** desde a última medição? (pega regressão)
+```sh
+anchors init --non-interactive                              # devolve as decisões em JSON
+anchors init --non-interactive --artifacts=spec,test --colocation
+```
 
-E gates que um script não computa ("esta tela respeita a arquitetura?") viram
-**gates de julgamento por IA**: a IA lê os *pontos de conformidade* do guide,
-confronta o alvo item a item, e o veredito entra na mesma mecânica (carimbo +
-issue) — envelhecendo se o alvo mudar.
+---
 
-## Estado do projeto
+## Saber onde você está
 
-Em construção, e honesto sobre isso. A **doutrina** dos 6 pilares está escrita
-e revisada; o **CLI** exercita o ciclo inteiro e foi validado contra uma
-prova de conceito real — um app mobile com backend serverless, com um grafo
-de porte não trivial.
+| comando | responde |
+| --- | --- |
+| `anchors status` | onde o projeto está no ciclo, e o próximo passo |
+| `anchors doctor` | o raio-X: órfãos, colisões, sinais ausentes, buracos |
+| `anchors coverage` | cobertura por cenário, por linha, e mutação |
+| `anchors stale` | o que mudou e ainda não foi reconfrontado |
+| `anchors impact <arquivo>` | o que uma alteração aqui atinge |
+| `anchors governs` | quem cada guia rege, e quantos |
+| `anchors compliance` | o estado de cada dever regulatório |
+
+O `doctor` é o que dizer para alguém que herdou o projeto. Ele não mede
+qualidade de código — mede se o **ecossistema** está saudável: spec sem código,
+código sem spec, sinal que ninguém ingeriu, gate declarado que não protege nada.
+
+---
+
+## Escrever
+
+| comando | o que faz |
+| --- | --- |
+| `anchors guide <artefato>` | a régua de como escrever (spec, code, feature, test, plan, review, work) |
+| `anchors new <kind> <nome>` | emite o esqueleto conforme a régua |
+| `anchors code` | gera um código de identidade único |
+| `anchors recode <de> <para>` | renomeia um código e propaga por todo o projeto |
+| `anchors work <etapa> --for <alvo>` | emite o prompt de trabalho de uma etapa |
+
+Os guias são a documentação **executável**: em vez de a IA decorar o Anchors,
+ela pergunta.
+
+```sh
+anchors guide work      # a régua de quem pegou um card
+anchors guide spec      # como escrever uma spec
+anchors guide review    # a régua de quem revisa um PR
+```
+
+---
+
+## Confrontar
+
+| comando | o que faz |
+| --- | --- |
+| `anchors check --changed <arq>` | roda os gates sobre o que mudou |
+| `anchors check --all` | roda sobre o projeto inteiro |
+| `anchors verify --phase <fase>` | roda TUDO o que a fase cobra (gates + ferramentas externas) |
+| `anchors audit <arquivo>` | o dossiê de pendências de um arquivo, para correção em lote |
+| `anchors judge <alvo> --gate <g>` | registra o veredito de um gate de julgamento |
+| `anchors suggest` | lista, aplica e decide as correções propostas |
+
+### `--changed` vs `--all`
+
+O `--changed` entrega o **raio de impacto**: o arquivo e tudo que depende dele.
+É o certo para quase todo gate — quem quebrou por tabela precisa ser
+confrontado.
+
+O `--all` é a foto do projeto inteiro, e é o que o CI roda.
+
+### `--no-record`
+
+Roda os gates **sem** gravar no mapa. É o que o CI usa: ele confronta, mas não
+deve produzir um mapa diferente do que foi commitado.
+
+---
+
+## Os sinais de teste
+
+| comando | o que faz |
+| --- | --- |
+| `anchors test` | roda as suítes declaradas e ingere os relatórios |
+| `anchors mutation` | roda as suítes de mutação e ingere os relatórios |
+| `anchors ingest --junit <x> --lcov <y>` | ingere relatórios que o projeto já gerou |
+
+**Prefira `anchors test` a `anchors ingest`.** Os dois numa operação só é o que
+garante que o mapa reflete o que **acabou de rodar** — ingerir à mão pode amarrar
+ao mapa o resultado de uma execução anterior, e nada acusaria.
+
+O Anchors não roda mutação nem conhece ferramenta: ele consome o formato aberto
+**Mutation Testing Elements** (`schemaVersion 1.x`), que Stryker, PIT, Infection
+e mutmut emitem.
+
+---
+
+## O trabalho (modo GitHub)
+
+| comando | o que faz |
+| --- | --- |
+| `anchors escalate "..."` | abre a issue de uma mudança necessária no plano ou na spec |
+| `anchors pr-body` | escreve as linhas que fecham os cards, na sintaxe da plataforma |
+| `anchors deliver` | registra a entrega de uma etapa — o gatilho do review |
+
+Ver [O fluxo de trabalho](/docs/fluxo-de-trabalho/) para como esses comandos se
+encaixam num dia de trabalho.
+
+### `escalate`: as duas saídas
+
+```sh
+anchors escalate "<o que está errado>" --sobre <arquivo> --card <n>
+anchors escalate "<o que precisa mudar>" --sobre <arquivo> --para-usuario
+```
+
+A primeira abre um achado que se entrega junto com o card. A segunda abre uma
+**decisão**, e o card para até ela sair.
+
+A escolha entre as duas é sua, e o critério é um só: **isto muda a direção do
+projeto?** Se muda, ou se você tem dúvida, é decisão de quem planejou.
+
+---
+
+## A fila (modo local)
+
+| comando | o que faz |
+| --- | --- |
+| `anchors watch` | o watcher em background: vê mudanças e ENFILEIRA trabalho |
+| `anchors queue` | lista as tasks vivas |
+| `anchors next` | puxa e reivindica a próxima |
+| `anchors done` | fecha task(s) reivindicada(s) |
+| `anchors drop` | descarta uma task sem concluí-la |
+| `anchors reclaim` | devolve à fila as tasks presas (worker morto) |
+
+O watcher **enfileira**, a IA **puxa**. É o que impede a conversa de ficar presa
+esperando o trabalho terminar.
+
+---
+
+## Parar tudo
+
+| comando | o que faz |
+| --- | --- |
+| `anchors freeze --motivo "..."` | congela o projeto inteiro |
+| `anchors thaw` | libera |
+
+Ver [Congelar o projeto](/docs/congelar/).
+
+---
+
+## Relatórios
+
+```sh
+anchors report all       # gera os relatórios em docs/anchors/
+```
+
+Recortes do que o Anchors mede, por perspectiva — para quem precisa do estado
+sem rodar comando.
+
+---
+
+## Códigos de saída
+
+| código | significa |
+| --- | --- |
+| `0` | passou |
+| `1` | um gate bloqueante reprovou, ou há julgamento pendente |
+| `3` | **não regido**: nenhum arquivo casa uma camada do `layers:` |
+
+O `3` existe para o hook distinguir "reprovou" de "não tenho jurisdição sobre
+isto". Tratá-lo como falha impediria commitar mudança só de configuração — que é
+trabalho legítimo que a Estrutura deliberadamente não rege.

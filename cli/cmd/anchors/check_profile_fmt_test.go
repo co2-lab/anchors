@@ -23,12 +23,12 @@ func perfil(gates ...gate.GateSummary) gate.Profile {
 // torta é o que faz o leitor perder o número que importa.
 func TestColunasAlinhamComNomeLongo(t *testing.T) {
 	nomes := []string{"eslint", "handler-ddb-inline-passivo", "circular"}
-	w := larguraDoNome(nomes)
+	w := nameWidth(nomes)
 	if w < len("handler-ddb-inline-passivo") {
 		t.Fatalf("largura %d corta o maior nome (%d)", w, len("handler-ddb-inline-passivo"))
 	}
 	// Piso: com nomes curtos a coluna não encolhe a ponto de colar no veredito.
-	if got := larguraDoNome([]string{"a", "bb"}); got < 18 {
+	if got := nameWidth([]string{"a", "bb"}); got < 18 {
 		t.Errorf("larguraDoNome sem piso: %d", got)
 	}
 }
@@ -40,7 +40,7 @@ func TestLarguraEPorColuna(t *testing.T) {
 		gate.GateSummary{Gate: "a", Pass: 1116, Fail: 0, Skip: 0},
 		gate.GateSummary{Gate: "b", Pass: 1, Fail: 1, Skip: 582},
 	)
-	w := calcularLarguras(p)
+	w := computeWidths(p)
 
 	if w.pass != 4 {
 		t.Errorf("pass: %d, queria 4 (por causa de 1116)", w.pass)
@@ -56,7 +56,7 @@ func TestLarguraEPorColuna(t *testing.T) {
 // As colunas SEMPRE presentes têm piso 1: `%*d` com largura 0 imprimiria colado
 // no símbolo. A do drift é a exceção — ela nasce 0 e só abre com drift real.
 func TestLarguraMinimaEUm(t *testing.T) {
-	w := calcularLarguras(perfil(gate.GateSummary{Gate: "a"}))
+	w := computeWidths(perfil(gate.GateSummary{Gate: "a"}))
 	for nome, got := range map[string]int{
 		"pass": w.pass, "fail": w.fail, "skip": w.skip, "judge": w.judge,
 	} {
@@ -112,7 +112,7 @@ func TestGateLimpoExigeAusenciaDePendencia(t *testing.T) {
 		{"aguardando IA", gate.GateSummary{Pass: 10, Judge: 1}, 0, false},
 	}
 	for _, c := range casos {
-		if got := gateLimpo(c.s, c.drift); got != c.limpo {
+		if got := cleanGate(c.s, c.drift); got != c.limpo {
 			t.Errorf("%s: gateLimpo = %v, queria %v", c.nome, got, c.limpo)
 		}
 	}
@@ -195,7 +195,7 @@ func TestColunaDoSkipNaoMigraComOuSemDrift(t *testing.T) {
 	}
 	// `driftCount` lê de p.Results; sem resultados o drift é 0 nas duas. Para
 	// exercitar o formato, medimos a função da célula diretamente.
-	if semDrift, comDrift := colunaDrift(0, 3), colunaDrift(407, 3); len([]rune(semDrift)) != len([]rune(comDrift)) {
+	if semDrift, comDrift := driftColumn(0, 3), driftColumn(407, 3); len([]rune(semDrift)) != len([]rune(comDrift)) {
 		t.Errorf("célula do ⚠ com larguras diferentes: sem=%d runas, com=%d runas (%q vs %q)",
 			len([]rune(semDrift)), len([]rune(comDrift)), semDrift, comDrift)
 	}
@@ -226,7 +226,7 @@ func TestColunaDoSkipNaoMigraComOuSemDrift(t *testing.T) {
 // `⚠` ocupa 1 coluna no terminal e 3 bytes em Go. Reservar o branco com `len()`
 // desalinha justamente o que ele existe para alinhar.
 func TestCelulaDoDriftMedeEmColunasNaoEmBytes(t *testing.T) {
-	if got := len([]rune(colunaDrift(0, 3))); got != 4 {
+	if got := len([]rune(driftColumn(0, 3))); got != 4 {
 		t.Errorf("célula vazia com %d colunas, queria 4 (símbolo + 3 dígitos)", got)
 	}
 }
@@ -462,7 +462,7 @@ func TestOcorrenciasDoMesmoArquivoQuebramEmLinhas(t *testing.T) {
 // Basta UM separador: duas ocorrências já se confundem numa linha só, e é o caso
 // mais comum. (Com o corte em >= 2 separadores, o par não quebrava.)
 func TestDuasOcorrenciasJaQuebram(t *testing.T) {
-	got := quebraOcorrencias("linha 8: erro; linha 10: erro")
+	got := breakOccurrences("linha 8: erro; linha 10: erro")
 	if !strings.Contains(got, "\n") {
 		t.Errorf("par não quebrou: %q", got)
 	}
@@ -470,7 +470,7 @@ func TestDuasOcorrenciasJaQuebram(t *testing.T) {
 
 // Um detalhe de uma frase só continua inteiro — não há o que separar.
 func TestOcorrenciaUnicaNaoQuebra(t *testing.T) {
-	got := quebraOcorrencias("a spec não declara `## Decisões em aberto`")
+	got := breakOccurrences("a spec não declara `## Decisões em aberto`")
 	if strings.Contains(got, "\n") {
 		t.Errorf("quebrou onde não havia separador: %q", got)
 	}
@@ -480,7 +480,7 @@ func TestOcorrenciaUnicaNaoQuebra(t *testing.T) {
 // carregam regex e trechos de código — o `;` de um `#[0-9A-Fa-f]{3};` não separa
 // ocorrência nenhuma, e quebrar ali picaria a mensagem no meio.
 func TestNaoQuebraPontoEVirgulaColado(t *testing.T) {
-	got := quebraOcorrencias("a camada não pode conter `a;b;c` — use token")
+	got := breakOccurrences("a camada não pode conter `a;b;c` — use token")
 	if strings.Contains(got, "\n") {
 		t.Errorf("quebrou num `;` colado, que não é separador de ocorrência: %q", got)
 	}
@@ -496,7 +496,7 @@ func TestListaLongaComVirgulaQuebra(t *testing.T) {
 	got := indent("símbolos sem catálogo: "+strings.Join(itens, ", "), "    ")
 
 	for _, l := range strings.Split(strings.TrimRight(got, "\n"), "\n") {
-		if len([]rune(l)) > limiarQuebraLista+20 {
+		if len([]rune(l)) > listBreakThreshold+20 {
 			t.Errorf("linha de %d runas — a lista não quebrou:\n%s", len([]rune(l)), l)
 		}
 	}
@@ -508,7 +508,7 @@ func TestListaLongaComVirgulaQuebra(t *testing.T) {
 // Em texto normal a vírgula separa oração: picá-la destruiria a frase.
 func TestFraseCurtaComVirgulaNaoQuebra(t *testing.T) {
 	frase := "a spec existe, o código existe, e os dois se referenciam"
-	if got := quebraOcorrencias(frase); strings.Contains(got, "\n") {
+	if got := breakOccurrences(frase); strings.Contains(got, "\n") {
 		t.Errorf("quebrou uma frase normal: %q", got)
 	}
 }
@@ -520,7 +520,7 @@ func TestProsaLongaComVirgulasNaoQuebra(t *testing.T) {
 	prosa := "Uma regra catalogada sem implementador atravessa o pipeline inteiro — a spec existe, " +
 		"o código existe, os dois se referenciam pelo header, e todos os gates ficam verdes " +
 		"sobre trabalho que não foi feito."
-	if got := quebraOcorrencias(prosa); strings.Contains(got, "\n") {
+	if got := breakOccurrences(prosa); strings.Contains(got, "\n") {
 		t.Errorf("picou uma frase em orações:\n%s", got)
 	}
 }
@@ -531,7 +531,7 @@ func TestListaDeCaminhosAindaQuebra(t *testing.T) {
 	for i := range itens {
 		itens[i] = fmt.Sprintf("apps/mobile/src/features/Modulo%02d.spec.md", i)
 	}
-	if got := quebraOcorrencias(strings.Join(itens, ", ")); !strings.Contains(got, "\n") {
+	if got := breakOccurrences(strings.Join(itens, ", ")); !strings.Contains(got, "\n") {
 		t.Errorf("lista de caminhos não quebrou:\n%s", got)
 	}
 }

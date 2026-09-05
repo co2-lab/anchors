@@ -18,7 +18,7 @@ func TestProgresso_reconheceOSufixo(t *testing.T) {
 		"plans/progress.md":      false,
 	}
 	for caminho, quer := range casos {
-		if got := EhArquivoDeProgresso(caminho); got != quer {
+		if got := IsProgressFile(caminho); got != quer {
 			t.Errorf("%q: %v, queria %v", caminho, got, quer)
 		}
 	}

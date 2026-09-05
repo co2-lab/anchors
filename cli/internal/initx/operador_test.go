@@ -20,15 +20,15 @@ func TestVarDeAgenteVenceAAusenciaDeTTY(t *testing.T) {
 	comAgente := envFalso(map[string]string{"CLAUDE_CODE_ENTRYPOINT": "cli"})
 
 	// Mesmo COM tty, a variável decide: uma IA pode rodar num PTY.
-	if o := DetectaOperador(true, comAgente); o != OperadorIA {
+	if o := DetectOperator(true, comAgente); o != OperadorIA {
 		t.Error("com variável de agente declarada, é IA — mesmo havendo TTY")
 	}
 	// E sem nada, um terminal é uma pessoa.
-	if o := DetectaOperador(true, envFalso(nil)); o != OperadorHumano {
+	if o := DetectOperator(true, envFalso(nil)); o != OperadorHumano {
 		t.Error("TTY e nenhuma variável de agente: é uma pessoa")
 	}
 	// Sem TTY sobra pipe, CI ou agente — nenhum é alguém digitando.
-	if o := DetectaOperador(false, envFalso(nil)); o != OperadorIA {
+	if o := DetectOperator(false, envFalso(nil)); o != OperadorIA {
 		t.Error("sem TTY não há pessoa lendo a saída e respondendo")
 	}
 }
@@ -36,10 +36,10 @@ func TestVarDeAgenteVenceAAusenciaDeTTY(t *testing.T) {
 // Nomear a ferramenta é o que permite dizer "abro o Claude Code?" em vez de "abra sua
 // IA" — e é a diferença entre uma oferta acionável e um conselho.
 func TestNomeiaAFerramentaDetectada(t *testing.T) {
-	if n := NomeDoAgente(envFalso(map[string]string{"CURSOR_TRACE_ID": "x"})); n != "Cursor" {
+	if n := AgentName(envFalso(map[string]string{"CURSOR_TRACE_ID": "x"})); n != "Cursor" {
 		t.Errorf("esperava Cursor, veio %q", n)
 	}
-	if n := NomeDoAgente(envFalso(nil)); n != "" {
+	if n := AgentName(envFalso(nil)); n != "" {
 		t.Errorf("sem variável conhecida não há nome a dizer, veio %q", n)
 	}
 }
@@ -47,7 +47,7 @@ func TestNomeiaAFerramentaDetectada(t *testing.T) {
 // O comando é ARGV, não linha de shell: o prompt tem aspas, parênteses e setas, e passá-lo
 // por `sh -c` faria o escape ser a única coisa entre o texto e o interpretador.
 func TestComandoDeAberturaEhArgvNaoShell(t *testing.T) {
-	argv := ComandoParaAbrirIA(envFalso(map[string]string{"CLAUDE_CODE_ENTRYPOINT": "cli"}))
+	argv := CommandToOpenAI(envFalso(map[string]string{"CLAUDE_CODE_ENTRYPOINT": "cli"}))
 
 	if len(argv) < 2 {
 		t.Fatalf("esperava argv com programa e prompt, veio %v", argv)
@@ -61,7 +61,7 @@ func TestComandoDeAberturaEhArgvNaoShell(t *testing.T) {
 	}
 	// Ferramenta desconhecida: nada a oferecer. Um comando que não existe é pior que
 	// nenhuma oferta.
-	if argv := ComandoParaAbrirIA(envFalso(nil)); argv != nil {
+	if argv := CommandToOpenAI(envFalso(nil)); argv != nil {
 		t.Errorf("sem ferramenta conhecida não há comando a oferecer: %v", argv)
 	}
 }

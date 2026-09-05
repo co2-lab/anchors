@@ -29,16 +29,16 @@ import (
 // Dir é a pasta de estado, a mesma do daemon (efêmero, não versionável).
 const Dir = ".anchors"
 
-// NomeDoEscopo devolve o arquivo onde a saída deste escopo é espelhada.
-func NomeDoEscopo(all bool) string {
+// ScopeName devolve o arquivo onde a saída deste escopo é espelhada.
+func ScopeName(all bool) string {
 	if all {
 		return "check-all.txt"
 	}
 	return "check-changed.txt"
 }
 
-// Espelho duplica tudo que for escrito para o stdout no arquivo.
-type Espelho struct {
+// Mirror duplica tudo que for escrito para o stdout no arquivo.
+type Mirror struct {
 	arq      *os.File
 	original *os.File
 	pipeR    *os.File
@@ -46,18 +46,18 @@ type Espelho struct {
 	pronto   chan struct{}
 }
 
-// Abrir começa a espelhar o stdout no arquivo do escopo. O `cabecalho` é escrito
+// Open começa a espelhar o stdout no arquivo do escopo. O `cabecalho` é escrito
 // antes de qualquer saída do comando.
 //
 // Falha ao abrir o arquivo NÃO é erro do check: o espelho é conveniência, e
 // impedir a varredura porque o disco está cheio seria trocar o essencial pelo
 // acessório. Devolve nil e o check segue escrevendo só na tela.
-func Abrir(root string, all bool, cabecalho string) *Espelho {
+func Open(root string, all bool, cabecalho string) *Mirror {
 	dir := filepath.Join(root, Dir)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil
 	}
-	arq, err := os.Create(filepath.Join(dir, NomeDoEscopo(all)))
+	arq, err := os.Create(filepath.Join(dir, ScopeName(all)))
 	if err != nil {
 		return nil
 	}
@@ -71,7 +71,7 @@ func Abrir(root string, all bool, cabecalho string) *Espelho {
 		arq.Close()
 		return nil
 	}
-	e := &Espelho{arq: arq, original: os.Stdout, pipeR: r, pipeW: w, pronto: make(chan struct{})}
+	e := &Mirror{arq: arq, original: os.Stdout, pipeR: r, pipeW: w, pronto: make(chan struct{})}
 	os.Stdout = w
 
 	// A cópia roda em goroutine: o pipe tem buffer finito, e sem alguém drenando
@@ -84,9 +84,9 @@ func Abrir(root string, all bool, cabecalho string) *Espelho {
 	return e
 }
 
-// Fechar devolve o stdout ao lugar e espera a cópia terminar. Seguro com nil,
+// Close devolve o stdout ao lugar e espera a cópia terminar. Seguro com nil,
 // para que o chamador possa usar `defer` sem checar.
-func (e *Espelho) Fechar() {
+func (e *Mirror) Close() {
 	if e == nil {
 		return
 	}
@@ -97,21 +97,21 @@ func (e *Espelho) Fechar() {
 	e.arq.Close()
 }
 
-// Caminho é o arquivo escrito, para o comando poder dizer onde ficou.
-func (e *Espelho) Caminho() string {
+// Path é o arquivo escrito, para o comando poder dizer onde ficou.
+func (e *Mirror) Path() string {
 	if e == nil {
 		return ""
 	}
 	return e.arq.Name()
 }
 
-// Cabecalho monta as linhas de contexto do topo do arquivo: quando rodou, sobre
+// Header monta as linhas de contexto do topo do arquivo: quando rodou, sobre
 // qual commit, com quantas mudanças pendentes e com que argumentos.
 //
 // O estado da árvore importa tanto quanto o commit: um check rodado com 40
 // arquivos modificados descreve algo que não está em lugar nenhum do histórico,
 // e quem relê precisa saber disso.
-func Cabecalho(comando, head, assunto string, sujos int, quando time.Time) string {
+func Header(comando, head, assunto string, sujos int, quando time.Time) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# %s\n", comando)
 	fmt.Fprintf(&b, "# quando: %s\n", quando.Format("2006-01-02 15:04:05 -0700"))

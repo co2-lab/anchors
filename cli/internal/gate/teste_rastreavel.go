@@ -34,7 +34,7 @@ import (
 // A régua é a mais fraca possível de propósito: basta UM código da unidade aparecer no
 // arquivo. Não se cobra um código por caso de teste — isso é do `feature-test-match`, que
 // já o faz por cenário. Aqui a pergunta é só "este teste se declara?".
-func checkTesteRastreavel(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkTestTraceable(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindTest {
 		return Skip, "a rastreabilidade é cobrada do teste — é ele que precisa se declarar"
 	}
@@ -44,12 +44,12 @@ func checkTesteRastreavel(content string, n mapx.Node, root string, g *mapx.Grap
 
 	// Só se cobra de teste que PROVA uma feature. Um teste sem feature ligada não tem
 	// cenário a citar, e exigir código dele seria pedir referência a nada.
-	feature, temFeature := featureQueOTesteProva(n, g)
+	feature, temFeature := featureProvenByTest(n, g)
 	if !temFeature {
 		return Skip, "teste sem feature ligada — não há cenário a citar"
 	}
 
-	codigos := codigosDaFeature(root, feature)
+	codigos := featureCodes(root, feature)
 	if len(codigos) == 0 {
 		return Skip, "a feature ligada não declara código de cenário — nada a citar"
 	}
@@ -65,11 +65,11 @@ func checkTesteRastreavel(content string, n mapx.Node, root string, g *mapx.Grap
 			"implementados mesmo que este arquivo os prove, e quem for consertar escreve um "+
 			"segundo teste do mesmo comportamento. Cite o código no nome do caso "+
 			"(`it('%s: …')`) ou num comentário ao lado",
-		feature, primeiros(codigos, 3), codigos[0])
+		feature, firstOnes(codigos, 3), codigos[0])
 }
 
-// featureQueOTesteProva acha a feature de onde parte a aresta `tested-by` para este teste.
-func featureQueOTesteProva(n mapx.Node, g *mapx.Graph) (string, bool) {
+// featureProvenByTest acha a feature de onde parte a aresta `tested-by` para este teste.
+func featureProvenByTest(n mapx.Node, g *mapx.Graph) (string, bool) {
 	for _, e := range g.Edges {
 		if e.Type == mapx.EdgeTestedBy && e.To == n.ID {
 			return e.From, true
@@ -78,8 +78,8 @@ func featureQueOTesteProva(n mapx.Node, g *mapx.Graph) (string, bool) {
 	return "", false
 }
 
-// codigosDaFeature lê os códigos de cenário que a feature declara.
-func codigosDaFeature(root, feature string) []string {
+// featureCodes lê os códigos de cenário que a feature declara.
+func featureCodes(root, feature string) []string {
 	b, err := os.ReadFile(filepath.Join(root, feature))
 	if err != nil {
 		return nil
@@ -95,7 +95,7 @@ func codigosDaFeature(root, feature string) []string {
 	return out
 }
 
-func primeiros(xs []string, n int) string {
+func firstOnes(xs []string, n int) string {
 	if len(xs) > n {
 		xs = xs[:n]
 	}

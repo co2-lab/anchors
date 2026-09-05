@@ -51,9 +51,22 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Usar o Anchors',
+					translations: { en: 'Using Anchors' },
+					items: [
+						{ label: 'O fluxo de trabalho', translations: { en: 'The workflow' }, slug: 'docs/fluxo-de-trabalho' },
+						{ label: 'O anchors.yaml', translations: { en: 'The anchors.yaml' }, slug: 'docs/anchors-yaml' },
+						{ label: 'Os gates', translations: { en: 'The gates' }, slug: 'docs/gates' },
+						{ label: 'Congelar o projeto', translations: { en: 'Freezing the project' }, slug: 'docs/congelar' },
+					],
+				},
+				{
 					label: 'O CLI',
 					translations: { en: 'The CLI' },
-					items: [{ label: 'Visão geral', translations: { en: 'Overview' }, slug: 'docs/cli' }],
+					items: [
+						{ label: 'Referência', translations: { en: 'Reference' }, slug: 'docs/cli' },
+						{ label: 'Gate: mutation-score', translations: { en: 'Gate: mutation-score' }, slug: 'docs/gate-mutation-score' },
+					],
 				},
 			],
 		}),

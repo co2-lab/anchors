@@ -26,7 +26,7 @@ func grafoDoProjeto() *mapx.Graph {
 
 func rodaMock(t *testing.T, content string, cfg *config.Config) (Verdict, string) {
 	t.Helper()
-	return checkMockTipado(content, testNode(), "", grafoDoProjeto(), cfg)
+	return checkMockTyped(content, testNode(), "", grafoDoProjeto(), cfg)
 }
 
 // O caso que o gate existe para pegar: dublê SEM amarra continua verde depois que o
@@ -107,7 +107,7 @@ func TestMockTipado_semContratoDeclaradoPula(t *testing.T) {
 // arquivo errado.
 func TestMockTipado_soRodaSobreTeste(t *testing.T) {
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}
-	if v, _ := checkMockTipado("", n, "", grafoDoProjeto(), cfgComContrato()); v != Skip {
+	if v, _ := checkMockTyped("", n, "", grafoDoProjeto(), cfgComContrato()); v != Skip {
 		t.Errorf("o dublê é cobrado do teste: %v", v)
 	}
 }

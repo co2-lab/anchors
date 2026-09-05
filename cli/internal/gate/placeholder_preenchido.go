@@ -29,11 +29,11 @@ import (
 // Medido antes de ligar, contra o repositório real: 0 achados em 590 specs. Nenhuma spec
 // viva carrega placeholder do gerador — o que confirma que quem escreve, preenche, e que
 // o gate cobra apenas o que ficou pelo caminho.
-func checkPlaceholderPreenchido(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func checkPlaceholderFilled(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec && n.Kind != mapx.KindFeature {
 		return Skip, "o esqueleto com placeholder é o que o `anchors new` emite — spec e feature"
 	}
-	achados := placeholdersAbertos(content, cfg)
+	achados := openPlaceholders(content, cfg)
 	if len(achados) == 0 {
 		return Pass, ""
 	}
@@ -54,18 +54,18 @@ var placeholderCampoRE = regexp.MustCompile(`(?mi)^\s*(?://|#|<!--|\*)?\s*([a-z_
 // a regra existe como código e não diz nada.
 var placeholderCelulaRE = regexp.MustCompile(`(?m)^\s*\|[^|\n]*\|[^|\n]*\bTODO\b[^|\n]*\|`)
 
-// placeholderTituloRE: título ou linha de corpo que abre com o marcador
+// placeholderTitleRE: título ou linha de corpo que abre com o marcador
 // (`# X — TODO propósito`, `TODO: o que a unidade faz`).
-var placeholderTituloRE = regexp.MustCompile(`(?m)^(?:#{1,6}\s+.*—\s*TODO\b.*|TODO[: ].*)$`)
+var placeholderTitleRE = regexp.MustCompile(`(?m)^(?:#{1,6}\s+.*—\s*TODO\b.*|TODO[: ].*)$`)
 
-// placeholdersAbertos acha os marcadores que o GERADOR deixou, e só eles.
+// openPlaceholders acha os marcadores que o GERADOR deixou, e só eles.
 //
 // A distinção que evita o falso positivo: uma seção `## TODOs` (lista de pendências que o
 // autor escreveu de propósito) é legítima e comum — medido, 77 specs de um projeto real a
 // têm. O gate não pode confundir "o autor listou o que falta" com "o autor não escreveu
 // nada". Por isso só conta o marcador em POSIÇÃO DE VALOR: campo de header, célula de
 // tabela, título de regra.
-func placeholdersAbertos(content string, cfg *config.Config) []string {
+func openPlaceholders(content string, cfg *config.Config) []string {
 	var out []string
 	visto := map[string]bool{}
 	add := func(s string) {
@@ -84,7 +84,7 @@ func placeholdersAbertos(content string, cfg *config.Config) []string {
 	for _, m := range placeholderCelulaRE.FindAllString(content, -1) {
 		add(m)
 	}
-	for _, m := range placeholderTituloRE.FindAllString(content, -1) {
+	for _, m := range placeholderTitleRE.FindAllString(content, -1) {
 		add(m)
 	}
 	return out

@@ -32,7 +32,7 @@ enfileirou ao ver mudanças. É só leitura; não reivindica nada.
 A IA-conversa e o humano usam isto para SABER o que há para fazer, sem se prender.
 Para pegar trabalho, use 'anchors next' (idealmente num worker/subagente).`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -91,7 +91,7 @@ então você pode rodar 'anchors next' em paralelo em várias sessões.
 Ao TERMINAR o passo (código escrito, check passou), feche com 'anchors done <id>'.
 Se a fila está vazia, imprime isso e sai com código 0.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -113,7 +113,7 @@ Se a fila está vazia, imprime isso e sai com código 0.`,
 				// perguntando "o que faço agora", e é essa pergunta que o plano parado
 				// responde. Um `anchors plan start` seria mais um passo para lembrar — e o
 				// que ninguém lembra de rodar não existe.
-				if n, err := semearDosPlanos(absRoot); err == nil && n > 0 {
+				if n, err := seedFromPlans(absRoot); err == nil && n > 0 {
 					fmt.Printf("fila vazia — semeada com %d plano(s) que ainda têm trabalho\n\n", n)
 					if t, err = queue.Claim(absRoot, worker, nowStamp()); err != nil {
 						return err
@@ -137,7 +137,7 @@ Se a fila está vazia, imprime isso e sai com código 0.`,
 			// pelo worker a cada task e precisa ser rápido, então não roda os gates —
 			// só conta quantos estão declarados como informativos. Quem quer saber
 			// quais estão limpos roda `anchors status` ou `check`, que já medem.
-			lembraMaturacaoBarato(absRoot)
+			rememberMaturationCheap(absRoot)
 			return nil
 		},
 	}
@@ -166,7 +166,7 @@ a fila chegou a 26+ tasks para 8 entregas, e fechar uma a uma fez o orquestrador
 desistir — a fila virou paisagem, que é o oposto do que ela existe para ser.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -224,7 +224,7 @@ obsoletas, duplicatas, ou um plano que caiu como 'triage' e você não quer trat
 Diferente de 'done' (que arquiva em done/): drop apaga, não vira histórico.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -249,7 +249,7 @@ func newReclaimCmd() *cobra.Command {
 órfã de um worker que morreu sem fechar com 'done'. Rode após um crash para o
 trabalho não ficar preso. As tasks voltam a ser puxáveis por 'anchors next'.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -287,13 +287,13 @@ func reclaimFn(force bool) func(string) (int, error) {
 	return queue.Reclaim
 }
 
-// semearDosPlanos enfileira uma task por PLANO que ainda tem spec por nascer.
+// seedFromPlans enfileira uma task por PLANO que ainda tem spec por nascer.
 //
 // "Ainda tem trabalho" é medido pelo disco, não por checkbox: um plano cujas specs
 // semeadas TODAS existem já foi cumprido, e enfileirá-lo seria o ruído que faz a fila
 // perder a confiança de quem a puxa. O que ele semeia sai do mesmo lugar que o gate
 // `plan-seeds-valid` lê — os caminhos `.spec.md` citados no texto.
-func semearDosPlanos(root string) (int, error) {
+func seedFromPlans(root string) (int, error) {
 	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
 	if err != nil {
 		return 0, err
@@ -309,7 +309,7 @@ func semearDosPlanos(root string) (int, error) {
 		}
 		faltam := 0
 		for _, s := range f.Seeds {
-			if seedExiste(root, s, files) {
+			if seedExists(root, s, files) {
 				continue
 			}
 			faltam++
@@ -344,7 +344,7 @@ func semearDosPlanos(root string) (int, error) {
 	return n, nil
 }
 
-// seedExiste diz se a spec que o plano semeia já está no repositório.
+// seedExists diz se a spec que o plano semeia já está no repositório.
 //
 // O plano cita de duas formas legítimas: pelo caminho, ou só pelo NOME do arquivo — que é
 // como se escreve em prosa ("a spec de `SubscriptionScreen.spec.md`"). Medido: 10 das 26
@@ -353,7 +353,7 @@ func semearDosPlanos(root string) (int, error) {
 //
 // Por nome, só quando ele é ÚNICO: dois arquivos homônimos tornam a citação ambígua, e
 // escolher um seria decidir pelo autor.
-func seedExiste(root, seed string, files []scan.File) bool {
+func seedExists(root, seed string, files []scan.File) bool {
 	if _, err := os.Stat(filepath.Join(root, seed)); err == nil {
 		return true
 	}
@@ -367,7 +367,7 @@ func seedExiste(root, seed string, files []scan.File) bool {
 	return achou == 1
 }
 
-// lembraMaturacaoBarato conta os gates informativos sem RODAR nenhum.
+// rememberMaturationCheap conta os gates informativos sem RODAR nenhum.
 //
 // O `next` é chamado pelo worker a cada task, e rodar a suíte de gates ali dobraria o
 // custo de puxar trabalho. O que ele pode fazer sem custo é ler a declaração: se há gate
@@ -376,7 +376,7 @@ func seedExiste(root, seed string, files []scan.File) bool {
 //
 // É um lembrete mais fraco de propósito. Um lembrete caro num comando de laço quente é
 // um lembrete que alguém vai querer desligar.
-func lembraMaturacaoBarato(root string) {
+func rememberMaturationCheap(root string) {
 	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
 	if err != nil {
 		return

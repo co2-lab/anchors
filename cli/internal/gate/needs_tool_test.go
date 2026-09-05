@@ -25,7 +25,7 @@ func TestFerramentaAusenteVirandoSkipNaoFail(t *testing.T) {
 	}
 	nodes := []mapx.Node{{ID: "a.ts", Kind: mapx.Kind("code")}}
 
-	res := RunCompleto([]config.Gate{g}, nodes, t.TempDir(), nil, &config.Config{}, false)
+	res := RunFull([]config.Gate{g}, nodes, t.TempDir(), nil, &config.Config{}, false)
 	if len(res) != 1 {
 		t.Fatalf("esperava 1 veredito, veio %d", len(res))
 	}
@@ -51,7 +51,7 @@ func TestFerramentaPresenteContinuaExecutando(t *testing.T) {
 	}
 	nodes := []mapx.Node{{ID: "a.ts", Kind: mapx.Kind("code")}}
 
-	res := RunCompleto([]config.Gate{g}, nodes, t.TempDir(), nil, &config.Config{}, false)
+	res := RunFull([]config.Gate{g}, nodes, t.TempDir(), nil, &config.Config{}, false)
 	if len(res) != 1 {
 		t.Fatalf("esperava 1 veredito, veio %d", len(res))
 	}

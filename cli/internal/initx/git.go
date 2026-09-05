@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-// EstadoGit é o que o `init` precisa saber sobre o versionamento ANTES de escanear.
+// GitState é o que o `init` precisa saber sobre o versionamento ANTES de escanear.
 // Git não é detalhe de conforto do Anchors: é o substrato de onde vêm o carimbo de
 // alteração (`gitmeta`), a cobertura de diff, o pre-commit e — no modo `github` — o
 // próprio `repo` da fila de trabalho. Um projeto sem git carrega e roda, mas boa parte
@@ -16,12 +16,12 @@ import (
 // máquina sem git (a oferta falha na hora), ou mandar instalar git para quem já o tem
 // (o usuário procura o problema onde ele não está). São estados separados porque a
 // AÇÃO é separada.
-type EstadoGit int
+type GitState int
 
 const (
 	// GitNaoInstalado — o binário `git` não está no PATH. O Anchors não tem o que
 	// oferecer: não há `git init` a rodar. O aviso manda instalar, e não pergunta nada.
-	GitNaoInstalado EstadoGit = iota
+	GitNaoInstalado GitState = iota
 	// GitNaoIniciado — git existe na máquina, mas a raiz não é repositório. Aqui a
 	// oferta faz sentido: `git init` + `.gitignore` + primeiro commit.
 	GitNaoIniciado
@@ -33,11 +33,11 @@ const (
 	GitPronto
 )
 
-// DetectaGit classifica a raiz. `gitNoPath` é injetado (e não consultado aqui) para
+// DetectGit classifica a raiz. `gitNoPath` é injetado (e não consultado aqui) para
 // manter esta função pura e testável sem depender do que está instalado na máquina de
 // quem roda o teste — a suíte precisa cobrir o caso "sem git" mesmo rodando numa
 // máquina com git.
-func DetectaGit(root string, gitNoPath bool) EstadoGit {
+func DetectGit(root string, gitNoPath bool) GitState {
 	if !gitNoPath {
 		return GitNaoInstalado
 	}
@@ -52,16 +52,16 @@ func DetectaGit(root string, gitNoPath bool) EstadoGit {
 	if !fi.IsDir() {
 		return GitPronto // worktree/submódulo: `.git` é ponteiro, o repo real é outro
 	}
-	if temCommit(dotGit) {
+	if hasCommit(dotGit) {
 		return GitPronto
 	}
 	return GitSemCommit
 }
 
-// temCommit diz se o repo já tem HEAD apontando para algo. Lê o disco em vez de rodar
+// hasCommit diz se o repo já tem HEAD apontando para algo. Lê o disco em vez de rodar
 // `git rev-parse`: num repo recém-criado o `.git/refs/heads` está vazio e não há
 // arquivo de ref nenhum — é o sinal mais direto de "ainda não há commit".
-func temCommit(dotGit string) bool {
+func hasCommit(dotGit string) bool {
 	heads := filepath.Join(dotGit, "refs", "heads")
 	var achou bool
 	_ = filepath.WalkDir(heads, func(_ string, d os.DirEntry, err error) error {
@@ -99,7 +99,7 @@ func repoAcima(root string) (string, bool) {
 // AvisoGit é o texto do aviso para cada estado, ou "" quando não há o que avisar.
 // Fica aqui, junto da decisão, para que o teste cubra a mensagem — é ela que ensina
 // o usuário POR QUE git importa, e uma mensagem vaga aqui vira um passo pulado.
-func AvisoGit(e EstadoGit) string {
+func AvisoGit(e GitState) string {
 	switch e {
 	case GitNaoInstalado:
 		return "O git não está instalado (ou não está no PATH).\n" +
@@ -123,10 +123,10 @@ func AvisoGit(e EstadoGit) string {
 	}
 }
 
-// OfereceAcao diz se o Anchors tem algo a PROPOR neste estado. É a distinção que
+// OfferAction diz se o Anchors tem algo a PROPOR neste estado. É a distinção que
 // separa "não há git" instalado de não iniciado: sem o binário não há oferta nenhuma
 // a fazer, e perguntar seria prometer uma ação que falharia ao ser aceita.
-func OfereceAcao(e EstadoGit) bool {
+func OfferAction(e GitState) bool {
 	return e == GitNaoIniciado || e == GitSemCommit
 }
 
@@ -153,6 +153,6 @@ Thumbs.db
 .anchors/
 `
 
-// MensagemPrimeiroCommit é o assunto do commit inicial. Diz o que é, não o que faz:
+// FirstCommitMessage é o assunto do commit inicial. Diz o que é, não o que faz:
 // quem lê o log um ano depois quer saber que aqui o projeto começou.
-const MensagemPrimeiroCommit = "chore: inicia o repositório"
+const FirstCommitMessage = "chore: inicia o repositório"

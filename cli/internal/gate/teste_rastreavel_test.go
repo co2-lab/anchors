@@ -19,7 +19,7 @@ func rodaRastreavel(t *testing.T, teste, feature string) (Verdict, string) {
 		Nodes: []mapx.Node{{ID: "u.feature", Kind: mapx.KindFeature}, {ID: "u.test.ts", Kind: mapx.KindTest}},
 		Edges: []mapx.Edge{{From: "u.feature", To: "u.test.ts", Type: mapx.EdgeTestedBy}},
 	}
-	return checkTesteRastreavel(teste, mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest}, root, g, nil)
+	return checkTestTraceable(teste, mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest}, root, g, nil)
 }
 
 const featFix = "@PHA1X-S01 @nivel-unit\nCenário: a\n@PHA1X-A01 @nivel-unit\nCenário: b\n"
@@ -59,7 +59,7 @@ func TestTesteRastreavel_umCodigoBasta(t *testing.T) {
 // referência a nada.
 func TestTesteRastreavel_semFeaturePula(t *testing.T) {
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "u.test.ts", Kind: mapx.KindTest}}}
-	v, _ := checkTesteRastreavel("it('x', () => {})",
+	v, _ := checkTestTraceable("it('x', () => {})",
 		mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest}, t.TempDir(), g, nil)
 	if v != Skip {
 		t.Errorf("sem feature não há o que citar: %v", v)
@@ -76,7 +76,7 @@ func TestTesteRastreavel_featureSemCodigoPula(t *testing.T) {
 // A cobrança é do TESTE — rodar sobre a feature acusaria o arquivo errado.
 func TestTesteRastreavel_soRodaSobreTeste(t *testing.T) {
 	n := mapx.Node{ID: "u.feature", Kind: mapx.KindFeature}
-	if v, _ := checkTesteRastreavel("", n, "", &mapx.Graph{}, nil); v != Skip {
+	if v, _ := checkTestTraceable("", n, "", &mapx.Graph{}, nil); v != Skip {
 		t.Errorf("a rastreabilidade é do teste: %v", v)
 	}
 }

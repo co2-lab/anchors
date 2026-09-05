@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -41,9 +42,9 @@ APRESENTA e REGISTRA, mas NÃO bloqueia — é diagnóstico, roda sob demanda.`,
 			// O raio-X completo seria ruído no CI: ele responde dezenas de perguntas, e
 			// quem chama daqui quer uma.
 			if soPipelines {
-				return verificaPipelines(cmd)
+				return checkPipelines(cmd)
 			}
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -62,7 +63,7 @@ APRESENTA e REGISTRA, mas NÃO bloqueia — é diagnóstico, roda sob demanda.`,
 			rep := health.Diagnose(g, cfg, absRoot)
 			printReport(rep)
 			if corrigir {
-				return repararAmbiente(absRoot, cfg)
+				return repairEnvironment(absRoot, cfg)
 			}
 			return nil // doctor NUNCA bloqueia — só reporta
 		},
@@ -76,11 +77,12 @@ APRESENTA e REGISTRA, mas NÃO bloqueia — é diagnóstico, roda sob demanda.`,
 }
 
 func printReport(r health.Report) {
-	fmt.Printf("anchors doctor — %d nós, %d arestas, %d camadas\n\n", r.Nodes, r.Edges, r.Layers)
+	fmt.Println(i18n.T("doctor.header", r.Nodes, r.Edges, r.Layers))
+	fmt.Println()
 
 	warnings := r.Warnings()
 	if len(r.Findings) == 0 {
-		fmt.Println("✓ nenhuma ponta sistêmica encontrada — ecossistema íntegro")
+		fmt.Println(i18n.T("doctor.all_clean"))
 		return
 	}
 
@@ -121,10 +123,10 @@ func printReport(r health.Report) {
 
 	fmt.Printf("resumo: %d ponta(s) de atenção, %d achado(s) no total\n",
 		len(warnings), len(r.Findings))
-	fmt.Println("(diagnóstico — nada foi bloqueado; decida o que conciliar)")
+	fmt.Println(i18n.T("doctor.diagnosis_note"))
 }
 
-// repararAmbiente cria o que falta no ambiente do modo `github`. É o `--fix` do doctor,
+// repairEnvironment cria o que falta no ambiente do modo `github`. É o `--fix` do doctor,
 // no precedente do `check --fix`: sem a flag, o doctor segue sendo diagnóstico puro
 // ("nada foi bloqueado; decida o que conciliar"), e com ela ele age.
 //
@@ -135,28 +137,29 @@ func printReport(r health.Report) {
 // COMPARTILHADA pelo time e vive fora do repositório — um board criado por engano polui a
 // organização inteira e não se desfaz com `git checkout`. O doctor diz o que falta; criar
 // é decisão de quem opera.
-func repararAmbiente(root string, cfg *config.Config) error {
-	if !cfg.ModoGitHub() {
-		fmt.Println("\n--fix: nada a fazer — o ambiente do GitHub só é exigido no `workflow.mode: github`.")
+func repairEnvironment(root string, cfg *config.Config) error {
+	if !cfg.GitHubMode() {
+		fmt.Println()
+		fmt.Println(i18n.T("doctor.fix.nothing_github_mode"))
 		return nil
 	}
 	// Lido ANTES de semear: depois da escrita os arquivos já casam o template, e não
 	// haveria como dizer quais foram ATUALIZADOS em vez de criados.
-	faltavam := initx.FaltaWorkflow(root)
-	desatualizados := initx.WorkflowsDesatualizados(root, cfg)
+	faltavam := initx.MissingWorkflow(root)
+	desatualizados := initx.OutdatedWorkflows(root, cfg)
 	if _, err := initx.SemeiaWorkflows(root, cfg); err != nil {
 		return fmt.Errorf("semear os pipelines: %w", err)
 	}
 	fmt.Println()
 	if len(faltavam) == 0 && len(desatualizados) == 0 {
-		fmt.Println("--fix: os pipelines já existem e estão atualizados.")
+		fmt.Println(i18n.T("doctor.fix.pipelines_current"))
 	}
 	if len(faltavam) > 0 {
 		fmt.Printf("✓ %d pipeline(s) criados em %s:\n", len(faltavam), initx.DirWorkflows)
 		for _, w := range faltavam {
 			fmt.Printf("    %s\n", w.Arquivo)
 		}
-		fmt.Println("  revise, commite e configure `vars.ANCHORS_PROJECT_NUMBER` no repositório.")
+		fmt.Println(i18n.T("doctor.fix.review_and_configure"))
 	}
 	// Atualizado é distinto de criado, e a mensagem separa os dois: um arquivo que MUDOU
 	// sozinho no repositório de alguém precisa ser lido antes de subir — dizer só
@@ -167,12 +170,12 @@ func repararAmbiente(root string, cfg *config.Config) error {
 		for _, w := range desatualizados {
 			fmt.Printf("    %s\n", w.Arquivo)
 		}
-		fmt.Println("  revise o diff e commite — a correção só passa a valer depois de subir.")
+		fmt.Println(i18n.T("doctor.fix.review_diff"))
 	}
 	// A PROTEÇÃO DO BRANCH é o que enforça "todo trabalho sobe via PR". Sem ela nada
 	// falha: o push direto funciona, e pula o card, a revisão e o pipeline de
 	// identificação — que dispara na ABERTURA do PR.
-	if err := protegeBranches(cfg); err != nil {
+	if err := protectBranches(cfg); err != nil {
 		fmt.Printf("⚠  não deu para proteger os branches: %v\n", err)
 	}
 
@@ -182,10 +185,10 @@ func repararAmbiente(root string, cfg *config.Config) error {
 	// É deliberado o fix mexer aqui: deixar a exigência de pé seria manter um fluxo que
 	// NÃO TEM COMO ser cumprido, e quem opera descobriria no meio de um merge. A revisão
 	// continua sendo cobrada — pelo estado do card, que é o que o Anchors controla.
-	if cfg.Workflow.AprovacoesExigidas() > 0 {
-		repo, branch := cfg.Workflow.Repo, cfg.Workflow.BranchDeIntegracao()
-		if ok, _ := health.PodeIgnorarProtecao(repo, branch); !ok {
-			if err := health.DesligaExigenciaDeAprovacao(repo, branch); err != nil {
+	if cfg.Workflow.RequiredApprovalsOrDefault() > 0 {
+		repo, branch := cfg.Workflow.Repo, cfg.Workflow.IntegrationBranchOrDefault()
+		if ok, _ := health.CanBypassProtection(repo, branch); !ok {
+			if err := health.DisableApprovalRequirement(repo, branch); err != nil {
 				fmt.Printf("⚠  não deu para desligar a exigência de aprovação: %v\n", err)
 			} else {
 				fmt.Println("✓ exigência de aprovação DESLIGADA no GitHub —")
@@ -199,7 +202,7 @@ func repararAmbiente(root string, cfg *config.Config) error {
 
 	// As LABELS de estado são o único pré-requisito real do fluxo — e criá-las é seguro:
 	// label é do repositório, reversível, e não afeta ninguém fora dele.
-	if err := criaLabelsDeEstado(cfg); err != nil {
+	if err := createStateLabels(cfg); err != nil {
 		fmt.Printf("⚠  não deu para criar as labels de estado: %v\n", err)
 	}
 
@@ -210,14 +213,14 @@ func repararAmbiente(root string, cfg *config.Config) error {
 	fmt.Println("  nativa do Projects (label adicionada → move para a coluna):")
 	fmt.Printf("    %s\n", strings.Join(initx.ColunasDoBoard, " · "))
 	fmt.Printf("  o Anchors escreve até `%s`; as seguintes são dos pipelines de entrega.\n",
-		initx.EstadoFinalDoAnchors)
+		initx.AnchorsFinalState)
 	return nil
 }
 
-// criaLabelsDeEstado garante as labels que carregam o estado do trabalho. São o único
+// createStateLabels garante as labels que carregam o estado do trabalho. São o único
 // pré-requisito do fluxo que não é arquivo — e sem elas o `identify` cria cards que o
 // `claim` nunca encontra.
-func criaLabelsDeEstado(cfg *config.Config) error {
+func createStateLabels(cfg *config.Config) error {
 	if _, err := exec.LookPath("gh"); err != nil {
 		return fmt.Errorf("o `gh` não está no PATH")
 	}
@@ -231,15 +234,15 @@ func criaLabelsDeEstado(cfg *config.Config) error {
 		"anchors:ready-to-release": "0e8a16", "anchors:production": "0e8a16",
 		// VERMELHO, e é o único: o card escalado é o que ninguém no fluxo destrava, e
 		// precisa saltar num board cheio de cinza e azul.
-		initx.LabelPrecisaDoUsuario: "d73a4a",
+		initx.LabelNeedsUser: "d73a4a",
 	}
 	var criadas int
 	// A label de ESCALAÇÃO entra junto: sem ela criada, o pipeline que escala um card
 	// falha ao aplicá-la — e falha em silêncio, porque `gh issue edit` com label
 	// inexistente não é erro fatal. O card ficaria travado sem o sinalizador que diz por
 	// quê.
-	todas := append([]string{cfg.Workflow.Labels[0], initx.LabelPrecisaDoUsuario},
-		initx.EstadosDoTrabalho...)
+	todas := append([]string{cfg.Workflow.Labels[0], initx.LabelNeedsUser},
+		initx.WorkStates...)
 	for _, e := range todas {
 		c := cor[e]
 		if c == "" {
@@ -256,7 +259,7 @@ func criaLabelsDeEstado(cfg *config.Config) error {
 	return nil
 }
 
-// corpoDeProtecao monta o JSON que a API de proteção de branch exige.
+// protectionBody monta o JSON que a API de proteção de branch exige.
 //
 // `required_approving_review_count` era ZERO, com o argumento de que exigir aprovação de
 // outra conta travaria um time de uma pessoa. Isso valia quando quem aprovava era gente —
@@ -271,24 +274,24 @@ func criaLabelsDeEstado(cfg *config.Config) error {
 // cobra a porta. Os três são OBRIGATÓRIOS no corpo, mesmo nulos — a API responde 422 se
 // qualquer um faltar, e a função é separada para que um teste confronte isso sem falar
 // com o GitHub.
-func corpoDeProtecao(aprovacoes int) string {
+func protectionBody(aprovacoes int) string {
 	return fmt.Sprintf(`{"required_status_checks":null,"enforce_admins":false,`+
 		`"required_pull_request_reviews":{"required_approving_review_count":%d},`+
 		`"restrictions":null}`, aprovacoes)
 }
 
-// protegeBranches exige PR nos branches que o projeto declarou como portas.
+// protectBranches exige PR nos branches que o projeto declarou como portas.
 //
 // Não exige APROVAÇÃO de outra conta: num time de uma pessoa com agentes, isso travaria
 // o fluxo inteiro. O PR existe aqui para o card ter objeto, para a revisão acontecer e
 // para o histórico ficar legível — não para satisfazer uma contagem.
-func protegeBranches(cfg *config.Config) error {
+func protectBranches(cfg *config.Config) error {
 	if _, err := exec.LookPath("gh"); err != nil {
 		return fmt.Errorf("o `gh` não está no PATH")
 	}
 	repo := cfg.Workflow.Repo
-	for _, b := range cfg.Workflow.BranchesProtegidos() {
-		body := corpoDeProtecao(cfg.Workflow.AprovacoesExigidas())
+	for _, b := range cfg.Workflow.ProtectedBranchesOrDefault() {
+		body := protectionBody(cfg.Workflow.RequiredApprovalsOrDefault())
 		// `--input -` LÊ do stdin, e é preciso de fato escrever nele: sem isso o corpo
 		// chega vazio e a API responde 422 reclamando de um campo obrigatório nulo — que
 		// foi o que aconteceu enquanto o `body` era montado e descartado logo abaixo.
@@ -311,23 +314,23 @@ func protegeBranches(cfg *config.Config) error {
 	return nil
 }
 
-// verificaPipelines é o `doctor --check-pipelines`: uma pergunta, um código de saída.
+// checkPipelines é o `doctor --check-pipelines`: uma pergunta, um código de saída.
 //
 // Sai com 1 quando algo está desatualizado ou faltando, para o CI poder barrar. Um aviso
 // que não muda o código de saída seria ignorado pelo próprio pipeline que o emitiu.
-func verificaPipelines(cmd *cobra.Command) error {
-	root := config.RaizDoProjeto(".")
+func checkPipelines(cmd *cobra.Command) error {
+	root := config.ProjectRoot(".")
 	cfg, err := config.Load(filepath.Join(root, "anchors.yaml"))
 	if err != nil {
 		return err
 	}
-	if !cfg.ModoGitHub() {
+	if !cfg.GitHubMode() {
 		fmt.Println("· modo local — não há pipeline do fluxo a verificar.")
 		return nil
 	}
 
-	faltam := initx.FaltaWorkflow(root)
-	velhos := initx.WorkflowsDesatualizados(root, cfg)
+	faltam := initx.MissingWorkflow(root)
+	velhos := initx.OutdatedWorkflows(root, cfg)
 	if len(faltam) == 0 && len(velhos) == 0 {
 		fmt.Printf("✓ os %d pipelines do fluxo estão no lugar e atualizados (anchors %s).\n",
 			len(initx.WorkflowsDoFluxo), version)

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,7 +26,7 @@ Estrutura, e confirma/ajusta com você via perguntas — chegando a um anchors.y
 correto. O grosso é inferido; as perguntas cobrem só as decisões humanas
 (co-location, granularidade das camadas, e quais guides regem quais tags).`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			absRoot, err := config.AbsRaiz(root)
+			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
@@ -33,7 +34,7 @@ correto. O grosso é inferido; as perguntas cobrem só as decisões humanas
 			// aborta e o fluxo em que o usuário pede a uma IA para iniciar o projeto
 			// (BOOTSTRAP.md §5) trava no comando central.
 			if naoInterativo {
-				return runInitNaoInterativo(cmd, absRoot, &f, aceitarDefaults)
+				return runInitNonInteractive(cmd, absRoot, &f, aceitarDefaults)
 			}
 			return runInit(absRoot)
 		},
@@ -54,13 +55,13 @@ correto. O grosso é inferido; as perguntas cobrem só as decisões humanas
 	return cmd
 }
 
-// erroSemTTY é a mensagem de quando o `init` interativo não tem terminal. Nomeia a
+// errNoTTY é a mensagem de quando o `init` interativo não tem terminal. Nomeia a
 // SAÍDA, e não só o problema: existe um modo não-interativo, e quem cai aqui (um agente,
 // um pipe, o CI) tem como prosseguir — sem esta indicação, o comando parece um beco.
 //
 // `contexto` diz o que já aconteceu antes da falha, porque isso muda o que o leitor
 // precisa saber: se o git foi tocado, se algo foi escrito.
-func erroSemTTY(contexto string) error {
+func errNoTTY(contexto string) error {
 	return fmt.Errorf("`anchors init` e interativo e nao ha terminal disponivel "+
 		"(sem TTY: pipe, CI ou agente sem shell interativo).\n"+
 		"%s\n\n"+
@@ -87,7 +88,7 @@ func runInit(root string) error {
 			erroDePrompt = true
 		}
 		if !overwrite {
-			fmt.Println("abortado — nada foi alterado.")
+			fmt.Println(i18n.T("init.aborted"))
 			return nil
 		}
 	}
@@ -96,11 +97,11 @@ func runInit(root string) error {
 	// alteração, a cobertura de diff e o pre-commit ficam desligados, e nenhum deles
 	// falha ruidosamente. Vem primeiro para que tudo que o init escrever daqui em
 	// diante já nasça sob versionamento.
-	if !etapaGit(root) {
-		return erroSemTTY("Nada foi escrito, e o git nao foi tocado.")
+	if !gitStep(root) {
+		return errNoTTY("Nada foi escrito, e o git nao foi tocado.")
 	}
 
-	fmt.Println("Escaneando o projeto…")
+	fmt.Println(i18n.T("init.scanning"))
 	p, err := initx.Infer(root)
 	if err != nil {
 		return fmt.Errorf("inferência: %w", err)
@@ -110,14 +111,14 @@ func runInit(root string) error {
 	// 0.4) A FASE ANTERIOR — antes de perguntar qualquer coisa, reconhecer se a fase
 	// DESCOBRIR ainda não aconteceu. Sem PROJECT.md e sem código, as perguntas abaixo
 	// saem sem resposta boa; o que muda é só QUEM recebe a instrução (pessoa ou IA).
-	if !etapaDescobrir(root, p) {
-		return erroSemTTY("Nada foi escrito.")
+	if !discoverStep(root, p) {
+		return errNoTTY("Nada foi escrito.")
 	}
 
 	cfg := p.Config
 	empty := len(p.CodeDirs) == 0 && !p.HasSpecMD && !p.HasFeature && !p.HasTest
 	if empty {
-		fmt.Println("Projeto novo/vazio — vou perguntar a estrutura que você pretende usar.")
+		fmt.Println(i18n.T("init.empty_project"))
 	}
 
 	// 0.5) PRESET DE STACK — oferece uma estrutura consagrada. Opcional: "nenhum"
@@ -188,7 +189,7 @@ func runInit(root string) error {
 				len(gates), strings.Join(names, ", ")), true) {
 			cfg.Gates = gates
 			if chosenArtifacts["test"] {
-				fmt.Println("  (os gates de teste leem os sinais de `anchors ingest` — rode a suíte com coverage e ingira)")
+				fmt.Println(i18n.T("init.test_gates_note"))
 			}
 		}
 	}
@@ -206,7 +207,7 @@ func runInit(root string) error {
 		keep := askMultiSelect("Quais diretórios de código tratar como camadas?", names)
 		initx.PruneCodeLayers(cfg, keep)
 	} else if empty {
-		fmt.Println("  (sem código ainda — declare as camadas de código no anchors.yaml quando existirem)")
+		fmt.Println(i18n.T("init.no_code_yet"))
 	}
 
 	// 3.5) MODO DE TRABALHO — onde a fila mora. É decisão HUMANA e EXCLUDENTE
@@ -214,17 +215,16 @@ func runInit(root string) error {
 	// outro. Perguntada aqui, e não no começo, porque só faz sentido depois de o projeto
 	// ter forma — mas ANTES de salvar, porque muda o arquivo.
 	if askConfirmDefault("A fila de trabalho vai morar nas issues do GitHub (em vez de local)?", false) {
-		repo := askTexto("Qual repositório? (owner/nome — nunca inferido do remote)")
+		repo := askText("Qual repositório? (owner/nome — nunca inferido do remote)")
 		if repo != "" {
 			cfg.Workflow = &config.Workflow{
 				Mode:   config.ModeGitHub,
 				Repo:   repo,
 				Labels: []string{"anchors"},
 			}
-			fmt.Println("  modo `github`: a label `anchors` marca os cards do fluxo no board compartilhado.")
-			fmt.Println("  rode `anchors doctor --fix` depois, para semear os pipelines.")
+			fmt.Println(i18n.T("init.github_mode"))
 		} else {
-			fmt.Println("  sem repositório declarado — seguindo no modo local.")
+			fmt.Println(i18n.T("init.local_mode"))
 		}
 	}
 
@@ -246,7 +246,7 @@ func runInit(root string) error {
 	// Vai antes da guarda de TTY de propósito? NÃO: depois. Um init abortado não deve
 	// deixar arquivo, e o header já é um resíduo conhecido — não vamos criar um segundo.
 	if erroDePrompt {
-		return erroSemTTY("Nada foi escrito: um `anchors.yaml` gerado sem as respostas " +
+		return errNoTTY("Nada foi escrito: um `anchors.yaml` gerado sem as respostas " +
 			"sairia com 0 camadas e 0 gates, carregaria sem erro e nao governaria nada.")
 	}
 	if err := config.Save(cfg, outPath); err != nil {
@@ -281,9 +281,9 @@ func runInit(root string) error {
 // [cli/internal cli/cmd]" na tela, e escreveu `layers: {}` — descartou a própria detecção.
 var erroDePrompt bool
 
-// askTexto coleta uma resposta livre. Usado pelo `repo` do modo github, que não tem
+// askText coleta uma resposta livre. Usado pelo `repo` do modo github, que não tem
 // conjunto de opções para escolher.
-func askTexto(title string) string {
+func askText(title string) string {
 	var v string
 	if err := huh.NewInput().Title(title).Value(&v).Run(); err != nil {
 		erroDePrompt = true

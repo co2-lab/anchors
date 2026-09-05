@@ -18,12 +18,12 @@ type NodeVerdict struct {
 // "ok". `now` é a data (carimbada por quem chama — o pacote não inventa tempo).
 // Devolve quantas arestas foram carimbadas.
 
-// carimbo monta o Stamp preservando a data quando NADA mudou.
+// stamp monta o Stamp preservando a data quando NADA mudou.
 //
 // A regra vale nos três pontos que carimbam (`StampEdges`, `StampEdge`, `StampNode`), e
 // por isso mora aqui: repetida em cada um, ela se perderia no próximo que nascesse — foi
 // assim que o `StampNodeByGate` passou despercebido na primeira tentativa.
-func carimbo(anterior *Stamp, fromRev, toRev, verdict, now string) *Stamp {
+func stamp(anterior *Stamp, fromRev, toRev, verdict, now string) *Stamp {
 	quando := now
 	// `anterior.ChangedAt != ""` não é detalhe: um carimbo SEM data preservaria o vazio
 	// para sempre — o buraco se perpetuaria justamente porque nada muda, e o campo sumiria
@@ -67,7 +67,7 @@ func (g *Graph) StampEdges(verdicts []NodeVerdict, now string) int {
 		if failed[e.From] || failed[e.To] {
 			verdict = "issue"
 		}
-		e.Stamp = carimbo(e.Stamp, g.nodeRev(e.From), g.nodeRev(e.To), verdict, now)
+		e.Stamp = stamp(e.Stamp, g.nodeRev(e.From), g.nodeRev(e.To), verdict, now)
 		stamped++
 	}
 	return stamped
@@ -81,7 +81,7 @@ func (g *Graph) StampEdge(from, to, verdict, now string) bool {
 	for i := range g.Edges {
 		e := &g.Edges[i]
 		if e.From == from && e.To == to {
-			e.Stamp = carimbo(e.Stamp, g.nodeRev(e.From), g.nodeRev(e.To), verdict, now)
+			e.Stamp = stamp(e.Stamp, g.nodeRev(e.From), g.nodeRev(e.To), verdict, now)
 			return true
 		}
 	}
@@ -125,11 +125,11 @@ func (g *Graph) StampNodeByGate(id, verdict, now, gateName string) int {
 		// O `Gate` entra depois: o helper decide a data, e o gate é de quem julgou.
 		// Um gate diferente sobre o mesmo estado NÃO é mudança da relação — é outra
 		// pergunta sobre ela —, então ele não faz a data avançar.
-		st := carimbo(e.Stamp, g.nodeRev(e.From), g.nodeRev(e.To), verdict, now)
+		st := stamp(e.Stamp, g.nodeRev(e.From), g.nodeRev(e.To), verdict, now)
 		st.Gate = gateName
 		e.Stamp = st
 		if gateName != "" {
-			j := Julgamento{
+			j := Judgment{
 				Gate:             gateName,
 				Verdict:          verdict,
 				ValidatedFromRev: g.nodeRev(e.From),
@@ -162,19 +162,19 @@ func (g *Graph) StampNodeByGate(id, verdict, now, gateName string) int {
 	return stamped
 }
 
-// JulgadoPor diz se o nó já recebeu veredito DESTE gate e se ele ainda vale — isto é,
+// JudgedBy diz se o nó já recebeu veredito DESTE gate e se ele ainda vale — isto é,
 // se nenhuma das pontas mudou desde o julgamento.
 //
 // Basta UMA aresta viva: o `judge` registra em todas as que tocam o alvo, então
 // qualquer uma responde. Se o alvo mudou depois, o veredito envelhece e volta a ser
 // pergunta — julgamento não é selo permanente, é leitura datada.
-func (g *Graph) JulgadoPor(id, gateName string) (verdict string, valido bool) {
+func (g *Graph) JudgedBy(id, gateName string) (verdict string, valido bool) {
 	for _, e := range g.Edges {
 		if e.From != id && e.To != id {
 			continue
 		}
 		for _, j := range e.Julgamentos {
-			if j.Gate != gateName {
+			if !mesmoGate(j.Gate, gateName) {
 				continue
 			}
 			if j.ValidatedFromRev != g.nodeRev(e.From) || j.ValidatedToRev != g.nodeRev(e.To) {
@@ -197,3 +197,32 @@ func (g *Graph) StaleEdges() []Edge {
 	}
 	return out
 }
+
+// mesmoGate compara o gate do carimbo com o gate procurado, tolerando o nome ANTIGO.
+//
+// Os nomes de gate migraram do português para o inglês, e o alias do `config` cobre a
+// CONFIGURAÇÃO — não os carimbos já gravados. Medido no blue-eyes: 40 julgamentos ficaram
+// órfãos de uma vez, e as 10 specs do projeto voltaram para a fila pedindo julgamento que
+// alguém já tinha dado.
+//
+// O efeito é pior que o incômodo: quem reencontra um julgamento que respondeu ontem
+// aprende que responder não adianta — e a próxima resposta vem sem olhar.
+//
+// A resolução mora aqui e não no `config` porque é o MAPA que carrega o nome antigo. O
+// `config` já converteu tudo o que carregou; o que ele não alcança é o que está em disco.
+func mesmoGate(doCarimbo, procurado string) bool {
+	if doCarimbo == procurado {
+		return true
+	}
+	if canonical := ResolveGateName; canonical != nil {
+		return canonical(doCarimbo) == procurado
+	}
+	return false
+}
+
+// ResolveGateName converte um nome de gate antigo para o canônico.
+//
+// Injetado pelo `config` no `init()`: `mapx` não pode importá-lo (seria ciclo, já que o
+// `config` usa tipos daqui). Nil significa "sem tabela de conversão" — e aí só o nome
+// exato casa, que é o comportamento correto para quem não declarou alias nenhum.
+var ResolveGateName func(string) string
