@@ -56,7 +56,7 @@ func CanBypassProtection(repo, branch string) (bool, string) {
 // checkApprovalReachable avisa quando a exigência de aprovação não tem como ser
 // cumprida: o autor não pode aprovar o próprio PR, e não há escape configurado.
 func checkApprovalReachable(cfg *config.Config) []Finding {
-	if cfg == nil || cfg.Workflow == nil || cfg.Workflow.AprovacoesExigidas() == 0 {
+	if cfg == nil || cfg.Workflow == nil || cfg.Workflow.RequiredApprovalsOrDefault() == 0 {
 		return nil // zero exigido: não há o que ficar inalcançável
 	}
 	if _, err := exec.LookPath("gh"); err != nil {
@@ -77,7 +77,7 @@ func checkApprovalReachable(cfg *config.Config) []Finding {
 			"normal. Duas saídas: (1) uma conta de serviço para os agentes, ou (2) "+
 			"`required_approvals: 0` no anchors.yaml, deixando a revisão ser cobrada pelo "+
 			"estado do card em vez da aprovação do GitHub. Rode `anchors doctor --fix` para "+
-			"a segunda", cfg.Workflow.AprovacoesExigidas())}}
+			"a segunda", cfg.Workflow.RequiredApprovalsOrDefault())}}
 }
 
 // desligaExigenciaDeAprovacao aplica a saída (2): zera a exigência no GitHub.

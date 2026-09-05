@@ -49,7 +49,7 @@ func checkPipelines(root string, cfg *config.Config) []Finding {
 	//
 	// Só vale para pipeline NÃO editado: um que o time customizou é dele, e a diferença
 	// em relação ao template é a customização, não atraso.
-	for _, w := range initx.WorkflowsDesatualizados(root, cfg) {
+	for _, w := range initx.OutdatedWorkflows(root, cfg) {
 		out = append(out, Finding{"pipeline-desatualizado", Warn, w.Arquivo,
 			"o pipeline é o template do Anchors e ficou para trás — uma correção no " +
 				"desenho do fluxo não chegou a este projeto. Rode `anchors doctor --fix` " +

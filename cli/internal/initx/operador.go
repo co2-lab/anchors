@@ -50,7 +50,7 @@ func DetectOperator(temTTY bool, env func(string) string) Operador {
 	if env == nil {
 		env = os.Getenv
 	}
-	if nomeDoAgente(env) != "" {
+	if agentName(env) != "" {
 		return OperadorIA
 	}
 	// `AI_AGENT` é genérica o bastante para valer como sinal sem estar na lista de
@@ -67,9 +67,9 @@ func DetectOperator(temTTY bool, env func(string) string) Operador {
 	return OperadorHumano
 }
 
-// nomeDoAgente devolve o nome da ferramenta de IA detectada, ou "". Percorre em ordem
+// agentName devolve o nome da ferramenta de IA detectada, ou "". Percorre em ordem
 // estável para que a mensagem não mude entre execuções idênticas.
-func nomeDoAgente(env func(string) string) string {
+func agentName(env func(string) string) string {
 	if env == nil {
 		env = os.Getenv
 	}
@@ -88,7 +88,7 @@ func nomeDoAgente(env func(string) string) string {
 
 // AgentName é a versão exportada, para a mensagem poder dizer "abrir o Claude Code"
 // em vez de "abrir sua IA".
-func AgentName(env func(string) string) string { return nomeDoAgente(env) }
+func AgentName(env func(string) string) string { return agentName(env) }
 
 // PrecisaDescobrir diz se a fase DESCOBRIR ainda não aconteceu neste projeto: não há
 // PROJECT.md, e não há código de onde o `init` pudesse inferir a Estrutura.
@@ -101,13 +101,13 @@ func PrecisaDescobrir(root string, p *Proposal) bool {
 	if p != nil && (len(p.CodeDirs) > 0 || p.HasSpecMD || p.HasFeature || p.HasTest) {
 		return false
 	}
-	return !TemProjectMD(root)
+	return !HasProjectMD(root)
 }
 
-// TemProjectMD diz se o PROJECT.md já existe na raiz. Aceita as duas grafias que
+// HasProjectMD diz se o PROJECT.md já existe na raiz. Aceita as duas grafias que
 // aparecem na prática — o guide escreve `PROJECT.md`, mas um projeto que já usava
 // `project.md` não deve ser mandado refazer a entrevista.
-func TemProjectMD(root string) bool {
+func HasProjectMD(root string) bool {
 	for _, nome := range []string{"PROJECT.md", "project.md", "Project.md"} {
 		if _, err := os.Stat(filepath.Join(root, nome)); err == nil {
 			return true
@@ -139,7 +139,7 @@ const PromptDescobrir = `Rode "anchors guide project" e siga essa régua à risc
 // por `sh -c` exigiria escapá-lo certo, e um escape errado ou vira comando torto ou
 // executa o que não devia. Com argv, o texto é um argumento e ponto.
 func CommandToOpenAI(env func(string) string) []string {
-	switch nomeDoAgente(env) {
+	switch agentName(env) {
 	case "Claude Code":
 		return []string{"claude", PromptDescobrir}
 	case "Gemini CLI":

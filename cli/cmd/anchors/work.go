@@ -218,7 +218,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 		// do confronto. E vê o registro de entrega, que dá escopo e traz a intenção
 		// declarada pelo autor para ser confrontada contra o disco.
 		b.WriteString("\n## O que você vai confrontar\n\n")
-		writeTrincaPaths(&b, rel, artifact, layer, cfg, g)
+		writeTriadPaths(&b, rel, artifact, layer, cfg, g)
 		writeDeliveryRecord(&b, root, rel)
 	} else if hasLayer && l.Regime == "declarativo" {
 		b.WriteString("\n## As peças e onde nascem\n\n")
@@ -230,7 +230,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 			"a decisão esteja faltando lá — não que esta camada precise de uma.\n")
 	} else {
 		b.WriteString("\n## As peças e onde nascem\n\n")
-		writeTrincaPaths(&b, rel, artifact, layer, cfg, g)
+		writeTriadPaths(&b, rel, artifact, layer, cfg, g)
 	}
 
 	// REGIMES: as tags de nível que os cenários da feature DEVEM declarar. Estão no
@@ -498,9 +498,9 @@ func guidesFor(l config.Layer, cfg *config.Config, artifact string) []string {
 	return out
 }
 
-// writeTrincaPaths mostra onde cada peça da trinca nasce para este alvo, usando o
+// writeTriadPaths mostra onde cada peça da trinca nasce para este alvo, usando o
 // `derived:` do projeto (co-location por padrão, overrides por camada).
-func writeTrincaPaths(b *strings.Builder, rel, artifact, layer string, cfg *config.Config, g *mapx.Graph) {
+func writeTriadPaths(b *strings.Builder, rel, artifact, layer string, cfg *config.Config, g *mapx.Graph) {
 	if cfg.Derived == nil {
 		b.WriteString("> O projeto não declara `derived:` — confirme onde as peças moram " +
 			"olhando os vizinhos da camada.\n")
@@ -889,7 +889,7 @@ func gateRequirements(artifact string, cfg *config.Config) []string {
 	var out []string
 	visto := map[string]bool{}
 	for _, gt := range cfg.Gates {
-		if !gateVale(gt, artifact) || visto[gt.Check] {
+		if !gateApplies(gt, artifact) || visto[gt.Check] {
 			continue
 		}
 		if frase, ok := porChecker[gt.Check]; ok {
@@ -903,7 +903,7 @@ func gateRequirements(artifact string, cfg *config.Config) []string {
 	return out
 }
 
-// gateVale: este gate se aplica ao artefato que está sendo produzido?
+// gateApplies: este gate se aplica ao artefato que está sendo produzido?
 //
 // O `on:` do gate diz sobre QUAL NÓ ele roda; esta função responde outra pergunta — quem
 // precisa CONHECER a exigência ao escrever. Nem sempre é o mesmo.
@@ -913,7 +913,7 @@ func gateRequirements(artifact string, cfg *config.Config) []string {
 // escrevia o teste não era avisado — medido, um agente escreveu 36 features corretas e
 // depois esbarrou num gate BLOQUEANTE vermelho sem entender por quê; a exigência só estava
 // legível no código-fonte do gate.
-func gateVale(gt config.Gate, artifact string) bool {
+func gateApplies(gt config.Gate, artifact string) bool {
 	for _, k := range gt.On {
 		if k == artifact {
 			return true

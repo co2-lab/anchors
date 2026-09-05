@@ -162,11 +162,11 @@ func checkPlanChangeJustified(content string, n mapx.Node, root string, g *mapx.
 
 	ult := minhas[len(minhas)-1]
 	return Pass, fmt.Sprintf("alterado, e a revisão `%s-R%04d` diz por quê: %s",
-		ult.Codigo, ult.Numero, primeiraLinha(ult.Explicacao))
+		ult.Codigo, ult.Numero, firstLine(ult.Explicacao))
 }
 
-// primeiraLinha encurta a explicação para o laudo, que é uma linha.
-func primeiraLinha(s string) string {
+// firstLine encurta a explicação para o laudo, que é uma linha.
+func firstLine(s string) string {
 	if i := strings.IndexByte(s, '\n'); i >= 0 {
 		s = s[:i]
 	}

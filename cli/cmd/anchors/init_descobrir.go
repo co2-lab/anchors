@@ -91,7 +91,7 @@ func instructPerson(root string) bool {
 			}
 			if err := openAI(root, comando); err != nil {
 				fmt.Printf("  ⚠ não deu para abrir: %v\n", err)
-				imprimePassoAPasso()
+				printStepByStep()
 			}
 			return true
 		}
@@ -99,13 +99,13 @@ func instructPerson(root string) bool {
 			return false
 		}
 	}
-	imprimePassoAPasso()
+	printStepByStep()
 	return true
 }
 
-// imprimePassoAPasso é a saída para quem prefere conduzir sozinho — ou para quando o
+// printStepByStep é a saída para quem prefere conduzir sozinho — ou para quando o
 // Anchors não sabe qual IA abrir. O prompt vai inteiro, pronto para colar.
-func imprimePassoAPasso() {
+func printStepByStep() {
 	fmt.Println(`
   Para fazer você mesmo:
 

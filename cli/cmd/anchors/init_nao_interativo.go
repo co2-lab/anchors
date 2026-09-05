@@ -114,7 +114,7 @@ func runInitNonInteractive(cmd *cobra.Command, root string, f *flagsInit, aceita
 				"inferidos do disco",
 		})
 	}
-	status := initx.ValidaRespostas(qs, r)
+	status := initx.ValidateAnswers(qs, r)
 
 	// Uma resposta inválida recusa o CONJUNTO. Escrever as válidas produziria um
 	// anchors.yaml que ninguém decidiu por completo — e um arquivo assim carrega sem

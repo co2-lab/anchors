@@ -163,8 +163,8 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 // nada: tirá-la quebraria as specs que já existem, e o padrão do framework é português.
 var decisõesRE = regexp.MustCompile(`(?im)^#{1,4}\s*(decis(ões|oes|ão|ao)\s+em\s+aberto|em\s+aberto|quest(ões|oes)\s+em\s+aberto|open\s+questions|pend(ências|encias)\s+de\s+decis(ão|ao))\b[^\n]*\n`)
 
-// tituloDeclaradoRE monta o casador para o título que o PROJETO declarou.
-func tituloDeclaradoRE(titulo string) *regexp.Regexp {
+// declaredTitleRE monta o casador para o título que o PROJETO declarou.
+func declaredTitleRE(titulo string) *regexp.Regexp {
 	return regexp.MustCompile(`(?im)^#{1,4}\s*` + regexp.QuoteMeta(titulo) + `\b[^\n]*\n`)
 }
 
@@ -175,8 +175,8 @@ func seçãoDecisõesEmAberto(content string) (string, bool) {
 func seçãoDecisõesEmAbertoCfg(content string, cfg *config.Config, camada string) (string, bool) {
 	// O título declarado VENCE: um projeto que chama a seção de "Pendências de produto"
 	// não pode ser cobrado pelo nome que o framework usaria.
-	if t := cfg.TituloDaSecao("open", "", camada); t != "" {
-		if loc := tituloDeclaradoRE(t).FindStringIndex(content); loc != nil {
+	if t := cfg.SectionTitle("open", "", camada); t != "" {
+		if loc := declaredTitleRE(t).FindStringIndex(content); loc != nil {
 			return bodyFrom(content, loc[1]), true
 		}
 	}

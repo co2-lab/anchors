@@ -114,13 +114,13 @@ var checkersComGate = map[string]func(g config.Gate, root string, graph *mapx.Gr
 	"marker-parity": checkMarkerParity,
 }
 
-// runInternalAgregado executa um checker interno de escopo batch/project.
+// runInternalAggregate executa um checker interno de escopo batch/project.
 //
 // Difere do `runInternal` num ponto que não é detalhe: NÃO há arquivo para ler. O
 // escopo é o conjunto, então o checker recebe um nó vazio e se orienta por `root` e
 // `cfg`. Tentar ler o conteúdo de um alvo aqui (como o runInternal faz) devolveria
 // erro de leitura e o gate reprovaria por um arquivo que nunca existiu.
-func runInternalAgregado(g config.Gate, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
+func runInternalAggregate(g config.Gate, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if fn, ok := checkersComGate[g.Check]; ok {
 		return fn(g, root, graph, cfg)
 	}

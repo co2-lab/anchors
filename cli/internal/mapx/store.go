@@ -40,7 +40,7 @@ func Save(g *Graph, path string) error {
 	// A comparação é com o arquivo COMPLETO, header incluído. A primeira versão comparava
 	// só o YAML contra o arquivo em disco — e como o disco tem o header, nunca eram
 	// iguais: a guarda não guardava nada, e só o teste isolado mostrou.
-	if igualIgnorandoGeradoPor(path, completo) {
+	if equalIgnoringGeneratedBy(path, completo) {
 		return nil
 	}
 	return os.WriteFile(path, completo, 0o644)
@@ -59,17 +59,17 @@ func Load(path string) (*Graph, error) {
 	return &g, nil
 }
 
-// igualIgnorandoGeradoPor diz se o mapa em disco é o mesmo, desconsiderando quem o gerou.
-func igualIgnorandoGeradoPor(path string, novo []byte) bool {
+// equalIgnoringGeneratedBy diz se o mapa em disco é o mesmo, desconsiderando quem o gerou.
+func equalIgnoringGeneratedBy(path string, novo []byte) bool {
 	atual, err := os.ReadFile(path)
 	if err != nil {
 		return false // não existe ainda: há o que escrever
 	}
-	return semGeradoPor(atual) == semGeradoPor(novo)
+	return withoutGeneratedBy(atual) == withoutGeneratedBy(novo)
 }
 
 var geradoPorLinhaRE = regexp.MustCompile(`(?m)^gerado_por:.*\n`)
 
-func semGeradoPor(b []byte) string {
+func withoutGeneratedBy(b []byte) string {
 	return geradoPorLinhaRE.ReplaceAllString(string(b), "")
 }

@@ -46,7 +46,7 @@ func checkScenarioLetterDeclared(content string, n mapx.Node, _ string, _ *mapx.
 	// ficaria cego para o que existe para achar. Aqui a varredura é sobre a forma
 	// (`@ABCDX-XX99`), sem consultar o vocabulário, e o vocabulário entra depois, ao
 	// julgar cada letra encontrada.
-	todos := codigoDeCenarioLivreRE().FindAllStringSubmatch(content, -1)
+	todos := freeScenarioCodeRE().FindAllStringSubmatch(content, -1)
 	if len(todos) == 0 {
 		return Skip, "feature sem cenário com código — nada a confrontar"
 	}
@@ -96,11 +96,11 @@ func containsStr(xs []string, s string) bool {
 	return false
 }
 
-// codigoDeCenarioLivreRE casa a FORMA de um código de cenário sem consultar o
+// freeScenarioCodeRE casa a FORMA de um código de cenário sem consultar o
 // vocabulário — é o que permite enxergar a letra que o projeto não declarou.
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
-func codigoDeCenarioLivreRE() *regexp.Regexp {
+func freeScenarioCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`@([A-Z0-9]` + config.CodeLengthPattern() + `)-([A-Z]{1,2})(\d{2})(?:#\d{2})?\b`)
 }

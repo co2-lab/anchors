@@ -59,11 +59,11 @@ type RegionError struct {
 // (`code_lengths`), que é carregada DEPOIS da inicialização dos globais. Um `var` aqui
 // congelaria o padrão default e a declaração do projeto não teria efeito — o modo de falha
 // que este campo existe para consertar.
-func reRegiaoAbre() *regexp.Regexp {
+func regionOpenRE() *regexp.Regexp {
 	return regexp.MustCompile(`#region\s*\[\s*([A-Z0-9]` + config.CodeLengthPattern() + `-[A-Za-z0-9-]+)\s*\]`)
 }
 
-func reRegiaoFecha() *regexp.Regexp {
+func regionCloseRE() *regexp.Regexp {
 	return regexp.MustCompile(`#endregion\s*(?:\[\s*([A-Z0-9]` + config.CodeLengthPattern() + `-[A-Za-z0-9-]+)\s*\])?`)
 }
 
@@ -86,7 +86,7 @@ func Regioes(content string) ([]Regiao, []RegionError) {
 		n := i + 1
 		// o fecho é testado ANTES da abertura: `#endregion` contém a substring `region`,
 		// e testar na ordem inversa faria todo fecho parecer uma abertura sem código.
-		if m := reRegiaoFecha().FindStringSubmatch(l); m != nil {
+		if m := regionCloseRE().FindStringSubmatch(l); m != nil {
 			if len(pilha) == 0 {
 				erros = append(erros, RegionError{Linha: n, Kind: "fecho-orfao", Achou: m[1]})
 				continue
@@ -109,7 +109,7 @@ func Regioes(content string) ([]Regiao, []RegionError) {
 			})
 			continue
 		}
-		if m := reRegiaoAbre().FindStringSubmatch(l); m != nil {
+		if m := regionOpenRE().FindStringSubmatch(l); m != nil {
 			pilha = append(pilha, aberta{code: m[1], linha: n})
 		}
 	}

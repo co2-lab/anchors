@@ -84,7 +84,7 @@ func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph,
 			continue
 		}
 		for _, loc := range re.FindAllStringIndex(content, -1) {
-			ini, fim := linhaDoOffset(content, loc[0]), linhaDoOffset(content, loc[1]-1)
+			ini, fim := lineAtOffset(content, loc[0]), lineAtOffset(content, loc[1]-1)
 			// A dispensa vale se estiver em QUALQUER linha do trecho casado (num import
 			// multilinha ela fica na linha do `from`, não na do `import`) ou na linha
 			// imediatamente acima.
@@ -107,9 +107,9 @@ func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph,
 	// o projeto marca `severity: warn` no que ainda está migrando, sem desligar o gate
 	// inteiro nem perder o registro.
 	if len(erros) == 0 {
-		return Pending, "fronteira em migração (`severity: warn`): " + juntaAte(avisos, 5)
+		return Pending, "fronteira em migração (`severity: warn`): " + joinUpTo(avisos, 5)
 	}
-	msg := "fronteira de camada violada: " + juntaAte(erros, 5)
+	msg := "fronteira de camada violada: " + joinUpTo(erros, 5)
 	if len(avisos) > 0 {
 		msg += fmt.Sprintf(" — e mais %d aviso(s) de regra em migração", len(avisos))
 	}
@@ -129,7 +129,7 @@ func describeBoundary(b config.Boundary) string {
 	return s
 }
 
-func juntaAte(xs []string, n int) string {
+func joinUpTo(xs []string, n int) string {
 	sort.Strings(xs)
 	if len(xs) > n {
 		return strings.Join(xs[:n], "; ") + fmt.Sprintf(" (e mais %d)", len(xs)-n)
@@ -148,8 +148,8 @@ func lineBeforeWaiver(linhas []string, i int) bool {
 	return i > 0 && allowBoundaryRE.MatchString(linhas[i-1])
 }
 
-// linhaDoOffset converte um offset em bytes no conteúdo para o índice da linha (0-based).
-func linhaDoOffset(content string, off int) int {
+// lineAtOffset converte um offset em bytes no conteúdo para o índice da linha (0-based).
+func lineAtOffset(content string, off int) int {
 	if off > len(content) {
 		off = len(content)
 	}

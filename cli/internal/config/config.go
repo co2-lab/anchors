@@ -239,12 +239,12 @@ func (w *Workflow) IntegrationBranchOrDefault() string {
 	return w.IntegrationBranch
 }
 
-// AprovacoesExigidas devolve quantas aprovações o PR precisa, com o default (1) aplicado.
+// RequiredApprovalsOrDefault devolve quantas aprovações o PR precisa, com o default (1) aplicado.
 //
 // Ponteiro no campo para distinguir "não declarou" (vale 1) de "declarou zero"
 // (deliberado). Com int simples, o zero-value seria indistinguível da ausência — e o
 // padrão nunca valeria.
-func (w *Workflow) AprovacoesExigidas() int {
+func (w *Workflow) RequiredApprovalsOrDefault() int {
 	if w == nil || w.RequiredApprovals == nil {
 		return 1
 	}
@@ -401,14 +401,14 @@ type Obligation struct {
 // jeito que não impõe idioma nem nomes de vendor (ver `dialect`).
 type SectionTitles map[string]string
 
-// TituloDaSecao devolve o título que o projeto usa para uma chave do catálogo, ou o
+// SectionTitle devolve o título que o projeto usa para uma chave do catálogo, ou o
 // padrão do framework quando ninguém renomeia.
 //
 // A precedência é CAMADA > projeto > framework, e a camada existe porque o dialeto quase
 // nunca é global. Medido num projeto real: "Modelo de Dado" e "Comportamentos" aparecem
 // em 50 specs de uma única camada e em 1 de todas as outras 588 — renomear no nível do
 // projeto teria trocado o título de 588 specs que estavam certas para consertar 50.
-func (c *Config) TituloDaSecao(chave, padrao, camada string) string {
+func (c *Config) SectionTitle(chave, padrao, camada string) string {
 	if c == nil {
 		return padrao
 	}
@@ -478,7 +478,7 @@ func (c *Config) TagLetters(tag string) ([]string, bool) {
 	var out []string
 	for _, rt := range c.RuleTypes {
 		for _, t := range rt.Tags {
-			if normalizaTitulo(t) == normalizaTitulo(tag) {
+			if normalizeTitle(t) == normalizeTitle(tag) {
 				out = append(out, strings.ToUpper(strings.TrimSpace(rt.Letter)))
 			}
 		}
@@ -489,16 +489,16 @@ func (c *Config) TagLetters(tag string) ([]string, bool) {
 // RequiresCodeIn diz se a seção (pelo título) foi declarada como catalogadora de regra.
 func (r RuleType) RequiresCodeIn(titulo string) bool {
 	for _, s := range r.RequiresCode {
-		if normalizaTitulo(s) == normalizaTitulo(titulo) {
+		if normalizeTitle(s) == normalizeTitle(titulo) {
 			return true
 		}
 	}
 	return false
 }
 
-// normalizaTitulo compara títulos ignorando caixa e espaço de borda — o mesmo
+// normalizeTitle compara títulos ignorando caixa e espaço de borda — o mesmo
 // critério que o gate `rule-types` usa para casar seção com letra.
-func normalizaTitulo(s string) string {
+func normalizeTitle(s string) string {
 	return strings.ToLower(strings.TrimSpace(s))
 }
 
@@ -854,11 +854,11 @@ func (g Gate) EffectiveScope() string {
 	}
 }
 
-// ScopeParaVarredura devolve o escopo do gate para o tipo de varredura em curso: o
+// ScopeForScan devolve o escopo do gate para o tipo de varredura em curso: o
 // `scope_full` quando o recorte é o projeto inteiro e o gate declarou um, o `scope` de
 // sempre no resto. Só batch/project são aceitos como `scope_full` — `node` no full
 // significaria uma execução por arquivo do projeto, que é o oposto da intenção.
-func (g Gate) ScopeParaVarredura(completa bool) string {
+func (g Gate) ScopeForScan(completa bool) string {
 	if !completa {
 		return g.EffectiveScope()
 	}
@@ -1653,7 +1653,7 @@ func DeclaredLayers(suites []Suite) []string {
 	return distintos(suites, func(s Suite) string { return s.Layer })
 }
 
-func WorkspacesDeclarados(suites []Suite) []string {
+func DeclaredWorkspaces(suites []Suite) []string {
 	return distintos(suites, func(s Suite) string { return s.Workspace })
 }
 

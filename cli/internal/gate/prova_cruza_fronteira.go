@@ -67,7 +67,7 @@ var afirmacaoDeRelacaoRE = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)\bmesma (regra|lógica|conta|fronteira|tabela)\b`),
 }
 
-// codigoDeRegraAlvoRE captura o ALVO como CÓDIGO DE REGRA (`RDSRX-B04`) — a forma
+// targetRuleCodeRE captura o ALVO como CÓDIGO DE REGRA (`RDSRX-B04`) — a forma
 // preferida. O código é identidade estável: já é usado em toda a aplicação (spec,
 // feature, teste, comentário no código), e sobrevive à refatoração que move ou
 // renomeia o arquivo.
@@ -78,7 +78,7 @@ var afirmacaoDeRelacaoRE = []*regexp.Regexp{
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
-func codigoDeRegraAlvoRE() *regexp.Regexp {
+func targetRuleCodeRE() *regexp.Regexp {
 	return regexp.MustCompile("`([A-Z0-9]" + config.CodeLengthPattern() + ")-[A-Z]\\d{2}(?:#\\d{2})?`")
 }
 
@@ -90,13 +90,13 @@ func codigoDeRegraAlvoRE() *regexp.Regexp {
 // dispensa `@no-cross` atende.
 var unidadeCitadaRE = regexp.MustCompile("`?([\\w./@-]+/[\\w.-]+\\.\\w{2,4})`?|`([\\w.-]+\\.(?:ts|tsx|js|jsx|mjs|go|py|rb|kt|swift|json|ya?ml))`")
 
-// linhaDeRegraRE isola a linha de uma regra catalogada (`| \x60ABCD-B01\x60 | … |`).
+// ruleLineRE isola a linha de uma regra catalogada (`| \x60ABCD-B01\x60 | … |`).
 // A afirmação e o arquivo citado têm de estar na MESMA linha: é o que amarra a
 // exigência à regra, e não a um parágrafo de prosa em volta.
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
-func linhaDeRegraRE() *regexp.Regexp {
+func ruleLineRE() *regexp.Regexp {
 	return regexp.MustCompile("(?m)^\\s*\\|\\s*`([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2}(?:#\\d{2})?)`\\s*\\|(.+)$")
 }
 
@@ -121,7 +121,7 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 	dispensadas := 0
 	donos := 0
 
-	for _, m := range linhaDeRegraRE().FindAllStringSubmatch(content, -1) {
+	for _, m := range ruleLineRE().FindAllStringSubmatch(content, -1) {
 		regra, texto := m[1], m[2]
 		if dispensaFronteiraRE.MatchString(texto) {
 			dispensadas++
@@ -143,7 +143,7 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 			// PREFERIDO: o alvo por CÓDIGO DE REGRA. Resolve pelo mapa (o nó que
 			// declara `code: RDSR`), então a regra não carrega caminho de arquivo —
 			// que muda — e sim a identidade da unidade, que não muda.
-			for _, mm := range codigoDeRegraAlvoRE().FindAllStringSubmatch(texto, -1) {
+			for _, mm := range targetRuleCodeRE().FindAllStringSubmatch(texto, -1) {
 				unidadeAlvo := mm[1]
 				if unidadeAlvo == unitRule(regra) {
 					continue // auto-referência: a própria unidade não é o outro lado

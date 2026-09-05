@@ -54,7 +54,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 			// modo local (mover pasta à mão), e manter os dois faz o board esconder o que os
 			// gates encontraram.
 			if cfg != nil && cfg.GitHubMode() && len(cfg.Workflow.Labels) > 0 {
-				issue.UsarGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
+				issue.UseGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
 			}
 			if len(cfg.Gates) == 0 {
 				return fmt.Errorf("nenhum gate declarado no anchors.yaml (seção `gates:`)")

@@ -107,7 +107,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 					"num lugar genérico (topo do arquivo, import) em vez do trecho que decide. " +
 					"A pergunta é sobre o que o código EXECUTA, não sobre o que o comentário " +
 					"afirma. Ao reprovar, PROPONHA a correção como patch. " +
-					instrucaoTBD("o código"),
+					tbdInstruction("o código"),
 			},
 			// O vocabulário de letras do código é do PROJETO (`rule_types`), mas o gate
 			// que impede conflito e letra não declarada é universal: uma letra fora do
@@ -295,7 +295,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 					"membro). Um regex que casa zero faz o gate `mock-carimbado` reportar " +
 					"verde sem ter conferido nada. Ao reprovar, PROPONHA o padrão corrigido " +
 					"como patch do `anchors.yaml`." +
-					instrucaoTBD("o teste"),
+					tbdInstruction("o teste"),
 			},
 			config.Gate{
 				Name: "mock-stamped", ID: "mock-stamped", On: []string{"test"}, Check: "mock-stamped",
@@ -583,7 +583,7 @@ func init() { config.SetCanonicalGateResolver(CanonicalGate) }
 // a lista o teste do de-para não teria contra o que confrontar — um destino errado
 // passaria despercebido.
 func init() {
-	config.RegistraNomesDeGate(func() []string {
+	config.RegisterGateNames(func() []string {
 		todos := DefaultGates(map[string]bool{"spec": true, "feature": true, "test": true}, false)
 		out := make([]string, 0, len(todos))
 		for _, g := range todos {

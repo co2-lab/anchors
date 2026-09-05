@@ -182,15 +182,15 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 		// em vez de repetida a cada alvo de cada varredura.
 		if faltando, ok := missingTool(g); ok {
 			results = append(results, Result{
-				Gate: g.Name, Target: "(" + string(g.ScopeParaVarredura(completa)) + ")",
+				Gate: g.Name, Target: "(" + string(g.ScopeForScan(completa)) + ")",
 				Verdict: Skip, Blocking: g.IsBlocking(),
 				Detail: "ferramenta ausente: " + faltando + " — gate não executado",
 			})
 			continue
 		}
-		switch g.ScopeParaVarredura(completa) {
+		switch g.ScopeForScan(completa) {
 		case config.ScopeBatch, config.ScopeProject:
-			results = append(results, runAgregado(g, alvos, root, completa, graph, cfg))
+			results = append(results, runAggregate(g, alvos, root, completa, graph, cfg))
 		default:
 			for _, n := range alvos {
 				// DISPENSA POR ALVO: o gate roda, e só este nó é poupado. O veredito é
@@ -211,14 +211,14 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 	return results
 }
 
-// runAgregado executa UMA vez um gate de escopo batch/project. O veredito é único:
+// runAggregate executa UMA vez um gate de escopo batch/project. O veredito é único:
 // a ferramenta olhou o conjunto e respondeu sobre ele.
 //
 // O alvo reportado é o próprio gate (não um arquivo): atribuir a falha do `tsc` a um
 // dos 63 arquivos seria mentira — o erro pode estar em qualquer um, ou na relação
 // entre eles. O laudo (stdout da ferramenta) é que nomeia arquivo e linha.
-func runAgregado(g config.Gate, alvos []mapx.Node, root string, completa bool, graph *mapx.Graph, cfg *config.Config) Result {
-	escopo := g.ScopeParaVarredura(completa)
+func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, graph *mapx.Graph, cfg *config.Config) Result {
+	escopo := g.ScopeForScan(completa)
 	r := Result{Gate: g.Name, Regra: idDoGate(g), Target: "(" + escopo + ")", Blocking: g.IsBlocking()}
 	// Um gate agregado pode ser INTERNO: a pergunta é sobre o conjunto, mas quem
 	// responde é o próprio CLI, não uma ferramenta de fora. É o caso de
@@ -230,7 +230,7 @@ func runAgregado(g config.Gate, alvos []mapx.Node, root string, completa bool, g
 	// checkers agregados leem `root`/`cfg`, nunca o conteúdo de um arquivo — e é por
 	// isso que este caminho não tenta lê-lo, ao contrário do `runInternal`.
 	if g.Check != "" {
-		r.Verdict, r.Detail = runInternalAgregado(g, root, graph, cfg)
+		r.Verdict, r.Detail = runInternalAggregate(g, root, graph, cfg)
 		return r
 	}
 	if g.Run == "" {

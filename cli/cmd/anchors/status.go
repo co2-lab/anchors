@@ -66,7 +66,7 @@ func runStatus(root string) error {
 	}
 
 	// 2. A FASE DESCOBRIR — antes do init, e a única que o Anchors não executa.
-	temProject := initx.TemProjectMD(root)
+	temProject := initx.HasProjectMD(root)
 	cfgPath := filepath.Join(root, config.DefaultFile)
 	_, errCfg := os.Stat(cfgPath)
 	temConfig := errCfg == nil

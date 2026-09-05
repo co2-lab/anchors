@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 )
 
-// RaizDoProjeto sobe a partir de `inicio` até achar o diretório que tem o `anchors.yaml`.
+// ProjectRoot sobe a partir de `inicio` até achar o diretório que tem o `anchors.yaml`.
 // Devolve `inicio` quando não acha — o chamador então falha com a mensagem normal de
 // config ausente, que é o comportamento certo fora de um projeto Anchors.
 //
@@ -19,7 +19,7 @@ import (
 // `cd` anterior fazia o comando seguinte falhar, e a mensagem não dizia que a causa era o
 // CWD — mostrava um caminho que ninguém pediu. Ferramentas de repositório (git, npm, cargo)
 // sobem até a raiz justamente porque quem trabalha não fica parado nela.
-func RaizDoProjeto(inicio string) string {
+func ProjectRoot(inicio string) string {
 	abs, err := filepath.Abs(inicio)
 	if err != nil {
 		return inicio
@@ -48,7 +48,7 @@ func AbsRoot(root string) (string, error) {
 		return "", err
 	}
 	if root == "." || root == "" {
-		return RaizDoProjeto(abs), nil
+		return ProjectRoot(abs), nil
 	}
 	return abs, nil
 }

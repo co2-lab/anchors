@@ -92,7 +92,7 @@ var WorkflowsDoFluxo = []Workflow{
 	},
 }
 
-// ProtecaoDeBranch é o que o modo `github` exige da `main`: nada entra sem PR.
+// BranchProtection é o que o modo `github` exige da `main`: nada entra sem PR.
 //
 // É o que torna o ciclo de revisão possível. A §7.9 do BOOTSTRAP diz que o agente sobe o
 // código e ABRE O PR, e o card vai para `ready-to-review` — sem PR não há o que revisar,
@@ -101,7 +101,7 @@ var WorkflowsDoFluxo = []Workflow{
 // E é o que o pipeline de identificação pressupõe: ele dispara na abertura do PR, porque
 // o push na main acontece DEPOIS do merge, quando o trabalho já terminou. Push direto na
 // main pula o card, pula a revisão, e pula o pipeline.
-type ProtecaoDeBranch struct {
+type BranchProtection struct {
 	// ExigePR — nada entra na main sem pull request.
 	ExigePR bool
 	// RevisoesNecessarias — quantas aprovações. Zero é legítimo num time de uma pessoa
@@ -111,7 +111,7 @@ type ProtecaoDeBranch struct {
 }
 
 // ProtecaoExigida é o mínimo que o fluxo pressupõe.
-var ProtecaoExigida = ProtecaoDeBranch{ExigePR: true, RevisoesNecessarias: 0}
+var ProtecaoExigida = BranchProtection{ExigePR: true, RevisoesNecessarias: 0}
 
 // DirWorkflows é onde os pipelines moram no projeto.
 const DirWorkflows = ".github/workflows"
@@ -327,12 +327,12 @@ func ÉTemplateIntacto(root, arquivo string) bool {
 	return strings.Contains(string(b), MarcadorDeTemplate)
 }
 
-// WorkflowsDesatualizados diz quais pipelines instalados são do Anchors (marcador
+// OutdatedWorkflows diz quais pipelines instalados são do Anchors (marcador
 // intacto) e diferem do template atual — os que `--fix` pode e deve atualizar.
 //
 // Um pipeline SEM o marcador não entra aqui mesmo que difira: é do time, e a diferença é
 // a customização dele.
-func WorkflowsDesatualizados(root string, cfg *config.Config) []Workflow {
+func OutdatedWorkflows(root string, cfg *config.Config) []Workflow {
 	var velhos []Workflow
 	for _, w := range WorkflowsDoFluxo {
 		if !ÉTemplateIntacto(root, w.Arquivo) {
@@ -346,7 +346,7 @@ func WorkflowsDesatualizados(root string, cfg *config.Config) []Workflow {
 		if err != nil {
 			continue
 		}
-		esperado = aplicaBranchDeIntegracao(esperado, cfg.Workflow.IntegrationBranchOrDefault())
+		esperado = applyIntegrationBranch(esperado, cfg.Workflow.IntegrationBranchOrDefault())
 		if !bytes.Equal(atual, esperado) {
 			velhos = append(velhos, w)
 		}
@@ -380,7 +380,7 @@ func SemeiaWorkflows(root string, cfg *config.Config) ([]string, error) {
 		if err != nil {
 			return escritos, fmt.Errorf("ler o template %s: %w", w.Arquivo, err)
 		}
-		conteudo = aplicaBranchDeIntegracao(conteudo, cfg.Workflow.IntegrationBranchOrDefault())
+		conteudo = applyIntegrationBranch(conteudo, cfg.Workflow.IntegrationBranchOrDefault())
 		if err := os.WriteFile(dest, conteudo, 0o644); err != nil {
 			return escritos, fmt.Errorf("escrever %s: %w", dest, err)
 		}
@@ -413,11 +413,11 @@ func semeiaBoard(root string) error {
 	return os.WriteFile(dest, conteudo, 0o644)
 }
 
-// aplicaBranchDeIntegracao troca o branch cravado no template pelo que o projeto
+// applyIntegrationBranch troca o branch cravado no template pelo que o projeto
 // declarou. A linha alvo é marcada com `# anchors:integration-branch` — um marcador, e
 // não uma busca por "main", porque "main" aparece em comentário e em outros contextos, e
 // substituir a ocorrência errada quebraria o pipeline de um jeito difícil de ver.
-func aplicaBranchDeIntegracao(conteudo []byte, branch string) []byte {
+func applyIntegrationBranch(conteudo []byte, branch string) []byte {
 	if branch == "" || branch == "main" {
 		return conteudo
 	}
