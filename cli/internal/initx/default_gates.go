@@ -106,7 +106,8 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 					"descrever um caso que o trecho não trata, ou quando a marcação estiver " +
 					"num lugar genérico (topo do arquivo, import) em vez do trecho que decide. " +
 					"A pergunta é sobre o que o código EXECUTA, não sobre o que o comentário " +
-					"afirma. Ao reprovar, PROPONHA a correção como patch.",
+					"afirma. Ao reprovar, PROPONHA a correção como patch. " +
+					instrucaoTBD("o código"),
 			},
 			// O vocabulário de letras do código é do PROJETO (`rule_types`), mas o gate
 			// que impede conflito e letra não declarada é universal: uma letra fora do
@@ -293,7 +294,8 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 					"dialeto, decorator em vez de chamada, dublê de módulo inteiro vs de " +
 					"membro). Um regex que casa zero faz o gate `mock-carimbado` reportar " +
 					"verde sem ter conferido nada. Ao reprovar, PROPONHA o padrão corrigido " +
-					"como patch do `anchors.yaml`.",
+					"como patch do `anchors.yaml`." +
+					instrucaoTBD("o teste"),
 			},
 			config.Gate{
 				Name: "mock-carimbado", ID: "mock-carimbado", On: []string{"test"}, Check: "mock-carimbado",
