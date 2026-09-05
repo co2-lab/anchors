@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"path/filepath"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -158,8 +159,8 @@ arestas do mapa por co-location (nomes de arquivo) e por código de cenário
 				return fmt.Errorf("save: %w", err)
 			}
 
-			fmt.Printf("mapa construído: %d nós, %d arestas\n", len(g.Nodes), len(g.Edges))
-			fmt.Printf("  escrito em %s\n", outPath)
+			fmt.Println(i18n.T("map.built", len(g.Nodes), len(g.Edges)))
+			fmt.Println(i18n.T("map.written_to", outPath))
 			printEdgeSummary(g)
 			return nil
 		},

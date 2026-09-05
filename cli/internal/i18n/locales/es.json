@@ -1,0 +1,34 @@
+{
+  "freeze.blocked.cli": "🛑 el proyecto está CONGELADO — `%s` no se ejecuta.",
+  "freeze.blocked.reason": "   Motivo: %s",
+  "freeze.blocked.work_safe": "   El trabajo que ya hiciste sigue en tu rama local.",
+  "freeze.blocked.how_to_thaw": "   Para liberar (quien lo congeló): `anchors thaw`",
+  "freeze.blocked.what_still_works": "   Para investigar: `anchors status`, `anchors doctor` y `anchors guide` siguen funcionando",
+  "freeze.no_reason": "(ningún motivo declarado — quien lo congeló no escribió `freeze_reason` en anchors.yaml)",
+  "freeze.already": "○ el proyecto YA está congelado: %s",
+  "freeze.already.retry": "  para cambiar el motivo, ejecuta `anchors thaw` y congela de nuevo.",
+  "freeze.reason_required": "--reason es obligatorio: escribe qué pasó, porque es el texto que TODO comando rechazado va a mostrar",
+  "freeze.done": "🛑 PROYECTO CONGELADO.",
+  "freeze.done.bypass": "   Quien lo ARREGLE pasa: `--no-verify` en los hooks, y el admin en el ruleset.",
+  "freeze.done.release": "   Para liberar: `anchors thaw`",
+  "thaw.not_frozen": "○ el proyecto no está congelado — nada que hacer.",
+  "thaw.done": "✓ PROYECTO LIBERADO — el trabajo vuelve.",
+  "thaw.cache_warning": "  Quien tenga la caché del hook caliente puede tardar hasta 10 minutos en\n  notarlo — o ejecutar `git fetch` para forzarlo.",
+
+  "lang.unsupported": "el idioma %q no está soportado — los disponibles son: %s",
+
+  "check.can_promote": "✓ se puede promover (ningún gate falló)",
+  "check.blocked_by_gates": "✗ bloqueado — %d gate(s) bloqueante(s) fallaron",
+  "check.blocked_by_judgment": "✗ bloqueado — %d objetivo(s) esperan juicio.",
+  "check.pending_note": "Pendiente no es defecto: es el gate diciendo que algo fue declarado y aún no decidido. No bloquea, y no desaparece solo.",
+  "check.legend.pass": "pasó",
+  "check.legend.fail": "falló — se convierte en issue",
+  "check.legend.warn": "divergió, pero no bloquea",
+  "check.legend.skip": "indeterminado — el gate no tuvo qué confrontar",
+
+  "map.built": "mapa construido: %d nodos, %d aristas",
+  "map.written_to": "  escrito en %s",
+  "map.version_mismatch": "⚠ el mapa fue escrito por `anchors %s` y este es %s.\n  Versiones distintas escriben el mapa de formas distintas: la más vieja DESHACE lo que la más nueva escribió, y el mapa empieza a oscilar — conflicto en cada PR, sin que nadie se equivoque.\n  Actualiza el binario (o ejecuta `anchors map build` con el nuevo y haz commit) antes de seguir.",
+
+  "not_governed": "%q no está regido por la Estructura (no coincide con ninguna capa de `layers:`) — nada que confrontar"
+}

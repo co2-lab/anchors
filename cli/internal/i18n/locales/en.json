@@ -1,0 +1,34 @@
+{
+  "freeze.blocked.cli": "🛑 the project is FROZEN — `%s` will not run.",
+  "freeze.blocked.reason": "   Reason: %s",
+  "freeze.blocked.work_safe": "   The work you have done stays on your local branch.",
+  "freeze.blocked.how_to_thaw": "   To release (whoever froze it): `anchors thaw`",
+  "freeze.blocked.what_still_works": "   To investigate: `anchors status`, `anchors doctor` and `anchors guide` still work",
+  "freeze.no_reason": "(no reason declared — whoever froze it did not write `freeze_reason` in anchors.yaml)",
+  "freeze.already": "○ the project is ALREADY frozen: %s",
+  "freeze.already.retry": "  to change the reason, run `anchors thaw` and freeze again.",
+  "freeze.reason_required": "--reason is required: write what happened, because it is the text EVERY refused command will show",
+  "freeze.done": "🛑 PROJECT FROZEN.",
+  "freeze.done.bypass": "   Whoever FIXES it gets through: `--no-verify` on the hooks, admin on the ruleset.",
+  "freeze.done.release": "   To release: `anchors thaw`",
+  "thaw.not_frozen": "○ the project is not frozen — nothing to do.",
+  "thaw.done": "✓ PROJECT RELEASED — work resumes.",
+  "thaw.cache_warning": "  Anyone with a warm hook cache may take up to 10 minutes to notice —\n  or run `git fetch` to force it.",
+
+  "lang.unsupported": "language %q is not supported — available: %s",
+
+  "check.can_promote": "✓ can promote (no gate failed)",
+  "check.blocked_by_gates": "✗ blocked — %d blocking gate(s) failed",
+  "check.blocked_by_judgment": "✗ blocked — %d target(s) awaiting judgment.",
+  "check.pending_note": "Pending is not a defect: it is the gate saying something was declared and not yet decided. It does not block, and it does not go away on its own.",
+  "check.legend.pass": "passed",
+  "check.legend.fail": "failed — becomes an issue",
+  "check.legend.warn": "diverged, but does not block",
+  "check.legend.skip": "indeterminate — the gate had nothing to confront",
+
+  "map.built": "map built: %d nodes, %d edges",
+  "map.written_to": "  written to %s",
+  "map.version_mismatch": "⚠ the map was written by `anchors %s` and this is %s.\n  Different versions write the map differently: the older one UNDOES what the newer wrote, and the map starts oscillating — a conflict on every PR, with nobody at fault.\n  Update the binary (or run `anchors map build` with the new one and commit) before going on.",
+
+  "not_governed": "%q is not governed by the Structure (matches no layer in `layers:`) — nothing to confront"
+}
