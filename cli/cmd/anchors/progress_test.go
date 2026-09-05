@@ -151,3 +151,33 @@ func TestProgresso_respeitaCodeLengthsDoProjeto(t *testing.T) {
 			"a veem e este comando não:\n%s", b)
 	}
 }
+
+// O `dispensado` é ACEITO, e é distinto de `pass` no mapa.
+//
+// A instrução do `@TBD` (ver `internal/initx/instrucao_tbd.go`) manda responder
+// DISPENSADO quando o alvo da pergunta não existe. Se o comando recusasse esse veredito,
+// a instrução mandaria o agente para uma parede — e a saída seria voltar ao `pass`
+// mentiroso que ela existe para evitar.
+//
+// Achado ao implementar a instrução: o `judge` aceitava só `pass` e `fail`.
+func TestJudge_aceitaDispensadoEExigeMotivo(t *testing.T) {
+	// A validação é a do comando; o que se prova aqui é o CONTRATO dos três vereditos.
+	for _, c := range []struct {
+		verdict string
+		reason  string
+		querErr bool
+		porque  string
+	}{
+		{"pass", "", false, "pass sem motivo é aceito (aprovação não precisa de laudo)"},
+		{"fail", "", true, "fail sem motivo não é acionável"},
+		{"dispensado", "", true, "dispensado sem a ausência nomeada é indistinguível de gate desligado"},
+		{"dispensado", "a spec declara @TBD: code e MTHRN não existe", false, "dispensado com motivo é aceito"},
+		{"inventado", "x", true, "veredito fora dos três é recusado"},
+	} {
+		err := validaVeredito(c.verdict, c.reason)
+		if (err != nil) != c.querErr {
+			t.Errorf("verdict=%q reason=%q: err=%v, queria erro=%v (%s)",
+				c.verdict, c.reason, err, c.querErr, c.porque)
+		}
+	}
+}
