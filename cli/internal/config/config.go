@@ -26,14 +26,41 @@ type Config struct {
 	// tabela tem de ser confrontado. Mas um gate que julga a MUDANÇA precisa separar
 	// "mudou" de "foi afetado por quem mudou", e a perspectiva sozinha não distingue os
 	// dois. Medido: o `plano-alterado-justificado` acusou 8 arquivos quando 1 mudara.
-	Alterados []string            `yaml:"-"`
-	Version   int                 `yaml:"version"`
-	Comments  map[string][]string `yaml:"comments,omitempty"` // override/extensão dos marcadores (D4)
-	Layers    map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
-	Derived   *Derived            `yaml:"derived,omitempty"`  // co-location dos derivados
-	Governs   []GovernRule        `yaml:"governs,omitempty"`  // dimensão vertical (arestas de alto grau)
-	Gates     []Gate              `yaml:"gates,omitempty"`    // os gates de qualidade (QUALITY §3-§5)
-	Recode    *Recode             `yaml:"recode,omitempty"`   // convenções de projeto p/ `anchors recode`
+	Alterados []string `yaml:"-"`
+
+	// Enabled: o INTERRUPTOR do projeto. `enabled: false` congela o Anchors inteiro —
+	// nenhum comando que escreve roda, e os que leem avisam antes de responder.
+	//
+	// É PONTEIRO de propósito. Um `bool` teria zero-value `false`, e todo projeto que
+	// nunca declarou o campo nasceria congelado — o modo de falha mais caro possível para
+	// quem está adotando. Nil (ausente) significa HABILITADO; só o `false` EXPLÍCITO
+	// congela.
+	//
+	// Existe porque o freio da plataforma (o ruleset que barra push e merge) não alcança
+	// a máquina de quem já clonou: ali o `check`, o `judge` e o `ingest` continuariam
+	// rodando e gravando no mapa. Congelar significa parar de PRODUZIR estado, não só de
+	// entregá-lo.
+	//
+	// Quem precisa mexer no repositório durante o congelamento continua podendo — por
+	// fora do Anchors, deliberadamente e com esforço. É a diferença entre "impossível" e
+	// "não acontece por inércia", e a segunda é a que se quer: um freio que ninguém pode
+	// contornar impede o próprio conserto.
+	Enabled *bool `yaml:"enabled,omitempty"`
+
+	// FreezeReason: por que o projeto está congelado. Só faz sentido com `enabled: false`.
+	//
+	// Sem o motivo, o congelamento é indistinguível de configuração quebrada — e quem
+	// esbarra nele tenta contornar em vez de ler. O texto vai para a mensagem de TODO
+	// comando recusado.
+	FreezeReason string `yaml:"freeze_reason,omitempty"`
+
+	Version  int                 `yaml:"version"`
+	Comments map[string][]string `yaml:"comments,omitempty"` // override/extensão dos marcadores (D4)
+	Layers   map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
+	Derived  *Derived            `yaml:"derived,omitempty"`  // co-location dos derivados
+	Governs  []GovernRule        `yaml:"governs,omitempty"`  // dimensão vertical (arestas de alto grau)
+	Gates    []Gate              `yaml:"gates,omitempty"`    // os gates de qualidade (QUALITY §3-§5)
+	Recode   *Recode             `yaml:"recode,omitempty"`   // convenções de projeto p/ `anchors recode`
 	// Tests e Mutation declaram COMO este projeto produz sinal de teste: o comando é
 	// do projeto, a amarração ao mapa é do Anchors. Ver Suite.
 	Tests    []Suite `yaml:"tests,omitempty"`
@@ -243,6 +270,30 @@ func (w *Workflow) BranchesProtegidos() []string {
 }
 
 // ModoGitHub diz se o projeto declarou a gestão no GitHub.
+// Congelado diz se o projeto está com o Anchors desligado (`enabled: false`).
+//
+// Nil-safe: uma config que não carregou não congela nada. O comando que a recebeu vazia
+// tem outro problema, e responder "congelado" ali mandaria quem investiga para o lado
+// errado.
+func (c *Config) Congelado() bool {
+	return c != nil && c.Enabled != nil && !*c.Enabled
+}
+
+// MotivoDoCongelamento devolve o texto a mostrar quando um comando é recusado.
+//
+// O motivo é OBRIGATÓRIO na prática, e a mensagem o cobra quando falta: um congelamento
+// sem razão escrita é indistinguível de configuração quebrada, e quem esbarra nele tenta
+// contornar em vez de ler.
+func (c *Config) MotivoDoCongelamento() string {
+	if !c.Congelado() {
+		return ""
+	}
+	if r := strings.TrimSpace(c.FreezeReason); r != "" {
+		return r
+	}
+	return "(nenhum motivo declarado — quem congelou não escreveu `freeze_reason` no anchors.yaml)"
+}
+
 func (c *Config) ModoGitHub() bool {
 	return c != nil && c.Workflow != nil && c.Workflow.Mode == ModeGitHub
 }
