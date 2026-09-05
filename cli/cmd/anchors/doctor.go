@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -76,11 +77,12 @@ APRESENTA e REGISTRA, mas NÃO bloqueia — é diagnóstico, roda sob demanda.`,
 }
 
 func printReport(r health.Report) {
-	fmt.Printf("anchors doctor — %d nós, %d arestas, %d camadas\n\n", r.Nodes, r.Edges, r.Layers)
+	fmt.Println(i18n.T("doctor.header", r.Nodes, r.Edges, r.Layers))
+	fmt.Println()
 
 	warnings := r.Warnings()
 	if len(r.Findings) == 0 {
-		fmt.Println("✓ nenhuma ponta sistêmica encontrada — ecossistema íntegro")
+		fmt.Println(i18n.T("doctor.all_clean"))
 		return
 	}
 
@@ -121,7 +123,7 @@ func printReport(r health.Report) {
 
 	fmt.Printf("resumo: %d ponta(s) de atenção, %d achado(s) no total\n",
 		len(warnings), len(r.Findings))
-	fmt.Println("(diagnóstico — nada foi bloqueado; decida o que conciliar)")
+	fmt.Println(i18n.T("doctor.diagnosis_note"))
 }
 
 // repairEnvironment cria o que falta no ambiente do modo `github`. É o `--fix` do doctor,
@@ -137,7 +139,8 @@ func printReport(r health.Report) {
 // é decisão de quem opera.
 func repairEnvironment(root string, cfg *config.Config) error {
 	if !cfg.GitHubMode() {
-		fmt.Println("\n--fix: nada a fazer — o ambiente do GitHub só é exigido no `workflow.mode: github`.")
+		fmt.Println()
+		fmt.Println(i18n.T("doctor.fix.nothing_github_mode"))
 		return nil
 	}
 	// Lido ANTES de semear: depois da escrita os arquivos já casam o template, e não
@@ -149,14 +152,14 @@ func repairEnvironment(root string, cfg *config.Config) error {
 	}
 	fmt.Println()
 	if len(faltavam) == 0 && len(desatualizados) == 0 {
-		fmt.Println("--fix: os pipelines já existem e estão atualizados.")
+		fmt.Println(i18n.T("doctor.fix.pipelines_current"))
 	}
 	if len(faltavam) > 0 {
 		fmt.Printf("✓ %d pipeline(s) criados em %s:\n", len(faltavam), initx.DirWorkflows)
 		for _, w := range faltavam {
 			fmt.Printf("    %s\n", w.Arquivo)
 		}
-		fmt.Println("  revise, commite e configure `vars.ANCHORS_PROJECT_NUMBER` no repositório.")
+		fmt.Println(i18n.T("doctor.fix.review_and_configure"))
 	}
 	// Atualizado é distinto de criado, e a mensagem separa os dois: um arquivo que MUDOU
 	// sozinho no repositório de alguém precisa ser lido antes de subir — dizer só
@@ -167,7 +170,7 @@ func repairEnvironment(root string, cfg *config.Config) error {
 		for _, w := range desatualizados {
 			fmt.Printf("    %s\n", w.Arquivo)
 		}
-		fmt.Println("  revise o diff e commite — a correção só passa a valer depois de subir.")
+		fmt.Println(i18n.T("doctor.fix.review_diff"))
 	}
 	// A PROTEÇÃO DO BRANCH é o que enforça "todo trabalho sobe via PR". Sem ela nada
 	// falha: o push direto funciona, e pula o card, a revisão e o pipeline de

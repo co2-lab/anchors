@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"path/filepath"
 	"strings"
@@ -87,7 +88,7 @@ func runInit(root string) error {
 			erroDePrompt = true
 		}
 		if !overwrite {
-			fmt.Println("abortado — nada foi alterado.")
+			fmt.Println(i18n.T("init.aborted"))
 			return nil
 		}
 	}
@@ -100,7 +101,7 @@ func runInit(root string) error {
 		return errNoTTY("Nada foi escrito, e o git nao foi tocado.")
 	}
 
-	fmt.Println("Escaneando o projeto…")
+	fmt.Println(i18n.T("init.scanning"))
 	p, err := initx.Infer(root)
 	if err != nil {
 		return fmt.Errorf("inferência: %w", err)
@@ -117,7 +118,7 @@ func runInit(root string) error {
 	cfg := p.Config
 	empty := len(p.CodeDirs) == 0 && !p.HasSpecMD && !p.HasFeature && !p.HasTest
 	if empty {
-		fmt.Println("Projeto novo/vazio — vou perguntar a estrutura que você pretende usar.")
+		fmt.Println(i18n.T("init.empty_project"))
 	}
 
 	// 0.5) PRESET DE STACK — oferece uma estrutura consagrada. Opcional: "nenhum"
@@ -188,7 +189,7 @@ func runInit(root string) error {
 				len(gates), strings.Join(names, ", ")), true) {
 			cfg.Gates = gates
 			if chosenArtifacts["test"] {
-				fmt.Println("  (os gates de teste leem os sinais de `anchors ingest` — rode a suíte com coverage e ingira)")
+				fmt.Println(i18n.T("init.test_gates_note"))
 			}
 		}
 	}
@@ -206,7 +207,7 @@ func runInit(root string) error {
 		keep := askMultiSelect("Quais diretórios de código tratar como camadas?", names)
 		initx.PruneCodeLayers(cfg, keep)
 	} else if empty {
-		fmt.Println("  (sem código ainda — declare as camadas de código no anchors.yaml quando existirem)")
+		fmt.Println(i18n.T("init.no_code_yet"))
 	}
 
 	// 3.5) MODO DE TRABALHO — onde a fila mora. É decisão HUMANA e EXCLUDENTE
@@ -221,10 +222,9 @@ func runInit(root string) error {
 				Repo:   repo,
 				Labels: []string{"anchors"},
 			}
-			fmt.Println("  modo `github`: a label `anchors` marca os cards do fluxo no board compartilhado.")
-			fmt.Println("  rode `anchors doctor --fix` depois, para semear os pipelines.")
+			fmt.Println(i18n.T("init.github_mode"))
 		} else {
-			fmt.Println("  sem repositório declarado — seguindo no modo local.")
+			fmt.Println(i18n.T("init.local_mode"))
 		}
 	}
 
