@@ -574,14 +574,14 @@ func translateTitle(body string, s section, cfg *config.Config, camada string) s
 	if local == "" {
 		return body
 	}
-	m := tituloSecaoRE.FindStringSubmatch(body)
+	m := sectionTitleRE.FindStringSubmatch(body)
 	if m == nil || strings.EqualFold(strings.TrimSpace(m[2]), local) {
 		return body
 	}
 	return strings.Replace(body, m[0], m[1]+" "+local+"\n", 1)
 }
 
-var tituloSecaoRE = regexp.MustCompile(`(?m)^(#{2,4})\s+([^\n]+)\n`)
+var sectionTitleRE = regexp.MustCompile(`(?m)^(#{2,4})\s+([^\n]+)\n`)
 
 // targetLayer resolve a camada da unidade que este artefato descreve — usada para achar
 // o léxico de seções DAQUELA camada (`section_titles`). O alvo é o irmão sem o sufixo de

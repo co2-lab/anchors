@@ -368,14 +368,14 @@ func linkedFeatureScenarios(n mapx.Node, root string, g *mapx.Graph) (int, strin
 		}
 		// A contagem é dos CENÁRIOS, não das tags: uma feature pode existir com
 		// cabeçalho e nenhum cenário (esqueleto), e isso não contradiz nada.
-		return len(cenarioRE.FindAllString(string(b), -1)), e.To
+		return len(scenarioRE.FindAllString(string(b), -1)), e.To
 	}
 	return 0, ""
 }
 
-// cenarioRE — o Gherkin do projeto pode estar em pt ou en; ambos abrem o cenário no
+// scenarioRE — o Gherkin do projeto pode estar em pt ou en; ambos abrem o cenário no
 // início da linha.
-var cenarioRE = regexp.MustCompile(`(?m)^\s*(?:Cenário|Cenario|Scenario|Esquema do Cenário|Scenario Outline):`)
+var scenarioRE = regexp.MustCompile(`(?m)^\s*(?:Cenário|Cenario|Scenario|Esquema do Cenário|Scenario Outline):`)
 
 // piecesToDevelop lê o `@TBD:` e devolve as arestas cuja peça ainda não foi escrita.
 //

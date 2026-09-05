@@ -1139,7 +1139,7 @@ func (d *Derived) PadroesDe() map[string]Padroes {
 	return resolvePatterns(d.Files)
 }
 
-// ChavePatterns é a chave RESERVADA dentro de `files`: o conjunto de arquivos que a spec
+// PatternKey é a chave RESERVADA dentro de `files`: o conjunto de arquivos que a spec
 // governa, quando ela não segue a co-location.
 //
 // `files.code` responde "onde mora o código desta spec?" com um template, e isso cobre a
@@ -1149,7 +1149,7 @@ func (d *Derived) PadroesDe() map[string]Padroes {
 //
 // Fica DENTRO de `files` e não ao lado porque é a MESMA decisão — onde estão os derivados
 // — expressa de outra forma. Ao lado, seriam dois lugares para responder uma pergunta só.
-const ChavePatterns = "patterns"
+const PatternKey = "patterns"
 
 // resolvePatterns troca `code` pelo conteúdo de `patterns`, quando declarado.
 //
@@ -1157,13 +1157,13 @@ const ChavePatterns = "patterns"
 // código e continuar querendo o `feature`/`test` da co-location. Descartar o mapa inteiro
 // obrigaria a repetir o que não mudou, e repetição em config é onde a divergência começa.
 func resolvePatterns(files map[string]Padroes) map[string]Padroes {
-	ps, tem := files[ChavePatterns]
+	ps, tem := files[PatternKey]
 	if !tem || len(ps) == 0 {
 		return files
 	}
 	out := map[string]Padroes{}
 	for k, v := range files {
-		if k == ChavePatterns {
+		if k == PatternKey {
 			continue // não é camada: não pode virar um derivado chamado "patterns"
 		}
 		out[k] = v

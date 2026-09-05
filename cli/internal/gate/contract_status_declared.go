@@ -35,10 +35,10 @@ import (
 //
 // O gate NÃO exige as faixas genéricas (`5xx`) nem inventa semântica: só compara os
 // números concretos que aparecem na tabela com os que aparecem no código.
-// contratoSecaoRE isola a seção "Contrato de Saída" até o próximo cabeçalho `##`.
+// contractSectionRE isola a seção "Contrato de Saída" até o próximo cabeçalho `##`.
 // O nome da seção varia um pouco entre specs (`## Contrato de Saída`, ou com sufixo
 // como "(por action + erro→status)"), então casa o prefixo.
-var contratoSecaoRE = regexp.MustCompile(`(?s)##\s*Contrato de Sa[íi]da[^\n]*\n(.*?)(?:\n##|\z)`)
+var contractSectionRE = regexp.MustCompile(`(?s)##\s*Contrato de Sa[íi]da[^\n]*\n(.*?)(?:\n##|\z)`)
 
 // statusNaTabelaRE casa o número de status numa linha de tabela: `| 200 | …`.
 // Aceita `4xx`/`5xx` na captura para poder IGNORÁ-los depois (são faixas, não
@@ -52,10 +52,10 @@ var statusNaTabelaRE = regexp.MustCompile(`(?m)^\s*\|\s*\*{0,2}(\d{3}|\d[xX]{2})
 const statusHTTPPadraoTS = `statusCode:\s*(\d{3})|\b[A-Za-z_$][\w$]*\(\s*(\d{3})\s*[,)]`
 const statusDinamicoPadraoTS = `statusCode:\s*[A-Za-z_$]`
 
-// statusHTTPNomeados traduz a constante nomeada em número, para os léxicos que a
+// namedHTTPStatuses traduz a constante nomeada em número, para os léxicos que a
 // usam (`http.StatusForbidden` em Go, `:forbidden` em Rails). Só os status que
 // aparecem em contrato de API — não é a tabela inteira da RFC.
-var statusHTTPNomeados = map[string]string{
+var namedHTTPStatuses = map[string]string{
 	"OK": "200", "Created": "201", "Accepted": "202", "NoContent": "204",
 	"BadRequest": "400", "Unauthorized": "401", "PaymentRequired": "402",
 	"Forbidden": "403", "NotFound": "404", "MethodNotAllowed": "405",
@@ -68,7 +68,7 @@ var statusHTTPNomeados = map[string]string{
 // de infraestrutura compartilhada e não de uma decisão do handler.
 //   - 500: quase todo handler tem o try/catch do topo, e as specs declaram `5xx`.
 //   - 401: quando o authorizer do API Gateway barra antes do handler.
-var statusExcecao = map[string]bool{"500": true}
+var statusException = map[string]bool{"500": true}
 
 func checkContractStatusDeclared(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
@@ -78,7 +78,7 @@ func checkContractStatusDeclared(content string, n mapx.Node, root string, g *ma
 		return Pending, "sem mapa carregado — o gate relacional precisa do grafo"
 	}
 
-	m := contratoSecaoRE.FindStringSubmatch(content)
+	m := contractSectionRE.FindStringSubmatch(content)
 	if m == nil {
 		return Skip, "spec sem seção `## Contrato de Saída` — nada a confrontar"
 	}
@@ -146,7 +146,7 @@ func checkContractStatusDeclared(content string, n mapx.Node, root string, g *ma
 			if g == "" {
 				continue
 			}
-			if num, ok := statusHTTPNomeados[g]; ok {
+			if num, ok := namedHTTPStatuses[g]; ok {
 				emitidos[num] = true
 			} else if len(g) == 3 && g[0] >= '1' && g[0] <= '5' {
 				emitidos[g] = true
@@ -160,7 +160,7 @@ func checkContractStatusDeclared(content string, n mapx.Node, root string, g *ma
 
 	var faltando, fantasma []string
 	for s := range emitidos {
-		if declarados[s] || statusExcecao[s] {
+		if declarados[s] || statusException[s] {
 			continue
 		}
 		// Faixa declarada cobre o 5xx correspondente: `5xx` na tabela ⇒ 503 ok.

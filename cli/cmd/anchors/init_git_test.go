@@ -61,8 +61,8 @@ func TestIniciaGitDeixaRepoComHEAD(t *testing.T) {
 	if err != nil {
 		t.Fatalf("git log falhou — não há HEAD: %v (%s)", err, out)
 	}
-	if strings.TrimSpace(out) != initx.MensagemPrimeiroCommit {
-		t.Errorf("assunto do commit = %q, queria %q", out, initx.MensagemPrimeiroCommit)
+	if strings.TrimSpace(out) != initx.FirstCommitMessage {
+		t.Errorf("assunto do commit = %q, queria %q", out, initx.FirstCommitMessage)
 	}
 	b, err := os.ReadFile(filepath.Join(dir, ".gitignore"))
 	if err != nil {

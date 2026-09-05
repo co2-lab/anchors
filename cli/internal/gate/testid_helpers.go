@@ -108,12 +108,12 @@ func handleDeTeste(cfg *config.Config) string {
 	return strings.TrimSpace(cfg.Derived.TestHandle)
 }
 
-// testIDDeclaradoRE captura o id citado em crase na spec. Aceita as três formas
+// declaredTestIDRE captura o id citado em crase na spec. Aceita as três formas
 // catalogadas que o projeto já usa (SPEC_TYPES §5): linha de tabela, bullet e
 // cabeçalho — o que importa é o id estar em crase, não a moldura em volta.
-var testIDDeclaradoRE = regexp.MustCompile("`(:?[a-zA-Z][a-zA-Z0-9._-]*(?:-\\*)?)`")
+var declaredTestIDRE = regexp.MustCompile("`(:?[a-zA-Z][a-zA-Z0-9._-]*(?:-\\*)?)`")
 
-// secaoSuperficieRE delimita a seção de inventário. Sem ela, qualquer crase na prosa
+// surfaceSectionRE delimita a seção de inventário. Sem ela, qualquer crase na prosa
 // da spec (nome de classe CSS, de campo, de arquivo) contaria como declaração — e o
 // gate passaria a aprovar por acidente, que é pior que reprovar por engano.
 //
@@ -121,11 +121,11 @@ var testIDDeclaradoRE = regexp.MustCompile("`(:?[a-zA-Z][a-zA-Z0-9._-]*(?:-\\*)?
 // specs do app de referência nomeiam ali a superfície que consome os ids. Exigir fim-de-linha logo
 // após o título fazia o gate não enxergar a seção dessas specs e acusá-las de não
 // declarar nada — reprovando justamente as que documentam melhor.
-var secaoSuperficieRE = regexp.MustCompile(`(?im)^#{1,6}\s*(?:superf[íi]cie de teste|test\s*ids?)\b.*$`)
+var surfaceSectionRE = regexp.MustCompile(`(?im)^#{1,6}\s*(?:superf[íi]cie de teste|test\s*ids?)\b.*$`)
 
 // declaredTestIDs lê o inventário DENTRO da seção de Superfície de Teste.
 func declaredTestIDs(spec, attr string) []string {
-	loc := secaoSuperficieRE.FindStringIndex(spec)
+	loc := surfaceSectionRE.FindStringIndex(spec)
 	if loc == nil {
 		return nil
 	}
@@ -146,7 +146,7 @@ func declaredTestIDs(spec, attr string) []string {
 		if celulas := rowCells(linha); celulas != nil {
 			alvo = celulas[0]
 		}
-		for _, m := range testIDDeclaradoRE.FindAllStringSubmatch(alvo, -1) {
+		for _, m := range declaredTestIDRE.FindAllStringSubmatch(alvo, -1) {
 			// O PRÓPRIO nome do atributo não é um id. O átomo genérico (Button,
 			// Avatar, ActionLink) recebe o handle de fora e a spec o documenta como
 			// `testID` (prop) — declarar isso é dizer "aceito um handle", não "exponho

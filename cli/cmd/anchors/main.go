@@ -18,7 +18,7 @@ var (
 func main() {
 	// O mapa registra QUEM o escreveu, para que um binário mais velho seja acusado em vez
 	// de reverter em silêncio o que a versão nova gravou (ver mapx.GeradoPor).
-	mapx.GeradoPor = version
+	mapx.GeneratedBy = version
 	if err := newRootCmd().Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "erro:", err)
 		// "não é regido" sai com código PRÓPRIO: quem automatiza (pre-commit, CI)
@@ -27,7 +27,7 @@ func main() {
 		// o pre-commit passou a deixar arquivo regido novo escapar sem trinca.
 		var nr errNotGoverned
 		if errors.As(err, &nr) {
-			os.Exit(ExitNaoRegido)
+			os.Exit(ExitNotGoverned)
 		}
 		os.Exit(1)
 	}

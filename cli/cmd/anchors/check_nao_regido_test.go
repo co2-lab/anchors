@@ -47,7 +47,7 @@ func TestSelectNodesDistingueRegidoDeNaoRegido(t *testing.T) {
 		}
 		var nr errNotGoverned
 		if errors.As(err, &nr) {
-			t.Fatalf("classificado como NÃO-REGIDO (sairia %d, o hook faria continue): %v", ExitNaoRegido, err)
+			t.Fatalf("classificado como NÃO-REGIDO (sairia %d, o hook faria continue): %v", ExitNotGoverned, err)
 		}
 		if !strings.Contains(err.Error(), "REGIDO") {
 			t.Fatalf("mensagem não diz que o arquivo é regido: %v", err)
@@ -89,7 +89,7 @@ func TestSelectNodesDistingueRegidoDeNaoRegido(t *testing.T) {
 		_, _, err := selectNodes(g, cfg, false, []string{iss}, dir)
 		var nr errNotGoverned
 		if !errors.As(err, &nr) {
-			t.Fatalf("issues/ deveria ser não-regido (exit %d), veio: %v", ExitNaoRegido, err)
+			t.Fatalf("issues/ deveria ser não-regido (exit %d), veio: %v", ExitNotGoverned, err)
 		}
 	})
 }

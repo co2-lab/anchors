@@ -12,8 +12,8 @@ import (
 // achado sobre `Foo.spec.md` casaria o card de `FooBar.spec.md` — e o Anchors fecharia o
 // card errado, que é pior que não fechar nenhum.
 func TestMarcadorEhExatoENaoPrefixo(t *testing.T) {
-	corpoDeOutro := fmt.Sprintf(MarcadorChave, "trinca-completa:packages/Foo.spec.md:violation")
-	marcaProcurada := fmt.Sprintf(MarcadorChave, "trinca-completa:packages/Foo.spec.md")
+	corpoDeOutro := fmt.Sprintf(KeyMarker, "trinca-completa:packages/Foo.spec.md:violation")
+	marcaProcurada := fmt.Sprintf(KeyMarker, "trinca-completa:packages/Foo.spec.md")
 
 	// O marcador do outro card CONTÉM o prefixo do procurado, e mesmo assim não pode
 	// casar: são achados de alvos diferentes.

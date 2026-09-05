@@ -54,9 +54,9 @@ var placeholderCampoRE = regexp.MustCompile(`(?mi)^\s*(?://|#|<!--|\*)?\s*([a-z_
 // a regra existe como código e não diz nada.
 var placeholderCelulaRE = regexp.MustCompile(`(?m)^\s*\|[^|\n]*\|[^|\n]*\bTODO\b[^|\n]*\|`)
 
-// placeholderTituloRE: título ou linha de corpo que abre com o marcador
+// placeholderTitleRE: título ou linha de corpo que abre com o marcador
 // (`# X — TODO propósito`, `TODO: o que a unidade faz`).
-var placeholderTituloRE = regexp.MustCompile(`(?m)^(?:#{1,6}\s+.*—\s*TODO\b.*|TODO[: ].*)$`)
+var placeholderTitleRE = regexp.MustCompile(`(?m)^(?:#{1,6}\s+.*—\s*TODO\b.*|TODO[: ].*)$`)
 
 // openPlaceholders acha os marcadores que o GERADOR deixou, e só eles.
 //
@@ -84,7 +84,7 @@ func openPlaceholders(content string, cfg *config.Config) []string {
 	for _, m := range placeholderCelulaRE.FindAllString(content, -1) {
 		add(m)
 	}
-	for _, m := range placeholderTituloRE.FindAllString(content, -1) {
+	for _, m := range placeholderTitleRE.FindAllString(content, -1) {
 		add(m)
 	}
 	return out

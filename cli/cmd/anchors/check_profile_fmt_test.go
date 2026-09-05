@@ -496,7 +496,7 @@ func TestListaLongaComVirgulaQuebra(t *testing.T) {
 	got := indent("símbolos sem catálogo: "+strings.Join(itens, ", "), "    ")
 
 	for _, l := range strings.Split(strings.TrimRight(got, "\n"), "\n") {
-		if len([]rune(l)) > limiarQuebraLista+20 {
+		if len([]rune(l)) > listBreakThreshold+20 {
 			t.Errorf("linha de %d runas — a lista não quebrou:\n%s", len([]rune(l)), l)
 		}
 	}

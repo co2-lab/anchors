@@ -48,7 +48,7 @@ func TestGitNaoInstaladoNaoEhOMesmoQueNaoIniciado(t *testing.T) {
 // git faz o usuário procurar o problema onde ele não está.
 func TestAvisoDizOQueFazerEmCadaEstado(t *testing.T) {
 	casos := []struct {
-		estado EstadoGit
+		estado GitState
 		contém string
 	}{
 		{GitNaoInstalado, "não está instalado"},

@@ -319,7 +319,7 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 		// por prosa ("que a spec ainda NÃO tomou"), e isso quebraria na tradução do
 		// laudo — sem erro, sem aviso: o gate simplesmente pararia de barrar.
 		if r.Verdict == Pending && g.Check == "open-questions-resolved" &&
-			strings.Contains(r.Detail, MarcaDecisaoEmAberto) {
+			strings.Contains(r.Detail, OpenDecisionMarker) {
 			r.Impede = true
 			// E vira ISSUE. A mesma distinção decide as duas coisas: "há decisão por
 			// tomar" é achado que precisa sobreviver à sessão; "a spec nasceu antes da
@@ -335,14 +335,14 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 	return r
 }
 
-// prazoRE captura o "quando" de cada dívida na mensagem do gate de obrigações, que as
+// deadlineRE captura o "quando" de cada dívida na mensagem do gate de obrigações, que as
 // concatena com ";". O nome da obrigação vem entre colchetes no início de cada trecho.
-var prazoRE = regexp.MustCompile(`\[([a-z0-9-]+)\][^;]*?DÍVIDA ASSUMIDA: ([^;]+)`)
+var deadlineRE = regexp.MustCompile(`\[([a-z0-9-]+)\][^;]*?DÍVIDA ASSUMIDA: ([^;]+)`)
 
 // declaredDeadlines extrai, do laudo do gate, apenas os vencimentos — um por obrigação.
 func declaredDeadlines(detail string) string {
 	var out []string
-	for _, m := range prazoRE.FindAllStringSubmatch(detail, -1) {
+	for _, m := range deadlineRE.FindAllStringSubmatch(detail, -1) {
 		out = append(out, "`"+m[1]+"` — "+strings.TrimSpace(m[2]))
 	}
 	if len(out) == 0 {

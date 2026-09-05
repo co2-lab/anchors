@@ -77,7 +77,7 @@ func TestJulgamentoSobreviveAoRebuild(t *testing.T) {
 		Nodes: []Node{{ID: "a.spec.md", Rev: "r1"}, {ID: "a.test.ts", Rev: "r1"}},
 		Edges: []Edge{{From: "a.spec.md", To: "a.test.ts"}},
 	}
-	PreservarCarimbos(novo, antigo)
+	PreserveStamps(novo, antigo)
 
 	if v, ok := novo.JudgedBy("a.spec.md", "meu-gate"); !ok || v != "ok" {
 		t.Errorf("o julgamento deveria sobreviver ao rebuild: veredito=%q ok=%v", v, ok)

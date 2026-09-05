@@ -87,7 +87,7 @@ func isTautology(resto string) (string, bool) {
 	}
 	// Remove o código e as palavras de ligação; o que sobra é o conteúdo real do passo.
 	semCode := tautoCodeRE().ReplaceAllString(resto, " ")
-	conteudo := ligacaoRE.ReplaceAllString(strings.ToLower(semCode), " ")
+	conteudo := linkRE.ReplaceAllString(strings.ToLower(semCode), " ")
 	conteudo = strings.TrimSpace(regexp.MustCompile(`[^\p{L}\p{N}]+`).ReplaceAllString(conteudo, " "))
 	// Até duas palavras residuais ainda é tautologia ("o efeito X se verifica" →
 	// "efeito verifica"). Acima disso, o autor escreveu algo de próprio.
@@ -104,9 +104,9 @@ func tautoCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`\b([A-Z0-9]` + config.CodeLengthPattern() + `-[A-Z]\d{2})\b`)
 }
 
-// ligacaoRE são as palavras que só ligam — sem elas, o passo não perde afirmação. Cobre os
+// linkRE são as palavras que só ligam — sem elas, o passo não perde afirmação. Cobre os
 // idiomas do Gherkin que o Anchors conhece.
-var ligacaoRE = regexp.MustCompile(`\b(o|a|os|as|um|uma|de|do|da|se|e|que|the|a|an|of|is|are|el|la|los|las|del|se|le|les|du|de|der|die|das|` +
+var linkRE = regexp.MustCompile(`\b(o|a|os|as|um|uma|de|do|da|se|e|que|the|a|an|of|is|are|el|la|los|las|del|se|le|les|du|de|der|die|das|` +
 	`efeito|efeitos|regra|regras|comportamento|cenário|cenario|requisito|` +
 	`verifica|verificado|verificada|aplica|aplicado|aplicada|vale|válido|valido|ocorre|acontece|` +
 	`effect|rule|behavior|behaviour|verified|applies|holds|is met|met|satisfied|` +

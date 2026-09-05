@@ -395,8 +395,8 @@ var noContentRE = regexp.MustCompile(`@no-content[^\S\n]*:[^\S\n]*\S+`)
 
 var sepTabelaRE = regexp.MustCompile(`^\|[\s:|-]+\|?$`)
 
-// secaoComNivelRE casa um cabeçalho e captura o nível (para agrupar por pai) e o título.
-var secaoComNivelRE = regexp.MustCompile(`^(#{2,4})\s+(.+?)\s*$`)
+// leveledSectionRE casa um cabeçalho e captura o nível (para agrupar por pai) e o título.
+var leveledSectionRE = regexp.MustCompile(`^(#{2,4})\s+(.+?)\s*$`)
 
 // siblingsWithoutCode acha a seção que DEVERIA catalogar e não cataloga.
 //
@@ -416,7 +416,7 @@ func siblingsWithoutCode(content string) string {
 	}
 	var secoes []sec
 	for _, l := range strings.Split(content, "\n") {
-		if m := secaoComNivelRE.FindStringSubmatch(l); m != nil {
+		if m := leveledSectionRE.FindStringSubmatch(l); m != nil {
 			secoes = append(secoes, sec{titulo: m[2], nivel: len(m[1])})
 			continue
 		}

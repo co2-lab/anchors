@@ -105,7 +105,7 @@ func Regioes(content string) ([]Regiao, []RegionError) {
 				Code:  topo.code,
 				Start: topo.linha,
 				End:   n,
-				Rev:   hashLinhas(linhas[topo.linha-1 : n]),
+				Rev:   hashLines(linhas[topo.linha-1 : n]),
 			})
 			continue
 		}
@@ -120,9 +120,9 @@ func Regioes(content string) ([]Regiao, []RegionError) {
 	return out, erros
 }
 
-// hashLinhas — sha256 truncado em 12 hex, o mesmo comprimento do `rev` de nó, para que os
+// hashLines — sha256 truncado em 12 hex, o mesmo comprimento do `rev` de nó, para que os
 // dois sejam comparáveis a olho no mapa e no mesmo formato para quem lê.
-func hashLinhas(linhas []string) string {
+func hashLines(linhas []string) string {
 	h := sha256.Sum256([]byte(strings.Join(linhas, "\n")))
 	return hex.EncodeToString(h[:])[:12]
 }

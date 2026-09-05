@@ -528,7 +528,7 @@ func extractNeedsCode(content []byte) []string {
 		// Só o que PARECE código de fase. Um caminho aqui é engano de quem escreveu (a
 		// spec depende de uma FASE, não de um arquivo), e aceitá-lo em silêncio deixaria
 		// a dependência sem efeito — o gate não a encontraria no plano.
-		if p == "" || !codigoDeFaseRE.MatchString(p) {
+		if p == "" || !phaseCodeRE.MatchString(p) {
 			continue
 		}
 		out = append(out, p)
@@ -536,8 +536,8 @@ func extractNeedsCode(content []byte) []string {
 	return out
 }
 
-// codigoDeFaseRE casa `FNDTN-F02` — o código de uma fase de plano.
-var codigoDeFaseRE = regexp.MustCompile(`^[A-Z0-9]` + config.CodeLengthPattern() + `-F\d{2}$`)
+// phaseCodeRE casa `FNDTN-F02` — o código de uma fase de plano.
+var phaseCodeRE = regexp.MustCompile(`^[A-Z0-9]` + config.CodeLengthPattern() + `-F\d{2}$`)
 
 // extractNeeds lê a linha `needs:` e resolve cada caminho relativo à raiz. Só faz
 // sentido em plano — um `needs:` numa spec seria a pergunta errada: spec não espera

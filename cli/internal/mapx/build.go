@@ -430,7 +430,7 @@ func sortGraph(g *Graph) {
 	})
 }
 
-// PreservarCarimbos transfere os carimbos de validação de um grafo ANTERIOR para o recém
+// PreserveStamps transfere os carimbos de validação de um grafo ANTERIOR para o recém
 // construído, para as arestas que sobreviveram ao rebuild.
 //
 // Sem isto, o carimbo é memória de uma execução só: o `Build` cria o grafo do zero, e o
@@ -443,7 +443,7 @@ func sortGraph(g *Graph) {
 // A aresta é identificada por (from, to, tipo) — o mesmo par ligado pelo mesmo motivo. Se
 // qualquer ponta mudou de rev, o `StaleEdges` continua acusando: preservar o carimbo não
 // é fingir que o confronto é atual, é lembrar QUANDO ele aconteceu.
-func PreservarCarimbos(novo, antigo *Graph) {
+func PreserveStamps(novo, antigo *Graph) {
 	preservarSinais(novo, antigo)
 	if novo == nil || antigo == nil {
 		return

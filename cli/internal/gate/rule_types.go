@@ -214,9 +214,9 @@ func normalizeSection(s string) string {
 	return strings.ToLower(strings.TrimSpace(s))
 }
 
-// linhaDeTabelaRE: linha de corpo de tabela markdown (não o cabeçalho nem o
+// tableRowRE: linha de corpo de tabela markdown (não o cabeçalho nem o
 // separador). Duas barras bastam para ser célula; o separador é `| --- |`.
-var linhaDeTabelaRE = regexp.MustCompile(`^\s*\|[^|]*\|`)
+var tableRowRE = regexp.MustCompile(`^\s*\|[^|]*\|`)
 var separadorTabelaRE = regexp.MustCompile(`^\s*\|[\s:|-]+\|?\s*$`)
 
 // sectionsWithoutCode acha seção declarada `requires_code` que tem tabela preenchida e
@@ -262,7 +262,7 @@ func sectionsWithoutCode(content string, types []config.RuleType) string {
 		if ruleCodeRE().MatchString(line) {
 			temCodigo = true
 		}
-		if linhaDeTabelaRE.MatchString(line) && !separadorTabelaRE.MatchString(line) &&
+		if tableRowRE.MatchString(line) && !separadorTabelaRE.MatchString(line) &&
 			!strings.Contains(strings.ToLower(line), "---") {
 			linhas++
 		}

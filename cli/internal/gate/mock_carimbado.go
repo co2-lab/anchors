@@ -143,18 +143,18 @@ type declaredStamp struct {
 	hash    string // o hash gravado
 }
 
-// carimboRE casa a anotação:
+// stampRE casa a anotação:
 //
 //	// @contract: caminho/do/modulo.ts | export function useX( | 10 | 361280fb
 //
 // O separador é `|` porque a âncora é uma linha de código e pode conter vírgula, dois
 // pontos e parênteses — qualquer separador mais comum a partiria no meio.
-var carimboRE = regexp.MustCompile(
+var stampRE = regexp.MustCompile(
 	`@contract:\s*([^|\n]+?)\s*\|\s*(.+?)\s*\|\s*(\d+)\s*\|\s*([0-9a-f]+)`)
 
 func declaredStamps(content string) []declaredStamp {
 	var out []declaredStamp
-	for _, m := range carimboRE.FindAllStringSubmatch(content, -1) {
+	for _, m := range stampRE.FindAllStringSubmatch(content, -1) {
 		qtd, err := strconv.Atoi(m[3])
 		if err != nil || qtd <= 0 {
 			continue

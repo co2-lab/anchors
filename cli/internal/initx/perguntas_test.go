@@ -6,7 +6,7 @@ import (
 )
 
 func qsDeTeste() []Question {
-	return Perguntas(&Proposal{Config: nil}, []string{"go", "nextjs"})
+	return Questions(&Proposal{Config: nil}, []string{"go", "nextjs"})
 }
 
 // O contrato existe para um agente responder sem ver a TUI. Cada pergunta precisa trazer
@@ -100,7 +100,7 @@ func TestStatusReportaTodasAsRespostas(t *testing.T) {
 // e "respondi vazio" (`--artifacts=""`, nenhum artefato) são decisões OPOSTAS, e um bool
 // zero-value não as separa.
 func TestNaoRespondidoNaoEhOMesmoQueRespondidoVazio(t *testing.T) {
-	qs := Perguntas(&Proposal{}, nil)
+	qs := Questions(&Proposal{}, nil)
 	vazio := []string{}
 
 	semResposta := ValidateAnswers(qs, Respostas{})

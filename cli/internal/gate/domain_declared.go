@@ -127,13 +127,13 @@ func entryOwner(linha string) string {
 	if dono == "" || strings.HasPrefix(dono, "TODO") {
 		return ""
 	}
-	if naoEhDonoRE.MatchString(dono) {
+	if notOwnerRE.MatchString(dono) {
 		return ""
 	}
 	return dono
 }
 
-// naoEhDonoRE reconhece a NÃO-RESPOSTA — a frase que parece preencher a coluna e não
+// notOwnerRE reconhece a NÃO-RESPOSTA — a frase que parece preencher a coluna e não
 // nomeia ninguém.
 //
 // Não pode ancorar no fim da linha (`$`): o autor escreve "não valido (MTVRX-X04)", com a
@@ -148,7 +148,7 @@ func entryOwner(linha string) string {
 //     autor escreve "não valido (MTVRX-X04)", com a referência à restrição ao lado. Foi
 //     exatamente assim que o dever ficou órfão em três specs reais; citar a própria
 //     restrição é dizer "não é meu" com fonte, e continua sendo não-resposta.
-var naoEhDonoRE = regexp.MustCompile(`(?i)(^\s*[-—]+\s*$)|(^\s*(n/?a|ningu[ée]m|nobody|none|nenhum|` +
+var notOwnerRE = regexp.MustCompile(`(?i)(^\s*[-—]+\s*$)|(^\s*(n/?a|ningu[ée]m|nobody|none|nenhum|` +
 	`n[ãa]o\s+(é|eh|e)\s+(meu|daqui|desta)|n[ãa]o\s+valid\w*|n[ãa]o\s+se\s+aplica|` +
 	`fora\s+de\s+escopo|delegado|outra\s+camada)\b)`)
 
