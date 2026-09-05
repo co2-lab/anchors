@@ -272,7 +272,11 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 				case "ok":
 					r.Verdict = Pass
 					r.Detail = "julgado por IA: aprovado"
-				case "dispensado":
+				// `dispensado` é o valor ANTIGO, e continua sendo lido: ele está em
+				// mapas já commitados, e ignorá-lo faria o gate reperguntar um
+				// julgamento que alguém respondeu — com o carimbo ali, visível no
+				// arquivo, sem nada os ligando.
+				case "waived", "dispensado":
 					// `Skip`, e não `Pass`: o gate NÃO MEDIU — o alvo da pergunta não
 					// existe (a spec o declara `@TBD`). `Pass` afirmaria aprovação, que é
 					// a mentira que o veredito `dispensado` existe para evitar; `Pending`

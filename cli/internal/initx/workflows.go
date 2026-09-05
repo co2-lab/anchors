@@ -159,7 +159,14 @@ var EstadosDoTrabalho = []string{
 // fluxo tem mais (plano → fase → spec → achado). A árvore do board já se monta pelo
 // `parent:` do artefato; esta label é o que amarra o achado que NÃO tem artefato — uma
 // config, um pipeline, um arquivo que nenhuma spec governa.
-const PrefixoLabelSob = "anchors:sob-"
+const PrefixoLabelSob = "anchors:under-"
+
+// PrefixoLabelSobAntigo é o nome anterior, em português.
+//
+// Ele está em ISSUES do GitHub, não só em configuração: renomear a constante não renomeia
+// as labels que já existem. Os pipelines aceitam os dois enquanto durar a migração, e o
+// `anchors doctor --fix` renomeia as labels no board.
+const PrefixoLabelSobAntigo = "anchors:sob-"
 
 // LabelSob devolve a label que liga um card ao trabalho de origem.
 func LabelSob(card string) string { return PrefixoLabelSob + card }
@@ -173,7 +180,10 @@ func LabelSob(card string) string { return PrefixoLabelSob + card }
 //
 // É a mesma distinção que `issue.DonoUsuário` faz para as issues em `issues/`: o dono é
 // um eixo independente do estado.
-const LabelPrecisaDoUsuario = "anchors:precisa-do-usuario"
+const LabelPrecisaDoUsuario = "anchors:needs-user"
+
+// LabelPrecisaDoUsuarioAntiga é o nome anterior. Ver PrefixoLabelSobAntigo.
+const LabelPrecisaDoUsuarioAntiga = "anchors:precisa-do-usuario"
 
 // ColunasDoBoard são os nomes das colunas do Project que ESPELHAM os estados acima.
 // O board é opcional: quem o quiser cria as colunas com estes nomes e liga a automação

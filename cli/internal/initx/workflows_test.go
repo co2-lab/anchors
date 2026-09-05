@@ -233,6 +233,9 @@ func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 	// card continua na coluna onde o trabalho parou. Tratá-la como estado a faria sair
 	// dessa coluna, e o board deixaria de mostrar onde o fluxo travou.
 	valida[LabelPrecisaDoUsuario] = true
+	// A label ANTIGA continua válida enquanto durar a migração: os pipelines a aceitam
+	// para não abandonar as issues que já a carregam.
+	valida[LabelPrecisaDoUsuarioAntiga] = true
 	for _, w := range WorkflowsDoFluxo {
 		b, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {
@@ -469,7 +472,9 @@ func TestClaimPulaCardEscalado(t *testing.T) {
 		t.Fatal(err)
 	}
 	texto := string(b)
-	if !strings.Contains(texto, `index("`+LabelPrecisaDoUsuario+`") | not`) {
+	// O filtro aceita as DUAS labels durante a migração, então o teste confere que a
+	// NOVA está presente — a antiga é tolerância, não requisito.
+	if !strings.Contains(texto, `index("`+LabelPrecisaDoUsuario+`")`) {
 		t.Error("o claim precisa EXCLUIR o card escalado da lista de disponíveis — " +
 			"senão a escalação vira só um rótulo")
 	}

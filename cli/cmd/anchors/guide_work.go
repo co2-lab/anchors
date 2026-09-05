@@ -29,7 +29,7 @@ issue do que ELE detecta, e o resto depende de você.
 O caminho barato é consertar na hora e seguir. E aí o conserto some do histórico: quem
 vier depois não sabe que aquilo já foi problema, nem por que a solução é aquela.
 
-    anchors escalate "<o que está errado>" --sobre <arquivo> --card <este card>
+    anchors escalate "<o que está errado>" --about <arquivo> --card <este card>
 
 O achado nasce com a label ` + "`anchors:sob-<número>`" + `, e os dois se entregam no MESMO
 PR: você já está com o contexto na mão, e separá-los faria um dos dois esperar sem razão.
@@ -42,7 +42,7 @@ para trocar uma palavra é burocracia.
 
 Se a mudança **impacta a direção do projeto** — ou se você tem dúvida —, não a faça:
 
-    anchors escalate "<o que precisa mudar>" --sobre <arquivo> --para-usuario
+    anchors escalate "<o que precisa mudar>" --about <arquivo> --for-user
 
 Isso vira decisão de quem planejou, e o card para até ela sair. A interpretação do impacto
 é sua: você é quem tem o contexto do que descobriu.

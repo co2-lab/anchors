@@ -140,9 +140,9 @@ func checkPlanoAlteradoJustificado(content string, n mapx.Node, root string, g *
 				"    > **%s-R0001:** <o que mudou e por quê>\n"+
 				"Se a mudança IMPACTA A DIREÇÃO do projeto, ou se você tem dúvida, não a "+
 				"faça aqui — a interpretação do impacto é sua, e ela escolhe a saída:\n"+
-				"    anchors escalate \"<o que precisa mudar>\" --sobre %s --para-usuario\n"+
+				"    anchors escalate \"<o que precisa mudar>\" --about %s --for-user\n"+
 				"Se não impacta a direção mas também não é para agora, vira card comum:\n"+
-				"    anchors escalate \"<o que precisa mudar>\" --sobre %s", codigo, n.ID, n.ID)
+				"    anchors escalate \"<o que precisa mudar>\" --about %s", codigo, n.ID, n.ID)
 	}
 
 	// A numeração tem de ser sequencial a partir de 1. Sem isso ela não responderia
