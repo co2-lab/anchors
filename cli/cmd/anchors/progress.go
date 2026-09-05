@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+
+	"github.com/co2-lab/anchors/internal/config"
 )
 
 // --- o PROGRESSO mora fora do plano ---
@@ -58,7 +60,19 @@ func caminhoDeProgresso(plano string) string {
 // `fase-ordenada` já usam. Ler daqui em vez de manter uma segunda lista é o que garante
 // que o progresso fale das fases que existem: uma fase renomeada aparece, uma inventada
 // não.
-var faseNoCabecalhoRE = regexp.MustCompile(`(?m)^#{2,4}\s+([A-Z0-9]{4,5}-F\d{2})\b[^\S\n]*—?[^\S\n]*(.*)$`)
+//
+// O TAMANHO DO CÓDIGO vem de `config.CodeLengthPattern()`, e não de um `{4,5}` escrito à
+// mão: `code_lengths` é configurável por projeto. Um literal aqui daria a paridade que
+// este comentário afirma apenas para os projetos no default — nos outros, a fase seria
+// reconhecida pelos gates e ignorada por este comando, e o progresso nasceria vazio sem
+// nada acusar.
+//
+// Construído por CHAMADA, não em `var`: a config é carregada depois da inicialização do
+// pacote, e um regex montado no init congelaria o default.
+func faseNoCabecalhoRE() *regexp.Regexp {
+	return regexp.MustCompile(`(?m)^#{2,4}[^\S\n]+([A-Z0-9]` +
+		config.CodeLengthPattern() + `-F\d{2})\b[^\S\n]*—?[^\S\n]*(.*)$`)
+}
 
 type faseDoPlano struct {
 	Codigo string
@@ -67,7 +81,7 @@ type faseDoPlano struct {
 
 func fasesDoPlano(conteudo string) []faseDoPlano {
 	var out []faseDoPlano
-	for _, m := range faseNoCabecalhoRE.FindAllStringSubmatch(conteudo, -1) {
+	for _, m := range faseNoCabecalhoRE().FindAllStringSubmatch(conteudo, -1) {
 		out = append(out, faseDoPlano{Codigo: m[1], Titulo: strings.TrimSpace(m[2])})
 	}
 	return out

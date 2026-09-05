@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/scan"
 )
 
@@ -116,5 +117,37 @@ func TestProgresso_planoSemFasesDizOQueFazer(t *testing.T) {
 	b, _ := os.ReadFile(destino)
 	if !strings.Contains(string(b), "TODO") {
 		t.Errorf("plano sem fases devia dizer o que fazer:\n%s", b)
+	}
+}
+
+// O TAMANHO DO CÓDIGO vem da CONFIG, não de um literal.
+//
+// `code_lengths` é configurável por projeto. Enquanto o regex fixava `{4,5}`, um projeto
+// com código de 3 letras tinha as fases reconhecidas pelos gates (que usam
+// `config.CodeLengthPattern()`) e IGNORADAS por este comando — o progresso nascia vazio,
+// sem nada acusar. O comentário do código afirmava paridade com os gates; o código só a
+// tinha para quem estivesse no default.
+//
+// Achado no review do próprio PR que introduziu o arquivo.
+func TestProgresso_respeitaCodeLengthsDoProjeto(t *testing.T) {
+	original := config.CodeLengths
+	t.Cleanup(func() { config.CodeLengths = original })
+	config.CodeLengths = []int{3}
+
+	plano := "# Plano\n\n### ABC-F01 — fase de código curto\n"
+	dir := t.TempDir()
+	p := filepath.Join(dir, "0001-curto.md")
+	if err := os.WriteFile(p, []byte(plano), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	destino, err := escreveProgressoInicial(p, plano, "ABC")
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := os.ReadFile(destino)
+	if !strings.Contains(string(b), "## ABC-F01") {
+		t.Fatalf("a fase de um projeto com code_lengths=[3] não foi reconhecida — os gates "+
+			"a veem e este comando não:\n%s", b)
 	}
 }
