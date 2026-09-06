@@ -729,6 +729,16 @@ func procedureFor(artifact string, cfg *config.Config) []string {
 				"sessão passa por esta operação\"), ela vale mesmo que o consumidor não exista — " +
 				"e ele a encontra pronta em vez de decidir sozinho. Uma exigência DECIDE; uma " +
 				"descrição depende de confirmação que ainda não pode vir.",
+			"**E a prosa ENVELHECE: confira se uma decisão pendente já foi tomada.** Os " +
+				"casos acima nascem errados; este nasce CERTO e apodrece. Uma spec que diz \"a " +
+				"unidade X decide isto\" ou \"pressupõe o pior caso\" está correta enquanto X " +
+				"não decidiu — e continua no arquivo depois que decidiu. Medido: uma regra " +
+				"tratava a rotação de token como hipótese defensiva; a spec do pool a tornou " +
+				"fato, e ninguém voltou. A leitura muda: \"serializamos por precaução\" é o que " +
+				"alguém remove num refactor; \"serializamos porque rotaciona\" não é. Nenhum gate " +
+				"acusa — o `plano-alterado-justificado` cobra quem ALTERA, e aqui ninguém " +
+				"alterou: uma spec nova tornou outra desatualizada, e as duas seguem " +
+				"internamente coerentes.",
 			"**Verifique o que a peça promete ao MUNDO.** Recurso declarado existe na infra? " +
 				"Env var citada é provida? Índice que a consulta precisa foi criado? O typecheck " +
 				"passa por acidente (`!`, índice de objeto) escondendo algo que só quebra em " +
