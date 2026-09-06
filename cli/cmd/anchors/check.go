@@ -672,6 +672,18 @@ func impactOf(g *mapx.Graph, cfg *config.Config, changed, root string) ([]string
 		if ig.SkipFile(target) {
 			return nil, errNotGoverned{target: target}
 		}
+		// O `-progress.md` é o MESMO impasse que o comentário acima descreve, por outra
+		// porta: ele casa a camada `plan` (`plans/*.md`) e o scanner NUNCA o indexa — de
+		// propósito, porque um arquivo que existe para mudar não pode ser confrontado por
+		// gates que cobram justificativa de mudança (ver `scan.IsProgressFile`).
+		//
+		// Sem esta linha o resultado era o descrito ali: o arquivo dito "regido", ausente
+		// do mapa, e `map build` não o acrescentando nunca. Medido no blue-eyes ao
+		// commitar os 17 progressos que o `anchors new progress` acabara de criar — o
+		// commit ficava barrado para sempre, pelo próprio mecanismo que separou os dois.
+		if scan.IsProgressFile(target) {
+			return nil, errNotGoverned{target: target}
+		}
 		if layer, _ := scan.Classify(target, cfg); layer == "" {
 			return nil, errNotGoverned{target: target}
 		}

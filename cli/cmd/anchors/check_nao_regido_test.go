@@ -93,3 +93,47 @@ func TestSelectNodesDistingueRegidoDeNaoRegido(t *testing.T) {
 		}
 	})
 }
+
+// O `-progress.md` é o mesmo impasse que o `issues/`/`changes/` já resolvia, por outra
+// porta: ele casa a camada `plan` (`plans/*.md`) e o scanner NUNCA o indexa — de
+// propósito, porque um arquivo que existe para MUDAR não pode ser confrontado por gates
+// que cobram justificativa de mudança.
+//
+// Sem a exclusão, o resultado era o pior caso: o arquivo dito "regido", ausente do mapa,
+// e `map build` não o acrescentando nunca — commit barrado para sempre pelo próprio
+// mecanismo que separou decisão de estado.
+//
+// Medido no blue-eyes ao commitar os 17 progressos que o `anchors new progress` acabara
+// de criar.
+func TestSelectNodes_progressoNaoEhRegido(t *testing.T) {
+	dir := t.TempDir()
+	os.MkdirAll(filepath.Join(dir, "plans"), 0o755)
+
+	plano := "plans/0002-plataforma.md"
+	progresso := "plans/0002-plataforma-progress.md"
+	os.WriteFile(filepath.Join(dir, plano), []byte("# Plano\n"), 0o644)
+	os.WriteFile(filepath.Join(dir, progresso), []byte("# Progresso\n\n- [x] feito\n"), 0o644)
+
+	cfg := cfgRegencia()
+	cfg.Layers["plan"] = config.Layer{Pattern: "plans/*.md", Kind: "plan"}
+	g := &mapx.Graph{} // mapa vazio: a condição real logo depois de criar o arquivo
+
+	_, _, err := selectNodes(g, cfg, false, []string{progresso}, dir)
+	if err == nil {
+		t.Fatal("passou sem erro — o esperado é errNotGoverned, não silêncio")
+	}
+	var nr errNotGoverned
+	if !errors.As(err, &nr) {
+		t.Fatalf("o progresso foi tratado como REGIDO e o commit ficaria barrado "+
+			"para sempre (o `map build` nunca o acrescenta): %v", err)
+	}
+
+	// e o PLANO continua regido: a exclusão é do companheiro, não da camada.
+	_, _, err = selectNodes(g, cfg, false, []string{plano}, dir)
+	if err == nil {
+		t.Fatal("o plano fora do mapa devia barrar")
+	}
+	if errors.As(err, &nr) {
+		t.Fatal("o plano foi classificado como não-regido — a exclusão vazou para a camada")
+	}
+}
