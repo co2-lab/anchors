@@ -45,8 +45,25 @@ import (
 var itemDeProgressoRE = regexp.MustCompile(
 	"(?m)^[ \t]*-[ \t]+\\[([ xX])\\][ \t]+`([^`]+\\.(?:md|ts|tsx|js|jsx|json|ya?ml|feature|py|go))`")
 
+// planSeedInListRE captura as specs que o plano SEMEIA — as do item de lista, não as
+// mencionadas em prosa.
+//
+// O `plan-seeds-valid` casa qualquer “ `x.spec.md` “ do arquivo, e para o que ele faz
+// isso basta: ele valida a FORMA do caminho, e validar de novo uma spec citada não custa
+// nada. Aqui custaria — medido: a revisão `PLTFR-R0003` menciona “ `DataStore.spec.md` “
+// em prosa (sem caminho), e o gate acusou o progresso de não listar uma spec que ele
+// lista, com outro nome. Três dos quatro achados eram menções assim.
+//
+// A âncora é o `- [ ]` / `- [x]` no início da linha: o plano promete criar naquele item, e
+// a prosa das revisões fala sobre o que já existe.
+var planSeedInListRE = regexp.MustCompile("(?m)^[ \t]*-[ \t]+\\[[ xX]\\][ \t]+`([^`]+\\.spec\\.md)`")
+
+// spec citada em QUALQUER lugar do progresso conta como listada: o item pode ter sido
+// reescrito, movido de fase, ou anotado — o que importa é o arquivo estar lá.
+var specInProgressRE = regexp.MustCompile("`([^`]+\\.spec\\.md)`")
+
 // checkProgressHonest confronta cada item do `-progress.md` contra o disco.
-func checkProgressHonest(_ string, n mapx.Node, root string, _ *mapx.Graph, _ *config.Config) (Verdict, string) {
+func checkProgressHonest(planContent string, n mapx.Node, root string, _ *mapx.Graph, _ *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindPlan {
 		return Skip, "o progresso acompanha o PLANO — é dele que o gate parte"
 	}
@@ -75,7 +92,18 @@ func checkProgressHonest(_ string, n mapx.Node, root string, _ *mapx.Graph, _ *c
 		}
 	}
 
-	if len(abertoMasFeito) == 0 && len(marcadoMasAusente) == 0 {
+	// A TERCEIRA DIREÇÃO: semente que o plano promete e o progresso não lista.
+	//
+	// As duas primeiras conferem os itens QUE EXISTEM no progresso. Um gate que só olha
+	// para dentro do arquivo nunca vê o que falta nele — e foi assim que este gate passou
+	// com `✓15` num plano que acabara de ganhar uma spec semeada (o `MutualTls.spec.md`,
+	// migrado do 0016 por `PLTFR-R0004`).
+	//
+	// O efeito é o mesmo que o `[x]` mentiroso: o progresso diz que a fase acabou, e o
+	// `anchors next` seguiu para outro plano com trabalho declarado por fazer.
+	naoListadas := seedsMissingFromProgress(string(conteudo), planContent)
+
+	if len(abertoMasFeito) == 0 && len(marcadoMasAusente) == 0 && len(naoListadas) == 0 {
 		return Pass, ""
 	}
 
@@ -93,6 +121,12 @@ func checkProgressHonest(_ string, n mapx.Node, root string, _ *mapx.Graph, _ *c
 			"  O trabalho foi feito e ninguém marcou — o próximo a olhar refaz.\n",
 			len(abertoMasFeito), strings.Join(abertoMasFeito, ", "))
 	}
+	if len(naoListadas) > 0 {
+		fmt.Fprintf(&b, "%d spec(s) que o PLANO semeia e o progresso NÃO lista: %s.\n"+
+			"  O progresso diz que a fase acabou, e há trabalho declarado por fazer — "+
+			"o `anchors next` segue para outro plano.\n",
+			len(naoListadas), strings.Join(naoListadas, ", "))
+	}
 	b.WriteString("\nMarque no `-progress.md`, NUNCA no plano: alterar o plano significa " +
 		"que a DECISÃO mudou, e cobra revisão (`{CODIGO}-R000N`).")
 	return Fail, b.String()
@@ -106,4 +140,30 @@ func checkProgressHonest(_ string, n mapx.Node, root string, _ *mapx.Graph, _ *c
 // procurar um que não existe.
 func progressPathOf(plano string) string {
 	return scan.ProgressPathFor(plano)
+}
+
+// seedsMissingFromProgress devolve as specs que o plano promete e o progresso não lista.
+//
+// Compara por CAMINHO, não por linha: o texto do item no progresso pode ser reescrito
+// (encurtado, traduzido) sem deixar de ser o mesmo item — o que identifica é o arquivo.
+func seedsMissingFromProgress(progresso, plano string) []string {
+	noProgresso := map[string]bool{}
+	for _, m := range specInProgressRE.FindAllStringSubmatch(progresso, -1) {
+		noProgresso[m[1]] = true
+	}
+	var faltam []string
+	vistas := map[string]bool{}
+	for _, m := range planSeedInListRE.FindAllStringSubmatch(plano, -1) {
+		caminho := m[1]
+		// MOLDES não são specs semeadas — é a mesma exceção do `plan-seeds-valid`.
+		if strings.HasPrefix(filepath.Base(caminho), "_TEMPLATE_") {
+			continue
+		}
+		if noProgresso[caminho] || vistas[caminho] {
+			continue
+		}
+		vistas[caminho] = true
+		faltam = append(faltam, caminho)
+	}
+	return faltam
 }
