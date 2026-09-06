@@ -349,6 +349,15 @@ func questionToRuleRE() *regexp.Regexp {
 	//        vira a revisão R04"). Casá-la trataria a pergunta em aberto como já
 	//        respondida — o oposto do que o gate faz. Medido: quebrou
 	//        `TestOpenQuestions_cobraCodigoNaPergunta`.
+	//   `F`  é a da FASE, pelo mesmo motivo, e este custou uma pergunta SILENCIADA: a
+	//        `THMEX-Q01` do blue-eyes dizia "vira uma revisão THMEX-R0001, ou uma spec de
+	//        decisão no DSSYD-F01", e o `F01` fez a linha parecer de-para. O gate passou
+	//        `✓1` com a pergunta em aberto — exatamente o falso NEGATIVO que a correção
+	//        do de-para existia para não criar.
+	//
+	// A lição das três: a coluna "Vira" cita o que a resposta VAI produzir, e isso nunca
+	// é uma regra — é revisão, fase, ou outra spec. Só a regra JÁ EXISTENTE fecha a
+	// pergunta.
 	//
 	// O de-para de verdade cita a REGRA que nasceu (`-B07`, `-I02`), não a revisão que
 	// vai registrá-la.
@@ -357,7 +366,7 @@ func questionToRuleRE() *regexp.Regexp {
 	// config. É frouxo na direção segura: um projeto com letra própria (`X`) tem seu
 	// de-para contado como pergunta aberta — o gate reprova de mais, e reprovar de mais
 	// é visível. Casar de mais é que seria silencioso.
-	letras := strings.NewReplacer("Q", "", "R", "").Replace(config.DefaultRuleLetters)
+	letras := strings.NewReplacer("Q", "", "R", "", "F", "").Replace(config.DefaultRuleLetters)
 	if letras == "" {
 		letras = "BIE"
 	}

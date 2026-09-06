@@ -304,3 +304,36 @@ func TestOpenItems_perguntaSemRegraAindaConta(t *testing.T) {
 		}
 	}
 }
+
+// A coluna "Vira" cita o que a resposta VAI PRODUZIR, e isso nunca é uma regra: é
+// revisão, fase, ou outra spec. Só a regra JÁ EXISTENTE fecha a pergunta.
+//
+// Três letras tiveram de sair da classe de "regra" no de-para, e cada uma custou um
+// defeito medido:
+//
+//	R  revisão   quebrou o `cobraCodigoNaPergunta` (a coluna Vira traz `-R04`)
+//	F  fase      SILENCIOU a `THMEX-Q01` do blue-eyes: ela dizia "vira uma revisão
+//	             THMEX-R0001, ou uma spec de decisão no DSSYD-F01", e o `F01` fez a
+//	             linha parecer de-para. O gate passou `✓1` com a pergunta em aberto
+//	Q  pergunta  faria duas perguntas na mesma linha parecerem de-para
+//
+// O `F` é o pior dos três: um falso NEGATIVO criado pela correção que existia para não
+// criar falso negativo.
+func TestOpenItems_colunaViraNaoFechaAPergunta(t *testing.T) {
+	casos := map[string]int{
+		// a coluna "Vira" citando REVISÃO — a pergunta continua aberta
+		"| `PARCX-Q01` | UTC ou local? | Produto | `PARCX-R04` |": 1,
+		// citando FASE e revisão — o caso do blue-eyes
+		"| `THMEX-Q01` | qual lib? | usuário | uma revisão `THMEX-R0001`, ou uma spec no `DSSYD-F01` |": 1,
+		// citando outra SPEC pelo código de fase dela
+		"| `ABCDE-Q02` | onde isto mora? | usuário | uma spec nova em `WXYZ-F03` |": 1,
+		// e o de-para DE VERDADE, com a regra que nasceu: fecha
+		"- [x] `DTSTD-Q01` — a retenção do PITR → virou `DTSTD-B07`: 35 dias": 0,
+		"| `DTSTD-Q02` — o histórico tem limite | `DTSTD-B08` — não tem |":    0,
+	}
+	for corpo, quer := range casos {
+		if got := len(openItems(corpo)); got != quer {
+			t.Errorf("openItems(%q)\n  = %d item(ns), queria %d", corpo, got, quer)
+		}
+	}
+}
