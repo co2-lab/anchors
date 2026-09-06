@@ -165,7 +165,16 @@ card para trocar uma palavra é burocracia.`,
 					fmt.Printf("· aviso: não consegui rotular o card #%s — rotule à mão, "+
 						"senão outro agente pega o card e refaz o caminho\n", card)
 				} else {
+					// O CAMINHO DE VOLTA sai junto com o aviso de parada.
+					//
+					// Sem isto o comando gravava um estado e não dizia como revertê-lo:
+					// medido em blue-eyes#139, a decisão saiu, as revisões foram
+					// aplicadas, a issue fechada — e o card ficou parado, porque a
+					// instrução de remover a label só existia no corpo do card que o
+					// WORKFLOW abre. Descobrir exigia grepar o YAML.
 					fmt.Printf("· card #%s parado até a decisão\n", card)
+					fmt.Printf("  para retomar, depois que a decisão virar regra:\n"+
+						"    anchors decided --card %s --resolution \"<CODIGO>-R000N: o que mudou\"\n", card)
 				}
 				_ = exec.Command("gh", "issue", "comment", card,
 					"--repo", cfg.Workflow.Repo,
