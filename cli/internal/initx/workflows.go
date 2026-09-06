@@ -133,7 +133,7 @@ const DirWorkflows = ".github/workflows"
 // O par `ready-to-x` / `in-x` é o que torna a fila legível: um diz "disponível para
 // alguém pegar", o outro "alguém está fazendo".
 var WorkStates = []string{
-	"anchors:to-do",
+	LabelToDo,
 	"anchors:in-progress",
 	"anchors:ready-to-review",
 	"anchors:in-review",
@@ -181,6 +181,15 @@ func LabelSob(card string) string { return PrefixoLabelSob + card }
 // É a mesma distinção que `issue.DonoUsuário` faz para as issues em `issues/`: o dono é
 // um eixo independente do estado.
 const LabelNeedsUser = "anchors:needs-user"
+
+// LabelToDo é o estado em que um card NASCE.
+//
+// Constante e não literal pelo mesmo motivo do `LabelNeedsUser`: quem cria a issue
+// (`internal/issue`) e quem cria o label (`anchors init`) precisam concordar, e um
+// literal repetido nos dois lados foi exatamente como o `needs-user` divergiu — o `gh`
+// recusa o comando inteiro por um label inexistente, então o achado do gate deixa de ser
+// registrado sem que nada além do aviso apareça.
+const LabelToDo = "anchors:to-do"
 
 // LabelNeedsUserLegacy é o nome anterior. Ver PrefixoLabelSobAntigo.
 const LabelNeedsUserLegacy = "anchors:precisa-do-usuario"
