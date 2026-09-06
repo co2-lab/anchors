@@ -186,7 +186,7 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				}
 				// gates de JULGAMENTO: enfileira uma task `judge` por alvo pendente,
 				// para uma IA confrontar e reportar com `anchors judge`.
-				if n := enqueueJudgments(absRoot, cfg, profile); n > 0 {
+				if n := enqueueJudgments(absRoot, cfg, profile, all); n > 0 {
 					fmt.Println(i18n.T("check.awaiting_ai_judgment", n))
 				}
 				// PENDENTES é o que está NA FILA, não o que acabou de ser enfileirado.
@@ -299,7 +299,7 @@ func filterGates(gates []config.Gate, phase, category string, skipSlow bool, per
 // enqueueJudgments cria uma task `judge` por alvo que um gate de julgamento marcou
 // como pendente (verdict Judge). A task carrega o gate e o guide, para o worker (a
 // IA) saber o que ler e confrontar. Reusa a fila. Idempotente pelo dedup da fila.
-func enqueueJudgments(root string, cfg *config.Config, p gate.Profile) int {
+func enqueueJudgments(root string, cfg *config.Config, p gate.Profile, varreduraCompleta bool) int {
 	// índice gate → (guide, ask) para enriquecer a task
 	guideOf := map[string]string{}
 	askOf := map[string]string{}
@@ -333,7 +333,20 @@ func enqueueJudgments(root string, cfg *config.Config, p gate.Profile) int {
 			n++
 		}
 	}
-	dropStaleJudgments(root, cfg, p)
+	// A limpeza SÓ vale na varredura completa.
+	//
+	// `dropStaleJudgments` conclui "não foi enfileirado agora, então é obsoleto". Isso é
+	// verdade quando o check olhou TODOS os nós; em `--changed` ele olhou um arquivo, e
+	// todos os outros alvos do mesmo gate parecem obsoletos por não terem sido olhados.
+	//
+	// Medido no blue-eyes: dois `check --changed` seguidos em testes diferentes deixaram
+	// UMA task na fila. O primeiro julgamento foi apagado pelo segundo check — e o
+	// `judge --pending` respondia "nenhum alvo aguardando" com cinco pendentes no
+	// `check --all`. Quem confia na fila para saber o que julgar perde trabalho em
+	// silêncio, que é o oposto do que esta função existe para fazer.
+	if varreduraCompleta {
+		dropStaleJudgments(root, cfg, p)
+	}
 	return n
 }
 
