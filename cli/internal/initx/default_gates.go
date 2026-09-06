@@ -178,6 +178,19 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Name: "plan-seeds-valid", ID: "plan-seeds-valid", On: []string{"plan"}, Check: "plan-seeds-valid",
 			Blocking: config.Bool(false), Measures: "o plano só semeia spec em camada que tem spec",
 		})
+		// A FONTE que o plano nomeia tem de ter dono declarado.
+		//
+		// Medido no blue-eyes: o plano 0008 dizia "Fonte: **GA4**" e declarava
+		// `needs:` só do 0005. O adaptador vinha do 0002, e a dependência existia SÓ
+		// NA PROSA — até o 0002 remover o adaptador numa revisão. Os dois planos
+		// seguiram internamente coerentes, e a contradição só apareceu ao começar o
+		// 0008. Nenhum gate pegava: o `dependency-honored` confronta o `needs:`
+		// declarado, e aqui o defeito é o `needs:` que FALTA.
+		gates = append(gates, config.Gate{
+			Name: "plan-source-declared", ID: "plan-source-declared", On: []string{"plan"},
+			Check: "plan-source-declared", Blocking: config.Bool(false),
+			Measures: "a fonte que o plano nomeia tem o plano do adaptador no `needs:`",
+		})
 		// A ORDEM dentro do plano. Um plano sem fases catalogadas passa (elas são
 		// opcionais); o gate só cobra a coerência de quem as declarou.
 		// O PLANO REVISADO avisa quem o lê. Sem isso, quem abre um plano antigo segue uma

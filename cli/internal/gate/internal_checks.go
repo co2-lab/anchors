@@ -66,6 +66,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"proof-crosses-boundary":   checkProofCrossesBoundary,
 	"triad-complete":           checkTriadComplete,
 	"plan-seeds-valid":         checkPlanSeedsValid,
+	"plan-source-declared":     checkPlanSourceDeclared,
 	"phase-ordered":            checkPhaseOrdered,
 	"phase-exists":             checkPhaseExists,
 	"parent-valid":             checkParentValid,
