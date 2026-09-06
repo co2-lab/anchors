@@ -250,9 +250,21 @@ está declarada.`,
 	return cmd
 }
 
+// findJudgmentGate acha o gate pelo nome, aceitando também o nome ANTIGO.
+//
+// O `Load` canoniza os nomes ao ler o arquivo: um `anchors.yaml` que declara
+// `mock-detect-cobre-o-dialeto` chega aqui com `g.Name == "mock-detect-covers-dialect"`.
+// Comparar só contra `g.Name` recusava justamente o nome que a pessoa tem na tela —
+// medido no blue-eyes: `--gate mock-detect-cobre-o-dialeto` respondia "gate não existe"
+// com o gate declarado, visível, três linhas acima no próprio arquivo.
+//
+// A mensagem era pior que o erro: ela manda procurar um gate que está ali, e não diz que
+// o nome mudou. Canonizar o ARGUMENTO fecha o buraco pela mesma tabela que o `Load` usa,
+// então os dois nomes nunca divergem.
 func findJudgmentGate(cfg *config.Config, name string) (config.Gate, bool) {
+	canonico, _ := config.CanonicalName(name)
 	for _, g := range cfg.Gates {
-		if g.Name == name && g.IsJudgment() {
+		if (g.Name == name || g.Name == canonico) && g.IsJudgment() {
 			return g, true
 		}
 	}
