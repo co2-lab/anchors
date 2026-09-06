@@ -260,3 +260,47 @@ func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
 		t.Errorf("a seção declarada é a que vale, e ela tem 1 pergunta; veio %d", n)
 	}
 }
+
+// TABELA HISTÓRICA não é pergunta aberta.
+//
+// Uma tabela é a forma mais legível de mostrar de onde a regra veio, e o `[x]` obriga a
+// bullet. Medido no blue-eyes (co2-lab/anchors#7): escrevi o histórico da spec do
+// DataStore como `| era | virou |` e o gate contou as duas linhas de dados como perguntas
+// ABERTAS — na seção que abre com `nenhuma.` e cuja tabela diz que elas viraram regra.
+//
+// A defesa por NOME de coluna não alcançava: `| era | virou |` não casa
+// `código|pergunta|decisão`, então o cabeçalho entrava como item e as linhas também.
+//
+// E o efeito de errar aqui não é cosmético: o veredito fica `Pending`, o `check` só fecha
+// issue em `Pass`, e o card `needs-user` fica aberto para sempre com o claim pulando o
+// trabalho.
+func TestOpenItems_deParaDePerguntaParaRegraNaoEhPerguntaAberta(t *testing.T) {
+	corpo := "nenhuma.\n\n" +
+		"| era | virou |\n" +
+		"|---|---|\n" +
+		"| `DTSTD-Q01` — qual a retenção do PITR | `DTSTD-B07` — 35 dias, o máximo |\n" +
+		"| `DTSTD-Q02` — o histórico tem limite | `DTSTD-B08` — não tem, e é declarado |\n"
+
+	if itens := openItems(corpo); len(itens) != 0 {
+		t.Errorf("contou %d item(ns) aberto(s) numa tabela de HISTÓRICO: %q", len(itens), itens)
+	}
+}
+
+// A pergunta que AINDA não virou regra continua contando — a correção não pode virar
+// vale-tudo para qualquer linha de tabela.
+func TestOpenItems_perguntaSemRegraAindaConta(t *testing.T) {
+	casos := map[string]int{
+		"| `DTSTD-Q01` | qual a retenção do PITR | usuário |": 1,
+		"- `DTSTD-Q03` — o cache do cliente tem TTL próprio?": 1,
+		"| `DTSTD-Q01` → `DTSTD-B07` | decidido |":            0, // de-para
+		// duas perguntas na MESMA linha contam como UM item: o gate conta LINHAS, e o
+		// laudo depois extrai os códigos de cada uma. O que importa aqui é que a linha
+		// NÃO foi confundida com de-para.
+		"| `DTSTD-Q01` — pergunta | `DTSTD-Q02` — outra pergunta |": 1,
+	}
+	for corpo, quer := range casos {
+		if got := len(openItems(corpo)); got != quer {
+			t.Errorf("openItems(%q) = %d item(ns), queria %d", corpo, got, quer)
+		}
+	}
+}

@@ -207,7 +207,8 @@ var itemRE = regexp.MustCompile(`(?m)^\s*(?:[-*+]\s+|\d+[.)]\s+|\|)`)
 
 func openItems(corpo string) []string {
 	var itens []string
-	for _, linha := range strings.Split(corpo, "\n") {
+	linhas := strings.Split(corpo, "\n")
+	for i, linha := range linhas {
 		if strings.TrimSpace(linha) == "" || closedRE.MatchString(linha) {
 			continue
 		}
@@ -225,6 +226,45 @@ func openItems(corpo string) []string {
 		// item RESOLVIDO fica no histórico sem bloquear: marcado com [x] ou riscado.
 		// A resposta vira regra, mas o rastro de que a pergunta existiu tem valor.
 		if regexp.MustCompile(`(?i)^\s*[-*+]\s*\[x\]|~~`).MatchString(linha) {
+			continue
+		}
+		// DE-PARA também é histórico: a linha cita a pergunta E a regra que nasceu dela.
+		//
+		// Uma tabela é a forma mais legível de mostrar de onde a regra veio, e o `[x]`
+		// obriga a bullet. Medido no blue-eyes: escrevi o histórico da spec do DataStore
+		// como `| era | virou |` e o gate contou as duas linhas de dados como perguntas
+		// ABERTAS — na seção que abre com `nenhuma.` e cuja tabela diz que elas viraram
+		// regra.
+		//
+		// A defesa por NOME de coluna (`código|pergunta|decisão`) não alcança: `| era |
+		// virou |` não casa nenhum, então o cabeçalho entrava como item e as linhas
+		// também.
+		//
+		// O reconhecimento é por CONTEÚDO: uma linha que cita um código de pergunta e um
+		// código de regra é de-para por construção — a pergunta que virou regra não é
+		// pergunta aberta.
+		//
+		// E o efeito de errar aqui não é cosmético: o veredito fica `Pending`, o `check`
+		// só fecha issue em `Pass`, e o card `needs-user` fica aberto para sempre com o
+		// claim pulando o trabalho.
+		if isQuestionAlreadyRule(linha) {
+			continue
+		}
+		// CABEÇALHO DE TABELA com nome de coluna IMPREVISTO.
+		//
+		// A defesa acima cobre os títulos previstos (`código|pergunta|decisão`…), e
+		// `| era | virou |` não casa nenhum — entrava como item. Medido no blue-eyes: a
+		// tabela de histórico da spec do DataStore produziu 3 achados, e o cabeçalho era
+		// um deles.
+		//
+		// O reconhecimento é pela FORMA: um cabeçalho é seguido pelo separador
+		// (`|---|---|`) na linha de baixo, e é isso que o distingue de uma linha de dados
+		// com nome de coluna estranho.
+		//
+		// Não basta "linha de tabela sem código": uma pergunta ANÔNIMA numa tabela é
+		// exatamente o achado que o gate cobra (ver `TestOpenQuestions_cobraCodigoNaPergunta`),
+		// e pulá-la esconderia o defeito que ele existe para acusar.
+		if isTableHeader(i, linhas) {
 			continue
 		}
 		itens = append(itens, strings.TrimSpace(linha))
@@ -293,3 +333,53 @@ func DecisõesEmAberto(content string, cfg *config.Config, camada string) int {
 	}
 	return len(openItems(corpo))
 }
+
+// questionToRuleRE casa o par (código de pergunta, código de regra) numa linha.
+//
+// As letras vêm da config (`rule_types`), menos o `Q`, que é a da pergunta: um projeto que
+// declare `Q` como tipo de regra faria o de-para casar duas perguntas, e o gate deixaria
+// de ver uma pergunta aberta citada ao lado de outra.
+func questionToRuleRE() *regexp.Regexp {
+	// As letras CANÔNICAS, menos duas:
+	//
+	//   `Q`  é a da PERGUNTA — deixá-la faria o de-para casar duas perguntas, e uma
+	//        pergunta aberta citada ao lado de outra sumiria.
+	//   `R`  é a da REVISÃO, e a coluna "Vira" de uma pergunta ABERTA já traz uma
+	//        (`| PARCX-Q01 | ...? | Produto | PARCX-R04 |` significa "quando decidirem,
+	//        vira a revisão R04"). Casá-la trataria a pergunta em aberto como já
+	//        respondida — o oposto do que o gate faz. Medido: quebrou
+	//        `TestOpenQuestions_cobraCodigoNaPergunta`.
+	//
+	// O de-para de verdade cita a REGRA que nasceu (`-B07`, `-I02`), não a revisão que
+	// vai registrá-la.
+	//
+	// O default (e não o vocabulário do projeto) porque o `openItems` não recebe a
+	// config. É frouxo na direção segura: um projeto com letra própria (`X`) tem seu
+	// de-para contado como pergunta aberta — o gate reprova de mais, e reprovar de mais
+	// é visível. Casar de mais é que seria silencioso.
+	letras := strings.NewReplacer("Q", "", "R", "").Replace(config.DefaultRuleLetters)
+	if letras == "" {
+		letras = "BIE"
+	}
+	cod := "[A-Z0-9]" + config.CodeLengthPattern()
+	return regexp.MustCompile(cod + `-Q\d+\b[\s\S]*?` + cod + `-[` + letras + `]\d+\b`)
+}
+
+// isQuestionAlreadyRule diz se a linha registra uma pergunta que JÁ virou regra.
+func isQuestionAlreadyRule(linha string) bool {
+	return questionToRuleRE().MatchString(linha)
+}
+
+// isTableHeader diz se a linha é o cabeçalho de uma tabela markdown.
+//
+// A prova é a linha SEGUINTE ser o separador (`|---|---|`): é a única marca que distingue
+// um cabeçalho de uma linha de dados, e ela não depende de os nomes das colunas serem
+// previsíveis — que foi o que falhou com `| era | virou |`.
+func isTableHeader(i int, linhas []string) bool {
+	if !strings.HasPrefix(strings.TrimSpace(linhas[i]), "|") || i+1 >= len(linhas) {
+		return false
+	}
+	return tableSeparatorRE.MatchString(linhas[i+1])
+}
+
+var tableSeparatorRE = regexp.MustCompile(`^\s*\|[\s:|-]+\|?\s*$`)
