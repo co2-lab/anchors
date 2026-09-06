@@ -46,6 +46,22 @@ release:
     owner: co2-lab
     name: anchors
 
+  # A MESMA TAG pode disparar o workflow mais de uma vez, e o padrão (`append`) recusa o
+  # artefato que já existe:
+  #
+  #   422 Validation Failed [{Resource:ReleaseAsset Field:name Code:already_exists}]
+  #
+  # Medido na v0.1.29: a tag foi refeita duas vezes por causa da mensagem, e o terceiro
+  # release caiu ao subir o que o segundo já tinha publicado. A release ficou PUBLICADA e
+  # CORRETA, o workflow ficou VERMELHO — o par que faz alguém refazer a tag e reproduzir o
+  # erro.
+  #
+  # `replace` substitui o asset de mesmo nome. É seguro porque o conteúdo é derivado da
+  # tag: reexecutar a mesma tag reconstrói o mesmo binário, e o que se sobrescreve é
+  # idêntico ao que estava lá. Não é `mode: keep-existing` porque ali um build corrigido
+  # não chegaria a substituir o artefato quebrado.
+  mode: replace
+
 # ── Linux: pacotes nativos ─────────────────────────────────────────────────────
 # Gerados do mesmo binário, sem repositório extra a manter: quem usa Debian/Ubuntu ou
 # Fedora baixa o .deb/.rpm da própria release e instala com o gerenciador do sistema.
