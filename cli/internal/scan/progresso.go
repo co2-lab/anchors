@@ -19,3 +19,17 @@ const sufixoProgresso = "-progress.md"
 func IsProgressFile(caminho string) bool {
 	return strings.HasSuffix(caminho, sufixoProgresso)
 }
+
+// ProgressPathFor devolve o caminho do companheiro de progresso de um plano.
+//
+// Existe aqui, e não em quem consome, para que o sufixo tenha UMA definição. O `scan` é
+// quem precisa manter o arquivo fora do mapa; uma segunda constante em outro pacote
+// poderia divergir desta em silêncio — e o consumidor passaria a procurar um arquivo que
+// não existe, ou a confrontar um que o scanner indexa.
+func ProgressPathFor(plano string) string {
+	ext := ""
+	if i := strings.LastIndex(plano, "."); i > strings.LastIndex(plano, "/") {
+		ext = plano[i:]
+	}
+	return strings.TrimSuffix(plano, ext) + sufixoProgresso
+}
