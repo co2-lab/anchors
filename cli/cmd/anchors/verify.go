@@ -70,38 +70,7 @@ commit só de README não dispara o typecheck do monorepo.`,
 			// `verify` é uma fachada: delega ao MESMO pipeline do `check`, para não
 			// existirem duas verdades sobre o que é passar. O que ele acrescenta é a
 			// fase (e a coleta do staged), não uma segunda régua.
-			sub := []string{"check", "--root", root}
-			if all {
-				sub = append(sub, "--all")
-			} else {
-				for _, c := range changed {
-					sub = append(sub, "--changed", c)
-				}
-			}
-			if phase != "" {
-				sub = append(sub, "--phase", phase)
-			}
-			// A MENSAGEM DE COMMIT, quando o hook `commit-msg` a passa. Só ele a tem: o
-			// git não grava `.git/COMMIT_EDITMSG` antes do `pre-commit` — a mensagem
-			// ainda não existe ali, e o arquivo carrega a do commit ANTERIOR.
-			if commitMsg != "" {
-				sub = append(sub, "--commit-msg", commitMsg)
-			}
-			if category != "" {
-				sub = append(sub, "--category", category)
-			}
-			if skipSlow {
-				sub = append(sub, "--skip-slow")
-			}
-			if noRecord {
-				sub = append(sub, "--no-record")
-			}
-			// A fase automática nunca espera IA: gate de julgamento não pode barrar um
-			// commit nem enfileirar lixo repetido a cada volta.
-			if phase != "" && phase != "manual" {
-				sub = append(sub, "--deterministic")
-			}
-			return runSubcommand(sub)
+			return runSubcommand(checkArgs(root, phase, commitMsg, category, changed, all, skipSlow, noRecord))
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
@@ -139,6 +108,57 @@ func stagedFiles(root string) ([]string, error) {
 		}
 	}
 	return lista, nil
+}
+
+// checkArgs monta a invocação do `check` que esta fase pede.
+//
+// Existe separada do RunE para ser TESTÁVEL: o que decide se um hook é usável
+// não é o veredito (esse o exit code carrega), é o que ele IMPRIME — e provar
+// isso pelo RunE exigiria um projeto em disco e um fork.
+func checkArgs(root, phase, commitMsg, category string, changed []string, all, skipSlow, noRecord bool) []string {
+	sub := []string{"check", "--root", root}
+	if all {
+		sub = append(sub, "--all")
+	} else {
+		for _, c := range changed {
+			sub = append(sub, "--changed", c)
+		}
+	}
+	if phase != "" {
+		sub = append(sub, "--phase", phase)
+	}
+	// A MENSAGEM DE COMMIT, quando o hook `commit-msg` a passa. Só ele a tem: o
+	// git não grava `.git/COMMIT_EDITMSG` antes do `pre-commit` — a mensagem
+	// ainda não existe ali, e o arquivo carrega a do commit ANTERIOR.
+	if commitMsg != "" {
+		sub = append(sub, "--commit-msg", commitMsg)
+	}
+	if category != "" {
+		sub = append(sub, "--category", category)
+	}
+	if skipSlow {
+		sub = append(sub, "--skip-slow")
+	}
+	if noRecord {
+		sub = append(sub, "--no-record")
+	}
+	// A fase automática nunca espera IA: gate de julgamento não pode barrar um
+	// commit nem enfileirar lixo repetido a cada volta.
+	if phase != "" && phase != "manual" {
+		sub = append(sub, "--deterministic")
+		// E ela não DESPEJA o relatório inteiro.
+		//
+		// O `pre-commit` e o `commit-msg` chamam este mesmo comando — de propósito,
+		// um reporta cedo e o outro barra — então a tabela de 42 gates saía DUAS
+		// vezes por commit, ~88 linhas, empurrando para fora da tela a única coisa
+		// que a pessoa precisava ler: o que reprovou, e o resultado do push logo
+		// abaixo. O relatório completo continua a um comando de distância, e o
+		// próprio check diz onde: `.anchors/check-changed.txt`.
+		//
+		// Na fase MANUAL não: ali a pessoa pediu o relatório.
+		sub = append(sub, "--only-issues")
+	}
+	return sub
 }
 
 // runSubcommand reexecuta o próprio binário. Reusar o pipeline do `check` por
