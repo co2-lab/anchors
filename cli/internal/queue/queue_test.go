@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 	"strings"
@@ -239,6 +240,12 @@ func TestReclaimRespeitaClaimRecente(t *testing.T) {
 	root := t.TempDir()
 	comAlvo(t, root, "A.spec.md")
 	_, _ = Enqueue(root, task("1-spec-a", "A.spec.md", "spec", "implement"))
+	// o ALVO tem de existir: o  descarta task de arquivo apagado (ver o comentário
+	// dele), e sem isto as tasks somem antes de serem contadas.
+	if err := os.WriteFile(filepath.Join(root, "x.md"), []byte("# x\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
 	agora := time.Now().Format(time.RFC3339)
 	if _, err := Claim(root, "worker-ativo", agora); err != nil {
 		t.Fatal(err)
@@ -327,5 +334,76 @@ func TestTaskDeAlvoInexistenteEhDescartada(t *testing.T) {
 		if strings.Contains(e.Name(), "sonda") {
 			t.Error("a task-fantasma continua no disco — reapareceria na próxima listagem")
 		}
+	}
+}
+
+// O ZERO do reclaim precisa se explicar.
+//
+// Medido no blue-eyes: `anchors reclaim` respondia "0 task(s) devolvida(s)" com uma task
+// visivelmente `claimed` na fila. O número estava CERTO — ela foi reivindicada há minutos,
+// dentro da JanelaDeTrabalho — e o zero sozinho parece defeito. Custou dois comandos para
+// descartar, e a task ali na frente é justamente o que faz alguém desconfiar da
+// ferramenta.
+func TestRecentesRetidas(t *testing.T) {
+	root := t.TempDir()
+	// o ALVO tem de existir: o List descarta task de arquivo apagado, e sem isto elas
+	// somem antes de serem contadas.
+	if err := os.WriteFile(filepath.Join(root, "x.md"), []byte("# x\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	agora := time.Now().Format(time.RFC3339)
+	antiga := time.Now().Add(-2 * JanelaDeTrabalho).Format(time.RFC3339)
+
+	// Escrevo os arquivos `claimed__` diretamente: o `Claim` pega a PRIMEIRA pending e
+	// devolve uma por chamada, então montar três estados distintos por ele dependeria da
+	// ordem de varredura — que é do sistema de arquivos, não do teste.
+	//
+	// O que se testa aqui é a CONTAGEM sobre um estado dado, e o estado é o arquivo.
+	for _, c := range []struct{ id, quando string }{
+		{"recente-1", agora},
+		{"recente-2", agora},
+		{"velha", antiga},
+	} {
+		t.Helper()
+		task := Task{
+			ID: c.id, Changed: "x.md", Kind: "plan",
+			State: Claimed, ClaimedBy: "worker", ClaimedAt: c.quando,
+		}
+		data, err := yaml.Marshal(task)
+		if err != nil {
+			t.Fatal(err)
+		}
+		alvo := filepath.Join(dirFor(root), fileName(Claimed, c.id))
+		if err := os.MkdirAll(filepath.Dir(alvo), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(alvo, data, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	if got := RecentlyHeld(root); got != 2 {
+		t.Errorf("RecentesRetidas = %d, queria 2 (as duas de agora)", got)
+	}
+
+	// o Reclaim leva só a que passou da janela
+	n, err := Reclaim(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n != 1 {
+		t.Errorf("Reclaim devolveu %d, queria 1", n)
+	}
+	if got := RecentlyHeld(root); got != 2 {
+		t.Errorf("depois do Reclaim, RecentesRetidas = %d, queria 2", got)
+	}
+
+	// e o force leva as duas
+	if n, _ := ReclaimForce(root); n != 2 {
+		t.Errorf("ReclaimForce devolveu %d, queria 2", n)
+	}
+	if got := RecentlyHeld(root); got != 0 {
+		t.Errorf("depois do force, RecentesRetidas = %d, queria 0", got)
 	}
 }

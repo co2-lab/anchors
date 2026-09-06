@@ -260,6 +260,19 @@ trabalho não ficar preso. As tasks voltam a ser puxáveis por 'anchors next'.`,
 				return err
 			}
 			fmt.Printf("%d task(s) devolvida(s) à fila (claimed → pending)\n", n)
+			// O ZERO precisa se explicar.
+			//
+			// Medido: o comando respondia "0 task(s) devolvida(s)" com uma task
+			// visivelmente `claimed` na fila. O número estava certo — ela foi reivindicada
+			// há minutos, dentro da janela de trabalho —, e o zero sozinho parece defeito.
+			// Custou dois comandos para descartar.
+			if !force {
+				if r := queue.RecentlyHeld(absRoot); r > 0 {
+					fmt.Printf("  (%d task(s) reivindicada(s) RECENTEMENTE ficaram — "+
+						"alguém pode estar nelas agora.\n"+
+						"   Se você sabe que o worker parou: `anchors reclaim --force`)\n", r)
+				}
+			}
 			return nil
 		},
 	}
