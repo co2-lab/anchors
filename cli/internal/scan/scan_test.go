@@ -285,3 +285,27 @@ func TestRevIgnoraFimDeLinha(t *testing.T) {
 		t.Fatal("conteúdos distintos não podem compartilhar rev")
 	}
 }
+
+// NOME SEM DIRETÓRIO não é caminho — é o arquivo citado em prosa.
+//
+// Uma revisão escreve "o `MutualTls.spec.md` migrou para a PLTFR-F03" ao explicar o que
+// mudou, e isso não é a promessa de criar um arquivo: o plano semeia
+// `packages/infra/MutualTls.spec.md`, com o caminho inteiro.
+//
+// Medido no blue-eyes: três menções assim (todas em revisões) fizeram o `anchors next`
+// dizer "1 de 12 spec(s) deste plano ainda não existem" num plano com as 9 entregues — e
+// semear trabalho para criar arquivos cujo nome sem diretório não aponta para lugar
+// nenhum. O plano parecia eternamente não-cumprido, e a fila entregava trabalho
+// impossível.
+//
+// Quanto MAIS revisões um plano acumula, pior fica.
+func TestSeedIgnoraNomeSemDiretorio(t *testing.T) {
+	plano := "> **PLTFR-R0004:** o `MutualTls.spec.md` migrou para a `PLTFR-F03`, e o\n" +
+		"> `CertificatePinning.spec.md` continua no 0016.\n\n" +
+		"- [ ] `packages/infra/MutualTls.spec.md` — o canal mTLS\n"
+
+	got := extractSeeds("plan", plano)
+	if len(got) != 1 || got[0] != "packages/infra/MutualTls.spec.md" {
+		t.Errorf("só o caminho conta como seed; veio %v", got)
+	}
+}

@@ -830,6 +830,27 @@ func extractSeeds(kind, content string) []string {
 			strings.ContainsAny(m[1], "*?[{") {
 			continue
 		}
+		// SEM DIRETÓRIO não é caminho — é o nome do arquivo citado em prosa.
+		//
+		// Uma revisão escreve "o `MutualTls.spec.md` migrou para a PLTFR-F03" ao explicar
+		// o que mudou, e isso não é a promessa de criar um arquivo: o plano semeia
+		// `packages/infra/MutualTls.spec.md`, com o caminho inteiro.
+		//
+		// Medido no blue-eyes: três menções assim (`MutualTls`, `CertificatePinning`,
+		// `DataStore`, todas em revisões) fizeram o `anchors next` dizer "1 de 12 spec(s)
+		// deste plano ainda não existem" num plano com as 9 entregues — e semear trabalho
+		// para criar arquivos cujo nome sem diretório não aponta para lugar nenhum.
+		//
+		// O efeito é o pior tipo: o plano parece eternamente não-cumprido, e a fila
+		// entrega trabalho impossível. Quanto MAIS revisões um plano acumula, pior fica.
+		//
+		// A régua é o separador, e não o item de lista (`- [ ]`): há planos que semeiam em
+		// prosa ("a spec de `apps/x/Tela.spec.md` nasce nesta fase"), e o
+		// `TestSeedIgnoraGlobEmProsa` registra que isso vale. O que não vale é citar o
+		// nome sem dizer ONDE.
+		if !strings.Contains(m[1], "/") {
+			continue
+		}
 		visto[m[1]] = true
 		out = append(out, m[1])
 	}
