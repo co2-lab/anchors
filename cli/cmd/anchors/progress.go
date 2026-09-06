@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/spf13/cobra"
 )
 
 // --- o PROGRESSO mora fora do plano ---
@@ -125,4 +126,74 @@ func writeInitialProgress(planoPath, conteudoPlano, codigo string) (string, erro
 		return "", err
 	}
 	return destino, nil
+}
+
+// newProgressCmd cria o `-progress.md` de um plano que JÁ EXISTE.
+//
+// O `anchors new plan` cria o companheiro junto com o plano — mas só ele. Um projeto que
+// adotou o Anchors antes deste mecanismo tem todos os planos sem companheiro, para
+// sempre, e nada acusa.
+//
+// Medido no blue-eyes: 17 planos, ZERO com `-progress.md`, e 17 com checkbox dentro do
+// plano — que é exatamente o que este arquivo existe para tirar de lá. O mecanismo
+// existia, estava testado, e não alcançava um único plano do projeto.
+//
+// O caminho feliz (plano novo) funcionava; era a ADOÇÃO que não tinha caminho.
+func newProgressCmd() *cobra.Command {
+	var root, para string
+	cmd := &cobra.Command{
+		Use:   "progress --for <plano>",
+		Short: "Cria o `-progress.md` de um plano existente (o ESTADO, fora do mapa)",
+		Long: `Cria o companheiro de progresso de um plano que já existe.
+
+Um plano é DECISÃO; o progresso é ESTADO. Enquanto os checkboxes de fase viviam no
+plano, marcar ` + "`- [x]`" + ` era ALTERAR o plano — e isso cobrava revisão de quem só
+terminou uma fase, além de derrubar o julgamento da spec que a fase entregou (o carimbo
+da aresta guarda a rev das duas pontas).
+
+O ` + "`anchors new plan`" + ` já cria o companheiro. Este comando é para os planos que
+nasceram antes:
+
+  anchors new progress --for plans/0002-plataforma.md
+
+Não sobrescreve: o arquivo guarda estado, e regravá-lo apagaria o que já foi registrado.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if para == "" {
+				return fmt.Errorf("informe o plano com --for (ex: `anchors new progress --for plans/0002-x.md`)")
+			}
+			absRoot, err := config.AbsRoot(root)
+			if err != nil {
+				return err
+			}
+			planoPath := para
+			if !filepath.IsAbs(planoPath) {
+				planoPath = filepath.Join(absRoot, para)
+			}
+			conteudo, err := os.ReadFile(planoPath)
+			if err != nil {
+				return fmt.Errorf("ler o plano: %w", err)
+			}
+			// O CÓDIGO vem do header do próprio plano, e não de um argumento: pedi-lo
+			// abriria a porta para o progresso nascer com identidade divergente da do
+			// plano que ele acompanha — e o par deixaria de ser localizável.
+			codigo := codeDoHeaderSpec(string(conteudo))
+			if codigo == "" {
+				return fmt.Errorf("o plano %s não declara `code:` no header @anchors — "+
+					"sem ele o progresso nasceria sem identidade", para)
+			}
+			prog, err := writeInitialProgress(planoPath, string(conteudo), codigo)
+			if err != nil {
+				return err
+			}
+			fmt.Printf("✓ %s criado (o ESTADO do plano %s; marque `[x]` aqui, nunca no plano)\n",
+				relTo(absRoot, prog), codigo)
+			if fases := planPhases(string(conteudo)); len(fases) > 0 {
+				fmt.Printf("  %d fase(s) do plano, uma seção para cada\n", len(fases))
+			}
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
+	cmd.Flags().StringVar(&para, "for", "", "o plano cujo progresso será criado")
+	return cmd
 }
