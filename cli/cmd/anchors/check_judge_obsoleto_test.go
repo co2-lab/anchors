@@ -87,3 +87,66 @@ func TestGateDaTaskJudge(t *testing.T) {
 		}
 	}
 }
+
+// Em `--changed` a limpeza NÃO roda — e é por isso que ela precisa do modo.
+//
+// `dropStaleJudgments` conclui "não foi enfileirado agora, então é obsoleto". A inferência
+// é válida quando o check olhou TODOS os nós; em `--changed` ele olhou um arquivo, e os
+// outros alvos do mesmo gate parecem obsoletos por não terem sido olhados.
+//
+// Medido no blue-eyes: dois `check --changed` em testes diferentes deixaram UMA task na
+// fila, e `judge --pending` respondia "nenhum alvo aguardando" com cinco pendentes no
+// `check --all`.
+//
+// O teste vizinho chama `dropStaleJudgments` direto e por isso nunca exercitou QUANDO
+// chamá-la — é este que cobre a decisão.
+func TestEnqueueJudgments_incrementalNaoDescartaOsOutrosAlvos(t *testing.T) {
+	root := t.TempDir()
+	cfg := &config.Config{Gates: []config.Gate{
+		{Name: "no-test-proof-real", Measures: config.MeasuresJudgment},
+	}}
+	for _, f := range []string{"a.spec.md", "b.spec.md"} {
+		if err := os.WriteFile(filepath.Join(root, f), []byte("# spec\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// já na fila: o julgamento do `b`, de uma rodada anterior
+	if _, err := queue.Enqueue(root, queue.Task{
+		ID: "judge-no-test-proof-real-b", Changed: "b.spec.md",
+		Kind: "judgment", Origin: "check",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	knownJudgmentGates = []string{"no-test-proof-real"}
+	// esta rodada é incremental e viu só o `a`
+	p := gate.Profile{Judged: []gate.Result{
+		{Gate: "no-test-proof-real", Target: "a.spec.md"},
+	}}
+
+	enqueueJudgments(root, cfg, p, false /* varreduraCompleta */)
+
+	tasks, err := queue.List(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	restou := map[string]bool{}
+	for _, tk := range tasks {
+		restou[tk.ID] = true
+	}
+	if !restou["judge-no-test-proof-real-b"] {
+		t.Error("o `--changed` apagou o julgamento de um alvo que ele nem olhou")
+	}
+
+	// e na varredura COMPLETA a limpeza volta a valer: ali "não enfileirado" de fato
+	// significa obsoleto, e é o caso que `dropStaleJudgments` existe para resolver.
+	enqueueJudgments(root, cfg, p, true /* varreduraCompleta */)
+	tasks, err = queue.List(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tk := range tasks {
+		if tk.ID == "judge-no-test-proof-real-b" {
+			t.Error("o `--all` devia ter descartado o alvo que o gate já não enfileira")
+		}
+	}
+}
