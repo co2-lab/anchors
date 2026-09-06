@@ -24,7 +24,7 @@ import (
 // interpreta o impacto, e a interpretação escolhe a saída.
 //
 //	--for-user  a mudança impacta a DIREÇÃO do projeto. Vira decisão de quem o
-//	                planejou, com `anchors:precisa-do-usuario`, e o claim não entrega
+//	                planejou, com `anchors:needs-user`, e o claim não entrega
 //	                o card enquanto ela não sair.
 //
 //	(padrão)        não impacta a direção. Vira card comum: nasce em `to-do`, entra na
@@ -52,7 +52,7 @@ Quem descobriu interpreta o impacto, e a interpretação escolhe a saída:
 
   --for-user   a mudança impacta a DIREÇÃO do projeto, ou você tem dúvida se
                    impacta. Vira decisão de quem planejou: a issue nasce com
-                   'anchors:precisa-do-usuario', e o claim não entrega o card
+                   'anchors:needs-user', e o claim não entrega o card
                    enquanto a decisão não sair.
 
   (padrão)         não impacta a direção. Vira card comum: nasce em 'to-do',

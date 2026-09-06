@@ -31,7 +31,7 @@ import (
 //     possível) — corrige e registra a revisão. O gate confere que a revisão existe.
 //
 //   - correção que MUDA A DIREÇÃO, ou dúvida sobre se muda — não corrige. Abre issue com
-//     `anchors:precisa-do-usuario`, e o `claim` para de entregar o card até alguém decidir.
+//     `anchors:needs-user`, e o `claim` para de entregar o card até alguém decidir.
 //
 // O gate não sabe distinguir os dois casos, e não é para saber: essa é a decisão que se
 // quer que um humano ou um agente TOME, com o contexto na mão. O que ele garante é que a
