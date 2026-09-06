@@ -166,6 +166,7 @@ ganham um REF (apontam para a spec). Use --code para fixar a identidade à mão.
 			return nil
 		},
 	}
+	cmd.AddCommand(newProgressCmd())
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
 	cmd.Flags().StringVar(&codeStr, "code", "", "usa este código de identidade (senão gera um único)")
 	cmd.Flags().StringVar(&out, "out", "", "caminho de saída (default: <nome><ext> na raiz)")

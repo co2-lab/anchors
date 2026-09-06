@@ -1,6 +1,7 @@
 package main
 
 import (
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -179,5 +180,86 @@ func TestJudge_aceitaDispensadoEExigeMotivo(t *testing.T) {
 			t.Errorf("verdict=%q reason=%q: err=%v, queria erro=%v (%s)",
 				c.verdict, c.reason, err, c.querErr, c.porque)
 		}
+	}
+}
+
+// O `anchors new progress --for <plano>` existe para os planos que nasceram ANTES do
+// mecanismo. O `anchors new plan` cria o companheiro junto — mas só ele, e um projeto que
+// adotou o Anchors antes desta versão fica com todos os planos sem companheiro, para
+// sempre, sem nada acusar.
+//
+// Medido no blue-eyes: 17 planos, ZERO com `-progress.md`, e 17 com checkbox DENTRO do
+// plano — que é exatamente o que este arquivo existe para tirar de lá. O caminho feliz
+// (plano novo) funcionava; era a ADOÇÃO que não tinha caminho.
+func TestNewProgress_criaParaPlanoExistente(t *testing.T) {
+	root := t.TempDir()
+	plano := filepath.Join(root, "plans", "0002-plataforma.md")
+	if err := os.MkdirAll(filepath.Dir(plano), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	const conteudo = `<!-- @anchors
+  code: PLTFR
+  layer: plan
+-->
+# Plataforma
+
+### PLTFR-F01 — o contrato
+
+### PLTFR-F02 — o acesso às fontes
+`
+	if err := os.WriteFile(plano, []byte(conteudo), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	cmd := newProgressCmd()
+	cmd.SetArgs([]string{"--root", root, "--for", "plans/0002-plataforma.md"})
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("criar o progresso: %v", err)
+	}
+
+	prog := filepath.Join(root, "plans", "0002-plataforma-progress.md")
+	b, err := os.ReadFile(prog)
+	if err != nil {
+		t.Fatalf("o arquivo não foi criado: %v", err)
+	}
+	got := string(b)
+	// a IDENTIDADE vem do plano, não de um argumento: um progresso com código
+	// divergente do plano que ele acompanha deixaria de ser localizável.
+	if !strings.Contains(got, "# Progresso — PLTFR") {
+		t.Errorf("o progresso não herdou o código do plano:\n%s", got)
+	}
+	for _, fase := range []string{"## PLTFR-F01", "## PLTFR-F02"} {
+		if !strings.Contains(got, fase) {
+			t.Errorf("falta a seção %q — as fases vêm dos cabeçalhos do plano", fase)
+		}
+	}
+
+	// NÃO SOBRESCREVE: o arquivo guarda estado, e regravá-lo apagaria o que já foi
+	// registrado. É o que torna seguro rodar o comando sobre um projeto inteiro.
+	cmd2 := newProgressCmd()
+	cmd2.SetArgs([]string{"--root", root, "--for", "plans/0002-plataforma.md"})
+	cmd2.SetOut(io.Discard)
+	cmd2.SetErr(io.Discard)
+	if err := cmd2.Execute(); err == nil {
+		t.Error("rodar de novo sobrescreveu o estado — devia recusar")
+	}
+}
+
+// Sem `code:` no header o progresso nasceria sem identidade, e o par plano/progresso
+// deixaria de ser localizável por código.
+func TestNewProgress_recusaPlanoSemCodigo(t *testing.T) {
+	root := t.TempDir()
+	plano := filepath.Join(root, "p.md")
+	if err := os.WriteFile(plano, []byte("# Plano sem header\n\n### ABCDE-F01 — fase\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := newProgressCmd()
+	cmd.SetArgs([]string{"--root", root, "--for", "p.md"})
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	if err := cmd.Execute(); err == nil {
+		t.Error("aceitou plano sem `code:` — o progresso nasceria sem identidade")
 	}
 }
