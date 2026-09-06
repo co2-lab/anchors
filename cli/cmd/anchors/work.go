@@ -696,6 +696,15 @@ func procedureFor(artifact string, cfg *config.Config) []string {
 			"**Confronte as regras entre si.** Duas regras da mesma spec podem se contradizer " +
 				"(uma diz ausência, outra diz valor, para o mesmo caso). Uma regra de baixo pode " +
 				"contradizer a de cima. Nenhum gate confronta regra↔regra — este é o lugar.",
+			"**Confronte a PROSA contra o que ela afirma.** Toda frase que descreve OUTRO " +
+				"artefato — \"o contrato emite três estados\", \"o plano põe isto fora de escopo\", " +
+				"\"o gate X cobra isto\" — é uma afirmação verificável, e nenhum gate a verifica. " +
+				"Abra o artefato citado e leia. Medido em UMA sessão: uma regra exigia o que o " +
+				"plano punha fora de escopo; três specs prometiam uma obrigação que não estava " +
+				"declarada; uma regra contava três valores de um conjunto que o contrato fecha " +
+				"em quatro. Os três passaram por todos os gates — o `ref-resolves` confirma que " +
+				"o código citado EXISTE, não que a frase sobre ele seja verdadeira. Desconfie " +
+				"mais quando a prosa CITA a fonte: citar dá autoridade sem dar prova.",
 			"**Verifique o que a peça promete ao MUNDO.** Recurso declarado existe na infra? " +
 				"Env var citada é provida? Índice que a consulta precisa foi criado? O typecheck " +
 				"passa por acidente (`!`, índice de objeto) escondendo algo que só quebra em " +
