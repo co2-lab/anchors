@@ -705,6 +705,14 @@ func procedureFor(artifact string, cfg *config.Config) []string {
 				"em quatro. Os três passaram por todos os gates — o `ref-resolves` confirma que " +
 				"o código citado EXISTE, não que a frase sobre ele seja verdadeira. Desconfie " +
 				"mais quando a prosa CITA a fonte: citar dá autoridade sem dar prova.",
+			"**E confronte a prosa contra o CÓDIGO, não só contra outras specs.** É o mesmo " +
+				"ataque num alvo pior: o código é onde o valor de fato vive. Medido: uma spec " +
+				"declarava o conjunto fechado como `crítico` e o código exportava `'critico'` — " +
+				"chaves DIFERENTES num valor que atravessa fronteira como JSON e vira `case` de " +
+				"switch. O `as const` protegia o lado do contrato (não compila) e NÃO o do " +
+				"consumidor, onde o `case` nunca casaria e a cor cairia no default em silêncio. " +
+				"Abra o arquivo que a spec diz realizar a regra e compare os LITERAIS, não o " +
+				"sentido.",
 			"**Verifique o que a peça promete ao MUNDO.** Recurso declarado existe na infra? " +
 				"Env var citada é provida? Índice que a consulta precisa foi criado? O typecheck " +
 				"passa por acidente (`!`, índice de objeto) escondendo algo que só quebra em " +
