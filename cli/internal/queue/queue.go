@@ -357,6 +357,26 @@ func Reclaim(root string) (int, error) { return reclaim(root, false) }
 // worker está noutra máquina, ou travado de verdade — e por isso é explícita.
 func ReclaimForce(root string) (int, error) { return reclaim(root, true) }
 
+// RecentlyHeld conta as tasks claimed que o `Reclaim` NÃO devolveu por serem recentes.
+//
+// Existe para a mensagem do comando poder explicar o zero. Medido: `anchors reclaim`
+// respondia "0 task(s) devolvida(s)" com uma task visivelmente `claimed` na fila — o
+// número está certo (ela foi reivindicada há minutos, dentro da JanelaDeTrabalho), e o
+// zero sozinho parece defeito. Dois comandos para descartar.
+func RecentlyHeld(root string) int {
+	tasks, err := List(root)
+	if err != nil {
+		return 0
+	}
+	n := 0
+	for _, t := range tasks {
+		if t.State == Claimed && t.ClaimedBy != "" && !staleClaim(t) {
+			n++
+		}
+	}
+	return n
+}
+
 func reclaim(root string, force bool) (int, error) {
 	d := dirFor(root)
 	tasks, err := List(root)
