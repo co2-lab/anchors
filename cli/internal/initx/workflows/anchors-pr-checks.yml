@@ -171,7 +171,21 @@ jobs:
             fi
           fi
 
+          # DUAS PERGUNTAS DIFERENTES, e confundi-las avançou um card que não terminou.
+          #
+          #   "este PR PERTENCE ao card?"  → o código no título responde
+          #   "este PR CONCLUI o card?"    → só o `Closes #N` responde
+          #
+          # O título serve para ENCONTRAR o card — relatório, contexto, saber de onde o
+          # trabalho veio. Avançar de ESTADO exige o vínculo declarado no corpo.
+          #
+          # Medido no blue-eyes: um PR entregou 1 das 3 specs de uma fase e removeu o
+          # `Closes` de propósito, justamente porque não concluía o plano. O `mover` achou
+          # o card pelo título `[PLTFR]` e o levou a `ready-to-test` — o fim da alçada do
+          # agente, com duas specs por escrever. O card só voltou porque alguém olhou.
+          concluiOCard=""
           if [ -n "$card" ]; then
+            concluiOCard="sim"
             echo "card #$card veio do vínculo declarado no corpo do PR (o que o \`anchors pr-body\` escreve)"
           else
             titulo=$(gh pr view "$pr" --json title --jq .title)
@@ -250,6 +264,23 @@ jobs:
                      anchors:production; do
               gh issue edit "$card" --remove-label "$e" >/dev/null 2>&1 || true
             done
+            if [ -z "$concluiOCard" ]; then
+              echo "card #$card foi encontrado pelo TÍTULO, e o PR não o declara com \`Closes\`."
+              echo "  o card fica onde está: o título diz que este PR PERTENCE ao card,"
+              echo "  não que ele o CONCLUI — e são perguntas diferentes."
+              {
+                echo "### ○ O card não foi avançado"
+                echo ""
+                echo "Este PR foi ligado ao card **#$card** pelo código no título, e não declara"
+                echo "\`Closes #$card\` no corpo."
+                echo ""
+                echo "O título diz que o PR **pertence** ao card. Avançar de estado exige que ele"
+                echo "**conclua** o card — e essa é a pergunta que só o \`Closes\` responde."
+                echo ""
+                echo "Se este PR conclui o card, use \`anchors pr-body\` e cole as linhas no corpo."
+              } >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
             gh issue edit "$card" --add-label "anchors:ready-to-test"
             gh issue comment "$card" --body "PR #$pr mergeado — card em \`ready-to-test\`, o fim da alçada do Anchors."
             echo "card #$card → ready-to-test (PR #$pr mergeado)"
