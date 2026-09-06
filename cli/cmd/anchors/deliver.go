@@ -154,8 +154,25 @@ Depois disto, o watcher enfileira a task de review.`,
 	cmd.Flags().StringVar(&unit, "unit", "", "OBRIGATÓRIO — o arquivo que identifica a unidade de propósito")
 	cmd.Flags().StringSliceVar(&files, "file", nil, "arquivo tocado (repetível)")
 	cmd.Flags().StringVar(&intent, "intent", "", "OBRIGATÓRIO — o que você diz ter feito")
-	cmd.Flags().StringSliceVar(&decisions, "decision", nil, "escolha que a régua não decidiu (repetível)")
-	cmd.Flags().StringSliceVar(&uncovered, "uncovered", nil, "o que você sabe que não está provado (repetível)")
+	// `StringArray`, e NÃO `StringSlice`: estas duas flags recebem PROSA, e o
+	// `StringSlice` do pflag divide o valor na vírgula.
+	//
+	// Medido no blue-eyes, entregando a spec do DataStore:
+	//
+	//	--decision "oito regras e dois invariantes, na letra B/I que as vizinhas usam"
+	//
+	// virou DUAS decisões no registro — "oito regras e dois invariantes" e " na letra
+	// B/I que as vizinhas usam", a segunda começando com espaço e sem sujeito. De cinco
+	// decisões declaradas saíram nove itens, quatro deles fragmentos.
+	//
+	// O dano é sobre o que o registro existe para fazer: o revisor confronta cada
+	// decisão contra o disco, e meia frase não é confrontável. Pior, a contagem infla —
+	// "nove decisões" descreve um trabalho que tomou cinco.
+	//
+	// Vírgula em prosa é pontuação, não separador. `--file` continua `StringSlice`
+	// porque caminho de arquivo não tem vírgula, e ali a divisão é conveniência real.
+	cmd.Flags().StringArrayVar(&decisions, "decision", nil, "escolha que a régua não decidiu (repetível)")
+	cmd.Flags().StringArrayVar(&uncovered, "uncovered", nil, "o que você sabe que não está provado (repetível)")
 	cmd.Flags().StringVar(&date, "date", "", "AAAA-MM-DD (OBRIGATÓRIO — o Anchors não lê o relógio)")
 	cmd.Flags().StringVar(&agent, "agent", "", "quem entregou (opcional)")
 	return cmd
