@@ -713,6 +713,13 @@ func procedureFor(artifact string, cfg *config.Config) []string {
 				"consumidor, onde o `case` nunca casaria e a cor cairia no default em silêncio. " +
 				"Abra o arquivo que a spec diz realizar a regra e compare os LITERAIS, não o " +
 				"sentido.",
+			"**E desconfie da prosa que descreve o FUTURO.** \"O plano X vai usar isto\", " +
+				"\"a fase Y vai precisar\" — não há artefato para abrir e comparar, então é " +
+				"INVERIFICÁVEL, e isso é pior que falso. Medido: uma spec justificava duas " +
+				"decisões de arquitetura com o que dois planos futuros fariam, e nenhum dos dois " +
+				"os mencionava. Justificativa se apoia no que EXISTE hoje, mais hipótese " +
+				"declarada como hipótese — se o plano não cumprir, a decisão fica com uma razão " +
+				"que não confere, e quem a revisar depois não sabe se a regra ainda vale.",
 			"**Verifique o que a peça promete ao MUNDO.** Recurso declarado existe na infra? " +
 				"Env var citada é provida? Índice que a consulta precisa foi criado? O typecheck " +
 				"passa por acidente (`!`, índice de objeto) escondendo algo que só quebra em " +
