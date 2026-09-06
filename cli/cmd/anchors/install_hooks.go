@@ -10,6 +10,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/spf13/cobra"
 )
 
@@ -126,7 +127,63 @@ func runInstallHooks(root string, force bool) error {
 	fmt.Println("  arquivo REGIDO fora do mapa também barra (rode `anchors map build`); não-regido é ignorado.")
 	fmt.Printf("✓ pre-push instalado em %s\n", pushHook)
 	fmt.Println("  os dois conferem se o projeto está CONGELADO no remoto antes de deixar o trabalho seguir.")
+
+	// O MERGE DRIVER do mapa vem junto: sem ele, o git mescla o
+	// `anchors.graph.yaml` como texto e apaga carimbo sem conflito e sem aviso.
+	//
+	// Medido no blue-eyes (co2-lab/anchors#12): um `git merge` removeu 1212 linhas do
+	// mapa e 62 carimbos de julgamento. O aviso do `map build` não pega — a perda
+	// acontece antes de o Anchors ser chamado.
+	//
+	// Instalado aqui e não no `init` porque é config LOCAL do clone (`git config`), e
+	// o `init` escreve o que é do repositório. Quem clona roda `install-hooks`.
+	installMapMergeDriver(root)
 	return nil
+}
+
+// installMapMergeDriver registra o driver no git local e declara o atributo.
+//
+// São duas metades e as duas são necessárias: o `.gitattributes` (versionado, diz QUAL
+// arquivo usa o driver) e o `git config` (local do clone, diz COMO chamá-lo). Sem a
+// segunda, o git avisa que o driver não existe e cai no merge textual — que é o
+// comportamento que se está evitando.
+//
+// Falha em silêncio de propósito: um projeto sem git, ou um `git config` que não roda, tem
+// outro problema — e o `install-hooks` já reportou o que importa.
+func installMapMergeDriver(root string) {
+	const (
+		nomeDriver = "anchors-map"
+		linhaAttr  = mapx.DefaultPath + " merge=" + nomeDriver
+	)
+	if err := exec.Command("git", "-C", root, "config",
+		"merge."+nomeDriver+".name", "anchors: une os carimbos do mapa").Run(); err != nil {
+		return
+	}
+	if err := exec.Command("git", "-C", root, "config",
+		"merge."+nomeDriver+".driver", "anchors map merge %O %A %B").Run(); err != nil {
+		return
+	}
+
+	attr := filepath.Join(root, ".gitattributes")
+	atual, _ := os.ReadFile(attr)
+	if strings.Contains(string(atual), linhaAttr) {
+		fmt.Println("✓ merge driver do mapa já configurado (.gitattributes + git config)")
+		return
+	}
+	conteudo := string(atual)
+	if conteudo != "" && !strings.HasSuffix(conteudo, "\n") {
+		conteudo += "\n"
+	}
+	conteudo += "\n# O MAPA é derivado, e o git o mescla como TEXTO — apagando carimbo de\n" +
+		"# julgamento sem conflito e sem aviso (medido: 62 de uma vez). O driver une os\n" +
+		"# carimbos dos dois lados. Registre-o com `anchors install-hooks`.\n" +
+		linhaAttr + "\n"
+	if err := os.WriteFile(attr, []byte(conteudo), 0o644); err != nil {
+		return
+	}
+	fmt.Println("✓ merge driver do mapa instalado (.gitattributes + git config)")
+	fmt.Println("  o `git merge` passa a UNIR os carimbos do mapa em vez de mesclá-lo como texto.")
+	fmt.Println("  commite o .gitattributes: ele é do repositório, e cada clone roda `install-hooks`.")
 }
 
 // gitHooksDir devolve o diretório de hooks efetivo do repo: honra core.hooksPath se
