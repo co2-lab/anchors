@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+
+	"github.com/co2-lab/anchors/internal/initx"
 )
 
 // --- no modo github, o achado vira CARD, não arquivo ---
@@ -119,10 +121,25 @@ func (g GitHub) Open(i Issue, nasce State) (created bool, at State, err error) {
 	// caminho mais curto para ninguém olhar nenhuma das duas listas. Sem estado de fluxo,
 	// ela fica fora do board até alguém decidir que chegou a hora.
 	if nasce != Future {
-		argv = append(argv, "--label", "anchors:to-do")
+		argv = append(argv, "--label", initx.LabelToDo)
 	}
+	// O NOME CANÔNICO, e não o legado.
+	//
+	// Os nomes de label migraram do português para o inglês, e este literal ficou para
+	// trás. Medido no blue-eyes: o gate `open-questions-resolved` reprovou uma spec com
+	// duas perguntas em aberto — o comportamento certo —, e a issue NÃO foi criada:
+	//
+	//     could not add label: 'anchors:precisa-do-usuario' not found
+	//
+	// O `gh` recusa o comando inteiro por um label inexistente, então o gate reprovava e
+	// o registro sumia: o card que devia esperar a decisão do usuário nunca chegou ao
+	// board. Um gate que acusa e não registra é pior do que não ter gate, porque o
+	// relatório da sessão diz que houve achado e amanhã ninguém encontra.
+	//
+	// `initx.LabelNeedsUser` é a mesma constante que o `init` usa para CRIAR o label —
+	// ligar as duas pontas na constante é o que impede a divergência de voltar.
 	if i.Dono == DonoUsuário {
-		argv = append(argv, "--label", "anchors:precisa-do-usuario")
+		argv = append(argv, "--label", initx.LabelNeedsUser)
 	}
 	if _, err := g.gh(argv...); err != nil {
 		return false, "", err
