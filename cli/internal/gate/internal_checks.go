@@ -44,6 +44,7 @@ var checkersWithRoot = map[string]func(content string, n mapx.Node, root string)
 // que atravessa a trinca — ex.: feature↔test (cada cenário da feature está implementado
 // no teste ligado, roteado pelo regime do cenário?).
 var checkersWithGraph = map[string]func(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string){
+	"progress-honest":          checkProgressHonest,
 	"feature-test-match":       checkFeatureTestMatch,
 	"cenario-identidade":       checkScenarioIdentity,
 	"cenario-tipo-alinhado":    checkScenarioTypeAligned,
