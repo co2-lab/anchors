@@ -739,6 +739,13 @@ func procedureFor(artifact string, cfg *config.Config) []string {
 				"acusa — o `plano-alterado-justificado` cobra quem ALTERA, e aqui ninguém " +
 				"alterou: uma spec nova tornou outra desatualizada, e as duas seguem " +
 				"internamente coerentes.",
+			"**E busque pelo CONTEÚDO, não pelo nome que você imagina.** O revisor também " +
+				"supõe. Medido: procurei \"lambda de indicadores de negócio\" para verificar se " +
+				"a origem existia, não achei, e escrevi no laudo que era lacuna — o plano a " +
+				"semeava com outro nome, e bastava procurar pelos INDICADORES em vez do rótulo " +
+				"que eu tinha na cabeça. Um `grep` pelo nome que você espera confirma o que você " +
+				"supõe; um pelo que a spec DIZ acha o que está lá. É o mesmo viés que os passos " +
+				"acima combatem, cometido do lado do revisor.",
 			"**Verifique o que a peça promete ao MUNDO.** Recurso declarado existe na infra? " +
 				"Env var citada é provida? Índice que a consulta precisa foi criado? O typecheck " +
 				"passa por acidente (`!`, índice de objeto) escondendo algo que só quebra em " +
