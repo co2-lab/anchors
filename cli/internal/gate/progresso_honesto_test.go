@@ -124,3 +124,86 @@ func TestProgressHonest_caminhoDerivaDoScan(t *testing.T) {
 		}
 	}
 }
+
+// A TERCEIRA DIREÇÃO: semente que o plano promete e o progresso não lista.
+//
+// As duas primeiras conferem os itens QUE EXISTEM no progresso. Um gate que só olha para
+// dentro do arquivo nunca vê o que falta nele — e foi assim que este gate passou com
+// `✓15` num plano que acabara de ganhar uma spec semeada (o `MutualTls.spec.md`, migrado
+// do 0016 por `PLTFR-R0004`).
+//
+// O efeito é o mesmo do `[x]` mentiroso: o progresso diz que a fase acabou, e o
+// `anchors next` seguiu para outro plano com trabalho declarado por fazer.
+func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
+	monta := func(t *testing.T, plano, progresso string) (string, mapx.Node, string) {
+		t.Helper()
+		root := t.TempDir()
+		if err := os.MkdirAll(filepath.Join(root, "plans"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		rel := "plans/0002-plataforma.md"
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(plano), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		prog := filepath.Join(root, "plans", "0002-plataforma-progress.md")
+		if err := os.WriteFile(prog, []byte(progresso), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		return root, mapx.Node{ID: rel, Kind: mapx.KindPlan}, plano
+	}
+
+	t.Run("semente ausente do progresso reprova", func(t *testing.T) {
+		root, n, conteudo := monta(t,
+			"- [ ] `packages/infra/MutualTls.spec.md` — o canal\n"+
+				"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n",
+			"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n")
+		v, d := checkProgressHonest(conteudo, n, root, nil, nil)
+		if v != Fail {
+			t.Fatalf("veredito %v, queria Fail: %s", v, d)
+		}
+		if !strings.Contains(d, "MutualTls.spec.md") {
+			t.Errorf("o laudo não nomeia a spec ausente:\n%s", d)
+		}
+		if strings.Contains(d, "DataStore") {
+			t.Errorf("acusou uma spec que ESTÁ no progresso:\n%s", d)
+		}
+	})
+
+	// O FALSO POSITIVO que apareceu no blue-eyes: a revisão `PLTFR-R0003` menciona
+	// `` `DataStore.spec.md` `` em prosa, SEM caminho. O regex antigo casava qualquer
+	// `x.spec.md` do arquivo, e o gate acusou o progresso de não listar uma spec que ele
+	// lista — três dos quatro achados eram menções assim.
+	//
+	// A âncora é o `- [ ]` no início da linha: o plano PROMETE criar naquele item, e a
+	// prosa das revisões fala sobre o que já existe.
+	t.Run("menção em prosa NÃO é semente", func(t *testing.T) {
+		root, n, conteudo := monta(t,
+			"> **PLTFR-R0003:** o `DataStore.spec.md` deixa de guardar estado de incidente.\n\n"+
+				"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n",
+			"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n")
+		if v, d := checkProgressHonest(conteudo, n, root, nil, nil); v != Pass {
+			t.Errorf("veredito %v, queria Pass — a menção em prosa não é promessa: %s", v, d)
+		}
+	})
+
+	// O item pode ter sido reescrito (encurtado, movido de fase) sem deixar de ser o
+	// mesmo item — o que identifica é o CAMINHO, não a linha.
+	t.Run("descrição diferente no progresso ainda conta como listada", func(t *testing.T) {
+		root, n, conteudo := monta(t,
+			"- [ ] `packages/infra/DataStore.spec.md` — a tabela DynamoDB e o que vive nela\n",
+			"- [x] `packages/infra/DataStore.spec.md`\n")
+		if v, d := checkProgressHonest(conteudo, n, root, nil, nil); v == Fail &&
+			strings.Contains(d, "NÃO lista") {
+			t.Errorf("acusou por descrição diferente — o caminho é o que identifica:\n%s", d)
+		}
+	})
+
+	t.Run("molde _TEMPLATE_ não é semente", func(t *testing.T) {
+		root, n, conteudo := monta(t,
+			"- [ ] `packages/_TEMPLATE_Area.spec.md` — o gabarito\n",
+			"# Progresso — PLTFR\n")
+		if v, d := checkProgressHonest(conteudo, n, root, nil, nil); v != Pass {
+			t.Errorf("veredito %v, queria Pass — molde não é spec semeada: %s", v, d)
+		}
+	})
+}
