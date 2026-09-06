@@ -68,6 +68,8 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 	root.AddCommand(newDoneCmd())
 	root.AddCommand(newDropCmd())
 	root.AddCommand(newEscalateCmd())
+	// A outra metade do escalate: sem ela o card fica parado para sempre (#10).
+	root.AddCommand(newDecidedCmd())
 	root.AddCommand(newCommitMsgCmd())
 	root.AddCommand(newPRBodyCmd())
 	root.AddCommand(newReclaimCmd())
