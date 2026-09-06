@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/co2-lab/anchors/internal/scan"
 
@@ -57,7 +58,8 @@ Para pegar trabalho, use 'anchors next' (idealmente num worker/subagente).`,
 				}
 				fmt.Printf("%s [%s] %s\n", mark, t.State, t.ID)
 				fmt.Printf("    mudou:    %s (%s)\n", t.Changed, t.Kind)
-				fmt.Printf("    sugestão: %s — %s\n", t.SuggestedNext, t.Reason)
+				fmt.Printf("    sugestão: %s — %s%s\n", t.SuggestedNext, t.Reason,
+					seedTally(absRoot, t))
 				if t.ClaimedBy != "" {
 					fmt.Printf("    por:      %s\n", t.ClaimedBy)
 				}
@@ -128,7 +130,7 @@ Se a fila está vazia, imprime isso e sai com código 0.`,
 			fmt.Printf("  mudou:    %s (%s)\n", t.Changed, t.Kind)
 			fmt.Printf("  origem:   %s\n", t.Origin)
 			fmt.Printf("  sugestão: %s\n", t.SuggestedNext)
-			fmt.Printf("  motivo:   %s\n\n", t.Reason)
+			fmt.Printf("  motivo:   %s%s\n\n", t.Reason, seedTally(absRoot, *t))
 			fmt.Printf("Execute o passo (veja `anchors guide`). Para o detalhe fino do que\n")
 			fmt.Printf("propagar, rode: anchors impact %s\n", t.Changed)
 			fmt.Printf("Ao terminar:    anchors done %s\n", t.ID)
@@ -334,8 +336,21 @@ func seedFromPlans(root string) (int, error) {
 			Kind:          "plan",
 			Origin:        "seed",
 			SuggestedNext: next,
-			Reason: fmt.Sprintf("%s — %d de %d spec(s) deste plano ainda não existem",
-				reason, faltam, len(f.Seeds)),
+			// A RAZÃO NÃO GUARDA O NÚMERO.
+			//
+			// Ele é derivável (`faltam` e `len(Seeds)` se recontam do disco a qualquer
+			// momento), e guardá-lo fazia o texto envelhecer na fila: a task nasce dizendo
+			// "6 de 7", duas specs são entregues, e ela continua dizendo 6.
+			//
+			// Medido no blue-eyes (co2-lab/anchors#11): a razão velha me fez desconfiar de
+			// uma correção que eu tinha acabado de publicar — passei quatro comandos
+			// investigando um defeito que não existia, porque a contagem estava certa e o
+			// texto era velho.
+			//
+			// Quem imprime recalcula: `contagemDeSementes` lê o disco na hora. Um campo
+			// não pode servir a dois propósitos — o que a task É e qual era o estado
+			// quando ela nasceu.
+			Reason: reason,
 		})
 		if err == nil && criada {
 			n++
@@ -392,4 +407,53 @@ func rememberMaturationCheap(root string) {
 	}
 	fmt.Printf("\n○ %d gate(s) informativo(s) declarado(s) — medem e não defendem.\n", informativos)
 	fmt.Println("  `anchors status` mostra quais já estão limpos e podem virar bloqueantes.")
+}
+
+// seedTally recalcula, NA HORA DE IMPRIMIR, quantas specs de um plano faltam.
+//
+// Vive aqui e não no `Reason` porque o número é derivável do disco, e um número guardado
+// envelhece: a task nascia dizendo "6 de 7", duas specs eram entregues, e ela continuava
+// dizendo 6 (co2-lab/anchors#11).
+//
+// Devolve string VAZIA para qualquer task que não seja semeadura de plano — o `reason` de
+// julgamento (`gate 'X' — pergunta: …`) não envelhece, porque a pergunta é do gate e não
+// do estado.
+func seedTally(root string, t queue.Task) string {
+	if t.Kind != "plan" || t.Origin != "seed" {
+		return ""
+	}
+	// Carrega a config aqui em vez de recebê-la: os dois chamadores não a têm em escopo, e
+	// passá-la obrigaria os dois a carregá-la só para isto. Falha em silêncio — a contagem
+	// é um extra na mensagem, e um projeto sem config tem outro problema, que o comando
+	// que chama já reporta.
+	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
+	if err != nil {
+		return ""
+	}
+	files, err := scan.Walk(root, cfg)
+	if err != nil {
+		return ""
+	}
+	for _, f := range files {
+		if f.Path != t.Changed || len(f.Seeds) == 0 {
+			continue
+		}
+		faltam := 0
+		for _, sd := range f.Seeds {
+			if !seedExists(root, sd, files) {
+				faltam++
+			}
+		}
+		// A task ANTIGA já traz a contagem gravada no `reason` — somar a recalculada
+		// imprimiria o número duas vezes. Medido ao instalar a correção com a fila cheia.
+		//
+		// Detectar pela frase e não por versão: o campo não guarda quem o escreveu, e uma
+		// task sobrevive a qualquer número de atualizações do binário.
+		if strings.Contains(t.Reason, "spec(s) deste plano") {
+			return ""
+		}
+		return fmt.Sprintf(" — %d de %d spec(s) deste plano ainda não existem",
+			faltam, len(f.Seeds))
+	}
+	return ""
 }
