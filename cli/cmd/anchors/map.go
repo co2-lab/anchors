@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"path/filepath"
+	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gate"
@@ -162,6 +163,7 @@ arestas do mapa por co-location (nomes de arquivo) e por código de cenário
 			fmt.Println(i18n.T("map.built", len(g.Nodes), len(g.Edges)))
 			fmt.Println(i18n.T("map.written_to", outPath))
 			printEdgeSummary(g)
+			printLayerAmbiguities(scan.Ambiguities(files, cfg))
 			return nil
 		},
 	}
@@ -222,4 +224,56 @@ func printEdgeSummary(g *mapx.Graph) {
 			fmt.Printf("    %-11s %d\n", t, n)
 		}
 	}
+}
+
+// printLayerAmbiguities denuncia onde a HEURÍSTICA escolheu a camada.
+//
+// O comentário do campo `priority` promete: "Declare quando a heurística errar; o `check`
+// avisa onde ela decidiu sozinha." Ele não avisava — a `scan.Ambiguities` existia,
+// completa e testada, e NINGUÉM a chamava.
+//
+// O custo do silêncio, medido no blue-eyes (blue-eyes#100): `**/*.test.*` e
+// `packages/shared/**/*.ts` casavam o mesmo `AreaStatus.test.ts`, o desempate por
+// comprimento escolheu `shared`, e o projeto ficou com ZERO nós `kind: test` tendo 70
+// testes verdes. Em cascata, QUATRO gates ficaram cegos — incluindo o `test-traceable`,
+// que é bloqueante.
+//
+// A única pista era a linha "gate declarado sem nada para medir", que aparece por vários
+// motivos legítimos (o artefato não existe ainda, a camada não foi declarada). Só se
+// descobriu contando os nós do mapa à mão.
+//
+// Sai no `map build` e não no `check` porque é aqui que a classificação acontece: avisar
+// no lugar onde a decisão é tomada é o que liga a causa ao efeito. E o `work` manda rodar
+// `map build` antes de todo `check`, então quem segue o fluxo vê.
+//
+// É AVISO, não reprovação: na maioria das vezes o comprimento acerta, e barrar por
+// ambiguidade reprovaria projetos que estão certos. O que não pode é decidir em silêncio.
+func printLayerAmbiguities(amb []scan.LayerAmbiguity) {
+	if len(amb) == 0 {
+		return
+	}
+	// Agrupa por PAR de camadas: o interessante é "test perde para shared", não a lista
+	// de arquivos. Num monorepo o mesmo par produz centenas de linhas idênticas, e
+	// despejá-las esconde justamente o padrão que precisa ser visto.
+	type par struct{ vencedora, perdedoras string }
+	ordem := []par{}
+	quantos := map[par]int{}
+	exemplo := map[par]string{}
+	for _, a := range amb {
+		k := par{a.Vencedora, strings.Join(a.Perdedoras, ", ")}
+		if quantos[k] == 0 {
+			ordem = append(ordem, k)
+			exemplo[k] = a.Arquivo
+		}
+		quantos[k]++
+	}
+	fmt.Printf("\n⚠ %d arquivo(s) tiveram a camada decidida por HEURÍSTICA — dois patterns "+
+		"casaram e nenhum declarou `priority`:\n", len(amb))
+	for _, k := range ordem {
+		fmt.Printf("    %s venceu %s  (%d arquivo(s), ex: %s)\n",
+			k.vencedora, k.perdedoras, quantos[k], exemplo[k])
+	}
+	fmt.Println("  A régua é o COMPRIMENTO do pattern, que mede verbosidade e não precisão.")
+	fmt.Println("  Se a escolha está errada, declare `priority: N` na camada que deve vencer —")
+	fmt.Println("  a camada errada tira o arquivo do alcance de TODO gate que mede a certa.")
 }
