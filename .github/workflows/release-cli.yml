@@ -20,6 +20,23 @@ jobs:
         with:
           go-version-file: cli/go.mod
 
+      # A MESMA TAG pode disparar este workflow mais de uma vez.
+      #
+      # Medido na v0.1.29: a tag foi refeita duas vezes (a mensagem saía corrompida — o
+      # `git tag` trata `#` como comentário e comia os cabeçalhos, e a correção é
+      # `--cleanup=verbatim`). Cada `git push --tags` disparou um release, e o terceiro
+      # tentou subir artefatos que o segundo já havia publicado:
+      #
+      #   422 Validation Failed [{Resource:ReleaseAsset Field:name Code:already_exists}]
+      #   ⨯ release failed after 1m14s
+      #
+      # A release ficou PUBLICADA e CORRETA (13 assets, o binário do commit certo) e o
+      # workflow ficou VERMELHO. É o pior par possível: quem olha o Actions conclui que o
+      # release falhou e refaz a tag — o que reproduz o mesmo erro.
+      #
+      # `--clean` limpa o `dist/` LOCAL; ele não sabe nada sobre o que já está no GitHub.
+      # Quem resolve é o `release.mode: replace` no `.goreleaser.yaml`, que substitui o
+      # asset de mesmo nome em vez de recusar por já existir.
       - uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
