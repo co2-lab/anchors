@@ -137,11 +137,55 @@ func runInstallHooks(root string, force bool) error {
 	//
 	// Instalado aqui e não no `init` porque é config LOCAL do clone (`git config`), e
 	// o `init` escreve o que é do repositório. Quem clona roda `install-hooks`.
-	installMapMergeDriver(root)
+	installMergeDrivers(root)
 	return nil
 }
 
-// installMapMergeDriver registra o driver no git local e declara o atributo.
+// installMergeDrivers registra os drivers de merge dos arquivos DERIVADOS do Anchors.
+//
+// São dois, e os dois nasceram do mesmo defeito medido: o git mescla como TEXTO um
+// arquivo que tem estrutura, e o resultado é dano (no mapa) ou atrito diário (no
+// progresso).
+func installMergeDrivers(root string) {
+	installMergeDriver(root, mergeDriver{
+		nome:    "anchors-map",
+		attr:    mapx.DefaultPath,
+		rotulo:  "anchors: une os carimbos do mapa",
+		comando: "anchors map merge %O %A %B",
+		assunto: "mapa",
+		porque: "# O MAPA é derivado, e o git o mescla como TEXTO — apagando carimbo de\n" +
+			"# julgamento sem conflito e sem aviso (medido: 62 de uma vez). O driver une os\n" +
+			"# carimbos dos dois lados. Registre-o com `anchors install-hooks`.",
+		efeito: "o `git merge` passa a UNIR os carimbos do mapa em vez de mesclá-lo como texto.",
+	})
+	installMergeDriver(root, mergeDriver{
+		nome:    "anchors-progress",
+		attr:    "*-progress.md",
+		rotulo:  "anchors: une o progresso dos planos",
+		comando: "anchors merge-progress %O %A %B",
+		assunto: "progresso",
+		porque: "# O PROGRESSO de um plano é marcado por quem entrega, e duas branches que\n" +
+			"# entregam specs do mesmo plano marcam checkboxes vizinhos: o git pede resolução\n" +
+			"# manual toda vez (medido: três PRs seguidos, resolução idêntica nos três).\n" +
+			"# O driver une os dois lados, e `[x]` vence `[ ]` — desmarcar por merge apagaria\n" +
+			"# uma entrega que já aconteceu.",
+		efeito: "o `git merge` passa a UNIR os itens do progresso; `[x]` vence `[ ]`.",
+	})
+}
+
+// mergeDriver descreve um driver: as duas metades do registro, e a prosa que explica ao
+// próximo leitor do `.gitattributes` por que a linha está lá.
+type mergeDriver struct {
+	nome    string // o nome no git config e no `merge=` do atributo
+	attr    string // o padrão de arquivo no .gitattributes
+	rotulo  string // merge.<nome>.name
+	comando string // merge.<nome>.driver
+	assunto string // como ele é chamado nas mensagens ("mapa", "progresso")
+	porque  string // o comentário que precede a linha no .gitattributes
+	efeito  string // o que muda, dito a quem acabou de instalar
+}
+
+// installMergeDriver registra um driver no git local e declara o atributo.
 //
 // São duas metades e as duas são necessárias: o `.gitattributes` (versionado, diz QUAL
 // arquivo usa o driver) e o `git config` (local do clone, diz COMO chamá-lo). Sem a
@@ -150,39 +194,34 @@ func runInstallHooks(root string, force bool) error {
 //
 // Falha em silêncio de propósito: um projeto sem git, ou um `git config` que não roda, tem
 // outro problema — e o `install-hooks` já reportou o que importa.
-func installMapMergeDriver(root string) {
-	const (
-		nomeDriver = "anchors-map"
-		linhaAttr  = mapx.DefaultPath + " merge=" + nomeDriver
-	)
+func installMergeDriver(root string, d mergeDriver) {
+	linhaAttr := d.attr + " merge=" + d.nome
+
 	if err := exec.Command("git", "-C", root, "config",
-		"merge."+nomeDriver+".name", "anchors: une os carimbos do mapa").Run(); err != nil {
+		"merge."+d.nome+".name", d.rotulo).Run(); err != nil {
 		return
 	}
 	if err := exec.Command("git", "-C", root, "config",
-		"merge."+nomeDriver+".driver", "anchors map merge %O %A %B").Run(); err != nil {
+		"merge."+d.nome+".driver", d.comando).Run(); err != nil {
 		return
 	}
 
 	attr := filepath.Join(root, ".gitattributes")
 	atual, _ := os.ReadFile(attr)
 	if strings.Contains(string(atual), linhaAttr) {
-		fmt.Println("✓ merge driver do mapa já configurado (.gitattributes + git config)")
+		fmt.Printf("✓ merge driver do %s já configurado (.gitattributes + git config)\n", d.assunto)
 		return
 	}
 	conteudo := string(atual)
 	if conteudo != "" && !strings.HasSuffix(conteudo, "\n") {
 		conteudo += "\n"
 	}
-	conteudo += "\n# O MAPA é derivado, e o git o mescla como TEXTO — apagando carimbo de\n" +
-		"# julgamento sem conflito e sem aviso (medido: 62 de uma vez). O driver une os\n" +
-		"# carimbos dos dois lados. Registre-o com `anchors install-hooks`.\n" +
-		linhaAttr + "\n"
+	conteudo += "\n" + d.porque + "\n" + linhaAttr + "\n"
 	if err := os.WriteFile(attr, []byte(conteudo), 0o644); err != nil {
 		return
 	}
-	fmt.Println("✓ merge driver do mapa instalado (.gitattributes + git config)")
-	fmt.Println("  o `git merge` passa a UNIR os carimbos do mapa em vez de mesclá-lo como texto.")
+	fmt.Printf("✓ merge driver do %s instalado (.gitattributes + git config)\n", d.assunto)
+	fmt.Println("  " + d.efeito)
 	fmt.Println("  commite o .gitattributes: ele é do repositório, e cada clone roda `install-hooks`.")
 }
 

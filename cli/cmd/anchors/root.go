@@ -56,6 +56,7 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 	root.AddCommand(newNewCmd())
 	root.AddCommand(newRecodeCmd())
 	root.AddCommand(newMapCmd())
+	root.AddCommand(newProgressMergeCmd())
 	root.AddCommand(newImpactCmd())
 	root.AddCommand(newCheckCmd())
 	root.AddCommand(newVerifyCmd())
