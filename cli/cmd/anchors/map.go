@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -153,8 +154,24 @@ arestas do mapa por co-location (nomes de arquivo) e por código de cenário
 			// rodar `map build` antes de todo `check`, então sem isto cada etapa zerava o
 			// carimbo da anterior e o `anchors stale` acusava o repositório inteiro como
 			// "nunca validado".
+			var perdidos string
 			if anterior, err := mapx.Load(outPath); err == nil {
 				mapx.PreserveStamps(g, anterior)
+				// PERDA DE CARIMBO é silenciosa, e o mapa continua VÁLIDO.
+				//
+				// O `PreserveStamps` preserva o que está no arquivo anterior — e num merge
+				// o arquivo anterior é o do OUTRO lado. Medido no blue-eyes
+				// (co2-lab/anchors#12): resolvi um conflito com `checkout --theirs` +
+				// `map build`, e o carimbo de `review` de uma spec desapareceu. Descobri
+				// por acaso, contando: 18 onde eu esperava 19.
+				//
+				// O custo não é o carimbo: é o LAUDO. Ele vive no `--reason` do comando,
+				// não no arquivo, e refazer uma revisão adversarial é caro.
+				//
+				// Remover um nó legitimamente remove os carimbos dele, então isto é AVISO
+				// e não reprovação. O que ele faz é transformar perda silenciosa em perda
+				// visível, que já é a maior parte do dano.
+				perdidos = stampLossWarning(anterior, g)
 			}
 			if err := mapx.Save(g, outPath); err != nil {
 				return fmt.Errorf("save: %w", err)
@@ -164,6 +181,9 @@ arestas do mapa por co-location (nomes de arquivo) e por código de cenário
 			fmt.Println(i18n.T("map.written_to", outPath))
 			printEdgeSummary(g)
 			printLayerAmbiguities(scan.Ambiguities(files, cfg))
+			if perdidos != "" {
+				fmt.Print(perdidos)
+			}
 			return nil
 		},
 	}
@@ -276,4 +296,51 @@ func printLayerAmbiguities(amb []scan.LayerAmbiguity) {
 	fmt.Println("  A régua é o COMPRIMENTO do pattern, que mede verbosidade e não precisão.")
 	fmt.Println("  Se a escolha está errada, declare `priority: N` na camada que deve vencer —")
 	fmt.Println("  a camada errada tira o arquivo do alcance de TODO gate que mede a certa.")
+}
+
+// stampLossWarning compara os carimbos do mapa ANTERIOR com os do novo.
+//
+// Conta por GATE, e não o total: "o mapa perdeu 1 carimbo" não diz o que refazer, e
+// "perdeu 1 de `review`" diz — o laudo de uma revisão adversarial é a coisa mais cara que
+// um carimbo representa.
+//
+// Devolve string vazia quando não houve perda, para o comando não imprimir nada no caso
+// normal. Um aviso que sempre aparece deixa de ser lido.
+func stampLossWarning(antigo, novo *mapx.Graph) string {
+	conta := func(g *mapx.Graph) map[string]int {
+		out := map[string]int{}
+		for _, e := range g.Edges {
+			for _, j := range e.Julgamentos {
+				out[j.Gate]++
+			}
+		}
+		return out
+	}
+	antes, depois := conta(antigo), conta(novo)
+	type perda struct {
+		gate  string
+		antes int
+		agora int
+	}
+	var perdas []perda
+	for gate, n := range antes {
+		if depois[gate] < n {
+			perdas = append(perdas, perda{gate, n, depois[gate]})
+		}
+	}
+	if len(perdas) == 0 {
+		return ""
+	}
+	sort.Slice(perdas, func(i, j int) bool { return perdas[i].gate < perdas[j].gate })
+
+	var b strings.Builder
+	b.WriteString("\n⚠ o mapa PERDEU carimbo(s) de julgamento:\n")
+	for _, p := range perdas {
+		fmt.Fprintf(&b, "    %-28s %d → %d\n", p.gate, p.antes, p.agora)
+	}
+	b.WriteString("  Remover um nó também remove os carimbos dele — então isto pode ser normal.\n")
+	b.WriteString("  O que NÃO é normal: perder carimbo depois de resolver conflito no mapa.\n")
+	b.WriteString("  O laudo vive no `--reason` do `anchors judge`, não no arquivo: se o carimbo\n")
+	b.WriteString("  sumiu, o julgamento volta para a fila e a evidência tem de ser refeita.\n")
+	return b.String()
 }
