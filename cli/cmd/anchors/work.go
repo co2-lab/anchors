@@ -720,6 +720,15 @@ func procedureFor(artifact string, cfg *config.Config) []string {
 				"os mencionava. Justificativa se apoia no que EXISTE hoje, mais hipótese " +
 				"declarada como hipótese — se o plano não cumprir, a decisão fica com uma razão " +
 				"que não confere, e quem a revisar depois não sabe se a regra ainda vale.",
+			"**A saída é EXIGIR em vez de descrever.** Nem toda menção ao que ainda não " +
+				"existe é previsão: referenciar uma spec que o PLANO semeia é legítimo — o plano " +
+				"a declara, e há gate confrontando o caminho. O que não vale é supor o que ela " +
+				"FARÁ. Medido: uma regra dizia \"os consumidores são nomeados\" e listava dois, " +
+				"com só um existindo; se o segundo implementasse de outro jeito, o argumento " +
+				"perdia a metade que o sustentava. Reescrita como exigência (\"toda saída de " +
+				"sessão passa por esta operação\"), ela vale mesmo que o consumidor não exista — " +
+				"e ele a encontra pronta em vez de decidir sozinho. Uma exigência DECIDE; uma " +
+				"descrição depende de confirmação que ainda não pode vir.",
 			"**Verifique o que a peça promete ao MUNDO.** Recurso declarado existe na infra? " +
 				"Env var citada é provida? Índice que a consulta precisa foi criado? O typecheck " +
 				"passa por acidente (`!`, índice de objeto) escondendo algo que só quebra em " +
