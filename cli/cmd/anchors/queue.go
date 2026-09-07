@@ -562,7 +562,8 @@ func nextFromBoard(root string, cfg *config.Config, agent string) error {
 		return err
 	}
 	if card != nil {
-		fmt.Printf("retomando o seu card (o contexto da sessão anterior vale mais que a fila)\n\n")
+		fmt.Printf("retomando o seu card — TERMINE ele antes de pegar outro\n")
+		fmt.Printf("  o contexto da sessão anterior vale mais que a ordem da fila.\n\n")
 	} else {
 		// SEM CARD: pede ao pipeline. Ele é serializado, e é isso que impede dois agentes
 		// de receberem o mesmo trabalho (ver `board.Ask`).
@@ -595,6 +596,17 @@ func nextFromBoard(root string, cfg *config.Config, agent string) error {
 // terminado — o `next` não as via (lia a fila local), e nada no card dizia que a
 // implementação são quatro entregas, nem que o teste nasce da feature.
 func printBoardWork(root string, card *board.Card) {
+	// O ESTADO manda, e o título é o assunto.
+	//
+	// Um card em `in-review` está com a revisão por fazer — e as instruções de
+	// implementação ali mandam refazer o que já foi entregue. Medido: o card #321, com a
+	// trinca completa, recebeu "ENTREGÁVEL: código + feature + teste + documentação" e o
+	// agente foi conferir se tinha esquecido algo. O trabalho que faltava era outro.
+	if card.State == board.StateInReview {
+		printReviewWork(root, card)
+		return
+	}
+
 	// O ALVO vem do CÓDIGO, não da pasta.
 	//
 	// O corpo do card traz as duas coisas — `Unidade: \`packages/infra\`` e
@@ -751,4 +763,37 @@ func layerOfPath(cfg *config.Config, caminho string) string {
 	}
 	layer, _ := scan.ClassifyPath(caminho, cfg)
 	return layer
+}
+
+// printReviewWork diz o que fazer com um card que está em REVISÃO.
+//
+// A revisão é a etapa que mais some, e por um motivo específico: ela não produz artefato
+// novo. Quem a pula não vê nada faltando — os quatro arquivos estão lá, os gates estão
+// verdes, e o card parece pronto. É exatamente por isso que o texto aqui precisa dizer que
+// o trabalho EXISTE, e qual é.
+func printReviewWork(root string, card *board.Card) {
+	alvo := targetOfCode(root, codeFromBody(card.Body))
+	if alvo == "" {
+		alvo = unitFromBody(card.Body)
+	}
+
+	fmt.Println("ENTREGÁVEL: a REVISÃO — e ela não produz arquivo novo.")
+	fmt.Println("  A implementação deste card já foi entregue. O que falta é confrontá-la")
+	fmt.Println("  contra o que ela DIZ ter feito, e é por isso que a etapa some: nada")
+	fmt.Println("  parece faltar. Os quatro arquivos estão lá e os gates estão verdes.")
+	fmt.Println()
+	fmt.Printf("    anchors work review --for %s\n\n", alvo)
+	fmt.Println("  Os gates verdes NÃO provam que está certo — eles confrontam o que é")
+	fmt.Println("  DECLARÁVEL. Em três rodadas de um E2E real, 7 defeitos graves (perda")
+	fmt.Println("  silenciosa de dado, regra sem teste que a prove, contradição entre duas")
+	fmt.Println("  regras da mesma spec) passaram com tudo verde. Nenhum veio de gate.")
+	fmt.Println()
+	fmt.Println("  O registro de entrega está nos comentários desta issue: é a metade")
+	fmt.Println("  DECLARADA do confronto — o que o autor diz ter feito, contra o disco.")
+	fmt.Println()
+	fmt.Println("  Se a revisão não achar nada, diga isso e siga. Se achar, o achado vira")
+	fmt.Println("  correção neste card — não card novo.")
+
+	fmt.Printf("\nAntes de começar:  anchors guide review\n")
+	fmt.Printf("Ao terminar:       abra o PR — o pipeline move o card, você não\n")
 }

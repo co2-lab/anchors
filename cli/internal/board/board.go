@@ -195,13 +195,16 @@ func (c Client) Mine(agent string) (*Card, error) {
 		if card.Owner != agent || waiting(card) {
 			continue
 		}
-		// RETOMAR é para o que ficou pela metade — `in-progress`. Um card que já foi
-		// entregue e está `in-review` não é trabalho meu: quem revisa é outro, e o meu
-		// próximo trabalho está noutro card.
-		if !has(card.Labels, StateInProgress) {
+		// TERMINAR O QUE ESTÁ COM ELE antes de pegar coisa nova. Um card `in-progress`
+		// está pela metade; um `in-review` que É DELE tem a revisão por fazer — nos dois
+		// casos o trabalho existe, e é dele.
+		//
+		// A condição que faz isso funcionar é o DONO, e ela já está no topo do laço: um
+		// card em revisão com outro agente nunca chega aqui, porque o `Owner` não casa.
+		if !emCurso(card) {
 			continue
 		}
-		card.State = StateInProgress
+		card.State = liveState(card)
 		return &card, nil
 	}
 	return nil, nil
@@ -216,15 +219,18 @@ func liveState(c Card) string {
 	return ""
 }
 
-// emCurso diz se alguém já está trabalhando no card.
+// emCurso diz se há trabalho acontecendo no card — e, no `Mine`, se ele é do agente.
 //
-// `in-review` conta, e é a correção desta rodada: ele é trabalho em curso tanto quanto
-// `in-progress` — a diferença é QUE trabalho acontece, não SE acontece. Um card em review
-// tem um revisor, e devolvê-lo ao claim entrega o mesmo card a duas pessoas.
+// Os dois estados contam. `in-progress` é implementação pela metade; `in-review` é revisão
+// por fazer — e revisar É trabalho. Terminar o que está com o agente antes de pegar coisa
+// nova é o que impede o board de encher de trabalho pela metade.
 //
-// Medido: o `Mine` devolvia qualquer card do agente sem olhar o estado, e um card já
-// entregue e em revisão voltava a cada `anchors next` — a fila parecia ter trabalho e o
-// agente reabria o que já tinha fechado.
+// A separação que importa não é entre os dois estados, é quem é o DONO: um card em revisão
+// com OUTRO agente não é meu, e o `Mine` o descarta pelo `Owner` antes de chegar aqui.
+//
+// (A primeira correção desta rodada tirou o `in-review` da retomada, e estava errada: o
+// card #321 voltava porque o trabalho de revisão dele ainda não tinha sido feito, não
+// porque o estado fosse indevido.)
 func emCurso(c Card) bool {
 	return has(c.Labels, StateInProgress) || has(c.Labels, StateInReview)
 }
