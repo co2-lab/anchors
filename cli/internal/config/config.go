@@ -72,6 +72,7 @@ type Config struct {
 	Comments map[string][]string `yaml:"comments,omitempty"` // override/extensão dos marcadores (D4)
 	Layers   map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
 	Derived  *Derived            `yaml:"derived,omitempty"`  // co-location dos derivados
+	Docs     *Docs               `yaml:"docs,omitempty"`     // as documentações que o projeto DEVE ter
 	Governs  []GovernRule        `yaml:"governs,omitempty"`  // dimensão vertical (arestas de alto grau)
 	Gates    []Gate              `yaml:"gates,omitempty"`    // os gates de qualidade (QUALITY §3-§5)
 	Recode   *Recode             `yaml:"recode,omitempty"`   // convenções de projeto p/ `anchors recode`

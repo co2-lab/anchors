@@ -228,6 +228,16 @@ func Classify(rel string, cfg *config.Config) (layer, kind string) {
 // prioridade e mesmo comprimento) sortearia a camada a cada execução — e uma classificação
 // que muda entre duas rodadas do mesmo comando envenena todo gate que depende dela. Por
 // isso o desempate final é o NOME da camada: arbitrário, mas estável.
+// ClassifyPath devolve a CAMADA e o KIND de um caminho, pelos padrões do projeto.
+//
+// Exportada porque a resolução de camada é usada fora do scanner — o `anchors next`
+// precisa dela para saber quais documentações a alteração obriga tocar. Reimplementá-la
+// lá seria manter duas leituras dos mesmos padrões, e elas divergiriam na primeira
+// mudança da Estrutura: um `overrides` novo passaria a valer para o mapa e não para o card.
+func ClassifyPath(rel string, cfg *config.Config) (layer, kind string) {
+	return classify(rel, cfg)
+}
+
 func classify(rel string, cfg *config.Config) (layer, kind string) {
 	// Normaliza AQUI, e não só em quem chama: são mais de dez chamadores (`check`, `code`,
 	// `new`, `watch`…), e basta um passar a forma nativa do Windows para o `doublestar.Match`

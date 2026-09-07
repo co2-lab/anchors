@@ -245,6 +245,7 @@ Traduzir mal destruiria exatamente isso.
 | [`TRACEABILITY.md`](./TRACEABILITY.md) | Pilar — identidade contínua + mapa de dependências; órfãos |
 | [`PROPAGATION.md`](./PROPAGATION.md) | Pilar — a onda incremental; staleness; quiescência |
 | [`QUALITY.md`](./QUALITY.md) | Pilar — gates que medem; features → testes; maturação informativo → bloqueante |
+| [`DOCS.md`](./DOCS.md) | A documentação — o que fica FORA da trinca: os artefatos agregados, compilados de `doct/` |
 | [`cli/`](./cli) | A ferramenta em Go: comandos, arquitetura, roadmap |
 | [`simulation/`](./simulation) | A simulação Larder — o ciclo de vida exercitado numa app fictícia |
 
