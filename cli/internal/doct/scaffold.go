@@ -135,18 +135,18 @@ func ScaffoldLayer(camada string) Scaffold {
 
 {{section . "Visão Geral"}}
 
-### Regras
-
+{{/* As seções Regras e Invariantes trazem os próprios headings de regra, e por isso
+     NÃO ganham um rótulo aqui: um heading "Regras" seguido dos headings das regras as
+     põe no mesmo nível, e o índice do documento lista o rótulo como irmão do que ele
+     contém. */}}
 {{section . "Regras"}}
 
-### Invariantes
-
 {{section . "Invariantes"}}
-
-### Cenários
-{{range scenarios .}}
+{{with scenarios .}}
+### Cenários desta unidade
+{{range .}}
 - ` + "`{{.Code}}`" + ` {{.Titulo}}
-{{end}}
+{{end}}{{end}}
 {{end}}
 `,
 	}
