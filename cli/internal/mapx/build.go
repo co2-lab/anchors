@@ -187,7 +187,7 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 		// passa por Clean e devolve "functions\run-audits": o caminho montado não casa
 		// id nenhum e a co-location inteira deixa de ligar spec/feature/teste.
 		dir := filepath.ToSlash(filepath.Dir(f.Path))
-		name, ext := stemDaAncora(f.Path)
+		name, ext := StemOfAnchor(f.Path)
 		module := filepath.Base(dir) // {{module}} — o dir-pai (ex.: run-audits em .../run-audits/handler.ts)
 		// Templates efetivos = default sobrescrito pelos overrides cuja `when` casa a
 		// camada da âncora (STRUCTURE.md §2.2: padrão de localização por camada quando
@@ -367,7 +367,18 @@ func governsEdges(files []scan.File, cfg *config.Config) []Edge {
 
 // stemName devolve o nome-base sem extensão e a extensão (sem ponto).
 // dir/Login.tsx → ("Login", "tsx").
-// stemDaAncora extrai o nome da unidade a partir do caminho da ÂNCORA.
+// StemOfAnchor extrai o nome da unidade a partir do caminho da ÂNCORA.
+//
+// EXPORTADA porque havia uma segunda implementação. O `anchors work` cortava o nome com
+// `strings.TrimSuffix(base, filepath.Ext(rel))` — e `filepath.Ext("X.spec.md")` é `.md`,
+// então o `{{name}}` saía `X.spec` e o prompt mandava criar `X.spec.ts` e
+// `X.spec.test.ts`.
+//
+// Medido no blue-eyes: `anchors work code --for packages/infra/GoLiveChecklist.spec.md`
+// dizia para escrever `GoLiveChecklist.spec.feature` e `GoLiveChecklist.spec.test.ts`,
+// quando o padrão do projeto — e o que o MAPA usa — é `GoLiveChecklist.ts` e
+// `GoLiveChecklist.test.ts`. O prompt de trabalho e o mapa discordavam sobre onde a peça
+// nasce, e quem seguisse o prompt criaria arquivo que nenhum gate encontra.
 //
 // A âncora é a spec (`Login.spec.md`), e dela o nome da unidade é `Login` — não
 // `Login.spec`, que é o que um corte na última extensão devolveria. Os sufixos de
@@ -377,7 +388,7 @@ func governsEdges(files []scan.File, cfg *config.Config) []Edge {
 // (`.ts`? `.tsx`? `.go`?) escolheria por um projeto que não declarou. Um template que
 // precise dela declara a extensão literalmente — `{{dir}}/{{name}}.test.ts` —, e assim a
 // decisão fica escrita onde se lê.
-func stemDaAncora(path string) (name, ext string) {
+func StemOfAnchor(path string) (name, ext string) {
 	base := filepath.Base(path)
 	for _, suf := range []string{".spec.md", ".feature"} {
 		if b, ok := strings.CutSuffix(base, suf); ok {

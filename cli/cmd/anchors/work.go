@@ -1043,7 +1043,14 @@ func derivedPaths(rel, layer string, cfg *config.Config) (map[string]string, map
 		return files, overridden
 	}
 	dir := filepath.Dir(rel)
-	name := strings.TrimSuffix(filepath.Base(rel), filepath.Ext(rel))
+	// O NOME vem do `mapx`, e não de um corte local.
+	//
+	// `filepath.Ext("X.spec.md")` é `.md`, então cortar por ela deixa `X.spec` — e o
+	// prompt passava a mandar criar `X.spec.ts` e `X.spec.test.ts`, enquanto o mapa (que
+	// usa `StemOfAnchor`) liga a trinca por `X`. Duas implementações do mesmo corte, e a
+	// deste comando estava errada: quem seguisse o prompt criaria arquivo que nenhum gate
+	// encontra.
+	name, _ := mapx.StemOfAnchor(rel)
 	// O módulo é o diretório-pai — usado por overrides que agrupam por Lambda/módulo
 	// (ex.: `packages/backend/__tests__/unit/lambdas/{{module}}.test.ts`).
 	module := filepath.Base(dir)
