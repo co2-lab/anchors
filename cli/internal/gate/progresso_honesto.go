@@ -45,6 +45,22 @@ import (
 var itemDeProgressoRE = regexp.MustCompile(
 	"(?m)^[ \t]*-[ \t]+\\[([ xX])\\][ \t]+`([^`]+\\.(?:md|ts|tsx|js|jsx|json|ya?ml|feature|py|go))`")
 
+// itemPlaceholderRE captura o item de progresso que NÃO cita caminho nenhum.
+//
+// O `anchors new progress` escreve `- [ ] TODO: um item por spec que esta fase semeia`
+// quando a fase não semeia nada — é um convite a preencher, e deveria sair quando alguém
+// decide o que a fase faz.
+//
+// Medido no blue-eyes: ficou no progresso do plano 0017, fase `MTUAO-F02`. E as três
+// direções deste gate não o veem — as duas primeiras confrontam itens que CITAM CAMINHO,
+// e a terceira olha as sementes do plano (aquela fase não semeia).
+//
+// O efeito é o oposto do que o gate protege: um `[ ]` eterno faz o plano parecer
+// incompleto para sempre. O `anchors next` volta a ele, e quem lê não sabe se falta
+// trabalho ou falta limpar o arquivo.
+var itemPlaceholderRE = regexp.MustCompile(
+	`(?m)^[ \t]*-[ \t]+\[[ xX]\][ \t]*(TODO|FIXME|XXX|\.\.\.)\b.*$`)
+
 // planSeedInListRE captura as specs que o plano SEMEIA — as do item de lista, não as
 // mencionadas em prosa.
 //
@@ -103,7 +119,14 @@ func checkProgressHonest(planContent string, n mapx.Node, root string, _ *mapx.G
 	// `anchors next` seguiu para outro plano com trabalho declarado por fazer.
 	naoListadas := seedsMissingFromProgress(string(conteudo), planContent)
 
-	if len(abertoMasFeito) == 0 && len(marcadoMasAusente) == 0 && len(naoListadas) == 0 {
+	// A QUARTA DIREÇÃO: o item que não promete arquivo nenhum.
+	var placeholders []string
+	for _, m := range itemPlaceholderRE.FindAllString(string(conteudo), -1) {
+		placeholders = append(placeholders, strings.TrimSpace(m))
+	}
+
+	if len(abertoMasFeito) == 0 && len(marcadoMasAusente) == 0 &&
+		len(naoListadas) == 0 && len(placeholders) == 0 {
 		return Pass, ""
 	}
 
@@ -126,6 +149,14 @@ func checkProgressHonest(planContent string, n mapx.Node, root string, _ *mapx.G
 			"  O progresso diz que a fase acabou, e há trabalho declarado por fazer — "+
 			"o `anchors next` segue para outro plano.\n",
 			len(naoListadas), strings.Join(naoListadas, ", "))
+	}
+	if len(placeholders) > 0 {
+		fmt.Fprintf(&b, "%d item(ns) PLACEHOLDER que não citam arquivo: %s.\n"+
+			"  O `anchors new progress` os escreve quando a fase não semeia nada, e eles "+
+			"deveriam sair quando alguém decide o que a fase faz. Um `[ ]` eterno faz o "+
+			"plano parecer incompleto para sempre — o `anchors next` volta a ele, e quem "+
+			"lê não sabe se falta trabalho ou falta limpar o arquivo.\n",
+			len(placeholders), strings.Join(placeholders, " / "))
 	}
 	b.WriteString("\nMarque no `-progress.md`, NUNCA no plano: alterar o plano significa " +
 		"que a DECISÃO mudou, e cobra revisão (`{CODIGO}-R000N`).")
