@@ -191,6 +191,20 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "plan-source-declared", Blocking: config.Bool(false),
 			Measures: "a fonte que o plano nomeia tem o plano do adaptador no `needs:`",
 		})
+		// A DOC COMPILADA envelhece em silêncio. O conteúdo mora na spec; o `docs/*.md`
+		// é derivado dela por template, e quem altera uma regra e esquece de recompilar
+		// deixa a documentação afirmando a versão ANTIGA — com conteúdo real, e por isso
+		// convincente. Uma doc obviamente incompleta manda procurar a fonte; uma doc
+		// desatualizada não manda procurar nada.
+		//
+		// INFORMATIVO por decisão: o desvio é resolvido por um `anchors docs build`, e o
+		// pipeline roda o build no merge. Reprovar o autor por trabalho que a máquina faz
+		// sozinha gastaria a atenção da revisão com o que ela menos precisa.
+		gates = append(gates, config.Gate{
+			Name: "docs-fresh", ID: "docs-fresh", On: []string{"spec"},
+			Check: "docs-fresh", Blocking: config.Bool(false),
+			Measures: "o `docs/*.md` compilado reflete a spec de onde veio",
+		})
 		// A ORDEM dentro do plano. Um plano sem fases catalogadas passa (elas são
 		// opcionais); o gate só cobra a coerência de quem as declarou.
 		// O PLANO REVISADO avisa quem o lê. Sem isso, quem abre um plano antigo segue uma

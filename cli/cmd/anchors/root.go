@@ -56,6 +56,8 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 	root.AddCommand(newNewCmd())
 	root.AddCommand(newRecodeCmd())
 	root.AddCommand(newMapCmd())
+	// A doc é compilada: `doct/*.md.tmpl` -> `docs/*.md` (o conteúdo mora nas specs).
+	root.AddCommand(newDocsCmd())
 	root.AddCommand(newProgressMergeCmd())
 	root.AddCommand(newImpactCmd())
 	root.AddCommand(newCheckCmd())

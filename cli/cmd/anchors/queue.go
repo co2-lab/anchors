@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/board"
+	"github.com/co2-lab/anchors/internal/doct"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
 
@@ -635,6 +636,7 @@ func printBoardWork(root string, card *board.Card) {
 		fmt.Println("    4. a documentação evolui JUNTO: a cada alteração que deveria ser")
 		fmt.Println("       documentada, atualize a doc na mesma entrega — deixá-la para o")
 		fmt.Println("       fim é o que a faz nascer incompleta.")
+		printDocDuties(root, unidade)
 		fmt.Println()
 		fmt.Println("  A ordem 1→2→3 não é gosto: a feature descreve o comportamento em")
 		fmt.Println("  cenários, e é dela que os testes nascem (`anchors work test` parte da")
@@ -700,4 +702,45 @@ func targetOfCode(root, code string) string {
 		}
 	}
 	return ""
+}
+
+// printDocDuties nomeia as documentações que ESTA alteração obriga tocar.
+//
+// "A documentação evolui junto" não diz QUAL documentação, e um agente que lê só isso
+// atualiza o que lhe parece documentação — normalmente um README. As obrigações reais são
+// declaradas no `docs:` do `anchors.yaml`, e dependem do tipo de projeto: uma API tem um
+// contrato que vive fora do código, e um endpoint que não entra nele é invisível para quem
+// consome.
+//
+// Silencioso quando o projeto não declara nada: cobrar OpenAPI de quem não tem API seria
+// ruído, e ruído no card é o que faz o agente parar de ler o card.
+func printDocDuties(root, unidade string) {
+	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
+	if err != nil || cfg == nil {
+		return
+	}
+	camada := layerOfPath(cfg, unidade)
+	deveres := cfg.RequiredFor(camada)
+	if len(deveres) == 0 {
+		return
+	}
+	fmt.Println()
+	fmt.Printf("       Alterar `%s` OBRIGA tocar:\n", camada)
+	for _, d := range deveres {
+		fmt.Print(doct.Duty(d))
+	}
+	fmt.Println("       `anchors docs duties --layer " + camada + "` repete isto a qualquer momento.")
+}
+
+// layerOfPath devolve a camada de um caminho.
+//
+// Delega ao `scan`, que é a autoridade: reimplementar a leitura dos padrões aqui manteria
+// duas versões da mesma regra, e elas divergiriam na primeira mudança da Estrutura — um
+// `overrides` novo passaria a valer para o mapa e não para o card.
+func layerOfPath(cfg *config.Config, caminho string) string {
+	if caminho == "" {
+		return ""
+	}
+	layer, _ := scan.ClassifyPath(caminho, cfg)
+	return layer
 }
