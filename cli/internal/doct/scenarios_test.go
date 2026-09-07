@@ -149,13 +149,27 @@ func TestInitScaffolds_oEsqueletoCompila(t *testing.T) {
 		t.Errorf("gerou %d docs de %d templates", len(res.Written), len(escritos))
 	}
 
-	// E o conteúdo real entra: o cenário aparece na página de comportamento.
-	b, err := os.ReadFile(filepath.Join(root, OutDir, "comportamento.md"))
+	// O CONTEÚDO entra na página da CAMADA — é ela que o índice promete.
+	b, err := os.ReadFile(filepath.Join(root, OutDir, "camadas", "infra.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !strings.Contains(string(b), "Então a régua não libera") {
-		t.Errorf("o corpo do cenário não entrou na doc:\n%s", b)
+		t.Errorf("o corpo do cenário não entrou na página da camada:\n%s", b)
+	}
+
+	// E o índice APONTA para lá, com uma âncora que existe. Um link que não resolve é o
+	// pior defeito de um índice: ele é clicável, e o navegador fica onde está.
+	idx, err := os.ReadFile(filepath.Join(root, OutDir, "comportamento.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	alvo := "camadas/infra.md#" + GitHubAnchor("GLCGL-B01 — item sem artefato não passa")
+	if !strings.Contains(string(idx), alvo) {
+		t.Errorf("o índice não aponta para `%s`:\n%s", alvo, idx)
+	}
+	if !strings.Contains(string(b), "#### GLCGL-B01 — item sem artefato não passa") {
+		t.Errorf("a âncora do índice não existe na página de destino:\n%s", b)
 	}
 }
 
