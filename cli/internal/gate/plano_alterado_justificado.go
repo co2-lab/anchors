@@ -42,9 +42,20 @@ import (
 // O formato segue o vocabulário que já existe (`FNDTN-F04` para fase), e a NUMERAÇÃO é o
 // que uma marca solta não daria: dá para ver quantas vezes o documento mudou, e em que
 // ordem. Um `@plan-fix` solto responderia "mudou"; `-R0003` responde "mudou três vezes".
+//
+// O SEPARADOR aceita dois-pontos OU travessão, e os dois prefixos convivem.
+//
+// Medido no blue-eyes: a `ServiceMetrics` registrou a `R0001` como TÍTULO de seção —
+// `### SRMTS-R0001 — a B06 afirmava um vocabulário que não existe` — que é o formato
+// natural quando a revisão ganha corpo, e a `R0002` no cabeçalho, com dois-pontos.
+//
+// O gate contou UMA e viu a maior como `-R0002`, reprovando por "não sequencial". O
+// diagnóstico acertou o sintoma e errou a causa: as revisões ERAM sequenciais; uma delas
+// não foi vista. E o pior é que a mensagem manda renumerar — o que produziria duas `R0001`
+// no mesmo arquivo.
 func revisaoRE() *regexp.Regexp {
-	return regexp.MustCompile(`(?m)^[^\S\n]*>?[^\S\n]*(?:\*\*)?([A-Z0-9]` +
-		config.CodeLengthPattern() + `)-R(\d{4})(?:\*\*)?[^\S\n]*:[^\S\n]*(\S.*)$`)
+	return regexp.MustCompile(`(?m)^[^\S\n]*(?:>|#{1,6})?[^\S\n]*(?:\*\*)?([A-Z0-9]` +
+		config.CodeLengthPattern() + `)-R(\d{4})(?:\*\*)?[^\S\n]*[:—–-][^\S\n]*(\S.*)$`)
 }
 
 // Revision é uma alteração registrada no próprio documento.
