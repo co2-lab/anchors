@@ -311,6 +311,28 @@ func enqueueJudgments(root string, cfg *config.Config, p gate.Profile, varredura
 			knownJudgmentGates = append(knownJudgmentGates, g.Name)
 		}
 	}
+	// NO MODO `github` A FILA É O BOARD, e o julgamento não foge disso.
+	//
+	// É a terceira porta do mesmo defeito: o `next` a tinha (v0.1.55), o `deliver` a
+	// tinha (v0.1.61), e o `check` continuava enfileirando julgamento em
+	// `.anchors/tasks/`. O efeito é o mesmo — a fila local renasce a cada `check`,
+	// sozinha, e o `doctor` a acusa como resíduo de uma migração que nunca terminou.
+	//
+	// Medido no projeto de referência: 76 tasks de julgamento pendentes, TODAS criadas
+	// no mesmo dia pelos `check` de uma sessão, num projeto declarado `mode: github`.
+	// Ninguém as puxaria: o `next` naquele modo lê o board.
+	//
+	// O julgamento que REPROVA já vira issue pelo caminho normal (o `check` a abre).
+	// O que fica de fora é o julgamento PENDENTE — e registrá-lo numa fila que ninguém
+	// lê é pior que não registrar, porque parece registro.
+	if cfg.GitHubMode() {
+		if len(p.Judged) > 0 {
+			fmt.Printf("\n  %d alvo(s) aguardam julgamento — rode `anchors judge` para resolvê-los.\n",
+				len(p.Judged))
+			fmt.Println("  (modo `github`: o julgamento não vai para fila local; o que REPROVAR vira issue)")
+		}
+		return 0
+	}
 	n := 0
 	for _, r := range p.Judged {
 		reason := fmt.Sprintf("gate '%s'", r.Gate)
