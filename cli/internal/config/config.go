@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -1246,10 +1247,17 @@ func Load(path string) (*Config, error) {
 	//
 	// Erro com o nome da chave e a linha é barato de consertar; um mapa vazio sem
 	// explicação custa uma sessão de investigação — foi o que custou aqui.
+	//
+	// O CUSTO da rigidez é o oposto: um campo que o Anchors ganha (`docs:`, na v0.1.58)
+	// quebra todo projeto cujo binário é anterior a ele. E a mensagem do yaml —
+	// "field docs not found in type config.Config" — descreve o sintoma em vocabulário
+	// de implementação, e manda o autor procurar o erro de digitação que não existe.
+	//
+	// A saída não é afrouxar (o modo de falha acima é pior), é NOMEAR a outra hipótese.
 	dec := yaml.NewDecoder(bytes.NewReader(data))
 	dec.KnownFields(true)
 	if err := dec.Decode(&c); err != nil {
-		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+		return nil, fmt.Errorf("%s: %w%s", filepath.Base(path), err, versionHint(err))
 	}
 	for i := range c.Gates {
 		c.Gates[i] = mergeCanonical(c.Gates[i])
@@ -1678,4 +1686,31 @@ func distintos(suites []Suite, campo func(Suite) string) []string {
 		out = append(out, v)
 	}
 	return out
+}
+
+// unknownFieldRE casa a mensagem do yaml.v3 para chave que o Config não conhece.
+var unknownFieldRE = regexp.MustCompile(`field (\w+) not found in type`)
+
+// versionHint acrescenta a hipótese que a mensagem do yaml não cobre.
+//
+// "field docs not found in type config.Config" descreve o sintoma em vocabulário de
+// implementação — `config.Config` é um tipo Go, e quem lê o `anchors.yaml` não o conhece.
+// A mensagem manda procurar um erro de digitação, e há duas causas possíveis:
+//
+//   - a chave está errada mesmo (o caso que o KnownFields existe para pegar)
+//   - a chave é NOVA e este binário é antigo — o `anchors.yaml` foi escrito por uma
+//     versão que a conhece, e a instalada não
+//
+// A segunda acontece toda vez que o Anchors ganha um campo, e é invisível para quem a
+// sofre: o arquivo está certo, e a ferramenta diz que não está.
+func versionHint(err error) string {
+	m := unknownFieldRE.FindStringSubmatch(err.Error())
+	if m == nil {
+		return ""
+	}
+	return fmt.Sprintf("\n  Duas causas possíveis, e a segunda não é erro seu:\n"+
+		"    • a chave `%s` está escrita errada (confira contra `anchors init --print`)\n"+
+		"    • a chave é NOVA e este binário é ANTIGO — o `anchors.yaml` foi escrito por\n"+
+		"      uma versão que a conhece. Atualize: `go install github.com/co2-lab/anchors/cmd/anchors@latest`",
+		m[1])
 }
