@@ -167,39 +167,26 @@ func waiting(c Card) bool {
 	return has(c.Labels, StateNeedsUser) || has(c.Labels, StateNeedsUserPt)
 }
 
-// Claim reivindica o próximo card para este agente, na ordem de prioridade do
-// `anchors-claim.yml`. Devolve nil quando não há trabalho.
-func (c Client) Claim(agent string) (*Card, error) {
-	// 1. O PRÓPRIO, em qualquer estado vivo. Retomar vence o board.
-	mine, err := c.list("")
+// Mine devolve o card que JÁ É deste agente, ou nil.
+//
+// Só LÊ. A atribuição é do pipeline (ver `Ask`), e este cliente nunca escreve
+// `anchors-owner` — é o que mantém a serialização que evita dois agentes no mesmo card.
+//
+// Qualquer estado vivo conta: `to-do` (a sessão anterior parou antes de começar),
+// `in-progress`, `ready-to-review` e `in-review` (o card voltou para correção). O que não
+// conta é `needs-user`: ali o trabalho espera decisão de gente, e entregá-lo faria o
+// agente decidir sozinho.
+func (c Client) Mine(agent string) (*Card, error) {
+	cards, err := c.list("")
 	if err != nil {
 		return nil, err
 	}
-	for _, card := range mine {
+	for _, card := range cards {
 		if card.Owner != agent || waiting(card) {
 			continue
 		}
-		if has(card.Labels, StateToDo) || has(card.Labels, StateInProgress) ||
-			has(card.Labels, StateReadyToReview) || has(card.Labels, StateInReview) {
-			card.State = liveState(card)
-			return &card, nil
-		}
-	}
-
-	// 2. E DEPOIS o board, na ordem: quase pronto antes de não começado.
-	for _, estado := range []string{StateReadyToReview, StateToDo} {
-		cards, err := c.list(estado)
-		if err != nil {
-			return nil, err
-		}
-		for _, card := range cards {
-			if waiting(card) {
-				continue
-			}
-			// Card de outro agente não é livre: ele pode estar no meio de uma sessão.
-			if card.Owner != "" && card.Owner != agent {
-				continue
-			}
+		if s := liveState(card); s != "" {
+			card.State = s
 			return &card, nil
 		}
 	}
@@ -215,17 +202,28 @@ func liveState(c Card) string {
 	return ""
 }
 
-// Take marca o card como deste agente e o move para `in-progress`.
+// Ask PEDE trabalho ao pipeline, e não o reivindica direto.
 //
-// O comentário vem ANTES da label: se a label entrasse primeiro e o comentário falhasse, o
-// card ficaria `in-progress` sem dono — e o próximo claim o veria como livre, entregando o
-// mesmo trabalho a dois agentes.
-func (c Client) Take(number int, agent string) error {
-	if _, err := c.gh("issue", "comment", fmt.Sprint(number),
-		"--body", OwnerMarker+" "+agent); err != nil {
-		return err
+// A DIFERENÇA É A CORRIDA, e o `BOOTSTRAP.md` §7.6 a descreve: comentários resolvem *quem
+// é o dono* e *em que ordem os claims chegaram*, mas **não resolvem a disputa** — dois
+// agentes podem comentar quase ao mesmo tempo, ambos lerem antes do outro escrever, e
+// ambos se acharem donos. A API do GitHub não oferece compare-and-swap.
+//
+// Então os agentes param de disputar: eles pedem, e quem atribui é o pipeline —
+// serializado por `concurrency: anchors-claim`, nunca duas instâncias juntas. "Este card
+// tem dono?" e "atribua a ele" viram uma operação sem ninguém no meio, e a colisão não
+// chega a existir.
+//
+// Por isso o `anchors-owner` é escrito SÓ pelo pipeline, e este cliente lê.
+func (c Client) Ask(agent string) error {
+	_, err := c.gh("workflow", "run", ClaimWorkflow, "-f", "agent="+agent)
+	if err != nil {
+		return fmt.Errorf("não consegui pedir trabalho ao pipeline: %w\n"+
+			"  (o claim é serializado por `concurrency` — é o que evita dois agentes\n"+
+			"   pegarem o mesmo card, e por isso o CLI pede em vez de reivindicar)", err)
 	}
-	_, err := c.gh("issue", "edit", fmt.Sprint(number),
-		"--add-label", StateInProgress, "--remove-label", StateToDo)
-	return err
+	return nil
 }
+
+// ClaimWorkflow é o pipeline que atribui trabalho. O nome vem do `initx`, que o semeia.
+const ClaimWorkflow = "anchors-claim.yml"

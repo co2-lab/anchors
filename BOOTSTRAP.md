@@ -268,18 +268,55 @@ O padrão se repete em cada etapa do ciclo, e é sempre o mesmo:
 > **Um artefato chegou ao repositório e não tem card que o governe → o pipeline cria o
 > card.**
 
-| artefato que apareceu | card que o pipeline cria |
-| --- | --- |
-| plano | "implementar o plano 00XX" |
-| specs (criadas por quem implementou o plano) | uma task por spec a implementar |
-| código/feature | task de teste |
-| … | … |
+| artefato que apareceu | card que o pipeline cria | e o entregável dele é |
+| --- | --- | --- |
+| plano | `[CÓDIGO] Implementar plan` | **todas as specs** que o plano semeia |
+| spec | `[CÓDIGO] Implementar spec` | **código + feature + teste + doc** daquela spec |
+| … | … | … |
+
+**Criar a spec e implementar a spec são trabalhos distintos.** O primeiro é o card do
+plano — um trabalho, N specs. O segundo é uma task por spec, e o entregável dela são os
+quatro artefatos que derivam dali.
+
+Confundir os dois é o que faz o ciclo parar na metade: com as specs escritas, quem lê
+"todas as tasks de plano fechadas" conclui que o trabalho acabou — e as tasks de
+implementação ficam em `to-do` sem que nada acuse. Medido no projeto de referência: 117
+specs, **zero features**, e o `anchors next` respondendo "fila vazia" com 84 cards abertos.
 
 Isto responde a pergunta que o [`WORKFLOW.md`](./WORKFLOW.md) §6 deixou aberta — *"quem
 cria o card da etapa seguinte?"* — com uma terceira opção que não estava na lista: **nem o
 agente encadeando, nem um humano decidindo, mas o CI reagindo ao que apareceu no
 repositório**. A vantagem é que o card nasce de um FATO verificável (o arquivo está lá,
 sem card), não de alguém lembrar de criá-lo.
+
+### 7.3.1 No modo `github` a fila é o board — e só ele
+
+O `workflow.mode` é **excludente**, e o `anchors.yaml` o declara:
+
+```yaml
+workflow:
+  mode: local     # a fila é .anchors/tasks/ (o watcher enfileira, `anchors next` puxa)
+  mode: github    # a fila são as issues/cards do repositório
+```
+
+Um modo **ou** outro, nunca um com o outro de reserva. A alternativa — tentar o GitHub e
+cair no local quando falha — parece robustez e é a pior escolha possível: passa a existir a
+pergunta *"de qual fila veio esta task?"*, que ninguém consegue responder depois do fato.
+
+Então, no modo `github`:
+
+- **`.anchors/tasks/` não deve existir.** O `anchors doctor` acusa se existir;
+- **o `anchors next` consulta o board**, nunca a fila local;
+- o card nasce do pipeline (§7.3), que observa o repositório — não de um watcher local.
+
+> **Medido no projeto de referência**, com `mode: github` declarado: `.anchors/tasks/` tinha
+> 11 tasks de plano (todas de trabalho já concluído) e o `anchors next` lia dali,
+> respondendo *"fila vazia — nada a fazer"* com **84 cards abertos no board**. A resposta
+> estava certa sobre a fila local e falsa sobre o projeto — e quem a leu concluiu que o
+> trabalho tinha acabado.
+>
+> Duas filas para a mesma pergunta, e a resposta vindo da errada. É exatamente o que o modo
+> excludente existe para impedir.
 
 ### 7.4 Os agentes rodam nas máquinas dos devs
 
@@ -324,15 +361,15 @@ sequenceDiagram
 
     Note over DEV,P: o agente PEDE, não pega —<br/>o pipeline serializado é quem atribui.<br/>Card DELE vem antes da prioridade do board.
 
-    DEV->>P: gh workflow run claim.yml<br/>-f agent=máquina/sessão
+    DEV->>P: anchors next<br/><i>(pede: gh workflow run claim.yml)</i>
     Note over P: concurrency: uma instância por vez.<br/>Sem corrida, porque sem concorrência.
     P->>GH: este agente já tem card?
     GH-->>P: não
     P->>GH: então: há card livre?<br/>(`ready-to-review` antes de `to-do`)
-    GH-->>P: [XXXXX-001] Implementar o plano
+    GH-->>P: [XXXXX-001] Implementar plan
     P->>GH: comenta `anchors-owner: máquina/sessão`<br/>+ label `in-progress`
-    DEV->>GH: qual card é meu?
-    GH-->>DEV: [XXXXX-001]
+    DEV->>P: anchors next<br/><i>(agora lê: o card é meu)</i>
+    P-->>DEV: [XXXXX-001] + o ENTREGÁVEL:<br/>todas as specs que o plano semeia
 
     DEV->>A: anchors guide spec / new spec
     DEV->>R: escreve as specs + PR
@@ -364,9 +401,13 @@ sequenceDiagram
     P->>R: detecta specs novas (code XXXXX-002…)
     P->>GH: título "[XXXXX-002] …" não existe?<br/>→ cria uma task por spec
 
-    loop o ciclo se repete
-        DEV->>GH: pega task de implementar spec
-        DEV->>R: código + feature + teste
+    Note over DEV,GH: CRIAR a spec e IMPLEMENTAR a spec são<br/>trabalhos distintos, com entregáveis distintos.<br/>O card do plano criou; este implementa.
+
+    loop uma task por spec, e o ciclo se repete
+        DEV->>P: anchors next
+        P-->>DEV: [XXXXX-002] Implementar spec<br/>+ o ENTREGÁVEL: code + feature + test + docs
+        DEV->>R: código, feature, teste — e a doc evoluindo junto
+        Note over DEV: a ordem não é gosto: a feature descreve o<br/>comportamento em cenários, e é dela que os<br/>testes nascem — não da spec.
         P->>GH: novo artefato sem card → nova task
     end
 ```
@@ -420,12 +461,26 @@ dono?" e "atribua a ele" viram uma operação sem ninguém no meio — não porq
 detectada, mas porque ela não chega a existir.
 
 ```sh
-# o agente PEDE (não pega)
-gh workflow run claim.yml -f agent="$(hostname)/$ANCHORS_SESSION"
-
-# e depois lê o que recebeu
-gh issue list --search "anchors-owner: $(hostname)/$ANCHORS_SESSION in:comments" --state open
+# o agente PEDE (não pega) — e lê, no mesmo comando
+anchors next
 ```
+
+O `anchors next` faz as duas coisas, na ordem que evita o card órfão:
+
+1. **primeiro lê** se este agente já tem card. Se tem, retoma — e nem pede: pedir com um
+   card na mão deixaria o primeiro com posse registrada e ninguém trabalhando nele;
+2. **se não tem**, dispara o `claim.yml` com a identidade e diz para chamar de novo em
+   alguns segundos. O pipeline escolhe, comenta a posse e move a label.
+
+A IDENTIDADE é `<maquina>/<sessao>`, e a sessão vem de `ANCHORS_SESSION`. Sem ela, cai no
+usuário do sistema — estável entre invocações, e suficiente para um dev com um agente. Quem
+roda mais de um precisa declarar a variável.
+
+> **Não use o PID.** Na fila local ele é a identidade certa (um processo é um worker, e
+> quando morre o `reclaim` devolve a task). No board a sessão atravessa MUITAS invocações:
+> cada `anchors next` é um processo novo. Medido — com o PID, três chamadas seguidas
+> produziram três donos diferentes e três cards `in-progress` para o mesmo agente, nenhum
+> sendo retomado.
 
 O comentário `anchors-owner` continua sendo o registro — com data, máquina e sessão — mas
 **só o pipeline escreve**. Os agentes leem.

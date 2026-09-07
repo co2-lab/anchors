@@ -6,7 +6,7 @@ import "testing"
 //
 // Um card já reivindicado por este agente carrega o contexto da sessão dele. Entregar
 // outro joga fora o que já foi lido — e deixa dois agentes com metade do entendimento.
-func TestClaim_retomarOProprioVenceAPrioridade(t *testing.T) {
+func TestMine_retomarOProprioVenceAPrioridade(t *testing.T) {
 	meu := Card{Number: 7, Owner: "maq/sessao-1", Labels: []string{StateInProgress}}
 	if liveState(meu) != StateInProgress {
 		t.Errorf("o estado vivo do card próprio não foi reconhecido: %q", liveState(meu))
