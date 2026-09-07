@@ -39,7 +39,7 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 		return Pending, "sem mapa carregado — o gate relacional precisa do grafo"
 	}
 	// Camada RECONHECIDA não tem trinca a cobrar.
-	if isRecognizedLayer(n, content) {
+	if isRecognizedLayerCfg(n, content, cfg) {
 		return Skip, "camada reconhecida (declarativa) — não tem trinca"
 	}
 
@@ -241,7 +241,15 @@ var (
 	//
 	// O ALVO é obrigatório (`@TBD: code`, `@TBD: code,test`): "está em andamento" sem
 	// dizer o quê viraria um interruptor geral do gate.
-	tbdRE = regexp.MustCompile(`(?i)@TBD[^\S\n]*:[^\S\n]*([a-z,\s]+)`)
+	// FORA DE CRASES: uma revisão que EXPLICA a remoção da dispensa cita o marcador — "a
+	// dispensa `@TBD: code,feature,test` do cabeçalho SAIU" — e sem esta guarda a citação
+	// a reativa. A spec passaria a declarar uma ausência que o texto ao lado diz ter
+	// deixado de existir.
+	//
+	// A crase é o sinal certo porque é como a doutrina cita qualquer marcador: em código,
+	// dentro do parágrafo. Um marcador ATIVO nunca está entre crases — ele é a declaração,
+	// não a menção a ela.
+	tbdRE = regexp.MustCompile(`(?i)(^|[^` + "`" + `])@TBD[^\S\n]*:[^\S\n]*([a-z,\s]+)`)
 )
 
 // referenciaRE — o CÓDIGO do cenário que prova esta unidade, entre crases, dentro do
@@ -387,7 +395,8 @@ func piecesToDevelop(content string) map[string]bool {
 	if m == nil {
 		return out
 	}
-	for _, peca := range strings.Split(m[1], ",") {
+	// `m[2]`: o grupo 1 é o caractere antes do `@TBD`, que a guarda de crase introduziu.
+	for _, peca := range strings.Split(m[2], ",") {
 		switch strings.TrimSpace(peca) {
 		case "code", "codigo", "código":
 			out[string(mapx.EdgeSpecifies)] = true
