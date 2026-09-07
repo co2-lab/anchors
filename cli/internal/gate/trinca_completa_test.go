@@ -365,3 +365,25 @@ func TestIsRecognizedLayerCfg_oRegimeDeclaradoVence(t *testing.T) {
 		t.Error("o projeto declarou `declarativo` e o gate cobrou")
 	}
 }
+
+// `@no-code` — a unidade cuja implementação É configuração.
+//
+// O comentário do gate citava este marcador desde sempre e ele nunca existiu. A lacuna só
+// apareceu quando o gate passou a confrontar de verdade: a `ContinuousIntegration` do
+// projeto de referência É os workflows do GitHub Actions, e não tem módulo a escrever. As
+// saídas eram deixar o gate reprovando para sempre, ou fingir um módulo que "valida a
+// configuração" e só saberia dizer que ela existe.
+func TestSpecWaivers_noCode(t *testing.T) {
+	// A razão é obrigatória: um marcador nu seria um jeito silencioso de calar o gate.
+	if len(specWaivers("@no-code")) != 0 {
+		t.Error("`@no-code` sem razão dispensou — a razão é o que separa decisão de esquecimento")
+	}
+
+	w := specWaivers("@no-code: a unidade É a configuração do pipeline")
+	// Sem módulo não há o que a feature exercitar nem o que o teste provar.
+	for _, e := range []mapx.EdgeType{mapx.EdgeSpecifies, mapx.EdgeCoveredBy, mapx.EdgeTestedBy} {
+		if !w[string(e)] {
+			t.Errorf("`@no-code` não dispensou %s — sem módulo, as três caem juntas", e)
+		}
+	}
+}
