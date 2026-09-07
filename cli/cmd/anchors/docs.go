@@ -186,7 +186,10 @@ func newDocsDutiesCmd() *cobra.Command {
 			// "a camada infra", vai mexer numa unidade dela. E a camada erra sozinha —
 			// no projeto de referência ela tem nove unidades e uma só toca esquema.
 			if unit != "" {
-				camada, _ := scan.ClassifyPath(relTo(absRoot, unit), cfg)
+				// A camada da UNIDADE, e não a do arquivo: uma spec casa `**/*.spec.md`
+				// e o `ClassifyPath` devolveria `spec`, que não deve documentação
+				// nenhuma. O card aponta a spec, e é o caminho que o agente usa.
+				camada := scan.LayerOfUnit(absRoot, relTo(absRoot, unit), cfg)
 				docs = cfg.RequiredFor(camada, codeOfUnit(absRoot, relTo(absRoot, unit)))
 				layer = unit
 			} else if layer != "" {

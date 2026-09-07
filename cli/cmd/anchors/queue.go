@@ -738,7 +738,7 @@ func printDocDuties(root, unidade string) {
 	if err != nil || cfg == nil {
 		return
 	}
-	camada := layerOfPath(cfg, unidade)
+	camada := layerOfPath(root, cfg, unidade)
 	// PELA UNIDADE, e não só pela camada: a camada erra sozinha. Medido no projeto de
 	// referência: `infra` tem nove unidades e apenas UMA toca esquema de dados — cobrar
 	// o esquema das outras oito ensina o agente a ignorar o aviso, que é o pior
@@ -764,12 +764,11 @@ func printDocDuties(root, unidade string) {
 // Delega ao `scan`, que é a autoridade: reimplementar a leitura dos padrões aqui manteria
 // duas versões da mesma regra, e elas divergiriam na primeira mudança da Estrutura — um
 // `overrides` novo passaria a valer para o mapa e não para o card.
-func layerOfPath(cfg *config.Config, caminho string) string {
+func layerOfPath(root string, cfg *config.Config, caminho string) string {
 	if caminho == "" {
 		return ""
 	}
-	layer, _ := scan.ClassifyPath(caminho, cfg)
-	return layer
+	return scan.LayerOfUnit(root, caminho, cfg)
 }
 
 // printReviewWork diz o que fazer com um card que está em REVISÃO.
