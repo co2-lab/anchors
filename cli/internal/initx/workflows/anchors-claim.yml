@@ -104,11 +104,21 @@ jobs:
           #
           # De `ready-to-test` em diante quem move são os pipelines de entrega do projeto,
           # e o agente não tem mais o que fazer ali.
+          #
+          # E `in-review` SAIU da lista, pela mesma razão por outra porta: ele é trabalho
+          # EM CURSO tanto quanto `in-progress` — a diferença entre os dois é QUE trabalho
+          # acontece, não SE acontece. Um card ali tem um revisor, e devolvê-lo ao dono
+          # original o faz reabrir o que já entregou.
+          #
+          # Medido: o card #321, entregue e em revisão, voltava a cada `anchors next` — a
+          # fila parecia ter trabalho, e o próximo card de verdade nunca era oferecido.
+          #
+          # O que sobra é o que está PARADO com o dono: `to-do` (reservado, não começado)
+          # e `in-progress` (pela metade). Esses sim são dele para retomar.
           meu=$(gh issue list --state open --label "$LABEL" --limit 200 \
             --json number,comments,labels \
             --jq "[.[]
-                   | select([.labels[].name] | any(. == \"anchors:to-do\" or . == \"anchors:in-progress\"
-                             or . == \"anchors:ready-to-review\" or . == \"anchors:in-review\"))
+                   | select([.labels[].name] | any(. == \"anchors:to-do\" or . == \"anchors:in-progress\"))
                    | select([.comments[].body | select(startswith(\"anchors-owner:\"))] | last == \"anchors-owner: $AGENT\")]
                   | .[0].number // empty")
 
