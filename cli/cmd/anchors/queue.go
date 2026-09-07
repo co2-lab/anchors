@@ -668,7 +668,7 @@ func printBoardWork(root string, card *board.Card) {
 	// corpo é escrito à mão — medido: o card #319 ficou aberto em `in-progress` depois do
 	// merge, e o #321 fechou sozinho, porque um PR tinha a linha e o outro não. O estado
 	// do board passou a divergir do repositório sem nada acusar.
-	fmt.Printf("Ao terminar:       anchors pr-body --for %s  (traz o `Closes` que fecha o card)\n", prTarget(card))
+	fmt.Printf("Ao terminar:       anchors pr-body --cards %d  (traz o `Closes` que fecha o card)\n", card.Number)
 	fmt.Printf("                   abra o PR com esse corpo — o pipeline move o card, você não\n")
 }
 
@@ -808,14 +808,6 @@ func printReviewWork(root string, card *board.Card) {
 	// corpo é escrito à mão — medido: o card #319 ficou aberto em `in-progress` depois do
 	// merge, e o #321 fechou sozinho, porque um PR tinha a linha e o outro não. O estado
 	// do board passou a divergir do repositório sem nada acusar.
-	fmt.Printf("Ao terminar:       anchors pr-body --for %s  (traz o `Closes` que fecha o card)\n", prTarget(card))
+	fmt.Printf("Ao terminar:       anchors pr-body --cards %d  (traz o `Closes` que fecha o card)\n", card.Number)
 	fmt.Printf("                   abra o PR com esse corpo — o pipeline move o card, você não\n")
-}
-
-// prTarget devolve o que o `pr-body` precisa como alvo — a unidade do card.
-func prTarget(card *board.Card) string {
-	if u := unitFromBody(card.Body); u != "" {
-		return u
-	}
-	return "<a unidade deste card>"
 }
