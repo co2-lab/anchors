@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/co2-lab/anchors/internal/i18n"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
@@ -143,6 +144,17 @@ func repairEnvironment(root string, cfg *config.Config) error {
 		fmt.Println(i18n.T("doctor.fix.nothing_github_mode"))
 		return nil
 	}
+	// A FILA LOCAL NÃO DEVE EXISTIR no modo github.
+	//
+	// O `config.go` declara o modo como EXCLUDENTE — *"um modo OU outro, nunca um com o
+	// outro de reserva"* — e diz que a validação é simples: *"no modo github,
+	// `.anchors/tasks/` não deve existir"*. Ninguém a havia escrito.
+	//
+	// Medido no blue-eyes: com `mode: github` no anchors.yaml, `.anchors/tasks/` tinha 11
+	// arquivos e o `anchors next` lia dali — respondendo "fila vazia" com 84 cards abertos
+	// no board. Duas filas para a mesma pergunta, e a resposta vinha da errada.
+	warnOrphanLocalQueue(root)
+
 	// Lido ANTES de semear: depois da escrita os arquivos já casam o template, e não
 	// haveria como dizer quais foram ATUALIZADOS em vez de criados.
 	faltavam := initx.MissingWorkflow(root)
@@ -361,4 +373,25 @@ func checkPipelines(cmd *cobra.Command) error {
 	cmd.SilenceUsage = true
 	return fmt.Errorf("%d pipeline(s) desatualizado(s) ou ausente(s) — e o projeto declarou "+
 		"`stale_pipeline_blocks: true`", len(faltam)+len(velhos))
+}
+
+// warnOrphanLocalQueue avisa (e não apaga) a fila local encontrada em modo github.
+//
+// AVISA em vez de apagar porque a fila pode ter task `claimed__` de um trabalho em curso:
+// apagar sem olhar destrói o registro de quem estava com o quê. E o histórico
+// (`.anchors/done/`) é memória — quem migrou de `local` para `github` não deve perdê-lo.
+func warnOrphanLocalQueue(root string) {
+	dir := filepath.Join(root, ".anchors", "tasks")
+	entradas, err := os.ReadDir(dir)
+	if err != nil || len(entradas) == 0 {
+		return
+	}
+	fmt.Println()
+	fmt.Printf("⚠ %d arquivo(s) em .anchors/tasks/ — e o modo é `github`\n", len(entradas))
+	fmt.Println("  No modo github a fila são as ISSUES do repositório. A fila local não")
+	fmt.Println("  deveria existir, e enquanto ela existir há duas respostas possíveis para")
+	fmt.Println("  \"qual meu próximo trabalho\" — que é o que o modo excludente evita.")
+	fmt.Println()
+	fmt.Println("  Confira se alguma está `claimed__` (trabalho em curso) e remova as demais:")
+	fmt.Println("      ls .anchors/tasks/ && rm -rf .anchors/tasks/")
 }
