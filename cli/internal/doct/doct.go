@@ -65,6 +65,34 @@ const GeneratedMarker = "<!-- anchors:generated de %s — NÃO EDITE: rode `anch
 
 var markerRE = regexp.MustCompile(`^<!-- anchors:generated `)
 
+// HandwrittenMarker abre a página que NÃO é gerada — a doc de produto é o caso típico.
+//
+// É COMENTÁRIO, e é o ponto: a nota se dirige a quem EDITA o arquivo, não a quem lê o
+// documento. Escrita como texto visível — um blockquote sob o título, que foi a primeira
+// forma que tomou — ela rouba o primeiro lugar da página para falar de mecânica de
+// ferramenta, e o leitor que veio saber o que o produto faz lê antes uma explicação sobre
+// templates.
+//
+// Markdown não renderiza `<!-- -->` em lugar nenhum — GitHub, MkDocs, Starlight — e é o
+// mesmo mecanismo do `GeneratedMarker`, pela mesma razão: a instrução fica visível para
+// quem abre o arquivo e invisível para quem abre a página.
+const HandwrittenMarker = `<!-- anchors:handwritten — esta página NÃO é gerada.
+
+     Ela não tem template em ` + "`" + Dir + "/`" + `, e o ` + "`anchors docs build`" + ` não a toca: o compilador
+     só sobrescreve arquivo que traga o marcador ` + "`anchors:generated`" + `. Edite aqui mesmo. -->`
+
+var handwrittenRE = regexp.MustCompile(`^<!-- anchors:handwritten`)
+
+// IsGenerated diz se o conteúdo de um `.md` foi produzido pelo compilador.
+func IsGenerated(conteudo []byte) bool { return markerRE.Match(conteudo) }
+
+// IsHandwritten diz se a página se DECLARA escrita à mão.
+//
+// Não é o mesmo que "não é gerada": um `.md` sem marcador nenhum também não é gerado, mas
+// não disse nada sobre si. A distinção importa para o `docs list`, que separa o que alguém
+// decidiu manter à mão do que simplesmente ainda não foi olhado.
+func IsHandwritten(conteudo []byte) bool { return handwrittenRE.Match(conteudo) }
+
 // Spec é o que um template vê de uma unidade.
 type Spec struct {
 	Code   string

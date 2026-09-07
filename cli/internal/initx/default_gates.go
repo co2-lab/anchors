@@ -205,6 +205,23 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "docs-fresh", Blocking: config.Bool(false),
 			Measures: "o `docs/*.md` compilado reflete a spec de onde veio",
 		})
+		// A SPEC BASTA POR SI. O corpo dela vira documentação palavra por palavra, e
+		// quem lê o `docs/` não tem o repositório aberto: uma frase que só APONTA para um
+		// plano manda essa pessoa a um arquivo que ela não vai abrir — que é exatamente o
+		// que o mecanismo de documentação existe para eliminar.
+		//
+		// A referência COM o trecho citado junto não é acusada: ali o leitor tem o
+		// argumento em mãos. O que o gate marca é o andaime que anuncia e não entrega.
+		//
+		// Casa ESTRUTURA, não vocabulário: os caminhos que o mapa conhece e a forma
+		// `{CODIGO}-R000N`. Um gate que procurasse "plano" ou "ver" passaria em silêncio
+		// no projeto escrito noutra língua — e silêncio é pior que ausência, porque a
+		// spec pareceria protegida.
+		gates = append(gates, config.Gate{
+			Name: "doc-self-contained", ID: "doc-self-contained", On: []string{"spec"},
+			Check: "doc-self-contained", Blocking: config.Bool(false),
+			Measures: "a spec traz o texto que cita, em vez de apontar para outro arquivo",
+		})
 		// A ORDEM dentro do plano. Um plano sem fases catalogadas passa (elas são
 		// opcionais); o gate só cobra a coerência de quem as declarou.
 		// O PLANO REVISADO avisa quem o lê. Sem isso, quem abre um plano antigo segue uma

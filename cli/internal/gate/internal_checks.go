@@ -86,7 +86,8 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"mock-stamped":             checkMockStamped,
 	"test-traceable":           checkTestTraceable,
 	"code-cataloged":           checkCodeCataloged,
-	"docs-fresh":                checkDocsFresh,
+	"docs-fresh":               checkDocsFresh,
+	"doc-self-contained":       checkDocSelfContained,
 }
 
 func runInternal(name string, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
