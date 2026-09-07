@@ -10,7 +10,21 @@ import "regexp"
 // JUnit. Preso às canônicas, um cenário de letra declarada pelo projeto (ex.: `-I01`, de
 // Invariant) nunca é reconhecido como provado — e o requisito aparece "sem teste verde"
 // mesmo tendo um teste que passa.
-var ruleLetters = "SRVAXBNMD"
+// O DEFAULT tem de ser o mesmo do `config.DefaultRuleLetters`, e ele divergiu.
+//
+// Medido no blue-eyes: um projeto sem `rule_types:` declarado usa o default do `config`
+// (`SRVAXBNMDEIQF`, que inclui `I` de Invariant). O `SetRuleLetters` é chamado com esse
+// valor e a divergência não apareceria — MAS o `ingest` só o chama quando a config
+// carrega, e qualquer caminho que leia o relatório antes disso usa esta constante.
+//
+// O sintoma foi o que o comentário acima descreve: 11 casos verdes, três cenários
+// reconhecidos como provados, e os invariantes (`GLCGL-I01`, `I02`, `I03`) aparecendo
+// "sem teste verde" com teste passando.
+//
+// Duas cópias da mesma lista divergem na primeira letra nova — e esta ficou três atrás
+// (`E`, `I`, `Q`, `F`). O comentário do `config` já registra que "é a terceira vez que a
+// lista fica para trás de uma letra nova".
+var ruleLetters = "SRVAXBNMDEIQF"
 
 // codeLenPattern espelha `config.CodeLengthPattern()`. Duplicado pelo mesmo motivo que
 // `ruleLetters`: o pacote testsig não depende de scan nem de config, e o comprimento do
