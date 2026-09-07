@@ -26,6 +26,9 @@ import (
 // (o mapx não invoca git para não acoplar). Pode ser nil (updated_at fica vazio).
 func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *Graph {
 	g := &Graph{Version: 1}
+	// A identidade de um artefato DERIVADO vem da âncora irmã, não do texto dele. Montado
+	// antes do laço porque a âncora pode aparecer depois na lista.
+	ancoraDeDerivado := anchorCodeByDerived(files, cfg)
 	for _, f := range files {
 		var tags []string
 		var regime string
@@ -41,7 +44,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 			Layer:         f.Layer,
 			Parent:        f.Parent,
 			Revises:       f.Revises,
-			Code:          nodeCode(f),
+			Code:          nodeCode(f, ancoraDeDerivado),
 			CodeDeclarado: declaredCode(f),
 			Tags:          tags,
 			Regime:        regime,
@@ -209,7 +212,9 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 			}
 		}
 		for _, ov := range cfg.Derived.Overrides {
-			if ov.Code == "" || ov.Code != nodeCode(f) {
+			// nil: este laço só vê a ÂNCORA, e ela declara a identidade no header — não
+			// há derivado a resolver aqui.
+			if ov.Code == "" || ov.Code != nodeCode(f, nil) {
 				continue
 			}
 			// O override por código SUBSTITUI a camada inteira, e não a completa: uma
@@ -423,14 +428,69 @@ func resolveTemplateM(tmpl, dir, name, ext, module string) string {
 
 // nodeCode decide a identidade do nó. O header DECLARADO vence: é onde o autor diz de
 // quem é o arquivo. A inferência pelo primeiro código do texto é só o fallback para quem
-// não declara — e ela erra quando a spec CITA outra unidade antes de definir a sua
+// não declara — e ela erra quando o arquivo CITA outra unidade antes de definir a sua
 // (medido: uma spec de modelo que abria referenciando `DTAXX-B11` entrava no mapa como
 // dona de `DTAX`, e os gates relacionais passavam a confrontar a unidade errada).
-func nodeCode(f scan.File) string {
+//
+// O `anchors` recebe a lista de arquivos para poder derivar a identidade de um ARTEFATO
+// DERIVADO da âncora irmã — ver `codeFromSibling`.
+func nodeCode(f scan.File, anchors map[string]string) string {
 	if f.HeaderCode != "" {
 		return f.HeaderCode
 	}
+	// A ÂNCORA IRMÃ vence a inferência pelo texto, para artefato derivado.
+	//
+	// Um teste ou uma feature não são donos de identidade: eles PROVAM uma unidade, e a
+	// unidade é a spec ao lado. Inferir do texto ali é ler o dado de teste como
+	// declaração.
+	//
+	// Medido no blue-eyes: `GoLiveChecklist.test.ts` citava `ELKAD-B01` numa string —
+	// o `estadoAtual` de uma dívida fictícia, "o ELKAD-B01 preparou o caminho" — e o
+	// arquivo entrou no mapa com `code: ELKAD`. O `scenario-coverage` passou a cobrar
+	// vinte e um cenários de outras specs, e os três invariantes que o teste PROVAVA
+	// apareciam como não provados.
+	//
+	// O arquivo vizinho não tem esse problema (`AreaStatus.test.ts` funciona sem header)
+	// porque todas as menções dele são da própria unidade. É o caso fácil, e ele esconde
+	// o defeito até alguém citar outra spec.
+	if c, ok := anchors[f.Path]; ok && c != "" {
+		return c
+	}
 	return primaryCode(f.Codes)
+}
+
+// anchorCodeByDerived mapeia cada artefato DERIVADO para o código da âncora dele.
+//
+// A âncora é a spec (`derived.anchor`), e o vínculo é o STEM: `X.spec.md` é a âncora de
+// `X.ts`, `X.feature` e `X.test.ts` no mesmo diretório. Só o que a âncora DECLARA no
+// header conta — se ela mesma não tem identidade declarada, não há o que propagar.
+func anchorCodeByDerived(files []scan.File, cfg *config.Config) map[string]string {
+	if cfg == nil || cfg.Derived == nil {
+		return nil
+	}
+	// stem da âncora → código declarado
+	porStem := map[string]string{}
+	for _, f := range files {
+		if f.Kind != cfg.Derived.Anchor || f.HeaderCode == "" {
+			continue
+		}
+		name, _ := StemOfAnchor(f.Path)
+		porStem[filepath.ToSlash(filepath.Dir(f.Path))+"/"+name] = f.HeaderCode
+	}
+	if len(porStem) == 0 {
+		return nil
+	}
+	out := map[string]string{}
+	for _, f := range files {
+		if f.Kind == cfg.Derived.Anchor || f.HeaderCode != "" {
+			continue // a âncora tem a sua; quem declarou não precisa de fallback
+		}
+		chave := filepath.ToSlash(filepath.Dir(f.Path)) + "/" + stemOfDerived(f.Path)
+		if c, ok := porStem[chave]; ok {
+			out[f.Path] = c
+		}
+	}
+	return out
 }
 
 // declaredCode diz se a identidade foi DECLARADA (header `code:`) ou apenas inferida do
@@ -555,4 +615,34 @@ func expandePadrao(padrao string, byPath map[string]scan.File) []string {
 	}
 	sort.Strings(out) // ordem estável: o mapa não pode mudar entre execuções
 	return out
+}
+
+// stemOfDerived corta os sufixos de um artefato DERIVADO até o nome da unidade.
+//
+// O `StemOfAnchor` corta os sufixos da ÂNCORA (`.spec.md`, `.feature`); aqui o alvo é o
+// outro lado — `X.test.ts`, `X.ts`, `X.tsx`, `X.test.tsx`. Cortar só a última extensão
+// deixaria `X.test`, que não casa o stem da spec.
+//
+// Não vem do `derived.files` de propósito: os templates são caminhos com `{{name}}`, e
+// invertê-los para extrair o nome exigiria casá-los como regex — que falha no primeiro
+// projeto que use um template com mais de uma variável. Cortar sufixo é o que os dois
+// lados já fazem.
+func stemOfDerived(path string) string {
+	base := filepath.Base(path)
+	// Do mais específico para o menos: `.test.ts` antes de `.ts`, senão `X.test.ts`
+	// viraria `X.test`.
+	for _, suf := range []string{
+		".spec.md", ".feature",
+		".test.ts", ".test.tsx", ".test.js", ".test.jsx",
+		".spec.ts", ".spec.tsx",
+		".test.go", "_test.go",
+	} {
+		if b, ok := strings.CutSuffix(base, suf); ok {
+			return b
+		}
+	}
+	if i := strings.LastIndex(base, "."); i > 0 {
+		return base[:i]
+	}
+	return base
 }

@@ -569,9 +569,21 @@ var checklistItemRE = regexp.MustCompile(`(?m)\bCK\d+\b`)
 // PASSOU (está em Signal.ProvenCodes)? Fecha o gate de Rastreabilidade — não basta
 // existir teste, cada requisito precisa estar provado. Pending se nada foi ingerido.
 func checkScenarioCoverage(content string, n mapx.Node) (Verdict, string) {
-	declared := anyCodeRE.FindAllString(content, -1)
+	// Só os requisitos DEFINIDOS por esta spec, não toda menção de código no texto.
+	//
+	// O `anyCodeRE` sobre o conteúdo inteiro casa também o que a spec CITA ao justificar
+	// as regras dela — e uma spec bem escrita cita muito. Medido no blue-eyes: a
+	// `GoLiveChecklist` tinha 6 requisitos e o gate cobrava 18 cenários, 15 deles de
+	// outras unidades (`CRPNC-B03`, `MTTLM-B02`, `DTSTD-B06`…). Nenhum daqueles cenários
+	// poderia ser provado por um teste desta unidade — o gate pedia o impossível, e a
+	// mensagem sugeria que a spec estava mal coberta.
+	//
+	// O `definedRequirements` é a mesma função que o `spec-feature-match` usa: ela casa
+	// TÍTULO DE SEÇÃO (`### CODE-B01 — …`) e respeita `@no-scenario`. Duas leituras do que
+	// é "um requisito desta spec" divergiriam — e divergiam.
+	declared := definedRequirements(content)
 	if len(declared) == 0 {
-		return Skip, "" // spec sem cenários — nada a cobrir
+		return Skip, "" // spec sem requisito definido — nada a cobrir
 	}
 	if n.Signal == nil {
 		return Pending, "sem sinal de teste ingerido (rode `anchors ingest --junit`)"
