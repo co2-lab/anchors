@@ -75,12 +75,45 @@ que é o modo de falha do §1.
 ```
 docs/
   produto.md          O QUE o sistema faz e para quem — vem dos planos, escrito à mão
-  arquitetura.md      COMO ele é montado — C4, os quatro níveis
-  comportamento.md    O QUE ACONTECE — os cenários das features, todos
-  regras.md           AS REGRAS — todas as specs, por seção (visão-matriz A)
-  camadas/*.md        POR ONDE — uma página por camada (visão-matriz B)
+  arquitetura.md      COMO ele é montado — C4 em quatro níveis, com Mermaid
+  comportamento.md    ÍNDICE dos cenários → a página da camada
+  regras.md           ÍNDICE das regras   → a página da camada
+  camadas/*.md        O CONTEÚDO — uma página por camada
   contratos/*.md      as docs específicas do tipo de projeto (OpenAPI, esquema…)
 ```
+
+### O conteúdo mora num lugar só; os cortes transversais são índices
+
+A primeira versão repetia o texto nas duas visões da matriz, e a medida mostrou por que não
+serve: `regras.md` saiu com **9.608 linhas** — o corte transversal de 84 unidades é o
+documento inteiro, mais uma vez. E cresce com o projeto, sem limite.
+
+Um índice não tem esse problema: uma linha por regra, e o link leva ao texto. O preço é o
+clique, e é justo — quem abre "todas as regras" procura *uma*, e antes rolava por todas.
+
+**A âncora do link é gerada, nunca escrita à mão.** Um índice cujo link não resolve é pior
+que não ter índice: ele é clicável, e o navegador fica onde está.
+
+### O formato se ajusta ao tamanho — decidido em um lugar
+
+Uma camada com três unidades cabe numa página com tudo; com trinta, é um documento que
+ninguém rola até o fim. O corte é do projeto:
+
+```
+anchors docs build --max-units 30 --max-lines 3000
+```
+
+Acima do corte, a página traz o **resumo** de cada unidade e diz isso no topo. Os dois
+critérios existem porque contar unidades engana: cinco specs longas geram mais página que
+vinte curtas.
+
+**O que muda é o que cabe na página, nunca em quantos arquivos a camada se parte.** Dividir
+ao cruzar um limiar quebraria todo link externo no dia em que a unidade seguinte entrasse.
+
+E a decisão é tomada **uma vez**, no `docs build`, e distribuída a todas as páginas. Deixar
+cada template escolher o seu limiar parecia flexível e foi o defeito: a página resumia por
+um critério, o link era montado por outro, e **483 de 812 links saíram quebrados** — todos
+clicáveis, todos parando no mesmo lugar.
 
 A ordem é de fora para dentro — produto, arquitetura, comportamento, regras, camadas. É a
 ordem em que alguém que chega precisa delas, e não a ordem em que o time as escreveu.
@@ -164,7 +197,18 @@ ilegível. **Separar em níveis é o mecanismo, não a decoração** — e o C4 
 cada nível mostra quanto pelo que ele omite.
 
 Os níveis 1 e 2 são escritos à mão no template: descrevem o sistema inteiro, e nenhuma spec
-sozinha os conhece. Os níveis 3 e 4 vêm das specs e das camadas.
+sozinha os conhece. O nível 3 vem das camadas e do mapa.
+
+**Os diagramas são Mermaid**, e não imagens. O GitHub os renderiza nativamente, e o MkDocs e
+o Starlight também. Um PNG exportado de uma ferramenta de desenho ficaria fora do controle
+de versão útil — o diff não diz o que mudou, e o arquivo-fonte do desenho acaba noutro
+lugar, ou some. Aqui o diagrama *é* texto, versionado com o resto.
+
+**As setas do nível 3 vêm do mapa** — das arestas que as unidades declaram e o gate confere.
+Desenhá-las à mão seria garantir que envelheçam: é no nível 3 que uma dependência nova
+aparece primeiro, e ninguém volta ao diagrama para acrescentá-la. As fronteiras da Estrutura
+não serviriam: elas declaram o que uma camada *não* pode alcançar, e a ausência de proibição
+não é uma dependência.
 
 O C4 **não tem gatilho por camada**, e não é esquecimento: ele não muda quando uma unidade
 muda — muda quando a estrutura muda (um contêiner novo, uma fonte externa nova, uma

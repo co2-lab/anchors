@@ -114,11 +114,15 @@ type Rule struct {
 type Compiler struct {
 	Root  string
 	Graph *mapx.Graph
-	specs []Spec
+	// Layout é a decisão de formato, resolvida UMA VEZ e distribuída a todos os
+	// templates. Ver `layout.go` — três lugares decidindo por conta foi o que produziu
+	// 483 links quebrados.
+	Layout Layout
+	specs  []Spec
 }
 
 func New(root string, g *mapx.Graph) (*Compiler, error) {
-	c := &Compiler{Root: root, Graph: g}
+	c := &Compiler{Root: root, Graph: g, Layout: DefaultLayout()}
 	if err := c.loadSpecs(); err != nil {
 		return nil, err
 	}
@@ -188,6 +192,25 @@ func (c *Compiler) Funcs() template.FuncMap {
 		// ela que diz o que ACONTECE — a spec diz a regra em abstrato.
 		"scenarios":    c.fnScenarios,
 		"allScenarios": c.fnAllScenarios,
+		// O LINK do índice. `anchor` produz a âncora do heading na convenção que GitHub,
+		// MkDocs e Starlight compartilham; `layerPage` monta o caminho da página de
+		// camada num lugar só, para que mover a pasta não quebre todos os links.
+		"anchor":    fnAnchor,
+		"layerPage": fnLayerPage,
+		// O LINK de uma regra/cenário conhece o FORMATO da página de destino: onde a
+		// camada é grande a página resume, e a âncora da regra não existe lá.
+		"ruleLink":     c.fnRuleLink,
+		"scenarioLink": c.fnScenarioLink,
+		// O TAMANHO do recorte, para o template escolher o formato: tudo numa página
+		// quando são poucas unidades, uma página por unidade quando são muitas.
+		"size": c.fnSize,
+		// O LAYOUT — a mesma resposta para todas as páginas.
+		"layout": func() Layout { return c.Layout },
+		"big":    c.fnBig,
+		// As DEPENDÊNCIAS entre camadas, deduzidas das arestas `needs` do mapa — o
+		// diagrama mostra o que o projeto tem, não o que alguém desenhou uma vez.
+		"layerDeps": c.fnLayerDeps,
+		"mermaidID": fnMermaidID,
 	}
 }
 

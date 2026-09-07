@@ -34,6 +34,8 @@ compilado, onde o ` + "`docs-fresh`" + ` acusa quando ela envelhece.`,
 func newDocsBuildCmd() *cobra.Command {
 	var root, mapPath string
 	var dryRun bool
+	var maxUnits, maxLines int
+	padrao := doct.DefaultLayout()
 	cmd := &cobra.Command{
 		Use:   "build",
 		Short: "Compila `doct/*.md.tmpl` em `docs/*.md`",
@@ -53,6 +55,11 @@ func newDocsBuildCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			// O LAYOUT é resolvido AQUI, uma vez, e vale para todas as páginas: a de
+			// camada, o índice de regras e o de comportamento perguntam ao mesmo objeto.
+			// Deixar cada template decidir foi o que produziu 483 links quebrados — a
+			// página resumia por um critério e o link era montado por outro.
+			c.Layout = doct.Layout{MaxUnits: maxUnits, MaxLines: maxLines}
 			res, err := c.Build(dryRun)
 			if err != nil {
 				return err
@@ -63,6 +70,13 @@ func newDocsBuildCmd() *cobra.Command {
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
 	cmd.Flags().StringVar(&mapPath, "map", "", "caminho do mapa (padrão: <root>/"+mapx.DefaultPath+")")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "compila sem escrever (é o que o gate usa)")
+	// O CORTE entre a página completa e a resumida. Vale para o projeto inteiro: a
+	// documentação em que uma camada segue uma lógica e a vizinha outra é a que obriga
+	// quem lê a descobrir a lógica antes de achar o que procura.
+	cmd.Flags().IntVar(&maxUnits, "max-units", padrao.MaxUnits,
+		"acima de N unidades, a página da camada traz o RESUMO de cada uma")
+	cmd.Flags().IntVar(&maxLines, "max-lines", padrao.MaxLines,
+		"acima de N linhas de spec somadas, idem — cinco specs longas pesam mais que vinte curtas")
 	return cmd
 }
 
