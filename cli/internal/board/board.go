@@ -35,6 +35,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -227,3 +228,68 @@ func (c Client) Ask(agent string) error {
 
 // ClaimWorkflow é o pipeline que atribui trabalho. O nome vem do `initx`, que o semeia.
 const ClaimWorkflow = "anchors-claim.yml"
+
+// --- o REGISTRO DE ENTREGA no modo `github` ---
+//
+// O `changes/*.md` é o gatilho do review no modo LOCAL: o watcher vê o arquivo aparecer e
+// enfileira a task. No modo `github` esse mecanismo não existe — quem move o card para
+// `ready-to-review` é o pipeline, e quem revisa está lendo a ISSUE.
+//
+// Deixar o registro em arquivo ali produz o pior dos dois mundos, e foi medido: 73
+// registros no repositório do projeto de referência, nenhum revisado, enquanto as issues
+// correspondentes não tinham a informação. O revisor não sabia que o arquivo existia, e o
+// watcher — que o veria — não estava rodando, porque no modo `github` ele não é o
+// mecanismo.
+//
+// É a mesma regra que o `workflow.mode` já impõe em toda parte: os dois modos são
+// EXCLUDENTES, e o registro segue a fila. No local, arquivo; no github, comentário.
+
+// FindByCode acha a issue aberta de uma unidade, pelo código no título.
+//
+// Pelo TÍTULO e não pelo corpo: o `identify.yml` escreve `[GLCGL] Implementar spec — …`,
+// e o código entre colchetes é o que dá identidade ao card. O corpo também o traz, mas
+// buscar ali casaria qualquer card que MENCIONE a unidade — o de outra que depende dela,
+// por exemplo — e comentar no card errado é pior que não comentar.
+func (c Client) FindByCode(code string) (*Card, error) {
+	if strings.TrimSpace(code) == "" {
+		return nil, fmt.Errorf("código vazio")
+	}
+	args := []string{"issue", "list", "--state", "open", "--limit", "200",
+		"--json", "number,title,body,labels"}
+	for _, l := range c.Labels {
+		args = append(args, "--label", l)
+	}
+	out, err := c.gh(args...)
+	if err != nil {
+		return nil, err
+	}
+	var brutos []rawCard
+	if err := json.Unmarshal(out, &brutos); err != nil {
+		return nil, fmt.Errorf("ler as issues: %w", err)
+	}
+	alvo := "[" + strings.ToUpper(code) + "]"
+	for _, r := range brutos {
+		if strings.Contains(strings.ToUpper(r.Title), alvo) {
+			return &Card{Number: r.Number, Title: r.Title, Body: r.Body,
+				Labels: labelNames(r)}, nil
+		}
+	}
+	return nil, fmt.Errorf("nenhuma issue aberta com `%s` no título", alvo)
+}
+
+// Comment posta um comentário numa issue.
+func (c Client) Comment(numero int, corpo string) error {
+	if strings.TrimSpace(corpo) == "" {
+		return fmt.Errorf("corpo vazio")
+	}
+	// Pelo STDIN e não por `--body`: o registro de entrega tem quebras de linha, crases e
+	// acentos, e passá-lo como argumento de linha de comando o expõe ao shell e ao limite
+	// de tamanho de `ARG_MAX`.
+	cmd := exec.Command("gh", "issue", "comment", strconv.Itoa(numero),
+		"--repo", c.Repo, "--body-file", "-")
+	cmd.Stdin = strings.NewReader(corpo)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("comentar na issue #%d: %w: %s", numero, err, out)
+	}
+	return nil
+}

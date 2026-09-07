@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/change"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/health"
 	"github.com/co2-lab/anchors/internal/initx"
@@ -154,6 +155,7 @@ func repairEnvironment(root string, cfg *config.Config) error {
 	// arquivos e o `anchors next` lia dali — respondendo "fila vazia" com 84 cards abertos
 	// no board. Duas filas para a mesma pergunta, e a resposta vinha da errada.
 	warnOrphanLocalQueue(root)
+	warnOrphanChanges(root)
 
 	// Lido ANTES de semear: depois da escrita os arquivos já casam o template, e não
 	// haveria como dizer quais foram ATUALIZADOS em vez de criados.
@@ -394,4 +396,38 @@ func warnOrphanLocalQueue(root string) {
 	fmt.Println()
 	fmt.Println("  Confira se alguma está `claimed__` (trabalho em curso) e remova as demais:")
 	fmt.Println("      ls .anchors/tasks/ && rm -rf .anchors/tasks/")
+}
+
+// warnOrphanChanges avisa sobre registros de entrega em arquivo encontrados em modo github.
+//
+// É o mesmo defeito da fila órfã, por outra porta. No modo `github` a entrega é registrada
+// como comentário na ISSUE — é lá que o revisor está olhando, e é o pipeline que move o
+// card para `ready-to-review`. Um `changes/*.md` ali não é lido por ninguém: o watcher que
+// o veria não é o mecanismo naquele modo.
+//
+// Medido no projeto de referência: 73 registros no disco, ZERO revisados, e as issues sem
+// a informação. Cada um representa uma entrega cuja intenção declarada nunca foi
+// confrontada — e a intenção declarada é justamente o que o registro existe para dar.
+//
+// AVISA e não apaga, pela mesma razão da fila: o registro é memória do que aconteceu com o
+// produto, e apagá-lo sem alguém olhar destrói o que ninguém mais tem.
+func warnOrphanChanges(root string) {
+	pendentes, err := change.Pending(root)
+	if err != nil || len(pendentes) == 0 {
+		return
+	}
+	fmt.Println()
+	fmt.Printf("⚠ %d registro(s) de entrega em `%s/` — e o modo é `github`\n",
+		len(pendentes), change.Dir)
+	fmt.Println("  No modo github a entrega é registrada como COMENTÁRIO na issue do card:")
+	fmt.Println("  é lá que quem revisa está olhando, e é o pipeline que move o card para")
+	fmt.Println("  `ready-to-review`. Um arquivo aqui não é lido por ninguém — o watcher que")
+	fmt.Println("  o veria não é o mecanismo neste modo.")
+	fmt.Println()
+	fmt.Println("  Cada um destes é uma entrega cuja INTENÇÃO DECLARADA nunca foi")
+	fmt.Println("  confrontada contra o disco — que é o que o registro existe para dar.")
+	fmt.Println()
+	fmt.Println("  O `anchors deliver` já registra na issue. Para os que ficaram para trás,")
+	fmt.Println("  poste o conteúdo na issue da unidade e mova para `" + change.ReviewedDir + "/`,")
+	fmt.Println("  ou deixe-os como histórico do período em que o modo era `local`.")
 }

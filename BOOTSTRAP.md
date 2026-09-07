@@ -307,6 +307,7 @@ Então, no modo `github`:
 
 - **`.anchors/tasks/` não deve existir.** O `anchors doctor` acusa se existir;
 - **o `anchors next` consulta o board**, nunca a fila local;
+- **o `anchors deliver` registra a entrega na ISSUE**, não em `changes/` (§7.3.2);
 - o card nasce do pipeline (§7.3), que observa o repositório — não de um watcher local.
 
 > **Medido no projeto de referência**, com `mode: github` declarado: `.anchors/tasks/` tinha
@@ -317,6 +318,43 @@ Então, no modo `github`:
 >
 > Duas filas para a mesma pergunta, e a resposta vindo da errada. É exatamente o que o modo
 > excludente existe para impedir.
+
+### 7.3.2 O registro de entrega segue a fila
+
+Ao fechar uma etapa, o agente registra o que entregou — a **intenção declarada**, o
+**escopo** e o **que não está provado**:
+
+```
+anchors deliver --stage code --unit src/pricing.ts \
+  --intent "implementa PRICX-B01..B04" \
+  --decision "mês fora de YYYY-MM: assumi entrada válida (a spec não decide)" \
+  --uncovered "PRICX-B04 não tem cenário"
+```
+
+As duas últimas partes são o que o torna útil. O revisor confronta o **declarado** contra o
+disco, e a divergência entre os dois é, por si só, um achado — não existe forma de
+detectá-la sem ter as duas versões.
+
+**Onde o registro vive depende do modo**, pela mesma razão da fila:
+
+| modo | onde | quem o lê |
+|---|---|---|
+| `local` | `changes/*.md` | o watcher o vê aparecer e enfileira o review |
+| `github` | comentário na issue do card | quem revisa, que já está lendo a issue |
+
+No modo `github` **não há watcher** movendo nada: quem move o card para `ready-to-review` é
+o pipeline. Um arquivo em `changes/` ali não é lido por ninguém.
+
+> **Medido no projeto de referência**: 73 registros de entrega no repositório, **nenhum
+> revisado**, e as issues correspondentes sem a informação. O revisor não sabia que o
+> arquivo existia; o watcher que o veria não estava rodando, porque naquele modo ele não é
+> o mecanismo.
+>
+> Cada um daqueles 73 é uma entrega cuja intenção declarada nunca foi confrontada — que é
+> exatamente o que o registro existe para dar.
+
+O `anchors doctor --fix` acusa registros em arquivo quando o modo é `github`. Ele **avisa e
+não apaga**: o registro é memória do que aconteceu com o produto.
 
 ### 7.4 Os agentes rodam nas máquinas dos devs
 
