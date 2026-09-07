@@ -4,8 +4,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/board"
+	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -100,6 +103,29 @@ Se a fila está vazia, imprime isso e sai com código 0.`,
 			if worker == "" {
 				worker = defaultWorkerID()
 			}
+
+			// NO MODO GITHUB A FILA É O BOARD, e não `.anchors/tasks/`.
+			//
+			// O `config.go` declara isso desde o começo — *"mode: github — a fila são as
+			// issues/cards do repositório"*, *"um modo OU outro, nunca um com o outro de
+			// reserva"*, *"no modo github, `.anchors/tasks/` não deve existir"* — e este
+			// comando desobedecia: chamava `queue.Claim` em qualquer modo.
+			//
+			// Medido no blue-eyes, com `mode: github` no anchors.yaml:
+			//
+			//	$ anchors next
+			//	fila vazia — nada a fazer
+			//
+			// Havia 84 cards abertos, um por spec, cada um pedindo código, feature, teste
+			// e documentação. A resposta estava certa sobre a fila local (vazia, porque
+			// nada mudara desde o último `check`) e FALSA sobre o projeto — e quem a leu
+			// concluiu que o trabalho tinha acabado. O ciclo parou com 117 specs e zero
+			// features.
+			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			if cfg.GitHubMode() {
+				return nextFromBoard(absRoot, cfg, worker)
+			}
+
 			t, err := queue.Claim(absRoot, worker, nowStamp())
 			if err != nil {
 				return err
@@ -467,6 +493,171 @@ func seedTally(root string, t queue.Task) string {
 		}
 		return fmt.Sprintf(" — %d de %d spec(s) deste plano ainda não existem",
 			faltam, len(f.Seeds))
+	}
+	return ""
+}
+
+// nextFromBoard reivindica o próximo card no modo github.
+//
+// A ordem é a do `anchors-claim.yml`, que já a implementava do lado do pipeline: retomar o
+// próprio antes do board, `ready-to-review` antes de `to-do`, e `needs-user` nunca. A
+// razão de cada uma está no `internal/board`.
+//
+// O QUE ELE IMPRIME é a diferença que importa. O card diz "Implementar spec — <título>", e
+// esse título é ambíguo: a spec já existe (foi o Plan Implementer que a escreveu). O
+// entregável deste card é o que vem DEPOIS dela — código, feature, teste e documentação —
+// e imprimir a cadeia é o que impede o agente de achar que o trabalho é a spec.
+func nextFromBoard(root string, cfg *config.Config, agent string) error {
+	if cfg.Workflow.Repo == "" {
+		return fmt.Errorf("workflow.repo vazio: no modo github ele é obrigatório — " +
+			"inferir do remote faria o Anchors escrever noutro repositório quando alguém " +
+			"trabalha num fork, e escrita em lugar errado não se desfaz com revert")
+	}
+	cli := board.Client{Repo: cfg.Workflow.Repo, Labels: cfg.Workflow.Labels}
+
+	card, err := cli.Claim(agent)
+	if err != nil {
+		return err
+	}
+	if card == nil {
+		fmt.Println("board vazio — nenhum card livre em `ready-to-review` nem `to-do`")
+		fmt.Printf("  (fila = as issues de %s, porque `workflow.mode: github`)\n", cfg.Workflow.Repo)
+		return nil
+	}
+
+	// TOMAR antes de imprimir: se o agente vê o card e a posse falha, dois agentes podem
+	// pegar o mesmo trabalho — e o segundo só descobre ao abrir o PR.
+	if card.Owner != agent {
+		if err := cli.Take(card.Number, agent); err != nil {
+			return fmt.Errorf("card #%d encontrado, mas a posse falhou: %w\n"+
+				"  (sem posse registrada, outro agente pegaria o mesmo trabalho)", card.Number, err)
+		}
+	} else {
+		fmt.Printf("retomando o seu card (o contexto da sessão anterior vale mais que a fila)\n\n")
+	}
+
+	fmt.Printf("card reivindicado: #%d — %s\n\n", card.Number, card.Title)
+	fmt.Printf("  estado:   %s\n", strings.TrimPrefix(card.State, "anchors:"))
+	fmt.Printf("  dono:     %s\n\n", agent)
+	printBoardWork(root, card)
+	return nil
+}
+
+// printBoardWork diz O QUE ENTREGAR, e é aqui que o título ambíguo é desfeito.
+//
+// O card `Implementar spec` foi criado quando a spec APARECEU no repositório, e o verbo
+// sugere que a spec é o que falta escrever. Não é: quem a escreveu foi o Plan Implementer,
+// no card do plano. Este card é do DEV, e o entregável dele são os quatro artefatos que
+// derivam da spec.
+//
+// Medido: as 84 issues deste tipo ficaram em `to-do` enquanto o agente concluía que o
+// projeto tinha terminado — porque nada no card, no título ou no corpo, dizia que a spec
+// era a ENTRADA e não a saída.
+func printBoardWork(root string, card *board.Card) {
+	// O ALVO vem do CÓDIGO, não da pasta.
+	//
+	// O corpo do card traz as duas coisas — `Unidade: \`packages/infra\`` e
+	// `Código: \`GLCGL\`` — e a primeira é a PASTA da camada. Medido: `packages/infra`
+	// tem nove specs, e `anchors work code --for packages/infra` não sabe de qual delas
+	// se trata.
+	//
+	// O código é único por unidade, e o mapa sabe o arquivo dele. O `code list --json` já
+	// expõe isso, e o comentário de lá prevê exatamente este uso: *"quem consome isto
+	// precisa NOMEAR o trabalho — e `onde` é a PASTA da unidade, não o arquivo"*.
+	alvo := targetOfCode(root, codeFromBody(card.Body))
+	if alvo == "" {
+		// Sem código resolvido, a pasta é o que há — e é melhor que nada, porque o
+		// `work` ao menos encontra a camada.
+		alvo = unitFromBody(card.Body)
+	}
+	unidade := alvo
+	if alvo == "" {
+		alvo = "<a unidade do card>"
+	}
+
+	switch {
+	case strings.Contains(card.Title, "Implementar plan"):
+		fmt.Println("ENTREGÁVEL: todas as specs que o plano semeia.")
+		fmt.Println("  Um trabalho só — o plano é a entrada, as specs são a saída.")
+		fmt.Println()
+		fmt.Printf("    anchors work spec --for <alvo que o plano lista>\n\n")
+		fmt.Println("  O `-progress.md` do plano é onde você marca o que entregou, e o gate")
+		fmt.Println("  `progress-honest` confronta cada `[x]` contra o disco.")
+
+	case strings.Contains(card.Title, "Implementar spec"):
+		fmt.Println("ENTREGÁVEL: código + feature + teste + documentação.")
+		fmt.Println("  A SPEC JÁ EXISTE — ela é a ENTRADA deste card, não a saída. Quem a")
+		fmt.Println("  escreveu foi o card do plano; este é o trabalho que deriva dela.")
+		fmt.Println()
+		fmt.Printf("    1. anchors work code    --for %s\n", alvo)
+		fmt.Printf("    2. anchors work feature --for %s\n", alvo)
+		fmt.Printf("    3. anchors work test    --for %s\n", alvo)
+		fmt.Println("    4. a documentação evolui JUNTO: a cada alteração que deveria ser")
+		fmt.Println("       documentada, atualize a doc na mesma entrega — deixá-la para o")
+		fmt.Println("       fim é o que a faz nascer incompleta.")
+		fmt.Println()
+		fmt.Println("  A ordem 1→2→3 não é gosto: a feature descreve o comportamento em")
+		fmt.Println("  cenários, e é dela que os testes nascem (`anchors work test` parte da")
+		fmt.Println("  feature, não da spec).")
+
+	default:
+		fmt.Println("ENTREGÁVEL: veja o corpo do card.")
+	}
+
+	fmt.Printf("\nAntes de começar:  anchors guide work\n")
+	if unidade != "" {
+		fmt.Printf("O que propagar:    anchors impact %s\n", unidade)
+	}
+	fmt.Printf("Ao terminar:       abra o PR — o pipeline move o card, você não\n")
+}
+
+// unitFromBody extrai o caminho da unidade do corpo do card.
+//
+// O `identify.yml` o escreve como "Unidade: `<pasta>`" — e é o que transforma o card num
+// alvo concreto para o `anchors work`. Sem ele o agente precisa adivinhar sobre o que o
+// card fala a partir do título.
+var unitInBodyRE = regexp.MustCompile("(?m)^Unidade:\\s*`([^`]+)`")
+
+func unitFromBody(body string) string {
+	m := unitInBodyRE.FindStringSubmatch(body)
+	if len(m) < 2 {
+		return ""
+	}
+	// A pasta pode vir como lista ("a, b"): o primeiro alvo é o suficiente para o `work`.
+	return strings.TrimSpace(strings.SplitN(m[1], ",", 2)[0])
+}
+
+// codeFromBody extrai o código da unidade do corpo do card.
+//
+// O `identify.yml` o escreve como "Código: `XXXXX`", e ele é a identidade ESTÁVEL do
+// trabalho: sobrevive a mover o arquivo de pasta, ao contrário do caminho.
+var codeInBodyRE = regexp.MustCompile("(?m)^C[óo]digo:\\s*`([^`]+)`")
+
+func codeFromBody(body string) string {
+	m := codeInBodyRE.FindStringSubmatch(body)
+	if len(m) < 2 {
+		return ""
+	}
+	return strings.TrimSpace(m[1])
+}
+
+// targetOfCode devolve o ARQUIVO da unidade com aquele código, lendo o mapa.
+//
+// Falha em silêncio (string vazia) de propósito: um card cujo código não está mais no mapa
+// aponta para trabalho que mudou de identidade, e o chamador cai na pasta — que ao menos
+// leva o `work` à camada certa. Barrar aqui deixaria o agente sem nada.
+func targetOfCode(root, code string) string {
+	if code == "" {
+		return ""
+	}
+	g, err := mapx.Load(filepath.Join(root, mapx.DefaultPath))
+	if err != nil {
+		return ""
+	}
+	for _, n := range g.Nodes {
+		if n.Code == code {
+			return n.ID
+		}
 	}
 	return ""
 }
