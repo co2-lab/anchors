@@ -124,6 +124,22 @@ func seedEdges(files []scan.File) []Edge {
 		for _, alvo := range f.Seeds {
 			destino := alvo
 			if !exists[destino] {
+				// CAMINHO DECLARADO É CAMINHO — não se resolve por nome.
+				//
+				// A busca por nome existe para a CITAÇÃO em prosa, onde o autor escreve só
+				// o arquivo. Aplicá-la a um caminho inteiro faz o mapa apontar para outro
+				// diretório: medido no blue-eyes, o plano 0010 semeia
+				// `packages/lambdas/redis/InstanceList.spec.md`, o alvo não existia ainda,
+				// e a aresta foi para `packages/lambdas/database/InstanceList.spec.md` —
+				// a spec do plano 0009.
+				//
+				// O sintoma visível foi o `anchors next` respondendo "2 de 4" e depois
+				// "3 de 3" para o mesmo plano cujas quatro sementes faltam. O dano real é
+				// maior: o mapa afirma que um plano semeia a spec de outro, e todo gate
+				// relacional passa a confrontar o par errado.
+				if strings.ContainsRune(alvo, '/') || strings.ContainsRune(alvo, filepath.Separator) {
+					continue
+				}
 				// Só resolve por nome quando ele é ÚNICO no repositório. Dois arquivos com
 				// o mesmo nome tornam a citação ambígua, e escolher um seria inventar uma
 				// aresta que o autor não declarou.
