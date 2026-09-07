@@ -38,6 +38,7 @@ import (
 	"strings"
 	"text/template"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -114,6 +115,9 @@ type Rule struct {
 type Compiler struct {
 	Root  string
 	Graph *mapx.Graph
+	// Config é a Estrutura do projeto — o compilador precisa dela para os CONTÊINERES,
+	// que são declarados lá e não deriváveis do mapa.
+	Config *config.Config
 	// Layout é a decisão de formato, resolvida UMA VEZ e distribuída a todos os
 	// templates. Ver `layout.go` — três lugares decidindo por conta foi o que produziu
 	// 483 links quebrados.
@@ -123,6 +127,10 @@ type Compiler struct {
 
 func New(root string, g *mapx.Graph) (*Compiler, error) {
 	c := &Compiler{Root: root, Graph: g, Layout: DefaultLayout()}
+	// A Estrutura é OPCIONAL aqui: o erro de carregá-la já é reportado por quem chama o
+	// compilador, e um template que não usa contêineres não deve falhar porque o
+	// `anchors.yaml` não os declara.
+	c.Config, _ = config.Load(filepath.Join(root, config.DefaultFile))
 	if err := c.loadSpecs(); err != nil {
 		return nil, err
 	}
@@ -210,7 +218,11 @@ func (c *Compiler) Funcs() template.FuncMap {
 		// As DEPENDÊNCIAS entre camadas, deduzidas das arestas `needs` do mapa — o
 		// diagrama mostra o que o projeto tem, não o que alguém desenhou uma vez.
 		"layerDeps": c.fnLayerDeps,
-		"mermaidID": fnMermaidID,
+		// Os CONTÊINERES — o nível 2 do C4, e o que dá um diagrama de nível 3 a cada um.
+		"containers":         c.fnContainers,
+		"internalContainers": c.fnInternalContainers,
+		"orphanLayers":       c.fnOrphanLayers,
+		"mermaidID":          fnMermaidID,
 	}
 }
 

@@ -186,34 +186,78 @@ ele não sabe instruir, ele ao menos nomeia e cobra.
 
 ### 5.2 A arquitetura em C4
 
-Todo projeto tem arquitetura, e o Anchors já a regula — as camadas, o `needs:` entre
+Todo projeto tem arquitetura, e o Anchors já a regula — as camadas, as dependências entre
 planos, as fronteiras que o `layer-boundary` cobra. Mas essa regulação vive no
 `anchors.yaml` e no mapa, **em formato de máquina**. Quem chega precisa da mesma informação
 em formato de gente.
 
-O C4 é a notação porque separa em níveis (contexto → contêineres → componentes → código), e
-é isso que impede a falha clássica do diagrama de arquitetura: um desenho só, com tudo,
-ilegível. **Separar em níveis é o mecanismo, não a decoração** — e o C4 vale tanto pelo que
-cada nível mostra quanto pelo que ele omite.
+**Cada nível amplia uma caixa do anterior** — essa é a regra central do modelo, e o que ele
+existe para impor:
+
+| nível | o que amplia | quantos diagramas |
+|---|---|---|
+| 1 — Contexto | o sistema como caixa única | um |
+| 2 — Contêineres | a caixa "o sistema" | um |
+| 3 — Componentes | **um contêiner** | **um por contêiner interno** |
+| 4 — Código | um componente | só onde houver algo não óbvio |
+
+Um único diagrama de nível 3 misturando o app, a API e a infraestrutura **não é nível 3 de
+coisa nenhuma** — é exatamente a falha que o C4 existe para evitar: um desenho só, com tudo.
+
+### 5.2.1 Contêiner é o que executa **ou armazena** dado
+
+Não é sinônimo de "processo que escrevemos". Banco de dados, fila, cache e sistema de
+arquivos são contêineres, e a omissão do banco é o erro mais comum ao aplicar o modelo.
+
+O que roda separado se declara na Estrutura, e é o que dá os níveis 2 e 3:
+
+```yaml
+containers:
+    - name: app
+      description: a interface
+      layers: [screen, component, feature-hook]
+      talks:
+          - to: api
+            protocol: HTTPS/JSON
+    - name: api
+      description: as rotas que o app consulta
+      layers: [lambdas, shared]
+    - name: banco
+      description: o que persiste
+      external: true      # é contêiner, e não é nosso por dentro
+```
+
+**`external: true`** diz "existe, conversa conosco, e não temos componentes lá dentro". Ele
+aparece no nível 2 — a conversa é real e o protocolo importa — e **não ganha nível 3**:
+desenhar componentes dentro de um banco de terceiro afirmaria um conhecimento que não temos.
+
+**O protocolo é obrigatório em cada conversa.** Uma seta sem ele diz que os dois se falam e
+não diz o que acontece quando a conversa falha — que é a única coisa que um diagrama de
+contêineres tem a dizer sobre risco.
+
+### 5.2.2 Camada não é componente
+
+`screen`, `lambdas`, `shared` são agrupamentos de código no repositório. O componente do C4
+é a peça com responsabilidade **dentro de um contêiner**. O `containers.layers` é a ponte
+entre os dois vocabulários: ele diz que camadas rodam em que contêiner, e é o que permite o
+nível 3 mostrar as unidades daquele contêiner em vez da lista de camadas do repositório.
+
+Uma camada que nenhum contêiner declara é **dita** na página, não escondida: um diagrama que
+a omite em silêncio afirma, por ausência, que ela não existe.
+
+### 5.2.3 Os diagramas são Mermaid
+
+O GitHub os renderiza nativamente, e o MkDocs e o Starlight também. Um PNG exportado de uma
+ferramenta de desenho ficaria fora do controle de versão útil — o diff não diz o que mudou,
+e o arquivo-fonte do desenho acaba noutro lugar, ou some. Aqui o diagrama *é* texto,
+versionado com o resto.
 
 Os níveis 1 e 2 são escritos à mão no template: descrevem o sistema inteiro, e nenhuma spec
-sozinha os conhece. O nível 3 vem das camadas e do mapa.
-
-**Os diagramas são Mermaid**, e não imagens. O GitHub os renderiza nativamente, e o MkDocs e
-o Starlight também. Um PNG exportado de uma ferramenta de desenho ficaria fora do controle
-de versão útil — o diff não diz o que mudou, e o arquivo-fonte do desenho acaba noutro
-lugar, ou some. Aqui o diagrama *é* texto, versionado com o resto.
-
-**As setas do nível 3 vêm do mapa** — das arestas que as unidades declaram e o gate confere.
-Desenhá-las à mão seria garantir que envelheçam: é no nível 3 que uma dependência nova
-aparece primeiro, e ninguém volta ao diagrama para acrescentá-la. As fronteiras da Estrutura
-não serviriam: elas declaram o que uma camada *não* pode alcançar, e a ausência de proibição
-não é uma dependência.
+sozinha os conhece. O nível 3 vem dos contêineres declarados.
 
 O C4 **não tem gatilho por camada**, e não é esquecimento: ele não muda quando uma unidade
 muda — muda quando a estrutura muda (um contêiner novo, uma fonte externa nova, uma
-fronteira que se desloca). Por isso ele não é trabalho de card de trinca, e sim de uma
-issue própria.
+fronteira que se desloca). Por isso não é trabalho de card de trinca, e sim de issue própria.
 
 ## 6. O gate `docs-fresh` é informativo
 
@@ -277,6 +321,6 @@ Anchors: o Anchors produz o `.md`, e o projeto decide se e como o expõe.
 | a matriz camada × seção | duas visões geradas dos mesmos dados |
 | "documente" não diz o quê | `docs.required` com `trigger` por camada |
 | nomear o arquivo não basta | cada `kind` diz o que pede e qual a armadilha |
-| a arquitetura só existe em formato de máquina | C4, com issue própria |
+| a arquitetura só existe em formato de máquina | C4 em Mermaid, um nível 3 por contêiner |
 | a spec manda o leitor da doc para fora | `doc-self-contained`, sem match de idioma |
 | cada projeto inventa a organização | `anchors docs init` propõe o esqueleto |

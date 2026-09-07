@@ -74,9 +74,12 @@ type Config struct {
 	Layers   map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
 	Derived  *Derived            `yaml:"derived,omitempty"`  // co-location dos derivados
 	Docs     *Docs               `yaml:"docs,omitempty"`     // as documentações que o projeto DEVE ter
-	Governs  []GovernRule        `yaml:"governs,omitempty"`  // dimensão vertical (arestas de alto grau)
-	Gates    []Gate              `yaml:"gates,omitempty"`    // os gates de qualidade (QUALITY §3-§5)
-	Recode   *Recode             `yaml:"recode,omitempty"`   // convenções de projeto p/ `anchors recode`
+	// ContainersDecl é o que roda SEPARADO — o nível 2 do C4. A Estrutura diz o que cada
+	// peça é; isto diz onde ela roda. Ver containers.go.
+	ContainersDecl []Container  `yaml:"containers,omitempty"`
+	Governs        []GovernRule `yaml:"governs,omitempty"` // dimensão vertical (arestas de alto grau)
+	Gates          []Gate       `yaml:"gates,omitempty"`   // os gates de qualidade (QUALITY §3-§5)
+	Recode         *Recode      `yaml:"recode,omitempty"`  // convenções de projeto p/ `anchors recode`
 	// Tests e Mutation declaram COMO este projeto produz sinal de teste: o comando é
 	// do projeto, a amarração ao mapa é do Anchors. Ver Suite.
 	Tests    []Suite `yaml:"tests,omitempty"`
