@@ -172,8 +172,8 @@ graph TB
 _Este contêiner não declara camadas._
 {{end}}
 {{else}}
-_Este contêiner não tem unidade nossa: ele existe, e o que roda dentro dele não é código
-deste repositório._
+_Nenhuma camada declara unidade que rode aqui. Ou o contêiner não executa código deste
+repositório, ou falta ligá-lo a uma camada em ` + "`containers.layers`" + `._
 {{end}}
 {{end}}
 {{with orphanLayers}}
