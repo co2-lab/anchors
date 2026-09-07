@@ -219,7 +219,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 		// declarada pelo autor para ser confrontada contra o disco.
 		b.WriteString("\n## O que você vai confrontar\n\n")
 		writeTriadPaths(&b, rel, artifact, layer, cfg, g)
-		writeDeliveryRecord(&b, root, rel)
+		writeDeliveryRecord(&b, root, rel, cfg)
 	} else if hasLayer && l.Regime == "declarativo" {
 		b.WriteString("\n## As peças e onde nascem\n\n")
 		fmt.Fprintf(&b, "**Só o próprio arquivo.** `%s` está numa camada RECONHECIDA "+
@@ -678,9 +678,14 @@ func procedureFor(artifact string, cfg *config.Config) []string {
 		// confrontar campo do modelo contra a regra que o interpreta. Por isso o
 		// procedimento manda executar, não revisar no sentido usual.
 		return []string{
-			"**Leia o registro de entrega** (`changes/`) e confronte a INTENÇÃO declarada " +
-				"contra o que está no disco. Divergência entre o que o autor diz ter feito e o " +
-				"que ele fez é, por si só, um achado.",
+			// O LUGAR do registro depende do modo, e o prompt não o repete aqui: a
+			// seção de registros acima já diz onde ele está (arquivo no modo local,
+			// comentário da issue no modo github). Nomear `changes/` neste passo mandava
+			// o revisor procurar no disco um registro que vive na issue — medido na
+			// revisão do card #321.
+			"**Leia o registro de entrega** (a seção acima diz onde ele está) e confronte a " +
+				"INTENÇÃO declarada contra o que está no disco. Divergência entre o que o autor " +
+				"diz ter feito e o que ele fez é, por si só, um achado.",
 			"**Confronte spec ↔ código, regra a regra.** Cada regra catalogada está " +
 				"implementada? Alguma foi implementada ao contrário? Há comportamento no código " +
 				"que nenhuma regra governa? (campo do modelo que ninguém lê, ramo que a spec " +
@@ -985,7 +990,7 @@ func gateApplies(gt config.Gate, artifact string) bool {
 //
 // Sem registro, o review ainda roda (a unidade está no disco), mas perde o escopo e a
 // declaração de intenção. Por isso a ausência é reportada, não silenciada.
-func writeDeliveryRecord(b *strings.Builder, root, rel string) {
+func writeDeliveryRecord(b *strings.Builder, root, rel string, cfg *config.Config) {
 	pend, _ := change.Pending(root)
 	unidade := filepath.ToSlash(rel)
 	// TODOS os registros da unidade, não o primeiro. Uma unidade acumula uma entrega por
@@ -1017,6 +1022,19 @@ func writeDeliveryRecord(b *strings.Builder, root, rel string) {
 		for _, a := range achados {
 			b.WriteString(a + "\n")
 		}
+		return
+	}
+	// NO MODO `github` O REGISTRO NÃO ESTÁ NO DISCO, e dizer "sem registro" ali é um
+	// falso negativo — o pior tipo, porque manda o revisor registrar no relatório uma
+	// lacuna que não existe.
+	//
+	// Medido na revisão do card #321: o guia avisou "Sem registro de entrega" e o registro
+	// estava nos comentários da issue, onde o `deliver` o põe naquele modo (v0.1.61). O
+	// revisor teve de descobrir isso sozinho.
+	if cfg != nil && cfg.GitHubMode() {
+		b.WriteString("\n> **O registro de entrega está nos COMENTÁRIOS da issue** deste " +
+			"card — é lá que o `anchors deliver` o põe no modo `github`. Leia-o: é a metade " +
+			"DECLARADA do confronto, o que o autor diz ter feito, contra o disco.\n")
 		return
 	}
 	b.WriteString("\n> **Sem registro de entrega** para esta unidade (`anchors deliver`). " +
