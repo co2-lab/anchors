@@ -53,45 +53,24 @@ func TestComment_recusaCorpoVazio(t *testing.T) {
 	}
 }
 
-// `in-review` NÃO é retomado. Ele é trabalho EM CURSO tanto quanto `in-progress` — a
-// diferença entre os dois é QUE trabalho acontece, não SE acontece. Um card ali tem um
-// revisor, e devolvê-lo ao dono original o faz reabrir o que já entregou.
+// O AGENTE TERMINA O QUE ESTÁ COM ELE antes de pegar coisa nova.
 //
-// Medido: o card #321, entregue e em revisão, voltava a cada `anchors next` — a fila
-// parecia ter trabalho e o próximo card de verdade nunca era oferecido.
-func TestMine_soRetomaOQueEstaPelaMetade(t *testing.T) {
-	casos := []struct {
-		estado string
-		retoma bool
-	}{
-		{StateInProgress, true},     // pela metade: é meu, e eu continuo
-		{StateInReview, false},      // em curso, com OUTRO: não é meu trabalho
-		{StateReadyToReview, false}, // parado, mas vem pela FILA e não pela retomada
-		{StateToDo, false},          // idem
-		{"anchors:ready-to-test", false},
-	}
-	for _, caso := range casos {
-		t.Run(caso.estado, func(t *testing.T) {
-			c := Card{Labels: []string{"anchors", caso.estado}}
-			got := has(c.Labels, StateInProgress)
-			if got != caso.retoma {
-				t.Errorf("%s: retoma=%v, queria %v", caso.estado, got, caso.retoma)
-			}
-		})
-	}
-}
-
-// `emCurso` cobre os dois estados de trabalho acontecendo — é a régua que separa o que o
-// claim pode oferecer do que já tem dono trabalhando.
-func TestEmCurso(t *testing.T) {
+// Os dois estados de trabalho em curso voltam pela retomada: `in-progress` é implementação
+// pela metade, `in-review` é revisão por fazer — e revisar É trabalho.
+//
+// O que separa "meu" de "de outro" não é o estado: é o dono. Um card em revisão com outro
+// agente é descartado pelo `Owner`, antes de o estado ser consultado.
+func TestEmCurso_osDoisEstadosDeTrabalho(t *testing.T) {
 	for _, e := range []string{StateInProgress, StateInReview} {
 		if !emCurso(Card{Labels: []string{e}}) {
-			t.Errorf("%s devia contar como trabalho em curso", e)
+			t.Errorf("%s é trabalho em curso — se for meu, eu termino antes de pegar outro", e)
 		}
 	}
-	for _, e := range []string{StateToDo, StateReadyToReview} {
+	// PARADOS não são retomados: eles vêm pela FILA, com a prioridade do board, e podem
+	// ser de qualquer um.
+	for _, e := range []string{StateToDo, StateReadyToReview, "anchors:ready-to-test"} {
 		if emCurso(Card{Labels: []string{e}}) {
-			t.Errorf("%s está PARADO — o claim pode oferecê-lo", e)
+			t.Errorf("%s está parado — vem pela fila, não pela retomada", e)
 		}
 	}
 }
