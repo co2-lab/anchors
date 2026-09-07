@@ -222,6 +222,17 @@ func optionalPieces(n mapx.Node, cfg *config.Config, g *mapx.Graph) map[string]b
 var (
 	noTestRE    = regexp.MustCompile(`@no-test[^\S\n]*:[^\S\n]*\S+`)
 	noFeatureRE = regexp.MustCompile(`@no-feature[^\S\n]*:[^\S\n]*\S+`)
+	// `@no-code: <razão>` — a unidade não tem MÓDULO a escrever.
+	//
+	// O comentário acima citava este marcador desde sempre e ele nunca existiu. A lacuna
+	// só apareceu quando o gate passou a confrontar de verdade: uma unidade cuja
+	// implementação É configuração — os workflows do CI, no projeto de referência — não
+	// tem arquivo de código, e a única saída era deixar o gate reprovando para sempre ou
+	// fingir um módulo que "valida a configuração" e só saberia dizer que ela existe.
+	//
+	// A razão é obrigatória, como nas outras duas: um marcador nu seria um jeito
+	// silencioso de calar o gate.
+	noCodeRE = regexp.MustCompile(`@no-code[^\S\n]*:[^\S\n]*\S+`)
 
 	// `@TBD` — TO BE DEVELOPED: a peça está decidida e AINDA NÃO foi escrita.
 	//
@@ -351,6 +362,18 @@ func specWaivers(content string) map[string]bool {
 	if noFeatureRE.MatchString(content) {
 		// Sem feature não há o que provar por cenário — a dispensa da feature
 		// arrasta a do teste, senão o gate cobraria um teste de cenário nenhum.
+		out[string(mapx.EdgeCoveredBy)] = true
+		out[string(mapx.EdgeTestedBy)] = true
+	}
+	if noCodeRE.MatchString(content) {
+		// Sem módulo, não há o que a feature exercitar nem o que o teste provar: a
+		// dispensa do código arrasta as outras duas, pelo mesmo motivo que a do
+		// `@no-feature` arrasta a do teste.
+		//
+		// Quem quiser dispensar SÓ o código — uma unidade cuja implementação é
+		// configuração mas que ainda assim tem comportamento observável — declara as três
+		// separadamente, e a razão de cada uma fica escrita.
+		out[string(mapx.EdgeSpecifies)] = true
 		out[string(mapx.EdgeCoveredBy)] = true
 		out[string(mapx.EdgeTestedBy)] = true
 	}

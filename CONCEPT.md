@@ -494,10 +494,17 @@ O conceito é transversal — cada pilar o instancia sobre o que dispensa:
 | instância | dispensa | onde | escopo |
 |---|---|---|---|
 | **`@no-test`** (`SPEC.md` §6) | a exigência de teste | tag na spec | permanente, por âncora |
+| **`@no-feature`** | os cenários em Gherkin | tag na spec | permanente, por âncora |
+| **`@no-code`** | o módulo — a unidade É configuração | tag na spec | permanente, por âncora |
 | **`--no-block`** (`QUALITY.md` §7) | o bloqueio, desta vez | flag de invocação | pontual, uma execução |
 | **maturação informativa** (`QUALITY.md` §7) | o rigor (mede, não trava) | política do gate | permanente, por gate |
 
-Todas as três são o mesmo conceito — dispensa honesta — aplicado a coisas diferentes
+O `@no-code` é o caso da unidade cuja implementação **é** configuração — os workflows de um
+pipeline, por exemplo. Ele arrasta as outras duas: sem módulo, não há o que a feature
+exercitar nem o que o teste provar. Quem tem comportamento observável apesar de não ter
+módulo declara as três separadamente, e a razão de cada uma fica escrita.
+
+Todas são o mesmo conceito — dispensa honesta — aplicado a coisas diferentes
 (o teste, o bloqueio, o rigor). Em todas, a marca é explícita, o registro nasce, e o
 porquê fica datado.
 
