@@ -228,6 +228,32 @@ func Classify(rel string, cfg *config.Config) (layer, kind string) {
 // prioridade e mesmo comprimento) sortearia a camada a cada execução — e uma classificação
 // que muda entre duas rodadas do mesmo comando envenena todo gate que depende dela. Por
 // isso o desempate final é o NOME da camada: arbitrário, mas estável.
+// headerLayerRE lê a camada que o próprio arquivo DECLARA no header.
+var headerLayerRE = regexp.MustCompile(`(?m)^\s*layer:\s*([a-zA-Z0-9_-]+)`)
+
+// LayerOfUnit devolve a camada da UNIDADE a que um arquivo pertence — não a do arquivo.
+//
+// A distinção existe porque uma spec casa dois padrões: o dela (`**/*.spec.md`, camada
+// `spec`) e o da unidade que ela governa. O `ClassifyPath` devolve o primeiro, que é o
+// certo para o mapa — a spec É um nó da camada `spec`. Mas quem pergunta "que camada é
+// esta unidade" quer o segundo.
+//
+// Medido: `anchors docs duties --unit <arquivo>.spec.md` respondia "nenhuma documentação
+// obrigatória" para uma lambda cuja camada deve o OpenAPI. Com o `.ts` da mesma unidade a
+// resposta era certa — e o card aponta a SPEC, que é o caminho que o agente usa.
+//
+// A camada declarada no header vence porque é a que o autor escreveu. Sem header, cai no
+// `ClassifyPath` — que para todo arquivo que não é spec já devolve a camada da unidade.
+func LayerOfUnit(root, rel string, cfg *config.Config) string {
+	if b, err := os.ReadFile(filepath.Join(root, rel)); err == nil {
+		if m := headerLayerRE.FindSubmatch(b); m != nil {
+			return string(m[1])
+		}
+	}
+	layer, _ := classify(rel, cfg)
+	return layer
+}
+
 // ClassifyPath devolve a CAMADA e o KIND de um caminho, pelos padrões do projeto.
 //
 // Exportada porque a resolução de camada é usada fora do scanner — o `anchors next`
