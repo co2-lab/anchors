@@ -662,7 +662,14 @@ func printBoardWork(root string, card *board.Card) {
 	if unidade != "" {
 		fmt.Printf("O que propagar:    anchors impact %s\n", unidade)
 	}
-	fmt.Printf("Ao terminar:       abra o PR — o pipeline move o card, você não\n")
+	// O CORPO DO PR pelo comando, e não à mão.
+	//
+	// O `Closes #N` é o que fecha o card no merge, e ele é fácil de esquecer quando o
+	// corpo é escrito à mão — medido: o card #319 ficou aberto em `in-progress` depois do
+	// merge, e o #321 fechou sozinho, porque um PR tinha a linha e o outro não. O estado
+	// do board passou a divergir do repositório sem nada acusar.
+	fmt.Printf("Ao terminar:       anchors pr-body --for %s  (traz o `Closes` que fecha o card)\n", prTarget(card))
+	fmt.Printf("                   abra o PR com esse corpo — o pipeline move o card, você não\n")
 }
 
 // unitFromBody extrai o caminho da unidade do corpo do card.
@@ -795,5 +802,20 @@ func printReviewWork(root string, card *board.Card) {
 	fmt.Println("  correção neste card — não card novo.")
 
 	fmt.Printf("\nAntes de começar:  anchors guide review\n")
-	fmt.Printf("Ao terminar:       abra o PR — o pipeline move o card, você não\n")
+	// O CORPO DO PR pelo comando, e não à mão.
+	//
+	// O `Closes #N` é o que fecha o card no merge, e ele é fácil de esquecer quando o
+	// corpo é escrito à mão — medido: o card #319 ficou aberto em `in-progress` depois do
+	// merge, e o #321 fechou sozinho, porque um PR tinha a linha e o outro não. O estado
+	// do board passou a divergir do repositório sem nada acusar.
+	fmt.Printf("Ao terminar:       anchors pr-body --for %s  (traz o `Closes` que fecha o card)\n", prTarget(card))
+	fmt.Printf("                   abra o PR com esse corpo — o pipeline move o card, você não\n")
+}
+
+// prTarget devolve o que o `pr-body` precisa como alvo — a unidade do card.
+func prTarget(card *board.Card) string {
+	if u := unitFromBody(card.Body); u != "" {
+		return u
+	}
+	return "<a unidade deste card>"
 }
