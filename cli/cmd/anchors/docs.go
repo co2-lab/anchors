@@ -8,6 +8,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/doct"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/spf13/cobra"
 )
 
@@ -167,7 +168,7 @@ func newDocsInitCmd() *cobra.Command {
 // documentar, e o que essa documentação precisa responder". Sem ele, a instrução seria
 // "atualize a doc", que produz o endpoint acrescentado ao OpenAPI sem os erros.
 func newDocsDutiesCmd() *cobra.Command {
-	var root, layer string
+	var root, layer, unit string
 	cmd := &cobra.Command{
 		Use:   "duties",
 		Short: "Lista as documentações obrigatórias do projeto e o que cada uma exige",
@@ -181,7 +182,14 @@ func newDocsDutiesCmd() *cobra.Command {
 				return err
 			}
 			docs := cfg.AllRequiredDocs()
-			if layer != "" {
+			// A UNIDADE é a pergunta que o agente faz de verdade: ele não vai mexer em
+			// "a camada infra", vai mexer numa unidade dela. E a camada erra sozinha —
+			// no projeto de referência ela tem nove unidades e uma só toca esquema.
+			if unit != "" {
+				camada, _ := scan.ClassifyPath(relTo(absRoot, unit), cfg)
+				docs = cfg.RequiredFor(camada, codeOfUnit(absRoot, relTo(absRoot, unit)))
+				layer = unit
+			} else if layer != "" {
 				docs = cfg.RequiredFor(layer)
 			}
 			if len(docs) == 0 {
@@ -209,5 +217,6 @@ func newDocsDutiesCmd() *cobra.Command {
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
 	cmd.Flags().StringVar(&layer, "layer", "", "só as obrigatórias ao alterar esta camada")
+	cmd.Flags().StringVar(&unit, "unit", "", "só as obrigatórias ao alterar ESTA unidade (mais preciso que --layer)")
 	return cmd
 }

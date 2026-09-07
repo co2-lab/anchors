@@ -43,15 +43,25 @@ type DocArtifact struct {
 	Kind string `yaml:"kind"`
 	// Path é o arquivo. É o que o gate confere e o que o `anchors next` nomeia.
 	Path string `yaml:"path"`
-	// Trigger são as camadas cuja alteração OBRIGA tocar esta doc.
+	// Trigger são as camadas OU UNIDADES cuja alteração obriga tocar esta doc.
 	//
 	// É o campo que transforma "documente" em algo verificável: mexer numa lambda de
 	// rota muda o contrato da API, e o OpenAPI tem de acompanhar. Mexer num utilitário
 	// interno não muda contrato nenhum, e cobrar ali seria cobrar por cobrar — o agente
 	// aprenderia a atualizar o arquivo sem pensar, que é pior que não atualizar.
 	//
-	// Vazio = a doc não tem gatilho por camada (é o caso do C4, que muda quando a
-	// ESTRUTURA muda, não quando uma unidade muda).
+	// Aceita as duas granularidades porque a camada erra sozinha. Medido: a camada
+	// `infra` do projeto de referência tem nove unidades, e apenas UMA toca esquema de
+	// dados — as outras oito são API Gateway, autenticação, mTLS, uma régua de processo.
+	// Cobrar o esquema de todas ensina o agente a ignorar o aviso, que é o pior
+	// resultado possível: o gate continua lá e ninguém o lê.
+	//
+	// Um item que casa uma CAMADA declarada é lido como camada; qualquer outro é lido
+	// como CÓDIGO de unidade. A ordem importa — se um código coincidir com um nome de
+	// camada, a camada vence, porque é a leitura que abrange mais.
+	//
+	// Vazio = a doc não tem gatilho (é o caso do C4, que muda quando a ESTRUTURA muda,
+	// não quando uma unidade muda).
 	Trigger []string `yaml:"trigger,omitempty"`
 	// Why é por que esta documentação existe. Vai para o texto do card: um agente que
 	// sabe o que a doc responde escreve melhor do que um que só sabe o caminho dela.
@@ -68,24 +78,40 @@ const (
 	KindRunbook   = "runbook"
 )
 
-// TriggeredBy diz se alterar uma unidade desta camada obriga tocar esta documentação.
-func (d DocArtifact) TriggeredBy(layer string) bool {
-	for _, l := range d.Trigger {
-		if strings.EqualFold(strings.TrimSpace(l), layer) {
+// TriggeredBy diz se alterar uma unidade obriga tocar esta documentação.
+//
+// Recebe a camada E o código da unidade, e basta um dos dois casar: quem declarou
+// `trigger: [lambdas]` quer toda a camada; quem declarou `trigger: [DTSTD]` quer aquela
+// unidade. Código vazio é o caso de quem pergunta só pela camada.
+func (d DocArtifact) TriggeredBy(layer, code string) bool {
+	for _, t := range d.Trigger {
+		t = strings.TrimSpace(t)
+		if strings.EqualFold(t, layer) {
+			return true
+		}
+		if code != "" && strings.EqualFold(t, code) {
 			return true
 		}
 	}
 	return false
 }
 
-// RequiredFor devolve as documentações que a alteração de uma camada obriga tocar.
-func (c *Config) RequiredFor(layer string) []DocArtifact {
+// RequiredFor devolve as documentações que a alteração obriga tocar.
+//
+// O `code` é opcional: sem ele a resposta é a da CAMADA inteira — o que serve ao
+// `anchors docs duties --layer x`, que pergunta em abstrato. Com ele, a resposta é a da
+// unidade, e é a que o card do agente precisa.
+func (c *Config) RequiredFor(layer string, code ...string) []DocArtifact {
 	if c == nil || c.Docs == nil {
 		return nil
 	}
+	unidade := ""
+	if len(code) > 0 {
+		unidade = code[0]
+	}
 	var out []DocArtifact
 	for _, d := range c.Docs.Required {
-		if d.TriggeredBy(layer) {
+		if d.TriggeredBy(layer, unidade) {
 			out = append(out, d)
 		}
 	}

@@ -720,12 +720,20 @@ func printDocDuties(root, unidade string) {
 		return
 	}
 	camada := layerOfPath(cfg, unidade)
-	deveres := cfg.RequiredFor(camada)
+	// PELA UNIDADE, e não só pela camada: a camada erra sozinha. Medido no projeto de
+	// referência: `infra` tem nove unidades e apenas UMA toca esquema de dados — cobrar
+	// o esquema das outras oito ensina o agente a ignorar o aviso, que é o pior
+	// resultado possível (o gate continua lá e ninguém o lê).
+	deveres := cfg.RequiredFor(camada, codeOfUnit(root, unidade))
 	if len(deveres) == 0 {
 		return
 	}
 	fmt.Println()
-	fmt.Printf("       Alterar `%s` OBRIGA tocar:\n", camada)
+	alvo := camada
+	if u := strings.TrimSpace(unidade); u != "" {
+		alvo = u
+	}
+	fmt.Printf("       Alterar `%s` OBRIGA tocar:\n", alvo)
 	for _, d := range deveres {
 		fmt.Print(doct.Duty(d))
 	}
