@@ -504,9 +504,12 @@ func seedTally(root string, t queue.Task) string {
 // razão de cada uma está no `internal/board`.
 //
 // O QUE ELE IMPRIME é a diferença que importa. O card diz "Implementar spec — <título>", e
-// esse título é ambíguo: a spec já existe (foi o Plan Implementer que a escreveu). O
-// entregável deste card é o que vem DEPOIS dela — código, feature, teste e documentação —
-// e imprimir a cadeia é o que impede o agente de achar que o trabalho é a spec.
+// o verbo é preciso: CRIAR a spec é o trabalho do card do plano; IMPLEMENTAR a spec é este
+// card — código, feature, teste e documentação.
+//
+// Imprimir a cadeia não conserta o título: ele já está certo. Serve para quem chega ao card
+// sem o contexto do fluxo, e é o que faz o próximo passo ser um comando em vez de uma
+// dedução — medido, o agente que leu só o título não seguiu para nenhuma das quatro etapas.
 func nextFromBoard(root string, cfg *config.Config, agent string) error {
 	if cfg.Workflow.Repo == "" {
 		return fmt.Errorf("workflow.repo vazio: no modo github ele é obrigatório — " +
@@ -543,16 +546,16 @@ func nextFromBoard(root string, cfg *config.Config, agent string) error {
 	return nil
 }
 
-// printBoardWork diz O QUE ENTREGAR, e é aqui que o título ambíguo é desfeito.
+// printBoardWork diz O QUE ENTREGAR — os quatro artefatos e a ordem entre eles.
 //
-// O card `Implementar spec` foi criado quando a spec APARECEU no repositório, e o verbo
-// sugere que a spec é o que falta escrever. Não é: quem a escreveu foi o Plan Implementer,
-// no card do plano. Este card é do DEV, e o entregável dele são os quatro artefatos que
-// derivam da spec.
+// O card nasce quando a spec APARECE no repositório, e pede a implementação dela: o card do
+// plano CRIA as specs, este IMPLEMENTA uma. São dois trabalhos com entregáveis diferentes,
+// e o título de cada um já diz qual.
 //
-// Medido: as 84 issues deste tipo ficaram em `to-do` enquanto o agente concluía que o
-// projeto tinha terminado — porque nada no card, no título ou no corpo, dizia que a spec
-// era a ENTRADA e não a saída.
+// O que faltava era o CORPO nomear os quatro artefatos e a dependência entre eles. Medido:
+// as 84 issues deste tipo ficaram em `to-do` enquanto o agente concluía que o projeto tinha
+// terminado — o `next` não as via (lia a fila local), e nada no card dizia que a
+// implementação são quatro entregas, nem que o teste nasce da feature.
 func printBoardWork(root string, card *board.Card) {
 	// O ALVO vem do CÓDIGO, não da pasta.
 	//
@@ -586,8 +589,8 @@ func printBoardWork(root string, card *board.Card) {
 
 	case strings.Contains(card.Title, "Implementar spec"):
 		fmt.Println("ENTREGÁVEL: código + feature + teste + documentação.")
-		fmt.Println("  A SPEC JÁ EXISTE — ela é a ENTRADA deste card, não a saída. Quem a")
-		fmt.Println("  escreveu foi o card do plano; este é o trabalho que deriva dela.")
+		fmt.Println("  A spec é a ENTRADA deste card — criá-la foi o trabalho do card do")
+		fmt.Println("  plano. Implementá-la é este, e são quatro entregas.")
 		fmt.Println()
 		fmt.Printf("    1. anchors work code    --for %s\n", alvo)
 		fmt.Printf("    2. anchors work feature --for %s\n", alvo)
