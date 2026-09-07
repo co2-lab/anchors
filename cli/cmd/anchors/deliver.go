@@ -6,7 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/board"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/mapx"
 
 	"github.com/co2-lab/anchors/internal/change"
 	"github.com/spf13/cobra"
@@ -110,12 +112,29 @@ Depois disto, o watcher enfileira a task de review.`,
 				Intent: intent, Decisions: decisions, Uncovered: uncovered,
 				Date: date, Agent: agent,
 			}
-			p, err := change.Save(absRoot, c)
-			if err != nil {
-				return fmt.Errorf("gravar o registro: %w", err)
+			// O MODO decide ONDE o registro vive, e os dois são excludentes.
+			//
+			// No local o arquivo É o mecanismo: o watcher o vê aparecer e enfileira o
+			// review. No modo `github` esse watcher não é quem move nada — quem move o
+			// card é o pipeline, e quem revisa está lendo a ISSUE.
+			//
+			// Medido no projeto de referência: 73 registros no repositório, nenhum
+			// revisado, e as issues sem a informação. O revisor não sabia que o arquivo
+			// existia; o watcher, que o veria, não estava rodando — porque naquele modo
+			// ele não é o mecanismo. É a mesma regra que o `next` aprendeu na v0.1.55.
+			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			if cfg != nil && cfg.GitHubMode() {
+				if err := deliverToBoard(absRoot, cfg, c); err != nil {
+					return err
+				}
+			} else {
+				p, err := change.Save(absRoot, c)
+				if err != nil {
+					return fmt.Errorf("gravar o registro: %w", err)
+				}
+				rel, _ := filepath.Rel(absRoot, p)
+				fmt.Printf("✓ entrega registrada: %s\n", rel)
 			}
-			rel, _ := filepath.Rel(absRoot, p)
-			fmt.Printf("✓ entrega registrada: %s\n", rel)
 
 			// O REVIEW é a etapa que fecha o ciclo, e a que mais some. Medido: um agente
 			// registrou 7 entregas corretamente e o review nunca aconteceu — ele não tinha
@@ -203,4 +222,58 @@ func existingPiece(root, rel string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// deliverToBoard posta o registro de entrega como comentário na issue da unidade.
+//
+// FALHA se não achar a issue, e não cai para o arquivo em silêncio: um registro que
+// deveria estar na issue e foi parar no disco é invisível para quem revisa — exatamente o
+// defeito que este caminho existe para fechar. Melhor o comando parar e dizer o que falta.
+func deliverToBoard(root string, cfg *config.Config, c change.Change) error {
+	codigo := codeOfUnit(root, c.Unit)
+	if codigo == "" {
+		return fmt.Errorf("não consegui achar o CÓDIGO da unidade `%s` no mapa.\n"+
+			"  No modo `github` o registro de entrega vai para a ISSUE, e é o código que\n"+
+			"  a identifica. Rode `anchors map build` e confira se a unidade está lá", c.Unit)
+	}
+	cli := board.Client{Repo: cfg.Workflow.Repo, Labels: cfg.Workflow.Labels}
+	card, err := cli.FindByCode(codigo)
+	if err != nil {
+		return fmt.Errorf("%w.\n"+
+			"  No modo `github` a entrega é registrada na issue do card, e ela precisa\n"+
+			"  existir e estar ABERTA. Se o card já foi fechado, reabra-o — ou registre a\n"+
+			"  entrega no card que cobre este trabalho", err)
+	}
+	if err := cli.Comment(card.Number, c.Render()); err != nil {
+		return err
+	}
+	fmt.Printf("✓ entrega registrada na issue #%d — %s\n", card.Number, card.Title)
+	return nil
+}
+
+// codeOfUnit devolve o código da unidade a que um arquivo pertence.
+//
+// Do MAPA, porque é ele que sabe: o código pode estar no header da spec, ser inferido do
+// texto, ou vir da âncora irmã de um derivado — três regras que o `mapx` já resolve, e
+// reimplementá-las aqui as faria divergir na primeira mudança.
+func codeOfUnit(root, unit string) string {
+	g, err := mapx.Load(filepath.Join(root, mapx.DefaultPath))
+	if err != nil {
+		return ""
+	}
+	unit = filepath.ToSlash(unit)
+	// Casa o arquivo exato primeiro; depois qualquer peça da mesma unidade (o `--unit`
+	// aceita a spec quando o alvo ainda não nasceu, e o código é o mesmo).
+	stem, _ := mapx.StemOfAnchor(unit)
+	for _, n := range g.Nodes {
+		if n.ID == unit && n.Code != "" {
+			return n.Code
+		}
+	}
+	for _, n := range g.Nodes {
+		if s, _ := mapx.StemOfAnchor(n.ID); s == stem && n.Code != "" {
+			return n.Code
+		}
+	}
+	return ""
 }
