@@ -63,22 +63,31 @@ func Scaffolds() []Scaffold {
 	return []Scaffold{
 		{
 			Nome:   "arquitetura.md" + SufixoTemplate,
-			Porque: "COMO o sistema é montado — o C4 em quatro níveis, com diagrama Mermaid",
+			Porque: "COMO o sistema é montado — o C4: contexto, contêineres, e um nível 3 por contêiner",
 			Corpo: `# Arquitetura
 
-{{/* MERMAID, e não uma imagem.
+{{/* O C4 COMO O C4 É.
 
-     O GitHub renderiza blocos de diagrama Mermaid nativamente, e o MkDocs e o Starlight
-     também. Um PNG exportado de uma ferramenta de desenho ficaria fora do controle de
-     versão útil: o diff não diz o que mudou, e o arquivo-fonte do desenho acaba noutro
-     lugar — ou some. Aqui o diagrama É texto, versionado com o resto.
+     A regra central do modelo é que cada nível AMPLIA UMA CAIXA do anterior. O nível 3
+     é o zoom de UM contêiner — não do sistema. Um diagrama de componentes misturando o
+     app, a API e a infraestrutura não é nível 3 de coisa nenhuma: é a falha que o C4
+     existe para evitar, um desenho só com tudo dentro.
 
-     Os NÍVEIS 1 e 2 são escritos à mão AQUI no template: descrevem o sistema inteiro, e
-     nenhuma spec sozinha os conhece. O nível 3 vem das camadas e do mapa. */}}
+     CONTÊINER é o que executa ou armazena dado — aplicação, serviço, BANCO, fila,
+     sistema de arquivos. Não é sinônimo de "processo que escrevemos": o banco é
+     contêiner, aparece no nível 2 com o protocolo da conversa, e sendo de terceiro não
+     ganha nível 3 — não temos componentes lá dentro.
+
+     MERMAID, e não imagem: o GitHub o renderiza nativamente. Um PNG exportado de uma
+     ferramenta de desenho ficaria fora do controle de versão útil — o diff não diz o
+     que mudou, e o arquivo-fonte acaba noutro lugar, ou some.
+
+     Os níveis 1 e 2 são escritos à mão AQUI: descrevem o sistema inteiro, e nenhuma
+     spec sozinha os conhece. O nível 3 vem dos contêineres declarados na Estrutura. */}}
 
 ## Nível 1 — Contexto
 
-Quem usa o sistema, e com que sistemas externos ele fala.
+O sistema como uma caixa só: quem o usa, e com que sistemas externos ele fala.
 
 ` + cerca("mermaid") + `
 graph TB
@@ -101,64 +110,79 @@ graph TB
 
 ## Nível 2 — Contêineres
 
-O que roda separado, e o protocolo de cada conversa. **O protocolo importa**: é ele que
-diz o que acontece quando a conversa falha.
+O zoom da caixa "O SISTEMA": o que roda ou armazena separado, e **com que protocolo cada
+par conversa**. O protocolo é o que diz o que acontece quando a conversa falha.
 
+{{/* As caixas vêm da declaração de contêineres da Estrutura; o BANCO está entre elas,
+     porque contêiner é o que executa OU ARMAZENA dado. As setas e os protocolos vêm de
+     "talks", na mesma declaração. */}}
 ` + cerca("mermaid") + `
 graph TB
     user["Pessoa"]
 
     subgraph sistema["O SISTEMA"]
-        app["App<br/><small>a interface</small>"]
-        api["API<br/><small>as rotas</small>"]
-        db[("Banco<br/><small>o que persiste</small>")]
-    end
+{{range containers}}{{if not .External}}        {{.ID}}["{{.Name}}<br/><small>{{.Description}}</small>"]
+{{end}}{{end}}    end
 
-    ext["Sistema externo"]
-
-    user -->|"usa"| app
-    app -->|"HTTPS/JSON"| api
-    api -->|"lê e escreve"| db
-    api -->|"consulta"| ext
-
+{{range containers}}{{if .External}}    {{.ID}}["{{.Name}}<br/><small>{{.Description}}</small>"]
+{{end}}{{end}}
+{{range containers}}{{$de := .ID}}{{range .Talks}}    {{$de}} -->|"{{.Protocol}}{{if .Why}}<br/>{{.Why}}{{end}}"| {{mermaidID .To}}
+{{end}}{{end}}
     classDef pessoa fill:#08427b,stroke:#052e56,color:#fff
     classDef conteiner fill:#438dd5,stroke:#2e6295,color:#fff
     classDef externo fill:#999,stroke:#6b6b6b,color:#fff
     class user pessoa
-    class app,api,db conteiner
-    class ext externo
+{{range containers}}{{if .External}}    class {{.ID}} externo
+{{else}}    class {{.ID}} conteiner
+{{end}}{{end}}
 ` + cerca("") + `
+{{if not containers}}
+> **Nenhum contêiner declarado.** O nível 2 e os de nível 3 saem vazios até a Estrutura
+> declarar o que roda separado. Ver o bloco de contêineres no ` + crase + `anchors.yaml` + crase + `.
+{{end}}
 
-<!-- FORA deste nível: as peças DENTRO de cada contêiner. Isso é o nível 3. -->
+<!-- FORA deste nível: as peças DENTRO de cada contêiner. Isso é o nível 3 — e há um
+     diagrama por contêiner, porque cada nível amplia UMA caixa do anterior. -->
 
 ## Nível 3 — Componentes
 
-As camadas do projeto, e o que existe em cada uma. Esta seção é **gerada**: a Estrutura
-declara as camadas, e as specs declaram as unidades.
+Um diagrama **por contêiner**: cada um amplia uma caixa do nível 2. Os externos não
+aparecem aqui — não temos componentes dentro deles, e desenhá-los afirmaria um
+conhecimento que não temos.
+{{range internalContainers}}
+### {{.Name}}
 
-{{/* AS SETAS vêm do MAPA — das arestas ` + crase + `needs` + crase + ` que as unidades declaram e o gate
-     confere. Desenhá-las à mão seria garantir que envelheçam: é no nível 3 que uma
-     dependência nova aparece primeiro, e ninguém volta ao diagrama para acrescentá-la.
+{{.Description}}
 
-     As fronteiras da Estrutura não serviriam: elas declaram o que uma camada NÃO pode
-     alcançar, e a ausência de proibição não é uma dependência. */}}
+{{if .Units}}
 ` + cerca("mermaid") + `
-graph LR
-{{range layers}}    {{mermaidID .}}["{{.}}<br/><small>{{(size (printf "layer=%s" .)).Units}} unidades</small>"]
-{{end}}{{range layerDeps}}    {{mermaidID .From}} -->|"{{.Count}}"| {{mermaidID .To}}
-{{end}}
+graph TB
+    subgraph {{.ID}}["{{.Name}}"]
+{{range .Layers}}        subgraph {{mermaidID .}}["{{.}}"]
+{{range $u := specs (printf "layer=%s" .)}}            {{mermaidID $u.Code}}["{{$u.Code}}<br/><small>{{$u.Titulo}}</small>"]
+{{end}}        end
+{{end}}    end
 ` + cerca("") + `
-{{if not layerDeps}}
-_Nenhuma dependência entre camadas está declarada no mapa. As caixas acima são o que
-existe; as setas aparecem quando as unidades declararem dependência._
+
+{{range .Layers}}
+#### {{.}}
+
+{{range specs (printf "layer=%s" .)}}- **{{.Code}}** — {{.Titulo}}
+{{end}}{{else}}
+_Este contêiner não declara camadas._
 {{end}}
-{{range $l := layers}}
-### {{$l}}
+{{else}}
+_Este contêiner não tem unidade nossa: ele existe, e o que roda dentro dele não é código
+deste repositório._
+{{end}}
+{{end}}
+{{with orphanLayers}}
+### Camadas fora de todo contêiner
 
-{{$g := size (printf "layer=%s" $l)}}{{$g.Units}} unidades, {{$g.Rules}} regras. O
-conteúdo está em [{{layerPage $l}}]({{layerPage $l}}).
+Estas camadas existem no projeto e nenhum contêiner as declara — não aparecem em diagrama
+de nível 3 nenhum. Ou falta declará-las, ou elas não rodam em lugar nenhum:
 
-{{range specs (printf "layer=%s" $l)}}- **{{.Code}}** — {{.Titulo}}
+{{range .}}- ` + crase + `{{.}}` + crase + `
 {{end}}{{end}}
 
 ## Nível 4 — Código
