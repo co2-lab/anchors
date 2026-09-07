@@ -186,6 +186,37 @@ revisão com trabalho de máquina.
 O gate **não escreve**. Se ele consertasse o que aponta, a segunda execução sempre passaria
 e o defeito só apareceria em quem clonasse o repositório.
 
+## 6.1 A spec tem de bastar por si — `doc-self-contained`
+
+O corpo da spec vira documentação palavra por palavra, e isso muda como ela deve ser
+escrita. Uma frase que só **aponta** para um plano manda o leitor da doc a um arquivo que
+ele não tem aberto — que é exatamente o que este mecanismo existe para eliminar.
+
+O gate não é sobre citar menos, é sobre **trazer o texto**:
+
+| | |
+|---|---|
+| acusado | *"O plano `PSHUX` explica por que o canal é assim."* |
+| certo | *"O desenho evita expor rota de ingestão: o alarme publica no SNS nativamente."* |
+
+Não é acusado nada que **acompanhe** a referência: a citação, uma tabela ou lista logo
+abaixo, ou — só para revisões — a explicação em prosa. Uma revisão é uma etiqueta e a frase
+ao lado é o conteúdo (*"a `PLTFR-R0003` corrigiu o escopo: o contador saiu porque a fonte
+não o expõe por réplica"*). Um **caminho de arquivo** não ganha esse escape: ele não é
+etiqueta de nada, é o lugar aonde a pessoa teria de ir.
+
+### Sem match de idioma
+
+O gate não procura "plano", "ver" nem "conforme". **O Anchors governa projetos em qualquer
+língua**, e um gate que casa vocabulário passa em silêncio no projeto escrito na outra — o
+que é pior que não existir, porque a spec *parece* protegida.
+
+Ele casa estrutura, e só o que o próprio Anchors define: os **caminhos que o mapa conhece**
+(nenhuma língua muda um caminho, e um padrão `plans/*.md` escrito à mão só valeria para
+quem chama a pasta assim) e a forma `{CODIGO}-R000N` da doutrina. As aspas reconhecidas são
+as de qualquer tradição escrita — `« »`, `„ “`, `「 」` — porque exigir aspas latinas
+acusaria injustamente quem escreve em francês, alemão ou japonês.
+
 ## 7. O site
 
 O `docs/*.md` compilado é markdown comum, e qualquer gerador estático o consome sem
@@ -203,4 +234,5 @@ Anchors: o Anchors produz o `.md`, e o projeto decide se e como o expõe.
 | "documente" não diz o quê | `docs.required` com `trigger` por camada |
 | nomear o arquivo não basta | cada `kind` diz o que pede e qual a armadilha |
 | a arquitetura só existe em formato de máquina | C4, com issue própria |
+| a spec manda o leitor da doc para fora | `doc-self-contained`, sem match de idioma |
 | cada projeto inventa a organização | `anchors docs init` propõe o esqueleto |
