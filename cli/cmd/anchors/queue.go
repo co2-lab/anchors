@@ -123,7 +123,9 @@ Se a fila está vazia, imprime isso e sai com código 0.`,
 			// features.
 			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
 			if cfg.GitHubMode() {
-				return nextFromBoard(absRoot, cfg, worker)
+				// A identidade do BOARD, não a da fila local: ali o PID é a resposta
+				// certa (um processo, um worker); aqui a sessão atravessa invocações.
+				return nextFromBoard(absRoot, cfg, agentID())
 			}
 
 			t, err := queue.Claim(absRoot, worker, nowStamp())
@@ -316,6 +318,37 @@ func defaultWorkerID() string {
 		host = "local"
 	}
 	return fmt.Sprintf("%d@%s", os.Getpid(), host)
+}
+
+// agentID é a identidade do agente no BOARD, e é diferente do worker da fila local.
+//
+// O PID NÃO SERVE AQUI. Na fila local ele é a identidade certa — um processo é um worker, e
+// quando ele morre o `reclaim` devolve a task. No board a sessão do agente atravessa MUITAS
+// invocações do CLI: cada `anchors next` é um processo novo.
+//
+// Medido: com `os.Getpid()`, três chamadas seguidas produziram três donos diferentes
+// (`46781@host`, `48256@host`, `52350@host`) e três cards `in-progress` para o mesmo
+// agente — cada um achando que era de outra pessoa, e nenhum sendo retomado.
+//
+// O formato é o que o `BOOTSTRAP.md` §7.6 define: `<maquina>/<sessao>`. A sessão vem do
+// ambiente porque só o cliente de IA sabe onde ela começa e termina; sem ela, cai no nome
+// do usuário — estável entre invocações, e suficiente para um dev com um agente.
+func agentID() string {
+	host, _ := os.Hostname()
+	if host == "" {
+		host = "local"
+	}
+	sessao := strings.TrimSpace(os.Getenv("ANCHORS_SESSION"))
+	if sessao == "" {
+		// O usuário do sistema é estável e distingue devs na mesma máquina. Não distingue
+		// dois agentes do MESMO dev — e é por isso que `ANCHORS_SESSION` existe: quem roda
+		// mais de um agente precisa declará-lo.
+		sessao = os.Getenv("USER")
+		if sessao == "" {
+			sessao = "default"
+		}
+	}
+	return host + "/" + sessao
 }
 
 // reclaimFn escolhe entre respeitar o worker vivo (padrão) e ignorá-lo (--force).
@@ -518,25 +551,29 @@ func nextFromBoard(root string, cfg *config.Config, agent string) error {
 	}
 	cli := board.Client{Repo: cfg.Workflow.Repo, Labels: cfg.Workflow.Labels}
 
-	card, err := cli.Claim(agent)
+	// PRIMEIRO o que já é meu: se este agente tem card, não há nada a pedir.
+	//
+	// Retomar vence a prioridade do board porque o contexto da sessão anterior vale mais
+	// que a ordem da fila — e pedir trabalho novo com um card na mão deixaria o primeiro
+	// órfão, com a posse registrada e ninguém trabalhando nele.
+	card, err := cli.Mine(agent)
 	if err != nil {
 		return err
 	}
-	if card == nil {
-		fmt.Println("board vazio — nenhum card livre em `ready-to-review` nem `to-do`")
-		fmt.Printf("  (fila = as issues de %s, porque `workflow.mode: github`)\n", cfg.Workflow.Repo)
-		return nil
-	}
-
-	// TOMAR antes de imprimir: se o agente vê o card e a posse falha, dois agentes podem
-	// pegar o mesmo trabalho — e o segundo só descobre ao abrir o PR.
-	if card.Owner != agent {
-		if err := cli.Take(card.Number, agent); err != nil {
-			return fmt.Errorf("card #%d encontrado, mas a posse falhou: %w\n"+
-				"  (sem posse registrada, outro agente pegaria o mesmo trabalho)", card.Number, err)
-		}
-	} else {
+	if card != nil {
 		fmt.Printf("retomando o seu card (o contexto da sessão anterior vale mais que a fila)\n\n")
+	} else {
+		// SEM CARD: pede ao pipeline. Ele é serializado, e é isso que impede dois agentes
+		// de receberem o mesmo trabalho (ver `board.Ask`).
+		if err := cli.Ask(agent); err != nil {
+			return err
+		}
+		fmt.Printf("trabalho pedido ao pipeline (claim serializado)\n")
+		fmt.Printf("  o pipeline escolhe o card, comenta a posse e move para in-progress.\n\n")
+		fmt.Printf("Leia o que recebeu:\n")
+		fmt.Printf("    anchors next          # em alguns segundos, quando o claim rodar\n")
+		fmt.Printf("    gh run list --workflow %s --limit 1   # ver o claim\n", board.ClaimWorkflow)
+		return nil
 	}
 
 	fmt.Printf("card reivindicado: #%d — %s\n\n", card.Number, card.Title)
