@@ -39,7 +39,16 @@ import (
 	"strings"
 )
 
-// Estados do ciclo, na ordem em que o claim os oferece.
+// Estados do ciclo.
+//
+// Eles se dividem em dois grupos, e a divisão é o que o claim usa:
+//
+//	PARADOS      ready-to-review, to-do — esperando alguém pegar
+//	EM CURSO     in-progress, in-review — alguém já está com eles
+//
+// `in-review` é trabalho em curso tanto quanto `in-progress`: a diferença entre os dois é
+// QUE trabalho está acontecendo, não SE está. Um card ali tem um revisor, e oferecê-lo ao
+// claim entrega o mesmo card a duas pessoas.
 const (
 	StateReadyToReview = "anchors:ready-to-review"
 	StateToDo          = "anchors:to-do"
@@ -186,10 +195,14 @@ func (c Client) Mine(agent string) (*Card, error) {
 		if card.Owner != agent || waiting(card) {
 			continue
 		}
-		if s := liveState(card); s != "" {
-			card.State = s
-			return &card, nil
+		// RETOMAR é para o que ficou pela metade — `in-progress`. Um card que já foi
+		// entregue e está `in-review` não é trabalho meu: quem revisa é outro, e o meu
+		// próximo trabalho está noutro card.
+		if !has(card.Labels, StateInProgress) {
+			continue
 		}
+		card.State = StateInProgress
+		return &card, nil
 	}
 	return nil, nil
 }
@@ -201,6 +214,19 @@ func liveState(c Card) string {
 		}
 	}
 	return ""
+}
+
+// emCurso diz se alguém já está trabalhando no card.
+//
+// `in-review` conta, e é a correção desta rodada: ele é trabalho em curso tanto quanto
+// `in-progress` — a diferença é QUE trabalho acontece, não SE acontece. Um card em review
+// tem um revisor, e devolvê-lo ao claim entrega o mesmo card a duas pessoas.
+//
+// Medido: o `Mine` devolvia qualquer card do agente sem olhar o estado, e um card já
+// entregue e em revisão voltava a cada `anchors next` — a fila parecia ter trabalho e o
+// agente reabria o que já tinha fechado.
+func emCurso(c Card) bool {
+	return has(c.Labels, StateInProgress) || has(c.Labels, StateInReview)
 }
 
 // Ask PEDE trabalho ao pipeline, e não o reivindica direto.
