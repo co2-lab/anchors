@@ -292,10 +292,40 @@ func scenarioEdges(files []scan.File, colo []Edge) []Edge {
 		linked[e.From+"\x00"+e.To] = true
 	}
 
+	// SÓ O CÓDIGO DA PRÓPRIA UNIDADE liga. Citar não é declarar.
+	//
+	// Uma spec cita códigos de irmãs o tempo todo — "o `ARSTS-B05` decidiu que métrica
+	// ausente não é métrica boa" — e o teste da irmã prova aquele código. Sem esta guarda,
+	// o mapa conclui que um testa o outro.
+	//
+	// Medido no projeto de referência: 40 arestas `tested-by` para um único
+	// `AreaStatus.test.ts`, vindas de specs que só o mencionavam em prosa. O `RateLimiting`
+	// aparecia testado por ele e NÃO pelo próprio `RateLimiting.test.ts` — e o
+	// `triad-complete` ficava indeterminado, que é o pior resultado: nem passa nem acusa.
+	//
+	// É a terceira porta do mesmo defeito que a v0.1.57 fechou nas outras duas (o dado de
+	// teste lido como declaração, e o derivado sem âncora).
+	codigoDe := func(f scan.File) string {
+		if f.HeaderCode != "" {
+			return f.HeaderCode
+		}
+		// Sem header, o primeiro código é a inferência que o `nodeCode` já usa.
+		if len(f.Codes) > 0 {
+			return RuleRoot(f.Codes[0])
+		}
+		return ""
+	}
+
 	type ref struct{ path, kind string }
 	byCode := map[string][]ref{}
 	for _, f := range files {
+		dono := codigoDe(f)
 		for _, c := range f.Codes {
+			// A citação de uma irmã não entra no índice: só o código cuja RAIZ é a
+			// identidade deste arquivo.
+			if dono == "" || RuleRoot(c) != dono {
+				continue
+			}
 			byCode[c] = append(byCode[c], ref{f.Path, f.Kind})
 		}
 	}
@@ -645,4 +675,17 @@ func stemOfDerived(path string) string {
 		return base[:i]
 	}
 	return base
+}
+
+// RuleRoot devolve a UNIDADE dona de um código de regra ou cenário.
+//
+// `GLCGL-B01` → `GLCGL`; `GLCGL-B01#02` → `GLCGL`. É o prefixo antes do primeiro hífen, e
+// não uma regex do formato completo: o vocabulário de letras é extensível por projeto
+// (`rule_types`), e uma regex aqui teria de acompanhar cada extensão — divergindo em
+// silêncio na primeira que alguém declarasse.
+func RuleRoot(codigo string) string {
+	if i := strings.Index(codigo, "-"); i > 0 {
+		return codigo[:i]
+	}
+	return codigo
 }

@@ -286,3 +286,82 @@ func TestSemTBDNadaEhDispensado(t *testing.T) {
 		t.Error("`@TBD` sem alvo não pode dispensar nada")
 	}
 }
+
+// O `@TBD` ENTRE CRASES é citação, não declaração.
+//
+// Uma revisão que explica a remoção da dispensa cita o marcador — "a dispensa
+// `@TBD: code,feature,test` do cabeçalho SAIU" — e sem a guarda a citação a REATIVA. A
+// spec passaria a declarar uma ausência que o texto ao lado diz ter deixado de existir.
+//
+// Medido ao remover o `@TBD` de três specs com as trincas completas: o gate continuou
+// lendo a dispensa, agora do texto da própria revisão que a removia — e o `triad-complete`
+// voltou a INDETERMINADO, que é o pior resultado (nem passa nem acusa, e parece cobertura).
+func TestPiecesToDevelop_citacaoEntreCrasesNaoDispensa(t *testing.T) {
+	casos := []struct {
+		nome     string
+		corpo    string
+		dispensa bool
+	}{
+		{"declaração ativa", "> **@TBD: code,test** — em andamento", true},
+		{"no início da linha", "@TBD: code", true},
+		{"citação numa revisão", "> a dispensa `@TBD: code,feature,test` do cabeçalho SAIU", false},
+		{"citação em prosa", "removi o `@TBD: test` porque a peça existe", false},
+	}
+	for _, c := range casos {
+		t.Run(c.nome, func(t *testing.T) {
+			got := len(piecesToDevelop(c.corpo)) > 0
+			if got != c.dispensa {
+				t.Errorf("dispensa=%v, queria %v para:\n%s", got, c.dispensa, c.corpo)
+			}
+		})
+	}
+}
+
+// E a declaração ativa continua nomeando as peças certas — a guarda não pode comer o
+// grupo de captura.
+func TestPiecesToDevelop_aDeclaracaoAtivaNomeiaAsPecas(t *testing.T) {
+	pecas := piecesToDevelop("> **@TBD: code,feature** — a spec nasce primeiro")
+	if len(pecas) != 2 {
+		t.Fatalf("peças = %v, queria code e feature", pecas)
+	}
+}
+
+// O REGIME DECLARADO vence o fallback por NOME, e a camada da spec é a do header.
+//
+// Duas coisas se somavam para dispensar unidades que têm regra:
+//
+//  1. `infra` está entre os nomes canônicos de camada declarativa (DAO, adaptador), e o
+//     fallback os reconhece por nome quando o projeto não declara regime;
+//  2. o nó de uma SPEC tem `layer: spec` — ela casa `**/*.spec.md` —, então o `Regime`
+//     copiado para o nó é o da camada `spec`, e o que o projeto declarou para `infra`
+//     nunca chegava.
+//
+// Medido: `packages/infra/` do projeto de referência é CDK COM regra — três unidades, 19
+// regras e invariantes somados, 61 testes, toda mutação detectada — e o `triad-complete`
+// respondia INDETERMINADO nas três. Nem passa nem acusa, e parece cobertura.
+func TestIsRecognizedLayerCfg_oRegimeDeclaradoVence(t *testing.T) {
+	spec := mapx.Node{Kind: mapx.KindSpec, Layer: "spec", Tags: []string{"spec"}}
+	header := "<!-- @anchors\n  layer: infra\n-->\n"
+
+	semDeclaracao := &config.Config{Layers: map[string]config.Layer{"infra": {}}}
+	comRegra := &config.Config{Layers: map[string]config.Layer{
+		"infra": {Regime: "comportamental"},
+	}}
+	comDispensa := &config.Config{Layers: map[string]config.Layer{
+		"infra": {Regime: "declarativo"},
+	}}
+
+	// Sem declaração, o fallback por nome vale — é o que serve a projeto que ainda não
+	// declarou regime, e tirá-lo mudaria o comportamento de quem depende dele.
+	if !isRecognizedLayerCfg(spec, header, semDeclaracao) {
+		t.Error("sem regime declarado, `infra` cai no fallback por nome")
+	}
+	// Declarado comportamental, a trinca é COBRADA.
+	if isRecognizedLayerCfg(spec, header, comRegra) {
+		t.Error("o projeto declarou `comportamental` e o gate dispensou pelo NOME da camada")
+	}
+	// Declarado declarativo, a dispensa continua.
+	if !isRecognizedLayerCfg(spec, header, comDispensa) {
+		t.Error("o projeto declarou `declarativo` e o gate cobrou")
+	}
+}

@@ -31,7 +31,7 @@ func escreveProgresso(t *testing.T, plano, progresso string) (root, planoPath st
 //
 // O progresso do plano 0017 tinha, na fase F02:
 //
-//	- [ ] TODO: um item por spec que esta fase semeia
+//   - [ ] TODO: um item por spec que esta fase semeia
 //
 // O `anchors new progress` o escreve quando a fase não semeia nada, e ele deveria sair
 // quando alguém decide o que a fase faz. Ficou.

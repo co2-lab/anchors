@@ -272,6 +272,21 @@ func isRecognizedLayer(n mapx.Node, content string) bool {
 	if n.Regime == "declarativo" {
 		return true
 	}
+	// REGIME DECLARADO E DIFERENTE encerra a decisão: o projeto disse o que a camada é, e
+	// o fallback por nome não pode contradizê-lo.
+	//
+	// Sem esta linha, a Estrutura era fonte da verdade só na direção que DISPENSA. Uma
+	// camada `infra` que declara `regime: regra` continuava caindo no fallback — e ali
+	// `infra` é um dos nomes canônicos de camada declarativa (DAO, adaptador, o que não
+	// decide nada).
+	//
+	// Medido no projeto de referência: `packages/infra/` é CDK COM regra — três unidades
+	// com 19 regras e invariantes somados, 61 testes, toda mutação detectada — e o
+	// `triad-complete` respondia INDETERMINADO nas três, por causa do NOME da camada. Nem
+	// passa nem acusa, e parece cobertura.
+	if n.Regime != "" {
+		return false
+	}
 	// Fallback aos nomes canônicos, p/ projetos que ainda não declaram `regime:`.
 	for _, t := range n.Tags {
 		if recognizedLayers[t] {
@@ -282,6 +297,34 @@ func isRecognizedLayer(n mapx.Node, content string) bool {
 		return recognizedLayers[strings.TrimSpace(m[1])]
 	}
 	return false
+}
+
+// isRecognizedLayerCfg decide o mesmo, consultando a ESTRUTURA para a camada que a spec
+// declara no header.
+//
+// A distinção existe porque o nó de uma SPEC tem `layer: spec` — ela casa `**/*.spec.md`,
+// e o `Regime` copiado para o nó é o da camada `spec`, não o da unidade. O regime que o
+// projeto declarou para `infra` nunca chegava aqui, e a decisão caía no fallback por nome.
+//
+// Medido: `packages/infra/` do projeto de referência é CDK COM regra — três unidades, 19
+// regras e invariantes somados, 61 testes —, o projeto declarou `regime: comportamental`
+// na camada, e o `triad-complete` seguiu respondendo INDETERMINADO. Nem passa nem acusa, e
+// parece cobertura.
+func isRecognizedLayerCfg(n mapx.Node, content string, cfg *config.Config) bool {
+	if n.Regime == "declarativo" {
+		return true
+	}
+	// A camada da UNIDADE, que a spec declara no header — e o regime QUE O PROJETO deu a
+	// ela. Declarado e diferente de `declarativo` encerra a decisão: a Estrutura é fonte
+	// da verdade nas duas direções, não só na que dispensa.
+	if cfg != nil {
+		if m := headerLayerValueRE.FindStringSubmatch(content); m != nil {
+			if l, ok := cfg.Layers[strings.TrimSpace(m[1])]; ok && l.Regime != "" {
+				return l.Regime == "declarativo"
+			}
+		}
+	}
+	return isRecognizedLayer(n, content)
 }
 
 // isExecutableScript — o nó é um roteiro do runner e2e (não um arquivo de teste em
