@@ -11,6 +11,7 @@ import (
 	"github.com/co2-lab/anchors/internal/doct"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
+	"github.com/co2-lab/anchors/internal/settings"
 
 	"github.com/co2-lab/anchors/internal/config"
 
@@ -550,7 +551,26 @@ func nextFromBoard(root string, cfg *config.Config, agent string) error {
 			"inferir do remote faria o Anchors escrever noutro repositório quando alguém " +
 			"trabalha num fork, e escrita em lugar errado não se desfaz com revert")
 	}
-	cli := board.Client{Repo: cfg.Workflow.Repo, Labels: cfg.Workflow.Labels}
+	// A DECISÃO LOCAL, antes de pedir trabalho.
+	//
+	// Num projeto com vários devs, cada um roda o seu agente — e nem todos podem decidir
+	// pelo produto. Um agente que pega um card escalonado e pergunta a quem o está
+	// rodando obtém uma resposta, e ela pode não ser a do dono: o escalonamento existe
+	// justamente para levar a pergunta a quem decide, e um agente prestativo demais o
+	// curto-circuita.
+	//
+	// Pergunta UMA VEZ, e o `.anchors/settings.yaml` guarda a resposta — fora do git,
+	// porque é decisão de quem opera, não do projeto. Quem já declarou não é perguntado
+	// de novo: perguntar a cada sessão é como se ensina alguém a responder sem ler.
+	local, err := ensureLocalDecision(root)
+	if err != nil {
+		return err
+	}
+
+	cli := board.Client{
+		Repo: cfg.Workflow.Repo, Labels: cfg.Workflow.Labels,
+		UserIssues: local.HandlesUserIssues(),
+	}
 
 	// PRIMEIRO o que já é meu: se este agente tem card, não há nada a pedir.
 	//
@@ -809,4 +829,52 @@ func printReviewWork(root string, card *board.Card) {
 	// do board passou a divergir do repositório sem nada acusar.
 	fmt.Printf("Ao terminar:       anchors pr-body --cards %d  (traz o `Closes` que fecha o card)\n", card.Number)
 	fmt.Printf("                   abra o PR com esse corpo — o pipeline move o card, você não\n")
+}
+
+// ensureLocalDecision pergunta, uma vez, se este agente atua nos cards escalonados.
+//
+// Só pergunta quando NÃO HÁ decisão registrada. As três situações são distintas, e tratar
+// "não declarado" como "não" apagaria a única em que a pergunta cabe:
+//
+//	nil    nunca perguntei      → pergunta agora
+//	false  disse que não        → segue, sem perguntar
+//	true   disse que sim        → segue, sem perguntar
+//
+// Fora do terminal (CI, pipeline) não há a quem perguntar: assume o padrão fechado e
+// registra, para o próximo `next` não travar esperando entrada que não vem.
+func ensureLocalDecision(root string) (settings.Settings, error) {
+	s, err := settings.Load(root)
+	if err != nil {
+		return s, err
+	}
+	if s.Decided() {
+		return s, nil
+	}
+	if !terminalInterativo() {
+		fmt.Println("(sem terminal para perguntar — este agente NÃO atua nos cards")
+		fmt.Println(" escalonados. Declare com `anchors settings user-issues`)")
+		fmt.Println()
+		return s, nil
+	}
+	decisao, err := askUserIssues()
+	if err != nil {
+		return s, err
+	}
+	s.UserIssues = decisao
+	s.Agent = agentID()
+	if err := settings.Save(root, s); err != nil {
+		return s, err
+	}
+	fmt.Printf("\n✓ %s\n", s.Describe())
+	fmt.Printf("  registrado em %s — não perguntarei de novo\n\n", settings.Path(root))
+	return s, nil
+}
+
+// terminalInterativo diz se há alguém do outro lado para responder.
+func terminalInterativo() bool {
+	fi, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return fi.Mode()&os.ModeCharDevice != 0
 }

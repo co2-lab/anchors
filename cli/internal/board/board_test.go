@@ -13,19 +13,43 @@ func TestMine_retomarOProprioVenceAPrioridade(t *testing.T) {
 	}
 }
 
-// A REGRA 3: `needs-user` nunca é entregue.
+// A REGRA 3: `needs-user` só vai para quem DECLAROU que decide o produto.
 //
-// É o card waiting esperando decisão de gente, e dá-lo a um agente o faz decidir sozinho —
-// que é o que o `escalate` existe para impedir.
-func TestParado_recusaOsDoisNomesDeNeedsUser(t *testing.T) {
+// Antes ele era recusado por todos, e os escalonados só saíam do board por intervenção
+// manual. A declines agora depende de quem pergunta: num projeto com vários devs, cada um
+// roda o seu agente, e um agente que pega um card escalonado e pergunta a quem o está
+// rodando obtém uma resposta que pode não ser a do dono do projeto.
+//
+// O padrão é fechado — o zero-value do `Client` não atua —, e o custo de errar para o lado
+// aberto é alguém decidir o produto sem autoridade, que é invisível depois do fato.
+func TestRecusa_escalonadoDependeDaDeclaracao(t *testing.T) {
 	for _, label := range []string{StateNeedsUser, StateNeedsUserPt} {
-		c := Card{Labels: []string{StateToDo, label}}
-		if !waiting(c) {
-			t.Errorf("card com %q não foi reconhecido como waiting", label)
+		card := Card{Labels: []string{StateToDo, label}}
+
+		semDeclarar := Client{}
+		if !semDeclarar.declines(card) {
+			t.Errorf("%q: o cliente que não declarou nada NÃO pode pegar escalonado", label)
+		}
+
+		optOut := Client{UserIssues: false}
+		if !optOut.declines(card) {
+			t.Errorf("%q: quem declarou que não decide continua recusando", label)
+		}
+
+		optIn := Client{UserIssues: true}
+		if optIn.declines(card) {
+			t.Errorf("%q: quem declarou que decide o produto pode pegá-lo", label)
 		}
 	}
-	if waiting(Card{Labels: []string{StateToDo}}) {
-		t.Error("card sem needs-user foi tratado como waiting")
+}
+
+// O card COMUM não é recusado por ninguém — a declaração só governa o escalonado.
+func TestRecusa_oCardComumPassaNosDoisModos(t *testing.T) {
+	card := Card{Labels: []string{StateToDo}}
+	for _, c := range []Client{{}, {UserIssues: true}} {
+		if c.declines(card) {
+			t.Errorf("card comum recusado por Client{UserIssues:%v}", c.UserIssues)
+		}
 	}
 }
 
