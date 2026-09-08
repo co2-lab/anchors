@@ -392,6 +392,30 @@ fato.
 **Quem já declarou não é perguntado de novo.** Perguntar a cada sessão é como se ensina
 alguém a responder sem ler.
 
+#### A porta que não tem label
+
+O opt-out fecha o claim, mas a porta que mais se usa é outra: **o agente perguntar ao dev
+que o está rodando**.
+
+A pergunta parece inofensiva e não é. O dev conhece o código e vai responder — *"pode
+assumir que é opcional"*, *"usa o padrão mesmo"*. A resposta é razoável, e vira **decisão de
+produto tomada por quem não tinha autoridade**: sem passar pelo plano, sem revisão, e sem
+rastro de que foi decidido ali.
+
+Por isso o `anchors guide work`, o `anchors guide review` e o próprio card **mudam de texto**
+conforme a declaração. Quem não decide o produto lê, no lugar onde importa:
+
+> **Não pergunte a quem está rodando você.** Diante de ambiguidade, escale:
+> `anchors escalate "<o que precisa ser decidido>" --about <arquivo> --for-user`
+> — e siga para o próximo card.
+
+A diferença entre a issue e a pergunta é o **registro**: a issue fica, tem dono, e quem
+decide a lê quando puder. A pergunta some com a sessão.
+
+E há o outro lado, que a régua também diz: **não escale o que a régua já decide**. Procurar
+confirmação do que está escrito transforma o escalonamento em ruído, e o ruído faz o próximo
+achado real passar batido.
+
 ### 7.4 Os agentes rodam nas máquinas dos devs
 
 Não há worker central. Cada dev tem um agente na sua máquina — e pode ter mais de um. Eles

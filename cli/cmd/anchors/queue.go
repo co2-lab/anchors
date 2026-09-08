@@ -678,6 +678,20 @@ func printBoardWork(root string, card *board.Card) {
 		fmt.Println("ENTREGÁVEL: veja o corpo do card.")
 	}
 
+	// A RÉGUA DA AUTONOMIA no próprio card, e não só no guia.
+	//
+	// O guia é um comando que alguém precisa rodar; o card é o que o agente lê sempre. Um
+	// agente que não decide o produto e não abriu o guia perguntaria ao dev — e é a porta
+	// que mais se usa, porque não tem label nem gate.
+	if !decidesProduct(root) {
+		fmt.Println()
+		fmt.Println("  VOCÊ NÃO DECIDE O RUMO DESTE PRODUTO (`.anchors/settings.yaml`).")
+		fmt.Println("  Diante de ambiguidade ou de escolha que muda o comportamento:")
+		fmt.Println("      anchors escalate \"<o que precisa ser decidido>\" --about <arquivo> --for-user")
+		fmt.Println("  NÃO pergunte a quem está rodando você — a resposta é razoável e vira")
+		fmt.Println("  decisão de produto de quem não tinha autoridade, sem rastro nenhum.")
+	}
+
 	fmt.Printf("\nAntes de começar:  anchors guide work\n")
 	if unidade != "" {
 		fmt.Printf("O que propagar:    anchors impact %s\n", unidade)
@@ -877,4 +891,17 @@ func terminalInterativo() bool {
 		return false
 	}
 	return fi.Mode()&os.ModeCharDevice != 0
+}
+
+// decidesProduct diz se este agente declarou que decide o rumo do produto.
+//
+// Erra para o lado FECHADO quando não consegue ler: um erro de leitura que resultasse em
+// "pode perguntar" seria a falha silenciosa mais cara deste mecanismo — o agente perguntaria
+// e ninguém saberia que a régua não foi aplicada.
+func decidesProduct(root string) bool {
+	s, err := settings.Load(root)
+	if err != nil {
+		return false
+	}
+	return s.HandlesUserIssues()
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/spf13/cobra"
 )
 
@@ -283,8 +284,15 @@ Subcomandos imprimem os guias das réguas específicas:
 		},
 	}
 	cmd.AddCommand(
-		newGuideSubCmd("review", "como revisar um PR: o que é seu e o que o check já mediu", reviewGuide),
-		newGuideSubCmd("work", "como trabalhar um card: a ordem, o que fazer com o achado que não é dele", workGuide),
+		// Os DOIS guias que dizem o que fazer diante do que não se sabe ganham a seção de
+		// AUTONOMIA, que muda conforme a declaração local (`.anchors/settings.yaml`).
+		//
+		// Ela não é um aviso no fim do texto: quem não decide o produto lê uma instrução
+		// diferente, no lugar onde ela importa. O `settings user-issues` fecha a porta do
+		// claim; esta seção fecha a que mais se usa — perguntar a quem está rodando o
+		// agente, e receber uma resposta razoável de quem não tinha autoridade para dá-la.
+		newGuideComAutonomia("review", "como revisar um PR: o que é seu e o que o check já mediu", reviewGuide),
+		newGuideComAutonomia("work", "como trabalhar um card: a ordem, o que fazer com o achado que não é dele", workGuide),
 		newGuideSubCmd("project", "como descobrir um projeto que ainda não existe (PROJECT.md + INSIGHTS.md)", projectGuide),
 		newGuidePlanCmd(),
 		newGuideSubCmd("spec", "como escrever uma spec (a origem da verdade)", specGuide),
@@ -321,4 +329,31 @@ escrevem um plano que decide QUAIS specs nascem ou mudam — nunca código diret
 			return nil
 		},
 	}
+}
+
+// newGuideComAutonomia fabrica um guia que anexa a seção de autonomia.
+//
+// A seção depende do `.anchors/settings.yaml`, e por isso este subcomando aceita `--root`:
+// sem ele, um agente que rodasse o guia de outro diretório leria a régua errada — e a
+// régua errada aqui é a que autoriza perguntar.
+func newGuideComAutonomia(use, short, body string) *cobra.Command {
+	var root string
+	cmd := &cobra.Command{
+		Use:   use,
+		Short: short,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			absRoot, err := config.AbsRoot(root)
+			if err != nil {
+				// Fora de um projeto, o guia ainda serve — só não tem a declaração local
+				// para consultar. Melhor imprimir a régua geral que recusar a ajuda.
+				fmt.Print(body)
+				return nil
+			}
+			fmt.Print(body)
+			printAutonomy(absRoot)
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
+	return cmd
 }
