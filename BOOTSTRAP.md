@@ -356,6 +356,42 @@ o pipeline. Um arquivo em `changes/` ali não é lido por ninguém.
 O `anchors doctor --fix` acusa registros em arquivo quando o modo é `github`. Ele **avisa e
 não apaga**: o registro é memória do que aconteceu com o produto.
 
+### 7.3.3 Nem todo agente decide o produto
+
+Num projeto com vários devs, cada um pode rodar o seu agente — e **nem todos podem decidir
+pelo produto**.
+
+Os cards `needs-user` são os escalonados: o agente achou algo que muda a direção e escalou
+em vez de decidir sozinho. Um agente que pega um desses e pergunta a quem o está rodando
+obtém uma resposta — e ela pode não ser a do dono do projeto. **O escalonamento existe
+justamente para levar a pergunta a quem decide**, e um agente prestativo demais o
+curto-circuita.
+
+Por isso a decisão é declarada, e é **local**:
+
+```
+anchors settings user-issues        # pergunta, e registra a resposta
+anchors settings show               # mostra o que está declarado
+```
+
+O registro vai para `.anchors/settings.yaml` — a mesma pasta do estado do daemon, que já
+está no `.gitignore`. **Não é configuração do projeto**: vale para uma máquina, e dois devs
+no mesmo repositório podem ter respostas diferentes.
+
+| estado | o que acontece |
+|---|---|
+| não declarado | o `anchors next` pergunta, uma vez, e registra |
+| declarou que **não** | os escalonados são recusados; o agente segue nos cards comuns |
+| declarou que **sim** | o claim pode entregar um escalonado a ele |
+
+**O padrão é fechado.** Sem declaração, o agente não atua — e fora do terminal (CI,
+pipeline) ele assume isso sem travar esperando uma entrada que não vem. O custo de errar
+para o lado aberto é alguém decidir o produto sem autoridade, e isso é invisível depois do
+fato.
+
+**Quem já declarou não é perguntado de novo.** Perguntar a cada sessão é como se ensina
+alguém a responder sem ler.
+
 ### 7.4 Os agentes rodam nas máquinas dos devs
 
 Não há worker central. Cada dev tem um agente na sua máquina — e pode ter mais de um. Eles

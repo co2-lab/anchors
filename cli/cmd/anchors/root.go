@@ -58,6 +58,8 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 	root.AddCommand(newMapCmd())
 	// A doc é compilada: `doct/*.md.tmpl` -> `docs/*.md` (o conteúdo mora nas specs).
 	root.AddCommand(newDocsCmd())
+	// A configuração LOCAL do agente: o que é dele, e não do projeto.
+	root.AddCommand(newSettingsCmd())
 	root.AddCommand(newProgressMergeCmd())
 	root.AddCommand(newImpactCmd())
 	root.AddCommand(newCheckCmd())

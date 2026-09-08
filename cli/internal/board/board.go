@@ -74,6 +74,17 @@ const OwnerMarker = "anchors-owner:"
 type Client struct {
 	Repo   string
 	Labels []string
+	// UserIssues diz se ESTE agente atua nos cards escalonados (`needs-user`).
+	//
+	// O padrão do zero-value é `false`, e é o certo: um cliente construído sem declarar
+	// nada não pega escalonado. Quem pode decidir o produto declara que pode — e a
+	// declaração vive em `.anchors/settings.yaml`, local e fora do git.
+	//
+	// A razão é de autoridade, não de capacidade. Num projeto com vários devs, cada um
+	// roda o seu agente; um agente que pega um card escalonado e pergunta a quem o está
+	// rodando obtém uma resposta, e ela pode não ser a do dono do projeto. O escalonamento
+	// existe justamente para levar a pergunta a quem decide.
+	UserIssues bool
 }
 
 // Card é o trabalho que o board entrega.
@@ -172,9 +183,18 @@ func has(labels []string, name string) bool {
 	return false
 }
 
-// waiting diz se o card está esperando decisão de gente.
-func waiting(c Card) bool {
+// isEscalated diz se o card está esperando decisão de gente.
+func isEscalated(c Card) bool {
 	return has(c.Labels, StateNeedsUser) || has(c.Labels, StateNeedsUserPt)
+}
+
+// declines diz se este cliente deve deixar o card de lado.
+//
+// Um escalonado é recusado por quem NÃO declarou que decide o produto — e essa é a
+// diferença que o `UserIssues` introduz. Antes, ele era recusado por todos, e os cards
+// escalonados só saíam do board por intervenção manual.
+func (c Client) declines(card Card) bool {
+	return isEscalated(card) && !c.UserIssues
 }
 
 // Mine devolve o card que JÁ É deste agente, ou nil.
@@ -192,7 +212,7 @@ func (c Client) Mine(agent string) (*Card, error) {
 		return nil, err
 	}
 	for _, card := range cards {
-		if card.Owner != agent || waiting(card) {
+		if card.Owner != agent || c.declines(card) {
 			continue
 		}
 		// TERMINAR O QUE ESTÁ COM ELE antes de pegar coisa nova. Um card `in-progress`
