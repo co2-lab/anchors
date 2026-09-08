@@ -80,7 +80,17 @@ type File struct {
 	// texto, o que erra quando a spec CITA outra unidade antes de definir a sua: uma spec
 	// de modelo que abre referenciando `DTAXX-B11` era registrada no mapa como dona de
 	// `DTAX`, e todo gate relacional passava a olhar a unidade errada.
-	HeaderCode    string
+	HeaderCode string
+	// HeaderLayer é a camada da UNIDADE, declarada no header (`layer: screen`).
+	//
+	// Distinta do `Layer`, que é a camada do ARQUIVO: uma spec casa `**/*.spec.md` e o
+	// `Layer` dela é `spec`. Quem pergunta "que camada é esta unidade" quer esta.
+	//
+	// Medido: o `derived.overrides` com `when: screen` nunca casava para uma spec, porque
+	// comparava contra o `Layer` — e o mapa procurava `{{name}}.ts` numa camada cujo
+	// pattern exige `.tsx`. O `triad-complete` respondia "falta o código" com o arquivo no
+	// disco.
+	HeaderLayer   string
 	NoPropagation bool  // o texto contém a anotação @noPropagation
 	SharedCode    bool  // o texto contém @anchors-shared-code (opt-out de colisão)
 	Deps          []Dep // dependências de reúso declaradas (Tabela de Dependências, SPEC_TYPES §5)
@@ -179,6 +189,7 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 			Rev:           shortHash(content),
 			Codes:         extractCodes(content),
 			HeaderCode:    extractHeaderCode(string(content)),
+			HeaderLayer:   extractHeaderLayer(string(content)),
 			Seeds:         extractSeeds(kind, string(content)),
 			Needs:         needsFor(kind, content, root, rel),
 			Parent:        parentDe(content),
@@ -891,4 +902,15 @@ func extractSeeds(kind, content string) []string {
 		out = append(out, m[1])
 	}
 	return out
+}
+
+// extractHeaderLayer lê a camada que o arquivo DECLARA no header.
+//
+// Vazio quando não há declaração — e aí quem consulta cai no `Layer` do arquivo, que para
+// tudo o que não é spec já é a camada da unidade.
+func extractHeaderLayer(content string) string {
+	if m := headerLayerRE.FindStringSubmatch(content); m != nil {
+		return m[1]
+	}
+	return ""
 }

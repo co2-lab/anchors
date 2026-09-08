@@ -204,7 +204,15 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 		// conjuntos diferentes de arquivos (a de `tsconfig` e a de `package.json`), e sem
 		// essa granularidade cada uma governaria os arquivos da outra.
 		for _, ov := range cfg.Derived.Overrides {
-			if ov.Code != "" || ov.When != f.Layer {
+			// A camada da UNIDADE, e não a do arquivo. Uma spec casa `**/*.spec.md` e o
+			// `f.Layer` dela é `spec` — um `when: screen` nunca casaria, e o override por
+			// camada seria inútil justamente para a âncora, que é quem o consulta.
+			//
+			// Medido: as camadas de UI do projeto de referência exigem `.tsx` no pattern,
+			// o `derived.files` global diz `.ts`, e o override que reconciliava os dois
+			// não era aplicado. O `triad-complete` respondia "falta o código" com o
+			// arquivo no disco.
+			if ov.Code != "" || ov.When != layerOfUnit(f) {
 				continue
 			}
 			for layer, tmpl := range ov.PadroesDe() {
@@ -688,4 +696,15 @@ func RuleRoot(codigo string) string {
 		return codigo[:i]
 	}
 	return codigo
+}
+
+// layerOfUnit devolve a camada da UNIDADE de um arquivo.
+//
+// O header vence porque é onde o autor a declara; sem ele, o `Layer` do arquivo já é a
+// camada da unidade para tudo o que não é spec.
+func layerOfUnit(f scan.File) string {
+	if f.HeaderLayer != "" {
+		return f.HeaderLayer
+	}
+	return f.Layer
 }
