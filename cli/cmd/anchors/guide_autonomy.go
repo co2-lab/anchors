@@ -29,11 +29,20 @@ func autonomyGuide(root string) string {
 	s, _ := settings.Load(root)
 
 	var b strings.Builder
+
+	// A LENTE do perfil, quando ele tem uma.
+	//
+	// "Revisar" não é uma coisa só: quem procura vazamento de dado e quem procura consulta
+	// em laço leem o mesmo código com perguntas diferentes. Um revisor sem lente declarada
+	// tende a fazer a revisão que SABE fazer — não a que falta.
+	if lens := s.Role.Lens(); lens != "" {
+		fmt.Fprintf(&b, "\n## A lente deste perfil (%s)\n\n%s.\n", s.Role.Title(), lens)
+	}
+
 	b.WriteString("\n## Quando você não souber\n\n")
 
 	if s.HandlesUserIssues() {
-		b.WriteString("Você declarou que decide o rumo deste produto " +
-			"(`anchors settings show`).\n\n")
+		fmt.Fprintf(&b, "Seu perfil (%s) decide o rumo deste produto.\n\n", s.Role.Title())
 		b.WriteString("Ainda assim, a régua vale: o que muda a DIREÇÃO do projeto se " +
 			"escreve, não se\nconversa. Uma decisão tomada no meio de uma sessão não " +
 			"deixa rastro de por que\nfoi tomada, e quem a herdar não terá como saber se " +
@@ -51,11 +60,11 @@ func autonomyGuide(root string) string {
 	// dizer "ficou declarado" a quem nunca declarou é afirmar um fato que não aconteceu, e
 	// o leitor vai procurar a declaração que não existe.
 	if s.Decided() {
-		b.WriteString("**Você NÃO decide o rumo deste produto** — foi o que ficou " +
-			"declarado em\n`.anchors/settings.yaml` (veja com `anchors settings show`).\n\n")
+		fmt.Fprintf(&b, "**Seu perfil (%s) NÃO decide o rumo deste produto** — quem decide "+
+			"é o\n`product-owner` ou o `architect`.\n\n", s.Role.Title())
 	} else {
-		b.WriteString("**Você não declarou se decide o rumo deste produto**, e o padrão " +
-			"é NÃO.\nDeclare com `anchors settings user-issues` se for o caso.\n\n")
+		b.WriteString("**Você não declarou um perfil**, e sem perfil o agente não decide " +
+			"nada.\nDeclare com `anchors settings role`.\n\n")
 	}
 	b.WriteString("Então, diante de uma ambiguidade, de uma spec que não decide o " +
 		"suficiente, ou de\numa escolha que muda o comportamento do produto:\n\n")

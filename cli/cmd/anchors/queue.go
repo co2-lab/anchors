@@ -865,22 +865,25 @@ func ensureLocalDecision(root string) (settings.Settings, error) {
 		return s, nil
 	}
 	if !terminalInterativo() {
-		fmt.Println("(sem terminal para perguntar — este agente NÃO atua nos cards")
-		fmt.Println(" escalonados. Declare com `anchors settings user-issues`)")
+		fmt.Println("(sem terminal para perguntar — este agente não tem perfil declarado,")
+		fmt.Println(" e sem perfil ele não atua nos cards escalonados. Declare com")
+		fmt.Println(" `anchors settings role`)")
 		fmt.Println()
 		return s, nil
 	}
-	decisao, err := askUserIssues()
+	perfil, err := askRole()
 	if err != nil {
 		return s, err
 	}
-	s.UserIssues = decisao
+	s.Role = perfil
+	s.UserIssues = nil
 	s.Agent = agentID()
 	if err := settings.Save(root, s); err != nil {
 		return s, err
 	}
-	fmt.Printf("\n✓ %s\n", s.Describe())
-	fmt.Printf("  registrado em %s — não perguntarei de novo\n\n", settings.Path(root))
+	fmt.Println()
+	printRole(perfil)
+	fmt.Printf("\n  registrado em %s — não perguntarei de novo\n\n", settings.Path(root))
 	return s, nil
 }
 

@@ -356,54 +356,82 @@ o pipeline. Um arquivo em `changes/` ali não é lido por ninguém.
 O `anchors doctor --fix` acusa registros em arquivo quando o modo é `github`. Ele **avisa e
 não apaga**: o registro é memória do que aconteceu com o produto.
 
-### 7.3.3 Nem todo agente decide o produto
+### 7.3.3 O PERFIL de quem contribui
 
-Num projeto com vários devs, cada um pode rodar o seu agente — e **nem todos podem decidir
-pelo produto**.
-
-Os cards `needs-user` são os escalonados: o agente achou algo que muda a direção e escalou
-em vez de decidir sozinho. Um agente que pega um desses e pergunta a quem o está rodando
-obtém uma resposta — e ela pode não ser a do dono do projeto. **O escalonamento existe
-justamente para levar a pergunta a quem decide**, e um agente prestativo demais o
-curto-circuita.
-
-Por isso a decisão é declarada, e é **local**:
+Num projeto com vários contribuidores, cada um pode rodar o seu agente — e nem todos fazem
+o mesmo trabalho. Quem chega declara o **perfil**, uma vez:
 
 ```
-anchors settings user-issues        # pergunta, e registra a resposta
-anchors settings show               # mostra o que está declarado
+anchors settings role        # pergunta, e registra
+anchors settings show        # mostra o perfil e as capacidades
 ```
 
-O registro vai para `.anchors/settings.yaml` — a mesma pasta do estado do daemon, que já
-está no `.gitignore`. **Não é configuração do projeto**: vale para uma máquina, e dois devs
-no mesmo repositório podem ter respostas diferentes.
+O registro vai para `.anchors/settings.yaml` — local, fora do git. **Não é configuração do
+projeto**: dois devs no mesmo repositório podem ter perfis diferentes.
 
-| estado | o que acontece |
-|---|---|
-| não declarado | o `anchors next` pergunta, uma vez, e registra |
-| declarou que **não** | os escalonados são recusados; o agente segue nos cards comuns |
-| declarou que **sim** | o claim pode entregar um escalonado a ele |
+| perfil | faz | decide? |
+|---|---|---|
+| `dev` | implementa a spec: código, cenários, teste, documentação | não |
+| `qa` | escreve o que prova, e ataca o que já passou | não |
+| `reviewer` | revisa adversarialmente, sem lente fixa | não |
+| `reviewer-security` | revisa com a lente de segurança | não |
+| `reviewer-performance` | revisa com a lente de custo | não |
+| `product-owner` | decide o rumo do produto | **sim** |
+| `architect` | decide a estrutura, e o produto | **sim** |
 
-**O padrão é fechado.** Sem declaração, o agente não atua — e fora do terminal (CI,
-pipeline) ele assume isso sem travar esperando uma entrada que não vem. O custo de errar
-para o lado aberto é alguém decidir o produto sem autoridade, e isso é invisível depois do
-fato.
+**O perfil não é hierarquia.** O arquiteto não manda no dev; ele responde outra pergunta. E
+não é permissão de repositório — o git cuida disso. É sobre **que trabalho o agente puxa** e
+**como ele se comporta diante do que não sabe**.
 
-**Quem já declarou não é perguntado de novo.** Perguntar a cada sessão é como se ensina
-alguém a responder sem ler.
+#### Só quem decide resolve o escalonado
+
+Os cards `needs-user` são os que um agente escalou porque encontrou algo que muda a direção.
+O claim só os entrega a `product-owner` e `architect`; os outros perfis escalam e seguem
+para o próximo card.
+
+**Por que a estrutura é separada do produto.** *"Esta tela deve mostrar o valor?"* é uma
+pergunta de produto; *"esta camada pode importar daquela?"* é de estrutura. Quem responde
+uma pode não ter contexto para a outra — e o arquiteto tem as duas capacidades porque
+decidir estrutura sem entender o produto produz camada que ninguém usa.
+
+#### A lente de quem revisa
+
+*Revisar* não é uma coisa só. Quem procura vazamento de dado e quem procura consulta em laço
+leem o mesmo código com perguntas diferentes — e **um revisor sem lente declarada tende a
+fazer a revisão que sabe fazer, não a que falta**.
+
+Por isso os perfis que revisam carregam a lente, e ela aparece no `anchors guide work` e no
+`anchors guide review`:
+
+> **segurança** — o dado que ESCAPA e a superfície que ABRE. Siga cada valor até onde ele sai
+> do sistema (resposta, log, métrica, push) e pergunte se ele precisava sair.
+>
+> **performance** — o que roda MAIS VEZES do que parece. Num serverless o custo é por
+> invocação: uma função que chama outra por item de uma lista de mil é mil invocações.
+>
+> **QA** — o que o teste NÃO prova. Mute a regra e rode a suíte: se ela continuar verde,
+> aquele teste não prova aquela linha.
+
+#### O padrão é fechado
+
+**Sem perfil, o agente não decide nada** — e fora do terminal (CI, pipeline) ele assume isso
+sem travar esperando entrada que não vem. Um perfil inventado no `settings.yaml` também não
+destrava capacidade nenhuma.
+
+O custo de errar para o lado aberto é alguém decidir sem autoridade, e isso é invisível
+depois do fato.
 
 #### A porta que não tem label
 
-O opt-out fecha o claim, mas a porta que mais se usa é outra: **o agente perguntar ao dev
-que o está rodando**.
+O perfil fecha o claim, mas a porta que mais se usa é outra: **o agente perguntar ao dev que
+o está rodando**.
 
-A pergunta parece inofensiva e não é. O dev conhece o código e vai responder — *"pode
-assumir que é opcional"*, *"usa o padrão mesmo"*. A resposta é razoável, e vira **decisão de
-produto tomada por quem não tinha autoridade**: sem passar pelo plano, sem revisão, e sem
-rastro de que foi decidido ali.
+A pergunta parece inofensiva e não é. O dev conhece o código e vai responder — *"pode assumir
+que é opcional"*, *"usa o padrão mesmo"*. A resposta é razoável, e vira **decisão de produto
+tomada por quem não tinha autoridade**: sem passar pelo plano, sem revisão, e sem rastro.
 
 Por isso o `anchors guide work`, o `anchors guide review` e o próprio card **mudam de texto**
-conforme a declaração. Quem não decide o produto lê, no lugar onde importa:
+conforme o perfil. Quem não decide o produto lê, no lugar onde importa:
 
 > **Não pergunte a quem está rodando você.** Diante de ambiguidade, escale:
 > `anchors escalate "<o que precisa ser decidido>" --about <arquivo> --for-user`
