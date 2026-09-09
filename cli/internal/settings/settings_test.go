@@ -77,10 +77,17 @@ func TestSave_oArquivoDizOQueEle(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	texto := string(b)
-	for _, esperado := range []string{"não vai para o git", "gitignore", "escalonados"} {
-		if !strings.Contains(texto, esperado) {
-			t.Errorf("o cabeçalho não menciona %q:\n%s", esperado, texto)
+	// O que o cabeçalho tem de dizer, e por quê:
+	//   · que é local — senão alguém tenta versioná-lo;
+	//   · quem decide o produto — é a diferença que mais aparece entre os perfis;
+	//   · como declarar — quem encontra o arquivo não estava na conversa.
+	texto := strings.ToLower(string(b))
+	for _, esperado := range []string{
+		"não vai para o git", "gitignore", "escalonados",
+		"product-owner", "architect", "anchors settings role",
+	} {
+		if !strings.Contains(texto, strings.ToLower(esperado)) {
+			t.Errorf("o cabeçalho não menciona %q:\n%s", esperado, b)
 		}
 	}
 }

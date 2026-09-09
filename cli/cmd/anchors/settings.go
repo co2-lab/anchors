@@ -23,8 +23,121 @@ Hoje há uma decisão aqui: se este agente atua nos cards ESCALONADOS
 (` + "`needs-user`" + `), que esperam decisão de quem conhece o produto.`,
 	}
 	cmd.AddCommand(newSettingsShowCmd())
+	cmd.AddCommand(newSettingsRoleCmd())
 	cmd.AddCommand(newSettingsUserIssuesCmd())
 	return cmd
+}
+
+// newSettingsRoleCmd declara o PERFIL de quem opera este agente.
+func newSettingsRoleCmd() *cobra.Command {
+	var root, date string
+	cmd := &cobra.Command{
+		Use:   "role [perfil]",
+		Short: "Declara o PERFIL de quem opera este agente",
+		Long: `O perfil diz que trabalho é seu, e as capacidades derivam dele.
+
+Não é hierarquia: o arquiteto não manda no dev, ele responde outra pergunta. E não
+é permissão de repositório — o git cuida disso. É sobre QUE TRABALHO o agente puxa
+do board e COMO ele se comporta diante do que não sabe.
+
+A diferença que mais aparece: só ` + "`product-owner`" + ` e ` + "`architect`" + ` atuam nos cards
+ESCALONADOS (` + "`needs-user`" + `), que esperam decisão de quem conhece o produto. Os
+outros perfis escalam e seguem para o próximo card.`,
+		Args: cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			absRoot, err := config.AbsRoot(root)
+			if err != nil {
+				return err
+			}
+			if date == "" {
+				return fmt.Errorf("informe --date AAAA-MM-DD (o Anchors não lê o relógio: " +
+					"a data é carimbada por quem declara)")
+			}
+			var perfil settings.Role
+			if len(args) == 1 {
+				if perfil = settings.ParseRole(args[0]); perfil == "" {
+					return fmt.Errorf("perfil %q não reconhecido.%s", args[0], roleList())
+				}
+			} else {
+				if perfil, err = askRole(); err != nil {
+					return err
+				}
+			}
+			s, err := settings.Load(absRoot)
+			if err != nil {
+				return err
+			}
+			s.Role = perfil
+			s.Agent = agentID()
+			s.DecidedAt = date
+			// O campo antigo sai: manter os dois faria a próxima leitura ter duas fontes
+			// para a mesma pergunta, e a resposta viria da que alguém esquecesse de mudar.
+			s.UserIssues = nil
+			if err := settings.Save(absRoot, s); err != nil {
+				return err
+			}
+			printRole(perfil)
+			fmt.Printf("\n  registrado em %s (local, fora do git)\n", settings.Path(absRoot))
+			return nil
+		},
+	}
+	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
+	cmd.Flags().StringVar(&date, "date", "", "OBRIGATÓRIO — AAAA-MM-DD, a data da declaração")
+	return cmd
+}
+
+// roleList monta a lista para a mensagem de erro e para a pergunta.
+func roleList() string {
+	var b strings.Builder
+	b.WriteString("\n\nOs perfis:\n\n")
+	for _, r := range settings.KnownRoles() {
+		fmt.Fprintf(&b, "  %-22s %s\n", string(r), r.Does())
+	}
+	return b.String()
+}
+
+// printRole mostra o que o perfil declarado significa.
+//
+// Mostra as CAPACIDADES e a LENTE, e não só o nome: quem acabou de declarar precisa saber o
+// que mudou — e o perfil que revisa precisa saber com que pergunta ler o código, senão faz
+// a revisão que sabe fazer em vez da que falta.
+func printRole(r settings.Role) {
+	fmt.Printf("✓ perfil: %s\n", r.Title())
+	fmt.Printf("  %s\n", r.Does())
+
+	if r.Can(settings.CapDecideProduct) {
+		fmt.Println("\n  Você atua nos cards ESCALONADOS (`needs-user`) — os que esperam")
+		fmt.Println("  decisão de quem conhece o produto. Resolver um deles é registrar a")
+		fmt.Println("  decisão no card, não respondê-la numa conversa.")
+	} else {
+		fmt.Println("\n  Você NÃO atua nos cards escalonados. Diante de ambiguidade:")
+		fmt.Println("      anchors escalate \"<o que precisa ser decidido>\" --about <arquivo> --for-user")
+		fmt.Println("  E siga para o próximo card — não pergunte a quem está rodando você.")
+	}
+	if lente := r.Lens(); lente != "" {
+		fmt.Printf("\n  A LENTE deste perfil, ao revisar:\n  %s.\n", lente)
+	}
+}
+
+// askRole pergunta o perfil no terminal.
+func askRole() (settings.Role, error) {
+	in := bufio.NewReader(os.Stdin)
+	for tentativa := 0; tentativa < 3; tentativa++ {
+		fmt.Println("Qual é o seu perfil neste projeto?")
+		fmt.Print(roleList())
+		fmt.Print("\n  perfil: ")
+
+		linha, err := in.ReadString('\n')
+		if err != nil {
+			return "", fmt.Errorf("ler a resposta: %w", err)
+		}
+		if r := settings.ParseRole(linha); r != "" {
+			return r, nil
+		}
+		fmt.Printf("\n  não reconheci %q.\n\n", strings.TrimSpace(linha))
+	}
+	return "", fmt.Errorf("sem perfil reconhecido — declare com " +
+		"`anchors settings role <perfil> --date AAAA-MM-DD`")
 }
 
 func newSettingsShowCmd() *cobra.Command {
@@ -42,12 +155,19 @@ func newSettingsShowCmd() *cobra.Command {
 				return err
 			}
 			fmt.Printf("configuração local: %s\n\n", settings.Path(absRoot))
-			fmt.Printf("  cards escalonados: %s\n", s.Describe())
-			if !s.Decided() {
+			fmt.Printf("  perfil: %s\n", s.Describe())
+			if s.Role != "" {
 				fmt.Println()
-				fmt.Println("  Para decidir:")
-				fmt.Println("      anchors settings user-issues sim   # eu decido o produto")
-				fmt.Println("      anchors settings user-issues nao   # deixo para quem decide")
+				printRole(s.Role)
+				fmt.Println("\n  capacidades:")
+				for _, c := range s.Role.Caps() {
+					fmt.Printf("    %s\n", c)
+				}
+			} else {
+				fmt.Println()
+				fmt.Println("  Para declarar:")
+				fmt.Println("      anchors settings role --date AAAA-MM-DD")
+				fmt.Print(roleList())
 			}
 			return nil
 		},

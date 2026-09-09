@@ -31,6 +31,17 @@ const File = "settings.yaml"
 
 // Settings é o que o agente decidiu sobre si mesmo neste projeto.
 type Settings struct {
+	// Role é o PERFIL de quem opera este agente, e é dele que as capacidades derivam.
+	//
+	// Substituiu o `user_issues` booleano, que respondia uma pergunta só — quem decide o
+	// produto — e deixava o resto implícito: o revisor de segurança e o de performance
+	// liam a mesma régua, e o QA recebia o card do dev.
+	//
+	// O papel é o que a pessoa sabe dizer sobre si: "sou dev" é uma resposta, "atuo em
+	// needs-user, não escrevo plano, reviso código" é um formulário que ninguém preenche
+	// com cuidado. E o papel sobrevive ao Anchors ganhar capacidades novas — elas nascem
+	// mapeadas aos perfis existentes, sem ninguém redeclarar nada.
+	Role Role `yaml:"role,omitempty"`
 	// UserIssues diz se ESTE agente atua nos cards escalonados (`needs-user`).
 	//
 	// É um ponteiro para distinguir três estados, e a distinção é o mecanismo: `nil` é
@@ -79,14 +90,42 @@ func Save(root string, s Settings) error {
 		return err
 	}
 	cabecalho := "# Configuração LOCAL deste agente — não vai para o git (`.anchors/` está\n" +
-		"# no `.gitignore`). O que está aqui vale para UMA máquina, e não para o projeto.\n" +
+		"# no `.gitignore`). O que está aqui vale para UMA máquina, e não para o projeto:\n" +
+		"# dois devs no mesmo repositório podem ter perfis diferentes.\n" +
 		"#\n" +
-		"# `user_issues` diz se este agente atua nos cards escalonados (`needs-user`), que\n" +
-		"# são os que esperam decisão de quem conhece o produto. O padrão é não: um agente\n" +
-		"# que os pega e pergunta a quem o está rodando obtém uma resposta que pode não ser\n" +
-		"# a do dono do projeto — e o escalonamento existe para levar a pergunta a quem\n" +
-		"# decide.\n"
+		"# O PERFIL diz que trabalho é seu, e as capacidades derivam dele. Não é\n" +
+		"# hierarquia — o arquiteto não manda no dev, ele responde outra pergunta — e não\n" +
+		"# é permissão de repositório, que o git já controla.\n" +
+		"#\n" +
+		"# A diferença que mais aparece: só `product-owner` e `architect` atuam nos cards\n" +
+		"# ESCALONADOS (`needs-user`), os que esperam decisão de quem conhece o produto.\n" +
+		"# Os outros perfis escalam e seguem para o próximo card — porque a resposta de\n" +
+		"# quem conhece o código é razoável, e vira decisão de produto sem passar pelo\n" +
+		"# plano nem deixar rastro.\n" +
+		"#\n" +
+		"# Declare com `anchors settings role`; veja com `anchors settings show`.\n"
 	return os.WriteFile(Path(root), append([]byte(cabecalho), b...), 0o644)
+}
+
+// Pode diz se o perfil declarado tem a capacidade.
+//
+// Sem perfil, NADA — o padrão fechado é o mesmo do booleano que este mecanismo substituiu, e
+// pela mesma razão: o custo de errar para o lado aberto é alguém decidir sem autoridade, e
+// isso é invisível depois do fato.
+func (s Settings) Can(c Capability) bool {
+	if s.Role == "" {
+		return s.legacyUserIssues(c)
+	}
+	return s.Role.Can(c)
+}
+
+// legacyUserIssues lê o campo antigo, para quem já declarou.
+//
+// O `user_issues: true` de um `settings.yaml` escrito antes dos perfis continua valendo — e
+// o comando pede o perfil na próxima vez. Ignorar o campo antigo faria quem já declarou
+// perder a capacidade sem nada avisar, no meio de um trabalho.
+func (s Settings) legacyUserIssues(c Capability) bool {
+	return c == CapDecideProduct && s.UserIssues != nil && *s.UserIssues
 }
 
 // HandlesUserIssues diz se o agente atua nos escalonados.
@@ -95,25 +134,36 @@ func Save(root string, s Settings) error {
 // o custo de errar para o lado aberto é alguém decidir o produto sem autoridade — que é
 // invisível depois do fato.
 func (s Settings) HandlesUserIssues() bool {
-	return s.UserIssues != nil && *s.UserIssues
+	return s.Can(CapDecideProduct)
 }
 
 // Decided diz se a escolha já foi feita — é o que separa "perguntar" de "seguir".
-func (s Settings) Decided() bool { return s.UserIssues != nil }
+//
+// O perfil OU o campo antigo: quem declarou `user_issues` antes dos perfis não é perguntado
+// de novo por causa da migração. O comando pede o perfil quando houver outra razão para
+// perguntar.
+func (s Settings) Decided() bool { return s.Role != "" || s.UserIssues != nil }
 
 // Describe a decisão, para o comando reportar.
 func (s Settings) Describe() string {
 	if !s.Decided() {
-		return "não declarado — o agente ainda não decidiu se atua nos escalonados"
+		return "nenhum perfil declarado — o agente não sabe que trabalho é dele"
 	}
-	if s.HandlesUserIssues() {
-		por := ""
-		if s.Agent != "" {
-			por = " (declarado por " + s.Agent + ")"
+	if s.Role == "" {
+		// Declarou pelo campo antigo. Diz o que vale E que falta o perfil, senão a
+		// migração ficaria invisível para quem lê.
+		if s.HandlesUserIssues() {
+			return "atua nos escalonados (pelo `user_issues` antigo) — declare o perfil " +
+				"com `anchors settings role`"
 		}
-		return "ATUA nos cards escalonados" + por
+		return "não atua nos escalonados (pelo `user_issues` antigo) — declare o perfil " +
+			"com `anchors settings role`"
 	}
-	return "NÃO atua nos cards escalonados — eles esperam quem decide o produto"
+	por := ""
+	if s.Agent != "" {
+		por = " · " + s.Agent
+	}
+	return s.Role.Title() + por
 }
 
 // Bool devolve o ponteiro que o campo pede, para quem monta o Settings.
