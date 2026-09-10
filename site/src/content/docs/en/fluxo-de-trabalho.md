@@ -148,6 +148,53 @@ error, the PR merges, and the card stays open.
 This actually happened: a PR said "Fecha #44, #49, #50" and all three stayed
 open.
 
+## 5.1 Wait for the verdict — pushing is not delivering
+
+Opening the PR does not close the card, and **pushing a commit is not a stopping
+point**. CI runs after the push, and its result is part of your work.
+
+```sh
+gh pr checks <n> --watch
+```
+
+`--watch` **blocks** until CI finishes: it waits on the process so you don't have
+to. Without it, the only way to learn the result is to ask again later — and
+"waiting for the next run" is a sentence that ends the turn delivering nothing.
+The card stays `in-progress`, with your name on it.
+
+If CI fails, the red is work on **this** card, not a new one: read the failure,
+fix it, push, and wait again. There are exactly two ways out of the loop:
+
+- CI went green and the card moved on the board; or
+- the failure needs a decision that isn't yours, and it becomes an escalation
+  (`anchors escalate ... --for-user`), with the card explicitly parked.
+
+Reporting the diagnosis and stopping is **not** a third way out. The right
+diagnosis is half the work; the other half is the verdict of the check you fired.
+
+## 5.2 The round's report has a format
+
+```sh
+anchors task-status
+```
+
+Whoever reads your report decides whether to continue, to review, or to answer a
+question — and what decides that is not the narrative of what you did. It's the
+**state**: where the card is, whether the CI verdict was read, and what is waiting
+on a person.
+
+The command discovers what the machine knows (the card and its state, the PR and
+its checks, what hasn't been pushed, the decisions parked in `needs-user`) and
+leaves **two gaps**, which are yours:
+
+- **What I proved** — the rules the suite confronts, and what mutation killed.
+  Passing tests are not proof; proof is the mutation that died.
+- **What I left out** — nothing, or what you left and why. Cutting scope is the
+  requester's call: if something didn't make it, this is where they find out.
+
+Without a format, each round reports whatever the agent found important, and what
+gets omitted first is precisely the state.
+
 ## 6. Review
 
 The claim hands out `ready-to-review` cards **before** `to-do` ones — reviewing

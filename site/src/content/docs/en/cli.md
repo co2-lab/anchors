@@ -57,6 +57,7 @@ tells it.
 | **Map** | `map build`, `map show`, `governs` | the dependency graph; who governs whom |
 | **Propagation** | `impact`, `stale` | the wave of a change; what became out of date |
 | **Queue** | `watch`, `queue`, `next`, `done`, `drop`, `reclaim` | the background watcher enqueues; the AI pulls |
+| **Reporting** | `task-status`, `pr-body` | the round's state: card, PR, checks, what's parked |
 | **Quality** | `check`, `judge`, `doctor` | deterministic gates **and AI-judgment gates**; systemic health |
 | **Identity** | `code` | generates/validates a unique scenario code (avoids collisions) |
 | **Confidence** | `ingest`, `coverage` | ingests JUnit/lcov from the runner; coverage by **scenario**, by the **diff**, and **delta** |

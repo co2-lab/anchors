@@ -152,8 +152,17 @@
           border-radius: 6px; padding: .6rem; margin-bottom: .5rem; text-decoration: none;
           color: inherit; cursor: pointer; }
   .card:hover { border-color: var(--fazendo); }
+  /* O CÓDIGO e o NÚMERO na mesma linha: o código diz QUAL unidade, o número diz qual
+     issue. Os dois são endereços, e só um deles serve para falar com outra pessoa —
+     "resolvi o INDTN" não abre nada; "#303" abre.
+     O número estava SÓ na modal, e por isso era invisível na leitura do board: quem
+     queria citar um card no chat ou no terminal tinha de abrir a modal para descobrir
+     o endereço dele. */
+  .card-topo { display: flex; align-items: baseline; gap: .4rem; }
   .codigo { font-family: ui-monospace, SFMono-Regular, monospace; font-size: .72rem;
             color: var(--fazendo); font-weight: 600; }
+  .num { margin-left: auto; font-family: ui-monospace, SFMono-Regular, monospace;
+         font-size: .7rem; color: var(--fraco); flex-shrink: 0; }
   .card h3 { font-size: .82rem; margin: .2rem 0 0; font-weight: 500; }
   /* A DEPENDÊNCIA no card responde "por que isto ainda não posso pegar?" sem abrir nada.
      A indentação sozinha mostra que há profundidade, mas não diz de quê ela vem. */
@@ -214,6 +223,29 @@
   .ir:hover { filter: brightness(1.1); color: #fff; }
   .d-numero { margin-left: auto; font-size: .75rem; color: var(--fraco);
               font-family: ui-monospace, monospace; }
+  /* A FAIXA DE ESCALONADOS, acima do board e fora dele.
+     `needs-user` não é uma etapa do trabalho — é o trabalho PARADO esperando uma decisão
+     que nenhum agente pode tomar. Não tinha coluna no board, e a consequência era pior
+     que a ausência de destaque: o card simplesmente DESAPARECIA da página. Ficava aberto
+     no GitHub, bloqueando o que dependia dele, e o board mostrava um projeto fluindo.
+     Fora do board de propósito: as colunas são o fluxo, e um card escalonado saiu do
+     fluxo. Pôr uma nona coluna diria que é mais uma etapa, e a leitura da esteira
+     ("da direita para a esquerda") passaria a incluir algo que não se pega. */
+  .bloqueio { border: 1px solid var(--alerta); border-left: 4px solid var(--alerta);
+              border-radius: 8px; padding: .9rem 1.1rem; margin: 0 0 1.25rem; }
+  .bloqueio h2 { margin: 0 0 .2rem; font-size: .82rem; text-transform: uppercase;
+                 letter-spacing: .06em; color: var(--alerta); }
+  .bloqueio .porque { margin: 0 0 .7rem; font-size: .8rem; color: var(--fraco);
+                      line-height: 1.55; }
+  .bloqueio ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
+  .bloqueio li { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
+  .bloqueio a { color: var(--fg); text-decoration: none; font-size: .85rem;
+                font-weight: 500; }
+  .bloqueio a:hover { text-decoration: underline; color: var(--alerta); }
+  .bloqueio .num { margin-left: 0; }
+  /* Quem BLOQUEIA o quê: uma decisão parada que não trava nada é diferente de uma que
+     trava seis cards, e o número muda a urgência de responder. */
+  .trava { font-size: .7rem; color: var(--fraco); }
   footer { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--linha);
            color: var(--fraco); font-size: .8rem; max-width: 46rem; }
   .pitch { margin: 0 0 .75rem; line-height: 1.6; }
@@ -269,6 +301,11 @@
   <div class="chips" id="chips"></div>
   <button type="button" id="limpar-filtro" hidden>limpar</button>
 </div>
+
+<!-- A FAIXA DE ESCALONADOS fica FORA das abas e ACIMA do board: ela não é um recorte
+     do fluxo, é o que está travado esperando uma pessoa. Dentro de uma aba, quem abre a
+     Árvore deixaria de ver. -->
+<section class="bloqueio" id="bloqueio" hidden aria-labelledby="bloqueio-t"></section>
 
 <section id="v-board" role="tabpanel" aria-labelledby="aba-board">
 <p class="prioridade">
@@ -410,7 +447,10 @@ function desenha(d) {
         <div class="oquee">${esc(oquee)}</div>
         ${cards.length === 0 ? '<div class="vazia">vazia</div>' : cards.map((c) => `
           <button class="card" type="button" data-numero="${c.numero}">
-            ${c.codigo ? `<div class="codigo">${esc(c.codigo)}</div>` : ""}
+            <div class="card-topo">
+              ${c.codigo ? `<span class="codigo">${esc(c.codigo)}</span>` : ""}
+              ${c.numero ? `<span class="num">#${esc(c.numero)}</span>` : ""}
+            </div>
             <h3>${esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</h3>
             ${(c.needs || []).length ? `<div class="dep" title="depende de">↳ ${
               c.needs.map((n) => esc(NIVEIS.fases?.[n]?.titulo || n)).join(" · ")}</div>` : ""}
@@ -418,7 +458,52 @@ function desenha(d) {
           </button>`).join("")}
       </section>`;
     }).join("");
+    desenhaBloqueio(d);
     desenhaArvore(d);
+}
+
+// A FAIXA DE ESCALONADOS. `anchors:needs-user` é o único estado que NÃO é uma etapa do
+// trabalho: é trabalho parado esperando uma decisão que nenhum agente pode tomar.
+//
+// Ele não tem coluna no board, e a consequência era pior que falta de destaque — o card
+// desaparecia da página inteira. Ficava aberto no GitHub, bloqueando o que dependia dele,
+// e o board mostrava um projeto fluindo.
+//
+// A faixa NÃO passa pelo filtro (`passaNoFiltro`) de propósito: filtrar é escolher onde
+// olhar dentro do fluxo, e uma decisão pendente não deixa de bloquear porque o leitor
+// está olhando outra fase.
+function desenhaBloqueio(d) {
+  const el = document.getElementById("bloqueio");
+  if (!el) return;
+  const presos = (d.itens || []).filter((i) => i.estado === "anchors:needs-user");
+  if (presos.length === 0) {
+    el.hidden = true;
+    el.innerHTML = "";
+    return;
+  }
+  // Quantos cards cada decisão trava. Uma pergunta parada que não bloqueia nada é
+  // diferente de uma que bloqueia seis, e o número é o que ordena a resposta.
+  const trava = (c) => (d.itens || []).filter((i) =>
+    i.estado !== "anchors:needs-user" && (i.needs || []).includes(c.codigo)).length;
+
+  const linhas = presos
+    .map((c) => ({ c, n: trava(c) }))
+    .sort((a, b) => b.n - a.n || Number(a.c.numero) - Number(b.c.numero))
+    .map(({ c, n }) => `<li>
+        <span class="num">#${esc(c.numero)}</span>
+        <a href="${esc(c.url)}" target="_blank" rel="noopener">${
+          esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</a>
+        ${n > 0 ? `<span class="trava">trava ${n} card${n > 1 ? "s" : ""}</span>` : ""}
+      </li>`).join("");
+
+  el.innerHTML = `
+    <h2 id="bloqueio-t">Esperando você · ${presos.length}</h2>
+    <p class="porque">Estas ${presos.length === 1 ? "issue" : "issues"} pedem uma decisão
+      que nenhum agente pode tomar por você. Enquanto não houver resposta na issue, o que
+      depende ${presos.length === 1 ? "dela" : "delas"} não anda — e o board abaixo segue
+      mostrando o resto do trabalho como se nada estivesse travado.</p>
+    <ul>${linhas}</ul>`;
+  el.hidden = false;
 }
 
 function carrega() {

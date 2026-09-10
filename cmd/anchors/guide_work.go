@@ -97,6 +97,27 @@ ciclo:
 Uma terceira coisa NÃO é saída: relatar o diagnóstico e parar. O diagnóstico correto é
 metade do trabalho; a outra metade é o veredito do check que você disparou.
 
+## Ao terminar a rodada: o RELATO tem formato
+
+Quem lê o seu relato decide se continua, se revisa, ou se responde uma pergunta. E o que
+decide isso não é a narrativa do que você fez — é o estado: onde o card está, se o veredito
+do CI foi lido, e o que espera uma pessoa.
+
+    anchors task-status
+
+Ele descobre o que a máquina sabe (o card e seu estado, o PR e os checks, o que não foi
+enviado, as decisões paradas) e deixa DUAS lacunas, que são suas:
+
+- **O que provei** — as regras que a suíte confronta, e o que a mutação matou. Testes que
+  passam não são prova; prova é a mutação que morreu.
+- **O que ficou de fora** — nada, ou o que você deixou e por quê. Escopo reduzido é decisão
+  de quem pediu, não sua: se algo não entrou, é aqui que ele descobre.
+
+Sem formato, cada rodada relata o que o agente achou importante — e o que se omite primeiro
+é justamente o estado. Um relato que diz "consertei e empurrei, aguardando a nova rodada"
+está CORRETO e é insuficiente: não diz que o card ficou ` + "`in-progress`" + ` com seu nome, nem que
+o veredito do check que você disparou não foi lido por ninguém.
+
 ## A spec nasce antes do código
 
 É o fluxo normal: a spec é a âncora. Enquanto as peças não existem, declare o que falta:
