@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/co2-lab/anchors/internal/change"
 	"github.com/co2-lab/anchors/internal/config"
@@ -144,6 +146,21 @@ func repairEnvironment(root string, cfg *config.Config) error {
 		fmt.Println()
 		fmt.Println(i18n.T("doctor.fix.nothing_github_mode"))
 		return nil
+	}
+	// A CREDENCIAL, ANTES DE TUDO.
+	//
+	// No modo `github` quase todo reparo passa pelo `gh`: proteger o branch, criar as
+	// labels de estado, ler o board. Sem credencial, cada um falha por conta — e quem lê a
+	// saída recebe cinco erros diferentes para uma causa só.
+	//
+	// Medido com um dev novo: o `doctor --fix` não conseguiu proteger o branch, desligar a
+	// exigência de aprovação, nem criar as labels, e a saída não dizia que a causa era
+	// login. Ele descobriu sozinho, testando.
+	//
+	// Uma verificação antes vale mais que cinco erros depois: ela nomeia a causa, dá o
+	// comando, e não gasta a atenção de quem lê com sintomas.
+	if err := requireGHAuth(); err != nil {
+		return err
 	}
 	// A FILA LOCAL NÃO DEVE EXISTIR no modo github.
 	//
@@ -430,4 +447,32 @@ func warnOrphanChanges(root string) {
 	fmt.Println("  O `anchors deliver` já registra na issue. Para os que ficaram para trás,")
 	fmt.Println("  poste o conteúdo na issue da unidade e mova para `" + change.ReviewedDir + "/`,")
 	fmt.Println("  ou deixe-os como histórico do período em que o modo era `local`.")
+}
+
+// requireGHAuth confere a credencial do `gh` antes de tentar reparar.
+//
+// Recusa com instrução em vez de tentar e falhar: `gh auth login` é interativo, e um agente
+// não tem como completá-lo — mandar a pessoa fazê-lo é a única saída honesta.
+func requireGHAuth() error {
+	if _, err := exec.LookPath("gh"); err != nil {
+		return fmt.Errorf("o `gh` não está instalado, e no modo `github` o Anchors " +
+			"depende dele para ler o board e reparar o ambiente.\n" +
+			"  Instale: https://cli.github.com")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "gh", "auth", "status")
+	// Sem stdin: se o `gh` decidir perguntar algo, ele falha em vez de pendurar o doctor.
+	cmd.Stdin = nil
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("o `gh` não está autenticado neste ambiente.\n\n"+
+			"  No modo `github` o board É a fila, e sem credencial o Anchors não lê card,\n"+
+			"  não reivindica trabalho e não repara o ambiente (branch protegido, labels\n"+
+			"  de estado). Não há como um agente resolver: o login é interativo.\n\n"+
+			"      gh auth login\n\n"+
+			"  Depois: `anchors doctor --fix` completa o que faltou.\n\n"+
+			"  O que o `gh` respondeu:\n  %s", strings.TrimSpace(string(out)))
+	}
+	return nil
 }

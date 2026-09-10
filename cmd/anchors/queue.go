@@ -864,7 +864,7 @@ func ensureLocalDecision(root string) (settings.Settings, error) {
 	if s.Decided() {
 		return s, nil
 	}
-	if !terminalInterativo() {
+	if !interactiveTerminal() {
 		fmt.Println("(sem terminal para perguntar — este agente não tem perfil declarado,")
 		fmt.Println(" e sem perfil ele não atua nos cards escalonados. Declare com")
 		fmt.Println(" `anchors settings role`)")
@@ -887,13 +887,35 @@ func ensureLocalDecision(root string) (settings.Settings, error) {
 	return s, nil
 }
 
-// terminalInterativo diz se há alguém do outro lado para responder.
-func terminalInterativo() bool {
+// interactiveTerminal diz se há alguém do outro lado para responder.
+//
+// O `ModeCharDevice` sozinho NÃO basta, e foi o defeito: `/dev/null` também é char device,
+// então um agente que rode `anchors next < /dev/null` — o caso normal de execução
+// não-interativa — passava pela guarda, caía na pergunta e morria com `erro: ler a
+// resposta: EOF`.
+//
+// Medido com um dev novo: o agente dele instalou tudo, declarou o perfil, e não conseguiu
+// pedir trabalho. Um comando que morre por EOF não diz o que fazer — ele parece defeito da
+// ferramenta, e quem lê vai procurar o problema no ambiente.
+//
+// A verificação certa é o `ioctl` que o terminal responde e o `/dev/null` não. Em Go, sem
+// dependência: um `Stat` no dispositivo e a comparação do inode com o do stdin. Mais
+// simples e igualmente confiável: `/dev/null` tem tamanho 0 e um terminal não tem tamanho —
+// mas o que os separa de verdade é o `Rdev`.
+func interactiveTerminal() bool {
 	fi, err := os.Stdin.Stat()
-	if err != nil {
+	if err != nil || fi.Mode()&os.ModeCharDevice == 0 {
 		return false
 	}
-	return fi.Mode()&os.ModeCharDevice != 0
+	// `/dev/null` é char device como o terminal. O que os distingue é ser o MESMO
+	// dispositivo: se o stdin aponta para `/dev/null`, não há ninguém lá.
+	nul, err := os.Stat(os.DevNull)
+	if err != nil {
+		// Sem poder comparar, assume o lado FECHADO: melhor não perguntar do que morrer
+		// por EOF no meio de um pipeline.
+		return false
+	}
+	return !os.SameFile(fi, nul)
 }
 
 // decidesProduct diz se este agente declarou que decide o rumo do produto.

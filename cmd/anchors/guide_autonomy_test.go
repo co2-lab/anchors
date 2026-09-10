@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -80,5 +81,47 @@ func TestDecidesProduct_erraParaOLadoFechado(t *testing.T) {
 	}
 	if decidesProduct("/caminho/que/nao/existe") {
 		t.Error("com erro de leitura, o agente não decide o produto")
+	}
+}
+
+// `/dev/null` NÃO é terminal, e o `ModeCharDevice` sozinho não sabe disso.
+//
+// Foi o defeito que impediu um agente de trabalhar: `/dev/null` também é char device, então
+// `anchors next < /dev/null` — o caso normal de execução não-interativa — passava pela
+// guarda, caía na pergunta do perfil e morria com `erro: ler a resposta: EOF`.
+//
+// Um comando que morre por EOF não diz o que fazer: parece defeito da ferramenta, e quem lê
+// vai procurar o problema no ambiente.
+func TestInteractiveTerminal_devNullNaoEhTerminal(t *testing.T) {
+	nul, err := os.Open(os.DevNull)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer nul.Close()
+
+	original := os.Stdin
+	os.Stdin = nul
+	defer func() { os.Stdin = original }()
+
+	if interactiveTerminal() {
+		t.Error("`/dev/null` foi tratado como terminal — o agente cairia na pergunta e " +
+			"morreria por EOF")
+	}
+}
+
+// E um arquivo comum também não: `anchors next < resposta.txt` não é alguém do outro lado.
+func TestInteractiveTerminal_arquivoNaoEhTerminal(t *testing.T) {
+	f, err := os.CreateTemp(t.TempDir(), "stdin")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer f.Close()
+
+	original := os.Stdin
+	os.Stdin = f
+	defer func() { os.Stdin = original }()
+
+	if interactiveTerminal() {
+		t.Error("um arquivo comum foi tratado como terminal")
 	}
 }
