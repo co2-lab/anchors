@@ -28,3 +28,36 @@ func TestGuiaDeTrabalhoCobreOAchadoDoAgente(t *testing.T) {
 		}
 	}
 }
+
+// O guia tinha de dizer que EMPURRAR NÃO É ENTREGAR, e não dizia. Um agente de outro dev
+// diagnosticou certo por que o CI reprovou (mapa gerado antes do commit que consertava a
+// config), reconstruiu, empurrou — e encerrou o turno com "aguardando a nova rodada". O
+// card ficou `in-progress` com o nome dele nele.
+//
+// O guia terminava no `pr-body`: nada dizia como esperar, nem que a espera não é uma
+// parada. Este teste cobra as duas coisas que faltavam — o comando que BLOQUEIA até o
+// veredito, e a recusa explícita da terceira saída (relatar e parar).
+func TestGuiaDeTrabalhoCobraEsperarOVereditoDoCI(t *testing.T) {
+	for _, want := range []string{
+		"--watch",     // o comando que espera pelo agente
+		"work review", // o que falta no PR que é seu
+		"escalate",    // a única saída legítima que não é o verde
+		"in-progress", // o custo de parar no meio: o card fica com seu nome
+		"metade",      // o diagnóstico correto é metade do trabalho
+	} {
+		if !strings.Contains(workGuide, want) {
+			t.Errorf("guia de trabalho deveria cobrir a espera do CI (esperava %q)", want)
+		}
+	}
+}
+
+// A regra é sobre CONTINUAR, e o teste acima casaria mesmo que o guia dissesse o oposto.
+// Este confronta a afirmação: o guia tem de negar que empurrar encerra o turno.
+func TestGuiaDeTrabalhoNegaQueEmpurrarEncerraOTurno(t *testing.T) {
+	if !strings.Contains(workGuide, "não é um ponto de parada") {
+		t.Error("o guia deveria NEGAR explicitamente que empurrar um commit é um ponto de parada")
+	}
+	if !strings.Contains(workGuide, "não fecha o card") {
+		t.Error("o guia deveria dizer que abrir o PR não fecha o card")
+	}
+}

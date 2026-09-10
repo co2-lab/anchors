@@ -71,6 +71,32 @@ O vínculo é declarado no vocabulário do Anchors — o card que você pegou e 
 sob ele. A palavra que a plataforma entende é DERIVADA disso, e muda com a
 plataforma, não com o idioma do projeto.
 
+## Depois de abrir o PR: o card não está entregue
+
+Abrir o PR não fecha o card, e **empurrar um commit não é um ponto de parada**. O CI roda
+depois do push, e o resultado dele é parte do seu trabalho — não notícia que alguém traz.
+
+    anchors work review          (mostra o que falta no PR que é seu)
+    gh pr checks <n> --watch     (BLOQUEIA até o CI concluir, e devolve o veredito)
+
+O ` + "`--watch`" + ` existe para isso: ele espera pelo processo, você não. Sem ele, a única forma
+de saber o resultado é perguntar de novo mais tarde — e "aguardando a nova rodada" é uma
+frase que encerra o turno sem entregar nada. O card continua ` + "`in-progress`" + `, com seu nome
+nele, e quem o retoma paga de novo o custo de entender.
+
+### O CI reprovou
+
+O vermelho é trabalho DESTE card, não um card novo. Leia a falha, conserte, empurre e
+**espere de novo** — quantas rodadas forem necessárias. Só há duas saídas legítimas do
+ciclo:
+
+- o CI ficou verde e o card avançou no board; ou
+- a falha exige uma decisão que não é sua, e aí ela vira escalonamento
+  (` + "`anchors escalate ... --for-user`" + `), com o card parado explicitamente.
+
+Uma terceira coisa NÃO é saída: relatar o diagnóstico e parar. O diagnóstico correto é
+metade do trabalho; a outra metade é o veredito do check que você disparou.
+
 ## A spec nasce antes do código
 
 É o fluxo normal: a spec é a âncora. Enquanto as peças não existem, declare o que falta:
