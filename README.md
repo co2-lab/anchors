@@ -69,18 +69,24 @@ tar -xzf anchors.tar.gz anchors
 sudo install anchors /usr/local/bin/anchors
 ```
 
+**`go install`**, se você já tem Go:
+
+```sh
+go install github.com/co2-lab/anchors/cmd/anchors@latest
+anchors --version
+```
+
 **Do fonte**, se você vai mexer no Anchors:
 
 ```sh
 git clone https://github.com/co2-lab/anchors && cd anchors
 go install ./cmd/anchors
-anchors --version
 ```
 
-> **`go install github.com/co2-lab/anchors/cmd/anchors@latest` não funcionava** até a
-> v0.1.78: o `go.mod` vivia em `cli/` e declarava o módulo como se estivesse na raiz, então
-> o Go baixava o módulo e não achava pacote nenhum. O layout foi corrigido — `go.mod`,
-> `cmd/` e `internal/` na raiz, como o padrão do Go pede.
+> O `go install` **não funcionava antes da v0.1.78**: o `go.mod` vivia em `cli/` e declarava
+> o módulo como se estivesse na raiz, então o Go baixava o módulo e não achava pacote
+> nenhum — nem pelo caminho declarado, nem com o `cli/`. Se você bateu nesse erro, atualize:
+> `@latest` já resolve.
 
 ## Começando
 
