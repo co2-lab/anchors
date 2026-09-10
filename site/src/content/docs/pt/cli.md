@@ -150,6 +150,7 @@ e mutmut emitem.
 | `anchors escalate "..."` | abre a issue de uma mudança necessária no plano ou na spec |
 | `anchors pr-body` | escreve as linhas que fecham os cards, na sintaxe da plataforma |
 | `anchors deliver` | registra a entrega de uma etapa — o gatilho do review |
+| `anchors task-status` | o relato da rodada: onde o card está, o veredito dos checks, e o que vem |
 
 Ver [O fluxo de trabalho](/docs/fluxo-de-trabalho/) para como esses comandos se
 encaixam num dia de trabalho.

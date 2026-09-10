@@ -149,6 +149,52 @@ mescla, e o card fica aberto.
 Isso aconteceu de verdade: um PR dizia "Fecha #44, #49, #50" e os três
 continuaram abertos.
 
+## 5.1 Espere o veredito — empurrar não é entregar
+
+Abrir o PR não fecha o card, e **empurrar um commit não é um ponto de parada**. O
+CI roda depois do push, e o resultado dele é parte do seu trabalho.
+
+```sh
+gh pr checks <n> --watch
+```
+
+O `--watch` **bloqueia** até o CI concluir: ele espera pelo processo, você não.
+Sem ele, a única forma de saber o resultado é perguntar de novo mais tarde — e
+"aguardando a nova rodada" é uma frase que encerra o turno sem entregar nada. O
+card continua `in-progress`, com seu nome nele.
+
+Se o CI reprovar, o vermelho é trabalho **deste** card, não um card novo: leia a
+falha, conserte, empurre e espere de novo. Há exatamente duas saídas do ciclo:
+
+- o CI ficou verde e o card avançou no board; ou
+- a falha exige uma decisão que não é sua, e ela vira escalonamento
+  (`anchors escalate ... --for-user`), com o card parado explicitamente.
+
+Relatar o diagnóstico e parar **não é** uma terceira saída. O diagnóstico correto
+é metade do trabalho; a outra metade é o veredito do check que você disparou.
+
+## 5.2 O relato da rodada tem formato
+
+```sh
+anchors task-status
+```
+
+Quem lê o seu relato decide se continua, se revisa, ou se responde uma pergunta —
+e o que decide isso não é a narrativa do que você fez. É o **estado**: onde o card
+está, se o veredito do CI foi lido, e o que espera uma pessoa.
+
+O comando descobre o que a máquina sabe (o card e seu estado, o PR e os checks, o
+que não foi enviado, as decisões paradas em `needs-user`) e deixa **duas lacunas**,
+que são suas:
+
+- **O que provei** — as regras que a suíte confronta, e o que a mutação matou.
+  Testes que passam não são prova; prova é a mutação que morreu.
+- **O que ficou de fora** — nada, ou o que você deixou e por quê. Reduzir escopo é
+  decisão de quem pediu: se algo não entrou, é aqui que ele descobre.
+
+Sem formato, cada rodada relata o que o agente achou importante, e o que se omite
+primeiro é justamente o estado.
+
 ## 6. A revisão
 
 O claim entrega cards em `ready-to-review` **antes** dos `to-do` — revisar vem
