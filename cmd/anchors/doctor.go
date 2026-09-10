@@ -178,11 +178,28 @@ func repairEnvironment(root string, cfg *config.Config) error {
 	// haveria como dizer quais foram ATUALIZADOS em vez de criados.
 	faltavam := initx.MissingWorkflow(root)
 	desatualizados := initx.OutdatedWorkflows(root, cfg)
-	if _, err := initx.SemeiaWorkflows(root, cfg); err != nil {
+	_, board, err := initx.SemeiaWorkflows(root, cfg)
+	if err != nil {
 		return fmt.Errorf("semear os pipelines: %w", err)
 	}
 	fmt.Println()
-	if len(faltavam) == 0 && len(desatualizados) == 0 {
+	// A PÁGINA do board é anunciada ANTES do resumo dos pipelines, e separada dele: ela
+	// muda por conta própria (o template do Anchors evolui) e é a única coisa aqui que
+	// aparece como diff no repositório de quem rodou o comando.
+	//
+	// Antes disto o `--fix` imprimia "os pipelines já existem e estão atualizados"
+	// enquanto REESCREVIA a página em silêncio. Quem visse o `git status` depois não
+	// saberia se tinha feito aquilo — e a única saída era ler o diff inteiro para
+	// descobrir de quem era a mudança.
+	switch board {
+	case initx.BoardCreated:
+		fmt.Printf("✓ página do board criada em %s\n", initx.BoardFile)
+	case initx.BoardUpdated:
+		fmt.Printf("✓ página do board ATUALIZADA em %s (era o template do Anchors e ficou para trás)\n",
+			initx.BoardFile)
+		fmt.Println("    leia o diff antes de subir — a mudança é do Anchors, não sua")
+	}
+	if len(faltavam) == 0 && len(desatualizados) == 0 && board == initx.BoardUnchanged {
 		fmt.Println(i18n.T("doctor.fix.pipelines_current"))
 	}
 	if len(faltavam) > 0 {

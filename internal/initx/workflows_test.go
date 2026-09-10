@@ -331,7 +331,7 @@ func TestFaltaWorkflowVeOQueNaoExiste(t *testing.T) {
 		t.Fatalf("projeto vazio: esperava %d faltando, veio %d", len(WorkflowsDoFluxo), len(faltam))
 	}
 
-	escritos, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}})
+	escritos, _, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}})
 	if err != nil {
 		t.Fatalf("semear: %v", err)
 	}
@@ -361,7 +361,7 @@ func TestSemeiaNaoSobrescreveOQueOTimeEditou(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	escritos, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}})
+	escritos, _, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}})
 	if err != nil {
 		t.Fatalf("semear: %v", err)
 	}
@@ -445,7 +445,7 @@ func TestBoardNaoSubstituiOSiteExistente(t *testing.T) {
 // metade — o workflow roda e falha ao copiar um arquivo que não existe.
 func TestSemeiaEscreveAPaginaDoBoard(t *testing.T) {
 	dir := t.TempDir()
-	if _, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}}); err != nil {
+	if _, _, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}}); err != nil {
 		t.Fatal(err)
 	}
 	b, err := os.ReadFile(filepath.Join(dir, BoardFile))
@@ -709,4 +709,95 @@ func TestPipelineConfrontaOVinculoENaoAPalavra(t *testing.T) {
 		t.Error("o pipeline deve conferir o que FALTA (os achados sob os cards declarados), " +
 			"e não repetir o que o corpo já diz")
 	}
+}
+
+// O `doctor --fix` imprimia "os pipelines já existem e estão atualizados" enquanto
+// REESCREVIA a página do board em silêncio. A mudança aparecia no `git status` de quem
+// rodou o comando sem nada tê-la anunciado — e a única forma de saber de quem era era ler
+// o diff inteiro.
+//
+// `semeiaBoard` passou a devolver O QUE FEZ. Estes testes cobram as três respostas, e a
+// terceira é a que evita o ruído: idêntico NÃO é atualização.
+func TestSemeiaBoard_dizOQueFez(t *testing.T) {
+	cfg := &config.Config{Workflow: &config.Workflow{}}
+
+	t.Run("não existia: criado", func(t *testing.T) {
+		dir := t.TempDir()
+		_, board, err := SemeiaWorkflows(dir, cfg)
+		if err != nil {
+			t.Fatalf("semear: %v", err)
+		}
+		if board != BoardCreated {
+			t.Errorf("página nova deveria ser BoardCreated, e foi %v", board)
+		}
+	})
+
+	t.Run("já idêntica: intocada, e não diz que atualizou", func(t *testing.T) {
+		// Dizer "atualizei" quando nada mudou treina quem lê a ignorar o aviso — e aí ele
+		// deixa de servir quando a mudança for real.
+		dir := t.TempDir()
+		if _, _, err := SemeiaWorkflows(dir, cfg); err != nil {
+			t.Fatalf("primeira semeadura: %v", err)
+		}
+		_, board, err := SemeiaWorkflows(dir, cfg)
+		if err != nil {
+			t.Fatalf("segunda semeadura: %v", err)
+		}
+		if board != BoardUnchanged {
+			t.Errorf("página idêntica deveria ser BoardUnchanged, e foi %v", board)
+		}
+	})
+
+	t.Run("do Anchors e para trás: atualizada", func(t *testing.T) {
+		dir := t.TempDir()
+		if _, _, err := SemeiaWorkflows(dir, cfg); err != nil {
+			t.Fatalf("primeira semeadura: %v", err)
+		}
+		// Uma página VELHA do Anchors: o marcador está lá, e o conteúdo difere.
+		alvo := filepath.Join(dir, BoardFile)
+		b, err := os.ReadFile(alvo)
+		if err != nil {
+			t.Fatalf("ler: %v", err)
+		}
+		velha := strings.Replace(string(b), "<meta charset=\"utf-8\">",
+			"<meta charset=\"utf-8\">\n<!-- versão antiga -->", 1)
+		if velha == string(b) {
+			t.Fatal("o teste não conseguiu envelhecer a página: o alvo do replace mudou")
+		}
+		if err := os.WriteFile(alvo, []byte(velha), 0o644); err != nil {
+			t.Fatalf("escrever: %v", err)
+		}
+
+		_, board, err := SemeiaWorkflows(dir, cfg)
+		if err != nil {
+			t.Fatalf("segunda semeadura: %v", err)
+		}
+		if board != BoardUpdated {
+			t.Errorf("página do Anchors que ficou para trás deveria ser BoardUpdated, e foi %v", board)
+		}
+	})
+
+	t.Run("editada pelo time: intocada, e o conteúdo fica", func(t *testing.T) {
+		dir := t.TempDir()
+		if _, _, err := SemeiaWorkflows(dir, cfg); err != nil {
+			t.Fatalf("primeira semeadura: %v", err)
+		}
+		alvo := filepath.Join(dir, BoardFile)
+		minha := "<!doctype html><p>a página é do time agora</p>"
+		if err := os.WriteFile(alvo, []byte(minha), 0o644); err != nil {
+			t.Fatalf("escrever: %v", err)
+		}
+
+		_, board, err := SemeiaWorkflows(dir, cfg)
+		if err != nil {
+			t.Fatalf("segunda semeadura: %v", err)
+		}
+		if board != BoardUnchanged {
+			t.Errorf("página do time deveria ser BoardUnchanged, e foi %v", board)
+		}
+		b, _ := os.ReadFile(alvo)
+		if string(b) != minha {
+			t.Error("o Anchors sobrescreveu uma página que o time assumiu")
+		}
+	})
 }

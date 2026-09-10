@@ -374,10 +374,10 @@ func OutdatedWorkflows(root string, cfg *config.Config) []Workflow {
 // Recebe o CONFIG, e não o branch já extraído: as regras de branch moram no anchors.yaml,
 // e quem precisa delas as lê de lá. Passar o valor pronto espalharia a decisão por cada
 // chamador, e bastaria um deles ler de outro lugar para o projeto ter dois fluxos.
-func SemeiaWorkflows(root string, cfg *config.Config) ([]string, error) {
+func SemeiaWorkflows(root string, cfg *config.Config) ([]string, BoardOutcome, error) {
 	dir := filepath.Join(root, DirWorkflows)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return nil, fmt.Errorf("criar %s: %w", DirWorkflows, err)
+		return nil, BoardUnchanged, fmt.Errorf("criar %s: %w", DirWorkflows, err)
 	}
 	var escritos []string
 	for _, w := range WorkflowsDoFluxo {
@@ -387,39 +387,74 @@ func SemeiaWorkflows(root string, cfg *config.Config) ([]string, error) {
 		}
 		conteudo, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {
-			return escritos, fmt.Errorf("ler o template %s: %w", w.Arquivo, err)
+			return escritos, BoardUnchanged, fmt.Errorf("ler o template %s: %w", w.Arquivo, err)
 		}
 		conteudo = applyIntegrationBranch(conteudo, cfg.Workflow.IntegrationBranchOrDefault())
 		if err := os.WriteFile(dest, conteudo, 0o644); err != nil {
-			return escritos, fmt.Errorf("escrever %s: %w", dest, err)
+			return escritos, BoardUnchanged, fmt.Errorf("escrever %s: %w", dest, err)
 		}
 		escritos = append(escritos, w.Arquivo)
 	}
 	// A PÁGINA do board acompanha o pipeline que a publica: semear um sem o outro deixa o
 	// fluxo pela metade — o workflow roda e falha ao copiar um arquivo que não existe.
-	if err := semeiaBoard(root); err != nil {
-		return escritos, err
+	board, err := semeiaBoard(root)
+	if err != nil {
+		return escritos, board, err
 	}
 	sort.Strings(escritos)
-	return escritos, nil
+	return escritos, board, nil
 }
+
+// BoardOutcome diz o que aconteceu com a PÁGINA do board numa semeadura.
+type BoardOutcome int
+
+const (
+	// BoardUnchanged — a página já era idêntica ao template, ou é do time (marcador
+	// removido) e o Anchors não a toca.
+	BoardUnchanged BoardOutcome = iota
+	// BoardCreated — não existia.
+	BoardCreated
+	// BoardUpdated — existia, era do Anchors, e ficou para trás.
+	BoardUpdated
+)
 
 // semeiaBoard escreve a página do board, e a mantém atualizada pela mesma régua dos
 // pipelines: intocada pelo marcador, o Anchors a atualiza; editada, ela passa a ser do
 // time.
-func semeiaBoard(root string) error {
+//
+// Devolve O QUE FEZ, e não só o erro. A primeira versão devolvia apenas `error`, e o
+// `doctor --fix` imprimia "os pipelines já existem e estão atualizados" enquanto
+// REESCREVIA a página em silêncio — a mudança aparecia no `git status` sem nada tê-la
+// anunciado, e quem visse o diff não saberia se tinha feito aquilo.
+//
+// Um arquivo que muda sozinho no repositório de alguém precisa ser dito.
+func semeiaBoard(root string) (BoardOutcome, error) {
 	dest := filepath.Join(root, BoardFile)
 	conteudo, err := fs.ReadFile(boardFS, "board/anchors-board.html")
 	if err != nil {
-		return fmt.Errorf("ler o template do board: %w", err)
+		return BoardUnchanged, fmt.Errorf("ler o template do board: %w", err)
 	}
-	if b, err := os.ReadFile(dest); err == nil && !strings.Contains(string(b), MarcadorDeTemplate) {
-		return nil // existe e é do time
+
+	estado := BoardCreated
+	if b, err := os.ReadFile(dest); err == nil {
+		if !strings.Contains(string(b), MarcadorDeTemplate) {
+			return BoardUnchanged, nil // existe e é do time
+		}
+		// Idêntico não é atualização: dizer "atualizei" quando nada mudou treina quem lê
+		// a ignorar o aviso, e aí ele deixa de servir quando a mudança for real.
+		if bytes.Equal(b, conteudo) {
+			return BoardUnchanged, nil
+		}
+		estado = BoardUpdated
 	}
+
 	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
-		return err
+		return BoardUnchanged, err
 	}
-	return os.WriteFile(dest, conteudo, 0o644)
+	if err := os.WriteFile(dest, conteudo, 0o644); err != nil {
+		return BoardUnchanged, err
+	}
+	return estado, nil
 }
 
 // applyIntegrationBranch troca o branch cravado no template pelo que o projeto
