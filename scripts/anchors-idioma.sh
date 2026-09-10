@@ -11,7 +11,7 @@
 #   - strings, que vão pelo i18n — traduzi-las aqui seria o erro oposto
 set -euo pipefail
 
-cd "$(dirname "$0")/../cli"
+cd "$(dirname "$0")/.."
 saida=$(go test ./internal/gate/ -run TestNenhumIdentificadorEmPortugues 2>&1) || {
   echo "$saida" | grep -E "identificador|TOTAL" | head -20
   exit 1

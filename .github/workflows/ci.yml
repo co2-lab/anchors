@@ -52,9 +52,6 @@ permissions:
 jobs:
   go:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: cli
     steps:
       - uses: actions/checkout@v4
 
@@ -63,8 +60,8 @@ jobs:
       # compilação sem relação aparente com o PR.
       - uses: actions/setup-go@v5
         with:
-          go-version-file: cli/go.mod
-          cache-dependency-path: cli/go.sum
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
 
       # A ORDEM É DELIBERADA, do mais barato ao mais caro, e cada passo falha o job:
       # descobrir que não compila depois de esperar a suíte inteira é tempo jogado fora.
