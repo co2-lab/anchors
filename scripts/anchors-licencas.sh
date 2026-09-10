@@ -13,7 +13,7 @@
 # restrição de revenda como serviço). Uma dependência GPL exigiria que o todo fosse GPL,
 # o que a ELv2 não é — então o conflito é real, não teórico.
 set -uo pipefail
-cd "$(git rev-parse --show-toplevel)/cli" || exit 1
+cd "$(git rev-parse --show-toplevel)" || exit 1
 
 command -v go-licenses >/dev/null 2>&1 || {
   echo "go-licenses não instalado — \`go install github.com/google/go-licenses@latest\`."

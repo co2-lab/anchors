@@ -39,7 +39,7 @@ projeto — specs, planos, features, guides, docs.
 | | | |
 |---|---|---|
 | **A doutrina** | o *conceito*, agnóstico de ferramenta — os 6 pilares e o mecanismo comum | os `*.md` desta raiz |
-| **O CLI** | a *ferramenta* em Go que uma IA opera para exercitar o ciclo | [`cli/`](./cli) |
+| **O CLI** | a *ferramenta* em Go que uma IA opera para exercitar o ciclo | [`cmd/`](./cmd) · [`CLI.md`](./CLI.md) |
 
 A IA não precisa saber o Anchors de cor — ela pergunta ao binário (`anchors guide`),
 aprende o fluxo, e opera com os comandos. O Anchors **não embute IA**: ele é a
@@ -47,13 +47,42 @@ ferramenta que a IA usa, em qualquer cliente (Claude Code, GPT, Gemini…).
 
 ---
 
-## Começando (o CLI)
+## Instalação
+
+**Homebrew** (macOS e Linux) — o caminho recomendado:
 
 ```sh
-cd cli
-go build -o anchors ./cmd/anchors
-./anchors --help
+brew install --cask co2-lab/tap/anchors
+anchors --version
 ```
+
+**Binário da release**, para quem não usa Homebrew. Há build para macOS e Linux, `amd64` e
+`arm64`, além de `.deb`, `.rpm` e `.apk`:
+
+```sh
+# escolha o pacote do seu sistema em:
+#   https://github.com/co2-lab/anchors/releases/latest
+
+gh release download --repo co2-lab/anchors \
+  --pattern 'anchors_*_darwin_arm64.tar.gz' --output anchors.tar.gz
+tar -xzf anchors.tar.gz anchors
+sudo install anchors /usr/local/bin/anchors
+```
+
+**Do fonte**, se você vai mexer no Anchors:
+
+```sh
+git clone https://github.com/co2-lab/anchors && cd anchors
+go install ./cmd/anchors
+anchors --version
+```
+
+> **`go install github.com/co2-lab/anchors/cmd/anchors@latest` não funcionava** até a
+> v0.1.78: o `go.mod` vivia em `cli/` e declarava o módulo como se estivesse na raiz, então
+> o Go baixava o módulo e não achava pacote nenhum. O layout foi corrigido — `go.mod`,
+> `cmd/` e `internal/` na raiz, como o padrão do Go pede.
+
+## Começando
 
 Num projeto qualquer:
 
@@ -103,8 +132,8 @@ feature→testar…). A IA não precisa lembrar o que vem depois; a fila diz.
 | **Relatórios** | `report` | 6 perspectivas em `docs/`: tests, quality, structure, config, issues, inconsistencies |
 | **A ponte IA** | `guide` (+ `guide plan/spec/code/feature/test/guide`) | o playbook e as réguas embutidas que a IA lê para operar |
 
-Detalhes e decisões de arquitetura em [`cli/README.md`](./cli/README.md) e
-[`cli/DECISIONS.md`](./cli/DECISIONS.md).
+Detalhes e decisões de arquitetura em [`CLI.md`](./CLI.md) e
+[`DECISIONS.md`](./DECISIONS.md).
 
 ### O que dá confiança no entregável
 
@@ -190,7 +219,7 @@ algo não bate. Os documentos abaixo explicam o CONCEITO; o `USING.md` explica a
    [`PLANNING`](./PLANNING.md) → [`SPEC`](./SPEC.md) →
    [`TRACEABILITY`](./TRACEABILITY.md) → [`PROPAGATION`](./PROPAGATION.md) →
    [`QUALITY`](./QUALITY.md).
-3. **O CLI** — [`cli/README.md`](./cli/README.md) para o estado da ferramenta,
+3. **O CLI** — [`CLI.md`](./CLI.md) para o estado da ferramenta,
    comando a comando, com o que já foi validado contra um projeto real.
 
 Cada pilar é auto-contido, mas aponta para os outros onde se tocam.
@@ -203,7 +232,7 @@ Em construção, e honesto sobre isso. A **doutrina** dos 6 pilares está escrit
 revisada; o **CLI** exercita o ciclo inteiro e foi validado contra uma prova de
 conceito real, não-trivial — um app mobile + backend serverless com um grafo de
 dependências de porte substancial. Os comandos acima existem e rodam; o roadmap
-e os furos conhecidos estão em [`cli/README.md`](./cli/README.md).
+e os furos conhecidos estão em [`CLI.md`](./CLI.md).
 
 O Anchors é o **conceito** — independente de qualquer ferramenta. Duas instâncias reais
 o exercitam: uma ferramenta/IDE que o aplica e o workspace de prova de conceito real
@@ -246,7 +275,7 @@ Traduzir mal destruiria exatamente isso.
 | [`PROPAGATION.md`](./PROPAGATION.md) | Pilar — a onda incremental; staleness; quiescência |
 | [`QUALITY.md`](./QUALITY.md) | Pilar — gates que medem; features → testes; maturação informativo → bloqueante |
 | [`DOCS.md`](./DOCS.md) | A documentação — o que fica FORA da trinca: os artefatos agregados, compilados de `doct/` |
-| [`cli/`](./cli) | A ferramenta em Go: comandos, arquitetura, roadmap |
+| [`cmd/`](./cmd) · [`CLI.md`](./CLI.md) | A ferramenta em Go: comandos, arquitetura, roadmap |
 | [`simulation/`](./simulation) | A simulação Larder — o ciclo de vida exercitado numa app fictícia |
 
 ---

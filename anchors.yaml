@@ -10,7 +10,8 @@ lang: pt-BR
 # (0 camadas)". Sucesso aparente com resultado inútil: quem roda em CI, script ou pipe fica
 # com um arquivo que carrega e não governa nada. Deveria falhar pedindo `--yes`/modo não
 # interativo, ou inferir do escaneamento que ele mesmo acabou de fazer (ele JÁ detectou
-# "código em: [cli/internal cli/cmd]" — e não usou).
+# "código em: [cli/internal cli/cmd]" — e não usou; os caminhos daquele dia tinham o
+# prefixo `cli/`, que saiu quando o `go.mod` foi para a raiz).
 version: 1
 
 layers:
@@ -34,16 +35,16 @@ layers:
   # Um comando por arquivo, e o comando é o ponto de entrada do usuário — a INTERFACE
   # do framework, no vocabulário do próprio Anchors.
   comando:
-    pattern: "cli/cmd/anchors/*.go"
+    pattern: "cmd/anchors/*.go"
     kind: code
     tags: [cli, comando]
-    exclude: ["**/*_test.go", "cli/cmd/anchors/main.go", "cli/cmd/anchors/root.go"]
+    exclude: ["**/*_test.go", "cmd/anchors/main.go", "cmd/anchors/root.go"]
 
   # ── AS REGRAS ───────────────────────────────────────────────────────────────────
   # Cada gate é uma REGRA do framework, com doutrina no cabeçalho do arquivo. É a
   # camada mais densa em decisão por linha — e a que mais se paga em spec.
   gate:
-    pattern: "cli/internal/gate/*.go"
+    pattern: "internal/gate/*.go"
     kind: code
     tags: [regra, gate]
     exclude: ["**/*_test.go"]
@@ -52,19 +53,19 @@ layers:
   # A hierarquia abaixo é a REAL, medida por import (não suposta):
   #   config → (nada)   scan → config   mapx → config+scan   gate → config+scan+mapx+…
   config:
-    pattern: "cli/internal/config/*.go"
+    pattern: "internal/config/*.go"
     kind: code
     tags: [nucleo, config]
     exclude: ["**/*_test.go"]
 
   scan:
-    pattern: "cli/internal/scan/*.go"
+    pattern: "internal/scan/*.go"
     kind: code
     tags: [nucleo, scan]
     exclude: ["**/*_test.go"]
 
   mapa:
-    pattern: "cli/internal/mapx/*.go"
+    pattern: "internal/mapx/*.go"
     kind: code
     tags: [nucleo, mapa]
     exclude: ["**/*_test.go"]
@@ -74,7 +75,7 @@ layers:
   # ambiente (gitmeta, daemon), medem (similarity, testsig, health) ou orquestram
   # (queue, recode, initx, pack, code, checklog). RECONHECIDA: não origina regra.
   infra:
-    pattern: "cli/internal/{change,checklog,code,daemon,gitmeta,health,initx,issue,pack,queue,recode,similarity,suggestion,testsig}/*.go"
+    pattern: "internal/{change,checklog,code,daemon,gitmeta,health,initx,issue,pack,queue,recode,similarity,suggestion,testsig}/*.go"
     kind: code
     tags: [infra]
     regime: declarativo
@@ -82,23 +83,23 @@ layers:
 
   # ── A TRINCA ────────────────────────────────────────────────────────────────────
   teste:
-    pattern: "cli/**/*_test.go"
+    pattern: "**/*_test.go"
     kind: test
     tags: [test]
 
   spec:
-    pattern: "cli/**/*.spec.md"
+    pattern: "**/*.spec.md"
     kind: spec
     tags: [spec]
 
   feature:
-    pattern: "cli/**/*.feature"
+    pattern: "**/*.feature"
     kind: feature
     tags: [feature]
 
   # Os guides que o próprio Anchors distribui (semeados no projeto do usuário).
   guide-distribuido:
-    pattern: "cli/guides/*.md"
+    pattern: "guides/*.md"
     kind: guide
     tags: [guide]
 
@@ -276,29 +277,33 @@ gates:
   #    `initx/default_gates.go` (ao contrario de `layer-boundary`, que herda `on: [code]`
   #    e por isso sempre funcionou). Gate declarado com nome que o catalogo nao conhece
   #    e sem `on:` proprio e aceito EM SILENCIO e nunca mede nada.
-  # 2. `./...` a partir da raiz. O modulo Go vive em `cli/`, nao na raiz — quando o
+  # 2. `./...` a partir da raiz. O modulo Go vivia em `cli/` e nao na raiz — quando o
   #    `on:` foi corrigido os tres passaram a reprovar com "directory prefix . does not
-  #    contain main module". O `cd cli &&` e o mesmo padrao que o MIF usa em `tests:`.
+  #    contain main module", e a saida foi um `cd cli &&` em cada comando.
+  #
+  #    O `go.mod` FOI PARA A RAIZ (v0.1.78), porque o layout antigo quebrava o
+  #    `go install` de quem instalava o Anchors — e com ele o `cd` saiu: `./...` a
+  #    partir da raiz agora alcanca o modulo, que e o que o comando sempre quis dizer.
   #
   # Enquanto isso: nada — nem CI (so ha deploy-site e release-cli), nem o pre-commit —
   # verificava que o Anchors compila ou que a suite passa.
   - name: build
     on: [code]
-    run: "cd cli && go build ./..."
+    run: "go build ./..."
     scope: project
     blocking: true
     measures: "o projeto compila"
 
   - name: vet
     on: [code]
-    run: "cd cli && go vet ./..."
+    run: "go vet ./..."
     scope: project
     blocking: true
     measures: "o `go vet` não acusa nada (a régua que vem com a linguagem)"
 
   - name: testes-passam
     on: [code]
-    run: "cd cli && go test ./..."
+    run: "go test ./..."
     scope: project
     blocking: true
     measures: "os 85 arquivos de teste passam"
