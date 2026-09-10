@@ -32,6 +32,7 @@
 package board
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os/exec"
@@ -109,7 +110,7 @@ type rawCard struct {
 
 func (c Client) gh(args ...string) ([]byte, error) {
 	args = append(args, "--repo", c.Repo)
-	out, err := exec.Command("gh", args...).Output()
+	out, err := runGH(args...)
 	if err != nil {
 		return out, fmt.Errorf("gh %s: %w", strings.Join(args, " "), err)
 	}
@@ -337,10 +338,20 @@ func (c Client) Comment(numero int, corpo string) error {
 	// Pelo STDIN e não por `--body`: o registro de entrega tem quebras de linha, crases e
 	// acentos, e passá-lo como argumento de linha de comando o expõe ao shell e ao limite
 	// de tamanho de `ARG_MAX`.
-	cmd := exec.Command("gh", "issue", "comment", strconv.Itoa(numero),
+	// O TETO vale aqui também, e o stdin é a exceção: este comando PRECISA de entrada
+	// (o corpo do comentário vem por ela, para não passar pelo shell).
+	ctx, cancel := context.WithTimeout(context.Background(), ghTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, "gh", "issue", "comment", strconv.Itoa(numero),
 		"--repo", c.Repo, "--body-file", "-")
 	cmd.Stdin = strings.NewReader(corpo)
-	if out, err := cmd.CombinedOutput(); err != nil {
+	out, err := cmd.CombinedOutput()
+	if ctx.Err() == context.DeadlineExceeded {
+		return fmt.Errorf("o `gh` não respondeu em %s ao comentar na issue #%d — "+
+			"confira `gh auth status`", ghTimeout, numero)
+	}
+	if err != nil {
 		return fmt.Errorf("comentar na issue #%d: %w: %s", numero, err, out)
 	}
 	return nil
