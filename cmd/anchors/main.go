@@ -4,7 +4,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/migra"
 	"os"
 )
 
@@ -19,6 +21,11 @@ func main() {
 	// O mapa registra QUEM o escreveu, para que um binário mais velho seja acusado em vez
 	// de reverter em silêncio o que a versão nova gravou (ver mapx.GeradoPor).
 	mapx.GeneratedBy = version
+	// A mensagem de chave desconhecida precisa distinguir TYPO de chave RENOMEADA, e quem
+	// sabe disso é o registro de migração. Injetado aqui porque o `config` não pode
+	// importar o `migra` — seria ciclo.
+	config.RenamedKey = migra.RenamedKey
+
 	if err := newRootCmd().Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "erro:", err)
 		// "não é regido" sai com código PRÓPRIO: quem automatiza (pre-commit, CI)

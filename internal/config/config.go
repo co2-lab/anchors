@@ -1280,7 +1280,7 @@ func Load(path string) (*Config, error) {
 	dec := yaml.NewDecoder(bytes.NewReader(data))
 	dec.KnownFields(true)
 	if err := dec.Decode(&c); err != nil {
-		return nil, fmt.Errorf("%s: %w%s", filepath.Base(path), err, versionHint(err))
+		return nil, fmt.Errorf("%s: %w%s", filepath.Base(path), err, versionHint(err, data))
 	}
 	for i := range c.Gates {
 		c.Gates[i] = mergeCanonical(c.Gates[i])
@@ -1719,14 +1719,74 @@ var unknownFieldRE = regexp.MustCompile(`field (\w+) not found in type`)
 //
 // A segunda acontece toda vez que o Anchors ganha um campo, e é invisível para quem a
 // sofre: o arquivo está certo, e a ferramenta diz que não está.
-func versionHint(err error) string {
+func versionHint(err error, data []byte) string {
 	m := unknownFieldRE.FindStringSubmatch(err.Error())
 	if m == nil {
 		return ""
 	}
+	chave := m[1]
+
+	// O ARQUIVO ESTÁ ATRASADO — e esta hipótese é DECIDÍVEL, não adivinhada.
+	//
+	// A versão anterior listava duas causas ("está escrita errada" ou "o binário é
+	// antigo") e faltava justamente a que mais acontece: o ARQUIVO é que é velho. Medido
+	// num PR do projeto de referência — o branch trazia `trinca_opcional` (formato 1), o
+	// CI rodava o binário novo, e a mensagem mandava ATUALIZAR O BINÁRIO. O conselho era
+	// o inverso do conserto, e quem o seguisse ficaria voltando versão até desistir.
+	//
+	// O `version:` do arquivo responde sozinho: se ele é anterior ao formato atual, a
+	// chave desconhecida é uma que a migração converteria. Não há o que adivinhar.
+	// As DUAS condições, e as duas são necessárias: o arquivo está atrasado E esta chave
+	// específica é uma das que a migração converte.
+	//
+	// Só o formato não basta. Um `anchors.yaml` em formato 1 com um typo de verdade
+	// (`layerz:`) receberia "rode `anchors migrate`" — o comando roda, não conserta o
+	// typo, e quem lê perde a confiança na mensagem seguinte.
+	if fileFormat(data) < FormatoAtualDeConfig && RenamedKey != nil && RenamedKey(chave) {
+		return fmt.Sprintf("\n  O ARQUIVO está no formato antigo, e a chave `%s` foi renomeada.\n"+
+			"  Migre — roda uma vez e deixa o projeto pronto para commit:\n\n"+
+			"      anchors migrate\n\n"+
+			"  (o binário está certo: é o `anchors.yaml` que precisa ser atualizado)", chave)
+	}
+
 	return fmt.Sprintf("\n  Duas causas possíveis, e a segunda não é erro seu:\n"+
 		"    • a chave `%s` está escrita errada (confira contra `anchors init --print`)\n"+
 		"    • a chave é NOVA e este binário é ANTIGO — o `anchors.yaml` foi escrito por\n"+
 		"      uma versão que a conhece. Atualize: `go install github.com/co2-lab/anchors/cmd/anchors@latest`",
-		m[1])
+		chave)
+}
+
+// RenamedKey diz se uma chave desconhecida é uma que a MIGRAÇÃO converte.
+//
+// Injetada pelo `main` a partir do `migra`: o `config` não pode importá-lo (o `migra`
+// precisaria dos tipos daqui, e seria ciclo). Nil significa "sem registro de migração" — e
+// aí a mensagem cai na versão genérica, que é o comportamento correto para quem não tem a
+// tabela.
+var RenamedKey func(string) bool
+
+// FormatoAtualDeConfig é a versão de formato que este binário escreve no `anchors.yaml`.
+//
+// Espelha o `mapx.FormatoAtual` e vive aqui para evitar o ciclo de import (o `mapx` usa
+// tipos do `config`). Os dois sobem juntos: uma migração que muda o mapa e a config é um
+// passo só.
+const FormatoAtualDeConfig = 2
+
+// fileVersionRE lê o `version:` de topo sem passar pelo parser — que é justamente
+// quem acabou de recusar o arquivo.
+var fileVersionRE = regexp.MustCompile(`(?m)^version:[[:space:]]*([0-9]+)[[:space:]]*$`)
+
+// fileFormat devolve o formato declarado, ou 1 quando não há `version:`.
+//
+// Os primeiros arquivos do produto não declaravam o campo, e tratá-los como formato 1 é o
+// que permite reconhecê-los como migráveis em vez de indecifráveis.
+func fileFormat(data []byte) int {
+	m := fileVersionRE.FindSubmatch(data)
+	if m == nil {
+		return 1
+	}
+	var v int
+	if _, err := fmt.Sscanf(string(m[1]), "%d", &v); err != nil {
+		return 1
+	}
+	return v
 }
