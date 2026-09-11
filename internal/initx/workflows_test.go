@@ -801,3 +801,50 @@ func TestSemeiaBoard_dizOQueFez(t *testing.T) {
 		}
 	})
 }
+
+// O CLAIM SERIALIZA QUEM PEGA O CARD, e isso não basta.
+//
+// O card é solto ao fim da implementação (`anchors-owner: (liberado)`) e volta à fila para
+// REVISÃO — mas a branch e o PR do primeiro agente continuam de pé. O claim seguinte o
+// entrega como se fosse trabalho novo, e o agente que o recebe reimplementa do zero.
+//
+// Medido no blue-eyes: TRÊS agentes resolveram a issue #375 em paralelo, sete minutos entre
+// o primeiro PR e o terceiro. Os três chegaram à mesma solução correta — o desperdício foi
+// de coordenação, não de qualidade. Dois PRs completos foram fechados como duplicata.
+func TestClaimPulaCardQueJaTemPRAberto(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-claim.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+
+	if !strings.Contains(s, "gh pr list --state open") {
+		t.Error("o claim precisa consultar os PRs ABERTOS antes de entregar um card")
+	}
+	// A busca é pelo NÚMERO no corpo do PR — onde o `anchors pr-body` escreve a linha de
+	// fechamento. Por branch não serve: o nome dela é livre, e os três PRs do caso medido
+	// tinham nomes diferentes.
+	if !strings.Contains(s, "in:body") {
+		t.Error("a busca deve ser pelo número do card no CORPO do PR, não pelo nome da branch")
+	}
+	if !strings.Contains(s, "revisar o PR, não reimplementar") {
+		t.Error("a mensagem deve dizer o que fazer: um PR aberto pede revisão, não trabalho novo")
+	}
+	// `continue` e não `break`: o card com PR é PULADO, e o claim segue procurando outro.
+	// Um `break` entregaria a fila vazia a quem tem trabalho disponível logo abaixo.
+	i := strings.Index(s, "já tem o PR")
+	if i < 0 {
+		t.Fatal("a linha que anuncia o PR aberto sumiu")
+	}
+	depois := s[i:min(i+200, len(s))]
+	if !strings.Contains(depois, "continue") {
+		t.Error("o card com PR deve ser PULADO (`continue`), não encerrar a busca")
+	}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
