@@ -69,6 +69,24 @@ type Config struct {
 	// comando recusado.
 	FreezeReason string `yaml:"freeze_reason,omitempty"`
 
+	// MinVersion: a versão MÍNIMA do binário que este projeto aceita.
+	//
+	// Existe para o momento em que uma correção do Anchors precisa alcançar todo mundo
+	// antes que o trabalho continue — um formato de mapa que mudou, um gate que passou a
+	// pegar algo que passava batido, um defeito que produz dado errado em silêncio.
+	//
+	// É DECLARADO, e essa é a diferença que o torna útil. A conferência anterior comparava
+	// o binário com o `gerado_por` do mapa, e aquele campo é DERIVADO: o próximo
+	// `map build` de qualquer agente o reescreve com a versão dele, apagando a exigência
+	// sem que ninguém decida nada. Medido: o campo voltou a "dev" num projeto onde a
+	// release corrente era a v0.1.83.
+	//
+	// Aqui quem escreve é uma pessoa, no arquivo que o time versiona — e desfazer exige
+	// um commit que aparece no diff.
+	//
+	// O formato é o da release, sem o "v": `min_version: 0.1.84`.
+	MinVersion string `yaml:"min_version,omitempty"`
+
 	Version  int                 `yaml:"version"`
 	Comments map[string][]string `yaml:"comments,omitempty"` // override/extensão dos marcadores (D4)
 	Layers   map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
@@ -1269,6 +1287,9 @@ func Load(path string) (*Config, error) {
 		return nil, err
 	}
 	if err := c.validarWorkflow(); err != nil {
+		return nil, err
+	}
+	if err := c.validarMinVersion(); err != nil {
 		return nil, err
 	}
 	// O IDIOMA vale a partir da CARGA, e não de cada comando.
