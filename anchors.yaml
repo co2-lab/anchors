@@ -12,8 +12,7 @@ lang: pt-BR
 # interativo, ou inferir do escaneamento que ele mesmo acabou de fazer (ele JÁ detectou
 # "código em: [cli/internal cli/cmd]" — e não usou; os caminhos daquele dia tinham o
 # prefixo `cli/`, que saiu quando o `go.mod` foi para a raiz).
-version: 1
-
+version: 2
 layers:
   # ── A DOUTRINA ──────────────────────────────────────────────────────────────────
   # Os 11 documentos que definem o que o Anchors é. Não são "docs": são a fonte das

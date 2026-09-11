@@ -87,7 +87,10 @@ type Node struct {
 	// conjunto produz 29 falsos positivos e nenhum achado.
 	//
 	// Quem PROMETE identidade declara; o resto é citação, e citação não se confere.
-	CodeDeclarado bool     `yaml:"code_declarado,omitempty"`
+	// A chave é `code_declared`, em inglês, como TODA chave de YAML do produto. O `lang`
+	// traduz o que se LÊ, nunca o que se ESCREVE na configuração — e uma chave é
+	// identificador, não prosa.
+	CodeDeclarado bool     `yaml:"code_declared,omitempty"`
 	Tags          []string `yaml:"tags,omitempty"` // tags da camada do nó (p/ gates escopados por tag)
 	// Regime da camada do nó (comportamental|declarativo|misto), copiado da Estrutura
 	// (config.Layer.Regime). `declarativo` = camada RECONHECIDA (não origina regra): o
@@ -275,7 +278,7 @@ type Edge struct {
 	To   string `yaml:"to"`
 	// Julgamentos: um por gate de julgamento que já respondeu sobre esta aresta.
 	// Preservado entre rodadas do `check` — ver o tipo Julgamento.
-	Julgamentos []Judgment `yaml:"julgamentos,omitempty"`
+	Julgamentos []Judgment `yaml:"judgments,omitempty"`
 	Type        EdgeType   `yaml:"type"`
 	Origin      Origin     `yaml:"origin"`
 	// Method — metadado da aresta `depends-on`: o método/símbolo consumido do alvo
@@ -294,7 +297,7 @@ type Graph struct {
 	// GeradoPor: a versão do binário que escreveu este mapa. Ver mapx.GeradoPor —
 	// é o que permite ao `check` acusar um binário mais VELHO que o mapa, que
 	// silenciosamente desfaz o que a versão nova escreveu.
-	GeradoPor string `yaml:"gerado_por,omitempty"`
+	GeradoPor string `yaml:"generated_by,omitempty"`
 	Nodes     []Node `yaml:"nodes"`
 	Edges     []Edge `yaml:"edges"`
 }

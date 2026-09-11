@@ -23,6 +23,13 @@ var GeneratedBy string
 
 // Save escreve o grafo como YAML material e versionável.
 func Save(g *Graph, path string) error {
+	// O FORMATO é de quem ESCREVE, não do chamador.
+	//
+	// O `Save` já carimbava a versão do binário e deixava o `version:` por conta de quem
+	// montou o grafo — e um `Graph{}` sem o campo gravava `version: 0`, que na leitura
+	// vira "formato 1: precisa migrar". O arquivo nasceria pedindo migração para um
+	// formato em que ele já está.
+	g.Version = FormatoAtual
 	g.GeradoPor = GeneratedBy
 	data, err := yaml.Marshal(g)
 	if err != nil {
@@ -56,6 +63,16 @@ func Load(path string) (*Graph, error) {
 	if err := yaml.Unmarshal(data, &g); err != nil {
 		return nil, err
 	}
+	// O FORMATO é conferido ANTES de o mapa ser usado, e não depois.
+	//
+	// Um arquivo que este binário não sabe ler não deve ser parcialmente interpretado: os
+	// campos que ele reconhece carregam, os que não reconhece somem, e a próxima gravação
+	// escreve o que sobrou. É assim que se perde dado sem nada acusar — e o `julgamentos`
+	// renomeado para `judgments` é o exemplo: os carimbos evaporariam e o `check` recobraria
+	// o que alguém já respondeu.
+	if err := ConfereFormato(path, g.Version); err != nil {
+		return nil, err
+	}
 	return &g, nil
 }
 
@@ -68,7 +85,7 @@ func equalIgnoringGeneratedBy(path string, novo []byte) bool {
 	return withoutGeneratedBy(atual) == withoutGeneratedBy(novo)
 }
 
-var generatedByLineRE = regexp.MustCompile(`(?m)^gerado_por:.*\n`)
+var generatedByLineRE = regexp.MustCompile(`(?m)^generated_by:.*\n`)
 
 func withoutGeneratedBy(b []byte) string {
 	return generatedByLineRE.ReplaceAllString(string(b), "")

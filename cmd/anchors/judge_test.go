@@ -27,23 +27,29 @@ func TestVeredito_dispensadoAntigoTambemExigeMotivo(t *testing.T) {
 	}
 }
 
-// O `Load` canoniza os nomes de gate, então o nome que a pessoa LÊ no anchors.yaml não é
-// o que fica em `g.Name`. O `judge` comparava só contra o canônico e recusava o outro —
-// medido no blue-eyes: `--gate mock-detect-cobre-o-dialeto` respondia "gate não existe"
-// com o gate declarado três linhas acima no próprio arquivo.
-func TestFindJudgmentGate_aceitaOsDoisNomes(t *testing.T) {
+// O NOME DO GATE é EXATO, e o nome legado em português não é mais aceito.
+//
+// Havia uma tabela de alias que convertia `mock-detect-cobre-o-dialeto` para o canônico, e
+// este teste provava que ela funcionava. Ela saiu: resolvia e não fechava — o arquivo nunca
+// se consertava, e o mapa acumulava carimbos nos dois formatos (medido no blue-eyes: 40
+// julgamentos como `regra-cumprida` convivendo com 2 como `rule-fulfilled`).
+//
+// A conversão virou o passo de migração `1→2`, que roda uma vez. Um projeto que ainda use
+// o nome antigo está no formato 1, e é RECUSADO com a mensagem que manda migrar — não lido
+// pela metade.
+func TestFindJudgmentGate_soOCanonico(t *testing.T) {
 	cfg := &config.Config{Gates: []config.Gate{
 		{Name: "mock-detect-covers-dialect", Measures: "judgment"},
 	}}
-	for _, nome := range []string{
-		"mock-detect-covers-dialect",  // o canônico, que o mapa guarda
-		"mock-detect-cobre-o-dialeto", // o que está ESCRITO no anchors.yaml do projeto
-	} {
-		if _, ok := findJudgmentGate(cfg, nome); !ok {
-			t.Errorf("findJudgmentGate(%q) = false; o gate está declarado", nome)
-		}
+	if _, ok := findJudgmentGate(cfg, "mock-detect-covers-dialect"); !ok {
+		t.Error("o nome canônico tem de ser encontrado")
+	}
+	// O legado NÃO resolve mais. Se resolvesse, a tabela teria voltado por algum caminho —
+	// e com ela a assimetria que duplicava carimbo.
+	if _, ok := findJudgmentGate(cfg, "mock-detect-cobre-o-dialeto"); ok {
+		t.Error("o nome legado não deveria resolver: ele é convertido na MIGRAÇÃO, não na leitura")
 	}
 	if _, ok := findJudgmentGate(cfg, "gate-que-nao-existe"); ok {
-		t.Error("aceitou um gate inexistente — a canonização não pode virar vale-tudo")
+		t.Error("um gate não declarado não pode ser encontrado")
 	}
 }

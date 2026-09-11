@@ -78,6 +78,7 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 	root.AddCommand(newCommitMsgCmd())
 	root.AddCommand(newPRBodyCmd())
 	root.AddCommand(newTaskStatusCmd())
+	root.AddCommand(newMigrateCmd())
 	root.AddCommand(newReclaimCmd())
 	root.AddCommand(newStaleCmd())
 	root.AddCommand(newCodeCmd())

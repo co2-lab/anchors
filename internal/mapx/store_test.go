@@ -18,7 +18,7 @@ import (
 func TestGeradoPorSozinhoNaoReescreveOMapa(t *testing.T) {
 	dir := t.TempDir()
 	p := filepath.Join(dir, "anchors.graph.yaml")
-	g := &Graph{Version: 1, Nodes: []Node{{ID: "a", Rev: "r1"}}}
+	g := &Graph{Version: FormatoAtual, Nodes: []Node{{ID: "a", Rev: "r1"}}}
 
 	GeneratedBy = "0.1.10"
 	if err := Save(g, p); err != nil {
@@ -43,7 +43,7 @@ func TestGeradoPorSozinhoNaoReescreveOMapa(t *testing.T) {
 		t.Fatal(err)
 	}
 	final, _ := os.ReadFile(p)
-	if !strings.Contains(string(final), "gerado_por: dev") {
+	if !strings.Contains(string(final), "generated_by: dev") {
 		t.Error("quando o mapa muda de verdade, quem gravou é quem está rodando")
 	}
 }
