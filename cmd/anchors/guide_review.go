@@ -109,6 +109,24 @@ Se o PR altera uma spec ou plano, a revisão (` + "`{CODIGO}-R000N`" + `) diz o 
 mudou e por quê. A pergunta é se aquilo era correção de FORMA — e se não for, se
 alguém decidiu. O gate confere que a revisão EXISTE; se ela é honesta é você quem vê.
 
+## VOCÊ NÃO MOVE O CARD
+
+Aprovar, reprovar, comentar — sim. Mexer na label de estado — não.
+
+Quem move é o pipeline, e ele move pelo FATO: ` + "`ready-to-review`" + ` quando os checks
+passam, ` + "`ready-to-test`" + ` quando o PR é MERGEADO. Um card em ` + "`ready-to-test`" + ` com o
+PR ainda aberto diz ao board que o trabalho entrou quando ele não entrou — e
+` + "`ready-to-test`" + ` é o fim da alçada do Anchors, então ninguém mais o confronta.
+
+Aconteceu: duas revisões independentes rodaram em paralelo sobre o mesmo PR. A
+primeira aprovou e moveu o card à mão. A segunda achou um defeito real que a
+primeira não cobriu, e não mexeu no estado — "já está ` + "`ready-to-test`" + ` pela outra
+revisão". A segunda agiu certo; a primeira criou o fato que a travou.
+
+Se a sua revisão reprova, o card fica onde está e o autor vê o veredito. Não há
+label a escrever: o estado errado é mais caro que o estado atrasado, porque o
+atrasado se corrige sozinho no próximo evento do pipeline.
+
 ## Ao terminar
 
 Aprovar não é "não achei nada": é afirmar que você OLHOU o que é seu. Se olhou e não
