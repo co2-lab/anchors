@@ -12,21 +12,30 @@
 # Nenhum era invisível ao `go test` — o primeiro precisava de um teste que não existia, e
 # é justamente o tipo de coisa que um CI cobrando a suíte torna barato de escrever.
 #
-# O QUE ESTE WORKFLOW NÃO FAZ, E POR QUÊ
+# O ANCHORS SE APLICA A SI MESMO — e demorou para chegar aqui.
 #
-# Não roda `anchors check` sobre o próprio Anchors. O produto ainda não está totalmente
-# instrumentado, e cobrá-lo de si mesmo antes disso produziria reprovação que ninguém
-# pode consertar sem antes terminar o produto — e a saída barata seria desligar o gate.
-# Decisão do mantenedor.
+# A versão anterior deste arquivo dizia: *"não roda `anchors check` sobre o próprio
+# Anchors. O produto ainda não está totalmente instrumentado, e cobrá-lo de si mesmo
+# produziria reprovação que ninguém pode consertar."* Era verdade quando foi escrito, e
+# deixou de ser: medido antes desta mudança, `anchors check --all` dá ZERO reprovações.
 #
-# Pelo mesmo motivo ficam de fora os gates que o `anchors.yaml` declara com `when: [ci]`
-# (`secret-nao-vazado`, `licenca-compativel`, e os três informativos): eles dependem de
-# ferramenta externa (gitleaks, go-licenses, osv-scanner, semgrep) e do Anchors instalado.
-# Continuam declarados e não rodando — o que é uma dívida CONHECIDA, registrada em
-# co2-lab/anchors#3, não um esquecimento.
+# O QUE A AUSÊNCIA CUSTOU, e é o que motivou revisitar a decisão. Ao migrar o vocabulário
+# para inglês, dois defeitos passaram sem nada acusar:
 #
-# O que sobra aqui é o que não depende de nada disso: o código compila, o vet não acusa,
-# a suíte passa, e a formatação é a canônica. É pouco, e é mais do que zero.
+#   • o filtro do gate "o mapa está em dia?" ignorava `gerado_por`, o nome ANTIGO. Depois
+#     da renomeação ele deixou de filtrar qualquer coisa, e TRÊS PRs de um projeto que usa
+#     o Anchors reprovaram de uma vez — todos no mesmo check, todos em 9s.
+#
+#   • o passo de migração convertia `id:` e `check:` e esquecia `name:`, que é justamente
+#     o campo que o `anchors.yaml` DESTE repositório usa. A migração rodou aqui e não
+#     converteu nada.
+#
+# Os dois são exatamente o tipo de coisa que um gate pega e uma leitura não. E os dois
+# foram descobertos por acidente, num projeto terceiro, depois de já estarem publicados.
+#
+# FERRAMENTA AUSENTE PULA, NÃO REPROVA (`needs_tool`), então rodar o check aqui é seguro
+# mesmo sem instalar gitleaks, osv-scanner e companhia. O que estiver instalado mede de
+# verdade; o resto aparece como pulado, à vista, em vez de silenciosamente ausente.
 name: CI
 
 on:
@@ -92,3 +101,61 @@ jobs:
       # onde ela tem mais chance de se manifestar.
       - name: Testes
         run: go test -race ./...
+
+      # O ANCHORS SOBRE O ANCHORS.
+      #
+      # Instalado a partir da árvore do PR, e não da release: o que este workflow precisa
+      # confrontar é o binário QUE ESTE PR PRODUZ. Usar a release publicada mediria a
+      # versão anterior — e um PR que quebra um gate passaria, porque o gate quebrado
+      # ainda não teria sido publicado.
+      - name: Instala o anchors desta árvore
+        run: go install ./cmd/anchors
+
+      # O MAPA é versionado e chega pronto no push. Conferir que ele está em dia vem
+      # ANTES de confrontar os gates: um mapa velho faz os gates medirem uma foto que não
+      # é a deste PR, e reportar verde sobre o que não mediram é pior que reprovar.
+      #
+      # A comparação ignora os campos que mudam sozinhos — `generated_by` (a versão do
+      # binário), `version` (o formato do mapa) e `updated_at` (a data do último commit).
+      # É a mesma lista do `anchors-gates.yml` que o produto instala nos projetos, e ela
+      # já errou uma vez: ficou com o nome antigo depois de uma renomeação e passou a não
+      # filtrar nada.
+      - name: O mapa está em dia?
+        run: |
+          cp anchors.graph.yaml /tmp/mapa-commitado.yaml
+          anchors map build >/dev/null 2>&1 || true
+          filtra() { grep -vE '^ *(generated_by|gerado_por|version|updated_at):' "$1"; }
+          if ! diff <(filtra /tmp/mapa-commitado.yaml) <(filtra anchors.graph.yaml); then
+            echo ""
+            echo "✗ o mapa commitado difere do que o \`map build\` produz."
+            echo "  Rode \`anchors map build\` e commite — os gates deste PR estariam"
+            echo "  medindo uma foto que não é a dele."
+            exit 1
+          fi
+          echo "✓ mapa em dia"
+
+      # `--all` e não `--changed`: um PR pode QUEBRAR um arquivo que ele não tocou —
+      # renomear um símbolo, mudar uma regra que outra unidade cita. O raio de impacto do
+      # `--changed` é calculado sobre o mapa, que pode estar velho justamente por causa
+      # deste PR.
+      #
+      # `--deterministic` pula os gates de julgamento por IA: eles pedem credencial e
+      # respondem devagar, e o veredito deles vive carimbado no mapa. O que sobra aqui é
+      # o que uma máquina decide sozinha.
+      - name: Os gates do Anchors, sobre o Anchors
+        run: anchors check --all --deterministic
+
+      # O CHECK GRAVA o que reprova em `issues/` — é o modo local, e este repositório não
+      # declara `workflow:`. No CI isso é ruído: a máquina é descartada, e um arquivo
+      # escrito aqui não chega a lugar nenhum.
+      #
+      # Falhar se sobrou algo seria redundante (o passo acima já falhou), mas listar é
+      # útil: um `issues/` não-vazio depois de um check que passou significaria que algo
+      # foi registrado sem reprovar — e isso é o tipo de divergência que vale ver.
+      - name: O check deixou issue para trás?
+        if: always()
+        run: |
+          if [ -d issues ] && [ -n "$(find issues -type f 2>/dev/null)" ]; then
+            echo "issues registradas por este check:"
+            find issues -type f | sed "s/^/  /"
+          fi
