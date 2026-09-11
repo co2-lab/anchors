@@ -174,7 +174,7 @@ func (g *Graph) JudgedBy(id, gateName string) (verdict string, valido bool) {
 			continue
 		}
 		for _, j := range e.Julgamentos {
-			if !mesmoGate(j.Gate, gateName) {
+			if j.Gate != gateName {
 				continue
 			}
 			if j.ValidatedFromRev != g.nodeRev(e.From) || j.ValidatedToRev != g.nodeRev(e.To) {
@@ -198,31 +198,13 @@ func (g *Graph) StaleEdges() []Edge {
 	return out
 }
 
-// mesmoGate compara o gate do carimbo com o gate procurado, tolerando o nome ANTIGO.
+// O CARIMBO casa pelo nome EXATO do gate.
 //
-// Os nomes de gate migraram do português para o inglês, e o alias do `config` cobre a
-// CONFIGURAÇÃO — não os carimbos já gravados. Medido no blue-eyes: 40 julgamentos ficaram
-// órfãos de uma vez, e as 10 specs do projeto voltaram para a fila pedindo julgamento que
-// alguém já tinha dado.
+// Houve uma normalização aqui (`mesmoGate` + `ResolveGateName`), que aceitava o nome
+// legado em português. Ela tinha um defeito de assimetria: a LEITURA normalizava e a
+// ESCRITA não — um projeto que renomeasse o gate ganhava um SEGUNDO carimbo em vez de
+// atualizar o primeiro.
 //
-// O efeito é pior que o incômodo: quem reencontra um julgamento que respondeu ontem
-// aprende que responder não adianta — e a próxima resposta vem sem olhar.
-//
-// A resolução mora aqui e não no `config` porque é o MAPA que carrega o nome antigo. O
-// `config` já converteu tudo o que carregou; o que ele não alcança é o que está em disco.
-func mesmoGate(doCarimbo, procurado string) bool {
-	if doCarimbo == procurado {
-		return true
-	}
-	if canonical := ResolveGateName; canonical != nil {
-		return canonical(doCarimbo) == procurado
-	}
-	return false
-}
-
-// ResolveGateName converte um nome de gate antigo para o canônico.
-//
-// Injetado pelo `config` no `init()`: `mapx` não pode importá-lo (seria ciclo, já que o
-// `config` usa tipos daqui). Nil significa "sem tabela de conversão" — e aí só o nome
-// exato casa, que é o comportamento correto para quem não declarou alias nenhum.
-var ResolveGateName func(string) string
+// O contrato de formato tornou a normalização desnecessária: o formato 2 só tem nome
+// canônico, e quem está no 1 é recusado com a mensagem que manda migrar. A conversão é o
+// passo `1→2` (`internal/migra/formato_2.go`) e roda uma vez.

@@ -25,7 +25,7 @@ import (
 // de alteração, TRACEABILITY §rev/updated_at) — vem do git, resolvido pelo chamador
 // (o mapx não invoca git para não acoplar). Pode ser nil (updated_at fica vazio).
 func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *Graph {
-	g := &Graph{Version: 1}
+	g := &Graph{Version: FormatoAtual}
 	// A identidade de um artefato DERIVADO vem da âncora irmã, não do texto dele. Montado
 	// antes do laço porque a âncora pode aparecer depois na lista.
 	ancoraDeDerivado := anchorCodeByDerived(files, cfg)

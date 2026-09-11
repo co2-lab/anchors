@@ -982,7 +982,9 @@ type Layer struct {
 	// `trinca-completa`: fica declarado na Estrutura, à vista, em vez de escondido
 	// num Skip do gate. Ex.: uma camada provada só por teste de integração central
 	// declara `trinca_opcional: [tested-by]`.
-	TrincaOpcional []string `yaml:"trinca_opcional,omitempty"`
+	// A chave é `triad_optional`: `lang` traduz o que se LÊ, e uma chave de YAML é
+	// identificador, não prosa.
+	TrincaOpcional []string `yaml:"triad_optional,omitempty"`
 	// Work: passos EXTRA que esta camada exige, por artefato (spec|code|feature|test).
 	// O `anchors work` já compõe um procedimento universal a partir da Estrutura; isto
 	// acrescenta o que só o projeto sabe ("rode o seed antes", "o teste desta camada é
@@ -1303,16 +1305,6 @@ func Load(path string) (*Config, error) {
 	if err := i18n.Set(c.Lang); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
-	// O VOCABULÁRIO ANTIGO ainda funciona, e é convertido na carga.
-	//
-	// Os nomes de gate nasceram em português e foram para o inglês, porque são
-	// IDENTIFICADORES — vão para o `anchors.yaml` de cada projeto, e um arquivo escrito
-	// por um time brasileiro tem de funcionar num time espanhol.
-	//
-	// Converter aqui, e não recusar, é o que permite migrar quando o projeto quiser: o
-	// `doctor` avisa que há nome obsoleto e o `--fix` reescreve; até lá, tudo funciona.
-	// Recusar de saída quebraria todo projeto existente numa atualização de binário.
-	c.canonicalizaVocabulario()
 
 	if err := c.validarEnumsDeGate(); err != nil {
 		return nil, err

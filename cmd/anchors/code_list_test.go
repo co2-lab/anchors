@@ -12,7 +12,7 @@ func mapaComCodigos(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
 	p := filepath.Join(dir, "anchors.graph.yaml")
-	const y = `version: 1
+	const y = `version: 2
 nodes:
     - id: apps/mobile/src/features/auth/LoginScreen.spec.md
       kind: spec

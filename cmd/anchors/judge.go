@@ -262,7 +262,7 @@ está declarada.`,
 // o nome mudou. Canonizar o ARGUMENTO fecha o buraco pela mesma tabela que o `Load` usa,
 // então os dois nomes nunca divergem.
 func findJudgmentGate(cfg *config.Config, name string) (config.Gate, bool) {
-	canonico, _ := config.CanonicalName(name)
+	canonico := name
 	for _, g := range cfg.Gates {
 		if (g.Name == name || g.Name == canonico) && g.IsJudgment() {
 			return g, true
