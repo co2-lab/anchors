@@ -3,8 +3,22 @@
 /cli/anchors-*
 *.exe
 
-# artefatos que o próprio Anchors gera num projeto (não versionar aqui)
-anchors.graph.yaml
+# O MAPA É VERSIONADO — inclusive aqui.
+#
+# Ele estava nesta lista, com a razão "artefatos que o próprio Anchors gera num projeto
+# (não versionar aqui)". A intenção era evitar que um mapa de teste vazasse para o
+# repositório; o efeito foi o Anchors não se tratar como projeto.
+#
+# E a contradição era direta: o cabeçalho que o próprio produto escreve em TODO mapa diz
+# "Material e versionado. Fonte de verdade do grafo". O repositório que o diz era o único
+# que não o fazia.
+#
+# Descoberto ao ligar o `anchors check` no CI (#3): o passo que confere se o mapa está em
+# dia falhou com "cannot stat 'anchors.graph.yaml'" — o arquivo não chega ao runner.
+#
+# `.anchors/` continua fora: ali vive ESTADO DA MÁQUINA (o espelho do último check, o
+# cache do freeze, a fila local), e estado de máquina num repositório compartilhado é
+# conflito a cada push.
 .anchors/
 
 # Go
