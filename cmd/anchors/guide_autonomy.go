@@ -39,6 +39,32 @@ func autonomyGuide(root string) string {
 		fmt.Fprintf(&b, "\n## A lente deste perfil (%s)\n\n%s.\n", s.Role.Title(), lens)
 	}
 
+	// O SEGUNDO tipo de parada, e ele não é escalonamento nenhum.
+	//
+	// Medido: um dev novo pediu ao agente dele para contribuir. O agente leu o
+	// CONTRIBUTING, montou o plano de onboarding CORRETO, e parou no passo 4 pedindo
+	// autorização — `doctor --fix` "protege o branch" e "cria labels", e isso se lê como
+	// alteração de estado compartilhado. Pediu OK e o turno acabou.
+	//
+	// A cautela estava certa: uma ação irreversível sobre repositório alheio merece
+	// pergunta. O que faltava era saber que aquele comando é idempotente, e que rodá-lo
+	// num repositório já montado não muda nada.
+	//
+	// Sem esta seção o agente escolhe entre dois erros: pedir autorização para tudo
+	// (e não começar) ou não pedir para nada (e mexer no que não devia).
+	b.WriteString("### Preparar o ambiente não pede autorização\n\n")
+	b.WriteString("Os comandos de PREPARAÇÃO são idempotentes e conferem antes de agir. " +
+		"Num projeto\njá montado eles não mudam nada, e rodá-los é o passo zero do " +
+		"trabalho:\n\n")
+	b.WriteString("    anchors doctor --fix          pipelines, hooks, labels, proteção do branch\n")
+	b.WriteString("    anchors settings role <perfil> --date <AAAA-MM-DD>\n")
+	b.WriteString("    anchors map build             o mapa que os gates confrontam\n\n")
+	b.WriteString("O `settings role` aceita o perfil e a data como ARGUMENTO — sem eles " +
+		"ele pergunta,\ne um agente sem terminal fica esperando resposta que não vem.\n\n")
+	b.WriteString("O que PEDE autorização é outra coisa: apagar trabalho de alguém, " +
+		"forçar push,\nfechar issue que não é sua, mexer em branch protegido. A régua é a " +
+		"REVERSIBILIDADE,\nnão o fato de tocar o remoto.\n\n")
+
 	b.WriteString("\n## Quando você não souber\n\n")
 
 	if s.HandlesUserIssues() {

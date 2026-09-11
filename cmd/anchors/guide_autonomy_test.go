@@ -125,3 +125,68 @@ func TestInteractiveTerminal_arquivoNaoEhTerminal(t *testing.T) {
 		t.Error("um arquivo comum foi tratado como terminal")
 	}
 }
+
+// UM DEV NOVO pediu ao agente dele para contribuir. O agente leu o CONTRIBUTING, montou o
+// plano de onboarding CORRETO — instalar, `pnpm install`, declarar perfil, `doctor --fix`,
+// `guide work` — e parou no passo 4 pedindo autorização: "o passo 4 altera o repositório
+// remoto (branch protection, labels) (...) quero teu OK explícito".
+//
+// A cautela estava certa. O que faltava era saber que `doctor --fix` é IDEMPOTENTE: num
+// repositório já montado ele não muda nada. Sem isso, o agente escolhe entre dois erros —
+// pedir autorização para tudo (e não começar) ou não pedir para nada.
+//
+// Ele também temeu que `settings role` fosse interativo. É, sem argumento — e aceita o
+// perfil e a data como argumento, o que nenhum texto dizia.
+func TestAutonomyGuide_preparacaoNaoPedeAutorizacao(t *testing.T) {
+	dir := t.TempDir()
+	g := autonomyGuide(dir)
+
+	if !strings.Contains(g, "não pede autorização") {
+		t.Error("o guia deveria dizer que preparar o ambiente não pede autorização")
+	}
+	if !strings.Contains(g, "idempotente") && !strings.Contains(g, "IDEMPOTENTE") {
+		t.Error("a razão tem de estar dita: os comandos conferem antes de agir")
+	}
+	if !strings.Contains(g, "doctor --fix") {
+		t.Error("o comando que causou a parada tem de ser nomeado")
+	}
+	// A régua tem de ser NOMEADA, senão o agente generaliza errado — "tocar o remoto"
+	// incluiria `git push`, e ele voltaria a pedir OK para entregar trabalho.
+	if !strings.Contains(g, "REVERSIBILIDADE") {
+		t.Error("o guia deveria dizer QUAL é a régua, não só listar exceções")
+	}
+	// E o contra-exemplo: sem ele, "preparação não pede autorização" lê-se como
+	// "nada pede autorização".
+	if !strings.Contains(g, "PEDE autorização") {
+		t.Error("o guia deveria dizer o que AINDA pede autorização")
+	}
+}
+
+func TestAutonomyGuide_dizQueSettingsRoleAceitaArgumento(t *testing.T) {
+	// O agente parou também por isto: "o passo 3 pode ser interativo (...) eu paro e
+	// devolvo o comando pra você rodar". O comando aceita perfil e data como argumento, e
+	// nenhum texto dizia — ele teria de rodar `--help` para descobrir.
+	g := autonomyGuide(t.TempDir())
+	if !strings.Contains(g, "--date") {
+		t.Error("o guia deveria mostrar a forma NÃO interativa do `settings role`")
+	}
+	if !strings.Contains(g, "espera") && !strings.Contains(g, "esperando") {
+		t.Error("a consequência tem de estar dita: um agente sem terminal fica esperando")
+	}
+}
+
+// A seção vale para TODO perfil, e isso não é detalhe: a primeira versão a colocou depois
+// da bifurcação que separa quem decide produto de quem não decide, e o `architect` — que
+// retorna cedo — nunca a via. Quem monta o ambiente não é só o dev.
+func TestAutonomyGuide_preparacaoValeParaTodoPerfil(t *testing.T) {
+	for _, perfil := range []string{"dev", "architect", "product-owner", "qa", "reviewer"} {
+		dir := t.TempDir()
+		s := settings.Settings{Role: settings.Role(perfil), DecidedAt: "2026-09-10"}
+		if err := settings.Save(dir, s); err != nil {
+			t.Fatalf("salvar settings de %s: %v", perfil, err)
+		}
+		if g := autonomyGuide(dir); !strings.Contains(g, "não pede autorização") {
+			t.Errorf("perfil %s não vê a seção de preparação", perfil)
+		}
+	}
+}

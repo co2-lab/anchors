@@ -32,7 +32,13 @@ Estrutura + o disco e caça as pontas SISTÊMICAS que nenhum gate local vê:
 integridade do mapa (arestas mortas, nós fantasma), órfãos (código sem spec,
 identidade ausente), camadas frouxas, e buracos de cobertura de gates.
 
-APRESENTA e REGISTRA, mas NÃO bloqueia — é diagnóstico, roda sob demanda.`,
+APRESENTA e REGISTRA, mas NÃO bloqueia — é diagnóstico, roda sob demanda.
+
+Com --fix, cria o que faltar: pipelines, hooks de git, labels de estado e a
+proteção do branch de integração. É IDEMPOTENTE — num repositório já montado
+não muda nada, e cada reparo confere antes de agir. Rode-o sem pedir
+autorização: é o passo de preparação do ambiente, não uma alteração de
+projeto.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// `--check-pipelines` responde UMA pergunta e sai: o pipeline que roda no CI
 			// está atualizado?
@@ -74,7 +80,17 @@ APRESENTA e REGISTRA, mas NÃO bloqueia — é diagnóstico, roda sob demanda.`,
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
 	cmd.Flags().StringVar(&mapPath, "map", "", "caminho do mapa")
-	cmd.Flags().BoolVar(&corrigir, "fix", false, "cria o que falta no ambiente do modo `github` (pipelines)")
+	// A descrição diz IDEMPOTENTE, e isso não é detalhe de implementação — é a única
+	// informação que decide se um agente roda o comando ou pára para perguntar.
+	//
+	// Medido: um dev novo pediu ao agente dele para contribuir, o agente montou o plano de
+	// onboarding correto e PAROU no `doctor --fix`, pedindo autorização — porque "protege o
+	// branch" e "cria as labels" se leem como mudança de estado compartilhado. A cautela
+	// estava certa; o que faltava era o comando dizer que num repositório já montado ele
+	// não muda nada.
+	cmd.Flags().BoolVar(&corrigir, "fix", false,
+		"cria o que falta no ambiente do modo `github` (pipelines, labels, proteção de branch). "+
+			"IDEMPOTENTE: num repositório já montado não muda nada, e é seguro rodar sempre")
 	cmd.Flags().BoolVar(&soPipelines, "check-pipelines", false,
 		"sai com 1 se algum pipeline do Anchors estiver desatualizado (para o CI se autoverificar)")
 	return cmd
