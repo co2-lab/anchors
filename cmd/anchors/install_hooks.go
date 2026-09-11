@@ -570,5 +570,65 @@ if [ "$local_cfg" != "$remota" ]; then
   echo "   Rode 'git pull --rebase $remoto $base' para ver o que mudou — é lá que um"
   echo "   congelamento seria declarado."
 fi
+
+# O BINÁRIO ATENDE AO MÍNIMO QUE O PROJETO DECLARA?
+#
+# 'min_version' no anchors.yaml do remoto é a alavanca para o momento em que uma correção
+# precisa alcançar todo mundo antes que o trabalho continue: um formato de mapa que mudou,
+# um gate que passou a pegar algo que passava batido, um defeito que produz dado errado em
+# silêncio.
+#
+# Ele é DECLARADO, e por isso serve. A conferência abaixo, contra o 'gerado_por' do mapa,
+# usa um campo DERIVADO — o próximo 'map build' de qualquer agente o reescreve com a versão
+# dele, apagando a exigência sem ninguém decidir nada. Medido: o campo voltou a "dev" num
+# projeto onde a release corrente era a v0.1.83.
+#
+# Este BARRA, e a diferença de força é deliberada: o 'gerado_por' avisa sobre uma
+# divergência que talvez não importe; o 'min_version' é alguém dizendo "abaixo disto não".
+min_ver=$(printf '%s' "$remota" | sed -n 's/^min_version:[[:space:]]*//p' | head -1 | tr -d '"'"'"' ')
+local_ver=$(anchors --version 2>/dev/null | sed -n 's/^anchors version \([^ ]*\).*/\1/p')
+
+if [ -n "$min_ver" ] && [ -n "$local_ver" ]; then
+  # A comparação é ORDINAL e o shell não a faz sozinho: "0.1.9" > "0.1.84" em ordem de
+  # texto, e é MENOR em versão. 'sort -V' resolve — se o menor dos dois for o mínimo, o
+  # local atende.
+  menor=$(printf '%s\n%s\n' "$min_ver" "$local_ver" | sort -V | head -1)
+  if [ "$local_ver" != "$min_ver" ] && [ "$menor" = "$local_ver" ]; then
+    echo ""
+    echo "🛑 PUSH RECUSADO — este projeto exige 'anchors' $min_ver ou mais novo."
+    echo ""
+    echo "   Seu binário é o $local_ver."
+    echo ""
+    echo "   O mínimo está declarado no anchors.yaml do $remoto/$base, e ele existe para"
+    echo "   quando uma correção precisa alcançar todo mundo antes de o trabalho seguir."
+    echo ""
+    echo "   Atualize com 'brew upgrade anchors' ou"
+    echo "   'go install github.com/co2-lab/anchors/cmd/anchors@latest'."
+    echo ""
+    exit 1
+  fi
+fi
+
+# O BINÁRIO DIVERGE DO QUE GRAVOU O MAPA? — avisa, não barra.
+#
+# Uma versão diferente não torna o trabalho errado; torna o mapa suscetível a oscilar. E
+# barrar por isso transformaria "atualize quando puder" em "pare agora", caro no meio de
+# uma entrega.
+remota_ver=$(printf '%s' "$(git show "$remoto/$base:anchors.graph.yaml" 2>/dev/null || true)" \
+  | sed -n 's/^gerado_por:[[:space:]]*//p' | head -1)
+
+if [ -n "$remota_ver" ] && [ -n "$local_ver" ] && [ "$remota_ver" != "$local_ver" ]; then
+  echo ""
+  echo "⚠  pre-push: o mapa no $remoto/$base foi gravado por 'anchors $remota_ver', e o"
+  echo "   seu binário é o $local_ver."
+  echo ""
+  echo "   Versões diferentes escrevem o mapa de jeitos diferentes: a mais velha DESFAZ o"
+  echo "   que a mais nova gravou, e o mapa oscila com conflito a cada PR sem ninguém"
+  echo "   errar nada."
+  echo ""
+  echo "   Atualize com 'brew upgrade anchors' ou"
+  echo "   'go install github.com/co2-lab/anchors/cmd/anchors@latest'."
+  echo ""
+fi
 exit 0
 `
