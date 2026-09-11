@@ -46,6 +46,18 @@ on:
   # aparece, e aparecer é a diferença entre saber e não saber.
   push:
     branches: [main]
+  # À MÃO: um PR cujo evento se perdeu, ou uma conferência que alguém quer refazer sem
+  # empurrar commit vazio. Pipeline sem escape manual transforma percalço em trabalho
+  # parado sem remédio.
+  #
+  # A frase acima é o comentário do `anchors-gates.yml` — o template que este produto
+  # INSTALA nos projetos. Ele tem o escape desde sempre; o CI do próprio Anchors não
+  # tinha, e isso custou: um `push --force` que amendou um commit não disparou os checks,
+  # o PR ficou com "no checks reported", e não havia como acordá-lo. Um commit vazio
+  # também não disparou.
+  #
+  # É a mesma família dos outros achados desta semana: o produto prega e não pratica.
+  workflow_dispatch:
 
 # Um PR que recebe vários pushes seguidos não precisa da suíte de cada um: só o último
 # estado importa. Sem isto, correções em sequência empilham execuções que já nasceram

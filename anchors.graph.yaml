@@ -1,7 +1,7 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
 version: 2
-generated_by: 0.1.91
+generated_by: 0.1.92
 nodes:
     - id: BOOTSTRAP.md
       kind: guide
@@ -1005,7 +1005,7 @@ nodes:
         - config
     - id: internal/config/config.go
       kind: code
-      rev: 8ab05d30c0f9
+      rev: a3b570a76fd2
       updated_at: "2026-09-11"
       layer: config
       tags:
@@ -1117,8 +1117,8 @@ nodes:
         - test
     - id: internal/config/version_hint_test.go
       kind: test
-      rev: ec3b7da1c6ed
-      updated_at: "2026-09-10"
+      rev: 1578dea4ef1c
+      updated_at: "2026-09-11"
       layer: teste
       tags:
         - test
@@ -1330,6 +1330,7 @@ nodes:
     - id: internal/gate/doc_required.go
       kind: code
       rev: 67fe14a396d3
+      updated_at: "2026-09-11"
       layer: gate
       tags:
         - regra
@@ -1337,6 +1338,7 @@ nodes:
     - id: internal/gate/doc_required_test.go
       kind: test
       rev: 0b02e308e0bf
+      updated_at: "2026-09-11"
       layer: teste
       tags:
         - test
@@ -1524,7 +1526,7 @@ nodes:
     - id: internal/gate/internal_checks.go
       kind: code
       rev: 004a1f99c222
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-11"
       layer: gate
       tags:
         - regra
@@ -2337,7 +2339,7 @@ nodes:
     - id: internal/initx/default_gates.go
       kind: code
       rev: 3b4a00288a77
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-11"
       layer: infra
       tags:
         - infra
