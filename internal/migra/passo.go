@@ -90,3 +90,20 @@ func AllSteps() []Step {
 	copy(out, steps)
 	return out
 }
+
+// RenamedKey diz se `chave` é uma que algum passo de migração converte.
+//
+// Existe para a mensagem de erro do `config`: uma chave desconhecida num arquivo de
+// formato antigo pode ser uma que a migração renomeou — e aí o conserto é `anchors
+// migrate` — ou um typo de verdade, e aí não é. Sem esta pergunta, a mensagem mandaria
+// migrar um arquivo que a migração não conserta, e quem lê perde a confiança na próxima.
+func RenamedKey(chave string) bool {
+	for _, s := range steps {
+		for _, porArquivo := range s.RenameKeys {
+			if _, ok := porArquivo[chave]; ok {
+				return true
+			}
+		}
+	}
+	return false
+}
