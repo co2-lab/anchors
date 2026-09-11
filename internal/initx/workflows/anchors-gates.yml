@@ -89,14 +89,30 @@ jobs:
           anchors map build >/dev/null 2>&1 || true
           # DOIS campos são ignorados, e por razões diferentes:
           #
-          #   • `gerado_por` muda com a versão do binário, e isso não é mapa velho.
+          #   • `generated_by` muda com a versão do binário, e isso não é mapa velho.
+          #     O nome antigo (`gerado_por`) continua na lista: um PR aberto ANTES da
+          #     migração para o formato 2 carrega o mapa com a chave velha, e filtrar só
+          #     a nova faria o gate reprovar por uma diferença que ele mesmo declara
+          #     ignorar. Medido: três PRs reprovaram de uma vez quando o campo foi
+          #     renomeado, todos por isto.
+          #
+          #   • `version` é o FORMATO do mapa, e ele muda quando o Anchors evolui — não
+          #     quando o PR está desatualizado. Um PR aberto antes da mudança de formato
+          #     traz o número velho, e o `map build` do CI escreve o novo: a diferença é
+          #     entre versões da FERRAMENTA, que é exatamente o que as outras duas linhas
+          #     desta lista existem para ignorar.
+          #
+          #     Filtrá-lo NÃO esconde mapa velho: o que denuncia mapa velho é o CONTEÚDO
+          #     (nós e arestas com rev defasado), e esse continua sendo comparado. Um PR
+          #     cujo mapa está realmente para trás reprova pelas linhas de nó, não pelo
+          #     cabeçalho.
           #
           #   • `updated_at` é a data do ÚLTIMO COMMIT do arquivo, e o mapa é gerado
           #     ANTES do commit que o carrega. Quem escreve um arquivo hoje gera o mapa
           #     com a data anterior, commita os dois juntos, e no CI o `map build` já vê
           #     a data nova. É um ciclo que nenhum `map build` fecha — todo PR que toca
           #     arquivo governado cairia aqui.
-          filtra() { grep -vE '^ *(gerado_por|updated_at):' "$1"; }
+          filtra() { grep -vE '^ *(generated_by|gerado_por|version|updated_at):' "$1"; }
           if ! diff -q <(filtra /tmp/mapa-commitado.yaml) \
                        <(filtra anchors.graph.yaml) >/dev/null; then
             echo "::error::O \`anchors.graph.yaml\` commitado não corresponde ao repositório. Rode \`anchors map build\`, commite e suba — sem isso os gates confrontam uma foto velha."
