@@ -205,6 +205,25 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "docs-fresh", Blocking: config.Bool(false),
 			Measures: "o `docs/*.md` compilado reflete a spec de onde veio",
 		})
+		// A DOCUMENTAÇÃO AGREGADA que a unidade alimenta. O `docs.required` declara qual
+		// documento é contrato e qual camada ou unidade o dispara; até aqui a declaração
+		// era resolvida (`RequiredFor`) e nunca CONFRONTADA.
+		//
+		// Medido no projeto de referência: um PR entregou uma lambda nova — spec, código,
+		// feature e teste — sem tocar o OpenAPI nem o esquema de dados, os dois declarados
+		// com `trigger: [lambdas]`. Todos os checks ficaram verdes. Só apareceu porque
+		// dois agentes colidiram no mesmo card e havia com que comparar.
+		//
+		// BLOQUEANTE, diferente do `docs-fresh` ao lado, e a diferença é o que a máquina
+		// consegue fazer sozinha: um `docs/*.md` desatualizado se conserta com um
+		// `docs build`, e reprovar o autor por isso gasta a atenção da revisão. Um
+		// contrato que não descreve a rota nova NÃO se conserta sozinho — alguém precisa
+		// escrever o que a rota faz.
+		gates = append(gates, config.Gate{
+			Name: "doc-required", ID: "doc-required", On: []string{"spec"},
+			Check: "doc-required", Blocking: config.Bool(true),
+			Measures: "as documentações que esta unidade dispara existem e a mencionam",
+		})
 		// A SPEC BASTA POR SI. O corpo dela vira documentação palavra por palavra, e
 		// quem lê o `docs/` não tem o repositório aberto: uma frase que só APONTA para um
 		// plano manda essa pessoa a um arquivo que ela não vai abrir — que é exatamente o
