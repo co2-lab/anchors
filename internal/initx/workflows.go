@@ -91,6 +91,13 @@ var WorkflowsDoFluxo = []Workflow{
 		ExigeSerial: true,
 	},
 	{
+		Arquivo: "anchors-guard.yml",
+		Papel:   "desfaz a mudança de estado que não veio do fluxo",
+		// SERIAL, e por card: uma reversão escreve label, e o evento que ela mesma dispara
+		// chegaria antes de a primeira execução terminar.
+		ExigeSerial: true,
+	},
+	{
 		Arquivo: "anchors-decided.yml",
 		Papel:   "devolve à fila o card cujos desbloqueios foram todos entregues",
 		// SERIAL: ele escreve label, e duas execuções sobre o mesmo card — uma vinda do
@@ -205,6 +212,20 @@ const LabelNeedsUser = "anchors:needs-user"
 // A label liga os dois: `anchors:desbloqueia-311` num card diz "quando eu for entregue, o
 // #311 pode voltar à fila". O pipeline de board a lê e o `anchors next` a respeita.
 const PrefixoLabelDesbloqueia = "anchors:desbloqueia-"
+
+// LabelManual é o OPT-OUT da trava: o card pode ser movido à mão.
+//
+// O pipeline `anchors-guard` desfaz qualquer mudança de estado que não tenha vindo dele —
+// e precisa disso porque os agentes usam a MESMA conta que a pessoa: o `actor` de um evento
+// distingue `github-actions[bot]` de humano, mas não distingue agente de dono do projeto.
+//
+// A label é o ato deliberado que diz "este card sou eu que movo". Ela fica NO CARD, à
+// vista, e some do histórico só quando alguém a remove — diferente de uma frase em
+// comentário, que se perde no meio da conversa.
+//
+// O CUSTO é pôr a label antes de mexer, e ele é o ponto: mover um card é raro, e o que a
+// trava impede é justamente o movimento que ninguém pensou duas vezes antes de fazer.
+const LabelManual = "anchors:manual"
 
 // LabelDesbloqueia é a label do card que destrava `card`.
 func LabelDesbloqueia(card string) string { return PrefixoLabelDesbloqueia + card }
