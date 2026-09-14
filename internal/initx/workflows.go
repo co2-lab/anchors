@@ -90,6 +90,14 @@ var WorkflowsDoFluxo = []Workflow{
 		Papel:       "libera cards cujo dono sumiu, preservando o histórico",
 		ExigeSerial: true,
 	},
+	{
+		Arquivo: "anchors-decided.yml",
+		Papel:   "devolve à fila o card cuja decisão o usuário respondeu",
+		// SERIAL: ele escreve label, e duas execuções sobre o mesmo card — uma vinda do
+		// comentário, outra do cron — removeriam a mesma label duas vezes e comentariam
+		// duas vezes no card.
+		ExigeSerial: true,
+	},
 }
 
 // BranchProtection é o que o modo `github` exige da `main`: nada entra sem PR.
@@ -200,6 +208,23 @@ const PrefixoLabelDesbloqueia = "anchors:desbloqueia-"
 
 // LabelDesbloqueia é a label do card que destrava `card`.
 func LabelDesbloqueia(card string) string { return PrefixoLabelDesbloqueia + card }
+
+// TagDeDecisao é a marca que a PESSOA escreve no comentário que responde o card escalado.
+//
+// Por que uma tag, e não "o último comentário de alguém":
+//
+// Num projeto com agentes, todos comentam com a MESMA conta — o `gh` autentica como o dono
+// do repositório, e os seis agentes que rodaram no projeto de referência aparecem como
+// `adrielcodeco`, igual à pessoa. Não há como distinguir "o usuário respondeu" de "um
+// agente registrou progresso" pelo autor do comentário.
+//
+// A tag resolve com um ato explícito, e escolhê-la como TAG e não como prefixo de comando
+// é deliberado: `#solution` se escreve no meio da frase, como quem responde — e não como
+// quem executa um comando. Um comentário de progresso nunca a carrega por acidente.
+//
+// O que está no comentário é a decisão, e ela fica no card — que é onde quem retoma o
+// trabalho vai procurar por quê.
+const TagDeDecisao = "#solution"
 
 // LabelToDo é o estado em que um card NASCE.
 //

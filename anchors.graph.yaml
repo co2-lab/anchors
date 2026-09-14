@@ -819,6 +819,7 @@ nodes:
     - id: cmd/anchors/unblock.go
       kind: code
       rev: 6e4ebe2ee7c7
+      updated_at: "2026-09-14"
       layer: comando
       tags:
         - cli
@@ -2316,7 +2317,7 @@ nodes:
     - id: internal/initx/board_bloqueio_test.go
       kind: test
       rev: 7ea0731b1908
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-14"
       layer: teste
       tags:
         - test
@@ -2483,16 +2484,16 @@ nodes:
         - test
     - id: internal/initx/workflows.go
       kind: code
-      rev: 957142d23944
-      updated_at: "2026-09-10"
+      rev: ad859cf2bc7c
+      updated_at: "2026-09-14"
       layer: infra
       tags:
         - infra
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: f81ab979cfe0
-      updated_at: "2026-09-11"
+      rev: 3756327a40dc
+      updated_at: "2026-09-14"
       layer: teste
       tags:
         - test
