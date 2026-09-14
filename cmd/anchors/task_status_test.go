@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/board"
+	"github.com/co2-lab/anchors/internal/initx"
 )
 
 // O comando existe por um relato que estava CERTO e insuficiente: o agente de outro dev
@@ -154,5 +155,101 @@ func TestTaskStatus_mudancaNaoCommitadaVemAntesDeQualquerOutroPasso(t *testing.T
 	}
 	if strings.Contains(out, "abrir o PR") {
 		t.Errorf("com trabalho não commitado, abrir PR é prematuro; saída:\n%s", out)
+	}
+}
+
+// A REVERSÃO precisa aparecer no relato, e ANTES de tudo o mais.
+//
+// Medido: um agente fechou o card à mão, a trava de estado desfez no mesmo minuto, e ele
+// encerrou o turno escrevendo "issue closed e resolvida, nada mais a fazer" — sem saber. O
+// comentário da reversão estava no card e estava correto; quem já saiu da conversa não o lê.
+//
+// Este relato é o último lugar onde a informação ainda muda o desfecho.
+func TestTaskStatus_aReversaoApareceAntesDoResto(t *testing.T) {
+	out := renderTaskStatus(taskState{
+		Card:   testCard(483, "anchors:in-progress", "[DTSTD] a spec exclui o estado"),
+		Branch: "fix-483", Clean: true,
+		Reverted: []string{"Revertido: fechado à mão (por alguem), e o card foi reaberto."},
+	})
+
+	if !strings.Contains(out, "DESFEITO") {
+		t.Fatal("a reversão precisa aparecer — o agente não a viu no card")
+	}
+	if !strings.Contains(out, "fechado à mão") {
+		t.Error("o relato deveria dizer O QUE foi desfeito")
+	}
+	// ANTES do PR: uma reversão muda o que o agente pensa que fez, e ler isso depois do
+	// veredito do CI é ler tarde demais.
+	if i, j := strings.Index(out, "DESFEITO"), strings.Index(out, "PR "); i > 0 && j > 0 && i > j {
+		t.Error("a reversão deveria vir ANTES do veredito do PR")
+	}
+	// E COMO AUTORIZAR: sem isso o agente conclui que o pipeline está quebrado, e a
+	// próxima reação é tentar contorná-lo.
+	if !strings.Contains(out, "anchors:manual") {
+		t.Error("o relato deveria dizer como autorizar o movimento deliberado")
+	}
+}
+
+// SEM REVERSÃO a seção não existe. Uma seção que aparece sempre — vazia na maioria das
+// vezes — treina quem lê a pular, e aí ela deixa de servir quando houver algo.
+func TestTaskStatus_semReversaoNaoInventaSecao(t *testing.T) {
+	out := renderTaskStatus(taskState{
+		Card: testCard(303, "anchors:in-progress", "x"), Branch: "impl-x", Clean: true,
+	})
+	if strings.Contains(out, "DESFEITO") {
+		t.Error("sem reversão a seção não deveria existir")
+	}
+}
+
+// O PARSER da reversão só aceita o que a TRAVA escreveu.
+//
+// Duas condições, e as duas importam: o marcador `🔒` E o autor ser o bot. Um comentário de
+// pessoa que por acaso comece com o mesmo símbolo não é uma reversão — e tratá-lo como uma
+// faria o relato acusar algo que não aconteceu.
+func TestRevertedOn_soContaOQueATravaEscreveu(t *testing.T) {
+	casos := []struct {
+		nome  string
+		corpo string
+		autor string
+		conta bool
+	}{
+		{"a reversão de verdade", initx.MarcadorDeReversao + " **Revertido: fechado à mão**", "github-actions", true},
+		{"pessoa usando o mesmo símbolo", initx.MarcadorDeReversao + " tranquei isto aqui", "alguem", false},
+		{"bot dizendo outra coisa", "▶️ De volta à fila.", "github-actions", false},
+		{"comentário comum", "trabalhando nisso", "alguem", false},
+	}
+	for _, c := range casos {
+		// Chama O QUE O CÓDIGO USA. A primeira versão reescrevia a condição aqui, e
+		// sobreviveu à mutação que removia a checagem do autor — o teste media a si mesmo.
+		if ehReversao(c.corpo, c.autor) != c.conta {
+			t.Errorf("%s: esperava conta=%v", c.nome, c.conta)
+		}
+	}
+}
+
+// A PRIMEIRA LINHA basta, sem a marcação de negrito. O comentário inteiro tem seis
+// parágrafos explicando a regra — despejá-los no terminal faria o relato virar um muro, e
+// quem precisa do detalhe abre o card.
+func TestRevertedOn_mostraSoAPrimeiraLinhaLimpa(t *testing.T) {
+	corpo := initx.MarcadorDeReversao + " **Revertido: fechado à mão** (por `alguem`), e o card foi reaberto.\n" +
+		"\nO card se move pelo FATO, não à mão: `in-progress` porque o claim entregou...\n" +
+		"\n**O que isto evita:** um card fechado antes do merge sai de `ready-to-review`..."
+
+	linha := corpo
+	if i := strings.IndexByte(linha, '\n'); i > 0 {
+		linha = linha[:i]
+	}
+	linha = strings.ReplaceAll(linha, "**", "")
+	linha = strings.ReplaceAll(linha, "`", "")
+	limpa := strings.TrimSpace(strings.TrimPrefix(linha, initx.MarcadorDeReversao))
+
+	if strings.Contains(limpa, "**") || strings.Contains(limpa, "`") {
+		t.Errorf("a marcação de negrito é ruído no terminal; veio %q", limpa)
+	}
+	if strings.Contains(limpa, "O que isto evita") {
+		t.Error("só a primeira linha — o resto faria o relato virar um muro")
+	}
+	if !strings.Contains(limpa, "fechado à mão") {
+		t.Errorf("a informação essencial se perdeu; veio %q", limpa)
 	}
 }
