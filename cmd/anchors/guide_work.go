@@ -71,6 +71,23 @@ O vínculo é declarado no vocabulário do Anchors — o card que você pegou e 
 sob ele. A palavra que a plataforma entende é DERIVADA disso, e muda com a
 plataforma, não com o idioma do projeto.
 
+## VOCÊ NÃO FECHA O CARD
+
+Quem fecha é o MERGE, pela linha ` + "`Closes #N`" + ` que o ` + "`anchors pr-body`" + ` escreveu. Fechar à
+mão parece arrumação — o trabalho está pronto, o PR está aberto, o card "já era" — e
+quebra o fluxo de um jeito que não aparece:
+
+- o card sai de ` + "`ready-to-review`" + ` ANTES de alguém revisar, e a fila de revisão esvazia;
+- o claim procura revisão primeiro (é a ordem da direita para a esquerda) e não acha
+  nada, então entrega trabalho NOVO;
+- o PR fica esperando, e quanto mais tempo espera mais caro fica revisá-lo.
+
+Medido: um projeto acumulou 25 PRs verdes esperando revisão com ZERO cards em
+` + "`ready-to-review`" + `. Os cards tinham sido fechados um minuto ANTES de o PR ser aberto, e o
+board dizia que não havia nada para revisar enquanto 25 trabalhos esperavam.
+
+A regra é a mesma do estado: o card se move pelo FATO, e o fato de "entregue" é o merge.
+
 ## Depois de abrir o PR: o card não está entregue
 
 Abrir o PR não fecha o card, e **empurrar um commit não é um ponto de parada**. O CI roda

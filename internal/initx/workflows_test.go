@@ -240,6 +240,10 @@ func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 	// entrega DESTE card destrava outro, e o card continua na coluna onde o trabalho está.
 	// O prefixo é conferido sem o número, que é por card e não se pode enumerar.
 	valida[PrefixoLabelDesbloqueia] = true
+	// O OPT-OUT da trava de estado, pela mesma razão das duas acima: ele autoriza mover o
+	// card à mão, e o card continua onde o trabalho está. Tratá-lo como estado o faria
+	// sair da coluna — e o board deixaria de mostrar o que ele autoriza.
+	valida[LabelManual] = true
 	for _, w := range WorkflowsDoFluxo {
 		b, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {
@@ -974,5 +978,107 @@ func TestPipelineDecidedTemOsDoisGatilhos(t *testing.T) {
 	if !strings.Contains(s, "- cron:") {
 		t.Error("o `schedule` precisa do cron: uma issue fechada pela API fora do fluxo não " +
 			"dispara o evento, e sem o agendamento o card espera para sempre")
+	}
+}
+
+// A TRAVA DE ESTADO: o card se move pelo FATO, e nada além do pipeline o move.
+//
+// Medido no projeto de referência: um agente fechou o card #432 às 15:47 e abriu o PR às
+// 15:48 — o mesmo padrão em oito PRs seguidos. O efeito não aparece no card, aparece na
+// FILA: o card sai de `ready-to-review` antes de alguém revisar, o claim (que procura
+// revisão primeiro) não acha nada e entrega trabalho NOVO.
+//
+// Resultado: 25 PRs verdes esperando revisão com ZERO cards em `ready-to-review`.
+func TestTravaDeEstadoRevertOQueNaoVeioDoFluxo(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+
+	// O PRÓPRIO PIPELINE não se vigia: ele move card o tempo todo, e reagir aos próprios
+	// eventos seria um laço. É a única distinção que o `actor` permite — os agentes usam a
+	// MESMA conta que a pessoa.
+	if !strings.Contains(s, "github.event.sender.login != 'github-actions[bot]'") {
+		t.Error("o pipeline precisa ignorar os próprios eventos, senão vira laço")
+	}
+
+	// OS QUATRO EVENTOS, e cada um tem o seu inverso.
+	for _, ev := range []string{"closed", "reopened", "labeled", "unlabeled"} {
+		if !strings.Contains(s, ev) {
+			t.Errorf("o pipeline precisa reagir a %q", ev)
+		}
+	}
+	for _, inverso := range []string{"gh issue reopen", "gh issue close", "--remove-label", "--add-label"} {
+		if !strings.Contains(s, inverso) {
+			t.Errorf("falta o inverso %q — reverter é desfazer, não avisar", inverso)
+		}
+	}
+
+	// O OPT-OUT precisa estar na GUARDA, não só explicado em comentário.
+	//
+	// A primeira versão procurava a label em qualquer lugar do arquivo, e sobreviveu à
+	// mutação que remove o `if` inteiro: `anchors:manual` continuava aparecendo na prosa
+	// que explica por que ele existe, e a trava passava a não ter escape nenhum.
+	//
+	// Terceira vez hoje que a mesma armadilha aparece — procurar a string em vez do que a
+	// usa. A asserção agora casa a guarda completa.
+	if !strings.Contains(s, `any(. == "`+LabelManual+`")`) {
+		t.Errorf("o opt-out %q precisa ser CONSULTADO, não só mencionado — uma trava sem "+
+			"escape transforma percalço em trabalho parado", LabelManual)
+	}
+	if !strings.Contains(s, "movimento manual autorizado") {
+		t.Error("o pipeline precisa SAIR quando o opt-out está presente")
+	}
+}
+
+// SÓ AS LABELS DE ESTADO são revertidas.
+//
+// O `escalate` põe `needs-user` e `sob-<n>`; o `unblock` põe `desbloqueia-<n>`. Os dois
+// fazem isso pela CLI, que autentica como a PESSOA — reverter essas labels desfaria o
+// trabalho dos próprios comandos do Anchors.
+func TestTravaDeEstadoNaoTocaLabelQueNaoEhEstado(t *testing.T) {
+	b, _ := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
+	s := string(b)
+
+	i := strings.Index(s, `case "$LABEL_MEXIDA" in`)
+	if i < 0 {
+		t.Fatal("o filtro por label de estado sumiu — o pipeline reverteria `needs-user` e " +
+			"`sob-<n>`, desfazendo o que o `escalate` acabou de fazer")
+	}
+	filtro := s[i:min(i+400, len(s))]
+	// A ALÇADA DO ANCHORS para em `ready-to-test` — o que vem depois é dos pipelines de
+	// entrega do PROJETO, e reverter ali desfaria trabalho de outro fluxo.
+	daAlcada := []string{
+		LabelToDo, "anchors:in-progress", "anchors:ready-to-review",
+		"anchors:in-review", "anchors:ready-to-test",
+	}
+	for _, estado := range daAlcada {
+		if !strings.Contains(filtro, estado) {
+			t.Errorf("o estado %q precisa estar no filtro da reversão", estado)
+		}
+	}
+	// E os de ENTREGA não podem estar: o Anchors escreve até `ready-to-test` e larga.
+	for _, depois := range []string{"anchors:in-test", "anchors:ready-to-release", "anchors:production"} {
+		if strings.Contains(filtro, depois) {
+			t.Errorf("%q é dos pipelines de ENTREGA do projeto — o Anchors não o reverte", depois)
+		}
+	}
+	for _, fora := range []string{LabelNeedsUser, PrefixoLabelDesbloqueia, PrefixoLabelSob} {
+		if strings.Contains(filtro, fora) {
+			t.Errorf("%q não é label de estado — revertê-la desfaria o `escalate`/`unblock`", fora)
+		}
+	}
+}
+
+// O COMENTÁRIO é o que transforma a reversão em ensinamento. Sem ele, quem mexeu vê o card
+// voltar sozinho e conclui que o pipeline está quebrado — e a próxima reação é desligá-lo.
+func TestTravaDeEstadoExplicaOQueFezEComoAutorizar(t *testing.T) {
+	b, _ := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
+	s := string(b)
+	for _, quer := range []string{"Revertido", "se move pelo FATO", "25 PRs verdes", LabelManual} {
+		if !strings.Contains(s, quer) {
+			t.Errorf("o comentário da reversão deveria conter %q", quer)
+		}
 	}
 }

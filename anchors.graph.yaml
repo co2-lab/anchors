@@ -235,7 +235,7 @@ nodes:
     - id: cmd/anchors/decided.go
       kind: code
       rev: 2176b5ccc27c
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-14"
       layer: comando
       tags:
         - cli
@@ -288,7 +288,7 @@ nodes:
         - comando
     - id: cmd/anchors/doctor.go
       kind: code
-      rev: a2eba6e8cd0f
+      rev: 22fd1da6a6b7
       updated_at: "2026-09-10"
       layer: comando
       tags:
@@ -453,7 +453,7 @@ nodes:
         - comando
     - id: cmd/anchors/guide_work.go
       kind: code
-      rev: bc96614eb292
+      rev: f399307b006e
       updated_at: "2026-09-10"
       layer: comando
       tags:
@@ -461,7 +461,7 @@ nodes:
         - comando
     - id: cmd/anchors/guide_work_test.go
       kind: test
-      rev: 910ec21f1fda
+      rev: 7cf97f371a5a
       updated_at: "2026-09-10"
       layer: teste
       tags:
@@ -2484,7 +2484,7 @@ nodes:
         - test
     - id: internal/initx/workflows.go
       kind: code
-      rev: a69aca4a3792
+      rev: 2964b398348b
       updated_at: "2026-09-14"
       layer: infra
       tags:
@@ -2492,7 +2492,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 79cae0bdaca2
+      rev: 7722efba1fc8
       updated_at: "2026-09-14"
       layer: teste
       tags:

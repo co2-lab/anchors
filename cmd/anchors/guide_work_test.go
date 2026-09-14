@@ -61,3 +61,30 @@ func TestGuiaDeTrabalhoNegaQueEmpurrarEncerraOTurno(t *testing.T) {
 		t.Error("o guia deveria dizer que abrir o PR não fecha o card")
 	}
 }
+
+// QUEM FECHA O CARD É O MERGE, e o guia não dizia.
+//
+// Ele dizia "abrir o PR não fecha o card" — verdadeiro e insuficiente: não proibia fechar
+// à mão, e fechar à mão parece arrumação (o trabalho está pronto, o PR está aberto, o card
+// "já era").
+//
+// Medido: um projeto acumulou 25 PRs verdes esperando revisão com ZERO cards em
+// `ready-to-review`. Os cards tinham sido fechados um minuto ANTES de o PR ser aberto —
+// o board dizia que não havia nada para revisar enquanto 25 trabalhos esperavam, e o
+// claim, que procura revisão primeiro, entregava trabalho novo.
+func TestGuiaDeTrabalhoProibeFecharOCardAMao(t *testing.T) {
+	if !strings.Contains(workGuide, "NÃO FECHA O CARD") {
+		t.Error("o guia precisa dizer explicitamente que o agente não fecha o card")
+	}
+	// A CONSEQUÊNCIA, e não só a proibição: uma regra sem o porquê se descumpre na
+	// primeira vez que parece atrapalhar.
+	for _, quer := range []string{"fila de revisão esvazia", "trabalho NOVO", "25 PRs"} {
+		if !strings.Contains(workGuide, quer) {
+			t.Errorf("o guia deveria explicar o efeito de fechar cedo (esperava %q)", quer)
+		}
+	}
+	// E QUEM fecha: sem isso o agente fica sem saber o que acontece com o card.
+	if !strings.Contains(workGuide, "Quem fecha é o MERGE") {
+		t.Error("o guia precisa dizer quem fecha o card, não só quem não fecha")
+	}
+}
