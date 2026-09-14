@@ -170,6 +170,80 @@ func TestFaixaDeBloqueio_ordenaPorQuantosCardsATravaTrava(t *testing.T) {
 	}
 }
 
+// `needs-user` ACUMULA com o estado do trabalho, e a faixa tem de ver os dois.
+//
+// Um card em revisão que precisa de decisão fica com as DUAS labels, e o `estado` do JSON é
+// a PRIMEIRA delas. A primeira versão filtrava por `estado === "anchors:needs-user"` e o
+// card SUMIA da faixa — ficava só na coluna IN REVIEW, indistinguível de um card sendo
+// revisado normalmente.
+//
+// Medido: o #311 do projeto de referência esperava uma decisão do usuário e não aparecia
+// aqui. O usuário o viu no board sem nada indicando que ninguém ia tocá-lo.
+func TestFaixaDeBloqueio_cardEscaladoComEstadoDeTrabalhoAparece(t *testing.T) {
+	hidden, html := rodaDesenhaBloqueio(t, []map[string]any{
+		{"estado": "anchors:in-review", "escalado": true, "numero": 311, "codigo": "NTDSN",
+			"titulo": "[NTDSN] o que sai da VPC", "url": "https://x/311"},
+		{"estado": "anchors:to-do", "escalado": true, "numero": 443, "codigo": "DEC",
+			"titulo": "[DEC] a revisão achou defeito crítico", "url": "https://x/443"},
+	})
+	if hidden {
+		t.Fatal("dois cards escalados e a faixa não apareceu")
+	}
+	if !strings.Contains(html, "#311") {
+		t.Error("o card `in-review` + `needs-user` tem de aparecer — é o caso que sumia")
+	}
+	if !strings.Contains(html, "#443") {
+		t.Error("o card `to-do` + `needs-user` também")
+	}
+	if !strings.Contains(html, "Esperando você · 2") {
+		t.Error("a contagem tem de incluir os dois")
+	}
+	// E dizer ONDE o card parou: `in-review` esperando decisão é diferente de `to-do`
+	// esperando decisão — no primeiro há trabalho meio feito, no segundo não.
+	if !strings.Contains(html, "parado em in-review") {
+		t.Error("a faixa deveria dizer em que estado o card parou")
+	}
+	// `to-do` não é "parado em": é o estado normal de quem ainda não foi pego.
+	if strings.Contains(html, "parado em to-do") {
+		t.Error("`to-do` não é um estado de trabalho interrompido")
+	}
+}
+
+// O CARD QUE ESPERA VOCÊ é diferente do que espera TRABALHO JÁ DECIDIDO.
+//
+// Quando a decisão sai e gera trabalho, o card da mudança nasce com
+// `anchors:desbloqueia-<n>` e o bloqueado continua com `needs-user` — porque remover a
+// label antes da entrega faria o claim devolver o card, e o agente esbarraria no mesmo
+// impasse.
+//
+// Os dois casos se parecem na tela se a faixa não os separar: um pede a atenção do usuário
+// AGORA, o outro não pede nada — só espera uma fila andar.
+func TestFaixaDeBloqueio_distingueQuemEsperaVoceDeQuemEsperaTrabalho(t *testing.T) {
+	_, html := rodaDesenhaBloqueio(t, []map[string]any{
+		{"estado": "anchors:in-review", "escalado": true, "numero": 311, "codigo": "NTDSN",
+			"titulo": "[NTDSN] o que sai da VPC", "url": "https://x/311"},
+		{"estado": "anchors:to-do", "escalado": true, "numero": 500, "codigo": "DEC",
+			"titulo": "[DEC] qual vocabulário?", "url": "https://x/500"},
+		// O card da mudança: não está escalado, e DESTRAVA o 311.
+		{"estado": "anchors:to-do", "numero": 444, "codigo": "FIX", "destrava": "311",
+			"titulo": "[destrava #311] try/catch por token", "url": "https://x/444"},
+	})
+
+	if !strings.Contains(html, "espera a entrega do #444") {
+		t.Error("o card cuja decisão já saiu deveria dizer POR QUEM espera")
+	}
+	// O #500 ainda espera a PESSOA — não pode ganhar a mesma frase.
+	i500 := strings.Index(html, "#500")
+	i444 := strings.Index(html, "espera a entrega do #444")
+	if i500 >= 0 && i444 >= 0 && i444 > i500 {
+		t.Error("a frase de espera colou no card errado — ela é do #311, não do #500")
+	}
+	// E o card da MUDANÇA não entra na faixa: ele não espera ninguém, é trabalho normal.
+	if strings.Contains(html, "#444 ") || strings.Contains(html, ">#444<") {
+		t.Error("o card que destrava não é um card escalado — ele não deveria aparecer aqui")
+	}
+}
+
 func TestFaixaDeBloqueio_escapaTituloHostil(t *testing.T) {
 	// O título vem de uma issue, e qualquer pessoa com acesso ao repositório escreve
 	// issue. A página é servida no Pages do projeto — um título com marcação executaria
