@@ -256,10 +256,10 @@ $ anchors escalate "o jest mede só packages/*/src/, mas o código vive ao lado 
 achado registrado: https://github.com/acme/projeto/issues/49
 ```
 
-O card nasce **sob** o de origem, com a label `anchors:sob-44`:
+O card nasce **sob** o de origem, com a label `anchors:under-44`:
 
 ```console
-$ gh issue list --label anchors:sob-44
+$ gh issue list --label anchors:under-44
   #50 Nada indica ONDE o código de uma spec deve nascer
   #49 O `jest.config.js` mede cobertura só de packages/*/src/
 ```

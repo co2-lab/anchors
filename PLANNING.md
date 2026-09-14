@@ -248,7 +248,7 @@ decide isso, e não deveria: ele só valida que a decisão foi tomada e ficou es
 
 | interpretação | saída | o card de origem |
 |---|---|---|
-| **muda a direção** do projeto, ou há dúvida | issue com `anchors:precisa-do-usuario` | **para** |
+| **muda a direção** do projeto, ou há dúvida | issue com `anchors:needs-user` | **para** |
 | não muda a direção | issue comum, nasce em `to-do` | **segue** |
 | trivial, e já estou editando o arquivo | corrige e registra a revisão | — |
 
