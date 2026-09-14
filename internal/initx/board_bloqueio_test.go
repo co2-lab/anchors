@@ -38,7 +38,14 @@ function mk(id) {
   if (els[id]) return els[id];
   const alvo = { id, hidden: false, innerHTML: '', textContent: '', dataset: {}, style: {} };
   return els[id] = new Proxy(alvo, {
-    get(o, k) { return k in o ? o[k] : (typeof k === 'string' ? () => mk(id + ':' + k) : undefined); },
+    get(o, k) {
+      if (k in o) return o[k];
+      // 'querySelectorAll' devolve LISTA. Um método genérico que devolve outro nó faz o
+      // spread '[...]' da página estourar, e o erro aponta para o código dela em vez do
+      // dublê — o sintoma é "exit status 1" apontando uma linha que está correta.
+      if (k === 'querySelectorAll') return () => [];
+      return typeof k === 'string' ? () => mk(id + ':' + k) : undefined;
+    },
     set(o, k, v) { o[k] = v; return true; },
   });
 }
@@ -60,6 +67,13 @@ var scriptRE = regexp.MustCompile(`(?s)<script>(.*?)</script>`)
 // rodaDesenhaBloqueio executa `desenhaBloqueio` com os itens dados e devolve o estado do
 // elemento da faixa.
 func rodaDesenhaBloqueio(t *testing.T, itens []map[string]any) (hidden bool, html string) {
+	return rodaNaPagina(t, "bloqueio", "desenhaBloqueio", itens)
+}
+
+// rodaNaPagina executa uma função da página sobre os itens dados e devolve o elemento que
+// ela escreveu. Generalizado do `desenhaBloqueio` quando a marca do card na COLUNA passou a
+// precisar do mesmo aparato — o dublê de DOM e a extração do script são os mesmos.
+func rodaNaPagina(t *testing.T, elemento, fn string, itens []map[string]any) (hidden bool, html string) {
 	t.Helper()
 
 	if _, err := exec.LookPath("node"); err != nil {
@@ -88,16 +102,19 @@ func rodaDesenhaBloqueio(t *testing.T, itens []map[string]any) (hidden bool, htm
 	}
 
 	prog := dubleDeDOM + js.String() + `
-const bloq = mk('bloqueio');
-desenhaBloqueio(` + string(dados) + `);
-console.log(JSON.stringify({hidden: bloq.hidden, html: bloq.innerHTML}));
+const alvo = mk('` + elemento + `');
+` + fn + `(` + string(dados) + `);
+console.log(JSON.stringify({hidden: alvo.hidden, html: alvo.innerHTML}));
 `
 	arq := filepath.Join(t.TempDir(), "board.mjs")
 	if err := os.WriteFile(arq, []byte(prog), 0o600); err != nil {
 		t.Fatalf("escrever: %v", err)
 	}
 
-	out, err := exec.Command("node", arq).Output()
+	// `CombinedOutput` e não `Output`: o `Output` engole o stderr, e um erro dentro do JS
+	// vira "exit status 1" sem dizer onde — dez minutos procurando o que a mensagem já
+	// teria dito.
+	out, err := exec.Command("node", arq).CombinedOutput()
 	if err != nil {
 		t.Fatalf("node: %v\n%s", err, out)
 	}
@@ -254,5 +271,39 @@ func TestFaixaDeBloqueio_escapaTituloHostil(t *testing.T) {
 	})
 	if strings.Contains(html, "<img src=x") {
 		t.Errorf("o título deveria ser escapado; html=%q", html)
+	}
+}
+
+// O CARD ESCALADO precisa de marca NA COLUNA, não só na faixa.
+//
+// A faixa lista o que espera uma pessoa; a coluna é onde se olha para saber o que está
+// acontecendo com um card específico. Sem marca ali, um card parado esperando decisão é
+// visualmente IDÊNTICO ao card ao lado que está sendo trabalhado.
+//
+// Medido: o usuário procurou o #311 na coluna, encontrou, e perguntou "e o destaque no
+// card?" — a faixa mostrava, e o card não dizia nada.
+func TestCardEscalado_temMarcaNaColuna(t *testing.T) {
+	_, html := rodaNaPagina(t, "colunas", "desenha", []map[string]any{
+		{"estado": "anchors:in-review", "escalado": true, "numero": 311, "codigo": "NTDSN",
+			"titulo": "[NTDSN] o que sai da VPC", "url": "u"},
+		{"estado": "anchors:in-review", "numero": 312, "codigo": "OUTRO",
+			"titulo": "[OUTRO] revisão normal", "url": "u"},
+	})
+
+	if !strings.Contains(html, `class="card escalado"`) {
+		t.Error("o card escalado precisa de classe própria — a borda é o que o distingue " +
+			"na varredura da coluna")
+	}
+	if !strings.Contains(html, "esperando você") {
+		t.Error("o selo precisa DIZER o que o card espera: uma borda colorida sozinha " +
+			"exige que quem vê já saiba o que a cor significa")
+	}
+	// E o card normal NÃO pode ganhar nenhum dos dois — uma marca que aparece em tudo não
+	// marca nada.
+	if n := strings.Count(html, `class="card escalado"`); n != 1 {
+		t.Errorf("só o card escalado deveria ter a classe; apareceu %d vezes", n)
+	}
+	if n := strings.Count(html, "esperando você"); n != 1 {
+		t.Errorf("só o card escalado deveria ter o selo; apareceu %d vezes", n)
 	}
 }

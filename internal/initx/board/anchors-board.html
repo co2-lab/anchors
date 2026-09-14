@@ -163,6 +163,15 @@
             color: var(--fazendo); font-weight: 600; }
   .num { margin-left: auto; font-family: ui-monospace, SFMono-Regular, monospace;
          font-size: .7rem; color: var(--fraco); flex-shrink: 0; }
+  /* O CARD ESCALADO, marcado NA COLUNA e não só na faixa.
+     A faixa lista o que espera uma pessoa; a coluna é onde se olha para saber o que está
+     acontecendo com um card específico. Sem marca aqui, um card parado esperando decisão
+     é visualmente idêntico ao card ao lado que está sendo trabalhado — e quem varre a
+     coluna não tem por que desconfiar dele. */
+  .card.escalado { border-color: var(--alerta); border-left-width: 3px; }
+  .selo { display: inline-flex; align-items: center; gap: .25rem; margin-top: .4rem;
+          font-size: .68rem; font-weight: 500; color: var(--alerta);
+          border: 1px solid var(--alerta); border-radius: 999px; padding: .08rem .45rem; }
   .card h3 { font-size: .82rem; margin: .2rem 0 0; font-weight: 500; }
   /* A DEPENDÊNCIA no card responde "por que isto ainda não posso pegar?" sem abrir nada.
      A indentação sozinha mostra que há profundidade, mas não diz de quê ela vem. */
@@ -446,12 +455,13 @@ function desenha(d) {
           ${esc(nome)}<span class="qtd">${cards.length}</span></div>
         <div class="oquee">${esc(oquee)}</div>
         ${cards.length === 0 ? '<div class="vazia">vazia</div>' : cards.map((c) => `
-          <button class="card" type="button" data-numero="${c.numero}">
+          <button class="card${c.escalado ? " escalado" : ""}" type="button" data-numero="${c.numero}">
             <div class="card-topo">
               ${c.codigo ? `<span class="codigo">${esc(c.codigo)}</span>` : ""}
               ${c.numero ? `<span class="num">#${esc(c.numero)}</span>` : ""}
             </div>
             <h3>${esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</h3>
+            ${c.escalado ? `<span class="selo">⚠ esperando você</span>` : ""}
             ${(c.needs || []).length ? `<div class="dep" title="depende de">↳ ${
               c.needs.map((n) => esc(NIVEIS.fases?.[n]?.titulo || n)).join(" · ")}</div>` : ""}
             ${c.dono ? `<span class="dono">◆ ${esc(c.dono)}</span>` : ""}
