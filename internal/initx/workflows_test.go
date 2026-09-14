@@ -1213,3 +1213,45 @@ func TestPipelineQueLeDadosDePRDeclaraAPermissao(t *testing.T) {
 		}
 	}
 }
+
+// TODAS as linhas `Closes` precisam ser conferidas, não só a primeira.
+//
+// A conferência que já existia olhava o PRIMEIRO número declarado — o que basta enquanto um
+// PR fecha um card. Um PR que consolida vários traz uma linha para cada, e as demais
+// passavam sem ninguém olhar.
+//
+// MEDIDO: um PR consolidando 19 trabalhos trouxe 19 linhas `Closes`, e todos os 19 números
+// eram de PULL REQUESTS, não dos cards. No GitHub um PR também é uma issue — `gh issue view`
+// aceita o número e responde normalmente —, então nada acusou. O merge fechou os PRs, e
+// dezoito cards ficaram abertos com o trabalho já entregue.
+//
+// O que salva é a label: um PR não carrega a label do Anchors. A conferência teria pego o
+// erro na primeira linha; o que faltava era ela olhar as outras dezoito.
+func TestPipelineConfereTodasAsLinhasDeFechamento(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-pr-checks.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	if !strings.Contains(texto, "outros=") {
+		t.Fatal("o pipeline confere só o primeiro `Closes` — num PR que fecha vários cards, " +
+			"os demais números entram sem ninguém olhar se são cards de verdade")
+	}
+	if !strings.Contains(texto, "naoSaoCards") {
+		t.Error("o pipeline deve ACUSAR os números que não são cards, e não só ignorá-los: " +
+			"um número de PR ali não fecha card nenhum, e o silêncio é o defeito")
+	}
+
+	// O MESMO FILTRO da primeira linha. Duas formas de extrair a mesma coisa divergem na
+	// primeira vez que uma delas mudar — e aqui divergir significa conferir a linha 1 com
+	// uma régua e as linhas 2..N com outra.
+	if !strings.Contains(texto, "emBloco = !emBloco") {
+		t.Error("a extração das demais linhas deve pular bloco de código como a primeira faz")
+	}
+	// `tail -n +2` é o que distingue "as demais" de "todas": a primeira já tem a sua
+	// própria conferência, com mensagem própria.
+	if !strings.Contains(texto, "tail -n +2") {
+		t.Error("as demais linhas são da segunda em diante — a primeira já é conferida acima")
+	}
+}
