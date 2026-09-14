@@ -92,7 +92,7 @@ var WorkflowsDoFluxo = []Workflow{
 	},
 	{
 		Arquivo: "anchors-decided.yml",
-		Papel:   "devolve à fila o card cuja decisão o usuário respondeu",
+		Papel:   "devolve à fila o card cujos desbloqueios foram todos entregues",
 		// SERIAL: ele escreve label, e duas execuções sobre o mesmo card — uma vinda do
 		// comentário, outra do cron — removeriam a mesma label duas vezes e comentariam
 		// duas vezes no card.
@@ -209,22 +209,15 @@ const PrefixoLabelDesbloqueia = "anchors:desbloqueia-"
 // LabelDesbloqueia é a label do card que destrava `card`.
 func LabelDesbloqueia(card string) string { return PrefixoLabelDesbloqueia + card }
 
-// TagDeDecisao é a marca que a PESSOA escreve no comentário que responde o card escalado.
+// A DECISÃO é registrada por COMANDO, não por tag em comentário.
 //
-// Por que uma tag, e não "o último comentário de alguém":
+// Houve aqui uma `TagDeDecisao = "#solution"`, para um pipeline reconhecer a resposta do
+// usuário num comentário. Ela saiu porque o `anchors decided --card N --resolution "..."`
+// já existia e faz mais: exige a REVISÃO que nasceu da decisão, e uma decisão que libera o
+// card sem dizer qual regra nasceu dela fica sem rastro.
 //
-// Num projeto com agentes, todos comentam com a MESMA conta — o `gh` autentica como o dono
-// do repositório, e os seis agentes que rodaram no projeto de referência aparecem como
-// `adrielcodeco`, igual à pessoa. Não há como distinguir "o usuário respondeu" de "um
-// agente registrou progresso" pelo autor do comentário.
-//
-// A tag resolve com um ato explícito, e escolhê-la como TAG e não como prefixo de comando
-// é deliberado: `#solution` se escreve no meio da frase, como quem responde — e não como
-// quem executa um comando. Um comentário de progresso nunca a carrega por acidente.
-//
-// O que está no comentário é a decisão, e ela fica no card — que é onde quem retoma o
-// trabalho vai procurar por quê.
-const TagDeDecisao = "#solution"
+// A tag teria criado um segundo caminho — o mais barato dos dois, e o que não exige a
+// resolução. Dois jeitos de destravar o mesmo card, um deles sem rastro.
 
 // LabelToDo é o estado em que um card NASCE.
 //
