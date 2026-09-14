@@ -689,7 +689,7 @@ em vez de opinar do zero.
 Na terceira, um aviso: quando a revisão não converge, o problema costuma estar antes do
 código — a spec não decide o que precisava decidir, e cada revisor lê o vazio de um jeito.
 
-Na **décima**, o card sai da alçada dos agentes. Ganha `anchors:precisa-do-usuario` e o
+Na **décima**, o card sai da alçada dos agentes. Ganha `anchors:needs-user` e o
 claim deixa de entregá-lo: dez revisões sem convergir não é problema de código, é uma
 decisão que ninguém tomou, e a décima primeira produziria a décima segunda.
 
