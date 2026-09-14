@@ -138,6 +138,45 @@ jobs:
             | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+' \
             | grep -oE '[0-9]+' | head -1 || true)
 
+          # A LISTA COM VÍRGULA NÃO FECHA O SEGUNDO CARD, e o PR parece que fechou os dois.
+          #
+          #   Closes #419, #473    → o GitHub fecha SÓ o #419
+          #
+          # A palavra de fechamento tem de vir antes de CADA número. O `anchors pr-body` já
+          # emite uma linha por card; o risco é quem escreve o corpo à mão.
+          #
+          # MEDIDO no projeto de referência: o PR #475 trazia essa linha exata, mergeou,
+          # fechou o #419 — e o #473 ficou aberto com o trabalho já entregue. Um agente
+          # notou e fechou à mão; a trava de estado reverteu, porque pela regra que ela
+          # conhece aquilo era um card saindo da fila sem merge. O card voltou a `in-progress`
+          # e ficou três horas parado esperando um trabalho que já existia.
+          #
+          # AVISO e não reprovação: o vínculo real do PR com o card está declarado, e barrar
+          # um merge por sintaxe seria pior que o defeito. O que faltava era alguém DIZER que
+          # os números depois da vírgula não valem.
+          extras=$(printf '%s\n' "$corpo" \
+            | sed 's/\r$//' \
+            | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+([[:space:]]*,[[:space:]]*#[0-9]+)+' \
+            | grep -oE '#[0-9]+' | tail -n +2 | tr '\n' ' ' || true)
+          if [ -n "$extras" ]; then
+            todos="$card $(echo "$extras" | tr -d '#')"
+            echo "::warning::o corpo declara os cards numa lista separada por vírgula, e a plataforma reconhece apenas o PRIMEIRO — $extras ficará aberto depois do merge. Rode \`anchors pr-body --cards $(echo $todos | tr ' ' ',')\` e substitua o bloco."
+            {
+              echo "### ⚠ cards que NÃO serão fechados"
+              echo
+              echo "O corpo declara os cards numa lista separada por vírgula, e a plataforma"
+              echo "reconhece apenas o primeiro número: **$extras** ficará aberto depois do merge,"
+              echo "com o trabalho já entregue."
+              echo
+              echo "Cada card precisa da sua própria linha. O comando gera as linhas prontas,"
+              echo "na sintaxe que esta plataforma entende:"
+              echo
+              echo '```console'
+              echo "\$ anchors pr-body --cards $(echo $todos | tr ' ' ',')"
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
           # O NÚMERO DO CORPO PRECISA SER CONFERIDO — ele é texto que alguém digitou.
           #
           # O caminho pelo TÍTULO já confere sem querer: ele procura na lista de issues com
