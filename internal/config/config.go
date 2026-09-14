@@ -62,6 +62,21 @@ type Config struct {
 	// de fórum que os cite. Traduz-se o que se LÊ, não o que se ESCREVE na configuração.
 	Lang string `yaml:"lang,omitempty"`
 
+	// Telemetry desliga a telemetria PARA O PROJETO: `telemetry: off`.
+	//
+	// Vale para todos que trabalham nele, e é a declaração certa quando a decisão é do
+	// time — diferente da variável de ambiente, que é de uma máquina, e do
+	// `anchors telemetry off`, que é de quem roda.
+	//
+	// O AMBIENTE VENCE ESTE CAMPO, e não é arbitrário: quem roda num CI precisa desligar
+	// sem commitar, e commitar para desligar telemetria faria a decisão de uma pessoa
+	// virar mudança no repositório do time.
+	//
+	// Não há campo para o ENDEREÇO nem para a CREDENCIAL. O endereço é do produto; a
+	// credencial é do ambiente — uma chave neste arquivo iria para o repositório de quem
+	// usa, e o gate `secret-nao-vazado` a acusaria, com razão.
+	Telemetry string `yaml:"telemetry,omitempty"`
+
 	// FreezeReason: por que o projeto está congelado. Só faz sentido com `enabled: false`.
 	//
 	// Sem o motivo, o congelamento é indistinguível de configuração quebrada — e quem

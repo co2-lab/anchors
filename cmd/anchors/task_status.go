@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"time"
+
+	"github.com/co2-lab/anchors/internal/telemetry"
 	"strconv"
 	"strings"
 
@@ -45,7 +48,7 @@ type taskState struct {
 // branchPR é o PR do branch atual e o veredito dos checks dele.
 type branchPR struct {
 	Number int
-	Estado string // OPEN, MERGED, CLOSED
+	State  string // OPEN, MERGED, CLOSED
 	Checks map[string]int
 	Total  int
 }
@@ -81,6 +84,13 @@ decide se alguém continua — o estado do card, e se o veredito do CI foi lido.
 			}
 			e := collectTaskState(absRoot, cfg, cardNum)
 			fmt.Print(renderTaskStatus(e))
+			// O EVENTO QUE MAIS IMPORTA: em que estado o turno terminou.
+			//
+			// Medido: um agente diagnosticou uma falha de CI, consertou, empurrou e
+			// encerrou com "aguardando a nova rodada" — o card ficou `in-progress` com o
+			// nome dele e ninguém soube por horas. Nada falhou; nenhum comando retornou
+			// erro. Só a SEQUÊNCIA revela o problema, e é ela que este evento registra.
+			emitTurnEnded(e)
 			return nil
 		},
 	}
@@ -193,7 +203,7 @@ func currentBranchPR(root string) *branchPR {
 	if json.Unmarshal([]byte(out), &r) != nil {
 		return nil
 	}
-	p := &branchPR{Number: r.Number, Estado: r.State, Checks: map[string]int{}}
+	p := &branchPR{Number: r.Number, State: r.State, Checks: map[string]int{}}
 	for _, c := range r.Checks {
 		p.Total++
 		// Um check EM CURSO não é um check que passou, e a diferença é a que decide se o
@@ -207,4 +217,30 @@ func currentBranchPR(root string) *branchPR {
 		}
 	}
 	return p
+}
+
+// emitTurnEnded registra o estado em que o trabalho parou.
+//
+// Só NÚMEROS e VOCABULÁRIO: o estado do card, se há PR, quantos checks reprovaram. Nem o
+// título do card, nem o nome da branch, nem o repositório — quem investiga um caso
+// específico pede o relatório local, não o painel.
+func emitTurnEnded(e taskState) {
+	attrs := map[string]any{
+		"tem_card":     e.Card != nil,
+		"tem_pr":       e.PR != nil,
+		"arvore_limpa": e.Clean,
+		"nao_enviado":  e.Unpushed,
+	}
+	if e.Card != nil {
+		// O ESTADO, sem o prefixo: `in-progress`, não `anchors:in-progress`. É vocabulário
+		// do produto, o mesmo em todo projeto.
+		attrs["estado"] = strings.TrimPrefix(e.Card.State, "anchors:")
+	}
+	if e.PR != nil {
+		attrs["pr_estado"] = strings.ToLower(e.PR.State)
+		attrs["checks_total"] = e.PR.Total
+		attrs["checks_reprovaram"] = e.PR.Checks["reprovou"]
+		attrs["checks_rodando"] = e.PR.Checks["em curso"]
+	}
+	emitter.Emit(telemetry.New(telemetry.TurnEnded, attrs, time.Now))
 }

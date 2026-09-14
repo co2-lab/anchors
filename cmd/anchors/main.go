@@ -26,6 +26,17 @@ func main() {
 	// importar o `migra` — seria ciclo.
 	config.RenamedKey = migra.RenamedKey
 
+	// O FLUSH da telemetria, e ele precisa acontecer nos DOIS caminhos de saída.
+	//
+	// `Emit` dispara o POST numa goroutine para não atrasar o comando — e num CLI isso
+	// significa que o processo morre antes de o envio sair. Medido: o coletor local não
+	// recebeu NADA até este `defer` existir, e o defeito é invisível em teste de unidade,
+	// onde o processo continua vivo depois da chamada.
+	//
+	// `defer` e não uma chamada no fim: o caminho de ERRO abaixo sai com `os.Exit`, que
+	// não roda defers — por isso ele também chama o flush, explicitamente.
+	defer flushTelemetry()
+
 	if err := newRootCmd().Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "erro:", err)
 		// "não é regido" sai com código PRÓPRIO: quem automatiza (pre-commit, CI)
@@ -34,8 +45,10 @@ func main() {
 		// o pre-commit passou a deixar arquivo regido novo escapar sem trinca.
 		var nr errNotGoverned
 		if errors.As(err, &nr) {
+			flushTelemetry()
 			os.Exit(ExitNotGoverned)
 		}
+		flushTelemetry()
 		os.Exit(1)
 	}
 }
