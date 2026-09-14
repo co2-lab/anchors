@@ -219,10 +219,21 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		// `docs build`, e reprovar o autor por isso gasta a atenção da revisão. Um
 		// contrato que não descreve a rota nova NÃO se conserta sozinho — alguém precisa
 		// escrever o que a rota faz.
+		// ESCOPO `batch`: um veredito por DOCUMENTO, e não por unidade.
+		//
+		// A primeira versão rodava por nó, e cada spec cujo contrato não a mencionava
+		// virava um card. No projeto de referência isso produziu 37 cards de uma vez — e
+		// todos escreviam nos MESMOS dois arquivos.
+		//
+		// O efeito foi uma fila que não anda: cada PR mergeado invalidava os outros,
+		// porque o ponto de inserção mudava. Medido: de 6 PRs, 2 passavam e 4 conflitavam.
+		//
+		// O defeito era do gate, que fatiou por unidade um trabalho que é por documento.
 		gates = append(gates, config.Gate{
 			Name: "doc-required", ID: "doc-required", On: []string{"spec"},
 			Check: "doc-required", Blocking: config.Bool(true),
-			Measures: "as documentações que esta unidade dispara existem e a mencionam",
+			Scope:    config.ScopeBatch,
+			Measures: "os documentos contratados existem e mencionam as unidades que os disparam",
 		})
 		// A SPEC BASTA POR SI. O corpo dela vira documentação palavra por palavra, e
 		// quem lê o `docs/` não tem o repositório aberto: uma frase que só APONTA para um
