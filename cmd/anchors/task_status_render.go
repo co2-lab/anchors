@@ -41,6 +41,24 @@ func renderTaskStatus(e taskState) string {
 		b.WriteString("Task  (nenhum card encontrado — informe `--card N`)\n")
 	}
 
+	// --- 1.5. o que foi DESFEITO ---
+	//
+	// Antes do veredito do PR, e antes do que falta: uma reversão muda o que o agente
+	// pensa que fez. Medido — ele fechou o card à mão, a trava desfez no mesmo minuto, e
+	// ele encerrou o turno escrevendo "issue closed e resolvida, nada mais a fazer".
+	//
+	// O comentário da reversão estava no card e estava correto. Quem já saiu da conversa
+	// não o lê — e este relato é o último lugar onde a informação ainda muda o desfecho.
+	if len(e.Reverted) > 0 {
+		b.WriteString("\n⚠ O QUE VOCÊ FEZ FOI DESFEITO\n")
+		for _, r := range e.Reverted {
+			b.WriteString("  · " + r + "\n")
+		}
+		b.WriteString("  O card se move pelo FATO: o claim entrega, os checks movem para\n")
+		b.WriteString("  revisão, o merge fecha. Se o movimento era deliberado, ponha a label\n")
+		b.WriteString("  `anchors:manual` no card e refaça.\n")
+	}
+
 	// --- 2. o veredito ---
 	b.WriteString("\n")
 	if e.PR != nil {

@@ -213,6 +213,17 @@ const LabelNeedsUser = "anchors:needs-user"
 // #311 pode voltar à fila". O pipeline de board a lê e o `anchors next` a respeita.
 const PrefixoLabelDesbloqueia = "anchors:desbloqueia-"
 
+// MarcadorDeReversao abre o comentário que a trava de estado escreve ao desfazer uma
+// mudança manual.
+//
+// Existe como CONSTANTE porque duas pontas precisam dele: o pipeline o escreve, e o
+// `anchors task-status` o procura para dizer ao agente que sua mudança foi revertida.
+//
+// A razão de a segunda ponta existir: um agente fechou o card à mão, a trava reverteu no
+// mesmo minuto, e ele escreveu "issue closed e resolvida, nada mais a fazer" — sem saber.
+// O comentário estava lá e estava correto; quem já saiu da conversa não o lê.
+const MarcadorDeReversao = "🔒"
+
 // LabelManual é o OPT-OUT da trava: o card pode ser movido à mão.
 //
 // O pipeline `anchors-guard` desfaz qualquer mudança de estado que não tenha vindo dele —

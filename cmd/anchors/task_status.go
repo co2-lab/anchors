@@ -13,6 +13,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/board"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/initx"
 	"github.com/spf13/cobra"
 )
 
@@ -43,6 +44,15 @@ type taskState struct {
 	Unpushed int  // commits à frente do remoto
 	PR       *branchPR
 	Blocked  []board.Card // os `needs-user`: o que espera decisão de pessoa
+	// Reverted: as mudanças que a trava de estado DESFEZ neste card.
+	//
+	// Medido: um agente fechou o card à mão, a trava reverteu no mesmo minuto, e ele
+	// escreveu "issue closed e resolvida, nada mais a fazer" — sem saber. O comentário da
+	// reversão estava lá e estava correto; quem já saiu da conversa não o lê.
+	//
+	// Aqui ele aparece no relato que o guia manda rodar ao FIM do turno — o último
+	// momento em que a informação ainda muda o desfecho.
+	Reverted []string
 }
 
 // branchPR é o PR do branch atual e o veredito dos checks dele.
@@ -121,6 +131,9 @@ func collectTaskState(root string, cfg *config.Config, cardNum int) taskState {
 		e.Blocked = escalatedCards(cli)
 	}
 	e.PR = currentBranchPR(root)
+	if e.Card != nil {
+		e.Reverted = revertedOn(e.Card.Number)
+	}
 	return e
 }
 
@@ -243,4 +256,55 @@ func emitTurnEnded(e taskState) {
 		attrs["checks_rodando"] = e.PR.Checks["em curso"]
 	}
 	emitter.Emit(telemetry.New(telemetry.TurnEnded, attrs, time.Now))
+}
+
+// ehReversao diz se um comentário é uma reversão da trava de estado.
+//
+// DUAS condições, e as duas importam: o marcador E o autor ser o bot. Um comentário de
+// pessoa que por acaso comece com o mesmo símbolo não é uma reversão, e tratá-lo como uma
+// faria o relato acusar algo que não aconteceu — um alarme falso gasta a atenção que o
+// alarme verdadeiro vai precisar.
+//
+// Função própria e não um `if` inline: assim o teste chama O QUE O CÓDIGO USA, em vez de
+// reescrever a mesma condição ao lado. A primeira versão do teste fazia isso, e sobreviveu
+// à mutação que removia a checagem do autor — o teste media a si mesmo.
+func ehReversao(corpo, autor string) bool {
+	return strings.HasPrefix(corpo, initx.MarcadorDeReversao) &&
+		strings.HasPrefix(autor, "github-actions")
+}
+
+// revertedOn lista as reversões que a trava de estado fez neste card.
+func revertedOn(card int) []string {
+	out := outputOf("gh", "issue", "view", strconv.Itoa(card), "--json", "comments")
+	if out == "" {
+		return nil
+	}
+	var r struct {
+		Comments []struct {
+			Body   string `json:"body"`
+			Author struct {
+				Login string `json:"login"`
+			} `json:"author"`
+		} `json:"comments"`
+	}
+	if json.Unmarshal([]byte(out), &r) != nil {
+		return nil
+	}
+	var rev []string
+	for _, c := range r.Comments {
+		if !ehReversao(c.Body, c.Author.Login) {
+			continue
+		}
+		// A PRIMEIRA LINHA basta: ela diz o que foi revertido e por quem. O comentário
+		// inteiro tem seis parágrafos explicando a regra, e despejá-los no terminal faria
+		// o relato virar um muro — quem precisa do detalhe abre o card.
+		linha := c.Body
+		if i := strings.IndexByte(linha, '\n'); i > 0 {
+			linha = linha[:i]
+		}
+		linha = strings.ReplaceAll(linha, "**", "")
+		linha = strings.ReplaceAll(linha, "`", "")
+		rev = append(rev, strings.TrimSpace(strings.TrimPrefix(linha, initx.MarcadorDeReversao)))
+	}
+	return rev
 }
