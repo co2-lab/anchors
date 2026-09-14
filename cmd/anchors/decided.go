@@ -71,6 +71,27 @@ ele diz o que diz.`,
 					"mora em `issues/`, e resolvê-la é mover o arquivo para `issues/done/`")
 			}
 
+			// A DECISÃO GEROU TRABALHO? Então o card espera a ENTREGA, não a decisão.
+			//
+			// `anchors unblock` cria o card da mudança com `anchors:desbloqueia-<n>`, e
+			// enquanto ele estiver aberto a label NÃO pode sair: o card voltaria à fila e
+			// o agente que o pegasse encontraria o trabalho que a decisão pediu ainda por
+			// fazer — esbarrando no mesmo impasse que foi escalado.
+			//
+			// Recusar aqui, e não avisar: liberar o card e imprimir um alerta deixaria o
+			// desfecho na mão de quem lê a saída, e a saída de um comando que "funcionou"
+			// não se lê com atenção.
+			if pendentes := desbloqueiosAbertos(cfg.Workflow.Repo, card); len(pendentes) > 0 {
+				cmd.SilenceUsage = true
+				return fmt.Errorf("o card #%s espera a entrega de #%s — a decisão saiu e "+
+					"gerou trabalho.\n\n"+
+					"   A label `%s` FICA até lá: sem ela o card volta à fila, e quem o "+
+					"pegar encontra o trabalho ainda por fazer.\n\n"+
+					"   Quando #%s for entregue, rode este comando de novo.",
+					card, strings.Join(pendentes, ", #"), initx.LabelNeedsUser,
+					strings.Join(pendentes, ", #"))
+			}
+
 			// A LABEL primeiro: é ela que trava. Se o resto falhar, o card já está livre —
 			// a ordem inversa deixaria o card parado com a issue fechada, que é
 			// exatamente o estado inconsistente que este comando existe para desfazer.
@@ -141,4 +162,41 @@ func closeDecisionsUnder(repo, card, resolucao string) int {
 		}
 	}
 	return n
+}
+
+// desbloqueiosAbertos lista os cards cuja entrega destrava `card`.
+//
+// A BUSCA POR LABEL do GitHub tem latência de índice — medido: um card recém-criado não
+// aparece por alguns segundos, e um recém-fechado continua aparecendo pelo mesmo tempo.
+//
+// Isso torna o comando ocasionalmente conservador: logo depois de fechar o desbloqueio, o
+// `decided` ainda pode recusar. É o lado certo do erro — recusar quando podia liberar custa
+// rodar o comando de novo; liberar quando não podia devolve à fila um card cujo trabalho
+// não terminou, e o agente que o pegar escala de novo.
+//
+// Vazio significa que a decisão não gerou trabalho — ou que o trabalho já foi entregue, e
+// nos dois casos o card pode voltar à fila.
+func desbloqueiosAbertos(repo, card string) []string {
+	out, err := exec.Command("gh", "issue", "list",
+		"--repo", repo,
+		"--state", "open",
+		"--label", initx.LabelDesbloqueia(card),
+		"--json", "number",
+	).Output()
+	if err != nil {
+		// Sem resposta do `gh` a resposta honesta é "não sei", e não-sei aqui não pode
+		// virar "pode liberar": o comando seguiria e removeria a label de um card que
+		// talvez espere trabalho. Devolver vazio é o que faz isso acontecer — então a
+		// falha de rede é tratada como ausência, e o operador vê o erro do `gh` na tela.
+		return nil
+	}
+	var achados []struct{ Number int }
+	if json.Unmarshal(out, &achados) != nil {
+		return nil
+	}
+	var ns []string
+	for _, a := range achados {
+		ns = append(ns, fmt.Sprint(a.Number))
+	}
+	return ns
 }

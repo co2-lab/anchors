@@ -891,52 +891,68 @@ func TestClaimRespeitaOCardDeDesbloqueio(t *testing.T) {
 	}
 }
 
-// O CICLO DO `needs-user` tem dois lados, e só um existia.
+// O PIPELINE cuida de UM caso: o desbloqueio entregue.
 //
-// O claim já não entregava card escalado — isso impede que um agente pegue o card e
-// esbarre no mesmo impasse que outro escalou. Faltava QUEM REMOVE a label depois que a
-// pessoa responde.
+// Há dois jeitos de um card em `needs-user` voltar à fila:
 //
-// Medido: o card #311 do projeto de referência teve o defeito consertado (duas revisões,
-// os testes provando por mutação) e continuou parado. A condição escrita na instrução
-// ("decida, e depois remova a label") tinha sido cumprida, e a label ficou — ninguém era
-// responsável por tirá-la.
-func TestPipelineDecidedRemoveALabelQuandoAPessoaResponde(t *testing.T) {
+//	· decisão simples → `anchors decided --card N --resolution "..."`, que exige a REGRA
+//	  que nasceu da decisão. É comando, e não pipeline, porque a resolução não se inventa;
+//	· decisão que GEROU TRABALHO → `anchors unblock` cria o card de desbloqueio, e quando
+//	  ele fecha NINGUÉM está olhando: não há evento no card bloqueado, e quem decidiu já
+//	  seguiu para outra coisa.
+//
+// Medido: o card #311 do projeto de referência teve o defeito consertado e continuou
+// parado. A condição escrita na instrução ("decida, e depois remova a label") tinha sido
+// cumprida, e a label ficou.
+func TestPipelineDecidedCuidaDoDesbloqueioEntregue(t *testing.T) {
 	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-decided.yml")
 	if err != nil {
 		t.Fatal(err)
 	}
 	s := string(b)
 
-	// A TAG é o sinal, e não o autor do comentário: num projeto com agentes, todos
-	// comentam com a MESMA conta (o `gh` autentica como o dono do repositório), e não há
-	// como distinguir "o usuário respondeu" de "um agente registrou progresso".
-	// A tag tem de estar no FILTRO, não só num comentário explicando o desenho.
-	//
-	// A primeira versão deste teste procurava a string em qualquer lugar do arquivo — e
-	// sobreviveu à mutação que troca o filtro por `select(length > 0)` (qualquer
-	// comentário destrava), porque `#solution` continuava aparecendo na prosa que explica
-	// por que a tag existe.
-	if !strings.Contains(s, `select(test("`+TagDeDecisao+`"; "i"))`) {
-		t.Errorf("a tag %q precisa estar no FILTRO dos comentários, não só explicada em "+
-			"comentário — o autor não distingue pessoa de agente", TagDeDecisao)
-	}
 	if !strings.Contains(s, "--remove-label") {
-		t.Error("o pipeline precisa REMOVER a label — é o lado que faltava do ciclo")
+		t.Error("o pipeline precisa REMOVER a label quando os desbloqueios fecham")
 	}
-
-	// A EXCEÇÃO é o que torna o automático seguro: respondida a decisão, se ela gerou
-	// trabalho, o card espera a ENTREGA. Sem isto o card voltaria à fila e o agente que o
-	// pegasse encontraria o trabalho ainda por fazer.
-	if !strings.Contains(s, "anchors:desbloqueia-$n") {
-		t.Error("o pipeline precisa conferir se há card de desbloqueio pendente")
+	// O CARD SEM desbloqueio nenhum não é caso deste pipeline: ele espera uma PESSOA, e
+	// liberá-lo aqui puliaria a resolução que o `decided` exige.
+	// A DISTINÇÃO entre "sem desbloqueio nenhum" e "desbloqueio entregue" precisa estar no
+	// FLUXO, não só numa busca que ninguém usa.
+	//
+	// A primeira versão deste teste checava só a presença de `--state all`, e sobreviveu à
+	// mutação que remove o `if` inteiro: a busca continuava no arquivo, e o pipeline
+	// passava a liberar TODO card escalado — inclusive os que esperam uma pessoa, pulando
+	// a resolução que o `anchors decided` exige.
+	if !strings.Contains(s, `if [ "$todos" = "0" ]; then`) {
+		t.Error("o card SEM desbloqueio nenhum tem de ser pulado: ele espera uma PESSOA, e " +
+			"liberá-lo aqui pularia a resolução que o `anchors decided` exige")
 	}
+	if !strings.Contains(s, `--state all`) {
+		t.Error("a contagem de `todos` precisa incluir os fechados — é ela que distingue " +
+			"`sem desbloqueio` de `desbloqueio entregue`")
+	}
+	// E ALGUM ainda aberto mantém a label.
 	i := strings.Index(s, "label MANTIDA")
 	if i < 0 {
-		t.Fatal("a linha que anuncia a exceção sumiu")
+		t.Fatal("a linha que anuncia o bloqueio remanescente sumiu")
 	}
 	if !strings.Contains(s[i:min(i+120, len(s))], "continue") {
-		t.Error("com desbloqueio pendente, o card é PULADO — a label não sai")
+		t.Error("com desbloqueio aberto, o card é PULADO — a label não sai")
+	}
+}
+
+// A TAG `#solution` NÃO pode voltar: ela criaria um segundo caminho de destrave, mais
+// barato que o `anchors decided` e sem exigir a resolução. Dois jeitos de liberar o mesmo
+// card, um deles deixando a decisão sem rastro.
+func TestPipelineDecidedNaoInterpretaComentario(t *testing.T) {
+	b, _ := fs.ReadFile(workflowsFS, "workflows/anchors-decided.yml")
+	s := string(b)
+	if strings.Contains(s, "#solution") {
+		t.Error("o pipeline não deve reconhecer tag em comentário — quem registra a decisão " +
+			"é o `anchors decided`, que exige a revisão que nasceu dela")
+	}
+	if strings.Contains(s, "issue_comment") {
+		t.Error("o gatilho é o FECHAMENTO do card de desbloqueio, não um comentário")
 	}
 }
 
@@ -950,13 +966,13 @@ func TestPipelineDecidedTemOsDoisGatilhos(t *testing.T) {
 	s := string(b)
 	// O `schedule` precisa do CRON junto: a palavra sozinha aparece na prosa que explica
 	// por que ele existe, e a mutação que remove as duas linhas do agendamento passava.
-	for _, gatilho := range []string{"issue_comment:", "workflow_dispatch:"} {
+	for _, gatilho := range []string{"issues:", "workflow_dispatch:"} {
 		if !strings.Contains(s, gatilho) {
 			t.Errorf("o pipeline precisa do gatilho %q", gatilho)
 		}
 	}
 	if !strings.Contains(s, "- cron:") {
-		t.Error("o `schedule` precisa do cron: um card cujo DESBLOQUEIO fechou não gera " +
-			"comentário nele, e sem o agendamento ele espera um evento que não vem")
+		t.Error("o `schedule` precisa do cron: uma issue fechada pela API fora do fluxo não " +
+			"dispara o evento, e sem o agendamento o card espera para sempre")
 	}
 }
