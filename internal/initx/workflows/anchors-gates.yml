@@ -134,7 +134,7 @@ jobs:
           #
           # A régua é: os cards que este trabalho fecha estão declarados no corpo, na
           # sintaxe que a plataforma entende? Quem sabe QUAIS cards é o Anchors (o
-          # `anchors-owner:` e a label `anchors:sob-<n>`); quem sabe a SINTAXE é o
+          # `anchors-owner:` e a label `anchors:under-<n>`); quem sabe a SINTAXE é o
           # `anchors pr-body`. O corpo é confrontado com o que ele mesmo geraria.
           if ! corpo=$(gh pr view "${{ github.event.pull_request.number }}" --repo "$GH_REPO" --json body --jq .body 2>&1); then
             echo "::warning::não consegui ler o corpo do PR — a conferência não aconteceu: $corpo"

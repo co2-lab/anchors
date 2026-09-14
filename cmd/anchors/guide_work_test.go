@@ -3,6 +3,8 @@ package main
 import (
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/initx"
 )
 
 // E o guia PRECISA cobrir o que o card deixou de dizer, senão a centralização perdeu
@@ -21,7 +23,7 @@ func TestGuiaDeTrabalhoCobreOAchadoDoAgente(t *testing.T) {
 		"--for-user",              // a saída para quando muda a direção
 		"anchors judge --pending", // o que barra o commit
 		"@TBD",                    // a peça que ainda não nasceu
-		"anchors:sob-",            // a label que amarra o achado ao trabalho
+		"anchors:under-",          // a label que amarra o achado ao trabalho
 	} {
 		if !strings.Contains(workGuide, exigido) {
 			t.Errorf("o guia de trabalho deve cobrir %q — o card não diz mais isso", exigido)
@@ -86,5 +88,22 @@ func TestGuiaDeTrabalhoProibeFecharOCardAMao(t *testing.T) {
 	// E QUEM fecha: sem isso o agente fica sem saber o que acontece com o card.
 	if !strings.Contains(workGuide, "Quem fecha é o MERGE") {
 		t.Error("o guia precisa dizer quem fecha o card, não só quem não fecha")
+	}
+}
+
+// O NOME DA LABEL no guia tem de ser o REAL.
+//
+// O guia dizia `anchors:sob-<n>` — o nome ANTERIOR à migração para inglês. O prefixo real é
+// `anchors:under-`, e quem seguisse o guia procuraria no board uma label que não existe.
+//
+// Cinco lugares carregavam o nome velho, incluindo este arquivo de teste (que o cobrava
+// errado) e o comentário do `escalate` que descreve o mecanismo.
+func TestGuiaDeTrabalhoUsaONomeRealDaLabel(t *testing.T) {
+	if strings.Contains(workGuide, "anchors:sob-") {
+		t.Error("o guia usa o nome ANTIGO da label — quem o seguir procura no board algo " +
+			"que não existe")
+	}
+	if !strings.Contains(workGuide, initx.PrefixoLabelSob) {
+		t.Errorf("o guia deveria usar %q, o prefixo real", initx.PrefixoLabelSob)
 	}
 }

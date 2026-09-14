@@ -303,7 +303,7 @@ nodes:
         - test
     - id: cmd/anchors/escalate.go
       kind: code
-      rev: aa8274ef08c6
+      rev: b39eaa623077
       updated_at: "2026-09-10"
       layer: comando
       tags:
@@ -453,7 +453,7 @@ nodes:
         - comando
     - id: cmd/anchors/guide_work.go
       kind: code
-      rev: f399307b006e
+      rev: 25f7dc8cf705
       updated_at: "2026-09-14"
       layer: comando
       tags:
@@ -461,7 +461,7 @@ nodes:
         - comando
     - id: cmd/anchors/guide_work_test.go
       kind: test
-      rev: 7cf97f371a5a
+      rev: f83d5be08284
       updated_at: "2026-09-14"
       layer: teste
       tags:
@@ -645,7 +645,7 @@ nodes:
         - test
     - id: cmd/anchors/pr_body.go
       kind: code
-      rev: f8204b1b97f5
+      rev: d2198f9f0733
       updated_at: "2026-09-10"
       layer: comando
       tags:
@@ -2492,7 +2492,7 @@ nodes:
         - test
     - id: internal/initx/workflows.go
       kind: code
-      rev: 6609b8fae90d
+      rev: cd45ec8f932d
       updated_at: "2026-09-14"
       layer: infra
       tags:
@@ -2500,7 +2500,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 7722efba1fc8
+      rev: 18ef9e0b353e
       updated_at: "2026-09-14"
       layer: teste
       tags:
