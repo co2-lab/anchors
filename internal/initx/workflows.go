@@ -182,6 +182,25 @@ func LabelSob(card string) string { return PrefixoLabelSob + card }
 // um eixo independente do estado.
 const LabelNeedsUser = "anchors:needs-user"
 
+// PrefixoLabelDesbloqueia marca o card cuja ENTREGA destrava outro.
+//
+// `needs-user` diz que um card espera uma PESSOA, e o claim já não o entrega enquanto a
+// label estiver lá. O que faltava era o caso em que a decisão da pessoa GERA TRABALHO: ela
+// decide, e a decisão exige que alguém mude alguma coisa antes de o card original seguir.
+//
+// Sem o vínculo, o que acontece é isto: a pessoa abre um card novo para a mudança, e o card
+// bloqueado fica com `needs-user` para sempre — porque a instrução diz "decida e remova a
+// label", e ela decidiu mas o trabalho ainda não foi feito. Ou pior: ela remove a label
+// achando que decidir bastava, o card volta à fila, e o agente que o pega encontra o mesmo
+// impasse.
+//
+// A label liga os dois: `anchors:desbloqueia-311` num card diz "quando eu for entregue, o
+// #311 pode voltar à fila". O pipeline de board a lê e o `anchors next` a respeita.
+const PrefixoLabelDesbloqueia = "anchors:desbloqueia-"
+
+// LabelDesbloqueia é a label do card que destrava `card`.
+func LabelDesbloqueia(card string) string { return PrefixoLabelDesbloqueia + card }
+
 // LabelToDo é o estado em que um card NASCE.
 //
 // Constante e não literal pelo mesmo motivo do `LabelNeedsUser`: quem cria a issue
