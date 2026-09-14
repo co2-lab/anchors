@@ -117,6 +117,9 @@ func runInternal(name string, n mapx.Node, root string, graph *mapx.Graph, cfg *
 // instâncias veriam a mesma configuração — ou nenhuma.
 var checkersComGate = map[string]func(g config.Gate, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string){
 	"marker-parity": checkMarkerParity,
+	// AGREGADO: um veredito por DOCUMENTO, não por unidade. A versão por-nó produziu 37
+	// cards que escreviam nos mesmos dois arquivos, e cada merge invalidava os outros 36.
+	"doc-required": checkDocRequiredAggregate,
 }
 
 // runInternalAggregate executa um checker interno de escopo batch/project.
@@ -253,7 +256,7 @@ var headerLayerRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*layer:\s*\S+
 // recognizedLayers são as tags de camadas RECONHECIDAS — declaradas na Estrutura só
 // para sair do escrutínio de spec (dao/infra/presentation/domain-types e afins). Um
 // arquivo dessas camadas não tem spec dona nem irmã a referenciar; sua identidade
-// mínima honesta é o `layer:` (a que camada pertence), não um code/ref inventado.
+// mínima honesta é o `layer:` (a que layer pertence), não um code/ref inventado.
 var recognizedLayers = map[string]bool{
 	"dao": true, "infra": true, "presentation": true, "domain-types": true,
 }
@@ -261,29 +264,29 @@ var recognizedLayers = map[string]bool{
 // headerLayerValueRE captura o VALOR do `layer:` declarado no header.
 var headerLayerValueRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*layer:\s*(\S+)`)
 
-// isRecognizedLayer decide se o arquivo pertence a uma camada reconhecida — pela tag
+// isRecognizedLayer decide se o arquivo pertence a uma layer reconhecida — pela tag
 // do nó OU pelo `layer:` DECLARADO no header. O header importa porque um TESTE de um
-// arquivo de camada reconhecida é classificado como `kind: test` (o pattern de test é
-// mais específico que o da camada), perdendo a tag da camada; mas ele declara
+// arquivo de layer reconhecida é classificado como `kind: test` (o pattern de test é
+// mais específico que o da layer), perdendo a tag da layer; mas ele declara
 // `layer: <reconhecida>` no header, e o header é a fonte da verdade da identidade.
 func isRecognizedLayer(n mapx.Node, content string) bool {
-	// A Estrutura do projeto é a fonte da verdade: uma camada com `regime: declarativo`
+	// A Estrutura do projeto é a fonte da verdade: uma layer com `regime: declarativo`
 	// é RECONHECIDA (não origina regra), qualquer que seja seu nome — o vocabulário de
 	// camadas pertence ao projeto (anchors.yaml), não ao engine. Ver STRUCTURE.md.
 	if n.Regime == "declarativo" {
 		return true
 	}
-	// REGIME DECLARADO E DIFERENTE encerra a decisão: o projeto disse o que a camada é, e
+	// REGIME DECLARADO E DIFERENTE encerra a decisão: o projeto disse o que a layer é, e
 	// o fallback por nome não pode contradizê-lo.
 	//
 	// Sem esta linha, a Estrutura era fonte da verdade só na direção que DISPENSA. Uma
-	// camada `infra` que declara `regime: regra` continuava caindo no fallback — e ali
-	// `infra` é um dos nomes canônicos de camada declarativa (DAO, adaptador, o que não
+	// layer `infra` que declara `regime: regra` continuava caindo no fallback — e ali
+	// `infra` é um dos nomes canônicos de layer declarativa (DAO, adaptador, o que não
 	// decide nada).
 	//
 	// Medido no projeto de referência: `packages/infra/` é CDK COM regra — três unidades
 	// com 19 regras e invariantes somados, 61 testes, toda mutação detectada — e o
-	// `triad-complete` respondia INDETERMINADO nas três, por causa do NOME da camada. Nem
+	// `triad-complete` respondia INDETERMINADO nas três, por causa do NOME da layer. Nem
 	// passa nem acusa, e parece cobertura.
 	if n.Regime != "" {
 		return false
@@ -300,22 +303,22 @@ func isRecognizedLayer(n mapx.Node, content string) bool {
 	return false
 }
 
-// isRecognizedLayerCfg decide o mesmo, consultando a ESTRUTURA para a camada que a spec
+// isRecognizedLayerCfg decide o mesmo, consultando a ESTRUTURA para a layer que a spec
 // declara no header.
 //
 // A distinção existe porque o nó de uma SPEC tem `layer: spec` — ela casa `**/*.spec.md`,
-// e o `Regime` copiado para o nó é o da camada `spec`, não o da unidade. O regime que o
+// e o `Regime` copiado para o nó é o da layer `spec`, não o da unidade. O regime que o
 // projeto declarou para `infra` nunca chegava aqui, e a decisão caía no fallback por nome.
 //
 // Medido: `packages/infra/` do projeto de referência é CDK COM regra — três unidades, 19
 // regras e invariantes somados, 61 testes —, o projeto declarou `regime: comportamental`
-// na camada, e o `triad-complete` seguiu respondendo INDETERMINADO. Nem passa nem acusa, e
+// na layer, e o `triad-complete` seguiu respondendo INDETERMINADO. Nem passa nem acusa, e
 // parece cobertura.
 func isRecognizedLayerCfg(n mapx.Node, content string, cfg *config.Config) bool {
 	if n.Regime == "declarativo" {
 		return true
 	}
-	// A camada da UNIDADE, que a spec declara no header — e o regime QUE O PROJETO deu a
+	// A layer da UNIDADE, que a spec declara no header — e o regime QUE O PROJETO deu a
 	// ela. Declarado e diferente de `declarativo` encerra a decisão: a Estrutura é fonte
 	// da verdade nas duas direções, não só na que dispensa.
 	if cfg != nil {
@@ -353,7 +356,7 @@ func checkHeaderConforms(content string, n mapx.Node) (Verdict, string) {
 	// no topo de um YAML de flow é comentário morto para quem o executa.
 	//
 	// A alternativa era retrofitar 717 arquivos com um cabeçalho que nenhum deles jamais
-	// teve — e o gate só passou a vê-los porque a camada `e2e-flow` os trouxe para o
+	// teve — e o gate só passou a vê-los porque a layer `e2e-flow` os trouxe para o
 	// grafo (para que a execução de E2E pudesse deixar carimbo). Cobrar deles um contrato
 	// escrito depois seria transformar a chegada ao mapa em 717 defeitos retroativos.
 	if isExecutableScript(n) {
@@ -367,8 +370,8 @@ func checkHeaderConforms(content string, n mapx.Node) (Verdict, string) {
 	if isRecognizedLayer(n, content) {
 		if !headerLayerRE.MatchString(content) &&
 			!headerCodeRE().MatchString(content) && !headerRefRE().MatchString(content) {
-			return Fail, "cabeçalho `@anchors` sem identidade — arquivo de camada reconhecida " +
-				"(dao/infra/presentation/domain-types) declara ao menos `layer: <camada>` " +
+			return Fail, "cabeçalho `@anchors` sem identidade — arquivo de layer reconhecida " +
+				"(dao/infra/presentation/domain-types) declara ao menos `layer: <layer>` " +
 				"(sua identidade mínima, pois não tem spec). Ver `anchors guide header`."
 		}
 		return Pass, ""
@@ -597,7 +600,7 @@ func checkHasScenarioCode(content string, _ mapx.Node) (Verdict, string) {
 	if anyCodeRE.MatchString(content) {
 		return Pass, ""
 	}
-	return Fail, "sem código de cenário (identidade ausente)"
+	return Fail, "sem código de cenário (identidade missing)"
 }
 
 // guide-has-checklist: um GUIDE de governança deve destilar suas regras em PONTOS DE

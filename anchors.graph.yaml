@@ -1,7 +1,7 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
 version: 2
-generated_by: 0.1.97
+generated_by: 0.1.98
 nodes:
     - id: BOOTSTRAP.md
       kind: guide
@@ -289,7 +289,7 @@ nodes:
     - id: cmd/anchors/doctor.go
       kind: code
       rev: 22fd1da6a6b7
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-14"
       layer: comando
       tags:
         - cli
@@ -454,7 +454,7 @@ nodes:
     - id: cmd/anchors/guide_work.go
       kind: code
       rev: f399307b006e
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-14"
       layer: comando
       tags:
         - cli
@@ -462,7 +462,7 @@ nodes:
     - id: cmd/anchors/guide_work_test.go
       kind: test
       rev: 7cf97f371a5a
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-14"
       layer: teste
       tags:
         - test
@@ -1337,7 +1337,7 @@ nodes:
         - test
     - id: internal/gate/doc_required.go
       kind: code
-      rev: 67fe14a396d3
+      rev: a263c27775b7
       updated_at: "2026-09-11"
       layer: gate
       tags:
@@ -1345,7 +1345,7 @@ nodes:
         - gate
     - id: internal/gate/doc_required_test.go
       kind: test
-      rev: 0b02e308e0bf
+      rev: 67a21bb4b3ef
       updated_at: "2026-09-11"
       layer: teste
       tags:
@@ -1533,7 +1533,7 @@ nodes:
         - test
     - id: internal/gate/internal_checks.go
       kind: code
-      rev: 004a1f99c222
+      rev: d44c8efb9628
       updated_at: "2026-09-11"
       layer: gate
       tags:
@@ -2346,7 +2346,7 @@ nodes:
         - test
     - id: internal/initx/default_gates.go
       kind: code
-      rev: 3b4a00288a77
+      rev: 09ef40713791
       updated_at: "2026-09-11"
       layer: infra
       tags:
