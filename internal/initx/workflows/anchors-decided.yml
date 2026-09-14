@@ -1,0 +1,113 @@
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
+# Anchors — a DECISÃO RESPONDIDA devolve o card à fila
+#
+# Um card em `anchors:needs-user` espera uma pessoa, e o claim não o entrega enquanto a
+# label estiver lá. Isso está certo — é o que impede um agente de pegar o card e esbarrar
+# no mesmo impasse que outro já escalou.
+#
+# O QUE FALTAVA era o outro lado: quem remove a label depois que a pessoa responde.
+#
+# Medido no projeto de referência: o card #311 teve o defeito consertado (duas revisões, os
+# testes provando por mutação) e continuou parado — a condição escrita na instrução
+# ("decida, e depois remova a label") tinha sido cumprida, e a label ficou. Ninguém era
+# responsável por tirá-la.
+#
+# COMO O PIPELINE SABE QUE A PESSOA RESPONDEU
+#
+# Não pelo autor do comentário: num projeto com agentes, TODOS comentam com a mesma conta
+# (o `gh` autentica como o dono do repositório). Os seis agentes do projeto de referência
+# aparecem como a mesma pessoa que escalou.
+#
+# Pela TAG `#solution` no comentário. É um ato explícito, escrito no meio da frase por quem
+# responde — e um comentário de progresso nunca a carrega por acidente.
+#
+# E A EXCEÇÃO, que é o que torna isto seguro: se a resposta GEROU TRABALHO, há cards com
+# `anchors:desbloqueia-<n>` abertos. A label NÃO sai enquanto eles não fecharem — a pessoa
+# decidiu, mas o card ainda não pode andar. Sem essa guarda, o card voltaria à fila e o
+# agente que o pegasse encontraria o trabalho ainda por fazer.
+name: anchors · decisão respondida
+
+on:
+  # O comentário é o gatilho natural: a pessoa responde e o card anda em segundos, sem
+  # esperar um cron.
+  issue_comment:
+    types: [created]
+  # De 30 em 30 minutos também, e por dois motivos: um card cujo desbloqueio fechou não
+  # gera comentário nenhum no card bloqueado, e um `issue_comment` pode se perder.
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: anchors-decided
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  destravar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Devolver à fila os cards cuja decisão saiu
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          LABEL: anchors
+        run: |
+          set -euo pipefail
+
+          # TODOS os cards escalados, e não só o do evento: o `schedule` precisa varrer, e
+          # varrer sempre custa uma chamada a mais num conjunto que é pequeno por natureza
+          # (um card escalado é exceção, não regra).
+          escalados=$(gh issue list --repo "$GH_REPO" --state open \
+            --label "$LABEL" --label "anchors:needs-user" --limit 100 \
+            --json number --jq '.[].number')
+
+          if [ -z "$escalados" ]; then
+            echo "nenhum card escalado — nada a fazer"
+            exit 0
+          fi
+
+          for n in $escalados; do
+            # A PESSOA RESPONDEU? A tag `#solution` em QUALQUER comentário do card.
+            #
+            # Qualquer um, e não só o último: depois de responder, a conversa continua — um
+            # agente comenta o progresso, o pipeline registra a posse — e exigir que a
+            # resposta seja a última mensagem faria o card travar de novo sozinho.
+            respondeu=$(gh issue view "$n" --repo "$GH_REPO" --json comments \
+              --jq '[.comments[].body | select(test("#solution"; "i"))] | length' 2>/dev/null || echo 0)
+            if [ "$respondeu" = "0" ]; then
+              continue
+            fi
+
+            # A RESPOSTA GEROU TRABALHO? Então o card espera a ENTREGA, não a decisão.
+            #
+            # Esta é a exceção que torna o automático seguro. Sem ela, o card voltaria à
+            # fila assim que a pessoa respondesse — e o agente que o pegasse encontraria o
+            # trabalho que a decisão pediu ainda por fazer, esbarrando no mesmo impasse.
+            pendentes=$(gh issue list --repo "$GH_REPO" --state open \
+              --label "anchors:desbloqueia-$n" --limit 20 \
+              --json number --jq '[.[].number] | join(", #")' 2>/dev/null || echo "")
+
+            if [ -n "$pendentes" ]; then
+              echo "· #$n respondido, mas espera a entrega de #$pendentes — label MANTIDA"
+              continue
+            fi
+
+            gh issue edit "$n" --repo "$GH_REPO" \
+              --remove-label "anchors:needs-user" >/dev/null
+
+            # O COMENTÁRIO diz POR QUE a label saiu. Uma label que some sozinha, sem rastro,
+            # faz quem acompanha suspeitar do pipeline em vez de confiar nele.
+            gh issue comment "$n" --repo "$GH_REPO" --body \
+              "▶️ **De volta à fila.** A decisão foi respondida (\`#solution\` num comentário acima) e nenhum card de desbloqueio está pendente.
+
+            A label \`anchors:needs-user\` foi removida por este pipeline — o claim volta a entregar este card." >/dev/null
+
+            echo "· #$n DESTRAVADO — a decisão saiu e não há trabalho pendente"
+          done
