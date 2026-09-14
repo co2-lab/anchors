@@ -31,7 +31,7 @@ vier depois não sabe que aquilo já foi problema, nem por que a solução é aq
 
     anchors escalate "<o que está errado>" --about <arquivo> --card <este card>
 
-O achado nasce com a label ` + "`anchors:sob-<número>`" + `, e os dois se entregam no MESMO
+O achado nasce com a label ` + "`anchors:under-<número>`" + `, e os dois se entregam no MESMO
 PR: você já está com o contexto na mão, e separá-los faria um dos dois esperar sem razão.
 
 ### Quando NÃO usar
@@ -60,7 +60,7 @@ commit, e quem mexeu no arquivo é quem tem contexto para responder:
     anchors pr-body
 
 Ele imprime as linhas que fecham o card que você pegou E os achados que nasceram sob
-ele (` + "`anchors:sob-<n>`" + `). Cole no corpo do PR.
+ele (` + "`anchors:under-<n>`" + `). Cole no corpo do PR.
 
 Você NÃO precisa saber a sintaxe da plataforma — e é justamente ela que se erra em
 silêncio. O GitHub reconhece a palavra de fechamento só em INGLÊS: escrever "Fecha

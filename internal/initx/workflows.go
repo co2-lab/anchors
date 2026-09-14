@@ -158,7 +158,7 @@ var WorkStates = []string{
 	"anchors:production",
 }
 
-// PrefixoLabelSob liga um card ao trabalho de onde ele NASCEU: `anchors:sob-44`.
+// PrefixoLabelSob liga um card ao trabalho de onde ele NASCEU: `anchors:under-44`.
 //
 // O achado que aparece enquanto se implementa outra coisa precisa de duas coisas ao mesmo
 // tempo — existir por si (para não se perder) e estar amarrado ao trabalho em curso (para
@@ -167,7 +167,7 @@ var WorkStates = []string{
 //
 // É LABEL, e não texto no corpo. A primeira versão escrevia "Descoberto durante o card
 // #44" na descrição, e isso não se consulta: não dá para listar o que pende sob um card,
-// nem para o board desenhar a relação. Label é filtrável (`--label anchors:sob-44`),
+// nem para o board desenhar a relação. Label é filtrável (`--label anchors:under-44`),
 // aparece na lista de issues e sobrevive a qualquer reescrita do texto.
 //
 // Também NÃO é a sub-issue nativa do GitHub: ela só aceita um nível, e a hierarquia deste

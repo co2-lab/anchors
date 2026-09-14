@@ -112,7 +112,7 @@ card para trocar uma palavra é burocracia.`,
 				labels = append(labels, initx.LabelNeedsUser)
 			}
 			// SOB o card de origem, como LABEL — o que permite listar o que pende sob um
-			// trabalho (`--label anchors:sob-44`) e entregá-lo no mesmo PR. Uma frase no
+			// trabalho (`--label anchors:under-44`) e entregá-lo no mesmo PR. Uma frase no
 			// corpo ("descoberto durante o card #44") não se consulta.
 			if card != "" {
 				labels = append(labels, initx.LabelSob(card))
