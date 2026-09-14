@@ -1,7 +1,7 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
 version: 2
-generated_by: 0.1.99
+generated_by: 0.1.100
 nodes:
     - id: BOOTSTRAP.md
       kind: guide
@@ -795,30 +795,31 @@ nodes:
         - test
     - id: cmd/anchors/task_status.go
       kind: code
-      rev: 8ca5180e2cff
-      updated_at: "2026-09-10"
+      rev: d35bb47672d8
+      updated_at: "2026-09-14"
       layer: comando
       tags:
         - cli
         - comando
     - id: cmd/anchors/task_status_render.go
       kind: code
-      rev: 1d5a0af85b10
-      updated_at: "2026-09-10"
+      rev: 1b8b02208ba3
+      updated_at: "2026-09-14"
       layer: comando
       tags:
         - cli
         - comando
     - id: cmd/anchors/task_status_test.go
       kind: test
-      rev: 14ba21d58729
-      updated_at: "2026-09-10"
+      rev: 285f5b061b63
+      updated_at: "2026-09-14"
       layer: teste
       tags:
         - test
     - id: cmd/anchors/telemetry.go
       kind: code
       rev: e9f6a25a9b89
+      updated_at: "2026-09-14"
       layer: comando
       tags:
         - cli
@@ -1021,7 +1022,7 @@ nodes:
     - id: internal/config/config.go
       kind: code
       rev: ffb2af61bfd0
-      updated_at: "2026-09-11"
+      updated_at: "2026-09-14"
       layer: config
       tags:
         - nucleo
@@ -2491,7 +2492,7 @@ nodes:
         - test
     - id: internal/initx/workflows.go
       kind: code
-      rev: 2964b398348b
+      rev: 6609b8fae90d
       updated_at: "2026-09-14"
       layer: infra
       tags:
@@ -2930,12 +2931,14 @@ nodes:
     - id: internal/telemetry/config_test.go
       kind: test
       rev: d528c74ac811
+      updated_at: "2026-09-14"
       layer: teste
       tags:
         - test
     - id: internal/telemetry/otlp_test.go
       kind: test
       rev: 8094902b04bf
+      updated_at: "2026-09-14"
       layer: teste
       tags:
         - test
