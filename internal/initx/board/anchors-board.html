@@ -255,6 +255,38 @@
   /* Quem BLOQUEIA o quê: uma decisão parada que não trava nada é diferente de uma que
      trava seis cards, e o número muda a urgência de responder. */
   .trava { font-size: .7rem; color: var(--fraco); }
+  /* O GANTT. Duas metades separadas por uma linha vertical: à esquerda o que aconteceu
+     (com data), à direita o que falta (com ordem).
+     Grid e não SVG: as barras são retângulos posicionados, o texto precisa fluir e ser
+     selecionável, e um SVG exigiria calcular largura de fonte à mão. */
+  .gantt { display: grid; grid-template-columns: minmax(9rem, auto) 1fr; gap: 0;
+           font-size: .8rem; position: relative; }
+  .g-rot { padding: .3rem .6rem .3rem 0; white-space: nowrap; overflow: hidden;
+           text-overflow: ellipsis; border-bottom: 1px solid var(--linha); }
+  .g-rot.fase { font-weight: 600; }
+  .g-rot.item { padding-left: 1.1rem; color: var(--fraco); }
+  .g-faixa { position: relative; border-bottom: 1px solid var(--linha);
+             border-left: 1px solid var(--linha); min-height: 1.9rem; }
+  .g-barra { position: absolute; top: .35rem; height: 1.15rem; border-radius: 3px;
+             display: flex; align-items: center; padding: 0 .4rem; font-size: .68rem;
+             overflow: hidden; white-space: nowrap; }
+  /* ENTREGUE: preenchido. É fato consumado, e a cor sólida é o que o diz sem legenda. */
+  .g-barra.feito { background: var(--pronto); color: #fff; }
+  /* EM CURSO: a cor do trabalho ativo. */
+  .g-barra.fazendo { background: var(--fazendo); color: #fff; }
+  /* FUTURO: contorno, não preenchimento — e o tracejado diz que a posição é ORDEM, não
+     data. Uma barra sólida à direita da linha prometeria um prazo que ninguém calculou. */
+  .g-barra.futuro { background: transparent; border: 1px dashed var(--todo);
+                    color: var(--fraco); }
+  /* A LINHA DO AGORA, e é ela que divide as duas metades do desenho. */
+  .g-hoje { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--marca);
+            z-index: 2; pointer-events: none; }
+  .g-hoje::after { content: "agora"; position: absolute; top: -1.1rem; left: -1.2rem;
+                   font-size: .62rem; color: var(--marca); font-weight: 600; }
+  .g-eixo { grid-column: 2; position: relative; height: 1.4rem; font-size: .65rem;
+            color: var(--fraco); border-bottom: 1px solid var(--linha); }
+  .g-marca { position: absolute; top: .2rem; transform: translateX(-50%); }
+  .g-vazio { grid-column: 1 / -1; padding: 2rem 0; color: var(--fraco); text-align: center; }
   footer { margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--linha);
            color: var(--fraco); font-size: .8rem; max-width: 46rem; }
   .pitch { margin: 0 0 .75rem; line-height: 1.6; }
@@ -300,6 +332,7 @@
 <nav class="abas" role="tablist">
   <button role="tab" id="aba-board" aria-selected="true" aria-controls="v-board">Board</button>
   <button role="tab" id="aba-arvore" aria-selected="false" aria-controls="v-arvore">Árvore</button>
+  <button role="tab" id="aba-roadmap" aria-selected="false" aria-controls="v-roadmap">Roadmap</button>
 </nav>
 
 <!-- O FILTRO fica FORA das abas, de propósito: ele vale para as duas, e duplicá-lo faria
@@ -334,6 +367,17 @@
     <strong>depende</strong> estiver concluído.
   </p>
   <div id="arvore"></div>
+</section>
+
+<!-- O ROADMAP. O que foi entregue tem data REAL; o que falta tem ORDEM, não data. -->
+<section id="v-roadmap" role="tabpanel" aria-labelledby="aba-roadmap" hidden>
+<p class="prioridade">
+  À <strong>esquerda</strong> da linha, o que foi entregue — com as datas reais de quando o
+  card nasceu e quando fechou. À <strong>direita</strong>, o que falta, posicionado pela
+  <em>dependência</em> e não por prazo: o Anchors sabe a ORDEM (o <code>needs:</code> do
+  mapa), e não inventa <em>quando</em>.
+</p>
+<div class="gantt" id="gantt"></div>
 </section>
 
 <!-- `<dialog>` nativo: o navegador já dá o fechamento por Esc, o foco preso dentro e o
@@ -449,7 +493,11 @@ function desenha(d) {
     NIVEIS = calculaNiveis(d);
     rotulasFiltro(d);
     document.getElementById("colunas").innerHTML = visiveis.map(([id, nome, oquee, cor]) => {
-      const cards = (d.itens || []).filter((i) => i.estado === id && passaNoFiltro(i));
+      // `!i.fechado`: o JSON passou a trazer os cards ENTREGUES também — o roadmap precisa
+      // deles para as datas reais. As colunas continuam sendo o trabalho EM CURSO, e um
+      // card fechado mantém a última label de estado: sem este filtro ele reapareceria na
+      // coluna onde parou, como se ainda estivesse lá.
+      const cards = (d.itens || []).filter((i) => !i.fechado && i.estado === id && passaNoFiltro(i));
       return `<section class="coluna">
         <div class="titulo"><span class="bola" style="background:${cor}"></span>
           ${esc(nome)}<span class="qtd">${cards.length}</span></div>
@@ -851,7 +899,7 @@ function desenhaArvore(d) {
   // filtro: com o recorte, o chip do estado escolhido seria o único a existir, e não
   // haveria como somar outro nem desmarcar o que se marcou.
   const presentes = COLUNAS.filter(([id]) =>
-    (d.itens || []).some((i) => i.codigo && passaNoFiltro(i) && i.estado === id));
+    (d.itens || []).some((i) => !i.fechado && i.codigo && passaNoFiltro(i) && i.estado === id));
 
   alvo.innerHTML = `
     <div class="controles">
@@ -896,7 +944,7 @@ function desenhaArvore(d) {
 }
 
 // --- as abas ---
-const ABAS = [["aba-board", "v-board"], ["aba-arvore", "v-arvore"]];
+const ABAS = [["aba-board", "v-board"], ["aba-arvore", "v-arvore"], ["aba-roadmap", "v-roadmap"]];
 function mostraAba(id) {
   for (const [aba, painel] of ABAS) {
     const sel = aba === id;

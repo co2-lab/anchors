@@ -25,7 +25,7 @@ func TestTaskStatus_prSemCheckNaoPassaPorConferido(t *testing.T) {
 	out := renderTaskStatus(taskState{
 		Card:   testCard(303, "anchors:in-progress", "[INDTN] implementar spec"),
 		Branch: "impl-x", Clean: true,
-		PR: &branchPR{Number: 368, Estado: "OPEN", Total: 0, Checks: map[string]int{}},
+		PR: &branchPR{Number: 368, State: "OPEN", Total: 0, Checks: map[string]int{}},
 	})
 	// Duas asserções para DOIS lugares distintos, e a distinção importa: a linha do PR é
 	// o que quem lê rápido vê, e o próximo passo é o que o agente segue. Mutar só a linha
@@ -53,7 +53,7 @@ func TestTaskStatus_checkEmCursoNaoEhCheckQuePassou(t *testing.T) {
 	out := renderTaskStatus(taskState{
 		Card:   testCard(303, "anchors:in-progress", "x"),
 		Branch: "impl-x", Clean: true,
-		PR: &branchPR{Number: 368, Estado: "OPEN", Total: 4,
+		PR: &branchPR{Number: 368, State: "OPEN", Total: 4,
 			Checks: map[string]int{"passou": 3, "em curso": 1}},
 	})
 	if strings.Contains(out, "4/4") {
@@ -74,7 +74,7 @@ func TestTaskStatus_checkReprovadoEhTrabalhoDesteCard(t *testing.T) {
 	out := renderTaskStatus(taskState{
 		Card:   testCard(303, "anchors:in-progress", "x"),
 		Branch: "impl-x", Clean: true,
-		PR: &branchPR{Number: 368, Estado: "OPEN", Total: 4,
+		PR: &branchPR{Number: 368, State: "OPEN", Total: 4,
 			Checks: map[string]int{"passou": 3, "reprovou": 1}},
 	})
 	if !strings.Contains(out, "trabalho DESTE card") {

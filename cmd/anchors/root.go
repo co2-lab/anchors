@@ -43,6 +43,20 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 			// o `anchors.yaml`, e um projeto com `lang: es` recebia essas linhas em
 			// inglês — a chave existia, o idioma é que ainda não valia.
 			applyProjectLang(cmd)
+			// O AVISO DE TELEMETRIA, e aqui pelo mesmo motivo do congelamento acima: é o
+			// único ponto por onde TODO comando passa.
+			//
+			// Os candidatos descartados e por quê:
+			//
+			//	init    → só alcança projeto NOVO. Quem instala o binário num projeto que
+			//	          outra pessoa configurou nunca o roda — e é o caso comum num time.
+			//	next    → só alcança quem PEDE CARD. Um revisor que roda `check` não vê.
+			//	doctor  → é opcional, e muita gente nunca o roda.
+			//
+			// E há a propriedade que decide: o `PersistentPreRunE` roda ANTES do comando,
+			// então o aviso aparece antes de o primeiro evento sair. Com `next` ou
+			// `doctor`, o dado já teria ido.
+			noticeTelemetry(cmd)
 			return refuseIfFrozen(cmd)
 		},
 	}
