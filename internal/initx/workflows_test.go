@@ -691,7 +691,7 @@ func TestCardApontaOGuiaDeTrabalho(t *testing.T) {
 // estar em inglês não é régua do Anchors.
 //
 // A régua é: os cards que este trabalho fecha estão declarados? Quem sabe QUAIS é o
-// Anchors (`anchors-owner:` e `anchors:sob-<n>`); quem sabe a SINTAXE é o `pr-body`.
+// Anchors (`anchors-owner:` e `anchors:under-<n>`); quem sabe a SINTAXE é o `pr-body`.
 func TestPipelineConfrontaOVinculoENaoAPalavra(t *testing.T) {
 	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-gates.yml")
 	if err != nil {

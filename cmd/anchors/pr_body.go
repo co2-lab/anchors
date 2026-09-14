@@ -26,7 +26,7 @@ import (
 // exigência da plataforma vazando para dentro da doutrina.
 //
 // A inversão: o vínculo é declarado no VOCABULÁRIO do Anchors — o card que o agente pegou
-// (`anchors-owner:`) e os achados que nasceram sob ele (`anchors:sob-<n>`) —, e a linha
+// (`anchors-owner:`) e os achados que nasceram sob ele (`anchors:under-<n>`) —, e a linha
 // que a plataforma entende é GERADA a partir dele. Quem escreve o PR não precisa saber a
 // palavra; quem muda de plataforma muda o gerador, não a doutrina.
 
@@ -50,7 +50,7 @@ func newPRBodyCmd() *cobra.Command {
 		Long: `Imprime as linhas de fechamento para o corpo do PR.
 
 O vínculo é declarado no vocabulário do Anchors: o card que você pegou
-('anchors-owner:') e os achados que nasceram sob ele ('anchors:sob-<n>'). A
+('anchors-owner:') e os achados que nasceram sob ele ('anchors:under-<n>'). A
 palavra-chave da plataforma é GERADA a partir disso.
 
 Você não precisa saber que o GitHub só aceita 'Closes' em inglês — e num projeto
