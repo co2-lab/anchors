@@ -51,6 +51,11 @@ concurrency:
 permissions:
   contents: read
   issues: write
+  # O TIMELINE de uma issue traz o PR que a referencia, e o `merged_at` dele é o fato que
+  # distingue "fechado à mão para burlar a fila" de "fechado à mão porque o `Closes` da
+  # lista com vírgula não pegou". Sem esta permissão o campo vem nulo e a exceção nunca
+  # dispara — a trava voltaria a reverter fechamento legítimo, em silêncio.
+  pull-requests: read
 
 jobs:
   # O HISTÓRICO: quanto tempo o card passou em cada coluna.
@@ -180,6 +185,45 @@ jobs:
             closed)
               # Quem fecha é o MERGE, pela linha `Closes #N`. Um fechamento manual tira o
               # card da fila antes de o trabalho ser aceito.
+              #
+              # SALVO QUANDO O TRABALHO JÁ ENTROU — e essa é a exceção que faltava.
+              #
+              # A plataforma reconhece só o PRIMEIRO número de uma lista com vírgula. Um PR
+              # com `Closes #419, #473` merge, fecha o #419, e deixa o #473 aberto com o
+              # trabalho já entregue. Quem nota fecha o card à mão, que é o ato CERTO — e a
+              # trava o desfazia, porque pela regra que ela conhecia aquilo era um card
+              # saindo da fila sem merge.
+              #
+              # Medido: o #473 voltou para `in-progress` e ficou três horas parado esperando
+              # um trabalho que já existia. A trava produziu exatamente o que existe para
+              # impedir: um card fora do estado que o fato manda.
+              #
+              # O FATO que decide é um PR MERGEADO que cita o card. Não o corpo do PR (a
+              # linha `Closes` é justamente a que falhou), nem a palavra de quem fechou:
+              # o merge é registro da plataforma, e é o mesmo fato que fecharia o card se a
+              # sintaxe estivesse certa.
+              #
+              # O TIMELINE e não `gh pr list --search`. A busca é TEXTUAL e difusa — medido,
+              # `--search 99999` devolveu um PR que não tem nada com o número. Uma trava que
+              # deixa de reverter por um falso positivo é pior que não ter trava: ela
+              # continuaria dizendo que vigia.
+              #
+              # O `cross-referenced` do timeline é o vínculo REAL que a plataforma registrou
+              # entre a issue e o PR, e `merged_at` diz se aquele PR entrou. Conferido nos
+              # três casos: card com PR mergeado devolve o número, card com PR aberto devolve
+              # vazio, card fechado pelo merge normal devolve o mesmo PR.
+              mergeado=$(gh api "repos/$GH_REPO/issues/$N/timeline" --paginate \
+                --jq '[.[] | select(.event == "cross-referenced" and .source.issue.pull_request.merged_at != null) | .source.issue.number] | first // ""' \
+                2>/dev/null || true)
+              if [ -n "$mergeado" ]; then
+                echo "· #$N: o PR #$mergeado mergeou citando este card — fechamento LEGÍTIMO"
+                gh issue comment "$N" --repo "$GH_REPO" --body "✅ **Fechamento mantido:** o PR #$mergeado mergeou citando este card.
+
+          A trava de estado não reverteu porque o FATO está lá — o trabalho entrou. Quando isso acontece com o card ainda aberto, quase sempre a causa é uma lista separada por vírgula no corpo do PR: a plataforma reconhece só o primeiro número, e os demais ficam abertos com o trabalho já entregue.
+
+          \`anchors pr-body --cards <n>\` gera uma linha por card, que é a forma que fecha todos." >/dev/null
+                exit 0
+              fi
               gh issue reopen "$N" --repo "$GH_REPO" >/dev/null
               motivo="fechado à mão"
               inverso="reaberto"
