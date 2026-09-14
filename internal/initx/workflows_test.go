@@ -1082,3 +1082,134 @@ func TestTravaDeEstadoExplicaOQueFezEComoAutorizar(t *testing.T) {
 		}
 	}
 }
+
+// A LISTA COM VÍRGULA precisa ser acusada: ela fecha UM card e parece fechar todos.
+//
+// O caso real, no projeto de referência. O PR #475 trazia no corpo:
+//
+//	Closes #419, #473
+//
+// A plataforma honra só o primeiro número. O PR mergeou, o #419 fechou, e o #473 ficou
+// aberto com o trabalho já entregue — invisível, porque o corpo do PR dizia o contrário.
+//
+// O ESTRAGO não parou aí. Um agente notou e fechou o #473 à mão; a trava de estado reverteu,
+// e estava certa pela regra que ela conhece (um card saindo da fila sem merge é exatamente
+// o que ela existe para impedir). O card voltou para `in-progress` e ficou três horas parado
+// esperando um trabalho que já existia.
+//
+// AVISO e não reprovação: o vínculo do PR com o card está declarado, e barrar um merge por
+// sintaxe seria pior que o defeito. O que faltava era alguém DIZER que os números depois da
+// vírgula não valem.
+func TestPipelineAcusaListaDeCardsComVirgula(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-pr-checks.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	if !strings.Contains(texto, "extras=") {
+		t.Fatal("o pipeline não extrai os números que vêm depois da vírgula — um PR com " +
+			"`Closes #419, #473` mergearia deixando o segundo card aberto, em silêncio")
+	}
+
+	// A MENSAGEM não pode ditar a sintaxe da plataforma: é a mesma régua do
+	// TestPipelineConfrontaOVinculoENaoAPalavra, e o aviso novo é um lugar fácil de
+	// quebrá-la — a tentação é mostrar o texto certo em vez de mandar gerá-lo.
+	if !strings.Contains(texto, "anchors pr-body --cards $") {
+		t.Error("o aviso deve mandar RODAR o `anchors pr-body` com os cards do PR — " +
+			"mostrar a linha pronta faria a sintaxe da plataforma vazar para a doutrina")
+	}
+
+	// A lista de números precisa chegar ao comando sugerido: um `pr-body` sem os cards
+	// certos não resolve o problema de quem o roda.
+	if !strings.Contains(texto, `todos="$card`) {
+		t.Error("o comando sugerido deve juntar o card já declarado aos que a vírgula " +
+			"engoliu — senão ele regenera só o que já estava certo")
+	}
+}
+
+// A TRAVA NÃO PODE DESFAZER UM FECHAMENTO LEGÍTIMO.
+//
+// Ela existe porque um card fechado antes do merge sai da fila de revisão sem ser revisado.
+// Mas há um caso em que fechar à mão é o ato CERTO: o trabalho mergeou e o card ficou aberto
+// porque o corpo do PR trazia `Closes #419, #473` — e a plataforma reconhece só o primeiro.
+//
+// Medido: a trava reverteu o fechamento do #473, o card voltou para `in-progress`, e ficou
+// três horas parado esperando um trabalho que já existia. A trava produziu exatamente o que
+// existe para impedir — um card fora do estado que o fato manda.
+//
+// O FATO que decide é um PR mergeado vinculado ao card. E a forma de perguntar importa: o
+// `gh pr list --search <n>` é TEXTUAL e difuso (medido: `--search 99999` devolveu um PR sem
+// relação nenhuma). Uma trava que deixa de reverter por falso positivo é pior que não ter
+// trava — ela continua dizendo que vigia.
+func TestTravaRespeitaOFechamentoComTrabalhoMergeado(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	if !strings.Contains(texto, "mergeado=") {
+		t.Fatal("a trava reverte todo fechamento manual, inclusive o do card cujo trabalho " +
+			"já mergeou — e é o caso em que fechar à mão é o ato certo")
+	}
+
+	// A CONSULTA precisa ser a do vínculo, não a textual.
+	if strings.Contains(texto, "pr list") && strings.Contains(texto, "--search \"$N\"") {
+		t.Error("a trava usa `gh pr list --search`, que é busca TEXTUAL: um número solto " +
+			"na prosa de outro PR faria a trava deixar de reverter um fechamento ilegítimo")
+	}
+	if !strings.Contains(texto, "cross-referenced") || !strings.Contains(texto, "merged_at") {
+		t.Error("a trava deve conferir o vínculo REAL no timeline (`cross-referenced` com " +
+			"`merged_at`), que é o registro que a plataforma faz entre a issue e o PR")
+	}
+
+	// SILÊNCIO SERIA PIOR: quem fechou precisa saber que o fechamento valeu, e por quê —
+	// senão fica esperando a reversão que a trava ensinou a esperar.
+	if !strings.Contains(texto, "Fechamento mantido") {
+		t.Error("a exceção deve COMENTAR no card: sem isso quem fechou não sabe se a trava " +
+			"aceitou, e o defeito da vírgula segue invisível para o próximo PR")
+	}
+}
+
+// QUEM LÊ DADOS DE PR PRECISA DECLARAR A PERMISSÃO.
+//
+// O `GITHUB_TOKEN` só concede o que o pipeline pede. Um workflow que lê `merged_at` sem
+// `pull-requests: read` não recebe erro: o campo vem NULO — e o código que depende dele toma
+// a decisão errada achando que decidiu certo.
+//
+// Na trava isso significaria voltar a reverter o fechamento de um card cujo trabalho já
+// mergeou, que é o defeito que a exceção existe para corrigir.
+func TestPipelineQueLeDadosDePRDeclaraAPermissao(t *testing.T) {
+	entradas, err := fs.ReadDir(workflowsFS, "workflows")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entradas) == 0 {
+		t.Fatal("nenhum workflow embutido — o glob quebrou e o teste passaria vazio")
+	}
+	for _, e := range entradas {
+		b, err := fs.ReadFile(workflowsFS, "workflows/"+e.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
+		texto := string(b)
+		// SÓ A CONSULTA, não o payload do evento.
+		//
+		// `github.event.pull_request.base.sha` chega no payload que dispara o workflow: o
+		// GitHub já o entregou, e nenhuma permissão o altera. Foi o falso positivo desta
+		// régua na primeira versão — ela acusou o `anchors-identify.yml`, que está certo.
+		//
+		// O que precisa da permissão é PERGUNTAR à API: `gh api .../timeline`, `gh pr view`,
+		// `gh pr list`. Aí o token decide o que devolve, e sem `pull-requests: read` os
+		// campos de PR vêm nulos em vez de dar erro.
+		consultaAPI := strings.Contains(texto, "gh api") ||
+			strings.Contains(texto, "gh pr ")
+		leDadosDePR := strings.Contains(texto, "merged_at") ||
+			strings.Contains(texto, ".source.issue.pull_request")
+		if consultaAPI && leDadosDePR && !strings.Contains(texto, "pull-requests: read") {
+			t.Errorf("%s lê dados de PR e não declara `pull-requests: read` — o campo vem "+
+				"NULO em vez de dar erro, e a decisão sai errada em silêncio", e.Name())
+		}
+	}
+}
