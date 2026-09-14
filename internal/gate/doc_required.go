@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -47,9 +48,105 @@ import (
 //
 // O que ele NÃO faz é aprovar silêncio.
 
+// checkDocRequired confronta os documentos declarados contra TODAS as unidades que os
+// disparam — um veredito por DOCUMENTO, não por unidade.
+//
+// POR QUE AGREGADO, e a razão é medida:
+//
+// A primeira versão rodava por nó: cada spec cujo contrato não a mencionava virava um card.
+// No projeto de referência isso produziu 37 cards de uma vez — e todos os 37 escreviam nos
+// MESMOS dois arquivos (`openapi.yaml`, `dados.md`).
+//
+// O efeito foi uma fila que não anda: cada PR mergeado invalidava os outros 36, porque o
+// ponto de inserção mudava. Medi: de 6 PRs, 2 passavam e 4 conflitavam. Resolver os 21
+// restantes exigiria 21 rodadas de resolver-verificar-mergear, uma por PR.
+//
+// O defeito não é dos agentes nem dos PRs: é do GATE, que fatiou por unidade um trabalho
+// que é por documento. Um card "o `openapi.yaml` não descreve estas 18 lambdas" é um PR só,
+// com uma seção por unidade — e nenhum conflito.
+//
+// O QUE NÃO MUDA: as duas perguntas continuam as mesmas (o documento existe, e menciona a
+// unidade), e a mensagem continua nomeando cada unidade que falta. O que muda é onde o
+// veredito é ancorado.
+func checkDocRequiredAggregate(_ config.Gate, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if cfg == nil || len(cfg.AllRequiredDocs()) == 0 {
+		return Skip, "o projeto não declara `docs.required` — não há documentação contratada"
+	}
+	if graph == nil {
+		return Skip, "sem mapa: não há como saber quais unidades disparam cada documento"
+	}
+
+	// Por DOCUMENTO: quais unidades ele deveria mencionar, e quais ele não menciona.
+	type pending struct {
+		doc         config.DocArtifact
+		missing     bool
+		content     string
+		unmentioned []string
+	}
+	byDoc := map[string]*pending{}
+	order := []string{}
+
+	for _, n := range graph.Nodes {
+		if n.Kind != mapx.KindSpec || n.Code == "" {
+			continue
+		}
+		layer := scan.LayerOfUnit(root, n.ID, cfg)
+		for _, d := range cfg.RequiredFor(layer, n.Code) {
+			pend, visto := byDoc[d.Path]
+			if !visto {
+				pend = &pending{doc: d}
+				b, err := os.ReadFile(filepath.Join(root, d.Path))
+				if err != nil {
+					pend.missing = true
+				} else {
+					pend.content = string(b)
+				}
+				byDoc[d.Path] = pend
+				order = append(order, d.Path)
+			}
+			if !pend.missing && !mentionsUnit(pend.content, n.Code, n.ID) {
+				pend.unmentioned = append(pend.unmentioned, n.Code)
+			}
+		}
+	}
+
+	var msg strings.Builder
+	failed := false
+	for _, path := range order {
+		p := byDoc[path]
+		switch {
+		case p.missing:
+			failed = true
+			fmt.Fprintf(&msg, "`%s` (%s) NÃO EXISTE, e é disparado por %d unidade(s).\n\n",
+				path, p.doc.Kind, len(p.unmentioned)+1)
+		case len(p.unmentioned) > 0:
+			failed = true
+			sort.Strings(p.unmentioned)
+			fmt.Fprintf(&msg, "`%s` (%s) não menciona %d unidade(s): %s.\n\n",
+				path, p.doc.Kind, len(p.unmentioned), strings.Join(p.unmentioned, ", "))
+		}
+	}
+	if !failed {
+		return Pass, ""
+	}
+
+	// A frase que explica o modo de falha, porque ele é silencioso: o arquivo existe, tem
+	// conteúdo real, e quem o lê não tem como saber que falta uma entrada.
+	msg.WriteString("Um contrato que existe e não descreve a unidade é pior que a ausência\n" +
+		"dele: quem consome encontra o documento, confia, e descobre o formato em\n" +
+		"produção.\n\n")
+	// UM CARD POR DOCUMENTO, e o PR também: a alternativa (um card por unidade) fatiou
+	// por unidade um trabalho que é por documento, e produziu 37 PRs que conflitavam
+	// entre si porque todos escreviam no mesmo arquivo.
+	msg.WriteString("Cada documento é declarado em `docs.required` com o `trigger` que o\n" +
+		"aciona. Trate UM documento por vez — as unidades que faltam nele são seções\n" +
+		"do mesmo arquivo, e separá-las em PRs diferentes produz conflito a cada merge.")
+	return Fail, msg.String()
+}
+
 // checkDocRequired confere se as documentações que esta unidade dispara existem e a citam.
 func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
-	// Parte da SPEC, e não do código: a spec é a âncora, tem a camada no header e o código
+	// Parte da SPEC, e não do código: a spec é a âncora, tem a layer no header e o código
 	// de identidade. Partir do código faria a mesma unidade ser cobrada uma vez por
 	// arquivo — três avisos idênticos para uma trinca.
 	if n.Kind != mapx.KindSpec {
@@ -61,7 +158,7 @@ func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *co
 
 	// A CAMADA DA UNIDADE, e não a do nó — e a diferença derruba o gate inteiro.
 	//
-	// O nó da spec tem `layer: spec` (a camada do ARTEFATO); a unidade que ela descreve
+	// O nó da spec tem `layer: spec` (a layer do ARTEFATO); a unidade que ela descreve
 	// mora em `lambdas`. Um `trigger: [lambdas]` comparado contra `n.Layer` nunca casa, e
 	// o gate responde "nenhuma documentação é disparada" para justamente a unidade que
 	// deve duas.
@@ -70,10 +167,10 @@ func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *co
 	// quando não há header. É a mesma função que o `anchors work` usa para informar o
 	// dever — e o comentário dela registra este mesmo defeito, medido antes no
 	// `docs duties`.
-	camada := scan.LayerOfUnit(root, n.ID, cfg)
-	duties := cfg.RequiredFor(camada, n.Code)
+	layer := scan.LayerOfUnit(root, n.ID, cfg)
+	duties := cfg.RequiredFor(layer, n.Code)
 	if len(duties) == 0 {
-		return Skip, fmt.Sprintf("nenhuma documentação é disparada por `%s`", camada)
+		return Skip, fmt.Sprintf("nenhuma documentação é disparada por `%s`", layer)
 	}
 
 	var missing, silent []string
