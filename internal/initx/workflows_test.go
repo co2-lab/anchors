@@ -236,6 +236,10 @@ func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 	// A label ANTIGA continua válida enquanto durar a migração: os pipelines a aceitam
 	// para não abandonar as issues que já a carregam.
 	valida[LabelNeedsUserLegacy] = true
+	// O VÍNCULO DE DESBLOQUEIO, pela mesma razão do `needs-user` acima: ele diz que a
+	// entrega DESTE card destrava outro, e o card continua na coluna onde o trabalho está.
+	// O prefixo é conferido sem o número, que é por card e não se pode enumerar.
+	valida[PrefixoLabelDesbloqueia] = true
 	for _, w := range WorkflowsDoFluxo {
 		b, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {
@@ -847,4 +851,42 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+// O CARD BLOQUEADO por um card de desbloqueio não volta à fila antes da entrega.
+//
+// `needs-user` diz que um card espera uma pessoa. Quando a decisão dessa pessoa GERA
+// TRABALHO, o trabalho vira um card com `anchors:desbloqueia-<n>` — e o bloqueado espera
+// por ELE, não mais pela pessoa.
+//
+// Sem esta guarda o ciclo se repete: alguém remove o `needs-user` achando que decidir
+// bastava, o claim devolve o card, e o agente que o pega encontra o mesmo impasse e escala
+// de novo. Medido: um card do projeto de referência esperava uma decisão sobre qual branch
+// aplicar uma correção, e o `anchors next` continuava re-servindo o mesmo card.
+func TestClaimRespeitaOCardDeDesbloqueio(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-claim.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+
+	if !strings.Contains(s, "anchors:desbloqueia-$n") {
+		t.Error("o claim precisa procurar o card que destrava o candidato")
+	}
+	if !strings.Contains(s, "--state open") {
+		t.Error("só o card de desbloqueio ABERTO bloqueia — fechado significa entregue")
+	}
+	// A mensagem tem de dizer POR QUEM ele espera: "pulando" sozinho manda quem lê o log
+	// procurar a razão no lugar errado.
+	if !strings.Contains(s, "(desbloqueio)") {
+		t.Error("a linha do log deveria distinguir este motivo dos outros dois que pulam card")
+	}
+	// `continue`, não `break`: o card bloqueado é pulado e a busca segue.
+	i := strings.Index(s, "espera a entrega do #$bloqueio")
+	if i < 0 {
+		t.Fatal("a linha que anuncia o bloqueio sumiu")
+	}
+	if !strings.Contains(s[i:min(i+200, len(s))], "continue") {
+		t.Error("o card bloqueado deve ser PULADO, não encerrar a busca")
+	}
 }

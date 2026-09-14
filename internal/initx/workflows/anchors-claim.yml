@@ -171,6 +171,25 @@ jobs:
           while read -r n; do
             [ -n "$n" ] || continue
 
+            # ESPERA UM CARD DE DESBLOQUEIO que ainda não fechou?
+            #
+            # Um card em `needs-user` cuja decisão GEROU TRABALHO tem a label
+            # `anchors:desbloqueia-<n>` num card irmão. Enquanto esse irmão estiver aberto,
+            # o bloqueado não pode voltar à fila — mesmo que alguém remova o `needs-user`
+            # achando que decidir bastava.
+            #
+            # Sem esta guarda, o ciclo se repete: o agente pega o card, encontra o mesmo
+            # impasse, escala de novo. Medido: um card do projeto de referência esperava
+            # uma decisão sobre qual branch aplicar uma correção, e o `anchors next`
+            # continuava re-servindo o mesmo card ao mesmo agente.
+            bloqueio=$(gh issue list --repo "$GH_REPO" --state open \
+              --label "anchors:desbloqueia-$n" --limit 5 \
+              --json number --jq '.[0].number // empty' 2>/dev/null || true)
+            if [ -n "$bloqueio" ]; then
+              echo "· #$n espera a entrega do #$bloqueio (desbloqueio) — pulando"
+              continue
+            fi
+
             # JÁ TEM PR ABERTO? Então alguém já fez este trabalho.
             #
             # O claim serializa quem PEGA o card, e isso não basta: o card é solto ao fim

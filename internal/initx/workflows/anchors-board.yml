@@ -122,7 +122,11 @@ jobs:
                     corpo: (.body // "" | .[0:4000]),
                     labels: [.labels[].name],
                     codigo: (.title | capture("^\\[(?<c>[^]]+)\\]").c? // ""),
-                    estado: ([.labels[].name | select(startswith("anchors:"))] | .[0] // "anchors:to-do"),
+                    estado: ([.labels[].name | select(startswith("anchors:"))
+                              | select(. != "anchors:needs-user")] | .[0] // "anchors:to-do"),
+                    escalado: ([.labels[].name] | any(. == "anchors:needs-user")),
+                    destrava: ([.labels[].name | select(startswith("anchors:desbloqueia-"))
+                                | sub("^anchors:desbloqueia-";"")] | .[0] // ""),
                     dono: ([.comments[].body | select(startswith("anchors-owner:"))] | last // "" |
                            sub("^anchors-owner: *";"") |
                            if test("\\(liberado\\)") then "" else . end),

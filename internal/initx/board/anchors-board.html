@@ -475,7 +475,28 @@ function desenha(d) {
 function desenhaBloqueio(d) {
   const el = document.getElementById("bloqueio");
   if (!el) return;
-  const presos = (d.itens || []).filter((i) => i.estado === "anchors:needs-user");
+  // O CAMPO `escalado`, e não o `estado` — e a diferença é o que fazia o card sumir.
+  //
+  // `needs-user` ACUMULA com o estado do trabalho: um card em revisão que precisa de uma
+  // decisão fica com as DUAS labels. O `estado` do JSON é a primeira label `anchors:`, e
+  // aí o card virava `in-review` e desaparecia desta faixa — ficava visível só na coluna,
+  // indistinguível de um card que está sendo revisado normalmente.
+  //
+  // Medido: o card #311 do projeto de referência esperava uma decisão do usuário e não
+  // aparecia aqui. Ele estava no board, na coluna IN REVIEW, sem nada indicando que
+  // ninguém ia tocá-lo até alguém responder.
+  const presos = (d.itens || []).filter((i) => i.escalado || i.estado === "anchors:needs-user");
+
+  // POR QUEM cada card espera. Um `needs-user` cuja decisão já saiu e virou trabalho tem um
+  // card irmão com `anchors:desbloqueia-<n>` — e enquanto ele não fechar, remover a label
+  // não adianta: o claim continua pulando.
+  //
+  // Sem esta linha, os dois casos se parecem na tela: o card que espera VOCÊ decidir e o
+  // que espera um trabalho já decidido. O primeiro pede sua atenção agora; o segundo, não.
+  const esperaPor = {};
+  for (const i of d.itens || []) {
+    if (i.destrava) esperaPor[i.destrava] = i.numero;
+  }
   if (presos.length === 0) {
     el.hidden = true;
     el.innerHTML = "";
@@ -493,7 +514,11 @@ function desenhaBloqueio(d) {
         <span class="num">#${esc(c.numero)}</span>
         <a href="${esc(c.url)}" target="_blank" rel="noopener">${
           esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</a>
-        ${n > 0 ? `<span class="trava">trava ${n} card${n > 1 ? "s" : ""}</span>` : ""}
+        ${c.estado && c.estado !== "anchors:to-do" && c.estado !== "anchors:needs-user"
+          ? `<span class="trava">parado em ${esc(c.estado.replace("anchors:", ""))}</span>` : ""}
+        ${esperaPor[c.numero]
+          ? `<span class="trava">decidido — espera a entrega do #${esc(esperaPor[c.numero])}</span>`
+          : n > 0 ? `<span class="trava">trava ${n} card${n > 1 ? "s" : ""}</span>` : ""}
       </li>`).join("");
 
   el.innerHTML = `
