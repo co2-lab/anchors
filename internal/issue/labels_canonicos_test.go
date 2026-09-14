@@ -1,6 +1,8 @@
 package issue
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -51,4 +53,79 @@ func TestLabelLegadoNaoEhAplicado(t *testing.T) {
 	if strings.Contains(initx.LabelNeedsUser, "precisa") {
 		t.Errorf("LabelNeedsUser = %q — voltou ao nome em português", initx.LabelNeedsUser)
 	}
+}
+
+// A PROSA QUE ENSINA também não pode citar o nome legado.
+//
+// A régua acima protege o que o código APLICA. Faltava o que a documentação ENSINA — e é
+// por onde o defeito voltou: o `WORKFLOW.md` mandava rodar
+//
+//	gh issue list --label anchors:sob-44
+//
+// e o `BOOTSTRAP.md` dizia que o card ganha `anchors:precisa-do-usuario`. Nenhum dos dois
+// existe num repositório inicializado pela versão atual. Quem seguisse o guia receberia uma
+// lista VAZIA — e a lista vazia não parece erro, parece ausência de trabalho.
+//
+// Foi assim que três cards (#473, #483, #409) ficaram abertos com o trabalho já mergeado:
+// o agente conferia se havia achados sob o card, a busca não devolvia nada, e o `Closes` do
+// segundo card nunca entrou no corpo do PR.
+//
+// As constantes `*Legacy`/`*Antigo` continuam existindo e continuam certas — elas servem
+// para LER cards antigos. O que este teste proíbe é ENSINAR o nome velho a quem cria
+// trabalho novo.
+func TestDocumentacaoNaoEnsinaLabelLegado(t *testing.T) {
+	legados := map[string]string{
+		initx.PrefixoLabelSobAntigo: initx.PrefixoLabelSob,
+		initx.LabelNeedsUserLegacy:  initx.LabelNeedsUser,
+	}
+
+	raiz := repoRoot(t)
+	docs, err := filepath.Glob(filepath.Join(raiz, "*.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(docs) == 0 {
+		t.Fatal("nenhum .md na raiz — o glob quebrou e o teste passaria vazio")
+	}
+
+	for _, doc := range docs {
+		b, err := os.ReadFile(doc)
+		if err != nil {
+			t.Fatal(err)
+		}
+		texto := string(b)
+		for velho, novo := range legados {
+			// O bloco que EXPLICA a migração pode citar o nome velho — é do que ele
+			// trata. O que não pode é a prosa ensinar o velho como se fosse o atual, e a
+			// distinção é a menção ao novo na mesma linha.
+			for _, linha := range strings.Split(texto, "\n") {
+				if strings.Contains(linha, velho) && !strings.Contains(linha, novo) {
+					t.Errorf("%s ensina o label legado %q (o atual é %q):\n\t%s",
+						filepath.Base(doc), velho, novo, strings.TrimSpace(linha))
+				}
+			}
+		}
+	}
+}
+
+// repoRoot sobe até achar o `go.mod`: o teste roda com o diretório do PACOTE como corrente,
+// e os documentos estão na raiz.
+func repoRoot(t *testing.T) string {
+	t.Helper()
+	dir, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 10; i++ {
+		if _, err := os.Stat(filepath.Join(dir, "go.mod")); err == nil {
+			return dir
+		}
+		pai := filepath.Dir(dir)
+		if pai == dir {
+			break
+		}
+		dir = pai
+	}
+	t.Fatal("não achei o go.mod subindo a partir do pacote")
+	return ""
 }

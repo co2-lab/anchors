@@ -5,8 +5,8 @@ generated_by: 0.1.100
 nodes:
     - id: BOOTSTRAP.md
       kind: guide
-      rev: 2682c1c3f162
-      updated_at: "2026-09-09"
+      rev: 912ca7253b9f
+      updated_at: "2026-09-14"
       layer: doutrina
       tags:
         - doutrina
@@ -46,8 +46,8 @@ nodes:
         - guide
     - id: PLANNING.md
       kind: doc
-      rev: e05a2b9d6e2a
-      updated_at: "2026-08-30"
+      rev: cdeb86d75463
+      updated_at: "2026-09-14"
       code: FNDTN
       layer: doc
       tags:
@@ -121,8 +121,8 @@ nodes:
         - guide
     - id: WORKFLOW.md
       kind: guide
-      rev: bdfba68debe4
-      updated_at: "2026-08-31"
+      rev: 21d16f8be3d1
+      updated_at: "2026-09-14"
       layer: doutrina
       tags:
         - doutrina
@@ -304,7 +304,7 @@ nodes:
     - id: cmd/anchors/escalate.go
       kind: code
       rev: b39eaa623077
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-14"
       layer: comando
       tags:
         - cli
@@ -646,7 +646,7 @@ nodes:
     - id: cmd/anchors/pr_body.go
       kind: code
       rev: d2198f9f0733
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-14"
       layer: comando
       tags:
         - cli
@@ -2537,8 +2537,8 @@ nodes:
         - test
     - id: internal/issue/labels_canonicos_test.go
       kind: test
-      rev: a83ae7616cea
-      updated_at: "2026-09-10"
+      rev: 5aad157e89af
+      updated_at: "2026-09-14"
       layer: teste
       tags:
         - test
