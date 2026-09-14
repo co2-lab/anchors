@@ -191,6 +191,48 @@ jobs:
           #
           # O segundo é o perigoso: falha silenciosamente para o lado errado — o PR parece
           # ter avançado um card, e o card de verdade fica parado.
+          # TODAS as linhas `Closes`, e não só a primeira.
+          #
+          # A conferência abaixo olha o `$card` — o PRIMEIRO número declarado. Um PR que
+          # fecha vários cards traz uma linha para cada, e as demais passavam sem ninguém
+          # olhar.
+          #
+          # MEDIDO: um PR consolidando 19 trabalhos trouxe 19 linhas `Closes`, e todos os 19
+          # números eram de PULL REQUESTS, não dos cards. No GitHub um PR também é uma issue,
+          # então `gh issue view` aceita o número e responde — o que salva é ele não ter a
+          # label do Anchors. A conferência teria pego, se tivesse olhado além da primeira
+          # linha. Dezoito cards ficaram abertos com o trabalho entregue.
+          outros=$(printf '%s\n' "$corpo" \
+            | sed 's/\r$//' \
+            | awk '
+                /^[[:space:]]*```/ { emBloco = !emBloco; next }
+                emBloco { next }
+                /^[[:space:]]{4}/ { next }
+                { print }
+              ' \
+            | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+' \
+            | grep -oE '[0-9]+' | tail -n +2 || true)
+          naoSaoCards=""
+          for o in $outros; do
+            t=$(gh issue view "$o" --json labels \
+              --jq "[.labels[].name] | index(\"$LABEL\") // empty" 2>/dev/null || true)
+            [ -z "$t" ] && naoSaoCards="$naoSaoCards #$o"
+          done
+          if [ -n "$naoSaoCards" ]; then
+            echo "::warning::o corpo declara$naoSaoCards, que não são cards do Anchors (sem a label \`$LABEL\`). Um número de PULL REQUEST aqui não fecha card nenhum — confira com \`anchors pr-body\`."
+            {
+              echo "### ⚠ números declarados que não são cards"
+              echo ""
+              echo "O corpo declara$naoSaoCards — nenhum deles tem a label \`$LABEL\`."
+              echo ""
+              echo "No GitHub um pull request também é uma issue, então declarar o número de um"
+              echo "PR aqui não dá erro: o merge fecha o PR, e o card que devia fechar fica"
+              echo "aberto com o trabalho já entregue."
+              echo ""
+              echo "\`anchors pr-body --cards <n>,<n>\` escreve as linhas a partir dos CARDS."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
           if [ -n "$card" ]; then
             temLabel=$(gh issue view "$card" --json labels \
               --jq "[.labels[].name] | index(\"$LABEL\") // empty" 2>/dev/null || true)
