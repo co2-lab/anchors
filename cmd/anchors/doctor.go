@@ -299,13 +299,20 @@ func createStateLabels(cfg *config.Config) error {
 		// VERMELHO, e é o único: o card escalado é o que ninguém no fluxo destrava, e
 		// precisa saltar num board cheio de cinza e azul.
 		initx.LabelNeedsUser: "d73a4a",
+		// ÂMBAR: o opt-out da trava de estado. Nem alarme (o card não está travado) nem
+		// fluxo normal (alguém autorizou mexer nele à mão) — a cor de atenção é a que
+		// separa os dois.
+		initx.LabelManual: "fbca04",
 	}
 	var criadas int
 	// A label de ESCALAÇÃO entra junto: sem ela criada, o pipeline que escala um card
 	// falha ao aplicá-la — e falha em silêncio, porque `gh issue edit` com label
 	// inexistente não é erro fatal. O card ficaria travado sem o sinalizador que diz por
 	// quê.
-	todas := append([]string{cfg.Workflow.Labels[0], initx.LabelNeedsUser},
+	// O OPT-OUT entra pelo mesmo motivo do `needs-user` acima: sem ele criado, quem quiser
+	// mover um card à mão não consegue aplicá-lo, e a trava de estado vira uma parede sem
+	// porta. `gh issue edit` com label inexistente falha em silêncio.
+	todas := append([]string{cfg.Workflow.Labels[0], initx.LabelNeedsUser, initx.LabelManual},
 		initx.WorkStates...)
 	for _, e := range todas {
 		c := cor[e]

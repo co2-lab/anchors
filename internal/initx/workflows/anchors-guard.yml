@@ -1,0 +1,157 @@
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
+# Anchors — o CARD SE MOVE PELO FATO, e a trava é o que garante isso
+#
+# O board não é um quadro que alguém arrasta: cada estado é a consequência de um FATO
+# verificável. `in-progress` porque o claim entregou. `ready-to-review` porque os checks
+# passaram. `ready-to-test` porque o PR mergeou. Fechado porque a linha `Closes #N` do PR
+# foi executada pelo GitHub.
+#
+# O QUE ACONTECE SEM A TRAVA, medido no projeto de referência:
+#
+# Um agente fechou o card #432 às 15:47 e abriu o PR às 15:48 — um minuto depois. O mesmo
+# padrão em oito PRs seguidos. O efeito não aparece no card: aparece na FILA.
+#
+#   · o card sai de `ready-to-review` antes de alguém revisar;
+#   · o claim procura revisão PRIMEIRO (a ordem da direita para a esquerda) e não acha nada;
+#   · então entrega trabalho NOVO, e o PR fica esperando.
+#
+# Resultado: 25 PRs verdes esperando revisão com ZERO cards em `ready-to-review`. O board
+# dizia que não havia nada para revisar enquanto 25 trabalhos esperavam.
+#
+# POR QUE REVERTER E NÃO SÓ AVISAR
+#
+# Avisar já era o que acontecia — o histórico do card registra tudo, e ninguém olhou. Um
+# aviso que ninguém lê tem o mesmo efeito de não existir, e foi assim que os 25 PRs
+# acumularam.
+#
+# O OPT-OUT é a label `anchors:manual`. Ela existe porque há casos legítimos (mover um card
+# para `ready-to-test` depois de um teste manual, por exemplo), e porque uma trava sem
+# escape transforma percalço em trabalho parado. O custo dela — pôr a label antes de mexer —
+# É O PONTO: mover um card é raro, e o que a trava impede é o movimento que ninguém pensou
+# duas vezes antes de fazer.
+name: anchors · trava de estado
+
+on:
+  issues:
+    types: [closed, reopened, labeled, unlabeled]
+  # À MÃO: uma trava sem escape transforma percalço em trabalho parado sem remédio. Aqui o
+  # dispatch serve para conferir a configuração sem precisar mexer num card de verdade.
+  workflow_dispatch:
+
+concurrency:
+  # SERIAL por card: uma reversão escreve label, e duas execuções sobre o mesmo card
+  # brigariam entre si — o `unlabeled` que a própria reversão dispara chegaria antes de a
+  # primeira terminar.
+  group: anchors-guard-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  reverter:
+    runs-on: ubuntu-latest
+    # O PRÓPRIO PIPELINE não se vigia: ele move card o tempo todo, e reagir aos próprios
+    # eventos seria um laço. Esta é a distinção que o `actor` permite — e a única que ele
+    # permite, porque os agentes usam a mesma conta que a pessoa.
+    if: github.event.sender.login != 'github-actions[bot]'
+    steps:
+      - name: Desfazer a mudança que não veio do fluxo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          LABEL: anchors
+          N: ${{ github.event.issue.number }}
+          ACAO: ${{ github.event.action }}
+          LABEL_MEXIDA: ${{ github.event.label.name }}
+          QUEM: ${{ github.event.sender.login }}
+        run: |
+          set -euo pipefail
+
+          # É CARD DO ANCHORS? Uma issue comum do projeto não tem nada a ver com esta
+          # trava, e reverter uma seria pior que o defeito que ela evita.
+          #
+          # `--label "$LABEL"` e não uma leitura das labels da issue: é o mesmo filtro que
+          # os outros pipelines usam, e a régua `TestPipelinesSoTocamCardsDoAnchors` o
+          # confronta — duas formas de perguntar a mesma coisa divergiriam na primeira vez
+          # que uma delas mudasse.
+          if ! gh issue list --repo "$GH_REPO" --state all --label "$LABEL" \
+               --limit 200 --json number --jq '[.[].number] | index('"$N"')' | grep -qv null; then
+            echo "#$N não é card do Anchors — fora da alçada desta trava"
+            exit 0
+          fi
+
+          # O OPT-OUT. A label diz "este card sou eu que movo", e é um ato deliberado que
+          # fica no card, à vista, até alguém removê-la.
+          if gh issue view "$N" --repo "$GH_REPO" --json labels \
+             --jq '[.labels[].name] | any(. == "anchors:manual")' | grep -q true; then
+            echo "#$N tem \`anchors:manual\` — movimento manual autorizado"
+            exit 0
+          fi
+
+          # SÓ OS ESTADOS DA ALÇADA DO ANCHORS, e a lista para em `ready-to-test`.
+          #
+          # Duas exclusões, por razões diferentes:
+          #
+          #   · `sob-<n>`, `desbloqueia-<n>` e `needs-user` são postas à mão DE PROPÓSITO —
+          #     o `escalate` e o `unblock` fazem isso pela CLI, que autentica como a pessoa.
+          #     Revertê-las desfaria o trabalho dos próprios comandos do Anchors.
+          #
+          #   · `in-test`, `ready-to-release` e `production` são dos PIPELINES DE ENTREGA do
+          #     projeto. O Anchors escreve até `ready-to-test` e larga — o que vem depois é
+          #     de outro fluxo, e reverter ali seria desfazer trabalho que não é dele.
+          if [ "$ACAO" = "labeled" ] || [ "$ACAO" = "unlabeled" ]; then
+            case "$LABEL_MEXIDA" in
+              anchors:to-do|anchors:in-progress|anchors:ready-to-review|anchors:in-review|anchors:ready-to-test)
+                ;;
+              *)
+                echo "#$N: \`$LABEL_MEXIDA\` não é label de estado — fora da alçada"
+                exit 0
+                ;;
+            esac
+          fi
+
+          # A REVERSÃO, e cada caso tem o seu inverso.
+          case "$ACAO" in
+            closed)
+              # Quem fecha é o MERGE, pela linha `Closes #N`. Um fechamento manual tira o
+              # card da fila antes de o trabalho ser aceito.
+              gh issue reopen "$N" --repo "$GH_REPO" >/dev/null
+              motivo="fechado à mão"
+              inverso="reaberto"
+              ;;
+            reopened)
+              gh issue close "$N" --repo "$GH_REPO" >/dev/null
+              motivo="reaberto à mão"
+              inverso="fechado de novo"
+              ;;
+            labeled)
+              gh issue edit "$N" --repo "$GH_REPO" --remove-label "$LABEL_MEXIDA" >/dev/null
+              motivo="a label \`$LABEL_MEXIDA\` foi posta à mão"
+              inverso="removida"
+              ;;
+            unlabeled)
+              gh issue edit "$N" --repo "$GH_REPO" --add-label "$LABEL_MEXIDA" >/dev/null
+              motivo="a label \`$LABEL_MEXIDA\` foi removida à mão"
+              inverso="devolvida"
+              ;;
+            *)
+              exit 0
+              ;;
+          esac
+
+          # O COMENTÁRIO é o que transforma a reversão em ensinamento. Sem ele, quem mexeu
+          # vê o card voltar sozinho e conclui que o pipeline está quebrado.
+          gh issue comment "$N" --repo "$GH_REPO" --body "🔒 **Revertido: $motivo** (por \`$QUEM\`), e o card foi $inverso.
+
+          O card se move pelo FATO, não à mão: \`in-progress\` porque o claim entregou, \`ready-to-review\` porque os checks passaram, \`ready-to-test\` porque o PR mergeou, fechado porque a linha \`Closes #N\` do PR foi executada.
+
+          **O que isto evita:** um card fechado antes do merge sai de \`ready-to-review\` sem ser revisado. O claim procura revisão primeiro e não acha nada — então entrega trabalho novo, e o PR fica esperando. Medido: 25 PRs verdes acumulados com zero cards na fila de revisão.
+
+          **Se o movimento era deliberado**, ponha a label \`anchors:manual\` no card e refaça. Ela é o opt-out, e fica visível para quem vier depois." >/dev/null
+
+          echo "· #$N REVERTIDO: $motivo → $inverso"
