@@ -1,7 +1,7 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
 version: 2
-generated_by: 0.1.95
+generated_by: 0.1.97
 nodes:
     - id: BOOTSTRAP.md
       kind: guide
@@ -234,7 +234,7 @@ nodes:
         - comando
     - id: cmd/anchors/decided.go
       kind: code
-      rev: 1e66ad86a43c
+      rev: 2176b5ccc27c
       updated_at: "2026-09-10"
       layer: comando
       tags:
@@ -2484,7 +2484,7 @@ nodes:
         - test
     - id: internal/initx/workflows.go
       kind: code
-      rev: ad859cf2bc7c
+      rev: a69aca4a3792
       updated_at: "2026-09-14"
       layer: infra
       tags:
@@ -2492,7 +2492,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 3756327a40dc
+      rev: 79cae0bdaca2
       updated_at: "2026-09-14"
       layer: teste
       tags:
