@@ -1,7 +1,7 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
 version: 2
-generated_by: 0.1.98
+generated_by: 0.1.99
 nodes:
     - id: BOOTSTRAP.md
       kind: guide
@@ -795,7 +795,7 @@ nodes:
         - test
     - id: cmd/anchors/task_status.go
       kind: code
-      rev: 0a2e820a4618
+      rev: 8ca5180e2cff
       updated_at: "2026-09-10"
       layer: comando
       tags:
@@ -803,7 +803,7 @@ nodes:
         - comando
     - id: cmd/anchors/task_status_render.go
       kind: code
-      rev: 44b3189f0d6d
+      rev: 1d5a0af85b10
       updated_at: "2026-09-10"
       layer: comando
       tags:
@@ -811,11 +811,18 @@ nodes:
         - comando
     - id: cmd/anchors/task_status_test.go
       kind: test
-      rev: 2a973e9c1d50
+      rev: 14ba21d58729
       updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
+    - id: cmd/anchors/telemetry.go
+      kind: code
+      rev: e9f6a25a9b89
+      layer: comando
+      tags:
+        - cli
+        - comando
     - id: cmd/anchors/unblock.go
       kind: code
       rev: 6e4ebe2ee7c7
@@ -1013,7 +1020,7 @@ nodes:
         - config
     - id: internal/config/config.go
       kind: code
-      rev: a3b570a76fd2
+      rev: ffb2af61bfd0
       updated_at: "2026-09-11"
       layer: config
       tags:
@@ -1338,7 +1345,7 @@ nodes:
     - id: internal/gate/doc_required.go
       kind: code
       rev: a263c27775b7
-      updated_at: "2026-09-11"
+      updated_at: "2026-09-14"
       layer: gate
       tags:
         - regra
@@ -1346,7 +1353,7 @@ nodes:
     - id: internal/gate/doc_required_test.go
       kind: test
       rev: 67a21bb4b3ef
-      updated_at: "2026-09-11"
+      updated_at: "2026-09-14"
       layer: teste
       tags:
         - test
@@ -1534,7 +1541,7 @@ nodes:
     - id: internal/gate/internal_checks.go
       kind: code
       rev: d44c8efb9628
-      updated_at: "2026-09-11"
+      updated_at: "2026-09-14"
       layer: gate
       tags:
         - regra
@@ -2347,7 +2354,7 @@ nodes:
     - id: internal/initx/default_gates.go
       kind: code
       rev: 09ef40713791
-      updated_at: "2026-09-11"
+      updated_at: "2026-09-14"
       layer: infra
       tags:
         - infra
@@ -2917,6 +2924,18 @@ nodes:
       kind: test
       rev: 865240e752ab
       updated_at: "2026-09-10"
+      layer: teste
+      tags:
+        - test
+    - id: internal/telemetry/config_test.go
+      kind: test
+      rev: d528c74ac811
+      layer: teste
+      tags:
+        - test
+    - id: internal/telemetry/otlp_test.go
+      kind: test
+      rev: 8094902b04bf
       layer: teste
       tags:
         - test

@@ -32,7 +32,7 @@
 # escape transforma percalço em trabalho parado. O custo dela — pôr a label antes de mexer —
 # É O PONTO: mover um card é raro, e o que a trava impede é o movimento que ninguém pensou
 # duas vezes antes de fazer.
-name: anchors · trava de estado
+name: anchors · trava e histórico de estado
 
 on:
   issues:
@@ -53,6 +53,66 @@ permissions:
   issues: write
 
 jobs:
+  # O HISTÓRICO: quanto tempo o card passou em cada coluna.
+  #
+  # Quem registra é este pipeline e não o que MOVE, e a razão é cobertura: o `claim` move
+  # para `in-progress`, o `pr-checks` para `ready-to-review` e `ready-to-test`, e uma pessoa
+  # pode mover à mão. Instrumentar cada um deles deixaria buracos no primeiro que fosse
+  # esquecido — aqui o evento é o mesmo `labeled` que a trava já observa.
+  #
+  # A ALTERNATIVA descartada: reconstruir o histórico do timeline do GitHub a cada
+  # publicação do board. Medido: 296 cards × 0,9s = ~4,5 minutos e 296 chamadas de API, num
+  # pipeline que roda a cada push. Aqui o dado NASCE no ato, e custa uma linha.
+  #
+  # O QUE ISSO NÃO FAZ: o passado. Cards movidos antes deste pipeline existir não têm
+  # registro — e o Gantt os mostra com `criado`→`fechado`, sem detalhe por coluna. Colher o
+  # passado é possível (o timeline tem tudo), e é trabalho de uma vez só, não deste laço.
+  historico:
+    runs-on: ubuntu-latest
+    if: github.event.action == 'labeled' && startsWith(github.event.label.name, 'anchors:')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # O histórico é COMMITADO: ele é o dado do roadmap, e precisa sobreviver à
+          # máquina descartável do runner.
+          ref: ${{ github.event.repository.default_branch }}
+      - name: Registrar a entrada no estado
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          N: ${{ github.event.issue.number }}
+          ESTADO: ${{ github.event.label.name }}
+          QUANDO: ${{ github.event.issue.updated_at }}
+        run: |
+          set -euo pipefail
+
+          # SÓ AS LABELS DE ESTADO. `needs-user`, `sob-<n>` e `manual` não são colunas — um
+          # card escalado continua onde o trabalho parou, e registrar isso como transição
+          # inventaria uma coluna que não existe.
+          case "$ESTADO" in
+            anchors:to-do|anchors:in-progress|anchors:ready-to-review|anchors:in-review|anchors:ready-to-test|anchors:in-test|anchors:ready-to-release|anchors:production) ;;
+            *) echo "$ESTADO não é coluna — nada a registrar"; exit 0 ;;
+          esac
+
+          mkdir -p .anchors-historico
+          arq=".anchors-historico/estados.jsonl"
+
+          # JSONL e não JSON: o arquivo só CRESCE, uma linha por transição. Um JSON exigiria
+          # ler, parsear e reescrever o todo a cada evento — e dois eventos simultâneos
+          # perderiam um. Acrescentar uma linha é atômico o bastante.
+          printf '{"card":%s,"estado":"%s","em":"%s"}\n' "$N" "$ESTADO" "$QUANDO" >> "$arq"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$arq"
+          git diff --cached --quiet && { echo "nada novo"; exit 0; }
+          git commit -q -m "chore(histórico): #$N → ${ESTADO#anchors:}"
+
+          # `--rebase` e não `--force`: outro evento pode ter commitado no meio. O arquivo
+          # só cresce, então o rebase nunca conflita de verdade.
+          git pull -q --rebase origin "${{ github.event.repository.default_branch }}" || true
+          git push -q origin HEAD:"${{ github.event.repository.default_branch }}" || \
+            echo "⚠ não consegui gravar o histórico — o board segue sem o tempo por coluna"
+
   reverter:
     runs-on: ubuntu-latest
     # O PRÓPRIO PIPELINE não se vigia: ele move card o tempo todo, e reagir aos próprios

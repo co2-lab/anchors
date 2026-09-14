@@ -110,14 +110,21 @@ jobs:
           # O corpo é CORTADO em 4000 caracteres: um board com 500 cards de corpo inteiro
           # vira um JSON de megabytes que trava a página no primeiro carregamento — e a
           # modal é um resumo, não o lugar de ler uma issue inteira.
-          gh issue list --state open --label "$LABEL" --limit 500 \
-            --json number,title,url,labels,comments,updatedAt,body,createdAt,author \
+          # `--state all` e não só `open`: o ROADMAP precisa do que já foi entregue — é
+          # dele que saem as datas REAIS (criado→fechado) da parte esquerda do Gantt. As
+          # colunas do board continuam mostrando só os abertos; quem filtra é a página.
+          #
+          # `closedAt` é o que separa "entregue" de "em andamento" sem depender de label:
+          # um card fechado tem data, um aberto não.
+          gh issue list --state all --label "$LABEL" --limit 500 \
+            --json number,title,url,labels,comments,updatedAt,body,createdAt,closedAt,author \
             --jq '[.[] | {
                     numero: .number,
                     titulo: .title,
                     url: .url,
                     atualizado: .updatedAt,
                     criado: .createdAt,
+                    fechado: (.closedAt // ""),
                     autor: (.author.login // ""),
                     corpo: (.body // "" | .[0:4000]),
                     labels: [.labels[].name],

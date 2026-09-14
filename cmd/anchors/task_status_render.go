@@ -44,7 +44,7 @@ func renderTaskStatus(e taskState) string {
 	// --- 2. o veredito ---
 	b.WriteString("\n")
 	if e.PR != nil {
-		b.WriteString(fmt.Sprintf("PR    #%d %s", e.PR.Number, strings.ToLower(e.PR.Estado)))
+		b.WriteString(fmt.Sprintf("PR    #%d %s", e.PR.Number, strings.ToLower(e.PR.State)))
 		if e.PR.Total > 0 {
 			b.WriteString(" · checks: " + describeChecks(e.PR.Checks, e.PR.Total))
 		} else {
@@ -166,16 +166,16 @@ func nextStep(e taskState) []string {
 	case e.PR == nil && e.Card != nil && inReview(e.Card.State):
 		ps = append(ps, fmt.Sprintf("o card #%d está em revisão e este branch não tem PR — "+
 			"o PR dele está noutro branch; `gh pr list --search %d` acha", e.Card.Number, e.Card.Number))
-	case e.PR != nil && e.PR.Estado == "OPEN" && e.PR.Total == 0:
+	case e.PR != nil && e.PR.State == "OPEN" && e.PR.Total == 0:
 		ps = append(ps, fmt.Sprintf("nenhum check rodou no PR #%d — não confie no verde que não existe; "+
 			"dispare (`gh workflow run`) e espere", e.PR.Number))
-	case e.PR != nil && e.PR.Estado == "OPEN" && e.PR.Checks["em curso"] > 0:
+	case e.PR != nil && e.PR.State == "OPEN" && e.PR.Checks["em curso"] > 0:
 		ps = append(ps, fmt.Sprintf("o CI do PR #%d está rodando — `gh pr checks %d --watch` "+
 			"BLOQUEIA até o veredito (não encerre o turno aqui)", e.PR.Number, e.PR.Number))
-	case e.PR != nil && e.PR.Estado == "OPEN" && e.PR.Checks["reprovou"] > 0:
+	case e.PR != nil && e.PR.State == "OPEN" && e.PR.Checks["reprovou"] > 0:
 		ps = append(ps, fmt.Sprintf("%d check(s) reprovaram no PR #%d — é trabalho DESTE card: "+
 			"conserte, empurre e espere de novo", e.PR.Checks["reprovou"], e.PR.Number))
-	case e.PR != nil && e.PR.Estado == "OPEN":
+	case e.PR != nil && e.PR.State == "OPEN":
 		ps = append(ps, fmt.Sprintf("os checks do PR #%d passaram — falta a revisão", e.PR.Number))
 	}
 
