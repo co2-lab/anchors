@@ -119,33 +119,33 @@ jobs:
           gh issue list --state all --label "$LABEL" --limit 500 \
             --json number,title,url,labels,comments,updatedAt,body,createdAt,closedAt,author \
             --jq '[.[] | {
-                    numero: .number,
-                    titulo: .title,
+                    number: .number,
+                    title: .title,
                     url: .url,
-                    atualizado: .updatedAt,
-                    criado: .createdAt,
-                    fechado: (.closedAt // ""),
-                    autor: (.author.login // ""),
-                    corpo: (.body // "" | .[0:4000]),
+                    updated: .updatedAt,
+                    created: .createdAt,
+                    closed: (.closedAt // ""),
+                    author: (.author.login // ""),
+                    body: (.body // "" | .[0:4000]),
                     labels: [.labels[].name],
-                    codigo: (.title | capture("^\\[(?<c>[^]]+)\\]").c? // ""),
+                    code: (.title | capture("^\\[(?<c>[^]]+)\\]").c? // ""),
                     # O CAMINHO que o achado cita: `[gate] Violação @ caminho/Arquivo.spec.md`.
                     # É por ele que o achado se liga à unidade — ver o passo "afiliar".
-                    alvo: (.title | capture("@\\s+(?<p>[^ :]+)").p? // ""),
-                    estado: ([.labels[].name | select(startswith("anchors:"))
+                    target: (.title | capture("@\\s+(?<p>[^ :]+)").p? // ""),
+                    state: ([.labels[].name | select(startswith("anchors:"))
                               | select(. != "anchors:needs-user")] | .[0] // "anchors:to-do"),
-                    escalado: ([.labels[].name] | any(. == "anchors:needs-user")),
-                    vinculo: ([.labels[].name
+                    escalated: ([.labels[].name] | any(. == "anchors:needs-user")),
+                    linkedTo: ([.labels[].name
                                | select(startswith("anchors:under-") or startswith("anchors:desbloqueia-"))
                                | sub("^anchors:(under|desbloqueia)-";"")] | .[0] // ""),
-                    destrava: ([.labels[].name | select(startswith("anchors:desbloqueia-"))
+                    unblocks: ([.labels[].name | select(startswith("anchors:desbloqueia-"))
                                 | sub("^anchors:desbloqueia-";"")] | .[0] // ""),
-                    dono: ([.comments[].body | select(startswith("anchors-owner:"))] | last // "" |
+                    owner: ([.comments[].body | select(startswith("anchors-owner:"))] | last // "" |
                            sub("^anchors-owner: *";"") |
                            if test("\\(liberado\\)") then "" else . end),
-                    posse: [.comments[].body | select(startswith("anchors-owner:")) |
+                    ownership: [.comments[].body | select(startswith("anchors-owner:")) |
                             sub("^anchors-owner: *";"")],
-                    comentarios: (.comments | length)
+                    comments: (.comments | length)
                   }]' > _board/board.json
 
           # PENDENTE agora, ou RESOLVIDO um dia? — e o board contava as duas coisas junto.
@@ -176,7 +176,7 @@ jobs:
           # MEDIDO: o #400 do projeto de referência ("nenhum workflow roda `pnpm typecheck`")
           # nunca foi respondido e apareceu como já-respondido. O sinal invertido no caso
           # mais frequente é pior que não ter sinal: ensina a ignorar a cor.
-          for n in $(jq -r '.[] | select(.escalado) | .numero' _board/board.json); do
+          for n in $(jq -r '.[] | select(.escalated) | .number' _board/board.json); do
             abertos=0
             existem=0
             for pref in under desbloqueia; do
@@ -194,8 +194,8 @@ jobs:
             else
               esperando=true;  msg="espera uma decisão — nenhum trabalho foi aberto sob ele"
             fi
-            jq --argjson n "$n" --argjson e "$esperando" --argjson a "$abertos" \
-              'map(if .numero == $n then . + {esperando: $e, sob_abertos: $a} else . end)' \
+            jq --argjson n "$n" --argjson e "$waiting" --argjson a "$abertos" \
+              'map(if .number == $n then . + {esperando: $e, sob_abertos: $a} else . end)' \
               _board/board.json > _board/board.tmp && mv _board/board.tmp _board/board.json
             echo "· #$n $msg"
           done
@@ -209,8 +209,8 @@ jobs:
           anchors code list --json > /tmp/codigos.json 2>/dev/null || echo '[]' > /tmp/codigos.json
           jq --slurpfile cod /tmp/codigos.json \
             '[.[] as $i | $i + {
-                needs: ([$cod[0][] | select(.code == $i.codigo) | .needs // []] | first // []),
-                parent: ([$cod[0][] | select(.code == $i.codigo) | .parent // ""] | first // "")
+                needs: ([$cod[0][] | select(.code == $i.code) | .needs // []] | first // []),
+                parent: ([$cod[0][] | select(.code == $i.code) | .parent // ""] | first // "")
               }]' _board/board.json > /tmp/comneeds.json
           mv /tmp/comneeds.json _board/board.json
 
@@ -227,7 +227,7 @@ jobs:
             while IFS=$'\t' read -r cod resto; do
               titulo=$(echo "$resto" | sed -E 's/ *\(depende d[eao][^)]*\) *//I')
               deps=$(echo "$resto" | grep -oE '[A-Z0-9]{4,5}-F[0-9]{2}' | jq -R . | jq -sc '.')
-              jq -nc --arg c "$cod" --arg t "$titulo" --argjson d "${deps:-[]}" \
+              jq -nc --arg c "$cod" --arg t "$title" --argjson d "${deps:-[]}" \
                 '{codigo:$c, titulo:$t, needs:$d, parent:($c | split("-")[0])}'
             done | jq -s '.' > /tmp/fases.json || echo '[]' > /tmp/fases.json
 
@@ -257,18 +257,50 @@ jobs:
           g = yaml.safe_load(io.open('anchors.graph.yaml', encoding='utf-8')) or {}
           porCaminho = {}
           for n in g.get('nodes', []):
-              c = n.get('code') or n.get('codigo') or ''
+              c = n.get('code') or n.get('code') or ''
               if re.fullmatch(r'[A-Z]{5}', c):
                   porCaminho[n.get('id', '')] = c
           itens = json.load(io.open('_board/board.json', encoding='utf-8'))
+          porNumero = {i.get('number'): i for i in itens}
+
+          def porCadeia(i, vistos=None):
+              """A unidade no fim da cadeia de vínculos — ou None."""
+              vistos = vistos or set()
+              if i.get('number') in vistos:   # ciclo de vínculo não trava
+                  return None
+              vistos.add(i.get('number'))
+              if re.fullmatch(r'[A-Z]{5}', i.get('code') or ''):
+                  return i['code']
+              if i.get('parent'):
+                  return i['parent']
+              v = str(i.get('linkedTo') or '')
+              if v.isdigit() and int(v) in porNumero:
+                  return porCadeia(porNumero[int(v)], vistos)
+              return None
+
           n = 0
           for i in itens:
               # só o que NÃO tem código de unidade próprio: quem tem, já está na árvore
-              if re.fullmatch(r'[A-Z]{5}', i.get('codigo') or ''):
+              if re.fullmatch(r'[A-Z]{5}', i.get('code') or ''):
                   continue
               if i.get('parent'):
                   continue
-              c = porCaminho.get((i.get('alvo') or '').rstrip(':.,'))
+              c = porCaminho.get((i.get('target') or '').rstrip(':.,'))
+              if c:
+                  i['parent'] = c
+                  n += 1
+                  continue
+              # SEGUNDA PORTA: o card de ESCALAÇÃO não traz `@ caminho` no título — o
+              # `escalate` escreve "[decisão] A revisão do card #311 achou…". O que ele traz
+              # é a label `under-<n>`, que o pipeline já extraiu como `linkedTo`.
+              #
+              # MEDIDO: dos 58 achados que sobravam na raiz, 25 são escalações com vínculo
+              # para um card de unidade. Sem esta porta, toda decisão pendente fica solta —
+              # e são exatamente as que mais precisam ser achadas.
+              # A CADEIA, e não um salto só. Um achado pode pender de outro achado, que
+              # por fim pende da unidade: `#498 → #410 (doc-required) → ALFDL`. Parar no
+              # primeiro salto deixava seis cards na raiz por um elo intermediário.
+              c = porCadeia(i)
               if c:
                   i['parent'] = c
                   n += 1
@@ -281,9 +313,9 @@ jobs:
           jq -n --slurpfile itens _board/board.json --slurpfile fases /tmp/fases.json \
                 --arg quando "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
                 --arg repo "$GH_REPO" \
-                '{quando: $quando, repo: $repo, fases: ($fases[0] // []), itens: $itens[0]}' > _board/dados.json
+                '{quando: $takenAt, repo: $repo, fases: ($phases[0] // []), itens: $items[0]}' > _board/dados.json
           mv _board/dados.json _board/board.json
-          echo "$(jq '.itens | length' _board/board.json) card(s) no board"
+          echo "$(jq '.items | length' _board/board.json) card(s) no board"
 
       - name: Montar a página
         run: cp .github/anchors-board.html _board/index.html

@@ -602,7 +602,7 @@ func TestBoardNaoDerrubaCardPeloFiltroDeDono(t *testing.T) {
 		t.Fatal(err)
 	}
 	texto := string(b)
-	i := strings.Index(texto, "dono:")
+	i := strings.Index(texto, "owner:")
 	if i < 0 {
 		t.Fatal("o board deixou de extrair o dono — se isso é intencional, remova este teste")
 	}
@@ -1382,5 +1382,45 @@ func TestPipelineDiagnosticaOConflitoDoMapa(t *testing.T) {
 	if !strings.Contains(texto, "anchors install-hooks") {
 		t.Error("o aviso deve cobrir o caso de o driver NÃO estar instalado no clone, que " +
 			"é quando o rebase pede resolução manual e a pessoa desiste")
+	}
+}
+
+// O `board.json` É CONTRATO, e contrato do Anchors é em inglês.
+//
+// Os 18 campos nasceram em português — `numero`, `titulo`, `estado` — enquanto o resto do
+// produto é inglês: as flags (`--about`, `--card`), as labels (`anchors:needs-user`), os
+// identificadores Go (a régua `TestNenhumIdentificadorEmPortugues` os cobra).
+//
+// O JSON é o que um projeto de terceiro lê para construir a própria visão. Um contrato meio
+// em cada idioma obriga quem o consome a saber os dois — e a decidir, campo a campo, qual
+// esperar.
+//
+// A janela foi agora porque o Anchors ainda roda num projeto só. Depois, cada board
+// publicado seria uma migração.
+func TestBoardJSONEmIngles(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-board.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	// Os nomes que existiam antes. Se um voltar, volta como campo do contrato.
+	for _, velho := range []string{
+		"numero", "titulo", "atualizado", "criado", "fechado", "autor", "corpo",
+		"codigo", "alvo", "estado", "escalado", "vinculo", "destrava", "dono",
+		"posse", "comentarios", "esperando", "fases", "itens", "quando",
+	} {
+		// Só a CHAVE do objeto — a palavra pode aparecer em prosa de comentário, e
+		// proibir isso tornaria impossível explicar a migração.
+		if regexp.MustCompile(`(?m)^\s{20}` + velho + `:`).MatchString(texto) {
+			t.Errorf("o campo %q voltou ao `board.json` — o contrato é em inglês", velho)
+		}
+	}
+
+	// E os nomes novos precisam estar lá: sem isto, apagar o campo passaria no teste.
+	for _, novo := range []string{"number", "title", "state", "created", "closed", "code"} {
+		if !regexp.MustCompile(`(?m)^\s{20}` + novo + `:`).MatchString(texto) {
+			t.Errorf("o campo %q sumiu do `board.json` — quem lê o contrato o espera", novo)
+		}
 	}
 }
