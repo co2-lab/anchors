@@ -96,7 +96,7 @@ func rodaNaPagina(t *testing.T, elemento, fn string, itens []map[string]any) (hi
 		t.Fatal("nenhum bloco <script> na página: o teste não tem o que confrontar")
 	}
 
-	dados, err := json.Marshal(map[string]any{"itens": itens})
+	dados, err := json.Marshal(map[string]any{"items": itens})
 	if err != nil {
 		t.Fatalf("dados: %v", err)
 	}
@@ -132,7 +132,7 @@ console.log(JSON.stringify({hidden: alvo.hidden, html: alvo.innerHTML}));
 
 func TestFaixaDeBloqueio_semEscalonadoNaoAparece(t *testing.T) {
 	hidden, html := rodaDesenhaBloqueio(t, []map[string]any{
-		{"estado": "anchors:to-do", "numero": 1, "codigo": "A", "titulo": "x", "url": "u"},
+		{"state": "anchors:to-do", "number": 1, "code": "A", "title": "x", "url": "u"},
 	})
 	if !hidden {
 		t.Error("sem card `needs-user` a faixa deveria estar escondida")
@@ -152,11 +152,11 @@ func TestFaixaDeBloqueio_ordenaPorQuantosCardsATravaTrava(t *testing.T) {
 	// E o `DEC2` depende do `DEC1`: serve para provar que a contagem NÃO conta como
 	// bloqueado um card que também está parado esperando uma pessoa.
 	hidden, html := rodaDesenhaBloqueio(t, []map[string]any{
-		{"estado": "anchors:needs-user", "numero": 12, "codigo": "DEC1", "titulo": "[DEC1] qual vocabulário?", "url": "https://x/12"},
-		{"estado": "anchors:needs-user", "numero": 99, "codigo": "DEC2", "titulo": "[DEC2] onde fica o limite?", "needs": []string{"DEC1"}, "url": "https://x/99"},
-		{"estado": "anchors:to-do", "numero": 5, "codigo": "Z1", "titulo": "z", "needs": []string{"DEC2"}, "url": "u"},
-		{"estado": "anchors:to-do", "numero": 6, "codigo": "Z2", "titulo": "z", "needs": []string{"DEC2"}, "url": "u"},
-		{"estado": "anchors:to-do", "numero": 7, "codigo": "Z3", "titulo": "z", "needs": []string{"DEC1"}, "url": "u"},
+		{"state": "anchors:needs-user", "number": 12, "code": "DEC1", "title": "[DEC1] qual vocabulário?", "url": "https://x/12"},
+		{"state": "anchors:needs-user", "number": 99, "code": "DEC2", "title": "[DEC2] onde fica o limite?", "needs": []string{"DEC1"}, "url": "https://x/99"},
+		{"state": "anchors:to-do", "number": 5, "code": "Z1", "title": "z", "needs": []string{"DEC2"}, "url": "u"},
+		{"state": "anchors:to-do", "number": 6, "code": "Z2", "title": "z", "needs": []string{"DEC2"}, "url": "u"},
+		{"state": "anchors:to-do", "number": 7, "code": "Z3", "title": "z", "needs": []string{"DEC1"}, "url": "u"},
 	})
 	if hidden {
 		t.Fatal("com dois cards `needs-user` a faixa deveria aparecer")
@@ -198,10 +198,10 @@ func TestFaixaDeBloqueio_ordenaPorQuantosCardsATravaTrava(t *testing.T) {
 // aqui. O usuário o viu no board sem nada indicando que ninguém ia tocá-lo.
 func TestFaixaDeBloqueio_cardEscaladoComEstadoDeTrabalhoAparece(t *testing.T) {
 	hidden, html := rodaDesenhaBloqueio(t, []map[string]any{
-		{"estado": "anchors:in-review", "escalado": true, "numero": 311, "codigo": "NTDSN",
-			"titulo": "[NTDSN] o que sai da VPC", "url": "https://x/311"},
-		{"estado": "anchors:to-do", "escalado": true, "numero": 443, "codigo": "DEC",
-			"titulo": "[DEC] a revisão achou defeito crítico", "url": "https://x/443"},
+		{"state": "anchors:in-review", "escalated": true, "number": 311, "code": "NTDSN",
+			"title": "[NTDSN] o que sai da VPC", "url": "https://x/311"},
+		{"state": "anchors:to-do", "escalated": true, "number": 443, "code": "DEC",
+			"title": "[DEC] a revisão achou defeito crítico", "url": "https://x/443"},
 	})
 	if hidden {
 		t.Fatal("dois cards escalados e a faixa não apareceu")
@@ -237,13 +237,13 @@ func TestFaixaDeBloqueio_cardEscaladoComEstadoDeTrabalhoAparece(t *testing.T) {
 // AGORA, o outro não pede nada — só espera uma fila andar.
 func TestFaixaDeBloqueio_distingueQuemEsperaVoceDeQuemEsperaTrabalho(t *testing.T) {
 	_, html := rodaDesenhaBloqueio(t, []map[string]any{
-		{"estado": "anchors:in-review", "escalado": true, "numero": 311, "codigo": "NTDSN",
-			"titulo": "[NTDSN] o que sai da VPC", "url": "https://x/311"},
-		{"estado": "anchors:to-do", "escalado": true, "numero": 500, "codigo": "DEC",
-			"titulo": "[DEC] qual vocabulário?", "url": "https://x/500"},
+		{"state": "anchors:in-review", "escalated": true, "number": 311, "code": "NTDSN",
+			"title": "[NTDSN] o que sai da VPC", "url": "https://x/311"},
+		{"state": "anchors:to-do", "escalated": true, "number": 500, "code": "DEC",
+			"title": "[DEC] qual vocabulário?", "url": "https://x/500"},
 		// O card da mudança: não está escalado, e DESTRAVA o 311.
-		{"estado": "anchors:to-do", "numero": 444, "codigo": "FIX", "destrava": "311",
-			"titulo": "[destrava #311] try/catch por token", "url": "https://x/444"},
+		{"state": "anchors:to-do", "number": 444, "code": "FIX", "unblocks": "311",
+			"title": "[destrava #311] try/catch por token", "url": "https://x/444"},
 	})
 
 	if !strings.Contains(html, "espera a entrega do #444") {
@@ -266,8 +266,8 @@ func TestFaixaDeBloqueio_escapaTituloHostil(t *testing.T) {
 	// issue. A página é servida no Pages do projeto — um título com marcação executaria
 	// no navegador de quem abre o board.
 	_, html := rodaDesenhaBloqueio(t, []map[string]any{
-		{"estado": "anchors:needs-user", "numero": 7, "codigo": "X",
-			"titulo": "<img src=x onerror=alert(1)>", "url": "https://x/7"},
+		{"state": "anchors:needs-user", "number": 7, "code": "X",
+			"title": "<img src=x onerror=alert(1)>", "url": "https://x/7"},
 	})
 	if strings.Contains(html, "<img src=x") {
 		t.Errorf("o título deveria ser escapado; html=%q", html)
@@ -284,10 +284,10 @@ func TestFaixaDeBloqueio_escapaTituloHostil(t *testing.T) {
 // card?" — a faixa mostrava, e o card não dizia nada.
 func TestCardEscalado_temMarcaNaColuna(t *testing.T) {
 	_, html := rodaNaPagina(t, "colunas", "desenha", []map[string]any{
-		{"estado": "anchors:in-review", "escalado": true, "numero": 311, "codigo": "NTDSN",
-			"titulo": "[NTDSN] o que sai da VPC", "url": "u"},
-		{"estado": "anchors:in-review", "numero": 312, "codigo": "OUTRO",
-			"titulo": "[OUTRO] revisão normal", "url": "u"},
+		{"state": "anchors:in-review", "escalated": true, "number": 311, "code": "NTDSN",
+			"title": "[NTDSN] o que sai da VPC", "url": "u"},
+		{"state": "anchors:in-review", "number": 312, "code": "OUTRO",
+			"title": "[OUTRO] revisão normal", "url": "u"},
 	})
 
 	if !strings.Contains(html, `class="card escalado"`) {
