@@ -1,7 +1,7 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
 version: 2
-generated_by: 0.1.100
+generated_by: dev
 nodes:
     - id: BOOTSTRAP.md
       kind: guide
@@ -304,7 +304,7 @@ nodes:
     - id: cmd/anchors/escalate.go
       kind: code
       rev: 85a3b8e4924d
-      updated_at: "2026-09-14"
+      updated_at: "2026-09-15"
       layer: comando
       tags:
         - cli
@@ -312,6 +312,7 @@ nodes:
     - id: cmd/anchors/escalate_dup.go
       kind: code
       rev: f3c9ef514462
+      updated_at: "2026-09-15"
       layer: comando
       tags:
         - cli
@@ -319,6 +320,7 @@ nodes:
     - id: cmd/anchors/escalate_dup_test.go
       kind: test
       rev: 9f0441291ea0
+      updated_at: "2026-09-15"
       layer: teste
       tags:
         - test
@@ -1373,12 +1375,19 @@ nodes:
         - test
     - id: internal/gate/doc_required.go
       kind: code
-      rev: a263c27775b7
-      updated_at: "2026-09-14"
+      rev: 5680ad2465a4
+      updated_at: "2026-09-15"
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/doc_required_secao_test.go
+      kind: test
+      rev: 609f442fea29
+      updated_at: "2026-09-15"
+      layer: teste
+      tags:
+        - test
     - id: internal/gate/doc_required_test.go
       kind: test
       rev: 67a21bb4b3ef
@@ -2528,8 +2537,8 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 169d2a2fa3d3
-      updated_at: "2026-09-14"
+      rev: 8e6d2b50bfbd
+      updated_at: "2026-09-15"
       layer: teste
       tags:
         - test
