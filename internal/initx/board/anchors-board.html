@@ -297,6 +297,24 @@
      data. Uma barra sólida à direita da linha prometeria um prazo que ninguém calculou. */
   .g-barra.futuro { background: transparent; border: 1px dashed var(--todo);
                     color: var(--fraco); }
+  /* A BARRA DO PAI é HÍBRIDA: ela abrange os filhos, e um pai cujo primeiro filho já
+     entregou tem início REAL enquanto ainda se estende ao futuro.
+
+     O gradiente corta em `--feito`, a posição da linha do agora dentro da própria barra:
+     sólido até ali (o que já aconteceu), listrado depois (o que falta). Pintar de uma cor
+     só obrigaria a escolher entre apagar o trabalho feito e prometer o que não foi. */
+  .g-barra.abrange {
+    background: linear-gradient(to right,
+      var(--fazendo) 0, var(--fazendo) var(--feito, 0%),
+      transparent var(--feito, 0%));
+    border: 1px solid var(--fazendo); color: #fff; font-weight: 600;
+  }
+  /* o trecho FUTURO ganha a listra que a folha futura já usa, para a leitura ser a mesma */
+  .g-barra.abrange::after {
+    content: ""; position: absolute; inset: 0 0 0 var(--feito, 0%);
+    background: repeating-linear-gradient(135deg,
+      var(--todo) 0 1px, transparent 1px 5px); opacity: .5;
+  }
   /* A LINHA DO AGORA, e é ela que divide as duas metades do desenho. */
   .g-hoje { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--marca);
             z-index: 2; pointer-events: none; }
@@ -1068,7 +1086,7 @@ function desenhaRoadmap(d) {
 //
 // O NÓ DE GRUPO (plano, fase) entra como linha própria, sem barra: ele é o cabeçalho do
 // bloco. Sem isso a indentação ficaria órfã — recuo sem nada que o explique.
-function ordenaPorHierarquia(linhas, d) {
+function ordenaPorHierarquia(linhas, d, PASSADO) {
   const CODIGO = /^[A-Z]{5}$/;
   const porCodigo = {};
   for (const { i } of linhas) if (CODIGO.test(i.codigo || "")) porCodigo[i.codigo] = i;
@@ -1092,6 +1110,32 @@ function ordenaPorHierarquia(linhas, d) {
   const daLinha = {};
   for (const l of linhas) if (l.i.codigo) daLinha[l.i.codigo] = l;
 
+  // O PAI É HÍBRIDO, e tratá-lo como uma coisa só era o defeito.
+  //
+  // Um plano cujo primeiro card já entregou TEM início real — a data está lá. E se ainda
+  // restam cards por fazer, ele também se estende ao futuro. As duas coisas ao mesmo tempo:
+  // desenhá-lo só como "futuro" apaga meses de trabalho já feito, e só como "feito" promete
+  // uma entrega que não aconteceu.
+  //
+  // A barra do pai ABRANGE os filhos: começa onde o primeiro começou, termina onde o último
+  // termina. O trecho REALIZADO é sólido; o que passa da linha do agora é tracejado — a
+  // mesma gramática das barras de folha, aplicada ao intervalo.
+  function extensao(cod, vistos = new Set()) {
+    if (vistos.has(cod)) return null;
+    vistos.add(cod);
+    const meus = filhos[cod] || [];
+    const proprio = daLinha[cod];
+    let ini = proprio ? proprio.esq : null;
+    let fim = proprio ? proprio.esq + proprio.larg : null;
+    for (const k of meus) {
+      const e = extensao(k, vistos);
+      if (!e) continue;
+      ini = ini === null ? e.ini : Math.min(ini, e.ini);
+      fim = fim === null ? e.fim : Math.max(fim, e.fim);
+    }
+    return ini === null ? null : { ini, fim };
+  }
+
   const saida = [];
   const usados = new Set();
   function desce(cod, nivel, vistos) {
@@ -1099,13 +1143,28 @@ function ordenaPorHierarquia(linhas, d) {
     vistos.add(cod);
     const meus = (filhos[cod] || []).sort((a, b) => a.localeCompare(b));
     const l = daLinha[cod];
-    if (l) {
-      // O nó COM filhos vira cabeçalho; sem filhos, é uma issue como outra qualquer.
-      saida.push({ ...l, nivel, grupo: meus.length > 0 });
+
+    if (meus.length) {
+      // CABEÇALHO com a barra que abrange os filhos. O card próprio do nó, quando existe,
+      // entra na conta como mais um extremo — um plano cuja spec fechou antes do primeiro
+      // card começa nela, e é a verdade.
+      const e = extensao(cod, new Set());
+      const base = l ? { ...l } : { i: nos[cod] };
+      if (e) {
+        saida.push({ ...base, esq: e.ini, larg: Math.max(1.5, e.fim - e.ini),
+                     classe: "abrange", nivel, grupo: true,
+                     // ONDE O REALIZADO TERMINA, em % da própria barra. É o que o CSS usa
+                     // para pintar sólido até ali e tracejado depois — sem isso o pai
+                     // híbrido teria de escolher uma das duas naturezas.
+                     feitoAte: Math.max(0, Math.min(100,
+                       (PASSADO - e.ini) / Math.max(0.01, e.fim - e.ini) * 100)) });
+      } else {
+        saida.push({ ...base, esq: 0, larg: 0, classe: "grupo", nivel, grupo: true });
+      }
+      if (l) usados.add(l);
+    } else if (l) {
+      saida.push({ ...l, nivel, grupo: false });
       usados.add(l);
-    } else if (meus.length) {
-      // fase sem card próprio: entra só como cabeçalho, sem barra
-      saida.push({ i: nos[cod], esq: 0, larg: 0, classe: "grupo", nivel, grupo: true });
     }
     for (const k of meus) desce(k, nivel + 1, vistos);
   }
@@ -1186,7 +1245,7 @@ function desenhaRoadmapLinha(d) {
   // A pergunta que a barra responde ("quando isto foi entregue?") não muda; o que muda é
   // como o leitor ACHA a issue de que precisa.
   if (modoRoadmap() === "arvore") {
-    ordenaPorHierarquia(linhas, d);
+    ordenaPorHierarquia(linhas, d, PASSADO);
   } else {
     // ocorrência: entregues por data, depois o em curso, depois o futuro pela ordem
     linhas.sort((a, b) => a.esq - b.esq || Number(a.i.numero) - Number(b.i.numero));
@@ -1204,14 +1263,17 @@ function desenhaRoadmapLinha(d) {
        <span class="g-marca" style="left:${PASSADO}%">agora</span>
        <span class="g-marca" style="left:98%">ordem →</span>
      </div>` +
-    linhas.map(({ i, esq, larg, classe, nivel, grupo }) => `
+    linhas.map(({ i, esq, larg, classe, nivel, grupo, feitoAte }) => `
       <div class="g-rot ${grupo ? "grupo" : "item"}"
            style="padding-left:${((nivel || 0) * 0.9 + (grupo ? 0 : 1.1)).toFixed(2)}rem"
            title="${rot(i)}">${rot(i)}</div>
-      <div class="g-faixa">${i.numero ? `
-        <a class="g-barra ${classe}" href="${esc(i.url)}" target="_blank" rel="noopener"
-           style="left:${esq.toFixed(1)}%;width:${larg.toFixed(1)}%"
-           title="#${esc(i.numero)} — ${quando(i)}">#${esc(i.numero)}</a>` : ""}
+      <div class="g-faixa">${larg > 0 ? `
+        <${i.numero ? "a" : "span"} class="g-barra ${classe}"${
+             i.numero ? ` href="${esc(i.url)}" target="_blank" rel="noopener"` : ""}
+           style="left:${esq.toFixed(1)}%;width:${larg.toFixed(1)}%${
+             classe === "abrange" ? `;--feito:${(feitoAte || 0).toFixed(1)}%` : ""}"
+           title="${i.numero ? `#${esc(i.numero)} — ` : ""}${quando(i)}">${
+             i.numero ? `#${esc(i.numero)}` : ""}</${i.numero ? "a" : "span"}>` : ""}
       </div>`).join("") +
     `<div class="g-hoje" style="left:calc(minmax(9rem,auto) + ${PASSADO}%)"></div>`;
 
