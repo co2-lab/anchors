@@ -18,6 +18,10 @@
   :root {
     --bg: #f6f8fa; --fg: #1f2328; --card: #fff; --linha: #d1d9e0; --fraco: #59636e;
     --todo: #8b949e; --fazendo: #0969da; --pronto: #1a7f37; --alerta: #9a6700;
+    /* ESPERANDO uma pessoa (laranja) × JÁ RESPONDIDO (amarelo, o `--alerta` acima).
+       Duas cores porque são dois estados de atenção diferentes: o laranja pede ação
+       agora; o amarelo é registro de que houve uma decisão, e não pede nada. */
+    --espera: #bc4c00;
     /* O vermelho da identidade (#ec3013) e o quase-preto da wordmark, do kit oficial. */
     --marca: #ec3013; --wordmark: #201e1d;
   }
@@ -29,6 +33,7 @@
     :root:not([data-tema="claro"]) {
       --bg: #0d1117; --fg: #e6edf3; --card: #151b23; --linha: #3d444d; --fraco: #9198a1;
       --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922;
+      --espera: #f0883e;
       /* No escuro o vermelho da marca é clareado: #ec3013 sobre #0d1117 não alcança
          contraste de leitura, e a wordmark preta desapareceria. */
       --marca: #ff5c3d; --wordmark: #e6edf3;
@@ -37,6 +42,7 @@
   :root[data-tema="escuro"] {
     --bg: #0d1117; --fg: #e6edf3; --card: #151b23; --linha: #3d444d; --fraco: #9198a1;
     --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922;
+      --espera: #f0883e;
     --marca: #ff5c3d; --wordmark: #e6edf3;
   }
   * { box-sizing: border-box; }
@@ -168,10 +174,16 @@
      acontecendo com um card específico. Sem marca aqui, um card parado esperando decisão
      é visualmente idêntico ao card ao lado que está sendo trabalhado — e quem varre a
      coluna não tem por que desconfiar dele. */
-  .card.escalado { border-color: var(--alerta); border-left-width: 3px; }
+  /* LARANJA para o que ESPERA uma pessoa; AMARELO para o que já foi RESPONDIDO.
+     São dois estados de atenção diferentes, e pintá-los igual é o que fazia a fila de
+     pendências parecer maior do que era — quem varre o board perde a que importa no meio
+     das que já foram resolvidas. O laranja pede ação; o amarelo é registro. */
+  .card.escalado { border-color: var(--espera); border-left-width: 3px; }
+  .card.escalado.respondido { border-color: var(--alerta); }
   .selo { display: inline-flex; align-items: center; gap: .25rem; margin-top: .4rem;
-          font-size: .68rem; font-weight: 500; color: var(--alerta);
-          border: 1px solid var(--alerta); border-radius: 999px; padding: .08rem .45rem; }
+          font-size: .68rem; font-weight: 500; color: var(--espera);
+          border: 1px solid var(--espera); border-radius: 999px; padding: .08rem .45rem; }
+  .selo.respondido { color: var(--alerta); border-color: var(--alerta); }
   .card h3 { font-size: .82rem; margin: .2rem 0 0; font-weight: 500; }
   /* A DEPENDÊNCIA no card responde "por que isto ainda não posso pegar?" sem abrir nada.
      A indentação sozinha mostra que há profundidade, mas não diz de quê ela vem. */
@@ -240,10 +252,20 @@
      Fora do board de propósito: as colunas são o fluxo, e um card escalonado saiu do
      fluxo. Pôr uma nona coluna diria que é mais uma etapa, e a leitura da esteira
      ("da direita para a esquerda") passaria a incluir algo que não se pega. */
-  .bloqueio { border: 1px solid var(--alerta); border-left: 4px solid var(--alerta);
+  /* A FAIXA é laranja: ela existe para o que espera VOCÊ. O bloco de já-respondidas
+     dentro dela vira amarelo — mesma faixa, atenção menor. */
+  .bloqueio { border: 1px solid var(--espera); border-left: 4px solid var(--espera);
               border-radius: 8px; padding: .9rem 1.1rem; margin: 0 0 1.25rem; }
   .bloqueio h2 { margin: 0 0 .2rem; font-size: .82rem; text-transform: uppercase;
-                 letter-spacing: .06em; color: var(--alerta); }
+                 letter-spacing: .06em; color: var(--espera); }
+  /* O JÁ RESPONDIDO, separado por uma linha e em amarelo — presente, sem competir com o
+     que pede ação. Ele não some porque quem escalou precisa ver que a resposta veio. */
+  .bloqueio h3.resolvido-t { margin: 1.1rem 0 .2rem; font-size: .8rem;
+                             text-transform: uppercase; letter-spacing: .06em;
+                             color: var(--alerta); padding-top: .9rem;
+                             border-top: 1px solid var(--linha); }
+  .bloqueio ul.resolvido .num { color: var(--alerta); }
+  .bloqueio ul.resolvido a { color: var(--fraco); }
   .bloqueio .porque { margin: 0 0 .7rem; font-size: .8rem; color: var(--fraco);
                       line-height: 1.55; }
   .bloqueio ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
@@ -503,13 +525,18 @@ function desenha(d) {
           ${esc(nome)}<span class="qtd">${cards.length}</span></div>
         <div class="oquee">${esc(oquee)}</div>
         ${cards.length === 0 ? '<div class="vazia">vazia</div>' : cards.map((c) => `
-          <button class="card${c.escalado ? " escalado" : ""}" type="button" data-numero="${c.numero}">
+          <button class="card${c.escalado ? " escalado" : ""}${
+              c.escalado && c.esperando === false ? " respondido" : ""}" type="button" data-numero="${c.numero}">
             <div class="card-topo">
               ${c.codigo ? `<span class="codigo">${esc(c.codigo)}</span>` : ""}
               ${c.numero ? `<span class="num">#${esc(c.numero)}</span>` : ""}
             </div>
             <h3>${esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</h3>
-            ${c.escalado ? `<span class="selo">⚠ esperando você</span>` : ""}
+            ${c.escalado
+              ? (c.esperando === false
+                  ? `<span class="selo respondido">✓ você já respondeu</span>`
+                  : `<span class="selo">⚠ esperando você</span>`)
+              : ""}
             ${(c.needs || []).length ? `<div class="dep" title="depende de">↳ ${
               c.needs.map((n) => esc(NIVEIS.fases?.[n]?.titulo || n)).join(" · ")}</div>` : ""}
             ${c.dono ? `<span class="dono">◆ ${esc(c.dono)}</span>` : ""}

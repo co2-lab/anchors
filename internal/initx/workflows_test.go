@@ -1260,3 +1260,45 @@ func TestPipelineConfereTodasAsLinhasDeFechamento(t *testing.T) {
 		t.Error("as demais linhas são da segunda em diante — a primeira já é conferida acima")
 	}
 }
+
+// O PIPELINE DE LIBERAÇÃO precisa conhecer OS DOIS prefixos de vínculo.
+//
+// Há dois comandos que prendem um card a outro, e cada um usa o seu:
+//
+//	anchors unblock   →  anchors:desbloqueia-<n>   a decisão gerou trabalho
+//	anchors escalate  →  anchors:under-<n>         o achado virou card próprio
+//
+// São a mesma relação — há trabalho aberto sob este card —, e o pipeline olhava só o
+// primeiro. MEDIDO: o card #311 do projeto de referência teve os dois achados que o
+// travavam (#441, #442) fechados e continuou com `needs-user`, aparecendo no board como
+// pendência do usuário em `ready-to-test`, com o trabalho já entregue pelo PR #402.
+//
+// Ninguém era responsável por tirar a label: o comando que libera é o `anchors decided`, e
+// quem decidiu já seguiu para outra coisa. O pipeline existe exatamente para esse buraco — e
+// não o cobria para metade dos cards.
+func TestPipelineDecidedConheceOsDoisPrefixosDeVinculo(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-decided.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	// O laço sobre os dois prefixos, e não uma consulta por prefixo fixo.
+	if !strings.Contains(texto, "for pref in desbloqueia under") {
+		t.Error("o pipeline consulta um prefixo só — metade dos cards escalados (os do " +
+			"`escalate`, com `under-<n>`) nunca seria liberada")
+	}
+
+	// AMBOS os lados: contar quantos existem E quantos estão abertos. Cobrir só o
+	// primeiro faria o pipeline achar que há vínculo e nunca ver que ele fechou.
+	if n := strings.Count(texto, "for pref in desbloqueia under"); n < 2 {
+		t.Errorf("o laço aparece %d vez(es) — as DUAS consultas precisam dele: a que conta "+
+			"os vínculos existentes e a que vê quais ainda estão abertos", n)
+	}
+
+	// A construção da lista de abertos não pode perder o que veio do primeiro prefixo.
+	if !strings.Contains(texto, `abertos="${abertos:+$abertos, #}$q"`) {
+		t.Error("a lista de abertos sobrescreve em vez de acumular — um card com vínculo " +
+			"aberto de cada tipo reportaria só um deles")
+	}
+}
