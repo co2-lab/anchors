@@ -6,12 +6,12 @@ import "testing"
 //
 // Duas armadilhas reais, no mesmo arquivo do projeto de referência:
 //
-//   · uma NOTA listava os componentes "que o gate `doc-required` deve sinalizar", e
-//     `MetricCard` estava nela. O gate lia, achava o nome, e se dava por satisfeito —
-//     silenciado pela própria nota que dizia que faltava documentá-lo.
+//	· uma NOTA listava os componentes "que o gate `doc-required` deve sinalizar", e
+//	  `MetricCard` estava nela. O gate lia, achava o nome, e se dava por satisfeito —
+//	  silenciado pela própria nota que dizia que faltava documentá-lo.
 //
-//   · a seção de `StatusBadge` citava `MetricCard` ao explicar quando NÃO se usa um em vez
-//     do outro. Prosa legítima — e não é documentação da unidade citada.
+//	· a seção de `StatusBadge` citava `MetricCard` ao explicar quando NÃO se usa um em vez
+//	  do outro. Prosa legítima — e não é documentação da unidade citada.
 //
 // Nos dois casos a unidade aparecia no arquivo e não tinha entrada. Ficou sem documentação
 // por semanas, com o gate verde.
