@@ -1376,7 +1376,7 @@ nodes:
     - id: internal/gate/doc_required.go
       kind: code
       rev: 5680ad2465a4
-      updated_at: "2026-09-14"
+      updated_at: "2026-09-15"
       layer: gate
       tags:
         - regra
@@ -1384,6 +1384,7 @@ nodes:
     - id: internal/gate/doc_required_secao_test.go
       kind: test
       rev: 6e997ecc1457
+      updated_at: "2026-09-15"
       layer: teste
       tags:
         - test

@@ -518,6 +518,7 @@ function desenha(d) {
     }).join("");
     desenhaBloqueio(d);
     desenhaArvore(d);
+    desenhaRoadmap(d);
 }
 
 // A FAIXA DE ESCALONADOS. `anchors:needs-user` é o único estado que NÃO é uma etapa do
@@ -543,7 +544,16 @@ function desenhaBloqueio(d) {
   // Medido: o card #311 do projeto de referência esperava uma decisão do usuário e não
   // aparecia aqui. Ele estava no board, na coluna IN REVIEW, sem nada indicando que
   // ninguém ia tocá-lo até alguém responder.
-  const presos = (d.itens || []).filter((i) => i.escalado || i.estado === "anchors:needs-user");
+  // O CARD FECHADO NÃO ESPERA NINGUÉM, e é metade do defeito de contagem.
+  //
+  // O board lê `--state all` porque o roadmap precisa do que já foi entregue. Esta faixa
+  // não: um card fechado que um dia teve `needs-user` carrega a label para sempre — ela
+  // não é removida no fechamento.
+  //
+  // MEDIDO no projeto de referência: o contador dizia 14 pendências e a lista mostrava 3.
+  // Os outros 11 eram cards FECHADOS, contados por uma label que registrava o passado.
+  const abertos = (d.itens || []).filter((i) => !i.fechado);
+  const presos = abertos.filter((i) => i.escalado || i.estado === "anchors:needs-user");
 
   // POR QUEM cada card espera. Um `needs-user` cuja decisão já saiu e virou trabalho tem um
   // card irmão com `anchors:desbloqueia-<n>` — e enquanto ele não fechar, remover a label
@@ -565,10 +575,24 @@ function desenhaBloqueio(d) {
   const trava = (c) => (d.itens || []).filter((i) =>
     i.estado !== "anchors:needs-user" && (i.needs || []).includes(c.codigo)).length;
 
-  const linhas = presos
-    .map((c) => ({ c, n: trava(c) }))
-    .sort((a, b) => b.n - a.n || Number(a.c.numero) - Number(b.c.numero))
-    .map(({ c, n }) => `<li>
+  // PENDENTE agora × RESPONDIDO um dia — e misturar os dois é o que torna a faixa inútil.
+  //
+  // `needs-user` registra que o card ESPEROU uma pessoa. Não diz se ainda espera: a label
+  // fica depois que a decisão sai, até o `anchors decided` ou o pipeline de desbloqueio a
+  // removerem — e o pipeline só conhece `desbloqueia-<n>`, não o `under-<n>` que o
+  // `escalate` usa.
+  //
+  // MEDIDO: o #311 aparecia como pendência em `ready-to-test`. O trabalho tinha entrado
+  // pelo PR #402 e os dois achados que o travavam (#441, #442) estavam FECHADOS. Quem olha
+  // uma lista onde parte já foi resolvida perde a que importa no meio.
+  //
+  // O campo `esperando` vem do pipeline, que conta os cards ABERTOS sob este. Quando ele
+  // não existe (board gerado por versão anterior), o comportamento é o de antes: tudo
+  // pendente, que é o lado seguro de errar.
+  const pendentes = presos.filter((c) => c.esperando !== false);
+  const respondidos = presos.filter((c) => c.esperando === false);
+
+  const linha = (c, n) => `<li>
         <span class="num">#${esc(c.numero)}</span>
         <a href="${esc(c.url)}" target="_blank" rel="noopener">${
           esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</a>
@@ -577,15 +601,37 @@ function desenhaBloqueio(d) {
         ${esperaPor[c.numero]
           ? `<span class="trava">decidido — espera a entrega do #${esc(esperaPor[c.numero])}</span>`
           : n > 0 ? `<span class="trava">trava ${n} card${n > 1 ? "s" : ""}</span>` : ""}
-      </li>`).join("");
+      </li>`;
+
+  const ordena = (lista) => lista
+    .map((c) => ({ c, n: trava(c) }))
+    .sort((a, b) => b.n - a.n || Number(a.c.numero) - Number(b.c.numero))
+    .map(({ c, n }) => linha(c, n)).join("");
+
+  // O RESPONDIDO não some: quem escalou precisa ver que a resposta veio, e o card ainda
+  // carrega a label — some de verdade só quando alguém a remover.
+  const bloco = respondidos.length === 0 ? "" : `
+    <h3 class="resolvido-t">Já respondidas · ${respondidos.length}</h3>
+    <p class="porque">A decisão saiu e o trabalho sob ${respondidos.length === 1 ? "esta issue" : "estas issues"}
+      terminou — ${respondidos.length === 1 ? "ela" : "elas"} ainda carrega${respondidos.length === 1 ? "" : "m"}
+      a marca de <code>needs-user</code>, e não pede${respondidos.length === 1 ? "" : "m"} mais nada de você.</p>
+    <ul class="resolvido">${ordena(respondidos)}</ul>`;
+
+  if (pendentes.length === 0 && respondidos.length === 0) {
+    el.hidden = true;
+    el.innerHTML = "";
+    return;
+  }
 
   el.innerHTML = `
-    <h2 id="bloqueio-t">Esperando você · ${presos.length}</h2>
-    <p class="porque">Estas ${presos.length === 1 ? "issue" : "issues"} pedem uma decisão
+    ${pendentes.length === 0 ? "" : `
+    <h2 id="bloqueio-t">Esperando você · ${pendentes.length}</h2>
+    <p class="porque">Est${pendentes.length === 1 ? "a issue pede uma decisão" : "as issues pedem uma decisão"}
       que nenhum agente pode tomar por você. Enquanto não houver resposta na issue, o que
-      depende ${presos.length === 1 ? "dela" : "delas"} não anda — e o board abaixo segue
+      depende ${pendentes.length === 1 ? "dela" : "delas"} não anda — e o board abaixo segue
       mostrando o resto do trabalho como se nada estivesse travado.</p>
-    <ul>${linhas}</ul>`;
+    <ul>${ordena(pendentes)}</ul>`}
+    ${bloco}`;
   el.hidden = false;
 }
 
@@ -941,6 +987,111 @@ function desenhaArvore(d) {
   alvo.querySelector("#recolher").onclick = () => {
     for (const d of alvo.querySelectorAll("details")) d.open = false;
   };
+}
+
+// --- o roadmap ---
+//
+// A ABA EXISTIA E NÃO DESENHAVA NADA. O CSS, o painel e a prosa foram escritos; o
+// renderizador ficou para depois, e "depois" durou até alguém abrir a aba e ver o vazio.
+//
+// O QUE ELE MOSTRA, e o que deliberadamente NÃO mostra:
+//
+//   · à ESQUERDA da linha do agora, o que foi entregue — com as datas REAIS (`criado`,
+//     `fechado`). É fato, e a barra sólida o diz.
+//
+//   · à DIREITA, o que falta — posicionado pela ORDEM (o `needs:` do mapa), nunca por
+//     prazo. O Anchors sabe o que vem antes do quê; não sabe quando. A barra tracejada é
+//     o que impede a leitura de promessa: uma barra sólida à direita prometeria uma data
+//     que ninguém calculou.
+//
+// A escolha de "ordem, sem datas" para o futuro é do projeto, e está no desenho do CSS
+// desde que ele foi escrito.
+function desenhaRoadmap(d) {
+  const el = document.getElementById("gantt");
+  if (!el) return;
+  const itens = (d.itens || []).filter((i) => i.criado);
+  if (itens.length === 0) {
+    el.innerHTML = `<p class="g-vazio">Nada para desenhar ainda — o roadmap nasce do
+      primeiro card com data.</p>`;
+    return;
+  }
+
+  const feitos = itens.filter((i) => i.fechado).sort((a, b) => a.fechado < b.fechado ? -1 : 1);
+  const abertos = itens.filter((i) => !i.fechado);
+
+  // A ESCALA do passado é temporal e real: do primeiro card ao agora.
+  const t0 = feitos.length ? new Date(feitos[0].criado).getTime()
+                           : new Date(itens[0].criado).getTime();
+  const agora = Date.now();
+  const vao = Math.max(agora - t0, 864e5); // nunca zero: um projeto de um dia ainda desenha
+
+  // METADE E METADE: o passado ocupa 55% da largura, o futuro os 45% restantes. A divisão
+  // é arbitrária DE PROPÓSITO — o futuro não tem escala temporal, e fingir uma (esticá-lo
+  // proporcionalmente ao passado) seria inventar duração.
+  const PASSADO = 55;
+  const posPassado = (iso) => PASSADO * (new Date(iso).getTime() - t0) / vao;
+
+  // A ORDEM do que falta vem do `needs:`: um item cujo pré-requisito ainda não fechou vem
+  // depois dele. Sem prazo — só sequência.
+  const porCodigo = {};
+  for (const i of itens) if (i.codigo) porCodigo[i.codigo] = i;
+  const profundidade = (i, visto) => {
+    visto = visto || new Set();
+    if (visto.has(i.numero)) return 0;       // ciclo no `needs:` não trava o desenho
+    visto.add(i.numero);
+    const pais = (i.needs || []).map((c) => porCodigo[c]).filter((p) => p && !p.fechado);
+    if (pais.length === 0) return 0;
+    return 1 + Math.max(...pais.map((p) => profundidade(p, visto)));
+  };
+  const niveis = abertos.map((i) => profundidade(i));
+  const maxNivel = Math.max(1, ...niveis);
+
+  const linhas = [];
+  for (const i of feitos) {
+    const ini = posPassado(i.criado);
+    const fim = Math.max(posPassado(i.fechado), ini + 1.5);
+    linhas.push({ i, esq: ini, larg: fim - ini, classe: "feito" });
+  }
+  abertos.forEach((i, k) => {
+    const nivel = niveis[k];
+    const emCurso = i.estado && i.estado !== "anchors:to-do";
+    // o que já começou nasce na linha do agora; o resto, escalonado pela ordem
+    const esq = emCurso ? PASSADO - 3 : PASSADO + (100 - PASSADO) * (nivel / (maxNivel + 1));
+    linhas.push({ i, esq, larg: Math.max(6, (100 - PASSADO) / (maxNivel + 2)),
+                  classe: emCurso ? "fazendo" : "futuro" });
+  });
+
+  // ordenar: entregues por data, depois o que está em curso, depois o futuro por ordem
+  linhas.sort((a, b) => a.esq - b.esq || Number(a.i.numero) - Number(b.i.numero));
+
+  const rot = (c) => esc((c.codigo ? c.codigo + " · " : "") +
+                         c.titulo.replace(/^\[[^\]]+\]\s*/, "")).slice(0, 80);
+  const quando = (c) => c.fechado
+    ? new Date(c.fechado).toLocaleDateString()
+    : (c.estado || "").replace("anchors:", "") || "a fazer";
+
+  el.innerHTML =
+    `<div class="g-rot"></div><div class="g-eixo">
+       <span class="g-marca" style="left:0">${new Date(t0).toLocaleDateString()}</span>
+       <span class="g-marca" style="left:${PASSADO}%">agora</span>
+       <span class="g-marca" style="left:98%">ordem →</span>
+     </div>` +
+    linhas.map(({ i, esq, larg, classe }) => `
+      <div class="g-rot item" title="${rot(i)}">${rot(i)}</div>
+      <div class="g-faixa">
+        <a class="g-barra ${classe}" href="${esc(i.url)}" target="_blank" rel="noopener"
+           style="left:${esq.toFixed(1)}%;width:${larg.toFixed(1)}%"
+           title="#${esc(i.numero)} — ${quando(i)}">#${esc(i.numero)}</a>
+      </div>`).join("") +
+    `<div class="g-hoje" style="left:calc(minmax(9rem,auto) + ${PASSADO}%)"></div>`;
+
+  // A LINHA DO AGORA é posicionada em JS porque ela atravessa a coluna das faixas, e o
+  // `calc` com `minmax` do grid não resolve no CSS.
+  const faixa = el.querySelector(".g-faixa");
+  if (faixa) {
+    const linha = el.querySelector(".g-hoje");
+    linha.style.left = (faixa.offsetLeft + faixa.offsetWidth * PASSADO / 100) + "px";
+  }
 }
 
 // --- as abas ---

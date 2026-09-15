@@ -240,6 +240,11 @@ func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 	// entrega DESTE card destrava outro, e o card continua na coluna onde o trabalho está.
 	// O prefixo é conferido sem o número, que é por card e não se pode enumerar.
 	valida[PrefixoLabelDesbloqueia] = true
+	// O VÍNCULO DO ACHADO, irmão do de desbloqueio: `under-<n>` diz que este card nasceu
+	// SOB outro, e o card continua na coluna onde o trabalho está. São os dois caminhos
+	// para um card ficar preso a outro — o `escalate` produz este, o `unblock` produz
+	// aquele —, e o board precisa dos dois para saber se a espera ainda é real.
+	valida[PrefixoLabelSob] = true
 	// O OPT-OUT da trava de estado, pela mesma razão das duas acima: ele autoriza mover o
 	// card à mão, e o card continua onde o trabalho está. Tratá-lo como estado o faria
 	// sair da coluna — e o board deixaria de mostrar o que ele autoriza.
