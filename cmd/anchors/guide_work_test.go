@@ -107,3 +107,39 @@ func TestGuiaDeTrabalhoUsaONomeRealDaLabel(t *testing.T) {
 		t.Errorf("o guia deveria usar %q, o prefixo real", initx.PrefixoLabelSob)
 	}
 }
+
+// O GUIA PRECISA ENSINAR O CLAIM — ele é o primeiro comando.
+//
+// O guia se anuncia como "a régua de quem pegou um card" e nunca ensinava COMO pegar.
+// Mencionava `status`, `check`, `escalate`, `judge`, `pr-body` — oito comandos — e não o
+// `claim`.
+//
+// MEDIDO no projeto de referência: 38 de 44 PRs abertos tinham o card ainda em `to-do`, e
+// a fila de revisão mostrava UM item enquanto 46 trabalhos esperavam. Os agentes escolhiam
+// o card à mão, implementavam e abriam PR — fazendo o que o guia ensinava.
+//
+// O que se perde não é o registro: é a FILA. O claim serve `ready-to-review` antes de
+// `to-do`, e um card que nunca entra na coluna de revisão faz o próximo agente encontrá-la
+// vazia.
+func TestGuiaEnsinaOClaimComoPrimeiroPasso(t *testing.T) {
+	if !strings.Contains(workGuide, "anchors claim") {
+		t.Fatal("o guia não menciona o `anchors claim` — quem o seguir escolhe o card à " +
+			"mão, e o board deixa de descrever quem está com o quê")
+	}
+
+	// ANTES de tudo: o claim precisa vir na primeira seção, não perdido no meio. Um
+	// comando ensinado depois de "como escrever a spec" chega tarde demais.
+	iClaim := strings.Index(workGuide, "anchors claim")
+	iOrdem := strings.Index(workGuide, "## A ordem")
+	if iOrdem > 0 && iClaim > iOrdem {
+		t.Error("o `claim` é ensinado depois da seção de ordem do board — ele é o " +
+			"PRIMEIRO comando, e ensiná-lo tarde é o mesmo que não ensinar")
+	}
+
+	// E o PORQUÊ: "rode este comando" sem a razão vira passo cerimonial, e é o primeiro
+	// que alguém pula quando tem pressa.
+	if !strings.Contains(workGuide, "encontrá-la vazia") {
+		t.Error("o guia não diz POR QUE o claim importa — sem a razão (a fila de revisão " +
+			"que fica vazia) ele vira cerimônia, e cerimônia se pula")
+	}
+}

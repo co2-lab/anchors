@@ -483,7 +483,7 @@ nodes:
         - comando
     - id: cmd/anchors/guide_work.go
       kind: code
-      rev: 25f7dc8cf705
+      rev: 665f6e1bf8af
       updated_at: "2026-09-14"
       layer: comando
       tags:
@@ -491,7 +491,7 @@ nodes:
         - comando
     - id: cmd/anchors/guide_work_test.go
       kind: test
-      rev: f83d5be08284
+      rev: ceb0e4d29409
       updated_at: "2026-09-14"
       layer: teste
       tags:
