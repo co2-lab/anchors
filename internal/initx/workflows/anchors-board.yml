@@ -129,6 +129,9 @@ jobs:
                     corpo: (.body // "" | .[0:4000]),
                     labels: [.labels[].name],
                     codigo: (.title | capture("^\\[(?<c>[^]]+)\\]").c? // ""),
+                    # O CAMINHO que o achado cita: `[gate] Violação @ caminho/Arquivo.spec.md`.
+                    # É por ele que o achado se liga à unidade — ver o passo "afiliar".
+                    alvo: (.title | capture("@\\s+(?<p>[^ :]+)").p? // ""),
                     estado: ([.labels[].name | select(startswith("anchors:"))
                               | select(. != "anchors:needs-user")] | .[0] // "anchors:to-do"),
                     escalado: ([.labels[].name] | any(. == "anchors:needs-user")),
@@ -227,6 +230,53 @@ jobs:
               jq -nc --arg c "$cod" --arg t "$titulo" --argjson d "${deps:-[]}" \
                 '{codigo:$c, titulo:$t, needs:$d, parent:($c | split("-")[0])}'
             done | jq -s '.' > /tmp/fases.json || echo '[]' > /tmp/fases.json
+
+          # AFILIAR O ACHADO À UNIDADE QUE ELE ACUSA.
+          #
+          # Um achado de gate — `[doc-required] Violação @ caminho/Arquivo.spec.md` — não tem
+          # código de unidade no título: o que está entre colchetes é o nome do GATE. Sem
+          # `parent`, ele fica solto na raiz do roadmap.
+          #
+          # MEDIDO no projeto de referência: 201 dos 304 cards eram achados, todos na raiz —
+          # uma lista de desfiliados maior que a árvore inteira, e o leitor não tem como
+          # saber a que trabalho cada um pertence.
+          #
+          # O VÍNCULO ESTÁ NO TÍTULO: o caminho do arquivo. E o MAPA sabe qual unidade vive
+          # em cada caminho — é a informação que ele existe para guardar. Cruzando os dois,
+          # 143 dos 201 achados encontram a sua unidade.
+          #
+          # Os 58 restantes acusam arquivo fora do mapa (um guia, um workflow) ou um alvo
+          # agregado. Eles seguem na raiz, e é o lugar certo: não pertencem a unidade nenhuma.
+          if [ -f anchors.graph.yaml ]; then
+            python3 - <<'AFILIA' || echo "⚠ não consegui afiliar os achados — seguem na raiz"
+          import json, re, io
+          try:
+              import yaml
+          except ImportError:
+              raise SystemExit(0)
+          g = yaml.safe_load(io.open('anchors.graph.yaml', encoding='utf-8')) or {}
+          porCaminho = {}
+          for n in g.get('nodes', []):
+              c = n.get('code') or n.get('codigo') or ''
+              if re.fullmatch(r'[A-Z]{5}', c):
+                  porCaminho[n.get('id', '')] = c
+          itens = json.load(io.open('_board/board.json', encoding='utf-8'))
+          n = 0
+          for i in itens:
+              # só o que NÃO tem código de unidade próprio: quem tem, já está na árvore
+              if re.fullmatch(r'[A-Z]{5}', i.get('codigo') or ''):
+                  continue
+              if i.get('parent'):
+                  continue
+              c = porCaminho.get((i.get('alvo') or '').rstrip(':.,'))
+              if c:
+                  i['parent'] = c
+                  n += 1
+          json.dump(itens, io.open('_board/board.json', 'w', encoding='utf-8'), ensure_ascii=False)
+          print(f"· {n} achado(s) afiliado(s) à unidade que acusam")
+          AFILIA
+          fi
+
 
           jq -n --slurpfile itens _board/board.json --slurpfile fases /tmp/fases.json \
                 --arg quando "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
