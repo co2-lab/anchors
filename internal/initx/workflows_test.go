@@ -1302,3 +1302,39 @@ func TestPipelineDecidedConheceOsDoisPrefixosDeVinculo(t *testing.T) {
 			"aberto de cada tipo reportaria só um deles")
 	}
 }
+
+// RESPONDIDO exige as DUAS coisas: já houve trabalho sob o card, E ele acabou.
+//
+// A primeira versão perguntava só "há card aberto sob este?" — e marcava como respondido
+// todo card com zero abertos. Mas um card que NUNCA teve trabalho sob ele também tem zero,
+// e ele é o caso mais comum: a decisão que ninguém tomou ainda não gerou trabalho nenhum.
+//
+// MEDIDO: o #400 do projeto de referência ("nenhum workflow roda `pnpm typecheck`") nunca
+// foi respondido e apareceu no board como já-respondido. Um sinal invertido no caso mais
+// frequente é pior que não ter sinal: ensina a ignorar a cor.
+func TestBoardSoMarcaRespondidoQuandoHouveTrabalhoQueAcabou(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-board.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	// As duas contagens: o que EXISTE (qualquer estado) e o que está ABERTO. Uma só não
+	// distingue "acabou" de "nunca começou".
+	if !strings.Contains(texto, "existem=") {
+		t.Fatal("o pipeline conta só os cards ABERTOS sob o card — com essa pergunta, " +
+			"um card que nunca teve trabalho sob ele vira `respondido`, e ele é o caso " +
+			"mais comum de espera real")
+	}
+	if !strings.Contains(texto, `[ "$existem" -gt 0 ] && [ "$abertos" = "0" ]`) {
+		t.Error("a condição de RESPONDIDO precisa exigir as duas coisas — já houve " +
+			"trabalho, e ele acabou")
+	}
+
+	// Os dois prefixos, pela mesma razão do pipeline de liberação: `under-` vem do
+	// `escalate`, `desbloqueia-` do `unblock`.
+	if !strings.Contains(texto, "for pref in under desbloqueia") {
+		t.Error("o board precisa contar os DOIS prefixos de vínculo — olhar só um faria " +
+			"metade dos cards escalados parecer sem trabalho sob eles")
+	}
+}

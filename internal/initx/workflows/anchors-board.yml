@@ -160,18 +160,41 @@ jobs:
           # Se algum está aberto, a espera é real. Se todos fecharam, a decisão saiu — o
           # card fica marcado como RESOLVIDO, e não some do board: quem escalou precisa ver
           # que a resposta veio.
+          # TRÊS SITUAÇÕES, e a diferença entre a segunda e a terceira é o que importa:
+          #
+          #   · o card tem trabalho ABERTO sob ele       → espera (o trabalho não terminou)
+          #   · o card TEVE trabalho sob ele, e fechou   → já respondido
+          #   · o card NUNCA teve card sob ele           → ESPERA VOCÊ, diretamente
+          #
+          # A terceira é a mais comum — a decisão que ninguém tomou ainda não gerou trabalho
+          # nenhum — e a primeira versão disto a marcava como respondida: `esperando` era
+          # `(abertos > 0)`, e um card sem vínculo tem zero abertos.
+          #
+          # MEDIDO: o #400 do projeto de referência ("nenhum workflow roda `pnpm typecheck`")
+          # nunca foi respondido e apareceu como já-respondido. O sinal invertido no caso
+          # mais frequente é pior que não ter sinal: ensina a ignorar a cor.
           for n in $(jq -r '.[] | select(.escalado) | .numero' _board/board.json); do
-            abertos=$(gh issue list --repo "$GH_REPO" --state open               --label "anchors:under-$n" --limit 20 --json number --jq 'length' 2>/dev/null || echo 0)
-            d=$(gh issue list --repo "$GH_REPO" --state open               --label "anchors:desbloqueia-$n" --limit 20 --json number --jq 'length' 2>/dev/null || echo 0)
-            total=$(( abertos + d ))
-            jq --argjson n "$n" --argjson t "$total" \
-              'map(if .numero == $n then . + {esperando: ($t > 0), sob_abertos: $t} else . end)' \
-              _board/board.json > _board/board.tmp && mv _board/board.tmp _board/board.json
-            if [ "$total" -gt 0 ]; then
-              echo "· #$n ESPERANDO — $total card(s) aberto(s) sob ele"
+            abertos=0
+            existem=0
+            for pref in under desbloqueia; do
+              a=$(gh issue list --repo "$GH_REPO" --state open --label "anchors:$pref-$n" --limit 20 --json number --jq 'length' 2>/dev/null || echo 0)
+              e=$(gh issue list --repo "$GH_REPO" --state all --label "anchors:$pref-$n" --limit 20 --json number --jq 'length' 2>/dev/null || echo 0)
+              abertos=$(( abertos + a ))
+              existem=$(( existem + e ))
+            done
+            # RESPONDIDO exige as DUAS coisas: já houve trabalho, E ele acabou. Sem a
+            # primeira, "zero abertos" quer dizer "ninguém respondeu ainda".
+            if [ "$existem" -gt 0 ] && [ "$abertos" = "0" ]; then
+              esperando=false; msg="a decisão saiu e o trabalho sob ele terminou"
+            elif [ "$abertos" -gt 0 ]; then
+              esperando=true;  msg="$abertos card(s) aberto(s) sob ele"
             else
-              echo "· #$n a decisão já saiu — marcado como resolvido"
+              esperando=true;  msg="espera uma decisão — nenhum trabalho foi aberto sob ele"
             fi
+            jq --argjson n "$n" --argjson e "$esperando" --argjson a "$abertos" \
+              'map(if .numero == $n then . + {esperando: $e, sob_abertos: $a} else . end)' \
+              _board/board.json > _board/board.tmp && mv _board/board.tmp _board/board.json
+            echo "· #$n $msg"
           done
 
           # O carimbo de quando a foto foi tirada. Um board sem isso não se distingue de
