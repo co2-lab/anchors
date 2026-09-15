@@ -258,14 +258,6 @@
               border-radius: 8px; padding: .9rem 1.1rem; margin: 0 0 1.25rem; }
   .bloqueio h2 { margin: 0 0 .2rem; font-size: .82rem; text-transform: uppercase;
                  letter-spacing: .06em; color: var(--espera); }
-  /* O JÁ RESPONDIDO, separado por uma linha e em amarelo — presente, sem competir com o
-     que pede ação. Ele não some porque quem escalou precisa ver que a resposta veio. */
-  .bloqueio h3.resolvido-t { margin: 1.1rem 0 .2rem; font-size: .8rem;
-                             text-transform: uppercase; letter-spacing: .06em;
-                             color: var(--alerta); padding-top: .9rem;
-                             border-top: 1px solid var(--linha); }
-  .bloqueio ul.resolvido .num { color: var(--alerta); }
-  .bloqueio ul.resolvido a { color: var(--fraco); }
   .bloqueio .porque { margin: 0 0 .7rem; font-size: .8rem; color: var(--fraco);
                       line-height: 1.55; }
   .bloqueio ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
@@ -616,8 +608,13 @@ function desenhaBloqueio(d) {
   // O campo `esperando` vem do pipeline, que conta os cards ABERTOS sob este. Quando ele
   // não existe (board gerado por versão anterior), o comportamento é o de antes: tudo
   // pendente, que é o lado seguro de errar.
+  // A FAIXA LISTA SÓ O QUE ESPERA. O já-respondido sai daqui — ele não pede nada, e uma
+  // lista que mistura os dois faz o leitor conferir item por item para achar o que importa.
+  //
+  // Ele NÃO desaparece do board: o card continua na sua coluna, em AMARELO, com o selo
+  // "✓ você já respondeu". Quem escalou vê que a resposta veio, no lugar onde o trabalho
+  // está — e não numa faixa de alerta, que é para o que pede ação.
   const pendentes = presos.filter((c) => c.esperando !== false);
-  const respondidos = presos.filter((c) => c.esperando === false);
 
   const linha = (c, n) => `<li>
         <span class="num">#${esc(c.numero)}</span>
@@ -635,30 +632,19 @@ function desenhaBloqueio(d) {
     .sort((a, b) => b.n - a.n || Number(a.c.numero) - Number(b.c.numero))
     .map(({ c, n }) => linha(c, n)).join("");
 
-  // O RESPONDIDO não some: quem escalou precisa ver que a resposta veio, e o card ainda
-  // carrega a label — some de verdade só quando alguém a remover.
-  const bloco = respondidos.length === 0 ? "" : `
-    <h3 class="resolvido-t">Já respondidas · ${respondidos.length}</h3>
-    <p class="porque">A decisão saiu e o trabalho sob ${respondidos.length === 1 ? "esta issue" : "estas issues"}
-      terminou — ${respondidos.length === 1 ? "ela" : "elas"} ainda carrega${respondidos.length === 1 ? "" : "m"}
-      a marca de <code>needs-user</code>, e não pede${respondidos.length === 1 ? "" : "m"} mais nada de você.</p>
-    <ul class="resolvido">${ordena(respondidos)}</ul>`;
-
-  if (pendentes.length === 0 && respondidos.length === 0) {
+  if (pendentes.length === 0) {
     el.hidden = true;
     el.innerHTML = "";
     return;
   }
 
   el.innerHTML = `
-    ${pendentes.length === 0 ? "" : `
     <h2 id="bloqueio-t">Esperando você · ${pendentes.length}</h2>
     <p class="porque">Est${pendentes.length === 1 ? "a issue pede uma decisão" : "as issues pedem uma decisão"}
       que nenhum agente pode tomar por você. Enquanto não houver resposta na issue, o que
       depende ${pendentes.length === 1 ? "dela" : "delas"} não anda — e o board abaixo segue
       mostrando o resto do trabalho como se nada estivesse travado.</p>
-    <ul>${ordena(pendentes)}</ul>`}
-    ${bloco}`;
+    <ul>${ordena(pendentes)}</ul>`;
   el.hidden = false;
 }
 
