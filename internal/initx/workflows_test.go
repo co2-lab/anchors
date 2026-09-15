@@ -245,6 +245,10 @@ func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 	// para um card ficar preso a outro — o `escalate` produz este, o `unblock` produz
 	// aquele —, e o board precisa dos dois para saber se a espera ainda é real.
 	valida[PrefixoLabelSob] = true
+	// O DESCARTE, pela mesma razão das outras: ele diz que o card saiu do BOARD, não que
+	// ele está numa coluna. Tratá-lo como estado o faria aparecer como uma — e o ponto do
+	// descarte é exatamente não aparecer.
+	valida[LabelDiscarded] = true
 	// O OPT-OUT da trava de estado, pela mesma razão das duas acima: ele autoriza mover o
 	// card à mão, e o card continua onde o trabalho está. Tratá-lo como estado o faria
 	// sair da coluna — e o board deixaria de mostrar o que ele autoriza.
@@ -1540,5 +1544,58 @@ func TestBoardAfiliaNumPasseEDenunciaOQueNaoFecha(t *testing.T) {
 			t.Errorf("o diagnóstico não distingue %q — os três motivos pedem ações "+
 				"diferentes de quem for consertar", m)
 		}
+	}
+}
+
+// O CARD DESCARTADO sai do board — e do DADO que o board publica.
+//
+// Fechar não basta: o board mostra os fechados porque o roadmap precisa deles para desenhar
+// o passado. Um card de teste, ou um achado sobre arquivo que não existe mais, fica lá para
+// sempre — fechado, sem pai possível, ocupando uma linha na raiz da árvore.
+//
+// MEDIDO no projeto de referência: das 27 raízes do roadmap, DOZE eram ruído permanente.
+//
+// O FILTRO É NA ORIGEM, e não na página: filtrar ao desenhar deixaria o card no JSON, e quem
+// consome o JSON (um painel próprio, um relatório) o veria. O contrato é o que o board
+// publica — se saiu do board, saiu do dado.
+func TestBoardNaoPublicaCardDescartado(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-board.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+	if !strings.Contains(texto, `any(. == "anchors:discarded") | not`) {
+		t.Error("o board publica o card descartado — ele ficaria na raiz do roadmap para " +
+			"sempre, sem pai possível e sem trabalho a fazer")
+	}
+	// Na MESMA consulta que lê as issues. Um filtro depois, sobre o JSON já montado,
+	// dependeria de ninguém esquecer de aplicá-lo no caminho novo.
+	i := strings.Index(texto, "gh issue list --state all")
+	j := strings.Index(texto[i:], "> _board/board.json")
+	if i < 0 || j < 0 || !strings.Contains(texto[i:i+j], "anchors:discarded") {
+		t.Error("o filtro do descartado não está na consulta que lê as issues")
+	}
+}
+
+// A TRAVA DE ESTADO não pode reabrir o card descartado.
+//
+// O `anchors discard` fecha o card depois de marcá-lo — e fechar à mão é exatamente o que a
+// trava reverte. Sem esta saída, o descartado voltaria a abrir em dez segundos e o `claim` o
+// serviria como trabalho novo: o mesmo ciclo que o #410 sofreu, por outra porta.
+func TestTravaRespeitaOCardDescartado(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+	if !strings.Contains(texto, `any(. == "anchors:discarded")`) {
+		t.Fatal("a trava reabriria o card descartado — e o `claim` o serviria de novo")
+	}
+	// ANTES da reversão: conferir depois de reabrir não adianta.
+	iDesc := strings.Index(texto, `any(. == "anchors:discarded")`)
+	iRev := strings.Index(texto, "gh issue reopen")
+	if iDesc > iRev {
+		t.Error("a conferência do descartado vem DEPOIS da reversão — o card já teria " +
+			"sido reaberto quando ela roda")
 	}
 }

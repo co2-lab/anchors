@@ -116,9 +116,18 @@ jobs:
           #
           # `closedAt` é o que separa "entregue" de "em andamento" sem depender de label:
           # um card fechado tem data, um aberto não.
+          # O DESCARTADO NÃO ENTRA, e o filtro é aqui — na origem.
+          #
+          # Filtrar na página deixaria o card no JSON, e quem consome o JSON (um painel
+          # próprio, um relatório) o veria. O contrato é o que o board publica: se ele saiu
+          # do board, saiu do dado.
+          #
+          # `--state all` continua porque o roadmap precisa do ENTREGUE — é como ele
+          # desenha o passado. Descartado é outra coisa: é o que nunca teve sentido, ou
+          # deixou de ter, e não pertence nem ao passado nem ao futuro.
           gh issue list --state all --label "$LABEL" --limit 500 \
             --json number,title,url,labels,comments,updatedAt,body,createdAt,closedAt,author \
-            --jq '[.[] | {
+            --jq '[.[] | select([.labels[].name] | any(. == "anchors:discarded") | not) | {
                     number: .number,
                     title: .title,
                     url: .url,
