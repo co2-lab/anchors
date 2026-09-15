@@ -2537,7 +2537,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 3b8de83f220e
+      rev: e78620d9909d
       updated_at: "2026-09-15"
       layer: teste
       tags:

@@ -1424,3 +1424,80 @@ func TestBoardJSONEmIngles(t *testing.T) {
 		}
 	}
 }
+
+// TODA `$variavel` USADA NUM PIPELINE PRECISA EXISTIR.
+//
+// O board parou de publicar com `waiting: unbound variable`. Uma renomeação trocou o USO de
+// três variáveis sem trocar a DECLARAÇÃO — e o YAML continua válido, a sintaxe do shell
+// continua válida, o JS continua válido. Nada acusou até o runner executar.
+//
+// As três eram da mesma natureza, e a do meio é a que derrubava tudo:
+//
+//	esperando=true          declarava      $waiting        usava
+//	--arg t "$title"        usava          titulo=         declarava
+//	--slurpfile itens       declarava      $items          o jq lia
+//
+// `set -u` pega isso — mas só no runner, depois do merge. Aqui é de graça.
+func TestPipelinesNaoUsamVariavelInexistente(t *testing.T) {
+	entradas, err := fs.ReadDir(workflowsFS, "workflows")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entradas) == 0 {
+		t.Fatal("nenhum workflow embutido — o glob quebrou e o teste passaria vazio")
+	}
+
+	// O que o AMBIENTE dá: do GitHub Actions, do `env:` do passo, e os laços do shell.
+	ambiente := regexp.MustCompile(`(?m)^\s*([A-Z_][A-Z_0-9]*):`)
+	// A ATRIBUIÇÃO não vive só no começo da linha: `a=1; b=2` e `if ! x=$(cmd)` são as
+	// duas formas que apareceram no fluxo, e exigir início de linha acusava as duas.
+	atribui := regexp.MustCompile(`(?:^|[;&|(]|\bif\s+!?\s*|\bthen\s+|\bdo\s+|\s)([a-zA-Z_][\w]*)=`)
+	laco := regexp.MustCompile(`\b(?:for|read(?:\s+-r)?)\s+(?:IFS=[^ ]*\s+read\s+-r\s+)?([a-zA-Z_][\w]*)`)
+	// o jq declara variáveis por `--arg`, `--argjson` e `--slurpfile`
+	jqVar := regexp.MustCompile(`--(?:arg|argjson|slurpfile|rawfile)\s+([a-zA-Z_][\w]*)`)
+	// O jq também declara DENTRO do programa: `... as $m`, `... as [$a, $b]`. É a mesma
+	// natureza de declaração, e ignorá-la acusava expressões corretas.
+	jqAs := regexp.MustCompile(`\bas\s+\$([a-zA-Z_][\w]*)`)
+	usa := regexp.MustCompile(`\$\{?([a-z_][a-zA-Z_0-9]*)\}?`)
+
+	for _, e := range entradas {
+		b, err := fs.ReadFile(workflowsFS, "workflows/"+e.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
+		texto := string(b)
+
+		declaradas := map[string]bool{}
+		for _, re := range []*regexp.Regexp{ambiente, atribui, laco, jqVar, jqAs} {
+			for _, m := range re.FindAllStringSubmatch(texto, -1) {
+				declaradas[m[1]] = true
+			}
+		}
+		// `read -r a b c d` declara TODAS — o laço captura só a primeira, e um `read` de
+		// quatro campos é comum quando a linha vem de um `\t`-separado.
+		for _, m := range regexp.MustCompile(`read\s+-r\s+([\w]+(?:\s+[\w]+)*)`).
+			FindAllStringSubmatch(texto, -1) {
+			for _, nome := range strings.Fields(m[1]) {
+				declaradas[nome] = true
+			}
+		}
+		// O `--arg` cuja variável vem na linha SEGUINTE, por continuação com `\`.
+		for _, m := range regexp.MustCompile(`(?s)--(?:arg|argjson|slurpfile|rawfile)\s+\\?\s*\n?\s*([a-zA-Z_][\w]*)`).
+			FindAllStringSubmatch(texto, -1) {
+			declaradas[m[1]] = true
+		}
+
+		for _, m := range usa.FindAllStringSubmatch(texto, -1) {
+			nome := m[1]
+			if declaradas[nome] {
+				continue
+			}
+			// `$takenAt` casa `taken` no prefixo minúsculo — confere o nome inteiro.
+			if declaradas[strings.TrimSuffix(nome, "At")] {
+				continue
+			}
+			t.Errorf("%s usa $%s e nada a declara — `set -u` derruba o passo no runner",
+				e.Name(), nome)
+		}
+	}
+}
