@@ -188,14 +188,14 @@ jobs:
             # RESPONDIDO exige as DUAS coisas: já houve trabalho, E ele acabou. Sem a
             # primeira, "zero abertos" quer dizer "ninguém respondeu ainda".
             if [ "$existem" -gt 0 ] && [ "$abertos" = "0" ]; then
-              esperando=false; msg="a decisão saiu e o trabalho sob ele terminou"
+              waiting=false; msg="a decisão saiu e o trabalho sob ele terminou"
             elif [ "$abertos" -gt 0 ]; then
-              esperando=true;  msg="$abertos card(s) aberto(s) sob ele"
+              waiting=true;  msg="$abertos card(s) aberto(s) sob ele"
             else
-              esperando=true;  msg="espera uma decisão — nenhum trabalho foi aberto sob ele"
+              waiting=true;  msg="espera uma decisão — nenhum trabalho foi aberto sob ele"
             fi
             jq --argjson n "$n" --argjson e "$waiting" --argjson a "$abertos" \
-              'map(if .number == $n then . + {esperando: $e, sob_abertos: $a} else . end)' \
+              'map(if .number == $n then . + {waiting: $e, openUnder: $a} else . end)' \
               _board/board.json > _board/board.tmp && mv _board/board.tmp _board/board.json
             echo "· #$n $msg"
           done
@@ -227,8 +227,8 @@ jobs:
             while IFS=$'\t' read -r cod resto; do
               titulo=$(echo "$resto" | sed -E 's/ *\(depende d[eao][^)]*\) *//I')
               deps=$(echo "$resto" | grep -oE '[A-Z0-9]{4,5}-F[0-9]{2}' | jq -R . | jq -sc '.')
-              jq -nc --arg c "$cod" --arg t "$title" --argjson d "${deps:-[]}" \
-                '{codigo:$c, titulo:$t, needs:$d, parent:($c | split("-")[0])}'
+              jq -nc --arg c "$cod" --arg t "$titulo" --argjson d "${deps:-[]}" \
+                '{code:$c, title:$t, needs:$d, parent:($c | split("-")[0])}'
             done | jq -s '.' > /tmp/fases.json || echo '[]' > /tmp/fases.json
 
           # AFILIAR O ACHADO À UNIDADE QUE ELE ACUSA.
@@ -310,10 +310,10 @@ jobs:
           fi
 
 
-          jq -n --slurpfile itens _board/board.json --slurpfile fases /tmp/fases.json \
-                --arg quando "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+          jq -n --slurpfile items _board/board.json --slurpfile phases /tmp/fases.json \
+                --arg takenAt "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
                 --arg repo "$GH_REPO" \
-                '{quando: $takenAt, repo: $repo, fases: ($phases[0] // []), itens: $items[0]}' > _board/dados.json
+                '{takenAt: $takenAt, repo: $repo, phases: ($phases[0] // []), items: $items[0]}' > _board/dados.json
           mv _board/dados.json _board/board.json
           echo "$(jq '.items | length' _board/board.json) card(s) no board"
 
