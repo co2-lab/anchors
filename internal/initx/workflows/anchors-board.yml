@@ -278,32 +278,49 @@ jobs:
                   return porCadeia(porNumero[int(v)], vistos)
               return None
 
+          # ATÉ ESTABILIZAR, e não um passe só.
+          #
+          # A cadeia resolve olhando o `parent` do elo seguinte — e num passe único esse
+          # `parent` pode ainda não ter sido escrito. Depende da ORDEM da lista, que é a
+          # ordem das issues no GitHub: `#498 → #410 → ALFDL` falhava porque o #498 vinha
+          # antes do #410 receber o dele.
+          #
+          # MEDIDO: sete cards ficavam na raiz por isso, todos com vínculo válido — e um
+          # deles aponta para um card que JÁ tinha `parent` no JSON publicado. Era ordem,
+          # não dado faltando.
+          #
+          # O teto de 10 passes é contra ciclo: a cadeia mais funda no projeto real tem
+          # três elos, e cada passe custa uma varredura de 300 itens.
           n = 0
-          for i in itens:
-              # só o que NÃO tem código de unidade próprio: quem tem, já está na árvore
-              if re.fullmatch(r'[A-Z]{5}', i.get('code') or ''):
-                  continue
-              if i.get('parent'):
-                  continue
-              c = porCaminho.get((i.get('target') or '').rstrip(':.,'))
-              if c:
-                  i['parent'] = c
-                  n += 1
-                  continue
-              # SEGUNDA PORTA: o card de ESCALAÇÃO não traz `@ caminho` no título — o
-              # `escalate` escreve "[decisão] A revisão do card #311 achou…". O que ele traz
-              # é a label `under-<n>`, que o pipeline já extraiu como `linkedTo`.
-              #
-              # MEDIDO: dos 58 achados que sobravam na raiz, 25 são escalações com vínculo
-              # para um card de unidade. Sem esta porta, toda decisão pendente fica solta —
-              # e são exatamente as que mais precisam ser achadas.
-              # A CADEIA, e não um salto só. Um achado pode pender de outro achado, que
-              # por fim pende da unidade: `#498 → #410 (doc-required) → ALFDL`. Parar no
-              # primeiro salto deixava seis cards na raiz por um elo intermediário.
-              c = porCadeia(i)
-              if c:
-                  i['parent'] = c
-                  n += 1
+          for _passe in range(10):
+            mudou = False
+            for i in itens:
+                # só o que NÃO tem código de unidade próprio: quem tem, já está na árvore
+                if re.fullmatch(r'[A-Z]{5}', i.get('code') or ''):
+                    continue
+                if i.get('parent'):
+                    continue
+                c = porCaminho.get((i.get('target') or '').rstrip(':.,'))
+                if c:
+                    i['parent'] = c
+                    n += 1; mudou = True
+                    continue
+                # SEGUNDA PORTA: o card de ESCALAÇÃO não traz `@ caminho` no título — o
+                # `escalate` escreve "[decisão] A revisão do card #311 achou…". O que ele traz
+                # é a label `under-<n>`, que o pipeline já extraiu como `linkedTo`.
+                #
+                # MEDIDO: dos 58 achados que sobravam na raiz, 25 são escalações com vínculo
+                # para um card de unidade. Sem esta porta, toda decisão pendente fica solta —
+                # e são exatamente as que mais precisam ser achadas.
+                # A CADEIA, e não um salto só. Um achado pode pender de outro achado, que
+                # por fim pende da unidade: `#498 → #410 (doc-required) → ALFDL`. Parar no
+                # primeiro salto deixava seis cards na raiz por um elo intermediário.
+                c = porCadeia(i)
+                if c:
+                    i['parent'] = c
+                    n += 1; mudou = True
+            if not mudou:
+              break
           json.dump(itens, io.open('_board/board.json', 'w', encoding='utf-8'), ensure_ascii=False)
           print(f"· {n} achado(s) afiliado(s) à unidade que acusam")
           AFILIA
