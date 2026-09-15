@@ -274,32 +274,16 @@
      (com data), à direita o que falta (com ordem).
      Grid e não SVG: as barras são retângulos posicionados, o texto precisa fluir e ser
      selecionável, e um SVG exigiria calcular largura de fonte à mão. */
-  /* A ÁRVORE DO ROADMAP. Mesma hierarquia da aba Árvore, cores do estado de ENTREGA:
-     verde entregue, azul em curso, cinza o que falta. */
-  .rm-arvore, .rm-arvore ul { list-style: none; margin: 0; padding: 0; }
-  .rm-arvore ul { padding-left: 1.1rem; border-left: 1px solid var(--linha);
-                  margin-left: .35rem; }
-  .rm-arvore li { padding: .15rem 0; font-size: .8rem; line-height: 1.5; }
-  .rm-arvore a { color: inherit; text-decoration: none; }
-  .rm-arvore a:hover { text-decoration: underline; }
-  .rm-arvore summary { cursor: pointer; font-weight: 600; padding: .15rem 0; }
-  .rm-arvore summary::marker { color: var(--fraco); }
-  .rm-marca { display: inline-block; width: 1rem; }
-  .rm-n { color: var(--fraco); font-size: .7rem; margin-left: .3rem; }
-  .rm-prog { color: var(--fraco); font-weight: 400; font-size: .72rem; margin-left: .4rem; }
-  .rm-feito > .rm-marca, .rm-feito > details > summary > .rm-marca { color: var(--pronto); }
-  /* O ENTREGUE esmaece: o roadmap é sobre o que falta, e o que já foi não deve competir
-     pela atenção — mas continua legível, porque ele é o que dá a medida do progresso. */
-  .rm-feito > a, .rm-feito > details > summary { color: var(--fraco); }
-  .rm-fazendo > .rm-marca { color: var(--fazendo); }
-  .rm-fazendo > a { color: var(--fazendo); font-weight: 500; }
-  .rm-futuro > .rm-marca { color: var(--todo); }
+  /* O CABEÇALHO DE GRUPO no modo árvore: plano e fase viram linha sem barra, e é o que
+     explica a indentação das issues abaixo. Sem ele o recuo ficaria órfão. */
+  .g-rot.grupo { font-weight: 600; color: var(--fg); }
+  .g-rot.item { color: var(--fraco); }
   .gantt { display: grid; grid-template-columns: minmax(9rem, auto) 1fr; gap: 0;
            font-size: .8rem; position: relative; }
   .g-rot { padding: .3rem .6rem .3rem 0; white-space: nowrap; overflow: hidden;
            text-overflow: ellipsis; border-bottom: 1px solid var(--linha); }
-  .g-rot.fase { font-weight: 600; }
-  .g-rot.item { padding-left: 1.1rem; color: var(--fraco); }
+  /* o recuo vem INLINE, calculado pelo nível na hierarquia — uma regra fixa aqui
+     sobrescreveria a indentação do modo árvore */
   .g-faixa { position: relative; border-bottom: 1px solid var(--linha);
              border-left: 1px solid var(--linha); min-height: 1.9rem; }
   .g-barra { position: absolute; top: .35rem; height: 1.15rem; border-radius: 3px;
@@ -415,8 +399,7 @@
   <button class="chip" type="button" data-modo="linha" aria-pressed="false">Linha do tempo</button>
 </div>
 <p class="prioridade" id="roadmap-legenda"></p>
-<div id="roadmap-arvore"></div>
-<div class="gantt" id="gantt" hidden></div>
+<div class="gantt" id="gantt"></div>
 </section>
 
 <!-- `<dialog>` nativo: o navegador já dá o fechamento por Esc, o foco preso dentro e o
@@ -1057,42 +1040,43 @@ function modoRoadmap() {
   return localStorage.getItem("anchors:roadmap") === "linha" ? "linha" : "arvore";
 }
 
-// A ÁRVORE DO ROADMAP é a mesma hierarquia da aba Árvore — plano → fase → card, pelo
-// `parent` —, e a diferença está no que cada nó DIZ.
-//
-// Lá a pergunta é "posso pegar isto agora?", e a resposta vem do `needs`. Aqui é "onde isto
-// está?", e a resposta é o estado de entrega. O mesmo desenho servindo a duas perguntas
-// seria mais econômico e responderia mal às duas.
-function desenhaRoadmapArvore(d) {
-  const alvo = document.getElementById("roadmap-arvore");
-  if (!alvo) return;
-  const fases = d.fases || [];
-
-  // SÓ O CÓDIGO DE UNIDADE entra na hierarquia, e a distinção não é cosmética.
-  //
-  // O `codigo` do JSON é o que está entre colchetes no título — e isso inclui o nome do
-  // GATE: `[doc-required] Violação @ …`. Medido no projeto de referência: 303 cards, 126
-  // "códigos" distintos, e um só deles (`doc-required`) respondia por 37 cards. Chavear a
-  // árvore por ele fazia 37 cards virarem um nó, e os outros 36 sumirem.
-  //
-  // O código de unidade tem forma: cinco letras maiúsculas. Dos 303 cards, 103 têm um — e
-  // ZERO repetem. Os outros 200 são achados de gate: eles pertencem ao card que os
-  // originou (a label `under-<n>`), não à hierarquia de planos, e um roadmap que os
-  // desenhasse como nós soltos mostraria a dívida como se fosse escopo.
-  const CODIGO = /^[A-Z]{5}$/;
-  const itens = (d.itens || []).filter((i) => CODIGO.test(i.codigo || ""));
-  if (!itens.length && !fases.length) {
-    alvo.innerHTML = '<p class="vazia">Nada a mostrar.</p>';
-    return;
+function desenhaRoadmap(d) {
+  // O MODO NÃO TROCA DE PAINEL: a linha do tempo é a mesma nos dois, e só a coluna da
+  // esquerda muda de ordem e indentação. Trocar de desenho inteiro faria o leitor perder
+  // a referência temporal ao alternar — que é justamente o que ele está usando.
+  const modo = modoRoadmap();
+  for (const b of document.querySelectorAll("[data-modo]")) {
+    b.setAttribute("aria-pressed", String(b.dataset.modo === modo));
   }
+  const leg = document.getElementById("roadmap-legenda");
+  if (leg) {
+    const comum = `À <strong>esquerda</strong> da linha, o que foi entregue — com as datas
+      reais. À <strong>direita</strong>, o que falta, posicionado pela <em>dependência</em>
+      e não por prazo: o Anchors sabe a ORDEM, e não inventa <em>quando</em>.`;
+    leg.innerHTML = comum + (modo === "arvore"
+      ? ` As issues vêm agrupadas por <strong>plano → fase</strong>, na hierarquia do mapa.`
+      : ` As issues vêm em <strong>ordem de ocorrência</strong>, uma por linha.`);
+  }
+  desenhaRoadmapLinha(d);
+}
+
+// ORDENA AS LINHAS pela hierarquia do mapa, e acrescenta o nível de indentação.
+//
+// A linha do tempo não muda: cada issue continua onde a data (ou a ordem) a põe. O que esta
+// função decide é em que SEQUÊNCIA as linhas aparecem e quanto cada rótulo recua — de modo
+// que as issues de uma fase fiquem juntas, sob o nome dela.
+//
+// O NÓ DE GRUPO (plano, fase) entra como linha própria, sem barra: ele é o cabeçalho do
+// bloco. Sem isso a indentação ficaria órfã — recuo sem nada que o explique.
+function ordenaPorHierarquia(linhas, d) {
+  const CODIGO = /^[A-Z]{5}$/;
+  const porCodigo = {};
+  for (const { i } of linhas) if (CODIGO.test(i.codigo || "")) porCodigo[i.codigo] = i;
 
   const nos = {};
-  for (const f of fases) nos[f.codigo] = { ...f, tipo: "fase" };
-  // O card ganha do nó de fase homônimo se houver colisão: o card é o trabalho real.
-  for (const i of itens) nos[i.codigo] = { ...i, tipo: "card" };
+  for (const f of d.fases || []) nos[f.codigo] = { ...f, tipo: "fase" };
+  for (const c of Object.keys(porCodigo)) nos[c] = { ...porCodigo[c], tipo: "card" };
 
-  // MESMA regra de pertencimento da aba Árvore: `parent` declarado, e a fase sem `parent`
-  // cai no plano homônimo (o código da fase é derivado do plano).
   const filhos = {};
   const raizes = [];
   for (const cod of Object.keys(nos)) {
@@ -1105,100 +1089,37 @@ function desenhaRoadmapArvore(d) {
     (filhos[pai] ||= []).push(cod);
   }
 
-  const ENTREGUE = ["anchors:ready-to-test", "anchors:in-test",
-                    "anchors:ready-to-release", "anchors:production"];
-  // ENTREGUE de um nó com filhos é o AND dos filhos — e o card do próprio nó, quando
-  // existe, entra na conta: um plano cuja spec ainda não fechou não está entregue, por
-  // mais que as fases dele estejam.
-  function entregue(n, vistos = new Set()) {
-    if (vistos.has(n.codigo)) return true;   // ciclo não trava o desenho
-    vistos.add(n.codigo);
-    const meus = filhos[n.codigo] || [];
-    const proprio = n.numero
-      ? Boolean(n.fechado) || ENTREGUE.includes(n.estado)
-      : true;                                 // nó de fase pura não tem card próprio
-    if (!meus.length) return proprio;
-    return proprio && meus.every((f) => entregue(nos[f], vistos));
-  }
+  const daLinha = {};
+  for (const l of linhas) if (l.i.codigo) daLinha[l.i.codigo] = l;
 
-  // O PROGRESSO da fase é o que dá a leitura de roadmap: 3/7 diz onde o plano está sem
-  // abrir nada. Conta só os CARDS — a fase seguinte não é parte desta.
-  function conta(cod, vistos = new Set()) {
-    if (vistos.has(cod)) return { feitos: 0, total: 0 };
+  const saida = [];
+  const usados = new Set();
+  function desce(cod, nivel, vistos) {
+    if (vistos.has(cod)) return;                 // ciclo de `parent` não trava
     vistos.add(cod);
-    let feitos = 0, total = 0;
-    for (const f of filhos[cod] || []) {
-      const n = nos[f];
-      // FOLHA conta como uma unidade; nó com filhos delega a contagem a eles — senão um
-      // plano de quatro fases contaria "4/4" em vez dos cards que ele de fato tem.
-      if (!(filhos[f] || []).length) { total++; if (entregue(n)) feitos++; }
-      else { const c = conta(f, vistos); feitos += c.feitos; total += c.total; }
-    }
-    return { feitos, total };
-  }
-
-  const rotulo = (n) => esc((n.titulo || n.codigo).replace(/^\[[^\]]+\]\s*/, ""));
-
-  function no(cod, vistos = new Set()) {
-    if (vistos.has(cod)) return "";
-    const n = nos[cod];
-    if (!n) return "";
     const meus = (filhos[cod] || []).sort((a, b) => a.localeCompare(b));
-    const feito = entregue(n);
-    const marca = feito ? "✓" : (n.tipo === "card" && n.estado !== "anchors:to-do" ? "◐" : "○");
-    const classe = feito ? "rm-feito" : (n.tipo === "card" && n.estado !== "anchors:to-do"
-      ? "rm-fazendo" : "rm-futuro");
-
-    // O QUE DECIDE O DESENHO É TER FILHOS, não o tipo.
-    //
-    // Um plano tem card próprio (`tipo: "card"`) E fases dentro dele — medido: os 17 planos
-    // do projeto de referência são todos cards. Desenhar `<details>` só para `tipo: "fase"`
-    // fazia cada plano virar uma folha, e as 86 fases sumirem com os cards delas junto.
-    if (!meus.length) {
-      return `<li class="${classe}"><span class="rm-marca">${marca}</span>
-        <a href="${esc(n.url || "#")}" target="_blank" rel="noopener">${rotulo(n)}</a>
-        ${n.numero ? `<span class="rm-n">#${esc(n.numero)}</span>` : ""}</li>`;
+    const l = daLinha[cod];
+    if (l) {
+      // O nó COM filhos vira cabeçalho; sem filhos, é uma issue como outra qualquer.
+      saida.push({ ...l, nivel, grupo: meus.length > 0 });
+      usados.add(l);
+    } else if (meus.length) {
+      // fase sem card próprio: entra só como cabeçalho, sem barra
+      saida.push({ i: nos[cod], esq: 0, larg: 0, classe: "grupo", nivel, grupo: true });
     }
-    const { feitos, total } = conta(cod, new Set());
-    const filhosHTML = meus.map((k) => no(k, new Set([...vistos, cod]))).join("");
-    // ABERTO enquanto houver o que fazer; fechado quando a fase terminou. Um roadmap que
-    // abre tudo obriga a rolar por cima do que já acabou para achar o que vem.
-    return `<li class="${classe} rm-grupo"><details ${feito ? "" : "open"}>
-      <summary><span class="rm-marca">${marca}</span> ${rotulo(n)}
-        ${total ? `<span class="rm-prog">${feitos}/${total}</span>` : ""}</summary>
-      ${filhosHTML ? `<ul>${filhosHTML}</ul>` : ""}
-    </details></li>`;
+    for (const k of meus) desce(k, nivel + 1, vistos);
   }
+  for (const r of raizes.sort((a, b) => a.localeCompare(b))) desce(r, 0, new Set());
 
-  alvo.innerHTML = `<ul class="rm-arvore">${
-    raizes.sort((a, b) => a.localeCompare(b)).map((r) => no(r)).join("")}</ul>`;
-}
+  // O QUE SOBROU vai para o fim, na ordem de ocorrência: são os achados de gate, que não
+  // pertencem à hierarquia de planos (eles pendem do card que os originou). Descartá-los
+  // esconderia do roadmap metade do que foi entregue.
+  const resto = linhas.filter((l) => !usados.has(l))
+    .sort((a, b) => a.esq - b.esq || Number(a.i.numero) - Number(b.i.numero))
+    .map((l) => ({ ...l, nivel: 0, grupo: false }));
 
-function desenhaRoadmap(d) {
-  // O SELETOR decide qual das duas desenha, e a outra fica escondida — as duas leem os
-  // mesmos dados, e recalcular na troca seria trabalho sem ganho.
-  const modo = modoRoadmap();
-  const arv = document.getElementById("roadmap-arvore");
-  const leg = document.getElementById("roadmap-legenda");
-  const gantt = document.getElementById("gantt");
-  if (arv) arv.hidden = modo !== "arvore";
-  if (gantt) gantt.hidden = modo !== "linha";
-  for (const b of document.querySelectorAll("[data-modo]")) {
-    b.setAttribute("aria-pressed", String(b.dataset.modo === modo));
-  }
-  if (leg) {
-    leg.innerHTML = modo === "arvore"
-      ? `A estrutura do plano: <strong>plano → fase → card</strong>, pelo
-         <code>parent</code> do mapa. O número ao lado da fase é o que já foi entregue
-         dela — e as fases concluídas vêm fechadas, porque o roadmap é sobre o que
-         <em>falta</em>.`
-      : `À <strong>esquerda</strong> da linha, o que foi entregue — com as datas reais de
-         quando o card nasceu e quando fechou. À <strong>direita</strong>, o que falta,
-         posicionado pela <em>dependência</em> e não por prazo: o Anchors sabe a ORDEM (o
-         <code>needs:</code> do mapa), e não inventa <em>quando</em>.`;
-  }
-  if (modo === "arvore") { desenhaRoadmapArvore(d); return; }
-  desenhaRoadmapLinha(d);
+  linhas.length = 0;
+  linhas.push(...saida, ...resto);
 }
 
 function desenhaRoadmapLinha(d) {
@@ -1256,8 +1177,20 @@ function desenhaRoadmapLinha(d) {
                   classe: emCurso ? "fazendo" : "futuro" });
   });
 
-  // ordenar: entregues por data, depois o que está em curso, depois o futuro por ordem
-  linhas.sort((a, b) => a.esq - b.esq || Number(a.i.numero) - Number(b.i.numero));
+  // A ORDEM E A INDENTAÇÃO DAS LINHAS é o que o modo troca. A linha do tempo é a MESMA
+  // nos dois — as barras, o eixo, a marca do agora —, e só o lado esquerdo muda:
+  //
+  //   LISTA   as issues em ordem de ocorrência, uma por linha
+  //   ÁRVORE  as issues agrupadas por plano → fase, na hierarquia do mapa
+  //
+  // A pergunta que a barra responde ("quando isto foi entregue?") não muda; o que muda é
+  // como o leitor ACHA a issue de que precisa.
+  if (modoRoadmap() === "arvore") {
+    ordenaPorHierarquia(linhas, d);
+  } else {
+    // ocorrência: entregues por data, depois o em curso, depois o futuro pela ordem
+    linhas.sort((a, b) => a.esq - b.esq || Number(a.i.numero) - Number(b.i.numero));
+  }
 
   const rot = (c) => esc((c.codigo ? c.codigo + " · " : "") +
                          c.titulo.replace(/^\[[^\]]+\]\s*/, "")).slice(0, 80);
@@ -1271,12 +1204,14 @@ function desenhaRoadmapLinha(d) {
        <span class="g-marca" style="left:${PASSADO}%">agora</span>
        <span class="g-marca" style="left:98%">ordem →</span>
      </div>` +
-    linhas.map(({ i, esq, larg, classe }) => `
-      <div class="g-rot item" title="${rot(i)}">${rot(i)}</div>
-      <div class="g-faixa">
+    linhas.map(({ i, esq, larg, classe, nivel, grupo }) => `
+      <div class="g-rot ${grupo ? "grupo" : "item"}"
+           style="padding-left:${((nivel || 0) * 0.9 + (grupo ? 0 : 1.1)).toFixed(2)}rem"
+           title="${rot(i)}">${rot(i)}</div>
+      <div class="g-faixa">${i.numero ? `
         <a class="g-barra ${classe}" href="${esc(i.url)}" target="_blank" rel="noopener"
            style="left:${esq.toFixed(1)}%;width:${larg.toFixed(1)}%"
-           title="#${esc(i.numero)} — ${quando(i)}">#${esc(i.numero)}</a>
+           title="#${esc(i.numero)} — ${quando(i)}">#${esc(i.numero)}</a>` : ""}
       </div>`).join("") +
     `<div class="g-hoje" style="left:calc(minmax(9rem,auto) + ${PASSADO}%)"></div>`;
 
