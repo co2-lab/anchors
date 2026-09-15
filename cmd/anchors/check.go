@@ -228,6 +228,33 @@ repetido). Sem esse modo, judge fica invisível (nem barra, nem registra).`,
 				os.Exit(1)
 			}
 
+			// O MAPA ESTÁ VELHO? — e esta pergunta é diferente de "o arquivo está no mapa".
+			//
+			// O hook já barrava o arquivo REGIDO fora do mapa (o arquivo novo). O que
+			// passava era o arquivo que ESTÁ no mapa com a `rev` de uma versão anterior:
+			// o `map build` rodou, e o trabalho continuou depois dele.
+			//
+			// MEDIDO no projeto de referência: das 12 reprovações do pipeline `gates`,
+			// SETE foram isto — a maior causa isolada. Nas sete o agente tinha commitado
+			// o mapa; ninguém esqueceu de gerá-lo, todos geraram cedo demais.
+			//
+			// AVISO e não barreira, e a distinção importa. O mapa velho não invalida o
+			// trabalho — invalida a FOTO que os gates confrontam. Barrar o commit aqui
+			// impediria alguém de salvar trabalho em andamento, que é justamente quando
+			// o mapa fica velho. O que faltava era DIZER, na máquina, o que o CI só diz
+			// seis minutos depois.
+			if stale := staleMapNodes(absRoot, g, cfg); len(stale) > 0 && !all {
+				fmt.Fprintln(os.Stderr)
+				fmt.Fprintln(os.Stderr, i18n.T("check.map_stale", len(stale)))
+				for i, v := range stale {
+					if i == 3 {
+						fmt.Fprintln(os.Stderr, i18n.T("check.map_stale_more", len(stale)-3))
+						break
+					}
+					fmt.Fprintln(os.Stderr, "    "+v)
+				}
+			}
+
 			if !profile.Passed {
 				// `os.Exit` não roda os `defer`: sem fechar aqui, o espelho perderia
 				// o fim do relatório exatamente no caso em que ele mais importa — o

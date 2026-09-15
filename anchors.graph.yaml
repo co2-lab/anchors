@@ -144,8 +144,8 @@ nodes:
         - test
     - id: cmd/anchors/check.go
       kind: code
-      rev: e23da76796e2
-      updated_at: "2026-09-10"
+      rev: 93f7945a8e79
+      updated_at: "2026-09-15"
       layer: comando
       tags:
         - cli
@@ -303,12 +303,25 @@ nodes:
         - test
     - id: cmd/anchors/escalate.go
       kind: code
-      rev: b39eaa623077
+      rev: 85a3b8e4924d
       updated_at: "2026-09-14"
       layer: comando
       tags:
         - cli
         - comando
+    - id: cmd/anchors/escalate_dup.go
+      kind: code
+      rev: f3c9ef514462
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/escalate_dup_test.go
+      kind: test
+      rev: 9f0441291ea0
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/escalate_test.go
       kind: test
       rev: b531290267d7
@@ -601,6 +614,21 @@ nodes:
       kind: test
       rev: 0f5b046e6baf
       updated_at: "2026-09-10"
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/map_staleness.go
+      kind: code
+      rev: 54cba53d5c50
+      updated_at: "2026-09-15"
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/map_staleness_test.go
+      kind: test
+      rev: 77c757870bde
+      updated_at: "2026-09-15"
       layer: teste
       tags:
         - test
