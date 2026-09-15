@@ -162,6 +162,75 @@ jobs:
             echo "· o PR não declara card — nada a conferir"
             exit 0
           fi
+
+          # O CARD ESTÁ NA COLUNA QUE ESTE TRABALHO DESCREVE?
+          #
+          # Um PR aberto significa que alguém está trabalhando — e o card precisa dizer
+          # isso. Se ele está em `to-do`, o `anchors claim` foi pulado: ninguém registrou
+          # posse, e o board mostra como disponível um trabalho que já tem PR.
+          #
+          # MEDIDO no projeto de referência: 38 dos 44 PRs abertos tinham o card em
+          # `to-do`. O efeito não é cosmético — o `claim` prioriza `ready-to-review` sobre
+          # `to-do`, e encontrava a fila de revisão VAZIA enquanto 46 trabalhos esperavam.
+          # Cada agente pegava trabalho novo em vez de revisar o que estava pronto.
+          #
+          # REPROVA, e não avisa. O `pr-checks` já avisava ("card não está em trabalho
+          # ativo — nada a fazer") e o aviso não impediu 38 ocorrências. Um gate que
+          # acusa e deixa passar ensina que o passo é opcional.
+          #
+          # A SAÍDA é rodar o claim — e ela está na mensagem, porque um gate que reprova
+          # sem dizer o que fazer transfere o problema em vez de resolvê-lo.
+          semClaim=""
+          for c in $(printf '%s' "$raiz" | tr ',' ' '); do
+            # A LABEL DO ANCHORS confirma jurisdição. `gh issue view` pega um número
+            # específico e não aceita `--label` como filtro — então a conferência vai no
+            # `jq`: sem a label-raiz, o `estado` sai vazio e o card cai no caso "não é do
+            # fluxo", que passa. É a mesma pergunta que os outros pipelines fazem com
+            # `--label "$LABEL"` no `issue list`.
+            estado=$(gh issue view "$c" --repo "$GH_REPO" --json labels \
+              --jq 'if ([.labels[].name] | index("anchors")) then
+                      [.labels[].name] | map(select(startswith("anchors:"))) | join(" ")
+                    else "" end' 2>/dev/null || echo "")
+            case "$estado" in
+              # ESTADOS DE TRABALHO EM CURSO: o card diz que alguém está nele.
+              *in-progress*|*ready-to-review*|*in-review*) ;;
+              # DE `ready-to-test` EM DIANTE o Anchors saiu da alçada — um PR que corrige
+              # algo já entregue é legítimo, e cobrar claim ali seria cobrar duas vezes.
+              *ready-to-test*|*in-test*|*ready-to-release*|*production*) ;;
+              # SEM LABEL DE ESTADO o card não é do fluxo (uma issue comum), e a régua
+              # não tem jurisdição sobre ele.
+              "") ;;
+              *) semClaim="$semClaim #$c" ;;
+            esac
+          done
+          if [ -n "$semClaim" ]; then
+            echo "::error::o(s) card(s)$semClaim ainda estão em \`to-do\` — o \`anchors claim\` foi pulado, e o board mostra como disponível um trabalho que já tem PR"
+            {
+              echo "### ✗ O card não foi reivindicado"
+              echo ""
+              echo "Este PR declara$semClaim, e esse(s) card(s) continuam em \`to-do\`."
+              echo ""
+              echo "**O que isso quebra.** O \`claim\` serve \`ready-to-review\` antes de"
+              echo "\`to-do\`: revisar tem prioridade sobre trabalho novo. Um card que nunca"
+              echo "entra na coluna de revisão faz o próximo agente encontrá-la vazia — e ele"
+              echo "pega trabalho novo em vez de revisar o que está pronto."
+              echo ""
+              echo "Medido: 38 de 44 PRs abertos com o card ainda em \`to-do\`, e a fila de"
+              echo "revisão vazia enquanto 46 trabalhos esperavam."
+              echo ""
+              echo "**A ordem que o fluxo espera:**"
+              echo ""
+              echo '```console'
+              echo "\$ anchors claim        # registra a posse e move o card"
+              echo "\$ # implementar"
+              echo "\$ anchors pr-body --cards <n>"
+              echo '```'
+              echo ""
+              echo "O claim escreve o \`anchors-owner\` no card — é por ele que o fluxo sabe"
+              echo "de quem é o trabalho, e a quem NÃO servir a revisão."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
           # E o que se confere é o que FALTA: os achados que nasceram sob os cards
           # declarados. Eles se entregam no mesmo PR, e esquecê-los deixa o board
           # afirmando que há trabalho pendente que já foi feito.

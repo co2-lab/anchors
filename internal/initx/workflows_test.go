@@ -1676,3 +1676,70 @@ func TestStaleLiberaODonoSemMoverOCard(t *testing.T) {
 		t.Error("o registro da liberação não diz em que coluna o card ficou")
 	}
 }
+
+// O PR CUJO CARD ESTÁ EM `to-do` REPROVA — o claim foi pulado.
+//
+// Um PR aberto significa que alguém está trabalhando, e o card precisa dizer isso. Em
+// `to-do`, ninguém registrou posse: o board mostra como disponível um trabalho que já tem PR.
+//
+// MEDIDO no projeto de referência: 38 dos 44 PRs abertos tinham o card em `to-do`. O efeito
+// não é cosmético — o `claim` prioriza `ready-to-review` sobre `to-do`, e encontrava a fila
+// de revisão VAZIA enquanto 46 trabalhos esperavam. Cada agente pegava trabalho novo em vez
+// de revisar o que estava pronto.
+//
+// REPROVA, e não avisa. O `pr-checks` já avisava ("card não está em trabalho ativo — nada a
+// fazer"), e o aviso não impediu as 38 ocorrências. Um gate que acusa e deixa passar ensina
+// que o passo é opcional.
+func TestGateReprovaCardSemClaim(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-gates.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	// O ACÚMULO: sem ele o gate confere o último card e esquece os anteriores — um PR que
+	// fecha três cards passaria com dois deles em `to-do`.
+	if !strings.Contains(texto, `semClaim="$semClaim #$c"`) {
+		t.Error("o gate não ACUMULA os cards sem claim — num PR que fecha vários, só o " +
+			"último seria conferido")
+	}
+	// E a JURISDIÇÃO: sem confirmar a label-raiz, o gate reprovaria uma issue comum do
+	// projeto que alguém citou num `Closes`.
+	if !strings.Contains(texto, `index("anchors")`) {
+		t.Error("o gate lê o card sem confirmar que ele é do Anchors — uma issue de outro " +
+			"fluxo citada num `Closes` seria reprovada por não ter label de estado")
+	}
+	if !strings.Contains(texto, "semClaim=") {
+		t.Fatal("o gate não confere a coluna do card — um PR com o card em `to-do` passa, " +
+			"e o board segue mostrando como disponível um trabalho que já tem PR")
+	}
+	// REPROVA de verdade: `::error::` sem `exit 1` é aviso com cara de erro.
+	i := strings.Index(texto, `if [ -n "$semClaim" ]`)
+	if i < 0 || !strings.Contains(texto[i:min(len(texto), i+2200)], "exit 1") {
+		t.Error("o gate acusa e deixa passar — foi o que já acontecia no `pr-checks`, e " +
+			"não impediu 38 ocorrências")
+	}
+
+	// OS ESTADOS QUE PASSAM, e cada um por uma razão diferente:
+	//
+	//   · trabalho em curso — o card diz que alguém está nele
+	//   · de `ready-to-test` em diante — o Anchors saiu da alçada, e um PR que corrige
+	//     algo já entregue é legítimo
+	//   · sem label de estado — não é card do fluxo, e a régua não tem jurisdição
+	for _, e := range []string{"in-progress", "ready-to-review", "in-review"} {
+		if !strings.Contains(texto[i-1500:i], e) {
+			t.Errorf("o estado %q não está entre os que passam — um card legitimamente "+
+				"em curso seria reprovado", e)
+		}
+	}
+	if !strings.Contains(texto[i-1500:i], "ready-to-test") {
+		t.Error("`ready-to-test` em diante precisa passar: o Anchors saiu da alçada, e " +
+			"cobrar claim ali seria cobrar duas vezes pelo mesmo trabalho")
+	}
+
+	// A SAÍDA na mensagem: um gate que reprova sem dizer o que fazer transfere o problema.
+	if !strings.Contains(texto, "anchors claim        # registra a posse") {
+		t.Error("a mensagem não diz como destravar — quem a lê fica sabendo que errou e " +
+			"não o que fazer")
+	}
+}
