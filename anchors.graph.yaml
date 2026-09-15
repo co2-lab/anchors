@@ -1383,7 +1383,7 @@ nodes:
         - gate
     - id: internal/gate/doc_required_secao_test.go
       kind: test
-      rev: 6e997ecc1457
+      rev: 609f442fea29
       updated_at: "2026-09-15"
       layer: teste
       tags:
