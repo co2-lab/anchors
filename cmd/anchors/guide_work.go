@@ -9,6 +9,24 @@ package main
 // instrução ATUAL, não a do dia em que o card nasceu.
 const workGuide = `# Guia de trabalho (a régua de quem pegou um card)
 
+## Antes de começar: PEGUE o card
+
+` + "`anchors claim`" + ` é o primeiro comando, e não é burocracia — é ele que
+registra QUEM está com o trabalho e move o card para a coluna certa.
+
+    $ anchors claim
+    · card #223 é seu — movido para in-progress
+
+**Escolher o card à mão e começar a implementar não funciona.** O que se perde não é o
+registro: é a FILA. O claim serve ` + "`ready-to-review`" + ` ANTES de ` + "`to-do`" + `
+— revisar tem prioridade sobre trabalho novo. Um card que nunca entra na coluna de
+revisão faz o próximo agente encontrá-la vazia, e ele pega trabalho novo em vez de
+revisar o que está pronto.
+
+Medido no projeto de referência: 38 de 44 PRs abertos com o card ainda em
+` + "`to-do`" + `, e a fila de revisão mostrando UM item enquanto 46 trabalhos
+esperavam. O gate ` + "`gates`" + ` reprova o PR cujo card ficou em ` + "`to-do`" + `.
+
 ## Antes de começar
 
 ` + "`anchors status`" + ` diz onde o projeto está, e ` + "`anchors guide <artefato>`" + ` diz
