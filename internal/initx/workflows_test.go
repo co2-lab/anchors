@@ -1501,3 +1501,44 @@ func TestPipelinesNaoUsamVariavelInexistente(t *testing.T) {
 		}
 	}
 }
+
+// A AFILIAÇÃO RESOLVE NUM PASSE, e denuncia o que não fecha.
+//
+// A tentação é repetir passes até estabilizar: numa árvore de N níveis isso custa N
+// varreduras da lista inteira. Pior — esconde a inconsistência, porque um vínculo que aponta
+// para um card INEXISTENTE se parece com um que ainda não foi visitado.
+//
+// O desenho certo é registrar o que cada achado DECLARA e resolver depois, seguindo as
+// referências com memória. O que não fecha é dado errado na issue, e merece nome.
+func TestBoardAfiliaNumPasseEDenunciaOQueNaoFecha(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-board.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	// NÃO pode haver laço de repetição sobre a lista inteira.
+	if regexp.MustCompile(`for\s+_\w*\s+in\s+range\(`).MatchString(texto) {
+		t.Error("a afiliação repete passes — numa árvore de N níveis isso custa N " +
+			"varreduras, e um vínculo quebrado fica indistinguível de um ainda não visitado")
+	}
+
+	if !strings.Contains(texto, "declara = {}") {
+		t.Fatal("a afiliação não registra o que cada achado DECLARA — sem isso ela depende " +
+			"da ordem da lista, que é a ordem das issues no GitHub")
+	}
+	// MEMÓRIA: sem ela, uma cadeia compartilhada é percorrida uma vez por dependente.
+	if !strings.Contains(texto, "resolvido = {}") {
+		t.Error("a resolução não guarda o resultado — cadeias compartilhadas seriam " +
+			"percorridas de novo a cada dependente")
+	}
+
+	// A DENÚNCIA, com os três motivos distinguidos. Chamar tudo de ciclo mandaria procurar
+	// o que não há: uma cadeia que termina sem unidade é legítima.
+	for _, m := range []string{"não existe", "ciclo de vínculos", "não é uma unidade"} {
+		if !strings.Contains(texto, m) {
+			t.Errorf("o diagnóstico não distingue %q — os três motivos pedem ações "+
+				"diferentes de quem for consertar", m)
+		}
+	}
+}
