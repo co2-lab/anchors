@@ -144,7 +144,7 @@ nodes:
         - test
     - id: cmd/anchors/check.go
       kind: code
-      rev: e23da76796e2
+      rev: 93f7945a8e79
       updated_at: "2026-09-10"
       layer: comando
       tags:
@@ -601,6 +601,19 @@ nodes:
       kind: test
       rev: 0f5b046e6baf
       updated_at: "2026-09-10"
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/map_staleness.go
+      kind: code
+      rev: 54cba53d5c50
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/map_staleness_test.go
+      kind: test
+      rev: 77c757870bde
       layer: teste
       tags:
         - test

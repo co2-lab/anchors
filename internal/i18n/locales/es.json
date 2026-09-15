@@ -53,5 +53,7 @@
   "judge.pass": "✓ juzgado PASS",
   "judge.pass_resolved": "✓ juzgado PASS — issue anterior resuelta (→ %s/done/)",
   "judge.waived": "○ juzgado DISPENSADO — no había qué confrontar",
-  "judge.waived_resolved": "○ juzgado DISPENSADO — no había qué confrontar; issue anterior resuelta (→ %s/done/)"
+  "judge.waived_resolved": "○ juzgado DISPENSADO — no había qué confrontar; issue anterior resuelta (→ %s/done/)",
+  "check.map_stale": "⚠ el mapa es MÁS ANTIGUO que %d archivo(s) regido(s) — se construyó antes de la última edición.\n  El trabajo está bien; la FOTO que los gates confrontan no lo está. Reconstruye antes de abrir el PR:\n      anchors map build",
+  "check.map_stale_more": "    … y %d más"
 }

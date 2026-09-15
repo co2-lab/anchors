@@ -53,5 +53,7 @@
   "judge.pass": "✓ judged PASS",
   "judge.pass_resolved": "✓ judged PASS — previous issue resolved (→ %s/done/)",
   "judge.waived": "○ judged WAIVED — there was nothing to confront",
-  "judge.waived_resolved": "○ judged WAIVED — there was nothing to confront; previous issue resolved (→ %s/done/)"
+  "judge.waived_resolved": "○ judged WAIVED — there was nothing to confront; previous issue resolved (→ %s/done/)",
+  "check.map_stale": "⚠ the map is OLDER than %d governed file(s) — it was built before the last edit.\n  The work is fine; the PHOTO the gates confront is not. Rebuild before opening the PR:\n      anchors map build",
+  "check.map_stale_more": "    … and %d more"
 }
