@@ -78,41 +78,31 @@ jobs:
             [ -n "$n" ] || continue
             dono=$(gh issue view "$n" --json comments \
               --jq '[.comments[].body | select(startswith("anchors-owner:"))] | last')
-            # PARA ONDE VOLTAR depende de ONDE ESTAVA, e a distinção evita trabalho
-            # refeito:
+            # O ESTADO ATUAL só para o registro: quem lê o card precisa saber onde ele
+            # ficou, e a mensagem sem isso obriga a conferir as labels.
+            estado_atual=$(gh issue view "$n" --json labels --jq '.labels[].name' |
+              grep -E '^anchors:(to-do|in-progress|in-review|in-test)$' | head -1 || true)
+
+            # O STALE LIBERA O DONO. NÃO MOVE O CARD.
             #
-            #   • `in-review` → `ready-to-review`. O PR está aberto e VERDE (é o que o
-            #     pr-checks exige para mover para lá), então a implementação terminou —
-            #     só o revisor sumiu. Mandar para `to-do` faria o próximo agente
-            #     REIMPLEMENTAR o que já existe.
+            # A versão anterior decidia um destino pela label anterior: `in-review` voltava
+            # para `ready-to-review`, e todo o resto para `to-do`. O raciocínio do primeiro
+            # caso estava certo e escrito no próprio código — "mandar para `to-do` faria o
+            # próximo agente REIMPLEMENTAR o que já existe".
             #
-            #   • `in-progress`/`in-test` → `to-do`. Aqui o trabalho NÃO terminou: não há
-            #     PR, ou os checks não passaram. Devolver à fila de revisão gastaria o
-            #     revisor com o que a máquina já sabe que não está pronto.
-            estado_anterior=$(gh issue view "$n" --json labels --jq '.labels[].name' |
-              grep -E '^anchors:(in-progress|in-review|in-test)$' | head -1 || true)
-            case "$estado_anterior" in
-              "anchors:in-review") destino="anchors:ready-to-review" ;;
-              *) destino="anchors:to-do" ;;
-            esac
+            # O SEGUNDO CASO PRESUMIA o que não conferia. A justificativa dizia "aqui o
+            # trabalho NÃO terminou: não há PR, ou os checks não passaram" — mas nada
+            # olhava se havia PR. Quando havia, e verde, a presunção estava errada e o
+            # efeito era exatamente o que o comentário condenava três linhas acima.
+            #
+            # Mover é uma decisão a mais, tomada sem os dados que a justificariam. Liberar
+            # o dono BASTA: o `claim` serve por estado E por dono liberado, e um card em
+            # `in-progress` sem dono é legível — alguém começou e sumiu. O board passa a
+            # dizer isso em vez de apagar a passagem.
+            #
+            # O QUE SE PERDE: o card não volta para a fila de quem filtra por `to-do`. É o
+            # preço de não mentir sobre onde o trabalho está, e o `claim` não precisa disso.
+            gh issue comment "$n" --body "anchors-owner: (liberado) — sem progresso desde ${limite}; dono anterior: ${dono#anchors-owner: }; o card fica em \`${estado_atual#anchors:}\`, e o próximo \`claim\` pode pegá-lo"
 
-            # Remove TODOS os estados antes de escrever o novo, e não só os que se espera
-            # encontrar: o estado é a label, então duas labels de estado são dois estados
-            # ao mesmo tempo. Uma lista parcial de remoção deixa o estado anterior colado
-            # no card — e aí o `identify` continua achando em `to-do` um card que já
-            # avançou, e o reprocessa para sempre.
-            for e in anchors:to-do anchors:in-progress anchors:ready-to-review \
-                     anchors:in-review anchors:ready-to-test anchors:in-test \
-                     anchors:ready-to-release anchors:production; do
-              [ "$e" = "$destino" ] && continue
-              gh issue edit "$n" --remove-label "$e" >/dev/null 2>&1 || true
-            done
-            gh issue edit "$n" --add-label "$destino"
-
-            # A LIBERAÇÃO é comentada DEPOIS de saber o destino, para o registro dizer
-            # onde o card foi parar. Um "liberado" sem destino obriga quem lê a conferir
-            # as labels para entender o que aconteceu.
-            gh issue comment "$n" --body "anchors-owner: (liberado) — sem progresso desde ${limite}; dono anterior: ${dono#anchors-owner: }; voltou para \`${destino#anchors:}\`"
-
-            echo "liberado: #$n → $destino (era de ${dono#anchors-owner: })"
+            echo "liberado: #$n (era de ${dono#anchors-owner: }) — fica em ${estado_atual#anchors:}"
           done
