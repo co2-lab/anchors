@@ -22,6 +22,9 @@
        Duas cores porque são dois estados de atenção diferentes: o laranja pede ação
        agora; o amarelo é registro de que houve uma decisão, e não pede nada. */
     --espera: #bc4c00;
+    /* A FASE: roxo acinzentado, fora da paleta de ESTADO. Ela não está em coluna
+       nenhuma — é estrutura do plano, não trabalho em curso. */
+    --fase: #8250df;
     /* O vermelho da identidade (#ec3013) e o quase-preto da wordmark, do kit oficial. */
     --marca: #ec3013; --wordmark: #201e1d;
   }
@@ -34,6 +37,7 @@
       --bg: #0d1117; --fg: #e6edf3; --card: #151b23; --linha: #3d444d; --fraco: #9198a1;
       --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922;
       --espera: #f0883e;
+      --fase: #a371f7;
       /* No escuro o vermelho da marca é clareado: #ec3013 sobre #0d1117 não alcança
          contraste de leitura, e a wordmark preta desapareceria. */
       --marca: #ff5c3d; --wordmark: #e6edf3;
@@ -43,6 +47,7 @@
     --bg: #0d1117; --fg: #e6edf3; --card: #151b23; --linha: #3d444d; --fraco: #9198a1;
     --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922;
       --espera: #f0883e;
+      --fase: #a371f7;
     --marca: #ff5c3d; --wordmark: #e6edf3;
   }
   * { box-sizing: border-box; }
@@ -282,6 +287,13 @@
      explica a indentação das issues abaixo. Sem ele o recuo ficaria órfão. */
   .g-rot.grupo { font-weight: 600; color: var(--fg); }
   .g-rot.item { color: var(--fraco); }
+  /* A FASE NÃO É TRABALHO: é uma seção do documento do plano, sem issue e sem trinca.
+     Nenhum agente a pega porque não há o que pegar — e desenhá-la como os cards sugere
+     que ela espera alguém.
+
+     O rótulo em itálico e apagado diz "estrutura, não trabalho" sem precisar de legenda:
+     é a mesma convenção tipográfica de um subtítulo num índice. */
+  .g-rot.fase { font-style: italic; font-weight: 500; color: var(--fraco); opacity: .85; }
   .gantt { display: grid; grid-template-columns: minmax(9rem, auto) 1fr; gap: 0;
            font-size: .8rem; position: relative; }
   .g-rot { padding: .3rem .6rem .3rem 0; white-space: nowrap; overflow: hidden;
@@ -313,6 +325,19 @@
       transparent var(--feito, 0%));
     border: 1px solid var(--fazendo); color: #fff; font-weight: 600;
   }
+  /* A BARRA DA FASE: hachura DIAGONAL, e a textura é o que a distingue à distância.
+     O plano tem barra sólida porque é trabalho; a fase só resume o intervalo dos filhos,
+     e a hachura diz "isto é a soma deles, não uma entrega própria".
+
+     Roxo acinzentado, fora da paleta de estado (cinza=fila, azul=curso, verde=pronto):
+     a fase não tem estado, e usar uma cor de estado a poria numa coluna onde ela não está. */
+  .g-barra.abrange.fase {
+    background: repeating-linear-gradient(45deg,
+      var(--fase) 0 3px, transparent 3px 7px);
+    border: 1px dashed var(--fase); color: var(--fraco); font-weight: 500;
+  }
+  /* sem a listra do futuro: a fase inteira já é textura, e sobrepor duas some com as duas */
+  .g-barra.abrange.fase::after { content: none; }
   /* o trecho FUTURO ganha a listra que a folha futura já usa, para a leitura ser a mesma */
   .g-barra.abrange::after {
     content: ""; position: absolute; inset: 0 0 0 var(--feito, 0%);
@@ -1271,16 +1296,29 @@ function ordenaPorHierarquia(linhas, d, PASSADO) {
       // card começa nela, e é a verdade.
       const e = extensao(cod, new Set());
       const base = l ? { ...l } : { i: nos[cod] };
+      // A FASE NÃO É TRABALHO, e o desenho precisa dizer isso.
+      //
+      // Um `## FNDTN-F01 — o CI` é uma SEÇÃO dentro do arquivo do plano, não um artefato:
+      // não tem issue, não tem trinca, e nenhum agente a pega porque não há o que pegar.
+      // Medido: as 86 fases do projeto de referência, todas sem card.
+      //
+      // O plano, ao contrário, É trabalho — `plans/0014-alertas-incidentes.md` é um arquivo
+      // regido, com card próprio e trinca a cumprir. Desenhar os dois igual sugere que a
+      // fase espera alguém, e ninguém virá.
+      //
+      // A distinção é `l`: o nó SEM card é o que não existe como issue.
+      const ehFase = !l;
       if (e) {
         saida.push({ ...base, esq: e.ini, larg: Math.max(1.5, e.fim - e.ini),
-                     classe: "abrange", nivel, grupo: true,
+                     classe: ehFase ? "abrange fase" : "abrange", nivel, grupo: true, fase: ehFase,
                      // ONDE O REALIZADO TERMINA, em % da própria barra. É o que o CSS usa
                      // para pintar sólido até ali e tracejado depois — sem isso o pai
                      // híbrido teria de escolher uma das duas naturezas.
                      feitoAte: Math.max(0, Math.min(100,
                        (PASSADO - e.ini) / Math.max(0.01, e.fim - e.ini) * 100)) });
       } else {
-        saida.push({ ...base, esq: 0, larg: 0, classe: "grupo", nivel, grupo: true });
+        saida.push({ ...base, esq: 0, larg: 0, classe: "grupo", nivel, grupo: true,
+                     fase: ehFase });
       }
       if (l) usados.add(l);
     } else if (l) {
@@ -1411,8 +1449,8 @@ function desenhaRoadmapLinha(d) {
        <span class="g-marca" style="left:${PASSADO}%">agora</span>
        <span class="g-marca" style="left:98%">ordem →</span>
      </div>` +
-    linhas.map(({ i, esq, larg, classe, nivel, grupo, feitoAte }) => `
-      <div class="g-rot ${grupo ? "grupo" : "item"}"
+    linhas.map(({ i, esq, larg, classe, nivel, grupo, feitoAte, fase }) => `
+      <div class="g-rot ${grupo ? "grupo" : "item"}${fase ? " fase" : ""}"
            style="padding-left:${((nivel || 0) * 0.9 + (grupo ? 0 : 1.1)).toFixed(2)}rem"
            title="${rot(i)}">${rot(i)}</div>
       <div class="g-faixa">${larg > 0 ? `

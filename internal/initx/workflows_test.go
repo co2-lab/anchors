@@ -1599,3 +1599,44 @@ func TestTravaRespeitaOCardDescartado(t *testing.T) {
 			"sido reaberto quando ela roda")
 	}
 }
+
+// A FASE PRECISA SE DISTINGUIR DO CARD no roadmap.
+//
+// Um `## FNDTN-F01 — o CI` é uma SEÇÃO dentro do arquivo do plano: não tem issue, não tem
+// trinca, e nenhum agente a pega porque não há o que pegar. Medido no projeto de referência:
+// 43 fases, TODAS sem card.
+//
+// O plano, ao contrário, É trabalho — `plans/0014-alertas-incidentes.md` é um arquivo regido,
+// com card próprio e trinca a cumprir; 18 deles existem, 2 já fechados por agentes.
+//
+// Desenhar os dois igual sugere que a fase espera alguém, e ninguém virá.
+func TestBoardDistingueFaseDeCard(t *testing.T) {
+	b, err := fs.ReadFile(boardFS, "board/anchors-board.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	// A MARCA vem de não ter card (`!l`), e não de uma lista de códigos: uma fase que
+	// ganhasse card deixaria de ser estrutura, e a regra tem de acompanhar.
+	if !strings.Contains(texto, "const ehFase = !l;") {
+		t.Error("a fase é reconhecida por outra coisa que não a ausência de card — se " +
+			"uma fase ganhar issue, ela passa a ser trabalho e o desenho tem de seguir")
+	}
+
+	// TEXTURA, e não só cor: a distinção precisa sobreviver a quem não distingue cores.
+	if !strings.Contains(texto, "repeating-linear-gradient(45deg") {
+		t.Error("a barra da fase não tem hachura — cor sozinha não distingue para quem " +
+			"não a enxerga, e a textura é o que separa à distância")
+	}
+	// A COR fora da paleta de ESTADO: a fase não está em coluna nenhuma, e usar cinza,
+	// azul ou verde a poria numa.
+	if !strings.Contains(texto, "--fase:") {
+		t.Error("a fase usa uma cor de estado — ela não tem estado, e isso a poria numa " +
+			"coluna onde ela não está")
+	}
+	// Nos TRÊS blocos de tema: uma cor definida só no claro some no escuro.
+	if n := strings.Count(texto, "--fase:"); n < 3 {
+		t.Errorf("`--fase` declarada %d vez(es) — faltam os blocos de tema escuro", n)
+	}
+}
