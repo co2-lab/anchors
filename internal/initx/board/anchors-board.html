@@ -1204,12 +1204,43 @@ function ordenaPorHierarquia(linhas, d, PASSADO) {
     return ini === null ? null : { ini, fim };
   }
 
+  // IRMÃOS EM ORDEM TEMPORAL, dentro de cada nível.
+  //
+  // Ordenar por CÓDIGO é arbitrário: `ALFDL` antes de `INSTN` não diz nada sobre o
+  // trabalho — é ordem alfabética num roadmap, onde o leitor lê da esquerda para a direita
+  // esperando que o de cima tenha vindo antes.
+  //
+  // O critério é o mesmo do modo lista: onde a barra COMEÇA. O desempate por LARGURA põe o
+  // que abrange mais antes do que abrange menos (o pai antes do filho, quando coincidem), e
+  // o número do card decide o resto — duas issues criadas no mesmo instante não têm outra
+  // diferença.
+  //
+  // O nó SEM barra (fase sem card próprio) herda o início do primeiro filho, senão ele
+  // afundaria para o começo da lista por comparar com zero.
+  function inicio(cod, vistos = new Set()) {
+    if (vistos.has(cod)) return Infinity;
+    vistos.add(cod);
+    const l = daLinha[cod];
+    if (l) return l.esq;
+    let m = Infinity;
+    for (const k of filhos[cod] || []) m = Math.min(m, inicio(k, vistos));
+    return m;
+  }
+  const porTempo = (a, b) => {
+    const ia = inicio(a), ib = inicio(b);
+    if (ia !== ib) return ia - ib;
+    const la = daLinha[a], lb = daLinha[b];
+    const wa = la ? la.larg : 0, wb = lb ? lb.larg : 0;
+    if (wa !== wb) return wb - wa;
+    return Number(la?.i.numero || 0) - Number(lb?.i.numero || 0);
+  };
+
   const saida = [];
   const usados = new Set();
   function desce(cod, nivel, vistos) {
     if (vistos.has(cod)) return;                 // ciclo de `parent` não trava
     vistos.add(cod);
-    const meus = (filhos[cod] || []).sort((a, b) => a.localeCompare(b));
+    const meus = (filhos[cod] || []).sort(porTempo);
     const l = daLinha[cod];
 
     if (meus.length) {
@@ -1236,7 +1267,7 @@ function ordenaPorHierarquia(linhas, d, PASSADO) {
     }
     for (const k of meus) desce(k, nivel + 1, vistos);
   }
-  for (const r of raizes.sort((a, b) => a.localeCompare(b))) desce(r, 0, new Set());
+  for (const r of raizes.sort(porTempo)) desce(r, 0, new Set());
 
   // O QUE SOBROU vai para o fim, na ordem de ocorrência: são os achados de gate, que não
   // pertencem à hierarquia de planos (eles pendem do card que os originou). Descartá-los
