@@ -263,47 +263,101 @@ jobs:
           itens = json.load(io.open('_board/board.json', encoding='utf-8'))
           porNumero = {i.get('number'): i for i in itens}
 
-          def porCadeia(i, vistos=None):
-              """A unidade no fim da cadeia de vínculos — ou None."""
-              vistos = vistos or set()
-              if i.get('number') in vistos:   # ciclo de vínculo não trava
-                  return None
-              vistos.add(i.get('number'))
-              if re.fullmatch(r'[A-Z]{5}', i.get('code') or ''):
-                  return i['code']
-              if i.get('parent'):
-                  return i['parent']
-              v = str(i.get('linkedTo') or '')
-              if v.isdigit() and int(v) in porNumero:
-                  return porCadeia(porNumero[int(v)], vistos)
-              return None
+          # A ÁRVORE É MONTADA EM MEMÓRIA, num passe só.
+          #
+          # Repetir passes até estabilizar resolveria — e custaria N passes numa árvore de N
+          # níveis, sobre 300 itens. Pior: esconderia a inconsistência, porque um vínculo que
+          # aponta para um card inexistente se parece com um que ainda não foi visitado.
+          #
+          # Aqui cada achado registra o PAI que ele declara, seja ele conhecido ou não. A
+          # resolução acontece depois, seguindo as referências — e o que não fecha é
+          # DENUNCIADO, porque é dado inconsistente na issue, não limitação do algoritmo.
+          def unidade(i):
+              """O código de unidade do próprio card, ou '' se ele não for uma unidade."""
+              c = i.get('code') or ''
+              return c if re.fullmatch(r'[A-Z]{5}', c) else ''
 
-          n = 0
+          # PASSE ÚNICO: cada achado declara de quem depende — o caminho que acusa, ou o
+          # número a que está vinculado. Nada é resolvido ainda.
+          declara = {}
           for i in itens:
-              # só o que NÃO tem código de unidade próprio: quem tem, já está na árvore
-              if re.fullmatch(r'[A-Z]{5}', i.get('code') or ''):
-                  continue
-              if i.get('parent'):
+              if unidade(i) or i.get('parent'):
                   continue
               c = porCaminho.get((i.get('target') or '').rstrip(':.,'))
               if c:
-                  i['parent'] = c
+                  declara[i['number']] = ('unidade', c)
+              else:
+                  v = str(i.get('linkedTo') or '')
+                  if v.isdigit():
+                      declara[i['number']] = ('card', int(v))
+
+          # RESOLUÇÃO por referência, com memória: cada cadeia é percorrida UMA vez, e o
+          # resultado fica guardado para quem passar por ela depois.
+          resolvido = {}
+          orfaos = []
+
+          def resolve(num, caminho):
+              if num in resolvido:
+                  return resolvido[num]
+              if num in caminho:                      # ciclo entre vínculos
+                  return None
+              i = porNumero.get(num)
+              if i is None:                           # aponta para card que não existe
+                  return None
+              alvo = unidade(i) or i.get('parent') or None
+              if alvo is None:
+                  d = declara.get(num)
+                  if d is None:
+                      alvo = None
+                  elif d[0] == 'unidade':
+                      alvo = d[1]
+                  else:
+                      alvo = resolve(d[1], caminho | {num})
+              resolvido[num] = alvo
+              return alvo
+
+          n = 0
+          for num, d in declara.items():
+              alvo = d[1] if d[0] == 'unidade' else resolve(d[1], {num})
+              if alvo:
+                  porNumero[num]['parent'] = alvo
                   n += 1
-                  continue
-              # SEGUNDA PORTA: o card de ESCALAÇÃO não traz `@ caminho` no título — o
-              # `escalate` escreve "[decisão] A revisão do card #311 achou…". O que ele traz
-              # é a label `under-<n>`, que o pipeline já extraiu como `linkedTo`.
-              #
-              # MEDIDO: dos 58 achados que sobravam na raiz, 25 são escalações com vínculo
-              # para um card de unidade. Sem esta porta, toda decisão pendente fica solta —
-              # e são exatamente as que mais precisam ser achadas.
-              # A CADEIA, e não um salto só. Um achado pode pender de outro achado, que
-              # por fim pende da unidade: `#498 → #410 (doc-required) → ALFDL`. Parar no
-              # primeiro salto deixava seis cards na raiz por um elo intermediário.
-              c = porCadeia(i)
-              if c:
-                  i['parent'] = c
-                  n += 1
+              else:
+                  orfaos.append((num, d))
+
+          json.dump(itens, io.open('_board/board.json', 'w', encoding='utf-8'), ensure_ascii=False)
+          print(f"· {n} achado(s) afiliado(s) à unidade que acusam")
+
+          # O QUE NÃO FECHOU É INCONSISTÊNCIA DA ISSUE, e merece nome.
+          #
+          # Um vínculo que aponta para um card inexistente, ou uma cadeia que se fecha em
+          # ciclo, não é limitação daqui: é dado errado no board. Silenciar transformaria o
+          # card num órfão indistinguível dos que legitimamente não têm pai.
+          # TRÊS MOTIVOS distintos, e o diagnóstico precisa dizer qual:
+          #
+          #   · o card apontado NÃO EXISTE       → o vínculo está errado na issue
+          #   · a cadeia se fecha em CICLO       → dois cards apontando um ao outro
+          #   · a cadeia TERMINA sem unidade     → nenhum elo é uma unidade, e isso é
+          #     legítimo: um `[plano]` pode pender de outro `[plano]` que não pende de nada
+          #
+          # O terceiro não é defeito, e chamá-lo de ciclo mandaria procurar o que não há.
+          def motivo(num, alvo, caminho=None):
+              caminho = caminho or set()
+              if alvo not in porNumero:
+                  return "o card #%d não existe" % alvo
+              if alvo in caminho:
+                  return "ciclo de vínculos"
+              i = porNumero[alvo]
+              d = declara.get(alvo)
+              if d is None or d[0] == 'unidade':
+                  return "a cadeia termina em #%d, que não é uma unidade" % alvo
+              return motivo(num, d[1], caminho | {alvo})
+
+          quebrados = [(num, d) for num, d in orfaos if d[0] == 'card']
+          if quebrados:
+              print(f"⚠ {len(quebrados)} vínculo(s) que não levam a uma unidade:")
+              for num, d in quebrados[:10]:
+                  print(f"    #{num} → #{d[1]}: {motivo(num, d[1], {num})}")
           json.dump(itens, io.open('_board/board.json', 'w', encoding='utf-8'), ensure_ascii=False)
           print(f"· {n} achado(s) afiliado(s) à unidade que acusam")
           AFILIA
