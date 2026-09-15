@@ -2361,7 +2361,7 @@ nodes:
         - test
     - id: internal/initx/board_bloqueio_test.go
       kind: test
-      rev: a277ef996963
+      rev: f323c7bd6ac2
       updated_at: "2026-09-14"
       layer: teste
       tags:
@@ -2537,7 +2537,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: e9c88ce48119
+      rev: 3b8de83f220e
       updated_at: "2026-09-15"
       layer: teste
       tags:

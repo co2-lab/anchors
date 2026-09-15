@@ -112,6 +112,10 @@
   .filtro-rotulo { font-size: .78rem; color: var(--fraco); }
   .chips { display: flex; gap: .35rem; flex-wrap: wrap; }
   .modo { display: flex; gap: .4rem; margin: 0 0 .7rem; }
+  /* A COLUNA QUE PAROU DE DRENAR. Amarelo a partir de 3 dias, laranja a partir de 7 —
+     a mesma gramática de atenção do resto do board: amarelo informa, laranja pede ação. */
+  .parada { margin-left: .35rem; font-size: .66rem; font-weight: 600; color: var(--alerta);
+            border: 1px solid var(--alerta); border-radius: 999px; padding: 0 .3rem; }
   .chip { font-size: .72rem; padding: .2rem .55rem; border-radius: 999px;
           border: 1px solid var(--linha); background: var(--card); color: var(--fraco); }
   .chip[aria-pressed="true"] { border-color: var(--fazendo); color: var(--fazendo);
@@ -477,7 +481,7 @@ const pref = {
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-let ULTIMO = { itens: [] };
+let ULTIMO = { items: [] };
 let NIVEIS = {};
 
 // --- a ÁRVORE, derivada do `needs` ---
@@ -495,11 +499,11 @@ let NIVEIS = {};
 // estivesse pronto antes de estar.
 function calculaNiveis(d) {
   const porCodigo = {};
-  for (const i of d.itens || []) if (i.codigo) porCodigo[i.codigo] = i;
+  for (const i of d.items || []) if (i.code) porCodigo[i.code] = i;
   // As fases são nós do grafo mesmo sem card próprio: elas agrupam, e sem elas os itens
   // que dependem de uma fase ficariam todos no mesmo nível.
   const fases = {};
-  for (const f of d.fases || []) fases[f.codigo] = f;
+  for (const f of d.phases || []) fases[f.code] = f;
 
   const nivel = {};
   const visitando = new Set();
@@ -522,7 +526,7 @@ function calculaNiveis(d) {
   // depois que a fase de que depende souber o dela.
   for (const cod of Object.keys(fases)) profundidade(cod);
   for (const cod of Object.keys(porCodigo)) profundidade(cod);
-  return { nivel, fases, porCodigo };
+  return { nivel, phases: fases, porCodigo };
 }
 
 // O ÚLTIMO DADO CARREGADO. O seletor de modo do roadmap redesenha sem buscar de novo: os
@@ -534,36 +538,54 @@ function desenha(d) {
   ultimoDado = d;
     ULTIMO = d;
     document.getElementById("quando").textContent =
-      d.repo + " · foto de " + new Date(d.quando).toLocaleString();
+      d.repo + " · foto de " + new Date(d.takenAt).toLocaleString();
     const visiveis = COLUNAS.filter(([, , , , cd]) => pref.cd || !cd);
     NIVEIS = calculaNiveis(d);
     rotulasFiltro(d);
     document.getElementById("colunas").innerHTML = visiveis.map(([id, nome, oquee, cor]) => {
-      // `!i.fechado`: o JSON passou a trazer os cards ENTREGUES também — o roadmap precisa
+      // `!i.closed`: o JSON passou a trazer os cards ENTREGUES também — o roadmap precisa
       // deles para as datas reais. As colunas continuam sendo o trabalho EM CURSO, e um
-      // card fechado mantém a última label de estado: sem este filtro ele reapareceria na
+      // card fechado mantém a última label de state: sem este filtro ele reapareceria na
       // coluna onde parou, como se ainda estivesse lá.
-      const cards = (d.itens || []).filter((i) => !i.fechado && i.estado === id && passaNoFiltro(i));
+      const cards = (d.items || []).filter((i) => !i.closed && i.state === id && passaNoFiltro(i));
+      // A IDADE DO MAIS VELHO da coluna. Uma fila não denuncia acúmulo pelo TAMANHO —
+      // dez cards em `to-do` é saudável, dez em `ready-to-test` há duas semanas não é.
+      //
+      // MEDIDO no projeto de referência: quatro cards presos em `ready-to-test` desde 29 de
+      // agosto, 17 dias. Ninguém os via: é o fim da alçada do Anchors (o que vem depois é
+      // dos pipelines de entrega do projeto), e o `stale` não os recicla de propósito —
+      // reciclar jogaria trabalho PRONTO de volta para `to-do`.
+      //
+      // Não reciclar é a decisão certa. O que faltava era DIZER que a coluna parou de
+      // drenar: o número sozinho não distingue fila que anda de fila que engasgou.
+      const velho = cards.reduce((m, c) =>
+        !c.updated ? m : (!m || c.updated < m ? c.updated : m), "");
+      const diasParado = velho
+        ? Math.floor((Date.now() - new Date(velho).getTime()) / 864e5) : 0;
       return `<section class="coluna">
         <div class="titulo"><span class="bola" style="background:${cor}"></span>
-          ${esc(nome)}<span class="qtd">${cards.length}</span></div>
+          ${esc(nome)}<span class="qtd">${cards.length}</span>${
+            diasParado >= 3
+              ? `<span class="parada" title="o card mais antigo desta coluna não se move há ${
+                   diasParado} dia(s)">◷ ${diasParado}d</span>`
+              : ""}</div>
         <div class="oquee">${esc(oquee)}</div>
         ${cards.length === 0 ? '<div class="vazia">vazia</div>' : cards.map((c) => `
-          <button class="card${c.escalado ? " escalado" : ""}${
-              c.escalado && c.esperando === false ? " respondido" : ""}" type="button" data-numero="${c.numero}">
+          <button class="card${c.escalated ? " escalado" : ""}${
+              c.escalated && c.waiting === false ? " respondido" : ""}" type="button" data-numero="${c.number}">
             <div class="card-topo">
-              ${c.codigo ? `<span class="codigo">${esc(c.codigo)}</span>` : ""}
-              ${c.numero ? `<span class="num">#${esc(c.numero)}</span>` : ""}
+              ${c.code ? `<span class="codigo">${esc(c.code)}</span>` : ""}
+              ${c.number ? `<span class="num">#${esc(c.number)}</span>` : ""}
             </div>
-            <h3>${esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</h3>
-            ${c.escalado
-              ? (c.esperando === false
+            <h3>${esc(c.title.replace(/^\[[^\]]+\]\s*/, ""))}</h3>
+            ${c.escalated
+              ? (c.waiting === false
                   ? `<span class="selo respondido">✓ você já respondeu</span>`
                   : `<span class="selo">⚠ esperando você</span>`)
               : ""}
             ${(c.needs || []).length ? `<div class="dep" title="depende de">↳ ${
-              c.needs.map((n) => esc(NIVEIS.fases?.[n]?.titulo || n)).join(" · ")}</div>` : ""}
-            ${c.dono ? `<span class="dono">◆ ${esc(c.dono)}</span>` : ""}
+              c.needs.map((n) => esc(NIVEIS.phases?.[n]?.title || n)).join(" · ")}</div>` : ""}
+            ${c.owner ? `<span class="dono">◆ ${esc(c.owner)}</span>` : ""}
           </button>`).join("")}
       </section>`;
     }).join("");
@@ -603,8 +625,8 @@ function desenhaBloqueio(d) {
   //
   // MEDIDO no projeto de referência: o contador dizia 14 pendências e a lista mostrava 3.
   // Os outros 11 eram cards FECHADOS, contados por uma label que registrava o passado.
-  const abertos = (d.itens || []).filter((i) => !i.fechado);
-  const presos = abertos.filter((i) => i.escalado || i.estado === "anchors:needs-user");
+  const abertos = (d.items || []).filter((i) => !i.closed);
+  const presos = abertos.filter((i) => i.escalated || i.state === "anchors:needs-user");
 
   // POR QUEM cada card espera. Um `needs-user` cuja decisão já saiu e virou trabalho tem um
   // card irmão com `anchors:desbloqueia-<n>` — e enquanto ele não fechar, remover a label
@@ -613,8 +635,8 @@ function desenhaBloqueio(d) {
   // Sem esta linha, os dois casos se parecem na tela: o card que espera VOCÊ decidir e o
   // que espera um trabalho já decidido. O primeiro pede sua atenção agora; o segundo, não.
   const esperaPor = {};
-  for (const i of d.itens || []) {
-    if (i.destrava) esperaPor[i.destrava] = i.numero;
+  for (const i of d.items || []) {
+    if (i.unblocks) esperaPor[i.unblocks] = i.number;
   }
   if (presos.length === 0) {
     el.hidden = true;
@@ -623,8 +645,8 @@ function desenhaBloqueio(d) {
   }
   // Quantos cards cada decisão trava. Uma pergunta parada que não bloqueia nada é
   // diferente de uma que bloqueia seis, e o número é o que ordena a resposta.
-  const trava = (c) => (d.itens || []).filter((i) =>
-    i.estado !== "anchors:needs-user" && (i.needs || []).includes(c.codigo)).length;
+  const trava = (c) => (d.items || []).filter((i) =>
+    i.state !== "anchors:needs-user" && (i.needs || []).includes(c.code)).length;
 
   // PENDENTE agora × RESPONDIDO um dia — e misturar os dois é o que torna a faixa inútil.
   //
@@ -646,22 +668,22 @@ function desenhaBloqueio(d) {
   // Ele NÃO desaparece do board: o card continua na sua coluna, em AMARELO, com o selo
   // "✓ você já respondeu". Quem escalou vê que a resposta veio, no lugar onde o trabalho
   // está — e não numa faixa de alerta, que é para o que pede ação.
-  const pendentes = presos.filter((c) => c.esperando !== false);
+  const pendentes = presos.filter((c) => c.waiting !== false);
 
   const linha = (c, n) => `<li>
-        <span class="num">#${esc(c.numero)}</span>
+        <span class="num">#${esc(c.number)}</span>
         <a href="${esc(c.url)}" target="_blank" rel="noopener">${
-          esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</a>
-        ${c.estado && c.estado !== "anchors:to-do" && c.estado !== "anchors:needs-user"
-          ? `<span class="trava">parado em ${esc(c.estado.replace("anchors:", ""))}</span>` : ""}
-        ${esperaPor[c.numero]
-          ? `<span class="trava">decidido — espera a entrega do #${esc(esperaPor[c.numero])}</span>`
+          esc(c.title.replace(/^\[[^\]]+\]\s*/, ""))}</a>
+        ${c.state && c.state !== "anchors:to-do" && c.state !== "anchors:needs-user"
+          ? `<span class="trava">parado em ${esc(c.state.replace("anchors:", ""))}</span>` : ""}
+        ${esperaPor[c.number]
+          ? `<span class="trava">decidido — espera a entrega do #${esc(esperaPor[c.number])}</span>`
           : n > 0 ? `<span class="trava">trava ${n} card${n > 1 ? "s" : ""}</span>` : ""}
       </li>`;
 
   const ordena = (lista) => lista
     .map((c) => ({ c, n: trava(c) }))
-    .sort((a, b) => b.n - a.n || Number(a.c.numero) - Number(b.c.numero))
+    .sort((a, b) => b.n - a.n || Number(a.c.number) - Number(b.c.number))
     .map(({ c, n }) => linha(c, n)).join("");
 
   if (pendentes.length === 0) {
@@ -772,7 +794,7 @@ function rotulasFiltro(d) {
   const cont = document.getElementById("filtro");
   const chips = document.getElementById("chips");
   const todas = new Set();
-  for (const i of d.itens || []) {
+  for (const i of d.items || []) {
     for (const l of i.labels || []) if (!l.startsWith("anchors:")) todas.add(l);
   }
   if (todas.size === 0) { cont.hidden = true; return; }
@@ -817,7 +839,7 @@ document.getElementById("limpar-filtro").onclick = () => { filtroAtivo.clear(); 
 // OU entre estados, como no filtro de label: marcar `to-do` e `in-progress` mostra os
 // dois. E vazio significa TODOS — não "nenhum".
 function passaNoEstado(i) {
-  return estadoAtivo.size === 0 || estadoAtivo.has(i.estado);
+  return estadoAtivo.size === 0 || estadoAtivo.has(i.state);
 }
 
 function passaNoFiltro(i) {
@@ -839,8 +861,8 @@ function desenhaArvore(d) {
   // As FASES sobrevivem ao filtro: elas são a estrutura, e removê-las deixaria os itens
   // filtrados órfãos na raiz — a árvore viraria uma lista, que é justamente o que a outra
   // aba já faz.
-  const itens = (d.itens || []).filter((i) => i.codigo && passaNoFiltro(i) && passaNoEstado(i));
-  const fases = d.fases || [];
+  const itens = (d.items || []).filter((i) => i.code && passaNoFiltro(i) && passaNoEstado(i));
+  const fases = d.phases || [];
   if (!itens.length && !fases.length) {
     alvo.innerHTML = '<p class="vazia">Nada a mostrar.</p>';
     return;
@@ -849,14 +871,14 @@ function desenhaArvore(d) {
   // Todos os nós: cards e fases juntos. A fase não tem card, e sem ela a árvore ficaria
   // com buracos onde deveria haver o agrupamento.
   const nos = {};
-  for (const f of fases) nos[f.codigo] = { ...f, tipo: "fase" };
-  for (const i of itens) nos[i.codigo] = { ...i, tipo: "card" };
+  for (const f of fases) nos[f.code] = { ...f, tipo: "fase" };
+  for (const i of itens) nos[i.code] = { ...i, tipo: "card" };
 
-  // O conjunto COMPLETO (antes do filtro) existe só para o progresso das fases: ele mede
+  // O conjunto COMPLETO (antes do filtro) existe só para o progresso das phases: ele mede
   // a fase, não o recorte que o leitor escolheu ver.
   const nosCompletos = { ...nos };
   const todosOsFilhos = {};
-  for (const i of d.itens || []) if (i.codigo) nosCompletos[i.codigo] = { ...i, tipo: "card" };
+  for (const i of d.items || []) if (i.code) nosCompletos[i.code] = { ...i, tipo: "card" };
   for (const cod of Object.keys(nosCompletos)) {
     const n = nosCompletos[cod];
     let pai = n.parent || "";
@@ -891,10 +913,10 @@ function desenhaArvore(d) {
   // o que vem depois, não parte desta — e incluí-la faria a fase 1 só fechar quando o
   // plano inteiro terminasse.
   const concluido = (n) => n.tipo === "fase"
-    ? (filhos[n.codigo] || []).filter((f) => nos[f].tipo === "card")
+    ? (filhos[n.code] || []).filter((f) => nos[f].tipo === "card")
         .every((f) => concluido(nos[f]))
     : ["anchors:ready-to-test", "anchors:in-test", "anchors:ready-to-release",
-       "anchors:production"].includes(n.estado);
+       "anchors:production"].includes(n.state);
 
   // LIVRE = todas as dependências concluídas. É a resposta que a árvore existe para dar.
   const livre = (n) => (n.needs || []).filter((x) => nos[x]).every((x) => concluido(nos[x]));
@@ -937,17 +959,17 @@ function desenhaArvore(d) {
       ? (todosDaFase.length
           ? `${todosDaFase.filter((k) => concluido(nosCompletos[k])).length}/${todosDaFase.length}`
           : "sem card")
-      : (n.estado || "").replace("anchors:", "");
+      : (n.state || "").replace("anchors:", "");
     // A ORDEM aparece como texto, já que deixou de ser aninhamento: "depois de F01" diz o
     // que a escada dizia, sem mentir que uma fase está dentro da outra.
     const depois = (n.needs || []).filter((x) => nos[x] && nos[x].tipo === "fase");
     const corpo = `<span class="cod">${esc(cod)}</span>
-        <span class="nome">${esc((n.titulo || "").replace(/^\[[^\]]+\]\s*/, ""))}</span>
+        <span class="nome">${esc((n.title || "").replace(/^\[[^\]]+\]\s*/, ""))}</span>
         ${depois.length ? `<span class="apos">depois de ${
           depois.map(esc).join(", ")}</span>` : ""}
         <span class="est">${esc(est)}</span>`;
     const linha = `<button class="no ${cls}" type="button" ${
-      n.numero ? `data-numero="${n.numero}"` : "disabled"}>${corpo}</button>`;
+      n.number ? `data-numero="${n.number}"` : "disabled"}>${corpo}</button>`;
     if (!kids.length) return `<li class="folha">${linha}</li>`;
     // `<details>` NATIVO: o navegador já dá o teclado (Enter/Espaço), a semântica de
     // expandido/recolhido para leitor de tela, e o Ctrl+F que abre o nó ao achar texto
@@ -966,7 +988,7 @@ function desenhaArvore(d) {
     // filho não abriam a modal.
     //
     // Dentro do summary, o `<details>` nativo faria a linha inteira recolher. O
-    // `preventDefault` no clique do nó é o que devolve o significado certo a cada alvo: o
+    // `preventDefault` no clique do nó é o que devolve o significado certo a cada target: o
     // triângulo recolhe, o resto abre os detalhes.
     return `<li><details${aberto}>
       <summary>
@@ -986,11 +1008,11 @@ function desenhaArvore(d) {
     [...alvo.querySelectorAll("details:not([open]) > .linha .cod")].map((e) => e.textContent));
 
   // Só os estados PRESENTES viram chip — oferecer os oito sempre daria botões que não
-  // filtram nada. Mas a conta é sobre TODOS os itens, e não sobre os que sobraram do
+  // filtram nada. Mas a conta é sobre TODOS os items, e não sobre os que sobraram do
   // filtro: com o recorte, o chip do estado escolhido seria o único a existir, e não
   // haveria como somar outro nem desmarcar o que se marcou.
   const presentes = COLUNAS.filter(([id]) =>
-    (d.itens || []).some((i) => !i.fechado && i.codigo && passaNoFiltro(i) && i.estado === id));
+    (d.items || []).some((i) => !i.closed && i.code && passaNoFiltro(i) && i.state === id));
 
   alvo.innerHTML = `
     <div class="controles">
@@ -1018,7 +1040,7 @@ function desenhaArvore(d) {
 
   for (const b of alvo.querySelectorAll(".est-chip")) {
     b.onclick = () => {
-      const e = b.dataset.estado;
+      const e = b.dataset.state;
       estadoAtivo.has(e) ? estadoAtivo.delete(e) : estadoAtivo.add(e);
       desenhaArvore(ULTIMO);
     };
@@ -1091,10 +1113,10 @@ function desenhaRoadmap(d) {
 function hierarquia(linhas, d) {
   const CODIGO = /^[A-Z]{5}$/;
   const daLinha = {};
-  for (const l of linhas) if (CODIGO.test(l.i.codigo || "")) daLinha[l.i.codigo] = l;
+  for (const l of linhas) if (CODIGO.test(l.i.code || "")) daLinha[l.i.code] = l;
 
   const nos = {};
-  for (const f of d.fases || []) nos[f.codigo] = { ...f, tipo: "fase" };
+  for (const f of d.phases || []) nos[f.code] = { ...f, tipo: "fase" };
   for (const c of Object.keys(daLinha)) nos[c] = { ...daLinha[c].i, tipo: "card" };
 
   const filhos = {};
@@ -1121,12 +1143,12 @@ function hierarquia(linhas, d) {
   // têm o mesmo `codigo` (`doc-required`), e chavear por ele faria 37 virarem um.
   const achados = {};
   for (const l of linhas) {
-    if (CODIGO.test(l.i.codigo || "")) continue;
+    if (CODIGO.test(l.i.code || "")) continue;
     const pai = l.i.parent || "";
     if (!pai || !nos[pai]) continue;
-    const chave = "#" + l.i.numero;
+    const chave = "#" + l.i.number;
     achados[chave] = l;
-    nos[chave] = { ...l.i, codigo: chave, tipo: "achado" };
+    nos[chave] = { ...l.i, code: chave, tipo: "achado" };
     (filhos[pai] ||= []).push(chave);
   }
   return { nos, filhos, raizes, daLinha: { ...daLinha, ...achados } };
@@ -1232,7 +1254,7 @@ function ordenaPorHierarquia(linhas, d, PASSADO) {
     const la = daLinha[a], lb = daLinha[b];
     const wa = la ? la.larg : 0, wb = lb ? lb.larg : 0;
     if (wa !== wb) return wb - wa;
-    return Number(la?.i.numero || 0) - Number(lb?.i.numero || 0);
+    return Number(la?.i.number || 0) - Number(lb?.i.number || 0);
   };
 
   const saida = [];
@@ -1273,7 +1295,7 @@ function ordenaPorHierarquia(linhas, d, PASSADO) {
   // pertencem à hierarquia de planos (eles pendem do card que os originou). Descartá-los
   // esconderia do roadmap metade do que foi entregue.
   const resto = linhas.filter((l) => !usados.has(l))
-    .sort((a, b) => a.esq - b.esq || Number(a.i.numero) - Number(b.i.numero))
+    .sort((a, b) => a.esq - b.esq || Number(a.i.number) - Number(b.i.number))
     .map((l) => ({ ...l, nivel: 0, grupo: false }));
 
   linhas.length = 0;
@@ -1283,19 +1305,28 @@ function ordenaPorHierarquia(linhas, d, PASSADO) {
 function desenhaRoadmapLinha(d) {
   const el = document.getElementById("gantt");
   if (!el) return;
-  const itens = (d.itens || []).filter((i) => i.criado);
+  const itens = (d.items || []).filter((i) => i.created);
   if (itens.length === 0) {
     el.innerHTML = `<p class="g-vazio">Nada para desenhar ainda — o roadmap nasce do
       primeiro card com data.</p>`;
     return;
   }
 
-  const feitos = itens.filter((i) => i.fechado).sort((a, b) => a.fechado < b.fechado ? -1 : 1);
-  const abertos = itens.filter((i) => !i.fechado);
+  // FECHADO é o critério, e não "chegou em `ready-to-test`".
+  //
+  // A tentação é dar por entregue quem já mergeou o trabalho. Mas `ready-to-test` é uma
+  // coluna de ESPERA — o card está lá até alguém testar e promover —, e pintá-lo como feito
+  // esconde o que o roadmap existe para mostrar.
+  //
+  // MEDIDO: o card #8 (`TSHRT`) está em `ready-to-test` DESDE AGOSTO, com os dois achados
+  // sob ele fechados. Ele não está entregue: está parado numa coluna que ninguém drena. A
+  // barra à direita da linha do agora é a verdade — e é como o problema fica visível.
+  const feitos = itens.filter((i) => i.closed).sort((a, b) => a.closed < b.closed ? -1 : 1);
+  const abertos = itens.filter((i) => !i.closed);
 
   // A ESCALA do passado é temporal e real: do primeiro card ao agora.
-  const t0 = feitos.length ? new Date(feitos[0].criado).getTime()
-                           : new Date(itens[0].criado).getTime();
+  const t0 = feitos.length ? new Date(feitos[0].created).getTime()
+                           : new Date(itens[0].created).getTime();
   const agora = Date.now();
   const vao = Math.max(agora - t0, 864e5); // nunca zero: um projeto de um dia ainda desenha
 
@@ -1308,12 +1339,12 @@ function desenhaRoadmapLinha(d) {
   // A ORDEM do que falta vem do `needs:`: um item cujo pré-requisito ainda não fechou vem
   // depois dele. Sem prazo — só sequência.
   const porCodigo = {};
-  for (const i of itens) if (i.codigo) porCodigo[i.codigo] = i;
+  for (const i of itens) if (i.code) porCodigo[i.code] = i;
   const profundidade = (i, visto) => {
     visto = visto || new Set();
-    if (visto.has(i.numero)) return 0;       // ciclo no `needs:` não trava o desenho
-    visto.add(i.numero);
-    const pais = (i.needs || []).map((c) => porCodigo[c]).filter((p) => p && !p.fechado);
+    if (visto.has(i.number)) return 0;       // ciclo no `needs:` não trava o desenho
+    visto.add(i.number);
+    const pais = (i.needs || []).map((c) => porCodigo[c]).filter((p) => p && !p.closed);
     if (pais.length === 0) return 0;
     return 1 + Math.max(...pais.map((p) => profundidade(p, visto)));
   };
@@ -1322,13 +1353,13 @@ function desenhaRoadmapLinha(d) {
 
   const linhas = [];
   for (const i of feitos) {
-    const ini = posPassado(i.criado);
-    const fim = Math.max(posPassado(i.fechado), ini + 1.5);
+    const ini = posPassado(i.created);
+    const fim = Math.max(posPassado(i.closed), ini + 1.5);
     linhas.push({ i, esq: ini, larg: fim - ini, classe: "feito" });
   }
   abertos.forEach((i, k) => {
     const nivel = niveis[k];
-    const emCurso = i.estado && i.estado !== "anchors:to-do";
+    const emCurso = i.state && i.state !== "anchors:to-do";
     // o que já começou nasce na linha do agora; o resto, escalonado pela ordem
     const esq = emCurso ? PASSADO - 3 : PASSADO + (100 - PASSADO) * (nivel / (maxNivel + 1));
     linhas.push({ i, esq, larg: Math.max(6, (100 - PASSADO) / (maxNivel + 2)),
@@ -1365,14 +1396,14 @@ function desenhaRoadmapLinha(d) {
     linhas.sort((a, b) =>
       a.esq - b.esq ||
       (b.larg || 0) - (a.larg || 0) ||
-      Number(a.i.numero) - Number(b.i.numero));
+      Number(a.i.number) - Number(b.i.number));
   }
 
-  const rot = (c) => esc((c.codigo ? c.codigo + " · " : "") +
-                         c.titulo.replace(/^\[[^\]]+\]\s*/, "")).slice(0, 80);
-  const quando = (c) => c.fechado
-    ? new Date(c.fechado).toLocaleDateString()
-    : (c.estado || "").replace("anchors:", "") || "a fazer";
+  const rot = (c) => esc((c.code ? c.code + " · " : "") +
+                         c.title.replace(/^\[[^\]]+\]\s*/, "")).slice(0, 80);
+  const quando = (c) => c.closed
+    ? new Date(c.closed).toLocaleDateString()
+    : (c.state || "").replace("anchors:", "") || "a fazer";
 
   el.innerHTML =
     `<div class="g-rot"></div><div class="g-eixo">
@@ -1385,12 +1416,12 @@ function desenhaRoadmapLinha(d) {
            style="padding-left:${((nivel || 0) * 0.9 + (grupo ? 0 : 1.1)).toFixed(2)}rem"
            title="${rot(i)}">${rot(i)}</div>
       <div class="g-faixa">${larg > 0 ? `
-        <${i.numero ? "a" : "span"} class="g-barra ${classe}"${
-             i.numero && i.url ? ` href="${esc(i.url)}" target="_blank" rel="noopener"` : ""}
+        <${i.number ? "a" : "span"} class="g-barra ${classe}"${
+             i.number && i.url ? ` href="${esc(i.url)}" target="_blank" rel="noopener"` : ""}
            style="left:${esq.toFixed(1)}%;width:${larg.toFixed(1)}%${
              classe === "abrange" ? `;--feito:${(feitoAte || 0).toFixed(1)}%` : ""}"
-           title="${i.numero ? `#${esc(i.numero)} — ` : ""}${quando(i)}">${
-             i.numero ? `#${esc(i.numero)}` : ""}</${i.numero ? "a" : "span"}>` : ""}
+           title="${i.number ? `#${esc(i.number)} — ` : ""}${quando(i)}">${
+             i.number ? `#${esc(i.number)}` : ""}</${i.number ? "a" : "span"}>` : ""}
       </div>`).join("") +
     `<div class="g-hoje" style="left:calc(minmax(9rem,auto) + ${PASSADO}%)"></div>`;
 
@@ -1456,9 +1487,9 @@ document.getElementById(cont).addEventListener("click", (ev) => {
     return;
   }
   if (ev.target.closest("summary")) ev.preventDefault();
-  const alvo = ev.target.closest(".card, .no[data-numero]");
+  const alvo = ev.target.closest(".card, .no[data-number]");
   if (!alvo) return;
-  const c = (ULTIMO.itens || []).find((i) => String(i.numero) === alvo.dataset.numero);
+  const c = (ULTIMO.items || []).find((i) => String(i.number) === alvo.dataset.number);
   if (c) abre(c);
 });
 }
@@ -1474,29 +1505,29 @@ function quando(iso) {
 }
 
 function abre(c) {
-  const estado = (c.estado || "").replace("anchors:", "");
+  const estado = (c.state || "").replace("anchors:", "");
   dlgCorpo.innerHTML = `
     <div class="d-topo">
       <button class="fechar" type="button" aria-label="fechar">✕</button>
-      ${c.codigo ? `<div class="d-codigo">${esc(c.codigo)}</div>` : ""}
-      <h2>${esc(c.titulo.replace(/^\[[^\]]+\]\s*/, ""))}</h2>
+      ${c.code ? `<div class="d-codigo">${esc(c.code)}</div>` : ""}
+      <h2>${esc(c.title.replace(/^\[[^\]]+\]\s*/, ""))}</h2>
       <div class="d-meta">
         <span class="tag estado">${esc(estado)}</span>
-        ${c.dono ? `<span class="tag dono">◆ ${esc(c.dono)}</span>`
+        ${c.owner ? `<span class="tag dono">◆ ${esc(c.owner)}</span>`
                  : '<span class="tag">sem dono</span>'}
-        ${c.comentarios ? `<span class="tag">${esc(c.comentarios)} comentário(s)</span>` : ""}
-        <span class="tag">${esc(quando(c.atualizado))}</span>
+        ${c.comments ? `<span class="tag">${esc(c.comments)} comentário(s)</span>` : ""}
+        <span class="tag">${esc(quando(c.updated))}</span>
       </div>
     </div>
     <div class="d-conteudo">
-      ${c.corpo ? `<div class="d-corpo">${esc(c.corpo)}</div>`
+      ${c.body ? `<div class="d-corpo">${esc(c.body)}</div>`
                 : '<div class="d-corpo">Sem descrição.</div>'}
-      ${(c.posse || []).length ? `<div class="d-posse"><strong>Histórico de posse</strong>
-        ${c.posse.map((p) => `<div>${esc(p)}</div>`).join("")}</div>` : ""}
+      ${(c.ownership || []).length ? `<div class="d-posse"><strong>Histórico de posse</strong>
+        ${c.ownership.map((p) => `<div>${esc(p)}</div>`).join("")}</div>` : ""}
     </div>
     <div class="d-acoes">
       <a class="ir" href="${esc(c.url)}" target="_blank" rel="noopener">abrir no GitHub ↗</a>
-      <span class="d-numero">#${esc(c.numero)}</span>
+      <span class="d-numero">#${esc(c.number)}</span>
     </div>`;
   dlg.showModal();
 }
