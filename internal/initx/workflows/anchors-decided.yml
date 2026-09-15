@@ -14,6 +14,17 @@
 #     `anchors:desbloqueia-<n>`. Enquanto ele estiver aberto, o `decided` RECUSA liberar:
 #     o card voltaria à fila e quem o pegasse encontraria o trabalho ainda por fazer.
 #
+#   · o ACHADO que parou o card virou card próprio, com `anchors:under-<n>` — é o que o
+#     `anchors escalate` produz. Mesma natureza do anterior: enquanto houver trabalho aberto
+#     sob o card, ele não volta à fila.
+#
+# OS DOIS PREFIXOS, e eles nascem de comandos diferentes. Este pipeline olhava só o
+# `desbloqueia-`, e o efeito foi medido: o #311 do projeto de referência teve os dois
+# achados que o travavam (#441 e #442) FECHADOS e continuou com a label `needs-user`,
+# aparecendo no board como pendência do usuário — em `ready-to-test`, com o trabalho já
+# entregue pelo PR #402. Ninguém era responsável por tirar a label, porque o pipeline que
+# deveria não conhecia o prefixo que o `escalate` usa.
+#
 # ESTE PIPELINE CUIDA DO SEGUNDO CASO, e só dele: quando o card de desbloqueio FECHA,
 # ninguém está olhando. Não há comentário no card bloqueado, não há evento nele, e a pessoa
 # que decidiu já seguiu para outra coisa — ela teria de lembrar de voltar e rodar o
@@ -74,17 +85,29 @@ jobs:
             # ESTE CARD ESPERA UM DESBLOQUEIO? Se não tem nenhum, não é caso deste
             # pipeline: ele espera uma PESSOA, e quem o libera é o `anchors decided` —
             # com a resolução, que este pipeline não tem como inventar.
-            todos=$(gh issue list --repo "$GH_REPO" --state all \
-              --label "anchors:desbloqueia-$n" --limit 20 \
-              --json number --jq '[.[].number] | length' 2>/dev/null || echo 0)
+            # OS DOIS PREFIXOS: `desbloqueia-` vem do `anchors unblock`, `under-` do
+            # `anchors escalate`. São comandos diferentes para a mesma relação — há
+            # trabalho aberto sob este card —, e olhar só um deixava metade dos cards
+            # presos para sempre.
+            todos=0
+            for pref in desbloqueia under; do
+              q=$(gh issue list --repo "$GH_REPO" --state all \
+                --label "anchors:$pref-$n" --limit 20 \
+                --json number --jq '[.[].number] | length' 2>/dev/null || echo 0)
+              todos=$(( todos + q ))
+            done
             if [ "$todos" = "0" ]; then
               continue
             fi
 
             # ALGUM ainda está ABERTO? Então o trabalho não terminou.
-            abertos=$(gh issue list --repo "$GH_REPO" --state open \
-              --label "anchors:desbloqueia-$n" --limit 20 \
-              --json number --jq '[.[].number] | join(", #")' 2>/dev/null || echo "")
+            abertos=""
+            for pref in desbloqueia under; do
+              q=$(gh issue list --repo "$GH_REPO" --state open \
+                --label "anchors:$pref-$n" --limit 20 \
+                --json number --jq '[.[].number] | join(", #")' 2>/dev/null || echo "")
+              [ -n "$q" ] && abertos="${abertos:+$abertos, #}$q"
+            done
             if [ -n "$abertos" ]; then
               echo "· #$n ainda espera a entrega de #$abertos — label MANTIDA"
               continue

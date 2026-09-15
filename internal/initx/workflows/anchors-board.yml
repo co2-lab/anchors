@@ -132,6 +132,9 @@ jobs:
                     estado: ([.labels[].name | select(startswith("anchors:"))
                               | select(. != "anchors:needs-user")] | .[0] // "anchors:to-do"),
                     escalado: ([.labels[].name] | any(. == "anchors:needs-user")),
+                    vinculo: ([.labels[].name
+                               | select(startswith("anchors:under-") or startswith("anchors:desbloqueia-"))
+                               | sub("^anchors:(under|desbloqueia)-";"")] | .[0] // ""),
                     destrava: ([.labels[].name | select(startswith("anchors:desbloqueia-"))
                                 | sub("^anchors:desbloqueia-";"")] | .[0] // ""),
                     dono: ([.comments[].body | select(startswith("anchors-owner:"))] | last // "" |
@@ -141,6 +144,35 @@ jobs:
                             sub("^anchors-owner: *";"")],
                     comentarios: (.comments | length)
                   }]' > _board/board.json
+
+          # PENDENTE agora, ou RESOLVIDO um dia? — e o board contava as duas coisas junto.
+          #
+          # A label `anchors:needs-user` diz que o card ESPEROU uma pessoa. Não diz se ainda
+          # espera: ela fica no card depois que a decisão sai, e só o `anchors decided` ou o
+          # pipeline de desbloqueio a removem.
+          #
+          # MEDIDO: o card #311 aparecia como pendência do usuário em `ready-to-test` — o
+          # trabalho tinha entrado pelo PR #402, os dois achados que o travavam (#441, #442)
+          # estavam FECHADOS, e a label continuava lá. Quem olha o board vê uma fila de
+          # pendências que em parte já foi resolvida, e a que importa se perde no meio.
+          #
+          # O FATO que separa: os cards abertos SOB este (`under-<n>`, `desbloqueia-<n>`).
+          # Se algum está aberto, a espera é real. Se todos fecharam, a decisão saiu — o
+          # card fica marcado como RESOLVIDO, e não some do board: quem escalou precisa ver
+          # que a resposta veio.
+          for n in $(jq -r '.[] | select(.escalado) | .numero' _board/board.json); do
+            abertos=$(gh issue list --repo "$GH_REPO" --state open               --label "anchors:under-$n" --limit 20 --json number --jq 'length' 2>/dev/null || echo 0)
+            d=$(gh issue list --repo "$GH_REPO" --state open               --label "anchors:desbloqueia-$n" --limit 20 --json number --jq 'length' 2>/dev/null || echo 0)
+            total=$(( abertos + d ))
+            jq --argjson n "$n" --argjson t "$total" \
+              'map(if .numero == $n then . + {esperando: ($t > 0), sob_abertos: $t} else . end)' \
+              _board/board.json > _board/board.tmp && mv _board/board.tmp _board/board.json
+            if [ "$total" -gt 0 ]; then
+              echo "· #$n ESPERANDO — $total card(s) aberto(s) sob ele"
+            else
+              echo "· #$n a decisão já saiu — marcado como resolvido"
+            fi
+          done
 
           # O carimbo de quando a foto foi tirada. Um board sem isso não se distingue de
           # um board que parou de atualizar — e o leitor confia num dado velho.

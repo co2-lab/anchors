@@ -219,6 +219,31 @@ func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *co
 // Ele separa "não documentado" de "documentado" — e a qualidade do que está escrito é
 // trabalho de revisão, não de gate.
 func mentionsUnit(doc, code, id string) bool {
+	// A MENÇÃO NUMA NOTA NÃO CONTA — e o caso que obrigou isto é quase cômico.
+	//
+	// No projeto de referência o `componentes.md` tinha uma nota listando os componentes
+	// "que o gate `doc-required` deve sinalizar", e `MetricCard` estava nela. O gate lia o
+	// arquivo, achava o nome, e se dava por satisfeito — SILENCIADO PELA PRÓPRIA NOTA QUE
+	// DIZIA QUE FALTAVA DOCUMENTÁ-LO. A unidade ficou sem entrada por semanas.
+	//
+	// A mesma armadilha vale para a citação cruzada: a entrada de `StatusBadge` mencionava
+	// `MetricCard` ao explicar quando NÃO se usa um em vez do outro. É prosa legítima, e
+	// não é documentação da unidade citada.
+	//
+	// O QUE CONTINUA GROSSEIRO, deliberadamente. Isto não valida conteúdo, não entende
+	// Markdown além de contar `#`, e não julga se o que está escrito presta — a qualidade
+	// segue sendo trabalho de revisão. A distinção é só uma: menção DENTRO de um bloco de
+	// nota não conta; em qualquer outro lugar, conta como antes.
+	// A SEÇÃO PRÓPRIA é a resposta forte: quem documenta abre uma seção para a unidade.
+	if hasOwnSection(doc, code, id) {
+		return true
+	}
+	// SEM SEÇÃO, só conta o documento que não TEM seções — um OpenAPI, um YAML, um
+	// arquivo de prosa corrida. Ali a menção é tudo o que existe, e cobrar título seria
+	// exigir uma estrutura que o formato não tem.
+	if hasAnyHeading(doc) {
+		return false
+	}
 	if code != "" && strings.Contains(doc, code) {
 		return true
 	}
@@ -229,4 +254,113 @@ func mentionsUnit(doc, code, id string) bool {
 		base = strings.TrimSuffix(base, sufixo)
 	}
 	return base != "" && strings.Contains(doc, base)
+}
+
+// hasOwnSection responde se ALGUMA seção do documento é sobre esta unidade.
+//
+// A DIFERENÇA entre citar e documentar, e ela decidiu o desenho. Duas armadilhas reais, no
+// mesmo arquivo do projeto de referência:
+//
+//	· uma NOTA listava os componentes "que o gate `doc-required` deve sinalizar", e
+//	  `MetricCard` estava nela — o gate lia, achava o nome, e se dava por satisfeito.
+//	  SILENCIADO PELA PRÓPRIA NOTA QUE DIZIA QUE FALTAVA DOCUMENTÁ-LO.
+//
+//	· a seção de `StatusBadge` citava `MetricCard` ao explicar quando NÃO se usa um em vez
+//	  do outro. Prosa legítima e útil — e não é documentação da unidade citada.
+//
+// Nos dois casos a unidade aparecia no arquivo e não tinha entrada. Ficou sem documentação
+// por semanas, com o gate verde.
+//
+// O TÍTULO é o que separa: quem documenta uma unidade abre uma seção para ela. Citar é
+// escrever o nome no corpo de outra.
+//
+// AGNÓSTICO. Não procura a palavra "Nota", nem qualquer outra — o Anchors roda em projetos
+// que documentam em qualquer idioma. Procura a IDENTIDADE (o código, o nome do arquivo) na
+// linha de título, que é estrutura de Markdown, não vocabulário.
+func hasOwnSection(doc, code, id string) bool {
+	base := baseName(id)
+	for _, l := range strings.Split(doc, "\n") {
+		if headingLevel(l) == 0 {
+			continue
+		}
+		// FRONTEIRA, e não substring: `MetricCardList.spec.md` no título contaria como
+		// documentação de `MetricCard` — um nome que CONTÉM o outro é outra unidade, e
+		// aceitar isso devolveria o defeito por uma porta lateral.
+		if code != "" && wholeWordInLine(l, code) {
+			return true
+		}
+		if base != "" && wholeWordInLine(l, base) {
+			return true
+		}
+	}
+	return false
+}
+
+// baseName é o nome do arquivo sem extensão: `ServiceList.spec.md` vira `ServiceList`.
+func baseName(id string) string {
+	base := filepath.Base(id)
+	for _, sufixo := range []string{".spec.md", ".md", ".ts", ".tsx", ".go"} {
+		base = strings.TrimSuffix(base, sufixo)
+	}
+	return base
+}
+
+// headingLevel conta os `#` iniciais de uma linha de título Markdown (0 se não for uma).
+func headingLevel(l string) int {
+	t := strings.TrimLeft(l, " \t")
+	n := 0
+	for n < len(t) && t[n] == '#' {
+		n++
+	}
+	if n == 0 || n >= len(t) || t[n] != ' ' {
+		return 0
+	}
+	return n
+}
+
+// hasAnyHeading diz se o documento é organizado em seções.
+//
+// Um `openapi.yaml` não tem títulos Markdown, e exigir uma seção por unidade ali seria
+// cobrar uma estrutura que o formato não tem — foi por isso que a menção existe como rede
+// secundária desde o início. A distinção mantém esse caso funcionando como antes.
+func hasAnyHeading(doc string) bool {
+	for _, l := range strings.Split(doc, "\n") {
+		if headingLevel(l) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+// wholeWordInLine procura o nome com FRONTEIRA nos dois lados.
+//
+// Um identificador é delimitado por qualquer caractere que não componha nome: crase,
+// espaço, barra, parêntese, ponto. `MetricCard` casa em "`MetricCard.spec.md`" e não casa
+// em "`MetricCardList.spec.md`" — e é essa distinção que impede o título de uma unidade de
+// contar como documentação de outra cujo nome ele contém.
+func wholeWordInLine(line, name string) bool {
+	i := 0
+	for {
+		j := strings.Index(line[i:], name)
+		if j < 0 {
+			return false
+		}
+		start := i + j
+		end := start + len(name)
+		if !isNameChar(line, start-1) && !isNameChar(line, end) {
+			return true
+		}
+		i = start + 1
+	}
+}
+
+// isNameChar diz se a posição carrega um caractere que faz parte de um identificador.
+// Fora dos limites da linha conta como fronteira.
+func isNameChar(s string, i int) bool {
+	if i < 0 || i >= len(s) {
+		return false
+	}
+	c := s[i]
+	return c == '_' || c == '-' ||
+		(c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
 }
