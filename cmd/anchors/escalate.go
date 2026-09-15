@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/initx"
 	"github.com/spf13/cobra"
 )
@@ -86,6 +87,30 @@ card para trocar uma palavra é burocracia.`,
 				return fmt.Errorf("`escalate` existe no modo github (o card é uma issue). " +
 					"No modo local, escreva a dúvida no plano e pare o trabalho — não há " +
 					"fila compartilhada de onde tirar o card")
+			}
+
+			// JÁ HÁ ALGUÉM NESTE ARQUIVO? — a pergunta que faltava.
+			//
+			// Dois agentes entregaram o MESMO trabalho no mesmo dia: um pegou o card do
+			// gate para `MetricCard.spec.md` às 11:38, outro encontrou o mesmo problema
+			// às 12:02 e abriu um card novo. Os dois PRs acrescentaram a mesma seção ao
+			// mesmo documento.
+			//
+			// O `claim` impede dois agentes de pegarem o mesmo card. Não impedia um
+			// agente de CRIAR um card para trabalho que já está em andamento noutro.
+			if sobre != "" && len(cfg.Workflow.Labels) > 0 {
+				if outros := openCardsAbout(sobre, cfg.Workflow.Labels[0]); len(outros) > 0 {
+					fmt.Fprintln(os.Stderr)
+					fmt.Fprintln(os.Stderr, i18n.T("escalate.already_open", sobre))
+					for i, o := range outros {
+						if i == 3 {
+							fmt.Fprintln(os.Stderr, i18n.T("escalate.already_open_more", len(outros)-3))
+							break
+						}
+						fmt.Fprintln(os.Stderr, "    "+o)
+					}
+					fmt.Fprintln(os.Stderr)
+				}
 			}
 
 			motivo := strings.Join(args, " ")
