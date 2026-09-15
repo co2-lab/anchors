@@ -1640,3 +1640,39 @@ func TestBoardDistingueFaseDeCard(t *testing.T) {
 		t.Errorf("`--fase` declarada %d vez(es) — faltam os blocos de tema escuro", n)
 	}
 }
+
+// O STALE LIBERA O DONO, e não move o card.
+//
+// A versão anterior decidia um destino pela label anterior: `in-review` voltava para
+// `ready-to-review`, e todo o resto para `to-do`. O raciocínio do primeiro caso estava certo
+// e escrito no próprio código — "mandar para `to-do` faria o próximo agente REIMPLEMENTAR o
+// que já existe".
+//
+// O SEGUNDO CASO PRESUMIA o que não conferia. A justificativa dizia "aqui o trabalho NÃO
+// terminou: não há PR, ou os checks não passaram" — mas nada olhava se havia PR. Quando
+// havia, e verde, a presunção estava errada e o efeito era exatamente o que o comentário
+// condenava três linhas acima: o card voltava para `to-do` e o trabalho pronto se perdia.
+//
+// Liberar o dono BASTA: o `claim` serve por estado E por dono liberado.
+func TestStaleLiberaODonoSemMoverOCard(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-stale.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	if strings.Contains(texto, "--add-label") {
+		t.Error("o stale move o card — mover é uma decisão tomada sem os dados que a " +
+			"justificariam, e um card com PR verde voltaria para `to-do`")
+	}
+	// A LIBERAÇÃO continua: sem ela o card fica preso a um dono que sumiu.
+	if !strings.Contains(texto, "anchors-owner: (liberado)") {
+		t.Fatal("o stale deixou de liberar o dono — o card ficaria preso a quem sumiu, e " +
+			"é para isso que este pipeline existe")
+	}
+	// E o REGISTRO diz onde o card ficou: sem isso, quem lê precisa conferir as labels
+	// para descobrir o que aconteceu.
+	if !strings.Contains(texto, "estado_atual") {
+		t.Error("o registro da liberação não diz em que coluna o card ficou")
+	}
+}
