@@ -1086,14 +1086,16 @@ function desenhaRoadmap(d) {
 //
 // O NÓ DE GRUPO (plano, fase) entra como linha própria, sem barra: ele é o cabeçalho do
 // bloco. Sem isso a indentação ficaria órfã — recuo sem nada que o explique.
-function ordenaPorHierarquia(linhas, d, PASSADO) {
+// A HIERARQUIA do mapa: quem é pai de quem. Uma função só, porque os dois modos precisam
+// dela — a árvore para ordenar e indentar, a lista para dar ao pai a barra que o cobre.
+function hierarquia(linhas, d) {
   const CODIGO = /^[A-Z]{5}$/;
-  const porCodigo = {};
-  for (const { i } of linhas) if (CODIGO.test(i.codigo || "")) porCodigo[i.codigo] = i;
+  const daLinha = {};
+  for (const l of linhas) if (CODIGO.test(l.i.codigo || "")) daLinha[l.i.codigo] = l;
 
   const nos = {};
   for (const f of d.fases || []) nos[f.codigo] = { ...f, tipo: "fase" };
-  for (const c of Object.keys(porCodigo)) nos[c] = { ...porCodigo[c], tipo: "card" };
+  for (const c of Object.keys(daLinha)) nos[c] = { ...daLinha[c].i, tipo: "card" };
 
   const filhos = {};
   const raizes = [];
@@ -1107,8 +1109,74 @@ function ordenaPorHierarquia(linhas, d, PASSADO) {
     (filhos[pai] ||= []).push(cod);
   }
 
-  const daLinha = {};
-  for (const l of linhas) if (l.i.codigo) daLinha[l.i.codigo] = l;
+  // OS ACHADOS DE GATE entram pela outra porta: eles não têm código de unidade — o que
+  // está entre colchetes no título é o nome do GATE —, mas o pipeline resolve o caminho
+  // que eles acusam e grava o `parent` da unidade.
+  //
+  // MEDIDO: 201 dos 304 cards do projeto de referência eram achados, TODOS na raiz — uma
+  // lista de desfiliados maior que a árvore inteira. Com o `parent` resolvido, 143 deles
+  // aparecem sob a unidade que acusam, que é onde quem lê os procura.
+  //
+  // A chave é o NÚMERO, não o código: dois achados do mesmo gate sobre unidades diferentes
+  // têm o mesmo `codigo` (`doc-required`), e chavear por ele faria 37 virarem um.
+  const achados = {};
+  for (const l of linhas) {
+    if (CODIGO.test(l.i.codigo || "")) continue;
+    const pai = l.i.parent || "";
+    if (!pai || !nos[pai]) continue;
+    const chave = "#" + l.i.numero;
+    achados[chave] = l;
+    nos[chave] = { ...l.i, codigo: chave, tipo: "achado" };
+    (filhos[pai] ||= []).push(chave);
+  }
+  return { nos, filhos, raizes, daLinha: { ...daLinha, ...achados } };
+}
+
+// abrangeFilhos dá a cada PAI a barra que cobre os filhos, nos DOIS modos.
+//
+// Um plano é um cabeçalho: ele começa quando o primeiro filho começou e termina quando o
+// último termina. Sem isto ele aparece com a barra do PRÓPRIO card — uma barra fina, sem
+// relação com o trabalho que descreve, e caindo na ordenação onde a data do card o põe.
+//
+// MEDIDO: os 14 planos abertos do projeto de referência caíam empilhados nas posições
+// 228–242 da lista, todos na mesma faixa de "futuro", longe das issues que descrevem.
+function abrangeFilhos(linhas, d, PASSADO) {
+  const { filhos, daLinha } = hierarquia(linhas, d);
+
+  function extensao(cod, vistos = new Set()) {
+    if (vistos.has(cod)) return null;            // ciclo de `parent` não trava
+    vistos.add(cod);
+    const l = daLinha[cod];
+    let ini = l ? l.esq : null;
+    let fim = l ? l.esq + l.larg : null;
+    for (const k of filhos[cod] || []) {
+      const e = extensao(k, vistos);
+      if (!e) continue;
+      ini = ini === null ? e.ini : Math.min(ini, e.ini);
+      fim = fim === null ? e.fim : Math.max(fim, e.fim);
+    }
+    return ini === null ? null : { ini, fim };
+  }
+
+  for (const cod of Object.keys(filhos)) {
+    const l = daLinha[cod];
+    if (!l) continue;                            // fase sem card próprio: nada a alargar
+    const e = extensao(cod, new Set());
+    if (!e) continue;
+    l.esq = e.ini;
+    l.larg = Math.max(1.5, e.fim - e.ini);
+    l.classe = "abrange";
+    // ONDE O REALIZADO TERMINA, em % da própria barra — o CSS pinta sólido até ali.
+    l.feitoAte = Math.max(0, Math.min(100,
+      (PASSADO - e.ini) / Math.max(0.01, e.fim - e.ini) * 100));
+  }
+}
+
+function ordenaPorHierarquia(linhas, d, PASSADO) {
+  // A MESMA hierarquia que o `abrangeFilhos` usa. Havia duas cópias desta montagem, e a
+  // consequência apareceu na hora: os achados afiliados entraram numa e não na outra — a
+  // árvore continuou mostrando 201 desfiliados enquanto a abrangência já os via.
+  const { nos, filhos, raizes, daLinha } = hierarquia(linhas, d);
 
   // O PAI É HÍBRIDO, e tratá-lo como uma coisa só era o defeito.
   //
@@ -1244,11 +1312,29 @@ function desenhaRoadmapLinha(d) {
   //
   // A pergunta que a barra responde ("quando isto foi entregue?") não muda; o que muda é
   // como o leitor ACHA a issue de que precisa.
+  // A ABRANGÊNCIA DO PAI vale nos DOIS modos: um plano é um cabeçalho que cobre os
+  // filhos, e isso é verdade independentemente de como a lista está ordenada. Calculá-la
+  // só na árvore fazia o plano aparecer na lista com a barra do próprio card — uma barra
+  // fina no meio do nada, sem relação com o trabalho que ele descreve.
+  abrangeFilhos(linhas, d, PASSADO);
+
   if (modoRoadmap() === "arvore") {
     ordenaPorHierarquia(linhas, d, PASSADO);
   } else {
-    // ocorrência: entregues por data, depois o em curso, depois o futuro pela ordem
-    linhas.sort((a, b) => a.esq - b.esq || Number(a.i.numero) - Number(b.i.numero));
+    // ORDEM DE OCORRÊNCIA — com o PAI antes dos seus, e não perdido no meio.
+    //
+    // Um plano é um cabeçalho, não um item de trabalho: ele abrange os filhos e não
+    // disputa posição com eles. Ordenado só pela data, os 14 planos abertos do projeto de
+    // referência caíam empilhados nas posições 228–242 — todos na mesma faixa de "futuro",
+    // longe das issues que descrevem.
+    //
+    // O critério é o INÍCIO: o pai começa quando o primeiro filho começou, então ele
+    // naturalmente precede os seus. O desempate por LARGURA põe o que abrange mais antes
+    // do que abrange menos — plano, depois fase, depois card.
+    linhas.sort((a, b) =>
+      a.esq - b.esq ||
+      (b.larg || 0) - (a.larg || 0) ||
+      Number(a.i.numero) - Number(b.i.numero));
   }
 
   const rot = (c) => esc((c.codigo ? c.codigo + " · " : "") +
@@ -1269,7 +1355,7 @@ function desenhaRoadmapLinha(d) {
            title="${rot(i)}">${rot(i)}</div>
       <div class="g-faixa">${larg > 0 ? `
         <${i.numero ? "a" : "span"} class="g-barra ${classe}"${
-             i.numero ? ` href="${esc(i.url)}" target="_blank" rel="noopener"` : ""}
+             i.numero && i.url ? ` href="${esc(i.url)}" target="_blank" rel="noopener"` : ""}
            style="left:${esq.toFixed(1)}%;width:${larg.toFixed(1)}%${
              classe === "abrange" ? `;--feito:${(feitoAte || 0).toFixed(1)}%` : ""}"
            title="${i.numero ? `#${esc(i.numero)} — ` : ""}${quando(i)}">${
