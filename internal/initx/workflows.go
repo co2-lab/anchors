@@ -238,6 +238,21 @@ const MarcadorDeReversao = "🔒"
 // trava impede é justamente o movimento que ninguém pensou duas vezes antes de fazer.
 const LabelManual = "anchors:manual"
 
+// LabelDiscarded marca o card que não faz mais sentido.
+//
+// SOFT-DELETE, e a escolha é deliberada. Fechar não basta: o board mostra os fechados porque
+// o roadmap precisa deles — é como ele desenha o que já foi entregue. Apagar de verdade
+// perderia o rastro de que a pergunta existiu, e é isso que distingue "resolvido" de
+// "descartado".
+//
+// MEDIDO no projeto de referência: das 27 raízes do roadmap, DOZE eram ruído permanente —
+// cards de teste (`[teste] … apagar`) e achados sobre arquivos que não existem mais. Todos
+// fechados, todos ainda desenhados, e nenhum jamais terá um pai a encontrar.
+//
+// O QUE ELA FAZ: o card sai do board (colunas, árvore, roadmap, faixa de pendências) e
+// continua no GitHub, com a razão registrada em comentário. Quem procurar o número o acha.
+const LabelDiscarded = "anchors:discarded"
+
 // LabelDesbloqueia é a label do card que destrava `card`.
 func LabelDesbloqueia(card string) string { return PrefixoLabelDesbloqueia + card }
 

@@ -278,6 +278,19 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: cmd/anchors/discard.go
+      kind: code
+      rev: cda0ded0e93a
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/discard_test.go
+      kind: test
+      rev: af60cec5c08c
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/docs.go
       kind: code
       rev: 6f66d1d2cd3a
@@ -288,7 +301,7 @@ nodes:
         - comando
     - id: cmd/anchors/doctor.go
       kind: code
-      rev: 22fd1da6a6b7
+      rev: 334f85437db5
       updated_at: "2026-09-14"
       layer: comando
       tags:
@@ -2529,7 +2542,7 @@ nodes:
         - test
     - id: internal/initx/workflows.go
       kind: code
-      rev: cd45ec8f932d
+      rev: 10ca0edbeaaf
       updated_at: "2026-09-14"
       layer: infra
       tags:
@@ -2537,7 +2550,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 69027a685895
+      rev: 2cee0034505a
       updated_at: "2026-09-15"
       layer: teste
       tags:
