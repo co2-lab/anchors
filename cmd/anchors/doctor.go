@@ -303,6 +303,9 @@ func createStateLabels(cfg *config.Config) error {
 		// fluxo normal (alguém autorizou mexer nele à mão) — a cor de atenção é a que
 		// separa os dois.
 		initx.LabelManual: "fbca04",
+		// CINZA APAGADO: o card descartado saiu do board, e a cor diz isso sem competir
+		// com nada. Não é alarme nem trabalho — é registro de que a pergunta existiu.
+		initx.LabelDiscarded: "d4d4d4",
 	}
 	var criadas int
 	// A label de ESCALAÇÃO entra junto: sem ela criada, o pipeline que escala um card
@@ -312,7 +315,8 @@ func createStateLabels(cfg *config.Config) error {
 	// O OPT-OUT entra pelo mesmo motivo do `needs-user` acima: sem ele criado, quem quiser
 	// mover um card à mão não consegue aplicá-lo, e a trava de estado vira uma parede sem
 	// porta. `gh issue edit` com label inexistente falha em silêncio.
-	todas := append([]string{cfg.Workflow.Labels[0], initx.LabelNeedsUser, initx.LabelManual},
+	todas := append([]string{cfg.Workflow.Labels[0], initx.LabelNeedsUser, initx.LabelManual,
+		initx.LabelDiscarded},
 		initx.WorkStates...)
 	for _, e := range todas {
 		c := cor[e]

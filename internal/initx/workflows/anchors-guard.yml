@@ -150,6 +150,18 @@ jobs:
             exit 0
           fi
 
+          # O DESCARTADO JÁ SAIU DO FLUXO, e reabri-lo o traria de volta.
+          #
+          # O `anchors discard` fecha o card depois de marcá-lo — e fechar à mão é
+          # exatamente o que esta trava reverte. Sem esta saída, o card descartado voltaria
+          # a abrir em dez segundos, e o `claim` o serviria como trabalho novo: o mesmo
+          # ciclo que o #410 sofreu, agora por outra porta.
+          if gh issue view "$N" --repo "$GH_REPO" --json labels \
+             --jq '[.labels[].name] | any(. == "anchors:discarded")' | grep -q true; then
+            echo "#$N está DESCARTADO — fora do fluxo, e fora desta trava"
+            exit 0
+          fi
+
           # O OPT-OUT. A label diz "este card sou eu que movo", e é um ato deliberado que
           # fica no card, à vista, até alguém removê-la.
           if gh issue view "$N" --repo "$GH_REPO" --json labels \
