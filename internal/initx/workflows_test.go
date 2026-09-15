@@ -1338,3 +1338,49 @@ func TestBoardSoMarcaRespondidoQuandoHouveTrabalhoQueAcabou(t *testing.T) {
 			"metade dos cards escalados parecer sem trabalho sob eles")
 	}
 }
+
+// O CONFLITO QUE SÓ O MAPA CAUSA precisa ser diagnosticado — o GitHub não sabe resolvê-lo.
+//
+// O `anchors.graph.yaml` é GERADO e muda em todo PR. O Anchors traz um merge driver que sabe
+// uni-lo (o `anchors map merge`), mas ele vive no clone de quem trabalha: o merge do servidor
+// não o tem, e cai no merge textual.
+//
+// MEDIDO no projeto de referência: ONZE PRs de trabalho independente — cada um tocando só os
+// arquivos da sua unidade — ficaram `CONFLICTING` de uma vez, porque um deles mergeou. O
+// único arquivo em comum era o mapa.
+//
+// Quem abre o PR vê "conflitos" e presume que mexeu no que outro mexeu. Não mexeu — e a saída
+// é um `git rebase` local, onde o driver está. Sem alguém DIZER isso, o PR espera.
+func TestPipelineDiagnosticaOConflitoDoMapa(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-pr-checks.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	if !strings.Contains(texto, "conflito-do-mapa") {
+		t.Fatal("o pipeline não diagnostica o conflito do mapa — onze PRs de trabalho " +
+			"independente podem ficar parados sem ninguém saber que a saída é um rebase")
+	}
+
+	// A INTERSEÇÃO, e não a presença do mapa no diff. O mapa está em TODO PR; o que
+	// distingue o caso mecânico é ele ser o ÚNICO arquivo que os dois lados tocaram.
+	if !strings.Contains(texto, "comm -12") {
+		t.Error("o diagnóstico precisa cruzar os arquivos dos DOIS lados — só olhar se o " +
+			"mapa está no PR acusaria todo PR, e um aviso que sempre sai não é lido")
+	}
+	if !strings.Contains(texto, `[ "$comuns" = "anchors.graph.yaml" ]`) {
+		t.Error("a condição deve exigir que o mapa seja o ÚNICO comum: com mais arquivos " +
+			"em comum o conflito é de trabalho, e mandar rebasear esconderia isso")
+	}
+
+	// O CAMINHO DE SAÍDA, não só o diagnóstico. Dizer "é o mapa" sem dizer o que fazer
+	// deixa o leitor exatamente onde estava.
+	if !strings.Contains(texto, "git rebase origin/$base") {
+		t.Error("o aviso deve dar o comando que resolve — o diagnóstico sozinho não destrava")
+	}
+	if !strings.Contains(texto, "anchors install-hooks") {
+		t.Error("o aviso deve cobrir o caso de o driver NÃO estar instalado no clone, que " +
+			"é quando o rebase pede resolução manual e a pessoa desiste")
+	}
+}

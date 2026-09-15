@@ -55,6 +55,71 @@ permissions:
   checks: read
 
 jobs:
+  # O CONFLITO QUE SÓ O MAPA CAUSA — e o GitHub não sabe resolvê-lo.
+  #
+  # O `anchors.graph.yaml` é GERADO e muda em todo PR. O Anchors traz um merge driver que
+  # sabe uni-lo (o `anchors map merge`, instalado pelo `install-hooks`), mas ele vive no
+  # clone de quem trabalha: o merge do servidor não o tem, e cai no merge textual.
+  #
+  # O EFEITO, medido no projeto de referência: onze PRs de trabalho INDEPENDENTE — cada um
+  # tocando só os arquivos da sua unidade — ficaram `CONFLICTING` de uma vez, porque um
+  # deles mergeou. O único arquivo em comum era o mapa.
+  #
+  # Quem abre o PR vê "conflitos" e presume que mexeu no que outro mexeu. Não mexeu — e a
+  # saída é um `git rebase` local, onde o driver está. Sem alguém DIZER isso, o PR espera.
+  conflito-do-mapa:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: É só o mapa que conflita?
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          estado=$(gh pr view "$PR" --json mergeable --jq .mergeable 2>/dev/null || echo "")
+          if [ "$estado" != "CONFLICTING" ]; then
+            echo "· #$PR: $estado — nada a diagnosticar"
+            exit 0
+          fi
+
+          # O ARQUIVO QUE O PR TOCA, cruzado com o que mudou no alvo desde a base. Se a
+          # interseção for SÓ o mapa, o conflito é mecânico.
+          base="${{ github.event.pull_request.base.ref }}"
+          meus=$(gh pr view "$PR" --json files --jq '[.files[].path] | sort | .[]')
+          outros=$(gh api "repos/$GH_REPO/compare/${{ github.event.pull_request.base.sha }}...$base" \
+            --jq '[.files[].filename] | sort | .[]' 2>/dev/null || echo "")
+          comuns=$(comm -12 <(printf '%s\n' "$meus") <(printf '%s\n' "$outros") | grep -v '^$' || true)
+
+          if [ "$comuns" = "anchors.graph.yaml" ]; then
+            echo "::warning::#$PR conflita SÓ no \`anchors.graph.yaml\` — arquivo gerado. O merge driver do Anchors resolve, mas ele vive no seu clone: rode \`git rebase origin/$base\` e suba de novo."
+            {
+              echo "### O conflito é só o mapa"
+              echo ""
+              echo "Este PR e o \`$base\` mudaram **um único arquivo em comum**:"
+              echo "\`anchors.graph.yaml\` — que é gerado, não escrito."
+              echo ""
+              echo "O Anchors traz um merge driver que sabe uni-lo (preserva os julgamentos"
+              echo "dos dois lados). Ele está no seu clone, não no servidor — por isso o"
+              echo "GitHub mostra conflito onde não há trabalho disputado."
+              echo ""
+              echo '```console'
+              echo "\$ git fetch origin $base"
+              echo "\$ git rebase origin/$base     # o driver resolve o mapa"
+              echo "\$ anchors map build && git add anchors.graph.yaml"
+              echo "\$ git push --force-with-lease"
+              echo '```'
+              echo ""
+              echo "Se o \`rebase\` pedir resolução manual do mapa, o driver não está"
+              echo "instalado neste clone: \`anchors install-hooks\` o registra."
+            } >> "$GITHUB_STEP_SUMMARY"
+          elif [ -n "$comuns" ]; then
+            echo "· #$PR conflita em arquivos de trabalho, não só no mapa:"
+            printf '%s\n' "$comuns" | sed 's/^/    /'
+          fi
+
   mover:
     runs-on: ubuntu-latest
     steps:
