@@ -95,7 +95,7 @@ func coverageForSpec(g *mapx.Graph, root, specID string) error {
 	if node == nil {
 		return fmt.Errorf("spec %q não está no mapa", specID)
 	}
-	declared, err := codesInFile(filepath.Join(root, specID))
+	declared, err := codesInFileOfUnit(filepath.Join(root, specID), node.Code)
 	if err != nil {
 		return fmt.Errorf("ler a spec: %w", err)
 	}
@@ -142,7 +142,7 @@ func coveragePanorama(g *mapx.Graph, root string, threshold float64) error {
 		if n.Kind != mapx.KindSpec {
 			continue
 		}
-		declared, _ := codesInFile(filepath.Join(root, n.ID))
+		declared, _ := codesInFileOfUnit(filepath.Join(root, n.ID), n.Code)
 		if len(declared) == 0 {
 			continue
 		}
@@ -423,7 +423,30 @@ func matchCoverage(diffFile string, covByFile map[string]testsig.FileCoverage) (
 }
 
 // codesInFile lê um arquivo e extrai os códigos de cenário que ele declara.
+//
+// Sem o código da unidade não há o que filtrar — prefira `codesInFileOfUnit`.
 func codesInFile(path string) ([]string, error) {
+	return codesInFileOfUnit(path, "")
+}
+
+// codesInFileOfUnit extrai os códigos que o arquivo DECLARA, descartando os que
+// ele apenas CITA.
+//
+// Uma spec cita regras vizinhas em prosa — é o estilo do projeto, e ler "o efetivo
+// (`QSCOP-B02`), não o pedido" é o que explica a decisão. O erro era tratar essa
+// citação como declaração.
+//
+// A causa é de endereço: `CodesInCase` foi escrita para o NOME de um caso de teste
+// (`"SPCRX-V01: ..."`), onde todo código presente É o código do caso. Aplicada ao
+// arquivo INTEIRO, ela colhe também o que a prosa menciona.
+//
+// MEDIDO no blue-eyes: 37 dos 55 nós com `proven_codes` carregavam código de outra
+// unidade. O `InfraList.spec.md` cita `QSCOP-B02` uma vez, em prosa; nenhum teste
+// do InfraList o menciona; e o mapa afirmava que o InfraList o provou. Isso é pior
+// que uma lacuna — a lacuna aparece no relatório, e uma prova falsa não.
+//
+// `unit` vazia passa reto: cortar tudo custaria ao nó os próprios cenários.
+func codesInFileOfUnit(path, unit string) ([]string, error) {
 	data, err := readFileString(path)
 	if err != nil {
 		return nil, err
@@ -431,6 +454,9 @@ func codesInFile(path string) ([]string, error) {
 	seen := map[string]bool{}
 	var out []string
 	for _, c := range testsig.CodesInCase(data) {
+		if unit != "" && !strings.HasPrefix(c, unit+"-") {
+			continue
+		}
 		if !seen[c] {
 			seen[c] = true
 			out = append(out, c)
