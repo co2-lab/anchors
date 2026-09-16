@@ -144,7 +144,7 @@ nodes:
         - test
     - id: cmd/anchors/board_serve.go
       kind: code
-      rev: cccce0b79c3d
+      rev: 7fe1bda99e93
       updated_at: "2026-09-16"
       layer: comando
       tags:
@@ -152,7 +152,7 @@ nodes:
         - comando
     - id: cmd/anchors/board_serve_test.go
       kind: test
-      rev: 1306f88db960
+      rev: 1a3141aee578
       updated_at: "2026-09-16"
       layer: teste
       tags:
