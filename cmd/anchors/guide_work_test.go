@@ -1,6 +1,9 @@
 package main
 
 import (
+	"regexp"
+
+	"github.com/spf13/cobra"
 	"strings"
 	"testing"
 
@@ -122,17 +125,17 @@ func TestGuiaDeTrabalhoUsaONomeRealDaLabel(t *testing.T) {
 // `to-do`, e um card que nunca entra na coluna de revisão faz o próximo agente encontrá-la
 // vazia.
 func TestGuiaEnsinaOClaimComoPrimeiroPasso(t *testing.T) {
-	if !strings.Contains(workGuide, "anchors claim") {
-		t.Fatal("o guia não menciona o `anchors claim` — quem o seguir escolhe o card à " +
+	if !strings.Contains(workGuide, "anchors next") {
+		t.Fatal("o guia não menciona o `anchors next` — quem o seguir escolhe o card à " +
 			"mão, e o board deixa de descrever quem está com o quê")
 	}
 
 	// ANTES de tudo: o claim precisa vir na primeira seção, não perdido no meio. Um
 	// comando ensinado depois de "como escrever a spec" chega tarde demais.
-	iClaim := strings.Index(workGuide, "anchors claim")
+	iClaim := strings.Index(workGuide, "anchors next")
 	iOrdem := strings.Index(workGuide, "## A ordem")
 	if iOrdem > 0 && iClaim > iOrdem {
-		t.Error("o `claim` é ensinado depois da seção de ordem do board — ele é o " +
+		t.Error("o `next` é ensinado depois da seção de ordem do board — ele é o " +
 			"PRIMEIRO comando, e ensiná-lo tarde é o mesmo que não ensinar")
 	}
 
@@ -141,5 +144,50 @@ func TestGuiaEnsinaOClaimComoPrimeiroPasso(t *testing.T) {
 	if !strings.Contains(workGuide, "encontrá-la vazia") {
 		t.Error("o guia não diz POR QUE o claim importa — sem a razão (a fila de revisão " +
 			"que fica vazia) ele vira cerimônia, e cerimônia se pula")
+	}
+}
+
+// TODO COMANDO QUE O GUIA MANDA RODAR PRECISA EXISTIR.
+//
+// A v0.1.120 publicou um guia ensinando `anchors claim` — que NÃO EXISTE. O comando é
+// `anchors next`; `claim` é o nome do PIPELINE (`anchors-claim.yml`), e eu o confundi com
+// o do CLI.
+//
+// O custo foi imediato: cinco agentes receberam a instrução e o primeiro a rodá-la levou
+// `erro: unknown command "claim"`. Um guia que manda rodar o que não existe é pior que um
+// guia omisso — o omisso faz procurar, este faz desistir.
+//
+// A régua confronta o guia com os comandos REGISTRADOS no cobra, que é a fonte de verdade:
+// se um comando for renomeado, ela acusa no mesmo commit.
+func TestGuiaSoCitaComandoQueExiste(t *testing.T) {
+	registrados := map[string]bool{}
+	var colhe func(*cobra.Command)
+	colhe = func(c *cobra.Command) {
+		registrados[c.Name()] = true
+		for _, f := range c.Commands() {
+			colhe(f)
+		}
+	}
+	colhe(newRootCmd())
+
+	// `anchors <algo>` no texto do guia — o `<algo>` precisa ser um comando de verdade.
+	// A captura para no primeiro não-letra: `anchors check --changed` cita `check`.
+	re := regexp.MustCompile(`anchors ([a-z][a-z-]*)`)
+	vistos := map[string]bool{}
+	for _, m := range re.FindAllStringSubmatch(workGuide, -1) {
+		nome := m[1]
+		if vistos[nome] {
+			continue
+		}
+		vistos[nome] = true
+		// `anchors <artefato>` é um placeholder do próprio guia, não um comando.
+		if nome == "guide" || registrados[nome] {
+			continue
+		}
+		t.Errorf("o guia manda rodar `anchors %s`, e esse comando não existe — quem o "+
+			"seguir recebe `unknown command` e para", nome)
+	}
+	if len(vistos) == 0 {
+		t.Fatal("nenhum `anchors <comando>` no guia — o regex quebrou e o teste passaria vazio")
 	}
 }
