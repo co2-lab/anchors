@@ -142,6 +142,21 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: cmd/anchors/board_serve.go
+      kind: code
+      rev: cccce0b79c3d
+      updated_at: "2026-09-16"
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/board_serve_test.go
+      kind: test
+      rev: 1306f88db960
+      updated_at: "2026-09-16"
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/check.go
       kind: code
       rev: 93f7945a8e79
@@ -2412,6 +2427,21 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/initx/board_expor.go
+      kind: code
+      rev: c0392b49356e
+      updated_at: "2026-09-16"
+      layer: infra
+      tags:
+        - infra
+      regime: declarativo
+    - id: internal/initx/board_expor_test.go
+      kind: test
+      rev: e349223970f9
+      updated_at: "2026-09-16"
+      layer: teste
+      tags:
+        - test
     - id: internal/initx/build_config.go
       kind: code
       rev: a97bdeab9580
@@ -2583,7 +2613,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: cc9bf3d22c6b
+      rev: 5a6f47ed89ee
       updated_at: "2026-09-16"
       layer: teste
       tags:
@@ -3613,6 +3643,10 @@ edges:
       origin: declared
     - from: WORKFLOW.md
       to: internal/initx/artifacts.go
+      type: governs
+      origin: declared
+    - from: WORKFLOW.md
+      to: internal/initx/board_expor.go
       type: governs
       origin: declared
     - from: WORKFLOW.md
