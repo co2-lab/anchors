@@ -253,6 +253,12 @@ func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 	// card à mão, e o card continua onde o trabalho está. Tratá-lo como estado o faria
 	// sair da coluna — e o board deixaria de mostrar o que ele autoriza.
 	valida[LabelManual] = true
+	// O BLOQUEIO, terceira direção do mesmo vínculo: `blocked-by-<n>` diz que ESTE card
+	// espera o #n. Não é estado pela mesma razão do `needs-user` — o card continua na
+	// coluna onde o trabalho parou, e é isso que faz o board mostrar ONDE ele travou.
+	// Fosse estado, um card bloqueado sairia de `in-progress` e o board diria que o
+	// trabalho nunca começou.
+	valida[PrefixoLabelBlockedBy] = true
 	for _, w := range WorkflowsDoFluxo {
 		b, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {

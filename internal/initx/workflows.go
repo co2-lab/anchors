@@ -256,6 +256,40 @@ const LabelDiscarded = "anchors:discarded"
 // LabelDesbloqueia é a label do card que destrava `card`.
 func LabelDesbloqueia(card string) string { return PrefixoLabelDesbloqueia + card }
 
+// PrefixoLabelBlockedBy marca o card que NÃO PODE SER TRABALHADO até outro sair.
+//
+// É a direção que faltava. As duas labels existentes ligam os cards, e nenhuma para o
+// trabalho de quem ficou esperando:
+//
+//	anchors:under-44          o card NASCEU do trabalho do #44 — procedência
+//	anchors:desbloqueia-311   a ENTREGA deste card destrava o #311 — do destravador
+//	anchors:blocked-by-44     ESTE card espera o #44 — do bloqueado
+//
+// O QUE FALTAVA: o `escalate --for-user` já PARA o card de origem — põe `needs-user` nele
+// e comenta "⏸ Parado". O que ele não dizia é POR QUAL card ele espera.
+//
+// Sem o número, o board mostra "esperando você" sem vínculo, e quem responde a decisão não
+// sabe o que acabou de soltar: cada card tem de ser reencontrado à mão, e o que não for
+// reencontrado segue parado depois de a decisão já ter saído.
+//
+// MEDIDO no projeto de referência: 23 decisões abertas eram SETE perguntas, e destravar as
+// dependentes exigia reler card por card para descobrir quem esperava o quê.
+//
+// O QUE A LABEL FECHA, nas três pontas:
+//
+//   - o `claim` confere se o bloqueador ainda está aberto antes de servir o card — a
+//     ninguém, nem ao dono atual
+//   - o board desenha o vínculo, com o número de quem segura
+//   - quem decide lista tudo que a resposta libera (`--label anchors:blocked-by-<n>`)
+//
+// É AUTOMÁTICA e não flag: se o card parou por causa daquela decisão, o vínculo é fato.
+// O julgamento — se a decisão impede o trabalho — já foi feito quando o agente escolheu
+// `--for-user`.
+const PrefixoLabelBlockedBy = "anchors:blocked-by-"
+
+// LabelBlockedBy é a label do card que espera `card`.
+func LabelBlockedBy(card string) string { return PrefixoLabelBlockedBy + card }
+
 // A DECISÃO é registrada por COMANDO, não por tag em comentário.
 //
 // Houve aqui uma `TagDeDecisao = "#solution"`, para um pipeline reconhecer a resposta do

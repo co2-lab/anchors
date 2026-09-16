@@ -95,6 +95,7 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 	root.AddCommand(newTaskStatusCmd())
 	root.AddCommand(newMigrateCmd())
 	root.AddCommand(newUnblockCmd())
+	root.AddCommand(newBackfillLabelsCmd())
 	root.AddCommand(newDiscardCmd())
 	root.AddCommand(newReclaimCmd())
 	root.AddCommand(newStaleCmd())

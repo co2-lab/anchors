@@ -92,21 +92,49 @@ ele diz o que diz.`,
 					strings.Join(pendentes, ", #"))
 			}
 
+			// O RASTRO ANTES DA REMOÇÃO, porque a label é o único lugar onde ele está.
+			//
+			// `blocked-by-<n>` sai junto com o `needs-user` — senão fica pendurada num
+			// card já livre, e quem lê o board depois vê bloqueio que não existe mais.
+			//
+			// MAS REMOVER APAGA A HISTÓRIA. Saber que este card esperou por aquela decisão
+			// é o que explica o atraso dele, e é o que permite rastrear a decisão para
+			// trás: "por que isto ficou parado três dias?" só tem resposta se o vínculo
+			// sobreviver ao desbloqueio.
+			//
+			// O COMENTÁRIO é onde o rastro fica. Ele é imutável no GitHub, aparece na
+			// timeline com data, e sobrevive a qualquer mexida posterior nas labels — o
+			// contrário da label, que é estado do AGORA e some quando o agora muda.
+			bloqueadores := labelsDeBloqueio(cfg.Workflow.Repo, card)
+
 			// A LABEL primeiro: é ela que trava. Se o resto falhar, o card já está livre —
 			// a ordem inversa deixaria o card parado com a issue fechada, que é
 			// exatamente o estado inconsistente que este comando existe para desfazer.
+			remover := []string{initx.LabelNeedsUser}
+			remover = append(remover, bloqueadores...)
 			out, err := exec.Command("gh", "issue", "edit", card,
 				"--repo", cfg.Workflow.Repo,
-				"--remove-label", initx.LabelNeedsUser,
+				"--remove-label", strings.Join(remover, ","),
 			).CombinedOutput()
 			if err != nil {
 				return fmt.Errorf("liberar o card #%s: %w\n%s", card, err, out)
 			}
 			fmt.Printf("✓ card #%s liberado — o claim volta a entregá-lo\n", card)
 
+			corpo := "▶ Liberado: a decisão saiu e virou regra.\n\n**Resolução:** " + resolucao
+			if len(bloqueadores) > 0 {
+				var quem []string
+				for _, b := range bloqueadores {
+					quem = append(quem, "#"+strings.TrimPrefix(b, initx.PrefixoLabelBlockedBy))
+				}
+				corpo += "\n\n**Estava bloqueado por:** " + strings.Join(quem, ", ") +
+					"\n\nA label de bloqueio saiu com este comando. O vínculo fica " +
+					"registrado aqui: é o que explica o tempo parado, e é por onde se " +
+					"rastreia a decisão para trás."
+			}
 			_ = exec.Command("gh", "issue", "comment", card,
 				"--repo", cfg.Workflow.Repo,
-				"--body", "▶ Liberado: a decisão saiu e virou regra.\n\n**Resolução:** "+resolucao,
+				"--body", corpo,
 			).Run()
 
 			// As issues de decisão abertas SOB este card. A label `under-<n>` é o que liga
@@ -199,4 +227,29 @@ func desbloqueiosAbertos(repo, card string) []string {
 		ns = append(ns, fmt.Sprint(a.Number))
 	}
 	return ns
+}
+
+// labelsDeBloqueio devolve as labels `blocked-by-<n>` que o card carrega.
+//
+// Precisa vir ANTES da remoção: depois, a informação não existe em lugar nenhum — a label é
+// estado do agora, e o rastro de que o card esperou por aquela decisão só sobrevive se for
+// escrito em comentário, que é imutável e datado.
+//
+// TODAS e não a primeira: um card pode ter parado por duas decisões (dois achados no mesmo
+// trabalho), e registrar só uma contaria a história pela metade.
+func labelsDeBloqueio(repo, card string) []string {
+	out, err := exec.Command("gh", "issue", "view", card,
+		"--repo", repo, "--json", "labels",
+		"--jq", `[.labels[].name | select(startswith("`+initx.PrefixoLabelBlockedBy+`"))] | .[]`,
+	).Output()
+	if err != nil {
+		return nil
+	}
+	var rotulos []string
+	for _, l := range strings.Fields(string(out)) {
+		if l = strings.TrimSpace(l); l != "" {
+			rotulos = append(rotulos, l)
+		}
+	}
+	return rotulos
 }
