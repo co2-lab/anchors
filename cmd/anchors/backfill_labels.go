@@ -149,6 +149,38 @@ bloqueador faria o claim segurar o card por uma decisão que ninguém ligou a el
 				for _, l := range estado.Labels {
 					jaTem[l.Name] = true
 				}
+
+				// O BACKFILL NÃO INFERE PRECEDÊNCIA ENTRE DECISÕES.
+				//
+				// `needs-user` + `blocked-by-<n>` juntas são LEGÍTIMAS: uma decisão pode
+				// depender de outra, e isso é ordem de corretude — "responda o #701
+				// primeiro, porque a resposta dele condiciona a do #647". Proibir a
+				// combinação apagaria informação real.
+				//
+				// O QUE ESTE COMANDO NÃO PODE É ADIVINHAR QUAL DAS DUAS É. Ele lê o
+				// `under-<n>`, que significa "nasci do trabalho do #n" — procedência, não
+				// precedência. Quando o #n é um card de TRABALHO, o vínculo é direto: o
+				// trabalho para até a decisão sair. Quando o #n é OUTRA DECISÃO, `under`
+				// não diz se uma condiciona a outra ou se as duas só nasceram no mesmo
+				// lugar, e são perguntas diferentes.
+				//
+				// MEDIDO no projeto de referência: quatro cards (#647, #706, #721, #555)
+				// receberam bloqueio por esta inferência, e nos quatro o "bloqueador" era
+				// outra decisão que apenas nasceu junto — não precedência. O único vínculo
+				// que o `under` acertou foi o #198 → #647: card em `in-review`, trabalho
+				// de verdade parado.
+				//
+				// ENTÃO O BACKFILL RECUPERA SÓ O CASO INEQUÍVOCO, e quem quiser declarar
+				// precedência entre decisões põe a label à mão — é julgamento de quem lê
+				// as duas, do mesmo jeito que decidir se são o mesmo assunto.
+				if jaTem[initx.LabelNeedsUser] {
+					fmt.Fprintf(cmd.OutOrStdout(),
+						"· #%s também é decisão aberta — precedência entre decisões não se "+
+							"infere do `under-<n>`; se o #%s condiciona este, ponha a label à mão\n",
+						origem, strings.Join(donos, ", #"))
+					pulados++
+					continue
+				}
 				for _, dono := range donos {
 					rotulo := initx.LabelBlockedBy(dono)
 					if jaTem[rotulo] {
