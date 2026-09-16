@@ -7,6 +7,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/doct"
+	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/spf13/cobra"
@@ -34,7 +35,7 @@ compilado, onde o ` + "`docs-fresh`" + ` acusa quando ela envelhece.`,
 
 func newDocsBuildCmd() *cobra.Command {
 	var root, mapPath string
-	var dryRun bool
+	var dryRun, semRebuild bool
 	var maxUnits, maxLines int
 	padrao := doct.DefaultLayout()
 	cmd := &cobra.Command{
@@ -48,9 +49,61 @@ func newDocsBuildCmd() *cobra.Command {
 			if mapPath == "" {
 				mapPath = filepath.Join(absRoot, mapx.DefaultPath)
 			}
-			g, err := mapx.Load(mapPath)
-			if err != nil {
-				return fmt.Errorf("carregar mapa: %w (rode `anchors map build`)", err)
+
+			// O MAPA É RECONSTRUÍDO AQUI, e não lido do disco.
+			//
+			// Este comando compila a partir do MAPA, não da árvore. Ele lia o
+			// `anchors.graph.yaml` como estava — e um mapa mais velho que as specs não
+			// conhece as unidades novas, então o compilado saía SEM os cenários delas.
+			// Sem erro: o arquivo encolhia e o commit parecia normal.
+			//
+			// MEDIDO no projeto de referência (#717, #743): o compilado no `develop` tinha
+			// 31 entradas a menos do que as specs produzem — DTSTD 11, HLCHH 4, NTCNN 8,
+			// SRMTS 8, quatro unidades inteiras. O commit que as apagou é de um PR que não
+			// toca nenhuma delas; quem o escreveu rodou `docs build` antes do `map build`
+			// e não tinha como saber.
+			//
+			// A ordem certa não podia ser responsabilidade de quem chama. Recusar o mapa
+			// velho seria melhor que aceitar, mas ainda devolveria o trabalho para quem
+			// não causou o problema — e a régua do projeto induzia a ordem errada.
+			//
+			// Reconstruir é o mesmo que o `map build` faz (`scan.Walk` → `mapx.Build`), e
+			// os CARIMBOS do mapa em disco são preservados: eles são estado de trabalho,
+			// não derivado, e o laudo de cada um vive no `--reason` do `anchors judge`.
+			//
+			// Este comando NÃO grava o mapa. Reconstruir para compilar é dele; decidir o
+			// que o `anchors.graph.yaml` guarda é do `map build`.
+			// `--no-map-rebuild` existe para quem PRECISA compilar contra um mapa
+			// específico: conferir o que uma revisão antiga produzia, compilar contra um
+			// `--map` de outro lugar, ou rodar onde o scan não vale (uma árvore parcial).
+			//
+			// É opt-out e não padrão porque o modo perigoso tem de ser o PEDIDO. Quem
+			// passa a flag está dizendo "sei que este mapa é a entrada que eu quero"; quem
+			// não passa recebe a garantia sem precisar saber que ela existe.
+			var g *mapx.Graph
+			if semRebuild {
+				var err error
+				if g, err = mapx.Load(mapPath); err != nil {
+					return fmt.Errorf("carregar mapa: %w (rode `anchors map build`, ou "+
+						"tire o `--no-map-rebuild` para o compilado sair da árvore)", err)
+				}
+				fmt.Fprintln(cmd.ErrOrStderr(),
+					"anchors: `--no-map-rebuild` — o compilado sai do mapa em disco, e o que "+
+						"ele não conhecer NÃO entra")
+			} else {
+				cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+				if err != nil {
+					return fmt.Errorf("carregar %s: %w (rode `anchors init` para criar)",
+						config.DefaultFile, err)
+				}
+				files, err := scan.Walk(absRoot, cfg)
+				if err != nil {
+					return fmt.Errorf("scan: %w", err)
+				}
+				g = mapx.Build(files, cfg, gitmeta.AllCommitDates(absRoot))
+				if anterior, err := mapx.Load(mapPath); err == nil {
+					mapx.PreserveStamps(g, anterior)
+				}
 			}
 			c, err := doct.New(absRoot, g)
 			if err != nil {
@@ -71,6 +124,8 @@ func newDocsBuildCmd() *cobra.Command {
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
 	cmd.Flags().StringVar(&mapPath, "map", "", "caminho do mapa (padrão: <root>/"+mapx.DefaultPath+")")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "compila sem escrever (é o que o gate usa)")
+	cmd.Flags().BoolVar(&semRebuild, "no-map-rebuild", false,
+		"compila contra o mapa em disco, sem reconstruí-lo — o que ele não conhecer não entra")
 	// O CORTE entre a página completa e a resumida. Vale para o projeto inteiro: a
 	// documentação em que uma camada segue uma lógica e a vizinha outra é a que obriga
 	// quem lê a descobrir a lógica antes de achar o que procura.
