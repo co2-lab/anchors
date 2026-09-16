@@ -1460,16 +1460,16 @@ nodes:
         - test
     - id: internal/gate/domain_declared.go
       kind: code
-      rev: 4b8934a1bc7d
-      updated_at: "2026-09-10"
+      rev: a809dedca3bf
+      updated_at: "2026-09-16"
       layer: gate
       tags:
         - regra
         - gate
     - id: internal/gate/domain_declared_test.go
       kind: test
-      rev: 53ae39785a26
-      updated_at: "2026-09-10"
+      rev: e5d588fbec60
+      updated_at: "2026-09-16"
       code: AAAAX
       layer: teste
       tags:
@@ -1608,8 +1608,8 @@ nodes:
         - test
     - id: internal/gate/internal_checks.go
       kind: code
-      rev: d44c8efb9628
-      updated_at: "2026-09-14"
+      rev: 2ba3c48b6fa1
+      updated_at: "2026-09-16"
       layer: gate
       tags:
         - regra
@@ -2220,6 +2220,22 @@ nodes:
       kind: test
       rev: d80361518c16
       updated_at: "2026-09-10"
+      layer: teste
+      tags:
+        - test
+    - id: internal/gate/value_anchored.go
+      kind: code
+      rev: eab9305a84a9
+      updated_at: "2026-09-16"
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/value_anchored_test.go
+      kind: test
+      rev: 329fdabc187e
+      updated_at: "2026-09-16"
+      code: UUUUU
       layer: teste
       tags:
         - test
@@ -3441,6 +3457,10 @@ edges:
       origin: declared
     - from: QUALITY.md
       to: internal/gate/trinca_completa.go
+      type: governs
+      origin: declared
+    - from: QUALITY.md
+      to: internal/gate/value_anchored.go
       type: governs
       origin: declared
     - from: QUALITY.md
