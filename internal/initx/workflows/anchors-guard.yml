@@ -118,6 +118,76 @@ jobs:
           gh issue edit "$N" --repo "$GH_REPO" --add-label "anchors:to-do"
           echo "#$N nasceu sem estado — posto em \`to-do\`, onde o \`claim\` o enxerga"
 
+      - name: O card escalado nasce com procedência
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          N: ${{ github.event.issue.number }}
+          LABEL: anchors
+        run: |
+          set -euo pipefail
+
+          # POR QUE AQUI, e não num hook do `gh`.
+          #
+          # O `gh` é um cliente HTTP e não tem sistema de hooks — não existe
+          # `pre-issue-create`. E se existisse não bastaria: `gh api -X POST`, `curl` e a
+          # interface web criam a issue pelo mesmo endpoint, sem passar por ele.
+          #
+          # O `anchors escalate` valida, e protege só quem o usa. Este passo é o único
+          # ponto por onde TODO card passa, de qualquer origem — e não dá para contornar.
+          #
+          # NÃO IMPEDE A CRIAÇÃO: o GitHub não tem "recusar issue". O que ele faz é ACUSAR
+          # em segundos, no próprio card, para quem criou corrigir antes de alguém pegar.
+          #
+          # MEDIDO no projeto de referência: 18 de 27 decisões abertas sem amarração
+          # alguma. Todas traziam o arquivo (`**Onde:**`) e nenhuma o card de origem — e
+          # uma escreveu "o achado veio do #690" em PROSA, que não se consulta.
+
+          if ! gh issue view "$N" --repo "$GH_REPO" --json labels \
+             --jq '[.labels[].name] | any(. == "'"$LABEL"'")' | grep -q true; then
+            exit 0
+          fi
+
+          # SÓ O CARD ESCALADO. Um card de trabalho não nasce de outro card: ele vem do
+          # plano, e exigir procedência dele seria cobrar um vínculo que não existe.
+          if ! gh issue view "$N" --repo "$GH_REPO" --json labels \
+             --jq '[.labels[].name] | any(. == "anchors:needs-user")' | grep -q true; then
+            exit 0
+          fi
+
+          # A PROCEDÊNCIA É LABEL, e é isso que se confere. O `under-<n>` diz de qual
+          # trabalho o achado nasceu. Frase no corpo não conta: não dá para listar o que
+          # pende sob um card, nem para o board desenhar a relação — é a razão de o
+          # vínculo ser label desde o início.
+          tem=$(gh issue view "$N" --repo "$GH_REPO" --json labels \
+            --jq '[.labels[].name | select(startswith("anchors:under-"))] | length')
+          if [ "${tem:-0}" -gt 0 ]; then
+            echo "#$N nasceu com procedência — nada a dizer"
+            exit 0
+          fi
+
+          echo "::warning title=Card escalado sem procedência::#$N não diz de qual trabalho nasceu"
+          gh issue comment "$N" --repo "$GH_REPO" --body "$(printf '%s\n' \
+            "⚠ **Este card não diz de qual trabalho nasceu.**" \
+            "" \
+            "Falta \`anchors:under-<n>\` — a label que liga o achado ao card onde ele foi" \
+            "descoberto. Sem ela ninguém consegue perguntar *o que este trabalho gerou?*," \
+            "e o achado fica solto: quem decidir não sabe o que a resposta destrava." \
+            "" \
+            "**Se ele nasceu de um card:**" \
+            "" \
+            "    gh issue edit $N --add-label anchors:under-<n>" \
+            "" \
+            "**Se nasceu fora de um trabalho** — alguém escalou algo que viu de fora —," \
+            "está certo como está; este aviso é só para o caso comum." \
+            "" \
+            "O \`anchors escalate --card <n>\` põe a label sozinho, e desde a v0.1.135" \
+            "descobre o card pelo \`anchors-owner\` quando você não passa a flag." \
+            "" \
+            "> O texto do corpo não serve: **\`**Onde:**\`** diz em qual ARQUIVO está o" \
+            "> problema, não de qual trabalho ele saiu. E frase em prosa não se consulta —" \
+            "> é por isso que o vínculo é label.")" >/dev/null
+
   # O HISTÓRICO: quanto tempo o card passou em cada coluna.
   #
   # Quem registra é este pipeline e não o que MOVE, e a razão é cobertura: o `claim` move
