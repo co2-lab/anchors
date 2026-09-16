@@ -319,7 +319,7 @@ nodes:
     - id: cmd/anchors/docs.go
       kind: code
       rev: d2f6f31bec1e
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-16"
       layer: comando
       tags:
         - cli
@@ -327,6 +327,7 @@ nodes:
     - id: cmd/anchors/docs_test.go
       kind: test
       rev: 37cd5cdd4dae
+      updated_at: "2026-09-16"
       code: ABCDE
       layer: teste
       code_declared: true
@@ -514,7 +515,7 @@ nodes:
         - comando
     - id: cmd/anchors/guide_work.go
       kind: code
-      rev: 784ca4507cf2
+      rev: 3910c445299e
       updated_at: "2026-09-15"
       layer: comando
       tags:
@@ -522,7 +523,7 @@ nodes:
         - comando
     - id: cmd/anchors/guide_work_test.go
       kind: test
-      rev: 73d1c9d35f85
+      rev: 8fa28e36955a
       updated_at: "2026-09-15"
       layer: teste
       tags:
