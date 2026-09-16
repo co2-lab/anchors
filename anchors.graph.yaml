@@ -2429,7 +2429,7 @@ nodes:
         - test
     - id: internal/initx/board_expor.go
       kind: code
-      rev: 0b9d39bdbf72
+      rev: c0392b49356e
       updated_at: "2026-09-16"
       layer: infra
       tags:
@@ -2437,7 +2437,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/board_expor_test.go
       kind: test
-      rev: 4e40dcf62e64
+      rev: e349223970f9
       updated_at: "2026-09-16"
       layer: teste
       tags:
