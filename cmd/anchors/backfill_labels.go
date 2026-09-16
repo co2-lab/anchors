@@ -99,11 +99,8 @@ bloqueador faria o claim segurar o card por uma decisão que ninguém ligou a el
 			for _, d := range decisoes {
 				for _, l := range d.Labels {
 					origem := ""
-					switch {
-					case strings.HasPrefix(l.Name, initx.PrefixoLabelSob):
+					if strings.HasPrefix(l.Name, initx.PrefixoLabelSob) {
 						origem = strings.TrimPrefix(l.Name, initx.PrefixoLabelSob)
-					case strings.HasPrefix(l.Name, initx.PrefixoLabelSobAntigo):
-						origem = strings.TrimPrefix(l.Name, initx.PrefixoLabelSobAntigo)
 					}
 					if origem == "" {
 						continue

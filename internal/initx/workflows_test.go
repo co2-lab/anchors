@@ -1936,3 +1936,51 @@ func TestReaberturaSemDeclaracaoEhMantida(t *testing.T) {
 			"reversão comum e o card é fechado mesmo no caminho que devia mantê-lo aberto")
 	}
 }
+
+// A PROCEDÊNCIA É CONFERIDA NO PIPELINE, porque é o único ponto por onde TODO card passa.
+//
+// Não há hook a pôr no `gh`: ele é um cliente HTTP e não tem `pre-issue-create`. E se
+// tivesse não bastaria — `gh api -X POST`, `curl` e a interface web criam a issue pelo mesmo
+// endpoint sem passar por ele. O `anchors escalate` valida e protege só quem o usa.
+//
+// O QUE ESTE PASSO FAZ é acusar, não impedir: o GitHub não tem "recusar issue". O card
+// nasce, e em segundos ganha um comentário dizendo o que falta — antes de alguém pegá-lo.
+//
+// MEDIDO no projeto de referência: 18 de 27 decisões abertas sem amarração alguma. Todas
+// traziam o arquivo (`**Onde:**`) e nenhuma o card de origem; uma escreveu "o achado veio do
+// #690" em PROSA, que não se consulta.
+func TestGuardCobraProcedenciaDoCardEscalado(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+
+	// SÓ O CARD ESCALADO: um card de trabalho vem do plano, não de outro card, e cobrar
+	// procedência dele seria exigir um vínculo que não existe.
+	if !strings.Contains(s, "O card escalado nasce com procedência") {
+		t.Fatal("o guard não confere procedência de card escalado — o achado nasce solto e " +
+			"ninguém consegue perguntar o que aquele trabalho gerou")
+	}
+
+	// A GRAFIA É UMA SÓ. O projeto está em beta fechado — não há board de terceiro com a
+	// grafia anterior a respeitar, e aceitar duas formas da mesma coisa é superfície de
+	// divergência: a primeira vez que uma delas mudasse, a outra ficaria para trás.
+	if !strings.Contains(s, PrefixoLabelSob) {
+		t.Errorf("a validação de procedência não conhece %q", PrefixoLabelSob)
+	}
+
+	// O REMÉDIO junto da acusação. Um aviso que diz o que está errado e não como consertar
+	// transfere o trabalho de descobrir para quem já errou.
+	if !strings.Contains(s, "--add-label anchors:under-") {
+		t.Error("o aviso não diz COMO pôr a procedência — quem o lê tem de ir descobrir o " +
+			"nome da label, e a maioria não vai")
+	}
+
+	// E A SAÍDA LEGÍTIMA declarada: escalar algo visto de fora de um trabalho é válido, e
+	// um aviso sem essa ressalva ensina que o card está errado quando não está.
+	if !strings.Contains(s, "nasceu fora de um trabalho") {
+		t.Error("o aviso não reconhece o achado que nasce fora de um card — sem isso ele " +
+			"acusa de defeito o que é uso legítimo")
+	}
+}
