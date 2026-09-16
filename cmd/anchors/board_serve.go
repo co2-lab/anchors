@@ -186,11 +186,19 @@ func (f *boardSource) leia() ([]byte, error) {
 // algoMudou pergunta ao GitHub se há issue tocada depois do que já vimos.
 //
 // Uma chamada, um campo. É a diferença entre custo por MUDANÇA e custo por TEMPO.
+//
+// PELO REST, COM ORDENAÇÃO EXPLÍCITA, e os dois detalhes são o conserto de um defeito
+// medido: o `gh issue list --limit 1` devolve a issue de maior NÚMERO, não a tocada por
+// último. Onze cards foram fechados e o board não releu, porque o mais recente por
+// número (`#683`, 19:22) era mais velho que o tocado de fato (`#630`, 19:29).
+//
+// O REST também escapa do limite SECUNDÁRIO do GraphQL, que derruba o `gh issue list`
+// enquanto `gh api rate_limit` ainda reporta a cota cheia — medido neste projeto com
+// nove agentes, e o motivo de o board ter ficado sem dado antes.
 func (f *boardSource) algoMudou() (bool, error) {
-	out, err := exec.Command("gh", "issue", "list",
-		"--repo", f.repo, "--state", "all", "--label", "anchors",
-		"--limit", "1", "--json", "updatedAt",
-		"--jq", ".[0].updatedAt // \"\"").Output()
+	out, err := exec.Command("gh", "api",
+		"/repos/"+f.repo+"/issues?state=all&labels=anchors&sort=updated&direction=desc&per_page=1",
+		"--jq", ".[0].updated_at // \"\"").Output()
 	if err != nil {
 		return false, err
 	}
