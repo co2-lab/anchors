@@ -1137,47 +1137,54 @@ func TestPipelineAcusaListaDeCardsComVirgula(t *testing.T) {
 	}
 }
 
-// A TRAVA NÃO PODE DESFAZER UM FECHAMENTO LEGÍTIMO.
+// O CARD NÃO FECHA NO MERGE — a trava reverte isso, e a razão é a esteira.
 //
-// Ela existe porque um card fechado antes do merge sai da fila de revisão sem ser revisado.
-// Mas há um caso em que fechar à mão é o ato CERTO: o trabalho mergeou e o card ficou aberto
-// porque o corpo do PR trazia `Closes #419, #473` — e a plataforma reconhece só o primeiro.
+// Esta régua guardava o oposto: havia uma exceção que MANTINHA o fechamento quando um PR
+// mergeado citava o card. A premissa era que o merge encerra o trabalho.
 //
-// Medido: a trava reverteu o fechamento do #473, o card voltou para `in-progress`, e ficou
-// três horas parado esperando um trabalho que já existia. A trava produziu exatamente o que
-// existe para impedir — um card fora do estado que o fato manda.
+// Ele não encerra. A alçada do Anchors acaba em `ready-to-test`; depois vêm `in-test`,
+// `ready-to-release` e `production` — do CD do projeto, que o Anchors não rastreia. Fechar
+// no merge declara entregue um trabalho com três estados à frente, e quem ia testar perde
+// de vista o que testar.
 //
-// O FATO que decide é um PR mergeado vinculado ao card. E a forma de perguntar importa: o
-// `gh pr list --search <n>` é TEXTUAL e difuso (medido: `--search 99999` devolveu um PR sem
-// relação nenhuma). Uma trava que deixa de reverter por falso positivo é pior que não ter
-// trava — ela continua dizendo que vigia.
-func TestTravaRespeitaOFechamentoComTrabalhoMergeado(t *testing.T) {
+// MEDIDO no projeto de referência: 71 cards fechados em `ready-to-test` contra 7 abertos,
+// 35 num só dia. A coluna que devia ACUMULAR o que espera teste mostrava só o resíduo — os
+// que nunca receberam a palavra de fechamento.
+//
+// O CASO QUE A EXCEÇÃO PROTEGIA desapareceu com a causa. Ele era: o corpo trazia
+// `Closes #419, #473`, a plataforma reconhecia só o primeiro, o #473 ficava aberto com o
+// trabalho entregue, alguém fechava à mão e a trava revertia (medido: 3h parado). Com
+// `Refs #N` (v0.1.130) nada fecha automaticamente, então não há mais card fechado pela
+// vírgula nem fechamento manual a preservar.
+//
+// QUEM FECHA agora é quem termina a esteira, declarando `anchors:manual` (entregue) ou
+// `anchors:discarded` (saiu do roadmap) — e a trava já isenta essas duas antes de chegar
+// ao fechamento.
+func TestOCardNaoFechaNoMerge(t *testing.T) {
 	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
 	if err != nil {
 		t.Fatal(err)
 	}
 	texto := string(b)
 
-	if !strings.Contains(texto, "mergeado=") {
-		t.Fatal("a trava reverte todo fechamento manual, inclusive o do card cujo trabalho " +
-			"já mergeou — e é o caso em que fechar à mão é o ato certo")
+	// A CONSULTA DO TIMELINE não pode voltar: era ela que autorizava manter o fechamento.
+	if strings.Contains(texto, "cross-referenced") {
+		t.Error("a trava voltou a consultar `cross-referenced` no timeline — era assim que " +
+			"ela isentava o fechamento de um card com PR mergeado, e o card precisa ficar " +
+			"ABERTO em `ready-to-test` porque a esteira segue no CD")
+	}
+	if strings.Contains(texto, "Fechamento mantido") {
+		t.Error("a trava voltou a ter a mensagem de fechamento mantido — o merge não " +
+			"encerra o card, ele o move para `ready-to-test` e ali o card fica aberto")
 	}
 
-	// A CONSULTA precisa ser a do vínculo, não a textual.
-	if strings.Contains(texto, "pr list") && strings.Contains(texto, "--search \"$N\"") {
-		t.Error("a trava usa `gh pr list --search`, que é busca TEXTUAL: um número solto " +
-			"na prosa de outro PR faria a trava deixar de reverter um fechamento ilegítimo")
-	}
-	if !strings.Contains(texto, "cross-referenced") || !strings.Contains(texto, "merged_at") {
-		t.Error("a trava deve conferir o vínculo REAL no timeline (`cross-referenced` com " +
-			"`merged_at`), que é o registro que a plataforma faz entre a issue e o PR")
-	}
-
-	// SILÊNCIO SERIA PIOR: quem fechou precisa saber que o fechamento valeu, e por quê —
-	// senão fica esperando a reversão que a trava ensinou a esperar.
-	if !strings.Contains(texto, "Fechamento mantido") {
-		t.Error("a exceção deve COMENTAR no card: sem isso quem fechou não sabe se a trava " +
-			"aceitou, e o defeito da vírgula segue invisível para o próximo PR")
+	// E O FECHAMENTO DECLARADO tem de continuar isento: `manual` é entregue,
+	// `discarded` saiu do roadmap. Sem isso não haveria como encerrar um card nunca.
+	for _, decl := range []string{"anchors:manual", "anchors:discarded"} {
+		if !strings.Contains(texto, decl) {
+			t.Errorf("a trava não conhece %q — sem uma forma DECLARADA de encerrar, o card "+
+				"fica aberto para sempre e a trava reverte quem tentar fechá-lo", decl)
+		}
 	}
 }
 
@@ -1187,8 +1194,8 @@ func TestTravaRespeitaOFechamentoComTrabalhoMergeado(t *testing.T) {
 // `pull-requests: read` não recebe erro: o campo vem NULO — e o código que depende dele toma
 // a decisão errada achando que decidiu certo.
 //
-// Na trava isso significaria voltar a reverter o fechamento de um card cujo trabalho já
-// mergeou, que é o defeito que a exceção existe para corrigir.
+// Continua valendo para todo pipeline que lê dados de PR — o `pr-checks` decide por
+// `merged` se avança o card, e um campo nulo o faria tratar PR abandonado como entregue.
 func TestPipelineQueLeDadosDePRDeclaraAPermissao(t *testing.T) {
 	entradas, err := fs.ReadDir(workflowsFS, "workflows")
 	if err != nil {
