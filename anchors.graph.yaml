@@ -145,7 +145,7 @@ nodes:
         - comando
     - id: cmd/anchors/backfill_labels_test.go
       kind: test
-      rev: 7c10ee79f7d4
+      rev: efe57eaf5ece
       updated_at: "2026-09-16"
       layer: teste
       tags:
@@ -365,7 +365,7 @@ nodes:
         - test
     - id: cmd/anchors/escalate.go
       kind: code
-      rev: 5912e506cdd9
+      rev: 16c71807035d
       updated_at: "2026-09-16"
       layer: comando
       tags:
