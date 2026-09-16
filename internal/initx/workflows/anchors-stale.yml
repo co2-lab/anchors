@@ -16,7 +16,7 @@ name: anchors · liberar cards parados
 on:
   schedule:
     # De 30 em 30 minutos. A frequência define a LATÊNCIA da detecção, não o critério:
-    # quem decide se um card está parado é `HORAS_ATE_STALE`, abaixo.
+    # quem decide se um card está parado são `HORAS_ESPERA` e `HORAS_ANDAMENTO`, abaixo.
     #
     # O `schedule` do GitHub Actions não é pontual — sob carga o disparo atrasa, e
     # agendamentos muito frequentes podem ser descartados. Se a latência vier a incomodar,
@@ -45,31 +45,56 @@ jobs:
           # repositório pelo git local — `GH_REPO` é o que o diz.
           GH_REPO: ${{ github.repository }}
           LABEL: anchors
-          # Quantas horas sem QUALQUER atualização fazem um card ser considerado parado.
-          # Ajuste ao ritmo do time: baixo demais rouba o card de quem está trabalhando
-          # devagar; alto demais deixa trabalho parado sem ninguém olhando.
-          HORAS_ATE_STALE: "6"
+          # DOIS RELÓGIOS, porque são dois problemas diferentes.
+          #
+          # ESPERA (`to-do`, `ready-to-*`): o card está parado POR DEFINIÇÃO — ele
+          # aguarda alguém pegar. Ter dono ali é RESÍDUO: alguém reivindicou e não
+          # trabalhou, e enquanto o nome estiver lá o `next` pode pular o card. Errar
+          # para menos não custa nada — o card já estava disponível.
+          HORAS_ESPERA: "2"
+          # ANDAMENTO (`in-progress`, `in-review`, `in-test`): há trabalho ACONTECENDO.
+          # Liberar cedo demais rouba o card de quem está trabalhando devagar, e o novo
+          # dono recomeça sobre algo meio feito. O sinal de vida (`updatedAt`) só aparece
+          # quando alguém comenta, move label ou referencia commit — um dev pode passar
+          # um dia inteiro no card sem tocar no issue.
+          HORAS_ANDAMENTO: "24"
         run: |
           set -euo pipefail
 
-          limite=$(date -u -d "-${HORAS_ATE_STALE} hours" +%Y-%m-%dT%H:%M:%SZ)
+          limite_espera=$(date -u -d "-${HORAS_ESPERA} hours" +%Y-%m-%dT%H:%M:%SZ)
+          limite_andamento=$(date -u -d "-${HORAS_ANDAMENTO} hours" +%Y-%m-%dT%H:%M:%SZ)
 
           # Um card é candidato quando tem dono (último `anchors-owner` não liberado) e
-          # não recebe atualização desde o limite. `updatedAt` cobre commit referenciado,
-          # comentário e mudança de label — qualquer sinal de vida conta como progresso.
+          # não recebe atualização desde o limite DO GRUPO DELE. `updatedAt` cobre commit
+          # referenciado, comentário e mudança de label — qualquer sinal de vida conta.
+          #
           # `--label "$LABEL"` não é detalhe: o board é compartilhado, e sem o filtro
           # este pipeline "liberaria" cards de outros fluxos — mexendo em trabalho que
           # não é do Anchors e cujo dono não se registra por `anchors-owner`.
-          # RECICLÁVEIS são só os estados de trabalho ATIVO. A distinção é entre travado
-          # e esperando: um card em `in-progress` sem sinal de vida é um agente que
-          # morreu, e reciclar devolve o trabalho à fila; um card em `ready-to-review`
-          # está parado POR DEFINIÇÃO — terminou e aguarda revisor humano, e ninguém
-          # comenta enquanto isso. Sem este filtro, o stale joga trabalho PRONTO de volta
-          # em `to-do` e o próximo agente o refaz do zero.
+          #
+          # OS DOIS GRUPOS, e por que o relógio difere:
+          #
+          #   ESPERA (`to-do`, `ready-to-*`) — o card aguarda alguém pegar. Dono ali é
+          #   resíduo, e o `next` pode pular um card que está livre na prática. 2h.
+          #
+          #   ANDAMENTO (`in-progress`, `in-review`, `in-test`) — há trabalho em curso.
+          #   Liberar cedo rouba o card de quem o faz devagar. 24h.
+          #
+          # `ready-to-*` era EXCLUÍDO de tudo, e a razão escrita valia contra MOVER o
+          # card ("o stale joga trabalho PRONTO de volta em `to-do`") — não contra
+          # liberar o dono. Desde que o stale parou de mover, a exclusão passou a
+          # prender: um card pronto com dono morto ficava fora do alcance do `next`.
           gh issue list --state open --label "$LABEL" --limit 200 \
             --json number,updatedAt,comments,labels \
-            --jq "[.[] | select(.updatedAt < \"$limite\")
-                  | select([.labels[].name] | any(. == \"anchors:in-progress\" or . == \"anchors:in-review\" or . == \"anchors:in-test\"))
+            --jq "[.[]
+                  | select(
+                      (([.labels[].name] | any(. == \"anchors:in-progress\" or . == \"anchors:in-review\" or . == \"anchors:in-test\"))
+                       and .updatedAt < \"$limite_andamento\")
+                      or
+                      (([.labels[].name] | any(. == \"anchors:in-progress\" or . == \"anchors:in-review\" or . == \"anchors:in-test\") | not)
+                       and ([.labels[].name] | any(. == \"anchors:to-do\" or startswith(\"anchors:ready-to-\")))
+                       and .updatedAt < \"$limite_espera\")
+                    )
                   | select(
                     ([.comments[].body | select(startswith(\"anchors-owner:\"))] | last // \"\")
                     | (. != \"\" and (endswith(\"(liberado)\") | not))
@@ -80,8 +105,19 @@ jobs:
               --jq '[.comments[].body | select(startswith("anchors-owner:"))] | last')
             # O ESTADO ATUAL só para o registro: quem lê o card precisa saber onde ele
             # ficou, e a mensagem sem isso obriga a conferir as labels.
+            #
+            # `ready-to-*` entra aqui junto com os demais: sem ele a mensagem sairia com
+            # o estado VAZIO justamente nos cards que a separação passou a alcançar.
             estado_atual=$(gh issue view "$n" --json labels --jq '.labels[].name' |
-              grep -E '^anchors:(to-do|in-progress|in-review|in-test)$' | head -1 || true)
+              grep -E '^anchors:(to-do|ready-to-[a-z]+|in-progress|in-review|in-test)$' | head -1 || true)
+
+            # O relógio que valeu, para o registro dizer POR QUE este card foi alcançado.
+            case "$estado_atual" in
+              anchors:in-progress|anchors:in-review|anchors:in-test)
+                janela="${HORAS_ANDAMENTO}h (trabalho em andamento)" ;;
+              *)
+                janela="${HORAS_ESPERA}h (card em espera — o dono era resíduo)" ;;
+            esac
 
             # O STALE LIBERA O DONO. NÃO MOVE O CARD.
             #
@@ -102,7 +138,7 @@ jobs:
             #
             # O QUE SE PERDE: o card não volta para a fila de quem filtra por `to-do`. É o
             # preço de não mentir sobre onde o trabalho está, e o `claim` não precisa disso.
-            gh issue comment "$n" --body "anchors-owner: (liberado) — sem progresso desde ${limite}; dono anterior: ${dono#anchors-owner: }; o card fica em \`${estado_atual#anchors:}\`, e o próximo \`claim\` pode pegá-lo"
+            gh issue comment "$n" --body "anchors-owner: (liberado) — sem progresso há mais de ${janela}; dono anterior: ${dono#anchors-owner: }; o card fica em \`${estado_atual#anchors:}\`, e o próximo \`anchors next\` pode pegá-lo"
 
-            echo "liberado: #$n (era de ${dono#anchors-owner: }) — fica em ${estado_atual#anchors:}"
+            echo "liberado: #$n (era de ${dono#anchors-owner: }) — fica em ${estado_atual#anchors:}, janela ${janela}"
           done
