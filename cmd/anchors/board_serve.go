@@ -248,10 +248,53 @@ func coletaCompleta(repo string) ([]byte, error) {
 		return nil, err
 	}
 
-	out, err := exec.Command("gh", "issue", "list",
-		"--repo", repo, "--state", "all", "--label", "anchors", "--limit", "500",
-		"--json", "number,title,url,labels,comments,updatedAt,body,createdAt,closedAt,author",
-		"--jq", jq).Output()
+	// PELO REST, e não pelo `gh issue list`.
+	//
+	// O porcelain vai por GraphQL, cujo limite SECUNDÁRIO derruba a consulta enquanto o
+	// `gh api rate_limit` ainda reporta cota cheia. Medido neste projeto com nove agentes:
+	// o board ficou sem dado nenhum, servindo só o erro, enquanto o REST respondia
+	// normalmente a tudo.
+	//
+	// O REST nomeia os campos em snake_case (`updated_at`, `created_at`, `closed_at`) e
+	// não traz `comments` embutido — o jq do pipeline espera camelCase e a lista de
+	// comentários. A ponte abaixo renomeia e injeta `comments: []` para o contrato
+	// continuar o mesmo.
+	//
+	// O CUSTO disso é o `owner`/`ownership`, que saem dos comentários: sem eles, o board
+	// local não mostra de quem é o card. É a troca que mantém o board DE PÉ quando o
+	// GraphQL cai — e um board sem o dono é melhor que um board sem nada.
+	ponte := `[.[] | select(.pull_request == null) | {
+	    number, title, url, body, labels, author: .user,
+	    updatedAt: .updated_at, createdAt: .created_at, closedAt: .closed_at,
+	    comments: []
+	  }] | ` + jq
+
+	// O `--paginate` sem `--jq` devolve os arrays de cada página concatenados
+	// (`[...][...]`), que não é JSON válido. O `--slurp` os juntaria, mas o `gh` recusa
+	// combiná-lo com `--jq`. A saída é pedir o cru e costurar aqui.
+	cru, err := exec.Command("gh", "api", "--paginate",
+		"/repos/"+repo+"/issues?state=all&labels=anchors&per_page=100").Output()
+	if err == nil {
+		//  achata o  que a costura das páginas produz.
+		filtro := exec.Command("jq", "-c", "add | "+ponte)
+		filtro.Stdin = strings.NewReader("[" + strings.ReplaceAll(string(cru), "][", ",") + "]")
+		var saida []byte
+		saida, err = filtro.Output()
+		if err == nil {
+			// `[[...]]` — a costura aninha um nível a mais; o jq já devolve o array final.
+			out := saida
+			items := strings.TrimSpace(string(out))
+			if items == "" {
+				items = "[]"
+			}
+			return []byte(fmt.Sprintf(`{"generated":%q,"items":%s}`,
+				time.Now().UTC().Format(time.RFC3339), items)), nil
+		}
+		if ee, ok := err.(*exec.ExitError); ok {
+			return nil, fmt.Errorf("filtrar o board: %w\n  %s", err, strings.TrimSpace(string(ee.Stderr)))
+		}
+	}
+	var out []byte
 	if err != nil {
 		var stderr string
 		if ee, ok := err.(*exec.ExitError); ok {
