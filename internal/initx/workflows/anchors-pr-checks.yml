@@ -170,8 +170,20 @@ jobs:
 
           # QUAL CARD ESTE PR AVANÇA — duas fontes, e a ordem importa.
           #
-          # 1) o VÍNCULO DECLARADO no corpo (`Closes #N`), que é o que o `anchors pr-body`
-          #    escreve. É a fonte primária porque é a que o fluxo ENSINA: o `guide work`
+          # 1) o VÍNCULO DECLARADO no corpo (`Refs #N`), que é o que o `anchors pr-body`
+          #    escreve. `closes|fixes|resolves` continuam aceitos — PR antigo e PR escrito
+          #    à mão usam essas palavras, e recusá-las quebraria o vínculo de quem não
+          #    passou pelo `pr-body`.
+          #
+          #    POR QUE `Refs` E NÃO `Closes`: o `Closes` fazia duas afirmações de uma vez,
+          #    e só uma é do Anchors. O pipeline o lia para saber que o PR CONCLUI a
+          #    implementação; o GitHub o lia para FECHAR a issue no merge. A esteira não
+          #    acaba aqui — vêm `in-test`, `ready-to-release`, `production`, que são do CD
+          #    e o Anchors não rastreia. O card fechava com três estados à frente, e quem
+          #    ia testar perdia de vista o que testar. MEDIDO: 71 cards fechados em
+          #    `ready-to-test` contra 7 abertos, 35 num só dia.
+          #
+          #    É a fonte primária porque é a que o fluxo ENSINA: o `guide work`
           #    descreve o `pr-body` em detalhe e não menciona o título em lugar nenhum.
           #    Exigir o título era uma segunda convenção para a mesma pergunta, e quem
           #    seguia o guia satisfazia só uma — em silêncio.
@@ -182,8 +194,8 @@ jobs:
           # ADIVINHAR continua fora de questão: sem nenhuma das duas, o card fica onde
           # está. Mover o card errado tira da fila um trabalho que ninguém terminou.
           corpo=$(gh pr view "$pr" --json body --jq '.body // ""')
-          # Só as linhas que COMEÇAM com a palavra de fechamento: um `Closes #12` citado
-          # no meio de uma frase ("o #12 não é fechado por este PR") não é vínculo.
+          # Só as linhas que COMEÇAM com a palavra de vínculo: um `Refs #12` citado no
+          # meio de uma frase ("o #12 não é tocado por este PR") não é vínculo.
           #
           # E FORA DE BLOCO DE CÓDIGO, onde um exemplo não é declaração. O `awk` rastreia
           # a cerca em vez de filtrar as linhas que a formam: um `grep -v` sobre "```"
@@ -200,7 +212,7 @@ jobs:
                 /^[[:space:]]{4}/ { next }
                 { print }
               ' \
-            | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+' \
+            | grep -oiE '^[[:space:]]*(refs|closes|fixes|resolves)[[:space:]]+#[0-9]+' \
             | grep -oE '[0-9]+' | head -1 || true)
 
           # A LISTA COM VÍRGULA NÃO FECHA O SEGUNDO CARD, e o PR parece que fechou os dois.
@@ -221,7 +233,7 @@ jobs:
           # os números depois da vírgula não valem.
           extras=$(printf '%s\n' "$corpo" \
             | sed 's/\r$//' \
-            | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+([[:space:]]*,[[:space:]]*#[0-9]+)+' \
+            | grep -oiE '^[[:space:]]*(refs|closes|fixes|resolves)[[:space:]]+#[0-9]+([[:space:]]*,[[:space:]]*#[0-9]+)+' \
             | grep -oE '#[0-9]+' | tail -n +2 | tr '\n' ' ' || true)
           if [ -n "$extras" ]; then
             todos="$card $(echo "$extras" | tr -d '#')"
@@ -275,7 +287,7 @@ jobs:
                 /^[[:space:]]{4}/ { next }
                 { print }
               ' \
-            | grep -oiE '^[[:space:]]*(closes|fixes|resolves)[[:space:]]+#[0-9]+' \
+            | grep -oiE '^[[:space:]]*(refs|closes|fixes|resolves)[[:space:]]+#[0-9]+' \
             | grep -oE '[0-9]+' | tail -n +2 || true)
           naoSaoCards=""
           for o in $outros; do
@@ -428,7 +440,17 @@ jobs:
               exit 0
             fi
             gh issue edit "$card" --add-label "anchors:ready-to-test"
-            gh issue comment "$card" --body "PR #$pr mergeado — card em \`ready-to-test\`, o fim da alçada do Anchors."
+            # O card fica ABERTO de propósito, e o comentário diz por quê — senão o
+            # próximo a ler o board conclui que o pipeline esqueceu de fechar.
+            gh issue comment "$card" --body "$(printf '%s\n' \
+              "PR #$pr mergeado — card em \`ready-to-test\`." \
+              "" \
+              "O card fica **ABERTO**: a alçada do Anchors termina aqui, a esteira não." \
+              "O que vem depois — \`in-test\`, \`ready-to-release\`, \`production\` — é do" \
+              "CD do projeto, e fechar agora declararia entregue um trabalho com três" \
+              "estados à frente." \
+              "" \
+              "Quem fecha o card é quem termina a esteira.")"
             echo "card #$card → ready-to-test (PR #$pr mergeado)"
             exit 0
           fi
