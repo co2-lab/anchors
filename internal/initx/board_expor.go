@@ -26,7 +26,13 @@ func BoardHTML() (string, error) {
 // local não o mostra; ou pior, mostra diferente.
 //
 // A âncora é o `--json` da coleta, que é único no arquivo.
-var jqDaColeta = regexp.MustCompile(`(?s)--json number,title,url,labels,comments,updatedAt,body,createdAt,closedAt,author \\\n\s*--jq '(.*?)'\s*\n`)
+// A ÂNCORA DO FIM importa tanto quanto a do começo. A primeira versão fechava em `'`
+// não-guloso e engolia o `> _board/board.json` que vem depois — o jq recebia a
+// redireção do shell como expressão e morria com `unexpected token "'"`.
+//
+// O fim real é `}]'` seguido do redirecionamento: o `]` fecha o array que o `[.[] | ...]`
+// abriu, e o `'` fecha a aspa do shell.
+var jqDaColeta = regexp.MustCompile(`(?s)--jq '(\[\.\[\].*?\}\])' *>`)
 
 // BoardCollectJQ devolve a expressão jq da coleta, lida do pipeline embutido.
 func BoardCollectJQ() (string, error) {

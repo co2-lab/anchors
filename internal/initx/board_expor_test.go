@@ -29,6 +29,28 @@ func TestBoardCollectJQSaiDoPipeline(t *testing.T) {
 		t.Error("a expressao nao filtra `anchors:discarded` — o board local mostraria " +
 			"card descartado, que o publicado nao mostra")
 	}
+
+	// A EXPRESSAO PRECISA SER JQ VALIDO, e a regua anterior nao media isso.
+	//
+	// A primeira versao do regex fechava em `'` nao-guloso e engolia o
+	// `> _board/board.json` que vem depois no shell. Os campos todos apareciam -- as
+	// asserções acima passavam -- e o `jq` morria com `unexpected token "'"` so quando o
+	// comando rodava de verdade.
+	//
+	// E' a armadilha de conferir a FORMA e nao o que a forma serve para fazer.
+	// O `>` sozinho NAO serve de sinal: ele aparece legitimamente na captura nomeada do
+	// jq (`(?<c>...)`). A regua primeira versao acusava isso como defeito -- grosseira
+	// demais, e teria mandado consertar o que estava certo.
+	//
+	// O que denuncia o corte errado e' o REDIRECIONAMENTO, que so existe no shell.
+	if strings.Contains(jq, "_board/board.json") {
+		t.Errorf("a expressao extraida carrega redirecionamento do shell — o jq vai "+
+			"receber `>` como sintaxe e morrer:\n%s", ultimos(jq, 80))
+	}
+	if !strings.HasPrefix(strings.TrimSpace(jq), "[") || !strings.HasSuffix(strings.TrimSpace(jq), "]") {
+		t.Errorf("a expressao nao abre e fecha o array — o regex cortou no lugar errado:\n%s",
+			ultimos(jq, 80))
+	}
 }
 
 // O HTML e o MESMO — nao uma copia que envelhece em paralelo.
@@ -43,4 +65,12 @@ func TestBoardHTMLEhOMesmoDoPipeline(t *testing.T) {
 	if !strings.Contains(h, "g-rot[data-number]") {
 		t.Error("o HTML nao tem a correcao do roadmap — o `serve` esta lendo outro arquivo")
 	}
+}
+
+// ultimos devolve o fim de uma string, para a mensagem de erro mostrar ONDE cortou.
+func ultimos(s string, n int) string {
+	if len(s) <= n {
+		return s
+	}
+	return "…" + s[len(s)-n:]
 }
