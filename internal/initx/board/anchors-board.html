@@ -17,7 +17,7 @@
 <style>
   :root {
     --bg: #f6f8fa; --fg: #1f2328; --card: #fff; --linha: #d1d9e0; --fraco: #59636e;
-    --todo: #8b949e; --fazendo: #0969da; --pronto: #1a7f37; --alerta: #9a6700;
+    --todo: #8b949e; --fazendo: #0969da; --pronto: #1a7f37; --alerta: #9a6700; --bloqueio: #cf222e;
     /* ESPERANDO uma pessoa (laranja) × JÁ RESPONDIDO (amarelo, o `--alerta` acima).
        Duas cores porque são dois estados de atenção diferentes: o laranja pede ação
        agora; o amarelo é registro de que houve uma decisão, e não pede nada. */
@@ -35,7 +35,7 @@
   @media (prefers-color-scheme: dark) {
     :root:not([data-tema="claro"]) {
       --bg: #0d1117; --fg: #e6edf3; --card: #151b23; --linha: #3d444d; --fraco: #9198a1;
-      --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922;
+      --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922; --bloqueio: #f85149;
       --espera: #f0883e;
       --fase: #a371f7;
       /* No escuro o vermelho da marca é clareado: #ec3013 sobre #0d1117 não alcança
@@ -45,7 +45,7 @@
   }
   :root[data-tema="escuro"] {
     --bg: #0d1117; --fg: #e6edf3; --card: #151b23; --linha: #3d444d; --fraco: #9198a1;
-    --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922;
+    --todo: #6e7681; --fazendo: #4493f8; --pronto: #3fb950; --alerta: #d29922; --bloqueio: #f85149;
       --espera: #f0883e;
       --fase: #a371f7;
     --marca: #ff5c3d; --wordmark: #e6edf3;
@@ -194,6 +194,11 @@
           font-size: .68rem; font-weight: 500; color: var(--espera);
           border: 1px solid var(--espera); border-radius: 999px; padding: .08rem .45rem; }
   .selo.respondido { color: var(--alerta); border-color: var(--alerta); }
+  /* BLOQUEADO é mais forte que ESPERANDO, e a cor diz isso: o card escalado espera uma
+     resposta e pode ter trabalho paralelo; o bloqueado não pode ser trabalhado por
+     ninguém. O selo é clicável — vai para o card que segura, que é onde a resposta vai. */
+  .selo.bloqueado { color: var(--bloqueio); border-color: var(--bloqueio); cursor: pointer; }
+  .card.bloqueado { border-color: var(--bloqueio); border-left-width: 3px; }
   .card h3 { font-size: .82rem; margin: .2rem 0 0; font-weight: 500; }
   /* A DEPENDÊNCIA no card responde "por que isto ainda não posso pegar?" sem abrir nada.
      A indentação sozinha mostra que há profundidade, mas não diz de quê ela vem. */
@@ -597,7 +602,8 @@ function desenha(d) {
         <div class="oquee">${esc(oquee)}</div>
         ${cards.length === 0 ? '<div class="vazia">vazia</div>' : cards.map((c) => `
           <button class="card${c.escalated ? " escalado" : ""}${
-              c.escalated && c.waiting === false ? " respondido" : ""}" type="button" data-numero="${c.number}">
+              c.escalated && c.waiting === false ? " respondido" : ""}${
+              c.blockedBy ? " bloqueado" : ""}" type="button" data-numero="${c.number}">
             <div class="card-topo">
               ${c.code ? `<span class="codigo">${esc(c.code)}</span>` : ""}
               ${c.number ? `<span class="num">#${esc(c.number)}</span>` : ""}
@@ -607,6 +613,16 @@ function desenha(d) {
               ? (c.waiting === false
                   ? `<span class="selo respondido">✓ você já respondeu</span>`
                   : `<span class="selo">⚠ esperando você</span>`)
+              : ""}
+            ${/* QUEM SEGURA, com o número. O `needs-user` sozinho diz que o card parou;
+                  não diz por qual decisão. Sem o número, destravar exige reler card por
+                  card para descobrir quem esperava o quê — medido: 23 decisões abertas
+                  eram sete perguntas, e o vínculo existia só na cabeça de quem escalou.
+
+                  O selo é clicável: o card que segura é onde a resposta vai. */""}
+            ${c.blockedBy
+              ? `<span class="selo bloqueado" data-vai-para="${esc(c.blockedBy)}"
+                   title="o trabalho deste card está parado até a decisão do #${esc(c.blockedBy)} sair">🔒 bloqueado por #${esc(c.blockedBy)}</span>`
               : ""}
             ${(c.needs || []).length ? `<div class="dep" title="depende de">↳ ${
               c.needs.map((n) => esc(NIVEIS.phases?.[n]?.title || n)).join(" · ")}</div>` : ""}
@@ -1531,6 +1547,21 @@ document.getElementById(cont).addEventListener("click", (ev) => {
     return;
   }
   if (ev.target.closest("summary")) ev.preventDefault();
+
+  // O SELO DE BLOQUEIO vai para quem SEGURA, não para o card clicado.
+  //
+  // Sem isto o clique cairia no `.card` que o contém e abriria o próprio bloqueado — que
+  // é o que o leitor já está vendo. A pergunta que ele tem ao ler "bloqueado por #123" é
+  // o que o #123 pede, e é lá que a resposta vai.
+  const segurado = ev.target.closest("[data-vai-para]");
+  if (segurado) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const dono = (ULTIMO.items || []).find((i) => String(i.number) === segurado.dataset.vaiPara);
+    if (dono) abre(dono);
+    return;
+  }
+
   const alvo = ev.target.closest(".card, .no[data-number], .g-rot[data-number]");
   if (!alvo) return;
   const c = (ULTIMO.items || []).find((i) => String(i.number) === alvo.dataset.number);
