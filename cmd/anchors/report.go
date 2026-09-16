@@ -218,7 +218,7 @@ func renderTests(ctx reportCtx) string {
 		if n.Kind != mapx.KindSpec {
 			continue
 		}
-		declared, _ := codesInFile(filepath.Join(root, n.ID))
+		declared, _ := codesInFileOfUnit(filepath.Join(root, n.ID), n.Code)
 		if len(declared) == 0 {
 			continue
 		}
