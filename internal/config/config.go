@@ -1168,6 +1168,41 @@ type Derived struct {
 	// `mock-detect-cobre-o-dialeto`, que lê os testes e diz se o padrão declarado
 	// alcança o que o projeto realmente escreve.
 	MockDetect string `yaml:"mock_detect,omitempty"`
+
+	// ExportDetect — como ESTE projeto ESCREVE um símbolo público. Regex com um grupo
+	// de captura: o nome do símbolo.
+	//
+	// Mesma razão do `MockDetect`, e a mesma falha para corrigir. O `code-cataloged`
+	// trazia embutido `export (function|const|class|…) NOME` — sintaxe de TS/JS. Num
+	// projeto Python, Go ou Ruby ele casava ZERO símbolos e reportava VERDE, sendo
+	// `blocking: true`: carimbava aprovação sobre o que não tinha conferido.
+	//
+	// Sem esta declaração o gate PULA, e diz que pulou. Um medidor que não sabe medir
+	// precisa calar — não aprovar.
+	//
+	//	export_detect: "^\\s*export\\s+(?:async\\s+)?(?:function|const|let|var|class|interface|type|enum)\\s+([A-Za-z_$][\\w$]*)"   # TS/JS
+	//	export_detect: "^func\\s+([A-Z]\\w*)"                      # Go (maiúscula = público)
+	//	export_detect: "^(?:def|class)\\s+([a-zA-Z]\\w*)"          # Python
+	ExportDetect string `yaml:"export_detect,omitempty"`
+
+	// ValueAnchor — o comentário que ANCORA um valor de conjunto fechado à regra que o
+	// justifica. Dois grupos de captura: a chave da regra e o valor esperado.
+	//
+	//	// @code-reference-[WINDOW-001]-[15m]
+	//	'15m',
+	//
+	// O SEGUNDO grupo é o que separa citar de provar. Uma âncora que só aponta a regra
+	// apodrece em silêncio: alguém troca `'15m'` por `'5m'` e o comentário segue
+	// parecendo correto. Com o valor escrito nela, o gate confronta o que a âncora
+	// AFIRMA contra o que a linha DIZ — e isso não depende de linguagem, porque compara
+	// duas partes do próprio comentário com a linha que ele anota.
+	//
+	// Por que por VALOR e não pelo símbolo: uma dispensa sobre `export const JANELAS`
+	// libera os quatro valores de uma vez, e cada valor de um conjunto fechado é uma
+	// decisão de domínio separada. MEDIDO: as telas do blue-eyes declaravam
+	// `5m·15m·30m·1h·1d` enquanto o contrato aceitava `15m·1h·6h·24h` — três valores
+	// que não existiam, e o backend caindo no padrão `1h` em silêncio.
+	ValueAnchor string `yaml:"value_anchor,omitempty"`
 }
 
 // PadroesDe devolve os padrões declarados, seja pelo nome novo (`patterns`) ou pelo
@@ -1784,7 +1819,7 @@ var RenamedKey func(string) bool
 // Espelha o `mapx.FormatoAtual` e vive aqui para evitar o ciclo de import (o `mapx` usa
 // tipos do `config`). Os dois sobem juntos: uma migração que muda o mapa e a config é um
 // passo só.
-const FormatoAtualDeConfig = 2
+const FormatoAtualDeConfig = 3
 
 // fileVersionRE lê o `version:` de topo sem passar pelo parser — que é justamente
 // quem acabou de recusar o arquivo.

@@ -40,13 +40,36 @@ func checkDomainDeclared(content string, n mapx.Node, root string, g *mapx.Graph
 
 	corpo, achou := seçãoDominio(content)
 	if !achou {
-		// Ausência NÃO é falha, pela mesma razão do `open-questions-resolved`: exigir a
-		// seção de toda spec transformaria instrumento em ritual, e unidade sem entrada
-		// externa (um componente que recebe props tipadas do próprio código) não tem
-		// domínio a declarar. O gate cobra quem ABRIU a seção — e o preset a abre em quem
-		// recebe entrada de fora.
-		return Skip, "a spec não declara `## Domínio` — a seção é para quem recebe entrada " +
-			"externa; abra-a quando houver valor que possa chegar errado"
+		// A DISPENSA É DECLARADA, não silenciosa.
+		//
+		// Antes, a ausência da seção era `Skip` — e o efeito, medido: 85 specs num
+		// projeto real, ZERO confrontadas. Um gate `blocking: true` que não protegia
+		// nada, porque só cobrava quem tinha ABERTO a seção, e ninguém abriu.
+		//
+		// A razão anterior tinha mérito: "exigir a seção de toda spec transformaria
+		// instrumento em ritual, e unidade sem entrada externa não tem domínio a
+		// declarar". Verdade — mas a saída certa é a que o resto do vocabulário já usa
+		// (`@no-rule`, `@no-scenario`, `@no-test`): DISPENSA COM RAZÃO, que registra que
+		// alguém olhou. O silêncio não distingue "não tem entrada externa" de "ninguém
+		// pensou no assunto".
+		//
+		// Este gate já fazia essa distinção logo abaixo, sobre a seção vazia: "uma seção
+		// vazia AFIRMA que se olhou e não se achou nada a declarar, que é diferente de
+		// não ter olhado". Reconhecia a diferença e não a aplicava ao caso principal.
+		//
+		// O CUSTO do silêncio, medido: o `QueryScope` define o conjunto fechado de
+		// janelas e recebe entrada de fora — caso central deste gate. Não abriu a seção,
+		// o gate calou, e duas telas declararam `5m`, `30m` e `1d`, que o contrato não
+		// aceita. O backend caía no padrão `1h` sem ninguém ver.
+		if noDomainRE.MatchString(content) {
+			return Skip, "a spec declara `@no-domain` com razão — não recebe entrada externa"
+		}
+		return Fail, "a spec não declara `## Domínio` nem dispensa a seção.\n\nSem uma " +
+			"das duas, ninguém sabe se a unidade não tem entrada externa ou se ninguém " +
+			"olhou — e o gate não pode distinguir as duas.\n\nDuas saídas: abra a seção " +
+			"declarando o que a unidade ACEITA (uma linha por entrada, com quem garante " +
+			"a fronteira), ou dispense com razão escrita:\n" +
+			"    <!-- @no-domain: recebe só props tipadas do próprio código -->"
 	}
 
 	linhas := domainLines(corpo)
@@ -163,3 +186,8 @@ func firstCell(linha string) string {
 	}
 	return "`" + c + "`"
 }
+
+// noDomainRE — a dispensa da seção, com razão obrigatória. Mesmo padrão do `@no-rule`
+// e do `@no-scenario`: marcador nu não dispensa, porque vira um jeito silencioso de
+// calar o gate e some o rastro de que houve decisão.
+var noDomainRE = regexp.MustCompile(`@no-domain[^\S\n]*:[^\S\n]*\S+`)

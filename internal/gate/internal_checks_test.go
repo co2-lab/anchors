@@ -259,3 +259,51 @@ func TestSubsecaoNaoEsvaziaOPai(t *testing.T) {
 		t.Fatalf("o `###` tem conteúdo no `####` filho; não devia acusar. Veio: %s", d)
 	}
 }
+
+// O NOME DE UM GATE E' CONTRATO PUBLICO -- ele aparece no `anchors.yaml` de todo
+// projeto, na saida do `check` e nas issues que o pipeline abre.
+//
+// Metade do vocabulario estava em portugues (`regra-implementada`, `cenario-identidade`)
+// e parte traduzida ao pe da letra (`header-conforme` -- meia palavra em cada idioma, e
+// "conforme" nao diz o que o gate faz). O `board.json` ja foi migrado para ingles pela
+// mesma razao: contrato e' superficie, e enquanto metade esta num idioma cada gate novo
+// herda a duvida sobre qual convencao seguir.
+//
+// Esta regua fecha a porta. Nome de gate e' em INGLES, kebab-case.
+func TestNomeDeGateEmIngles(t *testing.T) {
+	// As palavras que denunciam portugues nos nomes que ja existiram aqui. Nao e' um
+	// dicionario -- e' a lista do que ja entrou, para que nao volte.
+	emPortugues := []string{
+		"cenario", "regra", "conforme", "coerente", "consultado", "preenchido",
+		"existe", "implementada", "identidade", "declarada", "alinhado", "dominio",
+		"fase", "prova", "trinca", "promovivel", "progresso", "idioma", "carimbado",
+		"tipado", "ancorado", "valor", "codigo", "teste", "rastreavel",
+	}
+	todos := map[string]bool{}
+	for n := range internalCheckers {
+		todos[n] = true
+	}
+	for n := range checkersWithRoot {
+		todos[n] = true
+	}
+	for n := range checkersWithGraph {
+		todos[n] = true
+	}
+	if len(todos) == 0 {
+		t.Fatal("nenhum gate registrado — o teste passaria vazio")
+	}
+
+	for nome := range todos {
+		for _, p := range emPortugues {
+			// `-p-`, `p-` no comeco ou `-p` no fim: palavra inteira, nao substring.
+			if nome == p ||
+				strings.HasPrefix(nome, p+"-") ||
+				strings.HasSuffix(nome, "-"+p) ||
+				strings.Contains(nome, "-"+p+"-") {
+				t.Errorf("o gate `%s` tem `%s` no nome — nome de gate e' contrato publico "+
+					"e vai em INGLES; ele aparece no `anchors.yaml` de todo projeto e na "+
+					"saida do `check`", nome, p)
+			}
+		}
+	}
+}

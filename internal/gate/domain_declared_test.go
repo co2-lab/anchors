@@ -49,11 +49,23 @@ func TestDomainNaoRespostaNaoEhDono(t *testing.T) {
 	}
 }
 
-// Ausência da seção não é falha: exigir de toda spec vira ritual, e unidade sem entrada
-// externa não tem domínio a declarar. O gate cobra quem ABRIU.
-func TestDomainAusenciaNaoEhFalha(t *testing.T) {
-	if v, _ := rodaDominio(t, "# Spec\n\n## Regras\n\n### AAAAX-B01 — x\n"); v != Skip {
-		t.Fatal("spec sem a seção deveria ser Skip")
+// ESTE TESTE FIXAVA O DEFEITO, e é por isso que ele sobrevive aqui invertido.
+//
+// Ele afirmava: "ausência da seção não é falha — o gate cobra quem ABRIU". Com isso
+// verde, um gate `blocking: true` passou por 85 specs de um projeto real sem confrontar
+// NENHUMA. Ninguém abre uma seção que nada cobra.
+//
+// A premissa não estava errada: exigir a seção de toda spec vira ritual, e unidade sem
+// entrada externa não tem domínio a declarar. Errada estava a SAÍDA — silêncio em vez de
+// dispensa declarada. O resto do vocabulário resolve isso com `@no-rule`/`@no-scenario`:
+// a razão escrita registra que alguém olhou.
+//
+// Um teste que trava o comportamento de fuga do gate é pior que teste nenhum: ele faz a
+// falha parecer decisão.
+func TestDomainAusenciaSemDispensaReprova(t *testing.T) {
+	v, msg := rodaDominio(t, "# Spec\n\n## Regras\n\n### AAAAX-B01 — x\n")
+	if v != Fail {
+		t.Fatalf("spec sem a seção e sem dispensa deveria reprovar, veio %v: %s", v, msg)
 	}
 }
 
@@ -119,5 +131,52 @@ func TestDominioTeriaPegadoOCasoReal(t *testing.T) {
 		"a interface de cadastro (KVEDX-V02) rejeita chave reservada", 1)
 	if v, _ := checkDomainDeclared(comDono, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil); v != Pass {
 		t.Fatal("com dono nomeado deveria passar")
+	}
+}
+
+// A AUSENCIA DA SECAO era SILENCIO, e silencio nao e' dispensa.
+//
+// MEDIDO no blue-eyes: 85 specs, ZERO confrontadas -- `domain-declared` e' `blocking:
+// true` e nao protegia nada, porque so cobrava quem tinha ABERTO a secao. Ninguem abriu.
+//
+// A justificativa tinha merito ("exigir a secao de toda spec transformaria instrumento
+// em ritual"), mas escolheu a saida errada. O resto do vocabulario dispensa por
+// DECLARACAO com razao -- `@no-rule`, `@no-scenario`, `@no-test` --, e essa forma
+// registra que alguem OLHOU. O silencio nao distingue "nao tem entrada externa" de
+// "ninguem pensou no assunto".
+//
+// O proprio gate ja fazia essa distincao tres linhas abaixo, sobre a secao vazia: "uma
+// secao vazia AFIRMA que se olhou e nao se achou nada a declarar, que e' diferente de
+// nao ter olhado". Reconhecia a diferenca e nao a aplicava ao caso principal.
+//
+// E foi esse silencio que deixou passar o defeito real: o `QueryScope` define o conjunto
+// fechado de janelas e recebe entrada de fora -- caso central do gate. Nao abriu a secao,
+// o gate calou, e as telas declararam `5m`, `30m` e `1d`, que o contrato nao aceita.
+func TestDomainAusenciaPrecisaSerDeclarada(t *testing.T) {
+	semNada := "# U\n\n## Regras\n\n### UUUUU-B01 — algo\n"
+	v, msg := rodaDominio(t, semNada)
+	if v == Skip || v == Pass {
+		t.Errorf("a spec nao diz NADA sobre dominio e o gate a deixou passar (%v) — "+
+			"silencio nao distingue `nao tem entrada externa` de `ninguem pensou`: %s", v, msg)
+	}
+	if !strings.Contains(msg, "@no-domain") {
+		t.Errorf("a mensagem nao ensina a dispensa (`@no-domain`): %q", msg)
+	}
+}
+
+// A dispensa COM RAZAO vale — e e' o que separa decisao de esquecimento.
+func TestDomainDispensaComRazaoVale(t *testing.T) {
+	spec := "# U\n\n<!-- @no-domain: recebe so props tipadas do proprio codigo -->\n\n## Regras\n\n### UUUUU-B01 — algo\n"
+	if v, msg := rodaDominio(t, spec); v != Skip && v != Pass {
+		t.Errorf("`@no-domain` com razao deveria dispensar, veio %v: %s", v, msg)
+	}
+}
+
+// Marcador NU nao dispensa — mesmo padrao do `@no-rule`. Um marcador sem razao vira um
+// jeito silencioso de calar o gate, e some o rastro de que houve decisao.
+func TestDomainDispensaNuaNaoVale(t *testing.T) {
+	spec := "# U\n\n<!-- @no-domain -->\n\n## Regras\n\n### UUUUU-B01 — algo\n"
+	if v, _ := rodaDominio(t, spec); v == Skip || v == Pass {
+		t.Error("marcador sem razao nao pode dispensar")
 	}
 }

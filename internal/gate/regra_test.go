@@ -200,8 +200,8 @@ func TestMarcadorSemMotivoEhRecusado(t *testing.T) {
 // O marcador SEM código dispensa a regra inteira — a saída grossa continua existindo,
 // para o gate recém-declarado que o projeto ainda não cumpre em lugar nenhum.
 func TestMarcadorSemCodigoValeParaTudo(t *testing.T) {
-	d, _ := WaiverFromMessage("chore: liga o gate\n\n[skip-header-conforme: nenhum arquivo tem header ainda]")
-	if _, ok := d.Waived(RuleID("header-conforme")); !ok {
+	d, _ := WaiverFromMessage("chore: liga o gate\n\n[skip-header-valid: nenhum arquivo tem header ainda]")
+	if _, ok := d.Waived(RuleID("header-valid")); !ok {
 		t.Error("sem código, o marcador vale para a regra inteira")
 	}
 }

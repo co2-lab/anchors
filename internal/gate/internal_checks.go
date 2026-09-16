@@ -28,7 +28,7 @@ var internalCheckers = map[string]func(content string, n mapx.Node) (Verdict, st
 	"coverage-delta":      checkCoverageDelta,
 	"mutation-score":      checkMutationScore,
 	"tests-pass":          checkTestsPass,
-	"header-conforme":     checkHeaderConforms,
+	"header-valid":        checkHeaderConforms,
 	"route-declared":      checkRouteDeclared,
 }
 
@@ -46,9 +46,9 @@ var checkersWithRoot = map[string]func(content string, n mapx.Node, root string)
 var checkersWithGraph = map[string]func(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string){
 	"progress-honest":          checkProgressHonest,
 	"feature-test-match":       checkFeatureTestMatch,
-	"cenario-identidade":       checkScenarioIdentity,
-	"cenario-tipo-alinhado":    checkScenarioTypeAligned,
-	"cenario-letra-declarada":  checkScenarioLetterDeclared,
+	"scenario-identity":        checkScenarioIdentity,
+	"scenario-type-aligned":    checkScenarioTypeAligned,
+	"scenario-letter-declared": checkScenarioLetterDeclared,
 	"spec-feature-match":       checkSpecFeatureMatch,
 	"code-reference-valid":     checkCodeReferenceValid,
 	"scenario-asserts":         checkScenarioAsserts,
@@ -56,8 +56,8 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"count-honored":            checkCountHonored,
 	"trigger-declared":         checkTriggerDeclared,
 	"route-exists":             checkRouteExists,
-	"placeholder-preenchido":   checkPlaceholderFilled,
-	"regra-implementada":       checkRuleImplemented,
+	"placeholder-filled":       checkPlaceholderFilled,
+	"rule-implemented":         checkRuleImplemented,
 	"vr-baseline":              checkVRBaseline,
 	"ref-resolves":             checkRefResolves,
 	"layer-boundary":           checkLayerBoundary,
@@ -80,12 +80,13 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"identity-consistent":      checkIdentityConsistent,
 	"region-pair-honored":      checkRegionPairHonored,
 	"evidence-fresh":           checkEvidenceFresh,
-	"testid-coerente":          checkTestIDCoherent,
-	"testid-consultado-existe": checkQueriedTestIDExists,
+	"testid-consistent":        checkTestIDCoherent,
+	"testid-queried-exists":    checkQueriedTestIDExists,
 	"mock-typed":               checkMockTyped,
 	"mock-stamped":             checkMockStamped,
 	"test-traceable":           checkTestTraceable,
 	"code-cataloged":           checkCodeCataloged,
+	"value-anchored":           checkValueAnchored,
 	"docs-fresh":               checkDocsFresh,
 	"doc-required":             checkDocRequired,
 	"doc-self-contained":       checkDocSelfContained,
@@ -188,7 +189,7 @@ var updatedAtRE = regexp.MustCompile(`updated_at:\s*(\d{4}-\d{2}-\d{2})`)
 func checkUpdatedAt(content string, n mapx.Node, root string) (Verdict, string) {
 	m := updatedAtRE.FindStringSubmatch(content)
 	if m == nil {
-		return Skip, "" // sem updated_at declarado — o gate header-conforme cobra o header
+		return Skip, "" // sem updated_at declarado — o gate header-valid cobra o header
 	}
 	declared := m[1]
 
@@ -226,7 +227,7 @@ func checkUpdatedAt(content string, n mapx.Node, root string) (Verdict, string) 
 	return Pass, ""
 }
 
-// header-conforme: o arquivo tem o BLOCO DE CABEÇALHO do Anchors (`@anchors`) com o
+// header-valid: o arquivo tem o BLOCO DE CABEÇALHO do Anchors (`@anchors`) com o
 // mínimo obrigatório — a identidade (`code:`). O guide de header (anchors guide
 // header) é a régua; este gate verifica presença + mínimo. Agnóstico de dialeto de
 // comentário (só procura os marcadores no texto). Detalhes extras (updated_at, tags)
