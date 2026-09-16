@@ -144,7 +144,7 @@ nodes:
         - test
     - id: cmd/anchors/board_serve.go
       kind: code
-      rev: 7fe1bda99e93
+      rev: a228fc5c2d57
       updated_at: "2026-09-16"
       layer: comando
       tags:
@@ -644,16 +644,16 @@ nodes:
         - test
     - id: cmd/anchors/map_merge.go
       kind: code
-      rev: c1fe02562125
-      updated_at: "2026-09-10"
+      rev: 953bf4fcb413
+      updated_at: "2026-09-16"
       layer: comando
       tags:
         - cli
         - comando
     - id: cmd/anchors/map_merge_test.go
       kind: test
-      rev: 9f3afcd27086
-      updated_at: "2026-09-10"
+      rev: 2f6adc43efab
+      updated_at: "2026-09-16"
       layer: teste
       tags:
         - test
