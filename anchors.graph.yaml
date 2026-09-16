@@ -720,7 +720,7 @@ nodes:
         - test
     - id: cmd/anchors/pr_body.go
       kind: code
-      rev: d2198f9f0733
+      rev: 3c88c5014e33
       updated_at: "2026-09-14"
       layer: comando
       tags:
@@ -728,7 +728,7 @@ nodes:
         - comando
     - id: cmd/anchors/pr_body_test.go
       kind: test
-      rev: 262804a7f5f0
+      rev: 32b18915495c
       updated_at: "2026-09-10"
       layer: teste
       tags:

@@ -16,9 +16,8 @@ import (
 
 // --- o vínculo card↔PR é do Anchors; a palavra-chave é da plataforma ---
 //
-// O GitHub fecha um card quando o corpo do PR carrega `Closes #N` — e só em INGLÊS. Não
-// há configuração e não há tradução: um projeto que escreva "Fecha #44" tem o card aberto
-// depois do merge, em silêncio.
+// O GitHub só entende as palavras de vínculo em INGLÊS. Não há configuração e não há
+// tradução: um projeto que escreva "Refere #44" não cria vínculo nenhum, em silêncio.
 //
 // A primeira tentativa foi um gate que EXIGIA a palavra em inglês, e isso estava errado
 // pelo mesmo motivo que tiramos match de prosa dos gates: o Anchors é multi-idioma, e uma
@@ -30,15 +29,34 @@ import (
 // que a plataforma entende é GERADA a partir dele. Quem escreve o PR não precisa saber a
 // palavra; quem muda de plataforma muda o gerador, não a doutrina.
 
-// closingSyntax é como cada plataforma quer receber "este PR fecha aquele card".
+// linkSyntax é como cada plataforma quer receber "este PR entrega aquele card".
+//
+// VINCULAR, E NÃO FECHAR — e a diferença é o fluxo inteiro.
+//
+// Isto gerava `Closes #N`, e o `Closes` faz DUAS coisas de uma vez: o pipeline o lê para
+// saber que o PR CONCLUI a implementação (e então move o card para `ready-to-test`), e o
+// GitHub o lê para FECHAR a issue no merge. As duas afirmações foram tratadas como uma, e
+// não são: "a implementação acabou" não é "o card acabou".
+//
+// A esteira não termina em `ready-to-test`. Vêm `in-test`, `ready-to-release` e
+// `production` — colunas do CD, que o Anchors não rastreia hoje (ele vai até o CI). Fechar
+// o card no merge declara entregue um trabalho com três estados à frente, e quem ia testar
+// perde de vista o que precisa testar.
+//
+// MEDIDO no projeto de referência: 71 cards fechados em `ready-to-test` contra 7 abertos,
+// 35 num só dia. A coluna que deveria ACUMULAR o que espera teste mostrava só o resíduo —
+// os que nunca receberam `Closes`. A esteira entregava, e nada disso era visível.
+//
+// `Refs #N` cria a referência na timeline do card, que é o que o pipeline precisa para
+// achar o vínculo, e NÃO fecha. Quem fecha o card é quem termina a esteira.
 //
 // Um mapa, e não um `if`: acrescentar uma plataforma é acrescentar uma linha, e o gerador
 // não precisa saber quantas existem.
-var closingSyntax = map[string]string{
-	"github": "Closes #%s",
+var linkSyntax = map[string]string{
+	"github": "Refs #%s",
 	// GitLab aceita as mesmas palavras, mas com `#` só no mesmo projeto — a diferença
 	// aparece quando o card vive noutro repositório.
-	"gitlab": "Closes #%s",
+	"gitlab": "Refs #%s",
 }
 
 func newPRBodyCmd() *cobra.Command {
@@ -46,16 +64,20 @@ func newPRBodyCmd() *cobra.Command {
 	var sob bool
 	cmd := &cobra.Command{
 		Use:   "pr-body",
-		Short: "Escreve as linhas que fecham os cards deste trabalho, na sintaxe da plataforma",
-		Long: `Imprime as linhas de fechamento para o corpo do PR.
+		Short: "Escreve as linhas que vinculam os cards deste trabalho, na sintaxe da plataforma",
+		Long: `Imprime as linhas de vínculo para o corpo do PR.
+
+VINCULA sem fechar: o card avança para 'ready-to-test' e continua ABERTO, porque
+a esteira segue no CD ('in-test', 'ready-to-release', 'production') e o Anchors
+não rastreia essas colunas. Quem fecha o card é quem termina a esteira.
 
 O vínculo é declarado no vocabulário do Anchors: o card que você pegou
 ('anchors-owner:') e os achados que nasceram sob ele ('anchors:under-<n>'). A
 palavra-chave da plataforma é GERADA a partir disso.
 
-Você não precisa saber que o GitHub só aceita 'Closes' em inglês — e num projeto
-escrito noutro idioma, isso é justamente o que se erra em silêncio: o PR mescla e
-o card fica aberto.
+Você não precisa saber que o GitHub só aceita essas palavras em inglês — e num
+projeto escrito noutro idioma, isso é justamente o que se erra em silêncio: o PR
+mescla e o card não se liga a nada.
 
     anchors pr-body --cards 44          # o card e tudo que nasceu sob ele
     anchors pr-body                     # descobre pelo ANCHORS_AGENT`,
@@ -71,12 +93,12 @@ o card fica aberto.
 			if !cfg.GitHubMode() {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("`pr-body` existe no modo github: no modo local não há " +
-					"card a fechar, e o trabalho se registra movendo a pasta em `issues/`")
+					"card a vincular, e o trabalho se registra movendo a pasta em `issues/`")
 			}
-			sintaxe, ok := closingSyntax[cfg.Workflow.Mode]
+			sintaxe, ok := linkSyntax[cfg.Workflow.Mode]
 			if !ok {
 				cmd.SilenceUsage = true
-				return fmt.Errorf("não sei a sintaxe de fechamento de `%s` — as conhecidas "+
+				return fmt.Errorf("não sei a sintaxe de vínculo de `%s` — as conhecidas "+
 					"são: %s", cfg.Workflow.Mode, strings.Join(knownPlatforms(), ", "))
 			}
 
@@ -128,8 +150,8 @@ o card fica aberto.
 }
 
 func knownPlatforms() []string {
-	out := make([]string, 0, len(closingSyntax))
-	for k := range closingSyntax {
+	out := make([]string, 0, len(linkSyntax))
+	for k := range linkSyntax {
 		out = append(out, k)
 	}
 	sort.Strings(out)
