@@ -915,14 +915,14 @@ func gateRequirements(artifact string, cfg *config.Config) []string {
 			"ou bullet-negrito (`- **ABCDX-B01** ...`). Menção solta em prosa NÃO conta, e " +
 			"placeholder não preenchido reprova.",
 		"has-code": "O arquivo carrega ao menos um **código de cenário** (a identidade).",
-		"header-conforme": "O **header `@anchors`** no topo, com a identidade: `code:` se este " +
+		"header-valid": "O **header `@anchors`** no topo, com a identidade: `code:` se este " +
 			"artefato é dono, `ref:` se referencia a spec.",
 		"rule-types": "Cada **letra de código** (o `B` de `-B01`) precisa estar declarada no " +
 			"vocabulário `rule_types` do projeto — e a seção que a define, também.",
 		"route-declared":     "Spec de TELA declara a **rota** no cabeçalho.",
 		"dependency-honored": "Todo símbolo prometido na **Tabela de Dependências** (entre crases) é usado no código.",
 		"spec-feature-match": "Todo requisito declarado tem **cenário na feature** (ou `@no-scenario: <razão>`).",
-		"regra-implementada": "Toda regra catalogada aparece **no código** (o trecho que a realiza traz o código dela em comentário) — ou é dispensada na linha dela com `@no-code: <razão>`, para o que é satisfeito pela AUSÊNCIA de código. Declare regra a regra: é o que troca adivinhação por confronto.",
+		"rule-implemented": "Toda regra catalogada aparece **no código** (o trecho que a realiza traz o código dela em comentário) — ou é dispensada na linha dela com `@no-code: <razão>`, para o que é satisfeito pela AUSÊNCIA de código. Declare regra a regra: é o que troca adivinhação por confronto.",
 		"open-questions-resolved": "A seção **`## Decisões em aberto`** É OBRIGATÓRIA e nunca " +
 			"fica vazia: ou lista o que a spec não decide, ou traz `nenhuma`. Escrever " +
 			"`nenhuma` é uma AFIRMAÇÃO — \"olhei e não há dúvida\" —, diferente de omitir a " +

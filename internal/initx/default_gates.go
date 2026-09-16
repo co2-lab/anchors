@@ -469,7 +469,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	// rastreabilidade e aponta para o vazio — e um leitor futuro a toma como registro do
 	// que foi feito. Medido: uma spec afirmava "índices que o schema criou" citando 4
 	// códigos inexistentes, com todos os gates verdes.
-	// ref-resolves: o `ref:` aponta para a spec CERTA. `header-conforme` confere que o
+	// ref-resolves: o `ref:` aponta para a spec CERTA. `header-valid` confere que o
 	// campo existe; ninguém conferia que ele RESOLVE. Um ref errado parece rastreabilidade
 	// e atribui a unidade à spec errada, com todo gate relacional confrontando o par
 	// errado. Medido: 49 arquivos de modelo apontando para a identidade de antes de uma

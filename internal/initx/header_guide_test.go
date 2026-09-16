@@ -23,7 +23,7 @@ func TestRenderHeaderGuideDialect(t *testing.T) {
 func TestRenderHeaderGuideAlwaysHasEssentials(t *testing.T) {
 	// mesmo sem preset (Preset{}), o guia menciona o mínimo: code + o gate
 	out := RenderHeaderGuide(Preset{}, nil)
-	for _, want := range []string{"code:", "updated_at:", "header-conforme", "anchors guide header"} {
+	for _, want := range []string{"code:", "updated_at:", "header-valid", "anchors guide header"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("guia de header deveria mencionar %q", want)
 		}

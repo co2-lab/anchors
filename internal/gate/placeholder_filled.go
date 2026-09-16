@@ -16,7 +16,7 @@ import (
 // reprovava. Medido: uma spec recém-gerada, com `layer: TODO`, `updated_at: TODO`, o
 // título `# X — TODO propósito em uma frase` e a regra `### CRUXX-B01 — TODO regra`,
 // atravessava TODOS os gates bloqueantes com "✓ pode promover" — inclusive
-// `header-conforme ✓3`, que leu `layer: TODO` e aprovou.
+// `header-valid ✓3`, que leu `layer: TODO` e aprovou.
 //
 // A razão é estrutural: os gates de header validam a FORMA (o campo existe? tem o formato
 // certo?) e nunca perguntam se o valor SIGNIFICA alguma coisa. `TODO` é um valor

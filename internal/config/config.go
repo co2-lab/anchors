@@ -1819,7 +1819,7 @@ var RenamedKey func(string) bool
 // Espelha o `mapx.FormatoAtual` e vive aqui para evitar o ciclo de import (o `mapx` usa
 // tipos do `config`). Os dois sobem juntos: uma migração que muda o mapa e a config é um
 // passo só.
-const FormatoAtualDeConfig = 2
+const FormatoAtualDeConfig = 3
 
 // fileVersionRE lê o `version:` de topo sem passar pelo parser — que é justamente
 // quem acabou de recusar o arquivo.

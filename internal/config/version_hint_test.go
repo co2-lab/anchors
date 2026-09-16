@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -139,7 +140,11 @@ func TestLoad_arquivoNoFormatoAtualNuncaMandaMigrar(t *testing.T) {
 
 	dir := t.TempDir()
 	p := filepath.Join(dir, "anchors.yaml")
-	os.WriteFile(p, []byte("version: 2\nlayers: {}\ntrinca_opcional: 1\n"), 0o644)
+	// A versão vem da CONSTANTE, não de um literal: o teste fala sobre "o arquivo já
+	// está no formato atual", e escrever `2` à mão o prende ao formato de hoje. Cada
+	// migração nova quebrava este teste por um motivo que não é o que ele mede.
+	os.WriteFile(p, fmt.Appendf(nil, "version: %d\nlayers: {}\ntrinca_opcional: 1\n",
+		FormatoAtualDeConfig), 0o644)
 
 	_, err := Load(p)
 	if err == nil {
