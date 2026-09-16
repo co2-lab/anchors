@@ -1749,3 +1749,76 @@ func TestGateReprovaCardSemClaim(t *testing.T) {
 			"não o que fazer")
 	}
 }
+
+// O card PARADO em espera e o card PARADO em andamento nao sao o mesmo problema,
+// e cobra-los com o mesmo relogio erra nos dois lados.
+//
+// Em `to-do` e `ready-to-*` o card esta parado POR DEFINICAO -- ele espera alguem
+// pegar. Ter dono ali e' residuo: alguem reivindicou e nao trabalhou, e enquanto o
+// nome estiver la o `next` pode pular o card. Duas horas bastam, e o custo de errar
+// e' zero: o card ja estava disponivel.
+//
+// Em `in-progress` e `in-review` ha trabalho ACONTECENDO. Liberar cedo demais rouba
+// o card de quem esta trabalhando devagar -- e o novo dono comeca do zero sobre algo
+// meio feito. Vinte e quatro horas, porque o sinal de vida (`updatedAt`) so aparece
+// quando o agente comenta, move label ou referencia commit: um dev humano pode passar
+// um dia inteiro num card sem tocar no issue.
+func TestStaleSeparaEsperaDeAndamento(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-stale.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	// Os dois relogios existem e sao distintos.
+	if !strings.Contains(texto, "HORAS_ESPERA") {
+		t.Error("falta `HORAS_ESPERA` — sem ele o card com dono em `to-do`/`ready-to-*` " +
+			"espera o mesmo tempo do trabalho em andamento, e o `next` pula um card livre")
+	}
+	if !strings.Contains(texto, "HORAS_ANDAMENTO") {
+		t.Error("falta `HORAS_ANDAMENTO` — sem ele o trabalho em curso e a espera " +
+			"compartilham relogio, e um dos dois fica errado")
+	}
+	if strings.Contains(texto, "HORAS_ATE_STALE") {
+		t.Error("`HORAS_ATE_STALE` ainda existe — o relogio unico e' exatamente o que " +
+			"esta separacao desfaz")
+	}
+
+	// O de espera precisa ser MENOR: e' o caso barato de errar.
+	espera := valorDeEnv(texto, "HORAS_ESPERA")
+	andamento := valorDeEnv(texto, "HORAS_ANDAMENTO")
+	if espera == "" || andamento == "" {
+		t.Fatalf("nao consegui ler os dois relogios (espera=%q andamento=%q)", espera, andamento)
+	}
+	if espera >= andamento {
+		t.Errorf("espera=%s e andamento=%s — a espera tem que ser MENOR: liberar cedo "+
+			"um card que ja estava disponivel nao custa nada, e liberar cedo trabalho "+
+			"em curso rouba o card de quem o faz", espera, andamento)
+	}
+
+	// `ready-to-*` entra na varredura de espera. Antes ele era EXCLUIDO de tudo, e a
+	// razao valia contra MOVER -- nao contra liberar o dono.
+	if !strings.Contains(texto, "ready-to-") {
+		t.Error("`ready-to-*` nao aparece — o card pronto com dono residual fica preso, " +
+			"e era justamente o que a separacao vem resolver")
+	}
+
+	// O que a correcao anterior conquistou nao pode voltar: liberar o dono, nunca mover.
+	if strings.Contains(texto, "add-label") {
+		t.Error("`add-label` de volta no stale — o pipeline voltou a MOVER card, e mover " +
+			"apaga o trabalho ja feito")
+	}
+}
+
+// valorDeEnv le `NOME: "valor"` do bloco `env:` do YAML.
+func valorDeEnv(texto, nome string) string {
+	for _, linha := range strings.Split(texto, "\n") {
+		l := strings.TrimSpace(linha)
+		if !strings.HasPrefix(l, nome+":") {
+			continue
+		}
+		v := strings.TrimSpace(strings.TrimPrefix(l, nome+":"))
+		return strings.Trim(v, `"'`)
+	}
+	return ""
+}
