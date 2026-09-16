@@ -113,6 +113,45 @@ card para trocar uma palavra é burocracia.`,
 				}
 			}
 
+			// O CARD DE ORIGEM, DESCOBERTO se não foi informado.
+			//
+			// O `--card` era opcional e silencioso: sem ele o achado nasce sem procedência,
+			// e ninguém consegue perguntar "de onde veio isto?" nem "o que este trabalho
+			// gerou?". A doutrina do `under-<n>` diz que o vínculo é LABEL justamente
+			// porque frase no corpo não se consulta — e sem o `--card` não há nem frase.
+			//
+			// MEDIDO no projeto de referência: 18 de 27 decisões abertas sem amarração
+			// alguma. Todas traziam `**Onde:** <arquivo>` (procedência pelo ARQUIVO), e
+			// uma chegou a escrever "o achado veio do #690" em prosa — exatamente o que a
+			// doutrina condena.
+			//
+			// O `pr-body` já descobria o card pelo `ANCHORS_AGENT` (é o que o
+			// `requestedCards` faz), e este comando não. A assimetria não tinha razão: os
+			// dois perguntam a mesma coisa — "qual card este agente pegou?".
+			if strings.TrimSpace(card) == "" {
+				if achados := requestedCards("", cfg); len(achados) == 1 {
+					card = achados[0]
+					fmt.Fprintf(os.Stderr,
+						"anchors: o achado nasce sob o card #%s (do `anchors-owner`)\n", card)
+				} else if len(achados) > 1 {
+					// AMBIGUIDADE NÃO SE RESOLVE POR CHUTE: com dois cards em mãos, só o
+					// agente sabe em qual estava mexendo quando achou isto.
+					cmd.SilenceUsage = true
+					return fmt.Errorf("você tem %d cards em mãos (#%s) — informe `--card <n>` "+
+						"para dizer sob qual este achado nasceu",
+						len(achados), strings.Join(achados, ", #"))
+				} else {
+					// SEM CARD NENHUM o achado nasce solto, e isso é legítimo: alguém pode
+					// escalar fora de um trabalho. O que não pode é acontecer sem aviso.
+					fmt.Fprintln(os.Stderr,
+						"anchors: sem `--card` e sem `anchors-owner` — o achado nasce SEM "+
+							"procedência.")
+					fmt.Fprintln(os.Stderr,
+						"  ninguém vai poder perguntar de onde ele veio, nem o que este "+
+							"trabalho gerou. Se ele nasceu de um card, passe `--card <n>`.")
+				}
+			}
+
 			motivo := strings.Join(args, " ")
 			corpoTexto := escalationBody(motivo, sobre, card, paraUsuario)
 
