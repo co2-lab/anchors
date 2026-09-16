@@ -491,7 +491,7 @@ nodes:
         - comando
     - id: cmd/anchors/guide_work_test.go
       kind: test
-      rev: 817414c36ae2
+      rev: 73d1c9d35f85
       updated_at: "2026-09-15"
       layer: teste
       tags:
@@ -577,7 +577,7 @@ nodes:
     - id: cmd/anchors/install_hooks.go
       kind: code
       rev: 163a8642a210
-      updated_at: "2026-09-11"
+      updated_at: "2026-09-15"
       layer: comando
       tags:
         - cli
@@ -585,6 +585,7 @@ nodes:
     - id: cmd/anchors/install_hooks_test.go
       kind: test
       rev: 4cf7445d638c
+      updated_at: "2026-09-15"
       layer: teste
       tags:
         - test
@@ -2558,7 +2559,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 9296459b1a8c
+      rev: f67cae34aaa0
       updated_at: "2026-09-15"
       layer: teste
       tags:
