@@ -307,3 +307,39 @@ func TestCardEscalado_temMarcaNaColuna(t *testing.T) {
 		t.Errorf("só o card escalado deveria ter o selo; apareceu %d vezes", n)
 	}
 }
+
+// O ROADMAP nao abria os detalhes, e a incoerencia era invisivel.
+//
+// Nas abas Board e Arvore o clique num card abre a modal — dono, historico de posse, o
+// que o card pede. No Roadmap nao abria NADA: o rotulo da esquerda nao tinha
+// `data-number` nem listener, e a barra era um `<a href>` que SAIA para o GitHub.
+//
+// O custo: quem queria ver de quem e' um card nao tinha como, justamente na aba que
+// mostra o trabalho no tempo — onde a pergunta "quem esta com isso?" mais aparece.
+//
+// Relatado pelo usuario: "estou clicando nos itens do board e nao esta abrindo a modal,
+// eu queria ver os owners dos cards que estao na coluna in-review".
+func TestRoadmapAbreOsDetalhes(t *testing.T) {
+	b, err := fs.ReadFile(boardFS, "board/anchors-board.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	html := string(b)
+
+	// O container do roadmap entra na delegacao de clique.
+	if !strings.Contains(html, `"colunas", "arvore", "v-roadmap"`) {
+		t.Error("o `v-roadmap` nao esta na delegacao de clique — o clique no roadmap nao " +
+			"chega ao `abre()`, e a aba fica sem detalhes")
+	}
+
+	// O seletor reconhece o rotulo do roadmap.
+	if !strings.Contains(html, `.g-rot[data-number]`) {
+		t.Error("o seletor nao casa o rotulo do roadmap (`.g-rot[data-number]`) — o " +
+			"listener existe e nao acha alvo")
+	}
+
+	// E o rotulo carrega o numero, senao nao ha o que casar.
+	if !strings.Contains(html, `data-number="${esc(i.number)}"`) {
+		t.Error("o rotulo do roadmap nao emite `data-number` — o seletor nao tem o que ler")
+	}
+}

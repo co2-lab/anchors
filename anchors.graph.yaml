@@ -1,6 +1,6 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
-version: 2
+version: 3
 generated_by: dev
 nodes:
     - id: BOOTSTRAP.md
@@ -2407,8 +2407,8 @@ nodes:
         - test
     - id: internal/initx/board_bloqueio_test.go
       kind: test
-      rev: f323c7bd6ac2
-      updated_at: "2026-09-15"
+      rev: 9c44e465198d
+      updated_at: "2026-09-16"
       layer: teste
       tags:
         - test
