@@ -135,6 +135,19 @@ nodes:
       tags:
         - cli
         - comando
+    - id: cmd/anchors/backfill_labels.go
+      kind: code
+      rev: 3969849bae36
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/backfill_labels_test.go
+      kind: test
+      rev: 832fce104867
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/binario_velho_test.go
       kind: test
       rev: fd1c8419c12f
@@ -257,7 +270,7 @@ nodes:
         - test
     - id: cmd/anchors/decided.go
       kind: code
-      rev: 2176b5ccc27c
+      rev: 516e34f96265
       updated_at: "2026-09-14"
       layer: comando
       tags:
@@ -350,7 +363,7 @@ nodes:
         - test
     - id: cmd/anchors/escalate.go
       kind: code
-      rev: 85a3b8e4924d
+      rev: fee3a58310ee
       updated_at: "2026-09-15"
       layer: comando
       tags:
@@ -516,7 +529,7 @@ nodes:
     - id: cmd/anchors/guide_work.go
       kind: code
       rev: 3910c445299e
-      updated_at: "2026-09-15"
+      updated_at: "2026-09-16"
       layer: comando
       tags:
         - cli
@@ -524,7 +537,7 @@ nodes:
     - id: cmd/anchors/guide_work_test.go
       kind: test
       rev: 8fa28e36955a
-      updated_at: "2026-09-15"
+      updated_at: "2026-09-16"
       layer: teste
       tags:
         - test
@@ -2431,7 +2444,7 @@ nodes:
         - test
     - id: internal/initx/board_bloqueio_test.go
       kind: test
-      rev: 9c44e465198d
+      rev: 980b786e721d
       updated_at: "2026-09-16"
       layer: teste
       tags:
@@ -2614,7 +2627,7 @@ nodes:
         - test
     - id: internal/initx/workflows.go
       kind: code
-      rev: 10ca0edbeaaf
+      rev: badfb9ca8fc8
       updated_at: "2026-09-15"
       layer: infra
       tags:
@@ -2622,7 +2635,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 8f3c0e0e6a0b
+      rev: a1a051b54e7e
       updated_at: "2026-09-16"
       layer: teste
       tags:

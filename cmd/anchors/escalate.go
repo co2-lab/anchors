@@ -167,6 +167,7 @@ card para trocar uma palavra é burocracia.`,
 				return fmt.Errorf("abrir a issue: %v — %s", err, strings.TrimSpace(string(out)))
 			}
 			url := strings.TrimSpace(string(out))
+
 			// A palavra acompanha a SAÍDA: "decisão" para o que espera uma pessoa,
 			// "achado" para o card comum. Dizer "decisão aberta" nos dois casos fez eu
 			// mesmo conferir a label achando que tinha escalado sem querer.
@@ -183,9 +184,41 @@ card para trocar uma palavra é burocracia.`,
 			// Quando para, a label é o que impede o agente seguinte de pegar o card e
 			// refazer o mesmo caminho até a mesma dúvida.
 			if paraUsuario && card != "" {
+				// A LABEL DIZ POR QUAL CARD ELE ESPERA, e não só que espera.
+				//
+				// O `needs-user` sozinho para o card — e não diz QUEM o segura. O board
+				// mostrava "esperando você" sem número, e quem responde a decisão não
+				// sabe o que acabou de soltar: cada card tem de ser reencontrado à mão, e
+				// o que não for reencontrado segue parado depois de a decisão já ter saído.
+				//
+				// `anchors:blocked-by-<n>` fecha isso nas três pontas: o board desenha o
+				// vínculo, o `claim` confere se o #n ainda está aberto antes de servir o
+				// card, e quem decide lista tudo que a sua resposta libera
+				// (`--label anchors:blocked-by-<n>`).
+				//
+				// É AUTOMÁTICO porque não há julgamento a fazer: se este card parou por
+				// causa daquela decisão, o vínculo é fato, não escolha. O julgamento que
+				// existe — se a decisão impede o trabalho — já foi feito quando o agente
+				// escolheu `--for-user`.
+				rotuloBloqueio := ""
+				if n := numeroDaIssue(url); n != "" {
+					rotuloBloqueio = initx.LabelBlockedBy(n)
+					// SOB DEMANDA, como a `under-<n>`: é uma label por card, e pré-criar
+					// todas é impossível. O erro é ignorado porque "já existe" é o caso
+					// comum a partir do segundo card que espera a mesma decisão.
+					_ = exec.Command("gh", "label", "create", rotuloBloqueio,
+						"--repo", cfg.Workflow.Repo,
+						"--color", "b60205",
+						"--description", "este card espera a decisão do #"+n,
+					).Run()
+				}
+				rotulos := initx.LabelNeedsUser
+				if rotuloBloqueio != "" {
+					rotulos += "," + rotuloBloqueio
+				}
 				if _, err := exec.Command("gh", "issue", "edit", card,
 					"--repo", cfg.Workflow.Repo,
-					"--add-label", initx.LabelNeedsUser,
+					"--add-label", rotulos,
 				).CombinedOutput(); err != nil {
 					fmt.Printf("· aviso: não consegui rotular o card #%s — rotule à mão, "+
 						"senão outro agente pega o card e refaz o caminho\n", card)
@@ -283,4 +316,23 @@ func escalationBody(motivo, sobre, card string, paraUsuario bool) string {
 			"separá-los faria um dos dois esperar sem razão.\n", card, initx.LabelSob(card)))
 	}
 	return b.String()
+}
+
+// numeroDaIssue tira o número da URL que o `gh issue create` imprime.
+//
+// O `gh` devolve a URL completa, e o que se precisa é o número — para montar a label que
+// liga os dois cards. Vazio se a saída não tiver a forma esperada: melhor não rotular do
+// que rotular com um pedaço de URL.
+func numeroDaIssue(url string) string {
+	i := strings.LastIndex(url, "/")
+	if i < 0 || i+1 >= len(url) {
+		return ""
+	}
+	n := strings.TrimSpace(url[i+1:])
+	for _, r := range n {
+		if r < '0' || r > '9' {
+			return ""
+		}
+	}
+	return n
 }

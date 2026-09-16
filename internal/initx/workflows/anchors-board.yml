@@ -141,9 +141,20 @@ jobs:
                     # O CAMINHO que o achado cita: `[gate] Violação @ caminho/Arquivo.spec.md`.
                     # É por ele que o achado se liga à unidade — ver o passo "afiliar".
                     target: (.title | capture("@\\s+(?<p>[^ :]+)").p? // ""),
+                    # O ESTADO exclui o que NÃO é etapa do trabalho. `needs-user` e
+                    # `blocked-by-<n>` acumulam com a coluna — o card continua onde o
+                    # trabalho parou, e é isso que faz o board mostrar ONDE ele travou.
+                    # Sem excluir, o `.[0]` pegaria a primeira label em ordem alfabética e
+                    # o card apareceria numa coluna que não existe.
                     state: ([.labels[].name | select(startswith("anchors:"))
-                              | select(. != "anchors:needs-user")] | .[0] // "anchors:to-do"),
+                              | select(. != "anchors:needs-user")
+                              | select(startswith("anchors:blocked-by-") | not)] | .[0] // "anchors:to-do"),
                     escalated: ([.labels[].name] | any(. == "anchors:needs-user")),
+                    # QUEM SEGURA ESTE CARD. `blocked-by-<n>` diz que ele espera o #n, e
+                    # o board precisa do NÚMERO para desenhar o vínculo: "esperando você"
+                    # sem dizer por qual decisão não diz onde o trabalho travou.
+                    blockedBy: ([.labels[].name | select(startswith("anchors:blocked-by-"))
+                                | sub("^anchors:blocked-by-";"")] | .[0] // ""),
                     linkedTo: ([.labels[].name
                                | select(startswith("anchors:under-") or startswith("anchors:desbloqueia-"))
                                | sub("^anchors:(under|desbloqueia)-";"")] | .[0] // ""),

@@ -343,3 +343,47 @@ func TestRoadmapAbreOsDetalhes(t *testing.T) {
 		t.Error("o rotulo do roadmap nao emite `data-number` — o seletor nao tem o que ler")
 	}
 }
+
+// O BOARD DIZ POR QUEM O CARD ESPERA, e não só que espera.
+//
+// O `needs-user` para o card — e não diz QUEM o segura. O board mostrava "esperando você"
+// sem vínculo, e quem responde a decisão não sabe o que acabou de soltar: cada card tem de
+// ser reencontrado à mão, e o que não for reencontrado segue parado depois de a decisão já
+// ter saído.
+//
+// MEDIDO no projeto de referência: 23 decisões abertas eram SETE perguntas, e destravar as
+// dependentes exigia reler card por card para descobrir quem esperava o quê.
+func TestBoardMostraPorQuemOCardEspera(t *testing.T) {
+	html, err := BoardHTML()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// O CAMPO da coleta tem de chegar ao HTML: sem ele o selo nunca aparece.
+	if !strings.Contains(html, "blockedBy") {
+		t.Error("o board não lê `blockedBy` — o vínculo existe na label e não é desenhado")
+	}
+
+	// O NÚMERO no selo, e não só a palavra "bloqueado": é o número que responde "esperando
+	// o quê?", e sem ele o selo repete o que o `needs-user` já dizia.
+	if !strings.Contains(html, "bloqueado por #") {
+		t.Error("o selo de bloqueio não mostra o NÚMERO de quem segura — sem ele o leitor " +
+			"sabe que o card parou e não sabe onde a resposta vai")
+	}
+
+	// O CLIQUE vai para quem segura. Sem o `data-vai-para` o clique cai no card que o
+	// contém e abre o próprio bloqueado, que é o que o leitor já está vendo.
+	if !strings.Contains(html, "data-vai-para") {
+		t.Error("o selo não leva ao card que segura — a pergunta de quem lê `bloqueado " +
+			"por #123` é o que o #123 pede")
+	}
+
+	// A COR tem de existir nas TRÊS paletas: o board é lido em tema claro, escuro por
+	// `prefers-color-scheme` e escuro por `data-theme`. Uma cor definida só num bloco
+	// vira `inherit` nos outros, e o selo perde justamente o que o distingue do escalado.
+	if n := strings.Count(html, "--bloqueio:"); n < 3 {
+		t.Errorf("a cor de bloqueio está definida %d vez(es), e as paletas são 3 "+
+			"(claro, prefers-color-scheme, data-theme) — nos temas que faltam o selo "+
+			"perde a cor que o distingue do card apenas escalado", n)
+	}
+}

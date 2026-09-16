@@ -190,6 +190,45 @@ jobs:
               continue
             fi
 
+            # ESTE CARD ESTÁ BLOQUEADO POR OUTRO?
+            #
+            # A guarda acima olha do lado do DESTRAVADOR (`desbloqueia-<n>` num card
+            # irmão). Esta olha do lado do BLOQUEADO: `anchors:blocked-by-<m>` no próprio
+            # card diz "espero o #m", e é a label que o `escalate --for-user --blocks-card`
+            # aplica quando quem escalou julga que a decisão impede o trabalho.
+            #
+            # AS DUAS SÃO NECESSÁRIAS porque as perguntas são diferentes. A de cima exige
+            # que exista um card de TRABALHO derivado da decisão; esta vale quando a
+            # decisão ainda não gerou trabalho nenhum — o card espera a RESPOSTA, não a
+            # entrega de alguém.
+            #
+            # O QUE ISSO IMPEDE: um agente descobre um problema no card X, escala, e segue
+            # implementando sobre a premissa que ele mesmo declarou incerta. Ou pior — o X
+            # é liberado, outro agente o pega sem ler a escalada, e o PR decide por conta
+            # própria o que estava escalado. Medido no projeto de referência: dois cards
+            # relatam PR que "decidiu com base em premissa" e PR que "afirma que".
+            #
+            # Barra para TODOS, inclusive o dono atual: o bloqueio é sobre o trabalho, não
+            # sobre quem o faria.
+            segura=""
+            for b in $(gh issue view "$n" --repo "$GH_REPO" --json labels \
+                        --jq '[.labels[].name | select(startswith("anchors:blocked-by-"))] | .[]' \
+                        2>/dev/null || true); do
+              m=${b#anchors:blocked-by-}
+              [ -n "$m" ] || continue
+              # SÓ O QUE AINDA ESTÁ ABERTO segura. A label fica no card depois de a
+              # decisão sair — tirá-la é do `anchors decided` —, e tratar label como
+              # bloqueio sem conferir o estado deixaria o card parado para sempre.
+              if [ "$(gh issue view "$m" --repo "$GH_REPO" --json state --jq .state 2>/dev/null)" = "OPEN" ]; then
+                segura="$m"
+                break
+              fi
+            done
+            if [ -n "$segura" ]; then
+              echo "· #$n está BLOQUEADO pelo #$segura — pulando"
+              continue
+            fi
+
             # JÁ TEM PR ABERTO? Então alguém já fez este trabalho.
             #
             # O claim serializa quem PEGA o card, e isso não basta: o card é solto ao fim
