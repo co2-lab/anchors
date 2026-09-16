@@ -143,3 +143,47 @@ func TestBackfillNaoInfereprecedenciaEntreDecisoes(t *testing.T) {
 			"quando a decisão nova precede uma que já estava aberta")
 	}
 }
+
+// O ACHADO NASCE COM PROCEDÊNCIA, e quando não nasce o comando DIZ.
+//
+// O `--card` era opcional e silencioso. Sem ele o achado não tem de onde veio, e ninguém
+// consegue perguntar "o que este trabalho gerou?" — a doutrina do `under-<n>` diz que o
+// vínculo é LABEL justamente porque frase no corpo não se consulta, e sem o `--card` não há
+// nem frase.
+//
+// MEDIDO no projeto de referência: 18 de 27 decisões abertas sem amarração alguma. Todas
+// traziam `**Onde:** <arquivo>` — procedência pelo ARQUIVO, que responde onde o problema
+// está e não de qual trabalho ele saiu. Uma chegou a escrever "o achado veio do #690" em
+// prosa, exatamente o que a doutrina condena.
+//
+// A ASSIMETRIA não tinha razão: o `pr-body` já descobria o card pelo `ANCHORS_AGENT`, e o
+// `escalate` não. Os dois perguntam a mesma coisa — "qual card este agente pegou?".
+func TestEscalateDescobreOCardDeOrigem(t *testing.T) {
+	fonte := leFonte(t, "escalate.go")
+
+	// A DESCOBERTA reusa a peça do `pr-body`: duas implementações da mesma pergunta
+	// divergiriam na primeira vez que uma delas mudasse.
+	if !strings.Contains(fonte, `requestedCards("", cfg)`) {
+		t.Error("o `escalate` não descobre o card de origem — o achado nasce sem " +
+			"procedência, e o `pr-body` já sabia fazer isso pelo `anchors-owner`")
+	}
+
+	// AMBIGUIDADE recusa em vez de chutar: com dois cards em mãos, só o agente sabe em
+	// qual estava mexendo. Escolher o primeiro amarraria o achado ao trabalho errado.
+	if !strings.Contains(fonte, "informe `--card <n>`") {
+		t.Error("o `escalate` não trata o caso de vários cards em mãos — escolher um por " +
+			"conta própria amarra o achado ao trabalho errado, e o vínculo errado é pior " +
+			"que vínculo nenhum")
+	}
+
+	// E O SILÊNCIO é o que se corrige: nascer solto é legítimo (alguém pode escalar fora
+	// de um trabalho), acontecer sem aviso não.
+	//
+	// A primeira versão desta asserção tinha um `||` que a tornava sempre verdadeira —
+	// uma das metades casava a palavra "procedência" em qualquer lugar do arquivo,
+	// inclusive nos comentários que eu mesmo acabara de escrever. Ela passava sem medir.
+	if !strings.Contains(fonte, "anchors-owner` — o achado nasce SEM ") {
+		t.Error("o `escalate` aceita achado sem procedência em silêncio — quem o rodou " +
+			"não fica sabendo que abriu um card que ninguém vai poder rastrear")
+	}
+}
