@@ -1450,7 +1450,8 @@ function desenhaRoadmapLinha(d) {
        <span class="g-marca" style="left:98%">ordem →</span>
      </div>` +
     linhas.map(({ i, esq, larg, classe, nivel, grupo, feitoAte, fase }) => `
-      <div class="g-rot ${grupo ? "grupo" : "item"}${fase ? " fase" : ""}"
+      <div class="g-rot ${grupo ? "grupo" : "item"}${fase ? " fase" : ""}${i.number ? " abrivel" : ""}"
+           ${i.number ? `data-number="${esc(i.number)}"` : ""}
            style="padding-left:${((nivel || 0) * 0.9 + (grupo ? 0 : 1.1)).toFixed(2)}rem"
            title="${rot(i)}">${rot(i)}</div>
       <div class="g-faixa">${larg > 0 ? `
@@ -1513,7 +1514,12 @@ const dlgCorpo = document.getElementById("detalhe-corpo");
 
 // DELEGADO no container: as colunas são reescritas a cada 5s, e um listener por card
 // morreria no primeiro refresh.
-for (const cont of ["colunas", "arvore"]) {
+// O ROADMAP entra aqui, e a ausência dele era um defeito de coerência: nas outras abas
+// o clique abre os detalhes (dono, histórico de posse, o que o card pede), e no roadmap
+// não abria NADA — o rótulo não tinha listener, e a barra era um link que saía para o
+// GitHub. Quem queria ver de quem é um card não tinha como, justamente na aba que mostra
+// o trabalho no tempo.
+for (const cont of ["colunas", "arvore", "v-roadmap"]) {
 document.getElementById(cont).addEventListener("click", (ev) => {
   // O TRIÂNGULO recolhe, e só ele. `preventDefault` no resto do summary é o que impede o
   // `<details>` nativo de recolher quando o clique era para abrir os detalhes.
@@ -1525,7 +1531,7 @@ document.getElementById(cont).addEventListener("click", (ev) => {
     return;
   }
   if (ev.target.closest("summary")) ev.preventDefault();
-  const alvo = ev.target.closest(".card, .no[data-number]");
+  const alvo = ev.target.closest(".card, .no[data-number], .g-rot[data-number]");
   if (!alvo) return;
   const c = (ULTIMO.items || []).find((i) => String(i.number) === alvo.dataset.number);
   if (c) abre(c);
