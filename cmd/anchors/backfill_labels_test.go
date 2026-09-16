@@ -51,12 +51,18 @@ func TestBackfillRecuperaOVinculoSemAdivinhar(t *testing.T) {
 	// comportamento exigiria um repositório real. O que se guarda aqui é que as duas
 	// grafias são lidas — a migração para inglês não terminou nos boards que já existem, e
 	// ler só a nova perderia silenciosamente todo card anterior a ela.
+	// A GRAFIA É UMA SÓ. Houve aqui a exigência de ler também a anterior (`sob-<n>`), e
+	// ela saiu: o projeto está em beta fechado, não há board de terceiro a respeitar, e
+	// aceitar duas formas da mesma coisa é superfície de divergência — a primeira vez que
+	// uma delas mudasse, a outra ficaria para trás sem ninguém notar.
 	fonte := leFonte(t, "backfill_labels.go")
-	for _, peca := range []string{"PrefixoLabelSob", "PrefixoLabelSobAntigo"} {
-		if !strings.Contains(fonte, peca) {
-			t.Errorf("o backfill não lê %q — o vínculo dos cards mais antigos está na "+
-				"grafia anterior, e ignorá-la os deixa sem bloqueio para sempre", peca)
-		}
+	if !strings.Contains(fonte, "PrefixoLabelSob") {
+		t.Error("o backfill não lê `PrefixoLabelSob` — é de onde o vínculo sai, e sem ele " +
+			"o comando não tem o que recuperar")
+	}
+	if strings.Contains(fonte, "PrefixoLabelSobAntigo") {
+		t.Error("o backfill voltou a ler a grafia anterior — uma forma só, e a migração " +
+			"não tem board de terceiro para respeitar")
 	}
 
 	// A DECISÃO NÃO SEGURA A SI MESMA: um card pode ser decisão e origem de outro achado,
