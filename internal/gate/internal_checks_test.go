@@ -307,6 +307,3 @@ func TestNomeDeGateEmIngles(t *testing.T) {
 		}
 	}
 }
-
-
-

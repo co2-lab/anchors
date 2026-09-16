@@ -28,7 +28,7 @@ var internalCheckers = map[string]func(content string, n mapx.Node) (Verdict, st
 	"coverage-delta":      checkCoverageDelta,
 	"mutation-score":      checkMutationScore,
 	"tests-pass":          checkTestsPass,
-	"header-valid":     checkHeaderConforms,
+	"header-valid":        checkHeaderConforms,
 	"route-declared":      checkRouteDeclared,
 }
 
@@ -46,9 +46,9 @@ var checkersWithRoot = map[string]func(content string, n mapx.Node, root string)
 var checkersWithGraph = map[string]func(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string){
 	"progress-honest":          checkProgressHonest,
 	"feature-test-match":       checkFeatureTestMatch,
-	"scenario-identity":       checkScenarioIdentity,
+	"scenario-identity":        checkScenarioIdentity,
 	"scenario-type-aligned":    checkScenarioTypeAligned,
-	"scenario-letter-declared":  checkScenarioLetterDeclared,
+	"scenario-letter-declared": checkScenarioLetterDeclared,
 	"spec-feature-match":       checkSpecFeatureMatch,
 	"code-reference-valid":     checkCodeReferenceValid,
 	"scenario-asserts":         checkScenarioAsserts,
@@ -56,8 +56,8 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"count-honored":            checkCountHonored,
 	"trigger-declared":         checkTriggerDeclared,
 	"route-exists":             checkRouteExists,
-	"placeholder-filled":   checkPlaceholderFilled,
-	"rule-implemented":       checkRuleImplemented,
+	"placeholder-filled":       checkPlaceholderFilled,
+	"rule-implemented":         checkRuleImplemented,
 	"vr-baseline":              checkVRBaseline,
 	"ref-resolves":             checkRefResolves,
 	"layer-boundary":           checkLayerBoundary,
@@ -80,8 +80,8 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"identity-consistent":      checkIdentityConsistent,
 	"region-pair-honored":      checkRegionPairHonored,
 	"evidence-fresh":           checkEvidenceFresh,
-	"testid-consistent":          checkTestIDCoherent,
-	"testid-queried-exists": checkQueriedTestIDExists,
+	"testid-consistent":        checkTestIDCoherent,
+	"testid-queried-exists":    checkQueriedTestIDExists,
 	"mock-typed":               checkMockTyped,
 	"mock-stamped":             checkMockStamped,
 	"test-traceable":           checkTestTraceable,
@@ -888,4 +888,3 @@ func isBinary(content string) bool {
 // O vocabulário é o mesmo do gate `placeholder-preenchido`, e é universal: nenhum projeto
 // traduz `TODO`. A frase que vem depois dele ("descrever", "describe", "escribir") pode
 // mudar com o idioma do template, e por isso não entra na régua.
-
