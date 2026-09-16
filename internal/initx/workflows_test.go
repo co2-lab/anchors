@@ -1879,3 +1879,54 @@ func TestGuardDaEstadoAQuemNasceSemEle(t *testing.T) {
 			"num card que ja esta em revisao, e o trabalho seria refeito")
 	}
 }
+
+// REABRIR SEM DECLARAÇÃO É CORREÇÃO, NÃO VIOLAÇÃO.
+//
+// A trava era simétrica — fechou à mão, reabre; reabriu à mão, fecha —, e a simetria valia
+// enquanto fechar significasse "trabalho encerrado". Não significa mais: o card fica aberto
+// em `ready-to-test` até alguém terminar a esteira (ver TestOCardNaoFechaNoMerge).
+//
+// O passivo torna isto obrigatório, não opcional: MEDIDO no projeto de referência, 46 cards
+// fecharam sem `anchors:manual` nem `anchors:discarded` — por efeito do `Closes`, não por
+// decisão de ninguém. Com a trava simétrica, reabrir esses 46 seria desfeito em segundos, e
+// a trava estaria defendendo uma regra revogada exatamente quando alguém tenta consertar o
+// que ela ajudou a criar.
+//
+// O QUE NÃO PODE SUMIR é o outro lado: reabrir um card DECLARADO encerrado continua sendo a
+// mexida que a trava reverte.
+func TestReaberturaSemDeclaracaoEhMantida(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+
+	i := strings.Index(s, "reopened)")
+	if i < 0 {
+		t.Fatal("o pipeline não trata `reopened` — a trava perdeu um dos quatro eventos")
+	}
+	// Só o ramo do `reopened`, e não o arquivo inteiro: o `gh issue close` aparece noutros
+	// lugares, e uma busca global passaria mesmo se este ramo fechasse sempre.
+	fim := strings.Index(s[i:], "\n            labeled)")
+	if fim < 0 {
+		t.Fatal("não achei o fim do ramo `reopened` — o `case` mudou de forma")
+	}
+	ramo := s[i : i+fim]
+
+	// A DECISÃO tem de ser pela declaração, dentro do ramo.
+	if !strings.Contains(ramo, "anchors:manual") || !strings.Contains(ramo, "anchors:discarded") {
+		t.Error("o ramo `reopened` fecha de volta sem conferir se o encerramento foi " +
+			"DECLARADO — assim ele desfaz a reabertura de um card que o `Closes` fechou")
+	}
+	// E o caminho sem declaração tem de SAIR sem fechar.
+	if !strings.Contains(ramo, "exit 0") {
+		t.Error("o ramo `reopened` não tem saída sem fechar — a reabertura legítima " +
+			"precisa ser mantida, e não só comentada")
+	}
+	// O `break` não sai de um `case` em sh — sai de laço. Usá-lo aqui deixaria o ramo
+	// escorrendo para o código comum de reversão.
+	if strings.Contains(ramo, "\n                break\n") {
+		t.Error("`break` não encerra um ramo de `case` em sh: o fluxo escorre para a " +
+			"reversão comum e o card é fechado mesmo no caminho que devia mantê-lo aberto")
+	}
+}
