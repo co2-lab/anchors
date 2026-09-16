@@ -248,3 +248,51 @@ func TestPipelineSoEnsinaComandoQueExiste(t *testing.T) {
 		t.Fatal("nenhum `anchors <comando>` nos workflows -- o regex quebrou e o teste passaria vazio")
 	}
 }
+
+// ESCALAR SEM LER A FILA CRIA PERGUNTA REPETIDA.
+//
+// Nada impede N agentes de escalarem a MESMA decisão: cada um acha o problema trabalhando,
+// escreve com o contexto da sua hora, e não tem como saber que outro já escalou.
+//
+// MEDIDO no projeto de referência: 11 escaladas numa hora, 6 na seguinte. Uma triagem
+// reagrupou as 23 abertas e concluiu que eram SETE decisões — o resto era o mesmo assunto
+// por outro ângulo. Quem decide não lê 23 relatos para achar 7 perguntas, e enquanto a
+// fila cresce assim, a escalada de quem abriu também espera.
+//
+// NÃO É O AVISO QUE JÁ EXISTE. O `escalate` confere cards abertos sobre o mesmo arquivo
+// com a label do FLUXO ("pode haver alguém nisso") — é colisão de trabalho em curso. Aqui
+// a pergunta é outra: a fila de DECISÃO, e o que fazer quando o assunto já está lá.
+//
+// POR QUE O GUIA E NÃO O COMANDO: só quem leu os dois textos sabe se são a mesma pergunta.
+// Comparar o `--about` erra (mesmo arquivo não é mesmo assunto — a escala de valores e
+// onde a preferência mora são decisões distintas sobre a mesma spec) e casar palavras erra
+// pior, porque o Anchors é multi-idioma e dois agentes descrevem o mesmo achado com
+// palavras diferentes. Um aviso automático aqui teria a FORMA de régua e o conteúdo de
+// chute.
+//
+// O que se confronta é o VOCABULÁRIO — a label e o comando de consulta —, nunca a prosa:
+// a assertiva sobre frase prende o teste à largura do parágrafo e quebra em qualquer
+// reflow ou tradução.
+func TestGuiaDeTrabalhoMandaLerAFilaAntesDeEscalar(t *testing.T) {
+	for _, exigido := range []string{
+		"anchors:needs-user", // a fila que já existe
+		"gh issue list",      // como olhá-la antes de abrir outra
+	} {
+		if !strings.Contains(workGuide, exigido) {
+			t.Errorf("o guia não manda consultar %q antes de escalar — sem isso a fila de "+
+				"decisão cresce com a mesma pergunta escrita N vezes", exigido)
+		}
+	}
+
+	// A CONSULTA tem de vir antes do `--for-user` no texto: um agente lê em ordem, e
+	// instrução depois do comando é instrução que chega tarde.
+	iConsulta := strings.Index(workGuide, "gh issue list --label anchors:needs-user")
+	iEscala := strings.Index(workGuide, "--for-user")
+	if iConsulta < 0 || iEscala < 0 {
+		t.Fatal("não achei a consulta e a escalada no guia — o vocabulário mudou")
+	}
+	if iConsulta > iEscala {
+		t.Error("a consulta à fila aparece DEPOIS do `--for-user` no guia — quem lê em " +
+			"ordem já abriu o card quando chega na instrução de conferir a fila")
+	}
+}

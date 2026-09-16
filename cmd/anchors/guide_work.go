@@ -58,6 +58,41 @@ Se a correção é trivial E está no arquivo que você já está editando, corr
 revisão no próprio arquivo (` + "`{CODIGO}-R0001: o que mudou e por quê`" + `). Abrir card
 para trocar uma palavra é burocracia.
 
+### LEIA AS DECISÕES ABERTAS ANTES DE ABRIR OUTRA
+
+Você não é o único trabalhando. Antes de escalar, veja o que já está esperando resposta:
+
+    gh issue list --label anchors:needs-user --state open --limit 100
+
+Se a sua descoberta é **o mesmo assunto** de uma que já existe, comente nela. A descoberta
+se conserva igual, e quem decide recebe uma pergunta com mais evidência em vez de duas
+perguntas parecidas.
+
+Se é **assunto diferente**, escale. Duas decisões sobre o mesmo arquivo existem — uma
+sobre a escala de valores, outra sobre onde a preferência mora não são a mesma coisa.
+
+POR QUE ISSO É SEU E NÃO DO COMANDO: só quem leu os dois textos sabe se são a mesma
+pergunta. O Anchors poderia comparar o ` + "`--about`" + `, ou casar palavras do título — e erraria
+nas duas: mesmo arquivo não quer dizer mesmo assunto, e dois agentes descrevem o mesmo
+achado com palavras diferentes (em idiomas diferentes, se for o caso). O julgamento é o
+trabalho; automatizá-lo produziria aviso errado com cara de régua.
+
+MEDIDO no projeto de referência: 11 escaladas numa hora, 6 na seguinte. Uma triagem
+reagrupou as 23 abertas e concluiu que eram **sete decisões** — o resto era o mesmo
+assunto, visto de ângulos diferentes. Ninguém decide lendo 23 relatos para achar 7
+perguntas, e enquanto a fila cresce assim, a sua escalada também espera.
+
+#### Se o assunto é o mesmo, AMARRE em vez de só comentar
+
+Comentar conserva a descoberta. Amarrar faz uma resposta destravar todos de uma vez:
+
+    gh issue edit <o seu card> --add-label anchors:under-<a decisão que já existe>
+
+A label é filtrável, então quem for decidir vê o peso real da pergunta (o filtro
+` + "`--label anchors:under-<n>`" + ` lista tudo que ela segura), e quem responder sabe exatamente o que
+soltou. Sem a amarra, cada card precisa ser reencontrado e destravado um por um — e o que
+não for reencontrado continua parado depois de a decisão já ter saído.
+
 Se a mudança **impacta a direção do projeto** — ou se você tem dúvida —, não a faça:
 
     anchors escalate "<o que precisa mudar>" --about <arquivo> --for-user
