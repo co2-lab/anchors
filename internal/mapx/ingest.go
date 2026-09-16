@@ -55,7 +55,19 @@ func (g *Graph) IngestExecution(byFile map[string]ExecByFile, proven map[string]
 					pc = append(pc, code)
 				}
 			}
-			if len(pc) > 0 {
+			// GRAVA MESMO VAZIO. "Nenhum cenário provado" é informação, não ausência
+			// dela — e a ingestão é a medição inteira, não um acréscimo à anterior.
+			//
+			// Com `len(pc) > 0` o nó guardava para sempre a última prova que teve.
+			// MEDIDO: ao corrigir o filtro que fazia a spec declarar a regra do
+			// vizinho, sete nós continuaram carregando `proven_codes` alheios; o
+			// `map build` e o `ingest` rodaram de novo e não limparam nada.
+			//
+			// O caso geral é pior que o resíduo: uma unidade perde o último teste
+			// verde (apagado, ou o código do cenário renomeado), e o mapa segue
+			// dizendo que a regra está provada. O `stale` não cobra a unidade,
+			// porque a prova velha responde por ela.
+			if len(pc) > 0 || (n.Signal != nil && len(n.Signal.ProvenCodes) > 0) {
 				ensureSignal(n)
 				n.Signal.ProvenCodes = pc
 				n.Signal.AtRev = n.Rev
