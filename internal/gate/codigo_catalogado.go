@@ -18,9 +18,29 @@ import (
 // divergência escapa por um dos lados: medido num projeto real, uma spec catalogava 2
 // regras para 7 funções exportadas, e nenhum gate perguntou pelas 5 restantes.
 //
-// O risco de um gate assim é o ruído: nem toda função exportada MERECE regra. Um helper
-// de formatação, um tipo, uma constante de configuração — cobrar spec deles produziria
-// centenas de achados legítimos-porém-inúteis, e um gate que acusa tudo é desligado.
+// O RUÍDO NÃO É ARGUMENTO PARA NÃO CONSTRUIR — e esta linha já esteve errada aqui.
+//
+// A versão anterior dizia: "cobrar spec de todo símbolo produziria centenas de achados
+// legítimos-porém-inúteis, e um gate que acusa tudo é desligado". O medo estava certo;
+// a conclusão, não. Compare os dois desfechos:
+//
+//	gate granular, desligado pelo projeto → não protege, e o projeto SABE
+//	gate grosso demais, ligado            → não protege, e reporta VERDE
+//
+// O resultado é o mesmo; o que muda é a honestidade. O gate desligado DECLARA que não
+// cobre. O gate grosso FINGE que cobre — e sendo `blocking`, carimba aprovação sobre o
+// que não conferiu. É a mesma família do sinal que afirma prova inexistente.
+//
+// E há uma assimetria decisiva: um gate ruidoso é CALIBRÁVEL por quem o usa — desliga,
+// torna informativo, escopa, dispensa caso a caso; o `anchors.yaml` já declara cada gate
+// com seu próprio `blocking`, e omitir a entrada o desliga. Um gate grosso demais NÃO é
+// afiável pelo projeto: a decisão foi tomada aqui dentro e ele não tem como recuperá-la.
+//
+// Na dúvida entre granular-com-ruído e grosso-com-silêncio, o padrão é GRANULAR. A
+// cobertura é responsabilidade do projeto; o dever do Anchors é dar a informação para
+// ele decidir, não decidir por ele.
+//
+// A dispensa continua existindo — é o que torna o ruído administrável sem mentir:
 //
 // A saída é a mesma do resto do vocabulário (`@no-test`, `@no-code`, `@no-scenario`):
 // quem escreve o código DECLARA, na linha do símbolo, que ele não carrega regra —
@@ -44,9 +64,25 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 		return Skip, "spec sem código ligado (`specifies`) — a ausência é do gate trinca-completa"
 	}
 
+	// SEM SABER LER, O GATE CALA — nunca aprova.
+	//
+	// Antes o padrão TS/JS vinha embutido, e num projeto Go ou Python ele casava zero
+	// símbolos e devolvia Pass: verde sobre o que não conferiu, com `blocking: true`.
+	exportRE := exportDetectDe(cfg)
+	if exportRE == nil {
+		return Skip, "o projeto não declarou `derived.export_detect` — o padrão que " +
+			"reconhece um símbolo público NESTA linguagem.\n\nSem ele o gate não sabe o " +
+			"que ler, e aprovar seria carimbar o que não foi conferido.\n\nDeclare em " +
+			"`anchors.yaml`, com UM grupo de captura (o nome do símbolo):\n" +
+			"    derived:\n" +
+			"      export_detect: \"" + exportedREPadraoTS + "\"   # TS/JS\n" +
+			"      # export_detect: \"^func\\\\s+([A-Z]\\\\w*)\"          # Go\n" +
+			"      # export_detect: \"^(?:def|class)\\\\s+([a-zA-Z]\\\\w*)\"  # Python"
+	}
+
 	// Os símbolos que a spec já nomeia ou que o código dispensa saem da conta.
 	var orfaos []string
-	for _, s := range symbolsWithLine(texto) {
+	for _, s := range symbolsWithLine(texto, exportRE) {
 		if strings.Contains(content, s.nome) {
 			continue
 		}
@@ -75,14 +111,33 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 // `@no-code`/`@no-scenario` (CONCEPT §5.1).
 var noRuleRE = regexp.MustCompile(`@no-rule[^\S\n]*:[^\S\n]*\S+`)
 
-// exportedRE casa o nome de um símbolo exportado.
+// exportedREPadraoTS é o padrão de TypeScript/JavaScript, e só vale como SUGESTÃO ao
+// projeto que ainda não declarou o seu — nunca como default silencioso.
 //
-// ⚠️ É sintaxe de TypeScript/JavaScript. Num projeto Python, Go ou Ruby ele casa ZERO
-// símbolos e o gate passa em silêncio — verde sobre o que não conferiu. A generalização
-// (o projeto declarar o padrão, como em `mock_detect`) está pendente; até lá este gate
-// só tem efeito real em projetos JS/TS.
-var exportedRE = regexp.MustCompile(
-	`(?m)^\s*export\s+(?:async\s+)?(?:function|const|let|var|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)`)
+// Antes ele era embutido: num projeto Go, Python ou Ruby casava ZERO símbolos e o gate
+// reportava VERDE, sendo `blocking: true`. Carimbava aprovação sobre o que não tinha
+// conferido, que é a pior falha possível num medidor — e com viés de ecossistema
+// escondido no silêncio.
+//
+// Quem decide é `derived.export_detect`, pelo mesmo motivo do `mock_detect`: reconhecer
+// o que é público depende da linguagem (`export const X` em TS, maiúscula inicial em Go,
+// `__all__` em Python), e o Anchors não presume.
+const exportedREPadraoTS = `(?m)^\s*export\s+(?:async\s+)?(?:function|const|let|var|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)`
+
+// exportDetectDe devolve o regex que ESTE projeto declarou, ou nil se não declarou.
+// nil não é erro: é o gate admitindo que não sabe ler, para pular em vez de aprovar.
+func exportDetectDe(cfg *config.Config) *regexp.Regexp {
+	if cfg == nil || cfg.Derived == nil || strings.TrimSpace(cfg.Derived.ExportDetect) == "" {
+		return nil
+	}
+	re, err := regexp.Compile(cfg.Derived.ExportDetect)
+	if err != nil || re.NumSubexp() < 1 {
+		// Regex inválido ou sem grupo de captura: também não sabemos ler. O gate pula
+		// e a mensagem cobra a correção — melhor que aprovar por engano.
+		return nil
+	}
+	return re
+}
 
 type exportedSymbol struct {
 	nome  string
@@ -92,11 +147,11 @@ type exportedSymbol struct {
 
 // symbolsWithLine devolve cada símbolo exportado junto do contexto onde a dispensa
 // poderia estar escrita — a própria linha ou a de cima, que é onde o comentário fica.
-func symbolsWithLine(codigo string) []exportedSymbol {
+func symbolsWithLine(codigo string, re *regexp.Regexp) []exportedSymbol {
 	linhas := strings.Split(codigo, "\n")
 	var out []exportedSymbol
 	for i, l := range linhas {
-		m := exportedRE.FindStringSubmatch(l)
+		m := re.FindStringSubmatch(l)
 		if m == nil {
 			continue
 		}

@@ -3,9 +3,11 @@ package gate
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -19,7 +21,8 @@ func rodaCatalogado(t *testing.T, spec, codigo string) (Verdict, string) {
 		Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: "u.ts", Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
 	}
-	return checkCodeCataloged(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	cfg := &config.Config{Derived: &config.Derived{ExportDetect: exportedREPadraoTS}}
+	return checkCodeCataloged(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
 }
 
 // O caso real: a spec catalogava 2 regras para 7 funções exportadas, e nenhum gate
@@ -102,7 +105,7 @@ func TestNoRuleValeNoComentarioAcima(t *testing.T) {
 		"doc comment":          "/**\n * @no-rule: forma de entrada\n */\nexport function x() {}\n",
 	}
 	for nome, codigo := range casos {
-		simbolos := symbolsWithLine(codigo)
+		simbolos := symbolsWithLine(codigo, regexp.MustCompile(exportedREPadraoTS))
 		if len(simbolos) == 0 {
 			t.Fatalf("%s: nenhum símbolo reconhecido", nome)
 		}
@@ -118,7 +121,7 @@ func TestNoRuleValeNoComentarioAcima(t *testing.T) {
 // inteiro, que é o oposto do que ele é.
 func TestNoRuleNaoVazaEntreSimbolos(t *testing.T) {
 	codigo := "// @no-rule: este sim\nexport function comDeclaracao() {}\n\nexport function semDeclaracao() {}\n"
-	simbolos := symbolsWithLine(codigo)
+	simbolos := symbolsWithLine(codigo, regexp.MustCompile(exportedREPadraoTS))
 	if len(simbolos) != 2 {
 		t.Fatalf("esperava 2 símbolos, veio %d", len(simbolos))
 	}
@@ -128,5 +131,57 @@ func TestNoRuleNaoVazaEntreSimbolos(t *testing.T) {
 	if noRuleRE.MatchString(simbolos[1].linha) {
 		t.Error("o segundo NÃO tem declaração — herdar a do primeiro isentaria o arquivo " +
 			"inteiro com um marcador só")
+	}
+}
+
+// rodaCatalogadoCfg é a variante que passa config — o gate agnóstico depende dela.
+func rodaCatalogadoCfg(t *testing.T, spec, codigo, arquivo string, cfg *config.Config) (Verdict, string) {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, arquivo), []byte(codigo), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: arquivo, Kind: mapx.KindCode}},
+		Edges: []mapx.Edge{{From: "u.spec.md", To: arquivo, Type: mapx.EdgeSpecifies}},
+	}
+	return checkCodeCataloged(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
+}
+
+// O GATE NAO PODE APROVAR O QUE NAO SABE LER.
+//
+// O padrao de export estava EMBUTIDO como sintaxe TS/JS. Num projeto Go, Python ou Ruby
+// o regex casava zero simbolos e o gate reportava VERDE -- sendo `blocking: true`,
+// carimbava aprovacao sobre o que nao tinha conferido. E a pior falha possivel num
+// medidor, e a mesma que o comentario do `mock_detect` ja condenava por escrito.
+//
+// Sem `export_detect` declarado, o gate PULA e DIZ que pulou.
+func TestCodeCatalogedPulaQuandoNaoSabeLerALinguagem(t *testing.T) {
+	// Go: `func Publica()` nao casa nenhuma sintaxe de export TS/JS.
+	codigo := "package u\n\nfunc Publica() int { return 1 }\n"
+	v, msg := rodaCatalogadoCfg(t, "# U\n\n## UUUUU-B01 — algo\n", codigo, "u.go", nil)
+	if v == Pass {
+		t.Errorf("o gate APROVOU um arquivo que nao sabe ler (%s) — verde sobre o que "+
+			"nao conferiu e' pior que vermelho honesto", msg)
+	}
+	if v != Skip && v != Pending {
+		t.Errorf("esperava Skip/Pending, veio %v: %s", v, msg)
+	}
+	if !strings.Contains(msg, "export_detect") {
+		t.Errorf("a mensagem nao diz COMO habilitar (`export_detect`): %q", msg)
+	}
+}
+
+// Com o padrao declarado, o gate confronta de verdade -- em qualquer linguagem.
+func TestCodeCatalogedUsaOPadraoDoProjeto(t *testing.T) {
+	cfg := &config.Config{Derived: &config.Derived{ExportDetect: `(?m)^func\s+([A-Z]\w*)`}}
+
+	codigo := "package u\n\nfunc Publica() int { return 1 }\n"
+	v, msg := rodaCatalogadoCfg(t, "# U\n\n## UUUUU-B01 — algo\n", codigo, "u.go", cfg)
+	if v != Fail {
+		t.Errorf("`Publica` nao esta na spec e o gate nao reprovou (%v): %s", v, msg)
+	}
+	if !strings.Contains(msg, "Publica") {
+		t.Errorf("a mensagem nao nomeia o simbolo: %q", msg)
 	}
 }
