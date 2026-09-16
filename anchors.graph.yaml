@@ -137,7 +137,7 @@ nodes:
         - comando
     - id: cmd/anchors/backfill_labels.go
       kind: code
-      rev: 6bc3217fcf3e
+      rev: a0d46bb07b90
       updated_at: "2026-09-16"
       layer: comando
       tags:
@@ -145,7 +145,7 @@ nodes:
         - comando
     - id: cmd/anchors/backfill_labels_test.go
       kind: test
-      rev: efe57eaf5ece
+      rev: 5dc854cdb1e3
       updated_at: "2026-09-16"
       layer: teste
       tags:
@@ -2637,7 +2637,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: a1a051b54e7e
+      rev: 6ee61363e609
       updated_at: "2026-09-16"
       layer: teste
       tags:
