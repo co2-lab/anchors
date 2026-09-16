@@ -226,12 +226,20 @@ nodes:
         - comando
     - id: cmd/anchors/coverage.go
       kind: code
-      rev: b70fd9d5d72d
-      updated_at: "2026-09-10"
+      rev: db321edf9f9c
+      updated_at: "2026-09-15"
       layer: comando
       tags:
         - cli
         - comando
+    - id: cmd/anchors/coverage_test.go
+      kind: test
+      rev: be523738eb13
+      updated_at: "2026-09-15"
+      code: INLSN
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/decided.go
       kind: code
       rev: 2176b5ccc27c
@@ -514,8 +522,8 @@ nodes:
         - test
     - id: cmd/anchors/ingest.go
       kind: code
-      rev: 57117595d60d
-      updated_at: "2026-09-10"
+      rev: 965e675f06fa
+      updated_at: "2026-09-15"
       code: SPCRX
       layer: comando
       tags:
@@ -761,8 +769,8 @@ nodes:
         - comando
     - id: cmd/anchors/report.go
       kind: code
-      rev: b69ff3646bc3
-      updated_at: "2026-09-10"
+      rev: ad174ebad1bf
+      updated_at: "2026-09-15"
       layer: comando
       tags:
         - cli

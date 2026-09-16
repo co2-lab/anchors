@@ -122,7 +122,7 @@ func ingestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope strin
 				declaredByNode := map[string][]string{}
 				for _, n := range g.Nodes {
 					if n.Kind == mapx.KindSpec {
-						if codes, err := codesInFile(filepath.Join(absRoot, n.ID)); err == nil && len(codes) > 0 {
+						if codes, err := codesInFileOfUnit(filepath.Join(absRoot, n.ID), n.Code); err == nil && len(codes) > 0 {
 							declaredByNode[n.ID] = codes
 						}
 					}
