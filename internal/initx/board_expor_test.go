@@ -62,8 +62,19 @@ func TestBoardHTMLEhOMesmoDoPipeline(t *testing.T) {
 	if !strings.Contains(h, "board.json") {
 		t.Error("o HTML nao busca `board.json` — o `serve` serviria uma pagina que nao le nada")
 	}
-	if !strings.Contains(h, "g-rot[data-number]") {
-		t.Error("o HTML nao tem a correcao do roadmap — o `serve` esta lendo outro arquivo")
+	// O QUE ESTA REGUA MEDE e' que o `serve` le o HTML DO PRODUTO -- nao que ele tenha
+	// uma correcao especifica.
+	//
+	// A primeira versao exigia `g-rot[data-number]`, que e' de outro PR ainda aberto. Ela
+	// reprovava aqui por um motivo que nao tem a ver com o que ela diz medir, e forcaria
+	// quem a lesse a acoplar dois trabalhos independentes.
+	//
+	// As marcas abaixo sao da ESTRUTURA do board, nao de uma correcao: se elas somem, o
+	// `serve` passou a ler outro arquivo.
+	for _, marca := range []string{"id=\"colunas\"", "id=\"detalhe\"", "id=\"v-roadmap\""} {
+		if !strings.Contains(h, marca) {
+			t.Errorf("o HTML nao tem `%s` — o `serve` esta lendo outro arquivo", marca)
+		}
 	}
 }
 
