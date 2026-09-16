@@ -107,3 +107,39 @@ func TestDesbloqueioRegistraOVinculoAntesDeRemover(t *testing.T) {
 			"some a resposta de por que ele ficou parado")
 	}
 }
+
+// PRECEDÊNCIA ENTRE DECISÕES NÃO SE INFERE — mas PODE SER DECLARADA.
+//
+// A primeira versão desta régua proibia `needs-user` + `blocked-by-<n>` no mesmo card, e
+// estava errada: as duas juntas são LEGÍTIMAS. Uma decisão pode depender de outra, e isso é
+// ordem de corretude — "responda o #701 primeiro, porque a resposta dele condiciona a do
+// #647". Proibir apagaria informação real.
+//
+// O DEFEITO ERA INFERIR. O `backfill` lê o `under-<n>`, que significa "nasci do trabalho do
+// #n" — PROCEDÊNCIA. Quando o #n é um card de trabalho, o vínculo é inequívoco: o trabalho
+// para até a decisão sair. Quando o #n é outra decisão, `under` não distingue "uma
+// condiciona a outra" de "as duas nasceram no mesmo lugar", e são perguntas diferentes.
+//
+// MEDIDO no projeto de referência: quatro cards (#647, #706, #721, #555) receberam bloqueio
+// por essa inferência, e nos quatro o bloqueador era decisão que apenas nasceu junto. O
+// único que o `under` acertou foi o #198 → #647 — card em `in-review`, trabalho de verdade.
+//
+// A ASSIMETRIA entre os dois comandos é o ponto:
+//
+//	backfill    INFERE do `under-<n>` → recupera só o caso inequívoco (origem não escalada)
+//	escalate    DECLARA no ato       → vale sempre, inclusive decisão que precede decisão
+//
+// Quem quiser ordem entre duas decisões existentes põe a label à mão: é julgamento de quem
+// leu as duas, igual a decidir se são o mesmo assunto.
+func TestBackfillNaoInfereprecedenciaEntreDecisoes(t *testing.T) {
+	// A GUARDA vive no `backfill`, que infere. O `escalate` NÃO pode tê-la.
+	if g := "jaTem[initx.LabelNeedsUser]"; !strings.Contains(leFonte(t, "backfill_labels.go"), g) {
+		t.Errorf("o backfill perdeu a guarda %q — ele voltaria a inferir precedência do "+
+			"`under-<n>`, que diz procedência: medido, erra em 4 de 5 casos", g)
+	}
+	if strings.Contains(leFonte(t, "escalate.go"), "!jaEra") {
+		t.Error("o `escalate` ganhou a guarda do backfill — ali o vínculo é DECLARADO no " +
+			"ato por quem escalou, e suprimi-lo apagaria a ordem que ele estabeleceu " +
+			"quando a decisão nova precede uma que já estava aberta")
+	}
+}
