@@ -86,6 +86,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"mock-stamped":             checkMockStamped,
 	"test-traceable":           checkTestTraceable,
 	"code-cataloged":           checkCodeCataloged,
+	"value-anchored":           checkValueAnchored,
 	"docs-fresh":               checkDocsFresh,
 	"doc-required":             checkDocRequired,
 	"doc-self-contained":       checkDocSelfContained,
