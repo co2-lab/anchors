@@ -721,7 +721,7 @@ nodes:
     - id: cmd/anchors/pr_body.go
       kind: code
       rev: 3c88c5014e33
-      updated_at: "2026-09-14"
+      updated_at: "2026-09-16"
       layer: comando
       tags:
         - cli
@@ -729,7 +729,7 @@ nodes:
     - id: cmd/anchors/pr_body_test.go
       kind: test
       rev: 32b18915495c
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-16"
       layer: teste
       tags:
         - test
@@ -2613,7 +2613,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 5a6f47ed89ee
+      rev: 0091bf8d43bd
       updated_at: "2026-09-16"
       layer: teste
       tags:
