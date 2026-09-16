@@ -483,16 +483,16 @@ nodes:
         - comando
     - id: cmd/anchors/guide_work.go
       kind: code
-      rev: 665f6e1bf8af
-      updated_at: "2026-09-14"
+      rev: 784ca4507cf2
+      updated_at: "2026-09-15"
       layer: comando
       tags:
         - cli
         - comando
     - id: cmd/anchors/guide_work_test.go
       kind: test
-      rev: ceb0e4d29409
-      updated_at: "2026-09-14"
+      rev: 817414c36ae2
+      updated_at: "2026-09-15"
       layer: teste
       tags:
         - test

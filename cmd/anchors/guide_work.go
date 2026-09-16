@@ -11,10 +11,10 @@ const workGuide = `# Guia de trabalho (a régua de quem pegou um card)
 
 ## Antes de começar: PEGUE o card
 
-` + "`anchors claim`" + ` é o primeiro comando, e não é burocracia — é ele que
+` + "`anchors next`" + ` é o primeiro comando, e não é burocracia — é ele que
 registra QUEM está com o trabalho e move o card para a coluna certa.
 
-    $ anchors claim
+    $ anchors next
     · card #223 é seu — movido para in-progress
 
 **Escolher o card à mão e começar a implementar não funciona.** O que se perde não é o
