@@ -132,3 +132,63 @@ func TestMapMerge_ladoVazioNaoApagaOOutro(t *testing.T) {
 		})
 	}
 }
+
+// O DRIVER UNIA ARESTAS E CARIMBOS, E NUNCA OS NÓS.
+//
+// `Graph` guarda `Nodes` e `Edges` em listas separadas. O `addMissingEdges` reconciliava
+// uma delas; a outra saía do merge como o lado `nosso` a tinha, e todo nó que existia só
+// no lado incoming desaparecia.
+//
+// MEDIDO no blue-eyes (#730): base 329 nós, nosso 330, deles 332, resultado 330 — sumiram
+// os três que só existiam do lado deles. E o git reporta "Automatic merge went well".
+//
+// O formato do dano é o pior possível: o arquivo continua REGIDO (o `check` o reconhece)
+// e não está no mapa, então nenhum gate o confronta. O `map build` seguinte reinsere os
+// nós — quem mescla e roda `map build` nunca vê o problema, e quem mescla e empurra
+// publica um mapa que perdeu governança em silêncio.
+func TestMapMerge_naoPerdeNoQueSoExisteDoOutroLado(t *testing.T) {
+	dir := t.TempDir()
+	grava := func(nome string, g *mapx.Graph) string {
+		p := filepath.Join(dir, nome)
+		if err := mapx.Save(g, p); err != nil {
+			t.Fatal(err)
+		}
+		return p
+	}
+	no := func(id string) mapx.Node { return mapx.Node{ID: id, Kind: "spec", Rev: "r1"} }
+
+	base := grava("base.yaml", &mapx.Graph{Nodes: []mapx.Node{no("comum.spec.md")}})
+	nosso := grava("nosso.yaml", &mapx.Graph{Nodes: []mapx.Node{
+		no("comum.spec.md"), no("so-nosso.spec.md"),
+	}})
+	deles := grava("deles.yaml", &mapx.Graph{Nodes: []mapx.Node{
+		no("comum.spec.md"), no("so-deles-1.spec.md"), no("so-deles-2.spec.md"),
+	}})
+
+	cmd := newMapMergeCmd()
+	cmd.SetArgs([]string{base, nosso, deles})
+	cmd.SetOut(os.Stderr)
+	cmd.SetErr(os.Stderr)
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("map merge: %v", err)
+	}
+
+	g, err := mapx.Load(nosso)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tem := map[string]bool{}
+	for _, n := range g.Nodes {
+		tem[n.ID] = true
+	}
+	for _, id := range []string{
+		"comum.spec.md",      // dos dois
+		"so-nosso.spec.md",   // só nosso — não pode sumir
+		"so-deles-1.spec.md", // só deles — tem de vir
+		"so-deles-2.spec.md", // só deles — tem de vir
+	} {
+		if !tem[id] {
+			t.Errorf("o nó %q sumiu na união (mapa ficou com %d nós: %v)", id, len(g.Nodes), tem)
+		}
+	}
+}
