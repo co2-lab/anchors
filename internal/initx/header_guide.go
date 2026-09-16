@@ -80,7 +80,7 @@ func RenderHeaderGuide(preset Preset, moduleNames []string) string {
 
 	b.WriteString("## Regras\n\n")
 	b.WriteString("- Sempre no TOPO do arquivo.\n")
-	b.WriteString("- `code` é o mínimo obrigatório (gate `header-conforme`).\n")
+	b.WriteString("- `code` é o mínimo obrigatório (gate `header-valid`).\n")
 	b.WriteString("- `updated_at` bate com o dia do último commit (gate `updated-at-atual`; `--fix` conserta).\n")
 	b.WriteString("- Opt-out sempre com um porquê ao lado.\n\n")
 	// A seção de conformidade não é ornamento: o gate `guide-checklist` a exige, e um

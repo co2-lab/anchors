@@ -26,7 +26,7 @@ import "fmt"
 // Subir por isso tornaria toda adição uma barreira, e o número perderia o significado.
 const (
 	// FormatoAtual é o que este binário ESCREVE.
-	FormatoAtual = 2
+	FormatoAtual = 3
 
 	// FormatoMinimoLegivel é o mais antigo que ele lê sem migrar.
 	//

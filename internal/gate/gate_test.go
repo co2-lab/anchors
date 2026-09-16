@@ -136,11 +136,11 @@ func TestInternalCheckers(t *testing.T) {
 		{"spec-sections", "### LOGIX-S01\nUma regra escrita de verdade.", Pass}, // placeholder
 		{"has-code", "it('LOGIX-A01: ...')", Pass},
 		{"has-code", "sem identidade nenhuma", Fail},
-		{"header-conforme", "// @anchors\n//   code: LGNNX\nconst x = 1", Pass}, // dono (code)
-		{"header-conforme", "// @anchors\n//   ref: LGNNX\nconst x = 1", Pass},  // referência (ref) também conta
-		{"header-conforme", "<!-- @anchors\n  code: SPCRX\n-->\n# spec", Pass},  // dialeto markdown
-		{"header-conforme", "const x = 1 // nada aqui", Fail},                   // sem bloco
-		{"header-conforme", "// @anchors\n//   layer: screen\nconst x=1", Fail}, // bloco sem code NEM ref
+		{"header-valid", "// @anchors\n//   code: LGNNX\nconst x = 1", Pass}, // dono (code)
+		{"header-valid", "// @anchors\n//   ref: LGNNX\nconst x = 1", Pass},  // referência (ref) também conta
+		{"header-valid", "<!-- @anchors\n  code: SPCRX\n-->\n# spec", Pass},  // dialeto markdown
+		{"header-valid", "const x = 1 // nada aqui", Fail},                   // sem bloco
+		{"header-valid", "// @anchors\n//   layer: screen\nconst x=1", Fail}, // bloco sem code NEM ref
 	}
 	for _, c := range cases {
 		fn := internalCheckers[c.checker]
@@ -157,7 +157,7 @@ func TestInternalCheckers(t *testing.T) {
 func TestHeaderConformeRecognizedLayer(t *testing.T) {
 	presentation := mapx.Node{Kind: mapx.KindCode, Tags: []string{"frontend", "presentation"}}
 	regida := mapx.Node{Kind: mapx.KindCode, Tags: []string{"frontend", "business-logic"}}
-	fn := internalCheckers["header-conforme"]
+	fn := internalCheckers["header-valid"]
 
 	// reconhecida com só `layer:` → PASSA
 	if v, _ := fn("// @anchors\n//   layer: presentation\n", presentation); v != Pass {
@@ -181,7 +181,7 @@ func TestHeaderConformeTestOfRecognizedLayer(t *testing.T) {
 	// um TESTE de arquivo de camada reconhecida é classificado kind:test (perde a tag
 	// da camada), mas declara layer:presentation no header → deve passar com layer.
 	testNode := mapx.Node{Kind: mapx.KindTest, Tags: []string{"test"}}
-	fn := internalCheckers["header-conforme"]
+	fn := internalCheckers["header-valid"]
 	if v, _ := fn("// @anchors\n//   layer: presentation\nimport x", testNode); v != Pass {
 		t.Error("teste de presentation (kind:test) com layer no header deveria passar")
 	}

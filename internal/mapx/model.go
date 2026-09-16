@@ -94,7 +94,7 @@ type Node struct {
 	Tags          []string `yaml:"tags,omitempty"` // tags da camada do nó (p/ gates escopados por tag)
 	// Regime da camada do nó (comportamental|declarativo|misto), copiado da Estrutura
 	// (config.Layer.Regime). `declarativo` = camada RECONHECIDA (não origina regra): o
-	// gate header-conforme aceita `layer:` como identidade mínima, sem exigir code/ref.
+	// gate header-valid aceita `layer:` como identidade mínima, sem exigir code/ref.
 	// Vazio quando a camada não declara regime (fallback aos nomes canônicos reconhecidos).
 	Regime string `yaml:"regime,omitempty"`
 	// NoPropagation: o filho declarou `@noPropagation` — ele NÃO depende do pai, então
