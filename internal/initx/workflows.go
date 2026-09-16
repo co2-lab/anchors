@@ -179,8 +179,15 @@ const PrefixoLabelSob = "anchors:under-"
 // PrefixoLabelSobAntigo é o nome anterior, em português.
 //
 // Ele está em ISSUES do GitHub, não só em configuração: renomear a constante não renomeia
-// as labels que já existem. Os pipelines aceitam os dois enquanto durar a migração, e o
-// `anchors doctor --fix` renomeia as labels no board.
+// as labels que já existem. Os pipelines aceitam os dois enquanto durar a migração.
+//
+// NÃO HÁ RENOMEAÇÃO AUTOMÁTICA, e este comentário afirmava que havia ("o `anchors doctor
+// --fix` renomeia as labels no board"). Não renomeia, nunca renomeou — a promessa saiu em
+// vez de ganhar uma implementação porque aceitar as duas grafias já basta: renomear label
+// no GitHub reescreve o histórico de quem a usou, e o ganho seria cosmético.
+//
+// Quem LÊ as duas: os pipelines, e o `anchors backfill-labels`, que recupera vínculo de
+// card antigo.
 const PrefixoLabelSobAntigo = "anchors:sob-"
 
 // LabelSob devolve a label que liga um card ao trabalho de origem.
