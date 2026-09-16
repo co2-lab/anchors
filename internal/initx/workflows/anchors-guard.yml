@@ -280,22 +280,27 @@ jobs:
               # deixa de reverter por um falso positivo é pior que não ter trava: ela
               # continuaria dizendo que vigia.
               #
-              # O `cross-referenced` do timeline é o vínculo REAL que a plataforma registrou
-              # entre a issue e o PR, e `merged_at` diz se aquele PR entrou. Conferido nos
-              # três casos: card com PR mergeado devolve o número, card com PR aberto devolve
-              # vazio, card fechado pelo merge normal devolve o mesmo PR.
-              mergeado=$(gh api "repos/$GH_REPO/issues/$N/timeline" --paginate \
-                --jq '[.[] | select(.event == "cross-referenced" and .source.issue.pull_request.merged_at != null) | .source.issue.number] | first // ""' \
-                2>/dev/null || true)
-              if [ -n "$mergeado" ]; then
-                echo "· #$N: o PR #$mergeado mergeou citando este card — fechamento LEGÍTIMO"
-                gh issue comment "$N" --repo "$GH_REPO" --body "✅ **Fechamento mantido:** o PR #$mergeado mergeou citando este card.
-
-          A trava de estado não reverteu porque o FATO está lá — o trabalho entrou. Quando isso acontece com o card ainda aberto, quase sempre a causa é uma lista separada por vírgula no corpo do PR: a plataforma reconhece só o primeiro número, e os demais ficam abertos com o trabalho já entregue.
-
-          \`anchors pr-body --cards <n>\` gera uma linha por card, que é a forma que fecha todos." >/dev/null
-                exit 0
-              fi
+              # O PR MERGEADO NÃO ISENTA MAIS O FECHAMENTO, e a mudança é de doutrina.
+              #
+              # Isto consultava o timeline: se um PR mergeado citava o card, o fechamento
+              # era tratado como LEGÍTIMO e a trava não revertia. A premissa era que o
+              # merge encerra o trabalho — e ele não encerra.
+              #
+              # A alçada do Anchors acaba em `ready-to-test`; a esteira não. Vêm `in-test`,
+              # `ready-to-release` e `production` — do CD do projeto, que o Anchors não
+              # rastreia. Um card fechado no merge declara entregue um trabalho com três
+              # estados à frente, e quem ia testar perde de vista o que testar.
+              #
+              # MEDIDO: 71 cards fechados em `ready-to-test` contra 7 abertos, 35 num só
+              # dia. A coluna que devia acumular o que espera teste mostrava só o resíduo.
+              #
+              # Agora o merge move o card para `ready-to-test` (o `pr-checks` faz isso) e
+              # ele fica ABERTO ali. Quem fecha é quem termina a esteira, declarando
+              # `anchors:manual` (entregue) ou `anchors:discarded` (saiu do roadmap) — e
+              # essas duas saem desta trava antes de chegar aqui.
+              #
+              # `Refs #N` (v0.1.130) é o que o `pr-body` gera, e não fecha. Os cards que
+              # `Closes` fechou antes disso são passado, não regra.
               gh issue reopen "$N" --repo "$GH_REPO" >/dev/null
               motivo="fechado à mão"
               inverso="reaberto"
@@ -324,7 +329,7 @@ jobs:
           # vê o card voltar sozinho e conclui que o pipeline está quebrado.
           gh issue comment "$N" --repo "$GH_REPO" --body "🔒 **Revertido: $motivo** (por \`$QUEM\`), e o card foi $inverso.
 
-          O card se move pelo FATO, não à mão: \`in-progress\` porque o claim entregou, \`ready-to-review\` porque os checks passaram, \`ready-to-test\` porque o PR mergeou, fechado porque a linha \`Closes #N\` do PR foi executada.
+          O card se move pelo FATO, não à mão: \`in-progress\` porque o claim entregou, \`ready-to-review\` porque os checks passaram, \`ready-to-test\` porque o PR mergeou. E ali ele FICA ABERTO: a alçada do Anchors termina no CI, a esteira segue no CD (\`in-test\`, \`ready-to-release\`, \`production\`). Quem fecha é quem termina a esteira, declarando \`anchors:manual\` (entregue) ou \`anchors:discarded\` (saiu do roadmap).
 
           **O que isto evita:** um card fechado antes do merge sai de \`ready-to-review\` sem ser revisado. O claim procura revisão primeiro e não acha nada — então entrega trabalho novo, e o PR fica esperando. Medido: 25 PRs verdes acumulados com zero cards na fila de revisão.
 
