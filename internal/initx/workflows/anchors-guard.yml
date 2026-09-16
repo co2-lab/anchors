@@ -36,7 +36,7 @@ name: anchors · trava e histórico de estado
 
 on:
   issues:
-    types: [closed, reopened, labeled, unlabeled]
+    types: [opened, closed, reopened, labeled, unlabeled]
   # À MÃO: uma trava sem escape transforma percalço em trabalho parado sem remédio. Aqui o
   # dispatch serve para conferir a configuração sem precisar mexer num card de verdade.
   workflow_dispatch:
@@ -58,6 +58,66 @@ permissions:
   pull-requests: read
 
 jobs:
+  # TODO CARD NASCE COM ESTADO — e quem garante é o pipeline, não quem cria.
+  #
+  # MEDIDO no projeto de referência: 59 de 95 cards abertos estavam FORA do fluxo — 53 sem
+  # label de estado nenhuma, 6 só com `anchors:under-N` (que é bloqueio, não estado). O
+  # `claim` varre `to-do` e `ready-to-review`; um card sem nenhum dos dois é invisível.
+  #
+  # O efeito medido: três agentes pediram trabalho, ouviram "nenhum card livre", e pararam
+  # — com 53 cards de trabalho real parados no board.
+  #
+  # A CAUSA é que achado de gate nasce por caminhos diferentes (`anchors judge`,
+  # `anchors escalate`, o reporter dos gates), e nenhum aplicava estado. Consertar um por
+  # um deixa os outros, e o próximo caminho de criação nasce quebrado de novo — não há
+  # régua que cubra "todo lugar que cria issue".
+  #
+  # Por isso aqui: o pipeline vê a issue NASCER, venha de onde vier. É o mesmo raciocínio
+  # do `stale` e da trava abaixo — o pipeline corrige o fato, em vez de depender de cada
+  # um lembrar.
+  estado-inicial:
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Quem nasce sem estado nasce em to-do
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          N: ${{ github.event.issue.number }}
+          LABEL: anchors
+        run: |
+          set -euo pipefail
+
+          # Só o que é do Anchors. O board é compartilhado, e pôr estado numa issue de
+          # outro fluxo a arrastaria para uma fila que não é dela.
+          if ! gh issue view "$N" --repo "$GH_REPO" --json labels \
+             --jq '[.labels[].name] | any(. == "'"$LABEL"'")' | grep -q true; then
+            echo "#$N não é card do Anchors — não é comigo"
+            exit 0
+          fi
+
+          # JÁ TEM ESTADO? Então quem criou sabia o que fazia, e sobrescrever seria pior
+          # que não agir: um card criado direto em `in-review` voltaria para a fila e
+          # seria reimplementado do zero.
+          #
+          # `anchors:under-N` NÃO conta: é marca de bloqueio, não estado. Um card só com
+          # ela é tão invisível ao `claim` quanto um sem label nenhuma — foi metade dos
+          # seis que a medição achou.
+          atual=$(gh issue view "$N" --repo "$GH_REPO" --json labels \
+            --jq '[.labels[].name
+                   | select(startswith("anchors:"))
+                   | select(startswith("anchors:under-") | not)]
+                  | length')
+          if [ "${atual:-0}" -gt 0 ]; then
+            echo "#$N já nasceu com estado — nada a fazer"
+            exit 0
+          fi
+
+          gh issue edit "$N" --repo "$GH_REPO" --add-label "anchors:to-do"
+          echo "#$N nasceu sem estado — posto em \`to-do\`, onde o \`claim\` o enxerga"
+
   # O HISTÓRICO: quanto tempo o card passou em cada coluna.
   #
   # Quem registra é este pipeline e não o que MOVE, e a razão é cobertura: o `claim` move

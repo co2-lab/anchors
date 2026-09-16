@@ -62,6 +62,7 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 	}
 	root.AddCommand(newGuideCmd())
 	root.AddCommand(newWorkCmd())
+	root.AddCommand(newBoardCmd())
 	root.AddCommand(newInitCmd())
 	root.AddCommand(newInstallHooksCmd())
 	// O botão de pânico: congela e descongela o projeto inteiro.

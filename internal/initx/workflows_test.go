@@ -1822,3 +1822,53 @@ func valorDeEnv(texto, nome string) string {
 	}
 	return ""
 }
+
+// TODO ISSUE NASCE COM ESTADO, e o pipeline garante isso ao ve-la.
+//
+// MEDIDO no blue-eyes: 59 de 95 cards abertos estavam FORA do fluxo -- 53 sem label de
+// estado nenhuma, 6 so com `anchors:under-N` (que e' bloqueio, nao estado). O `claim` so
+// varre `to-do` e `ready-to-review`, entao esse trabalho era invisivel: tres agentes
+// pediram card, ouviram "nenhum card livre", e pararam.
+//
+// A causa: os achados de gate (`[domain-declared] Violacao @ ...`) sao criados por
+// caminhos diferentes -- `anchors judge`, `anchors escalate`, o reporter dos gates -- e
+// nenhum aplicava estado.
+//
+// POR QUE NO PIPELINE, e nao em cada criador: consertar um por um deixa os outros, e o
+// proximo caminho de criacao nasce quebrado de novo. Nao ha regua que cubra "todo lugar
+// que cria issue". O pipeline ve a issue nascer, venha de onde vier.
+//
+// E' o mesmo raciocinio do `stale` e do proprio guard: o pipeline corrige o FATO, em vez
+// de depender de cada um lembrar.
+func TestGuardDaEstadoAQuemNasceSemEle(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(b)
+
+	// Ele precisa VER a issue nascer.
+	//
+	// A regua nasceu FRACA aqui: `strings.Contains(texto, "opened")` casava dentro de
+	// `reopened`, e passava sem a correcao existir. E' a mesma armadilha que os agentes
+	// vem achando nos testes deste projeto -- asserção por substring nao distingue o que
+	// mede. O gatilho precisa estar na LISTA de types.
+	if !regexp.MustCompile(`types:\s*\[[^]]*\bopened\b`).MatchString(texto) {
+		t.Error("o guard nao escuta `opened` na lista de types — uma issue criada sem " +
+			"estado passa sem ninguem ver, e some do `claim`")
+	}
+
+	// E precisa APLICAR o estado inicial.
+	if !strings.Contains(texto, "anchors:to-do") {
+		t.Error("o guard nao aplica `anchors:to-do` — ver a issue nascer sem agir nao " +
+			"resolve nada")
+	}
+
+	// O QUE JA TEM ESTADO nao pode ser tocado: um card em `in-review` que recebesse
+	// `to-do` voltaria para a fila e seria reimplementado do zero.
+	if !strings.Contains(texto, "anchors:ready-to-review") &&
+		!strings.Contains(texto, "startswith(\\\"anchors:\\\")") {
+		t.Error("o guard nao confere se JA HA estado antes de aplicar — poria `to-do` " +
+			"num card que ja esta em revisao, e o trabalho seria refeito")
+	}
+}
