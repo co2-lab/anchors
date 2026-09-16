@@ -200,6 +200,23 @@ card para trocar uma palavra é burocracia.`,
 				// causa daquela decisão, o vínculo é fato, não escolha. O julgamento que
 				// existe — se a decisão impede o trabalho — já foi feito quando o agente
 				// escolheu `--for-user`.
+				// AQUI O VÍNCULO É DECLARADO, e por isso vale mesmo quando o card de
+				// origem JÁ era uma decisão aberta.
+				//
+				// `needs-user` + `blocked-by-<n>` juntas são legítimas: uma decisão pode
+				// depender de outra, e isso é ordem de corretude — "responda o #701
+				// primeiro, porque a resposta dele condiciona a do #647".
+				//
+				// E é exatamente o que acontece quando um agente trabalhando num card já
+				// escalado descobre que há uma pergunta ANTES daquela: ele escala de novo,
+				// e a nova decisão precede a que já estava lá. Suprimir a label nesse caso
+				// apagaria a ordem que ele acabou de estabelecer.
+				//
+				// A DIFERENÇA COM O `backfill` é a fonte. Lá o vínculo é INFERIDO do
+				// `under-<n>` (que diz procedência, não precedência) e a inferência erra:
+				// medido, quatro cards receberam bloqueio de uma decisão que apenas nasceu
+				// junto. Aqui quem escalou está declarando, no ato, que o trabalho para
+				// por causa desta decisão.
 				rotuloBloqueio := ""
 				if n := numeroDaIssue(url); n != "" {
 					rotuloBloqueio = initx.LabelBlockedBy(n)
