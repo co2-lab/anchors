@@ -2683,16 +2683,16 @@ nodes:
       no_propagation: true
     - id: internal/mapx/ingest.go
       kind: code
-      rev: 531d79f86d22
-      updated_at: "2026-09-10"
+      rev: a1ea0af89992
+      updated_at: "2026-09-15"
       layer: mapa
       tags:
         - nucleo
         - mapa
     - id: internal/mapx/ingest_test.go
       kind: test
-      rev: b4d17d28f595
-      updated_at: "2026-09-10"
+      rev: ff93dc48b2d8
+      updated_at: "2026-09-15"
       code: AAAAX
       layer: teste
       tags:
