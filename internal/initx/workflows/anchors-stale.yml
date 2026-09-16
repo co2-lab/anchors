@@ -15,15 +15,20 @@ name: anchors · liberar cards parados
 
 on:
   schedule:
-    # De 30 em 30 minutos. A frequência define a LATÊNCIA da detecção, não o critério:
+    # De hora em hora. A frequência define a LATÊNCIA da detecção, não o critério:
     # quem decide se um card está parado são `HORAS_ESPERA` e `HORAS_ANDAMENTO`, abaixo.
     #
+    # Uma hora atende as duas janelas sem desperdício: na de 24h é ruído, e na de 2h
+    # dá no máximo 50% de atraso sobre uma janela que já é curta de propósito —
+    # liberar cedo um card que estava parado em espera não custa nada.
+    #
     # O `schedule` do GitHub Actions não é pontual — sob carga o disparo atrasa, e
-    # agendamentos muito frequentes podem ser descartados. Se a latência vier a incomodar,
-    # o caminho confiável não é apertar o cron: é o agente disparar este workflow
-    # (`workflow_dispatch`) quando não acha card livre — aí a verificação acontece
-    # exatamente quando alguém precisa de trabalho.
-    - cron: "*/30 * * * *"
+    # agendamentos muito frequentes podem ser DESCARTADOS. Apertar o cron compra
+    # latência que o GitHub não garante entregar; o caminho confiável é o agente
+    # disparar este workflow (`workflow_dispatch`) quando não acha card livre — aí a
+    # verificação acontece exatamente quando alguém precisa de trabalho, que é o caso
+    # que a janela de 2h existe para resolver.
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 concurrency:
