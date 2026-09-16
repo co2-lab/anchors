@@ -166,7 +166,7 @@ jobs:
           # O CARD ESTÁ NA COLUNA QUE ESTE TRABALHO DESCREVE?
           #
           # Um PR aberto significa que alguém está trabalhando — e o card precisa dizer
-          # isso. Se ele está em `to-do`, o `anchors claim` foi pulado: ninguém registrou
+          # isso. Se ele está em `to-do`, o `anchors next` foi pulado: ninguém registrou
           # posse, e o board mostra como disponível um trabalho que já tem PR.
           #
           # MEDIDO no projeto de referência: 38 dos 44 PRs abertos tinham o card em
@@ -204,7 +204,7 @@ jobs:
             esac
           done
           if [ -n "$semClaim" ]; then
-            echo "::error::o(s) card(s)$semClaim ainda estão em \`to-do\` — o \`anchors claim\` foi pulado, e o board mostra como disponível um trabalho que já tem PR"
+            echo "::error::o(s) card(s)$semClaim ainda estão em \`to-do\` — o \`anchors next\` foi pulado, e o board mostra como disponível um trabalho que já tem PR"
             {
               echo "### ✗ O card não foi reivindicado"
               echo ""
@@ -221,7 +221,7 @@ jobs:
               echo "**A ordem que o fluxo espera:**"
               echo ""
               echo '```console'
-              echo "\$ anchors claim        # registra a posse e move o card"
+              echo "\$ anchors next          # registra a posse e move o card"
               echo "\$ # implementar"
               echo "\$ anchors pr-body --cards <n>"
               echo '```'

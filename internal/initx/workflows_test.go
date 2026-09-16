@@ -1738,7 +1738,13 @@ func TestGateReprovaCardSemClaim(t *testing.T) {
 	}
 
 	// A SAÍDA na mensagem: um gate que reprova sem dizer o que fazer transfere o problema.
-	if !strings.Contains(texto, "anchors claim        # registra a posse") {
+	//
+	// Esta régua nasceu ERRADA: ela casava o texto `anchors claim`, e com isso EXIGIA
+	// que a mensagem ensinasse um comando inexistente. Uma régua que fixa o texto da
+	// instrução prova que a mensagem não mudou — não que ela funciona. Agora ela cobra
+	// a posse pelo comando real, e o `TestPipelineSoEnsinaComandoQueExiste` confronta
+	// todo `anchors <algo>` dos pipelines contra os comandos registrados no cobra.
+	if !strings.Contains(texto, "anchors next") {
 		t.Error("a mensagem não diz como destravar — quem a lê fica sabendo que errou e " +
 			"não o que fazer")
 	}
