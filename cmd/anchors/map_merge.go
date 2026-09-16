@@ -81,7 +81,22 @@ O resultado é escrito em <nosso>, que é o que o git espera.`,
 
 			antes := countJudgments(gNosso)
 
-			// PRIMEIRO as arestas que só existem do outro lado.
+			// PRIMEIRO os NÓS que só existem do outro lado.
+			//
+			// `Graph` guarda `Nodes` e `Edges` em listas separadas, e por três versões
+			// este driver reconciliou só a segunda. O resultado saía com a lista de nós
+			// do lado `nosso`, e todo nó criado só no outro branch desaparecia.
+			//
+			// MEDIDO no blue-eyes (#730): base 329 nós, nosso 330, deles 332, resultado
+			// 330 — e o git reporta "Automatic merge went well".
+			//
+			// O dano é calado por construção: o arquivo continua REGIDO, o `check` o
+			// reconhece, e ele não está no mapa — então nenhum gate o confronta. O
+			// `map build` seguinte reinsere os nós, o que esconde o defeito de quem
+			// mescla e reconstrói, e o publica para quem mescla e empurra.
+			addMissingNodes(gNosso, gDeles)
+
+			// DEPOIS as arestas que só existem do outro lado.
 			//
 			// O `PreserveStamps` copia carimbo para aresta que JÁ ESTÁ no destino — é o
 			// que ele foi feito para fazer (preservar entre reconstruções do mesmo
@@ -113,6 +128,27 @@ O resultado é escrito em <nosso>, que é o que o git espera.`,
 		},
 	}
 	return cmd
+}
+
+// addMissingNodes copia para `destino` os nós que só existem em `origem`.
+//
+// Espelha o `addMissingEdges`: um merge junta branches que criaram unidades diferentes, e
+// o nó que só existe de um lado tem de sobreviver. Nó comum NÃO é tocado — a rev dele é
+// derivada do conteúdo do arquivo, e quem a resolve é o `map build` sobre a árvore
+// mesclada, não este driver, que só vê os dois mapas.
+func addMissingNodes(destino, origem *mapx.Graph) {
+	if destino == nil || origem == nil {
+		return
+	}
+	tem := make(map[string]bool, len(destino.Nodes))
+	for _, n := range destino.Nodes {
+		tem[n.ID] = true
+	}
+	for _, n := range origem.Nodes {
+		if !tem[n.ID] {
+			destino.Nodes = append(destino.Nodes, n)
+		}
+	}
 }
 
 func countJudgments(g *mapx.Graph) int {
