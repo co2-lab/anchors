@@ -318,12 +318,20 @@ nodes:
         - test
     - id: cmd/anchors/docs.go
       kind: code
-      rev: 6f66d1d2cd3a
+      rev: d2f6f31bec1e
       updated_at: "2026-09-10"
       layer: comando
       tags:
         - cli
         - comando
+    - id: cmd/anchors/docs_test.go
+      kind: test
+      rev: 37cd5cdd4dae
+      code: ABCDE
+      layer: teste
+      code_declared: true
+      tags:
+        - test
     - id: cmd/anchors/doctor.go
       kind: code
       rev: 334f85437db5
@@ -2613,7 +2621,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 0091bf8d43bd
+      rev: 8f3c0e0e6a0b
       updated_at: "2026-09-16"
       layer: teste
       tags:

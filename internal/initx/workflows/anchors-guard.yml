@@ -306,9 +306,47 @@ jobs:
               inverso="reaberto"
               ;;
             reopened)
-              gh issue close "$N" --repo "$GH_REPO" >/dev/null
-              motivo="reaberto à mão"
-              inverso="fechado de novo"
+              # REABRIR NEM SEMPRE É VIOLAÇÃO — e a assimetria é de propósito.
+              #
+              # A trava era simétrica: fechou à mão, reabre; reabriu à mão, fecha. Isso
+              # valia enquanto fechar significava "trabalho encerrado". Não significa
+              # mais: o card fica ABERTO em `ready-to-test` até alguém terminar a esteira,
+              # e todo card que o `Closes` fechou antes da v0.1.130 está fechado por um
+              # motivo que deixou de existir.
+              #
+              # Reabrir um desses CORRIGE o estado. Fechá-lo de volta faria a trava
+              # defender uma regra revogada — e faria isso em massa exatamente quando
+              # alguém tenta consertar o passivo.
+              #
+              # O QUE CONTINUA BARRADO: reabrir um card DECLARADO encerrado. `manual`
+              # (entregue) e `discarded` (fora do roadmap) são decisões de alguém, e
+              # desfazê-las à mão é a mexida que esta trava existe para reverter.
+              #
+              # A conferência é REPETIDA aqui de propósito. As guardas lá em cima desviam
+              # esses dois casos e nunca chegariam neste ponto — mas elas desviam por
+              # motivos próprios ("o descartado saiu do fluxo", "o opt-out autoriza"), e
+              # depender da ordem delas deixaria este ramo correto por acidente. Se
+              # qualquer uma mudar, aqui continua decidindo pelo que importa aqui.
+              if gh issue view "$N" --repo "$GH_REPO" --json labels \
+                 --jq '[.labels[].name] | any(. == "anchors:manual" or . == "anchors:discarded")' \
+                 | grep -q true; then
+                gh issue close "$N" --repo "$GH_REPO" >/dev/null
+                motivo="reaberto à mão, e o encerramento estava DECLARADO"
+                inverso="fechado de novo"
+              else
+                echo "· #$N: reaberto sem declaração de encerramento — mantido ABERTO"
+                gh issue comment "$N" --repo "$GH_REPO" --body "$(printf '%s\n' \
+                  "↩️ **Reabertura mantida.**" \
+                  "" \
+                  "Este card estava fechado sem \`anchors:manual\` nem \`anchors:discarded\`" \
+                  "— fechou por efeito do \`Closes\` no corpo de um PR, não por decisão de" \
+                  "alguém." \
+                  "" \
+                  "A alçada do Anchors termina em \`ready-to-test\`; a esteira segue no CD" \
+                  "(\`in-test\`, \`ready-to-release\`, \`production\`). O card fica aberto até" \
+                  "quem termina a esteira declarar o encerramento.")" >/dev/null
+                exit 0
+              fi
               ;;
             labeled)
               gh issue edit "$N" --repo "$GH_REPO" --remove-label "$LABEL_MEXIDA" >/dev/null
