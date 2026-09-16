@@ -576,12 +576,18 @@ nodes:
         - test
     - id: cmd/anchors/install_hooks.go
       kind: code
-      rev: da9a3db03401
+      rev: 163a8642a210
       updated_at: "2026-09-11"
       layer: comando
       tags:
         - cli
         - comando
+    - id: cmd/anchors/install_hooks_test.go
+      kind: test
+      rev: 4cf7445d638c
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/judge.go
       kind: code
       rev: 3db565c4cb2c
