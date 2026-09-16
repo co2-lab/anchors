@@ -289,8 +289,23 @@ ROOT="$(git rev-parse --show-toplevel)"
 # desligar o hook, e um hook desligado não protege nada. A rede é consultada no máximo uma
 # vez a cada 10 minutos; no resto, vale o que ficou guardado.
 #
-# O cache vive em .git/, que não é versionado: ele é estado da MÁQUINA, não do projeto.
-CACHE="$ROOT/.git/anchors-freeze-cache"
+# O cache vive no diretório do git, que não é versionado: ele é estado da MÁQUINA, não do
+# projeto.
+#
+# O comando git rev-parse --git-dir E NAO "$ROOT/.git": num WORKTREE, o .git e um ARQUIVO
+# que aponta para …/.git/worktrees/<nome>, e escrever dentro dele falha com Not a directory.
+#
+# MEDIDO: um agente trabalhando em worktree levou
+#
+#     .git/hooks/pre-commit: line 48: …/be-rev1/.git/anchors-freeze-cache: Not a directory
+#
+# e commitou com --no-verify — o hook inteiro deixou de rodar por causa do cache. Um hook
+# que falha assim é pior que hook nenhum: ele treina quem o usa a contorná-lo.
+#
+# O --git-dir devolve o caminho certo nos dois casos: .git no clone comum, e o diretorio do
+# worktree quando e um.
+GITDIR="$(git rev-parse --git-dir)"
+CACHE="$GITDIR/anchors-freeze-cache"
 JANELA=600
 
 congelado=""
@@ -418,7 +433,7 @@ if [ "$FAIL" -ne 0 ]; then
   # Então este hook REPORTA e deixa seguir; o 'commit-msg' reconfronta com a mensagem em
   # mãos e barra se a dispensa não cobrir o que reprovou. Quem não usa dispensa nenhuma vê
   # o mesmo resultado, um passo depois.
-  if [ -x "$ROOT/.git/hooks/commit-msg" ]; then
+  if [ -x "$GITDIR/hooks/commit-msg" ]; then
     echo "──────────────────────────────────────────────────────────────"
     echo "· gates reprovaram. Se for deliberado, declare na mensagem do commit:"
     echo "    [skip-<regra>@<CODIGO>: por quê]"
@@ -434,7 +449,7 @@ fi
 # arquitetura de import). Cada executável em .git/hooks/pre-commit.d/ roda com os
 # arquivos staged como argumentos; qualquer um que falhe barra o commit.
 # (Portável a bash 3.2 do macOS — sem mapfile.)
-HOOK_D="$ROOT/.git/hooks/pre-commit.d"
+HOOK_D="$GITDIR/hooks/pre-commit.d"
 if [ -d "$HOOK_D" ]; then
   STAGED_ARR=()
   while IFS= read -r line; do [ -n "$line" ] && STAGED_ARR+=("$line"); done <<< "$STAGED"
