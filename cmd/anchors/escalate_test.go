@@ -114,3 +114,80 @@ func TestVinculoComOTrabalhoDeOrigemEhLabel(t *testing.T) {
 			"nascer preso em vez de solto na fila")
 	}
 }
+
+// O VÍNCULO É COM O CARD, E O PR É O CAMINHO — não um segundo eixo.
+//
+// Um achado que nasce revisando trabalho alheio não tem `anchors-owner`: o agente não pegou
+// card nenhum, está lendo o de outro. Sem procedência, ninguém consegue perguntar "o que
+// gerou esta decisão?".
+//
+// MEDIDO no projeto de referência: os cards #786 e #788 nasceram assim, citando o PR
+// revisado em PROSA — exatamente o que a doutrina do `under-<n>` condena, porque frase no
+// corpo não se consulta.
+//
+// POR QUE NÃO UMA LABEL DE PR: o PR já declara a issue dele (`Refs`/`Closes`), e guardar as
+// duas pontas duplicaria o que a plataforma relaciona — quem abre o PR vê a issue. O que
+// faltava era o comando LER essa declaração em vez de o agente procurar.
+//
+// Conferido nos dois casos reais: o PR #556 declara `Closes #198`, e o #783 declara
+// `Refs #735` — o card cuja decisão gerou a contradição que o #788 escalou.
+func TestVinculoDoPRSaiDoCorpoDele(t *testing.T) {
+	for _, caso := range []struct {
+		nome, corpo, quer string
+	}{
+		{"o que o pr-body gera", "texto\n\nRefs #735\n", "735"},
+		{"a palavra de fechamento", "Closes #198", "198"},
+		{"maiúscula ou minúscula", "closes #42", "42"},
+		{"fixes também", "Fixes #7", "7"},
+		// SÓ NO INÍCIO DA LINHA: um número citado na prosa não é vínculo, e foi o defeito
+		// que o `pr-checks` já corrigiu uma vez — "o #12 não é fechado por este PR".
+		{"citado na prosa não conta", "o card refs #99 é de outro", ""},
+		{"sem vínculo nenhum", "só descrição", ""},
+	} {
+		m := vinculoNoCorpoRE.FindStringSubmatch(caso.corpo)
+		got := ""
+		if m != nil {
+			got = m[1]
+		}
+		if got != caso.quer {
+			t.Errorf("%s: de %q esperava %q, veio %q", caso.nome, caso.corpo, caso.quer, got)
+		}
+	}
+}
+
+// OS DOIS VÍNCULOS COEXISTEM, e não se substituem.
+//
+//	anchors:under-198     o achado pertence ao trabalho do card #198
+//	anchors:from-pr-556   foi lendo o PR #556 que alguém o viu
+//
+// O card #647 do projeto de referência tem os dois na história e só um virou label: a prosa
+// diz "ao revisar o PR #556" e a label diz `under-198` — o card que aquele PR fecha.
+// Guardar só o card perde por onde o achado apareceu; guardar só o PR perde onde ele se
+// entrega.
+//
+// O card É DERIVADO do PR (pelo `Refs`/`Closes`), e isso não torna a segunda label
+// redundante: derivar é ler uma vez. Se o PR for reescrito depois, a declaração muda e o
+// vínculo histórico se perde — a label registra o que foi lido, quando foi lido.
+func TestEscalateGuardaOCardEOPRJuntos(t *testing.T) {
+	fonte := leFonte(t, "escalate.go")
+
+	// AS DUAS LABELS no mesmo caminho de criação, não uma OU outra.
+	for _, peca := range []string{"initx.LabelDePR(", "initx.LabelSob(card)"} {
+		if !strings.Contains(fonte, peca) {
+			t.Errorf("o `escalate` não aplica %q — um dos dois vínculos se perde", peca)
+		}
+	}
+
+	// E NENHUMA DENTRO DO `else` DA OUTRA: se o PR excluísse o card, revisar um PR
+	// deixaria o achado sem saber por onde se entrega.
+	iPR := strings.Index(fonte, `if revisandoPR != "" {`)
+	iCard := strings.Index(fonte, `if card != "" {
+				labels = append(labels, initx.LabelSob(card))`)
+	if iPR < 0 || iCard < 0 {
+		t.Fatal("não achei os dois blocos de vínculo — o comando mudou de forma")
+	}
+	if iPR > iCard {
+		t.Error("o bloco do PR vem depois do bloco do card: como o card é DERIVADO do PR, " +
+			"a derivação precisa acontecer antes de o card ser lido")
+	}
+}
