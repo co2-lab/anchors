@@ -264,6 +264,10 @@ func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 	// Fosse estado, um card bloqueado sairia de `in-progress` e o board diria que o
 	// trabalho nunca começou.
 	valida[PrefixoLabelBlockedBy] = true
+	// A PROCEDÊNCIA PELO PR, irmã do `under-<n>`: ela diz onde o achado foi VISTO, e o
+	// card continua na coluna onde o trabalho está. Os dois coexistem — um responde por
+	// onde o achado se entrega, o outro por onde se rastreia a revisão.
+	valida[PrefixoLabelDePR] = true
 	for _, w := range WorkflowsDoFluxo {
 		b, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {
