@@ -77,6 +77,15 @@ var WorkflowsDoFluxo = []Workflow{
 		ExigeSerial: true,
 	},
 	{
+		Arquivo: "anchors-resolver-fila.yml",
+		Papel: "resolve o conflito de arquivo GERADO quando algo mergeia, e abre card de " +
+			"síntese quando o conflito é de conteúdo",
+		// SERIAL, e a razão é o push: dois runs resolvendo a mesma branch empurrariam
+		// resoluções concorrentes. O grupo é global de propósito — diferente do
+		// `pr-checks`, aqui o recurso disputado é a FILA inteira, não um card.
+		ExigeSerial: true,
+	},
+	{
 		Arquivo: "anchors-board.yml",
 		Papel:   "publica o board no Pages a partir das issues (sem Projects e sem PAT)",
 		// O ÚNICO que não exige serialização sem cancelamento: o board é estado DERIVADO,
