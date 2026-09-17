@@ -365,7 +365,7 @@ nodes:
         - test
     - id: cmd/anchors/escalate.go
       kind: code
-      rev: 16c71807035d
+      rev: 4c9c9e974f27
       updated_at: "2026-09-16"
       layer: comando
       tags:
@@ -388,7 +388,7 @@ nodes:
         - test
     - id: cmd/anchors/escalate_test.go
       kind: test
-      rev: b531290267d7
+      rev: bec1f0d08e58
       updated_at: "2026-09-10"
       layer: teste
       tags:
@@ -2446,7 +2446,7 @@ nodes:
         - test
     - id: internal/initx/board_bloqueio_test.go
       kind: test
-      rev: 980b786e721d
+      rev: 1fab473f521f
       updated_at: "2026-09-16"
       layer: teste
       tags:
@@ -2629,7 +2629,7 @@ nodes:
         - test
     - id: internal/initx/workflows.go
       kind: code
-      rev: 5e80df9e1282
+      rev: 394643801b56
       updated_at: "2026-09-16"
       layer: infra
       tags:
@@ -2637,7 +2637,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 6ee61363e609
+      rev: 348769e479f9
       updated_at: "2026-09-16"
       layer: teste
       tags:

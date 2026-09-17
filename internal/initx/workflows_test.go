@@ -236,6 +236,11 @@ func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 	// A label ANTIGA continua válida enquanto durar a migração: os pipelines a aceitam
 	// para não abandonar as issues que já a carregam.
 	valida[LabelNeedsUserLegacy] = true
+	// A SEGUNDA FILA DO USUÁRIO, pela mesma razão do `needs-user`: ela diz que o card
+	// espera uma pessoa, e o card continua na coluna onde o trabalho parou. O que a
+	// distingue é o que ela PEDE — "confira se isto é seu" em vez de "decida entre A e
+	// B" —, e essa diferença é de peso, não de estado.
+	valida[LabelNeedsFraming] = true
 	// O VÍNCULO DE DESBLOQUEIO, pela mesma razão do `needs-user` acima: ele diz que a
 	// entrega DESTE card destrava outro, e o card continua na coluna onde o trabalho está.
 	// O prefixo é conferido sem o número, que é por card e não se pode enumerar.
