@@ -171,13 +171,27 @@ jobs:
                     linkedTo: ([.labels[].name
                                | select(startswith("anchors:under-") or startswith("anchors:desbloqueia-"))
                                | sub("^anchors:(under|desbloqueia)-";"")] | .[0] // ""),
+                    # O DONO É A PRIMEIRA LINHA do comentário, e nada além dela.
+                    #
+                    # O `sub` abaixo tira o prefixo e deixava o RESTO INTEIRO. Quando o
+                    # agente escreve o `anchors-owner:` e o relatório no MESMO comentário, o
+                    # campo vinha com o relatório junto — medido: 2742 caracteres no card
+                    # #837, e o board renderizava o texto todo onde cabe um nome.
+                    #
+                    # `split` corta na primeira linha: o nome de um dono nunca tem quebra, e
+                    # o que vem depois é prosa de quem escreveu.
+                    #
+                    # O `// ""` depois do `first` não é enfeite: `"" | split("\n")` devolve
+                    # lista VAZIA, `first` disso é `null`, e o `test()` adiante morre com
+                    # "null cannot be matched" — derrubando o board INTEIRO para zero cards
+                    # sempre que um card não tem comentário de dono, que é o caso comum.
                     unblocks: ([.labels[].name | select(startswith("anchors:desbloqueia-"))
                                 | sub("^anchors:desbloqueia-";"")] | .[0] // ""),
                     owner: ([.comments[].body | select(startswith("anchors-owner:"))] | last // "" |
-                           sub("^anchors-owner: *";"") |
+                           sub("^anchors-owner: *";"") | ((split("\n")|first) // "") | sub(" +$";"") |
                            if test("\\(liberado\\)") then "" else . end),
                     ownership: [.comments[].body | select(startswith("anchors-owner:")) |
-                            sub("^anchors-owner: *";"")],
+                            sub("^anchors-owner: *";"") | ((split("\n")|first) // "") | sub(" +$";"")],
                     comments: (.comments | length)
                   }]' > _board/board.json
 
@@ -261,7 +275,7 @@ jobs:
               titulo=$(echo "$resto" | sed -E 's/ *\(depende d[eao][^)]*\) *//I')
               deps=$(echo "$resto" | grep -oE '[A-Z0-9]{4,5}-F[0-9]{2}' | jq -R . | jq -sc '.')
               jq -nc --arg c "$cod" --arg t "$titulo" --argjson d "${deps:-[]}" \
-                '{code:$c, title:$t, needs:$d, parent:($c | split("-")[0])}'
+                '{code:$c, title:$t, needs:$d, parent:(($c | split("-") | first) // "")}'
             done | jq -s '.' > /tmp/fases.json || echo '[]' > /tmp/fases.json
 
           # AFILIAR O ACHADO À UNIDADE QUE ELE ACUSA.

@@ -608,7 +608,7 @@ function desenha(d) {
         ${cards.length === 0 ? '<div class="vazia">vazia</div>' : cards.map((c) => `
           <button class="card${c.escalated ? " escalado" : ""}${
               c.escalated && c.waiting === false ? " respondido" : ""}${
-              c.blockedBy ? " bloqueado" : ""}" type="button" data-numero="${c.number}">
+              c.blockedBy ? " bloqueado" : ""}" type="button" data-number="${c.number}">
             <div class="card-topo">
               ${c.code ? `<span class="codigo">${esc(c.code)}</span>` : ""}
               ${c.number ? `<span class="num">#${esc(c.number)}</span>` : ""}
@@ -1037,7 +1037,7 @@ function desenhaArvore(d) {
           depois.map(esc).join(", ")}</span>` : ""}
         <span class="est">${esc(est)}</span>`;
     const linha = `<button class="no ${cls}" type="button" ${
-      n.number ? `data-numero="${n.number}"` : "disabled"}>${corpo}</button>`;
+      n.number ? `data-number="${n.number}"` : "disabled"}>${corpo}</button>`;
     if (!kids.length) return `<li class="folha">${linha}</li>`;
     // `<details>` NATIVO: o navegador já dá o teclado (Enter/Espaço), a semântica de
     // expandido/recolhido para leitor de tela, e o Ctrl+F que abre o nó ao achar texto
@@ -1087,7 +1087,7 @@ function desenhaArvore(d) {
       <button type="button" id="expandir">expandir tudo</button>
       <button type="button" id="recolher">recolher tudo</button>
       ${presentes.length > 1 ? `<span class="sep"></span>${presentes.map(([id, nome]) =>
-        `<button class="chip est-chip" type="button" data-estado="${esc(id)}"
+        `<button class="chip est-chip" type="button" data-state="${esc(id)}"
                  aria-pressed="${estadoAtivo.has(id)}">${esc(nome.toLowerCase())}</button>`
       ).join("")}${estadoAtivo.size ? '<button type="button" id="limpar-estado">limpar</button>' : ""}` : ""}
     </div>
