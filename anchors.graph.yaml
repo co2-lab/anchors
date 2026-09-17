@@ -1323,7 +1323,7 @@ nodes:
         - test
     - id: internal/doct/doct_test.go
       kind: test
-      rev: 5f35e2863530
+      rev: 444112596d2e
       updated_at: "2026-09-17"
       code: GLCGL
       layer: teste
@@ -2469,8 +2469,8 @@ nodes:
         - test
     - id: internal/initx/board_bloqueio_test.go
       kind: test
-      rev: 1fab473f521f
-      updated_at: "2026-09-16"
+      rev: 038d466d4c30
+      updated_at: "2026-09-17"
       layer: teste
       tags:
         - test
@@ -2660,7 +2660,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: af0e20eb89d5
+      rev: b9e0093cfb60
       updated_at: "2026-09-17"
       layer: teste
       tags:

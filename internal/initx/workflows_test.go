@@ -621,7 +621,10 @@ func TestBoardNaoDerrubaCardPeloFiltroDeDono(t *testing.T) {
 		t.Fatal(err)
 	}
 	texto := string(b)
-	i := strings.Index(texto, "owner:")
+	// `"owner:"` cru também casa dentro de `anchors-owner:` — e casava PRIMEIRO,
+	// numa linha de comentário, fazendo a janela de 400 caracteres terminar antes
+	// do campo que esta régua existe para medir. A âncora precisa ser o CAMPO.
+	i := strings.Index(texto, "\n                    owner:")
 	if i < 0 {
 		t.Fatal("o board deixou de extrair o dono — se isso é intencional, remova este teste")
 	}
@@ -635,6 +638,39 @@ func TestBoardNaoDerrubaCardPeloFiltroDeDono(t *testing.T) {
 		t.Error("o dono liberado deve virar campo VAZIO (if/then/else), não sumir")
 	}
 }
+
+// O BOARD INTEIRO cai para zero cards quando UM campo devolve `null`.
+//
+// `jq` não isola: `test()` sobre `null` aborta o filtro com código 5 e o board devolve
+// `{"erro": ...}` em vez de itens. Foi o que aconteceu ao cortar o dono na primeira
+// linha — `"" | split("\n")` devolve lista VAZIA, `first` disso é `null`, e todo card
+// sem comentário de dono (o caso comum) matava a página.
+//
+// A régua exige que todo índice sobre `split` tenha um fallback, porque a falha não é
+// local: ela apaga o board.
+func TestIndiceSobreSplitNoBoardTemFallback(t *testing.T) {
+	b, err := workflowsFS.ReadFile("workflows/anchors-board.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, linha := range strings.Split(string(b), "\n") {
+		corte := strings.TrimSpace(linha)
+		if strings.HasPrefix(corte, "#") || !strings.Contains(corte, "split(") {
+			continue
+		}
+		// `split(...)[0]` e `split(...)|first` devolvem `null` em lista vazia. Só
+		// vale se houver um `//` protegendo o resultado na mesma linha.
+		if !semFallbackRE.MatchString(corte) {
+			continue
+		}
+		if !strings.Contains(corte, "//") {
+			t.Errorf("índice sobre `split` sem fallback `// \"\"` derruba o board inteiro "+
+				"quando a lista vem vazia (`null cannot be matched`):\n  %s", corte)
+		}
+	}
+}
+
+var semFallbackRE = regexp.MustCompile(`split\([^)]*\)\s*(\[[0-9]+\]|\|\s*first)`)
 
 // A FRONTEIRA REAL: alguém tem de confrontar os gates no PR.
 //

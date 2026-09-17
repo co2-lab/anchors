@@ -440,3 +440,68 @@ func TestBoardSeparaDecidirDeEnquadrar(t *testing.T) {
 			"quem lê decide o mérito por falta de alternativa visível")
 	}
 }
+
+// O RENDER E O HANDLER TÊM DE FALAR O MESMO ATRIBUTO.
+//
+// O board.json virou contrato em inglês, o handler foi com ele — e os dois renders de card
+// ficaram escrevendo `data-numero`. O efeito medido: 88 cards na aba de colunas, ZERO
+// casando o `closest(".card, ...[data-number]")`, e o clique não abria nada. A aba de
+// roadmap, que já escrevia `data-number`, era a única viva.
+//
+// Nada acusou porque o HTML embutido não tinha régua alguma sobre seus próprios atributos:
+// o render e o handler moram no mesmo arquivo e divergiram dentro dele.
+//
+// Esta régua compara os dois lados: todo `data-*` que o handler procura precisa existir no
+// render, e todo `data-*` que o render escreve precisa ser procurado por alguém — um
+// atributo escrito e nunca lido é trabalho morto, e costuma ser o lado errado de uma ponte.
+func TestAtributosDeDadosDoBoardCasamEntreRenderEHandler(t *testing.T) {
+	b, err := fs.ReadFile(boardParaTeste, "board/anchors-board.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pagina := string(b)
+
+	// `data-vai-para` no HTML é `dataset.vaiPara` no JS: a plataforma converte hífen em
+	// camelCase, e comparar as duas grafias cruas acusaria uma ponte inexistente. Toda
+	// chave vira a forma sem hífen e minúscula antes de entrar nos conjuntos.
+	chave := func(s string) string { return strings.ToLower(strings.ReplaceAll(s, "-", "")) }
+
+	// Escrita tem TRÊS formas, e faltar uma vira falso-positivo: o atributo no template,
+	// o `setAttribute`, e a atribuição `dataset.x = ...`.
+	escritos := map[string]bool{}
+	for _, re := range []*regexp.Regexp{
+		regexp.MustCompile(`data-([a-z-]+)=`),
+		regexp.MustCompile(`setAttribute\("data-([a-z-]+)"`),
+		regexp.MustCompile(`dataset\.([a-zA-Z]+)\s*=[^=]`),
+	} {
+		for _, m := range re.FindAllStringSubmatch(pagina, -1) {
+			escritos[chave(m[1])] = true
+		}
+	}
+
+	// Leitura: seletor `[data-x]`, seletor com valor `[data-x="v"]` (inclusive em CSS),
+	// e `dataset.x` fora de atribuição.
+	lidos := map[string]bool{}
+	for _, re := range []*regexp.Regexp{
+		regexp.MustCompile(`\[data-([a-z-]+)[\]=]`),
+		regexp.MustCompile(`dataset\.([a-zA-Z]+)`),
+	} {
+		for _, m := range re.FindAllStringSubmatch(pagina, -1) {
+			lidos[chave(m[1])] = true
+		}
+	}
+
+	for attr := range lidos {
+		if !escritos[attr] {
+			t.Errorf("o handler procura `data-%s` (grafia normalizada), e NENHUM render "+
+				"escreve esse atributo — "+
+				"o clique não encontra alvo e a modal não abre", attr)
+		}
+	}
+	for attr := range escritos {
+		if !lidos[attr] {
+			t.Errorf("o render escreve `data-%s` e ninguém lê — atributo escrito e nunca "+
+				"consultado costuma ser o lado renomeado de uma ponte quebrada", attr)
+		}
+	}
+}
