@@ -362,8 +362,23 @@ func fnRules(s Spec) []Rule {
 			corpo = corpo[:j]
 		}
 		out = append(out, Rule{
-			Code:   s.raw[m[2]:m[3]],
-			Titulo: s.raw[m[4]:m[5]],
+			Code: s.raw[m[2]:m[3]],
+			// O TÍTULO É RÓTULO DE LINK, e comentário HTML não pertence a ele.
+			//
+			// O heading de uma regra pode carregar a dispensa na própria linha —
+			// `### ABCDE-B01 — o que ela diz <!-- @no-mark: razão -->` —, e o gate a
+			// aceita ali de propósito (ver `FRMTT-I02`: à direita do símbolo é onde o
+			// formatador não a move). Mas o compilado usa este texto como o rótulo entre
+			// colchetes, e o resultado era ilegível:
+			//
+			//	- [DSHBR-B01 — a escolha de fixar <!-- @no-mark: ... -->](camadas/...)
+			//
+			// MEDIDO no projeto de referência (#647): 57 ocorrências no `docs/regras.md`,
+			// espalhadas por todas as camadas — não é defeito de uma spec, é do gerador.
+			//
+			// A dispensa continua onde estava: ela é lida do RAW pelos gates, e este corte
+			// é só do rótulo. O `Corpo` também não a leva, porque começa depois do heading.
+			Titulo: strings.TrimSpace(comentarioHTMLRE.ReplaceAllString(s.raw[m[4]:m[5]], "")),
 			Corpo:  strings.TrimSpace(corpo),
 		})
 	}
@@ -503,3 +518,10 @@ func (c *Compiler) Stale() ([]string, error) {
 	}
 	return out, nil
 }
+
+// comentarioHTMLRE casa um comentário HTML inteiro, inclusive o que atravessa linhas.
+//
+// `(?s)` porque um `<!-- ... -->` pode quebrar de linha quando a razão da dispensa é longa
+// — e um regex sem ele deixaria metade do comentário no rótulo, que é pior que o defeito
+// original: o `-->` sozinho não diz nem que houve dispensa.
+var comentarioHTMLRE = regexp.MustCompile(`(?s)<!--.*?-->`)

@@ -287,3 +287,67 @@ func TestNew_specNoMapaSemArquivoFalha(t *testing.T) {
 		t.Fatal("spec ausente do disco passou em silêncio")
 	}
 }
+
+// O RÓTULO DO LINK NÃO CARREGA A DISPENSA.
+//
+// O heading de uma regra pode trazer o marcador na própria linha — e o gate o aceita ali de
+// propósito (`FRMTT-I02`: à direita do símbolo é onde o formatador não o move). Mas o
+// compilado usa esse texto como rótulo entre colchetes, e o resultado era ilegível:
+//
+//	- [DSHBR-B01 — a escolha de fixar <!-- @no-mark: ... -->](camadas/shell.md#...)
+//
+// MEDIDO no projeto de referência (#647): 57 ocorrências no `docs/regras.md`, espalhadas
+// por todas as camadas — não é defeito de uma spec, é do gerador.
+func TestTituloDaRegraNaoLevaComentarioHTML(t *testing.T) {
+	root, g := projetoDeTeste(t, map[string]string{
+		"pkg/Com.spec.md": `<!-- @anchors
+code: ABCDE
+-->
+
+# Com
+
+## Regras
+
+### ABCDE-B01 — a regra diz isto <!-- @no-mark: não há símbolo a marcar -->
+
+O corpo da regra.
+`,
+	})
+	escreveTemplate(t, root, "r.md.tmpl",
+		`{{range specs "layer=spec"}}{{range rules .}}- [{{.Code}} — {{.Titulo}}](x)
+{{end}}{{end}}`)
+
+	c, err := New(root, g)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.Build(false); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(root, OutDir, "r.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := string(b)
+
+	// SÓ A LINHA DO LINK. O compilado SEMPRE abre com `<!-- anchors:generated ... -->`, e
+	// procurar `<!--` no arquivo inteiro casaria esse cabeçalho — a primeira versão desta
+	// asserção reprovava a correção certa por isso.
+	var linha string
+	for _, l := range strings.Split(out, "\n") {
+		if strings.HasPrefix(l, "- [ABCDE-B01") {
+			linha = l
+			break
+		}
+	}
+	if linha == "" {
+		t.Fatalf("não achei a linha do link no compilado:\n%s", out)
+	}
+	if strings.Contains(linha, "<!--") || strings.Contains(linha, "-->") {
+		t.Errorf("o rótulo do link levou o comentário de dispensa:\n  %s", linha)
+	}
+	// E O TÍTULO TEM DE SOBREVIVER: cortar o comentário não pode cortar a regra junto.
+	if !strings.Contains(linha, "a regra diz isto") {
+		t.Errorf("o título da regra sumiu do rótulo — o corte levou o texto junto:\n  %s", linha)
+	}
+}
