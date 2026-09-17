@@ -409,6 +409,13 @@ nodes:
       tags:
         - cli
         - comando
+    - id: cmd/anchors/generated_paths.go
+      kind: code
+      rev: 1ecabe257804
+      layer: comando
+      tags:
+        - cli
+        - comando
     - id: cmd/anchors/governs.go
       kind: code
       rev: f2b03a68bbeb
@@ -889,6 +896,19 @@ nodes:
       kind: test
       rev: ecd711dcdf70
       updated_at: "2026-09-10"
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/synthesize.go
+      kind: code
+      rev: bba0c14746a6
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/synthesize_test.go
+      kind: test
+      rev: a2efa5f0497e
       layer: teste
       tags:
         - test
@@ -2629,7 +2649,7 @@ nodes:
         - test
     - id: internal/initx/workflows.go
       kind: code
-      rev: 0d77fb27eca1
+      rev: be6c87257b0f
       updated_at: "2026-09-17"
       layer: infra
       tags:
@@ -2966,7 +2986,7 @@ nodes:
         - test
     - id: internal/scan/progresso.go
       kind: code
-      rev: 14ebdb09f466
+      rev: a2a12e8c1203
       updated_at: "2026-09-10"
       layer: scan
       tags:

@@ -16,11 +16,16 @@ import (
 // vê-lo: um arquivo que existe para mudar não pode ser confrontado por gates que cobram
 // justificativa de mudança. Ele VAI para o git (é o histórico do trabalho); o que não vai
 // é para o mapa.
-const sufixoProgresso = "-progress.md"
+// SufixoProgresso é o nome do companheiro de um plano.
+//
+// EXPORTADO porque quem resolve conflito de arquivo GERADO precisa saber quais são os
+// gerados — e a lista tinha de ser derivada do produto, não escrita à mão no script de
+// cada projeto. Ver `anchors generated-paths`.
+const SufixoProgresso = "-progress.md"
 
 // IsProgressFile diz se o caminho é o companheiro de estado de um plano.
 func IsProgressFile(caminho string) bool {
-	return strings.HasSuffix(caminho, sufixoProgresso)
+	return strings.HasSuffix(caminho, SufixoProgresso)
 }
 
 // ProgressPathFor devolve o caminho do companheiro de progresso de um plano.
@@ -34,7 +39,7 @@ func ProgressPathFor(plano string) string {
 	if i := strings.LastIndex(plano, "."); i > strings.LastIndex(plano, "/") {
 		ext = plano[i:]
 	}
-	return strings.TrimSuffix(plano, ext) + sufixoProgresso
+	return strings.TrimSuffix(plano, ext) + SufixoProgresso
 }
 
 // --- o MERGE de dois lados de um progress ---
