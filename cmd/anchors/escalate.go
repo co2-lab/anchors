@@ -42,7 +42,7 @@ import (
 // claim. Este é o por JUÍZO: ninguém está travado, alguém percebeu algo.
 func newEscalateCmd() *cobra.Command {
 	var root, sobre, card string
-	var paraUsuario bool
+	var paraUsuario, incerto bool
 	cmd := &cobra.Command{
 		Use:   "escalate <motivo>",
 		Short: "Abre a issue de uma mudança necessária no plano ou na spec",
@@ -51,13 +51,41 @@ texto se contradiz) ou por LACUNA (o plano está coerente e não cobriu algo).
 
 Quem descobriu interpreta o impacto, e a interpretação escolhe a saída:
 
-  --for-user   a mudança impacta a DIREÇÃO do projeto, ou você tem dúvida se
-                   impacta. Vira decisão de quem planejou: a issue nasce com
-                   'anchors:needs-user', e o claim não entrega o card
-                   enquanto a decisão não sair.
+  --for-user   você AFIRMA que a mudança impacta a DIREÇÃO do projeto. Existe
+                   mais de uma resposta defensável, e escolher entre elas muda
+                   o que o produto faz. A issue nasce com 'anchors:needs-user'
+                   e o claim não entrega o card enquanto a decisão não sair.
+
+  --unsure     você NÃO SABE se impacta. Nasce igual ao '--for-user', e o card
+                   diz que a primeira pergunta é o enquadramento: se não
+                   impacta, quem lê devolve à fila em vez de decidir.
 
   (padrão)         não impacta a direção. Vira card comum: nasce em 'to-do',
                    entra na fila, um agente pega. Não para ninguém.
+
+POR QUE DUAS SAÍDAS PARA O QUE PARA O CARD: quem lê 30 decisões abertas precisa
+saber o que cada uma pede. "Decida entre A e B" e "confira se isto é seu" são
+trabalhos diferentes, e misturá-los faz o segundo custar como o primeiro.
+
+COMO ESCOLHER. A pergunta não é "tenho certeza?" — é "existe mais de uma
+resposta defensável, e escolher entre elas muda o que o produto FAZ?".
+
+  Impacta a direção              Não impacta
+  -----------------              -----------
+  qual valor o app oferece       a regra está certa e falta o gate que a cobra
+  se a UI mostra X ou Y          o texto se contradiz e um dos lados é o certo
+  o que conta como prova         a dispensa saiu e a régua não entrou
+  trocar algo já em produção     o caminho escrito no card está errado
+
+Se a saída é "arrumar o que está errado" e ninguém defenderia o estado atual,
+é card comum: não há escolha a fazer, só trabalho.
+
+E SE NÃO SOUBER, use '--unsure' em vez de '--for-user'. O custo de escalar por
+segurança não aparece para quem escala: cada card em 'needs-user' espera uma
+pessoa, e uma pessoa decide mais devagar do que N agentes escalam. Medido num
+projeto real: 11 escaladas numa hora, e uma triagem concluiu que as 23 abertas
+eram SETE decisões. Dizer "não sei" é mais honesto — e mais barato de ler — do
+que afirmar impacto que você não mediu.
 
 Não use para o que é trivial E está no arquivo que você já está editando: aí
 corrija e registre a revisão ('{CODIGO}-R0001: o que mudou e por quê'). Abrir
@@ -152,8 +180,18 @@ card para trocar uma palavra é burocracia.`,
 				}
 			}
 
+			// `--unsure` PARA O CARD como o `--for-user`, e a diferença está no CORPO.
+			//
+			// As duas afirmam coisas diferentes. "Impacta a direção" pede uma decisão;
+			// "não sei se impacta" pede um juízo sobre o próprio enquadramento — e quem
+			// lê trinta decisões abertas precisa saber qual das duas chegou, porque
+			// "decida entre A e B" e "confira se isto é seu" são trabalhos distintos.
+			//
+			// Misturá-los faz o segundo custar como o primeiro: quem lê gasta o esforço
+			// de decidir antes de descobrir que só precisava devolver o card à fila.
+			paraUsuario = paraUsuario || incerto
 			motivo := strings.Join(args, " ")
-			corpoTexto := escalationBody(motivo, sobre, card, paraUsuario)
+			corpoTexto := escalationBody(motivo, sobre, card, paraUsuario, incerto)
 
 			tmp, err := os.CreateTemp("", "anchors-escalate-*.md")
 			if err != nil {
@@ -174,6 +212,13 @@ card para trocar uma palavra é burocracia.`,
 			if paraUsuario {
 				titulo = "[decisão] " + firstLineOfReason(motivo)
 				labels = append(labels, initx.LabelNeedsUser)
+			}
+			// A DÚVIDA GANHA TÍTULO E LABEL PRÓPRIOS. Quem abre a fila precisa distinguir
+			// de relance "decida entre A e B" de "confira se isto é seu" — a segunda tem
+			// saída barata (trocar a label por `to-do`) e não exige decidir o mérito.
+			if incerto {
+				titulo = "[enquadramento] " + firstLineOfReason(motivo)
+				labels = append(labels, initx.LabelNeedsFraming)
 			}
 			// SOB o card de origem, como LABEL — o que permite listar o que pende sob um
 			// trabalho (`--label anchors:under-44`) e entregá-lo no mesmo PR. Uma frase no
@@ -309,7 +354,9 @@ card para trocar uma palavra é burocracia.`,
 	cmd.Flags().StringVar(&sobre, "about", "", "o plano ou spec onde está a incoerência")
 	cmd.Flags().StringVar(&card, "card", "", "número do card onde a necessidade foi descoberta")
 	cmd.Flags().BoolVar(&paraUsuario, "for-user", false,
-		"a mudança impacta a DIREÇÃO do projeto: vira decisão do usuário e para o card")
+		"você AFIRMA que a mudança impacta a DIREÇÃO do projeto: vira decisão e para o card")
+	cmd.Flags().BoolVar(&incerto, "unsure", false,
+		"você NÃO SABE se impacta a direção: para o card, e a primeira pergunta é o enquadramento")
 	aliasDeFlag(cmd, "about", "sobre")
 	aliasDeFlag(cmd, "for-user", "para-usuario")
 	cmd.PreRunE = func(c *cobra.Command, _ []string) error {
@@ -335,9 +382,11 @@ func firstLineOfReason(s string) string {
 // Separado do comando porque é ELE o que precisa ser confrontado: o valor está em dizer
 // por que o trabalho parou e como destravar. Um teste que precisasse do `gh` para ler
 // isso não rodaria em máquina nenhuma, e o texto ficaria sem régua.
-func escalationBody(motivo, sobre, card string, paraUsuario bool) string {
+func escalationBody(motivo, sobre, card string, paraUsuario, incerto bool) string {
 	var b strings.Builder
-	if paraUsuario {
+	if incerto {
+		b.WriteString("❓ **Não sei se esta decisão é minha.**\n\n")
+	} else if paraUsuario {
 		b.WriteString("🛑 **Esta decisão não é do agente.**\n\n")
 	} else {
 		b.WriteString("📋 **O plano precisa mudar.**\n\n")
@@ -345,6 +394,24 @@ func escalationBody(motivo, sobre, card string, paraUsuario bool) string {
 	b.WriteString(motivo + "\n\n")
 	if sobre != "" {
 		b.WriteString(fmt.Sprintf("**Onde:** `%s`\n\n", sobre))
+	}
+	if incerto {
+		b.WriteString("**A PRIMEIRA PERGUNTA É O ENQUADRAMENTO, não o mérito.** Quem " +
+			"descobriu isto não soube dizer se muda a DIREÇÃO do projeto, e preferiu " +
+			"declarar a dúvida a afirmar um impacto que não mediu.\n\n")
+		b.WriteString("**Se NÃO impacta a direção:** troque a label `" + initx.LabelNeedsUser +
+			"` por `anchors:to-do` e o card volta à fila — um agente pega. Não gaste o " +
+			"esforço de decidir o mérito: a saída aqui é \"isto é trabalho, não escolha\".\n\n")
+		b.WriteString("**Se impacta:** siga como qualquer decisão — registre onde ela vale, " +
+			"no plano ou na spec, como revisão (`{CODIGO}-R0001: o que mudou e por quê`), e " +
+			"depois remova a label `" + initx.LabelNeedsUser + "`.\n\n")
+		b.WriteString("> O critério: existe mais de uma resposta defensável, e escolher " +
+			"entre elas muda o que o produto FAZ? Se a saída é \"arrumar o que está " +
+			"errado\" e ninguém defenderia o estado atual, é card comum.\n\n")
+		if card != "" {
+			b.WriteString(fmt.Sprintf("Trabalho parado no card #%s.\n", card))
+		}
+		return b.String()
 	}
 	if paraUsuario {
 		b.WriteString("**Por que parou aqui:** quem descobriu interpretou que esta mudança " +
