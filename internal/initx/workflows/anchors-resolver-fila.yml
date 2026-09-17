@@ -85,7 +85,7 @@ jobs:
             echo "::error::o \`anchors.yaml\` não declara \`min_version\` — sem ela este job não sabe qual release baixar"
             exit 1
           fi
-          echo "baixando anchors v$versao (do min_version)"
+          echo "baixando a versao $versao do Anchors (do min_version)"
           gh release download "v$versao" --repo co2-lab/anchors \
             --pattern 'anchors_*_linux_amd64.tar.gz' --output /tmp/anchors.tar.gz --clobber
           tar -xzf /tmp/anchors.tar.gz -C /tmp anchors

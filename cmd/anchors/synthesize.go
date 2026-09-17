@@ -90,8 +90,8 @@ continuou. Nada se perde.`,
 			// É o mesmo `Refs`/`Closes` que o `pr-body` escreve e que o `pr-checks` lê —
 			// aqui ele responde "que trabalho cada um destes PRs entregava?".
 			cardA, cardB := cardDoPR(repo, a), cardDoPR(repo, b)
-			tituloA := tituloDoPR(repo, a)
-			tituloB := tituloDoPR(repo, b)
+			tituloA := prTitle(repo, a)
+			tituloB := prTitle(repo, b)
 
 			corpo := corpoDaSintese(a, b, cardA, cardB, tituloA, tituloB, arquivos)
 			titulo := "[síntese] o que o PR #" + a + " entrega, reconciliado com o que já entrou"
@@ -202,11 +202,11 @@ continuou. Nada se perde.`,
 	return cmd
 }
 
-// tituloDoPR lê o título de um PR, para o card da síntese dizer o que cada lado entregava.
+// prTitle lê o título de um PR, para o card da síntese dizer o que cada lado entregava.
 //
 // Vazio em qualquer erro: o título é contexto, e um card sem ele ainda é acionável — quem
 // o ler tem os números dos PRs.
-func tituloDoPR(repo, pr string) string {
+func prTitle(repo, pr string) string {
 	out, err := exec.Command("gh", "pr", "view", pr, "--repo", repo,
 		"--json", "title", "--jq", ".title // \"\"").Output()
 	if err != nil {

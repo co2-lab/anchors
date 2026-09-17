@@ -159,8 +159,8 @@ nodes:
         - test
     - id: cmd/anchors/board_serve.go
       kind: code
-      rev: 3f24706c1473
-      updated_at: "2026-09-16"
+      rev: c2fb0731afad
+      updated_at: "2026-09-17"
       layer: comando
       tags:
         - cli
@@ -902,7 +902,7 @@ nodes:
         - test
     - id: cmd/anchors/synthesize.go
       kind: code
-      rev: bba0c14746a6
+      rev: 1cc45e07728f
       updated_at: "2026-09-17"
       layer: comando
       tags:
