@@ -159,7 +159,7 @@ nodes:
         - test
     - id: cmd/anchors/board_serve.go
       kind: code
-      rev: a228fc5c2d57
+      rev: 3f24706c1473
       updated_at: "2026-09-16"
       layer: comando
       tags:
@@ -412,6 +412,7 @@ nodes:
     - id: cmd/anchors/generated_paths.go
       kind: code
       rev: 1ecabe257804
+      updated_at: "2026-09-17"
       layer: comando
       tags:
         - cli
@@ -902,6 +903,7 @@ nodes:
     - id: cmd/anchors/synthesize.go
       kind: code
       rev: bba0c14746a6
+      updated_at: "2026-09-17"
       layer: comando
       tags:
         - cli
@@ -909,6 +911,7 @@ nodes:
     - id: cmd/anchors/synthesize_test.go
       kind: test
       rev: a2efa5f0497e
+      updated_at: "2026-09-17"
       layer: teste
       tags:
         - test
@@ -2987,7 +2990,7 @@ nodes:
     - id: internal/scan/progresso.go
       kind: code
       rev: a2a12e8c1203
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-17"
       layer: scan
       tags:
         - nucleo
