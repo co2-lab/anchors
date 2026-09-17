@@ -260,13 +260,37 @@ func coletaCompleta(repo string) ([]byte, error) {
 	// comentários. A ponte abaixo renomeia e injeta `comments: []` para o contrato
 	// continuar o mesmo.
 	//
-	// O CUSTO disso é o `owner`/`ownership`, que saem dos comentários: sem eles, o board
-	// local não mostra de quem é o card. É a troca que mantém o board DE PÉ quando o
-	// GraphQL cai — e um board sem o dono é melhor que um board sem nada.
+	// OS COMENTÁRIOS DOS ABERTOS VÊM POR GRAPHQL, em lote.
+	//
+	// Isto injetava `comments: []` fixo, e o custo era o `owner`/`ownership` — que saem do
+	// comentário `anchors-owner:`. Sem eles o board não mostrava de quem é o card, e a
+	// modal (que também lê comentário) abria vazia.
+	//
+	// A razão original era boa: buscar comentário por REST é uma chamada POR CARD, e com
+	// centenas de cards isso é lento e bate no limite. Mas o GraphQL traz issue COM
+	// comentários numa chamada só — medido: 3 issues com os últimos comentários de cada
+	// numa requisição.
+	//
+	// SÓ OS ABERTOS, e é o que torna o custo aceitável: o `owner` de um card fechado não
+	// interessa a ninguém, e os abertos são uma fração do total (medido: 87 de 421).
+	//
+	// FALHA AQUI NÃO DERRUBA O BOARD. Se o GraphQL recusar — é o limite secundário que
+	// motivou o REST —, os comentários ficam vazios e o board serve o resto. Um board sem
+	// o dono continua sendo melhor que um board sem nada.
+	// O MAPA VAI POR ARQUIVO, e não embutido na expressão.
+	//
+	// A primeira versão o interpolava no jq, e o `exec` recusou: `argument list too long`.
+	// Com 87 cards e trinta comentários cada, o literal passa do limite do sistema — e o
+	// erro aparecia como board VAZIO, não como falha de coleta.
+	//
+	// `--slurpfile` lê o arquivo e o expõe como variável. O `[0]` porque ele sempre entrega
+	// um array dos documentos do arquivo, e o nosso é um objeto só.
+	arqCom, limpaCom := comentariosEmArquivo(repo)
+	defer limpaCom()
 	ponte := `[.[] | select(.pull_request == null) | {
 	    number, title, url, body, labels, author: .user,
 	    updatedAt: .updated_at, createdAt: .created_at, closedAt: .closed_at,
-	    comments: []
+	    comments: ($coment[0][.number|tostring] // [])
 	  }] | ` + jq
 
 	// O `--paginate` sem `--jq` devolve os arrays de cada página concatenados
@@ -276,7 +300,17 @@ func coletaCompleta(repo string) ([]byte, error) {
 		"/repos/"+repo+"/issues?state=all&labels=anchors&per_page=100").Output()
 	if err == nil {
 		//  achata o  que a costura das páginas produz.
-		filtro := exec.Command("jq", "-c", "add | "+ponte)
+		argvJq := []string{"-c"}
+		if arqCom != "" {
+			argvJq = append(argvJq, "--slurpfile", "coment", arqCom)
+		} else {
+			// SEM O ARQUIVO o jq não conheceria `$coment`, e a expressão inteira falharia
+			// — levando o board a zero itens por falta do DONO, que é o menos importante
+			// do que ele mostra.
+			argvJq = append(argvJq, "--argjson", "coment", "[{}]")
+		}
+		argvJq = append(argvJq, "add | "+ponte)
+		filtro := exec.Command("jq", argvJq...)
 		filtro.Stdin = strings.NewReader("[" + strings.ReplaceAll(string(cru), "][", ",") + "]")
 		var saida []byte
 		saida, err = filtro.Output()
@@ -318,3 +352,112 @@ func coletaCompleta(repo string) ([]byte, error) {
 }
 
 var _ = os.Getenv // mantém o import quando o corpo muda
+
+// comentariosDosAbertos devolve, como literal jq, um mapa de número → comentários.
+//
+// O `owner` e o `ownership` do board saem do comentário `anchors-owner:`, e a modal do card
+// mostra a conversa. Sem eles o board local ficava mudo sobre quem está com o quê.
+//
+// GRAPHQL PORQUE O REST PEDIRIA UMA CHAMADA POR CARD. A consulta abaixo traz cem issues com
+// os últimos comentários de cada, e pagina pelo cursor.
+//
+// `last: 30` e não `first`: o que interessa é o comentário MAIS RECENTE — o `anchors-owner`
+// atual, não o primeiro que o card recebeu. Um card com muita conversa teria o dono no fim.
+//
+// DEVOLVE `{}` em qualquer erro, e isso é deliberado: o limite secundário do GraphQL é o
+// que motivou a coleta por REST, e um board sem dono é melhor que um board sem nada.
+// comentariosEmArquivo grava o mapa num temporário e devolve o caminho.
+//
+// O jq recebe por `--slurpfile` porque o literal não cabe na linha de comando: medido com
+// 87 cards, o `exec` recusou com `argument list too long` — e o sintoma era o board vazio.
+//
+// Devolve caminho vazio quando não há o que gravar; quem chama trata passando `[{}]`.
+func comentariosEmArquivo(repo string) (string, func()) {
+	m := comentariosDosAbertos(repo)
+	if m == "" || m == "{}" {
+		return "", func() {}
+	}
+	f, err := os.CreateTemp("", "anchors-board-coment-*.json")
+	if err != nil {
+		return "", func() {}
+	}
+	if _, err := f.WriteString(m); err != nil {
+		f.Close()
+		os.Remove(f.Name())
+		return "", func() {}
+	}
+	f.Close()
+	return f.Name(), func() { os.Remove(f.Name()) }
+}
+
+func comentariosDosAbertos(repo string) string {
+	partes := strings.SplitN(repo, "/", 2)
+	if len(partes) != 2 {
+		return "{}"
+	}
+	q := `query($owner:String!,$name:String!,$cursor:String){
+	  repository(owner:$owner,name:$name){
+	    issues(first:100,states:OPEN,labels:["anchors"],after:$cursor){
+	      pageInfo{hasNextPage endCursor}
+	      nodes{number comments(last:30){nodes{body}}}
+	    }
+	  }
+	}`
+	acc := map[string][]map[string]string{}
+	cursor := ""
+	for i := 0; i < 10; i++ { // teto: 1000 cards abertos é muito além do real
+		argv := []string{"api", "graphql", "-f", "query=" + q,
+			"-F", "owner=" + partes[0], "-F", "name=" + partes[1]}
+		if cursor != "" {
+			argv = append(argv, "-F", "cursor="+cursor)
+		}
+		out, err := exec.Command("gh", argv...).Output()
+		if err != nil {
+			// PARCIAL VALE MAIS QUE NADA: se a segunda página falhar, o board mostra o
+			// dono dos cards da primeira em vez de nenhum.
+			break
+		}
+		var resp struct {
+			Data struct {
+				Repository struct {
+					Issues struct {
+						PageInfo struct {
+							HasNextPage bool   `json:"hasNextPage"`
+							EndCursor   string `json:"endCursor"`
+						} `json:"pageInfo"`
+						Nodes []struct {
+							Number   int `json:"number"`
+							Comments struct {
+								Nodes []struct {
+									Body string `json:"body"`
+								} `json:"nodes"`
+							} `json:"comments"`
+						} `json:"nodes"`
+					} `json:"issues"`
+				} `json:"repository"`
+			} `json:"data"`
+		}
+		if json.Unmarshal(out, &resp) != nil {
+			break
+		}
+		for _, n := range resp.Data.Repository.Issues.Nodes {
+			lista := make([]map[string]string, 0, len(n.Comments.Nodes))
+			for _, c := range n.Comments.Nodes {
+				lista = append(lista, map[string]string{"body": c.Body})
+			}
+			acc[fmt.Sprintf("%d", n.Number)] = lista
+		}
+		if !resp.Data.Repository.Issues.PageInfo.HasNextPage {
+			break
+		}
+		cursor = resp.Data.Repository.Issues.PageInfo.EndCursor
+	}
+	if len(acc) == 0 {
+		return "{}"
+	}
+	b, err := json.Marshal(acc)
+	if err != nil {
+		return "{}"
+	}
+	return string(b)
+}
