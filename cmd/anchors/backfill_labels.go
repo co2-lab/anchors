@@ -149,7 +149,7 @@ bloqueador faria o claim segurar o card por uma decisão que ninguém ligou a el
 				if err != nil {
 					continue
 				}
-				m := prCitadoRE.FindStringSubmatch(string(corpo))
+				m := prMentionRE.FindStringSubmatch(string(corpo))
 				if m == nil {
 					continue
 				}
@@ -297,9 +297,9 @@ bloqueador faria o claim segurar o card por uma decisão que ninguém ligou a el
 	return cmd
 }
 
-// prCitadoRE casa a primeira menção a um PR no corpo do card.
+// prMentionRE casa a primeira menção a um PR no corpo do card.
 //
 // `PR #N` e não só `#N`: um card cita muitos números — outros cards, commits, regras — e
 // só a forma com a palavra diz que aquele é um pull request. É o mínimo para não
 // transformar prosa em vínculo.
-var prCitadoRE = regexp.MustCompile(`(?i)\bPR #(\d+)`)
+var prMentionRE = regexp.MustCompile(`(?i)\bPR #(\d+)`)
