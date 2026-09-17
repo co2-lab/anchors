@@ -204,6 +204,28 @@ func LabelSob(card string) string { return PrefixoLabelSob + card }
 // um eixo independente do estado.
 const LabelNeedsUser = "anchors:needs-user"
 
+// LabelNeedsFraming marca o card em que a dúvida é o ENQUADRAMENTO, não o mérito.
+//
+// São duas filas do usuário, com pesos diferentes, e misturá-las faz a mais barata custar
+// como a mais cara:
+//
+//	needs-user     "decida entre A e B" — existe mais de uma resposta defensável, e
+//	               escolher entre elas muda o que o produto faz
+//	needs-framing  "confira se isto é seu" — quem escalou não soube dizer se muda a
+//	               direção, e preferiu declarar a dúvida a afirmar impacto que não mediu
+//
+// A SEGUNDA TEM SAÍDA BARATA: se não impacta, quem lê troca a label por `to-do` e o card
+// volta à fila. Ninguém precisa decidir o mérito. Sem a distinção, quem abre a fila gasta
+// o esforço de decidir antes de descobrir que só precisava devolver o card.
+//
+// MEDIDO no projeto de referência: das 26 decisões abertas, uma triagem concluiu que eram
+// SETE decisões reais. Boa parte do resto era enquadramento — card aberto como decisão
+// porque o agente teve dúvida, e a doutrina do `escalate` dizia "use `--for-user` (...) ou
+// se você tem dúvida se impacta", convidando a escalar por segurança.
+//
+// NÃO É ESTADO, como o `needs-user`: o card continua na coluna onde o trabalho parou.
+const LabelNeedsFraming = "anchors:needs-framing"
+
 // PrefixoLabelDesbloqueia marca o card cuja ENTREGA destrava outro.
 //
 // `needs-user` diz que um card espera uma PESSOA, e o claim já não o entrega enquanto a
