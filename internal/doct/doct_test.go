@@ -294,7 +294,7 @@ func TestNew_specNoMapaSemArquivoFalha(t *testing.T) {
 // propósito (`FRMTT-I02`: à direita do símbolo é onde o formatador não o move). Mas o
 // compilado usa esse texto como rótulo entre colchetes, e o resultado era ilegível:
 //
-//	- [DSHBR-B01 — a escolha de fixar <!-- @no-mark: ... -->](camadas/shell.md#...)
+//   - [DSHBR-B01 — a escolha de fixar <!-- @no-mark: ... -->](camadas/shell.md#...)
 //
 // MEDIDO no projeto de referência (#647): 57 ocorrências no `docs/regras.md`, espalhadas
 // por todas as camadas — não é defeito de uma spec, é do gerador.
