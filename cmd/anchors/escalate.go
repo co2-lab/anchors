@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -41,7 +42,7 @@ import (
 // O escalonamento por EXAUSTÃO (dez revisões sem convergir) já existia no pipeline de
 // claim. Este é o por JUÍZO: ninguém está travado, alguém percebeu algo.
 func newEscalateCmd() *cobra.Command {
-	var root, sobre, card string
+	var root, sobre, card, revisandoPR string
 	var paraUsuario, incerto bool
 	cmd := &cobra.Command{
 		Use:   "escalate <motivo>",
@@ -156,6 +157,34 @@ card para trocar uma palavra é burocracia.`,
 			// O `pr-body` já descobria o card pelo `ANCHORS_AGENT` (é o que o
 			// `requestedCards` faz), e este comando não. A assimetria não tinha razão: os
 			// dois perguntam a mesma coisa — "qual card este agente pegou?".
+			// O CARD SAI DO PR QUE SE REVISAVA, quando é esse o caminho.
+			//
+			// Um achado que nasce revisando trabalho alheio não tem `anchors-owner` — o
+			// agente não pegou card nenhum, está lendo o de outro. A descoberta abaixo
+			// devolve vazio, e o achado nascia sem procedência: medido nos cards #786 e
+			// #788, que citam o PR revisado em PROSA e não têm label nenhuma.
+			//
+			// O VÍNCULO NÃO É COM O PR, É COM O CARD. Um PR já declara a issue dele
+			// (`Refs`/`Closes`), e guardar as duas pontas duplicaria o que a plataforma
+			// relaciona: quem abre o PR vê a issue. O que faltava era o comando LER essa
+			// declaração em vez de o agente procurar.
+			//
+			// Conferido nos dois casos reais: o PR #556 declara `Closes #198`, e o #783
+			// declara `Refs #735` — que é o card cuja decisão gerou a contradição que o
+			// #788 escalou.
+			if strings.TrimSpace(card) == "" && strings.TrimSpace(revisandoPR) != "" {
+				if n := cardDoPR(cfg.Workflow.Repo, revisandoPR); n != "" {
+					card = n
+					fmt.Fprintf(os.Stderr,
+						"anchors: o PR #%s declara o card #%s — é sob ele que o achado nasce\n",
+						strings.TrimPrefix(revisandoPR, "#"), card)
+				} else {
+					fmt.Fprintf(os.Stderr,
+						"anchors: o PR #%s não declara card (`Refs`/`Closes`) — o achado "+
+							"nasce sem procedência\n", strings.TrimPrefix(revisandoPR, "#"))
+				}
+			}
+
 			if strings.TrimSpace(card) == "" {
 				if achados := requestedCards("", cfg); len(achados) == 1 {
 					card = achados[0]
@@ -223,6 +252,28 @@ card para trocar uma palavra é burocracia.`,
 			// SOB o card de origem, como LABEL — o que permite listar o que pende sob um
 			// trabalho (`--label anchors:under-44`) e entregá-lo no mesmo PR. Uma frase no
 			// corpo ("descoberto durante o card #44") não se consulta.
+			// O PR REVISADO É PROCEDÊNCIA TAMBÉM, e coexiste com o card.
+			//
+			// Os dois respondem perguntas diferentes: o `under-<n>` diz a qual trabalho o
+			// achado pertence (por onde ele se entrega), e o `from-pr-<n>` diz onde alguém
+			// o viu (por onde se rastreia a revisão).
+			//
+			// NÃO É REDUNDANTE com o `Refs` do PR, embora o card seja DERIVADO dele. Ler o
+			// `Refs` é uma consulta no momento do escalate; se o PR for reescrito depois, a
+			// declaração muda e o vínculo histórico se perde. A label registra o que foi
+			// lido, quando foi lido.
+			if revisandoPR != "" {
+				n := strings.TrimPrefix(strings.TrimSpace(revisandoPR), "#")
+				rotulo := initx.LabelDePR(n)
+				// SOB DEMANDA, como as outras de vínculo: uma por PR, e pré-criar todas é
+				// impossível. "Já existe" é o caso comum do segundo achado no mesmo PR.
+				_ = exec.Command("gh", "label", "create", rotulo,
+					"--repo", cfg.Workflow.Repo,
+					"--color", "d4c5f9",
+					"--description", "achado visto ao revisar o PR #"+n,
+				).Run()
+				labels = append(labels, rotulo)
+			}
 			if card != "" {
 				labels = append(labels, initx.LabelSob(card))
 			}
@@ -353,6 +404,8 @@ card para trocar uma palavra é burocracia.`,
 	cmd.Flags().StringVar(&root, "root", ".", "raiz do projeto")
 	cmd.Flags().StringVar(&sobre, "about", "", "o plano ou spec onde está a incoerência")
 	cmd.Flags().StringVar(&card, "card", "", "número do card onde a necessidade foi descoberta")
+	cmd.Flags().StringVar(&revisandoPR, "reviewing-pr", "",
+		"o PR que você revisava: o card sai do Refs/Closes dele, sem você procurar")
 	cmd.Flags().BoolVar(&paraUsuario, "for-user", false,
 		"você AFIRMA que a mudança impacta a DIREÇÃO do projeto: vira decisão e para o card")
 	cmd.Flags().BoolVar(&incerto, "unsure", false,
@@ -459,3 +512,36 @@ func numeroDaIssue(url string) string {
 	}
 	return n
 }
+
+// cardDoPR lê o card que um PR declara no corpo, pelo `Refs`/`Closes`.
+//
+// É o mesmo vínculo que o `pr-body` escreve e que o `pr-checks` lê para mover o card — a
+// diferença é a direção: aqui se pergunta "de qual card é este PR?", para que um achado
+// nascido ao revisá-lo herde a procedência certa.
+//
+// SÓ A PRIMEIRA linha de vínculo. Um PR que entrega vários cards declara vários, e escolher
+// entre eles é julgamento de quem leu o achado — o comando não adivinha: devolve o primeiro
+// e quem discordar passa `--card`.
+func cardDoPR(repo, pr string) string {
+	pr = strings.TrimPrefix(strings.TrimSpace(pr), "#")
+	if repo == "" || pr == "" {
+		return ""
+	}
+	out, err := exec.Command("gh", "pr", "view", pr,
+		"--repo", repo, "--json", "body", "--jq", ".body // \"\"").Output()
+	if err != nil {
+		return ""
+	}
+	m := vinculoNoCorpoRE.FindStringSubmatch(string(out))
+	if m == nil {
+		return ""
+	}
+	return m[1]
+}
+
+// vinculoNoCorpoRE casa a linha de vínculo que o `pr-body` gera e as que se escrevem à mão.
+//
+// `(?mi)` porque a linha pode estar em qualquer ponto do corpo e a grafia varia. As quatro
+// palavras são as que o `pr-checks` também aceita — manter as listas iguais é o que impede
+// que um PR seja vínculo para um comando e não para o outro.
+var vinculoNoCorpoRE = regexp.MustCompile(`(?mi)^\s*(?:refs|closes|fixes|resolves)\s+#(\d+)`)
