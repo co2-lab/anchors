@@ -1323,7 +1323,7 @@ nodes:
         - test
     - id: internal/doct/doct_test.go
       kind: test
-      rev: 5f35e2863530
+      rev: 444112596d2e
       updated_at: "2026-09-17"
       code: GLCGL
       layer: teste
