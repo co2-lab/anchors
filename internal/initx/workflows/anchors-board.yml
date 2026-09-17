@@ -85,6 +85,13 @@ jobs:
           # `stale_pipeline_blocks` no anchors.yaml. O padrão do comando é avisar e sair
           # com 0 — e um `continue-on-error` aqui anularia a escolha de quem declarou que
           # prefere barrar.
+          # AQUI O AVISO BASTA, e a diferença com o `anchors-gates.yml` é o que o passo
+          # FAZ. Lá o pipeline decide se o trabalho é aceito, e um verificador velho aceita
+          # o que a versão nova recusaria — por isso ele barra (`stale_pipeline_blocks`).
+          #
+          # Este publica e move card. Reprová-lo por pipeline velho trocaria "o board
+          # atualiza com o desenho antigo" por "o board não atualiza" — e ninguém saberia
+          # onde o trabalho está. O aviso é a escolha certa para quem informa.
           if ! anchors doctor --check-pipelines; then
             echo "::warning::Os pipelines do Anchors estão desatualizados — eles rodam, mas o que foi corrigido depois NÃO acontece. Rode \`anchors doctor --fix\`, commite e suba."
           fi

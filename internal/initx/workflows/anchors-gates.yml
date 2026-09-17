@@ -70,11 +70,24 @@ jobs:
 
       - name: Conferir se este pipeline está atualizado
         run: |
-          # SEM `continue-on-error`: quem decide se isto barra é o PROJETO, pelo
-          # `stale_pipeline_blocks` no anchors.yaml.
-          if ! anchors doctor --check-pipelines; then
-            echo "::warning::Este pipeline está desatualizado — ele roda, mas o que foi corrigido depois NÃO acontece. Rode \`anchors doctor --fix\`, commite e suba."
-          fi
+          # SEM `continue-on-error` E SEM ENGOLIR O CÓDIGO DE SAÍDA: quem decide se isto
+          # barra é o PROJETO, pelo `stale_pipeline_blocks` no anchors.yaml — e o `doctor`
+          # já implementa essa decisão, saindo com 1 quando o projeto a declarou.
+          #
+          # HAVIA AQUI UM `if ! ...; then echo ::warning::; fi`, e ele ANULAVA a decisão: o
+          # `if` consome o código de saída, então o passo passava verde mesmo com o projeto
+          # tendo declarado `true`. O comentário acima dizia que o projeto decide, e o
+          # código logo abaixo tirava a decisão dele.
+          #
+          # MEDIDO (#798): mutação aplicada ao próprio pipeline — 6 dos 10 passos de
+          # verificação somem sem que NENHUM sinal acuse. Os quatro passos deste arquivo
+          # eram o único caso detectado, e por este comando; mas o aviso saía de dentro do
+          # arquivo verificado, então apagar o passo apagava o aviso junto.
+          #
+          # Agora o comando decide: `stale_pipeline_blocks: false` (ou ausente) faz o
+          # `doctor` sair com 0 e imprimir o aviso ele mesmo; `true` faz sair com 1 e o
+          # passo reprova.
+          anchors doctor --check-pipelines
 
       - name: O mapa está em dia?
         run: |
