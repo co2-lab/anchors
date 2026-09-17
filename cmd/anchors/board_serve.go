@@ -285,7 +285,7 @@ func coletaCompleta(repo string) ([]byte, error) {
 	//
 	// `--slurpfile` lê o arquivo e o expõe como variável. O `[0]` porque ele sempre entrega
 	// um array dos documentos do arquivo, e o nosso é um objeto só.
-	arqCom, limpaCom := comentariosEmArquivo(repo)
+	arqCom, limpaCom := commentsToFile(repo)
 	defer limpaCom()
 	ponte := `[.[] | select(.pull_request == null) | {
 	    number, title, url, body, labels, author: .user,
@@ -353,7 +353,7 @@ func coletaCompleta(repo string) ([]byte, error) {
 
 var _ = os.Getenv // mantém o import quando o corpo muda
 
-// comentariosDosAbertos devolve, como literal jq, um mapa de número → comentários.
+// commentsOfOpenCards devolve, como literal jq, um mapa de número → comentários.
 //
 // O `owner` e o `ownership` do board saem do comentário `anchors-owner:`, e a modal do card
 // mostra a conversa. Sem eles o board local ficava mudo sobre quem está com o quê.
@@ -366,14 +366,14 @@ var _ = os.Getenv // mantém o import quando o corpo muda
 //
 // DEVOLVE `{}` em qualquer erro, e isso é deliberado: o limite secundário do GraphQL é o
 // que motivou a coleta por REST, e um board sem dono é melhor que um board sem nada.
-// comentariosEmArquivo grava o mapa num temporário e devolve o caminho.
+// commentsToFile grava o mapa num temporário e devolve o caminho.
 //
 // O jq recebe por `--slurpfile` porque o literal não cabe na linha de comando: medido com
 // 87 cards, o `exec` recusou com `argument list too long` — e o sintoma era o board vazio.
 //
 // Devolve caminho vazio quando não há o que gravar; quem chama trata passando `[{}]`.
-func comentariosEmArquivo(repo string) (string, func()) {
-	m := comentariosDosAbertos(repo)
+func commentsToFile(repo string) (string, func()) {
+	m := commentsOfOpenCards(repo)
 	if m == "" || m == "{}" {
 		return "", func() {}
 	}
@@ -390,7 +390,7 @@ func comentariosEmArquivo(repo string) (string, func()) {
 	return f.Name(), func() { os.Remove(f.Name()) }
 }
 
-func comentariosDosAbertos(repo string) string {
+func commentsOfOpenCards(repo string) string {
 	partes := strings.SplitN(repo, "/", 2)
 	if len(partes) != 2 {
 		return "{}"
