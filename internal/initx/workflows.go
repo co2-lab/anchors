@@ -316,6 +316,29 @@ func LabelDesbloqueia(card string) string { return PrefixoLabelDesbloqueia + car
 // `--for-user`.
 const PrefixoLabelBlockedBy = "anchors:blocked-by-"
 
+// PrefixoLabelDePR liga o achado ao PULL REQUEST em que ele foi visto.
+//
+// É procedência, como o `under-<n>`, e os dois COEXISTEM porque respondem perguntas
+// diferentes:
+//
+//	anchors:under-198     o achado pertence ao trabalho do card #198 — é por onde se
+//	                      entrega junto, e é o que o `claim` e o `pr-body` leem
+//	anchors:from-pr-556   foi lendo o PR #556 que alguém viu — é por onde se rastreia a
+//	                      REVISÃO, e ele sobrevive ao PR ser revertido ou reescrito
+//
+// O card #647 tem os dois na história e só um virou label: a prosa diz "ao revisar o PR
+// #556" e a label diz `under-198` — que é o card que aquele PR fecha. Guardar só o card
+// perde por onde o achado apareceu; guardar só o PR perde onde ele se entrega.
+//
+// NÃO É REDUNDANTE com o `Refs` do PR. O PR declara a issue dele, e é daí que o `escalate`
+// DERIVA o card quando recebe `--reviewing-pr`. Mas derivar é ler uma vez: se o PR for
+// reescrito depois, a declaração muda e o vínculo histórico se perde. A label registra o
+// que foi lido, no momento em que foi lido.
+const PrefixoLabelDePR = "anchors:from-pr-"
+
+// LabelDePR é a label que liga o achado ao PR revisado.
+func LabelDePR(pr string) string { return PrefixoLabelDePR + pr }
+
 // LabelBlockedBy é a label do card que espera `card`.
 func LabelBlockedBy(card string) string { return PrefixoLabelBlockedBy + card }
 
