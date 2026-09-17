@@ -2043,3 +2043,53 @@ func maxInt(a, b int) int {
 	}
 	return b
 }
+
+// O `concurrency` QUE ESCREVE NO CARD É POR PR, não global.
+//
+// A razão de serializar é a escrita: dois eventos do MESMO PR (o `check_suite` e o
+// `synchronize`) podem chegar juntos e mover o mesmo card duas vezes. O grupo por PR
+// resolve isso — e PRs diferentes mexem em cards diferentes.
+//
+// O GRUPO GLOBAL CUSTAVA O WORKFLOW INTEIRO. O GitHub mantém 1 rodando + 1 pendente por
+// grupo, e um terceiro run enfileirado CANCELA o pendente. Com fila grande, quase todo PR
+// perde a corrida.
+//
+// E o cancelamento é PIOR que falha: um job que falha aparece vermelho; um job cancelado
+// antes de criar o check run não aparece de forma alguma — o rollup fica idêntico ao de um
+// PR onde o workflow nunca existiu.
+//
+// MEDIDO no projeto de referência (#821): com 19 PRs abertos, 10 de 10 conferidos estavam
+// SEM o check do `pr-checks`. E ele é quem move o card para `ready-to-test` no merge.
+func TestConcurrencyDoPRChecksEhPorPR(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-pr-checks.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+
+	i := strings.Index(s, "concurrency:")
+	if i < 0 {
+		t.Fatal("o `pr-checks` não declara `concurrency` — dois eventos do mesmo PR " +
+			"escreveriam estado em cima de estado no card")
+	}
+	fim := strings.Index(s[i:], "\npermissions:")
+	if fim < 0 {
+		fim = len(s) - i
+	}
+	bloco := s[i : i+fim]
+
+	// O GRUPO tem de variar por PR. Um literal fixo serializa o repositório inteiro.
+	if !strings.Contains(bloco, "github.event.pull_request.number") {
+		t.Error("o `group` do `pr-checks` não varia por PR — com fila grande o GitHub " +
+			"cancela os pendentes, e o workflow SOME do rollup em vez de falhar")
+	}
+
+	// E O FALLBACK importa: este workflow também roda por `check_suite` e por
+	// `workflow_dispatch`, onde `pull_request.number` é vazio. Sem fallback, todos esses
+	// eventos cairiam no MESMO grupo (o de sufixo vazio) — o global de volta, por outro
+	// caminho.
+	if !strings.Contains(bloco, "||") {
+		t.Error("o `group` não tem fallback para os eventos sem `pull_request.number` " +
+			"(`check_suite`, `workflow_dispatch`) — eles voltariam a compartilhar um grupo")
+	}
+}
