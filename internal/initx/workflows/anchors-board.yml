@@ -149,7 +149,13 @@ jobs:
                     state: ([.labels[].name | select(startswith("anchors:"))
                               | select(. != "anchors:needs-user")
                               | select(startswith("anchors:blocked-by-") | not)] | .[0] // "anchors:to-do"),
-                    escalated: ([.labels[].name] | any(. == "anchors:needs-user")),
+                    escalated: ([.labels[].name] | any(. == "anchors:needs-user" or . == "anchors:needs-framing")),
+                    # O QUE O CARD PEDE. `needs-user` é "decida entre A e B";
+                    # `needs-framing` é "confira se isto é seu" — a segunda tem saída
+                    # barata (trocar a label por `to-do`) e não exige decidir o mérito.
+                    # Sem distinguir, quem abre a fila gasta o esforço da primeira antes
+                    # de descobrir que era a segunda.
+                    framing: ([.labels[].name] | any(. == "anchors:needs-framing")),
                     # QUEM SEGURA ESTE CARD. `blocked-by-<n>` diz que ele espera o #n, e
                     # o board precisa do NÚMERO para desenhar o vínculo: "esperando você"
                     # sem dizer por qual decisão não diz onde o trabalho travou.

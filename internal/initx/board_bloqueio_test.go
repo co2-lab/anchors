@@ -387,3 +387,56 @@ func TestBoardMostraPorQuemOCardEspera(t *testing.T) {
 			"perde a cor que o distingue do card apenas escalado", n)
 	}
 }
+
+// AS DUAS FILAS DO USUÁRIO SÃO SEPARADAS NO BOARD, porque os pesos são diferentes.
+//
+//	needs-user     "decida entre A e B" — existe mais de uma resposta defensável, e
+//	               escolher entre elas muda o que o produto faz
+//	needs-framing  "confira se isto é seu" — quem escalou não soube dizer se muda a
+//	               direção, e preferiu declarar a dúvida a afirmar impacto que não mediu
+//
+// A SEGUNDA TEM SAÍDA BARATA: se não impacta, trocar a label por `to-do` devolve o card à
+// fila e ninguém decide o mérito. Misturá-las faz a barata custar como a cara — quem abre
+// a lista gasta o esforço de decidir antes de descobrir que só precisava devolver o card.
+//
+// A CAUSA era do produto: a ajuda do `escalate` dizia "use `--for-user` (...) ou se você
+// tem dúvida se impacta", convidando a escalar por segurança. O custo dessa prudência é
+// invisível para quem escala.
+//
+// MEDIDO no projeto de referência: 26 decisões abertas, e uma triagem concluiu que eram
+// SETE decisões reais.
+func TestBoardSeparaDecidirDeEnquadrar(t *testing.T) {
+	html, err := BoardHTML()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// O CAMPO da coleta tem de chegar ao HTML: sem ele as duas filas viram uma.
+	if !strings.Contains(html, "framing") {
+		t.Fatal("o board não lê `framing` — as duas filas do usuário aparecem como uma, e " +
+			"a que pede só enquadramento custa como a que pede decisão")
+	}
+
+	// AS DUAS LISTAS TÊM DE SAIR DO MESMO CONJUNTO, cada uma com um lado do campo.
+	//
+	// A primeira versão desta asserção procurava `p.framing` no HTML e SOBREVIVEU à
+	// mutação que esvazia a lista de enquadramento (`const enquadrar = []`) — porque a
+	// string continua aparecendo no filtro da outra lista. Ela media a presença do texto,
+	// não a separação.
+	//
+	// As duas metades do predicado são o que não se pode perder: uma lista com o campo
+	// verdadeiro e outra com ele falso. Qualquer uma sozinha deixa uma fila vazia.
+	for _, metade := range []string{"pendentes.filter((p) => !p.framing)", "pendentes.filter((p) => p.framing)"} {
+		if !strings.Contains(html, metade) {
+			t.Errorf("o board perdeu `%s` — sem as duas metades do filtro uma das filas "+
+				"nasce vazia, e os cards dela desaparecem da vista", metade)
+		}
+	}
+
+	// E A SAÍDA BARATA dita no texto: sem ela quem lê não sabe que pode devolver o card
+	// em vez de decidir, que é a única razão de a fila existir separada.
+	if !strings.Contains(html, "anchors:to-do") {
+		t.Error("a fila de enquadramento não diz COMO devolver o card à fila — sem isso " +
+			"quem lê decide o mérito por falta de alternativa visível")
+	}
+}

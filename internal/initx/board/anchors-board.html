@@ -194,6 +194,11 @@
           font-size: .68rem; font-weight: 500; color: var(--espera);
           border: 1px solid var(--espera); border-radius: 999px; padding: .08rem .45rem; }
   .selo.respondido { color: var(--alerta); border-color: var(--alerta); }
+  /* AS DUAS FILAS do usuário, visualmente distintas: a de decisão pede julgamento de
+     produto, a de enquadramento pede só "isto é meu?" — e tratá-las igual faz a segunda
+     custar como a primeira para quem lê. */
+  .fila-t { font-size: .82rem; font-weight: 600; margin: .9rem 0 .2rem; }
+  .fila-t.enquadrar { color: var(--fraco); }
   /* BLOQUEADO é mais forte que ESPERANDO, e a cor diz isso: o card escalado espera uma
      resposta e pode ter trabalho paralelo; o bloqueado não pode ser trabalhado por
      ninguém. O selo é clicável — vai para o card que segura, que é onde a resposta vai. */
@@ -733,13 +738,35 @@ function desenhaBloqueio(d) {
     return;
   }
 
+  // DUAS FILAS, e os pesos são diferentes.
+  //
+  // `needs-user` pede DECISÃO: existe mais de uma resposta defensável, e escolher entre
+  // elas muda o que o produto faz. `needs-framing` pede ENQUADRAMENTO: quem escalou não
+  // soube dizer se muda a direção, e a saída é barata — se não muda, trocar a label por
+  // `to-do` devolve o card à fila sem ninguém decidir o mérito.
+  //
+  // Misturá-las faz a barata custar como a cara: quem abre a lista gasta o esforço de
+  // decidir antes de descobrir que só precisava devolver o card.
+  const decidir = pendentes.filter((p) => !p.framing);
+  const enquadrar = pendentes.filter((p) => p.framing);
+
   el.innerHTML = `
     <h2 id="bloqueio-t">Esperando você · ${pendentes.length}</h2>
-    <p class="porque">Est${pendentes.length === 1 ? "a issue pede uma decisão" : "as issues pedem uma decisão"}
-      que nenhum agente pode tomar por você. Enquanto não houver resposta na issue, o que
-      depende ${pendentes.length === 1 ? "dela" : "delas"} não anda — e o board abaixo segue
-      mostrando o resto do trabalho como se nada estivesse travado.</p>
-    <ul>${ordena(pendentes)}</ul>`;
+    ${decidir.length ? `
+      <h3 class="fila-t">🛑 Decidir · ${decidir.length}</h3>
+      <p class="porque">Est${decidir.length === 1 ? "a issue pede uma decisão" : "as issues pedem uma decisão"}
+        que nenhum agente pode tomar por você. Enquanto não houver resposta na issue, o que
+        depende ${decidir.length === 1 ? "dela" : "delas"} não anda — e o board abaixo segue
+        mostrando o resto do trabalho como se nada estivesse travado.</p>
+      <ul>${ordena(decidir)}</ul>` : ""}
+    ${enquadrar.length ? `
+      <h3 class="fila-t enquadrar">❓ Só dizer se é seu · ${enquadrar.length}</h3>
+      <p class="porque">Aqui a dúvida é o <strong>enquadramento</strong>, não o mérito: quem
+        escalou não soube dizer se a mudança muda a DIREÇÃO do projeto, e preferiu declarar
+        a dúvida a afirmar um impacto que não mediu. Se não muda, troque
+        <code>anchors:needs-framing</code> por <code>anchors:to-do</code> e o card volta à
+        fila — não gaste o esforço de decidir.</p>
+      <ul>${ordena(enquadrar)}</ul>` : ""}`;
   el.hidden = false;
 }
 
