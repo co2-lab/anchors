@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os/exec"
+	"regexp"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -115,6 +116,83 @@ bloqueador faria o claim segurar o card por uma decisão que ninguém ligou a el
 				}
 			}
 
+			// A PROCEDÊNCIA DO PR REVISADO, para quem nasceu sem card.
+			//
+			// Um achado que nasce revisando trabalho alheio não tem `anchors-owner`, e até
+			// a v0.1.139 nascia sem label nenhuma — citando o PR em PROSA, que é o que a
+			// doutrina do `under-<n>` condena.
+			//
+			// MEDIDO no projeto de referência: 23 decisões sem `under-`, e várias citando
+			// "PR #N" no corpo. O vínculo existe, escrito à mão, e não se consulta.
+			//
+			// O QUE ESTE PASSO FAZ: lê o PR citado, deriva o card do `Refs`/`Closes` dele,
+			// e grava as DUAS labels — `from-pr-<n>` (onde foi visto) e `under-<card>`
+			// (a que trabalho pertence).
+			//
+			// E NÃO ADIVINHA: só a primeira menção de `PR #N` no corpo, e só quando o PR
+			// de fato declara um card. Um número solto na prosa não vira vínculo — é o
+			// mesmo cuidado que o `pr-checks` toma ao ler o `Refs` só no início da linha.
+			recuperadosDePR := 0
+			for _, d := range decisoes {
+				temUnder := false
+				for _, l := range d.Labels {
+					if strings.HasPrefix(l.Name, initx.PrefixoLabelSob) {
+						temUnder = true
+						break
+					}
+				}
+				if temUnder {
+					continue
+				}
+				corpo, err := exec.Command("gh", "issue", "view", fmt.Sprintf("%d", d.Number),
+					"--repo", repo, "--json", "body", "--jq", ".body // \"\"").Output()
+				if err != nil {
+					continue
+				}
+				m := prMentionRE.FindStringSubmatch(string(corpo))
+				if m == nil {
+					continue
+				}
+				prCitado := m[1]
+				cardDoPr := cardDoPR(repo, prCitado)
+				if cardDoPr == "" {
+					continue
+				}
+				rotulos := []string{initx.LabelDePR(prCitado), initx.LabelSob(cardDoPr)}
+				if dryRun {
+					fmt.Fprintf(cmd.OutOrStdout(),
+						"· #%d receberia `%s` e `%s` (PR citado no corpo)\n",
+						d.Number, rotulos[0], rotulos[1])
+					recuperadosDePR++
+					continue
+				}
+				for _, r := range rotulos {
+					cor, desc := "d4c5f9", "achado visto ao revisar o PR #"+prCitado
+					if strings.HasPrefix(r, initx.PrefixoLabelSob) {
+						cor, desc = "c5def5", "achado que nasceu durante o trabalho do card #"+cardDoPr
+					}
+					_ = exec.Command("gh", "label", "create", r,
+						"--repo", repo, "--color", cor, "--description", desc).Run()
+				}
+				if o, err := exec.Command("gh", "issue", "edit", fmt.Sprintf("%d", d.Number),
+					"--repo", repo, "--add-label", strings.Join(rotulos, ","),
+				).CombinedOutput(); err != nil {
+					fmt.Fprintf(cmd.ErrOrStderr(), "· #%d: %v — %s\n",
+						d.Number, err, strings.TrimSpace(string(o)))
+					continue
+				}
+				fmt.Fprintf(cmd.OutOrStdout(), "· #%d ← PR #%s, card #%s\n",
+					d.Number, prCitado, cardDoPr)
+				recuperadosDePR++
+			}
+			if recuperadosDePR > 0 {
+				verbo := "recuperada(s) do PR citado"
+				if dryRun {
+					verbo = "a recuperar do PR citado (nada foi tocado)"
+				}
+				fmt.Fprintf(cmd.OutOrStdout(), "\n%d procedência(s) %s\n", recuperadosDePR, verbo)
+			}
+
 			if len(segurados) == 0 {
 				fmt.Fprintf(cmd.OutOrStdout(),
 					"nenhum vínculo a recuperar: %d decisão(ões) aberta(s), e nenhuma "+
@@ -218,3 +296,10 @@ bloqueador faria o claim segurar o card por uma decisão que ninguém ligou a el
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "mostra o que faria, sem tocar em nada")
 	return cmd
 }
+
+// prMentionRE casa a primeira menção a um PR no corpo do card.
+//
+// `PR #N` e não só `#N`: um card cita muitos números — outros cards, commits, regras — e
+// só a forma com a palavra diz que aquele é um pull request. É o mínimo para não
+// transformar prosa em vínculo.
+var prMentionRE = regexp.MustCompile(`(?i)\bPR #(\d+)`)
