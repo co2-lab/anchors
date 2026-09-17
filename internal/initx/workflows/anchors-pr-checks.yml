@@ -42,10 +42,27 @@ on:
         required: true
         type: string
 
-# Serializado: dois eventos do mesmo PR (o check_suite e o synchronize) podem chegar
-# juntos, e mover o mesmo card duas vezes escreve estado em cima de estado.
+# Serializado POR PR, e não no repositório inteiro.
+#
+# A razão de serializar é a escrita no card: dois eventos do MESMO PR (o `check_suite` e o
+# `synchronize`) podem chegar juntos e mover o mesmo card duas vezes. O grupo por PR resolve
+# isso — e PRs diferentes mexem em cards diferentes.
+#
+# O GRUPO GLOBAL CUSTAVA O WORKFLOW INTEIRO. O GitHub mantém 1 rodando + 1 pendente por
+# grupo, e um terceiro run enfileirado CANCELA o pendente. Com uma fila grande, quase todo
+# PR perde a corrida.
+#
+# E o cancelamento é pior que falha: um job que falha aparece vermelho; um job cancelado
+# ANTES de criar o check run não aparece de forma alguma — o rollup do PR fica idêntico ao
+# de um PR onde este workflow nunca existiu.
+#
+# MEDIDO no projeto de referência (#821): com 19 PRs abertos, 10 de 10 conferidos estavam
+# SEM o check deste workflow. E ele é quem move o card para `ready-to-test` no merge —
+# então o card não se movia, e a coluna ficava parada sem ninguém saber por quê.
+#
+# O `anchors-gates.yml` já usava o grupo por PR no mesmo repositório; este ficou para trás.
 concurrency:
-  group: anchors-pr-checks
+  group: anchors-pr-checks-${{ github.event.pull_request.number || github.event.inputs.pr || github.run_id }}
   cancel-in-progress: false
 
 permissions:
