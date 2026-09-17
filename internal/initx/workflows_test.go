@@ -1993,3 +1993,53 @@ func TestGuardCobraProcedenciaDoCardEscalado(t *testing.T) {
 			"acusa de defeito o que é uso legítimo")
 	}
 }
+
+// O `gates` NÃO ENGOLE O CÓDIGO DE SAÍDA do `doctor --check-pipelines`.
+//
+// Havia ali um `if ! anchors doctor --check-pipelines; then echo ::warning::; fi`, e o `if`
+// ANULAVA a decisão do projeto: ele consome o código de saída, então o passo passava verde
+// mesmo com `stale_pipeline_blocks: true` declarado no `anchors.yaml`.
+//
+// O comentário logo acima dizia "quem decide se isto barra é o PROJETO" — e o código abaixo
+// tirava a decisão dele. O `doctor` já implementava a parte certa: sai com 1 quando o
+// projeto declarou, e imprime o aviso ele mesmo quando não declarou.
+//
+// MEDIDO (#798): mutação aplicada ao próprio pipeline — 6 dos 10 passos de verificação
+// somem sem que nenhum sinal acuse. Os quatro deste arquivo eram o único caso detectado, e
+// por este comando; mas o aviso saía de DENTRO do arquivo verificado, então apagar o passo
+// apagava o aviso junto.
+//
+// O BOARD E O IDENTIFY FICAM COM O AVISO, e a diferença é o que o passo faz: eles publicam
+// e movem card, e reprová-los trocaria "o board atualiza com o desenho antigo" por "o board
+// não atualiza". Quem decide se o trabalho é aceito barra; quem informa avisa.
+func TestGatesNaoEngoleOVereditoDoCheckPipelines(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-gates.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+
+	if !strings.Contains(s, "anchors doctor --check-pipelines") {
+		t.Fatal("o `gates` não confere os pipelines — o verificador deixa de se verificar")
+	}
+	// O `if !` é o que anula: ele consome o código de saída e o passo passa verde.
+	if strings.Contains(s, "if ! anchors doctor --check-pipelines") {
+		t.Error("o `gates` voltou a envolver o `check-pipelines` num `if !` — o `if` " +
+			"consome o código de saída, e o `stale_pipeline_blocks: true` do projeto " +
+			"deixa de ter efeito")
+	}
+	// E `continue-on-error` faria o mesmo por outro caminho.
+	iCheck := strings.Index(s, "anchors doctor --check-pipelines")
+	trecho := s[maxInt(0, iCheck-600):iCheck]
+	if strings.Contains(trecho, "continue-on-error: true") {
+		t.Error("o passo do `check-pipelines` ganhou `continue-on-error` — mesmo efeito do " +
+			"`if !`: o veredito do projeto não barra nada")
+	}
+}
+
+func maxInt(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
