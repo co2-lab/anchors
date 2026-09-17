@@ -137,7 +137,7 @@ nodes:
         - comando
     - id: cmd/anchors/backfill_labels.go
       kind: code
-      rev: a0d46bb07b90
+      rev: 6dc50b869d08
       updated_at: "2026-09-16"
       layer: comando
       tags:
@@ -366,7 +366,7 @@ nodes:
     - id: cmd/anchors/escalate.go
       kind: code
       rev: 523017171b8c
-      updated_at: "2026-09-16"
+      updated_at: "2026-09-17"
       layer: comando
       tags:
         - cli
@@ -389,7 +389,7 @@ nodes:
     - id: cmd/anchors/escalate_test.go
       kind: test
       rev: 40684c230567
-      updated_at: "2026-09-16"
+      updated_at: "2026-09-17"
       layer: teste
       tags:
         - test
@@ -2630,7 +2630,7 @@ nodes:
     - id: internal/initx/workflows.go
       kind: code
       rev: 0d77fb27eca1
-      updated_at: "2026-09-16"
+      updated_at: "2026-09-17"
       layer: infra
       tags:
         - infra
@@ -2638,7 +2638,7 @@ nodes:
     - id: internal/initx/workflows_test.go
       kind: test
       rev: d52054dc45ef
-      updated_at: "2026-09-16"
+      updated_at: "2026-09-17"
       layer: teste
       tags:
         - test
