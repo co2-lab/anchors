@@ -389,7 +389,7 @@ nodes:
     - id: cmd/anchors/escalate_test.go
       kind: test
       rev: bec1f0d08e58
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-16"
       layer: teste
       tags:
         - test
@@ -1300,7 +1300,7 @@ nodes:
         - test
     - id: internal/doct/doct_test.go
       kind: test
-      rev: cca9fc61015b
+      rev: 5f35e2863530
       updated_at: "2026-09-10"
       code: GLCGL
       layer: teste
