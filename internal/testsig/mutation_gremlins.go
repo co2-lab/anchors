@@ -64,14 +64,14 @@ type gremlinsReport struct {
 func parseGremlins(b []byte) (*MutationReport, error) {
 	var raw gremlinsReport
 	if err := json.Unmarshal(b, &raw); err != nil {
-		return nil, fmt.Errorf("relatório de mutação inválido (o gate declara "+
-			"`format: gremlins`, que espera `files` como LISTA de `file_name`; um "+
-			"relatório Mutation Testing Elements traz `files` como objeto — confira "+
-			"se o `format:` bate com a ferramenta): %w", err)
+		return nil, fmt.Errorf("invalid mutation report (the gate declares "+
+			"`format: gremlins`, which expects `files` as a LIST of `file_name`; a "+
+			"Mutation Testing Elements report brings `files` as an object — check "+
+			"whether `format:` matches the tool): %w", err)
 	}
 	if len(raw.Files) == 0 {
-		return nil, fmt.Errorf("relatório do gremlins sem arquivos — confira se a " +
-			"execução produziu mutantes (`gremlins unleash --output <arquivo>`)")
+		return nil, fmt.Errorf("gremlins report with no files — check whether the " +
+			"run produced mutants (`gremlins unleash --output <file>`)")
 	}
 
 	rep := &MutationReport{Files: map[string]FileMutation{}}

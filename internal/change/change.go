@@ -84,11 +84,11 @@ func (c Change) Render() string {
 		fmt.Fprintf(&b, "  agent: %s\n", c.Agent)
 	}
 	b.WriteString("-->\n")
-	fmt.Fprintf(&b, "# Entrega: %s de `%s`\n\n", c.Stage, c.Unit)
+	fmt.Fprintf(&b, "# Delivery: %s of `%s`\n\n", c.Stage, c.Unit)
 
-	b.WriteString("## O que foi feito\n\n" + strings.TrimSpace(c.Intent) + "\n\n")
+	b.WriteString("## What was done\n\n" + strings.TrimSpace(c.Intent) + "\n\n")
 
-	b.WriteString("## Arquivos\n\n")
+	b.WriteString("## Files\n\n")
 	for _, f := range c.Files {
 		fmt.Fprintf(&b, "- `%s`\n", f)
 	}
@@ -96,18 +96,18 @@ func (c Change) Render() string {
 	// As duas seções seguintes são o que torna o registro útil ao revisor. Vazias, elas
 	// AFIRMAM algo (não houve decisão livre; nada ficou sem prova) — o que é diferente de
 	// omiti-las. Por isso são sempre emitidas.
-	b.WriteString("\n## Decisões que a régua não decidiu\n\n")
+	b.WriteString("\n## Decisions the ruler did not decide\n\n")
 	if len(c.Decisions) == 0 {
-		b.WriteString("nenhuma — tudo o que foi feito estava decidido na spec/guides.\n")
+		b.WriteString("none — everything that was done was already decided in the spec/guides.\n")
 	} else {
 		for _, d := range c.Decisions {
 			fmt.Fprintf(&b, "- %s\n", d)
 		}
 	}
 
-	b.WriteString("\n## O que NÃO está provado\n\n")
+	b.WriteString("\n## What is NOT proven\n\n")
 	if len(c.Uncovered) == 0 {
-		b.WriteString("nada — cada regra desta entrega tem cenário e teste que a exercita.\n")
+		b.WriteString("nothing — every rule of this delivery has a scenario and a test that exercises it.\n")
 	} else {
 		for _, u := range c.Uncovered {
 			fmt.Fprintf(&b, "- %s\n", u)

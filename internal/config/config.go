@@ -153,7 +153,7 @@ type Config struct {
 	// caminho real deste projeto. É a divisão que impede o pack de adivinhar a estrutura
 	// alheia — o dever é universal, o endereço é local.
 	PackValues map[string]string `yaml:"pack_values,omitempty"`
-	// AutoJudgment permite que a IA DECIDA sozinha as sugestões de julgamento, em vez de
+	// EnableAutoJudgment permite que a IA DECIDA sozinha as sugestões de julgamento, em vez de
 	// deixá-las aguardando aprovação humana.
 	//
 	// Desligado por default, e o default é a decisão importante: aprovar automaticamente
@@ -164,7 +164,7 @@ type Config struct {
 	// Quando ligado, a decisão fica MARCADA como automática no arquivo da sugestão
 	// (`por: IA (auto_judgment)`). Apagar essa distinção faria "ninguém olhou isto"
 	// parecer "alguém aprovou", que é a informação mais cara de perder numa auditoria.
-	AutoJudgment bool `yaml:"auto_judgment,omitempty"`
+	EnableAutoJudgment bool `yaml:"enable_auto_judgment,omitempty"`
 
 	// Jurisdictions são os mercados onde a aplicação opera (`br`, `eu`, `us-ca`). Filtram
 	// quais packs valem: um pack de jurisdição não declarada não é carregado, e o aviso
@@ -343,7 +343,7 @@ func (c *Config) FreezeReasonText() string {
 	if r := strings.TrimSpace(c.FreezeReason); r != "" {
 		return r
 	}
-	return "(nenhum motivo declarado — quem congelou não escreveu `freeze_reason` no anchors.yaml)"
+	return i18n.T("freeze.no_reason")
 }
 
 func (c *Config) GitHubMode() bool {
@@ -471,7 +471,7 @@ type RuleType struct {
 	Letter   string   `yaml:"letter"`             // a letra (1 char, maiúsculo)
 	Term     string   `yaml:"term"`               // o termo que a origina (ex.: "State")
 	Sections []string `yaml:"sections,omitempty"` // títulos de seção que a usam
-	// RequiresCode: as seções (deste subconjunto de `Sections`) em que uma tabela
+	// SectionsRequireCode: as seções (deste subconjunto de `Sections`) em que uma tabela
 	// preenchida SEM código é achado.
 	//
 	// Nem toda seção declarada cataloga regra. Medido num projeto real: "Eventos /
@@ -482,7 +482,7 @@ type RuleType struct {
 	//
 	// Fica na config, e não numa heurística do gate, porque a distinção é semântica
 	// do PROJETO: o mesmo título pode enumerar num repositório e normatizar noutro.
-	RequiresCode []string `yaml:"requires_code,omitempty"`
+	SectionsRequireCode []string `yaml:"sections_require_code,omitempty"`
 
 	// Tags: as tags de CENÁRIO que declaram esta natureza (`@estado` para a letra S).
 	//
@@ -526,7 +526,7 @@ func (c *Config) TagLetters(tag string) ([]string, bool) {
 
 // RequiresCodeIn diz se a seção (pelo título) foi declarada como catalogadora de regra.
 func (r RuleType) RequiresCodeIn(titulo string) bool {
-	for _, s := range r.RequiresCode {
+	for _, s := range r.SectionsRequireCode {
 		if normalizeTitle(s) == normalizeTitle(titulo) {
 			return true
 		}
@@ -821,6 +821,32 @@ type Gate struct {
 	// porque o formato é propriedade da STACK do projeto — decidido uma vez, não
 	// relembrado a cada ingestão. Ver FormatMTE/FormatGremlins.
 	Format string `yaml:"format,omitempty"`
+
+	// EnforceSectionLanguage decide se o gate de seções reclama de TÍTULO EM OUTRO IDIOMA — uma
+	// seção escrita em idioma diferente do `lang:` do projeto.
+	//
+	// PADRÃO: RECLAMA. O ponteiro nulo vale `true`, e não `false`, porque o silêncio aqui
+	// produz o acervo MISTO — metade das specs com `## Visão Geral`, metade com
+	// `## Overview`, nenhum gate reclamando (os confrontos de seção aceitam todos os
+	// idiomas de propósito, para não quebrar acervo existente). O resultado é uma spec sem
+	// forma única, que é precisamente o que a régua chama de "defeito a reportar, não
+	// escolha a fazer".
+	//
+	// Existe para ser DESLIGADO em dois casos legítimos, e só neles:
+	//   - a migração em curso, que trocou o `lang:` e ainda não reescreveu o acervo;
+	//   - o projeto deliberadamente bilíngue (spec em inglês, interface em português).
+	// Desligar é decisão declarada no anchors.yaml, que é o ponto: quem desliga escreve
+	// por quê ao lado, e quem lê o arquivo vê a escolha.
+	//
+	// NÃO barra sozinho: o veredito é o do gate que o hospeda. Num `spec-complete`
+	// informativo, isto aparece como divergência; num bloqueante, barra como o resto.
+	EnforceSectionLanguage *bool `yaml:"enforce_section_language,omitempty"`
+}
+
+// ChecksSectionLanguage diz se o gate cobra o idioma dos títulos de seção.
+// Omitido = SIM: ver EnforceSectionLanguage para o porquê de o default cobrar.
+func (g Gate) ChecksSectionLanguage() bool {
+	return g.EnforceSectionLanguage == nil || *g.EnforceSectionLanguage
 }
 
 // Formatos de relatório de mutação aceitos por `Gate.Format`.
@@ -992,14 +1018,14 @@ type Layer struct {
 	// ligação do gerador de identidade com a ESTRUTURA — o módulo do arquivo (auth,
 	// ir, family…) define seu prefixo, em vez de uma tabela hardcoded.
 	CodePrefix string `yaml:"code_prefix,omitempty"`
-	// TrincaOpcional: peças da trinca que ESTA camada dispensa, por aresta
+	// OptionalTriadEdges: peças da trinca que ESTA camada dispensa, por aresta
 	// (`specifies` | `covered-by` | `tested-by`). É o opt-out HONESTO do gate
 	// `trinca-completa`: fica declarado na Estrutura, à vista, em vez de escondido
 	// num Skip do gate. Ex.: uma camada provada só por teste de integração central
 	// declara `trinca_opcional: [tested-by]`.
-	// A chave é `triad_optional`: `lang` traduz o que se LÊ, e uma chave de YAML é
+	// A chave é `optional_triad_edges`: `lang` traduz o que se LÊ, e uma chave de YAML é
 	// identificador, não prosa.
-	TrincaOpcional []string `yaml:"triad_optional,omitempty"`
+	OptionalTriadEdges []string `yaml:"optional_triad_edges,omitempty"`
 	// Work: passos EXTRA que esta camada exige, por artefato (spec|code|feature|test).
 	// O `anchors work` já compõe um procedimento universal a partir da Estrutura; isto
 	// acrescenta o que só o projeto sabe ("rode o seed antes", "o teste desta camada é
@@ -1119,7 +1145,7 @@ type Derived struct {
 	// RECONHECER um dublê, não há o que carimbar — uma flag separada seria uma segunda
 	// chave para a mesma decisão, e duas chaves divergem.
 
-	// RuleMarking declara que ESTE projeto EXIGE a marcação regra↔código: cada regra da
+	// RuleMarkingPolicy declara que ESTE projeto EXIGE a marcação regra↔código: cada regra da
 	// spec aparece como comentário no trecho que a realiza (`// ABCDX-B01: …`).
 	//
 	// Existe porque a prática não pode ser cobrada por default. O `regra-implementada`
@@ -1137,7 +1163,7 @@ type Derived struct {
 	// pendência vira reprovação, e a unidade que não marcou passa a ser cobrada como
 	// qualquer outra. Projeto NOVO deve nascer com isto ligado — não há dívida a
 	// acomodar, e o primeiro código é escrito depois da regra existir.
-	RuleMarking string `yaml:"rule_marking,omitempty"`
+	RuleMarkingPolicy string `yaml:"rule_marking_policy,omitempty"`
 
 	// MockDetect — como ESTE projeto ESCREVE um dublê de teste. Regex com um grupo de
 	// captura: o módulo dublado.
@@ -1184,6 +1210,11 @@ type Derived struct {
 	//	export_detect: "^func\\s+([A-Z]\\w*)"                      # Go (maiúscula = público)
 	//	export_detect: "^(?:def|class)\\s+([a-zA-Z]\\w*)"          # Python
 	ExportDetect string `yaml:"export_detect,omitempty"`
+
+	// RoutePattern — como ESTE projeto REGISTRA uma rota. Regex com um grupo de
+	// captura contendo o nome ou caminho da rota.
+	// Se omitido, usa o padrão default (React Navigation / CDK).
+	RoutePattern string `yaml:"route_pattern,omitempty"`
 
 	// ValueAnchor — o comentário que ANCORA um valor de conjunto fechado à regra que o
 	// justifica. Dois grupos de captura: a chave da regra e o valor esperado.
@@ -1363,7 +1394,7 @@ func Load(path string) (*Config, error) {
 		// 2 é o mínimo que ainda distingue unidades; acima de 8 o código deixa de ser
 		// legível de relance, que é a razão de ele ser curto. Fora disso é typo.
 		if l < 2 || l > 8 {
-			return nil, fmt.Errorf("code_lengths: %d fora da faixa (2..8) — o código é "+
+			return nil, fmt.Errorf("code_lengths: %d out of range (2..8) — the code is "+
 				"identificador curto, lido de relance; comprimento assim costuma ser typo", l)
 		}
 	}
@@ -1415,9 +1446,9 @@ func (c *Config) validarIDsDeGate() error {
 			id = g.Name // sem ID declarado, o nome identifica
 		}
 		if anterior, ok := vistos[id]; ok {
-			return fmt.Errorf("gate %q: `id: %q` já é usado pelo gate %q — o ID é o que o "+
-				"relatório imprime e o que uma dispensa cita; repetido, ele aponta para dois "+
-				"lugares e desliga o que ninguém pediu", g.Name, id, anterior)
+			return fmt.Errorf("gate %q: `id: %q` is already used by gate %q — the ID is what the "+
+				"report prints and what a waiver cites; repeated, it points at two "+
+				"places and disables what nobody asked for", g.Name, id, anterior)
 		}
 		vistos[id] = g.Name
 	}
@@ -1432,8 +1463,8 @@ func (c *Config) validarEnumsDeGate() error {
 	}
 	for _, g := range c.Gates {
 		if g.Scope != "" && !escopos[g.Scope] {
-			return fmt.Errorf("gate %q: `scope: %q` desconhecido — use %q (uma execução por alvo), "+
-				"%q (uma execução com os alvos como argumentos) ou %q (uma execução, sem alvos)",
+			return fmt.Errorf("gate %q: unknown `scope: %q` — use %q (one run per target), "+
+				"%q (one run with the targets as arguments) or %q (one run, no targets)",
 				g.Name, g.Scope, ScopeNode, ScopeBatch, ScopeProject)
 		}
 		if g.Cost != "" && !custos[g.Cost] {
@@ -1442,7 +1473,7 @@ func (c *Config) validarEnumsDeGate() error {
 		}
 		for _, f := range g.When {
 			if !fases[f] {
-				return fmt.Errorf("gate %q: `when: [%q]` não é uma fase — use %q, %q, %q ou %q",
+				return fmt.Errorf("gate %q: `when: [%q]` is not a phase — use %q, %q, %q or %q",
 					g.Name, f, PhasePreCommit, PhasePrePush, PhaseCI, PhaseManual)
 			}
 		}
@@ -1466,9 +1497,9 @@ func (c *Config) validarWorkflow() error {
 		// O modo local não usa Repo nem Labels. Declará-los aqui não é inofensivo: quem lê
 		// o arquivo conclui que a integração está ativa, e ela não está.
 		if w.Repo != "" || len(w.Labels) > 0 {
-			return fmt.Errorf("workflow: `repo`/`labels` só valem em `mode: github` — " +
-				"no modo local eles não são lidos, e deixá-los declarados faz o arquivo " +
-				"afirmar uma integração que não existe")
+			return fmt.Errorf("workflow: `repo`/`labels` only apply under `mode: github` — " +
+				"in local mode they are not read, and leaving them declared makes the file " +
+				"assert an integration that does not exist")
 		}
 		return nil
 	case ModeGitHub:
@@ -1478,7 +1509,7 @@ func (c *Config) validarWorkflow() error {
 				"faria a escrita cair no repositório errado")
 		}
 		if !strings.Contains(w.Repo, "/") {
-			return fmt.Errorf("workflow: `repo: %q` fora do formato `owner/nome`", w.Repo)
+			return fmt.Errorf("workflow: `repo: %q` is not in `owner/name` format", w.Repo)
 		}
 		if len(w.Labels) == 0 {
 			return fmt.Errorf("workflow: `mode: github` exige ao menos uma label em " +
@@ -1793,16 +1824,16 @@ func versionHint(err error, data []byte) string {
 	// (`layerz:`) receberia "rode `anchors migrate`" — o comando roda, não conserta o
 	// typo, e quem lê perde a confiança na mensagem seguinte.
 	if fileFormat(data) < FormatoAtualDeConfig && RenamedKey != nil && RenamedKey(chave) {
-		return fmt.Sprintf("\n  O ARQUIVO está no formato antigo, e a chave `%s` foi renomeada.\n"+
-			"  Migre — roda uma vez e deixa o projeto pronto para commit:\n\n"+
+		return fmt.Sprintf("\n  The FILE is in the old format, and the key `%s` was renamed.\n"+
+			"  Migrate — it runs once and leaves the project ready to commit:\n\n"+
 			"      anchors migrate\n\n"+
-			"  (o binário está certo: é o `anchors.yaml` que precisa ser atualizado)", chave)
+			"  (the binary is right: it is `anchors.yaml` that needs updating)", chave)
 	}
 
-	return fmt.Sprintf("\n  Duas causas possíveis, e a segunda não é erro seu:\n"+
-		"    • a chave `%s` está escrita errada (confira contra `anchors init --print`)\n"+
-		"    • a chave é NOVA e este binário é ANTIGO — o `anchors.yaml` foi escrito por\n"+
-		"      uma versão que a conhece. Atualize: `go install github.com/co2-lab/anchors/cmd/anchors@latest`",
+	return fmt.Sprintf("\n  Two possible causes, and the second is not your mistake:\n"+
+		"    • the key `%s` is misspelled (check it against `anchors init --print`)\n"+
+		"    • the key is NEW and this binary is OLD — the `anchors.yaml` was written by\n"+
+		"      a version that knows it. Update: `go install github.com/co2-lab/anchors/cmd/anchors@latest`",
 		chave)
 }
 
@@ -1819,7 +1850,7 @@ var RenamedKey func(string) bool
 // Espelha o `mapx.FormatoAtual` e vive aqui para evitar o ciclo de import (o `mapx` usa
 // tipos do `config`). Os dois sobem juntos: uma migração que muda o mapa e a config é um
 // passo só.
-const FormatoAtualDeConfig = 3
+const FormatoAtualDeConfig = 4
 
 // fileVersionRE lê o `version:` de topo sem passar pelo parser — que é justamente
 // quem acabou de recusar o arquivo.

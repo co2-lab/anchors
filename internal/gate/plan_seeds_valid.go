@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -9,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
 )
@@ -34,10 +34,10 @@ var planSeedRE = regexp.MustCompile("`([^`]+\\.spec\\.md)`")
 
 func checkPlanSeedsValid(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindPlan {
-		return Skip, "não é um plano — o gate confronta o que um plano SEMEIA"
+		return Skip, i18n.T("gate.plan_seeds_valid.skip_not_plan")
 	}
 	if cfg == nil {
-		return Pending, "sem config carregada — o gate precisa da Estrutura"
+		return Pending, i18n.T("gate.plan_seeds_valid.pending_no_config")
 	}
 
 	seeds := map[string]bool{}
@@ -52,7 +52,7 @@ func checkPlanSeedsValid(content string, n mapx.Node, root string, g *mapx.Graph
 		seeds[s] = true
 	}
 	if len(seeds) == 0 {
-		return Skip, "o plano não semeia nenhuma spec (nenhum caminho `*.spec.md` citado)"
+		return Skip, i18n.T("gate.plan_seeds_valid.skip_no_seeds")
 	}
 
 	var declarativa, semCamada []string
@@ -81,26 +81,23 @@ func checkPlanSeedsValid(content string, n mapx.Node, root string, g *mapx.Graph
 			continue
 		}
 		if l, ok := cfg.Layers[layer]; ok && l.Regime == "declarativo" {
-			declarativa = append(declarativa, fmt.Sprintf("%s (camada `%s`)", s, layer))
+			declarativa = append(declarativa, i18n.T("gate.plan_seeds_valid.declarative_item", s, layer))
 		}
 	}
 
 	var parts []string
 	if len(declarativa) > 0 {
 		sort.Strings(declarativa)
-		parts = append(parts, "semeia spec em camada RECONHECIDA (declarativa), que não tem spec: "+
-			strings.Join(declarativa, ", ")+" — a decisão pertence à camada que DECIDE, não a esta")
+		parts = append(parts, i18n.T("gate.plan_seeds_valid.part_declarative", strings.Join(declarativa, ", ")))
 	}
 	if len(semCamada) > 0 {
 		sort.Strings(semCamada)
-		parts = append(parts, "semeia spec em caminho que não pertence a nenhuma camada declarada: "+
-			strings.Join(semCamada, ", ")+" — confira o caminho, ou declare a camada em `layers:`")
+		parts = append(parts, i18n.T("gate.plan_seeds_valid.part_undeclared", strings.Join(semCamada, ", ")))
 	}
 	if len(parts) == 0 {
 		return Pass, ""
 	}
-	return Fail, strings.Join(parts, "; ") + ". Corrija o PLANO: executá-lo produziria " +
-		"artefato que a Estrutura proíbe (ou fará quem executa gastar uma rodada descobrindo isso)."
+	return Fail, i18n.T("gate.plan_seeds_valid.fail_invalid_seeds", strings.Join(parts, "; "))
 }
 
 // rootDirExists diz se o primeiro segmento do caminho é um diretório REAL na raiz do

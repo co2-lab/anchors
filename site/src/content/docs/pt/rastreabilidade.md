@@ -122,28 +122,37 @@ Propriedades que fazem a identidade funcionar (destiladas do POC):
   identidade**. Sem fonte única, cada validador inventa sua própria noção de
   código e a cola se parte.
 
-### Quando a identidade diverge: o drift silencioso
+```
 
-A falha de identidade não é abstrata. No POC há um caso real: a tela de login foi
-renomeada, e seu código estável passou de `LGNN` para `LOGI`. A spec, a feature e a
-maioria dos testes foram atualizados — mas **um teste ficou para trás**, ainda
-citando `LGNN-S02`. A feature declara `@LOGI-S02`; o gate procura um teste que cite
-`LOGI-S02`; o `LGNN-S02` obsoleto **não casa**. Resultado: a feature parece
-descoberta, embora o teste exista — a cola quebrou silenciosamente porque a string
-de identidade divergiu entre duas encarnações do mesmo requisito.
+### Delimitação no código: Regiões e Hash por Função (`#region [CODE]`)
 
-É exatamente por isso que a gramática precisa ser **fonte única** e a identidade
-precisa ser **a chave, não o nome**: a divergência de uma string de identidade é
-invisível a olho nu, mas visível ao gate — que confronta por interseção exata de
-códigos. O drift de identidade é o análogo, no lado identidade, do que o anti-drift
-é para o conteúdo da âncora.
+Enquanto a spec delimita requisitos por linha, a feature por `Cenário` e o teste por bloco `it()` ou `test()`, o código-fonte costumava ser a exceção: a marcação dizia onde um requisito começava, mas não onde terminava. Sem delimitação, a identidade no arquivo era um conjunto difuso ("este arquivo realiza CODEX-A03") e não um intervalo de linhas.
 
-> **Fronteira com o grafo:** o grafo (`CONCEPT.md`) define *o que é uma aresta* —
-> nós, direção, tipo, sincronia. A Rastreabilidade define *como as arestas passam
-> a existir e se mantêm honestas* — a chave estável que permite afirmar "este nó é
-> a encarnação daquele", a unicidade dessa chave, e a ausência de nós órfãos. O
-> grafo usa a Rastreabilidade para se materializar; a Rastreabilidade garante que
-> o grafo não tem furos nem duplicatas.
+O efeito prático era o **falso stale**: alterar uma linha ou função no topo do arquivo invalidava todas as medições de testes do arquivo inteiro, mesmo as que cobriam funções intactas.
+
+Para resolver isso, o Anchors implementa **Regiões Declaradas com Hash de Conteúdo**:
+
+```typescript
+// #region [MLETX-A03]: confirmar persiste o lançamento e fecha
+export async function persistirLancamento(item: Lancamento): Promise<void> {
+  await db.put(item);
+  fecharModal();
+}
+// #endregion [MLETX-A03]
+```
+
+* **Cálculo de Hash da Região**: O Anchors calcula o hash SHA-256 (truncado em 12 hexadecimais) exclusivo das linhas compreendidas entre `#region` e `#endregion`.
+* **Isolamento de Mudança**: Alterações feitas fora da região **não alteram o hash dela**. Se você editar uma função vizinha `MLETX-A01`, a região `MLETX-A03` permanece idêntica e a evidência de teste que a cobre continua válida (não fica *stale*).
+* **Agnóstico de Linguagem**: A sintaxe reusa `#region`/`#endregion` (reconhecida e colapsável nativamente em editores como VS Code e JetBrains) e funciona com qualquer marcador de comentário (`//`, `#`, `--`, `/* */`, `<!-- -->`).
+* **Pareamento Verificado**: O gate interno `region-pair-honored` garante que todo `#region` tenha seu `#endregion` correspondente com o mesmo código, evitando aninhamentos trocados ou órfãos.
+
+### Frescor de Evidência: Como o Anchors detecta testes Stale
+
+Quando um teste executa, o comando `anchors ingest` ingere o relatório (JUnit, LCOV, etc.) e carimba no nó de teste:
+1. `AtRev`: A revisão do próprio arquivo de teste naquele momento.
+2. `ClosureRev`: As revisões e hashes de **todas as unidades e regiões** que o teste alcança (o fecho de dependências).
+
+Se qualquer código ou região do fecho mudar, o gate **`evidence-fresh`** detecta imediatamente que o teste ficou **stale** (vencido): o teste passou no passado, mas não contra o código de hoje. O gate reprova até que a suíte seja reexecutada contra as novas revisões.
 
 ---
 

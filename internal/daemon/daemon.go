@@ -80,7 +80,7 @@ func ReadMeta(p Paths) string {
 func Stop(p Paths) error {
 	pid := Running(p)
 	if pid == 0 {
-		return fmt.Errorf("watcher não está rodando")
+		return fmt.Errorf("watcher is not running")
 	}
 	proc, err := os.FindProcess(pid)
 	if err != nil {

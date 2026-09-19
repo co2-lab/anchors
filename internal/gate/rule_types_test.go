@@ -68,7 +68,7 @@ func TestRuleTypes_semVocabularioUsaAsCanonicas(t *testing.T) {
 	if v != Fail {
 		t.Errorf("`P` está fora das canônicas e deveria reprovar, got %v", v)
 	}
-	if !strings.Contains(msg, "canônico") {
+	if !strings.Contains(msg, "canônico") && !strings.Contains(msg, "canonical") {
 		t.Errorf("a mensagem deveria dizer que confronta o vocabulário canônico: %q", msg)
 	}
 }

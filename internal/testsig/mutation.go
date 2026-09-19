@@ -120,21 +120,21 @@ func ParseMutationFormat(path, format string) (*MutationReport, error) {
 	case "gremlins":
 		return parseGremlins(b)
 	default:
-		return nil, fmt.Errorf("formato de relatório de mutação desconhecido: %q "+
-			"(aceitos: `mutation-testing-elements` — o default — e `gremlins`; "+
-			"declare em `gates: - name: mutation-score / format:`)", format)
+		return nil, fmt.Errorf("unknown mutation report format: %q "+
+			"(accepted: `mutation-testing-elements` — the default — and `gremlins`; "+
+			"declare it in `gates: - name: mutation-score / format:`)", format)
 	}
 }
 
 func parseMTE(b []byte) (*MutationReport, error) {
 	var raw mtElements
 	if err := json.Unmarshal(b, &raw); err != nil {
-		return nil, fmt.Errorf("relatório de mutação inválido (esperado o formato "+
-			"Mutation Testing Elements, schemaVersion 1.x): %w", err)
+		return nil, fmt.Errorf("invalid mutation report (expected the "+
+			"Mutation Testing Elements format, schemaVersion 1.x): %w", err)
 	}
 	if len(raw.Files) == 0 {
-		return nil, fmt.Errorf("relatório de mutação sem arquivos — confira se a " +
-			"ferramenta emitiu o formato JSON padrão (Mutation Testing Elements)")
+		return nil, fmt.Errorf("mutation report with no files — check whether the " +
+			"tool emitted the standard JSON format (Mutation Testing Elements)")
 	}
 
 	rep := &MutationReport{Files: map[string]FileMutation{}}

@@ -47,25 +47,25 @@ type Plan struct {
 // Não escreve nada — só lê. O comando decide dry-run vs apply.
 func BuildPlan(root string, cfg *config.Config, old, new string) (*Plan, error) {
 	if !ValidCode(old) {
-		return nil, fmt.Errorf("código de origem %q inválido (esperado 4 chars A-Z0-9)", old)
+		return nil, fmt.Errorf("source code %q invalid (expected 4 chars A-Z0-9)", old)
 	}
 	if !ValidCode(new) {
-		return nil, fmt.Errorf("código de destino %q inválido (esperado 4 chars A-Z0-9)", new)
+		return nil, fmt.Errorf("target code %q invalid (expected 4 chars A-Z0-9)", new)
 	}
 	if old == new {
-		return nil, fmt.Errorf("origem e destino são o mesmo código (%s)", old)
+		return nil, fmt.Errorf("source and target are the same code (%s)", old)
 	}
 
 	files, err := scan.Walk(root, cfg)
 	if err != nil {
-		return nil, fmt.Errorf("varrer o projeto: %w", err)
+		return nil, fmt.Errorf("scanning the project: %w", err)
 	}
 
 	// Colisão: NEW já é o code DONO de alguma unidade? (o scan carimba Codes por header)
 	for _, f := range files {
 		for _, c := range f.Codes {
 			if c == new {
-				return nil, fmt.Errorf("o código de destino %s já é usado por %s — escolha outro", new, f.Path)
+				return nil, fmt.Errorf("the target code %s is already used by %s — choose another", new, f.Path)
 			}
 		}
 	}
@@ -123,13 +123,13 @@ func BuildPlan(root string, cfg *config.Config, old, new string) (*Plan, error) 
 	// aviso de legado: o prefixo de testID esperado (oldTID) não apareceu em lugar
 	// nenhum, mas há um candidato divergente (ex.: código-antigo minúsculo). Reporta.
 	if oldTID != "" && plan.TestIDs == 0 && legacyHits > 0 {
-		plan.TestIDLegacy = fmt.Sprintf("o prefixo de testID esperado %q não foi encontrado; "+
-			"há %d testID(s) com um prefixo divergente (provável recode manual anterior). "+
-			"O recode NÃO os toca (não adivinha) — padronize-os à mão para o prefixo derivado do código", oldTID, legacyHits)
+		plan.TestIDLegacy = fmt.Sprintf("the expected testID prefix %q was not found; "+
+			"there are %d testID(s) with a divergent prefix (likely a previous manual recode). "+
+			"The recode does NOT touch them (it does not guess) — standardize them by hand to the prefix derived from the code", oldTID, legacyHits)
 	}
 
 	if plan.Total == 0 && plan.TestIDs == 0 && len(plan.Renames) == 0 {
-		return nil, fmt.Errorf("o código %s não aparece em nenhum arquivo do projeto", old)
+		return nil, fmt.Errorf("the code %s does not appear in any file of the project", old)
 	}
 	sort.Slice(plan.Files, func(i, j int) bool { return plan.Files[i].Path < plan.Files[j].Path })
 	return plan, nil
@@ -183,13 +183,13 @@ func (p *Plan) Apply(root string) (int, error) {
 			mode = info.Mode()
 		}
 		if err := os.WriteFile(abs, []byte(fc.NewContent), mode); err != nil {
-			return written, fmt.Errorf("escrever %s: %w", fc.Path, err)
+			return written, fmt.Errorf("writing %s: %w", fc.Path, err)
 		}
 		written++
 	}
 	for _, r := range p.Renames {
 		if err := gitMoves(root, r.From, r.To); err != nil {
-			return written, fmt.Errorf("renomear %s → %s: %w", r.From, r.To, err)
+			return written, fmt.Errorf("renaming %s → %s: %w", r.From, r.To, err)
 		}
 		written++
 	}
@@ -236,8 +236,8 @@ func gitMoves(root, from, to string) error {
 	if strings.Contains(string(out), "not under version control") {
 		return os.Rename(filepath.Join(root, from), filepath.Join(root, to))
 	}
-	return fmt.Errorf("`git mv %s %s` recusou: %s\n"+
-		"   (há repositório aqui, então o arquivo NÃO foi movido por fora — mover à revelia "+
-		"do git deixaria o índice divergindo do disco, e é o que torna difícil desfazer)",
+	return fmt.Errorf("`git mv %s %s` refused: %s\n"+
+		"   (there is a repository here, so the file was NOT moved behind its back — moving without "+
+		"git would leave the index diverging from disk, and that is what makes undoing hard)",
 		from, to, strings.TrimSpace(string(out)))
 }

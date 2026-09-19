@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -26,10 +27,10 @@ import (
 //     spec `specifies`. Símbolo declarado + ausente no código → reprova.
 func checkDependencyHonored(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "não é uma spec — só spec tem Tabela de Dependências"
+		return Skip, i18n.T("gate.dependency.skip_not_spec")
 	}
 	if g == nil {
-		return Pending, "sem mapa carregado — o gate relacional precisa do grafo"
+		return pendingNoMap()
 	}
 
 	out := g.Neighbors(n.ID).Out
@@ -52,8 +53,7 @@ func checkDependencyHonored(content string, n mapx.Node, root string, g *mapx.Gr
 		promises = append(promises, promise{dep: e.Dep, target: e.To, symbols: syms})
 	}
 	if len(promises) == 0 {
-		return Skip, "a Tabela de Dependências não promete nenhum SÍMBOLO confrontável " +
-			"(só descrição em prosa, ou nenhuma dependência) — nada a verificar"
+		return Skip, i18n.T("gate.dependency.skip_no_symbols")
 	}
 
 	// o código que esta spec `specifies` (o consumidor real dos métodos).
@@ -64,7 +64,7 @@ func checkDependencyHonored(content string, n mapx.Node, root string, g *mapx.Gr
 		}
 	}
 	if len(codePaths) == 0 {
-		return Pending, "spec sem código ligado (specifies) — nada a confrontar ainda"
+		return Pending, i18n.T("gate.dependency.pending_no_code")
 	}
 
 	// une o conteúdo (não-comentário) do código regido.
@@ -91,16 +91,14 @@ func checkDependencyHonored(content string, n mapx.Node, root string, g *mapx.Gr
 			// Temos como sugerir: procuramos no código um símbolo parecido, para a
 			// mensagem dizer o que fazer em vez de só apontar o erro.
 			if near := nearestSymbol(code, sym); near != "" {
-				entry += " — o código usa `" + near + "`; renomeação?"
+				entry += i18n.T("gate.dependency.near_rename", near)
 			}
 			missing = append(missing, entry)
 		}
 	}
 	if len(missing) > 0 {
 		sort.Strings(missing)
-		return Fail, "a Tabela de Dependências promete símbolo(s) que o código NÃO usa: " +
-			strings.Join(missing, ", ") +
-			" — ou o código deveria usá-los, ou a spec não deveria declará-los."
+		return Fail, i18n.T("gate.dependency.unused", strings.Join(missing, ", "))
 	}
 	return Pass, ""
 }

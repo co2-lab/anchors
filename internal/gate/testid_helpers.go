@@ -35,13 +35,13 @@ import (
 // CABEÇA de um id montado no filho, não um id — ela é tratada à parte, virando
 // `cabeça-*`. Deixá-la casar o regex literal registraria `otp-input` (que nunca
 // aparece na tela) como se fosse um handle exposto.
-var sufixoPrefix = regexp.MustCompile(`(?i)prefix$`)
+var prefixSuffixRE = regexp.MustCompile(`(?i)prefix$`)
 
 // O `(?i)` é essencial e não é frouxidão: a prop derivada CAPITALIZA o atributo ao
 // compô-lo (`testID` → `backTestID`, `confirmTestID`). Sem ignorar a caixa, o regex
 // casaria só a forma exata e perderia todas as derivadas — que é como o gate acabou
 // declarando inexistentes ids que a spec documenta e os flows usam.
-func regexDeHandle(attr string) (literal, template *regexp.Regexp) {
+func handleRegex(attr string) (literal, template *regexp.Regexp) {
 	a := `(?i)([a-z]*` + regexp.QuoteMeta(attr) + `[a-z]*)`
 	return regexp.MustCompile(a + `\s*[=:]\s*\{?["'](:?[a-zA-Z][a-zA-Z0-9._-]*)["']`),
 		regexp.MustCompile(a + "\\s*[=:]\\s*\\{?`(:?[a-zA-Z][a-zA-Z0-9._-]*)\\$?\\{?")
@@ -50,7 +50,7 @@ func regexDeHandle(attr string) (literal, template *regexp.Regexp) {
 // exposedTestIDs devolve os handles que a unidade oferece ao mundo. O template
 // entra na forma `prefixo-*`, que é como a spec o declara.
 func exposedTestIDs(src string, attr string) []string {
-	testIDExpostoRE, testIDTemplateRE := regexDeHandle(attr)
+	testIDExpostoRE, testIDTemplateRE := handleRegex(attr)
 	visto := map[string]bool{}
 	var out []string
 	add := func(s string) {
@@ -65,7 +65,7 @@ func exposedTestIDs(src string, attr string) []string {
 	// `otp-input` que nunca aparece na tela, e acusaria de inexistentes os
 	// `otp-input-N` que a spec documenta e que 6 flows usam.
 	for _, m := range testIDExpostoRE.FindAllStringSubmatch(src, -1) {
-		if sufixoPrefix.MatchString(m[1]) {
+		if prefixSuffixRE.MatchString(m[1]) {
 			add(strings.TrimSuffix(m[2], "-") + "-*")
 			continue
 		}
@@ -98,10 +98,10 @@ func exposedTestIDs(src string, attr string) []string {
 	return out
 }
 
-// handleDeTeste — o atributo com que ESTE projeto marca elementos para alcance
+// testHandleAttr — o atributo com que ESTE projeto marca elementos para alcance
 // externo. Sem declaração devolve vazio, e os gates de inventário pulam: o Anchors
 // não adivinha o ecossistema, do mesmo modo que não adivinha idioma nem vendor.
-func handleDeTeste(cfg *config.Config) string {
+func testHandleAttr(cfg *config.Config) string {
 	if cfg == nil || cfg.Derived == nil {
 		return ""
 	}

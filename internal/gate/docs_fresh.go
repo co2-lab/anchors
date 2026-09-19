@@ -8,6 +8,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/doct"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -34,15 +35,15 @@ import (
 // checkDocsFresh confronta o `docs/*.md` contra o que os templates produziriam AGORA.
 func checkDocsFresh(_ string, n mapx.Node, root string, g *mapx.Graph, _ *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "o compilado deriva das SPECS — é delas que o gate parte"
+		return Skip, i18n.T("gate.docs_fresh.skip_not_spec")
 	}
 	if _, err := os.Stat(filepath.Join(root, doct.Dir)); err != nil {
-		return Skip, "o projeto não usa `" + doct.Dir + "/` — a documentação não é compilada"
+		return Skip, fmt.Sprintf(i18n.T("gate.docs_fresh.skip_no_doct_dir"), doct.Dir)
 	}
 
 	c, err := doct.New(root, g)
 	if err != nil {
-		return Skip, "não foi possível ler as specs: " + err.Error()
+		return Skip, fmt.Sprintf(i18n.T("gate.docs_fresh.skip_read_specs_err"), err.Error())
 	}
 
 	// COMPARA em memória. Escrever aqui seria o gate consertando o que ele deveria
@@ -50,17 +51,12 @@ func checkDocsFresh(_ string, n mapx.Node, root string, g *mapx.Graph, _ *config
 	// resultado dependente de ter rodado antes — a segunda execução sempre passaria.
 	defasados, err := c.Stale()
 	if err != nil {
-		return Fail, "os templates não compilam: " + err.Error() +
-			"\n  Enquanto não compilarem, a documentação inteira está congelada no último build."
+		return Fail, fmt.Sprintf(i18n.T("gate.docs_fresh.fail_compile_err"), err.Error())
 	}
 	if len(defasados) == 0 {
 		return Pass, ""
 	}
 
-	return Fail, fmt.Sprintf(
-		"%d documento(s) fora de data: %s.\n"+
-			"  O conteúdo mora na spec; o `%s/` é cópia derivada, e esta envelheceu — "+
-			"a documentação afirma a versão ANTIGA, com conteúdo real e convincente.\n"+
-			"  Rode `anchors docs build`.",
+	return Fail, fmt.Sprintf(i18n.T("gate.docs_fresh.stale_docs"),
 		len(defasados), strings.Join(defasados, ", "), doct.OutDir)
 }

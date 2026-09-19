@@ -1,0 +1,110 @@
+package health
+
+import (
+	"encoding/json"
+	"fmt"
+	"os/exec"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+)
+
+// --- a aprovação que o próprio autor não pode dar ---
+//
+// O fluxo pressupõe que OUTRO agente revise, e `required_approvals: 1` é o que impede o
+// merge sem revisão. Mas o GitHub RECUSA aprovação do próprio PR — é regra de plataforma,
+// sem configuração que a contorne — e agentes na mesma máquina compartilham a conta.
+//
+// O resultado é um fluxo travado: o card chega a `ready-to-review`, o revisor confronta e
+// aprova… e não consegue. Nenhum PR do projeto avança pelo caminho normal.
+//
+// Isso não é defeito do Anchors nem do projeto: é uma restrição conhecida, com dois
+// contornos que dependem de quem opera. O papel do doctor é DETECTAR a situação e dizer
+// qual dos dois cabe — em vez de deixar alguém descobrir no meio de um merge.
+
+// CanBypassProtection diz se a conta atual consegue mesclar por cima da exigência de
+// aprovação: precisa ser admin do repositório E a proteção não pode alcançar admins.
+//
+// São duas condições porque `enforce_admins: true` é o modo em que o dono do repositório
+// escolheu não ter escape — e nesse caso ser admin não ajuda.
+func CanBypassProtection(repo, branch string) (bool, string) {
+	if _, err := exec.LookPath("gh"); err != nil {
+		return false, i18n.T("health.approval_gh_missing")
+	}
+	login, err := exec.Command("gh", "api", "user", "--jq", ".login").Output()
+	if err != nil {
+		return false, i18n.T("health.approval_user_failed")
+	}
+	perm, err := exec.Command("gh", "api",
+		"repos/"+repo+"/collaborators/"+strings.TrimSpace(string(login))+"/permission",
+		"--jq", ".permission").Output()
+	if err != nil || strings.TrimSpace(string(perm)) != "admin" {
+		return false, i18n.T("health.approval_not_admin")
+	}
+	out, err := exec.Command("gh", "api",
+		"repos/"+repo+"/branches/"+branch+"/protection",
+		"--jq", ".enforce_admins.enabled").Output()
+	if err != nil {
+		return false, i18n.T("health.approval_read_failed")
+	}
+	if strings.TrimSpace(string(out)) == "true" {
+		return false, i18n.T("health.approval_enforce_admins")
+	}
+	return true, ""
+}
+
+// checkApprovalReachable avisa quando a exigência de aprovação não tem como ser
+// cumprida: o autor não pode aprovar o próprio PR, e não há escape configurado.
+func checkApprovalReachable(cfg *config.Config) []Finding {
+	if cfg == nil || cfg.Workflow == nil || cfg.Workflow.RequiredApprovalsOrDefault() == 0 {
+		return nil // zero exigido: não há o que ficar inalcançável
+	}
+	if _, err := exec.LookPath("gh"); err != nil {
+		return nil // sem `gh` o doctor já reclama noutro achado
+	}
+	repo := cfg.Workflow.Repo
+	branch := cfg.Workflow.IntegrationBranchOrDefault()
+
+	if ok, _ := CanBypassProtection(repo, branch); ok {
+		// Admin com escape: o fluxo funciona, e o merge usa `gh pr merge --admin`. Não é
+		// achado — é o contorno previsto, e repeti-lo a cada `doctor` viraria ruído.
+		return nil
+	}
+	return []Finding{{"aprovacao-inalcancavel", Warn, repo,
+		i18n.T("health.approval_unreachable", cfg.Workflow.RequiredApprovalsOrDefault())}}
+}
+
+// desligaExigenciaDeAprovacao aplica a saída (2): zera a exigência no GitHub.
+//
+// O `anchors.yaml` continua sendo a fonte da verdade — quem quiser a exigência de volta
+// declara `required_approvals: 1` e roda o fix de novo. Aqui só se ajusta o GitHub para
+// não travar um fluxo que ele mesmo impede de cumprir.
+func DisableApprovalRequirement(repo, branch string) error {
+	body := `{"required_status_checks":null,"enforce_admins":false,` +
+		`"required_pull_request_reviews":{"required_approving_review_count":0},` +
+		`"restrictions":null}`
+	cmd := exec.Command("gh", "api", "--method", "PUT",
+		"repos/"+repo+"/branches/"+branch+"/protection", "--input", "-")
+	cmd.Stdin = strings.NewReader(body)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%s: %s", branch, strings.TrimSpace(string(out)))
+	}
+	return nil
+}
+
+// currentApproval lê quantas aprovações o branch exige hoje. Devolve -1 quando não dá para
+// saber — que é diferente de zero, e o chamador não pode confundir os dois.
+func currentApproval(repo, branch string) int {
+	out, err := exec.Command("gh", "api",
+		"repos/"+repo+"/branches/"+branch+"/protection",
+		"--jq", ".required_pull_request_reviews.required_approving_review_count").Output()
+	if err != nil {
+		return -1
+	}
+	var n int
+	if json.Unmarshal([]byte(strings.TrimSpace(string(out))), &n) != nil {
+		return -1
+	}
+	return n
+}

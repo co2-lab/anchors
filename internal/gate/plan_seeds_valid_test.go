@@ -23,7 +23,7 @@ func TestPlanSeeds_semeiaEmCamadaDeclarativaReprova(t *testing.T) {
 	if v != Fail {
 		t.Fatalf("esperava Fail, got %v", v)
 	}
-	if !strings.Contains(msg, "RECONHECIDA") {
+	if !strings.Contains(msg, "RECONHECIDA") && !strings.Contains(msg, "RECOGNIZED") {
 		t.Errorf("mensagem deveria explicar o motivo: %q", msg)
 	}
 }

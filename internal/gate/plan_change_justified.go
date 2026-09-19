@@ -1,0 +1,254 @@
+package gate
+
+import (
+	"os/exec"
+	"regexp"
+	"strconv"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
+	"github.com/co2-lab/anchors/internal/mapx"
+)
+
+// --- o plano ALTERADO diz por que mudou ---
+//
+// Planejar erra, e quem descobre o erro é quem implementa. O problema não é o erro: é o
+// que acontece depois. Um agente que acha inconsistência no plano tem duas saídas, e as
+// duas são ruins — corrigir por conta própria (e o projeto passa a caminhar para um
+// destino que ninguém escolheu) ou implementar o que está escrito sabendo que está errado.
+//
+// A deriva é o risco maior, e é SILENCIOSA por construção: nenhum gate de ESTADO consegue
+// vê-la, porque o plano corrigido fica perfeitamente válido — a inconsistência foi
+// removida. O que denuncia não é o estado do arquivo, é a MUDANÇA sem justificativa.
+//
+// Por isso este gate olha o diff, não o conteúdo: plano ou spec que aparece entre os
+// arquivos alterados tem de trazer uma revisão declarada. Sem ela, barra.
+//
+// A régua é o julgamento de quem alterou, e ele é explícito:
+//
+//   - correção INÓCUA (redação, exemplo, typo, uma ambiguidade que só tinha uma leitura
+//     possível) — corrige e registra a revisão. O gate confere que a revisão existe.
+//
+//   - correção que MUDA A DIREÇÃO, ou dúvida sobre se muda — não corrige. Abre issue com
+//     `anchors:needs-user`, e o `claim` para de entregar o card até alguém decidir.
+//
+// O gate não sabe distinguir os dois casos, e não é para saber: essa é a decisão que se
+// quer que um humano ou um agente TOME, com o contexto na mão. O que ele garante é que a
+// decisão foi tomada por alguém e ficou escrita — em vez de acontecer por omissão.
+
+// revisionRE casa a revisão registrada no arquivo: `FNDTN-R0001: o que mudou e por quê`.
+//
+// O formato segue o vocabulário que já existe (`FNDTN-F04` para fase), e a NUMERAÇÃO é o
+// que uma marca solta não daria: dá para ver quantas vezes o documento mudou, e em que
+// ordem. Um `@plan-fix` solto responderia "mudou"; `-R0003` responde "mudou três vezes".
+//
+// O SEPARADOR aceita dois-pontos OU travessão, e os dois prefixos convivem.
+//
+// Medido no blue-eyes: a `ServiceMetrics` registrou a `R0001` como TÍTULO de seção —
+// `### SRMTS-R0001 — a B06 afirmava um vocabulário que não existe` — que é o formato
+// natural quando a revisão ganha corpo, e a `R0002` no cabeçalho, com dois-pontos.
+//
+// O gate contou UMA e viu a maior como `-R0002`, reprovando por "não sequencial". O
+// diagnóstico acertou o sintoma e errou a causa: as revisões ERAM sequenciais; uma delas
+// não foi vista. E o pior é que a mensagem manda renumerar — o que produziria duas `R0001`
+// no mesmo arquivo.
+func revisionRE() *regexp.Regexp {
+	return regexp.MustCompile(`(?m)^[^\S\n]*(?:>|#{1,6})?[^\S\n]*(?:\*\*)?([A-Z0-9]` +
+		config.CodeLengthPattern() + `)-R(\d{4})(?:\*\*)?[^\S\n]*[:—–-][^\S\n]*(\S.*)$`)
+}
+
+// Revision é uma alteração registrada no próprio documento.
+type Revision struct {
+	Code        string // o código do arquivo revisado (`FNDTN`)
+	Number      int    // sequencial: 1, 2, 3...
+	Explanation string
+}
+
+// RevisionsOf devolve as revisões declaradas no conteúdo, na ordem em que aparecem.
+func RevisionsOf(content string) []Revision {
+	var out []Revision
+	for _, m := range revisionRE().FindAllStringSubmatch(content, -1) {
+		n, err := strconv.Atoi(m[2])
+		if err != nil {
+			continue
+		}
+		out = append(out, Revision{Code: m[1], Number: n, Explanation: strings.TrimSpace(m[3])})
+	}
+	return out
+}
+
+// checkPlanChangeJustified confronta o plano/spec ALTERADO com a revisão declarada.
+//
+// O gate se abstém em `--all` (via `skip_on: [all]` no anchors.yaml). Ali não existe
+// "alterado": reprovar todo plano que nunca precisou de revisão seria acusar quem acertou
+// de primeira. Rodando com `--changed`, todo nó que ele recebe JÁ é um arquivo alterado —
+// por isso não precisa da lista, e não a recebe.
+func checkPlanChangeJustified(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	// SÓ o que de fato MUDOU. O `--changed X` entrega o RAIO DE IMPACTO de X — todo nó
+	// que depende dele —, e isso é certo para quase todo gate: quem quebrou por tabela tem
+	// de ser confrontado. Aqui não: um plano que não mudou não tem o que justificar.
+	//
+	// Medido no blue-eyes: sem esta conferência, alterar UM plano acusava 8 arquivos, 7
+	// deles intocados. Um gate bloqueante que acusa inocente é pior que gate nenhum — a
+	// saída barata vira desligá-lo.
+	if cfg == nil || !actuallyChanged(n.ID, cfg.Alterados) {
+		return Skip, i18n.T("gate.plan_change_justified.skip_not_in_changed")
+	}
+
+	// E O GIT CONFIRMA. `--changed X` é uma AFIRMAÇÃO de quem chama, não uma medição:
+	// quem roda à mão passa o caminho para testar algo, e o pre-commit passa TODO arquivo
+	// staged — inclusive os que entraram por rebase ou merge sem ninguém os ter editado.
+	//
+	// Cobrar justificativa de quem não mexeu é o pior defeito possível num gate
+	// bloqueante: ele barra trabalho correto, e a saída barata vira desligá-lo.
+	// ARQUIVO NOVO não tem o que justificar: ele não existia, então nada foi ALTERADO.
+	// A revisão registra por que o texto mudou — e num arquivo que nasce agora, o texto
+	// inteiro é a decisão. Cobrar `-R0001` aqui obrigaria toda spec nova a declarar uma
+	// revisão de si mesma no primeiro commit, que é ruído puro.
+	if gitSaysIsNew(root, n.ID) {
+		return Skip, i18n.T("gate.plan_change_justified.skip_new_file")
+	}
+	if !gitSaysChanged(root, n.ID) {
+		return Skip, i18n.T("gate.plan_change_justified.skip_git_unchanged")
+	}
+
+	codigo := n.Code
+	if codigo == "" {
+		return Skip, i18n.T("gate.plan_change_justified.skip_no_code")
+	}
+
+	// Só contam as revisões DESTE documento. Um plano pode citar a revisão de outro ao
+	// explicar o contexto, e isso não justifica a própria mudança.
+	var minhas []Revision
+	for _, r := range RevisionsOf(content) {
+		if r.Code == codigo {
+			minhas = append(minhas, r)
+		}
+	}
+
+	// JÁ SE EXPLICA por outro mecanismo? Então não há o que cobrar.
+	//
+	// Medido no PR do plano de mutação: os dois planos alterados diziam por que mudaram —
+	// o revisado com `@revised-by`/`@amended-by`, o que revisa com `revises:` no header —
+	// e este gate reprovou os dois, exigindo que dissessem de novo em outra notação.
+	//
+	// Exigir a mesma informação duas vezes não protege nada: ensina a satisfazer o gate
+	// em vez de comunicar, que é o oposto do que ele existe para fazer.
+	if explainedByRevision(content) {
+		return Pass, i18n.T("gate.plan_change_justified.pass_explained_by_revision")
+	}
+
+	if len(minhas) == 0 {
+		return Fail, i18n.T("gate.plan_change_justified.fail_unjustified_change", codigo, n.ID, n.ID)
+	}
+
+	// A numeração tem de ser sequencial a partir de 1. Sem isso ela não responderia
+	// "quantas vezes mudou" — que é a única coisa que ela dá a mais que uma marca solta.
+	maior := 0
+	for _, r := range minhas {
+		if r.Number > maior {
+			maior = r.Number
+		}
+	}
+	if maior != len(minhas) {
+		return Fail, i18n.T("gate.plan_change_justified.fail_revisions_not_sequential", len(minhas), maior)
+	}
+
+	ult := minhas[len(minhas)-1]
+	return Pass, i18n.T("gate.plan_change_justified.pass_justified_change",
+		ult.Code, ult.Number, firstLine(ult.Explanation))
+}
+
+// firstLine encurta a explicação para o laudo, que é uma linha.
+func firstLine(s string) string {
+	if i := strings.IndexByte(s, '\n'); i >= 0 {
+		s = s[:i]
+	}
+	if len(s) > 90 {
+		return s[:87] + "..."
+	}
+	return s
+}
+
+// actuallyChanged diz se o nó está na lista dos que mudaram.
+func actuallyChanged(id string, alterados []string) bool {
+	for _, a := range alterados {
+		if a == id {
+			return true
+		}
+	}
+	return false
+}
+
+// explainedByRevision diz se o arquivo já declara a mudança pelo mecanismo de revisão
+// entre planos — o `revises:` de quem revisa, e o aviso de quem foi revisado.
+//
+// São marcadores ESTÁVEIS, não prosa: o `plano-revisado` já os usa, e casar texto corrido
+// quebraria em projeto escrito noutro idioma.
+func explainedByRevision(content string) bool {
+	for _, marca := range []string{"revises:", "@revised-by", "@amended-by"} {
+		if strings.Contains(content, marca) {
+			return true
+		}
+	}
+	return false
+}
+
+// gitSaysChanged confronta a lista recebida com o que o git de fato vê.
+//
+// Conta o que está no índice E na árvore de trabalho: o pre-commit roda com o arquivo já
+// staged, e olhar só um dos dois deixaria passar metade dos casos.
+//
+// Sem git (ou fora de repositório), devolve `true` e deixa a decisão com quem chamou —
+// negar ali silenciaria o gate onde ele não tem como medir.
+func gitSaysChanged(root, path string) bool {
+	cmd := exec.Command("git", "status", "--porcelain", "--", path)
+	cmd.Dir = root
+	out, err := cmd.Output()
+	if err != nil {
+		return true
+	}
+	return len(strings.TrimSpace(string(out))) > 0
+}
+
+// gitSaysIsNew diz se o arquivo ainda não existe no histórico.
+//
+// `git log -1 -- <path>` vazio significa que nenhum commit o tocou — é a diferença entre
+// "mudou" e "nasceu". O status porcelain não serve aqui: ele marca `??` para não
+// rastreado e `A ` para staged, e um arquivo novo já adicionado ao índice apareceria como
+// alteração.
+func gitSaysIsNew(root, path string) bool {
+	// A pergunta é "este arquivo existe no ÚLTIMO COMMIT?", e não "ele é rastreado?".
+	//
+	// A diferença decide o gate. `git ls-files` consulta o INDEX, e o pre-commit roda com
+	// tudo já STAGED — então um arquivo que nasce neste commit aparece como rastreado, a
+	// guarda não dispara, e o gate cobra revisão de arquivo recém-nascido. Medido no
+	// blue-eyes: a `MutationHarness.spec.md` estava em `A` no `git status` e foi acusada
+	// de "foi ALTERADO e não diz por quê"; o arquivo que de fato mudou (`M`) não foi.
+	//
+	// Reproduzido isolado: `git ls-files --error-unmatch novo.md` erra antes do `git add`
+	// e ACERTA depois — sem nenhum commit no meio.
+	//
+	// `git cat-file -e HEAD:<path>` responde a pergunta certa: o caminho existe na árvore
+	// do último commit. E não sofre o problema que trouxe o `ls-files` para cá — num
+	// repositório sem commit algum, `HEAD` não resolve e o comando erra, que é a resposta
+	// correta ("não existia antes") em vez da falha do `git log`.
+	//
+	// FORA de repositório a resposta é NÃO: ali o gate não tem como medir, e afirmar
+	// "é novo" o silenciaria em todo projeto sem git — que é o caso dos testes de unidade
+	// e de quem roda o Anchors fora de um repositório.
+	if !inRepository(root) {
+		return false
+	}
+	cmd := exec.Command("git", "cat-file", "-e", "HEAD:"+path)
+	cmd.Dir = root
+	return cmd.Run() != nil // erro = não existe no último commit = nasce agora
+}
+
+// inRepository diz se `root` está dentro de um repositório git.
+func inRepository(root string) bool {
+	cmd := exec.Command("git", "rev-parse", "--is-inside-work-tree")
+	cmd.Dir = root
+	return cmd.Run() == nil
+}

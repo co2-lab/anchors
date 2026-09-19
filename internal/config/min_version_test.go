@@ -140,7 +140,7 @@ func TestValidarMinVersion_aMensagemEnsina(t *testing.T) {
 	if err == nil {
 		t.Fatal("esperava erro")
 	}
-	for _, quer := range []string{"MAJOR.MINOR.PATCH", "0.1.84", "silencia"} {
+	for _, quer := range []string{"MAJOR.MINOR.PATCH", "0.1.84", "silences"} {
 		if !strings.Contains(err.Error(), quer) {
 			t.Errorf("a mensagem deveria conter %q; veio: %s", quer, err)
 		}

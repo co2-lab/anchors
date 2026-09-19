@@ -7,6 +7,12 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
+	"github.com/co2-lab/anchors/cmd/anchors/flow"
+	"github.com/co2-lab/anchors/cmd/anchors/governance"
+	"github.com/co2-lab/anchors/cmd/anchors/mapcmd"
+	"github.com/co2-lab/anchors/cmd/anchors/ops"
+	"github.com/co2-lab/anchors/cmd/anchors/quality"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/spf13/cobra"
@@ -15,12 +21,12 @@ import (
 func newRootCmd() *cobra.Command {
 	root := &cobra.Command{
 		Use:   "anchors",
-		Short: "Anchors — framework de continuidade para desenvolvimento assistido por IA",
-		Long: `Anchors mantém um projeto coerente ao longo do tempo através de âncoras:
-documentos que guiam o desenvolvimento e confrontam o que foi feito.
+		Short: "Anchors — a continuity framework for AI-assisted development",
+		Long: `Anchors keeps a project coherent over time through anchors:
+documents that guide development and confront what was done.
 
-Este CLI exercita o ciclo de vida do Anchors: constrói o mapa de dependências,
-propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`,
+This CLI exercises the Anchors lifecycle: it builds the dependency map,
+propagates changes, runs the quality gates and reports the project's health.`,
 		SilenceUsage: true,
 		// Sem isto o erro sai DUAS vezes: o cobra imprime "Error: x" ao voltar do
 		// Execute, e o main imprime "erro: x" logo em seguida. Quem trata a saída é o
@@ -56,62 +62,17 @@ propaga alterações, roda os gates de qualidade e reporta a saúde do projeto.`
 			// E há a propriedade que decide: o `PersistentPreRunE` roda ANTES do comando,
 			// então o aviso aparece antes de o primeiro evento sair. Com `next` ou
 			// `doctor`, o dado já teria ido.
-			noticeTelemetry(cmd)
+			common.NoticeTelemetry(cmd)
 			return refuseIfFrozen(cmd)
 		},
 	}
-	root.AddCommand(newGuideCmd())
-	root.AddCommand(newWorkCmd())
-	root.AddCommand(newBoardCmd())
-	root.AddCommand(newInitCmd())
-	root.AddCommand(newInstallHooksCmd())
-	// O botão de pânico: congela e descongela o projeto inteiro.
-	root.AddCommand(newFreezeCmd())
-	root.AddCommand(newThawCmd())
-	root.AddCommand(newNewCmd())
-	root.AddCommand(newRecodeCmd())
-	root.AddCommand(newMapCmd())
-	// A doc é compilada: `doct/*.md.tmpl` -> `docs/*.md` (o conteúdo mora nas specs).
-	root.AddCommand(newDocsCmd())
-	// A configuração LOCAL do agente: o que é dele, e não do projeto.
-	root.AddCommand(newSettingsCmd())
-	root.AddCommand(newProgressMergeCmd())
-	root.AddCommand(newImpactCmd())
-	root.AddCommand(newCheckCmd())
-	root.AddCommand(newVerifyCmd())
-	root.AddCommand(newAuditCmd())
-	root.AddCommand(newDoctorCmd())
-	root.AddCommand(newStatusCmd())
-	root.AddCommand(newWatchCmd())
-	root.AddCommand(newQueueCmd())
-	root.AddCommand(newNextCmd())
-	root.AddCommand(newDoneCmd())
-	root.AddCommand(newDropCmd())
-	root.AddCommand(newEscalateCmd())
-	// A outra metade do escalate: sem ela o card fica parado para sempre (#10).
-	root.AddCommand(newDecidedCmd())
-	root.AddCommand(newCommitMsgCmd())
-	root.AddCommand(newPRBodyCmd())
-	root.AddCommand(newTaskStatusCmd())
-	root.AddCommand(newMigrateCmd())
-	root.AddCommand(newUnblockCmd())
-	root.AddCommand(newBackfillLabelsCmd())
-	root.AddCommand(newDiscardCmd())
-	root.AddCommand(newSynthesizeCmd())
-	root.AddCommand(newGeneratedPathsCmd())
-	root.AddCommand(newReclaimCmd())
-	root.AddCommand(newStaleCmd())
-	root.AddCommand(newCodeCmd())
-	root.AddCommand(newJudgeCmd())
-	root.AddCommand(newSuggestCmd())
-	root.AddCommand(newGovernsCmd())
-	root.AddCommand(newIngestCmd())
-	root.AddCommand(newTestCmd())
-	root.AddCommand(newMutationCmd())
-	root.AddCommand(newDeliverCmd())
-	root.AddCommand(newComplianceCmd())
-	root.AddCommand(newCoverageCmd())
-	root.AddCommand(newReportCmd())
+
+	governance.Register(root)
+	mapcmd.Register(root)
+	quality.Register(root)
+	flow.Register(root)
+	ops.Register(root)
+
 	return root
 }
 
@@ -163,12 +124,12 @@ func refuseIfFrozen(cmd *cobra.Command) error {
 		return nil
 	}
 	cmd.SilenceUsage = true
-	return fmt.Errorf("🛑 o projeto está CONGELADO — `%s` não roda.\n\n"+
-		"   Motivo: %s\n\n"+
-		"   O trabalho que você já fez continua no seu branch local.\n"+
-		"   Para liberar (quem congelou): `anchors thaw`\n"+
-		"   Para investigar: `anchors status`, `anchors doctor` e `anchors guide` continuam valendo",
-		cmd.Name(), cfg.FreezeReasonText())
+	return fmt.Errorf("%s\n\n%s\n\n%s\n%s\n%s",
+		i18n.T("freeze.blocked.cli", cmd.Name()),
+		i18n.T("freeze.blocked.reason", cfg.FreezeReasonText()),
+		i18n.T("freeze.blocked.work_safe"),
+		i18n.T("freeze.blocked.how_to_thaw"),
+		i18n.T("freeze.blocked.what_still_works"))
 }
 
 // applyProjectLang lê o `lang:` do anchors.yaml e o define, ANTES de qualquer saída.

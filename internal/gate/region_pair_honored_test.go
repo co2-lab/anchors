@@ -38,15 +38,15 @@ func TestRegionPairFechoTrocadoFalhaEDizOsDois(t *testing.T) {
 	if !strings.Contains(msg, "MLETX-B05") || !strings.Contains(msg, "MLETX-A03") {
 		t.Errorf("a mensagem tem de citar os DOIS códigos, veio: %s", msg)
 	}
-	if !strings.Contains(msg, "linha 3") {
+	if !strings.Contains(msg, "linha 3") && !strings.Contains(msg, "line 3") {
 		t.Errorf("a mensagem tem de apontar a linha, veio: %s", msg)
 	}
 }
 
 func TestRegionPairSemFechoFalha(t *testing.T) {
 	v, msg := checkRegionPairHonored("// #region [MLETX-A03]: x\nput()", regionNode(), "", nil, nil)
-	if v != Fail || !strings.Contains(msg, "nunca fechada") {
-		t.Fatalf("esperava Fail com 'nunca fechada', veio %v — %s", v, msg)
+	if v != Fail || (!strings.Contains(msg, "nunca fechada") && !strings.Contains(msg, "never closed")) {
+		t.Fatalf("esperava Fail com 'nunca fechada' / 'never closed', veio %v — %s", v, msg)
 	}
 }
 

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -39,26 +40,26 @@ func checkEvidenceFresh(_ string, n mapx.Node, _ string, g *mapx.Graph, _ *confi
 	if n.Signal == nil || n.Signal.AtRev == "" {
 		// Deliberadamente Skip: sem execução ingerida não existe evidência, e portanto não
 		// existe evidência vencida. Quem cobra a AUSÊNCIA de teste verde é o `coverage`.
-		return Skip, "sem execução ingerida — nada a envelhecer (ausência de prova é outra dívida)"
+		return Skip, i18n.T("gate.evidence_fresh.skip_no_execution")
 	}
 	ev := g.EvidenceStaleFor(n.ID)
 	if ev == nil {
-		return Pass, fmt.Sprintf("placar de %s confere com o código atual (%d dependência(s) no fecho)",
+		return Pass, fmt.Sprintf(i18n.T("gate.evidence_fresh.pass_fresh"),
 			n.Signal.AtRev, len(n.Signal.ClosureRev))
 	}
 
 	var b strings.Builder
-	b.WriteString("o placar deste teste mediu um código que já mudou — rode-o de novo.\n")
+	b.WriteString(i18n.T("gate.evidence_fresh.fail_stale") + "\n")
 	if ev.Own {
-		fmt.Fprintf(&b, "  o próprio arquivo de teste mudou (medido em %s)\n", ev.AtRev)
+		fmt.Fprintf(&b, i18n.T("gate.evidence_fresh.own_file_changed"), ev.AtRev)
 	}
 	if len(ev.Culprit) > 0 {
-		fmt.Fprintf(&b, "  %d dependência(s) do fecho avançaram de rev:\n", len(ev.Culprit))
+		fmt.Fprintf(&b, i18n.T("gate.evidence_fresh.closure_advanced"), len(ev.Culprit))
 		// Lista até 5: quem conserta roda o teste UMA vez, independente de quantas
 		// dependências mudaram. Despejar 290 caminhos afoga a única linha que importa.
 		for i, c := range ev.Culprit {
 			if i == 5 {
-				fmt.Fprintf(&b, "    … e %d outra(s)\n", len(ev.Culprit)-5)
+				fmt.Fprintf(&b, i18n.T("gate.evidence_fresh.and_others"), len(ev.Culprit)-5)
 				break
 			}
 			fmt.Fprintf(&b, "    %s\n", c)

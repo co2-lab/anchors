@@ -11,6 +11,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -37,7 +38,7 @@ import (
 // todo número que aparece no texto (um "90 dias" de retenção não é contagem de código).
 func checkCountHonored(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "a afirmação numérica é da spec — é ela que descreve o código"
+		return Skip, i18n.T("gate.count_honored.skip_not_spec")
 	}
 
 	decls := declaredCounts(content)
@@ -45,8 +46,7 @@ func checkCountHonored(content string, n mapx.Node, root string, g *mapx.Graph, 
 		// Ausência não é falha: nem toda spec afirma número, e exigir a marcação de toda
 		// spec seria ritual. O gate cobra quem DECLAROU como conferir — e quem escreve uma
 		// contagem sem declarar assume que ela envelheça.
-		return Skip, "a spec não declara nenhuma contagem confrontável " +
-			"(`<!-- @anchors-count: N = <glob> [/regex/] -->`)"
+		return Skip, i18n.T("gate.count_honored.skip_no_counts")
 	}
 
 	var erros []string
@@ -60,41 +60,39 @@ func checkCountHonored(content string, n mapx.Node, root string, g *mapx.Graph, 
 		// Achado real: o marcador dizia 51 (certo), e uma frase três linhas abaixo dizia
 		// "50 cláusulas de autorização" — o gate ficava ✓ e a spec mentia para quem a
 		// abrisse. Conferir só a marcação é conferir a metade que ninguém lê.
-		if real == d.Esperado && d.Rotulo != "" {
+		if real == d.Expected && d.Label != "" {
 			if divergentes := divergentProse(content, d, real); len(divergentes) > 0 {
-				erros = append(erros, fmt.Sprintf(
-					"o marcador de `%s` bate (%d), mas a PROSA diz %s — é a frase que o leitor "+
-						"lê, e ela está errada", d.Rotulo, real, strings.Join(divergentes, " e ")))
+				erros = append(erros, i18n.T("gate.count_honored.err_prose_divergent",
+					d.Label, real, strings.Join(divergentes, ", ")))
 			}
 			continue
 		}
-		if real != d.Esperado {
-			rotulo := d.Rotulo
+		if real != d.Expected {
+			rotulo := d.Label
 			if rotulo == "" {
-				rotulo = "itens"
+				rotulo = i18n.T("gate.count_honored.default_item_label")
 			}
-			erros = append(erros, fmt.Sprintf(
-				"a spec afirma **%d %s**, o código tem **%d** (`%s`%s)",
-				d.Esperado, rotulo, real, d.Glob, defaultSuffix(d.Padrao)))
+			suffix := ""
+			if d.Pattern != "" {
+				suffix = i18n.T("gate.count_honored.counting_regex_suffix", d.Pattern)
+			}
+			erros = append(erros, i18n.T("gate.count_honored.err_mismatch",
+				d.Expected, rotulo, real, d.Glob, suffix))
 		}
 	}
 	if len(erros) == 0 {
 		return Pass, ""
 	}
 	sort.Strings(erros)
-	return Fail, fmt.Sprintf("%d contagem(ns) desatualizada(s): %s. "+
-		"Um número em prosa envelhece sozinho — ninguém precisa errar para a frase virar "+
-		"mentira, basta o código crescer. Atualize o número (e as frases que dependem dele) "+
-		"ou corrija o que a contagem confronta",
-		len(erros), strings.Join(erros, "; "))
+	return Fail, i18n.T("gate.count.stale", len(erros), strings.Join(erros, "; "))
 }
 
 // count declarada na spec.
 type count struct {
-	Esperado int
-	Rotulo   string // "modelos", "cláusulas" — só para a mensagem
+	Expected int
+	Label    string // "modelos", "cláusulas" — só para a mensagem
 	Glob     string
-	Padrao   string // regex opcional: conta OCORRÊNCIAS em vez de arquivos
+	Pattern  string // regex opcional: conta OCORRÊNCIAS em vez de arquivos
 }
 
 // countRE casa `@anchors-count: 51 modelos = <glob> /regex/`. O rótulo e o regex são
@@ -115,10 +113,10 @@ func declaredCounts(content string) []count {
 			continue
 		}
 		out = append(out, count{
-			Esperado: n,
-			Rotulo:   strings.TrimSpace(m[2]),
+			Expected: n,
+			Label:    strings.TrimSpace(m[2]),
 			Glob:     strings.TrimSpace(m[3]),
-			Padrao:   m[4],
+			Pattern:  m[4],
 		})
 	}
 	return out
@@ -129,19 +127,19 @@ func declaredCounts(content string) []count {
 func countOf(root string, d count) (int, error) {
 	arquivos, err := doublestar.Glob(os.DirFS(root), d.Glob)
 	if err != nil {
-		return 0, fmt.Errorf("glob inválido: %w", err)
+		return 0, fmt.Errorf("%s", i18n.T("gate.count_honored.err_invalid_glob", err))
 	}
 	if len(arquivos) == 0 {
 		// Zero arquivos quase nunca é "o código tem zero": é o glob apontando para o lugar
 		// errado. Dizer isso evita a conclusão errada — e a correção é o glob, não o número.
-		return 0, fmt.Errorf("nenhum arquivo casa este glob — confira o caminho antes de mexer no número")
+		return 0, fmt.Errorf("%s", i18n.T("gate.count_honored.err_no_files_match"))
 	}
-	if d.Padrao == "" {
+	if d.Pattern == "" {
 		return len(arquivos), nil
 	}
-	re, err := regexp.Compile(d.Padrao)
+	re, err := regexp.Compile(d.Pattern)
 	if err != nil {
-		return 0, fmt.Errorf("regex inválido: %w", err)
+		return 0, fmt.Errorf("%s", i18n.T("gate.count_honored.err_invalid_regex", err))
 	}
 	total := 0
 	for _, f := range arquivos {
@@ -154,18 +152,11 @@ func countOf(root string, d count) (int, error) {
 	return total, nil
 }
 
-func defaultSuffix(p string) string {
-	if p == "" {
-		return ""
-	}
-	return ", contando `/" + p + "/`"
-}
-
 // divergentProse acha, no texto, afirmações "<N> <rótulo>" cujo número não bate com o
 // real. Só olha o MESMO rótulo que a marcação declara — é o que evita acusar o "90 dias"
 // de retenção que nada tem a ver com contagem de código.
 func divergentProse(content string, d count, real int) []string {
-	rot := regexp.QuoteMeta(d.Rotulo)
+	rot := regexp.QuoteMeta(d.Label)
 	// `\*{0,2}` aceita a forma em negrito (`**50 modelos**`), que é como o número
 	// costuma aparecer quando o autor quer destacá-lo.
 	// O QUALIFICADOR é o que separa a afirmação sobre o TOTAL de uma sobre um
@@ -227,7 +218,7 @@ func qualified(resto string) bool {
 	// financeiro" restringe, "de autorização" não), o projeto vê a lista e sabe o que o
 	// gate confronta. Errar para o lado do silêncio custa achado; errar para o outro
 	// acusa quem está certo, e um gate assim é desligado.
-	for _, lig := range complementosNaoRestritivos {
+	for _, lig := range nonRestrictiveComplements {
 		if strings.EqualFold(r, lig) {
 			return false
 		}
@@ -235,8 +226,8 @@ func qualified(resto string) bool {
 	return true
 }
 
-// complementosNaoRestritivos: o que segue o rótulo sem recortar o conjunto.
-var complementosNaoRestritivos = []string{
+// nonRestrictiveComplements: o que segue o rótulo sem recortar o conjunto.
+var nonRestrictiveComplements = []string{
 	"de autorização", "de autorizacao", "do produto", "do projeto", "no total",
 	"of authorization", "in total", "declarados", "no schema",
 }

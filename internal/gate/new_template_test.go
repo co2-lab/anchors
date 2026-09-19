@@ -31,7 +31,7 @@ func TestNewTemplate_specIsBornConforming(t *testing.T) {
 	if v, msg := checkHeaderConforms(spec, mapx.Node{ID: "x/Login.spec.md", Kind: "spec"}); v != Pass {
 		t.Fatalf("spec do `new` reprova header-conforme: %s", msg)
 	}
-	if v, msg := checkSpecSections(spec, mapx.Node{ID: "x/Login.spec.md"}); v != Pass {
+	if v, msg := checkSpecSections(spec, mapx.Node{ID: "x/Login.spec.md"}, "", nil, nil); v != Pass {
 		t.Fatalf("spec do `new` reprova spec-completa: %s", msg)
 	}
 }

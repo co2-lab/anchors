@@ -1,11 +1,11 @@
 package gate
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -40,30 +40,24 @@ import (
 // diz o que deveria. Ele cobra que a decisão TENHA endereço e que o endereço NÃO MINTA.
 func checkValueAnchored(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "o conjunto fechado vive no código; a spec é o ponto de partida do confronto"
+		return Skip, i18n.T("gate.value_anchored.skip_not_spec")
 	}
 	if g == nil {
-		return Pending, "sem mapa carregado — o gate relacional precisa do grafo"
+		return pendingNoMap()
 	}
 
 	anchorRE := valueAnchorDe(cfg)
 	if anchorRE == nil {
-		return Skip, "o projeto não declarou `derived.value_anchor` — o padrão da âncora " +
-			"que liga um VALOR à regra que o justifica.\n\nSem ele o gate não sabe o que " +
-			"ler, e aprovar seria carimbar o que não foi conferido.\n\nDeclare em " +
-			"`anchors.yaml`, com DOIS grupos de captura (a chave da regra e o valor):\n" +
-			"    derived:\n" +
-			"      value_anchor: \"@code-reference-\\\\[([^\\\\]]+)\\\\]-\\\\[([^\\\\]]+)\\\\]\""
+		return Skip, i18n.T("gate.value_anchored.skip_no_value_anchor")
 	}
 	exportRE := exportDetectDe(cfg)
 	if exportRE == nil {
-		return Skip, "o projeto não declarou `derived.export_detect` — sem ele o gate não " +
-			"sabe onde um conjunto fechado começa"
+		return Skip, i18n.T("gate.value_anchored.skip_no_export_detect")
 	}
 
 	alvo, texto, ok := specTarget(n, root, g)
 	if !ok {
-		return Skip, "spec sem código ligado (`specifies`) — a ausência é do gate trinca-completa"
+		return Skip, i18n.T("gate.value_anchored.skip_no_code")
 	}
 
 	semAncora, mentirosas := confrontValues(texto, exportRE, anchorRE)
@@ -75,21 +69,15 @@ func checkValueAnchored(content string, n mapx.Node, root string, g *mapx.Graph,
 	if len(mentirosas) > 0 {
 		// A ÂNCORA QUE MENTE vem primeiro: é pior que a ausente. A ausente se vê; esta
 		// parece rastreabilidade e aponta para o lugar errado.
-		fmt.Fprintf(&b, "%d âncora(s) que NÃO batem com o valor ao lado, em `%s`:\n", len(mentirosas), alvo)
+		b.WriteString(i18n.T("gate.value_anchored.lying_header", len(mentirosas), alvo))
 		for _, m := range mentirosas {
-			fmt.Fprintf(&b, "    linha %d — a âncora afirma `%s`, a linha diz `%s`\n", m.linha, m.afirmado, m.real)
+			b.WriteString(i18n.T("gate.value_anchored.lying_item", m.linha, m.afirmado, m.real))
 		}
-		b.WriteString("\nUma âncora que não confere apodreceu sem ninguém notar: ela " +
-			"continua parecendo rastreabilidade e aponta para o valor errado.\n\n")
+		b.WriteString(i18n.T("gate.value_anchored.lying_footer"))
 	}
 	if len(semAncora) > 0 {
-		fmt.Fprintf(&b, "%d valor(es) de conjunto fechado sem âncora, em `%s`: %s.\n\n",
-			len(semAncora), alvo, firstOnes(semAncora, 5))
-		b.WriteString("Cada valor de um conjunto fechado é uma decisão — acrescentar ou " +
-			"remover um muda o que o sistema aceita. Sem âncora, ninguém sabe qual regra o " +
-			"justifica, e quem consome o conjunto redigita os valores em vez de exigi-los.\n\n" +
-			"Ancore cada valor na linha acima dele:\n" +
-			"    // @code-reference-[WINDOW-001]-[15m]\n    '15m',")
+		b.WriteString(i18n.T("gate.value_anchored.unanchored_header", len(semAncora), alvo, firstOnes(semAncora, 5)))
+		b.WriteString(i18n.T("gate.value_anchored.unanchored_footer"))
 	}
 	return Fail, b.String()
 }
@@ -168,7 +156,7 @@ func confrontValues(codigo string, exportRE, anchorRE *regexp.Regexp) ([]string,
 			m = anchorRE.FindStringSubmatch(l)
 		}
 		if m == nil {
-			semAncora = append(semAncora, fmt.Sprintf("`%s` (linha %d)", valor, i+1))
+			semAncora = append(semAncora, i18n.T("gate.value_anchored.unanchored_item", valor, i+1))
 			continue
 		}
 		if m[2] != valor {

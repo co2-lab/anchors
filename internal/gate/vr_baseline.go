@@ -1,14 +1,13 @@
 package gate
 
 import (
-	"fmt"
 	"os"
-	"path/filepath"
 	"sort"
 	"strings"
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -39,11 +38,11 @@ import (
 // projeto passar a regravar baseline junto com a tela, o número cai e o gate endurece.
 func checkVRBaseline(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindFeature {
-		return Skip, "o cenário de regressão visual é declarado na feature — é dela que o confronto parte"
+		return Skip, i18n.T("gate.vr_baseline.skip_not_feature")
 	}
 	cenarios := vrScenarios(content, cfg)
 	if len(cenarios) == 0 {
-		return Skip, "a feature não declara cenário de regressão visual"
+		return Skip, i18n.T("gate.vr_baseline.skip_no_vr_scenarios")
 	}
 
 	base := strings.TrimSuffix(n.ID, ".feature")
@@ -61,14 +60,7 @@ func checkVRBaseline(content string, n mapx.Node, root string, g *mapx.Graph, cf
 		return Pass, ""
 	}
 	sort.Strings(semImagem)
-	return Fail, fmt.Sprintf("%d cenário(s) de regressão visual sem imagem de referência: %s. "+
-		"O `@nivel-vr` declara que esta tela é provada por CAPTURA, não por asserção — e sem "+
-		"baseline não há contra o que comparar. O cenário existe, o gate de feature o conta "+
-		"como coberto, e a prova prometida não acontece.\n\n"+
-		"Gere a captura (`%s.%s.png`, ao lado da unidade) ou tire a tag `@nivel-vr` do "+
-		"cenário — um cenário que ninguém prova é pior que um cenário ausente, porque parece "+
-		"cobertura",
-		len(semImagem), strings.Join(semImagem, ", "), filepath.Base(base), semImagem[0])
+	return Fail, i18n.T("gate.vr.missing", len(semImagem), strings.Join(semImagem, ", "))
 }
 
 // vrScenarios devolve os códigos de cenário marcados como regressão visual na feature.
@@ -77,7 +69,7 @@ func checkVRBaseline(content string, n mapx.Node, root string, g *mapx.Graph, cf
 // tag nomeia esse regime), com `nivel-vr` como default — o Anchors não impõe a
 // nomenclatura, do mesmo modo que não impõe idioma nem nome de vendor.
 func vrScenarios(content string, cfg *config.Config) []string {
-	tag := tagDeRegimeVisual(cfg)
+	tag := visualRegimeTag(cfg)
 	var out []string
 	visto := map[string]bool{}
 	for _, linha := range strings.Split(content, "\n") {
@@ -96,8 +88,8 @@ func vrScenarios(content string, cfg *config.Config) []string {
 	return out
 }
 
-// tagDeRegimeVisual lê do projeto qual tag nomeia o regime de captura visual.
-func tagDeRegimeVisual(cfg *config.Config) string {
+// visualRegimeTag lê do projeto qual tag nomeia o regime de captura visual.
+func visualRegimeTag(cfg *config.Config) string {
 	// O de-para é TAG → REGIME (`nivel-vr: vr`): a chave é o que aparece na feature, o
 	// valor é o nome do regime. Ler invertido devolvia `vr` como tag e o gate não
 	// encontrava cenário nenhum — silenciosamente, porque "não declara cenário visual" é

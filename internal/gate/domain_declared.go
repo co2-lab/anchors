@@ -1,11 +1,11 @@
 package gate
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -35,10 +35,10 @@ import (
 // do que foi declarado é trabalho do review.
 func checkDomainDeclared(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "a fronteira de entrada é declarada na spec"
+		return Skip, i18n.T("gate.domain.skip_not_spec")
 	}
 
-	corpo, achou := seçãoDominio(content)
+	corpo, achou := sectionDomain(content)
 	if !achou {
 		// A DISPENSA É DECLARADA, não silenciosa.
 		//
@@ -62,21 +62,14 @@ func checkDomainDeclared(content string, n mapx.Node, root string, g *mapx.Graph
 		// o gate calou, e duas telas declararam `5m`, `30m` e `1d`, que o contrato não
 		// aceita. O backend caía no padrão `1h` sem ninguém ver.
 		if noDomainRE.MatchString(content) {
-			return Skip, "a spec declara `@no-domain` com razão — não recebe entrada externa"
+			return Skip, i18n.T("gate.domain.skip")
 		}
-		return Fail, "a spec não declara `## Domínio` nem dispensa a seção.\n\nSem uma " +
-			"das duas, ninguém sabe se a unidade não tem entrada externa ou se ninguém " +
-			"olhou — e o gate não pode distinguir as duas.\n\nDuas saídas: abra a seção " +
-			"declarando o que a unidade ACEITA (uma linha por entrada, com quem garante " +
-			"a fronteira), ou dispense com razão escrita:\n" +
-			"    <!-- @no-domain: recebe só props tipadas do próprio código -->"
+		return Fail, i18n.T("gate.domain.missing")
 	}
 
 	linhas := domainLines(corpo)
 	if len(linhas) == 0 {
-		return Fail, "a seção `## Domínio` está vazia. Ou declare o que a unidade aceita " +
-			"(uma linha por entrada), ou remova a seção — uma seção vazia AFIRMA que se olhou " +
-			"e não se achou nada a declarar, que é diferente de não ter olhado"
+		return Fail, i18n.T("gate.domain.empty")
 	}
 
 	var semDono []string
@@ -88,18 +81,13 @@ func checkDomainDeclared(content string, n mapx.Node, root string, g *mapx.Graph
 	if len(semDono) == 0 {
 		return Pass, ""
 	}
-	return Fail, fmt.Sprintf("%d entrada(s) sem dono na coluna `Quem garante`: %s. "+
-		"Sem dono, \"fora do domínio\" é só outra forma de dizer \"não é meu problema\" — e "+
-		"o problema não fica com ninguém. Foi assim que três specs declararam, cada uma "+
-		"corretamente, que não validavam a mesma entrada: o dever ficou órfão e a entrada "+
-		"inválida passou. Nomeie quem barra: esta unidade, o chamador, ou a interface",
-		len(semDono), strings.Join(semDono, ", "))
+	return Fail, i18n.T("gate.domain.unowned", len(semDono), strings.Join(semDono, ", "))
 }
 
 // dominioRE reconhece o título da seção, com as variações que aparecem na prática.
 var dominioRE = regexp.MustCompile(`(?im)^#{1,4}\s*(dom[ií]nio|domain|entradas?\s+aceitas?|fronteira\s+de\s+entrada)\b[^\n]*\n`)
 
-func seçãoDominio(content string) (string, bool) {
+func sectionDomain(content string) (string, bool) {
 	loc := dominioRE.FindStringIndex(content)
 	if loc == nil {
 		return "", false

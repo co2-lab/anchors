@@ -25,7 +25,7 @@ func rodaAncora(t *testing.T, spec, codigo string, cfg *config.Config) (Verdict,
 
 func cfgAncora() *config.Config {
 	return &config.Config{Derived: &config.Derived{
-		ExportDetect: exportedREPadraoTS,
+		ExportDetect: exportedREDefaultTS,
 		ValueAnchor:  `@code-reference-\[([^\]]+)\]-\[([^\]]+)\]`,
 	}}
 }

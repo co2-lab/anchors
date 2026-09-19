@@ -91,10 +91,10 @@ func Load(path string) (*Pack, error) {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
 	if p.Name == "" {
-		return nil, fmt.Errorf("%s: pack sem `name`", filepath.Base(path))
+		return nil, fmt.Errorf("%s: pack without `name`", filepath.Base(path))
 	}
 	if len(p.Obligations) == 0 {
-		return nil, fmt.Errorf("%s: pack sem obrigações — um pack vazio não confronta nada", p.Name)
+		return nil, fmt.Errorf("%s: pack without obligations — an empty pack confronts nothing", p.Name)
 	}
 	return &p, nil
 }
@@ -123,15 +123,15 @@ func LoadAll(root string, refs []string, values map[string]string, jurisdictions
 		}
 		if j := strings.ToLower(p.Jurisdiction); j != "" && j != "global" && len(jur) > 0 && !jur[j] {
 			avisos = append(avisos, fmt.Sprintf(
-				"pack `%s` é da jurisdição `%s`, que o projeto não declara em `jurisdictions:` — "+
-					"não carregado. Se o app opera lá, declare; senão, remova o pack.", p.Name, p.Jurisdiction))
+				"pack `%s` belongs to jurisdiction `%s`, which the project does not declare in `jurisdictions:` — "+
+					"not loaded. If the app operates there, declare it; otherwise, remove the pack.", p.Name, p.Jurisdiction))
 			continue
 		}
 		if faltando := unresolved(p, values); len(faltando) > 0 {
 			return nil, nil, fmt.Errorf(
-				"o pack `%s` precisa que o projeto declare %s em `pack_values:` — sem isso ele "+
-					"não sabe ONDE confrontar, e um dever que não aponta para lugar nenhum passa "+
-					"verde sem verificar nada",
+				"the pack `%s` needs the project to declare %s in `pack_values:` — without that it "+
+					"does not know WHERE to confront, and a duty that points nowhere passes "+
+					"green without verifying anything",
 				p.Name, "`"+strings.Join(faltando, "`, `")+"`")
 		}
 		resolve(p, values)

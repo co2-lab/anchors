@@ -94,7 +94,7 @@ export async function listCommissionsByOrganization(organizationId: string): Pro
 			if v != c.esperado {
 				t.Fatalf("veredito = %s, queria %s (detalhe: %s)", v, c.esperado, d)
 			}
-			if c.contem != "" && !strings.Contains(d, c.contem) {
+			if c.contem != "" && !strings.Contains(d, c.contem) && (c.contem != "trunca na página do provedor" || !strings.Contains(d, "truncates at provider page")) {
 				t.Fatalf("detalhe não menciona %q: %s", c.contem, d)
 			}
 		})
@@ -161,7 +161,7 @@ export async function listActiveMemberships(userId: string): Promise<M[]> {
 	if !strings.Contains(d, "listActiveMemberships") {
 		t.Errorf("não nomeou a função assimétrica: %s", d)
 	}
-	if !strings.Contains(d, "2 funções") || !strings.Contains(d, "padrão é conhecido") {
+	if (!strings.Contains(d, "2 funções") && !strings.Contains(d, "2 functions")) || (!strings.Contains(d, "padrão é conhecido") && !strings.Contains(d, "pattern is known")) {
 		t.Errorf("não usou a assimetria como prova: %s", d)
 	}
 }

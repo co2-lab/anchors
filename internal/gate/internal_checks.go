@@ -9,6 +9,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -20,7 +21,6 @@ import (
 // para o checker de nome correspondente aqui.
 var internalCheckers = map[string]func(content string, n mapx.Node) (Verdict, string){
 	"non-empty":           checkNonEmpty,
-	"spec-sections":       checkSpecSections,
 	"has-code":            checkHasScenarioCode,
 	"guide-has-checklist": checkGuideHasChecklist,
 	"scenario-coverage":   checkScenarioCoverage,
@@ -53,6 +53,8 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"code-reference-valid":     checkCodeReferenceValid,
 	"scenario-asserts":         checkScenarioAsserts,
 	"domain-declared":          checkDomainDeclared,
+	// Precisa de `cfg` para ler a própria opção `enforce_section_language` — ver checkSpecSections.
+	"spec-sections":            checkSpecSections,
 	"count-honored":            checkCountHonored,
 	"trigger-declared":         checkTriggerDeclared,
 	"route-exists":             checkRouteExists,
@@ -95,7 +97,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 func runInternal(name string, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	content, err := os.ReadFile(filepath.Join(root, n.ID))
 	if err != nil {
-		return Fail, "não foi possível ler o arquivo: " + err.Error()
+		return Fail, i18n.T("gate.read_file_failed", err.Error())
 	}
 	if fn, ok := checkersWithGraph[name]; ok {
 		return fn(string(content), n, root, graph, cfg)
@@ -105,7 +107,7 @@ func runInternal(name string, n mapx.Node, root string, graph *mapx.Graph, cfg *
 	}
 	fn, ok := internalCheckers[name]
 	if !ok {
-		return Pending, "checker interno desconhecido: " + name
+		return Pending, i18n.T("gate.checker_not_implemented", name)
 	}
 	return fn(string(content), n)
 }
@@ -135,7 +137,7 @@ func runInternalAggregate(g config.Gate, root string, graph *mapx.Graph, cfg *co
 	}
 	fn, ok := checkersWithGraph[g.Check]
 	if !ok {
-		return Pending, "checker interno agregado desconhecido: " + g.Check
+		return Pending, i18n.T("gate.aggregate_checker_unknown", g.Check)
 	}
 	return fn("", mapx.Node{}, root, graph, cfg)
 }
@@ -143,7 +145,7 @@ func runInternalAggregate(g config.Gate, root string, graph *mapx.Graph, cfg *co
 // non-empty: o arquivo não é vazio nem só espaço. Trivial, mas pega placeholders.
 func checkNonEmpty(content string, _ mapx.Node) (Verdict, string) {
 	if strings.TrimSpace(content) == "" {
-		return Fail, "arquivo vazio"
+		return Fail, i18n.T("gate.empty_file")
 	}
 	return Pass, ""
 }
@@ -203,26 +205,23 @@ func checkUpdatedAt(content string, n mapx.Node, root string) (Verdict, string) 
 		// Antes isto caía no ramo "commitado" e devolvia "arquivo sem commit
 		// (novo/untracked)" — uma afirmação FALSA e específica, que mandava o autor
 		// investigar o arquivo quando o que falta é o repositório.
-		return Skip, "sem repositório git — o updated_at não tem contra o que ser conferido"
+		return Skip, i18n.T("gate.updated_at.no_git")
 	}
 	if mudou {
 		today := gitmeta.Today()
 		if declared == today {
 			return Pass, "" // atualizado para hoje (a alteração em curso)
 		}
-		return Fail, fmt.Sprintf("updated_at do header (%s) ≠ hoje (%s), e o arquivo tem "+
-			"alterações não-commitadas — atualize para o dia da alteração (%s), ou `anchors check --fix`.",
-			declared, today, today)
+		return Fail, i18n.T("gate.updated_at.uncommitted_diff", declared, today, today)
 	}
 
 	// COMMITADO: compara com a data do último commit que tocou o arquivo (só o dia).
 	gitDate, ok := gitmeta.LastCommitDate(root, n.ID)
 	if !ok {
-		return Pending, "arquivo sem commit no git (novo/untracked) — nada a comparar"
+		return Pending, i18n.T("gate.updated_at.no_commit")
 	}
 	if declared != gitDate {
-		return Fail, fmt.Sprintf("updated_at do header (%s) ≠ data do último commit (%s). "+
-			"Atualize para %s (ou rode `anchors check --fix`).", declared, gitDate, gitDate)
+		return Fail, i18n.T("gate.updated_at.diff", declared, gitDate, gitDate)
 	}
 	return Pass, ""
 }
@@ -348,7 +347,7 @@ func checkHeaderConforms(content string, n mapx.Node) (Verdict, string) {
 	// que o `identity-consistent` confronta. Cobrar header aqui exigiria o impossível
 	// e barraria todo commit de baseline visual.
 	if isBinary(content) {
-		return Skip, "arquivo binário — a identidade está no nome, não em cabeçalho"
+		return Skip, i18n.T("gate.header.binary")
 	}
 	// ROTEIRO de teste executável (.yaml do runner e2e): mesma razão do binário acima,
 	// por um caminho diferente. A identidade dele está no NOME do arquivo
@@ -361,32 +360,27 @@ func checkHeaderConforms(content string, n mapx.Node) (Verdict, string) {
 	// grafo (para que a execução de E2E pudesse deixar carimbo). Cobrar deles um contrato
 	// escrito depois seria transformar a chegada ao mapa em 717 defeitos retroativos.
 	if isExecutableScript(n) {
-		return Skip, "roteiro de teste executável — a identidade está no nome do arquivo e nas tags do runner"
+		return Skip, i18n.T("gate.header.executable_script")
 	}
 	if !headerBlockRE.MatchString(content) {
-		return Fail, "sem bloco de cabeçalho `@anchors` — todo arquivo do grafo deve ter " +
-			"o cabeçalho padrão no topo (veja `anchors guide header`)."
+		return Fail, i18n.T("gate.header.missing_block")
 	}
 	// Camada RECONHECIDA (sem spec): `layer:` é a identidade mínima suficiente.
 	if isRecognizedLayer(n, content) {
 		if !headerLayerRE.MatchString(content) &&
 			!headerCodeRE().MatchString(content) && !headerRefRE().MatchString(content) {
-			return Fail, "cabeçalho `@anchors` sem identidade — arquivo de layer reconhecida " +
-				"(dao/infra/presentation/domain-types) declara ao menos `layer: <layer>` " +
-				"(sua identidade mínima, pois não tem spec). Ver `anchors guide header`."
+			return Fail, i18n.T("gate.header.recognized_missing_id")
 		}
 		return Pass, ""
 	}
 	// Camada REGIDA (ou spec): exige posse ou referência.
 	if !headerCodeRE().MatchString(content) && !headerRefRE().MatchString(content) {
-		return Fail, "cabeçalho `@anchors` sem identidade — declare `code: <CÓDIGO>` se este " +
-			"arquivo é o DONO (a spec), ou `ref: <CÓDIGO>` se ele referencia a unidade (o " +
-			"resto da trinca: code/feature/test). Ver `anchors guide header`."
+		return Fail, i18n.T("gate.header.governed_missing_id")
 	}
 	return Pass, ""
 }
 
-func checkSpecSections(content string, _ mapx.Node) (Verdict, string) {
+func checkSpecSections(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	// O PLACEHOLDER não é cobrado aqui, e antes era: este gate casava as frases dos
 	// templates em português ("[Descreva aqui]", "TODO: descrever"), o que quebraria na
 	// tradução — e, pior, duplicava o gate `placeholder-preenchido`, que faz o mesmo
@@ -399,10 +393,7 @@ func checkSpecSections(content string, _ mapx.Node) (Verdict, string) {
 		specTableRE().MatchString(content) ||
 		specBoldBulletRE().MatchString(content)
 	if !catalogued {
-		return Fail, "spec sem nenhuma regra/estado CATALOGADO. Cada regra precisa de um " +
-			"código e um lugar estruturado — cabeçalho `### ABCDX-V01`, linha de tabela " +
-			"`| ABCDX-V01 | ... |`, ou bullet-negrito `- **ABCDX-V01** ...`. (Menção solta " +
-			"em prosa não conta.)"
+		return Fail, i18n.T("gate.spec_sections.no_rules")
 	}
 	// "Ao menos uma" é o piso, e sozinho ele deixa passar o caso mais comum: a spec que
 	// cataloga a primeira regra e escreve as outras nove em prosa. As nove ficam
@@ -412,7 +403,70 @@ func checkSpecSections(content string, _ mapx.Node) (Verdict, string) {
 	if msg := siblingsWithoutCode(content); msg != "" {
 		return Fail, msg
 	}
+	if msg := sectionsInWrongLanguage(content, cfg); msg != "" {
+		return Fail, msg
+	}
 	return Pass, ""
+}
+
+// sectionsInWrongLanguage acha títulos de seção escritos em idioma DIFERENTE do `lang:`
+// do projeto.
+//
+// Por que é um defeito, já que os confrontos de seção aceitam todos os idiomas: aceitar
+// todos é o que impede a tradução do catálogo de quebrar acervo existente — decisão
+// deliberada, e ela não deve virar licença para o acervo MISTO. Metade das specs com
+// `## Visão Geral` e metade com `## Overview` é uma spec sem forma única, e nenhum outro
+// gate reclama disso (cada um, sozinho, acha o que procura).
+//
+// Só reclama do que ele RECONHECE: um título fora do catálogo (`## Fora de escopo`, o
+// léxico próprio do projeto) não é idioma errado, é seção que o framework não nomeia —
+// acusá-la seria cobrar do projeto o vocabulário do engine.
+func sectionsInWrongLanguage(content string, cfg *config.Config) string {
+	if cfg == nil {
+		return ""
+	}
+	// A opção mora no gate que hospeda este check. Sem instância declarada (o caso do
+	// `--all` sintético), o default do framework vale: cobra.
+	for _, g := range cfg.Gates {
+		if g.Check == "spec-sections" && !g.ChecksSectionLanguage() {
+			return ""
+		}
+	}
+	lang := cfg.Lang
+	if lang == "" {
+		lang = i18n.Default
+	}
+	var fora []string
+	for _, titulo := range headingTitles(content) {
+		chave, idioma := i18n.SectionKeyFor(titulo)
+		if chave == "" || idioma == lang {
+			continue
+		}
+		esperado := i18n.TIn(lang, chave)
+		if esperado == "" || strings.EqualFold(esperado, titulo) {
+			continue
+		}
+		fora = append(fora, fmt.Sprintf("%q (%s) → %q", titulo, idioma, esperado))
+	}
+	if len(fora) == 0 {
+		return ""
+	}
+	return i18n.T("gate.spec_sections.wrong_language", lang, strings.Join(fora, "; "))
+}
+
+// headingTitles devolve o texto dos títulos `##`..`####` do conteúdo.
+func headingTitles(content string) []string {
+	var out []string
+	for linha := range strings.SplitSeq(content, "\n") {
+		t := strings.TrimSpace(linha)
+		if !strings.HasPrefix(t, "##") {
+			continue
+		}
+		if t = strings.TrimSpace(strings.TrimLeft(t, "#")); t != "" {
+			out = append(out, t)
+		}
+	}
+	return out
 }
 
 // seçãoVazia diz se a seção não tem CONTEÚDO — só o esqueleto.
@@ -420,7 +474,7 @@ func checkSpecSections(content string, _ mapx.Node) (Verdict, string) {
 // Conta como vazio: linha em branco, separador de tabela (`|---|---|`), cabeçalho de
 // tabela (a linha de rótulos que precede o separador) e o divisor `---`. Qualquer outra
 // coisa é conteúdo, e aí a ausência de código volta a ser o defeito que o gate pega.
-func seçãoVazia(linhas []string) bool {
+func emptySection(linhas []string) bool {
 	for i, l := range linhas {
 		t := strings.TrimSpace(l)
 		if t == "" || t == "---" {
@@ -546,7 +600,7 @@ func siblingsWithoutCode(content string) string {
 			if noContentRE.MatchString(strings.Join(s.linhas, "\n")) {
 				continue
 			}
-			if seçãoVazia(s.linhas) {
+			if emptySection(s.linhas) {
 				semConteudo = append(semConteudo, s.titulo)
 				continue
 			}
@@ -558,19 +612,11 @@ func siblingsWithoutCode(content string) string {
 		// gate não tem como saber. Pede a declaração — que custa uma linha e resolve
 		// para sempre.
 		if len(comCodigo) > 0 && len(semConteudo) > 0 && len(semCodigo) == 0 {
-			return fmt.Sprintf("seção(ões) VAZIA(s) sob irmãs que catalogam: %s. "+
-				"As irmãs (%s) têm regra e estas não têm nada — e vazio não diz se a "+
-				"seção NÃO SE APLICA ou se ninguém a preencheu. Se não se aplica, "+
-				"declare na própria seção: `@no-content: <por quê>` (a seção FICA, que "+
-				"importa quando ela é obrigatória). Se falta escrever, escreva.",
+			return i18n.T("gate.siblings.empty_sections",
 				strings.Join(semConteudo, ", "), strings.Join(comCodigo, ", "))
 		}
 		if len(comCodigo) > len(semCodigo) && len(semCodigo) > 0 {
-			return fmt.Sprintf("seção(ões) sem código sob irmãs que catalogam: %s. "+
-				"As irmãs (%s) têm código e estas não — uma regra sem código é invisível "+
-				"para os gates de identidade, e eles reportam verde sobre o que não "+
-				"conferiram. Dê um código a cada uma, ou mova o texto para uma seção de "+
-				"prosa (`## Restrições`, `## Notas`) se não for regra.",
+			return i18n.T("gate.siblings.missing_code",
 				strings.Join(semCodigo, ", "), strings.Join(comCodigo, ", "))
 		}
 	}
@@ -601,7 +647,7 @@ func checkHasScenarioCode(content string, _ mapx.Node) (Verdict, string) {
 	if anyCodeRE.MatchString(content) {
 		return Pass, ""
 	}
-	return Fail, "sem código de cenário (identidade missing)"
+	return Fail, i18n.T("gate.missing_scenario_code")
 }
 
 // guide-has-checklist: um GUIDE de governança deve destilar suas regras em PONTOS DE
@@ -610,7 +656,30 @@ func checkHasScenarioCode(content string, _ mapx.Node) (Verdict, string) {
 // DETERMINÍSTICO — só verifica a PRESENÇA da seção e de ao menos um item CK; a
 // QUALIDADE de cada ponto é julgamento (ver `anchors guide guide`). Ver a sugestão do
 // meta-guide: "a presença da checklist é um check determinístico".
-var checklistHeadingRE = regexp.MustCompile(`(?mi)^##+\s+pontos de conformidade\b`)
+// A seção é reconhecida em QUALQUER idioma do catálogo, e não só em português.
+//
+// O acoplamento que isto desfaz: o `anchors init` semeia o HEADER_GUIDE.md com o título
+// traduzido pelo `lang:` do projeto, e a regex antiga só casava a forma portuguesa — um
+// projeto `lang: en` nasceria reprovando o `guide-checklist` no primeiro `check`, por um
+// guide que o próprio init acabara de escrever. Aceitar todos os idiomas é o que mantém a
+// tradução do guia e o gate falando da mesma coisa.
+var checklistHeadingRE = regexp.MustCompile(`(?mi)^##+\s+(?:` +
+	strings.Join(escapeAll(i18n.AllTranslations("section.title.compliance_points")), "|") + `)\b`)
+
+// escapeAll prepara títulos traduzidos para entrar numa alternância de regex.
+func escapeAll(xs []string) []string {
+	out := make([]string, 0, len(xs))
+	for _, x := range xs {
+		if x != "" {
+			out = append(out, regexp.QuoteMeta(x))
+		}
+	}
+	if len(out) == 0 {
+		out = append(out, `pontos de conformidade`)
+	}
+	return out
+}
+
 var checklistItemRE = regexp.MustCompile(`(?m)\bCK\d+\b`)
 
 // --- sinais de teste ingeridos (execução, cobertura) — QUALITY §5 Execução ---
@@ -636,10 +705,10 @@ func checkScenarioCoverage(content string, n mapx.Node) (Verdict, string) {
 		return Skip, "" // spec sem requisito definido — nada a cobrir
 	}
 	if n.Signal == nil {
-		return Pending, "sem sinal de teste ingerido (rode `anchors ingest --junit`)"
+		return Pending, i18n.T("gate.no_test_signal")
 	}
 	if n.SignalStale() {
-		return Pending, "sinal de teste stale (a spec mudou desde a ingestão — reingira)"
+		return Pending, i18n.T("gate.stale_test_signal")
 	}
 	proven := map[string]bool{}
 	for _, c := range n.Signal.ProvenCodes {
@@ -657,7 +726,7 @@ func checkScenarioCoverage(content string, n mapx.Node) (Verdict, string) {
 		}
 	}
 	if len(missing) > 0 {
-		return Fail, fmt.Sprintf("%d cenário(s) sem teste verde: %s", len(missing), strings.Join(missing, ", "))
+		return Fail, i18n.T("gate.scenario_missing_test", len(missing), strings.Join(missing, ", "))
 	}
 	return Pass, ""
 }
@@ -666,14 +735,14 @@ func checkScenarioCoverage(content string, n mapx.Node) (Verdict, string) {
 // ora — poderia vir da config). Pending se não ingerida.
 func checkLineCoverage(_ string, n mapx.Node) (Verdict, string) {
 	if n.Signal == nil || n.Signal.TotalLines == 0 {
-		return Pending, "sem cobertura de linha ingerida (rode `anchors ingest --lcov`)"
+		return Pending, i18n.T("gate.no_line_coverage")
 	}
 	if n.SignalStale() {
-		return Pending, "cobertura stale (o arquivo mudou desde a ingestão — reingira)"
+		return Pending, i18n.T("gate.stale_coverage")
 	}
 	const threshold = 70.0
 	if n.Signal.LineCoverage < threshold {
-		return Fail, fmt.Sprintf("cobertura de linha %.0f%% < %.0f%%", n.Signal.LineCoverage, threshold)
+		return Fail, i18n.T("gate.line_coverage_low", n.Signal.LineCoverage, threshold)
 	}
 	return Pass, ""
 }
@@ -683,14 +752,14 @@ func checkLineCoverage(_ string, n mapx.Node) (Verdict, string) {
 // derrubado a cobertura de outra parte). Pending se não há baseline.
 func checkCoverageDelta(_ string, n mapx.Node) (Verdict, string) {
 	if n.Signal == nil || n.Signal.PrevLineCoverage == 0 {
-		return Pending, "sem baseline de cobertura (ingira duas vezes para comparar)"
+		return Pending, i18n.T("gate.no_coverage_baseline")
 	}
 	if n.SignalStale() {
-		return Pending, "cobertura stale (o arquivo mudou desde a ingestão — reingira)"
+		return Pending, i18n.T("gate.stale_coverage")
 	}
 	delta := n.Signal.LineCoverage - n.Signal.PrevLineCoverage
 	if delta < -0.01 {
-		return Fail, fmt.Sprintf("cobertura caiu %.0f%% → %.0f%% (%.0f pontos)", n.Signal.PrevLineCoverage, n.Signal.LineCoverage, delta)
+		return Fail, i18n.T("gate.coverage_dropped", n.Signal.PrevLineCoverage, n.Signal.LineCoverage, delta)
 	}
 	return Pass, ""
 }
@@ -716,13 +785,10 @@ func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 	// novo daria o mesmo resultado.
 	if n.Signal == nil || (n.Signal.MutantsKilled == 0 && n.Signal.MutantsSurvived == 0 &&
 		n.Signal.MutantsIgnored == 0 && n.Signal.MutantsNoCoverage == 0) {
-		return Pending, "sem sinal de mutação ingerido — a cobertura de linha diz que a " +
-			"linha EXECUTOU, não que alguém verificou o resultado. Rode a ferramenta de " +
-			"mutação do seu stack (Stryker/PIT/Infection/mutmut) e " +
-			"`anchors ingest --mutation <relatório>`"
+		return Pending, i18n.T("gate.mutation.no_signal")
 	}
 	if n.SignalStale() {
-		return Pending, "sinal de mutação stale (o arquivo mudou desde a ingestão — reingira)"
+		return Pending, i18n.T("gate.mutation.stale")
 	}
 	// Nenhum mutante EXECUTADO: o score é 100 por construção (ver ParseMutation) e não há
 	// veredito a dar. Passa em silêncio, e o silêncio é a decisão — os dois motivos
@@ -792,8 +858,7 @@ func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 			// ("Delta alto significa que quem prova esta unidade são os dependentes")
 			// concatenada aqui, que aparecia mesmo com delta baixo — e o laudo se
 			// contradizia: "os dois escopos concordam … Delta alto significa …".
-			return Fail, fmt.Sprintf("score de mutação ISOLADO %.0f%% < %.0f%% — %s. "+
-				"%d mutante(s) sobrevivem ao teste da própria unidade; %s",
+			return Fail, i18n.T("gate.mutation.isolated_failed",
 				iso.Score, threshold, ctx, iso.Survived,
 				compareDelta(delta))
 		}
@@ -804,8 +869,7 @@ func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 	}
 
 	if n.Signal.MutationScore < threshold {
-		return Fail, fmt.Sprintf("score de mutação %.0f%% < %.0f%% — %d mutante(s) sobreviveram: "+
-			"alterações no código que os testes não perceberam",
+		return Fail, i18n.T("gate.mutation.failed",
 			n.Signal.MutationScore, threshold, n.Signal.MutantsSurvived)
 	}
 	if faixa := middleRange(n.Signal.MutationScore, threshold, desejavel, n.Signal.MutantsSurvived); faixa != "" {
@@ -824,8 +888,7 @@ func middleRange(score, minimo, desejavel float64, sobreviventes int) string {
 	if desejavel <= 0 || desejavel <= minimo || score >= desejavel {
 		return ""
 	}
-	return fmt.Sprintf("score de mutação %.0f%%: aceitável (>= %.0f%%), ainda não desejável (%.0f%%) — "+
-		"faltam %.0f ponto(s), %d mutante(s) ainda sobrevivem",
+	return i18n.T("gate.mutation.middle_range",
 		score, minimo, desejavel, desejavel-score, sobreviventes)
 }
 
@@ -833,39 +896,34 @@ func middleRange(score, minimo, desejavel float64, sobreviventes int) string {
 func compareDelta(delta float64) string {
 	switch {
 	case delta >= 40:
-		return "a suíte completa cobre muito mais, então o buraco é no teste da unidade: " +
-			"quem prova esta unidade são os dependentes, e um refactor aqui não é protegido " +
-			"pelos testes daqui"
+		return i18n.T("gate.mutation.delta_high")
 	case delta >= 15:
-		return "parte da prova vem dos dependentes — nessa fatia, um refactor aqui não é " +
-			"protegido pelos testes daqui"
+		return i18n.T("gate.mutation.delta_medium")
 	default:
-		return "os dois escopos concordam — o buraco não é de acoplamento, é de asserção"
+		return i18n.T("gate.mutation.delta_low")
 	}
 }
 
 // tests-pass: o nó de teste tem 0 falhas (do resultado de execução ingerido)?
 func checkTestsPass(_ string, n mapx.Node) (Verdict, string) {
 	if n.Signal == nil || (n.Signal.Passed == 0 && n.Signal.Failed == 0 && n.Signal.Skipped == 0) {
-		return Pending, "sem resultado de execução ingerido (rode `anchors ingest --junit`)"
+		return Pending, i18n.T("gate.tests_pass.no_signal")
 	}
 	if n.SignalStale() {
-		return Pending, "resultado stale (o teste mudou desde a ingestão — reingira)"
+		return Pending, i18n.T("gate.tests_pass.stale")
 	}
 	if n.Signal.Failed > 0 {
-		return Fail, fmt.Sprintf("%d teste(s) falhando (%d passam)", n.Signal.Failed, n.Signal.Passed)
+		return Fail, i18n.T("gate.tests_pass.failed", n.Signal.Failed, n.Signal.Passed)
 	}
 	return Pass, ""
 }
 
 func checkGuideHasChecklist(content string, _ mapx.Node) (Verdict, string) {
 	if !checklistHeadingRE.MatchString(content) {
-		return Fail, "guide sem a seção '## Pontos de conformidade' — sem ela o julgamento " +
-			"vira heurística. Destile as regras em itens CK verificáveis (veja `anchors guide guide`)."
+		return Fail, i18n.T("gate.guide_checklist.missing_section")
 	}
 	if !checklistItemRE.MatchString(content) {
-		return Fail, "a seção de pontos de conformidade existe mas não tem itens 'CKn' — " +
-			"liste cada ponto verificável com seu código (CK1, CK2, …)."
+		return Fail, i18n.T("gate.guide_checklist.missing_items")
 	}
 	return Pass, ""
 }

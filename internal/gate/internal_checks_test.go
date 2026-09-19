@@ -45,7 +45,7 @@ Texto.
 
 Esta não tem código, e é regra igual às irmãs.
 `
-	v, msg := checkSpecSections(comFuro, mapx.Node{})
+	v, msg := checkSpecSections(comFuro, mapx.Node{}, "", nil, nil)
 	if v != Fail {
 		t.Errorf("a irmã sem código deveria reprovar, veio %v", v)
 	}
@@ -66,7 +66,7 @@ Texto.
 
 Texto.
 `
-	if v, msg := checkSpecSections(semFuro, mapx.Node{}); v != Pass {
+	if v, msg := checkSpecSections(semFuro, mapx.Node{}, "", nil, nil); v != Pass {
 		t.Errorf("todas as irmãs têm código; não havia o que cobrar: %v — %s", v, msg)
 	}
 }
@@ -95,7 +95,7 @@ Texto.
 
 Mais prosa.
 `
-	if v, msg := checkSpecSections(spec, mapx.Node{}); v != Pass {
+	if v, msg := checkSpecSections(spec, mapx.Node{}, "", nil, nil); v != Pass {
 		t.Errorf("seções de prosa não catalogam regra e não podem ser cobradas: %v — %s", v, msg)
 	}
 }
@@ -119,7 +119,7 @@ Texto.
 
 Texto.
 `
-	if v, msg := checkSpecSections(spec, mapx.Node{}); v != Pass {
+	if v, msg := checkSpecSections(spec, mapx.Node{}, "", nil, nil); v != Pass {
 		t.Errorf("uma irmã só não estabelece padrão: %v — %s", v, msg)
 	}
 }

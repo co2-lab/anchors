@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -9,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -35,22 +35,13 @@ import (
 //
 // O gate NÃO exige as faixas genéricas (`5xx`) nem inventa semântica: só compara os
 // números concretos que aparecem na tabela com os que aparecem no código.
-// contractSectionRE isola a seção "Contrato de Saída" até o próximo cabeçalho `##`.
-// O nome da seção varia um pouco entre specs (`## Contrato de Saída`, ou com sufixo
-// como "(por action + erro→status)"), então casa o prefixo.
-var contractSectionRE = regexp.MustCompile(`(?s)##\s*Contrato de Sa[íi]da[^\n]*\n(.*?)(?:\n##|\z)`)
+// contractSectionRE isola a seção "Contrato de Saída" / "Output Contract" até o próximo cabeçalho `##`.
+var contractSectionRE = regexp.MustCompile(`(?si)##\s*(?:Contrato de Sa[íi]da|Output Contract)[^\n]*\n(.*?)(?:\n##|\z)`)
 
 // statusNaTabelaRE casa o número de status numa linha de tabela: `| 200 | …`.
 // Aceita `4xx`/`5xx` na captura para poder IGNORÁ-los depois (são faixas, não
 // status concretos — cobrar `500` porque a spec diz `5xx` seria falso-positivo).
 var statusNaTabelaRE = regexp.MustCompile(`(?m)^\s*\|\s*\*{0,2}(\d{3}|\d[xX]{2})\b`)
-
-// statusHTTPPadraoTS é o léxico de FALLBACK, usado só quando o projeto não declara
-// `dialect:`. Não é o léxico do gate: o gate lê `Dialect.HTTPStatus`, e é isso que o
-// torna agnóstico de linguagem. Este default existe para não exigir configuração de
-// um projeto TS/Lambda — a stack em que o gate nasceu.
-const statusHTTPPadraoTS = `statusCode:\s*(\d{3})|\b[A-Za-z_$][\w$]*\(\s*(\d{3})\s*[,)]`
-const statusDinamicoPadraoTS = `statusCode:\s*[A-Za-z_$]`
 
 // namedHTTPStatuses traduz a constante nomeada em número, para os léxicos que a
 // usam (`http.StatusForbidden` em Go, `:forbidden` em Rails). Só os status que
@@ -72,15 +63,15 @@ var statusException = map[string]bool{"500": true}
 
 func checkContractStatusDeclared(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "não é uma spec — só spec tem Contrato de Saída"
+		return Skip, i18n.T("gate.contract_status.skip_not_spec")
 	}
 	if g == nil {
-		return Pending, "sem mapa carregado — o gate relacional precisa do grafo"
+		return pendingNoMap()
 	}
 
 	m := contractSectionRE.FindStringSubmatch(content)
 	if m == nil {
-		return Skip, "spec sem seção `## Contrato de Saída` — nada a confrontar"
+		return Skip, i18n.T("gate.contract_status.skip_no_section")
 	}
 	secao := m[1]
 
@@ -105,7 +96,7 @@ func checkContractStatusDeclared(content string, n mapx.Node, root string, g *ma
 		}
 	}
 	if len(codePaths) == 0 {
-		return Pending, "spec sem código ligado (specifies) — nada a confrontar ainda"
+		return Pending, i18n.T("gate.contract_status.pending_no_code")
 	}
 
 	var corpo strings.Builder
@@ -121,21 +112,26 @@ func checkContractStatusDeclared(content string, n mapx.Node, root string, g *ma
 	}
 	code := corpo.String()
 	if strings.TrimSpace(code) == "" {
-		return Pending, "código ligado não pôde ser lido — nada a confrontar"
+		return Pending, i18n.T("gate.contract_status.pending_read_code")
 	}
 
 	// O LÉXICO vem do dialeto do projeto — é o que mantém o gate agnóstico. Um
 	// projeto Go declara `http_status` casando `WriteHeader(403)`; um Rails, o
-	// `render status:`. Sem `dialect:`, cai no default TS/Lambda.
+	// O LÉXICO vem do dialeto do projeto — é o que mantém o gate agnóstico. Um
+	// projeto Go declara `http_status` casando `WriteHeader(403)`; um Rails, o
+	// `render status:`. Sem `dialect.http_status`, o gate fica Pendente (honestidade do
+	// medidor — não finge conformidade nem adivinha a stack).
 	d := cfg.DialectFor()
-	padrao := d.HTTPStatus
-	if padrao == "" {
-		padrao = statusHTTPPadraoTS
+	if d.HTTPStatus == "" {
+		if d.WaivedField("http_status") {
+			return Skip, i18n.T("gate.contract_status.skip_opt_out")
+		}
+		return Pending, i18n.T("gate.contract_status.pending_dialect_missing",
+			strings.Join(config.KnownDialectFamilies(), ", "))
 	}
-	reStatus := d.Compile(padrao)
+	reStatus := d.Compile(d.HTTPStatus)
 	if reStatus == nil {
-		return Pending, "o `dialect.http_status` do projeto não compila como regex — " +
-			"sem léxico não há como ler os status do código"
+		return Pending, i18n.T("gate.contract_status.pending_invalid_regex")
 	}
 
 	emitidos := map[string]bool{}
@@ -154,8 +150,7 @@ func checkContractStatusDeclared(content string, n mapx.Node, root string, g *ma
 		}
 	}
 	if len(emitidos) == 0 {
-		return Skip, "o código não devolve status por forma reconhecível " +
-			"(`statusCode:`, `jsonResponse(`, `cors(`) — pode não ser uma interface HTTP"
+		return Skip, i18n.T("gate.contract_status.skip_no_status_found")
 	}
 
 	var faltando, fantasma []string
@@ -180,9 +175,6 @@ func checkContractStatusDeclared(content string, n mapx.Node, root string, g *ma
 	// define `fail(status, message)` e chama `fail(400, …)`: o gate vê o literal na
 	// chamada, mas se o helper fosse indireto não veria.
 	padraoDin := d.HTTPStatusDynamic
-	if padraoDin == "" && d.HTTPStatus == "" {
-		padraoDin = statusDinamicoPadraoTS // só com o default TS; dialeto declarado manda
-	}
 	reDin := d.Compile(padraoDin)
 	temDinamico := reDin != nil && reDin.MatchString(code)
 	if !temDinamico {
@@ -197,22 +189,13 @@ func checkContractStatusDeclared(content string, n mapx.Node, root string, g *ma
 
 	var partes []string
 	if len(faltando) > 0 {
-		partes = append(partes, fmt.Sprintf(
-			"o código devolve %s e o Contrato de Saída não declara. Quem programa pela "+
-				"tabela não trata essa resposta — e o status omitido costuma ser o de "+
-				"SEGURANÇA (403 de ownership, 409 de conflito), porque quem escreve a "+
-				"tabela pensa no caminho felizardo",
-			strings.Join(faltando, ", ")))
+		partes = append(partes, i18n.T("gate.contract_status.missing", strings.Join(faltando, ", ")))
 	}
 	if len(fantasma) > 0 {
-		partes = append(partes, fmt.Sprintf(
-			"o Contrato declara %s e NENHUM caminho do código emite. É código morto no "+
-				"cliente: o ramo que trata esse status nunca dispara, e ninguém percebe",
-			strings.Join(fantasma, ", ")))
+		partes = append(partes, i18n.T("gate.contract_status.phantom", strings.Join(fantasma, ", ")))
 	}
 	if len(partes) > 0 {
-		return Fail, strings.Join(partes, "; ") + ". Confronte a tabela com os status " +
-			"reais do handler — a lista de emitidos sai de um grep dos `statusCode:`"
+		return Fail, strings.Join(partes, "; ") + i18n.T("gate.contract_status.fail_footer")
 	}
 
 	return Pass, ""

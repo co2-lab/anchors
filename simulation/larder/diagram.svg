@@ -189,5 +189,5 @@
   <text x="662" y="877" class="note">issue</text>
 
   <text x="40" y="915" class="sub">Cascata: watcher despacha o agente certo → cada agente cria artefatos E atualiza o mapa → doc é o elo terminal. Issue tem 3 rotas (uma delas: virar plano → ciclo).</text>
-  <text x="40" y="938" class="sub">Gates: de artefato (validam âncora) + de fluxo (validam passo). Pontas locais → gates; pontas sistêmicas → validador de saúde. Detalhe em fluxos.md e cobertura.md.</text>
+  <text x="40" y="938" class="sub">Gates: de artefato (validam âncora) + de fluxo (validam passo). Pontas locais → gates; pontas sistêmicas → validador de saúde. Detalhe em flows.md e coverage.md.</text>
 </svg>

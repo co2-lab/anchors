@@ -23,7 +23,8 @@ func rodaContrato(t *testing.T, spec, codigo string) (Verdict, string) {
 		},
 		Edges: []mapx.Edge{{From: "handler.spec.md", To: "handler.ts", Type: mapx.EdgeSpecifies}},
 	}
-	return checkContractStatusDeclared(spec, mapx.Node{ID: "handler.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	return checkContractStatusDeclared(spec, mapx.Node{ID: "handler.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
 }
 
 // O CORPUS deste gate são os 8 achados reais da auditoria de 2026-08 no app de referência. Cada
@@ -80,7 +81,7 @@ func TestContrato_statusFantasmaReprova(t *testing.T) {
 	if !strings.Contains(msg, "402") {
 		t.Errorf("a mensagem devia acusar o 402 fantasma; msg = %q", msg)
 	}
-	if !strings.Contains(msg, "morto") {
+	if !strings.Contains(msg, "morto") && !strings.Contains(msg, "dead") {
 		t.Errorf("a mensagem devia explicar que é código morto no cliente; msg = %q", msg)
 	}
 }
@@ -353,5 +354,55 @@ end`
 	}
 	if !strings.Contains(msg, "422") {
 		t.Errorf("devia acusar o 422; msg = %q", msg)
+	}
+}
+
+func TestContrato_semDialetoEhPendente(t *testing.T) {
+	spec := `## Contrato de Saída
+| Status | Quando |
+| --- | --- |
+| 200 | ok |
+`
+	codigo := `export const handler = async () => ({ statusCode: 200 })`
+	// Sem dialeto configurado (cfg nil ou Dialect vazio) -> Pending
+	v, _ := rodaContratoComDialeto(t, spec, codigo, "handler.ts", nil)
+	if v != Pending {
+		t.Fatalf("sem dialeto configurado devia ser Pending; obteve %v", v)
+	}
+}
+
+func TestContrato_optOutEhSkip(t *testing.T) {
+	spec := `## Contrato de Saída
+| Status | Quando |
+| --- | --- |
+| 200 | ok |
+`
+	codigo := `export const handler = async () => ({ statusCode: 200 })`
+	cfg := &config.Config{
+		Dialect: &config.Dialect{
+			OptOut: []string{"http_status"},
+		},
+	}
+	v, _ := rodaContratoComDialeto(t, spec, codigo, "handler.ts", cfg)
+	if v != Skip {
+		t.Fatalf("com opt_out de http_status devia ser Skip; obteve %v", v)
+	}
+}
+
+func TestContrato_secaoOutputContractEmIngles(t *testing.T) {
+	spec := `## Output Contract
+| Status | When |
+| --- | --- |
+| 200 | success |
+| 404 | not found |
+`
+	codigo := `export const handler = async () => {
+  if (!item) return { statusCode: 404, body: '{}' }
+  return { statusCode: 200, body: '{}' }
+}`
+	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	v, msg := rodaContratoComDialeto(t, spec, codigo, "handler.ts", cfg)
+	if v != Pass {
+		t.Fatalf("seção ## Output Contract devia passar; obteve %v (%s)", v, msg)
 	}
 }

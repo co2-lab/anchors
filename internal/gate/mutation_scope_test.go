@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -22,6 +23,8 @@ func nodeComEscopos(iso, full mapx.MutationScope) mapx.Node {
 // Olhando só o completo, ele parecia saudável — e 92% dos mutantes sobrevivem aos
 // próprios testes.
 func TestEscoposRevelamAcoplamento(t *testing.T) {
+	i18n.Set("pt-BR")
+	t.Cleanup(func() { i18n.Set(i18n.Default) })
 	n := nodeComEscopos(
 		mapx.MutationScope{Killed: 7, Survived: 81, Score: 8},
 		mapx.MutationScope{Killed: 68, Survived: 20, Score: 77})
@@ -62,6 +65,8 @@ func TestIsoladoAcimaDoLimiarPassa(t *testing.T) {
 // Delta baixo com score baixo é outro diagnóstico: não é acoplamento, é asserção
 // faltando — e a mensagem precisa dizer isso, senão o autor procura no lugar errado.
 func TestDeltaBaixoApontaAssercaoNaoAcoplamento(t *testing.T) {
+	i18n.Set("pt-BR")
+	t.Cleanup(func() { i18n.Set(i18n.Default) })
 	n := nodeComEscopos(
 		mapx.MutationScope{Killed: 2, Survived: 8, Score: 20},
 		mapx.MutationScope{Killed: 3, Survived: 7, Score: 25})

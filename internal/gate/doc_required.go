@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
 )
@@ -70,10 +71,10 @@ import (
 // veredito é ancorado.
 func checkDocRequiredAggregate(_ config.Gate, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if cfg == nil || len(cfg.AllRequiredDocs()) == 0 {
-		return Skip, "o projeto não declara `docs.required` — não há documentação contratada"
+		return Skip, i18n.T("gate.doc_required.skip_no_docs")
 	}
 	if graph == nil {
-		return Skip, "sem mapa: não há como saber quais unidades disparam cada documento"
+		return Skip, i18n.T("gate.doc_required.skip_no_map")
 	}
 
 	// Por DOCUMENTO: quais unidades ele deveria mencionar, e quais ele não menciona.
@@ -117,12 +118,12 @@ func checkDocRequiredAggregate(_ config.Gate, root string, graph *mapx.Graph, cf
 		switch {
 		case p.missing:
 			failed = true
-			fmt.Fprintf(&msg, "`%s` (%s) NÃO EXISTE, e é disparado por %d unidade(s).\n\n",
+			fmt.Fprintf(&msg, i18n.T("gate.doc_required.doc_missing"),
 				path, p.doc.Kind, len(p.unmentioned)+1)
 		case len(p.unmentioned) > 0:
 			failed = true
 			sort.Strings(p.unmentioned)
-			fmt.Fprintf(&msg, "`%s` (%s) não menciona %d unidade(s): %s.\n\n",
+			fmt.Fprintf(&msg, i18n.T("gate.doc_required.doc_unmentioned"),
 				path, p.doc.Kind, len(p.unmentioned), strings.Join(p.unmentioned, ", "))
 		}
 	}
@@ -132,15 +133,11 @@ func checkDocRequiredAggregate(_ config.Gate, root string, graph *mapx.Graph, cf
 
 	// A frase que explica o modo de falha, porque ele é silencioso: o arquivo existe, tem
 	// conteúdo real, e quem o lê não tem como saber que falta uma entrada.
-	msg.WriteString("Um contrato que existe e não descreve a unidade é pior que a ausência\n" +
-		"dele: quem consome encontra o documento, confia, e descobre o formato em\n" +
-		"produção.\n\n")
+	msg.WriteString(i18n.T("gate.doc_required.doc_failure_mode"))
 	// UM CARD POR DOCUMENTO, e o PR também: a alternativa (um card por unidade) fatiou
 	// por unidade um trabalho que é por documento, e produziu 37 PRs que conflitavam
 	// entre si porque todos escreviam no mesmo arquivo.
-	msg.WriteString("Cada documento é declarado em `docs.required` com o `trigger` que o\n" +
-		"aciona. Trate UM documento por vez — as unidades que faltam nele são seções\n" +
-		"do mesmo arquivo, e separá-las em PRs diferentes produz conflito a cada merge.")
+	msg.WriteString(i18n.T("gate.doc_required.doc_aggregate_guidance"))
 	return Fail, msg.String()
 }
 
@@ -150,10 +147,10 @@ func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *co
 	// de identidade. Partir do código faria a mesma unidade ser cobrada uma vez por
 	// arquivo — três avisos idênticos para uma trinca.
 	if n.Kind != mapx.KindSpec {
-		return Skip, "o dever de documentação é da UNIDADE, e a spec é quem a representa"
+		return Skip, i18n.T("gate.doc_required.skip_not_spec")
 	}
 	if cfg == nil || len(cfg.AllRequiredDocs()) == 0 {
-		return Skip, "o projeto não declara `docs.required` — não há documentação contratada"
+		return Skip, i18n.T("gate.doc_required.skip_no_docs")
 	}
 
 	// A CAMADA DA UNIDADE, e não a do nó — e a diferença derruba o gate inteiro.
@@ -170,7 +167,7 @@ func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *co
 	layer := scan.LayerOfUnit(root, n.ID, cfg)
 	duties := cfg.RequiredFor(layer, n.Code)
 	if len(duties) == 0 {
-		return Skip, fmt.Sprintf("nenhuma documentação é disparada por `%s`", layer)
+		return Skip, fmt.Sprintf(i18n.T("gate.doc_required.skip_no_duties"), layer)
 	}
 
 	var missing, silent []string
@@ -191,20 +188,17 @@ func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *co
 
 	var msg strings.Builder
 	if len(missing) > 0 {
-		msg.WriteString(fmt.Sprintf("%d documentação(ões) que esta unidade dispara não existe(m): %s.\n\n",
+		msg.WriteString(fmt.Sprintf(i18n.T("gate.doc_required.unit_missing_docs"),
 			len(missing), strings.Join(missing, ", ")))
 	}
 	if len(silent) > 0 {
-		msg.WriteString(fmt.Sprintf("%d documentação(ões) existe(m) e não menciona(m) `%s`: %s.\n\n",
+		msg.WriteString(fmt.Sprintf(i18n.T("gate.doc_required.unit_silent_docs"),
 			len(silent), n.Code, strings.Join(silent, ", ")))
 		// A frase que explica o modo de falha, porque ele é silencioso: o arquivo existe,
 		// tem conteúdo real, e quem o lê não tem como saber que falta uma entrada.
-		msg.WriteString("Um contrato que existe e não descreve a unidade nova é pior que a\n" +
-			"ausência dele: quem consome encontra o documento, confia, e descobre o\n" +
-			"formato em produção.\n\n")
+		msg.WriteString(i18n.T("gate.doc_required.unit_failure_mode"))
 	}
-	msg.WriteString("Cada uma é declarada em `docs.required` com o `trigger` que a aciona.\n")
-	msg.WriteString("`anchors docs duties --unit <arquivo>` lista o que esta unidade deve.")
+	msg.WriteString(i18n.T("gate.doc_required.unit_guidance"))
 	return Fail, msg.String()
 }
 

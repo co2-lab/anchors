@@ -10,6 +10,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -55,8 +56,7 @@ import (
 func checkMarkerParity(g config.Gate, root string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	prefixo := strings.TrimSpace(g.MarkerPrefix)
 	if prefixo == "" {
-		return Pending, "gate `marker-parity` sem `marker_prefix:` — sem o prefixo não há o " +
-			"que procurar. Declare-o no gate, junto de `marker_scopes:`"
+		return Pending, i18n.T("gate.marker_parity.pending_no_prefix")
 	}
 
 	escopos := g.MarkerScopes
@@ -65,20 +65,18 @@ func checkMarkerParity(g config.Gate, root string, _ *mapx.Graph, cfg *config.Co
 		esperado = len(escopos)
 	}
 	if esperado == 0 {
-		return Pending, "gate `marker-parity` sem `marker_count:` nem `marker_scopes:` — " +
-			"não há como saber quantas ocorrências cada regra precisa ter"
+		return Pending, i18n.T("gate.marker_parity.pending_no_count_or_scopes")
 	}
 
 	ocorr, err := scanMarkings(root, prefixo, escopos, cfg)
 	if err != nil {
-		return Fail, "não foi possível varrer as marcações: " + err.Error()
+		return Fail, fmt.Sprintf(i18n.T("gate.marker_parity.fail_scan_err"), err.Error())
 	}
 	if len(ocorr) == 0 {
 		// AUSÊNCIA TOTAL não é aprovação. Um prefixo que não aparece em lugar nenhum é
 		// quase sempre erro de digitação na declaração — e devolver Pass ali faria o
 		// gate parecer vigilante enquanto não vigia coisa alguma.
-		return Pending, fmt.Sprintf("nenhuma marcação `@%s-*` encontrada no projeto — "+
-			"confira o prefixo declarado (`marker_prefix: %s`)", prefixo, prefixo)
+		return Pending, fmt.Sprintf(i18n.T("gate.marker_parity.pending_no_markers_found"), prefixo, prefixo)
 	}
 
 	var faltas []string
@@ -101,7 +99,7 @@ func checkMarkerParity(g config.Gate, root string, _ *mapx.Graph, cfg *config.Co
 				}
 			}
 			if len(vazios) > 0 {
-				faltas = append(faltas, fmt.Sprintf("`@%s-%s` não aparece em: %s",
+				faltas = append(faltas, fmt.Sprintf(i18n.T("gate.marker_parity.missing_in_scopes"),
 					prefixo, nome, strings.Join(vazios, ", ")))
 			}
 			continue
@@ -113,21 +111,17 @@ func checkMarkerParity(g config.Gate, root string, _ *mapx.Graph, cfg *config.Co
 			total += len(arqs)
 		}
 		if total != esperado {
-			faltas = append(faltas, fmt.Sprintf("`@%s-%s` aparece %d vez(es), esperado %d",
+			faltas = append(faltas, fmt.Sprintf(i18n.T("gate.marker_parity.count_mismatch"),
 				prefixo, nome, total, esperado))
 		}
 	}
 
 	if len(faltas) > 0 {
-		return Fail, fmt.Sprintf("%d regra(s) de `%s` sem paridade:\n      %s\n\n"+
-			"      A regra vive em duas pontas e só uma foi mexida. Cada lado, olhado "+
-			"sozinho, está correto — o que quebrou é a RELAÇÃO entre eles, e ela não "+
-			"produz erro em lugar nenhum. Marque o lado que falta, ou apague a marcação "+
-			"do lado que sobrou se a regra deixou de existir.",
+		return Fail, fmt.Sprintf(i18n.T("gate.marker_parity.parity_failure"),
 			len(faltas), prefixo, strings.Join(faltas, "\n      "))
 	}
 
-	return Pass, fmt.Sprintf("%d regra(s) de `%s` com paridade nas %d ponta(s)",
+	return Pass, fmt.Sprintf(i18n.T("gate.marker_parity.pass_parity"),
 		len(nomes), prefixo, esperado)
 }
 

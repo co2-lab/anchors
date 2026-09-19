@@ -33,7 +33,7 @@ func TestCountPegaContagemEnvelhecida(t *testing.T) {
 	if v != Fail {
 		t.Fatalf("contagem desatualizada deveria reprovar, foi %s (%s)", v, d)
 	}
-	if !strings.Contains(d, "afirma **2 modelos**") || !strings.Contains(d, "tem **3**") {
+	if (!strings.Contains(d, "afirma **2 modelos**") && !strings.Contains(d, "asserts **2 modelos**")) || (!strings.Contains(d, "tem **3**") && !strings.Contains(d, "has **3**")) {
 		t.Errorf("a mensagem não mostra os dois números: %s", d)
 	}
 
@@ -72,7 +72,7 @@ func TestCountGlobVazioExplica(t *testing.T) {
 	if v != Fail {
 		t.Fatalf("glob vazio deveria reprovar, foi %s", v)
 	}
-	if !strings.Contains(d, "confira o caminho") {
+	if !strings.Contains(d, "confira o caminho") && !strings.Contains(d, "check path") {
 		t.Errorf("não explicou que o problema é o glob: %s", d)
 	}
 }
@@ -116,7 +116,7 @@ O schema declara **2 cláusulas de autorização**.
 	if v != Fail {
 		t.Fatalf("prosa divergente do disco deveria reprovar, foi %s (%s)", v, d)
 	}
-	if !strings.Contains(d, "PROSA diz **3**") {
+	if !strings.Contains(d, "PROSA diz **3**") && !strings.Contains(d, "PROSE says **3**") {
 		t.Errorf("não apontou a prosa: %s", d)
 	}
 }

@@ -4,12 +4,15 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
 // O gate de mutação só tem valor se distinguir três situações; um gate que sempre passa
 // (ou sempre reprova) não informa nada. Cada caso abaixo fixa uma delas.
 func TestMutationScore(t *testing.T) {
+	i18n.Set("pt-BR")
+	t.Cleanup(func() { i18n.Set(i18n.Default) })
 	casos := []struct {
 		nome     string
 		sig      *mapx.TestSignal

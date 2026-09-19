@@ -114,7 +114,7 @@ func (e *Mirror) Path() string {
 func Header(comando, head, assunto string, sujos int, quando time.Time) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# %s\n", comando)
-	fmt.Fprintf(&b, "# quando: %s\n", quando.Format("2006-01-02 15:04:05 -0700"))
+	fmt.Fprintf(&b, "# when: %s\n", quando.Format("2006-01-02 15:04:05 -0700"))
 	if head != "" {
 		fmt.Fprintf(&b, "# HEAD:   %s %s\n", head, assunto)
 	}
@@ -123,16 +123,16 @@ func Header(comando, head, assunto string, sujos int, quando time.Time) string {
 		// `sujos` negativo é "não deu para contar" (sem git/sem repo), NÃO "limpa".
 		// Um relatório que afirma limpeza sem ter conseguido olhar carimba uma foto que
 		// nunca existiu — e quem relê não tem como saber disso.
-		b.WriteString("# árvore: desconhecida (sem repositório git — não deu para conferir)\n")
+		b.WriteString("# tree: unknown (no git repository — could not check)\n")
 	case sujos == 1:
-		b.WriteString("# árvore: 1 arquivo modificado (não commitado)\n")
+		b.WriteString("# tree: 1 modified file (uncommitted)\n")
 	case sujos > 1:
-		fmt.Fprintf(&b, "# árvore: %d arquivos modificados (não commitados)\n", sujos)
+		fmt.Fprintf(&b, "# tree: %d modified file(s) (uncommitted)\n", sujos)
 	default:
-		b.WriteString("# árvore: limpa\n")
+		b.WriteString("# tree: clean\n")
 	}
 	b.WriteString("#\n")
-	b.WriteString("# Espelho da saída do check — releia daqui em vez de re-executar.\n")
-	b.WriteString("# Se o HEAD ou a árvore mudaram desde `quando`, esta foto envelheceu.\n\n")
+	b.WriteString("# Mirror of the check output — reread from here instead of re-running.\n")
+	b.WriteString("# If HEAD or the tree changed since `when`, this snapshot has aged.\n\n")
 	return b.String()
 }

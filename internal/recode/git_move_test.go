@@ -141,7 +141,7 @@ func TestMoveNaoContornaRecusaDoGit(t *testing.T) {
 	if err == nil {
 		t.Fatal("git recusou o move — contorná-lo com os.Rename sobrescreveria um arquivo rastreado")
 	}
-	if !strings.Contains(err.Error(), "recusou") {
+	if !strings.Contains(err.Error(), "refused") {
 		t.Errorf("a mensagem tem de dizer que foi o git que recusou: %v", err)
 	}
 	// O destino tem de continuar sendo o ORIGINAL: nada foi sobrescrito por fora.

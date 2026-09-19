@@ -1,12 +1,12 @@
 package gate
 
 import (
-	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -40,31 +40,31 @@ import (
 // O que ele NÃO cobra: source cujo adaptador ninguém semeia (pode ser source de um plano
 // futuro), e a ordem das fases — quem faz isso é o `fase-ordenada`.
 
-// reSourceLine casa a declaração de fonte na prosa de um plano.
-var reSourceLine = regexp.MustCompile(`(?m)^Fontes?:\s*(.+)$`)
+// sourceLineRE casa a declaração de fonte na prosa de um plano.
+var sourceLineRE = regexp.MustCompile(`(?m)^Fontes?:\s*(.+)$`)
 
-// reBoldSource extrai cada fonte nomeada da linha. O negrito é a convenção que os
+// boldSourceRE extrai cada fonte nomeada da linha. O negrito é a convenção que os
 // planos já usam (`**Prometheus**`, `**ELK**`, `**GA4**`) — e ela é o que separa a source
 // da prosa que a explica.
-var reBoldSource = regexp.MustCompile(`\*\*([^*]+)\*\*`)
+var boldSourceRE = regexp.MustCompile(`\*\*([^*]+)\*\*`)
 
 func checkPlanSourceDeclared(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindPlan {
-		return Skip, "não é um plano — o gate confronta a FONTE que um plano nomeia"
+		return Skip, i18n.T("gate.plan_source_declared.skip_not_plan")
 	}
 	if g == nil {
-		return Pending, "sem mapa — o gate precisa das sementes dos outros planos"
+		return Pending, i18n.T("gate.plan_source_declared.pending_no_map")
 	}
 
 	sources := namedSources(content)
 	if len(sources) == 0 {
-		return Skip, "o plano não nomeia fonte (`Fonte:` / `Fontes:`) — nada a confrontar"
+		return Skip, i18n.T("gate.plan_source_declared.skip_no_sources")
 	}
 
 	// De onde vem cada adaptador: nome da source -> plano que o semeia.
 	owners := adapterOwners(g)
 	if len(owners) == 0 {
-		return Pending, "nenhum plano semeia adaptador — o gate não tem contra o que confrontar"
+		return Pending, i18n.T("gate.plan_source_declared.pending_no_adapters")
 	}
 
 	declared := map[string]bool{}
@@ -78,26 +78,22 @@ func checkPlanSourceDeclared(content string, n mapx.Node, root string, g *mapx.G
 		if !ok || owner == n.ID || declared[owner] {
 			continue
 		}
-		missing = append(missing, fmt.Sprintf("%s (o adaptador está em %s)", f, owner))
+		missing = append(missing, i18n.T("gate.plan_source_declared.missing_item", f, owner))
 	}
 	if len(missing) == 0 {
-		return Pass, fmt.Sprintf("as %d fonte(s) nomeada(s) têm o plano do adaptador no `needs:`", len(sources))
+		return Pass, i18n.T("gate.plan_source_declared.pass_sources_honored", len(sources))
 	}
 	sort.Strings(missing)
 
-	return Fail, "o plano NOMEIA fonte cujo adaptador vem de outro plano, e não o declara no `needs:`:\n" +
-		"      " + strings.Join(missing, "\n      ") + "\n" +
-		"      A dependência existe só na PROSA. Medido: o 0008 nomeava GA4 e declarava apenas o 0005;\n" +
-		"      o 0002 removeu o `Ga4Adapter` numa revisão, e o 0008 ficou dependendo de uma fonte que\n" +
-		"      ninguém ia construir — sem que nada acusasse, porque os dois planos seguiram coerentes."
+	return Fail, i18n.T("gate.plan_source_declared.fail_missing_needs", strings.Join(missing, "\n      "))
 }
 
 // namedSources extrai as fontes em negrito das linhas `Fonte:`/`Fontes:`.
 func namedSources(content string) []string {
 	var out []string
 	seen := map[string]bool{}
-	for _, m := range reSourceLine.FindAllStringSubmatch(content, -1) {
-		for _, f := range reBoldSource.FindAllStringSubmatch(m[1], -1) {
+	for _, m := range sourceLineRE.FindAllStringSubmatch(content, -1) {
+		for _, f := range boldSourceRE.FindAllStringSubmatch(m[1], -1) {
 			nome := strings.TrimSpace(f[1])
 			if nome != "" && !seen[nome] {
 				seen[nome] = true

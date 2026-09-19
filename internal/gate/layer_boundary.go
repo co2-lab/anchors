@@ -1,12 +1,12 @@
 package gate
 
 import (
-	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
 )
@@ -35,14 +35,12 @@ import (
 // de virar uma exceção numa lista distante que ninguém revisita.
 func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindCode {
-		return Skip, "a fronteira se lê no código — é ele que importa ou não importa"
+		return Skip, i18n.T("gate.layer_boundary.skip_not_code")
 	}
 	if cfg == nil || len(cfg.Boundaries) == 0 {
 		// Pendente, não Pass: o Anchors não sabe a arquitetura do projeto, e fingir que
 		// verificou seria pior do que dizer o que falta (QUALITY §7, o terceiro estado).
-		return Pending, "o projeto não declarou fronteiras de camada. Declare `boundaries:` " +
-			"no anchors.yaml (`layer` + `forbid` + `because`) — sem isso, `layers:` é " +
-			"documentação: descreve a arquitetura sem defendê-la"
+		return Pending, i18n.T("gate.layer_boundary.pending_no_boundaries")
 	}
 
 	// A camada do nó vem da mesma classificação que o scan usa — a regra se declara pelo
@@ -57,7 +55,7 @@ func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph,
 		}
 	}
 	if len(aplicaveis) == 0 {
-		return Skip, fmt.Sprintf("nenhuma fronteira declarada para a camada %q", minhaCamada)
+		return Skip, i18n.T("gate.layer_boundary.skip_no_layer_boundaries", minhaCamada)
 	}
 
 	linhas := strings.Split(content, "\n")
@@ -80,7 +78,7 @@ func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph,
 		if err != nil {
 			// Padrão inválido é erro de CONFIG, e precisa aparecer — um regex quebrado
 			// que fosse ignorado em silêncio desligaria a regra sem ninguém saber.
-			erros = append(erros, fmt.Sprintf("a fronteira %q tem `forbid` inválido (%v)", b.Layer, err))
+			erros = append(erros, i18n.T("gate.layer_boundary.invalid_forbid", b.Layer, err))
 			continue
 		}
 		for _, loc := range re.FindAllStringIndex(content, -1) {
@@ -91,7 +89,7 @@ func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph,
 			if waiverSnippet(linhas, ini, fim) || lineBeforeWaiver(linhas, ini) {
 				continue
 			}
-			achado := fmt.Sprintf("linha %d: %s", ini+1, describeBoundary(b))
+			achado := i18n.T("gate.layer_boundary.line_prefix", ini+1, describeBoundary(b))
 			if b.Severity == "warn" {
 				avisos = append(avisos, achado)
 			} else {
@@ -107,22 +105,21 @@ func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph,
 	// o projeto marca `severity: warn` no que ainda está migrando, sem desligar o gate
 	// inteiro nem perder o registro.
 	if len(erros) == 0 {
-		return Pending, "fronteira em migração (`severity: warn`): " + joinUpTo(avisos, 5)
+		return Pending, i18n.T("gate.layer_boundary.warn_pending", joinUpTo(avisos, 5))
 	}
-	msg := "fronteira de camada violada: " + joinUpTo(erros, 5)
+	msg := i18n.T("gate.layer_boundary.violation", joinUpTo(erros, 5))
 	if len(avisos) > 0 {
-		msg += fmt.Sprintf(" — e mais %d aviso(s) de regra em migração", len(avisos))
+		msg += i18n.T("gate.layer_boundary.more_warnings", len(avisos))
 	}
-	return Fail, msg + ". Se a violação é dívida reconhecida, marque a linha com " +
-		"`@allow-boundary: <razão>`: a exceção fica visível no código, não numa lista distante"
+	return Fail, msg + i18n.T("gate.layer_boundary.fail_footer")
 }
 
 func describeBoundary(b config.Boundary) string {
-	quem := "esta camada"
+	quem := i18n.T("gate.layer_boundary.this_layer")
 	if b.Layer != "" {
-		quem = "a camada `" + b.Layer + "`"
+		quem = i18n.T("gate.layer_boundary.named_layer", b.Layer)
 	}
-	s := fmt.Sprintf("%s não pode conter `%s`", quem, b.Forbid)
+	s := i18n.T("gate.layer_boundary.cannot_contain", quem, b.Forbid)
 	if b.Because != "" {
 		s += " — " + b.Because
 	}
@@ -132,7 +129,7 @@ func describeBoundary(b config.Boundary) string {
 func joinUpTo(xs []string, n int) string {
 	sort.Strings(xs)
 	if len(xs) > n {
-		return strings.Join(xs[:n], "; ") + fmt.Sprintf(" (e mais %d)", len(xs)-n)
+		return strings.Join(xs[:n], "; ") + i18n.T("gate.layer_boundary.and_more", len(xs)-n)
 	}
 	return strings.Join(xs, "; ")
 }

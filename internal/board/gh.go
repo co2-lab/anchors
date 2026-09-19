@@ -49,10 +49,10 @@ func runGH(args ...string) ([]byte, error) {
 	out, err := cmd.Output()
 
 	if ctx.Err() == context.DeadlineExceeded {
-		return out, fmt.Errorf("o `gh` não respondeu em %s (`gh %s`).\n"+
-			"  Isso costuma ser credencial: rode `gh auth status` e, se preciso,\n"+
-			"  `gh auth login`. Também pode ser proxy ou rede — o Anchors não espera\n"+
-			"  mais que isso porque um comando que não volta custa a sessão inteira",
+		return out, fmt.Errorf("`gh` did not respond in %s (`gh %s`).\n"+
+			"  This is usually credentials: run `gh auth status` and, if needed,\n"+
+			"  `gh auth login`. It can also be proxy or network — Anchors does not wait\n"+
+			"  longer than this because a command that never returns costs the whole session",
 			ghTimeout, strings.Join(args, " "))
 	}
 	if err != nil {
@@ -72,10 +72,10 @@ func authHint(err error, args []string) string {
 	if !errors.As(err, &ee) || ee.ExitCode() != exitCodeNotAuthenticated {
 		return ""
 	}
-	return "\n\n  O código 4 do `gh` é NÃO AUTENTICADO. No modo `github` o board é a fila,\n" +
-		"  e sem credencial o Anchors não lê card nem reivindica trabalho:\n\n" +
+	return "\n\n  `gh` code 4 is NOT AUTHENTICATED. In `github` mode the board is the queue,\n" +
+		"  and without credentials Anchors reads no card and claims no work:\n\n" +
 		"      gh auth login\n\n" +
-		"  O login é interativo — um agente não tem como completá-lo."
+		"  The login is interactive — an agent has no way to complete it."
 }
 
 // exitCodeNotAuthenticated é o `exit status` que o `gh` devolve sem credencial.

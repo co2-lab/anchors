@@ -57,13 +57,13 @@ func TestFeatureSemCenarioVisualNaoEhAssunto(t *testing.T) {
 // mesmo princípio de `dialect` e `section_titles`. O de-para é TAG → REGIME, e lê-lo
 // invertido fazia o gate não encontrar cenário nenhum, silenciosamente.
 func TestTagDoRegimeVisualVemDoProjeto(t *testing.T) {
-	if got := tagDeRegimeVisual(nil); got != "nivel-vr" {
+	if got := visualRegimeTag(nil); got != "nivel-vr" {
 		t.Errorf("sem config, o default; veio %q", got)
 	}
 	cfg := &config.Config{Derived: &config.Derived{Regimes: map[string]string{
 		"level-visual": "vr", "level-unit": "unit",
 	}}}
-	if got := tagDeRegimeVisual(cfg); got != "level-visual" {
+	if got := visualRegimeTag(cfg); got != "level-visual" {
 		t.Errorf("a tag é a CHAVE do de-para (o que aparece na feature); veio %q", got)
 	}
 }

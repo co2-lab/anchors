@@ -78,7 +78,7 @@ func TestDecideMoveERegistra(t *testing.T) {
 	if !strings.Contains(string(b), "o padrão estava mesmo errado") {
 		t.Errorf("a razão deve ficar registrada: %s", b)
 	}
-	if !strings.Contains(string(b), "por:** pessoa") {
+	if !strings.Contains(string(b), "by:** pessoa") {
 		t.Errorf("quem decidiu deve ficar registrado: %s", b)
 	}
 }
@@ -130,7 +130,7 @@ func TestSugestaoSemPatchEhDiagnostico(t *testing.T) {
 	if strings.Contains(string(b), "```diff") {
 		t.Error("sem patch não deve haver bloco de diff")
 	}
-	if !strings.Contains(string(b), "precisa de decisão humana") {
+	if !strings.Contains(string(b), "needs a human decision") {
 		t.Errorf("deve dizer que a correção não é mecânica: %s", b)
 	}
 }

@@ -293,3 +293,15 @@ do Planejamento —, porque é o gabarito que todos os outros pressupõem.
 O que o pilar entrega: um projeto com **forma reconhecível** — uma planta que toda
 sessão respeita, de modo que o que uma constrói a próxima entende e continua. É o
 gabarito que impede o projeto de virar um amontoado de puxadinhos.
+
+---
+
+## 9. A Planta deste Repositório (Anchors)
+
+A aplicação concreta dos princípios deste pilar sobre a árvore do próprio código do Anchors
+está documentada em [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md):
+- As camadas declaradas em [`anchors.yaml`](./anchors.yaml);
+- A divisão do CLI [`cmd/anchors/`](./cmd/anchors/) por domínios (`flow`, `quality`, `governance`, `mapcmd`, `ops`);
+- O núcleo e os pacotes de suporte em [`internal/`](./internal/);
+- As regras de fronteira e direcionalidade de imports.
+

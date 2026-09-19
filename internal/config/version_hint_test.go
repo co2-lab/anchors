@@ -28,7 +28,7 @@ func TestLoad_chaveDesconhecidaNomeiaAHipoteseDaVersao(t *testing.T) {
 	if !strings.Contains(msg, "chaveQueNaoExiste") {
 		t.Errorf("a mensagem não nomeia a chave: %s", msg)
 	}
-	if !strings.Contains(msg, "ANTIGO") {
+	if !strings.Contains(msg, "binary is OLD") {
 		t.Errorf("a mensagem não oferece a hipótese da versão — quem tem binário velho\n"+
 			"procura um erro de digitação que não existe:\n%s", msg)
 	}
@@ -106,7 +106,7 @@ func TestLoad_arquivoAntigoComTypoNaoMandaMigrar(t *testing.T) {
 	if strings.Contains(msg, "anchors migrate") {
 		t.Errorf("a migração não conserta typo — mandar migrar gasta a confiança:\n%s", msg)
 	}
-	if !strings.Contains(msg, "escrita errada") {
+	if !strings.Contains(msg, "is misspelled") {
 		t.Errorf("o typo deveria receber a hipótese da digitação; veio:\n%s", msg)
 	}
 }

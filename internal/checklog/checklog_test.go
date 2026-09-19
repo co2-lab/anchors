@@ -117,14 +117,14 @@ func TestCabecalhoRegistraContexto(t *testing.T) {
 		"anchors check --all",
 		"2026-08-18 14:32:00",
 		"abc1234 fix: algo",
-		"3 arquivos modificados",
+		"3 modified file(s)",
 	} {
 		if !strings.Contains(h, quer) {
 			t.Errorf("cabeçalho sem %q:\n%s", quer, h)
 		}
 	}
 
-	if limpa := Header("c", "abc", "s", 0, quando); !strings.Contains(limpa, "árvore: limpa") {
+	if limpa := Header("c", "abc", "s", 0, quando); !strings.Contains(limpa, "tree: clean") {
 		t.Errorf("árvore limpa não registrada:\n%s", limpa)
 	}
 	// Sem git (repo novo, ou git ausente) o cabeçalho não pode inventar um HEAD.

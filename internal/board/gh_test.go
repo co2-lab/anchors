@@ -19,7 +19,7 @@ func TestDicaDeAuth_nomeiaACausaDoCodigo4(t *testing.T) {
 	}
 
 	dica := authHint(err, []string{"issue", "list"})
-	for _, esperado := range []string{"NÃO AUTENTICADO", "gh auth login", "interativo"} {
+	for _, esperado := range []string{"NOT AUTHENTICATED", "gh auth login", "interactive"} {
 		if !strings.Contains(dica, esperado) {
 			t.Errorf("a dica não menciona %q:\n%s", esperado, dica)
 		}

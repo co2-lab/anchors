@@ -245,8 +245,8 @@ func TestSpecs_filtroErradoFalha(t *testing.T) {
 	c, _ := New(root, g)
 
 	casos := []struct{ nome, filtro, esperaNaMsg string }{
-		{"campo com typo", "layar=infra", "desconhecido"},
-		{"camada inexistente", "layer=screen", "existem"},
+		{"campo com typo", "layar=infra", "unknown field"},
+		{"camada inexistente", "layer=screen", "existing"},
 		{"sem o `=`", "infra", "`=`"},
 		{"código inexistente", "code=NAOEX", "NAOEX"},
 	}

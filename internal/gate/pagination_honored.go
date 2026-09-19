@@ -1,12 +1,12 @@
 package gate
 
 import (
-	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -50,19 +50,17 @@ import (
 //     `dialect.collection_query`, este gate se declara Pendente.
 func checkPaginationHonored(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindCode {
-		return Skip, "não é código — a promessa se lê na assinatura da função"
+		return Skip, i18n.T("gate.pagination_honored.skip_not_code")
 	}
 	d := cfg.DialectFor()
 	// Cada padrão ausente é um olho fechado. Pendente nomeia QUAL falta, para a correção
 	// ser uma linha de YAML e não uma investigação.
 	var faltando []string
 	if d.ExportedFunc == "" && !d.WaivedField("exported_func") {
-		faltando = append(faltando, "`exported_func` (como se reconhece uma função exportada)")
+		faltando = append(faltando, i18n.T("gate.pagination_honored.missing_exported_func"))
 	}
 	if d.CollectionQuery == "" && !d.WaivedField("collection_query") {
-		faltando = append(faltando, "`collection_query` (como se reconhece uma consulta que "+
-			"devolve muitos registros — não tem default porque depende do seu provedor de dados: "+
-			"`QueryCommand|ScanCommand` no DynamoDB, `SELECT` em SQL, `.find()` no Mongo)")
+		faltando = append(faltando, i18n.T("gate.pagination_honored.missing_collection_query"))
 	}
 	if len(faltando) > 0 {
 		// Pending, não Skip: o gate NÃO verificou, e dizer isso é o ponto. Silenciar aqui
@@ -71,34 +69,32 @@ func checkPaginationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 		// Quem decidiu não configurar tem o opt-out explícito, e a mensagem o oferece —
 		// senão a única saída visível seria conviver com o aviso para sempre, e aviso
 		// permanente é aviso que se aprende a ignorar (levando os outros com ele).
-		return Pending, "o projeto não declarou " + strings.Join(faltando, " nem ") +
-			". Declare em `dialect:` no anchors.yaml (`family:` resolve parte disso: " +
-			strings.Join(config.KnownDialectFamilies(), ", ") + "). Se não se aplica a este " +
-			"projeto, dispense com `dialect.opt_out: [<campo>]` — o aviso sai do relatório e " +
-			"a decisão fica escrita."
+		return Pending, i18n.T("gate.pagination_honored.pending_dialect_missing",
+			strings.Join(faltando, " / "),
+			strings.Join(config.KnownDialectFamilies(), ", "))
 	}
 	// Campo dispensado = o projeto afirmou que não tem. Sem o padrão não há como confrontar,
 	// e o Skip aqui é honesto: diferente do Pending acima, alguém decidiu.
 	if d.CollectionQuery == "" || d.ExportedFunc == "" {
-		return Skip, "dialeto dispensado por `opt_out` — o projeto declarou que este padrão não se aplica"
+		return Skip, i18n.T("gate.pagination_honored.skip_opt_out")
 	}
 
 	consulta := d.Compile(d.CollectionQuery)
 	if consulta == nil || !consulta.MatchString(content) {
-		return Skip, "nenhuma consulta de coleção neste arquivo (pelo `dialect.collection_query` do projeto)"
+		return Skip, i18n.T("gate.pagination_honored.skip_no_collection_queries")
 	}
 
 	fns := exportedFuncs(content, d)
 	if len(fns) == 0 {
-		return Skip, "nenhuma função exportada reconhecida pelo dialeto do projeto"
+		return Skip, i18n.T("gate.pagination_honored.skip_no_exported_funcs")
 	}
 
 	// O módulo conhece o padrão de paginação? Se alguma irmã pagina, a que não pagina é
 	// assimetria — o mesmo raciocínio do gate sibling-guard.
-	irmãsPaginam := 0
+	sistersPaginate := 0
 	for _, f := range fns {
 		if paginatesAll(f.body, d) {
-			irmãsPaginam++
+			sistersPaginate++
 		}
 	}
 
@@ -133,31 +129,27 @@ func checkPaginationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 			if !temDefault {
 				continue // o chamador passa o limite: página deliberada, sem promessa quebrada
 			}
-			achados = append(achados, fmt.Sprintf(
-				"`%s` promete o conjunto mas trunca em `%s` por default — o chamador não "+
-					"escolheu esse limite e não recebe cursor, então o que passa dele é perdido "+
-					"em silêncio", f.name, lim))
+			achados = append(achados, i18n.T("gate.pagination_honored.item_hidden_default", f.name, lim))
 			continue
 		}
-		achados = append(achados, fmt.Sprintf(
-			"`%s` promete o conjunto e consulta sem paginar — a consulta trunca na página "+
-				"do provedor quando o dado crescer, devolvendo um resultado parcial que "+
-				"parece completo", f.name))
+		achados = append(achados, i18n.T("gate.pagination_honored.item_no_pagination", f.name))
 	}
 
 	if len(achados) == 0 {
 		return Pass, ""
 	}
 	sort.Strings(achados)
-	msg := "promessa de conjunto não honrada: " + strings.Join(achados, "; ")
-	if irmãsPaginam > 0 {
-		msg += fmt.Sprintf(". %s neste módulo pagina(m) com loop de cursor — o padrão é "+
-			"conhecido aqui, o que torna a omissão esquecimento e não decisão", plural(
-			irmãsPaginam, "1 função", fmt.Sprintf("%d funções", irmãsPaginam)))
+	var sisterSuffix string
+	if sistersPaginate > 0 {
+		var countStr string
+		if sistersPaginate == 1 {
+			countStr = i18n.T("gate.pagination_honored.sister_count_singular")
+		} else {
+			countStr = i18n.T("gate.pagination_honored.sister_count_plural", sistersPaginate)
+		}
+		sisterSuffix = i18n.T("gate.pagination_honored.sister_functions_paginate", countStr)
 	}
-	msg += ". Para dispensar: devolva o cursor, nomeie o limite como página " +
-		"(`pageSize`), renomeie a função para o que ela faz, ou marque `// @no-paginate: <razão>`"
-	return Fail, msg
+	return Fail, i18n.T("gate.pagination_honored.fail_broken_promise", strings.Join(achados, "; "), sisterSuffix)
 }
 
 // promisesSet: o NOME diz que devolve tudo? É o único lugar onde a promessa está
@@ -206,36 +198,36 @@ func paginatesAll(body string, d config.Dialect) bool {
 // `getAll`. A ASSOCIAÇÃO nome↔valor é que varia por sintaxe, e vem em duas formas que
 // cobrem as linguagens correntes: `nome = valor` (default de parâmetro) e `nome: valor`
 // ou `nome=valor` (campo de objeto / argumento nomeado).
-var limiteNome = `(?i)\b(limit|max|maxItems|maxKeys|maxResults|pageSize|page_size|take|top|first)\b`
+var limitNamePattern = `(?i)\b(limit|max|maxItems|maxKeys|maxResults|pageSize|page_size|take|top|first)\b`
 
 // `[^=\n]*?` deixa passar uma anotação de tipo (`limit: number = 100`, `limit: int = 100`)
 // sem atravessar a linha. Sem esse cuidado, `limit: number` — parâmetro OBRIGATÓRIO, que o
 // chamador escolhe — é lido como default e vira falso positivo (aconteceu, e o teste pegou).
-var limiteDefaultRE = regexp.MustCompile(limiteNome + `[^=\n]*?=\s*(\d+)`)
-var limiteLiteralRE = regexp.MustCompile(limiteNome + `\s*[:=]\s*(\d+)`)
+var limitDefaultRE = regexp.MustCompile(limitNamePattern + `[^=\n]*?=\s*(\d+)`)
+var limitLiteralRE = regexp.MustCompile(limitNamePattern + `\s*[:=]\s*(\d+)`)
 
 // O valor tem de ser um IDENTIFICADOR que o chamador possa ter passado — não um nome de
 // TIPO. `limit: number` (TS), `limit: int` (Python) e `limit: Int` (Kotlin) são anotações
 // de tipo na assinatura, não a passagem do limite para a consulta; lê-las como valor faz o
 // gate concluir "escondido" justamente no caso em que o chamador escolheu. O teste pegou.
-var tiposComuns = regexp.MustCompile(`(?i)^(number|int|integer|long|short|byte|float|double|decimal|uint\d*|int\d*|usize|i\d+|u\d+|Int|Long|Integer|Number|BigInt|size_t)$`)
+var commonTypesRE = regexp.MustCompile(`(?i)^(number|int|integer|long|short|byte|float|double|decimal|uint\d*|int\d*|usize|i\d+|u\d+|Int|Long|Integer|Number|BigInt|size_t)$`)
 
-var limiteParamRE = regexp.MustCompile(limiteNome + `\s*[:=]\s*(\w+)`)
+var limitParamRE = regexp.MustCompile(limitNamePattern + `\s*[:=]\s*(\w+)`)
 
 func hiddenLimit(body string, params []string) (string, bool) {
 	// default na assinatura: `limit = 100` — o chamador pode omitir e nem saber do corte.
-	if m := limiteDefaultRE.FindStringSubmatch(body); m != nil {
+	if m := limitDefaultRE.FindStringSubmatch(body); m != nil {
 		return m[1] + " = " + m[2], true
 	}
 	// literal cravado na query: `Limit: 50` — ninguém escolheu, está no código.
-	if m := limiteLiteralRE.FindStringSubmatch(body); m != nil {
+	if m := limitLiteralRE.FindStringSubmatch(body); m != nil {
 		return m[1] + ": " + m[2], true
 	}
 	// limite que vem de um parâmetro SEM default: o chamador escolheu, é contrato dele.
 	// Varre TODAS as ocorrências: a primeira pode ser a anotação de tipo na assinatura
 	// (`limit: number`) e a que interessa vir depois, na consulta (`Limit: limit`).
-	for _, m := range limiteParamRE.FindAllStringSubmatch(body, -1) {
-		if tiposComuns.MatchString(m[2]) {
+	for _, m := range limitParamRE.FindAllStringSubmatch(body, -1) {
+		if commonTypesRE.MatchString(m[2]) {
 			continue // anotação de tipo, não a passagem do valor
 		}
 		for _, p := range params {

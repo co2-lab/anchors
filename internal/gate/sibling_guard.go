@@ -1,12 +1,12 @@
 package gate
 
 import (
-	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -32,19 +32,17 @@ import (
 // exceção legítima. O gate erra para o lado de não incomodar.
 func checkSiblingGuard(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindCode {
-		return Skip, "não é código — a assimetria se lê entre funções de um módulo"
+		return Skip, i18n.T("gate.sibling_guard.skip_not_code")
 	}
 	d := cfg.DialectFor()
 	if d.ExportedFunc == "" {
 		// Pendente, não Pass: sem saber reconhecer uma função, o gate não verificou nada —
 		// e um ✓ aqui seria mentira (QUALITY §7, o terceiro estado).
-		return Pending, "o projeto não declarou como reconhecer uma função exportada. " +
-			"Declare `dialect.family` (" + strings.Join(config.KnownDialectFamilies(), ", ") +
-			") ou `dialect.exported_func` no anchors.yaml — sem isso este gate não vê o código"
+		return Pending, i18n.T("gate.sibling_guard.pending_dialect_missing", strings.Join(config.KnownDialectFamilies(), ", "))
 	}
 	fns := exportedFuncs(content, d)
 	if len(fns) < 3 {
-		return Skip, "menos de 3 funções exportadas — sem maioria para comparar"
+		return Skip, i18n.T("gate.sibling_guard.skip_few_functions")
 	}
 
 	// agrupa por PARÂMETRO comum: qual nome aparece na assinatura de várias.
@@ -63,7 +61,7 @@ func checkSiblingGuard(content string, n mapx.Node, root string, g *mapx.Graph, 
 		var comGuarda, semGuarda []string
 		for _, f := range irmas {
 			switch {
-			case guardOver(f.body, param):
+			case guardOver(f.body, param, d):
 				comGuarda = append(comGuarda, f.name)
 			case noGuardRE.MatchString(f.body):
 				// Opt-out HONESTO, com razão escrita. Esta função não precisa da guarda,
@@ -84,10 +82,13 @@ func checkSiblingGuard(content string, n mapx.Node, root string, g *mapx.Graph, 
 		if len(comGuarda) > len(semGuarda) && len(semGuarda) > 0 {
 			sort.Strings(comGuarda)
 			sort.Strings(semGuarda)
-			achados = append(achados, fmt.Sprintf(
-				"`%s` recebe `%s` sem nenhuma guarda, enquanto %s guardam (%s)",
+			sisterWord := i18n.T("gate.sibling_guard.sister_plural")
+			if len(comGuarda) == 1 {
+				sisterWord = i18n.T("gate.sibling_guard.sister_singular")
+			}
+			achados = append(achados, i18n.T("gate.sibling_guard.item_asymmetry",
 				strings.Join(semGuarda, "`, `"), param,
-				plural(len(comGuarda), "a irmã", "as irmãs"),
+				sisterWord,
 				strings.Join(comGuarda, ", ")))
 		}
 	}
@@ -95,19 +96,7 @@ func checkSiblingGuard(content string, n mapx.Node, root string, g *mapx.Graph, 
 		return Pass, ""
 	}
 	sort.Strings(achados)
-	return Fail, "assimetria entre funções irmãs: " + strings.Join(achados, "; ") +
-		". Ou a guarda falta na que não tem, ou ela é desnecessária nas que têm — " +
-		"as duas leituras não podem estar certas ao mesmo tempo. Se a função não precisa " +
-		"da guarda (porque DELEGA a uma irmã que já guarda, por exemplo), marque " +
-		"`// @no-guard: <razão>` no corpo dela — dispensar é decisão registrada; duplicar " +
-		"a guarda só para calar o gate esconde a razão."
-}
-
-func plural(n int, um, muitos string) string {
-	if n == 1 {
-		return um
-	}
-	return muitos
+	return Fail, i18n.T("gate.sibling_guard.fail_asymmetry", strings.Join(achados, "; "))
 }
 
 type exportedFunc struct {
@@ -165,17 +154,28 @@ func exportedFuncs(content string, d config.Dialect) []exportedFunc {
 // guardOver diz se o corpo aplica alguma guarda RECONHECÍVEL sobre o parâmetro:
 // filtrar, validar, lançar, ou retornar cedo por causa dele. Não entende semântica —
 // procura o parâmetro perto de uma construção de guarda.
-func guardOver(body, param string) bool {
+func guardOver(body, param string, d config.Dialect) bool {
 	p := regexp.QuoteMeta(param)
+	if len(d.GuardPatterns) > 0 {
+		for _, pat := range d.GuardPatterns {
+			reStr := strings.ReplaceAll(pat, "{{param}}", p)
+			re := d.Compile(reStr)
+			if re != nil && re.MatchString(body) {
+				return true
+			}
+		}
+		return false
+	}
 	padroes := []string{
-		`\.filter\([^)]*` + p + `\b`,                              // versions.filter(v => v.key === key)
-		`\b` + p + `\s*\.\s*filter\(`,                             // param.filter(...)
-		`if\s*\([^)]*\b` + p + `\b[^)]*\)\s*\{?\s*(throw|return)`, // guarda explícita
-		`\b` + p + `\b[^\n]*\?\?`,                                 // default via ??
-		`(throw|assert)[^\n]*\b` + p + `\b`,                       // validação que lança
+		`\.filter\([^)]*` + p + `\b`,
+		`\b` + p + `\s*\.\s*filter\(`,
+		`if\s*\(?[^\n{:]*\b` + p + `\b[^\n{:]*\)?\s*[:{]?\s*(throw|return|raise|panic)`,
+		`\b` + p + `\b[^\n]*\?\?`,
+		`(throw|assert|raise|panic)[^\n]*\b` + p + `\b`,
 	}
 	for _, pat := range padroes {
-		if regexp.MustCompile(pat).MatchString(body) {
+		re := d.Compile(pat)
+		if re != nil && re.MatchString(body) {
 			return true
 		}
 	}

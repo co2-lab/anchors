@@ -3,6 +3,7 @@ package gate
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -341,5 +342,24 @@ func TestFeatureTestMatch_codigoNaoCasaPrefixoDeOutro(t *testing.T) {
 		if !ok || got != c.quer {
 			t.Errorf("%s: título = %q (ok=%v), queria %q", c.cod, got, ok, c.quer)
 		}
+	}
+}
+
+func TestFeatureTestMatch_tRunSuportado(t *testing.T) {
+	corpo := `t.Run("DDTDX-B01: duplicata encontrada", func(t *testing.T) {})`
+	got, ok := testTitleFor(corpo, "DDTDX-B01")
+	if !ok || got != "duplicata encontrada" {
+		t.Errorf("t.Run em Go devia casar título: got=%q (ok=%v)", got, ok)
+	}
+}
+
+func TestStripLineCommentsSuportaHash(t *testing.T) {
+	src := "val = 1 # comentario\n# linha inteira de comentario\nval2 = 2\n"
+	res := stripLineComments(src)
+	if strings.Contains(res, "comentario") {
+		t.Errorf("comentários # deveriam ser removidos: %q", res)
+	}
+	if !strings.Contains(res, "val = 1") || !strings.Contains(res, "val2 = 2") {
+		t.Errorf("código deve ser preservado: %q", res)
 	}
 }

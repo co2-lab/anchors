@@ -68,3 +68,40 @@ func TestSemRotaDeclaradaNaoEhAssunto(t *testing.T) {
 		t.Errorf("sem rota declarada, Skip; veio %v", v)
 	}
 }
+
+func TestRotaComPadraoCustomizado(t *testing.T) {
+	dir := t.TempDir()
+	routesFile := filepath.Join(dir, "routes.go")
+	src := `package main
+func registerRoutes(r chi.Router) {
+    r.Get("/usuarios", ListUsers)
+    r.Post("/usuarios", CreateUser)
+}`
+	if err := os.WriteFile(routesFile, []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cfg := &config.Config{
+		RouteRegistryGlobs: []string{"routes.go"},
+		Derived: &config.Derived{
+			RoutePattern: `r\.(?:Get|Post)\("([^"]+)"`,
+		},
+	}
+
+	// Com barra
+	v, msg := checkRouteExists("> **Rota**: `/usuarios`", mapx.Node{Kind: mapx.KindSpec}, dir, nil, cfg)
+	if v != Pass {
+		t.Fatalf("rota /usuarios deveria passar com RoutePattern customizado; veio %v (%s)", v, msg)
+	}
+
+	// Sem barra
+	v2, msg2 := checkRouteExists("> **Rota**: `usuarios`", mapx.Node{Kind: mapx.KindSpec}, dir, nil, cfg)
+	if v2 != Pass {
+		t.Fatalf("rota usuarios deveria passar com RoutePattern customizado; veio %v (%s)", v2, msg2)
+	}
+
+	// Inexistente
+	v3, _ := checkRouteExists("> **Rota**: `/pedidos`", mapx.Node{Kind: mapx.KindSpec}, dir, nil, cfg)
+	if v3 != Fail {
+		t.Fatalf("rota inexistente /pedidos deveria reprovar; veio %v", v3)
+	}
+}

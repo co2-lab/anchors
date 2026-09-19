@@ -109,29 +109,29 @@ func SuggestNext(kind string) (next, reason string) {
 		//
 		// Promover (mover de `plans/review/` para `plans/`) é o gesto que diz "revisei e
 		// aprovo". Um gesto, não um campo a manter.
-		return "review-plan-draft", "um plano em RASCUNHO mudou — REVISE-O antes de promovê-lo " +
-			"(`anchors work review-plan-draft --for <plano>`): item cuja EXISTÊNCIA depende de " +
-			"decisão não tomada faz quem executa decidir sozinho ou parar o fluxo. Aprovado, " +
-			"renomeie tirando `.draft` — aí ele semeia trabalho"
+		return "review-plan-draft", "a DRAFT plan changed — REVIEW IT before promoting it " +
+			"(`anchors work review-plan-draft --for <plan>`): an item whose EXISTENCE depends on " +
+			"an undecided question makes whoever executes decide alone or stall the flow. Once approved, " +
+			"rename it dropping `.draft` — then it seeds work"
 	case "plan":
 		// Plano PROMOVIDO (já revisado) semeia trabalho. O custo de não revisar antes é
 		// assimétrico: um defeito na spec afeta uma unidade; um no plano se espalha por
 		// todas as que ele semeia — medido, um item "nasce SE …" fez o executor decidir
 		// sozinho, e uma fase inteira nasceu sobre premissa que ninguém aprovou.
-		return "spec", "um plano foi semeado — gere as specs que ele lista, uma por alvo " +
-			"(`anchors work spec --for <alvo>`)"
+		return "spec", "a plan was seeded — generate the specs it lists, one per target " +
+			"(`anchors work spec --for <target>`)"
 	case "spec":
-		return "code", "uma spec mudou — crie/atualize o código e a feature " +
-			"(`anchors work code --for <alvo>`)"
+		return "code", "a spec changed — create/update the code and the feature " +
+			"(`anchors work code --for <target>`)"
 	case "feature":
-		return "test", "uma feature mudou — escreva/atualize os testes"
+		return "test", "a feature changed — write/update the tests"
 	case "code":
 		// Depois do código vem a FEATURE: é ela que descreve o comportamento em cenários, e
 		// é dela que os testes nascem (`feature` → `test` logo acima). Confrontar com
 		// `anchors check` é parte de toda etapa, não uma etapa — sugerir "check" aqui
 		// mandava o executor para um comando que o `work` não sabe compor.
-		return "feature", "o código mudou — descreva o comportamento em cenários " +
-			"(`anchors work feature --for <alvo>`), que é de onde os testes nascem"
+		return "feature", "the code changed — describe the behaviour in scenarios " +
+			"(`anchors work feature --for <target>`), which is where the tests are born"
 	case "test":
 		// O teste é a ÚLTIMA peça da trinca a nascer: quando ele muda, a unidade está
 		// completa e é exatamente aí que o trabalho PARECE pronto. Por isso a cadeia não
@@ -142,13 +142,13 @@ func SuggestNext(kind string) (next, reason string) {
 		// contradição entre duas regras da mesma spec) passaram com TODOS os gates verdes.
 		// Nenhum foi achado por gate; os 7 saíram de revisão adversarial. O gate confronta
 		// o que é DECLARÁVEL; o que sobra precisa de alguém atacando de fora.
-		return "review", "a trinca fechou — rode a suíte, `anchors ingest` os sinais, e então " +
-			"REVISE a unidade inteira (`anchors work review --for <alvo>`): os gates verdes " +
-			"não provam que está certo"
+		return "review", "the triad closed — run the suite, `anchors ingest` the signals, and then " +
+			"REVIEW the whole unit (`anchors work review --for <target>`): green gates " +
+			"do not prove it is right"
 	case "guide":
-		return "review-governed", "uma régua mudou — revise os artefatos que ela rege"
+		return "review-governed", "a ruler changed — review the artifacts it governs"
 	default:
-		return "triage", "mudança de kind não mapeado — decida o próximo passo"
+		return "triage", "change of an unmapped kind — decide the next step"
 	}
 }
 
@@ -319,7 +319,7 @@ func MarkDone(root, id string) error {
 			return os.Rename(src, filepath.Join(done, fileName(Done, id)))
 		}
 	}
-	return fmt.Errorf("task não encontrada (pending/claimed): %s", id)
+	return fmt.Errorf("task not found (pending/claimed): %s", id)
 }
 
 // Drop descarta uma task da fila viva SEM concluí-la — remove o arquivo (pending ou
@@ -334,7 +334,7 @@ func Drop(root, id string) error {
 			return os.Remove(src)
 		}
 	}
-	return fmt.Errorf("task não encontrada (pending/claimed): %s", id)
+	return fmt.Errorf("task not found (pending/claimed): %s", id)
 }
 
 // Reclaim devolve à fila (claimed → pending) as tasks presas em claimed — tipicamente

@@ -10,6 +10,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -84,8 +85,7 @@ func checkObligationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 		}
 		if len(faltando) > 0 {
 			sort.Strings(faltando)
-			msg := fmt.Sprintf("`%s` (como `%s`) não aparece em: %s",
-				name, token, strings.Join(faltando, ", "))
+			msg := i18n.T("gate.obligation_honored.missing_in", name, token, strings.Join(faltando, ", "))
 			if ob.Because != "" {
 				msg += " — " + ob.Because
 			}
@@ -101,7 +101,7 @@ func checkObligationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 			// que ele continua valendo, e QUANDO será pago. É registro, não dispensa —
 			// por isso o veredito é Pendente (aparece no relatório), nunca Pass.
 			if quando := pendingFor(content, ob.Name); quando != "" {
-				pending = append(pending, fmt.Sprintf("[%s] %s — DÍVIDA ASSUMIDA: %s",
+				pending = append(pending, i18n.T("gate.obligation_honored.pending_debt_item",
 					ob.Name, msg, quando))
 				continue
 			}
@@ -113,21 +113,12 @@ func checkObligationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 	}
 	if len(violated) == 0 {
 		sort.Strings(pending)
-		return Pending, "obrigação transversal com DÍVIDA ASSUMIDA (não é falha — é registro): " +
-			strings.Join(pending, "; ")
+		return Pending, i18n.T("gate.obligation_honored.pending_only", strings.Join(pending, "; "))
 	}
 	sort.Strings(violated)
-	msg := "obrigação transversal não cumprida: " + strings.Join(violated, "; ") +
-		". Três saídas, e só uma é silêncio:\n" +
-		"  1. CUMPRA o dever;\n" +
-		"  2. se ele será pago depois, assuma a dívida com " +
-		"`obligation_pending: <nome> — <quando/onde>` (fica Pendente no relatório, visível);\n" +
-		"  3. se o dever NÃO se aplica a este nó, dispense com " +
-		"`obligation_waived: <nome> — <motivo>`.\n" +
-		"Dispensar o que ainda se deve é mentira; deixar vermelho o que já foi reconhecido " +
-		"confunde dívida com esquecimento."
+	msg := i18n.T("gate.obligation_honored.fail_unfulfilled", strings.Join(violated, "; "))
 	if len(pending) > 0 {
-		msg += fmt.Sprintf(" (há também %d dívida(s) assumida(s) neste nó)", len(pending))
+		msg += i18n.T("gate.obligation_honored.also_pending_suffix", len(pending))
 	}
 	return Fail, msg
 }

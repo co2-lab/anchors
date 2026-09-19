@@ -43,7 +43,7 @@ func TestEvidenceFreshCarimboFrescoPassa(t *testing.T) {
 	}
 	// A mensagem diz CONTRA O QUE conferiu: é a diferença entre "ninguém olhou" e
 	// "olhei e está de pé".
-	if !strings.Contains(msg, "1 dependência") {
+	if !strings.Contains(msg, "1 dependência") && !strings.Contains(msg, "1 dependency") {
 		t.Errorf("a mensagem devia dizer o tamanho do fecho conferido, veio: %s", msg)
 	}
 }
@@ -62,7 +62,7 @@ func TestEvidenceFreshVenceQuandoDependenciaMuda(t *testing.T) {
 	if !strings.Contains(msg, "utils/login.yaml") {
 		t.Errorf("a mensagem tem de nomear o culpado, veio: %s", msg)
 	}
-	if !strings.Contains(msg, "rode-o de novo") {
+	if !strings.Contains(msg, "rode-o de novo") && !strings.Contains(msg, "run it again") {
 		t.Errorf("a mensagem tem de dizer o conserto, veio: %s", msg)
 	}
 }
@@ -83,7 +83,7 @@ func TestEvidenceFreshTruncaListaLonga(t *testing.T) {
 	if v != Fail {
 		t.Fatalf("esperava Fail, veio %v", v)
 	}
-	if !strings.Contains(msg, "e 15 outra(s)") {
+	if !strings.Contains(msg, "e 15 outra(s)") && !strings.Contains(msg, "and 15 other(s)") {
 		t.Errorf("devia truncar em 5 e somar o resto, veio:\n%s", msg)
 	}
 }

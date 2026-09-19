@@ -107,7 +107,7 @@ func TestUnidadeAnteriorAPraticaEhPendencia(t *testing.T) {
 	if v != Pending {
 		t.Errorf("nenhuma regra declarada = dívida de migração (Pending); veio %v (%s)", v, msg)
 	}
-	if !strings.Contains(msg, "anterior à prática") {
+	if !strings.Contains(msg, "anterior à prática") && !strings.Contains(msg, "precedes") {
 		t.Errorf("a mensagem tem de NOMEAR a dívida, não fingir aprovação; veio: %s", msg)
 	}
 }
@@ -148,12 +148,12 @@ func TestRegraImplementada_marcacaoExigidaVenceAPendencia(t *testing.T) {
 	}
 
 	// Declarado: a migração acabou, e a unidade é cobrada como qualquer outra.
-	cfg := &config.Config{Derived: &config.Derived{RuleMarking: "required"}}
+	cfg := &config.Config{Derived: &config.Derived{RuleMarkingPolicy: "required"}}
 	v, msg := checkRuleImplemented(spec, n, root, nil, cfg)
 	if v != Fail {
 		t.Fatalf("com `rule_marking: required` a pendência vira reprovação: %v", v)
 	}
-	if !strings.Contains(msg, "spec descreve mesmo esta unidade") {
+	if !strings.Contains(msg, "spec descreve mesmo esta unidade") && !strings.Contains(msg, "spec actually describes this unit") {
 		t.Errorf("a mensagem deve levantar a hipótese de spec errada: %s", msg)
 	}
 }
@@ -165,7 +165,7 @@ func TestRegraImplementada_marcacaoExigidaNaoPuneQuemMarca(t *testing.T) {
 	must(t, os.WriteFile(filepath.Join(root, "u.ts"), []byte(
 		"// SBNKX-B01: inclui a conta\nexport function addAccount() {}\n"), 0o644))
 	spec := "<!-- @anchors\n  code: SBNKX\n-->\n| `SBNKX-B01` | incluir conta | acrescenta à lista |\n"
-	cfg := &config.Config{Derived: &config.Derived{RuleMarking: "required"}}
+	cfg := &config.Config{Derived: &config.Derived{RuleMarkingPolicy: "required"}}
 
 	if v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"},
 		root, nil, cfg); v != Pass {

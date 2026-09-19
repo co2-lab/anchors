@@ -1,13 +1,13 @@
 package gate
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -53,15 +53,15 @@ import (
 // silencioso de calar o gate, e some o rastro de que houve decisão.
 func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "a spec é o catálogo — é dela que o confronto parte"
+		return Skip, i18n.T("gate.code_cataloged.skip_not_spec")
 	}
 	if g == nil {
-		return Pending, "sem mapa carregado — o gate relacional precisa do grafo"
+		return pendingNoMap()
 	}
 
 	alvo, texto, ok := specTarget(n, root, g)
 	if !ok {
-		return Skip, "spec sem código ligado (`specifies`) — a ausência é do gate trinca-completa"
+		return Skip, i18n.T("gate.code_cataloged.skip_no_code")
 	}
 
 	// SEM SABER LER, O GATE CALA — nunca aprova.
@@ -70,14 +70,7 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 	// símbolos e devolvia Pass: verde sobre o que não conferiu, com `blocking: true`.
 	exportRE := exportDetectDe(cfg)
 	if exportRE == nil {
-		return Skip, "o projeto não declarou `derived.export_detect` — o padrão que " +
-			"reconhece um símbolo público NESTA linguagem.\n\nSem ele o gate não sabe o " +
-			"que ler, e aprovar seria carimbar o que não foi conferido.\n\nDeclare em " +
-			"`anchors.yaml`, com UM grupo de captura (o nome do símbolo):\n" +
-			"    derived:\n" +
-			"      export_detect: \"" + exportedREPadraoTS + "\"   # TS/JS\n" +
-			"      # export_detect: \"^func\\\\s+([A-Z]\\\\w*)\"          # Go\n" +
-			"      # export_detect: \"^(?:def|class)\\\\s+([a-zA-Z]\\\\w*)\"  # Python"
+		return Skip, i18n.T("gate.code_cataloged.skip_no_export_detect", exportedREDefaultTS)
 	}
 
 	// Os símbolos que a spec já nomeia ou que o código dispensa saem da conta.
@@ -91,27 +84,19 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 		}
 		// O nome sozinho obriga quem lê a caçar o símbolo no arquivo; com a linha,
 		// o endereço está completo.
-		orfaos = append(orfaos, fmt.Sprintf("%s (linha %d)", s.nome, s.num))
+		orfaos = append(orfaos, i18n.T("gate.code_cataloged.orphan_line", s.nome, s.num))
 	}
 	if len(orfaos) == 0 {
 		return Pass, ""
 	}
-	return Fail, fmt.Sprintf(
-		"%d símbolo(s) exportado(s) por `%s` que a spec não cataloga: %s.\n\nUm símbolo "+
-			"fora do catálogo atravessa o pipeline sem regra a confrontar — ninguém sabe o "+
-			"que ele deveria fazer.\n\nDuas saídas: catalogue-o na spec (basta o NOME "+
-			"aparecer no texto de uma regra), ou declare que ele não carrega regra — na "+
-			"linha do símbolo, ou no comentário logo acima dela:\n"+
-			"    // @no-rule: <por que este símbolo não tem regra>\n"+
-			"    export function algo() { … }",
-		len(orfaos), alvo, firstOnes(orfaos, 5))
+	return Fail, i18n.T("gate.code_cataloged.unmet_exports", len(orfaos), alvo, firstOnes(orfaos, 5))
 }
 
 // noRuleRE — a dispensa por SÍMBOLO, com razão obrigatória. Mesmo padrão do
 // `@no-code`/`@no-scenario` (CONCEPT §5.1).
 var noRuleRE = regexp.MustCompile(`@no-rule[^\S\n]*:[^\S\n]*\S+`)
 
-// exportedREPadraoTS é o padrão de TypeScript/JavaScript, e só vale como SUGESTÃO ao
+// exportedREDefaultTS é o padrão de TypeScript/JavaScript, e só vale como SUGESTÃO ao
 // projeto que ainda não declarou o seu — nunca como default silencioso.
 //
 // Antes ele era embutido: num projeto Go, Python ou Ruby casava ZERO símbolos e o gate
@@ -122,15 +107,28 @@ var noRuleRE = regexp.MustCompile(`@no-rule[^\S\n]*:[^\S\n]*\S+`)
 // Quem decide é `derived.export_detect`, pelo mesmo motivo do `mock_detect`: reconhecer
 // o que é público depende da linguagem (`export const X` em TS, maiúscula inicial em Go,
 // `__all__` em Python), e o Anchors não presume.
-const exportedREPadraoTS = `(?m)^\s*export\s+(?:async\s+)?(?:function|const|let|var|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)`
+const exportedREDefaultTS = `(?m)^\s*export\s+(?:async\s+)?(?:function|const|let|var|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)`
 
-// exportDetectDe devolve o regex que ESTE projeto declarou, ou nil se não declarou.
+// exportDetectDe devolve o regex que ESTE projeto declarou (via derived.export_detect
+// ou dialect.exported_func), ou nil se não declarou.
 // nil não é erro: é o gate admitindo que não sabe ler, para pular em vez de aprovar.
 func exportDetectDe(cfg *config.Config) *regexp.Regexp {
-	if cfg == nil || cfg.Derived == nil || strings.TrimSpace(cfg.Derived.ExportDetect) == "" {
+	if cfg == nil {
 		return nil
 	}
-	re, err := regexp.Compile(cfg.Derived.ExportDetect)
+	var pattern string
+	if cfg.Derived != nil && strings.TrimSpace(cfg.Derived.ExportDetect) != "" {
+		pattern = cfg.Derived.ExportDetect
+	} else {
+		d := cfg.DialectFor()
+		if strings.TrimSpace(d.ExportedFunc) != "" {
+			pattern = d.ExportedFunc
+		}
+	}
+	if pattern == "" {
+		return nil
+	}
+	re, err := regexp.Compile(pattern)
 	if err != nil || re.NumSubexp() < 1 {
 		// Regex inválido ou sem grupo de captura: também não sabemos ler. O gate pula
 		// e a mensagem cobra a correção — melhor que aprovar por engano.
@@ -155,6 +153,16 @@ func symbolsWithLine(codigo string, re *regexp.Regexp) []exportedSymbol {
 		if m == nil {
 			continue
 		}
+		symName := ""
+		for _, sub := range m[1:] {
+			if sub != "" {
+				symName = sub
+				break
+			}
+		}
+		if symName == "" {
+			continue
+		}
 		// O CONTEXTO é o símbolo mais o BLOCO DE COMENTÁRIO imediatamente acima, e não
 		// só a linha anterior.
 		//
@@ -166,7 +174,7 @@ func symbolsWithLine(codigo string, re *regexp.Regexp) []exportedSymbol {
 		// Pior: o mesmo arquivo passava em OUTRO símbolo por acaso, porque o nome dele
 		// aparecia no texto da spec. A declaração nunca era lida, e ninguém notava.
 		ctx := symbolContext(linhas, i)
-		out = append(out, exportedSymbol{nome: m[1], linha: ctx, num: i + 1})
+		out = append(out, exportedSymbol{nome: symName, linha: ctx, num: i + 1})
 	}
 	return out
 }

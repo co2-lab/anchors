@@ -81,7 +81,7 @@ func TestOpenQuestionsItemResolvidoNaoBloqueia(t *testing.T) {
 	if v != Pending {
 		t.Fatalf("um item ainda aberto deveria reprovar, foi %s", v)
 	}
-	if !strings.Contains(d, "1 decisão") {
+	if !strings.Contains(d, "1 decisão") && !strings.Contains(d, "1 open decision") {
 		t.Errorf("deveria contar só o item ABERTO (1), não os resolvidos: %s", d)
 	}
 }
@@ -189,7 +189,7 @@ func TestOpenQuestions_cobraCodigoNaPergunta(t *testing.T) {
 	if v != Pending {
 		t.Fatalf("pergunta anônima é pendência, foi %s", v)
 	}
-	if !strings.Contains(d, "SEM CÓDIGO") {
+	if !strings.Contains(d, "SEM CÓDIGO") && !strings.Contains(d, "WITHOUT CODE") {
 		t.Errorf("o achado deveria ser o da identidade ausente, veio: %s", d)
 	}
 
@@ -199,7 +199,7 @@ func TestOpenQuestions_cobraCodigoNaPergunta(t *testing.T) {
 	if v != Pending {
 		t.Fatalf("pergunta identificada continua sendo pendência, foi %s", v)
 	}
-	if strings.Contains(d, "SEM CÓDIGO") {
+	if strings.Contains(d, "SEM CÓDIGO") || strings.Contains(d, "WITHOUT CODE") {
 		t.Errorf("a pergunta tem código; não podia ser cobrada por identidade: %s", d)
 	}
 	if !strings.Contains(d, "PARCX-Q01") {
@@ -218,7 +218,7 @@ func TestOpenQuestions_naoConfundeViraComIdentidade(t *testing.T) {
 	semIdentidadeMasComDestino := base + "| | Fuso do vencimento? | Produto | `PARCX-R04` |\n"
 
 	_, d := rodaAberto(t, semIdentidadeMasComDestino)
-	if !strings.Contains(d, "SEM CÓDIGO") {
+	if !strings.Contains(d, "SEM CÓDIGO") && !strings.Contains(d, "WITHOUT CODE") {
 		t.Errorf("`PARCX-R04` está na coluna Vira e não identifica a pergunta: %s", d)
 	}
 }
@@ -233,14 +233,14 @@ func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
 
 	// SEM declarar: o framework não conhece o título, e o gate reporta a seção como
 	// ausente — dívida, não defeito, e por isso Pending e não Fail.
-	corpo, achou := seçãoDecisõesEmAbertoCfg(espanhol, nil, "")
+	corpo, achou := openDecisionsSectionCfg(espanhol, nil, "")
 	if achou {
 		t.Errorf("sem declaração, o framework não tem como conhecer o título: %q", corpo)
 	}
 
 	// DECLARANDO `section_titles.open`, o gate encontra a seção e conta a pergunta.
 	cfg := &config.Config{SectionTitles: config.SectionTitles{"open": "Decisiones pendientes"}}
-	if n := DecisõesEmAberto(espanhol, cfg, ""); n != 1 {
+	if n := OpenDecisions(espanhol, cfg, ""); n != 1 {
 		t.Errorf("com o título declarado, a pergunta deveria ser contada; veio %d", n)
 	}
 
@@ -256,7 +256,7 @@ func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
 	misto := "## Decisões em aberto\n\nnenhuma\n\n## Pendências de produto\n\n" +
 		"| Código | Pergunta |\n| --- | --- |\n| `PARCX-Q01` | Fuso? |\n"
 	cfgProduto := &config.Config{SectionTitles: config.SectionTitles{"open": "Pendências de produto"}}
-	if n := DecisõesEmAberto(misto, cfgProduto, ""); n != 1 {
+	if n := OpenDecisions(misto, cfgProduto, ""); n != 1 {
 		t.Errorf("a seção declarada é a que vale, e ela tem 1 pergunta; veio %d", n)
 	}
 }

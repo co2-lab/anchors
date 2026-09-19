@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -9,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -49,25 +49,25 @@ import (
 // regra ou inventar um comentário para calar o gate esconde o defeito em vez de tratá-lo.
 func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "quem cataloga a regra é a spec — é dela que o confronto parte"
+		return Skip, i18n.T("gate.rule_implemented.skip_not_spec")
 	}
 	unidade := specCode(content)
 	if unidade == "" {
-		return Skip, "a spec não declara `code:` no header — sem identidade não há o que confrontar"
+		return Skip, i18n.T("gate.rule_implemented.skip_no_code_header")
 	}
 	regras := declaredRules(content, unidade)
 	if len(regras) == 0 {
-		return Skip, "a spec não cataloga nenhuma regra com código"
+		return Skip, i18n.T("gate.rule_implemented.skip_no_rules")
 	}
 	alvo, achou := specTargetOnDisk(root, n.ID)
 	if !achou {
 		// Sem código, quem acusa é o `trinca-completa` — este gate confronta o código que
 		// existe, e duplicar a cobrança produziria dois gates apontando o mesmo dedo.
-		return Skip, "o código desta unidade ainda não existe — a ausência é do gate `trinca-completa`"
+		return Skip, i18n.T("gate.rule_implemented.skip_target_missing")
 	}
 	cod, err := os.ReadFile(filepath.Join(root, alvo))
 	if err != nil {
-		return Pending, "não foi possível ler `" + alvo + "`"
+		return Pending, i18n.T("gate.rule_implemented.pending_read_target", alvo)
 	}
 	texto := string(cod)
 
@@ -113,40 +113,19 @@ func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Grap
 	if len(faltando) == len(regras) && !hasAnyDeclaration(content, texto, regras) &&
 		requiresMarking(cfg) {
 		sort.Strings(faltando)
-		return Fail, fmt.Sprintf(
-			"nenhuma das %d regra(s) da spec aparece no código, e este projeto exige a "+
-				"marcação (`derived.rule_marking: required`).\n\nMarque no código o trecho "+
-				"que realiza cada regra (`// %s-B01: …`) ou dispense na linha dela "+
-				"(`@no-mark: <razão>`). Se NENHUMA regra tem código, verifique antes se a "+
-				"spec descreve mesmo esta unidade — é o sintoma de spec que fala de outra coisa",
-			len(regras), unidade)
+		return Fail, i18n.T("gate.rule_implemented.marking_required", len(regras), unidade)
 	}
 
 	if len(faltando) == len(regras) && !hasAnyDeclaration(content, texto, regras) {
-		return Pending, fmt.Sprintf("%d regra(s) catalogada(s) e nenhuma declarada — esta "+
-			"unidade é anterior à prática de ligar regra↔código. Ao tocá-la, marque no código "+
-			"a regra que cada trecho realiza (`// %s-B01: …`) ou dispense na linha dela "+
-			"(`@no-mark: <razão>`); aí o gate passa a confrontar de verdade",
-			len(regras), unidade)
+		return Pending, i18n.T("gate.rule_implemented.pending_migration", len(regras), unidade)
 	}
 	sort.Strings(faltando)
 	mostra := faltando
 	if len(mostra) > 6 {
 		mostra = mostra[:6]
 	}
-	return Fail, fmt.Sprintf("%d regra(s) que a spec declara e o código `%s` não realiza: %s%s. "+
-		"Uma regra catalogada sem implementador atravessa o pipeline inteiro — a spec existe, "+
-		"o código existe, os dois se referenciam pelo header, e todos os gates ficam verdes "+
-		"sobre trabalho que não foi feito.\n\n"+
-		"Duas saídas, e as duas são honestas: marque no código o trecho que realiza a regra "+
-		"(`// %s-B01: …`), ou declare na linha dela `@no-mark: <razão>` (ou `@no-code`, o nome antigo) — para o que é "+
-		"satisfeito pela AUSÊNCIA de código (restrição, limite de escopo).\n\n"+
-		"Se ao implementar a razão da dispensa não se sustentar, isso não é detalhe de "+
-		"formatação: é a spec estar errada sobre a própria unidade. Abra issue "+
-		"(`anchors judge %s --gate review --verdict fail --reason \"…\"`) em vez de "+
-		"apagar a regra ou inventar um comentário para calar o gate",
-		len(faltando), alvo, strings.Join(mostra, ", "),
-		suffixRest(len(faltando)-len(mostra)), unidade, n.ID)
+	return Fail, i18n.T("gate.rule_implemented.missing", len(faltando), alvo, strings.Join(mostra, ", "),
+		suffixRest(len(faltando)-len(mostra)))
 }
 
 // noCodeRE: a dispensa DECLARADA de que uma regra apareça no código. Vai na linha da
@@ -261,7 +240,7 @@ func suffixRest(n int) string {
 	if n <= 0 {
 		return ""
 	}
-	return fmt.Sprintf(" e mais %d", n)
+	return i18n.T("gate.rule_implemented.and_more", n)
 }
 
 // hasAnyDeclaration diz se a unidade JÁ ENTROU na prática — se alguma regra foi marcada
@@ -280,5 +259,5 @@ func hasAnyDeclaration(spec, codigo string, regras []string) bool {
 // Vazio = migração em curso (a pendência vale); "required" = a migração acabou.
 func requiresMarking(cfg *config.Config) bool {
 	return cfg != nil && cfg.Derived != nil &&
-		strings.EqualFold(strings.TrimSpace(cfg.Derived.RuleMarking), "required")
+		strings.EqualFold(strings.TrimSpace(cfg.Derived.RuleMarkingPolicy), "required")
 }

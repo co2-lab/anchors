@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -127,10 +128,10 @@ var codeFenceRE = regexp.MustCompile("^\\s*```")
 
 func checkDocSelfContained(content string, n mapx.Node, _ string, g *mapx.Graph, _ *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "o corpo que vira documentação é o da SPEC"
+		return Skip, i18n.T("gate.doc_self_contained.skip_not_spec")
 	}
 	if g == nil {
-		return Skip, "sem mapa não há como saber quais caminhos são nós"
+		return Skip, i18n.T("gate.doc_self_contained.skip_no_map")
 	}
 
 	// OS CAMINHOS QUE O MAPA CONHECE. É daqui que sai a lista do que conta como
@@ -162,7 +163,7 @@ func checkDocSelfContained(content string, n mapx.Node, _ string, g *mapx.Graph,
 		}
 
 		if c := citedNodePath(l, caminhos); c != "" && !carriesText(linhas, i, c) {
-			achados = append(achados, fmt.Sprintf("linha %d — aponta `%s`: %s",
+			achados = append(achados, fmt.Sprintf(i18n.T("gate.doc_self_contained.line_points_to_path"),
 				i+1, c, shorten(l)))
 			continue
 		}
@@ -171,7 +172,7 @@ func checkDocSelfContained(content string, n mapx.Node, _ string, g *mapx.Graph,
 		// `quotesText` já reconhece pelas aspas. Onde não houver, o achado é legítimo:
 		// um código de revisão sem uma palavra sobre o que mudou não informa ninguém.
 		if m := revisionRefRE.FindString(l); m != "" && !carriesText(linhas, i, m) {
-			achados = append(achados, fmt.Sprintf("linha %d — aponta %s: %s",
+			achados = append(achados, fmt.Sprintf(i18n.T("gate.doc_self_contained.line_points_to_rev"),
 				i+1, strings.Trim(m, "`"), shorten(l)))
 		}
 	}
@@ -182,14 +183,9 @@ func checkDocSelfContained(content string, n mapx.Node, _ string, g *mapx.Graph,
 	const maxAchados = 6
 	if len(achados) > maxAchados {
 		achados = append(achados[:maxAchados],
-			fmt.Sprintf("… e mais %d", len(achados)-maxAchados))
+			fmt.Sprintf(i18n.T("gate.doc_self_contained.and_more"), len(achados)-maxAchados))
 	}
-	return Fail, fmt.Sprintf(
-		"%d referência(s) que só APONTAM, sem trazer o texto:\n    %s\n"+
-			"  O corpo desta spec vira documentação: quem a lê em `docs/` não tem o "+
-			"repositório aberto, e navegar até o arquivo apontado é o que a documentação "+
-			"existe para eliminar.\n"+
-			"  TRAGA O TEXTO — a referência com o trecho citado junto NÃO é acusada.",
+	return Fail, fmt.Sprintf(i18n.T("gate.doc_self_contained.findings"),
 		len(achados), strings.Join(achados, "\n    "))
 }
 

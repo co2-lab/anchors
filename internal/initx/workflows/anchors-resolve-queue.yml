@@ -1,0 +1,287 @@
+# Anchors — quando algo MERGEIA, os PRs que passaram a conflitar se resolvem
+#
+# O job `resolver-o-gerado` (em `anchors-pr-checks.yml`) escuta eventos do PR: `opened`,
+# `reopened`, `synchronize`. Ele funciona — medido, reporta corretamente.
+#
+# MAS O CONFLITO NÃO NASCE DE UM EVENTO DO PR. Ele nasce quando OUTRO PR mergeia: o
+# `develop` anda, o `anchors.graph.yaml` muda, e todos os PRs abertos passam a conflitar
+# de uma vez. Nenhum evento acontece nos PRs afetados, e o job nunca vê o momento em que
+# o problema aparece.
+#
+# Medido: o #676 conflitou porque o #653 mergeou, e nenhum job rodou nele desde então.
+# Antes disso, um PR que declarou domínio em 85 specs derrubou 16 de uma vez — e a
+# drenagem foi manual, um PR por vez, dez minutos cada por causa do `gates`.
+#
+# Este workflow fecha o ciclo: o gatilho passa a ser o `push` no `develop`, que é onde o
+# conflito de fato nasce.
+name: anchors · a fila se resolve depois do merge
+
+on:
+  push:
+    branches: [develop] # anchors:integration-branch
+  # À MÃO, para varrer sem esperar um merge — útil quando a fila já está conflitando.
+  workflow_dispatch:
+
+# Serializado: dois merges seguidos disparariam duas varreduras concorrentes, e as duas
+# empurrariam resolução nos mesmos PRs.
+concurrency:
+  group: anchors-resolve-queue
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  varrer:
+    runs-on: ubuntu-latest
+    # UM RUN TRAVADO SEGURA A FILA INTEIRA, porque o `concurrency` é serial.
+    #
+    # MEDIDO: uma execução ficou `in_progress` por 32 minutos e as três seguintes foram
+    # canceladas atrás dela. Enquanto isso, sete PRs conflitavam sem ninguém resolver —
+    # o gatilho degradou exatamente quando a fila estava cheia, que é quando ele importa.
+    #
+    # Dez minutos é folga para o limite abaixo (3 PRs, ~2min cada). Passar disso é
+    # travamento, não trabalho.
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # NÃO HÁ `setup-go` AQUI, e a ausência é deliberada: nada neste job compila Go
+      # desde que a instalação passou a BAIXAR o binário liberado (abaixo). O passo que
+      # existia fixava `go-version: "1.23"` contra um módulo que exige uma toolchain mais
+      # alta, então o Go baixava uma SEGUNDA toolchain a cada execução — tempo cobrado de
+      # um orçamento de 10 minutos, para compilar o que a release já entrega compilado.
+
+      - name: Instalar o Anchors
+        # O BINÁRIO VEM DA RELEASE, e não de `go install`.
+        #
+        # `go install ...@v<tag>` fixa a versão mas NÃO passa os ldflags do goreleaser: o
+        # binário resultante não sabe a própria versão, `anchors --version` responde `dev`,
+        # e é esse carimbo que o `map build` grava em `generated_by`. Este job commita e dá
+        # PUSH na branch de cada PR — então o carimbo errado viaja para o trabalho alheio.
+        #
+        # MEDIDO (#705, #718, #754): o `anchors.graph.yaml` do `develop` lê
+        # `generated_by: dev`, e o campo oscila commit a commit — um gravou `0.1.128`, o
+        # seguinte gravou `dev`. O `min_version` não pega o caso: ele confronta o binário
+        # contra um piso, e `dev` não é menor que nada. Fixar a TAG não resolvia, porque o
+        # defeito nunca foi qual commit se compila: é o compilar em vez de baixar.
+        #
+        # `gh release download` é o mesmo dialeto dos outros três workflows
+        # (`anchors-board.yml`, `anchors-gates.yml`, `anchors-identify.yml`) — o resolver
+        # era o único fora do padrão, e era o único que gravava `dev`.
+        #
+        # A VERSÃO CONTINUA SAINDO DO `anchors.yaml`: UMA fonte da verdade, e subir o piso
+        # segue sendo o que atualiza o CI. Só o meio de obter o binário mudou.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          versao=$(grep -E '^min_version:' anchors.yaml | head -1 | tr -d ' ' | cut -d: -f2)
+          if [ -z "$versao" ]; then
+            echo "::error::o \`anchors.yaml\` não declara \`min_version\` — sem ela este job não sabe qual release baixar"
+            exit 1
+          fi
+          echo "baixando a versao $versao do Anchors (do min_version)"
+          gh release download "v$versao" --repo co2-lab/anchors \
+            --pattern 'anchors_*_linux_amd64.tar.gz' --output /tmp/anchors.tar.gz --clobber
+          tar -xzf /tmp/anchors.tar.gz -C /tmp anchors
+          sudo install /tmp/anchors /usr/local/bin/anchors
+          anchors --version
+
+      - name: Conferir se este pipeline está atualizado
+        # ELE EMPURRA NA BRANCH DE PRs ALHEIOS, e por isso conferir-se importa mais aqui
+        # que nos outros: um resolver velho resolve com o desenho antigo, e o trabalho de
+        # outra pessoa leva o resultado.
+        #
+        # Sem `if !` engolindo o código de saída — quem decide se barra é o projeto, pelo
+        # `stale_pipeline_blocks` do anchors.yaml.
+        run: anchors doctor --check-pipelines
+
+      - name: Resolver quem passou a conflitar só no gerado
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          BASE: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+
+          # A LISTA DOS GERADOS, uma vez por run. Sai do produto — ver `generated-paths`.
+          # `set -euo pipefail` já derruba o passo se o comando falhar — um `exit 1` à
+          # mão aqui barraria também o projeto que declarou não barrar.
+          GERADOS=$(anchors generated-paths --format re)
+          echo "gerados: $GERADOS"
+
+          git config user.name  "anchors[bot]"
+          git config user.email "anchors@users.noreply.github.com"
+
+          # Registra os merge drivers (mapa e progresso) neste runner. Sem isso o
+          # `git merge` cai no merge textual — que é o defeito, não o conserto: ele
+          # apaga carimbo de julgamento sem conflito e sem aviso.
+          #
+          # ISTO INSTALA O PRE-COMMIT JUNTO, e é por isso que o commit lá embaixo leva
+          # `--no-verify`. A razão está escrita lá; não a apague sem ler.
+          anchors install-hooks
+
+          # O GitHub leva alguns segundos para recalcular `mergeable` depois de um push.
+          # Sem a espera, a varredura lê `UNKNOWN` em tudo e não acha o que resolver.
+          sleep 45
+
+          # QUANTOS POR EXECUÇÃO, e por que poucos.
+          #
+          # A primeira versão varria TODOS os conflitantes num run só. Com onze PRs o run
+          # passou de 20 minutos — concluiu e resolveu os onze, mas enquanto rodava os
+          # merges seguintes empilharam execuções que o GitHub cancelou.
+          #
+          # Três por vez faz o run terminar antes do próximo chegar. A fila drena em
+          # passos, e cada merge puxa o passo seguinte: é o mesmo trabalho, distribuído
+          # em vez de acumulado.
+          LIMITE=3
+          resolvidos=0
+          pulados=0
+
+          for pr in $(gh pr list --repo "$GH_REPO" --state open --limit 50 \
+                       --json number,mergeable --jq '.[]|select(.mergeable=="CONFLICTING")|.number'); do
+            br=$(gh pr view "$pr" --repo "$GH_REPO" --json headRefName --jq .headRefName 2>/dev/null || echo "")
+            [ -z "$br" ] && continue
+
+            # Fork: não temos permissão de empurrar na branch de outro repositório.
+            mesmo=$(gh pr view "$pr" --repo "$GH_REPO" --json isCrossRepository --jq .isCrossRepository 2>/dev/null || echo "true")
+            if [ "$mesmo" = "true" ]; then
+              echo "· #$pr vem de fork — quem empurra é o autor"
+              continue
+            fi
+
+            # O LIMITE CONTA TENTATIVAS, não sucessos.
+            #
+            # Isto testava só `resolvidos`, que incrementa apenas quando o push dá certo.
+            # PR de fork, PR que conflita além do gerado e push que falha NÃO contavam —
+            # então com uma fila de 9 conflitantes, a maioria com conflito real, o laço
+            # percorria os 50 sem nunca disparar o `break` (#755).
+            #
+            # A justificativa escrita acima — "três por vez faz o run terminar antes do
+            # próximo chegar" — descrevia um limite que o código não implementava. Quem
+            # limitava de fato era o `timeout-minutes: 10`, cortando o job no meio: medido,
+            # 4 de 5 execuções recentes terminaram `cancelled`.
+            if [ "$((resolvidos + pulados))" -ge "$LIMITE" ]; then
+              echo "· limite de $LIMITE por execução atingido — o próximo merge continua"
+              break
+            fi
+
+            git checkout -q -B "fila-$pr" "origin/$br" 2>/dev/null || continue
+            git merge "origin/$BASE" --no-commit >/dev/null 2>&1 || true
+
+            # O QUE SOBROU depois do driver. Conflito fora do gerado é DECISÃO de quem
+            # escreveu — resolver por automação seria escolher um lado sem ler os dois.
+            # O QUE É GERADO SAI DO PRODUTO, não de uma lista escrita aqui.
+            #
+            # Havia três caminhos literais neste `grep` — `anchors.graph.yaml`, `docs/` e
+            # `-progress.md`. Os três já existem no Anchors (`mapx.DefaultPath`,
+            # `doct.OutDir`, `scan.SufixoProgresso`), e repeti-los aqui os duplicava: um
+            # projeto com outro layout veria documentação gerada tratada como divergência
+            # de conteúdo, e um caminho que mudasse no produto teria de ser caçado em cada
+            # script.
+            #
+            # `anchors generated-paths --format re` responde a pergunta uma vez.
+            restante=$(git diff --name-only --diff-filter=U | grep -vE "$GERADOS" || true)
+            if [ -n "$restante" ]; then
+              git merge --abort 2>/dev/null || true
+              echo "· #$pr conflita ALÉM do gerado:"
+              printf '%s\n' "$restante" | sed 's/^/    /'
+
+              # CONFLITO DE CONTEÚDO VIRA TRABALHO COM DONO, e não espera sem dono.
+              #
+              # Antes o PR ficava parado esperando o autor — e o autor pode ter terminado
+              # a sessão. Medido no projeto de referência: sete PRs parados assim, alguns
+              # há dias, com o trabalho de ninguém envelhecendo junto.
+              #
+              # O `synthesize` fecha os dois PRs e abre UM card que pede o melhor de cada
+              # um. Não é "escolha um lado": num caso real, os dois lados estavam certos e
+              # eram sobre coisas diferentes — as duas coisas entravam.
+              #
+              # QUEM É O OUTRO LADO: o `develop` já tem o trabalho mesclado, então o
+              # segundo PR é o que introduziu a divergência lá. Achá-lo exige ler o
+              # histórico do arquivo — e é por isso que o comando aceita `--pr-b` em vez
+              # de adivinhar: quando não dá para determinar, o card nasce com um lado só
+              # e quem o pegar completa.
+              #
+              # `|| true` porque o card é um GANHO, não uma condição: se abri-lo falhar, o
+              # PR continua onde estava e o run segue para o próximo.
+              outro=$(gh pr list --repo "$GH_REPO" --state merged --limit 5 \
+                --search "$(printf '%s' "$restante" | head -1)" \
+                --json number --jq '.[0].number // ""' 2>/dev/null || true)
+              anchors synthesize --pr-a "$pr" ${outro:+--pr-b "$outro"} \
+                --files "$(printf '%s' "$restante" | tr '\n' ',')" || true
+
+              pulados=$((pulados + 1))
+              continue
+            fi
+
+            # A ORDEM: `map build` ANTES de `docs build`, e não o contrário.
+            #
+            # O `docs build` lê o MAPA. Rodá-lo antes de reconstruir o mapa compila a
+            # partir de uma foto velha, e o compilado sai SEM os cenários das unidades que
+            # o mapa ainda não conhece — sem erro, o arquivo só encolhe (#717).
+            #
+            # Aqui isso é pior que em máquina de dev: o job commita e EMPURRA na branch de
+            # cada PR, então propagaria o compilado mutilado para o trabalho alheio.
+            #
+            # (A v0.1.132 fez o `docs build` reconstruir o mapa sozinho, então a ordem
+            # deixou de ser fatal — mas depender disso seria contar com a versão instalada
+            # em vez de escrever a ordem certa.)
+            anchors map build >/dev/null 2>&1
+            anchors docs build >/dev/null 2>&1 || true
+            git add -A
+
+            # `--no-verify` AQUI NÃO PULA VERIFICAÇÃO: ANTECIPA.
+            #
+            # O `anchors install-hooks` lá em cima instala os merge drivers — que este job
+            # precisa — e, junto, o pre-commit. Sem `--no-verify` o commit dispara
+            # `anchors check --changed` sobre o MERGE INTEIRO, que não são os dois ou três
+            # arquivos gerados: são todos os arquivos que o `develop` trouxe para a branch.
+            #
+            # MEDIDO no estado do #686 (merge de `develop`, 113 arquivos staged, release
+            # 0.1.137): `map build` 0,85s, `docs build` 17,8s, e o `git commit` COM o hook
+            # passou de 21 MINUTOS sem concluir — foi interrompido, não terminou. Com
+            # `--no-verify`, no mesmo estado staged: 0,028s. O orçamento do job é
+            # `timeout-minutes: 10`, então o PRIMEIRO PR da fila o consumia inteiro e a
+            # varredura morria antes do segundo: cinco execuções `cancelled` seguidas, e
+            # os oito PRs conflitantes intocados. O `|| true` do commit nunca protegeu
+            # disso — o hook não FALHA, ele DEMORA, e `|| true` não tem opinião sobre
+            # tempo.
+            #
+            # E o que o hook faria é o que as duas linhas acima acabaram de fazer: o
+            # `map build` e o `docs build` estão aqui como passos EXPLÍCITOS, antes do
+            # commit. A verificação não está sendo pulada — está sendo feita primeiro, à
+            # vista, em vez de repetida por um gancho sobre um conjunto de arquivos que
+            # não é o que este job mudou. É a "passagem deliberada, com o motivo ESCRITO"
+            # que a tabela de Domínio da CNINC admite, e a `CNINC-B05` continua realizada:
+            # o conjunto verificado é o mesmo, muda quem o roda e quantas vezes.
+            #
+            # Registrado como `CNINC-R0003` em `packages/infra/ContinuousIntegration.spec.md`.
+            git commit -q --no-verify -m "chore(mapa): o CI resolveu o conflito do arquivo gerado
+
+          O driver uniu os carimbos dos dois lados e o gerado foi reconstruído.
+          Nenhum arquivo de trabalho foi tocado — se houvesse conflito fora do
+          gerado, esta varredura teria pulado o PR." 2>/dev/null || true
+
+            if git push -q origin "fila-$pr:$br" 2>/dev/null; then
+              echo "· #$pr resolvido"
+              resolvidos=$((resolvidos + 1))
+            else
+              echo "· #$pr: o push falhou (a branch andou no meio?)"
+            fi
+            git merge --abort 2>/dev/null || true
+            git reset -q --hard
+          done
+
+          echo "resolvidos: $resolvidos · pulados por conflito real: $pulados"
+          {
+            echo "### A fila depois do merge"
+            echo ""
+            echo "- **$resolvidos** PR(s) tiveram o conflito de arquivo gerado resolvido"
+            echo "- **$pulados** conflitam além do gerado e ficaram para quem escreveu"
+          } >> "$GITHUB_STEP_SUMMARY"

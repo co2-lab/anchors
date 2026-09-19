@@ -12,7 +12,7 @@ lang: pt-BR
 # interativo, ou inferir do escaneamento que ele mesmo acabou de fazer (ele JÁ detectou
 # "código em: [cli/internal cli/cmd]" — e não usou; os caminhos daquele dia tinham o
 # prefixo `cli/`, que saiu quando o `go.mod` foi para a raiz).
-version: 2
+version: 4
 layers:
   # ── A DOUTRINA ──────────────────────────────────────────────────────────────────
   # Os 11 documentos que definem o que o Anchors é. Não são "docs": são a fonte das
@@ -21,20 +21,20 @@ layers:
     pattern: "*.md"
     kind: guide
     tags: [doutrina, guide]
-    exclude: ["README.md", "PLANNING.md"]
+    exclude: ["README.md", "PLANNING.md", "PROJECT_STRUCTURE.md"]
 
-  # README é porta de entrada e PLANNING é registro de processo — nenhum rege artefato.
+  # README é porta de entrada, PLANNING é registro de processo e PROJECT_STRUCTURE é a planta do repo.
   # Ficam reconhecidos como doc para não caírem em "não regido".
   doc:
-    pattern: "{README,PLANNING}.md"
+    pattern: "{README,PLANNING,PROJECT_STRUCTURE}.md"
     kind: doc
     tags: [doc]
 
   # ── O CLI ───────────────────────────────────────────────────────────────────────
-  # Um comando por arquivo, e o comando é o ponto de entrada do usuário — a INTERFACE
+  # Comandos organizados por domínio, ponto de entrada do usuário — a INTERFACE
   # do framework, no vocabulário do próprio Anchors.
   comando:
-    pattern: "cmd/anchors/*.go"
+    pattern: "cmd/anchors/**/*.go"
     kind: code
     tags: [cli, comando]
     exclude: ["**/*_test.go", "cmd/anchors/main.go", "cmd/anchors/root.go"]
@@ -201,7 +201,7 @@ gates:
   - name: license-compatible
     on: [code]
     scope: project
-    run: "bash scripts/anchors-licencas.sh"
+    run: "bash scripts/anchors-licenses.sh"
     needs_tool: go-licenses
     install_hint: "go install github.com/google/go-licenses@latest"
     blocking: true
@@ -336,11 +336,11 @@ gates:
   - name: code-language
     on: [code]
     scope: project
-    run: "bash scripts/anchors-idioma.sh"
+    run: "bash scripts/anchors-language.sh"
     blocking: true
     when: [pre-commit, pre-push, ci]
     category: consistency
     measures: "nenhum identificador em português — o código é em inglês (comentários não contam)"
 
-  - name: header-conforme
+  - name: header-valid
     blocking: false

@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -184,7 +185,7 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 			results = append(results, Result{
 				Gate: g.Name, Target: "(" + string(g.ScopeForScan(completa)) + ")",
 				Verdict: Skip, Blocking: g.IsBlocking(),
-				Detail: "ferramenta ausente: " + faltando + " — gate não executado",
+				Detail: i18n.T("gate.missing_tool", faltando),
 			})
 			continue
 		}
@@ -200,7 +201,7 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 					results = append(results, Result{
 						Gate: g.Name, Regra: idDoGate(g), Target: n.ID,
 						Verdict: Skip, Blocking: g.IsBlocking(),
-						Detail: "dispensado: " + motivo,
+						Detail: i18n.T("gate.waived", motivo),
 					})
 					continue
 				}
@@ -234,7 +235,7 @@ func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, 
 		return r
 	}
 	if g.Run == "" {
-		r.Verdict, r.Detail = Pending, "gate de escopo "+escopo+" exige `run:` (comando externo) ou `check:` (interno)"
+		r.Verdict, r.Detail = Pending, i18n.T("gate.scope_requires_run_or_check", escopo)
 		return r
 	}
 	var args []string
@@ -268,10 +269,10 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 				switch v {
 				case "issue":
 					r.Verdict = Fail
-					r.Detail = "julgado por IA: reprovado — ver a issue do laudo"
+					r.Detail = i18n.T("gate.judged_ai_failed")
 				case "ok":
 					r.Verdict = Pass
-					r.Detail = "julgado por IA: aprovado"
+					r.Detail = i18n.T("gate.judged_ai_passed")
 				// `dispensado` é o valor ANTIGO, e continua sendo lido: ele está em
 				// mapas já commitados, e ignorá-lo faria o gate reperguntar um
 				// julgamento que alguém respondeu — com o carimbo ali, visível no
@@ -284,17 +285,16 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 					//
 					// `Skip` é a categoria certa e já existe: "não se aplica a este alvo".
 					r.Verdict = Skip
-					r.Detail = "julgado por IA: DISPENSADO — o alvo da pergunta não existe " +
-						"(peça declarada `@TBD`)"
+					r.Detail = i18n.T("gate.judged_ai_waived")
 				default:
 					r.Verdict = Pending
-					r.Detail = "julgado por IA com veredito " + v
+					r.Detail = i18n.T("gate.judged_ai_verdict", v)
 				}
 				return r
 			}
 		}
 		r.Verdict = Judge
-		r.Detail = "aguarda julgamento de IA"
+		r.Detail = i18n.T("gate.awaits_ai_judgment")
 		if g.Guide != "" {
 			r.Detail += " (guide: " + g.Guide + ")"
 		}
@@ -330,7 +330,7 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 	case g.Run != "":
 		r.Verdict, r.Detail = runExternal(g.Run, n, root)
 	default:
-		r.Verdict, r.Detail = Pending, "gate sem `run` nem `check` declarado"
+		r.Verdict, r.Detail = Pending, i18n.T("gate.no_run_or_check")
 	}
 	return r
 }
@@ -376,4 +376,9 @@ func idDoGate(g config.Gate) string {
 		return g.ID
 	}
 	return g.Name
+}
+
+// pendingNoMap devolve o veredito Pending traduzido quando o grafo relacional não foi carregado.
+func pendingNoMap() (Verdict, string) {
+	return Pending, i18n.T("gate.no_map_loaded")
 }

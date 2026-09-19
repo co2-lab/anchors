@@ -1,11 +1,11 @@
 package gate
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -45,14 +45,14 @@ const OpenDecisionMarker = "[decisao-em-aberto]"
 // não há dúvida, em vez de omitir a seção e deixar a questão sem ter sido feita.
 func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "só a spec decide — a pergunta em aberto é dela"
+		return Skip, i18n.T("gate.open_questions.skip_not_spec")
 	}
 
 	// A CAMADA do nó não está no grafo, então a resolução do título cai em projeto >
 	// framework. Passar o cfg é o que importa: sem ele, o gate ignoraria o
 	// `section_titles` que o projeto declarou e voltaria a afirmar ausência sobre uma
 	// seção que existe com outro nome.
-	corpo, achou := seçãoDecisõesEmAbertoCfg(content, cfg, "")
+	corpo, achou := openDecisionsSectionCfg(content, cfg, "")
 	if !achou {
 		// A seção é DECLARADA no catálogo (`Default: true` em todo preset), e o esqueleto
 		// que o `anchors new` emite já a traz fechada com `nenhuma`. Então "não tem a
@@ -69,10 +69,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 		// vigilante e não vigia nada.
 		//
 		// Não IMPEDE (ver `Result.Impede`): dívida de migração não barra promoção.
-		return Pending, "a spec não declara `## Decisões em aberto`, que o preset desta " +
-			"camada emite por padrão — não dá para saber se ela decidiu tudo ou se a seção " +
-			"foi apagada. Ao tocá-la, feche com `nenhuma` (que AFIRMA que se olhou) ou " +
-			"escreva o que ainda não está decidido"
+		return Pending, i18n.T("gate.open_questions.pending_no_section")
 	}
 
 	itens := openItems(corpo)
@@ -87,28 +84,24 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 	// em aberto, e confundir os dois esconde o primeiro.
 	var anonimos []string
 	for _, it := range itens {
-		if códigoDoItem(it) == "" {
+		if itemCode(it) == "" {
 			anonimos = append(anonimos, "«"+summarize(it)+"»")
 		}
 	}
 	if len(anonimos) > 0 {
-		return Pending, fmt.Sprintf("%d decisão(ões) em aberto SEM CÓDIGO: %s. Uma pergunta "+
-			"anônima não vira issue rastreável e não sobrevive a uma reescrita da spec — e "+
-			"quando a resposta virar regra, nada liga a regra à pergunta que a originou. "+
-			"Dê um código a cada uma (`{CODE}-Q01`), na primeira coluna da tabela",
-			len(anonimos), strings.Join(anonimos, ", "))
+		return Pending, i18n.T("gate.open_questions.pending_anonymous", len(anonimos), strings.Join(anonimos, ", "))
 	}
 
 	var nums []string
 	for i, it := range itens {
 		if i >= 3 {
-			nums = append(nums, fmt.Sprintf("… e mais %d", len(itens)-3))
+			nums = append(nums, i18n.T("gate.open_questions.more_items", len(itens)-3))
 			break
 		}
 		// CÓDIGO e assunto juntos: o código identifica (e não muda quando alguém
 		// reescreve a frase), o texto diz do que se trata. Só o código faria o relatório
 		// exigir abrir a spec para saber o que se perguntou.
-		nums = append(nums, códigoDoItem(it)+" «"+summarize(it)+"»")
+		nums = append(nums, itemCode(it)+" «"+summarize(it)+"»")
 	}
 	// PENDING, não FAIL. A distinção é o ponto do gate, e errá-la o inverte:
 	//
@@ -139,13 +132,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 	//
 	// Marcador e não campo novo porque a assinatura do check é `(Verdict, string)` e é
 	// compartilhada por dezenas de gates; mudá-la para um caso obrigaria a tocar todos.
-	return Pending, fmt.Sprintf(OpenDecisionMarker+" %d decisão(ões) que a spec ainda NÃO tomou, e o código vai "+
-		"precisar: %s. Registrá-las aqui é o certo — o defeito seria decidir por conta "+
-		"própria na hora de implementar. O caminho de saída é UM: leve a pergunta a quem "+
-		"decide e PROMOVA a resposta a regra (com código). Apagar o item sem regra nova é "+
-		"varrer a pergunta para debaixo do tapete, e o gate não distingue isso de ter "+
-		"decidido — quem apaga assume a decisão silenciosamente",
-		len(itens), strings.Join(nums, ", "))
+	return Pending, i18n.T("gate.open_questions.pending_decisions", len(itens), strings.Join(nums, ", "))
 }
 
 // seçãoDecisõesEmAberto extrai o corpo da seção.
@@ -161,18 +148,18 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 //
 // A lista de variantes continua como ÚLTIMO recurso, para o projeto que não declarou
 // nada: tirá-la quebraria as specs que já existem, e o padrão do framework é português.
-var decisõesRE = regexp.MustCompile(`(?im)^#{1,4}\s*(decis(ões|oes|ão|ao)\s+em\s+aberto|em\s+aberto|quest(ões|oes)\s+em\s+aberto|open\s+questions|pend(ências|encias)\s+de\s+decis(ão|ao))\b[^\n]*\n`)
+var decisionsRE = regexp.MustCompile(`(?im)^#{1,4}\s*(decis(ões|oes|ão|ao)\s+em\s+aberto|em\s+aberto|quest(ões|oes)\s+em\s+aberto|open\s+questions|pend(ências|encias)\s+de\s+decis(ão|ao))\b[^\n]*\n`)
 
 // declaredTitleRE monta o casador para o título que o PROJETO declarou.
 func declaredTitleRE(titulo string) *regexp.Regexp {
 	return regexp.MustCompile(`(?im)^#{1,4}\s*` + regexp.QuoteMeta(titulo) + `\b[^\n]*\n`)
 }
 
-func seçãoDecisõesEmAberto(content string) (string, bool) {
-	return seçãoDecisõesEmAbertoCfg(content, nil, "")
+func openDecisionsSection(content string) (string, bool) {
+	return openDecisionsSectionCfg(content, nil, "")
 }
 
-func seçãoDecisõesEmAbertoCfg(content string, cfg *config.Config, camada string) (string, bool) {
+func openDecisionsSectionCfg(content string, cfg *config.Config, camada string) (string, bool) {
 	// O título declarado VENCE: um projeto que chama a seção de "Pendências de produto"
 	// não pode ser cobrado pelo nome que o framework usaria.
 	if t := cfg.SectionTitle("open", "", camada); t != "" {
@@ -180,7 +167,7 @@ func seçãoDecisõesEmAbertoCfg(content string, cfg *config.Config, camada stri
 			return bodyFrom(content, loc[1]), true
 		}
 	}
-	loc := decisõesRE.FindStringIndex(content)
+	loc := decisionsRE.FindStringIndex(content)
 	if loc == nil {
 		return "", false
 	}
@@ -272,13 +259,13 @@ func openItems(corpo string) []string {
 	return itens
 }
 
-// códigoDoItem extrai o código de identidade da pergunta (`{CODE}-Q01`), ou vazio.
+// itemCode extrai o código de identidade da pergunta (`{CODE}-Q01`), ou vazio.
 //
 // A letra `Q` é a canônica da decisão em aberto, mas o projeto pode declarar outra em
 // `rule_types` — daí aceitar qualquer letra do vocabulário: o gate cobra IDENTIDADE, não
 // uma letra específica, e recusar `X-D01` num projeto que chama a seção de "Dúvidas"
 // seria impor léxico, que a doutrina não faz.
-func códigoDoItem(item string) string {
+func itemCode(item string) string {
 	// SÓ A PRIMEIRA CÉLULA. A linha da tabela carrega outro código na coluna "Vira" — a
 	// regra que a resposta vai virar —, e ele NÃO é a identidade da pergunta: são coisas
 	// opostas (o que se pergunta e o que a resposta produzirá). Ler a linha inteira daria
@@ -320,14 +307,14 @@ func summarize(s string) string {
 	return s
 }
 
-// DecisõesEmAberto conta as decisões que a spec ainda não tomou. É o que o `doctor` usa
+// OpenDecisions conta as decisões que a spec ainda não tomou. É o que o `doctor` usa
 // para reportar a pendência como ponta sistêmica, no mesmo estatuto de `sinal-ausente`.
 //
 // Recebe a CONFIG porque o título da seção é do projeto: contar zero numa spec cuja seção
 // se chama outra coisa diria "não há decisão pendente" sobre uma spec cheia delas — o
 // silêncio que este gate existe para eliminar.
-func DecisõesEmAberto(content string, cfg *config.Config, camada string) int {
-	corpo, achou := seçãoDecisõesEmAbertoCfg(content, cfg, camada)
+func OpenDecisions(content string, cfg *config.Config, camada string) int {
+	corpo, achou := openDecisionsSectionCfg(content, cfg, camada)
 	if !achou {
 		return 0
 	}

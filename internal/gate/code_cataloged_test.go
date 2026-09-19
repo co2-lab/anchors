@@ -21,7 +21,7 @@ func rodaCatalogado(t *testing.T, spec, codigo string) (Verdict, string) {
 		Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: "u.ts", Kind: mapx.KindCode}},
 		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
 	}
-	cfg := &config.Config{Derived: &config.Derived{ExportDetect: exportedREPadraoTS}}
+	cfg := &config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}}
 	return checkCodeCataloged(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
 }
 
@@ -105,7 +105,7 @@ func TestNoRuleValeNoComentarioAcima(t *testing.T) {
 		"doc comment":          "/**\n * @no-rule: forma de entrada\n */\nexport function x() {}\n",
 	}
 	for nome, codigo := range casos {
-		simbolos := symbolsWithLine(codigo, regexp.MustCompile(exportedREPadraoTS))
+		simbolos := symbolsWithLine(codigo, regexp.MustCompile(exportedREDefaultTS))
 		if len(simbolos) == 0 {
 			t.Fatalf("%s: nenhum símbolo reconhecido", nome)
 		}
@@ -121,7 +121,7 @@ func TestNoRuleValeNoComentarioAcima(t *testing.T) {
 // inteiro, que é o oposto do que ele é.
 func TestNoRuleNaoVazaEntreSimbolos(t *testing.T) {
 	codigo := "// @no-rule: este sim\nexport function comDeclaracao() {}\n\nexport function semDeclaracao() {}\n"
-	simbolos := symbolsWithLine(codigo, regexp.MustCompile(exportedREPadraoTS))
+	simbolos := symbolsWithLine(codigo, regexp.MustCompile(exportedREDefaultTS))
 	if len(simbolos) != 2 {
 		t.Fatalf("esperava 2 símbolos, veio %d", len(simbolos))
 	}
@@ -183,5 +183,18 @@ func TestCodeCatalogedUsaOPadraoDoProjeto(t *testing.T) {
 	}
 	if !strings.Contains(msg, "Publica") {
 		t.Errorf("a mensagem nao nomeia o simbolo: %q", msg)
+	}
+}
+
+func TestCodeCatalogedUsaDialetoFamily(t *testing.T) {
+	cfg := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+
+	codigo := "package u\n\nfunc Publica() int { return 1 }\n"
+	v, msg := rodaCatalogadoCfg(t, "# U\n\n## UUUUU-B01 — algo\n", codigo, "u.go", cfg)
+	if v != Fail {
+		t.Errorf("`Publica` em Go via dialect family deveria reprovar: %v (%s)", v, msg)
+	}
+	if !strings.Contains(msg, "Publica") {
+		t.Errorf("a mensagem deveria nomear Publica: %q", msg)
 	}
 }

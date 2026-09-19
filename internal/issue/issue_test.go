@@ -182,7 +182,7 @@ func TestCorpoDaDividaMostraOVencimento(t *testing.T) {
 		Detail: "laudo", Date: "2026-08-13", Prazo: "`x` — na Fase 2",
 	}
 	corpo := iss.Body()
-	for _, quer := range []string{"Quando será paga", "na Fase 2", "Dívida ASSUMIDA"} {
+	for _, quer := range []string{"When it will be paid", "na Fase 2", "ASSUMED debt"} {
 		if !strings.Contains(corpo, quer) {
 			t.Errorf("o corpo da dívida precisa conter %q", quer)
 		}

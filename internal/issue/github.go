@@ -74,7 +74,7 @@ func (g GitHub) find(key string) (foundCard, bool, error) {
 		Body   string `json:"body"`
 	}
 	if err := json.Unmarshal(out, &todas); err != nil {
-		return foundCard{}, false, fmt.Errorf("ler a busca: %w", err)
+		return foundCard{}, false, fmt.Errorf("reading the search: %w", err)
 	}
 	// A busca do GitHub é por texto e devolve aproximações: a CONFIRMAÇÃO é o marcador
 	// exato no corpo. Sem ela um achado sobre `Foo.spec.md` casaria o card de

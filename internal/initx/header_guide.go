@@ -3,6 +3,8 @@ package initx
 import (
 	"fmt"
 	"strings"
+
+	"github.com/co2-lab/anchors/internal/i18n"
 )
 
 // CommentStyle é o dialeto de comentário de uma stack, para os exemplos do
@@ -40,49 +42,49 @@ func RenderHeaderGuide(preset Preset, moduleNames []string) string {
 	}
 
 	var b strings.Builder
-	b.WriteString("# Guia de cabeçalho — " + presetTitleOr(preset) + "\n\n")
-	b.WriteString("> O bloco de marcações no topo de CADA arquivo deste projeto. Semeado por\n")
-	b.WriteString("> `anchors init`; é a régua embutida (`anchors guide header`) instanciada para a\n")
-	b.WriteString("> stack aqui. Mandatório: um arquivo sem este cabeçalho é invisível ao que o\n")
-	b.WriteString("> Anchors sabe fazer melhor.\n\n")
+	b.WriteString("# Header guide — " + presetTitleOr(preset) + "\n\n")
+	b.WriteString("> The annotation block at the top of EVERY file in this project. Seeded by\n")
+	b.WriteString("> `anchors init`; it is the built-in ruler (`anchors guide header`) instantiated for\n")
+	b.WriteString("> the stack here. Mandatory: a file without this header is invisible to what\n")
+	b.WriteString("> Anchors does best.\n\n")
 
-	b.WriteString("## O bloco, no dialeto desta stack\n\n")
-	b.WriteString("No CÓDIGO/teste/feature (referencia a unidade da spec):\n\n```\n")
+	b.WriteString("## The block, in this stack's dialect\n\n")
+	b.WriteString("In CODE/test/feature (references the spec unit):\n\n```\n")
 	fmt.Fprintf(&b, "%s @anchors\n", c)
-	fmt.Fprintf(&b, "%s   ref: LGNN             # referencia a unidade dona (a spec); NÃO é posse\n", c)
-	fmt.Fprintf(&b, "%s   updated_at: 2026-08-08 # dia da última alteração (o gate confere vs. git)\n", c)
-	fmt.Fprintf(&b, "%s   layer: screen         # camada da Estrutura (normalmente deduzida do caminho)\n", c)
+	fmt.Fprintf(&b, "%s   ref: LGNN             # references the owning unit (the spec); NOT ownership\n", c)
+	fmt.Fprintf(&b, "%s   updated_at: 2026-08-08 # day of the last change (the gate checks vs. git)\n", c)
+	fmt.Fprintf(&b, "%s   layer: screen         # Structure layer (normally inferred from the path)\n", c)
 	fmt.Fprintf(&b, "%s   @feature: %s\n", c, feat)
 	b.WriteString("```\n\n")
-	b.WriteString("Na SPEC (a DONA da identidade):\n\n```\n")
+	b.WriteString("In the SPEC (the OWNER of the identity):\n\n```\n")
 	if cs.Open != "" {
-		fmt.Fprintf(&b, "%s @anchors\n  code: LGNN            # a spec POSSUI o código\n  updated_at: 2026-08-08\n  layer: screen\n%s\n", cs.Open, cs.Close)
+		fmt.Fprintf(&b, "%s @anchors\n  code: LGNN            # the spec OWNS the code\n  updated_at: 2026-08-08\n  layer: screen\n%s\n", cs.Open, cs.Close)
 	} else {
-		fmt.Fprintf(&b, "%s @anchors\n%s   code: LGNN            # a spec POSSUI o código\n%s   updated_at: 2026-08-08\n", c, c, c)
+		fmt.Fprintf(&b, "%s @anchors\n%s   code: LGNN            # the spec OWNS the code\n%s   updated_at: 2026-08-08\n", c, c, c)
 	}
 	b.WriteString("```\n\n")
 
-	b.WriteString("## As marcações\n\n")
-	b.WriteString("- `code:` — POSSE da identidade (a SPEC é a dona). `ref:` — REFERÊNCIA (code/\n")
-	b.WriteString("  feature/test apontam a unidade da spec; pode ser múltiplo: `ref: A, B`). Todo\n")
-	b.WriteString("  arquivo precisa de um dos dois. Gere o código com `anchors code <nome>`.\n")
-	b.WriteString("- `updated_at:` — o dia da última alteração. Quem altera atualiza; o gate\n")
-	b.WriteString("  `updated-at-atual` confere contra o git (só ano-mês-dia) e `anchors check --fix`\n")
-	b.WriteString("  corrige. NÃO invente a data — deixe bater com o commit.\n")
-	b.WriteString("- `layer:` — a camada; normalmente deduzida do caminho, declare só p/ sobrepor.\n")
-	b.WriteString("- `@feature: <nome>` — o módulo/feature vertical. ")
+	b.WriteString("## The annotations\n\n")
+	b.WriteString("- `code:` — OWNERSHIP of the identity (the SPEC is the owner). `ref:` — REFERENCE\n")
+	b.WriteString("  (code/feature/test point to the spec unit; it may be multiple: `ref: A, B`). Every\n")
+	b.WriteString("  file needs one of the two. Generate the code with `anchors code <name>`.\n")
+	b.WriteString("- `updated_at:` — the day of the last change. Whoever changes it updates it; the gate\n")
+	b.WriteString("  `updated-at-atual` checks against git (year-month-day only) and `anchors check --fix`\n")
+	b.WriteString("  fixes it. Do NOT make up the date — let it match the commit.\n")
+	b.WriteString("- `layer:` — the layer; normally inferred from the path, declare it only to override.\n")
+	b.WriteString("- `@feature: <name>` — the vertical module/feature. ")
 	if len(moduleNames) > 0 {
-		b.WriteString("Neste projeto: " + strings.Join(moduleNames, ", ") + ".\n")
+		b.WriteString("In this project: " + strings.Join(moduleNames, ", ") + ".\n")
 	} else {
 		b.WriteString("\n")
 	}
-	b.WriteString("- `@noPropagation`, `@anchors-shared-code` — opt-outs honestos (sempre com o porquê ao lado).\n\n")
+	b.WriteString("- `@noPropagation`, `@anchors-shared-code` — honest opt-outs (always with the why alongside).\n\n")
 
-	b.WriteString("## Regras\n\n")
-	b.WriteString("- Sempre no TOPO do arquivo.\n")
-	b.WriteString("- `code` é o mínimo obrigatório (gate `header-valid`).\n")
-	b.WriteString("- `updated_at` bate com o dia do último commit (gate `updated-at-atual`; `--fix` conserta).\n")
-	b.WriteString("- Opt-out sempre com um porquê ao lado.\n\n")
+	b.WriteString("## Rules\n\n")
+	b.WriteString("- Always at the TOP of the file.\n")
+	b.WriteString("- `code` is the mandatory minimum (gate `header-valid`).\n")
+	b.WriteString("- `updated_at` matches the day of the last commit (gate `updated-at-atual`; `--fix` repairs it).\n")
+	b.WriteString("- Opt-out always with a why alongside.\n\n")
 	// A seção de conformidade não é ornamento: o gate `guide-checklist` a exige, e um
 	// guide semeado pelo init que reprova o próprio gate do init é a pior primeira
 	// impressão possível — medido num projeto real, foi o primeiro achado bloqueante.
@@ -90,15 +92,15 @@ func RenderHeaderGuide(preset Preset, moduleNames []string) string {
 	// Ela existe por um motivo mais fundo que o gate: um guide em prosa é lido e
 	// interpretado; um guide com pontos CK é CONFRONTÁVEL. É o que separa "siga o
 	// padrão" de "estes cinco itens são verificáveis um a um".
-	b.WriteString("## Pontos de conformidade\n\n")
-	b.WriteString("Cada item é verificável em um arquivo, isoladamente. É o que um gate de\n")
-	b.WriteString("julgamento confronta — e o que impede o julgamento de virar heurística.\n\n")
-	b.WriteString("- **CK1** — o bloco está no TOPO do arquivo, antes de qualquer código.\n")
-	b.WriteString("- **CK2** — há uma linha `code:` com um único código de identidade.\n")
-	b.WriteString("- **CK3** — o dialeto do comentário é o da linguagem do arquivo.\n")
-	b.WriteString("- **CK4** — `updated_at`, quando presente, é o dia do último commit que tocou o arquivo.\n")
-	b.WriteString("- **CK5** — todo opt-out (`@no-…`, `@allow-…`) carrega o porquê na mesma linha.\n\n")
-	b.WriteString("_(Régua completa e universal: `anchors guide header`.)_\n")
+	fmt.Fprintf(&b, "## %s\n\n", i18n.TIn(i18n.Current(), "section.title.compliance_points"))
+	b.WriteString("Each item is verifiable in a single file, in isolation. It is what a judgment\n")
+	b.WriteString("gate confronts — and what keeps judgment from turning into heuristics.\n\n")
+	b.WriteString("- **CK1** — the block is at the TOP of the file, before any code.\n")
+	b.WriteString("- **CK2** — there is a `code:` line with a single identity code.\n")
+	b.WriteString("- **CK3** — the comment dialect is that of the file's language.\n")
+	b.WriteString("- **CK4** — `updated_at`, when present, is the day of the last commit that touched the file.\n")
+	b.WriteString("- **CK5** — every opt-out (`@no-…`, `@allow-…`) carries the why on the same line.\n\n")
+	b.WriteString("_(Complete, universal ruler: `anchors guide header`.)_\n")
 	return b.String()
 }
 
@@ -106,5 +108,5 @@ func presetTitleOr(p Preset) string {
 	if p.Title != "" {
 		return p.Title
 	}
-	return "projeto"
+	return "project"
 }

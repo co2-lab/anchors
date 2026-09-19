@@ -346,7 +346,7 @@ IA** — validar intenção e prosa é julgamento, não computação; os **trans
 (mapa) tendem a determinístico. Todos são gates de Qualidade com régua do pilar
 dono, como os de artefato — mesma mecânica (dupla saída, maturação), nenhuma
 novidade. A auditoria que os encontra é o próprio meta-gate rodando sobre o fluxo
-(exemplo em `simulation/larder/cobertura.md`). Nem toda ponta, porém, fecha por um
+(exemplo em `simulation/larder/coverage.md`). Nem toda ponta, porém, fecha por um
 gate no momento do passo — algumas são **sistêmicas** e só o validador de saúde
 (§5.2) as pega.
 

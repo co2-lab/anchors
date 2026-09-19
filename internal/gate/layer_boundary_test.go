@@ -36,7 +36,7 @@ func TestLayerBoundaryViolacao(t *testing.T) {
 	if v != Fail {
 		t.Fatalf("violação deveria reprovar, foi %s (%s)", v, d)
 	}
-	if !strings.Contains(d, "linha 2") {
+	if !strings.Contains(d, "linha 2") && !strings.Contains(d, "line 2") {
 		t.Errorf("não apontou ONDE: %s", d)
 	}
 	if !strings.Contains(d, "tela fala com hook") {
@@ -134,7 +134,7 @@ func TestLayerBoundaryRegexInvalidoNaoSilencia(t *testing.T) {
 	if v != Fail {
 		t.Fatalf("padrão inválido deveria falhar visivelmente, foi %s (%s)", v, d)
 	}
-	if !strings.Contains(d, "inválido") {
+	if !strings.Contains(d, "inválido") && !strings.Contains(d, "invalid") {
 		t.Errorf("não explicou o problema de config: %s", d)
 	}
 }
@@ -180,7 +180,7 @@ func TestLayerBoundaryPegaImportMultilinha(t *testing.T) {
 		t.Fatalf("import multilinha deveria reprovar, foi %s (%s)", v, d)
 	}
 	// Aponta a linha onde o casamento COMEÇA — o `import {`.
-	if !strings.Contains(d, "linha 1") {
+	if !strings.Contains(d, "linha 1") && !strings.Contains(d, "line 1") {
 		t.Errorf("não apontou o início do import: %s", d)
 	}
 }

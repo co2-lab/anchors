@@ -9,6 +9,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -31,38 +32,32 @@ import (
 // nome). Falso-positivo zero.
 func checkRouteExists(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "a rota é DECLARADA pela spec — é ela que promete o caminho"
+		return Skip, i18n.T("gate.route_exists.skip_not_spec")
 	}
 	rota := declaredRoute(content)
 	if rota == "" {
 		// Sem rota declarada não há o que confrontar. Cobrar a declaração é trabalho do
 		// `route-declared`; duplicá-lo aqui produziria dois gates acusando o mesmo.
-		return Skip, "a spec não declara rota"
+		return Skip, i18n.T("gate.route_exists.skip_no_route")
 	}
 	globs := cfg.RouteRegistry()
 	if len(globs) == 0 {
 		// Sem saber ONDE o projeto registra rotas, o gate não pode confrontar. Nomear o
 		// que falta é melhor que passar em silêncio: um ✓ aqui afirmaria que a rota
 		// existe, e o gate não olhou.
-		return Pending, "o projeto não declara `route_registry:` no anchors.yaml — sem " +
-			"saber onde as rotas são registradas, não há como confrontar `" + rota + "`"
+		return Pending, i18n.T("gate.route_exists.pending_no_route_registry", rota)
 	}
-	conhecidas, err := registeredRoutes(root, globs)
+	conhecidas, err := registeredRoutes(root, globs, cfg)
 	if err != nil {
-		return Pending, "não foi possível ler o registro de rotas: " + err.Error()
+		return Pending, i18n.T("gate.route_exists.pending_read_err", err.Error())
 	}
 	if len(conhecidas) == 0 {
-		return Pending, "nenhuma rota encontrada em `route_registry` — confira os globs " +
-			"antes de concluir que a rota não existe"
+		return Pending, i18n.T("gate.route_exists.pending_no_routes_found")
 	}
 	if conhecidas[rota] {
 		return Pass, ""
 	}
-	return Fail, fmt.Sprintf("a spec declara a rota `%s`, que NÃO existe no app "+
-		"(%d rota(s) registrada(s) em %s). Uma rota declarada e inexistente não falha em "+
-		"lugar nenhum: a spec fica bem-formada, quem a lê acredita que a tela é alcançável, "+
-		"e outras specs passam a prometer navegação para lá. Registre a rota, ou corrija o "+
-		"nome na spec para o que o app de fato usa",
+	return Fail, i18n.T("gate.route_exists.fail_route_missing",
 		rota, len(conhecidas), strings.Join(globs, ", "))
 }
 
@@ -85,42 +80,46 @@ func declaredRoute(content string) string {
 	return ""
 }
 
-// routeNameRE reconhece as formas em que uma rota é registrada:
+// routeNameRE reconhece as formas em que uma rota é registrada (default de fallback):
 //   - `name="Perfil"` — a prop do navegador (React Navigation, Expo Router e afins);
 //   - `Perfil: undefined` / `Perfil: {` — a entrada no tipo do stack;
 //   - `addResource('signup')` — a rota HTTP de um backend (API Gateway e afins).
 //
-// Todas contam porque projetos reais usam todas, e olhar só a primeira produz falso
-// positivo: medido, 9 das 96 telas de um projeto declaravam rota que só aparecia no tipo,
-// e 59 rotas HTTP viviam apenas na terceira forma.
+// Projetos em outras stacks (Go, Python, Rails, etc.) declaram `derived.route_pattern`.
 var routeNameRE = regexp.MustCompile(`name="([A-Za-z][A-Za-z0-9_]*)"|(?m)^\s{2,}([A-Za-z][A-Za-z0-9_]*)\s*:\s*(?:undefined|\{)|addResource\('([a-z0-9][a-z0-9/_-]*)'`)
 
 // registeredRoutes lê os arquivos de registro de rota do projeto e devolve os nomes.
-func registeredRoutes(root string, globs []string) (map[string]bool, error) {
+func registeredRoutes(root string, globs []string, cfg *config.Config) (map[string]bool, error) {
 	out := map[string]bool{}
 	fsys := os.DirFS(root)
+
+	reRoute := routeNameRE
+	if cfg != nil && cfg.Derived != nil && strings.TrimSpace(cfg.Derived.RoutePattern) != "" {
+		re, err := regexp.Compile(cfg.Derived.RoutePattern)
+		if err != nil || re.NumSubexp() < 1 {
+			return nil, fmt.Errorf("invalid derived.route_pattern regex (must compile with at least 1 capture group)")
+		}
+		reRoute = re
+	}
+
 	for _, glob := range globs {
 		arquivos, err := doublestar.Glob(fsys, glob)
 		if err != nil {
-			return nil, fmt.Errorf("glob %q inválido: %w", glob, err)
+			return nil, fmt.Errorf("%s", i18n.T("gate.route_exists.err_invalid_glob", glob, err))
 		}
 		for _, f := range arquivos {
 			b, rerr := os.ReadFile(filepath.Join(root, f))
 			if rerr != nil {
 				continue
 			}
-			for _, m := range routeNameRE.FindAllStringSubmatch(string(b), -1) {
-				if m[1] != "" {
-					out[m[1]] = true
-				}
-				if m[2] != "" {
-					out[m[2]] = true
-				}
-				// Rota HTTP: `addResource('signup')` registra `/signup`. Guardamos as duas
-				// escritas porque a spec pode declarar com ou sem a barra inicial.
-				if m[3] != "" {
-					nu := strings.TrimPrefix(m[3], "/")
-					out["/"+nu], out[nu] = true, true
+			for _, m := range reRoute.FindAllStringSubmatch(string(b), -1) {
+				for _, sub := range m[1:] {
+					if sub != "" {
+						nu := strings.TrimPrefix(sub, "/")
+						out[sub] = true
+						out[nu] = true
+						out["/"+nu] = true
+					}
 				}
 			}
 		}

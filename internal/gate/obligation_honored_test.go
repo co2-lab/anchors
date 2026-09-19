@@ -112,10 +112,13 @@ func TestObligation_dividaAssumida(t *testing.T) {
 	if v != Fail {
 		t.Fatalf("obrigação descumprida sem declaração deveria falhar, foi %s (%s)", v, d)
 	}
-	for _, saida := range []string{"CUMPRA", "obligation_pending", "obligation_waived"} {
+	for _, saida := range []string{"obligation_pending", "obligation_waived"} {
 		if !strings.Contains(d, saida) {
 			t.Errorf("a mensagem não oferece a saída %q: %s", saida, d)
 		}
+	}
+	if !strings.Contains(d, "CUMPRA") && !strings.Contains(d, "FULFILL") {
+		t.Errorf("a mensagem não oferece a saída CUMPRA/FULFILL: %s", d)
 	}
 
 	// dívida assumida COM o quando: Pendente (registro visível), nunca Pass nem Fail
@@ -124,7 +127,7 @@ func TestObligation_dividaAssumida(t *testing.T) {
 	if v != Pending {
 		t.Fatalf("dívida assumida deveria ser Pendente, foi %s (%s)", v, d)
 	}
-	if !strings.Contains(d, "DÍVIDA ASSUMIDA") || !strings.Contains(d, "fase 2") {
+	if (!strings.Contains(d, "DÍVIDA ASSUMIDA") && !strings.Contains(d, "ASSUMED DEBT")) || !strings.Contains(d, "fase 2") {
 		t.Errorf("o registro não mostra o compromisso: %s", d)
 	}
 

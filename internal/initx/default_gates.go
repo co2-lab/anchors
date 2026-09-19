@@ -12,6 +12,7 @@ var dependOnIngestedSignal = map[string]bool{
 	"tests-green": true, "line-coverage": true, "coverage-delta": true,
 	"mutation-score": true, "scenario-coverage": true, "sbom-generated": true,
 	"dependency-vulnerable": true, "no-duplication": true,
+	"license-compatible": true, "circular": true, "deadcode": true, "spellcheck": true,
 }
 
 // DefaultGates devolve os gates que um projeto deve NASCER com, conforme os artefatos
@@ -580,21 +581,51 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			config.Gate{
 				Name: "sbom-generated", ID: "sbom-generated", On: []string{"code"},
 				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
-				// NA RAIZ, e não em `.anchors/`: o SBOM descreve o PROJETO (quais
-				// dependências entraram), não uma execução. O `.anchors/` é área de
-				// trabalho da máquina de quem edita e está inteiro no `.gitignore` —
-				// deixá-lo ali obrigaria a uma exceção frágil (`.anchors/` com barra
-				// exclui o diretório e o git nem desce nele para avaliar a negação,
-				// então o arquivo sumia em silêncio).
-				//
-				// Na raiz ele é achável por quem procura, que é metade da razão de
-				// existir: o SBOM é a resposta a "o que exatamente foi entregue", e essa
-				// pergunta só se faz depois do incidente.
 				Run:       "syft scan dir:. -o cyclonedx-json=sbom.json -q",
 				NeedsTool: "syft", InstallHint: "brew install syft",
 				Blocking: config.Bool(false), When: []string{"ci"}, Cost: "slow",
 				Category: "provenance",
 				Measures: "o inventário de componentes entregues (SBOM) é gerado e versionável",
+			},
+			// Ortografia: erros de grafia no código, testes e documentação minam a
+			// confiança e quebram buscas. Agnóstico: typos (binário nativo ultra-rápido)
+			// ou cspell (Node). Ver `guides/GATES_ECOSYSTEM_GUIDE.md`.
+			config.Gate{
+				Name: "spellcheck", ID: "spellcheck", On: []string{"code", "test", "spec"},
+				Scope: config.ScopeBatch, ScopeFull: config.ScopeProject,
+				Run:       "typos",
+				NeedsTool: "typos", InstallHint: "brew install typos",
+				Blocking: config.Bool(false), When: []string{"pre-commit", "ci"}, Cost: "fast",
+				Category: "style",
+				Measures: "sem erro de grafia no texto e nos identificadores",
+			},
+			// Conformidade de licenças: garante que nenhuma dependência de produção traga
+			// licenças com copyleft forte (AGPL, SSPL, etc.) incompatíveis com o projeto.
+			// O comando varia conforme o gerenciador de pacotes do ecossistema.
+			config.Gate{
+				Name: "license-compatible", ID: "license-compatible", On: []string{"code"},
+				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
+				Blocking: config.Bool(false), When: []string{"ci"}, Cost: "fast",
+				Category: "legal",
+				Measures: "nenhuma dependência com copyleft forte ou licença incompatível",
+			},
+			// Dependência circular: pergunta de arquitetura de projeto (o ciclo é do grafo,
+			// não de um arquivo isolado). Ferramenta varia por dialeto (madge, go vet, etc).
+			config.Gate{
+				Name: "circular", ID: "circular", On: []string{"code"},
+				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
+				Blocking: config.Bool(false), When: []string{"pre-push", "ci"}, Cost: "slow",
+				Category: "architecture",
+				Measures: "não há ciclo de importação entre módulos",
+			},
+			// Código morto: exportações, símbolos e arquivos órfãos sem consumidor.
+			// Ferramenta varia por dialeto (knip, deadcode, vulture, cargo-udeps).
+			config.Gate{
+				Name: "deadcode", ID: "deadcode", On: []string{"code"},
+				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
+				Blocking: config.Bool(false), When: []string{"ci"}, Cost: "slow",
+				Category: "maintenance",
+				Measures: "não há export, símbolo ou arquivo órfão no projeto",
 			},
 		)
 	}

@@ -274,6 +274,7 @@ Traduzir mal destruiria exatamente isso.
 |---|---|
 | [`CONCEPT.md`](./CONCEPT.md) | O mecanismo comum: âncora, maturidade, grafo, sincronia, issues, vivo vs. histórico |
 | [`STRUCTURE.md`](./STRUCTURE.md) | Pilar — a planta da casa; as camadas e sua ordem; o gabarito |
+| [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) | A planta deste repositório — organização de diretórios, pacotes e camadas |
 | [`PLANNING.md`](./PLANNING.md) | Pilar — a origem do movimento; semeia specs; o norte entre sessões |
 | [`SPEC.md`](./SPEC.md) | Pilar — a origem da verdade; disciplina spec-first; guide→template→spec; regimes |
 | [`SPEC_TYPES.md`](./SPEC_TYPES.md) | Catálogo (apoio ao pilar Spec) — tipos de spec por família |

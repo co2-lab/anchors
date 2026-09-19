@@ -40,6 +40,16 @@ func TestRouteDeclared(t *testing.T) {
 			"<!-- @anchors\n  layer: business-logic\n-->\n### FOO-B01\n",
 			Skip,
 		},
+		{
+			"English screen with route and concrete navigation",
+			screen("> **Route**: `Home`\n\n### In\n| Origin | Screen |\n| --- | --- |\n| MainTabs | HomeScreen |\n"),
+			Pass,
+		},
+		{
+			"English screen with route but generic navigation",
+			screen("> **Route**: `Home`\n\n### Out\n| Target | Screen |\n| --- | --- |\n| button | Next screen |\n"),
+			Fail,
+		},
 	}
 	for _, c := range cases {
 		got, _ := checkRouteDeclared(c.content, mapx.Node{})

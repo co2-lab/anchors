@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -9,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -33,10 +33,10 @@ import (
 // não-observável por cenário — e deixa o rastro de que foi decisão, não esquecimento.
 func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "a obrigação é da spec — é ela que declara os requisitos"
+		return Skip, i18n.T("gate.spec_feature.skip_not_spec")
 	}
 	if g == nil {
-		return Pending, "sem mapa carregado — o gate relacional precisa do grafo"
+		return pendingNoMap()
 	}
 
 	// A feature se alcança pela aresta `covered-by` (spec → feature).
@@ -49,7 +49,7 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	if len(features) == 0 {
 		// Ausência de feature é problema do `trinca-completa`, não deste gate — cada um
 		// acusa uma coisa, senão o mesmo defeito aparece duas vezes no relatório.
-		return Skip, "spec sem feature ligada (`covered-by`) — a ausência da peça é do gate trinca-completa"
+		return Skip, i18n.T("gate.spec_feature.skip_no_feature")
 	}
 
 	// `@no-feature` ARRASTA a dispensa de cenário de TODOS os requisitos.
@@ -67,12 +67,12 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	// O `trinca-completa` já faz esse mesmo arrasto para o teste (`@no-feature` implica
 	// `@no-test`, porque sem cenário não há o que provar); aqui ele se completa.
 	if noFeatureRE.MatchString(content) {
-		return Skip, "a spec declara `@no-feature` — sem feature não há cenário a cobrar de requisito nenhum"
+		return Skip, i18n.T("gate.spec_feature.skip_waived")
 	}
 
 	declarados := definedRequirements(content)
 	if len(declarados) == 0 {
-		return Skip, "a spec não define requisito com código — nada a cobrir"
+		return Skip, i18n.T("gate.spec_feature.skip_no_requirements")
 	}
 
 	// une os códigos citados como TAG em qualquer feature ligada (uma spec pode ser
@@ -113,14 +113,9 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	mostra := faltando
 	sufixo := ""
 	if len(mostra) > 8 {
-		mostra, sufixo = mostra[:8], fmt.Sprintf(" (e mais %d)", len(faltando)-8)
+		mostra, sufixo = mostra[:8], i18n.T("gate.spec_feature.and_more", len(faltando)-8)
 	}
-	return Fail, fmt.Sprintf("%d requisito(s) declarado(s) sem cenário na feature: %s%s. "+
-		"Um requisito sem cenário atravessa o pipeline inteiro sem ser verificado — e todos "+
-		"os outros gates ficam VERDES, porque a spec tem código, a feature existe e ela bate "+
-		"com o teste. Escreva o cenário, ou dispense na linha do requisito com "+
-		"`@no-scenario: <razão>`",
-		len(faltando), strings.Join(mostra, ", "), sufixo)
+	return Fail, i18n.T("gate.spec_feature.missing", len(faltando), strings.Join(mostra, ", "), sufixo)
 }
 
 // definedRequirements extrai os códigos que a spec DEFINE — não os que ela cita.

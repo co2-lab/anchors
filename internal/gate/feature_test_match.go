@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/similarity"
 )
@@ -31,7 +32,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		return Skip, "" // só confronta features
 	}
 	if g == nil {
-		return Pending, "sem mapa carregado — o gate relacional precisa do grafo"
+		return pendingNoMap()
 	}
 	// O de-para de regime (tag-do-projeto → regime-canônico) vem da Estrutura. Este gate
 	// confronta a superfície `test` (o teste ligado por tested-by): só os cenários cujo
@@ -54,7 +55,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		// sem teste ligado: se a feature declara cenários, isto é uma lacuna da trinca —
 		// mas quem cobra a EXISTÊNCIA do teste é a co-location/tested-by; aqui só
 		// confrontamos correspondência quando há teste. Pending para não duplicar.
-		return Pending, "nenhum teste ligado (tested-by) — nada a confrontar ainda"
+		return Pending, i18n.T("gate.feature_test_match.pending_no_linked_tests")
 	}
 
 	// une o conteúdo (não-comentário) de todos os testes ligados
@@ -143,7 +144,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 
 	if len(missingCode) > 0 {
 		sort.Strings(missingCode)
-		detail := fmt.Sprintf("%d cenário(s) da feature SEM implementação no teste (código ausente): %s",
+		detail := i18n.T("gate.feature_test_match.fail_missing_implementation",
 			len(missingCode), strings.Join(missingCode, ", "))
 		return Fail, detail
 	}
@@ -151,7 +152,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		sort.Strings(driftDesc)
 		// descrição divergente é AVISO (Pending), não Fail: o código casa (rastreável),
 		// mas o texto do teste não reflete o cenário — o autor pode ter mudado os passos.
-		return Pending, fmt.Sprintf("código casa, mas a descrição de %d cenário(s) diverge do teste: %s",
+		return Pending, i18n.T("gate.feature_test_match.pending_description_diverges",
 			len(driftDesc), strings.Join(driftDesc, ", "))
 	}
 	return Pass, ""
@@ -335,19 +336,34 @@ func isRegimeTag(t string) bool {
 	return false
 }
 
-// stripLineComments remove comentários de linha `//` e de bloco simples para que os
+// stripLineComments remove comentários de linha (`//`, `#`, `--`) e de bloco simples para que os
 // códigos citados em comentário do teste NÃO contem como implementação (coerente com
 // extractCodes: comentário é referência, não posse). Barato e suficiente aqui.
 func stripLineComments(s string) string {
 	var b strings.Builder
 	for _, ln := range strings.Split(s, "\n") {
 		t := strings.TrimSpace(ln)
-		if strings.HasPrefix(t, "//") || strings.HasPrefix(t, "*") || strings.HasPrefix(t, "/*") {
+		if strings.HasPrefix(t, "//") || strings.HasPrefix(t, "*") || strings.HasPrefix(t, "/*") ||
+			strings.HasPrefix(t, "--") {
+			continue
+		}
+		if strings.HasPrefix(t, "#") && !strings.HasPrefix(t, "#include") &&
+			!strings.HasPrefix(t, "#define") && !strings.HasPrefix(t, "#pragma") &&
+			!strings.HasPrefix(t, "#if") && !strings.HasPrefix(t, "#else") &&
+			!strings.HasPrefix(t, "#endif") {
 			continue
 		}
 		// corta comentário inline
 		if i := strings.Index(ln, "//"); i >= 0 {
 			ln = ln[:i]
+		}
+		if i := strings.Index(ln, "--"); i >= 0 {
+			ln = ln[:i]
+		}
+		for _, sep := range []string{" #", "\t#"} {
+			if i := strings.Index(ln, sep); i >= 0 {
+				ln = ln[:i]
+			}
 		}
 		b.WriteString(ln)
 		b.WriteString("\n")
@@ -423,12 +439,12 @@ var testTitleReCache = map[string]*regexp.Regexp{}
 // Um título com vários códigos descreve o conjunto, não cada um: comparar o
 // título com cada cenário por igualdade condenaria N-1 deles sempre.
 func sharedTitle(body, code string) bool {
-	re, ok := tituloIrmaosReCache[code]
+	re, ok := siblingTitleRECache[code]
 	if !ok {
 		cod := regexp.QuoteMeta(code)
 		re = regexp.MustCompile(
-			`(?:it|test)\s*\(\s*['"` + "`" + `][^'"` + "`" + `]*` + cod + `[^'"` + "`" + `]*['"` + "`" + `]`)
-		tituloIrmaosReCache[code] = re
+			`(?:it|test|t\.Run|describe)\s*\(\s*['"` + "`" + `][^'"` + "`" + `]*` + cod + `[^'"` + "`" + `]*['"` + "`" + `]`)
+		siblingTitleRECache[code] = re
 	}
 	m := re.FindString(body)
 	if m == "" {
@@ -436,18 +452,18 @@ func sharedTitle(body, code string) bool {
 	}
 	// quantos códigos DISTINTOS o título cita?
 	achados := map[string]bool{}
-	for _, c := range codigoNoTituloRE.FindAllString(m, -1) {
+	for _, c := range titleCodeRE.FindAllString(m, -1) {
 		achados[c] = true
 	}
 	return len(achados) > 1
 }
 
 var (
-	tituloIrmaosReCache = map[string]*regexp.Regexp{}
-	codigoNoTituloRE    = regexp.MustCompile(`[A-Z0-9]` + config.CodeLengthPattern() + `-[A-Z]{1,2}\d{2}(?:#\d{2})?`)
+	siblingTitleRECache = map[string]*regexp.Regexp{}
+	titleCodeRE         = regexp.MustCompile(`[A-Z0-9]` + config.CodeLengthPattern() + `-[A-Z]{1,2}\d{2}(?:#\d{2})?`)
 )
 
-// testTitleFor extrai o título do `it` que cita `code`.
+// testTitleFor extrai o título do teste (`it`, `test`, `t.Run`, etc.) que cita `code`.
 //
 // Um teste pode provar VÁRIOS cenários e citar todos no título — a forma usada no
 // projeto é `it('AATAX-S03 / AATAX-B02 / AATAX-M01: sem iniciais exibe o fallback')`,
@@ -482,7 +498,7 @@ func testTitleFor(body, code string) (string, bool) {
 		// grudado, o que produzia "similar 100%": mesmo texto, comparação diferente.
 		outro := `\[?[A-Z0-9]` + config.CodeLengthPattern() + `-(?:[A-Z]{1,2}\d{2}(?:#\d{2})?|DS-[\w-]+)\]?`
 		irmaos := `(?:\s*[/,]?\s*` + outro + `)*`
-		abre := `(?:it|test)\s*\(\s*`
+		abre := `(?:it|test|t\.Run|describe)\s*\(\s*`
 		meio := `\[?` + irmaos + `\s*[/,]?\s*` + cod + irmaos + `\]?\s*[:—-]?\s*`
 		re = regexp.MustCompile(
 			abre + `'` + meio + `([^']*)'` + `|` +

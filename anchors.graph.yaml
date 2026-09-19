@@ -1,6 +1,6 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
-version: 3
+version: 4
 generated_by: dev
 nodes:
     - id: BOOTSTRAP.md
@@ -13,7 +13,7 @@ nodes:
         - guide
     - id: CLI.md
       kind: guide
-      rev: 30963dc1fce0
+      rev: f612aeb43589
       updated_at: "2026-09-10"
       layer: doutrina
       tags:
@@ -52,6 +52,13 @@ nodes:
       layer: doc
       tags:
         - doc
+    - id: PROJECT_STRUCTURE.md
+      kind: doc
+      rev: 1cbc878a2b46
+      layer: doc
+      tags:
+        - doc
+      no_propagation: true
     - id: PROPAGATION.md
       kind: guide
       rev: 554179b3b298
@@ -62,7 +69,7 @@ nodes:
         - guide
     - id: QUALITY.md
       kind: guide
-      rev: e8f013ee8aa3
+      rev: 2c21d829d3ab
       updated_at: "2026-08-31"
       code: CODEX
       layer: doutrina
@@ -71,7 +78,7 @@ nodes:
         - guide
     - id: README.md
       kind: doc
-      rev: e6466fb12f05
+      rev: f57e1f60b238
       updated_at: "2026-09-10"
       code: SPCRX
       layer: doc
@@ -96,7 +103,7 @@ nodes:
         - guide
     - id: STRUCTURE.md
       kind: guide
-      rev: 0a1c0ea90743
+      rev: 07092d3d8288
       updated_at: "2026-08-28"
       layer: doutrina
       tags:
@@ -127,908 +134,886 @@ nodes:
       tags:
         - doutrina
         - guide
-    - id: cmd/anchors/audit.go
+    - id: cmd/anchors/common/cards.go
       kind: code
-      rev: 9b85fc77e2a4
-      updated_at: "2026-09-10"
+      rev: c4f167a21355
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/backfill_labels.go
+    - id: cmd/anchors/common/errors.go
       kind: code
-      rev: a2d0a92ffaee
-      updated_at: "2026-09-17"
+      rev: 64f1fe731585
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/backfill_labels_test.go
-      kind: test
-      rev: 5dc854cdb1e3
-      updated_at: "2026-09-16"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/binario_velho_test.go
-      kind: test
-      rev: fd1c8419c12f
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/board_serve.go
+    - id: cmd/anchors/common/flags_compat.go
       kind: code
-      rev: c2fb0731afad
-      updated_at: "2026-09-17"
+      rev: 227f79076131
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/board_serve_test.go
-      kind: test
-      rev: 1a3141aee578
-      updated_at: "2026-09-16"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/check.go
+    - id: cmd/anchors/common/path.go
       kind: code
-      rev: 93f7945a8e79
-      updated_at: "2026-09-15"
+      rev: 9638883f43cb
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/check_judge_obsoleto_test.go
-      kind: test
-      rev: a6202b1202bc
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/check_map_stale_test.go
-      kind: test
-      rev: 327de9fdb5a4
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/check_nao_regido_test.go
-      kind: test
-      rev: 061604d41e81
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/check_profile_fmt_test.go
-      kind: test
-      rev: 95db3a8d5411
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/check_skip_on_test.go
-      kind: test
-      rev: 465f6dd471d5
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/code.go
+    - id: cmd/anchors/common/roles.go
       kind: code
-      rev: 1e3e2b03c3b0
-      updated_at: "2026-09-10"
-      code: ABCDX
+      rev: 3ff6c043d0a3
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/code_list_test.go
-      kind: test
-      rev: f00589c1516d
-      updated_at: "2026-09-11"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/commit_msg.go
+    - id: cmd/anchors/common/spec.go
       kind: code
-      rev: 5e3e1c916009
-      updated_at: "2026-09-10"
+      rev: b5afc7a47b1e
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/commit_msg_test.go
-      kind: test
-      rev: 9b5bfe4d061c
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/compliance.go
+    - id: cmd/anchors/common/telemetry.go
       kind: code
-      rev: b68cbac260b5
-      updated_at: "2026-09-10"
+      rev: b6735b9c46a6
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/coverage.go
+    - id: cmd/anchors/common/version.go
       kind: code
-      rev: db321edf9f9c
-      updated_at: "2026-09-15"
+      rev: 4c5dd1d26ab8
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/coverage_test.go
-      kind: test
-      rev: be523738eb13
-      updated_at: "2026-09-15"
-      code: INLSN
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/decided.go
+    - id: cmd/anchors/flow/backfill_labels.go
       kind: code
-      rev: 516e34f96265
-      updated_at: "2026-09-16"
+      rev: 928a28361051
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/decided_test.go
+    - id: cmd/anchors/flow/backfill_labels_test.go
       kind: test
-      rev: d90cc36c8dee
-      updated_at: "2026-09-10"
+      rev: 17c74c0dc099
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/deliver.go
+    - id: cmd/anchors/flow/decided.go
       kind: code
-      rev: e655f0b8b993
-      updated_at: "2026-09-10"
+      rev: 8db9f6b468b3
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/flow/decided_test.go
+      kind: test
+      rev: 2fd776a6bb0b
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/flow/deliver.go
+      kind: code
+      rev: c65e3099863f
       code: PRICX
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/deliver_confront.go
+    - id: cmd/anchors/flow/deliver_confront.go
       kind: code
-      rev: 9116ffcf45de
-      updated_at: "2026-09-10"
+      rev: "274398864836"
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/deliver_confront_git_test.go
+    - id: cmd/anchors/flow/deliver_confront_git_test.go
       kind: test
-      rev: 35e1b75c94a5
-      updated_at: "2026-09-10"
+      rev: 453adac67da2
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/deliver_flags_test.go
+    - id: cmd/anchors/flow/deliver_flags_test.go
       kind: test
-      rev: c62905ca44e7
-      updated_at: "2026-09-10"
+      rev: 95898f3e546a
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/discard.go
+    - id: cmd/anchors/flow/discard.go
       kind: code
-      rev: cda0ded0e93a
-      updated_at: "2026-09-15"
+      rev: c0d97c2bb580
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/discard_test.go
+    - id: cmd/anchors/flow/discard_test.go
       kind: test
-      rev: af60cec5c08c
-      updated_at: "2026-09-15"
+      rev: ea4a0247f7da
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/docs.go
+    - id: cmd/anchors/flow/escalate.go
       kind: code
-      rev: d2f6f31bec1e
-      updated_at: "2026-09-16"
+      rev: 8e608becc49f
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/docs_test.go
+    - id: cmd/anchors/flow/escalate_dup.go
+      kind: code
+      rev: 3271f04df70f
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/flow/escalate_dup_test.go
       kind: test
-      rev: 37cd5cdd4dae
-      updated_at: "2026-09-16"
-      code: ABCDE
+      rev: 59db6ec3e2c5
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/flow/escalate_test.go
+      kind: test
+      rev: bebda8d62232
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/flow/pr_body.go
+      kind: code
+      rev: 59a1cb2aa836
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/flow/pr_body_test.go
+      kind: test
+      rev: b0d720c9dfbc
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/flow/progress.go
+      kind: code
+      rev: 32498cca0e30
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/flow/progress_merge.go
+      kind: code
+      rev: 48b19d2b554e
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/flow/progress_test.go
+      kind: test
+      rev: 0f38df5912ea
+      code: PLTFR
       layer: teste
       code_declared: true
       tags:
         - test
-    - id: cmd/anchors/doctor.go
+    - id: cmd/anchors/flow/queue.go
       kind: code
-      rev: 334f85437db5
-      updated_at: "2026-09-15"
+      rev: 5c83e278d9e0
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/doctor_test.go
+    - id: cmd/anchors/flow/queue_seed_tally_test.go
       kind: test
-      rev: 264153cb2cd8
-      updated_at: "2026-09-10"
+      rev: 84dd7bc13791
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/escalate.go
+    - id: cmd/anchors/flow/register.go
       kind: code
-      rev: 523017171b8c
-      updated_at: "2026-09-17"
+      rev: 34a67aa8da27
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/escalate_dup.go
+    - id: cmd/anchors/flow/task_status.go
       kind: code
-      rev: f3c9ef514462
-      updated_at: "2026-09-15"
+      rev: ee291019585b
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/escalate_dup_test.go
+    - id: cmd/anchors/flow/task_status_render.go
+      kind: code
+      rev: 2981207d72ca
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/flow/task_status_test.go
       kind: test
-      rev: 9f0441291ea0
-      updated_at: "2026-09-15"
+      rev: 4f2d9e9d853f
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/escalate_test.go
+    - id: cmd/anchors/flow/unblock.go
+      kind: code
+      rev: 66022cd7dcdd
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/flow/watch.go
+      kind: code
+      rev: 4bb5082bab90
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/flow/watch_unix.go
+      kind: code
+      rev: c8ddcff4c49f
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/flow/watch_windows.go
+      kind: code
+      rev: ba2bd88fa6be
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/flow/work.go
+      kind: code
+      rev: 88573aa3fd6c
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/flow/work_declarative_test.go
       kind: test
-      rev: 40684c230567
-      updated_at: "2026-09-17"
+      rev: db4f57dc85ab
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/flags_compat.go
-      kind: code
-      rev: a1a278a831ab
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/freeze.go
-      kind: code
-      rev: db5ec7b9f8b3
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/generated_paths.go
-      kind: code
-      rev: 1ecabe257804
-      updated_at: "2026-09-17"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/governs.go
-      kind: code
-      rev: f2b03a68bbeb
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/guide.go
-      kind: code
-      rev: ad3369a0d634
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/guide_autonomy.go
-      kind: code
-      rev: d24b38e08119
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/guide_autonomy_test.go
+    - id: cmd/anchors/flow/work_derived_name_test.go
       kind: test
-      rev: 13b672b782d2
-      updated_at: "2026-09-10"
+      rev: c27592682c6e
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/guide_code.go
+    - id: cmd/anchors/flow/work_target_test.go
+      kind: test
+      rev: bd32b975f381
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/governance/audit.go
       kind: code
-      rev: ba6bebd94f1f
-      updated_at: "2026-09-10"
+      rev: dd11bb26c572
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/guide_feature.go
+    - id: cmd/anchors/governance/compliance.go
       kind: code
-      rev: d27dc03e0414
-      updated_at: "2026-09-10"
+      rev: c5b2349a8428
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/guide_guide.go
+    - id: cmd/anchors/governance/governs.go
       kind: code
-      rev: 137387fece3f
-      updated_at: "2026-09-10"
+      rev: 4db590ea3fce
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/guide_header.go
+    - id: cmd/anchors/governance/guide.go
       kind: code
-      rev: 26cabd7e77ef
-      updated_at: "2026-09-10"
+      rev: e62d842393b9
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/governance/guide_autonomy.go
+      kind: code
+      rev: 39107cff3837
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/governance/guide_autonomy_test.go
+      kind: test
+      rev: 2b7fb7ab6a9a
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/governance/guide_code.go
+      kind: code
+      rev: 0723becc5473
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/governance/guide_feature.go
+      kind: code
+      rev: bcc6335a013f
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/governance/guide_guide.go
+      kind: code
+      rev: 9b3f99e7d17f
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/governance/guide_header.go
+      kind: code
+      rev: 7cbbd00410e9
       layer: comando
       tags:
         - cli
         - comando
       no_propagation: true
       shared_code: true
-    - id: cmd/anchors/guide_plan.go
+    - id: cmd/anchors/governance/guide_plan.go
       kind: code
-      rev: 643565414aa1
-      updated_at: "2026-09-10"
+      rev: 7a3eec9675d0
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/guide_project.go
+    - id: cmd/anchors/governance/guide_project.go
       kind: code
-      rev: f06f747ad3e0
-      updated_at: "2026-09-10"
+      rev: 621b33494eb2
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/guide_project_test.go
+    - id: cmd/anchors/governance/guide_project_test.go
       kind: test
-      rev: ac3206373145
-      updated_at: "2026-09-10"
+      rev: d679fdcbf88a
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/guide_review.go
+    - id: cmd/anchors/governance/guide_review.go
       kind: code
-      rev: 0588eee08506
-      updated_at: "2026-09-11"
+      rev: fce435d8bd10
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/guide_review_test.go
+    - id: cmd/anchors/governance/guide_review_test.go
       kind: test
-      rev: 3e62a795f212
-      updated_at: "2026-09-11"
+      rev: 9ab04aadc798
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/guide_spec.go
+    - id: cmd/anchors/governance/guide_spec.go
       kind: code
-      rev: 86c416e11d74
-      updated_at: "2026-09-10"
+      rev: 2a5052f3e3a3
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/guide_tests.go
+    - id: cmd/anchors/governance/guide_tests.go
       kind: code
-      rev: 96979efb0a32
-      updated_at: "2026-09-10"
+      rev: 9a87b5db3d48
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/guide_work.go
+    - id: cmd/anchors/governance/guide_work.go
       kind: code
-      rev: 3910c445299e
-      updated_at: "2026-09-16"
+      rev: e5ebf7567671
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/guide_work_test.go
+    - id: cmd/anchors/governance/guide_work_test.go
       kind: test
-      rev: 8fa28e36955a
-      updated_at: "2026-09-16"
+      rev: 527f82e01973
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/impact.go
+    - id: cmd/anchors/governance/register.go
       kind: code
-      rev: 8baaf6fa4481
-      updated_at: "2026-09-10"
+      rev: 15dbc7db9d92
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/governance/spec_guide.go
+      kind: code
+      rev: d31eba720fb9
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/governance/spec_guide_test.go
+      kind: test
+      rev: dfd8ad511a0d
+      code: LOGIX
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/mapcmd/impact.go
+      kind: code
+      rev: 6ae8e3b5e5a0
       layer: comando
       tags:
         - cli
         - comando
       no_propagation: true
-    - id: cmd/anchors/impact_relto_test.go
+    - id: cmd/anchors/mapcmd/impact_relto_test.go
       kind: test
-      rev: c1c30683a841
-      updated_at: "2026-09-10"
+      rev: 532ee3334b03
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/ingest.go
+    - id: cmd/anchors/mapcmd/ingest.go
       kind: code
-      rev: 965e675f06fa
-      updated_at: "2026-09-15"
+      rev: 4a8a48fb2b8a
       code: SPCRX
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/ingest_manual_test.go
+    - id: cmd/anchors/mapcmd/ingest_manual_test.go
       kind: test
-      rev: 4dc640e99024
-      updated_at: "2026-09-10"
+      rev: f2dc5ac5cc6e
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/init.go
+    - id: cmd/anchors/mapcmd/judge.go
       kind: code
-      rev: 24a23b779e1f
-      updated_at: "2026-09-10"
+      rev: 91ba02d7da92
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/init_descobrir.go
-      kind: code
-      rev: ecb37710657b
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/init_git.go
-      kind: code
-      rev: 380d1c64e04b
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/init_git_test.go
+    - id: cmd/anchors/mapcmd/judge_test.go
       kind: test
-      rev: d83558a1d490
-      updated_at: "2026-09-10"
+      rev: e49cc9ef0975
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/init_nao_interativo.go
+    - id: cmd/anchors/mapcmd/map.go
       kind: code
-      rev: 3755548b9ff2
-      updated_at: "2026-09-10"
+      rev: 5e7aba9ed6aa
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/init_sem_tty_test.go
+    - id: cmd/anchors/mapcmd/map_ambiguity_test.go
       kind: test
-      rev: b6bab125a73b
-      updated_at: "2026-09-10"
+      rev: cf2f993d4b91
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/install_hooks.go
+    - id: cmd/anchors/mapcmd/map_merge.go
       kind: code
-      rev: 163a8642a210
-      updated_at: "2026-09-15"
+      rev: da998f82fa30
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/install_hooks_test.go
+    - id: cmd/anchors/mapcmd/map_merge_test.go
       kind: test
-      rev: 4cf7445d638c
-      updated_at: "2026-09-15"
+      rev: ee5224fef80e
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/judge.go
+    - id: cmd/anchors/mapcmd/map_staleness.go
       kind: code
-      rev: 3db565c4cb2c
-      updated_at: "2026-09-11"
+      rev: f53389d13bb4
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/judge_test.go
+    - id: cmd/anchors/mapcmd/map_staleness_test.go
       kind: test
-      rev: 960d3ea8cb3c
-      updated_at: "2026-09-11"
+      rev: ba728c76dfe3
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/map.go
-      kind: code
-      rev: f1b57637d201
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/map_ambiguidade_test.go
+    - id: cmd/anchors/mapcmd/map_stamp_loss_test.go
       kind: test
-      rev: 27fe6c79fb9f
-      updated_at: "2026-09-10"
+      rev: 4825fbe71243
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/map_merge.go
+    - id: cmd/anchors/mapcmd/recode.go
       kind: code
-      rev: 953bf4fcb413
-      updated_at: "2026-09-16"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/map_merge_test.go
-      kind: test
-      rev: 2f6adc43efab
-      updated_at: "2026-09-16"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/map_perda_carimbo_test.go
-      kind: test
-      rev: 0f5b046e6baf
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/map_staleness.go
-      kind: code
-      rev: 54cba53d5c50
-      updated_at: "2026-09-15"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/map_staleness_test.go
-      kind: test
-      rev: 77c757870bde
-      updated_at: "2026-09-15"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/migrate.go
-      kind: code
-      rev: 194604c18a99
-      updated_at: "2026-09-11"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/new.go
-      kind: code
-      rev: dc59ec8df481
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/new_dialect_test.go
-      kind: test
-      rev: e3397918730a
-      updated_at: "2026-09-10"
-      code: XXXXX
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/new_templates.go
-      kind: code
-      rev: "700136351315"
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/new_templates_test.go
-      kind: test
-      rev: 445bf11ed487
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/pr_body.go
-      kind: code
-      rev: 3c88c5014e33
-      updated_at: "2026-09-16"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/pr_body_test.go
-      kind: test
-      rev: 32b18915495c
-      updated_at: "2026-09-16"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/progress.go
-      kind: code
-      rev: 710c0984fafa
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/progress_merge.go
-      kind: code
-      rev: cef8785f0bec
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/progress_test.go
-      kind: test
-      rev: fc6c8db61bd1
-      updated_at: "2026-09-10"
-      code: PLTFR
-      layer: teste
-      code_declared: true
-      tags:
-        - test
-    - id: cmd/anchors/queue.go
-      kind: code
-      rev: cc63282d154f
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/queue_seed_tally_test.go
-      kind: test
-      rev: 0a48e9db35ff
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/recode.go
-      kind: code
-      rev: 58f2f56031d4
-      updated_at: "2026-09-10"
+      rev: a3b4ac834daf
       code: CODEX
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/report.go
+    - id: cmd/anchors/mapcmd/register.go
       kind: code
-      rev: ad174ebad1bf
-      updated_at: "2026-09-15"
+      rev: 40c0171ee80a
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/report_renderers.go
+    - id: cmd/anchors/ops/board_serve.go
       kind: code
-      rev: 30d96de02131
-      updated_at: "2026-09-10"
+      rev: efde1ced6ece
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/settings.go
-      kind: code
-      rev: b4dc71d69630
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/spec_guide.go
-      kind: code
-      rev: 16c7d5285892
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/spec_guide_test.go
+    - id: cmd/anchors/ops/board_serve_test.go
       kind: test
-      rev: 9e3904837d3a
-      updated_at: "2026-09-10"
-      code: LOGIX
+      rev: 3315dd6824d8
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/stale.go
+    - id: cmd/anchors/ops/code.go
       kind: code
-      rev: b2a270f7924a
-      updated_at: "2026-09-10"
+      rev: 9833ee9bec5b
+      code: ABCDX
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/status.go
-      kind: code
-      rev: cf4a454db82d
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/status_test.go
+    - id: cmd/anchors/ops/code_list_test.go
       kind: test
-      rev: 47c13abd5711
-      updated_at: "2026-09-11"
+      rev: 7c188ddab15a
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/suggest.go
+    - id: cmd/anchors/ops/commit_msg.go
       kind: code
-      rev: 5c5daeed2ce9
-      updated_at: "2026-09-10"
+      rev: dbd8b8362923
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/suite.go
-      kind: code
-      rev: 6497dcaa0314
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/suite_test.go
+    - id: cmd/anchors/ops/commit_msg_test.go
       kind: test
-      rev: ecd711dcdf70
-      updated_at: "2026-09-10"
+      rev: 6de0c9340ecf
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/synthesize.go
+    - id: cmd/anchors/ops/docs.go
       kind: code
-      rev: 1cc45e07728f
-      updated_at: "2026-09-17"
+      rev: 7ecf62a39b24
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/synthesize_test.go
+    - id: cmd/anchors/ops/docs_test.go
       kind: test
-      rev: a2efa5f0497e
-      updated_at: "2026-09-17"
+      rev: aa85630f274e
+      code: ABCDE
+      layer: teste
+      code_declared: true
+      tags:
+        - test
+    - id: cmd/anchors/ops/freeze.go
+      kind: code
+      rev: 682d7e19f600
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/ops/generated_paths.go
+      kind: code
+      rev: ecdaaedb3ae8
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/ops/init.go
+      kind: code
+      rev: 6cbf9790f979
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/ops/init_discover.go
+      kind: code
+      rev: e5981cb152ad
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/ops/init_git.go
+      kind: code
+      rev: 3ff1128c2034
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/ops/init_git_test.go
+      kind: test
+      rev: b5759dd11f87
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/task_status.go
-      kind: code
-      rev: d35bb47672d8
-      updated_at: "2026-09-14"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/task_status_render.go
-      kind: code
-      rev: 1b8b02208ba3
-      updated_at: "2026-09-14"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/task_status_test.go
+    - id: cmd/anchors/ops/init_no_tty_test.go
       kind: test
-      rev: 285f5b061b63
-      updated_at: "2026-09-14"
+      rev: d031b2216b2f
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/telemetry.go
+    - id: cmd/anchors/ops/init_non_interactive.go
       kind: code
-      rev: e9f6a25a9b89
-      updated_at: "2026-09-14"
+      rev: ce30e3b1afea
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/unblock.go
+    - id: cmd/anchors/ops/install_hooks.go
       kind: code
-      rev: 6e4ebe2ee7c7
-      updated_at: "2026-09-14"
+      rev: a858b3a9a1e5
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/verify.go
-      kind: code
-      rev: de802f6a5e15
-      updated_at: "2026-09-10"
-      layer: comando
-      tags:
-        - cli
-        - comando
-    - id: cmd/anchors/verify_exitcode_test.go
+    - id: cmd/anchors/ops/install_hooks_test.go
       kind: test
-      rev: f03476fe609e
-      updated_at: "2026-09-10"
+      rev: b9f9fa2c78a4
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/verify_ruido_test.go
-      kind: test
-      rev: ed64d9d54a72
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: cmd/anchors/watch.go
+    - id: cmd/anchors/ops/migrate.go
       kind: code
-      rev: f40e5fa33357
-      updated_at: "2026-09-10"
+      rev: e8973d4d464e
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/watch_unix.go
+    - id: cmd/anchors/ops/new.go
       kind: code
-      rev: 69da5df3d2b6
-      updated_at: "2026-09-10"
+      rev: f384541e4a1f
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/watch_windows.go
+    - id: cmd/anchors/ops/new_dialect_test.go
+      kind: test
+      rev: 3fe0b887fb47
+      code: XXXXX
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/ops/new_lang_test.go
+      kind: test
+      rev: 9fbdadea0b62
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/ops/new_templates.go
       kind: code
-      rev: 2fd72460e4c9
-      updated_at: "2026-09-10"
+      rev: 1013ebcf050e
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/work.go
+    - id: cmd/anchors/ops/new_templates_test.go
+      kind: test
+      rev: 9ca4d17b5265
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/ops/register.go
       kind: code
-      rev: 7f1d0334751e
-      updated_at: "2026-09-16"
+      rev: 3a428102df9b
       layer: comando
       tags:
         - cli
         - comando
-    - id: cmd/anchors/work_declarativa_test.go
+    - id: cmd/anchors/ops/settings.go
+      kind: code
+      rev: 9d8d37765130
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/ops/suggest.go
+      kind: code
+      rev: 5ba0d2be0734
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/ops/synthesize.go
+      kind: code
+      rev: 56133592bd31
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/ops/synthesize_test.go
       kind: test
-      rev: a6f2ccc50a02
-      updated_at: "2026-09-10"
+      rev: c182e98a6c9c
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/work_nome_derivado_test.go
+    - id: cmd/anchors/quality/check.go
+      kind: code
+      rev: 5648759d44fa
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/quality/check_obsolete_judge_test.go
       kind: test
-      rev: d5aa380e2cd5
-      updated_at: "2026-09-10"
+      rev: 95d52d46a582
       layer: teste
       tags:
         - test
-    - id: cmd/anchors/work_target_test.go
+    - id: cmd/anchors/quality/check_profile_fmt_test.go
       kind: test
-      rev: ed2a08dd5b18
-      updated_at: "2026-09-10"
+      rev: 95fcafd322bb
       layer: teste
       tags:
         - test
+    - id: cmd/anchors/quality/check_skip_on_test.go
+      kind: test
+      rev: c2a87bea0d4e
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/quality/check_stale_map_test.go
+      kind: test
+      rev: 36f7c779e1e6
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/quality/check_ungoverned_test.go
+      kind: test
+      rev: 9e50598ccf66
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/quality/coverage.go
+      kind: code
+      rev: 1d808b48b71f
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/quality/coverage_test.go
+      kind: test
+      rev: dd1174ee1ded
+      code: INLSN
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/quality/doctor.go
+      kind: code
+      rev: dc9b31f4152d
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/quality/doctor_test.go
+      kind: test
+      rev: 88a7d187a3fd
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/quality/old_binary_test.go
+      kind: test
+      rev: cbe565d5f6ca
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/quality/register.go
+      kind: code
+      rev: 75cddaeb5ddf
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/quality/report.go
+      kind: code
+      rev: 364e147be14b
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/quality/report_renderers.go
+      kind: code
+      rev: 7f23b33eb62e
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/quality/stale.go
+      kind: code
+      rev: a121244f8dc0
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/quality/status.go
+      kind: code
+      rev: 663cb5bde7d5
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/quality/status_test.go
+      kind: test
+      rev: d7a29978a1cf
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/quality/suite.go
+      kind: code
+      rev: b17dae9f39aa
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/quality/suite_test.go
+      kind: test
+      rev: c2faef0a9190
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/quality/verify.go
+      kind: code
+      rev: 09d5ad03e454
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/quality/verify_exitcode_test.go
+      kind: test
+      rev: 5434186ee633
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/quality/verify_noise_test.go
+      kind: test
+      rev: 8f5927f03a08
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/root_test.go
+      kind: test
+      rev: ca4c32ec97bf
+      layer: teste
+      tags:
+        - test
+    - id: guides/GATES_ECOSYSTEM_GUIDE.md
+      kind: guide
+      rev: b89b57f14acf
+      layer: guide-distribuido
+      tags:
+        - guide
     - id: guides/HEADER_GUIDE.md
       kind: guide
       rev: 032955262d76
@@ -1052,38 +1037,30 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/board/entrega_test.go
+    - id: internal/board/delivery_test.go
       kind: test
       rev: b95c6ec8f9b8
-      updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
     - id: internal/board/gh_test.go
       kind: test
-      rev: bbf6adc1e4a9
+      rev: 95bae9a00dba
       updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
     - id: internal/change/change.go
       kind: code
-      rev: f9f53eab68c3
+      rev: 6b0e1d55f021
       updated_at: "2026-09-10"
       layer: infra
       tags:
         - infra
       regime: declarativo
-    - id: internal/checklog/cabecalho_arvore_test.go
-      kind: test
-      rev: 5e9ad1eb87a3
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
     - id: internal/checklog/checklog.go
       kind: code
-      rev: 5cc6d471ca3e
+      rev: 838f30bb9ac7
       updated_at: "2026-09-10"
       layer: infra
       tags:
@@ -1091,8 +1068,14 @@ nodes:
       regime: declarativo
     - id: internal/checklog/checklog_test.go
       kind: test
-      rev: 35bc251946ef
+      rev: 2ea13e617f8a
       updated_at: "2026-09-10"
+      layer: teste
+      tags:
+        - test
+    - id: internal/checklog/tree_header_test.go
+      kind: test
+      rev: 01d39168d1a2
       layer: teste
       tags:
         - test
@@ -1143,7 +1126,7 @@ nodes:
         - config
     - id: internal/config/config.go
       kind: code
-      rev: d54fb3453536
+      rev: 3ecef319c556
       updated_at: "2026-09-16"
       layer: config
       tags:
@@ -1152,13 +1135,6 @@ nodes:
     - id: internal/config/config_test.go
       kind: test
       rev: c09298819609
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: internal/config/congelado_test.go
-      kind: test
-      rev: e392060ea25f
       updated_at: "2026-09-10"
       layer: teste
       tags:
@@ -1173,7 +1149,7 @@ nodes:
         - config
     - id: internal/config/dialect.go
       kind: code
-      rev: 452d8491ba5c
+      rev: 6e1c68f1e3aa
       updated_at: "2026-09-10"
       layer: config
       tags:
@@ -1194,6 +1170,12 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/config/frozen_test.go
+      kind: test
+      rev: e392060ea25f
+      layer: teste
+      tags:
+        - test
     - id: internal/config/merge_canonical_test.go
       kind: test
       rev: 1130d074ac11
@@ -1203,7 +1185,7 @@ nodes:
         - test
     - id: internal/config/min_version.go
       kind: code
-      rev: 3f8c427fb3e8
+      rev: 383968ae2ae4
       updated_at: "2026-09-11"
       layer: config
       tags:
@@ -1211,7 +1193,7 @@ nodes:
         - config
     - id: internal/config/min_version_test.go
       kind: test
-      rev: aa12f3321c2f
+      rev: 256c8a1263c5
       updated_at: "2026-09-11"
       layer: teste
       tags:
@@ -1223,25 +1205,22 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/config/padroes.go
+    - id: internal/config/patterns.go
       kind: code
-      rev: 53150a0e7727
-      updated_at: "2026-09-10"
+      rev: 50bb24921e13
       layer: config
       tags:
         - nucleo
         - config
-    - id: internal/config/padroes_test.go
+    - id: internal/config/patterns_test.go
       kind: test
       rev: 8110d5d51dba
-      updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
-    - id: internal/config/raiz.go
+    - id: internal/config/root.go
       kind: code
       rev: 3cbb6f987969
-      updated_at: "2026-09-10"
       layer: config
       tags:
         - nucleo
@@ -1255,36 +1234,34 @@ nodes:
         - test
     - id: internal/config/version_hint_test.go
       kind: test
-      rev: 49de398736ed
+      rev: 45f1aa6091f2
       updated_at: "2026-09-16"
       layer: teste
       tags:
         - test
-    - id: internal/config/vocabulario.go
+    - id: internal/config/vocabulary.go
       kind: code
       rev: 6c1ad1de5544
-      updated_at: "2026-09-11"
       layer: config
       tags:
         - nucleo
         - config
-    - id: internal/config/vocabulario_test.go
+    - id: internal/config/vocabulary_test.go
       kind: test
       rev: 135d486315c9
-      updated_at: "2026-09-11"
       layer: teste
       tags:
         - test
     - id: internal/config/workflow_test.go
       kind: test
-      rev: c1495cbf6d1a
+      rev: 3165815641a2
       updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
     - id: internal/daemon/daemon.go
       kind: code
-      rev: 08c585edc759
+      rev: e5455470ddec
       updated_at: "2026-09-10"
       layer: infra
       tags:
@@ -1323,7 +1300,7 @@ nodes:
         - test
     - id: internal/doct/doct_test.go
       kind: test
-      rev: 444112596d2e
+      rev: 003635f5b8b2
       updated_at: "2026-09-17"
       code: GLCGL
       layer: teste
@@ -1338,58 +1315,15 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/gate/cenario_identidade.go
-      kind: code
-      rev: 60254a6ccb39
-      updated_at: "2026-09-10"
-      code: XXXXX
-      layer: gate
-      tags:
-        - regra
-        - gate
-    - id: internal/gate/cenario_identidade_test.go
+    - id: internal/gate/checklist_language_test.go
       kind: test
-      rev: b61237f9c568
-      updated_at: "2026-09-10"
-      code: USBPX
-      layer: teste
-      tags:
-        - test
-    - id: internal/gate/cenario_letra_declarada.go
-      kind: code
-      rev: 5476bd81a412
-      updated_at: "2026-09-10"
-      layer: gate
-      tags:
-        - regra
-        - gate
-    - id: internal/gate/cenario_letra_declarada_test.go
-      kind: test
-      rev: a430060df3f0
-      updated_at: "2026-09-10"
-      code: RCRRX
-      layer: teste
-      tags:
-        - test
-    - id: internal/gate/cenario_tipo_alinhado.go
-      kind: code
-      rev: 634cf6817121
-      updated_at: "2026-09-10"
-      layer: gate
-      tags:
-        - regra
-        - gate
-    - id: internal/gate/cenario_tipo_alinhado_test.go
-      kind: test
-      rev: d46b1dc11fd9
-      updated_at: "2026-09-10"
-      code: LGSTX
+      rev: 1391d50f3693
       layer: teste
       tags:
         - test
     - id: internal/gate/code_cataloged.go
       kind: code
-      rev: 23543119c58f
+      rev: cdb096d3b2fb
       updated_at: "2026-09-16"
       layer: gate
       tags:
@@ -1397,15 +1331,28 @@ nodes:
         - gate
     - id: internal/gate/code_cataloged_test.go
       kind: test
-      rev: ca34a291153c
+      rev: b4ad4e76737f
       updated_at: "2026-09-16"
       code: INVAX
       layer: teste
       tags:
         - test
+    - id: internal/gate/code_language.go
+      kind: code
+      rev: e8d1d1108186
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/code_language_test.go
+      kind: test
+      rev: fc0f394e96f7
+      layer: teste
+      tags:
+        - test
     - id: internal/gate/code_reference_valid.go
       kind: code
-      rev: 9be28e838324
+      rev: f991e2c7dd2e
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1422,7 +1369,7 @@ nodes:
         - test
     - id: internal/gate/contract_status_declared.go
       kind: code
-      rev: 878ef3fb66e7
+      rev: eba61b62d923
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1430,14 +1377,14 @@ nodes:
         - gate
     - id: internal/gate/contract_status_declared_test.go
       kind: test
-      rev: 64e239065fc0
+      rev: 74aa5aea4691
       updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
     - id: internal/gate/count_honored.go
       kind: code
-      rev: 961942c8940d
+      rev: ac790afd26b5
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1445,14 +1392,14 @@ nodes:
         - gate
     - id: internal/gate/count_honored_test.go
       kind: test
-      rev: 943b7cad5639
+      rev: 94a3f5eb4878
       updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
     - id: internal/gate/dependency_honored.go
       kind: code
-      rev: 0cd1e9b0630f
+      rev: 9ebc588be760
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1467,29 +1414,28 @@ nodes:
         - test
     - id: internal/gate/doc_required.go
       kind: code
-      rev: 5680ad2465a4
+      rev: 4bec3c03b9b8
       updated_at: "2026-09-15"
       layer: gate
       tags:
         - regra
         - gate
-    - id: internal/gate/doc_required_secao_test.go
+    - id: internal/gate/doc_required_section_test.go
       kind: test
       rev: 609f442fea29
-      updated_at: "2026-09-15"
       layer: teste
       tags:
         - test
     - id: internal/gate/doc_required_test.go
       kind: test
-      rev: 67a21bb4b3ef
+      rev: f28e193ec321
       updated_at: "2026-09-14"
       layer: teste
       tags:
         - test
     - id: internal/gate/doc_self_contained.go
       kind: code
-      rev: bcc468167be1
+      rev: 4555e1b800e7
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1497,7 +1443,7 @@ nodes:
         - gate
     - id: internal/gate/doc_self_contained_test.go
       kind: test
-      rev: f776210dbe38
+      rev: e44430880790
       updated_at: "2026-09-10"
       code: GLCGL
       layer: teste
@@ -1505,7 +1451,7 @@ nodes:
         - test
     - id: internal/gate/docs_fresh.go
       kind: code
-      rev: 572be3865e27
+      rev: 227df2fd3627
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1522,7 +1468,7 @@ nodes:
         - test
     - id: internal/gate/domain_declared.go
       kind: code
-      rev: a809dedca3bf
+      rev: 996abb62116a
       updated_at: "2026-09-16"
       layer: gate
       tags:
@@ -1538,7 +1484,7 @@ nodes:
         - test
     - id: internal/gate/evidence_fresh.go
       kind: code
-      rev: b8c35d8320ce
+      rev: 8a9b87073030
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1546,7 +1492,7 @@ nodes:
         - gate
     - id: internal/gate/evidence_fresh_test.go
       kind: test
-      rev: e633a687ad08
+      rev: b2e4e8b4779c
       updated_at: "2026-09-10"
       layer: teste
       tags:
@@ -1566,22 +1512,6 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/gate/fase_ordenada.go
-      kind: code
-      rev: b419b00055b5
-      updated_at: "2026-09-10"
-      layer: gate
-      tags:
-        - regra
-        - gate
-    - id: internal/gate/fase_ordenada_test.go
-      kind: test
-      rev: 0894333c064c
-      updated_at: "2026-09-10"
-      code: FNDTN
-      layer: teste
-      tags:
-        - test
     - id: internal/gate/feature_suffix_test.go
       kind: test
       rev: b1861a400144
@@ -1592,7 +1522,7 @@ nodes:
         - test
     - id: internal/gate/feature_test_match.go
       kind: code
-      rev: edeef62ea38c
+      rev: 138f85ec9eaa
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1600,7 +1530,7 @@ nodes:
         - gate
     - id: internal/gate/feature_test_match_test.go
       kind: test
-      rev: a22072ae55b6
+      rev: 03972155882f
       updated_at: "2026-09-10"
       code: DDTDX
       layer: teste
@@ -1616,7 +1546,7 @@ nodes:
         - gate
     - id: internal/gate/gate.go
       kind: code
-      rev: e8466fae8730
+      rev: 889c52360186
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1624,7 +1554,7 @@ nodes:
         - gate
     - id: internal/gate/gate_test.go
       kind: test
-      rev: f6e5cde5d393
+      rev: 5c8b3122dc04
       updated_at: "2026-09-16"
       code: LOGIX
       layer: teste
@@ -1632,7 +1562,7 @@ nodes:
         - test
     - id: internal/gate/identity_consistent.go
       kind: code
-      rev: 5cce5890a2dd
+      rev: 585d6a699b96
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1646,31 +1576,9 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/gate/idioma_do_codigo.go
-      kind: code
-      rev: e8d1d1108186
-      updated_at: "2026-09-10"
-      layer: gate
-      tags:
-        - regra
-        - gate
-    - id: internal/gate/idioma_do_codigo_test.go
-      kind: test
-      rev: fc0f394e96f7
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: internal/gate/idioma_projeto_test.go
-      kind: test
-      rev: 088b0b65e3b9
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
     - id: internal/gate/internal_checks.go
       kind: code
-      rev: 573480e4daee
+      rev: f7c211d67715
       updated_at: "2026-09-16"
       layer: gate
       tags:
@@ -1678,7 +1586,7 @@ nodes:
         - gate
     - id: internal/gate/internal_checks_test.go
       kind: test
-      rev: 701aef851f09
+      rev: 2cb6eb19d81b
       updated_at: "2026-09-16"
       code: ABCDX
       layer: teste
@@ -1686,7 +1594,7 @@ nodes:
         - test
     - id: internal/gate/layer_boundary.go
       kind: code
-      rev: 02758e0e5487
+      rev: 5fdc00c22b91
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1694,14 +1602,14 @@ nodes:
         - gate
     - id: internal/gate/layer_boundary_test.go
       kind: test
-      rev: cdb2e9a81a08
+      rev: b641d1e6107b
       updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
     - id: internal/gate/marker_parity.go
       kind: code
-      rev: 3cd8d671222e
+      rev: eff4e9bb74c1
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1714,53 +1622,48 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/gate/mock_carimbado.go
+    - id: internal/gate/mock_stamped.go
       kind: code
-      rev: 713dcd78bdcf
-      updated_at: "2026-09-10"
+      rev: fe3c0c1095ee
       layer: gate
       tags:
         - regra
         - gate
-    - id: internal/gate/mock_carimbado_test.go
+    - id: internal/gate/mock_stamped_test.go
       kind: test
-      rev: 349b44543eff
-      updated_at: "2026-09-10"
+      rev: 868a981b3e87
       layer: teste
       tags:
         - test
-    - id: internal/gate/mock_tipado.go
+    - id: internal/gate/mock_typed.go
       kind: code
-      rev: 85a2804f62dd
-      updated_at: "2026-09-10"
+      rev: c53521703dbb
       layer: gate
       tags:
         - regra
         - gate
-    - id: internal/gate/mock_tipado_test.go
+    - id: internal/gate/mock_typed_test.go
       kind: test
-      rev: 75dc7145fead
-      updated_at: "2026-09-10"
+      rev: a67f91c92ba3
       layer: teste
       tags:
         - test
-    - id: internal/gate/mutation_faixas_test.go
+    - id: internal/gate/mutation_ranges_test.go
       kind: test
-      rev: 0e1cad36a5c4
-      updated_at: "2026-09-10"
+      rev: 43ed07868443
       layer: teste
       tags:
         - test
     - id: internal/gate/mutation_scope_test.go
       kind: test
-      rev: 8a113afe527a
+      rev: f7ebe7f036e4
       updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
     - id: internal/gate/mutation_score_test.go
       kind: test
-      rev: 4f3d73ffc067
+      rev: 5061ecd6cc0d
       updated_at: "2026-09-10"
       layer: teste
       tags:
@@ -1774,15 +1677,21 @@ nodes:
         - test
     - id: internal/gate/new_template_test.go
       kind: test
-      rev: 06952557d4df
+      rev: a5acf874c86b
       updated_at: "2026-09-10"
       code: LGNOX
       layer: teste
       tags:
         - test
+    - id: internal/gate/no_prose_match_test.go
+      kind: test
+      rev: f90e00d827ea
+      layer: teste
+      tags:
+        - test
     - id: internal/gate/obligation_honored.go
       kind: code
-      rev: bddca9b39c69
+      rev: 37b952cc1fd3
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1791,7 +1700,7 @@ nodes:
       no_propagation: true
     - id: internal/gate/obligation_honored_test.go
       kind: test
-      rev: 11ef86fb4b1f
+      rev: 16075f08731c
       updated_at: "2026-09-10"
       layer: teste
       tags:
@@ -1814,7 +1723,7 @@ nodes:
         - gate
     - id: internal/gate/open_questions.go
       kind: code
-      rev: f15979452c8b
+      rev: f95ba6b43dff
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1822,7 +1731,7 @@ nodes:
         - gate
     - id: internal/gate/open_questions_test.go
       kind: test
-      rev: 6aad8f545694
+      rev: eb01605011ee
       updated_at: "2026-09-10"
       code: PARCX
       layer: teste
@@ -1830,7 +1739,7 @@ nodes:
         - test
     - id: internal/gate/pagination_honored.go
       kind: code
-      rev: c0fad1fd4343
+      rev: b77317cb562c
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1838,14 +1747,28 @@ nodes:
         - gate
     - id: internal/gate/pagination_honored_test.go
       kind: test
-      rev: 872258a5900c
+      rev: 079b9338bb57
       updated_at: "2026-09-10"
+      layer: teste
+      tags:
+        - test
+    - id: internal/gate/phase_ordered.go
+      kind: code
+      rev: 6e09dbdbb21b
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/phase_ordered_test.go
+      kind: test
+      rev: aefdb865263e
+      code: FNDTN
       layer: teste
       tags:
         - test
     - id: internal/gate/placeholder_filled.go
       kind: code
-      rev: 7b8147ccae9d
+      rev: ca3883565729
       updated_at: "2026-09-16"
       layer: gate
       tags:
@@ -1860,9 +1783,42 @@ nodes:
       code_declared: true
       tags:
         - test
+    - id: internal/gate/plan_change_justified.go
+      kind: code
+      rev: 72708379eee1
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/plan_change_justified_test.go
+      kind: test
+      rev: e53c62998619
+      layer: teste
+      tags:
+        - test
+    - id: internal/gate/plan_review_format_test.go
+      kind: test
+      rev: a29b0b04cfa4
+      layer: teste
+      tags:
+        - test
+    - id: internal/gate/plan_revised.go
+      kind: code
+      rev: 5e4d49692700
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/plan_revised_test.go
+      kind: test
+      rev: 62d73b861240
+      code: ANTGO
+      layer: teste
+      tags:
+        - test
     - id: internal/gate/plan_seeds_valid.go
       kind: code
-      rev: a9bff28d3ac5
+      rev: d6ed5326c5ff
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1870,14 +1826,14 @@ nodes:
         - gate
     - id: internal/gate/plan_seeds_valid_test.go
       kind: test
-      rev: 14ccd7dbd3cc
+      rev: e69e244c916d
       updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
     - id: internal/gate/plan_source_declared.go
       kind: code
-      rev: 1b680361fd40
+      rev: 60217bbda172
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -1890,44 +1846,6 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/gate/plano_alterado_justificado.go
-      kind: code
-      rev: b655ef42e879
-      updated_at: "2026-09-10"
-      layer: gate
-      tags:
-        - regra
-        - gate
-    - id: internal/gate/plano_alterado_justificado_test.go
-      kind: test
-      rev: e53c62998619
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: internal/gate/plano_revisado.go
-      kind: code
-      rev: b690a79ade42
-      updated_at: "2026-09-10"
-      layer: gate
-      tags:
-        - regra
-        - gate
-    - id: internal/gate/plano_revisado_test.go
-      kind: test
-      rev: 62d73b861240
-      updated_at: "2026-09-10"
-      code: ANTGO
-      layer: teste
-      tags:
-        - test
-    - id: internal/gate/plano_revisao_formato_test.go
-      kind: test
-      rev: f500bd2d60e4
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
     - id: internal/gate/profile.go
       kind: code
       rev: 2a9d7f6fe2e3
@@ -1936,63 +1854,62 @@ nodes:
       tags:
         - regra
         - gate
-    - id: internal/gate/progresso_honesto.go
+    - id: internal/gate/progress_honest.go
       kind: code
-      rev: 6bcaea9fea51
-      updated_at: "2026-09-10"
+      rev: ad717349150f
       layer: gate
       tags:
         - regra
         - gate
-    - id: internal/gate/progresso_honesto_test.go
+    - id: internal/gate/progress_honest_test.go
       kind: test
-      rev: 5f756bf38981
-      updated_at: "2026-09-10"
+      rev: c7ddd22c91d7
       layer: teste
       tags:
         - test
-    - id: internal/gate/progresso_placeholder_test.go
+    - id: internal/gate/progress_placeholder_test.go
       kind: test
       rev: 3fd07e605853
-      updated_at: "2026-09-10"
       code: MTUAO
       layer: teste
       tags:
         - test
-    - id: internal/gate/promovivel.go
-      kind: code
-      rev: a5da8054ce15
-      updated_at: "2026-09-10"
-      layer: gate
-      tags:
-        - regra
-        - gate
-    - id: internal/gate/promovivel_test.go
+    - id: internal/gate/project_language_test.go
       kind: test
-      rev: 0a79be194f8f
-      updated_at: "2026-09-10"
+      rev: 088b0b65e3b9
       layer: teste
       tags:
         - test
-    - id: internal/gate/prova_cruza_fronteira.go
+    - id: internal/gate/promotable.go
       kind: code
-      rev: bbef88f0c48f
-      updated_at: "2026-09-10"
+      rev: a5da8054ce15
       layer: gate
       tags:
         - regra
         - gate
-    - id: internal/gate/prova_cruza_fronteira_test.go
+    - id: internal/gate/promotable_test.go
       kind: test
-      rev: 2a7223782644
-      updated_at: "2026-09-10"
+      rev: 0a79be194f8f
+      layer: teste
+      tags:
+        - test
+    - id: internal/gate/proof_crosses_boundary.go
+      kind: code
+      rev: ab915f3a27eb
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/proof_crosses_boundary_test.go
+      kind: test
+      rev: 2dfab70157bd
       code: SEATX
       layer: teste
       tags:
         - test
     - id: internal/gate/ref_resolves.go
       kind: code
-      rev: aba8afcbac8e
+      rev: 72e28614519b
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -2007,7 +1924,7 @@ nodes:
         - test
     - id: internal/gate/region_pair_honored.go
       kind: code
-      rev: 28a7f0a82c3c
+      rev: dbf225025f79
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -2015,30 +1932,15 @@ nodes:
         - gate
     - id: internal/gate/region_pair_honored_test.go
       kind: test
-      rev: e9cb2996c38a
+      rev: 565cec71817a
       updated_at: "2026-09-10"
       code: MLETX
       layer: teste
       tags:
         - test
-    - id: internal/gate/regra.go
-      kind: code
-      rev: b8bfb7f8b694
-      updated_at: "2026-09-10"
-      layer: gate
-      tags:
-        - regra
-        - gate
-    - id: internal/gate/regra_test.go
-      kind: test
-      rev: "388624199497"
-      updated_at: "2026-09-16"
-      layer: teste
-      tags:
-        - test
     - id: internal/gate/route_declared.go
       kind: code
-      rev: 324b08a30381
+      rev: 8402fe2e58cf
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -2046,14 +1948,14 @@ nodes:
         - gate
     - id: internal/gate/route_declared_test.go
       kind: test
-      rev: b8830cbb4ce2
+      rev: 38fcacf30238
       updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
     - id: internal/gate/route_exists.go
       kind: code
-      rev: 17d5c17eb08a
+      rev: 8310e693fce7
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -2061,14 +1963,21 @@ nodes:
         - gate
     - id: internal/gate/route_exists_test.go
       kind: test
-      rev: 8bac0f3cd858
+      rev: 48b7cda75545
       updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
+    - id: internal/gate/rule.go
+      kind: code
+      rev: b8bfb7f8b694
+      layer: gate
+      tags:
+        - regra
+        - gate
     - id: internal/gate/rule_implemented.go
       kind: code
-      rev: 8a05948f87b1
+      rev: bea14df81b37
       updated_at: "2026-09-16"
       layer: gate
       tags:
@@ -2076,7 +1985,7 @@ nodes:
         - gate
     - id: internal/gate/rule_implemented_test.go
       kind: test
-      rev: 32c81bf466dd
+      rev: ca9f2e698efe
       updated_at: "2026-09-16"
       code: MRHMX
       layer: teste
@@ -2090,9 +1999,15 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/rule_test.go
+      kind: test
+      rev: "388624199497"
+      layer: teste
+      tags:
+        - test
     - id: internal/gate/rule_types.go
       kind: code
-      rev: c48042b43ab5
+      rev: e77cc4fe9c5d
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -2100,7 +2015,7 @@ nodes:
         - gate
     - id: internal/gate/rule_types_requires_test.go
       kind: test
-      rev: 73b497299b37
+      rev: c01157d41b7a
       updated_at: "2026-09-10"
       code: BGCRX
       layer: teste
@@ -2108,7 +2023,7 @@ nodes:
         - test
     - id: internal/gate/rule_types_test.go
       kind: test
-      rev: 28433ce27df1
+      rev: 41f7d7c5ed1c
       updated_at: "2026-09-10"
       code: HOMEX
       layer: teste
@@ -2116,7 +2031,7 @@ nodes:
         - test
     - id: internal/gate/scenario_asserts.go
       kind: code
-      rev: 0a769ccf41ce
+      rev: df348b49e1ec
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -2130,11 +2045,53 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/gate/scenario_coverage_citacao_test.go
+    - id: internal/gate/scenario_coverage_citation_test.go
       kind: test
       rev: 7dc24474dc39
-      updated_at: "2026-09-10"
       code: GLCGL
+      layer: teste
+      tags:
+        - test
+    - id: internal/gate/scenario_identity.go
+      kind: code
+      rev: 396c865f461a
+      code: XXXXX
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/scenario_identity_test.go
+      kind: test
+      rev: b61237f9c568
+      code: USBPX
+      layer: teste
+      tags:
+        - test
+    - id: internal/gate/scenario_letter_declared.go
+      kind: code
+      rev: e5faa87abd02
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/scenario_letter_declared_test.go
+      kind: test
+      rev: 32d4967cf406
+      code: RCRRX
+      layer: teste
+      tags:
+        - test
+    - id: internal/gate/scenario_type_aligned.go
+      kind: code
+      rev: ae3973b6f62f
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/scenario_type_aligned_test.go
+      kind: test
+      rev: d46b1dc11fd9
+      code: LGSTX
       layer: teste
       tags:
         - test
@@ -2145,24 +2102,23 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/gate/sem_match_em_prosa_test.go
-      kind: test
-      rev: f90e00d827ea
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
     - id: internal/gate/sibling_guard.go
       kind: code
-      rev: 0b990be803d5
+      rev: c1ae6352b861
       updated_at: "2026-09-10"
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/sibling_guard_test.go
+      kind: test
+      rev: 6e4b372d34db
+      layer: teste
+      tags:
+        - test
     - id: internal/gate/spec_feature_match.go
       kind: code
-      rev: 0622fcec7303
+      rev: dc585f9f0609
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -2176,79 +2132,93 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/gate/teste_rastreavel.go
+    - id: internal/gate/spec_sections_language_test.go
+      kind: test
+      rev: 3fc6dac29fce
+      code: LGNOI
+      layer: teste
+      code_declared: true
+      tags:
+        - test
+    - id: internal/gate/test_traceable.go
       kind: code
-      rev: 0919136a42aa
-      updated_at: "2026-09-10"
+      rev: 90e382def2b3
       layer: gate
       tags:
         - regra
         - gate
-    - id: internal/gate/teste_rastreavel_test.go
+    - id: internal/gate/test_traceable_test.go
       kind: test
       rev: 2e542fff6903
-      updated_at: "2026-09-10"
       code: PHA1X
       layer: teste
       tags:
         - test
-    - id: internal/gate/testid_coerente.go
+    - id: internal/gate/testid_consistent.go
       kind: code
-      rev: 9c05e9f35844
-      updated_at: "2026-09-10"
+      rev: f8cb7c8aff9e
       layer: gate
       tags:
         - regra
         - gate
-    - id: internal/gate/testid_coerente_consumo_test.go
+    - id: internal/gate/testid_consistent_consumption_test.go
       kind: test
       rev: 8b5a6fa0f36c
-      updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
-    - id: internal/gate/testid_coerente_declarado_test.go
+    - id: internal/gate/testid_consistent_declared_test.go
       kind: test
       rev: 4d570b02945d
-      updated_at: "2026-09-10"
       code: ABCDX
-      layer: teste
-      tags:
-        - test
-    - id: internal/gate/testid_consultado_existe.go
-      kind: code
-      rev: b84ff55b0477
-      updated_at: "2026-09-10"
-      layer: gate
-      tags:
-        - regra
-        - gate
-    - id: internal/gate/testid_consultado_existe_test.go
-      kind: test
-      rev: 8369bd0dc2a5
-      updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
     - id: internal/gate/testid_helpers.go
       kind: code
-      rev: bd303b64a3d2
+      rev: 1372f5ca495f
       updated_at: "2026-09-10"
       layer: gate
       tags:
         - regra
         - gate
-    - id: internal/gate/testid_superficies.go
+    - id: internal/gate/testid_queried_exists.go
+      kind: code
+      rev: 26d61c2488d9
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/testid_queried_exists_test.go
+      kind: test
+      rev: 8369bd0dc2a5
+      layer: teste
+      tags:
+        - test
+    - id: internal/gate/testid_surfaces.go
       kind: code
       rev: 6bfcac5a9898
-      updated_at: "2026-09-10"
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/triad_complete.go
+      kind: code
+      rev: 7fbe0f3050d2
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/triad_complete_test.go
+      kind: test
+      rev: f2b411a637b2
+      code: AAAAX
+      layer: teste
+      tags:
+        - test
     - id: internal/gate/trigger_declared.go
       kind: code
-      rev: 3f775354477f
+      rev: b24df2c9e472
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -2261,33 +2231,15 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/gate/trinca_completa.go
-      kind: code
-      rev: 9164b2169a38
-      updated_at: "2026-09-10"
-      code: SGHBX
-      layer: gate
-      tags:
-        - regra
-        - gate
-    - id: internal/gate/trinca_completa_test.go
+    - id: internal/gate/updated_at_no_git_test.go
       kind: test
-      rev: 4df9c4eaed11
-      updated_at: "2026-09-10"
-      code: AAAAX
-      layer: teste
-      tags:
-        - test
-    - id: internal/gate/updated_at_sem_git_test.go
-      kind: test
-      rev: d80361518c16
-      updated_at: "2026-09-10"
+      rev: 314ade3c7111
       layer: teste
       tags:
         - test
     - id: internal/gate/value_anchored.go
       kind: code
-      rev: eab9305a84a9
+      rev: c640824efab2
       updated_at: "2026-09-16"
       layer: gate
       tags:
@@ -2295,7 +2247,7 @@ nodes:
         - gate
     - id: internal/gate/value_anchored_test.go
       kind: test
-      rev: 329fdabc187e
+      rev: b4e2346658b9
       updated_at: "2026-09-16"
       code: UUUUU
       layer: teste
@@ -2303,7 +2255,7 @@ nodes:
         - test
     - id: internal/gate/vr_baseline.go
       kind: code
-      rev: 22aa9bf05bf4
+      rev: 1a147b68dea5
       updated_at: "2026-09-10"
       layer: gate
       tags:
@@ -2311,24 +2263,22 @@ nodes:
         - gate
     - id: internal/gate/vr_baseline_test.go
       kind: test
-      rev: 6cb3a827bbaf
+      rev: 8f3350d3c639
       updated_at: "2026-09-10"
       code: TCDTX
       layer: teste
       tags:
         - test
-    - id: internal/gitmeta/disponivel.go
+    - id: internal/gitmeta/availability.go
       kind: code
       rev: 649cc782a80a
-      updated_at: "2026-09-10"
       layer: infra
       tags:
         - infra
       regime: declarativo
-    - id: internal/gitmeta/disponivel_test.go
+    - id: internal/gitmeta/availability_test.go
       kind: test
       rev: 554977654afb
-      updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
@@ -2347,76 +2297,54 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/gitmeta/silencio_test.go
+    - id: internal/gitmeta/silence_test.go
       kind: test
       rev: f256128133a8
-      updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
-    - id: internal/health/ambiente_github.go
+    - id: internal/health/approval.go
       kind: code
-      rev: 0986af739504
-      updated_at: "2026-09-10"
+      rev: cb8908e15cb5
       layer: infra
       tags:
         - infra
       regime: declarativo
-    - id: internal/health/ambiente_github_test.go
+    - id: internal/health/approval_test.go
       kind: test
-      rev: 6ee7a0757f27
-      updated_at: "2026-09-10"
+      rev: 279bb7cee1f2
       layer: teste
       tags:
         - test
-    - id: internal/health/aprovacao.go
+    - id: internal/health/github_environment.go
       kind: code
-      rev: beb0168ccb60
-      updated_at: "2026-09-10"
+      rev: e474db4524ce
       layer: infra
       tags:
         - infra
       regime: declarativo
-    - id: internal/health/aprovacao_test.go
+    - id: internal/health/github_environment_test.go
       kind: test
-      rev: 4e5ad7ad1e69
-      updated_at: "2026-09-10"
+      rev: c9f0f8b520a9
       layer: teste
       tags:
         - test
-    - id: internal/health/decisao_pendente.go
+    - id: internal/health/governance.go
       kind: code
-      rev: 0b0716852dba
-      updated_at: "2026-09-10"
+      rev: 6683ba21896b
       layer: infra
       tags:
         - infra
       regime: declarativo
-    - id: internal/health/decisao_pendente_test.go
+    - id: internal/health/governance_test.go
       kind: test
-      rev: 3cb1fdff383e
-      updated_at: "2026-09-10"
-      code: PARCX
-      layer: teste
-      tags:
-        - test
-    - id: internal/health/ferramenta_test.go
-      kind: test
-      rev: 3a702d50512e
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: internal/health/git_ausente_test.go
-      kind: test
-      rev: dfa4206adceb
-      updated_at: "2026-09-10"
+      rev: f8bc14748a14
       layer: teste
       tags:
         - test
     - id: internal/health/health.go
       kind: code
-      rev: c09d76f95c41
+      rev: c0f2617085e2
       updated_at: "2026-09-10"
       layer: infra
       tags:
@@ -2430,10 +2358,51 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/health/missing_git_test.go
+      kind: test
+      rev: 01234873042b
+      layer: teste
+      tags:
+        - test
     - id: internal/health/needs_test.go
       kind: test
       rev: 6ae8fb67eeaf
       updated_at: "2026-09-10"
+      layer: teste
+      tags:
+        - test
+    - id: internal/health/pending_decision.go
+      kind: code
+      rev: 5acadf48a82d
+      layer: infra
+      tags:
+        - infra
+      regime: declarativo
+    - id: internal/health/pending_decision_test.go
+      kind: test
+      rev: 0ae4eec37787
+      code: PARCX
+      layer: teste
+      tags:
+        - test
+    - id: internal/health/spec_sections.go
+      kind: code
+      rev: dfdb7fccf860
+      layer: infra
+      tags:
+        - infra
+      regime: declarativo
+    - id: internal/health/spec_sections_test.go
+      kind: test
+      rev: 7ec6baaeaf91
+      code: SGINS
+      layer: teste
+      code_declared: true
+      tags:
+        - test
+    - id: internal/health/tool_test.go
+      kind: test
+      rev: 3a702d50512e
       layer: teste
       tags:
         - test
@@ -2467,25 +2436,9 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/initx/board_bloqueio_test.go
+    - id: internal/initx/board_blocking_test.go
       kind: test
       rev: 038d466d4c30
-      updated_at: "2026-09-17"
-      layer: teste
-      tags:
-        - test
-    - id: internal/initx/board_expor.go
-      kind: code
-      rev: c0392b49356e
-      updated_at: "2026-09-16"
-      layer: infra
-      tags:
-        - infra
-      regime: declarativo
-    - id: internal/initx/board_expor_test.go
-      kind: test
-      rev: e349223970f9
-      updated_at: "2026-09-16"
       layer: teste
       tags:
         - test
@@ -2514,7 +2467,7 @@ nodes:
         - test
     - id: internal/initx/default_gates.go
       kind: code
-      rev: 6715ef236557
+      rev: bff1ce962e8b
       updated_at: "2026-09-16"
       layer: infra
       tags:
@@ -2524,6 +2477,19 @@ nodes:
       kind: test
       rev: 3cd047963371
       updated_at: "2026-09-10"
+      layer: teste
+      tags:
+        - test
+    - id: internal/initx/expose_board.go
+      kind: code
+      rev: d59b7f664cc5
+      layer: infra
+      tags:
+        - infra
+      regime: declarativo
+    - id: internal/initx/expose_board_test.go
+      kind: test
+      rev: e349223970f9
       layer: teste
       tags:
         - test
@@ -2544,7 +2510,7 @@ nodes:
         - test
     - id: internal/initx/header_guide.go
       kind: code
-      rev: f6979a1c697b
+      rev: 87c32544b800
       updated_at: "2026-09-16"
       layer: infra
       tags:
@@ -2552,6 +2518,12 @@ nodes:
       regime: declarativo
       no_propagation: true
       shared_code: true
+    - id: internal/initx/header_guide_language_test.go
+      kind: test
+      rev: d1d9dcabd862
+      layer: teste
+      tags:
+        - test
     - id: internal/initx/header_guide_test.go
       kind: test
       rev: dfe88bd93381
@@ -2575,33 +2547,16 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/initx/instrucao_tbd.go
-      kind: code
-      rev: cd911b1e869f
-      updated_at: "2026-09-10"
-      layer: infra
-      tags:
-        - infra
-      regime: declarativo
-    - id: internal/initx/instrucao_tbd_test.go
-      kind: test
-      rev: 63bf05c83521
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
-    - id: internal/initx/operador.go
+    - id: internal/initx/operator.go
       kind: code
       rev: c735d8c718d2
-      updated_at: "2026-09-10"
       layer: infra
       tags:
         - infra
       regime: declarativo
-    - id: internal/initx/operador_test.go
+    - id: internal/initx/operator_test.go
       kind: test
       rev: 1fb8f85f484f
-      updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
@@ -2613,21 +2568,6 @@ nodes:
       tags:
         - infra
       regime: declarativo
-    - id: internal/initx/perguntas.go
-      kind: code
-      rev: 045b1d8c6fa5
-      updated_at: "2026-09-10"
-      layer: infra
-      tags:
-        - infra
-      regime: declarativo
-    - id: internal/initx/perguntas_test.go
-      kind: test
-      rev: 288c1bcca238
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
     - id: internal/initx/presets.go
       kind: code
       rev: 767fe4e59f37
@@ -2643,16 +2583,41 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/initx/vocabulario_test.go
+    - id: internal/initx/questions.go
+      kind: code
+      rev: 045b1d8c6fa5
+      layer: infra
+      tags:
+        - infra
+      regime: declarativo
+    - id: internal/initx/questions_test.go
+      kind: test
+      rev: 288c1bcca238
+      layer: teste
+      tags:
+        - test
+    - id: internal/initx/tbd_instruction.go
+      kind: code
+      rev: cd911b1e869f
+      layer: infra
+      tags:
+        - infra
+      regime: declarativo
+    - id: internal/initx/tbd_instruction_test.go
+      kind: test
+      rev: 63bf05c83521
+      layer: teste
+      tags:
+        - test
+    - id: internal/initx/vocabulary_test.go
       kind: test
       rev: f83616566dd8
-      updated_at: "2026-09-11"
       layer: teste
       tags:
         - test
     - id: internal/initx/workflows.go
       kind: code
-      rev: be6c87257b0f
+      rev: c8c251a857d7
       updated_at: "2026-09-17"
       layer: infra
       tags:
@@ -2665,9 +2630,15 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/issue/canonical_labels_test.go
+      kind: test
+      rev: 5aad157e89af
+      layer: teste
+      tags:
+        - test
     - id: internal/issue/github.go
       kind: code
-      rev: 0568d61e89c3
+      rev: 8bef3d384cf6
       updated_at: "2026-09-10"
       layer: infra
       tags:
@@ -2682,7 +2653,7 @@ nodes:
         - test
     - id: internal/issue/issue.go
       kind: code
-      rev: 2a9b398f6fd7
+      rev: 5cbd91297a9d
       updated_at: "2026-09-10"
       layer: infra
       tags:
@@ -2690,15 +2661,14 @@ nodes:
       regime: declarativo
     - id: internal/issue/issue_test.go
       kind: test
-      rev: af4b3ddd4c16
+      rev: a9dbd919ece8
       updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
-    - id: internal/issue/labels_canonicos_test.go
+    - id: internal/issue/reassign_legacy_test.go
       kind: test
-      rev: 5aad157e89af
-      updated_at: "2026-09-14"
+      rev: 29240f84e645
       layer: teste
       tags:
         - test
@@ -2742,18 +2712,16 @@ nodes:
       tags:
         - test
       no_propagation: true
-    - id: internal/mapx/formato.go
+    - id: internal/mapx/format.go
       kind: code
-      rev: 384ef1b92031
-      updated_at: "2026-09-16"
+      rev: 5c6c73854705
       layer: mapa
       tags:
         - nucleo
         - mapa
-    - id: internal/mapx/formato_test.go
+    - id: internal/mapx/format_test.go
       kind: test
-      rev: f58d4955c720
-      updated_at: "2026-09-11"
+      rev: a34853117140
       layer: teste
       tags:
         - test
@@ -2790,10 +2758,9 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/mapx/julgado_test.go
+    - id: internal/mapx/judged_test.go
       kind: test
       rev: b7dbc512cc85
-      updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
@@ -2867,38 +2834,29 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/migra/migra_test.go
+    - id: internal/migra/migrate_test.go
       kind: test
       rev: 16cb4fd25885
-      updated_at: "2026-09-11"
       layer: teste
       tags:
         - test
-    - id: internal/migra/passo_test.go
+    - id: internal/migra/step_test.go
       kind: test
-      rev: eecb2f1e9634
-      updated_at: "2026-09-11"
+      rev: 122b173a5615
       layer: teste
       tags:
         - test
     - id: internal/pack/pack.go
       kind: code
-      rev: 732eee60d07d
+      rev: 189b3544a107
       updated_at: "2026-09-10"
       layer: infra
       tags:
         - infra
       regime: declarativo
-    - id: internal/queue/claim_residuo_test.go
-      kind: test
-      rev: 5bfa84742645
-      updated_at: "2026-09-10"
-      layer: teste
-      tags:
-        - test
     - id: internal/queue/queue.go
       kind: code
-      rev: de82f31c7a5c
+      rev: dec5c10541b8
       updated_at: "2026-09-10"
       layer: infra
       tags:
@@ -2908,6 +2866,12 @@ nodes:
       kind: test
       rev: 49f7fb08d8a8
       updated_at: "2026-09-10"
+      layer: teste
+      tags:
+        - test
+    - id: internal/queue/residual_claim_test.go
+      kind: test
+      rev: 5bfa84742645
       layer: teste
       tags:
         - test
@@ -2928,14 +2892,14 @@ nodes:
         - test
     - id: internal/recode/git_move_test.go
       kind: test
-      rev: d4f70023307e
+      rev: 68dfc3276c97
       updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
     - id: internal/recode/plan.go
       kind: code
-      rev: 4a76b305f06a
+      rev: 53d7dabfefa0
       updated_at: "2026-09-10"
       layer: infra
       tags:
@@ -2987,25 +2951,22 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: internal/scan/progresso.go
+    - id: internal/scan/progress.go
       kind: code
       rev: a2a12e8c1203
-      updated_at: "2026-09-17"
       layer: scan
       tags:
         - nucleo
         - scan
-    - id: internal/scan/progresso_merge_test.go
+    - id: internal/scan/progress_merge_test.go
       kind: test
       rev: 3ce86a1f3dcd
-      updated_at: "2026-09-10"
       layer: teste
       tags:
         - test
-    - id: internal/scan/progresso_test.go
+    - id: internal/scan/progress_test.go
       kind: test
       rev: 7a97e24327ba
-      updated_at: "2026-09-10"
       code: MTUAO
       layer: teste
       tags:
@@ -3075,7 +3036,7 @@ nodes:
         - test
     - id: internal/suggestion/suggestion.go
       kind: code
-      rev: d205712122f8
+      rev: bc5ca3de8421
       updated_at: "2026-09-10"
       layer: infra
       tags:
@@ -3083,7 +3044,7 @@ nodes:
       regime: declarativo
     - id: internal/suggestion/suggestion_test.go
       kind: test
-      rev: 865240e752ab
+      rev: 6fd0dfea62a6
       updated_at: "2026-09-10"
       layer: teste
       tags:
@@ -3110,10 +3071,9 @@ nodes:
       tags:
         - infra
       regime: declarativo
-    - id: internal/testsig/code_letras_test.go
+    - id: internal/testsig/code_letters_test.go
       kind: test
       rev: 8e76f5d37afe
-      updated_at: "2026-09-10"
       code: GLCGL
       layer: teste
       tags:
@@ -3151,7 +3111,7 @@ nodes:
       regime: declarativo
     - id: internal/testsig/mutation.go
       kind: code
-      rev: bff1eaa05e05
+      rev: cb0c10fc0915
       updated_at: "2026-09-10"
       layer: infra
       tags:
@@ -3159,7 +3119,7 @@ nodes:
       regime: declarativo
     - id: internal/testsig/mutation_gremlins.go
       kind: code
-      rev: 483b9e7b6847
+      rev: fcd47cb08f8f
       updated_at: "2026-09-10"
       layer: infra
       tags:
@@ -3213,15 +3173,15 @@ edges:
       type: governs
       origin: declared
     - from: CONCEPT.md
-      to: internal/config/padroes.go
+      to: internal/config/patterns.go
       type: governs
       origin: declared
     - from: CONCEPT.md
-      to: internal/config/raiz.go
+      to: internal/config/root.go
       type: governs
       origin: declared
     - from: CONCEPT.md
-      to: internal/config/vocabulario.go
+      to: internal/config/vocabulary.go
       type: governs
       origin: declared
     - from: CONCEPT.md
@@ -3233,7 +3193,7 @@ edges:
       type: governs
       origin: declared
     - from: CONCEPT.md
-      to: internal/mapx/formato.go
+      to: internal/mapx/format.go
       type: governs
       origin: declared
     - from: CONCEPT.md
@@ -3265,7 +3225,7 @@ edges:
       type: governs
       origin: declared
     - from: CONCEPT.md
-      to: internal/scan/progresso.go
+      to: internal/scan/progress.go
       type: governs
       origin: declared
     - from: CONCEPT.md
@@ -3285,7 +3245,7 @@ edges:
       type: governs
       origin: declared
     - from: PROPAGATION.md
-      to: internal/mapx/formato.go
+      to: internal/mapx/format.go
       type: governs
       origin: declared
     - from: PROPAGATION.md
@@ -3313,19 +3273,11 @@ edges:
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/cenario_identidade.go
-      type: governs
-      origin: declared
-    - from: QUALITY.md
-      to: internal/gate/cenario_letra_declarada.go
-      type: governs
-      origin: declared
-    - from: QUALITY.md
-      to: internal/gate/cenario_tipo_alinhado.go
-      type: governs
-      origin: declared
-    - from: QUALITY.md
       to: internal/gate/code_cataloged.go
+      type: governs
+      origin: declared
+    - from: QUALITY.md
+      to: internal/gate/code_language.go
       type: governs
       origin: declared
     - from: QUALITY.md
@@ -3369,10 +3321,6 @@ edges:
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/fase_ordenada.go
-      type: governs
-      origin: declared
-    - from: QUALITY.md
       to: internal/gate/feature_test_match.go
       type: governs
       origin: declared
@@ -3389,10 +3337,6 @@ edges:
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/idioma_do_codigo.go
-      type: governs
-      origin: declared
-    - from: QUALITY.md
       to: internal/gate/internal_checks.go
       type: governs
       origin: declared
@@ -3405,11 +3349,11 @@ edges:
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/mock_carimbado.go
+      to: internal/gate/mock_stamped.go
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/mock_tipado.go
+      to: internal/gate/mock_typed.go
       type: governs
       origin: declared
     - from: QUALITY.md
@@ -3433,7 +3377,19 @@ edges:
       type: governs
       origin: declared
     - from: QUALITY.md
+      to: internal/gate/phase_ordered.go
+      type: governs
+      origin: declared
+    - from: QUALITY.md
       to: internal/gate/placeholder_filled.go
+      type: governs
+      origin: declared
+    - from: QUALITY.md
+      to: internal/gate/plan_change_justified.go
+      type: governs
+      origin: declared
+    - from: QUALITY.md
+      to: internal/gate/plan_revised.go
       type: governs
       origin: declared
     - from: QUALITY.md
@@ -3445,27 +3401,19 @@ edges:
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/plano_alterado_justificado.go
-      type: governs
-      origin: declared
-    - from: QUALITY.md
-      to: internal/gate/plano_revisado.go
-      type: governs
-      origin: declared
-    - from: QUALITY.md
       to: internal/gate/profile.go
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/progresso_honesto.go
+      to: internal/gate/progress_honest.go
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/promovivel.go
+      to: internal/gate/promotable.go
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/prova_cruza_fronteira.go
+      to: internal/gate/proof_crosses_boundary.go
       type: governs
       origin: declared
     - from: QUALITY.md
@@ -3477,15 +3425,15 @@ edges:
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/regra.go
-      type: governs
-      origin: declared
-    - from: QUALITY.md
       to: internal/gate/route_declared.go
       type: governs
       origin: declared
     - from: QUALITY.md
       to: internal/gate/route_exists.go
+      type: governs
+      origin: declared
+    - from: QUALITY.md
+      to: internal/gate/rule.go
       type: governs
       origin: declared
     - from: QUALITY.md
@@ -3501,6 +3449,18 @@ edges:
       type: governs
       origin: declared
     - from: QUALITY.md
+      to: internal/gate/scenario_identity.go
+      type: governs
+      origin: declared
+    - from: QUALITY.md
+      to: internal/gate/scenario_letter_declared.go
+      type: governs
+      origin: declared
+    - from: QUALITY.md
+      to: internal/gate/scenario_type_aligned.go
+      type: governs
+      origin: declared
+    - from: QUALITY.md
       to: internal/gate/sibling_guard.go
       type: governs
       origin: declared
@@ -3509,15 +3469,11 @@ edges:
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/teste_rastreavel.go
+      to: internal/gate/test_traceable.go
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/testid_coerente.go
-      type: governs
-      origin: declared
-    - from: QUALITY.md
-      to: internal/gate/testid_consultado_existe.go
+      to: internal/gate/testid_consistent.go
       type: governs
       origin: declared
     - from: QUALITY.md
@@ -3525,15 +3481,19 @@ edges:
       type: governs
       origin: declared
     - from: QUALITY.md
-      to: internal/gate/testid_superficies.go
+      to: internal/gate/testid_queried_exists.go
+      type: governs
+      origin: declared
+    - from: QUALITY.md
+      to: internal/gate/testid_surfaces.go
+      type: governs
+      origin: declared
+    - from: QUALITY.md
+      to: internal/gate/triad_complete.go
       type: governs
       origin: declared
     - from: QUALITY.md
       to: internal/gate/trigger_declared.go
-      type: governs
-      origin: declared
-    - from: QUALITY.md
-      to: internal/gate/trinca_completa.go
       type: governs
       origin: declared
     - from: QUALITY.md
@@ -3569,15 +3529,15 @@ edges:
       type: governs
       origin: declared
     - from: STRUCTURE.md
-      to: internal/config/padroes.go
+      to: internal/config/patterns.go
       type: governs
       origin: declared
     - from: STRUCTURE.md
-      to: internal/config/raiz.go
+      to: internal/config/root.go
       type: governs
       origin: declared
     - from: STRUCTURE.md
-      to: internal/config/vocabulario.go
+      to: internal/config/vocabulary.go
       type: governs
       origin: declared
     - from: TRACEABILITY.md
@@ -3589,7 +3549,7 @@ edges:
       type: governs
       origin: declared
     - from: TRACEABILITY.md
-      to: internal/mapx/formato.go
+      to: internal/mapx/format.go
       type: governs
       origin: declared
     - from: TRACEABILITY.md
@@ -3621,7 +3581,7 @@ edges:
       type: governs
       origin: declared
     - from: TRACEABILITY.md
-      to: internal/scan/progresso.go
+      to: internal/scan/progress.go
       type: governs
       origin: declared
     - from: TRACEABILITY.md
@@ -3661,7 +3621,7 @@ edges:
       type: governs
       origin: declared
     - from: WORKFLOW.md
-      to: internal/gitmeta/disponivel.go
+      to: internal/gitmeta/availability.go
       type: governs
       origin: declared
     - from: WORKFLOW.md
@@ -3669,19 +3629,27 @@ edges:
       type: governs
       origin: declared
     - from: WORKFLOW.md
-      to: internal/health/ambiente_github.go
+      to: internal/health/approval.go
       type: governs
       origin: declared
     - from: WORKFLOW.md
-      to: internal/health/aprovacao.go
+      to: internal/health/github_environment.go
       type: governs
       origin: declared
     - from: WORKFLOW.md
-      to: internal/health/decisao_pendente.go
+      to: internal/health/governance.go
       type: governs
       origin: declared
     - from: WORKFLOW.md
       to: internal/health/health.go
+      type: governs
+      origin: declared
+    - from: WORKFLOW.md
+      to: internal/health/pending_decision.go
+      type: governs
+      origin: declared
+    - from: WORKFLOW.md
+      to: internal/health/spec_sections.go
       type: governs
       origin: declared
     - from: WORKFLOW.md
@@ -3690,10 +3658,6 @@ edges:
       origin: declared
     - from: WORKFLOW.md
       to: internal/initx/artifacts.go
-      type: governs
-      origin: declared
-    - from: WORKFLOW.md
-      to: internal/initx/board_expor.go
       type: governs
       origin: declared
     - from: WORKFLOW.md
@@ -3709,6 +3673,10 @@ edges:
       type: governs
       origin: declared
     - from: WORKFLOW.md
+      to: internal/initx/expose_board.go
+      type: governs
+      origin: declared
+    - from: WORKFLOW.md
       to: internal/initx/git.go
       type: governs
       origin: declared
@@ -3721,11 +3689,7 @@ edges:
       type: governs
       origin: declared
     - from: WORKFLOW.md
-      to: internal/initx/instrucao_tbd.go
-      type: governs
-      origin: declared
-    - from: WORKFLOW.md
-      to: internal/initx/operador.go
+      to: internal/initx/operator.go
       type: governs
       origin: declared
     - from: WORKFLOW.md
@@ -3733,11 +3697,15 @@ edges:
       type: governs
       origin: declared
     - from: WORKFLOW.md
-      to: internal/initx/perguntas.go
+      to: internal/initx/presets.go
       type: governs
       origin: declared
     - from: WORKFLOW.md
-      to: internal/initx/presets.go
+      to: internal/initx/questions.go
+      type: governs
+      origin: declared
+    - from: WORKFLOW.md
+      to: internal/initx/tbd_instruction.go
       type: governs
       origin: declared
     - from: WORKFLOW.md

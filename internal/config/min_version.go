@@ -53,16 +53,16 @@ func parseVersion(v string) ([3]int, error) {
 	var out [3]int
 	v = strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(v), "v"))
 	if v == "" {
-		return out, fmt.Errorf("versão vazia")
+		return out, fmt.Errorf("empty version")
 	}
 	partes := strings.Split(v, ".")
 	if len(partes) != 3 {
-		return out, fmt.Errorf("versão %q não é MAJOR.MINOR.PATCH", v)
+		return out, fmt.Errorf("version %q is not MAJOR.MINOR.PATCH", v)
 	}
 	for i, p := range partes {
 		n, err := strconv.Atoi(p)
 		if err != nil || n < 0 {
-			return out, fmt.Errorf("versão %q não é ordenável", v)
+			return out, fmt.Errorf("version %q is not orderable", v)
 		}
 		out[i] = n
 	}
@@ -106,9 +106,9 @@ func (c *Config) validarMinVersion() error {
 		return nil
 	}
 	if _, err := parseVersion(v); err != nil {
-		return fmt.Errorf("min_version: %q não é MAJOR.MINOR.PATCH (ex.: 0.1.84) — "+
-			"o campo declara a versão mínima do binário que este projeto aceita, e um "+
-			"valor que não se compara silencia o aviso que ele existe para dar", c.MinVersion)
+		return fmt.Errorf("min_version: %q is not MAJOR.MINOR.PATCH (e.g. 0.1.84) — "+
+			"the field declares the minimum binary version this project accepts, and a "+
+			"value that cannot be compared silences the very warning it exists to give", c.MinVersion)
 	}
 	return nil
 }

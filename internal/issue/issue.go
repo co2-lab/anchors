@@ -145,29 +145,29 @@ func (i Issue) Body() string {
 	fmt.Fprintf(&b, "# %s: %s\n\n", strings.ToUpper(string(i.Kind)), i.Target)
 	fmt.Fprintf(&b, "- **kind:** %s\n", i.Kind)
 	if i.Anchor != "" {
-		fmt.Fprintf(&b, "- **âncora (régua):** %s\n", i.Anchor)
+		fmt.Fprintf(&b, "- **anchor (ruler):** %s\n", i.Anchor)
 	}
-	fmt.Fprintf(&b, "- **alvo (regido):** %s\n", i.Target)
+	fmt.Fprintf(&b, "- **target (ruled):** %s\n", i.Target)
 	if i.Gate != "" {
 		fmt.Fprintf(&b, "- **gate:** %s\n", i.Gate)
 	}
 	// O DONO no cabeçalho é o que permite filtrar sem abrir cada arquivo — e é a
 	// pergunta que quem lê a pasta faz primeiro: "o que aqui é meu?".
-	fmt.Fprintf(&b, "- **dono:** %s\n", OwnerOf(i.Dono))
-	fmt.Fprintf(&b, "- **detectada em:** %s\n\n", i.Date)
+	fmt.Fprintf(&b, "- **owner:** %s\n", OwnerOf(i.Dono))
+	fmt.Fprintf(&b, "- **detected on:** %s\n\n", i.Date)
 	// Cabeçalho da seção do corpo — omitido quando o Detail já traz seus próprios
 	// cabeçalhos markdown (um laudo estruturado da IA), para não duplicar.
 	detailHasHeadings := strings.Contains(i.Detail, "\n#") || strings.HasPrefix(i.Detail, "#")
 	if !detailHasHeadings {
 		switch i.Kind {
 		case Violation:
-			b.WriteString("## Invariante violada\n\n")
+			b.WriteString("## Violated invariant\n\n")
 		case Stale:
-			b.WriteString("## Quem está atrás de quem\n\n")
+			b.WriteString("## Who is behind whom\n\n")
 		case Conflict:
-			b.WriteString("## A discordância\n\n")
+			b.WriteString("## The disagreement\n\n")
 		case Decision:
-			b.WriteString("## A pergunta em aberto\n\n")
+			b.WriteString("## The open question\n\n")
 		}
 	}
 	if i.Detail != "" {
@@ -179,23 +179,23 @@ func (i Issue) Body() string {
 		// O RODAPÉ diz como fechar. É a issue que o usuário resolve — sozinho, ou pedindo
 		// à IA que liste as perguntas abertas —, e sem isto ele teria a pergunta sem o
 		// procedimento: o caminho errado (apagar o item) é mais curto que o certo.
-		b.WriteString("_Decisão em aberto, registrada pelo Anchors. Não é defeito: é a spec " +
-			"dizendo a verdade sobre o que ainda não sabe.\n\n" +
-			"**Como fechar:** leve a pergunta a quem decide e PROMOVA a resposta a regra " +
-			"(com código) na spec. Marque o item como resolvido (`[x]`) citando a regra que " +
-			"nasceu dele — o `anchors check` fecha esta issue sozinho no próximo confronto.\n\n" +
-			"**O que NÃO fazer:** apagar o item sem regra nova. O gate não distingue isso de " +
-			"ter decidido, e quem apaga assume a decisão silenciosamente._\n")
+		b.WriteString("_Open decision, recorded by Anchors. It is not a defect: it is the spec " +
+			"telling the truth about what it does not know yet.\n\n" +
+			"**How to close it:** take the question to whoever decides and PROMOTE the answer to a rule " +
+			"(with a code) in the spec. Mark the item as resolved (`[x]`) citing the rule that " +
+			"was born from it — `anchors check` closes this issue on its own in the next confrontation.\n\n" +
+			"**What NOT to do:** delete the item without a new rule. The gate does not distinguish that from " +
+			"having decided, and whoever deletes it takes on the decision silently._\n")
 		return b.String()
 	}
 	if i.Prazo != "" {
-		fmt.Fprintf(&b, "**Quando será paga:**\n\n- %s\n\n", i.Prazo)
-		b.WriteString("_Dívida ASSUMIDA, registrada pelo Anchors. Não é defeito: é um dever " +
-			"conhecido, ainda válido, com um momento declarado para ser cumprido. Quando " +
-			"chegar a hora, mova para `todo/`; ao pagar, o confronto a fecha sozinho._\n")
+		fmt.Fprintf(&b, "**When it will be paid:**\n\n- %s\n\n", i.Prazo)
+		b.WriteString("_ASSUMED debt, recorded by Anchors. It is not a defect: it is a known duty, " +
+			"still valid, with a declared moment to be fulfilled. When the time comes, " +
+			"move it to `todo/`; once paid, the confrontation closes it on its own._\n")
 		return b.String()
 	}
-	b.WriteString("_Registrada pelo Anchors. Resolva movendo para `doing/` e, ao tratar, para `done/`._\n")
+	b.WriteString("_Recorded by Anchors. Resolve it by moving to `doing/` and, once handled, to `done/`._\n")
 	return b.String()
 }
 
@@ -334,7 +334,7 @@ func Reopen(root string, i Issue) (reaberta bool, err error) {
 	}
 	corpo := string(antigo)
 	if i.Detail != "" {
-		corpo += "\n\n---\n\n## Achado adicional — " + i.Date + "\n\n" + i.Detail + "\n"
+		corpo += "\n\n---\n\n## Additional finding — " + i.Date + "\n\n" + i.Detail + "\n"
 	}
 	destino := pathFor(root, Todo, name)
 	if st != Todo {
@@ -352,7 +352,7 @@ func Reopen(root string, i Issue) (reaberta bool, err error) {
 }
 
 // ownerRE lê o dono do cabeçalho de uma issue já gravada.
-var ownerRE = regexp.MustCompile(`(?m)^- \*\*dono:\*\*\s*(\S+)\s*$`)
+var ownerRE = regexp.MustCompile(`(?m)^- \*\*(?:owner|dono):\*\*\s*(\S+)\s*$`)
 
 // FileOwner lê de quem é a issue, sem carregar o resto.
 //
@@ -399,19 +399,30 @@ func Reassign(root string, st State, nome string, para Owner, porque string) err
 		return err
 	}
 	texto := string(b)
-	linha := "- **dono:** " + string(OwnerOf(para))
+	linha := "- **owner:** " + string(OwnerOf(para))
 	if ownerRE.MatchString(texto) {
 		texto = ownerRE.ReplaceAllString(texto, linha)
 	} else {
 		// Issue anterior ao campo: insere depois do kind, que sempre existe.
-		texto = strings.Replace(texto, "\n- **alvo", "\n"+linha+"\n- **alvo", 1)
+		//
+		// As DUAS grafias do rótulo, e não só a nova: este ramo só roda em issue ANTIGA
+		// (anterior ao campo `owner`), e issue antiga traz o rótulo em português. Ancorar
+		// só em `- **target` erraria exatamente o caso que o ramo existe para atender — e
+		// a falha é silenciosa: o Replace não casa, a linha do dono não entra, e o
+		// reassign termina sem erro tendo perdido o dono.
+		for _, ancora := range []string{"\n- **target", "\n- **alvo"} {
+			if strings.Contains(texto, ancora) {
+				texto = strings.Replace(texto, ancora, "\n"+linha+ancora, 1)
+				break
+			}
+		}
 	}
 	// O PORQUÊ é obrigatório na prática: uma issue que muda de dono sem explicação chega
 	// a quem decide sem contexto, e a primeira coisa que essa pessoa faz é perguntar o
 	// que já se tentou.
 	if porque != "" {
-		texto = strings.TrimRight(texto, "\n") + "\n\n---\n**Passou a ser do " +
-			string(OwnerOf(para)) + ":** " + porque + "\n"
+		texto = strings.TrimRight(texto, "\n") + "\n\n---\n**Became the " +
+			string(OwnerOf(para)) + "'s:** " + porque + "\n"
 	}
 	return os.WriteFile(caminho, []byte(texto), 0o644)
 }

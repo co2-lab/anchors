@@ -1,12 +1,12 @@
 package gate
 
 import (
-	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -37,7 +37,7 @@ import (
 // essencialmente o CÓDIGO DA REGRA e nada mais.
 func checkScenarioAsserts(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindFeature {
-		return Skip, "o passo de resultado é da feature — é ela que descreve o cenário"
+		return Skip, i18n.T("gate.scenario_asserts.skip_not_feature")
 	}
 
 	d := cfg.DialectFor()
@@ -70,12 +70,7 @@ func checkScenarioAsserts(content string, n mapx.Node, root string, g *mapx.Grap
 
 	sort.Strings(vazios)
 	vazios = dedup(vazios)
-	return Fail, fmt.Sprintf("%d cenário(s) com passo de resultado que não afirma resultado "+
-		"(%s): o `%s` repete o código da regra em vez de dizer o que deveria acontecer. "+
-		"Escreva o resultado OBSERVÁVEL, com o valor esperado — sem isso, a definição do que "+
-		"\"se verifica\" migra para o teste, e o teste passa a ser escrito sem saber qual era "+
-		"o desfecho",
-		len(vazios), strings.Join(vazios, ", "), kw.Then)
+	return Fail, i18n.T("gate.scenario.no_assert", len(vazios), strings.Join(vazios, ", "))
 }
 
 // isTautology: o resto do passo é só o código da regra, cercado de palavras de ligação?

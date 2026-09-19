@@ -83,6 +83,7 @@ sobre trabalho que não existe.
 | `rule-types` | as letras dos códigos estão no vocabulário declarado |
 | `teste-rastreavel` | o teste cita o código do cenário que prova |
 | `scenario-asserts` | o cenário afirma algo, em vez de só executar |
+| `region-pair-honored` | os marcadores `#region` e `#endregion` fecham com o mesmo código |
 
 ### O planejamento — o plano ainda descreve a realidade?
 
@@ -106,6 +107,7 @@ estado do arquivo, é a mudança sem justificativa.
 | gate | mede |
 | --- | --- |
 | `tests-green` | a suíte passa |
+| `evidence-fresh` | o placar do teste continua fresco (o código/fecho não avançou) |
 | `line-coverage` | a linha executou durante o teste |
 | `coverage-delta` | a cobertura não caiu com esta mudança |
 | `mutation-score` | se a linha mudasse, algum teste quebraria |
@@ -133,15 +135,20 @@ que nenhum teste percebia.
 | `mock-tipado` | o dublê respeita o contrato do que substitui |
 | `mock-detect-cobre-o-dialeto` | o regex que reconhece dublê alcança as formas que o projeto usa |
 
-### Segurança e conformidade
+### Segurança, conformidade e governança externa
 
-| gate | mede |
-| --- | --- |
-| `secret-nao-vazado` | nenhum segredo entra no repositório |
-| `dependencia-vulneravel` | quantas CVEs conhecidas as dependências carregam |
-| `sbom-gerado` | o inventário de dependências está publicado |
-| `obligation-honored` | os deveres regulatórios declarados são cumpridos |
-| `contract-status-declared` | o status de cada contrato externo está dito |
+| gate | tipo | mede |
+| --- | --- | --- |
+| `no-secret-leaked` | externo (`run`) | nenhum segredo entra no repositório |
+| `dependency-vulnerable` | externo (`run`) | quantas CVEs conhecidas as dependências carregam |
+| `sbom-generated` | externo (`run`) | o inventário CycloneDX/SPDX de dependências está publicado |
+| `license-compatible` | externo (`run`) | ausência de dependências com copyleft forte ou incompatível |
+| `no-duplication` | externo (`run`) | nenhum bloco de código aparece copiado em dois lugares |
+| `spellcheck` | externo (`run`) | sem erros de grafia no texto e nos identificadores |
+| `circular` | externo (`run`) | não há dependência circular entre módulos do projeto |
+| `deadcode` | externo (`run`) | não há funções, exports ou arquivos órfãos sem consumidor |
+| `obligation-honored` | interno | os deveres regulatórios declarados são cumpridos |
+| `contract-status-declared` | interno | o status de cada contrato externo está dito |
 
 ### Julgamento por IA
 
@@ -240,22 +247,88 @@ Fronteira importa menos; **prova** importa mais.
 
 ## Gates externos: quando a ferramenta é do projeto
 
-Nem todo gate é interno. Um comando do projeto vira gate com `run`:
+Nem todo gate é interno ao binário do Anchors. O Anchors é **estritamente agnóstico de linguagem**: ele decide **quando** avaliar (`when`), o **escopo** (`batch` vs `project`) e se a falha **barra** o commit ou PR (`blocking`), enquanto o seu projeto fornece a ferramenta adequada via `run:`.
 
 ```yaml
-- name: licenca-compativel
+- name: license-compatible
   on: [code]
   scope: project
-  run: 'bash scripts/anchors-licencas.sh'
+  run: 'go-licenses check ./... --disallowed_types=forbidden,restricted'
   needs_tool: go-licenses
   install_hint: 'go install github.com/google/go-licenses@latest'
-  blocking: true
-  when: [pre-push, ci]
+  blocking: false
+  when: [ci]
 ```
 
-O `needs_tool` e o `install_hint` importam: sem eles, um gate que depende de
-ferramenta ausente reprova com um erro de shell, e quem o vê não sabe se o
-código está errado ou se falta instalar algo.
+O `needs_tool` e o `install_hint` são essenciais: sem a ferramenta na máquina, o Anchors emite **`Skip`** e o `anchors doctor` avisa o que falta instalar, em vez de quebrar a execução com erro críptico de shell.
+
+---
+
+### Guia de ferramentas por linguagem
+
+A tabela a seguir resume as ferramentas recomendadas para cada gate externo nas principais plataformas:
+
+| Gate | Universal (Binário Nativo) | Go | Node.js / TypeScript | Python | Rust |
+|---|---|---|---|---|---|
+| `no-secret-leaked` | `gitleaks` | `gitleaks` | `gitleaks` | `detect-secrets` | `gitleaks` |
+| `dependency-vulnerable` | `osv-scanner` / `trivy` | `govulncheck` | `pnpm audit` / `osv-scanner` | `pip-audit` | `cargo-audit` |
+| `sbom-generated` | `syft` | `syft` / `cyclonedx-gomod` | `syft` / `@cyclonedx/cyclonedx-npm` | `cyclonedx-py` | `cargo-cyclonedx` |
+| `no-duplication` | `pmd cpd` | `dupl` | `jscpd` | `pylint --enable=similarities` | `flcl` / `pmd cpd` |
+| `spellcheck` | `typos` | `typos` | `typos` ou `cspell` | `typos` ou `codespell` | `typos` |
+| `license-compatible` | — | `go-licenses` | `license-checker` | `pip-licenses` | `cargo-deny` |
+| `circular` | — | Compilador Go / `go vet` | `madge` | `import-linter` | Compilador Rust |
+| `deadcode` | — | `deadcode` (x/tools) | `knip` | `vulture` | `cargo-udeps` |
+
+#### 1. `no-secret-leaked` (Segredos no código)
+Bloqueante desde o primeiro dia — segredo commitado entra para a eternidade do histórico git.
+- **Universal (Recomendado)**: `gitleaks git --no-banner --redact -v` (`brew install gitleaks`)
+
+#### 2. `dependency-vulnerable` (Vulnerabilidades nas dependências)
+Audita lockfiles contra bases de CVEs conhecidas.
+- **Universal (Recomendado)**: `osv-scanner scan source -r .` (`brew install osv-scanner`)
+- **Go**: `govulncheck ./...`
+- **Node / TS**: `pnpm audit --prod` ou `npm audit --omit=dev`
+- **Python**: `pip-audit`
+- **Rust**: `cargo-audit`
+
+#### 3. `sbom-generated` (Inventário de Software)
+Gera o inventário CycloneDX/SPDX para auditorias e compliance.
+- **Universal (Recomendado)**: `syft scan dir:. -o cyclonedx-json=sbom.json -q` (`brew install syft`)
+- **Go**: `cyclonedx-gomod app -json -output sbom.json`
+- **Node / TS**: `npx @cyclonedx/cyclonedx-npm --output-file sbom.json`
+
+#### 4. `no-duplication` (Detecção de copy-paste)
+Pega blocos de lógica idênticos duplicados entre múltiplos arquivos.
+- **Universal**: `pmd cpd --minimum-tokens 70 --dir . --language <lang>` (`brew install pmd`)
+- **Node / TS / Multi-lang**: `npx --yes jscpd . --reporters console --silent`
+- **Go**: `dupl -t 70`
+
+#### 5. `spellcheck` (Erros ortográficos)
+Elimina erros de digitação em texto, mensagens e identificadores de código (camelCase, snake_case).
+- **Universal (Recomendado)**: `typos` (`brew install typos`) — binário nativo ultra-rápido em Rust, sem dependência de Node ou Python.
+- **Node / TS**: `npx cspell --no-progress --no-summary {{files}}`
+
+#### 6. `license-compatible` (Conformidade de licenças)
+Impede inclusão acidental de dependências com copyleft forte (AGPL/SSPL) em projetos proprietários.
+- **Go**: `go-licenses check ./... --disallowed_types=forbidden,restricted`
+- **Node / TS**: `npx license-checker --production --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC'`
+- **Python**: `pip-licenses`
+- **Rust**: `cargo-deny check bans licenses`
+
+#### 7. `circular` (Dependências circulares)
+Detecta ciclos no grafo de módulos ou imports.
+- **Node / TS**: `npx madge --circular --extensions ts,tsx src/`
+- **Python**: `lint-imports` (via `import-linter`)
+- **Go / Rust**: Garantido nativamente pelo compilador da linguagem.
+
+#### 8. `deadcode` (Código morto)
+Identifica exports, funções, tipos e arquivos órfãos não consumidos.
+- **Go**: `deadcode ./...` (`go install golang.org/x/tools/cmd/deadcode@latest`)
+- **Node / TS**: `npx knip`
+- **Python**: `vulture src/`
+- **Rust**: `cargo +nightly udeps`
+
+> **Consulte o guia completo:** Veja [`guides/GATES_ECOSYSTEM_GUIDE.md`](https://github.com/co2-lab/anchors/blob/main/guides/GATES_ECOSYSTEM_GUIDE.md) no repositório para comandos de instalação detalhados, exemplos de allowlists e arquivos de configuração.
 
 > **Um gate declarado que nunca roda é pior que gate nenhum**, porque consta na
 > configuração como se protegesse. Se o gate declara `when: [ci]` e o seu CI não

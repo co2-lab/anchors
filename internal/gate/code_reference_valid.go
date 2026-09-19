@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -9,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -35,16 +35,16 @@ import (
 // que ela define — só as referências a OUTRAS unidades.
 func checkCodeReferenceValid(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "a citação cruzada é da spec — é ela que referencia outras unidades"
+		return Skip, i18n.T("gate.code_reference_valid.skip_not_spec")
 	}
 	if g == nil {
-		return Pending, "sem mapa carregado — o gate precisa do universo de identidades"
+		return Pending, i18n.T("gate.code_reference_valid.no_map")
 	}
 
-	meu := codeDoHeader(content)
+	meu := headerCode(content)
 	donos := codeOwners(g, root)
 	if len(donos) == 0 {
-		return Pending, "nenhuma identidade no mapa — rode `anchors map build`"
+		return Pending, i18n.T("gate.code_reference_valid.pending_no_identities")
 	}
 
 	orfas := map[string]bool{}
@@ -64,11 +64,7 @@ func checkCodeReferenceValid(content string, n mapx.Node, root string, g *mapx.G
 		lista = append(lista, "`"+c+"`")
 	}
 	sort.Strings(lista)
-	return Fail, fmt.Sprintf("cita %d código(s) que não existem no projeto: %s. "+
-		"Uma citação assim PARECE rastreabilidade e aponta para o vazio — quem lê depois "+
-		"(pessoa ou agente) a toma como registro do que foi feito. Ou a unidade citada "+
-		"precisa nascer, ou a citação está errada e deve sair",
-		len(lista), strings.Join(lista, ", "))
+	return Fail, i18n.T("gate.code_reference.invalid", len(lista), strings.Join(lista, ", "))
 }
 
 // refCodeRE casa uma referência a um requisito: `XXXXX-B07`. Não distingue definição de
@@ -91,7 +87,7 @@ func headerCodeCaptureRE() *regexp.Regexp {
 	return regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
 }
 
-func codeDoHeader(content string) string {
+func headerCode(content string) string {
 	if m := headerCodeCaptureRE().FindStringSubmatch(content); m != nil {
 		return m[1]
 	}
@@ -115,7 +111,7 @@ func codeOwners(g *mapx.Graph, root string) map[string]bool {
 		if err != nil {
 			continue
 		}
-		if c := codeDoHeader(string(b)); c != "" {
+		if c := headerCode(string(b)); c != "" {
 			out[c] = true
 		}
 	}

@@ -11,6 +11,18 @@ import { docsSchema } from '@astrojs/starlight/schema';
 //   en/concept.md    -> id `en/docs/concept`      (locale primeiro)
 const ROOT_LOCALE = 'pt';
 
+const canonicalSlugs: Record<string, string> = {
+	concept: 'conceito',
+	freeze: 'congelar',
+	structure: 'estrutura',
+	workflow: 'fluxo-de-trabalho',
+	planning: 'planejamento',
+	propagation: 'propagacao',
+	quality: 'qualidade',
+	traceability: 'rastreabilidade',
+	'spec-types': 'tipos-de-spec',
+};
+
 export const collections = {
 	docs: defineCollection({
 		loader: docsLoader({
@@ -21,7 +33,10 @@ export const collections = {
 					.replace(/^\/+/, '');
 				const parts = slug.split('/').filter(Boolean);
 				const locale = parts.shift() ?? ROOT_LOCALE;
-				const rest = parts.join('/');
+				let rest = parts.join('/');
+				if (locale === 'en' && canonicalSlugs[rest]) {
+					rest = canonicalSlugs[rest];
+				}
 				const docs = rest ? `docs/${rest}` : 'docs';
 				return locale === ROOT_LOCALE ? docs : `${locale}/${docs}`;
 			},

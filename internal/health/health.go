@@ -7,7 +7,6 @@
 package health
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -69,6 +69,8 @@ func Diagnose(g *mapx.Graph, cfg *config.Config, root string) Report {
 	r.Findings = append(r.Findings, checkPlanNeeds(g)...)
 	r.Findings = append(r.Findings, checkMissingSignals(g)...)
 	r.Findings = append(r.Findings, checkPendingDecisions(g, root, cfg)...)
+	r.Findings = append(r.Findings, checkGovernanceOpportunities(g, cfg)...)
+	r.Findings = append(r.Findings, checkSpecSections(g, cfg, root)...)
 	sortFindings(r.Findings)
 	return r
 }
@@ -129,7 +131,7 @@ func checkDuplicateCodes(g *mapx.Graph) []Finding {
 		}
 		out = append(out, Finding{
 			"identidade-duplicada", Warn, code,
-			"código usado por unidades distintas: " + strings.Join(owners, ", "),
+			i18n.T("health.duplicate_identity", strings.Join(owners, ", ")),
 		})
 	}
 	return out
@@ -195,13 +197,13 @@ func checkMapFidelity(g *mapx.Graph, root string) []Finding {
 	for _, n := range g.Nodes {
 		nodeIDs[n.ID] = true
 		if !exists(n.ID) {
-			out = append(out, Finding{"no-fantasma", Warn, n.ID, "nó no mapa sem arquivo em disco"})
+			out = append(out, Finding{"no-fantasma", Warn, n.ID, i18n.T("health.ghost_node")})
 		}
 	}
 	// arestas apontando para nó inexistente (aresta morta)
 	for _, e := range g.Edges {
 		if !nodeIDs[e.From] || !nodeIDs[e.To] {
-			out = append(out, Finding{"aresta-morta", Warn, e.From + " → " + e.To, "aresta aponta para nó ausente do mapa"})
+			out = append(out, Finding{"aresta-morta", Warn, e.From + " → " + e.To, i18n.T("health.dead_edge")})
 		}
 	}
 	return out
@@ -228,11 +230,11 @@ func checkOrphans(g *mapx.Graph) []Finding {
 		case mapx.KindSpec:
 			// spec sem código realizado — requisito sem encarnação
 			if !hasOutgoing[n.ID] {
-				out = append(out, Finding{"spec-sem-realizacao", Warn, n.ID, "spec não liga a nenhum código/feature/teste"})
+				out = append(out, Finding{"spec-sem-realizacao", Warn, n.ID, i18n.T("health.spec_without_implementation")})
 			}
 			// identidade ausente (o órfão invisível): spec sem código de cenário
 			if n.Code == "" {
-				out = append(out, Finding{"identidade-ausente", Warn, n.ID, "spec sem código de cenário (órfão invisível)"})
+				out = append(out, Finding{"identidade-ausente", Warn, n.ID, i18n.T("health.missing_identity")})
 			}
 		}
 	}
@@ -251,7 +253,7 @@ func checkLooseLayers(g *mapx.Graph, cfg *config.Config) []Finding {
 	// camada declarada na config mas sem nenhum nó do seu kind
 	for name, l := range cfg.Layers {
 		if kindCount[mapx.Kind(l.Kind)] == 0 {
-			out = append(out, Finding{"camada-vazia", Warn, name, "camada declarada na Estrutura mas sem nenhum arquivo"})
+			out = append(out, Finding{"camada-vazia", Warn, name, i18n.T("health.empty_layer")})
 		}
 	}
 	// guide que não aparece como `from` de nenhuma aresta governs (não rege nada)
@@ -266,8 +268,7 @@ func checkLooseLayers(g *mapx.Graph, cfg *config.Config) []Finding {
 			// um guide que não rege ninguém NÃO é guide — é doc parado. É débito de
 			// Estrutura (Warn): ou falta a regra `governs` (o guide rege algo que não
 			// foi declarado), ou o arquivo deveria ser kind `doc`.
-			out = append(out, Finding{"guide-sem-governo", Warn, n.ID,
-				"guide não rege ninguém — declare uma regra `governs` (a tag que ele rege) ou reclassifique como doc"})
+			out = append(out, Finding{"guide-sem-governo", Warn, n.ID, i18n.T("health.ungoverned_guide")})
 		}
 	}
 	return out
@@ -297,7 +298,7 @@ func checkGateCoverage(g *mapx.Graph, cfg *config.Config) []Finding {
 	for _, k := range kinds {
 		// código e doc podem legitimamente não ter gate próprio; specs/features/testes sim
 		if !covered[k] && (k == "spec" || k == "feature" || k == "test") {
-			out = append(out, Finding{"kind-sem-gate", Warn, k, "nenhum gate declarado confronta este kind (buraco de cobertura)"})
+			out = append(out, Finding{"kind-sem-gate", Warn, k, i18n.T("health.kind_without_gate")})
 		}
 	}
 	return out
@@ -343,27 +344,18 @@ func checkMissingSignals(g *mapx.Graph) []Finding {
 	var out []Finding
 	if testes > 0 && comExec == 0 {
 		out = append(out, Finding{"sinal-ausente", Warn, "execução (JUnit)",
-			fmt.Sprintf("%d teste(s) no mapa e NENHUM resultado ingerido — os gates de "+
-				"execução ficam Pending, então o pipeline não sabe se algum teste passa. "+
-				"Rode `anchors ingest --junit <arquivo>` (todo runner sério emite JUnit XML)", testes)})
+			i18n.T("health.missing_signal.junit", testes)})
 	}
 	if códigos > 0 && comCov == 0 {
 		out = append(out, Finding{"sinal-ausente", Warn, "cobertura (lcov)",
-			fmt.Sprintf("%d arquivo(s) de código e NENHUMA cobertura ingerida — sem ela não "+
-				"se distingue código exercitado de código nunca executado. "+
-				"Rode `anchors ingest --lcov <arquivo>` (lcov é formato universal)", códigos)})
+			i18n.T("health.missing_signal.lcov", códigos)})
 	}
 	if códigos > 0 && comMut == 0 {
 		out = append(out, Finding{"sinal-ausente", Info, "mutação",
-			"nenhum sinal de mutação ingerido. É o único sinal que responde se o teste " +
-				"PROVA a linha — cobertura só diz que ela EXECUTOU. O risco concreto: uma " +
-				"suíte 100% verde e 100% coberta pode não derrubar teste algum quando você " +
-				"apaga uma guarda do código. Se o stack tiver ferramenta (Stryker/PIT/" +
-				"Infection/mutmut), rode e `anchors ingest --mutation <relatório>`"})
+			i18n.T("health.missing_signal.mutation")})
 	} else if comMut > 0 && comMut < códigos {
 		out = append(out, Finding{"sinal-ausente", Info, "mutação (parcial)",
-			fmt.Sprintf("%d de %d arquivo(s) com sinal de mutação — o resto do código não "+
-				"tem essa prova", comMut, códigos)})
+			i18n.T("health.missing_signal.mutation_partial", comMut, códigos)})
 	}
 	return out
 }
@@ -396,8 +388,7 @@ func checkSkipOnValid(cfg *config.Config) []Finding {
 		for _, p := range gt.SkipOn {
 			if !validas[p] {
 				out = append(out, Finding{"skip-on-invalido", Warn, gt.Name,
-					"perspectiva desconhecida em `skip_on`: " + p +
-						" (use `change` ou `all`) — como está, o gate não é pulado em lugar nenhum"})
+					i18n.T("health.invalid_skip_on", p)})
 			}
 		}
 	}
@@ -429,9 +420,9 @@ func checkMissingTools(cfg *config.Config) []Finding {
 		if _, err := exec.LookPath(gt.NeedsTool); err == nil {
 			continue
 		}
-		msg := "gate DESABILITADO: `" + gt.NeedsTool + "` não está no PATH"
+		msg := i18n.T("health.missing_tool", gt.NeedsTool, gt.Name)
 		if gt.InstallHint != "" {
-			msg += " — instale com: " + gt.InstallHint
+			msg += " — " + gt.InstallHint
 		}
 		out = append(out, Finding{"ferramenta-ausente", Warn, gt.Name, msg})
 	}
@@ -467,20 +458,16 @@ var gitNoPath = func() bool {
 
 func gitMissing(cfg *config.Config, root string, instalado bool) []Finding {
 	if !instalado {
-		return []Finding{{"git-ausente", Warn, "git",
-			"o git não está no PATH — o carimbo de alteração (updated_at), " +
-				"`coverage --diff` e o pre-commit ficam desligados, em silêncio"}}
+		return []Finding{{"git-ausente", Warn, "git", i18n.T("health.git_missing")}}
 	}
 	if hasRepo(root) {
 		return nil
 	}
-	det := "este projeto não está sob git — o carimbo de alteração (updated_at), " +
-		"`coverage --diff` e `install-hooks` não têm como funcionar; rode `git init`"
+	det := i18n.T("health.git_no_repo")
 	// No modo `github` isso deixa de ser débito e vira impedimento: a fila de trabalho
 	// mora nas issues de um repositório, e sem repo não há de onde puxar.
 	if cfg.GitHubMode() {
-		det = "o `workflow.mode: github` exige repositório, e este projeto não está sob " +
-			"git — a fila de trabalho não tem de onde ser puxada; rode `git init`"
+		det = i18n.T("health.git_github_no_repo")
 	}
 	return []Finding{{"git-ausente", Warn, "repositório", det}}
 }
@@ -545,8 +532,7 @@ func checkPlanNeeds(g *mapx.Graph) []Finding {
 		for _, alvo := range n.Needs {
 			if !planos[alvo] {
 				out = append(out, Finding{"needs-quebrado", Warn, n.ID,
-					"`needs: " + alvo + "` aponta para um plano que não existe — a ordem de " +
-						"trabalho declarada não vale, e o card nasce antes da base"})
+					i18n.T("health.needs_broken", alvo)})
 			}
 		}
 	}
@@ -561,8 +547,7 @@ func checkPlanNeeds(g *mapx.Graph) []Finding {
 		for _, alvo := range depende[p] {
 			if estado[alvo] == 1 {
 				out = append(out, Finding{"needs-ciclo", Warn, p,
-					"ciclo de `needs` entre planos (" + strings.Join(caminho, " → ") + " → " + alvo +
-						") — nenhum deles pode começar, e o board fica com cards que ninguém pega"})
+					i18n.T("health.needs_cycle", strings.Join(caminho, " → ")+" → "+alvo)})
 				return true
 			}
 			if estado[alvo] == 0 && visita(alvo) {

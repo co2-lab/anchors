@@ -1,12 +1,12 @@
 package gate
 
 import (
-	"fmt"
 	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/pack"
 )
@@ -32,50 +32,46 @@ import (
 // Não exige que a spec cite gatilho algum — cobra só quem cita.
 func checkTriggerDeclared(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "o vocabulário de gatilho é ensinado pela spec — é ela que o autor lê"
+		return Skip, i18n.T("gate.trigger_declared.skip_not_spec")
 	}
 	citados := citedTriggers(content)
 	if len(citados) == 0 {
-		return Skip, "a spec não cita gatilho de obrigação"
+		return Skip, i18n.T("gate.trigger_declared.skip_no_triggers")
 	}
 	declarados, obrigacoes := declaredVocabulary(root, cfg)
 	if len(declarados) == 0 {
 		// Sem packs nem obrigações, não há vocabulário contra o que confrontar. Calar é o
 		// certo: acusar aqui seria cobrar de um projeto que não adotou compliance.
-		return Pending, "o projeto não declara `packs:` nem `obligations:` — sem vocabulário " +
-			"para confrontar, o gatilho citado não pode ser verificado"
+		return Pending, i18n.T("gate.trigger_declared.pending_no_vocabulary")
 	}
 
 	var erros []string
 	for _, c := range citados {
-		if declarados[c.valor] {
+		if declarados[c.value] {
 			continue
 		}
-		erros = append(erros, fmt.Sprintf("`%s: %s` não é gatilho de nenhum pack%s",
-			c.chave, c.valor, suggestion(c.valor, declarados)))
+		erros = append(erros, i18n.T("gate.trigger_declared.not_a_trigger",
+			c.key, c.value, suggestion(c.value, declarados)))
 	}
 	for _, ob := range citedObligations(content) {
 		if !obrigacoes[ob] {
-			erros = append(erros, fmt.Sprintf("a obrigação `%s` não existe", ob))
+			erros = append(erros, i18n.T("gate.trigger_declared.obligation_not_found", ob))
 		}
 	}
 	if len(erros) == 0 {
 		return Pass, ""
 	}
 	sort.Strings(erros)
-	return Fail, fmt.Sprintf("%d citação(ões) de vocabulário inexistente: %s. "+
-		"Quem seguir esta spec escreve um header bem-formado que NÃO dispara obrigação "+
-		"nenhuma — e nada acusa, porque o header está correto na forma. Use o vocabulário "+
-		"que os packs declaram",
+	return Fail, i18n.T("gate.trigger_declared.fail_unknown_vocabulary",
 		len(erros), strings.Join(erros, "; "))
 }
 
-type citedTrigger struct{ chave, valor string }
+type citedTrigger struct{ key, value string }
 
-// gatilhoRE casa a citação de um gatilho no texto: `carries: personal-data`,
+// triggerRE casa a citação de um gatilho no texto: `carries: personal-data`,
 // `shared-with: third-party`. A crase é o sinal de que o autor está citando um SÍMBOLO —
 // prosa solta ("carrega dado pessoal") não é citação e não é cobrada.
-var gatilhoRE = regexp.MustCompile("`([a-z][a-z-]*): ([a-z][a-z0-9-]*)`")
+var triggerRE = regexp.MustCompile("`([a-z][a-z-]*): ([a-z][a-z0-9-]*)`")
 
 // triggerKeys são os predicados que abrem uma obrigação. Fechada de propósito: sem
 // isso o regex pegaria qualquer `chave: valor` entre crases (`layer: dao`, `code: ABCD`)
@@ -88,7 +84,7 @@ var triggerKeys = map[string]bool{
 func citedTriggers(content string) []citedTrigger {
 	visto := map[string]bool{}
 	var out []citedTrigger
-	for _, m := range gatilhoRE.FindAllStringSubmatch(content, -1) {
+	for _, m := range triggerRE.FindAllStringSubmatch(content, -1) {
 		if !triggerKeys[m[1]] {
 			continue
 		}
@@ -97,7 +93,7 @@ func citedTriggers(content string) []citedTrigger {
 			continue
 		}
 		visto[k] = true
-		out = append(out, citedTrigger{chave: m[1], valor: m[2]})
+		out = append(out, citedTrigger{key: m[1], value: m[2]})
 	}
 	return out
 }
@@ -173,7 +169,7 @@ func suggestion(errado string, declarados map[string]bool) string {
 		if len(todos) > 4 {
 			todos = todos[:4]
 		}
-		return " (declarados: " + strings.Join(todos, ", ") + ")"
+		return i18n.T("gate.trigger_declared.suggestion_declared", strings.Join(todos, ", "))
 	}
-	return " — o declarado é `" + melhor + "`"
+	return i18n.T("gate.trigger_declared.suggestion_best", melhor)
 }

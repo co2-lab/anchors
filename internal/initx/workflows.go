@@ -55,31 +55,31 @@ type Workflow struct {
 var WorkflowsDoFluxo = []Workflow{
 	{
 		Arquivo:     "anchors-identify.yml",
-		Papel:       "cria o card de todo artefato que chegou ao repositório sem um",
+		Papel:       "creates the card for every artifact that reached the repository without one",
 		ExigeSerial: true,
 	},
 	{
 		Arquivo: "anchors-gates.yml",
-		Papel:   "confronta os gates a cada PR (é a fronteira: nada sobe sem passar)",
+		Papel:   "confronts the gates on every PR (it is the boundary: nothing lands without passing)",
 		// NÃO serializa: só lê e reporta. Serializar faria cada PR esperar a fila dos
 		// outros sem necessidade — o `concurrency` dele é por PR, não global.
 		ExigeSerial: false,
 	},
 	{
 		Arquivo:     "anchors-claim.yml",
-		Papel:       "atribui trabalho aos agentes (é o que elimina a corrida por um card)",
+		Papel:       "assigns work to the agents (it is what removes the race for a card)",
 		ExigeSerial: true,
 	},
 	{
 		Arquivo: "anchors-pr-checks.yml",
-		Papel: "move o card para revisão quando os checks do PR passam (e SÓ quando " +
-			"passam)",
+		Papel: "moves the card to review when the PR checks pass (and ONLY when " +
+			"they pass)",
 		ExigeSerial: true,
 	},
 	{
-		Arquivo: "anchors-resolver-fila.yml",
-		Papel: "resolve o conflito de arquivo GERADO quando algo mergeia, e abre card de " +
-			"síntese quando o conflito é de conteúdo",
+		Arquivo: "anchors-resolve-queue.yml",
+		Papel: "resolves the GENERATED-file conflict when something merges, and opens a synthesis " +
+			"card when the conflict is about content",
 		// SERIAL, e a razão é o push: dois runs resolvendo a mesma branch empurrariam
 		// resoluções concorrentes. O grupo é global de propósito — diferente do
 		// `pr-checks`, aqui o recurso disputado é a FILA inteira, não um card.
@@ -87,7 +87,7 @@ var WorkflowsDoFluxo = []Workflow{
 	},
 	{
 		Arquivo: "anchors-board.yml",
-		Papel:   "publica o board no Pages a partir das issues (sem Projects e sem PAT)",
+		Papel:   "publishes the board on Pages from the issues (no Projects and no PAT)",
 		// O ÚNICO que não exige serialização sem cancelamento: o board é estado DERIVADO,
 		// e a execução mais nova sempre produz uma foto melhor que a que está no meio do
 		// caminho. Cancelar aqui não perde trabalho — evita publicar uma foto velha por
@@ -96,12 +96,12 @@ var WorkflowsDoFluxo = []Workflow{
 	},
 	{
 		Arquivo:     "anchors-stale.yml",
-		Papel:       "libera cards cujo dono sumiu, preservando o histórico",
+		Papel:       "releases cards whose owner vanished, preserving the history",
 		ExigeSerial: true,
 	},
 	{
 		Arquivo: "anchors-guard.yml",
-		Papel:   "desfaz a mudança de estado que não veio do fluxo",
+		Papel:   "undoes the state change that did not come from the flow",
 		// SERIAL, e por card: uma reversão escreve label, e o evento que ela mesma dispara
 		// chegaria antes de a primeira execução terminar.
 		ExigeSerial: true,
@@ -556,7 +556,7 @@ func OutdatedWorkflows(root string, cfg *config.Config) []Workflow {
 func SemeiaWorkflows(root string, cfg *config.Config) ([]string, BoardOutcome, error) {
 	dir := filepath.Join(root, DirWorkflows)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
-		return nil, BoardUnchanged, fmt.Errorf("criar %s: %w", DirWorkflows, err)
+		return nil, BoardUnchanged, fmt.Errorf("creating %s: %w", DirWorkflows, err)
 	}
 	var escritos []string
 	for _, w := range WorkflowsDoFluxo {
@@ -566,11 +566,11 @@ func SemeiaWorkflows(root string, cfg *config.Config) ([]string, BoardOutcome, e
 		}
 		conteudo, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {
-			return escritos, BoardUnchanged, fmt.Errorf("ler o template %s: %w", w.Arquivo, err)
+			return escritos, BoardUnchanged, fmt.Errorf("reading the template %s: %w", w.Arquivo, err)
 		}
 		conteudo = applyIntegrationBranch(conteudo, cfg.Workflow.IntegrationBranchOrDefault())
 		if err := os.WriteFile(dest, conteudo, 0o644); err != nil {
-			return escritos, BoardUnchanged, fmt.Errorf("escrever %s: %w", dest, err)
+			return escritos, BoardUnchanged, fmt.Errorf("writing %s: %w", dest, err)
 		}
 		escritos = append(escritos, w.Arquivo)
 	}
@@ -611,7 +611,7 @@ func semeiaBoard(root string) (BoardOutcome, error) {
 	dest := filepath.Join(root, BoardFile)
 	conteudo, err := fs.ReadFile(boardFS, "board/anchors-board.html")
 	if err != nil {
-		return BoardUnchanged, fmt.Errorf("ler o template do board: %w", err)
+		return BoardUnchanged, fmt.Errorf("reading the board template: %w", err)
 	}
 
 	estado := BoardCreated

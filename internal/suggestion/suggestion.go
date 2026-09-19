@@ -89,7 +89,7 @@ type Suggestion struct {
 // decidida (approved/rejected), não volta para pending.
 func Open(root string, s Suggestion) (created bool, path string, err error) {
 	if s.ID == "" {
-		return false, "", fmt.Errorf("sugestão sem ID")
+		return false, "", fmt.Errorf("suggestion without ID")
 	}
 	// Já decidida? Não reabre. Reabrir apagaria a decisão de quem já olhou, e a mesma
 	// proposta recusada voltaria a cada varredura como se fosse nova.
@@ -116,23 +116,23 @@ func Open(root string, s Suggestion) (created bool, path string, err error) {
 // arquivo que possa divergir da pasta em que ele está.
 func Decide(root, id string, to State, reason string, autoJudged bool) error {
 	if to != Approved && to != Rejected {
-		return fmt.Errorf("estado de decisão inválido: %s", to)
+		return fmt.Errorf("invalid decision state: %s", to)
 	}
 	if strings.TrimSpace(reason) == "" {
 		// Decisão sem razão é a mesma falha que o `@no-test` nu: some o rastro de por
 		// que alguém escolheu, e a escolha vira indistinguível de descuido.
-		return fmt.Errorf("decisão exige razão escrita")
+		return fmt.Errorf("a decision requires a written reason")
 	}
 	origem := filepath.Join(root, Dir, string(Pending), id+".md")
 	b, err := os.ReadFile(origem)
 	if err != nil {
-		return fmt.Errorf("sugestão pendente não encontrada: %s", id)
+		return fmt.Errorf("pending suggestion not found: %s", id)
 	}
 	destDir := filepath.Join(root, Dir, string(to))
 	if err := os.MkdirAll(destDir, 0o755); err != nil {
 		return err
 	}
-	carimbo := fmt.Sprintf("\n\n## Decisão\n\n- **estado:** %s\n- **em:** %s\n- **por:** %s\n\n%s\n",
+	carimbo := fmt.Sprintf("\n\n## Decision\n\n- **state:** %s\n- **on:** %s\n- **by:** %s\n\n%s\n",
 		to, time.Now().Format("2006-01-02"), decider(autoJudged), reason)
 	if err := os.WriteFile(filepath.Join(destDir, id+".md"), append(b, []byte(carimbo)...), 0o644); err != nil {
 		return err
@@ -174,7 +174,7 @@ func PatchOf(root, id string, st State) (string, error) {
 	}
 	_, patch, ok := strings.Cut(string(b), "```diff\n")
 	if !ok {
-		return "", fmt.Errorf("sugestão %s não tem patch", id)
+		return "", fmt.Errorf("suggestion %s has no patch", id)
 	}
 	patch, _, _ = strings.Cut(patch, "\n```")
 	return patch, nil
@@ -184,16 +184,16 @@ func render(s Suggestion) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# SUGGESTION: %s\n\n", s.Target)
 	fmt.Fprintf(&b, "- **gate:** %s\n", s.Gate)
-	fmt.Fprintf(&b, "- **origem:** %s\n", s.Origin)
-	fmt.Fprintf(&b, "- **alvo:** %s\n", s.Target)
-	fmt.Fprintf(&b, "- **proposta em:** %s\n\n", time.Now().Format("2006-01-02"))
-	fmt.Fprintf(&b, "## Por quê\n\n%s\n", strings.TrimSpace(s.Why))
+	fmt.Fprintf(&b, "- **origin:** %s\n", s.Origin)
+	fmt.Fprintf(&b, "- **target:** %s\n", s.Target)
+	fmt.Fprintf(&b, "- **proposed on:** %s\n\n", time.Now().Format("2006-01-02"))
+	fmt.Fprintf(&b, "## Why\n\n%s\n", strings.TrimSpace(s.Why))
 	if strings.TrimSpace(s.Patch) != "" {
 		fmt.Fprintf(&b, "\n## Patch\n\n```diff\n%s\n```\n", strings.TrimRight(s.Patch, "\n"))
-		b.WriteString("\nAplicar: `anchors suggest apply " + s.ID + "`" +
-			" — ou `git apply` no diff acima.\n")
+		b.WriteString("\nApply: `anchors suggest apply " + s.ID + "`" +
+			" — or `git apply` on the diff above.\n")
 	} else {
-		b.WriteString("\n## Patch\n\n_A correção não é mecânica: este achado precisa de decisão humana._\n")
+		b.WriteString("\n## Patch\n\n_The fix is not mechanical: this finding needs a human decision._\n")
 	}
 	return b.String()
 }

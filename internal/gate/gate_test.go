@@ -143,7 +143,18 @@ func TestInternalCheckers(t *testing.T) {
 		{"header-valid", "// @anchors\n//   layer: screen\nconst x=1", Fail}, // bloco sem code NEM ref
 	}
 	for _, c := range cases {
+		// O checker pode estar em qualquer um dos dois registros: os puros de conteúdo e
+		// os que recebem grafo+config. Procurar só o primeiro fazia o teste reprovar quando
+		// um checker passava a precisar de `cfg` — mudança de assinatura, não de
+		// comportamento, que é justamente o que este teste NÃO deveria acusar.
 		fn := internalCheckers[c.checker]
+		if fn == nil {
+			if withGraph := checkersWithGraph[c.checker]; withGraph != nil {
+				fn = func(content string, n mapx.Node) (Verdict, string) {
+					return withGraph(content, n, "", nil, nil)
+				}
+			}
+		}
 		if fn == nil {
 			t.Fatalf("checker %q não registrado", c.checker)
 		}

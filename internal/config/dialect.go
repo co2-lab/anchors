@@ -82,6 +82,11 @@ type Dialect struct {
 	// idioma nativo do Gherkin: cravar um idioma específico obrigaria todo projeto a
 	// escrever feature na língua de quem fez o framework.
 	GherkinLanguage string `yaml:"gherkin_language,omitempty"`
+	// GuardPatterns lista padrões adicionais ou customizados que caracterizam uma
+	// guarda de parâmetro no sibling-guard. Use `{{param}}` onde o nome do parâmetro deve casar.
+	GuardPatterns []string `yaml:"guard_patterns,omitempty"`
+	// ImportPattern casa uma linha de importação de dependência no proof-crosses-boundary.
+	ImportPattern string `yaml:"import_pattern,omitempty"`
 }
 
 // GherkinKeywords são as palavras-chave da feature no idioma do projeto. Só os idiomas

@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -31,28 +32,23 @@ func checkRefResolves(content string, n mapx.Node, root string, g *mapx.Graph, c
 	switch n.Kind {
 	case mapx.KindCode, mapx.KindFeature, mapx.KindTest:
 	default:
-		return Skip, "só quem REFERENCIA carrega `ref:` — a spec é dona (`code:`)"
+		return Skip, i18n.T("gate.ref_resolves.skip_not_referencing")
 	}
 
 	m := refHeaderRE().FindStringSubmatch(content)
 	if m == nil {
-		return Skip, "o artefato não declara `ref:` — a ausência é do gate header-conforme"
+		return Skip, i18n.T("gate.ref_resolves.skip_no_ref")
 	}
 	ref := m[1]
 
-	specPath, specCode := specIrmaDe(root, n.ID)
+	specPath, specCode := siblingSpecOf(root, n.ID)
 	if specCode == "" {
-		return Skip, "sem spec irmã para confrontar — a ausência da peça é do gate trinca-completa"
+		return Skip, i18n.T("gate.ref_resolves.skip_no_sibling_spec")
 	}
 	if ref == specCode {
 		return Pass, ""
 	}
-	return Fail, fmt.Sprintf("`ref: %s` não é a identidade da spec que descreve este arquivo — "+
-		"`%s` declara `code: %s`. Um `ref:` errado PARECE rastreabilidade: o gate de header "+
-		"fica verde, e a unidade inteira passa a ser atribuída à spec errada, com todo gate "+
-		"relacional confrontando o par errado. Costuma ser refatoração não propagada (a spec "+
-		"foi dividida, o `ref:` ficou apontando para a antiga)",
-		ref, specPath, specCode)
+	return Fail, fmt.Sprintf(i18n.T("gate.ref_resolves.unmatched_ref"), ref, specPath, specCode)
 }
 
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
@@ -69,9 +65,9 @@ func specCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
 }
 
-// specIrmaDe acha a spec co-localizada com o arquivo e devolve (caminho, código dela).
+// siblingSpecOf acha a spec co-localizada com o arquivo e devolve (caminho, código dela).
 // Segue a convenção de nome: mesmo tronco, sufixo `.spec.md`, mesmo diretório.
-func specIrmaDe(root, rel string) (string, string) {
+func siblingSpecOf(root, rel string) (string, string) {
 	dir := filepath.Dir(rel)
 	base := filepath.Base(rel)
 	for _, suf := range []string{".feature", ".test.ts", ".test.tsx", ".spec.ts", "_test.go", "_test.py", "_spec.rb"} {

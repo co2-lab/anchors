@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -55,12 +56,7 @@ func canonicalLetters(content string) (Verdict, string) {
 		return Pass, ""
 	}
 	sort.Strings(fora)
-	return Fail, fmt.Sprintf("usa tipo(s) de regra fora do vocabulário canônico (%s): %s. "+
-		"Uma letra que o engine não reconhece é invisível para a rastreabilidade — o "+
-		"feature-test-match não a enxerga, mesmo com feature e teste escritos. Declare o "+
-		"vocabulário do projeto em `rule_types` no anchors.yaml (letra + termo + seções), "+
-		"ou use uma letra canônica.",
-		config.DefaultRuleLetters, strings.Join(fora, ", "))
+	return Fail, i18n.T("gate.rule_types.invalid", config.DefaultRuleLetters, strings.Join(fora, ", "))
 }
 
 // specSectionRE captura os títulos de seção (## / ### / ####) de uma spec.
@@ -106,11 +102,7 @@ func checkRuleTypes(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 	}
 	if len(undeclared) > 0 {
 		sort.Strings(undeclared)
-		return Fail, fmt.Sprintf("usa tipo(s) de regra NÃO declarado(s): %s. Uma letra fora do "+
-			"vocabulário é invisível para a rastreabilidade (o feature-test-match não a "+
-			"enxerga, mesmo com feature e teste escritos). Declare em `rule_types` no "+
-			"anchors.yaml (letra + termo + seções) ou use uma letra existente.",
-			strings.Join(undeclared, ", "))
+		return Fail, i18n.T("gate.rule_types.undeclared", strings.Join(undeclared, ", "))
 	}
 
 	// (2) SEÇÃO QUE CATALOGA REGRAS mas cujo título nenhuma letra reivindica.
@@ -205,8 +197,8 @@ func unclaimedSections(content string, types []config.RuleType) string {
 		return ""
 	}
 	sort.Strings(orphan)
-	return fmt.Sprintf("seção(ões) que catalogam regras sem letra declarada no vocabulário: %q. "+
-		"Declare a seção em `rule_types` (na entrada da letra que ela usa) no anchors.yaml.",
+	return fmt.Sprintf("section(s) cataloguing rules with no letter declared in the vocabulary: %q. "+
+		"Declare the section in `rule_types` (under the entry of the letter it uses) in anchors.yaml.",
 		strings.Join(orphan, ", "))
 }
 
@@ -228,7 +220,7 @@ var separadorTabelaRE = regexp.MustCompile(`^\s*\|[\s:|-]+\|?\s*$`)
 func sectionsWithoutCode(content string, types []config.RuleType) string {
 	exige := map[string]string{} // título normalizado → letra
 	for _, rt := range types {
-		for _, s := range rt.RequiresCode {
+		for _, s := range rt.SectionsRequireCode {
 			exige[normalizeSection(s)] = rt.Letter
 		}
 	}
@@ -273,11 +265,11 @@ func sectionsWithoutCode(content string, types []config.RuleType) string {
 		return ""
 	}
 	sort.Strings(achados)
-	return fmt.Sprintf("%d seção(ões) que o projeto declarou como catalogadoras de regra "+
-		"(`requires_code`) estão preenchidas SEM código: %s. Cada linha dessas tabelas afirma "+
-		"algo verificável, e sem código o cenário que a prova não tem o que citar — na prática, "+
-		"ele empresta o código de outra seção e passa a reger o que não é dele. "+
-		"Acrescente uma coluna `Regra` com o código, ou tire a seção de `requires_code` se ela "+
-		"apenas enumera valores",
+	return fmt.Sprintf("%d section(s) the project declared as rule-cataloguing "+
+		"(`sections_require_code`) are filled in WITHOUT a code: %s. Every row of those tables asserts "+
+		"something verifiable, and without a code the scenario that proves it has nothing to cite — in practice, "+
+		"it borrows another section's code and starts governing what is not its own. "+
+		"Add a `Rule` column with the code, or drop the section from `sections_require_code` if it "+
+		"merely enumerates values",
 		len(achados), strings.Join(achados, "; "))
 }

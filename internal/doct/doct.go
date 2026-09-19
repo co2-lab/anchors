@@ -62,7 +62,7 @@ const SufixoTemplate = ".tmpl"
 // é perder o trabalho; e o compilador RECUSA sobrescrever um `.md` que não o tenha — um
 // documento escrito à mão não é destruído porque alguém criou um template com o mesmo
 // nome.
-const GeneratedMarker = "<!-- anchors:generated de %s — NÃO EDITE: rode `anchors docs build` -->"
+const GeneratedMarker = "<!-- anchors:generated from %s — DO NOT EDIT: run `anchors docs build` -->"
 
 var markerRE = regexp.MustCompile(`^<!-- anchors:generated `)
 
@@ -77,10 +77,10 @@ var markerRE = regexp.MustCompile(`^<!-- anchors:generated `)
 // Markdown não renderiza `<!-- -->` em lugar nenhum — GitHub, MkDocs, Starlight — e é o
 // mesmo mecanismo do `GeneratedMarker`, pela mesma razão: a instrução fica visível para
 // quem abre o arquivo e invisível para quem abre a página.
-const HandwrittenMarker = `<!-- anchors:handwritten — esta página NÃO é gerada.
+const HandwrittenMarker = `<!-- anchors:handwritten — this page is NOT generated.
 
-     Ela não tem template em ` + "`" + Dir + "/`" + `, e o ` + "`anchors docs build`" + ` não a toca: o compilador
-     só sobrescreve arquivo que traga o marcador ` + "`anchors:generated`" + `. Edite aqui mesmo. -->`
+     It has no template in ` + "`" + Dir + "/`" + `, and ` + "`anchors docs build`" + ` does not touch it: the compiler
+     only overwrites a file carrying the ` + "`anchors:generated`" + ` marker. Edit right here. -->`
 
 var handwrittenRE = regexp.MustCompile(`^<!-- anchors:handwritten`)
 
@@ -155,8 +155,8 @@ func (c *Compiler) loadSpecs() error {
 			// PARA. Uma spec que o mapa conhece e o disco não tem sairia da documentação
 			// sem uma palavra — e o compilado, verde, ficaria sem ela. É o modo de falha
 			// que o mecanismo inteiro existe para evitar, entrando pela porta dos fundos.
-			return fmt.Errorf("spec %s está no mapa e não no disco: %w "+
-				"(rode `anchors map build`)", n.ID, err)
+			return fmt.Errorf("spec %s is in the map and not on disk: %w "+
+				"(run `anchors map build`)", n.ID, err)
 		}
 		raw := string(b)
 		titulo := ""
@@ -250,7 +250,7 @@ func (c *Compiler) fnSpecs(filtro ...string) ([]Spec, error) {
 	}
 	campo, valor, ok := strings.Cut(filtro[0], "=")
 	if !ok {
-		return nil, fmt.Errorf("filtro %q sem `=`: use `campo=valor` (ex.: `layer=screen`)", filtro[0])
+		return nil, fmt.Errorf("filter %q without `=`: use `field=value` (e.g. `layer=screen`)", filtro[0])
 	}
 	campo, valor = strings.TrimSpace(campo), strings.TrimSpace(valor)
 	var out []Spec
@@ -262,7 +262,7 @@ func (c *Compiler) fnSpecs(filtro ...string) ([]Spec, error) {
 			}
 		}
 		if len(out) == 0 {
-			return nil, fmt.Errorf("nenhuma spec na camada %q — existem: %s",
+			return nil, fmt.Errorf("no spec in layer %q — existing: %s",
 				valor, strings.Join(c.fnLayers(), ", "))
 		}
 	case "code":
@@ -272,10 +272,10 @@ func (c *Compiler) fnSpecs(filtro ...string) ([]Spec, error) {
 			}
 		}
 		if len(out) == 0 {
-			return nil, fmt.Errorf("nenhuma spec com o código %q", valor)
+			return nil, fmt.Errorf("no spec with code %q", valor)
 		}
 	default:
-		return nil, fmt.Errorf("campo %q desconhecido: use `layer` ou `code`", campo)
+		return nil, fmt.Errorf("unknown field %q: use `layer` or `code`", campo)
 	}
 	return out, nil
 }
@@ -303,7 +303,7 @@ func (c *Compiler) fnSpecByCode(code string) (*Spec, error) {
 			return &c.specs[i], nil
 		}
 	}
-	return nil, fmt.Errorf("nenhuma spec com o código %q", code)
+	return nil, fmt.Errorf("no spec with code %q", code)
 }
 
 // fnSection devolve o texto de uma seção `## <nome>` da spec, sem o cabeçalho dela.
@@ -437,7 +437,7 @@ func (c *Compiler) Build(dryRun bool) (Result, error) {
 func (c *Compiler) templates() ([]string, error) {
 	dir := filepath.Join(c.Root, Dir)
 	if _, err := os.Stat(dir); err != nil {
-		return nil, fmt.Errorf("sem `%s/`: crie os templates antes (`anchors docs init`)", Dir)
+		return nil, fmt.Errorf("no `%s/`: create the templates first (`anchors docs init`)", Dir)
 	}
 	var out []string
 	err := filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {

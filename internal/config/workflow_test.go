@@ -57,7 +57,7 @@ func TestWorkflowGitHubValido(t *testing.T) {
 
 func TestWorkflowRepoSemBarra(t *testing.T) {
 	_, err := load(t, "version: 1\nlayers: {}\nworkflow:\n  mode: github\n  repo: exemplo\n  labels: [anchors]\n")
-	if err == nil || !strings.Contains(err.Error(), "owner/nome") {
+	if err == nil || !strings.Contains(err.Error(), "owner/name") {
 		t.Fatalf("repo sem barra tem de falhar, veio %v", err)
 	}
 }
@@ -66,7 +66,7 @@ func TestWorkflowLocalNaoAceitaCamposDoGitHub(t *testing.T) {
 	// Declarar repo/labels no modo local faz o ARQUIVO afirmar uma integração que não
 	// existe — quem lê conclui que está ativa. É erro de declaração, não campo inofensivo.
 	_, err := load(t, "version: 1\nlayers: {}\nworkflow:\n  mode: local\n  repo: acme/exemplo\n")
-	if err == nil || !strings.Contains(err.Error(), "só valem em `mode: github`") {
+	if err == nil || !strings.Contains(err.Error(), "only apply under `mode: github`") {
 		t.Fatalf("esperava erro de campo indevido, veio %v", err)
 	}
 }

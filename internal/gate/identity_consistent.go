@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -43,16 +43,16 @@ import (
 // manual. Só esse o gate cobra.
 func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
-		return Skip, "a identidade é declarada na spec — é dela que o confronto parte"
+		return Skip, i18n.T("gate.identity_consistent.skip_not_spec")
 	}
 	if g == nil {
-		return Pending, "sem mapa carregado — o gate relacional precisa do grafo"
+		return pendingNoMap()
 	}
 	code := strings.ToUpper(strings.TrimSpace(n.Code))
 	if code == "" {
 		// Ausência de código é ofensa de `spec-tem-codigo`. Cobrar de novo aqui
 		// transformaria um achado em dois, e o segundo sem nada a acrescentar.
-		return Skip, "spec sem código declarado — a ausência é cobrada por `spec-tem-codigo`"
+		return Skip, i18n.T("gate.identity_consistent.skip_no_code")
 	}
 
 	conhecidos := mapCodes(g)
@@ -75,7 +75,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 				continue
 			}
 			orfas = append(orfas,
-				fmt.Sprintf("testID `%s-…` (%s)", sigla, filepath.Base(e.To)))
+				i18n.T("gate.identity_consistent.testid_item", sigla, filepath.Base(e.To)))
 		}
 	}
 
@@ -88,7 +88,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 	pngs, _ := doublestar.Glob(os.DirFS(root), base+".*-VR*.png")
 	for _, p := range pngs {
 		if sigla := baselineAcronym(filepath.Base(p)); sigla != "" && !strings.EqualFold(sigla, code) {
-			orfas = append(orfas, fmt.Sprintf("baseline `%s` (%s)", sigla, filepath.Base(p)))
+			orfas = append(orfas, i18n.T("gate.identity_consistent.baseline_item", sigla, filepath.Base(p)))
 		}
 	}
 
@@ -97,15 +97,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 	}
 	sort.Strings(orfas)
 	orfas = dedupSorted(orfas)
-	return Fail, fmt.Sprintf(
-		"identidade divergente: a spec declara `%s`, mas a mesma unidade aparece como %s. "+
-			"Nenhuma dessas siglas é código de unidade alguma do mapa — então o dicionário de "+
-			"códigos, que é GERADO do mapa, não as conhece: o spellcheck as acusa e "+
-			"dicionarizá-las cristaliza a divergência em vez de resolvê-la.\n\n"+
-			"Unifique pelo código da spec, ou mude o `code:` se a sigla certa for a outra. "+
-			"Prefixo que é código de OUTRA unidade não cai aqui — nomear a tela onde o "+
-			"elemento aparece (`home-…` num componente da HomeScreen) é reuso legítimo",
-		code, strings.Join(orfas, "; "))
+	return Fail, i18n.T("gate.identity_consistent.fail_inconsistent", code, strings.Join(orfas, "; "))
 }
 
 // mapCodes — todas as identidades declaradas no projeto. É o conjunto que

@@ -123,8 +123,8 @@ func (c Client) gh(args ...string) ([]byte, error) {
 // comando puxaria issue de produto, que não tem a forma que o ciclo espera.
 func (c Client) list(state string) ([]Card, error) {
 	if len(c.Labels) == 0 {
-		return nil, fmt.Errorf("workflow.labels vazio: no modo github ele é obrigatório — " +
-			"sem ele o claim puxaria qualquer issue do repositório")
+		return nil, fmt.Errorf("workflow.labels empty: in github mode it is mandatory — " +
+			"without it the claim would pull any issue in the repository")
 	}
 	args := []string{"issue", "list", "--state", "open", "--limit", "200",
 		"--json", "number,title,body,labels,comments"}
@@ -140,7 +140,7 @@ func (c Client) list(state string) ([]Card, error) {
 	}
 	var raw []rawCard
 	if err := json.Unmarshal(out, &raw); err != nil {
-		return nil, fmt.Errorf("resposta do gh não é o JSON esperado: %w", err)
+		return nil, fmt.Errorf("gh response is not the expected JSON: %w", err)
 	}
 	var cards []Card
 	for _, r := range raw {
@@ -272,9 +272,9 @@ func emCurso(c Card) bool {
 func (c Client) Ask(agent string) error {
 	_, err := c.gh("workflow", "run", ClaimWorkflow, "-f", "agent="+agent)
 	if err != nil {
-		return fmt.Errorf("não consegui pedir trabalho ao pipeline: %w\n"+
-			"  (o claim é serializado por `concurrency` — é o que evita dois agentes\n"+
-			"   pegarem o mesmo card, e por isso o CLI pede em vez de reivindicar)", err)
+		return fmt.Errorf("could not ask the pipeline for work: %w\n"+
+			"  (the claim is serialized by `concurrency` — that is what keeps two agents\n"+
+			"   from taking the same card, and why the CLI asks instead of claiming)", err)
 	}
 	return nil
 }
@@ -305,7 +305,7 @@ const ClaimWorkflow = "anchors-claim.yml"
 // por exemplo — e comentar no card errado é pior que não comentar.
 func (c Client) FindByCode(code string) (*Card, error) {
 	if strings.TrimSpace(code) == "" {
-		return nil, fmt.Errorf("código vazio")
+		return nil, fmt.Errorf("empty code")
 	}
 	args := []string{"issue", "list", "--state", "open", "--limit", "200",
 		"--json", "number,title,body,labels"}
@@ -318,7 +318,7 @@ func (c Client) FindByCode(code string) (*Card, error) {
 	}
 	var brutos []rawCard
 	if err := json.Unmarshal(out, &brutos); err != nil {
-		return nil, fmt.Errorf("ler as issues: %w", err)
+		return nil, fmt.Errorf("reading the issues: %w", err)
 	}
 	alvo := "[" + strings.ToUpper(code) + "]"
 	for _, r := range brutos {
@@ -327,13 +327,13 @@ func (c Client) FindByCode(code string) (*Card, error) {
 				Labels: labelNames(r)}, nil
 		}
 	}
-	return nil, fmt.Errorf("nenhuma issue aberta com `%s` no título", alvo)
+	return nil, fmt.Errorf("no open issue with `%s` in the title", alvo)
 }
 
 // Comment posta um comentário numa issue.
 func (c Client) Comment(numero int, corpo string) error {
 	if strings.TrimSpace(corpo) == "" {
-		return fmt.Errorf("corpo vazio")
+		return fmt.Errorf("empty body")
 	}
 	// Pelo STDIN e não por `--body`: o registro de entrega tem quebras de linha, crases e
 	// acentos, e passá-lo como argumento de linha de comando o expõe ao shell e ao limite
@@ -348,11 +348,11 @@ func (c Client) Comment(numero int, corpo string) error {
 	cmd.Stdin = strings.NewReader(corpo)
 	out, err := cmd.CombinedOutput()
 	if ctx.Err() == context.DeadlineExceeded {
-		return fmt.Errorf("o `gh` não respondeu em %s ao comentar na issue #%d — "+
-			"confira `gh auth status`", ghTimeout, numero)
+		return fmt.Errorf("`gh` did not respond in %s while commenting on issue #%d — "+
+			"check `gh auth status`", ghTimeout, numero)
 	}
 	if err != nil {
-		return fmt.Errorf("comentar na issue #%d: %w: %s", numero, err, out)
+		return fmt.Errorf("commenting on issue #%d: %w: %s", numero, err, out)
 	}
 	return nil
 }

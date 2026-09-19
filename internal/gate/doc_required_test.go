@@ -76,12 +76,12 @@ func TestDocRequired_documentoQueExisteEnaoMencionaReprova(t *testing.T) {
 	if v != Fail {
 		t.Fatalf("documento que existe e não menciona a unidade deveria reprovar; veio %v", v)
 	}
-	if !strings.Contains(msg, "não menciona") {
+	if !strings.Contains(msg, "não menciona") && !strings.Contains(msg, "not mention") {
 		t.Errorf("a mensagem deveria distinguir AUSENTE de MUDO; veio:\n%s", msg)
 	}
 	// O modo de falha tem de estar DITO: o arquivo existe, tem conteúdo real, e quem o lê
 	// não tem como saber que falta uma entrada.
-	if !strings.Contains(msg, "descobre o\nformato em produção") {
+	if !strings.Contains(msg, "descobre o\nformato em produção") && !strings.Contains(msg, "discover the\nformat in production") {
 		t.Errorf("a mensagem deveria explicar por que um contrato mudo é pior que missing; veio:\n%s", msg)
 	}
 }
@@ -228,7 +228,7 @@ func TestDocRequiredAgregado_umVereditoPorDocumento(t *testing.T) {
 	}
 
 	// UMA linha por documento, com as três unidades JUNTAS — não três mensagens.
-	if n := strings.Count(msg, "não menciona"); n != 2 {
+	if n := strings.Count(msg, "não menciona") + strings.Count(msg, "does not mention"); n != 2 {
 		t.Errorf("esperava 2 achados (um por documento), e a mensagem tem %d", n)
 	}
 	for _, cod := range []string{"AAAAA", "BBBBB", "CCCCC"} {
@@ -237,7 +237,7 @@ func TestDocRequiredAgregado_umVereditoPorDocumento(t *testing.T) {
 		}
 	}
 	// E a INSTRUÇÃO que evita a fila voltar: um documento por vez.
-	if !strings.Contains(msg, "UM documento por vez") {
+	if !strings.Contains(msg, "UM documento por vez") && !strings.Contains(msg, "ONE document at a time") {
 		t.Error("a mensagem deveria dizer para tratar um documento por vez — separar as " +
 			"unidades em PRs diferentes produz conflito a cada merge")
 	}
@@ -257,11 +257,11 @@ func TestDocRequiredAgregado_documentoAusenteEhOutroAchado(t *testing.T) {
 	if v != Fail {
 		t.Fatalf("esperava Fail; veio %v", v)
 	}
-	if !strings.Contains(msg, "NÃO EXISTE") {
+	if !strings.Contains(msg, "NÃO EXISTE") && !strings.Contains(msg, "DOES NOT EXIST") {
 		t.Error("o documento missing precisa ser distinguido do que existe e não menciona")
 	}
 	// O que ESTÁ certo não aparece na reprovação.
-	if strings.Contains(msg, "openapi.yaml` (openapi) não menciona") {
+	if strings.Contains(msg, "openapi.yaml` (openapi) não menciona") || strings.Contains(msg, "openapi.yaml` (openapi) does not mention") {
 		t.Error("o documento que menciona a unidade não deveria aparecer como achado")
 	}
 }

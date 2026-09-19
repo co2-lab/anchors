@@ -57,8 +57,7 @@ func Set(lang string) error {
 		lang = Default
 	}
 	if !IsSupported(lang) {
-		return fmt.Errorf("idioma %q não é suportado — os disponíveis são: %s",
-			lang, strings.Join(SupportedLangs, ", "))
+		return fmt.Errorf("%s", T("lang.unsupported", lang, strings.Join(SupportedLangs, ", ")))
 	}
 	mu.Lock()
 	defer mu.Unlock()
@@ -134,6 +133,68 @@ func load(lang string) map[string]string {
 	}
 	catalogo[lang] = c
 	return c
+}
+
+// AllTranslations devolve o valor de uma chave em TODOS os idiomas suportados, sem
+// duplicatas.
+//
+// Existe para o confronto com TEXTO JÁ ESCRITO EM DISCO, que é o caso em que o idioma
+// atual não basta: um título de seção de spec foi escrito sob o idioma que o projeto
+// tinha NAQUELE dia, e procurar só a tradução corrente acusaria ausência onde a seção
+// existe — com outro nome. Vale também para o projeto que trocou de `lang:` depois de
+// escrever metade do acervo.
+//
+// Não confundir com T(): aquela RESOLVE uma mensagem para o leitor; esta reconhece o que
+// já está escrito.
+func AllTranslations(chave string) []string {
+	var out []string
+	visto := map[string]bool{}
+	for _, lang := range SupportedLangs {
+		if s, ok := lookup(lang, chave); ok && s != "" && !visto[s] {
+			visto[s] = true
+			out = append(out, s)
+		}
+	}
+	return out
+}
+
+// TIn resolve uma chave num idioma ESPECÍFICO, sem mexer no idioma atual.
+//
+// T() serve ao leitor (resolve no idioma corrente); esta serve ao confronto: "como este
+// título se escreveria no `lang:` do projeto?". Devolve "" quando a chave não existe
+// naquele idioma — quem chama decide o que fazer com a ausência, em vez de receber a
+// chave crua de volta como a T() faz.
+func TIn(lang, chave string) string {
+	if s, ok := lookup(lang, chave); ok {
+		return s
+	}
+	return ""
+}
+
+// SectionKeyFor faz o caminho INVERSO do catálogo: dado um título de seção já escrito,
+// devolve a chave que ele realiza e o idioma em que está.
+//
+// Existe para o gate que cobra o idioma dos títulos. Sem ele, a alternativa seria uma
+// lista de traduções escrita à mão dentro do gate — que divergiria do catálogo no dia em
+// que alguém acrescentasse um idioma, e o gate passaria a acusar como "idioma errado" um
+// título perfeitamente válido.
+//
+// Devolve ("", "") para título que não está no catálogo: é o caso do léxico PRÓPRIO do
+// projeto (`## Fora de escopo`), que não é idioma errado — é seção que o framework não
+// nomeia, e cobrá-la seria impor o vocabulário do engine ao projeto.
+func SectionKeyFor(titulo string) (chave, lang string) {
+	t := strings.ToLower(strings.TrimSpace(titulo))
+	if t == "" {
+		return "", ""
+	}
+	for _, l := range SupportedLangs {
+		for k, v := range load(l) {
+			if strings.HasPrefix(k, "section.title.") && strings.ToLower(v) == t {
+				return k, l
+			}
+		}
+	}
+	return "", ""
 }
 
 // Keys devolve todas as chaves de um idioma. Serve ao gate que confronta os catálogos

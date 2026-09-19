@@ -4,10 +4,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
+
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/migra"
-	"os"
 )
 
 // Preenchidas via -ldflags no build de release (ver cli/.goreleaser.yaml).
@@ -18,6 +21,10 @@ var (
 )
 
 func main() {
+	common.Version = version
+	common.Commit = commit
+	common.Date = date
+
 	// O mapa registra QUEM o escreveu, para que um binário mais velho seja acusado em vez
 	// de reverter em silêncio o que a versão nova gravou (ver mapx.GeradoPor).
 	mapx.GeneratedBy = version
@@ -35,20 +42,20 @@ func main() {
 	//
 	// `defer` e não uma chamada no fim: o caminho de ERRO abaixo sai com `os.Exit`, que
 	// não roda defers — por isso ele também chama o flush, explicitamente.
-	defer flushTelemetry()
+	defer common.FlushTelemetry()
 
 	if err := newRootCmd().Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, "erro:", err)
+		fmt.Fprintln(os.Stderr, i18n.T("error")+":", err)
 		// "não é regido" sai com código PRÓPRIO: quem automatiza (pre-commit, CI)
 		// precisa distinguir "não tenho jurisdição sobre este arquivo" de "este
 		// arquivo reprovou". Sem isso, só resta grepar a mensagem — e foi assim que
 		// o pre-commit passou a deixar arquivo regido novo escapar sem trinca.
-		var nr errNotGoverned
+		var nr common.ErrNotGoverned
 		if errors.As(err, &nr) {
-			flushTelemetry()
-			os.Exit(ExitNotGoverned)
+			common.FlushTelemetry()
+			os.Exit(common.ExitNotGoverned)
 		}
-		flushTelemetry()
+		common.FlushTelemetry()
 		os.Exit(1)
 	}
 }

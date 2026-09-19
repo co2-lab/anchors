@@ -43,7 +43,7 @@ func TestDocSelfContained_referenciaVaziaFalha(t *testing.T) {
 			if v != Fail {
 				t.Fatalf("verdict = %v — a referência não traz o texto", v)
 			}
-			if !strings.Contains(msg, "TRAGA O TEXTO") {
+			if !strings.Contains(msg, "TRAGA O TEXTO") && !strings.Contains(msg, "BRING THE TEXT") {
 				t.Errorf("a mensagem não diz o conserto: %s", msg)
 			}
 		})

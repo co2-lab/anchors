@@ -31,12 +31,22 @@ As arestas conferem com a realidade (ex.: a trinca `LoginScreen.spec.md` →
 
 ## Arquitetura
 
+O CLI é organizado em domínios funcionais sob [`cmd/anchors/`](./cmd/anchors/) e apoia-se nos pacotes internos de [`internal/`](./internal/). A planta completa do projeto está detalhada em [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md).
+
 ```
-cmd/anchors/        # comandos (cobra): root, map
+cmd/anchors/
+  root.go, main.go  # inicialização e registro
+  flow/             # ciclo de tarefas (work, queue, watch, progress, deliver, escalate)
+  quality/          # validação e medição (check, verify, doctor, coverage, report)
+  governance/       # guias e conformidade (guide, spec_guide, governs, compliance)
+  mapcmd/           # grafo e análise (map, impact, ingest, judge, recode)
+  ops/              # suporte e configuração (init, new, migrate, freeze, settings)
 internal/
+  config/           # tabela de marcadores de comentário por linguagem (D4) e regras
   scan/             # percorre o repo lendo TEXTO; extrai código de cenário (regex)
   mapx/             # modelo do grafo, build (co-location + identidade), store (YAML)
-  config/           # tabela de marcadores de comentário por linguagem (D4)
+  gate/             # catálogo e execução dos gates de qualidade
+  ...               # pacotes de infraestrutura e apoio (telemetry, daemon, i18n, etc.)
 ```
 
 Princípios (DECISIONS.md): CLI único (D1); só lê texto, nunca parseia código (D2);

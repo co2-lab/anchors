@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
 )
@@ -39,10 +40,10 @@ func checkRegionPairHonored(content string, n mapx.Node, _ string, _ *mapx.Graph
 	}
 	regioes, erros := scan.Regioes(content)
 	if len(regioes) == 0 && len(erros) == 0 {
-		return Skip, "arquivo sem região declarada — a delimitação é opcional"
+		return Skip, i18n.T("gate.region_pair_honored.skip_no_regions")
 	}
 	if len(erros) == 0 {
-		return Pass, fmt.Sprintf("%d região(ões) bem formada(s)", len(regioes))
+		return Pass, i18n.T("gate.region_pair_honored.pass_well_formed", len(regioes))
 	}
 
 	// Ordena por linha: o leitor conserta de cima para baixo no arquivo, e uma lista fora
@@ -50,21 +51,19 @@ func checkRegionPairHonored(content string, n mapx.Node, _ string, _ *mapx.Graph
 	sort.Slice(erros, func(i, j int) bool { return erros[i].Linha < erros[j].Linha })
 
 	var b strings.Builder
-	fmt.Fprintf(&b, "%d defeito(s) de pareamento de região:\n", len(erros))
+	fmt.Fprintf(&b, "%s\n", i18n.T("gate.region_pair_honored.fail_pairing_defects", len(erros)))
 	for _, e := range erros {
 		switch e.Kind {
 		case "sem-fecho":
-			fmt.Fprintf(&b, "  linha %d: `#region [%s]` aberta e nunca fechada — falta `// #endregion [%s]`\n",
-				e.Linha, e.Code, e.Code)
+			fmt.Fprintf(&b, "  %s\n", i18n.T("gate.region_pair_honored.err_unclosed", e.Linha, e.Code, e.Code))
 		case "fecho-orfao":
 			id := e.Achou
 			if id == "" {
-				id = "sem código"
+				id = i18n.T("gate.region_pair_honored.no_code")
 			}
-			fmt.Fprintf(&b, "  linha %d: `#endregion [%s]` sem abertura correspondente\n", e.Linha, id)
+			fmt.Fprintf(&b, "  %s\n", i18n.T("gate.region_pair_honored.err_orphan_close", e.Linha, id))
 		case "fecho-trocado":
-			fmt.Fprintf(&b, "  linha %d: fecha `[%s]`, mas a região aberta é `[%s]` — aninhamento invertido\n",
-				e.Linha, e.Achou, e.Code)
+			fmt.Fprintf(&b, "  %s\n", i18n.T("gate.region_pair_honored.err_mismatched_close", e.Linha, e.Achou, e.Code))
 		}
 	}
 	return Fail, strings.TrimRight(b.String(), "\n")

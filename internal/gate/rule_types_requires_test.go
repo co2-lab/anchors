@@ -10,8 +10,8 @@ import (
 func cfgComRequires() *config.Config {
 	return &config.Config{RuleTypes: []config.RuleType{
 		{Letter: "B", Term: "Behavior",
-			Sections:     []string{"Eventos / Callbacks", "Comportamentos"},
-			RequiresCode: []string{"Eventos / Callbacks"}},
+			Sections:            []string{"Eventos / Callbacks", "Comportamentos"},
+			SectionsRequireCode: []string{"Eventos / Callbacks"}},
 		{Letter: "S", Term: "State",
 			Sections: []string{"Variantes", "Estados Visuais"}},
 	}}
