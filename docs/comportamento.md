@@ -62,6 +62,36 @@ teste prova.
 
 - [The gate does not use a dictionary to decide the language](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-X03`
 
+- [Non-specification artifacts skip confrontation](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B01`
+
+- [Confronting without a map graph returns pending](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B02`
+
+- [Confronting with an empty identity universe returns pending](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B03`
+
+- [Citations resolving to existing units in the map pass](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B04`
+
+- [Citations pointing to non-existent units fail](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B05`
+
+- [Citations matching the specification's own identity code pass](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B06`
+
+- [Multiple orphaned requirement citations are reported sorted](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B07`
+
+- [Identity ownership is resolved from graph nodes and header metadata](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B08`
+
+- [Non-requirement tokens are ignored](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-B09`
+
+- [Self-references to a specification's own requirements never fail](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-I01`
+
+- [Missing map or empty identity universe returns pending rather than pass](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-I02`
+
+- [Unresolvable external citations always produce a blocking fail verdict](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-I03`
+
+- [Implementation correctness of referenced requirements is not evaluated](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-X01`
+
+- [Non-specification artifacts are not inspected by this gate](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-X02`
+
+- [External requirement citations are not mandatory](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-X03`
+
 - [A status emitted and not declared is accused by number](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B01`
 
 - [A status declared and emitted by no path is accused as a phantom](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B02`
@@ -630,6 +660,40 @@ teste prova.
 
 - [Without a changed files list the gate skips confrontation](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-X03`
 
+- [Non-plan artifacts skip confrontation](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B01`
+
+- [Confronting without a map graph returns pending](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B02`
+
+- [A plan with neither revisions nor revisers skips confrontation](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B03`
+
+- [Declaring a revision target that does not exist in the map fails](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B04`
+
+- [A revising plan receives a pending reminder when the target lacks a top notice](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B05`
+
+- [The pending reminder on a revising plan clears once the target carries the notice](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B06`
+
+- [A revised plan lacking a top revision notice fails](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B07`
+
+- [A revised plan placing the revision notice after line 40 fails](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B08`
+
+- [A revised plan with top notice but no section amendment markers returns pending](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B09`
+
+- [A revised plan with top notice and marked section amendments passes](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B10`
+
+- [Markdown alerts and metadata directives are both accepted as valid markers](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B11`
+
+- [Revision notices must be placed within the first 40 lines](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I01`
+
+- [Missing section amendment markers yield pending rather than failure](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I02`
+
+- [The pending reminder clears once the revised plan is notified](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I03`
+
+- [Language neutrality allows markdown alerts and metadata directives](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-X01`
+
+- [Prose description quality accompanying revision markers is not evaluated](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-X02`
+
+- [Section amendment markers are not demanded on unrevised plans](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-X03`
+
 - [Non-plan artifacts skip confrontation](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B01`
 
 - [Missing project configuration returns Pending](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B02`
@@ -893,6 +957,36 @@ teste prova.
 - [The gate does not judge whether the letter suits the rule](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X03`
 
 - [The gate charges traceability, not format](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X04`
+
+- [Non-feature artifacts skip confrontation](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B01`
+
+- [Genuinely assertive outcome steps pass](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B02`
+
+- [Tautological outcome steps citing only the code fail](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B03`
+
+- [Tautological variations wrapped in linking words fail](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B04`
+
+- [Outcome steps citing a code with substantive assertion pass](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B05`
+
+- [Multiple tautological outcome steps are reported sorted and deduplicated](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B06`
+
+- [Outcome steps across recognized dialect keywords are enforced](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B07`
+
+- [Empty and comment lines are ignored](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B08`
+
+- [Non-outcome steps citing codes are ignored](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B09`
+
+- [Up to two residual content words is classified as a tautology](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-I01`
+
+- [Truly assertive outcome steps are never flagged as tautologies](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-I02`
+
+- [Language recognition covers all supported dialect alternatives](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-I03`
+
+- [Prose style and semantic elegance are not graded](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-X01`
+
+- [Setup and trigger steps are not inspected for code citations](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-X02`
+
+- [Scenario or test presence is not enforced by this gate](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-X03`
 
 - [Non-feature artifacts skip confrontation](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B01`
 

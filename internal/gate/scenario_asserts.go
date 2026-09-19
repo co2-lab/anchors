@@ -53,7 +53,12 @@ func checkScenarioAsserts(content string, n mapx.Node, root string, g *mapx.Grap
 	var vazios []string
 	for _, linha := range strings.Split(content, "\n") {
 		passo := strings.TrimSpace(linha)
-		if passo == "" || strings.HasPrefix(passo, "#") {
+		// O `HasPrefix(passo, "#")` que havia aqui era INALCANCAVEL: `firstWord` de
+		// `#Then x` devolve `#Then`, e de `# Then x` devolve `#` — nenhum dos dois esta no
+		// mapa de palavras de resultado, entao a linha comentada ja saia pelo `continue`
+		// seguinte. Achado por mutacao: remover a guarda deixava a suite verde, e a razao
+		// nao era falta de teste — era codigo que a via de producao nao alcanca.
+		if passo == "" {
 			continue
 		}
 		primeira, resto := firstWord(passo)

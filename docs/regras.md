@@ -15,6 +15,8 @@ abra a página dela em `camadas/`.
 
 ### [CDLNG — CodeLanguage — the code does not go back to mixing languages](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages)
 
+### [CRVCD — CodeReferenceValid — cross-referenced requirement codes must resolve to existing units](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units)
+
 ### [CSDCN — ContractStatusDeclared — the output contract lists the status codes the code really returns, and only those](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
 
 ### [CNHNC — CountHonored — a numerical assertion written in a spec must match reality in code](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code)
@@ -49,6 +51,8 @@ abra a página dela em `camadas/`.
 
 ### [PCJPL — PlanChangeJustified — a modified plan or spec must declare why it changed](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed)
 
+### [PLRVP — PlanRevised — mutual revision visibility between superseded and revising plans](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans)
+
 ### [PSVPL — PlanSeedsValid — specifications seeded in a plan must target valid governed layers](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers)
 
 ### [PSDPL — PlanSourceDeclared — a plan that NAMES a source has to declare who builds it](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it)
@@ -64,6 +68,8 @@ abra a página dela em `camadas/`.
 ### [RLIMR — RuleImplemented — a spec catalogues rules, and the code shows it realized them](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
 
 ### [RLTYR — RuleTypes — the rule VOCABULARY is extensible, but it must be DECLARED](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared)
+
+### [SCASS — ScenarioAsserts — scenario outcome steps must assert concrete verifiable outcomes](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes)
 
 ### [STASC — ScenarioTypeAligned — scenario classification tags must match the code nature letter](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter)
 

@@ -5,7 +5,7 @@
 
 
 
-> Esta camada tem 34 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 37 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -15,6 +15,12 @@
 
 
 ## CDLNG — CodeLanguage — the code does not go back to mixing languages
+
+
+
+
+
+## CRVCD — CodeReferenceValid — cross-referenced requirement codes must resolve to existing units
 
 
 
@@ -122,6 +128,12 @@
 
 
 
+## PLRVP — PlanRevised — mutual revision visibility between superseded and revising plans
+
+
+
+
+
 ## PSVPL — PlanSeedsValid — specifications seeded in a plan must target valid governed layers
 
 
@@ -165,6 +177,12 @@
 
 
 ## RLTYR — RuleTypes — the rule VOCABULARY is extensible, but it must be DECLARED
+
+
+
+
+
+## SCASS — ScenarioAsserts — scenario outcome steps must assert concrete verifiable outcomes
 
 
 
