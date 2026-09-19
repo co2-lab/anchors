@@ -5,7 +5,7 @@
 
 
 
-> Esta camada tem 28 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 31 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -152,7 +152,19 @@
 
 
 
+## STASC — ScenarioTypeAligned — scenario classification tags must match the code nature letter
+
+
+
+
+
 ## SFMSP — SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario
+
+
+
+
+
+## TSTRT — TestTraceable — a test linked to a feature must declare what scenario it proves
 
 
 
@@ -165,6 +177,12 @@
 
 
 ## TRCMT — TriadComplete — the pieces that realize a spec EXIST
+
+
+
+
+
+## TRDCT — TriggerDeclared — cited compliance triggers and obligations must exist in the declared vocabulary
 
 
 

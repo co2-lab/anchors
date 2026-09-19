@@ -59,11 +59,17 @@ abra a página dela em `camadas/`.
 
 ### [RLTYR — RuleTypes — the rule VOCABULARY is extensible, but it must be DECLARED](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared)
 
+### [STASC — ScenarioTypeAligned — scenario classification tags must match the code nature letter](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter)
+
 ### [SFMSP — SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
+
+### [TSTRT — TestTraceable — a test linked to a feature must declare what scenario it proves](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves)
 
 ### [TQETS — TestidQueriedExists — every handle queried by an E2E flow must exist in code](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code)
 
 ### [TRCMT — TriadComplete — the pieces that realize a spec EXIST](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist)
+
+### [TRDCT — TriggerDeclared — cited compliance triggers and obligations must exist in the declared vocabulary](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary)
 
 ### [VLANV — ValueAnchored — every value of a closed set points at the rule that justifies it, and the anchor carries the value](camadas/gate.md#vlanv--valueanchored--every-value-of-a-closed-set-points-at-the-rule-that-justifies-it-and-the-anchor-carries-the-value)
 

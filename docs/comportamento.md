@@ -778,6 +778,46 @@ teste prova.
 
 - [The gate charges traceability, not format](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X04`
 
+- [Non-feature artifacts skip confrontation](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B01`
+
+- [Missing or empty rule types in configuration skip confrontation](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B02`
+
+- [Configuration without tag mappings skips confrontation](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B03`
+
+- [Features without coded scenarios skip confrontation](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B04`
+
+- [Codes lacking a recognized rule letter are ignored](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B05`
+
+- [Unregistered scenario tags are ignored](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B06`
+
+- [Scenarios whose classification tags align with code letters pass](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B07`
+
+- [A tag mapped to multiple rule letters passes if any matches](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B08`
+
+- [A multi-coded scenario passes when a tag matches any code](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B09`
+
+- [A scenario tag disagreeing with the code rule letter returns Pending](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B10`
+
+- [The Pending verdict cites details of the type divergence](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B11`
+
+- [Multiple mismatch findings are sorted deterministically](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B12`
+
+- [Classification alignment is evaluated only on feature artifacts](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I01`
+
+- [Absence of tag mappings prevents speculative enforcement](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I02`
+
+- [Mismatched scenario types return Pending rather than Fail](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I03`
+
+- [Secondary requirement codes prevent false mismatch reporting](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I04`
+
+- [The gate does not mandate classification tags on every scenario](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X01`
+
+- [The gate does not decide whether tag or code is erroneous](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X02`
+
+- [Specifications and test files are not inspected or modified](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X03`
+
+- [Tags are permitted to map across multiple rule letters](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X04`
+
 - [A requirement no scenario tags is failed and named](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B01`
 
 - [A requirement that has a scenario is not accused](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B02`
@@ -811,6 +851,44 @@ teste prova.
 - [A cited code produces no accusation](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-X02`
 
 - [The gate does not confront feature against test](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-X03`
+
+- [Non-test artifacts skip confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B01`
+
+- [Confrontation without a dependency graph returns Pending](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B02`
+
+- [A test with no linked feature skips confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B03`
+
+- [A test whose linked feature cannot be read skips confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B04`
+
+- [A test whose linked feature declares no scenario codes skips confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B05`
+
+- [A test containing a declared scenario code passes](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B06`
+
+- [A single declared scenario code is sufficient to pass](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B07`
+
+- [A test containing none of the linked feature scenario codes fails](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B08`
+
+- [A test with transposed or misspelled codes fails exact substring confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B09`
+
+- [A failing verdict names the linked feature and lists expected codes](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B10`
+
+- [Scenario codes appearing anywhere in test content satisfy traceability](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B11`
+
+- [Traceability is strictly charged on test artifacts](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-I01`
+
+- [Tests without a linked feature are never charged](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-I02`
+
+- [The acceptance threshold requires only one scenario code present](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-I03`
+
+- [Missing graph structure produces Pending rather than approving](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-I04`
+
+- [The gate does not enforce one-to-one scenario coverage](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X01`
+
+- [Test execution results are not inspected by this gate](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X02`
+
+- [Scenario codes are not required in standalone test files](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X03`
+
+- [Test assertion semantics and quality are not evaluated](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X04`
 
 - [The gate skips when no test handle attribute is declared](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B01`
 
@@ -879,6 +957,48 @@ teste prova.
 - [The gate does not confront whether the pieces MATCH one another](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-X01`
 
 - [The gate does not judge the QUALITY of any piece](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-X02`
+
+- [Non-spec artifacts skip confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B01`
+
+- [Specifications without cited triggers skip confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B02`
+
+- [Cited triggers return Pending when no vocabulary is declared](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B03`
+
+- [Non-trigger key-value citations are ignored](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B04`
+
+- [Natural language mentions without backticks are ignored](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B05`
+
+- [Valid declared trigger values pass confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B06`
+
+- [Valid declared obligation names pass confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B07`
+
+- [An undeclared trigger value fails with a nearest-match suggestion](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B08`
+
+- [An undeclared trigger without close match lists declared triggers](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B09`
+
+- [An undeclared obligation name fails confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B10`
+
+- [Duplicate citations of triggers or obligations are deduplicated](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B11`
+
+- [Multiple vocabulary errors are sorted deterministically](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B12`
+
+- [The list of declared triggers is capped at four](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B13`
+
+- [Trigger confrontation applies exclusively to specification artifacts](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-I01`
+
+- [Missing compliance packs produce Pending rather than Pass](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-I02`
+
+- [Trigger keys are limited to recognized compliance predicates](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-I03`
+
+- [Undeclared triggers produce a blocking Fail verdict](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-I04`
+
+- [The gate does not require every specification to cite triggers](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X01`
+
+- [Code and test artifacts are not checked for trigger citations](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X02`
+
+- [Code obligation implementation is not evaluated by this gate](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X03`
+
+- [Unquoted prose text is not evaluated as symbol citations](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X04`
 
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#vlanv--valueanchored--every-value-of-a-closed-set-points-at-the-rule-that-justifies-it-and-the-anchor-carries-the-value) `VLANV-B01`
 
