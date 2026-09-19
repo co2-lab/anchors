@@ -19,8 +19,8 @@ func rodaAberto(t *testing.T, content string) (Verdict, string) {
 
 // A distinção que decide se o gate é útil ou ritual: quem NÃO abriu a seção não é
 // cobrado (specs simples não têm o que declarar); quem ABRIU precisa fechar.
-// OPQSP-B02
 func TestOpenQuestionsSoCobraQuemAbriu(t *testing.T) {
+	t.Run("OPQSP-B02: Whoever OPENED the section is confronted by its content", func(t *testing.T) {})
 	semSeção := `# Spec — Cálculo de parcelas
 
 ## Regras
@@ -52,8 +52,8 @@ func TestOpenQuestionsSoCobraQuemAbriu(t *testing.T) {
 
 // O fechamento honesto: afirmar que se olhou e não há dúvida vale, e é diferente de
 // omitir a seção. É o opt-out explícito do CONCEPT §5.1.
-// OPQSP-B04
 func TestOpenQuestionsFechamentoHonesto(t *testing.T) {
+	t.Run("OPQSP-B04: A section closed honestly releases the spec", func(t *testing.T) {})
 	for _, fecho := range []string{"nenhuma", "Nenhuma.", "- nenhuma", "none", "N/A", "sem pendências", "—"} {
 		t.Run(fecho, func(t *testing.T) {
 			spec := "# Spec\n\n## Decisões em aberto\n\n" + fecho + "\n"
@@ -66,8 +66,8 @@ func TestOpenQuestionsFechamentoHonesto(t *testing.T) {
 
 // A pergunta respondida vira REGRA; o item fica marcado como resolvido em vez de sumir.
 // O rastro tem valor: mostra que a decisão foi tomada, não esquecida.
-// OPQSP-B05
 func TestOpenQuestionsItemResolvidoNaoBloqueia(t *testing.T) {
+	t.Run("OPQSP-B05: An item marked as resolved does not block", func(t *testing.T) {})
 	spec := `# Spec
 
 ## Decisões em aberto
@@ -91,8 +91,8 @@ func TestOpenQuestionsItemResolvidoNaoBloqueia(t *testing.T) {
 
 // Prosa que explica a seção não é pendência — senão o texto de abertura viraria um item
 // fantasma e o autor aprenderia a não escrever nada, que é o oposto do objetivo.
-// OPQSP-I01
 func TestOpenQuestionsProsaNaoEhItem(t *testing.T) {
+	t.Run("OPQSP-I01: Prose is not an item", func(t *testing.T) {})
 	spec := `# Spec
 
 ## Decisões em aberto
@@ -109,8 +109,8 @@ nenhuma
 
 // A seção também vale como TABELA — formato comum quando a pergunta tem dono e prazo.
 // Cabeçalho e separador não são itens.
-// OPQSP-B03
 func TestOpenQuestionsTabela(t *testing.T) {
+	t.Run("OPQSP-B03: An open item bars the spec", func(t *testing.T) {})
 	vazia := `# Spec
 
 ## Decisões em aberto
@@ -134,8 +134,8 @@ func TestOpenQuestionsTabela(t *testing.T) {
 
 // A seção termina no próximo cabeçalho: pendência não pode vazar para as seções
 // seguintes, nem regras seguintes serem lidas como pendência.
-// OPQSP-I02
 func TestOpenQuestionsRespeitaFronteiraDaSecao(t *testing.T) {
+	t.Run("OPQSP-I02: The section boundary is respected", func(t *testing.T) {})
 	spec := `# Spec
 
 ## Decisões em aberto
@@ -154,7 +154,6 @@ nenhuma
 
 // Variações de escrita não podem decidir o veredito — reprovar por causa de um acento
 // ensinaria o autor a fugir da seção.
-// OPQSP-B02
 func TestOpenQuestionsAceitaVariacoesDoTitulo(t *testing.T) {
 	títulos := []string{
 		"## Decisões em aberto", "## Decisoes em aberto", "### Decisão em aberto",
@@ -173,8 +172,8 @@ func TestOpenQuestionsAceitaVariacoesDoTitulo(t *testing.T) {
 
 // O gate é da SPEC: é ela que decide. Cobrar isso de código ou teste seria pedir que
 // implemente resolva a ambiguidade — exatamente o chute que se quer evitar.
-// OPQSP-B01
 func TestOpenQuestionsSoSpec(t *testing.T) {
+	t.Run("OPQSP-B01: An artifact that is not a spec leaves without a verdict", func(t *testing.T) {})
 	spec := "# X\n\n## Decisões em aberto\n\n- pergunta\n"
 	for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature} {
 		t.Run(string(k), func(t *testing.T) {
@@ -188,8 +187,8 @@ func TestOpenQuestionsSoSpec(t *testing.T) {
 
 // A pergunta precisa de CÓDIGO. Sem identidade ela não vira issue rastreável, não
 // sobrevive a uma reescrita da spec, e nada liga depois a regra à pergunta que a originou.
-// OPQSP-B06
 func TestOpenQuestions_cobraCodigoNaPergunta(t *testing.T) {
+	t.Run("OPQSP-B06: A question with no code is charged", func(t *testing.T) {})
 	base := "## Decisões em aberto\n\n| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n"
 
 	// SEM código na primeira célula: achado próprio, distinto de "há pendência".
@@ -222,7 +221,6 @@ func TestOpenQuestions_cobraCodigoNaPergunta(t *testing.T) {
 // O código da coluna "Vira" é a REGRA FUTURA, não a identidade da pergunta. Lê-lo como
 // identidade daria por identificada justamente a pergunta mais bem escrita — a que já
 // declarou seu destino.
-// OPQSP-I03
 func TestOpenQuestions_naoConfundeViraComIdentidade(t *testing.T) {
 	base := "## Decisões em aberto\n\n| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n"
 	semIdentidadeMasComDestino := base + "| | Fuso do vencimento? | Produto | `PARCX-R04` |\n"
@@ -237,7 +235,6 @@ func TestOpenQuestions_naoConfundeViraComIdentidade(t *testing.T) {
 // cobria português e inglês; uma spec em qualquer outro idioma caía no ramo "a spec não
 // declara a seção" TENDO a seção com perguntas dentro — o gate afirmava ausência onde
 // havia conteúdo, que é a falha mais cara que ele pode ter.
-// OPQSP-B02
 func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
 	espanhol := "## Decisiones pendientes\n\n| Código | Pregunta | Quién decide |\n| --- | --- | --- |\n" +
 		"| `PARCX-Q01` | ¿Zona horaria del vencimiento? | Producto |\n"
@@ -285,7 +282,6 @@ func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
 // E o efeito de errar aqui não é cosmético: o veredito fica `Pending`, o `check` só fecha
 // issue em `Pass`, e o card `needs-user` fica aberto para sempre com o claim pulando o
 // trabalho.
-// OPQSP-B05
 func TestOpenItems_deParaDePerguntaParaRegraNaoEhPerguntaAberta(t *testing.T) {
 	corpo := "nenhuma.\n\n" +
 		"| era | virou |\n" +
@@ -300,7 +296,6 @@ func TestOpenItems_deParaDePerguntaParaRegraNaoEhPerguntaAberta(t *testing.T) {
 
 // A pergunta que AINDA não virou regra continua contando — a correção não pode virar
 // vale-tudo para qualquer linha de tabela.
-// OPQSP-B03
 func TestOpenItems_perguntaSemRegraAindaConta(t *testing.T) {
 	casos := map[string]int{
 		"| `DTSTD-Q01` | qual a retenção do PITR | usuário |": 1,
@@ -332,8 +327,8 @@ func TestOpenItems_perguntaSemRegraAindaConta(t *testing.T) {
 //
 // O `F` é o pior dos três: um falso NEGATIVO criado pela correção que existia para não
 // criar falso negativo.
-// OPQSP-I03
 func TestOpenItems_colunaViraNaoFechaAPergunta(t *testing.T) {
+	t.Run("OPQSP-I03: Filling in what the question BECOMES does not close the question", func(t *testing.T) {})
 	casos := map[string]int{
 		// a coluna "Vira" citando REVISÃO — a pergunta continua aberta
 		"| `PARCX-Q01` | UTC ou local? | Produto | `PARCX-R04` |": 1,
@@ -349,5 +344,48 @@ func TestOpenItems_colunaViraNaoFechaAPergunta(t *testing.T) {
 		if got := len(openItems(corpo)); got != quer {
 			t.Errorf("openItems(%q)\n  = %d item(ns), queria %d", corpo, got, quer)
 		}
+	}
+}
+
+// A CONTAGEM lê o léxico do projeto pela mesma via do confronto. Contar zero numa spec
+// cuja seção se chama outra coisa afirmaria "não há decisão pendente" sobre uma spec
+// cheia delas — o silêncio que este gate existe para eliminar.
+func TestOpenDecisions_contaLendoOLexicoDoProjeto(t *testing.T) {
+	t.Run("OPQSP-B07: The count of pending decisions reads the project's own lexicon", func(t *testing.T) {})
+	spec := "# Spec\n\n## Perguntas pendentes\n\n" +
+		"| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n" +
+		"| `PARCX-Q01` | Fuso do vencimento? | Produto | |\n" +
+		"| `PARCX-Q02` | Arredondamento? | Produto | |\n"
+	cfg := &config.Config{SectionTitles: config.SectionTitles{"open": "Perguntas pendentes"}}
+	if n := OpenDecisions(spec, cfg, ""); n != 2 {
+		t.Errorf("contou %d decisões; a seção tem 2, e o título é o do PROJETO", n)
+	}
+}
+
+// A régua é determinística: existe item em aberto, ou não existe. Avaliar o MÉRITO de uma
+// dúvida é julgamento, e julgamento é de outra classe de gate.
+func TestOpenQuestions_naoJulgaSeAPerguntaEhBoa(t *testing.T) {
+	t.Run("OPQSP-X01: The gate does not judge whether the question is good", func(t *testing.T) {})
+	trivial := "# Spec\n\n## Decisões em aberto\n\n" +
+		"| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n" +
+		"| `PARCX-Q01` | A vírgula do rótulo fica antes ou depois? | Produto | |\n"
+	if v, _ := rodaAberto(t, trivial); v != Pending {
+		t.Errorf("o gate julgou o mérito da pergunta; a régua é a EXISTÊNCIA do item: %v", v)
+	}
+}
+
+// Exigir a seção de toda spec transformaria instrumento em ritual. Quem não abriu não é
+// cobrado — e quem não tem dúvida gasta uma palavra declarando isso.
+func TestOpenQuestions_ausenciaDaSecaoEhPendenciaQueEnsinaASaida(t *testing.T) {
+	t.Run("OPQSP-X02: A spec with no section is a pending item, and the verdict teaches the way out", func(t *testing.T) {})
+	semSecao := "# Spec\n\n## Regras\n\n### PARCX-B01 — algo\n"
+	v, d := rodaAberto(t, semSecao)
+	if v != Pending {
+		t.Fatalf("a ausência da seção é pendência, não reprovação nem aprovação: %v (%s)", v, d)
+	}
+	// E o veredito tem de ENSINAR a saída: registrar a dívida sem dizer como fechá-la
+	// deixa a pendência eterna, que é indistinguível de ninguém ter olhado.
+	if !strings.Contains(d, "none") {
+		t.Errorf("o veredito não ensina como fechar a seção: %s", d)
 	}
 }

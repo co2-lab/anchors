@@ -29,8 +29,8 @@ func rodaRegraImpl(t *testing.T, spec, codigo string) (Verdict, string) {
 // linha. Metade de uma feature era código morto declarado como pronto, e os 26 gates
 // ficaram verdes — porque a spec existe, o código existe, e os dois se referenciam pelo
 // header.
-// RLIMR-B01
 func TestSpecQueFalaSozinhaEhAcusada(t *testing.T) {
+	t.Run("RLIMR-B01: A spec whose rules the code ignores is accused, and the verdict names them", func(t *testing.T) {})
 	// O caso REALX: a unidade já entrou na prática (o código marca `B01`), e a spec ganhou
 	// regras novas que ninguém implementou. É diferente da dívida de migração — aqui há
 	// declaração, e ela está incompleta.
@@ -60,8 +60,8 @@ func TestSpecQueFalaSozinhaEhAcusada(t *testing.T) {
 // A DISPENSA DECLARADA é o que troca heurística por confronto. Exigir todas as regras
 // marcadas seria falso (restrição é satisfeita pela ausência de código); "ao menos uma"
 // não diz nada sobre as outras quinze. Quem escreve a spec declara, regra a regra.
-// RLIMR-B02
 func TestDispensaDeclaradaFechaAConta(t *testing.T) {
+	t.Run("RLIMR-B02: A rule waived with a written reason closes the account", func(t *testing.T) {})
 	root := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(root, "u.ts"), []byte(
 		"// MTVRX-B01: resolve a versão vigente\nexport const f = 1\n"), 0o644))
@@ -100,8 +100,8 @@ func TestDispensaDeclaradaFechaAConta(t *testing.T) {
 // A unidade que não declarou NADA é dívida de MIGRAÇÃO, não defeito: nasceu antes da
 // prática. Medido no repositório de origem: 3.114 regras em 590 unidades. Acusá-las
 // reprovaria 98% do projeto, e um gate assim é desligado no primeiro dia.
-// RLIMR-B03
 func TestUnidadeAnteriorAPraticaEhPendencia(t *testing.T) {
+	t.Run("RLIMR-B03: A unit that predates the practice is a pending item, not a failure", func(t *testing.T) {})
 	root := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(root, "v.ts"), []byte("export const f = 1\n"), 0o644))
 	spec := "<!-- @anchors\n  code: ANTGX\n-->\n| `ANTGX-B01` | faz algo |\n| `ANTGX-B02` | faz outro |\n"
@@ -117,8 +117,8 @@ func TestUnidadeAnteriorAPraticaEhPendencia(t *testing.T) {
 
 // Sem código no disco quem acusa é o `trinca-completa`; duplicar a cobrança faria dois
 // gates apontando o mesmo dedo.
-// RLIMR-B05
 func TestSemCodigoNaoEhAssunto(t *testing.T) {
+	t.Run("RLIMR-B05: A spec with no linked code is not this gate's subject", func(t *testing.T) {})
 	spec := "<!-- @anchors\n  code: NOVAX\n-->\n| `NOVAX-B01` | faz algo |\n"
 	if v, _ := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "x.spec.md"}, t.TempDir(), nil, nil); v != Skip {
 		t.Errorf("sem código, Skip; veio %v", v)
@@ -139,8 +139,8 @@ func must(t *testing.T, err error) {
 // olhou". Medido: uma spec descrevia "mantém o cartão selecionado" enquanto o código era
 // um CRUD sem seleção; o gate VIU a regra ausente, caiu no ramo de migração e devolveu
 // pendência. O defeito atravessou os 44 gates.
-// RLIMR-B04
 func TestRegraImplementada_marcacaoExigidaVenceAPendencia(t *testing.T) {
+	t.Run("RLIMR-B04: Declaring the requirement turns the pending item into a failure", func(t *testing.T) {})
 	root := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(root, "u.ts"), []byte(
 		"export const useStore = () => ({ addAccount() {} })\n"), 0o644))
@@ -165,8 +165,8 @@ func TestRegraImplementada_marcacaoExigidaVenceAPendencia(t *testing.T) {
 
 // Com a marcação exigida, quem JÁ marca segue passando — a exigência não pune quem
 // está em dia.
-// RLIMR-I01
 func TestRegraImplementada_marcacaoExigidaNaoPuneQuemMarca(t *testing.T) {
+	t.Run("RLIMR-I01: Requiring the marking never punishes whoever already marks", func(t *testing.T) {})
 	root := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(root, "u.ts"), []byte(
 		"// SBNKX-B01: inclui a conta\nexport function addAccount() {}\n"), 0o644))
@@ -185,7 +185,6 @@ func TestRegraImplementada_marcacaoExigidaNaoPuneQuemMarca(t *testing.T) {
 // sua. Mas uma spec pode ter seis regras marcadas no código e duas que não têm onde ser
 // marcadas: declarar as duas numa linha só, nomeando-as, é mais legível que espalhar o
 // marcador por linhas que não falam disso.
-// RLIMR-B06
 func TestNoMarkComAlvoNomeado(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "u.ts"), []byte("// MTVRX-B01: resolve\n"), 0o644); err != nil {
@@ -226,8 +225,8 @@ func TestNoMarkComAlvoNomeado(t *testing.T) {
 // `@no-code` continua valendo: quem já escreveu não pode ver a spec quebrar por uma
 // renomeação. O nome mudou porque o antigo mente — o código EXISTE (um `tsconfig.json`
 // decide como tudo compila); o que não existe é a MARCAÇÃO.
-// RLIMR-I02
 func TestNomeAntigoNoCodeContinuaValendo(t *testing.T) {
+	t.Run("RLIMR-I02: The identity survives a rename", func(t *testing.T) {})
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "u.ts"), []byte("// MTVRX-B01: resolve\n"), 0o644); err != nil {
 		t.Fatal(err)
@@ -247,8 +246,8 @@ func TestNomeAntigoNoCodeContinuaValendo(t *testing.T) {
 // repetir a mesma razão N vezes, e repetição em declaração é onde a divergência começa.
 // A forma é mais forte que a nomeada, e por isso a razão importa mais: ela dispensa o
 // gate inteiro para aquele arquivo.
-// RLIMR-B06
 func TestNoMarkSemAlvoValeParaTodas(t *testing.T) {
+	t.Run("RLIMR-B06: A waiver with no named rule covers every rule of the spec", func(t *testing.T) {})
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "u.ts"), []byte("nada marcado aqui\n"), 0o644); err != nil {
 		t.Fatal(err)
@@ -266,5 +265,40 @@ func TestNoMarkSemAlvoValeParaTodas(t *testing.T) {
 	explicito := strings.Replace(spec, "@no-mark:", "@no-mark:[all]", 1)
 	if v, msg := checkRuleImplemented(explicito, n, root, nil, nil); v != Pass {
 		t.Errorf("`[all]` explícito deveria dispensar todas; veio %v (%s)", v, msg)
+	}
+}
+
+// A régua é DETERMINÍSTICA: a marca existe, ou a dispensa existe com razão. Se o código
+// marcado faz o que a regra descreve é JULGAMENTO, e julgamento é de outra classe de gate.
+func TestRegraImplementada_naoJulgaSeAImplementacaoEstaCerta(t *testing.T) {
+	t.Run("RLIMR-X01: The gate does not judge whether the implementation is correct", func(t *testing.T) {})
+	root := t.TempDir()
+	// A marca está lá; o que a função faz não tem relação com "resolve a versão".
+	must(t, os.WriteFile(filepath.Join(root, "u.ts"), []byte(
+		"// MTVRX-B01: resolve a versão vigente\nexport function f() { return 42 }\n"), 0o644))
+	spec := "<!-- @anchors\n  code: MTVRX\n-->\n| `MTVRX-B01` | resolve a versão |\n"
+	if v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Pass {
+		t.Errorf("o gate julgou o MÉRITO da implementação, e a régua é a marca: %v (%s)", v, msg)
+	}
+}
+
+// Exigir marca de TODA regra seria falso por construção: restrição é satisfeita pela
+// AUSÊNCIA de código, e ausência não tem onde receber comentário. Medido no projeto de
+// origem, a régua ingênua daria 3.121 achados — e uma lista assim é ignorada inteira.
+func TestRegraImplementada_naoExigeMarcaDeTodaRegra(t *testing.T) {
+	t.Run("RLIMR-X02: The gate does not demand a mark on EVERY rule", func(t *testing.T) {})
+	root := t.TempDir()
+	must(t, os.WriteFile(filepath.Join(root, "u.ts"), []byte(
+		"// MTVRX-B01: resolve a versão vigente\nexport const f = 1\n"), 0o644))
+	spec := `<!-- @anchors
+  code: MTVRX
+-->
+| Regra | Efeito |
+| --- | --- |
+| ` + "`MTVRX-B01`" + ` | resolve a versão |
+| ` + "`MTVRX-X01`" + ` | NÃO faz I/O @no-code: satisfeita pela ausência de import |
+`
+	if v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil); v != Pass {
+		t.Errorf("a restrição dispensada com razão fecha a conta: %v (%s)", v, msg)
 	}
 }

@@ -42,7 +42,7 @@ código, e o item sai da seção.
 | Efeito | Descrição |
 | --- | --- |
 | `OPQSP-B01` | Artefato que não é spec sai sem veredito: só a spec tem decisão em aberto a cobrar. |
-| `OPQSP-B02` | Só é cobrado quem ABRIU a seção. Quem não a tem não é acusado — a régua é sobre o que foi declarado, não sobre o que se supõe faltar. |
+| `OPQSP-B02` | Quem ABRIU a seção é confrontado pelo conteúdo dela: item em aberto barra, seção fechada libera. |
 | `OPQSP-B03` | Item em aberto BARRA: enquanto houver pergunta, a spec não passa por pronta. |
 | `OPQSP-B04` | Seção fechada honestamente — aberta e sem item — libera. Dizer "não há pergunta" é diferente de não ter olhado. |
 | `OPQSP-B05` | Item marcado como RESOLVIDO não bloqueia: a pergunta fica no rastro, e o que a fechou é a regra que nasceu dela. |
@@ -62,7 +62,7 @@ código, e o item sai da seção.
 | Regra | Limite | Por quê |
 | --- | --- | --- |
 | `OPQSP-X01` | Não julga se a pergunta é BOA nem se a resposta é certa. | A régua é determinística: existe item em aberto, ou não existe. Avaliar o mérito de uma dúvida é julgamento, e julgamento é de outra classe de gate. |
-| `OPQSP-X02` | Não exige que toda spec tenha a seção. | Exigir a seção de toda spec transformaria instrumento em ritual. Quem não tem dúvida gasta uma palavra declarando isso; quem não abriu não é cobrado. |
+| `OPQSP-X02` | Não REPROVA a spec que não tem a seção — registra a pendência e diz como fechá-la. | A ausência não distingue "tudo foi decidido" de "a seção foi apagada", e as duas pedem coisas opostas. Reprovar seria tratar migração como defeito; calar seria o silêncio que o gate existe para eliminar. O veredito fica indeterminado e ENSINA a saída: fechar com a declaração de que não há pergunta, ou escrever o que não se decidiu. |
 
 ## Dependências
 

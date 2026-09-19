@@ -1889,6 +1889,13 @@ nodes:
       tags:
         - regra
         - gate
+    - id: internal/gate/open_questions.feature
+      kind: feature
+      rev: c4da43aaff09
+      code: OPQSP
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/open_questions.go
       kind: code
       rev: f95ba6b43dff
@@ -1900,7 +1907,7 @@ nodes:
         - gate
     - id: internal/gate/open_questions.spec.md
       kind: spec
-      rev: bdcef0abf6d1
+      rev: a039bfb75d82
       updated_at: "2026-09-19"
       code: OPQSP
       layer: spec
@@ -1909,7 +1916,7 @@ nodes:
         - spec
     - id: internal/gate/open_questions_test.go
       kind: test
-      rev: 4a9b4fd41b60
+      rev: dc85b92ce7e5
       updated_at: "2026-09-19"
       code: OPQSP
       layer: teste
@@ -2169,6 +2176,13 @@ nodes:
       tags:
         - regra
         - gate
+    - id: internal/gate/rule_implemented.feature
+      kind: feature
+      rev: 8a1cc95ed73a
+      code: RLIMR
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/rule_implemented.go
       kind: code
       rev: bea14df81b37
@@ -2189,7 +2203,7 @@ nodes:
         - spec
     - id: internal/gate/rule_implemented_test.go
       kind: test
-      rev: 8c65faf9141a
+      rev: 700390a56eab
       updated_at: "2026-09-19"
       code: MRHMX
       layer: teste
@@ -2424,6 +2438,13 @@ nodes:
       tags:
         - regra
         - gate
+    - id: internal/gate/triad_complete.feature
+      kind: feature
+      rev: d25ffa7df0c6
+      code: TRCMT
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/triad_complete.go
       kind: code
       rev: 7fbe0f3050d2
@@ -2444,7 +2465,7 @@ nodes:
         - spec
     - id: internal/gate/triad_complete_test.go
       kind: test
-      rev: 1ce8652f263b
+      rev: db486725030c
       updated_at: "2026-09-19"
       code: TRCMT
       layer: teste
@@ -4100,8 +4121,26 @@ edges:
       type: specifies
       origin: convention
       stamp:
-        validated_from_rev: 8aaf21c6d0e0
+        validated_from_rev: 7b2f6cef4a68
         validated_to_rev: 996abb62116a
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/open_questions.feature
+      to: internal/gate/open_questions_test.go
+      type: tested-by
+      origin: convention
+      stamp:
+        validated_from_rev: c4da43aaff09
+        validated_to_rev: dc85b92ce7e5
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/open_questions.spec.md
+      to: internal/gate/open_questions.feature
+      type: covered-by
+      origin: convention
+      stamp:
+        validated_from_rev: a039bfb75d82
+        validated_to_rev: c4da43aaff09
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/open_questions.spec.md
@@ -4109,17 +4148,26 @@ edges:
       type: specifies
       origin: convention
       stamp:
-        validated_from_rev: bdcef0abf6d1
+        validated_from_rev: a039bfb75d82
         validated_to_rev: f95ba6b43dff
         changed_at: "2026-09-19"
         verdict: ok
-    - from: internal/gate/open_questions.spec.md
-      to: internal/gate/open_questions_test.go
+    - from: internal/gate/rule_implemented.feature
+      to: internal/gate/rule_implemented_test.go
       type: tested-by
       origin: convention
       stamp:
-        validated_from_rev: bdcef0abf6d1
-        validated_to_rev: 4a9b4fd41b60
+        validated_from_rev: 8a1cc95ed73a
+        validated_to_rev: 700390a56eab
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/rule_implemented.spec.md
+      to: internal/gate/rule_implemented.feature
+      type: covered-by
+      origin: convention
+      stamp:
+        validated_from_rev: 216c63d08c9b
+        validated_to_rev: 8a1cc95ed73a
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/rule_implemented.spec.md
@@ -4131,13 +4179,22 @@ edges:
         validated_to_rev: bea14df81b37
         changed_at: "2026-09-19"
         verdict: ok
-    - from: internal/gate/rule_implemented.spec.md
-      to: internal/gate/rule_implemented_test.go
+    - from: internal/gate/triad_complete.feature
+      to: internal/gate/triad_complete_test.go
       type: tested-by
       origin: convention
       stamp:
-        validated_from_rev: 216c63d08c9b
-        validated_to_rev: 8c65faf9141a
+        validated_from_rev: d25ffa7df0c6
+        validated_to_rev: db486725030c
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/triad_complete.spec.md
+      to: internal/gate/triad_complete.feature
+      type: covered-by
+      origin: convention
+      stamp:
+        validated_from_rev: aed2684c3a95
+        validated_to_rev: d25ffa7df0c6
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/triad_complete.spec.md
@@ -4147,14 +4204,5 @@ edges:
       stamp:
         validated_from_rev: aed2684c3a95
         validated_to_rev: 7fbe0f3050d2
-        changed_at: "2026-09-19"
-        verdict: ok
-    - from: internal/gate/triad_complete.spec.md
-      to: internal/gate/triad_complete_test.go
-      type: tested-by
-      origin: convention
-      stamp:
-        validated_from_rev: aed2684c3a95
-        validated_to_rev: 1ce8652f263b
         changed_at: "2026-09-19"
         verdict: ok
