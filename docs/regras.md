@@ -11,11 +11,15 @@ abra a página dela em `camadas/`.
 
 ## gate
 
-### [DMDCD — DomainDeclared — a spec declara o que a unidade ACEITA, e quem barra o inválido](camadas/gate.md#dmdcd--domaindeclared--a-spec-declara-o-que-a-unidade-aceita-e-quem-barra-o-inválido)
+### [CDLNG — CodeLanguage — the code does not go back to mixing languages](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages)
 
-### [OPQSP — OpenQuestions — spec com pergunta em aberto não está pronta para implementar](camadas/gate.md#opqsp--openquestions--spec-com-pergunta-em-aberto-não-está-pronta-para-implementar)
+### [DMDCD — DomainDeclared — the spec declares what the unit ACCEPTS, and who blocks the invalid](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid)
 
-### [RLIMR — RuleImplemented — a spec cataloga regras, e o código mostra que as realizou](camadas/gate.md#rlimr--ruleimplemented--a-spec-cataloga-regras-e-o-código-mostra-que-as-realizou)
+### [OPQSP — OpenQuestions — a spec with an open question is not ready to implement](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement)
 
-### [TRCMT — TriadComplete — as peças que realizam uma spec EXISTEM](camadas/gate.md#trcmt--triadcomplete--as-peças-que-realizam-uma-spec-existem)
+### [PGNHN — PaginationHonored — what promises a SET does not return the first page in silence](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence)
+
+### [RLIMR — RuleImplemented — a spec catalogues rules, and the code shows it realized them](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
+
+### [TRCMT — TriadComplete — the pieces that realize a spec EXIST](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist)
 

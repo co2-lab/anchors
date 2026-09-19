@@ -10,6 +10,24 @@ teste prova.
 
 ## gate
 
+- [An identifier in the wrong language is accused, and an English one passes](camadas/gate.md#cdlng-b01--an-identifier-in-the-wrong-language-is-accused-and-an-english-one-passes) `CDLNG-B01`
+
+- [The verdict returns the word that accused](camadas/gate.md#cdlng-b02--the-verdict-returns-the-word-that-accused) `CDLNG-B02`
+
+- [Only a DECLARATION is the subject](camadas/gate.md#cdlng-b03--only-a-declaration-is-the-subject) `CDLNG-B03`
+
+- [The declarations are found in every form the language offers](camadas/gate.md#cdlng-b04--the-declarations-are-found-in-every-form-the-language-offers) `CDLNG-B04`
+
+- [Deciding one word is separate from deciding a whole identifier](camadas/gate.md#cdlng-b05--deciding-one-word-is-separate-from-deciding-a-whole-identifier) `CDLNG-B05`
+
+- [A short word does not count](camadas/gate.md#cdlng-i01--a-short-word-does-not-count) `CDLNG-I01`
+
+- [The gate does not read comments](camadas/gate.md#cdlng-x01--the-gate-does-not-read-comments) `CDLNG-X01`
+
+- [The gate does not read user-facing text](camadas/gate.md#cdlng-x02--the-gate-does-not-read-user-facing-text) `CDLNG-X02`
+
+- [The gate does not use a dictionary to decide the language](camadas/gate.md#cdlng-x03--the-gate-does-not-use-a-dictionary-to-decide-the-language) `CDLNG-X03`
+
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dmdcd-b01--an-artifact-that-is-not-a-spec-leaves-without-a-verdict) `DMDCD-B01`
 
 - [A spec without the domain section is failed](camadas/gate.md#dmdcd-b02--a-spec-without-the-domain-section-is-failed) `DMDCD-B02`
@@ -55,6 +73,32 @@ teste prova.
 - [The gate does not judge whether the question is good](camadas/gate.md#opqsp-x01--the-gate-does-not-judge-whether-the-question-is-good) `OPQSP-X01`
 
 - [A spec with no section is a pending item, and the verdict teaches the way out](camadas/gate.md#opqsp-x02--a-spec-with-no-section-is-a-pending-item-and-the-verdict-teaches-the-way-out) `OPQSP-X02`
+
+- [A limit received from the caller passes](camadas/gate.md#pgnhn-b01--a-limit-received-from-the-caller-passes) `PGNHN-B01`
+
+- [A limit hidden in a default value is accused](camadas/gate.md#pgnhn-b02--a-limit-hidden-in-a-default-value-is-accused) `PGNHN-B02`
+
+- [The NAME bounds the promise](camadas/gate.md#pgnhn-b03--the-name-bounds-the-promise) `PGNHN-B03`
+
+- [Sibling functions that paginate are the proof by asymmetry](camadas/gate.md#pgnhn-b04--sibling-functions-that-paginate-are-the-proof-by-asymmetry) `PGNHN-B04`
+
+- [A waiver with a written reason leaves the report](camadas/gate.md#pgnhn-b05--a-waiver-with-a-written-reason-leaves-the-report) `PGNHN-B05`
+
+- [The verdict offers the way out](camadas/gate.md#pgnhn-b06--the-verdict-offers-the-way-out) `PGNHN-B06`
+
+- [Without a declared dialect the verdict is undetermined](camadas/gate.md#pgnhn-b07--without-a-declared-dialect-the-verdict-is-undetermined) `PGNHN-B07`
+
+- [The ruler is agnostic across languages](camadas/gate.md#pgnhn-i01--the-ruler-is-agnostic-across-languages) `PGNHN-I01`
+
+- [Where the construct is not recognised, the gate stays silent](camadas/gate.md#pgnhn-i02--where-the-construct-is-not-recognised-the-gate-stays-silent) `PGNHN-I02`
+
+- [A cursor with no loop does not count as pagination](camadas/gate.md#pgnhn-i03--a-cursor-with-no-loop-does-not-count-as-pagination) `PGNHN-I03`
+
+- [A provider prefix in the name does not hide the promise](camadas/gate.md#pgnhn-i04--a-provider-prefix-in-the-name-does-not-hide-the-promise) `PGNHN-I04`
+
+- [The gate does not invent a cursor the provider does not offer](camadas/gate.md#pgnhn-x01--the-gate-does-not-invent-a-cursor-the-provider-does-not-offer) `PGNHN-X01`
+
+- [The gate does not measure performance or page size](camadas/gate.md#pgnhn-x02--the-gate-does-not-measure-performance-or-page-size) `PGNHN-X02`
 
 - [A spec whose rules the code ignores is accused, and the verdict names them](camadas/gate.md#rlimr-b01--a-spec-whose-rules-the-code-ignores-is-accused-and-the-verdict-names-them) `RLIMR-B01`
 

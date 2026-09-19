@@ -6,28 +6,105 @@
 
 
 
-## DMDCD — DomainDeclared — a spec declara o que a unidade ACEITA, e quem barra o inválido
-
-Confronta uma spec contra a pergunta que o resto do framework não faz: **o que esta
-unidade aceita de entrada, e quem garante que o inválido nunca chega?**
-
-A lacuna que ele fecha foi medida: 71% das specs de um projeto real tinham seção de
-regras ou efeitos, e apenas 14% diziam o que a unidade aceita. O framework inteiro é
-construído sobre catalogar EFEITOS — o que a unidade faz —, e todo defeito de borda
-encontrado em três rodadas de review adversarial morava no que ninguém tinha declarado.
-
-A distinção que dá razão ao gate: `## Restrições` diz o que a unidade NÃO faz, e empurra
-o dever para FORA; `## Domínio` diz o que ela ACEITA, e nomeia QUEM fica com ele.
-Escrever mais restrições não fecha nada — cria órfãos, porque cada "não é meu" precisa de
-alguém do outro lado.
+## CDLNG — CodeLanguage — the code does not go back to mixing languages
 
 
 
 
-| Regra | Vale sempre | Como se prova |
-| --- | --- | --- |
-| `DMDCD-I01` | A dispensa exige RAZÃO. Uma marca de dispensa nua não silencia o gate — o silêncio sem porquê é o que ele existe para impedir. | confronta uma spec com a dispensa sem razão e verifica que o veredito ainda cobra |
-| `DMDCD-I02` | O veredito de reprovação NOMEIA o que está errado — qual entrada ficou sem dono, ou que a seção falta. Um gate que reprova sem dizer o quê transfere o trabalho de diagnóstico para quem lê. | confronta uma spec com entrada órfã e verifica que o nome dela aparece no veredito |
+
+
+
+
+
+#### CDLNG-B01 — An identifier in the wrong language is accused, and an English one passes
+
+```gherkin
+    Given a file declaring a function named in Portuguese
+    And another declaring a function named in English
+    When the gate confronts the file
+    Then the Portuguese identifier is accused
+    And the English one passes without noise
+```
+
+#### CDLNG-B02 — The verdict returns the word that accused
+
+```gherkin
+    Given a file declaring an identifier in the wrong language
+    When the gate confronts it
+    Then the verdict names that exact word, so the reader does not hunt the whole file
+```
+
+#### CDLNG-B03 — Only a DECLARATION is the subject
+
+```gherkin
+    Given a file whose Portuguese words appear outside any declaration
+    When the gate confronts it
+    Then it accuses nothing, because what declares no identifier is not read
+```
+
+#### CDLNG-B04 — The declarations are found in every form the language offers
+
+```gherkin
+    Given a file declaring identifiers as function, type, variable and constant
+    When the gate confronts it
+    Then every one of those declarations is read, not only the most common form
+```
+
+#### CDLNG-B05 — Deciding one word is separate from deciding a whole identifier
+
+```gherkin
+    Given a compound identifier made of several words
+    When the gate decides its language
+    Then it breaks the identifier into its words and decides each one
+    And that separation is what lets the length floor apply per word instead of to
+      the identifier as a whole
+```
+
+#### CDLNG-I01 — A short word does not count
+
+```gherkin
+    Given a file declaring identifiers below the length floor
+    When the gate confronts it
+    Then none is accused, because below the floor there is no language to infer and
+      accusing there is the noise that costs a gate its credibility
+```
+
+#### CDLNG-X01 — The gate does not read comments
+
+```gherkin
+    Given a file whose comments are written in the team's own language
+    And every identifier is in English
+    When the gate confronts it
+    Then it returns Pass, because the comment carries the measurement and the why
+```
+
+#### CDLNG-X02 — The gate does not read user-facing text
+
+```gherkin
+    Given a file whose user-facing strings are written in the project's language
+    And every identifier is in English
+    When the gate confronts it
+    Then it returns Pass, because that text goes through the translation catalog
+```
+
+#### CDLNG-X03 — The gate does not use a dictionary to decide the language
+
+```gherkin
+    Given a file declaring compound identifiers in English that no common dictionary holds
+    When the gate confronts it
+    Then none is accused, because the dictionary approach was measured at ninety percent
+      false positives — and a gate that wrong is switched off, defending nothing
+```
+
+
+## DMDCD — DomainDeclared — the spec declares what the unit ACCEPTS, and who blocks the invalid
+
+
+
+
+
+
+
 
 
 #### DMDCD-B01 — An artifact that is not a spec leaves without a verdict
@@ -133,35 +210,14 @@ alguém do outro lado.
 ```
 
 
-## OPQSP — OpenQuestions — spec com pergunta em aberto não está pronta para implementar
-
-Confronta uma spec contra as decisões que ela ainda NÃO tomou, e a mantém fora do "pronto"
-enquanto houver pergunta em aberto.
-
-A classe de defeito é a AMBIGUIDADE NÃO RESOLVIDA — a mais barata de evitar e a mais cara
-de descobrir tarde. O caminho é sempre o mesmo: a spec não decide algo que o código
-precisa; quem implementa escolhe uma leitura defensável e segue; a escolha nunca é
-confrontada com quem tinha a resposta; o produto sai com a leitura errada. Nenhum outro
-gate pega, porque todas as peças existem e se referenciam — o defeito é uma decisão que
-ninguém tomou.
-
-O que este gate acrescenta ao conselho "não chute, registre e reporte" é um LUGAR
-declarado para o registro. Sem lugar, registrar vira comentário de PR que morre no merge.
-Com lugar, a pergunta é um item de trabalho visível, e a spec só fica implementável quando
-a seção esvazia.
-
-O ciclo pretendido: quem escreve percebe o que não sabe e escreve na seção; o gate acusa
-enquanto houver item; a pergunta é levada a quem decide; a resposta VIRA REGRA, com
-código, e o item sai da seção.
+## OPQSP — OpenQuestions — a spec with an open question is not ready to implement
 
 
 
 
-| Regra | Vale sempre | Como se prova |
-| --- | --- | --- |
-| `OPQSP-I01` | Prosa não é item. Texto explicativo dentro da seção não conta como pergunta — senão o autor aprenderia a não explicar nada. | escreve prosa na seção sem item catalogado e verifica que não bloqueia |
-| `OPQSP-I02` | A fronteira da seção é respeitada: o que vem depois dela não é lido como pergunta. Sem isso, a spec inteira viraria seção de decisões. | escreve itens numa seção seguinte e verifica que só os da seção contam |
-| `OPQSP-I03` | A coluna que diz no que a pergunta VIRA não é a identidade dela, e preenchê-la não fecha a pergunta. São duas coisas: o destino previsto e a resposta dada. | preenche a coluna de destino sem resolver e verifica que ainda bloqueia |
+
+
+
 
 
 #### OPQSP-B01 — An artifact that is not a spec leaves without a verdict
@@ -271,37 +327,143 @@ código, e o item sai da seção.
 ```
 
 
-## RLIMR — RuleImplemented — a spec cataloga regras, e o código mostra que as realizou
-
-Confronta a spec contra o código na direção que faltava: **a spec não ficou falando
-sozinha?**
-
-É o inverso do gate que valida referências. Aquele confere que os códigos CITADOS pelo
-código existem na spec; este confere que as regras DECLARADAS na spec ganharam
-implementação. Sem ele, uma spec pode declarar cinco regras novas e o código não ganhar
-linha nenhuma — com todos os gates verdes, porque a spec existe, o código existe, e os
-dois se referenciam pelo cabeçalho.
-
-Medido: uma spec de interface ganhou cinco regras e 98 linhas, e o arquivo correspondente
-tinha ZERO ocorrência do assunto. Metade da entrega era código morto declarado como
-pronto, e nenhum dos 26 gates perguntou. O defeito só apareceu quando alguém leu spec e
-código na mesma passada.
-
-**A régua é a declaração, não a adivinhação.** Exigir toda regra marcada seria falso por
-construção — medido contra 592 unidades, daria 3.121 achados, e nem as unidades bem-feitas
-passariam: das que marcam o código, nenhuma marca 100%. A razão é boa: uma restrição ("a
-unidade NÃO faz Y") é satisfeita pela AUSÊNCIA de código, e ausência não tem onde receber
-marca. Mas "ao menos uma" também não serve — separa quem implementou de quem não
-implementou e não diz nada sobre as outras quinze regras. Então quem escreve a spec
-DECLARA, regra a regra, se ela tem código.
+## PGNHN — PaginationHonored — what promises a SET does not return the first page in silence
 
 
 
 
-| Regra | Vale sempre | Como se prova |
-| --- | --- | --- |
-| `RLIMR-I01` | Exigir a marcação nunca pune quem já marca. Quem fez o trabalho antes da exigência não pode reprovar por tê-lo feito. | declara a exigência sobre uma unidade que marca tudo e verifica que ela passa |
-| `RLIMR-I02` | A identidade sobrevive à renomeação: código marcado com o nome anterior continua valendo. Perder a marca num rename transformaria estabilidade de identidade em dívida nova. | marca o código com o nome antigo e verifica que a regra segue reconhecida |
+
+
+
+
+
+#### PGNHN-B01 — A limit received from the caller passes
+
+```gherkin
+    Given an exported function whose signature takes the limit as a parameter
+    When the gate confronts it
+    Then it returns Pass, because the page is deliberate and whoever asked for it
+      knows there is more
+```
+
+#### PGNHN-B02 — A limit hidden in a default value is accused
+
+```gherkin
+    Given an exported function whose name promises the whole set
+    And the limit lives in a default value the caller never sees
+    When the gate confronts it
+    Then it returns Fail, because the hundred-and-first row is never processed and
+      nobody is told
+```
+
+#### PGNHN-B03 — The NAME bounds the promise
+
+```gherkin
+    Given an exported function whose name promises no set at all
+    And it returns a partial result
+    When the gate confronts it
+    Then it returns Pass, because there is no promise to break
+```
+
+#### PGNHN-B04 — Sibling functions that paginate are the proof by asymmetry
+
+```gherkin
+    Given a module whose sibling functions loop until the cursor is exhausted
+    And one exported function returns a single page
+    When the gate confronts it
+    Then it returns Fail, because the author knew the pattern — the one that does not
+      paginate is forgetfulness, not decision
+```
+
+#### PGNHN-B05 — A waiver with a written reason leaves the report
+
+```gherkin
+    Given an exported function carrying a waiver marker followed by the reason
+    When the gate confronts it
+    Then it returns Pass, and the function no longer appears in the report
+```
+
+#### PGNHN-B06 — The verdict offers the way out
+
+```gherkin
+    Given an exported function accused of hiding the limit
+    When the gate confronts it
+    Then the verdict names the waiver marker, so whoever reads it learns the declared
+      way out instead of guessing
+```
+
+#### PGNHN-B07 — Without a declared dialect the verdict is undetermined
+
+```gherkin
+    Given a project that declares no dialect for its stack
+    When the gate confronts any code
+    Then it returns Pending, because approving without being able to read the code
+      would stamp what was never checked
+```
+
+#### PGNHN-I01 — The ruler is agnostic across languages
+
+```gherkin
+    Given the same hidden-limit defect written in two different stacks
+    And each project declares its own dialect
+    When the gate confronts both
+    Then both are accused, because the confronted truth — the name promises a set, the
+      return is partial — belongs to no language
+```
+
+#### PGNHN-I02 — Where the construct is not recognised, the gate stays silent
+
+```gherkin
+    Given code whose pattern the declared dialect does not reach
+    When the gate confronts it
+    Then it accuses nothing, because a false positive here teaches the team to ignore
+      the gate
+```
+
+#### PGNHN-I03 — A cursor with no loop does not count as pagination
+
+```gherkin
+    Given an exported function that returns the cursor and never walks it
+    When the gate confronts it
+    Then it returns Fail, because the consumer is left with the same slice, now wearing
+      the appearance of completeness
+```
+
+#### PGNHN-I04 — A provider prefix in the name does not hide the promise
+
+```gherkin
+    Given an exported function whose name carries the provider prefix before the promise
+    When the gate confronts it
+    Then it returns Fail, because what the name says holds wherever it comes from
+```
+
+#### PGNHN-X01 — The gate does not invent a cursor the provider does not offer
+
+```gherkin
+    Given an exported function calling a dependency with no pagination mechanism
+    When the gate confronts it
+    Then it returns Pass, because accusing the absence of a mechanism the dependency
+      lacks would hand the author a defect that is not theirs
+```
+
+#### PGNHN-X02 — The gate does not measure performance or page size
+
+```gherkin
+    Given an exported function that exposes its limit and returns a small page
+    When the gate confronts it
+    Then it returns Pass, because judging whether a hundred is many depends on the
+      domain, and that is the project's decision
+```
+
+
+## RLIMR — RuleImplemented — a spec catalogues rules, and the code shows it realized them
+
+
+
+
+
+
+
 
 
 #### RLIMR-B01 — A spec whose rules the code ignores is accused, and the verdict names them
@@ -401,30 +563,14 @@ DECLARA, regra a regra, se ela tem código.
 ```
 
 
-## TRCMT — TriadComplete — as peças que realizam uma spec EXISTEM
-
-Confronta uma spec de camada REGIDA contra a pergunta mais simples da trinca: **as peças
-que a realizam existem?** O código que ela especifica, a feature que a cobre, e o teste
-que a prova.
-
-Existe porque os gates relacionais FALHAM ABERTO por construção. Sem teste ligado, o
-confronto feature↔teste devolve "nada a confrontar ainda" em vez de reprovar; sem código,
-o de dependências idem. O efeito colateral é grave: uma spec sozinha, sem nenhuma
-implementação, atravessa TODOS os gates e o pipeline conclui "pode promover" — o verde
-certificando trabalho que não existe.
-
-Este gate fecha o buraco pelo lado positivo. Em vez de perguntar "as peças casam?" — o
-que exige que elas existam —, pergunta "as peças existem?".
+## TRCMT — TriadComplete — the pieces that realize a spec EXIST
 
 
 
 
-| Regra | Vale sempre | Como se prova |
-| --- | --- | --- |
-| `TRCMT-I01` | O teste é alcançado em DOIS saltos — spec → feature → teste —, porque quem aponta o teste é a feature. Conferir o teste direto na spec acusaria falta de teste no projeto inteiro. | liga a trinca em dois saltos e verifica que o gate a considera completa |
-| `TRCMT-I02` | Dispensar o teste e escrever cenário na feature é CONTRADIÇÃO, e reprova. As duas afirmações não convivem: ou o cenário é real e alguém precisa prová-lo, ou não deveria existir. | declara a dispensa, liga uma feature com cenário, e verifica a reprovação |
-| `TRCMT-I03` | Dispensar o teste exige dizer ONDE a prova está, e o lugar tem de existir. Referência órfã reprova. | declara a dispensa apontando um alvo inexistente e verifica a reprovação |
-| `TRCMT-I04` | A dispensa vale só para a peça declarada. Dispensar uma nunca dispensa as outras. | declara a dispensa de uma peça e verifica que as demais seguem cobradas |
+
+
+
 
 
 #### TRCMT-B01 — An artifact that is not a spec leaves without a verdict

@@ -248,42 +248,28 @@ o conceito; não o definem.
 > Nada aqui está cravado na pedra. Estes documentos são o conceito saindo da cabeça e
 > encontrando seu lugar — refinados conforme o framework amadurece.
 
-### Furo conhecido: o idioma
+### O idioma do projeto
 
-O Anchors é agnóstico de **linguagem** (`dialect:`), de **stack** (presets), de
-**vocabulário** (`rule_types`) e de **jurisdição** — mas ainda não de **idioma**. Medido:
-**752 strings em português contra 11 em inglês** no CLI. Tudo que o usuário lê — mensagem
-de gate, prompt do `work`, guide embutido — fala a língua de quem escreveu o framework.
+**Tudo neste repositório é escrito em INGLÊS** — identificadores, comentários, specs,
+features, testes, documentos de doutrina. A única exceção é o CATÁLOGO DE TRADUÇÃO
+(`internal/i18n/locales/*.json`), que existe justamente para guardar todos os idiomas
+que o produto fala.
 
-O que já é agnóstico: o Gherkin da feature (`dialect.gherkin_language`, 10 idiomas, default
-`en`), as letras de `rule_types` (iniciais de termos em inglês: State, Rule, Constraint…)
-e todo o conteúdo escrito pelo projeto.
+Quem lê o produto lê no idioma que o projeto declarar: o `lang:` do `anchors.yaml`
+governa as mensagens do CLI, os guides embutidos e as seções do template de spec — em
+`pt-BR`, `en` e `es`. O que o USUÁRIO lê é traduzido; o que se ESCREVE no repositório
+é inglês.
 
-O que falta: `language:` no `anchors.yaml` (default `en`) governando CLI, guides embutidos
-e as seções do template de spec — que hoje saem **mescladas** (`## Actions` convivendo com
-`## Efeitos`), sinal de que ninguém está decidindo o idioma, ele só acontece.
+A regra é uma só porque a mistura não fica onde nasce. A doutrina no topo de cada gate
+é a matéria-prima da spec dele; a spec vira feature, a feature vira título de teste. Um
+idioma no começo dessa cadeia se propaga por ela inteira — medido aqui: as specs saíram
+em português porque a doutrina estava, as features saíram em inglês, e a mesma unidade
+acabou partida em dois idiomas.
 
-Está registrado como pendência deliberada, não como descuido. E não é tradução mecânica: as
-mensagens dos gates explicam **por que** cada gate existe, não só o que falhou — dois
-revisores independentes as chamaram do melhor material de documentação do framework.
-Traduzir mal destruiria exatamente isso.
-
-### Índice completo dos documentos
-
-| Documento | Conteúdo |
-|---|---|
-| [`CONCEPT.md`](./CONCEPT.md) | O mecanismo comum: âncora, maturidade, grafo, sincronia, issues, vivo vs. histórico |
-| [`STRUCTURE.md`](./STRUCTURE.md) | Pilar — a planta da casa; as camadas e sua ordem; o gabarito |
-| [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md) | A planta deste repositório — organização de diretórios, pacotes e camadas |
-| [`PLANNING.md`](./PLANNING.md) | Pilar — a origem do movimento; semeia specs; o norte entre sessões |
-| [`SPEC.md`](./SPEC.md) | Pilar — a origem da verdade; disciplina spec-first; guide→template→spec; regimes |
-| [`SPEC_TYPES.md`](./SPEC_TYPES.md) | Catálogo (apoio ao pilar Spec) — tipos de spec por família |
-| [`TRACEABILITY.md`](./TRACEABILITY.md) | Pilar — identidade contínua + mapa de dependências; órfãos |
-| [`PROPAGATION.md`](./PROPAGATION.md) | Pilar — a onda incremental; staleness; quiescência |
-| [`QUALITY.md`](./QUALITY.md) | Pilar — gates que medem; features → testes; maturação informativo → bloqueante |
-| [`DOCS.md`](./DOCS.md) | A documentação — o que fica FORA da trinca: os artefatos agregados, compilados de `doct/` |
-| [`cmd/`](./cmd) · [`CLI.md`](./CLI.md) | A ferramenta em Go: comandos, arquitetura, roadmap |
-| [`simulation/`](./simulation) | A simulação Larder — o ciclo de vida exercitado numa app fictícia |
+O `code-language` (bloqueante) defende a parte que o compilador enxerga: os
+IDENTIFICADORES. Comentário e texto ao usuário ele não lê — o primeiro porque inferir
+idioma de prosa é chute, o segundo porque o catálogo já o resolve. Estarem fora do
+alcance do GATE não os põe fora da POLÍTICA: ali a régua é a revisão.
 
 ---
 

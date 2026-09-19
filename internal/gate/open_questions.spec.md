@@ -3,76 +3,76 @@
   updated_at: 2026-09-19
   layer: gate
 -->
-# OpenQuestions — spec com pergunta em aberto não está pronta para implementar
+# OpenQuestions — a spec with an open question is not ready to implement
 
-> **Código**: `OPQSP`
+> **Code**: `OPQSP`
 
-## Visão Geral
+## Overview
 
-Confronta uma spec contra as decisões que ela ainda NÃO tomou, e a mantém fora do "pronto"
-enquanto houver pergunta em aberto.
+Confronts a spec against the decisions it has NOT yet taken, and keeps it out of "ready"
+while there is an open question.
 
-A classe de defeito é a AMBIGUIDADE NÃO RESOLVIDA — a mais barata de evitar e a mais cara
-de descobrir tarde. O caminho é sempre o mesmo: a spec não decide algo que o código
-precisa; quem implementa escolhe uma leitura defensável e segue; a escolha nunca é
-confrontada com quem tinha a resposta; o produto sai com a leitura errada. Nenhum outro
-gate pega, porque todas as peças existem e se referenciam — o defeito é uma decisão que
-ninguém tomou.
+The defect class is UNRESOLVED AMBIGUITY — the cheapest to avoid and the most expensive
+to discover late. The path is always the same: the spec does not decide something the code
+needs; whoever implements picks a defensible reading and moves on; the choice is never
+confronted with the one who had the answer; the product ships with the wrong reading. No other
+gate catches it, because all the pieces exist and reference one another — the defect is a decision
+nobody took.
 
-O que este gate acrescenta ao conselho "não chute, registre e reporte" é um LUGAR
-declarado para o registro. Sem lugar, registrar vira comentário de PR que morre no merge.
-Com lugar, a pergunta é um item de trabalho visível, e a spec só fica implementável quando
-a seção esvazia.
+What this gate adds to the advice "don't guess, record and report" is a declared
+PLACE for the record. Without a place, recording becomes a PR comment that dies in the merge.
+With a place, the question is a visible work item, and the spec only becomes implementable when
+the section empties.
 
-O ciclo pretendido: quem escreve percebe o que não sabe e escreve na seção; o gate acusa
-enquanto houver item; a pergunta é levada a quem decide; a resposta VIRA REGRA, com
-código, e o item sai da seção.
+The intended cycle: whoever writes notices what they do not know and writes it in the section; the gate accuses
+while there is an item; the question is taken to whoever decides; the answer BECOMES A RULE, with
+a code, and the item leaves the section.
 
-## Domínio
+## Domain
 
-| Entrada | Aceita | Fora do domínio | Quem garante |
+| Input | Accepts | Outside the domain | Who guarantees |
 | --- | --- | --- | --- |
-| o artefato confrontado | qualquer nó do mapa | — (o gate não escolhe o alvo) | o motor de gates, que roteia pelo `on:` declarado |
-| a seção de decisões | o título em qualquer variação que o catálogo e o projeto nomeiam | título que nenhum dos dois nomeia | esta unidade, pelo vocabulário de títulos aceitos |
-| o conteúdo da seção | itens catalogados, prosa, ou nada | — (seção ausente é um caso, não um erro) | esta unidade: quem não abriu a seção não é cobrado |
-| o léxico do título | declarado na Estrutura do projeto | — (omitido cai no do framework) | a Estrutura, com o catálogo do framework como piso |
+| the confronted artifact | any map node | — (the gate does not choose the target) | the gate engine, which routes by the declared `on:` |
+| the decisions section | the title in any variation the catalogue and the project name | a title neither of the two names | this unit, by the vocabulary of accepted titles |
+| the section's content | catalogued items, prose, or nothing | — (an absent section is a case, not an error) | this unit: whoever did not open the section is not demanded |
+| the title's lexicon | declared in the project's Structure | — (omitted falls back to the framework's) | the Structure, with the framework's catalogue as the floor |
 
-## Efeitos
+## Effects
 
-| Efeito | Descrição |
+| Effect | Description |
 | --- | --- |
-| `OPQSP-B01` | Artefato que não é spec sai sem veredito: só a spec tem decisão em aberto a cobrar. |
-| `OPQSP-B02` | Quem ABRIU a seção é confrontado pelo conteúdo dela: item em aberto barra, seção fechada libera. |
-| `OPQSP-B03` | Item em aberto BARRA: enquanto houver pergunta, a spec não passa por pronta. |
-| `OPQSP-B04` | Seção fechada honestamente — aberta e sem item — libera. Dizer "não há pergunta" é diferente de não ter olhado. |
-| `OPQSP-B05` | Item marcado como RESOLVIDO não bloqueia: a pergunta fica no rastro, e o que a fechou é a regra que nasceu dela. |
-| `OPQSP-B06` | Cada pergunta precisa de CÓDIGO. Sem identidade ela não vira item rastreável nem sobrevive a uma reescrita da spec. |
-| `OPQSP-B07` | `OpenDecisions` CONTA as decisões pendentes de uma spec, para quem precisa do número em vez do veredito — é o que permite reportar a pendência como ponta sistêmica, no mesmo estatuto de um sinal ausente. A contagem lê o léxico do projeto pela mesma via do confronto: contar zero numa spec cuja seção se chama outra coisa afirmaria "não há decisão pendente" sobre uma spec cheia delas, que é o silêncio que esta unidade existe para eliminar. |
+| `OPQSP-B01` | An artifact that is not a spec leaves without a verdict: only the spec has an open decision to demand. |
+| `OPQSP-B02` | Whoever OPENED the section is confronted by its content: an open item blocks, a closed section releases. |
+| `OPQSP-B03` | An open item BLOCKS: while there is a question, the spec does not pass as ready. |
+| `OPQSP-B04` | A section closed honestly — opened and with no item — releases. Saying "there is no question" is different from not having looked. |
+| `OPQSP-B05` | An item marked as RESOLVED does not block: the question stays in the trace, and what closed it is the rule that was born from it. |
+| `OPQSP-B06` | Every question needs a CODE. Without identity it does not become a traceable item nor survive a rewrite of the spec. |
+| `OPQSP-B07` | `OpenDecisions` COUNTS a spec's pending decisions, for whoever needs the number instead of the verdict — it is what allows reporting the pendency as a systemic lead, in the same standing as an absent signal. The count reads the project's lexicon by the same route as the confrontation: counting zero in a spec whose section is called something else would assert "there is no pending decision" about a spec full of them, which is the silence this unit exists to eliminate. |
 
-## Invariantes
+## Invariants
 
-| Regra | Vale sempre | Como se prova |
+| Rule | Always holds | How it is proven |
 | --- | --- | --- |
-| `OPQSP-I01` | Prosa não é item. Texto explicativo dentro da seção não conta como pergunta — senão o autor aprenderia a não explicar nada. | escreve prosa na seção sem item catalogado e verifica que não bloqueia |
-| `OPQSP-I02` | A fronteira da seção é respeitada: o que vem depois dela não é lido como pergunta. Sem isso, a spec inteira viraria seção de decisões. | escreve itens numa seção seguinte e verifica que só os da seção contam |
-| `OPQSP-I03` | A coluna que diz no que a pergunta VIRA não é a identidade dela, e preenchê-la não fecha a pergunta. São duas coisas: o destino previsto e a resposta dada. | preenche a coluna de destino sem resolver e verifica que ainda bloqueia |
+| `OPQSP-I01` | Prose is not an item. Explanatory text inside the section does not count as a question — otherwise the author would learn to explain nothing. | writes prose in the section with no catalogued item and verifies that it does not block |
+| `OPQSP-I02` | The section's boundary is respected: what comes after it is not read as a question. Without that, the whole spec would turn into a decisions section. | writes items in a following section and verifies that only those in the section count |
+| `OPQSP-I03` | The column that says what the question BECOMES is not its identity, and filling it does not close the question. They are two things: the foreseen destination and the answer given. | fills the destination column without resolving and verifies that it still blocks |
 
-## Restrições
+## Constraints
 
-| Regra | Limite | Por quê |
+| Rule | Boundary | Why |
 | --- | --- | --- |
-| `OPQSP-X01` | Não julga se a pergunta é BOA nem se a resposta é certa. | A régua é determinística: existe item em aberto, ou não existe. Avaliar o mérito de uma dúvida é julgamento, e julgamento é de outra classe de gate. |
-| `OPQSP-X02` | Não REPROVA a spec que não tem a seção — registra a pendência e diz como fechá-la. | A ausência não distingue "tudo foi decidido" de "a seção foi apagada", e as duas pedem coisas opostas. Reprovar seria tratar migração como defeito; calar seria o silêncio que o gate existe para eliminar. O veredito fica indeterminado e ENSINA a saída: fechar com a declaração de que não há pergunta, ou escrever o que não se decidiu. |
+| `OPQSP-X01` | Does not judge whether the question is GOOD nor whether the answer is right. | The ruler is deterministic: either an open item exists, or it does not. Evaluating the merit of a doubt is judgement, and judgement belongs to another class of gate. |
+| `OPQSP-X02` | Does not FAIL the spec that does not have the section — it records the pendency and says how to close it. | The absence does not distinguish "everything was decided" from "the section was deleted", and the two ask for opposite things. Failing would be treating migration as a defect; going quiet would be the silence the gate exists to eliminate. The verdict stays undetermined and TEACHES the way out: close with the declaration that there is no question, or write down what was not decided. |
 
-## Dependências
+## Dependencies
 
-| Cód | Arquivo | Método | Camada |
+| Code | File | Method | Layer |
 | --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | núcleo — o título da seção pode ser do léxico do projeto, e o gate lê a Estrutura para saber |
+| DEP1 | `internal/config/config.go` | `Config` | core — the section's title may come from the project's lexicon, and the gate reads the Structure to find out |
 
-## Decisões em aberto
+## Open Decisions
 
-| Código | Pergunta | Quem decide | Vira |
+| Code | Question | Who decides | Becomes |
 | --- | --- | --- | --- |
 
-nenhuma
+none

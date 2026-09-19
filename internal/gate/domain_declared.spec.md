@@ -3,73 +3,73 @@
   updated_at: 2026-09-19
   layer: gate
 -->
-# DomainDeclared — a spec declara o que a unidade ACEITA, e quem barra o inválido
+# DomainDeclared — the spec declares what the unit ACCEPTS, and who blocks the invalid
 
-> **Código**: `DMDCD`
+> **Code**: `DMDCD`
 
-## Visão Geral
+## Overview
 
-Confronta uma spec contra a pergunta que o resto do framework não faz: **o que esta
-unidade aceita de entrada, e quem garante que o inválido nunca chega?**
+Confronts a spec against the question the rest of the framework does not ask: **what does this
+unit accept as input, and who guarantees that the invalid never arrives?**
 
-A lacuna que ele fecha foi medida: 71% das specs de um projeto real tinham seção de
-regras ou efeitos, e apenas 14% diziam o que a unidade aceita. O framework inteiro é
-construído sobre catalogar EFEITOS — o que a unidade faz —, e todo defeito de borda
-encontrado em três rodadas de review adversarial morava no que ninguém tinha declarado.
+The gap it closes was measured: 71% of the specs of a real project had a section of
+rules or effects, and only 14% said what the unit accepts. The whole framework is
+built on cataloguing EFFECTS — what the unit does —, and every edge defect
+found in three rounds of adversarial review lived in what nobody had declared.
 
-A distinção que dá razão ao gate: `## Restrições` diz o que a unidade NÃO faz, e empurra
-o dever para FORA; `## Domínio` diz o que ela ACEITA, e nomeia QUEM fica com ele.
-Escrever mais restrições não fecha nada — cria órfãos, porque cada "não é meu" precisa de
-alguém do outro lado.
+The distinction that gives the gate its reason: `## Constraints` says what the unit does NOT do, and pushes
+the duty OUTWARD; `## Domain` says what it ACCEPTS, and NAMES WHO is left with it.
+Writing more constraints closes nothing — it creates orphans, because every "not mine" needs
+someone on the other side.
 
-## Domínio
+## Domain
 
-| Entrada | Aceita | Fora do domínio | Quem garante |
+| Input | Accepts | Outside the domain | Who guarantees |
 | --- | --- | --- | --- |
-| o artefato confrontado | qualquer nó do mapa | — (o gate não escolhe o alvo) | o motor de gates, que roteia pelo `on:` declarado |
-| o conteúdo do artefato | qualquer texto, inclusive vazio | — (texto ausente é um caso, não um erro) | esta unidade: conteúdo sem a seção é REPROVAÇÃO, não exceção |
-| a seção de domínio | o título em qualquer idioma do catálogo, e as grafias que o projeto usa | título que o catálogo não nomeia | esta unidade, pelo vocabulário de títulos aceitos |
+| the confronted artifact | any map node | — (the gate does not choose the target) | the gate engine, which routes by the declared `on:` |
+| the artifact's content | any text, empty included | — (absent text is a case, not an error) | this unit: content without the section is a FAILURE, not an exception |
+| the domain section | the title in any language of the catalogue, and the spellings the project uses | a title the catalogue does not name | this unit, by the vocabulary of accepted titles |
 
-> `Quem garante` não pode ficar vazio nem dizer só "não é meu": se ninguém garante, o
-> dever é órfão — e é exatamente aí que a entrada inválida passa. É a mesma exigência que
-> este gate faz das specs que confronta, aplicada a ele próprio.
+> `Who guarantees` cannot be left empty nor say only "not mine": if nobody guarantees, the
+> duty is orphaned — and that is exactly where the invalid input gets through. It is the same demand that
+> this gate makes of the specs it confronts, applied to itself.
 
-## Efeitos
+## Effects
 
-| Efeito | Descrição |
+| Effect | Description |
 | --- | --- |
-| `DMDCD-B01` | Artefato que não é spec sai do confronto sem veredito: o gate não tem jurisdição sobre código, teste ou guia. |
-| `DMDCD-B02` | Spec SEM a seção de domínio REPROVA. A ausência não é silêncio: é a afirmação não feita. |
-| `DMDCD-B03` | Spec com a seção ABERTA e VAZIA reprova também — abrir o título sem declarar nada é o mesmo furo com aparência de conformidade. |
-| `DMDCD-B04` | Cada entrada declarada precisa nomear QUEM garante. Entrada sem dono reprova, e o veredito nomeia quais ficaram órfãs. |
-| `DMDCD-B05` | A dispensa é DECLARADA e com razão escrita. Quem não tem entrada externa registra isso na spec, e o gate se cala — mas fica o rastro de que alguém olhou. |
-| `DMDCD-B06` | Linha preenchida só com marcador de pendência não é declaração: o molde intocado não afirma nada. |
-| `DMDCD-B07` | Entrada cujo dono está nomeado passa — é o outro lado da mesma régua, e o que a torna satisfazível. |
+| `DMDCD-B01` | An artifact that is not a spec leaves the confrontation without a verdict: the gate has no jurisdiction over code, test or guide. |
+| `DMDCD-B02` | A spec WITHOUT the domain section FAILS. The absence is not silence: it is the assertion not made. |
+| `DMDCD-B03` | A spec with the section OPENED and EMPTY fails too — opening the title without declaring anything is the same hole wearing the appearance of compliance. |
+| `DMDCD-B04` | Every declared input must name WHO guarantees it. An input without an owner fails, and the verdict names which ones were left orphaned. |
+| `DMDCD-B05` | The waiver is DECLARED and with a written reason. Whoever has no external input records that in the spec, and the gate goes quiet — but the trace that someone looked remains. |
+| `DMDCD-B06` | A line filled only with a pending marker is not a declaration: the untouched mould asserts nothing. |
+| `DMDCD-B07` | An input whose owner is named passes — it is the other side of the same ruler, and what makes it satisfiable. |
 
-## Invariantes
+## Invariants
 
-| Regra | Vale sempre | Como se prova |
+| Rule | Always holds | How it is proven |
 | --- | --- | --- |
-| `DMDCD-I01` | A dispensa exige RAZÃO. Uma marca de dispensa nua não silencia o gate — o silêncio sem porquê é o que ele existe para impedir. | confronta uma spec com a dispensa sem razão e verifica que o veredito ainda cobra |
-| `DMDCD-I02` | O veredito de reprovação NOMEIA o que está errado — qual entrada ficou sem dono, ou que a seção falta. Um gate que reprova sem dizer o quê transfere o trabalho de diagnóstico para quem lê. | confronta uma spec com entrada órfã e verifica que o nome dela aparece no veredito |
+| `DMDCD-I01` | The waiver requires a REASON. A bare waiver mark does not silence the gate — silence without a why is what it exists to prevent. | confronts a spec with the waiver without a reason and verifies that the verdict still demands |
+| `DMDCD-I02` | The failing verdict NAMES what is wrong — which input was left without an owner, or that the section is missing. A gate that fails without saying what transfers the diagnostic work to whoever reads it. | confronts a spec with an orphaned input and verifies that its name appears in the verdict |
 
-## Restrições
+## Constraints
 
-| Regra | Limite | Por quê |
+| Rule | Boundary | Why |
 | --- | --- | --- |
-| `DMDCD-X01` | Não julga se a entrada declarada está CERTA — só se ela existe e tem dono. | Se o conjunto de valores aceitos corresponde ao domínio real é julgamento, e julgamento é de outra classe de gate. Aqui a régua é a PRESENÇA da declaração, que é determinística. |
-| `DMDCD-X02` | Não confronta o código para conferir se a validação existe de fato. | Esta camada lê TEXTO. Cruzar a declaração com a implementação é trabalho do gate relacional, que tem o mapa; fazê-lo aqui duplicaria a régua em dois lugares que divergiriam. |
+| `DMDCD-X01` | Does not judge whether the declared input is RIGHT — only whether it exists and has an owner. | Whether the set of accepted values corresponds to the real domain is judgement, and judgement belongs to another class of gate. Here the ruler is the PRESENCE of the declaration, which is deterministic. |
+| `DMDCD-X02` | Does not confront the code to check whether the validation in fact exists. | This layer reads TEXT. Crossing the declaration with the implementation is the work of the relational gate, which has the map; doing it here would duplicate the ruler in two places that would diverge. |
 
-## Dependências
+## Dependencies
 
-| Cód | Arquivo | Método | Camada |
+| Code | File | Method | Layer |
 | --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `KindSpec` | núcleo — o gate precisa do KIND do nó para saber se tem jurisdição |
-| DEP2 | `internal/config/config.go` | `Config` | núcleo — o léxico de títulos aceitos vem da Estrutura do projeto |
+| DEP1 | `internal/mapx/model.go` | `KindSpec` | core — the gate needs the node's KIND to know whether it has jurisdiction |
+| DEP2 | `internal/config/config.go` | `Config` | core — the lexicon of accepted titles comes from the project's Structure |
 
-## Decisões em aberto
+## Open Decisions
 
-| Código | Pergunta | Quem decide | Vira |
+| Code | Question | Who decides | Becomes |
 | --- | --- | --- | --- |
 
-nenhuma
+none

@@ -1,5 +1,5 @@
 # O idioma das mensagens. O Anchors suporta pt-BR, en e es.
-lang: pt-BR
+lang: en
 # anchors.yaml — o Anchors governando o próprio Anchors.
 #
 # Este arquivo é também um EXPERIMENTO de adoção: o Anchors nasceu para ser posto em
@@ -446,14 +446,28 @@ gates:
   # Cada pacote do Anchors JÁ tem doutrina no cabeçalho (`// Package X faz Y porque Z`) —
   # é a convenção mais consistente do repositório. O gate transforma hábito em régua.
   # Informativo primeiro: 125 arquivos de código, e nem todos seguem o formato `@anchors`.
-  # O IDIOMA do código é o inglês, e este gate é o que impede a regressão.
+  # ── THE PROJECT'S LANGUAGE POLICY ───────────────────────────────────────────────
   #
-  # O Anchors nasceu misturando português e inglês nos identificadores e migrou por
-  # completo. Sem um gate, basta um PR de quem não sabe da regra — e ela não está em lugar
-  # nenhum que o compilador leia.
+  # EVERYTHING in this repository is written in ENGLISH. Identifiers, comments, specs,
+  # features, tests, doctrine documents, commit messages. The single exception is the
+  # TRANSLATION CATALOG (`internal/i18n/locales/*.json`), which exists precisely to hold
+  # every language the product speaks — that is its job, and nowhere else's.
   #
-  # Olha DECLARAÇÕES. Ignora comentários (que ficam no idioma do time, e carregam as
-  # medições e os porquês) e strings (que vão pelo i18n).
+  # Why the exception is the only one, and why "comments may stay in the team's language"
+  # was dropped: a mixed repository does not stay mixed in one place. The doctrine at the
+  # top of each gate is the RAW MATERIAL of its spec — write the doctrine in one language
+  # and the spec inherits it, then the feature mirrors the spec, then the test title
+  # mirrors the feature. Measured here, in one sitting: specs came out in Portuguese
+  # because the doctrine was, while the features came out in English, and the same unit
+  # ended up split across two languages. The mixture propagates through the very links
+  # the framework exists to keep tight.
+  #
+  # This gate defends the part a compiler can see: IDENTIFIERS. Comments and user-facing
+  # strings it deliberately does not read — the first because reading prose for language
+  # is guesswork, the second because the translation catalog already resolves it by the
+  # project's `lang:`. That they are out of the GATE's reach does not put them outside the
+  # POLICY; it means the policy holds them by review, and this comment is where a reviewer
+  # reads it.
   - name: code-language
     on: [code]
     scope: project

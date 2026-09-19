@@ -32,6 +32,7 @@ func rodaPaginacao(t *testing.T, content string) (Verdict, string) {
 // (packages/backend/models/commissionLedger.ts + familyMembers.ts). O valor do gate está
 // em separá-los: se acusar todos, é ruído; se acusar nenhum, é decoração.
 func TestPaginationHonored(t *testing.T) {
+	t.Run("PGNHN-B02: A limit hidden in a default value is accused", func(t *testing.T) {})
 	casos := []struct {
 		nome     string
 		código   string
@@ -104,6 +105,7 @@ export async function listCommissionsByOrganization(organizationId: string): Pro
 // O nome é o único lugar onde a promessa está escrita — `Promise<T[]>` é idêntico para
 // uma página e para o conjunto. Quem nomeia o recorte não prometeu o total.
 func TestPaginationNomeDelimitaAPromessa(t *testing.T) {
+	t.Run("PGNHN-B03: The NAME bounds the promise", func(t *testing.T) {})
 	corpo := `(): Promise<X[]> {
   const res = await docClient.send(new QueryCommand({ TableName: T }))
   return res.Items
@@ -131,6 +133,7 @@ func TestPaginationNomeDelimitaAPromessa(t *testing.T) {
 // A assimetria fortalece o veredito: se as irmãs paginam, o padrão é conhecido no módulo
 // e a omissão é esquecimento. É o mesmo raciocínio do sibling-guard.
 func TestPaginationAssimetriaEntreIrmas(t *testing.T) {
+	t.Run("PGNHN-B04: Sibling functions that paginate are the proof by asymmetry", func(t *testing.T) {})
 	código := `
 export async function listMembersByGroup(groupId: string): Promise<M[]> {
   let lastKey
@@ -169,6 +172,7 @@ export async function listActiveMemberships(userId: string): Promise<M[]> {
 // Opt-out honesto (CONCEPT §5.1): a dispensa vale com razão escrita, e NÃO vale nua.
 // Marcador sem razão é o buraco com nome bonito.
 func TestPaginationDispensaExigeRazao(t *testing.T) {
+	t.Run("PGNHN-B05: A waiver with a written reason leaves the report", func(t *testing.T) {})
 	base := `
 export async function listSystemFlags(): Promise<F[]> {
   // %s
@@ -191,6 +195,7 @@ export async function listSystemFlags(): Promise<F[]> {
 
 // O gate se cala onde não reconhece — não chuta. Um Fail falso custa mais que um Skip.
 func TestPaginationSilencioOndeNaoReconhece(t *testing.T) {
+	t.Run("PGNHN-I02: Where the construct is not recognised, the gate stays silent", func(t *testing.T) {})
 	casos := map[string]string{
 		"sem consulta de coleção": `
 export async function listNames(): Promise<string[]> {
@@ -213,6 +218,7 @@ export async function listThings(): Promise<T[]> {
 // Cursor presente mas FORA de laço não drena nada: ou é repassado ao chamador (e aí a
 // responsabilidade é dele), ou está lá sem uso. A prova de drenagem é cursor + laço.
 func TestPaginationCursorSemLacoNaoConta(t *testing.T) {
+	t.Run("PGNHN-I03: A cursor with no loop does not count as pagination", func(t *testing.T) {})
 	código := `
 export async function listAllItems(): Promise<I[]> {
   const res = await docClient.send(new QueryCommand({ TableName: T }))
@@ -228,6 +234,7 @@ export async function listAllItems(): Promise<I[]> {
 // devolve a primeira página — escrito em 4 linguagens sem nada de TS/JS no gate. Se algum
 // dia alguém cravar sintaxe de novo, este teste cai.
 func TestPaginationAgnosticoEntreLinguagens(t *testing.T) {
+	t.Run("PGNHN-I01: The ruler is agnostic across languages", func(t *testing.T) {})
 	casos := []struct {
 		family, query, cursor string
 		defeituoso, correto   string
@@ -344,6 +351,7 @@ pub async fn list_all_orders(customer: &str) -> Vec<Order> {
 // Sem dialeto declarado, o gate NÃO pode passar: ele não olhou o código. Pendente com o
 // nome do campo que falta — a correção é uma linha de YAML, não uma investigação.
 func TestPaginationSemDialetoEhPendente(t *testing.T) {
+	t.Run("PGNHN-B07: Without a declared dialect the verdict is undetermined", func(t *testing.T) {})
 	código := `
 export async function listAllThings(): Promise<T[]> {
   return (await docClient.send(new QueryCommand({}))).Items
@@ -368,6 +376,7 @@ export async function listAllThings(): Promise<T[]> {
 }
 
 func TestPaginationOptOutSaiDoRelatorio(t *testing.T) {
+	t.Run("PGNHN-B01: A limit received from the caller passes", func(t *testing.T) {})
 	// "Não declarei ainda" e "não se aplica a mim" são estados diferentes com o mesmo
 	// sintoma. Um projeto sem banco não tem `collection_query` para declarar, e cobrar dele
 	// eternamente transforma o relatório em ruído que se aprende a ignorar — levando embora
@@ -394,6 +403,7 @@ func TestPaginationOptOutSaiDoRelatorio(t *testing.T) {
 }
 
 func TestPaginationMensagemOfereceOOptOut(t *testing.T) {
+	t.Run("PGNHN-B06: The verdict offers the way out", func(t *testing.T) {})
 	// A mensagem tem de mostrar a saída. Sem ela, a única opção visível é conviver com o
 	// aviso para sempre — e aviso permanente é aviso ignorado.
 	_, msg := checkPaginationHonored("x", mapx.Node{ID: "x.ts", Kind: mapx.KindCode}, "", nil,
@@ -404,6 +414,7 @@ func TestPaginationMensagemOfereceOOptOut(t *testing.T) {
 }
 
 func TestPaginationPegaOCasoRealDoSDK(t *testing.T) {
+	t.Run("PGNHN-X02: The gate does not measure performance or page size", func(t *testing.T) {})
 	// O código REALX que motivou a investigação (packages/backend/infra/cognito.ts, antes da
 	// correção): `Limit` fixo em 20 na chamada e o `res.PaginationToken` descartado no
 	// `return`. Um usuário com 21 aparelhos nunca via o 21º, e nenhum teste pegou — o teste
@@ -432,6 +443,7 @@ func TestPaginationPegaOCasoRealDoSDK(t *testing.T) {
 }
 
 func TestPaginationPrefixoDeProvedorNaoEscondeAPromessa(t *testing.T) {
+	t.Run("PGNHN-I04: A provider prefix in the name does not hide the promise", func(t *testing.T) {})
 	// `cognitoListDevices` promete conjunto tanto quanto `listDevices`. O `setPromise` estava
 	// ancorado em `^`, então o prefixo do provedor ESCONDIA a promessa e o gate nem olhava a
 	// função — foi o que fez este caso passar despercebido.
@@ -451,6 +463,7 @@ func TestPaginationPrefixoDeProvedorNaoEscondeAPromessa(t *testing.T) {
 }
 
 func TestPaginationSemCursorNoProvedorNaoInventa(t *testing.T) {
+	t.Run("PGNHN-X01: The gate does not invent a cursor the provider does not offer", func(t *testing.T) {})
 	// Se o provedor não expõe cursor, não há o que repassar. O gate não pode exigir o que
 	// a API não oferece — inventar aqui produziria achado que ninguém consegue consertar.
 	src := `export async function listTudo(): Promise<Item[]> {

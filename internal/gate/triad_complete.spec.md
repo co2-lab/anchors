@@ -3,72 +3,72 @@
   updated_at: 2026-09-19
   layer: gate
 -->
-# TriadComplete — as peças que realizam uma spec EXISTEM
+# TriadComplete — the pieces that realize a spec EXIST
 
-> **Código**: `TRCMT`
+> **Code**: `TRCMT`
 
-## Visão Geral
+## Overview
 
-Confronta uma spec de camada REGIDA contra a pergunta mais simples da trinca: **as peças
-que a realizam existem?** O código que ela especifica, a feature que a cobre, e o teste
-que a prova.
+Confronts a spec of a GOVERNED layer against the simplest question of the triad: **do the pieces
+that realize it exist?** The code it specifies, the feature that covers it, and the test
+that proves it.
 
-Existe porque os gates relacionais FALHAM ABERTO por construção. Sem teste ligado, o
-confronto feature↔teste devolve "nada a confrontar ainda" em vez de reprovar; sem código,
-o de dependências idem. O efeito colateral é grave: uma spec sozinha, sem nenhuma
-implementação, atravessa TODOS os gates e o pipeline conclui "pode promover" — o verde
-certificando trabalho que não existe.
+It exists because the relational gates FAIL OPEN by construction. Without a test linked, the
+feature↔test confrontation returns "nothing to confront yet" instead of failing; without code,
+the dependency one likewise. The side effect is grave: a lone spec, with no
+implementation at all, crosses ALL the gates and the pipeline concludes "can promote" — the green
+certifying work that does not exist.
 
-Este gate fecha o buraco pelo lado positivo. Em vez de perguntar "as peças casam?" — o
-que exige que elas existam —, pergunta "as peças existem?".
+This gate closes the hole from the positive side. Instead of asking "do the pieces match?" — which
+requires that they exist —, it asks "do the pieces exist?".
 
-## Domínio
+## Domain
 
-| Entrada | Aceita | Fora do domínio | Quem garante |
+| Input | Accepts | Outside the domain | Who guarantees |
 | --- | --- | --- | --- |
-| o artefato confrontado | qualquer nó do mapa | — (o gate não escolhe o alvo) | o motor de gates, que roteia pelo `on:` declarado |
-| o mapa | um grafo construído, ou nenhum | — (mapa ausente é um caso, não um erro) | esta unidade: sem mapa o veredito é indeterminado, nunca aprovação |
-| a camada do alvo | camada regida, reconhecida, ou nenhuma declarada | — | esta unidade, pelo regime declarado na Estrutura |
-| a dispensa por unidade | a marca com razão escrita ao lado | marca nua, sem razão | esta unidade: dispensa sem porquê não dispensa |
+| the confronted artifact | any map node | — (the gate does not choose the target) | the gate engine, which routes by the declared `on:` |
+| the map | a built graph, or none | — (an absent map is a case, not an error) | this unit: without a map the verdict is undetermined, never approval |
+| the target's layer | a governed layer, a recognized one, or none declared | — | this unit, by the regime declared in the Structure |
+| the per-unit waiver | the mark with a written reason beside it | a bare mark, without a reason | this unit: a waiver without a why does not waive |
 
-## Efeitos
+## Effects
 
-| Efeito | Descrição |
+| Effect | Description |
 | --- | --- |
-| `TRCMT-B01` | Artefato que não é spec sai sem veredito: só a spec tem trinca a cobrar. |
-| `TRCMT-B02` | Camada RECONHECIDA (regime declarativo) sai sem veredito: ela não tem spec nem trinca por definição. |
-| `TRCMT-B03` | Sem mapa o veredito é INDETERMINADO. Aprovar sem poder olhar seria afirmar o que não se mediu. |
-| `TRCMT-B04` | Spec com as três peças ligadas passa. |
-| `TRCMT-B05` | Spec a que falta alguma peça reprova, e o veredito NOMEIA quais faltam e onde cada uma nasce. |
-| `TRCMT-B06` | A camada pode dispensar uma peça em bloco, declarado na Estrutura. |
-| `TRCMT-B07` | A unidade pode dispensar uma peça na própria spec, com razão escrita — é a granularidade que a dispensa por camada não alcança. |
+| `TRCMT-B01` | An artifact that is not a spec leaves without a verdict: only the spec has a triad to demand. |
+| `TRCMT-B02` | A RECOGNIZED layer (declarative regime) leaves without a verdict: it has neither spec nor triad by definition. |
+| `TRCMT-B03` | Without a map the verdict is UNDETERMINED. Approving without being able to look would be asserting what was not measured. |
+| `TRCMT-B04` | A spec with the three pieces linked passes. |
+| `TRCMT-B05` | A spec missing some piece fails, and the verdict NAMES which ones are missing and where each one is born. |
+| `TRCMT-B06` | The layer may waive a piece as a block, declared in the Structure. |
+| `TRCMT-B07` | The unit may waive a piece in the spec itself, with a written reason — it is the granularity the per-layer waiver does not reach. |
 
-## Invariantes
+## Invariants
 
-| Regra | Vale sempre | Como se prova |
+| Rule | Always holds | How it is proven |
 | --- | --- | --- |
-| `TRCMT-I01` | O teste é alcançado em DOIS saltos — spec → feature → teste —, porque quem aponta o teste é a feature. Conferir o teste direto na spec acusaria falta de teste no projeto inteiro. | liga a trinca em dois saltos e verifica que o gate a considera completa |
-| `TRCMT-I02` | Dispensar o teste e escrever cenário na feature é CONTRADIÇÃO, e reprova. As duas afirmações não convivem: ou o cenário é real e alguém precisa prová-lo, ou não deveria existir. | declara a dispensa, liga uma feature com cenário, e verifica a reprovação |
-| `TRCMT-I03` | Dispensar o teste exige dizer ONDE a prova está, e o lugar tem de existir. Referência órfã reprova. | declara a dispensa apontando um alvo inexistente e verifica a reprovação |
-| `TRCMT-I04` | A dispensa vale só para a peça declarada. Dispensar uma nunca dispensa as outras. | declara a dispensa de uma peça e verifica que as demais seguem cobradas |
+| `TRCMT-I01` | The test is reached in TWO hops — spec → feature → test —, because the one that points at the test is the feature. Checking the test directly on the spec would accuse the whole project of missing tests. | links the triad in two hops and verifies that the gate considers it complete |
+| `TRCMT-I02` | Waiving the test and writing a scenario in the feature is a CONTRADICTION, and fails. The two assertions do not coexist: either the scenario is real and someone must prove it, or it should not exist. | declares the waiver, links a feature with a scenario, and verifies the failure |
+| `TRCMT-I03` | Waiving the test requires saying WHERE the proof is, and the place has to exist. An orphaned reference fails. | declares the waiver pointing at a nonexistent target and verifies the failure |
+| `TRCMT-I04` | The waiver holds only for the declared piece. Waiving one never waives the others. | declares the waiver of one piece and verifies that the rest remain demanded |
 
-## Restrições
+## Constraints
 
-| Regra | Limite | Por quê |
+| Rule | Boundary | Why |
 | --- | --- | --- |
-| `TRCMT-X01` | Não confronta se as peças CASAM entre si — só se existem. | Casar é o trabalho dos gates relacionais. Este existe justamente porque eles falham aberto quando a peça não existe; fazer os dois aqui duplicaria a régua. |
-| `TRCMT-X02` | Não julga a QUALIDADE de nenhuma peça. | Um teste vazio satisfaz este gate, e é correto: a régua aqui é a EXISTÊNCIA. Quem confronta o conteúdo é outro gate, e confundir os dois faria este reprovar por motivo que não sabe medir. |
+| `TRCMT-X01` | Does not confront whether the pieces MATCH one another — only whether they exist. | Matching is the work of the relational gates. This one exists precisely because they fail open when the piece does not exist; doing both here would duplicate the ruler. |
+| `TRCMT-X02` | Does not judge the QUALITY of any piece. | An empty test satisfies this gate, and that is correct: the ruler here is EXISTENCE. The one that confronts the content is another gate, and confusing the two would make this one fail for a reason it does not know how to measure. |
 
-## Dependências
+## Dependencies
 
-| Cód | Arquivo | Método | Camada |
+| Code | File | Method | Layer |
 | --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `Graph` | núcleo — as peças são arestas, e sem o grafo não há o que olhar |
-| DEP2 | `internal/config/config.go` | `Config` | núcleo — o regime da camada e a dispensa em bloco são declarados na Estrutura |
+| DEP1 | `internal/mapx/model.go` | `Graph` | core — the pieces are edges, and without the graph there is nothing to look at |
+| DEP2 | `internal/config/config.go` | `Config` | core — the layer's regime and the block waiver are declared in the Structure |
 
-## Decisões em aberto
+## Open Decisions
 
-| Código | Pergunta | Quem decide | Vira |
+| Code | Question | Who decides | Becomes |
 | --- | --- | --- | --- |
 
-nenhuma
+none
