@@ -341,6 +341,30 @@ gates:
   - name: scenario-coverage
     blocking: false
 
+  - name: domain-declared
+    blocking: false
+
+  - name: open-questions-resolved
+    blocking: false
+
+  - name: rule-types
+    blocking: false
+
+  - name: spec-feature-match
+    blocking: false
+
+  - name: dependency-honored
+    blocking: false
+
+  - name: count-honored
+    blocking: false
+
+  - name: ref-resolves
+    blocking: false
+
+  - name: guide-checklist
+    blocking: false
+
   - name: test-traceable
     blocking: false
 

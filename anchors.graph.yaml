@@ -1892,6 +1892,7 @@ nodes:
     - id: internal/gate/open_questions.feature
       kind: feature
       rev: c4da43aaff09
+      updated_at: "2026-09-19"
       code: OPQSP
       layer: feature
       tags:
@@ -2179,6 +2180,7 @@ nodes:
     - id: internal/gate/rule_implemented.feature
       kind: feature
       rev: 8a1cc95ed73a
+      updated_at: "2026-09-19"
       code: RLIMR
       layer: feature
       tags:
@@ -2441,6 +2443,7 @@ nodes:
     - id: internal/gate/triad_complete.feature
       kind: feature
       rev: d25ffa7df0c6
+      updated_at: "2026-09-19"
       code: TRCMT
       layer: feature
       tags:
@@ -3446,658 +3449,1478 @@ edges:
       to: internal/config/comments.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 6fa8ee0287b4
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/config/config.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 2536cd2306a8
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/config/containers.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 73d80d78a299
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/config/dialect.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 6e1c68f1e3aa
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/config/docs.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 6ae3ecebcb0c
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/config/min_version.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 383968ae2ae4
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/config/patterns.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 50bb24921e13
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/config/root.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 3cbb6f987969
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/config/vocabulary.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 6c1ad1de5544
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/mapx/build.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 22f496fdd22d
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/mapx/evidence.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 3ffea2c5fbae
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/mapx/format.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 5c6c73854705
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/mapx/impact.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 2d8df5dfde2a
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/mapx/ingest.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: a1ea0af89992
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/mapx/model.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: c35dfd17ef15
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/mapx/query.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 78f9a2dc632e
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/mapx/stamp.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 6f4dd18295de
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/mapx/store.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 0c00da6a4980
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/scan/ignore.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: 76847b83ed8c
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/scan/progress.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: a2a12e8c1203
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/scan/region.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: d1b270e16cd2
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: CONCEPT.md
       to: internal/scan/scan.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 32d26527e214
+        validated_to_rev: cadef85fd118
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: PROPAGATION.md
       to: internal/mapx/build.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 554179b3b298
+        validated_to_rev: 22f496fdd22d
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: PROPAGATION.md
       to: internal/mapx/evidence.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 554179b3b298
+        validated_to_rev: 3ffea2c5fbae
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: PROPAGATION.md
       to: internal/mapx/format.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 554179b3b298
+        validated_to_rev: 5c6c73854705
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: PROPAGATION.md
       to: internal/mapx/impact.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 554179b3b298
+        validated_to_rev: 2d8df5dfde2a
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: PROPAGATION.md
       to: internal/mapx/ingest.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 554179b3b298
+        validated_to_rev: a1ea0af89992
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: PROPAGATION.md
       to: internal/mapx/model.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 554179b3b298
+        validated_to_rev: c35dfd17ef15
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: PROPAGATION.md
       to: internal/mapx/query.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 554179b3b298
+        validated_to_rev: 78f9a2dc632e
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: PROPAGATION.md
       to: internal/mapx/stamp.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 554179b3b298
+        validated_to_rev: 6f4dd18295de
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: PROPAGATION.md
       to: internal/mapx/store.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 554179b3b298
+        validated_to_rev: 0c00da6a4980
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/code_cataloged.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: cdb096d3b2fb
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/code_language.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: e8d1d1108186
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/code_reference_valid.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: f991e2c7dd2e
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/contract_status_declared.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: eba61b62d923
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/count_honored.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: ac790afd26b5
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/dependency_honored.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 9ebc588be760
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/doc_required.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 4bec3c03b9b8
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/doc_self_contained.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 4555e1b800e7
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/docs_fresh.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 227df2fd3627
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/domain_declared.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 996abb62116a
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/evidence_fresh.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 8a9b87073030
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/external.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 431421bde9ae
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/feature_test_match.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 138f85ec9eaa
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/fix.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: f8e68a18e0fa
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/gate.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 889c52360186
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/identity_consistent.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 585d6a699b96
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/internal_checks.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: f7c211d67715
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/layer_boundary.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 5fdc00c22b91
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/marker_parity.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: eff4e9bb74c1
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/mock_stamped.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: fe3c0c1095ee
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/mock_typed.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: c53521703dbb
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/obligation_honored.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 37b952cc1fd3
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/obligations_report.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: caf2f21f4399
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/obligations_source.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: d2879674cc33
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/open_questions.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: f95ba6b43dff
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/pagination_honored.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: b77317cb562c
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/phase_ordered.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 6e09dbdbb21b
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/placeholder_filled.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: ca3883565729
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/plan_change_justified.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 72708379eee1
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/plan_revised.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 5e4d49692700
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/plan_seeds_valid.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: d6ed5326c5ff
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/plan_source_declared.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 60217bbda172
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/profile.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 2a9d7f6fe2e3
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/progress_honest.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: ad717349150f
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/promotable.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: a5da8054ce15
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/proof_crosses_boundary.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: ab915f3a27eb
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/ref_resolves.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 72e28614519b
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/region_pair_honored.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: dbf225025f79
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/route_declared.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 8402fe2e58cf
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/route_exists.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 8310e693fce7
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/rule.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: b8bfb7f8b694
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/rule_implemented.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: bea14df81b37
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/rule_types.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: e77cc4fe9c5d
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/scenario_asserts.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: abbb68785dd0
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/scenario_identity.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 396c865f461a
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/scenario_letter_declared.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: e5faa87abd02
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/scenario_type_aligned.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: ae3973b6f62f
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/sibling_guard.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: c1ae6352b861
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/spec_feature_match.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: dc585f9f0609
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/test_traceable.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 90e382def2b3
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/testid_consistent.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: f8cb7c8aff9e
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/testid_helpers.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 1372f5ca495f
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/testid_queried_exists.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 26d61c2488d9
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/testid_surfaces.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 6bfcac5a9898
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/triad_complete.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 7fbe0f3050d2
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/trigger_declared.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: b24df2c9e472
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/value_anchored.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: c640824efab2
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: QUALITY.md
       to: internal/gate/vr_baseline.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 7c491d9418fc
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: SPEC.md
       to: internal/gate/domain_declared.spec.md
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: dedf7925bcf7
+        validated_to_rev: 7b2f6cef4a68
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: SPEC.md
       to: internal/gate/open_questions.spec.md
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: dedf7925bcf7
+        validated_to_rev: a039bfb75d82
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: SPEC.md
       to: internal/gate/rule_implemented.spec.md
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: dedf7925bcf7
+        validated_to_rev: 216c63d08c9b
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: SPEC.md
       to: internal/gate/triad_complete.spec.md
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: dedf7925bcf7
+        validated_to_rev: aed2684c3a95
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: SPEC_TYPES.md
       to: internal/gate/domain_declared.spec.md
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: da86ff2960b9
+        validated_to_rev: 7b2f6cef4a68
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: SPEC_TYPES.md
       to: internal/gate/open_questions.spec.md
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: da86ff2960b9
+        validated_to_rev: a039bfb75d82
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: SPEC_TYPES.md
       to: internal/gate/rule_implemented.spec.md
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: da86ff2960b9
+        validated_to_rev: 216c63d08c9b
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: SPEC_TYPES.md
       to: internal/gate/triad_complete.spec.md
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: da86ff2960b9
+        validated_to_rev: aed2684c3a95
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: STRUCTURE.md
       to: internal/config/comments.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 07092d3d8288
+        validated_to_rev: 6fa8ee0287b4
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: STRUCTURE.md
       to: internal/config/config.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 07092d3d8288
+        validated_to_rev: 2536cd2306a8
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: STRUCTURE.md
       to: internal/config/containers.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 07092d3d8288
+        validated_to_rev: 73d80d78a299
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: STRUCTURE.md
       to: internal/config/dialect.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 07092d3d8288
+        validated_to_rev: 6e1c68f1e3aa
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: STRUCTURE.md
       to: internal/config/docs.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 07092d3d8288
+        validated_to_rev: 6ae3ecebcb0c
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: STRUCTURE.md
       to: internal/config/min_version.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 07092d3d8288
+        validated_to_rev: 383968ae2ae4
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: STRUCTURE.md
       to: internal/config/patterns.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 07092d3d8288
+        validated_to_rev: 50bb24921e13
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: STRUCTURE.md
       to: internal/config/root.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 07092d3d8288
+        validated_to_rev: 3cbb6f987969
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: STRUCTURE.md
       to: internal/config/vocabulary.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 07092d3d8288
+        validated_to_rev: 6c1ad1de5544
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/mapx/build.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: 22f496fdd22d
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/mapx/evidence.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: 3ffea2c5fbae
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/mapx/format.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: 5c6c73854705
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/mapx/impact.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: 2d8df5dfde2a
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/mapx/ingest.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: a1ea0af89992
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/mapx/model.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: c35dfd17ef15
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/mapx/query.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: 78f9a2dc632e
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/mapx/stamp.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: 6f4dd18295de
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/mapx/store.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: 0c00da6a4980
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/scan/ignore.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: 76847b83ed8c
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/scan/progress.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: a2a12e8c1203
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/scan/region.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: d1b270e16cd2
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: TRACEABILITY.md
       to: internal/scan/scan.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: a2beb4212dfc
+        validated_to_rev: cadef85fd118
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/change/change.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 6b0e1d55f021
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/checklog/checklog.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 838f30bb9ac7
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/code/code.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 57b94815a710
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/code/path.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 9e3142fbcf60
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/daemon/daemon.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: e5455470ddec
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/daemon/daemon_unix.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: dcc1df780462
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/daemon/daemon_windows.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 8354b85bcf7a
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/gitmeta/availability.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 649cc782a80a
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/gitmeta/gitmeta.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: ace465de1973
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/health/approval.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: cb8908e15cb5
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/health/github_environment.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: e474db4524ce
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/health/governance.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 6683ba21896b
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/health/health.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: c0f2617085e2
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/health/pending_decision.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 5acadf48a82d
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/health/spec_sections.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: dfdb7fccf860
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/apply_preset.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 76226103da14
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/artifacts.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 998ee667b76a
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/build_config.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: a97bdeab9580
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/decide.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 451b25d70aca
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/default_gates.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: bff1ce962e8b
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/expose_board.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: d59b7f664cc5
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/git.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 79d478128e0e
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/header_guide.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 87c32544b800
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/infer.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 86a303aff113
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/operator.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: c735d8c718d2
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/packs.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: f2e8588506ab
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/presets.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 767fe4e59f37
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/questions.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 045b1d8c6fa5
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/tbd_instruction.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: cd911b1e869f
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/initx/workflows.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: c8c251a857d7
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/issue/github.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 8bef3d384cf6
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/issue/issue.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 5cbd91297a9d
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/pack/pack.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 189b3544a107
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/queue/queue.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: dec5c10541b8
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/recode/dialect.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: ec357dbf481f
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/recode/plan.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 53d7dabfefa0
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/recode/rewrite.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 3f6f75361f71
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/similarity/similarity.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 5de399ad005c
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/suggestion/suggestion.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: bc5ca3de8421
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/testsig/code.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: ac6a34261189
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/testsig/diff.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 49198d076b73
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/testsig/junit.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: 022f398d8fd1
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/testsig/lcov.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: d3248d5715e6
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/testsig/mutation.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: cb0c10fc0915
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: WORKFLOW.md
       to: internal/testsig/mutation_gremlins.go
       type: governs
       origin: declared
+      stamp:
+        validated_from_rev: 21d16f8be3d1
+        validated_to_rev: fcd47cb08f8f
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: internal/gate/domain_declared.feature
       to: internal/gate/domain_declared_test.go
       type: tested-by
