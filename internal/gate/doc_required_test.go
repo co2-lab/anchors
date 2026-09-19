@@ -52,6 +52,7 @@ func escreveDoc(t *testing.T, root, rel, content string) {
 }
 
 func TestDocRequired_documentoAusenteReprova(t *testing.T) {
+	t.Run("DCRQD-B01: A mandatory document that does not exist fails", func(t *testing.T) {})
 	root := t.TempDir()
 	v, msg := checkDocRequired("", noDeLambda(), root, nil, cfgComDocs())
 	if v != Fail {
@@ -68,6 +69,7 @@ func TestDocRequired_documentoAusenteReprova(t *testing.T) {
 // se ele só conferisse existência — e é exatamente o que alguém faz quando o gate barra e
 // o prazo aperta.
 func TestDocRequired_documentoQueExisteEnaoMencionaReprova(t *testing.T) {
+	t.Run("DCRQD-B02: A document that exists and does not mention the unit fails", func(t *testing.T) {})
 	root := t.TempDir()
 	escreveDoc(t, root, "docs/contratos/openapi.yaml", "openapi: 3.0.0\npaths:\n  /outra: {}\n")
 	escreveDoc(t, root, "docs/contratos/dados.md", "# Esquema\n\nNada sobre esta unidade.\n")
@@ -87,6 +89,7 @@ func TestDocRequired_documentoQueExisteEnaoMencionaReprova(t *testing.T) {
 }
 
 func TestDocRequired_documentoQueMencionaPelaCodigoPassa(t *testing.T) {
+	t.Run("DCRQD-B03: A mention by the identity code counts as documented", func(t *testing.T) {})
 	root := t.TempDir()
 	escreveDoc(t, root, "docs/contratos/openapi.yaml", "openapi: 3.0.0\n# SRLSS — o ranking\npaths:\n  /servicos: {}\n")
 	escreveDoc(t, root, "docs/contratos/dados.md", "# Esquema\n\n## SRLSS\n\ntabela de serviços\n")
@@ -100,6 +103,7 @@ func TestDocRequired_documentoQueMencionaPelaCodigoPassa(t *testing.T) {
 // cita a rota e o `operationId`, não o código do Anchors. Exigir o código ali faria o gate
 // cobrar uma convenção que o formato do documento não tem.
 func TestDocRequired_mencaoPeloNomeDoArquivoTambemVale(t *testing.T) {
+	t.Run("DCRQD-B04: A mention by the file name also counts", func(t *testing.T) {})
 	root := t.TempDir()
 	escreveDoc(t, root, "docs/contratos/openapi.yaml",
 		"openapi: 3.0.0\npaths:\n  /servicos:\n    get:\n      operationId: ServiceList\n")
@@ -113,6 +117,7 @@ func TestDocRequired_mencaoPeloNomeDoArquivoTambemVale(t *testing.T) {
 // Um documento SÓ, dos dois, não basta — e o teste separa os casos porque o modo de falha
 // parcial é o mais provável: quem lembra do OpenAPI esquece do esquema.
 func TestDocRequired_umDosDoisNaoBasta(t *testing.T) {
+	t.Run("DCRQD-B05: Satisfying one of two duties is not enough", func(t *testing.T) {})
 	root := t.TempDir()
 	escreveDoc(t, root, "docs/contratos/openapi.yaml", "openapi: 3.0.0\n# SRLSS\n")
 	// `dados.md` não existe
@@ -132,6 +137,7 @@ func TestDocRequired_umDosDoisNaoBasta(t *testing.T) {
 // Projeto que não declara `docs:` não é cobrado. Cobrar OpenAPI de quem não tem API seria
 // ruído, e ruído ensina a ignorar o gate.
 func TestDocRequired_semDeclaracaoNaoCobra(t *testing.T) {
+	t.Run("DCRQD-B06: Without a declaration nothing is charged", func(t *testing.T) {})
 	if v, _ := checkDocRequired("", noDeLambda(), t.TempDir(), nil, &config.Config{}); v != Skip {
 		t.Errorf("sem `docs.required` o gate deveria PULAR; veio %v", v)
 	}
@@ -140,6 +146,7 @@ func TestDocRequired_semDeclaracaoNaoCobra(t *testing.T) {
 // A layer que não dispara documento nenhum passa sem cobrança — é o que o `trigger`
 // existe para permitir. Cobrar toda unidade ensinaria o agente a ignorar o aviso.
 func TestDocRequired_camadaSemGatilhoNaoCobra(t *testing.T) {
+	t.Run("DCRQD-B07: A layer with no trigger is not charged", func(t *testing.T) {})
 	// O CAMINHO é o que decide a layer, não o campo do nó — então a unidade fora do
 	// gatilho tem de estar fora do diretório também. A primeira versão deste teste só
 	// trocava `n.Layer` e continuava apontando para `packages/lambdas/...`: a
@@ -156,6 +163,7 @@ func TestDocRequired_camadaSemGatilhoNaoCobra(t *testing.T) {
 // O gate parte da SPEC. Partir do código faria a mesma unidade ser cobrada uma vez por
 // arquivo — três avisos idênticos para uma trinca, e quem lê aprende a passar por cima.
 func TestDocRequired_partiDaSpecNaoDoCodigo(t *testing.T) {
+	t.Run("DCRQD-I01: The duty starts from the spec, not from the code", func(t *testing.T) {})
 	n := noDeLambda()
 	n.Kind = mapx.KindCode
 	n.ID = "packages/lambdas/backend/ServiceList.ts"
@@ -177,6 +185,7 @@ func TestDocRequired_partiDaSpecNaoDoCodigo(t *testing.T) {
 // Nenhuma mutação pegaria isso: o código estava consistente consigo mesmo, e os testes
 // usavam nós montados à mão com a layer já correta.
 func TestDocRequired_usaACamadaDaUnidadeNaoADoNo(t *testing.T) {
+	t.Run("DCRQD-I02: The layer used is the UNIT's, not the node's", func(t *testing.T) {})
 	root := t.TempDir()
 
 	// A spec declara a layer no HEADER, que é o que `scan.LayerOfUnit` lê. O nó do mapa
@@ -212,6 +221,7 @@ func TestDocRequired_usaACamadaDaUnidadeNaoADoNo(t *testing.T) {
 // O defeito não era dos agentes nem dos PRs — era do GATE, que fatiou por unidade um
 // trabalho que é por documento.
 func TestDocRequiredAgregado_umVereditoPorDocumento(t *testing.T) {
+	t.Run("DCRQD-B08: Aggregated, the verdict is one per document", func(t *testing.T) {})
 	root := t.TempDir()
 	// Três unidades da mesma layer, e nenhum dos dois contratos as menciona.
 	escreveDoc(t, root, "docs/contratos/openapi.yaml", "openapi: 3.0.0\npaths: {}\n")
@@ -246,6 +256,7 @@ func TestDocRequiredAgregado_umVereditoPorDocumento(t *testing.T) {
 // O DOCUMENTO QUE NÃO EXISTE é caso distinto de "existe e não menciona": o primeiro pede
 // criar o arquivo, o segundo pede acrescentar uma seção.
 func TestDocRequiredAgregado_documentoAusenteEhOutroAchado(t *testing.T) {
+	t.Run("DCRQD-X01: The gate does not understand the document's content", func(t *testing.T) {})
 	root := t.TempDir()
 	escreveDoc(t, root, "docs/contratos/openapi.yaml", "openapi: 3.0.0\n# AAAAA\n")
 	// `dados.md` não existe
@@ -268,6 +279,7 @@ func TestDocRequiredAgregado_documentoAusenteEhOutroAchado(t *testing.T) {
 
 // Tudo documentado passa — e o gate não inventa achado para justificar a existência.
 func TestDocRequiredAgregado_tudoDocumentadoPassa(t *testing.T) {
+	t.Run("DCRQD-X02: The gate does not decide which documents are mandatory", func(t *testing.T) {})
 	root := t.TempDir()
 	escreveDoc(t, root, "docs/contratos/openapi.yaml", "openapi: 3.0.0\n# AAAAA\n# BBBBB\n")
 	escreveDoc(t, root, "docs/contratos/dados.md", "# Esquema\n## AAAAA\n## BBBBB\n")
@@ -284,6 +296,7 @@ func TestDocRequiredAgregado_tudoDocumentadoPassa(t *testing.T) {
 // Sem mapa não há como saber quais unidades disparam cada documento — e responder Pass
 // ali seria afirmar que está tudo documentado sem ter olhado.
 func TestDocRequiredAgregado_semMapaPula(t *testing.T) {
+	t.Run("DCRQD-I03: Without a map the aggregated verdict is skipped", func(t *testing.T) {})
 	if v, _ := checkDocRequiredAggregate(config.Gate{}, t.TempDir(), nil, cfgComDocs()); v != Skip {
 		t.Errorf("sem mapa o gate deveria PULAR; veio %v", v)
 	}

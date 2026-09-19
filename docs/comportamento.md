@@ -28,6 +28,32 @@ teste prova.
 
 - [The gate does not use a dictionary to decide the language](camadas/gate.md#cdlng-x03--the-gate-does-not-use-a-dictionary-to-decide-the-language) `CDLNG-X03`
 
+- [A mandatory document that does not exist fails](camadas/gate.md#dcrqd-b01--a-mandatory-document-that-does-not-exist-fails) `DCRQD-B01`
+
+- [A document that exists and does not mention the unit fails](camadas/gate.md#dcrqd-b02--a-document-that-exists-and-does-not-mention-the-unit-fails) `DCRQD-B02`
+
+- [A mention by the identity code counts as documented](camadas/gate.md#dcrqd-b03--a-mention-by-the-identity-code-counts-as-documented) `DCRQD-B03`
+
+- [A mention by the file name also counts](camadas/gate.md#dcrqd-b04--a-mention-by-the-file-name-also-counts) `DCRQD-B04`
+
+- [Satisfying one of two duties is not enough](camadas/gate.md#dcrqd-b05--satisfying-one-of-two-duties-is-not-enough) `DCRQD-B05`
+
+- [Without a declaration nothing is charged](camadas/gate.md#dcrqd-b06--without-a-declaration-nothing-is-charged) `DCRQD-B06`
+
+- [A layer with no trigger is not charged](camadas/gate.md#dcrqd-b07--a-layer-with-no-trigger-is-not-charged) `DCRQD-B07`
+
+- [Aggregated, the verdict is one per document](camadas/gate.md#dcrqd-b08--aggregated-the-verdict-is-one-per-document) `DCRQD-B08`
+
+- [The duty starts from the spec, not from the code](camadas/gate.md#dcrqd-i01--the-duty-starts-from-the-spec-not-from-the-code) `DCRQD-I01`
+
+- [The layer used is the UNIT's, not the node's](camadas/gate.md#dcrqd-i02--the-layer-used-is-the-units-not-the-nodes) `DCRQD-I02`
+
+- [Without a map the aggregated verdict is skipped](camadas/gate.md#dcrqd-i03--without-a-map-the-aggregated-verdict-is-skipped) `DCRQD-I03`
+
+- [The gate does not understand the document's content](camadas/gate.md#dcrqd-x01--the-gate-does-not-understand-the-documents-content) `DCRQD-X01`
+
+- [The gate does not decide which documents are mandatory](camadas/gate.md#dcrqd-x02--the-gate-does-not-decide-which-documents-are-mandatory) `DCRQD-X02`
+
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dmdcd-b01--an-artifact-that-is-not-a-spec-leaves-without-a-verdict) `DMDCD-B01`
 
 - [A spec without the domain section is failed](camadas/gate.md#dmdcd-b02--a-spec-without-the-domain-section-is-failed) `DMDCD-B02`

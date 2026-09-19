@@ -97,6 +97,131 @@
 ```
 
 
+## DCRQD — DocRequired — the aggregated document the unit must feed
+
+
+
+
+
+
+
+
+
+#### DCRQD-B01 — A mandatory document that does not exist fails
+
+```gherkin
+    Given a project declaring a document as mandatory for this unit's layer
+    And that document does not exist on disk
+    When the gate confronts the unit
+    Then it returns Fail
+```
+
+#### DCRQD-B02 — A document that exists and does not mention the unit fails
+
+```gherkin
+    Given the mandatory document exists and never names this unit
+    When the gate confronts the unit
+    Then it returns Fail, because existence alone would approve an empty file created
+      to silence the gate
+```
+
+#### DCRQD-B03 — A mention by the identity code counts as documented
+
+```gherkin
+    Given the mandatory document cites the unit's identity code
+    When the gate confronts the unit
+    Then it returns Pass
+```
+
+#### DCRQD-B04 — A mention by the file name also counts
+
+```gherkin
+    Given the mandatory document cites the unit's file name and not its code
+    When the gate confronts the unit
+    Then it returns Pass, because the document speaks of the unit either way
+```
+
+#### DCRQD-B05 — Satisfying one of two duties is not enough
+
+```gherkin
+    Given two documents declared mandatory for this unit's layer
+    And only one of them mentions the unit
+    When the gate confronts the unit
+    Then it returns Fail, because each document is charged on its own
+```
+
+#### DCRQD-B06 — Without a declaration nothing is charged
+
+```gherkin
+    Given a project that declares no mandatory document
+    When the gate confronts the unit
+    Then it returns Pass, because the ruler is what the project committed to, not what
+      one supposes it owes
+```
+
+#### DCRQD-B07 — A layer with no trigger is not charged
+
+```gherkin
+    Given a mandatory document whose trigger names another layer
+    And the document exists and does not mention this unit
+    When the gate confronts the unit
+    Then it returns Pass, because this layer triggers no duty
+```
+
+#### DCRQD-B08 — Aggregated, the verdict is one per document
+
+```gherkin
+    Given three units of a triggering layer and one mandatory document
+    When the gate runs over the whole project
+    Then it reports ONE verdict for that document, not one per unit
+```
+
+#### DCRQD-I01 — The duty starts from the spec, not from the code
+
+```gherkin
+    Given a unit whose spec and code both exist
+    When the gate confronts the project
+    Then the charge lands on the spec, because the spec is what declares the unit
+```
+
+#### DCRQD-I02 — The layer used is the UNIT's, not the node's
+
+```gherkin
+    Given a spec whose node layer is the spec layer
+    And the unit it describes belongs to a triggering layer
+    When the gate confronts it
+    Then the duty is charged, because reading the node's layer would charge every spec
+      of the project the same duty, or none
+```
+
+#### DCRQD-I03 — Without a map the aggregated verdict is skipped
+
+```gherkin
+    Given no graph built
+    When the gate runs aggregated
+    Then it does not approve, because approving without being able to look would stamp
+      what was never measured
+```
+
+#### DCRQD-X01 — The gate does not understand the document's content
+
+```gherkin
+    Given the mandatory document cites the unit and describes it wrongly
+    When the gate confronts the unit
+    Then it returns Pass, because the gate separates "not documented" from "documented" —
+      judging the quality of the documentation is another ruler
+```
+
+#### DCRQD-X02 — The gate does not decide which documents are mandatory
+
+```gherkin
+    Given a project whose Structure declares no duty for this layer
+    And a document that a reviewer would consider obviously required
+    When the gate confronts the unit
+    Then it returns Pass, because inventing duties would charge what nobody committed to
+```
+
+
 ## DMDCD — DomainDeclared — the spec declares what the unit ACCEPTS, and who blocks the invalid
 
 

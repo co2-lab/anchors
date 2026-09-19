@@ -13,6 +13,8 @@ abra a página dela em `camadas/`.
 
 ### [CDLNG — CodeLanguage — the code does not go back to mixing languages](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages)
 
+### [DCRQD — DocRequired — the aggregated document the unit must feed](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed)
+
 ### [DMDCD — DomainDeclared — the spec declares what the unit ACCEPTS, and who blocks the invalid](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid)
 
 ### [OPQSP — OpenQuestions — a spec with an open question is not ready to implement](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement)

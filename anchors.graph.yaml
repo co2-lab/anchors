@@ -1574,14 +1574,30 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/doc_required.feature
+      kind: feature
+      rev: b1e1797580be
+      code: DCRQD
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/doc_required.go
       kind: code
       rev: 4bec3c03b9b8
       updated_at: "2026-09-19"
+      code: DCRQD
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/doc_required.spec.md
+      kind: spec
+      rev: f38db8349f31
+      code: DCRQD
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/doc_required_section_test.go
       kind: test
       rev: 609f442fea29
@@ -1591,8 +1607,9 @@ nodes:
         - test
     - id: internal/gate/doc_required_test.go
       kind: test
-      rev: f28e193ec321
+      rev: c0425f271b7f
       updated_at: "2026-09-19"
+      code: DCRQD
       layer: teste
       tags:
         - test
@@ -4294,6 +4311,15 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC.md
+      to: internal/gate/doc_required.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: dedf7925bcf7
+        validated_to_rev: f38db8349f31
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: SPEC.md
       to: internal/gate/domain_declared.spec.md
       type: governs
       origin: declared
@@ -4345,6 +4371,15 @@ edges:
       stamp:
         validated_from_rev: da86ff2960b9
         validated_to_rev: dfe58531ab17
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: SPEC_TYPES.md
+      to: internal/gate/doc_required.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: da86ff2960b9
+        validated_to_rev: f38db8349f31
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC_TYPES.md
@@ -5022,6 +5057,28 @@ edges:
         validated_to_rev: 2ffa6610870b
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/doc_required.feature
+      to: internal/gate/doc_required_test.go
+      type: tested-by
+      origin: convention
+      stamp:
+        validated_from_rev: b1e1797580be
+        validated_to_rev: c0425f271b7f
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/doc_required.spec.md
+      to: internal/gate/doc_required.feature
+      type: covered-by
+      origin: convention
+      stamp:
+        validated_from_rev: f38db8349f31
+        validated_to_rev: b1e1797580be
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/doc_required.spec.md
+      to: internal/gate/doc_required.go
+      type: specifies
+      origin: convention
     - from: internal/gate/domain_declared.feature
       to: internal/gate/domain_declared_test.go
       type: tested-by
