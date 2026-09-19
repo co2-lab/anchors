@@ -208,12 +208,9 @@ derived:
   files:
     spec: ["{{dir}}/{{name}}.spec.md"]
     code: ["{{dir}}/{{name}}.go"]
+    feature: ["{{dir}}/{{name}}.feature"]
     test: ["{{dir}}/{{name}}_test.go"]
-  # `feature` fica de FORA, e é declaração, não esquecimento: este projeto não usa
-  # Gherkin — o comportamento é provado direto no teste de unidade. O `mapx` liga
-  # spec→teste quando não há feature declarada, e o `trinca-completa` dispensa a peça
-  # que a camada não tem. Declarar um template de `.feature` aqui faria toda spec
-  # nascer devendo um arquivo que ninguém pretende escrever.
+
 
 gates:
   # SEGURANÇA — a leva que existe para o que não tem volta.
@@ -308,6 +305,40 @@ gates:
     blocking: false
 
   - name: feature-not-empty
+    blocking: false
+
+  # ── OS TRES QUE FECHAM O CIRCUITO CENARIO↔TESTE ─────────────────────────────────
+  # Sem eles a trinca fecha ESTRUTURALMENTE e ninguem confere se os cenarios tem prova:
+  # o `triad-complete` responde "as tres pecas existem", e nao "elas dizem a mesma
+  # coisa". Uma feature com onze cenarios e um teste que prova dois passa igual.
+  #
+  # Ficam informativos ate o acervo de features crescer — promover agora reprovaria
+  # cada unidade que ainda nao tem feature, que e' a lista inteira menos uma.
+
+  # O cenario esta implementado no teste ligado? Confronta por CODIGO (reprova se
+  # falta) e por DESCRICAO (avisa se divergiu). Pega o agente que pula um cenario,
+  # renomeia ou muda os passos sem mexer no teste.
+  #
+  # Este declara `on:`/`check:` e os dois vizinhos nao — e a diferenca nao e' estilo: o
+  # `feature-test-match` nao esta no catalogo canonico (`initx/default_gates.go`), entao
+  # nao ha de onde herdar. Declarar so o `name:` o faria ser aceito EM SILENCIO e nunca
+  # medir nada, que e' o ATRITO 4 registrado acima.
+  - name: feature-test-match
+    on: [feature]
+    check: feature-test-match
+    blocking: false
+    measures: "cada cenario da feature esta implementado no teste ligado (por codigo e por descricao)"
+
+  # O passo de resultado AFIRMA algo observavel? Um `Then` que diz "o efeito X se
+  # verifica" e' tautologia: nao afirma resultado nenhum, passa nos gates, e dois
+  # cenarios de regras diferentes ficam indistinguiveis.
+  - name: scenario-asserts
+    blocking: false
+
+  # Cada cenario da spec tem um teste que PASSOU — cobertura semantica, nao de linha.
+  # E' o unico dos tres que depende de sinal ingerido: sem `anchors ingest` dos
+  # resultados, ele fica indeterminado e diz que ficou.
+  - name: scenario-coverage
     blocking: false
 
   - name: test-traceable

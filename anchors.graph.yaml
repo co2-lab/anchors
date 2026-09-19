@@ -425,7 +425,7 @@ nodes:
         - comando
     - id: cmd/anchors/flow/work.go
       kind: code
-      rev: 88573aa3fd6c
+      rev: ccfa58b32e9e
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -509,7 +509,7 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide_feature.go
       kind: code
-      rev: bcc6335a013f
+      rev: 8311dde7eeb1
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -892,7 +892,7 @@ nodes:
         - comando
     - id: cmd/anchors/ops/new.go
       kind: code
-      rev: f384541e4a1f
+      rev: 1bd73b13044f
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -1260,7 +1260,7 @@ nodes:
         - config
     - id: internal/config/config.go
       kind: code
-      rev: 3ecef319c556
+      rev: 2536cd2306a8
       updated_at: "2026-09-19"
       layer: config
       tags:
@@ -1610,6 +1610,13 @@ nodes:
       code_declared: true
       tags:
         - test
+    - id: internal/gate/domain_declared.feature
+      kind: feature
+      rev: 909da3475bac
+      code: DMDCD
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/domain_declared.go
       kind: code
       rev: 996abb62116a
@@ -1630,7 +1637,7 @@ nodes:
         - spec
     - id: internal/gate/domain_declared_test.go
       kind: test
-      rev: 92fe25054033
+      rev: c3d12bd04260
       updated_at: "2026-09-19"
       code: DMDCD
       layer: teste
@@ -1893,6 +1900,7 @@ nodes:
     - id: internal/gate/open_questions.spec.md
       kind: spec
       rev: bdcef0abf6d1
+      updated_at: "2026-09-19"
       code: OPQSP
       layer: spec
       code_declared: true
@@ -2172,6 +2180,7 @@ nodes:
     - id: internal/gate/rule_implemented.spec.md
       kind: spec
       rev: 216c63d08c9b
+      updated_at: "2026-09-19"
       code: RLIMR
       layer: spec
       code_declared: true
@@ -2226,7 +2235,7 @@ nodes:
         - test
     - id: internal/gate/scenario_asserts.go
       kind: code
-      rev: df348b49e1ec
+      rev: abbb68785dd0
       updated_at: "2026-09-19"
       layer: gate
       tags:
@@ -2480,7 +2489,7 @@ nodes:
         - test
     - id: internal/gate/vr_baseline.go
       kind: code
-      rev: 1a147b68dea5
+      rev: 7c491d9418fc
       updated_at: "2026-09-19"
       layer: gate
       tags:
@@ -2488,7 +2497,7 @@ nodes:
         - gate
     - id: internal/gate/vr_baseline_test.go
       kind: test
-      rev: 8f3350d3c639
+      rev: 0ef2df9d0c07
       updated_at: "2026-09-19"
       code: TCDTX
       layer: teste
@@ -4067,6 +4076,24 @@ edges:
       to: internal/testsig/mutation_gremlins.go
       type: governs
       origin: declared
+    - from: internal/gate/domain_declared.feature
+      to: internal/gate/domain_declared_test.go
+      type: tested-by
+      origin: convention
+      stamp:
+        validated_from_rev: 909da3475bac
+        validated_to_rev: c3d12bd04260
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/domain_declared.spec.md
+      to: internal/gate/domain_declared.feature
+      type: covered-by
+      origin: convention
+      stamp:
+        validated_from_rev: 8aaf21c6d0e0
+        validated_to_rev: 909da3475bac
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: internal/gate/domain_declared.spec.md
       to: internal/gate/domain_declared.go
       type: specifies
@@ -4074,15 +4101,6 @@ edges:
       stamp:
         validated_from_rev: 8aaf21c6d0e0
         validated_to_rev: 996abb62116a
-        changed_at: "2026-09-19"
-        verdict: ok
-    - from: internal/gate/domain_declared.spec.md
-      to: internal/gate/domain_declared_test.go
-      type: tested-by
-      origin: convention
-      stamp:
-        validated_from_rev: 8aaf21c6d0e0
-        validated_to_rev: 92fe25054033
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/open_questions.spec.md
