@@ -98,6 +98,44 @@ teste prova.
 
 - [The gate does not charge the phantom side under a dynamic status](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-X03`
 
+- [Confronting an artifact that is not a spec skips](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B01`
+
+- [A spec containing no count declarations skips](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B02`
+
+- [A declared file count matching the number of files on disk passes](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B03`
+
+- [A declared file count that differs from disk fails](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B04`
+
+- [A declared regex pattern counts occurrences across files instead of file count](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B05`
+
+- [A declared regex occurrence count that differs from reality fails](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B06`
+
+- [A glob pattern matching zero files fails with a path warning](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B07`
+
+- [An invalid glob expression fails reporting the glob syntax error](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B08`
+
+- [An invalid regex pattern fails reporting the regex syntax error](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B09`
+
+- [Divergent count stated in adjacent prose fails even if marker matches](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B10`
+
+- [Non-restrictive complements attached to prose labels are confronted as total count](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B11`
+
+- [Qualifying words attached to prose labels indicate subsets and are not accused](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B12`
+
+- [Arbitrary numbers in prose without declaration markers are ignored](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B13`
+
+- [Numerical claims without declaration markers never trigger confrontation](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-I01`
+
+- [Matching markers cannot conceal lying prose](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-I02`
+
+- [Zero matched files indicates path error rather than legitimate zero count](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-I03`
+
+- [The gate does not guess what to count from arbitrary text](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-X01`
+
+- [Specs without count markers are not penalized](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-X02`
+
+- [Prose phrases qualifying subsets are not accused as total count divergences](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-X03`
+
 - [A mandatory document that does not exist fails](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B01`
 
 - [A document that exists and does not mention the unit fails](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B02`
@@ -253,6 +291,38 @@ teste prova.
 - [Non-unit surfaces are left to their respective gates](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X02`
 
 - [Minor description drift does not block promotion](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X03`
+
+- [Confronting an artifact that is not a spec skips](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B01`
+
+- [Confronting without a graph returns Pending](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B02`
+
+- [Confronting a spec without a declared code skips](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B03`
+
+- [A testID prefix matching the spec identity code passes](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B04`
+
+- [An orphan testID prefix with code shape fails](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B05`
+
+- [A testID prefix matching another declared unit is accepted as legitimate reuse](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B06`
+
+- [A visual regression baseline with a divergent code fails](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B07`
+
+- [Short testID prefixes of three letters or fewer pass](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B08`
+
+- [Inconsistency failures cite conflicting acronyms and origin files](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B09`
+
+- [When no orphan testID prefixes or baseline discrepancies exist the gate passes](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B10`
+
+- [Without a map graph the relational gate never approves](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-I01`
+
+- [Cross-unit reuse is never permitted for visual regression baselines](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-I02`
+
+- [Absence of a spec code is never double-charged](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-I03`
+
+- [Common shorthand prefixes of three letters or fewer are not scrutinized](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-X01`
+
+- [The gate does not enforce code presence on specs](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-X02`
+
+- [Components referencing parent screen codes in testIDs are not forbidden](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-X03`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -623,6 +693,32 @@ teste prova.
 - [The gate does not compare the values on the two sides](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-X02`
 
 - [The gate does not decide whether an unmarked prose claim blocks](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-X03`
+
+- [Confronting an artifact that is neither code nor test skips](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B01`
+
+- [Code or test artifacts without region markers skip](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B02`
+
+- [Balanced regions closing with matching identity codes pass](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B03`
+
+- [An opened region that is never closed fails](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B04`
+
+- [An end region marker without an opening marker fails as an orphan close](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B05`
+
+- [An end region marker closing with a different code fails](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B06`
+
+- [Multiple pairing errors are ordered sequentially by line number](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B07`
+
+- [Region absence is never charged as a failure](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-I01`
+
+- [Pairing defects produce a blocking Fail verdict](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-I02`
+
+- [End markers must explicitly match opening codes](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-I03`
+
+- [The gate does not mandate region markers across all source files](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X01`
+
+- [Region markers inside specifications or documentation are ignored](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X02`
+
+- [Internal code semantics inside regions are not evaluated](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X03`
 
 - [A spec whose rules the code ignores is accused, and the verdict names them](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B01`
 

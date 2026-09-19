@@ -1581,18 +1581,35 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/count_honored.feature
+      kind: feature
+      rev: 4dd448f44297
+      code: CNHNC
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/count_honored.go
       kind: code
       rev: ac790afd26b5
       updated_at: "2026-09-19"
+      code: CNHNC
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/count_honored.spec.md
+      kind: spec
+      rev: fe98f6d1ff71
+      code: CNHNC
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/count_honored_test.go
       kind: test
-      rev: 94a3f5eb4878
+      rev: b640e62d5144
       updated_at: "2026-09-19"
+      code: CNHNC
       layer: teste
       tags:
         - test
@@ -1797,6 +1814,7 @@ nodes:
     - id: internal/gate/feature_test_match.feature
       kind: feature
       rev: b5425ee3cb98
+      updated_at: "2026-09-19"
       code: FTMFT
       layer: feature
       tags:
@@ -1813,6 +1831,7 @@ nodes:
     - id: internal/gate/feature_test_match.spec.md
       kind: spec
       rev: 0f1a5d0e2739
+      updated_at: "2026-09-19"
       code: FTMFT
       layer: spec
       code_declared: true
@@ -1850,19 +1869,35 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/identity_consistent.feature
+      kind: feature
+      rev: ffb29aed6e2d
+      code: IDCND
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/identity_consistent.go
       kind: code
       rev: 585d6a699b96
       updated_at: "2026-09-19"
+      code: IDCND
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/identity_consistent.spec.md
+      kind: spec
+      rev: 94abef875ff2
+      code: IDCND
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/identity_consistent_test.go
       kind: test
-      rev: 2eb5b075a7d3
+      rev: 6335746413d6
       updated_at: "2026-09-10"
-      code: BDEDX
+      code: IDCND
       layer: teste
       tags:
         - test
@@ -2216,6 +2251,7 @@ nodes:
     - id: internal/gate/plan_change_justified.feature
       kind: feature
       rev: 2f74e752ea70
+      updated_at: "2026-09-19"
       code: PCJPL
       layer: feature
       tags:
@@ -2232,6 +2268,7 @@ nodes:
     - id: internal/gate/plan_change_justified.spec.md
       kind: spec
       rev: b3b5b06b1b14
+      updated_at: "2026-09-19"
       code: PCJPL
       layer: spec
       code_declared: true
@@ -2438,19 +2475,35 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/region_pair_honored.feature
+      kind: feature
+      rev: a99d3794dec3
+      code: RPHRG
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/region_pair_honored.go
       kind: code
       rev: dbf225025f79
       updated_at: "2026-09-19"
+      code: RPHRG
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/region_pair_honored.spec.md
+      kind: spec
+      rev: "762971562134"
+      code: RPHRG
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/region_pair_honored_test.go
       kind: test
-      rev: 565cec71817a
+      rev: ff9405c70307
       updated_at: "2026-09-19"
-      code: MLETX
+      code: RPHRG
       layer: teste
       tags:
         - test
@@ -2770,6 +2823,7 @@ nodes:
     - id: internal/gate/testid_queried_exists.feature
       kind: feature
       rev: ecf4a8328282
+      updated_at: "2026-09-19"
       code: TQETS
       layer: feature
       tags:
@@ -2786,6 +2840,7 @@ nodes:
     - id: internal/gate/testid_queried_exists.spec.md
       kind: spec
       rev: e5b41c5acab6
+      updated_at: "2026-09-19"
       code: TQETS
       layer: spec
       code_declared: true
@@ -4659,6 +4714,15 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC.md
+      to: internal/gate/count_honored.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: dedf7925bcf7
+        validated_to_rev: fe98f6d1ff71
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: SPEC.md
       to: internal/gate/doc_required.spec.md
       type: governs
       origin: declared
@@ -4701,6 +4765,15 @@ edges:
       stamp:
         validated_from_rev: dedf7925bcf7
         validated_to_rev: 0f1a5d0e2739
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: SPEC.md
+      to: internal/gate/identity_consistent.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: dedf7925bcf7
+        validated_to_rev: 94abef875ff2
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC.md
@@ -4800,6 +4873,15 @@ edges:
       stamp:
         validated_from_rev: dedf7925bcf7
         validated_to_rev: eab6f1ca920a
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: SPEC.md
+      to: internal/gate/region_pair_honored.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: dedf7925bcf7
+        validated_to_rev: "762971562134"
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC.md
@@ -4884,6 +4966,15 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC_TYPES.md
+      to: internal/gate/count_honored.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: da86ff2960b9
+        validated_to_rev: fe98f6d1ff71
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: SPEC_TYPES.md
       to: internal/gate/doc_required.spec.md
       type: governs
       origin: declared
@@ -4926,6 +5017,15 @@ edges:
       stamp:
         validated_from_rev: da86ff2960b9
         validated_to_rev: 0f1a5d0e2739
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: SPEC_TYPES.md
+      to: internal/gate/identity_consistent.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: da86ff2960b9
+        validated_to_rev: 94abef875ff2
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC_TYPES.md
@@ -5025,6 +5125,15 @@ edges:
       stamp:
         validated_from_rev: da86ff2960b9
         validated_to_rev: eab6f1ca920a
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: SPEC_TYPES.md
+      to: internal/gate/region_pair_honored.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: da86ff2960b9
+        validated_to_rev: "762971562134"
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC_TYPES.md
@@ -5726,8 +5835,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindSpec`'
-      dep: DEP1
+      method: '`EdgeSpecifies`'
+      dep: DEP2
       stamp:
         validated_from_rev: 0cf3a482b528
         validated_to_rev: c35dfd17ef15
@@ -5737,8 +5846,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`EdgeSpecifies`'
-      dep: DEP2
+      method: '`KindSpec`'
+      dep: DEP1
       stamp:
         validated_from_rev: 0cf3a482b528
         validated_to_rev: c35dfd17ef15
@@ -5828,6 +5937,55 @@ edges:
       dep: DEP1
       stamp:
         validated_from_rev: 7f9b57316bc4
+        validated_to_rev: c35dfd17ef15
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/count_honored.feature
+      to: internal/gate/count_honored_test.go
+      type: tested-by
+      origin: convention
+      stamp:
+        validated_from_rev: 4dd448f44297
+        validated_to_rev: b640e62d5144
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/count_honored.spec.md
+      to: internal/config/config.go
+      type: depends-on
+      origin: declared
+      method: '`Config`'
+      dep: DEP1
+      stamp:
+        validated_from_rev: fe98f6d1ff71
+        validated_to_rev: 2536cd2306a8
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/count_honored.spec.md
+      to: internal/gate/count_honored.feature
+      type: covered-by
+      origin: convention
+      stamp:
+        validated_from_rev: fe98f6d1ff71
+        validated_to_rev: 4dd448f44297
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/count_honored.spec.md
+      to: internal/gate/count_honored.go
+      type: specifies
+      origin: convention
+      stamp:
+        validated_from_rev: fe98f6d1ff71
+        validated_to_rev: ac790afd26b5
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/count_honored.spec.md
+      to: internal/mapx/model.go
+      type: depends-on
+      origin: declared
+      method: '`Graph`, `KindSpec`, `Node`'
+      dep: DEP3
+      stamp:
+        validated_from_rev: fe98f6d1ff71
         validated_to_rev: c35dfd17ef15
         changed_at: "2026-09-19"
         verdict: ok
@@ -6009,8 +6167,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindTest`'
-      dep: DEP3
+      method: '`Graph`'
+      dep: DEP1
       stamp:
         validated_from_rev: c34539c2d755
         validated_to_rev: c35dfd17ef15
@@ -6020,8 +6178,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`Graph`'
-      dep: DEP1
+      method: '`KindTest`'
+      dep: DEP3
       stamp:
         validated_from_rev: c34539c2d755
         validated_to_rev: c35dfd17ef15
@@ -6096,6 +6254,55 @@ edges:
       stamp:
         validated_from_rev: 0f1a5d0e2739
         validated_to_rev: 5de399ad005c
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/identity_consistent.feature
+      to: internal/gate/identity_consistent_test.go
+      type: tested-by
+      origin: convention
+      stamp:
+        validated_from_rev: ffb29aed6e2d
+        validated_to_rev: 6335746413d6
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/identity_consistent.spec.md
+      to: internal/config/config.go
+      type: depends-on
+      origin: declared
+      method: '`Config`'
+      dep: DEP1
+      stamp:
+        validated_from_rev: 94abef875ff2
+        validated_to_rev: 2536cd2306a8
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/identity_consistent.spec.md
+      to: internal/gate/identity_consistent.feature
+      type: covered-by
+      origin: convention
+      stamp:
+        validated_from_rev: 94abef875ff2
+        validated_to_rev: ffb29aed6e2d
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/identity_consistent.spec.md
+      to: internal/gate/identity_consistent.go
+      type: specifies
+      origin: convention
+      stamp:
+        validated_from_rev: 94abef875ff2
+        validated_to_rev: 585d6a699b96
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/identity_consistent.spec.md
+      to: internal/mapx/model.go
+      type: depends-on
+      origin: declared
+      method: '`EdgeSpecifies`, `Graph`, `KindSpec`, `Node`'
+      dep: DEP3
+      stamp:
+        validated_from_rev: 94abef875ff2
+        validated_to_rev: c35dfd17ef15
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/layer_boundary.feature
@@ -6637,6 +6844,66 @@ edges:
         validated_to_rev: c35dfd17ef15
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/region_pair_honored.feature
+      to: internal/gate/region_pair_honored_test.go
+      type: tested-by
+      origin: convention
+      stamp:
+        validated_from_rev: a99d3794dec3
+        validated_to_rev: ff9405c70307
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/region_pair_honored.spec.md
+      to: internal/config/config.go
+      type: depends-on
+      origin: declared
+      method: '`Config`'
+      dep: DEP1
+      stamp:
+        validated_from_rev: "762971562134"
+        validated_to_rev: 2536cd2306a8
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/region_pair_honored.spec.md
+      to: internal/gate/region_pair_honored.feature
+      type: covered-by
+      origin: convention
+      stamp:
+        validated_from_rev: "762971562134"
+        validated_to_rev: a99d3794dec3
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/region_pair_honored.spec.md
+      to: internal/gate/region_pair_honored.go
+      type: specifies
+      origin: convention
+      stamp:
+        validated_from_rev: "762971562134"
+        validated_to_rev: dbf225025f79
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/region_pair_honored.spec.md
+      to: internal/mapx/model.go
+      type: depends-on
+      origin: declared
+      method: '`KindCode`, `KindTest`, `Node`'
+      dep: DEP3
+      stamp:
+        validated_from_rev: "762971562134"
+        validated_to_rev: c35dfd17ef15
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/region_pair_honored.spec.md
+      to: internal/scan/region.go
+      type: depends-on
+      origin: declared
+      method: '`Regioes`'
+      dep: DEP4
+      stamp:
+        validated_from_rev: "762971562134"
+        validated_to_rev: d1b270e16cd2
+        changed_at: "2026-09-19"
+        verdict: ok
     - from: internal/gate/rule_implemented.feature
       to: internal/gate/rule_implemented_test.go
       type: tested-by
@@ -6699,8 +6966,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`RuleType`'
-      dep: DEP1
+      method: '`DefaultRuleLetters`'
+      dep: DEP2
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: 2536cd2306a8
@@ -6710,8 +6977,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`DefaultRuleLetters`'
-      dep: DEP2
+      method: '`RuleType`'
+      dep: DEP1
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: 2536cd2306a8

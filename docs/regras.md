@@ -17,6 +17,8 @@ abra a página dela em `camadas/`.
 
 ### [CSDCN — ContractStatusDeclared — the output contract lists the status codes the code really returns, and only those](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
 
+### [CNHNC — CountHonored — a numerical assertion written in a spec must match reality in code](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code)
+
 ### [DCRQD — DocRequired — the aggregated document the unit must feed](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed)
 
 ### [DSCDC — DocSelfContained — the spec has to stand on its own](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own)
@@ -26,6 +28,8 @@ abra a página dela em `camadas/`.
 ### [EVFRV — EvidenceFresh — the score of this test holds against TODAY's code](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
 
 ### [FTMFT — FeatureTestMatch — scenarios in feature must be implemented in test by code and description](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description)
+
+### [IDCND — IdentityConsistent — a unit's spec identity must match its exposed testID and visual baseline](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline)
 
 ### [LYBNL — LayerBoundary — a layer does not reach what is not its own](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own)
 
@@ -48,6 +52,8 @@ abra a página dela em `camadas/`.
 ### [PRHNP — ProgressHonest — the progress file tells the truth about the disk](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
 ### [PCBPR — ProofCrossesBoundary — when a rule claims a relation, the proof must reach the other side](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side)
+
+### [RPHRG — RegionPairHonored — every opened source region must close with its own identity code](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code)
 
 ### [RLIMR — RuleImplemented — a spec catalogues rules, and the code shows it realized them](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
 

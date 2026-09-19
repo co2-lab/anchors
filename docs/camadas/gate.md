@@ -5,7 +5,7 @@
 
 
 
-> Esta camada tem 25 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 28 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -21,6 +21,12 @@
 
 
 ## CSDCN — ContractStatusDeclared — the output contract lists the status codes the code really returns, and only those
+
+
+
+
+
+## CNHNC — CountHonored — a numerical assertion written in a spec must match reality in code
 
 
 
@@ -51,6 +57,12 @@
 
 
 ## FTMFT — FeatureTestMatch — scenarios in feature must be implemented in test by code and description
+
+
+
+
+
+## IDCND — IdentityConsistent — a unit's spec identity must match its exposed testID and visual baseline
 
 
 
@@ -117,6 +129,12 @@
 
 
 ## PCBPR — ProofCrossesBoundary — when a rule claims a relation, the proof must reach the other side
+
+
+
+
+
+## RPHRG — RegionPairHonored — every opened source region must close with its own identity code
 
 
 
