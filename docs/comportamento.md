@@ -76,6 +76,38 @@ teste prova.
 
 - [The gate does not read the code to check the validation exists](camadas/gate.md#dmdcd-x02--the-gate-does-not-read-the-code-to-check-the-validation-exists) `DMDCD-X02`
 
+- [An artifact that is not a test leaves without a verdict](camadas/gate.md#evfrv-b01--an-artifact-that-is-not-a-test-leaves-without-a-verdict) `EVFRV-B01`
+
+- [Without a built map the gate stays quiet](camadas/gate.md#evfrv-b02--without-a-built-map-the-gate-stays-quiet) `EVFRV-B02`
+
+- [A test with no execution stamp is skipped, not failed](camadas/gate.md#evfrv-b03--a-test-with-no-execution-stamp-is-skipped-not-failed) `EVFRV-B03`
+
+- [A test whose closure is intact passes](camadas/gate.md#evfrv-b04--a-test-whose-closure-is-intact-passes) `EVFRV-B04`
+
+- [The passing verdict says what it checked against](camadas/gate.md#evfrv-b05--the-passing-verdict-says-what-it-checked-against) `EVFRV-B05`
+
+- [A test whose dependency advanced a revision fails](camadas/gate.md#evfrv-b06--a-test-whose-dependency-advanced-a-revision-fails) `EVFRV-B06`
+
+- [The failing verdict names the culprit](camadas/gate.md#evfrv-b07--the-failing-verdict-names-the-culprit) `EVFRV-B07`
+
+- [The failing verdict states the fix](camadas/gate.md#evfrv-b08--the-failing-verdict-states-the-fix) `EVFRV-B08`
+
+- [A test whose own file changed is reported separately from its closure](camadas/gate.md#evfrv-b09--a-test-whose-own-file-changed-is-reported-separately-from-its-closure) `EVFRV-B09`
+
+- [The culprit list is truncated at five and the remainder counted](camadas/gate.md#evfrv-b10--the-culprit-list-is-truncated-at-five-and-the-remainder-counted) `EVFRV-B10`
+
+- [Absence of proof and expired proof are never the same finding](camadas/gate.md#evfrv-i01--absence-of-proof-and-expired-proof-are-never-the-same-finding) `EVFRV-I01`
+
+- [A test that never ran is never approved either](camadas/gate.md#evfrv-i02--a-test-that-never-ran-is-never-approved-either) `EVFRV-I02`
+
+- [Truncation never hides the size of the problem](camadas/gate.md#evfrv-i03--truncation-never-hides-the-size-of-the-problem) `EVFRV-I03`
+
+- [The gate does not charge the absence of a green test](camadas/gate.md#evfrv-x01--the-gate-does-not-charge-the-absence-of-a-green-test) `EVFRV-X01`
+
+- [The gate does not run the test nor judge whether the change broke it](camadas/gate.md#evfrv-x02--the-gate-does-not-run-the-test-nor-judge-whether-the-change-broke-it) `EVFRV-X02`
+
+- [The gate does not read the project's configuration](camadas/gate.md#evfrv-x03--the-gate-does-not-read-the-projects-configuration) `EVFRV-X03`
+
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#opqsp-b01--an-artifact-that-is-not-a-spec-leaves-without-a-verdict) `OPQSP-B01`
 
 - [Whoever OPENED the section is confronted by its content](camadas/gate.md#opqsp-b02--whoever-opened-the-section-is-confronted-by-its-content) `OPQSP-B02`
@@ -126,6 +158,42 @@ teste prova.
 
 - [The gate does not measure performance or page size](camadas/gate.md#pgnhn-x02--the-gate-does-not-measure-performance-or-page-size) `PGNHN-X02`
 
+- [An artifact that is not a plan leaves without a verdict](camadas/gate.md#prhnp-b01--an-artifact-that-is-not-a-plan-leaves-without-a-verdict) `PRHNP-B01`
+
+- [A plan with no companion progress file is skipped, not failed](camadas/gate.md#prhnp-b02--a-plan-with-no-companion-progress-file-is-skipped-not-failed) `PRHNP-B02`
+
+- [The skip for a missing companion says how to create it](camadas/gate.md#prhnp-b03--the-skip-for-a-missing-companion-says-how-to-create-it) `PRHNP-B03`
+
+- [A ticked item whose file does not exist is failed](camadas/gate.md#prhnp-b04--a-ticked-item-whose-file-does-not-exist-is-failed) `PRHNP-B04`
+
+- [An open item whose file already exists is failed](camadas/gate.md#prhnp-b05--an-open-item-whose-file-already-exists-is-failed) `PRHNP-B05`
+
+- [A spec the plan seeds and the progress does not list is failed](camadas/gate.md#prhnp-b06--a-spec-the-plan-seeds-and-the-progress-does-not-list-is-failed) `PRHNP-B06`
+
+- [A checkbox item promising no file at all is failed](camadas/gate.md#prhnp-b07--a-checkbox-item-promising-no-file-at-all-is-failed) `PRHNP-B07`
+
+- [The ticked-but-absent finding is reported first](camadas/gate.md#prhnp-b08--the-ticked-but-absent-finding-is-reported-first) `PRHNP-B08`
+
+- [An item in prose citing no path is not charged](camadas/gate.md#prhnp-b09--an-item-in-prose-citing-no-path-is-not-charged) `PRHNP-B09`
+
+- [A progress that agrees with the disk on every item passes](camadas/gate.md#prhnp-b10--a-progress-that-agrees-with-the-disk-on-every-item-passes) `PRHNP-B10`
+
+- [The verdict names each offending path](camadas/gate.md#prhnp-b11--the-verdict-names-each-offending-path) `PRHNP-B11`
+
+- [The companion's path has one definition, derived from the scanner](camadas/gate.md#prhnp-i01--the-companions-path-has-one-definition-derived-from-the-scanner) `PRHNP-I01`
+
+- [A seed is matched by path, never by the item's text](camadas/gate.md#prhnp-i02--a-seed-is-matched-by-path-never-by-the-items-text) `PRHNP-I02`
+
+- [A spec mentioned in the plan's prose is not a seed](camadas/gate.md#prhnp-i03--a-spec-mentioned-in-the-plans-prose-is-not-a-seed) `PRHNP-I03`
+
+- [A template file is never a seeded spec](camadas/gate.md#prhnp-i04--a-template-file-is-never-a-seeded-spec) `PRHNP-I04`
+
+- [The gate does not charge the existence of the progress file](camadas/gate.md#prhnp-x01--the-gate-does-not-charge-the-existence-of-the-progress-file) `PRHNP-X01`
+
+- [The gate does not judge the content of an item beyond the path](camadas/gate.md#prhnp-x02--the-gate-does-not-judge-the-content-of-an-item-beyond-the-path) `PRHNP-X02`
+
+- [The gate does not put the progress file into the map](camadas/gate.md#prhnp-x03--the-gate-does-not-put-the-progress-file-into-the-map) `PRHNP-X03`
+
 - [A spec whose rules the code ignores is accused, and the verdict names them](camadas/gate.md#rlimr-b01--a-spec-whose-rules-the-code-ignores-is-accused-and-the-verdict-names-them) `RLIMR-B01`
 
 - [A rule waived with a written reason closes the account](camadas/gate.md#rlimr-b02--a-rule-waived-with-a-written-reason-closes-the-account) `RLIMR-B02`
@@ -171,4 +239,36 @@ teste prova.
 - [The gate does not confront whether the pieces MATCH one another](camadas/gate.md#trcmt-x01--the-gate-does-not-confront-whether-the-pieces-match-one-another) `TRCMT-X01`
 
 - [The gate does not judge the QUALITY of any piece](camadas/gate.md#trcmt-x02--the-gate-does-not-judge-the-quality-of-any-piece) `TRCMT-X02`
+
+- [An artifact that is not a spec leaves without a verdict](camadas/gate.md#vlanv-b01--an-artifact-that-is-not-a-spec-leaves-without-a-verdict) `VLANV-B01`
+
+- [A value of a closed set with no anchor is failed](camadas/gate.md#vlanv-b02--a-value-of-a-closed-set-with-no-anchor-is-failed) `VLANV-B02`
+
+- [The verdict names the unanchored value](camadas/gate.md#vlanv-b03--the-verdict-names-the-unanchored-value) `VLANV-B03`
+
+- [A value whose anchor carries rule key and value passes](camadas/gate.md#vlanv-b04--a-value-whose-anchor-carries-rule-key-and-value-passes) `VLANV-B04`
+
+- [An anchor that asserts one value while the line says another is failed](camadas/gate.md#vlanv-b05--an-anchor-that-asserts-one-value-while-the-line-says-another-is-failed) `VLANV-B05`
+
+- [The verdict of a lying anchor shows both sides of the divergence](camadas/gate.md#vlanv-b06--the-verdict-of-a-lying-anchor-shows-both-sides-of-the-divergence) `VLANV-B06`
+
+- [Lying anchors are reported before the unanchored ones](camadas/gate.md#vlanv-b07--lying-anchors-are-reported-before-the-unanchored-ones) `VLANV-B07`
+
+- [Without a declared value anchor pattern the gate skips](camadas/gate.md#vlanv-b08--without-a-declared-value-anchor-pattern-the-gate-skips) `VLANV-B08`
+
+- [The skip names the setting that enables the gate](camadas/gate.md#vlanv-b09--the-skip-names-the-setting-that-enables-the-gate) `VLANV-B09`
+
+- [A declaration that opens no list is not a closed set](camadas/gate.md#vlanv-b10--a-declaration-that-opens-no-list-is-not-a-closed-set) `VLANV-B10`
+
+- [An anchor pattern with a single capture group does not enable the gate](camadas/gate.md#vlanv-i01--an-anchor-pattern-with-a-single-capture-group-does-not-enable-the-gate) `VLANV-I01`
+
+- [A line carrying an anchor is never read as the end of the list](camadas/gate.md#vlanv-i02--a-line-carrying-an-anchor-is-never-read-as-the-end-of-the-list) `VLANV-I02`
+
+- [With no built map the verdict is pending](camadas/gate.md#vlanv-i03--with-no-built-map-the-verdict-is-pending) `VLANV-I03`
+
+- [The gate does not judge whether the value is a good one](camadas/gate.md#vlanv-x01--the-gate-does-not-judge-whether-the-value-is-a-good-one) `VLANV-X01`
+
+- [The gate does not accuse a line whose literal it cannot read](camadas/gate.md#vlanv-x02--the-gate-does-not-accuse-a-line-whose-literal-it-cannot-read) `VLANV-X02`
+
+- [The gate does not decide what an anchor or a public symbol looks like](camadas/gate.md#vlanv-x03--the-gate-does-not-decide-what-an-anchor-or-a-public-symbol-looks-like) `VLANV-X03`
 

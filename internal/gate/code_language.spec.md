@@ -65,7 +65,7 @@ turned off on the first day.
 
 | Code | File | Method | Layer |
 | --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `KindCode` | core — the gate only has jurisdiction over code |
+| DEP1 | `internal/gate/code_language.go` | `PortugueseIdentifiers` | gate — the confrontation is self-contained: the unit reads text and owns its own vocabulary, with no core symbol to borrow |
 
 ## Open Decisions
 

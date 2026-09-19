@@ -18,6 +18,7 @@ import (
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 )
 
 // scenarioCodeRE reconhece um código de cenário (TRACEABILITY §3): `<UNIDADE>-<LETRA><NN>`.
@@ -465,7 +466,30 @@ func stripComments(s string) string {
 
 // depHeadingRE casa o cabeçalho da seção de dependências (markdown), tolerante a
 // nível de heading e acentuação/caixa: "## Dependências", "### Dependencias de Dados".
-var depHeadingRE = regexp.MustCompile(`(?im)^#{1,6}\s+depend[eê]ncias?\b`)
+// A seção é reconhecida em QUALQUER idioma do catálogo, e não só em português.
+//
+// O acoplamento que isto desfaz: o `anchors new spec` emite o título traduzido pelo
+// `lang:` do projeto, e a regex antiga só casava a forma portuguesa. Um projeto `lang: en`
+// escrevia a Tabela de Dependências no título que o próprio gerador deu, o scan não a
+// achava, e nenhuma aresta `depends-on` nascia — o `dependency-honored` ficava
+// INDETERMINADO sobre um contrato que estava declarado. Medido aqui: dez specs passaram de
+// ✓ a ~ na hora em que o projeto virou `lang: en`.
+var depHeadingRE = regexp.MustCompile(`(?im)^#{1,6}\s+(?:` +
+	strings.Join(escapeAll(i18n.AllTranslations("section.title.deps")), "|") + `)\b`)
+
+// escapeAll prepara títulos traduzidos para entrar numa alternância de regex.
+func escapeAll(xs []string) []string {
+	out := make([]string, 0, len(xs))
+	for _, x := range xs {
+		if x != "" {
+			out = append(out, regexp.QuoteMeta(x))
+		}
+	}
+	if len(out) == 0 {
+		out = append(out, `depend[e\x{00ea}]ncias?`)
+	}
+	return out
+}
 
 // depCodeRE valida o código de uma linha de dependência: DEP seguido de dígitos.
 var depCodeRE = regexp.MustCompile(`^DEP\d+$`)

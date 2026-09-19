@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // O `-progress.md` é o único artefato do Anchors que nada confrontava — e "fora do mapa"
@@ -45,18 +46,31 @@ func TestProgressHonest(t *testing.T) {
 		return root, mapx.Node{ID: plano, Kind: mapx.KindPlan}
 	}
 
-	t.Run("[x] com arquivo AUSENTE reprova — o dano mais caro", func(t *testing.T) {
+	t.Run("PRHNP-B04: A ticked item whose file does not exist is failed", func(t *testing.T) {
 		root, n := monta(t, "- [x] `packages/shared/Nunca.spec.md` — nunca existiu\n")
 		v, d := checkProgressHonest("", n, root, nil, nil)
 		if v != Fail {
 			t.Fatalf("veredito %v, queria Fail: %s", v, d)
 		}
-		if (!strings.Contains(d, "NÃO EXISTE") && !strings.Contains(d, "DOES NOT EXIST")) || !strings.Contains(d, "Nunca.spec.md") {
+		if !strings.Contains(d, "NÃO EXISTE") && !strings.Contains(d, "DOES NOT EXIST") &&
+			!strings.Contains(d, "NO EXISTE") {
 			t.Errorf("o laudo não nomeia o problema:\n%s", d)
 		}
 	})
 
-	t.Run("[ ] com arquivo EXISTINDO reprova — produz retrabalho", func(t *testing.T) {
+	t.Run("PRHNP-B11: The verdict names each offending path", func(t *testing.T) {
+		root, n := monta(t, "- [x] `packages/shared/Nunca.spec.md` — nunca existiu\n")
+		v, d := checkProgressHonest("", n, root, nil, nil)
+		if v != Fail {
+			t.Fatalf("veredito %v, queria Fail: %s", v, d)
+		}
+		// Quem lê não pode ter de comparar o arquivo com o disco à mão.
+		if !strings.Contains(d, "Nunca.spec.md") {
+			t.Errorf("o laudo não nomeia o caminho acusado:\n%s", d)
+		}
+	})
+
+	t.Run("PRHNP-B05: An open item whose file already exists is failed", func(t *testing.T) {
 		root, n := monta(t,
 			"- [ ] `packages/shared/Feito.spec.md` — entregue e não marcado\n",
 			"packages/shared/Feito.spec.md")
@@ -64,12 +78,33 @@ func TestProgressHonest(t *testing.T) {
 		if v != Fail {
 			t.Fatalf("veredito %v, queria Fail: %s", v, d)
 		}
-		if !strings.Contains(d, "JÁ EXISTE") && !strings.Contains(d, "ALREADY EXISTS") {
+		if !strings.Contains(d, "JÁ EXISTE") && !strings.Contains(d, "ALREADY EXISTS") &&
+			!strings.Contains(d, "YA EXISTE") {
 			t.Errorf("o laudo não nomeia o problema:\n%s", d)
 		}
 	})
 
-	t.Run("progresso HONESTO passa", func(t *testing.T) {
+	// A ORDEM importa: o `[x]` sem arquivo vem primeiro porque é o dano mais caro — ele
+	// declara pronto o que não está, e quem lê o board decide com base nisso.
+	t.Run("PRHNP-B08: The ticked-but-absent finding is reported first", func(t *testing.T) {
+		root, n := monta(t,
+			"- [ ] `packages/shared/Feito.spec.md` — já entregue\n"+
+				"- [x] `packages/shared/Nunca.spec.md` — nunca existiu\n",
+			"packages/shared/Feito.spec.md")
+		v, d := checkProgressHonest("", n, root, nil, nil)
+		if v != Fail {
+			t.Fatalf("veredito %v, queria Fail: %s", v, d)
+		}
+		iAusente, iFeito := strings.Index(d, "Nunca.spec.md"), strings.Index(d, "Feito.spec.md")
+		if iAusente < 0 || iFeito < 0 {
+			t.Fatalf("o laudo precisa citar os dois achados:\n%s", d)
+		}
+		if iAusente > iFeito {
+			t.Errorf("o `[x]` sem arquivo tem de vir ANTES do retrabalho:\n%s", d)
+		}
+	})
+
+	t.Run("PRHNP-B10: A progress that agrees with the disk on every item passes", func(t *testing.T) {
 		root, n := monta(t,
 			"- [x] `a.spec.md` — feito\n- [ ] `b.spec.md` — por fazer\n",
 			"a.spec.md")
@@ -80,16 +115,37 @@ func TestProgressHonest(t *testing.T) {
 
 	// Item em PROSA não é confrontável, e reprovar por ele cobraria de quem escreveu um
 	// progresso legítimo — a fase pode ser "revisar com o time".
-	t.Run("item sem caminho é ignorado", func(t *testing.T) {
+	t.Run("PRHNP-B09: An item in prose citing no path is not charged", func(t *testing.T) {
 		root, n := monta(t, "- [ ] revisar com o time antes de seguir\n- [x] alinhado na daily\n")
 		if v, d := checkProgressHonest("", n, root, nil, nil); v != Pass {
 			t.Errorf("veredito %v, queria Pass — prosa não é confrontável: %s", v, d)
 		}
 	})
 
+	// O `anchors new progress` escreve o molde quando a fase não semeia nada. Um `[ ]`
+	// eterno faz o plano parecer incompleto para sempre: o `anchors next` volta a ele, e
+	// quem lê não sabe se falta trabalho ou falta limpar o arquivo.
+	t.Run("PRHNP-B07: A checkbox item promising no file at all is failed", func(t *testing.T) {
+		root, n := monta(t, "- [ ] TODO: um item por spec que esta fase semeia\n")
+		v, d := checkProgressHonest("", n, root, nil, nil)
+		if v != Fail {
+			t.Fatalf("veredito %v, queria Fail: %s", v, d)
+		}
+		if !strings.Contains(d, "TODO") {
+			t.Errorf("o laudo não mostra o item molde:\n%s", d)
+		}
+	})
+
 	// AUSÊNCIA do progresso não é falha DESTE gate: o plano pode ter nascido antes do
 	// mecanismo. São duas perguntas diferentes — "existe?" e "é verdade?".
-	t.Run("sem progresso ao lado, Skip com o caminho da correção", func(t *testing.T) {
+	t.Run("PRHNP-B02: A plan with no companion progress file is skipped, not failed", func(t *testing.T) {
+		root, n := monta(t, "")
+		if v, d := checkProgressHonest("", n, root, nil, nil); v != Skip {
+			t.Fatalf("veredito %v, queria Skip: %s", v, d)
+		}
+	})
+
+	t.Run("PRHNP-B03: The skip for a missing companion says how to create it", func(t *testing.T) {
 		root, n := monta(t, "")
 		v, d := checkProgressHonest("", n, root, nil, nil)
 		if v != Skip {
@@ -100,7 +156,25 @@ func TestProgressHonest(t *testing.T) {
 		}
 	})
 
-	t.Run("nó que não é plano faz Skip", func(t *testing.T) {
+	t.Run("PRHNP-X01: The gate does not charge the existence of the progress file", func(t *testing.T) {
+		root, n := monta(t, "")
+		if v, d := checkProgressHonest("", n, root, nil, nil); v == Fail {
+			t.Errorf("a ausência do companheiro é outra pergunta — não pode reprovar aqui: %s", d)
+		}
+	})
+
+	// O que o item DIZ não é conferido: a régua é o disco, que é determinístico e
+	// dispensa opinião.
+	t.Run("PRHNP-X02: The gate does not judge the content of an item beyond the path", func(t *testing.T) {
+		root, n := monta(t,
+			"- [x] `a.spec.md` — a spec do relatorio mensal de faturamento\n",
+			"a.spec.md")
+		if v, d := checkProgressHonest("", n, root, nil, nil); v != Pass {
+			t.Errorf("veredito %v, queria Pass — a descrição não é confrontada: %s", v, d)
+		}
+	})
+
+	t.Run("PRHNP-B01: An artifact that is not a plan leaves without a verdict", func(t *testing.T) {
 		root := t.TempDir()
 		n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}
 		if v, _ := checkProgressHonest("", n, root, nil, nil); v != Skip {
@@ -113,6 +187,7 @@ func TestProgressHonest(t *testing.T) {
 // mapa. Duas constantes divergiriam em silêncio, e o gate passaria a procurar um arquivo
 // que não existe.
 func TestProgressHonest_caminhoDerivaDoScan(t *testing.T) {
+	t.Run("PRHNP-I01: The companion's path has one definition, derived from the scanner", func(t *testing.T) {})
 	casos := map[string]string{
 		"plans/0002-plataforma.md": "plans/0002-plataforma-progress.md",
 		"plans/0017-mutacao.md":    "plans/0017-mutacao-progress.md",
@@ -122,6 +197,24 @@ func TestProgressHonest_caminhoDerivaDoScan(t *testing.T) {
 		if got := progressPathOf(plano); got != quer {
 			t.Errorf("progressPathOf(%q) = %q, queria %q", plano, got, quer)
 		}
+		// E a resposta é a MESMA que a do scan — que é quem detém a definição.
+		if got, doScan := progressPathOf(plano), scan.ProgressPathFor(plano); got != doScan {
+			t.Errorf("o gate divergiu do scan em %q: %q vs %q", plano, got, doScan)
+		}
+	}
+}
+
+// O companheiro fica FORA do mapa de propósito: ele existe para MUDAR, e um gate que o
+// alcançasse como nó cobraria justificativa de cada edição do artefato que registra
+// trabalho.
+func TestProgressHonest_companheiroForaDoMapa(t *testing.T) {
+	t.Run("PRHNP-X03: The gate does not put the progress file into the map", func(t *testing.T) {})
+	prog := progressPathOf("plans/0002-plataforma.md")
+	if !scan.IsProgressFile(prog) {
+		t.Fatalf("%q devia ser reconhecido como companheiro pelo scan — é assim que ele fica fora do mapa", prog)
+	}
+	if scan.IsProgressFile("plans/0002-plataforma.md") {
+		t.Errorf("o PLANO não é companheiro: ele precisa continuar sendo nó, ou o gate perde a âncora")
 	}
 }
 
@@ -152,7 +245,7 @@ func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
 		return root, mapx.Node{ID: rel, Kind: mapx.KindPlan}, plano
 	}
 
-	t.Run("semente ausente do progresso reprova", func(t *testing.T) {
+	t.Run("PRHNP-B06: A spec the plan seeds and the progress does not list is failed", func(t *testing.T) {
 		root, n, conteudo := monta(t,
 			"- [ ] `packages/infra/MutualTls.spec.md` — o canal\n"+
 				"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n",
@@ -176,7 +269,7 @@ func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
 	//
 	// A âncora é o `- [ ]` no início da linha: o plano PROMETE criar naquele item, e a
 	// prosa das revisões fala sobre o que já existe.
-	t.Run("menção em prosa NÃO é semente", func(t *testing.T) {
+	t.Run("PRHNP-I03: A spec mentioned in the plan's prose is not a seed", func(t *testing.T) {
 		root, n, conteudo := monta(t,
 			"> **PLTFR-R0003:** o `DataStore.spec.md` deixa de guardar estado de incidente.\n\n"+
 				"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n",
@@ -188,17 +281,18 @@ func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
 
 	// O item pode ter sido reescrito (encurtado, movido de fase) sem deixar de ser o
 	// mesmo item — o que identifica é o CAMINHO, não a linha.
-	t.Run("descrição diferente no progresso ainda conta como listada", func(t *testing.T) {
+	t.Run("PRHNP-I02: A seed is matched by path, never by the item's text", func(t *testing.T) {
 		root, n, conteudo := monta(t,
 			"- [ ] `packages/infra/DataStore.spec.md` — a tabela DynamoDB e o que vive nela\n",
 			"- [x] `packages/infra/DataStore.spec.md`\n")
 		if v, d := checkProgressHonest(conteudo, n, root, nil, nil); v == Fail &&
-			(strings.Contains(d, "NÃO lista") || strings.Contains(d, "DOES NOT list")) {
+			(strings.Contains(d, "NÃO lista") || strings.Contains(d, "DOES NOT list") ||
+				strings.Contains(d, "NO lista")) {
 			t.Errorf("acusou por descrição diferente — o caminho é o que identifica:\n%s", d)
 		}
 	})
 
-	t.Run("molde _TEMPLATE_ não é semente", func(t *testing.T) {
+	t.Run("PRHNP-I04: A template file is never a seeded spec", func(t *testing.T) {
 		root, n, conteudo := monta(t,
 			"- [ ] `packages/_TEMPLATE_Area.spec.md` — o gabarito\n",
 			"# Progresso — PLTFR\n")

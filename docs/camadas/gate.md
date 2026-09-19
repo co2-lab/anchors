@@ -335,6 +335,153 @@
 ```
 
 
+## EVFRV — EvidenceFresh — the score of this test holds against TODAY's code
+
+
+
+
+
+
+
+
+
+#### EVFRV-B01 — An artifact that is not a test leaves without a verdict
+
+```gherkin
+    Given a node whose kind is code, spec or plan
+    When the gate confronts it
+    Then it returns Skip, because only a test carries an execution score
+```
+
+#### EVFRV-B02 — Without a built map the gate stays quiet
+
+```gherkin
+    Given a test node and no graph built
+    When the gate confronts it
+    Then it returns Skip, because there is no closure to walk and it will not approve
+      what it could not look at
+```
+
+#### EVFRV-B03 — A test with no execution stamp is skipped, not failed
+
+```gherkin
+    Given a test that carries no record of ever having run
+    When the gate confronts it
+    Then it returns Skip, because a score that was never written cannot have expired
+```
+
+#### EVFRV-B04 — A test whose closure is intact passes
+
+```gherkin
+    Given a test stamped at the revision it ran on
+    And every dependency it recorded still sits at the revision the run measured
+    When the gate confronts it
+    Then it returns Pass
+```
+
+#### EVFRV-B05 — The passing verdict says what it checked against
+
+```gherkin
+    Given a test whose intact closure holds one dependency
+    When the gate confronts it
+    Then the verdict states the size of the closure it walked, because that is the difference
+      between "nobody looked" and "I looked and it stands"
+```
+
+#### EVFRV-B06 — A test whose dependency advanced a revision fails
+
+```gherkin
+    Given a test stamped at the revision it ran on
+    And a dependency that has since moved to a newer revision
+    When the gate confronts it
+    Then it returns Fail, because the score is still written and stopped holding
+```
+
+#### EVFRV-B07 — The failing verdict names the culprit
+
+```gherkin
+    Given a test whose dependency has since moved to a newer revision
+    When the gate confronts it
+    Then the verdict names that dependency, so whoever fixes it knows what moved underneath
+```
+
+#### EVFRV-B08 — The failing verdict states the fix
+
+```gherkin
+    Given a test whose dependency has since moved to a newer revision
+    When the gate confronts it
+    Then the verdict says to run the test again, because accusing without saying what to do
+      transfers the work to the reader
+```
+
+#### EVFRV-B09 — A test whose own file changed is reported separately from its closure
+
+```gherkin
+    Given a test whose own revision has moved since the run that stamped it
+    When the gate confronts it
+    Then the verdict reports the test's own file as changed, apart from any closure finding
+```
+
+#### EVFRV-B10 — The culprit list is truncated at five and the remainder counted
+
+```gherkin
+    Given a test whose stamped closure holds twenty dependencies and all of them moved
+    When the gate confronts it
+    Then the verdict lists five of them and states how many others there are
+```
+
+#### EVFRV-I01 — Absence of proof and expired proof are never the same finding
+
+```gherkin
+    Given a test that never ran
+    When the gate confronts it
+    Then it does not return Fail, because the absent proof is a different debt with a
+      different fix — run it the first time, not revalidate it
+```
+
+#### EVFRV-I02 — A test that never ran is never approved either
+
+```gherkin
+    Given a test that never ran
+    When the gate confronts it
+    Then it does not return Pass, because approving would state a freshness nobody measured
+```
+
+#### EVFRV-I03 — Truncation never hides the size of the problem
+
+```gherkin
+    Given a test whose stamped closure holds twenty dependencies and all of them moved
+    When the gate confronts it
+    Then the verdict counts what it did not list, so the reader still learns how far it spread
+```
+
+#### EVFRV-X01 — The gate does not charge the absence of a green test
+
+```gherkin
+    Given a test that carries no record of ever having run
+    When the gate confronts it
+    Then it does not return Fail, because charging the missing test is the coverage gate's ruler
+```
+
+#### EVFRV-X02 — The gate does not run the test nor judge whether the change broke it
+
+```gherkin
+    Given a test whose dependency moved by a change that could not affect the behaviour
+    When the gate confronts it
+    Then it returns Fail all the same, because the gate measures whether the evidence still
+      covers the current code — the cheap fix settles it for real instead of by opinion
+```
+
+#### EVFRV-X03 — The gate does not read the project's configuration
+
+```gherkin
+    Given a test with an intact closure and no configuration supplied at all
+    When the gate confronts it
+    Then it returns Pass, because the confronted truth lives in the map — a ruler depending
+      on settings could be turned off by a default nobody chose
+```
+
+
 ## OPQSP — OpenQuestions — a spec with an open question is not ready to implement
 
 
@@ -581,6 +728,175 @@
 ```
 
 
+## PRHNP — ProgressHonest — the progress file tells the truth about the disk
+
+
+
+
+
+
+
+
+
+#### PRHNP-B01 — An artifact that is not a plan leaves without a verdict
+
+```gherkin
+    Given a node whose kind is spec, code or test
+    When the gate confronts it
+    Then it returns Skip, because the gate is anchored on the plan, which is what the map holds
+```
+
+#### PRHNP-B02 — A plan with no companion progress file is skipped, not failed
+
+```gherkin
+    Given a plan with no progress file beside it
+    When the gate confronts it
+    Then it returns Skip, because "does the progress exist" is a different question
+      from "is the progress true"
+```
+
+#### PRHNP-B03 — The skip for a missing companion says how to create it
+
+```gherkin
+    Given a plan with no progress file beside it
+    When the gate confronts it
+    Then the verdict names the command that creates the companion, so the reader does not
+      have to look it up
+```
+
+#### PRHNP-B04 — A ticked item whose file does not exist is failed
+
+```gherkin
+    Given a progress item ticked as done and citing a path that is not on disk
+    When the gate confronts the plan
+    Then it returns Fail, because it declares done what is not
+```
+
+#### PRHNP-B05 — An open item whose file already exists is failed
+
+```gherkin
+    Given a progress item left open and citing a path that is already on disk
+    When the gate confronts the plan
+    Then it returns Fail, because it produces rework — somebody redoes what is done
+```
+
+#### PRHNP-B06 — A spec the plan seeds and the progress does not list is failed
+
+```gherkin
+    Given a plan whose checkbox items seed two specs
+    And a progress file that lists only one of them
+    When the gate confronts the plan
+    Then it returns Fail, because a gate that only looks inside the file never sees
+      what is missing from it
+```
+
+#### PRHNP-B07 — A checkbox item promising no file at all is failed
+
+```gherkin
+    Given a progress item that is an untouched template marker with no path
+    When the gate confronts the plan
+    Then it returns Fail, because an eternal open box makes the plan look unfinished forever
+```
+
+#### PRHNP-B08 — The ticked-but-absent finding is reported first
+
+```gherkin
+    Given a progress carrying both a ticked item with no file and an open item whose file exists
+    When the gate confronts the plan
+    Then the ticked-but-absent finding appears first, because whoever reads the board
+      decides on it
+```
+
+#### PRHNP-B09 — An item in prose citing no path is not charged
+
+```gherkin
+    Given progress items reading "review with the team" and "agreed at the daily"
+    When the gate confronts the plan
+    Then it returns Pass, because there is nothing to confront
+```
+
+#### PRHNP-B10 — A progress that agrees with the disk on every item passes
+
+```gherkin
+    Given a ticked item whose file is on disk and an open item whose file is not
+    When the gate confronts the plan
+    Then it returns Pass
+```
+
+#### PRHNP-B11 — The verdict names each offending path
+
+```gherkin
+    Given a progress item ticked as done and citing a path that is not on disk
+    When the gate confronts the plan
+    Then the verdict names that path, so the reader does not have to diff the file
+      against the disk by hand
+```
+
+#### PRHNP-I01 — The companion's path has one definition, derived from the scanner
+
+```gherkin
+    Given several plan paths, with and without an extension
+    When the companion of each is derived
+    Then each answer matches the scanner's, because a second constant here would diverge
+      in silence and the gate would hunt for a file that does not exist
+```
+
+#### PRHNP-I02 — A seed is matched by path, never by the item's text
+
+```gherkin
+    Given a plan seeding a spec with a long description
+    And a progress listing the same path under a shorter wording
+    When the gate confronts the plan
+    Then the seed is not accused as missing, because what identifies the item is the file
+```
+
+#### PRHNP-I03 — A spec mentioned in the plan's prose is not a seed
+
+```gherkin
+    Given a plan whose revision paragraph names a spec without a checkbox
+    And a progress listing every spec the plan actually seeds
+    When the gate confronts the plan
+    Then it returns Pass, because the checkbox is the promise and the prose speaks of
+      what already exists
+```
+
+#### PRHNP-I04 — A template file is never a seeded spec
+
+```gherkin
+    Given a plan whose checkbox item cites a template spec path
+    And a progress that does not list it
+    When the gate confronts the plan
+    Then it returns Pass, because the mould is the shape work is poured into, not work to be done
+```
+
+#### PRHNP-X01 — The gate does not charge the existence of the progress file
+
+```gherkin
+    Given a plan that predates the progress mechanism and has no companion
+    When the gate confronts it
+    Then it does not return Fail, because merging "does it exist" with "is it true"
+      would report two different debts as one finding
+```
+
+#### PRHNP-X02 — The gate does not judge the content of an item beyond the path
+
+```gherkin
+    Given a progress item whose description contradicts what the cited file contains
+    And that file is on disk and the item is ticked
+    When the gate confronts the plan
+    Then it returns Pass, because the ruler here is the disk, which needs no opinion
+```
+
+#### PRHNP-X03 — The gate does not put the progress file into the map
+
+```gherkin
+    Given a progress file that changes on every delivery
+    When the map is built
+    Then the progress file is not a node, because a gate reaching it would charge every
+      edit of the artifact that exists in order to change
+```
+
+
 ## RLIMR — RuleImplemented — a spec catalogues rules, and the code shows it realized them
 
 
@@ -813,6 +1129,151 @@
     Then it returns Pass, because the ruler here is EXISTENCE — confronting the content
       belongs to another gate, and mixing the two would fail by a criterion this one
       cannot measure
+```
+
+
+## VLANV — ValueAnchored — every value of a closed set points at the rule that justifies it, and the anchor carries the value
+
+
+
+
+
+
+
+
+
+#### VLANV-B01 — An artifact that is not a spec leaves without a verdict
+
+```gherkin
+    Given a node whose kind is code, test or feature
+    When the gate confronts it
+    Then it returns Skip, because the gate reaches the code through the spec
+```
+
+#### VLANV-B02 — A value of a closed set with no anchor is failed
+
+```gherkin
+    Given a closed set declaring the values "15m" and "1h" with no anchor comment on any of them
+    When the gate confronts it
+    Then it returns Fail, because each value is a domain decision that left no address
+```
+
+#### VLANV-B03 — The verdict names the unanchored value
+
+```gherkin
+    Given a closed set whose value "15m" carries no anchor
+    When the gate confronts it
+    Then the verdict names "15m", so the reader does not have to hunt for which value it was
+```
+
+#### VLANV-B04 — A value whose anchor carries rule key and value passes
+
+```gherkin
+    Given a closed set where each value is preceded by an anchor holding the rule key and that same value
+    When the gate confronts it
+    Then it returns Pass, because the address exists and it checks out
+```
+
+#### VLANV-B05 — An anchor that asserts one value while the line says another is failed
+
+```gherkin
+    Given an anchor asserting "15m" written above a line whose literal is "5m"
+    When the gate confronts it
+    Then it returns Fail, because a lying anchor looks like traceability while pointing at the wrong place
+```
+
+#### VLANV-B06 — The verdict of a lying anchor shows both sides of the divergence
+
+```gherkin
+    Given an anchor asserting "15m" written above a line whose literal is "5m"
+    When the gate confronts it
+    Then the verdict carries both "15m" and "5m", because one side alone does not show the drift
+```
+
+#### VLANV-B07 — Lying anchors are reported before the unanchored ones
+
+```gherkin
+    Given a closed set carrying one lying anchor and one value with no anchor at all
+    When the gate confronts it
+    Then the lying anchor appears first in the verdict, because the absent anchor can be seen
+      and the lying one cannot
+```
+
+#### VLANV-B08 — Without a declared value anchor pattern the gate skips
+
+```gherkin
+    Given a project that declares no value anchor pattern
+    When the gate confronts a closed set
+    Then it neither approves nor fails, because it cannot read and will not stamp what it did not measure
+```
+
+#### VLANV-B09 — The skip names the setting that enables the gate
+
+```gherkin
+    Given a project that declares no value anchor pattern
+    When the gate confronts a closed set
+    Then the verdict names the value_anchor setting, so the reader learns how to turn the gate on
+```
+
+#### VLANV-B10 — A declaration that opens no list is not a closed set
+
+```gherkin
+    Given a public symbol declared as a single scalar value on one line
+    When the gate confronts it
+    Then it returns Pass, because a scalar is not a closed set and there is nothing to anchor
+```
+
+#### VLANV-I01 — An anchor pattern with a single capture group does not enable the gate
+
+```gherkin
+    Given a declared anchor pattern that captures only the rule key
+    When the gate confronts a closed set
+    Then it neither approves nor fails, because without the second group the anchor asserts
+      no value and the confrontation cannot happen
+```
+
+#### VLANV-I02 — A line carrying an anchor is never read as the end of the list
+
+```gherkin
+    Given a closed set whose second value carries an anchor that lies, after a first anchored value
+    When the gate confronts it
+    Then it returns Fail, because the brackets inside the anchor must not close the set early
+```
+
+#### VLANV-I03 — With no built map the verdict is pending
+
+```gherkin
+    Given no graph built
+    When the gate confronts a spec
+    Then it does not approve, because approving without being able to look would stamp
+      what was never measured
+```
+
+#### VLANV-X01 — The gate does not judge whether the value is a good one
+
+```gherkin
+    Given a closed set whose value "999y" is anchored to a rule key and matches it exactly
+    When the gate confronts it
+    Then it returns Pass, because the ruler is that the decision has an address and the
+      address does not lie — whether the value belongs is judgement
+```
+
+#### VLANV-X02 — The gate does not accuse a line whose literal it cannot read
+
+```gherkin
+    Given a closed set line carrying a computed expression instead of a quoted literal
+    When the gate confronts it
+    Then it returns Pass, because a false negative is better than a mass of false positives
+      that would train the team to ignore the gate
+```
+
+#### VLANV-X03 — The gate does not decide what an anchor or a public symbol looks like
+
+```gherkin
+    Given a project whose declared export pattern does not match the way this file writes its set
+    When the gate confronts it
+    Then it returns Pass, because both shapes are declared by the project — inventing them
+      would charge a convention nobody adopted
 ```
 
 
