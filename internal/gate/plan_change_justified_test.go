@@ -1,13 +1,13 @@
 package gate
 
 import (
-	"github.com/co2-lab/anchors/internal/config"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -15,6 +15,7 @@ import (
 // silêncio. O arquivo fica VÁLIDO — a inconsistência foi removida —, e é por isso que
 // nenhum gate de estado o pega. O que denuncia é a mudança sem justificativa.
 func TestAlterado_semRevisaoReprova(t *testing.T) {
+	t.Run("PCJPL-B03: A changed plan or spec with no declared revision fails", func(t *testing.T) {})
 	v, d := checkPlanChangeJustified(
 		"# Plano 0001 — Fundação\n\n## Objetivo\n\nTexto corrigido sem dizer nada.\n",
 		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
@@ -34,6 +35,8 @@ func TestAlterado_semRevisaoReprova(t *testing.T) {
 }
 
 func TestAlterado_comRevisaoPassa(t *testing.T) {
+	t.Run("PCJPL-B04: A changed plan or spec with a valid revision passes", func(t *testing.T) {})
+	t.Run("PCJPL-X01: The gate does not judge whether a correction is directional", func(t *testing.T) {})
 	v, d := checkPlanChangeJustified(
 		"# Plano 0001\n\n> **FNDTN-R0001:** o exemplo citava um pacote que não existe.\n",
 		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
@@ -45,6 +48,7 @@ func TestAlterado_comRevisaoPassa(t *testing.T) {
 // A revisão de OUTRO documento não justifica a mudança deste. Sem isto, bastaria citar a
 // revisão alheia ao explicar o contexto para o gate calar.
 func TestAlterado_revisaoDeOutroNaoConta(t *testing.T) {
+	t.Run("PCJPL-B05: Citing the revision of another document does not count", func(t *testing.T) {})
 	v, _ := checkPlanChangeJustified(
 		"# Plano 0017\n\nComo explica a `MTUAO-R0001`, o CI mudou.\n",
 		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
@@ -56,6 +60,8 @@ func TestAlterado_revisaoDeOutroNaoConta(t *testing.T) {
 // A NUMERAÇÃO é o que uma marca solta não daria: quantas vezes o documento mudou. Com
 // buraco ela para de responder isso.
 func TestAlterado_numeracaoComBuracoReprova(t *testing.T) {
+	t.Run("PCJPL-B06: Revisions with non-sequential numbering fail", func(t *testing.T) {})
+	t.Run("PCJPL-I02: Revisions must be sequential from one without gaps", func(t *testing.T) {})
 	v, d := checkPlanChangeJustified(
 		"> **FNDTN-R0001:** primeira.\n\n> **FNDTN-R0007:** pulou do 1 para o 7.\n",
 		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
@@ -65,6 +71,7 @@ func TestAlterado_numeracaoComBuracoReprova(t *testing.T) {
 }
 
 func TestAlterado_variasRevisoesSequenciaisPassam(t *testing.T) {
+	t.Run("PCJPL-B07: Multiple sequential revisions pass and cite the latest", func(t *testing.T) {})
 	v, d := checkPlanChangeJustified(
 		"> **FNDTN-R0001:** primeira.\n\n> **FNDTN-R0002:** segunda.\n\n> **FNDTN-R0003:** terceira.\n",
 		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
@@ -80,6 +87,8 @@ func TestAlterado_variasRevisoesSequenciaisPassam(t *testing.T) {
 // Sem código não há como saber de quem é a revisão. Skip, e não Fail: quem cobra o código
 // é outro gate, e reprovar aqui daria dois achados para um defeito só.
 func TestAlterado_semCodigoPula(t *testing.T) {
+	t.Run("PCJPL-B02: An artifact with no identity code is skipped", func(t *testing.T) {})
+	t.Run("PCJPL-X02: The gate does not enforce identity code presence", func(t *testing.T) {})
 	v, _ := checkPlanChangeJustified("# Plano\n", mapx.Node{ID: "plans/0001.md"}, semGit(t), nil, cfgAlterado("plans/0001.md"))
 	if v != Skip {
 		t.Fatalf("sem código o gate deve pular, veio %v", v)
@@ -89,6 +98,7 @@ func TestAlterado_semCodigoPula(t *testing.T) {
 // O marcador tem de sobreviver às formas que as pessoas escrevem markdown: dentro de
 // alerta, em negrito, como item de lista.
 func TestAlterado_formasDeEscreverAMarca(t *testing.T) {
+	t.Run("PCJPL-B08: Revisions written in various markdown formats pass", func(t *testing.T) {})
 	for _, forma := range []string{
 		"> **FNDTN-R0001:** dentro de citação e negrito",
 		"FNDTN-R0001: cru, no começo da linha",
@@ -113,6 +123,8 @@ func cfgAlterado(paths ...string) *config.Config {
 // Medido no blue-eyes: alterar UM plano acusava 8 arquivos, 7 intocados. Um gate
 // bloqueante que acusa inocente é pior que gate nenhum — a saída barata vira desligá-lo.
 func TestAlterado_noRaioDeImpactoMasIntocadoPula(t *testing.T) {
+	t.Run("PCJPL-B01: An artifact reached only by the impact radius is skipped", func(t *testing.T) {})
+	t.Run("PCJPL-I01: Untouched nodes in the impact radius are never charged", func(t *testing.T) {})
 	v, d := checkPlanChangeJustified(
 		"# Spec que ninguém tocou\n",
 		mapx.Node{ID: "packages/shared/Workspace.spec.md", Code: "WKSPC"},
@@ -125,6 +137,7 @@ func TestAlterado_noRaioDeImpactoMasIntocadoPula(t *testing.T) {
 // Sem a lista (chamada que não passou config) o gate se cala: acusar sem saber o que mudou
 // é exatamente o defeito que ele acabou de corrigir.
 func TestAlterado_semListaDeAlteradosPula(t *testing.T) {
+	t.Run("PCJPL-X03: Without a changed files list the gate skips confrontation", func(t *testing.T) {})
 	v, _ := checkPlanChangeJustified("# Plano\n",
 		mapx.Node{ID: "plans/0001.md", Code: "FNDTN"}, semGit(t), nil, nil)
 	if v != Skip {
@@ -139,6 +152,7 @@ func TestAlterado_semListaDeAlteradosPula(t *testing.T) {
 // Exigir a mesma informação em duas notações ensina a satisfazer o gate em vez de
 // comunicar, que é o oposto do que ele existe para fazer.
 func TestAlterado_jaExplicadoPorRevisaoDePlanoPassa(t *testing.T) {
+	t.Run("PCJPL-B09: A change already explained by the plan revision mechanism passes", func(t *testing.T) {})
 	for _, conteudo := range []string{
 		"<!-- @anchors\n  revises: plans/0001-fundacao.md\n-->\n# Plano 0017\n",
 		"# Plano 0001\n\n> [!IMPORTANT]\n> `@revised-by: plans/0017-mutacao.md`\n",
@@ -162,6 +176,7 @@ func TestAlterado_jaExplicadoPorRevisaoDePlanoPassa(t *testing.T) {
 // editado. Cobrar de quem não mexeu é o pior defeito num gate bloqueante: barra trabalho
 // correto, e a saída barata vira desligá-lo.
 func TestAlterado_gitDesmenteAListaRecebida(t *testing.T) {
+	t.Run("PCJPL-B13: Outside a git repository the gate trusts the changed list", func(t *testing.T) {})
 	// Diretório sem git: o gate NÃO pode se calar por não conseguir medir — ali ele
 	// devolve o benefício da dúvida a quem chamou.
 	if !gitSaysChanged(t.TempDir(), "qualquer.md") {
@@ -187,6 +202,7 @@ func semGit(t *testing.T) string {
 // exigir uma revisão de si mesmo no primeiro commit é ruído puro, e ruído em gate
 // bloqueante é o que faz alguém desligá-lo.
 func TestAlterado_arquivoNovoNaoTemOQueJustificar(t *testing.T) {
+	t.Run("PCJPL-B10: A newly created untracked file is skipped", func(t *testing.T) {})
 	dir := t.TempDir()
 	if out, err := exec.Command("git", "-C", dir, "init", "-q").CombinedOutput(); err != nil {
 		t.Skipf("sem git: %v — %s", err, out)
@@ -216,6 +232,8 @@ func TestAlterado_arquivoNovoNaoTemOQueJustificar(t *testing.T) {
 //
 // A pergunta certa é "existe no ÚLTIMO COMMIT?", não "é rastreado?".
 func TestAlterado_arquivoNovoSTAGEDNaoTemOQueJustificar(t *testing.T) {
+	t.Run("PCJPL-B11: A newly created staged file is skipped", func(t *testing.T) {})
+	t.Run("PCJPL-I03: Files not existing in HEAD are never charged", func(t *testing.T) {})
 	dir := t.TempDir()
 	if out, err := exec.Command("git", "-C", dir, "init", "-q").CombinedOutput(); err != nil {
 		t.Skipf("sem git: %v — %s", err, out)
@@ -254,6 +272,7 @@ func TestAlterado_arquivoNovoSTAGEDNaoTemOQueJustificar(t *testing.T) {
 // silenciado o gate para todo mundo. Sem este teste, uma guarda que responde "é novo"
 // sempre passaria os dois casos anteriores e o gate não protegeria nada.
 func TestAlterado_arquivoQueJaExistiaNoCommitEMudouEhCobrado(t *testing.T) {
+	t.Run("PCJPL-B12: An existing committed file modified without a revision fails", func(t *testing.T) {})
 	dir := t.TempDir()
 	if out, err := exec.Command("git", "-C", dir, "init", "-q").CombinedOutput(); err != nil {
 		t.Skipf("sem git: %v — %s", err, out)
@@ -282,5 +301,22 @@ func TestAlterado_arquivoQueJaExistiaNoCommitEMudouEhCobrado(t *testing.T) {
 		mapx.Node{ID: "plano.md", Code: "PLANO"}, dir, nil, cfgAlterado("plano.md"))
 	if v != Fail {
 		t.Fatalf("arquivo que existia no commit e mudou sem revisão tem de reprovar, veio %v: %s", v, d)
+	}
+}
+
+func TestRevisionsOf_extraiRevisoesEmOrdem(t *testing.T) {
+	t.Run("PCJPL-B14: RevisionsOf parses declared revisions in order", func(t *testing.T) {})
+	conteudo := "# Documento\n\n" +
+		"> **FNDTN-R0001**: primeira revisão.\n\n" +
+		"### FNDTN-R0002 — segunda revisão como título.\n"
+	revs := RevisionsOf(conteudo)
+	if len(revs) != 2 {
+		t.Fatalf("esperava 2 revisões, obteve %d", len(revs))
+	}
+	if revs[0].Code != "FNDTN" || revs[0].Number != 1 || revs[0].Explanation != "primeira revisão." {
+		t.Errorf("primeira revisão incorreta: %+v", revs[0])
+	}
+	if revs[1].Code != "FNDTN" || revs[1].Number != 2 || revs[1].Explanation != "segunda revisão como título." {
+		t.Errorf("segunda revisão incorreta: %+v", revs[1])
 	}
 }

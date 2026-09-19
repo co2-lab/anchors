@@ -1794,19 +1794,35 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/feature_test_match.feature
+      kind: feature
+      rev: b5425ee3cb98
+      code: FTMFT
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/feature_test_match.go
       kind: code
       rev: 138f85ec9eaa
       updated_at: "2026-09-19"
+      code: FTMFT
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/feature_test_match.spec.md
+      kind: spec
+      rev: 0f1a5d0e2739
+      code: FTMFT
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/feature_test_match_test.go
       kind: test
-      rev: 03972155882f
+      rev: 137a675f8903
       updated_at: "2026-09-19"
-      code: DDTDX
+      code: FTMFT
       layer: teste
       tags:
         - test
@@ -1937,6 +1953,7 @@ nodes:
     - id: internal/gate/mock_stamped.feature
       kind: feature
       rev: 2d24222e9c0b
+      updated_at: "2026-09-19"
       code: MCSTM
       layer: feature
       tags:
@@ -1953,6 +1970,7 @@ nodes:
     - id: internal/gate/mock_stamped.spec.md
       kind: spec
       rev: 4bff8b52323e
+      updated_at: "2026-09-19"
       code: MCSTM
       layer: spec
       code_declared: true
@@ -1969,6 +1987,7 @@ nodes:
     - id: internal/gate/mock_typed.feature
       kind: feature
       rev: 883167ba0108
+      updated_at: "2026-09-19"
       code: MCTYM
       layer: feature
       tags:
@@ -1985,6 +2004,7 @@ nodes:
     - id: internal/gate/mock_typed.spec.md
       kind: spec
       rev: 823965f8ff66
+      updated_at: "2026-09-19"
       code: MCTYM
       layer: spec
       code_declared: true
@@ -2372,6 +2392,7 @@ nodes:
     - id: internal/gate/proof_crosses_boundary.feature
       kind: feature
       rev: f629ba170798
+      updated_at: "2026-09-19"
       code: PCBPR
       layer: feature
       tags:
@@ -2388,6 +2409,7 @@ nodes:
     - id: internal/gate/proof_crosses_boundary.spec.md
       kind: spec
       rev: eab6f1ca920a
+      updated_at: "2026-09-19"
       code: PCBPR
       layer: spec
       code_declared: true
@@ -2771,7 +2793,7 @@ nodes:
         - spec
     - id: internal/gate/testid_queried_exists_test.go
       kind: test
-      rev: 8369bd0dc2a5
+      rev: 14cc644d666d
       updated_at: "2026-09-19"
       code: TQETS
       layer: teste
@@ -4673,6 +4695,15 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC.md
+      to: internal/gate/feature_test_match.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: dedf7925bcf7
+        validated_to_rev: 0f1a5d0e2739
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: SPEC.md
       to: internal/gate/layer_boundary.spec.md
       type: governs
       origin: declared
@@ -4886,6 +4917,15 @@ edges:
       stamp:
         validated_from_rev: da86ff2960b9
         validated_to_rev: c34539c2d755
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: SPEC_TYPES.md
+      to: internal/gate/feature_test_match.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: da86ff2960b9
+        validated_to_rev: 0f1a5d0e2739
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC_TYPES.md
@@ -5969,8 +6009,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`Graph`'
-      dep: DEP1
+      method: '`KindTest`'
+      dep: DEP3
       stamp:
         validated_from_rev: c34539c2d755
         validated_to_rev: c35dfd17ef15
@@ -5980,11 +6020,82 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindTest`'
-      dep: DEP3
+      method: '`Graph`'
+      dep: DEP1
       stamp:
         validated_from_rev: c34539c2d755
         validated_to_rev: c35dfd17ef15
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/feature_test_match.feature
+      to: internal/gate/feature_test_match_test.go
+      type: tested-by
+      origin: convention
+      stamp:
+        validated_from_rev: b5425ee3cb98
+        validated_to_rev: 137a675f8903
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/feature_test_match.spec.md
+      to: internal/config/config.go
+      type: depends-on
+      origin: declared
+      method: '`CodeLengthPattern`, `Config`, `DefaultRuleLetters`'
+      dep: DEP1
+      stamp:
+        validated_from_rev: 0f1a5d0e2739
+        validated_to_rev: 2536cd2306a8
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/feature_test_match.spec.md
+      to: internal/config/dialect.go
+      type: depends-on
+      origin: declared
+      method: '`GherkinScenarioAlternatives`'
+      dep: DEP2
+      stamp:
+        validated_from_rev: 0f1a5d0e2739
+        validated_to_rev: 6e1c68f1e3aa
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/feature_test_match.spec.md
+      to: internal/gate/feature_test_match.feature
+      type: covered-by
+      origin: convention
+      stamp:
+        validated_from_rev: 0f1a5d0e2739
+        validated_to_rev: b5425ee3cb98
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/feature_test_match.spec.md
+      to: internal/gate/feature_test_match.go
+      type: specifies
+      origin: convention
+      stamp:
+        validated_from_rev: 0f1a5d0e2739
+        validated_to_rev: 138f85ec9eaa
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/feature_test_match.spec.md
+      to: internal/mapx/model.go
+      type: depends-on
+      origin: declared
+      method: '`EdgeTestedBy`, `Graph`, `KindFeature`, `Node`'
+      dep: DEP4
+      stamp:
+        validated_from_rev: 0f1a5d0e2739
+        validated_to_rev: c35dfd17ef15
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/feature_test_match.spec.md
+      to: internal/similarity/similarity.go
+      type: depends-on
+      origin: declared
+      method: '`Classify`, `Identico`, `Weights`'
+      dep: DEP5
+      stamp:
+        validated_from_rev: 0f1a5d0e2739
+        validated_to_rev: 5de399ad005c
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/layer_boundary.feature
@@ -6690,7 +6801,7 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: ecf4a8328282
-        validated_to_rev: 8369bd0dc2a5
+        validated_to_rev: 14cc644d666d
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/testid_queried_exists.spec.md

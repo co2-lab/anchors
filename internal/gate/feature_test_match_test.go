@@ -32,7 +32,7 @@ func writeFile(t *testing.T, root, rel, content string) {
 
 const featureSrc = `# language: pt
 # @anchors
-#   ref: DDTDX
+` + "# " + `  ref: DDTDX
 @backend @business-logic @dedup
 Funcionalidade: Dedup
 
@@ -60,6 +60,8 @@ func featureGraph(featPath, testPath string) *mapx.Graph {
 }
 
 func TestFeatureTestMatch_pass(t *testing.T) {
+	t.Run("FTMFT-B08: Tests implementing scenario codes with exact titles pass", func(t *testing.T) {})
+	t.Run("FTMFT-X01: Static analysis does not run tests or inspect execution results", func(t *testing.T) {})
 	root := t.TempDir()
 	feat := "business-logic/dedup.feature"
 	test := "__tests__/dedup.test.ts"
@@ -81,6 +83,8 @@ describe('dedup', () => {
 }
 
 func TestFeatureTestMatch_missingCode(t *testing.T) {
+	t.Run("FTMFT-B06: A scenario code completely absent from tests fails", func(t *testing.T) {})
+	t.Run("FTMFT-I01: Missing scenario code is always a failure", func(t *testing.T) {})
 	root := t.TempDir()
 	feat := "business-logic/dedup.feature"
 	test := "__tests__/dedup.test.ts"
@@ -99,6 +103,8 @@ describe('dedup', () => {
 }
 
 func TestFeatureTestMatch_codeInCommentDoesNotCount(t *testing.T) {
+	t.Run("FTMFT-B07: A scenario code appearing only in comments fails", func(t *testing.T) {})
+	t.Run("FTMFT-I03: Code presence ignores comments while description matching reads them", func(t *testing.T) {})
 	root := t.TempDir()
 	feat := "business-logic/dedup.feature"
 	test := "__tests__/dedup.test.ts"
@@ -118,13 +124,15 @@ describe('dedup', () => {
 }
 
 func TestFeatureTestMatch_e2eAndVRSkipped(t *testing.T) {
+	t.Run("FTMFT-B05: Scenarios belonging to non-test surfaces are skipped", func(t *testing.T) {})
+	t.Run("FTMFT-X02: Non-unit surfaces are left to their respective gates", func(t *testing.T) {})
 	root := t.TempDir()
 	feat := "screens/Login.feature"
 	test := "screens/Login.test.tsx"
 	// LGN-S01 é @nivel-unit (cobrado); LGN-R01 é só @nivel-e2e (Maestro); LGN-VR é visual.
 	featSrc := `# language: pt
 # @anchors
-#   ref: LGN0X
+` + "# " + `  ref: LGN0X
 @screen @login
 Funcionalidade: Login
 
@@ -155,6 +163,9 @@ describe('Login', () => {
 }
 
 func TestFeatureTestMatch_descriptionDrift(t *testing.T) {
+	t.Run("FTMFT-B09: Tests with matching codes but drifting descriptions issue a warning", func(t *testing.T) {})
+	t.Run("FTMFT-I02: Descriptive divergence is always an informative warning", func(t *testing.T) {})
+	t.Run("FTMFT-X03: Minor description drift does not block promotion", func(t *testing.T) {})
 	root := t.TempDir()
 	feat := "business-logic/dedup.feature"
 	test := "__tests__/dedup.test.ts"
@@ -178,6 +189,7 @@ describe('x', () => {
 // era truncado no primeiro `"`, e o gate acusava divergência de descrição num par
 // que dizia exatamente a mesma coisa.
 func TestFeatureTestMatch_tituloComAspasInternas(t *testing.T) {
+	t.Run("FTMFT-B10: Test titles containing quotes are parsed without truncation", func(t *testing.T) {})
 	root := t.TempDir()
 	feat := "business-logic/dedup.feature"
 	test := "__tests__/dedup.test.ts"
@@ -212,6 +224,7 @@ describe('x', () => {
 // depois de todos os códigos, e vale para QUALQUER um deles — o primeiro da lista
 // e os seguintes.
 func TestFeatureTestMatch_tituloComCodigosIrmaos(t *testing.T) {
+	t.Run("FTMFT-B11: Sibling scenario codes in composite test titles are extracted", func(t *testing.T) {})
 	corpo := `it('DDTDX-B01 / DDTDX-B02: duplicata e repetição saem do mesmo confronto', () => {})`
 
 	for _, cod := range []string{"DDTDX-B01", "DDTDX-B02"} {
@@ -247,6 +260,7 @@ func TestFeatureTestMatch_tituloComCodigosIrmaos(t *testing.T) {
 // N-1 deles por construção — no máximo um pode ser idêntico. A pergunta certa ali
 // é a da régua de corpo: o miolo do cenário está no teste?
 func TestFeatureTestMatch_tituloCompartilhadoNaoExigeIgualdade(t *testing.T) {
+	t.Run("FTMFT-B12: Shared test titles verify scenario presence through test body", func(t *testing.T) {})
 	root := t.TempDir()
 	feat := "business-logic/dedup.feature"
 	test := "__tests__/dedup.test.ts"
@@ -284,6 +298,7 @@ describe('x', () => {
 // código (`classifica`, `'duplicata'`). Sem ele nesta régua, o gate cobraria do
 // TypeScript uma palavra portuguesa que ele nunca vai conter.
 func TestFeatureTestMatch_comentarioCobreDescricaoMasNaoImplementa(t *testing.T) {
+	t.Run("FTMFT-B13: Test comments contribute to descriptive match but not code presence", func(t *testing.T) {})
 	root := t.TempDir()
 	feat := "business-logic/dedup.feature"
 	test := "__tests__/dedup.test.ts"
@@ -324,6 +339,7 @@ describe('x', () => {
 // `ABCDX-DS-delta-up` casava dentro de `ABCDX-DS-delta-up-high`, e o gate comparava
 // o cenário de "até 20%" com a prova de "acima de 20%" — divergência inventada.
 func TestFeatureTestMatch_codigoNaoCasaPrefixoDeOutro(t *testing.T) {
+	t.Run("FTMFT-B14: Scenario codes match with exact word boundaries", func(t *testing.T) {})
 	casos := []struct{ corpo, cod, quer string }{
 		{`it('SNBDX-DS-delta-up: até 20 em âmbar', () => {`, "SNBDX-DS-delta-up", "até 20 em âmbar"},
 		{`it('SNBDX-DS-delta-up-high: acima de 20 em vermelho', () => {`, "SNBDX-DS-delta-up", ""},
@@ -346,6 +362,7 @@ func TestFeatureTestMatch_codigoNaoCasaPrefixoDeOutro(t *testing.T) {
 }
 
 func TestFeatureTestMatch_tRunSuportado(t *testing.T) {
+	t.Run("FTMFT-B15: Go t.Run declarations are recognized as valid test titles", func(t *testing.T) {})
 	corpo := `t.Run("DDTDX-B01: duplicata encontrada", func(t *testing.T) {})`
 	got, ok := testTitleFor(corpo, "DDTDX-B01")
 	if !ok || got != "duplicata encontrada" {
@@ -354,6 +371,7 @@ func TestFeatureTestMatch_tRunSuportado(t *testing.T) {
 }
 
 func TestStripLineCommentsSuportaHash(t *testing.T) {
+	t.Run("FTMFT-B16: Script comment markers are stripped when verifying code presence", func(t *testing.T) {})
 	src := "val = 1 # comentario\n# linha inteira de comentario\nval2 = 2\n"
 	res := stripLineComments(src)
 	if strings.Contains(res, "comentario") {
@@ -361,5 +379,55 @@ func TestStripLineCommentsSuportaHash(t *testing.T) {
 	}
 	if !strings.Contains(res, "val = 1") || !strings.Contains(res, "val2 = 2") {
 		t.Errorf("código deve ser preservado: %q", res)
+	}
+}
+
+func TestFeatureTestMatch_nonFeatureSkips(t *testing.T) {
+	t.Run("FTMFT-B01: Non-feature artifacts skip confrontation", func(t *testing.T) {})
+	n := mapx.Node{ID: "foo.spec.md", Kind: mapx.KindSpec}
+	v, _ := checkFeatureTestMatch("", n, "", nil, nil)
+	if v != Skip {
+		t.Fatalf("esperava Skip para kind != feature, veio %v", v)
+	}
+}
+
+func TestFeatureTestMatch_nilGraphPending(t *testing.T) {
+	t.Run("FTMFT-B02: A nil graph returns pending without approving", func(t *testing.T) {})
+	n := mapx.Node{ID: "foo.feature", Kind: mapx.KindFeature}
+	v, _ := checkFeatureTestMatch(featureSrc, n, "", nil, nil)
+	if v != Pending {
+		t.Fatalf("esperava Pending para grafo nil, veio %v", v)
+	}
+}
+
+func TestFeatureTestMatch_noScenariosSkips(t *testing.T) {
+	t.Run("FTMFT-B03: A feature declaring no scenarios skips confrontation", func(t *testing.T) {})
+	n := mapx.Node{ID: "empty.feature", Kind: mapx.KindFeature}
+	g := &mapx.Graph{}
+	v, _ := checkFeatureTestMatch("# Apenas comentários\n", n, "", g, nil)
+	if v != Skip {
+		t.Fatalf("esperava Skip para feature sem cenários, veio %v", v)
+	}
+}
+
+func TestFeatureTestMatch_noLinkedTestsPending(t *testing.T) {
+	t.Run("FTMFT-B04: A feature with no linked tests returns pending", func(t *testing.T) {})
+	n := mapx.Node{ID: "feature_sem_teste.feature", Kind: mapx.KindFeature}
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{n},
+	}
+	v, _ := checkFeatureTestMatch(featureSrc, n, "", g, nil)
+	if v != Pending {
+		t.Fatalf("esperava Pending para feature sem teste ligado, veio %v", v)
+	}
+}
+
+func TestRootCode(t *testing.T) {
+	t.Run("FTMFT-B17: RootCode returns the root requirement code without scenario sub-index", func(t *testing.T) {})
+	if r := RootCode("ABCDX-B01#02"); r != "ABCDX-B01" {
+		t.Fatalf("esperava ABCDX-B01, obteve %s", r)
+	}
+	if r := RootCode("ABCDX-B01"); r != "ABCDX-B01" {
+		t.Fatalf("esperava ABCDX-B01, obteve %s", r)
 	}
 }

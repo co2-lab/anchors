@@ -25,6 +25,8 @@ abra a página dela em `camadas/`.
 
 ### [EVFRV — EvidenceFresh — the score of this test holds against TODAY's code](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
 
+### [FTMFT — FeatureTestMatch — scenarios in feature must be implemented in test by code and description](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description)
+
 ### [LYBNL — LayerBoundary — a layer does not reach what is not its own](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own)
 
 ### [MRPRM — MarkerParity — the same rule has to appear at BOTH ends that fulfil it](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it)
