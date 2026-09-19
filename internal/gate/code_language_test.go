@@ -16,7 +16,7 @@ func TestIdioma_acusaPortuguesEDeixaOInglesEmPaz(t *testing.T) {
 		"validaVeredito", "imprimeOrdemDeServico", "linhaDeRegraRE",
 	}
 	for _, id := range portugues {
-		if _, ehPT := IdentificadorEhPT(id); !ehPT {
+		if _, ehPT := IdentifierIsPortuguese(id); !ehPT {
 			t.Errorf("%q é português e passou", id)
 		}
 	}
@@ -31,7 +31,7 @@ func TestIdioma_acusaPortuguesEDeixaOInglesEmPaz(t *testing.T) {
 		"metadata", "schemaVersion", "deltaRange", "areaCode", "upgradePath",
 	}
 	for _, id := range ingles {
-		if w, ehPT := IdentificadorEhPT(id); ehPT {
+		if w, ehPT := IdentifierIsPortuguese(id); ehPT {
 			t.Errorf("%q é inglês legítimo e foi acusado (pela palavra %q)", id, w)
 		}
 	}
@@ -43,7 +43,7 @@ func TestIdioma_acusaPortuguesEDeixaOInglesEmPaz(t *testing.T) {
 // para adivinhar qual está errada.
 func TestIdioma_devolveAPalavraQueAcusou(t *testing.T) {
 	t.Run("CDLNG-B02: The verdict returns the word that accused", func(t *testing.T) {})
-	w, ehPT := IdentificadorEhPT("checkPlanoAlteradoJustificado")
+	w, ehPT := IdentifierIsPortuguese("checkPlanoAlteradoJustificado")
 	if !ehPT {
 		t.Fatal("não acusou")
 	}
@@ -64,7 +64,7 @@ func TestIdioma_ignoraOQueNaoEhDeclaracao(t *testing.T) {
 		"const exemplo = \"func alvoDaSpec() string\"\n" +
 		"\tfunc indentadoNaoEhDeclaracao() {}\n" +
 		"func stamp() {}\n"
-	achados := IdentificadoresPT(fonte)
+	achados := PortugueseIdentifiers(fonte)
 	if len(achados) != 0 {
 		t.Errorf("acusou o que não é declaração de topo: %v", achados)
 	}
@@ -78,7 +78,7 @@ func TestIdioma_achaAsDeclaracoesDeVerdade(t *testing.T) {
 		"var alvoPadrao = 1\n" +
 		"func stamp() {}\n" +
 		"type FileOwner struct{}\n"
-	achados := IdentificadoresPT(fonte)
+	achados := PortugueseIdentifiers(fonte)
 	if len(achados) != 3 {
 		t.Fatalf("achou %d, esperava 3 (carimbo, DonoDoArquivo, alvoPadrao): %v", len(achados), achados)
 	}
@@ -95,7 +95,7 @@ func TestIdioma_palavraCurtaNaoConta(t *testing.T) {
 	t.Run("CDLNG-I01: A short word does not count", func(t *testing.T) {})
 	t.Run("CDLNG-B05: Deciding one word is separate from deciding a whole identifier", func(t *testing.T) {})
 	for _, w := range []string{"id", "n", "ok", "a", "eh"} {
-		if PalavraEhPT(w) {
+		if WordIsPortuguese(w) {
 			t.Errorf("%q é curta demais para ser acusada", w)
 		}
 	}
@@ -107,7 +107,7 @@ func TestIdioma_naoLeComentario(t *testing.T) {
 	t.Run("CDLNG-X01: The gate does not read comments", func(t *testing.T) {})
 	conteudo := "// o carimbo guarda o veredito do julgamento, e o dono do arquivo responde\n" +
 		"func Stamp() {}\n"
-	if achados := IdentificadoresPT(conteudo); len(achados) > 0 {
+	if achados := PortugueseIdentifiers(conteudo); len(achados) > 0 {
 		t.Errorf("o gate leu o comentário e acusou %v — o porquê mora ali, no idioma do time", achados)
 	}
 }
@@ -117,7 +117,7 @@ func TestIdioma_naoLeComentario(t *testing.T) {
 func TestIdioma_naoLeTextoAoUsuario(t *testing.T) {
 	t.Run("CDLNG-X02: The gate does not read user-facing text", func(t *testing.T) {})
 	conteudo := "func Stamp() string { return \"o carimbo guarda o veredito do julgamento\" }\n"
-	if achados := IdentificadoresPT(conteudo); len(achados) > 0 {
+	if achados := PortugueseIdentifiers(conteudo); len(achados) > 0 {
 		t.Errorf("o gate leu a string ao usuário e acusou %v — quem a traduz é o catálogo", achados)
 	}
 }
@@ -129,7 +129,7 @@ func TestIdioma_naoUsaDicionario(t *testing.T) {
 	t.Run("CDLNG-X03: The gate does not use a dictionary to decide the language", func(t *testing.T) {})
 	compostos := []string{"AbsRoot", "FileOwner", "Classify", "StampVerdict", "LayerBoundary"}
 	for _, id := range compostos {
-		if palavra, ehPT := IdentificadorEhPT(id); ehPT {
+		if palavra, ehPT := IdentifierIsPortuguese(id); ehPT {
 			t.Errorf("%q é inglês composto e foi acusado por %q — é o falso positivo do dicionário", id, palavra)
 		}
 	}

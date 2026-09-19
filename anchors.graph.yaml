@@ -1481,13 +1481,14 @@ nodes:
     - id: internal/gate/code_language.feature
       kind: feature
       rev: af4430a5a99d
+      updated_at: "2026-09-19"
       code: CDLNG
       layer: feature
       tags:
         - feature
     - id: internal/gate/code_language.go
       kind: code
-      rev: e8d1d1108186
+      rev: 2ffa6610870b
       updated_at: "2026-09-19"
       code: CDLNG
       layer: gate
@@ -1496,7 +1497,8 @@ nodes:
         - gate
     - id: internal/gate/code_language.spec.md
       kind: spec
-      rev: 95392d062940
+      rev: dfe58531ab17
+      updated_at: "2026-09-19"
       code: CDLNG
       layer: spec
       code_declared: true
@@ -1504,7 +1506,7 @@ nodes:
         - spec
     - id: internal/gate/code_language_test.go
       kind: test
-      rev: 66c4a6d0dc74
+      rev: 18771b1c2646
       updated_at: "2026-09-19"
       code: CDLNG
       layer: teste
@@ -1943,6 +1945,7 @@ nodes:
     - id: internal/gate/pagination_honored.feature
       kind: feature
       rev: d8e596d9521d
+      updated_at: "2026-09-19"
       code: PGNHN
       layer: feature
       tags:
@@ -1959,6 +1962,7 @@ nodes:
     - id: internal/gate/pagination_honored.spec.md
       kind: spec
       rev: 9702f820d4bf
+      updated_at: "2026-09-19"
       code: PGNHN
       layer: spec
       code_declared: true
@@ -2106,7 +2110,7 @@ nodes:
         - test
     - id: internal/gate/project_language_test.go
       kind: test
-      rev: 088b0b65e3b9
+      rev: 35c5d5d554b8
       updated_at: "2026-09-19"
       layer: teste
       tags:
@@ -3773,7 +3777,7 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: 2c21d829d3ab
-        validated_to_rev: e8d1d1108186
+        validated_to_rev: 2ffa6610870b
         changed_at: "2026-09-19"
         verdict: ok
     - from: QUALITY.md
@@ -4286,7 +4290,7 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: dedf7925bcf7
-        validated_to_rev: 95392d062940
+        validated_to_rev: dfe58531ab17
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC.md
@@ -4340,7 +4344,7 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: da86ff2960b9
-        validated_to_rev: 95392d062940
+        validated_to_rev: dfe58531ab17
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC_TYPES.md
@@ -4997,7 +5001,7 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: af4430a5a99d
-        validated_to_rev: 66c4a6d0dc74
+        validated_to_rev: 18771b1c2646
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/code_language.spec.md
@@ -5005,7 +5009,7 @@ edges:
       type: covered-by
       origin: convention
       stamp:
-        validated_from_rev: 95392d062940
+        validated_from_rev: dfe58531ab17
         validated_to_rev: af4430a5a99d
         changed_at: "2026-09-19"
         verdict: ok
@@ -5014,8 +5018,8 @@ edges:
       type: specifies
       origin: convention
       stamp:
-        validated_from_rev: 95392d062940
-        validated_to_rev: e8d1d1108186
+        validated_from_rev: dfe58531ab17
+        validated_to_rev: 2ffa6610870b
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/domain_declared.feature

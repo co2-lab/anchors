@@ -44,8 +44,8 @@ turned off on the first day.
 | `CDLNG-B01` | An identifier in Portuguese is ACCUSED; an identifier in English passes without noise. |
 | `CDLNG-B02` | The verdict RETURNS the word that accused — without it, whoever reads looks for the needle in the whole file. |
 | `CDLNG-B03` | Only a DECLARATION is the subject: what does not declare an identifier is not read. |
-| `CDLNG-B04` | The declarations are truly found, in every form the language offers — not only in the most common one. `IdentificadoresPT` sweeps the content and returns what accused. |
-| `CDLNG-B05` | `PalavraEhPT` decides ONE word, and `IdentificadorEhPT` decides a whole identifier by breaking it into the words that compose it — it is the separation that lets the length floor hold per word, and not for the whole identifier. |
+| `CDLNG-B04` | The declarations are truly found, in every form the language offers — not only in the most common one. `PortugueseIdentifiers` sweeps the content and returns what accused. |
+| `CDLNG-B05` | `WordIsPortuguese` decides ONE word, and `IdentifierIsPortuguese` decides a whole identifier by breaking it into the words that compose it — it is the separation that lets the length floor hold per word, and not for the whole identifier. |
 
 ## Invariants
 

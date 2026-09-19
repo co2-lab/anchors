@@ -32,7 +32,7 @@ func TestNenhumIdentificadorEmPortugues(t *testing.T) {
 		if rerr != nil {
 			return nil
 		}
-		for id, palavra := range IdentificadoresPT(string(b)) {
+		for id, palavra := range PortugueseIdentifiers(string(b)) {
 			achados[id] = palavra + "  " + p
 		}
 		return nil

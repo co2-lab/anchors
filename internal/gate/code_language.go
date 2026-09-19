@@ -121,13 +121,13 @@ var goDeclaration = regexp.MustCompile(
 // alternativa — `[A-Z][a-z]*|[a-z]+` — produz o mesmo recorte para os casos que
 // importam. Uma sigla como `ID` vira dois pedaços de uma letra, que a régua de tamanho
 // descarta.
-var palavrasDoIdentificador = regexp.MustCompile(`[A-Z][a-z]*|[a-z]+`)
+var identifierWords = regexp.MustCompile(`[A-Z][a-z]*|[a-z]+`)
 
-// PalavraEhPT diz se uma palavra isolada é portuguesa.
+// WordIsPortuguese reports whether a single word is Portuguese.
 //
-// Exportada para o teste: é a decisão mais delicada do gate, e ela merece ser exercitada
-// caso a caso em vez de só através do resultado final.
-func PalavraEhPT(w string) bool {
+// Exported for the test: it is the gate's most delicate decision, and it deserves to be
+// exercised case by case instead of only through the final verdict.
+func WordIsPortuguese(w string) bool {
 	w = strings.ToLower(w)
 	if len(w) < 3 || exceptions[w] {
 		return false
@@ -176,25 +176,25 @@ var infinitivosPT = map[string]bool{
 	"garantir": true, "permitir": true, "repetir": true, "seguir": true,
 }
 
-// IdentificadorEhPT diz se um identificador tem alguma palavra portuguesa.
-func IdentificadorEhPT(ident string) (string, bool) {
-	for _, w := range palavrasDoIdentificador.FindAllString(ident, -1) {
-		if PalavraEhPT(w) {
+// IdentifierIsPortuguese reports whether an identifier carries any Portuguese word.
+func IdentifierIsPortuguese(ident string) (string, bool) {
+	for _, w := range identifierWords.FindAllString(ident, -1) {
+		if WordIsPortuguese(w) {
 			return strings.ToLower(w), true
 		}
 	}
 	return "", false
 }
 
-// IdentificadoresPT devolve os identificadores em português declarados no conteúdo.
+// PortugueseIdentifiers returns the Portuguese identifiers declared in the content.
 //
-// Devolve o identificador E a palavra que o acusou: sem ela, quem lê a reprovação tem de
-// adivinhar qual parte do nome está errada — e num `checkPlanoAlteradoJustificado` são
-// quatro candidatas.
-func IdentificadoresPT(conteudo string) map[string]string {
+// It returns the identifier AND the word that accused it: without that word, whoever reads
+// the failure has to guess which part of the name is wrong — and in a
+// `checkPlanoAlteradoJustificado` there are four candidates.
+func PortugueseIdentifiers(content string) map[string]string {
 	out := map[string]string{}
-	for _, m := range goDeclaration.FindAllStringSubmatch(conteudo, -1) {
-		if w, ehPT := IdentificadorEhPT(m[1]); ehPT {
+	for _, m := range goDeclaration.FindAllStringSubmatch(content, -1) {
+		if w, ehPT := IdentifierIsPortuguese(m[1]); ehPT {
 			out[m[1]] = w
 		}
 	}
