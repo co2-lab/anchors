@@ -45,7 +45,11 @@ abra a página dela em `camadas/`.
 
 ### [PGNHN — PaginationHonored — what promises a SET does not return the first page in silence](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence)
 
+### [PHORP — PhaseOrdered — plan phases and phase dependencies must be ordered and consistent](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent)
+
 ### [PCJPL — PlanChangeJustified — a modified plan or spec must declare why it changed](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed)
+
+### [PSVPL — PlanSeedsValid — specifications seeded in a plan must target valid governed layers](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers)
 
 ### [PSDPL — PlanSourceDeclared — a plan that NAMES a source has to declare who builds it](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it)
 
@@ -54,6 +58,8 @@ abra a página dela em `camadas/`.
 ### [PCBPR — ProofCrossesBoundary — when a rule claims a relation, the proof must reach the other side](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side)
 
 ### [RPHRG — RegionPairHonored — every opened source region must close with its own identity code](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code)
+
+### [RTEXR — RouteExists — declared route in specification must exist in application route registry](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
 
 ### [RLIMR — RuleImplemented — a spec catalogues rules, and the code shows it realized them](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
 

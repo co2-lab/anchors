@@ -5,7 +5,7 @@
 
 
 
-> Esta camada tem 31 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 34 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -110,7 +110,19 @@
 
 
 
+## PHORP — PhaseOrdered — plan phases and phase dependencies must be ordered and consistent
+
+
+
+
+
 ## PCJPL — PlanChangeJustified — a modified plan or spec must declare why it changed
+
+
+
+
+
+## PSVPL — PlanSeedsValid — specifications seeded in a plan must target valid governed layers
 
 
 
@@ -135,6 +147,12 @@
 
 
 ## RPHRG — RegionPairHonored — every opened source region must close with its own identity code
+
+
+
+
+
+## RTEXR — RouteExists — declared route in specification must exist in application route registry
 
 
 

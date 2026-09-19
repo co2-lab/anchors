@@ -104,8 +104,13 @@ func checkPlanSeedsValid(content string, n mapx.Node, root string, g *mapx.Graph
 // projeto. Distingue caminho de verdade ("packages/backend/...") de abreviação em prosa
 // ("features/subscription/..." sem o prefixo do app).
 func rootDirExists(root, rel string) bool {
+	// O `first == rel` que havia aqui era INALCANCAVEL: o unico chamador ja guarda com
+	// `strings.Contains(s, "/")`, e sem barra o SplitN devolve a string inteira. Achado por
+	// mutacao — trocar a condicao deixava a suite verde, e a razao nao era falta de teste:
+	// era codigo defensivo que a via de producao nao alcanca. Teste que o cobrisse teria de
+	// chamar o helper direto, pinando um ramo que o gate nunca percorre.
 	first := strings.SplitN(rel, "/", 2)[0]
-	if first == "" || first == rel {
+	if first == "" {
 		return false
 	}
 	fi, err := os.Stat(filepath.Join(root, first))

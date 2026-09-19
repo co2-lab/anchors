@@ -550,6 +550,46 @@ teste prova.
 
 - [The gate does not measure performance or page size](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-X02`
 
+- [The PlanPhases function extracts catalogued phase codes](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B01`
+
+- [Non-plan artifacts skip phase ordering confrontation](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B02`
+
+- [Plans without phase headings skip confrontation](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B03`
+
+- [Plans with phase-like sections lacking codes return Pending](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B04`
+
+- [Plans declaring valid backward phase dependencies pass](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B05`
+
+- [Plans with duplicate phase codes fail](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B06`
+
+- [Phases depending on uncatalogued phase codes fail](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B07`
+
+- [Phases depending on themselves fail](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B08`
+
+- [Phases depending on future phases fail](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B09`
+
+- [Specifications declaring existing phase dependencies pass](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B10`
+
+- [Specifications declaring missing phase dependencies fail](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B11`
+
+- [Artifacts declaring valid parents pass](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B12`
+
+- [Artifacts declaring invalid parents, self-parenting, or parent cycles fail](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B13`
+
+- [Phase dependencies are strictly acyclic and backward-directed](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-I01`
+
+- [Phase and parent targets must exist in the map](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-I02`
+
+- [Parent chains are cycle-free and bounded](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-I03`
+
+- [Phase detection identifies level-three sections regardless of language](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-I04`
+
+- [Small plans are not required to catalog phases](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-X01`
+
+- [Phase duration and calendar timing are not verified](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-X02`
+
+- [Both artifact codes and phase codes are accepted as parents](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-X03`
+
 - [An artifact reached only by the impact radius is skipped](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B01`
 
 - [An artifact with no identity code is skipped](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B02`
@@ -589,6 +629,42 @@ teste prova.
 - [The gate does not enforce identity code presence](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-X02`
 
 - [Without a changed files list the gate skips confrontation](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-X03`
+
+- [Non-plan artifacts skip confrontation](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B01`
+
+- [Missing project configuration returns Pending](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B02`
+
+- [Plans without seeded specifications skip confrontation](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B03`
+
+- [Template specification references are ignored as templates](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B04`
+
+- [Bare specification file names without directory paths are ignored](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B05`
+
+- [Informal path abbreviations without real top-level directories are ignored](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B06`
+
+- [Seeded specifications targeting valid governed layers pass](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B07`
+
+- [Multiple target source file extensions resolve the governed layer](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B08`
+
+- [Seeded specifications targeting declarative layers fail](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B09`
+
+- [Seeded specifications matching no declared layer in a real directory fail](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B10`
+
+- [Multiple seed defects across declarative and undeclared layers are aggregated](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-B11`
+
+- [Plan seed validation applies exclusively to plan artifacts](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-I01`
+
+- [Declarative layers reject specification seeding](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-I02`
+
+- [Seed validation evaluates structural layer validity without requiring file existence](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-I03`
+
+- [Casual prose citations and templates are not treated as seeded paths](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-I04`
+
+- [Existing file presence is not required for seeded specifications](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-X01`
+
+- [Plan progress synchronization is not evaluated by this gate](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-X02`
+
+- [Specification content and scenarios within seeded files are not verified](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers) `PSVPL-X03`
 
 - [A source that lives only in the prose is failed](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B01`
 
@@ -719,6 +795,46 @@ teste prova.
 - [Region markers inside specifications or documentation are ignored](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X02`
 
 - [Internal code semantics inside regions are not evaluated](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X03`
+
+- [Non-spec artifacts skip confrontation](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B01`
+
+- [Specifications without declared routes skip confrontation](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B02`
+
+- [Specifications with declared routes return Pending when route registry is unconfigured](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B03`
+
+- [Invalid route registry glob patterns return Pending](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B04`
+
+- [Route registry files containing zero registered routes return Pending](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B05`
+
+- [Declared screen route matching a component navigation prop passes](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B06`
+
+- [Declared screen route matching a navigation stack parameter type entry passes](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B07`
+
+- [Declared backend route matching an HTTP resource registration passes](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B08`
+
+- [HTTP method verb prefixes are stripped when evaluating declared routes](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B09`
+
+- [Route paths match regardless of leading slash differences between specification and code](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B10`
+
+- [Custom route pattern regex matches custom route registration patterns](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B11`
+
+- [Custom route pattern regex that is malformed or lacks capture groups returns Pending](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B12`
+
+- [Declared routes missing from all registered route definitions fail](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B13`
+
+- [Route presence is validated only for specifications](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-I01`
+
+- [The gate never approves route existence without inspecting registry files](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-I02`
+
+- [Route matching is slash-normalized between specification and code](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-I03`
+
+- [Missing routes produce a blocking Fail verdict](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-I04`
+
+- [The gate does not require every specification to declare a route](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-X01`
+
+- [Route parameter schemas and payload contracts are not evaluated by this gate](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-X02`
+
+- [Route access permissions and authentication middlewares are outside evaluation scope](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-X03`
 
 - [A spec whose rules the code ignores is accused, and the verdict names them](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B01`
 
