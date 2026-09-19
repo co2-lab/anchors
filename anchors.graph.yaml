@@ -1885,15 +1885,24 @@ nodes:
       kind: code
       rev: f95ba6b43dff
       updated_at: "2026-09-19"
+      code: OPQSP
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/open_questions.spec.md
+      kind: spec
+      rev: bdcef0abf6d1
+      code: OPQSP
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/open_questions_test.go
       kind: test
-      rev: eb01605011ee
+      rev: 4a9b4fd41b60
       updated_at: "2026-09-19"
-      code: PARCX
+      code: OPQSP
       layer: teste
       tags:
         - test
@@ -2155,13 +2164,22 @@ nodes:
       kind: code
       rev: bea14df81b37
       updated_at: "2026-09-19"
+      code: RLIMR
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/rule_implemented.spec.md
+      kind: spec
+      rev: 216c63d08c9b
+      code: RLIMR
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/rule_implemented_test.go
       kind: test
-      rev: ca9f2e698efe
+      rev: 8c65faf9141a
       updated_at: "2026-09-19"
       code: MRHMX
       layer: teste
@@ -2408,6 +2426,7 @@ nodes:
     - id: internal/gate/triad_complete.spec.md
       kind: spec
       rev: aed2684c3a95
+      updated_at: "2026-09-19"
       code: TRCMT
       layer: spec
       code_declared: true
@@ -3753,11 +3772,27 @@ edges:
       type: governs
       origin: declared
     - from: SPEC.md
+      to: internal/gate/open_questions.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC.md
+      to: internal/gate/rule_implemented.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC.md
       to: internal/gate/triad_complete.spec.md
       type: governs
       origin: declared
     - from: SPEC_TYPES.md
       to: internal/gate/domain_declared.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC_TYPES.md
+      to: internal/gate/open_questions.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC_TYPES.md
+      to: internal/gate/rule_implemented.spec.md
       type: governs
       origin: declared
     - from: SPEC_TYPES.md
@@ -4048,6 +4083,42 @@ edges:
       stamp:
         validated_from_rev: 8aaf21c6d0e0
         validated_to_rev: 92fe25054033
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/open_questions.spec.md
+      to: internal/gate/open_questions.go
+      type: specifies
+      origin: convention
+      stamp:
+        validated_from_rev: bdcef0abf6d1
+        validated_to_rev: f95ba6b43dff
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/open_questions.spec.md
+      to: internal/gate/open_questions_test.go
+      type: tested-by
+      origin: convention
+      stamp:
+        validated_from_rev: bdcef0abf6d1
+        validated_to_rev: 4a9b4fd41b60
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/rule_implemented.spec.md
+      to: internal/gate/rule_implemented.go
+      type: specifies
+      origin: convention
+      stamp:
+        validated_from_rev: 216c63d08c9b
+        validated_to_rev: bea14df81b37
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/rule_implemented.spec.md
+      to: internal/gate/rule_implemented_test.go
+      type: tested-by
+      origin: convention
+      stamp:
+        validated_from_rev: 216c63d08c9b
+        validated_to_rev: 8c65faf9141a
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/triad_complete.spec.md

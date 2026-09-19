@@ -29,6 +29,7 @@ func rodaRegraImpl(t *testing.T, spec, codigo string) (Verdict, string) {
 // linha. Metade de uma feature era código morto declarado como pronto, e os 26 gates
 // ficaram verdes — porque a spec existe, o código existe, e os dois se referenciam pelo
 // header.
+// RLIMR-B01
 func TestSpecQueFalaSozinhaEhAcusada(t *testing.T) {
 	// O caso REALX: a unidade já entrou na prática (o código marca `B01`), e a spec ganhou
 	// regras novas que ninguém implementou. É diferente da dívida de migração — aqui há
@@ -59,6 +60,7 @@ func TestSpecQueFalaSozinhaEhAcusada(t *testing.T) {
 // A DISPENSA DECLARADA é o que troca heurística por confronto. Exigir todas as regras
 // marcadas seria falso (restrição é satisfeita pela ausência de código); "ao menos uma"
 // não diz nada sobre as outras quinze. Quem escreve a spec declara, regra a regra.
+// RLIMR-B02
 func TestDispensaDeclaradaFechaAConta(t *testing.T) {
 	root := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(root, "u.ts"), []byte(
@@ -98,6 +100,7 @@ func TestDispensaDeclaradaFechaAConta(t *testing.T) {
 // A unidade que não declarou NADA é dívida de MIGRAÇÃO, não defeito: nasceu antes da
 // prática. Medido no repositório de origem: 3.114 regras em 590 unidades. Acusá-las
 // reprovaria 98% do projeto, e um gate assim é desligado no primeiro dia.
+// RLIMR-B03
 func TestUnidadeAnteriorAPraticaEhPendencia(t *testing.T) {
 	root := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(root, "v.ts"), []byte("export const f = 1\n"), 0o644))
@@ -114,6 +117,7 @@ func TestUnidadeAnteriorAPraticaEhPendencia(t *testing.T) {
 
 // Sem código no disco quem acusa é o `trinca-completa`; duplicar a cobrança faria dois
 // gates apontando o mesmo dedo.
+// RLIMR-B05
 func TestSemCodigoNaoEhAssunto(t *testing.T) {
 	spec := "<!-- @anchors\n  code: NOVAX\n-->\n| `NOVAX-B01` | faz algo |\n"
 	if v, _ := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "x.spec.md"}, t.TempDir(), nil, nil); v != Skip {
@@ -135,6 +139,7 @@ func must(t *testing.T, err error) {
 // olhou". Medido: uma spec descrevia "mantém o cartão selecionado" enquanto o código era
 // um CRUD sem seleção; o gate VIU a regra ausente, caiu no ramo de migração e devolveu
 // pendência. O defeito atravessou os 44 gates.
+// RLIMR-B04
 func TestRegraImplementada_marcacaoExigidaVenceAPendencia(t *testing.T) {
 	root := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(root, "u.ts"), []byte(
@@ -160,6 +165,7 @@ func TestRegraImplementada_marcacaoExigidaVenceAPendencia(t *testing.T) {
 
 // Com a marcação exigida, quem JÁ marca segue passando — a exigência não pune quem
 // está em dia.
+// RLIMR-I01
 func TestRegraImplementada_marcacaoExigidaNaoPuneQuemMarca(t *testing.T) {
 	root := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(root, "u.ts"), []byte(
@@ -179,6 +185,7 @@ func TestRegraImplementada_marcacaoExigidaNaoPuneQuemMarca(t *testing.T) {
 // sua. Mas uma spec pode ter seis regras marcadas no código e duas que não têm onde ser
 // marcadas: declarar as duas numa linha só, nomeando-as, é mais legível que espalhar o
 // marcador por linhas que não falam disso.
+// RLIMR-B06
 func TestNoMarkComAlvoNomeado(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "u.ts"), []byte("// MTVRX-B01: resolve\n"), 0o644); err != nil {
@@ -219,6 +226,7 @@ func TestNoMarkComAlvoNomeado(t *testing.T) {
 // `@no-code` continua valendo: quem já escreveu não pode ver a spec quebrar por uma
 // renomeação. O nome mudou porque o antigo mente — o código EXISTE (um `tsconfig.json`
 // decide como tudo compila); o que não existe é a MARCAÇÃO.
+// RLIMR-I02
 func TestNomeAntigoNoCodeContinuaValendo(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "u.ts"), []byte("// MTVRX-B01: resolve\n"), 0o644); err != nil {
@@ -239,6 +247,7 @@ func TestNomeAntigoNoCodeContinuaValendo(t *testing.T) {
 // repetir a mesma razão N vezes, e repetição em declaração é onde a divergência começa.
 // A forma é mais forte que a nomeada, e por isso a razão importa mais: ela dispensa o
 // gate inteiro para aquele arquivo.
+// RLIMR-B06
 func TestNoMarkSemAlvoValeParaTodas(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "u.ts"), []byte("nada marcado aqui\n"), 0o644); err != nil {

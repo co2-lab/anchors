@@ -19,6 +19,7 @@ func rodaAberto(t *testing.T, content string) (Verdict, string) {
 
 // A distinção que decide se o gate é útil ou ritual: quem NÃO abriu a seção não é
 // cobrado (specs simples não têm o que declarar); quem ABRIU precisa fechar.
+// OPQSP-B02
 func TestOpenQuestionsSoCobraQuemAbriu(t *testing.T) {
 	semSeção := `# Spec — Cálculo de parcelas
 
@@ -51,6 +52,7 @@ func TestOpenQuestionsSoCobraQuemAbriu(t *testing.T) {
 
 // O fechamento honesto: afirmar que se olhou e não há dúvida vale, e é diferente de
 // omitir a seção. É o opt-out explícito do CONCEPT §5.1.
+// OPQSP-B04
 func TestOpenQuestionsFechamentoHonesto(t *testing.T) {
 	for _, fecho := range []string{"nenhuma", "Nenhuma.", "- nenhuma", "none", "N/A", "sem pendências", "—"} {
 		t.Run(fecho, func(t *testing.T) {
@@ -64,6 +66,7 @@ func TestOpenQuestionsFechamentoHonesto(t *testing.T) {
 
 // A pergunta respondida vira REGRA; o item fica marcado como resolvido em vez de sumir.
 // O rastro tem valor: mostra que a decisão foi tomada, não esquecida.
+// OPQSP-B05
 func TestOpenQuestionsItemResolvidoNaoBloqueia(t *testing.T) {
 	spec := `# Spec
 
@@ -88,6 +91,7 @@ func TestOpenQuestionsItemResolvidoNaoBloqueia(t *testing.T) {
 
 // Prosa que explica a seção não é pendência — senão o texto de abertura viraria um item
 // fantasma e o autor aprenderia a não escrever nada, que é o oposto do objetivo.
+// OPQSP-I01
 func TestOpenQuestionsProsaNaoEhItem(t *testing.T) {
 	spec := `# Spec
 
@@ -105,6 +109,7 @@ nenhuma
 
 // A seção também vale como TABELA — formato comum quando a pergunta tem dono e prazo.
 // Cabeçalho e separador não são itens.
+// OPQSP-B03
 func TestOpenQuestionsTabela(t *testing.T) {
 	vazia := `# Spec
 
@@ -129,6 +134,7 @@ func TestOpenQuestionsTabela(t *testing.T) {
 
 // A seção termina no próximo cabeçalho: pendência não pode vazar para as seções
 // seguintes, nem regras seguintes serem lidas como pendência.
+// OPQSP-I02
 func TestOpenQuestionsRespeitaFronteiraDaSecao(t *testing.T) {
 	spec := `# Spec
 
@@ -148,6 +154,7 @@ nenhuma
 
 // Variações de escrita não podem decidir o veredito — reprovar por causa de um acento
 // ensinaria o autor a fugir da seção.
+// OPQSP-B02
 func TestOpenQuestionsAceitaVariacoesDoTitulo(t *testing.T) {
 	títulos := []string{
 		"## Decisões em aberto", "## Decisoes em aberto", "### Decisão em aberto",
@@ -166,6 +173,7 @@ func TestOpenQuestionsAceitaVariacoesDoTitulo(t *testing.T) {
 
 // O gate é da SPEC: é ela que decide. Cobrar isso de código ou teste seria pedir que
 // implemente resolva a ambiguidade — exatamente o chute que se quer evitar.
+// OPQSP-B01
 func TestOpenQuestionsSoSpec(t *testing.T) {
 	spec := "# X\n\n## Decisões em aberto\n\n- pergunta\n"
 	for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature} {
@@ -180,6 +188,7 @@ func TestOpenQuestionsSoSpec(t *testing.T) {
 
 // A pergunta precisa de CÓDIGO. Sem identidade ela não vira issue rastreável, não
 // sobrevive a uma reescrita da spec, e nada liga depois a regra à pergunta que a originou.
+// OPQSP-B06
 func TestOpenQuestions_cobraCodigoNaPergunta(t *testing.T) {
 	base := "## Decisões em aberto\n\n| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n"
 
@@ -213,6 +222,7 @@ func TestOpenQuestions_cobraCodigoNaPergunta(t *testing.T) {
 // O código da coluna "Vira" é a REGRA FUTURA, não a identidade da pergunta. Lê-lo como
 // identidade daria por identificada justamente a pergunta mais bem escrita — a que já
 // declarou seu destino.
+// OPQSP-I03
 func TestOpenQuestions_naoConfundeViraComIdentidade(t *testing.T) {
 	base := "## Decisões em aberto\n\n| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n"
 	semIdentidadeMasComDestino := base + "| | Fuso do vencimento? | Produto | `PARCX-R04` |\n"
@@ -227,6 +237,7 @@ func TestOpenQuestions_naoConfundeViraComIdentidade(t *testing.T) {
 // cobria português e inglês; uma spec em qualquer outro idioma caía no ramo "a spec não
 // declara a seção" TENDO a seção com perguntas dentro — o gate afirmava ausência onde
 // havia conteúdo, que é a falha mais cara que ele pode ter.
+// OPQSP-B02
 func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
 	espanhol := "## Decisiones pendientes\n\n| Código | Pregunta | Quién decide |\n| --- | --- | --- |\n" +
 		"| `PARCX-Q01` | ¿Zona horaria del vencimiento? | Producto |\n"
@@ -274,6 +285,7 @@ func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
 // E o efeito de errar aqui não é cosmético: o veredito fica `Pending`, o `check` só fecha
 // issue em `Pass`, e o card `needs-user` fica aberto para sempre com o claim pulando o
 // trabalho.
+// OPQSP-B05
 func TestOpenItems_deParaDePerguntaParaRegraNaoEhPerguntaAberta(t *testing.T) {
 	corpo := "nenhuma.\n\n" +
 		"| era | virou |\n" +
@@ -288,6 +300,7 @@ func TestOpenItems_deParaDePerguntaParaRegraNaoEhPerguntaAberta(t *testing.T) {
 
 // A pergunta que AINDA não virou regra continua contando — a correção não pode virar
 // vale-tudo para qualquer linha de tabela.
+// OPQSP-B03
 func TestOpenItems_perguntaSemRegraAindaConta(t *testing.T) {
 	casos := map[string]int{
 		"| `DTSTD-Q01` | qual a retenção do PITR | usuário |": 1,
@@ -319,6 +332,7 @@ func TestOpenItems_perguntaSemRegraAindaConta(t *testing.T) {
 //
 // O `F` é o pior dos três: um falso NEGATIVO criado pela correção que existia para não
 // criar falso negativo.
+// OPQSP-I03
 func TestOpenItems_colunaViraNaoFechaAPergunta(t *testing.T) {
 	casos := map[string]int{
 		// a coluna "Vira" citando REVISÃO — a pergunta continua aberta
