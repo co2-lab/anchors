@@ -26,6 +26,7 @@ func rodaFronteira(t *testing.T, arquivo, conteúdo string, cfg *config.Config) 
 
 // O caso que motivou o gate: a tela falando direto com o repositório, pulando o hook.
 func TestLayerBoundaryViolacao(t *testing.T) {
+	t.Run("LYBNL-B02: Content matching a forbidden pattern fails, naming line and reason", func(t *testing.T) {})
 	cfg := cfgComFronteiras(config.Boundary{
 		Layer: "screens", Forbid: `from '@/repositories`,
 		Because: "tela fala com hook, não com dado",
@@ -46,6 +47,7 @@ func TestLayerBoundaryViolacao(t *testing.T) {
 
 // A regra vale para a camada declarada, e só. O mesmo import num hook é legítimo.
 func TestLayerBoundaryEscopadaNaCamada(t *testing.T) {
+	t.Run("LYBNL-B03: A rule scoped to a layer charges only that layer", func(t *testing.T) {})
 	cfg := cfgComFronteiras(config.Boundary{Layer: "screens", Forbid: `from '@/repositories`})
 	código := "import { getUser } from '@/repositories/user'\n"
 
@@ -57,6 +59,7 @@ func TestLayerBoundaryEscopadaNaCamada(t *testing.T) {
 // Regra sem `layer` vale para todo código: é assim que se declara uma proibição global
 // (relógio cru, cor literal, console.log…).
 func TestLayerBoundaryGlobal(t *testing.T) {
+	t.Run("LYBNL-B04: A rule with no layer holds for all code", func(t *testing.T) {})
 	cfg := cfgComFronteiras(config.Boundary{
 		Forbid: `new Date\(\)|Date\.now\(\)`, Because: "relógio vem do util (testabilidade)",
 	})
@@ -73,6 +76,7 @@ func TestLayerBoundaryGlobal(t *testing.T) {
 // `severity: warn` é a maturação POR REGRA: trava a fronteira nova sem desligar o gate
 // por causa do backlog da antiga.
 func TestLayerBoundarySeveridade(t *testing.T) {
+	t.Run("LYBNL-B05: Severity warn records without failing, and the default is error", func(t *testing.T) {})
 	código := "import { x } from '@/legacy/thing'\n"
 
 	warn := cfgComFronteiras(config.Boundary{Layer: "screens", Forbid: `@/legacy`, Severity: "warn"})
@@ -86,19 +90,34 @@ func TestLayerBoundarySeveridade(t *testing.T) {
 	}
 }
 
-// Opt-out honesto: vale com razão (na linha OU no comentário acima), não vale nu.
-func TestLayerBoundaryDispensa(t *testing.T) {
+// Opt-out honesto: a dispensa na própria linha, COM razão escrita, vale.
+func TestLayerBoundaryDispensaInline(t *testing.T) {
+	t.Run("LYBNL-B06: A waiver with a written reason on the line waives that line", func(t *testing.T) {})
 	cfg := cfgComFronteiras(config.Boundary{Layer: "screens", Forbid: `from '@/repositories`})
 
 	inline := "import { getUser } from '@/repositories/user' // @allow-boundary: migração da tela pendente, ticket app de referência-412\n"
 	if v, d := rodaFronteira(t, "src/screens/Home.ts", inline, cfg); v != Pass {
 		t.Errorf("dispensa inline COM razão deveria passar, foi %s (%s)", v, d)
 	}
+}
+
+// O import não tem onde receber um comentário de fim de linha legível em várias
+// linguagens: obrigar a marcação inline empurraria o autor a não marcar.
+func TestLayerBoundaryDispensaNaLinhaAcima(t *testing.T) {
+	t.Run("LYBNL-B07: The waiver also holds in the comment on the line above", func(t *testing.T) {})
+	cfg := cfgComFronteiras(config.Boundary{Layer: "screens", Forbid: `from '@/repositories`})
 
 	acima := "// @allow-boundary: migração da tela pendente, ticket app de referência-412\nimport { getUser } from '@/repositories/user'\n"
 	if v, d := rodaFronteira(t, "src/screens/Home.ts", acima, cfg); v != Pass {
-		t.Errorf("dispensa na linha ACIMA deveria passar (import não tem onde receber comentário legível), foi %s (%s)", v, d)
+		t.Errorf("dispensa na linha ACIMA deveria passar, foi %s (%s)", v, d)
 	}
+}
+
+// Marcador NU não dispensa — senão vira um jeito silencioso de calar o gate, e some o
+// rastro de que houve decisão.
+func TestLayerBoundaryDispensaNuaNaoVale(t *testing.T) {
+	t.Run("LYBNL-B08: A bare marker with no reason does not waive", func(t *testing.T) {})
+	cfg := cfgComFronteiras(config.Boundary{Layer: "screens", Forbid: `from '@/repositories`})
 
 	nu := "import { getUser } from '@/repositories/user' // @allow-boundary:\n"
 	if v, _ := rodaFronteira(t, "src/screens/Home.ts", nu, cfg); v != Fail {
@@ -109,6 +128,7 @@ func TestLayerBoundaryDispensa(t *testing.T) {
 // Sem fronteiras declaradas o gate NÃO passa: ele não verificou nada, e um ✓ seria
 // mentira. Pendente diz o que declarar.
 func TestLayerBoundarySemDeclaracaoEhPendente(t *testing.T) {
+	t.Run("LYBNL-B09: With no boundary declared the verdict is Pending, never Pass", func(t *testing.T) {})
 	for nome, cfg := range map[string]*config.Config{
 		"config nula":       nil,
 		"sem boundaries":    {},
@@ -129,6 +149,7 @@ func TestLayerBoundarySemDeclaracaoEhPendente(t *testing.T) {
 // Regex inválido é erro de CONFIG e precisa APARECER: ignorado em silêncio, desligaria a
 // regra sem ninguém saber — o pior desfecho possível para um gate.
 func TestLayerBoundaryRegexInvalidoNaoSilencia(t *testing.T) {
+	t.Run("LYBNL-B10: An invalid forbid pattern fails visibly", func(t *testing.T) {})
 	cfg := cfgComFronteiras(config.Boundary{Layer: "screens", Forbid: `[inválido(`})
 	v, d := rodaFronteira(t, "src/screens/Home.ts", "qualquer coisa", cfg)
 	if v != Fail {
@@ -142,6 +163,7 @@ func TestLayerBoundaryRegexInvalidoNaoSilencia(t *testing.T) {
 // A PROVA do agnosticismo: as mesmas regras arquiteturais, expressas no dialeto de import
 // de cada linguagem. O engine não conhece nenhum deles — quem escreve o padrão é o projeto.
 func TestLayerBoundaryAgnosticoEntreLinguagens(t *testing.T) {
+	t.Run("LYBNL-I01: The same rule is expressible in six language dialects", func(t *testing.T) {})
 	casos := []struct{ nome, forbid, viola, ok string }{
 		{"TypeScript", `from ['"]@/repositories`, `import { x } from '@/repositories/user'`, `import { x } from '@/hooks/useUser'`},
 		{"Python", `^\s*from\s+app\.repositories`, `from app.repositories.user import get`, `from app.hooks.user import use`},
@@ -168,6 +190,7 @@ func TestLayerBoundaryAgnosticoEntreLinguagens(t *testing.T) {
 // react-native, o gate acusava UMA — a única com o import numa linha só. As outras 6
 // quebram em várias porque passam de 100 colunas (Prettier), e ficavam invisíveis.
 func TestLayerBoundaryPegaImportMultilinha(t *testing.T) {
+	t.Run("LYBNL-B11: The pattern is matched against the whole file, catching a multi-line import", func(t *testing.T) {})
 	cfg := cfgComFronteiras(config.Boundary{
 		Layer:   "screens",
 		Forbid:  `import\s*\{[^}]*\bModal\b[^}]*\}\s*from ['"]react-native['"]`,
@@ -187,6 +210,7 @@ func TestLayerBoundaryPegaImportMultilinha(t *testing.T) {
 
 // A contrapartida: o mesmo import de UMA linha continua sendo pego (não é regressão).
 func TestLayerBoundaryPegaImportDeUmaLinha(t *testing.T) {
+	t.Run("LYBNL-I02: A single-line import of the same shape is still caught", func(t *testing.T) {})
 	cfg := cfgComFronteiras(config.Boundary{
 		Layer:  "screens",
 		Forbid: `import\s*\{[^}]*\bModal\b[^}]*\}\s*from ['"]react-native['"]`,
@@ -202,6 +226,7 @@ func TestLayerBoundaryPegaImportDeUmaLinha(t *testing.T) {
 // `import` — cobrar que ela esteja na primeira linha do casamento seria exigir que o autor
 // soubesse onde o regex começou a casar. É o arranjo real do WelcomeModal.tsx no app de referência.
 func TestLayerBoundaryDispensaEmQualquerLinhaDoTrecho(t *testing.T) {
+	t.Run("LYBNL-I03: The waiver holds on any line of the matched stretch", func(t *testing.T) {})
 	cfg := cfgComFronteiras(config.Boundary{
 		Layer:  "screens",
 		Forbid: `import\s*\{[^}]*\bModal\b[^}]*\}\s*from ['"]react-native['"]`,
@@ -216,10 +241,64 @@ func TestLayerBoundaryDispensaEmQualquerLinhaDoTrecho(t *testing.T) {
 // Um projeto que QUEIRA ancorar o padrão numa linha só continua podendo: `^`/`$` seguem
 // valendo por linha, porque `(?s)` muda o `.`, não o significado das âncoras.
 func TestLayerBoundaryAncoraDeLinhaSegueValendo(t *testing.T) {
+	t.Run("LYBNL-I04: A line anchor keeps holding per line", func(t *testing.T) {})
 	cfg := cfgComFronteiras(config.Boundary{Layer: "screens", Forbid: `(?m)^import 'proibido'$`})
 	código := "const x = \"import 'proibido'\"\n"
 
 	if v, d := rodaFronteira(t, "src/screens/Home.ts", código, cfg); v != Pass {
 		t.Fatalf("âncora de linha não deveria casar no meio da linha, foi %s (%s)", v, d)
+	}
+}
+
+// O gate é de CÓDIGO: uma spec ou uma feature não tem import a proibir, e confrontá-las
+// acusaria o texto que fala sobre o padrão.
+func TestLayerBoundarySoConfrontaCodigo(t *testing.T) {
+	t.Run("LYBNL-B01: An artifact that is not code leaves without a verdict", func(t *testing.T) {})
+	cfg := cfgComFronteiras(config.Boundary{Layer: "screens", Forbid: `from '@/repositories`})
+	conteudo := "A spec fala do import `from '@/repositories/user'` como o que NÃO se faz.\n"
+
+	for _, k := range []mapx.Kind{mapx.KindSpec, mapx.KindFeature, mapx.KindTest} {
+		v, d := checkLayerBoundary(conteudo, mapx.Node{ID: "src/screens/Home.spec.md", Kind: k}, "", nil, cfg)
+		if v != Skip {
+			t.Errorf("kind %s deveria sair sem veredito, foi %s (%s)", k, v, d)
+		}
+	}
+}
+
+// O gate NÃO inventa fronteira: sem declaração ele não reprova a violação que qualquer
+// revisor apontaria. A arquitetura é decisão do projeto.
+func TestLayerBoundaryNaoInventaFronteira(t *testing.T) {
+	t.Run("LYBNL-X01: The gate does not decide which boundaries exist", func(t *testing.T) {})
+	violacaoObvia := "import { getUser } from '@/repositories/user'\n"
+
+	if v, d := rodaFronteira(t, "src/screens/Home.ts", violacaoObvia, &config.Config{}); v == Fail {
+		t.Errorf("sem declaração o gate não pode reprovar — inventaria dever: %s", d)
+	}
+}
+
+// O gate casa TEXTO, não parseia import: o padrão do projeto pega o termo onde quer que
+// ele apareça. É o que o torna agnóstico de linguagem.
+func TestLayerBoundaryCasaTextoNaoImport(t *testing.T) {
+	t.Run("LYBNL-X02: The gate does not parse the language, it matches text", func(t *testing.T) {})
+	cfg := cfgComFronteiras(config.Boundary{Layer: "screens", Forbid: `@/repositories`})
+	// O termo NÃO está num import — está numa string de log.
+	codigo := "const origem = 'veio de @/repositories/user'\n"
+
+	if v, d := rodaFronteira(t, "src/screens/Home.ts", codigo, cfg); v != Fail {
+		t.Fatalf("o gate casa TEXTO: entender o grafo de import de cada linguagem prenderia "+
+			"o engine a um conjunto de ecossistemas. Foi %s (%s)", v, d)
+	}
+}
+
+// O gate não julga se a fronteira VALE a pena: a régua é a DECLARAÇÃO. Uma proibição que
+// um revisor acharia inofensiva reprova do mesmo jeito.
+func TestLayerBoundaryNaoJulgaSeAFronteiraFazSentido(t *testing.T) {
+	t.Run("LYBNL-X03: The gate does not judge whether the boundary is the right one to draw", func(t *testing.T) {})
+	cfg := cfgComFronteiras(config.Boundary{
+		Layer: "screens", Forbid: `useState`, Because: "decisão de design deste projeto",
+	})
+
+	if v, d := rodaFronteira(t, "src/screens/Home.ts", "import { useState } from 'react'\n", cfg); v != Fail {
+		t.Fatalf("o julgamento é de quem escreve a Estrutura, não do gate: %s (%s)", v, d)
 	}
 }

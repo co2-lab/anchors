@@ -34,6 +34,7 @@ func tmpRoot(t *testing.T, purge string) string {
 func obligNode() mapx.Node { return mapx.Node{ID: "models/MetadataEntry.spec.md", Kind: mapx.KindSpec} }
 
 func TestObligation_gatilhoSemDeverReprova(t *testing.T) {
+	t.Run("OBHNB-B01: A node that carries the trigger and is absent from the demanded file fails", func(t *testing.T) {})
 	root := tmpRoot(t, "const tables = [USER_PROFILE_TABLE_NAME]\n")
 	content := "<!-- @anchors\n  code: ABCDX\n  carries: pii\n-->\n"
 	v, msg := checkObligationHonored(content, obligNode(), root, nil, obligCfg())
@@ -46,6 +47,7 @@ func TestObligation_gatilhoSemDeverReprova(t *testing.T) {
 }
 
 func TestObligation_deverCumpridoPassa(t *testing.T) {
+	t.Run("OBHNB-B02: A node that carries the trigger and does appear passes", func(t *testing.T) {})
 	// screaming-snake: MetadataEntry → METADATA_ENTRY
 	root := tmpRoot(t, "const t = [METADATA_ENTRY_TABLE]\n")
 	content := "<!-- @anchors\n  carries: pii\n-->\n"
@@ -55,6 +57,7 @@ func TestObligation_deverCumpridoPassa(t *testing.T) {
 }
 
 func TestObligation_semGatilhoPassa(t *testing.T) {
+	t.Run("OBHNB-B03: A node without the trigger contracts no obligation", func(t *testing.T) {})
 	root := tmpRoot(t, "vazio\n")
 	content := "<!-- @anchors\n  code: ABCDX\n-->\n" // não declara carries: pii
 	if v, _ := checkObligationHonored(content, obligNode(), root, nil, obligCfg()); v != Pass {
@@ -63,6 +66,7 @@ func TestObligation_semGatilhoPassa(t *testing.T) {
 }
 
 func TestObligation_waiverComMotivoEximeMasSemMotivoNao(t *testing.T) {
+	t.Run("OBHNB-B04: A waiver exempts only when it carries a written reason", func(t *testing.T) {})
 	root := tmpRoot(t, "vazio\n")
 	comMotivo := "<!-- @anchors\n  carries: pii\n  obligation_waived: pii-purgavel — grupo compartilhado; apagar destruiria dado de terceiros\n-->\n"
 	if v, _ := checkObligationHonored(comMotivo, obligNode(), root, nil, obligCfg()); v != Pass {
@@ -75,6 +79,7 @@ func TestObligation_waiverComMotivoEximeMasSemMotivoNao(t *testing.T) {
 }
 
 func TestObligation_semObrigacaoDeclaradaPula(t *testing.T) {
+	t.Run("OBHNB-B05: A project with no declared obligation is skipped", func(t *testing.T) {})
 	root := tmpRoot(t, "")
 	if v, _ := checkObligationHonored("carries: pii", obligNode(), root, nil, &config.Config{}); v != Skip {
 		t.Errorf("projeto sem obrigações declaradas deveria dar Skip")
@@ -82,6 +87,7 @@ func TestObligation_semObrigacaoDeclaradaPula(t *testing.T) {
 }
 
 func TestApplyIdentifierForm(t *testing.T) {
+	t.Run("OBHNB-I01: The token is derived through the declared form", func(t *testing.T) {})
 	cases := map[string]string{
 		"as-is":                    "MetadataEntry",
 		"screaming-snake":          "METADATA_ENTRY",
@@ -103,12 +109,11 @@ func TestApplyIdentifierForm(t *testing.T) {
 // precisão — dispensar seria mentira (o dever não deixou de existir), e deixar vermelho
 // confunde dívida assumida com esquecimento, que é justamente a distinção que o pilar
 // existe para preservar.
-func TestObligation_dividaAssumida(t *testing.T) {
+func TestObligation_aMensagemOfereceAsTresSaidas(t *testing.T) {
+	t.Run("OBHNB-B09: The failing verdict offers the three ways out", func(t *testing.T) {})
 	root := tmpRoot(t, "// nada aqui\n")
-	base := "<!-- @anchors\n  code: MTENX\n  carries: pii\n%s-->\n# x\n"
-
-	// sem declaração: falha, e a mensagem oferece as TRÊS saídas
-	v, d := checkObligationHonored(fmt.Sprintf(base, ""), obligNode(), root, nil, obligCfg())
+	content := "<!-- @anchors\n  code: MTENX\n  carries: pii\n-->\n# x\n"
+	v, d := checkObligationHonored(content, obligNode(), root, nil, obligCfg())
 	if v != Fail {
 		t.Fatalf("obrigação descumprida sem declaração deveria falhar, foi %s (%s)", v, d)
 	}
@@ -120,27 +125,43 @@ func TestObligation_dividaAssumida(t *testing.T) {
 	if !strings.Contains(d, "CUMPRA") && !strings.Contains(d, "FULFILL") {
 		t.Errorf("a mensagem não oferece a saída CUMPRA/FULFILL: %s", d)
 	}
+}
 
-	// dívida assumida COM o quando: Pendente (registro visível), nunca Pass nem Fail
-	comQuando := fmt.Sprintf(base, "  obligation_pending: pii-purgavel — o handler nasce na fase 2 do plano\n")
-	v, d = checkObligationHonored(comQuando, obligNode(), root, nil, obligCfg())
+// O TERCEIRO ESTADO: a dívida assumida.
+//
+// O gate só oferecia "cumpra" ou "dispense", e nenhuma servia ao caso mais comum: a
+// obrigação é REAL e será cumprida noutra fase. Dispensar seria mentira (o dever não
+// deixou de existir), e deixar vermelho confunde dívida assumida com esquecimento, que é
+// justamente a distinção que o pilar existe para preservar.
+func TestObligation_dividaAssumidaComQuandoEhPendente(t *testing.T) {
+	t.Run("OBHNB-B06: An acknowledged debt with a written when yields Pending", func(t *testing.T) {})
+	root := tmpRoot(t, "// nada aqui\n")
+	comQuando := "<!-- @anchors\n  code: MTENX\n  carries: pii\n" +
+		"  obligation_pending: pii-purgavel — o handler nasce na fase 2 do plano\n-->\n# x\n"
+	v, d := checkObligationHonored(comQuando, obligNode(), root, nil, obligCfg())
 	if v != Pending {
 		t.Fatalf("dívida assumida deveria ser Pendente, foi %s (%s)", v, d)
 	}
 	if (!strings.Contains(d, "DÍVIDA ASSUMIDA") && !strings.Contains(d, "ASSUMED DEBT")) || !strings.Contains(d, "fase 2") {
 		t.Errorf("o registro não mostra o compromisso: %s", d)
 	}
+}
 
-	// marcador NU não assume dívida nenhuma — continua falhando
-	nu := fmt.Sprintf(base, "  obligation_pending: pii-purgavel\n")
-	if v, _ := checkObligationHonored(nu, obligNode(), root, nil, obligCfg()); v != Fail {
-		t.Fatalf("dívida sem QUANDO deveria continuar falhando, foi %s", v)
+// O marcador NU não assume dívida nenhuma — só esconde melhor.
+func TestObligation_dividaSemQuandoContinuaFalhando(t *testing.T) {
+	t.Run("OBHNB-B07: A bare debt marker keeps failing", func(t *testing.T) {})
+	root := tmpRoot(t, "// nada aqui\n")
+	nu := "<!-- @anchors\n  code: MTENX\n  carries: pii\n" +
+		"  obligation_pending: pii-purgavel\n-->\n# x\n"
+	if v, d := checkObligationHonored(nu, obligNode(), root, nil, obligCfg()); v != Fail {
+		t.Fatalf("dívida sem QUANDO deveria continuar falhando, foi %s (%s)", v, d)
 	}
 }
 
 // Dispensa e dívida continuam distintas: dispensar diz "o dever não se aplica";
 // assumir diz "o dever vale e será pago". Só a primeira passa como resolvida.
 func TestObligation_dispensaEDividaSaoDistintas(t *testing.T) {
+	t.Run("OBHNB-B08: Waiver and debt stay distinct", func(t *testing.T) {})
 	root := tmpRoot(t, "// nada aqui\n")
 	base := "<!-- @anchors\n  code: MTENX\n  carries: pii\n%s-->\n# x\n"
 
@@ -151,5 +172,88 @@ func TestObligation_dispensaEDividaSaoDistintas(t *testing.T) {
 	divida := fmt.Sprintf(base, "  obligation_pending: pii-purgavel — fase 2\n")
 	if v, _ := checkObligationHonored(divida, obligNode(), root, nil, obligCfg()); v == Pass {
 		t.Fatal("dívida assumida NÃO pode passar como cumprida — ela ainda é devida")
+	}
+}
+
+// GLOB QUE NÃO CASA ARQUIVO NENHUM não produz violação. Acusar onde não havia o que ler
+// seria carimbar o que nunca foi medido — e o relatório passaria a dizer "descumprido"
+// sobre um destino que não existe.
+func TestObligation_globSemArquivoNaoInventaViolacao(t *testing.T) {
+	t.Run("OBHNB-I02: A glob that matches no file produces no violation", func(t *testing.T) {})
+	root := t.TempDir() // nenhum arquivo: o glob `purge.ts` não casa nada
+	cfg := &config.Config{Obligations: []config.Obligation{{
+		Name:         "pii-purgavel",
+		When:         "carries: pii",
+		MustAppearIn: []string{"purge.ts"},
+		IdentifiedBy: "screaming-snake",
+	}}}
+	content := "<!-- @anchors\n  code: MTENX\n  carries: pii\n-->\n"
+	if v, d := checkObligationHonored(content, obligNode(), root, nil, cfg); v != Pass {
+		t.Fatalf("sem arquivo para checar não há violação a declarar, foi %s (%s)", v, d)
+	}
+}
+
+// PRECEDÊNCIA: o `identified_as` do NÓ ganha da forma automática da obrigação. É a única
+// fonte que conhece a irregularidade real do projeto — `MetadataEntry` referenciado no
+// plural, uma irmã no singular, sem regra derivável. Inverter esta ordem acusa 28 modelos
+// que estão corretos (medido).
+func TestObligation_identifiedAsDoNoGanhaDaFormaAutomatica(t *testing.T) {
+	t.Run("OBHNB-I03: The node's own identified_as wins over the automatic form", func(t *testing.T) {})
+	// O destino nomeia só o PLURAL. A forma automática derivaria METADATA_ENTRY_TABLE_NAME
+	// (singular), que ali não existe — se o gate a usasse, acusaria um nó correto.
+	root := tmpRoot(t, "const tables = [METADATA_ENTRIES_TABLE_NAME]\n")
+	cfg := &config.Config{Obligations: []config.Obligation{{
+		Name:         "pii-purgavel",
+		When:         "carries: pii",
+		MustAppearIn: []string{"purge.ts"},
+		IdentifiedBy: "{{SCREAMING}}_TABLE_NAME",
+	}}}
+	comDeclaracao := "<!-- @anchors\n  code: MTENX\n  carries: pii\n" +
+		"  identified_as: METADATA_ENTRIES_TABLE_NAME\n-->\n"
+	if v, d := checkObligationHonored(comDeclaracao, obligNode(), root, nil, cfg); v != Pass {
+		t.Fatalf("o `identified_as` do nó devia ser o token procurado, foi %s (%s)", v, d)
+	}
+	// A contraparte que prova que a precedência é real: sem a declaração, a forma
+	// automática procura o singular e o nó correto é acusado.
+	semDeclaracao := "<!-- @anchors\n  code: MTENX\n  carries: pii\n-->\n"
+	if v, _ := checkObligationHonored(semDeclaracao, obligNode(), root, nil, cfg); v != Fail {
+		t.Fatalf("sem a declaração a forma automática procura o singular e devia acusar, foi %s", v)
+	}
+}
+
+// O gate NÃO DECIDE quais obrigações existem. Sem declaração na Estrutura, um nó que
+// qualquer revisor chamaria de obviamente purgável não é cobrado — inventar deveres
+// cobraria o que ninguém se comprometeu a fazer.
+func TestObligation_naoInventaDever(t *testing.T) {
+	t.Run("OBHNB-X01: The gate does not decide which obligations exist", func(t *testing.T) {})
+	root := tmpRoot(t, "const tables = []\n")
+	content := "<!-- @anchors\n  code: MTENX\n  carries: pii\n-->\n"
+	if v, d := checkObligationHonored(content, obligNode(), root, nil, &config.Config{}); v != Skip {
+		t.Fatalf("sem obrigação declarada nada é cobrado, foi %s (%s)", v, d)
+	}
+}
+
+// A régua é a PRESENÇA, e só ela. Um script que nomeia o token num ramo morto e não apaga
+// nada passa — separar esquecido de lembrado já é o defeito que este gate existe para
+// pegar; julgar a implementação é outra régua.
+func TestObligation_naoJulgaOQueODestinoFazComOToken(t *testing.T) {
+	t.Run("OBHNB-X02: The gate does not understand what the destination does with the token", func(t *testing.T) {})
+	root := tmpRoot(t, "if (false) { const morto = METADATA_ENTRY_TABLE }\n")
+	content := "<!-- @anchors\n  code: MTENX\n  carries: pii\n-->\n"
+	if v, d := checkObligationHonored(content, obligNode(), root, nil, obligCfg()); v != Pass {
+		t.Fatalf("a presença basta — julgar o uso é outra régua, foi %s (%s)", v, d)
+	}
+}
+
+// A declaração vale no HEADER, e só nele. Sem esse corte, uma citação na prosa — um
+// exemplo, um trecho de outro documento — eximiria uma obrigação que ninguém quis eximir.
+func TestObligation_declaracaoNoCorpoNaoVale(t *testing.T) {
+	t.Run("OBHNB-X03: A declaration written in the body is not read", func(t *testing.T) {})
+	root := tmpRoot(t, "// nada aqui\n")
+	enchimento := strings.Repeat("Prosa da spec que empurra o corpo para longe do header.\n", 40)
+	content := "<!-- @anchors\n  code: MTENX\n  carries: pii\n-->\n# x\n" + enchimento +
+		"obligation_waived: pii-purgavel — este nó não guarda dado do titular\n"
+	if v, d := checkObligationHonored(content, obligNode(), root, nil, obligCfg()); v != Fail {
+		t.Fatalf("declaração fora do header não exime, foi %s (%s)", v, d)
 	}
 }

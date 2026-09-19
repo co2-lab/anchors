@@ -6,6 +6,172 @@
 
 
 
+## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
+
+
+
+
+
+
+
+
+
+#### CDCTC-B01 — An artifact that is not a spec leaves without a verdict
+
+```gherkin
+    Given a node whose kind is code, test or feature
+    When the gate confronts it
+    Then it returns Skip, because the ruler starts from the spec that governs the code
+```
+
+#### CDCTC-B02 — An exported symbol the spec never names fails, and the verdict names it
+
+```gherkin
+    Given a spec cataloguing one rule and a code file exporting three functions
+    When the gate confronts it
+    Then it returns Fail naming each orphan and its line, because the name alone would
+      make the reader hunt for the symbol in the file
+```
+
+#### CDCTC-B03 — What the spec already catalogues is never accused
+
+```gherkin
+    Given a spec cataloguing one of the exported functions by name
+    When the gate confronts it
+    Then the verdict does not name that function, because it is already catalogued
+```
+
+#### CDCTC-B04 — A no-rule marker with a written reason waives the symbol
+
+```gherkin
+    Given an exported function carrying a no-rule marker with a written reason
+    And the spec that catalogues every other symbol
+    When the gate confronts it
+    Then it returns Pass, because not every export deserves a rule and the waiver is what
+      makes the noise manageable without lying
+```
+
+#### CDCTC-B05 — A bare no-rule marker does not waive
+
+```gherkin
+    Given an exported function carrying a no-rule marker with nothing written after it
+    When the gate confronts it
+    Then it returns Fail, because a bare marker would be a silent way to quiet the gate
+      and the trace that a decision was taken would vanish
+```
+
+#### CDCTC-B06 — A spec cataloguing every exported symbol passes
+
+```gherkin
+    Given a code file exporting two constants and a spec naming both
+    When the gate confronts it
+    Then it returns Pass
+```
+
+#### CDCTC-B07 — With no code linked the gate leaves without a verdict
+
+```gherkin
+    Given a spec with no code file linked to it in the map
+    When the gate confronts it
+    Then it returns Skip, because the absence belongs to the triad gate and accusing it
+      in both places would duplicate the debt
+```
+
+#### CDCTC-B08 — Without a declared export pattern the gate skips and says so
+
+```gherkin
+    Given a Go file and a project that declared no export pattern
+    When the gate confronts the spec that governs it
+    Then it does not return Pass, and the verdict names how to enable the pattern,
+      because green over what was never read is worse than an honest red
+```
+
+#### CDCTC-B09 — With the pattern declared the gate confronts for real in any language
+
+```gherkin
+    Given a project declaring an export pattern for Go
+    And a Go file exporting a function the spec never names
+    When the gate confronts the spec
+    Then it returns Fail naming that function
+```
+
+#### CDCTC-B10 — The declared dialect family also supplies the pattern
+
+```gherkin
+    Given a project that names its dialect family as Go and declares no pattern of its own
+    And a Go file exporting a function the spec never names
+    When the gate confronts the spec
+    Then it returns Fail naming that function, because naming the family is enough
+```
+
+#### CDCTC-I01 — The waiver holds in the comment block above the symbol
+
+```gherkin
+    Given the no-rule declaration written inline, one line above, in a two-line comment
+      block, in a block with paragraphs and in a doc comment
+    When the gate reads the context of the symbol in each case
+    Then the declaration holds in all of them, because it is documentation and the
+      explanation rarely fits on one line
+```
+
+#### CDCTC-I02 — The waiver does not leak between symbols
+
+```gherkin
+    Given two exported functions where only the first carries a no-rule declaration
+    When the gate reads the context of each symbol
+    Then only the first carries the declaration, because inheriting would let one marker
+      exempt the whole file, which is the opposite of what it is
+```
+
+#### CDCTC-I03 — The gate never approves a language it cannot read
+
+```gherkin
+    Given a Go file whose exports match no TypeScript syntax
+    And a project that declared no export pattern
+    When the gate confronts the spec
+    Then it does not return Pass, because stamping approval over what was never read is
+      the worst possible failure in a measuring instrument
+```
+
+#### CDCTC-X01 — The gate does not judge whether the rule describes the symbol well
+
+```gherkin
+    Given a spec whose rule names the exported function and describes it wrongly
+    When the gate confronts it
+    Then it returns Pass, because the ruler is whether the spec NAMES the symbol —
+      judging what the rule says about it belongs to another gate
+```
+
+#### CDCTC-X02 — The gate does not decide which symbols deserve a rule
+
+```gherkin
+    Given an exported function of pure formatting, which a reviewer would exempt
+    And no no-rule declaration anywhere near it
+    When the gate confronts the spec
+    Then it returns Fail, because the exemption is the project's call and the waiver is
+      where it records it — deciding here would remove the calibration
+```
+
+#### CDCTC-X03 — The gate knows no language, the project declares what is public
+
+```gherkin
+    Given two projects whose export patterns recognise different syntaxes
+    And the same file, public under one pattern and invisible under the other
+    When the gate confronts each
+    Then the verdicts differ, because recognising what is public depends on the language
+      and Anchors does not presume
+```
+
+#### CDCTC-X04 — The gate does not charge the absence of code
+
+```gherkin
+    Given a spec cataloguing rules with no code file linked to it
+    When the gate confronts it
+    Then it returns Skip rather than Fail, because accusing the same debt in two gates
+      would duplicate the finding
+```
+
+
 ## CDLNG — CodeLanguage — the code does not go back to mixing languages
 
 
@@ -94,6 +260,186 @@
     When the gate confronts it
     Then none is accused, because the dictionary approach was measured at ninety percent
       false positives — and a gate that wrong is switched off, defending nothing
+```
+
+
+## CSDCN — ContractStatusDeclared — the output contract lists the status codes the code really returns, and only those
+
+
+
+
+
+
+
+
+
+#### CSDCN-B01 — A status emitted and not declared is accused by number
+
+```gherkin
+    Given an output contract declaring 200, 404 and the 5xx range
+    And a handler that also emits 401, 403 and 409 on its refusal branches
+    When the gate confronts it
+    Then it returns Fail naming 401, 403 and 409, because the client programmed from the
+      table does not handle a refusal it was never told about
+```
+
+#### CSDCN-B02 — A status declared and emitted by no path is accused as a phantom
+
+```gherkin
+    Given an output contract declaring 402 for exceeded quota
+    And a handler whose quota branch answers 429 and never 402
+    When the gate confronts it
+    Then it returns Fail naming 402 as dead code in the client, which disappears with
+      nobody noticing
+```
+
+#### CSDCN-B03 — A faithful table passes
+
+```gherkin
+    Given an output contract whose concrete status codes are exactly the ones the handler emits
+    When the gate confronts it
+    Then it returns Pass, because a gate that only accuses is a noise generator
+```
+
+#### CSDCN-B04 — The 500 of the top-level try/catch is not charged
+
+```gherkin
+    Given an output contract declaring 200 and the 5xx range
+    And a handler whose only other status is the 500 of its catch block
+    When the gate confronts it
+    Then it returns Pass, because that 500 is infrastructure every handler carries, not a
+      decision of this one
+```
+
+#### CSDCN-B05 — The 5xx range covers, the 4xx range does not
+
+```gherkin
+    Given an output contract declaring 200, the 4xx range and the 5xx range
+    And a handler that emits 503 and 403
+    When the gate confronts it
+    Then it returns Fail naming 403 and staying silent about 503, because a generic 4xx
+      would hide exactly the access refusals this gate hunts
+```
+
+#### CSDCN-B06 — A status that lives only in a comment is not emitted
+
+```gherkin
+    Given an output contract declaring 200 and 404
+    And a handler whose 404 appears only in a comment describing the old behaviour, the
+      live branch answering 403
+    When the gate confronts it
+    Then it returns Fail naming 404 as a phantom, because a comment is not behaviour
+```
+
+#### CSDCN-B07 — Without the contract section there is nothing to confront
+
+```gherkin
+    Given a spec that catalogues effects and opens no output contract section
+    When the gate confronts it
+    Then it returns Skip, because charging the section's existence belongs to spec-complete
+```
+
+#### CSDCN-B08 — Code that returns no status is skipped
+
+```gherkin
+    Given an output contract that declares void, the contract of a cron handler
+    And code that persists items and returns no status
+    When the gate confronts it
+    Then it returns Skip, because there are no numbers on either side to compare
+```
+
+#### CSDCN-B09 — A literal status passed to a local helper counts as emitted
+
+```gherkin
+    Given an output contract declaring 200 and 400
+    And a handler that builds its 400 through a locally defined fail helper called with the literal
+    When the gate confronts it
+    Then it returns Pass, because a 400 is a 400 wherever the envelope is built
+```
+
+#### CSDCN-B10 — With a dynamic status the phantom side goes quiet and the literals still count
+
+```gherkin
+    Given an output contract declaring 200 and 404
+    And a handler with a helper that takes the status by parameter and one literal 403
+    When the gate confronts it
+    Then it returns Fail naming 403 and never naming 404, because a declared value may be
+      emitted through a call textual reading cannot reach
+```
+
+#### CSDCN-B11 — Without a declared dialect the verdict is Pending
+
+```gherkin
+    Given a project whose Structure declares no http_status lexicon
+    And a handler that emits 200
+    When the gate confronts it
+    Then it returns Pending, because the meter does not fake conformity nor guess the stack
+```
+
+#### CSDCN-B12 — An explicit opt-out of the http_status field is honoured
+
+```gherkin
+    Given a project whose Structure waives the http_status field of the dialect
+    When the gate confronts a spec with an output contract
+    Then it returns Skip, because the waiver is declared and localised, not a silent absence
+```
+
+#### CSDCN-I01 — The lexicon comes from the project's dialect, not from the gate
+
+```gherkin
+    Given a Go handler that writes its refusal through the net/http writer
+    And a Structure declaring the go dialect family
+    When the gate confronts it
+    Then it returns Fail naming 403, because embedding one stack's syntax would make the
+      gate silent on every other one
+```
+
+#### CSDCN-I02 — A dialect declared by hand teaches the gate its own lexicon
+
+```gherkin
+    Given a Structure declaring the http_status pattern directly, with no family
+    And a Ruby handler that renders 422 through that pattern
+    When the gate confronts it
+    Then it returns Fail naming 422, because the agnosticism cannot stop at the built-in families
+```
+
+#### CSDCN-I03 — A named constant is worth the number it means
+
+```gherkin
+    Given a handler whose refusal is written as the named forbidden constant and never as digits
+    When the gate confronts it
+    Then it returns Fail naming 403, because reading only digits would approve every
+      handler written with constants
+```
+
+#### CSDCN-X01 — The gate does not demand the generic ranges
+
+```gherkin
+    Given an output contract that declares no 5xx range at all
+    And a handler whose only failure path is the 500 of its catch block
+    When the gate confronts it
+    Then it returns Pass, because treating a range as a status would mean guessing which
+      numbers it covers
+```
+
+#### CSDCN-X02 — The gate does not judge when each status is right
+
+```gherkin
+    Given an output contract declaring 403 for a branch a reviewer would call a 404
+    And a handler that emits exactly that 403
+    When the gate confronts it
+    Then it returns Pass, because the ruler is the correspondence between two sets of
+      numbers, not judgement about the design
+```
+
+#### CSDCN-X03 — The gate does not charge the phantom side under a dynamic status
+
+```gherkin
+    Given a handler whose envelope helper receives the status by parameter
+    And an output contract declaring a status no literal in the code shows
+    When the gate confronts it
+    Then it never names that status, because mass false positives are what makes a team
+      turn the gate off
 ```
 
 
@@ -219,6 +565,155 @@
     And a document that a reviewer would consider obviously required
     When the gate confronts the unit
     Then it returns Pass, because inventing duties would charge what nobody committed to
+```
+
+
+## DSCDC — DocSelfContained — the spec has to stand on its own
+
+
+
+
+
+
+
+
+
+#### DSCDC-B01 — A reference that brings the passage it announces passes
+
+```gherkin
+    Given a spec naming the path of a plan node and quoting the passage just below it
+    When the gate confronts it
+    Then it returns Pass, because the reader has the argument in hand and does not leave the page
+```
+
+#### DSCDC-B02 — A reference that only points is accused
+
+```gherkin
+    Given a spec whose line names a plan path, or its bare file name, or a revision code,
+      and carries nothing of what it announces
+    When the gate confronts it
+    Then it returns Fail telling the author to bring the text, because the scaffold sends
+      the reader to a file they do not have
+```
+
+#### DSCDC-B03 — A quotation counts in any written tradition
+
+```gherkin
+    Given a spec whose reference is followed by the passage in straight quotes, typographic
+      quotes, guillemets, German low quotes or CJK corner brackets
+    When the gate confronts each one
+    Then every one returns Pass, because demanding Latin quotes would accuse a French or a
+      Japanese project unjustly
+```
+
+#### DSCDC-B04 — A path inside a code fence is an example, not a reference
+
+```gherkin
+    Given a spec showing a command to run inside a fenced block, and that command names a plan path
+    When the gate confronts it
+    Then it returns Pass, because inside the fence the path is what the reader types, not
+      where the reader is being sent
+```
+
+#### DSCDC-B05 — The spec citing its own path is identifying itself
+
+```gherkin
+    Given a spec whose body names its own file path
+    When the gate confronts it
+    Then it returns Pass, because it is sending nobody anywhere
+```
+
+#### DSCDC-B06 — A rule code is not a revision
+
+```gherkin
+    Given a spec whose line names a sibling rule code and explains what that rule proved
+    When the gate confronts it
+    Then it returns Pass, because the revision form is the one the doctrine reserves and
+      accusing the other would charge the spec for naming its own subject
+```
+
+#### DSCDC-B07 — Only the spec is charged
+
+```gherkin
+    Given the same empty reference written in a plan, a feature, a test and a code node
+    When the gate confronts each of them
+    Then every one returns Skip, because the plan references sibling plans by function and
+      the feature does not become documentation prose
+```
+
+#### DSCDC-B08 — A revision cited with an explanation on the same line passes
+
+```gherkin
+    Given a spec whose line names a revision code and then says, in substantive prose, what
+      that revision changed
+    When the gate confronts it
+    Then it returns Pass, because the code is the label and the sentence is the content
+```
+
+#### DSCDC-B09 — With no map the confrontation is skipped
+
+```gherkin
+    Given a spec whose body names what looks like a plan path
+    And no graph built
+    When the gate confronts it
+    Then it returns Skip, because the list of what counts as a reference comes from the map
+      and nowhere else
+```
+
+#### DSCDC-I01 — The ruler matches structure, never vocabulary
+
+```gherkin
+    Given the same bare path reference written in English, Spanish, German and Japanese
+    When the gate confronts each spec
+    Then every one returns Fail, because a gate that matched words would pass in silence over
+      the project written in the other language, and silence is worse than absence
+```
+
+#### DSCDC-I02 — The on-line explanation escape belongs to the revision, not to the path
+
+```gherkin
+    Given a spec whose line names a plan path and surrounds it with long prose that never says
+      what is in the file
+    When the gate confronts it
+    Then it returns Fail, because a path is the place the person would have to go and no
+      amount of surrounding prose says what waits there
+```
+
+#### DSCDC-I03 — The verdict names the line and shows what it says
+
+```gherkin
+    Given a spec whose fourth line carries a bare plan reference
+    When the gate confronts it
+    Then the finding carries that line number and an excerpt of the line, so the reader does
+      not have to hunt for it
+```
+
+#### DSCDC-X01 — The gate does not judge whether the accompanying content is faithful
+
+```gherkin
+    Given a spec whose reference is followed by a quotation that says something else entirely
+    When the gate confronts it
+    Then it returns Pass, because the ruler is whether the reader is left with something to
+      read — judging fidelity is another class of gate
+```
+
+#### DSCDC-X02 — The gate marks and does not block
+
+```gherkin
+    Given a spec with a bare reference
+    When the gate confronts it
+    Then the finding is recorded as informative and no command is offered to fix it, because
+      rewriting a sentence is the work of whoever wrote it
+```
+
+#### DSCDC-X03 — Measuring explanation errs on the permissive side
+
+```gherkin
+    Given a spec whose line names a revision code followed by prose just past the threshold
+      and saying little
+    When the gate confronts it
+    Then it returns Pass, because the threshold is a coarse ruler and mass false positives
+      are what make someone switch an informative gate off
 ```
 
 
@@ -482,6 +977,483 @@
 ```
 
 
+## LYBNL — LayerBoundary — a layer does not reach what is not its own
+
+
+
+
+
+
+
+
+
+#### LYBNL-B01 — An artifact that is not code leaves without a verdict
+
+```gherkin
+    Given a node whose kind is spec, test or feature
+    When the gate confronts it
+    Then it returns Skip, because there is no import to forbid outside code
+```
+
+#### LYBNL-B02 — Content matching a forbidden pattern fails, naming line and reason
+
+```gherkin
+    Given a boundary forbidding the screens layer to import from the repositories
+    And a screen whose second line imports straight from a repository
+    When the gate confronts it
+    Then it returns Fail naming line 2 and the declared reason, because a prohibition
+      with no motive turns into ritual
+```
+
+#### LYBNL-B03 — A rule scoped to a layer charges only that layer
+
+```gherkin
+    Given the same boundary declared for the screens layer
+    And a hook that imports from a repository
+    When the gate confronts it
+    Then it does not fail, because the hook is exactly who is allowed to reach the data
+```
+
+#### LYBNL-B04 — A rule with no layer holds for all code
+
+```gherkin
+    Given a boundary with no layer forbidding the raw clock
+    And files of the screens, hooks and repositories layers each reading the raw clock
+    When the gate confronts each of them
+    Then every one fails, because a rule without a layer is how a global prohibition
+      is declared
+```
+
+#### LYBNL-B05 — Severity warn records without failing, and the default is error
+
+```gherkin
+    Given a boundary marked severity warn and a file that violates it
+    When the gate confronts it
+    Then it returns Pending, and the same boundary with no severity returns Fail,
+      because the default is error and warn is the per-rule maturation
+```
+
+#### LYBNL-B06 — A waiver with a written reason on the line waives that line
+
+```gherkin
+    Given a forbidden import carrying an allow-boundary marker with a written reason
+    When the gate confronts it
+    Then it returns Pass, and the acknowledged debt stays visible and dated in the code
+```
+
+#### LYBNL-B07 — The waiver also holds in the comment on the line above
+
+```gherkin
+    Given a forbidden import whose allow-boundary marker with reason sits on the line above
+    When the gate confronts it
+    Then it returns Pass, because an import has nowhere to carry a readable end-of-line
+      comment and demanding it inline would push the author not to declare at all
+```
+
+#### LYBNL-B08 — A bare marker with no reason does not waive
+
+```gherkin
+    Given a forbidden import carrying an allow-boundary marker with nothing written after it
+    When the gate confronts it
+    Then it returns Fail, because a bare marker is a silent way to quiet the gate
+```
+
+#### LYBNL-B09 — With no boundary declared the verdict is Pending, never Pass
+
+```gherkin
+    Given a project that declares no boundary at all
+    When the gate confronts a code file
+    Then it returns Pending naming what to declare, because pretending it checked is
+      worse than saying what is missing
+```
+
+#### LYBNL-B10 — An invalid forbid pattern fails visibly
+
+```gherkin
+    Given a boundary whose forbid pattern does not compile
+    When the gate confronts a code file
+    Then it returns Fail explaining the config problem, because swallowed in silence it
+      would switch the rule off with nobody knowing
+```
+
+#### LYBNL-B11 — The pattern is matched against the whole file, catching a multi-line import
+
+```gherkin
+    Given a boundary forbidding a named import from a package
+    And a file whose import of that name is wrapped over several lines
+    When the gate confronts it
+    Then it returns Fail pointing at the line where the match starts
+```
+
+#### LYBNL-I01 — The same rule is expressible in six language dialects
+
+```gherkin
+    Given the same architectural rule written in the import dialect of TypeScript,
+      Python, Go, Java, Rust and Ruby
+    When the gate confronts a violation and a legitimate import in each dialect
+    Then the violation fails and the legitimate import passes in all six, because the one
+      who writes the pattern is the project and the engine knows no language
+```
+
+#### LYBNL-I02 — A single-line import of the same shape is still caught
+
+```gherkin
+    Given a boundary forbidding a named import from a package
+    And a file whose import of that name fits on one line
+    When the gate confronts it
+    Then it returns Fail, because accusing only the wrapped form would accuse formatting
+      rather than the violation
+```
+
+#### LYBNL-I03 — The waiver holds on any line of the matched stretch
+
+```gherkin
+    Given a multi-line import whose allow-boundary marker sits on the from line
+    When the gate confronts it
+    Then it returns Pass, because demanding the marker on the first line of the match
+      would require the author to know where the regex started matching
+```
+
+#### LYBNL-I04 — A line anchor keeps holding per line
+
+```gherkin
+    Given a boundary whose pattern anchors the forbidden text to a whole line
+    And a file carrying that text inside a string in the middle of a line
+    When the gate confronts it
+    Then it returns Pass, because the whole-file match changes the dot, not the meaning
+      of the anchors
+```
+
+#### LYBNL-X01 — The gate does not decide which boundaries exist
+
+```gherkin
+    Given a project whose Structure declares no boundary
+    And a screen importing straight from a repository, which a reviewer would forbid
+    When the gate confronts it
+    Then it does not fail, because inventing boundaries would charge what nobody
+      committed to
+```
+
+#### LYBNL-X02 — The gate does not parse the language, it matches text
+
+```gherkin
+    Given a boundary whose pattern is plain text with no notion of imports
+    And a file where the forbidden text appears outside any import statement
+    When the gate confronts it
+    Then it returns Fail, because the ruler is TEXT — understanding the import graph of
+      every language would tie the engine to a set of ecosystems
+```
+
+#### LYBNL-X03 — The gate does not judge whether the boundary is the right one to draw
+
+```gherkin
+    Given a boundary forbidding something a reviewer would consider harmless
+    And a file that matches it
+    When the gate confronts it
+    Then it returns Fail, because the ruler is the DECLARATION — whether the boundary is
+      worth drawing is design judgment, and that belongs to whoever writes the Structure
+```
+
+
+## MRPRM — MarkerParity — the same rule has to appear at BOTH ends that fulfil it
+
+
+
+
+
+
+
+
+
+#### MRPRM-B01 — A rule marked at both declared scopes passes
+
+```gherkin
+    Given a declaration whose scopes are the page tree and the server tree
+    And the same rule name marked once in each of them
+    When the gate confronts it
+    Then it returns Pass, because the mapping still has its two ends
+```
+
+#### MRPRM-B02 — A rule missing from one end fails, and the verdict names the empty scope
+
+```gherkin
+    Given the rule marked in the page tree and absent from the server tree
+    When the gate confronts it
+    Then it returns Fail
+    And the verdict names the server scope, because neither side looks wrong on its own
+```
+
+#### MRPRM-B03 — Two markings on the same side do not satisfy the gate
+
+```gherkin
+    Given the same rule marked twice inside the page tree and never in the server tree
+    When the gate confronts it
+    Then it returns Fail, because the two add up to the expected count and would hide
+      exactly the mismatch the gate exists to catch
+```
+
+#### MRPRM-B04 — A rule left over at one end fails and is named
+
+```gherkin
+    Given both ends marked for one rule
+    And a second rule marked only in the page tree, left behind when the server dropped it
+    When the gate confronts it
+    Then it returns Fail naming that leftover rule
+```
+
+#### MRPRM-B05 — Total absence of the prefix is not approval
+
+```gherkin
+    Given a declared prefix that appears nowhere in the tree
+    When the gate confronts it
+    Then it returns Pending asking to check marker_prefix, because absence is almost
+      always a typo in the declaration and Pass would make the gate look vigilant while
+      watching nothing
+```
+
+#### MRPRM-B06 — A declaration with no prefix returns Pending
+
+```gherkin
+    Given a gate declaration whose marker_prefix is empty
+    When the gate confronts it
+    Then it returns Pending asking for the prefix, because with no prefix there is
+      nothing to confront
+```
+
+#### MRPRM-B07 — With no scopes declared the ruler is the count
+
+```gherkin
+    Given a declaration with no scopes and a required count of two
+    And the rule marked in two files anywhere in the tree
+    When the gate confronts it
+    Then it returns Pass
+    And a tree carrying only one of those markings returns Fail
+```
+
+#### MRPRM-B08 — The marking crosses language
+
+```gherkin
+    Given the rule marked in a TypeScript file of the page tree
+    And marked again in a Go file of the server tree
+    When the gate confronts it
+    Then it returns Pass, because the mapping between the two ends is the same mapping
+      whatever language writes each end
+```
+
+#### MRPRM-B09 — Ignored directories never count towards parity
+
+```gherkin
+    Given both declared ends marked
+    And a third copy of the marking inside node_modules
+    When the gate confronts it
+    Then it returns Pass, and the vendored copy is not counted as an end
+```
+
+#### MRPRM-I01 — The failing verdict names the rule and the empty scope
+
+```gherkin
+    Given a rule whose server end was never marked
+    When the gate confronts it
+    Then the verdict carries both the rule name and the scope left empty, so the reader
+      does not have to diff the two trees to find the orphan
+```
+
+#### MRPRM-I02 — What was not measured is never approved
+
+```gherkin
+    Given in turn a declaration with no prefix, one with neither count nor scopes, and
+      a prefix that appears nowhere
+    When the gate confronts each of them
+    Then none of them returns Pass, because approving without having looked would stamp
+      what was never measured
+```
+
+#### MRPRM-X01 — The gate does not read what each end actually does
+
+```gherkin
+    Given both ends marked with the same rule name
+    And the page promising a list of items the handler does not erase
+    When the gate confronts it
+    Then it returns Pass, because presence is deterministic and agreement of meaning is
+      not — this gate separates "one end" from "both ends"
+```
+
+#### MRPRM-X02 — The gate does not decide which rules live at two ends
+
+```gherkin
+    Given a project whose Structure declares no marker-parity gate for a rule a reviewer
+      would consider obviously two-ended
+    When the gate is asked to run
+    Then nothing is charged, because the catalogue of two-ended rules belongs to the
+      project and a gate that invented parities would charge what nobody committed to
+```
+
+#### MRPRM-X03 — Files outside the text extension list are not read
+
+```gherkin
+    Given both declared ends marked
+    And a binary asset carrying the same byte sequence
+    When the gate confronts it
+    Then the asset is not scanned, because erring low costs a marking in an exotic place
+      and erring high costs megabytes read on every walk
+```
+
+
+## OBHNB — ObligationHonored — the cross-cutting duty that lives OUTSIDE the unit
+
+
+
+
+
+
+
+
+
+#### OBHNB-B01 — A node that carries the trigger and is absent from the demanded file fails
+
+```gherkin
+    Given a project declaring an obligation triggered by the personal-data attribute
+    And a node whose header carries that attribute and whose token never appears in the purge script
+    When the gate confronts it
+    Then it returns Fail carrying the declared reason for the duty, so the reader learns
+      what the absence costs
+```
+
+#### OBHNB-B02 — A node that carries the trigger and does appear passes
+
+```gherkin
+    Given the same obligation and a node whose header carries the trigger
+    And the purge script naming the token derived from that node
+    When the gate confronts it
+    Then it returns Pass, because the duty is fulfilled
+```
+
+#### OBHNB-B03 — A node without the trigger contracts no obligation
+
+```gherkin
+    Given a node whose header does not declare the trigger attribute
+    And a purge script that never names it
+    When the gate confronts it
+    Then it returns Pass, because the duty is charged by what the node declares about
+      itself, not by what it might resemble
+```
+
+#### OBHNB-B04 — A waiver exempts only when it carries a written reason
+
+```gherkin
+    Given a node that carries the trigger and is absent from the purge script
+    When the gate confronts it once with the waiver followed by a reason and once with the
+      waiver alone
+    Then the first returns Pass and the second returns Fail, because the reason is what
+      separates the honest exception from silence
+```
+
+#### OBHNB-B05 — A project with no declared obligation is skipped
+
+```gherkin
+    Given a project whose Structure declares no cross-cutting obligation
+    When the gate confronts a node that carries a trigger-looking attribute
+    Then it returns Skip, because inventing duties would charge what nobody committed to
+```
+
+#### OBHNB-B06 — An acknowledged debt with a written when yields Pending
+
+```gherkin
+    Given a node that carries the trigger and is absent from the purge script
+    And a debt declaration naming the obligation and the phase in which it will be paid
+    When the gate confronts it
+    Then it returns Pending carrying that commitment, because the duty still holds and the
+      record must stay visible in the report
+```
+
+#### OBHNB-B07 — A bare debt marker keeps failing
+
+```gherkin
+    Given the same unfulfilled node with a debt marker naming the obligation and nothing more
+    When the gate confronts it
+    Then it returns Fail, because a marker with no when assumes no debt — it only hides better
+```
+
+#### OBHNB-B08 — Waiver and debt stay distinct
+
+```gherkin
+    Given one unfulfilled node waiving the obligation with a reason and another acknowledging
+      the debt with a when
+    When the gate confronts both
+    Then only the waiver passes, because the debt is still owed and cannot be stamped as fulfilled
+```
+
+#### OBHNB-B09 — The failing verdict offers the three ways out
+
+```gherkin
+    Given a node that carries the trigger, is absent from the purge script and declares nothing
+    When the gate confronts it
+    Then the verdict names fulfilling, waiving with a reason and acknowledging the debt with
+      a when, so nobody has to guess what the gate will accept
+```
+
+#### OBHNB-I01 — The token is derived through the declared form
+
+```gherkin
+    Given a node named MetadataEntry
+    When each declared identifier form is applied to it
+    Then the raw form yields MetadataEntry, the screaming form METADATA_ENTRY, the snake form
+      metadata_entry, the kebab form metadata-entry and a free template the composed token,
+      because guessing the shape in the engine would put one project's mess inside the framework
+```
+
+#### OBHNB-I02 — A glob that matches no file produces no violation
+
+```gherkin
+    Given an obligation whose destination glob matches no file in the project
+    And a node that carries the trigger
+    When the gate confronts it
+    Then it returns Pass, because accusing where there was nothing to read would stamp what
+      was never measured
+```
+
+#### OBHNB-I03 — The node's own identified_as wins over the automatic form
+
+```gherkin
+    Given a node named MetadataEntry whose header declares it is referenced as a plural env var
+    And an obligation whose automatic form would derive the singular one
+    And the purge script naming only the plural declared by the node
+    When the gate confronts it
+    Then it returns Pass, because only the node knows the project's real irregularity —
+      inverting this order accuses 28 correct models
+```
+
+#### OBHNB-X01 — The gate does not decide which obligations exist
+
+```gherkin
+    Given a project whose Structure declares no obligation about personal data
+    And a node a reviewer would consider obviously purgeable
+    When the gate confronts it
+    Then it returns Skip, because the duties are the project's decision and a gate that
+      invented them would be turned off
+```
+
+#### OBHNB-X02 — The gate does not understand what the destination does with the token
+
+```gherkin
+    Given a purge script that names the node's token in a dead branch and erases nothing
+    When the gate confronts the node that carries the trigger
+    Then it returns Pass, because the ruler is presence — separating forgotten from
+      remembered is the defect this gate was built for, and judging the implementation is
+      another ruler
+```
+
+#### OBHNB-X03 — A declaration written in the body is not read
+
+```gherkin
+    Given a node that carries the trigger and is absent from the purge script
+    And a waiver with a full reason written far down in the document's prose instead of the header
+    When the gate confronts it
+    Then it returns Fail, because without that cut a quotation in the prose would waive an
+      obligation nobody meant to waive
+```
+
+
 ## OPQSP — OpenQuestions — a spec with an open question is not ready to implement
 
 
@@ -725,6 +1697,149 @@
     When the gate confronts it
     Then it returns Pass, because judging whether a hundred is many depends on the
       domain, and that is the project's decision
+```
+
+
+## PSDPL — PlanSourceDeclared — a plan that NAMES a source has to declare who builds it
+
+
+
+
+
+
+
+
+
+#### PSDPL-B01 — A source that lives only in the prose is failed
+
+```gherkin
+    Given a plan whose prose names a source in bold
+    And another plan seeds that source's adapter
+    And this plan's needs list does not name that other plan
+    When the gate confronts it
+    Then it returns Fail, because the dependency existed only in the prose and survived
+      the day the other plan dropped the adapter
+```
+
+#### PSDPL-B02 — The verdict names which source and where its adapter lives
+
+```gherkin
+    Given a plan naming a source whose adapter another plan seeds
+    And that other plan absent from the needs list
+    When the gate confronts it
+    Then the verdict carries the source name and the plan that owns the adapter, so the
+      fix is a declaration rather than an investigation
+```
+
+#### PSDPL-B03 — With the owning plan declared in needs the gate passes
+
+```gherkin
+    Given a plan naming a source whose adapter another plan seeds
+    And that other plan listed in this plan's needs
+    When the gate confronts it
+    Then it returns Pass, because the prose and the declaration now say the same thing
+```
+
+#### PSDPL-B04 — Every source of the line is confronted on its own
+
+```gherkin
+    Given one source line naming two sources in bold
+    And both adapters seeded by a plan this one does not declare
+    When the gate confronts it
+    Then it returns Fail naming both, because one declared source does not cover the rest
+```
+
+#### PSDPL-B05 — The source name matches the adapter regardless of case
+
+```gherkin
+    Given a plan naming the source in lower case
+    And the seeded adapter file spelling it in mixed case
+    When the gate confronts it
+    Then the two are matched and the undeclared dependency is charged
+```
+
+#### PSDPL-B06 — A source whose adapter nobody seeds is not charged
+
+```gherkin
+    Given a plan naming a source
+    And no plan in the map seeds an adapter for it
+    When the gate confronts it
+    Then it does not fail, because the source may belong to a plan that does not exist
+      yet and the gate cannot invent a dependency
+```
+
+#### PSDPL-B07 — The plan that seeds the adapter is not charged for itself
+
+```gherkin
+    Given a plan that names a source and itself seeds that source's adapter
+    When the gate confronts it
+    Then it does not fail, because a plan does not depend on itself
+```
+
+#### PSDPL-B08 — A plan with no source line returns Skip
+
+```gherkin
+    Given a plan whose prose names no source at all
+    When the gate confronts it
+    Then it returns Skip, because there is nothing to confront and that is not approval
+```
+
+#### PSDPL-B09 — An artifact that is not a plan returns Skip
+
+```gherkin
+    Given a spec whose text carries a source line
+    When the gate confronts it
+    Then it returns Skip, because the gate has jurisdiction over plans only
+```
+
+#### PSDPL-I01 — What was not measured is never approved
+
+```gherkin
+    Given in turn a plan confronted with no graph built, and one whose map seeds no
+      adapter at all
+    When the gate confronts each of them
+    Then neither returns Pass, because approving there would stamp a confrontation that
+      never happened
+```
+
+#### PSDPL-I02 — A seeded file off the naming pattern owns nothing
+
+```gherkin
+    Given a plan that seeds a file whose name does not end in the adapter suffix
+    And another plan naming that same source in bold
+    When the gate confronts the consumer
+    Then nothing is charged, because a wrong accusation costs more than a missed one —
+      it teaches the reader to ignore the gate
+```
+
+#### PSDPL-X01 — The gate does not confront the order of the phases
+
+```gherkin
+    Given a plan that declares in needs the plan building its adapter
+    And that owning plan scheduled in a later phase than this one
+    When the gate confronts it
+    Then it returns Pass, because ordering is the ruler of another gate and holding it
+      in two places would let the two diverge
+```
+
+#### PSDPL-X02 — The gate does not demand a needs pointing at nothing
+
+```gherkin
+    Given a plan naming a source no plan in the map builds
+    When the gate confronts it
+    Then it does not fail, because charging it would demand a declaration pointing at
+      nothing — the gate would be asking for a lie instead of catching one
+```
+
+#### PSDPL-X03 — The gate does not interpret what the source is for
+
+```gherkin
+    Given a plan whose prose names a source in bold only to say it was ruled out
+    And another plan seeds that source's adapter
+    When the gate confronts it
+    Then it still fails, because the ruler is the bold name on the source line —
+      deciding whether the plan really consumes it is interpretation, and interpretation
+      is not what a blocking gate can hold
 ```
 
 
@@ -1001,6 +2116,368 @@
     When the gate confronts it
     Then it returns Pass, because absence has nowhere to receive a comment — demanding
       it would produce thousands of findings and teach the team to ignore the list
+```
+
+
+## RLTYR — RuleTypes — the rule VOCABULARY is extensible, but it must be DECLARED
+
+
+
+
+
+
+
+
+
+#### RLTYR-B01 — A letter that is not declared in the vocabulary fails
+
+```gherkin
+    Given a vocabulary declaring the letters S, B and E
+    And a spec cataloguing a rule under the letter P
+    When the gate confronts it
+    Then it returns Fail naming the letter P, because a letter the traceability cannot
+      see makes the rule look covered when it is not
+```
+
+#### RLTYR-B02 — A declared letter under a claimed section passes
+
+```gherkin
+    Given a vocabulary declaring the letters S, B and E with their sections
+    And a spec cataloguing rules only under those letters and sections
+    When the gate confronts it
+    Then it returns Pass
+```
+
+#### RLTYR-B03 — A section cataloguing rules under a title no letter claims fails
+
+```gherkin
+    Given a vocabulary whose declared sections do not include "Regras Inventadas"
+    And a spec cataloguing a declared letter under that title
+    When the gate confronts it
+    Then it returns Fail naming the section, because the letter is claimed by a title and
+      the catalogue has to sit where the vocabulary says it does
+```
+
+#### RLTYR-B04 — The same letter claimed by two terms is a conflict in the vocabulary
+
+```gherkin
+    Given a vocabulary where the letter E is claimed by the terms Error and Estado
+    When the gate confronts any spec
+    Then it returns Fail signalling the CONFLICT, because each letter belongs to ONE term
+```
+
+#### RLTYR-B05 — With no vocabulary declared the gate confronts the canonical letters
+
+```gherkin
+    Given a project that declares no vocabulary
+    And a spec cataloguing a rule under the letter P, which is outside the canonical set
+    When the gate confronts it
+    Then it returns Fail saying it confronts the canonical vocabulary, because a gate that
+      Skips forever gives the impression of a defence that does not exist
+```
+
+#### RLTYR-B06 — A heading that is the rule code itself is not a category section
+
+```gherkin
+    Given a spec whose heading is the rule code followed by its title
+    When the gate confronts it
+    Then it returns Pass, because that heading is the rule's own header and not a
+      category that has to claim a letter
+```
+
+#### RLTYR-B07 — A section that only cites other sections' codes claims no letter
+
+```gherkin
+    Given a spec whose test-id section references codes of other sections in an inner column
+    And that section title is claimed by no letter
+    When the gate confronts it
+    Then it returns Pass, because citing is not cataloguing
+```
+
+#### RLTYR-B08 — A section that defines a code in the first table cell is charged
+
+```gherkin
+    Given a spec whose unclaimed section carries a table row opening with a rule code
+    When the gate confronts it
+    Then it returns Fail, because the first cell is where a definition lives
+```
+
+#### RLTYR-B09 — A section declared as rule-cataloguing and filled without a code is Pending
+
+```gherkin
+    Given a vocabulary declaring "Eventos / Callbacks" as requiring a code
+    And a spec whose section of that name carries a filled table and no code at all
+    When the gate confronts it
+    Then it returns Pending naming the section, because a row that asserts something
+      verifiable and carries no code leaves the scenario with nothing to cite
+```
+
+#### RLTYR-B10 — A section whose table already carries the code is not charged
+
+```gherkin
+    Given a vocabulary declaring "Eventos / Callbacks" as requiring a code
+    And a spec whose section of that name carries the rule code in its table
+    When the gate confronts it
+    Then it does not return Pending, because there is nothing left to charge
+```
+
+#### RLTYR-B11 — A declared section outside sections_require_code is not charged
+
+```gherkin
+    Given a vocabulary declaring "Variantes" under a letter but not as requiring a code
+    And a spec whose section of that name merely enumerates values
+    When the gate confronts it
+    Then it does not return Pending, because demanding a rule of an index would invent a duty
+```
+
+#### RLTYR-B12 — A project that does not use sections_require_code changes no behaviour
+
+```gherkin
+    Given a vocabulary declaring "Eventos / Callbacks" with no requires-code marking
+    And a spec whose section of that name carries a filled table and no code
+    When the gate confronts it
+    Then it does not return Pending, because the ruler is born opt-in and would otherwise
+      accuse an entire existing base at once
+```
+
+#### RLTYR-I01 — A spec with no rule code at all is not this gate's problem
+
+```gherkin
+    Given a project with no vocabulary declared
+    And a spec of pure prose that catalogues no rule
+    When the gate confronts it
+    Then it returns Pass, because charging the existence of a catalogued rule belongs to
+      the spec-complete gate and doing it here would duplicate the ruler
+```
+
+#### RLTYR-I02 — The verdict names the letter and where to declare it
+
+```gherkin
+    Given a project with no vocabulary declared
+    And a spec using a letter outside the canonical set
+    When the gate confronts it
+    Then the verdict carries both the letter and the vocabulary key to declare it in,
+      because failing without saying what transfers the diagnosis to whoever reads it
+```
+
+#### RLTYR-I03 — A filled section with no code is the gap where the scenario loses its anchor
+
+```gherkin
+    Given a vocabulary declaring an events section as requiring a code
+    And a spec whose events section is filled and carries no code
+    When the gate confronts it
+    Then it reports the finding, because without a code the scenario borrows the
+      neighbouring section's and starts governing what is not its own
+```
+
+#### RLTYR-X01 — The gate does not decide which letters exist
+
+```gherkin
+    Given a vocabulary declaring a letter the canonical set does not contain
+    And a spec cataloguing rules under that letter and its claimed section
+    When the gate confronts it
+    Then it returns Pass, because the vocabulary is extensible by design and the canonical
+      letters are the fallback, not a ceiling
+```
+
+#### RLTYR-X02 — Without a declared vocabulary only the letter is charged
+
+```gherkin
+    Given a project that declares no vocabulary
+    And a spec cataloguing a canonical letter under a title no vocabulary claims
+    When the gate confronts it
+    Then it returns Pass, because sections and terms only exist once the project declares
+      them, and charging them against an implicit vocabulary would invent a rule nobody wrote
+```
+
+#### RLTYR-X03 — The gate does not judge whether the letter suits the rule
+
+```gherkin
+    Given a vocabulary declaring both S for state and B for behaviour
+    And a spec cataloguing a plainly behavioural rule under the state letter and section
+    When the gate confronts it
+    Then it returns Pass, because which letter a rule deserves is editorial judgment —
+      the ruler here is that the traceability can see it
+```
+
+#### RLTYR-X04 — The gate charges traceability, not format
+
+```gherkin
+    Given a spec whose unclaimed section carries prose and no rule code at all
+    When the gate confronts it
+    Then it returns Pass, because a section that catalogues nothing has no traceability
+      to defend, whatever its shape
+```
+
+
+## SFMSP — SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario
+
+
+
+
+
+
+
+
+
+#### SFMSP-B01 — A requirement no scenario tags is failed and named
+
+```gherkin
+    Given a spec defining two requirements
+    And a linked feature carrying a scenario for only one of them
+    When the gate confronts it
+    Then it returns Fail naming the uncovered requirement, because otherwise it would
+      cross the whole pipeline with nothing verifying it
+```
+
+#### SFMSP-B02 — A requirement that has a scenario is not accused
+
+```gherkin
+    Given a spec defining one covered requirement and one uncovered requirement
+    When the gate confronts it
+    Then the verdict carries the uncovered one and never the covered one
+```
+
+#### SFMSP-B03 — With every requirement tagged the gate passes
+
+```gherkin
+    Given a spec defining two requirements
+    And a linked feature carrying one scenario tagged for each
+    When the gate confronts it
+    Then it returns Pass
+```
+
+#### SFMSP-B04 — A code merely cited contracts no obligation
+
+```gherkin
+    Given a spec defining one requirement of its own
+    And prose and a Dependency Table citing codes of other units
+    And a feature covering only its own requirement
+    When the gate confronts it
+    Then it returns Pass, because a spec cites other units' codes all the time and
+      without that distinction the gate would be a noise generator
+```
+
+#### SFMSP-B05 — A per-requirement waiver with a written reason waives
+
+```gherkin
+    Given a spec whose second requirement carries the waiver marker followed by a reason
+    And a feature covering only the first requirement
+    When the gate confronts it
+    Then it returns Pass, and the reason stays in the spec as the record that it was a
+      decision rather than forgetfulness
+```
+
+#### SFMSP-B06 — A bare per-requirement waiver does not waive
+
+```gherkin
+    Given a spec whose second requirement carries the waiver marker with nothing after it
+    And a feature covering only the first requirement
+    When the gate confronts it
+    Then it returns Fail, because the waiver requires a written reason
+```
+
+#### SFMSP-B07 — A whole-spec waiver drags the waiver to every requirement
+
+```gherkin
+    Given a spec declaring with a reason that it has no feature
+    And two requirements neither of which carries a waiver of its own
+    When the gate confronts it
+    Then it returns Skip, because with no feature no requirement of it can have a
+      scenario — one decision, one place
+```
+
+#### SFMSP-B08 — Without the whole-spec waiver the same requirements keep failing
+
+```gherkin
+    Given the same two requirements and the same empty feature
+    And no whole-spec waiver anywhere in the spec
+    When the gate confronts it
+    Then it returns Fail, because the drag cannot become a silent way of muting the gate
+```
+
+#### SFMSP-B09 — A bare whole-spec waiver drags nothing
+
+```gherkin
+    Given a spec whose whole-spec waiver marker has nothing written after it
+    And a feature carrying no scenario
+    When the gate confronts it
+    Then it returns Fail, because otherwise the marker would be a switch that turns the
+      gate off without accounting for it
+```
+
+#### SFMSP-B10 — A spec with no feature returns Skip
+
+```gherkin
+    Given a spec defining a requirement and no feature linked to it
+    When the gate confronts it
+    Then it returns Skip, because that absence is the ruler of the triad gate and
+      accusing it here would print the same defect twice
+```
+
+#### SFMSP-B11 — Requirements are looked for across every linked feature
+
+```gherkin
+    Given a spec covered by two features
+    And each feature carrying the scenario of a different requirement
+    When the gate confronts it
+    Then it returns Pass, because the requirement only needs to be in some of them
+```
+
+#### SFMSP-B12 — An artifact that is not a spec returns Skip
+
+```gherkin
+    Given a node whose kind is code, test or feature
+    When the gate confronts it
+    Then it returns Skip, because only a spec defines requirements
+```
+
+#### SFMSP-I01 — Every waiver requires a written reason
+
+```gherkin
+    Given in turn a bare per-requirement marker and a bare whole-spec marker
+    When the gate confronts each of them
+    Then both still fail, because a bare marker is a switch with no accounting and
+      silence without a why is what the gate exists to end
+```
+
+#### SFMSP-I02 — Each gate accuses one thing
+
+```gherkin
+    Given a spec with a defined requirement and no feature at all
+    When the gate confronts it
+    Then it skips rather than failing, because the missing feature belongs to the triad
+      gate and reporting it here would print the same defect twice
+```
+
+#### SFMSP-X01 — The gate does not judge whether the scenario proves the requirement
+
+```gherkin
+    Given a spec defining one requirement
+    And a feature whose scenario carries the tag and asserts nothing at all
+    When the gate confronts it
+    Then it returns Pass, because the tag is deterministic and the shape of the
+      assertion is the ruler of another gate
+```
+
+#### SFMSP-X02 — A cited code produces no accusation
+
+```gherkin
+    Given a spec whose Dependency Table cites three codes of other units
+    And a feature covering only the code this spec defines
+    When the gate confronts it
+    Then none of the cited codes appears in the verdict, because a gate that cries wolf
+      gets switched off — which costs more than the defect it was catching
+```
+
+#### SFMSP-X03 — The gate does not confront feature against test
+
+```gherkin
+    Given a spec whose every requirement has a scenario
+    And no test binding any of those scenarios
+    When the gate confronts it
+    Then it returns Pass, because that edge already has its own watcher and this gate
+      exists for the edge before it, which had none
 ```
 
 

@@ -34,6 +34,7 @@ func rodaContrato(t *testing.T, spec, codigo string) (Verdict, string) {
 // eram a defesa contra sequestro de convite — o cliente programado pela tabela não
 // tratava a recusa.
 func TestContrato_statusDeSegurancaOmitidoReprova(t *testing.T) {
+	t.Run("CSDCN-B01: A status emitted and not declared is accused by number", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -63,6 +64,7 @@ func TestContrato_statusDeSegurancaOmitidoReprova(t *testing.T) {
 // cota responde 429). Um cliente que tratasse 402 como "precisa pagar" nunca
 // dispararia esse ramo — código morto que ninguém percebe.
 func TestContrato_statusFantasmaReprova(t *testing.T) {
+	t.Run("CSDCN-B02: A status declared and emitted by no path is accused as a phantom", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -89,6 +91,7 @@ func TestContrato_statusFantasmaReprova(t *testing.T) {
 // import-transactions declarava "200 com transações" — uma API síncrona que não
 // existe. O caminho normal responde 202 `processing`.
 func TestContrato_statusRealDiferenteDoDeclaradoReprova(t *testing.T) {
+	t.Run("CSDCN-X02: The gate does not judge when each status is right", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -116,6 +119,7 @@ func TestContrato_statusRealDiferenteDoDeclaradoReprova(t *testing.T) {
 
 // O contrato correto passa. Sem isto o gate seria um gerador de ruído.
 func TestContrato_tabelaFielPassa(t *testing.T) {
+	t.Run("CSDCN-B03: A faithful table passes", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -141,6 +145,7 @@ func TestContrato_tabelaFielPassa(t *testing.T) {
 // O 500 do try/catch do topo não é decisão do handler: quase todo um tem, e as
 // specs declaram `5xx`. Cobrá-lo produziria falso-positivo em massa.
 func TestContrato_quinhentosDoTryCatchNaoEhCobrado(t *testing.T) {
+	t.Run("CSDCN-B04: The 500 of the top-level try/catch is not charged", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -162,6 +167,7 @@ func TestContrato_quinhentosDoTryCatchNaoEhCobrado(t *testing.T) {
 // A faixa `5xx` cobre 502/503, mas NÃO serve de guarda-chuva para os 4xx: um `4xx`
 // genérico esconderia justamente as recusas de acesso que este gate persegue.
 func TestContrato_faixaCincoXXCobreMasQuatroXXNao(t *testing.T) {
+	t.Run("CSDCN-B05: The 5xx range covers, the 4xx range does not", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -189,6 +195,7 @@ func TestContrato_faixaCincoXXCobreMasQuatroXXNao(t *testing.T) {
 // Comentário não é comportamento: um `// devolve 404` descreve o que a função FAZIA.
 // Contá-lo faria o gate aprovar um contrato que o código já não cumpre.
 func TestContrato_statusEmComentarioNaoConta(t *testing.T) {
+	t.Run("CSDCN-B06: A status that lives only in a comment is not emitted", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -212,6 +219,7 @@ func TestContrato_statusEmComentarioNaoConta(t *testing.T) {
 // Sem seção de contrato, o gate não tem o que confrontar — Skip, não Fail. Cobrar a
 // existência da seção é trabalho do `spec-completa`.
 func TestContrato_semSecaoEhSkip(t *testing.T) {
+	t.Run("CSDCN-B07: Without the contract section there is nothing to confront", func(t *testing.T) {})
 	if v, _ := rodaContrato(t, "## Efeitos\n| `X-B01` | faz algo |\n", "return { statusCode: 200 }"); v != Skip {
 		t.Fatalf("spec sem Contrato de Saída devia ser Skip, obteve %v", v)
 	}
@@ -220,6 +228,7 @@ func TestContrato_semSecaoEhSkip(t *testing.T) {
 // `void` é o contrato de um handler de cron/trigger: não devolve status. Se o código
 // também não devolve, não há nada a confrontar.
 func TestContrato_codigoSemStatusEhSkip(t *testing.T) {
+	t.Run("CSDCN-B08: Code that returns no status is skipped", func(t *testing.T) {})
 	spec := "## Contrato de Saída\n`void` (efeito: persiste itens).\n"
 	codigo := "export const handler = async () => { await gravar() }"
 	if v, _ := rodaContrato(t, spec, codigo); v != Skip {
@@ -233,6 +242,7 @@ func TestContrato_codigoSemStatusEhSkip(t *testing.T) {
 // acusava o 400 como fantasma. A forma genérica `helper(400, …)` cobre os helpers
 // locais que cada handler define.
 func TestContrato_helperLocalComStatusLiteralEhReconhecido(t *testing.T) {
+	t.Run("CSDCN-B09: A literal status passed to a local helper counts as emitted", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -260,6 +270,7 @@ export const handler = async () => {
 // por um caminho que a leitura textual não alcança. Ele segue cobrando o que
 // encontrou de literal e se cala sobre o resto.
 func TestContrato_comStatusDinamicoNaoAcusaFantasma(t *testing.T) {
+	t.Run("CSDCN-B10: With a dynamic status the phantom side goes quiet and the literals still count", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -307,6 +318,7 @@ func rodaContratoComDialeto(t *testing.T, spec, codigo, arquivo string, cfg *con
 // sobre um handler Go `net/http`, com o léxico vindo de `dialect.family: go`.
 // Se alguém voltar a embutir `statusCode:` na lógica, este teste reprova.
 func TestContrato_dialetoGoLeStatusDoNetHTTP(t *testing.T) {
+	t.Run("CSDCN-I01: The lexicon comes from the project's dialect, not from the gate", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -336,6 +348,7 @@ func Handle(w http.ResponseWriter, r *http.Request) {
 // Dialeto declarado à mão (sem família): um projeto Rails/Python que ensina o gate
 // a ler o seu próprio léxico. Prova que não é preciso ter família embutida.
 func TestContrato_dialetoExplicitoEnsinaLexicoProprio(t *testing.T) {
+	t.Run("CSDCN-I02: A dialect declared by hand teaches the gate its own lexicon", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -358,6 +371,7 @@ end`
 }
 
 func TestContrato_semDialetoEhPendente(t *testing.T) {
+	t.Run("CSDCN-B11: Without a declared dialect the verdict is Pending", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -372,6 +386,7 @@ func TestContrato_semDialetoEhPendente(t *testing.T) {
 }
 
 func TestContrato_optOutEhSkip(t *testing.T) {
+	t.Run("CSDCN-B12: An explicit opt-out of the http_status field is honoured", func(t *testing.T) {})
 	spec := `## Contrato de Saída
 | Status | Quando |
 | --- | --- |
@@ -404,5 +419,87 @@ func TestContrato_secaoOutputContractEmIngles(t *testing.T) {
 	v, msg := rodaContratoComDialeto(t, spec, codigo, "handler.ts", cfg)
 	if v != Pass {
 		t.Fatalf("seção ## Output Contract devia passar; obteve %v (%s)", v, msg)
+	}
+}
+
+// A CONSTANTE NOMEADA vale o número que significa. Um handler escrito inteiramente com
+// `http.StatusForbidden` não tem um único dígito no corpo — ler só dígitos aprovaria
+// todos eles em silêncio.
+func TestContrato_constanteNomeadaValeONumero(t *testing.T) {
+	t.Run("CSDCN-I03: A named constant is worth the number it means", func(t *testing.T) {})
+	spec := `## Contrato de Saída
+| Status | Quando |
+| --- | --- |
+| 200 | ok |
+`
+	codigo := `package handler
+
+func Handle(w http.ResponseWriter, r *http.Request) {
+	if !dono(r) {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}`
+	cfg := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	v, msg := rodaContratoComDialeto(t, spec, codigo, "handler.go", cfg)
+	if v != Fail {
+		t.Fatalf("o 403 escrito só como constante devia ser cobrado; obteve %v (%s)", v, msg)
+	}
+	if !strings.Contains(msg, "403") {
+		t.Errorf("devia traduzir StatusForbidden → 403; msg = %q", msg)
+	}
+	if strings.Contains(msg, "StatusOK") || strings.Contains(msg, "StatusForbidden") {
+		t.Errorf("a acusação é pelo NÚMERO, não pelo nome da constante; msg = %q", msg)
+	}
+}
+
+// O gate NÃO EXIGE a faixa genérica. Uma tabela que declara só o 200, sobre um handler
+// cujo único outro caminho é o 500 do catch, passa: tratar a faixa como status exigiria
+// adivinhar quais números ela cobre, e a adivinhação seria cobrada como declaração.
+func TestContrato_naoExigeFaixaGenerica(t *testing.T) {
+	t.Run("CSDCN-X01: The gate does not demand the generic ranges", func(t *testing.T) {})
+	spec := `## Contrato de Saída
+| Status | Quando |
+| --- | --- |
+| 200 | ok |
+`
+	codigo := `export const handler = async () => {
+  try {
+    return { statusCode: 200, body: '{}' }
+  } catch {
+    return { statusCode: 500, body: '{}' }
+  }
+}`
+	v, msg := rodaContrato(t, spec, codigo)
+	if v != Pass {
+		t.Fatalf("sem faixa declarada e só com o 500 do catch devia passar; obteve %v (%s)", v, msg)
+	}
+}
+
+// A contraparte do dinâmico, pelo lado do que o gate SE CALA: o status declarado que
+// nenhum literal mostra não pode ser acusado quando o envelope recebe o código por
+// parâmetro. Aqui não há nenhum literal a cobrar — o veredito tem de ser limpo.
+func TestContrato_dinamicoSilenciaOFantasmaPorCompleto(t *testing.T) {
+	t.Run("CSDCN-X03: The gate does not charge the phantom side under a dynamic status", func(t *testing.T) {})
+	spec := `## Contrato de Saída
+| Status | Quando |
+| --- | --- |
+| 200 | ok |
+| 409 | conflito |
+`
+	codigo := `function resp(status: number) {
+  return { statusCode: status, body: '{}' }
+}
+export const handler = async () => {
+  if (conflito) return resp(codigoDeConflito)
+  return { statusCode: 200, body: '{}' }
+}`
+	v, msg := rodaContrato(t, spec, codigo)
+	if v != Pass {
+		t.Fatalf("com status dinâmico e nenhum literal a cobrar, o veredito devia ser limpo; obteve %v (%s)", v, msg)
+	}
+	if strings.Contains(msg, "409") {
+		t.Errorf("o 409 pode ser emitido por um caminho que a leitura textual não alcança; msg = %q", msg)
 	}
 }
