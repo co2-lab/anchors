@@ -215,6 +215,13 @@ derived:
   # e seria a leitura errada aqui — num repositório onde o código veio primeiro, ancorar
   # nele congelaria a inversão que a doutrina existe para desfazer.
   anchor: spec
+  # Como ESTE projeto escreve um simbolo publico. Sem a declaracao o `code-cataloged`
+  # PULA e diz que pulou — um medidor que nao sabe medir tem de calar, nao aprovar. O
+  # padrao embutido era de TS/JS (`export function NOME`), que em Go casa ZERO simbolos:
+  # o gate reportaria verde sendo `blocking`, carimbando o que nao conferiu.
+  #
+  # Em Go a exportacao e' a MAIUSCULA inicial, e nao uma palavra-chave.
+  export_detect: "^func\\s+([A-Z]\\w*)"
   files:
     spec: ["{{dir}}/{{name}}.spec.md"]
     code: ["{{dir}}/{{name}}.go"]

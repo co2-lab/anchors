@@ -48,6 +48,7 @@ func raizComProva(t *testing.T, codigo string) string {
 	return root
 }
 
+// TRCMT-B04
 func TestTrincaCompleta_trincaInteiraPassa(t *testing.T) {
 	g := trincaGraph(true, true, true)
 	if v, msg := checkTriadComplete("", specNode(), "", g, &config.Config{}); v != Pass {
@@ -55,6 +56,7 @@ func TestTrincaCompleta_trincaInteiraPassa(t *testing.T) {
 	}
 }
 
+// TRCMT-I01
 func TestTrincaCompleta_testeAlcancadoEmDoisSaltos(t *testing.T) {
 	// A regressão que eu mesmo introduzi: procurar `tested-by` DIRETO na spec acusa
 	// falta de teste em todo projeto, porque a aresta nasce na FEATURE.
@@ -65,6 +67,7 @@ func TestTrincaCompleta_testeAlcancadoEmDoisSaltos(t *testing.T) {
 	}
 }
 
+// TRCMT-B05
 func TestTrincaCompleta_semTesteReprova(t *testing.T) {
 	g := trincaGraph(true, true, false)
 	v, msg := checkTriadComplete("", specNode(), "", g, &config.Config{})
@@ -76,6 +79,7 @@ func TestTrincaCompleta_semTesteReprova(t *testing.T) {
 	}
 }
 
+// TRCMT-B05
 func TestTrincaCompleta_specSozinhaReprovaCitandoAsTresPecas(t *testing.T) {
 	// o caso que motivou o gate: spec sem nada atravessava TODOS os gates.
 	g := trincaGraph(false, false, false)
@@ -90,6 +94,7 @@ func TestTrincaCompleta_specSozinhaReprovaCitandoAsTresPecas(t *testing.T) {
 	}
 }
 
+// TRCMT-B02
 func TestTrincaCompleta_camadaReconhecidaPula(t *testing.T) {
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"dao"}}
 	g := trincaGraph(false, false, false)
@@ -98,6 +103,7 @@ func TestTrincaCompleta_camadaReconhecidaPula(t *testing.T) {
 	}
 }
 
+// TRCMT-B06
 func TestTrincaCompleta_trincaOpcionalDispensaPeca(t *testing.T) {
 	// opt-out HONESTO: declarado na Estrutura, não escondido num Skip.
 	cfg := &config.Config{Layers: map[string]config.Layer{
@@ -110,6 +116,7 @@ func TestTrincaCompleta_trincaOpcionalDispensaPeca(t *testing.T) {
 	}
 }
 
+// TRCMT-B01
 func TestTrincaCompleta_naoSpecPula(t *testing.T) {
 	n := mapx.Node{ID: "x.ts", Kind: mapx.KindCode}
 	if v, _ := checkTriadComplete("", n, "", trincaGraph(false, false, false), &config.Config{}); v != Skip {
@@ -117,6 +124,7 @@ func TestTrincaCompleta_naoSpecPula(t *testing.T) {
 	}
 }
 
+// TRCMT-B07
 func TestTrincaCompleta_noTestDispensaPorUnidade(t *testing.T) {
 	// A dispensa por CAMADA isenta em bloco; esta é da UNIDADE e fica escrita nela.
 	// Serve para o caso real: dentro de `services` convivem o gateway de 9 linhas
@@ -130,6 +138,7 @@ func TestTrincaCompleta_noTestDispensaPorUnidade(t *testing.T) {
 	}
 }
 
+// TRCMT-B07
 func TestTrincaCompleta_dispensaExigeRazao(t *testing.T) {
 	// Marcador NU não dispensa — senão `@no-test` viraria um jeito silencioso de
 	// calar o gate, que é o oposto do opt-out honesto.
@@ -141,6 +150,7 @@ func TestTrincaCompleta_dispensaExigeRazao(t *testing.T) {
 	}
 }
 
+// TRCMT-I04
 func TestTrincaCompleta_noFeatureArrastaOTeste(t *testing.T) {
 	// Sem feature não há cenário a provar: cobrar o teste seria exigir a prova de
 	// algo que ninguém especificou.
@@ -151,6 +161,7 @@ func TestTrincaCompleta_noFeatureArrastaOTeste(t *testing.T) {
 	}
 }
 
+// TRCMT-I04
 func TestTrincaCompleta_dispensaNaoApagaOCodigo(t *testing.T) {
 	// O CÓDIGO nunca é dispensável: uma spec sem o arquivo que ela descreve é a
 	// própria situação que este gate existe para pegar.
@@ -161,6 +172,7 @@ func TestTrincaCompleta_dispensaNaoApagaOCodigo(t *testing.T) {
 	}
 }
 
+// TRCMT-I02
 func TestTrincaCompleta_noTestComCenarioNaFeatureEhContradicao(t *testing.T) {
 	// `@no-test` diz "não há o que provar"; um cenário diz "prova-se assim". As duas
 	// afirmações não convivem — e sem esta checagem a contradição fica MUDA: a
@@ -183,6 +195,7 @@ func TestTrincaCompleta_noTestComCenarioNaFeatureEhContradicao(t *testing.T) {
 	}
 }
 
+// TRCMT-I02
 func TestTrincaCompleta_noTestSemCenarioPassa(t *testing.T) {
 	// Feature com cabeçalho e NENHUM cenário (esqueleto) não contradiz a dispensa —
 	// não há afirmação de comportamento a provar.
@@ -201,6 +214,7 @@ func TestTrincaCompleta_noTestSemCenarioPassa(t *testing.T) {
 // A referência do `@no-test` tem de RESOLVER: um código que nenhum teste menciona é
 // uma promessa vazia. Pior que a ausência — ela passa a impressão de que a prova foi
 // conferida por alguém.
+// TRCMT-I03
 func TestTrincaCompleta_noTestComReferenciaOrfaReprova(t *testing.T) {
 	root := raizComProva(t, "AAAAX-B01") // o teste prova B01…
 	g := trincaGraph(true, true, false)
@@ -217,6 +231,7 @@ func TestTrincaCompleta_noTestComReferenciaOrfaReprova(t *testing.T) {
 
 // Razão em PROSA, sem código, não basta: é exatamente o "provado na integração" que
 // ninguém consegue conferir. É a regra que este gate passou a cobrar.
+// TRCMT-I03
 func TestTrincaCompleta_noTestSemReferenciaReprova(t *testing.T) {
 	root := raizComProva(t, "AAAAX-B01")
 	g := trincaGraph(true, true, false)
@@ -230,6 +245,7 @@ func TestTrincaCompleta_noTestSemReferenciaReprova(t *testing.T) {
 // `@no-feature` NÃO precisa de referência: ele afirma que não há comportamento
 // observável, e não existe prova a apontar. Exigir o endereço de algo que a spec acabou
 // de dizer que não existe seria incoerente — e travaria todo gateway sem regra.
+// TRCMT-I03
 func TestTrincaCompleta_noFeatureNaoExigeReferencia(t *testing.T) {
 	g := trincaGraph(true, false, false)
 	spec := "@no-feature: wiring de infraestrutura, sem regra observável\n"
@@ -245,6 +261,7 @@ func TestTrincaCompleta_noFeatureNaoExigeReferencia(t *testing.T) {
 // Sem o `@TBD`, quem escreve uma spec nova tem duas saídas e ambas são ruins: barrar o
 // commit de todo trabalho em andamento, ou declarar `@no-test` mentindo — e aí a cobrança
 // some PARA SEMPRE justamente na unidade que mais vai precisar dela.
+// TRCMT-I04
 func TestTBDDispensaSoOQueFoiDeclarado(t *testing.T) {
 	casos := []struct {
 		marca   string
@@ -276,6 +293,7 @@ func TestTBDDispensaSoOQueFoiDeclarado(t *testing.T) {
 }
 
 // Sem `@TBD` nenhum, nada é dispensado — o marcador é opt-in.
+// TRCMT-B07
 func TestSemTBDNadaEhDispensado(t *testing.T) {
 	if len(piecesToDevelop("# Spec sem marca nenhuma\n")) != 0 {
 		t.Error("sem `@TBD` o gate cobra tudo, como sempre cobrou")
@@ -296,6 +314,7 @@ func TestSemTBDNadaEhDispensado(t *testing.T) {
 // Medido ao remover o `@TBD` de três specs com as trincas completas: o gate continuou
 // lendo a dispensa, agora do texto da própria revisão que a removia — e o `triad-complete`
 // voltou a INDETERMINADO, que é o pior resultado (nem passa nem acusa, e parece cobertura).
+// TRCMT-B07
 func TestPiecesToDevelop_citacaoEntreCrasesNaoDispensa(t *testing.T) {
 	casos := []struct {
 		nome     string
@@ -319,6 +338,7 @@ func TestPiecesToDevelop_citacaoEntreCrasesNaoDispensa(t *testing.T) {
 
 // E a declaração ativa continua nomeando as peças certas — a guarda não pode comer o
 // grupo de captura.
+// TRCMT-B05
 func TestPiecesToDevelop_aDeclaracaoAtivaNomeiaAsPecas(t *testing.T) {
 	pecas := piecesToDevelop("> **@TBD: code,feature** — a spec nasce primeiro")
 	if len(pecas) != 2 {
@@ -339,6 +359,7 @@ func TestPiecesToDevelop_aDeclaracaoAtivaNomeiaAsPecas(t *testing.T) {
 // Medido: `packages/infra/` do projeto de referência é CDK COM regra — três unidades, 19
 // regras e invariantes somados, 61 testes, toda mutação detectada — e o `triad-complete`
 // respondia INDETERMINADO nas três. Nem passa nem acusa, e parece cobertura.
+// TRCMT-B02
 func TestIsRecognizedLayerCfg_oRegimeDeclaradoVence(t *testing.T) {
 	spec := mapx.Node{Kind: mapx.KindSpec, Layer: "spec", Tags: []string{"spec"}}
 	header := "<!-- @anchors\n  layer: infra\n-->\n"
@@ -373,6 +394,7 @@ func TestIsRecognizedLayerCfg_oRegimeDeclaradoVence(t *testing.T) {
 // projeto de referência É os workflows do GitHub Actions, e não tem módulo a escrever. As
 // saídas eram deixar o gate reprovando para sempre, ou fingir um módulo que "valida a
 // configuração" e só saberia dizer que ela existe.
+// TRCMT-B07
 func TestSpecWaivers_noCode(t *testing.T) {
 	// A razão é obrigatória: um marcador nu seria um jeito silencioso de calar o gate.
 	if len(specWaivers("@no-code")) != 0 {

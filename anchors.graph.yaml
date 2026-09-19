@@ -1622,6 +1622,7 @@ nodes:
     - id: internal/gate/domain_declared.spec.md
       kind: spec
       rev: 8aaf21c6d0e0
+      updated_at: "2026-09-19"
       code: DMDCD
       layer: spec
       code_declared: true
@@ -1630,7 +1631,7 @@ nodes:
     - id: internal/gate/domain_declared_test.go
       kind: test
       rev: 92fe25054033
-      updated_at: "2026-09-16"
+      updated_at: "2026-09-19"
       code: DMDCD
       layer: teste
       tags:
@@ -2399,15 +2400,24 @@ nodes:
       kind: code
       rev: 7fbe0f3050d2
       updated_at: "2026-09-19"
+      code: TRCMT
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/triad_complete.spec.md
+      kind: spec
+      rev: aed2684c3a95
+      code: TRCMT
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/triad_complete_test.go
       kind: test
-      rev: f2b411a637b2
+      rev: 1ce8652f263b
       updated_at: "2026-09-19"
-      code: AAAAX
+      code: TRCMT
       layer: teste
       tags:
         - test
@@ -3742,8 +3752,16 @@ edges:
       to: internal/gate/domain_declared.spec.md
       type: governs
       origin: declared
+    - from: SPEC.md
+      to: internal/gate/triad_complete.spec.md
+      type: governs
+      origin: declared
     - from: SPEC_TYPES.md
       to: internal/gate/domain_declared.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC_TYPES.md
+      to: internal/gate/triad_complete.spec.md
       type: governs
       origin: declared
     - from: STRUCTURE.md
@@ -4030,5 +4048,23 @@ edges:
       stamp:
         validated_from_rev: 8aaf21c6d0e0
         validated_to_rev: 92fe25054033
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/triad_complete.spec.md
+      to: internal/gate/triad_complete.go
+      type: specifies
+      origin: convention
+      stamp:
+        validated_from_rev: aed2684c3a95
+        validated_to_rev: 7fbe0f3050d2
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/triad_complete.spec.md
+      to: internal/gate/triad_complete_test.go
+      type: tested-by
+      origin: convention
+      stamp:
+        validated_from_rev: aed2684c3a95
+        validated_to_rev: 1ce8652f263b
         changed_at: "2026-09-19"
         verdict: ok
