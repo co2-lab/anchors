@@ -25,9 +25,13 @@ abra a página dela em `camadas/`.
 
 ### [DSCDC — DocSelfContained — the spec has to stand on its own](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own)
 
+### [DCFRD — DocsFresh — the compiled document has to reflect the spec](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec)
+
 ### [DMDCD — DomainDeclared — the spec declares what the unit ACCEPTS, and who blocks the invalid](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid)
 
 ### [EVFRV — EvidenceFresh — the score of this test holds against TODAY's code](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
+
+### [EXCMX — ExternalCommand — executes external tools via shell passing targets as positional arguments](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments)
 
 ### [FTMFT — FeatureTestMatch — scenarios in feature must be implemented in test by code and description](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description)
 
@@ -59,7 +63,11 @@ abra a página dela em `camadas/`.
 
 ### [PRHNP — ProgressHonest — the progress file tells the truth about the disk](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
 
+### [PRGTP — PromotableGates — identifies clean informative gates ready for promotion to blocking](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking)
+
 ### [PCBPR — ProofCrossesBoundary — when a rule claims a relation, the proof must reach the other side](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side)
+
+### [RFRSR — RefResolves — the reference points at the spec that REALLY describes the unit](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit)
 
 ### [RPHRG — RegionPairHonored — every opened source region must close with its own identity code](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code)
 
@@ -70,6 +78,8 @@ abra a página dela em `camadas/`.
 ### [RLTYR — RuleTypes — the rule VOCABULARY is extensible, but it must be DECLARED](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared)
 
 ### [SCASS — ScenarioAsserts — scenario outcome steps must assert concrete verifiable outcomes](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes)
+
+### [SCIDS — ScenarioIdentity — two scenarios of the same feature cannot share one code](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code)
 
 ### [STASC — ScenarioTypeAligned — scenario classification tags must match the code nature letter](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter)
 
@@ -84,4 +94,6 @@ abra a página dela em `camadas/`.
 ### [TRDCT — TriggerDeclared — cited compliance triggers and obligations must exist in the declared vocabulary](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary)
 
 ### [VLANV — ValueAnchored — every value of a closed set points at the rule that justifies it, and the anchor carries the value](camadas/gate.md#vlanv--valueanchored--every-value-of-a-closed-set-points-at-the-rule-that-justifies-it-and-the-anchor-carries-the-value)
+
+### [VRBSV — VRBaseline — ensures visual regression scenarios have captured reference baseline images](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images)
 

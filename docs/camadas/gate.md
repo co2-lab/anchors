@@ -5,7 +5,7 @@
 
 
 
-> Esta camada tem 37 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 43 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -50,6 +50,12 @@
 
 
 
+## DCFRD — DocsFresh — the compiled document has to reflect the spec
+
+
+
+
+
 ## DMDCD — DomainDeclared — the spec declares what the unit ACCEPTS, and who blocks the invalid
 
 
@@ -57,6 +63,12 @@
 
 
 ## EVFRV — EvidenceFresh — the score of this test holds against TODAY's code
+
+
+
+
+
+## EXCMX — ExternalCommand — executes external tools via shell passing targets as positional arguments
 
 
 
@@ -152,7 +164,19 @@
 
 
 
+## PRGTP — PromotableGates — identifies clean informative gates ready for promotion to blocking
+
+
+
+
+
 ## PCBPR — ProofCrossesBoundary — when a rule claims a relation, the proof must reach the other side
+
+
+
+
+
+## RFRSR — RefResolves — the reference points at the spec that REALLY describes the unit
 
 
 
@@ -183,6 +207,12 @@
 
 
 ## SCASS — ScenarioAsserts — scenario outcome steps must assert concrete verifiable outcomes
+
+
+
+
+
+## SCIDS — ScenarioIdentity — two scenarios of the same feature cannot share one code
 
 
 
@@ -225,6 +255,12 @@
 
 
 ## VLANV — ValueAnchored — every value of a closed set points at the rule that justifies it, and the anchor carries the value
+
+
+
+
+
+## VRBSV — VRBaseline — ensures visual regression scenarios have captured reference baseline images
 
 
 

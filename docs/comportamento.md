@@ -222,6 +222,38 @@ teste prova.
 
 - [Measuring explanation errs on the permissive side](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-X03`
 
+- [A compiled document that no longer matches the spec fails](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B01`
+
+- [The verdict names the stale documents](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B02`
+
+- [A compiled document that matches the templates passes](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B03`
+
+- [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B04`
+
+- [A project with no template directory is not charged](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B05`
+
+- [A template whose document was never produced counts as stale](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B06`
+
+- [A document written by hand is not charged](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B07`
+
+- [A template that cannot be compiled fails](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B08`
+
+- [A project whose specs cannot be read leaves without a verdict](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B09`
+
+- [The comparison happens in memory](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-B10`
+
+- [The gate never repairs what it points at](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-I01`
+
+- [The charge starts from the spec and never from the compiled document](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-I02`
+
+- [The gate does not judge whether the compiled document is good](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-X01`
+
+- [The gate does not run the build even knowing the fix](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-X02`
+
+- [The gate does not charge documents written by hand](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-X03`
+
+- [The compiled document is not confronted as an artifact of its own](camadas/gate.md#dcfrd--docsfresh--the-compiled-document-has-to-reflect-the-spec) `DCFRD-X04`
+
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B01`
 
 - [A spec without the domain section is failed](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B02`
@@ -275,6 +307,42 @@ teste prova.
 - [The gate does not run the test nor judge whether the change broke it](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X02`
 
 - [The gate does not read the project's configuration](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X03`
+
+- [An external command exiting with status zero returns Pass](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B01`
+
+- [An external command exiting with non-zero status returns Fail with output](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B02`
+
+- [An external command failing with empty output reports execution error](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B03`
+
+- [Single node execution delegates to RunExternalArgs](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B04`
+
+- [Placeholder file is rewritten to positional parameter](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B05`
+
+- [Placeholder files is rewritten to all positional parameters](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B06`
+
+- [Execution without targets runs once for project scope](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B07`
+
+- [Targets within budget run in a single batch](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B08`
+
+- [Targets exceeding budget are partitioned across batches](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B09`
+
+- [Failure in any batch causes entire execution to fail](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B10`
+
+- [Single target failure detail is truncated at five hundred characters](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B11`
+
+- [Batch failure detail is truncated at four thousand characters](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B12`
+
+- [Environment variable overrides argv limit](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B13`
+
+- [Target paths are passed strictly in argv preventing injection](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-I01`
+
+- [Oversized single target is isolated in its own batch](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-I02`
+
+- [Platform default argv limits are enforced](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-I03`
+
+- [The gate does not parse or interpret linter diagnostics](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-X01`
+
+- [The gate does not aggregate cross-file state across partitioned batches](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-X02`
 
 - [Non-feature artifacts skip confrontation](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B01`
 
@@ -794,6 +862,32 @@ teste prova.
 
 - [The gate does not put the progress file into the map](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-X03`
 
+- [Returns an empty list of Promotable gates when profile contains no gates](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B01`
+
+- [An informative gate with passes and zero failures is included](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B02`
+
+- [An informative gate with failures is excluded from promotion](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B03`
+
+- [An informative gate with zero passes is excluded as having no data](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B04`
+
+- [A blocking gate is excluded from promotion suggestions](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B05`
+
+- [Returned Promotable populates Gate with the declared gate name](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B06`
+
+- [Returned Promotable records Passou equal to passed node count](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B07`
+
+- [PromotableGates returns candidates sorted deterministically by name](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B08`
+
+- [Multiple clean informative gates are all collected](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B09`
+
+- [An informative gate is candidate if and only if non-blocking zero failures and positive passes](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-I01`
+
+- [A gate with zero passes is never classified as clean](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-I02`
+
+- [Does not automatically promote gates or modify anchors yaml](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-X01`
+
+- [Does not evaluate gate execution results directly from disk](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-X02`
+
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B01`
 
 - [A marked rule whose governed code does not import the cited unit fails](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B02`
@@ -833,6 +927,44 @@ teste prova.
 - [The gate does not compare the values on the two sides](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-X02`
 
 - [The gate does not decide whether an unmarked prose claim blocks](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-X03`
+
+- [A reference that does not match the sibling spec fails](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B01`
+
+- [The failing verdict names both sides of the divergence](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B02`
+
+- [A reference equal to the sibling spec passes](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B03`
+
+- [A spec is not confronted](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B04`
+
+- [An artifact with no reference declared leaves without a verdict](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B05`
+
+- [With no sibling spec the gate goes quiet](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B06`
+
+- [A sibling spec that declares no identity counts as no sibling](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B07`
+
+- [The sibling is found by the name convention](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B08`
+
+- [A test file lands on the same sibling its code does](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B09`
+
+- [An intermediate extension is dropped from the stem](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B10`
+
+- [The reference is read whatever the comment syntax of the language](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B11`
+
+- [The accepted identity length comes from the project's Structure](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B12`
+
+- [A leading dot is not a stem separator](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B13`
+
+- [The ruler is the sibling on disk, never the map](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-I01`
+
+- [The gate never repairs what it points at](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-I02`
+
+- [The gate does not charge the absence of the reference field](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-X01`
+
+- [The gate does not charge the absence of the sibling spec](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-X02`
+
+- [The gate does not consult the map to resolve the reference](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-X03`
+
+- [The gate does not judge whether the spec describes the unit well](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-X04`
 
 - [Confronting an artifact that is neither code nor test skips](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-B01`
 
@@ -987,6 +1119,40 @@ teste prova.
 - [Setup and trigger steps are not inspected for code citations](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-X02`
 
 - [Scenario or test presence is not enforced by this gate](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-X03`
+
+- [Two scenarios sharing one code are reported](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B01`
+
+- [The report names the repeated code](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B02`
+
+- [The report says how many scenarios share the code](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B03`
+
+- [The report teaches the way out with the project's own code](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B04`
+
+- [The suffix gives each scenario its own identity](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B05`
+
+- [Distinct codes pass](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B06`
+
+- [The verdict is Pending and never a failure](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B07`
+
+- [An artifact that is not a feature leaves without a verdict](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B08`
+
+- [A feature with no coded scenario leaves without a verdict](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B09`
+
+- [Several repeated codes are reported together in a stable order](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B10`
+
+- [Long titles are shortened in the report](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B11`
+
+- [Grouping is by the complete code, suffix included](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-I01`
+
+- [The message is deterministic](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-I02`
+
+- [The gate does not judge whether the two scenarios describe different behaviours](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X01`
+
+- [The gate does not look across features](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X02`
+
+- [The gate does not charge the absence of a code on a scenario](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X03`
+
+- [The gate does not renumber the scenarios](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X04`
 
 - [Non-feature artifacts skip confrontation](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B01`
 
@@ -1241,4 +1407,30 @@ teste prova.
 - [The gate does not accuse a line whose literal it cannot read](camadas/gate.md#vlanv--valueanchored--every-value-of-a-closed-set-points-at-the-rule-that-justifies-it-and-the-anchor-carries-the-value) `VLANV-X02`
 
 - [The gate does not decide what an anchor or a public symbol looks like](camadas/gate.md#vlanv--valueanchored--every-value-of-a-closed-set-points-at-the-rule-that-justifies-it-and-the-anchor-carries-the-value) `VLANV-X03`
+
+- [Artifacts that are not feature files leave with verdict Skip](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B01`
+
+- [Feature files declaring no visual regression scenarios leave with verdict Skip](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B02`
+
+- [Visual regression scenarios having matching baseline images pass](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B03`
+
+- [Visual regression scenarios lacking baseline images fail naming missing codes](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B04`
+
+- [Baseline image matching supports naming variants](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B05`
+
+- [Reads visual regime tag from project configuration](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B06`
+
+- [Falls back to default visual regime tag when configuration is missing](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B07`
+
+- [Multiple missing baseline scenario codes are sorted alphabetically](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B08`
+
+- [Only scenario codes containing visual regression suffix are matched](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B09`
+
+- [Every visual regression scenario declared must correspond to a baseline image](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-I01`
+
+- [Visual regime tag mapping treats map key as tag in feature](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-I02`
+
+- [Does not evaluate baseline staleness using disk modification timestamps](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-X01`
+
+- [Does not fail commits based on git commit dates of baseline images](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-X02`
 
