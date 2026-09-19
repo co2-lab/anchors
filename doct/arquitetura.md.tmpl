@@ -1,0 +1,128 @@
+{{/* COMO o sistema é montado — o C4: contexto, contêineres, e um nível 3 por contêiner */}}
+# Arquitetura
+
+{{/* O C4 COMO O C4 É.
+
+     A regra central do modelo é que cada nível AMPLIA UMA CAIXA do anterior. O nível 3
+     é o zoom de UM contêiner — não do sistema. Um diagrama de componentes misturando o
+     app, a API e a infraestrutura não é nível 3 de coisa nenhuma: é a falha que o C4
+     existe para evitar, um desenho só com tudo dentro.
+
+     CONTÊINER é o que executa ou armazena dado — aplicação, serviço, BANCO, fila,
+     sistema de arquivos. Não é sinônimo de "processo que escrevemos": o banco é
+     contêiner, aparece no nível 2 com o protocolo da conversa, e sendo de terceiro não
+     ganha nível 3 — não temos componentes lá dentro.
+
+     MERMAID, e não imagem: o GitHub o renderiza nativamente. Um PNG exportado de uma
+     ferramenta de desenho ficaria fora do controle de versão útil — o diff não diz o
+     que mudou, e o arquivo-fonte acaba noutro lugar, ou some.
+
+     Os níveis 1 e 2 são escritos à mão AQUI: descrevem o sistema inteiro, e nenhuma
+     spec sozinha os conhece. O nível 3 vem dos contêineres declarados na Estrutura. */}}
+
+## Nível 1 — Contexto
+
+O sistema como uma caixa só: quem o usa, e com que sistemas externos ele fala.
+
+```mermaid
+graph TB
+    user["Pessoa<br/><small>quem usa o sistema</small>"]
+    sys["O SISTEMA<br/><small>o que este repositório constrói</small>"]
+    ext["Sistema externo<br/><small>de onde vêm os dados</small>"]
+
+    user -->|"usa"| sys
+    sys -->|"consulta"| ext
+
+    classDef pessoa fill:#08427b,stroke:#052e56,color:#fff
+    classDef sistema fill:#1168bd,stroke:#0b4884,color:#fff
+    classDef externo fill:#999,stroke:#6b6b6b,color:#fff
+    class user pessoa
+    class sys sistema
+    class ext externo
+```
+
+<!-- FORA deste nível: como o sistema é montado por dentro. Isso é o nível 2. -->
+
+## Nível 2 — Contêineres
+
+O zoom da caixa "O SISTEMA": o que roda ou armazena separado, e **com que protocolo cada
+par conversa**. O protocolo é o que diz o que acontece quando a conversa falha.
+
+{{/* As caixas vêm da declaração de contêineres da Estrutura; o BANCO está entre elas,
+     porque contêiner é o que executa OU ARMAZENA dado. As setas e os protocolos vêm de
+     "talks", na mesma declaração. */}}
+```mermaid
+graph TB
+    user["Pessoa"]
+
+    subgraph sistema["O SISTEMA"]
+{{range containers}}{{if not .External}}        {{.ID}}["{{.Name}}<br/><small>{{.Description}}</small>"]
+{{end}}{{end}}    end
+
+{{range containers}}{{if .External}}    {{.ID}}["{{.Name}}<br/><small>{{.Description}}</small>"]
+{{end}}{{end}}
+{{range containers}}{{$de := .ID}}{{range .Talks}}    {{$de}} -->|"{{.Protocol}}{{if .Why}}<br/>{{.Why}}{{end}}"| {{mermaidID .To}}
+{{end}}{{end}}
+    classDef pessoa fill:#08427b,stroke:#052e56,color:#fff
+    classDef conteiner fill:#438dd5,stroke:#2e6295,color:#fff
+    classDef externo fill:#999,stroke:#6b6b6b,color:#fff
+    class user pessoa
+{{range containers}}{{if .External}}    class {{.ID}} externo
+{{else}}    class {{.ID}} conteiner
+{{end}}{{end}}
+```
+{{if not containers}}
+> **Nenhum contêiner declarado.** O nível 2 e os de nível 3 saem vazios até a Estrutura
+> declarar o que roda separado. Ver o bloco de contêineres no `anchors.yaml`.
+{{end}}
+
+<!-- FORA deste nível: as peças DENTRO de cada contêiner. Isso é o nível 3 — e há um
+     diagrama por contêiner, porque cada nível amplia UMA caixa do anterior. -->
+
+## Nível 3 — Componentes
+
+Um diagrama **por contêiner**: cada um amplia uma caixa do nível 2. Os externos não
+aparecem aqui — não temos componentes dentro deles, e desenhá-los afirmaria um
+conhecimento que não temos.
+{{range internalContainers}}
+### {{.Name}}
+
+{{.Description}}
+
+{{if .Units}}
+```mermaid
+graph TB
+    subgraph {{.ID}}["{{.Name}}"]
+{{range .Layers}}        subgraph {{mermaidID .}}["{{.}}"]
+{{range $u := specs (printf "layer=%s" .)}}            {{mermaidID $u.Code}}["{{$u.Code}}<br/><small>{{$u.Titulo}}</small>"]
+{{end}}        end
+{{end}}    end
+```
+
+{{range .Layers}}
+#### {{.}}
+
+{{range specs (printf "layer=%s" .)}}- **{{.Code}}** — {{.Titulo}}
+{{end}}{{else}}
+_Este contêiner não declara camadas._
+{{end}}
+{{else}}
+_Nenhuma camada declara unidade que rode aqui. Ou o contêiner não executa código deste
+repositório, ou falta ligá-lo a uma camada em `containers.layers`._
+{{end}}
+{{end}}
+{{with orphanLayers}}
+### Camadas fora de todo contêiner
+
+Estas camadas existem no projeto e nenhum contêiner as declara — não aparecem em diagrama
+de nível 3 nenhum. Ou falta declará-las, ou elas não rodam em lugar nenhum:
+
+{{range .}}- `{{.}}`
+{{end}}{{end}}
+
+## Nível 4 — Código
+
+<!-- Só onde houver algo não óbvio. O mapa que o Anchors mantém já é a versão de
+     máquina, e repeti-lo aqui seria duplicação sem leitor. -->
+
+_Nada a destacar por enquanto._

@@ -70,9 +70,8 @@ DECLARA, regra a regra, se ela tem código.
 
 | Cód | Arquivo | Método | Camada |
 | --- | --- | --- | --- |
-| DEP1 | `internal/mapx` | `Graph` | núcleo — o código ligado se alcança pela aresta, não por convenção de nome |
-| DEP2 | `internal/config` | `Config` | núcleo — a exigência de marcação é declarada na Estrutura |
-| DEP3 | `internal/i18n` | `T` | infra — o veredito é texto ao usuário, no idioma do projeto |
+| DEP1 | `internal/mapx/model.go` | `Graph` | núcleo — o código ligado se alcança pela aresta, não por convenção de nome |
+| DEP2 | `internal/config/config.go` | `Config` | núcleo — a exigência de marcação é declarada na Estrutura |
 
 ## Decisões em aberto
 

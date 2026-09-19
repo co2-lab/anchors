@@ -1,0 +1,15 @@
+{{/* AS REGRAS de todo o sistema — índice que atravessa as camadas */}}
+# Regras
+
+Todas as regras do sistema, de todas as unidades. Cada uma leva ao texto na página da sua
+camada.
+
+Para ver uma camada inteira de uma vez — com a visão geral de cada unidade e os cenários —
+abra a página dela em `camadas/`.
+{{range $l := layers}}
+## {{$l}}
+{{range $s := specs (printf "layer=%s" $l)}}
+### [{{$s.Code}} — {{$s.Titulo}}]({{layerPage $l}}#{{anchor (printf "%s — %s" $s.Code $s.Titulo)}})
+{{range rules $s}}
+- [{{.Code}} — {{.Titulo}}]({{ruleLink $l $s .}})
+{{end}}{{end}}{{end}}

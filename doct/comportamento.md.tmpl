@@ -1,0 +1,14 @@
+{{/* O QUE ACONTECE — índice dos cenários, que levam ao conteúdo na página da camada */}}
+# Comportamento
+
+Todos os cenários do sistema. Cada um leva à unidade que o define.
+
+Um cenário descreve o que o sistema faz numa situação — vem da feature, e é o mesmo que o
+teste prova.
+{{range $l := layers}}
+## {{$l}}
+{{range allScenarios (printf "layer=%s" $l)}}
+- [{{.Titulo}}]({{scenarioLink $l .}}) `{{.Code}}`
+{{else}}
+_Nenhum cenário ainda: as unidades desta camada não têm feature._
+{{end}}{{end}}

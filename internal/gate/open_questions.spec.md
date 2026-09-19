@@ -68,8 +68,7 @@ código, e o item sai da seção.
 
 | Cód | Arquivo | Método | Camada |
 | --- | --- | --- | --- |
-| DEP1 | `internal/config` | `Config` | núcleo — o título da seção pode ser do léxico do projeto, e o gate lê a Estrutura para saber |
-| DEP2 | `internal/i18n` | `T` | infra — o veredito é texto ao usuário, no idioma do projeto |
+| DEP1 | `internal/config/config.go` | `Config` | núcleo — o título da seção pode ser do léxico do projeto, e o gate lê a Estrutura para saber |
 
 ## Decisões em aberto
 

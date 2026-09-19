@@ -179,6 +179,13 @@ governs:
 #
 # O template de teste do init (`{{name}}.test.{{ext}}`) é do dialeto JS/TS; em Go o
 # teste é `{{name}}_test.go`. Herdá-lo aqui ligaria a spec a um arquivo que não existe.
+# O DIALETO da stack: como este projeto ESCREVE as construcoes que os gates precisam
+# reconhecer (funcao exportada, caso de teste, dublê). O Anchors nao supoe — sem a
+# declaracao, os gates que leem codigo ficam INDETERMINADOS e dizem que ficaram, em vez
+# de aprovar o que nao conferiram.
+dialect:
+  family: go
+
 derived:
   # A SPEC é a âncora: dela nascem o código e o teste (CONCEPT: "da spec nascem o
   # código, a feature e o teste"). O inverso também é aceito pelo engine (`anchor: code`),
@@ -339,6 +346,15 @@ gates:
   # E' o unico dos tres que depende de sinal ingerido: sem `anchors ingest` dos
   # resultados, ele fica indeterminado e diz que ficou.
   - name: scenario-coverage
+    blocking: false
+
+  - name: docs-fresh
+    blocking: false
+
+  - name: sibling-guard
+    blocking: false
+
+  - name: no-duplication
     blocking: false
 
   - name: domain-declared

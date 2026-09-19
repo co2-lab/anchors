@@ -1,0 +1,52 @@
+{{/* o que existe na camada `gate`, com o conteúdo de cada unidade */}}
+# Camada: gate
+
+{{/* O FORMATO vem do LAYOUT, decidido uma vez no `docs build` e igual para todas
+     as páginas — esta, o índice de regras e o de comportamento.
+
+     Não há limiar escrito aqui, de propósito. A primeira versão deixava cada template
+     escolher o seu, e o resultado foi medido: 483 de 812 links quebrados, porque a
+     página resumia por um critério e os links eram montados por outro.
+
+     Para mudar o corte deste projeto:  anchors docs build --max-units 30
+
+     O que muda é o que CABE na página, nunca em quantos arquivos a camada se parte:
+     dividir ao cruzar um limiar quebraria todo link externo no dia em que a unidade
+     seguinte entrasse. */}}
+{{if big "layer=gate"}}
+> {{layout.Describe (size "layer=gate")}}
+
+{{range specs "layer=gate"}}
+## {{.Code}} — {{.Titulo}}
+
+{{section . "Visão Geral"}}
+
+{{range rules .}}
+- **{{.Code}}** — {{.Titulo}}
+{{end}}
+{{end}}
+{{else}}
+{{range specs "layer=gate"}}
+## {{.Code}} — {{.Titulo}}
+
+{{section . "Visão Geral"}}
+
+{{/* As seções Regras e Invariantes trazem os próprios headings de regra, e por isso
+     NÃO ganham um rótulo aqui: um heading "Regras" seguido dos headings das regras as
+     põe no mesmo nível, e o índice do documento lista o rótulo como irmão do que ele
+     contém. */}}
+{{section . "Regras"}}
+
+{{section . "Invariantes"}}
+{{/* Cada cenário é um HEADING, e não um item de lista: é para ele que o índice de
+     comportamento aponta, e âncora só existe onde há heading. Um índice cujo link não
+     resolve é pior que não ter índice — ele parece funcionar. */}}
+{{range scenarios .}}
+#### {{.Code}} — {{.Titulo}}
+
+```gherkin
+{{.Corpo}}
+```
+{{end}}
+{{end}}
+{{end}}

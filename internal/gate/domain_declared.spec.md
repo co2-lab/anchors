@@ -64,8 +64,8 @@ alguém do outro lado.
 
 | Cód | Arquivo | Método | Camada |
 | --- | --- | --- | --- |
-| DEP1 | `internal/i18n` | `T` | infra — os vereditos são texto ao usuário, e saem no idioma do projeto |
-| DEP2 | `internal/mapx` | `Node` | núcleo — o gate precisa do KIND do nó para saber se tem jurisdição |
+| DEP1 | `internal/mapx/model.go` | `KindSpec` | núcleo — o gate precisa do KIND do nó para saber se tem jurisdição |
+| DEP2 | `internal/config/config.go` | `Config` | núcleo — o léxico de títulos aceitos vem da Estrutura do projeto |
 
 ## Decisões em aberto
 

@@ -63,9 +63,8 @@ que exige que elas existam —, pergunta "as peças existem?".
 
 | Cód | Arquivo | Método | Camada |
 | --- | --- | --- | --- |
-| DEP1 | `internal/mapx` | `Graph` | núcleo — as peças são arestas, e sem o grafo não há o que olhar |
-| DEP2 | `internal/config` | `Config` | núcleo — o regime da camada e a dispensa em bloco são declarados na Estrutura |
-| DEP3 | `internal/i18n` | `T` | infra — o veredito é texto ao usuário, no idioma do projeto |
+| DEP1 | `internal/mapx/model.go` | `Graph` | núcleo — as peças são arestas, e sem o grafo não há o que olhar |
+| DEP2 | `internal/config/config.go` | `Config` | núcleo — o regime da camada e a dispensa em bloco são declarados na Estrutura |
 
 ## Decisões em aberto
 
