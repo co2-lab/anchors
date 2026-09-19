@@ -499,7 +499,7 @@ type RuleType struct {
 
 // TagLetters devolve TODAS as letras que declaram a tag de cenário, e se a tag é
 // conhecida. Tags fora do vocabulário não são erro: o projeto usa `@smoke`, `@P1`,
-// `@nivel-e2e` e outras que não falam de natureza de regra.
+// `@e2e-level` e outras que não falam de natureza de regra.
 //
 // São várias, e não uma, porque a mesma tag pode caber sob mais de uma natureza sem
 // ambiguidade. Medido num projeto real: `@estado-dado` marca tanto cenários de `S`
@@ -1067,7 +1067,7 @@ type Derived struct {
 	Overrides []DerivedOverride  `yaml:"overrides,omitempty"` // padrões por camada-âncora (não co-localizado)
 	// Regimes — o de-para do vocabulário de REGIME de teste do PROJETO para o regime
 	// CANÔNICO do framework (unit|integration|e2e|vr). Chave = a tag do projeto (sem @,
-	// ex.: "nivel-unit"); valor = o regime canônico. Um cenário de feature declara sua
+	// ex.: "unit-level"); valor = o regime canônico. Um cenário de feature declara sua
 	// tag de regime; o gate de correspondência a traduz p/ o canônico e confronta contra
 	// a SUPERFÍCIE do regime. Tag sem mapeamento = não confrontada (opt-out). STRUCTURE §2.3.
 	Regimes map[string]string `yaml:"regimes,omitempty"`

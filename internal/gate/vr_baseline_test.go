@@ -16,13 +16,13 @@ const featVR = `Funcionalidade: Tela
   Cenário: carrega
     Dado algo
 
-  @estado @TCDTX-VR @nivel-vr @P3
+  @estado @TCDTX-VR @vr-level @P3
   Cenário: aparência da tela carregada
     Dado algo
 `
 
 // TestCenarioVRSemBaselineEhAcusado guarda a superfície de prova que nenhum gate
-// alcançava. `@nivel-vr` declara que a tela é provada por CAPTURA, não por asserção — e
+// alcançava. `@vr-level` declara que a tela é provada por CAPTURA, não por asserção — e
 // sem imagem de referência não há contra o que comparar. O cenário existe, o gate de
 // feature o conta como coberto, e a prova prometida não acontece.
 func TestCenarioVRSemBaselineEhAcusado(t *testing.T) {
@@ -57,7 +57,7 @@ func TestFeatureSemCenarioVisualNaoEhAssunto(t *testing.T) {
 // mesmo princípio de `dialect` e `section_titles`. O de-para é TAG → REGIME, e lê-lo
 // invertido fazia o gate não encontrar cenário nenhum, silenciosamente.
 func TestTagDoRegimeVisualVemDoProjeto(t *testing.T) {
-	if got := visualRegimeTag(nil); got != "nivel-vr" {
+	if got := visualRegimeTag(nil); got != "vr-level" {
 		t.Errorf("sem config, o default; veio %q", got)
 	}
 	cfg := &config.Config{Derived: &config.Derived{Regimes: map[string]string{

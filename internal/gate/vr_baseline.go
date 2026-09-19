@@ -14,7 +14,7 @@ import (
 // vr-baseline: o cenário de regressão VISUAL prometido tem imagem de referência.
 //
 // O VR é a única superfície de prova que nenhum gate alcançava. Um cenário marcado
-// `@nivel-vr` declara que aquela tela é provada por CAPTURA — não por asserção em teste
+// `@vr-level` declara que aquela tela é provada por CAPTURA — não por asserção em teste
 // unitário, que é onde os demais gates olham. Sem baseline, o cenário existe, o gate de
 // feature o conta como coberto, e não há imagem contra a qual comparar nada: a prova
 // prometida não acontece, e nada acusa.
@@ -66,8 +66,14 @@ func checkVRBaseline(content string, n mapx.Node, root string, g *mapx.Graph, cf
 // vrScenarios devolve os códigos de cenário marcados como regressão visual na feature.
 //
 // O que é "regressão visual" vem do PROJETO (`derived.regimes` no anchors.yaml diz qual
-// tag nomeia esse regime), com `nivel-vr` como default — o Anchors não impõe a
-// nomenclatura, do mesmo modo que não impõe idioma nem nome de vendor.
+// tag nomeia esse regime), com `vr-level` como default.
+//
+// O default é em inglês pelo mesmo motivo que o resto do produto: ele INDUZ. Um projeto
+// que não declara `regimes` herda esta grafia e a escreve em cada cenário; um default em
+// português faria todo projeto novo nascer com vocabulário misto — e a tag é
+// identificador, então consertar depois custa migração, não tradução. Medido: um projeto
+// real declarou `nivel-unit` porque foi o exemplo que o Anchors lhe deu, e hoje são 800
+// cenários. O Anchors não impõe a nomenclatura — mas o que ele sugere vira a do projeto.
 func vrScenarios(content string, cfg *config.Config) []string {
 	tag := visualRegimeTag(cfg)
 	var out []string
@@ -90,7 +96,7 @@ func vrScenarios(content string, cfg *config.Config) []string {
 
 // visualRegimeTag lê do projeto qual tag nomeia o regime de captura visual.
 func visualRegimeTag(cfg *config.Config) string {
-	// O de-para é TAG → REGIME (`nivel-vr: vr`): a chave é o que aparece na feature, o
+	// O de-para é TAG → REGIME (`vr-level: vr`): a chave é o que aparece na feature, o
 	// valor é o nome do regime. Ler invertido devolvia `vr` como tag e o gate não
 	// encontrava cenário nenhum — silenciosamente, porque "não declara cenário visual" é
 	// um Skip legítimo para a maioria das features.
@@ -102,5 +108,5 @@ func visualRegimeTag(cfg *config.Config) string {
 			}
 		}
 	}
-	return "nivel-vr"
+	return "vr-level"
 }

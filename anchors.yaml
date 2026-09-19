@@ -38,11 +38,6 @@ layers:
     kind: code
     tags: [cli, comando]
     exclude: ["**/*_test.go", "cmd/anchors/main.go", "cmd/anchors/root.go"]
-    # Este projeto não usa Gherkin: o comportamento é provado direto no teste de
-    # unidade em Go. Sem esta dispensa, toda spec nasceria devendo um `.feature` que
-    # ninguém pretende escrever — e o `trinca-completa` reprovaria por uma peça que a
-    # camada não tem, em vez de pela que falta.
-    optional_triad_edges: [covered-by]
 
   # ── AS REGRAS ───────────────────────────────────────────────────────────────────
   # Cada gate é uma REGRA do framework, com doutrina no cabeçalho do arquivo. É a
@@ -52,11 +47,6 @@ layers:
     kind: code
     tags: [regra, gate]
     exclude: ["**/*_test.go"]
-    # Este projeto não usa Gherkin: o comportamento é provado direto no teste de
-    # unidade em Go. Sem esta dispensa, toda spec nasceria devendo um `.feature` que
-    # ninguém pretende escrever — e o `trinca-completa` reprovaria por uma peça que a
-    # camada não tem, em vez de pela que falta.
-    optional_triad_edges: [covered-by]
 
   # ── O NÚCLEO ────────────────────────────────────────────────────────────────────
   # A hierarquia abaixo é a REAL, medida por import (não suposta):
@@ -66,33 +56,18 @@ layers:
     kind: code
     tags: [nucleo, config]
     exclude: ["**/*_test.go"]
-    # Este projeto não usa Gherkin: o comportamento é provado direto no teste de
-    # unidade em Go. Sem esta dispensa, toda spec nasceria devendo um `.feature` que
-    # ninguém pretende escrever — e o `trinca-completa` reprovaria por uma peça que a
-    # camada não tem, em vez de pela que falta.
-    optional_triad_edges: [covered-by]
 
   scan:
     pattern: "internal/scan/*.go"
     kind: code
     tags: [nucleo, scan]
     exclude: ["**/*_test.go"]
-    # Este projeto não usa Gherkin: o comportamento é provado direto no teste de
-    # unidade em Go. Sem esta dispensa, toda spec nasceria devendo um `.feature` que
-    # ninguém pretende escrever — e o `trinca-completa` reprovaria por uma peça que a
-    # camada não tem, em vez de pela que falta.
-    optional_triad_edges: [covered-by]
 
   mapa:
     pattern: "internal/mapx/*.go"
     kind: code
     tags: [nucleo, mapa]
     exclude: ["**/*_test.go"]
-    # Este projeto não usa Gherkin: o comportamento é provado direto no teste de
-    # unidade em Go. Sem esta dispensa, toda spec nasceria devendo um `.feature` que
-    # ninguém pretende escrever — e o `trinca-completa` reprovaria por uma peça que a
-    # camada não tem, em vez de pela que falta.
-    optional_triad_edges: [covered-by]
 
   # ── INFRA ───────────────────────────────────────────────────────────────────────
   # Os pacotes de apoio: materializam artefato (issue, change, suggestion), leem
@@ -104,11 +79,6 @@ layers:
     tags: [infra]
     regime: declarativo
     exclude: ["**/*_test.go"]
-    # Este projeto não usa Gherkin: o comportamento é provado direto no teste de
-    # unidade em Go. Sem esta dispensa, toda spec nasceria devendo um `.feature` que
-    # ninguém pretende escrever — e o `trinca-completa` reprovaria por uma peça que a
-    # camada não tem, em vez de pela que falta.
-    optional_triad_edges: [covered-by]
 
   # ── A TRINCA ────────────────────────────────────────────────────────────────────
   teste:
@@ -222,6 +192,19 @@ derived:
   #
   # Em Go a exportacao e' a MAIUSCULA inicial, e nao uma palavra-chave.
   export_detect: "^func\\s+([A-Z]\\w*)"
+  # O de-para do vocabulario de REGIME de teste. Um cenario da feature declara a tag,
+  # e o confronto a traduz para o regime canonico do framework antes de procurar a peca
+  # que o prova. Tag sem mapeamento nao e' confrontada — e um opt-out silencioso, que e'
+  # o que este bloco existe para evitar.
+  #
+  # Aqui ha UM regime, e a declaracao registra isso: os gates deste projeto se provam
+  # por teste de unidade em Go, no arquivo ao lado. Nao ha suite de integracao nem de
+  # ponta a ponta a mapear — declarar regimes que nao existem faria o confronto procurar
+  # arquivos que ninguem pretende escrever.
+  regimes:
+    unit-level: unit
+  surfaces:
+    unit: test
   files:
     spec: ["{{dir}}/{{name}}.spec.md"]
     code: ["{{dir}}/{{name}}.go"]

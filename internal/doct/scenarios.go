@@ -33,7 +33,7 @@ type Scenario struct {
 }
 
 var (
-	// A tag-line: `@GLCGL-B01 @nivel-unit`. O primeiro código é a identidade.
+	// A tag-line: `@GLCGL-B01 @unit-level`. O primeiro código é a identidade.
 	cenarioTagRE = regexp.MustCompile(`@([A-Za-z0-9][A-Za-z0-9_#-]*)`)
 	// O título aceita as duas grafias — a feature pode estar em `# language: pt` ou não,
 	// e uma documentação que ignora metade dos cenários por causa do idioma do arquivo

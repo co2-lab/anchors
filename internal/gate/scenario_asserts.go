@@ -14,7 +14,7 @@ import (
 //
 // A falha que este gate pega é a **tautologia** — "dado X, então X":
 //
-//	@XXXXX-B05 @nivel-unit
+//	@XXXXX-B05 @unit-level
 //	Cenário: cada chave versiona sozinha
 //	  Dado ...
 //	  Quando ...

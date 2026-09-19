@@ -238,8 +238,8 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 
 	// REGIMES: as tags de nível que os cenários da feature DEVEM declarar. Estão no
 	// anchors.yaml (`derived.regimes`) e nenhum comando as listava — um agente escreveu
-	// `@nivel-integracao` (português, coerente com o resto do Gherkin) quando o certo
-	// era `@nivel-integration`, e só descobriu garimpando o YAML.
+	// `@integracao` (português, coerente com o resto do Gherkin) quando o certo
+	// era `@integration-level`, e só descobriu garimpando o YAML.
 	if artifact == "feature" || artifact == "test" {
 		writeRegimes(&b, cfg)
 	}
@@ -788,7 +788,7 @@ func procedureFor(artifact string, cfg *config.Config) []string {
 		return []string{
 			"List the scenario codes the spec declares — the feature covers those, and only those.",
 			"Generate the frame with `anchors new feature <Name> --out <path>`.",
-			"Write one scenario per observable behavior, with the code tag and the regime tag (`@nivel-unit` etc., see `derived.regimes`).",
+			"Write one scenario per observable behavior, with the code tag and the regime tag (`@unit-level` etc., see `derived.regimes`).",
 			"The TITLE of the scenario must describe the behavior — the test will mirror it (the gate confronts code AND description).",
 		}
 	case "test":
@@ -826,8 +826,11 @@ func writeRegimes(b *strings.Builder, cfg *config.Config) {
 		}
 		fmt.Fprintf(b, "- `@%s` (regime %s)%s\n", t, canon, surface)
 	}
-	b.WriteString("\nThe tag belongs to the PROJECT and is not translatable: writing `@nivel-integracao` " +
-		"instead of `@nivel-integration` makes the scenario be confronted by no gate.\n")
+	// O contra-exemplo usa a tag que o projeto REALMENTE declarou, listada logo acima —
+	// cravar um par aqui ensinaria um vocabulario que pode nao ser o dele, que e' o defeito
+	// que esta mensagem existe para evitar.
+	b.WriteString("\nThe tag belongs to the PROJECT and is not translatable: any spelling other " +
+		"than the ones listed above makes the scenario be confronted by no gate.\n")
 }
 
 // derivedPieceUnit resolve a UNIDADE quando o alvo dado é uma peça derivada

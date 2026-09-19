@@ -265,7 +265,7 @@ func renderArtifact(t template, name, id, outPath, root string, chosen map[strin
 			body = strings.ReplaceAll(body, "{TEST_BODY}", testBody(cfg.DialectFor().Family, name, id))
 		}
 		// A tag de REGIME é do projeto (`derived.regimes` faz o de-para para o regime
-		// canônico). Cravar `@nivel-unit` gerava um cenário que o gate de correspondência
+		// canônico). Cravar `@unit-level` gerava um cenário que o gate de correspondência
 		// não confronta em projeto nenhum que use outro vocabulário — e o `work` já
 		// ensinava que "a tag é do PROJETO e não é traduzível". O template contradizia
 		// a própria régua.
