@@ -38,6 +38,11 @@ layers:
     kind: code
     tags: [cli, comando]
     exclude: ["**/*_test.go", "cmd/anchors/main.go", "cmd/anchors/root.go"]
+    # Este projeto não usa Gherkin: o comportamento é provado direto no teste de
+    # unidade em Go. Sem esta dispensa, toda spec nasceria devendo um `.feature` que
+    # ninguém pretende escrever — e o `trinca-completa` reprovaria por uma peça que a
+    # camada não tem, em vez de pela que falta.
+    optional_triad_edges: [covered-by]
 
   # ── AS REGRAS ───────────────────────────────────────────────────────────────────
   # Cada gate é uma REGRA do framework, com doutrina no cabeçalho do arquivo. É a
@@ -47,6 +52,11 @@ layers:
     kind: code
     tags: [regra, gate]
     exclude: ["**/*_test.go"]
+    # Este projeto não usa Gherkin: o comportamento é provado direto no teste de
+    # unidade em Go. Sem esta dispensa, toda spec nasceria devendo um `.feature` que
+    # ninguém pretende escrever — e o `trinca-completa` reprovaria por uma peça que a
+    # camada não tem, em vez de pela que falta.
+    optional_triad_edges: [covered-by]
 
   # ── O NÚCLEO ────────────────────────────────────────────────────────────────────
   # A hierarquia abaixo é a REAL, medida por import (não suposta):
@@ -56,18 +66,33 @@ layers:
     kind: code
     tags: [nucleo, config]
     exclude: ["**/*_test.go"]
+    # Este projeto não usa Gherkin: o comportamento é provado direto no teste de
+    # unidade em Go. Sem esta dispensa, toda spec nasceria devendo um `.feature` que
+    # ninguém pretende escrever — e o `trinca-completa` reprovaria por uma peça que a
+    # camada não tem, em vez de pela que falta.
+    optional_triad_edges: [covered-by]
 
   scan:
     pattern: "internal/scan/*.go"
     kind: code
     tags: [nucleo, scan]
     exclude: ["**/*_test.go"]
+    # Este projeto não usa Gherkin: o comportamento é provado direto no teste de
+    # unidade em Go. Sem esta dispensa, toda spec nasceria devendo um `.feature` que
+    # ninguém pretende escrever — e o `trinca-completa` reprovaria por uma peça que a
+    # camada não tem, em vez de pela que falta.
+    optional_triad_edges: [covered-by]
 
   mapa:
     pattern: "internal/mapx/*.go"
     kind: code
     tags: [nucleo, mapa]
     exclude: ["**/*_test.go"]
+    # Este projeto não usa Gherkin: o comportamento é provado direto no teste de
+    # unidade em Go. Sem esta dispensa, toda spec nasceria devendo um `.feature` que
+    # ninguém pretende escrever — e o `trinca-completa` reprovaria por uma peça que a
+    # camada não tem, em vez de pela que falta.
+    optional_triad_edges: [covered-by]
 
   # ── INFRA ───────────────────────────────────────────────────────────────────────
   # Os pacotes de apoio: materializam artefato (issue, change, suggestion), leem
@@ -79,6 +104,11 @@ layers:
     tags: [infra]
     regime: declarativo
     exclude: ["**/*_test.go"]
+    # Este projeto não usa Gherkin: o comportamento é provado direto no teste de
+    # unidade em Go. Sem esta dispensa, toda spec nasceria devendo um `.feature` que
+    # ninguém pretende escrever — e o `trinca-completa` reprovaria por uma peça que a
+    # camada não tem, em vez de pela que falta.
+    optional_triad_edges: [covered-by]
 
   # ── A TRINCA ────────────────────────────────────────────────────────────────────
   teste:
@@ -165,6 +195,36 @@ governs:
 # sem escrever spec nenhuma), depois os da trinca — que só passam a fazer sentido conforme
 # as specs nascem. Ligar tudo de uma vez num projeto existente produz centenas de issues
 # no primeiro dia e ninguém lê a lista.
+# ── A TRINCA: ONDE CADA PEÇA NASCE ───────────────────────────────────────────────
+# ATRITO 5 — sem este bloco, a trinca NÃO EXISTE para o mapa. O `triadEdges` abre com
+# `if cfg.Derived == nil { return nil }`, então um projeto sem `derived:` nunca ganha
+# aresta `specifies`/`tested-by` — e os oito gates da trinca ficam declarados e cegos,
+# reportados como "sem nada para medir". O sintoma é perfeitamente enganoso: parece
+# faltar spec, e o que falta é a CONVENÇÃO que diz onde a spec mora.
+#
+# Pior: o `anchors init` só semeia este bloco quando DETECTA co-location — e detectar
+# depende de já existirem specs. Projeto que adota o Anchors antes de ter a primeira
+# spec (o caso normal, e o deste repositório) sai do init sem o bloco, escreve a spec
+# no lugar certo, e o mapa não a liga a nada. Não há mensagem sobre isso em lugar nenhum.
+#
+# O template de teste do init (`{{name}}.test.{{ext}}`) é do dialeto JS/TS; em Go o
+# teste é `{{name}}_test.go`. Herdá-lo aqui ligaria a spec a um arquivo que não existe.
+derived:
+  # A SPEC é a âncora: dela nascem o código e o teste (CONCEPT: "da spec nascem o
+  # código, a feature e o teste"). O inverso também é aceito pelo engine (`anchor: code`),
+  # e seria a leitura errada aqui — num repositório onde o código veio primeiro, ancorar
+  # nele congelaria a inversão que a doutrina existe para desfazer.
+  anchor: spec
+  files:
+    spec: ["{{dir}}/{{name}}.spec.md"]
+    code: ["{{dir}}/{{name}}.go"]
+    test: ["{{dir}}/{{name}}_test.go"]
+  # `feature` fica de FORA, e é declaração, não esquecimento: este projeto não usa
+  # Gherkin — o comportamento é provado direto no teste de unidade. O `mapx` liga
+  # spec→teste quando não há feature declarada, e o `trinca-completa` dispensa a peça
+  # que a camada não tem. Declarar um template de `.feature` aqui faria toda spec
+  # nascer devendo um arquivo que ninguém pretende escrever.
+
 gates:
   # SEGURANÇA — a leva que existe para o que não tem volta.
   #
@@ -173,7 +233,7 @@ gates:
   # do git guarda a original. Os demais são informativos porque um achado deles é uma
   # PERGUNTA sobre contexto, e bloquear no primeiro dia treina a equipe a ignorar.
 
-  - name: secret-nao-vazado
+  - name: no-secret-leaked
     on: [code, test, doc, spec, feature, guide, plan]
     scope: batch
     scope_full: project
@@ -186,7 +246,7 @@ gates:
     category: security
     measures: "nenhum segredo entra no repositório (gitleaks; allowlist declarada em .gitleaks.toml)"
 
-  - name: dependencia-vulneravel
+  - name: dependency-vulnerable
     on: [code]
     scope: project
     run: "bash scripts/anchors-deps-vuln.sh"
@@ -210,7 +270,7 @@ gates:
     category: security
     measures: "nenhuma dependência copyleft forte no binário (incompatível com a ELv2)"
 
-  - name: sbom-gerado
+  - name: sbom-generated
     on: [code]
     scope: project
     run: "bash scripts/anchors-sbom.sh"
@@ -222,7 +282,7 @@ gates:
     category: security
     measures: "o inventário de componentes do binário, para quem audita o que distribuímos"
 
-  - name: padrao-inseguro
+  - name: insecure-pattern
     on: [code]
     scope: batch
     scope_full: project
@@ -240,7 +300,7 @@ gates:
     blocking: true
     measures: "as fronteiras entre camadas do CLI, verificadas por import real"
 
-  - name: codigo-catalogado
+  - name: code-cataloged
     blocking: false
 
   - name: code-reference-valid
@@ -248,19 +308,19 @@ gates:
 
   # TRINCA — informativos por enquanto: o projeto tem 0 specs para 127 arquivos de código,
   # e promovê-los a bloqueante hoje barraria todo commit. Sobem conforme a adoção avança.
-  - name: trinca-completa
+  - name: triad-complete
     blocking: false
 
-  - name: spec-tem-codigo
+  - name: spec-has-code
     blocking: false
 
-  - name: spec-completa
+  - name: spec-complete
     blocking: false
 
-  - name: feature-nao-vazia
+  - name: feature-not-empty
     blocking: false
 
-  - name: teste-rastreavel
+  - name: test-traceable
     blocking: false
 
   # ── FERRAMENTA GO — `run:`, não `check:` ─────────────────────────────────────────
@@ -300,7 +360,7 @@ gates:
     blocking: true
     measures: "o `go vet` não acusa nada (a régua que vem com a linguagem)"
 
-  - name: testes-passam
+  - name: tests-green
     on: [code]
     run: "go test ./..."
     scope: project

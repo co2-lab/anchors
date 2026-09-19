@@ -18,6 +18,7 @@ const cabecalhoDominio = "## Domínio\n\n| Entrada | Aceita | Fora do domínio |
 // outra forma de dizer "não é meu problema" — e o problema não fica com ninguém. Foi
 // assim que três specs declararam, cada uma corretamente, que não validavam a mesma
 // entrada: o dever ficou órfão e a entrada inválida passou.
+// DMDCD-B04
 func TestDomainExigeDono(t *testing.T) {
 	semDono := "# Spec\n\n" + cabecalhoDominio +
 		"| `chave` | texto não-vazio | `__proto__` |  |\n"
@@ -37,6 +38,7 @@ func TestDomainExigeDono(t *testing.T) {
 }
 
 // A NÃO-RESPOSTA não conta como dono: é exatamente a frase que cria o órfão.
+// DMDCD-B04
 func TestDomainNaoRespostaNaoEhDono(t *testing.T) {
 	for _, naoDono := range []string{"ninguém", "n/a", "-", "—", "não valido", "não é meu", "TODO: decidir"} {
 		t.Run(naoDono, func(t *testing.T) {
@@ -62,6 +64,7 @@ func TestDomainNaoRespostaNaoEhDono(t *testing.T) {
 //
 // Um teste que trava o comportamento de fuga do gate é pior que teste nenhum: ele faz a
 // falha parecer decisão.
+// DMDCD-B02
 func TestDomainAusenciaSemDispensaReprova(t *testing.T) {
 	v, msg := rodaDominio(t, "# Spec\n\n## Regras\n\n### AAAAX-B01 — x\n")
 	if v != Fail {
@@ -70,6 +73,7 @@ func TestDomainAusenciaSemDispensaReprova(t *testing.T) {
 }
 
 // Seção aberta e vazia é pior que ausente: AFIRMA que se olhou e não se achou nada.
+// DMDCD-B03
 func TestDomainSecaoVaziaReprova(t *testing.T) {
 	if v, d := rodaDominio(t, "# Spec\n\n"+cabecalhoDominio); v != Fail {
 		t.Fatalf("seção só com cabeçalho deveria reprovar, foi %s (%s)", v, d)
@@ -83,6 +87,7 @@ func TestDomainSecaoVaziaReprova(t *testing.T) {
 
 // Prosa explicativa não é linha de dados — senão o texto de abertura viraria entrada
 // fantasma e o autor aprenderia a não explicar nada.
+// DMDCD-B03
 func TestDomainProsaNaoEhEntrada(t *testing.T) {
 	spec := "# Spec\n\n## Domínio\n\nEsta unidade recebe o histórico já carregado.\n\n" +
 		"| Entrada | Aceita | Fora do domínio | Quem garante |\n| --- | --- | --- | --- |\n" +
@@ -92,6 +97,7 @@ func TestDomainProsaNaoEhEntrada(t *testing.T) {
 	}
 }
 
+// DMDCD-B01
 func TestDomainSoSpec(t *testing.T) {
 	spec := cabecalhoDominio + "| x | y | z |  |\n"
 	for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature} {
@@ -112,6 +118,7 @@ func TestDomainSoSpec(t *testing.T) {
 // Este teste responde: a seção teria forçado o autor a VER? Repare que a não-resposta
 // vem com CITAÇÃO ("não valido (MTVRX-X04)") — foi o que quase deixou o gate passar, e é
 // como um autor honesto escreveria ao transportar a restrição para a coluna do dono.
+// DMDCD-I02
 func TestDominioTeriaPegadoOCasoReal(t *testing.T) {
 	comoEstava := `# MTVRX
 
@@ -152,6 +159,7 @@ func TestDominioTeriaPegadoOCasoReal(t *testing.T) {
 // E foi esse silencio que deixou passar o defeito real: o `QueryScope` define o conjunto
 // fechado de janelas e recebe entrada de fora -- caso central do gate. Nao abriu a secao,
 // o gate calou, e as telas declararam `5m`, `30m` e `1d`, que o contrato nao aceita.
+// DMDCD-B02
 func TestDomainAusenciaPrecisaSerDeclarada(t *testing.T) {
 	semNada := "# U\n\n## Regras\n\n### UUUUU-B01 — algo\n"
 	v, msg := rodaDominio(t, semNada)
@@ -165,6 +173,7 @@ func TestDomainAusenciaPrecisaSerDeclarada(t *testing.T) {
 }
 
 // A dispensa COM RAZAO vale — e e' o que separa decisao de esquecimento.
+// DMDCD-B05
 func TestDomainDispensaComRazaoVale(t *testing.T) {
 	spec := "# U\n\n<!-- @no-domain: recebe so props tipadas do proprio codigo -->\n\n## Regras\n\n### UUUUU-B01 — algo\n"
 	if v, msg := rodaDominio(t, spec); v != Skip && v != Pass {
@@ -174,6 +183,7 @@ func TestDomainDispensaComRazaoVale(t *testing.T) {
 
 // Marcador NU nao dispensa — mesmo padrao do `@no-rule`. Um marcador sem razao vira um
 // jeito silencioso de calar o gate, e some o rastro de que houve decisao.
+// DMDCD-I01
 func TestDomainDispensaNuaNaoVale(t *testing.T) {
 	spec := "# U\n\n<!-- @no-domain -->\n\n## Regras\n\n### UUUUU-B01 — algo\n"
 	if v, _ := rodaDominio(t, spec); v == Skip || v == Pass {
