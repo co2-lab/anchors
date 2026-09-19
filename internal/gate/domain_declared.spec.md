@@ -43,6 +43,8 @@ alguém do outro lado.
 | `DMDCD-B03` | Spec com a seção ABERTA e VAZIA reprova também — abrir o título sem declarar nada é o mesmo furo com aparência de conformidade. |
 | `DMDCD-B04` | Cada entrada declarada precisa nomear QUEM garante. Entrada sem dono reprova, e o veredito nomeia quais ficaram órfãs. |
 | `DMDCD-B05` | A dispensa é DECLARADA e com razão escrita. Quem não tem entrada externa registra isso na spec, e o gate se cala — mas fica o rastro de que alguém olhou. |
+| `DMDCD-B06` | Linha preenchida só com marcador de pendência não é declaração: o molde intocado não afirma nada. |
+| `DMDCD-B07` | Entrada cujo dono está nomeado passa — é o outro lado da mesma régua, e o que a torna satisfazível. |
 
 ## Invariantes
 

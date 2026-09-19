@@ -28,7 +28,7 @@ Feature: DomainDeclared — the spec declares what the unit ACCEPTS, and who rej
     Then it returns Fail, because opening the title without declaring anything is the same
       gap wearing the appearance of compliance
 
-  @DMDCD-B03 @unit-level
+  @DMDCD-B06 @unit-level
   Scenario: A row filled only with placeholders is not a declaration
     Given a spec whose domain section carries a single row reading "TODO" in every column
     When the gate confronts it
@@ -42,7 +42,7 @@ Feature: DomainDeclared — the spec declares what the unit ACCEPTS, and who rej
     Then it returns Fail
     And the verdict names "chave", so the reader does not have to hunt for the orphan
 
-  @DMDCD-B04 @unit-level
+  @DMDCD-B07 @unit-level
   Scenario: An entry whose owner is named passes
     Given a spec declaring the entry "chave" with its accepted values
     And the column that says who guarantees it reads "the interface, before calling"

@@ -1612,7 +1612,8 @@ nodes:
         - test
     - id: internal/gate/domain_declared.feature
       kind: feature
-      rev: 909da3475bac
+      rev: 773c9570d150
+      updated_at: "2026-09-19"
       code: DMDCD
       layer: feature
       tags:
@@ -1628,7 +1629,7 @@ nodes:
         - gate
     - id: internal/gate/domain_declared.spec.md
       kind: spec
-      rev: 8aaf21c6d0e0
+      rev: 7b2f6cef4a68
       updated_at: "2026-09-19"
       code: DMDCD
       layer: spec
@@ -1637,7 +1638,7 @@ nodes:
         - spec
     - id: internal/gate/domain_declared_test.go
       kind: test
-      rev: c3d12bd04260
+      rev: 7721f39faa76
       updated_at: "2026-09-19"
       code: DMDCD
       layer: teste
@@ -4081,8 +4082,8 @@ edges:
       type: tested-by
       origin: convention
       stamp:
-        validated_from_rev: 909da3475bac
-        validated_to_rev: c3d12bd04260
+        validated_from_rev: 773c9570d150
+        validated_to_rev: 7721f39faa76
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/domain_declared.spec.md
@@ -4090,8 +4091,8 @@ edges:
       type: covered-by
       origin: convention
       stamp:
-        validated_from_rev: 8aaf21c6d0e0
-        validated_to_rev: 909da3475bac
+        validated_from_rev: 7b2f6cef4a68
+        validated_to_rev: 773c9570d150
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/domain_declared.spec.md
