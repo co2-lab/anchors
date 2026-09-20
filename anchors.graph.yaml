@@ -964,7 +964,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/check.go
       kind: code
-      rev: 08a37c342170
+      rev: 82afda17b371
       updated_at: "2026-09-20"
       layer: comando
       tags:
