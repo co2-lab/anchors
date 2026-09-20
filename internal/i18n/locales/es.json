@@ -739,5 +739,15 @@
   "gate.docs_covered.skip_no_doct_dir": "proyecto sin `%s/` — no hay plantillas, así que no hay cobertura que cobrar",
   "check.timing_item_single": "    %-*s  %8s  %s",
   "check.timing_targets_count": "%*d objetivos",
-  "check.timing_targets_count_one": "%*d objetivo"
+  "check.timing_targets_count_one": "%*d objetivo",
+  "gate.realizes_resolves.skip_not_spec": "no es spec — sólo la spec declara `@realizes`",
+  "gate.realizes_resolves.skip_none": "la spec no declara `@realizes` — nada que resolver",
+  "gate.realizes_resolves.unknown_unit": "%d `@realizes` apuntando a doctrina de producto que NO EXISTE: %s.\nLa referencia parece trazabilidad y no resuelve a nada: el mapa queda sin arista, y todo gate de este eje confronta el vacío. Crea el archivo de doctrina, o corrige el código.",
+  "gate.realizes_resolves.unknown_rule": "%d `@realizes` apuntando a una regla que la doctrina no cataloga: %s.\nEl archivo existe y la regla no — típicamente una regla renombrada cuyos realizadores nadie actualizó, que es exactamente la divergencia silenciosa que este eje existe para acabar.",
+  "gate.product_realized.skip_not_product": "no es doctrina de producto — la realización se cobra de la doctrina, que es la que se realiza",
+  "gate.product_realized.unrealized": "%d regla(s) de producto que NINGUNA spec realiza: %s.\nUna regla escrita y no realizada es una decisión de producto que nunca llegó al código. Pasa todos los demás gates porque el archivo de doctrina está bien formado — nada más mira el otro extremo.",
+  "gate.product_realized.no_rules": "la doctrina no cataloga ninguna regla — una doctrina de producto sin reglas no gobierna nada",
+  "gate.doctrine_not_duplicated.skip_not_spec": "no es spec — la duplicación se cobra de quien realiza",
+  "gate.doctrine_not_duplicated.copied": "%d regla(s) COPIANDO el texto de la doctrina de producto en vez de referenciarla: %s.\nLa copia es lo que el concepto existe para eliminar: dos textos que dicen lo mismo divergen al primer cambio, y ningún gate lo ve porque ambos están bien formados. Referencia con `@realizes` y di AQUÍ sólo lo específico de esta unidad.",
+  "gate.plan_seeds_valid.part_doctrine_outside": "doctrina de producto sembrada FUERA de `product/`: %s — el kind `product` viene de la ruta, así que una doctrina nacida en otro lugar se lee como doc común, y la spec que la realiza apunta a un archivo que el mapa no reconoce como doctrina"
 }

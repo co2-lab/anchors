@@ -163,3 +163,43 @@ func TestPlanSeeds_B11_MultiplosDefeitosAgregados(t *testing.T) {
 		t.Errorf("defeitos de categorias distintas devem ser separados por ponto e vírgula: %s", msg)
 	}
 }
+
+// A DOUTRINA DE PRODUTO semeada por um plano tem UMA regra: morar em `product/`.
+//
+// Nao se cobra dela camada de alvo (doutrina nao tem alvo — ela E' o artefato) nem
+// existencia (semear significa que vai nascer). Cobra-se o lugar, porque o kind
+// `product` vem do CAMINHO: nascida fora, ela e' lida como doc comum, e a spec que a
+// realizar aponta para um arquivo que o mapa nao reconhece como doutrina.
+func TestPlanSeedsValid_doutrinaForaDeProductReprova(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "src"), 0o755)
+	n := mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}
+	v, msg := checkPlanSeedsValid("semeia `src/limite.doctrine.md`\n", n, root, nil, &config.Config{})
+	if v != Fail {
+		t.Fatalf("esperava Fail, veio %v (%s)", v, msg)
+	}
+	if !strings.Contains(msg, "src/limite.doctrine.md") {
+		t.Errorf("o veredito tem de NOMEAR a doutrina: %s", msg)
+	}
+}
+
+func TestPlanSeedsValid_doutrinaEmProductPassa(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "product"), 0o755)
+	n := mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}
+	if v, msg := checkPlanSeedsValid("semeia `product/limite.doctrine.md`\n", n, root, nil, &config.Config{}); v == Fail {
+		t.Errorf("doutrina em product/ nao devia reprovar: %s", msg)
+	}
+}
+
+// Um plano que semeia APENAS doutrinas (nenhuma spec) e' legitimo, e o guarda de
+// "nenhuma spec semeada" nao pode engoli-lo: com ele antes da checagem de doutrina, o
+// plano saia Skip — sem veredito, com a doutrina fora de `product/` passando em silencio.
+func TestPlanSeedsValid_planoSoDeDoutrinaNaoEscapaPeloGuarda(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "src"), 0o755)
+	n := mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}
+	if v, _ := checkPlanSeedsValid("so doutrina: `src/x.doctrine.md`\n", n, root, nil, &config.Config{}); v != Fail {
+		t.Errorf("esperava Fail, veio %v — o guarda de seeds vazias engoliu o plano", v)
+	}
+}

@@ -32,6 +32,17 @@ func filepathBase(p string) string { return filepath.Base(p) }
 
 var planSeedRE = regexp.MustCompile("`([^`]+\\.spec\\.md)`")
 
+// doctrineSeedRE — a DOUTRINA DE PRODUTO semeada por um plano.
+//
+// Reconhecida a' parte, e nao junto das specs no regex acima, porque a validacao daqui
+// nao se aplica a ela: o gate confere a CAMADA DO ALVO que a spec descreveria
+// (`Foo.spec.md` -> `Foo.ts`), e doutrina nao tem alvo — ela E' o artefato. Cobrar dela
+// uma camada de codigo acusaria toda doutrina semeada de "camada nao declarada".
+//
+// O scan a registra como semente (aresta `seeds` no grafo, que e' o que faz o plano
+// deixar de ficar orfao); aqui ela so' precisa nao ser confundida com spec.
+var doctrineSeedRE = regexp.MustCompile("`([^`]+\\.doctrine\\.md)`")
+
 func checkPlanSeedsValid(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindPlan {
 		return Skip, i18n.T("gate.plan_seeds_valid.skip_not_plan")
@@ -51,7 +62,31 @@ func checkPlanSeedsValid(content string, n mapx.Node, root string, g *mapx.Graph
 		}
 		seeds[s] = true
 	}
-	if len(seeds) == 0 {
+	// A DOUTRINA semeada: a unica regra que vale para ela e' morar em `product/`.
+	//
+	// Nao se cobra camada de alvo (ela nao tem alvo), nem existencia (a doutrina vai
+	// NASCER — e' o que semear significa). Cobra-se o lugar, porque o kind `product` vem
+	// do caminho: uma doutrina semeada fora de `product/` nasce como `doc`, e a spec que
+	// a realizar aponta para um arquivo que o mapa nao reconhece como doutrina.
+	var foraDeProduct []string
+	for _, m := range doctrineSeedRE.FindAllStringSubmatch(content, -1) {
+		d := m[1]
+		if strings.HasPrefix(filepathBase(d), "_TEMPLATE") {
+			continue
+		}
+		if !strings.Contains(d, "/") || !rootDirExists(root, d) {
+			continue // citacao em prosa, nao semeadura — mesma regra das specs
+		}
+		if !strings.HasPrefix(d, "product/") {
+			foraDeProduct = append(foraDeProduct, d)
+		}
+	}
+
+	// O guarda de "nenhuma spec semeada" vem DEPOIS da doutrina, e a ordem e' a decisao:
+	// um plano que semeia apenas doutrinas de produto (sem nenhuma spec) e' legitimo, e
+	// com o guarda antes ele saia como Skip — sem veredito, com a doutrina fora de
+	// `product/` passando em silencio. Achado por sonda.
+	if len(seeds) == 0 && len(foraDeProduct) == 0 {
 		return Skip, i18n.T("gate.plan_seeds_valid.skip_no_seeds")
 	}
 
@@ -86,6 +121,10 @@ func checkPlanSeedsValid(content string, n mapx.Node, root string, g *mapx.Graph
 	}
 
 	var parts []string
+	if len(foraDeProduct) > 0 {
+		sort.Strings(foraDeProduct)
+		parts = append(parts, i18n.T("gate.plan_seeds_valid.part_doctrine_outside", strings.Join(foraDeProduct, ", ")))
+	}
 	if len(declarativa) > 0 {
 		sort.Strings(declarativa)
 		parts = append(parts, i18n.T("gate.plan_seeds_valid.part_declarative", strings.Join(declarativa, ", ")))

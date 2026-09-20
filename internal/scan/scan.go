@@ -955,8 +955,13 @@ func extractRealizes(kind, content string) []Realizes {
 	return out
 }
 
-// planSeedRE acha os caminhos de spec que um plano SEMEIA (cita entre crases).
-var planSeedRE = regexp.MustCompile("`([^`]+\\.spec\\.md)`")
+// planSeedRE acha os caminhos de ARTEFATO ANCORA que um plano SEMEIA (cita entre crases).
+//
+// Duas extensoes, e a segunda foi acrescentada com o conceito de doutrina de produto: um
+// plano nao promete apenas as specs das unidades, promete tambem as REGRAS DE PRODUTO que
+// elas vao realizar. Com o regex cravado em `.spec.md`, uma doutrina citada num plano era
+// invisivel ao grafo — o plano prometia a regra transversal e nada cobrava a entrega.
+var planSeedRE = regexp.MustCompile("`([^`]+\\.(?:spec|doctrine)\\.md)`")
 
 // extractSeeds devolve as specs que um plano semeia. Vazio para qualquer outro kind — só
 // plano semeia.

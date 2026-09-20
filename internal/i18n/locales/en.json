@@ -739,5 +739,15 @@
   "gate.docs_covered.skip_no_doct_dir": "project without `%s/` — there are no templates, so there is no coverage to charge",
   "check.timing_item_single": "    %-*s  %8s  %s",
   "check.timing_targets_count": "%*d targets",
-  "check.timing_targets_count_one": "%*d target"
+  "check.timing_targets_count_one": "%*d target",
+  "gate.realizes_resolves.skip_not_spec": "not a spec — only a spec declares `@realizes`",
+  "gate.realizes_resolves.skip_none": "spec declares no `@realizes` — nothing to resolve",
+  "gate.realizes_resolves.unknown_unit": "%d `@realizes` pointing at product doctrine that DOES NOT EXIST: %s.\nThe reference looks like traceability and resolves to nothing: the map has no edge, and every gate on this axis confronts a void. Either create the doctrine file, or fix the code.",
+  "gate.realizes_resolves.unknown_rule": "%d `@realizes` pointing at a rule the doctrine does not catalogue: %s.\nThe file exists and the rule does not — typically a rule that was renamed and whose realizers nobody updated, which is exactly the silent divergence this axis exists to end.",
+  "gate.product_realized.skip_not_product": "not product doctrine — realization is charged of the doctrine, which is what gets realized",
+  "gate.product_realized.unrealized": "%d product rule(s) that NO spec realizes: %s.\nA rule written and not realized is a product decision that never reached the code. It passes every other gate because the doctrine file itself is well-formed — nothing else looks at the other end.",
+  "gate.product_realized.no_rules": "doctrine catalogues no rule — a product doctrine with no rule governs nothing",
+  "gate.doctrine_not_duplicated.skip_not_spec": "not a spec — duplication is charged of whoever realizes",
+  "gate.doctrine_not_duplicated.copied": "%d rule(s) COPYING the text of the product doctrine instead of referencing it: %s.\nThe copy is what the concept exists to eliminate: two texts saying the same thing diverge at the first change, and no gate sees it because both are well-formed. Reference with `@realizes` and state HERE only what is specific to this unit.",
+  "gate.plan_seeds_valid.part_doctrine_outside": "product doctrine seeded OUTSIDE `product/`: %s — the `product` kind comes from the path, so a doctrine born elsewhere is read as a plain doc, and the spec that realizes it points at a file the map does not recognise as doctrine"
 }
