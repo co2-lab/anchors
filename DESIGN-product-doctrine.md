@@ -134,22 +134,30 @@ A consequência importa para os gates: nenhum deles pode cobrar paridade de cont
 "≥ 1 realizador", que é uma pergunta diferente. Quem prova a regra é a tríade de cada
 spec que a realiza — duplicar teste aqui seria provar duas vezes a mesma coisa.
 
-### D4 — A tag `@feature` migra? SIM, e ela hoje NÃO FAZ NADA
+### D4 — A tag `@feature` migra? NÃO — a implementação mudou a resposta
 
-Verificado antes de decidir: `@feature` aparece em `internal/initx/header_guide.go` e
-`cmd/anchors/governance/guide_header.go`, sempre em TEXTO DE GUIA. Nenhum parser a lê —
-`internal/scan/` e `internal/mapx/` não a mencionam.
+A decisão registrada aqui era SIM. Ao implementar, uma segunda leitura desfez a premissa.
 
-É promessa documentada e não cumprida: o guia diz que ela "agrupa arquivos da mesma fatia
-de domínio, mesmo espalhados por camadas", e nada no motor agrupa coisa alguma.
+**A tag não é lida por ninguém.** `@feature` aparece em `internal/initx/header_guide.go` e
+`cmd/anchors/governance/guide_header.go`, as duas vezes em TEXTO DE GUIA. Nenhum parser a
+consome: `internal/scan/` e `internal/mapx/` não a mencionam. O guia promete que ela
+"agrupa arquivos da mesma fatia de domínio, mesmo espalhados por camadas", e nada no motor
+agrupa coisa alguma. Isso continua verdade, e foi o que sustentava o SIM.
 
-Então não é migração de funcionalidade — é o artefato de produto CUMPRINDO o que a tag
-prometia. `@product: auth` passa a apontar para `product/auth.doctrine.md`, que existe e
-é confrontado.
+**Mas os dois eixos não são a mesma coisa**, e é isso que muda a decisão. A tag declara
+PERTENCIMENTO — "este arquivo é do módulo auth" — e o próprio guia a lista ao lado de
+`@experimental` e `@legacy`, que são rótulos livres de agrupamento. A doutrina de produto
+declara DECISÃO: tem arquivo próprio, código de identidade, regras catalogadas, e é
+realizada por arestas do mapa.
 
-Como nada lê a tag antiga, a migração é de TEXTO (os dois guias), e o passo de formato
-em `internal/migra/` serve para reescrever os headers de projetos que já a adotaram —
-sem ele, quem escreveu `@feature: auth` fica com um rótulo órfão.
+Renomear uma para a outra criaria uma equivalência falsa: quem lesse `@product: auth` no
+header de um arquivo suporia que existe `product/auth.doctrine.md`, e a tag não afirma
+isso — ela só diz a que módulo o arquivo pertence. Seriam dois significados no mesmo nome,
+exatamente o defeito que fez `features/` ser descartado no D0.
+
+**Fica como está, e a dívida real é outra:** `@feature` é promessa documentada e não
+cumprida. Ou o motor passa a agrupar por ela (e aí ela ganha gate e sentido), ou ela sai
+dos guias. Registrado, não resolvido — é trabalho de outro eixo.
 
 ## A implementação
 
