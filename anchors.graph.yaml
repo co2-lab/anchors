@@ -1632,18 +1632,35 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/dependency_honored.feature
+      kind: feature
+      rev: 712dd29950e6
+      code: DEPHN
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/dependency_honored.go
       kind: code
       rev: 9ebc588be760
       updated_at: "2026-09-19"
+      code: DEPHN
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/dependency_honored.spec.md
+      kind: spec
+      rev: 17721284e98d
+      code: DEPHN
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/dependency_honored_test.go
       kind: test
-      rev: 6d714d0e82ed
+      rev: 52b0cb2a3f59
       updated_at: "2026-09-10"
+      code: DEPHN
       layer: teste
       tags:
         - test
@@ -2343,6 +2360,13 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/placeholder_filled.feature
+      kind: feature
+      rev: 6d41d23bf959
+      code: PLCFL
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/placeholder_filled.go
       kind: code
       rev: ca3883565729
@@ -2354,7 +2378,8 @@ nodes:
         - gate
     - id: internal/gate/placeholder_filled.spec.md
       kind: spec
-      rev: 1c9e649c67cf
+      rev: 9afea8a33146
+      updated_at: "2026-09-20"
       code: PLCFL
       layer: spec
       code_declared: true
@@ -2362,7 +2387,7 @@ nodes:
         - spec
     - id: internal/gate/placeholder_filled_test.go
       kind: test
-      rev: 92f14999f1e2
+      rev: a28a04e74cce
       updated_at: "2026-09-16"
       code: CRUXX
       layer: teste
@@ -5095,6 +5120,10 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC.md
+      to: internal/gate/dependency_honored.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC.md
       to: internal/gate/doc_required.spec.md
       type: governs
       origin: declared
@@ -5506,6 +5535,10 @@ edges:
         validated_to_rev: fe98f6d1ff71
         changed_at: "2026-09-19"
         verdict: ok
+    - from: SPEC_TYPES.md
+      to: internal/gate/dependency_honored.spec.md
+      type: governs
+      origin: declared
     - from: SPEC_TYPES.md
       to: internal/gate/doc_required.spec.md
       type: governs
@@ -6721,6 +6754,30 @@ edges:
         validated_to_rev: c35dfd17ef15
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/dependency_honored.feature
+      to: internal/gate/dependency_honored_test.go
+      type: tested-by
+      origin: convention
+    - from: internal/gate/dependency_honored.spec.md
+      to: internal/gate/dependency_honored.feature
+      type: covered-by
+      origin: convention
+    - from: internal/gate/dependency_honored.spec.md
+      to: internal/gate/dependency_honored.go
+      type: specifies
+      origin: convention
+    - from: internal/gate/dependency_honored.spec.md
+      to: internal/mapx/model.go
+      type: depends-on
+      origin: declared
+      method: '`KindSpec`, `EdgeDependsOn`, `EdgeSpecifies`'
+      dep: DEP2
+    - from: internal/gate/dependency_honored.spec.md
+      to: internal/mapx/query.go
+      type: depends-on
+      origin: declared
+      method: '`Neighbors`'
+      dep: DEP1
     - from: internal/gate/doc_required.feature
       to: internal/gate/doc_required_test.go
       type: tested-by
@@ -7542,26 +7599,24 @@ edges:
         validated_to_rev: c35dfd17ef15
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/placeholder_filled.feature
+      to: internal/gate/placeholder_filled_test.go
+      type: tested-by
+      origin: convention
     - from: internal/gate/placeholder_filled.spec.md
-      to: internal/config/config.go
-      type: depends-on
-      origin: declared
-      method: '`Config`'
-      dep: DEP1
+      to: internal/gate/placeholder_filled.feature
+      type: covered-by
+      origin: convention
     - from: internal/gate/placeholder_filled.spec.md
       to: internal/gate/placeholder_filled.go
       type: specifies
-      origin: convention
-    - from: internal/gate/placeholder_filled.spec.md
-      to: internal/gate/placeholder_filled_test.go
-      type: tested-by
       origin: convention
     - from: internal/gate/placeholder_filled.spec.md
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
       method: '`KindSpec`'
-      dep: DEP2
+      dep: DEP1
     - from: internal/gate/plan_change_justified.feature
       to: internal/gate/plan_change_justified_test.go
       type: tested-by

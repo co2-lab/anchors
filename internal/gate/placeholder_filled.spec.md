@@ -37,7 +37,7 @@ writes, fills in, and that the gate charges only what was left behind.
 | --- | --- | --- | --- |
 | the confronted artifact | any node of the map | — (the gate does not choose the target) | the gate engine, routing by the declared `on:` |
 | the content | any text, including empty | — (absent text is a case, not an error) | this unit: nothing written is nothing to charge |
-| the marker vocabulary | what the project declares as the pending word | a word the project never declared | the Structure, so the marker is the project's and not the framework's |
+| the marker vocabulary | the generator's own markers, fixed in this unit | a pending word the project invented for itself | this unit: the markers are the ones the generator emits, and nothing else |
 
 ## Effects
 
@@ -61,18 +61,16 @@ writes, fills in, and that the gate charges only what was left behind.
 | Rule | Boundary | Why |
 | --- | --- | --- |
 | `PLCFL-X01` | Does not judge whether what replaced the marker is GOOD. | The ruler is deterministic: the marker is there, or it is not. Whether the sentence that replaced it says something worth saying is judgment, and judgment belongs to another class of gate. |
-| `PLCFL-X02` | Does not invent the marker vocabulary. | The pending word comes from the project's Structure. Hardcoding one here would charge a project that writes its pending items differently, and miss the one that matches. |
+| `PLCFL-X02` | Charges only the marker in a VALUE POSITION — header field, table cell, rule title — and never a marker in running prose. | This is the whole distinction that keeps the gate honest. A deliberate pending-work section, a sentence naming what is left to do, a comment carrying a marker: all are the author writing, and the gate that accused them would punish the honesty the framework asks for everywhere else. The position is the evidence, not the word. |
 
 ## Dependencies
 
 | Code | File | Method | Layer |
 | --- | --- | --- | --- |
-| DEP1 | `internal/config/config.go` | `Config` | core — the marker vocabulary is declared in the Structure |
-| DEP2 | `internal/mapx/model.go` | `KindSpec` | core — the kind is what routes the jurisdiction |
+| DEP1 | `internal/mapx/model.go` | `KindSpec` | core — the kind is what routes the jurisdiction |
 
 ## Open Decisions
 
 | Code | Question | Who decides | Becomes |
 | --- | --- | --- | --- |
-
-none
+| `PLCFL-Q01` | Should the marker vocabulary come from the project's Structure instead of being fixed in this unit? The detector TAKES the Structure as a parameter and never reads it: a project that writes its pending items with another word is not charged, and one that legitimately uses these words in a value position is. Closing this means either declaring the vocabulary and reading it, or dropping the unused parameter so the signature stops promising what it does not do. | whoever owns the Structure's surface | either a declared vocabulary field, or a narrower signature | <!-- @no-scenario: an OPEN QUESTION has no behaviour to confront — it names a decision nobody has taken yet. A scenario here would assert as true the very thing still undecided. It earns scenarios when it closes, as whichever rule it becomes. -->
