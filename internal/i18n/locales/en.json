@@ -733,5 +733,8 @@
   "check.timing_item": "    %-*s  %8s  %5d target(s)  worst %8s",
   "check.timing_targets": "⏱ slowest targets (one confrontation each):",
   "check.timing_target_item": "    %8s  %s @ %s",
-  "check.timing_note": "  Wall time, this run, this machine — it varies with cache and load. Use it to\n  compare gates with each other, never as an absolute budget. A gate that costs by\n  VOLUME (cheap per target, times hundreds) and one that costs per TARGET (a single\n  run that boots a compiler) are optimised in opposite ways: the `worst` column is\n  what tells them apart."
+  "check.timing_note": "  Wall time, this run, this machine — it varies with cache and load. Use it to\n  compare gates with each other, never as an absolute budget. A gate that costs by\n  VOLUME (cheap per target, times hundreds) and one that costs per TARGET (a single\n  run that boots a compiler) are optimised in opposite ways: the `worst` column is\n  what tells them apart.",
+  "gate.docs_covered.uncovered": "%d spec(s) reach NO documentation page: %s.\nThe templates in `doct/` filter by layer, and no filter selects these — they are compiled into nothing, and every page that exists is correct, so nothing else accuses it. Either widen a template's filter, or add a page for the layer.",
+  "gate.docs_covered.skip_not_spec": "not a spec — coverage is charged of the spec, which is what feeds the documentation",
+  "gate.docs_covered.skip_no_doct_dir": "project without `%s/` — there are no templates, so there is no coverage to charge"
 }

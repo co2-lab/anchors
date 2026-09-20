@@ -1144,7 +1144,7 @@ nodes:
     - id: guides/HEADER_GUIDE.md
       kind: guide
       rev: 0115a508747b
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-20"
       layer: guide-distribuido
       tags:
         - guide
@@ -1153,7 +1153,7 @@ nodes:
     - id: guides/SPEC_GUIDE.md
       kind: guide
       rev: c02858da0c90
-      updated_at: "2026-08-28"
+      updated_at: "2026-09-20"
       layer: guide-distribuido
       tags:
         - guide
@@ -1736,6 +1736,19 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/docs_covered.go
+      kind: code
+      rev: e465b4dcc5a8
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/docs_covered_test.go
+      kind: test
+      rev: 462ad8b8ea3e
+      layer: teste
+      tags:
+        - test
     - id: internal/gate/docs_fresh.feature
       kind: feature
       rev: 3805fa8bbdb4
@@ -1746,8 +1759,8 @@ nodes:
         - feature
     - id: internal/gate/docs_fresh.go
       kind: code
-      rev: 227df2fd3627
-      updated_at: "2026-09-19"
+      rev: 613927a5e421
+      updated_at: "2026-09-20"
       code: DCFRD
       layer: gate
       tags:
@@ -1764,8 +1777,8 @@ nodes:
         - spec
     - id: internal/gate/docs_fresh_test.go
       kind: test
-      rev: faa4facfaa8a
-      updated_at: "2026-09-19"
+      rev: 1a8bdc1a21ac
+      updated_at: "2026-09-20"
       code: GLCGL
       layer: teste
       code_declared: true
@@ -2001,7 +2014,7 @@ nodes:
         - feature
     - id: internal/gate/internal_checks.go
       kind: code
-      rev: f7c211d67715
+      rev: cdf6b2b01907
       updated_at: "2026-09-19"
       code: INCHN
       layer: gate
@@ -3605,7 +3618,7 @@ nodes:
         - test
     - id: internal/initx/default_gates.go
       kind: code
-      rev: bff1ce962e8b
+      rev: "980424903720"
       updated_at: "2026-09-19"
       layer: infra
       tags:
@@ -4659,6 +4672,10 @@ edges:
         validated_to_rev: 4555e1b800e7
         changed_at: "2026-09-19"
         verdict: ok
+    - from: QUALITY.md
+      to: internal/gate/docs_covered.go
+      type: governs
+      origin: declared
     - from: QUALITY.md
       to: internal/gate/docs_fresh.go
       type: governs
@@ -7045,8 +7062,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`Graph`'
-      dep: DEP1
+      method: '`KindTest`'
+      dep: DEP3
       stamp:
         validated_from_rev: c34539c2d755
         validated_to_rev: c35dfd17ef15
@@ -7056,8 +7073,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindTest`'
-      dep: DEP3
+      method: '`Graph`'
+      dep: DEP1
       stamp:
         validated_from_rev: c34539c2d755
         validated_to_rev: c35dfd17ef15

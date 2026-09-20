@@ -206,6 +206,15 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "docs-fresh", Blocking: config.Bool(false),
 			Measures: "o `docs/*.md` compilado reflete a spec de onde veio",
 		})
+		// A COBERTURA, que o gate acima nao tem como ver: ele confere as paginas que
+		// EXISTEM, e o defeito silencioso e' a spec que nao chega a pagina nenhuma.
+		// Os templates filtram por camada, entao uma spec que nenhum filtro seleciona
+		// compila para lugar nenhum — e todas as paginas seguem corretas.
+		gates = append(gates, config.Gate{
+			Name: "docs-covered", ID: "docs-covered", On: []string{"spec"},
+			Check: "docs-covered", Blocking: config.Bool(false),
+			Measures: "toda spec chega a alguma pagina da documentacao",
+		})
 		// A DOCUMENTAÇÃO AGREGADA que a unidade alimenta. O `docs.required` declara qual
 		// documento é contrato e qual camada ou unidade o dispara; até aqui a declaração
 		// era resolvida (`RequiredFor`) e nunca CONFRONTADA.

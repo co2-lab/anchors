@@ -90,6 +90,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"code-cataloged":           checkCodeCataloged,
 	"value-anchored":           checkValueAnchored,
 	"docs-fresh":               checkDocsFresh,
+	"docs-covered":             checkDocsCovered,
 	"doc-required":             checkDocRequired,
 	"doc-self-contained":       checkDocSelfContained,
 }

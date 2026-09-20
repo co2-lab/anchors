@@ -733,5 +733,8 @@
   "check.timing_item": "    %-*s  %8s  %5d objetivo(s)  peor %8s",
   "check.timing_targets": "⏱ objetivos más lentos (una confrontación cada uno):",
   "check.timing_target_item": "    %8s  %s @ %s",
-  "check.timing_note": "  Tiempo de pared, de esta ejecución, en esta máquina — varía con la caché y la\n  carga. Úsalo para comparar los gates ENTRE SÍ, nunca como presupuesto absoluto. Un\n  gate que cuesta por VOLUMEN (barato por objetivo, por cientos) y uno que cuesta por\n  OBJETIVO (una ejecución que arranca un compilador) se optimizan de formas opuestas:\n  la columna `peor` es lo que los distingue."
+  "check.timing_note": "  Tiempo de pared, de esta ejecución, en esta máquina — varía con la caché y la\n  carga. Úsalo para comparar los gates ENTRE SÍ, nunca como presupuesto absoluto. Un\n  gate que cuesta por VOLUMEN (barato por objetivo, por cientos) y uno que cuesta por\n  OBJETIVO (una ejecución que arranca un compilador) se optimizan de formas opuestas:\n  la columna `peor` es lo que los distingue.",
+  "gate.docs_covered.uncovered": "%d spec(s) no llegan a NINGUNA página de documentación: %s.\nLas plantillas en `doct/` filtran por capa, y ningún filtro las selecciona — compilan a ninguna parte, y toda página existente es correcta, así que nada más lo acusa. Amplía el filtro de una plantilla, o crea la página de la capa.",
+  "gate.docs_covered.skip_not_spec": "no es spec — la cobertura se cobra de la spec, que es la que alimenta la documentación",
+  "gate.docs_covered.skip_no_doct_dir": "proyecto sin `%s/` — no hay plantillas, así que no hay cobertura que cobrar"
 }

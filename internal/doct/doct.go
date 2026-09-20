@@ -29,6 +29,8 @@ package doct
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"io/fs"
 	"os"
@@ -64,7 +66,25 @@ const SufixoTemplate = ".tmpl"
 // nome.
 const GeneratedMarker = "<!-- anchors:generated from %s — DO NOT EDIT: run `anchors docs build` -->"
 
+// GeneratedMarkerHashed e' o marcador COM a impressao digital das entradas que
+// produziram a pagina: o template e as specs que ele consome.
+//
+// Existe para que conferir se a doc esta em dia deixe de exigir recompila-la. Sem o
+// carimbo, a unica forma de responder "esta defasada?" e' montar o documento inteiro e
+// comparar — e o `docs-fresh` faz essa pergunta a cada varredura, mesmo quando nada
+// mudou. Com o carimbo, a resposta e' comparar dois hashes.
+//
+// O hash cobre as DUAS entradas de proposito. Cobrir so' as specs deixaria passar um
+// template editado (a doc mudaria de forma sem nenhuma spec mudar); cobrir so' o
+// template deixaria passar o caso comum, que e' a spec revisada.
+const GeneratedMarkerHashed = "<!-- anchors:generated from %s — inputs:%s — DO NOT EDIT: run `anchors docs build` -->"
+
 var markerRE = regexp.MustCompile(`^<!-- anchors:generated `)
+
+// markerHashRE extrai a impressao digital de um marcador que a tenha. A ausencia nao e'
+// erro: paginas compiladas por uma versao anterior do Anchors nao a carregam, e para
+// elas o caminho continua sendo recompilar e comparar.
+var markerHashRE = regexp.MustCompile(`^<!-- anchors:generated from [^—]+— inputs:([0-9a-f]{16}) —`)
 
 // HandwrittenMarker abre a página que NÃO é gerada — a doc de produto é o caso típico.
 //
@@ -123,6 +143,10 @@ type Compiler struct {
 	// 483 links quebrados.
 	Layout Layout
 	specs  []Spec
+	// consumed registra quais specs os templates PEDIRAM, para a cobertura. Vive no
+	// compilador e nao num retorno porque quem as pede sao as funcoes de template,
+	// chamadas de dentro do `Execute` — nao ha por onde devolver.
+	consumed map[string]bool
 }
 
 func New(root string, g *mapx.Graph) (*Compiler, error) {
@@ -246,6 +270,7 @@ func (c *Compiler) Funcs() template.FuncMap {
 // A terceira é a mais provável, porque é como se escreveria se a API fosse por campo.
 func (c *Compiler) fnSpecs(filtro ...string) ([]Spec, error) {
 	if len(filtro) == 0 || strings.TrimSpace(filtro[0]) == "" {
+		c.markConsumed(c.specs)
 		return c.specs, nil
 	}
 	campo, valor, ok := strings.Cut(filtro[0], "=")
@@ -277,6 +302,54 @@ func (c *Compiler) fnSpecs(filtro ...string) ([]Spec, error) {
 	default:
 		return nil, fmt.Errorf("unknown field %q: use `layer` or `code`", campo)
 	}
+	c.markConsumed(out)
+	return out, nil
+}
+
+// markConsumed anota quais specs um template pediu — o insumo da COBERTURA.
+//
+// A pergunta que isto responde nao e' a do `docs-fresh` ("a pagina esta em dia?"), e sim
+// "a documentacao ALCANCA todas as specs?". Sao defeitos diferentes, e o segundo e' o
+// silencioso: os templates filtram (`specs "layer=gate"`), entao uma spec de camada que
+// nenhum template seleciona nao aparece em pagina nenhuma — e nada acusa, porque todas
+// as paginas que existem estao corretas.
+//
+// Hoje nao ha orfa neste repositorio, e e' coincidencia do estado atual: as 51 specs sao
+// de `gate`, e ha um template que pede exatamente `layer=gate`. A primeira spec fora
+// dessa camada some da documentacao sem uma palavra.
+func (c *Compiler) markConsumed(specs []Spec) {
+	if c.consumed == nil {
+		c.consumed = map[string]bool{}
+	}
+	for _, sp := range specs {
+		c.consumed[sp.Path] = true
+	}
+}
+
+// Uncovered devolve as specs que NENHUM template consumiu, depois de compilar todos.
+//
+// Compila de verdade (e nao le os `.md` ja gerados) porque a pergunta e' sobre o que os
+// templates ALCANCAM, e isso so' se sabe executando-os: o filtro vive dentro do
+// template, e le-lo por regex reimplementaria a linguagem de template por fora.
+func (c *Compiler) Uncovered() ([]string, error) {
+	tmpls, err := c.templates()
+	if err != nil {
+		return nil, nil // sem `doct/`, nao ha cobertura a cobrar
+	}
+	c.consumed = map[string]bool{}
+	for _, rel := range tmpls {
+		saida := strings.TrimSuffix(rel, SufixoTemplate)
+		if _, err := c.compile(filepath.Join(c.Root, Dir, filepath.FromSlash(rel)), saida); err != nil {
+			return nil, err
+		}
+	}
+	var out []string
+	for _, sp := range c.specs {
+		if !c.consumed[sp.Path] {
+			out = append(out, sp.Path)
+		}
+	}
+	sort.Strings(out)
 	return out, nil
 }
 
@@ -458,6 +531,29 @@ func (c *Compiler) templates() ([]string, error) {
 	return out, err
 }
 
+// inputsHash e' a impressao digital do template MAIS de todas as specs que o compilador
+// carregou — as entradas exatas de `compile`.
+//
+// Ordem estavel: `loadSpecs` ja ordena as specs por caminho, e o caminho entra no hash
+// junto do conteudo. Sem isso, duas execucoes com a mesma verdade produziriam hashes
+// diferentes e o carimbo acusaria defasagem que nao existe.
+//
+// Truncado em 8 bytes (16 hex): o hash aqui detecta MUDANCA, nao defende contra
+// adversario. Colisao acidental em 2^64 nao e' o risco desta engenharia, e o marcador
+// fica legivel.
+func (c *Compiler) inputsHash(tmpl []byte) string {
+	h := sha256.New()
+	h.Write(tmpl)
+	h.Write([]byte{0})
+	for _, sp := range c.specs {
+		h.Write([]byte(sp.Path))
+		h.Write([]byte{0})
+		h.Write([]byte(sp.raw))
+		h.Write([]byte{0})
+	}
+	return hex.EncodeToString(h.Sum(nil)[:8])
+}
+
 func (c *Compiler) compile(tmplPath, saida string) ([]byte, error) {
 	b, err := os.ReadFile(tmplPath)
 	if err != nil {
@@ -475,7 +571,7 @@ func (c *Compiler) compile(tmplPath, saida string) ([]byte, error) {
 		rel = tmplPath
 	}
 	rel = filepath.ToSlash(rel)
-	fmt.Fprintf(&buf, GeneratedMarker+"\n\n", rel)
+	fmt.Fprintf(&buf, GeneratedMarkerHashed+"\n\n", rel, c.inputsHash(b))
 	if err := t.Execute(&buf, nil); err != nil {
 		return nil, fmt.Errorf("template %s: %w", tmplPath, err)
 	}
@@ -496,14 +592,42 @@ func (c *Compiler) Stale() ([]string, error) {
 	var out []string
 	for _, rel := range tmpls {
 		saida := strings.TrimSuffix(rel, SufixoTemplate)
-		esperado, err := c.compile(filepath.Join(c.Root, Dir, filepath.FromSlash(rel)), saida)
-		if err != nil {
-			return nil, err
-		}
+		tmplPath := filepath.Join(c.Root, Dir, filepath.FromSlash(rel))
+
 		atual, err := os.ReadFile(filepath.Join(c.Root, OutDir, filepath.FromSlash(saida)))
 		if err != nil {
 			out = append(out, saida) // não existe: está defasado por ausência
 			continue
+		}
+
+		// ATALHO PELO CARIMBO: se a pagina declara a impressao digital das entradas que a
+		// produziram, e ela bate com as entradas de AGORA, a pagina esta em dia — sem
+		// montar o documento.
+		//
+		// E' o que tira o custo do caso comum. Compilar para descobrir que nada mudou era
+		// o trabalho que o `docs-fresh` repetia a cada varredura: medido neste
+		// repositorio, ~8s por compilacao completa, paga mesmo quando nenhuma spec fora
+		// tocada.
+		//
+		// A ausencia do carimbo NAO e' defasagem: paginas geradas por uma versao anterior
+		// nao o carregam, e acusa-las mandaria o autor rodar um build que nao conserta
+		// nada que ele tenha feito. Para elas o caminho antigo continua valendo — compila
+		// e compara — e o proximo `docs build` grava o carimbo.
+		if m := markerHashRE.FindSubmatch(atual); m != nil {
+			b, errT := os.ReadFile(tmplPath)
+			if errT != nil {
+				return nil, errT
+			}
+			if string(m[1]) == c.inputsHash(b) {
+				continue
+			}
+			out = append(out, saida)
+			continue
+		}
+
+		esperado, err := c.compile(tmplPath, saida)
+		if err != nil {
+			return nil, err
 		}
 		// Um `.md` sem marcador é escrito à mão, e o `Build` não o sobrescreve. Cobrar
 		// atualização de um arquivo que o compilador se recusa a escrever mandaria o autor
