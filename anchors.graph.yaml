@@ -2736,6 +2736,7 @@ nodes:
     - id: internal/gate/route_declared.feature
       kind: feature
       rev: 82cf72d89f23
+      updated_at: "2026-09-20"
       code: RTDCL
       layer: feature
       tags:
@@ -2752,6 +2753,7 @@ nodes:
     - id: internal/gate/route_declared.spec.md
       kind: spec
       rev: 25efb10781b6
+      updated_at: "2026-09-20"
       code: RTDCL
       layer: spec
       code_declared: true
@@ -2759,8 +2761,8 @@ nodes:
         - spec
     - id: internal/gate/route_declared_test.go
       kind: test
-      rev: 71b41dbf101c
-      updated_at: "2026-09-19"
+      rev: dd73d4573ac3
+      updated_at: "2026-09-20"
       code: RTDCL
       layer: teste
       tags:
@@ -2995,6 +2997,7 @@ nodes:
     - id: internal/gate/scenario_letter_declared.feature
       kind: feature
       rev: d9b64b46c69f
+      updated_at: "2026-09-20"
       code: SCLTR
       layer: feature
       tags:
@@ -3011,6 +3014,7 @@ nodes:
     - id: internal/gate/scenario_letter_declared.spec.md
       kind: spec
       rev: ab3e8cd92792
+      updated_at: "2026-09-20"
       code: SCLTR
       layer: spec
       code_declared: true
@@ -3018,8 +3022,8 @@ nodes:
         - spec
     - id: internal/gate/scenario_letter_declared_test.go
       kind: test
-      rev: 9b42be6f48a2
-      updated_at: "2026-09-19"
+      rev: 6f1c54eb2a25
+      updated_at: "2026-09-20"
       code: SCLTR
       layer: teste
       tags:
