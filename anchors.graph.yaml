@@ -3309,7 +3309,7 @@ nodes:
         - gate
     - id: internal/gate/triad_complete.feature
       kind: feature
-      rev: d25ffa7df0c6
+      rev: c4fb90cc4a29
       updated_at: "2026-09-19"
       code: TRCMT
       layer: feature
@@ -3335,7 +3335,7 @@ nodes:
         - spec
     - id: internal/gate/triad_complete_test.go
       kind: test
-      rev: b98c294ca0a9
+      rev: d09011dc4bad
       updated_at: "2026-09-20"
       code: TRCMT
       layer: teste
@@ -4379,6 +4379,7 @@ nodes:
     - id: product/vertical-grouping.doctrine.md
       kind: product
       rev: b22709cf848c
+      updated_at: "2026-09-20"
       code: VGRUP
       layer: produto
       code_declared: true

@@ -90,6 +90,14 @@ Feature: TriadComplete — the pieces that realise a spec EXIST
     Then it returns Pass, because matching is the work of the relational gates — this one
       exists precisely because they fail open when the piece is absent
 
+  @TRCMT-B08 @unit-level
+  Scenario: A piece declared TO BE DEVELOPED leaves the verdict undetermined
+    Given a spec declaring `@TBD` for a piece it has not written yet, with the reason
+    When the gate confronts it
+    Then it returns Pending and never Pass, because `@TBD` is DEBT while `@no-<piece>`
+      is a permanent waiver — treating them alike erased the pending work from the radar
+      for the honest declaration of whoever assumed it
+
   @TRCMT-X02 @unit-level
   Scenario: The gate does not judge the QUALITY of any piece
     Given a spec linked to a feature with no scenarios and to an empty test
