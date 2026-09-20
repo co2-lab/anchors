@@ -1635,6 +1635,7 @@ nodes:
     - id: internal/gate/dependency_honored.feature
       kind: feature
       rev: 712dd29950e6
+      updated_at: "2026-09-20"
       code: DEPHN
       layer: feature
       tags:
@@ -1651,6 +1652,7 @@ nodes:
     - id: internal/gate/dependency_honored.spec.md
       kind: spec
       rev: 17721284e98d
+      updated_at: "2026-09-20"
       code: DEPHN
       layer: spec
       code_declared: true
@@ -1659,7 +1661,7 @@ nodes:
     - id: internal/gate/dependency_honored_test.go
       kind: test
       rev: 52b0cb2a3f59
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-20"
       code: DEPHN
       layer: teste
       tags:
@@ -2363,6 +2365,7 @@ nodes:
     - id: internal/gate/placeholder_filled.feature
       kind: feature
       rev: 6d41d23bf959
+      updated_at: "2026-09-20"
       code: PLCFL
       layer: feature
       tags:
@@ -2388,7 +2391,7 @@ nodes:
     - id: internal/gate/placeholder_filled_test.go
       kind: test
       rev: a28a04e74cce
-      updated_at: "2026-09-16"
+      updated_at: "2026-09-20"
       code: CRUXX
       layer: teste
       code_declared: true
@@ -2730,18 +2733,35 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/route_declared.feature
+      kind: feature
+      rev: 82cf72d89f23
+      code: RTDCL
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/route_declared.go
       kind: code
       rev: 8402fe2e58cf
       updated_at: "2026-09-19"
+      code: RTDCL
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/route_declared.spec.md
+      kind: spec
+      rev: 25efb10781b6
+      code: RTDCL
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/route_declared_test.go
       kind: test
-      rev: 38fcacf30238
+      rev: 71b41dbf101c
       updated_at: "2026-09-19"
+      code: RTDCL
       layer: teste
       tags:
         - test
@@ -2972,19 +2992,35 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/scenario_letter_declared.feature
+      kind: feature
+      rev: d9b64b46c69f
+      code: SCLTR
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/scenario_letter_declared.go
       kind: code
       rev: e5faa87abd02
       updated_at: "2026-09-19"
+      code: SCLTR
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/scenario_letter_declared.spec.md
+      kind: spec
+      rev: ab3e8cd92792
+      code: SCLTR
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/scenario_letter_declared_test.go
       kind: test
-      rev: 32d4967cf406
+      rev: 9b42be6f48a2
       updated_at: "2026-09-19"
-      code: RCRRX
+      code: SCLTR
       layer: teste
       tags:
         - test
@@ -5361,6 +5397,10 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC.md
+      to: internal/gate/route_declared.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC.md
       to: internal/gate/route_exists.spec.md
       type: governs
       origin: declared
@@ -5409,6 +5449,10 @@ edges:
         validated_to_rev: 80bb393d42f4
         changed_at: "2026-09-19"
         verdict: ok
+    - from: SPEC.md
+      to: internal/gate/scenario_letter_declared.spec.md
+      type: governs
+      origin: declared
     - from: SPEC.md
       to: internal/gate/scenario_type_aligned.spec.md
       type: governs
@@ -5777,6 +5821,10 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC_TYPES.md
+      to: internal/gate/route_declared.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC_TYPES.md
       to: internal/gate/route_exists.spec.md
       type: governs
       origin: declared
@@ -5825,6 +5873,10 @@ edges:
         validated_to_rev: 80bb393d42f4
         changed_at: "2026-09-19"
         verdict: ok
+    - from: SPEC_TYPES.md
+      to: internal/gate/scenario_letter_declared.spec.md
+      type: governs
+      origin: declared
     - from: SPEC_TYPES.md
       to: internal/gate/scenario_type_aligned.spec.md
       type: governs
@@ -8069,6 +8121,24 @@ edges:
         validated_to_rev: d1b270e16cd2
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/route_declared.feature
+      to: internal/gate/route_declared_test.go
+      type: tested-by
+      origin: convention
+    - from: internal/gate/route_declared.spec.md
+      to: internal/gate/route_declared.feature
+      type: covered-by
+      origin: convention
+    - from: internal/gate/route_declared.spec.md
+      to: internal/gate/route_declared.go
+      type: specifies
+      origin: convention
+    - from: internal/gate/route_declared.spec.md
+      to: internal/mapx/model.go
+      type: depends-on
+      origin: declared
+      method: '`Node`'
+      dep: DEP1
     - from: internal/gate/route_exists.feature
       to: internal/gate/route_exists_test.go
       type: tested-by
@@ -8203,8 +8273,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`RuleType`'
-      dep: DEP1
+      method: '`CodeLengthPattern`'
+      dep: DEP3
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: 2536cd2306a8
@@ -8214,8 +8284,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`CodeLengthPattern`'
-      dep: DEP3
+      method: '`RuleType`'
+      dep: DEP1
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: 2536cd2306a8
@@ -8348,6 +8418,30 @@ edges:
         validated_to_rev: c35dfd17ef15
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/scenario_letter_declared.feature
+      to: internal/gate/scenario_letter_declared_test.go
+      type: tested-by
+      origin: convention
+    - from: internal/gate/scenario_letter_declared.spec.md
+      to: internal/config/config.go
+      type: depends-on
+      origin: declared
+      method: '`CodeLengthPattern`'
+      dep: DEP1
+    - from: internal/gate/scenario_letter_declared.spec.md
+      to: internal/gate/scenario_letter_declared.feature
+      type: covered-by
+      origin: convention
+    - from: internal/gate/scenario_letter_declared.spec.md
+      to: internal/gate/scenario_letter_declared.go
+      type: specifies
+      origin: convention
+    - from: internal/gate/scenario_letter_declared.spec.md
+      to: internal/mapx/model.go
+      type: depends-on
+      origin: declared
+      method: '`KindFeature`'
+      dep: DEP2
     - from: internal/gate/scenario_type_aligned.feature
       to: internal/gate/scenario_type_aligned_test.go
       type: tested-by

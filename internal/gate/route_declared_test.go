@@ -16,37 +16,37 @@ func TestRouteDeclared(t *testing.T) {
 		want    Verdict
 	}{
 		{
-			"tela com rota e navegação concreta",
+			"RTDCL-B04: tela com rota e navegação concreta",
 			screen("> **Rota**: `Home`\n\n### Entrada\n| Origem | Tela |\n| --- | --- |\n| MainTabs | HomeScreen |\n"),
 			Pass,
 		},
 		{
-			"tela sem rota",
+			"RTDCL-B02: tela sem rota",
 			screen("## Visão Geral\nsem linha de rota\n"),
 			Fail,
 		},
 		{
-			"tela com rota mas navegação genérica",
+			"RTDCL-B03: tela com rota mas navegação genérica",
 			screen("> **Rota**: `Home`\n\n### Saída\n| Destino | Tela |\n| --- | --- |\n| botão | Próxima tela |\n"),
 			Fail,
 		},
 		{
-			"hook não é cobrado (Skip)",
+			"RTDCL-B01: hook não é cobrado (Skip)",
 			"<!-- @anchors\n  layer: hook\n-->\n## useAuth\nsem rota, tudo bem\n",
 			Skip,
 		},
 		{
-			"business-logic não é cobrado (Skip)",
+			"RTDCL-B01: business-logic não é cobrado (Skip)",
 			"<!-- @anchors\n  layer: business-logic\n-->\n### FOO-B01\n",
 			Skip,
 		},
 		{
-			"English screen with route and concrete navigation",
+			"RTDCL-B05: English screen with route and concrete navigation",
 			screen("> **Route**: `Home`\n\n### In\n| Origin | Screen |\n| --- | --- |\n| MainTabs | HomeScreen |\n"),
 			Pass,
 		},
 		{
-			"English screen with route but generic navigation",
+			"RTDCL-B05: English screen with route but generic navigation",
 			screen("> **Route**: `Home`\n\n### Out\n| Target | Screen |\n| --- | --- |\n| button | Next screen |\n"),
 			Fail,
 		},
@@ -59,6 +59,8 @@ func TestRouteDeclared(t *testing.T) {
 	}
 }
 
+// RTDCL-I01: the header's declared layer is the source of truth of identity; the node's
+// tags are only the fallback. The header is what the author wrote on purpose.
 func TestLayerOf_headerWinsOverTags(t *testing.T) {
 	content := "<!-- @anchors\n  layer: screen\n-->\n"
 	if got := layerOf(mapx.Node{Tags: []string{"hook"}}, content); got != "screen" {
@@ -67,5 +69,45 @@ func TestLayerOf_headerWinsOverTags(t *testing.T) {
 	// header omisso → cai nas tags do nó
 	if got := layerOf(mapx.Node{Tags: []string{"screen"}}, "sem header\n"); got != "screen" {
 		t.Errorf("layerOf (fallback tag) = %q, quer screen", got)
+	}
+}
+
+// RTDCL-I02: only TABLE ROWS of the navigation sections declare edges. A sentence
+// mentioning a generic destination is the author writing, not an edge being declared —
+// accusing it would charge prose for the shape of a table.
+func TestRouteDeclared_I02_genericTermInProseIsNotAccused(t *testing.T) {
+	content := "<!-- @anchors\n  code: HOMEX\n  layer: screen\n-->\n" +
+		"> **Route**: `Home`\n\n### Out\n" +
+		"The user reaches the next screen from here, once the form is valid.\n\n" +
+		"| Target | Screen |\n| --- | --- |\n| button | DetailScreen |\n"
+	if v, msg := checkRouteDeclared(content, mapx.Node{}); v != Pass {
+		t.Errorf("a generic term in prose must not be accused; got %v (%s)", v, msg)
+	}
+}
+
+// RTDCL-X01: no layer other than `screen` is charged for a route. This was the legacy
+// validator's vice — it knew only screen and component, so every non-component was
+// treated as a screen and every unit that legitimately has no route was accused.
+func TestRouteDeclared_X01_onlyScreenIsCharged(t *testing.T) {
+	for _, layer := range []string{"hook", "business-logic", "store", "dao", "component", "gate"} {
+		content := "<!-- @anchors\n  layer: " + layer + "\n-->\n## no route here, on purpose\n"
+		v, msg := checkRouteDeclared(content, mapx.Node{})
+		if v != Skip {
+			t.Errorf("layer %q: expected Skip, got %v (%s)", layer, v, msg)
+		}
+		if msg == "" {
+			t.Errorf("layer %q: the Skip must state its reason", layer)
+		}
+	}
+}
+
+// RTDCL-X02: the ruler is the spec's INTERNAL coherence — a route is named and the
+// neighbours are concrete. Confronting that name against the real routing table is a
+// different confrontation, over a different artifact.
+func TestRouteDeclared_X02_routeIsNotConfrontedAgainstRouter(t *testing.T) {
+	content := "<!-- @anchors\n  code: HOMEX\n  layer: screen\n-->\n" +
+		"> **Route**: `ARouteNoRouterDefines`\n\n### In\n| Origin | Screen |\n| --- | --- |\n| MainTabs | HomeScreen |\n"
+	if v, msg := checkRouteDeclared(content, mapx.Node{}); v != Pass {
+		t.Errorf("the gate must not confront the route against the router; got %v (%s)", v, msg)
 	}
 }

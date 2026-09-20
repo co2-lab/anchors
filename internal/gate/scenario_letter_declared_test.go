@@ -62,3 +62,68 @@ func TestCenarioLetraDeclarada_agrupaPorLetra(t *testing.T) {
 		t.Errorf("os dois códigos deviam vir na mesma linha: %s", detail)
 	}
 }
+
+// SCLTR-B01: scenario codes live in features — every other kind leaves without a verdict.
+func TestScenarioLetterDeclared_B01_skipsNonFeature(t *testing.T) {
+	feat := "@ABCDX-SG01\nScenario: x\n"
+	for _, k := range []mapx.Kind{mapx.KindSpec, mapx.KindCode, mapx.KindTest} {
+		n := mapx.Node{ID: "a", Kind: k}
+		if v, _ := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras()); v != Skip {
+			t.Errorf("kind %v: expected Skip, got %v", k, v)
+		}
+	}
+}
+
+// SCLTR-B02: with no declared vocabulary every letter would be either all valid or all
+// invented — both answers are noise, so the gate declines to judge.
+func TestScenarioLetterDeclared_B02_skipsWithoutVocabulary(t *testing.T) {
+	feat := "@ABCDX-SG01\nScenario: x\n"
+	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
+	if v, _ := checkScenarioLetterDeclared(feat, n, "", nil, &config.Config{}); v != Skip {
+		t.Errorf("empty vocabulary: expected Skip, got %v", v)
+	}
+	if v, _ := checkScenarioLetterDeclared(feat, n, "", nil, nil); v != Skip {
+		t.Errorf("nil config: expected Skip, got %v", v)
+	}
+}
+
+// SCLTR-B03: a feature with no code at all has nothing to judge.
+func TestScenarioLetterDeclared_B03_skipsWithoutCodes(t *testing.T) {
+	feat := "# language: en\nFeature: x\n\n  Scenario: no code here\n    Then y\n"
+	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
+	if v, _ := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras()); v != Skip {
+		t.Errorf("expected Skip, got %v", v)
+	}
+}
+
+// SCLTR-I02: the code-length pattern is read at EVERY call. It comes from the project's
+// Structure, which loads AFTER the package globals — a pattern built once at load time
+// would freeze the default and silently ignore the project's declaration.
+//
+// Proven by declaring a non-default length and confronting a code of that length: it has
+// to be SEEN (reported as an undeclared letter), not silently skipped as unrecognisable.
+func TestScenarioLetterDeclared_I02_codeLengthReadPerCall(t *testing.T) {
+	original := append([]int{}, config.CodeLengths...)
+	defer func() { config.CodeLengths = original }()
+
+	config.CodeLengths = []int{7}
+	feat := "@ABCDEFG-SG01\nScenario: x\n"
+	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
+	v, detail := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras())
+	if v != Pending {
+		t.Fatalf("a 7-char code must be recognised once the project declares length 7; got %v (%s)", v, detail)
+	}
+	if !strings.Contains(detail, "ABCDEFG-SG01") {
+		t.Errorf("the verdict must name the code: %s", detail)
+	}
+}
+
+// SCLTR-X02: a tag is free vocabulary by design. Charging it here would turn a precise
+// instrument into a style opinion — only the LETTER OF THE CODE is judged.
+func TestScenarioLetterDeclared_X02_ignoresTags(t *testing.T) {
+	feat := "@whatever-free-tag @ABCDX-S01 @another_one\nScenario: x\n    Then y\n"
+	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
+	if v, detail := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras()); v != Pass {
+		t.Errorf("free-form tags must not be judged; got %v (%s)", v, detail)
+	}
+}
