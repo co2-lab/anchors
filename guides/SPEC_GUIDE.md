@@ -1,33 +1,33 @@
-# Guia de spec — como escrever um `.spec.md` neste projeto
+# Spec guide — how to write a `.spec.md` in this project
 
-> Semeado por `anchors init`. É a régua embutida (`anchors guide spec`)
-> instanciada com o dialeto DESTE projeto. Leia antes de escrever qualquer spec.
+> Seeded by `anchors init`. It is the built-in ruler (`anchors guide spec`) instantiated
+> with THIS project's dialect. Read it before writing any spec.
 
-## Comece pelo comando, não pelo texto
+## Start from the command, not from the text
 
-Não escreva a spec do zero. O CLI emite o esqueleto já conforme:
+Do not write the spec from scratch. The CLI emits a skeleton that already conforms:
 
 ```sh
-anchors new spec <Nome> --out <caminho>/<Nome>.spec.md   # gera o esqueleto
-anchors new spec --list-sections                          # as seções e QUANDO usar cada
+anchors new spec <Name> --out <path>/<Name>.spec.md   # generates the skeleton
+anchors new spec --list-sections                       # the sections and WHEN to use each
 ```
 
-O comando resolve o que é mais fácil errar: gera o código de identidade, escreve o
-cabeçalho `@anchors` no dialeto certo, e usa o formato exato de regra catalogada.
-Depois preencha e confronte com `anchors check --changed <arquivo>`.
+The command solves what is easiest to get wrong: it generates the identity code, writes
+the `@anchors` header in the right dialect, and uses the exact format of a catalogued
+rule. Then fill it in and confront it with `anchors check --changed <file>`.
 
-## O formato que o gate exige
+## The format the gate demands
 
-Uma regra é **catalogada** quando tem código E lugar estruturado. Três formas
-valem, e menção solta em prosa NÃO conta:
+A rule is **catalogued** when it has a code AND a structured place. Three forms count, and
+a loose mention in prose does NOT:
 
 ```md
-### ANCH-B01 — descrição da regra          <- cabeçalho (preferido)
-| `ANCH-B02` | descrição |                     <- linha de tabela
-- **ANCH-B03** descrição                       <- bullet-negrito
+### ANCH-B01 — the rule's description       <- heading (preferred)
+| `ANCH-B02` | description |                    <- table row
+- **ANCH-B03** description                      <- bold bullet
 ```
 
-## Exemplo completo (copie e adapte)
+## Full example (copy and adapt)
 
 ```md
 <!-- @anchors
@@ -35,65 +35,81 @@ valem, e menção solta em prosa NÃO conta:
   updated_at: 2026-01-15
   layer: screen
 -->
-# Login — autentica o usuário e o leva ao app
+# Login — authenticates the user and takes them into the app
 
-> **Código**: `ANCH`
+> **Code**: `ANCH`
 
-## Visão Geral
+## Overview
 
-Tela de entrada: recebe e-mail e senha, autentica, e navega para a Home.
+The entry screen: it takes an e-mail and a password, authenticates, and navigates Home.
 
-## Regras
+## Rules
 
-### ANCH-S01 — Estado inicial
-Campos vazios, botão de entrar desabilitado.
+### ANCH-S01 — Initial state
+Empty fields, the sign-in button disabled.
 
-### ANCH-A01 — Entrar com credenciais válidas
-Autentica e navega para a Home.
+### ANCH-A01 — Sign in with valid credentials
+Authenticates and navigates Home.
 
-### ANCH-V01 — E-mail inválido
-O campo mostra a mensagem e o submit não dispara.
+### ANCH-V01 — Invalid e-mail
+The field shows the message and the submit does not fire.
 
-### ANCH-R01 — Só anônimo acessa
-Sessão ativa é redirecionada para a Home.
+### ANCH-R01 — Only the anonymous reach it
+An active session is redirected Home.
 
-## Decisões em aberto
+## Open Decisions
 
-| Pergunta | Quem decide | Vira |
+| Question | Who decides | Becomes |
 | --- | --- | --- |
 
-nenhuma
+none
 ```
 
-## A letra do código diz a NATUREZA da regra
+## The code's letter states the rule's NATURE
 
-Este projeto não declara `rule_types`, então valem as letras canônicas do
-framework: `S` estado, `R` permissão, `V` validação, `A` ação, `X` restrição,
-`B` comportamento, `N` navegação, `M` mensagem, `D` dado. Declarar as suas em
-`rule_types` faz o vocabulário do time valer no lugar do genérico.
+This project does not declare `rule_types`, so the framework's canonical letters hold:
+`S` state, `R` permission, `V` validation, `A` action, `X` constraint, `B` behaviour,
+`N` navigation, `M` message, `D` data. Declaring your own in `rule_types` makes the team's
+vocabulary count in place of the generic one.
 
-## As seções
+## The sections
 
-Três são obrigatórias — cabeçalho, visão geral e regras — mais as decisões em
-aberto. As demais entram com `--with <chave>` quando a unidade pede. Rode
-`anchors new spec --list-sections` para a lista com o critério de escolha de cada
-uma; ela inclui as ALTERNATIVAS mutuamente exclusivas (`contract` ou `signature`,
-`rules` ou `effects`), que é onde a escolha errada custa reescrita.
+Three are mandatory — header, overview and rules — plus the open decisions. The rest come
+in with `--with <key>` when the unit calls for them. Run
+`anchors new spec --list-sections` for the list with each one's choice criterion; it
+includes the mutually exclusive ALTERNATIVES (`contract` or `signature`, `rules` or
+`effects`), which is where the wrong choice costs a rewrite.
 
-## O que NÃO fazer
+## What NOT to do
 
-- **Regra sem código.** Sem identidade, a feature e o teste não têm o que citar —
-  a trinca não fecha e os gates relacionais ficam sem alvo.
-- **Descrever implementação.** A spec diz o COMPORTAMENTO; o nome da função e a
-  biblioteca mudam sem a regra mudar.
-- **Repetir a copy.** O texto ao usuário mora uma vez (na seção de mensagens); as
-  outras seções referenciam o código dela.
-- **Chutar o que está ambíguo.** Vira linha em *Decisões em aberto* — o gate
-  `open-questions-resolved` cobra que alguém decida, e é isso que se quer.
+- **A rule with no code.** With no identity, the feature and the test have nothing to
+  cite — the triad does not close and the relational gates are left without a target.
+- **Describing implementation.** The spec states the BEHAVIOUR; the function's name and
+  the library change without the rule changing.
+- **Repeating the copy.** The text shown to the user lives once (in the messages
+  section); the other sections reference its code.
+- **Guessing at what is ambiguous.** It becomes a line in *Open Decisions* — the
+  `open-questions-resolved` gate charges someone to decide, and that is the point.
 
-## Especialize este arquivo
+## Compliance points
 
-Ele nasce genérico. Conforme o projeto firma convenções (perfis de spec por tipo
-de unidade, exemplos reais, casos CORRETO/ERRADO tirados do próprio repo), edite
-aqui — é a régua DESTE projeto, e o `governs` do `anchors.yaml` liga este guide aos
-alvos que ele rege.
+- CK1: every rule carries a code AND sits in one of the three structured forms (heading,
+  table row, bold bullet) — a rule mentioned only in prose is not catalogued, and the
+  feature and the test have nothing to cite.
+- CK2: the code's letter matches the rule's NATURE according to the declared vocabulary
+  (or the canonical letters, when the project declares none).
+- CK3: the spec states behaviour, not implementation — no function name, library or
+  framework detail stands where the rule should be.
+- CK4: the text shown to the user appears in ONE place, and the other sections reference
+  its code rather than repeating it.
+- CK5: what is ambiguous became a line in *Open Decisions* instead of being guessed at.
+- CK6: the mandatory sections are present — header, overview, rules, and open decisions.
+- CK7: when the unit calls for mutually exclusive alternatives, exactly one of each pair
+  is present (`contract` or `signature`, `rules` or `effects`), never both.
+
+## Specialise this file
+
+It is born generic. As the project settles conventions (spec profiles by unit type, real
+examples, RIGHT/WRONG cases taken from the repo itself), edit it here — it is THIS
+project's ruler, and the `governs` in `anchors.yaml` links this guide to the targets it
+rules.

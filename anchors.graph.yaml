@@ -4,21 +4,19 @@ version: 4
 generated_by: dev
 nodes:
     - id: BOOTSTRAP.md
-      kind: guide
+      kind: doc
       rev: 912ca7253b9f
       updated_at: "2026-09-14"
-      layer: doutrina
+      layer: doc
       tags:
-        - doutrina
-        - guide
+        - doc
     - id: CLI.md
-      kind: guide
+      kind: doc
       rev: f612aeb43589
       updated_at: "2026-09-19"
-      layer: doutrina
+      layer: doc
       tags:
-        - doutrina
-        - guide
+        - doc
       no_propagation: true
     - id: CONCEPT.md
       kind: guide
@@ -29,21 +27,19 @@ nodes:
         - doutrina
         - guide
     - id: DECISIONS.md
-      kind: guide
+      kind: doc
       rev: 145cc6f1e814
       updated_at: "2026-09-10"
-      layer: doutrina
+      layer: doc
       tags:
-        - doutrina
-        - guide
+        - doc
     - id: DOCS.md
-      kind: guide
+      kind: doc
       rev: f279bc140585
       updated_at: "2026-09-07"
-      layer: doutrina
+      layer: doc
       tags:
-        - doutrina
-        - guide
+        - doc
     - id: PLANNING.md
       kind: doc
       rev: cdeb86d75463
@@ -120,13 +116,12 @@ nodes:
         - doutrina
         - guide
     - id: USING.md
-      kind: guide
+      kind: doc
       rev: 97376b65113f
       updated_at: "2026-09-03"
-      layer: doutrina
+      layer: doc
       tags:
-        - doutrina
-        - guide
+        - doc
     - id: WORKFLOW.md
       kind: guide
       rev: 21d16f8be3d1
@@ -969,8 +964,8 @@ nodes:
         - test
     - id: cmd/anchors/quality/check.go
       kind: code
-      rev: 5648759d44fa
-      updated_at: "2026-09-19"
+      rev: bde248a1377e
+      updated_at: "2026-09-20"
       layer: comando
       tags:
         - cli
@@ -1148,7 +1143,7 @@ nodes:
         - guide
     - id: guides/HEADER_GUIDE.md
       kind: guide
-      rev: 032955262d76
+      rev: 0115a508747b
       updated_at: "2026-09-10"
       layer: guide-distribuido
       tags:
@@ -1157,7 +1152,7 @@ nodes:
       shared_code: true
     - id: guides/SPEC_GUIDE.md
       kind: guide
-      rev: c4622ee8de31
+      rev: c02858da0c90
       updated_at: "2026-08-28"
       layer: guide-distribuido
       tags:
@@ -1938,8 +1933,8 @@ nodes:
         - feature
     - id: internal/gate/gate.go
       kind: code
-      rev: 889c52360186
-      updated_at: "2026-09-19"
+      rev: 4b753ed87637
+      updated_at: "2026-09-20"
       code: GTENG
       layer: gate
       tags:
@@ -2542,8 +2537,8 @@ nodes:
         - test
     - id: internal/gate/profile.go
       kind: code
-      rev: 2a9d7f6fe2e3
-      updated_at: "2026-09-10"
+      rev: 6dfdeac5c4be
+      updated_at: "2026-09-20"
       layer: gate
       tags:
         - regra
