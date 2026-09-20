@@ -111,6 +111,25 @@ type File struct {
 	Parent string
 	// Revises são os planos que ESTE revisa — caminhos, como o `needs`.
 	Revises []string
+	// Realizes: as REGRAS DE DOUTRINA DE PRODUTO que as regras desta spec concretizam,
+	// declaradas com `@realizes <CODIGO-REGRA>` na linha da regra.
+	//
+	// Guarda o codigo da regra de produto, e nao o caminho do arquivo: quem escreve a
+	// spec sabe QUAL regra esta' realizando, e obrigar o caminho faria toda spec quebrar
+	// quando o arquivo de doutrina fosse renomeado. O mapa resolve codigo -> arquivo,
+	// que e' o trabalho dele.
+	Realizes []Realizes
+}
+
+// Realizes e' uma declaracao `@realizes` — a regra local que concretiza uma regra de
+// produto. Vira uma aresta `realizes` da spec para o arquivo de doutrina.
+type Realizes struct {
+	// From e' o codigo da regra DESTA spec que faz a declaracao (`CRED-V01`), quando da'
+	// para saber. Vazio quando a tag aparece solta, fora de uma regra catalogada — o
+	// gate trata os dois casos, mas so' o primeiro permite dizer QUAL regra realiza o que.
+	From string
+	// To e' o codigo da regra de produto realizada (`LIMIT-R03`).
+	To string
 }
 
 // Dep é uma linha da Tabela de Dependências de uma spec consumidora (SPEC_TYPES §5):
@@ -192,6 +211,7 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 			HeaderCode:    extractHeaderCode(string(content)),
 			HeaderLayer:   extractHeaderLayer(string(content)),
 			Seeds:         extractSeeds(kind, string(content)),
+			Realizes:      extractRealizes(kind, string(content)),
 			Needs:         needsFor(kind, content, root, rel),
 			Parent:        parentDe(content),
 			Revises:       revisesDe(kind, content, root, rel),
@@ -879,6 +899,60 @@ func extractHeaderCode(content string) string {
 		return m[1]
 	}
 	return ""
+}
+
+// realizesRE acha a tag `@realizes CODIGO-R03` em qualquer lugar da linha. Aceita o
+// codigo entre crases ou nu, porque quem escreve a spec alterna entre os dois sem pensar
+// nisso — e recusar um dos formatos faria a declaracao sumir em silencio, que e' o modo
+// de falha que os gates existem para acabar.
+var realizesRE = regexp.MustCompile("@realizes\\s+`?([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`?")
+
+// localRuleRE acha o codigo da regra DESTA spec numa linha — as tres formas catalogadas
+// (cabecalho, linha de tabela, bullet-negrito).
+var localRuleRE = regexp.MustCompile("(?:^#{1,6}\\s+|^\\s*\\|\\s*`?|^\\s*-\\s+\\*\\*)([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})")
+
+// extractRealizes le as declaracoes `@realizes` de uma spec.
+//
+// A tag vive NA LINHA DA REGRA, e nao numa coluna de tabela, por uma razao medida: a
+// regra catalogada tem TRES formas validas (cabecalho, linha de tabela, bullet-negrito),
+// e uma coluna so' existe na do meio. Com coluna, referenciar doutrina obrigaria a spec
+// a trocar de formato — a tag vale nas tres.
+//
+// A regra local que declara e' a que aparece na MESMA linha, ou o ultimo cabecalho de
+// regra visto antes dela: `### CRED-V01 — limite` numa linha e `@realizes LIMIT-R03` na
+// seguinte e' a forma natural de escrever quando a descricao e' longa.
+func extractRealizes(kind, content string) []Realizes {
+	if kind != "spec" {
+		return nil
+	}
+	var out []Realizes
+	visto := map[string]bool{}
+	atual := ""
+	for _, linha := range strings.Split(content, "\n") {
+		if m := localRuleRE.FindStringSubmatch(linha); m != nil {
+			atual = m[1]
+		} else if strings.TrimSpace(linha) == "" {
+			// A LINHA EM BRANCO fecha o escopo da regra. Sem isso, um `@realizes` escrito
+			// em prosa paragrafos abaixo era atribuido a ultima regra vista — uma aresta
+			// FALSA, apontando para a regra errada, que e' pior que nao capturar nada:
+			// o gate confirmaria uma realizacao que ninguem declarou.
+			//
+			// Achado por sonda: `@realizes ORFA-R01` num paragrafo solto saia como
+			// `from=CRED-B03`, a regra tres linhas acima.
+			atual = ""
+		}
+		for _, r := range realizesRE.FindAllStringSubmatch(linha, -1) {
+			// A MESMA regra local pode realizar varias regras de produto, e regras
+			// diferentes podem realizar a mesma — so' o PAR se repete sem dizer nada.
+			chave := atual + "\x00" + r[1]
+			if visto[chave] {
+				continue
+			}
+			visto[chave] = true
+			out = append(out, Realizes{From: atual, To: r[1]})
+		}
+	}
+	return out
 }
 
 // planSeedRE acha os caminhos de spec que um plano SEMEIA (cita entre crases).

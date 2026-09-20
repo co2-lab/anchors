@@ -122,8 +122,44 @@ func seedEdges(files []scan.File) []Edge {
 		porNome[base] = append(porNome[base], f.Path)
 	}
 
+	// O indice das DOUTRINAS DE PRODUTO, por codigo de unidade: a spec declara
+	// `@realizes LIMIT-R03` e o mapa resolve `LIMIT` -> `product/limite.doctrine.md`.
+	//
+	// A spec cita o CODIGO DA REGRA, nunca o caminho, e e' deliberado: quem escreve sabe
+	// qual regra esta' realizando, e exigir o caminho faria toda spec quebrar quando o
+	// arquivo de doutrina fosse renomeado. Resolver codigo -> arquivo e' trabalho do mapa.
+	doutrinaPorCodigo := map[string]string{}
+	for _, f := range files {
+		if f.Kind == string(KindProduct) && f.HeaderCode != "" {
+			doutrinaPorCodigo[f.HeaderCode] = f.Path
+		}
+	}
+
 	var edges []Edge
 	for _, f := range files {
+		// `@realizes` — a regra da spec concretiza uma regra da doutrina de produto.
+		//
+		// E' 1 para MUITOS: varias specs realizam a mesma regra, e uma spec realiza
+		// varias. Por isso a aresta carrega o par de codigos no `Dep`/`Method`: sem eles
+		// o mapa diria apenas que os dois arquivos se tocam, e o gate nao teria como
+		// dizer QUAL regra ficou sem realizador.
+		for _, r := range f.Realizes {
+			unidade, _, ok := strings.Cut(r.To, "-")
+			if !ok {
+				continue
+			}
+			destino, temDoutrina := doutrinaPorCodigo[unidade]
+			if !temDoutrina {
+				// Doutrina inexistente NAO vira aresta morta: o gate `realizes-resolves`
+				// e' quem reporta, com o codigo na mao. Uma aresta para um arquivo que
+				// nao existe faria os gates relacionais confrontarem o vazio.
+				continue
+			}
+			edges = append(edges, Edge{
+				From: f.Path, To: destino, Type: EdgeRealizes,
+				Origin: OriginDeclared, Dep: r.From, Method: r.To,
+			})
+		}
 		for _, alvo := range f.Seeds {
 			destino := alvo
 			if !exists[destino] {

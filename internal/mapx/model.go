@@ -17,6 +17,18 @@ const (
 	KindDoc     Kind = "doc"
 	KindGuide   Kind = "guide"
 	KindPlan    Kind = "plan"
+	// KindProduct — a DOUTRINA DE PRODUTO: a regra que atravessa alvos.
+	//
+	// Toda spec tem um alvo, e a co-locacao amarra a triade ao mesmo diretorio. E' a
+	// forca do modelo e tambem o seu limite: uma regra de negocio que vale para tres
+	// telas nao pertence a nenhuma das tres. Sem lugar para ela, so' havia duplicar (e
+	// divergir na primeira mudanca) ou eleger uma dona arbitraria.
+	//
+	// Vive em `product/<nome>.doctrine.md`, fora da arvore de alvos, no precedente do
+	// `plans/`. A spec aponta para a regra de produto que realiza — nunca o contrario:
+	// um artefato de produto que listasse seus realizadores viraria indice, e indice
+	// envelhece a cada spec nova.
+	KindProduct Kind = "product"
 )
 
 // EdgeType é o tipo semântico da aresta (CONCEPT §3). O tipo carrega a força
@@ -50,6 +62,19 @@ const (
 	// de uma feature antes de a fundação existir, e descobre isso ao tentar criar o
 	// primeiro arquivo — depois de já ter reivindicado o trabalho.
 	EdgeNeeds EdgeType = "needs"
+
+	// EdgeRealizes — a regra da SPEC concretiza uma regra da DOUTRINA DE PRODUTO.
+	//
+	// E' 1 para MUITOS: uma regra de produto e' realizada por varias specs, e e'
+	// justamente isso que o conceito existe para permitir. Por isso nenhum gate daqui
+	// pode cobrar PARIDADE de contagem, ao contrario do `triad-complete`, que conta
+	// 1:1:1 — a pergunta certa e' "ha' ao menos um realizador?".
+	//
+	// A direcao e' da spec para o produto porque a spec e' quem SABE que esta' realizando
+	// uma regra transversal. O caminho inverso exigiria que o artefato de produto
+	// mantivesse a lista de quem o realiza, e essa lista estaria errada na proxima spec
+	// que alguem escrevesse sem lembrar de atualiza-la.
+	EdgeRealizes EdgeType = "realizes"
 )
 
 // Origin — como a aresta entrou no mapa (TRACEABILITY §4).

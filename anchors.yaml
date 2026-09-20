@@ -40,6 +40,15 @@ layers:
     kind: doc
     tags: [doc]
 
+  # Documentos de DESENHO — registram um conceito antes de implementa-lo: o problema
+  # medido, as alternativas descartadas e as decisoes tomadas. Sao registro, nao regua,
+  # pela mesma razao que DECISIONS.md: nao governam nada, e cobrar deles pontos de
+  # conformidade obrigaria a inventar regras para um documento que so' narra escolhas.
+  desenho:
+    pattern: "DESIGN-*.md"
+    kind: doc
+    tags: [doc, desenho]
+
   # ── O CLI ───────────────────────────────────────────────────────────────────────
   # Comandos organizados por domínio, ponto de entrada do usuário — a INTERFACE
   # do framework, no vocabulário do próprio Anchors.

@@ -33,6 +33,14 @@ nodes:
       layer: doc
       tags:
         - doc
+    - id: DESIGN-product-doctrine.md
+      kind: doc
+      rev: 75312c44d97c
+      code: LIMIT
+      layer: desenho
+      tags:
+        - doc
+        - desenho
     - id: DOCS.md
       kind: doc
       rev: f279bc140585
@@ -3839,7 +3847,7 @@ nodes:
         - test
     - id: internal/mapx/build.go
       kind: code
-      rev: 22f496fdd22d
+      rev: 676aad77011c
       updated_at: "2026-09-11"
       layer: mapa
       tags:
@@ -3934,7 +3942,7 @@ nodes:
         - test
     - id: internal/mapx/model.go
       kind: code
-      rev: c35dfd17ef15
+      rev: b8f80e6cce40
       updated_at: "2026-09-16"
       layer: mapa
       tags:
@@ -4163,7 +4171,7 @@ nodes:
         - test
     - id: internal/scan/scan.go
       kind: code
-      rev: e4396db47daa
+      rev: b78c64aaca7e
       updated_at: "2026-09-19"
       layer: scan
       tags:
@@ -4173,7 +4181,7 @@ nodes:
       shared_code: true
     - id: internal/scan/scan_test.go
       kind: test
-      rev: c6532fa22bac
+      rev: 5484d8aa4c0c
       updated_at: "2026-09-10"
       code: BAZZX
       layer: teste

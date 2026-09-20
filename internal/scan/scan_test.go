@@ -309,3 +309,66 @@ func TestSeedIgnoraNomeSemDiretorio(t *testing.T) {
 		t.Errorf("só o caminho conta como seed; veio %v", got)
 	}
 }
+
+// A tag `@realizes` vale nas TRES formas de regra catalogada — cabecalho, linha de
+// tabela e bullet-negrito. Uma coluna de tabela so' existiria na do meio, e referenciar
+// doutrina obrigaria a spec a trocar de formato.
+func TestExtractRealizes_asTresFormasDeRegra(t *testing.T) {
+	c := "### CRED-V01 — limite respeitado    @realizes LIMIT-R03\n" +
+		"| `CRED-V02` | outra coisa | @realizes `LIMIT-R04` |\n" +
+		"- **CRED-B03** terceira forma\n" +
+		"  @realizes LIMIT-R05\n"
+	got := extractRealizes("spec", c)
+	quer := []Realizes{
+		{From: "CRED-V01", To: "LIMIT-R03"},
+		{From: "CRED-V02", To: "LIMIT-R04"},
+		{From: "CRED-B03", To: "LIMIT-R05"},
+	}
+	if len(got) != len(quer) {
+		t.Fatalf("esperava %d declaracoes, veio %d: %+v", len(quer), len(got), got)
+	}
+	for i := range quer {
+		if got[i] != quer[i] {
+			t.Errorf("[%d] veio %+v, quer %+v", i, got[i], quer[i])
+		}
+	}
+}
+
+// A LINHA EM BRANCO fecha o escopo da regra. Sem isso, um `@realizes` escrito em prosa
+// era atribuido a ultima regra vista — uma aresta FALSA apontando para a regra errada, o
+// que e' pior que nao capturar: o gate confirmaria uma realizacao que ninguem declarou.
+func TestExtractRealizes_tagOrfaNaoRoubaARegraAnterior(t *testing.T) {
+	c := "### CRED-B03 — uma regra\n\ntexto solto com @realizes ORFA-R01\n"
+	got := extractRealizes("spec", c)
+	if len(got) != 1 {
+		t.Fatalf("esperava 1 declaracao, veio %+v", got)
+	}
+	if got[0].From != "" {
+		t.Errorf("a tag orfa foi atribuida a %q — deveria ficar sem dona", got[0].From)
+	}
+}
+
+// So' a SPEC declara realizacao: o codigo, o teste e a feature nao catalogam regra, e
+// ler a tag neles criaria aresta a partir de quem nao e' dono de regra nenhuma.
+func TestExtractRealizes_soSpec(t *testing.T) {
+	c := "### CRED-V01 — x    @realizes LIMIT-R03\n"
+	for _, kind := range []string{"code", "test", "feature", "plan", "product"} {
+		if got := extractRealizes(kind, c); got != nil {
+			t.Errorf("kind %q: esperava nil, veio %+v", kind, got)
+		}
+	}
+}
+
+// O MESMO par repetido nao diz nada de novo; uma regra realizando VARIAS, e varias
+// realizando a mesma, sao os dois casos legitimos que o 1-para-muitos existe para
+// permitir.
+func TestExtractRealizes_deduplicaOParENaoOCodigo(t *testing.T) {
+	c := "### CRED-V01 — x    @realizes LIMIT-R03\n" +
+		"\n### CRED-V01 — x de novo    @realizes LIMIT-R03\n" +
+		"\n### CRED-V02 — y    @realizes LIMIT-R03\n" +
+		"\n### CRED-V03 — z    @realizes LIMIT-R03 @realizes LIMIT-R09\n"
+	got := extractRealizes("spec", c)
+	if len(got) != 4 {
+		t.Fatalf("esperava 4 (o par repetido some, os demais ficam), veio %d: %+v", len(got), got)
+	}
+}
