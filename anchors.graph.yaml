@@ -1725,6 +1725,7 @@ nodes:
     - id: internal/gate/docs_fresh.feature
       kind: feature
       rev: 3805fa8bbdb4
+      updated_at: "2026-09-19"
       code: DCFRD
       layer: feature
       tags:
@@ -1741,6 +1742,7 @@ nodes:
     - id: internal/gate/docs_fresh.spec.md
       kind: spec
       rev: f3ccfb8c02b5
+      updated_at: "2026-09-19"
       code: DCFRD
       layer: spec
       code_declared: true
@@ -1749,7 +1751,7 @@ nodes:
     - id: internal/gate/docs_fresh_test.go
       kind: test
       rev: faa4facfaa8a
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-19"
       code: GLCGL
       layer: teste
       code_declared: true
@@ -1826,6 +1828,7 @@ nodes:
     - id: internal/gate/external.feature
       kind: feature
       rev: b66a94fb0d1a
+      updated_at: "2026-09-19"
       code: EXCMX
       layer: feature
       tags:
@@ -1842,6 +1845,7 @@ nodes:
     - id: internal/gate/external.spec.md
       kind: spec
       rev: 94ac27eda675
+      updated_at: "2026-09-19"
       code: EXCMX
       layer: spec
       code_declared: true
@@ -1850,7 +1854,7 @@ nodes:
     - id: internal/gate/external_test.go
       kind: test
       rev: aa633d4bc42f
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-19"
       code: EXCMX
       layer: teste
       tags:
@@ -1909,15 +1913,24 @@ nodes:
       kind: code
       rev: 889c52360186
       updated_at: "2026-09-19"
+      code: GTENG
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/gate.spec.md
+      kind: spec
+      rev: 3ccfd6b94f58
+      code: GTENG
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/gate_test.go
       kind: test
       rev: 5c8b3122dc04
       updated_at: "2026-09-19"
-      code: LOGIX
+      code: GTENG
       layer: teste
       tags:
         - test
@@ -1959,15 +1972,24 @@ nodes:
       kind: code
       rev: f7c211d67715
       updated_at: "2026-09-19"
+      code: INCHN
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/internal_checks.spec.md
+      kind: spec
+      rev: fb294c539fa6
+      code: INCHN
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/internal_checks_test.go
       kind: test
       rev: 2cb6eb19d81b
       updated_at: "2026-09-19"
-      code: ABCDX
+      code: INCHN
       layer: teste
       tags:
         - test
@@ -2523,6 +2545,7 @@ nodes:
     - id: internal/gate/promotable.feature
       kind: feature
       rev: faf0bc5ee373
+      updated_at: "2026-09-19"
       code: PRGTP
       layer: feature
       tags:
@@ -2539,6 +2562,7 @@ nodes:
     - id: internal/gate/promotable.spec.md
       kind: spec
       rev: 9e03864f7e62
+      updated_at: "2026-09-19"
       code: PRGTP
       layer: spec
       code_declared: true
@@ -2589,6 +2613,7 @@ nodes:
     - id: internal/gate/ref_resolves.feature
       kind: feature
       rev: e890d0168a98
+      updated_at: "2026-09-19"
       code: RFRSR
       layer: feature
       tags:
@@ -2605,6 +2630,7 @@ nodes:
     - id: internal/gate/ref_resolves.spec.md
       kind: spec
       rev: d47236bd4e64
+      updated_at: "2026-09-19"
       code: RFRSR
       layer: spec
       code_declared: true
@@ -2613,7 +2639,7 @@ nodes:
     - id: internal/gate/ref_resolves_test.go
       kind: test
       rev: ee9824a6de14
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-19"
       code: RFRSR
       layer: teste
       tags:
@@ -2701,14 +2727,30 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/rule.feature
+      kind: feature
+      rev: 497575b4520f
+      code: RLUEX
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/rule.go
       kind: code
       rev: b8bfb7f8b694
       updated_at: "2026-09-19"
+      code: RLUEX
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/rule.spec.md
+      kind: spec
+      rev: 3f3024ebe16c
+      code: RLUEX
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/rule_implemented.feature
       kind: feature
       rev: 8a1cc95ed73a
@@ -2753,8 +2795,9 @@ nodes:
         - test
     - id: internal/gate/rule_test.go
       kind: test
-      rev: "388624199497"
+      rev: 3ea469c8395d
       updated_at: "2026-09-19"
+      code: RLUEX
       layer: teste
       tags:
         - test
@@ -2844,6 +2887,7 @@ nodes:
     - id: internal/gate/scenario_identity.feature
       kind: feature
       rev: 8d7f82808700
+      updated_at: "2026-09-19"
       code: SCIDS
       layer: feature
       tags:
@@ -2860,6 +2904,7 @@ nodes:
     - id: internal/gate/scenario_identity.spec.md
       kind: spec
       rev: 80bb393d42f4
+      updated_at: "2026-09-19"
       code: SCIDS
       layer: spec
       code_declared: true
@@ -2930,18 +2975,35 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/sibling_guard.feature
+      kind: feature
+      rev: 9a80bb24b23e
+      code: SBGRD
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/sibling_guard.go
       kind: code
-      rev: c1ae6352b861
+      rev: 8e7e3e0e5ab0
       updated_at: "2026-09-19"
+      code: SBGRD
       layer: gate
       tags:
         - regra
         - gate
+    - id: internal/gate/sibling_guard.spec.md
+      kind: spec
+      rev: 72ba8e907a0a
+      code: SBGRD
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
     - id: internal/gate/sibling_guard_test.go
       kind: test
-      rev: 6e4b372d34db
+      rev: c9a83baf38be
       updated_at: "2026-09-19"
+      code: SBGRD
       layer: teste
       tags:
         - test
@@ -3207,6 +3269,7 @@ nodes:
     - id: internal/gate/vr_baseline.feature
       kind: feature
       rev: 672abfa694f0
+      updated_at: "2026-09-19"
       code: VRBSV
       layer: feature
       tags:
@@ -3223,6 +3286,7 @@ nodes:
     - id: internal/gate/vr_baseline.spec.md
       kind: spec
       rev: 9ac63acbe2cb
+      updated_at: "2026-09-19"
       code: VRBSV
       layer: spec
       code_declared: true
@@ -5063,6 +5127,10 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC.md
+      to: internal/gate/gate.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC.md
       to: internal/gate/identity_consistent.spec.md
       type: governs
       origin: declared
@@ -5071,6 +5139,10 @@ edges:
         validated_to_rev: 94abef875ff2
         changed_at: "2026-09-19"
         verdict: ok
+    - from: SPEC.md
+      to: internal/gate/internal_checks.spec.md
+      type: governs
+      origin: declared
     - from: SPEC.md
       to: internal/gate/layer_boundary.spec.md
       type: governs
@@ -5234,6 +5306,10 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC.md
+      to: internal/gate/rule.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC.md
       to: internal/gate/rule_implemented.spec.md
       type: governs
       origin: declared
@@ -5276,6 +5352,15 @@ edges:
       stamp:
         validated_from_rev: dedf7925bcf7
         validated_to_rev: 882996e77635
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: SPEC.md
+      to: internal/gate/sibling_guard.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: dedf7925bcf7
+        validated_to_rev: 72ba8e907a0a
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC.md
@@ -5450,6 +5535,10 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC_TYPES.md
+      to: internal/gate/gate.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC_TYPES.md
       to: internal/gate/identity_consistent.spec.md
       type: governs
       origin: declared
@@ -5458,6 +5547,10 @@ edges:
         validated_to_rev: 94abef875ff2
         changed_at: "2026-09-19"
         verdict: ok
+    - from: SPEC_TYPES.md
+      to: internal/gate/internal_checks.spec.md
+      type: governs
+      origin: declared
     - from: SPEC_TYPES.md
       to: internal/gate/layer_boundary.spec.md
       type: governs
@@ -5621,6 +5714,10 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC_TYPES.md
+      to: internal/gate/rule.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC_TYPES.md
       to: internal/gate/rule_implemented.spec.md
       type: governs
       origin: declared
@@ -5663,6 +5760,15 @@ edges:
       stamp:
         validated_from_rev: da86ff2960b9
         validated_to_rev: 882996e77635
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: SPEC_TYPES.md
+      to: internal/gate/sibling_guard.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: da86ff2960b9
+        validated_to_rev: 72ba8e907a0a
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC_TYPES.md
@@ -6373,8 +6479,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`EdgeSpecifies`'
-      dep: DEP2
+      method: '`KindSpec`'
+      dep: DEP1
       stamp:
         validated_from_rev: 0cf3a482b528
         validated_to_rev: c35dfd17ef15
@@ -6384,8 +6490,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindSpec`'
-      dep: DEP1
+      method: '`EdgeSpecifies`'
+      dep: DEP2
       stamp:
         validated_from_rev: 0cf3a482b528
         validated_to_rev: c35dfd17ef15
@@ -6919,6 +7025,14 @@ edges:
         validated_to_rev: 5de399ad005c
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/gate.spec.md
+      to: internal/gate/gate.go
+      type: specifies
+      origin: convention
+    - from: internal/gate/gate.spec.md
+      to: internal/gate/gate_test.go
+      type: tested-by
+      origin: convention
     - from: internal/gate/identity_consistent.feature
       to: internal/gate/identity_consistent_test.go
       type: tested-by
@@ -6968,6 +7082,14 @@ edges:
         validated_to_rev: c35dfd17ef15
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/internal_checks.spec.md
+      to: internal/gate/internal_checks.go
+      type: specifies
+      origin: convention
+    - from: internal/gate/internal_checks.spec.md
+      to: internal/gate/internal_checks_test.go
+      type: tested-by
+      origin: convention
     - from: internal/gate/layer_boundary.feature
       to: internal/gate/layer_boundary_test.go
       type: tested-by
@@ -7850,6 +7972,18 @@ edges:
         validated_to_rev: c35dfd17ef15
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/rule.feature
+      to: internal/gate/rule_test.go
+      type: tested-by
+      origin: convention
+    - from: internal/gate/rule.spec.md
+      to: internal/gate/rule.feature
+      type: covered-by
+      origin: convention
+    - from: internal/gate/rule.spec.md
+      to: internal/gate/rule.go
+      type: specifies
+      origin: convention
     - from: internal/gate/rule_implemented.feature
       to: internal/gate/rule_implemented_test.go
       type: tested-by
@@ -7912,8 +8046,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`CodeLengthPattern`'
-      dep: DEP3
+      method: '`DefaultRuleLetters`'
+      dep: DEP2
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: 2536cd2306a8
@@ -7923,8 +8057,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`DefaultRuleLetters`'
-      dep: DEP2
+      method: '`CodeLengthPattern`'
+      dep: DEP3
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: 2536cd2306a8
@@ -8117,6 +8251,40 @@ edges:
         validated_to_rev: c35dfd17ef15
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/sibling_guard.feature
+      to: internal/gate/sibling_guard_test.go
+      type: tested-by
+      origin: convention
+      stamp:
+        validated_from_rev: 9a80bb24b23e
+        validated_to_rev: c9a83baf38be
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/sibling_guard.spec.md
+      to: internal/config/dialect.go
+      type: depends-on
+      origin: declared
+      method: '`KnownDialectFamilies`'
+      dep: DEP1
+    - from: internal/gate/sibling_guard.spec.md
+      to: internal/gate/sibling_guard.feature
+      type: covered-by
+      origin: convention
+      stamp:
+        validated_from_rev: 72ba8e907a0a
+        validated_to_rev: 9a80bb24b23e
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/sibling_guard.spec.md
+      to: internal/gate/sibling_guard.go
+      type: specifies
+      origin: convention
+    - from: internal/gate/sibling_guard.spec.md
+      to: internal/mapx/model.go
+      type: depends-on
+      origin: declared
+      method: '`KindCode`'
+      dep: DEP2
     - from: internal/gate/spec_feature_match.feature
       to: internal/gate/spec_feature_match_test.go
       type: tested-by

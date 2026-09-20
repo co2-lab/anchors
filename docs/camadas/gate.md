@@ -5,7 +5,7 @@
 
 
 
-> Esta camada tem 43 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 45 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -194,6 +194,12 @@
 
 
 
+## RLUEX — Rule — the identity of a verification INSIDE a gate, and the waiver that names it
+
+
+
+
+
 ## RLIMR — RuleImplemented — a spec catalogues rules, and the code shows it realized them
 
 
@@ -219,6 +225,12 @@
 
 
 ## STASC — ScenarioTypeAligned — scenario classification tags must match the code nature letter
+
+
+
+
+
+## SBGRD — SiblingGuard — sibling functions treat the same parameter consistently
 
 
 

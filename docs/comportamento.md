@@ -8,6 +8,10 @@ Todos os cenários do sistema. Cada um leva à unidade que o define.
 Um cenário descreve o que o sistema faz numa situação — vem da feature, e é o mesmo que o
 teste prova.
 
+## TODO
+
+_Nenhum cenário ainda: as unidades desta camada não têm feature._
+
 ## gate
 
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B01`
@@ -1032,6 +1036,52 @@ teste prova.
 
 - [Route access permissions and authentication middlewares are outside evaluation scope](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-X03`
 
+- [Building an identifier joins the gate and the rule](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B01`
+
+- [A gate with a single verification gains no separator](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B02`
+
+- [The identifier decomposes into gate and rule](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B03`
+
+- [The rule half is empty when the identifier carries only a gate](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B04`
+
+- [A waiver with no reason is refused](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B05`
+
+- [A waiver with no rule name is refused](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B06`
+
+- [A path is refused as the waiver target](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B07`
+
+- [A target marker with nothing after it is refused](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B08`
+
+- [The waiver accepts both granularities](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B09`
+
+- [A waiver that declares targets does not hold for the whole gate](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B10`
+
+- [A waiver by target spares the named codes and confronts the rest](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B11`
+
+- [A waiver with no declared target holds for every code](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B12`
+
+- [An artifact with no code is not reached by a waiver restricted to targets](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B13`
+
+- [Each target carries its own reason](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B14`
+
+- [The commit message declares waivers that survive in the history](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B15`
+
+- [A commit marker whose reason is blank is refused](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B16`
+
+- [Two waivers merge instead of forcing a choice](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B17`
+
+- [A waiver never reaches what nobody waived](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-I01`
+
+- [Every accepted waiver carries a written reason](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-I02`
+
+- [A refusal always reaches the caller as an error](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-I03`
+
+- [The unit does not accept a path as the waiver target](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-X01`
+
+- [The unit does not decide whether a rule passes](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-X02`
+
+- [The unit reads neither files nor the map](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-X03`
+
 - [A spec whose rules the code ignores is accused, and the verdict names them](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B01`
 
 - [A rule waived with a written reason closes the account](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B02`
@@ -1193,6 +1243,30 @@ teste prova.
 - [Specifications and test files are not inspected or modified](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X03`
 
 - [Tags are permitted to map across multiple rule letters](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-X04`
+
+- [An artifact that is not code leaves without a verdict](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B01`
+
+- [Without a declared dialect the verdict is undetermined](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B02`
+
+- [Fewer than three siblings on the same parameter is left alone](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B03`
+
+- [The sibling that does not guard is accused](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B04`
+
+- [When every sibling guards, nothing is accused](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B05`
+
+- [When no sibling guards, nothing is accused either](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B06`
+
+- [The verdict names the function and the parameter](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B07`
+
+- [A waiver with a written reason silences the accusation](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-B08`
+
+- [The gate never judges what the guard does](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-I01`
+
+- [The three conservatism conditions hold together](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-I02`
+
+- [The gate does not invent what an exported function looks like](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-X01`
+
+- [A single function in isolation is not accused](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-X02`
 
 - [A requirement no scenario tags is failed and named](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B01`
 

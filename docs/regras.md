@@ -9,6 +9,12 @@ camada.
 Para ver uma camada inteira de uma vez — com a visão geral de cada unidade e os cenários —
 abra a página dela em `camadas/`.
 
+## TODO
+
+### [GTENG — GateEngine — TODO purpose in one sentence](camadas/TODO.md#gteng--gateengine--todo-purpose-in-one-sentence)
+
+### [INCHN — InternalChecks — TODO purpose in one sentence](camadas/TODO.md#inchn--internalchecks--todo-purpose-in-one-sentence)
+
 ## gate
 
 ### [CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code)
@@ -73,6 +79,8 @@ abra a página dela em `camadas/`.
 
 ### [RTEXR — RouteExists — declared route in specification must exist in application route registry](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
 
+### [RLUEX — Rule — the identity of a verification INSIDE a gate, and the waiver that names it](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it)
+
 ### [RLIMR — RuleImplemented — a spec catalogues rules, and the code shows it realized them](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
 
 ### [RLTYR — RuleTypes — the rule VOCABULARY is extensible, but it must be DECLARED](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared)
@@ -82,6 +90,8 @@ abra a página dela em `camadas/`.
 ### [SCIDS — ScenarioIdentity — two scenarios of the same feature cannot share one code](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code)
 
 ### [STASC — ScenarioTypeAligned — scenario classification tags must match the code nature letter](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter)
+
+### [SBGRD — SiblingGuard — sibling functions treat the same parameter consistently](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently)
 
 ### [SFMSP — SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 

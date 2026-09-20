@@ -55,6 +55,14 @@ func checkSiblingGuard(content string, n mapx.Node, root string, g *mapx.Graph, 
 
 	var achados []string
 	for param, irmas := range porParam {
+		// O piso de tres vale por PARAMETRO, e nao so por arquivo: tres funcoes exportadas
+		// onde so duas compartilham o parametro ainda sao um par, e par nao tem maioria.
+		//
+		// A condicao e' REDUNDANTE com a da maioria logo abaixo (`comGuarda > semGuarda`
+		// com duas irmas da' 1 > 1, falso) — achado por mutacao: troca-la por `< 2` deixa a
+		// suite verde, e nao por falta de teste. Fica como guarda EXPLICITA porque a
+		// intencao ("tres e' o piso") nao se le na aritmetica da maioria, e quem mexer nela
+		// depois nao tem como saber que estava apoiada nisso.
 		if len(irmas) < 3 {
 			continue
 		}
