@@ -37,3 +37,9 @@ FINDINGS-*.md
 
 # relatorios gerados por gates (SBOM etc)
 reports/
+
+# permissoes locais do Claude Code: ESTADO DA MAQUINA, pela mesma razao que `.anchors/`.
+# Quais comandos um agente pode rodar e' decisao de quem senta na maquina, nao do projeto
+# — versionar aqui concederia a permissao a todo mundo que clonasse o repositorio.
+# `.claude/settings.json` (se existir) continua versionado: esse e' configuracao do projeto.
+.claude/settings.local.json
