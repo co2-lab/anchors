@@ -148,6 +148,21 @@ type Size struct {
 
 // fnSize mede um recorte — o mesmo filtro que o `specs` aceita.
 func (c *Compiler) fnSize(filtro ...string) (Size, error) {
+	// MEMORIZADO por recorte. A resposta nao muda durante uma compilacao, e recalcula-la
+	// custava caro de um jeito nao obvio: `fnScenarios` LE do disco a feature de cada
+	// spec, entao um `fnSize` de uma camada com 51 specs sao 51 leituras de arquivo.
+	//
+	// Medido neste repositorio: `scenarioLink` consulta o tamanho da camada para decidir
+	// o formato do destino, e o template `comportamento.md.tmpl` monta 840 links — eram
+	// ~43 mil leituras de arquivo por compilacao, 7.34s dos 7.45s do total. As outras
+	// tres paginas juntas custavam 38ms.
+	chave := strings.Join(filtro, "\x00")
+	if c.sizeCache == nil {
+		c.sizeCache = map[string]Size{}
+	}
+	if v, ok := c.sizeCache[chave]; ok {
+		return v, nil
+	}
 	sel, err := c.fnSpecs(filtro...)
 	if err != nil {
 		// Recorte VAZIO é tamanho zero, não erro: perguntar o tamanho de uma camada sem
@@ -162,6 +177,7 @@ func (c *Compiler) fnSize(filtro ...string) (Size, error) {
 		out.Lines += strings.Count(s.raw, "\n")
 		out.Scenes += len(c.fnScenarios(s))
 	}
+	c.sizeCache[chave] = out
 	return out, nil
 }
 

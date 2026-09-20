@@ -351,3 +351,57 @@ O corpo da regra.
 		t.Errorf("o título da regra sumiu do rótulo — o corte levou o texto junto:\n  %s", linha)
 	}
 }
+
+// A memorizacao do `fnSize` e' otimizacao pura: a saida tem de ser IDENTICA com e sem
+// cache. Um teste de comportamento nao a pegaria (e' o mesmo resultado por definicao), e
+// e' justamente por isso que ela precisa de guarda propria — o risco nao e' o cache
+// errar, e' ele devolver a resposta de OUTRO recorte.
+//
+// Confronta os dois caminhos no mesmo compilador: a primeira chamada calcula e memoriza,
+// a segunda le do cache, e recortes diferentes tem de continuar diferentes.
+func TestFnSize_cachePorRecorte(t *testing.T) {
+	root, g := projetoDoisRecortes(t)
+	c, err := New(root, g)
+	if err != nil {
+		t.Fatal(err)
+	}
+	a1, err := c.fnSize("layer=alfa")
+	if err != nil {
+		t.Fatal(err)
+	}
+	b1, err := c.fnSize("layer=beta")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if a1.Units == b1.Units {
+		t.Fatalf("o cenario de teste nao distingue os recortes: alfa=%d beta=%d", a1.Units, b1.Units)
+	}
+	// Segunda rodada: agora vem do cache, e tem de bater com a primeira.
+	a2, _ := c.fnSize("layer=alfa")
+	b2, _ := c.fnSize("layer=beta")
+	if a2 != a1 {
+		t.Errorf("recorte alfa mudou ao vir do cache: %+v vs %+v", a2, a1)
+	}
+	if b2 != b1 {
+		t.Errorf("recorte beta mudou ao vir do cache: %+v vs %+v", b2, b1)
+	}
+}
+
+// projetoDoisRecortes monta duas camadas com contagens DIFERENTES, para que um cache que
+// confundisse os recortes fosse visivel.
+func projetoDoisRecortes(t *testing.T) (string, *mapx.Graph) {
+	t.Helper()
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, "pkg"), 0o755)
+	spec := func(code, layer string) string {
+		return "---\ncode: " + code + "\nlayer: " + layer + "\n---\n\n# T — t\n\n## Visão Geral\n\nx.\n"
+	}
+	os.WriteFile(filepath.Join(root, "pkg/A.spec.md"), []byte(spec("AAAAA", "alfa")), 0o644)
+	os.WriteFile(filepath.Join(root, "pkg/B.spec.md"), []byte(spec("BBBBB", "beta")), 0o644)
+	os.WriteFile(filepath.Join(root, "pkg/C.spec.md"), []byte(spec("CCCCC", "beta")), 0o644)
+	return root, &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "pkg/A.spec.md", Kind: mapx.KindSpec, Code: "AAAAA", Layer: "alfa"},
+		{ID: "pkg/B.spec.md", Kind: mapx.KindSpec, Code: "BBBBB", Layer: "beta"},
+		{ID: "pkg/C.spec.md", Kind: mapx.KindSpec, Code: "CCCCC", Layer: "beta"},
+	}}
+}

@@ -147,6 +147,14 @@ type Compiler struct {
 	// compilador e nao num retorno porque quem as pede sao as funcoes de template,
 	// chamadas de dentro do `Execute` — nao ha por onde devolver.
 	consumed map[string]bool
+	// Os INDICES do grafo, montados uma vez (ver `buildIndexes`). O grafo nao muda
+	// durante a compilacao, e reconstruir a resposta a cada consulta era o que fazia uma
+	// compilacao completa custar 7.7s.
+	kindByID       map[string]mapx.Kind
+	featuresBySpec map[string][]string
+	// sizeCache memoriza o tamanho de cada recorte — ver `fnSize`, onde esta a medida
+	// que justifica o cache.
+	sizeCache map[string]Size
 }
 
 func New(root string, g *mapx.Graph) (*Compiler, error) {

@@ -118,30 +118,51 @@ func (c *Compiler) fnScenarios(s Spec) []Scenario {
 }
 
 // featuresOf devolve as features ligadas a uma spec, pelo mapa.
+//
+// Usa INDICE, e nao varredura. A versao anterior percorria todas as arestas do grafo por
+// spec e, para cada uma, chamava `kindOf`, que percorria todos os nos — quadratico dentro
+// de quadratico. Medido neste repositorio (51 specs, 533 nos, 495 arestas), o template
+// `comportamento.md.tmpl` levava 7.68s dos 7.73s de uma compilacao completa; os outros
+// tres templates somavam 33ms.
 func (c *Compiler) featuresOf(s Spec) []string {
-	var out []string
+	c.buildIndexes()
+	return c.featuresBySpec[s.Path]
+}
+
+// buildIndexes monta, UMA VEZ, os indices que as funcoes de template consultam por
+// unidade: o kind de cada no' e as features de cada spec.
+//
+// Uma vez por compilador, e nao por chamada, porque o grafo nao muda durante a
+// compilacao — e era justamente reconstruir a mesma resposta a cada consulta que custava
+// os 7.68s.
+func (c *Compiler) buildIndexes() {
+	if c.kindByID != nil {
+		return
+	}
+	c.kindByID = make(map[string]mapx.Kind, len(c.Graph.Nodes))
+	for _, n := range c.Graph.Nodes {
+		c.kindByID[n.ID] = n.Kind
+	}
+	c.featuresBySpec = map[string][]string{}
 	for _, e := range c.Graph.Edges {
-		if e.From != s.Path && e.To != s.Path {
-			continue
-		}
-		outro := e.To
-		if e.To == s.Path {
-			outro = e.From
-		}
-		if c.kindOf(outro) == mapx.KindFeature {
-			out = append(out, outro)
+		for _, par := range [2][2]string{{e.From, e.To}, {e.To, e.From}} {
+			specPath, outro := par[0], par[1]
+			if c.kindByID[outro] != mapx.KindFeature {
+				continue
+			}
+			// A aresta entra no indice da PONTA que e' spec. Sem o filtro, uma aresta
+			// feature→feature (se houver) se indexaria sob si mesma.
+			if c.kindByID[specPath] != mapx.KindSpec {
+				continue
+			}
+			c.featuresBySpec[specPath] = append(c.featuresBySpec[specPath], outro)
 		}
 	}
-	return out
 }
 
 func (c *Compiler) kindOf(id string) mapx.Kind {
-	for _, n := range c.Graph.Nodes {
-		if n.ID == id {
-			return n.Kind
-		}
-	}
-	return ""
+	c.buildIndexes()
+	return c.kindByID[id]
 }
 
 // fnAllScenarios devolve os cenários de TODAS as specs de um recorte.
