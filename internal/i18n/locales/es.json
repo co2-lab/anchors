@@ -728,5 +728,10 @@
   "spec_guide.col_who": "Quién decide",
   "spec_guide.col_becomes": "Se vuelve",
   "spec_guide.none": "ninguna",
-  "section.title.compliance_points": "Puntos de conformidad"
+  "section.title.compliance_points": "Puntos de conformidad",
+  "check.timing_header": "⏱ tiempo por gate — %s en total (el más lento primero):",
+  "check.timing_item": "    %-*s  %8s  %5d objetivo(s)  peor %8s",
+  "check.timing_targets": "⏱ objetivos más lentos (una confrontación cada uno):",
+  "check.timing_target_item": "    %8s  %s @ %s",
+  "check.timing_note": "  Tiempo de pared, de esta ejecución, en esta máquina — varía con la caché y la\n  carga. Úsalo para comparar los gates ENTRE SÍ, nunca como presupuesto absoluto. Un\n  gate que cuesta por VOLUMEN (barato por objetivo, por cientos) y uno que cuesta por\n  OBJETIVO (una ejecución que arranca un compilador) se optimizan de formas opuestas:\n  la columna `peor` es lo que los distingue."
 }

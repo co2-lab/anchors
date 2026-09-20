@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
@@ -74,6 +75,15 @@ type Result struct {
 	//
 	// Quem sabe a diferença é o gate, que sabe o que mediu.
 	Impede bool
+	// Duracao e' o tempo de parede desta confrontacao — o gate contra ESTE alvo, ou
+	// contra o conjunto quando o escopo e' agregado.
+	//
+	// Existe porque o custo do `check --all` e' invisivel no relatorio: ele leva minutos
+	// num projeto real, e nada diz ONDE. Sem a medida, otimizar e' adivinhar qual gate
+	// cobrar — e a suspeita natural (o gate com mais alvos) costuma estar errada, porque
+	// um `run:` externo que sobe um compilador custa mais em UMA execucao do que um
+	// checker interno em centenas.
+	Duracao time.Duration
 }
 
 // applies: o gate se aplica a um nó se o kind está no `on` do gate, E o nó não carrega
@@ -84,10 +94,6 @@ func applies(g config.Gate, n mapx.Node, root string) bool {
 	if !slices.Contains(g.On, string(n.Kind)) {
 		return false
 	}
-	// A exclusão vem ANTES do filtro positivo, e a ordem é a decisão: um nó excluído fica
-	// fora mesmo que também case uma tag do `tags`. Camadas costumam carregar rótulos
-	// transversais (`backend`, `code`) junto com o seu próprio, então a exceção precisa
-	// vencer — senão declarar a exclusão não teria efeito nenhum onde ela importa.
 	// A exclusão vem ANTES do filtro positivo, e a ordem é a decisão: um nó excluído fica
 	// fora mesmo que também case uma tag do `tags`. Camadas costumam carregar rótulos
 	// transversais (`backend`, `code`) junto com o seu próprio, então a exceção precisa
@@ -191,7 +197,10 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 		}
 		switch g.ScopeForScan(completa) {
 		case config.ScopeBatch, config.ScopeProject:
-			results = append(results, runAggregate(g, alvos, root, completa, graph, cfg))
+			inicio := time.Now()
+			agregado := runAggregate(g, alvos, root, completa, graph, cfg)
+			agregado.Duracao = time.Since(inicio)
+			results = append(results, agregado)
 		default:
 			for _, n := range alvos {
 				// DISPENSA POR ALVO: o gate roda, e só este nó é poupado. O veredito é
@@ -205,7 +214,10 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 					})
 					continue
 				}
-				results = append(results, runOne(g, n, root, graph, cfg))
+				inicio := time.Now()
+				um := runOne(g, n, root, graph, cfg)
+				um.Duracao = time.Since(inicio)
+				results = append(results, um)
 			}
 		}
 	}

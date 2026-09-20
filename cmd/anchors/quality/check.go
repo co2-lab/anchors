@@ -6,6 +6,7 @@ import (
 	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -26,7 +27,7 @@ import (
 func newCheckCmd() *cobra.Command {
 	var root, mapPath, phase, category string
 	var changed []string
-	var all, noRecord, fix, deterministic, skipSlow, onlyIssues, showDrift bool
+	var all, noRecord, fix, deterministic, skipSlow, onlyIssues, showDrift, showTiming bool
 	var skipRegras string
 	var msgPath string
 	cmd := &cobra.Command{
@@ -178,6 +179,9 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			results := gate.RunWithWaiver(cfg.Gates, nodes, absRoot, g, cfg, all, dispensa)
 			profile := gate.Aggregate(results)
 			printProfile(profile, onlyIssues, showDrift)
+			if showTiming {
+				printTiming(profile)
+			}
 			warnGatesWithoutTarget(cfg.Gates, profile)
 
 			// O LOOP: check → carimbo → issue. Deixa de "reportar" e passa a
@@ -297,6 +301,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 		"path to the commit message file, from which to read the `[skip-regra@CODIGO: motivo]` markers")
 	cmd.Flags().BoolVar(&onlyIssues, "only-issues", false, "omits from the table the gates that passed everything and left no pending item (the total remains in the footer)")
 	cmd.Flags().BoolVar(&showDrift, "show-drift", false, "lists ALL the pending items (⚠) with the address of each one; without the flag, only the table counter")
+	cmd.Flags().BoolVar(&showTiming, "timing", false, "measures how long each gate took, and names the slowest targets — to find what makes a scan expensive")
 	return cmd
 }
 
@@ -1029,6 +1034,97 @@ func warnGatesWithoutTarget(declarados []config.Gate, p gate.Profile) {
 		fmt.Printf("    %s\n", n)
 	}
 	fmt.Println(i18n.T("check.unused_gates_note"))
+}
+
+// printTiming mostra ONDE a varredura gastou o tempo — por gate, e depois os alvos
+// individuais mais caros.
+//
+// O custo do `check --all` e' invisivel no relatorio normal: ele leva minutos num
+// projeto real, e nada diz onde. Sem a medida, otimizar e' adivinhar qual gate cobrar —
+// e a suspeita natural (o gate com mais alvos) costuma estar errada, porque um `run:`
+// externo que sobe um compilador custa mais em UMA execucao do que um checker interno
+// em centenas.
+//
+// Os ALVOS entram porque o gate caro nem sempre e' caro por igual: um unico arquivo
+// patologico (uma spec gigante, um teste que o `run:` recompila) aparece aqui com nome
+// e endereco, e e' acionavel de um jeito que a media por gate nao e'.
+func printTiming(p gate.Profile) {
+	type linha struct {
+		nome  string
+		total time.Duration
+		pior  time.Duration
+		alvos int
+	}
+	var linhas []linha
+	var total time.Duration
+	for nome, s := range p.ByGate {
+		n := s.Pass + s.Fail + s.Skip + s.Pending + s.Judge
+		linhas = append(linhas, linha{nome, s.Duracao, s.Pior, n})
+		total += s.Duracao
+	}
+	if len(linhas) == 0 {
+		return
+	}
+	// Empate desempatado pelo NOME, e nao deixado ao acaso do mapa: duas execucoes da
+	// mesma varredura tem de imprimir a mesma ordem, senao comparar dois relatorios
+	// vira ruido.
+	sort.Slice(linhas, func(i, j int) bool {
+		if linhas[i].total != linhas[j].total {
+			return linhas[i].total > linhas[j].total
+		}
+		return linhas[i].nome < linhas[j].nome
+	})
+
+	largura := 0
+	for _, l := range linhas {
+		if len(l.nome) > largura {
+			largura = len(l.nome)
+		}
+	}
+
+	fmt.Println()
+	fmt.Println(i18n.T("check.timing_header", arredonda(total)))
+	for _, l := range linhas {
+		fmt.Println(i18n.T("check.timing_item", largura, l.nome, arredonda(l.total), l.alvos, arredonda(l.pior)))
+	}
+
+	// Os alvos individuais mais caros, atravessando todos os gates.
+	piores := append([]gate.Result(nil), p.Results...)
+	sort.Slice(piores, func(i, j int) bool {
+		if piores[i].Duracao != piores[j].Duracao {
+			return piores[i].Duracao > piores[j].Duracao
+		}
+		if piores[i].Gate != piores[j].Gate {
+			return piores[i].Gate < piores[j].Gate
+		}
+		return piores[i].Target < piores[j].Target
+	})
+	if len(piores) > 0 && piores[0].Duracao > 0 {
+		fmt.Println()
+		fmt.Println(i18n.T("check.timing_targets"))
+		for i, r := range piores {
+			// Zero nao e' informacao: um alvo que nem registrou tempo nao ajuda ninguem
+			// a otimizar, e listar dez deles empurraria os reais para fora da tela.
+			if i == 10 || r.Duracao == 0 {
+				break
+			}
+			fmt.Println(i18n.T("check.timing_target_item", arredonda(r.Duracao), r.Gate, r.Target))
+		}
+	}
+	fmt.Println(i18n.T("check.timing_note"))
+}
+
+// arredonda corta a precisao ao que o leitor usa para DECIDIR. `1.234567ms` e
+// `1.23ms` levam a mesma acao, e o digito a mais so' atrapalha a comparacao entre
+// linhas — que e' para o que esta tabela existe.
+func arredonda(d time.Duration) string {
+	switch {
+	case d >= time.Second:
+		return d.Round(10 * time.Millisecond).String()
+	case d >= time.Millisecond:
+		return d.Round(100 * time.Microsecond).String()
+	}
+	return d.Round(time.Microsecond).String()
 }
 
 func printProfile(p gate.Profile, onlyIssues, showDrift bool) {

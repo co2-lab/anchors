@@ -1,6 +1,9 @@
 package gate
 
-import "sort"
+import (
+	"sort"
+	"time"
+)
 
 // Profile é a agregação dos vereditos (QUALITY §6): a qualidade não é um número, é
 // o conjunto de vereditos por gate. Deriva a decisão de promoção ("todos os
@@ -23,6 +26,15 @@ type GateSummary struct {
 	Skip     int
 	Pending  int
 	Judge    int // aguardando julgamento de IA
+	// Duracao e' o tempo somado de todas as confrontacoes deste gate, e Pior e' a mais
+	// cara delas.
+	//
+	// As duas medidas juntas separam o que uma so' esconde: um gate pode custar caro por
+	// VOLUME (barato por alvo, multiplicado por centenas) ou por ALVO (uma execucao que
+	// sobe um compilador). O total sozinho nao distingue os dois casos, e a otimizacao
+	// de cada um e' oposta — reduzir alvos no primeiro, trocar a ferramenta no segundo.
+	Duracao time.Duration
+	Pior    time.Duration
 }
 
 // Aggregate monta o perfil a partir dos resultados brutos.
@@ -60,6 +72,10 @@ func Aggregate(results []Result) Profile {
 		case Judge:
 			s.Judge++
 			p.Judged = append(p.Judged, r)
+		}
+		s.Duracao += r.Duracao
+		if r.Duracao > s.Pior {
+			s.Pior = r.Duracao
 		}
 		p.ByGate[r.Gate] = s
 	}

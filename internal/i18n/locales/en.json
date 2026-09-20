@@ -728,5 +728,10 @@
   "spec_guide.col_who": "Who decides",
   "spec_guide.col_becomes": "Becomes",
   "spec_guide.none": "none",
-  "section.title.compliance_points": "Compliance points"
+  "section.title.compliance_points": "Compliance points",
+  "check.timing_header": "⏱ time by gate — %s total (the slowest first):",
+  "check.timing_item": "    %-*s  %8s  %5d target(s)  worst %8s",
+  "check.timing_targets": "⏱ slowest targets (one confrontation each):",
+  "check.timing_target_item": "    %8s  %s @ %s",
+  "check.timing_note": "  Wall time, this run, this machine — it varies with cache and load. Use it to\n  compare gates with each other, never as an absolute budget. A gate that costs by\n  VOLUME (cheap per target, times hundreds) and one that costs per TARGET (a single\n  run that boots a compiler) are optimised in opposite ways: the `worst` column is\n  what tells them apart."
 }
