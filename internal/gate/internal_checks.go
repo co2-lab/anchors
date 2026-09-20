@@ -49,6 +49,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"doctrine-realized":        checkDoctrineRealized,
 	"spec-doctrine-exists":     checkSpecDoctrineExists,
 	"doctrine-not-duplicated":  checkDoctrineNotDuplicated,
+	"spec-realizes-doctrine":   checkSpecRealizesDoctrine,
 	"feature-test-match":       checkFeatureTestMatch,
 	"scenario-identity":        checkScenarioIdentity,
 	"scenario-type-aligned":    checkScenarioTypeAligned,

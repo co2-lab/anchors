@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -93,5 +94,47 @@ func TestDoctrineNotDuplicated_nearCopyWithAWordChangedFails(t *testing.T) {
 	v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil)
 	if v != Fail {
 		t.Fatalf("a near copy must be accused — exact comparison would let it through: %v (%s)", v, msg)
+	}
+}
+
+// The demand is DECLARED BY LAYER, never universal.
+//
+// Measured in this repository: of 841 catalogued rules the overwhelming majority is local
+// to its unit. Demanding `@realizes` everywhere would force inventing umbrella doctrine
+// just to silence the gate — the vice `placeholder-filled` exists to catch. In a product
+// application the proportion inverts, and only the Structure knows which case it is.
+func TestSpecRealizesDoctrine_onlyWhereTheLayerDemands(t *testing.T) {
+	cfg := &config.Config{Layers: map[string]config.Layer{
+		"screen": {RequiresDoctrine: true},
+		"gate":   {},
+	}}
+	spec := "### CRED-V01 — a rule with no declaration\n"
+
+	demanding := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
+	v, msg := checkSpecRealizesDoctrine(spec, demanding, "", nil, cfg)
+	if v != Fail {
+		t.Errorf("a demanding layer must accuse a naked rule: %v (%s)", v, msg)
+	}
+	if !strings.Contains(msg, "CRED-V01") {
+		t.Errorf("the verdict must name the rule: %s", msg)
+	}
+
+	quiet := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"gate"}}
+	if v, msg := checkSpecRealizesDoctrine(spec, quiet, "", nil, cfg); v != Skip {
+		t.Errorf("a layer that does not demand must stay quiet: %v (%s)", v, msg)
+	}
+}
+
+// A rule that DECLARES is not accused, and one deferred with `@TBD` becomes debt rather
+// than a failure — the doctrine it will realize is still being written.
+func TestSpecRealizesDoctrine_declaredPassesAndTbdDefers(t *testing.T) {
+	cfg := &config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}}
+	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
+
+	if v, msg := checkSpecRealizesDoctrine("### CRED-V01 — a rule    @realizes LIMIT-R03\n", n, "", nil, cfg); v != Pass {
+		t.Errorf("a declared rule must pass: %v (%s)", v, msg)
+	}
+	if v, msg := checkSpecRealizesDoctrine("### CRED-V01 — a rule    @TBD: doctrine being written\n", n, "", nil, cfg); v != Pending {
+		t.Errorf("`@TBD` must be debt, not failure: %v (%s)", v, msg)
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/co2-lab/anchors/internal/similarity"
 )
 
@@ -417,4 +418,105 @@ func parseRealizesWithLines(content string) []realizesOnLine {
 		}
 	}
 	return out
+}
+
+// --- does this layer DEMAND doctrine? ---
+//
+// The rule a layer declares with `requires_doctrine: true`: every catalogued rule of its
+// specs must say which product decision it concretises.
+//
+// Optional by default, and the reason is measured. In this repository, of 841 catalogued
+// rules the overwhelming majority is LOCAL to its unit — `SBGRD-B01` ("an artifact that
+// is not code leaves without a verdict") belongs to no product; it is a gate's mechanics.
+// Demanding it everywhere would force inventing umbrella doctrine just to silence the
+// gate, which is the vice `placeholder-filled` exists to catch.
+//
+// In a PRODUCT application the proportion inverts: almost every screen rule serves a
+// product decision, and the one that does not is suspect. Anchors does not know which
+// case it is looking at — the Structure does, layer by layer.
+func checkSpecRealizesDoctrine(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Kind != mapx.KindSpec {
+		return Skip, i18n.T("gate.spec_realizes_doctrine.skip_not_spec")
+	}
+	if cfg == nil {
+		return Skip, i18n.T("gate.spec_realizes_doctrine.skip_no_config")
+	}
+	if !layerRequiresDoctrine(n, root, g, cfg) {
+		return Skip, i18n.T("gate.spec_realizes_doctrine.skip_layer_does_not_require")
+	}
+
+	declared := map[string]bool{}
+	deferred := map[string]bool{}
+	for _, r := range parseRealizesWithLines(content) {
+		if r.from == "" {
+			continue // an orphan tag declares nothing for any rule
+		}
+		declared[r.from] = true
+	}
+	var naked []string
+	for _, line := range strings.Split(content, "\n") {
+		m := doctrineRuleRE.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		if tbdLineRE.MatchString(line) {
+			deferred[m[1]] = true
+			continue
+		}
+		if !declared[m[1]] && !strings.Contains(line, "@realizes") {
+			naked = append(naked, m[1])
+		}
+	}
+	if len(naked) > 0 {
+		sort.Strings(naked)
+		return Fail, fmt.Sprintf(i18n.T("gate.spec_realizes_doctrine.missing"), len(naked), strings.Join(naked, ", "))
+	}
+	if len(deferred) > 0 {
+		return Pending, fmt.Sprintf(i18n.T("gate.spec_realizes_doctrine.deferred"), len(deferred))
+	}
+	return Pass, ""
+}
+
+// layerRequiresDoctrine answers whether the unit's layer demands `@realizes`.
+//
+// It resolves the layer by the TARGET the spec describes, never by the spec's own file:
+// a `.spec.md` matches the `spec` layer, and the demand is declared on the layer of the
+// thing being specified (`screen`, `handler`).
+//
+// Two routes, and the second is not redundancy: the `specifies` edge only exists AFTER
+// the code is born, and at the `spec` step it is not. Without resolving by PATH the gate
+// would be blind exactly in the window where the author is writing the spec — which is
+// when the demand matters most. The lesson is the same one `triad-complete` already paid
+// for, in the comment above its own second route.
+func layerRequiresDoctrine(n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) bool {
+	tags := append([]string{}, n.Tags...)
+	if g != nil {
+		for _, e := range g.Neighbors(n.ID).Out {
+			if e.Type != mapx.EdgeSpecifies {
+				continue
+			}
+			for _, target := range g.Nodes {
+				if target.ID == e.To {
+					tags = append(tags, target.Tags...)
+				}
+			}
+		}
+	}
+	for _, t := range tags {
+		if l, ok := cfg.Layers[t]; ok && l.RequiresDoctrine {
+			return true
+		}
+	}
+	if base := strings.TrimSuffix(n.ID, ".spec.md"); base != n.ID {
+		for _, ext := range []string{".ts", ".tsx", ".go", ".py", ".js"} {
+			layer, _ := scan.Classify(base+ext, cfg)
+			if layer == "" {
+				continue
+			}
+			if cfg.Layers[layer].RequiresDoctrine {
+				return true
+			}
+		}
+	}
+	return false
 }

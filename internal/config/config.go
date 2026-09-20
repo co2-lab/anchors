@@ -1026,6 +1026,19 @@ type Layer struct {
 	// A chave é `optional_triad_edges`: `lang` traduz o que se LÊ, e uma chave de YAML é
 	// identificador, não prosa.
 	OptionalTriadEdges []string `yaml:"optional_triad_edges,omitempty"`
+	// RequiresDoctrine: as regras das specs DESTA camada têm de declarar `@realizes`,
+	// apontando a doutrina de produto que concretizam.
+	//
+	// Opcional por padrão, e a razão é medida. Neste repositório, das 841 regras
+	// catalogadas a esmagadora maioria é LOCAL à unidade: `SBGRD-B01` ("artefato que não
+	// é código sai sem veredito") não pertence a produto nenhum — é mecânica de um gate.
+	// Exigir de todas forçaria inventar doutrina guarda-chuva só para calar o gate, que é
+	// o vício que o `placeholder-filled` existe para pegar.
+	//
+	// Numa aplicação de PRODUTO a proporção se inverte: quase toda regra de tela serve a
+	// uma decisão de produto, e a que não serve é suspeita. Quem sabe qual é o caso não é
+	// o Anchors — é a Estrutura, camada por camada.
+	RequiresDoctrine bool `yaml:"requires_doctrine,omitempty"`
 	// Work: passos EXTRA que esta camada exige, por artefato (spec|code|feature|test).
 	// O `anchors work` já compõe um procedimento universal a partir da Estrutura; isto
 	// acrescenta o que só o projeto sabe ("rode o seed antes", "o teste desta camada é

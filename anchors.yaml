@@ -426,6 +426,14 @@ gates:
   - name: doctrine-not-duplicated
     blocking: false
 
+  # Declarado e SEM camada que o acione: este repositorio e' um FRAMEWORK, e das 841
+  # regras catalogadas a esmagadora maioria e' mecanica de gate, nao decisao de produto.
+  # Exigir `@realizes` de todas forcaria inventar doutrina guarda-chuva so' para calar o
+  # gate. Num projeto de produto, a camada de tela declara `requires_doctrine: true` e
+  # ele passa a cobrar.
+  - name: spec-realizes-doctrine
+    blocking: false
+
   - name: docs-covered
     blocking: false
 

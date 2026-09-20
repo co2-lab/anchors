@@ -234,6 +234,15 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Measures: "a spec referencia a doutrina em vez de copiar o texto dela",
 		})
 
+		// A EXIGENCIA POR CAMADA: opcional por padrao, e quem decide e' a Estrutura.
+		// Sem camada declarando `requires_doctrine`, este gate e' Skip em tudo — o que
+		// e' o certo para um framework, e o oposto do certo para um produto.
+		gates = append(gates, config.Gate{
+			Name: "spec-realizes-doctrine", ID: "spec-realizes-doctrine", On: []string{"spec"},
+			Check: "spec-realizes-doctrine", Blocking: config.Bool(false),
+			Measures: "as regras da spec declaram a doutrina de produto que realizam",
+		})
+
 		// A COBERTURA, que o gate acima nao tem como ver: ele confere as paginas que
 		// EXISTEM, e o defeito silencioso e' a spec que nao chega a pagina nenhuma.
 		// Os templates filtram por camada, entao uma spec que nenhum filtro seleciona

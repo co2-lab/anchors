@@ -769,5 +769,10 @@
   "gate.doctrine_not_duplicated.pending_small_corpus": "similarity corpus too small (%d rules, %d needed): with few rules IDF has nothing to weigh, and only a byte-identical copy would be caught. Reporting a pass here would state something that was never measured.",
   "section.purpose.doctrine_overview": "What this doctrine decides, and what it costs when it is broken. Write the REASON, not just the rule: whoever reads it later needs to know what was being defended — the rule alone ages into arbitrary.",
   "section.purpose.doctrine_rules": "The rules a spec can REALIZE. Same grammar as a spec's rules: a code, one of the three catalogued forms, and a letter stating the nature. Each one must be stated so that a spec can point at it and say 'this is what I concretise' — a rule too vague to realize is prose.",
-  "section.purpose.doctrine_constraints": "What this doctrine deliberately does NOT decide. The boundary matters as much as the rule: without it, whoever reads assumes the doctrine covers what it never meant to."
+  "section.purpose.doctrine_constraints": "What this doctrine deliberately does NOT decide. The boundary matters as much as the rule: without it, whoever reads assumes the doctrine covers what it never meant to.",
+  "gate.spec_realizes_doctrine.skip_not_spec": "not a spec — the demand falls on the spec's rules",
+  "gate.spec_realizes_doctrine.skip_no_config": "no Structure to read — the demand is declared per layer",
+  "gate.spec_realizes_doctrine.skip_layer_does_not_require": "this layer does not declare `requires_doctrine` — a rule local to the unit is legitimate here",
+  "gate.spec_realizes_doctrine.missing": "%d rule(s) without `@realizes` in a layer that demands it: %s.\nThe layer declared that its rules concretise product decisions. A rule with no declaration either belongs to a doctrine nobody wrote down, or it does not belong in this layer. Declare `@TBD: <reason>` on the line while the doctrine is still being written.",
+  "gate.spec_realizes_doctrine.deferred": "%d rule(s) declared TO BE DEVELOPED (`@TBD`): the doctrine they will realize is not written yet. Debt, and it stays visible."
 }

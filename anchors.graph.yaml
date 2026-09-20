@@ -35,7 +35,7 @@ nodes:
         - doc
     - id: DESIGN-product-doctrine.md
       kind: doc
-      rev: 75312c44d97c
+      rev: bfa2fd7ae525
       updated_at: "2026-09-20"
       code: LIMIT
       layer: desenho
@@ -482,8 +482,8 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide.go
       kind: code
-      rev: e62d842393b9
-      updated_at: "2026-09-19"
+      rev: a20e83c322b1
+      updated_at: "2026-09-20"
       layer: comando
       tags:
         - cli
@@ -539,9 +539,19 @@ nodes:
       shared_code: true
     - id: cmd/anchors/governance/guide_plan.go
       kind: code
-      rev: 7a3eec9675d0
-      updated_at: "2026-09-19"
+      rev: c452eeca8945
+      updated_at: "2026-09-20"
       layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/governance/guide_product.go
+      kind: code
+      rev: a8cd434e4158
+      updated_at: "2026-09-20"
+      code: LIMIT
+      layer: comando
+      code_declared: true
       tags:
         - cli
         - comando
@@ -577,8 +587,9 @@ nodes:
         - test
     - id: cmd/anchors/governance/guide_spec.go
       kind: code
-      rev: 2a5052f3e3a3
-      updated_at: "2026-09-19"
+      rev: 896aa6770188
+      updated_at: "2026-09-20"
+      code: LIMIT
       layer: comando
       tags:
         - cli
@@ -896,8 +907,8 @@ nodes:
         - comando
     - id: cmd/anchors/ops/new.go
       kind: code
-      rev: 1bd73b13044f
-      updated_at: "2026-09-19"
+      rev: 58c7e98c2b3c
+      updated_at: "2026-09-20"
       layer: comando
       tags:
         - cli
@@ -919,8 +930,8 @@ nodes:
         - test
     - id: cmd/anchors/ops/new_templates.go
       kind: code
-      rev: 1013ebcf050e
-      updated_at: "2026-09-19"
+      rev: d5df0fca4b77
+      updated_at: "2026-09-20"
       layer: comando
       tags:
         - cli
@@ -929,6 +940,14 @@ nodes:
       kind: test
       rev: 9ca4d17b5265
       updated_at: "2026-09-19"
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/ops/new_test.go
+      kind: test
+      rev: 792d0a5a19b6
+      updated_at: "2026-09-20"
+      code: CRLMT
       layer: teste
       tags:
         - test
@@ -1264,7 +1283,7 @@ nodes:
         - config
     - id: internal/config/config.go
       kind: code
-      rev: 2536cd2306a8
+      rev: fac4b1787d52
       updated_at: "2026-09-19"
       layer: config
       tags:
@@ -1797,7 +1816,7 @@ nodes:
         - test
     - id: internal/gate/doctrine.go
       kind: code
-      rev: 00dcf264d472
+      rev: 0e217ee632ec
       updated_at: "2026-09-20"
       layer: gate
       tags:
@@ -1805,7 +1824,8 @@ nodes:
         - gate
     - id: internal/gate/doctrine_test.go
       kind: test
-      rev: 0c6ccbe30d0a
+      rev: e674d91e0762
+      updated_at: "2026-09-20"
       code: LIMIT
       layer: teste
       tags:
@@ -2040,7 +2060,7 @@ nodes:
         - feature
     - id: internal/gate/internal_checks.go
       kind: code
-      rev: e6be85e43cfa
+      rev: 4d63a6b1a416
       updated_at: "2026-09-20"
       code: INCHN
       layer: gate
@@ -3644,7 +3664,7 @@ nodes:
         - test
     - id: internal/initx/default_gates.go
       kind: code
-      rev: 7c2df35cc056
+      rev: 24d053bd0329
       updated_at: "2026-09-20"
       layer: infra
       tags:

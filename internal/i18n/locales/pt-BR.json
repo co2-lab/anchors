@@ -769,5 +769,10 @@
   "gate.doctrine_not_duplicated.pending_small_corpus": "corpus de similaridade pequeno demais (%d regras, precisa de %d): com poucas regras o IDF não tem o que ponderar, e só uma cópia idêntica byte a byte seria pega. Dizer que passou afirmaria algo que não foi medido.",
   "section.purpose.doctrine_overview": "O que esta doutrina decide, e o que custa quando é quebrada. Escreva a RAZÃO, não só a regra: quem ler depois precisa saber o que estava sendo defendido — a regra sozinha envelhece virando arbitrária.",
   "section.purpose.doctrine_rules": "As regras que uma spec pode REALIZAR. Mesma gramática das regras de spec: um código, uma das três formas catalogadas, e uma letra dizendo a natureza. Cada uma tem de ser dita de um jeito que uma spec possa apontar e dizer 'é isto que eu concretizo' — regra vaga demais para ser realizada é prosa.",
-  "section.purpose.doctrine_constraints": "O que esta doutrina deliberadamente NÃO decide. A fronteira importa tanto quanto a regra: sem ela, quem lê assume que a doutrina cobre o que ela nunca pretendeu."
+  "section.purpose.doctrine_constraints": "O que esta doutrina deliberadamente NÃO decide. A fronteira importa tanto quanto a regra: sem ela, quem lê assume que a doutrina cobre o que ela nunca pretendeu.",
+  "gate.spec_realizes_doctrine.skip_not_spec": "não é spec — a exigência recai sobre as regras da spec",
+  "gate.spec_realizes_doctrine.skip_no_config": "sem Estrutura para ler — a exigência é declarada por camada",
+  "gate.spec_realizes_doctrine.skip_layer_does_not_require": "esta camada não declara `requires_doctrine` — regra local à unidade é legítima aqui",
+  "gate.spec_realizes_doctrine.missing": "%d regra(s) sem `@realizes` numa camada que exige: %s.\nA camada declarou que suas regras concretizam decisões de produto. Regra sem declaração ou pertence a uma doutrina que ninguém escreveu, ou não pertence a esta camada. Declare `@TBD: <razão>` na linha enquanto a doutrina ainda está sendo escrita.",
+  "gate.spec_realizes_doctrine.deferred": "%d regra(s) declarada(s) A DESENVOLVER (`@TBD`): a doutrina que elas vão realizar ainda não existe. Dívida, e fica visível."
 }
