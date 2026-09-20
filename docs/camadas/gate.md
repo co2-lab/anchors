@@ -5,7 +5,7 @@
 
 
 
-> Esta camada tem 45 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 47 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -80,7 +80,19 @@
 
 
 
+## GTENG — GateEngine — which gates reach which node, and what the run concludes
+
+
+
+
+
 ## IDCND — IdentityConsistent — a unit's spec identity must match its exposed testID and visual baseline
+
+
+
+
+
+## INCHN — InternalChecks — the registry that routes a declared check name to a function
 
 
 

@@ -69,7 +69,6 @@ conhecimento que não temos.
 Estas camadas existem no projeto e nenhum contêiner as declara — não aparecem em diagrama
 de nível 3 nenhum. Ou falta declará-las, ou elas não rodam em lugar nenhum:
 
-- `TODO`
 - `gate`
 
 

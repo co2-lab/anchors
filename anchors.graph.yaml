@@ -1909,6 +1909,13 @@ nodes:
       tags:
         - regra
         - gate
+    - id: internal/gate/gate.feature
+      kind: feature
+      rev: 46d837f31958
+      code: GTENG
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/gate.go
       kind: code
       rev: 889c52360186
@@ -1920,7 +1927,8 @@ nodes:
         - gate
     - id: internal/gate/gate.spec.md
       kind: spec
-      rev: 3ccfd6b94f58
+      rev: fcd00ea44182
+      updated_at: "2026-09-19"
       code: GTENG
       layer: spec
       code_declared: true
@@ -1928,7 +1936,7 @@ nodes:
         - spec
     - id: internal/gate/gate_test.go
       kind: test
-      rev: 5c8b3122dc04
+      rev: 3f32e07b8c18
       updated_at: "2026-09-19"
       code: GTENG
       layer: teste
@@ -1968,6 +1976,13 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/internal_checks.feature
+      kind: feature
+      rev: e5b513b9df3f
+      code: INCHN
+      layer: feature
+      tags:
+        - feature
     - id: internal/gate/internal_checks.go
       kind: code
       rev: f7c211d67715
@@ -1979,7 +1994,8 @@ nodes:
         - gate
     - id: internal/gate/internal_checks.spec.md
       kind: spec
-      rev: fb294c539fa6
+      rev: 37ef40be0165
+      updated_at: "2026-09-19"
       code: INCHN
       layer: spec
       code_declared: true
@@ -1987,7 +2003,7 @@ nodes:
         - spec
     - id: internal/gate/internal_checks_test.go
       kind: test
-      rev: 2cb6eb19d81b
+      rev: 87d41fe2ed3c
       updated_at: "2026-09-19"
       code: INCHN
       layer: teste
@@ -2730,6 +2746,7 @@ nodes:
     - id: internal/gate/rule.feature
       kind: feature
       rev: 497575b4520f
+      updated_at: "2026-09-19"
       code: RLUEX
       layer: feature
       tags:
@@ -2746,6 +2763,7 @@ nodes:
     - id: internal/gate/rule.spec.md
       kind: spec
       rev: 3f3024ebe16c
+      updated_at: "2026-09-19"
       code: RLUEX
       layer: spec
       code_declared: true
@@ -2978,6 +2996,7 @@ nodes:
     - id: internal/gate/sibling_guard.feature
       kind: feature
       rev: 9a80bb24b23e
+      updated_at: "2026-09-19"
       code: SBGRD
       layer: feature
       tags:
@@ -2994,6 +3013,7 @@ nodes:
     - id: internal/gate/sibling_guard.spec.md
       kind: spec
       rev: 72ba8e907a0a
+      updated_at: "2026-09-19"
       code: SBGRD
       layer: spec
       code_declared: true
@@ -6479,8 +6499,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindSpec`'
-      dep: DEP1
+      method: '`EdgeSpecifies`'
+      dep: DEP2
       stamp:
         validated_from_rev: 0cf3a482b528
         validated_to_rev: c35dfd17ef15
@@ -6490,8 +6510,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`EdgeSpecifies`'
-      dep: DEP2
+      method: '`KindSpec`'
+      dep: DEP1
       stamp:
         validated_from_rev: 0cf3a482b528
         validated_to_rev: c35dfd17ef15
@@ -7025,14 +7045,30 @@ edges:
         validated_to_rev: 5de399ad005c
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/gate.feature
+      to: internal/gate/gate_test.go
+      type: tested-by
+      origin: convention
+    - from: internal/gate/gate.spec.md
+      to: internal/config/config.go
+      type: depends-on
+      origin: declared
+      method: '`Gate`'
+      dep: DEP1
+    - from: internal/gate/gate.spec.md
+      to: internal/gate/gate.feature
+      type: covered-by
+      origin: convention
     - from: internal/gate/gate.spec.md
       to: internal/gate/gate.go
       type: specifies
       origin: convention
     - from: internal/gate/gate.spec.md
-      to: internal/gate/gate_test.go
-      type: tested-by
-      origin: convention
+      to: internal/mapx/model.go
+      type: depends-on
+      origin: declared
+      method: '`Node`'
+      dep: DEP2
     - from: internal/gate/identity_consistent.feature
       to: internal/gate/identity_consistent_test.go
       type: tested-by
@@ -7082,14 +7118,30 @@ edges:
         validated_to_rev: c35dfd17ef15
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/internal_checks.feature
+      to: internal/gate/internal_checks_test.go
+      type: tested-by
+      origin: convention
+    - from: internal/gate/internal_checks.spec.md
+      to: internal/config/config.go
+      type: depends-on
+      origin: declared
+      method: '`CodeLengthPattern`'
+      dep: DEP1
+    - from: internal/gate/internal_checks.spec.md
+      to: internal/gate/internal_checks.feature
+      type: covered-by
+      origin: convention
     - from: internal/gate/internal_checks.spec.md
       to: internal/gate/internal_checks.go
       type: specifies
       origin: convention
     - from: internal/gate/internal_checks.spec.md
-      to: internal/gate/internal_checks_test.go
-      type: tested-by
-      origin: convention
+      to: internal/mapx/model.go
+      type: depends-on
+      origin: declared
+      method: '`Node`'
+      dep: DEP2
     - from: internal/gate/layer_boundary.feature
       to: internal/gate/layer_boundary_test.go
       type: tested-by
@@ -8057,8 +8109,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`CodeLengthPattern`'
-      dep: DEP3
+      method: '`RuleType`'
+      dep: DEP1
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: 2536cd2306a8
@@ -8068,8 +8120,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`RuleType`'
-      dep: DEP1
+      method: '`CodeLengthPattern`'
+      dep: DEP3
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: 2536cd2306a8

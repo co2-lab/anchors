@@ -9,12 +9,6 @@ camada.
 Para ver uma camada inteira de uma vez — com a visão geral de cada unidade e os cenários —
 abra a página dela em `camadas/`.
 
-## TODO
-
-### [GTENG — GateEngine — TODO purpose in one sentence](camadas/TODO.md#gteng--gateengine--todo-purpose-in-one-sentence)
-
-### [INCHN — InternalChecks — TODO purpose in one sentence](camadas/TODO.md#inchn--internalchecks--todo-purpose-in-one-sentence)
-
 ## gate
 
 ### [CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code)
@@ -41,7 +35,11 @@ abra a página dela em `camadas/`.
 
 ### [FTMFT — FeatureTestMatch — scenarios in feature must be implemented in test by code and description](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description)
 
+### [GTENG — GateEngine — which gates reach which node, and what the run concludes](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
 ### [IDCND — IdentityConsistent — a unit's spec identity must match its exposed testID and visual baseline](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline)
+
+### [INCHN — InternalChecks — the registry that routes a declared check name to a function](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 ### [LYBNL — LayerBoundary — a layer does not reach what is not its own](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own)
 
