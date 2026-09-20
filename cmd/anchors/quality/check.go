@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1082,17 +1083,50 @@ func printTiming(p gate.Profile) {
 		}
 	}
 
+	// A CONTAGEM e' montada como texto ANTES de medir, e a largura sai do rotulo mais
+	// longo que de fato aparece.
+	//
+	// Formatar os dois casos em sequencias diferentes (`%5d targets` de um lado, `1
+	// target` literal do outro) desalinhava a coluna de duas maneiras ao mesmo tempo: o
+	// numero sem padding no caso singular, e o rotulo com uma letra a menos. E a largura
+	// nao pode ser constante porque o rotulo e' traduzido — `alvos`, `targets` e
+	// `objetivos` nao tem o mesmo tamanho.
+	// O NUMERO e' alinhado dentro da propria string traduzida (`%*d`), e nao concatenado
+	// por fora: a ordem entre numero e rotulo pertence a traducao, e monta-la aqui
+	// assumiria que o numero vem primeiro — verdade nas tres linguas de hoje, e nao uma
+	// garantia da proxima.
+	larguraNum := 1
+	for _, l := range linhas {
+		if n := len(strconv.Itoa(l.alvos)); n > larguraNum {
+			larguraNum = n
+		}
+	}
+	rotulo := make([]string, len(linhas))
+	larguraAlvos := 0
+	for i, l := range linhas {
+		if l.alvos == 1 {
+			rotulo[i] = i18n.T("check.timing_targets_count_one")
+		} else {
+			rotulo[i] = i18n.T("check.timing_targets_count", larguraNum, l.alvos)
+		}
+		if len(rotulo[i]) > larguraAlvos {
+			larguraAlvos = len(rotulo[i])
+		}
+	}
+
 	fmt.Println()
 	fmt.Println(i18n.T("check.timing_header", arredonda(total)))
-	for _, l := range linhas {
+	for i, l := range linhas {
 		// `pior` so' aparece onde ha' o que comparar. Com um alvo unico ela repete o
 		// total na coluna ao lado, e duas colunas com o mesmo numero nao distinguem
 		// nada — so' fazem o olho procurar uma diferenca que nao existe.
 		if l.alvos == 1 {
-			fmt.Println(i18n.T("check.timing_item_single", largura, l.nome, arredonda(l.total)))
+			// Sem padding na coluna de alvos: nada vem DEPOIS dela nesta linha, e o
+			// preenchimento viraria espaco solto no fim.
+			fmt.Println(i18n.T("check.timing_item_single", largura, l.nome, arredonda(l.total), rotulo[i]))
 			continue
 		}
-		fmt.Println(i18n.T("check.timing_item", largura, l.nome, arredonda(l.total), l.alvos, arredonda(l.pior)))
+		fmt.Println(i18n.T("check.timing_item", largura, l.nome, arredonda(l.total), larguraAlvos, rotulo[i], arredonda(l.pior)))
 	}
 
 	// Os alvos individuais mais caros, atravessando todos os gates.

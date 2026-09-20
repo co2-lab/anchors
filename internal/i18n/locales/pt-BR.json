@@ -730,12 +730,14 @@
   "spec_guide.none": "nenhuma",
   "section.title.compliance_points": "Pontos de conformidade",
   "check.timing_header": "⏱ tempo por gate — %s no total (o mais lento primeiro):",
-  "check.timing_item": "    %-*s  %8s  %5d alvos  pior %8s",
+  "check.timing_item": "    %-*s  %8s  %-*s  pior %8s",
   "check.timing_targets": "⏱ alvos mais lentos (uma confrontação cada):",
   "check.timing_target_item": "    %8s  %s @ %s",
   "check.timing_note": "  Tempo de parede, desta execução, nesta máquina — varia com cache e carga. Use\n  para comparar os gates ENTRE SI, nunca como orçamento absoluto. `pior` é a\n  confrontação mais cara sozinha, e é o que separa um gate que custa por VOLUME\n  (barato por alvo, vezes centenas) de um que custa por ALVO. Fica de fora onde o\n  gate rodou uma vez só, porque ali ela apenas repetiria o total.",
   "gate.docs_covered.uncovered": "%d spec(s) não chegam a NENHUMA página de documentação: %s.\nOs templates em `doct/` filtram por camada, e nenhum filtro seleciona essas — elas compilam para lugar nenhum, e toda página que existe está correta, então nada mais acusa. Ou amplie o filtro de um template, ou crie a página da camada.",
   "gate.docs_covered.skip_not_spec": "não é spec — a cobertura se cobra da spec, que é quem alimenta a documentação",
   "gate.docs_covered.skip_no_doct_dir": "projeto sem `%s/` — não há templates, então não há cobertura a cobrar",
-  "check.timing_item_single": "    %-*s  %8s  1 alvo"
+  "check.timing_item_single": "    %-*s  %8s  %s",
+  "check.timing_targets_count": "%*d alvos",
+  "check.timing_targets_count_one": "1 alvo"
 }
