@@ -302,3 +302,54 @@ func TestDocsFresh_oCompiladoNaoEhArtefatoProprio(t *testing.T) {
 		t.Errorf("o compilado recebeu veredito (%s) — ele é saída de build", v)
 	}
 }
+
+// A resposta do `Stale()` e' a mesma para todas as specs, e custava uma recompilacao
+// completa POR ALVO: medido com `--timing`, 6m37s em 51 alvos, 97% do `check --all`.
+//
+// Este teste prova o cache pelo EFEITO OBSERVAVEL, e nao cronometrando: apaga o
+// diretorio dos templates entre as duas chamadas. Sem cache a segunda leria o disco e
+// daria Skip ("sem doct/"); com cache ela devolve a primeira resposta.
+func TestDocsFresh_naoRecompilaPorAlvo(t *testing.T) {
+	resetDocsCache()
+	root, g := projetoComDoc(t)
+	defasa(t, root, g)
+
+	if v, _ := checkDocsFresh("", noSpec(), root, g, nil); v != Fail {
+		t.Fatalf("primeira chamada: esperava Fail, veio %v", v)
+	}
+	// Apaga o TEMPLATE e mantem o diretorio: o guarda de `doct/` roda ANTES do cache
+	// (e' um `os.Stat` barato, por alvo), entao remover o diretorio inteiro cairia nele
+	// e mediria o guarda, nao o cache. Sem template, uma recompilacao devolveria "nada
+	// defasado" (Pass); o cache devolve o Fail da primeira.
+	if err := os.Remove(filepath.Join(root, doct.Dir, "infra.md.tmpl")); err != nil {
+		t.Fatal(err)
+	}
+	if v, _ := checkDocsFresh("", noSpec(), root, g, nil); v != Fail {
+		t.Errorf("segunda chamada recompilou em vez de usar o cache: veio %v", v)
+	}
+}
+
+// O cache NAO PODE vazar entre varreduras. A chave inclui a raiz e o grafo justamente
+// porque duas varreduras da mesma sessao (o `check` roda antes e depois do `--fix`)
+// enxergam estados diferentes — reusar a resposta responderia sobre o que ja mudou.
+func TestDocsFresh_cacheNaoVazaEntreProjetos(t *testing.T) {
+	resetDocsCache()
+	rootA, gA := projetoComDoc(t)
+	defasa(t, rootA, gA)
+	if v, _ := checkDocsFresh("", noSpec(), rootA, gA, nil); v != Fail {
+		t.Fatalf("projeto A: esperava Fail, veio %v", v)
+	}
+
+	// Projeto B, em dia: se o cache vazasse pela raiz, herdaria o Fail de A.
+	rootB, gB := projetoComDoc(t)
+	c, err := doct.New(rootB, gB)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.Build(false); err != nil {
+		t.Fatal(err)
+	}
+	if v, d := checkDocsFresh("", noSpec(), rootB, gB, nil); v != Pass {
+		t.Errorf("projeto B esta em dia: esperava Pass, veio %v (%s)", v, d)
+	}
+}
