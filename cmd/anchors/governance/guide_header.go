@@ -112,6 +112,10 @@ Cross-cutting labels that categorize the file, for queries and gate scope:
   which the spec points at with '@realizes'. If what you want is for a rule spanning
   several units to have one place and be verified, that is the axis: run
   'anchors guide product'. The tag groups; the doctrine decides.
+  What the tag is and is not is written down, with the reasons: see the vertical-grouping
+  doctrine ('VGRUP'). The mechanism grows toward FILTER and VIEW ('--feature'), never
+  toward a gate that demands the label — a label that becomes an obligation gets filled in
+  to silence the charge, and the grouping fills with files nobody classified.
 - '@<tag>' — any other free grouping tag (e.g. @experimental, @legacy).
 
 ### Opt-outs (only @flag — presence = on)

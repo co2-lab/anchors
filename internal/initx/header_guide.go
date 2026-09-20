@@ -85,6 +85,8 @@ func RenderHeaderGuide(preset Preset, moduleNames []string) string {
 	b.WriteString(" Nothing reads it: no gate, no edge.\n")
 	b.WriteString("  The vertical axis that IS confronted is product doctrine — `product/<name>.doctrine.md`,\n")
 	b.WriteString("  which the spec points at with `@realizes` (see `anchors guide product`).\n")
+	b.WriteString("  The tag groups; the doctrine decides. The mechanism grows toward FILTER and VIEW,\n")
+	b.WriteString("  never toward a gate that demands the label.\n")
 	b.WriteString("- `@noPropagation`, `@anchors-shared-code` — honest opt-outs (always with the why alongside).\n\n")
 
 	b.WriteString("## Rules\n\n")

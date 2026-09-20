@@ -37,7 +37,9 @@ In the SPEC (the OWNER of the identity):
 - `@feature: <name>` — a free GROUPING label for the vertical module. Nothing reads it:
   no gate, no edge. The vertical axis that IS confronted is product doctrine —
   `product/<name>.doctrine.md`, which the spec points at with `@realizes` (see
-  `anchors guide product`).
+  `anchors guide product`). The tag groups; the doctrine decides — the reasons are written
+  in `product/vertical-grouping.doctrine.md` (`VGRUP`), including why the mechanism grows
+  toward filter and view and never toward a gate that demands the label.
 - `@noPropagation`, `@anchors-shared-code` — honest opt-outs (always with the why
   alongside).
 

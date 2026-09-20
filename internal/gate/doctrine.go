@@ -134,6 +134,16 @@ func checkDoctrineRealized(content string, n mapx.Node, root string, g *mapx.Gra
 	for _, line := range strings.Split(content, "\n") {
 		isDeferred := tbdLineRE.MatchString(line)
 		for _, m := range doctrineRuleRE.FindAllStringSubmatch(line, -1) {
+			// An OPEN QUESTION (`-Q`) is not a realizable rule: it names a decision
+			// nobody has taken yet. Demanding a realizer would ask a spec to concretise
+			// the very thing still undecided — and the only way to comply would be to
+			// answer the question inside a spec, which is where it must NOT be answered.
+			//
+			// `open-questions-resolved` is the gate that charges a `-Q`, and it charges
+			// the right thing: that someone DECIDES, not that someone implements.
+			if isOpenQuestion(m[1]) {
+				continue
+			}
 			rules[m[1]] = true
 			if isDeferred {
 				deferred[m[1]] = true
@@ -246,6 +256,16 @@ func checkSpecDoctrineExists(content string, n mapx.Node, root string, g *mapx.G
 // this gate reads the CONTENT it is handed rather than the already-scanned node, because
 // it needs to know which LINE the tag sits on in order to pair it with the waiver.
 var realizesTagRE = regexp.MustCompile("@realizes\\s+`?([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`?")
+
+// isOpenQuestion says whether a code names an open question (`-Q`) rather than a rule.
+//
+// The letter is the nature, and `Q` is the one that asserts nothing: it records what has
+// not been decided, so whoever implements does not guess. Every gate on this axis has to
+// skip it — a question has no behaviour to confront.
+func isOpenQuestion(code string) bool {
+	_, rest, ok := strings.Cut(code, "-")
+	return ok && strings.HasPrefix(rest, "Q")
+}
 
 // minCorpusForIDF is the floor below which the similarity ruler measures nothing.
 //

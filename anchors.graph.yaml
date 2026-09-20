@@ -529,8 +529,8 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide_header.go
       kind: code
-      rev: 14bcba2833a5
-      updated_at: "2026-09-19"
+      rev: 861dc34cff58
+      updated_at: "2026-09-20"
       layer: comando
       tags:
         - cli
@@ -547,7 +547,7 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide_product.go
       kind: code
-      rev: a8cd434e4158
+      rev: a516bd93cbc8
       updated_at: "2026-09-20"
       code: LIMIT
       layer: comando
@@ -1171,7 +1171,7 @@ nodes:
         - guide
     - id: guides/HEADER_GUIDE.md
       kind: guide
-      rev: 88c715d5a3a7
+      rev: 7853aed8f54c
       updated_at: "2026-09-20"
       layer: guide-distribuido
       tags:
@@ -1816,7 +1816,7 @@ nodes:
         - test
     - id: internal/gate/doctrine.go
       kind: code
-      rev: 0e217ee632ec
+      rev: 0db866ce8699
       updated_at: "2026-09-20"
       layer: gate
       tags:
@@ -1824,7 +1824,7 @@ nodes:
         - gate
     - id: internal/gate/doctrine_test.go
       kind: test
-      rev: e674d91e0762
+      rev: 723dd68cc0f8
       updated_at: "2026-09-20"
       code: LIMIT
       layer: teste
@@ -3709,8 +3709,8 @@ nodes:
         - test
     - id: internal/initx/header_guide.go
       kind: code
-      rev: b78e2ee0fc9d
-      updated_at: "2026-09-19"
+      rev: c6f7abed81da
+      updated_at: "2026-09-20"
       layer: infra
       tags:
         - infra
@@ -4371,6 +4371,15 @@ nodes:
       rev: df9daf492d2b
       updated_at: "2026-09-20"
       code: SAIDA
+      layer: produto
+      code_declared: true
+      tags:
+        - product
+        - doutrina
+    - id: product/vertical-grouping.doctrine.md
+      kind: product
+      rev: b22709cf848c
+      code: VGRUP
       layer: produto
       code_declared: true
       tags:

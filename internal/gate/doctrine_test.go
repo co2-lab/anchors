@@ -138,3 +138,27 @@ func TestSpecRealizesDoctrine_declaredPassesAndTbdDefers(t *testing.T) {
 		t.Errorf("`@TBD` must be debt, not failure: %v (%s)", v, msg)
 	}
 }
+
+// An OPEN QUESTION (`-Q`) is not a realizable rule, and demanding a realizer for one
+// would ask a spec to concretise the very thing still undecided.
+//
+// Found against the real doctrine: `VGRUP-Q01` records a decision about how the grouping
+// filter should work, and the gate accused it of having no realizer. The only way to
+// comply would be to answer the question inside a spec — which is where it must NOT be
+// answered. `open-questions-resolved` is the gate that charges a `-Q`, and it charges the
+// right thing: that someone DECIDES.
+func TestDoctrineRealized_openQuestionIsNotARule(t *testing.T) {
+	doctrine := "### LIMIT-R03 — a rule    @TBD: not realized yet\n\n" +
+		"| `LIMIT-Q01` | what should happen when the limit changes mid-flow? | product | a rule |\n"
+	root := t.TempDir()
+	n := mapx.Node{ID: "product/l.doctrine.md", Kind: mapx.KindProduct, Code: "LIMIT"}
+	g := &mapx.Graph{Nodes: []mapx.Node{n}}
+
+	v, msg := checkDoctrineRealized(doctrine, n, root, g, nil)
+	if strings.Contains(msg, "LIMIT-Q01") {
+		t.Errorf("an open question must not be charged for a realizer: %s", msg)
+	}
+	if v == Fail {
+		t.Errorf("only the deferred rule remains, so this is debt and not failure: %v (%s)", v, msg)
+	}
+}

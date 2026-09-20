@@ -95,6 +95,17 @@ On this axis almost every case is the first: the cross-cutting rule is DECIDED b
 is implemented, and that is how product works. A bare marker waives nothing — the reason
 is mandatory.
 
+## What doctrine is NOT: the grouping tag
+
+` + "`@feature: checkout`" + ` in a file header is a GROUPING label — it says what slice
+the file belongs to, alongside ` + "`@experimental`" + ` and ` + "`@legacy`" + `. Nothing
+reads it: no gate, no edge.
+
+The two answer different questions. The tag groups the FILES of a slice; doctrine decides
+the RULES that cut across units. A slice may have doctrine, doctrine may span slices, and
+neither implies the other. The reasons are written down in the vertical-grouping doctrine
+(` + "`VGRUP`" + `).
+
 ## The plan seeds doctrine too
 
 A plan does not promise only the specs of the units; it promises the PRODUCT RULES they
