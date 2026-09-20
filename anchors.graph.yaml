@@ -964,7 +964,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/check.go
       kind: code
-      rev: bde248a1377e
+      rev: 08a37c342170
       updated_at: "2026-09-20"
       layer: comando
       tags:
@@ -1435,8 +1435,8 @@ nodes:
         - test
     - id: internal/doct/doct_test.go
       kind: test
-      rev: 003635f5b8b2
-      updated_at: "2026-09-19"
+      rev: 3bc6aa9626bc
+      updated_at: "2026-09-20"
       code: GLCGL
       layer: teste
       code_declared: true
@@ -1739,6 +1739,7 @@ nodes:
     - id: internal/gate/docs_covered.go
       kind: code
       rev: e465b4dcc5a8
+      updated_at: "2026-09-20"
       layer: gate
       tags:
         - regra
@@ -1746,6 +1747,7 @@ nodes:
     - id: internal/gate/docs_covered_test.go
       kind: test
       rev: 462ad8b8ea3e
+      updated_at: "2026-09-20"
       layer: teste
       tags:
         - test
@@ -2015,7 +2017,7 @@ nodes:
     - id: internal/gate/internal_checks.go
       kind: code
       rev: cdf6b2b01907
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-20"
       code: INCHN
       layer: gate
       tags:
@@ -3619,7 +3621,7 @@ nodes:
     - id: internal/initx/default_gates.go
       kind: code
       rev: "980424903720"
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-20"
       layer: infra
       tags:
         - infra
