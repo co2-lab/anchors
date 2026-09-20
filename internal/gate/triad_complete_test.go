@@ -430,3 +430,33 @@ func TestTrincaCompleta_naoJulgaAQualidadeDasPecas(t *testing.T) {
 		t.Errorf("o gate julgou a qualidade das peças, e a régua é a existência: %v (%s)", v, msg)
 	}
 }
+
+// `@TBD` e `@no-*` dizem coisas DIFERENTES, e a diferenca decide o veredito.
+//
+// `@no-<peca>: <razao>` afirma "esta unidade NAO VAI TER aquela peca" — dispensa
+// permanente, e o gate passa. `@TBD: code,test` afirma "ainda nao escrevi" — divida, e o
+// gate fica Pendente, visivel ate' alguem pagar.
+//
+// Ate' a separacao as duas caiam no mesmo balde e viravam Pass: uma spec com
+// `@TBD: code,feature,test` saia VERDE, indistinguivel de uma trinca completa — apagando
+// do radar justamente o trabalho que falta.
+func TestTriadComplete_tbdEhDividaENaoDispensa(t *testing.T) {
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: mapx.KindSpec}}}
+	n := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
+
+	tbd := "<!-- @anchors\n  @TBD: code,feature,test — o handler vem na fase 2\n-->\n# X\n"
+	v, msg := checkTriadComplete(tbd, n, t.TempDir(), g, nil)
+	if v != Pending {
+		t.Errorf("@TBD devia ser Pending (divida), veio %v (%s)", v, msg)
+	}
+
+	naoVaiTer := "<!-- @anchors\n  @no-code: e configuracao pura\n  @no-feature: sem comportamento observavel\n" +
+		"  @no-test: provado por `OUTRO-B01`\n-->\n# X\n"
+	if v, msg := checkTriadComplete(naoVaiTer, n, t.TempDir(), g, nil); v != Pass {
+		t.Errorf("@no-* devia ser Pass (dispensa), veio %v (%s)", v, msg)
+	}
+
+	if v, _ := checkTriadComplete("# X\n", n, t.TempDir(), g, nil); v != Fail {
+		t.Errorf("sem declaracao nenhuma devia ser Fail, veio %v", v)
+	}
+}

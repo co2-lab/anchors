@@ -84,6 +84,18 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 	for peca := range dispensas {
 		optional[peca] = true
 	}
+	// A DIVIDA (`@TBD`) e' contada A PARTE das dispensas, e a distincao decide o
+	// veredito: `@no-<peca>: <razao>` afirma "esta unidade NAO VAI TER aquela peca", e o
+	// gate cala para sempre; `@TBD: code,test` afirma "ainda nao escrevi", que e' outra
+	// coisa — e' trabalho pendente, nao decisao tomada.
+	//
+	// Ate' aqui as duas caiam no mesmo balde e viravam Pass. O efeito era apagar do radar
+	// justamente o que falta fazer: uma spec com `@TBD: code,feature,test` saia verde,
+	// indistinguivel de uma trinca completa.
+	//
+	// Agora a peca adiada nao reprova (ela foi declarada, com razao escrita) mas tambem
+	// nao passa: vira Pending, que continua aparecendo ate' alguem pagar.
+	adiadas := piecesToDevelop(content)
 
 	// A dispensa CONTRADIZ a feature? `@no-test` diz "esta unidade não precisa de
 	// teste"; um cenário na feature diz "este comportamento se verifica assim". As
@@ -117,17 +129,26 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 	}
 
 	var missing []string
+	var devendo []string
 	for _, r := range required {
 		if have[r.edge] || optional[string(r.edge)] {
 			continue
 		}
+		if adiadas[string(r.edge)] {
+			devendo = append(devendo, r.peca)
+			continue
+		}
 		missing = append(missing, r.peca+" ("+r.ondeE+")")
 	}
-	if len(missing) == 0 {
-		return Pass, ""
+	if len(missing) > 0 {
+		sort.Strings(missing)
+		return Fail, i18n.T("gate.triad.incomplete", strings.Join(missing, "; "))
 	}
-	sort.Strings(missing)
-	return Fail, i18n.T("gate.triad.incomplete", strings.Join(missing, "; "))
+	if len(devendo) > 0 {
+		sort.Strings(devendo)
+		return Pending, i18n.T("gate.triad.to_be_developed", len(devendo), strings.Join(devendo, ", "))
+	}
+	return Pass, ""
 }
 
 // optionalPieces lê da camada do nó quais peças da trinca o projeto dispensa
@@ -356,9 +377,6 @@ func specWaivers(content string) map[string]bool {
 		out[string(mapx.EdgeSpecifies)] = true
 		out[string(mapx.EdgeCoveredBy)] = true
 		out[string(mapx.EdgeTestedBy)] = true
-	}
-	for peca := range piecesToDevelop(content) {
-		out[peca] = true
 	}
 	return out
 }
