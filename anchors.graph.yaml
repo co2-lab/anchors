@@ -679,8 +679,8 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/map.go
       kind: code
-      rev: 24a3ef07a3f2
-      updated_at: "2026-09-19"
+      rev: d3173a20c4a3
+      updated_at: "2026-09-20"
       layer: comando
       tags:
         - cli
@@ -1797,7 +1797,7 @@ nodes:
         - test
     - id: internal/gate/doctrine.go
       kind: code
-      rev: 5674cc99e967
+      rev: a6f165d85e3f
       layer: gate
       tags:
         - regra
@@ -2508,7 +2508,7 @@ nodes:
         - feature
     - id: internal/gate/plan_seeds_valid.go
       kind: code
-      rev: 4e750fb2eddf
+      rev: 288ada51dee6
       updated_at: "2026-09-20"
       code: PSVPL
       layer: gate
@@ -2526,7 +2526,7 @@ nodes:
         - spec
     - id: internal/gate/plan_seeds_valid_test.go
       kind: test
-      rev: a551e71e1937
+      rev: 2aeb17450445
       updated_at: "2026-09-20"
       code: PSVPL
       layer: teste
@@ -3289,7 +3289,7 @@ nodes:
         - feature
     - id: internal/gate/triad_complete.go
       kind: code
-      rev: db194773c4cc
+      rev: 9117be2ddf85
       updated_at: "2026-09-20"
       code: TRCMT
       layer: gate
@@ -3299,7 +3299,7 @@ nodes:
     - id: internal/gate/triad_complete.spec.md
       kind: spec
       rev: 80986ee2db2b
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-20"
       code: TRCMT
       layer: spec
       code_declared: true
@@ -3307,7 +3307,7 @@ nodes:
         - spec
     - id: internal/gate/triad_complete_test.go
       kind: test
-      rev: 1a2be49ae6ab
+      rev: b98c294ca0a9
       updated_at: "2026-09-20"
       code: TRCMT
       layer: teste
@@ -3855,7 +3855,7 @@ nodes:
         - test
     - id: internal/mapx/build.go
       kind: code
-      rev: 676aad77011c
+      rev: a4c9509fedc6
       updated_at: "2026-09-20"
       layer: mapa
       tags:
@@ -4179,7 +4179,7 @@ nodes:
         - test
     - id: internal/scan/scan.go
       kind: code
-      rev: 35fe358d9af1
+      rev: 363678c671ae
       updated_at: "2026-09-20"
       layer: scan
       tags:
@@ -4189,7 +4189,7 @@ nodes:
       shared_code: true
     - id: internal/scan/scan_test.go
       kind: test
-      rev: 5484d8aa4c0c
+      rev: dbbcd713e264
       updated_at: "2026-09-20"
       code: BAZZX
       layer: teste
@@ -4338,9 +4338,9 @@ nodes:
       layer: teste
       tags:
         - test
-    - id: product/saidas-declaradas.doctrine.md
+    - id: product/declared-ways-out.doctrine.md
       kind: product
-      rev: 6949197d46aa
+      rev: 5544afc2404b
       code: SAIDA
       layer: produto
       code_declared: true
@@ -8780,19 +8780,19 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: internal/gate/triad_complete.spec.md
-      to: product/saidas-declaradas.doctrine.md
+      to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
       method: SAIDA-R03
       dep: TRCMT-B08
     - from: internal/gate/triad_complete.spec.md
-      to: product/saidas-declaradas.doctrine.md
+      to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
       method: SAIDA-R02
       dep: TRCMT-B08
     - from: internal/gate/triad_complete.spec.md
-      to: product/saidas-declaradas.doctrine.md
+      to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
       method: SAIDA-R01

@@ -242,29 +242,30 @@ func printEdgeSummary(g *mapx.Graph) {
 		return
 	}
 	fmt.Println(i18n.T("map.edges_by_type"))
-	// A ORDEM e' a da trinca (o caminho que o leitor percorre), e o resto vem depois em
-	// ordem alfabetica.
+	// The ORDER is the triad's (the path the reader walks), and everything else follows
+	// alphabetically.
 	//
-	// Antes era uma lista FIXA de cinco tipos, e o que nao estivesse nela ficava
-	// invisivel: `depends-on`, `seeds`, `needs` e `realizes` existiam no mapa e nao
-	// apareciam no sumario. O sintoma enganava — construi as arestas `realizes`, o
-	// sumario nao as listou, e a primeira conclusao foi que o build nao as criara.
-	conhecidos := []mapx.EdgeType{mapx.EdgeGoverns, mapx.EdgeSpecifies, mapx.EdgeCoveredBy, mapx.EdgeTestedBy, mapx.EdgeReferences}
-	vistos := map[mapx.EdgeType]bool{}
-	for _, t := range conhecidos {
-		vistos[t] = true
+	// It used to be a FIXED list of five types, and whatever was not on it stayed
+	// invisible: `depends-on`, `seeds`, `needs` and `realizes` existed in the map and
+	// never showed up in the summary. The symptom misled — the `realizes` edges were
+	// built, the summary did not list them, and the first conclusion was that the build
+	// had not created them.
+	known := []mapx.EdgeType{mapx.EdgeGoverns, mapx.EdgeSpecifies, mapx.EdgeCoveredBy, mapx.EdgeTestedBy, mapx.EdgeReferences}
+	seen := map[mapx.EdgeType]bool{}
+	for _, t := range known {
+		seen[t] = true
 		if n := byType[t]; n > 0 {
 			fmt.Printf("    %-11s %d\n", t, n)
 		}
 	}
-	var resto []string
+	var rest []string
 	for t := range byType {
-		if !vistos[t] {
-			resto = append(resto, string(t))
+		if !seen[t] {
+			rest = append(rest, string(t))
 		}
 	}
-	sort.Strings(resto)
-	for _, t := range resto {
+	sort.Strings(rest)
+	for _, t := range rest {
 		fmt.Printf("    %-11s %d\n", t, byType[mapx.EdgeType(t)])
 	}
 }

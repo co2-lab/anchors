@@ -431,16 +431,16 @@ func TestTrincaCompleta_naoJulgaAQualidadeDasPecas(t *testing.T) {
 	}
 }
 
-// `@TBD` e `@no-*` dizem coisas DIFERENTES, e a diferenca decide o veredito.
+// `@TBD` and `@no-*` say DIFFERENT things, and the difference decides the verdict.
 //
-// `@no-<peca>: <razao>` afirma "esta unidade NAO VAI TER aquela peca" — dispensa
-// permanente, e o gate passa. `@TBD: code,test` afirma "ainda nao escrevi" — divida, e o
-// gate fica Pendente, visivel ate' alguem pagar.
+// `@no-<piece>: <reason>` asserts "this unit WILL NEVER HAVE that piece" — a permanent
+// waiver, and the gate passes. `@TBD: code,test` asserts "I have not written it yet" —
+// debt, and the gate stays Pending, visible until someone pays it.
 //
-// Ate' a separacao as duas caiam no mesmo balde e viravam Pass: uma spec com
-// `@TBD: code,feature,test` saia VERDE, indistinguivel de uma trinca completa — apagando
-// do radar justamente o trabalho que falta.
-func TestTriadComplete_tbdEhDividaENaoDispensa(t *testing.T) {
+// Until they were separated both shared a bucket and became Pass: a spec with
+// `@TBD: code,feature,test` came out GREEN, indistinguishable from a complete triad —
+// erasing from the radar exactly the work that remains.
+func TestTriadComplete_tbdIsDebtNotWaiver(t *testing.T) {
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: mapx.KindSpec}}}
 	n := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
 

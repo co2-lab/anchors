@@ -927,10 +927,10 @@ func extractRealizes(kind, content string) []Realizes {
 	}
 	var out []Realizes
 	visto := map[string]bool{}
-	atual := ""
+	current := ""
 	for _, linha := range strings.Split(content, "\n") {
 		if m := localRuleRE.FindStringSubmatch(linha); m != nil {
-			atual = m[1]
+			current = m[1]
 		} else if strings.TrimSpace(linha) == "" {
 			// A LINHA EM BRANCO fecha o escopo da regra. Sem isso, um `@realizes` escrito
 			// em prosa paragrafos abaixo era atribuido a ultima regra vista — uma aresta
@@ -939,17 +939,17 @@ func extractRealizes(kind, content string) []Realizes {
 			//
 			// Achado por sonda: `@realizes ORFA-R01` num paragrafo solto saia como
 			// `from=CRED-B03`, a regra tres linhas acima.
-			atual = ""
+			current = ""
 		}
 		for _, r := range realizesRE.FindAllStringSubmatch(linha, -1) {
 			// A MESMA regra local pode realizar varias regras de produto, e regras
 			// diferentes podem realizar a mesma — so' o PAR se repete sem dizer nada.
-			chave := atual + "\x00" + r[1]
-			if visto[chave] {
+			key := current + "\x00" + r[1]
+			if visto[key] {
 				continue
 			}
-			visto[chave] = true
-			out = append(out, Realizes{From: atual, To: r[1]})
+			visto[key] = true
+			out = append(out, Realizes{From: current, To: r[1]})
 		}
 	}
 	return out

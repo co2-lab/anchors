@@ -80,22 +80,23 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 	// Aqui a decisão é da UNIDADE e fica escrita nela, com razão obrigatória: quem lê
 	// a spec vê por que aquele arquivo não tem teste, em vez de descobrir num
 	// `trinca_opcional` distante que removeu a exigência da camada inteira.
-	dispensas := specWaivers(content)
-	for peca := range dispensas {
+	waived := specWaivers(content)
+	for peca := range waived {
 		optional[peca] = true
 	}
-	// A DIVIDA (`@TBD`) e' contada A PARTE das dispensas, e a distincao decide o
-	// veredito: `@no-<peca>: <razao>` afirma "esta unidade NAO VAI TER aquela peca", e o
-	// gate cala para sempre; `@TBD: code,test` afirma "ainda nao escrevi", que e' outra
-	// coisa — e' trabalho pendente, nao decisao tomada.
+	// DEBT (`@TBD`) is counted APART from the waivers, and the distinction decides the
+	// verdict: `@no-<piece>: <reason>` asserts "this unit WILL NEVER HAVE that piece",
+	// and the gate goes quiet for good; `@TBD: code,test` asserts "I have not written it
+	// yet", which is another thing entirely — pending work, not a decision taken.
 	//
-	// Ate' aqui as duas caiam no mesmo balde e viravam Pass. O efeito era apagar do radar
-	// justamente o que falta fazer: uma spec com `@TBD: code,feature,test` saia verde,
-	// indistinguivel de uma trinca completa.
+	// Until now the two shared a bucket and both became Pass. The effect was to erase
+	// from the radar exactly what remains to be done: a spec with `@TBD: code,feature,test`
+	// came out green, indistinguishable from a complete triad.
 	//
-	// Agora a peca adiada nao reprova (ela foi declarada, com razao escrita) mas tambem
-	// nao passa: vira Pending, que continua aparecendo ate' alguem pagar.
-	adiadas := piecesToDevelop(content)
+	// Now the deferred piece does not fail (it was declared, with a written reason) but
+	// does not pass either: it becomes Pending, which keeps showing up until someone
+	// pays it.
+	toDevelop := piecesToDevelop(content)
 
 	// A dispensa CONTRADIZ a feature? `@no-test` diz "esta unidade não precisa de
 	// teste"; um cenário na feature diz "este comportamento se verifica assim". As
@@ -122,20 +123,20 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 		}
 	}
 
-	if dispensas[string(mapx.EdgeTestedBy)] {
+	if waived[string(mapx.EdgeTestedBy)] {
 		if qtd, feat := linkedFeatureScenarios(n, root, g); qtd > 0 {
 			return Fail, i18n.T("gate.triad.no_test_conflict", feat, qtd)
 		}
 	}
 
 	var missing []string
-	var devendo []string
+	var owed []string
 	for _, r := range required {
 		if have[r.edge] || optional[string(r.edge)] {
 			continue
 		}
-		if adiadas[string(r.edge)] {
-			devendo = append(devendo, r.peca)
+		if toDevelop[string(r.edge)] {
+			owed = append(owed, r.peca)
 			continue
 		}
 		missing = append(missing, r.peca+" ("+r.ondeE+")")
@@ -144,9 +145,9 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 		sort.Strings(missing)
 		return Fail, i18n.T("gate.triad.incomplete", strings.Join(missing, "; "))
 	}
-	if len(devendo) > 0 {
-		sort.Strings(devendo)
-		return Pending, i18n.T("gate.triad.to_be_developed", len(devendo), strings.Join(devendo, ", "))
+	if len(owed) > 0 {
+		sort.Strings(owed)
+		return Pending, i18n.T("gate.triad.to_be_developed", len(owed), strings.Join(owed, ", "))
 	}
 	return Pass, ""
 }

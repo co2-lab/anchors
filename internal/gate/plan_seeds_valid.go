@@ -62,13 +62,14 @@ func checkPlanSeedsValid(content string, n mapx.Node, root string, g *mapx.Graph
 		}
 		seeds[s] = true
 	}
-	// A DOUTRINA semeada: a unica regra que vale para ela e' morar em `product/`.
+	// SEEDED DOCTRINE: the only rule that holds for it is living under `product/`.
 	//
-	// Nao se cobra camada de alvo (ela nao tem alvo), nem existencia (a doutrina vai
-	// NASCER — e' o que semear significa). Cobra-se o lugar, porque o kind `product` vem
-	// do caminho: uma doutrina semeada fora de `product/` nasce como `doc`, e a spec que
-	// a realizar aponta para um arquivo que o mapa nao reconhece como doutrina.
-	var foraDeProduct []string
+	// No target layer is demanded (it has no target), nor existence (the doctrine is
+	// about to BE BORN — that is what seeding means). The PLACE is demanded, because the
+	// `product` kind comes from the path: a doctrine seeded outside `product/` is born as
+	// a plain doc, and the spec realizing it points at a file the map does not recognise
+	// as doctrine.
+	var outsideProduct []string
 	for _, m := range doctrineSeedRE.FindAllStringSubmatch(content, -1) {
 		d := m[1]
 		if strings.HasPrefix(filepathBase(d), "_TEMPLATE") {
@@ -78,15 +79,15 @@ func checkPlanSeedsValid(content string, n mapx.Node, root string, g *mapx.Graph
 			continue // citacao em prosa, nao semeadura — mesma regra das specs
 		}
 		if !strings.HasPrefix(d, "product/") {
-			foraDeProduct = append(foraDeProduct, d)
+			outsideProduct = append(outsideProduct, d)
 		}
 	}
 
-	// O guarda de "nenhuma spec semeada" vem DEPOIS da doutrina, e a ordem e' a decisao:
-	// um plano que semeia apenas doutrinas de produto (sem nenhuma spec) e' legitimo, e
-	// com o guarda antes ele saia como Skip — sem veredito, com a doutrina fora de
-	// `product/` passando em silencio. Achado por sonda.
-	if len(seeds) == 0 && len(foraDeProduct) == 0 {
+	// The "no spec seeded" guard comes AFTER the doctrine check, and the order is the
+	// decision: a plan seeding only product doctrine (no spec at all) is legitimate, and
+	// with the guard first it came out as Skip — no verdict, with a doctrine outside
+	// `product/` passing in silence. Found by probe.
+	if len(seeds) == 0 && len(outsideProduct) == 0 {
 		return Skip, i18n.T("gate.plan_seeds_valid.skip_no_seeds")
 	}
 
@@ -121,9 +122,9 @@ func checkPlanSeedsValid(content string, n mapx.Node, root string, g *mapx.Graph
 	}
 
 	var parts []string
-	if len(foraDeProduct) > 0 {
-		sort.Strings(foraDeProduct)
-		parts = append(parts, i18n.T("gate.plan_seeds_valid.part_doctrine_outside", strings.Join(foraDeProduct, ", ")))
+	if len(outsideProduct) > 0 {
+		sort.Strings(outsideProduct)
+		parts = append(parts, i18n.T("gate.plan_seeds_valid.part_doctrine_outside", strings.Join(outsideProduct, ", ")))
 	}
 	if len(declarativa) > 0 {
 		sort.Strings(declarativa)

@@ -310,10 +310,10 @@ func TestSeedIgnoraNomeSemDiretorio(t *testing.T) {
 	}
 }
 
-// A tag `@realizes` vale nas TRES formas de regra catalogada — cabecalho, linha de
-// tabela e bullet-negrito. Uma coluna de tabela so' existiria na do meio, e referenciar
-// doutrina obrigaria a spec a trocar de formato.
-func TestExtractRealizes_asTresFormasDeRegra(t *testing.T) {
+// The `@realizes` tag holds in ALL THREE forms of a catalogued rule — heading, table row
+// and bold bullet. A table column would exist only in the middle one, and referencing
+// doctrine would force the spec to change format.
+func TestExtractRealizes_theThreeRuleForms(t *testing.T) {
 	c := "### CRED-V01 — limite respeitado    @realizes LIMIT-R03\n" +
 		"| `CRED-V02` | outra coisa | @realizes `LIMIT-R04` |\n" +
 		"- **CRED-B03** terceira forma\n" +
@@ -334,10 +334,10 @@ func TestExtractRealizes_asTresFormasDeRegra(t *testing.T) {
 	}
 }
 
-// A LINHA EM BRANCO fecha o escopo da regra. Sem isso, um `@realizes` escrito em prosa
-// era atribuido a ultima regra vista — uma aresta FALSA apontando para a regra errada, o
-// que e' pior que nao capturar: o gate confirmaria uma realizacao que ninguem declarou.
-func TestExtractRealizes_tagOrfaNaoRoubaARegraAnterior(t *testing.T) {
+// A BLANK LINE closes the rule's scope. Without it, an `@realizes` written in prose was
+// attributed to the last rule seen — a FALSE edge pointing at the wrong rule, which is
+// worse than capturing nothing: the gate would confirm a realization nobody declared.
+func TestExtractRealizes_orphanTagDoesNotStealPreviousRule(t *testing.T) {
 	c := "### CRED-B03 — uma regra\n\ntexto solto com @realizes ORFA-R01\n"
 	got := extractRealizes("spec", c)
 	if len(got) != 1 {
@@ -348,9 +348,9 @@ func TestExtractRealizes_tagOrfaNaoRoubaARegraAnterior(t *testing.T) {
 	}
 }
 
-// So' a SPEC declara realizacao: o codigo, o teste e a feature nao catalogam regra, e
-// ler a tag neles criaria aresta a partir de quem nao e' dono de regra nenhuma.
-func TestExtractRealizes_soSpec(t *testing.T) {
+// Only the SPEC declares realization: code, test and feature catalogue no rules, and
+// reading the tag in them would create an edge from something that owns no rule.
+func TestExtractRealizes_specOnly(t *testing.T) {
 	c := "### CRED-V01 — x    @realizes LIMIT-R03\n"
 	for _, kind := range []string{"code", "test", "feature", "plan", "product"} {
 		if got := extractRealizes(kind, c); got != nil {
@@ -359,10 +359,9 @@ func TestExtractRealizes_soSpec(t *testing.T) {
 	}
 }
 
-// O MESMO par repetido nao diz nada de novo; uma regra realizando VARIAS, e varias
-// realizando a mesma, sao os dois casos legitimos que o 1-para-muitos existe para
-// permitir.
-func TestExtractRealizes_deduplicaOParENaoOCodigo(t *testing.T) {
+// The SAME pair repeated says nothing new; one rule realizing SEVERAL, and several
+// realizing the same one, are the two legitimate cases that 1-to-many exists to allow.
+func TestExtractRealizes_dedupesThePairNotTheCode(t *testing.T) {
 	c := "### CRED-V01 — x    @realizes LIMIT-R03\n" +
 		"\n### CRED-V01 — x de novo    @realizes LIMIT-R03\n" +
 		"\n### CRED-V02 — y    @realizes LIMIT-R03\n" +

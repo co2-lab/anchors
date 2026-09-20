@@ -40,12 +40,13 @@ layers:
     kind: doc
     tags: [doc]
 
-  # A DOUTRINA DE PRODUTO — a regra que atravessa alvos.
+  # PRODUCT DOCTRINE — the rule that cuts across targets.
   #
-  # Toda spec tem um ALVO, e a co-locacao amarra a triade ao mesmo diretorio. Uma regra
-  # que vale para varias unidades nao pertence a nenhuma delas: ou era duplicada (e
-  # divergia na primeira mudanca), ou morava numa spec arbitraria que as outras
-  # referenciavam implicitamente. Aqui ela tem lugar, e a spec aponta com `@realizes`.
+  # Every spec has a TARGET, and co-location ties the triad to one directory. A rule that
+  # holds for several units belongs to none of them: it was either duplicated (and
+  # diverged at the first change) or lived in an arbitrary spec that the others
+  # referenced implicitly. Here it has a place, and the spec points at it with
+  # `@realizes`.
   produto:
     pattern: "product/*.doctrine.md"
     kind: product

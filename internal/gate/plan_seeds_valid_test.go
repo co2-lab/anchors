@@ -164,13 +164,13 @@ func TestPlanSeeds_B11_MultiplosDefeitosAgregados(t *testing.T) {
 	}
 }
 
-// A DOUTRINA DE PRODUTO semeada por um plano tem UMA regra: morar em `product/`.
+// PRODUCT DOCTRINE seeded by a plan has ONE rule: live under `product/`.
 //
-// Nao se cobra dela camada de alvo (doutrina nao tem alvo — ela E' o artefato) nem
-// existencia (semear significa que vai nascer). Cobra-se o lugar, porque o kind
-// `product` vem do CAMINHO: nascida fora, ela e' lida como doc comum, e a spec que a
-// realizar aponta para um arquivo que o mapa nao reconhece como doutrina.
-func TestPlanSeedsValid_doutrinaForaDeProductReprova(t *testing.T) {
+// No target layer is demanded of it (doctrine has no target — it IS the artifact) nor
+// existence (seeding means it is about to be born). The PLACE is demanded, because the
+// `product` kind comes from the PATH: born elsewhere, it reads as a plain doc, and the
+// spec realizing it points at a file the map does not recognise as doctrine.
+func TestPlanSeedsValid_doctrineOutsideProductFails(t *testing.T) {
 	root := t.TempDir()
 	os.MkdirAll(filepath.Join(root, "src"), 0o755)
 	n := mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}
@@ -183,7 +183,7 @@ func TestPlanSeedsValid_doutrinaForaDeProductReprova(t *testing.T) {
 	}
 }
 
-func TestPlanSeedsValid_doutrinaEmProductPassa(t *testing.T) {
+func TestPlanSeedsValid_doctrineInProductPasses(t *testing.T) {
 	root := t.TempDir()
 	os.MkdirAll(filepath.Join(root, "product"), 0o755)
 	n := mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}
@@ -192,10 +192,10 @@ func TestPlanSeedsValid_doutrinaEmProductPassa(t *testing.T) {
 	}
 }
 
-// Um plano que semeia APENAS doutrinas (nenhuma spec) e' legitimo, e o guarda de
-// "nenhuma spec semeada" nao pode engoli-lo: com ele antes da checagem de doutrina, o
-// plano saia Skip — sem veredito, com a doutrina fora de `product/` passando em silencio.
-func TestPlanSeedsValid_planoSoDeDoutrinaNaoEscapaPeloGuarda(t *testing.T) {
+// A plan seeding ONLY doctrine (no spec at all) is legitimate, and the "no spec seeded"
+// guard must not swallow it: with the guard before the doctrine check, the plan came out
+// Skip — no verdict, with a doctrine outside `product/` passing in silence.
+func TestPlanSeedsValid_doctrineOnlyPlanIsNotSwallowedByGuard(t *testing.T) {
 	root := t.TempDir()
 	os.MkdirAll(filepath.Join(root, "src"), 0o755)
 	n := mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}

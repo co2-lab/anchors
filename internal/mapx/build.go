@@ -128,10 +128,10 @@ func seedEdges(files []scan.File) []Edge {
 	// A spec cita o CODIGO DA REGRA, nunca o caminho, e e' deliberado: quem escreve sabe
 	// qual regra esta' realizando, e exigir o caminho faria toda spec quebrar quando o
 	// arquivo de doutrina fosse renomeado. Resolver codigo -> arquivo e' trabalho do mapa.
-	doutrinaPorCodigo := map[string]string{}
+	doctrineByCode := map[string]string{}
 	for _, f := range files {
 		if f.Kind == string(KindProduct) && f.HeaderCode != "" {
-			doutrinaPorCodigo[f.HeaderCode] = f.Path
+			doctrineByCode[f.HeaderCode] = f.Path
 		}
 	}
 
@@ -144,25 +144,25 @@ func seedEdges(files []scan.File) []Edge {
 		// o mapa diria apenas que os dois arquivos se tocam, e o gate nao teria como
 		// dizer QUAL regra ficou sem realizador.
 		for _, r := range f.Realizes {
-			unidade, _, ok := strings.Cut(r.To, "-")
+			unit, _, ok := strings.Cut(r.To, "-")
 			if !ok {
 				continue
 			}
-			destino, temDoutrina := doutrinaPorCodigo[unidade]
-			if !temDoutrina {
+			target, hasDoctrine := doctrineByCode[unit]
+			if !hasDoctrine {
 				// Doutrina inexistente NAO vira aresta morta: o gate `realizes-resolves`
 				// e' quem reporta, com o codigo na mao. Uma aresta para um arquivo que
 				// nao existe faria os gates relacionais confrontarem o vazio.
 				continue
 			}
 			edges = append(edges, Edge{
-				From: f.Path, To: destino, Type: EdgeRealizes,
+				From: f.Path, To: target, Type: EdgeRealizes,
 				Origin: OriginDeclared, Dep: r.From, Method: r.To,
 			})
 		}
 		for _, alvo := range f.Seeds {
-			destino := alvo
-			if !exists[destino] {
+			target := alvo
+			if !exists[target] {
 				// CAMINHO DECLARADO É CAMINHO — não se resolve por nome.
 				//
 				// A busca por nome existe para a CITAÇÃO em prosa, onde o autor escreve só
@@ -183,12 +183,12 @@ func seedEdges(files []scan.File) []Edge {
 				// o mesmo nome tornam a citação ambígua, e escolher um seria inventar uma
 				// aresta que o autor não declarou.
 				if cands := porNome[filepath.Base(alvo)]; len(cands) == 1 {
-					destino = cands[0]
+					target = cands[0]
 				} else {
 					continue
 				}
 			}
-			edges = append(edges, Edge{From: f.Path, To: destino, Type: EdgeSeeds, Origin: OriginDeclared})
+			edges = append(edges, Edge{From: f.Path, To: target, Type: EdgeSeeds, Origin: OriginDeclared})
 		}
 		// `needs:` — a ordem de trabalho entre planos. A aresta aponta do dependente para
 		// o pré-requisito, e um alvo que não existe NÃO vira aresta: o doctor a reporta
