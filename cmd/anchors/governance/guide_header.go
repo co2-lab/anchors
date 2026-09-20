@@ -105,8 +105,13 @@ Cross-cutting labels that categorize the file, for queries and gate scope:
 - 'layer: <layer>' — the Structure layer it belongs to (screen, component,
   service, model…). Normally Anchors INFERS this from the path (the layer pattern);
   declare it only if you want to override.
-- '@feature: <name>' — the vertical module/feature (auth, dashboard, budgets…). It groups
-  files of the same domain slice, even when spread across layers.
+- '@feature: <name>' — a free GROUPING label for the vertical module (auth, dashboard,
+  budgets…), alongside '@experimental' and '@legacy'. It says what the file belongs to,
+  and nothing reads it: no gate, no edge, no confrontation.
+  The vertical axis that IS confronted is product doctrine — 'product/<name>.doctrine.md',
+  which the spec points at with '@realizes'. If what you want is for a rule spanning
+  several units to have one place and be verified, that is the axis: run
+  'anchors guide product'. The tag groups; the doctrine decides.
 - '@<tag>' — any other free grouping tag (e.g. @experimental, @legacy).
 
 ### Opt-outs (only @flag — presence = on)

@@ -72,12 +72,19 @@ func RenderHeaderGuide(preset Preset, moduleNames []string) string {
 	b.WriteString("  `updated-at-atual` checks against git (year-month-day only) and `anchors check --fix`\n")
 	b.WriteString("  fixes it. Do NOT make up the date — let it match the commit.\n")
 	b.WriteString("- `layer:` — the layer; normally inferred from the path, declare it only to override.\n")
-	b.WriteString("- `@feature: <name>` — the vertical module/feature. ")
+	// A tag AGRUPA e nao e' confrontada; a doutrina de produto DECIDE e e' confrontada.
+	//
+	// Dizer so' "o modulo vertical" deixava as duas parecendo o mesmo eixo, uma delas nao
+	// implementada — e desde que `product/` existe, essa leitura custa caro: quem quer
+	// que uma regra transversal tenha um lugar escreveria a tag e esperaria um gate que
+	// nunca vem.
+	b.WriteString("- `@feature: <name>` — a free GROUPING label for the vertical module. ")
 	if len(moduleNames) > 0 {
-		b.WriteString("In this project: " + strings.Join(moduleNames, ", ") + ".\n")
-	} else {
-		b.WriteString("\n")
+		b.WriteString("In this project: " + strings.Join(moduleNames, ", ") + ".")
 	}
+	b.WriteString(" Nothing reads it: no gate, no edge.\n")
+	b.WriteString("  The vertical axis that IS confronted is product doctrine — `product/<name>.doctrine.md`,\n")
+	b.WriteString("  which the spec points at with `@realizes` (see `anchors guide product`).\n")
 	b.WriteString("- `@noPropagation`, `@anchors-shared-code` — honest opt-outs (always with the why alongside).\n\n")
 
 	b.WriteString("## Rules\n\n")

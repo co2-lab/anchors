@@ -529,7 +529,7 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide_header.go
       kind: code
-      rev: 7cbbd00410e9
+      rev: 14bcba2833a5
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -1171,7 +1171,7 @@ nodes:
         - guide
     - id: guides/HEADER_GUIDE.md
       kind: guide
-      rev: 0115a508747b
+      rev: 88c715d5a3a7
       updated_at: "2026-09-20"
       layer: guide-distribuido
       tags:
@@ -1284,7 +1284,7 @@ nodes:
     - id: internal/config/config.go
       kind: code
       rev: fac4b1787d52
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-20"
       layer: config
       tags:
         - nucleo
@@ -3709,7 +3709,7 @@ nodes:
         - test
     - id: internal/initx/header_guide.go
       kind: code
-      rev: 87c32544b800
+      rev: b78e2ee0fc9d
       updated_at: "2026-09-19"
       layer: infra
       tags:

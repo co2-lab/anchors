@@ -34,7 +34,10 @@ In the SPEC (the OWNER of the identity):
   `updated-at-atual` gate checks against git (year-month-day only) and
   `anchors check --fix` corrects it. Do NOT invent the date — let it match the commit.
 - `layer:` — the layer; usually deduced from the path, declare it only to override.
-- `@feature: <name>` — the vertical module/feature.
+- `@feature: <name>` — a free GROUPING label for the vertical module. Nothing reads it:
+  no gate, no edge. The vertical axis that IS confronted is product doctrine —
+  `product/<name>.doctrine.md`, which the spec points at with `@realizes` (see
+  `anchors guide product`).
 - `@noPropagation`, `@anchors-shared-code` — honest opt-outs (always with the why
   alongside).
 
