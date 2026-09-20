@@ -1085,6 +1085,13 @@ func printTiming(p gate.Profile) {
 	fmt.Println()
 	fmt.Println(i18n.T("check.timing_header", arredonda(total)))
 	for _, l := range linhas {
+		// `pior` so' aparece onde ha' o que comparar. Com um alvo unico ela repete o
+		// total na coluna ao lado, e duas colunas com o mesmo numero nao distinguem
+		// nada — so' fazem o olho procurar uma diferenca que nao existe.
+		if l.alvos == 1 {
+			fmt.Println(i18n.T("check.timing_item_single", largura, l.nome, arredonda(l.total)))
+			continue
+		}
 		fmt.Println(i18n.T("check.timing_item", largura, l.nome, arredonda(l.total), l.alvos, arredonda(l.pior)))
 	}
 
