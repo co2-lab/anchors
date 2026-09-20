@@ -296,6 +296,7 @@ Subcommands print the guides for the specific rulers:
 		newGuideComAutonomia("work", "how to work a card: the order, what to do with a finding that is not its own", WorkGuide),
 		newGuideSubCmd("project", "how to discover a project that does not yet exist (PROJECT.md + INSIGHTS.md)", projectGuide),
 		newGuidePlanCmd(),
+		newGuideProductCmd(),
 		newGuideSubCmd("spec", "how to write a spec (the source of truth)", specGuide),
 		newGuideSubCmd("code", "how to implement the code guided by the spec", codeGuide),
 		newGuideSubCmd("feature", "how to write the feature (behaviour scenarios)", featureGuide),
@@ -314,6 +315,19 @@ func newGuideSubCmd(use, short, body string) *cobra.Command {
 		Short: short,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Print(body)
+			return nil
+		},
+	}
+}
+
+func newGuideProductCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "product",
+		Short: "Print the product doctrine guide (the rule that cuts across targets)",
+		Long: `The product doctrine guide is the ruler for the rule that belongs to no
+single unit: it lives in product/, and the specs point at it with ` + "`@realizes`" + `.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Print(productGuide)
 			return nil
 		},
 	}

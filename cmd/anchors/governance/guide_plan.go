@@ -55,6 +55,22 @@ The heart of the plan. A LIST of the specs that will be born or change. For each
 Do not list code, screens, endpoints. If you feel the urge to list those, it is a sign
 that the corresponding spec has not been thought through yet — add the spec to the list.
 
+### 3b. Seeded product doctrine (when the rule cuts across targets)
+
+If a rule of this plan holds for SEVERAL of the specs above, it does not belong to any of
+them: it belongs to the product. Seed it the same way, and the specs realize it.
+
+  • the doctrine file — e.g.: product/credit-limit.doctrine.md
+  • one line of what it decides
+
+The test is simple: if you are about to write the same rule into two specs, it is
+doctrine. Duplicating it makes the two diverge at the first change, and no gate sees it —
+both texts are well-formed.
+
+Doctrine lives in ` + "`product/`" + `, never elsewhere: the kind comes from the path, and
+a doctrine born outside is read as a plain doc. Read ` + "`anchors guide product`" + `
+before writing one.
+
 ### 4. Phases (order and dependencies)
 Group the specs into small, independently deliverable PHASES, in the order in which
 they must be born. If one spec depends on another first, it comes in a later phase. The

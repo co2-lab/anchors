@@ -766,5 +766,8 @@
   "gate.triad.to_be_developed": "%d pieza(s) de la tríada declarada(s) POR DESARROLLAR (`@TBD`): %s.\nNo es un suspenso — la spec declaró lo que aún no ha escrito, con la razón por escrito. Y tampoco es un aprobado: `@TBD` es DEUDA, a diferencia de `@no-<pieza>`, que afirma que la pieza nunca existirá.",
   "gate.doctrine_not_duplicated.skip_none": "la spec no declara `@realizes` — nada que comparar",
   "gate.doctrine_not_duplicated.item": "`%s` repite `%s` (%.0f%%)",
-  "gate.doctrine_not_duplicated.pending_small_corpus": "corpus de similitud demasiado pequeño (%d reglas, hacen falta %d): con pocas reglas el IDF no tiene qué ponderar, y sólo una copia idéntica byte a byte sería detectada."
+  "gate.doctrine_not_duplicated.pending_small_corpus": "corpus de similitud demasiado pequeño (%d reglas, hacen falta %d): con pocas reglas el IDF no tiene qué ponderar, y sólo una copia idéntica byte a byte sería detectada.",
+  "section.purpose.doctrine_overview": "Qué decide esta doctrina, y qué cuesta cuando se rompe. Escribe la RAZÓN, no sólo la regla: quien la lea después necesita saber qué se estaba defendiendo.",
+  "section.purpose.doctrine_rules": "Las reglas que una spec puede REALIZAR. Misma gramática que las reglas de spec: un código, una de las tres formas catalogadas, y una letra que dice la naturaleza.",
+  "section.purpose.doctrine_constraints": "Lo que esta doctrina deliberadamente NO decide. La frontera importa tanto como la regla."
 }

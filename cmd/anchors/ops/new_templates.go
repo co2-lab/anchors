@@ -18,6 +18,7 @@ var templates = map[string]template{
 	"feature": featureTemplate,
 	"test":    testTemplate,
 	"plan":    planTemplate,
+	"product": productTemplate,
 }
 
 // ─── header helpers (dialeto de comentário por artefato, HEADER_GUIDE) ──────────
@@ -685,4 +686,53 @@ var planTemplate = template{
 				">\n" +
 				"> Apague esta caixa depois de cumprir os passos.\n\n"},
 	},
+}
+
+// productTemplate — a DOUTRINA DE PRODUTO: a regra que atravessa alvos.
+//
+// Poucas seções de propósito. A doutrina não é uma spec: ela não tem alvo, não tem
+// contrato, não tem estado. Ela decide, e diz por quê — e cada seção a mais é um convite
+// a preencher formulário em vez de escrever a decisão.
+var productTemplate = template{
+	kind:     "product",
+	ext:      ".doctrine.md",
+	idField:  "code",
+	headerFn: productHeader,
+	// As chaves levam o prefixo `doctrine_` de proposito.
+	//
+	// `sectionBody` resolve o corpo por `section.body.<chave>` no catalogo de traducao, e
+	// o literal do template so' vale quando a chave NAO existe la'. Com `rules` ou
+	// `overview` nus, a doutrina herdava silenciosamente o corpo da SPEC — medido: o
+	// `anchors new product` emitia `### CRLMC-B01 — TODO rule` e "o que a unidade faz",
+	// texto de spec num artefato que nao tem unidade nenhuma.
+	sections: []section{
+		{Key: "doctrine_title", Title: "section.title.title", Default: true,
+			Body: "# {name}\n\n> **Code**: `{id}`\n\n"},
+
+		{Key: "doctrine_overview", Title: "section.title.overview", Default: true,
+			Purpose: "section.purpose.doctrine_overview",
+			Body:    "## Overview\n\nTODO: what this doctrine decides, and what it costs when it is broken.\n\n"},
+
+		{Key: "doctrine_rules", Title: "section.title.rules", Default: true,
+			Purpose: "section.purpose.doctrine_rules",
+			Body: "## Rules\n\n### {id}-R01 — TODO: the rule, stated so a spec can realize it\n\n" +
+				"### {id}-R02 — TODO\n\n"},
+
+		{Key: "doctrine_constraints", Title: "section.title.constraints", Default: false,
+			Purpose: "section.purpose.doctrine_constraints",
+			Body:    "## Constraints\n\n| Rule | Boundary | Why |\n| --- | --- | --- |\n| `{id}-X01` | TODO | TODO |\n\n"},
+
+		{Key: "doctrine_open", Title: "section.title.open", Default: true,
+			Purpose: "section.purpose.open",
+			Body:    "## Open Decisions\n\n| Code | Question | Who decides | Becomes |\n| --- | --- | --- | --- |\n\nnone\n\n"},
+	},
+}
+
+// productHeader — a doutrina NÃO declara `layer:`.
+//
+// A camada é do alvo que uma spec descreve, e a doutrina não tem alvo: ela é o artefato.
+// O `mdHeader` emite `layer: TODO`, que aqui seria um campo que ninguém pode preencher —
+// e um placeholder eterno é exatamente o que o `placeholder-filled` existe para acusar.
+func productHeader(id, outPath string) string {
+	return fmt.Sprintf("<!-- @anchors\n  code: %s\n  updated_at: TODO\n-->\n", id)
 }

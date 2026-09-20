@@ -766,5 +766,8 @@
   "gate.triad.to_be_developed": "%d triad piece(s) declared TO BE DEVELOPED (`@TBD`): %s.\nNot a failure — the spec declared what it has not written yet, with the reason in writing. And not a pass either: `@TBD` is DEBT, unlike `@no-<piece>`, which states the piece will never exist. It stays visible until someone writes it.",
   "gate.doctrine_not_duplicated.skip_none": "spec declares no `@realizes` — nothing to compare",
   "gate.doctrine_not_duplicated.item": "`%s` repeats `%s` (%.0f%%)",
-  "gate.doctrine_not_duplicated.pending_small_corpus": "similarity corpus too small (%d rules, %d needed): with few rules IDF has nothing to weigh, and only a byte-identical copy would be caught. Reporting a pass here would state something that was never measured."
+  "gate.doctrine_not_duplicated.pending_small_corpus": "similarity corpus too small (%d rules, %d needed): with few rules IDF has nothing to weigh, and only a byte-identical copy would be caught. Reporting a pass here would state something that was never measured.",
+  "section.purpose.doctrine_overview": "What this doctrine decides, and what it costs when it is broken. Write the REASON, not just the rule: whoever reads it later needs to know what was being defended — the rule alone ages into arbitrary.",
+  "section.purpose.doctrine_rules": "The rules a spec can REALIZE. Same grammar as a spec's rules: a code, one of the three catalogued forms, and a letter stating the nature. Each one must be stated so that a spec can point at it and say 'this is what I concretise' — a rule too vague to realize is prose.",
+  "section.purpose.doctrine_constraints": "What this doctrine deliberately does NOT decide. The boundary matters as much as the rule: without it, whoever reads assumes the doctrine covers what it never meant to."
 }

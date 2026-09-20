@@ -95,7 +95,15 @@ get a REF (pointing at the spec). Use --code to pin the identity by hand.`,
 				if err != nil {
 					return err
 				}
-				if kind != "spec" {
+				// O aviso vale para quem REFERENCIA uma spec (`ref:`), e nao para todo
+				// kind que nao seja spec.
+				//
+				// A condicao era `kind != "spec"`, e acusava tambem o `plan` e a
+				// `product` — dois artefatos que POSSUEM identidade (`code:`) e nao
+				// apontam para spec nenhuma. O texto dizia "a product referencia a spec
+				// (`ref:`); sem spec ela nasce ORFA e o trinca-completa vai acusar", tres
+				// afirmacoes falsas sobre uma doutrina de produto, que nao tem triade.
+				if tpl.idField == "ref" {
 					fmt.Printf("warning: no spec found for this target — I generated the code `%s`.\n"+
 						"  A %s references the spec (`ref:`); without a spec, it is born ORPHANED and the\n"+
 						"  trinca-completa gate will flag it. Check the --out, or create the spec first.\n", id, kind)

@@ -82,6 +82,26 @@ A spec is not all alike — it specializes according to what makes the unit vary
   in another section — reference the code.
 - Ambiguity becomes a TODO, never a guess (inherited from the plan).
 - Co-location. The spec lives beside the artifact it describes.
+- A rule that holds for OTHER units is not this spec's: it is product doctrine. Reference
+  it with ` + "`@realizes`" + ` instead of writing it again here.
+
+## The rule that is not yours: product doctrine
+
+A spec describes ONE unit. When a rule holds for several — "the credit limit applies to
+signup, simulation and approval" — it belongs to none of them, and writing it into each
+makes the copies diverge at the first change.
+
+It lives in ` + "`product/<name>.doctrine.md`" + `, and the spec points at it on the line
+of the rule that concretises it:
+
+    ### CRED-V01 — disables submit when the amount is above the limit   @realizes LIMIT-R03
+
+State HERE only what is specific to this unit. The example above says WHAT THIS SCREEN
+DOES; the shared rule ("the limit is never exceeded") stays in the doctrine, said once.
+
+Copying the doctrine's text back is the defect the axis exists to eliminate, and
+` + "`doctrine-not-duplicated`" + ` charges it. Read ` + "`anchors guide product`" + `
+before writing or realizing doctrine.
 
 ## Anti-patterns (refuse them)
 
@@ -89,6 +109,7 @@ A spec is not all alike — it specializes according to what makes the unit vary
 - A state without an entry condition → it cannot be tested; declare when it happens.
 - Copy duplicated in two sections → it will diverge; centralize it in the Messages.
 - A requirement without an ID → it becomes invisible to the feature and the test; give it a code.
+- The same rule written in two specs → it is product doctrine; move it to ` + "`product/`" + ` and reference it.
 
 ## Project specialization
 
