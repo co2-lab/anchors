@@ -41,7 +41,8 @@ requires that they exist —, it asks "do the pieces exist?".
 | `TRCMT-B04` | A spec with the three pieces linked passes. |
 | `TRCMT-B05` | A spec missing some piece fails, and the verdict NAMES which ones are missing and where each one is born. |
 | `TRCMT-B06` | The layer may waive a piece as a block, declared in the Structure. |
-| `TRCMT-B07` | The unit may waive a piece in the spec itself, with a written reason — it is the granularity the per-layer waiver does not reach. |
+| `TRCMT-B07` | The unit may waive a piece in the spec itself, with a written reason — it is the granularity the per-layer waiver does not reach. @realizes SAIDA-R01 |
+| `TRCMT-B08` | A piece declared TO BE DEVELOPED (`@TBD`) leaves the verdict UNDETERMINED, never approved: it is DEBT, and it stays visible until someone writes it. Measured before the fix: `@TBD` shared a bucket with the permanent waiver, and a spec declaring three unwritten pieces came out green — the honest declaration erased the pending work from the radar. @realizes SAIDA-R02 @realizes SAIDA-R03 |
 
 ## Invariants
 

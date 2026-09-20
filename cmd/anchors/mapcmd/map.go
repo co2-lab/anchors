@@ -242,10 +242,30 @@ func printEdgeSummary(g *mapx.Graph) {
 		return
 	}
 	fmt.Println(i18n.T("map.edges_by_type"))
-	for _, t := range []mapx.EdgeType{mapx.EdgeGoverns, mapx.EdgeSpecifies, mapx.EdgeCoveredBy, mapx.EdgeTestedBy, mapx.EdgeReferences} {
+	// A ORDEM e' a da trinca (o caminho que o leitor percorre), e o resto vem depois em
+	// ordem alfabetica.
+	//
+	// Antes era uma lista FIXA de cinco tipos, e o que nao estivesse nela ficava
+	// invisivel: `depends-on`, `seeds`, `needs` e `realizes` existiam no mapa e nao
+	// apareciam no sumario. O sintoma enganava — construi as arestas `realizes`, o
+	// sumario nao as listou, e a primeira conclusao foi que o build nao as criara.
+	conhecidos := []mapx.EdgeType{mapx.EdgeGoverns, mapx.EdgeSpecifies, mapx.EdgeCoveredBy, mapx.EdgeTestedBy, mapx.EdgeReferences}
+	vistos := map[mapx.EdgeType]bool{}
+	for _, t := range conhecidos {
+		vistos[t] = true
 		if n := byType[t]; n > 0 {
 			fmt.Printf("    %-11s %d\n", t, n)
 		}
+	}
+	var resto []string
+	for t := range byType {
+		if !vistos[t] {
+			resto = append(resto, string(t))
+		}
+	}
+	sort.Strings(resto)
+	for _, t := range resto {
+		fmt.Printf("    %-11s %d\n", t, byType[mapx.EdgeType(t)])
 	}
 }
 

@@ -36,6 +36,7 @@ nodes:
     - id: DESIGN-product-doctrine.md
       kind: doc
       rev: 75312c44d97c
+      updated_at: "2026-09-20"
       code: LIMIT
       layer: desenho
       tags:
@@ -678,7 +679,7 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/map.go
       kind: code
-      rev: 5e7aba9ed6aa
+      rev: 24a3ef07a3f2
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -1794,6 +1795,13 @@ nodes:
       code_declared: true
       tags:
         - test
+    - id: internal/gate/doctrine.go
+      kind: code
+      rev: 5674cc99e967
+      layer: gate
+      tags:
+        - regra
+        - gate
     - id: internal/gate/domain_declared.feature
       kind: feature
       rev: 773c9570d150
@@ -2500,8 +2508,8 @@ nodes:
         - feature
     - id: internal/gate/plan_seeds_valid.go
       kind: code
-      rev: 6d70de754907
-      updated_at: "2026-09-19"
+      rev: 4e750fb2eddf
+      updated_at: "2026-09-20"
       code: PSVPL
       layer: gate
       tags:
@@ -2518,8 +2526,8 @@ nodes:
         - spec
     - id: internal/gate/plan_seeds_valid_test.go
       kind: test
-      rev: 27aecc262d75
-      updated_at: "2026-09-19"
+      rev: a551e71e1937
+      updated_at: "2026-09-20"
       code: PSVPL
       layer: teste
       tags:
@@ -3281,8 +3289,8 @@ nodes:
         - feature
     - id: internal/gate/triad_complete.go
       kind: code
-      rev: 7fbe0f3050d2
-      updated_at: "2026-09-19"
+      rev: db194773c4cc
+      updated_at: "2026-09-20"
       code: TRCMT
       layer: gate
       tags:
@@ -3290,7 +3298,7 @@ nodes:
         - gate
     - id: internal/gate/triad_complete.spec.md
       kind: spec
-      rev: b3bff9d89c12
+      rev: 80986ee2db2b
       updated_at: "2026-09-19"
       code: TRCMT
       layer: spec
@@ -3299,8 +3307,8 @@ nodes:
         - spec
     - id: internal/gate/triad_complete_test.go
       kind: test
-      rev: db486725030c
-      updated_at: "2026-09-19"
+      rev: 1a2be49ae6ab
+      updated_at: "2026-09-20"
       code: TRCMT
       layer: teste
       tags:
@@ -3848,7 +3856,7 @@ nodes:
     - id: internal/mapx/build.go
       kind: code
       rev: 676aad77011c
-      updated_at: "2026-09-11"
+      updated_at: "2026-09-20"
       layer: mapa
       tags:
         - nucleo
@@ -3943,7 +3951,7 @@ nodes:
     - id: internal/mapx/model.go
       kind: code
       rev: b8f80e6cce40
-      updated_at: "2026-09-16"
+      updated_at: "2026-09-20"
       layer: mapa
       tags:
         - nucleo
@@ -4171,8 +4179,8 @@ nodes:
         - test
     - id: internal/scan/scan.go
       kind: code
-      rev: b78c64aaca7e
-      updated_at: "2026-09-19"
+      rev: 35fe358d9af1
+      updated_at: "2026-09-20"
       layer: scan
       tags:
         - nucleo
@@ -4182,7 +4190,7 @@ nodes:
     - id: internal/scan/scan_test.go
       kind: test
       rev: 5484d8aa4c0c
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-20"
       code: BAZZX
       layer: teste
       tags:
@@ -4330,6 +4338,15 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: product/saidas-declaradas.doctrine.md
+      kind: product
+      rev: 6949197d46aa
+      code: SAIDA
+      layer: produto
+      code_declared: true
+      tags:
+        - product
+        - doutrina
 edges:
     - from: CONCEPT.md
       to: internal/config/comments.go
@@ -4695,6 +4712,10 @@ edges:
         validated_to_rev: 227df2fd3627
         changed_at: "2026-09-19"
         verdict: ok
+    - from: QUALITY.md
+      to: internal/gate/doctrine.go
+      type: governs
+      origin: declared
     - from: QUALITY.md
       to: internal/gate/domain_declared.go
       type: governs
@@ -8288,6 +8309,17 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
+      method: '`RuleType`'
+      dep: DEP1
+      stamp:
+        validated_from_rev: 6ab06f981fd1
+        validated_to_rev: 2536cd2306a8
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/rule_types.spec.md
+      to: internal/config/config.go
+      type: depends-on
+      origin: declared
       method: '`DefaultRuleLetters`'
       dep: DEP2
       stamp:
@@ -8301,17 +8333,6 @@ edges:
       origin: declared
       method: '`CodeLengthPattern`'
       dep: DEP3
-      stamp:
-        validated_from_rev: 6ab06f981fd1
-        validated_to_rev: 2536cd2306a8
-        changed_at: "2026-09-19"
-        verdict: ok
-    - from: internal/gate/rule_types.spec.md
-      to: internal/config/config.go
-      type: depends-on
-      origin: declared
-      method: '`RuleType`'
-      dep: DEP1
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: 2536cd2306a8
@@ -8758,6 +8779,24 @@ edges:
         validated_to_rev: c35dfd17ef15
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/triad_complete.spec.md
+      to: product/saidas-declaradas.doctrine.md
+      type: realizes
+      origin: declared
+      method: SAIDA-R03
+      dep: TRCMT-B08
+    - from: internal/gate/triad_complete.spec.md
+      to: product/saidas-declaradas.doctrine.md
+      type: realizes
+      origin: declared
+      method: SAIDA-R02
+      dep: TRCMT-B08
+    - from: internal/gate/triad_complete.spec.md
+      to: product/saidas-declaradas.doctrine.md
+      type: realizes
+      origin: declared
+      method: SAIDA-R01
+      dep: TRCMT-B07
     - from: internal/gate/trigger_declared.feature
       to: internal/gate/trigger_declared_test.go
       type: tested-by
