@@ -166,6 +166,32 @@ teste prova.
 
 - [Prose phrases qualifying subsets are not accused as total count divergences](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-X03`
 
+- [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B01`
+
+- [Without a relational map the verdict is undetermined](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B02`
+
+- [A spec declaring no confrontable symbols leaves without a verdict](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B03`
+
+- [A spec governing no code leaves the verdict undetermined](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B04`
+
+- [When every promised symbol appears in governed code, the gate passes](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B05`
+
+- [When a promised symbol is absent from governed code, the gate fails](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B06`
+
+- [When an absent symbol resembles an identifier in code, the verdict suggests the rename](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B07`
+
+- [Symbols appearing only in comments do not fulfill the promise](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B08`
+
+- [Prose descriptions in dependency methods are never treated as contracts](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-I01`
+
+- [Symbol presence is matched strictly on token word boundaries](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-I02`
+
+- [Near-symbol rename suggestions are strictly conservative](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-I03`
+
+- [The gate performs static textual confrontation without runtime execution](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-X01`
+
+- [The gate does not interpret dependency semantics or parameter signatures](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-X02`
+
 - [A mandatory document that does not exist fails](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B01`
 
 - [A document that exists and does not mention the unit fails](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B02`
@@ -788,6 +814,24 @@ teste prova.
 
 - [Both artifact codes and phase codes are accepted as parents](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-X03`
 
+- [A raw skeleton fails confrontation](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B01`
+
+- [A header field whose value is the marker fails](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B02`
+
+- [A table cell holding only the marker fails](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B03`
+
+- [A title or body line opening with the marker fails](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B04`
+
+- [The verdict names what was left behind](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B05`
+
+- [An artifact with every marker replaced passes](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B06`
+
+- [A section written on purpose to list pending work is not accused](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-I01`
+
+- [The gate does not judge the quality of replacement text](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-X01`
+
+- [A marker in running prose is not accused](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-X02`
+
 - [An artifact reached only by the impact radius is skipped](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B01`
 
 - [An artifact with no identity code is skipped](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B02`
@@ -1092,6 +1136,24 @@ teste prova.
 
 - [Internal code semantics inside regions are not evaluated](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X03`
 
+- [An artifact that is not a screen leaves without a verdict, and says why](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B01`
+
+- [A screen with no named route fails](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B02`
+
+- [A navigation row carrying a generic term fails](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B03`
+
+- [A screen with a named route and concrete neighbours passes](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B04`
+
+- [Route and navigation are recognised in either declared language](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B05`
+
+- [The header's declared layer wins over the node's tags](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-I01`
+
+- [A generic term in prose is not accused](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-I02`
+
+- [No layer other than screen is charged for a route](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-X01`
+
+- [The declared route is not confronted against the real router](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-X02`
+
 - [Non-spec artifacts skip confrontation](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B01`
 
 - [Specifications without declared routes skip confrontation](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-B02`
@@ -1299,6 +1361,30 @@ teste prova.
 - [The gate does not charge the absence of a code on a scenario](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X03`
 
 - [The gate does not renumber the scenarios](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X04`
+
+- [An artifact that is not a feature leaves without a verdict](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B01`
+
+- [With no declared vocabulary the gate leaves without a verdict](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B02`
+
+- [A feature carrying no scenario code leaves without a verdict](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B03`
+
+- [Every letter inside the vocabulary passes](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B04`
+
+- [A letter outside the vocabulary is undetermined, not a failure](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B05`
+
+- [The verdict names the letters that are outside and the codes carrying them](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B06`
+
+- [Codes sharing one unknown letter are grouped into a single line](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B07`
+
+- [The scan is over the shape of a code, never over the vocabulary](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-I01`
+
+- [The code-length pattern is read at every call](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-I02`
+
+- [A valid letter is never named in the verdict](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-I03`
+
+- [The gate does not choose between declaring and remapping](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-X01`
+
+- [The tags accompanying a code are not judged](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-X02`
 
 - [Non-feature artifacts skip confrontation](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B01`
 

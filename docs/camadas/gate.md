@@ -5,7 +5,7 @@
 
 
 
-> Esta camada tem 47 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 51 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -33,6 +33,12 @@
 
 
 ## CNHNC — CountHonored — a numerical assertion written in a spec must match reality in code
+
+
+
+
+
+## DEPHN — DependencyHonored — methods promised in the dependency table are consumed in code
 
 
 
@@ -146,6 +152,12 @@
 
 
 
+## PLCFL — PlaceholderFilled — the skeleton the generator emits must be FILLED IN
+
+
+
+
+
 ## PCJPL — PlanChangeJustified — a modified plan or spec must declare why it changed
 
 
@@ -200,6 +212,12 @@
 
 
 
+## RTDCL — RouteDeclared — a screen declares how one arrives, and names its neighbours
+
+
+
+
+
 ## RTEXR — RouteExists — declared route in specification must exist in application route registry
 
 
@@ -231,6 +249,12 @@
 
 
 ## SCIDS — ScenarioIdentity — two scenarios of the same feature cannot share one code
+
+
+
+
+
+## SCLTR — ScenarioLetterDeclared — the letter of a scenario code exists in the vocabulary
 
 
 

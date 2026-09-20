@@ -21,6 +21,8 @@ abra a página dela em `camadas/`.
 
 ### [CNHNC — CountHonored — a numerical assertion written in a spec must match reality in code](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code)
 
+### [DEPHN — DependencyHonored — methods promised in the dependency table are consumed in code](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code)
+
 ### [DCRQD — DocRequired — the aggregated document the unit must feed](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed)
 
 ### [DSCDC — DocSelfContained — the spec has to stand on its own](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own)
@@ -57,6 +59,8 @@ abra a página dela em `camadas/`.
 
 ### [PHORP — PhaseOrdered — plan phases and phase dependencies must be ordered and consistent](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent)
 
+### [PLCFL — PlaceholderFilled — the skeleton the generator emits must be FILLED IN](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in)
+
 ### [PCJPL — PlanChangeJustified — a modified plan or spec must declare why it changed](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed)
 
 ### [PLRVP — PlanRevised — mutual revision visibility between superseded and revising plans](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans)
@@ -75,6 +79,8 @@ abra a página dela em `camadas/`.
 
 ### [RPHRG — RegionPairHonored — every opened source region must close with its own identity code](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code)
 
+### [RTDCL — RouteDeclared — a screen declares how one arrives, and names its neighbours](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours)
+
 ### [RTEXR — RouteExists — declared route in specification must exist in application route registry](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry)
 
 ### [RLUEX — Rule — the identity of a verification INSIDE a gate, and the waiver that names it](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it)
@@ -86,6 +92,8 @@ abra a página dela em `camadas/`.
 ### [SCASS — ScenarioAsserts — scenario outcome steps must assert concrete verifiable outcomes](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes)
 
 ### [SCIDS — ScenarioIdentity — two scenarios of the same feature cannot share one code](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code)
+
+### [SCLTR — ScenarioLetterDeclared — the letter of a scenario code exists in the vocabulary](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary)
 
 ### [STASC — ScenarioTypeAligned — scenario classification tags must match the code nature letter](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter)
 
