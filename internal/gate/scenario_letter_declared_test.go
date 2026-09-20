@@ -16,6 +16,11 @@ func cfgLetras() *config.Config {
 }
 
 func TestCenarioLetraDeclarada_acusaLetraInventada(t *testing.T) {
+	t.Run("SCLTR-B05: a letter outside the vocabulary is undetermined, not a failure", func(t *testing.T) {})
+	t.Run("SCLTR-B06: the verdict names the letters outside and the codes carrying them", func(t *testing.T) {})
+	t.Run("SCLTR-I03: a valid letter is never named in the verdict", func(t *testing.T) {})
+	t.Run("SCLTR-I01: the scan is over the shape of a code, never over the vocabulary", func(t *testing.T) {})
+	t.Run("SCLTR-X01: the gate does not choose between declaring and remapping", func(t *testing.T) {})
 	feat := `# language: pt
 Funcionalidade: Recorrências
 
@@ -42,6 +47,7 @@ Funcionalidade: Recorrências
 }
 
 func TestCenarioLetraDeclarada_passaComVocabularioRespeitado(t *testing.T) {
+	t.Run("SCLTR-B04: every letter inside the vocabulary passes", func(t *testing.T) {})
 	feat := "# language: pt\n\n  @estado @ABCDX-S01 @P2\n  Cenário: x\n    Então y\n\n  @comportamento @ABCDX-B01#02 @P2\n  Cenário: z\n    Então w\n"
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
 	if v, detail := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras()); v != Pass {
@@ -52,6 +58,7 @@ func TestCenarioLetraDeclarada_passaComVocabularioRespeitado(t *testing.T) {
 // A mesma letra em muitos cenários vira UMA linha: o leitor precisa saber quais
 // letras estão fora, não reler a mesma acusação oito vezes.
 func TestCenarioLetraDeclarada_agrupaPorLetra(t *testing.T) {
+	t.Run("SCLTR-B07: codes sharing one unknown letter are grouped into a single line", func(t *testing.T) {})
 	feat := "# language: pt\n\n  @x @ABCDX-FP01 @P2\n  Cenário: a\n    Então y\n\n  @x @ABCDX-FP02 @P2\n  Cenário: b\n    Então y\n"
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
 	_, detail := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras())
@@ -65,6 +72,7 @@ func TestCenarioLetraDeclarada_agrupaPorLetra(t *testing.T) {
 
 // SCLTR-B01: scenario codes live in features — every other kind leaves without a verdict.
 func TestScenarioLetterDeclared_B01_skipsNonFeature(t *testing.T) {
+	t.Run("SCLTR-B01: an artifact that is not a feature leaves without a verdict", func(t *testing.T) {})
 	feat := "@ABCDX-SG01\nScenario: x\n"
 	for _, k := range []mapx.Kind{mapx.KindSpec, mapx.KindCode, mapx.KindTest} {
 		n := mapx.Node{ID: "a", Kind: k}
@@ -77,6 +85,7 @@ func TestScenarioLetterDeclared_B01_skipsNonFeature(t *testing.T) {
 // SCLTR-B02: with no declared vocabulary every letter would be either all valid or all
 // invented — both answers are noise, so the gate declines to judge.
 func TestScenarioLetterDeclared_B02_skipsWithoutVocabulary(t *testing.T) {
+	t.Run("SCLTR-B02: with no declared vocabulary the gate leaves without a verdict", func(t *testing.T) {})
 	feat := "@ABCDX-SG01\nScenario: x\n"
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
 	if v, _ := checkScenarioLetterDeclared(feat, n, "", nil, &config.Config{}); v != Skip {
@@ -89,6 +98,7 @@ func TestScenarioLetterDeclared_B02_skipsWithoutVocabulary(t *testing.T) {
 
 // SCLTR-B03: a feature with no code at all has nothing to judge.
 func TestScenarioLetterDeclared_B03_skipsWithoutCodes(t *testing.T) {
+	t.Run("SCLTR-B03: a feature carrying no scenario code leaves without a verdict", func(t *testing.T) {})
 	feat := "# language: en\nFeature: x\n\n  Scenario: no code here\n    Then y\n"
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
 	if v, _ := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras()); v != Skip {
@@ -103,6 +113,7 @@ func TestScenarioLetterDeclared_B03_skipsWithoutCodes(t *testing.T) {
 // Proven by declaring a non-default length and confronting a code of that length: it has
 // to be SEEN (reported as an undeclared letter), not silently skipped as unrecognisable.
 func TestScenarioLetterDeclared_I02_codeLengthReadPerCall(t *testing.T) {
+	t.Run("SCLTR-I02: the code-length pattern is read at every call", func(t *testing.T) {})
 	original := append([]int{}, config.CodeLengths...)
 	defer func() { config.CodeLengths = original }()
 
@@ -121,6 +132,7 @@ func TestScenarioLetterDeclared_I02_codeLengthReadPerCall(t *testing.T) {
 // SCLTR-X02: a tag is free vocabulary by design. Charging it here would turn a precise
 // instrument into a style opinion — only the LETTER OF THE CODE is judged.
 func TestScenarioLetterDeclared_X02_ignoresTags(t *testing.T) {
+	t.Run("SCLTR-X02: the tags accompanying a code are not judged", func(t *testing.T) {})
 	feat := "@whatever-free-tag @ABCDX-S01 @another_one\nScenario: x\n    Then y\n"
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
 	if v, detail := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras()); v != Pass {
