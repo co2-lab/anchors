@@ -1105,7 +1105,7 @@ func printTiming(p gate.Profile) {
 	larguraAlvos := 0
 	for i, l := range linhas {
 		if l.alvos == 1 {
-			rotulo[i] = i18n.T("check.timing_targets_count_one")
+			rotulo[i] = i18n.T("check.timing_targets_count_one", larguraNum, l.alvos)
 		} else {
 			rotulo[i] = i18n.T("check.timing_targets_count", larguraNum, l.alvos)
 		}

@@ -739,5 +739,5 @@
   "gate.docs_covered.skip_no_doct_dir": "projeto sem `%s/` — não há templates, então não há cobertura a cobrar",
   "check.timing_item_single": "    %-*s  %8s  %s",
   "check.timing_targets_count": "%*d alvos",
-  "check.timing_targets_count_one": "1 alvo"
+  "check.timing_targets_count_one": "%*d alvo"
 }
