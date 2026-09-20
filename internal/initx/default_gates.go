@@ -206,6 +206,34 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "docs-fresh", Blocking: config.Bool(false),
 			Measures: "o `docs/*.md` compilado reflete a spec de onde veio",
 		})
+		// O EIXO VERTICAL — a doutrina de produto e quem a realiza.
+		//
+		// Quatro perguntas distintas, cada uma pegando um silencio que as outras nao
+		// veem. As tres de referencia reprovam (a referencia quebrada parece
+		// rastreabilidade e nao resolve para nada); a de realizacao INFORMA, porque uma
+		// regra decidida hoje para ser implementada no proximo ciclo e' trabalho
+		// legitimo, nao defeito.
+		gates = append(gates, config.Gate{
+			Name: "plan-doctrine-exists", ID: "plan-doctrine-exists", On: []string{"plan"},
+			Check: "plan-doctrine-exists", Blocking: config.Bool(false),
+			Measures: "a doutrina de produto que o plano semeia existe",
+		})
+		gates = append(gates, config.Gate{
+			Name: "doctrine-realized", ID: "doctrine-realized", On: []string{"product"},
+			Check: "doctrine-realized", Blocking: config.Bool(false),
+			Measures: "toda regra de produto e' realizada por alguma spec",
+		})
+		gates = append(gates, config.Gate{
+			Name: "spec-doctrine-exists", ID: "spec-doctrine-exists", On: []string{"spec"},
+			Check: "spec-doctrine-exists", Blocking: config.Bool(false),
+			Measures: "a doutrina que a spec referencia com `@realizes` existe",
+		})
+		gates = append(gates, config.Gate{
+			Name: "doctrine-not-duplicated", ID: "doctrine-not-duplicated", On: []string{"spec"},
+			Check: "doctrine-not-duplicated", Blocking: config.Bool(false),
+			Measures: "a spec referencia a doutrina em vez de copiar o texto dela",
+		})
+
 		// A COBERTURA, que o gate acima nao tem como ver: ele confere as paginas que
 		// EXISTEM, e o defeito silencioso e' a spec que nao chega a pagina nenhuma.
 		// Os templates filtram por camada, entao uma spec que nenhum filtro seleciona

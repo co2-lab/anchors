@@ -42,20 +42,20 @@ bucket as `@no-*`, and a spec with `@TBD: code,feature,test` came out **green**,
 indistinguishable from a complete triad. The work that remained disappeared from the radar
 because of the honest declaration of whoever assumed it — the worst possible incentive.
 
-### SAIDA-R04 — a bare marker waives nothing
+### SAIDA-R04 — a bare marker waives nothing    @TBD: the reason is checked per gate, and no spec catalogues it as its own rule yet
 
 `@no-code` on its own, with no `:` and no written reason, is not a way out: it is the
 silence the gates exist to end. The reason is mandatory in both markers, and it is checked
 by pattern — whoever reads the unit finds there why it is waived, without hunting for the
 decision somewhere else.
 
-### SAIDA-R05 — the way out holds where it is written
+### SAIDA-R05 — the way out holds where it is written    @TBD: holds today by construction (each gate reads its own line), and no spec asserts it
 
 A marker on a line waives that line; in the header, the unit. There is no waiver that
 holds for the whole project written in a distant file — the decision stays where whoever
 reads will find it.
 
-### SAIDA-R06 — a marker inside backticks is a MENTION, not a declaration
+### SAIDA-R06 — a marker inside backticks is a MENTION, not a declaration    @TBD: implemented in `triad-complete` and in the doctrine axis, not yet catalogued as a spec rule
 
 A revision explaining the removal of a waiver cites the marker (*"the `@TBD: code` waiver
 is gone"*), and without this distinction the citation **reactivates** the waiver the text
@@ -65,7 +65,7 @@ says has ended. An active marker is never inside backticks.
 
 | Rule | Boundary | Why |
 | --- | --- | --- |
-| `SAIDA-X01` | No gate infers a way out from the wording of a message. | The way out is a declared field or marker, never a recognised phrase — deducing intent from prose ages at the first rewrite of the message. |
+| `SAIDA-X01` @TBD: a constraint nobody has had to assert yet | No gate infers a way out from the wording of a message. | The way out is a declared field or marker, never a recognised phrase — deducing intent from prose ages at the first rewrite of the message. |
 
 ## Open Decisions
 

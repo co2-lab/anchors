@@ -11,6 +11,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/similarity"
 )
 
 // --- the VERTICAL AXIS: product doctrine and whoever realizes it ---
@@ -244,3 +245,176 @@ func checkSpecDoctrineExists(content string, n mapx.Node, root string, g *mapx.G
 // this gate reads the CONTENT it is handed rather than the already-scanned node, because
 // it needs to know which LINE the tag sits on in order to pair it with the waiver.
 var realizesTagRE = regexp.MustCompile("@realizes\\s+`?([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`?")
+
+// minCorpusForIDF is the floor below which the similarity ruler measures nothing.
+//
+// Measured against real sentences: a 2-text corpus scores 0.00 for a near-identical pair
+// (every shared word weighs zero, and the shared words ARE the evidence); with 4 the same
+// pair scores 0.51 and is correctly classified.
+const minCorpusForIDF = 4
+
+// minCopyScore is the floor a SIMILAR pair must clear to be called a copy.
+//
+// It matches the similarity library's own threshold, and it is restated here because the
+// verdict alone is not enough: `Classify` promotes a low-scoring pair to "similar" when
+// the two share a rare token, which on this axis is the norm rather than evidence — a
+// spec that realizes a rule is expected to speak its vocabulary.
+const minCopyScore = 0.5
+
+// --- is the doctrine DUPLICATED in the spec? ---
+//
+// The defect this whole axis exists to eliminate. Before `product/` there were only two
+// ways out for a rule spanning three screens: copy it into all three (and watch them
+// diverge at the first change), or pick an arbitrary owner. The copy is the common one,
+// because it reads well — each spec is complete on its own.
+//
+// And it is invisible to every other gate: both texts are well-formed, both catalogue
+// their rules, both have a complete triad. Nothing compares one against the other.
+//
+// The ruler is SIMILARITY, not equality: whoever copies almost always adjusts a word.
+// Exact comparison would catch only the laziest case and report green on the rest.
+func checkDoctrineNotDuplicated(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Kind != mapx.KindSpec {
+		return Skip, i18n.T("gate.doctrine_not_duplicated.skip_not_spec")
+	}
+	if g == nil {
+		return pendingNoMap()
+	}
+
+	// The doctrine text of each rule this spec realizes, read from the far end.
+	doctrineText := map[string]string{}
+	for _, e := range g.Neighbors(n.ID).Out {
+		if e.Type != mapx.EdgeRealizes {
+			continue
+		}
+		b, err := os.ReadFile(filepath.Join(root, e.To))
+		if err != nil {
+			continue
+		}
+		for code, text := range ruleTexts(string(b)) {
+			doctrineText[code] = text
+		}
+	}
+	if len(doctrineText) == 0 {
+		return Skip, i18n.T("gate.doctrine_not_duplicated.skip_none")
+	}
+
+	local := ruleTexts(content)
+
+	// The corpus is EVERY rule of both sides — never just the pair being compared.
+	//
+	// `Weights` is IDF: a token appearing in every document of the corpus weighs zero,
+	// because it separates nothing. With a two-text corpus that is exactly what happens
+	// to the shared words, which are the evidence of a copy — measured, two sentences
+	// differing by one word scored 0.00, and only a byte-identical copy was caught.
+	//
+	// With the full set of rules the shared vocabulary of the domain ("the", "limit")
+	// stays cheap while what only these two say stays expensive, which is the signal the
+	// gate is after.
+	var corpus []string
+	for _, t := range doctrineText {
+		corpus = append(corpus, t)
+	}
+	for _, t := range local {
+		corpus = append(corpus, t)
+	}
+	// FEW RULES: IDF has nothing to weigh, and the gate cannot measure.
+	//
+	// Measured: with a 2-rule corpus two sentences differing by one word score 0.00; from
+	// 4 rules on, the same pair scores 0.51 and is correctly called similar. Below that
+	// floor only a byte-identical copy would be caught, and reporting Pass would state
+	// something that was never checked — the worst failure of a measuring instrument.
+	if len(corpus) < minCorpusForIDF {
+		return Pending, fmt.Sprintf(i18n.T("gate.doctrine_not_duplicated.pending_small_corpus"), len(corpus), minCorpusForIDF)
+	}
+	weights := similarity.Weights(corpus)
+
+	var found []string
+	for _, r := range parseRealizesWithLines(content) {
+		// `@TBD` on the line is DEBT, not a waiver: the wording is still being worked
+		// out, and charging it now would push whoever is writing to paraphrase for the
+		// gate instead of for the reader.
+		if r.deferred {
+			continue
+		}
+		mine, ok := local[r.from]
+		if !ok || mine == "" {
+			continue
+		}
+		theirs, ok := doctrineText[r.to]
+		if !ok || theirs == "" {
+			continue
+		}
+		verdict, score := similarity.Classify(mine, theirs, weights)
+		// IDENTICO passa direto; SIMILAR ainda precisa do SCORE, e a exigencia extra
+		// existe por um caso medido.
+		//
+		// `Classify` promove a "similar" um par que compartilha um token RARO mesmo com
+		// score baixo — evidencia estrutural de que dois textos tratam do mesmo assunto.
+		// E' certo na origem da lib e ERRADO aqui: a spec DEVE usar o vocabulario da
+		// doutrina que realiza, e' o proposito do `@realizes`. Sem o piso, as tres
+		// primeiras arestas reais deste repositorio foram acusadas com 13%, 17% e 8% —
+		// textos que nao se parecem em nada, unidos por compartilhar "dispensa" e "gate".
+		if verdict == similarity.Identico ||
+			(verdict == similarity.Similar && score >= minCopyScore) {
+			found = append(found, fmt.Sprintf(i18n.T("gate.doctrine_not_duplicated.item"), r.from, r.to, score*100))
+		}
+	}
+	if len(found) == 0 {
+		return Pass, ""
+	}
+	sort.Strings(found)
+	return Fail, fmt.Sprintf(i18n.T("gate.doctrine_not_duplicated.copied"), len(found), strings.Join(found, ", "))
+}
+
+// ruleTexts maps each catalogued rule code to the text that describes it — the rest of
+// the line the code opens.
+//
+// The line is enough because all three catalogued forms put the description right after
+// the code: the heading, the table row, the bold bullet. Reading the paragraph below a
+// heading would drag in prose belonging to no rule.
+func ruleTexts(content string) map[string]string {
+	out := map[string]string{}
+	for _, line := range strings.Split(content, "\n") {
+		m := doctrineRuleRE.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		rest := line[strings.Index(line, m[1])+len(m[1]):]
+		// Strip what is punctuation of the FORM and not of the text: the em dash of a
+		// heading, the pipes of a table row, the closing backtick.
+		rest = strings.Trim(rest, "`|— -")
+		if i := strings.Index(rest, "@realizes"); i >= 0 {
+			rest = rest[:i]
+		}
+		if s := strings.TrimSpace(rest); s != "" {
+			out[m[1]] = s
+		}
+	}
+	return out
+}
+
+// realizesOnLine is one `@realizes` declaration with the context the gate needs: which
+// local rule made it, and whether the line carries debt.
+type realizesOnLine struct {
+	from     string
+	to       string
+	deferred bool
+}
+
+func parseRealizesWithLines(content string) []realizesOnLine {
+	var out []realizesOnLine
+	current := ""
+	for _, line := range strings.Split(content, "\n") {
+		if m := doctrineRuleRE.FindStringSubmatch(line); m != nil {
+			current = m[1]
+		} else if strings.TrimSpace(line) == "" {
+			current = ""
+		}
+		deferred := tbdLineRE.MatchString(line)
+		for _, m := range realizesTagRE.FindAllStringSubmatch(line, -1) {
+			out = append(out, realizesOnLine{from: current, to: m[1], deferred: deferred})
+		}
+	}
+	return out
+}

@@ -45,6 +45,10 @@ var checkersWithRoot = map[string]func(content string, n mapx.Node, root string)
 // no teste ligado, roteado pelo regime do cenário?).
 var checkersWithGraph = map[string]func(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string){
 	"progress-honest":          checkProgressHonest,
+	"plan-doctrine-exists":     checkPlanDoctrineExists,
+	"doctrine-realized":        checkDoctrineRealized,
+	"spec-doctrine-exists":     checkSpecDoctrineExists,
+	"doctrine-not-duplicated":  checkDoctrineNotDuplicated,
 	"feature-test-match":       checkFeatureTestMatch,
 	"scenario-identity":        checkScenarioIdentity,
 	"scenario-type-aligned":    checkScenarioTypeAligned,

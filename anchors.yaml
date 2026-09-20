@@ -413,6 +413,19 @@ gates:
   # compilada reflete a spec, este se a spec chega a ALGUMA pagina. O segundo defeito e'
   # o silencioso — os templates filtram por camada, e a spec que nenhum filtro seleciona
   # compila para lugar nenhum enquanto todas as paginas seguem corretas.
+  # O EIXO VERTICAL — a doutrina de produto e quem a realiza.
+  - name: plan-doctrine-exists
+    blocking: false
+
+  - name: doctrine-realized
+    blocking: false
+
+  - name: spec-doctrine-exists
+    blocking: false
+
+  - name: doctrine-not-duplicated
+    blocking: false
+
   - name: docs-covered
     blocking: false
 
