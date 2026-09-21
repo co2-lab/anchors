@@ -1588,6 +1588,8 @@ teste prova.
 
 - [The gate does not confront whether the pieces MATCH one another](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-X01`
 
+- [A piece declared TO BE DEVELOPED leaves the verdict undetermined](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B08`
+
 - [The gate does not judge the QUALITY of any piece](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-X02`
 
 - [Non-spec artifacts skip confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B01`
