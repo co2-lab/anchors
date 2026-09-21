@@ -774,5 +774,12 @@
   "gate.spec_realizes_doctrine.skip_no_config": "no Structure to read — the demand is declared per layer",
   "gate.spec_realizes_doctrine.skip_layer_does_not_require": "this layer does not declare `requires_doctrine` — a rule local to the unit is legitimate here",
   "gate.spec_realizes_doctrine.missing": "%d rule(s) without `@realizes` in a layer that demands it: %s.\nThe layer declared that its rules concretise product decisions. A rule with no declaration either belongs to a doctrine nobody wrote down, or it does not belong in this layer. Declare `@TBD: <reason>` on the line while the doctrine is still being written.",
-  "gate.spec_realizes_doctrine.deferred": "%d rule(s) declared TO BE DEVELOPED (`@TBD`): the doctrine they will realize is not written yet. Debt, and it stays visible."
+  "gate.spec_realizes_doctrine.deferred": "%d rule(s) declared TO BE DEVELOPED (`@TBD`): the doctrine they will realize is not written yet. Debt, and it stays visible.",
+  "section.title.flow_steps": "Assembly",
+  "section.title.action_command": "Command",
+  "section.title.action_results": "Results",
+  "section.purpose.flow_overview": "What work this flow drives, and — the part that matters — WHICH RULE stops depending on memory once it becomes topology. A flow whose overview does not name that rule is probably a list of steps with extra ceremony.",
+  "section.purpose.flow_steps": "The steps, each naming the PIECE it fits and where each result goes. The association is positional: what comes below a step belongs to it. A step with no exit declares `> @terminal` — declared, never deduced from 'has no exit', because that may be the end of the work or an oversight and only the author knows which.",
+  "section.purpose.action_command": "The command line as it is actually typed, with the flags that change the outcome. RUN IT before writing the results: an action whose results were imagined describes a command that does not exist.",
+  "section.purpose.action_results": "Everything this action can answer. Each result gets a code and a SHORT NAME in caps before the colon — that name is what the arrow carries in the diagram, so it has to read on its own. Do NOT say where each one leads: that is the flow's job, and the ignorance is what makes the piece reusable."
 }

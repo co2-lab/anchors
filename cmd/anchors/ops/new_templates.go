@@ -19,6 +19,8 @@ var templates = map[string]template{
 	"test":    testTemplate,
 	"plan":    planTemplate,
 	"product": productTemplate,
+	"flow":    flowTemplate,
+	"action":  actionTemplate,
 }
 
 // ─── header helpers (dialeto de comentário por artefato, HEADER_GUIDE) ──────────
@@ -735,4 +737,57 @@ var productTemplate = template{
 // e um placeholder eterno é exatamente o que o `placeholder-filled` existe para acusar.
 func productHeader(id, outPath string) string {
 	return fmt.Sprintf("<!-- @anchors\n  code: %s\n  updated_at: TODO\n-->\n", id)
+}
+
+// flowTemplate — a MONTAGEM: os passos, a peça que cada um encaixa, e para onde vai cada
+// resultado.
+//
+// Poucas seções, e de propósito: um fluxo não é uma spec. Ele não tem contrato, nem
+// estado, nem domínio — ele liga peças. Cada seção a mais seria convite a preencher
+// formulário em vez de desenhar a ligação.
+var flowTemplate = template{
+	kind:     "flow",
+	ext:      ".flow.md",
+	idField:  "code",
+	headerFn: productHeader,
+	sections: []section{
+		{Key: "flow_title", Title: "section.title.title", Default: true,
+			Body: "# {name}\n\n> **Code**: `{id}`\n\n"},
+
+		{Key: "flow_overview", Title: "section.title.overview", Default: true,
+			Purpose: "section.purpose.flow_overview",
+			Body: "TODO: what work this flow drives, and which rule stops depending on memory\n" +
+				"once it becomes topology.\n\n"},
+
+		{Key: "flow_steps", Title: "section.title.flow_steps", Default: true,
+			Purpose: "section.purpose.flow_steps",
+			Body: "## Assembly\n\n### {id}-P01 — TODO: what this step does\n\n" +
+				"Fits: `TODO` (the action code)\n\nResults:\n" +
+				"- `TODO-R01` TODO → `{id}-P02`\n\n" +
+				"### {id}-P02 — TODO: where the work ends\n\n> @terminal\n\n"},
+	},
+}
+
+// actionTemplate — a PEÇA: o comando e os resultados que ele oferece.
+//
+// A ação NÃO declara para onde cada resultado vai: quem liga é o fluxo, e é essa ignorância
+// deliberada que a torna reusável em mais de um.
+var actionTemplate = template{
+	kind:     "action",
+	ext:      ".action.md",
+	idField:  "code",
+	headerFn: productHeader,
+	sections: []section{
+		{Key: "action_title", Title: "section.title.title", Default: true,
+			Body: "# Action: `TODO` — {name}\n\n> **Code**: `{id}`\n\n"},
+
+		{Key: "action_command", Title: "section.title.action_command", Default: true,
+			Purpose: "section.purpose.action_command",
+			Body:    "## Command\n\n    TODO: the command line, with the flags that matter\n\n"},
+
+		{Key: "action_results", Title: "section.title.action_results", Default: true,
+			Purpose: "section.purpose.action_results",
+			Body: "## Results\n\n### {id}-R01 — TODO: SHORT NAME IN CAPS: what happened\n\n" +
+				"### {id}-R02 — TODO\n\n"},
+	},
 }

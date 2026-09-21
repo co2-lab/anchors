@@ -45,7 +45,7 @@ func projectWithFlow(t *testing.T, content string) string {
 	if err := os.MkdirAll(filepath.Join(root, Dir), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(root, Dir, "unblock"+SufixoFluxo), []byte(content), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(root, Dir, "unblock"+FlowSuffix), []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	return root
@@ -123,5 +123,52 @@ func TestBuild_projectWithoutFlowsIsNotAnError(t *testing.T) {
 	g, err := Build(t.TempDir())
 	if err != nil || g != nil {
 		t.Errorf("expected nil graph and no error, got %+v / %v", g, err)
+	}
+}
+
+// The PIECE shape is what makes this finding possible, and the linear drawing hid it: an
+// action declares everything it can answer, and a flow that ignores one of those answers
+// leaves a hole — whoever gets that result has nowhere to go, and improvises.
+func TestUnhandled_findsTheResultNoFlowRoutes(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, ActionsDir), 0o755)
+	os.WriteFile(filepath.Join(root, Dir, "f"+FlowSuffix), []byte(
+		"### FLOWX-P01 — one step\n\nFits: `ACTST`\n\nResults:\n- `ACTST-R01` FINE → `FLOWX-P02`\n\n"+
+			"### FLOWX-P02 — the end\n\n> @terminal\n"), 0o644)
+	os.WriteFile(filepath.Join(root, ActionsDir, "a"+ActionSuffix), []byte(
+		"### ACTST-R01 — FINE: it worked\n\n### ACTST-R02 — BROKEN: nobody routes this one\n"), 0o644)
+
+	g, err := Build(root)
+	if err != nil || g == nil {
+		t.Fatalf("build: %v", err)
+	}
+	got := Unhandled(g)
+	if len(got) != 1 || got[0].Code != "ACTST-R02" {
+		t.Errorf("expected exactly ACTST-R02 unhandled, got %+v", got)
+	}
+	// A result is DECLARED by its action, never ARRIVED at: asking it "who reaches you?"
+	// would accuse every result a flow happens not to route.
+	for _, s := range Unreachable(g) {
+		if IsResult(s.Code) {
+			t.Errorf("a result must not be charged as unreachable: %s", s.Code)
+		}
+	}
+}
+
+// `Fits:` is what turns the flow into assembly rather than redrawing: the step names the
+// piece, and the piece declares its own results. Without it every flow would repeat the
+// description of `map build`, and the copies would diverge at the first change.
+func TestBuild_readsThePieceEachStepFits(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, Dir), 0o755)
+	os.WriteFile(filepath.Join(root, Dir, "f"+FlowSuffix), []byte(
+		"### FLOWX-P01 — a step\n\nFits: `ACMAP`\n\n### FLOWX-P02 — no piece\n\n> @terminal\n"), 0o644)
+	g, _ := Build(root)
+	s, _ := StateByCode(g, "FLOWX-P01")
+	if s.Fits != "ACMAP" {
+		t.Errorf("expected the step to fit ACMAP, got %q", s.Fits)
+	}
+	if s2, _ := StateByCode(g, "FLOWX-P02"); s2.Fits != "" {
+		t.Errorf("a step that fits nothing must carry no piece, got %q", s2.Fits)
 	}
 }

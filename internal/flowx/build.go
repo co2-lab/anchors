@@ -25,6 +25,20 @@ var stateRE = regexp.MustCompile(`(?m)^#{1,6}\s+([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2
 // What Anchors guarantees is the SET: from here, these exits, and no others.
 var transitionRE = regexp.MustCompile("(?m)^\\s*[-*]\\s+`([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`\\s*(.*)$")
 
+// fitsRE matches what a flow step FITS: `Encaixa: ` + "`ACHCK`" + `.
+//
+// It is what turns the flow into assembly rather than redrawing: the step says which piece
+// it uses, and the piece declares its own results. Without it, every flow would repeat the
+// description of `map build` — and they would diverge at the first change.
+var fitsRE = regexp.MustCompile("(?im)^\\s*(?:Encaixa|Fits)\\s*:\\s*`?([A-Z0-9]{3,6})`?")
+
+// resultLinkRE matches a RESULT being routed to a next step:
+// `- ` + "`ACHCK-R02`" + ` BARRADO → ` + "`WORKR-P03`" + `.
+//
+// Two codes on one line: the result that arrived, and where it goes. The arrow may be
+// `→`, `->` or nothing — what identifies the destination is being the SECOND code.
+var resultLinkRE = regexp.MustCompile("(?m)`?([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`?[^`\\n]*?`([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`")
+
 // terminalRE marks the state there is no leaving.
 //
 // Declared, never deduced from "has no exit": a state with no exit may be the end of the
@@ -45,7 +59,7 @@ func Build(root string) (*mapx.FlowGraph, error) {
 	}
 	var names []string
 	for _, e := range entries {
-		if !e.IsDir() && strings.HasSuffix(e.Name(), SufixoFluxo) {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), FlowSuffix) {
 			names = append(names, e.Name())
 		}
 	}
@@ -53,7 +67,29 @@ func Build(root string) (*mapx.FlowGraph, error) {
 	// different files and the diff would turn into noise.
 	sort.Strings(names)
 
+	// The ACTIONS live in a subfolder and enter the SAME graph: they are nodes like the
+	// steps, and the difference is the role, not the structure. A result (`ACHCK-R02`) is
+	// the target of a transition just like a step — what changes is who declares it.
+	actionEntries, _ := os.ReadDir(filepath.Join(root, ActionsDir))
+	var actionNames []string
+	for _, e := range actionEntries {
+		if !e.IsDir() && strings.HasSuffix(e.Name(), ActionSuffix) {
+			actionNames = append(actionNames, e.Name())
+		}
+	}
+	sort.Strings(actionNames)
+
 	g := &mapx.FlowGraph{}
+	for _, nome := range actionNames {
+		rel := filepath.ToSlash(filepath.Join(ActionsDir, nome))
+		b, err := os.ReadFile(filepath.Join(root, ActionsDir, nome))
+		if err != nil {
+			continue
+		}
+		states, transitions := parse(string(b), rel)
+		g.States = append(g.States, states...)
+		g.Transitions = append(g.Transitions, transitions...)
+	}
 	for _, nome := range names {
 		rel := filepath.ToSlash(filepath.Join(Dir, nome))
 		b, err := os.ReadFile(filepath.Join(dir, nome))
@@ -70,11 +106,11 @@ func Build(root string) (*mapx.FlowGraph, error) {
 	return g, nil
 }
 
-// parse reads ONE flow file.
+// parse reads ONE flow or action file.
 //
-// The exit→state association is POSITIONAL: an exit belongs to the last state declared
-// above it. That is what allows writing the flow the way it reads — the state, and right
-// below it where it leads — instead of repeating the origin code on every line.
+// The exit→state association is POSITIONAL: what comes below a state belongs to it. That
+// is what allows writing the flow the way it reads — the step, and right below it the
+// piece it fits and where each result goes.
 func parse(content, flowPath string) ([]mapx.FlowState, []mapx.FlowTransition) {
 	var states []mapx.FlowState
 	var transitions []mapx.FlowTransition
@@ -89,22 +125,53 @@ func parse(content, flowPath string) ([]mapx.FlowState, []mapx.FlowTransition) {
 				Title:    strings.TrimSpace(m[2]),
 				Flow:     flowPath,
 				Terminal: terminalDeclaredAfter(lines, i),
+				Fits:     fitsDeclaredAfter(lines, i),
 			})
 			continue
 		}
 		if current == "" {
 			continue // an exit before any state has no owner
 		}
+		// A ROUTED RESULT (two codes on the line) wins over a plain exit: the first code
+		// is the result that arrived, the second is where it goes. Reading it as a plain
+		// exit would make the flow point at the RESULT instead of at the next step — an
+		// edge to a node that lives in another file and is not a step.
+		if m := resultLinkRE.FindStringSubmatch(line); m != nil {
+			transitions = append(transitions, mapx.FlowTransition{
+				From: current, To: m[2], On: m[1],
+				When: conditionOf(line), Flow: flowPath,
+			})
+			continue
+		}
 		if m := transitionRE.FindStringSubmatch(line); m != nil {
 			transitions = append(transitions, mapx.FlowTransition{
-				From: current,
-				To:   m[1],
-				When: strings.TrimSpace(m[2]),
-				Flow: flowPath,
+				From: current, To: m[1],
+				When: strings.TrimSpace(m[2]), Flow: flowPath,
 			})
 		}
 	}
 	return states, transitions
+}
+
+// conditionOf keeps the prose of the line minus the two codes — what whoever works reads
+// to recognise the result.
+func conditionOf(line string) string {
+	out := resultLinkRE.ReplaceAllString(line, "")
+	out = strings.TrimSpace(strings.Trim(strings.TrimSpace(out), "-*→>` "))
+	return out
+}
+
+// fitsDeclaredAfter reads which PIECE a step fits — between its heading and the next.
+func fitsDeclaredAfter(lines []string, start int) string {
+	for i := start + 1; i < len(lines); i++ {
+		if stateRE.MatchString(lines[i]) {
+			return ""
+		}
+		if m := fitsRE.FindStringSubmatch(lines[i]); m != nil {
+			return m[1]
+		}
+	}
+	return ""
 }
 
 // terminalDeclaredAfter looks for `@terminal` in the state's body — between its heading

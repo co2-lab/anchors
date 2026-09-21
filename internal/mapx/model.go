@@ -360,12 +360,23 @@ type FlowState struct {
 	Title    string `yaml:"title"`
 	Flow     string `yaml:"flow"`
 	Terminal bool   `yaml:"terminal,omitempty"`
+	// Fits é o código da AÇÃO que este passo encaixa — a peça do quebra-cabeça.
+	//
+	// O passo diz qual peça usa; a peça declara os próprios resultados. Sem isto, cada
+	// fluxo repetiria a descrição do `map build`, e as cópias divergiriam na primeira
+	// mudança — o defeito que a doutrina de produto existe para acabar, aqui no processo.
+	Fits string `yaml:"fits,omitempty"`
 }
 
 // FlowTransition é a saída de um estado para outro, com a condição que a torna válida.
 type FlowTransition struct {
 	From string `yaml:"from"`
 	To   string `yaml:"to"`
+	// On é o RESULTADO da ação que dispara esta transição (`ACHCK-R02`).
+	//
+	// Vazio numa transição direta entre passos. Preenchido, é o que liga a peça ao
+	// encaixe: o resultado que a ação declarou, e para onde o fluxo o manda.
+	On   string `yaml:"on,omitempty"`
 	When string `yaml:"when,omitempty"`
 	Flow string `yaml:"flow"`
 }

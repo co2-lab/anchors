@@ -33,6 +33,22 @@ nodes:
       layer: doc
       tags:
         - doc
+    - id: DESIGN-flow-driven-work.md
+      kind: doc
+      rev: 77686d12d203
+      updated_at: "2026-09-21"
+      code: DSTRV
+      layer: desenho
+      tags:
+        - doc
+        - desenho
+    - id: DESIGN-flows-do-anchors.md
+      kind: doc
+      rev: de33e774a459
+      layer: desenho
+      tags:
+        - doc
+        - desenho
     - id: DESIGN-product-doctrine.md
       kind: doc
       rev: bfa2fd7ae525
@@ -482,7 +498,7 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide.go
       kind: code
-      rev: a20e83c322b1
+      rev: 90c28ad05504
       updated_at: "2026-09-20"
       layer: comando
       tags:
@@ -516,6 +532,15 @@ nodes:
       rev: 8311dde7eeb1
       updated_at: "2026-09-19"
       layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/governance/guide_flow.go
+      kind: code
+      rev: 23c881441274
+      code: ACHCK
+      layer: comando
+      code_declared: true
       tags:
         - cli
         - comando
@@ -641,6 +666,13 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: cmd/anchors/mapcmd/flow.go
+      kind: code
+      rev: 70ea6db5e4aa
+      layer: comando
+      tags:
+        - cli
+        - comando
     - id: cmd/anchors/mapcmd/impact.go
       kind: code
       rev: 6ae8e3b5e5a0
@@ -690,8 +722,8 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/map.go
       kind: code
-      rev: d3173a20c4a3
-      updated_at: "2026-09-20"
+      rev: 706de68185ea
+      updated_at: "2026-09-21"
       layer: comando
       tags:
         - cli
@@ -751,7 +783,7 @@ nodes:
         - comando
     - id: cmd/anchors/mapcmd/register.go
       kind: code
-      rev: 40c0171ee80a
+      rev: 9cd3e4a31858
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -930,7 +962,7 @@ nodes:
         - test
     - id: cmd/anchors/ops/new_templates.go
       kind: code
-      rev: d5df0fca4b77
+      rev: f6868b3c5fa9
       updated_at: "2026-09-20"
       layer: comando
       tags:
@@ -1476,6 +1508,15 @@ nodes:
       updated_at: "2026-09-10"
       code: GLCGL
       layer: teste
+      tags:
+        - test
+    - id: internal/flowx/build_test.go
+      kind: test
+      rev: 7bfc100e1fa9
+      updated_at: "2026-09-21"
+      code: DSTRV
+      layer: teste
+      code_declared: true
       tags:
         - test
     - id: internal/gate/checklist_language_test.go
@@ -3310,7 +3351,7 @@ nodes:
     - id: internal/gate/triad_complete.feature
       kind: feature
       rev: c4fb90cc4a29
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-20"
       code: TRCMT
       layer: feature
       tags:
@@ -3978,8 +4019,8 @@ nodes:
         - test
     - id: internal/mapx/model.go
       kind: code
-      rev: b8f80e6cce40
-      updated_at: "2026-09-20"
+      rev: 36563466e4e4
+      updated_at: "2026-09-21"
       layer: mapa
       tags:
         - nucleo
@@ -9005,3 +9046,415 @@ edges:
         validated_to_rev: c35dfd17ef15
         changed_at: "2026-09-19"
         verdict: ok
+flow:
+    states:
+        - code: ACHCK-R01
+          title: 'PROMOVÍVEL: nenhum gate bloqueante reprovou'
+          flow: flows/actions/check.action.md
+        - code: ACHCK-R02
+          title: 'BARRADO: um gate bloqueante reprovou'
+          flow: flows/actions/check.action.md
+        - code: ACHCK-R03
+          title: 'JULGAMENTO PENDENTE: há gate que nenhum script computa'
+          flow: flows/actions/check.action.md
+        - code: ACHCK-R04
+          title: 'FORA DA ESTRUTURA: o alvo não casa camada nenhuma'
+          flow: flows/actions/check.action.md
+        - code: ACHCK-R05
+          title: 'MAPA DESATUALIZADO: o mapa é mais velho que os arquivos'
+          flow: flows/actions/check.action.md
+        - code: ACDEC-R01
+          title: 'CARD LIBERADO: volta à fila com a resolução escrita'
+          flow: flows/actions/decided.action.md
+        - code: ACDIS-R01
+          title: 'CARD DESCARTADO: fora do quadro, com a razão registrada'
+          flow: flows/actions/discard.action.md
+        - code: ACDON-R01
+          title: 'FECHADA: a tarefa foi para o histórico'
+          flow: flows/actions/done.action.md
+        - code: ACDON-R02
+          title: 'SEM ID: a ação não sabe o que fechar'
+          flow: flows/actions/done.action.md
+        - code: ACESC-R01
+          title: 'CARD COMUM: não impacta a direção'
+          flow: flows/actions/escalate.action.md
+        - code: ACESC-R02
+          title: 'AGUARDANDO O USUÁRIO: impacta a direção'
+          flow: flows/actions/escalate.action.md
+        - code: ACESC-R03
+          title: 'AGUARDANDO ENQUADRAMENTO: não se sabe se impacta'
+          flow: flows/actions/escalate.action.md
+        - code: ACGPJ-R01
+          title: 'DESCOBERTA FEITA: PROJECT.md e INSIGHTS.md escritos'
+          flow: flows/actions/guide-project.action.md
+        - code: ACGDE-R01
+          title: 'RÉGUA LIDA: quem vai escrever sabe o critério'
+          flow: flows/actions/guide.action.md
+        - code: ACGDE-R02
+          title: 'GUIA SEM PONTOS DE CONFORMIDADE: só há prosa a interpretar'
+          flow: flows/actions/guide.action.md
+        - code: ACINI-R01
+          title: 'ESTRUTURA INFERIDA: o projeto tem código e o disco respondeu'
+          flow: flows/actions/init.action.md
+        - code: ACINI-R02
+          title: 'DIRETÓRIO VAZIO: não há de onde inferir'
+          flow: flows/actions/init.action.md
+        - code: ACJPN-R01
+          title: 'HÁ ALVO AGUARDANDO: o guia e a pergunta vêm junto'
+          flow: flows/actions/judge-pending.action.md
+        - code: ACJPN-R02
+          title: 'NADA AGUARDANDO: nenhum gate de julgamento pendente'
+          flow: flows/actions/judge-pending.action.md
+        - code: ACJVD-R01
+          title: 'APROVADO: o alvo cumpre os pontos de conformidade'
+          flow: flows/actions/judge-verdict.action.md
+        - code: ACJVD-R02
+          title: 'REPROVADO: o alvo viola um ou mais pontos'
+          flow: flows/actions/judge-verdict.action.md
+        - code: ACJVD-R03
+          title: 'DISPENSADO: o ponto não se aplica a este alvo'
+          flow: flows/actions/judge-verdict.action.md
+        - code: ACMAP-R01
+          title: 'MAPA EM DIA: o grafo reflete o disco'
+          flow: flows/actions/map-build.action.md
+        - code: ACMAP-R02
+          title: 'CARIMBO PERDIDO: o rebuild não achou um nó que tinha validação'
+          flow: flows/actions/map-build.action.md
+        - code: ACNPL-R01
+          title: 'PLANO SEMEADO: o arquivo existe e a esteira partiu'
+          flow: flows/actions/new-plan.action.md
+        - code: ACNXT-R01
+          title: 'TAREFA PUXADA: reivindicada, e é só desta sessão'
+          flow: flows/actions/next.action.md
+        - code: ACNXT-R02
+          title: 'FILA VAZIA: não há trabalho pendente'
+          flow: flows/actions/next.action.md
+        - code: ACRCL-R01
+          title: 'TAREFAS DEVOLVIDAS: a fila volta a alcançá-las'
+          flow: flows/actions/reclaim.action.md
+        - code: ACRCL-R02
+          title: 'NADA PRESO: nenhuma reivindicação órfã'
+          flow: flows/actions/reclaim.action.md
+        - code: ACUNB-R01
+          title: 'CARD DE DESBLOQUEIO ABERTO: o bloqueado espera trabalho, não pessoa'
+          flow: flows/actions/unblock.action.md
+        - code: ACWCH-R01
+          title: 'VIGIA NO AR: as mudanças viram tarefa'
+          flow: flows/actions/watch-start.action.md
+        - code: ACWCH-R02
+          title: 'JÁ ESTAVA RODANDO: nada a fazer'
+          flow: flows/actions/watch-start.action.md
+        - code: ACWRK-R01
+          title: 'PROCEDIMENTO COMPOSTO: quem trabalha sabe o que fazer'
+          flow: flows/actions/work.action.md
+        - code: ACWRK-R02
+          title: 'ALVO FORA DA ESTRUTURA: o procedimento sai genérico'
+          flow: flows/actions/work.action.md
+        - code: ADOCA-P01
+          title: configurar o projeto
+          flow: flows/adocao.flow.md
+          fits: ACINI
+        - code: ADOCA-P02
+          title: descobrir o que o projeto É
+          flow: flows/adocao.flow.md
+          fits: ACGPJ
+        - code: ADOCA-P03
+          title: construir o mapa
+          flow: flows/adocao.flow.md
+          fits: ACMAP
+        - code: ADOCA-P04
+          title: pôr a esteira no ar
+          flow: flows/adocao.flow.md
+          fits: ACWCH
+        - code: ADOCA-P05
+          title: pronto para planejar
+          flow: flows/adocao.flow.md
+          terminal: true
+        - code: JUDGE-P01
+          title: ver o que aguarda julgamento
+          flow: flows/judge.flow.md
+          fits: ACJPN
+        - code: JUDGE-P02
+          title: ler a régua do que rege este alvo
+          flow: flows/judge.flow.md
+          fits: ACGDE
+        - code: JUDGE-P03
+          title: julgar o alvo contra CADA ponto
+          flow: flows/judge.flow.md
+        - code: JUDGE-P04
+          title: registrar o veredito
+          flow: flows/judge.flow.md
+          fits: ACJVD
+        - code: JUDGE-P05
+          title: nada a julgar
+          flow: flows/judge.flow.md
+          terminal: true
+        - code: JUDGE-P06
+          title: veredito registrado
+          flow: flows/judge.flow.md
+          terminal: true
+        - code: PLANO-P01
+          title: rascunhar o escopo NA CONVERSA
+          flow: flows/plano.flow.md
+          fits: ACGDE
+        - code: PLANO-P02
+          title: iterar até o usuário APROVAR
+          flow: flows/plano.flow.md
+        - code: PLANO-P03
+          title: escrever o arquivo do plano
+          flow: flows/plano.flow.md
+          fits: ACNPL
+        - code: PLANO-P04
+          title: a esteira partiu
+          flow: flows/plano.flow.md
+          terminal: true
+        - code: TRAVA-P01
+          title: 'o trabalho parou: por quê?'
+          flow: flows/travado.flow.md
+        - code: TRAVA-P02
+          title: abrir a questão, escolhendo a saída
+          flow: flows/travado.flow.md
+          fits: ACESC
+        - code: TRAVA-P03
+          title: o card espera uma pessoa
+          flow: flows/travado.flow.md
+        - code: TRAVA-P04
+          title: soltar o card com a resolução escrita
+          flow: flows/travado.flow.md
+          fits: ACDEC
+        - code: TRAVA-P05
+          title: abrir o card que desbloqueia
+          flow: flows/travado.flow.md
+          fits: ACUNB
+        - code: TRAVA-P06
+          title: de volta à fila
+          flow: flows/travado.flow.md
+          terminal: true
+        - code: TRAVA-P07
+          title: tirar do quadro
+          flow: flows/travado.flow.md
+          fits: ACDIS
+        - code: TRAVA-P08
+          title: devolver as tarefas do worker morto
+          flow: flows/travado.flow.md
+          fits: ACRCL
+        - code: TRAVA-P10
+          title: não era isso
+          flow: flows/travado.flow.md
+        - code: TRAVA-P09
+          title: encerrado sem entrega
+          flow: flows/travado.flow.md
+          terminal: true
+        - code: WORKR-P01
+          title: puxar a próxima tarefa
+          flow: flows/worker.flow.md
+          fits: ACNXT
+        - code: WORKR-P02
+          title: pôr no mapa o arquivo que a tarefa cita
+          flow: flows/worker.flow.md
+          fits: ACMAP
+        - code: WORKR-P03
+          title: escrever o artefato da etapa
+          flow: flows/worker.flow.md
+          fits: ACWRK
+        - code: WORKR-P04
+          title: confrontar
+          flow: flows/worker.flow.md
+          fits: ACHCK
+        - code: WORKR-P05
+          title: julgar o que nenhum script computa
+          flow: flows/worker.flow.md
+        - code: WORKR-P06
+          title: fechar a tarefa
+          flow: flows/worker.flow.md
+          fits: ACDON
+        - code: WORKR-P07
+          title: nada a fazer
+          flow: flows/worker.flow.md
+          terminal: true
+        - code: WORKR-P08
+          title: o alvo não é regido pela Estrutura
+          flow: flows/worker.flow.md
+          terminal: true
+    transitions:
+        - from: ADOCA-P01
+          to: ADOCA-P03
+          "on": ACINI-R01
+          flow: flows/adocao.flow.md
+        - from: ADOCA-P01
+          to: ADOCA-P02
+          "on": ACINI-R02
+          flow: flows/adocao.flow.md
+        - from: ADOCA-P02
+          to: ADOCA-P01
+          "on": ACGPJ-R01
+          when: (agora o init tem de onde inferir)
+          flow: flows/adocao.flow.md
+        - from: ADOCA-P03
+          to: ADOCA-P04
+          "on": ACMAP-R01
+          flow: flows/adocao.flow.md
+        - from: ADOCA-P04
+          to: ADOCA-P05
+          "on": ACWCH-R01
+          flow: flows/adocao.flow.md
+        - from: ADOCA-P04
+          to: ADOCA-P05
+          "on": ACWCH-R02
+          flow: flows/adocao.flow.md
+        - from: JUDGE-P01
+          to: JUDGE-P02
+          "on": ACJPN-R01
+          flow: flows/judge.flow.md
+        - from: JUDGE-P01
+          to: JUDGE-P05
+          "on": ACJPN-R02
+          flow: flows/judge.flow.md
+        - from: JUDGE-P02
+          to: JUDGE-P03
+          "on": ACGDE-R01
+          flow: flows/judge.flow.md
+        - from: JUDGE-P02
+          to: JUDGE-P03
+          "on": ACGDE-R02
+          flow: flows/judge.flow.md
+        - from: JUDGE-P03
+          to: JUDGE-P04
+          "on": JUDGE-P03
+          flow: flows/judge.flow.md
+        - from: JUDGE-P04
+          to: JUDGE-P06
+          "on": ACJVD-R01
+          flow: flows/judge.flow.md
+        - from: JUDGE-P04
+          to: JUDGE-P06
+          "on": ACJVD-R02
+          flow: flows/judge.flow.md
+        - from: JUDGE-P04
+          to: JUDGE-P06
+          "on": ACJVD-R03
+          flow: flows/judge.flow.md
+        - from: PLANO-P01
+          to: PLANO-P02
+          "on": ACGDE-R01
+          flow: flows/plano.flow.md
+        - from: PLANO-P02
+          to: PLANO-P01
+          "on": PLANO-P02
+          flow: flows/plano.flow.md
+        - from: PLANO-P02
+          to: PLANO-P03
+          "on": PLANO-P03
+          flow: flows/plano.flow.md
+        - from: PLANO-P03
+          to: PLANO-P04
+          "on": ACNPL-R01
+          flow: flows/plano.flow.md
+        - from: TRAVA-P01
+          to: TRAVA-P02
+          "on": TRAVA-P02
+          flow: flows/travado.flow.md
+        - from: TRAVA-P01
+          to: TRAVA-P07
+          "on": TRAVA-P07
+          flow: flows/travado.flow.md
+        - from: TRAVA-P01
+          to: TRAVA-P08
+          "on": TRAVA-P08
+          flow: flows/travado.flow.md
+        - from: TRAVA-P02
+          to: TRAVA-P06
+          "on": ACESC-R01
+          flow: flows/travado.flow.md
+        - from: TRAVA-P02
+          to: TRAVA-P03
+          "on": ACESC-R02
+          flow: flows/travado.flow.md
+        - from: TRAVA-P02
+          to: TRAVA-P03
+          "on": ACESC-R03
+          flow: flows/travado.flow.md
+        - from: TRAVA-P03
+          to: TRAVA-P04
+          "on": TRAVA-P04
+          flow: flows/travado.flow.md
+        - from: TRAVA-P03
+          to: TRAVA-P05
+          "on": TRAVA-P05
+          flow: flows/travado.flow.md
+        - from: TRAVA-P03
+          to: TRAVA-P07
+          "on": TRAVA-P07
+          flow: flows/travado.flow.md
+        - from: TRAVA-P04
+          to: TRAVA-P06
+          "on": ACDEC-R01
+          flow: flows/travado.flow.md
+        - from: TRAVA-P05
+          to: TRAVA-P06
+          "on": ACUNB-R01
+          flow: flows/travado.flow.md
+        - from: TRAVA-P07
+          to: TRAVA-P09
+          "on": ACDIS-R01
+          flow: flows/travado.flow.md
+        - from: TRAVA-P08
+          to: TRAVA-P06
+          "on": ACRCL-R01
+          flow: flows/travado.flow.md
+        - from: TRAVA-P08
+          to: TRAVA-P10
+          "on": ACRCL-R02
+          flow: flows/travado.flow.md
+        - from: TRAVA-P10
+          to: TRAVA-P01
+          "on": TRAVA-P01
+          flow: flows/travado.flow.md
+        - from: WORKR-P01
+          to: WORKR-P02
+          "on": ACNXT-R01
+          flow: flows/worker.flow.md
+        - from: WORKR-P01
+          to: WORKR-P07
+          "on": ACNXT-R02
+          flow: flows/worker.flow.md
+        - from: WORKR-P02
+          to: WORKR-P03
+          "on": ACMAP-R01
+          flow: flows/worker.flow.md
+        - from: WORKR-P03
+          to: WORKR-P04
+          "on": ACWRK-R01
+          flow: flows/worker.flow.md
+        - from: WORKR-P04
+          to: WORKR-P06
+          "on": ACHCK-R01
+          flow: flows/worker.flow.md
+        - from: WORKR-P04
+          to: WORKR-P03
+          "on": ACHCK-R02
+          when: (volta a escrever)
+          flow: flows/worker.flow.md
+        - from: WORKR-P04
+          to: WORKR-P05
+          "on": ACHCK-R03
+          flow: flows/worker.flow.md
+        - from: WORKR-P04
+          to: WORKR-P08
+          "on": ACHCK-R04
+          flow: flows/worker.flow.md
+        - from: WORKR-P04
+          to: WORKR-P02
+          "on": ACHCK-R05
+          when: (refaz o mapa e confronta de novo)
+          flow: flows/worker.flow.md
+        - from: WORKR-P05
+          to: WORKR-P04
+          "on": JUDGE-R01
+          when: (confronta de novo)
+          flow: flows/worker.flow.md
+        - from: WORKR-P06
+          to: WORKR-P01
+          "on": ACDON-R01
+          when: (volta a puxar)
+          flow: flows/worker.flow.md

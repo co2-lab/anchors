@@ -774,5 +774,12 @@
   "gate.spec_realizes_doctrine.skip_no_config": "sin Estructura que leer — la exigencia se declara por capa",
   "gate.spec_realizes_doctrine.skip_layer_does_not_require": "esta capa no declara `requires_doctrine` — una regla local a la unidad es legítima aquí",
   "gate.spec_realizes_doctrine.missing": "%d regla(s) sin `@realizes` en una capa que lo exige: %s.\nLa capa declaró que sus reglas concretan decisiones de producto. Una regla sin declaración o pertenece a una doctrina que nadie escribió, o no pertenece a esta capa.",
-  "gate.spec_realizes_doctrine.deferred": "%d regla(s) declarada(s) POR DESARROLLAR (`@TBD`): la doctrina que realizarán aún no existe. Deuda, y queda visible."
+  "gate.spec_realizes_doctrine.deferred": "%d regla(s) declarada(s) POR DESARROLLAR (`@TBD`): la doctrina que realizarán aún no existe. Deuda, y queda visible.",
+  "section.title.flow_steps": "Montaje",
+  "section.title.action_command": "Comando",
+  "section.title.action_results": "Resultados",
+  "section.purpose.flow_overview": "Qué trabajo dirige este flujo y — lo que importa — QUÉ REGLA deja de depender de la memoria al volverse topología.",
+  "section.purpose.flow_steps": "Los pasos, cada uno nombrando la PIEZA que encaja y adónde va cada resultado. La asociación es posicional. Un paso sin salida declara `> @terminal`.",
+  "section.purpose.action_command": "La línea de comando tal como se escribe. EJECÚTALA antes de escribir los resultados: una acción cuyos resultados fueron imaginados describe un comando que no existe.",
+  "section.purpose.action_results": "Todo lo que esta acción sabe responder. NO digas adónde lleva cada uno: eso es trabajo del flujo, y esa ignorancia es lo que hace la pieza reusable."
 }

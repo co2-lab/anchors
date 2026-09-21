@@ -9,4 +9,5 @@ func Register(root *cobra.Command) {
 	root.AddCommand(newIngestCmd())
 	root.AddCommand(newJudgeCmd())
 	root.AddCommand(newRecodeCmd())
+	root.AddCommand(newFlowCmd())
 }

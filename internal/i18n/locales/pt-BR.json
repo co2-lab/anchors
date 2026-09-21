@@ -774,5 +774,12 @@
   "gate.spec_realizes_doctrine.skip_no_config": "sem Estrutura para ler — a exigência é declarada por camada",
   "gate.spec_realizes_doctrine.skip_layer_does_not_require": "esta camada não declara `requires_doctrine` — regra local à unidade é legítima aqui",
   "gate.spec_realizes_doctrine.missing": "%d regra(s) sem `@realizes` numa camada que exige: %s.\nA camada declarou que suas regras concretizam decisões de produto. Regra sem declaração ou pertence a uma doutrina que ninguém escreveu, ou não pertence a esta camada. Declare `@TBD: <razão>` na linha enquanto a doutrina ainda está sendo escrita.",
-  "gate.spec_realizes_doctrine.deferred": "%d regra(s) declarada(s) A DESENVOLVER (`@TBD`): a doutrina que elas vão realizar ainda não existe. Dívida, e fica visível."
+  "gate.spec_realizes_doctrine.deferred": "%d regra(s) declarada(s) A DESENVOLVER (`@TBD`): a doutrina que elas vão realizar ainda não existe. Dívida, e fica visível.",
+  "section.title.flow_steps": "Montagem",
+  "section.title.action_command": "Comando",
+  "section.title.action_results": "Resultados",
+  "section.purpose.flow_overview": "Que trabalho este fluxo dirige e — a parte que importa — QUAL REGRA deixa de depender de memória quando vira topologia. Um fluxo cuja visão geral não nomeia essa regra é provavelmente uma lista de passos com cerimônia a mais.",
+  "section.purpose.flow_steps": "Os passos, cada um nomeando a PEÇA que encaixa e para onde vai cada resultado. A associação é posicional: o que vem abaixo de um passo pertence a ele. Passo sem saída declara `> @terminal` — declarado, nunca deduzido de 'não tem saída', porque isso pode ser o fim do trabalho ou um esquecimento, e só o autor sabe qual.",
+  "section.purpose.action_command": "A linha de comando como ela é digitada, com as flags que mudam o resultado. RODE antes de escrever os resultados: uma ação cujos resultados foram imaginados descreve um comando que não existe.",
+  "section.purpose.action_results": "Tudo o que esta ação sabe responder. Cada resultado ganha um código e um NOME CURTO em maiúsculas antes dos dois pontos — esse nome é o que a seta carrega no diagrama, então tem de se ler sozinho. NÃO diga para onde cada um leva: isso é trabalho do fluxo, e é essa ignorância que torna a peça reusável."
 }

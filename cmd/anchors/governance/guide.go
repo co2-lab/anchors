@@ -297,6 +297,7 @@ Subcommands print the guides for the specific rulers:
 		newGuideSubCmd("project", "how to discover a project that does not yet exist (PROJECT.md + INSIGHTS.md)", projectGuide),
 		newGuidePlanCmd(),
 		newGuideProductCmd(),
+		newGuideFlowCmd(),
 		newGuideSubCmd("spec", "how to write a spec (the source of truth)", specGuide),
 		newGuideSubCmd("code", "how to implement the code guided by the spec", codeGuide),
 		newGuideSubCmd("feature", "how to write the feature (behaviour scenarios)", featureGuide),
@@ -315,6 +316,19 @@ func newGuideSubCmd(use, short, body string) *cobra.Command {
 		Short: short,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Print(body)
+			return nil
+		},
+	}
+}
+
+func newGuideFlowCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "flow",
+		Short: "Print the flow guide (work driven by shape, not by memory)",
+		Long: `The flow guide is the ruler for ACTIONS (the puzzle pieces, each declaring
+its results) and FLOWS (the assembly that says where each result goes).`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Print(flowGuide)
 			return nil
 		},
 	}
