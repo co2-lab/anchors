@@ -33,9 +33,16 @@ nodes:
       layer: doc
       tags:
         - doc
+    - id: DESIGN-falhas-e-logs.md
+      kind: doc
+      rev: badc952f012a
+      layer: desenho
+      tags:
+        - doc
+        - desenho
     - id: DESIGN-flow-driven-work.md
       kind: doc
-      rev: 77686d12d203
+      rev: d2d52efe03f5
       updated_at: "2026-09-21"
       code: DSTRV
       layer: desenho
@@ -53,7 +60,7 @@ nodes:
         - desenho
     - id: DESIGN-flows-do-anchors.md
       kind: doc
-      rev: de33e774a459
+      rev: 557b51479514
       updated_at: "2026-09-21"
       layer: desenho
       tags:
@@ -1350,7 +1357,7 @@ nodes:
         - config
     - id: internal/config/dialect.go
       kind: code
-      rev: 6e1c68f1e3aa
+      rev: 21f066c43ef8
       updated_at: "2026-09-19"
       layer: config
       tags:
@@ -1524,7 +1531,7 @@ nodes:
         - test
     - id: internal/flowx/build_test.go
       kind: test
-      rev: 8e68e53ea721
+      rev: cf9125b38025
       updated_at: "2026-09-21"
       code: DSTRV
       layer: teste
@@ -1985,6 +1992,19 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/failure.go
+      kind: code
+      rev: dac3ccb7e7a7
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/failure_test.go
+      kind: test
+      rev: 2ab9f9cfc2a9
+      layer: teste
+      tags:
+        - test
     - id: internal/gate/feature_suffix_test.go
       kind: test
       rev: b1861a400144
@@ -2113,7 +2133,7 @@ nodes:
         - feature
     - id: internal/gate/internal_checks.go
       kind: code
-      rev: 4d63a6b1a416
+      rev: 0cd6d4d9e444
       updated_at: "2026-09-20"
       code: INCHN
       layer: gate
@@ -3717,7 +3737,7 @@ nodes:
         - test
     - id: internal/initx/default_gates.go
       kind: code
-      rev: 24d053bd0329
+      rev: df4006eaf489
       updated_at: "2026-09-20"
       layer: infra
       tags:
@@ -4835,6 +4855,10 @@ edges:
         validated_to_rev: 431421bde9ae
         changed_at: "2026-09-19"
         verdict: ok
+    - from: QUALITY.md
+      to: internal/gate/failure.go
+      type: governs
+      origin: declared
     - from: QUALITY.md
       to: internal/gate/feature_test_match.go
       type: governs
@@ -6742,8 +6766,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`EdgeSpecifies`'
-      dep: DEP2
+      method: '`KindSpec`'
+      dep: DEP1
       stamp:
         validated_from_rev: 0cf3a482b528
         validated_to_rev: c35dfd17ef15
@@ -6753,8 +6777,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindSpec`'
-      dep: DEP1
+      method: '`EdgeSpecifies`'
+      dep: DEP2
       stamp:
         validated_from_rev: 0cf3a482b528
         validated_to_rev: c35dfd17ef15
@@ -8401,17 +8425,6 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`RuleType`'
-      dep: DEP1
-      stamp:
-        validated_from_rev: 6ab06f981fd1
-        validated_to_rev: 2536cd2306a8
-        changed_at: "2026-09-19"
-        verdict: ok
-    - from: internal/gate/rule_types.spec.md
-      to: internal/config/config.go
-      type: depends-on
-      origin: declared
       method: '`DefaultRuleLetters`'
       dep: DEP2
       stamp:
@@ -8425,6 +8438,17 @@ edges:
       origin: declared
       method: '`CodeLengthPattern`'
       dep: DEP3
+      stamp:
+        validated_from_rev: 6ab06f981fd1
+        validated_to_rev: 2536cd2306a8
+        changed_at: "2026-09-19"
+        verdict: ok
+    - from: internal/gate/rule_types.spec.md
+      to: internal/config/config.go
+      type: depends-on
+      origin: declared
+      method: '`RuleType`'
+      dep: DEP1
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: 2536cd2306a8
@@ -8875,8 +8899,8 @@ edges:
       to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
-      method: SAIDA-R03
-      dep: TRCMT-B08
+      method: SAIDA-R01
+      dep: TRCMT-B07
     - from: internal/gate/triad_complete.spec.md
       to: product/declared-ways-out.doctrine.md
       type: realizes
@@ -8887,8 +8911,8 @@ edges:
       to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
-      method: SAIDA-R01
-      dep: TRCMT-B07
+      method: SAIDA-R03
+      dep: TRCMT-B08
     - from: internal/gate/trigger_declared.feature
       to: internal/gate/trigger_declared_test.go
       type: tested-by

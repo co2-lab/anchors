@@ -243,6 +243,31 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Measures: "as regras da spec declaram a doutrina de produto que realizam",
 		})
 
+		// A FALHA declarada, tratada e registrada — a camada estatica do conceito.
+		//
+		// A spec ja' catalogava como a unidade falha (a secao `-E`), e NADA confrontava
+		// isso: as regras atravessavam o pipeline inteiro sem que se perguntasse se eram
+		// tratadas, se logavam, ou se aconteciam.
+		//
+		// `failure-logged` e' o que sustenta as camadas seguintes: um tratamento que
+		// engole a falha sem registrar nada e' o silencio perfeito — ela acontece, nada
+		// sabe, e nenhuma ferramenta a jusante tem o que ler.
+		gates = append(gates, config.Gate{
+			Name: "failure-handled", ID: "failure-handled", On: []string{"spec"},
+			Check: "failure-handled", Blocking: config.Bool(false),
+			Measures: "a falha declarada tem caminho que a trata no codigo",
+		})
+		gates = append(gates, config.Gate{
+			Name: "failure-logged", ID: "failure-logged", On: []string{"spec"},
+			Check: "failure-logged", Blocking: config.Bool(false),
+			Measures: "o tratamento da falha REGISTRA a ocorrencia",
+		})
+		gates = append(gates, config.Gate{
+			Name: "failure-declared", ID: "failure-declared", On: []string{"spec"},
+			Check: "failure-declared", Blocking: config.Bool(false),
+			Measures: "o tratamento que existe no codigo responde a alguma falha declarada",
+		})
+
 		// A COBERTURA, que o gate acima nao tem como ver: ele confere as paginas que
 		// EXISTEM, e o defeito silencioso e' a spec que nao chega a pagina nenhuma.
 		// Os templates filtram por camada, entao uma spec que nenhum filtro seleciona

@@ -434,6 +434,18 @@ gates:
   - name: spec-realizes-doctrine
     blocking: false
 
+  # A FALHA declarada, tratada e registrada. Este repositorio nao declara regras `-E`
+  # (um CLI falha por retorno, nao por excecao em producao), entao os tres saem
+  # indeterminados aqui — o veredito honesto para "nao ha' o que confrontar".
+  - name: failure-handled
+    blocking: false
+
+  - name: failure-logged
+    blocking: false
+
+  - name: failure-declared
+    blocking: false
+
   - name: docs-covered
     blocking: false
 

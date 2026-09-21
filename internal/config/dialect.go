@@ -87,6 +87,26 @@ type Dialect struct {
 	GuardPatterns []string `yaml:"guard_patterns,omitempty"`
 	// ImportPattern casa uma linha de importação de dependência no proof-crosses-boundary.
 	ImportPattern string `yaml:"import_pattern,omitempty"`
+	// HandlePatterns reconhecem um caminho que TRATA uma falha em vez de deixá-la escapar.
+	//
+	// NÃO é "achar o `catch`". Cravar `catch` seria cravar a sintaxe de uma família de
+	// linguagens, e tratamento tem muitas formas que não se parecem:
+	//
+	//	if (x == null) { return recusa() }        trata
+	//	try { ... } catch (e) { ... }             trata
+	//	match result { Err(e) => ... }            trata
+	//	if err != nil { return fmt.Errorf(...) }  trata
+	//
+	// O que elas têm em comum não é a forma, é o EFEITO: a falha vira parte do fluxo e a
+	// aplicação segue — que é o que a torna resiliente. Por isso os padrões vêm do
+	// projeto, como os de guarda: quem sabe a forma no dialeto local é quem escreve nele.
+	HandlePatterns []string `yaml:"handle_patterns,omitempty"`
+	// LogPatterns reconhecem o REGISTRO da ocorrência.
+	//
+	// É a peça que sustenta tudo o mais, e a que ninguém cobra: um tratamento que engole a
+	// falha sem registrar nada é o silêncio perfeito — a falha acontece, nada sabe, e
+	// nenhuma ferramenta a jusante tem o que ler.
+	LogPatterns []string `yaml:"log_patterns,omitempty"`
 }
 
 // GherkinKeywords são as palavras-chave da feature no idioma do projeto. Só os idiomas
@@ -196,6 +216,17 @@ var dialectFamilies = map[string]Dialect{
 		// que recebem o status como 1º argumento (`jsonResponse(409, …)`, `fail(400)`).
 		HTTPStatus:        `statusCode:\s*(\d{3})|\b[A-Za-z_$][\w$]*\(\s*(\d{3})\s*[,)]`,
 		HTTPStatusDynamic: `statusCode:\s*[A-Za-z_$]`,
+		HandlePatterns: []string{
+			`\bcatch\s*\(`,
+			`\.catch\(`,
+			`if\s*\([^)]*(?:==|===)\s*null`,
+			`if\s*\(\s*!`,
+			`\bthrow\s+new\b`,
+		},
+		LogPatterns: []string{
+			`\b(?:logger|log|console)\s*\.\s*(?:error|warn|fatal|exception)\b`,
+			`\bcaptureException\b`,
+		},
 	},
 	"go": {
 		// Em Go a exportação é a MAIÚSCULA inicial — não uma palavra-chave.
@@ -207,6 +238,16 @@ var dialectFamilies = map[string]Dialect{
 		// `c.JSON(409, …)`. A constante vira número pelo mapa do gate.
 		HTTPStatus:        `WriteHeader\(\s*(\d{3})\s*\)|\bJSON\(\s*(\d{3})\s*,|http\.Status(\w+)`,
 		HTTPStatusDynamic: `WriteHeader\(\s*[a-z]`,
+		HandlePatterns: []string{
+			`if\s+err\s*!=\s*nil`,
+			`\brecover\(\)`,
+			`==\s*nil\s*\{`,
+			`\berrors\.(?:Is|As)\(`,
+		},
+		LogPatterns: []string{
+			`\b(?:log|logger|slog)\.(?:Error|Warn|Fatal|Printf|Print)\b`,
+			`\bfmt\.Errorf\(`,
+		},
 	},
 	"python": {
 		// Sem palavra-chave de exportação: convenção é o underscore inicial marcar o
@@ -306,6 +347,12 @@ func (c *Config) DialectFor() Dialect {
 		}
 		if d.HTTPStatusDynamic == "" {
 			d.HTTPStatusDynamic = base.HTTPStatusDynamic
+		}
+		if len(d.HandlePatterns) == 0 {
+			d.HandlePatterns = base.HandlePatterns
+		}
+		if len(d.LogPatterns) == 0 {
+			d.LogPatterns = base.LogPatterns
 		}
 	}
 	if d.SetPromise == "" {

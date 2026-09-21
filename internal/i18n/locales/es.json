@@ -781,5 +781,13 @@
   "section.purpose.flow_overview": "Qué trabajo dirige este flujo y — lo que importa — QUÉ REGLA deja de depender de la memoria al volverse topología.",
   "section.purpose.flow_steps": "Los pasos, cada uno nombrando la PIEZA que encaja y adónde va cada resultado. La asociación es posicional. Un paso sin salida declara `> @terminal`.",
   "section.purpose.action_command": "La línea de comando tal como se escribe. EJECÚTALA antes de escribir los resultados: una acción cuyos resultados fueron imaginados describe un comando que no existe.",
-  "section.purpose.action_results": "Todo lo que esta acción sabe responder. NO digas adónde lleva cada uno: eso es trabajo del flujo, y esa ignorancia es lo que hace la pieza reusable."
+  "section.purpose.action_results": "Todo lo que esta acción sabe responder. NO digas adónde lleva cada uno: eso es trabajo del flujo, y esa ignorancia es lo que hace la pieza reusable.",
+  "gate.failure_handled.skip_not_spec": "no es spec — la tabla de fallos vive en la spec",
+  "gate.failure_handled.skip_none": "la spec no declara fallos (`-E`) — nada que cobrar",
+  "gate.failure_handled.skip_no_dialect": "el proyecto no declara dialecto (`handle_patterns`) — leer código que no sabe reconocer sellaría lo que nunca se verificó",
+  "gate.failure_handled.pending_no_code": "la spec aún no gobierna código — no hay contra qué confrontar los fallos",
+  "gate.failure_handled.untreated": "%d fallo(s) declarado(s) SIN camino de tratamiento en el código: %s.\nUn fallo catalogado y no tratado es una promesa que el código no cumple.",
+  "gate.failure_logged.unlogged": "%d fallo(s) tratado(s) que no REGISTRAN nada: %s.\nUn tratamiento que se traga el fallo sin registrarlo es el silencio perfecto: ocurre, nada lo sabe, y ninguna herramienta posterior tiene qué leer.",
+  "gate.failure_declared.undeclared": "el código tiene caminos de tratamiento que ningún fallo declarado (`-E`) explica: %d encontrados, %d declarados.",
+  "gate.failure_declared.skip_none": "el código no declara camino de tratamiento — nada que confrontar"
 }
