@@ -789,5 +789,8 @@
   "gate.failure_handled.untreated": "%d fallo(s) declarado(s) SIN camino de tratamiento en el código: %s.\nUn fallo catalogado y no tratado es una promesa que el código no cumple.",
   "gate.failure_logged.unlogged": "%d fallo(s) tratado(s) que no REGISTRAN nada: %s.\nUn tratamiento que se traga el fallo sin registrarlo es el silencio perfecto: ocurre, nada lo sabe, y ninguna herramienta posterior tiene qué leer.",
   "gate.failure_declared.undeclared": "el código tiene caminos de tratamiento que ningún fallo declarado (`-E`) explica: %d encontrados, %d declarados.",
-  "gate.failure_declared.skip_none": "el código no declara camino de tratamiento — nada que confrontar"
+  "gate.failure_declared.skip_none": "el código no declara camino de tratamiento — nada que confrontar",
+  "flow.keyword.fits": "Encaja",
+  "flow.keyword.suggests": "Sugiere",
+  "flow.keyword.results": "Resultados"
 }

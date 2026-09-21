@@ -789,5 +789,8 @@
   "gate.failure_handled.untreated": "%d declared failure(s) with NO handling path in the code: %s.\nA failure catalogued and not handled is a promise the code does not keep: the spec says how the unit fails, and nothing in it deals with that. Treating is not \"having a catch\" — any path that turns the failure into part of the flow counts, and the project declares the shapes in `handle_patterns`.",
   "gate.failure_logged.unlogged": "%d handled failure(s) that RECORD nothing: %s.\nA handling path that swallows the failure without logging is the perfect silence: it happens, nothing knows, and no tool downstream has anything to read. It is the piece that sustains everything else.",
   "gate.failure_declared.undeclared": "the code has handling paths that no declared failure (`-E`) accounts for: %d found, %d declared.\nSomebody wrote a defence and never declared what it prevents. The defence may be right — what is missing is the spec saying which failure it answers, so whoever reads it knows whether it still applies.",
-  "gate.failure_declared.skip_none": "the code declares no handling path — nothing to confront"
+  "gate.failure_declared.skip_none": "the code declares no handling path — nothing to confront",
+  "flow.keyword.fits": "Fits",
+  "flow.keyword.suggests": "Suggests",
+  "flow.keyword.results": "Results"
 }

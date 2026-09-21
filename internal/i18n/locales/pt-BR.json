@@ -789,5 +789,8 @@
   "gate.failure_handled.untreated": "%d falha(s) declarada(s) SEM caminho de tratamento no código: %s.\nFalha catalogada e não tratada é promessa que o código não cumpre: a spec diz como a unidade falha, e nada nela lida com isso. Tratar não é \"ter um catch\" — qualquer caminho que torne a falha parte do fluxo conta, e as formas o projeto declara em `handle_patterns`.",
   "gate.failure_logged.unlogged": "%d falha(s) tratada(s) que não REGISTRAM nada: %s.\nUm tratamento que engole a falha sem logar é o silêncio perfeito: ela acontece, nada sabe, e nenhuma ferramenta a jusante tem o que ler. É a peça que sustenta todo o resto.",
   "gate.failure_declared.undeclared": "o código tem caminhos de tratamento que nenhuma falha declarada (`-E`) explica: %d encontrados, %d declaradas.\nAlguém escreveu uma defesa e nunca declarou o que ela previne. A defesa pode estar certa — o que falta é a spec dizer a qual falha ela responde, para quem ler depois saber se ainda vale.",
-  "gate.failure_declared.skip_none": "o código não declara caminho de tratamento — nada a confrontar"
+  "gate.failure_declared.skip_none": "o código não declara caminho de tratamento — nada a confrontar",
+  "flow.keyword.fits": "Encaixa",
+  "flow.keyword.suggests": "Sugere",
+  "flow.keyword.results": "Resultados"
 }

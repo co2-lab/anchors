@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -25,12 +26,30 @@ var stateRE = regexp.MustCompile(`(?m)^#{1,6}\s+([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2
 // What Anchors guarantees is the SET: from here, these exits, and no others.
 var transitionRE = regexp.MustCompile("(?m)^\\s*[-*]\\s+`([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`\\s*(.*)$")
 
+// escapeAll prepares translated keywords to enter a regex alternation.
+func escapeAll(xs []string) []string {
+	out := make([]string, 0, len(xs))
+	for _, x := range xs {
+		if x != "" {
+			out = append(out, regexp.QuoteMeta(x))
+		}
+	}
+	return out
+}
+
 // fitsRE matches what a flow step FITS: `Encaixa: ` + "`ACHCK`" + `.
 //
 // It is what turns the flow into assembly rather than redrawing: the step says which piece
 // it uses, and the piece declares its own results. Without it, every flow would repeat the
 // description of `map build` — and they would diverge at the first change.
-var fitsRE = regexp.MustCompile("(?im)^\\s*(?:Encaixa|Fits)\\s*:\\s*`?([A-Z0-9]{3,6})`?")
+//
+// The keyword comes from the TRANSLATION CATALOG, never hardcoded. The first version read
+// `(?:Encaixa|Fits)` — two languages nailed into the pattern, which is exactly what the
+// catalog exists to avoid: a project writing in Spanish had no way to write in its own
+// language, and adding one would mean editing the engine.
+var fitsRE = regexp.MustCompile("(?im)^\\s*(?:" +
+	strings.Join(escapeAll(i18n.AllTranslations("flow.keyword.fits")), "|") +
+	")\\s*:\\s*`?([A-Z0-9]{3,6})`?")
 
 // resultLinkRE matches a RESULT being routed to a next step:
 // `- ` + "`ACHCK-R02`" + ` BARRADO → ` + "`WORKR-P03`" + `.
@@ -55,7 +74,9 @@ var resultLinkRE = regexp.MustCompile("(?m)`?([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`
 // `spec-feature-match` says it plainly — "write the scenario, OR waive with
 // `@no-scenario: <reason>`". Two legitimate reactions, and choosing between them requires
 // knowing whether the requirement is real.
-var suggestsRE = regexp.MustCompile(`(?im)^\s*(?:Sugere|Suggests)\s*:\s*(\S.*)$`)
+var suggestsRE = regexp.MustCompile("(?im)^\\s*(?:" +
+	strings.Join(escapeAll(i18n.AllTranslations("flow.keyword.suggests")), "|") +
+	")\\s*:\\s*(\\S.*)$")
 
 // terminalRE marks the state there is no leaving.
 //

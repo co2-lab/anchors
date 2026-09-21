@@ -13,45 +13,47 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// --- a FALHA declarada, tratada e registrada ---
+// --- the FAILURE declared, handled and recorded ---
 //
-// A spec já catalogava como a unidade falha, com letra própria (`-E`) e uma tabela de
-// condição e efeito. E nada confrontava isso: as regras atravessavam o pipeline inteiro,
-// e ninguém perguntava se eram tratadas, se logavam, ou se aconteciam.
+// The spec already catalogued how the unit fails, with its own letter (`-E`) and a table
+// of condition and effect. And nothing confronted it: the rules crossed the whole pipeline
+// and nobody asked whether they were handled, whether they logged, or whether they happen.
 //
-// Estes três gates fecham a primeira das três camadas do conceito — a que é CONFRONTO
-// ESTÁTICO puro, e por isso não depende de produção nem de formato de log nenhum:
+// These three gates close the first of the concept's three layers — the one that is PURE
+// STATIC confrontation, and therefore depends on neither production nor any log format:
 //
-//	failure-handled    a falha declarada tem caminho que a trata?
-//	failure-logged     esse caminho REGISTRA a ocorrência?
-//	failure-declared   o tratamento que existe responde a alguma falha declarada?
+//	failure-handled    does the declared failure have a path that handles it?
+//	failure-logged     does that path RECORD the occurrence?
+//	failure-declared   does the handling that exists answer some declared failure?
 //
-// O terceiro é o inverso do primeiro, e pega o caso mais comum: alguém escreveu uma defesa
-// e nunca declarou o que ela previne.
+// The third is the inverse of the first, and catches the commonest case: somebody wrote a
+// defence and never declared what it prevents.
 //
-// TRATAR NÃO É "TER UM CATCH". Cravar `catch` seria cravar a sintaxe de uma família de
-// linguagens — `if (x == null) { return recusa() }` trata tanto quanto, e um `match` em
-// Rust também. O que as formas têm em comum não é a aparência, é o EFEITO: a falha vira
-// parte do fluxo e a aplicação segue. Quem sabe reconhecer a forma no dialeto local é o
-// projeto, em `handle_patterns` — o mesmo mecanismo do `guard_patterns`, que já existia.
+// HANDLING IS NOT "HAVING A CATCH". Nailing `catch` would nail the syntax of one family of
+// languages — `if (x == null) { return refuse() }` handles just as much, and so does a
+// `match` in Rust. What the shapes have in common is not the look, it is the EFFECT: the
+// failure becomes part of the flow and the application carries on. Who knows the local
+// dialect's shape is the project, in `handle_patterns` — the same mechanism as
+// `guard_patterns`, which already existed.
 
-// failureRuleRE acha uma regra de FALHA (`-E`) nas três formas catalogadas.
+// failureRuleRE finds a FAILURE rule (`-E`) in the three catalogued forms.
 var failureRuleRE = regexp.MustCompile(`(?m)(?:^#{1,6}\s+|^\s*\|\s*` + "`?" + `|^\s*-\s+\*\*)([A-Z0-9]{3,6}-E[0-9]{2})`)
 
-// resilientRE — a falha COMPREENDIDA e absorvida pelo fluxo.
+// resilientRE — the failure UNDERSTOOD and absorbed by the flow.
 //
-// É uma afirmação diferente das duas que já existiam, e por isso tem marcador próprio:
+// It is an assertion different from the two that already existed, and so it gets its own
+// marker:
 //
-//	@no-<coisa>: <razão>   "não vai ter"        — dispensa permanente
-//	@TBD: <razão>          "ainda não tem"      — dívida, continua aparecendo
-//	@resilient: <razão>    "acontece, sei por quê, e está tratada"
+//	@no-<thing>: <reason>   "it will never have one"   — permanent waiver
+//	@TBD: <reason>          "it does not have one yet"  — debt, keeps showing up
+//	@resilient: <reason>    "it happens, I know why, and it is handled"
 //
-// Não é dispensa (a falha é real e acontece) nem dívida (não há nada pendente): é
-// conhecimento adquirido. A razão obrigatória é o que a distingue de calar um alerta — ela
-// responde a pergunta que alguém vai fazer em seis meses, "por que ignoramos isso?".
+// It is not a waiver (the failure is real and happens) nor debt (nothing is pending): it is
+// knowledge acquired. The mandatory reason is what tells it apart from silencing an alert —
+// it answers the question somebody will ask in six months, "why do we ignore this?".
 var resilientRE = regexp.MustCompile("(?i)(^|[^`])@resilient[^\\S\\n]*:[^\\S\\n]*\\S+")
 
-// declaredFailures lê as regras `-E` da spec, separando as marcadas como resilientes.
+// declaredFailures reads the `-E` rules from the spec, separating the ones marked resilient.
 func declaredFailures(content string) (all, resilient []string) {
 	seen := map[string]bool{}
 	for _, line := range strings.Split(content, "\n") {
@@ -101,7 +103,7 @@ func anyMatch(d config.Dialect, patterns []string, code string) bool {
 	return false
 }
 
-// --- a falha declarada tem caminho que a trata? ---
+// --- does the declared failure have a path that handles it? ---
 func checkFailureHandled(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.failure_handled.skip_not_spec")
@@ -112,8 +114,8 @@ func checkFailureHandled(content string, n mapx.Node, root string, g *mapx.Graph
 	}
 	d := cfg.DialectFor()
 	if len(d.HandlePatterns) == 0 {
-		// Pendente e não Pass: sem saber reconhecer um tratamento, o gate não verificou
-		// nada — e um ✓ aqui seria carimbar o que nunca foi medido.
+		// Pending and not Pass: without knowing how to recognise a handling path, the gate
+		// verified nothing — and a ✓ here would stamp what was never measured.
 		return Pending, i18n.T("gate.failure_handled.skip_no_dialect")
 	}
 	code, ok := governedCode(n, root, g)
@@ -121,17 +123,17 @@ func checkFailureHandled(content string, n mapx.Node, root string, g *mapx.Graph
 		return Pending, i18n.T("gate.failure_handled.pending_no_code")
 	}
 
-	// A falha RESILIENTE sai da cobrança: ela foi compreendida, está absorvida pelo fluxo,
-	// e a razão está escrita ao lado dela.
+	// A RESILIENT failure leaves the charge: it was understood, the flow absorbs it, and
+	// the reason is written beside it.
 	isResilient := map[string]bool{}
 	for _, r := range resilient {
 		isResilient[r] = true
 	}
 
-	// A régua é do CONJUNTO, e não de cada regra: o código não cita o código da falha
-	// (`CRED-E01` não aparece num `if`), então não há como amarrar uma regra a um caminho
-	// específico. O que dá para afirmar é se a unidade tem tratamento nenhum enquanto
-	// declara falhas — e é justamente esse o caso que interessa.
+	// The ruler is over the SET, not over each rule: the code does not cite the failure's
+	// code (`CRED-E01` does not appear in an `if`), so there is no way to tie one rule to a
+	// specific path. What can be asserted is whether the unit has NO handling at all while
+	// declaring failures — and that is exactly the case that matters.
 	if anyMatch(d, d.HandlePatterns, code) {
 		return Pass, ""
 	}
@@ -148,7 +150,7 @@ func checkFailureHandled(content string, n mapx.Node, root string, g *mapx.Graph
 	return Fail, fmt.Sprintf(i18n.T("gate.failure_handled.untreated"), len(charged), strings.Join(charged, ", "))
 }
 
-// --- o tratamento REGISTRA a ocorrência? ---
+// --- does the handling RECORD the occurrence? ---
 func checkFailureLogged(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.failure_handled.skip_not_spec")
@@ -165,8 +167,8 @@ func checkFailureLogged(content string, n mapx.Node, root string, g *mapx.Graph,
 	if !ok {
 		return Pending, i18n.T("gate.failure_handled.pending_no_code")
 	}
-	// Sem tratamento nenhum não há o que cobrar aqui: quem cobra é o gate irmão, e dois
-	// gates acusando o mesmo defeito viram ruído.
+	// With no handling at all there is nothing to charge here: the sibling gate charges it,
+	// and two gates accusing the same defect turn into noise.
 	if !anyMatch(d, d.HandlePatterns, code) {
 		return Skip, ""
 	}
@@ -190,11 +192,12 @@ func checkFailureLogged(content string, n mapx.Node, root string, g *mapx.Graph,
 	return Fail, fmt.Sprintf(i18n.T("gate.failure_logged.unlogged"), len(charged), strings.Join(charged, ", "))
 }
 
-// --- o tratamento que existe responde a alguma falha declarada? ---
+// --- does the handling that exists answer some declared failure? ---
 //
-// O inverso do `failure-handled`, e o caso mais comum: alguém escreveu uma defesa e nunca
-// declarou o que ela previne. A defesa pode estar certíssima — o que falta é a spec dizer
-// a qual falha ela responde, para quem ler depois saber se ainda vale.
+// The inverse of `failure-handled`, and the commonest case: somebody wrote a defence and
+// never declared what it prevents. The defence may be perfectly right — what is missing is
+// the spec saying which failure it answers, so whoever reads it later knows if it still
+// applies.
 func checkFailureDeclared(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.failure_handled.skip_not_spec")

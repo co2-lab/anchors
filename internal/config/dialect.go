@@ -87,25 +87,26 @@ type Dialect struct {
 	GuardPatterns []string `yaml:"guard_patterns,omitempty"`
 	// ImportPattern casa uma linha de importação de dependência no proof-crosses-boundary.
 	ImportPattern string `yaml:"import_pattern,omitempty"`
-	// HandlePatterns reconhecem um caminho que TRATA uma falha em vez de deixá-la escapar.
+	// HandlePatterns recognise a path that HANDLES a failure instead of letting it escape.
 	//
-	// NÃO é "achar o `catch`". Cravar `catch` seria cravar a sintaxe de uma família de
-	// linguagens, e tratamento tem muitas formas que não se parecem:
+	// It is NOT "find the catch". Nailing `catch` would nail the syntax of one family of
+	// languages, and handling takes many shapes that look nothing alike:
 	//
-	//	if (x == null) { return recusa() }        trata
-	//	try { ... } catch (e) { ... }             trata
-	//	match result { Err(e) => ... }            trata
-	//	if err != nil { return fmt.Errorf(...) }  trata
+	//	if (x == null) { return refuse() }        handles
+	//	try { ... } catch (e) { ... }             handles
+	//	match result { Err(e) => ... }            handles
+	//	if err != nil { return fmt.Errorf(...) }  handles
 	//
-	// O que elas têm em comum não é a forma, é o EFEITO: a falha vira parte do fluxo e a
-	// aplicação segue — que é o que a torna resiliente. Por isso os padrões vêm do
-	// projeto, como os de guarda: quem sabe a forma no dialeto local é quem escreve nele.
+	// What they have in common is not the shape, it is the EFFECT: the failure becomes part
+	// of the flow and the application carries on — which is what makes it resilient. So the
+	// patterns come from the project, like the guard ones: whoever knows the shape in the
+	// local dialect is whoever writes in it.
 	HandlePatterns []string `yaml:"handle_patterns,omitempty"`
-	// LogPatterns reconhecem o REGISTRO da ocorrência.
+	// LogPatterns recognise the RECORDING of the occurrence.
 	//
-	// É a peça que sustenta tudo o mais, e a que ninguém cobra: um tratamento que engole a
-	// falha sem registrar nada é o silêncio perfeito — a falha acontece, nada sabe, e
-	// nenhuma ferramenta a jusante tem o que ler.
+	// It is the piece that sustains everything else, and the one nobody charges: a handling
+	// path that swallows the failure without recording anything is the perfect silence —
+	// the failure happens, nothing knows, and no tool downstream has anything to read.
 	LogPatterns []string `yaml:"log_patterns,omitempty"`
 }
 

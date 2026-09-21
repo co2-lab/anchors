@@ -202,3 +202,21 @@ func TestBuild_readsTheSuggestedReaction(t *testing.T) {
 		t.Errorf("a result with no suggestion must carry none, got %q", r2.Suggests)
 	}
 }
+
+// The flow keyword comes from the TRANSLATION CATALOG, never hardcoded.
+//
+// The first version read `(?:Encaixa|Fits)` — two languages nailed into the pattern, which
+// is exactly what the catalog exists to avoid: a project writing in Spanish had no way to
+// write in its own language, and adding one would mean editing the engine.
+func TestBuild_theFlowKeywordIsTranslated(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, Dir), 0o755)
+	// Written in Spanish — a language this engine has no clause for.
+	os.WriteFile(filepath.Join(root, Dir, "f"+FlowSuffix), []byte(
+		"### FLOWX-P01 — un paso\n\nEncaja: `ACTST`\n\n### FLOWX-P02 — el final\n\n> @terminal\n"), 0o644)
+	g, _ := Build(root)
+	s, ok := StateByCode(g, "FLOWX-P01")
+	if !ok || s.Fits != "ACTST" {
+		t.Errorf("the keyword must be read in any catalogued language, got %+v", s)
+	}
+}
