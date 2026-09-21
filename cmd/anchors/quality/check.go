@@ -180,9 +180,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			results := gate.RunWithWaiver(cfg.Gates, nodes, absRoot, g, cfg, all, dispensa)
 			profile := gate.Aggregate(results)
 			printProfile(profile, onlyIssues, showDrift)
-			if showTiming {
-				printTiming(profile)
-			}
+			reportTiming(showTiming, profile)
 			warnGatesWithoutTarget(cfg.Gates, profile)
 
 			// O LOOP: check → carimbo → issue. Deixa de "reportar" e passa a
@@ -1035,6 +1033,24 @@ func warnGatesWithoutTarget(declarados []config.Gate, p gate.Profile) {
 		fmt.Printf("    %s\n", n)
 	}
 	fmt.Println(i18n.T("check.unused_gates_note"))
+}
+
+// reportTiming decide SE a medida sai, e e' a unica porta para o `printTiming`.
+//
+// A decisao vive numa funcao propria, e nao inline no `RunE`, por uma razao medida: o
+// `RunE` precisa de um projeto inteiro para rodar, entao um teste da condicao inline so'
+// consegue RECRIA-LA ("se falso, nao chamo") em vez de exercita-la. E uma condicao
+// recriada nao prova nada sobre a de producao — confirmado por mutacao: chamar o
+// `printTiming` incondicionalmente aqui passava por todos os testes.
+//
+// A flag `timing-metrics` governa exatamente esta linha: `off` e AUSENTE nao imprimem,
+// `on` imprime. Medir e' opt-in, e um default invertido nao daria erro nenhum — so'
+// gastaria tempo de todo mundo, para sempre, em silencio.
+func reportTiming(mostrar bool, p gate.Profile) {
+	if !mostrar {
+		return
+	}
+	printTiming(p)
 }
 
 // printTiming mostra ONDE a varredura gastou o tempo — por gate, e depois os alvos

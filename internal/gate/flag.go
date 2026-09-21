@@ -171,16 +171,32 @@ func checkFlagCovered(content string, n mapx.Node, root string, g *mapx.Graph, c
 	// same reason a doctrine does not: such a list is an index, and an index is wrong as
 	// of the next test somebody writes without updating it.
 	proven := map[string]bool{}
+	ingested := false
 	for _, node := range g.Nodes {
-		if node.Kind != mapx.KindTest {
+		if node.Kind != mapx.KindTest || node.Signal == nil {
 			continue
 		}
-		if node.Signal == nil {
-			continue
-		}
+		ingested = true
 		for _, code := range node.Signal.ProvenCodes {
 			proven[code] = true
 		}
+	}
+
+	// NOTHING INGESTED IS NOT "NO TEST".
+	//
+	// The first version failed here, and the accusation was false: a project that has
+	// never run `anchors ingest` carries no signal on any node, so every scenario looked
+	// untested even with tests written and passing. Measured on this very repository —
+	// zero `proven_codes` in the whole graph, and the gate accused three scenarios whose
+	// tests it had no way to see.
+	//
+	// It is the same distinction `scenario-coverage` already makes, and its comment
+	// records the cost of getting it wrong: "o gate pedia o impossivel, e a mensagem
+	// sugeria que a spec estava mal coberta". Pending says "nobody measured"; Fail says
+	// "somebody measured, and it is not there". Collapsing the two teaches people to
+	// ignore the gate.
+	if !ingested {
+		return Pending, i18n.T("gate.no_test_signal")
 	}
 
 	var untested []string

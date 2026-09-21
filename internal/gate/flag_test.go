@@ -160,3 +160,34 @@ func TestFlagCovered_semMapaNaoAfirmaPass(t *testing.T) {
 		t.Error("sem mapa o gate afirmou Pass — não tinha como saber")
 	}
 }
+
+// NADA INGERIDO não é "sem teste" — e confundir os dois é acusação FALSA.
+//
+// Medido neste próprio repositório: zero `proven_codes` no grafo inteiro, e a primeira
+// versão do gate acusou três cenários cujos testes ela não tinha como enxergar. É a
+// mesma distinção que o `scenario-coverage` já faz, e o comentário dele registra o custo
+// de errá-la: "o gate pedia o impossível, e a mensagem sugeria que a spec estava mal
+// coberta".
+func TestFlagCovered_semIngestaoEPendingNaoFail(t *testing.T) {
+	// Um nó de teste EXISTE e nada foi ingerido: Signal == nil.
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "t_test.go", Kind: mapx.KindTest}}}
+	v, msg := checkFlagCovered(flagCompleta, flagNode(), "", g, nil)
+	if v == Fail {
+		t.Errorf("sem ingestão o gate ACUSOU (%q) — não tinha como saber se há teste", msg)
+	}
+	if v != Pending {
+		t.Errorf("sem ingestão esperava Pending, veio %v", v)
+	}
+}
+
+// E com sinal ingerido ele volta a acusar de verdade: a distinção não pode virar
+// desculpa para nunca cobrar nada.
+func TestFlagCovered_comIngestaoVoltaACobrar(t *testing.T) {
+	g := &mapx.Graph{Nodes: []mapx.Node{{
+		ID: "t_test.go", Kind: mapx.KindTest,
+		Signal: &mapx.TestSignal{ProvenCodes: []string{"OUTRO-G01"}},
+	}}}
+	if v, _ := checkFlagCovered(flagCompleta, flagNode(), "", g, nil); v != Fail {
+		t.Errorf("houve ingestão e nenhum cenário provado — esperava Fail, veio %v", v)
+	}
+}
