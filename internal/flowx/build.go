@@ -39,6 +39,24 @@ var fitsRE = regexp.MustCompile("(?im)^\\s*(?:Encaixa|Fits)\\s*:\\s*`?([A-Z0-9]{
 // `→`, `->` or nothing — what identifies the destination is being the SECOND code.
 var resultLinkRE = regexp.MustCompile("(?m)`?([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`?[^`\\n]*?`([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`")
 
+// suggestsRE matches the REACTION a result suggests: `Sugere: <o que fazer>`.
+//
+// It is the third category, and the most common one. A result does not always generate
+// work by itself (the automatic reaction) nor end the matter — it often SUGGESTS what to
+// do next, and the choice belongs to whoever works.
+//
+// Measured in the message catalog: 18 occurrences of "run `anchors <command>`" inside gate
+// verdicts — `doctor --fix` (5), `map build` (3), `check --fix` (2), `ingest` (3). Each of
+// those is a flow edge hidden in prose, where it depends on somebody reading and
+// remembering.
+//
+// It is recorded as a SUGGESTION and not as a transition on purpose: presenting it as an
+// ordinary exit would make the flow lie about who decides. The verdict of
+// `spec-feature-match` says it plainly — "write the scenario, OR waive with
+// `@no-scenario: <reason>`". Two legitimate reactions, and choosing between them requires
+// knowing whether the requirement is real.
+var suggestsRE = regexp.MustCompile(`(?im)^\s*(?:Sugere|Suggests)\s*:\s*(\S.*)$`)
+
 // terminalRE marks the state there is no leaving.
 //
 // Declared, never deduced from "has no exit": a state with no exit may be the end of the
@@ -126,6 +144,7 @@ func parse(content, flowPath string) ([]mapx.FlowState, []mapx.FlowTransition) {
 				Flow:     flowPath,
 				Terminal: terminalDeclaredAfter(lines, i),
 				Fits:     fitsDeclaredAfter(lines, i),
+				Suggests: suggestsDeclaredAfter(lines, i),
 			})
 			continue
 		}
@@ -169,6 +188,20 @@ func fitsDeclaredAfter(lines []string, start int) string {
 		}
 		if m := fitsRE.FindStringSubmatch(lines[i]); m != nil {
 			return m[1]
+		}
+	}
+	return ""
+}
+
+// suggestsDeclaredAfter reads the reaction a result suggests — between its heading and the
+// next one.
+func suggestsDeclaredAfter(lines []string, start int) string {
+	for i := start + 1; i < len(lines); i++ {
+		if stateRE.MatchString(lines[i]) {
+			return ""
+		}
+		if m := suggestsRE.FindStringSubmatch(lines[i]); m != nil {
+			return strings.TrimSpace(m[1])
 		}
 	}
 	return ""

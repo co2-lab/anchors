@@ -42,9 +42,18 @@ nodes:
       tags:
         - doc
         - desenho
+    - id: DESIGN-flows-automaticos.md
+      kind: doc
+      rev: 57bdc23deea8
+      code: ACHCK
+      layer: desenho
+      tags:
+        - doc
+        - desenho
     - id: DESIGN-flows-do-anchors.md
       kind: doc
       rev: de33e774a459
+      updated_at: "2026-09-21"
       layer: desenho
       tags:
         - doc
@@ -499,7 +508,7 @@ nodes:
     - id: cmd/anchors/governance/guide.go
       kind: code
       rev: 90c28ad05504
-      updated_at: "2026-09-20"
+      updated_at: "2026-09-21"
       layer: comando
       tags:
         - cli
@@ -538,6 +547,7 @@ nodes:
     - id: cmd/anchors/governance/guide_flow.go
       kind: code
       rev: 23c881441274
+      updated_at: "2026-09-21"
       code: ACHCK
       layer: comando
       code_declared: true
@@ -668,7 +678,8 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/flow.go
       kind: code
-      rev: 70ea6db5e4aa
+      rev: fd0aae8b16e7
+      updated_at: "2026-09-21"
       layer: comando
       tags:
         - cli
@@ -784,7 +795,7 @@ nodes:
     - id: cmd/anchors/mapcmd/register.go
       kind: code
       rev: 9cd3e4a31858
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-21"
       layer: comando
       tags:
         - cli
@@ -963,7 +974,7 @@ nodes:
     - id: cmd/anchors/ops/new_templates.go
       kind: code
       rev: f6868b3c5fa9
-      updated_at: "2026-09-20"
+      updated_at: "2026-09-21"
       layer: comando
       tags:
         - cli
@@ -1512,7 +1523,7 @@ nodes:
         - test
     - id: internal/flowx/build_test.go
       kind: test
-      rev: 7bfc100e1fa9
+      rev: 8e68e53ea721
       updated_at: "2026-09-21"
       code: DSTRV
       layer: teste
@@ -4019,7 +4030,7 @@ nodes:
         - test
     - id: internal/mapx/model.go
       kind: code
-      rev: 36563466e4e4
+      rev: c38ba21235bc
       updated_at: "2026-09-21"
       layer: mapa
       tags:
@@ -9048,12 +9059,19 @@ edges:
         verdict: ok
 flow:
     states:
+        - code: ACAUD-R01
+          title: 'HÁ PENDÊNCIA: o dossiê lista o que está aberto'
+          flow: flows/actions/audit.action.md
+        - code: ACAUD-R02
+          title: 'NADA ABERTO: o arquivo não tem pendência'
+          flow: flows/actions/audit.action.md
         - code: ACHCK-R01
           title: 'PROMOVÍVEL: nenhum gate bloqueante reprovou'
           flow: flows/actions/check.action.md
         - code: ACHCK-R02
           title: 'BARRADO: um gate bloqueante reprovou'
           flow: flows/actions/check.action.md
+          suggests: corrigir o que o veredito aponta, ou declarar a dispensa com razão escrita.
         - code: ACHCK-R03
           title: 'JULGAMENTO PENDENTE: há gate que nenhum script computa'
           flow: flows/actions/check.action.md
@@ -9063,6 +9081,7 @@ flow:
         - code: ACHCK-R05
           title: 'MAPA DESATUALIZADO: o mapa é mais velho que os arquivos'
           flow: flows/actions/check.action.md
+          suggests: '`anchors map build`, e confrontar de novo.'
         - code: ACDEC-R01
           title: 'CARD LIBERADO: volta à fila com a resolução escrita'
           flow: flows/actions/decided.action.md
@@ -9169,6 +9188,25 @@ flow:
         - code: ADOCA-P05
           title: pronto para planejar
           flow: flows/adocao.flow.md
+          terminal: true
+        - code: ISSUE-P01
+          title: detectada, ninguém pegou
+          flow: flows/issue.flow.md
+        - code: ISSUE-P02
+          title: alguém está resolvendo
+          flow: flows/issue.flow.md
+          fits: ACAUD
+        - code: ISSUE-P03
+          title: corrigir, e confrontar de novo
+          flow: flows/issue.flow.md
+          fits: ACHCK
+        - code: ISSUE-P04
+          title: tratada
+          flow: flows/issue.flow.md
+          terminal: true
+        - code: ISSUE-P05
+          title: dívida assumida, com prazo
+          flow: flows/issue.flow.md
           terminal: true
         - code: JUDGE-P01
           title: ver o que aguarda julgamento
@@ -9302,6 +9340,35 @@ flow:
           to: ADOCA-P05
           "on": ACWCH-R02
           flow: flows/adocao.flow.md
+        - from: ISSUE-P01
+          to: ISSUE-P02
+          "on": ISSUE-P02
+          flow: flows/issue.flow.md
+        - from: ISSUE-P01
+          to: ISSUE-P05
+          "on": ISSUE-P05
+          flow: flows/issue.flow.md
+        - from: ISSUE-P02
+          to: ISSUE-P03
+          "on": ACAUD-R01
+          flow: flows/issue.flow.md
+        - from: ISSUE-P02
+          to: ISSUE-P04
+          "on": ACAUD-R02
+          flow: flows/issue.flow.md
+        - from: ISSUE-P03
+          to: ISSUE-P04
+          "on": ACHCK-R01
+          flow: flows/issue.flow.md
+        - from: ISSUE-P03
+          to: ISSUE-P03
+          "on": ACHCK-R02
+          when: (ainda não)
+          flow: flows/issue.flow.md
+        - from: ISSUE-P05
+          to: ISSUE-P01
+          "on": ISSUE-P01
+          flow: flows/issue.flow.md
         - from: JUDGE-P01
           to: JUDGE-P02
           "on": ACJPN-R01
@@ -9433,7 +9500,7 @@ flow:
         - from: WORKR-P04
           to: WORKR-P03
           "on": ACHCK-R02
-          when: (volta a escrever)
+          when: (volta a escrever — e a issue aberta segue no fluxo `ISSUE`)
           flow: flows/worker.flow.md
         - from: WORKR-P04
           to: WORKR-P05

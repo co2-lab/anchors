@@ -366,6 +366,15 @@ type FlowState struct {
 	// fluxo repetiria a descrição do `map build`, e as cópias divergiriam na primeira
 	// mudança — o defeito que a doutrina de produto existe para acabar, aqui no processo.
 	Fits string `yaml:"fits,omitempty"`
+	// Suggests é a REAÇÃO que este resultado sugere — a terceira categoria.
+	//
+	// Nem todo resultado gera trabalho sozinho (a reação automática) nem encerra o
+	// assunto: muitos SUGEREM o que fazer, e a escolha é de quem trabalha. Hoje isso vive
+	// na prosa da mensagem do gate, onde depende de alguém ler e lembrar.
+	//
+	// É sugestão e não transição de propósito: apresentá-la como saída comum faria o
+	// fluxo mentir sobre quem manda.
+	Suggests string `yaml:"suggests,omitempty"`
 }
 
 // FlowTransition é a saída de um estado para outro, com a condição que a torna válida.

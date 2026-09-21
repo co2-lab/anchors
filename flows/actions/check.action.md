@@ -29,6 +29,11 @@ sozinho: é onde vive o que os bloqueantes não confrontam.
 Cada gate que reprova gera uma issue. Enquanto o bloqueante estiver vermelho, o trabalho
 não avança — é o que o `done` não deve contornar.
 
+Sugere: corrigir o que o veredito aponta, ou declarar a dispensa com razão escrita.
+
+A escolha é de quem trabalha, e as duas são legítimas — o veredito de cada gate nomeia a
+sua. O que ele NÃO oferece é a terceira saída, que seria fechar assim mesmo.
+
 ### ACHCK-R03 — JULGAMENTO PENDENTE: há gate que nenhum script computa
 
 O `check` não computa esses: marca o alvo com `⏳` e enfileira. O veredito é de uma IA,
@@ -48,3 +53,5 @@ para acabar.
 
 O `check` confronta a FOTO que o mapa tem, e ela envelheceu. O trabalho pode estar certo e
 o veredito, errado.
+
+Sugere: `anchors map build`, e confrontar de novo.

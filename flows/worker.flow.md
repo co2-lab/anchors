@@ -53,7 +53,7 @@ Encaixa: `ACHCK` (`anchors check --changed`)
 
 Resultados:
 - `ACHCK-R01` PROMOVÍVEL → `WORKR-P06`
-- `ACHCK-R02` BARRADO → `WORKR-P03` (volta a escrever)
+- `ACHCK-R02` BARRADO → `WORKR-P03` (volta a escrever — e a issue aberta segue no fluxo `ISSUE`)
 - `ACHCK-R03` JULGAMENTO PENDENTE → `WORKR-P05`
 - `ACHCK-R04` FORA DA ESTRUTURA → `WORKR-P08`
 - `ACHCK-R05` MAPA DESATUALIZADO → `WORKR-P02` (refaz o mapa e confronta de novo)

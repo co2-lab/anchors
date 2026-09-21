@@ -172,3 +172,33 @@ func TestBuild_readsThePieceEachStepFits(t *testing.T) {
 		t.Errorf("a step that fits nothing must carry no piece, got %q", s2.Fits)
 	}
 }
+
+// The THIRD category: a result that neither generates work by itself nor ends the matter —
+// it SUGGESTS what to do, and the choice belongs to whoever works.
+//
+// Measured in the message catalog: 18 occurrences of "run `anchors <command>`" inside gate
+// verdicts. Each is a flow edge hidden in prose, where it depends on somebody reading and
+// remembering.
+func TestBuild_readsTheSuggestedReaction(t *testing.T) {
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, ActionsDir), 0o755)
+	os.MkdirAll(filepath.Join(root, Dir), 0o755)
+	os.WriteFile(filepath.Join(root, ActionsDir, "a"+ActionSuffix), []byte(
+		"### ACTST-R01 — STALE: the map aged\n\nSugere: `anchors map build`, and confront again.\n\n"+
+			"### ACTST-R02 — FINE: nothing to do\n"), 0o644)
+	os.WriteFile(filepath.Join(root, Dir, "f"+FlowSuffix), []byte(
+		"### FLOWX-P01 — a step\n\nFits: `ACTST`\n\nResults:\n"+
+			"- `ACTST-R01` STALE → `FLOWX-P01`\n- `ACTST-R02` FINE → `FLOWX-P02`\n\n"+
+			"### FLOWX-P02 — done\n\n> @terminal\n"), 0o644)
+
+	g, _ := Build(root)
+	r1, _ := StateByCode(g, "ACTST-R01")
+	if r1.Suggests == "" {
+		t.Error("the suggested reaction was not read")
+	}
+	// A result with no suggestion carries none — the field is not filled by inheritance
+	// from the result above it.
+	if r2, _ := StateByCode(g, "ACTST-R02"); r2.Suggests != "" {
+		t.Errorf("a result with no suggestion must carry none, got %q", r2.Suggests)
+	}
+}

@@ -191,6 +191,16 @@ document.`,
 				if t.When != "" {
 					fmt.Printf("  %-12s   %s\n", "", t.When)
 				}
+				// A SUGESTÃO vem do RESULTADO, e não da transição: ela é o que a ação
+				// recomenda a quem recebe aquela resposta, independentemente de para onde
+				// este fluxo em particular a encaminha.
+				//
+				// Sem ela, quem chega a um resultado sabe para onde ir e não o que fazer —
+				// e a recomendação continuaria só na prosa da mensagem do gate, que é de
+				// onde ela precisava sair.
+				if r, ok := flowx.StateByCode(fg, t.On); ok && r.Suggests != "" {
+					fmt.Printf("  %-12s   ↳ %s\n", "", r.Suggests)
+				}
 			}
 			return nil
 		},
