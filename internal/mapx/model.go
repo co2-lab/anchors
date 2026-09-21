@@ -325,6 +325,49 @@ type Graph struct {
 	GeradoPor string `yaml:"generated_by,omitempty"`
 	Nodes     []Node `yaml:"nodes"`
 	Edges     []Edge `yaml:"edges"`
+	// Flow é o grafo dos FLUXOS DE TRABALHO, no mesmo arquivo e em chave SEPARADA.
+	//
+	// Mesmo arquivo porque é um grafo só de conteúdos distintos, e dois arquivos
+	// obrigariam quem lê a saber de antemão em qual olhar. Chave separada porque os dois
+	// não podem se misturar: o mapa liga ARTEFATOS, e é sobre ele que o `impact` e a
+	// Propagação caminham — um estado de processo ("MEDIDO", "dois ataques gastos") não é
+	// artefato de ninguém, e atravessá-lo faria o `impact` responder que mudar um arquivo
+	// afeta uma decisão.
+	//
+	// Está NA STRUCT, e não fora dela, por uma razão mecânica que este arquivo já
+	// documenta em `Load`: "os campos que ele reconhece carregam, os que não reconhece
+	// somem, e a próxima gravação escreve o que sobrou". O `Save` serializa a struct
+	// inteira — um fluxo que não fosse campo seria apagado no `map build` seguinte, sem
+	// nada acusar.
+	//
+	// Quem o PREENCHE é o `flow build`; o `map build` apenas o preserva. Ver internal/flowx.
+	Flow *FlowGraph `yaml:"flow,omitempty"`
+}
+
+// FlowGraph — os fluxos de trabalho dentro do mapa, em chave própria.
+//
+// O tipo vive aqui (e não em `flowx`) para que `mapx` não dependa de `flowx`: a dependência
+// tem de apontar de quem constrói o fluxo para quem guarda o arquivo, nunca ao contrário.
+// A LÓGICA de fluxo (travessia, próximas saídas, validação) fica toda em `flowx`.
+type FlowGraph struct {
+	States      []FlowState      `yaml:"states"`
+	Transitions []FlowTransition `yaml:"transitions"`
+}
+
+// FlowState é um ESTADO do fluxo — um ponto onde o trabalho pode estar.
+type FlowState struct {
+	Code     string `yaml:"code"`
+	Title    string `yaml:"title"`
+	Flow     string `yaml:"flow"`
+	Terminal bool   `yaml:"terminal,omitempty"`
+}
+
+// FlowTransition é a saída de um estado para outro, com a condição que a torna válida.
+type FlowTransition struct {
+	From string `yaml:"from"`
+	To   string `yaml:"to"`
+	When string `yaml:"when,omitempty"`
+	Flow string `yaml:"flow"`
 }
 
 // Stale devolve true se a aresta está desatualizada dado o estado atual dos nós.

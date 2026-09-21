@@ -160,6 +160,15 @@ map's edges by co-location (file names) and by scenario code
 			var perdidos string
 			if anterior, err := mapx.Load(outPath); err == nil {
 				mapx.PreserveStamps(g, anterior)
+				// O FLUXO sobrevive ao rebuild do mapa, pela mesma razão dos carimbos e
+				// com um risco maior: quem o preenche é o `flow build`, que lê
+				// `flows/*.flow.md` — arquivos que o `map build` não varre.
+				//
+				// Sem esta linha, rodar `map build` apagaria o grafo de fluxo inteiro e
+				// nada acusaria: o arquivo continuaria válido, só sem a chave. É o modo
+				// de falha que o comentário do `Load` descreve ("os campos que ele
+				// reconhece carregam, os que não reconhece somem").
+				g.Flow = anterior.Flow
 				// PERDA DE CARIMBO é silenciosa, e o mapa continua VÁLIDO.
 				//
 				// O `PreserveStamps` preserva o que está no arquivo anterior — e num merge
