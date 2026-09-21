@@ -40,7 +40,7 @@ O ` + "`MTTLM-B02`" + ` nasce desligado, e a ` + "`CRPNC-B06`" + ` o liga.
 		Rev: "abc",
 	}
 
-	v, msg := checkScenarioCoverage(content, n)
+	v, msg := checkScenarioCoverage(content, n, "", nil, nil)
 
 	if v != Pass {
 		t.Errorf("veredito = %v — %s\n  os dois requisitos DEFINIDOS estão provados; o "+
@@ -63,7 +63,7 @@ func TestScenarioCoverage_aindaCobraORequisitoDefinido(t *testing.T) {
 		Signal: &mapx.TestSignal{ProvenCodes: []string{"ABCDX-B01"}, AtRev: "r1"},
 	}
 
-	v, msg := checkScenarioCoverage(content, n)
+	v, msg := checkScenarioCoverage(content, n, "", nil, nil)
 
 	if v != Fail {
 		t.Fatalf("veredito = %v — o `ABCDX-B02` não tem cenário provado", v)

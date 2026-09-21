@@ -2,6 +2,8 @@ package gate
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -147,12 +149,26 @@ func checkFlagScenarioExists(content string, n mapx.Node, root string, g *mapx.G
 //
 // Per SCENARIO, not per flag, and that is the whole point: the flag whose ON path is
 // tested and whose OFF path is not passes a per-flag rule while leaving exactly the branch
-// that will break unproven. It is also the costlier rule to satisfy, which is why it
-// INFORMS rather than blocks — the scenario written today and tested next commit is
-// ordinary work, not a defect.
+// that will break unproven.
 //
-// The proof is the scenario CODE appearing in a green test, which is the same currency the
-// rest of the framework already uses for traceability.
+// TWO QUESTIONS, and collapsing them loses the answer to both:
+//
+//	ESCRITO   some test file names this scenario code     (static, always available)
+//	VERDE     that test RAN and PASSED                    (needs ingested execution)
+//
+// The first version asked only the second, and on a project that has never ingested a
+// report it accused every scenario — including the ones with tests written and passing.
+// Measured on this very repository: zero `proven_codes` in the whole graph.
+//
+// But answering only the first would be the opposite error, and a worse one: a test can
+// be written and never run, or run and fail. "Somebody wrote it" is not "it works".
+//
+// So the gate reports BOTH, and names which scenarios are in which state. The distinction
+// is the finding: a scenario with a test that never ran is a different problem, with a
+// different fix, than a scenario nobody tested.
+//
+// INFORMATIVE, because the scenario written today and tested next commit is ordinary
+// work, not a defect.
 func checkFlagCovered(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindFlag {
 		return Skip, i18n.T("gate.flag_covered.skip_not_flag")
@@ -165,50 +181,87 @@ func checkFlagCovered(content string, n mapx.Node, root string, g *mapx.Graph, c
 		return Skip, i18n.T("gate.flag_scenarios_complete.no_scenarios")
 	}
 
-	// Which scenarios some test proves. The currency is `ProvenCodes` — the scenario code
-	// appearing in a test case that PASSED, which is the same semantic coverage the rest
-	// of the framework already uses — the flag file itself never names its testers, for the
-	// same reason a doctrine does not: such a list is an index, and an index is wrong as
-	// of the next test somebody writes without updating it.
-	proven := map[string]bool{}
-	ingested := false
-	for _, node := range g.Nodes {
-		if node.Kind != mapx.KindTest || node.Signal == nil {
-			continue
-		}
-		ingested = true
-		for _, code := range node.Signal.ProvenCodes {
-			proven[code] = true
-		}
-	}
+	written, green, ingested := scenarioEvidence(f, root, g)
 
-	// NOTHING INGESTED IS NOT "NO TEST".
-	//
-	// The first version failed here, and the accusation was false: a project that has
-	// never run `anchors ingest` carries no signal on any node, so every scenario looked
-	// untested even with tests written and passing. Measured on this very repository —
-	// zero `proven_codes` in the whole graph, and the gate accused three scenarios whose
-	// tests it had no way to see.
-	//
-	// It is the same distinction `scenario-coverage` already makes, and its comment
-	// records the cost of getting it wrong: "o gate pedia o impossivel, e a mensagem
-	// sugeria que a spec estava mal coberta". Pending says "nobody measured"; Fail says
-	// "somebody measured, and it is not there". Collapsing the two teaches people to
-	// ignore the gate.
-	if !ingested {
-		return Pending, i18n.T("gate.no_test_signal")
-	}
-
-	var untested []string
+	var noTest, notGreen []string
 	for _, s := range f.Scenarios {
-		if !proven[s.Code] {
-			untested = append(untested, s.Code)
+		switch {
+		case green[s.Code]:
+			// provado: nada a cobrar
+		case written[s.Code]:
+			notGreen = append(notGreen, s.Code)
+		default:
+			noTest = append(noTest, s.Code)
 		}
 	}
-	if len(untested) == 0 {
+	sort.Strings(noTest)
+	sort.Strings(notGreen)
+
+	if len(noTest) == 0 && len(notGreen) == 0 {
 		return Pass, ""
 	}
-	sort.Strings(untested)
-	return Fail, fmt.Sprintf(i18n.T("gate.flag_covered.untested"),
-		len(untested), len(f.Scenarios), strings.Join(untested, ", "))
+
+	var b strings.Builder
+	if len(noTest) > 0 {
+		fmt.Fprintf(&b, i18n.T("gate.flag_covered.no_test"),
+			len(noTest), len(f.Scenarios), strings.Join(noTest, ", "))
+	}
+	if len(notGreen) > 0 {
+		if b.Len() > 0 {
+			b.WriteString("\n")
+		}
+		// A EXECUÇÃO é o que falta, não o teste — e a saída tem de dizer qual das duas,
+		// porque o conserto é outro: escrever um teste versus rodar o que já existe.
+		if !ingested {
+			fmt.Fprintf(&b, i18n.T("gate.flag_covered.written_not_ingested"),
+				len(notGreen), strings.Join(notGreen, ", "))
+		} else {
+			fmt.Fprintf(&b, i18n.T("gate.flag_covered.written_not_green"),
+				len(notGreen), strings.Join(notGreen, ", "))
+		}
+	}
+	return Fail, strings.TrimRight(b.String(), "\n")
+}
+
+// scenarioEvidence answers, for each scenario, the two independent questions: is there a
+// test that NAMES it, and did that test PASS?
+//
+// The two readings are deliberately separate. `written` is static — it survives a project
+// that never ingests a report, which is the common case early on. `green` requires
+// execution, and is the only one that proves anything actually works.
+//
+// `ingested` reports whether ANY execution reached the graph, so the verdict can say
+// "nobody ran it" instead of "it failed" — two very different instructions to the reader.
+func scenarioEvidence(f flagx.Flag, root string, g *mapx.Graph) (written, green map[string]bool, ingested bool) {
+	written = map[string]bool{}
+	green = map[string]bool{}
+
+	for _, node := range g.Nodes {
+		if node.Kind != mapx.KindTest {
+			continue
+		}
+		if node.Signal != nil {
+			ingested = true
+			for _, code := range node.Signal.ProvenCodes {
+				green[code] = true
+			}
+		}
+
+		// O lado ESTÁTICO: o arquivo de teste NOMEIA o código do cenário?
+		//
+		// Comentários fora, pela mesma régua do `feature-test-match`: um código citado
+		// num comentário é REFERÊNCIA a outra unidade, não implementação. Contá-lo faria
+		// o gate dar por testado um cenário que alguém só mencionou de passagem.
+		b, err := os.ReadFile(filepath.Join(root, node.ID))
+		if err != nil {
+			continue
+		}
+		body := stripLineComments(string(b))
+		for _, s := range f.Scenarios {
+			if strings.Contains(body, s.Code) {
+				written[s.Code] = true
+			}
+		}
+	}
+	return written, green, ingested
 }

@@ -812,5 +812,9 @@
   "gate.flag_scenario_exists.no_citation": "la spec no cita ningun escenario de flag",
   "gate.flag_scenario_exists.unknown": "%d escenario(s) de flag citados con `@gated-by` que no existen: %s.\nUna regla gobernada por un escenario que nadie escribio es una condicion que nunca sera confrontada. Declare el escenario en `flags/<nombre>.flag.md`, o corrija el codigo.",
   "gate.flag_covered.skip_not_flag": "no es una feature flag — la cobertura por escenario se exige al archivo de flag",
-  "gate.flag_covered.untested": "%d de %d escenario(s) de flag sin prueba verde: %s.\nPor ESCENARIO, no por flag: la flag con el camino encendido probado y el apagado no deja sin prueba justamente la rama que va a romperse. Escriba una prueba nombrando el codigo del escenario."
+  "gate.flag_covered.no_test": "%d de %d escenario(s) de flag que NINGUNA prueba nombra: %s.\nPor ESCENARIO, no por flag: la flag con el camino encendido probado y el apagado no deja sin prueba justamente la rama que va a romperse. Escriba una prueba nombrando el codigo del escenario.",
+  "gate.flag_covered.written_not_ingested": "%d escenario(s) con prueba ESCRITA y ninguna ejecucion ingerida: %s.\nLa prueba nombra el codigo y nadie sabe si pasa — escrita no es verde. Ejecute la suite e ingiera el reporte (`anchors ingest --junit`).",
+  "gate.flag_covered.written_not_green": "%d escenario(s) con prueba escrita que NO paso: %s.\nHubo ejecucion ingerida y estos codigos no estan entre los probados: la prueba existe y no prueba el escenario.",
+  "gate.scenario_written_not_ingested": "%d escenario(s) con prueba ESCRITA y ninguna ejecucion ingerida: %s.\nLa prueba nombra el codigo y nadie sabe si pasa — escrita no es verde. Ejecute la suite e ingiera el reporte (`anchors ingest --junit`).",
+  "gate.scenario_written_not_green": "%d escenario(s) con prueba escrita que NO paso: %s.\nHubo ejecucion ingerida y estos codigos no estan entre los probados."
 }

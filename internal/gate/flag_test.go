@@ -161,33 +161,82 @@ func TestFlagCovered_semMapaNaoAfirmaPass(t *testing.T) {
 	}
 }
 
-// NADA INGERIDO não é "sem teste" — e confundir os dois é acusação FALSA.
+// AS DUAS PERGUNTAS, e por que separá-las.
 //
-// Medido neste próprio repositório: zero `proven_codes` no grafo inteiro, e a primeira
-// versão do gate acusou três cenários cujos testes ela não tinha como enxergar. É a
-// mesma distinção que o `scenario-coverage` já faz, e o comentário dele registra o custo
-// de errá-la: "o gate pedia o impossível, e a mensagem sugeria que a spec estava mal
-// coberta".
-func TestFlagCovered_semIngestaoEPendingNaoFail(t *testing.T) {
-	// Um nó de teste EXISTE e nada foi ingerido: Signal == nil.
-	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "t_test.go", Kind: mapx.KindTest}}}
-	v, msg := checkFlagCovered(flagCompleta, flagNode(), "", g, nil)
-	if v == Fail {
-		t.Errorf("sem ingestão o gate ACUSOU (%q) — não tinha como saber se há teste", msg)
+// "Tem teste escrito?" é estática e sempre respondível. "O teste passou?" exige execução
+// ingerida. Juntar as duas perde a resposta das duas: num projeto que nunca ingeriu
+// relatório (o caso deste repositório — zero `proven_codes` no grafo), a régua só de
+// execução acusava TODO cenário, inclusive os que tinham teste escrito e passando.
+//
+// E só a estática seria o erro oposto, pior: teste escrito pode nunca ter rodado.
+func TestFlagCovered_semTesteNenhumAcusaMesmoSemIngestao(t *testing.T) {
+	root := t.TempDir()
+	// Um nó de teste que existe e NÃO nomeia cenário nenhum.
+	if err := os.WriteFile(filepath.Join(root, "t_test.go"), []byte("func TestNada(t *testing.T) {}\n"), 0o644); err != nil {
+		t.Fatal(err)
 	}
-	if v != Pending {
-		t.Errorf("sem ingestão esperava Pending, veio %v", v)
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "t_test.go", Kind: mapx.KindTest}}}
+
+	v, msg := checkFlagCovered(flagCompleta, flagNode(), root, g, nil)
+	if v != Fail {
+		t.Fatalf("nenhum teste nomeia os cenários — esperava Fail, veio %v", v)
+	}
+	for _, c := range []string{"CHKUT-G01", "CHKUT-G02", "CHKUT-G03"} {
+		if !strings.Contains(msg, c) {
+			t.Errorf("o veredito não nomeia %s: %q", c, msg)
+		}
 	}
 }
 
-// E com sinal ingerido ele volta a acusar de verdade: a distinção não pode virar
-// desculpa para nunca cobrar nada.
-func TestFlagCovered_comIngestaoVoltaACobrar(t *testing.T) {
+// ESCRITO mas NUNCA RODADO: o gate tem de dizer isso, e não "sem teste".
+//
+// É o caso que o pedido nomeou: o teste pode ter sido desenvolvido e nunca ter colhido
+// resultado. O conserto é outro — rodar a suíte, não escrever um teste.
+func TestFlagCovered_escritoMasSemExecucaoDizQualDosDois(t *testing.T) {
+	root := t.TempDir()
+	corpo := "func TestX(t *testing.T) { /* CHKUT-G01 */ }\nconst c = \"CHKUT-G01\"\n"
+	if err := os.WriteFile(filepath.Join(root, "t_test.go"), []byte(corpo), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "t_test.go", Kind: mapx.KindTest}}}
+
+	v, msg := checkFlagCovered(flagCompleta, flagNode(), root, g, nil)
+	if v != Fail {
+		t.Fatalf("esperava Fail, veio %v", v)
+	}
+	// O G01 tem teste ESCRITO: não pode aparecer como "nenhum teste nomeia".
+	if !strings.Contains(msg, "ingest") {
+		t.Errorf("o veredito não distingue escrito-sem-execução: %q", msg)
+	}
+	if !strings.Contains(msg, "CHKUT-G01") {
+		t.Errorf("o veredito não nomeia o cenário escrito e não executado: %q", msg)
+	}
+}
+
+// O CÓDIGO EM COMENTÁRIO não conta como teste escrito — mesma régua do
+// `feature-test-match`: citação é referência, não implementação.
+func TestFlagCovered_codigoEmComentarioNaoContaComoTeste(t *testing.T) {
+	root := t.TempDir()
+	soComentario := "// CHKUT-G01 é tratado noutro lugar\nfunc TestX(t *testing.T) {}\n"
+	if err := os.WriteFile(filepath.Join(root, "t_test.go"), []byte(soComentario), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "t_test.go", Kind: mapx.KindTest}}}
+
+	_, msg := checkFlagCovered(flagCompleta, flagNode(), root, g, nil)
+	if strings.Contains(msg, "ingest") {
+		t.Errorf("o código só em COMENTÁRIO passou por teste escrito: %q", msg)
+	}
+}
+
+// E com execução ingerida, o cenário provado sai da acusação.
+func TestFlagCovered_ingeridoEVerdePassa(t *testing.T) {
+	root := t.TempDir()
 	g := &mapx.Graph{Nodes: []mapx.Node{{
 		ID: "t_test.go", Kind: mapx.KindTest,
-		Signal: &mapx.TestSignal{ProvenCodes: []string{"OUTRO-G01"}},
+		Signal: &mapx.TestSignal{ProvenCodes: []string{"CHKUT-G01", "CHKUT-G02", "CHKUT-G03"}},
 	}}}
-	if v, _ := checkFlagCovered(flagCompleta, flagNode(), "", g, nil); v != Fail {
-		t.Errorf("houve ingestão e nenhum cenário provado — esperava Fail, veio %v", v)
+	if v, msg := checkFlagCovered(flagCompleta, flagNode(), root, g, nil); v != Pass {
+		t.Errorf("todos provados e veio %v: %s", v, msg)
 	}
 }

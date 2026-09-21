@@ -812,5 +812,9 @@
   "gate.flag_scenario_exists.no_citation": "the spec cites no flag scenario",
   "gate.flag_scenario_exists.unknown": "%d flag scenario(s) cited with `@gated-by` that do not exist: %s.\nA rule governed by a scenario nobody wrote is a condition that will never be confronted. Declare the scenario in `flags/<name>.flag.md`, or correct the code.",
   "gate.flag_covered.skip_not_flag": "not a feature flag — per-scenario coverage is charged of the flag file",
-  "gate.flag_covered.untested": "%d of %d flag scenario(s) with no green test: %s.\nPer SCENARIO, not per flag: the flag whose ON path is tested and whose OFF path is not leaves precisely the branch that will break unproven. Write a test naming the scenario code."
+  "gate.flag_covered.no_test": "%d of %d flag scenario(s) that NO test names: %s.\nPer SCENARIO, not per flag: the flag whose ON path is tested and whose OFF path is not leaves precisely the branch that will break unproven. Write a test naming the scenario code.",
+  "gate.flag_covered.written_not_ingested": "%d scenario(s) with a test WRITTEN but no execution ingested: %s.\nThe test names the code and nobody knows whether it passes — written is not green. Run the suite and ingest the report (`anchors ingest --junit`).",
+  "gate.flag_covered.written_not_green": "%d scenario(s) with a test written that did NOT pass: %s.\nExecution was ingested and these codes are not among the proven ones: the test exists and does not prove the scenario.",
+  "gate.scenario_written_not_ingested": "%d scenario(s) with a test WRITTEN but no execution ingested: %s.\nThe test names the code and nobody knows whether it passes — written is not green. Run the suite and ingest the report (`anchors ingest --junit`).",
+  "gate.scenario_written_not_green": "%d scenario(s) with a test written that did NOT pass: %s.\nExecution was ingested and these codes are not among the proven ones."
 }

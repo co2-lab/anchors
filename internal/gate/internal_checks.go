@@ -23,7 +23,6 @@ var internalCheckers = map[string]func(content string, n mapx.Node) (Verdict, st
 	"non-empty":           checkNonEmpty,
 	"has-code":            checkHasScenarioCode,
 	"guide-has-checklist": checkGuideHasChecklist,
-	"scenario-coverage":   checkScenarioCoverage,
 	"line-coverage":       checkLineCoverage,
 	"coverage-delta":      checkCoverageDelta,
 	"mutation-score":      checkMutationScore,
@@ -47,6 +46,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"progress-honest":          checkProgressHonest,
 	"plan-doctrine-exists":     checkPlanDoctrineExists,
 	"doctrine-realized":        checkDoctrineRealized,
+	"scenario-coverage":        checkScenarioCoverage,
 	"flag-scenario-grammar":    checkFlagScenarioGrammar,
 	"flag-scenarios-complete":  checkFlagScenariosComplete,
 	"flag-scenario-exists":     checkFlagScenarioExists,
@@ -700,7 +700,7 @@ var checklistItemRE = regexp.MustCompile(`(?m)\bCK\d+\b`)
 // scenario-coverage: cada código de cenário que a spec DECLARA tem um teste que
 // PASSOU (está em Signal.ProvenCodes)? Fecha o gate de Rastreabilidade — não basta
 // existir teste, cada requisito precisa estar provado. Pending se nada foi ingerido.
-func checkScenarioCoverage(content string, n mapx.Node) (Verdict, string) {
+func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Graph, _ *config.Config) (Verdict, string) {
 	// Só os requisitos DEFINIDOS por esta spec, não toda menção de código no texto.
 	//
 	// O `anyCodeRE` sobre o conteúdo inteiro casa também o que a spec CITA ao justificar
@@ -717,31 +717,105 @@ func checkScenarioCoverage(content string, n mapx.Node) (Verdict, string) {
 	if len(declared) == 0 {
 		return Skip, "" // spec sem requisito definido — nada a cobrir
 	}
-	if n.Signal == nil {
-		return Pending, i18n.T("gate.no_test_signal")
-	}
 	if n.SignalStale() {
 		return Pending, i18n.T("gate.stale_test_signal")
 	}
+
+	// DUAS PERGUNTAS, e juntá-las perde a resposta das duas.
+	//
+	//   ESCRITO  algum teste NOMEIA este código de cenário   (estático, sempre respondível)
+	//   VERDE    esse teste RODOU e PASSOU                   (exige execução ingerida)
+	//
+	// A versão anterior só perguntava a segunda, e num projeto que nunca ingeriu relatório
+	// respondia Pending para tudo — "ninguém mediu" —, escondendo os cenários que ninguém
+	// testou. E só a estática seria o erro oposto: teste escrito pode nunca ter rodado.
+	//
+	// É a mesma régua do `flag-covered`, e pela mesma razão: o conserto de "sem teste" é
+	// escrever um; o de "escrito e não executado" é rodar a suíte. Um veredito que não
+	// distingue os dois manda a pessoa pelo caminho errado metade das vezes.
 	proven := map[string]bool{}
-	for _, c := range n.Signal.ProvenCodes {
-		proven[c] = true
+	ingested := n.Signal != nil
+	if ingested {
+		for _, c := range n.Signal.ProvenCodes {
+			proven[c] = true
+		}
 	}
-	var missing []string
+	written := codesNamedByTests(declared, root, g, n.ID)
+
+	var noTest, notGreen []string
 	seen := map[string]bool{}
 	for _, code := range declared {
 		if seen[code] {
 			continue
 		}
 		seen[code] = true
-		if !proven[code] {
-			missing = append(missing, code)
+		switch {
+		case proven[code]:
+			// provado: nada a cobrar
+		case written[code]:
+			notGreen = append(notGreen, code)
+		default:
+			noTest = append(noTest, code)
 		}
 	}
-	if len(missing) > 0 {
-		return Fail, i18n.T("gate.scenario_missing_test", len(missing), strings.Join(missing, ", "))
+	if len(noTest) == 0 && len(notGreen) == 0 {
+		return Pass, ""
 	}
-	return Pass, ""
+
+	var b strings.Builder
+	if len(noTest) > 0 {
+		b.WriteString(i18n.T("gate.scenario_missing_test", len(noTest), strings.Join(noTest, ", ")))
+	}
+	if len(notGreen) > 0 {
+		if b.Len() > 0 {
+			b.WriteString("\n")
+		}
+		if !ingested {
+			b.WriteString(i18n.T("gate.scenario_written_not_ingested", len(notGreen), strings.Join(notGreen, ", ")))
+		} else {
+			b.WriteString(i18n.T("gate.scenario_written_not_green", len(notGreen), strings.Join(notGreen, ", ")))
+		}
+	}
+	return Fail, strings.TrimRight(b.String(), "\n")
+}
+
+// codesNamedByTests responde a metade ESTÁTICA: quais destes códigos algum teste nomeia.
+//
+// Percorre os testes LIGADOS a este nó (arestas `tested-by`) e, na falta delas, os testes
+// do grafo — a flag não tem aresta para os seus testes, e a spec nem sempre tem. Comentário
+// não conta, pela mesma régua do `feature-test-match`: código citado em comentário é
+// REFERÊNCIA a outra unidade, não implementação.
+func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string) map[string]bool {
+	written := map[string]bool{}
+	if g == nil || root == "" {
+		return written
+	}
+	var paths []string
+	for _, e := range g.Neighbors(id).Out {
+		if e.Type == mapx.EdgeTestedBy {
+			paths = append(paths, e.To)
+		}
+	}
+	if len(paths) == 0 {
+		for _, node := range g.Nodes {
+			if node.Kind == mapx.KindTest {
+				paths = append(paths, node.ID)
+			}
+		}
+	}
+	for _, tp := range paths {
+		b, err := os.ReadFile(filepath.Join(root, tp))
+		if err != nil {
+			continue
+		}
+		body := stripLineComments(string(b))
+		for _, c := range codes {
+			if strings.Contains(body, c) {
+				written[c] = true
+			}
+		}
+	}
+	return written
 }
 
 // line-coverage: a cobertura de linha do nó de código está >= 70%? (limiar fixo por
