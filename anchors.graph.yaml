@@ -45,6 +45,7 @@ nodes:
     - id: DESIGN-flows-automaticos.md
       kind: doc
       rev: 57bdc23deea8
+      updated_at: "2026-09-21"
       code: ACHCK
       layer: desenho
       tags:
@@ -9082,6 +9083,20 @@ flow:
           title: 'MAPA DESATUALIZADO: o mapa é mais velho que os arquivos'
           flow: flows/actions/check.action.md
           suggests: '`anchors map build`, e confrontar de novo.'
+        - code: ACCIP-R01
+          title: 'PR VERDE: compila, testa, e os gates passam'
+          flow: flows/actions/ci.action.md
+        - code: ACCIP-R02
+          title: 'MAPA VELHO: o mapa não reflete o que o PR traz'
+          flow: flows/actions/ci.action.md
+          suggests: '`anchors map build`, e commitar o mapa junto.'
+        - code: ACCIP-R03
+          title: 'GATE REPROVOU: um bloqueante falhou no confronto completo'
+          flow: flows/actions/ci.action.md
+        - code: ACCIP-R04
+          title: 'ISSUE PARA TRÁS: o check abriu achado que o PR não fechou'
+          flow: flows/actions/ci.action.md
+          suggests: tratar o que ficou, ou declarar por que fica.
         - code: ACDEC-R01
           title: 'CARD LIBERADO: volta à fila com a resolução escrita'
           flow: flows/actions/decided.action.md
@@ -9148,12 +9163,32 @@ flow:
         - code: ACNXT-R02
           title: 'FILA VAZIA: não há trabalho pendente'
           flow: flows/actions/next.action.md
+        - code: ACPRC-R01
+          title: 'COMMIT PASSOU: nenhum bloqueante vermelho'
+          flow: flows/actions/pre-commit.action.md
+        - code: ACPRC-R02
+          title: 'BARRADO POR GATE: um bloqueante reprovou no que está em stage'
+          flow: flows/actions/pre-commit.action.md
+          suggests: 'corrigir, ou declarar a dispensa na mensagem do commit com `[skip-<regra>@<CÓDIGO>: por quê]`.'
+        - code: ACPRC-R03
+          title: 'BARRADO POR FALTA DE MAPA: arquivo REGIDO e fora do mapa'
+          flow: flows/actions/pre-commit.action.md
+          suggests: '`anchors map build`, e commitar de novo.'
+        - code: ACPRC-R04
+          title: 'IGNORADO: arquivo não regido pela Estrutura'
+          flow: flows/actions/pre-commit.action.md
         - code: ACRCL-R01
           title: 'TAREFAS DEVOLVIDAS: a fila volta a alcançá-las'
           flow: flows/actions/reclaim.action.md
         - code: ACRCL-R02
           title: 'NADA PRESO: nenhuma reivindicação órfã'
           flow: flows/actions/reclaim.action.md
+        - code: ACREL-R01
+          title: 'PUBLICADO: os binários estão disponíveis'
+          flow: flows/actions/release.action.md
+        - code: ACREL-R02
+          title: 'FALHOU: o build da release quebrou'
+          flow: flows/actions/release.action.md
         - code: ACUNB-R01
           title: 'CARD DE DESBLOQUEIO ABERTO: o bloqueado espera trabalho, não pessoa'
           flow: flows/actions/unblock.action.md
@@ -9163,6 +9198,12 @@ flow:
         - code: ACWCH-R02
           title: 'JÁ ESTAVA RODANDO: nada a fazer'
           flow: flows/actions/watch-start.action.md
+        - code: ACWTC-R01
+          title: 'TAREFA ENFILEIRADA: a mudança virou trabalho pendente'
+          flow: flows/actions/watch.action.md
+        - code: ACWTC-R02
+          title: 'IGNORADO: a mudança não pede trabalho'
+          flow: flows/actions/watch.action.md
         - code: ACWRK-R01
           title: 'PROCEDIMENTO COMPOSTO: quem trabalha sabe o que fazer'
           flow: flows/actions/work.action.md
@@ -9188,6 +9229,25 @@ flow:
         - code: ADOCA-P05
           title: pronto para planejar
           flow: flows/adocao.flow.md
+          terminal: true
+        - code: ENTRG-P01
+          title: commitar o trabalho
+          flow: flows/entrega.flow.md
+          fits: ACPRC
+        - code: ENTRG-P02
+          title: corrigir o que o gate apontou
+          flow: flows/entrega.flow.md
+          fits: ACHCK
+        - code: ENTRG-P03
+          title: abrir o PR
+          flow: flows/entrega.flow.md
+        - code: ENTRG-P04
+          title: pôr o arquivo novo no mapa
+          flow: flows/entrega.flow.md
+          fits: ACMAP
+        - code: ENTRG-P05
+          title: a bola está com o pipeline
+          flow: flows/entrega.flow.md
           terminal: true
         - code: ISSUE-P01
           title: detectada, ninguém pegou
@@ -9230,6 +9290,32 @@ flow:
         - code: JUDGE-P06
           title: veredito registrado
           flow: flows/judge.flow.md
+          terminal: true
+        - code: PIPEL-P01
+          title: o CI confronta o PR
+          flow: flows/pipeline.flow.md
+          fits: ACCIP
+        - code: PIPEL-P02
+          title: o PR está pronto para revisão
+          flow: flows/pipeline.flow.md
+        - code: PIPEL-P03
+          title: mergeado na main
+          flow: flows/pipeline.flow.md
+        - code: PIPEL-P04
+          title: publicar
+          flow: flows/pipeline.flow.md
+          fits: ACREL
+        - code: PIPEL-P05
+          title: a bola voltou para quem trabalha
+          flow: flows/pipeline.flow.md
+          terminal: true
+        - code: PIPEL-P06
+          title: versão publicada
+          flow: flows/pipeline.flow.md
+          terminal: true
+        - code: PIPEL-P07
+          title: a tag existe e a release não
+          flow: flows/pipeline.flow.md
           terminal: true
         - code: PLANO-P01
           title: rascunhar o escopo NA CONVERSA
@@ -9306,6 +9392,10 @@ flow:
           title: fechar a tarefa
           flow: flows/worker.flow.md
           fits: ACDON
+        - code: WORKR-P09
+          title: o vigia já enfileirou a próxima etapa
+          flow: flows/worker.flow.md
+          fits: ACWTC
         - code: WORKR-P07
           title: nada a fazer
           flow: flows/worker.flow.md
@@ -9340,6 +9430,42 @@ flow:
           to: ADOCA-P05
           "on": ACWCH-R02
           flow: flows/adocao.flow.md
+        - from: ENTRG-P01
+          to: ENTRG-P03
+          "on": ACPRC-R01
+          flow: flows/entrega.flow.md
+        - from: ENTRG-P01
+          to: ENTRG-P03
+          "on": ACPRC-R04
+          flow: flows/entrega.flow.md
+        - from: ENTRG-P01
+          to: ENTRG-P02
+          "on": ACPRC-R02
+          flow: flows/entrega.flow.md
+        - from: ENTRG-P01
+          to: ENTRG-P04
+          "on": ACPRC-R03
+          flow: flows/entrega.flow.md
+        - from: ENTRG-P02
+          to: ENTRG-P01
+          "on": ACHCK-R01
+          flow: flows/entrega.flow.md
+        - from: ENTRG-P02
+          to: ENTRG-P02
+          "on": ACHCK-R02
+          flow: flows/entrega.flow.md
+        - from: ENTRG-P03
+          to: ENTRG-P05
+          "on": ENTRG-P05
+          flow: flows/entrega.flow.md
+        - from: ENTRG-P04
+          to: ENTRG-P01
+          "on": ACMAP-R01
+          flow: flows/entrega.flow.md
+        - from: ENTRG-P04
+          to: ENTRG-P01
+          "on": ACMAP-R02
+          flow: flows/entrega.flow.md
         - from: ISSUE-P01
           to: ISSUE-P02
           "on": ISSUE-P02
@@ -9401,6 +9527,38 @@ flow:
           to: JUDGE-P06
           "on": ACJVD-R03
           flow: flows/judge.flow.md
+        - from: PIPEL-P01
+          to: PIPEL-P02
+          "on": ACCIP-R01
+          flow: flows/pipeline.flow.md
+        - from: PIPEL-P01
+          to: PIPEL-P05
+          "on": ACCIP-R02
+          flow: flows/pipeline.flow.md
+        - from: PIPEL-P01
+          to: PIPEL-P05
+          "on": ACCIP-R03
+          flow: flows/pipeline.flow.md
+        - from: PIPEL-P01
+          to: PIPEL-P05
+          "on": ACCIP-R04
+          flow: flows/pipeline.flow.md
+        - from: PIPEL-P02
+          to: PIPEL-P03
+          "on": PIPEL-P03
+          flow: flows/pipeline.flow.md
+        - from: PIPEL-P03
+          to: PIPEL-P04
+          "on": PIPEL-P04
+          flow: flows/pipeline.flow.md
+        - from: PIPEL-P04
+          to: PIPEL-P06
+          "on": ACREL-R01
+          flow: flows/pipeline.flow.md
+        - from: PIPEL-P04
+          to: PIPEL-P07
+          "on": ACREL-R02
+          flow: flows/pipeline.flow.md
         - from: PLANO-P01
           to: PLANO-P02
           "on": ACGDE-R01
@@ -9493,6 +9651,10 @@ flow:
           to: WORKR-P04
           "on": ACWRK-R01
           flow: flows/worker.flow.md
+        - from: WORKR-P03
+          to: WORKR-P08
+          "on": ACWRK-R02
+          flow: flows/worker.flow.md
         - from: WORKR-P04
           to: WORKR-P06
           "on": ACHCK-R01
@@ -9521,7 +9683,21 @@ flow:
           when: (confronta de novo)
           flow: flows/worker.flow.md
         - from: WORKR-P06
-          to: WORKR-P01
+          to: WORKR-P09
           "on": ACDON-R01
+          flow: flows/worker.flow.md
+        - from: WORKR-P06
+          to: WORKR-P06
+          "on": ACDON-R02
+          when: (a tarefa puxada tem id; use o dele)
+          flow: flows/worker.flow.md
+        - from: WORKR-P09
+          to: WORKR-P01
+          "on": ACWTC-R01
           when: (volta a puxar)
+          flow: flows/worker.flow.md
+        - from: WORKR-P09
+          to: WORKR-P01
+          "on": ACWTC-R02
+          when: (a mudança não pedia trabalho; a fila decide)
           flow: flows/worker.flow.md

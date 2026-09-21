@@ -46,6 +46,7 @@ testes, `verify` nada (só confronta).
 
 Resultados:
 - `ACWRK-R01` ARTEFATO ESCRITO → `WORKR-P04`
+- `ACWRK-R02` ALVO FORA DA ESTRUTURA → `WORKR-P08`
 
 ### WORKR-P04 — confrontar
 
@@ -69,11 +70,25 @@ Resultados:
 
 Encaixa: `ACDON` (`anchors done <id>`)
 
-Salvar o artefato já fez o watcher enfileirar a PRÓXIMA etapa. O ciclo se sustenta sozinho
-— ninguém precisa lembrar o que vem depois, a fila diz.
+Resultados:
+- `ACDON-R01` FECHADA → `WORKR-P09`
+- `ACDON-R02` SEM ID → `WORKR-P06` (a tarefa puxada tem id; use o dele)
+
+### WORKR-P09 — o vigia já enfileirou a próxima etapa
+
+Encaixa: `ACWTC` (o vigia, que dispara sozinho)
+
+Este passo não é trabalho de ninguém — ele já aconteceu. Quando o artefato foi salvo em
+`WORKR-P03`, o vigia classificou a mudança e enfileirou a etapa seguinte
+(spec→implement, feature→test).
+
+Está no fluxo justamente porque é o que faz o ciclo se sustentar. Sem ele desenhado, o
+`worker` pareceria depender de alguém lembrar o que vem depois — e o mecanismo que
+substitui essa memória ficaria invisível.
 
 Resultados:
-- `ACDON-R01` FECHADA → `WORKR-P01` (volta a puxar)
+- `ACWTC-R01` TAREFA ENFILEIRADA → `WORKR-P01` (volta a puxar)
+- `ACWTC-R02` IGNORADO → `WORKR-P01` (a mudança não pedia trabalho; a fila decide)
 
 ### WORKR-P07 — nada a fazer
 
