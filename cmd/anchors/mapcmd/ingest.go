@@ -135,10 +135,17 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope strin
 				// mapx não toca disco), para o cruzamento de cobertura semântica.
 				declaredByNode := map[string][]string{}
 				for _, n := range g.Nodes {
-					if n.Kind == mapx.KindSpec {
-						if codes, err := common.CodesInFileOfUnit(filepath.Join(absRoot, n.ID), n.Code); err == nil && len(codes) > 0 {
-							declaredByNode[n.ID] = codes
-						}
+					// SPEC e FLAG: os dois declaram cenarios que um teste pode provar.
+					//
+					// A flag entrou depois, e sem ela os cenarios de flag (`-G`) nunca
+					// chegavam ao mapa: o teste nomeava o codigo, o relatorio o trazia, e o
+					// cruzamento o descartava por o no' nao ser spec. O `flag-covered`
+					// respondia "nenhuma execucao ingerida" com a suite verde na mao.
+					if n.Kind != mapx.KindSpec && n.Kind != mapx.KindFlag {
+						continue
+					}
+					if codes, err := common.CodesInFileOfUnit(filepath.Join(absRoot, n.ID), n.Code); err == nil && len(codes) > 0 {
+						declaredByNode[n.ID] = codes
 					}
 				}
 				mf, mc := g.IngestExecution(byFile, proven, declaredByNode, layer, now)

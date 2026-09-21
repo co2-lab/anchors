@@ -38,7 +38,7 @@ func perfilComTempo() gate.Profile {
 // a lista de alvos. Um teste que so' checasse "nao quebrou" passaria com a tabela inteira
 // impressa na tela.
 func TestTimingG01_desligadoNaoImprimeTempo(t *testing.T) {
-	t.Log("cenário TIMNG-G01")
+	t.Run("TIMNG-G01: with the flag off, check prints no timing at all", func(t *testing.T) {})
 	// Confronta a VARIAVEL que o comando cobra, e nao um literal: `if desligado := false`
 	// seria tautologia — passaria com o `printTiming` chamado incondicionalmente na
 	// producao, que e' exatamente a regressao que este cenario existe para pegar.
@@ -69,7 +69,7 @@ func TestTimingG01_desligadoNaoImprimeTempo(t *testing.T) {
 // respondem perguntas diferentes ("qual gate custa" e "qual arquivo custa"), e foi a
 // segunda que apontou o `fnSize` lendo ~43.000 arquivos.
 func TestTimingG02_ligadoImprimeTempoPorGateEAlvos(t *testing.T) {
-	t.Log("cenário TIMNG-G02")
+	t.Run("TIMNG-G02: with the flag on, check prints time per gate and the slowest targets", func(t *testing.T) {})
 	cmd := newCheckCmd()
 	if err := cmd.Flags().Parse([]string{"--timing"}); err != nil {
 		t.Fatal(err)
@@ -105,7 +105,7 @@ func TestTimingG02_ligadoImprimeTempoPorGateEAlvos(t *testing.T) {
 // importa por uma razao concreta: um default invertido nao daria erro nenhum — so'
 // gastaria tempo de todo mundo, para sempre, em silencio.
 func TestTimingG03_ausenteValeODefaultQueEDesligado(t *testing.T) {
-	t.Log("cenário TIMNG-G03")
+	t.Run("TIMNG-G03: with the flag absent, the declared default holds — measuring is opt-in", func(t *testing.T) {})
 	// A ausencia do VALOR e' a ausencia da flag na linha de comando. Parsear um argv sem
 	// `--timing` deixa `showTiming` no estado que o cenario descreve — e e' esse estado,
 	// nao um literal, que o call site consulta.

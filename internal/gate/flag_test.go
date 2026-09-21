@@ -126,11 +126,10 @@ func TestFlagScenarioExists(t *testing.T) {
 // por flag, e é ele que vai quebrar.
 func TestFlagCovered_porCenarioNaoPorFlag(t *testing.T) {
 	// Um teste prova só o G01. Numa régua por FLAG isso passaria.
-	g := &mapx.Graph{Nodes: []mapx.Node{{
-		ID: "t.test.ts", Kind: mapx.KindTest,
-		Signal: &mapx.TestSignal{ProvenCodes: []string{"CHKUT-G01"}},
-	}}}
-	v, msg := checkFlagCovered(flagCompleta, flagNode(), "", g, nil)
+	n := flagNode()
+	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CHKUT-G01"}}
+	g := &mapx.Graph{Nodes: []mapx.Node{n}}
+	v, msg := checkFlagCovered(flagCompleta, n, "", g, nil)
 	if v != Fail {
 		t.Fatalf("dois cenários sem teste e veio %v", v)
 	}
@@ -145,11 +144,10 @@ func TestFlagCovered_porCenarioNaoPorFlag(t *testing.T) {
 }
 
 func TestFlagCovered_todosProvados(t *testing.T) {
-	g := &mapx.Graph{Nodes: []mapx.Node{{
-		ID: "t.test.ts", Kind: mapx.KindTest,
-		Signal: &mapx.TestSignal{ProvenCodes: []string{"CHKUT-G01", "CHKUT-G02", "CHKUT-G03"}},
-	}}}
-	if v, msg := checkFlagCovered(flagCompleta, flagNode(), "", g, nil); v != Pass {
+	n := flagNode()
+	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CHKUT-G01", "CHKUT-G02", "CHKUT-G03"}}
+	g := &mapx.Graph{Nodes: []mapx.Node{n}}
+	if v, msg := checkFlagCovered(flagCompleta, n, "", g, nil); v != Pass {
 		t.Errorf("todos os cenários têm teste e veio %v: %s", v, msg)
 	}
 }
@@ -232,11 +230,12 @@ func TestFlagCovered_codigoEmComentarioNaoContaComoTeste(t *testing.T) {
 // E com execução ingerida, o cenário provado sai da acusação.
 func TestFlagCovered_ingeridoEVerdePassa(t *testing.T) {
 	root := t.TempDir()
-	g := &mapx.Graph{Nodes: []mapx.Node{{
-		ID: "t_test.go", Kind: mapx.KindTest,
-		Signal: &mapx.TestSignal{ProvenCodes: []string{"CHKUT-G01", "CHKUT-G02", "CHKUT-G03"}},
-	}}}
-	if v, msg := checkFlagCovered(flagCompleta, flagNode(), root, g, nil); v != Pass {
+	// O sinal vive no no' DA FLAG, como o do `scenario-coverage` vive no da spec: a
+	// ingestao cruza os provados com os que o no' DECLARA.
+	n := flagNode()
+	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CHKUT-G01", "CHKUT-G02", "CHKUT-G03"}}
+	g := &mapx.Graph{Nodes: []mapx.Node{n}}
+	if v, msg := checkFlagCovered(flagCompleta, n, root, g, nil); v != Pass {
 		t.Errorf("todos provados e veio %v: %s", v, msg)
 	}
 }

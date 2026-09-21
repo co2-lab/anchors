@@ -111,8 +111,17 @@ jobs:
       # `-race` porque a suíte tem código concorrente (watcher, workflow) e uma corrida só
       # aparece sob carga — no CI, que roda em máquina diferente da de quem escreveu, é
       # onde ela tem mais chance de se manifestar.
+      # O RELATORIO sai daqui, e nao de uma segunda execucao: rodar a suite duas vezes
+      # dobraria o tempo do job para medir exatamente a mesma coisa. O `tee` deixa a saida
+      # visivel no log (um teste que falha tem de aparecer onde a pessoa ja' olha) e o
+      # `PIPESTATUS` preserva o codigo de saida do `go test` — sem ele, o `tee` bem
+      # sucedido mascararia a suite vermelha, que e' a familia de defeito que este arquivo
+      # ja' documenta tres vezes: check verde que nao fez o trabalho.
       - name: Testes
-        run: go test -race ./...
+        run: |
+          set -o pipefail
+          go test -race -v ./... 2>&1 | tee /tmp/go-test.out
+          exit ${PIPESTATUS[0]}
 
       # O ANCHORS SOBRE O ANCHORS.
       #
@@ -145,6 +154,28 @@ jobs:
             exit 1
           fi
           echo "✓ mapa em dia"
+
+      # A EVIDENCIA DE EXECUCAO entra no mapa AQUI, e a ordem e' o que torna isso possivel.
+      #
+      # Depois do passo acima porque o `ingest` ESCREVE no mapa: os sinais sobrevivem a um
+      # `map build`, entao ingerir antes faria o mapa divergir do commitado e o passo de
+      # frescor reprovaria — medido, 1124 linhas de diferenca. O mapa versionado nunca
+      # carregou sinal, e e' deliberado: evidencia e' de uma EXECUCAO, nao do repositorio.
+      #
+      # Antes dos gates porque e' o que eles leem. Sem isto, `scenario-coverage` e
+      # `flag-covered` respondem "nenhuma execucao ingerida" com a suite verde na mao —
+      # medido neste repositorio: 51 specs assim antes desta mudanca, e 51 verdes depois.
+      #
+      # `go-junit-report` porque o `go test` nao emite JUnit. A ferramenta e' do ECOSSISTEMA
+      # Go, nao do Anchors: ele nao roda teste e nao conhece runner — recebe o relatorio.
+      #
+      # O CODIGO DO CENARIO vive no NOME do caso, e em Go isso e' um subteste
+      # (`t.Run("CDCTC-B02: ...")`) porque o identificador da funcao nao aceita o `-`.
+      - name: A evidência de execução entra no mapa
+        run: |
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          go-junit-report < /tmp/go-test.out > /tmp/junit.xml
+          anchors ingest --junit /tmp/junit.xml
 
       # `--all` e não `--changed`: um PR pode QUEBRAR um arquivo que ele não tocou —
       # renomear um símbolo, mudar uma regra que outra unidade cita. O raio de impacto do

@@ -2,8 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -181,7 +179,18 @@ func checkFlagCovered(content string, n mapx.Node, root string, g *mapx.Graph, c
 		return Skip, i18n.T("gate.flag_scenarios_complete.no_scenarios")
 	}
 
-	written, green, ingested := scenarioEvidence(f, root, g)
+	// O VERDE vem do sinal DESTE no', como o `scenario-coverage` le' o da spec: a
+	// ingestao cruza os codigos provados com os que o no' DECLARA, e a flag declara os
+	// seus. Procurar o sinal nos nos de teste era a leitura errada — nenhum arquivo de
+	// teste "declara" o cenario da flag, e por isso nunca havia sinal onde eu olhava.
+	green := map[string]bool{}
+	ingested := n.Signal != nil
+	if ingested {
+		for _, c := range n.Signal.ProvenCodes {
+			green[c] = true
+		}
+	}
+	written := codesNamedByTests(scenarioCodes(f), root, g, n.ID)
 
 	var noTest, notGreen []string
 	for _, s := range f.Scenarios {
@@ -223,45 +232,11 @@ func checkFlagCovered(content string, n mapx.Node, root string, g *mapx.Graph, c
 	return Fail, strings.TrimRight(b.String(), "\n")
 }
 
-// scenarioEvidence answers, for each scenario, the two independent questions: is there a
-// test that NAMES it, and did that test PASS?
-//
-// The two readings are deliberately separate. `written` is static — it survives a project
-// that never ingests a report, which is the common case early on. `green` requires
-// execution, and is the only one that proves anything actually works.
-//
-// `ingested` reports whether ANY execution reached the graph, so the verdict can say
-// "nobody ran it" instead of "it failed" — two very different instructions to the reader.
-func scenarioEvidence(f flagx.Flag, root string, g *mapx.Graph) (written, green map[string]bool, ingested bool) {
-	written = map[string]bool{}
-	green = map[string]bool{}
-
-	for _, node := range g.Nodes {
-		if node.Kind != mapx.KindTest {
-			continue
-		}
-		if node.Signal != nil {
-			ingested = true
-			for _, code := range node.Signal.ProvenCodes {
-				green[code] = true
-			}
-		}
-
-		// O lado ESTÁTICO: o arquivo de teste NOMEIA o código do cenário?
-		//
-		// Comentários fora, pela mesma régua do `feature-test-match`: um código citado
-		// num comentário é REFERÊNCIA a outra unidade, não implementação. Contá-lo faria
-		// o gate dar por testado um cenário que alguém só mencionou de passagem.
-		b, err := os.ReadFile(filepath.Join(root, node.ID))
-		if err != nil {
-			continue
-		}
-		body := stripLineComments(string(b))
-		for _, s := range f.Scenarios {
-			if strings.Contains(body, s.Code) {
-				written[s.Code] = true
-			}
-		}
+// scenarioCodes lista os codigos que esta flag declara.
+func scenarioCodes(f flagx.Flag) []string {
+	out := make([]string, 0, len(f.Scenarios))
+	for _, s := range f.Scenarios {
+		out = append(out, s.Code)
 	}
-	return written, green, ingested
+	return out
 }

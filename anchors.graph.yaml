@@ -738,7 +738,7 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/ingest.go
       kind: code
-      rev: ff218a15869a
+      rev: 6f85a22a2480
       updated_at: "2026-09-21"
       code: SPCRX
       layer: comando
@@ -1107,7 +1107,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/check_timing_test.go
       kind: test
-      rev: f05ed2112252
+      rev: c78460332afd
       updated_at: "2026-09-21"
       code: TIMNG
       layer: teste
@@ -2120,7 +2120,7 @@ nodes:
         - gate
     - id: internal/gate/flag.go
       kind: code
-      rev: 91e3da1163ca
+      rev: 0ceadb9add95
       updated_at: "2026-09-21"
       layer: gate
       tags:
@@ -2128,7 +2128,7 @@ nodes:
         - gate
     - id: internal/gate/flag_test.go
       kind: test
-      rev: ef3d7a4d5d98
+      rev: adcb55667b70
       updated_at: "2026-09-21"
       code: CHKUT
       layer: teste
@@ -3161,7 +3161,7 @@ nodes:
     - id: internal/gate/scenario_coverage_citation_test.go
       kind: test
       rev: 5e35a2656296
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-21"
       code: GLCGL
       layer: teste
       tags:
@@ -3169,6 +3169,7 @@ nodes:
     - id: internal/gate/scenario_coverage_two_questions_test.go
       kind: test
       rev: 61aabd9bd74f
+      updated_at: "2026-09-21"
       code: CREDX
       layer: teste
       tags:
