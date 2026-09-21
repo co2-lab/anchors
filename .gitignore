@@ -1,4 +1,11 @@
 # binários compilados do CLI
+#
+# `/anchors` — o binário da RAIZ, que é onde `go build -o anchors ./cmd/anchors` o deixa.
+# A lista cobria só `/cli/anchors`, um caminho que não existe mais, e o binário da raiz
+# entrou no repositório sem nada acusar: 17 versões commitadas, 325 MB de blobs no
+# histórico, todas Mach-O arm64 — inúteis em qualquer máquina que não seja a de quem
+# compilou, e redundantes com os 12 artefatos que o goreleaser publica a cada tag.
+/anchors
 /cli/anchors
 /cli/anchors-*
 *.exe
