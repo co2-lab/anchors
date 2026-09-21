@@ -792,5 +792,13 @@
   "gate.failure_declared.skip_none": "the code declares no handling path — nothing to confront",
   "flow.keyword.fits": "Fits",
   "flow.keyword.suggests": "Suggests",
-  "flow.keyword.results": "Results"
+  "flow.keyword.results": "Results",
+  "failure.review.header": "failures observed and not yet understood (%d):",
+  "failure.review.none": "no failure under observation — every occurrence carries a conclusion, or there is nothing ingested yet (`anchors ingest --logs`)",
+  "failure.review.item": "    %-12s %4d occurrence(s)   %s → %s",
+  "failure.review.where": "      declared in %s",
+  "failure.review.stale": "      ⚠ the spec changed since the ingestion — re-ingest before concluding",
+  "failure.review.howto": "\nEach one is a question the spec could not answer when it was written: it mapped the\nfailure as POSSIBLE without knowing how it would happen. The log now has the context\nthat answers it.\n\nThree conclusions, and all three are progress:\n\n  cause found    write it beside the rule — the handling can stop being generic\n  resilient      `@resilient: <reason>` — it leaves the radar without leaving the record\n  still unknown  `@observing: <what was ruled out>` — different from nobody having looked",
+  "failure.review.observing": "      under observation: %s",
+  "failure.review.resilient": "      resilient: %s"
 }

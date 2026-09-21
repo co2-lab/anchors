@@ -792,5 +792,13 @@
   "gate.failure_declared.skip_none": "o código não declara caminho de tratamento — nada a confrontar",
   "flow.keyword.fits": "Encaixa",
   "flow.keyword.suggests": "Sugere",
-  "flow.keyword.results": "Resultados"
+  "flow.keyword.results": "Resultados",
+  "failure.review.header": "falhas observadas e ainda não compreendidas (%d):",
+  "failure.review.none": "nenhuma falha sob observação — toda ocorrência carrega uma conclusão, ou ainda não há nada ingerido (`anchors ingest --logs`)",
+  "failure.review.item": "    %-12s %4d ocorrência(s)   %s → %s",
+  "failure.review.where": "      declarada em %s",
+  "failure.review.stale": "      ⚠ a spec mudou desde a ingestão — reingira antes de concluir",
+  "failure.review.howto": "\nCada uma é uma pergunta que a spec não soube responder quando foi escrita: ela mapeou a\nfalha como POSSÍVEL sem saber como ela aconteceria. O log agora tem o contexto que\nresponde.\n\nTrês conclusões, e as três são progresso:\n\n  causa achada      escreva ao lado da regra — o tratamento pode deixar de ser genérico\n  resiliente        `@resilient: <razão>` — sai do radar sem sair do registro\n  ainda não sei     `@observing: <o que foi descartado>` — diferente de ninguém ter olhado",
+  "failure.review.observing": "      sob observação: %s",
+  "failure.review.resilient": "      resiliente: %s"
 }

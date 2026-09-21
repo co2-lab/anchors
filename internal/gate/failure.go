@@ -53,6 +53,78 @@ var failureRuleRE = regexp.MustCompile(`(?m)(?:^#{1,6}\s+|^\s*\|\s*` + "`?" + `|
 // it answers the question somebody will ask in six months, "why do we ignore this?".
 var resilientRE = regexp.MustCompile("(?i)(^|[^`])@resilient[^\\S\\n]*:[^\\S\\n]*\\S+")
 
+// observingRE — the failure that OCCURS and whose cause is not yet known.
+//
+// It is the third conclusion of the observation layer, and the one that no observability
+// tool records: the difference between "nobody investigated" and "we investigated and
+// still do not know". The second is KNOWLEDGE, and today it is lost — the next person to
+// look starts from zero, ruling out what somebody already ruled out.
+//
+// The mandatory text is what carries that: `@observing: ruled out timeout and partner
+// retry; happens only on accounts in migration`.
+var observingRE = regexp.MustCompile("(?i)(^|[^`])@observing[^\\S\\n]*:[^\\S\\n]*\\S+")
+
+// FailureConclusion is what a spec says about a failure it declared, after seeing it
+// happen.
+//
+// The three are progress, and they differ in what they ask of whoever reads next:
+//
+//	cause found    the rule carries it in prose — the handling can stop being generic
+//	resilient      `@resilient: <reason>` — it leaves the radar without leaving the record
+//	observing      `@observing: <what was ruled out>` — the question stays open, with history
+type FailureConclusion struct {
+	Rule      string
+	Resilient string
+	Observing string
+}
+
+// FailureConclusions reads, per rule, what the spec concluded about each failure.
+func FailureConclusions(content string) map[string]FailureConclusion {
+	out := map[string]FailureConclusion{}
+	for _, line := range strings.Split(content, "\n") {
+		for _, m := range failureRuleRE.FindAllStringSubmatch(line, -1) {
+			c := out[m[1]]
+			c.Rule = m[1]
+			if mm := reasonOf(resilientRE, line); mm != "" {
+				c.Resilient = mm
+			}
+			if mm := reasonOf(observingRE, line); mm != "" {
+				c.Observing = mm
+			}
+			out[m[1]] = c
+		}
+	}
+	return out
+}
+
+// reasonOf extracts the written reason of a marker — everything after the colon, to the
+// end of the line or the cell.
+//
+// The reason is what separates a conclusion from silencing: a bare marker would say "stop
+// asking" without saying why, and in six months nobody would know whether it still holds.
+//
+// It is read from the LINE and not from the marker's own match, because the marker pattern
+// stops at the first token — it only has to prove the reason EXISTS. Reading the reason
+// from it truncated `@resilient: the partner restarts at 3am` down to `the`, which throws
+// away exactly the part that is worth keeping.
+func reasonOf(re *regexp.Regexp, line string) string {
+	loc := re.FindStringIndex(line)
+	if loc == nil {
+		return ""
+	}
+	_, after, ok := strings.Cut(line[loc[0]:], ":")
+	if !ok {
+		return ""
+	}
+	// A table cell ends at the pipe: the reason is what the author wrote in THIS column,
+	// and swallowing the next one would attribute to the conclusion a text that belongs to
+	// another field.
+	if i := strings.Index(after, "|"); i >= 0 {
+		after = after[:i]
+	}
+	return strings.TrimSpace(after)
+}
+
 // declaredFailures reads the `-E` rules from the spec, separating the ones marked resilient.
 func declaredFailures(content string) (all, resilient []string) {
 	seen := map[string]bool{}

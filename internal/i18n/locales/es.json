@@ -792,5 +792,13 @@
   "gate.failure_declared.skip_none": "el código no declara camino de tratamiento — nada que confrontar",
   "flow.keyword.fits": "Encaja",
   "flow.keyword.suggests": "Sugiere",
-  "flow.keyword.results": "Resultados"
+  "flow.keyword.results": "Resultados",
+  "failure.review.header": "fallos observados y aún no comprendidos (%d):",
+  "failure.review.none": "ningún fallo bajo observación — cada ocurrencia lleva una conclusión, o aún no hay nada ingerido",
+  "failure.review.item": "    %-12s %4d ocurrencia(s)   %s → %s",
+  "failure.review.where": "      declarado en %s",
+  "failure.review.stale": "      ⚠ la spec cambió desde la ingestión — vuelve a ingerir antes de concluir",
+  "failure.review.howto": "\nCada uno es una pregunta que la spec no supo responder cuando se escribió.\n\n  causa hallada     escríbela junto a la regla\n  resiliente        `@resilient: <razón>`\n  aún no lo sé      `@observing: <lo que se descartó>`",
+  "failure.review.observing": "      bajo observación: %s",
+  "failure.review.resilient": "      resiliente: %s"
 }

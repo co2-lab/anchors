@@ -35,7 +35,8 @@ nodes:
         - doc
     - id: DESIGN-falhas-e-logs.md
       kind: doc
-      rev: badc952f012a
+      rev: 3cb6575cf661
+      updated_at: "2026-09-21"
       layer: desenho
       tags:
         - doc
@@ -684,6 +685,13 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: cmd/anchors/mapcmd/failures.go
+      kind: code
+      rev: b3fcd7a78a4b
+      layer: comando
+      tags:
+        - cli
+        - comando
     - id: cmd/anchors/mapcmd/flow.go
       kind: code
       rev: fd0aae8b16e7
@@ -710,8 +718,8 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/ingest.go
       kind: code
-      rev: 4a8a48fb2b8a
-      updated_at: "2026-09-19"
+      rev: ff218a15869a
+      updated_at: "2026-09-21"
       code: SPCRX
       layer: comando
       tags:
@@ -802,7 +810,7 @@ nodes:
         - comando
     - id: cmd/anchors/mapcmd/register.go
       kind: code
-      rev: 9cd3e4a31858
+      rev: a2aada918673
       updated_at: "2026-09-21"
       layer: comando
       tags:
@@ -1334,8 +1342,8 @@ nodes:
         - config
     - id: internal/config/config.go
       kind: code
-      rev: fac4b1787d52
-      updated_at: "2026-09-20"
+      rev: 6aeb5b8fd5cb
+      updated_at: "2026-09-21"
       layer: config
       tags:
         - nucleo
@@ -1357,8 +1365,8 @@ nodes:
         - config
     - id: internal/config/dialect.go
       kind: code
-      rev: 21f066c43ef8
-      updated_at: "2026-09-19"
+      rev: eee8bfc0a6f7
+      updated_at: "2026-09-21"
       layer: config
       tags:
         - nucleo
@@ -1531,7 +1539,7 @@ nodes:
         - test
     - id: internal/flowx/build_test.go
       kind: test
-      rev: cf9125b38025
+      rev: d7afa5604f9b
       updated_at: "2026-09-21"
       code: DSTRV
       layer: teste
@@ -1994,14 +2002,16 @@ nodes:
         - test
     - id: internal/gate/failure.go
       kind: code
-      rev: dac3ccb7e7a7
+      rev: 042bf7ddae82
+      updated_at: "2026-09-21"
       layer: gate
       tags:
         - regra
         - gate
     - id: internal/gate/failure_test.go
       kind: test
-      rev: 2ab9f9cfc2a9
+      rev: fd6fbb0680a3
+      updated_at: "2026-09-21"
       layer: teste
       tags:
         - test
@@ -2134,7 +2144,7 @@ nodes:
     - id: internal/gate/internal_checks.go
       kind: code
       rev: 0cd6d4d9e444
-      updated_at: "2026-09-20"
+      updated_at: "2026-09-21"
       code: INCHN
       layer: gate
       tags:
@@ -3738,7 +3748,7 @@ nodes:
     - id: internal/initx/default_gates.go
       kind: code
       rev: df4006eaf489
-      updated_at: "2026-09-20"
+      updated_at: "2026-09-21"
       layer: infra
       tags:
         - infra
@@ -3954,6 +3964,13 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/logscan/scan_test.go
+      kind: test
+      rev: 01b52f38f20c
+      updated_at: "2026-09-21"
+      layer: teste
+      tags:
+        - test
     - id: internal/mapx/build.go
       kind: code
       rev: a4c9509fedc6
@@ -4051,7 +4068,7 @@ nodes:
         - test
     - id: internal/mapx/model.go
       kind: code
-      rev: c38ba21235bc
+      rev: 91c1ed1a3ac9
       updated_at: "2026-09-21"
       layer: mapa
       tags:

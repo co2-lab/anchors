@@ -10,4 +10,5 @@ func Register(root *cobra.Command) {
 	root.AddCommand(newJudgeCmd())
 	root.AddCommand(newRecodeCmd())
 	root.AddCommand(newFlowCmd())
+	root.AddCommand(newFailuresCmd())
 }

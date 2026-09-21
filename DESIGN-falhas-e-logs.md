@@ -1,6 +1,7 @@
 # Falhas — declarar, tratar, registrar, e descobrir de onde vêm
 
-> Documento de DESENHO, anterior à implementação.
+> As três camadas estão IMPLEMENTADAS. Este documento fica como o registro do desenho e
+> das decisões — inclusive das que mudaram no caminho.
 
 ## O que já existe, e o que nunca foi confrontado
 
@@ -136,7 +137,9 @@ O Anchors dá o alvo, o material e o lugar de registrar a conclusão.
 
 | Código | Pergunta | Quem decide | Vira |
 | --- | --- | --- | --- |
-| `Q01` | A camada 1 entra sozinha primeiro? Ela é confronto estático puro — não depende de produção, de log nem de formato nenhum, e é pré-requisito das outras duas: sem `failure-logged`, a camada 2 não tem o que ingerir. | você | o escopo da primeira rodada |
+| `Q01` | FECHADA — a camada 1 entrou primeiro, sozinha, e as outras duas vieram em seguida. A ordem estava certa: sem `failure-logged`, a camada 2 não teria o que varrer. | você | (implementado) |
+| ~~`Q01`~~ | A camada 1 entra sozinha primeiro? Ela é confronto estático puro — não depende de produção, de log nem de formato nenhum, e é pré-requisito das outras duas: sem `failure-logged`, a camada 2 não tem o que ingerir. | você | o escopo da primeira rodada |
 | `Q02` | Como o dialeto reconhece "tratamento" e "log"? O `GuardPatterns` já existe para guarda de parâmetro; o mesmo mecanismo serviria (`catch_patterns`, `log_patterns`), declarado por projeto. | você | dois campos novos em `dialect` |
-| `Q03` | A ponte log→regra é o código CARIMBAR o identificador (`{rule: "CRED-E01"}`) ou um padrão declarado por regra? A primeira é exata e exige tocar o código; a segunda adota o legado e erra como toda heurística. | você | se o `anchors.yaml` ganha `errors.match` |
+| `Q03` | FECHADA — o código carimba, com delimitador `#[CRED-E01]`. Medido: código nu dá 5 falsos positivos em 6 linhas de ruído, `[...]` dá 2, `#[...]` dá 0. O alias por texto ficou como ponte do legado. | você | (implementado) |
+| ~~`Q03`~~ | A ponte log→regra é o código CARIMBAR o identificador (`{rule: "CRED-E01"}`) ou um padrão declarado por regra? A primeira é exata e exige tocar o código; a segunda adota o legado e erra como toda heurística. | você | se o `anchors.yaml` ganha `errors.match` |
 | `Q04` | Onde vive a conclusão da camada 3? Uma coluna nova na tabela `-E` (`causa`, `aceitável`, `sob observação`) mantém tudo num lugar só — mas mistura o que foi DECIDIDO com o que foi DESCOBERTO. | você | o formato da seção `Errors` |

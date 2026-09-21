@@ -109,3 +109,41 @@ func TestFailureHandled_noDialectIsUndetermined(t *testing.T) {
 		t.Errorf("with no dialect expected Pending, got %v", v)
 	}
 }
+
+// The THIRD conclusion of the observation layer, and the one no observability tool
+// records: the difference between "nobody investigated" and "we investigated and still do
+// not know". The second is KNOWLEDGE — without it the next person starts from zero, ruling
+// out what somebody already ruled out.
+func TestFailureConclusions_readsTheThreeOutcomes(t *testing.T) {
+	spec := "| `CRED-E01` | balance | refuses |\n" +
+		"| `CRED-E02` | partner down | retries | @resilient: the partner restarts at 3am daily; the retry covers it |\n" +
+		"| `CRED-E03` | timeout | refuses | @observing: ruled out partner retry and network latency; only on migrated accounts |\n"
+	got := FailureConclusions(spec)
+
+	if c := got["CRED-E01"]; c.Resilient != "" || c.Observing != "" {
+		t.Errorf("a failure with no conclusion must carry none: %+v", c)
+	}
+	// The WHOLE reason is what matters. The marker pattern stops at the first token —
+	// it only proves the reason exists — and reading the reason from it truncated
+	// `@resilient: the partner restarts...` down to `the`.
+	if c := got["CRED-E02"]; !strings.Contains(c.Resilient, "retry covers it") {
+		t.Errorf("the reason must be read whole, got %q", c.Resilient)
+	}
+	if c := got["CRED-E03"]; !strings.Contains(c.Observing, "migrated accounts") {
+		t.Errorf("the reason must be read whole, got %q", c.Observing)
+	}
+}
+
+// A table cell ends at the pipe: the reason is what the author wrote in THIS column, and
+// swallowing the next one would attribute to the conclusion a text belonging to another
+// field.
+func TestFailureConclusions_theReasonStopsAtTheCell(t *testing.T) {
+	spec := "| `CRED-E01` | cond | @resilient: the real reason | another column |\n"
+	c := FailureConclusions(spec)["CRED-E01"]
+	if strings.Contains(c.Resilient, "another column") {
+		t.Errorf("the reason swallowed the next cell: %q", c.Resilient)
+	}
+	if !strings.Contains(c.Resilient, "the real reason") {
+		t.Errorf("the reason was lost: %q", c.Resilient)
+	}
+}
