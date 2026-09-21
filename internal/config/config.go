@@ -117,6 +117,17 @@ type Config struct {
 	// do projeto, a amarração ao mapa é do Anchors. Ver Suite.
 	Tests    []Suite `yaml:"tests,omitempty"`
 	Mutation []Suite `yaml:"mutation,omitempty"`
+	// Logs diz ONDE estão os logs — e só isso, porque só isso é preciso.
+	//
+	// O FORMATO não entra aqui, e a razão é o que torna a varredura possível sem ditar
+	// nada: se o tratamento registra o CÓDIGO da falha, ele é a mesma sequência de
+	// caracteres em JSON, em texto puro ou em syslog. O Anchors procura o código, não o
+	// formato.
+	//
+	// A exigência recai sobre quem loga, não sobre como loga: o gate `failure-logged` já
+	// cobra que o tratamento registre; o que este eixo acrescenta é que ele registre COM
+	// IDENTIDADE.
+	Logs *LogsConfig `yaml:"logs,omitempty"`
 	// RuleTypes declara o VOCABULÁRIO de tipos de regra do projeto: cada letra do
 	// código (`{CODE}-<letra><NN>`) é a inicial do TERMO que nomeia a seção da spec.
 	// Vazio → o engine usa as letras canônicas (ver DefaultRuleLetters).
@@ -1640,6 +1651,42 @@ func (c *Config) RouteRegistry() []string {
 // ─────────────────────────────────────────────────────────────────────────────
 // SUÍTES — como o PROJETO produz sinal de teste
 // ─────────────────────────────────────────────────────────────────────────────
+
+// LogsConfig declara onde os logs estão e como reconhecer uma ocorrência de falha neles.
+type LogsConfig struct {
+	// Paths são os globs dos arquivos de log a varrer (`logs/*.jsonl`, `/var/log/app/*`).
+	//
+	// O Anchors nunca adivinha: sem caminho declarado, ele não varre nada. Sair procurando
+	// arquivo que pareça log seria a heurística que lê o que não devia — e log costuma
+	// carregar justamente o que não pode vazar.
+	Paths []string `yaml:"paths,omitempty"`
+	// Delimiters cercam o código no log: `#[CRED-E01]` por padrão.
+	//
+	// É o que separa a falha do que apenas se PARECE com ela, e a escolha é medida contra
+	// linhas de ruído reais:
+	//
+	//	código nu     5 falsos positivos   id de build, chave de cache, SKU, trace id
+	//	[CRED-E01]    2 falsos positivos   markdown em prosa, índice de array
+	//	#[CRED-E01]   0 falsos positivos
+	//
+	// Os três pegam as falhas reais igual — o que muda é o que capturam A MAIS. E o custo
+	// de escrever `#[` em vez de `[` é o mesmo para quem loga.
+	//
+	// Um par vazio (`delimiters: ["", ""]`) volta ao código nu, para o log legado que
+	// ninguém vai reescrever — com o custo acima, e por isso o gate exige, aí, que a linha
+	// diga que está reportando falha.
+	Delimiters []string `yaml:"delimiters,omitempty"`
+	// Aliases mapeiam um padrão de texto para um código de falha, para o log que já existe
+	// e ninguém vai reescrever: `CRED-E01: "INSUFFICIENT_BALANCE"`.
+	//
+	// É a ponte do legado, e tem o problema de toda heurística: casa o que não é, e não
+	// casa o que é. Por isso o `match` (o código carimbado) é o alvo, e isto é a ponte.
+	Aliases map[string]string `yaml:"aliases,omitempty"`
+	// Timestamp extrai a data de uma linha, no grupo 1. Opcional: sem ele, a ocorrência
+	// entra sem janela, e o gate que compara "ocorreu e parou" contra "ocorre agora" não
+	// tem o que comparar.
+	Timestamp string `yaml:"timestamp,omitempty"`
+}
 
 // Suite é um comando do projeto que produz um relatório de teste, mais o caminho do
 // relatório que ele deixa. O Anchors não sabe rodar teste — não conhece jest, pytest

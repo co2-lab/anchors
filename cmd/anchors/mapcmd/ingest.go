@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 
+	"github.com/co2-lab/anchors/internal/logscan"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/testsig"
 	"github.com/spf13/cobra"
@@ -29,6 +31,7 @@ var ViaAnchorsTest bool
 
 func newIngestCmd() *cobra.Command {
 	var root, mapPath, junit, lcov, mutation, layer, scope string
+	var logs bool
 	cmd := &cobra.Command{
 		Use:   "ingest",
 		Short: "Ingest test signals (JUnit/lcov) the project generated and bind them to the map",
@@ -46,16 +49,26 @@ pytest-cov…) and hand over the report. From the execution, Anchors also derive
 SCENARIO: a scenario code (SPCRX-V01) is PROVEN if it appears in a case that passed.
 Run 'anchors coverage' afterwards to see the spec requirements with no green test.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if junit == "" && lcov == "" && mutation == "" {
-				return fmt.Errorf("provide --junit <file>, --lcov <file> and/or --mutation <file>")
+			if junit == "" && lcov == "" && mutation == "" && !logs {
+				return fmt.Errorf("provide --junit <file>, --lcov <file>, --mutation <file> and/or --logs")
 			}
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
 				return err
 			}
-			return IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope)
+			if junit != "" || lcov != "" || mutation != "" {
+				if err := IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope); err != nil {
+					return err
+				}
+			}
+			if logs {
+				return ingestLogs(absRoot, mapPath)
+			}
+			return nil
 		},
 	}
+	cmd.Flags().BoolVar(&logs, "logs", false,
+		"scan the logs declared in `logs.paths` and bind the failure occurrences to the specs that declare them")
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().StringVar(&mapPath, "map", "", "path to the map")
 	cmd.Flags().StringVar(&junit, "junit", "", "JUnit XML file (execution result)")
@@ -212,5 +225,89 @@ func warnIfManualIngest(absRoot string) error {
 	fmt.Fprintln(os.Stderr, "  `anchors test` runs the suite and ingests in a single operation — that is what")
 	fmt.Fprintln(os.Stderr, "  guarantees the map reflects what has just run. To REFUSE manual")
 	fmt.Fprintln(os.Stderr, "  ingestion, declare `manual_ingest_blocks: true` under `workflow:`.")
+	return nil
+}
+
+// ingestLogs varre os logs do projeto e amarra as ocorrências às specs que as declaram.
+//
+// O Anchors VARRE — ele não pede o resultado pronto, ao contrário do que a primeira versão
+// deste eixo fazia. O que torna isso possível sem ditar formato é que o log carrega o
+// CÓDIGO da falha: `CRED-E01` é a mesma sequência de caracteres em JSON, em texto puro ou
+// em syslog, e procurar o código dispensa entender o formato.
+func ingestLogs(absRoot, mapPath string) error {
+	if mapPath == "" {
+		mapPath = filepath.Join(absRoot, mapx.DefaultPath)
+	}
+	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	if err != nil {
+		return err
+	}
+	if cfg.Logs == nil || len(cfg.Logs.Paths) == 0 {
+		return fmt.Errorf("no log declared — add `logs.paths` to anchors.yaml with the globs of your log files")
+	}
+	g, err := mapx.Load(mapPath)
+	if err != nil {
+		return err
+	}
+	res, err := logscan.Scan(absRoot, cfg, g)
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return nil
+	}
+
+	// A ocorrência vai para a SPEC que declara a regra — é dela a falha, e é nela que a
+	// conclusão sobre a causa vai ser escrita depois.
+	byRule := map[string]*mapx.Node{}
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
+		if n.Kind != mapx.KindSpec {
+			continue
+		}
+		b, err := os.ReadFile(filepath.Join(absRoot, n.ID))
+		if err != nil {
+			continue
+		}
+		for _, m := range logscan.SpecFailureCodes(string(b)) {
+			byRule[m] = n
+		}
+		n.Failures = nil
+	}
+	bound := 0
+	for _, o := range res.Occurrences {
+		n, ok := byRule[o.Rule]
+		if !ok {
+			continue
+		}
+		// A REV da spec no momento da ingestão: a ocorrência envelhece se a spec mudar,
+		// porque a falha observada era da versão anterior da regra.
+		o.Rev = n.Rev
+		n.Failures = append(n.Failures, o)
+		bound++
+	}
+	if err := mapx.Save(g, mapPath); err != nil {
+		return err
+	}
+
+	fmt.Printf("logs: %d file(s), %d line(s) — %d occurrence(s) bound to %d spec rule(s)\n",
+		res.Files, res.Lines, bound, len(res.Occurrences))
+	if len(res.Unknown) == 0 {
+		return nil
+	}
+	// O ACHADO da camada, e o que nenhuma observability dá: o log mostra um erro que a
+	// spec não previu. Ele não entra no mapa (amarrá-lo inventaria dono para uma falha
+	// órfã), mas some em silêncio se não for dito aqui.
+	fmt.Printf("\n⚠ %d failure code(s) in the log that NO spec declares:\n", len(res.Unknown))
+	codes := make([]string, 0, len(res.Unknown))
+	for c := range res.Unknown {
+		codes = append(codes, c)
+	}
+	sort.Strings(codes)
+	for _, c := range codes {
+		fmt.Printf("    %-12s %d occurrence(s)\n", c, res.Unknown[c])
+	}
+	fmt.Println("  Somebody is handling and logging a failure the spec never declared —")
+	fmt.Println("  or the code is a typo. Both are worth a look.")
 	return nil
 }

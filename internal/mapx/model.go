@@ -144,6 +144,36 @@ type Node struct {
 	// Signal — sinais de qualidade INGERIDOS do runner (o Anchors não roda o teste;
 	// consome o artefato que o projeto já gera). Preenchido por `anchors ingest`.
 	Signal *TestSignal `yaml:"signal,omitempty"`
+	// Failures — as OCORRÊNCIAS de falha observadas em produção, por regra `-E`.
+	//
+	// Ingeridas, nunca lidas: o Anchors não tem acesso ao log de ninguém, e parsear
+	// formato alheio seria a heurística que envelhece a cada troca de logger. Você extrai
+	// do seu log (com um `jq`, um `grep`, uma query no observability) e entrega o arquivo
+	// — o mesmo desenho do `ingest` de teste, que também não roda o runner.
+	//
+	// É o que fecha o circuito entre a falha DECLARADA na spec e a falha que de fato
+	// acontece. Sem isso, os dois lados existem e ninguém os confronta: a `-E` diz que
+	// pode falhar, o log diz que falhou, e nada liga uma coisa à outra.
+	Failures []FailureSignal `yaml:"failures,omitempty"`
+}
+
+// FailureSignal é a ocorrência observada de UMA falha declarada.
+//
+// Amarrada à SPEC e não ao código, porque a regra `-E` é dela: o código implementa o
+// tratamento, mas quem declara a falha — e quem recebe a conclusão sobre ela — é a spec.
+type FailureSignal struct {
+	// Rule é o código da falha (`CRED-E01`), e é a ponte com a declaração.
+	Rule string `yaml:"rule"`
+	// Count é quantas vezes a falha ocorreu na janela observada.
+	Count int `yaml:"count"`
+	// First e Last delimitam a janela. Uma falha que ocorreu muito e PAROU diz algo
+	// diferente de uma que ocorre agora — e o `last` é o que distingue as duas.
+	First string `yaml:"first,omitempty"`
+	Last  string `yaml:"last,omitempty"`
+	// Rev é a revisão da spec no momento da ingestão. A ocorrência ENVELHECE quando a
+	// spec muda: a falha observada era da versão anterior da regra, e tratá-la como
+	// atual afirmaria sobre o que não foi medido.
+	Rev string `yaml:"rev,omitempty"`
 }
 
 // TestSignal são os sinais de qualidade de teste amarrados a um nó (código ou teste).
