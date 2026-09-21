@@ -1,7 +1,7 @@
 # Os fluxos que o Anchors já tem — levantamento
 
 > Levantamento anterior à escrita. O que o Anchors executa hoje, onde há DECISÃO, e o que
-> vira fluxo. O fluxo de destravar do galaxy NÃO entra aqui: é do galaxy, e o Anchors
+> vira fluxo. O fluxo de destravar de um projeto acompanhado NÃO entra aqui: é dele, e o Anchors
 > apenas oferece o mecanismo para o projeto escrever o seu.
 
 ## O critério, corrigido

@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// The flow that originated the feature, in miniature: the galaxy unblocking rotation.
+// The flow that originated the feature, in miniature: an unblocking rotation.
 const destravar = `<!-- @anchors
   code: DSTRV
   updated_at: 2026-09-21

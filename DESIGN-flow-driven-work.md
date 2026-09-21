@@ -5,17 +5,16 @@
 
 ## O problema, medido em projeto real
 
-No `galaxy` há 58 problemas abertos e um guia de 232 linhas (`guides/destravar.md`) que
+Um projeto acompanhado tem 58 problemas técnicos abertos e um guia de 232 linhas que
 cataloga **oito abordagens** para destravar, cada uma com o seu "quando esta é a certa", e
-uma regra explícita na linha 11 ("a regra dos DOIS ATAQUES").
+uma regra explícita logo no começo: dois ataques por abordagem, e depois troca.
 
-E mesmo assim, o dossiê do problema 142 abre com este aviso:
+E mesmo assim, o dossiê de um dos problemas abre avisando que teve cinco passagens, que
+cada uma re-apontou o alvo da anterior, e que pelo menos duas mandaram uma rodada para o
+lugar errado.
 
-> *"LEIA A ÚLTIMA RODADA PRIMEIRO. Este dossiê tem cinco passagens e cada uma re-apontou o
-> alvo da anterior — o título já foi dado por errado e depois confirmado... pelo menos dois
-> já mandaram uma rodada para o sítio errado."*
-
-**Cinco rodadas, duas no alvo errado**, com a informação certa escrita e disponível.
+**Cinco rodadas, duas no alvo errado**, com a informação certa escrita e disponível o
+tempo todo.
 
 A causa não é falta de documento — é a NATUREZA do documento. Um catálogo de "o que fazer
 caso X" é INSUMO: exige que quem trabalha lembre de consultar, escolha certo entre oito, e
@@ -151,4 +150,4 @@ alguém escolha.
 
 | Código | Pergunta | Quem decide | Vira |
 | --- | --- | --- | --- |
-| `Q01` | O fluxo default do Anchors é o do CICLO (plan→spec→code→feature→test→review) ou o de DESTRAVAR (o do galaxy)? O primeiro exercita a ligação com o `work`; o segundo ataca o problema que originou o pedido. | você | o primeiro `flows/*.flow.md` semeado pelo `init` |
+| `Q01` | O fluxo default do Anchors é o do CICLO (plan→spec→code→feature→test→review) ou o de DESTRAVAR (o caso que originou o pedido)? O primeiro exercita a ligação com o `work`; o segundo ataca o problema que originou o pedido. | você | o primeiro `flows/*.flow.md` semeado pelo `init` |
