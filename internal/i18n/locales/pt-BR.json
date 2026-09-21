@@ -793,6 +793,8 @@
   "flow.keyword.fits": "Encaixa",
   "flow.keyword.suggests": "Sugere",
   "flow.keyword.results": "Resultados",
+  "flag.keyword.absent": "ausente",
+  "flag.keyword.present": "presente",
   "failure.review.header": "falhas observadas e ainda não compreendidas (%d):",
   "failure.review.none": "nenhuma falha sob observação — toda ocorrência carrega uma conclusão, ou ainda não há nada ingerido (`anchors ingest --logs`)",
   "failure.review.item": "    %-12s %4d ocorrência(s)   %s → %s",
@@ -800,5 +802,15 @@
   "failure.review.stale": "      ⚠ a spec mudou desde a ingestão — reingira antes de concluir",
   "failure.review.howto": "\nCada uma é uma pergunta que a spec não soube responder quando foi escrita: ela mapeou a\nfalha como POSSÍVEL sem saber como ela aconteceria. O log agora tem o contexto que\nresponde.\n\nTrês conclusões, e as três são progresso:\n\n  causa achada      escreva ao lado da regra — o tratamento pode deixar de ser genérico\n  resiliente        `@resilient: <razão>` — sai do radar sem sair do registro\n  ainda não sei     `@observing: <o que foi descartado>` — diferente de ninguém ter olhado",
   "failure.review.observing": "      sob observação: %s",
-  "failure.review.resilient": "      resiliente: %s"
+  "failure.review.resilient": "      resiliente: %s",
+  "gate.flag_scenario_grammar.skip_not_flag": "nao e' uma feature flag — a gramatica dos cenarios e' cobrada do arquivo de flag, que e' onde eles sao declarados",
+  "gate.flag_scenario_grammar.unparsed": "%d condicao(oes) de cenario que a gramatica nao reconhece:\n  %s\nA gramatica e' fixa de proposito: prosa cobre qualquer caso e nao da' para confrontar. Escreva uma comparacao (`= \"on\"`, `>= 50`, `contains \"beta\"`, `matches \"^v2\"`) ou o caso ausente (`ausente`).",
+  "gate.flag_scenarios_complete.skip_not_flag": "nao e' uma feature flag — a completude e' cobrada do arquivo de flag, que e' quem declara os cenarios",
+  "gate.flag_scenarios_complete.no_scenarios": "a flag nao declara cenario nenhum — uma flag sem cenario nao governa nada",
+  "gate.flag_scenarios_complete.no_absent": "a flag nao declara o que acontece quando ela esta' AUSENTE.\nServico de flags fora do ar, ambiente novo, teste local: sem comportamento declarado vale o default da biblioteca, e isso se descobre em producao. Acrescente um cenario com a condicao `ausente`, ou dispense com `@no-absent: <razao>` quando a flag nao puder faltar.",
+  "gate.flag_scenario_exists.skip_not_spec": "nao e' uma spec — a citacao e' cobrada de quem cita",
+  "gate.flag_scenario_exists.no_citation": "a spec nao cita cenario de flag",
+  "gate.flag_scenario_exists.unknown": "%d cenario(s) de flag citados com `@gated-by` que nao existem: %s.\nUma regra governada por um cenario que ninguem escreveu e' uma condicao que nunca sera' confrontada. Declare o cenario em `flags/<nome>.flag.md`, ou corrija o codigo.",
+  "gate.flag_covered.skip_not_flag": "nao e' uma feature flag — a cobertura por cenario e' cobrada do arquivo de flag",
+  "gate.flag_covered.untested": "%d de %d cenario(s) de flag sem teste verde: %s.\nPor CENARIO, nao por flag: a flag com o caminho ligado testado e o desligado nao deixa sem prova justamente o ramo que vai quebrar. Escreva um teste nomeando o codigo do cenario."
 }

@@ -574,7 +574,13 @@ func normalizeTitle(s string) string {
 // ainda assim precisa de identidade: sem código, a pergunta não vira issue rastreável,
 // não sobrevive a uma reescrita da spec, e não dá para dizer que a regra `X-B03` nasceu
 // da pergunta `X-Q01`. É a peça que faltava para a pergunta durar mais que a sessão.
-var DefaultRuleLetters = "SRVAXBNMDEIQF"
+// `G` (Gate/Flag) e' o CENARIO DE FEATURE FLAG. Ele nao e' uma regra da unidade — e' uma
+// condicao sob a qual as regras dela valem —, e ainda assim precisa de identidade: sem
+// codigo, o cenario nao vira alvo de teste rastreavel, e nao da' para dizer que a regra
+// `CRED-V01` so' vale quando `CHKUT-G02`. E' a quarta letra a entrar; as tres metades da
+// decisao (esta lista, o catalogo de secoes, e a copia do `testsig`) foram atualizadas na
+// mesma mudanca, e os dois testes de guarda existem para cobrar exatamente isso.
+var DefaultRuleLetters = "SRVAXBNMDEIQFG"
 
 // CodeLengths são os comprimentos de código de identidade que o engine reconhece.
 //

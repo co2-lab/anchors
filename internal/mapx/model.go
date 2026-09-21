@@ -29,6 +29,18 @@ const (
 	// um artefato de produto que listasse seus realizadores viraria indice, e indice
 	// envelhece a cada spec nova.
 	KindProduct Kind = "product"
+
+	// KindFlag — a FEATURE FLAG: os caminhos que o valor da flag abre.
+	//
+	// Uma flag multiplica os caminhos do codigo sem multiplicar a spec. `if
+	// flag("novo-checkout")` cria dois comportamentos, e a spec descreve UM — ou, pior,
+	// descreve os dois misturados numa frase que nao diz qual vale quando.
+	//
+	// Vive em `flags/<nome>.flag.md`, fora da arvore de alvos, no mesmo precedente do
+	// `product/`. Dentro dela, cada CENARIO e' uma regra de letra `G` com condicao
+	// propria — e e' o cenario, nunca o valor real, que o Anchors confronta: o valor
+	// muda por usuario e por minuto, e o framework nao tem (nem deve ter) acesso a ele.
+	KindFlag Kind = "flag"
 )
 
 // EdgeType é o tipo semântico da aresta (CONCEPT §3). O tipo carrega a força
@@ -75,6 +87,17 @@ const (
 	// mantivesse a lista de quem o realiza, e essa lista estaria errada na proxima spec
 	// que alguem escrevesse sem lembrar de atualiza-la.
 	EdgeRealizes EdgeType = "realizes"
+
+	// EdgeGatedBy — a regra da SPEC so' vale sob um CENARIO de feature flag.
+	//
+	// A direcao repete a do `realizes`, e pela mesma razao: quem sabe que depende da
+	// flag e' a spec. Um arquivo de flag que listasse seus dependentes viraria indice, e
+	// indice envelhece a cada spec nova que alguem escreve sem lembrar de atualiza-lo.
+	//
+	// Tambem e' 1 para MUITOS: um cenario governa quantas regras forem necessarias, e uma
+	// regra pode depender de mais de um cenario (duas flags que se cruzam). Nenhum gate
+	// daqui cobra paridade de contagem.
+	EdgeGatedBy EdgeType = "gated-by"
 )
 
 // Origin — como a aresta entrou no mapa (TRACEABILITY §4).

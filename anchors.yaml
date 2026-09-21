@@ -52,6 +52,16 @@ layers:
     kind: product
     tags: [product, doutrina]
 
+  # FEATURE FLAGS. A flag multiplica os caminhos do codigo sem multiplicar a spec: `if
+  # flag("novo-checkout")` cria dois comportamentos e a spec descreve UM. Aqui cada flag
+  # declara os CENARIOS por valor, e a spec aponta com `@gated-by` a regra que so' vale
+  # sob um deles. O que o Anchors confronta e' o cenario declarado, nunca o valor real —
+  # que muda por usuario e por minuto, e ao qual ele nao tem (nem deve ter) acesso.
+  flags:
+    pattern: "flags/*.flag.md"
+    kind: flag
+    tags: [flag, feature-flag]
+
   # Documentos de DESENHO — registram um conceito antes de implementa-lo: o problema
   # medido, as alternativas descartadas e as decisoes tomadas. Sao registro, nao regua,
   # pela mesma razao que DECISIONS.md: nao governam nada, e cobrar deles pontos de
@@ -424,6 +434,20 @@ gates:
     blocking: false
 
   - name: doctrine-not-duplicated
+    blocking: false
+
+  # O EIXO DAS FEATURE FLAGS — os cenarios que o valor da flag abre.
+  #
+  # Os quatro `on:` vem do canonico (`mergeCanonical`): os tres primeiros sobre o arquivo
+  # de flag, e o `flag-scenario-exists` sobre a spec, que e' quem cita.
+  - name: flag-scenario-grammar
+
+  - name: flag-scenarios-complete
+
+  - name: flag-scenario-exists
+
+  # INFORMATIVO: teste por cenario e' a regua certa e a mais cara de cumprir.
+  - name: flag-covered
     blocking: false
 
   # Declarado e SEM camada que o acione: este repositorio e' um FRAMEWORK, e das 841

@@ -793,6 +793,8 @@
   "flow.keyword.fits": "Encaja",
   "flow.keyword.suggests": "Sugiere",
   "flow.keyword.results": "Resultados",
+  "flag.keyword.absent": "ausente",
+  "flag.keyword.present": "presente",
   "failure.review.header": "fallos observados y aún no comprendidos (%d):",
   "failure.review.none": "ningún fallo bajo observación — cada ocurrencia lleva una conclusión, o aún no hay nada ingerido",
   "failure.review.item": "    %-12s %4d ocurrencia(s)   %s → %s",
@@ -800,5 +802,15 @@
   "failure.review.stale": "      ⚠ la spec cambió desde la ingestión — vuelve a ingerir antes de concluir",
   "failure.review.howto": "\nCada uno es una pregunta que la spec no supo responder cuando se escribió.\n\n  causa hallada     escríbela junto a la regla\n  resiliente        `@resilient: <razón>`\n  aún no lo sé      `@observing: <lo que se descartó>`",
   "failure.review.observing": "      bajo observación: %s",
-  "failure.review.resilient": "      resiliente: %s"
+  "failure.review.resilient": "      resiliente: %s",
+  "gate.flag_scenario_grammar.skip_not_flag": "no es una feature flag — la gramatica de los escenarios se exige al archivo de flag, que es donde se declaran",
+  "gate.flag_scenario_grammar.unparsed": "%d condicion(es) de escenario que la gramatica no reconoce:\n  %s\nLa gramatica es fija a proposito: la prosa cubre cualquier caso y no permite confrontar nada. Escriba una comparacion (`= \"on\"`, `>= 50`, `contains \"beta\"`, `matches \"^v2\"`) o el caso ausente (`ausente`).",
+  "gate.flag_scenarios_complete.skip_not_flag": "no es una feature flag — la completitud se exige al archivo de flag, que es quien declara los escenarios",
+  "gate.flag_scenarios_complete.no_scenarios": "la flag no declara ningun escenario — una flag sin escenario no gobierna nada",
+  "gate.flag_scenarios_complete.no_absent": "la flag no declara que ocurre cuando esta AUSENTE.\nServicio de flags caido, un entorno nuevo, una prueba local: sin comportamiento declarado vale el default de la libreria, y eso se descubre en produccion. Agregue un escenario con la condicion `ausente`, o dispense con `@no-absent: <razon>` cuando la flag no pueda faltar.",
+  "gate.flag_scenario_exists.skip_not_spec": "no es una spec — la cita se exige a quien cita",
+  "gate.flag_scenario_exists.no_citation": "la spec no cita ningun escenario de flag",
+  "gate.flag_scenario_exists.unknown": "%d escenario(s) de flag citados con `@gated-by` que no existen: %s.\nUna regla gobernada por un escenario que nadie escribio es una condicion que nunca sera confrontada. Declare el escenario en `flags/<nombre>.flag.md`, o corrija el codigo.",
+  "gate.flag_covered.skip_not_flag": "no es una feature flag — la cobertura por escenario se exige al archivo de flag",
+  "gate.flag_covered.untested": "%d de %d escenario(s) de flag sin prueba verde: %s.\nPor ESCENARIO, no por flag: la flag con el camino encendido probado y el apagado no deja sin prueba justamente la rama que va a romperse. Escriba una prueba nombrando el codigo del escenario."
 }

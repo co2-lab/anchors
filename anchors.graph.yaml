@@ -41,6 +41,14 @@ nodes:
       tags:
         - doc
         - desenho
+    - id: DESIGN-feature-flags.md
+      kind: doc
+      rev: ddb5e5a0cbef
+      code: CHKUT
+      layer: desenho
+      tags:
+        - doc
+        - desenho
     - id: DESIGN-flow-driven-work.md
       kind: doc
       rev: d2d52efe03f5
@@ -516,7 +524,7 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide.go
       kind: code
-      rev: 90c28ad05504
+      rev: a7327c927888
       updated_at: "2026-09-21"
       layer: comando
       tags:
@@ -550,6 +558,15 @@ nodes:
       rev: 8311dde7eeb1
       updated_at: "2026-09-19"
       layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/governance/guide_flag.go
+      kind: code
+      rev: 1df3cbe41143
+      code: CHKUT
+      layer: comando
+      code_declared: true
       tags:
         - cli
         - comando
@@ -688,6 +705,7 @@ nodes:
     - id: cmd/anchors/mapcmd/failures.go
       kind: code
       rev: b3fcd7a78a4b
+      updated_at: "2026-09-21"
       layer: comando
       tags:
         - cli
@@ -1221,6 +1239,15 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: flags/timing-metrics.flag.md
+      kind: flag
+      rev: 6ac5dccb10a0
+      code: TIMNG
+      layer: flags
+      code_declared: true
+      tags:
+        - flag
+        - feature-flag
     - id: guides/GATES_ECOSYSTEM_GUIDE.md
       kind: guide
       rev: b89b57f14acf
@@ -1342,7 +1369,7 @@ nodes:
         - config
     - id: internal/config/config.go
       kind: code
-      rev: 6aeb5b8fd5cb
+      rev: fba09dc33d61
       updated_at: "2026-09-21"
       layer: config
       tags:
@@ -1534,6 +1561,19 @@ nodes:
       rev: cada633d9cde
       updated_at: "2026-09-10"
       code: GLCGL
+      layer: teste
+      tags:
+        - test
+    - id: internal/flagx/grammar_test.go
+      kind: test
+      rev: 7ddea0dbc86b
+      layer: teste
+      tags:
+        - test
+    - id: internal/flagx/parse_test.go
+      kind: test
+      rev: ae8a05da62b0
+      code: CHKUT
       layer: teste
       tags:
         - test
@@ -2065,6 +2105,20 @@ nodes:
       tags:
         - regra
         - gate
+    - id: internal/gate/flag.go
+      kind: code
+      rev: 655415a04804
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/flag_test.go
+      kind: test
+      rev: df12489c23b2
+      code: CHKUT
+      layer: teste
+      tags:
+        - test
     - id: internal/gate/gate.feature
       kind: feature
       rev: 46d837f31958
@@ -2143,7 +2197,7 @@ nodes:
         - feature
     - id: internal/gate/internal_checks.go
       kind: code
-      rev: 0cd6d4d9e444
+      rev: 88a20a88dc0b
       updated_at: "2026-09-21"
       code: INCHN
       layer: gate
@@ -3747,7 +3801,7 @@ nodes:
         - test
     - id: internal/initx/default_gates.go
       kind: code
-      rev: df4006eaf489
+      rev: 037953b82715
       updated_at: "2026-09-21"
       layer: infra
       tags:
@@ -3973,7 +4027,7 @@ nodes:
         - test
     - id: internal/mapx/build.go
       kind: code
-      rev: a4c9509fedc6
+      rev: 5efa0cebe7b8
       updated_at: "2026-09-20"
       layer: mapa
       tags:
@@ -4068,7 +4122,7 @@ nodes:
         - test
     - id: internal/mapx/model.go
       kind: code
-      rev: 91c1ed1a3ac9
+      rev: f1917b1daf6e
       updated_at: "2026-09-21"
       layer: mapa
       tags:
@@ -4297,7 +4351,7 @@ nodes:
         - test
     - id: internal/scan/scan.go
       kind: code
-      rev: 363678c671ae
+      rev: c13ceaa6cd7c
       updated_at: "2026-09-20"
       layer: scan
       tags:
@@ -4373,7 +4427,7 @@ nodes:
         - test
     - id: internal/testsig/code.go
       kind: code
-      rev: ac6a34261189
+      rev: e3fa43c931df
       updated_at: "2026-09-10"
       layer: infra
       tags:
@@ -4381,7 +4435,7 @@ nodes:
       regime: declarativo
     - id: internal/testsig/code_letters_test.go
       kind: test
-      rev: 8e76f5d37afe
+      rev: 424c3ab27ce5
       updated_at: "2026-09-19"
       code: GLCGL
       layer: teste
@@ -4895,6 +4949,15 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: QUALITY.md
+      to: internal/gate/flag.go
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: 655415a04804
+        changed_at: "2026-09-21"
+        verdict: ok
+    - from: QUALITY.md
       to: internal/gate/gate.go
       type: governs
       origin: declared
@@ -5305,8 +5368,8 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: dedf7925bcf7
-        validated_to_rev: 0cef6cb6fcf7
-        changed_at: "2026-09-19"
+        validated_to_rev: bbbab248ec08
+        changed_at: "2026-09-21"
         verdict: ok
     - from: SPEC.md
       to: internal/gate/code_reference_valid.spec.md
@@ -5729,8 +5792,8 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: da86ff2960b9
-        validated_to_rev: 0cef6cb6fcf7
-        changed_at: "2026-09-19"
+        validated_to_rev: bbbab248ec08
+        changed_at: "2026-09-21"
         verdict: ok
     - from: SPEC_TYPES.md
       to: internal/gate/code_reference_valid.spec.md
@@ -6783,8 +6846,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindSpec`'
-      dep: DEP1
+      method: '`EdgeSpecifies`'
+      dep: DEP2
       stamp:
         validated_from_rev: 0cf3a482b528
         validated_to_rev: c35dfd17ef15
@@ -6794,8 +6857,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`EdgeSpecifies`'
-      dep: DEP2
+      method: '`KindSpec`'
+      dep: DEP1
       stamp:
         validated_from_rev: 0cf3a482b528
         validated_to_rev: c35dfd17ef15
@@ -6815,9 +6878,9 @@ edges:
       type: covered-by
       origin: convention
       stamp:
-        validated_from_rev: 0cef6cb6fcf7
+        validated_from_rev: bbbab248ec08
         validated_to_rev: af4430a5a99d
-        changed_at: "2026-09-19"
+        changed_at: "2026-09-21"
         verdict: ok
     - from: internal/gate/code_language.spec.md
       to: internal/gate/code_language.go
@@ -6826,18 +6889,18 @@ edges:
       method: '`PortugueseIdentifiers`'
       dep: DEP1
       stamp:
-        validated_from_rev: 0cef6cb6fcf7
+        validated_from_rev: bbbab248ec08
         validated_to_rev: 2ffa6610870b
-        changed_at: "2026-09-19"
+        changed_at: "2026-09-21"
         verdict: ok
     - from: internal/gate/code_language.spec.md
       to: internal/gate/code_language.go
       type: specifies
       origin: convention
       stamp:
-        validated_from_rev: 0cef6cb6fcf7
+        validated_from_rev: bbbab248ec08
         validated_to_rev: 2ffa6610870b
-        changed_at: "2026-09-19"
+        changed_at: "2026-09-21"
         verdict: ok
     - from: internal/gate/code_reference_valid.feature
       to: internal/gate/code_reference_valid_test.go
@@ -8453,8 +8516,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`CodeLengthPattern`'
-      dep: DEP3
+      method: '`RuleType`'
+      dep: DEP1
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: 2536cd2306a8
@@ -8464,8 +8527,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`RuleType`'
-      dep: DEP1
+      method: '`CodeLengthPattern`'
+      dep: DEP3
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: 2536cd2306a8
@@ -8916,8 +8979,8 @@ edges:
       to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
-      method: SAIDA-R01
-      dep: TRCMT-B07
+      method: SAIDA-R03
+      dep: TRCMT-B08
     - from: internal/gate/triad_complete.spec.md
       to: product/declared-ways-out.doctrine.md
       type: realizes
@@ -8928,8 +8991,8 @@ edges:
       to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
-      method: SAIDA-R03
-      dep: TRCMT-B08
+      method: SAIDA-R01
+      dep: TRCMT-B07
     - from: internal/gate/trigger_declared.feature
       to: internal/gate/trigger_declared_test.go
       type: tested-by

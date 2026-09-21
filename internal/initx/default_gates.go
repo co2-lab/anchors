@@ -228,6 +228,32 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "spec-doctrine-exists", Blocking: config.Bool(false),
 			Measures: "a doutrina que a spec referencia com `@realizes` existe",
 		})
+
+		// O EIXO DAS FEATURE FLAGS. Uma flag multiplica os caminhos do codigo sem
+		// multiplicar a spec, e os tres custos (revisao, teste, remocao) sao silencios que
+		// nenhum outro gate enxerga.
+		gates = append(gates, config.Gate{
+			Name: "flag-scenario-grammar", ID: "flag-scenario-grammar", On: []string{"flag"},
+			Check: "flag-scenario-grammar", Blocking: config.Bool(true),
+			Measures: "a condicao de cada cenario esta escrita na gramatica",
+		})
+		gates = append(gates, config.Gate{
+			Name: "flag-scenarios-complete", ID: "flag-scenarios-complete", On: []string{"flag"},
+			Check: "flag-scenarios-complete", Blocking: config.Bool(true),
+			Measures: "a flag declara o caso AUSENTE",
+		})
+		gates = append(gates, config.Gate{
+			Name: "flag-scenario-exists", ID: "flag-scenario-exists", On: []string{"spec"},
+			Check: "flag-scenario-exists", Blocking: config.Bool(true),
+			Measures: "o cenario que a spec cita com `@gated-by` existe",
+		})
+		// INFORMATIVO: teste por cenario e' a regra certa e a mais cara de cumprir. O
+		// cenario escrito hoje e testado no commit seguinte e' trabalho normal, nao defeito.
+		gates = append(gates, config.Gate{
+			Name: "flag-covered", ID: "flag-covered", On: []string{"flag"},
+			Check: "flag-covered", Blocking: config.Bool(false),
+			Measures: "cada cenario de flag tem ao menos um teste verde",
+		})
 		gates = append(gates, config.Gate{
 			Name: "doctrine-not-duplicated", ID: "doctrine-not-duplicated", On: []string{"spec"},
 			Check: "doctrine-not-duplicated", Blocking: config.Bool(false),

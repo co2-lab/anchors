@@ -297,6 +297,7 @@ Subcommands print the guides for the specific rulers:
 		newGuideSubCmd("project", "how to discover a project that does not yet exist (PROJECT.md + INSIGHTS.md)", projectGuide),
 		newGuidePlanCmd(),
 		newGuideProductCmd(),
+		newGuideFlagCmd(),
 		newGuideFlowCmd(),
 		newGuideSubCmd("spec", "how to write a spec (the source of truth)", specGuide),
 		newGuideSubCmd("code", "how to implement the code guided by the spec", codeGuide),
@@ -342,6 +343,19 @@ func newGuideProductCmd() *cobra.Command {
 single unit: it lives in product/, and the specs point at it with ` + "`@realizes`" + `.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Print(productGuide)
+			return nil
+		},
+	}
+}
+
+func newGuideFlagCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "flag",
+		Short: "Print the feature flag guide (the scenarios a flag's value opens)",
+		Long: `The feature flag guide is the ruler for the condition under which a rule
+holds: it lives in flags/, and the specs point at it with ` + "`@gated-by`" + `.`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			fmt.Print(flagGuide)
 			return nil
 		},
 	}

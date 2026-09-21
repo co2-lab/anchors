@@ -135,6 +135,15 @@ func seedEdges(files []scan.File) []Edge {
 		}
 	}
 
+	// O indice das FEATURE FLAGS, pela mesma mecanica: a spec declara
+	// `@gated-by CHKUT-G02` e o mapa resolve `CHKUT` -> `flags/novo-checkout.flag.md`.
+	flagByCode := map[string]string{}
+	for _, f := range files {
+		if f.Kind == string(KindFlag) && f.HeaderCode != "" {
+			flagByCode[f.HeaderCode] = f.Path
+		}
+	}
+
 	var edges []Edge
 	for _, f := range files {
 		// `@realizes` — a regra da spec concretiza uma regra da doutrina de produto.
@@ -157,6 +166,26 @@ func seedEdges(files []scan.File) []Edge {
 			}
 			edges = append(edges, Edge{
 				From: f.Path, To: target, Type: EdgeRealizes,
+				Origin: OriginDeclared, Dep: r.From, Method: r.To,
+			})
+		}
+		// `@gated-by` — a regra da spec so' vale sob um cenario de feature flag.
+		//
+		// Espelha o `@realizes` inclusive no que NAO faz: cenario inexistente nao vira
+		// aresta morta. Quem reporta e' o gate `flag-scenario-exists`, com o codigo na
+		// mao — uma aresta para um arquivo que nao existe faria os gates relacionais
+		// confrontarem o vazio.
+		for _, r := range f.GatedBy {
+			unit, _, ok := strings.Cut(r.To, "-")
+			if !ok {
+				continue
+			}
+			target, hasFlag := flagByCode[unit]
+			if !hasFlag {
+				continue
+			}
+			edges = append(edges, Edge{
+				From: f.Path, To: target, Type: EdgeGatedBy,
 				Origin: OriginDeclared, Dep: r.From, Method: r.To,
 			})
 		}

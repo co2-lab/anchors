@@ -119,6 +119,13 @@ type File struct {
 	// quando o arquivo de doutrina fosse renomeado. O mapa resolve codigo -> arquivo,
 	// que e' o trabalho dele.
 	Realizes []Realizes
+	// GatedBy: os CENARIOS DE FEATURE FLAG sob os quais as regras desta spec valem.
+	//
+	// Mesma forma do `Realizes`, e nao por acaso: as duas declaram que uma regra local
+	// depende de algo que vive fora da arvore de alvos. O que muda e' a pergunta — o
+	// `realizes` diz "concretiza esta regra transversal", o `gated-by` diz "so' vale
+	// quando a flag estiver assim".
+	GatedBy []Realizes
 }
 
 // Realizes e' uma declaracao `@realizes` — a regra local que concretiza uma regra de
@@ -212,6 +219,7 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 			HeaderLayer:   extractHeaderLayer(string(content)),
 			Seeds:         extractSeeds(kind, string(content)),
 			Realizes:      extractRealizes(kind, string(content)),
+			GatedBy:       extractGatedBy(kind, string(content)),
 			Needs:         needsFor(kind, content, root, rel),
 			Parent:        parentDe(content),
 			Revises:       revisesDe(kind, content, root, rel),
@@ -907,6 +915,16 @@ func extractHeaderCode(content string) string {
 // de falha que os gates existem para acabar.
 var realizesRE = regexp.MustCompile("@realizes\\s+`?([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`?")
 
+// gatedByRE acha as declaracoes `@gated-by` — a regra desta spec so' vale sob um CENARIO
+// de feature flag. Mesma tolerancia de crases do `@realizes`, pela mesma razao: quem
+// escreve alterna entre as duas formas sem pensar, e recusar uma faria a declaracao sumir
+// em silencio.
+//
+// A letra e' fixa em `G` de proposito. `@gated-by CRED-B03` nao e' uma flag — e' um erro
+// de quem escreveu, e casar qualquer letra faria o mapa criar uma aresta para um cenario
+// que nunca vai existir, em vez de deixar o gate reportar o codigo errado.
+var gatedByRE = regexp.MustCompile("@gated-by\\s+`?([A-Z0-9]{3,6}-G[0-9]{2})`?")
+
 // localRuleRE acha o codigo da regra DESTA spec numa linha — as tres formas catalogadas
 // (cabecalho, linha de tabela, bullet-negrito).
 var localRuleRE = regexp.MustCompile("(?:^#{1,6}\\s+|^\\s*\\|\\s*`?|^\\s*-\\s+\\*\\*)([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})")
@@ -922,6 +940,23 @@ var localRuleRE = regexp.MustCompile("(?:^#{1,6}\\s+|^\\s*\\|\\s*`?|^\\s*-\\s+\\
 // regra visto antes dela: `### CRED-V01 — limite` numa linha e `@realizes LIMIT-R03` na
 // seguinte e' a forma natural de escrever quando a descricao e' longa.
 func extractRealizes(kind, content string) []Realizes {
+	return extractRuleTags(kind, content, realizesRE)
+}
+
+// extractGatedBy le as declaracoes `@gated-by` de uma spec.
+//
+// Mesma mecanica do `@realizes` — e compartilha o codigo com ele de proposito. As duas
+// tags tem a mesma forma (vive na linha da regra, vale nas tres formas de regra, escopo
+// fechado pela linha em branco), e duas copias da mesma varredura divergiriam na primeira
+// correcao aplicada a uma so'. E' a licao que a lista de letras ja' deu tres vezes neste
+// mesmo repositorio.
+func extractGatedBy(kind, content string) []Realizes {
+	return extractRuleTags(kind, content, gatedByRE)
+}
+
+// extractRuleTags varre as declaracoes de uma tag que vive NA LINHA DA REGRA e aponta
+// para um codigo de fora da spec.
+func extractRuleTags(kind, content string, tagRE *regexp.Regexp) []Realizes {
 	if kind != "spec" {
 		return nil
 	}
@@ -941,7 +976,7 @@ func extractRealizes(kind, content string) []Realizes {
 			// `from=CRED-B03`, a regra tres linhas acima.
 			current = ""
 		}
-		for _, r := range realizesRE.FindAllStringSubmatch(linha, -1) {
+		for _, r := range tagRE.FindAllStringSubmatch(linha, -1) {
 			// A MESMA regra local pode realizar varias regras de produto, e regras
 			// diferentes podem realizar a mesma — so' o PAR se repete sem dizer nada.
 			key := current + "\x00" + r[1]

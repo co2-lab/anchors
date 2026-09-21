@@ -1,0 +1,20 @@
+<!-- @anchors
+  code: TIMNG
+  updated_at: 2026-09-21
+-->
+# Flag: timing-metrics
+
+> **Code**: `TIMNG`
+
+Whether `anchors check` measures and prints how long each gate took.
+
+The flag is real and this file is the axis confronting itself: `--timing` was added to
+find what makes a scan expensive, and it found it — `docs-fresh` was 97% of a 6m49s run.
+
+## Scenarios
+
+| Scenario | When the value | Then |
+| --- | --- | --- |
+| `TIMNG-G01` | `= "off"` | the check prints only the verdicts, and measures no time |
+| `TIMNG-G02` | `= "on"` | the check also prints time per gate, and the slowest targets |
+| `TIMNG-G03` | `absent` | the same as `off` — measuring is opt-in, never a default cost |

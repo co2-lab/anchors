@@ -55,7 +55,7 @@ func TestCodesInCase_mantemAsCanonicas(t *testing.T) {
 func TestRuleLetters_naoDivergeDoConfig(t *testing.T) {
 	// O valor de `config.DefaultRuleLetters`, copiado. Se este teste falhar, a lista de lá
 	// mudou: alinhe a de cá e atualize esta constante — nas duas, nunca numa.
-	const doConfig = "SRVAXBNMDEIQF"
+	const doConfig = "SRVAXBNMDEIQFG"
 
 	if ruleLetters != doConfig {
 		t.Errorf("ruleLetters = %q, o config declara %q\n"+

@@ -793,6 +793,8 @@
   "flow.keyword.fits": "Fits",
   "flow.keyword.suggests": "Suggests",
   "flow.keyword.results": "Results",
+  "flag.keyword.absent": "absent",
+  "flag.keyword.present": "present",
   "failure.review.header": "failures observed and not yet understood (%d):",
   "failure.review.none": "no failure under observation — every occurrence carries a conclusion, or there is nothing ingested yet (`anchors ingest --logs`)",
   "failure.review.item": "    %-12s %4d occurrence(s)   %s → %s",
@@ -800,5 +802,15 @@
   "failure.review.stale": "      ⚠ the spec changed since the ingestion — re-ingest before concluding",
   "failure.review.howto": "\nEach one is a question the spec could not answer when it was written: it mapped the\nfailure as POSSIBLE without knowing how it would happen. The log now has the context\nthat answers it.\n\nThree conclusions, and all three are progress:\n\n  cause found    write it beside the rule — the handling can stop being generic\n  resilient      `@resilient: <reason>` — it leaves the radar without leaving the record\n  still unknown  `@observing: <what was ruled out>` — different from nobody having looked",
   "failure.review.observing": "      under observation: %s",
-  "failure.review.resilient": "      resilient: %s"
+  "failure.review.resilient": "      resilient: %s",
+  "gate.flag_scenario_grammar.skip_not_flag": "not a feature flag — the scenario grammar is charged of the flag file, which is where scenarios are declared",
+  "gate.flag_scenario_grammar.unparsed": "%d scenario condition(s) the grammar does not recognise:\n  %s\nThe grammar is fixed on purpose: prose covers any case and can be confronted with none. Write a comparison (`= \"on\"`, `>= 50`, `contains \"beta\"`, `matches \"^v2\"`) or the absent case (`absent`).",
+  "gate.flag_scenarios_complete.skip_not_flag": "not a feature flag — completeness is charged of the flag file, which is what declares the scenarios",
+  "gate.flag_scenarios_complete.no_scenarios": "the flag declares no scenario — a flag with no scenario governs nothing",
+  "gate.flag_scenarios_complete.no_absent": "the flag does not declare what happens when it is ABSENT.\nFlag service down, a new environment, a local test: without a declared behaviour what holds is whatever the library defaults to, and that is discovered in production. Add a scenario with the condition `absent`, or waive with `@no-absent: <reason>` when the flag cannot be absent.",
+  "gate.flag_scenario_exists.skip_not_spec": "not a spec — the citation is charged of whoever cites it",
+  "gate.flag_scenario_exists.no_citation": "the spec cites no flag scenario",
+  "gate.flag_scenario_exists.unknown": "%d flag scenario(s) cited with `@gated-by` that do not exist: %s.\nA rule governed by a scenario nobody wrote is a condition that will never be confronted. Declare the scenario in `flags/<name>.flag.md`, or correct the code.",
+  "gate.flag_covered.skip_not_flag": "not a feature flag — per-scenario coverage is charged of the flag file",
+  "gate.flag_covered.untested": "%d of %d flag scenario(s) with no green test: %s.\nPer SCENARIO, not per flag: the flag whose ON path is tested and whose OFF path is not leaves precisely the branch that will break unproven. Write a test naming the scenario code."
 }
