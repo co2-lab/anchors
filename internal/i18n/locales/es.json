@@ -839,5 +839,7 @@
   "gate.test_feature.skip_not_test": "no es una prueba — la prueba se exige a quien la afirma",
   "gate.test_feature.pending_no_feature": "ninguna feature ligada a esta prueba — quien exige el vinculo es la triada",
   "gate.test_feature.pending_no_scenarios": "la feature ligada no declara escenario codificado",
-  "gate.test_feature.orphan": "%d codigo(s) que la prueba dice probar y ningun escenario declara: %s.\nUna prueba verde sobre regla revertida es peor que una ausente, porque ATESTIGUA: la suite pasa, la cobertura sube, y el numero dice que un comportamiento esta probado cuando nadie lo decide."
+  "gate.test_feature.orphan": "%d codigo(s) que la prueba dice probar y ningun escenario declara: %s.\nUna prueba verde sobre regla revertida es peor que una ausente, porque ATESTIGUA: la suite pasa, la cobertura sube, y el numero dice que un comportamiento esta probado cuando nadie lo decide.",
+  "gate.flag_scenario_governs.skip_not_flag": "no es una feature flag — la gobernanza se exige al archivo de flag, que declara los escenarios",
+  "gate.flag_scenario_governs.ungoverned": "%d de %d escenario(s) de flag que ninguna regla invoca: %s.\nUn escenario que nadie cita es un camino declarado que no gobierna nada: alguien escribio \"cuando el valor sea X, entonces Y\" y ninguna spec dice que regla vale bajo el. Citelo en la regla con `@gated-by <codigo>`, o dispense con `@no-govern: <razon>` cuando el camino no necesite regla propia."
 }

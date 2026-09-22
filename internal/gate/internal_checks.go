@@ -53,6 +53,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"flag-scenario-grammar":    checkFlagScenarioGrammar,
 	"flag-scenarios-complete":  checkFlagScenariosComplete,
 	"flag-scenario-exists":     checkFlagScenarioExists,
+	"flag-scenario-governs":    checkFlagScenarioGoverns,
 	"flag-covered":             checkFlagCovered,
 	"spec-doctrine-exists":     checkSpecDoctrineExists,
 	"doctrine-not-duplicated":  checkDoctrineNotDuplicated,

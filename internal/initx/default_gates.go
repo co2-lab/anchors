@@ -277,6 +277,15 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "flag-scenario-exists", Blocking: config.Bool(true),
 			Measures: "o cenario que a spec cita com `@gated-by` existe",
 		})
+		// A VOLTA do anterior: aquele confronta a spec que cita cenario inexistente;
+		// este, o cenario que ninguem cita. Informativo porque a flag nasce ANTES das
+		// specs que a citam — exigir as duas pontas no mesmo commit nao e' como o
+		// trabalho acontece.
+		gates = append(gates, config.Gate{
+			Name: "flag-scenario-governs", ID: "flag-scenario-governs", On: []string{"flag"},
+			Check: "flag-scenario-governs", Blocking: config.Bool(false),
+			Measures: "todo cenario de flag governa ao menos uma regra",
+		})
 		// INFORMATIVO: teste por cenario e' a regra certa e a mais cara de cumprir. O
 		// cenario escrito hoje e testado no commit seguinte e' trabalho normal, nao defeito.
 		gates = append(gates, config.Gate{

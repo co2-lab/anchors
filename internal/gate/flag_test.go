@@ -239,3 +239,69 @@ func TestFlagCovered_ingeridoEVerdePassa(t *testing.T) {
 		t.Errorf("todos provados e veio %v: %s", v, msg)
 	}
 }
+
+// --- flag-scenario-governs: A VOLTA do `flag-scenario-exists` ---
+//
+// Aquele confronta a spec que cita um cenário inexistente; este, o cenário que ninguém
+// cita. Um cenário que nenhuma regra invoca é caminho DECLARADO e não governado.
+
+// A aresta `gated-by` CHEGA na flag e carrega, no Method, o código do cenário invocado.
+func citando(codigos ...string) *mapx.Graph {
+	g := &mapx.Graph{Nodes: []mapx.Node{flagNode()}}
+	for _, c := range codigos {
+		g.Edges = append(g.Edges, mapx.Edge{
+			From: "a.spec.md", To: "flags/checkout.flag.md",
+			Type: mapx.EdgeGatedBy, Method: c,
+		})
+	}
+	return g
+}
+
+func TestFlagScenarioGoverns_cenarioSemRegraEAcusado(t *testing.T) {
+	t.Run("CHKUT-G0X: a scenario no rule invokes is reported", func(t *testing.T) {})
+	// Só o G01 é citado; G02 e G03 ficam soltos.
+	v, msg := checkFlagScenarioGoverns(flagCompleta, flagNode(), "", citando("CHKUT-G01"), nil)
+	if v != Fail {
+		t.Fatalf("dois cenários sem regra e veio %v", v)
+	}
+	for _, c := range []string{"CHKUT-G02", "CHKUT-G03"} {
+		if !strings.Contains(msg, c) {
+			t.Errorf("o veredito não nomeia %s: %q", c, msg)
+		}
+	}
+	if strings.Contains(msg, "CHKUT-G01") {
+		t.Errorf("acusou o cenário que É citado: %q", msg)
+	}
+}
+
+func TestFlagScenarioGoverns_todosCitadosPassa(t *testing.T) {
+	g := citando("CHKUT-G01", "CHKUT-G02", "CHKUT-G03")
+	if v, msg := checkFlagScenarioGoverns(flagCompleta, flagNode(), "", g, nil); v != Pass {
+		t.Errorf("todos citados e veio %v: %s", v, msg)
+	}
+}
+
+// A dispensa por cenário: há caminho que existe e nenhuma regra precisa nomear — o `off`
+// que devolve ao comportamento antigo, já governado pelas regras que sempre valeram.
+func TestFlagScenarioGoverns_dispensaPorCenario(t *testing.T) {
+	comDispensa := "| Cenário | Quando o valor | Então |\n| --- | --- | --- |\n" +
+		"| `CHKUT-G01` | `= \"off\"` | vale o comportamento antigo @no-govern: as regras de sempre já o governam |\n"
+	if v, msg := checkFlagScenarioGoverns(comDispensa, flagNode(), "", citando(), nil); v != Pass {
+		t.Errorf("a dispensa tem razão escrita e veio %v: %s", v, msg)
+	}
+
+	nu := strings.Replace(comDispensa, "@no-govern: as regras de sempre já o governam", "@no-govern", 1)
+	if v, _ := checkFlagScenarioGoverns(nu, flagNode(), "", citando(), nil); v != Fail {
+		t.Error("o marcador NU foi aceito — a razão é obrigatória")
+	}
+}
+
+func TestFlagScenarioGoverns_skips(t *testing.T) {
+	naoEFlag := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
+	if v, _ := checkFlagScenarioGoverns(flagCompleta, naoEFlag, "", citando(), nil); v != Skip {
+		t.Errorf("não é flag e veio %v", v)
+	}
+	if v, _ := checkFlagScenarioGoverns(flagCompleta, flagNode(), "", nil, nil); v == Pass {
+		t.Error("sem mapa o gate afirmou Pass — não tinha como saber quem cita")
+	}
+}

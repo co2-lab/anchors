@@ -104,7 +104,20 @@ and an index is wrong as of the next spec somebody writes without updating it.
 | ` + "`flag-scenario-grammar`" + ` | is the condition written in the grammar? | fails |
 | ` + "`flag-scenarios-complete`" + ` | does the flag declare the ABSENT case? | fails |
 | ` + "`flag-scenario-exists`" + ` | does the cited scenario exist? | fails |
+| ` + "`flag-scenario-governs`" + ` | does every scenario govern some rule? | informs |
 | ` + "`flag-covered`" + ` | does EVERY scenario have a green test? | informs |
+
+` + "`flag-scenario-governs`" + ` is the REVERSE of ` + "`flag-scenario-exists`" + `: that one
+confronts the spec citing a scenario nobody wrote; this one, the scenario nobody cites. A
+scenario no rule invokes is a declared path that governs nothing — somebody wrote "when
+the value is X, then Y" and no spec says which rule holds under it. It informs rather than
+blocks because the flag is written BEFORE the specs that cite it: whoever writes the flag
+is deciding the paths, and the rules come after.
+
+A path that genuinely needs no rule of its own — the ` + "`off`" + ` that returns to the old
+behaviour, already governed by the rules that always held — waives it:
+
+    @no-govern: the rules that always held already govern it
 
 ` + "`flag-covered`" + ` charges per SCENARIO, not per flag: the flag whose ON path is tested
 and whose OFF path is not passes a per-flag rule while leaving exactly the branch that

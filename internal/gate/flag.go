@@ -143,6 +143,73 @@ func checkFlagScenarioExists(content string, n mapx.Node, root string, g *mapx.G
 		len(codes), strings.Join(codes, ", "))
 }
 
+// --- does every scenario govern some rule? ---
+//
+// A VOLTA do `flag-scenario-exists`, e a pergunta é a inversa: aquele confronta a spec
+// que cita um cenário inexistente; este confronta o cenário que ninguém cita.
+//
+// Um cenário que nenhuma regra invoca é caminho DECLARADO e não governado: alguém
+// escreveu "quando o valor for X, então Y" e nenhuma spec diz que regra vale sob ele. O
+// código ramifica na flag de qualquer forma — o que falta é o registro de quem depende
+// disso, e é justamente esse registro que o eixo existe para manter.
+//
+// É o mesmo par assimétrico que os dois sentidos da trinca mostraram hoje, e que o
+// carimbo da documentação já tinha mostrado: perguntar só a ida deixa o resto invisível.
+//
+// INFORMATIVO, e por uma razão de ordem: a flag nasce ANTES das specs que a citam — quem
+// escreve a flag está decidindo os caminhos, e as regras vêm depois. Um gate bloqueante
+// aqui exigiria que as duas pontas nascessem no mesmo commit, que não é como o trabalho
+// acontece.
+func checkFlagScenarioGoverns(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Kind != mapx.KindFlag {
+		return Skip, i18n.T("gate.flag_scenario_governs.skip_not_flag")
+	}
+	if g == nil {
+		return pendingNoMap()
+	}
+	f := flagx.ParseContent(content, n.ID)
+	if len(f.Scenarios) == 0 {
+		return Skip, i18n.T("gate.flag_scenarios_complete.no_scenarios")
+	}
+
+	// Quem cita: as arestas `gated-by` que CHEGAM aqui carregam, no Method, o código do
+	// cenário invocado — a mesma mecânica que o `doctrine-realized` usa para saber quem
+	// realiza uma regra de produto.
+	governados := map[string]bool{}
+	for _, e := range g.Neighbors(n.ID).In {
+		if e.Type == mapx.EdgeGatedBy {
+			governados[e.Method] = true
+		}
+	}
+
+	var soltos []string
+	for _, s := range f.Scenarios {
+		if governados[s.Code] {
+			continue
+		}
+		// A dispensa declarada, por cenário: há caminho que existe e nenhuma regra
+		// precisa nomear — o `off` de uma flag cujo desligado é simplesmente o
+		// comportamento antigo, já governado pelas regras que sempre valeram.
+		if noGovernRE.MatchString(s.Then) {
+			continue
+		}
+		soltos = append(soltos, s.Code)
+	}
+	if len(soltos) == 0 {
+		return Pass, ""
+	}
+	sort.Strings(soltos)
+	return Fail, fmt.Sprintf(i18n.T("gate.flag_scenario_governs.ungoverned"),
+		len(soltos), len(f.Scenarios), strings.Join(soltos, ", "))
+}
+
+// noGovernRE — a dispensa por cenário, com razão obrigatória.
+//
+// `@no-govern: <razão>` e não `@TBD`, porque as duas afirmações são diferentes: este
+// cenário NUNCA vai ter regra própria (o desligado que devolve ao comportamento antigo),
+// e isso é dispensa permanente, não dívida.
+var noGovernRE = regexp.MustCompile(`(?i)@no-govern[^\S\n]*:[^\S\n]*\S+`)
+
 // --- does every scenario have a test? ---
 //
 // Per SCENARIO, not per flag, and that is the whole point: the flag whose ON path is

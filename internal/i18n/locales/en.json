@@ -839,5 +839,7 @@
   "gate.test_feature.skip_not_test": "not a test — the proof is charged of whoever claims it",
   "gate.test_feature.pending_no_feature": "no feature linked to this test — who charges the link is the triad",
   "gate.test_feature.pending_no_scenarios": "the linked feature declares no coded scenario",
-  "gate.test_feature.orphan": "%d code(s) the test claims to prove and no scenario declares: %s.\nA green test over a reverted rule is worse than a missing one, because it ATTESTS: the suite passes, coverage rises, and the number says a behaviour is proven when nobody decides it any more."
+  "gate.test_feature.orphan": "%d code(s) the test claims to prove and no scenario declares: %s.\nA green test over a reverted rule is worse than a missing one, because it ATTESTS: the suite passes, coverage rises, and the number says a behaviour is proven when nobody decides it any more.",
+  "gate.flag_scenario_governs.skip_not_flag": "not a feature flag — governance is charged of the flag file, which declares the scenarios",
+  "gate.flag_scenario_governs.ungoverned": "%d of %d flag scenario(s) that no rule invokes: %s.\nA scenario nobody cites is a declared path that governs nothing: somebody wrote \"when the value is X, then Y\" and no spec says which rule holds under it. Cite it from the rule with `@gated-by <code>`, or waive with `@no-govern: <reason>` when the path needs no rule of its own."
 }

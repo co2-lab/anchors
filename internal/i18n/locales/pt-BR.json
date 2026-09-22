@@ -839,5 +839,7 @@
   "gate.test_feature.skip_not_test": "nao e' um teste — a prova e' cobrada de quem a afirma",
   "gate.test_feature.pending_no_feature": "nenhuma feature ligada a este teste — quem cobra a ligacao e' a trinca",
   "gate.test_feature.pending_no_scenarios": "a feature ligada nao declara cenario codificado",
-  "gate.test_feature.orphan": "%d codigo(s) que o teste diz provar e nenhum cenario declara: %s.\nUm teste verde sobre regra revertida e' pior que um teste ausente, porque ele ATESTA: a suite passa, a cobertura sobe, e o numero diz que um comportamento esta' provado quando ninguem mais o decide."
+  "gate.test_feature.orphan": "%d codigo(s) que o teste diz provar e nenhum cenario declara: %s.\nUm teste verde sobre regra revertida e' pior que um teste ausente, porque ele ATESTA: a suite passa, a cobertura sobe, e o numero diz que um comportamento esta' provado quando ninguem mais o decide.",
+  "gate.flag_scenario_governs.skip_not_flag": "nao e' uma feature flag — a governanca e' cobrada do arquivo de flag, que declara os cenarios",
+  "gate.flag_scenario_governs.ungoverned": "%d de %d cenario(s) de flag que nenhuma regra invoca: %s.\nUm cenario que ninguem cita e' caminho declarado que nao governa nada: alguem escreveu \"quando o valor for X, entao Y\" e nenhuma spec diz que regra vale sob ele. Cite-o na regra com `@gated-by <codigo>`, ou dispense com `@no-govern: <razao>` quando o caminho nao precisar de regra propria."
 }

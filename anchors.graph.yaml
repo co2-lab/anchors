@@ -564,7 +564,7 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide_flag.go
       kind: code
-      rev: 1df3cbe41143
+      rev: aff064016b5b
       updated_at: "2026-09-21"
       code: CHKUT
       layer: comando
@@ -2127,7 +2127,7 @@ nodes:
         - gate
     - id: internal/gate/flag.go
       kind: code
-      rev: 0ceadb9add95
+      rev: e3721c3be105
       updated_at: "2026-09-21"
       layer: gate
       tags:
@@ -2135,7 +2135,7 @@ nodes:
         - gate
     - id: internal/gate/flag_test.go
       kind: test
-      rev: adcb55667b70
+      rev: 0667f1507d07
       updated_at: "2026-09-21"
       code: CHKUT
       layer: teste
@@ -2219,7 +2219,7 @@ nodes:
         - feature
     - id: internal/gate/internal_checks.go
       kind: code
-      rev: "161698442870"
+      rev: 6a70c3b17a9a
       updated_at: "2026-09-22"
       code: INCHN
       layer: gate
@@ -3882,7 +3882,7 @@ nodes:
         - test
     - id: internal/initx/default_gates.go
       kind: code
-      rev: 7c5f85da34ee
+      rev: 593ac63a5c67
       updated_at: "2026-09-22"
       layer: infra
       tags:
