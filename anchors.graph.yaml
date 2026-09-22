@@ -1071,15 +1071,16 @@ nodes:
         - test
     - id: cmd/anchors/quality/check.go
       kind: code
-      rev: d7b302171e84
-      updated_at: "2026-09-21"
+      rev: 5102dc2e0e68
+      updated_at: "2026-09-22"
       layer: comando
       tags:
         - cli
         - comando
     - id: cmd/anchors/quality/check_judgment_brief_test.go
       kind: test
-      rev: 8eac9937eef4
+      rev: 389523609f9d
+      updated_at: "2026-09-22"
       layer: teste
       tags:
         - test
