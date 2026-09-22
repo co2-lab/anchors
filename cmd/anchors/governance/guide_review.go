@@ -75,6 +75,21 @@ map. Your job is different: to confront the JUDGMENT with the excerpt. A verdict
 "pass" over a marker in a generic place (top of the file, an import) is the defect the
 automation gets wrong most often.
 
+### What did the checks leave AWAITING JUDGMENT?
+
+The pipeline does not judge, and that is deliberate: judgment asks for a credential,
+answers slowly, and — what settles it — is JUDGMENT, exactly the work review exists to do.
+
+So it DIRECTS. The check prints, in CI, the list of what is awaiting: the target, the
+question the gate declares, and the guide holding the ruler. That list is yours to work
+through, and it is the moment to do it — the PR has the diff in front of you and the
+author is still there.
+
+Measured in the reference app: 59 of 85 specs had never received a verdict, with CI
+running on every PR. The earlier version printed only the count ("3 targets awaiting
+judgment"), and a count is not an address — whoever reviewed knew there was work and not
+which, where, or what to ask.
+
 ### Was what sits under ` + "`@TBD`" + ` judged, or rubber-stamped?
 
 A spec that declares ` + "`@TBD: code`" + ` states that the code does not exist yet — and that is the
@@ -182,34 +197,38 @@ These are the ones no script reaches.
 - REV-CK4: the judgment of ` + "`regra-cumprida`" + ` was confronted against the EXCERPT it marks —
   a "pass" over a marker in a generic place (top of file, an import) is the defect the
   automation gets wrong most often
-- REV-CK5: what sits under ` + "`@TBD`" + ` was judged as ABSENCE, not rubber-stamped as realized —
+- REV-CK5: every target the checks listed as AWAITING JUDGMENT was judged — the pipeline
+  does not judge (it needs a credential, answers slowly, and judgment is precisely the
+  work review exists for); it prints the list, with the target, the question and the
+  guide, and an unjudged target stays unjudged in silence
+- REV-CK6: what sits under ` + "`@TBD`" + ` was judged as ABSENCE, not rubber-stamped as realized —
   and the ` + "`@TBD`" + ` is still true: if the code now exists and the spec still declares it, the
   declaration aged
-- REV-CK6: a rule that contradicts a SIBLING rule of the same unit was reported — the gates
+- REV-CK7: a rule that contradicts a SIBLING rule of the same unit was reported — the gates
   confront each rule on its own, and two rules asserting opposite things both pass
 
 ### The revision (tag: spec, plan)
 
-- REV-CK7: the revision ` + "`{CODIGO}-R000N`" + ` says what changed AND why — the gate checks it
+- REV-CK8: the revision ` + "`{CODIGO}-R000N`" + ` says what changed AND why — the gate checks it
   exists; whether it is honest is yours
-- REV-CK8: a revision that changes DIRECTION was decided by whoever plans, not by whoever
+- REV-CK9: a revision that changes DIRECTION was decided by whoever plans, not by whoever
   implements — a correction of form is the author's; a change of direction is not
-- REV-CK9: the revision named every sibling rule that speaks of what it rewrote — either
+- REV-CK10: the revision named every sibling rule that speaks of what it rewrote — either
   as revised too, or as read and still valid (` + "`Checked:`" + `)
 
 ### The test (tag: test)
 
-- REV-CK10: the assertions confront the RESULT, not only that the line ran — a test that
+- REV-CK11: the assertions confront the RESULT, not only that the line ran — a test that
   calls the function and asserts nothing about the outcome gives 100% coverage and proves
   nothing
-- REV-CK11: the test names the scenario code it proves, so the map can see it — a test
+- REV-CK12: the test names the scenario code it proves, so the map can see it — a test
   that proves a requirement without naming it leaves the requirement reported as unproven
 
 ### The PR itself (tag: any PR)
 
-- REV-CK12: everything the diff touched is mentioned in the description — a change the
+- REV-CK13: everything the diff touched is mentioned in the description — a change the
   author does not mention is where what they did not notice changing lives
-- REV-CK13: the card's state label was NOT moved by hand — who moves it is the pipeline,
+- REV-CK14: the card's state label was NOT moved by hand — who moves it is the pipeline,
   and it moves by FACT; a wrong state costs more than a late one, because the late one
   corrects itself at the next event
 

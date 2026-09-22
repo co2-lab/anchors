@@ -108,8 +108,6 @@
   "check.fixes_count": "%d reparo(s) aplicado(s).",
   "check.header": "check %s — %d nós, %d gates",
   "check.waived_rule": "○ dispensado: %s — %s",
-  "check.github_judgment_pending": "  %d alvo(s) aguardam julgamento — rode `anchors judge` para resolvê-los.",
-  "check.github_judgment_mode": "  (modo `github`: o julgamento não vai para fila local; o que REPROVAR vira issue)",
   "check.record_decision_exists": "   (decisão de %s já em %s/)",
   "check.record_debt_exists": "   (dívida de %s @ %s já está em %s/ — virou trabalho de agora)",
   "check.record_issue_exists": "   (issue de %s @ %s já em %s/)",
@@ -825,5 +823,12 @@
   "gate.revision_orphans.no_revises": "%d revisao(oes) que nao nomeiam regra nenhuma com `Revises:`.\nUma revisao que nao nomeia nada nao pode ser confrontada contra irma nenhuma — e e' a irma que segue afirmando o que a revisao revogou.",
   "gate.revision_orphans.unknown_rule": "%d regra(s) nomeadas em `Revises:` que esta spec nao define: %s.\nCorrija o codigo, ou defina a regra.",
   "gate.revision_orphans.orphans": "%d regra(s) compartilham o vocabulario do que a revisao reescreveu, e nao foram mencionadas:",
-  "gate.revision_orphans.how_to_clear": "  A revisao mudou o que essas palavras afirmam. Leia cada uma e declare `Checked: <codigo>`, ou revise-a tambem (`Revises:`).\n  O `Checked` nao afirma que a regra esta certa — so' que alguem olhou."
+  "gate.revision_orphans.how_to_clear": "  A revisao mudou o que essas palavras afirmam. Leia cada uma e declare `Checked: <codigo>`, ou revise-a tambem (`Revises:`).\n  O `Checked` nao afirma que a regra esta certa — so' que alguem olhou.",
+  "check.judgment_brief_header": "⚖  %d alvo(s) aguardam julgamento, em %d gate(s).",
+  "check.judgment_brief_who": "   O pipeline NAO julga: o julgamento e' trabalho do revisor no PR, e esta e' a lista a percorrer (ver `REV-CK4` em `anchors guide review`).",
+  "check.judgment_brief_gate": "   %s — %d alvo(s)",
+  "check.judgment_brief_guide": "      guia: %s",
+  "check.judgment_brief_ask": "      pergunta: %s",
+  "check.judgment_brief_more": "      … e mais %d",
+  "check.judgment_brief_footer": "   O veredito que REPROVA vira issue. O que passa fica carimbado no mapa — e um alvo nao julgado continua nao julgado, em silencio, ate' alguem ler a spec meses depois."
 }

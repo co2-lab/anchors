@@ -635,16 +635,16 @@ nodes:
         - test
     - id: cmd/anchors/governance/guide_review.go
       kind: code
-      rev: 25b428ca11ee
-      updated_at: "2026-09-19"
+      rev: 2a078ea9d855
+      updated_at: "2026-09-22"
       layer: comando
       tags:
         - cli
         - comando
     - id: cmd/anchors/governance/guide_review_test.go
       kind: test
-      rev: cea0376a37e6
-      updated_at: "2026-09-19"
+      rev: 1e011a806a00
+      updated_at: "2026-09-22"
       layer: teste
       tags:
         - test
@@ -1071,12 +1071,18 @@ nodes:
         - test
     - id: cmd/anchors/quality/check.go
       kind: code
-      rev: 6cf6059c8cce
+      rev: d7b302171e84
       updated_at: "2026-09-21"
       layer: comando
       tags:
         - cli
         - comando
+    - id: cmd/anchors/quality/check_judgment_brief_test.go
+      kind: test
+      rev: 8eac9937eef4
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/quality/check_obsolete_judge_test.go
       kind: test
       rev: 95d52d46a582

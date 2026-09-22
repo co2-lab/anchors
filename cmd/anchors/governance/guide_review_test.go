@@ -65,7 +65,7 @@ func TestGuiaDeReview_temPontosDeConformidade(t *testing.T) {
 // Cada ponto tem CÓDIGO, e a numeração é contínua: o relatório precisa referenciar o item
 // específico, e um buraco na sequência é item apagado sem ninguém notar.
 func TestGuiaDeReview_pontosNumeradosSemBuraco(t *testing.T) {
-	for i := 1; i <= 13; i++ {
+	for i := 1; i <= 14; i++ {
 		codigo := "REV-CK" + itoa(i) + ":"
 		if !strings.Contains(reviewGuide, codigo) {
 			t.Errorf("falta o ponto %s — a numeração tem buraco", codigo)
@@ -83,13 +83,14 @@ func TestGuiaDeReview_cadaPontoTemProsaAcima(t *testing.T) {
 		"REV-CK1":  "do the checks EXIST?",
 		"REV-CK3":  "decide what it needed to decide",
 		"REV-CK4":  "realize the rule, or only cite it",
-		"REV-CK5":  "@TBD",
-		"REV-CK6":  "contradict each other",
-		"REV-CK9":  "Checked:",
-		"REV-CK10": "PROVE, or only execute",
-		"REV-CK11": "WHICH requirement it proves",
-		"REV-CK12": "change without saying",
-		"REV-CK13": "DO NOT MOVE THE CARD",
+		"REV-CK5":  "AWAITING JUDGMENT?",
+		"REV-CK6":  "@TBD",
+		"REV-CK7":  "contradict each other",
+		"REV-CK10": "Checked:",
+		"REV-CK11": "PROVE, or only execute",
+		"REV-CK12": "WHICH requirement it proves",
+		"REV-CK13": "change without saying",
+		"REV-CK14": "DO NOT MOVE THE CARD",
 	}
 	for ck, ancora := range ancoras {
 		if !strings.Contains(corpo, ancora) {

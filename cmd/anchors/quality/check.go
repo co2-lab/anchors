@@ -374,9 +374,7 @@ func enqueueJudgments(root string, cfg *config.Config, p gate.Profile, varredura
 	// lê é pior que não registrar, porque parece registro.
 	if cfg.GitHubMode() {
 		if len(p.Judged) > 0 {
-			fmt.Println()
-			fmt.Println(i18n.T("check.github_judgment_pending", len(p.Judged)))
-			fmt.Println(i18n.T("check.github_judgment_mode"))
+			printJudgmentBrief(p.Judged, guideOf, askOf)
 		}
 		return 0
 	}
@@ -1051,6 +1049,67 @@ func reportTiming(mostrar bool, p gate.Profile) {
 		return
 	}
 	printTiming(p)
+}
+
+// printJudgmentBrief entrega ao REVISOR a lista do que falta julgar.
+//
+// Quem julga no CI é o revisor do PR, e não a máquina: o julgamento pede credencial de
+// IA, responde devagar, e — o que decide a questão — é JULGAMENTO, que é exatamente o
+// trabalho que o review existe para fazer. O pipeline não deve tomá-lo.
+//
+// O que ele deve fazer é DIRIGIR. A versão anterior imprimia só a contagem ("3 alvos
+// aguardam julgamento"), e a contagem não é endereço: o revisor sabia que havia trabalho
+// e não sabia qual, onde, nem o que perguntar. Na prática o item não era julgado —
+// medido no app de referência, 59 das 85 specs nunca receberam veredito, e o CI rodava
+// em todos os PRs.
+//
+// A lista traz as três coisas que faltavam: o ALVO (qual arquivo), a PERGUNTA (o `ask`
+// que o gate declara) e o GUIA (onde está a régua). Com elas o julgamento vira um item
+// de checklist do review — que é onde o `REV-CK4` já o cobra.
+func printJudgmentBrief(judged []gate.Result, guideOf, askOf map[string]string) {
+	// Um alvo pode aguardar vários gates, e um gate vários alvos. Agrupar por GATE é o
+	// que permite fazer a pergunta uma vez para os alvos que a compartilham — que é como
+	// alguém de fato revisa.
+	porGate := map[string][]string{}
+	var ordem []string
+	for _, r := range judged {
+		if _, visto := porGate[r.Gate]; !visto {
+			ordem = append(ordem, r.Gate)
+		}
+		porGate[r.Gate] = append(porGate[r.Gate], r.Target)
+	}
+	sort.Strings(ordem)
+
+	fmt.Println()
+	fmt.Println(i18n.T("check.judgment_brief_header", len(judged), len(ordem)))
+	fmt.Println(i18n.T("check.judgment_brief_who"))
+	for _, g := range ordem {
+		alvos := porGate[g]
+		sort.Strings(alvos)
+		fmt.Println()
+		fmt.Printf(i18n.T("check.judgment_brief_gate"), g, len(alvos))
+		fmt.Println()
+		if gd := guideOf[g]; gd != "" {
+			fmt.Printf(i18n.T("check.judgment_brief_guide"), gd)
+			fmt.Println()
+		}
+		if ask := askOf[g]; ask != "" {
+			fmt.Printf(i18n.T("check.judgment_brief_ask"), strings.TrimSpace(ask))
+			fmt.Println()
+		}
+		// ATÉ DEZ, e o resto contado. Uma lista de sessenta caminhos afoga a pergunta
+		// que vem antes dela, e quem revisa abre o primeiro punhado de qualquer forma.
+		for i, a := range alvos {
+			if i == 10 {
+				fmt.Printf(i18n.T("check.judgment_brief_more"), len(alvos)-10)
+				fmt.Println()
+				break
+			}
+			fmt.Printf("      %s\n", a)
+		}
+	}
+	fmt.Println()
+	fmt.Println(i18n.T("check.judgment_brief_footer"))
 }
 
 // printTiming mostra ONDE a varredura gastou o tempo — por gate, e depois os alvos
