@@ -635,7 +635,7 @@ nodes:
         - test
     - id: cmd/anchors/governance/guide_review.go
       kind: code
-      rev: fce435d8bd10
+      rev: 25b428ca11ee
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -643,7 +643,7 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide_review_test.go
       kind: test
-      rev: 9ab04aadc798
+      rev: cea0376a37e6
       updated_at: "2026-09-19"
       layer: teste
       tags:

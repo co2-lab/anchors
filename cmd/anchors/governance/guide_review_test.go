@@ -46,3 +46,71 @@ func TestGuiaDeReview_dizPorQueOEstadoErradoCustaCaro(t *testing.T) {
 		t.Error("o guia deveria dizer qual dos dois erros é o pior")
 	}
 }
+
+// A LISTA existe para que nada passe por ESQUECIMENTO.
+//
+// O review é o lugar do que exige julgamento, e julgamento não vira gate — mas a memória
+// de QUAIS julgamentos fazer não deveria depender de lembrar. É a mesma inversão que os
+// pontos de conformidade já fazem nos outros guias: em vez de "leia a prosa e lembre do
+// que importa", a lista diz "estes são os itens, um a um".
+//
+// O guia de review era o único que governa e não tinha a seção — o `guide-checklist`
+// cobra `## Pontos de conformidade` de toda régua, e esta escapava por viver no binário.
+func TestGuiaDeReview_temPontosDeConformidade(t *testing.T) {
+	if !strings.Contains(reviewGuide, "## Pontos de conformidade") {
+		t.Fatal("o guia de review não tem a seção obrigatória de pontos de conformidade")
+	}
+}
+
+// Cada ponto tem CÓDIGO, e a numeração é contínua: o relatório precisa referenciar o item
+// específico, e um buraco na sequência é item apagado sem ninguém notar.
+func TestGuiaDeReview_pontosNumeradosSemBuraco(t *testing.T) {
+	for i := 1; i <= 13; i++ {
+		codigo := "REV-CK" + itoa(i) + ":"
+		if !strings.Contains(reviewGuide, codigo) {
+			t.Errorf("falta o ponto %s — a numeração tem buraco", codigo)
+		}
+	}
+}
+
+// ANCORADO NA PROSA: cada ponto destila uma régua que o corpo do guia já explica. Um
+// ponto sem explicação acima é invenção — e foi assim que três deles nasceram nesta
+// mesma escrita, antes de ganharem a prosa que lhes faltava.
+func TestGuiaDeReview_cadaPontoTemProsaAcima(t *testing.T) {
+	corpo := reviewGuide[:strings.Index(reviewGuide, "## Pontos de conformidade")]
+	// Os termos que cada ponto afirma têm de aparecer ANTES da lista.
+	ancoras := map[string]string{
+		"REV-CK1":  "do the checks EXIST?",
+		"REV-CK3":  "decide what it needed to decide",
+		"REV-CK4":  "realize the rule, or only cite it",
+		"REV-CK5":  "@TBD",
+		"REV-CK6":  "contradict each other",
+		"REV-CK9":  "Checked:",
+		"REV-CK10": "PROVE, or only execute",
+		"REV-CK11": "WHICH requirement it proves",
+		"REV-CK12": "change without saying",
+		"REV-CK13": "DO NOT MOVE THE CARD",
+	}
+	for ck, ancora := range ancoras {
+		if !strings.Contains(corpo, ancora) {
+			t.Errorf("%s não tem prosa acima da lista (procurei %q) — ou falta a explicação, ou o ponto é invenção", ck, ancora)
+		}
+	}
+}
+
+// A lista NÃO substitui os checks. Confundir as duas coisas faria o revisor gastar-se
+// refazendo à mão o que o script já confrontou melhor.
+func TestGuiaDeReview_listaNaoSubstituiOsChecks(t *testing.T) {
+	achatado := strings.Join(strings.Fields(reviewGuide), " ")
+	if !strings.Contains(achatado, "NOT a substitute for the checks") {
+		t.Error("a lista deveria dizer que não substitui os checks")
+	}
+}
+
+// itoa sem importar strconv só para isto.
+func itoa(n int) string {
+	if n < 10 {
+		return string(rune('0' + n))
+	}
+	return string(rune('0'+n/10)) + string(rune('0'+n%10))
+}
