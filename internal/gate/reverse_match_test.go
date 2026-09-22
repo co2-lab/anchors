@@ -151,3 +151,66 @@ func TestTestFeatureMatch_skips(t *testing.T) {
 		t.Errorf("sem feature ligada esperava Pending, veio %v", v)
 	}
 }
+
+// A VARIANTE nao e' outra regra.
+//
+// A feature numera variantes do mesmo requisito — `@DTTBD-B01#01`, `#02` — quando uma
+// regra precisa de mais de um cenario para ser exercitada. A spec declara a regra UMA vez.
+//
+// MEDIDO no app de referencia: sem tratar o sufixo, o gate acusou 69 features, TODAS por
+// variante — oito cenarios de uma feature cuja regra existe e esta' declarada. Um gate que
+// acusa o que esta' certo ensina a ignora-lo, e teria enterrado o caso real (a
+// `DTSTD-B10` revertida) no meio do ruido.
+func TestFeatureSpecMatch_varianteNaoEOutraRegra(t *testing.T) {
+	t.Run("FSPMT-X02: a numbered variant resolves to the rule it varies", func(t *testing.T) {})
+	root, g := comSpec(t, "### UNITX-B01 — a regra\n")
+	comVariantes := "@UNITX\nFeature: X\n\n" +
+		"  @UNITX-B01#01\n  Scenario: primeiro recorte\n\n" +
+		"  @UNITX-B01#02\n  Scenario: segundo recorte\n"
+
+	if v, msg := checkFeatureSpecMatch(comVariantes, featNodeRev(), root, g, nil); v != Pass {
+		t.Errorf("as variantes sao da B01, que existe: %v / %s", v, msg)
+	}
+}
+
+// E a variante ORFA continua sendo acusada — tratar o sufixo nao pode virar anistia.
+func TestFeatureSpecMatch_varianteDeRegraInexistenteEAcusada(t *testing.T) {
+	root, g := comSpec(t, "### UNITX-B01 — a regra que ficou\n")
+	comOrfa := "@UNITX\nFeature: X\n\n  @UNITX-B10#01\n  Scenario: variante da revertida\n"
+
+	v, msg := checkFeatureSpecMatch(comOrfa, featNodeRev(), root, g, nil)
+	if v != Fail {
+		t.Fatalf("a B10 nao existe e veio %v", v)
+	}
+	// O codigo COMO ESCRITO, para quem le' o veredito acha-lo no arquivo.
+	if !strings.Contains(msg, "UNITX-B10#01") {
+		t.Errorf("o veredito nao traz o codigo como escrito: %q", msg)
+	}
+}
+
+func TestTestFeatureMatch_varianteNaoEOutraRegra(t *testing.T) {
+	t.Run("TFTMT-X02: a numbered variant resolves to the rule it varies", func(t *testing.T) {})
+	root, g := comFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01#01\n  Scenario: recorte\n")
+	teste := "it('UNITX-B01 exercita a regra', () => {})\n"
+
+	if v, msg := checkTestFeatureMatch(teste, testNodeRev(), root, g, nil); v != Pass {
+		t.Errorf("o teste prova a B01, que a feature declara como variante: %v / %s", v, msg)
+	}
+}
+
+// A REVISAO NAO E' REGRA, e nao se cobra cenario dela.
+//
+// `JDDTJ-R0002` e' uma revisao — quatro digitos —, e o `anyCodeRE` casa `R00` porque `R`
+// esta' nas letras canonicas (de Rule) e o padrao le' dois digitos. O resto sobra, e o
+// gate acusava um codigo que ninguem escreveu.
+//
+// MEDIDO no app de referencia: dois dos tres achados eram isto.
+func TestTestFeatureMatch_revisaoNaoEAcusada(t *testing.T) {
+	t.Run("TFTMT-X03: a revision code is not charged as a rule", func(t *testing.T) {})
+	root, g := comFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01\n  Scenario: a regra\n")
+	teste := "describe('UNITX-R0002 — a decisao', () => {\n  it('UNITX-B01 ok', () => {})\n})\n"
+
+	if v, msg := checkTestFeatureMatch(teste, testNodeRev(), root, g, nil); v != Pass {
+		t.Errorf("a revisao foi cobrada como regra: %v / %s", v, msg)
+	}
+}

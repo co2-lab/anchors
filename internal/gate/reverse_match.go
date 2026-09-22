@@ -35,6 +35,51 @@ import (
 // gate de ida: quem lê "1 cenário sem regra" precisa saber que a acusação é sobre a
 // feature, não sobre a spec.
 
+// semVariante tira o sufixo de VARIANTE do código do cenário.
+//
+// A feature numera variantes do mesmo requisito — `@DTTBD-B01#01`, `#02` — quando uma
+// regra precisa de mais de um cenário para ser exercitada. A spec declara a regra UMA
+// vez (`DTTBD-B01`), e é ela que decide; as variantes são recorte de quem escreve o
+// cenário.
+//
+// Medido no app de referência: sem isto, o gate acusou 69 features, TODAS por variante —
+// oito cenários de uma feature cuja regra existe e está declarada. Um gate que acusa o
+// que está certo ensina a ignorá-lo, e teria enterrado o caso real (a `DTSTD-B10`
+// revertida) no meio do ruído.
+func semVariante(codigo string) string {
+	if i := strings.IndexByte(codigo, '#'); i >= 0 {
+		return codigo[:i]
+	}
+	return codigo
+}
+
+// ehRevisao diz se o código casado é na verdade o prefixo de uma REVISÃO (`-R0002`).
+//
+// O `anyCodeRE` lê dois dígitos após a letra; a revisão tem quatro. Sem esta conferência
+// `JDDTJ-R0002` chega como `JDDTJ-R00`, um código que não existe em lugar nenhum.
+func ehRevisao(corpo, casado string) bool {
+	for _, i := range indicesDe(corpo, casado) {
+		fim := i + len(casado)
+		if fim < len(corpo) && corpo[fim] >= '0' && corpo[fim] <= '9' {
+			return true
+		}
+	}
+	return false
+}
+
+// indicesDe devolve todas as posições de `sub` em `s`.
+func indicesDe(s, sub string) []int {
+	var out []int
+	for i := 0; ; {
+		j := strings.Index(s[i:], sub)
+		if j < 0 {
+			return out
+		}
+		out = append(out, i+j)
+		i += j + 1
+	}
+}
+
 // checkFeatureSpecMatch — a volta do `spec-feature-match`: todo CENÁRIO da feature
 // corresponde a uma regra que a spec ainda DEFINE?
 //
@@ -88,13 +133,15 @@ func checkFeatureSpecMatch(content string, n mapx.Node, root string, g *mapx.Gra
 			// unidade para dizer contra o que ele roda, e cobrar isso da spec local faria
 			// o gate pedir o impossível — é o erro que o `scenario-coverage` já mediu, com
 			// 18 cenários cobrados de uma spec que definia 6.
-			if n.Code != "" && !strings.HasPrefix(c, n.Code+"-") {
+			regra := semVariante(c)
+			if n.Code != "" && !strings.HasPrefix(regra, n.Code+"-") {
 				continue
 			}
-			if declared[c] || seen[c] {
+			if declared[regra] || seen[regra] {
 				continue
 			}
-			seen[c] = true
+			seen[regra] = true
+			// O código COMO ESCRITO no cenário, para quem lê o veredito achá-lo.
 			orphans = append(orphans, c)
 		}
 	}
@@ -140,7 +187,7 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		}
 		for _, sc := range parseFeatureScenarios(string(b)) {
 			for _, c := range sc.Codes {
-				declared[c] = true
+				declared[semVariante(c)] = true
 				if u, _, ok := strings.Cut(c, "-"); ok {
 					unidades[u] = true
 				}
@@ -158,17 +205,30 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	var orphans []string
 	seen := map[string]bool{}
 	for _, m := range anyCodeRE.FindAllString(corpo, -1) {
+		// A REVISÃO NÃO É REGRA, e não se cobra cenário dela.
+		//
+		// `JDDTJ-R0002` é uma revisão — quatro dígitos —, e o `anyCodeRE` casa `R00`
+		// porque `R` está nas letras canônicas (de Rule) e o padrão lê dois dígitos. O
+		// resto sobra, e o gate acusava um código que ninguém escreveu.
+		//
+		// Medido no app de referência: dois dos três achados eram isto. Um cenário exercita
+		// o comportamento que a revisão DECIDIU — a regra revisada —, e é essa que a
+		// feature declara.
+		if ehRevisao(corpo, m) {
+			continue
+		}
 		// Só as unidades que estas features governam: um teste cita código de outras
 		// unidades ao montar fixture, e cobrá-los aqui seria pedir que a feature local
 		// declarasse cenário alheio.
-		u, _, ok := strings.Cut(m, "-")
+		regra := semVariante(m)
+		u, _, ok := strings.Cut(regra, "-")
 		if !ok || !unidades[u] {
 			continue
 		}
-		if declared[m] || seen[m] {
+		if declared[regra] || seen[regra] {
 			continue
 		}
-		seen[m] = true
+		seen[regra] = true
 		orphans = append(orphans, m)
 	}
 	if len(orphans) == 0 {

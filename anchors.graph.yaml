@@ -2948,14 +2948,16 @@ nodes:
         - test
     - id: internal/gate/reverse_match.go
       kind: code
-      rev: b1817b7f2d20
+      rev: 60d410439146
+      updated_at: "2026-09-22"
       layer: gate
       tags:
         - regra
         - gate
     - id: internal/gate/reverse_match_test.go
       kind: test
-      rev: 8d7263b2961c
+      rev: 2a712f4fc514
+      updated_at: "2026-09-22"
       code: UNITX
       layer: teste
       tags:
