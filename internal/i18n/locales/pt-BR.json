@@ -795,6 +795,8 @@
   "flow.keyword.results": "Resultados",
   "flag.keyword.absent": "ausente",
   "flag.keyword.present": "presente",
+  "revision.keyword.revises": "Revisa",
+  "revision.keyword.checked": "Conferido",
   "failure.review.header": "falhas observadas e ainda não compreendidas (%d):",
   "failure.review.none": "nenhuma falha sob observação — toda ocorrência carrega uma conclusão, ou ainda não há nada ingerido (`anchors ingest --logs`)",
   "failure.review.item": "    %-12s %4d ocorrência(s)   %s → %s",
@@ -816,5 +818,12 @@
   "gate.flag_covered.written_not_ingested": "%d cenario(s) com teste ESCRITO e nenhuma execucao ingerida: %s.\nO teste nomeia o codigo e ninguem sabe se ele passa — escrito nao e' verde. Rode a suite e ingira o relatorio (`anchors ingest --junit`).",
   "gate.flag_covered.written_not_green": "%d cenario(s) com teste escrito que NAO passou: %s.\nHouve execucao ingerida e estes codigos nao estao entre os provados: o teste existe e nao prova o cenario.",
   "gate.scenario_written_not_ingested": "%d cenario(s) com teste ESCRITO e nenhuma execucao ingerida: %s.\nO teste nomeia o codigo e ninguem sabe se ele passa — escrito nao e' verde. Rode a suite e ingira o relatorio (`anchors ingest --junit`).",
-  "gate.scenario_written_not_green": "%d cenario(s) com teste escrito que NAO passou: %s.\nHouve execucao ingerida e estes codigos nao estao entre os provados."
+  "gate.scenario_written_not_green": "%d cenario(s) com teste escrito que NAO passou: %s.\nHouve execucao ingerida e estes codigos nao estao entre os provados.",
+  "gate.revision_orphans.skip_not_spec": "nao e' uma spec — a revisao e' cobrada do documento que a carrega",
+  "gate.revision_orphans.no_revision": "a spec nao declara revisao — nada a confrontar",
+  "gate.revision_orphans.no_rules": "a spec nao define regra — uma revisao nao tem irma a alcancar",
+  "gate.revision_orphans.no_revises": "%d revisao(oes) que nao nomeiam regra nenhuma com `Revises:`.\nUma revisao que nao nomeia nada nao pode ser confrontada contra irma nenhuma — e e' a irma que segue afirmando o que a revisao revogou.",
+  "gate.revision_orphans.unknown_rule": "%d regra(s) nomeadas em `Revises:` que esta spec nao define: %s.\nCorrija o codigo, ou defina a regra.",
+  "gate.revision_orphans.orphans": "%d regra(s) compartilham o vocabulario do que a revisao reescreveu, e nao foram mencionadas:",
+  "gate.revision_orphans.how_to_clear": "  A revisao mudou o que essas palavras afirmam. Leia cada uma e declare `Checked: <codigo>`, ou revise-a tambem (`Revises:`).\n  O `Checked` nao afirma que a regra esta certa — so' que alguem olhou."
 }

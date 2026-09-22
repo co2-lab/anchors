@@ -795,6 +795,8 @@
   "flow.keyword.results": "Resultados",
   "flag.keyword.absent": "ausente",
   "flag.keyword.present": "presente",
+  "revision.keyword.revises": "Revisa",
+  "revision.keyword.checked": "Revisado",
   "failure.review.header": "fallos observados y aún no comprendidos (%d):",
   "failure.review.none": "ningún fallo bajo observación — cada ocurrencia lleva una conclusión, o aún no hay nada ingerido",
   "failure.review.item": "    %-12s %4d ocurrencia(s)   %s → %s",
@@ -816,5 +818,12 @@
   "gate.flag_covered.written_not_ingested": "%d escenario(s) con prueba ESCRITA y ninguna ejecucion ingerida: %s.\nLa prueba nombra el codigo y nadie sabe si pasa — escrita no es verde. Ejecute la suite e ingiera el reporte (`anchors ingest --junit`).",
   "gate.flag_covered.written_not_green": "%d escenario(s) con prueba escrita que NO paso: %s.\nHubo ejecucion ingerida y estos codigos no estan entre los probados: la prueba existe y no prueba el escenario.",
   "gate.scenario_written_not_ingested": "%d escenario(s) con prueba ESCRITA y ninguna ejecucion ingerida: %s.\nLa prueba nombra el codigo y nadie sabe si pasa — escrita no es verde. Ejecute la suite e ingiera el reporte (`anchors ingest --junit`).",
-  "gate.scenario_written_not_green": "%d escenario(s) con prueba escrita que NO paso: %s.\nHubo ejecucion ingerida y estos codigos no estan entre los probados."
+  "gate.scenario_written_not_green": "%d escenario(s) con prueba escrita que NO paso: %s.\nHubo ejecucion ingerida y estos codigos no estan entre los probados.",
+  "gate.revision_orphans.skip_not_spec": "no es una spec — la revision se exige al documento que la lleva",
+  "gate.revision_orphans.no_revision": "la spec no declara revision — nada que confrontar",
+  "gate.revision_orphans.no_rules": "la spec no define regla — una revision no tiene hermana a la que llegar",
+  "gate.revision_orphans.no_revises": "%d revision(es) que no nombran ninguna regla con `Revises:`.\nUna revision que no nombra nada no puede confrontarse contra ninguna hermana — y es la hermana la que sigue afirmando lo que la revision revoco.",
+  "gate.revision_orphans.unknown_rule": "%d regla(s) nombradas en `Revises:` que esta spec no define: %s.\nCorrija el codigo, o defina la regla.",
+  "gate.revision_orphans.orphans": "%d regla(s) comparten el vocabulario de lo que la revision reescribio, y no fueron mencionadas:",
+  "gate.revision_orphans.how_to_clear": "  La revision cambio lo que esas palabras afirman. Lea cada una y declare `Checked: <codigo>`, o revisela tambien (`Revises:`).\n  El `Checked` no afirma que la regla este correcta — solo que alguien miro."
 }

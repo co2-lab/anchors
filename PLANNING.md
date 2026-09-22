@@ -277,6 +277,53 @@ responder isso.
 Não se usa o `revises:` para isto: ele serve para **plano revisa plano**, e criar um
 plano inteiro para corrigir uma redação seria desproporcional.
 
+### A revisão declara o que TOCA, e o que CONFERIU
+
+Uma regra não vive sozinha. Ela compartilha vocabulário com as vizinhas, e é esse
+vocabulário que a revisão muda — não só o texto da regra que ela reescreve.
+
+```markdown
+> **NTCNN-R0002:** o badge é um PONTO, não um número.
+>
+> **Revises:** `B03`, `B07`
+> **Checked:** `I02`, `B04`
+```
+
+`Revises` é *"reescrevi esta regra"*. `Checked` é *"li esta outra, e ela continua
+valendo"* — e é a linha que quase ninguém escreve sozinho, porque exige perguntar
+quem mais falava do assunto.
+
+As palavras-chave são as do CATÁLOGO DE TRADUÇÕES, como `Fits` já é no fluxo: o
+marcador do framework nasce em inglês (`@TBD`, `@no-scenario`, `@resilient` — todos),
+e um projeto que escreve em outro idioma recebe a sua tradução sem que o engine mude.
+
+**O caso que originou isto, medido no app de referência.** A `NTCNN-R0002` trocou o
+badge do sino de CONTAGEM para PONTO, e nomeou as regras que reescreveu: `B03`, `B04`,
+`B07`. O invariante `I02` não foi citado — e ele se chama *"O badge nunca CONTA o que a
+lista não mostra"*, com corpo dizendo *"o NÚMERO no sino corresponde ao que aparece ao
+abrir"*.
+
+O invariante governava uma aritmética que a revisão havia abolido. A spec passou a
+afirmar as duas coisas ao mesmo tempo, e **nada acusou**: a `B03` estava correta, a
+`I02` estava bem-formada, a tríade completa, a suíte verde. A contradição só apareceu
+**meses depois**, quando outro agente foi implementar e não soube qual das duas seguir
+— e virou uma decisão que teve de subir para o usuário, sem que ninguém lembrasse do
+contexto.
+
+Foram **sete** contradições assim numa única leva, todas com a mesma forma: uma
+revisão muda o significado de uma palavra, e as regras que usam aquela palavra
+continuam afirmando o que foi revogado.
+
+**Por que `Checked:` e não "revise tudo".** Numa unidade com nove regras, exigir que
+toda revisão confira as nove reprova sempre — e o custo de satisfazer vira teatro:
+cola-se a lista inteira sem ler. O `Checked` é barato de escrever *depois de ler*, e
+impossível de escrever honestamente sem ler. É essa assimetria que faz a régua
+funcionar.
+
+**O que ele não é.** `Checked: I02` não afirma que a `I02` está certa — afirma que
+alguém olhou. Se ao olhar a contradição aparecer, a saída é a de sempre: revisar
+também (entra em `Revises:`), ou escalar quando mudar a direção.
+
 ### O gate `plano-alterado-justificado`
 
 Um plano corrigido em silêncio faz o projeto caminhar para um destino que ninguém

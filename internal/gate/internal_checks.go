@@ -47,6 +47,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"plan-doctrine-exists":     checkPlanDoctrineExists,
 	"doctrine-realized":        checkDoctrineRealized,
 	"scenario-coverage":        checkScenarioCoverage,
+	"revision-orphans":         checkRevisionOrphans,
 	"flag-scenario-grammar":    checkFlagScenarioGrammar,
 	"flag-scenarios-complete":  checkFlagScenariosComplete,
 	"flag-scenario-exists":     checkFlagScenarioExists,

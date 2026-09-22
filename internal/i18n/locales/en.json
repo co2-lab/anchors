@@ -795,6 +795,8 @@
   "flow.keyword.results": "Results",
   "flag.keyword.absent": "absent",
   "flag.keyword.present": "present",
+  "revision.keyword.revises": "Revises",
+  "revision.keyword.checked": "Checked",
   "failure.review.header": "failures observed and not yet understood (%d):",
   "failure.review.none": "no failure under observation — every occurrence carries a conclusion, or there is nothing ingested yet (`anchors ingest --logs`)",
   "failure.review.item": "    %-12s %4d occurrence(s)   %s → %s",
@@ -816,5 +818,12 @@
   "gate.flag_covered.written_not_ingested": "%d scenario(s) with a test WRITTEN but no execution ingested: %s.\nThe test names the code and nobody knows whether it passes — written is not green. Run the suite and ingest the report (`anchors ingest --junit`).",
   "gate.flag_covered.written_not_green": "%d scenario(s) with a test written that did NOT pass: %s.\nExecution was ingested and these codes are not among the proven ones: the test exists and does not prove the scenario.",
   "gate.scenario_written_not_ingested": "%d scenario(s) with a test WRITTEN but no execution ingested: %s.\nThe test names the code and nobody knows whether it passes — written is not green. Run the suite and ingest the report (`anchors ingest --junit`).",
-  "gate.scenario_written_not_green": "%d scenario(s) with a test written that did NOT pass: %s.\nExecution was ingested and these codes are not among the proven ones."
+  "gate.scenario_written_not_green": "%d scenario(s) with a test written that did NOT pass: %s.\nExecution was ingested and these codes are not among the proven ones.",
+  "gate.revision_orphans.skip_not_spec": "not a spec — revisions are charged of the document that carries them",
+  "gate.revision_orphans.no_revision": "the spec declares no revision — nothing to confront",
+  "gate.revision_orphans.no_rules": "the spec defines no rule — a revision has no siblings to reach",
+  "gate.revision_orphans.no_revises": "%d revision(s) that name no rule with `Revises:`.\nA revision that names nothing cannot be confronted against any sibling — and it is the sibling that keeps asserting what the revision revoked.",
+  "gate.revision_orphans.unknown_rule": "%d rule(s) named in `Revises:` that this spec does not define: %s.\nCorrect the code, or define the rule.",
+  "gate.revision_orphans.orphans": "%d rule(s) share the vocabulary of what the revision rewrote, and were not mentioned:",
+  "gate.revision_orphans.how_to_clear": "  The revision changed what those words assert. Read each one and declare `Checked: <code>`, or revise it too (`Revises:`).\n  `Checked` does not assert the rule is correct — only that somebody looked."
 }

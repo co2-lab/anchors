@@ -232,6 +232,16 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		// O EIXO DAS FEATURE FLAGS. Uma flag multiplica os caminhos do codigo sem
 		// multiplicar a spec, e os tres custos (revisao, teste, remocao) sao silencios que
 		// nenhum outro gate enxerga.
+		// A REVISAO QUE MUDOU O SIGNIFICADO DE UMA PALAVRA, e nao disse a quem.
+		//
+		// INFORMATIVO ao nascer, e de proposito: nenhuma revisao escrita ate hoje carrega
+		// `Checked:`, entao toda revisao existente nasce achado. Medir a fila antes de
+		// cobra-la e' o que impede o gate de nascer sendo ignorado.
+		gates = append(gates, config.Gate{
+			Name: "revision-orphans", ID: "revision-orphans", On: []string{"spec"},
+			Check: "revision-orphans", Blocking: config.Bool(false),
+			Measures: "a revisao nomeia as regras irmas que falam do mesmo assunto",
+		})
 		gates = append(gates, config.Gate{
 			Name: "flag-scenario-grammar", ID: "flag-scenario-grammar", On: []string{"flag"},
 			Check: "flag-scenario-grammar", Blocking: config.Bool(true),

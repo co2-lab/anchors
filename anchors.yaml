@@ -436,6 +436,14 @@ gates:
   - name: doctrine-not-duplicated
     blocking: false
 
+  # A REVISAO QUE MUDOU O SIGNIFICADO DE UMA PALAVRA, e nao disse a quem.
+  #
+  # INFORMATIVO ao nascer: nenhuma revisao escrita ate hoje carrega `Checked:`, entao
+  # toda revisao existente nasce achado. Medir a fila antes de cobra-la e' o que impede o
+  # gate de nascer sendo ignorado.
+  - name: revision-orphans
+    blocking: false
+
   # O EIXO DAS FEATURE FLAGS — os cenarios que o valor da flag abre.
   #
   # Os quatro `on:` vem do canonico (`mergeCanonical`): os tres primeiros sobre o arquivo
