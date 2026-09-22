@@ -825,7 +825,7 @@
   "gate.revision_orphans.orphans": "%d regla(s) comparten el vocabulario de lo que la revision reescribio, y no fueron mencionadas:",
   "gate.revision_orphans.how_to_clear": "  La revision cambio lo que esas palabras afirman. Lea cada una y declare `Checked: <codigo>`, o revisela tambien (`Revises:`).\n  El `Checked` no afirma que la regla este correcta — solo que alguien miro.",
   "check.judgment_brief_header": "⚖  %d objetivo(s) esperan juicio, en %d gate(s).",
-  "check.judgment_brief_who": "   El pipeline NO juzga: el juicio es trabajo del revisor en el PR, y esta es la lista a recorrer (ver `REV-CK4` en `anchors guide review`).",
+  "check.judgment_brief_who": "   El pipeline NO juzga: el juicio es trabajo del revisor en el PR, y esta es la lista a recorrer (ver `REV-CK5` en `anchors guide review`).",
   "check.judgment_brief_gate": "   %s — %d objetivo(s)",
   "check.judgment_brief_guide": "      guia: %s",
   "check.judgment_brief_ask": "      pregunta: %s",

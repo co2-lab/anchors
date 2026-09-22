@@ -1,6 +1,7 @@
 package quality
 
 import (
+	"os"
 	"strings"
 	"testing"
 
@@ -70,7 +71,7 @@ func TestBriefDeJulgamento_dizQueOPipelineNaoJulga(t *testing.T) {
 	if !strings.Contains(achatado, "NAO julga") && !strings.Contains(achatado, "NOT judge") {
 		t.Errorf("o brief nao diz que o pipeline nao julga:\n%s", saida)
 	}
-	if !strings.Contains(saida, "REV-CK4") {
+	if !strings.Contains(saida, "REV-CK5") {
 		t.Errorf("o brief nao aponta o item do checklist de review:\n%s", saida)
 	}
 }
@@ -90,5 +91,36 @@ func TestBriefDeJulgamento_truncaListaLonga(t *testing.T) {
 	}
 	if strings.Count(saida, ".spec.md") > 11 {
 		t.Errorf("o brief listou mais de dez alvos:\n%s", saida)
+	}
+}
+
+// O BRIEF É RELATÓRIO, NÃO REGISTRO — e a chamada tem de viver FORA do bloco de
+// registro.
+//
+// Ele nasceu dentro do `if !noRecord`, e o efeito foi medido no app de referência: o
+// pipeline roda `check --all --no-record` (deliberado — registrar dali abriria card a
+// cada push), que é EXATAMENTE o modo em que o revisor precisa da lista. O único lugar
+// onde o brief importava era o único em que ele não saía.
+//
+// A guarda é sobre a ORDEM do código-fonte porque é ali que o defeito mora: o brief
+// chamado depois de `if !noRecord {` volta a sumir no pipeline, e nenhum teste de saída
+// pegaria isso sem montar um projeto inteiro em modo github.
+func TestBriefDeJulgamento_ficaForaDoBlocoDeRegistro(t *testing.T) {
+	src, err := os.ReadFile("check.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	texto := string(src)
+	chamada := strings.Index(texto, "printJudgmentBrief(profile.Judged")
+	if chamada < 0 {
+		t.Fatal("a chamada do brief sumiu do fluxo do check")
+	}
+	registro := strings.Index(texto, "if !noRecord {")
+	if registro < 0 {
+		t.Fatal("o bloco de registro sumiu")
+	}
+	if chamada > registro {
+		t.Error("o brief voltou para DENTRO do bloco de registro — ele some no " +
+			"`--no-record`, que é o modo do pipeline e o único em que ele importa")
 	}
 }

@@ -825,7 +825,7 @@
   "gate.revision_orphans.orphans": "%d rule(s) share the vocabulary of what the revision rewrote, and were not mentioned:",
   "gate.revision_orphans.how_to_clear": "  The revision changed what those words assert. Read each one and declare `Checked: <code>`, or revise it too (`Revises:`).\n  `Checked` does not assert the rule is correct — only that somebody looked.",
   "check.judgment_brief_header": "⚖  %d target(s) awaiting judgment, across %d gate(s).",
-  "check.judgment_brief_who": "   The pipeline does NOT judge: judgment is the reviewer's work on the PR, and this is the list to work through (see `REV-CK4` in `anchors guide review`).",
+  "check.judgment_brief_who": "   The pipeline does NOT judge: judgment is the reviewer's work on the PR, and this is the list to work through (see `REV-CK5` in `anchors guide review`).",
   "check.judgment_brief_gate": "   %s — %d target(s)",
   "check.judgment_brief_guide": "      guide: %s",
   "check.judgment_brief_ask": "      asks: %s",

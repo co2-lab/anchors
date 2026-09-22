@@ -187,6 +187,21 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// "registrar": grava o veredito por aresta no mapa (destrava stale) e
 			// abre uma issue de violation por fail bloqueante (sobrevive à sessão).
 			// Opt-out honesto: --no-record só reporta, não registra.
+			// O BRIEF DE JULGAMENTO É RELATÓRIO, NÃO REGISTRO — e por isso vem ANTES do
+			// `!noRecord`.
+			//
+			// Ele estava dentro do bloco de registro, e o efeito foi medido: o pipeline
+			// do app de referência roda `check --all --no-record` (deliberado — registrar
+			// dali abriria card a cada push), que é EXATAMENTE o modo em que o revisor
+			// precisa da lista. O único lugar onde o brief importava era o único em que
+			// ele não saía.
+			//
+			// Enfileirar é escrita e continua sob `!noRecord`; dizer ao revisor o que
+			// falta julgar não escreve nada.
+			if len(profile.Judged) > 0 && cfg.GitHubMode() {
+				guias, perguntas := judgmentGuides(cfg)
+				printJudgmentBrief(profile.Judged, guias, perguntas)
+			}
 			pendentes := 0
 			if !noRecord {
 				if err := recordCheck(absRoot, mapPath, g, profile); err != nil {
@@ -373,9 +388,8 @@ func enqueueJudgments(root string, cfg *config.Config, p gate.Profile, varredura
 	// O que fica de fora é o julgamento PENDENTE — e registrá-lo numa fila que ninguém
 	// lê é pior que não registrar, porque parece registro.
 	if cfg.GitHubMode() {
-		if len(p.Judged) > 0 {
-			printJudgmentBrief(p.Judged, guideOf, askOf)
-		}
+		// O brief já saiu, antes do bloco de registro: no modo `github` a fila é o
+		// board, e o julgamento não foge disso.
 		return 0
 	}
 	n := 0
@@ -1049,6 +1063,26 @@ func reportTiming(mostrar bool, p gate.Profile) {
 		return
 	}
 	printTiming(p)
+}
+
+// judgmentGuides indexa gate → (guia, pergunta) para o brief.
+//
+// Mesma leitura que o `enqueueJudgments` faz para enriquecer a task: o gate declara os
+// dois, e quem julga precisa dos dois — o guia diz onde está a régua, a pergunta diz o
+// que confrontar.
+func judgmentGuides(cfg *config.Config) (map[string]string, map[string]string) {
+	guideOf := map[string]string{}
+	askOf := map[string]string{}
+	if cfg == nil {
+		return guideOf, askOf
+	}
+	for _, g := range cfg.Gates {
+		if g.IsJudgment() {
+			guideOf[g.Name] = g.Guide
+			askOf[g.Name] = g.Ask
+		}
+	}
+	return guideOf, askOf
 }
 
 // printJudgmentBrief entrega ao REVISOR a lista do que falta julgar.
