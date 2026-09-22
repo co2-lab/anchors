@@ -830,5 +830,14 @@
   "check.judgment_brief_guide": "      guia: %s",
   "check.judgment_brief_ask": "      pregunta: %s",
   "check.judgment_brief_more": "      … y %d mas",
-  "check.judgment_brief_footer": "   El veredicto que REPRUEBA se vuelve issue. El que pasa queda sellado en el mapa — y un objetivo no juzgado sigue no juzgado, en silencio, hasta que alguien lea la spec meses despues."
+  "check.judgment_brief_footer": "   El veredicto que REPRUEBA se vuelve issue. El que pasa queda sellado en el mapa — y un objetivo no juzgado sigue no juzgado, en silencio, hasta que alguien lea la spec meses despues.",
+  "gate.feature_spec.skip_not_feature": "no es una feature — el escenario se exige al archivo que lo declara",
+  "gate.feature_spec.skip_no_scenarios": "la feature no declara escenario codificado — nada que confrontar",
+  "gate.feature_spec.pending_no_spec": "ninguna spec ligada a esta feature — quien exige la EXISTENCIA de la spec es la co-locacion",
+  "gate.feature_spec.pending_no_requirements": "la spec ligada no define requisito — nada contra lo que casar",
+  "gate.feature_spec.orphan": "%d escenario(s) cuya regla la spec ya no declara: %s.\nUn revert quita la regla y el escenario queda: sigue afirmando un comportamiento que nadie decide, y la prueba que lo ejercita sigue verde. Quite el escenario, o restaure la regla en la spec.",
+  "gate.test_feature.skip_not_test": "no es una prueba — la prueba se exige a quien la afirma",
+  "gate.test_feature.pending_no_feature": "ninguna feature ligada a esta prueba — quien exige el vinculo es la triada",
+  "gate.test_feature.pending_no_scenarios": "la feature ligada no declara escenario codificado",
+  "gate.test_feature.orphan": "%d codigo(s) que la prueba dice probar y ningun escenario declara: %s.\nUna prueba verde sobre regla revertida es peor que una ausente, porque ATESTIGUA: la suite pasa, la cobertura sube, y el numero dice que un comportamiento esta probado cuando nadie lo decide."
 }

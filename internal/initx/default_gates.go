@@ -232,6 +232,26 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		// O EIXO DAS FEATURE FLAGS. Uma flag multiplica os caminhos do codigo sem
 		// multiplicar a spec, e os tres custos (revisao, teste, remocao) sao silencios que
 		// nenhum outro gate enxerga.
+		// A VOLTA DE CADA PAR DA TRINCA.
+		//
+		// O `spec-feature-match` e o `feature-test-match` percorrem a ORIGEM procurando o
+		// destino. Estes percorrem o destino perguntando se a origem ainda existe — e e'
+		// o que pega o resto que um revert deixa: cenario sem regra, teste provando regra
+		// revertida. Medido: o caso real passava com mensagem VAZIA.
+		//
+		// Informativos ao nascer: todo revert historico deixou resto, e uma leva grande de
+		// achados identicos vira ruido que se aprende a rolar.
+		gates = append(gates, config.Gate{
+			Name: "feature-spec-match", ID: "feature-spec-match", On: []string{"feature"},
+			Check: "feature-spec-match", Blocking: config.Bool(false),
+			Measures: "todo cenario da feature corresponde a uma regra que a spec declara",
+		})
+		gates = append(gates, config.Gate{
+			Name: "test-feature-match", ID: "test-feature-match", On: []string{"test"},
+			Check: "test-feature-match", Blocking: config.Bool(false),
+			Measures: "todo codigo que o teste prova corresponde a um cenario declarado",
+		})
+
 		// A REVISAO QUE MUDOU O SIGNIFICADO DE UMA PALAVRA, e nao disse a quem.
 		//
 		// INFORMATIVO ao nascer, e de proposito: nenhuma revisao escrita ate hoje carrega

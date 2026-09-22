@@ -830,5 +830,14 @@
   "check.judgment_brief_guide": "      guia: %s",
   "check.judgment_brief_ask": "      pergunta: %s",
   "check.judgment_brief_more": "      … e mais %d",
-  "check.judgment_brief_footer": "   O veredito que REPROVA vira issue. O que passa fica carimbado no mapa — e um alvo nao julgado continua nao julgado, em silencio, ate' alguem ler a spec meses depois."
+  "check.judgment_brief_footer": "   O veredito que REPROVA vira issue. O que passa fica carimbado no mapa — e um alvo nao julgado continua nao julgado, em silencio, ate' alguem ler a spec meses depois.",
+  "gate.feature_spec.skip_not_feature": "nao e' uma feature — o cenario e' cobrado do arquivo que o declara",
+  "gate.feature_spec.skip_no_scenarios": "a feature nao declara cenario codificado — nada a confrontar",
+  "gate.feature_spec.pending_no_spec": "nenhuma spec ligada a esta feature — quem cobra a EXISTENCIA da spec e' a co-locacao",
+  "gate.feature_spec.pending_no_requirements": "a spec ligada nao define requisito — nada contra o que casar",
+  "gate.feature_spec.orphan": "%d cenario(s) cuja regra a spec nao declara mais: %s.\nUm revert tira a regra e o cenario fica: ele segue afirmando um comportamento que ninguem decide mais, e o teste que o exercita continua verde. Remova o cenario, ou restaure a regra na spec.",
+  "gate.test_feature.skip_not_test": "nao e' um teste — a prova e' cobrada de quem a afirma",
+  "gate.test_feature.pending_no_feature": "nenhuma feature ligada a este teste — quem cobra a ligacao e' a trinca",
+  "gate.test_feature.pending_no_scenarios": "a feature ligada nao declara cenario codificado",
+  "gate.test_feature.orphan": "%d codigo(s) que o teste diz provar e nenhum cenario declara: %s.\nUm teste verde sobre regra revertida e' pior que um teste ausente, porque ele ATESTA: a suite passa, a cobertura sobe, e o numero diz que um comportamento esta' provado quando ninguem mais o decide."
 }

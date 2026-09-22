@@ -436,6 +436,15 @@ gates:
   - name: doctrine-not-duplicated
     blocking: false
 
+  # A VOLTA DE CADA PAR DA TRINCA. O `spec-feature-match` e o `feature-test-match`
+  # percorrem a ORIGEM procurando o destino; estes percorrem o destino perguntando se a
+  # origem ainda existe — e e' o que pega o resto que um revert deixa.
+  - name: feature-spec-match
+    blocking: false
+
+  - name: test-feature-match
+    blocking: false
+
   # A REVISAO QUE MUDOU O SIGNIFICADO DE UMA PALAVRA, e nao disse a quem.
   #
   # INFORMATIVO ao nascer: nenhuma revisao escrita ate hoje carrega `Checked:`, entao

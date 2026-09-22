@@ -830,5 +830,14 @@
   "check.judgment_brief_guide": "      guide: %s",
   "check.judgment_brief_ask": "      asks: %s",
   "check.judgment_brief_more": "      … and %d more",
-  "check.judgment_brief_footer": "   A verdict that FAILS becomes an issue. One that passes is stamped on the map — and an unjudged target stays unjudged, silently, until somebody reads the spec months later."
+  "check.judgment_brief_footer": "   A verdict that FAILS becomes an issue. One that passes is stamped on the map — and an unjudged target stays unjudged, silently, until somebody reads the spec months later.",
+  "gate.feature_spec.skip_not_feature": "not a feature — the scenario is charged of the file that declares it",
+  "gate.feature_spec.skip_no_scenarios": "the feature declares no coded scenario — nothing to confront",
+  "gate.feature_spec.pending_no_spec": "no spec linked to this feature — who charges the spec's EXISTENCE is co-location",
+  "gate.feature_spec.pending_no_requirements": "the linked spec defines no requirement — nothing to match against",
+  "gate.feature_spec.orphan": "%d scenario(s) whose rule the spec no longer declares: %s.\nA revert removes the rule and the scenario stays: it keeps asserting a behaviour nobody decides any more, and the test that exercises it stays green. Remove the scenario, or restore the rule in the spec.",
+  "gate.test_feature.skip_not_test": "not a test — the proof is charged of whoever claims it",
+  "gate.test_feature.pending_no_feature": "no feature linked to this test — who charges the link is the triad",
+  "gate.test_feature.pending_no_scenarios": "the linked feature declares no coded scenario",
+  "gate.test_feature.orphan": "%d code(s) the test claims to prove and no scenario declares: %s.\nA green test over a reverted rule is worse than a missing one, because it ATTESTS: the suite passes, coverage rises, and the number says a behaviour is proven when nobody decides it any more."
 }

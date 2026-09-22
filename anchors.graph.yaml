@@ -2219,7 +2219,7 @@ nodes:
         - feature
     - id: internal/gate/internal_checks.go
       kind: code
-      rev: 01dd4ac0471f
+      rev: "161698442870"
       updated_at: "2026-09-22"
       code: INCHN
       layer: gate
@@ -2943,6 +2943,20 @@ nodes:
       rev: ff9405c70307
       updated_at: "2026-09-19"
       code: RPHRG
+      layer: teste
+      tags:
+        - test
+    - id: internal/gate/reverse_match.go
+      kind: code
+      rev: b1817b7f2d20
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/reverse_match_test.go
+      kind: test
+      rev: 8d7263b2961c
+      code: UNITX
       layer: teste
       tags:
         - test
@@ -3866,7 +3880,7 @@ nodes:
         - test
     - id: internal/initx/default_gates.go
       kind: code
-      rev: 4acb18a14b27
+      rev: 7c5f85da34ee
       updated_at: "2026-09-22"
       layer: infra
       tags:
@@ -5061,7 +5075,7 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: 2c21d829d3ab
-        validated_to_rev: 01dd4ac0471f
+        validated_to_rev: "161698442870"
         changed_at: "2026-09-22"
         verdict: ok
     - from: QUALITY.md
@@ -5252,6 +5266,15 @@ edges:
         validated_from_rev: 2c21d829d3ab
         validated_to_rev: dbf225025f79
         changed_at: "2026-09-19"
+        verdict: ok
+    - from: QUALITY.md
+      to: internal/gate/reverse_match.go
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: 2c21d829d3ab
+        validated_to_rev: b1817b7f2d20
+        changed_at: "2026-09-22"
         verdict: ok
     - from: QUALITY.md
       to: internal/gate/revision_orphans.go
@@ -6753,7 +6776,7 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: 21d16f8be3d1
-        validated_to_rev: 4acb18a14b27
+        validated_to_rev: 7c5f85da34ee
         changed_at: "2026-09-22"
         verdict: ok
     - from: WORKFLOW.md
@@ -7491,8 +7514,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindTest`'
-      dep: DEP3
+      method: '`Graph`'
+      dep: DEP1
       stamp:
         validated_from_rev: c34539c2d755
         validated_to_rev: f1917b1daf6e
@@ -7502,8 +7525,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`Graph`'
-      dep: DEP1
+      method: '`KindTest`'
+      dep: DEP3
       stamp:
         validated_from_rev: c34539c2d755
         validated_to_rev: f1917b1daf6e
@@ -7751,7 +7774,7 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: 37ef40be0165
-        validated_to_rev: 01dd4ac0471f
+        validated_to_rev: "161698442870"
         changed_at: "2026-09-22"
         verdict: ok
     - from: internal/gate/internal_checks.spec.md
@@ -8850,8 +8873,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`DefaultRuleLetters`'
-      dep: DEP2
+      method: '`CodeLengthPattern`'
+      dep: DEP3
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: fba09dc33d61
@@ -8861,8 +8884,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`CodeLengthPattern`'
-      dep: DEP3
+      method: '`DefaultRuleLetters`'
+      dep: DEP2
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: fba09dc33d61
