@@ -95,7 +95,7 @@ nodes:
     - id: PLANNING.md
       kind: doc
       rev: 3070d1bfe8ae
-      updated_at: "2026-09-14"
+      updated_at: "2026-09-22"
       code: FNDTN
       layer: doc
       tags:
@@ -2213,7 +2213,7 @@ nodes:
     - id: internal/gate/internal_checks.go
       kind: code
       rev: 01dd4ac0471f
-      updated_at: "2026-09-21"
+      updated_at: "2026-09-22"
       code: INCHN
       layer: gate
       tags:
@@ -2942,6 +2942,7 @@ nodes:
     - id: internal/gate/revision_orphans.feature
       kind: feature
       rev: be1578ecbcd3
+      updated_at: "2026-09-22"
       code: RVORP
       layer: feature
       tags:
@@ -2949,6 +2950,7 @@ nodes:
     - id: internal/gate/revision_orphans.go
       kind: code
       rev: d9ee61f3f714
+      updated_at: "2026-09-22"
       code: RVORP
       layer: gate
       tags:
@@ -2956,7 +2958,8 @@ nodes:
         - gate
     - id: internal/gate/revision_orphans.spec.md
       kind: spec
-      rev: c093cf25dea5
+      rev: c90dd77d59b8
+      updated_at: "2026-09-22"
       code: RVORP
       layer: spec
       code_declared: true
@@ -2965,6 +2968,7 @@ nodes:
     - id: internal/gate/revision_orphans_test.go
       kind: test
       rev: 8dc2be69993a
+      updated_at: "2026-09-22"
       code: NTCNN
       layer: teste
       code_declared: true
@@ -3856,7 +3860,7 @@ nodes:
     - id: internal/initx/default_gates.go
       kind: code
       rev: 4acb18a14b27
-      updated_at: "2026-09-21"
+      updated_at: "2026-09-22"
       layer: infra
       tags:
         - infra
@@ -5743,7 +5747,7 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: dedf7925bcf7
-        validated_to_rev: c093cf25dea5
+        validated_to_rev: c90dd77d59b8
         changed_at: "2026-09-22"
         verdict: ok
     - from: SPEC.md
@@ -6211,7 +6215,7 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: da86ff2960b9
-        validated_to_rev: c093cf25dea5
+        validated_to_rev: c90dd77d59b8
         changed_at: "2026-09-22"
         verdict: ok
     - from: SPEC_TYPES.md
@@ -8639,7 +8643,7 @@ edges:
       type: covered-by
       origin: convention
       stamp:
-        validated_from_rev: c093cf25dea5
+        validated_from_rev: c90dd77d59b8
         validated_to_rev: be1578ecbcd3
         changed_at: "2026-09-22"
         verdict: ok
@@ -8648,7 +8652,7 @@ edges:
       type: specifies
       origin: convention
       stamp:
-        validated_from_rev: c093cf25dea5
+        validated_from_rev: c90dd77d59b8
         validated_to_rev: d9ee61f3f714
         changed_at: "2026-09-22"
         verdict: ok

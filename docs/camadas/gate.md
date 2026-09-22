@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:ea3b3da76c077107 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:127a1c93b7e409f0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 51 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 52 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -207,6 +207,12 @@
 
 
 ## RPHRG — RegionPairHonored — every opened source region must close with its own identity code
+
+
+
+
+
+## RVORP — RevisionOrphans — the rules a revision changed the meaning of, without saying so
 
 
 

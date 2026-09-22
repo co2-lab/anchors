@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:ca98c93f914b71b3 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:94cd2bbdb362cf7c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1135,6 +1135,24 @@ teste prova.
 - [Region markers inside specifications or documentation are ignored](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X02`
 
 - [Internal code semantics inside regions are not evaluated](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code) `RPHRG-X03`
+
+- [Non-spec artifacts skip confrontation](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B01`
+
+- [A spec with no revision has nothing to confront](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B02`
+
+- [A revision naming no rule cannot be confronted](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B03`
+
+- [A revision naming a rule the spec does not define fails](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B04`
+
+- [A sibling sharing vocabulary and left unmentioned is reported](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B05`
+
+- [Every vocabulary-sharing sibling accounted for passes](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B06`
+
+- [Checked clears the accusation without asserting correctness](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B07`
+
+- [A revised rule is never its own orphan](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-I01`
+
+- [Terms shared by the whole unit do not discriminate](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-X01`
 
 - [An artifact that is not a screen leaves without a verdict, and says why](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B01`
 

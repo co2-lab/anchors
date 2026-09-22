@@ -58,4 +58,4 @@ This gate operates in distinct territory from neighbouring gates:
 
 | Code | Question |
 | --- | --- |
-| `RVORP-Q01` | Should the gate block or inform? No revision written to date carries `Checked:`, so every existing revision is born a finding. Informative measures the queue before charging it; blocking ends the silence sooner. |
+| `RVORP-Q01` <!-- @no-scenario: uma decisão em aberto não é requisito — não há comportamento a exercitar até que ela seja tomada --> | Should the gate block or inform? No revision written to date carries `Checked:`, so every existing revision is born a finding. Informative measures the queue before charging it; blocking ends the silence sooner. |

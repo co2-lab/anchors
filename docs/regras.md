@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:63c407d9438c8771 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:d141e14105384dc2 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -78,6 +78,8 @@ abra a página dela em `camadas/`.
 ### [RFRSR — RefResolves — the reference points at the spec that REALLY describes the unit](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit)
 
 ### [RPHRG — RegionPairHonored — every opened source region must close with its own identity code](camadas/gate.md#rphrg--regionpairhonored--every-opened-source-region-must-close-with-its-own-identity-code)
+
+### [RVORP — RevisionOrphans — the rules a revision changed the meaning of, without saying so](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so)
 
 ### [RTDCL — RouteDeclared — a screen declares how one arrives, and names its neighbours](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours)
 
