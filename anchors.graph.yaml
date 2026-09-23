@@ -738,7 +738,7 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/ingest.go
       kind: code
-      rev: 087db4193cb5
+      rev: ceeec2a28045
       updated_at: "2026-09-23"
       code: SPCRX
       layer: comando
@@ -4194,12 +4194,18 @@ nodes:
       no_propagation: true
     - id: internal/mapx/ingest.go
       kind: code
-      rev: 7c0a81de755b
+      rev: 92633120cfc7
       updated_at: "2026-09-23"
       layer: mapa
       tags:
         - nucleo
         - mapa
+    - id: internal/mapx/ingest_coverage_suite_test.go
+      kind: test
+      rev: 907c956c169b
+      layer: teste
+      tags:
+        - test
     - id: internal/mapx/ingest_suite_rev_test.go
       kind: test
       rev: 21cf5637e690
@@ -4225,7 +4231,7 @@ nodes:
         - test
     - id: internal/mapx/model.go
       kind: code
-      rev: 4a31ca4bed9c
+      rev: 752450ce2922
       updated_at: "2026-09-23"
       layer: mapa
       tags:

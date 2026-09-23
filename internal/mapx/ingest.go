@@ -3,6 +3,7 @@ package mapx
 import (
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -124,6 +125,155 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven map[st
 	return
 }
 
+func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now string) (matched int) {
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
+		if n.Kind != KindCode {
+			continue
+		}
+		for file, cov := range byFile {
+			if !pathMatches(n.ID, file) {
+				continue
+			}
+			ensureSignal(n)
+			if n.Signal.TotalLines > 0 {
+				n.Signal.PrevLineCoverage = n.Signal.LineCoverage
+			}
+			if n.Signal.CoverageBySuite == nil {
+				n.Signal.CoverageBySuite = map[string]SuiteCoverage{}
+			}
+			var instrumented, covered []int
+			for line, hit := range cov.Lines {
+				instrumented = append(instrumented, line)
+				if hit {
+					covered = append(covered, line)
+				}
+			}
+			n.Signal.CoverageBySuite[suite] = SuiteCoverage{
+				Instrumented: encodeRanges(instrumented),
+				Covered:      encodeRanges(covered),
+				CoveredLines: cov.Covered,
+				TotalLines:   cov.Total,
+				AtRev:        n.Rev,
+			}
+			c, t := unionCoverage(n.Signal.CoverageBySuite)
+			n.Signal.CoveredLines, n.Signal.TotalLines = c, t
+			if t > 0 {
+				n.Signal.LineCoverage = float64(c) / float64(t) * 100
+			}
+			n.Signal.AtRev = oldestSuiteRev(n.Signal.CoverageBySuite, n.Rev)
+			n.Signal.IngestedAt = now
+			matched++
+			break
+		}
+	}
+	return
+}
+
+// unionCoverage computes covered/total over the union of the suites' lines.
+//
+// A suite that reported only totals (LF/LH, no per-line detail) cannot join a line union.
+// When any suite lacks detail, the union falls back to the suite with the most covered
+// lines — an UNDER-estimate, never an over-estimate: summing counts would count a line
+// twice when two suites cover it.
+func unionCoverage(bySuite map[string]SuiteCoverage) (covered, total int) {
+	instr, cov := map[int]bool{}, map[int]bool{}
+	detailed := true
+	for _, sc := range bySuite {
+		if sc.Instrumented == "" && sc.TotalLines > 0 {
+			detailed = false
+		}
+		for _, l := range decodeRanges(sc.Instrumented) {
+			instr[l] = true
+		}
+		for _, l := range decodeRanges(sc.Covered) {
+			cov[l] = true
+		}
+	}
+	if detailed {
+		return len(cov), len(instr)
+	}
+	for _, sc := range bySuite {
+		if sc.CoveredLines > covered || (sc.CoveredLines == covered && sc.TotalLines > total) {
+			covered, total = sc.CoveredLines, sc.TotalLines
+		}
+	}
+	return covered, total
+}
+
+// oldestSuiteRev: the union is only as fresh as its stalest suite (see unionRev).
+func oldestSuiteRev(bySuite map[string]SuiteCoverage, current string) string {
+	suites := make([]string, 0, len(bySuite))
+	for s := range bySuite {
+		suites = append(suites, s)
+	}
+	sort.Strings(suites)
+	for _, s := range suites {
+		if rev := bySuite[s].AtRev; rev != current {
+			if rev == "" {
+				return "unknown"
+			}
+			return rev
+		}
+	}
+	return current
+}
+
+// encodeRanges writes sorted line numbers as compact ranges: `1-5,9,12-20`.
+func encodeRanges(lines []int) string {
+	if len(lines) == 0 {
+		return ""
+	}
+	sort.Ints(lines)
+	var b strings.Builder
+	start, prev := lines[0], lines[0]
+	flush := func() {
+		if b.Len() > 0 {
+			b.WriteByte(',')
+		}
+		if start == prev {
+			b.WriteString(strconv.Itoa(start))
+		} else {
+			b.WriteString(strconv.Itoa(start) + "-" + strconv.Itoa(prev))
+		}
+	}
+	for _, l := range lines[1:] {
+		if l == prev || l == prev+1 {
+			prev = l
+			continue
+		}
+		flush()
+		start, prev = l, l
+	}
+	flush()
+	return b.String()
+}
+
+// decodeRanges reads what encodeRanges wrote.
+func decodeRanges(s string) []int {
+	var out []int
+	for _, part := range strings.Split(s, ",") {
+		if part == "" {
+			continue
+		}
+		lo, hi, isRange := strings.Cut(part, "-")
+		a, err := strconv.Atoi(lo)
+		if err != nil {
+			continue
+		}
+		b := a
+		if isRange {
+			if b, err = strconv.Atoi(hi); err != nil {
+				continue
+			}
+		}
+		for l := a; l <= b; l++ {
+			out = append(out, l)
+		}
+	}
+	return out
+}
+
 // unionProven: os códigos provados por QUALQUER suíte, sem repetição e em ordem estável
 // (o mapa é versionado; ordem de map mudaria o arquivo a cada ingestão).
 func unionProven(bySuite map[string][]string) []string {
@@ -171,6 +321,18 @@ func unionRev(sig *TestSignal, current string) string {
 
 // IngestCoverage grava a cobertura de linha nos nós de CÓDIGO, casando por caminho.
 func (g *Graph) IngestCoverage(byFile map[string]FileCov, now string) (matched int) {
+	return g.IngestCoverageSuite(byFile, "", now)
+}
+
+// IngestCoverageSuite is IngestCoverage with the SUITE named (the lcov report it came
+// from). With a suite, each suite's measurement is kept on its own and the node's coverage
+// is the UNION: a line covered by the unit suite stays covered when the integration suite
+// is ingested after it. An empty suite keeps the previous behaviour — the report is the
+// whole measurement.
+func (g *Graph) IngestCoverageSuite(byFile map[string]FileCov, suite, now string) (matched int) {
+	if suite != "" {
+		return g.ingestCoverageBySuite(byFile, suite, now)
+	}
 	for i := range g.Nodes {
 		n := &g.Nodes[i]
 		if n.Kind != KindCode {
@@ -272,6 +434,8 @@ type FileMutation struct {
 // FileCov é a cobertura de um arquivo (desacopla o mapx do pacote testsig).
 type FileCov struct {
 	Covered, Total int
+	// Lines: per instrumented line, covered or not. Empty when the report gave only totals.
+	Lines map[int]bool
 }
 
 // SignalStale diz se o sinal de um nó envelheceu — o arquivo mudou de rev desde a

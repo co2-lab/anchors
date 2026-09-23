@@ -100,6 +100,19 @@ const (
 	EdgeGatedBy EdgeType = "gated-by"
 )
 
+// SuiteCoverage is one suite's measurement of one file: which lines it instrumented,
+// which it covered, and the file's rev when it measured. Lines are stored as ranges
+// (`1-5,9,12-20`), because the map is versioned and a list of every line would bloat it.
+type SuiteCoverage struct {
+	Instrumented string `yaml:"instrumented,omitempty"`
+	Covered      string `yaml:"covered,omitempty"`
+	// Totals, for a report that gave no per-line detail (LF/LH only): the union cannot be
+	// computed line by line then, and the suite's own counts are what exists.
+	CoveredLines int    `yaml:"covered_lines,omitempty"`
+	TotalLines   int    `yaml:"total_lines,omitempty"`
+	AtRev        string `yaml:"at_rev,omitempty"`
+}
+
 // Origin — como a aresta entrou no mapa (TRACEABILITY §4).
 type Origin string
 
@@ -220,6 +233,14 @@ type TestSignal struct {
 	// PrevLineCoverage: a cobertura de linha da ingestão ANTERIOR — o baseline para o
 	// delta ("a cobertura caiu?"). Preservado ao ingerir por cima. -1 = sem baseline.
 	PrevLineCoverage float64 `yaml:"prev_line_coverage,omitempty"`
+	// CoverageBySuite: line coverage PER SUITE (key = the lcov report), and the fields
+	// above are the union — a line counts as covered if ANY suite covered it.
+	//
+	// It exists for the same reason as `ProvenBySuite`: in a monorepo each suite is
+	// ingested on its own, and with a single set of numbers the integration suite,
+	// ingested after the unit one, OVERWROTE the unit coverage of the same file. Some
+	// directories are only exercised by integration, so the two measure different lines.
+	CoverageBySuite map[string]SuiteCoverage `yaml:"coverage_by_suite,omitempty"`
 	// MUTAÇÃO (do formato Mutation Testing Elements, schemaVersion 1.x): quantos
 	// mutantes o teste MATOU. É a única medida objetiva de "o teste prova algo": um
 	// mutante SOBREVIVENTE é uma alteração no código que os testes não perceberam —

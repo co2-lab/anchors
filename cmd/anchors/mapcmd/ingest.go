@@ -172,10 +172,16 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 				}
 				byFile := map[string]mapx.FileCov{}
 				for _, fc := range rep.Files {
-					byFile[fc.File] = mapx.FileCov{Covered: fc.CoveredLines, Total: fc.TotalLines}
+					byFile[fc.File] = mapx.FileCov{Covered: fc.CoveredLines, Total: fc.TotalLines, Lines: fc.Lines}
 				}
 				byFile = resolveByFile(g, mapx.KindCode, byFile, absRoot, lcov)
-				m := g.IngestCoverage(byFile, now)
+				// The suite is the REPORT, as for JUnit: unit and integration each speak
+				// for the lines they measured, and neither erases the other.
+				key := suite
+				if key == "" {
+					key = suiteKey(absRoot, lcov)
+				}
+				m := g.IngestCoverageSuite(byFile, key, now)
 				fmt.Printf("coverage: %d file(s) in the lcov, %d code node(s) matched\n", len(rep.Files), m)
 			}
 
