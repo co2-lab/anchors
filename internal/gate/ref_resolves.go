@@ -43,18 +43,18 @@ func checkRefResolves(content string, n mapx.Node, root string, g *mapx.Graph, c
 
 	specPath, specCode := siblingSpecOf(root, n.ID)
 	if specCode == "" {
-		// Sem spec irmã não há com que confrontar o `ref:` — MAS ainda dá para exigir
-		// que ele aponte para ALGUMA identidade existente. Um `ref:` inventado (o código
-		// não é `code:` de spec nenhuma no projeto) não é "não sei dizer": é errado, e
-		// sem esta checagem ele passava como indeterminado.
+		// With no sibling spec there is nothing to confront the `ref:` with — BUT it can
+		// still be required to point at SOME existing identity. An invented `ref:` (the
+		// code is no spec's `code:` anywhere in the project) is not "cannot tell": it is
+		// wrong, and without this check it passed as undetermined.
 		//
-		// Medido no MIF: 3174 refs, 1830 confrontados e 1344 SEM spec irmã — ou seja, 42%
-		// do corpus caía no Skip. Um `ref: KYBD` criado à mão, apontando para código que
-		// não existe em lugar nenhum, foi medido caindo em `~1` e não em `✗1`.
+		// Measured in MIF: 3174 refs, 1830 confronted and 1344 with NO sibling spec — that
+		// is, 42% of the corpus fell into Skip. A hand-made `ref: KYBD`, pointing at a code
+		// that exists nowhere, was measured landing on `~1` and not on `✗1`.
 		//
-		// A distinção com `trinca-completa` se mantém: lá se cobra a AUSÊNCIA da spec
-		// irmã; aqui, a identidade que o `ref:` INVENTA. Um arquivo de infra sem spec
-		// (legítimo) continua passando — o que não passa é citar um código fantasma.
+		// The distinction from `triad-complete` holds: that one charges the ABSENCE of the
+		// sibling spec; this one, the identity the `ref:` INVENTS. An infra file with no
+		// spec (legitimate) still passes — what does not pass is citing a phantom code.
 		if g != nil && !codeExistsInGraph(g, ref) {
 			return Fail, fmt.Sprintf(i18n.T("gate.ref_resolves.unknown_code"), ref, ref)
 		}
@@ -66,11 +66,11 @@ func checkRefResolves(content string, n mapx.Node, root string, g *mapx.Graph, c
 	return Fail, fmt.Sprintf(i18n.T("gate.ref_resolves.unmatched_ref"), ref, specPath, specCode)
 }
 
-// codeExistsInGraph diz se algum nó do mapa DECLARA este código como identidade.
+// codeExistsInGraph says whether some node of the map DECLARES this code as its identity.
 //
-// Só `CodeDeclarado` conta: identidade INFERIDA (o primeiro código que apareceu no texto
-// de um fixture, por exemplo) não é dona de nada, e aceitá-la aqui deixaria passar o ref
-// que aponta para uma string de exemplo em documentação.
+// Only `CodeDeclarado` counts: an INFERRED identity (the first code that showed up in a
+// fixture's text, for instance) owns nothing, and accepting it here would let through the
+// ref that points at an example string in documentation.
 func codeExistsInGraph(g *mapx.Graph, code string) bool {
 	for i := range g.Nodes {
 		if g.Nodes[i].CodeDeclarado && g.Nodes[i].Code == code {

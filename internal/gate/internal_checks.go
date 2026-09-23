@@ -159,20 +159,21 @@ func runInternalAggregate(g config.Gate, root string, graph *mapx.Graph, cfg *co
 	return fn("", mapx.Node{}, root, graph, cfg)
 }
 
-// non-empty: o arquivo não é vazio nem só espaço. Trivial, mas pega placeholders.
+// non-empty: the file is not empty nor whitespace only. Trivial, but it catches
+// placeholders.
 //
-// Para uma FEATURE, porém, "não vazio" não pode ser medido em bytes. O cabeçalho Gherkin
-// (`# language`, o header @anchors, as tags e a linha `Funcionalidade:`) já enche oito
-// linhas SEM declarar um único cenário — e o arquivo passava, porque `TrimSpace` só pega
-// o arquivo literalmente vazio.
+// For a FEATURE, though, "not empty" cannot be measured in bytes. The Gherkin header
+// (`# language`, the @anchors header, the tags and the `Feature:` line) already fills
+// eight lines WITHOUT declaring a single scenario — and the file passed, because
+// `TrimSpace` only catches the literally empty file.
 //
-// Medido no app de referência: 12 features de `services/` com exatamente esse formato —
-// oito linhas, zero cenários — todas aprovadas por este gate enquanto ele era bloqueante.
-// A casca vazia atravessava o pipeline parecendo cobertura: a trinca tinha as três peças,
-// e a do meio não dizia nada.
+// Measured in the reference app: 12 features under `services/` with exactly that shape —
+// eight lines, zero scenarios — all approved by this gate while it was blocking. The
+// empty shell crossed the pipeline looking like coverage: the triad had its three pieces,
+// and the middle one said nothing.
 //
-// O que conta como substância depende do artefato, e para feature é o CENÁRIO — a
-// unidade que a feature existe para declarar.
+// What counts as substance depends on the artifact, and for a feature it is the SCENARIO
+// — the unit the feature exists to declare.
 func checkNonEmpty(content string, n mapx.Node) (Verdict, string) {
 	if strings.TrimSpace(content) == "" {
 		return Fail, i18n.T("gate.empty_file")
@@ -661,15 +662,15 @@ func siblingsWithoutCode(content string) string {
 // A classe de letras vem do vocabulário do projeto (`rule_types`) — ver SetRuleLetters.
 var anyCodeRE = anyCodeREFor(config.DefaultRuleLetters)
 
-// O `DS-` leva o NOME junto: um estado de dado é `SECU-DS-bio-on`, não `SECU-DS-`.
+// The `DS-` carries the NAME with it: a data state is `SECU-DS-bio-on`, not `SECU-DS-`.
 //
-// A regex irmã que lê a FEATURE (`featCodeREFor`) já captura `DS-[A-Za-z0-9-]+`; esta,
-// que lê o TESTE e o código, parava no `DS-` e devolvia um prefixo que não existe em
-// lugar nenhum. As duas pontas do mesmo contrato liam gramáticas diferentes, e o
-// `test-feature-match` acusava o teste de provar `SECU-DS-` — um código que ninguém
-// escreveu — enquanto o cenário `@SECU-DS-bio-on` estava lá, declarado.
+// The sibling regex that reads the FEATURE (`featCodeREFor`) already captures
+// `DS-[A-Za-z0-9-]+`; this one, which reads the TEST and the code, stopped at `DS-` and
+// returned a prefix that exists nowhere. The two ends of the same contract read different
+// grammars, and `test-feature-match` accused the test of proving `SECU-DS-` — a code
+// nobody wrote — while the scenario `@SECU-DS-bio-on` was right there, declared.
 //
-// Medido no app de referência: 78 dos 124 códigos "órfãos" eram este truncamento.
+// Measured in the reference app: 78 of the 124 "orphan" codes were this truncation.
 func anyCodeREFor(letters string) *regexp.Regexp {
 	return regexp.MustCompile(`\b[A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) + `]\d{2}|DS-[A-Za-z0-9-]+|VR)`)
 }

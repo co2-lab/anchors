@@ -636,10 +636,10 @@ func extractNeedsCode(content []byte) []string {
 	return out
 }
 
-// phaseCodeRE casa `FNDTN-F02` — o código de uma fase de plano.
+// phaseCodeRE matches `FNDTN-F02` — the code of a plan phase.
 //
-// Compilado por CHAMADA e não em `var`: o comprimento vem de `code_lengths`, carregado
-// DEPOIS dos globais — em `var` ele congelava o default `[5]` (ver `codeRE` no gate).
+// Compiled per CALL and not in a `var`: the length comes from `code_lengths`, loaded
+// AFTER the globals — in a `var` it froze the default `[5]` (see `codeRE` in the gate).
 func phaseCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`^[A-Z0-9]` + config.CodeLengthPattern() + `-F\d{2}$`)
 }

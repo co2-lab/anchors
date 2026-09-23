@@ -460,10 +460,10 @@ func sharedTitle(body, code string) bool {
 
 var siblingTitleRECache = map[string]*regexp.Regexp{}
 
-// Compilado por CHAMADA e não em `var` — a mesma regra do `codeRE` (rule_implemented.go):
-// o comprimento do código vem de `code_lengths`, carregado DEPOIS dos globais. Em `var`
-// este regex congelava o default `[5]`, e num projeto `[4]` não casava requisito algum —
-// o título que cita três cenários contava zero.
+// Compiled per CALL and not in a `var` — the same rule as `codeRE` (rule_implemented.go):
+// the code length comes from `code_lengths`, loaded AFTER the globals. In a `var` this
+// regex froze the default `[5]`, and in a `[4]` project it matched no requirement at all —
+// a title citing three scenarios counted zero.
 func titleCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`[A-Z0-9]` + config.CodeLengthPattern() + `-[A-Z]{1,2}\d{2}(?:#\d{2})?`)
 }

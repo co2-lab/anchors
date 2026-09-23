@@ -732,50 +732,51 @@ func TestRegistroNaoJulgaSeOTextoEstaCerto(t *testing.T) {
 	}
 }
 
-// A casca vazia: o cabeçalho Gherkin sozinho enche oito linhas sem declarar cenário, e
-// `TrimSpace` não vê diferença entre isso e um arquivo com conteúdo. Medido no app de
-// referência: 12 features de `services/` exatamente assim, todas aprovadas.
-func TestNonEmptyFeatureSemCenario(t *testing.T) {
-	casca := "# language: pt\n# @anchors\n#   ref: SGABX\n#   layer: service\n\n@backend @service\nFuncionalidade: auth (service) — Gateway\n"
-	v, d := checkNonEmpty(casca, mapx.Node{Kind: mapx.KindFeature})
+// The empty shell: the Gherkin header alone fills eight lines without declaring a
+// scenario, and `TrimSpace` sees no difference between that and a file with content.
+// Measured in the reference app: 12 features under `services/` exactly like this, all
+// approved.
+func TestNonEmptyFeatureWithoutScenario(t *testing.T) {
+	shell := "# language: pt\n# @anchors\n#   ref: SGABX\n#   layer: service\n\n@backend @service\nFuncionalidade: auth (service) — Gateway\n"
+	v, d := checkNonEmpty(shell, mapx.Node{Kind: mapx.KindFeature})
 	if v != Fail {
-		t.Fatalf("feature sem cenário deveria reprovar, foi %s (%s)", v, d)
+		t.Fatalf("a feature with no scenario should fail, got %s (%s)", v, d)
 	}
 }
 
-func TestNonEmptyFeatureComCenario(t *testing.T) {
+func TestNonEmptyFeatureWithScenario(t *testing.T) {
 	ok := "# language: pt\nFuncionalidade: x\n\n  @comportamento @ABCD-B01\n  Cenário: faz algo\n    Dado que sim\n"
 	if v, d := checkNonEmpty(ok, mapx.Node{Kind: mapx.KindFeature}); v != Pass {
-		t.Fatalf("feature com cenário deveria passar, foi %s (%s)", v, d)
+		t.Fatalf("a feature with a scenario should pass, got %s (%s)", v, d)
 	}
 }
 
-// A regra do cenário vale SÓ para feature: um .ts com conteúdo não declara cenário e
-// continua passando, senão o gate reprovaria todo arquivo de código do projeto.
-func TestNonEmptyNaoExigeCenarioForaDeFeature(t *testing.T) {
+// The scenario rule holds ONLY for features: a .ts with content declares no scenario and
+// still passes, otherwise the gate would fail every code file of the project.
+func TestNonEmptyDoesNotDemandScenarioOutsideFeatures(t *testing.T) {
 	if v, _ := checkNonEmpty("export const x = 1\n", mapx.Node{Kind: mapx.KindCode}); v != Pass {
-		t.Fatalf("código com conteúdo deveria passar, foi %s", v)
+		t.Fatalf("code with content should pass, got %s", v)
 	}
 }
 
-// O estado de dado leva o NOME junto (`SECU-DS-bio-on`). A regex que lê o TESTE parava
-// no `DS-` enquanto a irmã que lê a FEATURE capturava o nome inteiro — as duas pontas do
-// mesmo contrato com gramáticas diferentes. Medido no app de referência: 78 dos 124
-// códigos "órfãos" do `test-feature-match` eram este truncamento.
-func TestAnyCodeRECapturaNomeDoEstadoDeDado(t *testing.T) {
-	// Códigos de CINCO caracteres: é o default do engine (`config.CodeLengths`), e este
-	// teste não reconfigura o global — o app de referência usa 4 por declarar
-	// `code_lengths: [4]` no próprio anchors.yaml.
-	casos := map[string]string{
+// The data state carries the NAME with it (`SECU-DS-bio-on`). The regex that reads the
+// TEST stopped at `DS-` while the sibling that reads the FEATURE captured the whole name
+// — the two ends of the same contract with different grammars. Measured in the reference
+// app: 78 of the 124 "orphan" codes of `test-feature-match` were this truncation.
+func TestAnyCodeRECapturesTheDataStateName(t *testing.T) {
+	// FIVE-character codes: that is the engine's default (`config.CodeLengths`), and this
+	// test does not reconfigure the global — the reference app uses 4 by declaring
+	// `code_lengths: [4]` in its own anchors.yaml.
+	cases := map[string]string{
 		"it('SECUX-DS-bio-on: ...')":     "SECUX-DS-bio-on",
 		"it('TREXX-DS-filter-12m: ...')": "TREXX-DS-filter-12m",
 		"it('HOMEX-B01: ...')":           "HOMEX-B01",
 		"it('MNPMX-VR: ...')":            "MNPMX-VR",
 	}
-	for entrada, esperado := range casos {
-		got := anyCodeRE.FindString(entrada)
-		if got != esperado {
-			t.Errorf("%s → %q, esperado %q", entrada, got, esperado)
+	for input, want := range cases {
+		got := anyCodeRE.FindString(input)
+		if got != want {
+			t.Errorf("%s → %q, want %q", input, got, want)
 		}
 	}
 }

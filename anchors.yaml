@@ -436,9 +436,9 @@ gates:
   - name: doctrine-not-duplicated
     blocking: false
 
-  # A VOLTA DE CADA PAR DA TRINCA. O `spec-feature-match` e o `feature-test-match`
-  # percorrem a ORIGEM procurando o destino; estes percorrem o destino perguntando se a
-  # origem ainda existe — e e' o que pega o resto que um revert deixa.
+  # THE WAY BACK OF EACH PAIR OF THE TRIAD. `spec-feature-match` and `feature-test-match`
+  # walk the ORIGIN looking for the destination; these walk the destination asking whether
+  # the origin still exists — which is what catches what a revert leaves behind.
   - name: feature-spec-match
     blocking: false
 
@@ -463,8 +463,8 @@ gates:
 
   - name: flag-scenario-exists
 
-  # A VOLTA do `flag-scenario-exists`: aquele confronta a spec que cita cenario
-  # inexistente; este, o cenario que ninguem cita.
+  # The WAY BACK of `flag-scenario-exists`: that one confronts the spec citing a scenario
+  # that does not exist; this one, the scenario nobody cites.
   - name: flag-scenario-governs
     blocking: false
 

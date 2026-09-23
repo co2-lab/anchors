@@ -161,16 +161,16 @@ func withoutExtension(id string) string {
 // equilibrar chaves, que regex não faz — e não é preciso: a amarra, quando existe, está
 // sempre antes do corpo.
 //
-// A cabeça da fábrica fica NUMA linha. O `[^=]*` de antes atravessava quebras de linha:
-// a partir da vírgula de `vi.mock('x', { spy: true })` ele varria o arquivo inteiro até
-// o `=>` de um mock POSTERIOR, e atribuía ao `{ spy: true }` uma fábrica que não era
-// dele — sem anotação, claro, porque a cabeça capturada era lixo de três declarações.
-// O modo spy do Vitest carrega o módulo REAL e só envolve as funções: é mais amarrado
-// ao contrato do que qualquer `Partial<typeof>`, e não tem fábrica para anotar.
+// The factory's head stays on ONE line. The earlier `[^=]*` crossed line breaks: from
+// the comma of `vi.mock('x', { spy: true })` it swept the whole file up to the `=>` of a
+// LATER mock, and gave `{ spy: true }` a factory that was not its own — unannotated, of
+// course, because the captured head was debris from three declarations. Vitest's spy
+// mode loads the REAL module and only wraps the functions: it is tied tighter to the
+// contract than any `Partial<typeof>`, and has no factory to annotate.
 //
-// Medido no app de referência: 3 dos 4 "dublês soltos" eram exatamente isso — falsos.
-// O `\s*` antes do grupo aceita a fábrica na linha seguinte (como o prettier quebra
-// `vi.mock(\n  'x',\n  (): Partial<…> => ({`); o `[^=\n]*` impede o grupo de sair dela.
+// Measured in the reference app: 3 of the 4 "loose doubles" were exactly this — false.
+// The `\s*` before the group accepts the factory on the next line (as prettier breaks
+// `vi.mock(\n  'x',\n  (): Partial<…> => ({`); the `[^=\n]*` keeps the group on it.
 var mockWithFactoryRE = regexp.MustCompile(
 	`(?:jest|vi)\s*\.\s*mock\s*\(\s*['"` + "`" + `]([^'"` + "`" + `]+)['"` + "`" + `]\s*,\s*([^=\n]*)=>`)
 

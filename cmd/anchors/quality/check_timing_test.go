@@ -8,18 +8,18 @@ import (
 	"github.com/co2-lab/anchors/internal/gate"
 )
 
-// Os CENARIOS da flag `timing-metrics` (`flags/timing-metrics.flag.md`).
+// The SCENARIOS of the `timing-metrics` flag (`flags/timing-metrics.flag.md`).
 //
-// A flag governa se o `check` mede e imprime o tempo por gate. Os tres cenarios estao
-// aqui, cada um com o seu codigo no NOME do teste: e' assim que o `flag-covered` os
-// reconhece como provados quando a execucao e' ingerida.
+// The flag governs whether `check` measures and prints the time per gate. The three
+// scenarios are here, each with its code in a subtest NAME: that is how `flag-covered`
+// recognises them as proven once the execution is ingested.
 //
-// O `--timing` nasceu para achar o que faz uma varredura ser cara, e achou: o
-// `docs-fresh` era 97% de uma execucao de 6m49s. Mas nasceu sem teste nenhum, e foi o
-// proprio `flag-covered` que cobrou — o primeiro trabalho que o eixo de flags encontrou.
+// `--timing` was born to find what makes a scan expensive, and it found it: `docs-fresh`
+// was 97% of a 6m49s run. But it was born with no test at all, and it was `flag-covered`
+// itself that charged it — the first work the flag axis found.
 
-// perfilComTempo monta um Profile com tempo medido, que e' o que o `printTiming` le.
-func perfilComTempo() gate.Profile {
+// profileWithTime builds a Profile with measured time, which is what `printTiming` reads.
+func profileWithTime() gate.Profile {
 	return gate.Profile{
 		ByGate: map[string]gate.GateSummary{
 			"docs-fresh": {Gate: "docs-fresh", Pass: 3, Duracao: 900 * time.Millisecond, Pior: 800 * time.Millisecond},
@@ -32,104 +32,100 @@ func perfilComTempo() gate.Profile {
 	}
 }
 
-// TIMNG-G01 — o valor e' `off`: o check imprime so' os vereditos, e NAO mede tempo.
+// TIMNG-G01 — the value is `off`: check prints only the verdicts, and measures NO time.
 //
-// A prova e' a ausencia: com a flag desligada nao deve sair nem o cabecalho de tempo nem
-// a lista de alvos. Um teste que so' checasse "nao quebrou" passaria com a tabela inteira
-// impressa na tela.
-func TestTimingG01_desligadoNaoImprimeTempo(t *testing.T) {
+// The proof is the absence: with the flag off neither the timing header nor the target
+// list may print. A test that only checked "nothing broke" would pass with the whole
+// table on screen.
+func TestTimingG01_offPrintsNoTiming(t *testing.T) {
 	t.Run("TIMNG-G01: with the flag off, check prints no timing at all", func(t *testing.T) {})
-	// Confronta a VARIAVEL que o comando cobra, e nao um literal: `if desligado := false`
-	// seria tautologia — passaria com o `printTiming` chamado incondicionalmente na
-	// producao, que e' exatamente a regressao que este cenario existe para pegar.
-	//
-	// O `newCheckCmd` declara `--timing` ligada a `showTiming`, e e' ela que o call site
-	// consulta. Parsear a linha de comando SEM a flag deixa a variavel no estado que o
-	// cenario descreve.
+	// It confronts the VARIABLE the command reads, not a literal: `if off := false` would
+	// be a tautology — it would pass with `printTiming` called unconditionally in
+	// production, which is exactly the regression this scenario exists to catch.
 	cmd := newCheckCmd()
 	if err := cmd.Flags().Parse([]string{"--timing=false"}); err != nil {
 		t.Fatal(err)
 	}
 
-	ligado, err := cmd.Flags().GetBool("timing")
+	on, err := cmd.Flags().GetBool("timing")
 	if err != nil {
 		t.Fatal(err)
 	}
-	// A FUNCAO DE PRODUCAO, nao uma copia da condicao: o `RunE` chama exatamente esta.
-	saida := capturaSaida(t, func() { reportTiming(ligado, perfilComTempo()) })
-	if saida != "" {
-		t.Errorf("com a flag `off` o check imprimiu metrica de tempo:\n%s", saida)
+	// The PRODUCTION function, not a copy of the condition: `RunE` calls exactly this.
+	out := capturaSaida(t, func() { reportTiming(on, profileWithTime()) })
+	if out != "" {
+		t.Errorf("with the flag `off` check printed timing:\n%s", out)
 	}
 }
 
-// TIMNG-G02 — o valor e' `on`: o check tambem imprime tempo por gate, e os alvos mais
-// lentos.
+// TIMNG-G02 — the value is `on`: check also prints time per gate, and the slowest
+// targets.
 //
-// Os dois blocos sao cobrados, e nao so' um: o cabecalho por gate e a lista de alvos
-// respondem perguntas diferentes ("qual gate custa" e "qual arquivo custa"), e foi a
-// segunda que apontou o `fnSize` lendo ~43.000 arquivos.
-func TestTimingG02_ligadoImprimeTempoPorGateEAlvos(t *testing.T) {
+// Both blocks are charged, not just one: the per-gate header and the target list answer
+// different questions ("which gate costs" and "which file costs"), and it was the second
+// that pointed at `fnSize` reading ~43,000 files.
+func TestTimingG02_onPrintsTimePerGateAndTargets(t *testing.T) {
 	t.Run("TIMNG-G02: with the flag on, check prints time per gate and the slowest targets", func(t *testing.T) {})
 	cmd := newCheckCmd()
 	if err := cmd.Flags().Parse([]string{"--timing"}); err != nil {
 		t.Fatal(err)
 	}
 
-	ligado, err := cmd.Flags().GetBool("timing")
+	on, err := cmd.Flags().GetBool("timing")
 	if err != nil {
 		t.Fatal(err)
 	}
-	saida := capturaSaida(t, func() { reportTiming(ligado, perfilComTempo()) })
-	if saida == "" {
-		t.Fatal("com a flag `on` o check nao imprimiu nada")
+	out := capturaSaida(t, func() { reportTiming(on, profileWithTime()) })
+	if out == "" {
+		t.Fatal("with the flag `on` check printed nothing")
 	}
-	for _, esperado := range []string{"docs-fresh", "build"} {
-		if !strings.Contains(saida, esperado) {
-			t.Errorf("a saida nao nomeia o gate %q:\n%s", esperado, saida)
+	for _, want := range []string{"docs-fresh", "build"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the output does not name the gate %q:\n%s", want, out)
 		}
 	}
-	// O ALVO individual mais caro — o bloco que a media por gate nao mostra.
-	if !strings.Contains(saida, "a.spec.md") {
-		t.Errorf("a saida nao lista o alvo mais lento:\n%s", saida)
+	// The most expensive individual TARGET — the block the per-gate average does not show.
+	if !strings.Contains(out, "a.spec.md") {
+		t.Errorf("the output does not list the slowest target:\n%s", out)
 	}
-	// E o mais caro vem primeiro: a ordem e' o que torna a tabela acionavel.
-	if strings.Index(saida, "docs-fresh") > strings.Index(saida, "build") {
-		t.Errorf("o gate mais caro nao veio primeiro:\n%s", saida)
+	// And the most expensive comes first: the order is what makes the table actionable.
+	if strings.Index(out, "docs-fresh") > strings.Index(out, "build") {
+		t.Errorf("the most expensive gate did not come first:\n%s", out)
 	}
 }
 
-// TIMNG-G03 — o valor esta AUSENTE: vale o mesmo que `off`. Medir e' opt-in, nunca um
-// custo default.
+// TIMNG-G03 — the value is ABSENT: the same as `off`. Measuring is opt-in, never a
+// default cost.
 //
-// E' o cenario que o `flag-scenarios-complete` cobra e o que ninguem escreve. Aqui ele
-// importa por uma razao concreta: um default invertido nao daria erro nenhum — so'
-// gastaria tempo de todo mundo, para sempre, em silencio.
-func TestTimingG03_ausenteValeODefaultQueEDesligado(t *testing.T) {
+// It is the scenario `flag-scenarios-complete` charges and the one nobody writes. It
+// matters here for a concrete reason: an inverted default would raise no error at all — it
+// would just spend everyone's time, forever, in silence.
+func TestTimingG03_absentMeansTheDefaultWhichIsOff(t *testing.T) {
 	t.Run("TIMNG-G03: with the flag absent, the declared default holds — measuring is opt-in", func(t *testing.T) {})
-	// A ausencia do VALOR e' a ausencia da flag na linha de comando. Parsear um argv sem
-	// `--timing` deixa `showTiming` no estado que o cenario descreve — e e' esse estado,
-	// nao um literal, que o call site consulta.
+	// The absence of the VALUE is the absence of the flag on the command line. Parsing an
+	// argv without `--timing` leaves the flag in the state the scenario describes — and it
+	// is that state, not a literal, that the call site reads.
 	cmd := newCheckCmd()
 	if err := cmd.Flags().Parse([]string{}); err != nil {
 		t.Fatal(err)
 	}
 
-	ligado, err := cmd.Flags().GetBool("timing")
+	on, err := cmd.Flags().GetBool("timing")
 	if err != nil {
 		t.Fatal(err)
 	}
-	saida := capturaSaida(t, func() { reportTiming(ligado, perfilComTempo()) })
-	if saida != "" {
-		t.Errorf("sem declarar `--timing` o check mediu e imprimiu — medir tem de ser opt-in:\n%s", saida)
+	out := capturaSaida(t, func() { reportTiming(on, profileWithTime()) })
+	if out != "" {
+		t.Errorf("without `--timing` check measured and printed — measuring must be opt-in:\n%s", out)
 	}
-	// E o DEFAULT declarado no cobra tem de ser o mesmo. E' a outra metade do cenario:
-	// o bloco acima prova o comportamento com o valor ausente, e este prova que o valor
-	// ausente e' de fato o que o comando entrega quando ninguem passa `--timing`.
+	// And the DEFAULT declared in cobra must be the same. It is the other half of the
+	// scenario: the block above proves the behaviour with the value absent, and this one
+	// proves that absent is really what the command delivers when nobody passes `--timing`.
 	f := newCheckCmd().Flags().Lookup("timing")
 	if f == nil {
-		t.Fatal("a flag `--timing` sumiu do comando")
+		t.Fatal("the `--timing` flag disappeared from the command")
 	}
 	if f.DefValue != "false" {
-		t.Errorf("o default de `--timing` e' %q — medir deixou de ser opt-in", f.DefValue)
+		t.Errorf("the default of `--timing` is %q — measuring stopped being opt-in", f.DefValue)
 	}
 }

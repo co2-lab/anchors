@@ -2130,19 +2130,20 @@ func TestConcurrencyDoPRChecksEhPorPR(t *testing.T) {
 	}
 }
 
-// O `to-do` NO NASCIMENTO NAO E' MEXIDA — e a trava o removia.
+// The `to-do` AT BIRTH IS NOT TAMPERING — and the lock removed it.
 //
-// Quem cria o card ja' com `anchors:to-do` (a mao, pelo `anchors escalate`, pela web)
-// dispara `labeled` como humano. O ramo `labeled` do `reverter` removia a label vinte
-// segundos depois, e o `estado-inicial` nao corrigia: quando ele olhou, o card JA' tinha
-// estado. Os dois jobs corriam juntos e se anulavam.
+// Whoever creates the card already with `anchors:to-do` (by hand, through `anchors
+// escalate`, through the web) fires `labeled` as a human. The `reverter`'s `labeled`
+// branch removed the label twenty seconds later, and `estado-inicial` did not fix it:
+// when it looked, the card ALREADY had a state. The two jobs ran together and cancelled
+// each other out.
 //
-// MEDIDO no projeto de referencia: 21 cards abertos sem estado, todos com o mesmo rastro
-// — nascem com `to-do`, o `github-actions[bot]` remove em ~20s. Invisiveis ao `claim`.
+// MEASURED in the reference project: 21 open cards with no state, all with the same trail
+// — born with `to-do`, `github-actions[bot]` removes it in ~20s. Invisible to `claim`.
 //
-// A regua olha SO' o ramo `labeled`: o `anchors:to-do` aparece no arquivo inteiro (o
-// `estado-inicial` o aplica), e uma busca global passaria sem a excecao existir.
-func TestTravaNaoRemoveOToDoDeQuemNasce(t *testing.T) {
+// The ruler looks ONLY at the `labeled` branch: `anchors:to-do` appears all over the file
+// (`estado-inicial` applies it), and a global search would pass with no exception there.
+func TestLockDoesNotRemoveTheToDoOfANewCard(t *testing.T) {
 	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
 	if err != nil {
 		t.Fatal(err)
@@ -2150,51 +2151,51 @@ func TestTravaNaoRemoveOToDoDeQuemNasce(t *testing.T) {
 	s := string(b)
 	i := strings.Index(s, "\n            labeled)")
 	if i < 0 {
-		t.Fatal("o `reverter` nao trata `labeled` — a trava perdeu um dos eventos")
+		t.Fatal("the `reverter` does not handle `labeled` — the lock lost one of the events")
 	}
-	fim := strings.Index(s[i:], "\n            unlabeled)")
-	if fim < 0 {
-		t.Fatal("nao achei o fim do ramo `labeled` — o `case` mudou de forma")
+	end := strings.Index(s[i:], "\n            unlabeled)")
+	if end < 0 {
+		t.Fatal("could not find the end of the `labeled` branch — the `case` changed shape")
 	}
-	ramo := s[i : i+fim]
+	branch := s[i : i+end]
 
-	remocao := strings.Index(ramo, "--remove-label")
-	if remocao < 0 {
-		t.Fatal("o ramo `labeled` nao remove mais nada — a trava deixou de reverter")
+	removal := strings.Index(branch, "--remove-label")
+	if removal < 0 {
+		t.Fatal("the `labeled` branch no longer removes anything — the lock stopped reverting")
 	}
-	antes := ramo[:remocao]
+	before := branch[:removal]
 
-	// A excecao tem de vir ANTES da remocao, e sair sem remover.
-	if !strings.Contains(antes, `"$LABEL_MEXIDA" = "anchors:to-do"`) {
-		t.Error("o ramo `labeled` remove o `to-do` sem perguntar se o card esta' NASCENDO " +
-			"— o card criado ja' na fila perde o estado e some do `claim`")
+	// The exception must come BEFORE the removal, and exit without removing.
+	if !strings.Contains(before, `"$LABEL_MEXIDA" = "anchors:to-do"`) {
+		t.Error("the `labeled` branch removes the `to-do` without asking whether the card is " +
+			"being BORN — a card created already in the queue loses its state and vanishes from `claim`")
 	}
-	if !strings.Contains(antes, "exit 0") {
-		t.Error("a excecao do nascimento nao sai antes da remocao — o `to-do` e' removido " +
-			"mesmo quando reconhecido como entrada")
+	if !strings.Contains(before, "exit 0") {
+		t.Error("the birth exception does not exit before the removal — the `to-do` is removed " +
+			"even when recognised as an entrance")
 	}
 
-	// E ela so' vale para card SEM OUTRO ESTADO: devolver um `in-progress` a' fila a mao
-	// continua sendo mexida.
-	for _, estado := range []string{"anchors:in-progress", "anchors:ready-to-review",
+	// And it only holds for a card with NO OTHER STATE: moving an `in-progress` back to
+	// the queue by hand is still tampering.
+	for _, state := range []string{"anchors:in-progress", "anchors:ready-to-review",
 		"anchors:in-review", "anchors:ready-to-test"} {
-		if !strings.Contains(antes, estado) {
-			t.Errorf("a excecao nao confere %q — um card nesse estado que recebesse `to-do` "+
-				"a mao voltaria para a fila e seria reimplementado", estado)
+		if !strings.Contains(before, state) {
+			t.Errorf("the exception does not check %q — a card in that state receiving `to-do` "+
+				"by hand would go back to the queue and be reimplemented", state)
 		}
 	}
 }
 
-// A LABEL `anchors` CHEGA DEPOIS DA CRIACAO, e o `estado-inicial` precisa ver isso.
+// The `anchors` LABEL ARRIVES AFTER CREATION, and `estado-inicial` has to see it.
 //
-// MEDIDO no projeto de referencia: o #912 nasceu as 18:39:23 e recebeu `anchors` as
-// 18:40:06. Quando o job rodou no `opened`, o card ainda nao era do Anchors, e ele saiu
-// sem agir. O card ficou sem estado, invisivel ao `claim`, e sem reversao nenhuma no
-// rastro que explicasse por que.
+// MEASURED in the reference project: #912 was born at 18:39:23 and got `anchors` at
+// 18:40:06. When the job ran on `opened`, the card did not belong to Anchors yet, and it
+// left without acting. The card stayed stateless, invisible to `claim`, with no revert in
+// the trail to explain why.
 //
-// A regua le' o `if` DO JOB, parseado: uma busca por `labeled` no arquivo casaria com o
-// gatilho do workflow ou com o ramo do `reverter`, e passaria sem a correcao existir.
-func TestEstadoInicialVeALabelQueChegaDepois(t *testing.T) {
+// The ruler reads the JOB's `if`, parsed: a search for `labeled` in the file would match
+// the workflow trigger or the `reverter` branch, and pass with no fix in place.
+func TestInitialStateSeesTheLabelThatArrivesLater(t *testing.T) {
 	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
 	if err != nil {
 		t.Fatal(err)
@@ -2209,15 +2210,15 @@ func TestEstadoInicialVeALabelQueChegaDepois(t *testing.T) {
 	}
 	job, ok := doc.Jobs["estado-inicial"]
 	if !ok {
-		t.Fatal("o job `estado-inicial` sumiu do guard")
+		t.Fatal("the `estado-inicial` job vanished from the guard")
 	}
 	cond := strings.Join(strings.Fields(job.If), " ")
 	if !strings.Contains(cond, "github.event.action == 'opened'") {
-		t.Error("o `estado-inicial` deixou de ver a issue NASCER")
+		t.Error("`estado-inicial` no longer sees the issue being BORN")
 	}
 	if !strings.Contains(cond, "github.event.action == 'labeled'") ||
 		!strings.Contains(cond, "github.event.label.name == 'anchors'") {
-		t.Errorf("o `estado-inicial` nao reage a' label `anchors` que chega depois da "+
-			"criacao — o card fica sem estado e some do `claim`. if: %q", cond)
+		t.Errorf("`estado-inicial` does not react to the `anchors` label arriving after "+
+			"creation — the card stays stateless and vanishes from `claim`. if: %q", cond)
 	}
 }

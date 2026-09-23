@@ -76,14 +76,14 @@ jobs:
   # do `stale` e da trava abaixo — o pipeline corrige o fato, em vez de depender de cada
   # um lembrar.
   estado-inicial:
-    # DOIS MOMENTOS em que um card entra no Anchors, e o job precisa ver os dois.
+    # TWO MOMENTS when a card enters Anchors, and the job has to see both.
     #
-    # O `opened` cobre quem nasce com a label `anchors`. Mas ela também chega DEPOIS: a
-    # pessoa cria a issue e marca em seguida. MEDIDO no projeto de referência: o #912
-    # nasceu às 18:39:23 e recebeu `anchors` às 18:40:06 — quando este job rodou no
-    # `opened`, o card ainda não era do Anchors, e ele saiu sem agir. O card ficou sem
-    # estado para sempre, invisível ao `claim`, e sem reversão nenhuma no rastro que
-    # explicasse por quê.
+    # `opened` covers whoever is born with the `anchors` label. But the label also arrives
+    # LATER: the person creates the issue and tags it right after. MEASURED in the
+    # reference project: #912 was born at 18:39:23 and got `anchors` at 18:40:06 — when
+    # this job ran on `opened`, the card did not belong to Anchors yet, and it left without
+    # acting. The card stayed stateless forever, invisible to `claim`, with no revert in
+    # the trail to explain why.
     if: >-
       github.event_name == 'issues' && (
         github.event.action == 'opened' ||
@@ -431,23 +431,23 @@ jobs:
               fi
               ;;
             labeled)
-              # PÔR `to-do` NUM CARD SEM ESTADO É ENTRADA NO FLUXO, NÃO MOVIMENTO.
+              # PUTTING `to-do` ON A STATELESS CARD IS ENTERING THE FLOW, NOT A MOVE.
               #
-              # Quem cria o card já com `anchors:to-do` — à mão, pelo `anchors escalate`,
-              # pela interface web — dispara `labeled` como humano, e esta trava o tratava
-              # como mexida: removia a label vinte segundos depois. O `estado-inicial` lá em
-              # cima não corrigia, porque quando ele olhou o card JÁ tinha estado. Os dois
-              # jobs corriam juntos e se anulavam.
+              # Whoever creates the card already with `anchors:to-do` — by hand, through
+              # `anchors escalate`, through the web UI — fires `labeled` as a human, and this
+              # lock treated it as tampering: it removed the label twenty seconds later. The
+              # `estado-inicial` job above did not fix it, because when it looked the card
+              # ALREADY had a state. The two jobs ran together and cancelled each other out.
               #
-              # MEDIDO no projeto de referência: 21 cards abertos sem estado nenhum, todos
-              # com o mesmo rastro — nascem com `to-do`, e o `github-actions[bot]` remove em
-              # ~20s. Invisíveis ao `claim`, que só varre estado: trabalho real que nenhum
-              # agente pega, com o board mostrando fila vazia.
+              # MEASURED in the reference project: 21 open cards with no state at all, all
+              # with the same trail — born with `to-do`, and `github-actions[bot]` removes it
+              # in ~20s. Invisible to `claim`, which only sweeps states: real work no agent
+              # picks up, while the board shows an empty queue.
               #
-              # A distinção é pelo que o card JÁ TINHA. Sem outro estado, `to-do` é a porta
-              # de entrada — é exatamente o que o `estado-inicial` teria posto. Com outro
-              # estado (alguém devolvendo um `in-progress` à fila à mão), é movimento, e
-              # continua revertido.
+              # The distinction is what the card ALREADY HAD. With no other state, `to-do` is
+              # the entrance — exactly what `estado-inicial` would have set. With another
+              # state (someone moving an `in-progress` back to the queue by hand), it is a
+              # move, and it is still reverted.
               if [ "$LABEL_MEXIDA" = "anchors:to-do" ]; then
                 outros=$(gh issue view "$N" --repo "$GH_REPO" --json labels \
                   --jq '[.labels[].name
@@ -455,7 +455,7 @@ jobs:
                                   or . == "anchors:in-review" or . == "anchors:ready-to-test")]
                         | length')
                 if [ "${outros:-0}" -eq 0 ]; then
-                  echo "#$N: \`to-do\` num card sem estado — é entrada no fluxo, mantida"
+                  echo "#$N: \`to-do\` on a stateless card — it is entering the flow, kept"
                   exit 0
                 fi
               fi

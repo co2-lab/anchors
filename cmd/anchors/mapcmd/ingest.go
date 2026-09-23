@@ -151,8 +151,8 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 					}
 				}
 				byFile = resolveByFile(g, mapx.KindTest, byFile, absRoot, junit)
-				// A suíte é o RELATÓRIO: num monorepo cada workspace ingere o seu, e sem a
-				// chave a prova de uma suíte apagava a das outras (ver ProvenBySuite).
+				// The suite is the REPORT: in a monorepo each workspace ingests its own, and
+				// without the key one suite's proof erased the others' (see ProvenBySuite).
 				key := suite
 				if key == "" {
 					key = suiteKey(absRoot, junit)
@@ -217,10 +217,10 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 	}
 }
 
-// resolveByFile reescreve as chaves do relatório para o ID exato do nó dono (ver
-// mapx.ResolveReportPaths) e descarta, com aviso, as que continuam ambíguas — caminho
-// relativo ao workspace que casa nós de dois workspaces e o diretório do relatório não
-// desempata. Sem isto os DOIS nós recebiam o sinal.
+// resolveByFile rewrites the report's keys to the exact ID of the owning node (see
+// mapx.ResolveReportPaths) and drops, with a warning, the ones that stay ambiguous — a
+// workspace-relative path matching nodes of two workspaces that the report's directory
+// does not break the tie for. Without this BOTH nodes received the signal.
 func resolveByFile[T any](g *mapx.Graph, kind mapx.Kind, byFile map[string]T, absRoot, report string) map[string]T {
 	paths := make([]string, 0, len(byFile))
 	for p := range byFile {

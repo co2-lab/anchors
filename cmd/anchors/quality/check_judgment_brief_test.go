@@ -8,16 +8,16 @@ import (
 	"github.com/co2-lab/anchors/internal/gate"
 )
 
-// A CONTAGEM NAO E' ENDERECO.
+// A COUNT IS NOT AN ADDRESS.
 //
-// A versao anterior imprimia so' "%d alvos aguardam julgamento", e o revisor sabia que
-// havia trabalho sem saber qual, onde, nem o que perguntar. Medido no app de referencia:
-// 59 das 85 specs nunca receberam veredito, com o CI rodando em todos os PRs.
+// The earlier version printed only "%d targets awaiting judgment", and the reviewer knew
+// there was work without knowing which, where, or what to ask. Measured in the reference
+// app: 59 of 85 specs never received a verdict, with CI running on every PR.
 func judgedFixture() []gate.Result {
 	return []gate.Result{
-		{Gate: "regra-cumprida", Target: "a/Um.spec.md", Verdict: gate.Judge},
-		{Gate: "regra-cumprida", Target: "b/Dois.spec.md", Verdict: gate.Judge},
-		{Gate: "teste-prova", Target: "c/Tres.test.ts", Verdict: gate.Judge},
+		{Gate: "rule-fulfilled", Target: "a/One.spec.md", Verdict: gate.Judge},
+		{Gate: "rule-fulfilled", Target: "b/Two.spec.md", Verdict: gate.Judge},
+		{Gate: "test-proves", Target: "c/Three.test.ts", Verdict: gate.Judge},
 	}
 }
 
@@ -25,102 +25,102 @@ func brief(t *testing.T) string {
 	t.Helper()
 	return capturaSaida(t, func() {
 		printJudgmentBrief(judgedFixture(),
-			map[string]string{"regra-cumprida": "SPEC.md"},
-			map[string]string{"regra-cumprida": "O trecho REALIZA o que a regra descreve?"})
+			map[string]string{"rule-fulfilled": "SPEC.md"},
+			map[string]string{"rule-fulfilled": "Does the excerpt DO what the rule describes?"})
 	})
 }
 
-// O ALVO: sem ele o revisor nao sabe onde olhar.
-func TestBriefDeJulgamento_nomeiaCadaAlvo(t *testing.T) {
-	saida := brief(t)
-	for _, alvo := range []string{"a/Um.spec.md", "b/Dois.spec.md", "c/Tres.test.ts"} {
-		if !strings.Contains(saida, alvo) {
-			t.Errorf("o brief nao nomeia o alvo %q:\n%s", alvo, saida)
+// The TARGET: without it the reviewer does not know where to look.
+func TestJudgmentBrief_namesEveryTarget(t *testing.T) {
+	out := brief(t)
+	for _, target := range []string{"a/One.spec.md", "b/Two.spec.md", "c/Three.test.ts"} {
+		if !strings.Contains(out, target) {
+			t.Errorf("the brief does not name the target %q:\n%s", target, out)
 		}
 	}
 }
 
-// A PERGUNTA: e' o `ask` que o gate declara, e sem ela o revisor inventa o criterio.
-func TestBriefDeJulgamento_trazAPerguntaEOGuia(t *testing.T) {
-	saida := brief(t)
-	if !strings.Contains(saida, "REALIZA o que a regra descreve") {
-		t.Errorf("o brief nao traz a pergunta do gate:\n%s", saida)
+// The QUESTION: it is the `ask` the gate declares, and without it the reviewer invents
+// the criterion.
+func TestJudgmentBrief_carriesTheQuestionAndTheGuide(t *testing.T) {
+	out := brief(t)
+	if !strings.Contains(out, "DO what the rule describes") {
+		t.Errorf("the brief does not carry the gate's question:\n%s", out)
 	}
-	if !strings.Contains(saida, "SPEC.md") {
-		t.Errorf("o brief nao diz onde esta' a regua:\n%s", saida)
-	}
-}
-
-// AGRUPADO POR GATE: um gate pergunta a mesma coisa de varios alvos, e repetir a
-// pergunta por alvo faria o revisor le-la tres vezes para responder uma.
-func TestBriefDeJulgamento_agrupaPorGate(t *testing.T) {
-	saida := brief(t)
-	if n := strings.Count(saida, "REALIZA o que a regra descreve"); n != 1 {
-		t.Errorf("a pergunta aparece %d vezes, esperava 1 (agrupada por gate):\n%s", n, saida)
-	}
-	if !strings.Contains(saida, "regra-cumprida") || !strings.Contains(saida, "teste-prova") {
-		t.Errorf("o brief nao nomeia os dois gates:\n%s", saida)
+	if !strings.Contains(out, "SPEC.md") {
+		t.Errorf("the brief does not say where the ruler is:\n%s", out)
 	}
 }
 
-// QUEM JULGA: o pipeline entrega a lista, o revisor decide. Sem dizer isso, a lista
-// parece pendencia da maquina — e ninguem a percorre.
-func TestBriefDeJulgamento_dizQueOPipelineNaoJulga(t *testing.T) {
-	saida := brief(t)
-	achatado := strings.Join(strings.Fields(saida), " ")
-	if !strings.Contains(achatado, "NAO julga") && !strings.Contains(achatado, "NOT judge") {
-		t.Errorf("o brief nao diz que o pipeline nao julga:\n%s", saida)
+// GROUPED BY GATE: a gate asks the same thing of several targets, and repeating the
+// question per target would make the reviewer read it three times to answer once.
+func TestJudgmentBrief_groupsByGate(t *testing.T) {
+	out := brief(t)
+	if n := strings.Count(out, "DO what the rule describes"); n != 1 {
+		t.Errorf("the question appears %d times, want 1 (grouped by gate):\n%s", n, out)
 	}
-	if !strings.Contains(saida, "REV-CK5") {
-		t.Errorf("o brief nao aponta o item do checklist de review:\n%s", saida)
+	if !strings.Contains(out, "rule-fulfilled") || !strings.Contains(out, "test-proves") {
+		t.Errorf("the brief does not name both gates:\n%s", out)
 	}
 }
 
-// ATE' DEZ, e o resto contado: sessenta caminhos afogam a pergunta que vem antes deles.
-func TestBriefDeJulgamento_truncaListaLonga(t *testing.T) {
-	var muitos []gate.Result
+// WHO JUDGES: the pipeline hands over the list, the reviewer decides. Without saying so,
+// the list reads as the machine's backlog — and nobody works through it.
+func TestJudgmentBrief_saysThePipelineDoesNotJudge(t *testing.T) {
+	out := brief(t)
+	flat := strings.Join(strings.Fields(out), " ")
+	if !strings.Contains(flat, "NAO julga") && !strings.Contains(flat, "NOT judge") {
+		t.Errorf("the brief does not say the pipeline does not judge:\n%s", out)
+	}
+	if !strings.Contains(out, "REV-CK5") {
+		t.Errorf("the brief does not point at the review checklist item:\n%s", out)
+	}
+}
+
+// UP TO TEN, and the rest counted: sixty paths drown the question that comes before them.
+func TestJudgmentBrief_truncatesALongList(t *testing.T) {
+	var many []gate.Result
 	for i := 0; i < 25; i++ {
-		muitos = append(muitos, gate.Result{Gate: "regra-cumprida",
+		many = append(many, gate.Result{Gate: "rule-fulfilled",
 			Target: "u/" + string(rune('a'+i)) + ".spec.md", Verdict: gate.Judge})
 	}
-	saida := capturaSaida(t, func() {
-		printJudgmentBrief(muitos, map[string]string{}, map[string]string{})
+	out := capturaSaida(t, func() {
+		printJudgmentBrief(many, map[string]string{}, map[string]string{})
 	})
-	if !strings.Contains(saida, "15") {
-		t.Errorf("o brief nao conta os que ficaram de fora:\n%s", saida)
+	if !strings.Contains(out, "15") {
+		t.Errorf("the brief does not count the ones left out:\n%s", out)
 	}
-	if strings.Count(saida, ".spec.md") > 11 {
-		t.Errorf("o brief listou mais de dez alvos:\n%s", saida)
+	if strings.Count(out, ".spec.md") > 11 {
+		t.Errorf("the brief listed more than ten targets:\n%s", out)
 	}
 }
 
-// O BRIEF É RELATÓRIO, NÃO REGISTRO — e a chamada tem de viver FORA do bloco de
-// registro.
+// THE BRIEF IS A REPORT, NOT A RECORD — and its call has to live OUTSIDE the record block.
 //
-// Ele nasceu dentro do `if !noRecord`, e o efeito foi medido no app de referência: o
-// pipeline roda `check --all --no-record` (deliberado — registrar dali abriria card a
-// cada push), que é EXATAMENTE o modo em que o revisor precisa da lista. O único lugar
-// onde o brief importava era o único em que ele não saía.
+// It was born inside `if !noRecord`, and the effect was measured in the reference app:
+// the pipeline runs `check --all --no-record` (on purpose — recording from there would
+// open a card on every push), which is EXACTLY the mode in which the reviewer needs the
+// list. The one place the brief mattered was the one place it did not print.
 //
-// A guarda é sobre a ORDEM do código-fonte porque é ali que o defeito mora: o brief
-// chamado depois de `if !noRecord {` volta a sumir no pipeline, e nenhum teste de saída
-// pegaria isso sem montar um projeto inteiro em modo github.
-func TestBriefDeJulgamento_ficaForaDoBlocoDeRegistro(t *testing.T) {
+// The guard is on the ORDER of the source because that is where the defect lives: the
+// brief called after `if !noRecord {` disappears in the pipeline again, and no output test
+// would catch it without assembling a whole project in github mode.
+func TestJudgmentBrief_staysOutsideTheRecordBlock(t *testing.T) {
 	src, err := os.ReadFile("check.go")
 	if err != nil {
 		t.Fatal(err)
 	}
-	texto := string(src)
-	chamada := strings.Index(texto, "printJudgmentBrief(profile.Judged")
-	if chamada < 0 {
-		t.Fatal("a chamada do brief sumiu do fluxo do check")
+	text := string(src)
+	call := strings.Index(text, "printJudgmentBrief(profile.Judged")
+	if call < 0 {
+		t.Fatal("the brief's call disappeared from check's flow")
 	}
-	registro := strings.Index(texto, "if !noRecord {")
-	if registro < 0 {
-		t.Fatal("o bloco de registro sumiu")
+	record := strings.Index(text, "if !noRecord {")
+	if record < 0 {
+		t.Fatal("the record block disappeared")
 	}
-	if chamada > registro {
-		t.Error("o brief voltou para DENTRO do bloco de registro — ele some no " +
-			"`--no-record`, que é o modo do pipeline e o único em que ele importa")
+	if call > record {
+		t.Error("the brief went back INSIDE the record block — it disappears under " +
+			"`--no-record`, which is the pipeline's mode and the only one where it matters")
 	}
 }

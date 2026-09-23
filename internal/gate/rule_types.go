@@ -146,15 +146,16 @@ func conflictingLetters(types []config.RuleType) string {
 		strings.Join(bad, "; ") + ". Cada letra pertence a UM termo/seção."
 }
 
-// definesRuleRE casa uma linha que DEFINE uma regra: o código é a primeira coisa da
-// linha (cabeçalho `### CODEX-B01:`, bullet `- **CODEX-B01**`) ou a primeira célula de
-// uma linha de tabela (`| \`CODEX-B01\` | … |`). Uma seção que apenas CITA códigos de
-// outras seções (ex.: "Test IDs (Maestro)", que referencia `BUTOX-A01` na coluna "Usado
-// em") NÃO cataloga regra — e portanto não precisa reivindicar letra.
-// Compilado por CHAMADA e não em `var` — a mesma regra do `codeRE` (rule_implemented.go):
-// o comprimento do código vem de `code_lengths`, carregado DEPOIS dos globais. Em `var`
-// este regex congelava o default `[5]`, e num projeto `[4]` não casava requisito algum —
-// toda seção de regras passava por "não cataloga regra".
+// definesRuleRE matches a line that DEFINES a rule: the code is the first thing on the
+// line (heading `### CODEX-B01:`, bullet `- **CODEX-B01**`) or the first cell of a table
+// row (`| \`CODEX-B01\` | … |`). A section that only CITES codes of other sections (e.g.
+// "Test IDs (Maestro)", which references `BUTOX-A01` in the "Used in" column) does NOT
+// catalogue rules — and so does not need to claim a letter.
+//
+// Compiled per CALL and not in a `var` — the same rule as `codeRE` (rule_implemented.go):
+// the code length comes from `code_lengths`, loaded AFTER the globals. In a `var` this
+// regex froze the default `[5]`, and in a `[4]` project it matched no requirement at all —
+// every rules section passed as "catalogues no rule".
 func definesRuleRE() *regexp.Regexp {
 	return regexp.MustCompile(
 		"(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}[A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2}")

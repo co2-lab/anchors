@@ -27,14 +27,14 @@ func (g *Graph) IngestExecution(byFile map[string]ExecByFile, proven map[string]
 	return g.IngestExecutionSuite(byFile, proven, declaredByNode, layer, "", now)
 }
 
-// IngestExecutionSuite é o IngestExecution com a SUÍTE nomeada (o relatório de onde a
-// execução veio). Com suíte, a prova de cada spec é gravada sob a chave dela e o
-// `ProvenCodes` vira a união de todas — reingerir a MESMA suíte ainda apaga o que ela
-// deixou de provar, mas a ingestão de uma suíte não fala mais pelas outras. Suíte vazia
-// mantém o comportamento anterior: o relatório é a medição inteira.
+// IngestExecutionSuite is IngestExecution with the SUITE named (the report the execution
+// came from). With a suite, each spec's proof is stored under its key and `ProvenCodes`
+// becomes the union of all of them — re-ingesting the SAME suite still erases what it
+// stopped proving, but one suite's ingestion no longer speaks for the others. An empty
+// suite keeps the previous behaviour: the report is the whole measurement.
 //
-// Prova antiga sem suíte (ingerida antes deste campo existir) não tem dono conhecido; a
-// primeira ingestão com suíte que tocar a spec a substitui pela união medida.
+// An old proof with no suite (ingested before this field existed) has no known owner;
+// the first suite ingestion touching the spec replaces it with the measured union.
 func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven map[string]bool, declaredByNode map[string][]string, layer, suite, now string) (matchedFiles, matchedCodes int) {
 	if layer == "" {
 		layer = "unit" // camada default quando não informada
@@ -274,8 +274,8 @@ func decodeRanges(s string) []int {
 	return out
 }
 
-// unionProven: os códigos provados por QUALQUER suíte, sem repetição e em ordem estável
-// (o mapa é versionado; ordem de map mudaria o arquivo a cada ingestão).
+// unionProven: the codes proven by ANY suite, without repetition and in a stable order
+// (the map is versioned; map order would change the file on every ingestion).
 func unionProven(bySuite map[string][]string) []string {
 	visto := map[string]bool{}
 	var out []string
@@ -494,20 +494,21 @@ func hasPathSuffix(full, suffix string) bool {
 	return full[len(full)-len(suffix)-1] == '/'
 }
 
-// ResolveReportPaths decide, ANTES da ingestão, a que nó cada caminho do relatório
-// pertence — e devolve o caminho reescrito para o ID exato do nó.
+// ResolveReportPaths decides, BEFORE ingestion, which node each path of the report
+// belongs to — and returns the path rewritten to the node's exact ID.
 //
-// Por que existe: o casamento é por SUFIXO, e runners de monorepo escrevem caminhos
-// relativos ao próprio workspace (`src/components/atoms/SectionLabel.tsx`). Com dois
-// workspaces que têm o mesmo arquivo, o sufixo casa os DOIS nós e os dois recebiam o
-// sinal — a cobertura da landing aparecia no componente homônimo do mobile, e a
-// ingestão seguinte trocava o sentido. MEDIDO no MIF (2026-09-23): 100 arquivos no
-// lcov "casavam" 101 nós.
+// Why it exists: matching is by SUFFIX, and monorepo runners write paths relative to
+// their own workspace (`src/components/atoms/SectionLabel.tsx`). With two workspaces
+// holding the same file, the suffix matches BOTH nodes and both received the signal — the
+// landing's coverage showed up on the mobile component of the same name, and the next
+// ingestion flipped it. MEASURED in MIF (2026-09-23): 100 files in the lcov "matched" 101
+// nodes.
 //
-// Desempate: o nó que divide o prefixo de diretório mais longo com o PRÓPRIO relatório
-// (`reportRel`, relativo à raiz). O `unit.xml` em `apps/landing-page/test-output/` é da
-// landing. Se ainda assim empatar, o caminho fica SEM dono e volta em `ambiguous`:
-// atribuir a um dos dois no palpite seria afirmar uma prova que ninguém mediu.
+// Tie-break: the node sharing the longest directory prefix with the report ITSELF
+// (`reportRel`, relative to the root). The `unit.xml` under
+// `apps/landing-page/test-output/` belongs to the landing. If it still ties, the path is
+// left with NO owner and comes back in `ambiguous`: assigning it to one of the two on a
+// guess would assert a proof nobody measured.
 func (g *Graph) ResolveReportPaths(kind Kind, paths []string, reportRel string) (resolved map[string]string, ambiguous []string) {
 	resolved = map[string]string{}
 	hint := filepath.ToSlash(reportRel)
@@ -520,7 +521,7 @@ func (g *Graph) ResolveReportPaths(kind Kind, paths []string, reportRel string) 
 		}
 		switch len(cands) {
 		case 0:
-			resolved[p] = p // ninguém casa: segue como veio (a ingestão só não amarra)
+			resolved[p] = p // nothing matches: kept as it came (ingestion just ties nothing)
 		case 1:
 			resolved[p] = cands[0]
 		default:

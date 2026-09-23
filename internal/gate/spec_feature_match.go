@@ -147,14 +147,15 @@ func definedRequirements(content string) []string {
 	return out
 }
 
-// defineRuleCaptureRE é o `definesRuleRE` do gate rule-types com o código CAPTURADO —
-// mesma gramática de "definir" (código no início da linha/item/título, ou primeira célula
-// de tabela), porque as duas perguntas dependem da mesma distinção: definir ≠ citar.
-// Compilado por CHAMADA e não em `var` — a mesma regra do `codeRE` (rule_implemented.go):
-// o comprimento do código vem de `code_lengths`, carregado DEPOIS dos globais. Em `var`
-// este regex congelava o default `[5]`, e num projeto `[4]` não casava requisito algum —
-// MEDIDO no MIF (2026-09-23): `spec-feature-match` e `scenario-coverage` indeterminados
-// nas 691 specs, bloqueantes e cegos.
+// defineRuleCaptureRE is the rule-types gate's `definesRuleRE` with the code CAPTURED —
+// the same grammar of "defining" (code at the start of the line/item/heading, or the
+// first table cell), because both questions depend on the same distinction: define ≠ cite.
+//
+// Compiled per CALL and not in a `var` — the same rule as `codeRE` (rule_implemented.go):
+// the code length comes from `code_lengths`, loaded AFTER the globals. In a `var` this
+// regex froze the default `[5]`, and in a `[4]` project it matched no requirement at all —
+// MEASURED in MIF (2026-09-23): `spec-feature-match` and `scenario-coverage` undetermined
+// on all 691 specs, blocking and blind.
 func defineRuleCaptureRE() *regexp.Regexp {
 	return regexp.MustCompile(
 		"(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2})")

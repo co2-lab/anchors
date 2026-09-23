@@ -199,10 +199,10 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 				printJudgmentBrief(profile.Judged, guides, asks)
 			}
 
-			// O LOOP: check → carimbo → issue. Deixa de "reportar" e passa a
-			// "registrar": grava o veredito por aresta no mapa (destrava stale) e
-			// abre uma issue de violation por fail bloqueante (sobrevive à sessão).
-			// Opt-out honesto: --no-record só reporta, não registra.
+			// THE LOOP: check → stamp → issue. It stops "reporting" and starts
+			// "recording": it writes the verdict per edge into the map (unblocks stale)
+			// and opens a violation issue per blocking fail (outlives the session).
+			// Honest opt-out: --no-record only reports, it does not record.
 			pendentes := 0
 			if !noRecord {
 				if err := recordCheck(absRoot, mapPath, g, profile); err != nil {

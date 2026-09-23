@@ -342,38 +342,38 @@ jest.mock('@gorhom/bottom-sheet', () => ({ BottomSheet: 'View' }))`
 	}
 }
 
-// O modo spy do Vitest (`vi.mock('x', { spy: true })`) carrega o módulo REAL e só envolve
-// as funções — não tem fábrica, e não há o que anotar. O `[^=]*` de antes atravessava
-// quebras de linha e atribuía ao spy a fábrica de um mock POSTERIOR; medido no app de
-// referência, 3 de 4 "dublês soltos" eram exatamente isso.
-func TestMockTipado_spyNaoEhFabricaDeOutroMock(t *testing.T) {
+// Vitest's spy mode (`vi.mock('x', { spy: true })`) loads the REAL module and only wraps
+// the functions — it has no factory, and there is nothing to annotate. The earlier
+// `[^=]*` crossed line breaks and gave the spy the factory of a LATER mock; measured in
+// the reference app, 3 of 4 "loose doubles" were exactly this.
+func TestMockTyped_spyIsNotAnotherMocksFactory(t *testing.T) {
 	t.Run("MCTYM-B06: A spy mock is not charged with a later mock's factory", func(t *testing.T) {})
 	src := `vi.mock('src/a', { spy: true })
 vi.mock('src/b', (): Partial<typeof import('src/b')> => ({
   algo: vi.fn(),
 }))`
 	if v, msg := rodaMock(t, src, cfgComContrato()); v != Pass {
-		t.Errorf("spy seguido de fábrica anotada deveria passar: %v (%s)", v, msg)
+		t.Errorf("a spy followed by an annotated factory should pass: %v (%s)", v, msg)
 	}
 }
 
-// A fábrica na linha SEGUINTE (como o prettier quebra) continua sendo lida — e sua
-// anotação continua contando. Sem o `\s*` antes do grupo, a quebra derrubaria o casamento
-// e o dublê anotado passaria por não ter fábrica.
-func TestMockTipado_fabricaNaLinhaSeguinte(t *testing.T) {
+// A factory on the NEXT line (as prettier breaks it) is still read — and its annotation
+// still counts. Without the `\s*` before the group, the break would drop the match and
+// the annotated double would pass as having no factory.
+func TestMockTyped_factoryOnTheNextLine(t *testing.T) {
 	t.Run("MCTYM-B07: A factory on the next line is still read, tie and all", func(t *testing.T) {})
-	anotado := `vi.mock(
+	annotated := `vi.mock(
   'src/a',
   (): Partial<typeof import('src/a')> => ({ x: vi.fn() }),
 )`
-	if v, msg := rodaMock(t, anotado, cfgComContrato()); v != Pass {
-		t.Errorf("fábrica anotada na linha seguinte deveria passar: %v (%s)", v, msg)
+	if v, msg := rodaMock(t, annotated, cfgComContrato()); v != Pass {
+		t.Errorf("an annotated factory on the next line should pass: %v (%s)", v, msg)
 	}
-	solto := `vi.mock(
+	loose := `vi.mock(
   'src/a',
   () => ({ x: vi.fn() }),
 )`
-	if v, _ := rodaMock(t, solto, cfgComContrato()); v != Fail {
-		t.Errorf("fábrica SEM anotação na linha seguinte deveria reprovar: %v", v)
+	if v, _ := rodaMock(t, loose, cfgComContrato()); v != Fail {
+		t.Errorf("an UNannotated factory on the next line should fail: %v", v)
 	}
 }
