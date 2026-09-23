@@ -202,3 +202,34 @@ func TestValueAnchored_skips(t *testing.T) {
 		t.Error("with no map the gate approved — it could not look across")
 	}
 }
+
+// A declaration is a comment of its own. The comment EXPLAINING the syntax carries the
+// anchor too, and reading it as a declaration charged the explanation — measured in the
+// project that adopted the gate: key "key", failed.
+func TestValueAnchored_anchorInsideProseIsAMention(t *testing.T) {
+	t.Run("VLANV-B08: only an anchor standing alone on a comment line is a declaration", func(t *testing.T) {})
+	// Text AFTER the anchor, and text BEFORE it: each is caught by its own half of the rule.
+	prose := "// @code-reference-[key]-[value] is the syntax each entry carries\n" +
+		"// the syntax each entry carries is @code-reference-[key]-[value]\n" +
+		"/* e.g. `@code-reference-[key]-[value]` */\n" +
+		"const doc = '@code-reference-[key]-[value]'\n" +
+		"export const C = {}\n"
+	root, g := project(t, map[string]string{"seal.ts": prose})
+	if v, msg := runOn(t, root, g, "seal.ts"); v != Skip {
+		t.Errorf("mentions of the syntax were read as declarations: %v / %s", v, msg)
+	}
+
+	// The standalone forms still declare — in every comment style, closing marker included.
+	decl := "// @code-reference-[SEAL]-[#0B1F3A]\nnavy: '#0B1F3A',\n" +
+		"/* @code-reference-[SEAL]-[#0B1F3A] */\nfill: '#0B1F3A',\n" +
+		"# @code-reference-[SEAL]-[#0B1F3A]\nNAVY = '#0B1F3A'\n"
+	root, g = project(t, map[string]string{"seal.ts": decl})
+	if v, msg := runOn(t, root, g, "seal.ts"); v != Pass {
+		t.Errorf("standalone declarations stopped being read: %v / %s", v, msg)
+	}
+	decl = "// @code-reference-[SEAL]-[#0B1F3A]\nnavy: '#FFFFFF',\n"
+	root, g = project(t, map[string]string{"seal.ts": decl})
+	if v, _ := runOn(t, root, g, "seal.ts"); v != Fail {
+		t.Errorf("a standalone declaration that lies must still fail: %v", v)
+	}
+}

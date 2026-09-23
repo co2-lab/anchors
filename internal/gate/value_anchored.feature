@@ -53,6 +53,12 @@ Feature: ValueAnchored — a replicated key is declared where it is used, and ev
     When the gate confronts the file
     Then it fails
 
+  @VLANV-B08 @unit-level
+  Scenario: An anchor inside prose is a mention, not a declaration
+    Given a comment that explains the anchor syntax in a sentence
+    When the gate confronts the file
+    Then the mention is not charged
+
   @VLANV-X01 @unit-level
   Scenario: A prose rule declares no value
     Given rules whose lines carry backticked identifiers only in headings or prose cells

@@ -179,11 +179,17 @@ func (d valueDecl) matches() bool {
 // may be stacked above the same line, and a longer explanation may sit between them.
 // Blank lines are skipped too. Which lines are comments is read from their start (`//`,
 // `#`, `/*`, `*`, `--`, `<!--`), the same reading the other gates use.
+//
+// A declaration is a comment OF ITS OWN: the anchor is the whole content of its comment
+// line. An anchor inside prose — a comment explaining the syntax, `see
+// @code-reference-[key]-[value]` — is a mention, not a declaration. Reading it as one
+// charged the explanation itself: measured in the project that adopted the gate, the
+// comment documenting the anchors failed with key "key".
 func declarationsIn(content, file string, anchorRE *regexp.Regexp) []valueDecl {
 	lines := strings.Split(content, "\n")
 	var out []valueDecl
 	for i, l := range lines {
-		m := anchorRE.FindStringSubmatch(l)
+		m := standaloneAnchor(l, anchorRE)
 		if m == nil {
 			continue
 		}
@@ -199,6 +205,37 @@ func declarationsIn(content, file string, anchorRE *regexp.Regexp) []valueDecl {
 		out = append(out, d)
 	}
 	return out
+}
+
+// standaloneAnchor returns the anchor's groups when it is the whole content of a comment
+// line — the comment marker, the anchor, and at most the marker that closes the comment.
+func standaloneAnchor(line string, anchorRE *regexp.Regexp) []string {
+	t := strings.TrimSpace(line)
+	if !isCommentLine(t) {
+		return nil
+	}
+	for _, p := range []string{"<!--", "/**", "/*", "//", "#", "--", "*"} {
+		if strings.HasPrefix(t, p) {
+			t = strings.TrimSpace(strings.TrimPrefix(t, p))
+			break
+		}
+	}
+	loc := anchorRE.FindStringSubmatchIndex(t)
+	if loc == nil || loc[0] != 0 {
+		return nil
+	}
+	switch strings.TrimSpace(t[loc[1]:]) {
+	case "", "*/", "-->":
+	default:
+		return nil
+	}
+	m := make([]string, len(loc)/2)
+	for g := range m {
+		if loc[2*g] >= 0 {
+			m[g] = t[loc[2*g]:loc[2*g+1]]
+		}
+	}
+	return m
 }
 
 // isCommentLine reports whether a trimmed line is a whole-line comment.

@@ -61,6 +61,7 @@ copies are the truth.
 | `VLANV-B05` | A declaration whose key is a rule declaring a value in the spec, and that disagrees with it, fails, naming the spec and the value it declares. |
 | `VLANV-B06` | Without a declared pattern the gate skips and names the setting that enables it. |
 | `VLANV-B07` | A declaration with no code line below it fails: it annotates nothing. |
+| `VLANV-B08` | Only an anchor that is the whole content of a comment line is a declaration; an anchor inside prose (a comment explaining the syntax) or inside code is a mention, and is not charged. |
 
 ## Invariants
 
@@ -76,7 +77,7 @@ copies are the truth.
 | --- | --- | --- |
 | `VLANV-X01` | A rule whose defining line declares no value is not charged against the spec. | Most rules are prose. Reading any backticked identifier as a value would charge every declaration pointing at an ordinary rule. |
 | `VLANV-X02` | A literal nobody declared is not charged. | Anchoring is for REPLICATED keys, and whoever replicates declares. Charging every value of every set was the first version, and it was replaced. |
-| `VLANV-X03` | Does not decide which comment shape is a declaration. | The project declares it (`derived.value_anchor`), because it belongs to how the codebase writes. |
+| `VLANV-X03` | Does not decide the anchor's syntax. | The project declares it (`derived.value_anchor`), because it belongs to how the codebase writes. The gate only requires that the anchor stand alone on its comment line (`VLANV-B08`). |
 
 ## Dependencies
 
