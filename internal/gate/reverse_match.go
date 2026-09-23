@@ -12,63 +12,64 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// --- A VOLTA DE CADA PAR DA TRINCA ---
+// --- THE RETURN LEG OF EACH TRIAD PAIR ---
 //
-// O `spec-feature-match` pergunta "toda regra tem cenário?" e o `feature-test-match`
-// pergunta "todo cenário tem teste?". Os dois percorrem a ORIGEM procurando o destino, e
-// nenhum percorre o destino perguntando se a origem ainda existe.
+// `spec-feature-match` asks "does every rule have a scenario?" and `feature-test-match`
+// asks "does every scenario have a test?". Both walk the ORIGIN looking for the
+// destination, and neither walks the destination asking whether the origin still exists.
 //
-// A assimetria tem um custo medido. Um revert apagou a regra `DTSTD-B10` — spec, código e
-// teste —, e a `.feature` manteve o cenário dela: no ponto do revert aquele cenário ainda
-// não existia, e um PR paralelo o reintroduziu sem conflito de git. Sondado neste
-// repositório, contra o caso exato:
+// The asymmetry has a measured cost. A revert deleted the rule `DTSTD-B10` — spec, code
+// and test —, and the `.feature` kept its scenario: at the point of the revert that
+// scenario did not exist yet, and a parallel PR reintroduced it with no git conflict.
+// Probed in this repository, against the exact case:
 //
-//	spec→feature   cenário órfão (B10 sem regra)   Pass, mensagem VAZIA
-//	feature→teste  teste provando B10 ausente      nem mencionado
+//	spec→feature   orphan scenario (B10, no rule)   Pass, EMPTY message
+//	feature→test   test proving the absent B10      not even mentioned
 //
-// O cenário ficou na feature afirmando um comportamento que a spec não decide mais, e o
-// teste ficou verde provando uma regra que ninguém declara. Todos os gates verdes.
+// The scenario stayed in the feature asserting a behaviour the spec no longer decides, and
+// the test stayed green proving a rule nobody declares. Every gate green.
 //
-// É o mesmo par assimétrico que o carimbo da documentação e o `realizes` já mostraram —
-// "se a spec tem hash e a doc não a referencia, algo quebrou; e vice-versa". A volta é
-// uma PERGUNTA PRÓPRIA, e por isso ganha gate próprio em vez de virar mais um veredito do
-// gate de ida: quem lê "1 cenário sem regra" precisa saber que a acusação é sobre a
-// feature, não sobre a spec.
+// It is the same asymmetric pair the documentation stamp and `realizes` had already shown
+// — "if the spec has a hash and the doc does not reference it, something broke; and vice
+// versa". The return leg is a QUESTION OF ITS OWN, and so it gets a gate of its own instead
+// of becoming one more verdict of the forward gate: whoever reads "1 scenario without a
+// rule" needs to know the accusation is about the feature, not about the spec.
 
-// semVariante tira o sufixo de VARIANTE do código do cenário.
+// withoutVariant strips the VARIANT suffix from a scenario code.
 //
-// A feature numera variantes do mesmo requisito — `@DTTBD-B01#01`, `#02` — quando uma
-// regra precisa de mais de um cenário para ser exercitada. A spec declara a regra UMA
-// vez (`DTTBD-B01`), e é ela que decide; as variantes são recorte de quem escreve o
-// cenário.
+// A feature numbers variants of the same requirement — `@DTTBD-B01#01`, `#02` — when a
+// rule needs more than one scenario to be exercised. The spec declares the rule ONCE
+// (`DTTBD-B01`), and it is the rule that decides; variants are how whoever writes the
+// scenario slices it.
 //
-// Medido no app de referência: sem isto, o gate acusou 69 features, TODAS por variante —
-// oito cenários de uma feature cuja regra existe e está declarada. Um gate que acusa o
-// que está certo ensina a ignorá-lo, e teria enterrado o caso real (a `DTSTD-B10`
-// revertida) no meio do ruído.
-func semVariante(codigo string) string {
-	if i := strings.IndexByte(codigo, '#'); i >= 0 {
-		return codigo[:i]
+// Measured in the reference app: without this, the gate reported 69 features, ALL because
+// of variants — eight scenarios of a feature whose rule exists and is declared. A gate that
+// accuses what is right teaches people to ignore it, and would have buried the real case
+// (the reverted `DTSTD-B10`) in the noise.
+func withoutVariant(code string) string {
+	if i := strings.IndexByte(code, '#'); i >= 0 {
+		return code[:i]
 	}
-	return codigo
+	return code
 }
 
-// ehRevisao diz se o código casado é na verdade o prefixo de uma REVISÃO (`-R0002`).
+// isRevision reports whether a matched code is really the prefix of a REVISION
+// (`-R0002`).
 //
-// O `anyCodeRE` lê dois dígitos após a letra; a revisão tem quatro. Sem esta conferência
-// `JDDTJ-R0002` chega como `JDDTJ-R00`, um código que não existe em lugar nenhum.
-func ehRevisao(corpo, casado string) bool {
-	for _, i := range indicesDe(corpo, casado) {
-		fim := i + len(casado)
-		if fim < len(corpo) && corpo[fim] >= '0' && corpo[fim] <= '9' {
+// `anyCodeRE` reads two digits after the letter; a revision has four. Without this check
+// `JDDTJ-R0002` arrives as `JDDTJ-R00`, a code that exists nowhere.
+func isRevision(body, matched string) bool {
+	for _, i := range indicesOf(body, matched) {
+		end := i + len(matched)
+		if end < len(body) && body[end] >= '0' && body[end] <= '9' {
 			return true
 		}
 	}
 	return false
 }
 
-// indicesDe devolve todas as posições de `sub` em `s`.
-func indicesDe(s, sub string) []int {
+// indicesOf returns every position of `sub` in `s`.
+func indicesOf(s, sub string) []int {
 	var out []int
 	for i := 0; ; {
 		j := strings.Index(s[i:], sub)
@@ -80,10 +81,11 @@ func indicesDe(s, sub string) []int {
 	}
 }
 
-// checkFeatureSpecMatch — a volta do `spec-feature-match`: todo CENÁRIO da feature
-// corresponde a uma regra que a spec ainda DEFINE?
+// checkFeatureSpecMatch — the return leg of `spec-feature-match`: does every SCENARIO of
+// the feature correspond to a rule the spec still DEFINES?
 //
-// O confronto é sobre a feature, e o alvo é ela: quem sobrou órfão foi o cenário.
+// The confrontation is about the feature, and it is the target: what was left orphaned is
+// the scenario.
 func checkFeatureSpecMatch(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindFeature {
 		return Skip, i18n.T("gate.feature_spec.skip_not_feature")
@@ -96,7 +98,7 @@ func checkFeatureSpecMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		return Skip, i18n.T("gate.feature_spec.skip_no_scenarios")
 	}
 
-	// As specs que ESTA feature cobre: a aresta `covered-by` sai da spec e chega aqui.
+	// The specs THIS feature covers: the `covered-by` edge leaves the spec and arrives here.
 	var specPaths []string
 	for _, e := range g.Neighbors(n.ID).In {
 		if e.Type == mapx.EdgeCoveredBy {
@@ -104,13 +106,13 @@ func checkFeatureSpecMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		}
 	}
 	if len(specPaths) == 0 {
-		// Sem spec ligada não há o que confrontar, e quem cobra a EXISTÊNCIA da spec é a
-		// co-location. Pending para não duplicar a acusação.
+		// With no linked spec there is nothing to confront, and whoever charges the spec's
+		// EXISTENCE is co-location. Pending, so the accusation is not duplicated.
 		return Pending, i18n.T("gate.feature_spec.pending_no_spec")
 	}
 
-	// A união do que as specs ligadas definem. União e não interseção: uma feature pode
-	// cobrir mais de uma spec, e o cenário que casa QUALQUER uma delas tem dono.
+	// The union of what the linked specs define. Union and not intersection: a feature may
+	// cover more than one spec, and a scenario matching ANY of them has an owner.
 	declared := map[string]bool{}
 	for _, sp := range specPaths {
 		b, err := os.ReadFile(filepath.Join(root, sp))
@@ -129,19 +131,19 @@ func checkFeatureSpecMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	seen := map[string]bool{}
 	for _, sc := range scenarios {
 		for _, c := range sc.Codes {
-			// SÓ os códigos da própria unidade. Um cenário pode citar a regra de outra
-			// unidade para dizer contra o que ele roda, e cobrar isso da spec local faria
-			// o gate pedir o impossível — é o erro que o `scenario-coverage` já mediu, com
-			// 18 cenários cobrados de uma spec que definia 6.
-			regra := semVariante(c)
-			if n.Code != "" && !strings.HasPrefix(regra, n.Code+"-") {
+			// ONLY the unit's own codes. A scenario may cite another unit's rule to say
+			// what it runs against, and charging that to the local spec would have the gate
+			// ask the impossible — the mistake `scenario-coverage` already measured, with 18
+			// scenarios charged to a spec that defined 6.
+			rule := withoutVariant(c)
+			if n.Code != "" && !strings.HasPrefix(rule, n.Code+"-") {
 				continue
 			}
-			if declared[regra] || seen[regra] {
+			if declared[rule] || seen[rule] {
 				continue
 			}
-			seen[regra] = true
-			// O código COMO ESCRITO no cenário, para quem lê o veredito achá-lo.
+			seen[rule] = true
+			// The code AS WRITTEN in the scenario, so whoever reads the verdict can find it.
 			orphans = append(orphans, c)
 		}
 	}
@@ -153,12 +155,12 @@ func checkFeatureSpecMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		len(orphans), strings.Join(orphans, ", "))
 }
 
-// checkTestFeatureMatch — a volta do `feature-test-match`: todo CÓDIGO que o teste diz
-// provar corresponde a um cenário que a feature ainda declara?
+// checkTestFeatureMatch — the return leg of `feature-test-match`: does every CODE the test
+// claims to prove correspond to a scenario the feature still declares?
 //
-// O alvo é o TESTE, e a diferença importa: um teste verde provando regra revertida é pior
-// que um teste ausente, porque ele ATESTA. A suíte passa, a cobertura sobe, e o número diz
-// que um comportamento está provado quando ninguém mais o decide.
+// The target is the TEST, and the difference matters: a green test proving a reverted rule
+// is worse than a missing test, because it ATTESTS. The suite passes, coverage rises, and
+// the number says a behaviour is proven when nobody decides it any more.
 func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindTest {
 		return Skip, i18n.T("gate.test_feature.skip_not_test")
@@ -167,7 +169,7 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		return pendingNoMap()
 	}
 
-	// As features que ESTE teste exercita: `tested-by` sai da feature e chega aqui.
+	// The features THIS test exercises: `tested-by` leaves the feature and arrives here.
 	var featPaths []string
 	for _, e := range g.Neighbors(n.ID).In {
 		if e.Type == mapx.EdgeTestedBy {
@@ -179,7 +181,7 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	}
 
 	declared := map[string]bool{}
-	unidades := map[string]bool{}
+	units := map[string]bool{}
 	for _, fp := range featPaths {
 		b, err := os.ReadFile(filepath.Join(root, fp))
 		if err != nil {
@@ -187,9 +189,9 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		}
 		for _, sc := range parseFeatureScenarios(string(b)) {
 			for _, c := range sc.Codes {
-				declared[semVariante(c)] = true
+				declared[withoutVariant(c)] = true
 				if u, _, ok := strings.Cut(c, "-"); ok {
-					unidades[u] = true
+					units[u] = true
 				}
 			}
 		}
@@ -198,37 +200,37 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		return Pending, i18n.T("gate.test_feature.pending_no_scenarios")
 	}
 
-	// COMENTÁRIO FORA, pela mesma régua do `feature-test-match`: um código citado em
-	// comentário é REFERÊNCIA, não prova.
-	corpo := stripLineComments(content)
+	// COMMENTS OUT, by the same ruler as `feature-test-match`: a code cited in a comment is
+	// a REFERENCE, not proof.
+	body := stripLineComments(content)
 
 	var orphans []string
 	seen := map[string]bool{}
-	for _, m := range anyCodeRE.FindAllString(corpo, -1) {
-		// A REVISÃO NÃO É REGRA, e não se cobra cenário dela.
+	for _, m := range anyCodeRE.FindAllString(body, -1) {
+		// A REVISION IS NOT A RULE, and no scenario is charged for it.
 		//
-		// `JDDTJ-R0002` é uma revisão — quatro dígitos —, e o `anyCodeRE` casa `R00`
-		// porque `R` está nas letras canônicas (de Rule) e o padrão lê dois dígitos. O
-		// resto sobra, e o gate acusava um código que ninguém escreveu.
+		// `JDDTJ-R0002` is a revision — four digits —, and `anyCodeRE` matches `R00`
+		// because `R` is one of the canonical letters (for Rule) and the pattern reads two
+		// digits. The rest is left over, and the gate reported a code nobody wrote.
 		//
-		// Medido no app de referência: dois dos três achados eram isto. Um cenário exercita
-		// o comportamento que a revisão DECIDIU — a regra revisada —, e é essa que a
-		// feature declara.
-		if ehRevisao(corpo, m) {
+		// Measured in the reference app: two of the three findings were this. A scenario
+		// exercises the behaviour the revision DECIDED — the revised rule —, and that is the
+		// one the feature declares.
+		if isRevision(body, m) {
 			continue
 		}
-		// Só as unidades que estas features governam: um teste cita código de outras
-		// unidades ao montar fixture, e cobrá-los aqui seria pedir que a feature local
-		// declarasse cenário alheio.
-		regra := semVariante(m)
-		u, _, ok := strings.Cut(regra, "-")
-		if !ok || !unidades[u] {
+		// Only the units these features govern: a test cites other units' codes when it
+		// builds fixtures, and charging them here would ask the local feature to declare
+		// someone else's scenario.
+		rule := withoutVariant(m)
+		u, _, ok := strings.Cut(rule, "-")
+		if !ok || !units[u] {
 			continue
 		}
-		if declared[regra] || seen[regra] {
+		if declared[rule] || seen[rule] {
 			continue
 		}
-		seen[regra] = true
+		seen[rule] = true
 		orphans = append(orphans, m)
 	}
 	if len(orphans) == 0 {

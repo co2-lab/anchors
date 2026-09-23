@@ -750,18 +750,19 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 		return Pending, i18n.T("gate.stale_test_signal")
 	}
 
-	// DUAS PERGUNTAS, e juntá-las perde a resposta das duas.
+	// TWO QUESTIONS, and merging them loses the answer to both.
 	//
-	//   ESCRITO  algum teste NOMEIA este código de cenário   (estático, sempre respondível)
-	//   VERDE    esse teste RODOU e PASSOU                   (exige execução ingerida)
+	//   WRITTEN  some test NAMES this scenario code   (static, always answerable)
+	//   GREEN    that test RAN and PASSED             (needs ingested execution)
 	//
-	// A versão anterior só perguntava a segunda, e num projeto que nunca ingeriu relatório
-	// respondia Pending para tudo — "ninguém mediu" —, escondendo os cenários que ninguém
-	// testou. E só a estática seria o erro oposto: teste escrito pode nunca ter rodado.
+	// The earlier version asked only the second, and on a project that never ingested a
+	// report it answered Pending for everything — "nobody measured" —, hiding the scenarios
+	// nobody tested. And the static question alone would be the opposite error: a written
+	// test may never have run.
 	//
-	// É a mesma régua do `flag-covered`, e pela mesma razão: o conserto de "sem teste" é
-	// escrever um; o de "escrito e não executado" é rodar a suíte. Um veredito que não
-	// distingue os dois manda a pessoa pelo caminho errado metade das vezes.
+	// It is the same ruler as `flag-covered`, and for the same reason: the fix for "no test"
+	// is writing one; the fix for "written and not run" is running the suite. A verdict
+	// that does not tell them apart sends the reader down the wrong path half the time.
 	proven := map[string]bool{}
 	ingested := n.Signal != nil
 	if ingested {
@@ -780,7 +781,7 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 		seen[code] = true
 		switch {
 		case proven[code]:
-			// provado: nada a cobrar
+			// proven: nothing to charge
 		case written[code]:
 			notGreen = append(notGreen, code)
 		default:
@@ -808,12 +809,12 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 	return Fail, strings.TrimRight(b.String(), "\n")
 }
 
-// codesNamedByTests responde a metade ESTÁTICA: quais destes códigos algum teste nomeia.
+// codesNamedByTests answers the STATIC half: which of these codes some test names.
 //
-// Percorre os testes LIGADOS a este nó (arestas `tested-by`) e, na falta delas, os testes
-// do grafo — a flag não tem aresta para os seus testes, e a spec nem sempre tem. Comentário
-// não conta, pela mesma régua do `feature-test-match`: código citado em comentário é
-// REFERÊNCIA a outra unidade, não implementação.
+// It walks the tests LINKED to this node (`tested-by` edges) and, when there are none,
+// every test in the graph — a flag has no edge to its tests, and a spec does not always
+// have one. A comment does not count, by the same ruler as `feature-test-match`: a code
+// cited in a comment is a REFERENCE to another unit, not an implementation.
 func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string) map[string]bool {
 	written := map[string]bool{}
 	if g == nil || root == "" {

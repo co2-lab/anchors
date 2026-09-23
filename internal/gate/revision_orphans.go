@@ -11,44 +11,46 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// --- a revisão que mudou o significado de uma palavra, e não disse a quem ---
+// --- the revision that changed what a word means, and did not tell whom ---
 //
-// Uma regra não vive sozinha. Ela compartilha vocabulário com as irmãs, e é esse
-// vocabulário que a revisão muda — não só o texto da regra que ela reescreve.
+// A rule does not live alone. It shares vocabulary with its siblings, and it is that
+// vocabulary a revision changes — not only the text of the rule it rewrites.
 //
-// MEDIDO no app de referência, e é o que produziu este gate. A `NTCNN-R0002` trocou o
-// badge do sino de CONTAGEM para PONTO e nomeou as regras que reescreveu: `B03`, `B04`,
-// `B07`. O invariante `I02` não foi nomeado — e ele se chama "O badge nunca CONTA o que a
-// lista não mostra", com corpo dizendo "o NÚMERO no sino corresponde ao que aparece ao
-// abrir". O invariante governava uma aritmética que a revisão havia abolido.
+// MEASURED in the reference app, and it is what produced this gate. `NTCNN-R0002` changed
+// the bell badge from a COUNT to a DOT and named the rules it rewrote: `B03`, `B04`, `B07`.
+// The invariant `I02` was not named — and it is titled "the badge never COUNTS what the
+// list does not show", with a body saying "the NUMBER on the bell matches what appears on
+// opening". The invariant governed arithmetic the revision had abolished.
 //
-// NADA ACUSOU. A `B03` estava correta, a `I02` bem-formada, a tríade completa, a suíte
-// verde. A contradição apareceu MESES depois, quando outro agente foi implementar e não
-// soube qual das duas seguir — e virou decisão que teve de subir para o usuário, sem
-// ninguém lembrar do contexto. Sete contradições dessa forma exata numa única leva.
+// NOTHING ACCUSED IT. `B03` was correct, `I02` well-formed, the triad complete, the suite
+// green. The contradiction surfaced MONTHS later, when another agent went to implement and
+// could not tell which of the two to follow — and it became a decision that had to
+// escalate to the user, with nobody left remembering the context. Seven contradictions of
+// this exact shape surfaced in a single batch.
 //
-// A RÉGUA É CO-CITAÇÃO, não significado. Perguntar se duas regras se contradizem exige
-// lê-las, e isso é julgamento — faria disto um judge, não um gate. O que uma máquina
-// decide sozinha é mais estreito e basta: quais regras desta unidade compartilham o
-// vocabulário das regras que a revisão tocou, e não foram mencionadas.
+// THE RULER IS CO-CITATION, not meaning. Asking whether two rules contradict each other
+// requires reading them, and that is judgement — it would make this a judge, not a gate.
+// What a machine decides alone is narrower and sufficient: which rules of this unit share
+// the vocabulary of the rules the revision touched, and were not mentioned.
 
-// revisesRE e checkedRE casam os dois campos da revisão.
+// revisesRE and checkedRE match the two fields of a revision.
 //
-// As palavras-chave vêm do CATÁLOGO DE TRADUÇÕES, nunca cravadas. É a lição que o eixo de
-// fluxo já deu: a primeira versão do `fits` trazia `(?:Encaixa|Fits)` pregado no padrão, e
-// um projeto que escrevesse em espanhol não tinha como declarar nada sem editar o engine.
+// The keywords come from the TRANSLATION CATALOG, never hardcoded. It is the lesson the
+// flow axis already taught: the first version of `fits` carried `(?:Encaixa|Fits)` nailed
+// into the pattern, and a project writing in Spanish had no way to declare anything
+// without editing the engine.
 func revisesRE() *regexp.Regexp { return keywordListRE("revision.keyword.revises") }
 func checkedRE() *regexp.Regexp { return keywordListRE("revision.keyword.checked") }
 
-// keywordListRE monta o padrão de um campo que lista códigos de regra:
+// keywordListRE builds the pattern for a field that lists rule codes:
 // `**Revises:** ` + "`B03`, `B07`" + `.
-func keywordListRE(chave string) *regexp.Regexp {
+func keywordListRE(key string) *regexp.Regexp {
 	return regexp.MustCompile("(?im)^[^\\S\\n]*(?:>|#{1,6})?[^\\S\\n]*(?:\\*\\*)?(?:" +
-		strings.Join(escapeKeywords(i18n.AllTranslations(chave)), "|") +
+		strings.Join(escapeKeywords(i18n.AllTranslations(key)), "|") +
 		")(?:\\*\\*)?[^\\S\\n]*:[^\\S\\n]*(\\S.*)$")
 }
 
-// escapeKeywords prepara as palavras traduzidas para entrar numa alternação de regex.
+// escapeKeywords prepares translated keywords to enter a regex alternation.
 func escapeKeywords(xs []string) []string {
 	out := make([]string, 0, len(xs))
 	for _, x := range xs {
@@ -59,14 +61,14 @@ func escapeKeywords(xs []string) []string {
 	return out
 }
 
-// ruleRefRE acha os códigos CURTOS que os campos listam (`B03`, `I02`).
+// ruleRefRE finds the SHORT codes a field lists (`B03`, `I02`).
 //
-// Curto e não completo (`NTCNN-B03`) porque é assim que a revisão se escreve: ela já está
-// dentro da unidade, e repetir o prefixo em cada item seria ruído. A forma longa também
-// casa — quem escreve alterna entre as duas sem pensar nisso.
+// Short rather than full (`NTCNN-B03`) because that is how a revision is written: it is
+// already inside the unit, and repeating the prefix on every item would be noise. The long
+// form matches too — whoever writes switches between the two without thinking about it.
 var ruleRefRE = regexp.MustCompile(`\b(?:[A-Z0-9]{3,6}-)?([A-Z]\d{2})\b`)
 
-// --- o gate ---
+// --- the gate ---
 func checkRevisionOrphans(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.revision_orphans.skip_not_spec")
@@ -77,17 +79,17 @@ func checkRevisionOrphans(content string, n mapx.Node, root string, g *mapx.Grap
 		return Skip, i18n.T("gate.revision_orphans.no_revision")
 	}
 
-	// As regras que ESTA spec define — TODAS, inclusive as dispensadas de cenário.
+	// The rules THIS spec defines — ALL of them, including those waived from a scenario.
 	//
-	// O `definedRequirements` do `spec-feature-match` descarta a regra com
-	// `@no-scenario`, e ali está certo: ela pergunta "este requisito tem cenário?", e a
-	// dispensa responde. Aqui a pergunta é outra — "esta regra afirma algo que a revisão
-	// mudou?" — e a dispensa de cenário não responde nada sobre isso.
+	// `definedRequirements`, from `spec-feature-match`, drops a rule carrying
+	// `@no-scenario`, and it is right to there: it asks "does this requirement have a
+	// scenario?", and the waiver answers. Here the question is different — "does this rule
+	// assert something the revision changed?" — and a scenario waiver says nothing about it.
 	//
-	// MEDIDO na spec que originou o gate: a `NTCNN-B07` carrega `@no-scenario` (é decisão
-	// de layout, sem renderização a exercitar) e é uma das três regras que a `R0002`
-	// reescreveu. Com a leitura do vizinho, o gate acusava a `B07` como código
-	// inexistente — falso positivo sobre a regra que o motivou.
+	// MEASURED on the spec that produced the gate: `NTCNN-B07` carries `@no-scenario` (it
+	// is a layout decision, with no rendering to exercise) and is one of the three rules
+	// `R0002` rewrote. Reading it the neighbour's way, the gate reported `B07` as an unknown
+	// code — a false positive on the very rule that motivated it.
 	titleByShort := ruleTitles(content)
 	if len(titleByShort) == 0 {
 		return Skip, i18n.T("gate.revision_orphans.no_rules")
@@ -95,25 +97,24 @@ func checkRevisionOrphans(content string, n mapx.Node, root string, g *mapx.Grap
 	revised := codesIn(revisesRE(), content)
 	checked := codesIn(checkedRE(), content)
 
-	// SEM `Revises:` O GATE SE ABSTÉM, e não acusa.
+	// WITHOUT `Revises:` THE GATE ABSTAINS instead of accusing.
 	//
-	// O campo é novo e as revisões que já existem não o carregam: medido no app de
-	// referência, 439 revisões escritas em 141 specs, nenhuma com `Revises:` — e a
-	// primeira versão deste gate reprovava 174 specs de uma vez, todas com a mesma
-	// mensagem.
+	// The field is new and the revisions already written do not carry it: measured in the
+	// reference app, 439 revisions in 141 specs, none with `Revises:` — and the first
+	// version of this gate failed 174 specs at once, all with the same message.
 	//
-	// Cento e setenta e quatro achados idênticos não são uma fila, são ruído: quem abre
-	// o relatório aprende a rolar por eles, e o achado REAL — a irmã órfã — se perde no
-	// meio. Pending diz o que é verdade ("não há como confrontar esta revisão") sem
-	// cobrar de quem escreveu antes de a régua existir.
+	// A hundred and seventy-four identical findings are not a queue, they are noise:
+	// whoever opens the report learns to scroll past them, and the REAL finding — the
+	// orphaned sibling — gets lost among them. Pending states what is true ("this revision
+	// cannot be confronted") without charging whoever wrote before the ruler existed.
 	//
-	// A cobrança vem do `plan-change-justified`, que se ancora no `--changed`: a revisão
-	// NOVA nasce sob a régua nova, e é nela que o campo passa a ser exigido.
+	// The charge comes from `plan-change-justified`, which anchors on `--changed`: a NEW
+	// revision is born under the new ruler, and that is where the field becomes required.
 	if len(revised) == 0 {
 		return Pending, fmt.Sprintf(i18n.T("gate.revision_orphans.no_revises"), len(revs))
 	}
 
-	// Código nomeado que a spec não define: o `ref-resolves` deste eixo.
+	// A named code the spec does not define: this axis's `ref-resolves`.
 	var unknown []string
 	for c := range revised {
 		if _, ok := titleByShort[c]; !ok {
@@ -126,7 +127,7 @@ func checkRevisionOrphans(content string, n mapx.Node, root string, g *mapx.Grap
 			len(unknown), strings.Join(unknown, ", "))
 	}
 
-	// O VOCABULÁRIO das regras revisadas, menos o que não discrimina.
+	// The VOCABULARY of the revised rules.
 	revisedTerms := map[string]bool{}
 	for c := range revised {
 		for t := range termsOf(titleByShort[c]) {
@@ -137,50 +138,45 @@ func checkRevisionOrphans(content string, n mapx.Node, root string, g *mapx.Grap
 		return Pass, ""
 	}
 
-	type orfa struct {
-		code   string
-		termos []string
+	type orphan struct {
+		code  string
+		terms []string
 	}
-	var orfas []orfa
-	for short, titulo := range titleByShort {
-		// Uma regra nunca acusa a si mesma, e o que já foi conferido sai da lista.
+	var orphans []orphan
+	for short, title := range titleByShort {
+		// A rule never accuses itself, and what was already checked leaves the list.
 		if revised[short] || checked[short] {
 			continue
 		}
-		var compart []string
-		for t := range termsOf(titulo) {
+		var shared []string
+		for t := range termsOf(title) {
 			if revisedTerms[t] {
-				compart = append(compart, t)
+				shared = append(shared, t)
 			}
 		}
-		// UMA palavra em comum não liga duas regras — liga quase todas entre si. O que
-		// aponta para o mesmo assunto é a COINCIDÊNCIA: duas ou mais.
-		//
-		// Medido na spec que originou o gate: com o limiar em uma palavra qualquer, seis
-		// das nove regras vinham acusadas; com este, sobra a `I02` — que é exatamente a
-		// que contradizia a revisão.
-		if !discriminates(compart) {
+		// See `discriminates` for why a single cleaned domain word is enough.
+		if !discriminates(shared) {
 			continue
 		}
-		sort.Strings(compart)
-		orfas = append(orfas, orfa{short, compart})
+		sort.Strings(shared)
+		orphans = append(orphans, orphan{short, shared})
 	}
-	if len(orfas) == 0 {
+	if len(orphans) == 0 {
 		return Pass, ""
 	}
-	sort.Slice(orfas, func(i, j int) bool { return orfas[i].code < orfas[j].code })
+	sort.Slice(orphans, func(i, j int) bool { return orphans[i].code < orphans[j].code })
 
 	var b strings.Builder
-	fmt.Fprintf(&b, i18n.T("gate.revision_orphans.orphans"), len(orfas))
-	for _, o := range orfas {
+	fmt.Fprintf(&b, i18n.T("gate.revision_orphans.orphans"), len(orphans))
+	for _, o := range orphans {
 		fmt.Fprintf(&b, "\n    %s — %q\n      %s", o.code,
-			trimTitle(titleByShort[o.code]), strings.Join(o.termos, ", "))
+			trimTitle(titleByShort[o.code]), strings.Join(o.terms, ", "))
 	}
 	b.WriteString("\n" + i18n.T("gate.revision_orphans.how_to_clear"))
 	return Fail, b.String()
 }
 
-// codesIn reúne os códigos curtos que um campo lista, em todas as suas ocorrências.
+// codesIn gathers the short codes a field lists, across all its occurrences.
 func codesIn(re *regexp.Regexp, content string) map[string]bool {
 	out := map[string]bool{}
 	for _, m := range re.FindAllStringSubmatch(content, -1) {
@@ -191,46 +187,47 @@ func codesIn(re *regexp.Regexp, content string) map[string]bool {
 	return out
 }
 
-// ruleTitles indexa o TÍTULO de cada regra definida, pelo código curto.
+// ruleTitles indexes the TITLE of each defined rule by its short code.
 //
-// O título e não o corpo: ele é onde a regra AFIRMA o que afirma, em uma linha, e é o que
-// a revisão contradiz quando contradiz. O corpo traz prosa de justificativa, e incluí-lo
-// faria quase toda regra compartilhar vocabulário com quase toda outra.
+// The title and not the body: it is where the rule ASSERTS what it asserts, in one line,
+// and it is what a revision contradicts when it contradicts. The body carries
+// justification prose, and including it would make almost every rule share vocabulary
+// with almost every other.
 func ruleTitles(content string) map[string]string {
 	out := map[string]string{}
 	re := defineRuleCaptureRE()
-	for _, linha := range strings.Split(content, "\n") {
-		m := re.FindStringSubmatch(linha)
+	for _, line := range strings.Split(content, "\n") {
+		m := re.FindStringSubmatch(line)
 		if m == nil {
 			continue
 		}
-		// A DISPENSA EM COMENTÁRIO não é parte do que a regra afirma, e deixá-la entrar
-		// envenena a comparação: medido na spec real, a `B07` carrega dois `@no-*` com
-		// razão escrita e saía com 34 termos — contra 4 a 6 das irmãs —, compartilhando
-		// vocabulário com quase todas por acidente de prosa.
-		if i := strings.Index(linha, "<!--"); i >= 0 {
-			linha = linha[:i]
+		// A WAIVER IN A COMMENT is not part of what the rule asserts, and letting it in
+		// poisons the comparison: measured on the real spec, `B07` carries two `@no-*` with
+		// a written reason and came out with 34 terms — against 4 to 6 for its siblings —,
+		// sharing vocabulary with almost all of them by accident of prose.
+		if i := strings.Index(line, "<!--"); i >= 0 {
+			line = line[:i]
 		}
-		_, curto, ok := strings.Cut(m[1], "-")
+		_, short, ok := strings.Cut(m[1], "-")
 		if !ok {
 			continue
 		}
-		out[curto] = linha
+		out[short] = line
 	}
 	return out
 }
 
-// termsOf reduz um título ao seu vocabulário, como CONJUNTO.
+// termsOf reduces a title to its vocabulary, as a SET.
 //
-// Reaproveita o `significantTerms` do `feature-test-match` — mesma pergunta ("quais
-// palavras deste texto dizem do que ele trata?"), e duas listas de stopwords divergiriam
-// na primeira palavra que alguém acrescentasse a uma só.
+// It reuses `significantTerms` from `feature-test-match` — the same question ("which
+// words of this text say what it is about?"), and two stopword lists would diverge on the
+// first word someone added to only one of them.
 //
-// O CÓDIGO sai antes: `NTCNN-B03` traria `NTCNN` para todo título da unidade, e o termo
-// que todos compartilham não discrimina nada.
-func termsOf(titulo string) map[string]bool {
+// The CODE is removed first: `NTCNN-B03` would bring `NTCNN` into every title of the
+// unit, and a term everyone shares discriminates nothing.
+func termsOf(title string) map[string]bool {
 	out := map[string]bool{}
-	for _, w := range significantTerms(anyCodeRE.ReplaceAllString(titulo, " ")) {
+	for _, w := range significantTerms(anyCodeRE.ReplaceAllString(title, " ")) {
 		if !extraStopwords[w] {
 			out[w] = true
 		}
@@ -238,59 +235,62 @@ func termsOf(titulo string) map[string]bool {
 	return out
 }
 
-// extraStopwords são as palavras que o `descStopwords` não precisa descartar e esta régua
-// precisa.
+// extraStopwords are the words `descStopwords` does not need to drop and this ruler does.
 //
-// A NEGAÇÃO é a que mais custa: metade das regras de uma spec bem escrita diz o que a
-// unidade NÃO faz, e "não" ligava toda regra a toda outra. Medido na spec que originou o
-// gate — das seis órfãs acusadas na primeira versão, quatro compartilhavam apenas "não".
+// NEGATION costs the most: half the rules of a well-written spec state what the unit does
+// NOT do, and "não" linked every rule to every other. Measured on the spec that produced
+// the gate — of the six orphans the first version reported, four shared nothing but "não".
 //
-// Ela não entra no `descStopwords` porque lá a pergunta é outra: o `feature-test-match`
-// compara a descrição do cenário com o corpo do teste, e ali a negação DISCRIMINA (um
-// teste que afirma e um que nega provam coisas diferentes).
+// It does not go into `descStopwords` because the question there is different:
+// `feature-test-match` compares a scenario's description with the test body, and there
+// negation DOES discriminate (a test that asserts and one that denies prove different
+// things).
+//
+// The Portuguese and Spanish words are DATA, not prose: they are the negations that appear
+// in the specs of projects written in those languages, and the ruler must recognise them.
 var extraStopwords = map[string]bool{
 	"não": true, "nao": true, "nunca": true, "nenhum": true, "nenhuma": true,
 	"not": true, "never": true, "none": true, "no": true,
-	"ni": true, "nunca_es": true,
-	// Vocabulário de ESTRUTURA da spec, não do domínio dela.
+	"ni": true,
+	// The spec's STRUCTURAL vocabulary, not its domain's.
 	"regra": true, "rule": true, "spec": true, "unidade": true, "unit": true,
 }
 
-// UMA PALAVRA DE DOMÍNIO BASTA, e o limiar foi medido nas duas direções.
+// discriminates decides whether the shared vocabulary points at the SAME subject.
 //
-// A primeira versão exigia DUAS palavras em comum, e o caso que originou o gate não
-// passava: na spec real, a `I02` divide exatamente uma palavra com o que a `R0002`
-// reescreveu — `badge` —, e é essa palavra que carrega a contradição inteira.
+// ONE DOMAIN WORD IS ENOUGH, and the threshold was measured in both directions.
 //
-// O que torna uma palavra suficiente é a LIMPEZA do título, não a quantidade. Duas
-// medições, na mesma spec:
+// The first version required TWO shared words, and the case that produced the gate did not
+// pass: on the real spec, `I02` shares exactly one word with what `R0002` rewrote —
+// `badge` —, and that word carries the whole contradiction.
 //
-//	sem limpar   3 acusadas — `B01` e `B05` entravam só por "não"
-//	limpando     1 acusada  — a `I02`, que é o alvo
+// What makes one word sufficient is CLEANING the title, not counting. Two measurements, on
+// the same spec:
 //
-// As duas fontes de ruído eram a NEGAÇÃO (metade das regras de uma spec bem escrita diz
-// o que a unidade não faz) e a DISPENSA EM COMENTÁRIO (a `B07` saía com 34 termos contra
-// 4 das irmãs). Removidas as duas, o vocabulário que sobra é o do domínio — e nele uma
-// coincidência já é sinal.
+//	not cleaned   3 reported — `B01` and `B05` entered on "não" alone
+//	cleaned       1 reported — `I02`, which is the target
 //
-// Também foi testado um filtro de termo ubíquo (descartar o que aparece em mais de 2/3
-// das regras). Ele descartava `lista` e `badge` — exatamente o assunto — e fazia o caso
-// real não acusar nada. Numa spec bem escrita o vocabulário de domínio se repete de
-// propósito: descartar o que se repete é descartar o assunto.
-
-// discriminates decide se o vocabulário compartilhado aponta para o MESMO assunto.
-func discriminates(compart []string) bool {
-	return len(compart) >= 1
+// The two sources of noise were NEGATION (half the rules of a well-written spec state what
+// the unit does not do) and the WAIVER IN A COMMENT (`B07` came out with 34 terms against
+// 4 for its siblings). With both removed, what remains is domain vocabulary — and there a
+// single coincidence is already a signal.
+//
+// A ubiquity filter was also tried (dropping terms that appear in more than two thirds of
+// the rules). It dropped `lista` and `badge` — precisely the subject — and made the real
+// case accuse nothing. In a well-written spec the domain vocabulary repeats on purpose:
+// dropping what repeats is dropping the subject.
+func discriminates(shared []string) bool {
+	return len(shared) >= 1
 }
 
-// trimTitle deixa o título legível no veredito: sem o `###`, sem o código, sem o travessão.
-func trimTitle(linha string) string {
-	s := strings.TrimSpace(strings.TrimLeft(linha, "#> *|`"))
+// trimTitle makes a title readable in the verdict: no `###`, no code, no dash.
+func trimTitle(line string) string {
+	s := strings.TrimSpace(strings.TrimLeft(line, "#> *|`"))
 	if m := anyCodeRE.FindStringIndex(s); m != nil {
 		s = s[m[1]:]
 	}
 	s = strings.TrimSpace(strings.TrimLeft(s, "—–-: `"))
-	// A dispensa em comentário HTML não é parte do que a regra afirma.
+	// A waiver in an HTML comment is not part of what the rule asserts.
 	if i := strings.Index(s, "<!--"); i >= 0 {
 		s = strings.TrimSpace(s[:i])
 	}

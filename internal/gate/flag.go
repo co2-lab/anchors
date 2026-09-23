@@ -145,21 +145,23 @@ func checkFlagScenarioExists(content string, n mapx.Node, root string, g *mapx.G
 
 // --- does every scenario govern some rule? ---
 //
-// A VOLTA do `flag-scenario-exists`, e a pergunta é a inversa: aquele confronta a spec
-// que cita um cenário inexistente; este confronta o cenário que ninguém cita.
+// The RETURN LEG of `flag-scenario-exists`, asking the inverse question: that one
+// confronts the spec citing a scenario that does not exist; this one confronts the
+// scenario nobody cites.
 //
-// Um cenário que nenhuma regra invoca é caminho DECLARADO e não governado: alguém
-// escreveu "quando o valor for X, então Y" e nenhuma spec diz que regra vale sob ele. O
-// código ramifica na flag de qualquer forma — o que falta é o registro de quem depende
-// disso, e é justamente esse registro que o eixo existe para manter.
+// A scenario no rule invokes is a DECLARED path that governs nothing: somebody wrote "when
+// the value is X, then Y" and no spec says which rule holds under it. The code branches on
+// the flag anyway — what is missing is the record of who depends on it, and keeping that
+// record is exactly what this axis exists for.
 //
-// É o mesmo par assimétrico que os dois sentidos da trinca mostraram hoje, e que o
-// carimbo da documentação já tinha mostrado: perguntar só a ida deixa o resto invisível.
+// It is the same asymmetric pair the two directions of the triad showed, and that the
+// documentation stamp had shown before: asking only the forward question leaves the rest
+// invisible.
 //
-// INFORMATIVO, e por uma razão de ordem: a flag nasce ANTES das specs que a citam — quem
-// escreve a flag está decidindo os caminhos, e as regras vêm depois. Um gate bloqueante
-// aqui exigiria que as duas pontas nascessem no mesmo commit, que não é como o trabalho
-// acontece.
+// INFORMATIVE, for a reason of ORDER: the flag is written BEFORE the specs that cite it —
+// whoever writes the flag is deciding the paths, and the rules come after. A blocking gate
+// here would require both ends to be born in the same commit, which is not how the work
+// happens.
 func checkFlagScenarioGoverns(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindFlag {
 		return Skip, i18n.T("gate.flag_scenario_governs.skip_not_flag")
@@ -172,42 +174,42 @@ func checkFlagScenarioGoverns(content string, n mapx.Node, root string, g *mapx.
 		return Skip, i18n.T("gate.flag_scenarios_complete.no_scenarios")
 	}
 
-	// Quem cita: as arestas `gated-by` que CHEGAM aqui carregam, no Method, o código do
-	// cenário invocado — a mesma mecânica que o `doctrine-realized` usa para saber quem
-	// realiza uma regra de produto.
-	governados := map[string]bool{}
+	// Who cites: the `gated-by` edges ARRIVING here carry, in Method, the code of the
+	// invoked scenario — the same mechanism `doctrine-realized` uses to know who realizes
+	// a product rule.
+	governed := map[string]bool{}
 	for _, e := range g.Neighbors(n.ID).In {
 		if e.Type == mapx.EdgeGatedBy {
-			governados[e.Method] = true
+			governed[e.Method] = true
 		}
 	}
 
-	var soltos []string
+	var ungoverned []string
 	for _, s := range f.Scenarios {
-		if governados[s.Code] {
+		if governed[s.Code] {
 			continue
 		}
-		// A dispensa declarada, por cenário: há caminho que existe e nenhuma regra
-		// precisa nomear — o `off` de uma flag cujo desligado é simplesmente o
-		// comportamento antigo, já governado pelas regras que sempre valeram.
+		// The declared waiver, per scenario: some paths exist and need no rule to name
+		// them — the `off` of a flag whose disabled side is simply the old behaviour,
+		// already governed by the rules that always held.
 		if noGovernRE.MatchString(s.Then) {
 			continue
 		}
-		soltos = append(soltos, s.Code)
+		ungoverned = append(ungoverned, s.Code)
 	}
-	if len(soltos) == 0 {
+	if len(ungoverned) == 0 {
 		return Pass, ""
 	}
-	sort.Strings(soltos)
+	sort.Strings(ungoverned)
 	return Fail, fmt.Sprintf(i18n.T("gate.flag_scenario_governs.ungoverned"),
-		len(soltos), len(f.Scenarios), strings.Join(soltos, ", "))
+		len(ungoverned), len(f.Scenarios), strings.Join(ungoverned, ", "))
 }
 
-// noGovernRE — a dispensa por cenário, com razão obrigatória.
+// noGovernRE — the per-scenario waiver, with a mandatory reason.
 //
-// `@no-govern: <razão>` e não `@TBD`, porque as duas afirmações são diferentes: este
-// cenário NUNCA vai ter regra própria (o desligado que devolve ao comportamento antigo),
-// e isso é dispensa permanente, não dívida.
+// `@no-govern: <reason>` and not `@TBD`, because the two assert different things: this
+// scenario will NEVER have a rule of its own (the disabled side that returns to the old
+// behaviour), and that is a permanent waiver, not a debt.
 var noGovernRE = regexp.MustCompile(`(?i)@no-govern[^\S\n]*:[^\S\n]*\S+`)
 
 // --- does every scenario have a test? ---
@@ -218,8 +220,8 @@ var noGovernRE = regexp.MustCompile(`(?i)@no-govern[^\S\n]*:[^\S\n]*\S+`)
 //
 // TWO QUESTIONS, and collapsing them loses the answer to both:
 //
-//	ESCRITO   some test file names this scenario code     (static, always available)
-//	VERDE     that test RAN and PASSED                    (needs ingested execution)
+//	WRITTEN   some test file names this scenario code     (static, always available)
+//	GREEN     that test RAN and PASSED                    (needs ingested execution)
 //
 // The first version asked only the second, and on a project that has never ingested a
 // report it accused every scenario — including the ones with tests written and passing.
@@ -246,10 +248,10 @@ func checkFlagCovered(content string, n mapx.Node, root string, g *mapx.Graph, c
 		return Skip, i18n.T("gate.flag_scenarios_complete.no_scenarios")
 	}
 
-	// O VERDE vem do sinal DESTE no', como o `scenario-coverage` le' o da spec: a
-	// ingestao cruza os codigos provados com os que o no' DECLARA, e a flag declara os
-	// seus. Procurar o sinal nos nos de teste era a leitura errada — nenhum arquivo de
-	// teste "declara" o cenario da flag, e por isso nunca havia sinal onde eu olhava.
+	// GREEN comes from THIS node's signal, the way `scenario-coverage` reads the spec's:
+	// ingestion crosses the proven codes with the ones the node DECLARES, and the flag
+	// declares its own. Looking for the signal on test nodes was the wrong reading — no
+	// test file "declares" a flag scenario, so there was never a signal where it looked.
 	green := map[string]bool{}
 	ingested := n.Signal != nil
 	if ingested {
@@ -263,7 +265,7 @@ func checkFlagCovered(content string, n mapx.Node, root string, g *mapx.Graph, c
 	for _, s := range f.Scenarios {
 		switch {
 		case green[s.Code]:
-			// provado: nada a cobrar
+			// proven: nothing to charge
 		case written[s.Code]:
 			notGreen = append(notGreen, s.Code)
 		default:
@@ -286,8 +288,9 @@ func checkFlagCovered(content string, n mapx.Node, root string, g *mapx.Graph, c
 		if b.Len() > 0 {
 			b.WriteString("\n")
 		}
-		// A EXECUÇÃO é o que falta, não o teste — e a saída tem de dizer qual das duas,
-		// porque o conserto é outro: escrever um teste versus rodar o que já existe.
+		// EXECUTION is what is missing, not the test — and the output has to say which of
+		// the two, because the fix differs: writing a test versus running the one that
+		// already exists.
 		if !ingested {
 			fmt.Fprintf(&b, i18n.T("gate.flag_covered.written_not_ingested"),
 				len(notGreen), strings.Join(notGreen, ", "))
@@ -299,7 +302,7 @@ func checkFlagCovered(content string, n mapx.Node, root string, g *mapx.Graph, c
 	return Fail, strings.TrimRight(b.String(), "\n")
 }
 
-// scenarioCodes lista os codigos que esta flag declara.
+// scenarioCodes lists the codes this flag declares.
 func scenarioCodes(f flagx.Flag) []string {
 	out := make([]string, 0, len(f.Scenarios))
 	for _, s := range f.Scenarios {

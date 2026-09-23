@@ -183,25 +183,26 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			reportTiming(showTiming, profile)
 			warnGatesWithoutTarget(cfg.Gates, profile)
 
+			// THE JUDGMENT BRIEF IS A REPORT, NOT A RECORD — which is why it comes BEFORE
+			// `!noRecord`.
+			//
+			// It used to live inside the record block, and the effect was measured: the
+			// reference app's pipeline runs `check --all --no-record` (on purpose — recording
+			// from there would open a card on every push), which is EXACTLY the mode in which
+			// the reviewer needs the list. The one place the brief mattered was the one
+			// place it did not print.
+			//
+			// Enqueueing is a write and stays under `!noRecord`; telling the reviewer what
+			// is left to judge writes nothing.
+			if len(profile.Judged) > 0 && cfg.GitHubMode() {
+				guides, asks := judgmentGuides(cfg)
+				printJudgmentBrief(profile.Judged, guides, asks)
+			}
+
 			// O LOOP: check → carimbo → issue. Deixa de "reportar" e passa a
 			// "registrar": grava o veredito por aresta no mapa (destrava stale) e
 			// abre uma issue de violation por fail bloqueante (sobrevive à sessão).
 			// Opt-out honesto: --no-record só reporta, não registra.
-			// O BRIEF DE JULGAMENTO É RELATÓRIO, NÃO REGISTRO — e por isso vem ANTES do
-			// `!noRecord`.
-			//
-			// Ele estava dentro do bloco de registro, e o efeito foi medido: o pipeline
-			// do app de referência roda `check --all --no-record` (deliberado — registrar
-			// dali abriria card a cada push), que é EXATAMENTE o modo em que o revisor
-			// precisa da lista. O único lugar onde o brief importava era o único em que
-			// ele não saía.
-			//
-			// Enfileirar é escrita e continua sob `!noRecord`; dizer ao revisor o que
-			// falta julgar não escreve nada.
-			if len(profile.Judged) > 0 && cfg.GitHubMode() {
-				guias, perguntas := judgmentGuides(cfg)
-				printJudgmentBrief(profile.Judged, guias, perguntas)
-			}
 			pendentes := 0
 			if !noRecord {
 				if err := recordCheck(absRoot, mapPath, g, profile); err != nil {
@@ -388,8 +389,8 @@ func enqueueJudgments(root string, cfg *config.Config, p gate.Profile, varredura
 	// O que fica de fora é o julgamento PENDENTE — e registrá-lo numa fila que ninguém
 	// lê é pior que não registrar, porque parece registro.
 	if cfg.GitHubMode() {
-		// O brief já saiu, antes do bloco de registro: no modo `github` a fila é o
-		// board, e o julgamento não foge disso.
+		// The brief was already printed, before the record block: in `github` mode the
+		// queue is the board, and judgment is no exception.
 		return 0
 	}
 	n := 0
@@ -1047,29 +1048,30 @@ func warnGatesWithoutTarget(declarados []config.Gate, p gate.Profile) {
 	fmt.Println(i18n.T("check.unused_gates_note"))
 }
 
-// reportTiming decide SE a medida sai, e e' a unica porta para o `printTiming`.
+// reportTiming decides WHETHER the measurement prints, and is the only door to
+// `printTiming`.
 //
-// A decisao vive numa funcao propria, e nao inline no `RunE`, por uma razao medida: o
-// `RunE` precisa de um projeto inteiro para rodar, entao um teste da condicao inline so'
-// consegue RECRIA-LA ("se falso, nao chamo") em vez de exercita-la. E uma condicao
-// recriada nao prova nada sobre a de producao — confirmado por mutacao: chamar o
-// `printTiming` incondicionalmente aqui passava por todos os testes.
+// The decision lives in its own function, not inline in `RunE`, for a measured reason:
+// `RunE` needs a whole project to run, so a test of the inline condition can only
+// RECREATE it ("if false, do not call") instead of exercising it. And a recreated
+// condition proves nothing about the production one — confirmed by mutation: calling
+// `printTiming` unconditionally here passed every test.
 //
-// A flag `timing-metrics` governa exatamente esta linha: `off` e AUSENTE nao imprimem,
-// `on` imprime. Medir e' opt-in, e um default invertido nao daria erro nenhum — so'
-// gastaria tempo de todo mundo, para sempre, em silencio.
-func reportTiming(mostrar bool, p gate.Profile) {
-	if !mostrar {
+// The `timing-metrics` flag governs exactly this line: `off` and ABSENT do not print,
+// `on` prints. Measuring is opt-in, and an inverted default would raise no error at all —
+// it would just spend everyone's time, forever, in silence.
+func reportTiming(show bool, p gate.Profile) {
+	if !show {
 		return
 	}
 	printTiming(p)
 }
 
-// judgmentGuides indexa gate → (guia, pergunta) para o brief.
+// judgmentGuides indexes gate → (guide, question) for the brief.
 //
-// Mesma leitura que o `enqueueJudgments` faz para enriquecer a task: o gate declara os
-// dois, e quem julga precisa dos dois — o guia diz onde está a régua, a pergunta diz o
-// que confrontar.
+// The same reading `enqueueJudgments` does to enrich a task: the gate declares both, and
+// whoever judges needs both — the guide says where the ruler is, the question says what
+// to confront.
 func judgmentGuides(cfg *config.Config) (map[string]string, map[string]string) {
 	guideOf := map[string]string{}
 	askOf := map[string]string{}
@@ -1085,43 +1087,43 @@ func judgmentGuides(cfg *config.Config) (map[string]string, map[string]string) {
 	return guideOf, askOf
 }
 
-// printJudgmentBrief entrega ao REVISOR a lista do que falta julgar.
+// printJudgmentBrief hands the REVIEWER the list of what is left to judge.
 //
-// Quem julga no CI é o revisor do PR, e não a máquina: o julgamento pede credencial de
-// IA, responde devagar, e — o que decide a questão — é JULGAMENTO, que é exatamente o
-// trabalho que o review existe para fazer. O pipeline não deve tomá-lo.
+// Who judges in CI is the PR's reviewer, not the machine: judgment needs an AI
+// credential, answers slowly, and — what settles it — is JUDGMENT, exactly the work review
+// exists to do. The pipeline must not take it over.
 //
-// O que ele deve fazer é DIRIGIR. A versão anterior imprimia só a contagem ("3 alvos
-// aguardam julgamento"), e a contagem não é endereço: o revisor sabia que havia trabalho
-// e não sabia qual, onde, nem o que perguntar. Na prática o item não era julgado —
-// medido no app de referência, 59 das 85 specs nunca receberam veredito, e o CI rodava
-// em todos os PRs.
+// What the pipeline must do is DIRECT. The earlier version printed only the count ("3
+// targets awaiting judgment"), and a count is not an address: the reviewer knew there was
+// work and not which, where, or what to ask. In practice the item was not judged —
+// measured in the reference app, 59 of 85 specs never received a verdict, with CI running
+// on every PR.
 //
-// A lista traz as três coisas que faltavam: o ALVO (qual arquivo), a PERGUNTA (o `ask`
-// que o gate declara) e o GUIA (onde está a régua). Com elas o julgamento vira um item
-// de checklist do review — que é onde o `REV-CK4` já o cobra.
+// The list carries the three things that were missing: the TARGET (which file), the
+// QUESTION (the `ask` the gate declares) and the GUIDE (where the ruler is). With them,
+// judgment becomes an item of the review checklist — which is where `REV-CK5` charges it.
 func printJudgmentBrief(judged []gate.Result, guideOf, askOf map[string]string) {
-	// Um alvo pode aguardar vários gates, e um gate vários alvos. Agrupar por GATE é o
-	// que permite fazer a pergunta uma vez para os alvos que a compartilham — que é como
-	// alguém de fato revisa.
-	porGate := map[string][]string{}
-	var ordem []string
+	// A target may await several gates, and a gate several targets. Grouping by GATE is
+	// what lets the question be asked once for the targets that share it — which is how
+	// someone actually reviews.
+	byGate := map[string][]string{}
+	var order []string
 	for _, r := range judged {
-		if _, visto := porGate[r.Gate]; !visto {
-			ordem = append(ordem, r.Gate)
+		if _, seen := byGate[r.Gate]; !seen {
+			order = append(order, r.Gate)
 		}
-		porGate[r.Gate] = append(porGate[r.Gate], r.Target)
+		byGate[r.Gate] = append(byGate[r.Gate], r.Target)
 	}
-	sort.Strings(ordem)
+	sort.Strings(order)
 
 	fmt.Println()
-	fmt.Println(i18n.T("check.judgment_brief_header", len(judged), len(ordem)))
+	fmt.Println(i18n.T("check.judgment_brief_header", len(judged), len(order)))
 	fmt.Println(i18n.T("check.judgment_brief_who"))
-	for _, g := range ordem {
-		alvos := porGate[g]
-		sort.Strings(alvos)
+	for _, g := range order {
+		targets := byGate[g]
+		sort.Strings(targets)
 		fmt.Println()
-		fmt.Printf(i18n.T("check.judgment_brief_gate"), g, len(alvos))
+		fmt.Printf(i18n.T("check.judgment_brief_gate"), g, len(targets))
 		fmt.Println()
 		if gd := guideOf[g]; gd != "" {
 			fmt.Printf(i18n.T("check.judgment_brief_guide"), gd)
@@ -1131,11 +1133,11 @@ func printJudgmentBrief(judged []gate.Result, guideOf, askOf map[string]string) 
 			fmt.Printf(i18n.T("check.judgment_brief_ask"), strings.TrimSpace(ask))
 			fmt.Println()
 		}
-		// ATÉ DEZ, e o resto contado. Uma lista de sessenta caminhos afoga a pergunta
-		// que vem antes dela, e quem revisa abre o primeiro punhado de qualquer forma.
-		for i, a := range alvos {
+		// UP TO TEN, and the rest counted. A list of sixty paths drowns the question
+		// that comes before it, and whoever reviews opens the first handful anyway.
+		for i, a := range targets {
 			if i == 10 {
-				fmt.Printf(i18n.T("check.judgment_brief_more"), len(alvos)-10)
+				fmt.Printf(i18n.T("check.judgment_brief_more"), len(targets)-10)
 				fmt.Println()
 				break
 			}

@@ -755,6 +755,7 @@ nodes:
     - id: cmd/anchors/mapcmd/ingest_suite_key_test.go
       kind: test
       rev: 71f678557dd9
+      updated_at: "2026-09-23"
       layer: teste
       tags:
         - test
@@ -1077,7 +1078,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/check.go
       kind: code
-      rev: 5102dc2e0e68
+      rev: 6a7d947fe6db
       updated_at: "2026-09-22"
       layer: comando
       tags:
@@ -1221,7 +1222,7 @@ nodes:
     - id: cmd/anchors/quality/suite.go
       kind: code
       rev: a16726cb1860
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       layer: comando
       tags:
         - cli
@@ -1417,7 +1418,7 @@ nodes:
     - id: internal/config/dialect.go
       kind: code
       rev: da051f61af2b
-      updated_at: "2026-09-21"
+      updated_at: "2026-09-23"
       layer: config
       tags:
         - nucleo
@@ -1590,14 +1591,14 @@ nodes:
         - test
     - id: internal/flagx/grammar_test.go
       kind: test
-      rev: 7ddea0dbc86b
+      rev: 57fee8a2b6a5
       updated_at: "2026-09-21"
       layer: teste
       tags:
         - test
     - id: internal/flagx/parse_test.go
       kind: test
-      rev: ae8a05da62b0
+      rev: 533995aa4247
       updated_at: "2026-09-21"
       code: CHKUT
       layer: teste
@@ -2225,7 +2226,7 @@ nodes:
         - feature
     - id: internal/gate/internal_checks.go
       kind: code
-      rev: 2d16b4750dbd
+      rev: 69953dccbbf1
       updated_at: "2026-09-23"
       code: INCHN
       layer: gate
@@ -2431,6 +2432,7 @@ nodes:
     - id: internal/gate/non_empty_feature_test.go
       kind: test
       rev: 83da6afdd7ae
+      updated_at: "2026-09-23"
       layer: teste
       tags:
         - test
@@ -3238,7 +3240,7 @@ nodes:
         - test
     - id: internal/gate/scenario_coverage_two_questions_test.go
       kind: test
-      rev: 61aabd9bd74f
+      rev: c47f2dea9aae
       updated_at: "2026-09-21"
       code: CREDX
       layer: teste
@@ -3548,7 +3550,7 @@ nodes:
     - id: internal/gate/triad_complete.go
       kind: code
       rev: f0be017f41a8
-      updated_at: "2026-09-20"
+      updated_at: "2026-09-23"
       code: TRCMT
       layer: gate
       tags:
@@ -4201,6 +4203,7 @@ nodes:
     - id: internal/mapx/ingest_suite_rev_test.go
       kind: test
       rev: 21cf5637e690
+      updated_at: "2026-09-23"
       code: AAAAA
       layer: teste
       tags:
