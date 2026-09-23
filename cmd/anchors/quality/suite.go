@@ -275,7 +275,7 @@ func ingestIfRecent(absRoot, junit, lcov, mutation string, s config.Suite, inici
 	if j == "" && l == "" && m == "" {
 		return nil
 	}
-	return mapcmd.IngestArtifacts(absRoot, "", j, l, m, s.Layer, s.Scope)
+	return mapcmd.IngestArtifacts(absRoot, "", j, l, m, s.Layer, s.Scope, "")
 }
 
 // workspaceLabel prefixa o workspace no cabeçalho quando existe. Sem ele, duas suítes

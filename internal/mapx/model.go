@@ -276,6 +276,13 @@ type TestSignal struct {
 	// tivessem perdido a prova. MEDIDO no MIF (2026-09-23): 131 specs do backend zeradas
 	// pela mesma ingestão que provou 390 do mobile.
 	ProvenBySuite map[string][]string `yaml:"proven_by_suite,omitempty"`
+	// ProvenRevBySuite: the node's rev when EACH suite last measured it.
+	//
+	// One `AtRev` for the whole node is not enough once proofs come from several suites:
+	// suite A proves B01 at rev1, the spec changes, suite B runs at rev2 — and a single
+	// stamp said the whole union was measured at rev2, B01 included. Measured with a probe:
+	// `proven=[B01 B02] at_rev=rev2 stale=false`, with B01 never measured at rev2.
+	ProvenRevBySuite map[string]string `yaml:"proven_rev_by_suite,omitempty"`
 	// AtRev: a rev do nó quando o sinal foi ingerido (para detectar staleness).
 	AtRev string `yaml:"at_rev,omitempty"`
 	// ClosureRev: a rev de cada nó do FECHO deste teste no momento da ingestão — o que ele

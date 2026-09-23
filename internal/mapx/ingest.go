@@ -93,18 +93,29 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven map[st
 				}
 				continue
 			}
-			var anterior []string
+			var previous []string
 			if n.Signal != nil {
-				anterior = n.Signal.ProvenBySuite[suite]
+				previous = n.Signal.ProvenBySuite[suite]
 			}
-			if len(pc) > 0 || len(anterior) > 0 {
+			if len(pc) > 0 || len(previous) > 0 {
 				ensureSignal(n)
 				if n.Signal.ProvenBySuite == nil {
 					n.Signal.ProvenBySuite = map[string][]string{}
 				}
-				n.Signal.ProvenBySuite[suite] = pc
+				if n.Signal.ProvenRevBySuite == nil {
+					n.Signal.ProvenRevBySuite = map[string]string{}
+				}
+				if len(pc) > 0 {
+					n.Signal.ProvenBySuite[suite] = pc
+					n.Signal.ProvenRevBySuite[suite] = n.Rev
+				} else {
+					// The suite stopped proving anything here: it leaves the union, and
+					// leaves no empty entry behind in the versioned map.
+					delete(n.Signal.ProvenBySuite, suite)
+					delete(n.Signal.ProvenRevBySuite, suite)
+				}
 				n.Signal.ProvenCodes = unionProven(n.Signal.ProvenBySuite)
-				n.Signal.AtRev = n.Rev
+				n.Signal.AtRev = unionRev(n.Signal, n.Rev)
 				n.Signal.IngestedAt = now
 				matchedCodes += len(pc)
 			}
@@ -128,6 +139,34 @@ func unionProven(bySuite map[string][]string) []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+// unionRev is the rev the union of proofs can honestly claim.
+//
+// The union is only as fresh as its OLDEST contributor. If every suite that still proves
+// something measured the current rev, the union is current. If any of them measured an
+// earlier rev, that rev is returned, and `SignalStale` reports the node stale until that
+// suite runs again — which is the truth: part of what the map calls proven was measured
+// against a spec that no longer exists.
+//
+// An entry with no recorded rev (written before `ProvenRevBySuite` existed) has unknown
+// freshness, and unknown is not fresh: it returns a rev that can never match.
+func unionRev(sig *TestSignal, current string) string {
+	suites := make([]string, 0, len(sig.ProvenBySuite))
+	for s := range sig.ProvenBySuite {
+		suites = append(suites, s)
+	}
+	sort.Strings(suites) // stable: the map is versioned
+	for _, s := range suites {
+		rev, ok := sig.ProvenRevBySuite[s]
+		if !ok {
+			return "unknown"
+		}
+		if rev != current {
+			return rev
+		}
+	}
+	return current
 }
 
 // IngestCoverage grava a cobertura de linha nos nós de CÓDIGO, casando por caminho.

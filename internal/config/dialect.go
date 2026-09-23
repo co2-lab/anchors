@@ -115,19 +115,27 @@ type Dialect struct {
 // tabela que Cucumber/Behave/SpecFlow usam.
 type GherkinKeywords struct {
 	Feature, Scenario, Outline, Given, When, Then, Examples string
+	// ScenarioSynonyms are the other ways the official Gherkin table lets a scenario open
+	// in this language — `Example:` in English, `Exemplo:` and the unaccented `Cenario:`
+	// in Portuguese. They are READ, never written: the scaffold keeps using `Scenario`.
+	//
+	// Without them a reader goes blind on valid features. Measured when `non-empty` began
+	// counting scenarios: a feature written with `Rule:` + `Example:` (standard Gherkin 6)
+	// failed a BLOCKING gate as "feature with no scenario".
+	ScenarioSynonyms []string
 }
 
 var gherkinByLang = map[string]GherkinKeywords{
-	"en":    {"Feature", "Scenario", "Scenario Outline", "Given", "When", "Then", "Examples"},
-	"pt":    {"Funcionalidade", "Cenário", "Esquema do Cenário", "Dado", "Quando", "Então", "Exemplos"},
-	"es":    {"Característica", "Escenario", "Esquema del escenario", "Dado", "Cuando", "Entonces", "Ejemplos"},
-	"fr":    {"Fonctionnalité", "Scénario", "Plan du scénario", "Soit", "Quand", "Alors", "Exemples"},
-	"de":    {"Funktionalität", "Szenario", "Szenariogrundriss", "Angenommen", "Wenn", "Dann", "Beispiele"},
-	"it":    {"Funzionalità", "Scenario", "Schema dello scenario", "Dato", "Quando", "Allora", "Esempi"},
-	"nl":    {"Functionaliteit", "Scenario", "Abstract Scenario", "Gegeven", "Als", "Dan", "Voorbeelden"},
-	"ru":    {"Функция", "Сценарий", "Структура сценария", "Дано", "Когда", "Тогда", "Примеры"},
-	"ja":    {"機能", "シナリオ", "シナリオテンプレート", "前提", "もし", "ならば", "例"},
-	"zh-CN": {"功能", "场景", "场景大纲", "假如", "当", "那么", "例子"},
+	"en":    {"Feature", "Scenario", "Scenario Outline", "Given", "When", "Then", "Examples", []string{"Example", "Scenario Template"}},
+	"pt":    {"Funcionalidade", "Cenário", "Esquema do Cenário", "Dado", "Quando", "Então", "Exemplos", []string{"Cenario", "Exemplo", "Esquema do Cenario"}},
+	"es":    {"Característica", "Escenario", "Esquema del escenario", "Dado", "Cuando", "Entonces", "Ejemplos", []string{"Ejemplo"}},
+	"fr":    {"Fonctionnalité", "Scénario", "Plan du scénario", "Soit", "Quand", "Alors", "Exemples", []string{"Exemple"}},
+	"de":    {"Funktionalität", "Szenario", "Szenariogrundriss", "Angenommen", "Wenn", "Dann", "Beispiele", []string{"Beispiel"}},
+	"it":    {"Funzionalità", "Scenario", "Schema dello scenario", "Dato", "Quando", "Allora", "Esempi", []string{"Esempio"}},
+	"nl":    {"Functionaliteit", "Scenario", "Abstract Scenario", "Gegeven", "Als", "Dan", "Voorbeelden", []string{"Voorbeeld"}},
+	"ru":    {"Функция", "Сценарий", "Структура сценария", "Дано", "Когда", "Тогда", "Примеры", []string{"Пример"}},
+	"ja":    {"機能", "シナリオ", "シナリオテンプレート", "前提", "もし", "ならば", "例", nil},
+	"zh-CN": {"功能", "场景", "场景大纲", "假如", "当", "那么", "例子", []string{"剧本"}},
 }
 
 // GherkinScenarioAlternatives são TODAS as formas de abrir um cenário, em todos os
@@ -154,6 +162,9 @@ func GherkinScenarioAlternatives() []string {
 		// tentada primeiro — senão casa o prefixo e perde o resto.
 		add(kw.Outline)
 		add(kw.Scenario)
+		for _, syn := range kw.ScenarioSynonyms {
+			add(syn)
+		}
 	}
 	sort.Slice(out, func(i, j int) bool {
 		if len(out[i]) != len(out[j]) {

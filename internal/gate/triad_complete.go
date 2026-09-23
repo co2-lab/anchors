@@ -403,9 +403,16 @@ func linkedFeatureScenarios(n mapx.Node, root string, g *mapx.Graph) (int, strin
 	return 0, ""
 }
 
-// scenarioRE — o Gherkin do projeto pode estar em pt ou en; ambos abrem o cenário no
-// início da linha.
-var scenarioRE = regexp.MustCompile(`(?m)^\s*(?:Cenário|Cenario|Scenario|Esquema do Cenário|Scenario Outline):`)
+// scenarioRE matches the line that OPENS a scenario, in any language of the official
+// Gherkin table (`config.GherkinScenarioAlternatives`).
+//
+// It used to carry five keywords nailed in Portuguese and English. That was a partial
+// copy of the table the dialect already keeps for exactly this purpose, and it went blind
+// on valid features: measured when `non-empty` began counting scenarios, a Spanish feature
+// (`Escenario:`) and an English one written as `Rule:` + `Example:` both failed a
+// BLOCKING gate as "feature with no scenario".
+var scenarioRE = regexp.MustCompile(`(?m)^\s*(?:` +
+	strings.Join(quoteAll(config.GherkinScenarioAlternatives()), "|") + `):`)
 
 // piecesToDevelop lê o `@TBD:` e devolve as arestas cuja peça ainda não foi escrita.
 //

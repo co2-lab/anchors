@@ -738,7 +738,7 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/ingest.go
       kind: code
-      rev: f64c3879c83d
+      rev: 087db4193cb5
       updated_at: "2026-09-23"
       code: SPCRX
       layer: comando
@@ -749,6 +749,12 @@ nodes:
       kind: test
       rev: f2dc5ac5cc6e
       updated_at: "2026-09-19"
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/mapcmd/ingest_suite_key_test.go
+      kind: test
+      rev: 71f678557dd9
       layer: teste
       tags:
         - test
@@ -1214,7 +1220,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/suite.go
       kind: code
-      rev: b17dae9f39aa
+      rev: a16726cb1860
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -1410,7 +1416,7 @@ nodes:
         - config
     - id: internal/config/dialect.go
       kind: code
-      rev: eee8bfc0a6f7
+      rev: da051f61af2b
       updated_at: "2026-09-21"
       layer: config
       tags:
@@ -2127,7 +2133,7 @@ nodes:
         - gate
     - id: internal/gate/flag.go
       kind: code
-      rev: e3721c3be105
+      rev: 6a3dff4c49a3
       updated_at: "2026-09-22"
       layer: gate
       tags:
@@ -2135,7 +2141,7 @@ nodes:
         - gate
     - id: internal/gate/flag_test.go
       kind: test
-      rev: 0667f1507d07
+      rev: 5f9c24ab2099
       updated_at: "2026-09-22"
       code: CHKUT
       layer: teste
@@ -2419,6 +2425,12 @@ nodes:
       kind: test
       rev: f90e00d827ea
       updated_at: "2026-09-19"
+      layer: teste
+      tags:
+        - test
+    - id: internal/gate/non_empty_feature_test.go
+      kind: test
+      rev: 83da6afdd7ae
       layer: teste
       tags:
         - test
@@ -2948,7 +2960,7 @@ nodes:
         - test
     - id: internal/gate/reverse_match.go
       kind: code
-      rev: 60d410439146
+      rev: 40a134e109d8
       updated_at: "2026-09-22"
       layer: gate
       tags:
@@ -2956,7 +2968,7 @@ nodes:
         - gate
     - id: internal/gate/reverse_match_test.go
       kind: test
-      rev: 2a712f4fc514
+      rev: 7cf303f91adf
       updated_at: "2026-09-22"
       code: UNITX
       layer: teste
@@ -2972,7 +2984,7 @@ nodes:
         - feature
     - id: internal/gate/revision_orphans.go
       kind: code
-      rev: 9cfda56ba97c
+      rev: 399ef16fb696
       updated_at: "2026-09-23"
       code: RVORP
       layer: gate
@@ -2990,7 +3002,7 @@ nodes:
         - spec
     - id: internal/gate/revision_orphans_test.go
       kind: test
-      rev: 8dc2be69993a
+      rev: bbd306286488
       updated_at: "2026-09-22"
       code: NTCNN
       layer: teste
@@ -3535,7 +3547,7 @@ nodes:
         - feature
     - id: internal/gate/triad_complete.go
       kind: code
-      rev: 9117be2ddf85
+      rev: f0be017f41a8
       updated_at: "2026-09-20"
       code: TRCMT
       layer: gate
@@ -4180,12 +4192,19 @@ nodes:
       no_propagation: true
     - id: internal/mapx/ingest.go
       kind: code
-      rev: 893430aeda44
+      rev: 7c0a81de755b
       updated_at: "2026-09-23"
       layer: mapa
       tags:
         - nucleo
         - mapa
+    - id: internal/mapx/ingest_suite_rev_test.go
+      kind: test
+      rev: 21cf5637e690
+      code: AAAAA
+      layer: teste
+      tags:
+        - test
     - id: internal/mapx/ingest_test.go
       kind: test
       rev: 21ac30110fff
@@ -4203,7 +4222,7 @@ nodes:
         - test
     - id: internal/mapx/model.go
       kind: code
-      rev: 82ee57ab8b8f
+      rev: 4a31ca4bed9c
       updated_at: "2026-09-23"
       layer: mapa
       tags:

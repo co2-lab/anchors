@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
@@ -30,7 +31,7 @@ import (
 var ViaAnchorsTest bool
 
 func newIngestCmd() *cobra.Command {
-	var root, mapPath, junit, lcov, mutation, layer, scope string
+	var root, mapPath, junit, lcov, mutation, layer, scope, suite string
 	var logs bool
 	cmd := &cobra.Command{
 		Use:   "ingest",
@@ -57,7 +58,7 @@ Run 'anchors coverage' afterwards to see the spec requirements with no green tes
 				return err
 			}
 			if junit != "" || lcov != "" || mutation != "" {
-				if err := IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope); err != nil {
+				if err := IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite); err != nil {
 					return err
 				}
 			}
@@ -75,6 +76,7 @@ Run 'anchors coverage' afterwards to see the spec requirements with no green tes
 	cmd.Flags().StringVar(&lcov, "lcov", "", "lcov .info file (line coverage)")
 	cmd.Flags().StringVar(&mutation, "mutation", "", "mutation JSON report. The FORMAT belongs to the project: declare it in the mutation-score gate of anchors.yaml, key 'format' (default 'mutation-testing-elements' — Stryker/PIT/Infection/mutmut; 'gremlins' for Go)")
 	cmd.Flags().StringVar(&layer, "layer", "", "test layer of this suite (unit|integration|e2e…); default unit — merges several")
+	cmd.Flags().StringVar(&suite, "suite", "", "name of this suite in the map (default: the JUnit path relative to the root). Proofs are kept per suite, so each workspace's report only speaks for itself")
 	cmd.Flags().StringVar(&scope, "scope", "", "scope of the suite that ran the mutants: `isolated` (only the unit's test) or `full` (with the dependents). Ingesting both allows reading the DIFFERENCE — how much the unit depends on third parties to prove itself")
 	return cmd
 }
@@ -83,7 +85,7 @@ Run 'anchors coverage' afterwards to see the spec requirements with no green tes
 // `anchors mutation` possam ingerir o que acabaram de produzir sem reimplementar nada
 // nem invocar o próprio binário de novo. É o que fecha o par "rodar" / "ingerir" que
 // antes exigia um humano no meio.
-func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope string) error {
+func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite string) error {
 	if err := warnIfManualIngest(absRoot); err != nil {
 		return err
 	}
@@ -151,7 +153,11 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope strin
 				byFile = resolveByFile(g, mapx.KindTest, byFile, absRoot, junit)
 				// A suíte é o RELATÓRIO: num monorepo cada workspace ingere o seu, e sem a
 				// chave a prova de uma suíte apagava a das outras (ver ProvenBySuite).
-				mf, mc := g.IngestExecutionSuite(byFile, proven, declaredByNode, layer, relToRoot(absRoot, junit), now)
+				key := suite
+				if key == "" {
+					key = suiteKey(absRoot, junit)
+				}
+				mf, mc := g.IngestExecutionSuite(byFile, proven, declaredByNode, layer, key, now)
 				fmt.Printf("execution: %d case(s), %d test file(s) matched, %d scenario(s) proven\n",
 					len(rep.Cases), mf, mc)
 				if len(byFile) > 0 && mf == 0 {
@@ -205,12 +211,6 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope strin
 	}
 }
 
-// warnIfManualIngest reclama de uma ingestão feita fora do `anchors test`.
-//
-// AVISA por padrão e só BARRA quando o projeto declara `manual_ingest_blocks: true`. A
-// razão de não barrar sempre é que há usos legítimos — um CI que rodou a suíte noutro
-// job, uma ferramenta que o `tests:` não cobre —, e derrubá-los tiraria a saída de quem
-// tem razão.
 // resolveByFile reescreve as chaves do relatório para o ID exato do nó dono (ver
 // mapx.ResolveReportPaths) e descarta, com aviso, as que continuam ambíguas — caminho
 // relativo ao workspace que casa nós de dois workspaces e o diretório do relatório não
@@ -221,10 +221,36 @@ func resolveByFile[T any](g *mapx.Graph, kind mapx.Kind, byFile map[string]T, ab
 		paths = append(paths, p)
 	}
 	resolved, ambiguous := g.ResolveReportPaths(kind, paths, relToRoot(absRoot, report))
+	// Two report paths can resolve to the SAME node (one workspace-relative, one from the
+	// root). Iterating the map directly let the last one win, in random order — the same
+	// report could write different numbers on two runs. The path that already IS the node
+	// ID wins; otherwise the first in sorted order, and the collision is reported.
+	sorted := make([]string, 0, len(byFile))
+	for p := range byFile {
+		sorted = append(sorted, p)
+	}
+	sort.Strings(sorted)
 	out := make(map[string]T, len(byFile))
-	for p, v := range byFile {
-		if id, ok := resolved[p]; ok {
-			out[id] = v
+	from := map[string]string{}
+	var collisions []string
+	for _, p := range sorted {
+		id, ok := resolved[p]
+		if !ok {
+			continue
+		}
+		if prev, taken := from[id]; taken {
+			if p == id && prev != id {
+				out[id], from[id] = byFile[p], p
+			}
+			collisions = append(collisions, id)
+			continue
+		}
+		out[id], from[id] = byFile[p], p
+	}
+	if len(collisions) > 0 {
+		fmt.Printf("  warning: %d node(s) named by more than one path in %s — kept one, deterministically:\n", len(collisions), filepath.Base(report))
+		for _, c := range collisions {
+			fmt.Printf("    %s (from %s)\n", c, from[c])
 		}
 	}
 	if len(ambiguous) > 0 {
@@ -238,8 +264,23 @@ func resolveByFile[T any](g *mapx.Graph, kind mapx.Kind, byFile map[string]T, ab
 	return out
 }
 
-// relToRoot devolve o caminho do relatório relativo à raiz do projeto, com `/` — é a
-// identidade da suíte no mapa, e precisa ser a mesma em qualquer máquina.
+// suiteKey is the identity of a suite in the map, and it has to be the same on every
+// machine — otherwise each machine writes its own entry and none ever replaces another.
+//
+// A report INSIDE the repository is keyed by its path from the root. A report OUTSIDE it
+// (CI writing to `/tmp/junit.xml`) would become `../../../../tmp/junit.xml`, with a depth
+// that depends on where the runner checked the repository out. It is keyed by its file
+// name instead; two external reports with the same name then share an entry, which is the
+// behaviour before suites existed — and `--suite` names it explicitly when that matters.
+func suiteKey(absRoot, report string) string {
+	rel := relToRoot(absRoot, report)
+	if rel == ".." || strings.HasPrefix(rel, "../") {
+		return "external/" + filepath.Base(report)
+	}
+	return rel
+}
+
+// relToRoot returns the report's path relative to the project root, with `/`.
 func relToRoot(absRoot, report string) string {
 	rel := report
 	if abs, err := filepath.Abs(report); err == nil {
@@ -250,6 +291,12 @@ func relToRoot(absRoot, report string) string {
 	return filepath.ToSlash(rel)
 }
 
+// warnIfManualIngest reclama de uma ingestão feita fora do `anchors test`.
+//
+// AVISA por padrão e só BARRA quando o projeto declara `manual_ingest_blocks: true`. A
+// razão de não barrar sempre é que há usos legítimos — um CI que rodou a suíte noutro
+// job, uma ferramenta que o `tests:` não cobre —, e derrubá-los tiraria a saída de quem
+// tem razão.
 func warnIfManualIngest(absRoot string) error {
 	if ViaAnchorsTest {
 		return nil
