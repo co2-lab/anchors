@@ -148,7 +148,10 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope strin
 						declaredByNode[n.ID] = codes
 					}
 				}
-				mf, mc := g.IngestExecution(byFile, proven, declaredByNode, layer, now)
+				byFile = resolveByFile(g, mapx.KindTest, byFile, absRoot, junit)
+				// A suíte é o RELATÓRIO: num monorepo cada workspace ingere o seu, e sem a
+				// chave a prova de uma suíte apagava a das outras (ver ProvenBySuite).
+				mf, mc := g.IngestExecutionSuite(byFile, proven, declaredByNode, layer, relToRoot(absRoot, junit), now)
 				fmt.Printf("execution: %d case(s), %d test file(s) matched, %d scenario(s) proven\n",
 					len(rep.Cases), mf, mc)
 				if len(byFile) > 0 && mf == 0 {
@@ -165,6 +168,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope strin
 				for _, fc := range rep.Files {
 					byFile[fc.File] = mapx.FileCov{Covered: fc.CoveredLines, Total: fc.TotalLines}
 				}
+				byFile = resolveByFile(g, mapx.KindCode, byFile, absRoot, lcov)
 				m := g.IngestCoverage(byFile, now)
 				fmt.Printf("coverage: %d file(s) in the lcov, %d code node(s) matched\n", len(rep.Files), m)
 			}
@@ -183,6 +187,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope strin
 					}
 					sobreviventes += fm.Survived
 				}
+				byFile = resolveByFile(g, mapx.KindCode, byFile, absRoot, mutation)
 				m := g.IngestMutationScoped(byFile, scope, now, rep.Low, rep.High)
 				fmt.Printf("mutation (%s): %d file(s) in the report, %d code node(s) matched, %d surviving mutant(s)\n",
 					mutationFormat, len(rep.Files), m, sobreviventes)
@@ -206,6 +211,45 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope strin
 // razão de não barrar sempre é que há usos legítimos — um CI que rodou a suíte noutro
 // job, uma ferramenta que o `tests:` não cobre —, e derrubá-los tiraria a saída de quem
 // tem razão.
+// resolveByFile reescreve as chaves do relatório para o ID exato do nó dono (ver
+// mapx.ResolveReportPaths) e descarta, com aviso, as que continuam ambíguas — caminho
+// relativo ao workspace que casa nós de dois workspaces e o diretório do relatório não
+// desempata. Sem isto os DOIS nós recebiam o sinal.
+func resolveByFile[T any](g *mapx.Graph, kind mapx.Kind, byFile map[string]T, absRoot, report string) map[string]T {
+	paths := make([]string, 0, len(byFile))
+	for p := range byFile {
+		paths = append(paths, p)
+	}
+	resolved, ambiguous := g.ResolveReportPaths(kind, paths, relToRoot(absRoot, report))
+	out := make(map[string]T, len(byFile))
+	for p, v := range byFile {
+		if id, ok := resolved[p]; ok {
+			out[id] = v
+		}
+	}
+	if len(ambiguous) > 0 {
+		sort.Strings(ambiguous)
+		fmt.Printf("  warning: %d path(s) in %s match more than one node and the report's folder does not decide — left WITHOUT signal:\n", len(ambiguous), filepath.Base(report))
+		for _, a := range ambiguous {
+			fmt.Printf("    %s\n", a)
+		}
+		fmt.Println("  make the runner write paths from the repository root (lcov: projectRoot; jest-junit: filePathPrefix).")
+	}
+	return out
+}
+
+// relToRoot devolve o caminho do relatório relativo à raiz do projeto, com `/` — é a
+// identidade da suíte no mapa, e precisa ser a mesma em qualquer máquina.
+func relToRoot(absRoot, report string) string {
+	rel := report
+	if abs, err := filepath.Abs(report); err == nil {
+		if r, err := filepath.Rel(absRoot, abs); err == nil {
+			rel = r
+		}
+	}
+	return filepath.ToSlash(rel)
+}
+
 func warnIfManualIngest(absRoot string) error {
 	if ViaAnchorsTest {
 		return nil

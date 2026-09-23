@@ -129,11 +129,12 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 func definedRequirements(content string) []string {
 	vistos := map[string]bool{}
 	var out []string
+	re := defineRuleCaptureRE()
 	for _, linha := range strings.Split(content, "\n") {
 		if waivedByNoScenario(linha) {
 			continue
 		}
-		m := defineRuleCaptureRE.FindStringSubmatch(linha)
+		m := re.FindStringSubmatch(linha)
 		if m == nil {
 			continue
 		}
@@ -149,8 +150,15 @@ func definedRequirements(content string) []string {
 // defineRuleCaptureRE é o `definesRuleRE` do gate rule-types com o código CAPTURADO —
 // mesma gramática de "definir" (código no início da linha/item/título, ou primeira célula
 // de tabela), porque as duas perguntas dependem da mesma distinção: definir ≠ citar.
-var defineRuleCaptureRE = regexp.MustCompile(
-	"(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2})")
+// Compilado por CHAMADA e não em `var` — a mesma regra do `codeRE` (rule_implemented.go):
+// o comprimento do código vem de `code_lengths`, carregado DEPOIS dos globais. Em `var`
+// este regex congelava o default `[5]`, e num projeto `[4]` não casava requisito algum —
+// MEDIDO no MIF (2026-09-23): `spec-feature-match` e `scenario-coverage` indeterminados
+// nas 691 specs, bloqueantes e cegos.
+func defineRuleCaptureRE() *regexp.Regexp {
+	return regexp.MustCompile(
+		"(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2})")
+}
 
 // noScenarioRE — o opt-out por requisito, com razão obrigatória depois dos dois-pontos.
 var noScenarioRE = regexp.MustCompile(`@no-scenario[^\S\n]*:[^\S\n]*\S+`)

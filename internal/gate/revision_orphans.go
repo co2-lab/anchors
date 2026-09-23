@@ -198,8 +198,9 @@ func codesIn(re *regexp.Regexp, content string) map[string]bool {
 // faria quase toda regra compartilhar vocabulário com quase toda outra.
 func ruleTitles(content string) map[string]string {
 	out := map[string]string{}
+	re := defineRuleCaptureRE()
 	for _, linha := range strings.Split(content, "\n") {
-		m := defineRuleCaptureRE.FindStringSubmatch(linha)
+		m := re.FindStringSubmatch(linha)
 		if m == nil {
 			continue
 		}

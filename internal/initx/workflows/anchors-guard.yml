@@ -419,6 +419,34 @@ jobs:
               fi
               ;;
             labeled)
+              # PÔR `to-do` NUM CARD SEM ESTADO É ENTRADA NO FLUXO, NÃO MOVIMENTO.
+              #
+              # Quem cria o card já com `anchors:to-do` — à mão, pelo `anchors escalate`,
+              # pela interface web — dispara `labeled` como humano, e esta trava o tratava
+              # como mexida: removia a label vinte segundos depois. O `estado-inicial` lá em
+              # cima não corrigia, porque quando ele olhou o card JÁ tinha estado. Os dois
+              # jobs corriam juntos e se anulavam.
+              #
+              # MEDIDO no projeto de referência: 21 cards abertos sem estado nenhum, todos
+              # com o mesmo rastro — nascem com `to-do`, e o `github-actions[bot]` remove em
+              # ~20s. Invisíveis ao `claim`, que só varre estado: trabalho real que nenhum
+              # agente pega, com o board mostrando fila vazia.
+              #
+              # A distinção é pelo que o card JÁ TINHA. Sem outro estado, `to-do` é a porta
+              # de entrada — é exatamente o que o `estado-inicial` teria posto. Com outro
+              # estado (alguém devolvendo um `in-progress` à fila à mão), é movimento, e
+              # continua revertido.
+              if [ "$LABEL_MEXIDA" = "anchors:to-do" ]; then
+                outros=$(gh issue view "$N" --repo "$GH_REPO" --json labels \
+                  --jq '[.labels[].name
+                         | select(. == "anchors:in-progress" or . == "anchors:ready-to-review"
+                                  or . == "anchors:in-review" or . == "anchors:ready-to-test")]
+                        | length')
+                if [ "${outros:-0}" -eq 0 ]; then
+                  echo "#$N: \`to-do\` num card sem estado — é entrada no fluxo, mantida"
+                  exit 0
+                fi
+              fi
               gh issue edit "$N" --repo "$GH_REPO" --remove-label "$LABEL_MEXIDA" >/dev/null
               motivo="a label \`$LABEL_MEXIDA\` foi posta à mão"
               inverso="removida"

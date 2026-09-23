@@ -731,3 +731,51 @@ func TestRegistroNaoJulgaSeOTextoEstaCerto(t *testing.T) {
 		t.Errorf("a régua é presença e forma, não qualidade: %v — %s", v, msg)
 	}
 }
+
+// A casca vazia: o cabeçalho Gherkin sozinho enche oito linhas sem declarar cenário, e
+// `TrimSpace` não vê diferença entre isso e um arquivo com conteúdo. Medido no app de
+// referência: 12 features de `services/` exatamente assim, todas aprovadas.
+func TestNonEmptyFeatureSemCenario(t *testing.T) {
+	casca := "# language: pt\n# @anchors\n#   ref: SGABX\n#   layer: service\n\n@backend @service\nFuncionalidade: auth (service) — Gateway\n"
+	v, d := checkNonEmpty(casca, mapx.Node{Kind: mapx.KindFeature})
+	if v != Fail {
+		t.Fatalf("feature sem cenário deveria reprovar, foi %s (%s)", v, d)
+	}
+}
+
+func TestNonEmptyFeatureComCenario(t *testing.T) {
+	ok := "# language: pt\nFuncionalidade: x\n\n  @comportamento @ABCD-B01\n  Cenário: faz algo\n    Dado que sim\n"
+	if v, d := checkNonEmpty(ok, mapx.Node{Kind: mapx.KindFeature}); v != Pass {
+		t.Fatalf("feature com cenário deveria passar, foi %s (%s)", v, d)
+	}
+}
+
+// A regra do cenário vale SÓ para feature: um .ts com conteúdo não declara cenário e
+// continua passando, senão o gate reprovaria todo arquivo de código do projeto.
+func TestNonEmptyNaoExigeCenarioForaDeFeature(t *testing.T) {
+	if v, _ := checkNonEmpty("export const x = 1\n", mapx.Node{Kind: mapx.KindCode}); v != Pass {
+		t.Fatalf("código com conteúdo deveria passar, foi %s", v)
+	}
+}
+
+// O estado de dado leva o NOME junto (`SECU-DS-bio-on`). A regex que lê o TESTE parava
+// no `DS-` enquanto a irmã que lê a FEATURE capturava o nome inteiro — as duas pontas do
+// mesmo contrato com gramáticas diferentes. Medido no app de referência: 78 dos 124
+// códigos "órfãos" do `test-feature-match` eram este truncamento.
+func TestAnyCodeRECapturaNomeDoEstadoDeDado(t *testing.T) {
+	// Códigos de CINCO caracteres: é o default do engine (`config.CodeLengths`), e este
+	// teste não reconfigura o global — o app de referência usa 4 por declarar
+	// `code_lengths: [4]` no próprio anchors.yaml.
+	casos := map[string]string{
+		"it('SECUX-DS-bio-on: ...')":     "SECUX-DS-bio-on",
+		"it('TREXX-DS-filter-12m: ...')": "TREXX-DS-filter-12m",
+		"it('HOMEX-B01: ...')":           "HOMEX-B01",
+		"it('MNPMX-VR: ...')":            "MNPMX-VR",
+	}
+	for entrada, esperado := range casos {
+		got := anyCodeRE.FindString(entrada)
+		if got != esperado {
+			t.Errorf("%s → %q, esperado %q", entrada, got, esperado)
+		}
+	}
+}

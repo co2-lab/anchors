@@ -112,3 +112,92 @@ func TestIngestApagaProvaQueDeixouDeExistir(t *testing.T) {
 			n.Signal.ProvenCodes)
 	}
 }
+
+// Monorepo: o runner escreve caminho relativo ao workspace, e o mesmo arquivo existe em
+// dois workspaces. Medido no MIF: a cobertura da landing caía no SectionLabel do mobile.
+func monorepoGraph() *Graph {
+	return &Graph{Nodes: []Node{
+		{ID: "apps/landing-page/src/atoms/Label.tsx", Kind: KindCode, Rev: "r1"},
+		{ID: "apps/mobile/src/atoms/Label.tsx", Kind: KindCode, Rev: "r1"},
+		{ID: "apps/mobile/src/atoms/Only.tsx", Kind: KindCode, Rev: "r1"},
+	}}
+}
+
+func TestResolveReportPathsDesempataPelaPastaDoRelatorio(t *testing.T) {
+	g := monorepoGraph()
+	got, amb := g.ResolveReportPaths(KindCode,
+		[]string{"src/atoms/Label.tsx", "src/atoms/Only.tsx", "src/nada.ts"},
+		"apps/landing-page/test-output/coverage/lcov.info")
+	if len(amb) != 0 {
+		t.Fatalf("a pasta do relatório decide; não devia sobrar ambíguo: %v", amb)
+	}
+	if got["src/atoms/Label.tsx"] != "apps/landing-page/src/atoms/Label.tsx" {
+		t.Errorf("Label devia ir para a landing, foi para %q", got["src/atoms/Label.tsx"])
+	}
+	if got["src/atoms/Only.tsx"] != "apps/mobile/src/atoms/Only.tsx" {
+		t.Errorf("caminho único devia resolver para o único dono, veio %q", got["src/atoms/Only.tsx"])
+	}
+	if got["src/nada.ts"] != "src/nada.ts" {
+		t.Errorf("caminho sem dono segue como veio, veio %q", got["src/nada.ts"])
+	}
+
+	// resolvido para o ID exato, a ingestão amarra UM nó, não dois
+	cov := map[string]FileCov{got["src/atoms/Label.tsx"]: {Covered: 1, Total: 2}}
+	if m := g.IngestCoverage(cov, "now"); m != 1 {
+		t.Fatalf("esperava 1 nó casado, veio %d", m)
+	}
+	for _, n := range g.Nodes {
+		if n.ID == "apps/mobile/src/atoms/Label.tsx" && n.Signal != nil {
+			t.Error("o homônimo do mobile não pode receber a cobertura da landing")
+		}
+	}
+}
+
+func TestResolveReportPathsEmpateFicaSemDono(t *testing.T) {
+	g := monorepoGraph()
+	// relatório na raiz: nenhuma das duas pastas é mais próxima
+	got, amb := g.ResolveReportPaths(KindCode, []string{"src/atoms/Label.tsx"}, "coverage/lcov.info")
+	if len(amb) != 1 || amb[0] != "src/atoms/Label.tsx" {
+		t.Fatalf("empate devia voltar como ambíguo, veio %v", amb)
+	}
+	if _, ok := got["src/atoms/Label.tsx"]; ok {
+		t.Error("caminho ambíguo não pode ser atribuído no palpite")
+	}
+}
+
+// Monorepo: cada suíte é ingerida sozinha. A do mobile não pode falar pela do backend —
+// MEDIDO no MIF: a ingestão do mobile gravou VAZIO em 131 specs do backend.
+func TestIngestPorSuiteNaoApagaProvaDeOutraSuite(t *testing.T) {
+	g := &Graph{Nodes: []Node{
+		{ID: "back/A.spec.md", Kind: KindSpec, Rev: "r1"},
+		{ID: "mob/B.spec.md", Kind: KindSpec, Rev: "r1"},
+	}}
+	declared := map[string][]string{
+		"back/A.spec.md": {"AAAA-B01"},
+		"mob/B.spec.md":  {"BBBB-B01"},
+	}
+	provados := func(id string) []string {
+		for _, n := range g.Nodes {
+			if n.ID == id && n.Signal != nil {
+				return n.Signal.ProvenCodes
+			}
+		}
+		return nil
+	}
+
+	g.IngestExecutionSuite(nil, map[string]bool{"AAAA-B01": true}, declared, "unit", "back/junit.xml", "t1")
+	g.IngestExecutionSuite(nil, map[string]bool{"BBBB-B01": true}, declared, "unit", "mob/junit.xml", "t2")
+
+	if got := provados("back/A.spec.md"); len(got) != 1 || got[0] != "AAAA-B01" {
+		t.Errorf("a suíte do mobile apagou a prova do backend: %v", got)
+	}
+	if got := provados("mob/B.spec.md"); len(got) != 1 || got[0] != "BBBB-B01" {
+		t.Errorf("prova do mobile não gravada: %v", got)
+	}
+
+	// reingerir a MESMA suíte sem a prova ainda apaga — a regra do teste acima continua
+	g.IngestExecutionSuite(nil, map[string]bool{}, declared, "unit", "back/junit.xml", "t3")
+	if got := provados("back/A.spec.md"); len(got) != 0 {
+		t.Errorf("a prova que a própria suíte deixou de dar continuou no mapa: %v", got)
+	}
+}

@@ -341,3 +341,39 @@ jest.mock('@gorhom/bottom-sheet', () => ({ BottomSheet: 'View' }))`
 		}
 	}
 }
+
+// O modo spy do Vitest (`vi.mock('x', { spy: true })`) carrega o módulo REAL e só envolve
+// as funções — não tem fábrica, e não há o que anotar. O `[^=]*` de antes atravessava
+// quebras de linha e atribuía ao spy a fábrica de um mock POSTERIOR; medido no app de
+// referência, 3 de 4 "dublês soltos" eram exatamente isso.
+func TestMockTipado_spyNaoEhFabricaDeOutroMock(t *testing.T) {
+	t.Run("MCTYM-B06: A spy mock is not charged with a later mock's factory", func(t *testing.T) {})
+	src := `vi.mock('src/a', { spy: true })
+vi.mock('src/b', (): Partial<typeof import('src/b')> => ({
+  algo: vi.fn(),
+}))`
+	if v, msg := rodaMock(t, src, cfgComContrato()); v != Pass {
+		t.Errorf("spy seguido de fábrica anotada deveria passar: %v (%s)", v, msg)
+	}
+}
+
+// A fábrica na linha SEGUINTE (como o prettier quebra) continua sendo lida — e sua
+// anotação continua contando. Sem o `\s*` antes do grupo, a quebra derrubaria o casamento
+// e o dublê anotado passaria por não ter fábrica.
+func TestMockTipado_fabricaNaLinhaSeguinte(t *testing.T) {
+	t.Run("MCTYM-B07: A factory on the next line is still read, tie and all", func(t *testing.T) {})
+	anotado := `vi.mock(
+  'src/a',
+  (): Partial<typeof import('src/a')> => ({ x: vi.fn() }),
+)`
+	if v, msg := rodaMock(t, anotado, cfgComContrato()); v != Pass {
+		t.Errorf("fábrica anotada na linha seguinte deveria passar: %v (%s)", v, msg)
+	}
+	solto := `vi.mock(
+  'src/a',
+  () => ({ x: vi.fn() }),
+)`
+	if v, _ := rodaMock(t, solto, cfgComContrato()); v != Fail {
+		t.Errorf("fábrica SEM anotação na linha seguinte deveria reprovar: %v", v)
+	}
+}

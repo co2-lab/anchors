@@ -160,8 +160,19 @@ func withoutExtension(id string) string {
 // tipo apareceria (`(): Partial<typeof Real> =>`). Casar a fábrica inteira exigiria
 // equilibrar chaves, que regex não faz — e não é preciso: a amarra, quando existe, está
 // sempre antes do corpo.
+//
+// A cabeça da fábrica fica NUMA linha. O `[^=]*` de antes atravessava quebras de linha:
+// a partir da vírgula de `vi.mock('x', { spy: true })` ele varria o arquivo inteiro até
+// o `=>` de um mock POSTERIOR, e atribuía ao `{ spy: true }` uma fábrica que não era
+// dele — sem anotação, claro, porque a cabeça capturada era lixo de três declarações.
+// O modo spy do Vitest carrega o módulo REAL e só envolve as funções: é mais amarrado
+// ao contrato do que qualquer `Partial<typeof>`, e não tem fábrica para anotar.
+//
+// Medido no app de referência: 3 dos 4 "dublês soltos" eram exatamente isso — falsos.
+// O `\s*` antes do grupo aceita a fábrica na linha seguinte (como o prettier quebra
+// `vi.mock(\n  'x',\n  (): Partial<…> => ({`); o `[^=\n]*` impede o grupo de sair dela.
 var mockWithFactoryRE = regexp.MustCompile(
-	`(?:jest|vi)\s*\.\s*mock\s*\(\s*['"` + "`" + `]([^'"` + "`" + `]+)['"` + "`" + `]\s*,([^=]*)=>`)
+	`(?:jest|vi)\s*\.\s*mock\s*\(\s*['"` + "`" + `]([^'"` + "`" + `]+)['"` + "`" + `]\s*,\s*([^=\n]*)=>`)
 
 // declaredDoubles inventaria os dublês do arquivo e diz quais têm amarra.
 //

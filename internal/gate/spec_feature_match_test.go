@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -350,5 +351,24 @@ func TestSpecFeatureMatchNaoConfrontaFeatureContraTeste(t *testing.T) {
 	// nenhum teste amarra cenario nenhum — o grafo nem tem no de teste.
 	if v, d := rodaSpecFeature(t, spec, feature); v != Pass {
 		t.Errorf("feature→teste e de outro gate; veio %s (%s)", v, d)
+	}
+}
+
+// O projeto declara `code_lengths: [4]` DEPOIS de o pacote inicializar. Com o regex em
+// `var`, compilado no init com o default `[5]`, a spec de código de 4 caracteres devolvia
+// ZERO requisitos — medido no MIF: `spec-feature-match` e `scenario-coverage` ficaram
+// indeterminados nas 691 specs, bloqueantes e cegos.
+func TestDefinedRequirementsRespeitaCodeLengthsDoProjeto(t *testing.T) {
+	config.SetCodeLengths([]int{4})
+	defer config.SetCodeLengths([]int{5})
+	got := definedRequirements("| `DDTD-B01` | mesma descrição |\n### DDTD-R02 — regra\n")
+	if len(got) != 2 || got[0] != "DDTD-B01" || got[1] != "DDTD-R02" {
+		t.Fatalf("com code_lengths [4] esperava [DDTD-B01 DDTD-R02], veio %v", got)
+	}
+	if !definesRuleRE().MatchString("| `DDTD-B01` | x |") {
+		t.Error("rule-types: definesRuleRE ignorou code_lengths [4]")
+	}
+	if n := len(titleCodeRE().FindAllString("it('DDTD-B01 / DDTD-B02: x')", -1)); n != 2 {
+		t.Errorf("feature-test-match: titleCodeRE achou %d códigos, esperava 2", n)
 	}
 }

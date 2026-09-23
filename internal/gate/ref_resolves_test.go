@@ -27,6 +27,83 @@ func rodaRefResolves(t *testing.T, arquivo, conteudo, specNome, specConteudo str
 	return checkRefResolves(conteudo, mapx.Node{ID: arquivo, Kind: kind}, dir, nil, nil)
 }
 
+// Variante COM grafo: os casos sem spec irmã precisam dele para dizer se o código citado
+// existe em algum lugar do projeto.
+func rodaRefResolvesComGrafo(t *testing.T, arquivo, conteudo string, g *mapx.Graph) (Verdict, string) {
+	t.Helper()
+	dir := t.TempDir()
+	kind := mapx.KindCode
+	if strings.HasSuffix(arquivo, ".feature") {
+		kind = mapx.KindFeature
+	} else if strings.Contains(arquivo, ".test.") {
+		kind = mapx.KindTest
+	}
+	return checkRefResolves(conteudo, mapx.Node{ID: arquivo, Kind: kind}, dir, g, nil)
+}
+
+// grafoCom monta um mapa com as identidades DECLARADAS informadas.
+func grafoCom(codigos ...string) *mapx.Graph {
+	g := &mapx.Graph{}
+	for _, c := range codigos {
+		g.Nodes = append(g.Nodes, mapx.Node{
+			ID: c + ".spec.md", Kind: mapx.KindSpec, Code: c, CodeDeclarado: true,
+		})
+	}
+	return g
+}
+
+// O buraco que o Skip deixava: sem spec irmã o gate se calava, e um `ref:` INVENTADO
+// passava como indeterminado. Medido no MIF: 1344 de 3174 refs caíam no Skip (42%), e um
+// `ref: KYBDX` criado à mão — código que não é `code:` de spec nenhuma — deu `~1`, não
+// `✗1`. O arquivo de infra sem spec é legítimo; citar identidade fantasma não é.
+func TestRefResolvesCodigoInexistenteNoProjeto(t *testing.T) {
+	t.Run("RFRSR-B05: A reference to a code that exists nowhere fails", func(t *testing.T) {})
+	v, d := rodaRefResolvesComGrafo(t,
+		"kybDocs.ts", "// @anchors\n//   ref: KYBDX\n//   layer: infra\n",
+		grafoCom("ORAT1", "MORQX"))
+	if v != Fail {
+		t.Fatalf("ref para código inexistente deveria reprovar, foi %s (%s)", v, d)
+	}
+	if !strings.Contains(d, "KYBDX") {
+		t.Fatalf("o veredito deveria nomear o código inventado, foi %q", d)
+	}
+}
+
+// A distinção com `trinca-completa` se mantém: infra sem spec irmã é legítima, desde que
+// o `ref:` aponte para identidade REAL. Reprovar aqui roubaria o achado do outro gate.
+func TestRefResolvesSemSpecIrmaMasCodigoExiste(t *testing.T) {
+	t.Run("RFRSR-B06: Without sibling spec, an existing code still skips", func(t *testing.T) {})
+	v, _ := rodaRefResolvesComGrafo(t,
+		"helper.ts", "// @anchors\n//   ref: MORQX\n//   layer: infra\n",
+		grafoCom("ORAT1", "MORQX"))
+	if v != Skip {
+		t.Fatalf("código existente sem spec irmã deveria pular, foi %s", v)
+	}
+}
+
+// Identidade INFERIDA não é dona de nada: aceitar `CodeDeclarado: false` deixaria passar
+// o ref que aponta para uma string de exemplo em fixture ou documentação.
+func TestRefResolvesIdentidadeInferidaNaoVale(t *testing.T) {
+	t.Run("RFRSR-B07: An inferred identity does not satisfy the reference", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "fixture.md", Kind: mapx.KindDoc, Code: "FAKEX", CodeDeclarado: false},
+	}}
+	v, _ := rodaRefResolvesComGrafo(t, "x.ts", "// @anchors\n//   ref: FAKEX\n", g)
+	if v != Fail {
+		t.Fatalf("identidade inferida não deveria satisfazer o ref, foi %s", v)
+	}
+}
+
+// Sem grafo (chamada que não o fornece) o gate não pode afirmar inexistência — e afirmar
+// o que não se mediu é pior que calar.
+func TestRefResolvesSemGrafoNaoAfirmaInexistencia(t *testing.T) {
+	t.Run("RFRSR-B08: Without a graph, absence is not asserted", func(t *testing.T) {})
+	v, _ := rodaRefResolvesComGrafo(t, "x.ts", "// @anchors\n//   ref: QUALQ\n", nil)
+	if v != Skip {
+		t.Fatalf("sem grafo deveria pular, foi %s", v)
+	}
+}
+
 // O caso real: 49 arquivos de modelo com `ref: DTAXX` — a identidade de quando os modelos
 // viviam num arquivo só. Depois da desfusão cada um ganhou spec própria, e nenhum `ref:`
 // foi propagado. `header-conforme` ficou verde nos 49: ele confere que o campo EXISTE.

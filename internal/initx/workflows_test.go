@@ -2129,3 +2129,58 @@ func TestConcurrencyDoPRChecksEhPorPR(t *testing.T) {
 			"(`check_suite`, `workflow_dispatch`) — eles voltariam a compartilhar um grupo")
 	}
 }
+
+// O `to-do` NO NASCIMENTO NAO E' MEXIDA — e a trava o removia.
+//
+// Quem cria o card ja' com `anchors:to-do` (a mao, pelo `anchors escalate`, pela web)
+// dispara `labeled` como humano. O ramo `labeled` do `reverter` removia a label vinte
+// segundos depois, e o `estado-inicial` nao corrigia: quando ele olhou, o card JA' tinha
+// estado. Os dois jobs corriam juntos e se anulavam.
+//
+// MEDIDO no projeto de referencia: 21 cards abertos sem estado, todos com o mesmo rastro
+// — nascem com `to-do`, o `github-actions[bot]` remove em ~20s. Invisiveis ao `claim`.
+//
+// A regua olha SO' o ramo `labeled`: o `anchors:to-do` aparece no arquivo inteiro (o
+// `estado-inicial` o aplica), e uma busca global passaria sem a excecao existir.
+func TestTravaNaoRemoveOToDoDeQuemNasce(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+	i := strings.Index(s, "\n            labeled)")
+	if i < 0 {
+		t.Fatal("o `reverter` nao trata `labeled` — a trava perdeu um dos eventos")
+	}
+	fim := strings.Index(s[i:], "\n            unlabeled)")
+	if fim < 0 {
+		t.Fatal("nao achei o fim do ramo `labeled` — o `case` mudou de forma")
+	}
+	ramo := s[i : i+fim]
+
+	remocao := strings.Index(ramo, "--remove-label")
+	if remocao < 0 {
+		t.Fatal("o ramo `labeled` nao remove mais nada — a trava deixou de reverter")
+	}
+	antes := ramo[:remocao]
+
+	// A excecao tem de vir ANTES da remocao, e sair sem remover.
+	if !strings.Contains(antes, `"$LABEL_MEXIDA" = "anchors:to-do"`) {
+		t.Error("o ramo `labeled` remove o `to-do` sem perguntar se o card esta' NASCENDO " +
+			"— o card criado ja' na fila perde o estado e some do `claim`")
+	}
+	if !strings.Contains(antes, "exit 0") {
+		t.Error("a excecao do nascimento nao sai antes da remocao — o `to-do` e' removido " +
+			"mesmo quando reconhecido como entrada")
+	}
+
+	// E ela so' vale para card SEM OUTRO ESTADO: devolver um `in-progress` a' fila a mao
+	// continua sendo mexida.
+	for _, estado := range []string{"anchors:in-progress", "anchors:ready-to-review",
+		"anchors:in-review", "anchors:ready-to-test"} {
+		if !strings.Contains(antes, estado) {
+			t.Errorf("a excecao nao confere %q — um card nesse estado que recebesse `to-do` "+
+				"a mao voltaria para a fila e seria reimplementado", estado)
+		}
+	}
+}

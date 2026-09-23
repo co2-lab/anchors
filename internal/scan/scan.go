@@ -622,12 +622,13 @@ func extractNeedsCode(content []byte) []string {
 	}
 	raw := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(string(m[1])), "-->"))
 	var out []string
+	phase := phaseCodeRE()
 	for _, part := range strings.Split(raw, ",") {
 		p := stripInlineCode(strings.TrimSpace(part))
 		// Só o que PARECE código de fase. Um caminho aqui é engano de quem escreveu (a
 		// spec depende de uma FASE, não de um arquivo), e aceitá-lo em silêncio deixaria
 		// a dependência sem efeito — o gate não a encontraria no plano.
-		if p == "" || !phaseCodeRE.MatchString(p) {
+		if p == "" || !phase.MatchString(p) {
 			continue
 		}
 		out = append(out, p)
@@ -636,7 +637,12 @@ func extractNeedsCode(content []byte) []string {
 }
 
 // phaseCodeRE casa `FNDTN-F02` — o código de uma fase de plano.
-var phaseCodeRE = regexp.MustCompile(`^[A-Z0-9]` + config.CodeLengthPattern() + `-F\d{2}$`)
+//
+// Compilado por CHAMADA e não em `var`: o comprimento vem de `code_lengths`, carregado
+// DEPOIS dos globais — em `var` ele congelava o default `[5]` (ver `codeRE` no gate).
+func phaseCodeRE() *regexp.Regexp {
+	return regexp.MustCompile(`^[A-Z0-9]` + config.CodeLengthPattern() + `-F\d{2}$`)
+}
 
 // extractNeeds lê a linha `needs:` e resolve cada caminho relativo à raiz. Só faz
 // sentido em plano — um `needs:` numa spec seria a pergunta errada: spec não espera

@@ -452,16 +452,21 @@ func sharedTitle(body, code string) bool {
 	}
 	// quantos códigos DISTINTOS o título cita?
 	achados := map[string]bool{}
-	for _, c := range titleCodeRE.FindAllString(m, -1) {
+	for _, c := range titleCodeRE().FindAllString(m, -1) {
 		achados[c] = true
 	}
 	return len(achados) > 1
 }
 
-var (
-	siblingTitleRECache = map[string]*regexp.Regexp{}
-	titleCodeRE         = regexp.MustCompile(`[A-Z0-9]` + config.CodeLengthPattern() + `-[A-Z]{1,2}\d{2}(?:#\d{2})?`)
-)
+var siblingTitleRECache = map[string]*regexp.Regexp{}
+
+// Compilado por CHAMADA e não em `var` — a mesma regra do `codeRE` (rule_implemented.go):
+// o comprimento do código vem de `code_lengths`, carregado DEPOIS dos globais. Em `var`
+// este regex congelava o default `[5]`, e num projeto `[4]` não casava requisito algum —
+// o título que cita três cenários contava zero.
+func titleCodeRE() *regexp.Regexp {
+	return regexp.MustCompile(`[A-Z0-9]` + config.CodeLengthPattern() + `-[A-Z]{1,2}\d{2}(?:#\d{2})?`)
+}
 
 // testTitleFor extrai o título do teste (`it`, `test`, `t.Run`, etc.) que cita `code`.
 //

@@ -1,6 +1,10 @@
 package mapx
 
-import "path/filepath"
+import (
+	"path/filepath"
+	"sort"
+	"strings"
+)
 
 // A ingestão de sinais de teste no grafo (o Anchors consome o artefato do runner e o
 // amarra aos nós). Casa os caminhos dos relatórios aos nós por SUFIXO de caminho —
@@ -19,6 +23,18 @@ type ExecByFile struct {
 // códigos de cenário ELES declaram (lido do arquivo pelo comando — o mapx não toca
 // disco). IngestExecution cruza esses declarados com os provados.
 func (g *Graph) IngestExecution(byFile map[string]ExecByFile, proven map[string]bool, declaredByNode map[string][]string, layer, now string) (matchedFiles, matchedCodes int) {
+	return g.IngestExecutionSuite(byFile, proven, declaredByNode, layer, "", now)
+}
+
+// IngestExecutionSuite é o IngestExecution com a SUÍTE nomeada (o relatório de onde a
+// execução veio). Com suíte, a prova de cada spec é gravada sob a chave dela e o
+// `ProvenCodes` vira a união de todas — reingerir a MESMA suíte ainda apaga o que ela
+// deixou de provar, mas a ingestão de uma suíte não fala mais pelas outras. Suíte vazia
+// mantém o comportamento anterior: o relatório é a medição inteira.
+//
+// Prova antiga sem suíte (ingerida antes deste campo existir) não tem dono conhecido; a
+// primeira ingestão com suíte que tocar a spec a substitui pela união medida.
+func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven map[string]bool, declaredByNode map[string][]string, layer, suite, now string) (matchedFiles, matchedCodes int) {
 	if layer == "" {
 		layer = "unit" // camada default quando não informada
 	}
@@ -67,9 +83,27 @@ func (g *Graph) IngestExecution(byFile map[string]ExecByFile, proven map[string]
 			// verde (apagado, ou o código do cenário renomeado), e o mapa segue
 			// dizendo que a regra está provada. O `stale` não cobra a unidade,
 			// porque a prova velha responde por ela.
-			if len(pc) > 0 || (n.Signal != nil && len(n.Signal.ProvenCodes) > 0) {
+			if suite == "" {
+				if len(pc) > 0 || (n.Signal != nil && len(n.Signal.ProvenCodes) > 0) {
+					ensureSignal(n)
+					n.Signal.ProvenCodes = pc
+					n.Signal.AtRev = n.Rev
+					n.Signal.IngestedAt = now
+					matchedCodes += len(pc)
+				}
+				continue
+			}
+			var anterior []string
+			if n.Signal != nil {
+				anterior = n.Signal.ProvenBySuite[suite]
+			}
+			if len(pc) > 0 || len(anterior) > 0 {
 				ensureSignal(n)
-				n.Signal.ProvenCodes = pc
+				if n.Signal.ProvenBySuite == nil {
+					n.Signal.ProvenBySuite = map[string][]string{}
+				}
+				n.Signal.ProvenBySuite[suite] = pc
+				n.Signal.ProvenCodes = unionProven(n.Signal.ProvenBySuite)
 				n.Signal.AtRev = n.Rev
 				n.Signal.IngestedAt = now
 				matchedCodes += len(pc)
@@ -77,6 +111,23 @@ func (g *Graph) IngestExecution(byFile map[string]ExecByFile, proven map[string]
 		}
 	}
 	return
+}
+
+// unionProven: os códigos provados por QUALQUER suíte, sem repetição e em ordem estável
+// (o mapa é versionado; ordem de map mudaria o arquivo a cada ingestão).
+func unionProven(bySuite map[string][]string) []string {
+	visto := map[string]bool{}
+	var out []string
+	for _, codes := range bySuite {
+		for _, c := range codes {
+			if !visto[c] {
+				visto[c] = true
+				out = append(out, c)
+			}
+		}
+	}
+	sort.Strings(out)
+	return out
 }
 
 // IngestCoverage grava a cobertura de linha nos nós de CÓDIGO, casando por caminho.
@@ -238,4 +289,64 @@ func hasPathSuffix(full, suffix string) bool {
 	}
 	// a posição antes do sufixo deve ser um separador (fronteira de caminho)
 	return full[len(full)-len(suffix)-1] == '/'
+}
+
+// ResolveReportPaths decide, ANTES da ingestão, a que nó cada caminho do relatório
+// pertence — e devolve o caminho reescrito para o ID exato do nó.
+//
+// Por que existe: o casamento é por SUFIXO, e runners de monorepo escrevem caminhos
+// relativos ao próprio workspace (`src/components/atoms/SectionLabel.tsx`). Com dois
+// workspaces que têm o mesmo arquivo, o sufixo casa os DOIS nós e os dois recebiam o
+// sinal — a cobertura da landing aparecia no componente homônimo do mobile, e a
+// ingestão seguinte trocava o sentido. MEDIDO no MIF (2026-09-23): 100 arquivos no
+// lcov "casavam" 101 nós.
+//
+// Desempate: o nó que divide o prefixo de diretório mais longo com o PRÓPRIO relatório
+// (`reportRel`, relativo à raiz). O `unit.xml` em `apps/landing-page/test-output/` é da
+// landing. Se ainda assim empatar, o caminho fica SEM dono e volta em `ambiguous`:
+// atribuir a um dos dois no palpite seria afirmar uma prova que ninguém mediu.
+func (g *Graph) ResolveReportPaths(kind Kind, paths []string, reportRel string) (resolved map[string]string, ambiguous []string) {
+	resolved = map[string]string{}
+	hint := filepath.ToSlash(reportRel)
+	for _, p := range paths {
+		var cands []string
+		for _, n := range g.Nodes {
+			if n.Kind == kind && pathMatches(n.ID, p) {
+				cands = append(cands, n.ID)
+			}
+		}
+		switch len(cands) {
+		case 0:
+			resolved[p] = p // ninguém casa: segue como veio (a ingestão só não amarra)
+		case 1:
+			resolved[p] = cands[0]
+		default:
+			best, bestLen, tie := "", -1, false
+			for _, c := range cands {
+				l := commonDirPrefix(c, hint)
+				switch {
+				case l > bestLen:
+					best, bestLen, tie = c, l, false
+				case l == bestLen:
+					tie = true
+				}
+			}
+			if tie {
+				ambiguous = append(ambiguous, p)
+				continue
+			}
+			resolved[p] = best
+		}
+	}
+	return
+}
+
+// commonDirPrefix conta quantos segmentos de diretório iniciais `a` e `b` compartilham.
+func commonDirPrefix(a, b string) int {
+	sa, sb := strings.Split(filepath.ToSlash(a), "/"), strings.Split(filepath.ToSlash(b), "/")
+	n := 0
+	for n < len(sa)-1 && n < len(sb)-1 && sa[n] == sb[n] {
+		n++
+	}
+	return n
 }

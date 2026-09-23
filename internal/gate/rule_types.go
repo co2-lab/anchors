@@ -151,8 +151,14 @@ func conflictingLetters(types []config.RuleType) string {
 // uma linha de tabela (`| \`CODEX-B01\` | … |`). Uma seção que apenas CITA códigos de
 // outras seções (ex.: "Test IDs (Maestro)", que referencia `BUTOX-A01` na coluna "Usado
 // em") NÃO cataloga regra — e portanto não precisa reivindicar letra.
-var definesRuleRE = regexp.MustCompile(
-	"(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}[A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2}")
+// Compilado por CHAMADA e não em `var` — a mesma regra do `codeRE` (rule_implemented.go):
+// o comprimento do código vem de `code_lengths`, carregado DEPOIS dos globais. Em `var`
+// este regex congelava o default `[5]`, e num projeto `[4]` não casava requisito algum —
+// toda seção de regras passava por "não cataloga regra".
+func definesRuleRE() *regexp.Regexp {
+	return regexp.MustCompile(
+		"(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}[A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2}")
+}
 
 // unclaimedSections acha seções que catalogam regras (DEFINEM ao menos um código) sob um
 // título que nenhuma entrada do vocabulário declara. Seções sem código, ou que só citam
@@ -168,12 +174,13 @@ func unclaimedSections(content string, types []config.RuleType) string {
 	cur := ""
 	var orphan []string
 	seen := map[string]bool{}
+	defines := definesRuleRE()
 	for _, line := range lines {
 		if m := specSectionRE.FindStringSubmatch(line); m != nil {
 			cur = m[1]
 			continue
 		}
-		if cur == "" || !definesRuleRE.MatchString(line) {
+		if cur == "" || !defines.MatchString(line) {
 			continue
 		}
 		key := normalizeSection(cur)

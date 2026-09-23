@@ -160,9 +160,25 @@ func runInternalAggregate(g config.Gate, root string, graph *mapx.Graph, cfg *co
 }
 
 // non-empty: o arquivo não é vazio nem só espaço. Trivial, mas pega placeholders.
-func checkNonEmpty(content string, _ mapx.Node) (Verdict, string) {
+//
+// Para uma FEATURE, porém, "não vazio" não pode ser medido em bytes. O cabeçalho Gherkin
+// (`# language`, o header @anchors, as tags e a linha `Funcionalidade:`) já enche oito
+// linhas SEM declarar um único cenário — e o arquivo passava, porque `TrimSpace` só pega
+// o arquivo literalmente vazio.
+//
+// Medido no app de referência: 12 features de `services/` com exatamente esse formato —
+// oito linhas, zero cenários — todas aprovadas por este gate enquanto ele era bloqueante.
+// A casca vazia atravessava o pipeline parecendo cobertura: a trinca tinha as três peças,
+// e a do meio não dizia nada.
+//
+// O que conta como substância depende do artefato, e para feature é o CENÁRIO — a
+// unidade que a feature existe para declarar.
+func checkNonEmpty(content string, n mapx.Node) (Verdict, string) {
 	if strings.TrimSpace(content) == "" {
 		return Fail, i18n.T("gate.empty_file")
+	}
+	if n.Kind == mapx.KindFeature && !scenarioRE.MatchString(content) {
+		return Fail, i18n.T("gate.feature_no_scenario")
 	}
 	return Pass, ""
 }
@@ -645,8 +661,17 @@ func siblingsWithoutCode(content string) string {
 // A classe de letras vem do vocabulário do projeto (`rule_types`) — ver SetRuleLetters.
 var anyCodeRE = anyCodeREFor(config.DefaultRuleLetters)
 
+// O `DS-` leva o NOME junto: um estado de dado é `SECU-DS-bio-on`, não `SECU-DS-`.
+//
+// A regex irmã que lê a FEATURE (`featCodeREFor`) já captura `DS-[A-Za-z0-9-]+`; esta,
+// que lê o TESTE e o código, parava no `DS-` e devolvia um prefixo que não existe em
+// lugar nenhum. As duas pontas do mesmo contrato liam gramáticas diferentes, e o
+// `test-feature-match` acusava o teste de provar `SECU-DS-` — um código que ninguém
+// escreveu — enquanto o cenário `@SECU-DS-bio-on` estava lá, declarado.
+//
+// Medido no app de referência: 78 dos 124 códigos "órfãos" eram este truncamento.
 func anyCodeREFor(letters string) *regexp.Regexp {
-	return regexp.MustCompile(`\b[A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) + `]\d{2}|DS-|VR)`)
+	return regexp.MustCompile(`\b[A-Z0-9]` + config.CodeLengthPattern() + `-(?:[` + regexp.QuoteMeta(letters) + `]\d{2}|DS-[A-Za-z0-9-]+|VR)`)
 }
 
 // SetRuleLetters reconfigura a gramática de código dos gates para o vocabulário do

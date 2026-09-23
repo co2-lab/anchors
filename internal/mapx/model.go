@@ -269,6 +269,13 @@ type TestSignal struct {
 	// Códigos de cenário PROVADOS: os que aparecem em um caso de teste que PASSOU.
 	// É a cobertura semântica (qual requisito da spec tem teste verde).
 	ProvenCodes []string `yaml:"proven_codes,omitempty"`
+	// ProvenBySuite: os provados POR SUÍTE (chave = o relatório JUnit, relativo à raiz), e
+	// `ProvenCodes` é a união. Existe pelo mesmo motivo do `ByLayer` dos nós de teste: num
+	// monorepo cada suíte é ingerida sozinha, e com um campo só a ingestão do mobile
+	// gravava VAZIO nas specs do backend — que não estavam naquele relatório, não que
+	// tivessem perdido a prova. MEDIDO no MIF (2026-09-23): 131 specs do backend zeradas
+	// pela mesma ingestão que provou 390 do mobile.
+	ProvenBySuite map[string][]string `yaml:"proven_by_suite,omitempty"`
 	// AtRev: a rev do nó quando o sinal foi ingerido (para detectar staleness).
 	AtRev string `yaml:"at_rev,omitempty"`
 	// ClosureRev: a rev de cada nó do FECHO deste teste no momento da ingestão — o que ele
