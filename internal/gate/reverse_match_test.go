@@ -215,3 +215,57 @@ func TestTestFeatureMatch_revisionIsNotReported(t *testing.T) {
 		t.Errorf("the revision was charged as a rule: %v / %s", v, msg)
 	}
 }
+
+// DATA STATES are defined by NAME, in the spec's short form — and a state no spec defines
+// is still an orphan.
+//
+// Measured in a project that defines its states in a table (`| DS-data-present | … |`)
+// and cites them in the feature as `@TREXX-DS-data-present`: 94 of 103 failures of this
+// gate were states the spec DID define. The fixture keeps one real orphan (`DS-filter`)
+// to prove the fix is not an amnesty.
+func TestFeatureSpecMatch_dataStatesAreDefinedByName(t *testing.T) {
+	t.Run("FSPMT-X03: a data state the spec defines in short form is not an orphan", func(t *testing.T) {})
+	spec := "### TREXX-B01 — the rule\n\n## Data states\n\n" +
+		"| State | When |\n| --- | --- |\n" +
+		"| `DS-data-present` | some month is non-zero |\n" +
+		"| `DS-data-empty` | every month is zero |\n"
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "x.spec.md"), []byte(spec), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	node := mapx.Node{ID: "x.feature", Kind: mapx.KindFeature, Code: "TREXX"}
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{node},
+		Edges: []mapx.Edge{{From: "x.spec.md", To: "x.feature", Type: mapx.EdgeCoveredBy}},
+	}
+	feature := "@TREXX\nFeature: X\n\n" +
+		"  @TREXX-B01\n  Scenario: rule\n\n" +
+		"  @TREXX-DS-data-present\n  Scenario: data present\n\n" +
+		"  @TREXX-DS-data-empty\n  Scenario: data empty\n\n" +
+		"  @TREXX-DS-filter\n  Scenario: a state no spec defines\n"
+
+	v, msg := checkFeatureSpecMatch(feature, node, root, g, nil)
+	if v != Fail {
+		t.Fatalf("DS-filter is not defined and the verdict was %v", v)
+	}
+	if !strings.Contains(msg, "TREXX-DS-filter") {
+		t.Errorf("the real orphan is not named: %q", msg)
+	}
+	for _, defined := range []string{"TREXX-DS-data-present", "TREXX-DS-data-empty"} {
+		if strings.Contains(msg, defined) {
+			t.Errorf("%s is defined in the spec and was reported: %q", defined, msg)
+		}
+	}
+}
+
+// The VISUAL BASELINE is not a rule the spec defines: `vr-baseline` charges it.
+func TestFeatureSpecMatch_visualBaselineIsNotCharged(t *testing.T) {
+	t.Run("FSPMT-X04: the unit's VR baseline is left to vr-baseline", func(t *testing.T) {})
+	root, g := withSpec(t, "### UNITX-B01 — the rule\n")
+	withVR := "@UNITX\nFeature: X\n\n  @UNITX-B01\n  Scenario: rule\n\n" +
+		"  @UNITX-VR @nivel-vr\n  Scenario: the screen's picture\n"
+
+	if v, msg := checkFeatureSpecMatch(withVR, featNodeRev(), root, g, nil); v != Pass {
+		t.Errorf("the VR baseline was charged as an orphan: %v / %s", v, msg)
+	}
+}

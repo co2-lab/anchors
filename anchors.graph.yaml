@@ -1079,7 +1079,7 @@ nodes:
     - id: cmd/anchors/quality/check.go
       kind: code
       rev: 6a7d947fe6db
-      updated_at: "2026-09-22"
+      updated_at: "2026-09-23"
       layer: comando
       tags:
         - cli
@@ -1592,14 +1592,14 @@ nodes:
     - id: internal/flagx/grammar_test.go
       kind: test
       rev: 57fee8a2b6a5
-      updated_at: "2026-09-21"
+      updated_at: "2026-09-23"
       layer: teste
       tags:
         - test
     - id: internal/flagx/parse_test.go
       kind: test
       rev: 533995aa4247
-      updated_at: "2026-09-21"
+      updated_at: "2026-09-23"
       code: CHKUT
       layer: teste
       tags:
@@ -2135,7 +2135,7 @@ nodes:
     - id: internal/gate/flag.go
       kind: code
       rev: 6a3dff4c49a3
-      updated_at: "2026-09-22"
+      updated_at: "2026-09-23"
       layer: gate
       tags:
         - regra
@@ -2143,7 +2143,7 @@ nodes:
     - id: internal/gate/flag_test.go
       kind: test
       rev: 5f9c24ab2099
-      updated_at: "2026-09-22"
+      updated_at: "2026-09-23"
       code: CHKUT
       layer: teste
       tags:
@@ -2962,16 +2962,16 @@ nodes:
         - test
     - id: internal/gate/reverse_match.go
       kind: code
-      rev: 40a134e109d8
-      updated_at: "2026-09-22"
+      rev: 029f5f645c9b
+      updated_at: "2026-09-23"
       layer: gate
       tags:
         - regra
         - gate
     - id: internal/gate/reverse_match_test.go
       kind: test
-      rev: 7cf303f91adf
-      updated_at: "2026-09-22"
+      rev: fa60dd8f1c7a
+      updated_at: "2026-09-23"
       code: UNITX
       layer: teste
       tags:
@@ -3005,7 +3005,7 @@ nodes:
     - id: internal/gate/revision_orphans_test.go
       kind: test
       rev: bbd306286488
-      updated_at: "2026-09-22"
+      updated_at: "2026-09-23"
       code: NTCNN
       layer: teste
       code_declared: true
@@ -3241,7 +3241,7 @@ nodes:
     - id: internal/gate/scenario_coverage_two_questions_test.go
       kind: test
       rev: c47f2dea9aae
-      updated_at: "2026-09-21"
+      updated_at: "2026-09-23"
       code: CREDX
       layer: teste
       tags:

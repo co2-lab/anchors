@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -81,6 +82,36 @@ func indicesOf(s, sub string) []int {
 	}
 }
 
+// dataStateDefRE finds where a spec DEFINES a data state: `DS-<name>` at the start of a
+// heading, a bullet or a table's first cell — the same positions that define a rule. The
+// unit prefix is optional, because specs write the short form inside their own unit.
+var dataStateDefRE = regexp.MustCompile("(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}(?:[A-Z0-9]{3,6}-)?(DS-[A-Za-z0-9-]+)")
+
+// dataStatesOf returns the data states a spec defines, in short form (`DS-data-present`).
+//
+// `definedRequirements` only knows `-{letter}{NN}` rules, and a data state is not one: it
+// is named, not numbered. Measured in a project that defines states in a table
+// (`| DS-data-present | … |`) and cites them in the feature as `@TREX-DS-data-present`:
+// 94 of 103 `feature-spec-match` failures were this — states the spec DID define.
+func dataStatesOf(content string) map[string]bool {
+	out := map[string]bool{}
+	for _, m := range dataStateDefRE.FindAllStringSubmatch(content, -1) {
+		out[strings.TrimRight(m[1], "-")] = true
+	}
+	return out
+}
+
+// visualRegression reports whether a scenario code is the unit's VISUAL baseline
+// (`TREX-VR`, `TREX-VR-<state>`).
+//
+// It is not a rule the spec defines — it is the screen's picture, and `vr-baseline` is the
+// gate that charges it (the flow exists, the baseline image exists). Charging it here too
+// would report every screen that adopts visual regression as an orphan.
+func visualRegression(code string) bool {
+	_, rest, ok := strings.Cut(code, "-")
+	return ok && (rest == "VR" || strings.HasPrefix(rest, "VR-"))
+}
+
 // checkFeatureSpecMatch — the return leg of `spec-feature-match`: does every SCENARIO of
 // the feature correspond to a rule the spec still DEFINES?
 //
@@ -114,6 +145,7 @@ func checkFeatureSpecMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	// The union of what the linked specs define. Union and not intersection: a feature may
 	// cover more than one spec, and a scenario matching ANY of them has an owner.
 	declared := map[string]bool{}
+	states := map[string]bool{}
 	for _, sp := range specPaths {
 		b, err := os.ReadFile(filepath.Join(root, sp))
 		if err != nil {
@@ -122,8 +154,11 @@ func checkFeatureSpecMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		for _, c := range definedRequirements(string(b)) {
 			declared[c] = true
 		}
+		for st := range dataStatesOf(string(b)) {
+			states[st] = true
+		}
 	}
-	if len(declared) == 0 {
+	if len(declared) == 0 && len(states) == 0 {
 		return Pending, i18n.T("gate.feature_spec.pending_no_requirements")
 	}
 
@@ -137,6 +172,13 @@ func checkFeatureSpecMatch(content string, n mapx.Node, root string, g *mapx.Gra
 			// scenarios charged to a spec that defined 6.
 			rule := withoutVariant(c)
 			if n.Code != "" && !strings.HasPrefix(rule, n.Code+"-") {
+				continue
+			}
+			if visualRegression(rule) {
+				continue
+			}
+			// A data state is declared by its NAME, with or without the unit prefix.
+			if _, short, ok := strings.Cut(rule, "-"); ok && strings.HasPrefix(short, "DS-") && states[short] {
 				continue
 			}
 			if declared[rule] || seen[rule] {
