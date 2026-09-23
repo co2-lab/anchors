@@ -10,205 +10,195 @@ import (
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-func rodaAncora(t *testing.T, spec, codigo string, cfg *config.Config) (Verdict, string) {
+const anchorPattern = `@code-reference-\[([^\]]+)\]-\[([^\]]+)\]`
+
+func cfgAnchor() *config.Config {
+	return &config.Config{Derived: &config.Derived{ValueAnchor: anchorPattern}}
+}
+
+// project writes the files and returns the root and a map with them as nodes (`.spec.md`
+// as specs, the rest as code). Each call builds a NEW graph, so the per-map index cache
+// never leaks between tests.
+func project(t *testing.T, files map[string]string) (string, *mapx.Graph) {
 	t.Helper()
 	root := t.TempDir()
-	if err := os.WriteFile(filepath.Join(root, "u.ts"), []byte(codigo), 0o644); err != nil {
+	g := &mapx.Graph{}
+	for name, body := range files {
+		p := filepath.Join(root, name)
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		kind := mapx.KindCode
+		if strings.HasSuffix(name, ".spec.md") {
+			kind = mapx.KindSpec
+		}
+		g.Nodes = append(g.Nodes, mapx.Node{ID: name, Kind: kind})
+	}
+	return root, g
+}
+
+func runOn(t *testing.T, root string, g *mapx.Graph, file string) (Verdict, string) {
+	t.Helper()
+	b, err := os.ReadFile(filepath.Join(root, file))
+	if err != nil {
 		t.Fatal(err)
 	}
-	g := &mapx.Graph{
-		Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: "u.ts", Kind: mapx.KindCode}},
-		Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
+	return checkValueAnchored(string(b), mapx.Node{ID: file, Kind: mapx.KindCode}, root, g, cfgAnchor())
+}
+
+// --- LOCAL: the declaration against the code line below it ---
+
+func TestValueAnchored_declarationMatchingItsLinePasses(t *testing.T) {
+	t.Run("VLANV-B01: a declaration whose next code line contains the value passes", func(t *testing.T) {})
+	root, g := project(t, map[string]string{"theme.ts": "// @code-reference-[COLOR-OK]-[#1F8A5B]\nsuccess: '#1F8A5B',\n"})
+	if v, msg := runOn(t, root, g, "theme.ts"); v != Pass {
+		t.Errorf("the line carries the value and the verdict was %v: %s", v, msg)
 	}
-	return checkValueAnchored(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
 }
 
-func cfgAncora() *config.Config {
-	return &config.Config{Derived: &config.Derived{
-		ExportDetect: exportedREDefaultTS,
-		ValueAnchor:  `@code-reference-\[([^\]]+)\]-\[([^\]]+)\]`,
-	}}
-}
-
-// CADA VALOR DE UM CONJUNTO FECHADO E UMA DECISAO -- e uma dispensa sobre o SIMBOLO
-// libera todos de uma vez.
-//
-// MEDIDO: o `QueryScope` do blue-eyes declara `JANELAS = ['15m','1h','6h','24h']` com um
-// `@no-rule` na linha do `export`. Os quatro valores nunca foram confrontados
-// individualmente, e duas telas passaram a declarar `5m`, `30m` e `1d` -- que o contrato
-// NAO aceita. O backend cai no padrao `1h` em silencio: a tela mostra `5m` exibindo dados
-// de uma hora.
-func TestValorSemAncoraReprova(t *testing.T) {
-	t.Run("VLANV-B02: A value of a closed set with no anchor is failed", func(t *testing.T) {})
-	t.Run("VLANV-B03: The verdict names the unanchored value", func(t *testing.T) {})
-	codigo := "export const JANELAS = [\n  '15m',\n  '1h',\n] as const;\n"
-	v, msg := rodaAncora(t, "# U\n\n## UUUUU-B01 — janelas\n", codigo, cfgAncora())
+func TestValueAnchored_declarationThatLiesFails(t *testing.T) {
+	t.Run("VLANV-B02: a declaration whose next code line does not contain the value fails", func(t *testing.T) {})
+	root, g := project(t, map[string]string{"theme.ts": "// @code-reference-[COLOR-OK]-[#1F8A5B]\nsuccess: '#2A9D6B',\n"})
+	v, msg := runOn(t, root, g, "theme.ts")
 	if v != Fail {
-		t.Fatalf("valor sem ancora deveria reprovar, veio %v: %s", v, msg)
+		t.Fatalf("the line says another value and the verdict was %v", v)
 	}
-	if !strings.Contains(msg, "15m") {
-		t.Errorf("a mensagem nao nomeia o valor sem ancora: %q", msg)
-	}
-}
-
-// A ancora completa vale: chave da regra + valor esperado.
-func TestValorComAncoraPassa(t *testing.T) {
-	t.Run("VLANV-B04: A value whose anchor carries rule key and value passes", func(t *testing.T) {})
-	codigo := "export const JANELAS = [\n" +
-		"  // @code-reference-[WINDOW-001]-[15m]\n  '15m',\n" +
-		"  // @code-reference-[WINDOW-002]-[1h]\n  '1h',\n] as const;\n"
-	if v, msg := rodaAncora(t, "# U\n\n## UUUUU-B01 — janelas\n", codigo, cfgAncora()); v != Pass {
-		t.Errorf("ancora completa deveria passar, veio %v: %s", v, msg)
+	for _, want := range []string{"COLOR-OK", "#1F8A5B", "#2A9D6B"} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("the verdict does not show %q: %q", want, msg)
+		}
 	}
 }
 
-// O SEGUNDO COLCHETE E O QUE SEPARA CITAR DE PROVAR.
-//
-// Uma ancora que so aponta a regra apodrece em silencio: alguem troca o valor e o
-// comentario continua parecendo correto. Com o valor escrito nela, o gate confronta o que
-// a ancora AFIRMA contra o que a linha DIZ -- e isso nao depende de linguagem, porque
-// compara duas partes do proprio comentario com a linha que ele anota.
-func TestAncoraQueMenteSobreOValorReprova(t *testing.T) {
-	t.Run("VLANV-B05: An anchor that asserts one value while the line says another is failed", func(t *testing.T) {})
-	t.Run("VLANV-B06: The verdict of a lying anchor shows both sides of the divergence", func(t *testing.T) {})
-	codigo := "export const JANELAS = [\n" +
-		"  // @code-reference-[WINDOW-001]-[15m]\n  '5m',\n] as const;\n"
-	v, msg := rodaAncora(t, "# U\n\n## UUUUU-B01 — janelas\n", codigo, cfgAncora())
+// Comment lines between the declaration and the code are skipped: declarations may be
+// stacked, and an explanation may sit between them.
+func TestValueAnchored_commentLinesAreSkipped(t *testing.T) {
+	t.Run("VLANV-B03: comment and blank lines between declaration and code are skipped", func(t *testing.T) {})
+	body := "// @code-reference-[COLOR-OK]-[#1F8A5B]\n" +
+		"// @code-reference-[COLOR-BG]-[#FFFFFF]\n" +
+		"// the brand pair, used together\n\n" +
+		"pair: ['#1F8A5B', '#FFFFFF'],\n"
+	root, g := project(t, map[string]string{"theme.ts": body})
+	if v, msg := runOn(t, root, g, "theme.ts"); v != Pass {
+		t.Errorf("both declarations annotate the code line below and it holds both: %v / %s", v, msg)
+	}
+}
+
+func TestValueAnchored_declarationWithNoCodeBelowFails(t *testing.T) {
+	t.Run("VLANV-B07: a declaration with no code line below it fails", func(t *testing.T) {})
+	root, g := project(t, map[string]string{"theme.ts": "x = 1\n// @code-reference-[COLOR-OK]-[#1F8A5B]\n"})
+	v, msg := runOn(t, root, g, "theme.ts")
+	if v != Fail || !strings.Contains(msg, "COLOR-OK") {
+		t.Errorf("a declaration with nothing below it annotates nothing: %v / %s", v, msg)
+	}
+}
+
+// --- ACROSS: every declaration of the same key declares the same value ---
+
+// The propagation: the colour changed in one place, declaration included, and the other
+// place stayed behind. Each file is locally consistent — only the comparison catches it.
+func TestValueAnchored_divergentCopiesAreReported(t *testing.T) {
+	t.Run("VLANV-B04: declarations of the same key with different values are reported", func(t *testing.T) {})
+	root, g := project(t, map[string]string{
+		"theme.ts":  "// @code-reference-[COLOR-OK]-[#2A9D6B]\nsuccess: '#2A9D6B',\n",
+		"banner.ts": "// @code-reference-[COLOR-OK]-[#1F8A5B]\nfill: '#1F8A5B',\n",
+	})
+	v, msg := runOn(t, root, g, "banner.ts")
 	if v != Fail {
-		t.Fatalf("a ancora afirma `15m` e a linha diz `5m` — deveria reprovar, veio %v: %s", v, msg)
+		t.Fatalf("the copies disagree and the verdict was %v", v)
 	}
-	if !strings.Contains(msg, "15m") || !strings.Contains(msg, "5m") {
-		t.Errorf("a mensagem precisa mostrar OS DOIS lados da divergencia: %q", msg)
-	}
-}
-
-// Sem `value_anchor` declarado o gate PULA -- nao sabe ler, nao aprova.
-func TestValorAncoradoPulaSemPadrao(t *testing.T) {
-	t.Run("VLANV-B08: Without a declared value anchor pattern the gate skips", func(t *testing.T) {})
-	t.Run("VLANV-B09: The skip names the setting that enables the gate", func(t *testing.T) {})
-	codigo := "export const JANELAS = ['15m'] as const;\n"
-	v, msg := rodaAncora(t, "# U\n", codigo, nil)
-	if v == Pass || v == Fail {
-		t.Errorf("sem padrao declarado o gate nao pode julgar (%v): %s", v, msg)
-	}
-	if !strings.Contains(msg, "value_anchor") {
-		t.Errorf("a mensagem nao diz COMO habilitar: %q", msg)
+	for _, want := range []string{"theme.ts", "banner.ts", "#2A9D6B", "#1F8A5B"} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("the verdict does not list %q: %q", want, msg)
+		}
 	}
 }
 
-// O gate alcanca o codigo ATRAVES da spec -- sobre os outros tipos ele nao tem jurisdicao
-// propria.
-func TestValorAncoradoSoOlhaSpec(t *testing.T) {
-	t.Run("VLANV-B01: An artifact that is not a spec leaves without a verdict", func(t *testing.T) {})
-	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "u.ts", Kind: mapx.KindCode}}}
-	n := mapx.Node{ID: "u.ts", Kind: mapx.KindCode}
-	if v, msg := checkValueAnchored("", n, t.TempDir(), g, cfgAncora()); v != Skip {
-		t.Errorf("no de codigo deveria pular, veio %v: %s", v, msg)
+func TestValueAnchored_agreeingCopiesPass(t *testing.T) {
+	root, g := project(t, map[string]string{
+		"theme.ts":  "// @code-reference-[COLOR-OK]-[#1F8A5B]\nsuccess: '#1F8A5B',\n",
+		"banner.ts": "// @code-reference-[COLOR-OK]-[#1F8A5B]\nfill: '#1F8A5B',\n",
+	})
+	if v, msg := runOn(t, root, g, "banner.ts"); v != Pass {
+		t.Errorf("the copies agree and the verdict was %v: %s", v, msg)
 	}
 }
 
-// A ANCORA QUE MENTE vem primeiro: e pior que a ausente. A ausente se ve; esta parece
-// rastreabilidade e aponta para o lugar errado.
-func TestAncoraMentirosaVemAntesDaAusente(t *testing.T) {
-	t.Run("VLANV-B07: Lying anchors are reported before the unanchored ones", func(t *testing.T) {})
-	codigo := "export const JANELAS = [\n" +
-		"  // @code-reference-[WINDOW-001]-[15m]\n  '5m',\n" +
-		"  '24h',\n] as const;\n"
-	v, msg := rodaAncora(t, "# U\n", codigo, cfgAncora())
+// --- SPEC: the key is a rule that declares its value ---
+
+// The rule is the source: the value changed in the spec, and every place still carrying
+// the old one is reported — even when all the copies agree with each other.
+func TestValueAnchored_ruleValueInTheSpecIsTheSource(t *testing.T) {
+	t.Run("VLANV-B05: a declaration disagreeing with the value its rule declares fails", func(t *testing.T) {})
+	root, g := project(t, map[string]string{
+		"tokens.spec.md": "| Rule | Token | Value |\n| --- | --- | --- |\n| `TKNSX-R01` | success | `#2A9D6B` |\n",
+		"theme.ts":       "// @code-reference-[TKNSX-R01]-[#1F8A5B]\nsuccess: '#1F8A5B',\n",
+		"banner.ts":      "// @code-reference-[TKNSX-R01]-[#1F8A5B]\nfill: '#1F8A5B',\n",
+	})
+	v, msg := runOn(t, root, g, "theme.ts")
 	if v != Fail {
-		t.Fatalf("esperava Fail, veio %v: %s", v, msg)
+		t.Fatalf("the rule now says #2A9D6B and the verdict was %v", v)
 	}
-	iMentira := strings.Index(msg, "5m")
-	i24 := strings.Index(msg, "24h")
-	if iMentira < 0 || i24 < 0 {
-		t.Fatalf("o laudo precisa citar os dois achados: %q", msg)
-	}
-	if iMentira > i24 {
-		t.Errorf("a ancora mentirosa tem de vir ANTES da ausente:\n%s", msg)
+	if !strings.Contains(msg, "#2A9D6B") || !strings.Contains(msg, "tokens.spec.md") {
+		t.Errorf("the verdict does not show the rule's value and where it lives: %q", msg)
 	}
 }
 
-// Um `export const X = 1` nao abre lista: nao e conjunto fechado e nao ha o que ancorar.
-func TestEscalarNaoEhConjuntoFechado(t *testing.T) {
-	t.Run("VLANV-B10: A declaration that opens no list is not a closed set", func(t *testing.T) {})
-	codigo := "export const JANELA_PADRAO = '1h';\n"
-	if v, msg := rodaAncora(t, "# U\n", codigo, cfgAncora()); v != Pass {
-		t.Errorf("escalar nao e conjunto, deveria passar, veio %v: %s", v, msg)
+func TestValueAnchored_ruleValueMatchingPasses(t *testing.T) {
+	root, g := project(t, map[string]string{
+		"tokens.spec.md": "| Rule | Token | Value |\n| --- | --- | --- |\n| `TKNSX-R01` | success | `#1F8A5B` |\n",
+		"theme.ts":       "// @code-reference-[TKNSX-R01]-[#1F8A5B]\nsuccess: '#1F8A5B',\n",
+	})
+	if v, msg := runOn(t, root, g, "theme.ts"); v != Pass {
+		t.Errorf("the declaration matches the rule and the verdict was %v: %s", v, msg)
 	}
 }
 
-// Sem o SEGUNDO grupo a ancora nao afirma valor nenhum -- e o confronto que da razao ao
-// gate nao pode acontecer. Vale como padrao nao declarado.
-func TestPadraoComUmGrupoNaoHabilita(t *testing.T) {
-	t.Run("VLANV-I01: An anchor pattern with a single capture group does not enable the gate", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{
-		ExportDetect: exportedREDefaultTS,
-		ValueAnchor:  `@code-reference-\[([^\]]+)\]`,
-	}}
-	codigo := "export const JANELAS = [\n  '15m',\n] as const;\n"
-	v, msg := rodaAncora(t, "# U\n", codigo, cfg)
-	if v == Pass || v == Fail {
-		t.Errorf("padrao de um grupo nao e verificavel, o gate nao pode julgar (%v): %s", v, msg)
+// Only a table cell that is ENTIRELY a backticked token is a declared value. A heading
+// or a prose cell carries backticked identifiers all the time, and reading them as values
+// would charge every declaration pointing at an ordinary rule.
+func TestValueAnchored_proseRuleDeclaresNoValue(t *testing.T) {
+	t.Run("VLANV-X01: a rule whose line declares no value is not charged against the spec", func(t *testing.T) {})
+	root, g := project(t, map[string]string{
+		"credit.spec.md": "### CREDX-B01 — validates the `limit` before submitting\n\n" +
+			"| `CREDX-B02` | uses `calcLimit` to decide |\n",
+		"a.ts": "// @code-reference-[CREDX-B01]-[500]\nconst max = 500\n// @code-reference-[CREDX-B02]-[600]\nconst min = 600\n",
+	})
+	if v, msg := runOn(t, root, g, "a.ts"); v != Pass {
+		t.Errorf("neither rule declares a value, and the declarations were charged: %v / %s", v, msg)
 	}
 }
 
-// A ancora `@code-reference-[WINDOW-001]-[15m]` carrega dois `]`, e trata-los como fim de
-// lista encerrava o conjunto na primeira ancora: o gate saia do bloco e nao confrontava
-// valor nenhum. Um caso que deveria reprovar passava, porque o confronto nunca acontecia.
-func TestAncoraNaoFechaOConjunto(t *testing.T) {
-	t.Run("VLANV-I02: A line carrying an anchor is never read as the end of the list", func(t *testing.T) {})
-	codigo := "export const JANELAS = [\n" +
-		"  // @code-reference-[WINDOW-001]-[15m]\n  '15m',\n" +
-		"  // @code-reference-[WINDOW-002]-[1h]\n  '6h',\n] as const;\n"
-	v, msg := rodaAncora(t, "# U\n", codigo, cfgAncora())
-	if v != Fail {
-		t.Fatalf("o segundo valor mente e tem de ser alcancado, veio %v: %s", v, msg)
-	}
-	if !strings.Contains(msg, "6h") {
-		t.Errorf("o confronto parou na primeira ancora — o segundo valor nao foi visto:\n%s", msg)
+// --- what the gate is NOT ---
+
+// A value nobody declared is not charged: anchoring is for REPLICATED keys, and whoever
+// replicates declares.
+func TestValueAnchored_undeclaredValuesAreNotCharged(t *testing.T) {
+	t.Run("VLANV-X02: a literal with no declaration is not charged", func(t *testing.T) {})
+	root, g := project(t, map[string]string{"windows.ts": "export const WINDOWS = [\n  '15m',\n  '1h',\n]\n"})
+	if v, _ := runOn(t, root, g, "windows.ts"); v != Skip {
+		t.Errorf("no declaration in the file: expected Skip, got %v", v)
 	}
 }
 
-// Aprovar sem poder olhar carimbaria o que nao foi medido.
-func TestValorAncoradoSemMapaNaoAprova(t *testing.T) {
-	t.Run("VLANV-I03: With no built map the verdict is pending", func(t *testing.T) {})
-	n := mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}
-	if v, msg := checkValueAnchored("# U\n", n, t.TempDir(), nil, cfgAncora()); v == Pass {
-		t.Errorf("sem mapa o gate nao pode aprovar, veio %v: %s", v, msg)
+func TestValueAnchored_skips(t *testing.T) {
+	t.Run("VLANV-B06: without a declared pattern the gate skips and names the setting", func(t *testing.T) {})
+	root, g := project(t, map[string]string{"a.ts": "// @code-reference-[K]-[v]\nv\n"})
+	v, msg := checkValueAnchored("// @code-reference-[K]-[v]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, root, g, &config.Config{})
+	if v != Skip || !strings.Contains(msg, "derived.value_anchor") {
+		t.Errorf("no pattern: expected Skip naming the setting, got %v: %s", v, msg)
 	}
-}
-
-// A regua e que a decisao TENHA endereco e que o endereco NAO MINTA. Se o valor pertence
-// ao dominio e julgamento, e julgamento e de quem conhece o produto.
-func TestNaoJulgaSeOValorEhBom(t *testing.T) {
-	t.Run("VLANV-X01: The gate does not judge whether the value is a good one", func(t *testing.T) {})
-	codigo := "export const JANELAS = [\n" +
-		"  // @code-reference-[WINDOW-999]-[999y]\n  '999y',\n] as const;\n"
-	if v, msg := rodaAncora(t, "# U\n", codigo, cfgAncora()); v != Pass {
-		t.Errorf("valor absurdo mas ancorado e coerente deveria passar, veio %v: %s", v, msg)
+	if v, _ := checkValueAnchored("x", mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}, root, g, cfgAnchor()); v != Skip {
+		t.Errorf("not a code file and the verdict was %v", v)
 	}
-}
-
-// A extracao do literal e deliberadamente simples. Falso-negativo aqui e melhor que
-// falso-positivo em massa, que treina o time a ignorar o gate.
-func TestNaoAcusaLinhaSemLiteral(t *testing.T) {
-	t.Run("VLANV-X02: The gate does not accuse a line whose literal it cannot read", func(t *testing.T) {})
-	codigo := "export const JANELAS = [\n  DEFAULT_WINDOW,\n  computeWindow(base),\n] as const;\n"
-	if v, msg := rodaAncora(t, "# U\n", codigo, cfgAncora()); v != Pass {
-		t.Errorf("linha sem literal legivel nao e acusada, veio %v: %s", v, msg)
+	oneGroup := &config.Config{Derived: &config.Derived{ValueAnchor: `@code-reference-\[([^\]]+)\]`}}
+	if v, _ := checkValueAnchored("// @code-reference-[K]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, root, g, oneGroup); v != Skip {
+		t.Errorf("a one-group pattern asserts no value and must not enable the gate: %v", v)
 	}
-}
-
-// As duas formas -- o que e simbolo publico e o que e ancora -- sao declaradas pelo
-// projeto. Um gate que as inventasse cobraria uma convencao que ninguem adotou.
-func TestNaoInventaAFormaDoSimboloPublico(t *testing.T) {
-	t.Run("VLANV-X03: The gate does not decide what an anchor or a public symbol looks like", func(t *testing.T) {})
-	cfg := &config.Config{Derived: &config.Derived{
-		ExportDetect: `^public\s+static\s+final\s+\w+\s+(\w+)`, // outra linguagem: nao casa com o `export const`
-		ValueAnchor:  `@code-reference-\[([^\]]+)\]-\[([^\]]+)\]`,
-	}}
-	codigo := "export const JANELAS = [\n  '15m',\n] as const;\n"
-	if v, msg := rodaAncora(t, "# U\n", codigo, cfg); v != Pass {
-		t.Errorf("o gate nao acha o conjunto pelo padrao declarado — nao acusa, veio %v: %s", v, msg)
+	if v, _ := checkValueAnchored("// @code-reference-[K]-[v]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, root, nil, cfgAnchor()); v == Pass {
+		t.Error("with no map the gate approved — it could not look across")
 	}
 }

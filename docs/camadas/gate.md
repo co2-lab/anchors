@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:127a1c93b7e409f0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:69fcec946147e22c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
@@ -308,7 +308,7 @@
 
 
 
-## VLANV — ValueAnchored — every value of a closed set points at the rule that justifies it, and the anchor carries the value
+## VLANV — ValueAnchored — a replicated key is declared where it is used, and every copy carries the same value
 
 
 

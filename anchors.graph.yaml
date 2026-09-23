@@ -3616,7 +3616,7 @@ nodes:
         - test
     - id: internal/gate/value_anchored.feature
       kind: feature
-      rev: 5d6512346d54
+      rev: 40d60eb01002
       updated_at: "2026-09-19"
       code: VLANV
       layer: feature
@@ -3624,7 +3624,7 @@ nodes:
         - feature
     - id: internal/gate/value_anchored.go
       kind: code
-      rev: c640824efab2
+      rev: e7f8a351a77e
       updated_at: "2026-09-19"
       code: VLANV
       layer: gate
@@ -3633,7 +3633,7 @@ nodes:
         - gate
     - id: internal/gate/value_anchored.spec.md
       kind: spec
-      rev: 9f8e3c0c37d9
+      rev: f604a7f111a1
       updated_at: "2026-09-19"
       code: VLANV
       layer: spec
@@ -3642,7 +3642,7 @@ nodes:
         - spec
     - id: internal/gate/value_anchored_test.go
       kind: test
-      rev: 0d9c977dbbab
+      rev: "6567105478e9"
       updated_at: "2026-09-19"
       code: VLANV
       layer: teste
@@ -4203,6 +4203,7 @@ nodes:
     - id: internal/mapx/ingest_coverage_suite_test.go
       kind: test
       rev: 907c956c169b
+      updated_at: "2026-09-23"
       layer: teste
       tags:
         - test
@@ -9516,6 +9517,12 @@ edges:
         changed_at: "2026-09-21"
         verdict: ok
     - from: internal/gate/value_anchored.spec.md
+      to: internal/gate/spec_feature_match.go
+      type: depends-on
+      origin: declared
+      method: '`defineRuleCaptureRE`'
+      dep: DEP3
+    - from: internal/gate/value_anchored.spec.md
       to: internal/gate/value_anchored.feature
       type: covered-by
       origin: convention
@@ -9537,19 +9544,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindSpec`'
+      method: '`KindCode`'
       dep: DEP2
-      stamp:
-        validated_from_rev: 9f8e3c0c37d9
-        validated_to_rev: f1917b1daf6e
-        changed_at: "2026-09-21"
-        verdict: ok
-    - from: internal/gate/value_anchored.spec.md
-      to: internal/mapx/model.go
-      type: depends-on
-      origin: declared
-      method: '`KindSpec`'
-      dep: DEP3
       stamp:
         validated_from_rev: 9f8e3c0c37d9
         validated_to_rev: f1917b1daf6e

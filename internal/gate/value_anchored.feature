@@ -1,110 +1,66 @@
 # language: en
 # @anchors
 #   ref: VLANV
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-23
 #   layer: feature
 
 @VLANV
-Feature: ValueAnchored — every value of a closed set points at the rule that justifies it
+Feature: ValueAnchored — a replicated key is declared where it is used, and every copy carries the same value
 
   @VLANV-B01 @unit-level
-  Scenario: An artifact that is not a spec leaves without a verdict
-    Given a node whose kind is code, test or feature
-    When the gate confronts it
-    Then it returns Skip, because the gate reaches the code through the spec
+  Scenario: A declaration matching its code line passes
+    Given a code file declaring `COLOR-OK` as `#1F8A5B`
+    And the code line below it holds `#1F8A5B`
+    When the gate confronts the file
+    Then it passes
 
   @VLANV-B02 @unit-level
-  Scenario: A value of a closed set with no anchor is failed
-    Given a closed set declaring the values "15m" and "1h" with no anchor comment on any of them
-    When the gate confronts it
-    Then it returns Fail, because each value is a domain decision that left no address
+  Scenario: A declaration whose code line says another value fails
+    Given a code file declaring `COLOR-OK` as `#1F8A5B`
+    And the code line below it holds `#2A9D6B`
+    When the gate confronts the file
+    Then it fails, showing the key, the declared value and the line
 
   @VLANV-B03 @unit-level
-  Scenario: The verdict names the unanchored value
-    Given a closed set whose value "15m" carries no anchor
-    When the gate confronts it
-    Then the verdict names "15m", so the reader does not have to hunt for which value it was
+  Scenario: Comment and blank lines between declaration and code are skipped
+    Given two stacked declarations and an explanatory comment above one code line
+    When the gate confronts the file
+    Then both declarations are checked against that code line
 
   @VLANV-B04 @unit-level
-  Scenario: A value whose anchor carries rule key and value passes
-    Given a closed set where each value is preceded by an anchor holding the rule key and that same value
-    When the gate confronts it
-    Then it returns Pass, because the address exists and it checks out
+  Scenario: Copies of the same key with different values are reported
+    Given `COLOR-OK` declared as `#2A9D6B` in one file and as `#1F8A5B` in another
+    And each file is locally consistent
+    When the gate confronts either file
+    Then it fails, listing every place and value of the key
 
   @VLANV-B05 @unit-level
-  Scenario: An anchor that asserts one value while the line says another is failed
-    Given an anchor asserting "15m" written above a line whose literal is "5m"
-    When the gate confronts it
-    Then it returns Fail, because a lying anchor looks like traceability while pointing at the wrong place
+  Scenario: The value a rule declares in the spec is the source
+    Given a spec row `TKNSX-R01` declaring `#2A9D6B`
+    And code declarations of `TKNSX-R01` as `#1F8A5B` that agree with each other
+    When the gate confronts a file holding one of them
+    Then it fails, naming the spec and the value it declares
 
   @VLANV-B06 @unit-level
-  Scenario: The verdict of a lying anchor shows both sides of the divergence
-    Given an anchor asserting "15m" written above a line whose literal is "5m"
-    When the gate confronts it
-    Then the verdict carries both "15m" and "5m", because one side alone does not show the drift
+  Scenario: Without a declared pattern the gate skips and says how to enable it
+    Given a project that does not declare `derived.value_anchor`
+    When the gate confronts a code file
+    Then it skips, naming the setting
 
   @VLANV-B07 @unit-level
-  Scenario: Lying anchors are reported before the unanchored ones
-    Given a closed set carrying one lying anchor and one value with no anchor at all
-    When the gate confronts it
-    Then the lying anchor appears first in the verdict, because the absent anchor can be seen
-      and the lying one cannot
-
-  @VLANV-B08 @unit-level
-  Scenario: Without a declared value anchor pattern the gate skips
-    Given a project that declares no value anchor pattern
-    When the gate confronts a closed set
-    Then it neither approves nor fails, because it cannot read and will not stamp what it did not measure
-
-  @VLANV-B09 @unit-level
-  Scenario: The skip names the setting that enables the gate
-    Given a project that declares no value anchor pattern
-    When the gate confronts a closed set
-    Then the verdict names the value_anchor setting, so the reader learns how to turn the gate on
-
-  @VLANV-B10 @unit-level
-  Scenario: A declaration that opens no list is not a closed set
-    Given a public symbol declared as a single scalar value on one line
-    When the gate confronts it
-    Then it returns Pass, because a scalar is not a closed set and there is nothing to anchor
-
-  @VLANV-I01 @unit-level
-  Scenario: An anchor pattern with a single capture group does not enable the gate
-    Given a declared anchor pattern that captures only the rule key
-    When the gate confronts a closed set
-    Then it neither approves nor fails, because without the second group the anchor asserts
-      no value and the confrontation cannot happen
-
-  @VLANV-I02 @unit-level
-  Scenario: A line carrying an anchor is never read as the end of the list
-    Given a closed set whose second value carries an anchor that lies, after a first anchored value
-    When the gate confronts it
-    Then it returns Fail, because the brackets inside the anchor must not close the set early
-
-  @VLANV-I03 @unit-level
-  Scenario: With no built map the verdict is pending
-    Given no graph built
-    When the gate confronts a spec
-    Then it does not approve, because approving without being able to look would stamp
-      what was never measured
+  Scenario: A declaration with nothing below annotates nothing
+    Given a declaration on the last line of a file
+    When the gate confronts the file
+    Then it fails
 
   @VLANV-X01 @unit-level
-  Scenario: The gate does not judge whether the value is a good one
-    Given a closed set whose value "999y" is anchored to a rule key and matches it exactly
-    When the gate confronts it
-    Then it returns Pass, because the ruler is that the decision has an address and the
-      address does not lie — whether the value belongs is judgement
+  Scenario: A prose rule declares no value
+    Given rules whose lines carry backticked identifiers only in headings or prose cells
+    When declarations point at those rules
+    Then they are not charged against the spec
 
   @VLANV-X02 @unit-level
-  Scenario: The gate does not accuse a line whose literal it cannot read
-    Given a closed set line carrying a computed expression instead of a quoted literal
-    When the gate confronts it
-    Then it returns Pass, because a false negative is better than a mass of false positives
-      that would train the team to ignore the gate
-
-  @VLANV-X03 @unit-level
-  Scenario: The gate does not decide what an anchor or a public symbol looks like
-    Given a project whose declared export pattern does not match the way this file writes its set
-    When the gate confronts it
-    Then it returns Pass, because both shapes are declared by the project — inventing them
-      would charge a convention nobody adopted
+  Scenario: A literal nobody declared is not charged
+    Given a closed set with no declaration
+    When the gate confronts the file
+    Then it skips

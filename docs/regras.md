@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:d141e14105384dc2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:dff8a3c763fcdee8 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -111,7 +111,7 @@ abra a página dela em `camadas/`.
 
 ### [TRDCT — TriggerDeclared — cited compliance triggers and obligations must exist in the declared vocabulary](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary)
 
-### [VLANV — ValueAnchored — every value of a closed set points at the rule that justifies it, and the anchor carries the value](camadas/gate.md#vlanv--valueanchored--every-value-of-a-closed-set-points-at-the-rule-that-justifies-it-and-the-anchor-carries-the-value)
+### [VLANV — ValueAnchored — a replicated key is declared where it is used, and every copy carries the same value](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value)
 
 ### [VRBSV — VRBaseline — ensures visual regression scenarios have captured reference baseline images](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images)
 
