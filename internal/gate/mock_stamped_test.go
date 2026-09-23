@@ -462,3 +462,20 @@ func TestMockCarimbado_hashEhTruncadoParaLeituraHumana(t *testing.T) {
 		t.Fatalf("truncar não pode cegar a comparação: %v", v)
 	}
 }
+
+// A MODULE WITH A DOT IN ITS NAME (`auth.store`). The gate used to strip an "extension"
+// from the specifier and cut part of the name, so a stamp on `auth.store.ts` never matched
+// the double of `@/src/stores/auth.store`. Measured after stamping a real project: 93
+// tests still failed as "double without stamp", all like this.
+func TestGenerateStamps_moduleWithADotInItsName(t *testing.T) {
+	t.Run("MCSTM-B16: a module whose name has a dot is matched to its stamp", func(t *testing.T) {})
+	test := "jest.mock('@/src/stores/auth.store')\n"
+	root, g := stampProject(t, map[string]string{"src/stores/auth.store.ts": realHooks, "src/Home.test.tsx": test})
+	out, written, _, err := GenerateStamps(test, "src/Home.test.tsx", root, g, stampCfg())
+	if err != nil || len(written) != 1 {
+		t.Fatalf("expected one stamp: %v %v", written, err)
+	}
+	if v, msg := checkMockStamped(out, mapx.Node{ID: "src/Home.test.tsx", Kind: mapx.KindTest}, root, g, stampCfg()); v != Pass {
+		t.Errorf("the stamp on auth.store.ts does not satisfy the double of auth.store: %v / %s", v, msg)
+	}
+}

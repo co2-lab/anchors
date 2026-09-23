@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCSTM
-  updated_at: 2026-09-19
+  updated_at: 2026-09-23
   layer: gate
 -->
 # MockStamped — the double carries the mark of the snippet it replaces, and the gate RECOMPUTES it
@@ -63,6 +63,7 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | `MCSTM-B13` | A dialect regex that does not compile fails LOUDLY: it is a configuration error, and silencing it would make the gate sweep zero doubles and report green. |
 | `MCSTM-B14` | A dialect regex with no capture group fails too: without it the gate cannot know WHICH module was doubled. |
 | `MCSTM-B15` | A different ecosystem's dialect is charged exactly the same way once declared — the stamp is agnostic in fact, not in intention. |
+| `MCSTM-B16` | A double whose module name contains a dot (`@/src/stores/auth.store`) is matched to the stamp of `auth.store.ts`: the specifier is compared as written and without a final extension, and both forms count. Stripping an "extension" from an import specifier cut part of the NAME. |
 
 ## Invariants
 

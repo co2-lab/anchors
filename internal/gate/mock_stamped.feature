@@ -165,3 +165,10 @@ Feature: MockStamped — the double carries the mark of the snippet it replaces,
     When the gate recomputes it
     Then the comparison is over the truncated value, because the stamp is read by a human
       and there is no adversary forging a collision against their own test
+
+  @MCSTM-B16 @unit-level
+  Scenario: A module with a dot in its name is matched to its stamp
+    Given a test doubling `@/src/stores/auth.store`
+    And a stamp on `src/stores/auth.store.ts`
+    When the gate confronts the test
+    Then the double counts as stamped

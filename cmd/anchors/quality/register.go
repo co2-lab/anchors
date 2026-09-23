@@ -13,4 +13,5 @@ func Register(root *cobra.Command) {
 	root.AddCommand(newReportCmd())
 	root.AddCommand(newTestCmd())
 	root.AddCommand(newMutationCmd())
+	root.AddCommand(newStampCmd())
 }

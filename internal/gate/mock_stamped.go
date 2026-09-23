@@ -107,8 +107,16 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 // (`apps/mobile/src/hooks/useX.ts`) descrevem o mesmo arquivo por vias diferentes —
 // alias e caminho de disco. Casar pelo sufixo sem extensão resolve os dois sem
 // precisar de um resolvedor de alias, que seria específico do ecossistema.
+//
+// The specifier is compared AS WRITTEN and without a final extension, and both forms
+// count. An import specifier usually has no extension, and cutting one anyway cut part of
+// the NAME: `@/src/stores/auth.store` became `src/stores/auth`, which no stamp file
+// (`auth.store.ts` → `auth.store`) matches. Measured in a real project after stamping all
+// its doubles: 93 tests still failed as "double without stamp", all on modules with a dot
+// in the name (`auth.store`, `ui.store`). ESM specifiers that DO carry an extension
+// (`./x.js`) are why the stripped form is kept too.
 func moduleHasStamp(modulo string, carimbos []declaredStamp) bool {
-	alvo := withoutExtension(strings.TrimPrefix(modulo, "./"))
+	alvo := strings.TrimPrefix(modulo, "./")
 	for strings.HasPrefix(alvo, "../") {
 		alvo = strings.TrimPrefix(alvo, "../")
 	}
@@ -117,10 +125,13 @@ func moduleHasStamp(modulo string, carimbos []declaredStamp) bool {
 			alvo = alvo[i+1:]
 		}
 	}
+	forms := []string{alvo, withoutExtension(alvo)}
 	for _, c := range carimbos {
 		arq := withoutExtension(c.file)
-		if arq == alvo || strings.HasSuffix(arq, "/"+alvo) {
-			return true
+		for _, f := range forms {
+			if arq == f || strings.HasSuffix(arq, "/"+f) {
+				return true
+			}
 		}
 	}
 	return false

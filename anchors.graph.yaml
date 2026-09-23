@@ -1174,7 +1174,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/register.go
       kind: code
-      rev: 75cddaeb5ddf
+      rev: 0b51cb7d943a
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -1200,6 +1200,13 @@ nodes:
       kind: code
       rev: a121244f8dc0
       updated_at: "2026-09-19"
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/quality/stamp.go
+      kind: code
+      rev: 66f03b0d440c
       layer: comando
       tags:
         - cli
@@ -2318,9 +2325,39 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/gate/mock_stamp_gen.feature
+      kind: feature
+      rev: ace72bfda19f
+      code: MKSTP
+      layer: feature
+      tags:
+        - feature
+    - id: internal/gate/mock_stamp_gen.go
+      kind: code
+      rev: ffe723651417
+      code: MKSTP
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/mock_stamp_gen.spec.md
+      kind: spec
+      rev: fd5632b88b46
+      code: MKSTP
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
+    - id: internal/gate/mock_stamp_gen_test.go
+      kind: test
+      rev: 04128db24ba6
+      code: MKSTP
+      layer: teste
+      tags:
+        - test
     - id: internal/gate/mock_stamped.feature
       kind: feature
-      rev: 2d24222e9c0b
+      rev: a65d09130115
       updated_at: "2026-09-19"
       code: MCSTM
       layer: feature
@@ -2328,7 +2365,7 @@ nodes:
         - feature
     - id: internal/gate/mock_stamped.go
       kind: code
-      rev: fe3c0c1095ee
+      rev: 1b11f4b299db
       updated_at: "2026-09-19"
       code: MCSTM
       layer: gate
@@ -2337,7 +2374,7 @@ nodes:
         - gate
     - id: internal/gate/mock_stamped.spec.md
       kind: spec
-      rev: 4bff8b52323e
+      rev: b38341cf116b
       updated_at: "2026-09-19"
       code: MCSTM
       layer: spec
@@ -2346,7 +2383,7 @@ nodes:
         - spec
     - id: internal/gate/mock_stamped_test.go
       kind: test
-      rev: a3236c21d7e4
+      rev: 30436b365336
       updated_at: "2026-09-19"
       code: MCSTM
       layer: teste
@@ -3617,7 +3654,7 @@ nodes:
     - id: internal/gate/value_anchored.feature
       kind: feature
       rev: 40d60eb01002
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: VLANV
       layer: feature
       tags:
@@ -3625,7 +3662,7 @@ nodes:
     - id: internal/gate/value_anchored.go
       kind: code
       rev: e7f8a351a77e
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: VLANV
       layer: gate
       tags:
@@ -3634,7 +3671,7 @@ nodes:
     - id: internal/gate/value_anchored.spec.md
       kind: spec
       rev: f604a7f111a1
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: VLANV
       layer: spec
       code_declared: true
@@ -3643,7 +3680,7 @@ nodes:
     - id: internal/gate/value_anchored_test.go
       kind: test
       rev: "6567105478e9"
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: VLANV
       layer: teste
       tags:
@@ -5128,6 +5165,10 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: QUALITY.md
+      to: internal/gate/mock_stamp_gen.go
+      type: governs
+      origin: declared
+    - from: QUALITY.md
       to: internal/gate/mock_stamped.go
       type: governs
       origin: declared
@@ -5659,6 +5700,10 @@ edges:
         changed_at: "2026-09-19"
         verdict: ok
     - from: SPEC.md
+      to: internal/gate/mock_stamp_gen.spec.md
+      type: governs
+      origin: declared
+    - from: SPEC.md
       to: internal/gate/mock_stamped.spec.md
       type: governs
       origin: declared
@@ -6126,6 +6171,10 @@ edges:
         validated_to_rev: bd977c8a1e05
         changed_at: "2026-09-19"
         verdict: ok
+    - from: SPEC_TYPES.md
+      to: internal/gate/mock_stamp_gen.spec.md
+      type: governs
+      origin: declared
     - from: SPEC_TYPES.md
       to: internal/gate/mock_stamped.spec.md
       type: governs
@@ -7545,8 +7594,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`Graph`'
-      dep: DEP1
+      method: '`KindTest`'
+      dep: DEP3
       stamp:
         validated_from_rev: c34539c2d755
         validated_to_rev: f1917b1daf6e
@@ -7556,8 +7605,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindTest`'
-      dep: DEP3
+      method: '`Graph`'
+      dep: DEP1
       stamp:
         validated_from_rev: c34539c2d755
         validated_to_rev: f1917b1daf6e
@@ -7917,6 +7966,30 @@ edges:
         validated_to_rev: eff4e9bb74c1
         changed_at: "2026-09-19"
         verdict: ok
+    - from: internal/gate/mock_stamp_gen.feature
+      to: internal/gate/mock_stamp_gen_test.go
+      type: tested-by
+      origin: convention
+    - from: internal/gate/mock_stamp_gen.spec.md
+      to: internal/gate/mock_stamp_gen.feature
+      type: covered-by
+      origin: convention
+    - from: internal/gate/mock_stamp_gen.spec.md
+      to: internal/gate/mock_stamp_gen.go
+      type: specifies
+      origin: convention
+    - from: internal/gate/mock_stamp_gen.spec.md
+      to: internal/gate/mock_stamped.go
+      type: depends-on
+      origin: declared
+      method: '`declaredStamps`, `snippetHash`, `moduleHasStamp`'
+      dep: DEP1
+    - from: internal/gate/mock_stamp_gen.spec.md
+      to: internal/gate/mock_typed.go
+      type: depends-on
+      origin: declared
+      method: '`isGovernedModule`'
+      dep: DEP2
     - from: internal/gate/mock_stamped.feature
       to: internal/gate/mock_stamped_test.go
       type: tested-by
@@ -8893,17 +8966,6 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`RuleType`'
-      dep: DEP1
-      stamp:
-        validated_from_rev: 6ab06f981fd1
-        validated_to_rev: fba09dc33d61
-        changed_at: "2026-09-21"
-        verdict: ok
-    - from: internal/gate/rule_types.spec.md
-      to: internal/config/config.go
-      type: depends-on
-      origin: declared
       method: '`CodeLengthPattern`'
       dep: DEP3
       stamp:
@@ -8917,6 +8979,17 @@ edges:
       origin: declared
       method: '`DefaultRuleLetters`'
       dep: DEP2
+      stamp:
+        validated_from_rev: 6ab06f981fd1
+        validated_to_rev: fba09dc33d61
+        changed_at: "2026-09-21"
+        verdict: ok
+    - from: internal/gate/rule_types.spec.md
+      to: internal/config/config.go
+      type: depends-on
+      origin: declared
+      method: '`RuleType`'
+      dep: DEP1
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: fba09dc33d61

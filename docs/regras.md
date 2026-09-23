@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:dff8a3c763fcdee8 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:a55f7bd09477e11b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -46,6 +46,8 @@ abra a página dela em `camadas/`.
 ### [LYBNL — LayerBoundary — a layer does not reach what is not its own](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own)
 
 ### [MRPRM — MarkerParity — the same rule has to appear at BOTH ends that fulfil it](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it)
+
+### [MKSTP — MockStampGenerator — writes the missing `@contract` stamps, and never rewrites one](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one)
 
 ### [MCSTM — MockStamped — the double carries the mark of the snippet it replaces, and the gate RECOMPUTES it](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it)
 
