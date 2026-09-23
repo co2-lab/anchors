@@ -2184,3 +2184,40 @@ func TestTravaNaoRemoveOToDoDeQuemNasce(t *testing.T) {
 		}
 	}
 }
+
+// A LABEL `anchors` CHEGA DEPOIS DA CRIACAO, e o `estado-inicial` precisa ver isso.
+//
+// MEDIDO no projeto de referencia: o #912 nasceu as 18:39:23 e recebeu `anchors` as
+// 18:40:06. Quando o job rodou no `opened`, o card ainda nao era do Anchors, e ele saiu
+// sem agir. O card ficou sem estado, invisivel ao `claim`, e sem reversao nenhuma no
+// rastro que explicasse por que.
+//
+// A regua le' o `if` DO JOB, parseado: uma busca por `labeled` no arquivo casaria com o
+// gatilho do workflow ou com o ramo do `reverter`, e passaria sem a correcao existir.
+func TestEstadoInicialVeALabelQueChegaDepois(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc struct {
+		Jobs map[string]struct {
+			If string `yaml:"if"`
+		} `yaml:"jobs"`
+	}
+	if err := yaml.Unmarshal(b, &doc); err != nil {
+		t.Fatal(err)
+	}
+	job, ok := doc.Jobs["estado-inicial"]
+	if !ok {
+		t.Fatal("o job `estado-inicial` sumiu do guard")
+	}
+	cond := strings.Join(strings.Fields(job.If), " ")
+	if !strings.Contains(cond, "github.event.action == 'opened'") {
+		t.Error("o `estado-inicial` deixou de ver a issue NASCER")
+	}
+	if !strings.Contains(cond, "github.event.action == 'labeled'") ||
+		!strings.Contains(cond, "github.event.label.name == 'anchors'") {
+		t.Errorf("o `estado-inicial` nao reage a' label `anchors` que chega depois da "+
+			"criacao — o card fica sem estado e some do `claim`. if: %q", cond)
+	}
+}

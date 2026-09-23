@@ -76,7 +76,19 @@ jobs:
   # do `stale` e da trava abaixo — o pipeline corrige o fato, em vez de depender de cada
   # um lembrar.
   estado-inicial:
-    if: github.event_name == 'issues' && github.event.action == 'opened'
+    # DOIS MOMENTOS em que um card entra no Anchors, e o job precisa ver os dois.
+    #
+    # O `opened` cobre quem nasce com a label `anchors`. Mas ela também chega DEPOIS: a
+    # pessoa cria a issue e marca em seguida. MEDIDO no projeto de referência: o #912
+    # nasceu às 18:39:23 e recebeu `anchors` às 18:40:06 — quando este job rodou no
+    # `opened`, o card ainda não era do Anchors, e ele saiu sem agir. O card ficou sem
+    # estado para sempre, invisível ao `claim`, e sem reversão nenhuma no rastro que
+    # explicasse por quê.
+    if: >-
+      github.event_name == 'issues' && (
+        github.event.action == 'opened' ||
+        (github.event.action == 'labeled' && github.event.label.name == 'anchors')
+      )
     runs-on: ubuntu-latest
     permissions:
       issues: write
