@@ -39,6 +39,12 @@ Feature: MockStampGenerator — writes the missing `@contract` stamps, and never
     When the generator runs
     Then nothing is written
 
+  @MKSTP-B06 @unit-level
+  Scenario: The header stays out of a whole-module stamp
+    Given a module that opens with an @anchors header
+    When it is stamped whole and only its updated_at changes
+    Then the stamp still passes the gate
+
   @MKSTP-I01 @unit-level
   Scenario: An existing stamp is never rewritten
     Given a test whose stamp diverges from the module

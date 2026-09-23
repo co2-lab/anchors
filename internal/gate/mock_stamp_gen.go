@@ -260,9 +260,15 @@ func stampForExport(module, file, key string, lines []string, exportRE *regexp.R
 	return StampWritten{}, false
 }
 
-// stampForWholeModule anchors a stamp on the first usable line and covers to the end.
+// stampForWholeModule anchors a stamp on the first usable line AFTER the `@anchors`
+// header and covers to the end.
+//
+// The header stays out of the hash because `check --fix` rewrites its `updated_at:` on
+// every edit: a stamp covering it diverged on ANY change to the module, including one that
+// never touched what the double replaces — measured in the project that adopted the
+// generator, where a 1037-line module flagged its doubles on every edit.
 func stampForWholeModule(module, file string, lines []string) (StampWritten, bool) {
-	for i := range lines {
+	for i := headerEnd(lines); i < len(lines); i++ {
 		if !usableAnchor(lines, i) {
 			continue
 		}
@@ -271,6 +277,27 @@ func stampForWholeModule(module, file string, lines []string) (StampWritten, boo
 			Hash: snippetHash(strings.Join(lines[i:], "\n"))}, true
 	}
 	return StampWritten{}, false
+}
+
+// headerSearchLines bounds where the `@anchors` header may start: it sits at the top, after
+// at most a directive (`'use client'`) or a shebang. A mention further down is prose.
+const headerSearchLines = 10
+
+// headerEnd returns the index of the first line after the file's `@anchors` header — the
+// run of comment lines that opens with the marker — or 0 when the file has none.
+func headerEnd(lines []string) int {
+	for i := 0; i < len(lines) && i < headerSearchLines; i++ {
+		t := strings.TrimSpace(lines[i])
+		if !isCommentLine(t) || !strings.Contains(t, "@anchors") {
+			continue
+		}
+		j := i + 1
+		for j < len(lines) && isCommentLine(strings.TrimSpace(lines[j])) {
+			j++
+		}
+		return j
+	}
+	return 0
 }
 
 // usableAnchor: the line can anchor a stamp the gate will find again.

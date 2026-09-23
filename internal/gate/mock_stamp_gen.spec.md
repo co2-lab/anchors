@@ -42,6 +42,7 @@ Exposed as `anchors stamp [tests...]`, with `--dry-run`.
 | `MKSTP-B03` | Each factory key that names an export of the module gets its own stamp, anchored on that export and covering its block — a change to another member does not make it diverge. |
 | `MKSTP-B04` | With no factory key naming an export (an automock, for instance), one stamp covers the whole module — which is what an automock replaces. |
 | `MKSTP-B05` | A double of a module outside the map (a third-party library) is not stamped. |
+| `MKSTP-B06` | A whole-module stamp starts after the module's `@anchors` header, so an edit that only rewrites the header (`updated_at:`, which `check --fix` bumps on every edit) does not make it diverge. |
 
 ## Invariants
 

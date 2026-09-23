@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e5a33b09ed11df64 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:6e161dbc40c18e62 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -621,6 +621,8 @@ teste prova.
 - [An automock gets one stamp over the whole module](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B04`
 
 - [A third-party double is not stamped](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B05`
+
+- [The header stays out of a whole-module stamp](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-B06`
 
 - [An existing stamp is never rewritten](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-I01`
 

@@ -186,3 +186,39 @@ func TestGenerateStamps_ambiguousAnchorLineIsAvoided(t *testing.T) {
 		t.Errorf("the generated stamp did not pass the gate: %v / %s", v, msg)
 	}
 }
+
+// The header stays out of the hash: `check --fix` rewrites `updated_at:` on every edit, and
+// a stamp covering it failed on any change to the module — even one the double never saw.
+func TestGenerateStamps_wholeModuleSkipsTheAnchorsHeader(t *testing.T) {
+	t.Run("MKSTP-B06: a whole-module stamp starts after the @anchors header", func(t *testing.T) {})
+	header := func(date string) string {
+		return "'use client'\n// @anchors\n//   ref: BALNC\n//   updated_at: " + date + "\n//\n// notes about the unit\n"
+	}
+	test := "jest.mock('@/src/hooks/balance')\n"
+	root, g := stampProject(t, map[string]string{"src/hooks/balance.ts": header("2026-09-01") + realHooks, "src/Home.test.tsx": test})
+	out, written, _, err := GenerateStamps(test, "src/Home.test.tsx", root, g, stampCfg())
+	if err != nil || len(written) != 1 {
+		t.Fatalf("expected one whole-module stamp: %v %v", written, err)
+	}
+	if written[0].Anchor != "import { useQuery } from 'react-query'" {
+		t.Errorf("the stamp should anchor on the first line after the header, got %q", written[0].Anchor)
+	}
+	node := mapx.Node{ID: "src/Home.test.tsx", Kind: mapx.KindTest}
+
+	// Only the header changes: the stamp still holds.
+	if err := os.WriteFile(filepath.Join(root, "src/hooks/balance.ts"), []byte(header("2026-09-23")+realHooks), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if v, msg := checkMockStamped(out, node, root, g, stampCfg()); v != Pass {
+		t.Errorf("a header-only edit made the stamp diverge: %v / %s", v, msg)
+	}
+
+	// The body changes: it still diverges — skipping the header must not blind the stamp.
+	changed := strings.Replace(realHooks, "fetchLimits(id)", "fetchLimits(id, true)", 1)
+	if err := os.WriteFile(filepath.Join(root, "src/hooks/balance.ts"), []byte(header("2026-09-23")+changed), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if v, _ := checkMockStamped(out, node, root, g, stampCfg()); v != Fail {
+		t.Errorf("a body edit did not make the whole-module stamp diverge: %v", v)
+	}
+}
