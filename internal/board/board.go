@@ -86,6 +86,9 @@ type Client struct {
 	// rodando obtém uma resposta, e ela pode não ser a do dono do projeto. O escalonamento
 	// existe justamente para levar a pergunta a quem decide.
 	UserIssues bool
+
+	// run replaces `gh` in tests. Nil means the real `gh` (see `runGH`).
+	run func(args ...string) ([]byte, error)
 }
 
 // Card é o trabalho que o board entrega.
@@ -110,7 +113,11 @@ type rawCard struct {
 
 func (c Client) gh(args ...string) ([]byte, error) {
 	args = append(args, "--repo", c.Repo)
-	out, err := runGH(args...)
+	run := c.run
+	if run == nil {
+		run = runGH
+	}
+	out, err := run(args...)
 	if err != nil {
 		return out, fmt.Errorf("gh %s: %w", strings.Join(args, " "), err)
 	}

@@ -394,7 +394,7 @@ nodes:
         - test
     - id: cmd/anchors/flow/queue.go
       kind: code
-      rev: 5c83e278d9e0
+      rev: 2cd96c9c2ab5
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -738,7 +738,7 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/ingest.go
       kind: code
-      rev: ceeec2a28045
+      rev: d90829e5cac2
       updated_at: "2026-09-23"
       code: SPCRX
       layer: comando
@@ -1078,7 +1078,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/check.go
       kind: code
-      rev: 6a7d947fe6db
+      rev: 368557d736ea
       updated_at: "2026-09-23"
       layer: comando
       tags:
@@ -1086,8 +1086,8 @@ nodes:
         - comando
     - id: cmd/anchors/quality/check_judgment_brief_test.go
       kind: test
-      rev: 389523609f9d
-      updated_at: "2026-09-22"
+      rev: d97b4dba6404
+      updated_at: "2026-09-23"
       layer: teste
       tags:
         - test
@@ -1121,8 +1121,8 @@ nodes:
         - test
     - id: cmd/anchors/quality/check_timing_test.go
       kind: test
-      rev: c78460332afd
-      updated_at: "2026-09-21"
+      rev: cc88afd112ce
+      updated_at: "2026-09-23"
       code: TIMNG
       layer: teste
       tags:
@@ -1175,7 +1175,7 @@ nodes:
     - id: cmd/anchors/quality/register.go
       kind: code
       rev: 0b51cb7d943a
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       layer: comando
       tags:
         - cli
@@ -1207,6 +1207,7 @@ nodes:
     - id: cmd/anchors/quality/stamp.go
       kind: code
       rev: 66f03b0d440c
+      updated_at: "2026-09-23"
       layer: comando
       tags:
         - cli
@@ -1307,6 +1308,12 @@ nodes:
       kind: test
       rev: a5cc269fa9c5
       updated_at: "2026-09-10"
+      layer: teste
+      tags:
+        - test
+    - id: internal/board/claim_wait_test.go
+      kind: test
+      rev: 535666bb09b5
       layer: teste
       tags:
         - test
@@ -2107,7 +2114,7 @@ nodes:
         - feature
     - id: internal/gate/feature_test_match.go
       kind: code
-      rev: 4e6d5f2c9bd3
+      rev: 37a927827314
       updated_at: "2026-09-23"
       code: FTMFT
       layer: gate
@@ -2233,7 +2240,7 @@ nodes:
         - feature
     - id: internal/gate/internal_checks.go
       kind: code
-      rev: 69953dccbbf1
+      rev: b1efe126b123
       updated_at: "2026-09-23"
       code: INCHN
       layer: gate
@@ -2251,7 +2258,7 @@ nodes:
         - spec
     - id: internal/gate/internal_checks_test.go
       kind: test
-      rev: fb5f523f23df
+      rev: f1e5a5093be0
       updated_at: "2026-09-23"
       code: INCHN
       layer: teste
@@ -2327,14 +2334,16 @@ nodes:
         - test
     - id: internal/gate/mock_stamp_gen.feature
       kind: feature
-      rev: ace72bfda19f
+      rev: 97aad3695591
+      updated_at: "2026-09-23"
       code: MKSTP
       layer: feature
       tags:
         - feature
     - id: internal/gate/mock_stamp_gen.go
       kind: code
-      rev: ffe723651417
+      rev: 4434326f4734
+      updated_at: "2026-09-23"
       code: MKSTP
       layer: gate
       tags:
@@ -2342,7 +2351,8 @@ nodes:
         - gate
     - id: internal/gate/mock_stamp_gen.spec.md
       kind: spec
-      rev: fd5632b88b46
+      rev: "386820993774"
+      updated_at: "2026-09-23"
       code: MKSTP
       layer: spec
       code_declared: true
@@ -2350,7 +2360,8 @@ nodes:
         - spec
     - id: internal/gate/mock_stamp_gen_test.go
       kind: test
-      rev: 04128db24ba6
+      rev: 4daf205f6a1c
+      updated_at: "2026-09-23"
       code: MKSTP
       layer: teste
       tags:
@@ -2358,7 +2369,7 @@ nodes:
     - id: internal/gate/mock_stamped.feature
       kind: feature
       rev: a65d09130115
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: MCSTM
       layer: feature
       tags:
@@ -2366,7 +2377,7 @@ nodes:
     - id: internal/gate/mock_stamped.go
       kind: code
       rev: 1b11f4b299db
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: MCSTM
       layer: gate
       tags:
@@ -2375,7 +2386,7 @@ nodes:
     - id: internal/gate/mock_stamped.spec.md
       kind: spec
       rev: b38341cf116b
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: MCSTM
       layer: spec
       code_declared: true
@@ -2384,7 +2395,7 @@ nodes:
     - id: internal/gate/mock_stamped_test.go
       kind: test
       rev: 30436b365336
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: MCSTM
       layer: teste
       tags:
@@ -2399,7 +2410,7 @@ nodes:
         - feature
     - id: internal/gate/mock_typed.go
       kind: code
-      rev: b470eb8e2913
+      rev: c5796ae3aaf1
       updated_at: "2026-09-23"
       code: MCTYM
       layer: gate
@@ -2417,7 +2428,7 @@ nodes:
         - spec
     - id: internal/gate/mock_typed_test.go
       kind: test
-      rev: ecf6e4528d43
+      rev: 8b57bfedca61
       updated_at: "2026-09-23"
       code: MCTYM
       layer: teste
@@ -2939,7 +2950,7 @@ nodes:
         - feature
     - id: internal/gate/ref_resolves.go
       kind: code
-      rev: f34bb9f76cdd
+      rev: ccd502049f82
       updated_at: "2026-09-23"
       code: RFRSR
       layer: gate
@@ -2957,7 +2968,7 @@ nodes:
         - spec
     - id: internal/gate/ref_resolves_test.go
       kind: test
-      rev: 6da43988cb59
+      rev: 6da05772a011
       updated_at: "2026-09-23"
       code: RFRSR
       layer: teste
@@ -3202,7 +3213,7 @@ nodes:
         - feature
     - id: internal/gate/rule_types.go
       kind: code
-      rev: 4596292fe582
+      rev: 642ddfd947bc
       updated_at: "2026-09-23"
       code: RLTYR
       layer: gate
@@ -3436,7 +3447,7 @@ nodes:
         - feature
     - id: internal/gate/spec_feature_match.go
       kind: code
-      rev: 24f87235cffc
+      rev: 9580df9982f1
       updated_at: "2026-09-23"
       code: SFMSP
       layer: gate
@@ -3653,7 +3664,7 @@ nodes:
         - test
     - id: internal/gate/value_anchored.feature
       kind: feature
-      rev: 40d60eb01002
+      rev: 3863c9d685ce
       updated_at: "2026-09-23"
       code: VLANV
       layer: feature
@@ -3661,7 +3672,7 @@ nodes:
         - feature
     - id: internal/gate/value_anchored.go
       kind: code
-      rev: e7f8a351a77e
+      rev: 6272de809839
       updated_at: "2026-09-23"
       code: VLANV
       layer: gate
@@ -3670,7 +3681,7 @@ nodes:
         - gate
     - id: internal/gate/value_anchored.spec.md
       kind: spec
-      rev: f604a7f111a1
+      rev: 20efe8571733
       updated_at: "2026-09-23"
       code: VLANV
       layer: spec
@@ -3679,7 +3690,7 @@ nodes:
         - spec
     - id: internal/gate/value_anchored_test.go
       kind: test
-      rev: "6567105478e9"
+      rev: a2c4415840aa
       updated_at: "2026-09-23"
       code: VLANV
       layer: teste
@@ -3933,8 +3944,8 @@ nodes:
         - test
     - id: internal/initx/default_gates.go
       kind: code
-      rev: 593ac63a5c67
-      updated_at: "2026-09-22"
+      rev: a901f23f8072
+      updated_at: "2026-09-23"
       layer: infra
       tags:
         - infra
@@ -4101,7 +4112,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 77421643687b
+      rev: e0d824896389
       updated_at: "2026-09-23"
       layer: teste
       tags:
@@ -4231,7 +4242,7 @@ nodes:
       no_propagation: true
     - id: internal/mapx/ingest.go
       kind: code
-      rev: 92633120cfc7
+      rev: ea585d52163f
       updated_at: "2026-09-23"
       layer: mapa
       tags:
@@ -4254,7 +4265,7 @@ nodes:
         - test
     - id: internal/mapx/ingest_test.go
       kind: test
-      rev: 21ac30110fff
+      rev: bfcf869cebf6
       updated_at: "2026-09-23"
       code: AAAAX
       layer: teste
@@ -4269,7 +4280,7 @@ nodes:
         - test
     - id: internal/mapx/model.go
       kind: code
-      rev: 752450ce2922
+      rev: 972e56e33673
       updated_at: "2026-09-23"
       layer: mapa
       tags:
@@ -4498,7 +4509,7 @@ nodes:
         - test
     - id: internal/scan/scan.go
       kind: code
-      rev: "985674183915"
+      rev: 672fef77eb82
       updated_at: "2026-09-23"
       layer: scan
       tags:
