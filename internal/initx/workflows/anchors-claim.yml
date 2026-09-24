@@ -548,7 +548,10 @@ jobs:
               '   que o pipeline conta as voltas e avisa quando a revisão deixa de convergir.' \
               '   Depois escolha o desfecho:' \
               '' \
-              '   - **aceito** → mova o card para `anchors:ready-to-test`.' \
+              '   - **aceito** → comente no PR, numa linha só, `anchors-review: approved by <você>`.' \
+              '     NÃO mova o card: essa linha põe o status `anchors/review` verde, e quem move' \
+              '     o card para `ready-to-test` é o merge. Movê-lo à mão antes do merge esconde' \
+              '     o aviso de merge sem o desfecho da revisão.' \
               '' \
               '   - **defeito de EXECUÇÃO** (marcação no lugar errado, opção faltando, teste que' \
               '     não cobre o caso) → **corrija você mesmo**, no mesmo PR, e passe o card para' \
@@ -560,7 +563,8 @@ jobs:
               '' \
               '   - **defeito de ENTENDIMENTO** (a spec foi lida errado, a abordagem não serve)' \
               '     → **devolva**: card para `anchors:to-do`, posse para quem implementou, e o' \
-              '     comentário dizendo o que a spec pede que o código não faz.' \
+              '     comentário dizendo o que a spec pede que o código não faz, com a linha' \
+              '     `anchors-review: rejected by <você>` — ela põe o status `anchors/review` vermelho.' \
               '' \
               '     Aqui corrigir seria pior que moroso: esconderia que o autor entendeu errado,' \
               '     e o mesmo erro volta no próximo card que ele pegar.' \

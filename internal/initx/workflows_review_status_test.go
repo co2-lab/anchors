@@ -539,3 +539,22 @@ func TestPRChecksGreenPRPublishesReviewPending(t *testing.T) {
 		t.Errorf("the pending status should say it awaits a reviewer, got %q", desc)
 	}
 }
+
+// The claim hands the reviewer the instructions, and they must teach the SAME line the
+// `review` job parses. The claim used to say "aceito → move the card to ready-to-test",
+// which bypasses the status and, done before the merge, hides the #782 comment.
+func TestClaimTeachesTheReviewVerdictLine(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-claim.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+	for _, want := range []string{"anchors-review: approved by <você>", "anchors-review: rejected by <você>"} {
+		if !strings.Contains(s, want) {
+			t.Errorf("the reviewer instructions do not teach %q", want)
+		}
+	}
+	if strings.Contains(s, "**aceito** → mova o card") {
+		t.Error("the reviewer is still told to move the card on approval")
+	}
+}
