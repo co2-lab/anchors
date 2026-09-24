@@ -45,6 +45,12 @@ Feature: MockStampGenerator — writes the missing `@contract` stamps, and never
     When it is stamped whole and only its updated_at changes
     Then the stamp still passes the gate
 
+  @MKSTP-B07 @unit-level
+  Scenario: A key added to a stamped double gets a stamp
+    Given a double already stamped for one export
+    When a key naming another export is added to its factory and the generator runs
+    Then only the new export gets a stamp, and the existing one is untouched
+
   @MKSTP-I01 @unit-level
   Scenario: An existing stamp is never rewritten
     Given a test whose stamp diverges from the module

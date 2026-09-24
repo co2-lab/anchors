@@ -2357,7 +2357,7 @@ nodes:
         - test
     - id: internal/gate/mock_stamp_gen.feature
       kind: feature
-      rev: 97aad3695591
+      rev: 0957b7fe4fdf
       updated_at: "2026-09-23"
       code: MKSTP
       layer: feature
@@ -2365,7 +2365,7 @@ nodes:
         - feature
     - id: internal/gate/mock_stamp_gen.go
       kind: code
-      rev: 4434326f4734
+      rev: a429d4290ecd
       updated_at: "2026-09-23"
       code: MKSTP
       layer: gate
@@ -2374,7 +2374,7 @@ nodes:
         - gate
     - id: internal/gate/mock_stamp_gen.spec.md
       kind: spec
-      rev: "386820993774"
+      rev: 4375b6acec42
       updated_at: "2026-09-23"
       code: MKSTP
       layer: spec
@@ -2383,7 +2383,7 @@ nodes:
         - spec
     - id: internal/gate/mock_stamp_gen_test.go
       kind: test
-      rev: 4daf205f6a1c
+      rev: 01e3c5555676
       updated_at: "2026-09-23"
       code: MKSTP
       layer: teste
@@ -4177,7 +4177,7 @@ nodes:
     - id: internal/initx/workflows_test.go
       kind: test
       rev: 29bb6e4fb5c8
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
@@ -4306,7 +4306,7 @@ nodes:
       no_propagation: true
     - id: internal/mapx/ingest.go
       kind: code
-      rev: ea585d52163f
+      rev: 00caf4ee5828
       updated_at: "2026-09-23"
       layer: mapa
       tags:
@@ -4314,7 +4314,7 @@ nodes:
         - mapa
     - id: internal/mapx/ingest_coverage_suite_test.go
       kind: test
-      rev: 907c956c169b
+      rev: 599bccb2f2ff
       updated_at: "2026-09-23"
       layer: teste
       tags:

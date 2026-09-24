@@ -222,3 +222,47 @@ func TestGenerateStamps_wholeModuleSkipsTheAnchorsHeader(t *testing.T) {
 		t.Errorf("a body edit did not make the whole-module stamp diverge: %v", v)
 	}
 }
+
+// A key ADDED to an already-stamped double gets its own stamp; the existing stamps are left
+// alone. Measured in the reference project: `s3ObjectExists` added to a mock that already
+// stamped s3GetObject/s3PutObject came out with no stamp.
+func TestGenerateStamps_newKeyOnAStampedDoubleGetsAStamp(t *testing.T) {
+	t.Run("MKSTP-B07: a key added to a stamped double gets a stamp, and existing stamps are untouched", func(t *testing.T) {})
+	node := mapx.Node{ID: "src/Home.test.tsx", Kind: mapx.KindTest}
+	first := "jest.mock('@/src/hooks/balance', () => ({ useBalance: jest.fn() }))\n"
+	root, g := stampProject(t, map[string]string{"src/hooks/balance.ts": realHooks, "src/Home.test.tsx": first})
+	stamped, _, _, err := GenerateStamps(first, "src/Home.test.tsx", root, g, stampCfg())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	grown := strings.Replace(stamped, "useBalance: jest.fn() }", "useBalance: jest.fn(), useLimits: jest.fn() }", 1)
+	out, written, _, err := GenerateStamps(grown, "src/Home.test.tsx", root, g, stampCfg())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(written) != 1 || !strings.Contains(written[0].Anchor, "useLimits") {
+		t.Fatalf("the new key should get exactly one stamp, on useLimits: %+v", written)
+	}
+	for _, l := range strings.Split(grown, "\n") {
+		if strings.Contains(l, "@contract:") && !strings.Contains(out, l) {
+			t.Errorf("an existing stamp was touched: %q", l)
+		}
+	}
+	if v, msg := checkMockStamped(out, node, root, g, stampCfg()); v != Pass {
+		t.Errorf("the grown double does not pass the gate: %v / %s", v, msg)
+	}
+
+	// Idempotent: nothing more to add.
+	if _, again, _, _ := GenerateStamps(out, "src/Home.test.tsx", root, g, stampCfg()); len(again) != 0 {
+		t.Errorf("a second run added stamps again: %+v", again)
+	}
+
+	// A whole-module stamp already covers every member: a new key adds nothing.
+	auto := "jest.mock('@/src/hooks/balance')\n"
+	whole, _, _, _ := GenerateStamps(auto, "src/Home.test.tsx", root, g, stampCfg())
+	withKey := strings.Replace(whole, "jest.mock('@/src/hooks/balance')", "jest.mock('@/src/hooks/balance', () => ({ useLimits: jest.fn() }))", 1)
+	if _, extra, _, _ := GenerateStamps(withKey, "src/Home.test.tsx", root, g, stampCfg()); len(extra) != 0 {
+		t.Errorf("a member inside a whole-module stamp got a stamp of its own: %+v", extra)
+	}
+}

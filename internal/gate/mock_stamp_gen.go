@@ -84,9 +84,9 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 			continue
 		}
 		done[module] = true
-		if moduleHasStamp(module, existing) {
-			continue // never rewritten — see the file comment
-		}
+		// A stamped double is never rewritten — see the file comment. It can still GAIN a
+		// stamp: a key added to its factory later names an export no stamp covers.
+		stamped := moduleHasStamp(module, existing)
 
 		file, reason := resolveModuleFile(module, testID, g)
 		if file == "" {
@@ -104,9 +104,15 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 		if exportRE != nil {
 			for _, key := range factoryKeys(content, m[0]) {
 				if s, ok := stampForExport(module, file, key, modLines, exportRE); ok {
+					if stamped && coveredByExisting(s.Anchor, file, modLines, existing) {
+						continue
+					}
 					stamps = append(stamps, s)
 				}
 			}
+		}
+		if stamped && len(stamps) == 0 {
+			continue
 		}
 		if len(stamps) == 0 {
 			s, ok := stampForWholeModule(module, file, modLines)
@@ -135,6 +141,33 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 		out = append(out, l)
 	}
 	return strings.Join(out, "\n"), written, skipped, nil
+}
+
+// coveredByExisting reports whether an existing stamp on `file` already covers the line
+// `anchor` — the same anchor, or a range (a whole-module stamp, a wider block) that
+// contains it. Such a member needs no new stamp.
+func coveredByExisting(anchor, file string, modLines []string, existing []declaredStamp) bool {
+	at := -1
+	for i, l := range modLines {
+		if strings.TrimRight(l, "\r") == anchor {
+			at = i
+			break
+		}
+	}
+	for _, c := range existing {
+		if withoutExtension(c.file) != withoutExtension(file) {
+			continue
+		}
+		if c.anchor == anchor {
+			return true
+		}
+		for i, l := range modLines {
+			if strings.TrimRight(l, "\r") == c.anchor && at >= i && at < i+c.count {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 // resolveModuleFile finds the ONE code file of the map a double's specifier names.

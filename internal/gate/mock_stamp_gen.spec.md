@@ -43,6 +43,7 @@ Exposed as `anchors stamp [tests...]`, with `--dry-run`.
 | `MKSTP-B04` | With no factory key naming an export (an automock, for instance), one stamp covers the whole module — which is what an automock replaces. |
 | `MKSTP-B05` | A double of a module outside the map (a third-party library) is not stamped. |
 | `MKSTP-B06` | A whole-module stamp starts after the module's `@anchors` header, so an edit that only rewrites the header (`updated_at:`, which `check --fix` bumps on every edit) does not make it diverge. |
+| `MKSTP-B07` | A key added later to an already-stamped double gets its own stamp when no existing stamp of that module covers its export (same anchor, or a range containing it); the existing stamps are left untouched, and a second run adds nothing. |
 
 ## Invariants
 
