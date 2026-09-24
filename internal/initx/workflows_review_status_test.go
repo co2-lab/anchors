@@ -662,10 +662,11 @@ func TestPRChecksClosingLineWinsOverRefs(t *testing.T) {
 	})
 }
 
-// REJECTED sends the work back to its author: the card leaves `in-review` for
-// `in-progress`, owned by the author again (the owner before the reviewer), so their
-// `anchors next` resumes it. Before, it stayed in `in-review` with no owner and was
-// offered to no one (blue-eyes, 2026-09-24). APPROVED leaves the card for the merge.
+// REJECTED sends the work back to its author: the card leaves `in-review` for `to-do`,
+// owned by the author again (the owner before the reviewer). Their `anchors next` resumes
+// it; if they do not ask for work, the stale releases it after the waiting window and any
+// agent takes it. Before, it stayed in `in-review` with no owner and was offered to no one
+// (blue-eyes, 2026-09-24). APPROVED leaves the card for the merge.
 func TestPRChecksRejectedGoesBackToTheAuthor(t *testing.T) {
 	run := func(verdict string) string {
 		w := newGHWorld(t)
@@ -681,7 +682,7 @@ func TestPRChecksRejectedGoesBackToTheAuthor(t *testing.T) {
 	calls := run("rejected")
 	for _, want := range []string{
 		"BODY anchors-owner: (liberado) — revisão concluída: rejected por agent-b",
-		"FIELD add-label=anchors:in-progress",
+		"FIELD add-label=anchors:to-do",
 		"BODY anchors-owner: agent-a",
 	} {
 		if !strings.Contains(calls, want) {
@@ -690,7 +691,7 @@ func TestPRChecksRejectedGoesBackToTheAuthor(t *testing.T) {
 	}
 
 	calls = run("approved")
-	if strings.Contains(calls, "anchors:in-progress") || strings.Contains(calls, "BODY anchors-owner: agent-a") {
+	if strings.Contains(calls, "add-label=anchors:to-do") || strings.Contains(calls, "BODY anchors-owner: agent-a") {
 		t.Errorf("an approval must leave the card for the merge:\n%s", calls)
 	}
 }
