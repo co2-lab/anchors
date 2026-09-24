@@ -12,7 +12,7 @@ nodes:
         - doc
     - id: CLI.md
       kind: doc
-      rev: f612aeb43589
+      rev: 40fa851851fb
       updated_at: "2026-09-19"
       layer: doc
       tags:
@@ -278,7 +278,7 @@ nodes:
         - test
     - id: cmd/anchors/flow/deliver.go
       kind: code
-      rev: c65e3099863f
+      rev: e4f03010f8c0
       updated_at: "2026-09-19"
       code: PRICX
       layer: comando
@@ -304,6 +304,12 @@ nodes:
       kind: test
       rev: 95898f3e546a
       updated_at: "2026-09-19"
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/flow/deliver_upstream_test.go
+      kind: test
+      rev: 81cbcdf7395e
       layer: teste
       tags:
         - test
@@ -738,7 +744,7 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/ingest.go
       kind: code
-      rev: ceeec2a28045
+      rev: d90829e5cac2
       updated_at: "2026-09-23"
       code: SPCRX
       layer: comando
@@ -837,12 +843,25 @@ nodes:
         - comando
     - id: cmd/anchors/mapcmd/register.go
       kind: code
-      rev: a2aada918673
+      rev: d996b569e86b
       updated_at: "2026-09-21"
       layer: comando
       tags:
         - cli
         - comando
+    - id: cmd/anchors/mapcmd/renumber.go
+      kind: code
+      rev: 919845643f10
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/mapcmd/renumber_test.go
+      kind: test
+      rev: d9e71543ed1b
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/ops/board_serve.go
       kind: code
       rev: efde1ced6ece
@@ -1078,7 +1097,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/check.go
       kind: code
-      rev: 6a7d947fe6db
+      rev: 368557d736ea
       updated_at: "2026-09-23"
       layer: comando
       tags:
@@ -1086,8 +1105,8 @@ nodes:
         - comando
     - id: cmd/anchors/quality/check_judgment_brief_test.go
       kind: test
-      rev: 389523609f9d
-      updated_at: "2026-09-22"
+      rev: d97b4dba6404
+      updated_at: "2026-09-23"
       layer: teste
       tags:
         - test
@@ -1121,8 +1140,8 @@ nodes:
         - test
     - id: cmd/anchors/quality/check_timing_test.go
       kind: test
-      rev: c78460332afd
-      updated_at: "2026-09-21"
+      rev: cc88afd112ce
+      updated_at: "2026-09-23"
       code: TIMNG
       layer: teste
       tags:
@@ -1175,7 +1194,7 @@ nodes:
     - id: cmd/anchors/quality/register.go
       kind: code
       rev: 0b51cb7d943a
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       layer: comando
       tags:
         - cli
@@ -1207,6 +1226,7 @@ nodes:
     - id: cmd/anchors/quality/stamp.go
       kind: code
       rev: 66f03b0d440c
+      updated_at: "2026-09-23"
       layer: comando
       tags:
         - cli
@@ -2107,7 +2127,7 @@ nodes:
         - feature
     - id: internal/gate/feature_test_match.go
       kind: code
-      rev: 4e6d5f2c9bd3
+      rev: 37a927827314
       updated_at: "2026-09-23"
       code: FTMFT
       layer: gate
@@ -2157,7 +2177,7 @@ nodes:
         - test
     - id: internal/gate/gate.feature
       kind: feature
-      rev: 46d837f31958
+      rev: 46e8b2c448bc
       updated_at: "2026-09-19"
       code: GTENG
       layer: feature
@@ -2165,7 +2185,7 @@ nodes:
         - feature
     - id: internal/gate/gate.go
       kind: code
-      rev: 4b753ed87637
+      rev: 37f82f3d2673
       updated_at: "2026-09-20"
       code: GTENG
       layer: gate
@@ -2174,7 +2194,7 @@ nodes:
         - gate
     - id: internal/gate/gate.spec.md
       kind: spec
-      rev: fcd00ea44182
+      rev: 3bb52841dfe2
       updated_at: "2026-09-19"
       code: GTENG
       layer: spec
@@ -2183,7 +2203,7 @@ nodes:
         - spec
     - id: internal/gate/gate_test.go
       kind: test
-      rev: 3f32e07b8c18
+      rev: 2fc03679d70b
       updated_at: "2026-09-19"
       code: GTENG
       layer: teste
@@ -2233,7 +2253,7 @@ nodes:
         - feature
     - id: internal/gate/internal_checks.go
       kind: code
-      rev: 69953dccbbf1
+      rev: b1efe126b123
       updated_at: "2026-09-23"
       code: INCHN
       layer: gate
@@ -2251,7 +2271,7 @@ nodes:
         - spec
     - id: internal/gate/internal_checks_test.go
       kind: test
-      rev: fb5f523f23df
+      rev: f1e5a5093be0
       updated_at: "2026-09-23"
       code: INCHN
       layer: teste
@@ -2327,14 +2347,16 @@ nodes:
         - test
     - id: internal/gate/mock_stamp_gen.feature
       kind: feature
-      rev: ace72bfda19f
+      rev: 97aad3695591
+      updated_at: "2026-09-23"
       code: MKSTP
       layer: feature
       tags:
         - feature
     - id: internal/gate/mock_stamp_gen.go
       kind: code
-      rev: ffe723651417
+      rev: 4434326f4734
+      updated_at: "2026-09-23"
       code: MKSTP
       layer: gate
       tags:
@@ -2342,7 +2364,8 @@ nodes:
         - gate
     - id: internal/gate/mock_stamp_gen.spec.md
       kind: spec
-      rev: fd5632b88b46
+      rev: "386820993774"
+      updated_at: "2026-09-23"
       code: MKSTP
       layer: spec
       code_declared: true
@@ -2350,7 +2373,8 @@ nodes:
         - spec
     - id: internal/gate/mock_stamp_gen_test.go
       kind: test
-      rev: 04128db24ba6
+      rev: 4daf205f6a1c
+      updated_at: "2026-09-23"
       code: MKSTP
       layer: teste
       tags:
@@ -2358,7 +2382,7 @@ nodes:
     - id: internal/gate/mock_stamped.feature
       kind: feature
       rev: a65d09130115
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: MCSTM
       layer: feature
       tags:
@@ -2366,7 +2390,7 @@ nodes:
     - id: internal/gate/mock_stamped.go
       kind: code
       rev: 1b11f4b299db
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: MCSTM
       layer: gate
       tags:
@@ -2375,7 +2399,7 @@ nodes:
     - id: internal/gate/mock_stamped.spec.md
       kind: spec
       rev: b38341cf116b
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: MCSTM
       layer: spec
       code_declared: true
@@ -2384,7 +2408,7 @@ nodes:
     - id: internal/gate/mock_stamped_test.go
       kind: test
       rev: 30436b365336
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: MCSTM
       layer: teste
       tags:
@@ -2399,7 +2423,7 @@ nodes:
         - feature
     - id: internal/gate/mock_typed.go
       kind: code
-      rev: b470eb8e2913
+      rev: c5796ae3aaf1
       updated_at: "2026-09-23"
       code: MCTYM
       layer: gate
@@ -2417,7 +2441,7 @@ nodes:
         - spec
     - id: internal/gate/mock_typed_test.go
       kind: test
-      rev: ecf6e4528d43
+      rev: 8b57bfedca61
       updated_at: "2026-09-23"
       code: MCTYM
       layer: teste
@@ -2939,7 +2963,7 @@ nodes:
         - feature
     - id: internal/gate/ref_resolves.go
       kind: code
-      rev: f34bb9f76cdd
+      rev: ccd502049f82
       updated_at: "2026-09-23"
       code: RFRSR
       layer: gate
@@ -2957,7 +2981,7 @@ nodes:
         - spec
     - id: internal/gate/ref_resolves_test.go
       kind: test
-      rev: 6da43988cb59
+      rev: 6da05772a011
       updated_at: "2026-09-23"
       code: RFRSR
       layer: teste
@@ -3046,6 +3070,36 @@ nodes:
       code: NTCNN
       layer: teste
       code_declared: true
+      tags:
+        - test
+    - id: internal/gate/revision_renumber.feature
+      kind: feature
+      rev: 29e80e1e18d4
+      code: RVRNR
+      layer: feature
+      tags:
+        - feature
+    - id: internal/gate/revision_renumber.go
+      kind: code
+      rev: 06c848be7601
+      code: RVRNR
+      layer: gate
+      tags:
+        - regra
+        - gate
+    - id: internal/gate/revision_renumber.spec.md
+      kind: spec
+      rev: 29b9744660ef
+      code: RVRNR
+      layer: spec
+      code_declared: true
+      tags:
+        - spec
+    - id: internal/gate/revision_renumber_test.go
+      kind: test
+      rev: 5d962fa98a42
+      code: RVRNR
+      layer: teste
       tags:
         - test
     - id: internal/gate/route_declared.feature
@@ -3202,7 +3256,7 @@ nodes:
         - feature
     - id: internal/gate/rule_types.go
       kind: code
-      rev: 4596292fe582
+      rev: 642ddfd947bc
       updated_at: "2026-09-23"
       code: RLTYR
       layer: gate
@@ -3436,7 +3490,7 @@ nodes:
         - feature
     - id: internal/gate/spec_feature_match.go
       kind: code
-      rev: 24f87235cffc
+      rev: 9580df9982f1
       updated_at: "2026-09-23"
       code: SFMSP
       layer: gate
@@ -3653,7 +3707,7 @@ nodes:
         - test
     - id: internal/gate/value_anchored.feature
       kind: feature
-      rev: 40d60eb01002
+      rev: 3863c9d685ce
       updated_at: "2026-09-23"
       code: VLANV
       layer: feature
@@ -3661,7 +3715,7 @@ nodes:
         - feature
     - id: internal/gate/value_anchored.go
       kind: code
-      rev: e7f8a351a77e
+      rev: 6272de809839
       updated_at: "2026-09-23"
       code: VLANV
       layer: gate
@@ -3670,7 +3724,7 @@ nodes:
         - gate
     - id: internal/gate/value_anchored.spec.md
       kind: spec
-      rev: f604a7f111a1
+      rev: 20efe8571733
       updated_at: "2026-09-23"
       code: VLANV
       layer: spec
@@ -3679,7 +3733,7 @@ nodes:
         - spec
     - id: internal/gate/value_anchored_test.go
       kind: test
-      rev: "6567105478e9"
+      rev: a2c4415840aa
       updated_at: "2026-09-23"
       code: VLANV
       layer: teste
@@ -3933,8 +3987,8 @@ nodes:
         - test
     - id: internal/initx/default_gates.go
       kind: code
-      rev: 593ac63a5c67
-      updated_at: "2026-09-22"
+      rev: a901f23f8072
+      updated_at: "2026-09-23"
       layer: infra
       tags:
         - infra
@@ -4093,7 +4147,7 @@ nodes:
         - test
     - id: internal/initx/workflows.go
       kind: code
-      rev: c8c251a857d7
+      rev: 775f4cb5f114
       updated_at: "2026-09-19"
       layer: infra
       tags:
@@ -4101,7 +4155,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 77421643687b
+      rev: 3a89773f27c6
       updated_at: "2026-09-23"
       layer: teste
       tags:
@@ -4159,7 +4213,7 @@ nodes:
         - test
     - id: internal/mapx/build.go
       kind: code
-      rev: 5efa0cebe7b8
+      rev: 9cc89d92a1b2
       updated_at: "2026-09-21"
       layer: mapa
       tags:
@@ -4231,7 +4285,7 @@ nodes:
       no_propagation: true
     - id: internal/mapx/ingest.go
       kind: code
-      rev: 92633120cfc7
+      rev: ea585d52163f
       updated_at: "2026-09-23"
       layer: mapa
       tags:
@@ -4254,7 +4308,7 @@ nodes:
         - test
     - id: internal/mapx/ingest_test.go
       kind: test
-      rev: 21ac30110fff
+      rev: bfcf869cebf6
       updated_at: "2026-09-23"
       code: AAAAX
       layer: teste
@@ -4269,7 +4323,7 @@ nodes:
         - test
     - id: internal/mapx/model.go
       kind: code
-      rev: 752450ce2922
+      rev: c854d6ae3da0
       updated_at: "2026-09-23"
       layer: mapa
       tags:
@@ -4279,7 +4333,7 @@ nodes:
       shared_code: true
     - id: internal/mapx/node_code_test.go
       kind: test
-      rev: f38e034f6a17
+      rev: 4f86019884fe
       updated_at: "2026-09-10"
       code: DTAXX
       layer: teste
@@ -4498,7 +4552,7 @@ nodes:
         - test
     - id: internal/scan/scan.go
       kind: code
-      rev: "985674183915"
+      rev: ab630ba42070
       updated_at: "2026-09-23"
       layer: scan
       tags:
@@ -4514,6 +4568,22 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/scan/upstream.go
+      kind: code
+      rev: f692f9656173
+      layer: scan
+      tags:
+        - nucleo
+        - scan
+      shared_code: true
+    - id: internal/scan/upstream_test.go
+      kind: test
+      rev: b66fb0b64681
+      code: FNDTN
+      layer: teste
+      tags:
+        - test
+      shared_code: true
     - id: internal/settings/roles_test.go
       kind: test
       rev: b5286a58f84f
@@ -4876,6 +4946,10 @@ edges:
         validated_to_rev: c13ceaa6cd7c
         changed_at: "2026-09-21"
         verdict: ok
+    - from: CONCEPT.md
+      to: internal/scan/upstream.go
+      type: governs
+      origin: declared
     - from: PROPAGATION.md
       to: internal/mapx/build.go
       type: governs
@@ -5357,6 +5431,10 @@ edges:
         validated_to_rev: d9ee61f3f714
         changed_at: "2026-09-22"
         verdict: ok
+    - from: QUALITY.md
+      to: internal/gate/revision_renumber.go
+      type: governs
+      origin: declared
     - from: QUALITY.md
       to: internal/gate/route_declared.go
       type: governs
@@ -5857,6 +5935,15 @@ edges:
         changed_at: "2026-09-22"
         verdict: ok
     - from: SPEC.md
+      to: internal/gate/revision_renumber.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: dedf7925bcf7
+        validated_to_rev: 4fbfa788f5e3
+        changed_at: "2026-09-23"
+        verdict: ok
+    - from: SPEC.md
       to: internal/gate/route_declared.spec.md
       type: governs
       origin: declared
@@ -6329,6 +6416,15 @@ edges:
         changed_at: "2026-09-22"
         verdict: ok
     - from: SPEC_TYPES.md
+      to: internal/gate/revision_renumber.spec.md
+      type: governs
+      origin: declared
+      stamp:
+        validated_from_rev: da86ff2960b9
+        validated_to_rev: 4fbfa788f5e3
+        changed_at: "2026-09-23"
+        verdict: ok
+    - from: SPEC_TYPES.md
       to: internal/gate/route_declared.spec.md
       type: governs
       origin: declared
@@ -6679,6 +6775,10 @@ edges:
         validated_to_rev: c13ceaa6cd7c
         changed_at: "2026-09-21"
         verdict: ok
+    - from: TRACEABILITY.md
+      to: internal/scan/upstream.go
+      type: governs
+      origin: declared
     - from: WORKFLOW.md
       to: internal/change/change.go
       type: governs
@@ -8790,6 +8890,44 @@ edges:
         validated_to_rev: d9ee61f3f714
         changed_at: "2026-09-22"
         verdict: ok
+    - from: internal/gate/revision_renumber.feature
+      to: internal/gate/revision_renumber_test.go
+      type: tested-by
+      origin: convention
+      stamp:
+        validated_from_rev: 29e80e1e18d4
+        validated_to_rev: 5d962fa98a42
+        changed_at: "2026-09-23"
+        verdict: ok
+    - from: internal/gate/revision_renumber.spec.md
+      to: internal/gate/plan_change_justified.go
+      type: depends-on
+      origin: declared
+      method: '`revisionRE`'
+      dep: DEP1
+      stamp:
+        validated_from_rev: 4fbfa788f5e3
+        validated_to_rev: 72708379eee1
+        changed_at: "2026-09-23"
+        verdict: ok
+    - from: internal/gate/revision_renumber.spec.md
+      to: internal/gate/revision_renumber.feature
+      type: covered-by
+      origin: convention
+      stamp:
+        validated_from_rev: 4fbfa788f5e3
+        validated_to_rev: 29e80e1e18d4
+        changed_at: "2026-09-23"
+        verdict: ok
+    - from: internal/gate/revision_renumber.spec.md
+      to: internal/gate/revision_renumber.go
+      type: specifies
+      origin: convention
+      stamp:
+        validated_from_rev: 4fbfa788f5e3
+        validated_to_rev: 06c848be7601
+        changed_at: "2026-09-23"
+        verdict: ok
     - from: internal/gate/route_declared.feature
       to: internal/gate/route_declared_test.go
       type: tested-by
@@ -9480,17 +9618,6 @@ edges:
       to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
-      method: SAIDA-R03
-      dep: TRCMT-B08
-      stamp:
-        validated_from_rev: 80986ee2db2b
-        validated_to_rev: df9daf492d2b
-        changed_at: "2026-09-21"
-        verdict: ok
-    - from: internal/gate/triad_complete.spec.md
-      to: product/declared-ways-out.doctrine.md
-      type: realizes
-      origin: declared
       method: SAIDA-R02
       dep: TRCMT-B08
       stamp:
@@ -9504,6 +9631,17 @@ edges:
       origin: declared
       method: SAIDA-R01
       dep: TRCMT-B07
+      stamp:
+        validated_from_rev: 80986ee2db2b
+        validated_to_rev: df9daf492d2b
+        changed_at: "2026-09-21"
+        verdict: ok
+    - from: internal/gate/triad_complete.spec.md
+      to: product/declared-ways-out.doctrine.md
+      type: realizes
+      origin: declared
+      method: SAIDA-R03
+      dep: TRCMT-B08
       stamp:
         validated_from_rev: 80986ee2db2b
         validated_to_rev: df9daf492d2b

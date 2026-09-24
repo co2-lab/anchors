@@ -638,6 +638,27 @@ func TestPortaQueSabeAVarreduraHonraOEscopoDeFull(t *testing.T) {
 
 // A porta que honra a dispensa POR ALVO produz veredito para TODOS os nós — um deles
 // poupado. A dispensa não pode sair filtrando o gate da lista.
+// A vendored pipeline is out of the internal rulers — its triad and header live upstream —
+// and still in reach of an external command, which measures what the file does here.
+func TestAppliesUpstreamOnlyToExternalCommands(t *testing.T) {
+	t.Run("GTENG-B22: A vendored file is out of every internal ruler and still reached by an external command", func(t *testing.T) {})
+
+	vendored := mapx.Node{ID: ".github/workflows/anchors-claim.yml", Kind: mapx.KindCode, Upstream: true}
+	own := mapx.Node{ID: ".github/workflows/ci.yml", Kind: mapx.KindCode}
+	internal := config.Gate{Name: "triad-complete", On: []string{"code"}, Check: "triad-complete"}
+	external := config.Gate{Name: "no-secret-leaked", On: []string{"code"}, Run: "gitleaks"}
+
+	if applies(internal, vendored, t.TempDir()) {
+		t.Error("an internal ruler must not reach a vendored file")
+	}
+	if !applies(internal, own, t.TempDir()) {
+		t.Error("an internal ruler still reaches the project's own workflow")
+	}
+	if !applies(external, vendored, t.TempDir()) {
+		t.Error("an external command still reaches a vendored file")
+	}
+}
+
 func TestPortaComDispensaProduzVereditoParaTodos(t *testing.T) {
 	t.Run("GTENG-B21: The entry point that honours a waiver by target keeps the gate running", func(t *testing.T) {})
 

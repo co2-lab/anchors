@@ -7,6 +7,13 @@
 
 > **Code**: `GTENG`
 
+> **GTENG-R0001:** routing learned about VENDORED files. A pipeline Anchors seeded and still
+> owns (it carries the template marker) had every internal ruler charging it a triad and a
+> code — measured in blue-eyes, where the project was asked to own, and to specify, files
+> `anchors doctor --fix` replaces whole. Decided by the user: those files are upstream-owned.
+>
+> **Revises:** `B22`
+
 ## Overview
 
 This is the ENGINE. It answers two questions and nothing else: **which gates apply to
@@ -92,6 +99,7 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 | `GTENG-B19` | `RunWithConfig` is the same entry point carrying the Structure, which the relational checkers need to read the regimes and the surfaces of the triad. |
 | `GTENG-B20` | `RunFull` is the one that also knows whether the sweep is the WHOLE project, which is the only thing that lets a gate able to sweep on its own run ONCE instead of receiving thousands of targets in batches. |
 | `GTENG-B21` | `RunWithWaiver` is the one that honours a waiver BY TARGET, which cannot be served by filtering the gate out of the list. |
+| `GTENG-B22` | A vendored file — a pipeline Anchors seeded that still carries its template marker — is out of every internal ruler, whose triad, header and identity live upstream; an external command still reaches it, because what the file does in this repository is the project's concern. |
 
 ## Invariants
 

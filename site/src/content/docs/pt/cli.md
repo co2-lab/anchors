@@ -86,6 +86,7 @@ código sem spec, sinal que ninguém ingeriu, gate declarado que não protege na
 | `anchors new <kind> <nome>` | emite o esqueleto conforme a régua |
 | `anchors code` | gera um código de identidade único |
 | `anchors recode <de> <para>` | renomeia um código e propaga por todo o projeto |
+| `anchors renumber [specs...]` | no rebase, renumera as revisões (`-R000N`) que o branch adicionou e que colidem com a base |
 | `anchors work <etapa> --for <alvo>` | emite o prompt de trabalho de uma etapa |
 
 Os guias são a documentação **executável**: em vez de a IA decorar o Anchors,

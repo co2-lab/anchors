@@ -43,6 +43,7 @@ func Build(files []scan.File, cfg *config.Config, updatedAt map[string]string) *
 			UpdatedAt:     updatedAt[f.Path],
 			Layer:         f.Layer,
 			Parent:        f.Parent,
+			Upstream:      f.Upstream,
 			Revises:       f.Revises,
 			Code:          nodeCode(f, ancoraDeDerivado),
 			CodeDeclarado: declaredCode(f),
@@ -538,6 +539,12 @@ func resolveTemplateM(tmpl, dir, name, ext, module string) string {
 // O `anchors` recebe a lista de arquivos para poder derivar a identidade de um ARTEFATO
 // DERIVADO da âncora irmã — ver `codeFromSibling`.
 func nodeCode(f scan.File, anchors map[string]string) string {
+	// A VENDORED file has no local identity. Inferring one from its text read an example in
+	// a comment as ownership: blue-eyes' `anchors-board.yml` entered the map as `FNDTN`,
+	// the code of a plan it merely quotes.
+	if f.Upstream {
+		return ""
+	}
 	if f.HeaderCode != "" {
 		return f.HeaderCode
 	}

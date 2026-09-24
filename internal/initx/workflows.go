@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // workflowsFS carrega os pipelines que o modo `github` do fluxo de trabalho pressupõe.
@@ -137,8 +138,9 @@ type BranchProtection struct {
 // RequiredProtection é o mínimo que o fluxo pressupõe.
 var RequiredProtection = BranchProtection{ExigePR: true, RevisoesNecessarias: 0}
 
-// DirWorkflows é onde os pipelines moram no projeto.
-const DirWorkflows = ".github/workflows"
+// DirWorkflows é onde os pipelines moram no projeto. One constant with the scan, which
+// reads a marker-carrying file here as upstream-owned: two copies would drift.
+const DirWorkflows = scan.UpstreamDir
 
 // WorkStates são as LABELS que carregam o estado de um card, na ordem do fluxo.
 //
@@ -498,7 +500,10 @@ func SemConcurrency(root string) []Workflow {
 // (`<!-- anchors:template -->`), e prendê-lo à sintaxe de comentário de uma linguagem
 // faria a página do board nunca casar — o `--fix` a trataria como editada pelo time e
 // jamais a atualizaria, em silêncio.
-const MarcadorDeTemplate = "anchors:template"
+//
+// The value lives in the scan (`scan.UpstreamMarker`), which reads the same marker to keep
+// the map from giving a vendored pipeline a local code: one marker, one definition.
+const MarcadorDeTemplate = scan.UpstreamMarker
 
 // ÉTemplateIntacto diz se o pipeline instalado ainda é o do Anchors.
 //
