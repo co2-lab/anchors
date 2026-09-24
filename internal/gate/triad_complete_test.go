@@ -472,6 +472,11 @@ func TestSpecWaivers_tableRowIsTheRulesNotTheUnits(t *testing.T) {
 	if w := specWaivers(spec); len(w) != 0 {
 		t.Errorf("per-rule waivers in table rows were read as unit waivers: %v", w)
 	}
+	heading := "### AERXX-S01: Alerta simples (só OK) — @no-code: estado sem lógica\n" +
+		"- **SMCSX-V02**: Mês no topo @no-code: satisfeita pela delegação\n"
+	if w := specWaivers(heading); len(w) != 0 {
+		t.Errorf("per-rule waivers on a rule's heading/bullet were read as unit waivers: %v", w)
+	}
 	unit := spec + "\n@no-code: a unidade é a configuração do pipeline\n"
 	if w := specWaivers(unit); len(w) == 0 {
 		t.Error("a unit-level waiver outside the table stopped counting")

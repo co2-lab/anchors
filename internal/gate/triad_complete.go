@@ -356,14 +356,16 @@ func provingTest(codigo, root string, g *mapx.Graph) (arquivo string, achou bool
 }
 
 // specWaivers devolve as ARESTAS dispensadas pela própria spec.
-// unitWaiver reports whether a UNIT-level waiver is declared: the marker outside a table
-// row. A line that starts with `|` is a rule's row, and a waiver written there is that
-// RULE's (the per-rule shape `rule-implemented` reads) — not the unit's. Matching the whole
-// spec turned every per-rule `@no-code:` into a waiver of code, feature and test for the
-// unit: measured in MIF, 293 of 308 triad failures were that one misreading.
+// unitWaiver reports whether a UNIT-level waiver is declared: the marker on a line that
+// does not define a rule. A waiver on a rule's own line — its table row, its heading
+// (`### CODE-S01: … @no-code: …`) or its bullet — is that RULE's (the per-rule shape
+// `rule-implemented` reads), not the unit's. Matching the whole spec turned every per-rule
+// `@no-code:` into a waiver of code, feature and test for the unit: measured in MIF, 293 of
+// 308 triad failures were table rows, and 7 of the rest were rule headings.
 func unitWaiver(re *regexp.Regexp, content string) bool {
+	defines := definesRuleRE()
 	for _, line := range strings.Split(content, "\n") {
-		if strings.HasPrefix(strings.TrimSpace(line), "|") {
+		if strings.HasPrefix(strings.TrimSpace(line), "|") || defines.MatchString(line) {
 			continue
 		}
 		if re.MatchString(line) {
