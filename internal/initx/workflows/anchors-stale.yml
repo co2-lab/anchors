@@ -89,8 +89,13 @@ jobs:
           # card ("o stale joga trabalho PRONTO de volta em `to-do`") — não contra
           # liberar o dono. Desde que o stale parou de mover, a exclusão passou a
           # prender: um card pronto com dono morto ficava fora do alcance do `next`.
+          # A LISTA VEM SEM COMENTÁRIOS. Pedir `comments` de 200 cards numa consulta só
+          # estourava o GraphQL do GitHub: medido no blue-eyes, 60 execuções seguidas em
+          # `502`/`504`, e nenhum card liberado em dois dias e meio. A lista agora escolhe
+          # pelo que é barato (labels e `updatedAt`), e o dono de cada candidato vem pela
+          # API REST, um card por vez.
           gh issue list --state open --label "$LABEL" --limit 200 \
-            --json number,updatedAt,comments,labels \
+            --json number,updatedAt,labels \
             --jq "[.[]
                   | select(
                       (([.labels[].name] | any(. == \"anchors:in-progress\" or . == \"anchors:in-review\" or . == \"anchors:in-test\"))
@@ -100,21 +105,26 @@ jobs:
                        and ([.labels[].name] | any(. == \"anchors:to-do\" or startswith(\"anchors:ready-to-\")))
                        and .updatedAt < \"$limite_espera\")
                     )
-                  | select(
-                    ([.comments[].body | select(startswith(\"anchors-owner:\"))] | last // \"\")
-                    | (. != \"\" and (endswith(\"(liberado)\") | not))
-                  )] | .[].number" |
-          while read -r n; do
+                  | \"\\(.number) \\([.labels[].name | select(test(\"^anchors:(to-do|ready-to-[a-z]+|in-progress|in-review|in-test)$\"))] | first // \"\")\"]
+                  | .[]" |
+          while read -r n estado_atual; do
             [ -n "$n" ] || continue
-            dono=$(gh issue view "$n" --json comments \
-              --jq '[.comments[].body | select(startswith("anchors-owner:"))] | last')
-            # O ESTADO ATUAL só para o registro: quem lê o card precisa saber onde ele
-            # ficou, e a mensagem sem isso obriga a conferir as labels.
-            #
-            # `ready-to-*` entra aqui junto com os demais: sem ele a mensagem sairia com
-            # o estado VAZIO justamente nos cards que a separação passou a alcançar.
-            estado_atual=$(gh issue view "$n" --json labels --jq '.labels[].name' |
-              grep -E '^anchors:(to-do|ready-to-[a-z]+|in-progress|in-review|in-test)$' | head -1 || true)
+            # O DONO é o último `anchors-owner:`, lido pela REST (a primeira linha de cada
+            # comentário). Falha da API PULA o card: liberar sem saber de quem ele é
+            # seria agir sobre um palpite.
+            if ! donos=$(gh api "repos/$GH_REPO/issues/$n/comments" --paginate \
+                --jq '.[] | .body | split("\n")[0] | select(startswith("anchors-owner:"))'); then
+              echo "· #$n: não consegui ler o dono (gh falhou) — pulando"
+              continue
+            fi
+            dono=$(printf '%s\n' "$donos" | tail -1)
+            # Sem dono, ou JÁ LIBERADO, não há o que liberar. O marcador é o PREFIXO: o
+            # próprio stale escreve o motivo depois dele, e comparar pelo fim da linha
+            # tomava cada card já liberado por um card com dono — e o liberava de novo
+            # a cada hora.
+            case "$dono" in
+              ""|"anchors-owner: (liberado)"*) continue ;;
+            esac
 
             # O relógio que valeu, para o registro dizer POR QUE este card foi alcançado.
             case "$estado_atual" in
