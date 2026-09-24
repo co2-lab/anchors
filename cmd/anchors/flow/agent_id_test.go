@@ -42,3 +42,17 @@ func TestAgentID_fallbackIsAnnounced(t *testing.T) {
 		t.Errorf("a declared session: id=%q, stderr=%q (want no warning)", id, out)
 	}
 }
+
+// Claiming from the board requires a declared session: the fallback identity is shared by
+// every agent of the same user on one machine (blue-eyes #650).
+func TestRequireSession(t *testing.T) {
+	t.Setenv("ANCHORS_SESSION", "")
+	err := requireSession()
+	if err == nil || !strings.Contains(err.Error(), "export ANCHORS_SESSION=") {
+		t.Errorf("claiming without ANCHORS_SESSION was allowed, or the error does not say how to fix it: %v", err)
+	}
+	t.Setenv("ANCHORS_SESSION", "devA")
+	if err := requireSession(); err != nil {
+		t.Errorf("a declared session was refused: %v", err)
+	}
+}

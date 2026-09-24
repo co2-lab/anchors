@@ -132,6 +132,9 @@ while one of yours is still pending — re-running it waits on that same claim.`
 			if cfg.GitHubMode() {
 				// A identidade do BOARD, não a da fila local: ali o PID é a resposta
 				// certa (um processo, um worker); aqui a sessão atravessa invocações.
+				if err := requireSession(); err != nil {
+					return err
+				}
 				return nextFromBoard(absRoot, cfg, agentID())
 			}
 
@@ -341,6 +344,25 @@ func defaultWorkerID() string {
 // O formato é o que o `BOOTSTRAP.md` §7.6 define: `<maquina>/<sessao>`. A sessão vem do
 // ambiente porque só o cliente de IA sabe onde ela começa e termina; sem ela, cai no nome
 // do usuário — estável entre invocações, e suficiente para um dev com um agente.
+// requireSession refuses to claim from the board without ANCHORS_SESSION.
+//
+// Without it the identity falls back to <host>/<user>, and two agents of the same user on
+// one machine are the SAME owner to the board: each resumes the other's card, and the
+// collision shows only after both have worked the same card. A warning was not enough —
+// blue-eyes #650: a machine claimed as `…/default` next to dev1..dev5. Claiming is the
+// one moment the identity is WRITTEN (the `anchors-owner:` comment), so that is where it
+// must be declared; commands that only read keep the fallback and its warning.
+func requireSession() error {
+	if strings.TrimSpace(os.Getenv("ANCHORS_SESSION")) != "" {
+		return nil
+	}
+	return fmt.Errorf("ANCHORS_SESSION is not set — `anchors next` claims cards on the board, and the claim\n" +
+		"  records WHO owns them. Without a session every agent of this user on this machine\n" +
+		"  claims under the same name and takes the others' cards.\n\n" +
+		"  Give this agent a name of its own, e.g.:\n" +
+		"      export ANCHORS_SESSION=dev1")
+}
+
 func agentID() string {
 	host, _ := os.Hostname()
 	if host == "" {

@@ -14,8 +14,13 @@ const WorkGuide = `# Work guide (the ruler for whoever picked up a card)
 ` + "`anchors next`" + ` is the first command, and it is not bureaucracy — it is what
 records WHO has the work and moves the card to the right column.
 
+    $ export ANCHORS_SESSION=dev1   # a name of its own for EACH agent
     $ anchors next
     · card #223 is yours — moved to in-progress
+
+**Declare ` + "`ANCHORS_SESSION`" + ` first.** The claim records the owner as
+` + "`<machine>/<session>`" + `, and ` + "`next`" + ` refuses to claim without it: two agents of the same
+user on one machine would otherwise be ONE owner to the board and take each other's cards.
 
 **Picking the card by hand and starting to implement does not work.** What is lost is not the
 record: it is the QUEUE. The claim serves ` + "`ready-to-review`" + ` BEFORE ` + "`to-do`" + `

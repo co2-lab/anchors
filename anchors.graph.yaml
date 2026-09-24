@@ -248,7 +248,7 @@ nodes:
         - comando
     - id: cmd/anchors/flow/agent_id_test.go
       kind: test
-      rev: 4fdabe90ce71
+      rev: d61554ff9580
       updated_at: "2026-09-24"
       layer: teste
       tags:
@@ -408,7 +408,7 @@ nodes:
         - test
     - id: cmd/anchors/flow/queue.go
       kind: code
-      rev: ea60381b6a92
+      rev: 510d6f6997cd
       updated_at: "2026-09-24"
       layer: comando
       tags:
@@ -688,7 +688,7 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide_work.go
       kind: code
-      rev: e5ebf7567671
+      rev: 4b74fd70da49
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -1122,7 +1122,7 @@ nodes:
     - id: cmd/anchors/quality/check.go
       kind: code
       rev: 6b3f1a4bb5ed
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       layer: comando
       tags:
         - cli
@@ -1151,6 +1151,7 @@ nodes:
     - id: cmd/anchors/quality/check_record_issues_test.go
       kind: test
       rev: 982b5e843f48
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
