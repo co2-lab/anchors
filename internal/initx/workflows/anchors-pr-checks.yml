@@ -17,6 +17,38 @@
 # Com este pipeline, `ready-to-review` PASSA A SIGNIFICAR "os checks passaram". O agente
 # que abriu o PR não escreve label nenhuma: a obrigação dele é olhar o resultado e
 # consertar o que reprovou.
+#
+# THE REVIEW IS A COMMIT STATUS, `anchors/review` (blue-eyes #835).
+#
+# Before it, a PR could be merged while the review this pipeline itself asked for was
+# still running — and the merge moved the card to `ready-to-test` all the same. The review
+# was a column on the board, not a fact the merge button could see.
+#
+# The `review` job publishes `anchors/review` on the PR head commit:
+#
+#   pending  — the card waits for a reviewer (`ready-to-review`), or the assigned reviewer
+#              has not posted a verdict yet
+#   success  — ONLY when the ASSIGNED reviewer posted, on the PR, the verdict line
+#                  anchors-review: approved by <reviewer>
+#   failure  — when that reviewer posted
+#                  anchors-review: rejected by <reviewer>
+#
+# The assigned reviewer is the `anchors-owner:` of the card at the moment the claim moved
+# it to `in-review`; a verdict posted before that moment belongs to an earlier round and
+# does not count. The line is written by the reviewer (`anchors guide review`), at the
+# start of a line, outside code blocks, in a comment by someone with write access.
+#
+# MAKE IT REQUIRED to have the merge wait for the review: in the branch protection (or
+# ruleset) of the integration branch, add `anchors/review` to the required status checks.
+# The Anchors does not require it on its own — a PR that declares no card gets no review
+# and no status, and requiring it is the project's decision to route every PR through a
+# card. A merge with `--admin` still goes through; the difference is that the merger sees
+# `anchors/review` red or pending on the button, and the card says so afterwards (below).
+#
+# A MERGE WITHOUT THE OUTCOME IS NOT SILENT (blue-eyes #782): the card still moves to
+# `ready-to-test` — the work landed, and the board must not contradict the repository —
+# but the card gets a comment saying the PR merged without the review outcome, naming the
+# reviewer and the PR.
 name: anchors · PR verde move o card
 
 on:
@@ -32,6 +64,11 @@ on:
     # depende dela.
     types: [opened, reopened, synchronize, closed]
     branches: [main] # anchors:integration-branch
+  # The reviewer's VERDICT arrives as a PR comment, and it is the event that turns
+  # `anchors/review` green or red. Every comment in the repository fires this trigger;
+  # the `review` job filters down to PR comments that carry a verdict line.
+  issue_comment:
+    types: [created, edited]
   # À MÃO, para quando algo travar: um card que ficou em `in-progress` porque o evento se
   # perdeu não tem outra saída — e um pipeline sem escape manual transforma um percalço
   # em trabalho parado sem remédio.
@@ -62,7 +99,9 @@ on:
 #
 # O `anchors-gates.yml` já usava o grupo por PR no mesmo repositório; este ficou para trás.
 concurrency:
-  group: anchors-pr-checks-${{ github.event.pull_request.number || github.event.inputs.pr || github.run_id }}
+  # `issue.number` is the PR number on a PR comment — the verdict of a PR serializes with
+  # the other events of the same PR.
+  group: anchors-pr-checks-${{ github.event.pull_request.number || github.event.issue.number || github.event.inputs.pr || github.run_id }}
   cancel-in-progress: false
 
 permissions:
@@ -70,6 +109,8 @@ permissions:
   issues: write
   pull-requests: read
   checks: read
+  # `anchors/review` is a commit status on the PR head.
+  statuses: write
 
 jobs:
   # O CONFLITO QUE SÓ O MAPA CAUSA — e o GitHub não sabe resolvê-lo.
@@ -137,14 +178,163 @@ jobs:
             printf '%s\n' "$comuns" | sed 's/^/    /'
           fi
 
+  # THE REVIEW OUTCOME, as the `anchors/review` commit status (see the header).
+  #
+  # It runs BEFORE `mover` (which `needs` it): on the merge, `mover` reads the outcome
+  # computed here to decide whether the card gets the "merged without the review outcome"
+  # comment. Not on `check_suite` — the only card change there is `mover`'s move to
+  # `ready-to-review`, and `mover` publishes that `pending` itself, after the move.
+  review:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'issue_comment' && github.event.issue.pull_request &&
+       contains(github.event.comment.body, 'anchors-review:'))
+    outputs:
+      state: ${{ steps.outcome.outputs.state }}
+      reviewer: ${{ steps.outcome.outputs.reviewer }}
+    steps:
+      - name: Publish the review outcome (anchors/review)
+        id: outcome
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          LABEL: anchors
+          PR: ${{ github.event.pull_request.number || github.event.issue.number || inputs.pr }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          saida() { echo "$1=$2" >> "${GITHUB_OUTPUT:-/dev/null}"; }
+          saida state none
+
+          sha="$HEAD_SHA"
+          if [ -z "$sha" ]; then
+            sha=$(gh pr view "$PR" --json headRefOid --jq .headRefOid 2>/dev/null || true)
+          fi
+          if [ -z "$sha" ]; then
+            echo "PR #$PR: no head commit found — no status to publish"
+            exit 0
+          fi
+
+          # THE CARD, by the same two sources `mover` uses: the link declared in the body
+          # (outside code blocks, and only if it carries the Anchors label), then the code
+          # in the title.
+          corpo=$(gh pr view "$PR" --json body --jq '.body // ""' 2>/dev/null || true)
+          card=$(printf '%s\n' "$corpo" \
+            | sed 's/\r$//' \
+            | awk '
+                /^[[:space:]]*```/ { emBloco = !emBloco; next }
+                emBloco { next }
+                /^[[:space:]]{4}/ { next }
+                { print }
+              ' \
+            | grep -oiE '^[[:space:]]*(refs|closes|fixes|resolves)[[:space:]]+#[0-9]+' \
+            | grep -oE '[0-9]+' | head -1 || true)
+          if [ -n "$card" ]; then
+            temLabel=$(gh issue view "$card" --json labels \
+              --jq "[.labels[].name] | index(\"$LABEL\") // empty" 2>/dev/null || true)
+            if [ -z "$temLabel" ]; then card=""; fi
+          fi
+          if [ -z "$card" ]; then
+            titulo=$(gh pr view "$PR" --json title --jq .title 2>/dev/null || true)
+            codigo=$(echo "$titulo" | sed -n 's/^\[\([^]]*\)\].*/\1/p')
+            if [ -n "$codigo" ]; then
+              card=$(gh issue list --state all --label "$LABEL" --limit 200 \
+                --json number,title --jq "[.[] | select(.title | startswith(\"[$codigo]\"))] | .[0].number // empty" \
+                2>/dev/null || true)
+            fi
+          fi
+          # NO CARD, NO STATUS: the pipeline assigned no review to this PR, and inventing a
+          # verdict for it would be the green that states work nobody did.
+          if [ -z "$card" ]; then
+            echo "PR #$PR declares no card — no review was assigned, no status published"
+            exit 0
+          fi
+
+          labels=$(gh issue view "$card" --json labels --jq '.labels[].name' 2>/dev/null || true)
+
+          # THE ASSIGNED REVIEWER: the card's `anchors-owner:` when the claim last moved it
+          # to `in-review`. The moment matters twice — the owner BEFORE it is the one the
+          # claim assigned, and a verdict BEFORE it belongs to an earlier round.
+          atribuido=$(gh api "repos/$GH_REPO/issues/$card/events" --paginate \
+            --jq '.[] | select(.event == "labeled" and .label.name == "anchors:in-review") | .created_at' \
+            2>/dev/null | tail -1 || true)
+          revisor=""
+          if [ -n "$atribuido" ]; then
+            revisor=$(gh issue view "$card" --json comments \
+              --jq "[.comments[] | select(.createdAt <= \"$atribuido\") | .body
+                     | select(startswith(\"anchors-owner: \"))
+                     | ltrimstr(\"anchors-owner: \") | split(\"\n\")[0] | split(\" \")[0]
+                     | select(startswith(\"(\") | not)] | last // empty" 2>/dev/null || true)
+          fi
+          saida reviewer "$revisor"
+
+          # THE VERDICT LINE, on the PR, by the assigned reviewer, after the assignment.
+          # The last one wins: a reviewer who changes their mind posts a new line.
+          #
+          # Only comments by someone with WRITE access count: on a public repository anyone
+          # can comment, and a line typed by a stranger would turn the status green.
+          veredito=""
+          if [ -n "$revisor" ]; then
+            comentarios=$(gh api "repos/$GH_REPO/issues/$PR/comments" --paginate \
+              --jq ".[] | select(.created_at >= \"$atribuido\")
+                        | select(.author_association == \"OWNER\" or .author_association == \"MEMBER\" or .author_association == \"COLLABORATOR\")
+                        | .body | @base64" 2>/dev/null || true)
+            for c in $comentarios; do
+              linhas=$(printf '%s' "$c" | base64 --decode \
+                | sed 's/\r$//' \
+                | awk '
+                    /^[[:space:]]*```/ { emBloco = !emBloco; next }
+                    emBloco { next }
+                    /^[[:space:]]{4}/ { next }
+                    { print }
+                  ' \
+                | sed -nE 's/^anchors-review: (approved|rejected) by ([^[:space:]]+)[[:space:]]*$/\1 \2/p' || true)
+              while read -r v quem; do
+                if [ -n "$v" ] && [ "$quem" = "$revisor" ]; then veredito="$v"; fi
+              done <<< "$linhas"
+            done
+          fi
+
+          # `ready-to-review` WINS over any earlier verdict: the card is back in the queue
+          # (a reviewer fixed it and released it), and the new round has no reviewer yet.
+          if echo "$labels" | grep -qx "anchors:ready-to-review"; then
+            state=pending; desc="awaiting a reviewer: card #$card is in ready-to-review"
+          elif [ -z "$revisor" ]; then
+            echo "card #$card was never assigned for review — no status published"
+            exit 0
+          elif [ "$veredito" = "approved" ]; then
+            state=success; desc="approved by $revisor (card #$card)"
+          elif [ "$veredito" = "rejected" ]; then
+            state=failure; desc="rejected by $revisor (card #$card)"
+          else
+            state=pending; desc="awaiting the verdict of $revisor (card #$card)"
+          fi
+
+          gh api --method POST "repos/$GH_REPO/statuses/$sha" \
+            -f state="$state" -f context="anchors/review" \
+            -f description="${desc:0:140}" -f target_url="$RUN_URL" >/dev/null
+          saida state "$state"
+          echo "anchors/review → $state on $sha: $desc"
+
   mover:
     runs-on: ubuntu-latest
+    # AFTER `review`, and even when it failed or was skipped (`always()`): the card moves
+    # by fact, and a status that could not be read must not hold it. A PR comment is only
+    # a verdict — it moves nothing.
+    needs: review
+    if: ${{ always() && github.event_name != 'issue_comment' }}
     steps:
       - name: Mover o card quando o PR ficar verde
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           LABEL: anchors
+          REVIEW_STATE: ${{ needs.review.outputs.state }}
+          REVIEWER: ${{ needs.review.outputs.reviewer }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
 
@@ -468,6 +658,29 @@ jobs:
               "estados à frente." \
               "" \
               "Quem fecha o card é quem termina a esteira.")"
+            # MERGED WITHOUT THE REVIEW OUTCOME (blue-eyes #782). The card moves all the
+            # same — the work landed, and a card held back would make the board contradict
+            # the repository. What must not happen is the move looking like every other
+            # one: whoever reads the card later has to see that nobody signed the review.
+            if [ "$REVIEW_STATE" != "success" ]; then
+              quemRevisava="${REVIEWER:-no reviewer had been assigned}"
+              gh issue comment "$card" --body "$(printf '%s\n' \
+                "⚠ **PR #$pr merged WITHOUT the review outcome.**" \
+                "" \
+                "\`anchors/review\` was \`${REVIEW_STATE:-not reported}\` at the merge; reviewer: **$quemRevisava**." \
+                "" \
+                "The card moved to \`ready-to-test\` because the work landed — but no" \
+                "\`anchors-review: approved by <reviewer>\` line was posted on PR #$pr by the" \
+                "assigned reviewer. If a review is still owed, it is owed on what is now in" \
+                "the integration branch." \
+                "" \
+                "To make the merge wait for the review, require the \`anchors/review\` status" \
+                "in the branch protection; a merge with \`--admin\` still goes through, and" \
+                "lands here." \
+                "" \
+                "Run: $RUN_URL")"
+              echo "::warning::PR #$pr merged without the review outcome (anchors/review: ${REVIEW_STATE:-not reported}; reviewer: $quemRevisava) — said so on card #$card"
+            fi
             echo "card #$card → ready-to-test (PR #$pr mergeado)"
             exit 0
           fi
@@ -498,4 +711,16 @@ jobs:
           # nada acusasse, e a prioridade direita-para-esquerda deixou de valer na prática.
           gh issue comment "$card" --body "anchors-owner: (liberado) — implementação concluída; o card espera REVISÃO de outro agente"
           gh issue comment "$card" --body "Os checks do PR #$pr passaram — card em \`ready-to-review\`, esperando revisor."
+          # THE REVIEW IS NOW OWED, and the merge button has to see it: `anchors/review`
+          # goes `pending` on the head commit. Published HERE, after the move, and not by
+          # the `review` job — that one ran before this move and saw the card still in
+          # `in-progress`.
+          sha=$(gh pr view "$pr" --json headRefOid --jq .headRefOid 2>/dev/null || true)
+          if [ -n "$sha" ]; then
+            gh api --method POST "repos/$GH_REPO/statuses/$sha" \
+              -f state=pending -f context="anchors/review" \
+              -f description="awaiting a reviewer: card #$card is in ready-to-review" \
+              -f target_url="$RUN_URL" >/dev/null || \
+              echo "::warning::could not publish anchors/review on $sha"
+          fi
           echo "card #$card → ready-to-review (PR #$pr verde)"

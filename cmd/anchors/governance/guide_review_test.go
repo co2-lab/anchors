@@ -65,7 +65,7 @@ func TestGuiaDeReview_temPontosDeConformidade(t *testing.T) {
 // Cada ponto tem CÓDIGO, e a numeração é contínua: o relatório precisa referenciar o item
 // específico, e um buraco na sequência é item apagado sem ninguém notar.
 func TestGuiaDeReview_pontosNumeradosSemBuraco(t *testing.T) {
-	for i := 1; i <= 14; i++ {
+	for i := 1; i <= 15; i++ {
 		codigo := "REV-CK" + itoa(i) + ":"
 		if !strings.Contains(reviewGuide, codigo) {
 			t.Errorf("falta o ponto %s — a numeração tem buraco", codigo)
@@ -91,6 +91,7 @@ func TestGuiaDeReview_cadaPontoTemProsaAcima(t *testing.T) {
 		"REV-CK12": "WHICH requirement it proves",
 		"REV-CK13": "change without saying",
 		"REV-CK14": "DO NOT MOVE THE CARD",
+		"REV-CK15": "YOUR VERDICT IS A LINE ON THE PR",
 	}
 	for ck, ancora := range ancoras {
 		if !strings.Contains(corpo, ancora) {
@@ -114,4 +115,28 @@ func itoa(n int) string {
 		return string(rune('0' + n))
 	}
 	return string(rune('0'+n/10)) + string(rune('0'+n%10))
+}
+
+// THE VERDICT IS A LINE THE PIPELINE READS (blue-eyes #835). `anchors-pr-checks.yml`
+// turns `anchors/review` green only on `anchors-review: approved by <reviewer>`, and red on
+// `rejected`. The guide is the only place the reviewer learns that line — a guide that
+// taught another spelling would leave every reviewed PR pending forever.
+func TestReviewGuide_teachesTheVerdictLineThePipelineReads(t *testing.T) {
+	for _, line := range []string{
+		"    anchors-review: approved by <you>\n",
+		"    anchors-review: rejected by <you>\n",
+	} {
+		if !strings.Contains(reviewGuide, line) {
+			t.Errorf("the review guide should show the verdict line %q as a copyable block", strings.TrimSpace(line))
+		}
+	}
+	flat := strings.Join(strings.Fields(reviewGuide), " ")
+	// WHO counts: the assigned reviewer, after the assignment — otherwise the reviewer of
+	// an earlier round, or any agent, could sign.
+	if !strings.Contains(flat, "Only the reviewer the claim assigned counts") {
+		t.Error("the guide should say that only the assigned reviewer's line counts")
+	}
+	if !strings.Contains(flat, "the last one wins") {
+		t.Error("the guide should say how a changed verdict is recorded (a new line; the last wins)")
+	}
 }

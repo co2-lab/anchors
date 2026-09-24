@@ -249,7 +249,7 @@ O que é seu é o que exige julgamento:
 
 | o que você achou | o que fazer |
 | --- | --- |
-| nada | mova o card para `ready-to-test` |
+| nada | poste `anchors-review: approved by <você>` no PR — o merge leva o card a `ready-to-test` |
 | defeito de **execução** (marcação errada, teste que não cobre o caso) | **corrija você mesmo**, no mesmo PR, e devolva o card para `ready-to-review` liberando a posse |
 | defeito de **entendimento** (a spec foi lida errado, a abordagem não serve) | **devolva**: card para `to-do`, posse para quem implementou |
 
@@ -269,5 +269,13 @@ volta no próximo card que ele pegar.
 
 O card fecha pelo `Closes #N` do corpo, e o pipeline o move para
 `ready-to-test` — o fim da alçada do Anchors.
+
+A revisão fica visível no botão de merge: o pipeline publica o status de commit
+`anchors/review` no PR — `pending` enquanto a revisão é devida, `success` só depois que o
+revisor atribuído posta `anchors-review: approved by <revisor>`, `failure` com
+`anchors-review: rejected by <revisor>`. Coloque `anchors/review` entre os status checks
+obrigatórios do branch para o merge esperar por ele. Um merge que passa mesmo assim
+(`--admin`) ainda move o card, e o card recebe um comentário dizendo que o PR mergeou sem
+o desfecho da revisão, com o nome do revisor.
 
 Daí em diante, o processo de entrega é do seu projeto.

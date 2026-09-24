@@ -249,7 +249,7 @@ What's yours is what requires judgment:
 
 | what you found | what to do |
 | --- | --- |
-| nothing | move the card to `ready-to-test` |
+| nothing | post `anchors-review: approved by <you>` on the PR — the merge moves the card to `ready-to-test` |
 | **execution** defect (wrong marker, test missing a case) | **fix it yourself**, in the same PR, and return the card to `ready-to-review` releasing ownership |
 | **understanding** defect (the spec was misread, the approach doesn't work) | **send it back**: card to `to-do`, ownership to whoever implemented it |
 
@@ -270,5 +270,13 @@ returns on their next card.
 
 The card closes via `Closes #N` in the body, and the pipeline moves it to
 `ready-to-test` — the end of Anchors' remit.
+
+The review is visible to the merge button: the pipeline publishes the commit status
+`anchors/review` on the PR — `pending` while the review is owed, `success` only once the
+assigned reviewer posted `anchors-review: approved by <reviewer>`, `failure` on
+`anchors-review: rejected by <reviewer>`. Add `anchors/review` to the branch's required
+status checks to make the merge wait for it. A merge that goes through anyway (`--admin`)
+still moves the card, and the card gets a comment saying the PR merged without the review
+outcome, naming the reviewer.
 
 From there, delivery is your project's process.
