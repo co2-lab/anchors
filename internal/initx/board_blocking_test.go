@@ -76,6 +76,32 @@ func rodaDesenhaBloqueio(t *testing.T, itens []map[string]any) (hidden bool, htm
 func rodaNaPagina(t *testing.T, elemento, fn string, itens []map[string]any) (hidden bool, html string) {
 	t.Helper()
 
+	dados, err := json.Marshal(map[string]any{"items": itens})
+	if err != nil {
+		t.Fatalf("dados: %v", err)
+	}
+	out := rodaJSDaPagina(t, `
+const alvo = mk('`+elemento+`');
+`+fn+`(`+string(dados)+`);
+console.log(JSON.stringify({hidden: alvo.hidden, html: alvo.innerHTML}));
+`)
+	var r struct {
+		Hidden bool   `json:"hidden"`
+		HTML   string `json:"html"`
+	}
+	if err := json.Unmarshal([]byte(out), &r); err != nil {
+		t.Fatalf("saída do node não é o JSON esperado: %v\n%s", err, out)
+	}
+	return r.Hidden, r.HTML
+}
+
+// rodaJSDaPagina carrega o JS da página sobre o dublê de DOM, executa `codigo` depois dele
+// e devolve a ÚLTIMA linha que o node imprimiu. Separado do `rodaNaPagina` quando o filtro
+// de agentes passou a ter função PURA para confrontar — ela devolve valor, não escreve em
+// elemento, e o aparato de carregar a página é o mesmo.
+func rodaJSDaPagina(t *testing.T, codigo string) string {
+	t.Helper()
+
 	if _, err := exec.LookPath("node"); err != nil {
 		t.Skip("node ausente: o JS da página não pode ser confrontado nesta máquina")
 	}
@@ -96,16 +122,7 @@ func rodaNaPagina(t *testing.T, elemento, fn string, itens []map[string]any) (hi
 		t.Fatal("nenhum bloco <script> na página: o teste não tem o que confrontar")
 	}
 
-	dados, err := json.Marshal(map[string]any{"items": itens})
-	if err != nil {
-		t.Fatalf("dados: %v", err)
-	}
-
-	prog := dubleDeDOM + js.String() + `
-const alvo = mk('` + elemento + `');
-` + fn + `(` + string(dados) + `);
-console.log(JSON.stringify({hidden: alvo.hidden, html: alvo.innerHTML}));
-`
+	prog := dubleDeDOM + js.String() + "\n" + codigo
 	arq := filepath.Join(t.TempDir(), "board.mjs")
 	if err := os.WriteFile(arq, []byte(prog), 0o600); err != nil {
 		t.Fatalf("escrever: %v", err)
@@ -118,16 +135,9 @@ console.log(JSON.stringify({hidden: alvo.hidden, html: alvo.innerHTML}));
 	if err != nil {
 		t.Fatalf("node: %v\n%s", err, out)
 	}
-	var r struct {
-		Hidden bool   `json:"hidden"`
-		HTML   string `json:"html"`
-	}
 	// A última linha: a página pode logar antes.
 	linhas := strings.Split(strings.TrimSpace(string(out)), "\n")
-	if err := json.Unmarshal([]byte(linhas[len(linhas)-1]), &r); err != nil {
-		t.Fatalf("saída do node não é o JSON esperado: %v\n%s", err, out)
-	}
-	return r.Hidden, r.HTML
+	return linhas[len(linhas)-1]
 }
 
 func TestFaixaDeBloqueio_semEscalonadoNaoAparece(t *testing.T) {

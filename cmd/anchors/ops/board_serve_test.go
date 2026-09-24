@@ -1,9 +1,11 @@
 package ops
 
 import (
+	"encoding/json"
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 // O BOARD PUBLICADO E UMA FOTO, e a foto envelhece.
@@ -108,5 +110,33 @@ func TestIncrementalPerguntaPelaMaisRecente(t *testing.T) {
 		t.Error("o incremental usa `gh issue list`, que vai por GraphQL — e o limite " +
 			"SECUNDARIO dele derruba a consulta enquanto `gh api rate_limit` ainda " +
 			"reporta cota cheia. O REST nao tem esse problema")
+	}
+}
+
+// The live board says it is live, and stamps `takenAt` like the published one.
+//
+// The page's agent filter counts "the last 30 minutes" from `takenAt` for the published
+// board and from NOW when `live` is true. Without `live`, `board serve` would count from
+// the stamp of a read the floor keeps handing back, and active agents would drop off the
+// list while still working. Without `takenAt`, the header read "Invalid Date".
+func TestServePayloadIsLiveAndStamped(t *testing.T) {
+	agora := time.Date(2026, 9, 24, 12, 0, 0, 0, time.FixedZone("BRT", -3*3600))
+	var b struct {
+		TakenAt string           `json:"takenAt"`
+		Live    bool             `json:"live"`
+		Items   []map[string]any `json:"items"`
+	}
+	if err := json.Unmarshal(montaBoard(`[{"number":1}]`, agora), &b); err != nil {
+		t.Fatalf("the payload is not JSON: %v", err)
+	}
+	if !b.Live {
+		t.Error("the `board serve` payload does not say `live: true` — the page would count " +
+			"agent activity from the stamp of a cached read, not from now")
+	}
+	if b.TakenAt != "2026-09-24T15:00:00Z" {
+		t.Errorf("takenAt = %q, want the read time in UTC (2026-09-24T15:00:00Z)", b.TakenAt)
+	}
+	if len(b.Items) != 1 {
+		t.Errorf("items = %v, want the one item passed in", b.Items)
 	}
 }

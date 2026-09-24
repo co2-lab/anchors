@@ -874,7 +874,7 @@ nodes:
         - test
     - id: cmd/anchors/ops/board_serve.go
       kind: code
-      rev: efde1ced6ece
+      rev: e668381db13a
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -882,7 +882,7 @@ nodes:
         - comando
     - id: cmd/anchors/ops/board_serve_test.go
       kind: test
-      rev: 3315dd6824d8
+      rev: 6985a3add8dc
       updated_at: "2026-09-19"
       layer: teste
       tags:
@@ -1343,7 +1343,7 @@ nodes:
     - id: internal/board/claim_wait_test.go
       kind: test
       rev: 80c9d4d749c4
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
@@ -3976,9 +3976,15 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/initx/board_agents_test.go
+      kind: test
+      rev: fca88fb62541
+      layer: teste
+      tags:
+        - test
     - id: internal/initx/board_blocking_test.go
       kind: test
-      rev: 038d466d4c30
+      rev: ea53b7c4f26d
       updated_at: "2026-09-19"
       layer: teste
       tags:
