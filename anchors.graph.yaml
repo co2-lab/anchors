@@ -689,7 +689,7 @@ nodes:
     - id: cmd/anchors/governance/guide_work.go
       kind: code
       rev: 4b74fd70da49
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-24"
       layer: comando
       tags:
         - cli
@@ -4225,7 +4225,7 @@ nodes:
         - test
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: c0e506e00c63
+      rev: 1c4612353300
       updated_at: "2026-09-24"
       layer: teste
       tags:

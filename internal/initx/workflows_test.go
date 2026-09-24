@@ -2311,6 +2311,7 @@ case "$call" in
       title) fail title ;;
       comments) case "$jqx" in
           *"## Revisão"*) echo 0 ;;
+          *'select(. != "(liberado)")'*) echo "${FAKE_PREV_OWNER:-}" ;;
           *) echo "${FAKE_OWNER:-}" ;;
         esac ;;
     esac ;;
@@ -2972,5 +2973,23 @@ func TestClaimOwnCardLookupSkipsEscalated(t *testing.T) {
 	}
 	if out, _ := runClaim(t, "FAKE_GRAPHQL="+page(`,{"name":"anchors:needs-user"}`)); strings.Contains(out, "#9") {
 		t.Errorf("a card waiting on a person was resumed as the agent's own work:\n%s", out)
+	}
+}
+
+// WHOEVER WROTE IT DOES NOT REVIEW IT. A card in review released by the same agent that
+// asks is its own work: it stays for another agent (blue-eyes: six self-reviews in one day
+// with two agents working). A to-do card handed back to its implementer is still theirs.
+func TestClaimDoesNotHandAnAgentItsOwnReview(t *testing.T) {
+	released := "FAKE_OWNER=anchors-owner: (liberado) — implementação concluída"
+	if out, handed := runClaim(t, "FAKE_CARD_STATE=ready-to-review", released,
+		"FAKE_PREV_OWNER=machine/session"); handed {
+		t.Errorf("the agent was handed the review of its own work:\n%s", out)
+	}
+	if out, handed := runClaim(t, "FAKE_CARD_STATE=ready-to-review", released,
+		"FAKE_PREV_OWNER=other/agent"); !handed {
+		t.Errorf("the review of ANOTHER agent's work was not handed out:\n%s", out)
+	}
+	if out, handed := runClaim(t, released, "FAKE_PREV_OWNER=machine/session"); !handed {
+		t.Errorf("a to-do card released by the same agent must stay claimable:\n%s", out)
 	}
 }

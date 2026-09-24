@@ -161,6 +161,7 @@ jobs:
           # `(liberado)` explícito (ver o `case` do dono): um `in-progress` sem dono
           # declarado é de alguém que não passou pelo claim, e não é tomado.
           : > /tmp/andamento.txt
+          : > /tmp/revisao.txt
           # `in-review` entra pelo mesmo motivo, logo depois de `ready-to-review`: é uma
           # revisão que alguém começou e o stale liberou — 4 no blue-eyes, parados desde
           # 19/09 com os PRs abertos. A transição abaixo já a retoma sem regredir o estado.
@@ -172,6 +173,9 @@ jobs:
             cat /tmp/estado.txt >> /tmp/disponiveis.txt
             if [ "$estado" = "anchors:in-progress" ] || [ "$estado" = "anchors:in-review" ]; then
               cat /tmp/estado.txt >> /tmp/andamento.txt
+            fi
+            if [ "$estado" = "anchors:ready-to-review" ] || [ "$estado" = "anchors:in-review" ]; then
+              cat /tmp/estado.txt >> /tmp/revisao.txt
             fi
           done
 
@@ -403,6 +407,19 @@ jobs:
                          | sub("^anchors-owner:[ ]*"; "")
                          | sub("[ ]*—.*$"; "")]
                         | map(select(. != "(liberado)")) | last // ""')
+                # QUEM ESCREVEU NÃO REVISA. Um card em revisão que volta ao mesmo agente que
+                # o soltou é o autor revisando o próprio trabalho — e a revisão só vale
+                # porque um segundo par de olhos vê o que o primeiro não viu. A versão
+                # anterior entregava com um aviso (blue-eyes#82, pensada para um time de
+                # um); com dois agentes trabalhando, ela devolveu a revisão ao próprio autor
+                # seis vezes num dia, e cada uma parou o agente até alguém intervir. O card
+                # fica para OUTRO agente; um time de um revisa à mão.
+                if [ "$liberou_antes" = "$AGENT" ] && grep -qx "$n" /tmp/revisao.txt; then
+                  echo "· #$n: a revisão é do trabalho de $AGENT — fica para outro agente"
+                  livre=""
+                  liberou_antes=""
+                  continue
+                fi
                 break ;;
             esac
           done < /tmp/disponiveis.txt
