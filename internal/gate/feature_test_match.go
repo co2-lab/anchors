@@ -39,6 +39,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	// regime canônico é confrontado por ela (unit/integration). Cenários de outros regimes
 	// (e2e, vr) ou sem regime mapeado são verificados noutra superfície — aqui, pulados.
 	testRegimes := regimesForTestSurface(cfg)
+	knownRegimes := knownRegimeTags(cfg)
 	scenarios := parseFeatureScenarios(content)
 	if len(scenarios) == 0 {
 		return Skip, "" // feature sem cenários codificados — nada a confrontar
@@ -98,7 +99,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	pesos := similarity.Weights(corpus)
 
 	for _, sc := range scenarios {
-		if !scenarioHitsTestSurface(sc, testRegimes) {
+		if !scenarioHitsTestSurface(sc, testRegimes, knownRegimes) {
 			continue // cenário de outro regime (e2e/vr) ou sem regime → outra superfície
 		}
 		if !strings.Contains(body, sc.Code) {
@@ -302,38 +303,38 @@ func regimesForTestSurface(cfg *config.Config) map[string]bool {
 	return out
 }
 
-// scenarioHitsTestSurface: o cenário é confrontado pela superfície `test`? Verdadeiro se
-// ALGUMA de suas tags mapeia para um regime-test. Cenário SEM nenhuma tag de regime
-// declarada é confrontado (default conservador — cobra presença). Cenário cujas tags são
-// todas de outros regimes (e2e/vr) NÃO é confrontado aqui (mora noutra superfície).
-func scenarioHitsTestSurface(sc featureScenario, testRegimes map[string]bool) bool {
+// scenarioHitsTestSurface: is the scenario confronted by the `test` surface? True if ANY of
+// its tags maps to a test regime. A scenario with no KNOWN regime tag is confronted
+// (conservative default — presence is charged). A scenario whose known regime tags all map
+// to other regimes (e2e/vr) is NOT confronted here (it lives on another surface).
+//
+// "Known" means MAPPED by the project (or a canonical regime name), not "looks like a
+// regime". The old test was the `nivel-` prefix, and an UNMAPPED tag passed for "another
+// regime": measured in blue-eyes, `@nivel-compilacao` is not under `regimes:`, and every
+// scenario carrying it was skipped by this gate without a word.
+func scenarioHitsTestSurface(sc featureScenario, testRegimes, knownRegimes map[string]bool) bool {
 	sawRegimeTag := false
 	for _, t := range sc.Tags {
 		if testRegimes[t] {
 			return true
 		}
-		// é uma tag de regime conhecida (mapeada a QUALQUER regime)? marca que houve
-		// declaração de regime — para distinguir "sem regime" de "outro regime".
-		if isRegimeTag(t) {
+		if knownRegimes[t] {
 			sawRegimeTag = true
 		}
 	}
-	return !sawRegimeTag // sem nenhuma tag de regime → conservador (confronta)
+	return !sawRegimeTag // no known regime tag → conservative (confront)
 }
 
-// isRegimeTag: heurística barata p/ reconhecer uma tag que É de regime (mesmo que não
-// caia na superfície test) — as convenções comuns começam por "nivel-" ou são um regime
-// canônico. Usada só para distinguir "cenário sem regime" (confronta) de "cenário de
-// outro regime" (pula). Conservadora: na dúvida, NÃO é regime.
-func isRegimeTag(t string) bool {
-	if strings.HasPrefix(t, "nivel-") {
-		return true
+// knownRegimeTags: the tags the project maps under `regimes:`, plus the canonical regime
+// names (a project with no mapping uses them directly).
+func knownRegimeTags(cfg *config.Config) map[string]bool {
+	out := map[string]bool{"unit": true, "integration": true, "e2e": true, "vr": true}
+	if cfg != nil && cfg.Derived != nil {
+		for tag := range cfg.Derived.Regimes {
+			out[tag] = true
+		}
 	}
-	switch t {
-	case "unit", "integration", "e2e", "vr":
-		return true
-	}
-	return false
+	return out
 }
 
 // stripLineComments remove comentários de linha (`//`, `#`, `--`) e de bloco simples para que os

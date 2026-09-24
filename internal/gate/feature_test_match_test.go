@@ -431,3 +431,37 @@ func TestRootCode(t *testing.T) {
 		t.Fatalf("esperava ABCDX-B01, obteve %s", r)
 	}
 }
+
+// An UNMAPPED regime tag used to pass for "another regime": `@nivel-compilacao` is not under
+// blue-eyes' `regimes:`, and every scenario carrying it was skipped by this gate silently.
+func TestFeatureTestMatch_unmappedRegimeTagIsStillConfronted(t *testing.T) {
+	t.Run("FTMFT-B18: an unmapped regime tag does not exempt a scenario", func(t *testing.T) {})
+	root := t.TempDir()
+	feat := "screens/Form.feature"
+	test := "screens/Form.test.tsx"
+	featSrc := `# language: pt
+# @anchors
+` + "# " + `  ref: FRMXX
+@screen
+Funcionalidade: Form
+
+  @FRMXX-B01 @nivel-unit
+  Cenário: valida o campo
+    Então vejo o erro
+
+  @FRMXX-B02 @nivel-compilacao
+  Cenário: o tipo recusa a chave extra
+    Então o tsc recusa
+`
+	writeFile(t, root, feat, featSrc)
+	writeFile(t, root, test, `
+describe('Form', () => {
+  it('FRMXX-B01: valida o campo', () => {})
+})`)
+	g := featureGraph(feat, test)
+	n := mapx.Node{ID: feat, Kind: mapx.KindFeature}
+	v, detail := checkFeatureTestMatch(featSrc, n, root, g, regimeCfg())
+	if v == Pass || !strings.Contains(detail, "FRMXX-B02") {
+		t.Errorf("the @nivel-compilacao scenario (unmapped) was not confronted: %v %s", v, detail)
+	}
+}

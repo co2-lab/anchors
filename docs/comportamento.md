@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:37dd0599a469b51f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:96feb9ea1ac9a9f7 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -415,6 +415,8 @@ teste prova.
 - [Non-unit surfaces are left to their respective gates](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X02`
 
 - [Minor description drift does not block promotion](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X03`
+
+- [An unmapped regime tag does not exempt a scenario](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B18`
 
 - [A gate reaches only the kinds it declares](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B01`
 

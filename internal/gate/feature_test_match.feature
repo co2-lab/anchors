@@ -144,3 +144,9 @@ Feature: FeatureTestMatch — scenarios in feature must be implemented in test b
     Given minor phrasing variations between scenario and test
     When the gate confronts the artifact
     Then it emits a warning instead of failing the check
+
+  @FTMFT-B18 @unit-level
+  Scenario: An unmapped regime tag does not exempt a scenario
+    Given a scenario tagged with a regime the project does not map
+    When the feature is confronted with its test
+    Then the scenario is still charged against the test

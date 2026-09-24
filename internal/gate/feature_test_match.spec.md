@@ -60,6 +60,7 @@ in automated test suites.
 | `FTMFT-B15` | Go `t.Run` test bindings are recognized alongside standard test runner declarations. |
 | `FTMFT-B16` | Line comments using `#` and `--` syntax are stripped when evaluating code presence. |
 | `FTMFT-B17` | The exported function `RootCode` strips scenario sub-indices (`#01`) and returns the root requirement code. |
+| `FTMFT-B18` | Only a regime tag the project MAPS under `regimes:` (or a canonical regime name) exempts a scenario as belonging to another surface; an unmapped tag that merely looks like a regime (`@nivel-compilacao`) leaves the scenario confronted. |
 
 ## Invariants
 
