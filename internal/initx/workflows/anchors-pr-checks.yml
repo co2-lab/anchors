@@ -319,6 +319,21 @@ jobs:
           saida state "$state"
           echo "anchors/review → $state on $sha: $desc"
 
+          # THE VERDICT FREES THE REVIEWER. Once the assigned reviewer posted `approved` or
+          # `rejected`, the review is done — but the card still named them as owner, and
+          # `anchors next` kept resuming it ("FINISH it before taking another") until the
+          # merge or a person moved it. The release has no "sem progresso", so the claim does
+          # not re-offer the card: it waits for the merge (approved) or the author (rejected).
+          # Only when the reviewer is still the owner — an edited comment re-runs this job.
+          if [ "$veredito" = "approved" ] || [ "$veredito" = "rejected" ]; then
+            ultimo=$(gh issue view "$card" --json comments \
+              --jq '[.comments[].body | split("\n")[0] | select(startswith("anchors-owner:"))] | last // ""')
+            if [ "$ultimo" = "anchors-owner: $revisor" ]; then
+              gh issue comment "$card" --body "anchors-owner: (liberado) — revisão concluída: $veredito por $revisor"
+              echo "card #$card: $revisor released after the $veredito verdict"
+            fi
+          fi
+
   mover:
     runs-on: ubuntu-latest
     # AFTER `review`, and even when it failed or was skipped (`always()`): the card moves

@@ -558,3 +558,38 @@ func TestClaimTeachesTheReviewVerdictLine(t *testing.T) {
 		t.Error("the reviewer is still told to move the card on approval")
 	}
 }
+
+// THE VERDICT FREES THE REVIEWER: after an approved/rejected line, the card no longer names
+// the reviewer as owner, so `anchors next` stops resuming it. Pending changes nothing, and
+// a card already released is not released twice.
+func TestPRChecksVerdictReleasesTheReviewer(t *testing.T) {
+	script := reviewScript(t)
+	env := map[string]string{"PR": "7", "HEAD_SHA": "abc123"}
+	release := "BODY anchors-owner: (liberado)"
+
+	for _, verdict := range []string{"approved", "rejected"} {
+		w := newGHWorld(t)
+		rw := defaultReviewWorld()
+		rw.prComments = []map[string]string{prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: "+verdict+" by agent-b")}
+		w.seedReview(rw)
+		_, calls, _ := w.run(script, env)
+		if !strings.Contains(calls, "CALL issue comment 12") || !strings.Contains(calls, release) {
+			t.Errorf("%s verdict did not release the reviewer:\n%s", verdict, calls)
+		}
+	}
+
+	w := newGHWorld(t)
+	w.seedReview(defaultReviewWorld()) // no verdict yet
+	if _, calls, _ := w.run(script, env); strings.Contains(calls, release) {
+		t.Errorf("a pending review released the reviewer:\n%s", calls)
+	}
+
+	w = newGHWorld(t)
+	rw := defaultReviewWorld()
+	rw.owners = append(rw.owners, map[string]string{"createdAt": "2026-09-20T11:30:00Z", "body": "anchors-owner: (liberado) — revisão concluída: approved por agent-b"})
+	rw.prComments = []map[string]string{prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: approved by agent-b")}
+	w.seedReview(rw)
+	if _, calls, _ := w.run(script, env); strings.Contains(calls, release) {
+		t.Errorf("an already released card was released again:\n%s", calls)
+	}
+}
