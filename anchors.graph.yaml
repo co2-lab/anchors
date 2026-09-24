@@ -401,8 +401,8 @@ nodes:
         - test
     - id: cmd/anchors/flow/queue.go
       kind: code
-      rev: 2cd96c9c2ab5
-      updated_at: "2026-09-23"
+      rev: 33ea7ddae516
+      updated_at: "2026-09-24"
       layer: comando
       tags:
         - cli
@@ -746,7 +746,7 @@ nodes:
     - id: cmd/anchors/mapcmd/ingest.go
       kind: code
       rev: ba0609512bc7
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       code: SPCRX
       layer: comando
       tags:
@@ -762,6 +762,7 @@ nodes:
     - id: cmd/anchors/mapcmd/ingest_predating_test.go
       kind: test
       rev: c46d27e43ae3
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
@@ -4183,12 +4184,13 @@ nodes:
     - id: internal/initx/workflows_stale_test.go
       kind: test
       rev: 1cdc780eb7fa
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: e578312f82ec
+      rev: 997a365189ee
       updated_at: "2026-09-24"
       layer: teste
       tags:

@@ -2298,7 +2298,10 @@ case "$call" in
         esac ;;
       state) fail state; echo "${FAKE_STATE:-CLOSED}" ;;
       title) fail title ;;
-      comments) echo "${FAKE_OWNER:-}" ;;
+      comments) case "$jqx" in
+          *"## Revisão"*) echo 0 ;;
+          *) echo "${FAKE_OWNER:-}" ;;
+        esac ;;
     esac ;;
   "pr list") fail pr; printf '%s' "${FAKE_PRS:-[]}" | jq -r "$jqx" ;;
 esac
@@ -2882,5 +2885,17 @@ func TestClaimOffersAReleasedInProgressCard(t *testing.T) {
 	}
 	if out, handed := runClaim(t); !handed {
 		t.Errorf("control: a to-do card with no owner must still be handed out:\n%s", out)
+	}
+}
+
+// A review the stale released in `in-review` is offered too, with the same guard: only an
+// explicit `(liberado)`. In blue-eyes 4 such reviews sat with their PRs open since 19/09.
+func TestClaimOffersAReleasedInReviewCard(t *testing.T) {
+	if out, handed := runClaim(t, "FAKE_CARD_STATE=in-review",
+		"FAKE_OWNER=anchors-owner: (liberado) — sem progresso há mais de 24h"); !handed {
+		t.Errorf("a released in-review card was not handed out:\n%s", out)
+	}
+	if out, handed := runClaim(t, "FAKE_CARD_STATE=in-review"); handed {
+		t.Errorf("an in-review card with no declared owner was taken:\n%s", out)
 	}
 }
