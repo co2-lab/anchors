@@ -279,7 +279,7 @@ nodes:
     - id: cmd/anchors/flow/deliver.go
       kind: code
       rev: de2f2ad08b83
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       code: PRICX
       layer: comando
       tags:
@@ -401,7 +401,7 @@ nodes:
         - test
     - id: cmd/anchors/flow/queue.go
       kind: code
-      rev: 33ea7ddae516
+      rev: 3c538bdcca3c
       updated_at: "2026-09-24"
       layer: comando
       tags:
@@ -422,6 +422,12 @@ nodes:
       tags:
         - cli
         - comando
+    - id: cmd/anchors/flow/review_work_test.go
+      kind: test
+      rev: d5b72ad16904
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/flow/task_status.go
       kind: code
       rev: ee291019585b
@@ -1357,6 +1363,7 @@ nodes:
     - id: internal/board/find_by_number_test.go
       kind: test
       rev: f810e9980674
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test

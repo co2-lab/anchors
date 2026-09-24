@@ -866,7 +866,15 @@ func printReviewWork(root string, card *board.Card) {
 	fmt.Println("  against what it SAYS it did, and that is why the step disappears: nothing")
 	fmt.Println("  seems to be missing. The four files are there and the gates are green.")
 	fmt.Println()
-	fmt.Printf("    anchors work review --for %s\n\n", alvo)
+	if alvo != "" {
+		fmt.Printf("    anchors work review --for %s\n\n", alvo)
+	} else {
+		// A card whose body names no unit (a plan card, a finding under another card)
+		// printed `--for ` with nothing after it — a command that does nothing. The PR is
+		// what carries the delivery, so that is what to open.
+		fmt.Printf("    this card names no unit: review the PR that references it —\n"+
+			"    gh pr list --state open --search \"#%d in:body\"\n\n", card.Number)
+	}
 	fmt.Println("  Green gates do NOT prove it is right — they confront what is")
 	fmt.Println("  DECLARABLE. In three rounds of a real E2E, 7 serious defects (silent")
 	fmt.Println("  data loss, a rule with no test that proves it, contradiction between two")
