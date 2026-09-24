@@ -270,6 +270,9 @@ func TestPipelinesSoUsamColunasDeclaradas(t *testing.T) {
 	// card continua na coluna onde o trabalho está. Os dois coexistem — um responde por
 	// onde o achado se entrega, o outro por onde se rastreia a revisão.
 	valida[PrefixoLabelDePR] = true
+	// THE BUG, like `needs-user`: it says what the card waits for (a fix where no agent in
+	// the queue edits), not which column it is in.
+	valida[LabelBug] = true
 	for _, w := range WorkflowsDoFluxo {
 		b, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
 		if err != nil {
@@ -3009,5 +3012,33 @@ func TestClaimAuthorIsTheOwnerBeforeTheDelivery(t *testing.T) {
 	if out, handed := runClaim(t, "FAKE_CARD_STATE=ready-to-review", released,
 		"FAKE_PREV_OWNER=other/agent", "FAKE_AUTHOR=machine/session"); handed {
 		t.Errorf("the author was handed the review of its own work:\n%s", out)
+	}
+}
+
+// The claim never hands out a bug card: no agent in the queue can fix the pipeline or the
+// tool. Runs the candidate filter of the claim through the real `jq`.
+func TestClaimNeverHandsOutABug(t *testing.T) {
+	if _, err := exec.LookPath("jq"); err != nil {
+		t.Skip("no jq on PATH")
+	}
+	b, err := workflowsFS.ReadFile("workflows/anchors-claim.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	m := regexp.MustCompile(`--jq '(\.\[\] \| select\(\[\.labels\[\]\.name\] \| \(index\("anchors:needs-user"\)[^']*)'`).FindSubmatch(b)
+	if m == nil {
+		t.Fatal("the claim's candidate filter was not found")
+	}
+	in := `[{"number":1,"labels":[{"name":"anchors"},{"name":"anchors:to-do"},{"name":"anchors:bug"}]},
+	        {"number":2,"labels":[{"name":"anchors"},{"name":"anchors:to-do"}]},
+	        {"number":3,"labels":[{"name":"anchors"},{"name":"anchors:needs-user"}]}]`
+	cmd := exec.Command("jq", "-r", string(m[1]))
+	cmd.Stdin = strings.NewReader(in)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("jq: %v\n%s", err, out)
+	}
+	if got := strings.TrimSpace(string(out)); got != "2" {
+		t.Errorf("candidates = %q, want only #2 (a bug and a decision are never handed out)", got)
 	}
 }

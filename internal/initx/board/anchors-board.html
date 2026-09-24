@@ -687,6 +687,11 @@ function desenhaBloqueio(d) {
   // Os outros 11 eram cards FECHADOS, contados por uma label que registrava o passado.
   const abertos = (d.items || []).filter((i) => !i.closed);
   const presos = abertos.filter((i) => i.escalated || i.state === "anchors:needs-user");
+  // UM BUG NÃO É DECISÃO. `anchors:bug` diz que o pipeline ou a ferramenta está errado e
+  // que ninguém da fila pode consertar — não há o que escolher. Contá-lo em "Esperando
+  // você" foi o que aconteceu antes da label existir: seis "decisões" em duas horas, todas
+  // bugs, e quem abria a faixa procurava uma escolha que não havia.
+  const bugs = abertos.filter((i) => i.bug);
 
   // POR QUEM cada card espera. Um `needs-user` cuja decisão já saiu e virou trabalho tem um
   // card irmão com `anchors:desbloqueia-<n>` — e enquanto ele não fechar, remover a label
@@ -698,7 +703,7 @@ function desenhaBloqueio(d) {
   for (const i of d.items || []) {
     if (i.unblocks) esperaPor[i.unblocks] = i.number;
   }
-  if (presos.length === 0) {
+  if (presos.length === 0 && bugs.length === 0) {
     el.hidden = true;
     el.innerHTML = "";
     return;
@@ -746,7 +751,7 @@ function desenhaBloqueio(d) {
     .sort((a, b) => b.n - a.n || Number(a.c.number) - Number(b.c.number))
     .map(({ c, n }) => linha(c, n)).join("");
 
-  if (pendentes.length === 0) {
+  if (pendentes.length === 0 && bugs.length === 0) {
     el.hidden = true;
     el.innerHTML = "";
     return;
@@ -764,7 +769,7 @@ function desenhaBloqueio(d) {
   const decidir = pendentes.filter((p) => !p.framing);
   const enquadrar = pendentes.filter((p) => p.framing);
 
-  el.innerHTML = `
+  el.innerHTML = `${pendentes.length ? `
     <h2 id="bloqueio-t">Esperando você · ${pendentes.length}</h2>
     ${decidir.length ? `
       <h3 class="fila-t">🛑 Decidir · ${decidir.length}</h3>
@@ -780,7 +785,15 @@ function desenhaBloqueio(d) {
         a dúvida a afirmar um impacto que não mediu. Se não muda, troque
         <code>anchors:needs-framing</code> por <code>anchors:to-do</code> e o card volta à
         fila — não gaste o esforço de decidir.</p>
-      <ul>${ordena(enquadrar)}</ul>` : ""}`;
+      <ul>${ordena(enquadrar)}</ul>` : ""}` : ""}
+    ${bugs.length ? `
+      <h2 class="bugs-t">🐞 Bugs · ${bugs.length}</h2>
+      <p class="porque">Defeitos no pipeline ou na ferramenta, e <strong>não</strong>
+        decisões: o estado atual está errado e não há o que escolher. Nenhum agente da fila
+        os pega, porque o conserto mora onde eles não editam (os workflows semeados, o próprio
+        Anchors). Consertado, feche a issue — os cards com <code>anchors:blocked-by-&lt;n&gt;</code>
+        voltam à fila.</p>
+      <ul>${ordena(bugs)}</ul>` : ""}`;
   el.hidden = false;
 }
 

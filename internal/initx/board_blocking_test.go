@@ -515,3 +515,29 @@ func TestAtributosDeDadosDoBoardCasamEntreRenderEHandler(t *testing.T) {
 		}
 	}
 }
+
+// A BUG IS NOT A DECISION, and the board keeps them apart: "Esperando você" counts only what
+// asks a choice, and `anchors:bug` gets its own strip. Before the label, six bugs opened as
+// decisions made the strip ask for choices that did not exist.
+func TestFaixaSeparaBugsDeDecisoes(t *testing.T) {
+	hidden, html := rodaDesenhaBloqueio(t, []map[string]any{
+		{"state": "anchors:to-do", "escalated": true, "number": 10, "code": "DEC", "title": "[decision] A ou B", "url": "u"},
+		{"state": "anchors:to-do", "bug": true, "number": 20, "code": "bug", "title": "[bug] o job pega o card errado", "url": "u"},
+	})
+	if hidden {
+		t.Fatal("with a decision and a bug the strip must show")
+	}
+	if !strings.Contains(html, "Esperando você · 1") {
+		t.Errorf("the bug must not count as waiting for you:\n%s", html)
+	}
+	if !strings.Contains(html, "Bugs · 1") || !strings.Contains(html, "o job pega o card errado") {
+		t.Errorf("the bug must be listed in its own strip:\n%s", html)
+	}
+
+	hidden, html = rodaDesenhaBloqueio(t, []map[string]any{
+		{"state": "anchors:to-do", "bug": true, "number": 20, "code": "bug", "title": "[bug] x", "url": "u"},
+	})
+	if hidden || strings.Contains(html, "Esperando você") || !strings.Contains(html, "Bugs · 1") {
+		t.Errorf("only a bug: the strip shows the bug and no 'waiting for you' (hidden=%v):\n%s", hidden, html)
+	}
+}

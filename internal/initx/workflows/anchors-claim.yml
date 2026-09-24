@@ -138,7 +138,7 @@ jobs:
             --jq ".data.repository.issues.nodes[]
                    | select([.labels.nodes[].name] | any(. == \"anchors:to-do\" or . == \"anchors:in-progress\"
                              or . == \"anchors:ready-to-review\" or . == \"anchors:in-review\"))
-                   | select([.labels.nodes[].name] | any(. == \"anchors:needs-user\" or . == \"anchors:precisa-do-usuario\") | not)
+                   | select([.labels.nodes[].name] | any(. == \"anchors:needs-user\" or . == \"anchors:precisa-do-usuario\" or . == \"anchors:bug\") | not)
                    | select([.comments.nodes[].body | select(startswith(\"anchors-owner:\"))] | last == \"anchors-owner: $AGENT\")
                    | .number" | head -1)
 
@@ -168,7 +168,7 @@ jobs:
           for estado in "anchors:ready-to-review" "anchors:in-review" "anchors:in-progress" "anchors:to-do"; do
             gh issue list --state open --label "$LABEL" --label "$estado" \
               --limit 200 --json number,labels \
-              --jq '.[] | select([.labels[].name] | (index("anchors:needs-user") or index("anchors:precisa-do-usuario")) | not) | .number' \
+              --jq '.[] | select([.labels[].name] | (index("anchors:needs-user") or index("anchors:precisa-do-usuario") or index("anchors:bug")) | not) | .number' \
               > /tmp/estado.txt
             cat /tmp/estado.txt >> /tmp/disponiveis.txt
             if [ "$estado" = "anchors:in-progress" ] || [ "$estado" = "anchors:in-review" ]; then

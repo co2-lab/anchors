@@ -215,6 +215,23 @@ func LabelSob(card string) string { return PrefixoLabelSob + card }
 // um eixo independente do estado.
 const LabelNeedsUser = "anchors:needs-user"
 
+// LabelBug marks a card that reports a DEFECT in the pipeline or in the tooling.
+//
+// It is the third thing a card can wait for, and it is neither of the other two: there is
+// no choice to make (`needs-user`) and no framing to confirm (`needs-framing`) — the
+// current state is wrong, nobody would defend it, and the fix is work. What stops it is
+// WHERE the fix lives: a seeded workflow (`.github/workflows/anchors-*`) or Anchors itself,
+// which no agent in the queue edits.
+//
+// Before it existed the only exit that reached a person was `--for-user`, so agents who
+// KNEW they had found a bug opened it as "This decision is not the agent's". Measured in
+// blue-eyes, 2026-09-24: six decisions in two hours (#982, #985, #987, #988, #989, #995),
+// all of them bugs, and the board showed "waiting for you" for work that asked no decision.
+//
+// Like `needs-user` it is not a state: the claim never hands the card out (an agent could
+// not fix it), and the board lists it in its own strip, apart from what waits a decision.
+const LabelBug = "anchors:bug"
+
 // LabelNeedsFraming marca o card em que a dúvida é o ENQUADRAMENTO, não o mérito.
 //
 // São duas filas do usuário, com pesos diferentes, e misturá-las faz a mais barata custar

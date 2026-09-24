@@ -189,7 +189,7 @@ jobs:
                     # Sem excluir, o `.[0]` pegaria a primeira label em ordem alfabética e
                     # o card apareceria numa coluna que não existe.
                     state: ([.labels[].name | select(startswith("anchors:"))
-                              | select(. != "anchors:needs-user")
+                              | select(. != "anchors:needs-user" and . != "anchors:bug")
                               | select(startswith("anchors:blocked-by-") | not)] | .[0] // "anchors:to-do"),
                     escalated: ([.labels[].name] | any(. == "anchors:needs-user" or . == "anchors:needs-framing")),
                     # O QUE O CARD PEDE. `needs-user` é "decida entre A e B";
@@ -198,6 +198,10 @@ jobs:
                     # Sem distinguir, quem abre a fila gasta o esforço da primeira antes
                     # de descobrir que era a segunda.
                     framing: ([.labels[].name] | any(. == "anchors:needs-framing")),
+                    # A BUG in the pipeline or the tool (`anchors:bug`) is not a decision:
+                    # the board lists it apart, so "waiting for you" counts only what
+                    # asks a choice.
+                    bug: ([.labels[].name] | any(. == "anchors:bug")),
                     # QUEM SEGURA ESTE CARD. `blocked-by-<n>` diz que ele espera o #n, e
                     # o board precisa do NÚMERO para desenhar o vínculo: "esperando você"
                     # sem dizer por qual decisão não diz onde o trabalho travou.

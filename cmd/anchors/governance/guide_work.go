@@ -105,6 +105,14 @@ If the change **impacts the project's direction** — or if you are in doubt —
 That becomes a decision for whoever planned, and the card stops until it comes out. Interpreting the impact
 is yours: you are the one with the context of what you found.
 
+If what is wrong is the PIPELINE or the TOOL — a seeded workflow computes the wrong thing, an
+` + "`anchors`" + ` command picks the wrong card, a gate misreads a file — it is not a decision: there is nothing to
+choose, and the fix lives where you do not edit (` + "`.github/workflows/anchors-*`" + `, Anchors itself):
+
+    anchors escalate "<what is wrong, with the measurement>" --about <file> --bug [--blocking]
+
+` + "`--blocking`" + ` when your card cannot go on until it is fixed; without it the card goes on.
+
 ## Before committing
 
 ` + "`anchors check`" + ` blocks while there is a pending judgment — it is work for THIS

@@ -44,7 +44,7 @@ import (
 // claim. Este é o por JUÍZO: ninguém está travado, alguém percebeu algo.
 func newEscalateCmd() *cobra.Command {
 	var root, sobre, card, revisandoPR string
-	var paraUsuario, incerto bool
+	var paraUsuario, incerto, bug, bloqueante bool
 	cmd := &cobra.Command{
 		Use:   "escalate <reason>",
 		Short: "Open the issue for a change needed in the plan or the spec",
@@ -85,6 +85,15 @@ defensible answer, and does choosing between them change what the product DOES?"
 If the exit is "fix what is wrong" and nobody would defend the current state,
 it is an ordinary card: there is no choice to make, only work.
 
+  --bug        what is wrong is the PIPELINE or the TOOL, not the plan: a seeded
+                   workflow computes the wrong thing, an 'anchors' command picks the
+                   wrong card, a gate misreads a file. Nothing to decide — but the fix
+                   lives where no agent in the queue edits ('.github/workflows/anchors-*',
+                   Anchors itself), so it is born with 'anchors:bug' and the claim does
+                   not hand it out. It is NOT a decision: do not use '--for-user' for it.
+  --blocking   with '--bug': your card cannot go on until the bug is fixed. The card
+                   waits for it ('anchors:blocked-by-<n>'); without it, the card goes on.
+
 AND IF YOU DO NOT KNOW, use '--unsure' instead of '--for-user'. The cost of
 escalating for safety does not show up for whoever escalates: each card in
 'needs-user' waits for a person, and one person decides more slowly than N agents
@@ -114,6 +123,14 @@ card to change one word is bureaucracy.`,
 				cmd.SilenceUsage = true
 				return fmt.Errorf("`workflow.labels` is empty: the issue would be born without the " +
 					"label the claim pipeline uses to find it, and would be orphaned")
+			}
+			if bug && (paraUsuario || incerto) {
+				cmd.SilenceUsage = true
+				return fmt.Errorf("`--bug` is not a decision: it cannot go with `--for-user` or `--unsure`")
+			}
+			if bloqueante && !bug {
+				cmd.SilenceUsage = true
+				return fmt.Errorf("`--blocking` goes with `--bug` (a decision already stops the card)")
 			}
 			if !cfg.GitHubMode() {
 				cmd.SilenceUsage = true
@@ -225,6 +242,9 @@ card to change one word is bureaucracy.`,
 			paraUsuario = paraUsuario || incerto
 			motivo := strings.Join(args, " ")
 			corpoTexto := escalationBody(motivo, sobre, card, paraUsuario, incerto)
+			if bug {
+				corpoTexto = bugBody(motivo, sobre, card, bloqueante)
+			}
 
 			tmp, err := os.CreateTemp("", "anchors-escalate-*.md")
 			if err != nil {
@@ -252,6 +272,10 @@ card to change one word is bureaucracy.`,
 			if incerto {
 				titulo = "[framing] " + firstLineOfReason(motivo)
 				labels = append(labels, initx.LabelNeedsFraming)
+			}
+			if bug {
+				titulo = "[bug] " + firstLineOfReason(motivo)
+				labels = append(labels, initx.LabelBug)
 			}
 			// SOB o card de origem, como LABEL — o que permite listar o que pende sob um
 			// trabalho (`--label anchors:under-44`) e entregá-lo no mesmo PR. Uma frase no
@@ -314,6 +338,9 @@ card to change one word is bureaucracy.`,
 			if paraUsuario {
 				que = "decision opened"
 			}
+			if bug {
+				que = "bug reported"
+			}
 			fmt.Printf("%s: %s\n", que, url)
 
 			// O CARD só é parado quando a decisão é do usuário. Numa issue comum o
@@ -322,7 +349,7 @@ card to change one word is bureaucracy.`,
 			//
 			// Quando para, a label é o que impede o agente seguinte de pegar o card e
 			// refazer o mesmo caminho até a mesma dúvida.
-			if paraUsuario && card != "" {
+			if (paraUsuario || (bug && bloqueante)) && card != "" {
 				// A LABEL DIZ POR QUAL CARD ELE ESPERA, e não só que espera.
 				//
 				// O `needs-user` sozinho para o card — e não diz QUEM o segura. O board
@@ -368,10 +395,17 @@ card to change one word is bureaucracy.`,
 						"--description", "this card is waiting for the decision of #"+n,
 					).Run()
 				}
-				rotulos := initx.LabelNeedsUser
-				if rotuloBloqueio != "" {
-					rotulos += "," + rotuloBloqueio
+				// A BUG STOPS THE CARD WITHOUT `needs-user`: the card waits for the fix, not for a
+				// person to choose — and `needs-user` would list it under "waiting for you". The
+				// `blocked-by-<n>` alone holds it, and the claim releases it when the bug closes.
+				var partes []string
+				if paraUsuario {
+					partes = append(partes, initx.LabelNeedsUser)
 				}
+				if rotuloBloqueio != "" {
+					partes = append(partes, rotuloBloqueio)
+				}
+				rotulos := strings.Join(partes, ",")
 				if _, err := exec.Command("gh", "issue", "edit", card,
 					"--repo", cfg.Workflow.Repo,
 					"--add-label", rotulos,
@@ -386,13 +420,26 @@ card to change one word is bureaucracy.`,
 					// aplicadas, a issue fechada — e o card ficou parado, porque a
 					// instrução de remover a label só existia no corpo do card que o
 					// WORKFLOW abre. Descobrir exigia grepar o YAML.
-					fmt.Printf("· card #%s stopped until the decision\n", card)
-					fmt.Printf("  to resume, after the decision becomes a rule:\n"+
-						"    anchors decided --card %s --resolution \"<CODE>-R000N: what changed\"\n", card)
+					if bug {
+						fmt.Printf("· card #%s stopped until the bug is fixed — it resumes when the bug issue closes\n", card)
+					} else {
+						fmt.Printf("· card #%s stopped until the decision\n", card)
+						fmt.Printf("  to resume, after the decision becomes a rule:\n"+
+							"    anchors decided --card %s --resolution \"<CODE>-R000N: what changed\"\n", card)
+					}
+				}
+				parou := "⏸ Stopped: there is an open decision — "
+				if bug {
+					parou = "⏸ Stopped: a bug in the pipeline or the tool blocks this card — "
 				}
 				_ = exec.Command("gh", "issue", "comment", card,
 					"--repo", cfg.Workflow.Repo,
-					"--body", "⏸ Stopped: there is an open decision — "+url,
+					"--body", parou+url,
+				).Run()
+			} else if bug && card != "" {
+				_ = exec.Command("gh", "issue", "comment", card,
+					"--repo", cfg.Workflow.Repo,
+					"--body", "🐞 Bug reported from this work (the card goes on) — "+url,
 				).Run()
 			} else if card != "" {
 				// Sem parar, mas deixando o rastro: quem for revisar este card precisa
@@ -414,6 +461,10 @@ card to change one word is bureaucracy.`,
 		"you ASSERT the change impacts the project's DIRECTION: it becomes a decision and stops the card")
 	cmd.Flags().BoolVar(&incerto, "unsure", false,
 		"you DO NOT KNOW whether it impacts the direction: it stops the card, and the first question is the framing")
+	cmd.Flags().BoolVar(&bug, "bug", false,
+		"the PIPELINE or the TOOL is wrong (a seeded workflow, an anchors command, a gate): not a decision")
+	cmd.Flags().BoolVar(&bloqueante, "blocking", false,
+		"with --bug: your card cannot go on until the bug is fixed, and it waits for it")
 	common.AliasDeFlag(cmd, "about", "sobre")
 	common.AliasDeFlag(cmd, "for-user", "para-usuario")
 	cmd.PreRunE = func(c *cobra.Command, _ []string) error {
@@ -487,6 +538,32 @@ func escalationBody(motivo, sobre, card string, paraUsuario, incerto bool) strin
 		b.WriteString(fmt.Sprintf("Born UNDER card #%s (label `%s`), which proceeds normally. "+
 			"The two are delivered in the same PR: the finding appeared while doing that work, and "+
 			"separating them would make one of the two wait for no reason.\n", card, initx.LabelSob(card)))
+	}
+	return b.String()
+}
+
+// bugBody is the text of a bug issue. It says first that there is nothing to decide — the
+// confusion it exists to end is a bug read as a decision — then where the fix lives and
+// what releases the cards that wait for it.
+func bugBody(motivo, sobre, card string, bloqueante bool) string {
+	var b strings.Builder
+	b.WriteString("🐞 **A bug in the pipeline or the tool — there is nothing to decide.**\n\n")
+	b.WriteString(motivo + "\n\n")
+	if sobre != "" {
+		b.WriteString(fmt.Sprintf("**Where:** `%s`\n\n", sobre))
+	}
+	b.WriteString("**Why it is not an ordinary card:** the current state is wrong and nobody would " +
+		"defend it, but the fix lives where the agents in the queue do not edit — a seeded workflow " +
+		"(`.github/workflows/anchors-*`) or Anchors itself. The claim does not hand this issue out.\n\n")
+	b.WriteString("**How to unblock:** fix it where it lives (for Anchors: a release, then " +
+		"`min_version` and the seeded workflows updated in this repository), and close this issue.")
+	if bloqueante && card != "" {
+		b.WriteString(fmt.Sprintf(" Card #%s waits for it (`anchors:blocked-by-<n>`) and goes back "+
+			"to the queue when this closes.", card))
+	}
+	b.WriteString("\n")
+	if !bloqueante && card != "" {
+		b.WriteString(fmt.Sprintf("\nFound during card #%s, which goes on.\n", card))
 	}
 	return b.String()
 }

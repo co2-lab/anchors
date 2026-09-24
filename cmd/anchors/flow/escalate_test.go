@@ -191,3 +191,22 @@ func TestEscalateGuardaOCardEOPRJuntos(t *testing.T) {
 			"a derivação precisa acontecer antes de o card ser lido")
 	}
 }
+
+// A bug is not a decision (blue-eyes, 2026-09-24: six "decisions" in two hours, all bugs).
+// The body says so first, never asks for one, and names the card only as the flag says.
+func TestBugBody_isNotADecision(t *testing.T) {
+	b := bugBody("the review job picks the wrong card", ".github/workflows/anchors-pr-checks.yml", "966", true)
+	for _, want := range []string{"nothing to decide", "anchors-pr-checks.yml", "Card #966 waits for it", "close this issue"} {
+		if !strings.Contains(b, want) {
+			t.Errorf("the bug body should say %q:\n%s", want, b)
+		}
+	}
+	for _, bad := range []string{"not the agent's", "needs-user", "decide, and record"} {
+		if strings.Contains(b, bad) {
+			t.Errorf("a bug body must not read as a decision (%q):\n%s", bad, b)
+		}
+	}
+	if nb := bugBody("x", "", "966", false); strings.Contains(nb, "waits for it") || !strings.Contains(nb, "which goes on") {
+		t.Errorf("without --blocking the card goes on, and the body must say so:\n%s", nb)
+	}
+}
