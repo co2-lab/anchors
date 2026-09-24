@@ -3070,3 +3070,17 @@ func TestClaimCanReadABlockingPullRequest(t *testing.T) {
 		t.Errorf("the claim needs `pull-requests: read` to read the state of a blocking PR, has %q", p)
 	}
 }
+
+// A REVIEW CARD WITH AN OPEN PR IS THE REVIEW. The open-PR skip exists so nobody
+// reimplements a delivered card; applied to `ready-to-review` it emptied the review queue
+// (blue-eyes, 2026-09-24: 15 of 20 review cards skipped, no reviewer handed a review).
+func TestClaimHandsOutAReviewCardThatHasItsPR(t *testing.T) {
+	j, _ := json.Marshal([]map[string]any{{"number": 77, "body": "Closes #4"}})
+	prs := "FAKE_PRS=" + string(j)
+	if out, handed := runClaim(t, "FAKE_CARD_STATE=ready-to-review", prs); !handed {
+		t.Errorf("a review card with its open PR was skipped — there is nothing else to review:\n%s", out)
+	}
+	if out, handed := runClaim(t, prs); handed {
+		t.Errorf("control: a to-do card with an open PR must still be skipped:\n%s", out)
+	}
+}

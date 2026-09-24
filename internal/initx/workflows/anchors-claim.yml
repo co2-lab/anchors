@@ -318,14 +318,22 @@ jobs:
             # Um PR já aberto NÃO significa que o card está pronto — significa que quem
             # revisa deve pegar o PR, não reimplementar. O card volta à fila pelo caminho
             # normal quando o PR mescla ou fecha.
-            if ! pr_aberto=$(gh pr list --state open --search "$n in:body" \
-              --json number,body --jq "[.[] | select(.body | test(\"\\\\b(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?):?[[:space:]]+#$n\\\\b|/issues/$n\\\\b\"; \"i\"))] | .[0].number // empty"); then
-              echo "· #$n: could not list the open PRs (gh failed) — skipping, fail closed"
-              continue
-            fi
-            if [ -n "$pr_aberto" ]; then
-              echo "· #$n já tem o PR #$pr_aberto aberto — pulando (revisar o PR, não reimplementar)"
-              continue
+            #
+            # SÓ PARA TRABALHO DE IMPLEMENTAÇÃO. Um card em `ready-to-review`/`in-review` com
+            # PR aberto é exatamente o que se revisa — pulá-lo esvaziava a fila de revisão
+            # inteira. Medido no blue-eyes, 2026-09-24: o claim percorreu os 20 cards em
+            # `ready-to-review`, pulou 15 porque o PR estava aberto e 5 por bloqueio, e
+            # nenhum revisor recebeu revisão pelo `anchors next`.
+            if ! grep -qx "$n" /tmp/revisao.txt; then
+              if ! pr_aberto=$(gh pr list --state open --search "$n in:body" \
+                --json number,body --jq "[.[] | select(.body | test(\"\\\\b(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?):?[[:space:]]+#$n\\\\b|/issues/$n\\\\b\"; \"i\"))] | .[0].number // empty"); then
+                echo "· #$n: could not list the open PRs (gh failed) — skipping, fail closed"
+                continue
+              fi
+              if [ -n "$pr_aberto" ]; then
+                echo "· #$n já tem o PR #$pr_aberto aberto — pulando (revisar o PR, não reimplementar)"
+                continue
+              fi
             fi
 
             # BLOQUEADO por dependência? O código do card sai do título (`[XXXXX] ...`),
