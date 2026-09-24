@@ -2311,6 +2311,7 @@ case "$call" in
       title) fail title ;;
       comments) case "$jqx" in
           *"## Revisão"*) echo 0 ;;
+          *"implementação concluída"*) echo "${FAKE_AUTHOR:-}" ;;
           *'select(. != "(liberado)")'*) echo "${FAKE_PREV_OWNER:-}" ;;
           *) echo "${FAKE_OWNER:-}" ;;
         esac ;;
@@ -2991,5 +2992,22 @@ func TestClaimDoesNotHandAnAgentItsOwnReview(t *testing.T) {
 	}
 	if out, handed := runClaim(t, released, "FAKE_PREV_OWNER=machine/session"); !handed {
 		t.Errorf("a to-do card released by the same agent must stay claimable:\n%s", out)
+	}
+}
+
+// The AUTHOR is the owner before the delivery ("implementação concluída"), not whoever
+// released last: reviewers release too, and the previous reviewer must not pass for the
+// author while the real author is handed its own re-review.
+func TestClaimAuthorIsTheOwnerBeforeTheDelivery(t *testing.T) {
+	released := "FAKE_OWNER=anchors-owner: (liberado) — revisão concluída"
+	// The agent reviewed last time; another agent wrote it → the agent may review again.
+	if out, handed := runClaim(t, "FAKE_CARD_STATE=ready-to-review", released,
+		"FAKE_PREV_OWNER=machine/session", "FAKE_AUTHOR=other/agent"); !handed {
+		t.Errorf("the previous reviewer was taken for the author:\n%s", out)
+	}
+	// The agent wrote it; someone else released last → still the agent's own work.
+	if out, handed := runClaim(t, "FAKE_CARD_STATE=ready-to-review", released,
+		"FAKE_PREV_OWNER=other/agent", "FAKE_AUTHOR=machine/session"); handed {
+		t.Errorf("the author was handed the review of its own work:\n%s", out)
 	}
 }

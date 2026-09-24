@@ -414,7 +414,20 @@ jobs:
                 # um); com dois agentes trabalhando, ela devolveu a revisão ao próprio autor
                 # seis vezes num dia, e cada uma parou o agente até alguém intervir. O card
                 # fica para OUTRO agente; um time de um revisa à mão.
-                if [ "$liberou_antes" = "$AGENT" ] && grep -qx "$n" /tmp/revisao.txt; then
+                #
+                # O AUTOR é quem era dono antes da entrega ("implementação concluída", que só
+                # o pipeline escreve), e não quem soltou por último: revisores também soltam o
+                # card (à mão, e o veredito desde a v0.1.173), e o último a soltar pode ser o
+                # revisor anterior — que passaria por autor, enquanto o autor de verdade
+                # receberia a própria revisão. Sem entrega registrada, vale quem soltou por último.
+                autor=$(gh issue view "$n" --json comments \
+                  --jq '[.comments[].body | split("\n")[0] | select(startswith("anchors-owner:"))] as $o
+                        | ([range(0; $o | length) | select($o[.] | test("implementação concluída"))] | last) as $i
+                        | if $i == null then ""
+                          else ([$o[0:$i][] | sub("^anchors-owner:[ ]*"; "") | sub("[ ]*—.*$"; "")
+                                 | select(. != "(liberado)")] | last // "") end')
+                autor="${autor:-$liberou_antes}"
+                if [ "$autor" = "$AGENT" ] && grep -qx "$n" /tmp/revisao.txt; then
                   echo "· #$n: a revisão é do trabalho de $AGENT — fica para outro agente"
                   livre=""
                   liberou_antes=""
