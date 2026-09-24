@@ -3,8 +3,10 @@ package quality
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 
@@ -23,6 +25,7 @@ import (
 func newStampCmd() *cobra.Command {
 	var root, mapPath string
 	var dryRun bool
+	var refresh []string
 	cmd := &cobra.Command{
 		Use:   "stamp [test files...]",
 		Short: "Write the missing `@contract` stamps on test doubles (never rewrites an existing one)",
@@ -40,7 +43,17 @@ With no file given, every test of the map is stamped.
 
     anchors stamp                           every test
     anchors stamp src/Home.test.tsx         one test
-    anchors stamp --dry-run                 says what it would write`,
+    anchors stamp --dry-run                 says what it would write
+
+AFTER CHANGING A FUNCTION, refresh the stamps that point at its file — and read the answer:
+
+    anchors stamp --refresh src/hooks/balance.ts
+
+It lists every double stamped against the previous version (test, line, member, old and
+new hash, and how the stamped block changed from HEAD), then updates those hashes. Each
+double listed reproduces the OLD contract: adjust it in the same commit. A stamp whose
+anchor line is gone (the member was renamed or removed) is not refreshed — re-stamp it by
+hand. With --dry-run it only lists.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
@@ -56,6 +69,9 @@ With no file given, every test of the map is stamped.
 			g, err := mapx.Load(mapPath)
 			if err != nil {
 				return fmt.Errorf("load map: %w (run `anchors map build`)", err)
+			}
+			if len(refresh) > 0 {
+				return refreshStamps(absRoot, g, refresh, dryRun)
 			}
 
 			var tests []string
@@ -118,5 +134,87 @@ With no file given, every test of the map is stamped.
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().StringVar(&mapPath, "map", "", "path to the map")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "say what would be written, without writing")
+	cmd.Flags().StringSliceVar(&refresh, "refresh", nil,
+		"after changing this file: list the doubles stamped against its previous version and update their stamps")
 	return cmd
+}
+
+// refreshStamps is `anchors stamp --refresh <file>`: for each changed file, the doubles
+// stamped against its previous version — with how the stamped block changed — and their
+// stamps updated. The list is the point: it is the work the change created.
+func refreshStamps(root string, g *mapx.Graph, files []string, dryRun bool) error {
+	total := 0
+	for _, f := range files {
+		rel := common.RelTo(root, f)
+		found, err := gate.RefreshStamps(g, root, rel, !dryRun)
+		if err != nil {
+			return err
+		}
+		if len(found) == 0 {
+			fmt.Printf("%s — no double is stamped against a previous version of it.\n", rel)
+			continue
+		}
+		total += len(found)
+		antigo, _ := exec.Command("git", "-C", root, "show", "HEAD:"+rel).Output()
+		novo, _ := os.ReadFile(filepath.Join(root, rel))
+		fmt.Printf("%s changed — %d double(s) stamped against the previous version:\n\n", rel, len(found))
+		for _, r := range found {
+			if r.Err != "" {
+				fmt.Printf("  %s:%d  `%s`\n      NOT refreshed: %s — the member was renamed or removed;\n"+
+					"      adjust the double, delete this stamp and run `anchors stamp`.\n\n", r.Test, r.Line, r.Anchor, r.Err)
+				continue
+			}
+			fmt.Printf("  %s:%d  `%s`  (%s → %s)\n", r.Test, r.Line, r.Anchor, r.Old, r.New)
+			velho, okV := gate.StampSnippet(string(antigo), r.Anchor, r.Count)
+			atual, okA := gate.StampSnippet(string(novo), r.Anchor, r.Count)
+			if okV && okA {
+				for _, l := range blockDiff(velho, atual) {
+					fmt.Printf("      %s\n", l)
+				}
+			} else {
+				fmt.Printf("      (no HEAD version of the block to compare)\n")
+			}
+			fmt.Println()
+		}
+	}
+	if total == 0 {
+		return nil
+	}
+	if dryRun {
+		fmt.Printf("would update the stamps above (--dry-run: nothing written).\n")
+		return nil
+	}
+	fmt.Printf("Stamps updated. Each double above reproduced the OLD contract: adjust it to the new one\n" +
+		"in this same commit — the stamp now says the double matches, and only you have checked it.\n")
+	return nil
+}
+
+// blockDiff lists the lines of a stamped block that left (-) and that came in (+).
+func blockDiff(velho, atual string) []string {
+	va := strings.Split(velho, "\n")
+	aa := strings.Split(atual, "\n")
+	emA := map[string]int{}
+	for _, l := range aa {
+		emA[l]++
+	}
+	emV := map[string]int{}
+	for _, l := range va {
+		emV[l]++
+	}
+	var out []string
+	for _, l := range va {
+		if emA[l] > 0 {
+			emA[l]--
+			continue
+		}
+		out = append(out, "- "+l)
+	}
+	for _, l := range aa {
+		if emV[l] > 0 {
+			emV[l]--
+			continue
+		}
+		out = append(out, "+ "+l)
+	}
+	return out
 }

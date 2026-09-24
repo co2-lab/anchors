@@ -172,3 +172,20 @@ Feature: MockStamped — the double carries the mark of the snippet it replaces,
     And a stamp on `src/stores/auth.store.ts`
     When the gate confronts the test
     Then the double counts as stamped
+
+  @MCSTM-B17 @unit-level
+  Scenario: Changing a module checks the doubles stamped against it
+    Given a test whose stamp points at a module
+    And another test with no stamp on that module
+    When the module is the changed file of a check
+    Then the stamping test enters the check, and the other does not
+    And a drift names the module file of the stamp
+
+  @MCSTM-B18 @unit-level
+  Scenario: The author of a change refreshes the stamps and gets the doubles to adjust
+    Given two members of a module stamped by a test
+    And one of them changed
+    When the author runs the stamp refresh for the module
+    Then only the stamp of the changed member is listed, with the old and the new hash
+    And its hash is updated, and the gate passes again
+    And a stamp whose anchor is gone is listed and not refreshed

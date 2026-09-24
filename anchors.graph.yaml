@@ -695,7 +695,7 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide_tests.go
       kind: code
-      rev: 04ce7df4d55e
+      rev: c29e99cd1bc0
       updated_at: "2026-09-24"
       layer: comando
       tags:
@@ -703,7 +703,7 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide_tests_test.go
       kind: test
-      rev: 6e5d31a28a3f
+      rev: 06ae16f5a3f5
       updated_at: "2026-09-24"
       layer: teste
       tags:
@@ -1240,6 +1240,7 @@ nodes:
     - id: cmd/anchors/quality/impact_stamps_test.go
       kind: test
       rev: 7c9030b1e4e8
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
@@ -1284,12 +1285,18 @@ nodes:
         - comando
     - id: cmd/anchors/quality/stamp.go
       kind: code
-      rev: 66f03b0d440c
+      rev: 179ead7e85d1
       updated_at: "2026-09-23"
       layer: comando
       tags:
         - cli
         - comando
+    - id: cmd/anchors/quality/stamp_refresh_test.go
+      kind: test
+      rev: 88c883cbe525
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/quality/status.go
       kind: code
       rev: 663cb5bde7d5
@@ -2446,7 +2453,7 @@ nodes:
         - spec
     - id: internal/gate/mock_stamp_gen_test.go
       kind: test
-      rev: 4fba02efb14d
+      rev: d6be7d11dd29
       updated_at: "2026-09-24"
       code: MKSTP
       layer: teste
@@ -2454,7 +2461,7 @@ nodes:
         - test
     - id: internal/gate/mock_stamped.feature
       kind: feature
-      rev: a65d09130115
+      rev: 7ca848e47ac6
       updated_at: "2026-09-23"
       code: MCSTM
       layer: feature
@@ -2462,8 +2469,8 @@ nodes:
         - feature
     - id: internal/gate/mock_stamped.go
       kind: code
-      rev: a2ceca6bc382
-      updated_at: "2026-09-23"
+      rev: 5e4b6a3c15ab
+      updated_at: "2026-09-24"
       code: MCSTM
       layer: gate
       tags:
@@ -2471,7 +2478,7 @@ nodes:
         - gate
     - id: internal/gate/mock_stamped.spec.md
       kind: spec
-      rev: b38341cf116b
+      rev: 0b93524b7cac
       updated_at: "2026-09-23"
       code: MCSTM
       layer: spec
@@ -4253,7 +4260,7 @@ nodes:
         - test
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: a4de010b6d05
+      rev: e1dcb5bdd01c
       updated_at: "2026-09-24"
       layer: teste
       tags:

@@ -15,3 +15,13 @@ func TestTestGuideNamesTheInstrumentPerInputShape(t *testing.T) {
 		}
 	}
 }
+
+// The test guide teaches the refresh with the stamp: whoever changes a doubled function
+// runs it and adjusts the doubles it lists.
+func TestTestGuideTeachesTheStampRefresh(t *testing.T) {
+	for _, want := range []string{"anchors stamp --refresh", "mock-stamped", "same commit"} {
+		if !strings.Contains(testGuide, want) {
+			t.Errorf("the test guide should say %q", want)
+		}
+	}
+}

@@ -279,3 +279,93 @@ func TestsStamping(g *mapx.Graph, root, file string) []string {
 	}
 	return out
 }
+
+// StampRefresh is one `@contract` stamp that `RefreshStamps` found diverging from the
+// module it points at.
+type StampRefresh struct {
+	Test   string // the test holding the stamp
+	Line   int    // 1-based line of the stamp in the test
+	File   string // the module the stamp points at
+	Anchor string
+	Count  int
+	Old    string // the hash written in the stamp
+	New    string // the hash of the snippet today; empty when it cannot be recomputed
+	Err    string // why the stamp could not be refreshed (anchor gone or ambiguous)
+}
+
+// RefreshStamps updates the hash of every stamp that points at `file` and no longer matches
+// it, in every test of the map, and returns what it found.
+//
+// It is the command side of "who changes a function updates its doubles": run by the
+// author of the change, it answers with the list of doubles that reproduced the old
+// contract — the ones to adjust in the same commit. A stamp whose anchor line is gone or
+// ambiguous is NOT refreshed: the member was renamed or removed, and only a person can say
+// which new line the double now stands for.
+//
+// With write=false it only reports.
+func RefreshStamps(g *mapx.Graph, root, file string, write bool) ([]StampRefresh, error) {
+	var out []StampRefresh
+	for _, t := range TestsStamping(g, root, file) {
+		path := filepath.Join(root, t)
+		b, err := os.ReadFile(path)
+		if err != nil {
+			return out, err
+		}
+		lines := strings.Split(string(b), "\n")
+		changed := false
+		for i, l := range lines {
+			m := stampRE.FindStringSubmatchIndex(l)
+			if m == nil {
+				continue
+			}
+			c := declaredStamp{file: l[m[2]:m[3]], anchor: l[m[4]:m[5]], hash: l[m[8]:m[9]]}
+			c.count, _ = strconv.Atoi(l[m[6]:m[7]])
+			if filepath.ToSlash(c.file) != filepath.ToSlash(file) || c.count <= 0 {
+				continue
+			}
+			r := StampRefresh{Test: t, Line: i + 1, File: c.file, Anchor: c.anchor, Count: c.count, Old: c.hash}
+			atual, err := recomputeStamp(root, c)
+			if err != nil {
+				r.Err = err.Error()
+				out = append(out, r)
+				continue
+			}
+			if atual == c.hash {
+				continue
+			}
+			r.New = atual
+			out = append(out, r)
+			lines[i] = l[:m[8]] + atual + l[m[9]:]
+			changed = true
+		}
+		if changed && write {
+			if err := os.WriteFile(path, []byte(strings.Join(lines, "\n")), 0o644); err != nil {
+				return out, err
+			}
+		}
+	}
+	return out, nil
+}
+
+// StampSnippet returns the `count` lines that start at the unique `anchor` line of
+// `content` — the block a stamp covers — or false when the anchor is absent or repeated.
+func StampSnippet(content, anchor string, count int) (string, bool) {
+	linhas := strings.Split(content, "\n")
+	idx := -1
+	for i, l := range linhas {
+		if strings.TrimRight(l, "\r") == anchor {
+			if idx >= 0 {
+				return "", false
+			}
+			idx = i
+		}
+	}
+	if idx < 0 {
+		return "", false
+	}
+	fim := idx + count
+	if fim > len(linhas) {
+		fim = len(linhas)
+	}
+	return strings.Join(linhas[idx:fim], "\n"), true
+}

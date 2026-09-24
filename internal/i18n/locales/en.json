@@ -416,7 +416,7 @@
   "gate.mock_stamped.fail_missing_stamps": "%d test double(s) without contract stamp: %s.\n\nWithout stamp nothing to recompute — double may reproduce a contract that already changed and nothing warns. Stamp snippet it replaces: `// @contract: <file> | <line opening snippet> | <line count> | <hash>`",
   "gate.mock_stamped.skip_no_governed_modules": "test does not mock governed module — no stamp to require",
   "gate.mock_stamped.stamp_diff_line": "%s: `%s` — stamp %s, contract today %s",
-  "gate.mock_stamped.fail_drift": "%d stamp(s) do not match real module:\n  - %s\n\nSnippet changed after this double was written — it now reproduces a contract that no longer exists, and test passes against old version. Check what changed, adjust double and update stamp (or record deliberate divergence with written reason next to it)",
+  "gate.mock_stamped.fail_drift": "%d stamp(s) do not match real module:\n  - %s\n\nSnippet changed after this double was written — it now reproduces a contract that no longer exists, and test passes against old version. Whoever changed the module: run `anchors stamp --refresh <module file>` — it lists every double stamped against the previous version, with how the block changed, and updates the stamps; then adjust each double listed in the same commit (or record deliberate divergence with written reason next to it)",
   "gate.mock_stamped.err_module_not_found": "module not found: %s",
   "gate.mock_stamped.err_anchor_not_found": "anchor not found — snippet was renamed or removed",
   "gate.mock_stamped.err_anchor_ambiguous": "anchor ambiguous (%d occurrences) — use a unique line from snippet",

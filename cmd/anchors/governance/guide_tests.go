@@ -57,6 +57,24 @@ instrument is chosen by the shape of the input space, not by taste:
 Measured, in a real project: nine surviving mutants across four units, all the same
 shape — the boundary closed for one case, the neighbour left open.
 
+## Doubles of a module: the stamp, and who refreshes it
+
+When a test doubles a module of the project (` + "`jest.mock`" + `, ` + "`vi.mock`" + `…), the double
+carries a stamp — ` + "`// @contract: <file> | <anchor line> | <lines> | <hash>`" + ` — that the
+` + "`mock-stamped`" + ` gate recomputes against the real file. Write missing stamps with
+` + "`anchors stamp`" + `; it never rewrites an existing one.
+
+WHEN YOU CHANGE A FUNCTION THAT OTHERS DOUBLE, you own the doubles too:
+
+    anchors stamp --refresh <file you changed>
+
+It lists every double stamped against the previous version — test, line, member, and how
+the stamped block changed from HEAD — and updates those stamps. Each double listed
+reproduces the OLD contract: adjust it in the same commit — after the refresh the stamp
+says the double matches, and you are the one who checked it. If you skip the refresh, the
+pre-commit (` + "`check --changed`" + ` of the file) fails on every stale stamp. A member you renamed or removed
+is not refreshed: adjust the double, delete its stamp, and run ` + "`anchors stamp`" + `.
+
 ## Environment safety (when the test touches external state)
 
 - DISCOVER THE ENVIRONMENT BY IDENTITY, NOT BY NAME. Validate that the resources belong
