@@ -355,6 +355,13 @@ func agentID() string {
 		if sessao == "" {
 			sessao = "default"
 		}
+		// SAID, not silent. Two agents of the same user on one machine share this
+		// identity, own each other's cards and collide on every claim — measured in
+		// blue-eyes (#650): a machine with no `ANCHORS_SESSION` claimed as `…/default`
+		// alongside dev1..dev5. One agent per user is fine; the warning says when it is not.
+		fmt.Fprintf(os.Stderr, "⚠ ANCHORS_SESSION is not set: this agent claims as %q. Two agents of the same\n"+
+			"  user on this machine would share that identity and take each other's cards —\n"+
+			"  set ANCHORS_SESSION to a name of its own for each one.\n", host+"/"+sessao)
 	}
 	return host + "/" + sessao
 }
