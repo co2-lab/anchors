@@ -149,8 +149,9 @@ type reviewWorld struct {
 	labels     []string
 	owners     []map[string]string // card comments
 	assignedAt string              // "" = never moved to in-review
-	prComments []map[string]string
+	prComments []map[string]any
 	prBody     string
+	perms      map[string]string // login → repository permission, as the API reports it
 }
 
 func defaultReviewWorld() reviewWorld {
@@ -166,8 +167,13 @@ func defaultReviewWorld() reviewWorld {
 	}
 }
 
-func prComment(at, who, body string) map[string]string {
-	return map[string]string{"created_at": at, "author_association": who, "body": body}
+func prComment(at, who, body string) map[string]any {
+	return prCommentBy(at, who, "someone", body)
+}
+
+// prCommentBy names the author: the permission fallback looks the LOGIN up.
+func prCommentBy(at, who, login, body string) map[string]any {
+	return map[string]any{"created_at": at, "author_association": who, "user": map[string]string{"login": login}, "body": body}
 }
 
 func (w *ghWorld) seedReview(rw reviewWorld) {
@@ -190,9 +196,12 @@ func (w *ghWorld) seedReview(rw reviewWorld) {
 	}
 	w.fixture("api_repos_o_r_issues_12_events", events)
 	if rw.prComments == nil {
-		rw.prComments = []map[string]string{}
+		rw.prComments = []map[string]any{}
 	}
 	w.fixture("api_repos_o_r_issues_7_comments", rw.prComments)
+	for login, perm := range rw.perms {
+		w.fixture("api_repos_o_r_collaborators_"+login+"_permission", map[string]string{"permission": perm})
+	}
 }
 
 func reviewScript(t *testing.T) string {
@@ -234,7 +243,7 @@ func TestPRChecksPublishesTheReviewStatus(t *testing.T) {
 		{
 			name: "success only on the assigned reviewer's approved line",
 			edit: func(rw *reviewWorld) {
-				rw.prComments = []map[string]string{
+				rw.prComments = []map[string]any{
 					prComment("2026-09-20T11:00:00Z", "OWNER", "## Revisão\n\nAll rules hold.\n\nanchors-review: approved by agent-b\n"),
 				}
 			},
@@ -243,7 +252,7 @@ func TestPRChecksPublishesTheReviewStatus(t *testing.T) {
 		{
 			name: "failure on the assigned reviewer's rejected line",
 			edit: func(rw *reviewWorld) {
-				rw.prComments = []map[string]string{
+				rw.prComments = []map[string]any{
 					prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: rejected by agent-b\r\n"),
 				}
 			},
@@ -257,7 +266,7 @@ func TestPRChecksPublishesTheReviewStatus(t *testing.T) {
 		{
 			name: "another agent's approval does not count",
 			edit: func(rw *reviewWorld) {
-				rw.prComments = []map[string]string{
+				rw.prComments = []map[string]any{
 					prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: approved by agent-a"),
 				}
 			},
@@ -266,7 +275,7 @@ func TestPRChecksPublishesTheReviewStatus(t *testing.T) {
 		{
 			name: "an approval from before the assignment belongs to an earlier round",
 			edit: func(rw *reviewWorld) {
-				rw.prComments = []map[string]string{
+				rw.prComments = []map[string]any{
 					prComment("2026-09-20T09:30:00Z", "OWNER", "anchors-review: approved by agent-b"),
 				}
 			},
@@ -275,7 +284,7 @@ func TestPRChecksPublishesTheReviewStatus(t *testing.T) {
 		{
 			name: "a verdict line inside a code block is an example",
 			edit: func(rw *reviewWorld) {
-				rw.prComments = []map[string]string{
+				rw.prComments = []map[string]any{
 					prComment("2026-09-20T11:00:00Z", "OWNER", "Write this when done:\n\n```\nanchors-review: approved by agent-b\n```\n"),
 				}
 			},
@@ -284,7 +293,7 @@ func TestPRChecksPublishesTheReviewStatus(t *testing.T) {
 		{
 			name: "a line quoted mid-sentence is not a verdict",
 			edit: func(rw *reviewWorld) {
-				rw.prComments = []map[string]string{
+				rw.prComments = []map[string]any{
 					prComment("2026-09-20T11:00:00Z", "OWNER", "I will post anchors-review: approved by agent-b later"),
 				}
 			},
@@ -293,16 +302,38 @@ func TestPRChecksPublishesTheReviewStatus(t *testing.T) {
 		{
 			name: "a commenter without write access cannot sign the review",
 			edit: func(rw *reviewWorld) {
-				rw.prComments = []map[string]string{
+				rw.prComments = []map[string]any{
 					prComment("2026-09-20T11:00:00Z", "NONE", "anchors-review: approved by agent-b"),
 				}
 			},
 			wantState: "pending",
 		},
 		{
+			// blue-eyes #982: an org with no PUBLIC members. The job's token sees the member's
+			// comment as CONTRIBUTOR, and every approval was dropped.
+			name: "a private org member's line counts by repository permission",
+			edit: func(rw *reviewWorld) {
+				rw.prComments = []map[string]any{
+					prCommentBy("2026-09-20T11:00:00Z", "CONTRIBUTOR", "dev", "anchors-review: approved by agent-b"),
+				}
+				rw.perms = map[string]string{"dev": "write"}
+			},
+			wantState: "success",
+		},
+		{
+			name: "a contributor with only read access still cannot sign the review",
+			edit: func(rw *reviewWorld) {
+				rw.prComments = []map[string]any{
+					prCommentBy("2026-09-20T11:00:00Z", "CONTRIBUTOR", "outsider", "anchors-review: approved by agent-b"),
+				}
+				rw.perms = map[string]string{"outsider": "read"}
+			},
+			wantState: "pending",
+		},
+		{
 			name: "the last verdict wins",
 			edit: func(rw *reviewWorld) {
-				rw.prComments = []map[string]string{
+				rw.prComments = []map[string]any{
 					prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: approved by agent-b"),
 					prComment("2026-09-20T12:00:00Z", "MEMBER", "anchors-review: rejected by agent-b"),
 				}
@@ -315,7 +346,7 @@ func TestPRChecksPublishesTheReviewStatus(t *testing.T) {
 				rw.owners = append(rw.owners, map[string]string{
 					"createdAt": "2026-09-20T13:00:00Z", "body": "anchors-owner: agent-c",
 				})
-				rw.prComments = []map[string]string{
+				rw.prComments = []map[string]any{
 					prComment("2026-09-20T14:00:00Z", "OWNER", "anchors-review: approved by agent-c"),
 				}
 			},
@@ -329,7 +360,7 @@ func TestPRChecksPublishesTheReviewStatus(t *testing.T) {
 				rw.owners = append(rw.owners, map[string]string{
 					"createdAt": "2026-09-20T10:00:00Z", "body": "anchors-owner: (liberado) — race",
 				})
-				rw.prComments = []map[string]string{
+				rw.prComments = []map[string]any{
 					prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: approved by agent-b"),
 				}
 			},
@@ -339,7 +370,7 @@ func TestPRChecksPublishesTheReviewStatus(t *testing.T) {
 			name: "a card back in ready-to-review is pending, whatever the earlier round said",
 			edit: func(rw *reviewWorld) {
 				rw.labels = []string{"anchors", "anchors:ready-to-review"}
-				rw.prComments = []map[string]string{
+				rw.prComments = []map[string]any{
 					prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: approved by agent-b"),
 				}
 			},
@@ -357,7 +388,7 @@ func TestPRChecksPublishesTheReviewStatus(t *testing.T) {
 			name: "a PR that declares no card gets no status",
 			edit: func(rw *reviewWorld) {
 				rw.prBody = "Pipeline fix, no card.\n"
-				rw.prComments = []map[string]string{
+				rw.prComments = []map[string]any{
 					prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: approved by agent-b"),
 				}
 			},
@@ -570,7 +601,7 @@ func TestPRChecksVerdictReleasesTheReviewer(t *testing.T) {
 	for _, verdict := range []string{"approved", "rejected"} {
 		w := newGHWorld(t)
 		rw := defaultReviewWorld()
-		rw.prComments = []map[string]string{prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: "+verdict+" by agent-b")}
+		rw.prComments = []map[string]any{prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: "+verdict+" by agent-b")}
 		w.seedReview(rw)
 		_, calls, _ := w.run(script, env)
 		if !strings.Contains(calls, "CALL issue comment 12") || !strings.Contains(calls, release) {
@@ -587,7 +618,7 @@ func TestPRChecksVerdictReleasesTheReviewer(t *testing.T) {
 	w = newGHWorld(t)
 	rw := defaultReviewWorld()
 	rw.owners = append(rw.owners, map[string]string{"createdAt": "2026-09-20T11:30:00Z", "body": "anchors-owner: (liberado) — revisão concluída: approved por agent-b"})
-	rw.prComments = []map[string]string{prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: approved by agent-b")}
+	rw.prComments = []map[string]any{prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: approved by agent-b")}
 	w.seedReview(rw)
 	if _, calls, _ := w.run(script, env); strings.Contains(calls, release) {
 		t.Errorf("an already released card was released again:\n%s", calls)

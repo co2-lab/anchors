@@ -276,13 +276,28 @@ jobs:
           #
           # Only comments by someone with WRITE access count: on a public repository anyone
           # can comment, and a line typed by a stranger would turn the status green.
+          #
+          # `author_association` alone is NOT that test. A PRIVATE org membership is hidden
+          # from the workflow's `GITHUB_TOKEN`: the same comment reads `MEMBER` to the
+          # member's own `gh` and `CONTRIBUTOR` to the job. Measured in blue-eyes (#982): an
+          # org with no public members, where every `approved` line was dropped and
+          # `anchors/review` stayed `pending` on every PR. When the association does not
+          # vouch for the author, the repository PERMISSION of that login decides.
           veredito=""
           if [ -n "$revisor" ]; then
             comentarios=$(gh api "repos/$GH_REPO/issues/$PR/comments" --paginate \
               --jq ".[] | select(.created_at >= \"$atribuido\")
-                        | select(.author_association == \"OWNER\" or .author_association == \"MEMBER\" or .author_association == \"COLLABORATOR\")
-                        | .body | @base64" 2>/dev/null || true)
-            for c in $comentarios; do
+                        | \"\\(.author_association) \\(.user.login) \\(.body | @base64)\"" 2>/dev/null || true)
+            while read -r assoc autor c; do
+              [ -z "${c:-}" ] && continue
+              case "$assoc" in
+                OWNER|MEMBER|COLLABORATOR) ;;
+                *)
+                  perm=$(gh api "repos/$GH_REPO/collaborators/$autor/permission" \
+                    --jq .permission 2>/dev/null </dev/null || true)
+                  case "$perm" in admin|maintain|write) ;; *) continue ;; esac
+                  ;;
+              esac
               linhas=$(printf '%s' "$c" | base64 --decode \
                 | sed 's/\r$//' \
                 | awk '
@@ -295,7 +310,7 @@ jobs:
               while read -r v quem; do
                 if [ -n "$v" ] && [ "$quem" = "$revisor" ]; then veredito="$v"; fi
               done <<< "$linhas"
-            done
+            done <<< "$comentarios"
           fi
 
           # `ready-to-review` WINS over any earlier verdict: the card is back in the queue
