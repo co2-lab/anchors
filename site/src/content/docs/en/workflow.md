@@ -33,6 +33,14 @@ Beyond state, two labels cut across any column:
 | `anchors:precisa-do-usuario` | the card awaits a **human decision** and is handed to no one until it comes |
 | `anchors:sob-<n>` | this card is a **finding** born while someone worked on card `<n>` |
 
+The board page (the published one and `anchors board serve`) shows, above the
+columns, one chip per **agent active in the last 30 minutes**: the current owner
+of at least one open card touched in that window. A released card
+(`(liberado)`) has no owner and does not count. On the published board the 30
+minutes count from the snapshot; on `board serve`, from now. Clicking a chip
+shows only that agent's cards, and the choice is kept in the URL
+(`#agente=<name>`).
+
 ## 1. Ask for work — don't pick it
 
 ```sh

@@ -34,6 +34,13 @@ Além do estado, duas labels atravessam qualquer coluna:
 | `anchors:precisa-do-usuario` | o card espera uma **decisão humana** e não é entregue a ninguém até ela sair |
 | `anchors:sob-<n>` | este card é um **achado** que nasceu enquanto alguém trabalhava no card `<n>` |
 
+A página do board (a publicada e a do `anchors board serve`) mostra, acima das
+colunas, um chip por **agente ativo nos últimos 30 minutos**: dono atual de ao
+menos um card aberto tocado nesse intervalo. Um card liberado (`(liberado)`) não
+tem dono, e não conta. No board publicado os 30 minutos contam a partir da foto;
+no `board serve`, a partir de agora. Clicar num chip mostra só os cards daquele
+agente, e a escolha fica na URL (`#agente=<nome>`).
+
 ## 1. Peça trabalho — não escolha
 
 ```sh

@@ -125,6 +125,11 @@
           border: 1px solid var(--linha); background: var(--card); color: var(--fraco); }
   .chip[aria-pressed="true"] { border-color: var(--fazendo); color: var(--fazendo);
                                background: var(--bg); }
+  /* O chip do agente carrega o NOME em monoespaçada, como o `◆ dono` do card: é o mesmo
+     identificador, e a mesma tipografia é o que liga um ao outro sem legenda. */
+  .chip.agente { font-family: ui-monospace, monospace; }
+  .chip .qtd-ag { margin-left: .3rem; opacity: .75; }
+  .sem-agente { font-size: .75rem; color: var(--fraco); font-style: italic; }
   .apos { font-size: .68rem; color: var(--fraco); font-family: ui-monospace, monospace;
           flex: none; padding: .1rem .4rem; border-radius: 4px; background: var(--bg); }
   .controles { display: flex; gap: .5rem; margin-bottom: .75rem; align-items: center;
@@ -420,6 +425,14 @@
   <button type="button" id="limpar-filtro" hidden>limpar</button>
 </div>
 
+<!-- QUEM ESTÁ TRABALHANDO AGORA. Um chip por agente com card aberto tocado nos últimos 30
+     minutos; clicar mostra só os cards dele. Fica ao lado do filtro de label, fora das
+     abas, pelo mesmo motivo: vale para o board e para a árvore. -->
+<div class="filtro" id="agentes" hidden>
+  <span class="filtro-rotulo">Agentes ativos (30 min):</span>
+  <div class="chips" id="agentes-chips"></div>
+</div>
+
 <!-- A FAIXA DE ESCALONADOS fica FORA das abas e ACIMA do board: ela não é um recorte
      do fluxo, é o que está travado esperando uma pessoa. Dentro de uma aba, quem abre a
      Árvore deixaria de ver. -->
@@ -577,6 +590,7 @@ function desenha(d) {
     const visiveis = COLUNAS.filter(([, , , , cd]) => pref.cd || !cd);
     NIVEIS = calculaNiveis(d);
     rotulasFiltro(d);
+    rotulasAgentes(d);
     document.getElementById("colunas").innerHTML = visiveis.map(([id, nome, oquee, cor]) => {
       // `!i.closed`: o JSON passou a trazer os cards ENTREGUES também — o roadmap precisa
       // deles para as datas reais. As colunas continuam sendo o trabalho EM CURSO, e um
@@ -910,10 +924,130 @@ function passaNoEstado(i) {
   return estadoAtivo.size === 0 || estadoAtivo.has(i.state);
 }
 
+// O AGENTE é E com a label, e não OU: "os cards do fulano" marcado junto com `bug` quer
+// dizer "os bugs do fulano". Somar os dois devolveria o board quase inteiro.
 function passaNoFiltro(i) {
+  if (agenteAtivo && i.owner !== agenteAtivo) return false;
   if (filtroAtivo.size === 0) return true;
   return (i.labels || []).some((l) => filtroAtivo.has(l));
 }
+
+// --- o filtro por AGENTE ---
+//
+// "Quem está trabalhando agora?" é a pergunta de quem abre o board com nove agentes no
+// projeto, e as colunas não a respondem: o `◆ dono` está em cada card, espalhado por oito
+// colunas, e um dono que largou o card há dois dias parece igual a um que comentou agora.
+//
+// ATIVO = dono ATUAL de ao menos um card ABERTO que foi tocado nos últimos 30 minutos.
+//
+//   · DONO ATUAL: o `owner` do JSON, que é o último `anchors-owner:` do card. O liberado
+//     (`(liberado)`) chega VAZIO — o pipeline já o apaga — e vazio não é agente. Um card
+//     liberado há cinco minutos foi tocado agora, e contá-lo poria na lista quem acabou de
+//     ir embora.
+//
+//   · TOCADO: o `updated` do card. Ele cobre o comentário de posse sem precisar de outro
+//     campo: comentar numa issue avança o `updatedAt` dela. MEDIDO neste repositório, em
+//     sete cards: o `updatedAt` é o `createdAt` do último comentário, ou um segundo depois.
+//
+//   · 30 MINUTOS contados da FOTO, e não do relógio de quem lê. O board publicado pode ter
+//     horas; medir pelo agora esvaziaria a lista de uma foto velha, e ela passaria a dizer
+//     "ninguém trabalha" quando o que diz é "ninguém trabalhava há 30 min da foto". O
+//     `board serve` é vivo (`live: true`) — lá a foto é agora.
+const JANELA_ATIVO_MS = 30 * 60 * 1000;
+
+// O agente escolhido, ou "" para todos. Vive no HASH da URL (`#agente=nome`): sobrevive ao
+// recarregar e vai junto quando alguém cola o link — "olha o que o fulano pegou" é um link.
+let agenteAtivo = "";
+
+function referenciaDaAtividade(d) {
+  const foto = Date.parse((d && (d.takenAt || d.generated)) || "");
+  // Sem carimbo legível, o agora é o único relógio que sobra — e errar para o agora é
+  // mostrar menos agentes, não inventar um.
+  if ((d && d.live) || Number.isNaN(foto)) return Date.now();
+  return foto;
+}
+
+// PURA: recebe o dado e o instante de referência, devolve [{nome, cards}] em ordem de
+// nome. `cards` conta TODOS os cards abertos do agente, não só os tocados na janela — é o
+// que aparece na tela quando se clica no chip.
+function agentesAtivos(d, ref) {
+  const corte = ref - JANELA_ATIVO_MS;
+  const por = {};
+  for (const i of d.items || []) {
+    if (i.closed || !i.owner) continue;
+    const a = (por[i.owner] ||= { nome: i.owner, cards: 0, ativo: false });
+    a.cards++;
+    const t = Date.parse(i.updated || "");
+    if (!Number.isNaN(t) && t >= corte) a.ativo = true;
+  }
+  return Object.values(por).filter((a) => a.ativo)
+    .map(({ nome, cards }) => ({ nome, cards }))
+    .sort((a, b) => a.nome.localeCompare(b.nome));
+}
+
+function leAgenteDoHash() {
+  try {
+    const m = /(?:^#|&)agente=([^&]*)/.exec(window.location.hash || "");
+    return m ? decodeURIComponent(m[1]) : "";
+  } catch (e) { return ""; }
+}
+
+function gravaAgenteNoHash(nome) {
+  try {
+    // `replaceState`, e não `location.hash =`: cada clique num chip viraria uma entrada do
+    // histórico, e o "voltar" do navegador passaria a desfazer filtro em vez de sair.
+    history.replaceState(null, "", nome
+      ? "#agente=" + encodeURIComponent(nome)
+      : window.location.pathname + window.location.search);
+  } catch (e) { /* sem history (arquivo local, sandbox): o filtro vale só até recarregar */ }
+}
+
+function rotulasAgentes(d) {
+  const cont = document.getElementById("agentes");
+  const chips = document.getElementById("agentes-chips");
+  const ativos = agentesAtivos(d, referenciaDaAtividade(d));
+  // O ESCOLHIDO FICA NA LISTA mesmo depois de sair da janela. Sem isto o filtro continuaria
+  // valendo sem chip nenhum para desmarcá-lo — o board mostraria meia dúzia de cards e
+  // nada na tela diria por quê.
+  if (agenteAtivo && !ativos.some((a) => a.nome === agenteAtivo)) {
+    const cards = (d.items || []).filter((i) => !i.closed && i.owner === agenteAtivo).length;
+    ativos.push({ nome: agenteAtivo, cards });
+    ativos.sort((a, b) => a.nome.localeCompare(b.nome));
+  }
+  cont.hidden = false;
+  // Recria só quando o CONJUNTO muda — o mesmo cuidado do filtro de label com o foco de
+  // quem navega pelos chips com o teclado.
+  const assinatura = ativos.map((a) => a.nome + ":" + a.cards).join("|");
+  if (chips.dataset.assinatura !== assinatura) {
+    chips.dataset.assinatura = assinatura;
+    chips.innerHTML = ativos.length === 0
+      ? '<span class="sem-agente">nenhum agente ativo nos últimos 30 min</span>'
+      : `<button class="chip" type="button" data-agente="">todos</button>` +
+        ativos.map((a) => `<button class="chip agente" type="button" data-agente="${esc(a.nome)}"
+             title="${a.cards} card(s) aberto(s) de ${esc(a.nome)}">◆ ${esc(a.nome)}<span
+             class="qtd-ag">${a.cards}</span></button>`).join("");
+  }
+  for (const b of chips.querySelectorAll(".chip")) {
+    b.setAttribute("aria-pressed", String(b.dataset.agente === agenteAtivo));
+  }
+}
+
+document.getElementById("agentes-chips").addEventListener("click", (ev) => {
+  const b = ev.target.closest(".chip");
+  if (!b) return;
+  // CLICAR DE NOVO no escolhido desmarca: é o mesmo gesto do filtro de label, e o chip
+  // "todos" é o caminho explícito para o mesmo lugar.
+  const nome = b.dataset.agente || "";
+  agenteAtivo = nome === agenteAtivo ? "" : nome;
+  gravaAgenteNoHash(agenteAtivo);
+  desenha(ULTIMO);
+});
+// O hash também muda por fora — um link colado na mesma aba, o "voltar".
+window.addEventListener("hashchange", () => {
+  agenteAtivo = leAgenteDoHash();
+  desenha(ULTIMO);
+});
+agenteAtivo = leAgenteDoHash();
 
 // --- a ÁRVORE ---
 //

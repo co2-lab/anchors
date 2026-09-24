@@ -321,8 +321,7 @@ func coletaCompleta(repo string) ([]byte, error) {
 			if items == "" {
 				items = "[]"
 			}
-			return []byte(fmt.Sprintf(`{"generated":%q,"items":%s}`,
-				time.Now().UTC().Format(time.RFC3339), items)), nil
+			return montaBoard(items, time.Now()), nil
 		}
 		if ee, ok := err.(*exec.ExitError); ok {
 			return nil, fmt.Errorf("filter the board: %w\n  %s", err, strings.TrimSpace(string(ee.Stderr)))
@@ -346,9 +345,23 @@ func coletaCompleta(repo string) ([]byte, error) {
 	if items == "" {
 		items = "[]"
 	}
-	board := fmt.Sprintf(`{"generated":%q,"items":%s}`,
-		time.Now().UTC().Format(time.RFC3339), items)
-	return []byte(board), nil
+	return montaBoard(items, time.Now()), nil
+}
+
+// montaBoard wraps the items in the `board.json` envelope.
+//
+// `takenAt` IS THE PIPELINE'S FIELD. Only `generated` was here, and the page reads
+// `takenAt`: the local board's header said "foto de Invalid Date". `generated` stays for
+// whoever already read it.
+//
+// `live: true` tells the page this data is LIVE. The agent filter measures "active in the
+// last 30 min" from the snapshot, because the published one can be hours old. Here that
+// would be wrong: the floor and the incremental hand back the same read for minutes while
+// nothing changes, and its stamp would age without the data aging. Counting from the stamp
+// would drop agents who are still working; the page counts from now instead.
+func montaBoard(items string, agora time.Time) []byte {
+	t := agora.UTC().Format(time.RFC3339)
+	return []byte(fmt.Sprintf(`{"generated":%q,"takenAt":%q,"live":true,"items":%s}`, t, t, items))
 }
 
 var _ = os.Getenv // mantém o import quando o corpo muda
