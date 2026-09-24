@@ -2288,17 +2288,17 @@ case "$call" in
   "issue list")
     case "$labels" in
       *anchors:desbloqueia-*) fail unblock ;;
-      *" anchors:to-do"*) echo "$FAKE_CARD" ;;
+      *" anchors:${FAKE_CARD_STATE:-to-do}"*) echo "$FAKE_CARD" ;;
     esac ;;
   "issue view")
     case "$json" in
       labels) case "$jqx" in
           *blocked-by*) fail labels; [ -z "${FAKE_BLOCKED_BY:-}" ] || echo "$FAKE_BLOCKED_BY" ;;
-          *) echo "anchors:to-do" ;;
+          *) echo "anchors:${FAKE_CARD_STATE:-to-do}" ;;
         esac ;;
       state) fail state; echo "${FAKE_STATE:-CLOSED}" ;;
       title) fail title ;;
-      comments) echo "" ;;
+      comments) echo "${FAKE_OWNER:-}" ;;
     esac ;;
   "pr list") fail pr; printf '%s' "${FAKE_PRS:-[]}" | jq -r "$jqx" ;;
 esac
@@ -2862,5 +2862,25 @@ func TestEveryFlowTemplateCarriesTheMarker(t *testing.T) {
 		if !strings.Contains(string(b), MarcadorDeTemplate) {
 			t.Errorf("%s has no %q — once installed, `doctor --fix` never updates it", w.Arquivo, MarcadorDeTemplate)
 		}
+	}
+}
+
+// A card the stale RELEASED in `in-progress` goes back to the queue: the stale keeps the
+// state (moving would presume where the work is), so the claim has to offer it. In
+// blue-eyes 15 released cards sat in `in-progress` for days, offered to nobody.
+// An `in-progress` card with NO declared owner is not taken: someone moved it by hand.
+func TestClaimOffersAReleasedInProgressCard(t *testing.T) {
+	if out, handed := runClaim(t, "FAKE_CARD_STATE=in-progress",
+		"FAKE_OWNER=anchors-owner: (liberado) — sem progresso há mais de 24h"); !handed {
+		t.Errorf("a released in-progress card was not handed out:\n%s", out)
+	}
+	if out, handed := runClaim(t, "FAKE_CARD_STATE=in-progress"); handed {
+		t.Errorf("an in-progress card with no declared owner was taken:\n%s", out)
+	}
+	if out, handed := runClaim(t, "FAKE_CARD_STATE=in-progress", "FAKE_OWNER=anchors-owner: other/agent"); handed {
+		t.Errorf("an in-progress card another agent owns was taken:\n%s", out)
+	}
+	if out, handed := runClaim(t); !handed {
+		t.Errorf("control: a to-do card with no owner must still be handed out:\n%s", out)
 	}
 }

@@ -135,11 +135,24 @@ jobs:
           # `--label` repetido é E, não OU: o card precisa ter a do Anchors E a de estado.
           # O ESCALADO fica de fora — enquanto espera decisão humana, entregá-lo a um
           # agente produziria a revisão que já se sabe que não vai convergir.
-          for estado in "anchors:ready-to-review" "anchors:to-do"; do
+          #
+          # `in-progress` ENTRA, entre os dois: é o card que alguém começou e o stale
+          # LIBEROU (`anchors-owner: (liberado)`). O stale não o devolve a `to-do` —
+          # mover presumiria onde o trabalho está —, e sem este estado na lista o card
+          # ficava fora da fila para sempre. Medido no blue-eyes: 15 cards liberados entre
+          # 16 e 20/09, parados em `in-progress` desde então. Só entra o que tem o
+          # `(liberado)` explícito (ver o `case` do dono): um `in-progress` sem dono
+          # declarado é de alguém que não passou pelo claim, e não é tomado.
+          : > /tmp/andamento.txt
+          for estado in "anchors:ready-to-review" "anchors:in-progress" "anchors:to-do"; do
             gh issue list --state open --label "$LABEL" --label "$estado" \
               --limit 200 --json number,labels \
               --jq '.[] | select([.labels[].name] | (index("anchors:needs-user") or index("anchors:precisa-do-usuario")) | not) | .number' \
-              >> /tmp/disponiveis.txt
+              > /tmp/estado.txt
+            cat /tmp/estado.txt >> /tmp/disponiveis.txt
+            if [ "$estado" = "anchors:in-progress" ]; then
+              cat /tmp/estado.txt >> /tmp/andamento.txt
+            fi
           done
 
           # A ORDEM DE TRABALHO: um card cuja dependência não fechou não pode ser
@@ -339,6 +352,11 @@ jobs:
             # do marcador (`anchors-owner: (liberado) — sem progresso desde …`), e sem ele
             # o padrão exigiria que a linha TERMINASSE em "(liberado)" — nenhum card
             # liberado voltaria à fila, e o board travaria em silêncio.
+            # Um `in-progress` só é tomado com o `(liberado)` EXPLÍCITO (ver a lista acima).
+            if [ -z "$dono" ] && grep -qx "$n" /tmp/andamento.txt; then
+              echo "· #$n está em andamento sem dono declarado — não é tomado"
+              continue
+            fi
             case "$dono" in
               ""|*"(liberado)"*)
                 livre="$n"

@@ -634,11 +634,11 @@ func reportClaimWithoutCard(out board.ClaimOutcome) error {
 		fmt.Printf("the claim did not finish within %s — it is still queued behind other claims, "+
 			"or the pipeline is stuck.\n", board.DefaultClaimTimeout)
 		fmt.Printf("  follow it:  %s\n", runRef)
-		fmt.Printf("  then run `anchors next` again: it waits for this same claim and does NOT "+
+		fmt.Printf("  then run `anchors next` again: it waits for this same claim and does NOT " +
 			"dispatch another while it is pending.\n")
 		return nil
 	case out.Run != nil && out.Run.Conclusion == "success":
-		fmt.Printf("the claim ran and handed you no card: no free card on the board (or the "+
+		fmt.Printf("the claim ran and handed you no card: no free card on the board (or the " +
 			"project is frozen).\n")
 		fmt.Printf("  why:  %s\n", runRef)
 		return nil
