@@ -2292,7 +2292,9 @@ while [ $# -gt 0 ]; do
 done
 fail() { if [ "${FAKE_FAIL:-}" = "$1" ]; then echo "gh: HTTP 502" >&2; exit 1; fi; }
 case "$call" in
-  "api graphql") printf '%s' "${FAKE_MINE:-}" ;;
+  "api graphql")
+    if [ -n "${FAKE_GRAPHQL:-}" ]; then printf '%s' "$FAKE_GRAPHQL" | jq -r "$jqx"
+    else printf '%s' "${FAKE_MINE:-}"; fi ;;
   "api "*) exit 1 ;;
   "issue list")
     case "$labels" in
@@ -2953,5 +2955,22 @@ func TestClaimDoesNotReofferAHandReleasedCardInFlight(t *testing.T) {
 	// A to-do card released by hand is still free: nothing is in flight there.
 	if out, handed := runClaim(t, "FAKE_OWNER=anchors-owner: (liberado)"); !handed {
 		t.Errorf("a to-do card released by hand must stay claimable:\n%s", out)
+	}
+}
+
+// A card WAITING ON A PERSON is not the agent's open work: the own-card lookup skips
+// `needs-user` too. blue-eyes #651, parked after a rejected review, went back to the same
+// agent on every `anchors next`. Runs the workflow's real jq over GraphQL-shaped data.
+func TestClaimOwnCardLookupSkipsEscalated(t *testing.T) {
+	page := func(extra string) string {
+		return `{"data":{"repository":{"issues":{"nodes":[{"number":9,` +
+			`"labels":{"nodes":[{"name":"anchors"},{"name":"anchors:in-review"}` + extra + `]},` +
+			`"comments":{"nodes":[{"body":"anchors-owner: machine/session"}]}}]}}}}`
+	}
+	if out, _ := runClaim(t, "FAKE_GRAPHQL="+page("")); !strings.Contains(out, "#9") {
+		t.Errorf("control: the agent's own card #9 was not resumed:\n%s", out)
+	}
+	if out, _ := runClaim(t, "FAKE_GRAPHQL="+page(`,{"name":"anchors:needs-user"}`)); strings.Contains(out, "#9") {
+		t.Errorf("a card waiting on a person was resumed as the agent's own work:\n%s", out)
 	}
 }

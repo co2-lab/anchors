@@ -121,6 +121,10 @@ jobs:
           # comentários de 200 cards numa consulta só estourava o GraphQL: medido no
           # blue-eyes, com 114 cards abertos, `502` em toda execução — nenhum card era
           # entregue. É a mesma consulta que o `anchors next` usa desde a v0.1.160.
+          # O ESCALADO fica de fora também aqui, e não só na lista de candidatos: um card
+          # esperando decisão de gente não é "o meu trabalho em aberto". Medido no
+          # blue-eyes: o #651, estacionado com `needs-user` depois de o revisor reprovar o
+          # PR, voltava ao mesmo agente a cada `anchors next`, somando "## Revisão N".
           meu=$(gh api graphql --paginate \
             -f owner="${GH_REPO%%/*}" -f name="${GH_REPO#*/}" -f label="$LABEL" \
             -f query='query($owner: String!, $name: String!, $label: String!, $endCursor: String) {
@@ -134,6 +138,7 @@ jobs:
             --jq ".data.repository.issues.nodes[]
                    | select([.labels.nodes[].name] | any(. == \"anchors:to-do\" or . == \"anchors:in-progress\"
                              or . == \"anchors:ready-to-review\" or . == \"anchors:in-review\"))
+                   | select([.labels.nodes[].name] | any(. == \"anchors:needs-user\" or . == \"anchors:precisa-do-usuario\") | not)
                    | select([.comments.nodes[].body | select(startswith(\"anchors-owner:\"))] | last == \"anchors-owner: $AGENT\")
                    | .number" | head -1)
 
