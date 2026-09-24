@@ -171,6 +171,25 @@ If your review rejects, the card stays where it is and the author sees the verdi
 label to write: the wrong state is more expensive than the late state, because the
 late one corrects itself at the pipeline's next event.
 
+## YOUR VERDICT IS A LINE ON THE PR
+
+The platform's "approve" does not reach the pipeline: the agents on one machine share an
+account, and GitHub refuses an approval of your own PR. What the pipeline reads is a line
+of its own, at the start of a line, in a comment on the PR:
+
+    anchors-review: approved by <you>
+    anchors-review: rejected by <you>
+
+` + "`<you>`" + ` is the name in your ` + "`anchors-owner:`" + ` line on the card. The line sets the PR's
+` + "`anchors/review`" + ` status: green on ` + "`approved`" + `, red on ` + "`rejected`" + `, and pending until
+it is posted. A project that requires that status cannot merge before your verdict; one
+that merges anyway gets a comment on the card saying the PR merged without the review
+outcome, naming you.
+
+Only the reviewer the claim assigned counts, and only a line posted after the assignment —
+a verdict from an earlier round does not approve this one. Changed your mind? Post a new
+line; the last one wins. Inside a code block the line is an example, not a verdict.
+
 ## Pontos de conformidade
 
 The list exists so that nothing is missed by FORGETTING. Each point distils a question
@@ -231,6 +250,9 @@ These are the ones no script reaches.
 - REV-CK14: the card's state label was NOT moved by hand — who moves it is the pipeline,
   and it moves by FACT; a wrong state costs more than a late one, because the late one
   corrects itself at the next event
+- REV-CK15: the verdict was posted as the line ` + "`anchors-review: approved|rejected by <you>`" + `
+  on the PR — a review that ends in prose alone leaves ` + "`anchors/review`" + ` pending, and the
+  merge records the PR as merged without the review outcome
 
 ## When you finish
 

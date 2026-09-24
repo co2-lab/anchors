@@ -306,6 +306,41 @@ O que descreve o **projeto** nasce fora dali. O SBOM é o exemplo: ele estava em
 enquanto era gravado numa pasta destinada a ser ignorada. Hoje nasce na raiz. A
 distinção não é *quem gerou* o arquivo, é **o que ele descreve**.
 
+
+## 7.2 The review is a commit status the merge can see
+
+Decided in blue-eyes #835 and #782. Before, a PR could be merged while the review the
+pipeline itself had assigned was still running, and the merge moved the card to
+`ready-to-test` all the same: the review was a column on the board, not a fact the merge
+button could see.
+
+`anchors-pr-checks.yml` publishes the commit status **`anchors/review`** on the PR head:
+
+| status | when |
+| --- | --- |
+| `pending` | the card went to `ready-to-review` (the review is owed), or the assigned reviewer has not posted a verdict yet |
+| `success` | only when the **assigned** reviewer posted, on the PR, `anchors-review: approved by <reviewer>` |
+| `failure` | when that reviewer posted `anchors-review: rejected by <reviewer>` |
+
+- **The assigned reviewer** is the card's `anchors-owner:` at the moment the claim last
+  moved it to `in-review`. A verdict posted before that moment belongs to an earlier
+  round, and a verdict signed by anyone else does not count.
+- **The line** stands at the start of a line, outside code blocks, in a comment by someone
+  with write access. The last one wins. `anchors guide review` teaches it.
+- **A card back in `ready-to-review`** is `pending` again, whatever the earlier round said.
+- **A PR that declares no card** gets no status: no review was assigned to it.
+
+**Requiring it is the project's decision.** Adding `anchors/review` to the required status
+checks of the integration branch makes the merge wait for the verdict — and routes every
+PR through a card, since a PR without one never gets the status. `anchors doctor --fix`
+does not require it (its protection body leaves `required_status_checks` null). A merge
+with `--admin` still goes through; the merger sees the status red or pending.
+
+**A merge without the outcome is not silent.** The card still moves to `ready-to-test` —
+the work landed, and the board must not contradict the repository — but it gets a comment
+saying PR #N merged without the review outcome, with the status it had and the reviewer's
+name.
+
 ---
 
 ## 8. O que existe hoje
