@@ -415,7 +415,7 @@
   "gate.mock_stamped.skip_no_mock_detect": "el proyecto no declara `derived.mock_detect` — Anchors no sabe reconocer un doble de prueba en este ecosistema, y adivinar reportaría verde sobre lo no verificado",
   "gate.mock_stamped.fail_missing_stamps": "%d doble(s) de prueba sin sello de contrato: %s.\n\nSin sello no hay qué recalcular — el doble puede reproducir un contrato que ya cambió y nada avisa. Selle el fragmento que sustituye: `// @contract: <archivo> | <línea que abre el fragmento> | <cant de líneas> | <hash>`",
   "gate.mock_stamped.skip_no_governed_modules": "el test no simula módulo gobernado — no hay sello que exigir",
-  "gate.mock_stamped.stamp_diff_line": "`%s` — sello %s, contrato hoy %s",
+  "gate.mock_stamped.stamp_diff_line": "%s: `%s` — sello %s, contrato hoy %s",
   "gate.mock_stamped.fail_drift": "%d sello(s) no coinciden con el módulo real:\n  - %s\n\nEl fragmento cambió después de que se escribió este doble — ahora reproduce un contrato que ya no existe, y el test pasa sobre la versión antigua. Verifique qué cambió, ajuste el doble y actualice el sello (o registre la divergencia deliberada con una razón escrita al lado)",
   "gate.mock_stamped.err_module_not_found": "módulo no encontrado: %s",
   "gate.mock_stamped.err_anchor_not_found": "ancla no encontrada — el fragmento fue renombrado o eliminado",

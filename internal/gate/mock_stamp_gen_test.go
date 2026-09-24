@@ -266,3 +266,42 @@ func TestGenerateStamps_newKeyOnAStampedDoubleGetsAStamp(t *testing.T) {
 		t.Errorf("a member inside a whole-module stamp got a stamp of its own: %+v", extra)
 	}
 }
+
+// WHOEVER CHANGES A MODULE SEES THE DOUBLES IT BREAKS. `TestsStamping` finds the tests whose
+// stamps point at a file, so `check --changed <module>` checks them in the same commit; the
+// drift message names the module file, so the author knows which change caused it.
+func TestTestsStamping_findsTheDoublesOfAChangedModule(t *testing.T) {
+	test := "jest.mock('@/src/hooks/balance', () => ({\n  useBalance: jest.fn(),\n}))\n\nit('shows', () => {})\n"
+	other := "jest.mock('@/src/hooks/other', () => ({}))\nit('x', () => {})\n"
+	root, g := stampProject(t, map[string]string{
+		"apps/mobile/src/hooks/balance.ts":       realHooks,
+		"apps/mobile/src/hooks/other.ts":         "export function other() {}\n",
+		"apps/mobile/src/screens/Home.test.tsx":  test,
+		"apps/mobile/src/screens/Other.test.tsx": other,
+	})
+	testID := "apps/mobile/src/screens/Home.test.tsx"
+	stamped, _, _, err := GenerateStamps(test, testID, root, g, stampCfg())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, testID), []byte(stamped), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	got := TestsStamping(g, root, "apps/mobile/src/hooks/balance.ts")
+	if len(got) != 1 || got[0] != testID {
+		t.Fatalf("the test stamping balance.ts should be found, and only it: %v", got)
+	}
+	if got := TestsStamping(g, root, "apps/mobile/src/hooks/other.ts"); len(got) != 0 {
+		t.Errorf("no stamp points at other.ts (its double is unstamped): %v", got)
+	}
+
+	changed := strings.Replace(realHooks, "['balance', id]", "['balance', id, 'v2']", 1)
+	if err := os.WriteFile(filepath.Join(root, "apps/mobile/src/hooks/balance.ts"), []byte(changed), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	v, msg := checkMockStamped(stamped, mapx.Node{ID: testID, Kind: mapx.KindTest}, root, g, stampCfg())
+	if v != Fail || !strings.Contains(msg, "apps/mobile/src/hooks/balance.ts") {
+		t.Errorf("the drift must fail and name the module file, got %v: %s", v, msg)
+	}
+}

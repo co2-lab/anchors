@@ -415,7 +415,7 @@
   "gate.mock_stamped.skip_no_mock_detect": "o projeto não declara `derived.mock_detect` — o Anchors não sabe reconhecer um dublê neste ecossistema, e adivinhar reportaria verde sobre o que não conferiu",
   "gate.mock_stamped.fail_missing_stamps": "%d dublê(s) sem carimbo de contrato: %s.\n\nSem carimbo não há o que recalcular — o dublê pode reproduzir um contrato que já mudou e nada acusa. Carimbe o trecho que ele substitui: `// @contract: <arquivo> | <linha que abre o trecho> | <qtd de linhas> | <hash>`",
   "gate.mock_stamped.skip_no_governed_modules": "o teste não dubla módulo regido — não há carimbo a cobrar",
-  "gate.mock_stamped.stamp_diff_line": "`%s` — carimbo %s, contrato hoje %s",
+  "gate.mock_stamped.stamp_diff_line": "%s: `%s` — carimbo %s, contrato hoje %s",
   "gate.mock_stamped.fail_drift": "%d carimbo(s) não batem com o módulo real:\n  - %s\n\nO trecho mudou depois que este dublê foi escrito — ele agora reproduz um contrato que não existe mais, e o teste passa sobre a versão antiga. Confira o que mudou, ajuste o dublê e atualize o carimbo (ou registre a divergência deliberada com uma razão escrita ao lado)",
   "gate.mock_stamped.err_module_not_found": "módulo não encontrado: %s",
   "gate.mock_stamped.err_anchor_not_found": "âncora não encontrada — o trecho foi renomeado ou removido",

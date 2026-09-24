@@ -91,7 +91,7 @@ func checkMockStamped(content string, n mapx.Node, root string, g *mapx.Graph, c
 		}
 		if atual != c.hash {
 			divergentes = append(divergentes, fmt.Sprintf(i18n.T("gate.mock_stamped.stamp_diff_line"),
-				c.anchor, c.hash, atual))
+				c.file, c.anchor, c.hash, atual))
 		}
 	}
 	if len(divergentes) == 0 {
@@ -244,6 +244,37 @@ func detectedDoubles(content string, re *regexp.Regexp) []string {
 	for _, m := range re.FindAllStringSubmatch(content, -1) {
 		if len(m) > 1 && strings.TrimSpace(m[1]) != "" {
 			out = append(out, m[1])
+		}
+	}
+	return out
+}
+
+// TestsStamping returns the test nodes whose `@contract` stamps point at `file`.
+//
+// It is what makes the person who CHANGES a module see the doubles it breaks. The gate
+// recomputes a stamp when the TEST is checked, and a `check --changed` of the module
+// alone never checked its tests: the drift surfaced days later, to whoever next touched
+// one of them, far from the change that caused it. With these tests in the impact of the
+// changed module, the same pre-commit that commits the change lists every double that now
+// reproduces the old contract — and the author updates them in the same commit.
+func TestsStamping(g *mapx.Graph, root, file string) []string {
+	if g == nil || file == "" {
+		return nil
+	}
+	var out []string
+	for _, n := range g.Nodes {
+		if n.Kind != mapx.KindTest {
+			continue
+		}
+		b, err := os.ReadFile(filepath.Join(root, n.ID))
+		if err != nil || !strings.Contains(string(b), "@contract:") {
+			continue
+		}
+		for _, c := range declaredStamps(string(b)) {
+			if filepath.ToSlash(c.file) == filepath.ToSlash(file) {
+				out = append(out, n.ID)
+				break
+			}
 		}
 	}
 	return out

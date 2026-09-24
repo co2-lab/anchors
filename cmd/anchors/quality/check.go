@@ -818,6 +818,14 @@ func impactOf(g *mapx.Graph, cfg *config.Config, changed, root string) ([]string
 			ids[peca] = true
 		}
 	}
+	// THE TESTS THAT STAMP THIS FILE enter too: a double stamped against the old version
+	// of a module is stale the moment the module changes, and the `mock-stamped` gate only
+	// sees it when the TEST is checked. Without them the drift reached whoever touched the
+	// test next, far from the change; with them, the commit that changes the module lists
+	// every double to update.
+	for _, t := range gate.TestsStamping(g, root, target) {
+		ids[t] = true
+	}
 	out := make([]string, 0, len(ids))
 	for id := range ids {
 		out = append(out, id)
