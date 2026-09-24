@@ -109,6 +109,8 @@ type File struct {
 	// fase. Um só: pertencimento é uma relação de um pai, ao contrário de `needs`, que é
 	// lista porque uma coisa pode depender de várias.
 	Parent string
+	// Upstream: the file is a copy Anchors seeded and still owns — see IsUpstreamOwned.
+	Upstream bool
 	// Revises são os planos que ESTE revisa — caminhos, como o `needs`.
 	Revises []string
 	// Realizes: as REGRAS DE DOUTRINA DE PRODUTO que as regras desta spec concretizam,
@@ -222,11 +224,18 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 			GatedBy:       extractGatedBy(kind, string(content)),
 			Needs:         needsFor(kind, content, root, rel),
 			Parent:        parentDe(content),
+			Upstream:      IsUpstreamOwned(rel, content),
 			Revises:       revisesDe(kind, content, root, rel),
 			NoPropagation: noPropRE.Match(content),
 			SharedCode:    sharedCodeRE.Match(content),
 			Deps:          depsFor(kind, content, root, rel),
 		})
+		// A vendored pipeline's scenario codes are examples in ITS comments — the Anchors
+		// project's vocabulary, not a claim on this project's units. Counting them would
+		// give the file an inferred identity it does not own.
+		if f := &out[len(out)-1]; f.Upstream {
+			f.Codes = nil
+		}
 		return nil
 	})
 	return out, err
@@ -605,8 +614,13 @@ func revisesDe(kind string, content []byte, root, rel string) []string {
 // Vale para qualquer kind: uma spec pertence a uma fase, uma fase a um plano, e um plano
 // pode pertencer a outro num projeto que agrupe por épico. A hierarquia é livre porque a
 // forma de organizar trabalho varia, e o Anchors não tem por que impor uma.
+//
+// ONLY INSIDE THE `@anchors` HEADER. The pattern alone matched any line starting with
+// `parent:` — measured in blue-eyes: `anchors-board.yml` carries a jq program whose line
+// `parent: ([$cod[0][] | select(...) | .parent // "")] | first // "")` became the node's
+// parent in the map, and the tree hung the workflow under a jq expression.
 func parentDe(content []byte) string {
-	m := headerParentRE.FindSubmatch(content)
+	m := headerParentRE.FindSubmatch(AnchorsHeader(content))
 	if m == nil {
 		return ""
 	}

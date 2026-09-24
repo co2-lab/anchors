@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:47df5354e7cdaef2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:896acc52f7490751 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -457,6 +457,8 @@ teste prova.
 - [The entry point that knows the sweep kind honours the full-sweep scope](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B20`
 
 - [The entry point that honours a waiver by target keeps the gate running](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B21`
+
+- [A vendored file is out of every internal ruler and still reached by an external command](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B22`
 
 - [A waiver by target never removes the gate from the list](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I01`
 
@@ -1171,6 +1173,24 @@ teste prova.
 - [A revised rule is never its own orphan](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-I01`
 
 - [Terms shared by the whole unit do not discriminate](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-X01`
+
+- [A revision the branch added whose number the base already uses moves to the next free number](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B01`
+
+- [After a rebase, only the branch's revision moves, not the base's with the same number](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B02`
+
+- [When one added revision collides, every added revision of that code moves in order](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B03`
+
+- [A revision the branch added whose number the base does not use stays](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B04`
+
+- [A citation is rewritten only on a line the branch added](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B05`
+
+- [The branch adding the same number twice is refused, naming the code](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B06`
+
+- [A revision the base has is never renumbered, even with its explanation edited](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-I01`
+
+- [Rewriting is one pass, and a chain of renames never cascades](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-I02`
+
+- [Does not rewrite a revision cited without its unit code](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-X01`
 
 - [An artifact that is not a screen leaves without a verdict, and says why](camadas/gate.md#rtdcl--routedeclared--a-screen-declares-how-one-arrives-and-names-its-neighbours) `RTDCL-B01`
 

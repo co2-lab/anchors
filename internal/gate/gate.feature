@@ -148,6 +148,13 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     When the entry point that honours it is called over several nodes
     Then the gate produces a verdict for every node, one of them spared
 
+  @GTENG-B22 @unit-level
+  Scenario: A vendored file is out of every internal ruler and still reached by an external command
+    Given a pipeline Anchors seeded, still carrying its template marker
+    When an internal ruler and an external command are routed
+    Then the internal ruler does not reach it
+    And the external command does
+
   @GTENG-I01 @unit-level
   Scenario: A waiver by target never removes the gate from the list
     Given a waiver naming one of two applicable nodes

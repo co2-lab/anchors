@@ -105,3 +105,17 @@ func TestAnchorCodeByDerived_ligaPeloStem(t *testing.T) {
 		t.Errorf("Outra.test.ts recebeu %q — o stem não casa, e o código da vizinha não é dele", c)
 	}
 }
+
+// A VENDORED pipeline has no local identity, whatever its text quotes: blue-eyes'
+// `anchors-board.yml` entered the map as `FNDTN`, the code of a plan it merely cites.
+func TestNodeCode_upstreamHasNone(t *testing.T) {
+	f := scan.File{Path: ".github/workflows/anchors-board.yml", Upstream: true,
+		HeaderCode: "FNDTN", Codes: []string{"FNDTN-F04"}}
+	if got := nodeCode(f, map[string]string{f.Path: "ABCDX"}); got != "" {
+		t.Fatalf("an upstream-owned file gets no local code, got %q", got)
+	}
+	g := Build([]scan.File{f}, &config.Config{}, nil)
+	if n := g.Nodes[0]; !n.Upstream || n.Code != "" {
+		t.Fatalf("the node should be upstream with no code, got upstream=%v code=%q", n.Upstream, n.Code)
+	}
+}

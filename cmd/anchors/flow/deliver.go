@@ -10,6 +10,7 @@ import (
 	"github.com/co2-lab/anchors/internal/board"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 
 	"github.com/co2-lab/anchors/internal/change"
 	"github.com/spf13/cobra"
@@ -125,6 +126,24 @@ After this, the watcher queues the review task.`,
 			// existia; o watcher, que o veria, não estava rodando — porque naquele modo
 			// ele não é o mecanismo. É a mesma regra que o `next` aprendeu na v0.1.55.
 			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+			// A VENDORED pipeline has no card here: its code, its spec and its board live
+			// upstream, in the Anchors project that seeded it. Demanding the unit's code
+			// refused every delivery touching one — measured in blue-eyes, where the map
+			// gives `anchors-claim.yml` no code, as it should.
+			//
+			// In `github` mode there is no card to carry the record, and writing it to
+			// `changes/` instead would be the fallback between modes this command refuses
+			// (see above). So nothing is recorded, and the output says why and what makes
+			// the file the project's. In local mode `changes/` IS the mechanism, and the
+			// record is written as for any unit.
+			upstream := upstreamUnit(absRoot, c.Unit)
+			if upstream && cfg != nil && cfg.GitHubMode() {
+				fmt.Printf("✓ nothing to record: `%s` is an Anchors-seeded pipeline, owned upstream —\n"+
+					"  it has no local code and no card. A change to it belongs to Anchors (`anchors doctor --fix`\n"+
+					"  replaces the file whole); to make it this project's, remove its `%s` line.\n",
+					c.Unit, scan.UpstreamMarker)
+				return nil
+			}
 			if cfg != nil && cfg.GitHubMode() {
 				if err := deliverToBoard(absRoot, cfg, c); err != nil {
 					return err
@@ -224,6 +243,16 @@ func existingPiece(root, rel string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// upstreamUnit says whether the delivered unit is a vendored Anchors pipeline — read from
+// the file itself, not from the map, which may be older than the file.
+func upstreamUnit(root, unit string) bool {
+	b, err := os.ReadFile(filepath.Join(root, unit))
+	if err != nil {
+		return false
+	}
+	return scan.IsUpstreamOwned(unit, b)
 }
 
 // deliverToBoard posta o registro de entrega como comentário na issue da unidade.

@@ -39,7 +39,7 @@ cmd/anchors/
   flow/             # ciclo de tarefas (work, queue, watch, progress, deliver, escalate)
   quality/          # validação e medição (check, verify, doctor, coverage, report)
   governance/       # guias e conformidade (guide, spec_guide, governs, compliance)
-  mapcmd/           # grafo e análise (map, impact, ingest, judge, recode)
+  mapcmd/           # grafo e análise (map, impact, ingest, judge, recode, renumber)
   ops/              # suporte e configuração (init, new, migrate, freeze, settings)
 internal/
   config/           # tabela de marcadores de comentário por linguagem (D4) e regras

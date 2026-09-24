@@ -175,6 +175,11 @@ type Node struct {
 	// dela. Com só uma das duas relações, quem monta a árvore precisa inferir a outra — e
 	// inferir pertencimento a partir de ordem encaixa as fases de um plano numa escada.
 	Parent string `yaml:"parent,omitempty"`
+	// Upstream — the file is a vendored copy Anchors seeded and still owns (a pipeline
+	// under `.github/workflows/` carrying the template marker). Its rules and its spec live
+	// upstream: the node carries no local code, and the internal gates do not charge it a
+	// triad the project could never honestly write.
+	Upstream bool `yaml:"upstream,omitempty"`
 	// Revises — os planos que ESTE revisa (`revises:` no header).
 	Revises []string `yaml:"revises,omitempty"`
 	// Signal — sinais de qualidade INGERIDOS do runner (o Anchors não roda o teste;

@@ -94,6 +94,14 @@ func applies(g config.Gate, n mapx.Node, root string) bool {
 	if !slices.Contains(g.On, string(n.Kind)) {
 		return false
 	}
+	// A VENDORED file is out of every internal ruler. Its triad, header and identity live
+	// upstream, in the Anchors project that seeded it: charging them here asks the project
+	// to write a spec for a file it does not own, and the only way to comply is fiction.
+	// An external command (`run:` — secrets, vulnerable patterns) still reaches it: what the
+	// file DOES in this repository is the project's concern, whoever wrote it.
+	if n.Upstream && g.Run == "" {
+		return false
+	}
 	// A exclusão vem ANTES do filtro positivo, e a ordem é a decisão: um nó excluído fica
 	// fora mesmo que também case uma tag do `tags`. Camadas costumam carregar rótulos
 	// transversais (`backend`, `code`) junto com o seu próprio, então a exceção precisa
