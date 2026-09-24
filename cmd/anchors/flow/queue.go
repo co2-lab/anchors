@@ -645,7 +645,7 @@ func nextFromBoard(root string, cfg *config.Config, agent string) error {
 	fmt.Printf("card claimed: #%d — %s\n\n", card.Number, card.Title)
 	fmt.Printf("  state:    %s\n", strings.TrimPrefix(card.State, "anchors:"))
 	fmt.Printf("  owner:    %s\n\n", agent)
-	printBoardWork(root, card)
+	printBoardWork(root, card, agent)
 	return nil
 }
 
@@ -688,7 +688,7 @@ func reportClaimWithoutCard(out board.ClaimOutcome) error {
 // as 84 issues deste tipo ficaram em `to-do` enquanto o agente concluía que o projeto tinha
 // terminado — o `next` não as via (lia a fila local), e nada no card dizia que a
 // implementação são quatro entregas, nem que o teste nasce da feature.
-func printBoardWork(root string, card *board.Card) {
+func printBoardWork(root string, card *board.Card, agent string) {
 	// O ESTADO manda, e o título é o assunto.
 	//
 	// Um card em `in-review` está com a revisão por fazer — e as instruções de
@@ -696,7 +696,7 @@ func printBoardWork(root string, card *board.Card) {
 	// trinca completa, recebeu "ENTREGÁVEL: código + feature + teste + documentação" e o
 	// agente foi conferir se tinha esquecido algo. O trabalho que faltava era outro.
 	if card.State == board.StateInReview {
-		printReviewWork(root, card)
+		printReviewWork(root, card, agent)
 		return
 	}
 
@@ -884,7 +884,7 @@ func layerOfPath(root string, cfg *config.Config, caminho string) string {
 // novo. Quem a pula não vê nada faltando — os quatro arquivos estão lá, os gates estão
 // verdes, e o card parece pronto. É exatamente por isso que o texto aqui precisa dizer que
 // o trabalho EXISTE, e qual é.
-func printReviewWork(root string, card *board.Card) {
+func printReviewWork(root string, card *board.Card, agent string) {
 	alvo := targetOfCode(root, codeFromBody(card.Body))
 	if alvo == "" {
 		alvo = unitFromBody(card.Body)
@@ -912,18 +912,29 @@ func printReviewWork(root string, card *board.Card) {
 	fmt.Println("  The delivery record is in the comments of this issue: it is the DECLARED")
 	fmt.Println("  half of the confrontation — what the author says they did, against the disk.")
 	fmt.Println()
-	fmt.Println("  If the review finds nothing, say so and move on. If it finds something, the finding becomes a")
-	fmt.Println("  correction in this card — not a new card.")
+	// THE REVIEW ENDS WITH ONE LINE, and this is the only place the reviewer is told it.
+	//
+	// This used to say "open the PR with `anchors pr-body`" and "the finding becomes a
+	// correction in this card" — implementation instructions, for a card whose deliverable
+	// is a verdict on SOMEONE ELSE's PR. Measured in blue-eyes, 2026-09-24: reviewers posted
+	// "Veredito: OK", stamped `judge --verdict fail`, ran `anchors decided`, and escalated
+	// three "decisions" (#998, #1001, #1009) because `anchors next` kept resuming the card.
+	// None of those ends a review: only the verdict line does. It publishes `anchors/review`
+	// on the PR and releases the reviewer from the card.
+	who := agent
+	if strings.TrimSpace(who) == "" {
+		who = "<your ANCHORS_SESSION agent id>"
+	}
+	fmt.Println("  If it finds something, it is the AUTHOR who corrects it, on their branch: you do not")
+	fmt.Println("  push to it, and you do not open a PR of your own.")
 
 	fmt.Printf("\nBefore starting:   anchors guide review\n")
-	// O CORPO DO PR pelo comando, e não à mão.
-	//
-	// O `Closes #N` é o que fecha o card no merge, e ele é fácil de esquecer quando o
-	// corpo é escrito à mão — medido: o card #319 ficou aberto em `in-progress` depois do
-	// merge, e o #321 fechou sozinho, porque um PR tinha a linha e o outro não. O estado
-	// do board passou a divergir do repositório sem nada acusar.
-	fmt.Printf("When done:         anchors pr-body --cards %d  (brings the `Closes` that closes the card)\n", card.Number)
-	fmt.Printf("                   open the PR with that body — the pipeline moves the card, not you\n")
+	fmt.Printf("When done:         comment on the PR under review, the result first, then ONE line alone:\n")
+	fmt.Printf("                     anchors-review: approved by %s\n", who)
+	fmt.Printf("                     anchors-review: rejected by %s\n", who)
+	fmt.Printf("                   That line is what ends the review: it turns `anchors/review` green or red\n")
+	fmt.Printf("                   and releases you from the card. `judge`, `decided` or a comment without\n")
+	fmt.Printf("                   it do NOT — and `anchors next` keeps resuming this card until it is there.\n")
 }
 
 // ensureLocalDecision pergunta, uma vez, se este agente atua nos cards escalonados.
