@@ -203,3 +203,18 @@ func TestCarimboSemDataAdotaAdeHoje(t *testing.T) {
 		t.Fatalf("carimbo sem data deve adotar a de hoje, senão o buraco se perpetua; veio %q", got)
 	}
 }
+
+// A WAIVER is a person's decision; the mechanical check does not re-validate it. One
+// commit in blue-eyes turned 21 waived judgments into `ok` through this loop.
+func TestStampKeepsAWaiver(t *testing.T) {
+	g := stampGraph()
+	waiver := &Stamp{ValidatedFromRev: "old", ValidatedToRev: "old", ChangedAt: "2026-09-01", Verdict: "waived"}
+	g.Edges[0].Stamp = waiver
+	g.StampEdges([]NodeVerdict{{ID: "A.spec.md"}, {ID: "A.tsx"}}, "2026-09-24")
+	if got := g.Edges[0].Stamp; got.Verdict != "waived" || got.ChangedAt != "2026-09-01" || got.ValidatedFromRev != "old" {
+		t.Fatalf("the waiver was rewritten by the mechanical stamp: %+v", got)
+	}
+	if !g.Stale(g.Edges[0]) {
+		t.Error("the ends changed rev since the waiver, and the edge does not read stale — a person must decide again")
+	}
+}

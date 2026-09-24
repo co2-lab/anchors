@@ -63,6 +63,16 @@ func (g *Graph) StampEdges(verdicts []NodeVerdict, now string) int {
 		if !seen[e.From] || !seen[e.To] {
 			continue
 		}
+		// A WAIVER IS A PERSON'S DECISION, and the mechanical check does not confirm it:
+		// both ends passing their gates says nothing about why a rule was waived. This loop
+		// rewrote `waived` as `ok` on every edge whose ends it confronted — measured in
+		// blue-eyes: one commit touching a feature turned 21 waived plan-chain judgments
+		// into `ok`, dated today, with nobody having looked at them. The waiver is kept
+		// as it was; when an end changes rev it goes stale by itself, and a person decides
+		// again.
+		if e.Stamp != nil && e.Stamp.Verdict == "waived" {
+			continue
+		}
 		verdict := "ok"
 		if failed[e.From] || failed[e.To] {
 			verdict = "issue"
