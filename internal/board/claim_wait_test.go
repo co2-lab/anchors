@@ -54,6 +54,11 @@ func (f *fakeBoard) run(args ...string) ([]byte, error) {
 	case "run list":
 		return json.Marshal(f.runs)
 	case "api graphql":
+		for _, a := range args {
+			if a == "--repo" {
+				return nil, fmt.Errorf("unknown flag: --repo") // what gh answers
+			}
+		}
 		f.polls++
 		if f.onPoll != nil {
 			f.onPoll(f, f.polls)

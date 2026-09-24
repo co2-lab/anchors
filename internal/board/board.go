@@ -112,7 +112,12 @@ type rawCard struct {
 }
 
 func (c Client) gh(args ...string) ([]byte, error) {
-	args = append(args, "--repo", c.Repo)
+	// `gh api` has no `--repo`: the repository goes in the path or the query variables,
+	// and the flag makes gh refuse the call ("unknown flag: --repo"). Measured: every
+	// `anchors next` failed that way with the paginated board query of v0.1.160.
+	if len(args) == 0 || args[0] != "api" {
+		args = append(args, "--repo", c.Repo)
+	}
 	run := c.run
 	if run == nil {
 		run = runGH
