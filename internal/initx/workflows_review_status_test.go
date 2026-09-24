@@ -624,3 +624,40 @@ func TestPRChecksVerdictReleasesTheReviewer(t *testing.T) {
 		t.Errorf("an already released card was released again:\n%s", calls)
 	}
 }
+
+// blue-eyes #988/#989: the body opens with `Refs #13` (a related card, itself in the
+// queue) and ends with `Closes #12` (the card under review). The closing line wins in the
+// review job AND in the mover, whatever the order in the body.
+func TestPRChecksClosingLineWinsOverRefs(t *testing.T) {
+	const body = "Refs #13 · the pattern is there\n\nImplements the thing.\n\nCloses #12\n"
+	related := map[string]any{
+		"labels":   []map[string]string{{"name": "anchors"}, {"name": "anchors:ready-to-review"}},
+		"comments": []any{},
+	}
+
+	t.Run("review: the verdict counts for the closed card", func(t *testing.T) {
+		w := newGHWorld(t)
+		rw := defaultReviewWorld()
+		rw.prBody = body
+		rw.prComments = []map[string]any{
+			prComment("2026-09-20T11:00:00Z", "OWNER", "anchors-review: approved by agent-b"),
+		}
+		w.seedReview(rw)
+		w.fixture("issue_view_13", related)
+		out, calls, _ := w.run(reviewScript(t), map[string]string{"PR": "7", "HEAD_SHA": "abc123"})
+		if state, desc := publishedStatus(calls); state != "success" || !strings.Contains(desc, "card #12") {
+			t.Fatalf("anchors/review = %q (%q), want success on card #12\noutput:\n%s", state, desc, out)
+		}
+	})
+
+	t.Run("mover: the merge moves the closed card, not the referenced one", func(t *testing.T) {
+		w := newGHWorld(t)
+		w.seedMerge("anchors:in-review")
+		w.fixture("pr_view_7", map[string]any{"body": body, "title": "some work", "headRefOid": "abc123"})
+		w.fixture("issue_view_13", related)
+		_, calls, _ := w.run(moverScript(t, mergedEvent), map[string]string{"REVIEW_STATE": "success", "REVIEWER": "agent-b"})
+		if !strings.Contains(calls, "CALL issue edit 12") || strings.Contains(calls, "CALL issue edit 13") {
+			t.Fatalf("the merge must move #12 and leave #13 alone:\n%s", calls)
+		}
+	})
+}

@@ -222,6 +222,11 @@ jobs:
           # (outside code blocks, and only if it carries the Anchors label), then the code
           # in the title.
           corpo=$(gh pr view "$PR" --json body --jq '.body // ""' 2>/dev/null || true)
+          # The line that CLOSES wins over a `Refs`, whatever the order in the body. A body
+          # that opens with `Refs #414` (a related card) and ends with `Closes #968` (the
+          # card under review) resolved #414 — the verdict went to the wrong card and the
+          # status stayed `pending` for good (blue-eyes #988, #989). The mover below and its
+          # "other lines" check use the same order, so the three agree on which is first.
           card=$(printf '%s\n' "$corpo" \
             | sed 's/\r$//' \
             | awk '
@@ -231,6 +236,7 @@ jobs:
                 { print }
               ' \
             | grep -oiE '^[[:space:]]*(refs|closes|fixes|resolves)[[:space:]]+#[0-9]+' \
+            | awk '{ print (tolower($1) == "refs" ? 1 : 0) "\t" $0 }' | sort -s -k1,1n | cut -f2- \
             | grep -oE '[0-9]+' | head -1 || true)
           if [ -n "$card" ]; then
             temLabel=$(gh issue view "$card" --json labels \
@@ -450,6 +456,7 @@ jobs:
                 { print }
               ' \
             | grep -oiE '^[[:space:]]*(refs|closes|fixes|resolves)[[:space:]]+#[0-9]+' \
+            | awk '{ print (tolower($1) == "refs" ? 1 : 0) "\t" $0 }' | sort -s -k1,1n | cut -f2- \
             | grep -oE '[0-9]+' | head -1 || true)
 
           # A LISTA COM VÍRGULA NÃO FECHA O SEGUNDO CARD, e o PR parece que fechou os dois.
@@ -525,6 +532,7 @@ jobs:
                 { print }
               ' \
             | grep -oiE '^[[:space:]]*(refs|closes|fixes|resolves)[[:space:]]+#[0-9]+' \
+            | awk '{ print (tolower($1) == "refs" ? 1 : 0) "\t" $0 }' | sort -s -k1,1n | cut -f2- \
             | grep -oE '[0-9]+' | tail -n +2 || true)
           naoSaoCards=""
           for o in $outros; do
