@@ -30,6 +30,7 @@ import (
 func newDeliverCmd() *cobra.Command {
 	var root, stage, unit, intent, agent, date string
 	var files, decisions, uncovered []string
+	var card int
 
 	cmd := &cobra.Command{
 		Use:   "deliver",
@@ -137,7 +138,7 @@ After this, the watcher queues the review task.`,
 			// the file the project's. In local mode `changes/` IS the mechanism, and the
 			// record is written as for any unit.
 			upstream := upstreamUnit(absRoot, c.Unit)
-			if upstream && cfg != nil && cfg.GitHubMode() {
+			if upstream && cfg != nil && cfg.GitHubMode() && card == 0 {
 				fmt.Printf("✓ nothing to record: `%s` is an Anchors-seeded pipeline, owned upstream —\n"+
 					"  it has no local code and no card. A change to it belongs to Anchors (`anchors doctor --fix`\n"+
 					"  replaces the file whole); to make it this project's, remove its `%s` line.\n",
@@ -145,7 +146,7 @@ After this, the watcher queues the review task.`,
 				return nil
 			}
 			if cfg != nil && cfg.GitHubMode() {
-				if err := deliverToBoard(absRoot, cfg, c); err != nil {
+				if err := deliverToBoard(absRoot, cfg, c, card); err != nil {
 					return err
 				}
 			} else {
@@ -215,6 +216,8 @@ After this, the watcher queues the review task.`,
 	cmd.Flags().StringArrayVar(&uncovered, "uncovered", nil, "what you know is not proven (repeatable)")
 	cmd.Flags().StringVar(&date, "date", "", "YYYY-MM-DD (REQUIRED — Anchors does not read the clock)")
 	cmd.Flags().StringVar(&agent, "agent", "", "who delivered (optional)")
+	cmd.Flags().IntVar(&card, "card", 0, "github mode: the card to record on, instead of finding it by the unit's code "+
+		"(a plan card with no [CODE] in its title, or a change to generated files only)")
 	return cmd
 }
 
@@ -260,20 +263,37 @@ func upstreamUnit(root, unit string) bool {
 // FALHA se não achar a issue, e não cai para o arquivo em silêncio: um registro que
 // deveria estar na issue e foi parar no disco é invisível para quem revisa — exatamente o
 // defeito que este caminho existe para fechar. Melhor o comando parar e dizer o que falta.
-func deliverToBoard(root string, cfg *config.Config, c change.Change) error {
+//
+// `--card` names the card directly. The code lookup cannot find two real cases, and both
+// were measured in blue-eyes: a PLAN card (`[plano] …`) has no `[CODE]` in its title, and a
+// change to generated files only (`docs/`, the map) has no unit in the map. Agents fell
+// back to writing the record by hand, outside the format the reviewer reads.
+func deliverToBoard(root string, cfg *config.Config, c change.Change, cardNumber int) error {
+	cli := board.Client{Repo: cfg.Workflow.Repo, Labels: cfg.Workflow.Labels}
+	if cardNumber > 0 {
+		card, err := cli.FindOpenByNumber(cardNumber)
+		if err != nil {
+			return err
+		}
+		if err := cli.Comment(card.Number, c.Render()); err != nil {
+			return err
+		}
+		fmt.Printf("✓ delivery recorded on issue #%d — %s\n", card.Number, card.Title)
+		return nil
+	}
 	codigo := codeOfUnit(root, c.Unit)
 	if codigo == "" {
 		return fmt.Errorf("could not find the CODE of unit `%s` in the map.\n"+
 			"  In `github` mode the delivery record goes to the ISSUE, and it is the code that\n"+
-			"  identifies it. Run `anchors map build` and check whether the unit is there", c.Unit)
+			"  identifies it. Run `anchors map build` and check whether the unit is there —\n"+
+			"  or name the card with `--card <n>`", c.Unit)
 	}
-	cli := board.Client{Repo: cfg.Workflow.Repo, Labels: cfg.Workflow.Labels}
 	card, err := cli.FindByCode(codigo)
 	if err != nil {
 		return fmt.Errorf("%w.\n"+
 			"  In `github` mode the delivery is recorded on the card issue, and it must\n"+
 			"  exist and be OPEN. If the card was already closed, reopen it — or record the\n"+
-			"  delivery on the card that covers this work", err)
+			"  delivery on the card that covers this work with `--card <n>`", err)
 	}
 	if err := cli.Comment(card.Number, c.Render()); err != nil {
 		return err

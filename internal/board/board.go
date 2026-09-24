@@ -376,6 +376,32 @@ func (c Client) FindByCode(code string) (*Card, error) {
 	return nil, fmt.Errorf("no open issue with `%s` in the title", alvo)
 }
 
+// FindOpenByNumber returns card #n, refusing one that is closed or is not an Anchors card:
+// a delivery recorded there would go to a card nobody reads, or to someone else's issue.
+func (c Client) FindOpenByNumber(n int) (*Card, error) {
+	out, err := c.gh("issue", "view", strconv.Itoa(n), "--json", "number,title,body,labels,state")
+	if err != nil {
+		return nil, err
+	}
+	var r struct {
+		rawCard
+		State string `json:"state"`
+	}
+	if err := json.Unmarshal(out, &r); err != nil {
+		return nil, fmt.Errorf("reading issue #%d: %w", n, err)
+	}
+	labels := labelNames(r.rawCard)
+	if r.State != "OPEN" {
+		return nil, fmt.Errorf("issue #%d is %s — a delivery goes on an OPEN card", n, strings.ToLower(r.State))
+	}
+	for _, l := range c.Labels {
+		if !has(labels, l) {
+			return nil, fmt.Errorf("issue #%d has no `%s` label — it is not an Anchors card", n, l)
+		}
+	}
+	return &Card{Number: r.Number, Title: r.Title, Body: r.Body, Labels: labels}, nil
+}
+
 // Comment posta um comentário numa issue.
 func (c Client) Comment(numero int, corpo string) error {
 	if strings.TrimSpace(corpo) == "" {

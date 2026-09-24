@@ -278,7 +278,7 @@ nodes:
         - test
     - id: cmd/anchors/flow/deliver.go
       kind: code
-      rev: e4f03010f8c0
+      rev: de2f2ad08b83
       updated_at: "2026-09-23"
       code: PRICX
       layer: comando
@@ -1354,6 +1354,12 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/board/find_by_number_test.go
+      kind: test
+      rev: f810e9980674
+      layer: teste
+      tags:
+        - test
     - id: internal/board/gh_test.go
       kind: test
       rev: 95bae9a00dba
@@ -1628,7 +1634,7 @@ nodes:
     - id: internal/doct/scenarios_test.go
       kind: test
       rev: ef3b800cf3a3
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-24"
       code: GLCGL
       layer: teste
       tags:
@@ -4405,16 +4411,16 @@ nodes:
         - test
     - id: internal/mapx/stamp.go
       kind: code
-      rev: 6f4dd18295de
-      updated_at: "2026-09-11"
+      rev: e425b5133736
+      updated_at: "2026-09-24"
       layer: mapa
       tags:
         - nucleo
         - mapa
     - id: internal/mapx/stamp_test.go
       kind: test
-      rev: 7f493a0d6671
-      updated_at: "2026-09-10"
+      rev: 119bd203817c
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
