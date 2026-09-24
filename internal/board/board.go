@@ -367,13 +367,30 @@ func (c Client) FindByCode(code string) (*Card, error) {
 		return nil, fmt.Errorf("reading the issues: %w", err)
 	}
 	alvo := "[" + strings.ToUpper(code) + "]"
+	var achados []rawCard
 	for _, r := range brutos {
 		if strings.Contains(strings.ToUpper(r.Title), alvo) {
-			return &Card{Number: r.Number, Title: r.Title, Body: r.Body,
-				Labels: labelNames(r)}, nil
+			achados = append(achados, r)
 		}
 	}
-	return nil, fmt.Errorf("no open issue with `%s` in the title", alvo)
+	switch len(achados) {
+	case 0:
+		return nil, fmt.Errorf("no open issue with `%s` in the title", alvo)
+	case 1:
+		r := achados[0]
+		return &Card{Number: r.Number, Title: r.Title, Body: r.Body, Labels: labelNames(r)}, nil
+	}
+	// TWO OPEN CARDS WITH THE SAME CODE, and the code alone cannot tell which one this
+	// work belongs to. Picking the first recorded a delivery on the wrong card in
+	// blue-eyes (#995): `[RIMRD]` matched a review card for another PR before the card
+	// that asked for the work. The same rule as above applies — commenting on the wrong
+	// card is worse than not commenting — so the choice goes back to whoever knows it.
+	var lista []string
+	for _, r := range achados {
+		lista = append(lista, fmt.Sprintf("#%d %s", r.Number, r.Title))
+	}
+	return nil, fmt.Errorf("%d open issues have `%s` in the title — name the card with `--card <n>`:\n  %s",
+		len(achados), alvo, strings.Join(lista, "\n  "))
 }
 
 // FindOpenByNumber returns card #n, refusing one that is closed or is not an Anchors card:

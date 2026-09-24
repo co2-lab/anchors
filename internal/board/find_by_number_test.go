@@ -34,3 +34,31 @@ func TestFindOpenByNumber(t *testing.T) {
 		t.Errorf("an issue without the Anchors label was accepted: %v", err)
 	}
 }
+
+// Two open cards with the same code (blue-eyes #995): the code alone cannot say which one
+// the work belongs to, and picking the first recorded the delivery on the wrong card.
+// The lookup refuses and names both, so the agent chooses with `--card <n>`.
+func TestFindByCode_refusesAnAmbiguousCode(t *testing.T) {
+	answer := ""
+	c := Client{Repo: "o/r", Labels: []string{"anchors"}, run: func(args ...string) ([]byte, error) {
+		return []byte(answer), nil
+	}}
+
+	answer = `[{"number":966,"title":"[RIMRD] review of PR #884","body":"","labels":[]},
+	           {"number":887,"title":"[RIMRD] B10 escopo efetivo","body":"","labels":[]},
+	           {"number":12,"title":"[ALTPL] other","body":"","labels":[]}]`
+	_, err := c.FindByCode("RIMRD")
+	if err == nil {
+		t.Fatal("two cards with [RIMRD] and the lookup picked one — the delivery could land on the wrong card")
+	}
+	for _, want := range []string{"#966", "#887", "--card"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("the refusal should name %s: %v", want, err)
+		}
+	}
+
+	answer = `[{"number":887,"title":"[RIMRD] B10","body":"","labels":[]},{"number":12,"title":"[ALTPL] x","body":"","labels":[]}]`
+	if card, err := c.FindByCode("RIMRD"); err != nil || card.Number != 887 {
+		t.Errorf("a single match must still be found: %v %+v", err, card)
+	}
+}
