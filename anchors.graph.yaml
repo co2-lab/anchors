@@ -9383,8 +9383,8 @@ nodes:
         - doc
     - id: WORKFLOW.md
       kind: guide
-      rev: bafabb806fcf
-      updated_at: "2026-09-14"
+      rev: 0d68b36d2fa3
+      updated_at: "2026-09-23"
       layer: doutrina
       tags:
         - doutrina
@@ -9843,7 +9843,7 @@ nodes:
     - id: cmd/anchors/governance/guide_review.go
       kind: code
       rev: 800cbd953d8b
-      updated_at: "2026-09-22"
+      updated_at: "2026-09-23"
       layer: comando
       tags:
         - cli
@@ -9851,7 +9851,7 @@ nodes:
     - id: cmd/anchors/governance/guide_review_test.go
       kind: test
       rev: 798f55361b29
-      updated_at: "2026-09-22"
+      updated_at: "2026-09-23"
       layer: teste
       tags:
         - test
@@ -13320,13 +13320,14 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_review_status_test.go
       kind: test
-      rev: f4c23e270e1a
+      rev: 0a49ce9f8182
+      updated_at: "2026-09-23"
       layer: teste
       tags:
         - test
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: c65e107cf673
+      rev: e1cb724b9393
       updated_at: "2026-09-23"
       layer: teste
       tags:
@@ -13953,14 +13954,14 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindSpec`'
-      dep: DEP1
+      method: '`EdgeSpecifies`'
+      dep: DEP2
     - from: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/code_cataloged.spec.md
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`EdgeSpecifies`'
-      dep: DEP2
+      method: '`KindSpec`'
+      dep: DEP1
     - from: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/code_language.feature
       to: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/code_language_test.go
       type: tested-by
@@ -15729,12 +15730,6 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`RuleType`'
-      dep: DEP1
-    - from: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/rule_types.spec.md
-      to: internal/config/config.go
-      type: depends-on
-      origin: declared
       method: '`CodeLengthPattern`'
       dep: DEP3
     - from: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/rule_types.spec.md
@@ -15743,6 +15738,12 @@ edges:
       origin: declared
       method: '`DefaultRuleLetters`'
       dep: DEP2
+    - from: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/rule_types.spec.md
+      to: internal/config/config.go
+      type: depends-on
+      origin: declared
+      method: '`RuleType`'
+      dep: DEP1
     - from: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/rule_types.spec.md
       to: internal/gate/rule_types_test.go
       type: tested-by
@@ -16231,6 +16232,12 @@ edges:
       to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
+      method: SAIDA-R03
+      dep: TRCMT-B08
+    - from: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/triad_complete.spec.md
+      to: product/declared-ways-out.doctrine.md
+      type: realizes
+      origin: declared
       method: SAIDA-R01
       dep: TRCMT-B07
     - from: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/triad_complete.spec.md
@@ -16238,12 +16245,6 @@ edges:
       type: realizes
       origin: declared
       method: SAIDA-R02
-      dep: TRCMT-B08
-    - from: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/triad_complete.spec.md
-      to: product/declared-ways-out.doctrine.md
-      type: realizes
-      origin: declared
-      method: SAIDA-R03
       dep: TRCMT-B08
     - from: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/trigger_declared.feature
       to: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/trigger_declared_test.go
@@ -16431,14 +16432,14 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`EdgeSpecifies`'
-      dep: DEP2
+      method: '`KindSpec`'
+      dep: DEP1
     - from: .claude/worktrees/agent-a738e5f2c693ce911/internal/gate/code_cataloged.spec.md
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindSpec`'
-      dep: DEP1
+      method: '`EdgeSpecifies`'
+      dep: DEP2
     - from: .claude/worktrees/agent-a738e5f2c693ce911/internal/gate/code_language.feature
       to: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/code_language_test.go
       type: tested-by
@@ -16859,14 +16860,14 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`Graph`'
-      dep: DEP1
+      method: '`KindTest`'
+      dep: DEP3
     - from: .claude/worktrees/agent-a738e5f2c693ce911/internal/gate/evidence_fresh.spec.md
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindTest`'
-      dep: DEP3
+      method: '`Graph`'
+      dep: DEP1
     - from: .claude/worktrees/agent-a738e5f2c693ce911/internal/gate/external.feature
       to: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/external_test.go
       type: tested-by
@@ -18193,14 +18194,14 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`RuleType`'
-      dep: DEP1
+      method: '`DefaultRuleLetters`'
+      dep: DEP2
     - from: .claude/worktrees/agent-a738e5f2c693ce911/internal/gate/rule_types.spec.md
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`DefaultRuleLetters`'
-      dep: DEP2
+      method: '`RuleType`'
+      dep: DEP1
     - from: .claude/worktrees/agent-a738e5f2c693ce911/internal/gate/rule_types.spec.md
       to: internal/config/config.go
       type: depends-on
@@ -18695,6 +18696,12 @@ edges:
       to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
+      method: SAIDA-R01
+      dep: TRCMT-B07
+    - from: .claude/worktrees/agent-a738e5f2c693ce911/internal/gate/triad_complete.spec.md
+      to: product/declared-ways-out.doctrine.md
+      type: realizes
+      origin: declared
       method: SAIDA-R03
       dep: TRCMT-B08
     - from: .claude/worktrees/agent-a738e5f2c693ce911/internal/gate/triad_complete.spec.md
@@ -18703,12 +18710,6 @@ edges:
       origin: declared
       method: SAIDA-R02
       dep: TRCMT-B08
-    - from: .claude/worktrees/agent-a738e5f2c693ce911/internal/gate/triad_complete.spec.md
-      to: product/declared-ways-out.doctrine.md
-      type: realizes
-      origin: declared
-      method: SAIDA-R01
-      dep: TRCMT-B07
     - from: .claude/worktrees/agent-a738e5f2c693ce911/internal/gate/trigger_declared.feature
       to: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/trigger_declared_test.go
       type: tested-by
@@ -20657,8 +20658,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`RuleType`'
-      dep: DEP1
+      method: '`CodeLengthPattern`'
+      dep: DEP3
     - from: .claude/worktrees/agent-ac62affa0cb62d8b2/internal/gate/rule_types.spec.md
       to: internal/config/config.go
       type: depends-on
@@ -20669,8 +20670,8 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`CodeLengthPattern`'
-      dep: DEP3
+      method: '`RuleType`'
+      dep: DEP1
     - from: .claude/worktrees/agent-ac62affa0cb62d8b2/internal/gate/rule_types.spec.md
       to: internal/gate/rule_types_test.go
       type: tested-by
@@ -21159,6 +21160,12 @@ edges:
       to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
+      method: SAIDA-R02
+      dep: TRCMT-B08
+    - from: .claude/worktrees/agent-ac62affa0cb62d8b2/internal/gate/triad_complete.spec.md
+      to: product/declared-ways-out.doctrine.md
+      type: realizes
+      origin: declared
       method: SAIDA-R03
       dep: TRCMT-B08
     - from: .claude/worktrees/agent-ac62affa0cb62d8b2/internal/gate/triad_complete.spec.md
@@ -21167,12 +21174,6 @@ edges:
       origin: declared
       method: SAIDA-R01
       dep: TRCMT-B07
-    - from: .claude/worktrees/agent-ac62affa0cb62d8b2/internal/gate/triad_complete.spec.md
-      to: product/declared-ways-out.doctrine.md
-      type: realizes
-      origin: declared
-      method: SAIDA-R02
-      dep: TRCMT-B08
     - from: .claude/worktrees/agent-ac62affa0cb62d8b2/internal/gate/trigger_declared.feature
       to: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/trigger_declared_test.go
       type: tested-by
@@ -21787,14 +21788,14 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`Graph`'
-      dep: DEP1
+      method: '`KindTest`'
+      dep: DEP3
     - from: .claude/worktrees/agent-ae600ecb035549a1a/internal/gate/evidence_fresh.spec.md
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindTest`'
-      dep: DEP3
+      method: '`Graph`'
+      dep: DEP1
     - from: .claude/worktrees/agent-ae600ecb035549a1a/internal/gate/external.feature
       to: .claude/worktrees/agent-a20f28d6d6477e7ef/internal/gate/external_test.go
       type: tested-by
@@ -23121,14 +23122,14 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`RuleType`'
-      dep: DEP1
+      method: '`DefaultRuleLetters`'
+      dep: DEP2
     - from: .claude/worktrees/agent-ae600ecb035549a1a/internal/gate/rule_types.spec.md
       to: internal/config/config.go
       type: depends-on
       origin: declared
-      method: '`DefaultRuleLetters`'
-      dep: DEP2
+      method: '`RuleType`'
+      dep: DEP1
     - from: .claude/worktrees/agent-ae600ecb035549a1a/internal/gate/rule_types.spec.md
       to: internal/config/config.go
       type: depends-on
@@ -23623,14 +23624,14 @@ edges:
       to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
-      method: SAIDA-R01
-      dep: TRCMT-B07
+      method: SAIDA-R02
+      dep: TRCMT-B08
     - from: .claude/worktrees/agent-ae600ecb035549a1a/internal/gate/triad_complete.spec.md
       to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
-      method: SAIDA-R02
-      dep: TRCMT-B08
+      method: SAIDA-R01
+      dep: TRCMT-B07
     - from: .claude/worktrees/agent-ae600ecb035549a1a/internal/gate/triad_complete.spec.md
       to: product/declared-ways-out.doctrine.md
       type: realizes
@@ -27957,8 +27958,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`EdgeSpecifies`'
-      dep: DEP2
+      method: '`KindSpec`'
+      dep: DEP1
       stamp:
         validated_from_rev: 0cf3a482b528
         validated_to_rev: f1917b1daf6e
@@ -27968,8 +27969,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindSpec`'
-      dep: DEP1
+      method: '`EdgeSpecifies`'
+      dep: DEP2
       stamp:
         validated_from_rev: 0cf3a482b528
         validated_to_rev: f1917b1daf6e
@@ -28665,8 +28666,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`KindTest`'
-      dep: DEP3
+      method: '`Graph`'
+      dep: DEP1
       stamp:
         validated_from_rev: c34539c2d755
         validated_to_rev: f1917b1daf6e
@@ -28676,8 +28677,8 @@ edges:
       to: internal/mapx/model.go
       type: depends-on
       origin: declared
-      method: '`Graph`'
-      dep: DEP1
+      method: '`KindTest`'
+      dep: DEP3
       stamp:
         validated_from_rev: c34539c2d755
         validated_to_rev: f1917b1daf6e
@@ -30805,6 +30806,17 @@ edges:
       to: internal/config/config.go
       type: depends-on
       origin: declared
+      method: '`CodeLengthPattern`'
+      dep: DEP3
+      stamp:
+        validated_from_rev: 6ab06f981fd1
+        validated_to_rev: fba09dc33d61
+        changed_at: "2026-09-21"
+        verdict: ok
+    - from: internal/gate/rule_types.spec.md
+      to: internal/config/config.go
+      type: depends-on
+      origin: declared
       method: '`DefaultRuleLetters`'
       dep: DEP2
       stamp:
@@ -30818,17 +30830,6 @@ edges:
       origin: declared
       method: '`RuleType`'
       dep: DEP1
-      stamp:
-        validated_from_rev: 6ab06f981fd1
-        validated_to_rev: fba09dc33d61
-        changed_at: "2026-09-21"
-        verdict: ok
-    - from: internal/gate/rule_types.spec.md
-      to: internal/config/config.go
-      type: depends-on
-      origin: declared
-      method: '`CodeLengthPattern`'
-      dep: DEP3
       stamp:
         validated_from_rev: 6ab06f981fd1
         validated_to_rev: fba09dc33d61
@@ -31607,6 +31608,17 @@ edges:
       to: product/declared-ways-out.doctrine.md
       type: realizes
       origin: declared
+      method: SAIDA-R03
+      dep: TRCMT-B08
+      stamp:
+        validated_from_rev: 80986ee2db2b
+        validated_to_rev: df9daf492d2b
+        changed_at: "2026-09-21"
+        verdict: ok
+    - from: internal/gate/triad_complete.spec.md
+      to: product/declared-ways-out.doctrine.md
+      type: realizes
+      origin: declared
       method: SAIDA-R02
       dep: TRCMT-B08
       stamp:
@@ -31620,17 +31632,6 @@ edges:
       origin: declared
       method: SAIDA-R01
       dep: TRCMT-B07
-      stamp:
-        validated_from_rev: 80986ee2db2b
-        validated_to_rev: df9daf492d2b
-        changed_at: "2026-09-21"
-        verdict: ok
-    - from: internal/gate/triad_complete.spec.md
-      to: product/declared-ways-out.doctrine.md
-      type: realizes
-      origin: declared
-      method: SAIDA-R03
-      dep: TRCMT-B08
       stamp:
         validated_from_rev: 80986ee2db2b
         validated_to_rev: df9daf492d2b

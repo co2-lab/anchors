@@ -2443,3 +2443,408 @@ func TestClaimRunNameIsWhatNextLooksFor(t *testing.T) {
 			doc.RunName, want)
 	}
 }
+
+// workflowStep is one parsed step of an embedded template, as the tests below read it.
+type workflowStep struct {
+	Name string            `yaml:"name"`
+	ID   string            `yaml:"id"`
+	If   string            `yaml:"if"`
+	Uses string            `yaml:"uses"`
+	With map[string]string `yaml:"with"`
+	Env  map[string]string `yaml:"env"`
+	Run  string            `yaml:"run"`
+}
+
+type workflowJob struct {
+	Env   map[string]string `yaml:"env"`
+	Steps []workflowStep    `yaml:"steps"`
+}
+
+func parseWorkflow(t *testing.T, name string) map[string]workflowJob {
+	t.Helper()
+	b, err := fs.ReadFile(workflowsFS, "workflows/"+name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc struct {
+		Jobs map[string]workflowJob `yaml:"jobs"`
+	}
+	if err := yaml.Unmarshal(b, &doc); err != nil {
+		t.Fatalf("%s: %v", name, err)
+	}
+	return doc.Jobs
+}
+
+// writeStubs puts executables named after the map keys in a fresh directory, and returns
+// a PATH that finds them before the real ones.
+func writeStubs(t *testing.T, stubs map[string]string) string {
+	t.Helper()
+	dir := t.TempDir()
+	for name, body := range stubs {
+		p := filepath.Join(dir, name)
+		if err := os.WriteFile(p, []byte("#!/usr/bin/env bash\n"+body), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return dir + string(os.PathListSeparator) + os.Getenv("PATH")
+}
+
+// EVERY TEMPLATE THAT INSTALLS ANCHORS PICKS THE VERSION THE SAME WAY.
+//
+// The resolver read `min_version` from anchors.yaml; `gates`, `board` and `identify` used
+// `ANCHORS_VERSION: latest`. A project pinned to a version had three of its pipelines jump
+// to a newer binary on their own while the fourth stayed put — the same repository judged
+// by two different Anchors depending on which workflow ran.
+//
+// The ruler compares the install SCRIPTS byte for byte: one copy that drifts (a new
+// template written from an old one, a fix applied to three of four) fails here.
+func TestEveryTemplateResolvesTheAnchorsVersionTheSameWay(t *testing.T) {
+	entries, err := fs.ReadDir(workflowsFS, "workflows")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var reference, referenceFile string
+	installers := 0
+	for _, e := range entries {
+		b, err := fs.ReadFile(workflowsFS, "workflows/"+e.Name())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(b), "ANCHORS_VERSION") {
+			t.Errorf("%s still declares ANCHORS_VERSION — the version comes from `min_version`", e.Name())
+		}
+		if !strings.Contains(string(b), "gh release download") {
+			continue
+		}
+		installers++
+		var script string
+		for _, job := range parseWorkflow(t, e.Name()) {
+			for _, s := range job.Steps {
+				if strings.Contains(s.Run, "gh release download") {
+					if s.Name != "Instalar o Anchors" {
+						t.Errorf("%s downloads Anchors in step %q, outside the shared install step", e.Name(), s.Name)
+					}
+					script = s.Run
+				}
+			}
+		}
+		if !strings.Contains(script, "min_version") {
+			t.Errorf("%s installs Anchors without reading `min_version`", e.Name())
+		}
+		if reference == "" {
+			reference, referenceFile = script, e.Name()
+			continue
+		}
+		if script != reference {
+			t.Errorf("%s installs Anchors with a script different from %s's — the version "+
+				"rule has to be the same snippet everywhere", e.Name(), referenceFile)
+		}
+	}
+	if installers < 4 {
+		t.Errorf("only %d templates install Anchors; expected gates, board, identify and "+
+			"resolve-queue — the glob or the marker changed and this ruler would pass empty", installers)
+	}
+}
+
+// THE SNIPPET, RUN: `min_version` wins in every spelling the config accepts, and `latest`
+// only when the field is absent.
+//
+// `gh`, `tar`, `sudo` and `anchors` are stubs; what is measured is the TAG handed to
+// `gh release download`.
+func TestInstallSnippetDownloadsTheMinVersion(t *testing.T) {
+	if _, err := exec.LookPath("bash"); err != nil {
+		t.Skip("no bash on PATH")
+	}
+	var script string
+	for _, job := range parseWorkflow(t, "anchors-gates.yml") {
+		for _, s := range job.Steps {
+			if s.Name == "Instalar o Anchors" {
+				script = s.Run
+			}
+		}
+	}
+	if script == "" {
+		t.Fatal("anchors-gates.yml has no `Instalar o Anchors` step")
+	}
+	cases := []struct {
+		name, yaml string // yaml == "-" means no anchors.yaml at all
+		want       string
+	}{
+		{"plain", "version: 4\nmin_version: 0.1.84\n", "v0.1.84"},
+		{"double-quoted", "min_version: \"0.1.84\"\n", "v0.1.84"},
+		{"single-quoted", "min_version: '0.1.84'\n", "v0.1.84"},
+		{"with a v", "min_version: v0.1.84\n", "v0.1.84"},
+		{"trailing comment", "min_version: 0.1.84 # raised for 0.1.80's fix\n", "v0.1.84"},
+		{"absent", "version: 4\n", "v9.9.9"},
+		{"commented out", "# min_version: 0.1.84\n", "v9.9.9"},
+		{"no anchors.yaml", "-", "v9.9.9"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			dir := t.TempDir()
+			got := filepath.Join(dir, "downloaded")
+			if c.yaml != "-" {
+				if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte(c.yaml), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+			path := writeStubs(t, map[string]string{
+				"gh": `case "$1 $2" in
+  "release view") echo v9.9.9 ;;
+  "release download") echo "$3" > "$GOT" ;;
+  *) exit 1 ;;
+esac`,
+				"tar":     "exit 0",
+				"sudo":    "exit 0",
+				"anchors": "exit 0",
+			})
+			cmd := exec.Command("bash", "-c", script)
+			cmd.Dir = dir
+			cmd.Env = append(os.Environ(), "PATH="+path, "GOT="+got)
+			if out, err := cmd.CombinedOutput(); err != nil {
+				t.Fatalf("the install step failed: %v\n%s", err, out)
+			}
+			b, err := os.ReadFile(got)
+			if err != nil {
+				t.Fatalf("nothing was downloaded: %v", err)
+			}
+			if tag := strings.TrimSpace(string(b)); tag != c.want {
+				t.Errorf("downloaded %q, want %q", tag, c.want)
+			}
+		})
+	}
+}
+
+// THE RESOLVER PUSHES ONLY WITH AN APP TOKEN.
+//
+// A push with `GITHUB_TOKEN` leaves every check of the PR at `action_required`: the PR
+// looks green with no Anchors check run (blue-eyes #838). The token has to be minted from
+// the App's secrets, and a step's `if:` cannot read `secrets` — so the presence test lives
+// in the job's `env`, and the step reads `env`.
+func TestResolveQueuePushesOnlyWithAnAppToken(t *testing.T) {
+	job, ok := parseWorkflow(t, "anchors-resolve-queue.yml")["varrer"]
+	if !ok {
+		t.Fatal("the `varrer` job vanished from the resolver")
+	}
+	has := job.Env["ANCHORS_HAS_APP"]
+	if !strings.Contains(has, "secrets.ANCHORS_APP_ID") || !strings.Contains(has, "secrets.ANCHORS_APP_PRIVATE_KEY") {
+		t.Errorf("the job env does not test both App secrets: ANCHORS_HAS_APP=%q", has)
+	}
+	var app, checkout, resolve *workflowStep
+	for i := range job.Steps {
+		s := &job.Steps[i]
+		switch {
+		case strings.HasPrefix(s.Uses, "actions/create-github-app-token@"):
+			app = s
+		case strings.HasPrefix(s.Uses, "actions/checkout@"):
+			checkout = s
+		case strings.Contains(s.Run, "git push"):
+			resolve = s
+		}
+	}
+	if app == nil || checkout == nil || resolve == nil {
+		t.Fatalf("missing a step (app token: %v, checkout: %v, push: %v)", app != nil, checkout != nil, resolve != nil)
+	}
+	if strings.Contains(app.If, "secrets.") || !strings.Contains(app.If, "env.ANCHORS_HAS_APP") {
+		t.Errorf("the App token step must branch on env.ANCHORS_HAS_APP (a step `if:` cannot read secrets): if=%q", app.If)
+	}
+	if app.With["app-id"] == "" || app.With["private-key"] == "" {
+		t.Error("the App token step does not pass the App id and private key")
+	}
+	if tok := checkout.With["token"]; !strings.Contains(tok, "steps."+app.ID+".outputs.token") {
+		t.Errorf("the checkout does not use the App token, so `git push` would push as GITHUB_TOKEN: token=%q", tok)
+	}
+	if cp := resolve.Env["CAN_PUSH"]; !strings.Contains(cp, "steps."+app.ID+".outputs.token") {
+		t.Errorf("CAN_PUSH does not come from the minted token: %q", cp)
+	}
+}
+
+// resolveQueueRepo builds an origin whose `feature` branch conflicts with `develop` only in
+// the generated `anchors.graph.yaml`, and a clone of it where the resolver runs.
+func resolveQueueRepo(t *testing.T) (origin, work string) {
+	t.Helper()
+	root := t.TempDir()
+	origin = filepath.Join(root, "origin.git")
+	seed := filepath.Join(root, "seed")
+	work = filepath.Join(root, "work")
+	git := func(dir string, args ...string) {
+		t.Helper()
+		cmd := exec.Command("git", args...)
+		cmd.Dir = dir
+		cmd.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t",
+			"GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
+		if out, err := cmd.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v\n%s", args, err, out)
+		}
+	}
+	write := func(content string) {
+		if err := os.WriteFile(filepath.Join(seed, "anchors.graph.yaml"), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	git(root, "init", "-q", "--bare", origin)
+	git(root, "init", "-q", "-b", "develop", seed)
+	write("nodes: [a]\n")
+	git(seed, "add", ".")
+	git(seed, "commit", "-q", "-m", "base")
+	git(seed, "push", "-q", origin, "develop")
+	git(seed, "checkout", "-q", "-b", "feature")
+	write("nodes: [a, feature]\n")
+	git(seed, "commit", "-q", "-am", "feature")
+	git(seed, "push", "-q", origin, "feature")
+	git(seed, "checkout", "-q", "develop")
+	write("nodes: [a, other]\n")
+	git(seed, "commit", "-q", "-am", "other")
+	git(seed, "push", "-q", origin, "develop")
+	git(root, "clone", "-q", origin, work)
+	return origin, work
+}
+
+func revParse(t *testing.T, dir, ref string) string {
+	t.Helper()
+	out, err := exec.Command("git", "-C", dir, "rev-parse", ref).Output()
+	if err != nil {
+		t.Fatalf("rev-parse %s: %v", ref, err)
+	}
+	return strings.TrimSpace(string(out))
+}
+
+// runResolveStep runs the resolver's sweep against `work`, with `gh`, `anchors` and `sleep`
+// stubbed. The `gh` stub serves PR #7 on branch `feature`, keeps the comments posted in
+// `state`, and reports them back to the "already commented?" query.
+func runResolveStep(t *testing.T, work, state, canPush string) string {
+	t.Helper()
+	var script string
+	for _, s := range parseWorkflow(t, "anchors-resolve-queue.yml")["varrer"].Steps {
+		if strings.Contains(s.Run, "git push") {
+			script = s.Run
+		}
+	}
+	path := writeStubs(t, map[string]string{
+		"gh": `case "$1 $2" in
+  "pr list") echo 7 ;;
+  "pr view")
+    case "$*" in
+      *headRefName*) echo feature ;;
+      *isCrossRepository*) echo false ;;
+      *comments*) ls "$STATE" | grep -c '^comment-' || true ;;
+    esac ;;
+  "pr comment")
+    n=$(ls "$STATE" | grep -c '^comment-' || true)
+    while [ $# -gt 0 ]; do [ "$1" = --body-file ] && cp "$2" "$STATE/comment-$n"; shift; done ;;
+  *) exit 1 ;;
+esac`,
+		"anchors": `case "$1" in
+  generated-paths) echo 'anchors\.graph\.yaml' ;;
+esac
+exit 0`,
+		"sleep": "exit 0",
+	})
+	cmd := exec.Command("bash", "-c", script)
+	cmd.Dir = work
+	cmd.Env = append(os.Environ(), "PATH="+path, "STATE="+state, "CAN_PUSH="+canPush,
+		"GH_REPO=o/r", "BASE=develop", "GITHUB_STEP_SUMMARY="+filepath.Join(state, "summary"),
+		"GIT_CONFIG_GLOBAL=/dev/null")
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("the resolve step failed: %v\n%s", err, out)
+	}
+	return string(out)
+}
+
+func postedComments(t *testing.T, state string) []string {
+	t.Helper()
+	entries, err := os.ReadDir(state)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var bodies []string
+	for _, e := range entries {
+		if strings.HasPrefix(e.Name(), "comment-") {
+			b, err := os.ReadFile(filepath.Join(state, e.Name()))
+			if err != nil {
+				t.Fatal(err)
+			}
+			bodies = append(bodies, string(b))
+		}
+	}
+	return bodies
+}
+
+// WITHOUT AN APP TOKEN, THE RESOLVER COMMENTS — ONCE — AND PUSHES NOTHING.
+//
+// Run against a real git repository: the PR branch must stay where it was, the comment
+// must carry the exact local commands, and a second sweep (the next merge into the base)
+// must not repeat it.
+func TestResolveQueueWithoutAppTokenCommentsOnceAndDoesNotPush(t *testing.T) {
+	if _, err := exec.LookPath("bash"); err != nil {
+		t.Skip("no bash on PATH")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("no git on PATH")
+	}
+	origin, work := resolveQueueRepo(t)
+	state := t.TempDir()
+	before := revParse(t, origin, "refs/heads/feature")
+
+	runResolveStep(t, work, state, "false")
+
+	// The run summary counts the PR as commented, not as resolved.
+	summary, err := os.ReadFile(filepath.Join(state, "summary"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(summary), "- **0** PR(s) tiveram") ||
+		!strings.Contains(string(summary), "- **1** PR(s) conflict only in generated files") {
+		t.Errorf("the summary does not count the PR as commented-not-resolved:\n%s", summary)
+	}
+	if after := revParse(t, origin, "refs/heads/feature"); after != before {
+		t.Error("the resolver PUSHED without an App token — the PR would look green with no Anchors check run")
+	}
+	comments := postedComments(t, state)
+	if len(comments) != 1 {
+		t.Fatalf("want exactly one comment on the PR, got %d", len(comments))
+	}
+	body := comments[0]
+	for _, want := range []string{
+		"<!-- anchors:resolve-queue:resolve-locally -->",
+		"- `anchors.graph.yaml`",
+		"git checkout feature\n",
+		"git merge --no-commit origin/develop\n",
+		"anchors map build\nanchors docs build\n", // map BEFORE docs: the docs read the map
+		"git commit --no-edit\n",
+		"ANCHORS_APP_ID",
+	} {
+		if !strings.Contains(body, want) {
+			t.Errorf("the comment lacks %q:\n%s", want, body)
+		}
+	}
+
+	runResolveStep(t, work, state, "false")
+	if n := len(postedComments(t, state)); n != 1 {
+		t.Errorf("the second sweep commented again: %d comments — every merge into the base "+
+			"would add one more to the same PR", n)
+	}
+}
+
+// WITH AN APP TOKEN, THE RESOLVER KEEPS RESOLVING: it pushes the merge, and says nothing.
+func TestResolveQueueWithAppTokenPushes(t *testing.T) {
+	if _, err := exec.LookPath("bash"); err != nil {
+		t.Skip("no bash on PATH")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("no git on PATH")
+	}
+	origin, work := resolveQueueRepo(t)
+	state := t.TempDir()
+	before := revParse(t, origin, "refs/heads/feature")
+
+	runResolveStep(t, work, state, "true")
+
+	if after := revParse(t, origin, "refs/heads/feature"); after == before {
+		t.Error("with an App token the resolver did not push the resolution")
+	}
+	if n := len(postedComments(t, state)); n != 0 {
+		t.Errorf("with an App token the resolver also commented (%d) — the comment is the fallback", n)
+	}
+}

@@ -14,6 +14,19 @@
 #
 # Este workflow fecha o ciclo: o gatilho passa a ser o `push` no `develop`, que é onde o
 # conflito de fato nasce.
+#
+# IT PUSHES ONLY WITH A GITHUB APP TOKEN. Without one, it comments instead.
+#
+# A push made with `GITHUB_TOKEN` does not start the PR's workflows the normal way: GitHub
+# leaves every check of that PR at `action_required`, so the PR looks green with NO
+# Anchors check run — the resolution would land unverified and look verified. MEASURED
+# (blue-eyes #838).
+#
+# So: set the `ANCHORS_APP_ID` and `ANCHORS_APP_PRIVATE_KEY` secrets (a GitHub App
+# installed on this repository with Contents: write — plus Workflows: write if merges
+# from the integration branch can touch `.github/workflows/`) and the job pushes with a
+# token minted from them, whose push DOES trigger the checks. Without them, the job
+# pushes nothing: it comments on the PR, once, with the commands to resolve it locally.
 name: anchors · a fila se resolve depois do merge
 
 on:
@@ -28,9 +41,10 @@ concurrency:
   group: anchors-resolve-queue
   cancel-in-progress: false
 
+# `pull-requests: write` for the resolve-locally comment when no App token is set.
 permissions:
   contents: write
-  pull-requests: read
+  pull-requests: write
 
 jobs:
   varrer:
@@ -44,11 +58,32 @@ jobs:
     # Dez minutos é folga para o limite abaixo (3 PRs, ~2min cada). Passar disso é
     # travamento, não trabalho.
     timeout-minutes: 10
+    # WHY TWO SECRETS FOR AN APP, AND NOT ONE `ANCHORS_PUSH_TOKEN`: an App installation
+    # token expires in an hour, so it cannot be stored — it has to be minted on each run
+    # from the App's id and private key (`actions/create-github-app-token`). A single
+    # stored token could only be a personal access token, tied to one person's account.
+    #
+    # WHY THIS JOB-LEVEL `env`: a step's `if:` cannot read `secrets` — GitHub rejects the
+    # expression. It can read `env`, so the presence test is made here, once, and the
+    # step below branches on it.
+    env:
+      ANCHORS_HAS_APP: ${{ secrets.ANCHORS_APP_ID != '' && secrets.ANCHORS_APP_PRIVATE_KEY != '' }}
     steps:
+      - name: Token to push with (GitHub App, optional)
+        id: app
+        if: env.ANCHORS_HAS_APP == 'true'
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.ANCHORS_APP_ID }}
+          private-key: ${{ secrets.ANCHORS_APP_PRIVATE_KEY }}
+
+      # The checkout persists its token as the `origin` credential, so `git push` below
+      # pushes as the App when there is one. With `GITHUB_TOKEN` the job never pushes:
+      # `CAN_PUSH` is false and the resolve step comments instead.
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app.outputs.token || secrets.GITHUB_TOKEN }}
 
       # NÃO HÁ `setup-go` AQUI, e a ausência é deliberada: nada neste job compila Go
       # desde que a instalação passou a BAIXAR o binário liberado (abaixo). O passo que
@@ -74,19 +109,27 @@ jobs:
         # (`anchors-board.yml`, `anchors-gates.yml`, `anchors-identify.yml`) — o resolver
         # era o único fora do padrão, e era o único que gravava `dev`.
         #
-        # A VERSÃO CONTINUA SAINDO DO `anchors.yaml`: UMA fonte da verdade, e subir o piso
-        # segue sendo o que atualiza o CI. Só o meio de obter o binário mudou.
+        # The version rule (`min_version`, else latest) is the shared snippet below.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          versao=$(grep -E '^min_version:' anchors.yaml | head -1 | tr -d ' ' | cut -d: -f2)
-          if [ -z "$versao" ]; then
-            echo "::error::o \`anchors.yaml\` não declara \`min_version\` — sem ela este job não sabe qual release baixar"
-            exit 1
+          # WHICH ANCHORS: the one `min_version` in anchors.yaml names, and the latest
+          # release ONLY when the project declares none. A project pinned to a version
+          # keeps that binary in CI until someone raises the floor; with `latest` the CI
+          # would jump to a newer binary on its own, and what it does would depend on
+          # WHEN it ran. Every template that installs Anchors runs this same snippet —
+          # a test compares them, so they cannot drift apart again.
+          MIN=$(grep -m1 -E '^min_version:' anchors.yaml 2>/dev/null | cut -d'#' -f1 \
+            | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+          if [ -n "$MIN" ]; then
+            TAG="v$MIN"
+            echo "installing Anchors $TAG (the min_version in anchors.yaml)"
+          else
+            TAG=$(gh release view --repo co2-lab/anchors --json tagName --jq .tagName)
+            echo "installing Anchors $TAG (latest: anchors.yaml declares no min_version)"
           fi
-          echo "baixando a versao $versao do Anchors (do min_version)"
-          gh release download "v$versao" --repo co2-lab/anchors \
+          gh release download "$TAG" --repo co2-lab/anchors \
             --pattern 'anchors_*_linux_amd64.tar.gz' --output /tmp/anchors.tar.gz --clobber
           tar -xzf /tmp/anchors.tar.gz -C /tmp anchors
           sudo install /tmp/anchors /usr/local/bin/anchors
@@ -106,6 +149,9 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
           BASE: ${{ github.ref_name }}
+          # `true` only when the App token was minted — the checkout's credential is then
+          # the App's, and pushing makes the PR's checks run.
+          CAN_PUSH: ${{ steps.app.outputs.token != '' }}
         run: |
           set -euo pipefail
 
@@ -142,6 +188,16 @@ jobs:
           LIMITE=3
           resolvidos=0
           pulados=0
+          commented=0
+
+          # The mark that makes the resolve-locally comment ONE comment per PR, not one per
+          # run: every merge into the base re-runs this sweep over the same PRs.
+          MARKER='<!-- anchors:resolve-queue:resolve-locally -->'
+          if [ "$CAN_PUSH" = "true" ]; then
+            echo "pushing with the GitHub App token"
+          else
+            echo "no ANCHORS_APP_ID/ANCHORS_APP_PRIVATE_KEY: will comment instead of pushing"
+          fi
 
           for pr in $(gh pr list --repo "$GH_REPO" --state open --limit 50 \
                        --json number,mergeable --jq '.[]|select(.mergeable=="CONFLICTING")|.number'); do
@@ -166,7 +222,7 @@ jobs:
             # próximo chegar" — descrevia um limite que o código não implementava. Quem
             # limitava de fato era o `timeout-minutes: 10`, cortando o job no meio: medido,
             # 4 de 5 execuções recentes terminaram `cancelled`.
-            if [ "$((resolvidos + pulados))" -ge "$LIMITE" ]; then
+            if [ "$((resolvidos + pulados + commented))" -ge "$LIMITE" ]; then
               echo "· limite de $LIMITE por execução atingido — o próximo merge continua"
               break
             fi
@@ -217,6 +273,57 @@ jobs:
                 --files "$(printf '%s' "$restante" | tr '\n' ',')" || true
 
               pulados=$((pulados + 1))
+              continue
+            fi
+
+            # NO APP TOKEN: COMMENT, DO NOT PUSH. See the header — a `GITHUB_TOKEN` push
+            # leaves the PR green with no Anchors check run, which is worse than leaving it
+            # conflicting: the conflict is visible, the missing check is not.
+            if [ "$CAN_PUSH" != "true" ]; then
+              conflicted=$(git diff --name-only --diff-filter=U)
+              git merge --abort 2>/dev/null || true
+              git reset -q --hard
+
+              # ONCE PER PR. A failed read SKIPS the comment instead of assuming "none yet":
+              # guessing wrong there is exactly the repeated comment this avoids.
+              if ! already=$(gh pr view "$pr" --repo "$GH_REPO" --json comments \
+                     --jq "[.comments[].body | select(contains(\"$MARKER\"))] | length" 2>/dev/null); then
+                echo "· #$pr: could not read its comments — not commenting blind"
+                continue
+              fi
+              if [ "$already" != "0" ]; then
+                echo "· #$pr conflicts only in generated files — already told how to resolve it"
+                continue
+              fi
+
+              {
+                echo "$MARKER"
+                printf '**Anchors:** this PR conflicts with `%s` only in GENERATED files:\n\n' "$BASE"
+                if [ -n "$conflicted" ]; then
+                  printf '%s\n' "$conflicted" | sed 's/^/- `/; s/$/`/'
+                else
+                  # The Anchors merge drivers resolved them on this runner; GitHub's own
+                  # merge has no drivers, which is why the PR still shows the conflict.
+                  echo "- (files the Anchors merge drivers resolve; GitHub's merge cannot)"
+                fi
+                echo; printf '%s\n' "The CI does not push the resolution here: a push made with" \
+                  "\`GITHUB_TOKEN\` leaves every check of this PR at \`action_required\`, and the" \
+                  "PR would look green with no Anchors check run. Resolve it locally:"
+                printf '\n```sh\ngit fetch origin\ngit checkout %s\ngit merge --no-commit origin/%s\nanchors map build\nanchors docs build\ngit add -u\ngit commit --no-edit\ngit push\n```\n' "$br" "$BASE"
+                echo; printf '%s\n' "\`map build\` BEFORE \`docs build\`: the docs are compiled from the map." \
+                  "Run \`anchors install-hooks\` once per clone so the merge drivers union the" \
+                  "stamps of both sides instead of a textual merge." \
+                  "" \
+                  "To let the CI resolve this on its own, set the \`ANCHORS_APP_ID\` and" \
+                  "\`ANCHORS_APP_PRIVATE_KEY\` secrets (a GitHub App with Contents: write)."
+              } > /tmp/resolve-locally.md
+
+              if gh pr comment "$pr" --repo "$GH_REPO" --body-file /tmp/resolve-locally.md >/dev/null; then
+                echo "· #$pr conflicts only in generated files — commented how to resolve it locally"
+                commented=$((commented + 1))
+              else
+                echo "· #$pr: the comment failed"
+              fi
               continue
             fi
 
@@ -278,10 +385,11 @@ jobs:
             git reset -q --hard
           done
 
-          echo "resolvidos: $resolvidos · pulados por conflito real: $pulados"
+          echo "resolvidos: $resolvidos · pulados por conflito real: $pulados · commented: $commented"
           {
             echo "### A fila depois do merge"
             echo ""
             echo "- **$resolvidos** PR(s) tiveram o conflito de arquivo gerado resolvido"
+            echo "- **$commented** PR(s) conflict only in generated files and were told how to resolve locally (no App token to push with)"
             echo "- **$pulados** conflitam além do gerado e ficaram para quem escreveu"
           } >> "$GITHUB_STEP_SUMMARY"
