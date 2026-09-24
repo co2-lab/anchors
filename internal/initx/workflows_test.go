@@ -1,6 +1,7 @@
 package initx
 
 import (
+	"encoding/json"
 	"gopkg.in/yaml.v3"
 	"io/fs"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/board"
 	"github.com/co2-lab/anchors/internal/config"
 )
 
@@ -2255,5 +2257,189 @@ func TestGuardProvenanceWarningIsPostedOnce(t *testing.T) {
 	}
 	if !strings.Contains(before, "exit 0") {
 		t.Error("finding the earlier warning does not stop the step")
+	}
+}
+
+// --- the claim script, RUN against a fake `gh` ---
+//
+// Greps over the YAML cannot tell a regex that matches `4/4` from one that does not, nor
+// an error swallowed by `|| true` from one that stops the card. These tests run the
+// claim's real `run:` script with a `gh` that answers from environment variables, and
+// look at what it did: whether it commented `anchors-owner:` on the card.
+
+// fakeGH answers the claim script's `gh` calls. One to-do card ($FAKE_CARD) is on the
+// board; $FAKE_FAIL names the one call that fails like an API error; $FAKE_PRS is the
+// JSON of the open PRs, filtered by the script's own `--jq` through the real `jq`.
+const fakeGH = `#!/usr/bin/env bash
+echo "gh $*" >> "$FAKE_LOG"
+call="$1 $2"
+json=""; jqx=""; labels=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --json) json="$2"; shift ;;
+    --jq) jqx="$2"; shift ;;
+    --label) labels="$labels $2"; shift ;;
+  esac
+  shift
+done
+fail() { if [ "${FAKE_FAIL:-}" = "$1" ]; then echo "gh: HTTP 502" >&2; exit 1; fi; }
+case "$call" in
+  "api "*) exit 1 ;;
+  "issue list")
+    case "$labels" in
+      *anchors:desbloqueia-*) fail unblock ;;
+      *" anchors:to-do"*) echo "$FAKE_CARD" ;;
+    esac ;;
+  "issue view")
+    case "$json" in
+      labels) case "$jqx" in
+          *blocked-by*) fail labels; [ -z "${FAKE_BLOCKED_BY:-}" ] || echo "$FAKE_BLOCKED_BY" ;;
+          *) echo "anchors:to-do" ;;
+        esac ;;
+      state) fail state; echo "${FAKE_STATE:-CLOSED}" ;;
+      title) fail title ;;
+      comments) echo "" ;;
+    esac ;;
+  "pr list") fail pr; printf '%s' "${FAKE_PRS:-[]}" | jq -r "$jqx" ;;
+esac
+exit 0
+`
+
+// runClaim runs the claim script with the fake `gh` and the given environment, and
+// returns its output and whether it handed card #4 out.
+func runClaim(t *testing.T, env ...string) (string, bool) {
+	t.Helper()
+	for _, bin := range []string{"bash", "jq"} {
+		if _, err := exec.LookPath(bin); err != nil {
+			t.Skipf("no %s on PATH", bin)
+		}
+	}
+	b, err := workflowsFS.ReadFile("workflows/anchors-claim.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc struct {
+		Jobs map[string]struct {
+			Steps []struct {
+				Run string `yaml:"run"`
+			} `yaml:"steps"`
+		} `yaml:"jobs"`
+	}
+	if err := yaml.Unmarshal(b, &doc); err != nil {
+		t.Fatal(err)
+	}
+	script := ""
+	for _, j := range doc.Jobs {
+		for _, s := range j.Steps {
+			if strings.Contains(s.Run, "anchors-owner: $AGENT") {
+				script = s.Run
+			}
+		}
+	}
+	if script == "" {
+		t.Fatal("the claim step (the one that comments `anchors-owner: $AGENT`) vanished")
+	}
+	dir := t.TempDir()
+	// The script keeps its scratch files in /tmp; each run gets its own.
+	script = strings.ReplaceAll(script, "/tmp/", dir+"/")
+	bin := filepath.Join(dir, "bin")
+	if err := os.MkdirAll(bin, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(bin, "gh"), []byte(fakeGH), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	logFile := filepath.Join(dir, "gh.log")
+	cmd := exec.Command("bash", "-c", script)
+	cmd.Env = append(os.Environ(),
+		"PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"),
+		"FAKE_LOG="+logFile, "FAKE_CARD=4",
+		"GH_REPO=o/r", "AGENT=machine/session", "LABEL=anchors")
+	cmd.Env = append(cmd.Env, env...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Fatalf("the claim script failed: %v\n%s", err, out)
+	}
+	calls, _ := os.ReadFile(logFile)
+	return string(out), strings.Contains(string(calls), "gh issue comment 4 --body anchors-owner: machine/session")
+}
+
+// Only a REAL reference to the card hides it: a linking keyword before `#N`, or an issue
+// URL. Measured in blue-eyes #679: a PR body reporting a mutation score of `4/4` matched
+// the old `(#|/)N\b`, and card #4 was never handed out again.
+func TestClaimOnlyCountsARealReferenceToTheCard(t *testing.T) {
+	pr := func(body string) string {
+		j, _ := json.Marshal([]map[string]any{{"number": 77, "body": body}})
+		return "FAKE_PRS=" + string(j)
+	}
+	for _, body := range []string{
+		"Closes #4", "closes #4", "Refs #4", "Fixes: #4", "RESOLVES #4", "fixed #4",
+		"see https://github.com/o/r/issues/4 for context",
+	} {
+		out, handed := runClaim(t, pr(body))
+		if handed {
+			t.Errorf("PR body %q references card #4, and the card was still handed out:\n%s", body, out)
+		}
+		if !strings.Contains(out, "já tem o PR #77") {
+			t.Errorf("PR body %q: the skip does not name the PR:\n%s", body, out)
+		}
+	}
+	for _, body := range []string{
+		"mutation score 4/4", "Closes #40", "Refs #14", "step #4 of the plan",
+		"https://github.com/o/r/pull/4", "https://github.com/o/r/issues/44",
+	} {
+		if out, handed := runClaim(t, pr(body)); !handed {
+			t.Errorf("PR body %q does not reference card #4, and it hid the card:\n%s", body, out)
+		}
+	}
+}
+
+// The guards FAIL CLOSED: when `gh` errors, the card is skipped and the log says so. The
+// old `2>/dev/null || true` read an API error as "no blocker" and handed the card out.
+func TestClaimGuardsFailClosed(t *testing.T) {
+	// The control: with every call answering, the card IS handed out — otherwise the
+	// cases below would pass for a reason that has nothing to do with the failure.
+	if out, handed := runClaim(t); !handed {
+		t.Fatalf("with no failure the card should be handed out:\n%s", out)
+	}
+	for _, c := range []struct{ name, fail, extra string }{
+		{"unblock card lookup", "unblock", ""},
+		{"blocked-by labels", "labels", ""},
+		{"blocker state", "state", "FAKE_BLOCKED_BY=anchors:blocked-by-9"},
+		{"open PR lookup", "pr", ""},
+		{"card title (dependencies)", "title", ""},
+	} {
+		env := []string{"FAKE_FAIL=" + c.fail}
+		if c.extra != "" {
+			env = append(env, c.extra)
+		}
+		out, handed := runClaim(t, env...)
+		if handed {
+			t.Errorf("%s: gh failed and the card was handed out anyway (fail open):\n%s", c.name, out)
+		}
+		if !strings.Contains(out, "#4") || !(strings.Contains(out, "fail closed") ||
+			strings.Contains(out, "gh failed")) {
+			t.Errorf("%s: the skip is not logged — nobody reading the run learns why:\n%s", c.name, out)
+		}
+	}
+}
+
+// The claim run carries the agent in its title, exactly as `board.ClaimRunTitle` writes it:
+// that title is how `anchors next` finds the run it dispatched and waits for it instead of
+// dispatching another.
+func TestClaimRunNameIsWhatNextLooksFor(t *testing.T) {
+	b, err := workflowsFS.ReadFile("workflows/anchors-claim.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc struct {
+		RunName string `yaml:"run-name"`
+	}
+	if err := yaml.Unmarshal(b, &doc); err != nil {
+		t.Fatal(err)
+	}
+	if want := board.ClaimRunTitle("${{ inputs.agent }}"); doc.RunName != want {
+		t.Errorf("run-name = %q, want %q — `anchors next` would not recognise its own claim",
+			doc.RunName, want)
 	}
 }

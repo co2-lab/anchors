@@ -97,7 +97,11 @@ The claim is atomic: two workers in different terminals NEVER take the same task
 so you can run 'anchors next' in parallel in several sessions.
 
 When you FINISH the step (code written, check passed), close it with 'anchors done <id>'.
-If the queue is empty, it prints that and exits with code 0.`,
+If the queue is empty, it prints that and exits with code 0.
+
+In github mode the queue is the board: 'next' asks the claim pipeline and WAITS
+(up to 3 minutes) for the card it hands out. It never dispatches a second claim
+while one of yours is still pending — re-running it waits on that same claim.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
@@ -588,23 +592,60 @@ func nextFromBoard(root string, cfg *config.Config, agent string) error {
 		fmt.Printf("resuming your card — FINISH it before taking another\n")
 		fmt.Printf("  the context of the previous session is worth more than the queue order.\n\n")
 	} else {
-		// SEM CARD: pede ao pipeline. Ele é serializado, e é isso que impede dois agentes
-		// de receberem o mesmo trabalho (ver `board.Ask`).
-		if err := cli.Ask(agent); err != nil {
+		// NO CARD: ask the pipeline — it is serialized, and that is what keeps two agents
+		// from receiving the same work (see `board.Ask`) — and WAIT for the answer.
+		//
+		// This used to stop after the dispatch and tell the agent to run `anchors next`
+		// again. Each re-run while the claim was pending dispatched another one, which
+		// cancelled the pending run or duplicated the claim (blue-eyes #679). Now this
+		// same call waits, bounded, for the run it dispatched — or for the one of this
+		// agent that is already pending, which it never dispatches twice.
+		fmt.Printf("work requested from the pipeline (serialized claim) — waiting for it, up to %s\n",
+			board.DefaultClaimTimeout)
+		out, err := cli.AskAndWait(agent, board.ClaimWait{})
+		if err != nil {
 			return err
 		}
-		fmt.Printf("work requested from the pipeline (serialized claim)\n")
-		fmt.Printf("  the pipeline picks the card, comments the ownership and moves it to in-progress.\n\n")
-		fmt.Printf("Read what you received:\n")
-		fmt.Printf("    anchors next          # in a few seconds, when the claim runs\n")
-		fmt.Printf("    gh run list --workflow %s --limit 1   # see the claim\n", board.ClaimWorkflow)
-		return nil
+		if out.Card == nil {
+			return reportClaimWithoutCard(out)
+		}
+		card = out.Card
+		fmt.Println()
 	}
 
 	fmt.Printf("card claimed: #%d — %s\n\n", card.Number, card.Title)
 	fmt.Printf("  state:    %s\n", strings.TrimPrefix(card.State, "anchors:"))
 	fmt.Printf("  owner:    %s\n\n", agent)
 	printBoardWork(root, card)
+	return nil
+}
+
+// reportClaimWithoutCard says why the wait ended without a card, and what to do next.
+//
+// Every branch names the run, so the agent follows THAT run instead of asking again. A
+// claim that failed is an error; one that ran and found nothing is not.
+func reportClaimWithoutCard(out board.ClaimOutcome) error {
+	runRef := fmt.Sprintf("gh run list --workflow %s --limit 5", board.ClaimWorkflow)
+	if out.Run != nil {
+		runRef = fmt.Sprintf("gh run view %d --log", out.Run.ID)
+	}
+	switch {
+	case out.TimedOut:
+		fmt.Printf("the claim did not finish within %s — it is still queued behind other claims, "+
+			"or the pipeline is stuck.\n", board.DefaultClaimTimeout)
+		fmt.Printf("  follow it:  %s\n", runRef)
+		fmt.Printf("  then run `anchors next` again: it waits for this same claim and does NOT "+
+			"dispatch another while it is pending.\n")
+		return nil
+	case out.Run != nil && out.Run.Conclusion == "success":
+		fmt.Printf("the claim ran and handed you no card: no free card on the board (or the "+
+			"project is frozen).\n")
+		fmt.Printf("  why:  %s\n", runRef)
+		return nil
+	case out.Run != nil:
+		return fmt.Errorf("the claim run #%d ended as %q and handed you no card — see `%s`",
+			out.Run.ID, out.Run.Conclusion, runRef)
+	}
 	return nil
 }
 

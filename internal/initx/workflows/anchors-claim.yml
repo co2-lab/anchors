@@ -17,6 +17,11 @@
 # REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
 # para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
 name: anchors · atribuir trabalho
+# One title per agent, so `anchors next` can tell ITS run apart from every other agent's.
+# `gh workflow run` returns no run id: without this, the CLI could only guess which run
+# answered it, and the guess is what used to send the agent to dispatch a second claim.
+# The text must stay equal to `board.ClaimRunTitle`.
+run-name: "anchors · claim for ${{ inputs.agent }}"
 
 on:
   workflow_dispatch:
@@ -182,9 +187,17 @@ jobs:
             # impasse, escala de novo. Medido: um card do projeto de referência esperava
             # uma decisão sobre qual branch aplicar uma correção, e o `anchors next`
             # continuava re-servindo o mesmo card ao mesmo agente.
-            bloqueio=$(gh issue list --repo "$GH_REPO" --state open \
+            # FAIL CLOSED: every guard below that asks the API skips the card when the
+            # API does not answer. The old form (`2>/dev/null || true`) read an error as
+            # "no blocker" and handed the card out — a rate limit or a 502 was enough to
+            # deliver blocked, escalated or already-done work. A skipped card costs one
+            # claim; a wrongly delivered one costs a whole implementation.
+            if ! bloqueio=$(gh issue list --repo "$GH_REPO" --state open \
               --label "anchors:desbloqueia-$n" --limit 5 \
-              --json number --jq '.[0].number // empty' 2>/dev/null || true)
+              --json number --jq '.[0].number // empty'); then
+              echo "· #$n: could not check its unblock card (gh failed) — skipping, fail closed"
+              continue
+            fi
             if [ -n "$bloqueio" ]; then
               echo "· #$n espera a entrega do #$bloqueio (desbloqueio) — pulando"
               continue
@@ -211,15 +224,23 @@ jobs:
             # Barra para TODOS, inclusive o dono atual: o bloqueio é sobre o trabalho, não
             # sobre quem o faria.
             segura=""
-            for b in $(gh issue view "$n" --repo "$GH_REPO" --json labels \
-                        --jq '[.labels[].name | select(startswith("anchors:blocked-by-"))] | .[]' \
-                        2>/dev/null || true); do
+            if ! bloqueadores=$(gh issue view "$n" --repo "$GH_REPO" --json labels \
+                        --jq '[.labels[].name | select(startswith("anchors:blocked-by-"))] | .[]'); then
+              echo "· #$n: could not read its blocked-by labels (gh failed) — skipping, fail closed"
+              continue
+            fi
+            for b in $bloqueadores; do
               m=${b#anchors:blocked-by-}
               [ -n "$m" ] || continue
               # SÓ O QUE AINDA ESTÁ ABERTO segura. A label fica no card depois de a
               # decisão sair — tirá-la é do `anchors decided` —, e tratar label como
               # bloqueio sem conferir o estado deixaria o card parado para sempre.
-              if [ "$(gh issue view "$m" --repo "$GH_REPO" --json state --jq .state 2>/dev/null)" = "OPEN" ]; then
+              # A state the API did not return is not "closed": it holds the card too.
+              if ! estado_m=$(gh issue view "$m" --repo "$GH_REPO" --json state --jq .state); then
+                segura="$m (state unreadable: gh failed)"
+                break
+              fi
+              if [ "$estado_m" = "OPEN" ]; then
                 segura="$m"
                 break
               fi
@@ -245,11 +266,20 @@ jobs:
             # escreve a linha de fechamento (`Closes #N`). Não é por branch: o nome dela é
             # livre, e os três daquele caso tinham nomes diferentes.
             #
+            # Only a real REFERENCE counts: a linking keyword (`Closes`/`Refs`/`Fixes`/
+            # `Resolves` and GitHub's variants, any case) before `#N`, or an issue URL
+            # `/issues/N`. The old pattern accepted any `#N` or `/N`, and a PR body that
+            # reported a mutation score of `4/4` hid card #4 from every claim (blue-eyes
+            # #679).
+            #
             # Um PR já aberto NÃO significa que o card está pronto — significa que quem
             # revisa deve pegar o PR, não reimplementar. O card volta à fila pelo caminho
             # normal quando o PR mescla ou fecha.
-            pr_aberto=$(gh pr list --state open --search "$n in:body" \
-              --json number,body --jq "[.[] | select(.body | test(\"(#|/)$n\\\\b\"))] | .[0].number // empty" 2>/dev/null || true)
+            if ! pr_aberto=$(gh pr list --state open --search "$n in:body" \
+              --json number,body --jq "[.[] | select(.body | test(\"\\\\b(close[sd]?|fix(e[sd])?|resolve[sd]?|refs?):?[[:space:]]+#$n\\\\b|/issues/$n\\\\b\"; \"i\"))] | .[0].number // empty"); then
+              echo "· #$n: could not list the open PRs (gh failed) — skipping, fail closed"
+              continue
+            fi
             if [ -n "$pr_aberto" ]; then
               echo "· #$n já tem o PR #$pr_aberto aberto — pulando (revisar o PR, não reimplementar)"
               continue
@@ -257,7 +287,10 @@ jobs:
 
             # BLOQUEADO por dependência? O código do card sai do título (`[XXXXX] ...`),
             # e o `needs` dele, do mapa.
-            cod=$(gh issue view "$n" --json title --jq '.title | capture("^\\[(?<c>[^]]+)\\]").c' 2>/dev/null || true)
+            if ! cod=$(gh issue view "$n" --json title --jq '.title | capture("^\\[(?<c>[^]]+)\\]").c'); then
+              echo "· #$n: could not read its title (gh failed) — skipping, fail closed"
+              continue
+            fi
             if [ -n "$cod" ] && [ -s /tmp/mapa.yaml ]; then
               # As fases de um plano não são nós do mapa: elas vivem no markdown. Um
               # `needs` que aponta para fase é resolvido pelos CARDS que pertencem a ela —
