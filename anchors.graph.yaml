@@ -2426,7 +2426,7 @@ nodes:
     - id: internal/gate/mock_typed.feature
       kind: feature
       rev: 4db0209d2037
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-24"
       code: MCTYM
       layer: feature
       tags:
@@ -2434,7 +2434,7 @@ nodes:
     - id: internal/gate/mock_typed.go
       kind: code
       rev: da8d9a8512f9
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       code: MCTYM
       layer: gate
       tags:
@@ -2443,7 +2443,7 @@ nodes:
     - id: internal/gate/mock_typed.spec.md
       kind: spec
       rev: 34927f73f0e3
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-24"
       code: MCTYM
       layer: spec
       code_declared: true
@@ -2452,7 +2452,7 @@ nodes:
     - id: internal/gate/mock_typed_test.go
       kind: test
       rev: 3157696ee091
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       code: MCTYM
       layer: teste
       tags:
@@ -4176,7 +4176,7 @@ nodes:
         - test
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: e1cb724b9393
+      rev: 29bb6e4fb5c8
       updated_at: "2026-09-23"
       layer: teste
       tags:

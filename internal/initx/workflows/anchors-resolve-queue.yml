@@ -1,3 +1,7 @@
+# anchors:template — gerado pelo `anchors`. Enquanto esta linha e o conteúdo abaixo
+# não forem editados, `anchors doctor --fix` mantém o arquivo atualizado. Ao editar,
+# REMOVA esta linha: é o que diz ao Anchors que o pipeline passou a ser seu, e o `--fix`
+# para de tocá-lo (passa a avisar quando o padrão mudar, sem sobrescrever).
 # Anchors — quando algo MERGEIA, os PRs que passaram a conflitar se resolvem
 #
 # O job `resolver-o-gerado` (em `anchors-pr-checks.yml`) escuta eventos do PR: `opened`,

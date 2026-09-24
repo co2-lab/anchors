@@ -2848,3 +2848,19 @@ func TestResolveQueueWithAppTokenPushes(t *testing.T) {
 		t.Errorf("with an App token the resolver also commented (%d) — the comment is the fallback", n)
 	}
 }
+
+// EVERY template the flow seeds carries the marker. Without it, `doctor --fix` treats the
+// installed file as the team's own and never updates it — `anchors-resolve-queue.yml` was
+// born without it, so its fixes (the GitHub App push, the `min_version` install) reached
+// no project that already had it.
+func TestEveryFlowTemplateCarriesTheMarker(t *testing.T) {
+	for _, w := range WorkflowsDoFluxo {
+		b, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(string(b), MarcadorDeTemplate) {
+			t.Errorf("%s has no %q — once installed, `doctor --fix` never updates it", w.Arquivo, MarcadorDeTemplate)
+		}
+	}
+}
