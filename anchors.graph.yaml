@@ -745,7 +745,7 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/ingest.go
       kind: code
-      rev: d90829e5cac2
+      rev: ba0609512bc7
       updated_at: "2026-09-23"
       code: SPCRX
       layer: comando
@@ -756,6 +756,12 @@ nodes:
       kind: test
       rev: f2dc5ac5cc6e
       updated_at: "2026-09-19"
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/mapcmd/ingest_predating_test.go
+      kind: test
+      rev: c46d27e43ae3
       layer: teste
       tags:
         - test
@@ -2358,7 +2364,7 @@ nodes:
     - id: internal/gate/mock_stamp_gen.feature
       kind: feature
       rev: 0957b7fe4fdf
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       code: MKSTP
       layer: feature
       tags:
@@ -2366,7 +2372,7 @@ nodes:
     - id: internal/gate/mock_stamp_gen.go
       kind: code
       rev: a429d4290ecd
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       code: MKSTP
       layer: gate
       tags:
@@ -2375,7 +2381,7 @@ nodes:
     - id: internal/gate/mock_stamp_gen.spec.md
       kind: spec
       rev: 4375b6acec42
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       code: MKSTP
       layer: spec
       code_declared: true
@@ -2384,7 +2390,7 @@ nodes:
     - id: internal/gate/mock_stamp_gen_test.go
       kind: test
       rev: 01e3c5555676
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       code: MKSTP
       layer: teste
       tags:
@@ -4174,9 +4180,15 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: internal/initx/workflows_stale_test.go
+      kind: test
+      rev: 1cdc780eb7fa
+      layer: teste
+      tags:
+        - test
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 29bb6e4fb5c8
+      rev: e578312f82ec
       updated_at: "2026-09-24"
       layer: teste
       tags:
@@ -4306,16 +4318,16 @@ nodes:
       no_propagation: true
     - id: internal/mapx/ingest.go
       kind: code
-      rev: 00caf4ee5828
-      updated_at: "2026-09-23"
+      rev: 49e1fc2bd2de
+      updated_at: "2026-09-24"
       layer: mapa
       tags:
         - nucleo
         - mapa
     - id: internal/mapx/ingest_coverage_suite_test.go
       kind: test
-      rev: 599bccb2f2ff
-      updated_at: "2026-09-23"
+      rev: f57b8d0c51cd
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test

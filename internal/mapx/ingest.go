@@ -156,6 +156,11 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now stri
 				TotalLines:   cov.Total,
 				AtRev:        n.Rev,
 			}
+			if cov.Predates {
+				e := n.Signal.CoverageBySuite[suite]
+				e.AtRev = ""
+				n.Signal.CoverageBySuite[suite] = e
+			}
 			c, t := unionCoverage(n.Signal.CoverageBySuite, n.Rev)
 			n.Signal.CoveredLines, n.Signal.TotalLines = c, t
 			if t > 0 {
@@ -451,6 +456,10 @@ type FileCov struct {
 	Covered, Total int
 	// Lines: per instrumented line, covered or not. Empty when the report gave only totals.
 	Lines map[int]bool
+	// Predates: the report was written BEFORE the file's current content — its line
+	// numbers describe another text. The entry is kept, with no rev, so it neither joins
+	// the union nor passes for fresh.
+	Predates bool
 }
 
 // SignalStale diz se o sinal de um nó envelheceu — o arquivo mudou de rev desde a

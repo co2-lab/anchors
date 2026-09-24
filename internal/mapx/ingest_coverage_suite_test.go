@@ -115,3 +115,22 @@ func TestIngestCoverageSuite_staleSuiteLinesDoNotJoinTheUnion(t *testing.T) {
 		t.Error("the integration suite has not re-measured the new rev, and the node reads fresh")
 	}
 }
+
+// A report written before the file's current content is ingested with no rev: it neither
+// joins the union nor passes for fresh, even when ingested today.
+func TestIngestCoverageSuite_reportThatPredatesTheFileIsNotFresh(t *testing.T) {
+	g := &Graph{Nodes: []Node{{ID: "handler.ts", Kind: KindCode, Rev: "new"}}}
+	g.IngestCoverageSuite(map[string]FileCov{"handler.ts": {Covered: 0, Total: 4, Lines: lines(nil, []int{31, 32, 33, 34}), Predates: true}}, "integration.info", "t1")
+	g.IngestCoverageSuite(map[string]FileCov{"handler.ts": {Covered: 3, Total: 4, Lines: lines([]int{1, 2, 3}, []int{4})}}, "unit.info", "t2")
+
+	sig := g.Nodes[0].Signal
+	if got := sig.CoverageBySuite["integration.info"].AtRev; got != "" {
+		t.Errorf("a report older than the file was stamped with rev %q", got)
+	}
+	if sig.CoveredLines != 3 || sig.TotalLines != 4 {
+		t.Errorf("the predating report joined the union: %d/%d", sig.CoveredLines, sig.TotalLines)
+	}
+	if !g.Nodes[0].SignalStale() {
+		t.Error("with a suite that has not measured this text, the node reads fresh")
+	}
+}

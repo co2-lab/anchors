@@ -175,6 +175,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 					byFile[fc.File] = mapx.FileCov{Covered: fc.CoveredLines, Total: fc.TotalLines, Lines: fc.Lines}
 				}
 				byFile = resolveByFile(g, mapx.KindCode, byFile, absRoot, lcov)
+				markPredating(byFile, absRoot, lcov)
 				// The suite is the REPORT, as for JUnit: unit and integration each speak
 				// for the lines they measured, and neither erases the other.
 				key := suite
@@ -414,4 +415,33 @@ func ingestLogs(absRoot, mapPath string) error {
 	fmt.Println("  Somebody is handling and logging a failure the spec never declared —")
 	fmt.Println("  or the code is a typo. Both are worth a look.")
 	return nil
+}
+
+// markPredating flags the files the lcov report is OLDER than.
+//
+// A node's rev is read at ingestion time, not when the report was written: an old
+// integration lcov ingested today was stamped with today's rev, and its lines — numbered
+// for the text before the edit — joined the union as if fresh. Measured in the reference
+// project: unit fresh at 73/75, integration from the day before at 0/76, union 73/106 =
+// 69%. The report's mtime against the file's is the evidence the report carries: a file
+// changed after the report was written is not the file the report measured.
+func markPredating(byFile map[string]mapx.FileCov, absRoot, report string) {
+	ri, err := os.Stat(report)
+	if err != nil {
+		return
+	}
+	for file, cov := range byFile {
+		p := file
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(absRoot, file)
+		}
+		fi, err := os.Stat(p)
+		if err != nil {
+			continue
+		}
+		if fi.ModTime().After(ri.ModTime()) {
+			cov.Predates = true
+			byFile[file] = cov
+		}
+	}
 }
