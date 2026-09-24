@@ -133,21 +133,41 @@ func (c Client) list(state string) ([]Card, error) {
 		return nil, fmt.Errorf("workflow.labels empty: in github mode it is mandatory — " +
 			"without it the claim would pull any issue in the repository")
 	}
-	args := []string{"issue", "list", "--state", "open", "--limit", "200",
-		"--json", "number,title,body,labels,comments"}
-	for _, l := range c.Labels {
-		args = append(args, "--label", l)
+	owner, name, ok := strings.Cut(c.Repo, "/")
+	if !ok {
+		return nil, fmt.Errorf("repository %q is not owner/name", c.Repo)
 	}
-	if state != "" {
-		args = append(args, "--label", state)
-	}
-	out, err := c.gh(args...)
+	// THE BOARD IN PAGES OF 25, with each card's last 100 comments. `gh issue list --json
+	// ...,comments` asked GitHub's GraphQL for every comment of 100 cards per page, and
+	// with a hundred-odd open cards the page timed out: measured in blue-eyes, HTTP 504
+	// after ~11s on every `anchors next`, so no agent could claim. The owner is the LAST
+	// `anchors-owner:` comment, which the last 100 comments hold in any real card.
+	//
+	// GraphQL's `labels:` filter is OR, and the cycle needs AND (the Anchors label AND the
+	// state), so the query narrows by the first label and the rest is filtered here.
+	out, err := c.gh("api", "graphql", "--paginate",
+		"-f", "owner="+owner, "-f", "name="+name, "-f", "label="+c.Labels[0],
+		"-f", "query="+boardQuery,
+		"--jq", `.data.repository.issues.nodes[] | {number, title, body,`+
+			` labels: [.labels.nodes[] | {name}], comments: [.comments.nodes[] | {body}]}`)
 	if err != nil {
 		return nil, err
 	}
 	var raw []rawCard
-	if err := json.Unmarshal(out, &raw); err != nil {
-		return nil, fmt.Errorf("gh response is not the expected JSON: %w", err)
+	dec := json.NewDecoder(strings.NewReader(string(out)))
+	for dec.More() {
+		var r rawCard
+		if err := dec.Decode(&r); err != nil {
+			return nil, fmt.Errorf("gh response is not the expected JSON: %w", err)
+		}
+		names := labelNames(r)
+		keep := state == "" || has(names, state)
+		for _, l := range c.Labels {
+			keep = keep && has(names, l)
+		}
+		if keep {
+			raw = append(raw, r)
+		}
 	}
 	var cards []Card
 	for _, r := range raw {
@@ -158,6 +178,20 @@ func (c Client) list(state string) ([]Card, error) {
 	}
 	return cards, nil
 }
+
+// boardQuery lists the open issues carrying one label, 25 per page — see `list`.
+const boardQuery = `query($owner: String!, $name: String!, $label: String!, $endCursor: String) {
+  repository(owner: $owner, name: $name) {
+    issues(first: 25, after: $endCursor, states: OPEN, labels: [$label]) {
+      pageInfo { hasNextPage endCursor }
+      nodes {
+        number title body
+        labels(first: 50) { nodes { name } }
+        comments(last: 100) { nodes { body } }
+      }
+    }
+  }
+}`
 
 func labelNames(r rawCard) []string {
 	var out []string

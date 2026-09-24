@@ -18,7 +18,7 @@ type fakeBoard struct {
 	dispatches int
 	// onDispatch runs on every `gh workflow run`; by default it queues a run.
 	onDispatch func(f *fakeBoard)
-	// onPoll runs on every `gh issue list` (every look at the board).
+	// onPoll runs on every board read (`gh api graphql`, every look at the board).
 	onPoll func(f *fakeBoard, poll int)
 	polls  int
 	card   bool // the claim handed the card: it shows up owned and in-progress
@@ -53,17 +53,17 @@ func (f *fakeBoard) run(args ...string) ([]byte, error) {
 		return nil, nil
 	case "run list":
 		return json.Marshal(f.runs)
-	case "issue list":
+	case "api graphql":
 		f.polls++
 		if f.onPoll != nil {
 			f.onPoll(f, f.polls)
 		}
 		if !f.card {
-			return []byte("[]"), nil
+			return nil, nil
 		}
-		return []byte(`[{"number":4,"title":"[ABCDE] card","labels":[{"name":"anchors"},` +
+		return []byte(`{"number":4,"title":"[ABCDE] card","labels":[{"name":"anchors"},` +
 			`{"name":"anchors:in-progress"}],"comments":[{"body":"anchors-owner: ` +
-			waitAgent + `"}]}]`), nil
+			waitAgent + `"}]}` + "\n"), nil
 	}
 	return nil, fmt.Errorf("unexpected gh call: %v", args)
 }
