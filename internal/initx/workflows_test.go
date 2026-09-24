@@ -2943,14 +2943,24 @@ func TestClaimReadsItsOwnCardInPages(t *testing.T) {
 	}
 }
 
-// Only what the STALE released is abandoned work. A reviewer who rejects and releases by
-// hand has finished; re-offering the card handed it back to the same agent on every
-// `anchors next` (blue-eyes #766).
+// A card released by hand in flight is never handed back to WHOEVER RELEASED IT: that was
+// the loop of blue-eyes #766. Any other agent takes it — skipping it for everyone left 29
+// cards in the working columns with no owner (blue-eyes, 2026-09-24). An approved review
+// released by the verdict waits for the merge, and is taken by no one.
 func TestClaimDoesNotReofferAHandReleasedCardInFlight(t *testing.T) {
 	for _, st := range []string{"in-review", "in-progress"} {
 		if out, handed := runClaim(t, "FAKE_CARD_STATE="+st,
-			"FAKE_OWNER=anchors-owner: (liberado)"); handed {
-			t.Errorf("%s: a card released by hand was handed out again:\n%s", st, out)
+			"FAKE_OWNER=anchors-owner: (liberado)", "FAKE_PREV_OWNER=machine/session"); handed {
+			t.Errorf("%s: a card released by hand was handed back to whoever released it:\n%s", st, out)
+		}
+		if out, handed := runClaim(t, "FAKE_CARD_STATE="+st,
+			"FAKE_OWNER=anchors-owner: (liberado)", "FAKE_PREV_OWNER=other/agent"); !handed {
+			t.Errorf("%s: a card another agent released by hand was offered to no one:\n%s", st, out)
+		}
+		if out, handed := runClaim(t, "FAKE_CARD_STATE="+st,
+			"FAKE_OWNER=anchors-owner: (liberado) — revisão concluída: approved por other/agent",
+			"FAKE_PREV_OWNER=other/agent"); handed {
+			t.Errorf("%s: an approved review waiting for the merge was handed out:\n%s", st, out)
 		}
 		if out, handed := runClaim(t, "FAKE_CARD_STATE="+st,
 			"FAKE_OWNER=anchors-owner: (liberado) — sem progresso há mais de 24h"); !handed {

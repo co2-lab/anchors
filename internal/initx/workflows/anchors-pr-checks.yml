@@ -352,6 +352,33 @@ jobs:
             if [ "$ultimo" = "anchors-owner: $revisor" ]; then
               gh issue comment "$card" --body "anchors-owner: (liberado) — revisão concluída: $veredito por $revisor"
               echo "card #$card: $revisor released after the $veredito verdict"
+
+              # REJECTED: THE WORK GOES BACK TO ITS AUTHOR, in `in-progress`.
+              #
+              # "It waits for the author" was the intent above, and nothing did it: the card
+              # stayed in `in-review` with no owner, the claim does not re-offer a card
+              # released by hand in flight, and no one was told to fix anything. Measured
+              # in blue-eyes, 2026-09-24: six rejected cards and thirteen more released in
+              # flight — 31 cards in the working columns, two with a live owner.
+              #
+              # The author is the owner before the reviewer: the last named owner, before
+              # the assignment, that is not the reviewer. Owning the card again, their
+              # `anchors next` resumes it; if they are gone, the stale releases it for lack
+              # of progress and the claim offers it to whoever asks.
+              if [ "$veredito" = "rejected" ] && echo "$labels" | grep -qx "anchors:in-review"; then
+                autor=$(gh issue view "$card" --json comments \
+                  --jq "[.comments[] | select(.createdAt <= \"$atribuido\") | .body
+                         | select(startswith(\"anchors-owner: \"))
+                         | ltrimstr(\"anchors-owner: \") | split(\"\n\")[0] | split(\" \")[0]
+                         | select(startswith(\"(\") | not)
+                         | select(. != \"$revisor\")] | last // empty" 2>/dev/null || true)
+                gh issue edit "$card" --remove-label "anchors:in-review" --add-label "anchors:in-progress" >/dev/null
+                if [ -n "$autor" ]; then
+                  gh issue comment "$card" --body "anchors-owner: $autor"
+                fi
+                gh issue comment "$card" --body "↩ PR #$PR rejected by $revisor — the card is back in \`in-progress\`${autor:+, with its author ($autor)}. Fix what the \`## Revisão\` on the PR asks, on the PR's branch (it is yours while you hold the card), and deliver again."
+                echo "card #$card: rejected — back to in-progress${autor:+, owner $autor}"
+              fi
             fi
           fi
 

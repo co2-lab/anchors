@@ -661,3 +661,36 @@ func TestPRChecksClosingLineWinsOverRefs(t *testing.T) {
 		}
 	})
 }
+
+// REJECTED sends the work back to its author: the card leaves `in-review` for
+// `in-progress`, owned by the author again (the owner before the reviewer), so their
+// `anchors next` resumes it. Before, it stayed in `in-review` with no owner and was
+// offered to no one (blue-eyes, 2026-09-24). APPROVED leaves the card for the merge.
+func TestPRChecksRejectedGoesBackToTheAuthor(t *testing.T) {
+	run := func(verdict string) string {
+		w := newGHWorld(t)
+		rw := defaultReviewWorld()
+		rw.prComments = []map[string]any{
+			prComment("2026-09-20T11:00:00Z", "OWNER", "## Revisão\n\nFails B02.\n\nanchors-review: "+verdict+" by agent-b\n"),
+		}
+		w.seedReview(rw)
+		_, calls, _ := w.run(reviewScript(t), map[string]string{"PR": "7", "HEAD_SHA": "abc123"})
+		return calls
+	}
+
+	calls := run("rejected")
+	for _, want := range []string{
+		"BODY anchors-owner: (liberado) — revisão concluída: rejected por agent-b",
+		"FIELD add-label=anchors:in-progress",
+		"BODY anchors-owner: agent-a",
+	} {
+		if !strings.Contains(calls, want) {
+			t.Errorf("a rejection should do %q:\n%s", want, calls)
+		}
+	}
+
+	calls = run("approved")
+	if strings.Contains(calls, "anchors:in-progress") || strings.Contains(calls, "BODY anchors-owner: agent-a") {
+		t.Errorf("an approval must leave the card for the merge:\n%s", calls)
+	}
+}

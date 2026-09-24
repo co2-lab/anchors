@@ -393,12 +393,34 @@ jobs:
             # devolvia ao mesmo agente em toda chamada do `anchors next`. Medido no
             # blue-eyes: o revisor do #766 reprovou o PR, liberou a posse e recebeu o
             # mesmo card de volta, preso num laço.
+            #
+            # BUT ONLY FROM WHOEVER RELEASED IT. The guard used to skip every hand-released
+            # card in flight, for everyone — and every release that is not the stale's is by
+            # hand: an escalation, `anchors decided`, a reviewer who left without a verdict.
+            # Measured in blue-eyes, 2026-09-24: 31 cards in `in-progress`/`in-review`, two
+            # with a live owner; the rest offered to no one, while five agents found "no free
+            # card". The loop of #766 was the SAME agent getting its card back, so that is
+            # what is refused; another agent takes the card.
+            #
+            # An APPROVED review released by the verdict waits for the merge: it is not work
+            # for anyone, and a second reviewer would redo a review that is done.
             if grep -qx "$n" /tmp/andamento.txt; then
               case "$dono" in
                 *"(liberado)"*"sem progresso"*) ;;
-                *"(liberado)"*)
-                  echo "· #$n foi liberado à mão em andamento — não é trabalho parado, não é tomado"
+                *"(liberado)"*"approved"*)
+                  echo "· #$n: review approved — it waits for the merge, not taken"
                   continue ;;
+                *"(liberado)"*)
+                  soltou=$(gh issue view "$n" --json comments \
+                    --jq '[.comments[].body
+                           | select(startswith("anchors-owner:"))
+                           | sub("^anchors-owner:[ ]*"; "")
+                           | sub("[ ]*—.*$"; "")]
+                          | map(select(. != "(liberado)")) | last // ""')
+                  if [ "$soltou" = "$AGENT" ]; then
+                    echo "· #$n was released by hand by you — not handed back"
+                    continue
+                  fi ;;
               esac
             fi
             case "$dono" in
