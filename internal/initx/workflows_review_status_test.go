@@ -51,11 +51,11 @@ func loadPRChecks(t *testing.T) prChecksDoc {
 	return doc
 }
 
-// fakeGH is a `gh` that answers reads from JSON fixtures (filtered by the real `jq`, as
+// reviewFakeGH is a `gh` that answers reads from JSON fixtures (filtered by the real `jq`, as
 // `gh --jq` does) and records every write in calls.log. The fixture of a read is named
 // after its positional arguments: `gh pr view 7` → pr_view_7.json, `gh api
 // repos/o/r/issues/12/events` → api_repos_o_r_issues_12_events.json.
-const fakeGH = `#!/usr/bin/env bash
+const reviewFakeGH = `#!/usr/bin/env bash
 dir="$(cd "$(dirname "$0")" && pwd)"
 jq_expr=""; pos=(); write=""; body=""; fields=()
 while [ $# -gt 0 ]; do
@@ -100,7 +100,7 @@ func newGHWorld(t *testing.T) *ghWorld {
 	if err := os.MkdirAll(filepath.Join(dir, "fixtures"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "gh"), []byte(fakeGH), 0o755); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "gh"), []byte(reviewFakeGH), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	return &ghWorld{t: t, dir: dir}
