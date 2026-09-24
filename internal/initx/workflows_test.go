@@ -3042,3 +3042,21 @@ func TestClaimNeverHandsOutABug(t *testing.T) {
 		t.Errorf("candidates = %q, want only #2 (a bug and a decision are never handed out)", got)
 	}
 }
+
+// blue-eyes #1005: a `blocked-by-<n>` naming a PULL REQUEST could not be read without
+// `pull-requests: read`, and every card waiting on a PR was skipped as still blocked.
+func TestClaimCanReadABlockingPullRequest(t *testing.T) {
+	b, err := workflowsFS.ReadFile("workflows/anchors-claim.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var doc struct {
+		Permissions map[string]string `yaml:"permissions"`
+	}
+	if err := yaml.Unmarshal(b, &doc); err != nil {
+		t.Fatal(err)
+	}
+	if p := doc.Permissions["pull-requests"]; p != "read" && p != "write" {
+		t.Errorf("the claim needs `pull-requests: read` to read the state of a blocking PR, has %q", p)
+	}
+}

@@ -42,6 +42,12 @@ concurrency:
 permissions:
   contents: read
   issues: write
+  # A `blocked-by-<n>` can name a PULL REQUEST (a card waiting for a PR to merge), and
+  # reading its state goes through the same `gh issue view`. Without this the token gets
+  # "Resource not accessible by integration", the check fails closed, and every card
+  # waiting on a PR is skipped as if still blocked — measured in blue-eyes (#1005): seven
+  # cards skipped, and the claim ended in "no free card".
+  pull-requests: read
 
 jobs:
   atribuir:
