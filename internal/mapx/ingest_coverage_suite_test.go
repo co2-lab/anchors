@@ -86,3 +86,32 @@ func TestRanges_roundTrip(t *testing.T) {
 		t.Errorf("decodeRanges(%q) = %v", enc, got)
 	}
 }
+
+// A suite recorded before the file was edited speaks of another numbering: joining its
+// lines to the fresh suite's mixes two texts. The reference case: unit fresh at 73/75,
+// integration stale at 0/76 — the union read 73/106 = 69% on a file covered at 97%.
+func TestIngestCoverageSuite_staleSuiteLinesDoNotJoinTheUnion(t *testing.T) {
+	g := &Graph{Nodes: []Node{{ID: "handler.ts", Kind: KindCode, Rev: "old"}}}
+	var oldLines []int
+	for l := 1; l <= 76; l++ {
+		oldLines = append(oldLines, l+30) // the old numbering, shifted
+	}
+	g.IngestCoverageSuite(map[string]FileCov{"handler.ts": {Covered: 0, Total: 76, Lines: lines(nil, oldLines)}}, "integration.info", "t1")
+
+	g.Nodes[0].Rev = "new" // the file was edited
+	var hit, miss []int
+	for l := 1; l <= 73; l++ {
+		hit = append(hit, l)
+	}
+	miss = []int{74, 75}
+	g.IngestCoverageSuite(map[string]FileCov{"handler.ts": {Covered: 73, Total: 75, Lines: lines(hit, miss)}}, "unit.info", "t2")
+
+	sig := g.Nodes[0].Signal
+	if sig.CoveredLines != 73 || sig.TotalLines != 75 {
+		t.Errorf("only the fresh suite speaks of the current lines: want 73/75, got %d/%d (%.0f%%)",
+			sig.CoveredLines, sig.TotalLines, sig.LineCoverage)
+	}
+	if !g.Nodes[0].SignalStale() {
+		t.Error("the integration suite has not re-measured the new rev, and the node reads fresh")
+	}
+}

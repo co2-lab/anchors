@@ -156,7 +156,7 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now stri
 				TotalLines:   cov.Total,
 				AtRev:        n.Rev,
 			}
-			c, t := unionCoverage(n.Signal.CoverageBySuite)
+			c, t := unionCoverage(n.Signal.CoverageBySuite, n.Rev)
 			n.Signal.CoveredLines, n.Signal.TotalLines = c, t
 			if t > 0 {
 				n.Signal.LineCoverage = float64(c) / float64(t) * 100
@@ -176,7 +176,22 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now stri
 // When any suite lacks detail, the union falls back to the suite with the most covered
 // lines — an UNDER-estimate, never an over-estimate: summing counts would count a line
 // twice when two suites cover it.
-func unionCoverage(bySuite map[string]SuiteCoverage) (covered, total int) {
+//
+// Only suites measured at the CURRENT rev take part. A suite recorded before the file was
+// edited speaks of another text: its line numbers no longer point at these lines, and
+// joining them mixes two numberings. Measured in the reference project: an edited handler,
+// unit fresh at 73/75, integration stale at 0/76 in the old numbering — the union read
+// 73/106 = 69% and failed the threshold on a file the fresh suite covered at 97%. The
+// stale suite stays stored (it is refreshed when it runs again) and still keeps the node
+// stale through `oldestSuiteRev`; it just says nothing about the current lines.
+func unionCoverage(bySuite map[string]SuiteCoverage, currentRev string) (covered, total int) {
+	fresh := map[string]SuiteCoverage{}
+	for s, sc := range bySuite {
+		if sc.AtRev == currentRev {
+			fresh[s] = sc
+		}
+	}
+	bySuite = fresh
 	instr, cov := map[int]bool{}, map[int]bool{}
 	detailed := true
 	for _, sc := range bySuite {
