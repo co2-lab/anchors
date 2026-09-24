@@ -362,7 +362,7 @@ jobs:
               #
               # `to-do` with the author as owner uses what already exists: the author's next
               # `anchors next` finds it as their own card and resumes it; if they do not ask
-              # for work, the stale releases a waiting card's owner after HORAS_ESPERA (2h)
+              # for work, the stale releases it after HORAS_RETRABALHO (1h)
               # and any agent takes it. The author is the last named owner before the
               # assignment that is not the reviewer.
               if [ "$veredito" = "rejected" ] && echo "$labels" | grep -qx "anchors:in-review"; then
@@ -376,7 +376,7 @@ jobs:
                 if [ -n "$autor" ]; then
                   gh issue comment "$card" --body "anchors-owner: $autor"
                 fi
-                gh issue comment "$card" --body "↩ PR #$PR rejected by $revisor — the card is back in \`to-do\`${autor:+, with its author ($autor): their next \`anchors next\` resumes it, and if they do not ask for work in 2h the card is released to any agent}. Whoever holds it fixes what the \`## Revisão\` on the PR asks, on the PR's branch (it is theirs while they hold the card), and delivers again."
+                gh issue comment "$card" --body "↩ PR #$PR rejected by $revisor — the card is back in \`to-do\`${autor:+, with its author ($autor): their next \`anchors next\` resumes it, and if they do not ask for work in 1h the card is released to any agent}. Whoever holds it fixes what the \`## Revisão\` on the PR asks, on the PR's branch (it is theirs while they hold the card), and delivers again."
                 echo "card #$card: rejected — back to to-do${autor:+, owner $autor}"
               fi
             fi

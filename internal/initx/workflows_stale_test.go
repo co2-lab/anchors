@@ -67,6 +67,7 @@ func runStale(t *testing.T, env ...string) (out, calls string) {
 	// Fixed cut-offs: macOS `date` has no `-d`, and the test needs a known clock.
 	script = strings.Replace(script, `limite_espera=$(date -u -d "-${HORAS_ESPERA} hours" +%Y-%m-%dT%H:%M:%SZ)`, `limite_espera=2026-09-24T08:00:00Z`, 1)
 	script = strings.Replace(script, `limite_andamento=$(date -u -d "-${HORAS_ANDAMENTO} hours" +%Y-%m-%dT%H:%M:%SZ)`, `limite_andamento=2026-09-23T10:00:00Z`, 1)
+	script = strings.Replace(script, `limite_retrabalho=$(date -u -d "-${HORAS_RETRABALHO} hours" +%Y-%m-%dT%H:%M:%SZ)`, `limite_retrabalho=2026-09-24T09:00:00Z`, 1)
 	if strings.Contains(script, "date -u -d") {
 		t.Fatal("the cut-off lines changed shape; update the test's replacement")
 	}
@@ -81,7 +82,7 @@ func runStale(t *testing.T, env ...string) (out, calls string) {
 	logFile := filepath.Join(dir, "gh.log")
 	cmd := exec.Command("bash", "-c", script)
 	cmd.Env = append(os.Environ(), "PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"),
-		"FAKE_LOG="+logFile, "GH_REPO=o/r", "LABEL=anchors", "HORAS_ESPERA=2", "HORAS_ANDAMENTO=24")
+		"FAKE_LOG="+logFile, "GH_REPO=o/r", "LABEL=anchors", "HORAS_ESPERA=2", "HORAS_ANDAMENTO=24", "HORAS_RETRABALHO=1")
 	cmd.Env = append(cmd.Env, env...)
 	o, err := cmd.CombinedOutput()
 	if err != nil {
@@ -126,5 +127,31 @@ func TestStaleReleasesByRESTOwnerAndOnlyOnce(t *testing.T) {
 	}
 	if strings.Contains(calls, "gh issue comment 8 ") {
 		t.Error("card #8 had progress inside the window and was released")
+	}
+}
+
+// A REJECTED card goes back to `to-do` owned by its author, and the author's turn is short:
+// 1h, not the 2h of an ordinary waiting card. The clock here: now 10:00, waiting cut-off
+// 08:00, rework cut-off 09:00. A card last touched at 08:30 is released only if its owner
+// came from a rejection (the "↩ PR #N rejected" line after the owner line).
+func TestStaleReleasesARejectedCardAfterOneHour(t *testing.T) {
+	at := "2026-09-24T08:30:00Z"
+	issues := `[
+	 {"number":5,"updatedAt":"` + at + `","labels":[{"name":"anchors"},{"name":"anchors:to-do"}]},
+	 {"number":6,"updatedAt":"` + at + `","labels":[{"name":"anchors"},{"name":"anchors:to-do"}]},
+	 {"number":7,"updatedAt":"2026-09-24T07:00:00Z","labels":[{"name":"anchors"},{"name":"anchors:to-do"}]}
+	]`
+	out, calls := runStale(t, "FAKE_ISSUES="+issues,
+		`FAKE_COMMENTS_5=[{"body":"anchors-owner: a/author"},{"body":"↩ PR #9 rejected by a/rev — the card is back in to-do"}]`,
+		`FAKE_COMMENTS_6=[{"body":"anchors-owner: a/other"}]`,
+		`FAKE_COMMENTS_7=[{"body":"anchors-owner: a/other"}]`)
+	if !strings.Contains(calls, "gh issue comment 5 --body anchors-owner: (liberado)") {
+		t.Errorf("a rejected card idle for 1h30 must go to any agent:\n%s\n%s", calls, out)
+	}
+	if strings.Contains(calls, "gh issue comment 6 ") {
+		t.Errorf("an ordinary waiting card idle for 1h30 keeps its 2h:\n%s", calls)
+	}
+	if !strings.Contains(calls, "gh issue comment 7 --body anchors-owner: (liberado)") {
+		t.Errorf("an ordinary waiting card idle for 3h must still be released:\n%s", calls)
 	}
 }

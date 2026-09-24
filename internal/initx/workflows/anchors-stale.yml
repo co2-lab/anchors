@@ -63,11 +63,16 @@ jobs:
           # quando alguém comenta, move label ou referencia commit — um dev pode passar
           # um dia inteiro no card sem tocar no issue.
           HORAS_ANDAMENTO: "24"
+          # RETRABALHO: um card REPROVADO volta para `to-do` com o autor como dono
+          # (`anchors-pr-checks`). Ele já conhece o trabalho e o que a revisão pediu, então
+          # a vez dele é curta: se não pedir trabalho em 1h, o card vai para qualquer agente.
+          HORAS_RETRABALHO: "1"
         run: |
           set -euo pipefail
 
           limite_espera=$(date -u -d "-${HORAS_ESPERA} hours" +%Y-%m-%dT%H:%M:%SZ)
           limite_andamento=$(date -u -d "-${HORAS_ANDAMENTO} hours" +%Y-%m-%dT%H:%M:%SZ)
+          limite_retrabalho=$(date -u -d "-${HORAS_RETRABALHO} hours" +%Y-%m-%dT%H:%M:%SZ)
 
           # Um card é candidato quando tem dono (último `anchors-owner` não liberado) e
           # não recebe atualização desde o limite DO GRUPO DELE. `updatedAt` cobre commit
@@ -103,20 +108,21 @@ jobs:
                       or
                       (([.labels[].name] | any(. == \"anchors:in-progress\" or . == \"anchors:in-review\" or . == \"anchors:in-test\") | not)
                        and ([.labels[].name] | any(. == \"anchors:to-do\" or startswith(\"anchors:ready-to-\")))
-                       and .updatedAt < \"$limite_espera\")
+                       and .updatedAt < \"$limite_retrabalho\")
                     )
-                  | \"\\(.number) \\([.labels[].name | select(test(\"^anchors:(to-do|ready-to-[a-z]+|in-progress|in-review|in-test)$\"))] | first // \"\")\"]
+                  | \"\\(.number) \\([.labels[].name | select(test(\"^anchors:(to-do|ready-to-[a-z]+|in-progress|in-review|in-test)$\"))] | first // \"\") \\(.updatedAt)\"]
                   | .[]" |
-          while read -r n estado_atual; do
+          while read -r n estado_atual atualizado; do
             [ -n "$n" ] || continue
             # O DONO é o último `anchors-owner:`, lido pela REST (a primeira linha de cada
             # comentário). Falha da API PULA o card: liberar sem saber de quem ele é
             # seria agir sobre um palpite.
-            if ! donos=$(gh api "repos/$GH_REPO/issues/$n/comments" --paginate \
-                --jq '.[] | .body | split("\n")[0] | select(startswith("anchors-owner:"))'); then
+            if ! linhas=$(gh api "repos/$GH_REPO/issues/$n/comments" --paginate \
+                --jq '.[] | .body | split("\n")[0] | select(startswith("anchors-owner:") or startswith("↩ PR #"))'); then
               echo "· #$n: não consegui ler o dono (gh falhou) — pulando"
               continue
             fi
+            donos=$(printf '%s\n' "$linhas" | grep '^anchors-owner:' || true)
             dono=$(printf '%s\n' "$donos" | tail -1)
             # Sem dono, ou JÁ LIBERADO, não há o que liberar. O marcador é o PREFIXO: o
             # próprio stale escreve o motivo depois dele, e comparar pelo fim da linha
@@ -126,12 +132,28 @@ jobs:
               ""|"anchors-owner: (liberado)"*) continue ;;
             esac
 
+            # RETRABALHO: o dono atual foi dado por uma reprovação — depois da última linha
+            # de dono vem o aviso "↩ PR #N rejected" do `anchors-pr-checks`.
+            retrabalho=""
+            if printf '%s\n' "$linhas" | awk '/^anchors-owner:/ { depois = "" } /^↩ PR #/ { depois = $0 } END { exit !(depois ~ /rejected/) }'; then
+              retrabalho="sim"
+            fi
+
             # O relógio que valeu, para o registro dizer POR QUE este card foi alcançado.
             case "$estado_atual" in
               anchors:in-progress|anchors:in-review|anchors:in-test)
                 janela="${HORAS_ANDAMENTO}h (trabalho em andamento)" ;;
               *)
-                janela="${HORAS_ESPERA}h (card em espera — o dono era resíduo)" ;;
+                if [ -n "$retrabalho" ]; then
+                  janela="${HORAS_RETRABALHO}h (retrabalho de um PR reprovado — a vez do autor)"
+                else
+                  # A lista trouxe o card em espera pelo limite MAIS CURTO (o do retrabalho).
+                  # Um card comum só sai com o limite dele.
+                  if [[ "$atualizado" > "$limite_espera" ]]; then
+                    continue
+                  fi
+                  janela="${HORAS_ESPERA}h (card em espera — o dono era resíduo)"
+                fi ;;
             esac
 
             # O STALE LIBERA O DONO. NÃO MOVE O CARD.
