@@ -90,6 +90,12 @@ Feature: TriadComplete — the pieces that realise a spec EXIST
     Then it returns Pass, because matching is the work of the relational gates — this one
       exists precisely because they fail open when the piece is absent
 
+  @TRCMT-B09 @unit-level
+  Scenario: A per-rule waiver in a table row does not waive the unit
+    Given a spec whose only waiver sits inside a rule's table row
+    When the gate reads the unit's waivers
+    Then no piece of the triad is waived
+
   @TRCMT-B08 @unit-level
   Scenario: A piece declared TO BE DEVELOPED leaves the verdict undetermined
     Given a spec declaring `@TBD` for a piece it has not written yet, with the reason

@@ -66,7 +66,7 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	//
 	// O `trinca-completa` já faz esse mesmo arrasto para o teste (`@no-feature` implica
 	// `@no-test`, porque sem cenário não há o que provar); aqui ele se completa.
-	if noFeatureRE.MatchString(content) {
+	if unitWaiver(noFeatureRE, content) {
 		return Skip, i18n.T("gate.spec_feature.skip_waived")
 	}
 

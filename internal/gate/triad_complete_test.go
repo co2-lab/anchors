@@ -461,3 +461,19 @@ func TestTriadComplete_tbdIsDebtNotWaiver(t *testing.T) {
 		t.Errorf("sem declaracao nenhuma devia ser Fail, veio %v", v)
 	}
 }
+
+// A per-rule waiver lives in the rule's TABLE ROW; reading it as the unit's waived code,
+// feature and test for the whole unit (MIF: 293 of 308 triad failures).
+func TestSpecWaivers_tableRowIsTheRulesNotTheUnits(t *testing.T) {
+	t.Run("TRCMT-B09: a per-rule waiver in a table row does not waive the unit", func(t *testing.T) {})
+	spec := "| Rule | What |\n| --- | --- |\n" +
+		"| `CMTC-X01` | NÃO faz aviso de duplicata — @no-code: satisfeita pela AUSÊNCIA |\n" +
+		"| `CMTC-B02` | @no-test: provado pelo tsc |\n"
+	if w := specWaivers(spec); len(w) != 0 {
+		t.Errorf("per-rule waivers in table rows were read as unit waivers: %v", w)
+	}
+	unit := spec + "\n@no-code: a unidade é a configuração do pipeline\n"
+	if w := specWaivers(unit); len(w) == 0 {
+		t.Error("a unit-level waiver outside the table stopped counting")
+	}
+}

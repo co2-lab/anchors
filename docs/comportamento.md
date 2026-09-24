@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:96feb9ea1ac9a9f7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d42fccee02e84576 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1649,6 +1649,8 @@ teste prova.
 - [A waiver covers only the piece it declares](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-I04`
 
 - [The gate does not confront whether the pieces MATCH one another](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-X01`
+
+- [A per-rule waiver in a table row does not waive the unit](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B09`
 
 - [A piece declared TO BE DEVELOPED leaves the verdict undetermined](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B08`
 

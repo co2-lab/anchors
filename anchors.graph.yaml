@@ -249,6 +249,7 @@ nodes:
     - id: cmd/anchors/flow/agent_id_test.go
       kind: test
       rev: 4fdabe90ce71
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
@@ -2157,7 +2158,7 @@ nodes:
     - id: internal/gate/feature_test_match.feature
       kind: feature
       rev: 994c1317fc66
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-24"
       code: FTMFT
       layer: feature
       tags:
@@ -2165,7 +2166,7 @@ nodes:
     - id: internal/gate/feature_test_match.go
       kind: code
       rev: d60cb7c32713
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       code: FTMFT
       layer: gate
       tags:
@@ -2174,7 +2175,7 @@ nodes:
     - id: internal/gate/feature_test_match.spec.md
       kind: spec
       rev: 3b4a1abd85c5
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-24"
       code: FTMFT
       layer: spec
       code_declared: true
@@ -2183,7 +2184,7 @@ nodes:
     - id: internal/gate/feature_test_match_test.go
       kind: test
       rev: 3884463747fb
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-24"
       code: FTMFT
       layer: teste
       tags:
@@ -3531,7 +3532,7 @@ nodes:
         - feature
     - id: internal/gate/spec_feature_match.go
       kind: code
-      rev: 9580df9982f1
+      rev: 105a8caa08a1
       updated_at: "2026-09-23"
       code: SFMSP
       layer: gate
@@ -3673,7 +3674,7 @@ nodes:
         - gate
     - id: internal/gate/triad_complete.feature
       kind: feature
-      rev: c4fb90cc4a29
+      rev: f8dcfd32251f
       updated_at: "2026-09-20"
       code: TRCMT
       layer: feature
@@ -3681,7 +3682,7 @@ nodes:
         - feature
     - id: internal/gate/triad_complete.go
       kind: code
-      rev: f0be017f41a8
+      rev: cdfba554908b
       updated_at: "2026-09-23"
       code: TRCMT
       layer: gate
@@ -3690,7 +3691,7 @@ nodes:
         - gate
     - id: internal/gate/triad_complete.spec.md
       kind: spec
-      rev: 80986ee2db2b
+      rev: 71a37501dbbd
       updated_at: "2026-09-20"
       code: TRCMT
       layer: spec
@@ -3699,7 +3700,7 @@ nodes:
         - spec
     - id: internal/gate/triad_complete_test.go
       kind: test
-      rev: d09011dc4bad
+      rev: f133d3c16b9e
       updated_at: "2026-09-20"
       code: TRCMT
       layer: teste

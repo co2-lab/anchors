@@ -113,7 +113,7 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 	// não há comportamento observável nenhum e não existe prova a apontar — exigir
 	// referência ali seria pedir o endereço de algo que a spec acabou de dizer que não
 	// existe.
-	if noTestRE.MatchString(content) && !noFeatureRE.MatchString(content) {
+	if unitWaiver(noTestRE, content) && !unitWaiver(noFeatureRE, content) {
 		alvo, temRef := proofPointedByNoTest(content)
 		if !temRef {
 			return Fail, i18n.T("gate.triad.no_test_no_pointer")
@@ -356,18 +356,35 @@ func provingTest(codigo, root string, g *mapx.Graph) (arquivo string, achou bool
 }
 
 // specWaivers devolve as ARESTAS dispensadas pela própria spec.
+// unitWaiver reports whether a UNIT-level waiver is declared: the marker outside a table
+// row. A line that starts with `|` is a rule's row, and a waiver written there is that
+// RULE's (the per-rule shape `rule-implemented` reads) — not the unit's. Matching the whole
+// spec turned every per-rule `@no-code:` into a waiver of code, feature and test for the
+// unit: measured in MIF, 293 of 308 triad failures were that one misreading.
+func unitWaiver(re *regexp.Regexp, content string) bool {
+	for _, line := range strings.Split(content, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "|") {
+			continue
+		}
+		if re.MatchString(line) {
+			return true
+		}
+	}
+	return false
+}
+
 func specWaivers(content string) map[string]bool {
 	out := map[string]bool{}
-	if noTestRE.MatchString(content) {
+	if unitWaiver(noTestRE, content) {
 		out[string(mapx.EdgeTestedBy)] = true
 	}
-	if noFeatureRE.MatchString(content) {
+	if unitWaiver(noFeatureRE, content) {
 		// Sem feature não há o que provar por cenário — a dispensa da feature
 		// arrasta a do teste, senão o gate cobraria um teste de cenário nenhum.
 		out[string(mapx.EdgeCoveredBy)] = true
 		out[string(mapx.EdgeTestedBy)] = true
 	}
-	if noCodeRE.MatchString(content) {
+	if unitWaiver(noCodeRE, content) {
 		// Sem módulo, não há o que a feature exercitar nem o que o teste provar: a
 		// dispensa do código arrasta as outras duas, pelo mesmo motivo que a do
 		// `@no-feature` arrasta a do teste.
