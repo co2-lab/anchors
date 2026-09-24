@@ -1537,6 +1537,13 @@ func TestPipelinesNaoUsamVariavelInexistente(t *testing.T) {
 				declaradas[m[1]] = true
 			}
 		}
+		// A consulta GraphQL declara as SUAS variáveis no cabeçalho: `query($endCursor:
+		// String)`. Elas vivem dentro de aspas simples — o shell não as expande —, e o
+		// `--paginate` do gh preenche `$endCursor`. Mesma natureza do `as $x` do jq.
+		for _, m := range regexp.MustCompile(`\$([a-zA-Z_][\w]*)\s*:\s*\[?[A-Z]`).
+			FindAllStringSubmatch(texto, -1) {
+			declaradas[m[1]] = true
+		}
 		// `read -r a b c d` declara TODAS — o laço captura só a primeira, e um `read` de
 		// quatro campos é comum quando a linha vem de um `\t`-separado.
 		for _, m := range regexp.MustCompile(`read\s+-r\s+([\w]+(?:\s+[\w]+)*)`).
@@ -2284,6 +2291,7 @@ while [ $# -gt 0 ]; do
 done
 fail() { if [ "${FAKE_FAIL:-}" = "$1" ]; then echo "gh: HTTP 502" >&2; exit 1; fi; }
 case "$call" in
+  "api graphql") printf '%s' "${FAKE_MINE:-}" ;;
   "api "*) exit 1 ;;
   "issue list")
     case "$labels" in
@@ -2897,5 +2905,32 @@ func TestClaimOffersAReleasedInReviewCard(t *testing.T) {
 	}
 	if out, handed := runClaim(t, "FAKE_CARD_STATE=in-review"); handed {
 		t.Errorf("an in-review card with no declared owner was taken:\n%s", out)
+	}
+}
+
+// The claim reads "is there a card that is already mine?" in pages of 25: the old
+// `gh issue list --json ...,comments` over 200 cards got 502 on every run in blue-eyes.
+// A card already owned is resumed before anything new is handed out.
+func TestClaimReadsItsOwnCardInPages(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-claim.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+	i := strings.Index(s, "meu=$(")
+	if i < 0 {
+		t.Fatal("the own-card lookup vanished from the claim")
+	}
+	head := s[i : i+200]
+	if strings.Contains(head, "gh issue list") || !strings.Contains(head, "gh api graphql --paginate") {
+		t.Errorf("the own-card lookup is not the paginated GraphQL query:\n%s", head)
+	}
+	if !strings.Contains(s, "issues(first: 25") {
+		t.Error("the page size is not 25")
+	}
+	// Wired: when the lookup finds the agent's card, the claim resumes it.
+	out, _ := runClaim(t, "FAKE_MINE=9")
+	if !strings.Contains(out, "9") {
+		t.Errorf("the agent's own card #9 was not resumed:\n%s", out)
 	}
 }

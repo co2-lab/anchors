@@ -117,13 +117,25 @@ jobs:
           # O que separa "meu" de "de outro" não é o estado — é o `anchors-owner` do
           # último comentário, que o filtro abaixo já exige. Um card em revisão com outro
           # agente nunca chega aqui.
-          meu=$(gh issue list --state open --label "$LABEL" --limit 200 \
-            --json number,comments,labels \
-            --jq "[.[]
-                   | select([.labels[].name] | any(. == \"anchors:to-do\" or . == \"anchors:in-progress\"
+          # EM PÁGINAS DE 25, com os últimos 100 comentários de cada card. Pedir os
+          # comentários de 200 cards numa consulta só estourava o GraphQL: medido no
+          # blue-eyes, com 114 cards abertos, `502` em toda execução — nenhum card era
+          # entregue. É a mesma consulta que o `anchors next` usa desde a v0.1.160.
+          meu=$(gh api graphql --paginate \
+            -f owner="${GH_REPO%%/*}" -f name="${GH_REPO#*/}" -f label="$LABEL" \
+            -f query='query($owner: String!, $name: String!, $label: String!, $endCursor: String) {
+              repository(owner: $owner, name: $name) {
+                issues(first: 25, after: $endCursor, states: OPEN, labels: [$label]) {
+                  pageInfo { hasNextPage endCursor }
+                  nodes { number labels(first: 50) { nodes { name } } comments(last: 100) { nodes { body } } }
+                }
+              }
+            }' \
+            --jq ".data.repository.issues.nodes[]
+                   | select([.labels.nodes[].name] | any(. == \"anchors:to-do\" or . == \"anchors:in-progress\"
                              or . == \"anchors:ready-to-review\" or . == \"anchors:in-review\"))
-                   | select([.comments[].body | select(startswith(\"anchors-owner:\"))] | last == \"anchors-owner: $AGENT\")]
-                  | .[0].number // empty")
+                   | select([.comments.nodes[].body | select(startswith(\"anchors-owner:\"))] | last == \"anchors-owner: $AGENT\")
+                   | .number" | head -1)
 
           # Os candidatos vêm das LABELS de estado — o board não é consultado, e nem
           # precisa existir. A PRIORIDADE É DA DIREITA PARA A ESQUERDA DO FLUXO: o
