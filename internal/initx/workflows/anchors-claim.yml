@@ -372,6 +372,20 @@ jobs:
               echo "· #$n está em andamento sem dono declarado — não é tomado"
               continue
             fi
+            # E só o que o STALE liberou ("sem progresso"): esse foi ABANDONADO. Quem solta
+            # à mão um card em andamento terminou a sua parte — o revisor que reprovou e
+            # devolveu a posse, por exemplo — e reentregá-lo como trabalho parado o
+            # devolvia ao mesmo agente em toda chamada do `anchors next`. Medido no
+            # blue-eyes: o revisor do #766 reprovou o PR, liberou a posse e recebeu o
+            # mesmo card de volta, preso num laço.
+            if grep -qx "$n" /tmp/andamento.txt; then
+              case "$dono" in
+                *"(liberado)"*"sem progresso"*) ;;
+                *"(liberado)"*)
+                  echo "· #$n foi liberado à mão em andamento — não é trabalho parado, não é tomado"
+                  continue ;;
+              esac
+            fi
             case "$dono" in
               ""|*"(liberado)"*)
                 livre="$n"

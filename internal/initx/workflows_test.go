@@ -2935,3 +2935,23 @@ func TestClaimReadsItsOwnCardInPages(t *testing.T) {
 		t.Errorf("the agent's own card #9 was not resumed:\n%s", out)
 	}
 }
+
+// Only what the STALE released is abandoned work. A reviewer who rejects and releases by
+// hand has finished; re-offering the card handed it back to the same agent on every
+// `anchors next` (blue-eyes #766).
+func TestClaimDoesNotReofferAHandReleasedCardInFlight(t *testing.T) {
+	for _, st := range []string{"in-review", "in-progress"} {
+		if out, handed := runClaim(t, "FAKE_CARD_STATE="+st,
+			"FAKE_OWNER=anchors-owner: (liberado)"); handed {
+			t.Errorf("%s: a card released by hand was handed out again:\n%s", st, out)
+		}
+		if out, handed := runClaim(t, "FAKE_CARD_STATE="+st,
+			"FAKE_OWNER=anchors-owner: (liberado) — sem progresso há mais de 24h"); !handed {
+			t.Errorf("%s: a card the stale released was not handed out:\n%s", st, out)
+		}
+	}
+	// A to-do card released by hand is still free: nothing is in flight there.
+	if out, handed := runClaim(t, "FAKE_OWNER=anchors-owner: (liberado)"); !handed {
+		t.Errorf("a to-do card released by hand must stay claimable:\n%s", out)
+	}
+}

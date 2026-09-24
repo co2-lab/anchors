@@ -4031,7 +4031,7 @@ nodes:
     - id: internal/initx/expose_board.go
       kind: code
       rev: 9c20a1e67058
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-24"
       layer: infra
       tags:
         - infra
@@ -4197,7 +4197,7 @@ nodes:
         - test
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 667b5acb74f6
+      rev: 5aca590cf466
       updated_at: "2026-09-24"
       layer: teste
       tags:
