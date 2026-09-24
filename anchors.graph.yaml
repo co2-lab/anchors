@@ -369,6 +369,7 @@ nodes:
     - id: cmd/anchors/flow/notifications.go
       kind: code
       rev: 7d016daa9f92
+      updated_at: "2026-09-24"
       layer: comando
       tags:
         - cli
@@ -376,6 +377,7 @@ nodes:
     - id: cmd/anchors/flow/notifications_test.go
       kind: test
       rev: e0f1a29fab0c
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
@@ -693,12 +695,18 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide_tests.go
       kind: code
-      rev: 9a87b5db3d48
+      rev: 04ce7df4d55e
       updated_at: "2026-09-19"
       layer: comando
       tags:
         - cli
         - comando
+    - id: cmd/anchors/governance/guide_tests_test.go
+      kind: test
+      rev: 6e5d31a28a3f
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/governance/guide_work.go
       kind: code
       rev: 2e90244f9481
@@ -4224,7 +4232,7 @@ nodes:
       regime: declarativo
     - id: internal/initx/workflows_review_status_test.go
       kind: test
-      rev: 056c4e972b30
+      rev: c6cc03dbe8dc
       updated_at: "2026-09-24"
       layer: teste
       tags:
@@ -4238,7 +4246,7 @@ nodes:
         - test
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 13097cac36ad
+      rev: a4de010b6d05
       updated_at: "2026-09-24"
       layer: teste
       tags:

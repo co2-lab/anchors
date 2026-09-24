@@ -35,6 +35,28 @@ Each feature scenario already arrived classified at its natural level — prove 
 - ASYNCHRONY/EVENTUAL CONSISTENCY MADE EXPLICIT. If the system is eventually
   consistent, wait on a predicate (retry/poll), do not read right after writing.
 
+## Proving a boundary: the instrument follows the SHAPE of the input space
+
+A boundary rule says what may NOT come out, or what alone is accepted: "the screen
+asserts no state of X", "no credential crosses", "only these fields". The rule applies to
+EVERY input, and a test that checks ONE representative leaves the neighbour open. The
+instrument is chosen by the shape of the input space, not by taste:
+
+- SMALL AND CLOSED (a handful of values: the verdicts, the states, the environments) →
+  EXHAUSTIVE. ` + "`it.each`" + ` over the whole set, read from the source of truth (the exported
+  list, the type's members), never a copy typed in the test. A value added later is
+  tested without anyone remembering to.
+- LARGE BUT STRUCTURED (numbers, strings, nested objects built from a few kinds of part)
+  → A TABLE OF CLASSES. One case per class that can behave differently (empty, zero,
+  null, at the limit, one past it, each variant of the union), each named for the class.
+- OPEN (anything a source may send, any text) → CLOSE THE OUTPUT OR THE SOURCE, never a
+  list of the forbidden. Assert the exact set of keys that comes out, or read the unit's
+  own code for what it cannot reach (imports, module state). A blacklist of names only
+  proves the names someone remembered.
+
+Measured, in a real project: nine surviving mutants across four units, all the same
+shape — the boundary closed for one case, the neighbour left open.
+
 ## Environment safety (when the test touches external state)
 
 - DISCOVER THE ENVIRONMENT BY IDENTITY, NOT BY NAME. Validate that the resources belong
@@ -57,6 +79,8 @@ later. (The project's golden rule holds: absence of proof is not proof of absenc
 - Reading right after writing in an eventual system → intermittent (flaky) test.
 - Inferring the environment by name → risk of running against production.
 - "All green" without saying what did not run → a dishonest report.
+- A boundary proven by one representative, or by a list of forbidden names → the
+  neighbour case is still open.
 
 ## Project specialization
 
