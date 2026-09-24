@@ -377,3 +377,31 @@ func TestMockTyped_factoryOnTheNextLine(t *testing.T) {
 		t.Errorf("an UNannotated factory on the next line should fail: %v", v)
 	}
 }
+
+// With `mock_detect` declared (a project declares it for `mock-stamped`), the detector
+// started deciding what needs a type: automocks and spy mocks were charged, though both
+// derive from the real module by construction. Measured: 38 tests at once, 0 before.
+func TestMockTyped_doubleWithoutFactoryIsNotCharged(t *testing.T) {
+	t.Run("MCTYM-X05: a double with no factory is not charged", func(t *testing.T) {})
+	cfg := cfgComContrato()
+	cfg.Derived.MockDetect = `(?:jest|vi)\.mock\(['"]([^'"]+)`
+
+	// Single-line calls: the `mock_detect` path reads the detector line by line, so a call
+	// whose specifier sits on the next line is not detected at all (a separate limit).
+	derived := "jest.mock('src/a')\nvi.mock('src/b', { spy: true })\njest.mock('packages/backend/repositories/lotes', { virtual: true, spy: true })\n"
+	if v, msg := rodaMock(t, derived, cfg); v == Fail {
+		t.Errorf("an automock and spy mocks were charged: %s", msg)
+	}
+
+	// The narrowing must not blind the gate: an unannotated FACTORY is still charged,
+	// inline or on the next line.
+	for _, loose := range []string{
+		"jest.mock('src/a', () => ({ x: jest.fn() }))\n",
+		"vi.mock('src/a',\n  () => ({ x: vi.fn() }),\n)\n",
+		"jest.mock('src/a', factory)\n",
+	} {
+		if v, _ := rodaMock(t, loose, cfg); v != Fail {
+			t.Errorf("an unannotated factory stopped being charged (%v): %q", v, loose)
+		}
+	}
+}

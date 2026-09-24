@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:896acc52f7490751 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:fb779ee59e3bcca3 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -713,6 +713,8 @@ teste prova.
 - [The gate carries no built-in tie shape and no built-in ecosystem](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X03`
 
 - [The gate does not charge third-party library doubles](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X04`
+
+- [A double with no factory is not charged](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X05`
 
 - [A node that carries the trigger and is absent from the demanded file fails](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B01`
 

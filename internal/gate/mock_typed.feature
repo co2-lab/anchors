@@ -143,3 +143,10 @@ Feature: MockTyped — every test double must derive from the module it replaces
     When the gate confronts it
     Then it returns Skip, because a gate that accuses everything is switched off and takes
       the legitimate findings with it
+
+  @MCTYM-X05 @unit-level
+  Scenario: A double with no factory is not charged
+    Given the project declares mock_detect
+    And a test with an automock and a spy mock of governed modules
+    When the gate confronts it
+    Then neither is charged, and an unannotated factory still is

@@ -189,6 +189,18 @@ func declaredDoubles(content string, cfg *config.Config, forma string) []declare
 				m := re.FindStringSubmatch(linha)
 				if len(m) > 1 && strings.TrimSpace(m[1]) != "" {
 					modulo := strings.TrimSpace(m[1])
+					// When the tie is a TYPE on the factory (`{{module}}` in the form), only a
+					// double WITH a factory has a contract to freeze — see mockHasFactory.
+					// When the tie is an option on the call itself (`autospec=True`), the bare
+					// call is exactly what is charged: Python's `patch` without it is a
+					// MagicMock, not the module.
+					fimCall := i + 40
+					if fimCall > len(linhas) {
+						fimCall = len(linhas)
+					}
+					if strings.Contains(forma, "{{module}}") && !mockHasFactory(strings.Join(linhas[i:fimCall], "\n")) {
+						continue
+					}
 					// Contexto: a linha do mock mais as próximas 3 linhas (para chamadas multi-linha)
 					fim := i + 4
 					if fim > len(linhas) {
@@ -219,6 +231,61 @@ func declaredDoubles(content string, cfg *config.Config, forma string) []declare
 		})
 	}
 	return out
+}
+
+// mockHasFactory reports whether the mock call opening `text` passes a FACTORY — a second
+// argument that is not an options object.
+//
+// An automock (`jest.mock('x')`, no second argument) mirrors the real module's exports, and
+// Vitest's `{ spy: true }` IS the real module with spies: both derive from the module by
+// construction, so there is no hand-written contract to go stale and nothing a
+// `Partial<typeof X>` could bind. Measured in the project that declared `mock_detect` for
+// `mock-stamped`: 51 doubles charged by this gate, 42 automocks and 9 spy mocks, not one
+// hand-written factory. The detector says what a DOUBLE is; whether it needs a type is
+// this gate's own question.
+func mockHasFactory(text string) bool {
+	open := strings.Index(text, "(")
+	if open < 0 {
+		return false
+	}
+	depth, comma := 0, -1
+	var quote byte
+	end := -1
+	for i := open; i < len(text) && end < 0; i++ {
+		c := text[i]
+		if quote != 0 {
+			if c == '\\' {
+				i++
+			} else if c == quote {
+				quote = 0
+			}
+			continue
+		}
+		switch c {
+		case '\'', '"', '`':
+			quote = c
+		case '(', '[', '{':
+			depth++
+		case ')', ']', '}':
+			depth--
+			if depth == 0 {
+				end = i
+			}
+		case ',':
+			if depth == 1 && comma < 0 {
+				comma = i
+			}
+		}
+	}
+	if comma < 0 {
+		return false
+	}
+	stop := end
+	if stop < 0 {
+		stop = len(text)
+	}
+	second := strings.TrimSpace(text[comma+1 : stop])
+	return second != "" && !strings.HasPrefix(second, "{")
 }
 
 // annotationRE — a fábrica anotada tem `): <Tipo>` entre os parâmetros e a seta. Aceita
