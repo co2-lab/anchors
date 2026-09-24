@@ -306,6 +306,45 @@ O que descreve o **projeto** nasce fora dali. O SBOM é o exemplo: ele estava em
 enquanto era gravado numa pasta destinada a ser ignorada. Hoje nasce na raiz. A
 distinção não é *quem gerou* o arquivo, é **o que ele descreve**.
 
+## 7.2 Which Anchors the pipelines install
+
+Every pipeline that installs Anchors (`gates`, `board`, `identify`, `resolve-queue`)
+downloads the release that `min_version` in `anchors.yaml` names, and the **latest**
+release only when the project declares no `min_version`.
+
+Before, the resolver read `min_version` and the other three used `latest`. A project
+pinned to a version had three pipelines jump to a newer binary on their own while the
+fourth stayed put — the same repository judged by two different Anchors, depending on
+which workflow ran. Now raising the floor in `anchors.yaml` is what moves the CI, in all
+of them at once.
+
+The rule is **one shell snippet**, identical in every template, and a test compares the
+copies byte for byte and runs the snippet against each spelling `min_version` accepts
+(`0.1.84`, quoted, `v0.1.84`, with a trailing comment) and against its absence.
+
+## 7.3 The queue resolver pushes only as a GitHub App
+
+`anchors-resolve-queue` merges the integration branch into PRs that conflict only in
+generated files. A push made with `GITHUB_TOKEN` leaves every check of that PR at
+`action_required`: the PR looks green with **no** Anchors check run, so the resolution
+lands unverified and looks verified (measured: blue-eyes #838).
+
+- With the secrets `ANCHORS_APP_ID` and `ANCHORS_APP_PRIVATE_KEY` (a GitHub App installed
+  on the repository with Contents: write, plus Workflows: write if merges can touch
+  `.github/workflows/`), the job mints an App token (`actions/create-github-app-token`),
+  checks out with it and pushes the resolution; that push triggers the PR's checks.
+- Without them, the job **pushes nothing**. It comments on the PR with the exact commands
+  to resolve it locally — `git merge --no-commit origin/<base>`, `anchors map build`,
+  `anchors docs build`, commit, push — **once**: a hidden marker in the comment makes the
+  next sweeps skip a PR already told.
+
+Two secrets and not one stored token, because an App installation token expires in an
+hour: it has to be minted on each run. A single stored token could only be a personal
+access token, tied to one person's account. And the presence test lives in the job's
+`env`, because a step's `if:` cannot read `secrets`.
+
+Conflicts in content are unchanged: they still become a synthesis card.
+
 ---
 
 ## 8. O que existe hoje

@@ -76,15 +76,22 @@ jobs:
       - name: Instalar o Anchors
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Fixe uma versão (`v1.2.3`) quando quiser que o pipeline pare de mudar sozinho:
-          # `latest` faz o comportamento do CI depender de quando ele rodou.
-          ANCHORS_VERSION: latest
         run: |
           set -euo pipefail
-          if [ "$ANCHORS_VERSION" = "latest" ]; then
-            TAG=$(gh release view --repo co2-lab/anchors --json tagName --jq .tagName)
+          # WHICH ANCHORS: the one `min_version` in anchors.yaml names, and the latest
+          # release ONLY when the project declares none. A project pinned to a version
+          # keeps that binary in CI until someone raises the floor; with `latest` the CI
+          # would jump to a newer binary on its own, and what it does would depend on
+          # WHEN it ran. Every template that installs Anchors runs this same snippet —
+          # a test compares them, so they cannot drift apart again.
+          MIN=$(grep -m1 -E '^min_version:' anchors.yaml 2>/dev/null | cut -d'#' -f1 \
+            | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' || true)
+          if [ -n "$MIN" ]; then
+            TAG="v$MIN"
+            echo "installing Anchors $TAG (the min_version in anchors.yaml)"
           else
-            TAG="$ANCHORS_VERSION"
+            TAG=$(gh release view --repo co2-lab/anchors --json tagName --jq .tagName)
+            echo "installing Anchors $TAG (latest: anchors.yaml declares no min_version)"
           fi
           gh release download "$TAG" --repo co2-lab/anchors \
             --pattern 'anchors_*_linux_amd64.tar.gz' --output /tmp/anchors.tar.gz --clobber
