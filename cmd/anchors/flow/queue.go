@@ -101,7 +101,13 @@ If the queue is empty, it prints that and exits with code 0.
 
 In github mode the queue is the board: 'next' asks the claim pipeline and WAITS
 (up to 3 minutes) for the card it hands out. It never dispatches a second claim
-while one of yours is still pending — re-running it waits on that same claim.`,
+while one of yours is still pending — re-running it waits on that same claim.
+
+NOTIFICATIONS: whatever is in 'notifications.md' at the repository root is printed
+on top, before the card, on every call — it is how whoever runs the project tells
+every agent something. In github mode it is read from the integration branch on
+the platform (not your checkout); HTML comments in it are not printed. Read it and
+act on it before the card.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
@@ -135,9 +141,15 @@ while one of yours is still pending — re-running it waits on that same claim.`
 				if err := requireSession(); err != nil {
 					return err
 				}
+				// The message to every agent comes first, from the integration branch on
+				// the platform — see notifications.go.
+				branch := cfg.Workflow.IntegrationBranchOrDefault()
+				raw, readErr := notificationsFromBranch(cfg.Workflow.Repo, branch)
+				printNotifications(raw, cfg.Workflow.Repo+"@"+branch, readErr)
 				return nextFromBoard(absRoot, cfg, agentID())
 			}
 
+			printNotifications(notificationsLocal(absRoot), "project root", nil)
 			t, err := queue.Claim(absRoot, worker, nowStamp())
 			if err != nil {
 				return err

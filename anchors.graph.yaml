@@ -338,8 +338,8 @@ nodes:
         - test
     - id: cmd/anchors/flow/escalate.go
       kind: code
-      rev: 8e608becc49f
-      updated_at: "2026-09-19"
+      rev: 5d0e23327021
+      updated_at: "2026-09-24"
       layer: comando
       tags:
         - cli
@@ -361,8 +361,21 @@ nodes:
         - test
     - id: cmd/anchors/flow/escalate_test.go
       kind: test
-      rev: bebda8d62232
-      updated_at: "2026-09-19"
+      rev: 4d3b6616e1e6
+      updated_at: "2026-09-24"
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/flow/notifications.go
+      kind: code
+      rev: 7d016daa9f92
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/flow/notifications_test.go
+      kind: test
+      rev: e0f1a29fab0c
       layer: teste
       tags:
         - test
@@ -408,7 +421,7 @@ nodes:
         - test
     - id: cmd/anchors/flow/queue.go
       kind: code
-      rev: 510d6f6997cd
+      rev: 9ea1c8e1132c
       updated_at: "2026-09-24"
       layer: comando
       tags:
@@ -431,7 +444,7 @@ nodes:
         - comando
     - id: cmd/anchors/flow/review_work_test.go
       kind: test
-      rev: d5b72ad16904
+      rev: 742707cc95c9
       updated_at: "2026-09-24"
       layer: teste
       tags:
@@ -688,7 +701,7 @@ nodes:
         - comando
     - id: cmd/anchors/governance/guide_work.go
       kind: code
-      rev: 4b74fd70da49
+      rev: 2e90244f9481
       updated_at: "2026-09-24"
       layer: comando
       tags:
@@ -1202,8 +1215,8 @@ nodes:
         - test
     - id: cmd/anchors/quality/doctor.go
       kind: code
-      rev: dc9b31f4152d
-      updated_at: "2026-09-19"
+      rev: 01e8078dc4b7
+      updated_at: "2026-09-24"
       layer: comando
       tags:
         - cli
@@ -1377,7 +1390,7 @@ nodes:
         - test
     - id: internal/board/find_by_number_test.go
       kind: test
-      rev: f810e9980674
+      rev: 0ec0a540d89a
       updated_at: "2026-09-24"
       layer: teste
       tags:
@@ -4013,7 +4026,7 @@ nodes:
         - test
     - id: internal/initx/board_blocking_test.go
       kind: test
-      rev: ea53b7c4f26d
+      rev: 53b5f9f17074
       updated_at: "2026-09-24"
       layer: teste
       tags:
@@ -4203,15 +4216,15 @@ nodes:
         - test
     - id: internal/initx/workflows.go
       kind: code
-      rev: 775f4cb5f114
-      updated_at: "2026-09-23"
+      rev: e23a5a24368e
+      updated_at: "2026-09-24"
       layer: infra
       tags:
         - infra
       regime: declarativo
     - id: internal/initx/workflows_review_status_test.go
       kind: test
-      rev: 9d2182181cdb
+      rev: 056c4e972b30
       updated_at: "2026-09-24"
       layer: teste
       tags:
@@ -4225,7 +4238,7 @@ nodes:
         - test
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: 0222c6ab35c9
+      rev: 13097cac36ad
       updated_at: "2026-09-24"
       layer: teste
       tags:
