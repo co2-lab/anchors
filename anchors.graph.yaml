@@ -875,7 +875,7 @@ nodes:
     - id: cmd/anchors/ops/board_serve.go
       kind: code
       rev: e668381db13a
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-24"
       layer: comando
       tags:
         - cli
@@ -883,7 +883,7 @@ nodes:
     - id: cmd/anchors/ops/board_serve_test.go
       kind: test
       rev: 6985a3add8dc
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
@@ -3979,13 +3979,14 @@ nodes:
     - id: internal/initx/board_agents_test.go
       kind: test
       rev: fca88fb62541
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
     - id: internal/initx/board_blocking_test.go
       kind: test
       rev: ea53b7c4f26d
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
@@ -4029,7 +4030,7 @@ nodes:
         - test
     - id: internal/initx/expose_board.go
       kind: code
-      rev: d59b7f664cc5
+      rev: 9c20a1e67058
       updated_at: "2026-09-19"
       layer: infra
       tags:
@@ -4196,7 +4197,7 @@ nodes:
         - test
     - id: internal/initx/workflows_test.go
       kind: test
-      rev: c221dc283693
+      rev: 667b5acb74f6
       updated_at: "2026-09-24"
       layer: teste
       tags:

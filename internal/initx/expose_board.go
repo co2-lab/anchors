@@ -32,7 +32,10 @@ func BoardHTML() (string, error) {
 //
 // O fim real é `}]'` seguido do redirecionamento: o `]` fecha o array que o `[.[] | ...]`
 // abriu, e o `'` fecha a aspa do shell.
-var jqDaColeta = regexp.MustCompile(`(?s)--jq '(\[\.\[\].*?\}\])' *>`)
+//
+// Desde que a coleta passou a ler em páginas (`gh api graphql` → `_board/raw.jsonl`), a
+// expressão roda num `jq -s` sobre esse arquivo; as duas formas são aceitas.
+var jqDaColeta = regexp.MustCompile(`(?s)(?:--jq|jq -s) '(\[\.\[\].*?\}\])' *(?:_board/raw\.jsonl *)?>`)
 
 // BoardCollectJQ devolve a expressão jq da coleta, lida do pipeline embutido.
 func BoardCollectJQ() (string, error) {

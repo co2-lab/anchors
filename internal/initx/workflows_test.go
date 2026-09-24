@@ -324,7 +324,8 @@ func TestPipelinesSoTocamCardsDoAnchors(t *testing.T) {
 		if !strings.Contains(texto, "gh issue") {
 			continue
 		}
-		if !strings.Contains(texto, `--label "$LABEL"`) {
+		// `-f label="$LABEL"` é o mesmo filtro na consulta GraphQL paginada.
+		if !strings.Contains(texto, `--label "$LABEL"`) && !strings.Contains(texto, `-f label="$LABEL"`) {
 			t.Errorf("%s não filtra pela label do Anchors — pode tocar card de outro fluxo", w.Arquivo)
 		}
 	}
@@ -1637,7 +1638,7 @@ func TestBoardNaoPublicaCardDescartado(t *testing.T) {
 	}
 	// Na MESMA consulta que lê as issues. Um filtro depois, sobre o JSON já montado,
 	// dependeria de ninguém esquecer de aplicá-lo no caminho novo.
-	i := strings.Index(texto, "gh issue list --state all")
+	i := strings.Index(texto, "gh api graphql --paginate")
 	j := strings.Index(texto[i:], "> _board/board.json")
 	if i < 0 || j < 0 || !strings.Contains(texto[i:i+j], "anchors:discarded") {
 		t.Error("o filtro do descartado não está na consulta que lê as issues")

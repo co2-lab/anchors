@@ -142,9 +142,34 @@ jobs:
           # `--state all` continua porque o roadmap precisa do ENTREGUE — é como ele
           # desenha o passado. Descartado é outra coisa: é o que nunca teve sentido, ou
           # deixou de ter, e não pertence nem ao passado nem ao futuro.
-          gh issue list --state all --label "$LABEL" --limit 500 \
-            --json number,title,url,labels,comments,updatedAt,body,createdAt,closedAt,author \
-            --jq '[.[] | select([.labels[].name] | any(. == "anchors:discarded") | not) | {
+          #
+          # EM PÁGINAS DE 25, com os últimos 100 comentários de cada card. O `gh issue list
+          # --json ...,comments` pedia todos os comentários de 100 cards por página, e com
+          # centenas de cards o GraphQL do GitHub estourava: medido no blue-eyes, o board
+          # falhava em toda execução. A consulta devolve cada card no MESMO formato do
+          # `gh issue list`, e a expressão abaixo — a que o `board serve` também roda —
+          # não muda.
+          gh api graphql --paginate \
+            -f owner="${GH_REPO%%/*}" -f name="${GH_REPO#*/}" -f label="$LABEL" \
+            -f query='query($owner: String!, $name: String!, $label: String!, $endCursor: String) {
+              repository(owner: $owner, name: $name) {
+                issues(first: 25, after: $endCursor, states: [OPEN, CLOSED], labels: [$label],
+                       orderBy: {field: CREATED_AT, direction: DESC}) {
+                  pageInfo { hasNextPage endCursor }
+                  nodes {
+                    number title url body updatedAt createdAt closedAt
+                    author { login }
+                    labels(first: 50) { nodes { name } }
+                    comments(last: 100) { totalCount nodes { body createdAt } }
+                  }
+                }
+              }
+            }' \
+            --jq '.data.repository.issues.nodes[] | {number, title, url, body, updatedAt, createdAt,
+                    closedAt, author, labels: [.labels.nodes[] | {name}],
+                    comments: [.comments.nodes[] | {body, createdAt}], commentCount: .comments.totalCount}' \
+            > _board/raw.jsonl
+          jq -s '[.[] | select([.labels[].name] | any(. == "anchors:discarded") | not) | {
                     number: .number,
                     title: .title,
                     url: .url,
@@ -202,8 +227,8 @@ jobs:
                            if test("\\(liberado\\)") then "" else . end),
                     ownership: [.comments[].body | select(startswith("anchors-owner:")) |
                             sub("^anchors-owner: *";"") | ((split("\n")|first) // "") | sub(" +$";"")],
-                    comments: (.comments | length)
-                  }]' > _board/board.json
+                    comments: (.commentCount // (.comments | length))
+                  }]' _board/raw.jsonl > _board/board.json
 
           # PENDENTE agora, ou RESOLVIDO um dia? — e o board contava as duas coisas junto.
           #
