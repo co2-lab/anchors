@@ -248,3 +248,27 @@ func TestScaffolds_todosTemNomeECorpo(t *testing.T) {
 		}
 	}
 }
+
+// A SCENARIO OUTLINE is a scenario. The title regex required the line to START with
+// Cenário/Scenario, and `Esquema do Cenário:` never matched: 7 outlines were missing from
+// blue-eyes' comportamento.md. The `Exemplos:` table must not pass for a scenario.
+func TestScenarios_outlineIsAScenario(t *testing.T) {
+	feat := "# language: pt\nFuncionalidade: X\n\n" +
+		"  @ABCDE-B01\n  Esquema do Cenário: por <caso>\n    Dado <caso>\n\n" +
+		"    Exemplos:\n      | caso |\n      | a    |\n\n" +
+		"  @ABCDE-B02\n  Cenário: comum\n    Dado algo\n"
+	cs := parseScenarios(feat, "ABCDE")
+	if len(cs) != 2 {
+		t.Fatalf("want the outline and the scenario, got %+v", cs)
+	}
+	if cs[0].Titulo != "por <caso>" || cs[1].Titulo != "comum" {
+		t.Errorf("titles = %q, %q", cs[0].Titulo, cs[1].Titulo)
+	}
+	if !strings.Contains(cs[0].Corpo, "| a    |") {
+		t.Errorf("the Examples table did not stay in the outline's body: %q", cs[0].Corpo)
+	}
+	en := parseScenarios("Feature: X\n\n  @ABCDE-B01\n  Scenario Outline: by <c>\n    Given <c>\n", "ABCDE")
+	if len(en) != 1 || en[0].Titulo != "by <c>" {
+		t.Errorf("English outline = %+v", en)
+	}
+}

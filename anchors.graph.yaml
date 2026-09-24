@@ -1627,7 +1627,7 @@ nodes:
         - test
     - id: internal/doct/scenarios_test.go
       kind: test
-      rev: cada633d9cde
+      rev: ef3b800cf3a3
       updated_at: "2026-09-10"
       code: GLCGL
       layer: teste

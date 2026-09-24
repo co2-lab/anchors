@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -35,13 +36,24 @@ type Scenario struct {
 var (
 	// A tag-line: `@GLCGL-B01 @unit-level`. O primeiro código é a identidade.
 	cenarioTagRE = regexp.MustCompile(`@([A-Za-z0-9][A-Za-z0-9_#-]*)`)
-	// O título aceita as duas grafias — a feature pode estar em `# language: pt` ou não,
-	// e uma documentação que ignora metade dos cenários por causa do idioma do arquivo
-	// não é a documentação de ninguém.
-	cenarioTituloRE = regexp.MustCompile(`(?i)^\s*(?:Cen[áa]rio|Scenario)(?:\s+Outline|\s+Esquema.*?)?:\s*(.+?)\s*$`)
+	// O título aceita TODA palavra de cenário dos dialetos — a MESMA lista que os gates
+	// usam (`config.GherkinScenarioAlternatives`, a mais longa primeiro). A versão anterior
+	// exigia a linha COMEÇAR com Cenário/Scenario, e `Esquema do Cenário:` nunca casava:
+	// medido no blue-eyes, os 7 esquemas sumiam do `comportamento.md`. Os dois-pontos logo
+	// após a palavra impedem que a tabela `Exemplos:` passe por cenário `Exemplo`.
+	cenarioTituloRE = scenarioTitleRE()
 	// O código de identidade tem a forma `ABCDE-B01` (com `#NN` opcional).
 	cenarioCodigoRE = regexp.MustCompile(`^[A-Z0-9]{4,6}-(?:[A-Z]{1,2}\d{2}|DS-[A-Za-z0-9-]+|VR)(?:#\d{2})?$`)
 )
+
+// scenarioTitleRE monta o título a partir das palavras de cenário de todos os dialetos.
+func scenarioTitleRE() *regexp.Regexp {
+	var alts []string
+	for _, a := range config.GherkinScenarioAlternatives() {
+		alts = append(alts, regexp.QuoteMeta(a))
+	}
+	return regexp.MustCompile(`(?i)^\s*(?:` + strings.Join(alts, "|") + `)\s*:\s*(.+?)\s*$`)
+}
 
 // parseScenarios lê os cenários de uma feature.
 //
