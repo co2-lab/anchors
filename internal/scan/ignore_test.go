@@ -138,3 +138,35 @@ func TestEfemerosNaoViramTrabalho(t *testing.T) {
 		}
 	}
 }
+
+// A worktree or nested clone inside the tree is another checkout: its files are copies,
+// and mapping them duplicated the whole project (1360 nodes from four agent worktrees).
+func TestWalkSkipsNestedCheckouts(t *testing.T) {
+	dir := t.TempDir()
+	must(t, os.MkdirAll(filepath.Join(dir, "src"), 0o755))
+	must(t, os.WriteFile(filepath.Join(dir, "src", "a.ts"), []byte("export const a = 1\n"), 0o644))
+	wt := filepath.Join(dir, "tools", "worktrees", "agent-1")
+	must(t, os.MkdirAll(filepath.Join(wt, "src"), 0o755))
+	must(t, os.WriteFile(filepath.Join(wt, ".git"), []byte("gitdir: /elsewhere\n"), 0o644))
+	must(t, os.WriteFile(filepath.Join(wt, "src", "a.ts"), []byte("export const a = 1\n"), 0o644))
+	clone := filepath.Join(dir, "vendor-clone")
+	must(t, os.MkdirAll(filepath.Join(clone, ".git"), 0o755))
+	must(t, os.WriteFile(filepath.Join(clone, "b.ts"), []byte("export const b = 1\n"), 0o644))
+
+	cfg := &config.Config{Layers: map[string]config.Layer{"code": {Pattern: "**/*.ts", Kind: "code"}}}
+	files, err := Walk(dir, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, f := range files {
+		got = append(got, f.Path)
+	}
+	joined := strings.Join(got, " ")
+	if !strings.Contains(joined, "src/a.ts") {
+		t.Fatalf("the project's own file was not scanned: %v", got)
+	}
+	if strings.Contains(joined, "worktrees") || strings.Contains(joined, "vendor-clone") {
+		t.Errorf("a nested checkout was scanned as project material: %v", got)
+	}
+}

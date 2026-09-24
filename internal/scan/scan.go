@@ -159,6 +159,22 @@ var ignored = map[string]bool{
 // Walk percorre root e classifica cada arquivo pelas CAMADAS da config. Um arquivo
 // que não casa nenhuma camada é ignorado. Quando casa mais de uma, vence a de
 // pattern mais específico (heurística: maior comprimento do pattern).
+// nestedCheckout reports whether a directory below the root is another checkout — a git
+// worktree or a nested repository, marked by its own `.git` (a file in a worktree, a
+// directory in a clone). Its files belong to that checkout, not to this project.
+//
+// Measured in this repository: four agent worktrees under `.claude/worktrees/` put 1360
+// copies of the project's own files into the map. They were excluded in
+// `.git/info/exclude`, which the scan does not read — and should not need to: a checkout
+// inside the tree is never the project's material, whatever the ignore files say.
+func nestedCheckout(path, rel string) bool {
+	if rel == "." {
+		return false
+	}
+	_, err := os.Lstat(filepath.Join(path, ".git"))
+	return err == nil
+}
+
 func Walk(root string, cfg *config.Config) ([]File, error) {
 	// O vocabulário é ligado AQUI, na porta de entrada, e não em cada chamador: um
 	// chamador novo que esquecesse a ligação não daria erro — daria um mapa sem as
@@ -183,7 +199,7 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 		// forma nativa de vazar para dentro do grafo.
 		rel := filepath.ToSlash(mustRel(root, path))
 		if d.IsDir() {
-			if ig.SkipDir(d.Name(), rel) {
+			if ig.SkipDir(d.Name(), rel) || nestedCheckout(path, rel) {
 				return filepath.SkipDir
 			}
 			return nil

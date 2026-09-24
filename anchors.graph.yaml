@@ -13,7 +13,7 @@ nodes:
     - id: CLI.md
       kind: doc
       rev: 40fa851851fb
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       layer: doc
       tags:
         - doc
@@ -279,7 +279,7 @@ nodes:
     - id: cmd/anchors/flow/deliver.go
       kind: code
       rev: e4f03010f8c0
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: PRICX
       layer: comando
       tags:
@@ -310,6 +310,7 @@ nodes:
     - id: cmd/anchors/flow/deliver_upstream_test.go
       kind: test
       rev: 81cbcdf7395e
+      updated_at: "2026-09-23"
       layer: teste
       tags:
         - test
@@ -844,7 +845,7 @@ nodes:
     - id: cmd/anchors/mapcmd/register.go
       kind: code
       rev: d996b569e86b
-      updated_at: "2026-09-21"
+      updated_at: "2026-09-23"
       layer: comando
       tags:
         - cli
@@ -852,6 +853,7 @@ nodes:
     - id: cmd/anchors/mapcmd/renumber.go
       kind: code
       rev: 919845643f10
+      updated_at: "2026-09-23"
       layer: comando
       tags:
         - cli
@@ -859,6 +861,7 @@ nodes:
     - id: cmd/anchors/mapcmd/renumber_test.go
       kind: test
       rev: d9e71543ed1b
+      updated_at: "2026-09-23"
       layer: teste
       tags:
         - test
@@ -2185,7 +2188,7 @@ nodes:
     - id: internal/gate/gate.feature
       kind: feature
       rev: 46e8b2c448bc
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: GTENG
       layer: feature
       tags:
@@ -2193,7 +2196,7 @@ nodes:
     - id: internal/gate/gate.go
       kind: code
       rev: 37f82f3d2673
-      updated_at: "2026-09-20"
+      updated_at: "2026-09-23"
       code: GTENG
       layer: gate
       tags:
@@ -2202,7 +2205,7 @@ nodes:
     - id: internal/gate/gate.spec.md
       kind: spec
       rev: 3bb52841dfe2
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: GTENG
       layer: spec
       code_declared: true
@@ -2211,7 +2214,7 @@ nodes:
     - id: internal/gate/gate_test.go
       kind: test
       rev: 2fc03679d70b
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       code: GTENG
       layer: teste
       tags:
@@ -3082,6 +3085,7 @@ nodes:
     - id: internal/gate/revision_renumber.feature
       kind: feature
       rev: 29e80e1e18d4
+      updated_at: "2026-09-23"
       code: RVRNR
       layer: feature
       tags:
@@ -3089,6 +3093,7 @@ nodes:
     - id: internal/gate/revision_renumber.go
       kind: code
       rev: 06c848be7601
+      updated_at: "2026-09-23"
       code: RVRNR
       layer: gate
       tags:
@@ -3097,6 +3102,7 @@ nodes:
     - id: internal/gate/revision_renumber.spec.md
       kind: spec
       rev: 29b9744660ef
+      updated_at: "2026-09-23"
       code: RVRNR
       layer: spec
       code_declared: true
@@ -3105,6 +3111,7 @@ nodes:
     - id: internal/gate/revision_renumber_test.go
       kind: test
       rev: 5d962fa98a42
+      updated_at: "2026-09-23"
       code: RVRNR
       layer: teste
       tags:
@@ -4155,7 +4162,7 @@ nodes:
     - id: internal/initx/workflows.go
       kind: code
       rev: 775f4cb5f114
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-23"
       layer: infra
       tags:
         - infra
@@ -4228,7 +4235,7 @@ nodes:
     - id: internal/mapx/build.go
       kind: code
       rev: 9cc89d92a1b2
-      updated_at: "2026-09-21"
+      updated_at: "2026-09-23"
       layer: mapa
       tags:
         - nucleo
@@ -4348,7 +4355,7 @@ nodes:
     - id: internal/mapx/node_code_test.go
       kind: test
       rev: 4f86019884fe
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-23"
       code: DTAXX
       layer: teste
       tags:
@@ -4585,6 +4592,7 @@ nodes:
     - id: internal/scan/upstream.go
       kind: code
       rev: f692f9656173
+      updated_at: "2026-09-23"
       layer: scan
       tags:
         - nucleo
@@ -4593,6 +4601,7 @@ nodes:
     - id: internal/scan/upstream_test.go
       kind: test
       rev: b66fb0b64681
+      updated_at: "2026-09-23"
       code: FNDTN
       layer: teste
       tags:
