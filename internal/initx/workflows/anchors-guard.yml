@@ -178,6 +178,17 @@ jobs:
             exit 0
           fi
 
+          # ONE WARNING PER CARD. This job runs on `opened` AND on the late `anchors` label,
+          # and a card created with its labels fires both — so the same warning was posted
+          # twice. The runs are serialised per issue (`concurrency` above), which is what
+          # makes checking before commenting enough.
+          ja_avisou=$(gh issue view "$N" --repo "$GH_REPO" --json comments \
+            --jq '[.comments[].body | select(startswith("⚠ **Este card não diz de qual trabalho nasceu.**"))] | length')
+          if [ "${ja_avisou:-0}" -gt 0 ]; then
+            echo "#$N já recebeu o aviso de procedência — não repito"
+            exit 0
+          fi
+
           echo "::warning title=Card escalado sem procedência::#$N não diz de qual trabalho nasceu"
           gh issue comment "$N" --repo "$GH_REPO" --body "$(printf '%s\n' \
             "⚠ **Este card não diz de qual trabalho nasceu.**" \

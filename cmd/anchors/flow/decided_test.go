@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/initx"
 )
 
 // O `escalate --for-user` gravava um estado que ele não sabia reverter.
@@ -81,5 +83,21 @@ func TestDecided_recusaForaDoModoGithub(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "issues/") {
 		t.Errorf("o erro não aponta onde a decisão mora no modo local:\n%s", err)
+	}
+}
+
+// The guard reverts a close by a person that lacks `anchors:manual`, and `decided` runs
+// under a person's account: without the label first, the closed decision came back.
+func TestDecided_closeLabelsManualBeforeClosing(t *testing.T) {
+	calls := closeDecisionArgs("o/r", 832, "X-R0001: y")
+	if len(calls) != 2 {
+		t.Fatalf("expected label then close, got %v", calls)
+	}
+	label, closing := strings.Join(calls[0], " "), strings.Join(calls[1], " ")
+	if !strings.Contains(label, "issue edit 832") || !strings.Contains(label, "--add-label "+initx.LabelManual) {
+		t.Errorf("the first call must put %s on the issue: %q", initx.LabelManual, label)
+	}
+	if !strings.Contains(closing, "issue close 832") || !strings.Contains(closing, "X-R0001: y") {
+		t.Errorf("the second call must close with the resolution: %q", closing)
 	}
 }

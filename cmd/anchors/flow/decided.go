@@ -182,14 +182,34 @@ func closeDecisionsUnder(repo, card, resolucao string) int {
 	}
 	n := 0
 	for _, i := range achadas {
-		if exec.Command("gh", "issue", "close", fmt.Sprint(i.Number),
-			"--repo", repo,
-			"--comment", "✓ Decided, and the answer became a rule.\n\n**Resolution:** "+resolucao,
-		).Run() == nil {
+		ok := true
+		for _, args := range closeDecisionArgs(repo, i.Number, resolucao) {
+			if exec.Command("gh", args...).Run() != nil {
+				ok = false
+				break
+			}
+		}
+		if ok {
 			n++
 		}
 	}
 	return n
+}
+
+// closeDecisionArgs returns, in order, the `gh` calls that close one decision issue.
+//
+// The `anchors:manual` label goes on BEFORE the close. `decided` runs under a person's
+// account, and the guard reverts any close by a person that lacks the label — measured in
+// the reference project: the decision issue this command closed was reopened by the guard
+// within a minute, and the card showed as undecided again. The label is the guard's own
+// opt-out, and closing a decision IS the authorised move.
+func closeDecisionArgs(repo string, number int, resolution string) [][]string {
+	n := fmt.Sprint(number)
+	return [][]string{
+		{"issue", "edit", n, "--repo", repo, "--add-label", initx.LabelManual},
+		{"issue", "close", n, "--repo", repo,
+			"--comment", "✓ Decided, and the answer became a rule.\n\n**Resolution:** " + resolution},
+	}
 }
 
 // desbloqueiosAbertos lista os cards cuja entrega destrava `card`.

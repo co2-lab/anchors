@@ -2222,3 +2222,38 @@ func TestInitialStateSeesTheLabelThatArrivesLater(t *testing.T) {
 			"creation — the card stays stateless and vanishes from `claim`. if: %q", cond)
 	}
 }
+
+// ONE PROVENANCE WARNING PER CARD. `estado-inicial` runs on `opened` and on the late
+// `anchors` label; a card created with its labels fires both, and the warning was posted
+// twice. The step must look for its own earlier comment BEFORE commenting.
+func TestGuardProvenanceWarningIsPostedOnce(t *testing.T) {
+	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-guard.yml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	s := string(b)
+	i := strings.Index(s, "- name: O card escalado nasce com procedência")
+	if i < 0 {
+		t.Fatal("the provenance step vanished from the guard")
+	}
+	step := s[i:]
+	if j := strings.Index(step[1:], "\n      - name:"); j >= 0 {
+		step = step[:j+1]
+	}
+	comment := strings.Index(step, "gh issue comment")
+	if comment < 0 {
+		t.Fatal("the provenance step no longer comments")
+	}
+	before := step[:comment]
+	marker := "⚠ **Este card não diz de qual trabalho nasceu.**"
+	if !strings.Contains(before, "select(startswith(\""+marker+"\"))") {
+		t.Error("the step comments without checking for its own earlier warning — a card " +
+			"created with its labels gets the warning twice")
+	}
+	if !strings.Contains(step[comment:], marker) {
+		t.Error("the check looks for a marker the comment no longer starts with")
+	}
+	if !strings.Contains(before, "exit 0") {
+		t.Error("finding the earlier warning does not stop the step")
+	}
+}
