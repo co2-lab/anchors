@@ -28,7 +28,7 @@ import (
 func newCheckCmd() *cobra.Command {
 	var root, mapPath, phase, category string
 	var changed []string
-	var all, noRecord, fix, deterministic, skipSlow, onlyIssues, showDrift, showTiming bool
+	var all, noRecord, recordIssues, fix, deterministic, skipSlow, onlyIssues, showDrift, showTiming bool
 	var skipRegras string
 	var msgPath string
 	cmd := &cobra.Command{
@@ -59,8 +59,17 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// No modo github o achado de gate vira CARD, não arquivo: o `issues/` é a fila do
 			// modo local (mover pasta à mão), e manter os dois faz o board esconder o que os
 			// gates encontraram.
+			// ...but only CI opens and closes those CARDS (or `--record-issues`). A local
+			// check runs on work in progress — before the `docs build`, halfway through a
+			// merge — and every blocking failure it saw became an issue on the board. Measured
+			// in blue-eyes: two `[docs-fresh]` cards opened by an agent's local check for a
+			// state that existed only on its machine; the next local check closed one under
+			// a person's account, the state lock reverted that as a manual close, and the
+			// claim handed the spurious card back to the agent in a loop.
+			issuesOn := true
 			if cfg != nil && cfg.GitHubMode() && len(cfg.Workflow.Labels) > 0 {
 				issue.UseGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
+				issuesOn = recordIssues || os.Getenv("GITHUB_ACTIONS") == "true"
 			}
 			if len(cfg.Gates) == 0 {
 				return fmt.Errorf("no gate declared in anchors.yaml (`gates:` section)")
@@ -205,7 +214,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// Honest opt-out: --no-record only reports, it does not record.
 			pendentes := 0
 			if !noRecord {
-				if err := recordCheck(absRoot, mapPath, g, profile); err != nil {
+				if err := recordCheck(absRoot, mapPath, g, profile, issuesOn); err != nil {
 					fmt.Fprintf(os.Stderr, "warning: failed to record (stamp/issue): %v\n", err)
 				}
 				// gates de JULGAMENTO: enfileira uma task `judge` por alvo pendente,
@@ -305,6 +314,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 	cmd.Flags().StringSliceVar(&changed, "changed", nil, "changed file(s) — repeatable or comma-separated; the gates run ONCE over the union of the impact paths")
 	cmd.Flags().BoolVar(&all, "all", false, "scan every node (the full picture; expensive)")
 	cmd.Flags().BoolVar(&noRecord, "no-record", false, "report only: neither stamps the map nor opens issues")
+	cmd.Flags().BoolVar(&recordIssues, "record-issues", false, "github mode: open/close board issues from a local run too (by default only CI does)")
 	cmd.Flags().BoolVar(&fix, "fix", false, "self-healer: applies the automatic repairs (e.g. fixes updated_at) before confronting")
 	cmd.Flags().BoolVar(&deterministic, "deterministic", false, "runs only the computable gates (skips the AI-judgment ones) — the pre-commit mode")
 	cmd.Flags().StringVar(&phase, "phase", "", "enforces only the gates of this phase (pre-commit|pre-push|ci|manual)")
@@ -504,7 +514,7 @@ func relSlug(p string) string { return strings.TrimSuffix(p, filepath.Ext(p)) }
 // recordCheck fecha o loop: carimba as arestas confrontadas no mapa (persistindo o
 // veredito, o que destrava a detecção de stale) e abre uma issue de violation por
 // fail bloqueante. É a passagem de "reporta" para "registra" (QUALITY §5).
-func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile) error {
+func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn bool) error {
 	now := time.Now()
 	day := now.Format("2006-01-02")
 
@@ -525,6 +535,10 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile) error {
 	stamped := g.StampEdges(verdicts, now.Format(time.DateOnly))
 	if err := mapx.Save(g, mapPath); err != nil {
 		return fmt.Errorf("save stamped map: %w", err)
+	}
+	if !issuesOn {
+		fmt.Println("record: map stamped; board issues are left to CI (local check — use --record-issues to write them)")
+		return nil
 	}
 
 	// 2) ISSUES — o loop completo, abre E fecha:
