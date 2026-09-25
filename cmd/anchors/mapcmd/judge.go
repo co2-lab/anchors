@@ -25,7 +25,7 @@ import (
 // (fica stale) se o alvo mudar depois.
 func newJudgeCmd() *cobra.Command {
 	var root, mapPath, gateName, verdict, reason, patchFile string
-	var pending bool
+	var pending, recordIssues bool
 	cmd := &cobra.Command{
 		Use:   "judge <target>",
 		Short: "Record an AI's verdict for a judgment gate",
@@ -200,7 +200,21 @@ it is declared.`,
 				}
 			}
 
-			if failed {
+			// MANUAL MODE writes no issue unless asked: the verdict is in the map (above),
+			// and the report is printed here, the one place it stays.
+			if !judgeWritesIssue(cfg, recordIssues) {
+				switch {
+				case failed:
+					fmt.Printf("✗ judged FAIL — stamped in the map; no issue written (mode: manual — --record-issues writes it)\n")
+					if strings.TrimSpace(reason) != "" {
+						fmt.Printf("\n%s\n\n", strings.TrimSpace(reason))
+					}
+				case v == "waived":
+					fmt.Println(i18n.T("judge.waived"))
+				default:
+					fmt.Println(i18n.T("judge.pass"))
+				}
+			} else if failed {
 				created, at, err := issue.Open(absRoot, iss)
 				if err != nil {
 					return err
@@ -248,6 +262,7 @@ it is declared.`,
 	cmd.Flags().StringVar(&reason, "reason", "", "the full REPORT (multi-line markdown) — becomes the issue body; mandatory on fail")
 	cmd.Flags().StringVar(&patchFile, "patch", "", "file with the diff that FIXES the finding — opens an applicable suggestion (`anchors suggest`)")
 	cmd.Flags().BoolVar(&pending, "pending", false, "lists the targets awaiting judgment")
+	cmd.Flags().BoolVar(&recordIssues, "record-issues", false, "mode: manual — write the issue (on fail) and close it (on pass); by default none is written")
 	return cmd
 }
 
@@ -354,4 +369,14 @@ func ValidateVerdict(v, reason string) error {
 			"(name the absence: which piece is missing, and where it is declared)")
 	}
 	return nil
+}
+
+// judgeWritesIssue says whether `anchors judge` opens and closes the issue of its verdict.
+// Always, except in manual mode, where it does only with --record-issues — the verdict is
+// stamped in the map either way.
+func judgeWritesIssue(cfg *config.Config, recordIssues bool) bool {
+	if cfg != nil && cfg.ManualMode() {
+		return recordIssues
+	}
+	return true
 }

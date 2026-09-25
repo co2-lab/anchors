@@ -811,12 +811,18 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/judge.go
       kind: code
-      rev: 91ba02d7da92
+      rev: 63d818dfdaf6
       updated_at: "2026-09-19"
       layer: comando
       tags:
         - cli
         - comando
+    - id: cmd/anchors/mapcmd/judge_manual_test.go
+      kind: test
+      rev: c75c27deea86
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/mapcmd/judge_test.go
       kind: test
       rev: e49cc9ef0975
@@ -989,7 +995,7 @@ nodes:
         - comando
     - id: cmd/anchors/ops/init.go
       kind: code
-      rev: 6cbf9790f979
+      rev: d54b724511a7
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -1027,7 +1033,7 @@ nodes:
         - test
     - id: cmd/anchors/ops/init_non_interactive.go
       kind: code
-      rev: ce30e3b1afea
+      rev: abb7a0769cb1
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -1143,7 +1149,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/check.go
       kind: code
-      rev: c629e1700f8d
+      rev: 2b3c5a018a6d
       updated_at: "2026-09-25"
       layer: comando
       tags:
@@ -1173,7 +1179,7 @@ nodes:
     - id: cmd/anchors/quality/check_record_issues_test.go
       kind: test
       rev: f10e18969ffb
-      updated_at: "2026-09-24"
+      updated_at: "2026-09-25"
       layer: teste
       tags:
         - test
@@ -1241,6 +1247,12 @@ nodes:
       kind: test
       rev: 7c9030b1e4e8
       updated_at: "2026-09-24"
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/quality/issues_on_test.go
+      kind: test
+      rev: 143e0e24df7b
       layer: teste
       tags:
         - test
@@ -1517,7 +1529,7 @@ nodes:
         - config
     - id: internal/config/config.go
       kind: code
-      rev: fba09dc33d61
+      rev: 70f768489875
       updated_at: "2026-09-21"
       layer: config
       tags:
@@ -1651,7 +1663,7 @@ nodes:
         - test
     - id: internal/config/workflow_test.go
       kind: test
-      rev: 3165815641a2
+      rev: 64ce54fa52d4
       updated_at: "2026-09-19"
       layer: teste
       tags:
@@ -4217,7 +4229,7 @@ nodes:
         - test
     - id: internal/initx/questions.go
       kind: code
-      rev: 045b1d8c6fa5
+      rev: 3b445841a4bc
       updated_at: "2026-09-19"
       layer: infra
       tags:
@@ -4306,7 +4318,7 @@ nodes:
     - id: internal/issue/issue.go
       kind: code
       rev: e9cf2efd7f15
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-25"
       layer: infra
       tags:
         - infra
@@ -4314,7 +4326,7 @@ nodes:
     - id: internal/issue/issue_test.go
       kind: test
       rev: 6a332acfc88b
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-25"
       layer: teste
       tags:
         - test

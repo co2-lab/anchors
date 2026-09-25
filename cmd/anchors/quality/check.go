@@ -66,11 +66,10 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// state that existed only on its machine; the next local check closed one under
 			// a person's account, the state lock reverted that as a manual close, and the
 			// claim handed the spurious card back to the agent in a loop.
-			issuesOn := true
 			if cfg != nil && cfg.GitHubMode() && len(cfg.Workflow.Labels) > 0 {
 				issue.UseGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
-				issuesOn = recordIssues || os.Getenv("GITHUB_ACTIONS") == "true"
 			}
+			issuesOn := issuesOnFor(cfg, recordIssues, os.Getenv("GITHUB_ACTIONS") == "true")
 			if len(cfg.Gates) == 0 {
 				return fmt.Errorf("no gate declared in anchors.yaml (`gates:` section)")
 			}
@@ -318,7 +317,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 	cmd.Flags().StringSliceVar(&changed, "changed", nil, "changed file(s) — repeatable or comma-separated; the gates run ONCE over the union of the impact paths")
 	cmd.Flags().BoolVar(&all, "all", false, "scan every node (the full picture; expensive)")
 	cmd.Flags().BoolVar(&noRecord, "no-record", false, "report only: neither stamps the map nor opens issues")
-	cmd.Flags().BoolVar(&recordIssues, "record-issues", false, "github mode: open/close board issues from a local run too (by default only CI does)")
+	cmd.Flags().BoolVar(&recordIssues, "record-issues", false, "github mode: open/close board issues from a local run too (by default only CI does); manual mode: write the issues to issues/ (by default none is written)")
 	cmd.Flags().BoolVar(&fix, "fix", false, "self-healer: applies the automatic repairs (e.g. fixes updated_at) before confronting")
 	cmd.Flags().BoolVar(&deterministic, "deterministic", false, "runs only the computable gates (skips the AI-judgment ones) — the pre-commit mode")
 	cmd.Flags().StringVar(&phase, "phase", "", "enforces only the gates of this phase (pre-commit|pre-push|ci|manual)")
@@ -541,7 +540,11 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn, 
 		return fmt.Errorf("save stamped map: %w", err)
 	}
 	if !issuesOn {
-		fmt.Println("record: map stamped; board issues are left to CI (local check — use --record-issues to write them)")
+		if cfg, err := config.Load(filepath.Join(root, config.DefaultFile)); err == nil && cfg.ManualMode() {
+			fmt.Println("record: map stamped; no issue written (mode: manual — use --record-issues to write them)")
+		} else {
+			fmt.Println("record: map stamped; board issues are left to CI (local check — use --record-issues to write them)")
+		}
 		return nil
 	}
 
@@ -1771,4 +1774,21 @@ func staleBinaryWarning(gravouMapa, rodando string) string {
 		return ""
 	}
 	return i18n.T("map.version_mismatch", gravouMapa, rodando)
+}
+
+// issuesOnFor says whether this check writes issues.
+//
+//	local   always — `issues/` is the local record of the findings
+//	github  only in CI, or with --record-issues: a local run would file cards for a state
+//	        that exists only on one machine
+//	manual  only with --record-issues: the check reports and stamps the map, and nothing
+//	        lands in `issues/` on its own (`config.Workflow.Mode`)
+func issuesOnFor(cfg *config.Config, recordIssues, inCI bool) bool {
+	switch {
+	case cfg != nil && cfg.ManualMode():
+		return recordIssues
+	case cfg != nil && cfg.GitHubMode() && len(cfg.Workflow.Labels) > 0:
+		return recordIssues || inCI
+	}
+	return true
 }

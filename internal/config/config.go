@@ -191,6 +191,7 @@ type Config struct {
 //
 //	workflow:
 //	  mode: local     # a fila é .anchors/tasks/ (o watcher enfileira, `anchors next` puxa)
+//	  mode: manual    # como o local, mas nenhum comando grava issue sozinho em `issues/`
 //	  mode: github    # a fila são as issues/cards do repositório
 //
 // Um modo OU outro, nunca um com o outro de reserva. A alternativa — tentar o GitHub e
@@ -204,8 +205,15 @@ type Config struct {
 // modo github, `.anchors/tasks/` não deve existir; no modo local, nenhum comando toca a
 // rede.
 type Workflow struct {
-	// Mode: "local" | "github". Vazio = local (o comportamento que sempre existiu, para
-	// não quebrar projeto que nunca declarou nada).
+	// Mode: "local" | "manual" | "github". Vazio = local (o comportamento que sempre
+	// existiu, para não quebrar projeto que nunca declarou nada).
+	//
+	// MANUAL is the local mode without automatic issues. In local mode every `anchors check`
+	// writes a file in `issues/` per blocking failure, open decision and assumed debt, and
+	// `anchors judge --verdict fail` writes one per finding; a project that works from the
+	// check's output ends up with a second copy of the same list to walk through. In manual
+	// mode the check reports and stamps the map, and nothing lands in `issues/` unless the
+	// command is run with `--record-issues`.
 	Mode string `yaml:"mode"`
 
 	// Repo no formato "owner/nome". Só no modo github, e OBRIGATÓRIO nele: inferir do
@@ -361,8 +369,14 @@ func (c *Config) GitHubMode() bool {
 	return c != nil && c.Workflow != nil && c.Workflow.Mode == ModeGitHub
 }
 
+// ManualMode is the local mode in which no command writes an issue on its own (see Mode).
+func (c *Config) ManualMode() bool {
+	return c != nil && c.Workflow != nil && c.Workflow.Mode == ModeManual
+}
+
 const (
 	ModeLocal  = "local"
+	ModeManual = "manual"
 	ModeGitHub = "github"
 )
 
@@ -1523,8 +1537,8 @@ func (c *Config) validarWorkflow() error {
 	}
 	w := c.Workflow
 	switch w.Mode {
-	case "", ModeLocal:
-		// O modo local não usa Repo nem Labels. Declará-los aqui não é inofensivo: quem lê
+	case "", ModeLocal, ModeManual:
+		// O modo local (e o manual) não usa Repo nem Labels. Declará-los aqui não é inofensivo: quem lê
 		// o arquivo conclui que a integração está ativa, e ela não está.
 		if w.Repo != "" || len(w.Labels) > 0 {
 			return fmt.Errorf("workflow: `repo`/`labels` only apply under `mode: github` — " +
@@ -1548,7 +1562,7 @@ func (c *Config) validarWorkflow() error {
 		}
 		return nil
 	default:
-		return fmt.Errorf("workflow: `mode: %q` desconhecido — use `local` ou `github` "+
+		return fmt.Errorf("workflow: `mode: %q` desconhecido — use `local`, `manual` ou `github` "+
 			"(não há fallback entre eles: o modo é declarado, não adivinhado)", w.Mode)
 	}
 }

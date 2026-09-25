@@ -142,10 +142,12 @@ func Questions(p *Proposal, presets []string) []Question {
 			ID:      "workflow",
 			Texto:   "Onde a fila de trabalho mora?",
 			Tipo:    "select",
-			Opcoes:  []string{"local", "github"},
+			Opcoes:  []string{"local", "manual", "github"},
 			Default: "local",
 			PorQue: "os modos são EXCLUDENTES (WORKFLOW.md §2): `local` guarda a fila em " +
-				"`.anchors/tasks/` e as issues em `issues/`; `github` a põe nas issues do " +
+				"`.anchors/tasks/` e as issues em `issues/`; `manual` é o local sem issue " +
+				"automática — o `check` só relata, e `issues/` recebe arquivo apenas com " +
+				"`--record-issues`; `github` a põe nas issues do " +
 				"repositório, com o estado de cada trabalho na coluna de um Project. Nunca um " +
 				"com o outro de reserva — de qual fila veio esta task? é pergunta que ninguém " +
 				"consegue responder depois do fato. O modo `github` EXIGE --repo e --labels.",

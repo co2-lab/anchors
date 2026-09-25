@@ -188,3 +188,18 @@ gates:
 		t.Errorf("esperava 3 gates, veio %d", len(c.Gates))
 	}
 }
+
+// `mode: manual` is the local mode without automatic issues: it loads, says so, and like
+// local takes no `repo`/`labels`.
+func TestWorkflowManual(t *testing.T) {
+	cfg, err := load(t, "version: 1\nlayers: {}\nworkflow:\n  mode: manual\n")
+	if err != nil {
+		t.Fatalf("mode: manual must load: %v", err)
+	}
+	if !cfg.ManualMode() || cfg.GitHubMode() {
+		t.Errorf("manual mode: ManualMode=%v GitHubMode=%v", cfg.ManualMode(), cfg.GitHubMode())
+	}
+	if _, err := load(t, "version: 1\nlayers: {}\nworkflow:\n  mode: manual\n  repo: o/r\n"); err == nil {
+		t.Error("manual mode with `repo` must be refused, as in local mode")
+	}
+}

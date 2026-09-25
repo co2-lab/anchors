@@ -50,7 +50,7 @@ anchors.yaml. The bulk is inferred; the questions cover only the human decisions
 	cmd.Flags().BoolVar(&f.colocation, "colocation", false, "derived files next to the code")
 	cmd.Flags().StringSliceVar(&f.layers, "layers", nil, "code directories to treat as layers")
 	cmd.Flags().StringArrayVar(&f.governs, "governs", nil, "governs rule: GUIDE=tag1,tag2 (repeatable)")
-	cmd.Flags().StringVar(&f.workflow, "workflow", "", "where the work queue lives: local|github")
+	cmd.Flags().StringVar(&f.workflow, "workflow", "", "where the work queue lives: local|manual|github (manual: like local, and no command writes an issue on its own)")
 	cmd.Flags().StringVar(&f.repo, "repo", "", "repository owner/name (required in github mode)")
 	cmd.Flags().StringSliceVar(&f.labels, "labels", nil, "labels that mark the Anchors cards (required in github mode)")
 	return cmd
@@ -227,6 +227,8 @@ func runInit(root string) error {
 		} else {
 			fmt.Println(i18n.T("init.local_mode"))
 		}
+	} else if !askConfirmDefault("Should each `anchors check` write its findings as files in issues/? (no = manual mode: the check only reports)", true) {
+		cfg.Workflow = &config.Workflow{Mode: config.ModeManual}
 	}
 
 	// 4) GOVERNS — só se houver guides (a régua precisa existir para reger).

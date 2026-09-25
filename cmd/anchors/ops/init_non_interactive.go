@@ -199,7 +199,9 @@ func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta)
 	// O modo é decisão HUMANA (onde a fila mora), e os modos são EXCLUDENTES: só se
 	// declara o bloco quando a escolha é `github`. Escrever `mode: local` explícito seria
 	// ruído — a ausência do bloco já significa local (WORKFLOW.md §2).
-	if modo, _ := valor("workflow").(string); modo == "github" {
+	if modo, _ := valor("workflow").(string); modo == config.ModeManual {
+		cfg.Workflow = &config.Workflow{Mode: config.ModeManual}
+	} else if modo == "github" {
 		repo, _ := valor("repo").(string)
 		cfg.Workflow = &config.Workflow{
 			Mode:   config.ModeGitHub,
