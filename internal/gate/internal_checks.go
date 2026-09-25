@@ -730,7 +730,17 @@ var checklistItemRE = regexp.MustCompile(`(?m)\bCK\d+\b`)
 // scenario-coverage: cada código de cenário que a spec DECLARA tem um teste que
 // PASSOU (está em Signal.ProvenCodes)? Fecha o gate de Rastreabilidade — não basta
 // existir teste, cada requisito precisa estar provado. Pending se nada foi ingerido.
-func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Graph, _ *config.Config) (Verdict, string) {
+func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	// THE LAYER'S OPT-OUT HOLDS HERE TOO. A layer that declares `tested-by` in
+	// `optional_triad_edges` has no tests by declaration — "the model declares; the unit
+	// that consumes it is what proves it" — and `triad-complete` honours that. This gate
+	// ignored it and charged a green test for every rule: in MIF, every schema-model spec
+	// failed (about 130 findings) over tests the Structure says do not exist. Where the
+	// rules of such a layer must be proven, the proof belongs to the unit that consumes it,
+	// and that unit's scenarios are charged there.
+	if cfg != nil && optionalPieces(n, cfg, g)["tested-by"] {
+		return Skip, i18n.T("gate.scenario_coverage.skip_tested_by_optional")
+	}
 	// Só os requisitos DEFINIDOS por esta spec, não toda menção de código no texto.
 	//
 	// O `anyCodeRE` sobre o conteúdo inteiro casa também o que a spec CITA ao justificar

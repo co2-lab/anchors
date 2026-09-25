@@ -205,6 +205,7 @@
   "gate.siblings.missing_code": "section(s) without code under cataloguing siblings: %s. Siblings (%s) have codes and these do not — a rule without code is invisible to identity gates, and they report green on what they did not check. Give a code to each, or move text to prose section (`## Constraints`, `## Notes`) if not a rule.",
   "gate.missing_scenario_code": "missing scenario code (missing identity)",
   "gate.no_test_signal": "no test signal ingested (run `anchors ingest --junit`)",
+  "gate.scenario_coverage.skip_tested_by_optional": "the layer declares `tested-by` optional (`optional_triad_edges`): its rules are proven by the unit that consumes it, and charged there",
   "gate.stale_test_signal": "stale test signal (the spec changed since ingestion — reingest)",
   "gate.scenario_missing_test": "%d scenario(s) without passing test: %s",
   "gate.no_line_coverage": "no line coverage ingested (run `anchors ingest --lcov`)",

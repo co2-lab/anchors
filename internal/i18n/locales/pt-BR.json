@@ -205,6 +205,7 @@
   "gate.siblings.missing_code": "seção(ões) sem código sob irmãs que catalogam: %s. As irmãs (%s) têm código e estas não — uma regra sem código é invisível para os gates de identidade, e eles reportam verde sobre o que não conferiram. Dê um código a cada uma, ou mova o texto para uma seção de prosa (`## Restrições`, `## Notas`) se não for regra.",
   "gate.missing_scenario_code": "sem código de cenário (identidade missing)",
   "gate.no_test_signal": "sem sinal de teste ingerido (rode `anchors ingest --junit`)",
+  "gate.scenario_coverage.skip_tested_by_optional": "a camada declara `tested-by` opcional (`optional_triad_edges`): as regras dela são provadas pela unidade que a consome, e cobradas lá",
   "gate.stale_test_signal": "sinal de teste stale (a spec mudou desde a ingestão — reingira)",
   "gate.scenario_missing_test": "%d cenário(s) sem teste verde: %s",
   "gate.no_line_coverage": "sem cobertura de linha ingerida (rode `anchors ingest --lcov`)",

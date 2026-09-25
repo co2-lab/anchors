@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -86,5 +87,27 @@ func TestScenarioCoverage_provenPasses(t *testing.T) {
 
 	if v, msg := checkScenarioCoverage(specWithTwoRequirements, n, root, g, nil); v != Pass {
 		t.Errorf("both requirements proven and the verdict was %v: %s", v, msg)
+	}
+}
+
+// A LAYER THAT DISPENSES `tested-by` has no tests by declaration, and `scenario-coverage`
+// honours it as `triad-complete` does. In MIF every schema-model spec failed "scenario with
+// no green test" although the Structure says those tests do not exist. A layer without the
+// opt-out is still charged.
+func TestScenarioCoverage_honoursTheLayersTestedByOptOut(t *testing.T) {
+	root, g := rootWithTest(t, "package credx\n")
+	cfg := &config.Config{Layers: map[string]config.Layer{
+		"schema-model": {Kind: "spec", OptionalTriadEdges: []string{"covered-by", "tested-by"}},
+		"service":      {Kind: "spec"},
+	}}
+	optedOut := specNodeCoverage()
+	optedOut.Tags = []string{"schema-model"}
+	if v, msg := checkScenarioCoverage(specWithTwoRequirements, optedOut, root, g, cfg); v != Skip || !strings.Contains(msg, "tested-by") {
+		t.Errorf("a layer dispensing tested-by must skip and say why, got %v: %s", v, msg)
+	}
+	charged := specNodeCoverage()
+	charged.Tags = []string{"service"}
+	if v, _ := checkScenarioCoverage(specWithTwoRequirements, charged, root, g, cfg); v != Fail {
+		t.Errorf("a layer without the opt-out is still charged, got %v", v)
 	}
 }
