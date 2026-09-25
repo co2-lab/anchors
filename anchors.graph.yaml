@@ -696,7 +696,7 @@ nodes:
     - id: cmd/anchors/governance/guide_tests.go
       kind: code
       rev: ad8e619836bf
-      updated_at: "2026-09-24"
+      updated_at: "2026-09-25"
       layer: comando
       tags:
         - cli
@@ -1283,7 +1283,7 @@ nodes:
     - id: cmd/anchors/quality/register.go
       kind: code
       rev: 6860c78bd611
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-25"
       layer: comando
       tags:
         - cli
@@ -1359,20 +1359,22 @@ nodes:
         - test
     - id: cmd/anchors/quality/touch.go
       kind: code
-      rev: 0893811e85c5
+      rev: ce04b94cfeac
+      updated_at: "2026-09-25"
       layer: comando
       tags:
         - cli
         - comando
     - id: cmd/anchors/quality/touch_test.go
       kind: test
-      rev: 4a4a3febc167
+      rev: e40d0f85ba91
+      updated_at: "2026-09-25"
       layer: teste
       tags:
         - test
     - id: cmd/anchors/quality/verify.go
       kind: code
-      rev: 09d5ad03e454
+      rev: e29dbe08c178
       updated_at: "2026-09-19"
       layer: comando
       tags:
@@ -1544,7 +1546,7 @@ nodes:
         - config
     - id: internal/config/config.go
       kind: code
-      rev: 65abed5f38d6
+      rev: e70489c74d12
       updated_at: "2026-09-25"
       layer: config
       tags:
@@ -1678,7 +1680,7 @@ nodes:
         - test
     - id: internal/config/workflow_test.go
       kind: test
-      rev: 64ce54fa52d4
+      rev: 06170c01e457
       updated_at: "2026-09-25"
       layer: teste
       tags:

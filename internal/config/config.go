@@ -194,6 +194,7 @@ type Config struct {
 // Touch is the project's side of `anchors touch`.
 //
 //	touch:
+//	  pre_commit: false     # default true: the pre-commit bumps the staged files first
 //	  exclude: [anchors.graph.yaml, "**/*.generated.*"]
 //
 // Exclude lists globs (doublestar, from the project root) that the command never bumps —
@@ -201,6 +202,13 @@ type Config struct {
 // command's `--exclude` flags.
 type Touch struct {
 	Exclude []string `yaml:"exclude,omitempty"`
+	// PreCommit: the pre-commit phase (`anchors verify --phase pre-commit --staged`, what
+	// the installed hook calls) bumps the staged files BEFORE the gates run. On unless
+	// declared false. The date is a mechanical fact — the file changed today — and the
+	// `updated-at-current` gate would block the commit over exactly that; bumping it there
+	// turns the block into the fix. `false` is for projects that do not accept a hook
+	// rewriting files.
+	PreCommit *bool `yaml:"pre_commit,omitempty"`
 }
 
 // Workflow declara o modo de gestão do trabalho, e é EXCLUDENTE de propósito.

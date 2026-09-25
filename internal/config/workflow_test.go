@@ -203,3 +203,19 @@ func TestWorkflowManual(t *testing.T) {
 		t.Error("manual mode with `repo` must be refused, as in local mode")
 	}
 }
+
+// `touch.pre_commit: false` is read from the YAML; with no `touch` block the default is on
+// (the field stays nil).
+func TestTouchPreCommitKey(t *testing.T) {
+	cfg, err := load(t, "version: 1\nlayers: {}\ntouch:\n  pre_commit: false\n  exclude: [anchors.graph.yaml]\n")
+	if err != nil {
+		t.Fatalf("touch block must load: %v", err)
+	}
+	if cfg.Touch == nil || cfg.Touch.PreCommit == nil || *cfg.Touch.PreCommit || len(cfg.Touch.Exclude) != 1 {
+		t.Errorf("touch = %+v, want pre_commit false and one exclude", cfg.Touch)
+	}
+	cfg, err = load(t, "version: 1\nlayers: {}\n")
+	if err != nil || cfg.Touch != nil {
+		t.Errorf("no touch block: Touch = %+v, err %v", cfg.Touch, err)
+	}
+}

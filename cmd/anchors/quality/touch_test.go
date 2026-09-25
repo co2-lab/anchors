@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
 )
 
 const touchHeader = "// @anchors\n//   code: CODEX\n//   updated_at: 2026-09-01\n"
@@ -130,5 +132,46 @@ func TestTouch_staged(t *testing.T) {
 	idxD, _ := exec.Command("git", "-C", root, "show", ":d.ts").Output()
 	if strings.Contains(string(idxD), "export const x = 3") {
 		t.Errorf("the unstaged change of d.ts must not reach the index:\n%s", idxD)
+	}
+}
+
+// The pre-commit phase dates the staged files first — on by default, off with
+// `touch.pre_commit: false`, and never outside the pre-commit over the index.
+func TestPreCommitTouches(t *testing.T) {
+	off := false
+	on := true
+	for _, c := range []struct {
+		name   string
+		staged bool
+		phase  string
+		cfg    *config.Config
+		want   bool
+	}{
+		{"default: no config", true, "pre-commit", nil, true},
+		{"default: no touch block", true, "pre-commit", &config.Config{}, true},
+		{"declared on", true, "pre-commit", &config.Config{Touch: &config.Touch{PreCommit: &on}}, true},
+		{"declared off", true, "pre-commit", &config.Config{Touch: &config.Touch{PreCommit: &off}}, false},
+		{"not staged", false, "pre-commit", nil, false},
+		{"another phase", true, "ci", nil, false},
+	} {
+		if got := preCommitTouches(c.staged, c.phase, c.cfg); got != c.want {
+			t.Errorf("%s: preCommitTouches = %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
+// What the pre-commit prints: never a silent rewrite.
+func TestPrintPreCommitTouch(t *testing.T) {
+	out := captureStdout(t, func() {
+		printPreCommitTouch([]touchDecision{{File: "a.ts"}, {File: "b.ts"}},
+			map[touchSkip][]string{skipUnstaged: {"d.ts"}}, nil)
+	})
+	for _, want := range []string{"dated 2 staged file(s) today", "a.ts, b.ts", "d.ts not dated"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the pre-commit should say %q:\n%s", want, out)
+		}
+	}
+	if out := captureStdout(t, func() { printPreCommitTouch(nil, map[touchSkip][]string{}, nil) }); out != "" {
+		t.Errorf("nothing dated, nothing said; printed:\n%s", out)
 	}
 }

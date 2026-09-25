@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/spf13/cobra"
@@ -53,6 +55,17 @@ Scope of the external gates (` + "`scope:`" + `):
 A project/batch scoped gate only runs if THERE IS a relevant file in the cut: a
 README-only commit does not trigger the monorepo's typecheck.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// THE PRE-COMMIT DATES WHAT IT IS ABOUT TO CHECK. The `updated-at-current` gate
+			// would block the commit over a header date that is a mechanical fact — the file
+			// changed today —, so the phase bumps the staged files first (`anchors touch
+			// --staged`) and the gate sees the right date. On unless `touch.pre_commit:
+			// false`. A failure here warns and does not block: the gate still does.
+			if absRoot, err := config.AbsRoot(root); err == nil {
+				cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+				if preCommitTouches(staged, phase, cfg) {
+					printPreCommitTouch(touchRun(absRoot, true, false, gitmeta.Today(), nil))
+				}
+			}
 			if staged {
 				lista, err := stagedFiles(root)
 				if err != nil {
@@ -194,4 +207,28 @@ func translateChildOutput(err error) error {
 		return errNotGoverned{target: i18n.T("verify.staged_files")}
 	}
 	return err
+}
+
+// printPreCommitTouch says what the pre-commit dated — never a silent rewrite.
+func printPreCommitTouch(bumped []touchDecision, skipped map[touchSkip][]string, err error) {
+	if err != nil {
+		fmt.Printf("· touch: could not date the staged files (%v) — the updated-at gate still checks them\n", err)
+		return
+	}
+	if len(bumped) > 0 {
+		var nomes []string
+		for _, d := range bumped {
+			nomes = append(nomes, d.File)
+		}
+		fmt.Printf("· touch: dated %d staged file(s) today (updated_at): %s\n", len(bumped), strings.Join(nomes, ", "))
+	}
+	for _, f := range skipped[skipUnstaged] {
+		fmt.Printf("· touch: %s not dated — it has changes outside the index\n", f)
+	}
+}
+
+// preCommitTouches says whether this verify dates the staged files first: only the
+// pre-commit phase over the index, and only while the project has not turned it off.
+func preCommitTouches(staged bool, phase string, cfg *config.Config) bool {
+	return staged && phase == "pre-commit" && touchOnPreCommit(cfg)
 }

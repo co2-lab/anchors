@@ -111,6 +111,9 @@ touched, in any comment dialect. The project's ` + "`touch.exclude`" + ` globs (
 --exclude. With --staged, a file that also has changes outside the index is skipped:
 re-staging it would put those changes in the commit.
 
+The installed pre-commit already runs it on the staged files before the gates
+(` + "`touch.pre_commit`" + ` in anchors.yaml, on by default; ` + "`false`" + ` turns it off).
+
 After a ` + "`stamp --refresh`" + `, order does not matter: a ` + "`@contract`" + ` stamp never covers the header.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			absRoot, err := config.AbsRoot(root)
@@ -120,51 +123,9 @@ After a ` + "`stamp --refresh`" + `, order does not matter: a ` + "`@contract`" 
 			if date == "" {
 				date = gitmeta.Today()
 			}
-			if cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile)); err == nil && cfg.Touch != nil {
-				exclude = append(exclude, cfg.Touch.Exclude...)
-			}
-			files, err := touchCandidates(absRoot, staged)
+			bumped, skipped, err := touchRun(absRoot, staged, dryRun, date, exclude)
 			if err != nil {
 				return err
-			}
-			var bumped []touchDecision
-			skipped := map[touchSkip][]string{}
-			for _, f := range files {
-				if excludedBy(f, exclude) {
-					skipped[skipExcluded] = append(skipped[skipExcluded], f)
-					continue
-				}
-				current, ok := touchCurrent(absRoot, f, staged)
-				if !ok {
-					skipped[skipUnreadable] = append(skipped[skipUnreadable], f)
-					continue
-				}
-				if staged && hasUnstaged(absRoot, f) {
-					if updatedAtLineRE.MatchString(current) {
-						skipped[skipUnstaged] = append(skipped[skipUnstaged], f)
-					}
-					continue
-				}
-				base, hasBase := gitShow(absRoot, "HEAD:"+f)
-				d := decideTouch(f, current, base, hasBase, date)
-				if !d.Bump {
-					if d.Skip != skipNoHeader {
-						skipped[d.Skip] = append(skipped[d.Skip], f)
-					}
-					continue
-				}
-				bumped = append(bumped, d)
-				if dryRun {
-					continue
-				}
-				if err := os.WriteFile(filepath.Join(absRoot, f), []byte(d.Content), 0o644); err != nil {
-					return err
-				}
-				if staged {
-					if out, err := exec.Command("git", "-C", absRoot, "add", "--", f).CombinedOutput(); err != nil {
-						return fmt.Errorf("re-stage %s: %v %s", f, err, out)
-					}
-				}
 			}
 			verb := "bumped"
 			if dryRun {
@@ -259,4 +220,63 @@ func excludedBy(f string, globs []string) bool {
 		}
 	}
 	return false
+}
+
+// touchRun bumps the changed files (worktree, or index with staged) and says what it did.
+// The project's `touch.exclude` adds to exclude. Shared by `anchors touch` and the
+// pre-commit phase of `anchors verify`.
+func touchRun(absRoot string, staged, dryRun bool, date string, exclude []string) ([]touchDecision, map[touchSkip][]string, error) {
+	if cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile)); err == nil && cfg.Touch != nil {
+		exclude = append(append([]string{}, exclude...), cfg.Touch.Exclude...)
+	}
+	files, err := touchCandidates(absRoot, staged)
+	if err != nil {
+		return nil, nil, err
+	}
+	var bumped []touchDecision
+	skipped := map[touchSkip][]string{}
+	for _, f := range files {
+		if excludedBy(f, exclude) {
+			skipped[skipExcluded] = append(skipped[skipExcluded], f)
+			continue
+		}
+		current, ok := touchCurrent(absRoot, f, staged)
+		if !ok {
+			skipped[skipUnreadable] = append(skipped[skipUnreadable], f)
+			continue
+		}
+		if staged && hasUnstaged(absRoot, f) {
+			if updatedAtLineRE.MatchString(current) {
+				skipped[skipUnstaged] = append(skipped[skipUnstaged], f)
+			}
+			continue
+		}
+		base, hasBase := gitShow(absRoot, "HEAD:"+f)
+		d := decideTouch(f, current, base, hasBase, date)
+		if !d.Bump {
+			if d.Skip != skipNoHeader {
+				skipped[d.Skip] = append(skipped[d.Skip], f)
+			}
+			continue
+		}
+		bumped = append(bumped, d)
+		if dryRun {
+			continue
+		}
+		if err := os.WriteFile(filepath.Join(absRoot, f), []byte(d.Content), 0o644); err != nil {
+			return bumped, skipped, err
+		}
+		if staged {
+			if out, err := exec.Command("git", "-C", absRoot, "add", "--", f).CombinedOutput(); err != nil {
+				return bumped, skipped, fmt.Errorf("re-stage %s: %v %s", f, err, out)
+			}
+		}
+	}
+	return bumped, skipped, nil
+}
+
+// touchOnPreCommit says whether the pre-commit phase bumps the staged files first: on
+// unless the project declares `touch.pre_commit: false`.
+func touchOnPreCommit(cfg *config.Config) bool {
+	return cfg == nil || cfg.Touch == nil || cfg.Touch.PreCommit == nil || *cfg.Touch.PreCommit
 }
