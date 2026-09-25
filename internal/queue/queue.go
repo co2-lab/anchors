@@ -448,3 +448,7 @@ func existsAtRoot(root, rel string) bool {
 	_, err := os.Stat(filepath.Join(root, rel))
 	return err == nil
 }
+
+// ClaimIsOld says whether a claimed task is past the window in which someone is presumed
+// to be working on it — the same test `reclaim` uses.
+func ClaimIsOld(t Task) bool { return staleClaim(t) }

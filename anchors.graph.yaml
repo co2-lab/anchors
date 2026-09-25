@@ -1143,7 +1143,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/check.go
       kind: code
-      rev: 8348e340c258
+      rev: 6fc74056e33f
       updated_at: "2026-09-24"
       layer: comando
       tags:
@@ -1244,6 +1244,19 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: cmd/anchors/quality/local_backlog.go
+      kind: code
+      rev: dc1d87d75dc3
+      layer: comando
+      tags:
+        - cli
+        - comando
+    - id: cmd/anchors/quality/local_backlog_test.go
+      kind: test
+      rev: fce14da4299f
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/quality/old_binary_test.go
       kind: test
       rev: cbe565d5f6ca
@@ -1286,7 +1299,7 @@ nodes:
     - id: cmd/anchors/quality/stamp.go
       kind: code
       rev: 179ead7e85d1
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       layer: comando
       tags:
         - cli
@@ -1294,6 +1307,7 @@ nodes:
     - id: cmd/anchors/quality/stamp_refresh_test.go
       kind: test
       rev: 88c883cbe525
+      updated_at: "2026-09-24"
       layer: teste
       tags:
         - test
@@ -2462,7 +2476,7 @@ nodes:
     - id: internal/gate/mock_stamped.feature
       kind: feature
       rev: 7ca848e47ac6
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       code: MCSTM
       layer: feature
       tags:
@@ -2479,7 +2493,7 @@ nodes:
     - id: internal/gate/mock_stamped.spec.md
       kind: spec
       rev: 0b93524b7cac
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-24"
       code: MCSTM
       layer: spec
       code_declared: true
@@ -4318,8 +4332,8 @@ nodes:
         - test
     - id: internal/mapx/build.go
       kind: code
-      rev: 9cc89d92a1b2
-      updated_at: "2026-09-23"
+      rev: 67b0ec90f60d
+      updated_at: "2026-09-25"
       layer: mapa
       tags:
         - nucleo
@@ -4333,8 +4347,8 @@ nodes:
         - test
     - id: internal/mapx/build_test.go
       kind: test
-      rev: 02226f8b1845
-      updated_at: "2026-09-10"
+      rev: e21ad4288bf2
+      updated_at: "2026-09-25"
       code: LOGIX
       layer: teste
       tags:
@@ -4520,7 +4534,7 @@ nodes:
       regime: declarativo
     - id: internal/queue/queue.go
       kind: code
-      rev: dec5c10541b8
+      rev: f24a7a8b6df2
       updated_at: "2026-09-19"
       layer: infra
       tags:

@@ -230,6 +230,10 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 				// julgar, e commitar. Medido no projeto de referência.
 				pendentes = queuedJudgments(absRoot)
 			}
+			// THE LOCAL BACKLOG, on the full sweep only — see local_backlog.go.
+			if all && !cfg.GitHubMode() {
+				printLocalBacklog(readLocalBacklog(absRoot))
+			}
 
 			if c := espelho.Path(); c != "" {
 				rel, err := filepath.Rel(absRoot, c)
