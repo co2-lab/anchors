@@ -75,6 +75,10 @@ says the double matches, and you are the one who checked it. If you skip the ref
 pre-commit (` + "`check --changed`" + ` of the file) fails on every stale stamp. A member you renamed or removed
 is not refreshed: adjust the double, delete its stamp, and run ` + "`anchors stamp`" + `.
 
+The refresh rewrites the tests it lists, and each one then needs its ` + "`updated_at`" + ` bumped:
+` + "`anchors touch`" + ` does it for every changed file (a ` + "`@contract`" + ` stamp never covers the header,
+so the order of the two does not matter).
+
 ## Environment safety (when the test touches external state)
 
 - DISCOVER THE ENVIRONMENT BY IDENTITY, NOT BY NAME. Validate that the resources belong

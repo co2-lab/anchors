@@ -192,7 +192,7 @@
   "gate.code_reference_valid.no_map": "sin mapa cargado — el gate necesita el universo de identidades",
   "error": "error",
   "gate.updated_at.no_git": "sin repositorio git — updated_at no tiene contra qué cotejarse",
-  "gate.updated_at.uncommitted_diff": "updated_at de cabecera (%s) ≠ hoy (%s), y el archivo tiene cambios sin confirmar — actualice al día de la alteración (%s), o ejecute `anchors check --fix`.",
+  "gate.updated_at.uncommitted_diff": "updated_at de cabecera (%s) ≠ hoy (%s), y el archivo tiene cambios sin confirmar — actualice al día de la alteración (%s), o ejecute `anchors touch` (todos los archivos cambiados) / `anchors check --fix`.",
   "gate.updated_at.no_commit": "archivo sin commit en git (nuevo/untracked) — nada que comparar",
   "gate.updated_at.diff": "updated_at de cabecera (%s) ≠ fecha del último commit (%s). Actualice a %s (o ejecute `anchors check --fix`).",
   "gate.header.binary": "archivo binario — la identidad está en el nombre, no en la cabecera",

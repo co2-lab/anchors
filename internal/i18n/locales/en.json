@@ -192,7 +192,7 @@
   "gate.code_reference_valid.no_map": "no map loaded — gate requires identity universe",
   "error": "error",
   "gate.updated_at.no_git": "no git repository — updated_at has nothing to compare against",
-  "gate.updated_at.uncommitted_diff": "header updated_at (%s) ≠ today (%s), and file has uncommitted changes — update to date of change (%s), or run `anchors check --fix`.",
+  "gate.updated_at.uncommitted_diff": "header updated_at (%s) ≠ today (%s), and file has uncommitted changes — update to date of change (%s), or run `anchors touch` (every changed file) / `anchors check --fix`.",
   "gate.updated_at.no_commit": "file without git commit (new/untracked) — nothing to compare",
   "gate.updated_at.diff": "header updated_at (%s) ≠ last commit date (%s). Update to %s (or run `anchors check --fix`).",
   "gate.header.binary": "binary file — identity is in name, not header",

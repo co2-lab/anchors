@@ -185,6 +185,22 @@ type Config struct {
 
 	// Workflow — ONDE a fila de trabalho mora. Ver o tipo.
 	Workflow *Workflow `yaml:"workflow,omitempty"`
+
+	// Touch configures `anchors touch`, the command that bumps `updated_at` on changed
+	// files. See the type.
+	Touch *Touch `yaml:"touch,omitempty"`
+}
+
+// Touch is the project's side of `anchors touch`.
+//
+//	touch:
+//	  exclude: [anchors.graph.yaml, "**/*.generated.*"]
+//
+// Exclude lists globs (doublestar, from the project root) that the command never bumps —
+// generated or vendored files, whose header nobody maintains by hand. They add to the
+// command's `--exclude` flags.
+type Touch struct {
+	Exclude []string `yaml:"exclude,omitempty"`
 }
 
 // Workflow declara o modo de gestão do trabalho, e é EXCLUDENTE de propósito.
