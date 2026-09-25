@@ -1,6 +1,7 @@
 package mapx
 
 import (
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -309,7 +310,7 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 		todos := map[string][]string{} // camada → TODOS os que existem (as arestas)
 		for layer, padroes := range tmpls {
 			for _, tmpl := range padroes {
-				for _, want := range expandePadrao(resolveTemplateM(tmpl, dir, name, ext, module), byPath) {
+				for _, want := range expandePadrao(resolveTemplateM(tmpl, globEscape(dir), globEscape(name), globEscape(ext), globEscape(module)), byPath) {
 					if derived[layer] == "" {
 						derived[layer] = want
 					}
@@ -719,12 +720,33 @@ func expandePadrao(padrao string, byPath map[string]scan.File) []string {
 	}
 	var out []string
 	for p := range byPath {
-		if ok, err := filepath.Match(padrao, p); err == nil && ok {
+		// `path.Match`, not `filepath.Match`: the map's paths are slash-separated on every
+		// system, and only `path.Match` honours the `\` escape everywhere — it is what keeps
+		// a literal `[slug]` from being read as a character class (see `globEscape`).
+		if ok, err := path.Match(padrao, p); err == nil && ok {
 			out = append(out, p)
 		}
 	}
 	sort.Strings(out) // ordem estável: o mapa não pode mudar entre execuções
 	return out
+}
+
+// globEscape makes a REAL path segment literal inside a template before it becomes a
+// pattern. The template's own wildcards (`packages/*/tsconfig.json`) are the author's; the
+// directory and name of the anchor are data. Unescaped, a Next.js route directory
+// `app/selo/[slug]/` turned `[slug]` into a character class that matches one letter, so
+// the spec there found neither its code nor its feature and `triad-complete` reported
+// both missing (reported from MIF, 2026-09-25).
+func globEscape(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		switch r {
+		case '*', '?', '[', ']', '\\':
+			b.WriteByte('\\')
+		}
+		b.WriteRune(r)
+	}
+	return b.String()
 }
 
 // stemOfDerived corta os sufixos de um artefato DERIVADO até o nome da unidade.

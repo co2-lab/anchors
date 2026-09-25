@@ -283,3 +283,44 @@ func TestBuild_ancoraSpec(t *testing.T) {
 		t.Error("o código não pode especificar a spec — a spec é a âncora")
 	}
 }
+
+// A directory with brackets (a Next.js route `app/selo/[slug]/`) is a literal path, not a
+// character class: the spec there finds its code, feature and test. Unescaped, `[slug]`
+// matched one letter and `triad-complete` reported code and feature missing (reported from
+// MIF, 2026-09-25). The template's own wildcards still work: that is `TestBuild_colocation`
+// and the `packages/*` specs.
+func TestBuild_colocationInABracketDirectory(t *testing.T) {
+	d := "apps/landing-page/src/app/selo/[slug]"
+	files := []scan.File{
+		{Path: d + "/SeloClient.tsx", Layer: "screen", Kind: "code", Rev: "a"},
+		{Path: d + "/SeloClient.spec.md", Layer: "spec", Kind: "spec", Rev: "b", Codes: []string{"SELOC-A01"}},
+		{Path: d + "/SeloClient.feature", Layer: "feature", Kind: "feature", Rev: "c", Codes: []string{"SELOC-A01"}},
+		{Path: d + "/SeloClient.test.tsx", Layer: "test", Kind: "test", Rev: "d", Codes: []string{"SELOC-A01"}},
+	}
+	g := Build(files, testCfg(), nil)
+	for _, c := range []struct {
+		from, to string
+		typ      EdgeType
+	}{
+		{d + "/SeloClient.spec.md", d + "/SeloClient.tsx", EdgeSpecifies},
+		{d + "/SeloClient.spec.md", d + "/SeloClient.feature", EdgeCoveredBy},
+		{d + "/SeloClient.feature", d + "/SeloClient.test.tsx", EdgeTestedBy},
+	} {
+		if !hasEdge(g, c.from, c.to, c.typ) {
+			t.Errorf("missing co-location edge in a bracket directory: %s →%s→ %s", c.from, c.typ, c.to)
+		}
+	}
+}
+
+func TestGlobEscape(t *testing.T) {
+	for in, want := range map[string]string{
+		"app/selo/[slug]": `app/selo/\[slug\]`,
+		"a*b?c":           `a\*b\?c`,
+		`x\y`:             `x\\y`,
+		"plain/dir":       "plain/dir",
+	} {
+		if got := globEscape(in); got != want {
+			t.Errorf("globEscape(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
