@@ -214,7 +214,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// Honest opt-out: --no-record only reports, it does not record.
 			pendentes := 0
 			if !noRecord {
-				if err := recordCheck(absRoot, mapPath, g, profile, issuesOn); err != nil {
+				if err := recordCheck(absRoot, mapPath, g, profile, issuesOn, all); err != nil {
 					fmt.Fprintf(os.Stderr, "warning: failed to record (stamp/issue): %v\n", err)
 				}
 				// gates de JULGAMENTO: enfileira uma task `judge` por alvo pendente,
@@ -518,7 +518,7 @@ func relSlug(p string) string { return strings.TrimSuffix(p, filepath.Ext(p)) }
 // recordCheck fecha o loop: carimba as arestas confrontadas no mapa (persistindo o
 // veredito, o que destrava a detecção de stale) e abre uma issue de violation por
 // fail bloqueante. É a passagem de "reporta" para "registra" (QUALITY §5).
-func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn bool) error {
+func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn, full bool) error {
 	now := time.Now()
 	day := now.Format("2006-01-02")
 
@@ -551,6 +551,9 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn b
 	// A chave estável (gate+alvo+kind) é o que liga o pass de hoje à issue de ontem.
 	opened, resolved := 0, 0
 	adiadas := 0
+	// The violations this run REPRODUCED — on a full check, every open violation outside
+	// this set is closed at the end (see `issue.ReconcileViolations`).
+	vivas := map[string]bool{}
 	for _, r := range p.Results {
 		if r.Verdict == gate.Skip {
 			continue // gate não se aplica — não mexe na issue
@@ -619,6 +622,7 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn b
 		switch r.Verdict {
 		case gate.Fail:
 			if r.Blocking { // só fail BLOQUEANTE vira issue (informativo não barra nem registra)
+				vivas[iss.Key()] = true
 				created, at, err := issue.Open(root, iss)
 				if err != nil {
 					return fmt.Errorf("open issue: %w", err)
@@ -653,6 +657,20 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn b
 				resolved++
 				fmt.Println(i18n.T("check.record_issue_resolved", r.Gate, r.Target, issue.Dir))
 			}
+		}
+	}
+
+	// THE FULL SWEEP CLOSES WHAT IT DID NOT REPRODUCE. An open violation that this check —
+	// which confronted everything — did not find again is not current: fixed and confirmed
+	// without recording, a gate that now skips it, a target gone, or a gate renamed.
+	if full {
+		fechadas, err := issue.ReconcileViolations(root, vivas)
+		if err != nil {
+			return fmt.Errorf("reconcile issues: %w", err)
+		}
+		if len(fechadas) > 0 {
+			resolved += len(fechadas)
+			fmt.Println(i18n.T("check.record_reconciled", len(fechadas), issue.Dir))
 		}
 	}
 

@@ -1143,8 +1143,8 @@ nodes:
         - test
     - id: cmd/anchors/quality/check.go
       kind: code
-      rev: 6fc74056e33f
-      updated_at: "2026-09-24"
+      rev: c629e1700f8d
+      updated_at: "2026-09-25"
       layer: comando
       tags:
         - cli
@@ -1172,7 +1172,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/check_record_issues_test.go
       kind: test
-      rev: 982b5e843f48
+      rev: f10e18969ffb
       updated_at: "2026-09-24"
       layer: teste
       tags:
@@ -1247,6 +1247,7 @@ nodes:
     - id: cmd/anchors/quality/local_backlog.go
       kind: code
       rev: dc1d87d75dc3
+      updated_at: "2026-09-25"
       layer: comando
       tags:
         - cli
@@ -1254,6 +1255,7 @@ nodes:
     - id: cmd/anchors/quality/local_backlog_test.go
       kind: test
       rev: fce14da4299f
+      updated_at: "2026-09-25"
       layer: teste
       tags:
         - test
@@ -4303,7 +4305,7 @@ nodes:
         - test
     - id: internal/issue/issue.go
       kind: code
-      rev: 5cbd91297a9d
+      rev: e9cf2efd7f15
       updated_at: "2026-09-19"
       layer: infra
       tags:
@@ -4311,7 +4313,7 @@ nodes:
       regime: declarativo
     - id: internal/issue/issue_test.go
       kind: test
-      rev: a9dbd919ece8
+      rev: 6a332acfc88b
       updated_at: "2026-09-19"
       layer: teste
       tags:
@@ -4535,7 +4537,7 @@ nodes:
     - id: internal/queue/queue.go
       kind: code
       rev: f24a7a8b6df2
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-25"
       layer: infra
       tags:
         - infra

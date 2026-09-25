@@ -444,3 +444,57 @@ func UseGitHub(repo, label string) {
 
 // UseFiles volta a gravar em `issues/` — usado pelos testes, que não falam com a rede.
 func UseFiles() { target = nil }
+
+// ReconcileViolations closes every open violation issue — in `todo/` or `doing/` — whose key
+// is not in `alive`, the violations a FULL check reproduced, and returns the files it moved.
+//
+// A violation issue closed only on a `Pass` of the same (gate, target). Everything else left
+// it open forever: a fix confirmed with `--no-record` or by `--changed` of other files, a
+// gate that now skips the target, a target renamed or deleted — and a gate RENAMED, since
+// the key carries the gate's name. Measured in a real project: 55 issues open, 40 of them
+// under `header-conforme` (renamed `header-conforms`), all fixed, and an agent that had
+// already worked through the `check --all` output went through them one by one in case one
+// held something new. A full check confronts everything, so a violation it does not
+// reproduce is not current.
+//
+// Only VIOLATIONS of the agent: a decision, a debt, a stale or conflict issue is not born of
+// a gate failure, and an issue waiting for the user is theirs to close. In github mode it
+// does nothing — the board is reconciled by the pipeline.
+func ReconcileViolations(root string, alive map[string]bool) ([]string, error) {
+	if target != nil {
+		return nil, nil
+	}
+	var closed []string
+	for _, st := range []State{Todo, Doing} {
+		names, err := List(root, st)
+		if err != nil {
+			return closed, err
+		}
+		for _, name := range names {
+			key := keyOfFile(name)
+			if !strings.HasPrefix(key, string(Violation)+"--") || alive[key] {
+				continue
+			}
+			if FileOwner(pathFor(root, st, name)) == DonoUsuário {
+				continue
+			}
+			ok, err := Resolve(root, key)
+			if err != nil {
+				return closed, err
+			}
+			if ok {
+				closed = append(closed, name)
+			}
+		}
+	}
+	return closed, nil
+}
+
+// keyOfFile is the Key of an issue file: its name without the leading date and `.md`.
+func keyOfFile(name string) string {
+	n := strings.TrimSuffix(name, ".md")
+	if i := strings.Index(n, "--"); i >= 0 {
+		return n[i+2:]
+	}
+	return n
+}

@@ -115,6 +115,7 @@
   "check.record_issue_resolved": "   ✓ issue resuelta: %s @ %s → %s/done/",
   "check.record_summary": "registrado: %d arista(s) estampada(s); %d nueva(s) issue(s), %d resuelta(s) en %s/",
   "check.record_debt_future": "  %d deuda(s) asumida(s) registrada(s) en %s/future/ — no es para ahora, vence después.",
+  "check.record_reconciled": "  %d issue(s) de violación abierta(s) en %s/ que este check completo no reprodujo — cerrada(s) (corregida, gate que ahora omite, objetivo que desapareció, o gate renombrado).",
   "check.backlog_head": "⚠ todavía abierto localmente después de este check (no solo lo que abrió):",
   "check.backlog_issues": "  issues: %d en %s/todo/ (%d esperando al usuario), %d en %s/doing/ — cada una es un archivo allí",
   "check.backlog_tasks": "  tasks: %d pendiente(s), %d reclamada(s) (%d fuera de la ventana de trabajo — `anchors reclaim` las devuelve) — `anchors next` toma la siguiente",

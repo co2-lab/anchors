@@ -115,6 +115,7 @@
   "check.record_issue_resolved": "   ✓ issue resolved: %s @ %s → %s/done/",
   "check.record_summary": "recorded: %d edge(s) stamped; %d new issue(s), %d resolved in %s/",
   "check.record_debt_future": "  %d assumed debt(s) recorded in %s/future/ — not for now, due later.",
+  "check.record_reconciled": "  %d open violation issue(s) in %s/ not reproduced by this full check — closed (fixed, a gate that now skips, a target gone, or a gate renamed).",
   "check.backlog_head": "⚠ still open locally after this check (not only what it opened):",
   "check.backlog_issues": "  issues: %d in %s/todo/ (%d waiting for the user), %d in %s/doing/ — each one is a file there",
   "check.backlog_tasks": "  tasks: %d pending, %d claimed (%d past the work window — `anchors reclaim` returns them) — `anchors next` takes the next one",

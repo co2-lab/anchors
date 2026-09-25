@@ -301,3 +301,43 @@ func TestDonoAusenteEhDoAgente(t *testing.T) {
 		t.Errorf("issue sem o campo é do agente, veio %q", d)
 	}
 }
+
+// A full check closes every open violation it did not reproduce — and nothing else. The
+// renamed gate is the measured case: 40 `header-conforme` issues nothing could close once
+// the gate became `header-conforms`.
+func TestReconcileViolations(t *testing.T) {
+	UseFiles()
+	root := t.TempDir()
+	vivo := Issue{Kind: Violation, Gate: "header-conforms", Target: "a.ts", Date: "2026-09-25"}
+	renomeado := Issue{Kind: Violation, Gate: "header-conforme", Target: "a.ts", Date: "2026-09-11"}
+	doUsuario := Issue{Kind: Violation, Gate: "spec-complete", Target: "b.spec.md", Date: "2026-09-11", Dono: DonoUsuário}
+	decisao := Issue{Kind: Decision, Gate: "open-questions-resolved", Target: "c.spec.md", Date: "2026-09-11"}
+	for _, i := range []Issue{vivo, renomeado, doUsuario, decisao} {
+		if _, _, err := Open(root, i); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// One more, already being worked on.
+	emAndamento := Issue{Kind: Violation, Gate: "feature-test-match", Target: "d.feature", Date: "2026-09-11"}
+	if _, _, err := OpenAt(root, emAndamento, Doing); err != nil {
+		t.Fatal(err)
+	}
+
+	closed, err := ReconcileViolations(root, map[string]bool{vivo.Key(): true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(closed) != 2 {
+		t.Fatalf("the renamed-gate and the doing violation should close, closed %v", closed)
+	}
+	for _, i := range []Issue{renomeado, emAndamento} {
+		if st, _ := Exists(root, i.Key()); st != Done {
+			t.Errorf("%s should be done, is %s", i.Key(), st)
+		}
+	}
+	for _, i := range []Issue{vivo, doUsuario, decisao} {
+		if st, _ := Exists(root, i.Key()); st != Todo {
+			t.Errorf("%s must stay open (reproduced, the user's, or not a violation), is %s", i.Key(), st)
+		}
+	}
+}
