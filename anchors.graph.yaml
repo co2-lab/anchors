@@ -1150,7 +1150,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/check.go
       kind: code
-      rev: 2b3c5a018a6d
+      rev: d41aca145ace
       updated_at: "2026-09-25"
       layer: comando
       tags:
@@ -1241,6 +1241,12 @@ nodes:
       kind: test
       rev: 88a7d187a3fd
       updated_at: "2026-09-19"
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/quality/findings_summary_test.go
+      kind: test
+      rev: baef431621a3
       layer: teste
       tags:
         - test
@@ -1375,7 +1381,7 @@ nodes:
     - id: cmd/anchors/quality/verify.go
       kind: code
       rev: e29dbe08c178
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-25"
       layer: comando
       tags:
         - cli

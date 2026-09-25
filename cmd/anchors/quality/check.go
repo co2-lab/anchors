@@ -1399,9 +1399,23 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 		}
 	}
 
-	if len(p.Failures) > 0 {
+	// THE HEADER COUNTS EVERYTHING THE CHECK FOUND, by kind. It said "N issue(s) —
+	// divergences recorded:" over the failures alone: it read as N issues PLUS the
+	// divergences, and the divergences (⚠, which do not block) were not in the number at
+	// all. Nor is every failure an issue (in manual mode none is written).
+	if drifts := len(driftResults(p)); len(p.Failures) > 0 || drifts > 0 {
+		bloqueiam := 0
+		for _, r := range p.Failures {
+			if r.Blocking {
+				bloqueiam++
+			}
+		}
+		dica := i18n.T("check.drift_hint_flag")
+		if showDrift {
+			dica = i18n.T("check.drift_hint_above")
+		}
 		fmt.Println()
-		fmt.Println(i18n.T("check.issues_summary", len(p.Failures)))
+		fmt.Println(i18n.T("check.findings_summary", len(p.Failures), bloqueiam, len(p.Failures)-bloqueiam, drifts, dica))
 		for _, r := range p.Failures {
 			mark := i18n.T("check.tag.informative")
 			if r.Blocking {
