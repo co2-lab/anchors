@@ -1,7 +1,7 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
 version: 4
-generated_by: dev
+generated_by: 0.1.196
 nodes:
     - id: BOOTSTRAP.md
       kind: doc
@@ -782,7 +782,7 @@ nodes:
     - id: cmd/anchors/mapcmd/ingest.go
       kind: code
       rev: 12f9ec0d7991
-      updated_at: "2026-09-24"
+      updated_at: "2026-09-26"
       code: SPCRX
       layer: comando
       tags:
@@ -1352,7 +1352,7 @@ nodes:
     - id: cmd/anchors/quality/suite.go
       kind: code
       rev: 9f933f0c07b5
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-26"
       layer: comando
       tags:
         - cli
@@ -1367,7 +1367,7 @@ nodes:
     - id: cmd/anchors/quality/touch.go
       kind: code
       rev: 0fc6ca4af3c7
-      updated_at: "2026-09-25"
+      updated_at: "2026-09-26"
       layer: comando
       tags:
         - cli
@@ -1375,7 +1375,7 @@ nodes:
     - id: cmd/anchors/quality/touch_test.go
       kind: test
       rev: e5c5b7b4d280
-      updated_at: "2026-09-25"
+      updated_at: "2026-09-26"
       layer: teste
       tags:
         - test
@@ -4443,7 +4443,7 @@ nodes:
     - id: internal/mapx/ingest.go
       kind: code
       rev: 4d2ffe6c40f4
-      updated_at: "2026-09-24"
+      updated_at: "2026-09-26"
       layer: mapa
       tags:
         - nucleo
@@ -4458,7 +4458,7 @@ nodes:
     - id: internal/mapx/ingest_suite_rev_test.go
       kind: test
       rev: fb4fc6ba4248
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-26"
       code: AAAAA
       layer: teste
       tags:
@@ -4466,7 +4466,7 @@ nodes:
     - id: internal/mapx/ingest_test.go
       kind: test
       rev: b42a4ff7b3f1
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-26"
       code: AAAAX
       layer: teste
       tags:
@@ -4835,7 +4835,7 @@ nodes:
     - id: internal/testsig/junit.go
       kind: code
       rev: a604f81e6b8b
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-26"
       layer: infra
       tags:
         - infra
@@ -4881,7 +4881,7 @@ nodes:
     - id: internal/testsig/testsig_test.go
       kind: test
       rev: 040495099c2b
-      updated_at: "2026-09-10"
+      updated_at: "2026-09-26"
       code: SPCRX
       layer: teste
       tags:

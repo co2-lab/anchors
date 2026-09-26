@@ -13,6 +13,15 @@ lang: en
 # "código em: [cli/internal cli/cmd]" — e não usou; os caminhos daquele dia tinham o
 # prefixo `cli/`, que saiu quando o `go.mod` foi para a raiz).
 version: 4
+# The version floor: `mode: manual` (below) exists from 0.1.190 on. An older binary would
+# refuse to load this file; with the floor it asks to be updated instead.
+min_version: 0.1.190
+# THE WORKFLOW MODE: manual — the local mode without automatic issues. `anchors check`
+# reports and stamps the map, and nothing is written to `issues/` unless a command runs
+# with `--record-issues`. The check's output is the list to work from; a second copy of it
+# as files only has to be walked through again (see CONTRIBUTING.md).
+workflow:
+  mode: manual
 layers:
   # ── A DOUTRINA ──────────────────────────────────────────────────────────────────
   # Os documentos que definem o que o Anchors é. Não são "docs": são a fonte das
