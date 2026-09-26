@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/i18n"
 	"regexp"
 	"strings"
 )
@@ -184,25 +185,23 @@ func ParseWaiver(bruto string) (Waiver, []string) {
 		if r, a, temAlvo := strings.Cut(regra, "@"); temAlvo {
 			regra, alvo = strings.TrimSpace(r), strings.TrimSpace(a)
 			if alvo == "" {
-				erros = append(erros, "`"+parte+"` — falta o código depois do `@`")
+				erros = append(erros, i18n.T("gate.waiver.no_code_after_at", parte))
 				continue
 			}
 			// CAMINHO é recusado explicitamente. A alternativa — aceitá-lo em silêncio e
 			// nunca casar — produziria uma dispensa que não dispensa, e o commit
 			// reprovaria sem explicação aparente. O erro nomeia o que fazer.
 			if strings.ContainsAny(alvo, "/\\.*") {
-				erros = append(erros, "`"+parte+"` — o alvo é o CÓDIGO do artefato "+
-					"(ex.: `WRKSP`), não o caminho: o caminho muda quando alguém "+
-					"reorganiza pastas, e a dispensa deixaria de valer em silêncio")
+				erros = append(erros, i18n.T("gate.waiver.target_is_path", parte))
 				continue
 			}
 		}
 		if !ok || motivo == "" {
-			erros = append(erros, "`"+parte+"` — falta o motivo (use `regra=por quê`)")
+			erros = append(erros, i18n.T("gate.waiver.no_reason_eq", parte))
 			continue
 		}
 		if regra == "" {
-			erros = append(erros, "`"+parte+"` — falta a regra")
+			erros = append(erros, i18n.T("gate.waiver.no_rule", parte))
 			continue
 		}
 		d.PorRegra[regra] = motivo
@@ -240,7 +239,7 @@ func WaiverFromMessage(msg string) (Waiver, []string) {
 	for _, m := range markerInMessage.FindAllStringSubmatch(msg, -1) {
 		regra, codigo, motivo := m[1], m[2], strings.TrimSpace(m[3])
 		if motivo == "" {
-			erros = append(erros, "`"+m[0]+"` — falta o motivo depois dos dois-pontos")
+			erros = append(erros, i18n.T("gate.waiver.no_reason_colon", m[0]))
 			continue
 		}
 		d.PorRegra[regra] = motivo

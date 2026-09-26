@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/initx"
 	"github.com/spf13/cobra"
 )
@@ -81,7 +82,16 @@ the next one to read the plan would not know why it says what it says.`,
 			// Recusar aqui, e não avisar: liberar o card e imprimir um alerta deixaria o
 			// desfecho na mão de quem lê a saída, e a saída de um comando que "funcionou"
 			// não se lê com atenção.
-			if pendentes := desbloqueiosAbertos(cfg.Workflow.Repo, card); len(pendentes) > 0 {
+			pendentes, err := desbloqueiosAbertos(cfg.Workflow.Repo, card)
+			if err != nil {
+				// NOT KNOWING refuses too: a failed lookup used to read as "no pending
+				// work", and the label was removed from a card that could still be
+				// waiting — the very release this check exists to prevent.
+				cmd.SilenceUsage = true
+				return fmt.Errorf("%s", i18n.T("decided.unblock_unknown",
+					card, initx.LabelDesbloqueia(card), err, initx.LabelNeedsUser))
+			}
+			if len(pendentes) > 0 {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("card #%s is waiting for the delivery of #%s — the decision came out and "+
 					"generated work.\n\n"+
@@ -224,7 +234,10 @@ func closeDecisionArgs(repo string, number int, resolution string) [][]string {
 //
 // Vazio significa que a decisão não gerou trabalho — ou que o trabalho já foi entregue, e
 // nos dois casos o card pode voltar à fila.
-func desbloqueiosAbertos(repo, card string) []string {
+//
+// An ERROR means the answer is unknown (gh failed, or its output was not the JSON list),
+// and the caller must refuse: only a list that was actually read may come back empty.
+func desbloqueiosAbertos(repo, card string) ([]string, error) {
 	out, err := exec.Command("gh", "issue", "list",
 		"--repo", repo,
 		"--state", "open",
@@ -234,19 +247,24 @@ func desbloqueiosAbertos(repo, card string) []string {
 	if err != nil {
 		// Sem resposta do `gh` a resposta honesta é "não sei", e não-sei aqui não pode
 		// virar "pode liberar": o comando seguiria e removeria a label de um card que
-		// talvez espere trabalho. Devolver vazio é o que faz isso acontecer — então a
-		// falha de rede é tratada como ausência, e o operador vê o erro do `gh` na tela.
-		return nil
+		// talvez espere trabalho. So the failure is RETURNED, and the caller refuses —
+		// returning an empty list here is exactly what used to release the card.
+		if ee, ok := err.(*exec.ExitError); ok && len(ee.Stderr) > 0 {
+			return nil, fmt.Errorf("%w: %s", err, strings.TrimSpace(string(ee.Stderr)))
+		}
+		return nil, err
 	}
+	// Unreadable output is not knowing either: `gh issue list --json` answers `[]` when
+	// there is nothing, never an empty or garbled body.
 	var achados []struct{ Number int }
-	if json.Unmarshal(out, &achados) != nil {
-		return nil
+	if err := json.Unmarshal(out, &achados); err != nil {
+		return nil, err
 	}
 	var ns []string
 	for _, a := range achados {
 		ns = append(ns, fmt.Sprint(a.Number))
 	}
-	return ns
+	return ns, nil
 }
 
 // labelsDeBloqueio devolve as labels `blocked-by-<n>` que o card carrega.

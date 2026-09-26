@@ -2,6 +2,7 @@ package ops
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"os"
 	"os/exec"
 	"strings"
@@ -68,12 +69,11 @@ continued. Nothing is lost.`,
 			}
 			if !cfg.GitHubMode() {
 				cmd.SilenceUsage = true
-				return fmt.Errorf("`synthesize` exists in github mode: in local mode there is no " +
-					"PR to synthesize")
+				return fmt.Errorf("%s", i18n.T("synthesize.github_only"))
 			}
 			if strings.TrimSpace(prA) == "" {
 				cmd.SilenceUsage = true
-				return fmt.Errorf("provide at least the PR that was left out: `--pr-a <n>`")
+				return fmt.Errorf("%s", i18n.T("synthesize.need_pr_a"))
 			}
 			// O SEGUNDO LADO PODE FALTAR, e o card nasce assim mesmo.
 			//
@@ -95,13 +95,13 @@ continued. Nothing is lost.`,
 			tituloB := prTitle(repo, b)
 
 			corpo := corpoDaSintese(a, b, cardA, cardB, tituloA, tituloB, arquivos)
-			titulo := "[synthesis] what PR #" + a + " delivers, reconciled with what already landed"
+			titulo := i18n.T("synthesize.title_one", a)
 			if b != "" {
-				titulo = "[synthesis] what PRs #" + a + " and #" + b + " deliver, in one"
+				titulo = i18n.T("synthesize.title_two", a, b)
 			}
 
 			if dryRun {
-				fmt.Fprintln(cmd.OutOrStdout(), "— card that would be opened —")
+				fmt.Fprintln(cmd.OutOrStdout(), i18n.T("synthesize.dry_run_header"))
 				fmt.Fprintln(cmd.OutOrStdout(), titulo)
 				fmt.Fprintln(cmd.OutOrStdout())
 				fmt.Fprintln(cmd.OutOrStdout(), corpo)
@@ -140,14 +140,15 @@ continued. Nothing is lost.`,
 			out, err := exec.Command("gh", argv...).CombinedOutput()
 			if err != nil {
 				cmd.SilenceUsage = true
-				return fmt.Errorf("open the synthesis card: %v — %s", err, strings.TrimSpace(string(out)))
+				return fmt.Errorf("%s", i18n.T("synthesize.open_failed", err, strings.TrimSpace(string(out))))
 			}
 			url := strings.TrimSpace(string(out))
 			novo := common.NumeroDaIssue(url)
-			fmt.Fprintf(cmd.OutOrStdout(), "synthesis card: %s\n", url)
+			fmt.Fprintln(cmd.OutOrStdout(), i18n.T("synthesize.card", url))
 
 			// AS QUATRO PONTAS DA RASTREABILIDADE, e cada falha é AVISADA em vez de
 			// silenciosa: o card já existe, e perder um link é pior descoberto depois.
+			var fechados, naoFechados []string
 			pares := [][2]string{{a, b}}
 			if b != "" {
 				pares = append(pares, [2]string{b, a})
@@ -155,42 +156,46 @@ continued. Nothing is lost.`,
 			for _, par := range pares {
 				pr, outro := par[0], par[1]
 				if outro == "" {
-					outro = "what is already on the integration branch"
+					outro = i18n.T("synthesize.other_side_branch")
 				} else {
 					outro = "#" + outro
 				}
-				msg := fmt.Sprintf("🔀 **Closed in favor of the synthesis.**\n\n"+
-					"This PR conflicts in CONTENT with %s — both wrote about the same "+
-					"place, and picking a side would be choosing without reading the other.\n\n"+
-					"The work continues in %s, which asks for the best of both in a single result. "+
-					"The content here is NOT lost: it is what that card has to deliver.",
-					outro, url)
+				msg := i18n.T("synthesize.comment_pr", outro, url)
 				if o, err := exec.Command("gh", "pr", "comment", pr, "--repo", repo,
 					"--body", msg).CombinedOutput(); err != nil {
-					fmt.Fprintf(cmd.ErrOrStderr(), "· warning: #%s did not receive the comment: %s\n",
-						pr, strings.TrimSpace(string(o)))
+					fmt.Fprintln(cmd.ErrOrStderr(), i18n.T("synthesize.warn_no_comment", pr, strings.TrimSpace(string(o))))
 				}
 				if o, err := exec.Command("gh", "pr", "close", pr, "--repo", repo).CombinedOutput(); err != nil {
-					fmt.Fprintf(cmd.ErrOrStderr(), "· warning: #%s was not closed: %s\n",
-						pr, strings.TrimSpace(string(o)))
+					fmt.Fprintln(cmd.ErrOrStderr(), i18n.T("synthesize.warn_not_closed", pr, strings.TrimSpace(string(o))))
+					naoFechados = append(naoFechados, "#"+pr)
+				} else {
+					fechados = append(fechados, "#"+pr)
 				}
 			}
 			for _, c := range []string{cardA, cardB} {
 				if c == "" {
 					continue
 				}
-				msg := fmt.Sprintf("🔀 The PR of this card conflicted in content with another, and the "+
-					"work continues in the synthesis: %s\n\nThis card stays open — it only closes "+
-					"when the synthesis delivers what it asked for.", url)
+				msg := i18n.T("synthesize.comment_card", url)
 				if o, err := exec.Command("gh", "issue", "comment", c, "--repo", repo,
 					"--body", msg).CombinedOutput(); err != nil {
-					fmt.Fprintf(cmd.ErrOrStderr(), "· warning: card #%s did not receive the link: %s\n",
-						c, strings.TrimSpace(string(o)))
+					fmt.Fprintln(cmd.ErrOrStderr(), i18n.T("synthesize.warn_card_no_link", c, strings.TrimSpace(string(o))))
 				}
 			}
+			// The closing line names what gh ACTUALLY closed. It counted the PRs it meant to
+			// close: "PRs #693 and # were closed" with `--pr-a` alone, and "closed" after a
+			// `gh pr close` that failed and had just been warned about.
 			if novo != "" {
-				fmt.Fprintf(cmd.OutOrStdout(),
-					"  PRs #%s and #%s were closed, and the four ends point at each other\n", a, b)
+				switch len(fechados) {
+				case 0:
+				case 1:
+					fmt.Fprintln(cmd.OutOrStdout(), i18n.T("synthesize.closed_one", fechados[0]))
+				default:
+					fmt.Fprintln(cmd.OutOrStdout(), i18n.T("synthesize.closed_many", strings.Join(fechados, ", ")))
+				}
+				if len(naoFechados) > 0 {
+					fmt.Fprintln(cmd.OutOrStdout(), i18n.T("synthesize.still_open", strings.Join(naoFechados, ", ")))
+				}
 			}
 			return nil
 		},
@@ -225,28 +230,22 @@ func prTitle(repo, pr string) string {
 func corpoDaSintese(a, b, cardA, cardB, tituloA, tituloB, arquivos string) string {
 	var s strings.Builder
 	if b != "" {
-		s.WriteString("🔀 **Two PRs wrote about the same place, and both were closed.**\n\n")
+		s.WriteString(i18n.T("synthesize.body.head_two"))
 	} else {
-		s.WriteString("🔀 **This PR wrote about a place that has already changed, and was closed.**\n\n")
+		s.WriteString(i18n.T("synthesize.body.head_one"))
 	}
-	s.WriteString("This card asks for the SYNTHESIS: read both sides, and deliver the best of each ")
-	s.WriteString("in a result better than both. It is not \"pick a side\" — if it were, ")
-	s.WriteString("automation would already have chosen.\n\n")
+	s.WriteString(i18n.T("synthesize.body.ask"))
 
-	s.WriteString("## What each one delivered\n\n")
-	s.WriteString(fmt.Sprintf("| PR | card | what it was |\n|---|---|---|\n"))
+	s.WriteString(i18n.T("synthesize.body.what_each"))
 	s.WriteString(fmt.Sprintf("| #%s | %s | %s |\n", a, cardRef(cardA), ouTraco(tituloA)))
 	if b != "" {
 		s.WriteString(fmt.Sprintf("| #%s | %s | %s |\n\n", b, cardRef(cardB), ouTraco(tituloB)))
 	} else {
-		s.WriteString("\n> **The other side was not identified.** The conflict is against what is ")
-		s.WriteString("already on the integration branch — find out what changed there by reading the ")
-		s.WriteString("file history (`git log -p <file>`). Whoever made that change does not need ")
-		s.WriteString("to be interrupted: their work has already landed.\n\n")
+		s.WriteString(i18n.T("synthesize.body.other_unknown"))
 	}
 
 	if strings.TrimSpace(arquivos) != "" {
-		s.WriteString("## Where they disagree\n\n")
+		s.WriteString(i18n.T("synthesize.body.where"))
 		for _, f := range strings.Split(arquivos, ",") {
 			if f = strings.TrimSpace(f); f != "" {
 				s.WriteString("- `" + f + "`\n")
@@ -255,25 +254,16 @@ func corpoDaSintese(a, b, cardA, cardB, tituloA, tituloB, arquivos string) strin
 		s.WriteString("\n")
 	}
 
-	s.WriteString("## How to deliver\n\n")
+	s.WriteString(i18n.T("synthesize.body.how"))
 	if b != "" {
-		s.WriteString("1. Read both closed PRs — their content is there, and it is what you have to preserve.\n")
+		s.WriteString(i18n.T("synthesize.body.read_two"))
+		s.WriteString(i18n.T("synthesize.body.open_two", a, b))
 	} else {
-		s.WriteString("1. Read the closed PR — its content is there, and it is what you have to preserve.\n")
+		s.WriteString(i18n.T("synthesize.body.read_one"))
+		s.WriteString(i18n.T("synthesize.body.open_one", a))
 	}
-	if b != "" {
-		s.WriteString("2. Open ONE PR with the synthesis, citing both: `Refs #" + a + "` and `Refs #" + b + "`.\n")
-	} else {
-		s.WriteString("2. Open ONE PR with the synthesis, citing what was closed: `Refs #" + a + "`.\n")
-	}
-	s.WriteString("3. If the two sides are about DIFFERENT things, both go in — the conflict ")
-	s.WriteString("was of position in the file, not of content.\n")
-	s.WriteString("4. If they are about the SAME thing, decide with the reason written down: which argument ")
-	s.WriteString("survives, and why. Record it as a revision in the spec.\n\n")
-
-	s.WriteString("> **What NOT to do:** take one side and discard the other without saying why. ")
-	s.WriteString("The work of both is closed here; if something is lost, no one will know ")
-	s.WriteString("what it was.\n")
+	s.WriteString(i18n.T("synthesize.body.steps_rest"))
+	s.WriteString(i18n.T("synthesize.body.dont"))
 	return s.String()
 }
 

@@ -2,6 +2,7 @@ package common
 
 import (
 	"os"
+	"path/filepath"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/telemetry"
@@ -17,7 +18,9 @@ func NoticeTelemetry(cmd *cobra.Command) {
 
 	var declared string
 	if root != "" {
-		if cfg, err := config.Load(config.DefaultFile); err == nil && cfg != nil {
+		// From the project ROOT, not the cwd: run from a subdirectory or with `--root`, the
+		// cwd has no anchors.yaml, and a project's `telemetry: off` was ignored.
+		if cfg, err := config.Load(filepath.Join(root, config.DefaultFile)); err == nil && cfg != nil {
 			declared = cfg.Telemetry
 		}
 	}

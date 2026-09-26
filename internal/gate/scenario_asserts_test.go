@@ -168,3 +168,14 @@ func TestScenarioAssertsSemCenariosOuTestesNaoBloqueia(t *testing.T) {
 		t.Fatalf("feature sem passos deveria passar neste gate: %s (%s)", v, d)
 	}
 }
+
+func TestScenarioAsserts_residualWordLimit(t *testing.T) {
+	t.Run("SCASS-I01: Up to two residual words around a code is still a tautology", func(t *testing.T) {
+		if code, ok := isTautology("the ABCDE-B01 badge counts"); !ok || code != "ABCDE-B01" {
+			t.Errorf("two residual words (badge, counts) are still a tautology: %q %v", code, ok)
+		}
+		if _, ok := isTautology("the ABCDE-B01 badge counts unread items"); ok {
+			t.Error("four residual words are an assertion of the author's own")
+		}
+	})
+}

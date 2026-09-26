@@ -288,3 +288,37 @@ func TestValueAnchored_declaredWithTooFewGroups(t *testing.T) {
 		t.Fatalf("the declared pattern must be named with the missing group, got %v (%s)", v, msg)
 	}
 }
+
+func TestValueAnchored_reportDetails(t *testing.T) {
+	t.Run("VLANV-B02: A lying declaration names its line and the code line below it", func(t *testing.T) {
+		root, g := project(t, map[string]string{
+			"theme.ts": "const a = 1\n// @code-reference-[COLOR-OK]-[#1F8A5B]\n\nsuccess: '#000000',\n",
+		})
+		v, msg := runOn(t, root, g, "theme.ts")
+		if v != Fail || !strings.Contains(msg, "line 2 — `COLOR-OK` declares `#1F8A5B`, and line 4 says: success: '#000000',") {
+			t.Errorf("got %v: %s", v, msg)
+		}
+	})
+
+	t.Run("VLANV-B04: Divergent copies are listed by file, then by line", func(t *testing.T) {
+		root, g := project(t, map[string]string{
+			"a.ts": "// @code-reference-[K]-[1]\nx = 1\n\n// @code-reference-[K]-[3]\nz = 3\n",
+			"b.ts": "\n// @code-reference-[K]-[2]\ny = 2\n",
+		})
+		_, msg := runOn(t, root, g, "a.ts")
+		i1, i4, i2 := strings.Index(msg, "a.ts:1 —"), strings.Index(msg, "a.ts:4 —"), strings.Index(msg, "b.ts:2 —")
+		if i1 < 0 || i4 < 0 || i2 < 0 || !(i1 < i4 && i4 < i2) {
+			t.Errorf("expected a.ts:1, a.ts:4, b.ts:2 in that order: %s", msg)
+		}
+	})
+
+	t.Run("VLANV-B02: A pattern whose key group opens the comment still reads the key", func(t *testing.T) {
+		root, g := project(t, map[string]string{"theme.ts": "// COLOR-OK=#1F8A5B\nsuccess: '#000000',\n"})
+		cfg := &config.Config{Derived: &config.Derived{ValueAnchor: `([A-Z]+-[A-Z]+)=(\S+)`}}
+		content, _ := os.ReadFile(filepath.Join(root, "theme.ts"))
+		v, msg := checkValueAnchored(string(content), mapx.Node{ID: "theme.ts", Kind: mapx.KindCode}, root, g, cfg)
+		if v != Fail || !strings.Contains(msg, "`COLOR-OK` declares `#1F8A5B`") {
+			t.Errorf("got %v: %s", v, msg)
+		}
+	})
+}

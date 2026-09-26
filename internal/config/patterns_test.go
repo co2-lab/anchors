@@ -1,6 +1,7 @@
 package config
 
 import (
+	"strings"
 	"testing"
 
 	"gopkg.in/yaml.v3"
@@ -74,5 +75,38 @@ func TestSemPatternsUsaFiles(t *testing.T) {
 	}
 	if got := d.PadroesDe()["code"]; len(got) != 1 || got[0] != "x.ts" {
 		t.Errorf("sem patterns, `files` manda: %v", got)
+	}
+}
+
+// The loader refuses what is neither text nor a non-empty list of text, and says why.
+func TestPadroesRejectsOtherShapes(t *testing.T) {
+	for name, doc := range map[string]string{
+		"empty list":       "code: []\n",
+		"mapping":          "code: {a: b}\n",
+		"list of mappings": "code:\n  - {a: b}\n",
+	} {
+		var m map[string]Padroes
+		if err := yaml.Unmarshal([]byte(doc), &m); err == nil {
+			t.Errorf("%s: want an error, got %v", name, m)
+		}
+	}
+	var m map[string]Padroes
+	err := yaml.Unmarshal([]byte("code: []\n"), &m)
+	if err == nil || !strings.Contains(err.Error(), "empty pattern list") {
+		t.Errorf("an empty list must name its cause, got %v", err)
+	}
+}
+
+// Writing back keeps the simplest shape: one pattern is a string, several are a list.
+func TestPadroesMarshalsToTheSimplestShape(t *testing.T) {
+	out, err := yaml.Marshal(map[string]Padroes{
+		"code": {"x.ts"},
+		"test": {"a.test.ts", "b.test.ts"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "code: x.ts\ntest:\n    - a.test.ts\n    - b.test.ts\n"; string(out) != want {
+		t.Errorf("Marshal = %q, want %q", out, want)
 	}
 }

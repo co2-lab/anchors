@@ -82,7 +82,6 @@ func TestAvisa_dizOQueColetaOQueNaoEComoDesligar(t *testing.T) {
 		"não envia",             // o que não coleta
 		"conteúdo de arquivo",   // o medo mais provável de quem lê
 		"anchors_telemetry=off", // como desligar, sem editar arquivo
-		"anchors telemetry off",
 		"telemetry: off",
 	} {
 		if !strings.Contains(texto, strings.ToLower(quer)) {

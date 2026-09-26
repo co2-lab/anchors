@@ -292,10 +292,12 @@ func trimTitle(line string) string {
 	if m := anyCodeRE.FindStringIndex(s); m != nil {
 		s = s[m[1]:]
 	}
-	s = strings.TrimSpace(strings.TrimLeft(s, "—–-: `"))
+	// `|` too: in a table row the code's cell ends in one, and the title came out as
+	// "| text |" in the orphan message.
+	s = strings.TrimSpace(strings.TrimLeft(s, "—–-: `|"))
 	// A waiver in an HTML comment is not part of what the rule asserts.
 	if i := strings.Index(s, "<!--"); i >= 0 {
 		s = strings.TrimSpace(s[:i])
 	}
-	return s
+	return strings.TrimSpace(strings.TrimRight(s, "| "))
 }

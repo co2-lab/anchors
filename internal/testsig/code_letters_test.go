@@ -64,3 +64,61 @@ func TestRuleLetters_naoDivergeDoConfig(t *testing.T) {
 			"  escrever o teste de novo.", ruleLetters, doConfig)
 	}
 }
+
+// The project's vocabulary replaces the canonical one in the grammar builder: a declared
+// letter is recognised, and an empty value (a config that did not declare it) keeps what
+// was there.
+//
+// These assert on mustCodeRE, the builder the setters feed. CodesInCase reads a regex
+// compiled once at package init (junit.go `caseCodeRE`), so today it does NOT see the
+// setters -- reported as a bug, and deliberately not asserted here.
+func TestSetRuleLetters(t *testing.T) {
+	saved := ruleLetters
+	t.Cleanup(func() { ruleLetters = saved })
+
+	SetRuleLetters("BZ")
+	if got := mustCodeRE().FindAllString("ABCDX-Z01: project letter", -1); len(got) != 1 || got[0] != "ABCDX-Z01" {
+		t.Errorf("a declared letter must be recognised, got %v", got)
+	}
+	if got := mustCodeRE().FindAllString("ABCDX-I01: not declared", -1); len(got) != 0 {
+		t.Errorf("a letter outside the project's vocabulary must not match, got %v", got)
+	}
+	SetRuleLetters("")
+	if ruleLetters != "BZ" {
+		t.Errorf("an empty value must keep the letters, got %q", ruleLetters)
+	}
+}
+
+// The code length is the project's too: a 3-character code matches only once declared.
+func TestSetCodeLenPattern(t *testing.T) {
+	saved := codeLenPattern
+	t.Cleanup(func() { codeLenPattern = saved })
+
+	if got := mustCodeRE().FindAllString("ABC-B01: short code", -1); len(got) != 0 {
+		t.Fatalf("with the default length a 3-char code must not match, got %v", got)
+	}
+	SetCodeLenPattern("{3}")
+	if got := mustCodeRE().FindAllString("ABC-B01: short code", -1); len(got) != 1 || got[0] != "ABC-B01" {
+		t.Errorf("after SetCodeLenPattern({3}) the code must match, got %v", got)
+	}
+	SetCodeLenPattern("")
+	if codeLenPattern != "{3}" {
+		t.Errorf("an empty value must keep the pattern, got %q", codeLenPattern)
+	}
+}
+
+// The project's vocabulary reaches the JUnit reading: a letter declared after the package
+// loaded is recognised in a case name, and one no longer declared is not.
+func TestCodesInCaseFollowsTheDeclaredLetters(t *testing.T) {
+	prev := ruleLetters
+	defer SetRuleLetters(prev)
+
+	SetRuleLetters("BZ")
+	if got := CodesInCase("ABCDX-Z01: a project letter"); len(got) != 1 || got[0] != "ABCDX-Z01" {
+		t.Fatalf("a declared letter must be read from the case name, got %v", got)
+	}
+	SetRuleLetters("B")
+	if got := CodesInCase("ABCDX-Z01: no longer declared"); len(got) != 0 {
+		t.Errorf("a letter no longer declared must not be read, got %v", got)
+	}
+}

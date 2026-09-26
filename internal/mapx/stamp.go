@@ -88,10 +88,23 @@ func (g *Graph) StampEdges(verdicts []NodeVerdict, now string) int {
 // false se a aresta não existe. O carimbo leva as revs atuais das pontas, então o
 // veredito de IA envelhece (fica stale) se o alvo mudar depois — mesmo anti-drift.
 func (g *Graph) StampEdge(from, to, verdict, now string) bool {
+	return g.StampEdgeByGate(from, to, verdict, now, "")
+}
+
+// StampEdgeByGate is StampEdge that also records WHICH gate judged the edge, as
+// StampNodeByGate does. Without the record, a judgment gate that declares `guide:` stamped
+// its guide→target edge and `JudgedBy` never saw it: the next check asked the same
+// judgment again, right after it was answered.
+func (g *Graph) StampEdgeByGate(from, to, verdict, now, gateName string) bool {
 	for i := range g.Edges {
 		e := &g.Edges[i]
 		if e.From == from && e.To == to {
-			e.Stamp = stamp(e.Stamp, g.nodeRev(e.From), g.nodeRev(e.To), verdict, now)
+			st := stamp(e.Stamp, g.nodeRev(e.From), g.nodeRev(e.To), verdict, now)
+			if gateName != "" {
+				st.Gate = gateName
+				g.recordJudgment(e, gateName, verdict, now)
+			}
+			e.Stamp = st
 			return true
 		}
 	}
@@ -139,33 +152,7 @@ func (g *Graph) StampNodeByGate(id, verdict, now, gateName string) int {
 		st.Gate = gateName
 		e.Stamp = st
 		if gateName != "" {
-			j := Judgment{
-				Gate:             gateName,
-				Verdict:          verdict,
-				ValidatedFromRev: g.nodeRev(e.From),
-				ValidatedToRev:   g.nodeRev(e.To),
-				ChangedAt:        now,
-			}
-			// Mesma regra do carimbo: rejulgar e achar o mesmo não é fato novo. Sem
-			// isto, cada `anchors judge` reescreveria a data de todos os julgamentos.
-			for k := range e.Julgamentos {
-				a := e.Julgamentos[k]
-				if a.Gate == gateName && a.Verdict == verdict &&
-					a.ValidatedFromRev == j.ValidatedFromRev && a.ValidatedToRev == j.ValidatedToRev {
-					j.ChangedAt = a.ChangedAt
-				}
-			}
-			trocou := false
-			for k := range e.Julgamentos {
-				if e.Julgamentos[k].Gate == gateName {
-					e.Julgamentos[k] = j
-					trocou = true
-					break
-				}
-			}
-			if !trocou {
-				e.Julgamentos = append(e.Julgamentos, j)
-			}
+			g.recordJudgment(e, gateName, verdict, now)
 		}
 		stamped++
 	}
@@ -218,3 +205,35 @@ func (g *Graph) StaleEdges() []Edge {
 // O contrato de formato tornou a normalização desnecessária: o formato 2 só tem nome
 // canônico, e quem está no 1 é recusado com a mensagem que manda migrar. A conversão é o
 // passo `1→2` (`internal/migra/formato_2.go`) e roda uma vez.
+
+// recordJudgment records on the edge the verdict a named gate gave it, at the ends' current
+// revs — what `JudgedBy` reads to know the judgment was answered. One entry per gate.
+func (g *Graph) recordJudgment(e *Edge, gateName, verdict, now string) {
+	j := Judgment{
+		Gate:             gateName,
+		Verdict:          verdict,
+		ValidatedFromRev: g.nodeRev(e.From),
+		ValidatedToRev:   g.nodeRev(e.To),
+		ChangedAt:        now,
+	}
+	// Mesma regra do carimbo: rejulgar e achar o mesmo não é fato novo. Sem
+	// isto, cada `anchors judge` reescreveria a data de todos os julgamentos.
+	for k := range e.Julgamentos {
+		a := e.Julgamentos[k]
+		if a.Gate == gateName && a.Verdict == verdict &&
+			a.ValidatedFromRev == j.ValidatedFromRev && a.ValidatedToRev == j.ValidatedToRev {
+			j.ChangedAt = a.ChangedAt
+		}
+	}
+	trocou := false
+	for k := range e.Julgamentos {
+		if e.Julgamentos[k].Gate == gateName {
+			e.Julgamentos[k] = j
+			trocou = true
+			break
+		}
+	}
+	if !trocou {
+		e.Julgamentos = append(e.Julgamentos, j)
+	}
+}

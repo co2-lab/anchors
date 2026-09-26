@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/co2-lab/anchors/internal/i18n"
 	"strings"
 	"testing"
 )
@@ -85,7 +86,7 @@ func TestNomeInexistenteVemRotuladoEJunto(t *testing.T) {
 	if len(ausentes) != 2 {
 		t.Fatalf("as duas ausências vêm juntas; veio %v", ausentes)
 	}
-	if !strings.Contains(ausentes[0], "camada") || !strings.Contains(ausentes[0], "smoke") {
+	if ausentes[0] != i18n.T("config.suite.missing_layer", `"smoke"`) {
 		t.Errorf("a primeira devia ser a camada smoke; veio %q", ausentes[0])
 	}
 	if !strings.Contains(ausentes[1], "workspace") || !strings.Contains(ausentes[1], "web") {
@@ -207,7 +208,7 @@ func TestMesmaCamadaEWorkspaceComEscoposDiferentesNaoColidem(t *testing.T) {
 // TestEscopoInexistenteVemRotulado — o usuário precisa saber em QUAL eixo errou.
 func TestEscopoInexistenteVemRotulado(t *testing.T) {
 	_, ausentes := SelecionaSuites(suitesMutacao(), nil, nil, []string{"parcial"})
-	if len(ausentes) != 1 || !strings.Contains(ausentes[0], "escopo") {
+	if len(ausentes) != 1 || ausentes[0] != i18n.T("config.suite.missing_scope", `"parcial"`) {
 		t.Errorf("ausência devia ser rotulada como escopo; veio %v", ausentes)
 	}
 }

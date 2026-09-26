@@ -1930,17 +1930,17 @@ func SelecionaSuites(suites []Suite, camadas, workspaces, escopos []string) (sel
 	}
 	for _, c := range camadas {
 		if k := strings.ToLower(strings.TrimSpace(c)); k != "" && !existeC[k] {
-			ausentes = append(ausentes, "camada "+strconvQuote(c))
+			ausentes = append(ausentes, i18n.T("config.suite.missing_layer", strconvQuote(c)))
 		}
 	}
 	for _, w := range workspaces {
 		if k := strings.ToLower(strings.TrimSpace(w)); k != "" && !existeW[k] {
-			ausentes = append(ausentes, "workspace "+strconvQuote(w))
+			ausentes = append(ausentes, i18n.T("config.suite.missing_workspace", strconvQuote(w)))
 		}
 	}
 	for _, e := range escopos {
 		if k := strings.ToLower(strings.TrimSpace(e)); k != "" && !existeE[k] {
-			ausentes = append(ausentes, "escopo "+strconvQuote(e))
+			ausentes = append(ausentes, i18n.T("config.suite.missing_scope", strconvQuote(e)))
 		}
 	}
 	return sel, ausentes

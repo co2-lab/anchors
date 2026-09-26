@@ -202,3 +202,60 @@ func TestRevisionOrphans_oneDomainWordIsEnough(t *testing.T) {
 		t.Errorf("B04 does not speak of the badge and was reported: %q", msg)
 	}
 }
+
+func TestRevisionOrphans_readsEveryRevision(t *testing.T) {
+	t.Run("RVORP-B03: A revision naming no rule cannot be confronted", func(t *testing.T) {
+		spec := "> **NTCNN-R0001:** first change.\n\n> **NTCNN-R0002:** second change.\n\n" +
+			"### NTCNN-B01 — uma regra\n"
+		v, msg := checkRevisionOrphans(spec, specNodeRev(), "", nil, nil)
+		if v != Pending || !strings.HasPrefix(msg, "2 revision(s)") {
+			t.Errorf("both revisions are counted: %v (%s)", v, msg)
+		}
+	})
+
+	t.Run("RVORP-B05: A vocabulary-sharing sibling that no revision names is an orphan", func(t *testing.T) {
+		// Two revisions, each naming one rule: the second `Revises:` counts as much as the
+		// first, so B02 is revised and never an orphan.
+		spec := "> **NTCNN-R0001:** first.\n>\n> **Revises:** `B01`\n\n" +
+			"> **NTCNN-R0002:** second.\n>\n> **Revises:** `B02`\n\n" +
+			"### NTCNN-B01 — O badge mostra um ponto\n\n" +
+			"### NTCNN-B02 — O sino mostra um ponto\n\n" +
+			"### NTCNN-I02 — O badge acende com o sino\n\n" +
+			"### NTCNN-I01 — O badge apaga ao abrir\n"
+		v, msg := checkRevisionOrphans(spec, specNodeRev(), "", nil, nil)
+		if v != Fail {
+			t.Fatalf("got %v (%s)", v, msg)
+		}
+		if strings.Contains(msg, "NTCNN-B02") || strings.Contains(msg, "\n    B02") {
+			t.Errorf("a rule named by the second revision is not an orphan: %s", msg)
+		}
+		i1, i2 := strings.Index(msg, "\n    I01 — "), strings.Index(msg, "\n    I02 — ")
+		if i1 < 0 || i2 < 0 || i1 > i2 {
+			t.Errorf("the orphans are listed in code order, each with its title: %s", msg)
+		}
+		if !strings.Contains(msg, `"O badge apaga ao abrir"`) {
+			t.Errorf("the title is shown without heading or code: %s", msg)
+		}
+	})
+}
+
+func TestTrimTitle(t *testing.T) {
+	cases := map[string]string{
+		"### NTCNN-B03 — O badge é um ponto":                            "O badge é um ponto",
+		"### NTCNN-B07 — <!-- @no-scenario: layout, nothing to run -->": "",
+		"### NTCNN-B07 — O layout <!-- @no-scenario: x -->":             "O layout",
+		"just text": "just text",
+	}
+	for in, want := range cases {
+		if got := trimTitle(in); got != want {
+			t.Errorf("trimTitle(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+// A rule in a table row keeps only its statement as the title, with no cell pipes.
+func TestTrimTitleOfATableRow(t *testing.T) {
+	if got := trimTitle("| `XXXXX-B03` | the badge shows the count |"); got != "the badge shows the count" {
+		t.Errorf("trimTitle of a table row = %q", got)
+	}
+}

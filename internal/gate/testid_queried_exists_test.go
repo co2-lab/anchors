@@ -294,3 +294,86 @@ func TestConsultadoExiste_unreadableIsPending(t *testing.T) {
 		t.Fatalf("with a source unread, the missing handle is not accused: want Pending naming it, got %v: %s", v, d)
 	}
 }
+
+func writeFlow(t *testing.T, root, name, body string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(root, "flows", name), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestConsultadoExiste_reportDetails(t *testing.T) {
+	t.Run("TQETS-B06: The verdict names the missing handle and the querying flows", func(t *testing.T) {
+		root, cfg := fixtureConsultado(t, `<View testID=":abcd-tela" />`,
+			"- tapOn:\n    id: ':abcd-b-missing'\n") // F-A01.yaml
+		writeFlow(t, root, "F-Z01.yaml", "- tapOn:\n    id: ':abcd-a-missing'\n- tapOn:\n    id: ':abcd-b-missing'\n")
+		writeFlow(t, root, "helper.js", "// id: ':abcd-js-missing'\n")             // not a flow
+		writeFlow(t, root, "F-Y01.yml", "- tapOn:\n    id: ':abcd-yml-missing'\n") // .yml is a flow
+		v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+		if v != Fail {
+			t.Fatalf("got %v: %s", v, d)
+		}
+		ia, ib := strings.Index(d, "abcd-a-missing"), strings.Index(d, "abcd-b-missing")
+		if ia < 0 || ib < 0 || ia > ib {
+			t.Errorf("the handles are listed in id order: %s", d)
+		}
+		if !strings.Contains(d, "queried in: flows/F-A01.yaml, flows/F-Z01.yaml") {
+			t.Errorf("the flows of one handle are listed in path order: %s", d)
+		}
+		if !strings.Contains(d, "abcd-yml-missing") || strings.Contains(d, "abcd-js-missing") {
+			t.Errorf(".yml flows are read, .js helpers are not: %s", d)
+		}
+	})
+
+	t.Run("TQETS-B02: The E2E surface may be declared by an override", func(t *testing.T) {
+		root, cfg := fixtureConsultado(t, `<View testID=":abcd-tela" />`, "- tapOn:\n    id: ':abcd-missing'\n")
+		cfg.Derived.Files = nil
+		cfg.Derived.Overrides = []config.DerivedOverride{
+			{Files: map[string]config.Padroes{"code": {"src"}}}, // no e2e pattern here
+			{Files: map[string]config.Padroes{"e2e": {"flows"}}},
+		}
+		if v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg); v != Fail {
+			t.Errorf("the override's surface is confronted: %v (%s)", v, d)
+		}
+	})
+
+	t.Run("TQETS-E02: An unreadable source directory is never approved", func(t *testing.T) {
+		if os.Geteuid() == 0 {
+			t.Skip("root reads through permissions")
+		}
+		root, cfg := fixtureConsultado(t, `<View testID=":abcd-tela" />`, "- tapOn:\n    id: ':abcd-tela'\n")
+		locked := filepath.Join(root, "locked")
+		if err := os.Mkdir(locked, 0o000); err != nil {
+			t.Fatal(err)
+		}
+		t.Cleanup(func() { _ = os.Chmod(locked, 0o755) })
+		v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+		if v != Pending || !strings.Contains(d, "locked") {
+			t.Errorf("the unreadable directory is named: %v (%s)", v, d)
+		}
+	})
+}
+
+func TestQueriedHandles(t *testing.T) {
+	flow := "- tapOn:\n    id: ':abcd-one'\n- tapOn:\n    id: \"abcd-two\"\n" +
+		"- tapOn:\n    id: 'ab-c'\n" + // four characters, with a dash: the floor itself
+		"- tapOn:\n    id: 'abc'\n" + // below the floor
+		"- tapOn:\n    id: '.*-row-x'\n" + // a pattern with no static head
+		"- tapOn:\n    id: 'abcd-list-.*'\n"
+	got := queriedHandles(flow)
+	want := []string{"abcd-one", "abcd-two", "ab-c", "abcd-list"}
+	if strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Errorf("got %v, want %v", got, want)
+	}
+}
+
+func TestExposedHandleRecognisers_collectEveryOccurrence(t *testing.T) {
+	src := "const m = { A: ':abcd-one', B: ':abcd-two' }\n" +
+		"testID={`${testID}-row-${i}`} other={`${id}-cell-${j}`}\n"
+	if got := looseLiteralHandles(src); strings.Join(got, ",") != ":abcd-one,:abcd-two" {
+		t.Errorf("looseLiteralHandles = %v", got)
+	}
+	if got := propComposedSuffixes(src); strings.Join(got, ",") != "*-row-*,*-cell-*" {
+		t.Errorf("propComposedSuffixes = %v", got)
+	}
+}

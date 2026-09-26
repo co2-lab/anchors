@@ -149,3 +149,144 @@ O que a unidade faz.
 			"— veio outro: %v", err)
 	}
 }
+
+// --- duties, init, and what `build` reports ---
+
+const dutiesConfig = `layers:
+  api:
+    pattern: "api/**/*.go"
+    kind: code
+docs:
+  required:
+    - kind: openapi
+      path: docs/api.yaml
+      trigger: [api]
+      why: the contract of the endpoints
+    - kind: c4
+      path: docs/c4.md
+`
+
+func TestDocsDutiesAnswersPerLayerAndPerUnit(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, root, "anchors.yaml", dutiesConfig)
+	writeFile(t, root, "api/handler.go", "package api\n")
+
+	err, out := runCmd(t, newDocsCmd(), "duties", "--root", root)
+	if err != nil || !strings.Contains(out, "Required documentation:") ||
+		!strings.Contains(out, "docs/api.yaml") || !strings.Contains(out, "docs/c4.md") {
+		t.Errorf("all duties: %v\n%s", err, out)
+	}
+
+	err, out = runCmd(t, newDocsCmd(), "duties", "--root", root, "--layer", "api")
+	if err != nil || !strings.Contains(out, "Changing `api` requires touching") ||
+		!strings.Contains(out, "docs/api.yaml") || strings.Contains(out, "docs/c4.md") {
+		t.Errorf("--layer api must name only the triggered doc: %v\n%s", err, out)
+	}
+
+	err, out = runCmd(t, newDocsCmd(), "duties", "--root", root, "--layer", "web")
+	if err != nil || !strings.Contains(out, "No documentation is required when changing `web`") {
+		t.Errorf("--layer web: %v\n%s", err, out)
+	}
+
+	// The UNIT is resolved to its layer: the handler lives in `api`.
+	err, out = runCmd(t, newDocsCmd(), "duties", "--root", root, "--unit", "api/handler.go")
+	if err != nil || !strings.Contains(out, "Changing `api/handler.go` requires touching") ||
+		!strings.Contains(out, "docs/api.yaml") {
+		t.Errorf("--unit: %v\n%s", err, out)
+	}
+}
+
+func TestDocsDutiesWithoutDeclarationTeachesTheKinds(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, root, "anchors.yaml", "version: 1\n")
+	err, out := runCmd(t, newDocsCmd(), "duties", "--root", root)
+	if err != nil || !strings.Contains(out, "declares no required documentation") || !strings.Contains(out, "openapi, c4") {
+		t.Errorf("no docs declared: %v\n%s", err, out)
+	}
+	if err, _ := runCmd(t, newDocsCmd(), "duties", "--root", t.TempDir()); err == nil {
+		t.Error("duties without anchors.yaml must fail")
+	}
+}
+
+// `docs init` writes the skeleton once; a second run skips what exists, --force rewrites.
+func TestDocsInitWritesTheSkeletonOnce(t *testing.T) {
+	root := t.TempDir()
+	if err, _ := runCmd(t, newDocsCmd(), "init", "--root", root); err == nil ||
+		!strings.Contains(err.Error(), "anchors map build") {
+		t.Errorf("init without a map must point at `map build`: %v", err)
+	}
+	writeFile(t, root, "anchors.graph.yaml", "version: 4\nnodes: []\nedges: []\n")
+
+	err, out := runCmd(t, newDocsCmd(), "init", "--root", root)
+	if err != nil {
+		t.Fatalf("docs init: %v", err)
+	}
+	tmpls, _ := filepath.Glob(filepath.Join(root, "doct", "*.md.tmpl"))
+	if len(tmpls) == 0 || !strings.Contains(out, "✓ doct/") {
+		t.Fatalf("no template written:\n%s", out)
+	}
+	edited := tmpls[0]
+	if err := os.WriteFile(edited, []byte("mine"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	_, out = runCmd(t, newDocsCmd(), "init", "--root", root)
+	if !strings.Contains(out, "already exists (use --force to overwrite)") {
+		t.Errorf("the second run does not say what it skipped:\n%s", out)
+	}
+	if b, _ := os.ReadFile(edited); string(b) != "mine" {
+		t.Error("a second run without --force overwrote an edited template")
+	}
+	runCmd(t, newDocsCmd(), "init", "--root", root, "--force")
+	if b, _ := os.ReadFile(edited); string(b) == "mine" {
+		t.Error("--force did not rewrite the template")
+	}
+}
+
+// What `build` reports: a hand-written page with a template is SKIPPED and named; a dry
+// run says nothing was written; with no template, it says there was nothing to compile.
+func TestDocsBuildReportsSkippedDryRunAndNothing(t *testing.T) {
+	root := t.TempDir()
+	writeFile(t, root, "anchors.yaml", "version: 1\n")
+	if err := os.MkdirAll(filepath.Join(root, "doct"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	err, out := runCmd(t, newDocsBuildCmd(), "--root", root)
+	if err != nil || !strings.Contains(out, "no template in `doct/`") {
+		t.Errorf("no template: %v\n%s", err, out)
+	}
+
+	writeFile(t, root, "doct/guia.md.tmpl", "# Guide\n")
+	writeFile(t, root, "doct/manual.md.tmpl", "# Manual\n")
+	writeFile(t, root, "docs/manual.md", "written by hand\n")
+
+	err, out = runCmd(t, newDocsBuildCmd(), "--root", root, "--dry-run")
+	if err != nil {
+		t.Fatalf("dry run: %v", err)
+	}
+	if !strings.Contains(out, "docs/guia.md compiled (not written)") {
+		t.Errorf("the dry run does not list the page:\n%s", out)
+	}
+	if _, serr := os.Stat(filepath.Join(root, "docs", "guia.md")); serr == nil {
+		t.Error("--dry-run wrote the page")
+	}
+	if !strings.Contains(out, "1 file(s) NOT generated") || !strings.Contains(out, "docs/manual.md") {
+		t.Errorf("the hand-written page is not reported as skipped:\n%s", out)
+	}
+	if b, _ := os.ReadFile(filepath.Join(root, "docs", "manual.md")); string(b) != "written by hand\n" {
+		t.Error("the hand-written page was overwritten")
+	}
+
+	if err, _ := runCmd(t, newDocsBuildCmd(), "--root", root, "--no-map-rebuild"); err == nil ||
+		!strings.Contains(err.Error(), "load map") {
+		t.Errorf("--no-map-rebuild without a map must say so: %v", err)
+	}
+}
+
+func TestDocsFreshHintNamesEveryStalePage(t *testing.T) {
+	got := docsFreshHint([]string{"docs/a.md", "docs/b.md"})
+	if !strings.Contains(got, "2 documento(s)") || !strings.Contains(got, "docs/a.md, docs/b.md") ||
+		!strings.Contains(got, "anchors docs build") {
+		t.Errorf("hint = %q", got)
+	}
+}

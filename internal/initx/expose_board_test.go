@@ -1,6 +1,7 @@
 package initx
 
 import (
+	"embed"
 	"strings"
 	"testing"
 )
@@ -84,4 +85,18 @@ func ultimos(s string, n int) string {
 		return s
 	}
 	return "…" + s[len(s)-n:]
+}
+
+// Without the embedded files, both readers fail loudly instead of serving an empty board.
+func TestBoardReadersFailWithoutTheEmbeddedFiles(t *testing.T) {
+	savedBoard, savedWorkflows := boardFS, workflowsFS
+	t.Cleanup(func() { boardFS, workflowsFS = savedBoard, savedWorkflows })
+	boardFS, workflowsFS = embed.FS{}, embed.FS{}
+
+	if h, err := BoardHTML(); err == nil || h != "" || !strings.Contains(err.Error(), "the board HTML is not embedded") {
+		t.Errorf("BoardHTML = %q, %v; want the not-embedded error", h, err)
+	}
+	if jq, err := BoardCollectJQ(); err == nil || jq != "" || !strings.Contains(err.Error(), "the board pipeline is not embedded") {
+		t.Errorf("BoardCollectJQ = %q, %v; want the not-embedded error", jq, err)
+	}
 }

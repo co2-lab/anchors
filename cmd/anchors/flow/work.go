@@ -221,7 +221,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 		// do confronto. E vê o registro de entrega, que dá escopo e traz a intenção
 		// declarada pelo autor para ser confrontada contra o disco.
 		b.WriteString("\n## What you are going to confront\n\n")
-		writeTriadPaths(&b, rel, artifact, layer, cfg, g)
+		writeTriadPaths(&b, root, rel, artifact, layer, cfg, g)
 		writeDeliveryRecord(&b, root, rel, cfg)
 	} else if hasLayer && l.Regime == "declarativo" {
 		b.WriteString("\n## The pieces and where they are born\n\n")
@@ -233,7 +233,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 			"the decision is missing there — not that this layer needs one.\n")
 	} else {
 		b.WriteString("\n## The pieces and where they are born\n\n")
-		writeTriadPaths(&b, rel, artifact, layer, cfg, g)
+		writeTriadPaths(&b, root, rel, artifact, layer, cfg, g)
 	}
 
 	// REGIMES: as tags de nível que os cenários da feature DEVEM declarar. Estão no
@@ -508,7 +508,7 @@ func guidesFor(l config.Layer, cfg *config.Config, artifact string) []string {
 
 // writeTriadPaths mostra onde cada peça da trinca nasce para este alvo, usando o
 // `derived:` do projeto (co-location por padrão, overrides por camada).
-func writeTriadPaths(b *strings.Builder, rel, artifact, layer string, cfg *config.Config, g *mapx.Graph) {
+func writeTriadPaths(b *strings.Builder, root, rel, artifact, layer string, cfg *config.Config, g *mapx.Graph) {
 	if cfg.Derived == nil {
 		b.WriteString("> The project does not declare `derived:` — confirm where the pieces live " +
 			"by looking at the layer neighbors.\n")
@@ -528,7 +528,10 @@ func writeTriadPaths(b *strings.Builder, rel, artifact, layer string, cfg *confi
 			mark = "→" // a peça desta etapa
 		}
 		exists := ""
-		if _, err := os.Stat(p); err == nil {
+		// Against the PROJECT ROOT: `p` is relative to it, and a bare os.Stat(p) resolved it
+		// against the process's cwd — `anchors work --root X` run from elsewhere marked
+		// the pieces of whatever tree it happened to stand in.
+		if _, err := os.Stat(filepath.Join(root, p)); err == nil {
 			exists = "  (already exists)"
 		}
 		note := ""

@@ -188,7 +188,12 @@ func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta)
 	colocado, _ := valor("colocation").(bool)
 	initx.ApplyColocation(cfg, colocado, artefatos)
 
-	if l := asList(valor("layers")); len(l) > 0 {
+	// Only an ANSWERED `--layers` prunes. The default of the question was inferred from
+	// the disk BEFORE the preset was applied: pruning with it, in a project with code,
+	// dropped the preset's `core` and `common` and left only the inferred `*-code` — while
+	// the TUI, which asks after the preset, keeps them all. The untouched default means
+	// "keep every code layer", which is the TUI's pre-selection.
+	if l := asList(valor("layers")); len(l) > 0 && !usedDefault(status, "layers") {
 		keep := map[string]bool{}
 		for _, n := range l {
 			keep[n] = true
@@ -238,6 +243,16 @@ func nextStepAfter(root string, p *initx.Proposal) string {
 			"interview with the user before writing any code"
 	}
 	return "`anchors map build` — without the map, no file exists for the gates"
+}
+
+// usedDefault says whether the answer `id` was not given and fell back to its default.
+func usedDefault(status []initx.StatusResposta, id string) bool {
+	for _, s := range status {
+		if s.ID == id {
+			return s.UsouPada
+		}
+	}
+	return false
 }
 
 func asList(v any) []string {

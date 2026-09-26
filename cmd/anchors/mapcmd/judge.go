@@ -91,6 +91,13 @@ it is declared.`,
 			if err := ValidateVerdict(v, reason); err != nil {
 				return err
 			}
+			// The legacy value is the canonical one from here on. ValidateVerdict mapped
+			// it only inside itself, and the rest of RunE, seeing `dispensado`, stamped
+			// the edge `ok` and printed "judged PASS" — the lying pass `waived` exists
+			// to prevent.
+			if v == "dispensado" {
+				v = "waived"
+			}
 
 			target := relTo(absRoot, args[0])
 			g, err := mapx.Load(mapPath)
@@ -158,7 +165,7 @@ it is declared.`,
 			//    alvo) com o veredito da IA. Se o gate declara guide, carimba essa
 			//    aresta; senão, cai para o carimbo por-nó (todas as arestas do alvo).
 			stamped := 0
-			if gc.Guide != "" && g.StampEdge(gc.Guide, target, verdictStr, now.Format(time.DateOnly)) {
+			if gc.Guide != "" && g.StampEdgeByGate(gc.Guide, target, verdictStr, now.Format(time.DateOnly), gateName) {
 				stamped = 1
 			} else {
 				// Carimbo por NÓ: o `judge` julga uma UNIDADE, e o `StampEdges` exige as

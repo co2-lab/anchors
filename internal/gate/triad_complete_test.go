@@ -3,6 +3,7 @@ package gate
 import (
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"testing"
 
@@ -512,4 +513,77 @@ func TestTriadComplete_Errors(t *testing.T) {
 			t.Fatalf("the scenario of the feature on disk must contradict the waiver, got %v: %s", v, msg)
 		}
 	})
+}
+
+func TestOptionalPieces_resolvesTheLayerOfTheTarget(t *testing.T) {
+	cfg := &config.Config{Layers: map[string]config.Layer{
+		"dao":    {Pattern: "models/**/*.ts", Kind: "code", OptionalTriadEdges: []string{"tested-by"}},
+		"lib":    {Pattern: "screens/**/*.ts", Kind: "code"},
+		"screen": {Pattern: "screens/**/*.tsx", Kind: "code", OptionalTriadEdges: []string{"covered-by"}},
+	}}
+	keys := func(m map[string]bool) string {
+		var out []string
+		for k := range m {
+			out = append(out, k)
+		}
+		sort.Strings(out)
+		return strings.Join(out, ",")
+	}
+
+	t.Run("TRCMT-B06: The layer may waive a piece as a block, reached by the specifies edge", func(t *testing.T) {
+		spec := mapx.Node{ID: "docs/user.spec.md", Kind: mapx.KindSpec}
+		g := &mapx.Graph{
+			Nodes: []mapx.Node{spec,
+				{ID: "src/user.ts", Kind: mapx.KindCode, Tags: []string{"dao"}},
+				{ID: "src/other.ts", Kind: mapx.KindCode, Tags: []string{"dao"}},
+				{ID: "src/plain.ts", Kind: mapx.KindCode}},
+			Edges: []mapx.Edge{{From: spec.ID, To: "src/user.ts", Type: mapx.EdgeSpecifies}},
+		}
+		if got := keys(optionalPieces(spec, cfg, g)); got != "tested-by" {
+			t.Errorf("the target's layer waives the test: %q", got)
+		}
+		g.Edges[0].Type = mapx.EdgeCoveredBy
+		if got := keys(optionalPieces(spec, cfg, g)); got != "" {
+			t.Errorf("only a specifies edge names the target: %q", got)
+		}
+		g.Edges[0] = mapx.Edge{From: spec.ID, To: "src/plain.ts", Type: mapx.EdgeSpecifies}
+		if got := keys(optionalPieces(spec, cfg, g)); got != "" {
+			t.Errorf("a target in no waiving layer waives nothing: %q", got)
+		}
+	})
+
+	t.Run("TRCMT-B06: Before the code exists, the layer is resolved by the target's path", func(t *testing.T) {
+		if got := keys(optionalPieces(mapx.Node{ID: "models/user.spec.md", Kind: mapx.KindSpec}, cfg, nil)); got != "tested-by" {
+			t.Errorf("models/user.ts is a dao: %q", got)
+		}
+		// screens/home.ts falls in `lib`, which waives nothing; the search goes on to .tsx
+		if got := keys(optionalPieces(mapx.Node{ID: "screens/home.spec.md", Kind: mapx.KindSpec}, cfg, nil)); got != "covered-by" {
+			t.Errorf("screens/home.tsx is a screen: %q", got)
+		}
+		if got := keys(optionalPieces(mapx.Node{ID: "models/user.md", Kind: mapx.KindSpec}, cfg, nil)); got != "" {
+			t.Errorf("a file that is not a spec has no target path: %q", got)
+		}
+	})
+}
+
+func TestReferenceInBlock_findsTheCodeAmongOtherQuotes(t *testing.T) {
+	t.Run("TRCMT-I03: Waiving the test requires saying where the proof is", func(t *testing.T) {
+		code, ok := referenceInBlock("@no-test: proven by the `handler` test, scenario `SGHBX-B01`")
+		if !ok || code != "SGHBX-B01" {
+			t.Errorf("the code is found after a quote that is not one: %q %v", code, ok)
+		}
+	})
+}
+
+func TestLinkedFeatureScenarios_countsEveryScenario(t *testing.T) {
+	root := t.TempDir()
+	feature := "Feature: x\n\n  Scenario: one\n    Given a\n\n  Scenario: two\n    Given b\n"
+	if err := os.WriteFile(filepath.Join(root, "x.feature"), []byte(feature), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}
+	g := &mapx.Graph{Edges: []mapx.Edge{{From: n.ID, To: "x.feature", Type: mapx.EdgeCoveredBy}}}
+	if count, path := linkedFeatureScenarios(n, root, g); count != 2 || path != "x.feature" {
+		t.Errorf("got %d scenarios in %q", count, path)
+	}
 }

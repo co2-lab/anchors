@@ -56,6 +56,17 @@ existing pre-commit that was not written by this command.`,
 // --force e distinguir de um hook artesanal do usuário.
 const hookMarker = "# managed-by: anchors install-hooks"
 
+// legacyCommitMsgMarker is the header the commit-msg hook carried before it carried
+// hookMarker. That hook was then taken for the user's on every reinstall without --force,
+// and never updated; recognising the old header is what lets existing installs catch up.
+const legacyCommitMsgMarker = "# anchors:hook — instalado por 'anchors install-hooks'"
+
+// writtenByAnchors says whether a hook on disk is one this command wrote.
+func writtenByAnchors(hook []byte) bool {
+	return strings.Contains(string(hook), hookMarker) ||
+		strings.Contains(string(hook), legacyCommitMsgMarker)
+}
+
 func runInstallHooks(root string, force bool) error {
 	// 1. exige anchors.yaml (é um projeto anchors?)
 	if _, err := os.Stat(filepath.Join(root, config.DefaultFile)); err != nil {
@@ -80,7 +91,7 @@ func runInstallHooks(root string, force bool) error {
 
 	// 3. se já existe e não é nosso, respeita (a menos que --force).
 	if existing, rerr := os.ReadFile(hookPath); rerr == nil {
-		if !strings.Contains(string(existing), hookMarker) && !force {
+		if !writtenByAnchors(existing) && !force {
 			return fmt.Errorf(
 				"a pre-commit already exists in %s that was not written by anchors.\n"+
 					"  review it and, if you want to replace it, run with --force",
@@ -96,7 +107,7 @@ func runInstallHooks(root string, force bool) error {
 	// dispensa escrita na mensagem seria lida do commit errado, em silêncio.
 	msgHook := filepath.Join(hooksDir, "commit-msg")
 	if existing, rerr := os.ReadFile(msgHook); rerr == nil &&
-		!strings.Contains(string(existing), hookMarker) && !force {
+		!writtenByAnchors(existing) && !force {
 		fmt.Printf("⚠  %s exists and was not written by anchors — not overwritten.\n", msgHook)
 	} else if err := os.WriteFile(msgHook, []byte(commitMsgScript), 0o755); err != nil {
 		return fmt.Errorf("write %s: %w", msgHook, err)
@@ -108,7 +119,7 @@ func runInstallHooks(root string, force bool) error {
 	// o último momento em que a informação ainda muda o desfecho.
 	pushHook := filepath.Join(hooksDir, "pre-push")
 	if existing, rerr := os.ReadFile(pushHook); rerr == nil &&
-		!strings.Contains(string(existing), hookMarker) && !force {
+		!writtenByAnchors(existing) && !force {
 		fmt.Printf("⚠  %s exists and was not written by anchors — not overwritten.\n", pushHook)
 	} else if err := os.WriteFile(pushHook, []byte(prePushScript), 0o755); err != nil {
 		return fmt.Errorf("write %s: %w", pushHook, err)
@@ -471,7 +482,7 @@ exit 0
 // existe para o caso em que a mensagem MUDA o veredito — e ele só reexecuta quando há
 // marcador, para não pagar o custo duas vezes em todo commit.
 const commitMsgScript = `#!/usr/bin/env bash
-# anchors:hook — instalado por 'anchors install-hooks'
+` + hookMarker + `
 set -euo pipefail
 
 MSG_FILE="$1"

@@ -161,7 +161,9 @@ func suggestion(errado string, declarados map[string]bool) string {
 	var melhor string
 	for d := range declarados {
 		if strings.Contains(d, errado) || strings.Contains(errado, d) {
-			if melhor == "" || len(d) < len(melhor) {
+			// Ties go to the alphabetically first: map order made the suggestion
+			// change between runs of the same check.
+			if melhor == "" || len(d) < len(melhor) || (len(d) == len(melhor) && d < melhor) {
 				melhor = d
 			}
 		}

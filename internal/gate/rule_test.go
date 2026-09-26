@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/i18n"
 	"strings"
 	"testing"
 )
@@ -30,7 +31,7 @@ func TestDispensaExigeARegra(t *testing.T) {
 	if len(erros) != 1 {
 		t.Fatalf("entrada sem regra tem de ser recusada, veio %d erro(s): %v", len(erros), erros)
 	}
-	if !strings.Contains(erros[0], "regra") {
+	if erros[0] != i18n.T("gate.waiver.no_rule", "=um motivo qualquer") {
 		t.Errorf("o erro deveria dizer o que falta: %s", erros[0])
 	}
 }
@@ -217,7 +218,8 @@ func TestDispensaRecusaCaminhoComoAlvo(t *testing.T) {
 			t.Errorf("%q deveria ser recusado: o alvo é o CÓDIGO, não o caminho", bruto)
 			continue
 		}
-		if !strings.Contains(erros[0], "CÓDIGO") {
+		// `WRKSP` is the example only this message gives, in every language.
+		if !strings.Contains(erros[0], "WRKSP") {
 			t.Errorf("o erro deveria dizer o que usar no lugar: %s", erros[0])
 		}
 	}

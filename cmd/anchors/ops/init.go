@@ -1,8 +1,10 @@
 package ops
 
 import (
+	"errors"
 	"fmt"
 	"github.com/co2-lab/anchors/internal/i18n"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -63,16 +65,7 @@ anchors.yaml. The bulk is inferred; the questions cover only the human decisions
 // `contexto` diz o que já aconteceu antes da falha, porque isso muda o que o leitor
 // precisa saber: se o git foi tocado, se algo foi escrito.
 func errNoTTY(contexto string) error {
-	return fmt.Errorf("`anchors init` is interactive and there is no terminal available "+
-		"(no TTY: pipe, CI or agent without an interactive shell).\n"+
-		"%s\n\n"+
-		"Use the NON-INTERACTIVE mode, in two calls of the SAME flag:\n"+
-		"  1. anchors init --non-interactive\n"+
-		"       with no answers, returns the decisions in JSON (options, the default\n"+
-		"       inferred from disk, and what each answer changes in the project)\n"+
-		"  2. anchors init --non-interactive --artifacts=spec,feature,test --colocation\n"+
-		"       with answers in flags, applies them and reports the verdict of each one\n\n"+
-		"Or run it in an interactive terminal.", contexto)
+	return fmt.Errorf("%s", i18n.T("init.no_tty", contexto))
 }
 
 // runInit orquestra: infere (puro) → pergunta (TUI) → aplica decisões (puro) →
@@ -83,9 +76,9 @@ func runInit(root string) error {
 
 	if _, err := os.Stat(outPath); err == nil {
 		var overwrite bool
-		if err := huh.NewConfirm().
+		if err := runPrompt(huh.NewConfirm().
 			Title(config.DefaultFile + " already exists. Overwrite?").
-			Value(&overwrite).Run(); err != nil {
+			Value(&overwrite)); err != nil {
 			erroDePrompt = true
 		}
 		if !overwrite {
@@ -144,6 +137,7 @@ func runInit(root string) error {
 		}
 	}
 
+	var headerDest, headerRel, headerBody string
 	// 0.6) GUIA DE CABEÇALHO — semeia um HEADER_GUIDE.md no projeto (a régua do bloco
 	// @anchors, instanciada com o dialeto de comentário da stack e as features reais).
 	// É o padrão MANDATÓRIO de cabeçalho; o init o materializa para o projeto seguir.
@@ -156,11 +150,11 @@ func runInit(root string) error {
 		if guideDir == "" {
 			guideDir = "guides"
 		}
-		dest := filepath.Join(root, guideDir, "HEADER_GUIDE.md")
-		body := initx.RenderHeaderGuide(chosenPreset, moduleBasenames)
-		if err := os.MkdirAll(filepath.Dir(dest), 0o755); err == nil && os.WriteFile(dest, []byte(body), 0o644) == nil {
-			fmt.Printf("Header guide seeded: %s\n", filepath.Join(guideDir, "HEADER_GUIDE.md"))
-		}
+		// Written only after the guard below: an init that refuses must leave NOTHING —
+		// seeded here, the guide stayed behind every aborted run.
+		headerDest = filepath.Join(root, guideDir, "HEADER_GUIDE.md")
+		headerRel = filepath.Join(guideDir, "HEADER_GUIDE.md")
+		headerBody = initx.RenderHeaderGuide(chosenPreset, moduleBasenames)
 	}
 
 	// 1) ARTEFATOS — SEMPRE perguntado. Pré-marca os detectados; num projeto vazio,
@@ -247,13 +241,18 @@ func runInit(root string) error {
 	// exatamente o que ele existe para não ser.
 	//
 	// Vai antes da guarda de TTY de propósito? NÃO: depois. Um init abortado não deve
-	// deixar arquivo, e o header já é um resíduo conhecido — não vamos criar um segundo.
+	// deixar arquivo — e o header guide agora também espera por ela.
 	if erroDePrompt {
 		return errNoTTY("Nothing was written: an `anchors.yaml` generated without the answers " +
 			"would come out with 0 layers and 0 gates, would load without error and would govern nothing.")
 	}
 	if err := config.Save(cfg, outPath); err != nil {
 		return fmt.Errorf("save: %w", err)
+	}
+	if headerDest != "" {
+		if os.MkdirAll(filepath.Dir(headerDest), 0o755) == nil && os.WriteFile(headerDest, []byte(headerBody), 0o644) == nil {
+			fmt.Printf("Header guide seeded: %s\n", headerRel)
+		}
 	}
 	if p.GuideDir != "" {
 		destSpec := filepath.Join(root, p.GuideDir, "SPEC_GUIDE.md")
@@ -284,11 +283,51 @@ func runInit(root string) error {
 // [cli/internal cli/cmd]" na tela, e escreveu `layers: {}` — descartou a própria detecção.
 var erroDePrompt bool
 
+// errEndOfInput is what runPrompt returns when a prompt in line mode ran out of input.
+var errEndOfInput = errors.New("end of input: the prompt got no answer")
+
+// runPrompt runs one prompt, and turns end-of-input into an error.
+//
+// With TERM=dumb huh switches to line mode: it reads os.Stdin line by line and, when the
+// input ends, returns the field's DEFAULT with no error. So the `erroDePrompt` guard never
+// tripped, and `TERM=dumb anchors init </dev/null` accepted the git offer, then wrote an
+// anchors.yaml with 0 artifacts and 0 gates under a "✓ written". End-of-input is not an
+// answer, and is reported the way a missing TTY is.
+//
+// huh makes a fresh line reader per prompt, so a piped script loses every line after the
+// first prompt too: those prompts also hit end-of-input, and are refused the same way.
+func runPrompt(field huh.Field) error {
+	// The same test huh makes (NewForm) to pick line mode.
+	if os.Getenv("TERM") != "dumb" {
+		return field.Run()
+	}
+	in := &eofWatcher{r: os.Stdin}
+	err := huh.NewForm(huh.NewGroup(field)).WithShowHelp(false).WithInput(in).Run()
+	if err == nil && in.eof {
+		return errEndOfInput
+	}
+	return err
+}
+
+// eofWatcher records whether a read reached the end of the input.
+type eofWatcher struct {
+	r   io.Reader
+	eof bool
+}
+
+func (w *eofWatcher) Read(p []byte) (int, error) {
+	n, err := w.r.Read(p)
+	if errors.Is(err, io.EOF) {
+		w.eof = true
+	}
+	return n, err
+}
+
 // askText coleta uma resposta livre. Usado pelo `repo` do modo github, que não tem
 // conjunto de opções para escolher.
 func askText(title string) string {
 	var v string
-	if err := huh.NewInput().Title(title).Value(&v).Run(); err != nil {
+	if err := runPrompt(huh.NewInput().Title(title).Value(&v)); err != nil {
 		erroDePrompt = true
 	}
 	return strings.TrimSpace(v)
@@ -296,7 +335,7 @@ func askText(title string) string {
 
 func askConfirmDefault(title string, def bool) bool {
 	v := def
-	if err := huh.NewConfirm().Title(title).Value(&v).Run(); err != nil {
+	if err := runPrompt(huh.NewConfirm().Title(title).Value(&v)); err != nil {
 		erroDePrompt = true
 	}
 	return v
@@ -310,7 +349,7 @@ func askMultiSelectPre(title string, items []string, pre map[string]bool) map[st
 		opts = append(opts, huh.NewOption(it, it).Selected(pre[it]))
 	}
 	var picked []string
-	if err := huh.NewMultiSelect[string]().Title(title).Options(opts...).Value(&picked).Run(); err != nil {
+	if err := runPrompt(huh.NewMultiSelect[string]().Title(title).Options(opts...).Value(&picked)); err != nil {
 		erroDePrompt = true
 	}
 	set := map[string]bool{}
@@ -327,7 +366,7 @@ func askMultiSelect(title string, items []string) map[string]bool {
 		opts = append(opts, huh.NewOption(it, it).Selected(true))
 	}
 	var picked []string
-	if err := huh.NewMultiSelect[string]().Title(title).Options(opts...).Value(&picked).Run(); err != nil {
+	if err := runPrompt(huh.NewMultiSelect[string]().Title(title).Options(opts...).Value(&picked)); err != nil {
 		erroDePrompt = true
 	}
 	set := map[string]bool{}
@@ -344,10 +383,10 @@ func askGovernAnswers(guides, tags []string) map[string]string {
 	answers := map[string]string{}
 	for _, guide := range guides {
 		var tag string
-		if err := huh.NewSelect[string]().
+		if err := runPrompt(huh.NewSelect[string]().
 			Title(fmt.Sprintf("The guide %s governs which tag?", filepath.Base(guide))).
 			Options(huh.NewOptions(options...)...).
-			Value(&tag).Run(); err != nil {
+			Value(&tag)); err != nil {
 			erroDePrompt = true
 		}
 		answers[guide] = tag
@@ -364,10 +403,10 @@ func askPreset() (initx.Preset, bool) {
 		opts = append(opts, p.Title)
 	}
 	var choice string
-	if err := huh.NewSelect[string]().
+	if err := runPrompt(huh.NewSelect[string]().
 		Title("Use a project structure preset (established stack)?").
 		Options(huh.NewOptions(opts...)...).
-		Value(&choice).Run(); err != nil {
+		Value(&choice)); err != nil {
 		erroDePrompt = true
 	}
 	if choice == none || choice == "" {

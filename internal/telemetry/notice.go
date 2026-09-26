@@ -67,7 +67,6 @@ func Notice(w io.Writer, root string) {
 │                                                                           │
 │ Para desligar, qualquer um destes:                                        │
 │     export ANCHORS_TELEMETRY=off                                          │
-│     anchors telemetry off                                                 │
 │     telemetry: off      (no anchors.yaml, vale para o projeto)            │
 │                                                                           │
 │ Este aviso aparece uma vez por máquina.                                   │

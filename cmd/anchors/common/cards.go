@@ -36,8 +36,11 @@ func AgentCards(cfg *config.Config) []AgentCard {
 		return nil
 	}
 	var cards []AgentCard
-	for _, l := range strings.Split(strings.TrimSpace(string(out)), "\n") {
-		p := strings.Split(l, "\t")
+	// Trim only the line breaks: the last line of a card with no state label ENDS in a
+	// tab (its empty third field), and TrimSpace over the whole output ate it — that card
+	// alone, in that position alone, was dropped.
+	for _, l := range strings.Split(strings.Trim(string(out), "\r\n"), "\n") {
+		p := strings.Split(strings.TrimRight(l, "\r"), "\t")
 		if len(p) != 3 || p[0] == "" {
 			continue
 		}

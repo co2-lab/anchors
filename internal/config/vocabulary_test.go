@@ -1,5 +1,10 @@
 package config
 
+import (
+	"reflect"
+	"testing"
+)
+
 // A TABELA DE ALIAS que este arquivo testava FOI REMOVIDA.
 //
 // Ela aceitava os nomes de gate em português e os convertia na carga, para sempre. Os
@@ -22,3 +27,17 @@ package config
 //
 // Este arquivo fica como registro: quem procurar pelos testes do alias encontra por que
 // eles não estão mais aqui.
+
+func TestDefaultGateNamesForTest(t *testing.T) {
+	saved := defaultGateNames
+	t.Cleanup(func() { defaultGateNames = saved })
+
+	RegisterGateNames(nil)
+	if got := DefaultGateNamesForTest(); got != nil {
+		t.Fatalf("with nothing registered, want nil, got %v", got)
+	}
+	RegisterGateNames(func() []string { return []string{"spec-complete", "rule-fulfilled"} })
+	if got, want := DefaultGateNamesForTest(), []string{"spec-complete", "rule-fulfilled"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("DefaultGateNamesForTest = %v, want %v", got, want)
+	}
+}

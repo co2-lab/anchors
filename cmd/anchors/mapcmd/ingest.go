@@ -109,6 +109,12 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 			mutationFormat := config.FormatMTE
 			if cfg, cerr := config.Load(filepath.Join(absRoot, config.DefaultFile)); cerr == nil {
 				testsig.SetRuleLetters(cfg.RuleLetters())
+				// The code length too, when the project DECLARES one: reading JUnit is
+				// permissive by default (4 and 5), and a `[6]` project's cases were never
+				// read. Undeclared, the permissive default stays.
+				if len(cfg.CodeLengths) > 0 {
+					testsig.SetCodeLenPattern(config.CodeLengthPattern())
+				}
 				mutationFormat = cfg.MutationFormat()
 			}
 			now := time.Now().Format(time.RFC3339)

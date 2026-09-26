@@ -302,3 +302,61 @@ func TestLayerBoundaryNaoJulgaSeAFronteiraFazSentido(t *testing.T) {
 		t.Fatalf("o julgamento é de quem escreve a Estrutura, não do gate: %s (%s)", v, d)
 	}
 }
+
+func TestLayerBoundary_findingDetails(t *testing.T) {
+	t.Run("LYBNL-B02: Content matching a forbidden pattern fails, naming line and reason", func(t *testing.T) {
+		cfg := cfgComFronteiras(config.Boundary{Layer: "screens", Forbid: `from '@/repositories`})
+		content := "import a from '@/repositories/a'\nconst x = 1\nimport b from '@/repositories/b'\n"
+		v, d := rodaFronteira(t, "src/screens/Home.ts", content, cfg)
+		if v != Fail || !strings.Contains(d, "line 1:") || !strings.Contains(d, "line 3:") {
+			t.Errorf("every occurrence is named by its line: %v (%s)", v, d)
+		}
+		if !strings.Contains(d, "layer `screens` cannot contain") {
+			t.Errorf("a scoped rule names its layer: %s", d)
+		}
+		if strings.Contains(d, "warning(s)") {
+			t.Errorf("no warning was found, none is announced: %s", d)
+		}
+	})
+
+	t.Run("LYBNL-B04: A rule with no layer holds for all code", func(t *testing.T) {
+		cfg := cfgComFronteiras(config.Boundary{Forbid: `Date\.now`})
+		_, d := rodaFronteira(t, "src/hooks/x.ts", "Date.now()\n", cfg)
+		if !strings.Contains(d, "this layer cannot contain") {
+			t.Errorf("a global rule speaks of this layer: %s", d)
+		}
+	})
+
+	t.Run("LYBNL-B05: Severity warn records without failing, and the default is error", func(t *testing.T) {
+		cfg := cfgComFronteiras(
+			config.Boundary{Forbid: `console\.log`},
+			config.Boundary{Forbid: `debugger`, Severity: "warn"},
+		)
+		v, d := rodaFronteira(t, "src/hooks/x.ts", "console.log(1)\ndebugger\n", cfg)
+		if v != Fail || !strings.Contains(d, "and 1 more warning(s)") {
+			t.Errorf("the failure still counts the warnings beside it: %v (%s)", v, d)
+		}
+	})
+
+	t.Run("LYBNL-B06: A waiver with a written reason on the line waives that line", func(t *testing.T) {
+		// the match ends at the end of line 1; the waiver on line 2 belongs to line 2 only
+		cfg := cfgComFronteiras(config.Boundary{Forbid: `Date\.now\(\)`})
+		content := "const t = Date.now()\nconst u = 2 // @allow-boundary: unrelated reason\n"
+		if v, d := rodaFronteira(t, "src/hooks/x.ts", content, cfg); v != Fail {
+			t.Errorf("a waiver on the line BELOW does not waive: %v (%s)", v, d)
+		}
+	})
+}
+
+func TestLayerBoundary_listsAtMostFiveFindings(t *testing.T) {
+	cfg := cfgComFronteiras(config.Boundary{Forbid: `console\.log`})
+	five := strings.Repeat("console.log(1)\n", 5)
+	if _, d := rodaFronteira(t, "src/hooks/x.ts", five, cfg); strings.Contains(d, "(and ") {
+		t.Errorf("five findings are all listed, with no remainder: %s", d)
+	}
+	seven := strings.Repeat("console.log(1)\n", 7)
+	_, d := rodaFronteira(t, "src/hooks/x.ts", seven, cfg)
+	if !strings.Contains(d, "(and 2 more)") || strings.Contains(d, "line 6:") {
+		t.Errorf("seven findings list five and count the other two: %s", d)
+	}
+}

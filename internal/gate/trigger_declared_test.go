@@ -208,3 +208,49 @@ func TestTriggerDeclared_PackThatDoesNotLoad(t *testing.T) {
 		t.Fatalf("a pack that does not load must leave the verdict Pending with its error, got %v (%s)", v, msg)
 	}
 }
+
+func TestTriggerDeclared_reportDetails(t *testing.T) {
+	cfg := &config.Config{Obligations: []config.Obligation{
+		{Name: "lgpd-eliminacao", When: "carries: personal-data"},
+		{Name: "lgpd-sensivel", When: "carries: sensitive-personal-data"},
+	}}
+	spec := mapx.Node{Kind: mapx.KindSpec}
+
+	t.Run("TRDCT-B08: An undeclared trigger fails, naming the nearest declared one", func(t *testing.T) {
+		v, msg := checkTriggerDeclared("declare `carries: personal`", spec, t.TempDir(), nil, cfg)
+		if v != Fail || !strings.Contains(msg, "declared is `personal-data`") {
+			t.Errorf("the shortest declared trigger containing the citation is suggested: %v (%s)", v, msg)
+		}
+	})
+
+	t.Run("TRDCT-B12: Every error is aggregated in the verdict", func(t *testing.T) {
+		content := "declare `carries: pii` and `renders: face`\n" +
+			"a obrigação `lgpd-inexistente` e a obrigação `lgpd-outra`\n"
+		v, msg := checkTriggerDeclared(content, spec, t.TempDir(), nil, cfg)
+		if v != Fail {
+			t.Fatalf("got %v (%s)", v, msg)
+		}
+		for _, want := range []string{"`carries: pii`", "`renders: face`", "`lgpd-inexistente`", "`lgpd-outra`"} {
+			if !strings.Contains(msg, want) {
+				t.Errorf("missing %s in: %s", want, msg)
+			}
+		}
+		if !strings.HasPrefix(msg, "4 citation(s)") {
+			t.Errorf("four errors are counted: %s", msg)
+		}
+	})
+}
+
+// Equally close candidates resolve the same way on every run.
+func TestSuggestionIsDeterministic(t *testing.T) {
+	decl := map[string]bool{"data-pii": true, "data-pie": true, "unrelated-x": true}
+	first := suggestion("data", decl)
+	for i := 0; i < 50; i++ {
+		if got := suggestion("data", decl); got != first {
+			t.Fatalf("the suggestion changed between runs: %q then %q", first, got)
+		}
+	}
+	if !strings.Contains(first, "data-pie") {
+		t.Errorf("a tie goes to the alphabetically first candidate: %q", first)
+	}
+}

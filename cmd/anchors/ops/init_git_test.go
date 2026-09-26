@@ -114,3 +114,177 @@ func TestIniciaGitSoCommitaQuandoRepoJaExiste(t *testing.T) {
 		t.Fatalf("estado final = %v, queria GitPronto", e)
 	}
 }
+
+// --- gitStep: the first step of `anchors init` ---
+
+// A machine without git gets the warning and no question: offering `git init` there would
+// fail the moment it is accepted. And init goes on — git missing is a warning, not an error.
+func TestGitStepWithoutGitWarnsAndProceeds(t *testing.T) {
+	resetPromptError(t)
+	t.Setenv("PATH", t.TempDir()) // no git on this PATH
+	root := t.TempDir()
+
+	var ok bool
+	out := captureStdout(t, func() { ok = gitStep(root) })
+	if !ok {
+		t.Fatal("gitStep stopped init on a machine without git; it must only warn")
+	}
+	if !strings.Contains(out, initx.AvisoGit(initx.GitNaoInstalado)) {
+		t.Errorf("the not-installed warning is missing:\n%s", out)
+	}
+	if erroDePrompt {
+		t.Error("a prompt ran although there is nothing to offer without git")
+	}
+}
+
+// A repository with a commit is ready: nothing is printed and nothing is asked.
+func TestGitStepOnAReadyRepoIsSilent(t *testing.T) {
+	resetPromptError(t)
+	root := newGitRepo(t)
+	var ok bool
+	out := captureStdout(t, func() { ok = gitStep(root) })
+	if !ok || out != "" {
+		t.Errorf("gitStep on a ready repo = %v, printed %q; want true and silence", ok, out)
+	}
+}
+
+// A repository WITHOUT a commit is offered the first commit. When the offer cannot be
+// asked, gitStep says so (false) and does not commit on its own.
+func TestGitStepOnARepoWithoutCommitDoesNotActWithoutAnAnswer(t *testing.T) {
+	skipIfTerminal(t)
+	resetPromptError(t)
+	isolateGit(t)
+	root := t.TempDir()
+	if out, err := runGit(root, "init", "-q"); err != nil {
+		t.Fatalf("git init: %s", out)
+	}
+
+	var ok bool
+	out := captureStdout(t, func() { ok = gitStep(root) })
+	if ok {
+		t.Error("with the prompt failing, gitStep must tell init to abort")
+	}
+	if !strings.Contains(out, initx.AvisoGit(initx.GitSemCommit)) {
+		t.Errorf("the no-commit warning is missing:\n%s", out)
+	}
+	if _, err := runGit(root, "rev-parse", "HEAD"); err == nil {
+		t.Error("a commit was made although nobody accepted")
+	}
+}
+
+// Without an identity the commit fails, and the error names the fix instead of pasting
+// git's long message.
+func TestInitGitWithoutIdentityNamesTheFix(t *testing.T) {
+	withoutGitIdentity(t)
+	root := t.TempDir()
+
+	var err error
+	captureStdout(t, func() { err = initGit(root, initx.GitNaoIniciado) })
+	if err == nil {
+		t.Fatal("the commit cannot succeed without an identity")
+	}
+	msg := err.Error()
+	if !strings.Contains(msg, "git does not know who you are") ||
+		!strings.Contains(msg, `git config --global user.email`) {
+		t.Errorf("the error does not name the fix: %v", err)
+	}
+	if strings.Count(msg, "\n") > 4 {
+		t.Errorf("only the first line of git's output belongs in the detail: %v", err)
+	}
+}
+
+func TestFirstLineCutsAtTheFirstNewline(t *testing.T) {
+	for in, want := range map[string]string{
+		"one\ntwo\nthree": "one",
+		"single":          "single",
+		"":                "",
+	} {
+		if got := firstLine(in); got != want {
+			t.Errorf("firstLine(%q) = %q, want %q", in, got, want)
+		}
+	}
+}
+
+// answerGitOffer runs gitStep on a directory outside git, answering the offer with
+// `reply`. TERM=dumb puts the prompt in its line-based mode, which reads os.Stdin instead
+// of opening a terminal — so the answer is deterministic.
+func answerGitOffer(t *testing.T, reply string) (dir string, ok bool, out string) {
+	t.Helper()
+	resetPromptError(t)
+	isolateGit(t)
+	t.Setenv("TERM", "dumb")
+	dir = t.TempDir()
+	withStdin(t, reply, func() {
+		out = captureStdout(t, func() { ok = gitStep(dir) })
+	})
+	return dir, ok, out
+}
+
+// Declining is legitimate and init goes on — but it names NOW what stays incomplete.
+func TestGitStepDeclinedNamesWhatStaysOff(t *testing.T) {
+	dir, ok, out := answerGitOffer(t, "n\n")
+	if !ok {
+		t.Error("declining git must not stop init")
+	}
+	if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
+		t.Error("a repository was created although the offer was declined")
+	}
+	for _, want := range []string{"proceeding without git", "coverage --diff", "install-hooks", "`git init` later"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the consequence %q is not named:\n%s", want, out)
+		}
+	}
+}
+
+// Accepting leaves a repository with HEAD, the .gitignore seeded, and init going on.
+func TestGitStepAcceptedLeavesARepoWithHead(t *testing.T) {
+	dir, ok, out := answerGitOffer(t, "y\n")
+	if !ok {
+		t.Error("accepting git must not stop init")
+	}
+	if e := initx.DetectGit(dir, true); e != initx.GitPronto {
+		t.Fatalf("after accepting, the state is %v, want GitPronto\n%s", e, out)
+	}
+	if !strings.Contains(out, "✓ first commit") || !strings.Contains(out, "✓ .gitignore seeded") {
+		t.Errorf("the output does not report what was done:\n%s", out)
+	}
+}
+
+// A failure while initializing does not stop init: it is reported with its cause (here,
+// git without an identity).
+func TestGitStepReportsAFailedInitialization(t *testing.T) {
+	resetPromptError(t)
+	withoutGitIdentity(t)
+	t.Setenv("TERM", "dumb")
+	dir := t.TempDir()
+	var ok bool
+	var out string
+	withStdin(t, "y\n", func() {
+		out = captureStdout(t, func() { ok = gitStep(dir) })
+	})
+	if !ok {
+		t.Error("a failed initialization must not stop init")
+	}
+	if !strings.Contains(out, "could not initialize git") || !strings.Contains(out, "git does not know who you are") {
+		t.Errorf("the failure and its cause are not reported:\n%s", out)
+	}
+}
+
+// withoutGitIdentity leaves git with no author: no global config but `useConfigOnly`, and
+// none of the identity variables — so a commit fails the way it does on a fresh machine.
+func withoutGitIdentity(t *testing.T) {
+	t.Helper()
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git is not installed")
+	}
+	global := filepath.Join(t.TempDir(), "gitconfig")
+	if err := os.WriteFile(global, []byte("[user]\n\tuseConfigOnly = true\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("GIT_CONFIG_GLOBAL", global)
+	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+	for _, k := range []string{"GIT_AUTHOR_NAME", "GIT_AUTHOR_EMAIL", "GIT_COMMITTER_NAME", "GIT_COMMITTER_EMAIL", "EMAIL"} {
+		t.Setenv(k, "")
+		os.Unsetenv(k)
+	}
+}

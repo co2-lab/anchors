@@ -97,12 +97,10 @@ PR merges and the card links to nothing.
 				return fmt.Errorf("`pr-body` exists in github mode: in local mode there is no " +
 					"card to link, and the work is recorded by moving the folder in `issues/`")
 			}
-			sintaxe, ok := linkSyntax[cfg.Workflow.Mode]
-			if !ok {
-				cmd.SilenceUsage = true
-				return fmt.Errorf("I do not know the link syntax of `%s` — the known ones "+
-					"are: %s", cfg.Workflow.Mode, strings.Join(knownPlatforms(), ", "))
-			}
+			// GitHubMode() above already means Mode == "github", which linkSyntax always
+			// has: the "unknown platform" refusal that stood here could never run, and a
+			// branch no input reaches only pretends the command handles something.
+			sintaxe := linkSyntax[config.ModeGitHub]
 
 			raizes := requestedCards(cards, cfg)
 			if len(raizes) == 0 {
@@ -149,15 +147,6 @@ PR merges and the card links to nothing.
 	cmd.Flags().BoolVar(&sob, "so-sob", false,
 		"only the findings born under the given cards, not the cards themselves")
 	return cmd
-}
-
-func knownPlatforms() []string {
-	out := make([]string, 0, len(linkSyntax))
-	for k := range linkSyntax {
-		out = append(out, k)
-	}
-	sort.Strings(out)
-	return out
 }
 
 // requestedCards resolve o que foi passado em `--cards`, ou descobre pelo agente.

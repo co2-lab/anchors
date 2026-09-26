@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -419,5 +420,57 @@ func TestMockTipado_noMapIsPending(t *testing.T) {
 	v, msg := checkMockTyped(content, testNode(), "", nil, cfgComContrato())
 	if v != Pending {
 		t.Fatalf("with no map the verdict must be Pending, got %v (%s)", v, msg)
+	}
+}
+
+func TestMockTyped_skipReasons(t *testing.T) {
+	t.Run("MCTYM-B07: A test that doubles nobody leaves without a verdict", func(t *testing.T) {
+		// with no map loaded too: there is no double whose owner would need the map
+		v, msg := checkMockTyped("test('x', () => {})\n", testNode(), "", nil, cfgComContrato())
+		if v != Skip || msg != i18n.T("gate.mock_typed.skip_no_doubles") {
+			t.Errorf("got %v (%s)", v, msg)
+		}
+	})
+	t.Run("MCTYM-B09: A third-party library double is not charged", func(t *testing.T) {
+		v, msg := rodaMock(t, "jest.mock('@aws-sdk/client-s3', () => ({}))\n", cfgComContrato())
+		if v != Skip || msg != i18n.T("gate.mock_typed.skip_external_only") {
+			t.Errorf("the skip says the doubles are all external: %v (%s)", v, msg)
+		}
+	})
+}
+
+func TestMockHasFactory(t *testing.T) {
+	cases := []struct {
+		text string
+		want bool
+	}{
+		{"jest.mock('x', () => ({}))", true},
+		{"jest.mock('x')", false},
+		{"jest.mock('x', { spy: true })", false},
+		{"('x', () => ({}))", true},                             // the call's paren opens the text
+		{"jest.mock(require.resolve('./x'), () => ({}))", true}, // a nested call in the first argument
+		{"jest.mock(\n  'x',\n)\nconst f = () => 1", false},     // prettier's trailing comma: no factory
+		{"jest.mock('it\\'s', () => ({}))", true},               // an escaped quote inside the name
+		{"jest.mock('x', factory", true},                        // unclosed: read to the end
+		{"no call here", false},
+	}
+	for _, c := range cases {
+		if got := mockHasFactory(c.text); got != c.want {
+			t.Errorf("mockHasFactory(%q) = %v, want %v", c.text, got, c.want)
+		}
+	}
+}
+
+func TestWithoutExtension(t *testing.T) {
+	cases := map[string]string{
+		"x/y.ts":       "x/y",
+		"y.test.ts":    "y.test",
+		"Makefile":     "Makefile",
+		"a.dir/Readme": "a.dir/Readme",
+	}
+	for in, want := range cases {
+		if got := withoutExtension(in); got != want {
+			t.Errorf("withoutExtension(%q) = %q, want %q", in, got, want)
+		}
 	}
 }

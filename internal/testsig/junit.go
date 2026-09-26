@@ -7,7 +7,9 @@ package testsig
 import (
 	"encoding/xml"
 	"os"
+	"regexp"
 	"strings"
+	"sync"
 )
 
 // CaseResult é um caso de teste individual, do JUnit.
@@ -100,11 +102,28 @@ func collectSuite(s junitTestsuite, rep *ExecReport) {
 
 // scenarioCodeRE — extrai códigos de cenário do NOME de um caso (ex.: "SPCRX-V01: ...").
 // Mesma gramática do resto do projeto (TRACEABILITY §3).
-var caseCodeRE = mustCodeRE()
+// caseCodeRE is built from the CURRENT vocabulary (`SetRuleLetters`, `SetCodeLenPattern`)
+// and cached until it changes. A package-level `var` froze the defaults at load, so the
+// setters changed nothing: a project's own letter (`-Z01`) was never read from a case
+// name, and its rule showed no green test.
+var (
+	caseCodeMu  sync.Mutex
+	caseCodeKey string
+	caseCodeVal *regexp.Regexp
+)
+
+func caseCodeRE() *regexp.Regexp {
+	caseCodeMu.Lock()
+	defer caseCodeMu.Unlock()
+	if key := ruleLetters + "\x00" + codeLenPattern; key != caseCodeKey || caseCodeVal == nil {
+		caseCodeKey, caseCodeVal = key, mustCodeRE()
+	}
+	return caseCodeVal
+}
 
 // CodesInCase devolve os códigos de cenário mencionados no nome de um caso.
 func CodesInCase(name string) []string {
-	return caseCodeRE.FindAllString(name, -1)
+	return caseCodeRE().FindAllString(name, -1)
 }
 
 // PassedCodes devolve os códigos de cenário que aparecem em casos que PASSARAM

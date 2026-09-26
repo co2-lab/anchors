@@ -132,9 +132,16 @@ func collectTaskState(root string, cfg *config.Config, cardNum int) taskState {
 		}
 		e.Blocked = escalatedCards(cli)
 	}
-	e.PR = currentBranchPR(root)
+	// The CONFIGURED repo, never the one `gh` would infer from the working directory: from
+	// a fork, or with --root pointing elsewhere, the inferred one is another repository,
+	// and the report would describe its card and its PR as if they were this one's.
+	repo := ""
+	if cfg != nil && cfg.Workflow != nil {
+		repo = cfg.Workflow.Repo
+	}
+	e.PR = currentBranchPR(root, repo)
 	if e.Card != nil {
-		e.Reverted = revertedOn(e.Card.Number)
+		e.Reverted = revertedOn(repo, e.Card.Number)
 	}
 	return e
 }
@@ -149,8 +156,25 @@ func outputOf(nome string, args ...string) string {
 	return string(out)
 }
 
+// ghOutput runs `gh` against `repo` (when there is one) and in `dir` (when given), with the
+// same silent failure as outputOf. `--repo` is what keeps `gh` from inferring the
+// repository from the git remote of the working directory — the config forbids that
+// inference, and every lookup of this command goes through here so none can skip it.
+func ghOutput(dir, repo string, args ...string) string {
+	if repo != "" {
+		args = append(args, "--repo", repo)
+	}
+	c := exec.Command("gh", args...)
+	c.Dir = dir
+	out, err := c.Output()
+	if err != nil {
+		return ""
+	}
+	return string(out)
+}
+
 func cardByNumber(cli board.Client, n int) *board.Card {
-	out := outputOf("gh", "issue", "view", strconv.Itoa(n), "--json", "number,title,labels,state")
+	out := ghOutput("", cli.Repo, "issue", "view", strconv.Itoa(n), "--json", "number,title,labels,state")
 	if out == "" {
 		return nil
 	}
@@ -183,7 +207,7 @@ func cardByNumber(cli board.Client, n int) *board.Card {
 // continuando a trabalhar — e um relato que a omite convida o leitor a esperar por algo que
 // só ele pode destravar.
 func escalatedCards(cli board.Client) []board.Card {
-	out := outputOf("gh", "issue", "list", "--label", "anchors:needs-user",
+	out := ghOutput("", cli.Repo, "issue", "list", "--label", "anchors:needs-user",
 		"--state", "open", "--limit", "50", "--json", "number,title")
 	if out == "" {
 		return nil
@@ -202,8 +226,15 @@ func escalatedCards(cli board.Client) []board.Card {
 	return cs
 }
 
-func currentBranchPR(root string) *branchPR {
-	out := outputOf("gh", "pr", "view", "--json", "number,state,statusCheckRollup")
+func currentBranchPR(root, repo string) *branchPR {
+	// The branch of ROOT, named explicitly, and `gh` run in root: a bare `gh pr view` reads
+	// the branch (and the repo) of the process's working directory, which with --root
+	// elsewhere is another checkout entirely.
+	branch := strings.TrimSpace(outputOf("git", "-C", root, "rev-parse", "--abbrev-ref", "HEAD"))
+	if branch == "" || branch == "HEAD" {
+		return nil
+	}
+	out := ghOutput(root, repo, "pr", "view", branch, "--json", "number,state,statusCheckRollup")
 	if out == "" {
 		return nil
 	}
@@ -213,6 +244,9 @@ func currentBranchPR(root string) *branchPR {
 		Checks []struct {
 			Conclusion string `json:"conclusion"`
 			Status     string `json:"status"`
+			// State is what a legacy commit status (StatusContext) carries instead of
+			// conclusion/status: SUCCESS, FAILURE, ERROR, PENDING or EXPECTED.
+			State string `json:"state"`
 		} `json:"statusCheckRollup"`
 	}
 	if json.Unmarshal([]byte(out), &r) != nil {
@@ -221,10 +255,24 @@ func currentBranchPR(root string) *branchPR {
 	p := &branchPR{Number: r.Number, State: r.State, Checks: map[string]int{}}
 	for _, c := range r.Checks {
 		p.Total++
+		if c.Conclusion == "" && c.Status == "" && c.State != "" {
+			// A commit status has no status/conclusion pair: its `state` is the verdict,
+			// and PENDING/EXPECTED are the ones still waiting.
+			if c.State == "PENDING" || c.State == "EXPECTED" {
+				p.Checks["em curso"]++
+				continue
+			}
+			c.Conclusion, c.Status = c.State, "COMPLETED"
+		}
 		// Um check EM CURSO não é um check que passou, e a diferença é a que decide se o
 		// turno pode terminar: `SUCCESS` com 3 de 4 é um relato que mente por omissão.
+		//
+		// A check run that has not finished has NO conclusion yet (status QUEUED,
+		// IN_PROGRESS, …). Without this case it fell into `default` and was counted as
+		// failed, and the report told the agent to "fix" a PR whose CI was only running.
 		switch {
-
+		case c.Conclusion == "" || (c.Status != "" && c.Status != "COMPLETED"):
+			p.Checks["em curso"]++
 		case c.Conclusion == "SUCCESS" || c.Conclusion == "NEUTRAL" || c.Conclusion == "SKIPPED":
 			p.Checks["passou"]++
 		default:
@@ -278,8 +326,8 @@ func ehReversao(corpo, autor string) bool {
 }
 
 // revertedOn lista as reversões que a trava de estado fez neste card.
-func revertedOn(card int) []string {
-	out := outputOf("gh", "issue", "view", strconv.Itoa(card), "--json", "comments")
+func revertedOn(repo string, card int) []string {
+	out := ghOutput("", repo, "issue", "view", strconv.Itoa(card), "--json", "comments")
 	if out == "" {
 		return nil
 	}

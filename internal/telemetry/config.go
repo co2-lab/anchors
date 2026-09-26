@@ -12,12 +12,11 @@ import (
 // confiança na ferramenta inteira — e o Anchors não fica ao lado do trabalho, ele barra
 // commit e move card.
 //
-// O que compensa esse custo é o desligamento ser TRIVIAL e ANUNCIADO. Três caminhos, e o
+// O que compensa esse custo é o desligamento ser TRIVIAL e ANUNCIADO. Dois caminhos, e o
 // primeiro funciona sem editar arquivo nenhum:
 //
 //	ANCHORS_TELEMETRY=off          variável de ambiente (vale para tudo, inclusive CI)
 //	telemetry: off                 no `anchors.yaml` (vale para o projeto, versionado)
-//	anchors telemetry off          grava em `.anchors/settings.yaml` (vale para a máquina)
 //
 // E o AVISO aparece duas vezes: no `anchors init`, e na PRIMEIRA execução de qualquer
 // comando numa máquina que ainda não viu o aviso. A segunda é o que alcança quem instalou
