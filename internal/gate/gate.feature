@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GTENG
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @GTENG
@@ -154,6 +154,13 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     When an internal ruler and an external command are routed
     Then the internal ruler does not reach it
     And the external command does
+
+  @GTENG-B23 @unit-level
+  Scenario: A gate declared with run executes the custom runner even when canonical specifies check
+    Given a canonical gate declaring check
+    When a project gate declares run
+    Then the custom runner executes rather than the canonical check
+
 
   @GTENG-I01 @unit-level
   Scenario: A waiver by target never removes the gate from the list

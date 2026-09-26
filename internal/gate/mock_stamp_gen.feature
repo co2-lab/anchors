@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MKSTP
-#   updated_at: 2026-09-23
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @MKSTP
@@ -62,3 +62,10 @@ Feature: MockStampGenerator — writes the missing `@contract` stamps, and never
     Given a module whose first line occurs twice
     When it is stamped
     Then the anchor is a unique line and the gate passes
+
+  @MKSTP-X01 @unit-level
+  Scenario: Generator does not refresh a divergent stamp
+    Given a test whose stamp diverges from the module
+    When the generator runs
+    Then the divergent stamp is not refreshed or rewritten, preserving the signal for human review
+

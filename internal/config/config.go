@@ -1600,6 +1600,14 @@ func (c *Config) validarWorkflow() error {
 // os projetos seguiam perguntando a versão velha, sem ninguém perceber. Com o merge,
 // `- name: no-test-prova-real` basta.
 //
+// `Run` and `Check` are treated as a MUTUALLY EXCLUSIVE PAIR: the gate runner handles
+// `check:` with precedence over `run:`. If the merge inherited one when the other was
+// declared, the project's intent would be silenced by the canonical default (e.g. in
+// `tests-green`, the canonical gate declares `check: tests-pass`; if the project overrides
+// it with `run: "go test ./..."`, inheriting `check` would cause the runner to execute
+// the internal check rather than the custom test command). Declaring either in the project
+// prevents inheritance of both.
+//
 // `Blocking` entra no merge como os demais porque é `*bool`: `nil` é "a chave não veio",
 // distinto do `blocking: false` explícito. Fosse `bool`, herdá-lo promoveria a bloqueante
 // um gate que o projeto manteve informativo DE PROPÓSITO — barrando commits liberados
@@ -1618,10 +1626,8 @@ func mergeCanonical(g Gate) Gate {
 	if len(g.Tags) == 0 {
 		g.Tags = base.Tags
 	}
-	if g.Run == "" {
+	if g.Run == "" && g.Check == "" {
 		g.Run = base.Run
-	}
-	if g.Check == "" {
 		g.Check = base.Check
 	}
 	if g.Measures == "" {

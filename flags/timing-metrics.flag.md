@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TIMNG
-  updated_at: 2026-09-21
+  updated_at: 2026-09-26
 -->
 # Flag: timing-metrics
 
@@ -15,6 +15,6 @@ find what makes a scan expensive, and it found it — `docs-fresh` was 97% of a 
 
 | Scenario | When the value | Then |
 | --- | --- | --- |
-| `TIMNG-G01` | `= "off"` | the check prints only the verdicts, and measures no time |
-| `TIMNG-G02` | `= "on"` | the check also prints time per gate, and the slowest targets |
-| `TIMNG-G03` | `absent` | the same as `off` — measuring is opt-in, never a default cost |
+| `TIMNG-G01` | `= "off"` | the check prints only the verdicts, and measures no time <!-- @no-govern: honored by reportTiming in cmd/anchors/quality/check.go:1110 and proven in check_timing_test.go; the CLI layer has no spec citing it with @gated-by yet --> |
+| `TIMNG-G02` | `= "on"` | the check also prints time per gate, and the slowest targets <!-- @no-govern: honored by reportTiming in cmd/anchors/quality/check.go:1110 and proven in check_timing_test.go; the CLI layer has no spec citing it with @gated-by yet --> |
+| `TIMNG-G03` | `absent` | the same as `off` — measuring is opt-in, never a default cost <!-- @no-govern: default defined in cobra flag registration and proven in check_timing_test.go; the CLI layer has no spec citing it with @gated-by yet --> |

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTENG
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # GateEngine — which gates reach which node, and what the run concludes
@@ -13,6 +13,7 @@
 > `anchors doctor --fix` replaces whole. Decided by the user: those files are upstream-owned.
 >
 > **Revises:** `B22`
+> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B13`, `B14`, `B15`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `I01`, `I02`, `I03`, `X01`, `X02`, `X03`
 
 ## Overview
 
@@ -100,6 +101,7 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 | `GTENG-B20` | `RunFull` is the one that also knows whether the sweep is the WHOLE project, which is the only thing that lets a gate able to sweep on its own run ONCE instead of receiving thousands of targets in batches. |
 | `GTENG-B21` | `RunWithWaiver` is the one that honours a waiver BY TARGET, which cannot be served by filtering the gate out of the list. |
 | `GTENG-B22` | A vendored file — a pipeline Anchors seeded that still carries its template marker — is out of every internal ruler, whose triad, header and identity live upstream; an external command still reaches it, because what the file does in this repository is the project's concern. |
+| `GTENG-B23` | A gate declared with `run:` executes the custom runner, even when the canonical declaration specifies `check:`. |
 
 ## Invariants
 

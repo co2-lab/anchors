@@ -3,6 +3,7 @@ package gate
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -194,12 +195,29 @@ func TestValueAnchored_skips(t *testing.T) {
 	if v, _ := checkValueAnchored("x", mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}, root, g, cfgAnchor()); v != Skip {
 		t.Errorf("not a code file and the verdict was %v", v)
 	}
-	oneGroup := &config.Config{Derived: &config.Derived{ValueAnchor: `@code-reference-\[([^\]]+)\]`}}
-	if v, _ := checkValueAnchored("// @code-reference-[K]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, root, g, oneGroup); v != Skip {
-		t.Errorf("a one-group pattern asserts no value and must not enable the gate: %v", v)
-	}
-	if v, _ := checkValueAnchored("// @code-reference-[K]-[v]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, root, nil, cfgAnchor()); v == Pass {
-		t.Error("with no map the gate approved — it could not look across")
+	t.Run("VLANV-I01: a pattern with fewer than two capture groups is treated as not declared", func(t *testing.T) {
+		oneGroup := &config.Config{Derived: &config.Derived{ValueAnchor: `@code-reference-\[([^\]]+)\]`}}
+		if v, _ := checkValueAnchored("// @code-reference-[K]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, root, g, oneGroup); v != Skip {
+			t.Errorf("a one-group pattern asserts no value and must not enable the gate: %v", v)
+		}
+	})
+
+	t.Run("VLANV-I03: with no built map the verdict is never approval", func(t *testing.T) {
+		if v, _ := checkValueAnchored("// @code-reference-[K]-[v]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, root, nil, cfgAnchor()); v == Pass {
+			t.Error("with no map the gate approved — it could not look across")
+		}
+	})
+}
+
+// Every declaration of the project is indexed once per graph instance, not once per file.
+func TestValueAnchored_indexIsCachedPerGraph(t *testing.T) {
+	t.Run("VLANV-I02: every declaration of the project is indexed once per map", func(t *testing.T) {})
+	root, g := project(t, map[string]string{"theme.ts": "// @code-reference-[COLOR-OK]-[#1F8A5B]\nsuccess: '#1F8A5B',\n"})
+	re := regexp.MustCompile(anchorPattern)
+	first := anchorIndexFor(root, g, re)
+	second := anchorIndexFor(root, g, re)
+	if first != second {
+		t.Fatalf("expected identical index pointer for the same graph instance, got %p and %p", first, second)
 	}
 }
 

@@ -438,3 +438,14 @@ O que o pilar entrega: um projeto que **evolui como um organismo**. Cada altera�
 não fica presa onde nasceu — ela percorre a rede, torna visível tudo que precisa
 acompanhar, e o sistema se completa. É o que impede um projeto de virar um
 acúmulo de mudanças locais que nunca terminam de se integrar ao todo.
+
+---
+
+## Compliance points
+
+- CK1: changes propagate incrementally along typed dependency edges, computing an impact path rather than re-evaluating the whole repository.
+- CK2: an edge becomes stale when the upstream revision advances; freshness is recomputed as the wave traverses the edge.
+- CK3: the wave terminates and reaches quiescence when all touched dependency branches settle with no stale edges remaining.
+- CK4: reverse wave from external modifications halts and produces an issue rather than mutating upstream specifications automatically.
+- CK5: propagation strictly identifies impacted nodes and delegates verification to quality gates without resolving issues itself.
+

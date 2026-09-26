@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCSTM
-  updated_at: 2026-09-24
+  updated_at: 2026-09-26
   layer: gate
 -->
 # MockStamped — the double carries the mark of the snippet it replaces, and the gate RECOMPUTES it
@@ -54,7 +54,7 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | `MCSTM-B04` | The stamp is immune to DISPLACEMENT: the anchor is searched by CONTENT, so editing lines above does not invalidate the stamp of a snippet that did not change. |
 | `MCSTM-B05` | An anchor that vanished — renamed, removed or rewritten — fails with its own message: it is a finding, not a tool error, because the double is certainly out of date. |
 | `MCSTM-B06` | An anchor occurring more than once fails as ambiguous: a stamp pointing at "one of the two" proves nothing, and the gate reports rather than choosing. |
-| `MCSTM-B07` | The declared line count delimits the window: a change beyond it is not reached, and one inside it is. The reach stays in plain sight of whoever reads, and the gate needs no per-language parser to find where the block ends. |
+| `MCSTM-B07` | `StampSnippet` delimits the window by the declared line count: a change beyond it is not reached, and one inside it is. The reach stays in plain sight of whoever reads, and the gate needs no per-language parser to find where the block ends. |
 | `MCSTM-B08` | Without the dialect declared by the project the gate goes quiet: adopting the stamp is the project's decision. |
 | `MCSTM-B09` | A double of a module the project does not govern is not charged. |
 | `MCSTM-B10` | A stamp whose module no longer exists on disk is a finding with its own message, not a crash. |
@@ -64,8 +64,8 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | `MCSTM-B14` | A dialect regex with no capture group fails too: without it the gate cannot know WHICH module was doubled. |
 | `MCSTM-B15` | A different ecosystem's dialect is charged exactly the same way once declared — the stamp is agnostic in fact, not in intention. |
 | `MCSTM-B16` | A double whose module name contains a dot (`@/src/stores/auth.store`) is matched to the stamp of `auth.store.ts`: the specifier is compared as written and without a final extension, and both forms count. Stripping an "extension" from an import specifier cut part of the NAME. |
-| `MCSTM-B17` | WHOEVER CHANGES A MODULE SEES THE DOUBLES IT BREAKS. `check --changed <module>` brings in the tests whose stamps point at the module, so the pre-commit of the change runs this gate on them, and the drift message names the module file of each stamp. Without it the drift surfaced to whoever next touched the test, far from the change. |
-| `MCSTM-B18` | `anchors stamp --refresh <module>` is how the author of a change updates the stamps: it lists every double stamped against the previous version — test, line, member, old and new hash, and how the stamped block changed from HEAD — and updates those hashes. The list is the work the change created: each double reproduced the old contract, and is adjusted in the same commit. A stamp whose anchor is gone is NOT refreshed, because only a person can say which new line the double now stands for. |
+| `MCSTM-B17` | WHOEVER CHANGES A MODULE SEES THE DOUBLES IT BREAKS. `TestsStamping` resolves the tests whose stamps point at the module, so `check --changed <module>` brings them into the check and this gate runs on them, naming the module file of each stamp. Without it the drift surfaced to whoever next touched the test, far from the change. |
+| `MCSTM-B18` | `RefreshStamps` (`anchors stamp --refresh <module>`) is how the author of a change updates the stamps: it lists every double stamped against the previous version — test, line, member, old and new hash, and how the stamped block changed from HEAD — and updates those hashes. The list is the work the change created: each double reproduced the old contract, and is adjusted in the same commit. A stamp whose anchor is gone is NOT refreshed, because only a person can say which new line the double now stands for. |
 
 ## Invariants
 

@@ -676,3 +676,15 @@ O conceito acima é independente de ferramenta. Duas instâncias reais o exercit
 
 Estas instâncias ilustram o conceito; não o definem. O Anchors permanece verdadeiro
 sem elas.
+
+---
+
+## Compliance points
+
+- CK1: every anchor is persisted in a repo-tracked artifact with explicit identity, freshness stamp, and validation criteria.
+- CK2: dependencies form a typed, directed graph where edges carry confrontation questions and validation stamps.
+- CK3: freshness and synchronization are tracked per edge, not globally per node, enabling incremental impact analysis.
+- CK4: live truth (anchors and graph) is strictly separated from historical facts (immutable append-only logs).
+- CK5: every opt-out or waiver is explicit, documented with a reason and dated, never silent or implicit.
+- CK6: desynchronization detected by blocking edges produces actionable, typed issues (stale, conflict, violation).
+

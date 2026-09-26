@@ -384,3 +384,14 @@ O que o pilar entrega: um projeto onde **tudo que existe é governado por uma fo
 de verdade**, e onde essa fonte é o ponto em que rastreabilidade, propagação e
 qualidade se encontram. É o safepoint que faz a escalada inteira ser segura — o nó
 que, bem cravado, sustenta todo o peso do resto.
+
+---
+
+## Compliance points
+
+- CK1: every system unit is governed by a spec created prior to code implementation (spec-first discipline).
+- CK2: the spec captures behavior, contracts, rules, invariants, and errors without containing implementation code.
+- CK3: requirements in a spec declare their operational regime (behavioral or declarative) via tags.
+- CK4: specifications follow a structured template with stable identifiers, inputs, outputs, side effects, and dependencies.
+- CK5: no feature, code, or test exists in the repository without an associated governing specification.
+

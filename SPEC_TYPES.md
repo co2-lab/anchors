@@ -268,3 +268,13 @@ para além da trinca de uma única unidade.
 > outro vai `tela → usecase → repository → service`. A tabela é a mesma em cada elo —
 > um usecase declara suas dependências de repository/service do mesmo jeito que a tela
 > declara as dele. A recursão é a propagação seguindo a planta (`STRUCTURE.md` §4).
+
+---
+
+## Compliance points
+
+- CK1: every spec type adheres to the common skeleton (identity, purpose, inputs, outputs, rules, errors, dependencies, traceability).
+- CK2: data dependencies are declared explicitly by the consuming spec in a dedicated dependencies table using local `DEPn` codes.
+- CK3: dependencies table columns separate target file from method, enabling precise edge metadata and fine-grained impact analysis.
+- CK4: layer boundaries declared in dependencies conform to architectural layering rules defined in project structure.
+

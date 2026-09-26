@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MKSTP
-  updated_at: 2026-09-23
+  updated_at: 2026-09-26
   layer: gate
 -->
 # MockStampGenerator — writes the missing `@contract` stamps, and never rewrites one
@@ -37,7 +37,7 @@ Exposed as `anchors stamp [tests...]`, with `--dry-run`.
 
 | Effect | Description |
 | --- | --- |
-| `MKSTP-B01` | A stamp the generator writes passes the gate, and a later change to the stamped snippet fails it. |
+| `MKSTP-B01` | `GenerateStamps` writes a stamp that passes the gate, and a later change to the stamped snippet fails it. |
 | `MKSTP-B02` | A specifier matching several files resolves to the one sharing the longest directory prefix with the test; a tie is skipped and reported, never guessed. |
 | `MKSTP-B03` | Each factory key that names an export of the module gets its own stamp, anchored on that export and covering its block — a change to another member does not make it diverge. |
 | `MKSTP-B04` | With no factory key naming an export (an automock, for instance), one stamp covers the whole module — which is what an automock replaces. |

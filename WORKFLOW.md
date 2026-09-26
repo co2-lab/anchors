@@ -387,3 +387,14 @@ Conflicts in content are unchanged: they still become a synthesis card.
 - `config.Workflow` com `Mode`/`Repo`/`Labels` e `Config.ModoGitHub()`
 - validação completa no `Load`, com 7 testes que cobrem cada mensagem de erro
 - **nada mais**: nenhum comando consulta o GitHub ainda
+
+---
+
+## Compliance points
+
+- CK1: workflow mode is strictly mutually exclusive (`local` or `github`), declared in `anchors.yaml` without fallback between modes.
+- CK2: in `github` mode, `repo` and `labels` are required and never inferred from git remotes; local `.anchors/tasks/` must not exist.
+- CK3: in `local` mode, task claiming is atomic via POSIX file operations and no remote network calls are executed.
+- CK4: pipelines installing Anchors pin to the declared `min_version` using the unified installer snippet.
+- CK5: automated conflict resolution pushes solely as an authenticated GitHub App token or aborts and leaves instructions.
+

@@ -20,7 +20,7 @@ nodes:
       no_propagation: true
     - id: CONCEPT.md
       kind: guide
-      rev: 32d26527e214
+      rev: e058377f5403
       updated_at: "2026-09-07"
       layer: doutrina
       tags:
@@ -110,7 +110,7 @@ nodes:
       no_propagation: true
     - id: PROPAGATION.md
       kind: guide
-      rev: 554179b3b298
+      rev: 1fed03ec697e
       updated_at: "2026-08-30"
       layer: doutrina
       tags:
@@ -118,7 +118,7 @@ nodes:
         - guide
     - id: QUALITY.md
       kind: guide
-      rev: 2c21d829d3ab
+      rev: 8ec3e37e12f8
       updated_at: "2026-09-19"
       code: CODEX
       layer: doutrina
@@ -136,7 +136,7 @@ nodes:
       no_propagation: true
     - id: SPEC.md
       kind: guide
-      rev: dedf7925bcf7
+      rev: 83fdad85c2e3
       updated_at: "2026-09-04"
       layer: doutrina
       tags:
@@ -144,7 +144,7 @@ nodes:
         - guide
     - id: SPEC_TYPES.md
       kind: guide
-      rev: da86ff2960b9
+      rev: 2ba0ba1e8da9
       updated_at: "2026-08-28"
       layer: doutrina
       tags:
@@ -152,7 +152,7 @@ nodes:
         - guide
     - id: STRUCTURE.md
       kind: guide
-      rev: 07092d3d8288
+      rev: ca7df05bab09
       updated_at: "2026-09-19"
       layer: doutrina
       tags:
@@ -160,7 +160,7 @@ nodes:
         - guide
     - id: TRACEABILITY.md
       kind: guide
-      rev: a2beb4212dfc
+      rev: 3d840fb7c168
       updated_at: "2026-08-30"
       code: CODEX
       layer: doutrina
@@ -176,7 +176,7 @@ nodes:
         - doc
     - id: WORKFLOW.md
       kind: guide
-      rev: 0d68b36d2fa3
+      rev: a35490355ffa
       updated_at: "2026-09-23"
       layer: doutrina
       tags:
@@ -1410,7 +1410,7 @@ nodes:
         - test
     - id: flags/timing-metrics.flag.md
       kind: flag
-      rev: 6ac5dccb10a0
+      rev: fb4602a6d65a
       updated_at: "2026-09-21"
       code: TIMNG
       layer: flags
@@ -1418,9 +1418,23 @@ nodes:
       tags:
         - flag
         - feature-flag
+      signal:
+        proven_codes:
+            - TIMNG-G01
+            - TIMNG-G02
+            - TIMNG-G03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - TIMNG-G01
+                - TIMNG-G02
+                - TIMNG-G03
+        proven_rev_by_suite:
+            .anchors/junit.xml: fb4602a6d65a
+        at_rev: fb4602a6d65a
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: guides/GATES_ECOSYSTEM_GUIDE.md
       kind: guide
-      rev: b89b57f14acf
+      rev: aaa30844e96f
       updated_at: "2026-09-19"
       layer: guide-distribuido
       tags:
@@ -1553,7 +1567,7 @@ nodes:
         - config
     - id: internal/config/config.go
       kind: code
-      rev: e70489c74d12
+      rev: c758c13ca2d5
       updated_at: "2026-09-25"
       layer: config
       tags:
@@ -1606,7 +1620,7 @@ nodes:
         - test
     - id: internal/config/merge_canonical_test.go
       kind: test
-      rev: 1130d074ac11
+      rev: d0a5c2479eb6
       updated_at: "2026-09-10"
       layer: teste
       tags:
@@ -1805,6 +1819,67 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - CDCTC-B01
+            - CDCTC-B02
+            - CDCTC-B03
+            - CDCTC-B04
+            - CDCTC-B05
+            - CDCTC-B06
+            - CDCTC-B07
+            - CDCTC-B08
+            - CDCTC-B09
+            - CDCTC-B10
+            - CDCTC-I01
+            - CDCTC-I02
+            - CDCTC-I03
+            - CDCTC-X01
+            - CDCTC-X02
+            - CDCTC-X03
+            - CDCTC-X04
+        proven_by_suite:
+            .anchors/junit.xml:
+                - CDCTC-B01
+                - CDCTC-B02
+                - CDCTC-B03
+                - CDCTC-B04
+                - CDCTC-B05
+                - CDCTC-B06
+                - CDCTC-B07
+                - CDCTC-B08
+                - CDCTC-B09
+                - CDCTC-B10
+                - CDCTC-I01
+                - CDCTC-I02
+                - CDCTC-I03
+                - CDCTC-X01
+                - CDCTC-X02
+                - CDCTC-X03
+                - CDCTC-X04
+            external/report.xml:
+                - CDCTC-B01
+                - CDCTC-B02
+                - CDCTC-B03
+                - CDCTC-B04
+                - CDCTC-B05
+                - CDCTC-B06
+                - CDCTC-B07
+                - CDCTC-B08
+                - CDCTC-B09
+                - CDCTC-B10
+                - CDCTC-I01
+                - CDCTC-I02
+                - CDCTC-I03
+                - CDCTC-X01
+                - CDCTC-X02
+                - CDCTC-X03
+                - CDCTC-X04
+        proven_rev_by_suite:
+            .anchors/junit.xml: 0cf3a482b528
+            external/report.xml: 0cf3a482b528
+        at_rev: 0cf3a482b528
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/code_cataloged_test.go
       kind: test
       rev: c0bf8e1d17ec
@@ -1839,6 +1914,43 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - CDLNG-B01
+            - CDLNG-B02
+            - CDLNG-B03
+            - CDLNG-B04
+            - CDLNG-B05
+            - CDLNG-I01
+            - CDLNG-X01
+            - CDLNG-X02
+            - CDLNG-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - CDLNG-B01
+                - CDLNG-B02
+                - CDLNG-B03
+                - CDLNG-B04
+                - CDLNG-B05
+                - CDLNG-I01
+                - CDLNG-X01
+                - CDLNG-X02
+                - CDLNG-X03
+            external/report.xml:
+                - CDLNG-B01
+                - CDLNG-B02
+                - CDLNG-B03
+                - CDLNG-B04
+                - CDLNG-B05
+                - CDLNG-I01
+                - CDLNG-X01
+                - CDLNG-X02
+                - CDLNG-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: 0cef6cb6fcf7
+            external/report.xml: 0cef6cb6fcf7
+        at_rev: 0cef6cb6fcf7
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/code_language_test.go
       kind: test
       rev: 18771b1c2646
@@ -1873,6 +1985,61 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - CRVCD-B01
+            - CRVCD-B02
+            - CRVCD-B03
+            - CRVCD-B04
+            - CRVCD-B05
+            - CRVCD-B06
+            - CRVCD-B07
+            - CRVCD-B08
+            - CRVCD-B09
+            - CRVCD-I01
+            - CRVCD-I02
+            - CRVCD-I03
+            - CRVCD-X01
+            - CRVCD-X02
+            - CRVCD-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - CRVCD-B01
+                - CRVCD-B02
+                - CRVCD-B03
+                - CRVCD-B04
+                - CRVCD-B05
+                - CRVCD-B06
+                - CRVCD-B07
+                - CRVCD-B08
+                - CRVCD-B09
+                - CRVCD-I01
+                - CRVCD-I02
+                - CRVCD-I03
+                - CRVCD-X01
+                - CRVCD-X02
+                - CRVCD-X03
+            external/report.xml:
+                - CRVCD-B01
+                - CRVCD-B02
+                - CRVCD-B03
+                - CRVCD-B04
+                - CRVCD-B05
+                - CRVCD-B06
+                - CRVCD-B07
+                - CRVCD-B08
+                - CRVCD-B09
+                - CRVCD-I01
+                - CRVCD-I02
+                - CRVCD-I03
+                - CRVCD-X01
+                - CRVCD-X02
+                - CRVCD-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: a118d82526f5
+            external/report.xml: a118d82526f5
+        at_rev: a118d82526f5
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/code_reference_valid_test.go
       kind: test
       rev: a640b48e0215
@@ -1907,6 +2074,70 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - CSDCN-B01
+            - CSDCN-B02
+            - CSDCN-B03
+            - CSDCN-B04
+            - CSDCN-B05
+            - CSDCN-B06
+            - CSDCN-B07
+            - CSDCN-B08
+            - CSDCN-B09
+            - CSDCN-B10
+            - CSDCN-B11
+            - CSDCN-B12
+            - CSDCN-I01
+            - CSDCN-I02
+            - CSDCN-I03
+            - CSDCN-X01
+            - CSDCN-X02
+            - CSDCN-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - CSDCN-B01
+                - CSDCN-B02
+                - CSDCN-B03
+                - CSDCN-B04
+                - CSDCN-B05
+                - CSDCN-B06
+                - CSDCN-B07
+                - CSDCN-B08
+                - CSDCN-B09
+                - CSDCN-B10
+                - CSDCN-B11
+                - CSDCN-B12
+                - CSDCN-I01
+                - CSDCN-I02
+                - CSDCN-I03
+                - CSDCN-X01
+                - CSDCN-X02
+                - CSDCN-X03
+            external/report.xml:
+                - CSDCN-B01
+                - CSDCN-B02
+                - CSDCN-B03
+                - CSDCN-B04
+                - CSDCN-B05
+                - CSDCN-B06
+                - CSDCN-B07
+                - CSDCN-B08
+                - CSDCN-B09
+                - CSDCN-B10
+                - CSDCN-B11
+                - CSDCN-B12
+                - CSDCN-I01
+                - CSDCN-I02
+                - CSDCN-I03
+                - CSDCN-X01
+                - CSDCN-X02
+                - CSDCN-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: 7f9b57316bc4
+            external/report.xml: 7f9b57316bc4
+        at_rev: 7f9b57316bc4
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/contract_status_declared_test.go
       kind: test
       rev: 4b9e8d72e548
@@ -1941,6 +2172,73 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - CNHNC-B01
+            - CNHNC-B02
+            - CNHNC-B03
+            - CNHNC-B04
+            - CNHNC-B05
+            - CNHNC-B06
+            - CNHNC-B07
+            - CNHNC-B08
+            - CNHNC-B09
+            - CNHNC-B10
+            - CNHNC-B11
+            - CNHNC-B12
+            - CNHNC-B13
+            - CNHNC-I01
+            - CNHNC-I02
+            - CNHNC-I03
+            - CNHNC-X01
+            - CNHNC-X02
+            - CNHNC-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - CNHNC-B01
+                - CNHNC-B02
+                - CNHNC-B03
+                - CNHNC-B04
+                - CNHNC-B05
+                - CNHNC-B06
+                - CNHNC-B07
+                - CNHNC-B08
+                - CNHNC-B09
+                - CNHNC-B10
+                - CNHNC-B11
+                - CNHNC-B12
+                - CNHNC-B13
+                - CNHNC-I01
+                - CNHNC-I02
+                - CNHNC-I03
+                - CNHNC-X01
+                - CNHNC-X02
+                - CNHNC-X03
+            external/report.xml:
+                - CNHNC-B01
+                - CNHNC-B02
+                - CNHNC-B03
+                - CNHNC-B04
+                - CNHNC-B05
+                - CNHNC-B06
+                - CNHNC-B07
+                - CNHNC-B08
+                - CNHNC-B09
+                - CNHNC-B10
+                - CNHNC-B11
+                - CNHNC-B12
+                - CNHNC-B13
+                - CNHNC-I01
+                - CNHNC-I02
+                - CNHNC-I03
+                - CNHNC-X01
+                - CNHNC-X02
+                - CNHNC-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: fe98f6d1ff71
+            external/report.xml: fe98f6d1ff71
+        at_rev: fe98f6d1ff71
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/count_honored_test.go
       kind: test
       rev: b640e62d5144
@@ -1975,6 +2273,55 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - DEPHN-B01
+            - DEPHN-B02
+            - DEPHN-B03
+            - DEPHN-B04
+            - DEPHN-B05
+            - DEPHN-B06
+            - DEPHN-B07
+            - DEPHN-B08
+            - DEPHN-I01
+            - DEPHN-I02
+            - DEPHN-I03
+            - DEPHN-X01
+            - DEPHN-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - DEPHN-B01
+                - DEPHN-B02
+                - DEPHN-B03
+                - DEPHN-B04
+                - DEPHN-B05
+                - DEPHN-B06
+                - DEPHN-B07
+                - DEPHN-B08
+                - DEPHN-I01
+                - DEPHN-I02
+                - DEPHN-I03
+                - DEPHN-X01
+                - DEPHN-X02
+            external/report.xml:
+                - DEPHN-B01
+                - DEPHN-B02
+                - DEPHN-B03
+                - DEPHN-B04
+                - DEPHN-B05
+                - DEPHN-B06
+                - DEPHN-B07
+                - DEPHN-B08
+                - DEPHN-I01
+                - DEPHN-I02
+                - DEPHN-I03
+                - DEPHN-X01
+                - DEPHN-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: 17721284e98d
+            external/report.xml: 17721284e98d
+        at_rev: 17721284e98d
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/dependency_honored_test.go
       kind: test
       rev: 52b0cb2a3f59
@@ -2009,6 +2356,55 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - DCRQD-B01
+            - DCRQD-B02
+            - DCRQD-B03
+            - DCRQD-B04
+            - DCRQD-B05
+            - DCRQD-B06
+            - DCRQD-B07
+            - DCRQD-B08
+            - DCRQD-I01
+            - DCRQD-I02
+            - DCRQD-I03
+            - DCRQD-X01
+            - DCRQD-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - DCRQD-B01
+                - DCRQD-B02
+                - DCRQD-B03
+                - DCRQD-B04
+                - DCRQD-B05
+                - DCRQD-B06
+                - DCRQD-B07
+                - DCRQD-B08
+                - DCRQD-I01
+                - DCRQD-I02
+                - DCRQD-I03
+                - DCRQD-X01
+                - DCRQD-X02
+            external/report.xml:
+                - DCRQD-B01
+                - DCRQD-B02
+                - DCRQD-B03
+                - DCRQD-B04
+                - DCRQD-B05
+                - DCRQD-B06
+                - DCRQD-B07
+                - DCRQD-B08
+                - DCRQD-I01
+                - DCRQD-I02
+                - DCRQD-I03
+                - DCRQD-X01
+                - DCRQD-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: f38db8349f31
+            external/report.xml: f38db8349f31
+        at_rev: f38db8349f31
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/doc_required_section_test.go
       kind: test
       rev: 609f442fea29
@@ -2050,6 +2446,61 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - DSCDC-B01
+            - DSCDC-B02
+            - DSCDC-B03
+            - DSCDC-B04
+            - DSCDC-B05
+            - DSCDC-B06
+            - DSCDC-B07
+            - DSCDC-B08
+            - DSCDC-B09
+            - DSCDC-I01
+            - DSCDC-I02
+            - DSCDC-I03
+            - DSCDC-X01
+            - DSCDC-X02
+            - DSCDC-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - DSCDC-B01
+                - DSCDC-B02
+                - DSCDC-B03
+                - DSCDC-B04
+                - DSCDC-B05
+                - DSCDC-B06
+                - DSCDC-B07
+                - DSCDC-B08
+                - DSCDC-B09
+                - DSCDC-I01
+                - DSCDC-I02
+                - DSCDC-I03
+                - DSCDC-X01
+                - DSCDC-X02
+                - DSCDC-X03
+            external/report.xml:
+                - DSCDC-B01
+                - DSCDC-B02
+                - DSCDC-B03
+                - DSCDC-B04
+                - DSCDC-B05
+                - DSCDC-B06
+                - DSCDC-B07
+                - DSCDC-B08
+                - DSCDC-B09
+                - DSCDC-I01
+                - DSCDC-I02
+                - DSCDC-I03
+                - DSCDC-X01
+                - DSCDC-X02
+                - DSCDC-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: c04e87ae2467
+            external/report.xml: c04e87ae2467
+        at_rev: c04e87ae2467
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/doc_self_contained_test.go
       kind: test
       rev: 0c3351e58d13
@@ -2099,6 +2550,64 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - DCFRD-B01
+            - DCFRD-B02
+            - DCFRD-B03
+            - DCFRD-B04
+            - DCFRD-B05
+            - DCFRD-B06
+            - DCFRD-B07
+            - DCFRD-B08
+            - DCFRD-B09
+            - DCFRD-B10
+            - DCFRD-I01
+            - DCFRD-I02
+            - DCFRD-X01
+            - DCFRD-X02
+            - DCFRD-X03
+            - DCFRD-X04
+        proven_by_suite:
+            .anchors/junit.xml:
+                - DCFRD-B01
+                - DCFRD-B02
+                - DCFRD-B03
+                - DCFRD-B04
+                - DCFRD-B05
+                - DCFRD-B06
+                - DCFRD-B07
+                - DCFRD-B08
+                - DCFRD-B09
+                - DCFRD-B10
+                - DCFRD-I01
+                - DCFRD-I02
+                - DCFRD-X01
+                - DCFRD-X02
+                - DCFRD-X03
+                - DCFRD-X04
+            external/report.xml:
+                - DCFRD-B01
+                - DCFRD-B02
+                - DCFRD-B03
+                - DCFRD-B04
+                - DCFRD-B05
+                - DCFRD-B06
+                - DCFRD-B07
+                - DCFRD-B08
+                - DCFRD-B09
+                - DCFRD-B10
+                - DCFRD-I01
+                - DCFRD-I02
+                - DCFRD-X01
+                - DCFRD-X02
+                - DCFRD-X03
+                - DCFRD-X04
+        proven_rev_by_suite:
+            .anchors/junit.xml: f3ccfb8c02b5
+            external/report.xml: f3ccfb8c02b5
+        at_rev: f3ccfb8c02b5
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/docs_fresh_test.go
       kind: test
       rev: 1a8bdc1a21ac
@@ -2150,6 +2659,49 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - DMDCD-B01
+            - DMDCD-B02
+            - DMDCD-B03
+            - DMDCD-B04
+            - DMDCD-B05
+            - DMDCD-B06
+            - DMDCD-B07
+            - DMDCD-I01
+            - DMDCD-I02
+            - DMDCD-X01
+            - DMDCD-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - DMDCD-B01
+                - DMDCD-B02
+                - DMDCD-B03
+                - DMDCD-B04
+                - DMDCD-B05
+                - DMDCD-B06
+                - DMDCD-B07
+                - DMDCD-I01
+                - DMDCD-I02
+                - DMDCD-X01
+                - DMDCD-X02
+            external/report.xml:
+                - DMDCD-B01
+                - DMDCD-B02
+                - DMDCD-B03
+                - DMDCD-B04
+                - DMDCD-B05
+                - DMDCD-B06
+                - DMDCD-B07
+                - DMDCD-I01
+                - DMDCD-I02
+                - DMDCD-X01
+                - DMDCD-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: 36df1c24ab3f
+            external/report.xml: 36df1c24ab3f
+        at_rev: 36df1c24ab3f
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/domain_declared_test.go
       kind: test
       rev: 7721f39faa76
@@ -2184,6 +2736,64 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - EVFRV-B01
+            - EVFRV-B02
+            - EVFRV-B03
+            - EVFRV-B04
+            - EVFRV-B05
+            - EVFRV-B06
+            - EVFRV-B07
+            - EVFRV-B08
+            - EVFRV-B09
+            - EVFRV-B10
+            - EVFRV-I01
+            - EVFRV-I02
+            - EVFRV-I03
+            - EVFRV-X01
+            - EVFRV-X02
+            - EVFRV-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - EVFRV-B01
+                - EVFRV-B02
+                - EVFRV-B03
+                - EVFRV-B04
+                - EVFRV-B05
+                - EVFRV-B06
+                - EVFRV-B07
+                - EVFRV-B08
+                - EVFRV-B09
+                - EVFRV-B10
+                - EVFRV-I01
+                - EVFRV-I02
+                - EVFRV-I03
+                - EVFRV-X01
+                - EVFRV-X02
+                - EVFRV-X03
+            external/report.xml:
+                - EVFRV-B01
+                - EVFRV-B02
+                - EVFRV-B03
+                - EVFRV-B04
+                - EVFRV-B05
+                - EVFRV-B06
+                - EVFRV-B07
+                - EVFRV-B08
+                - EVFRV-B09
+                - EVFRV-B10
+                - EVFRV-I01
+                - EVFRV-I02
+                - EVFRV-I03
+                - EVFRV-X01
+                - EVFRV-X02
+                - EVFRV-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: c34539c2d755
+            external/report.xml: c34539c2d755
+        at_rev: c34539c2d755
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/evidence_fresh_test.go
       kind: test
       rev: 5fd361f9df74
@@ -2218,6 +2828,70 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - EXCMX-B01
+            - EXCMX-B02
+            - EXCMX-B03
+            - EXCMX-B04
+            - EXCMX-B05
+            - EXCMX-B06
+            - EXCMX-B07
+            - EXCMX-B08
+            - EXCMX-B09
+            - EXCMX-B10
+            - EXCMX-B11
+            - EXCMX-B12
+            - EXCMX-B13
+            - EXCMX-I01
+            - EXCMX-I02
+            - EXCMX-I03
+            - EXCMX-X01
+            - EXCMX-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - EXCMX-B01
+                - EXCMX-B02
+                - EXCMX-B03
+                - EXCMX-B04
+                - EXCMX-B05
+                - EXCMX-B06
+                - EXCMX-B07
+                - EXCMX-B08
+                - EXCMX-B09
+                - EXCMX-B10
+                - EXCMX-B11
+                - EXCMX-B12
+                - EXCMX-B13
+                - EXCMX-I01
+                - EXCMX-I02
+                - EXCMX-I03
+                - EXCMX-X01
+                - EXCMX-X02
+            external/report.xml:
+                - EXCMX-B01
+                - EXCMX-B02
+                - EXCMX-B03
+                - EXCMX-B04
+                - EXCMX-B05
+                - EXCMX-B06
+                - EXCMX-B07
+                - EXCMX-B08
+                - EXCMX-B09
+                - EXCMX-B10
+                - EXCMX-B11
+                - EXCMX-B12
+                - EXCMX-B13
+                - EXCMX-I01
+                - EXCMX-I02
+                - EXCMX-I03
+                - EXCMX-X01
+                - EXCMX-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: 94ac27eda675
+            external/report.xml: 94ac27eda675
+        at_rev: 94ac27eda675
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/external_test.go
       kind: test
       rev: aa633d4bc42f
@@ -2275,6 +2949,88 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - FTMFT-B01
+            - FTMFT-B02
+            - FTMFT-B03
+            - FTMFT-B04
+            - FTMFT-B05
+            - FTMFT-B06
+            - FTMFT-B07
+            - FTMFT-B08
+            - FTMFT-B09
+            - FTMFT-B10
+            - FTMFT-B11
+            - FTMFT-B12
+            - FTMFT-B13
+            - FTMFT-B14
+            - FTMFT-B15
+            - FTMFT-B16
+            - FTMFT-B17
+            - FTMFT-B18
+            - FTMFT-I01
+            - FTMFT-I02
+            - FTMFT-I03
+            - FTMFT-X01
+            - FTMFT-X02
+            - FTMFT-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - FTMFT-B01
+                - FTMFT-B02
+                - FTMFT-B03
+                - FTMFT-B04
+                - FTMFT-B05
+                - FTMFT-B06
+                - FTMFT-B07
+                - FTMFT-B08
+                - FTMFT-B09
+                - FTMFT-B10
+                - FTMFT-B11
+                - FTMFT-B12
+                - FTMFT-B13
+                - FTMFT-B14
+                - FTMFT-B15
+                - FTMFT-B16
+                - FTMFT-B17
+                - FTMFT-B18
+                - FTMFT-I01
+                - FTMFT-I02
+                - FTMFT-I03
+                - FTMFT-X01
+                - FTMFT-X02
+                - FTMFT-X03
+            external/report.xml:
+                - FTMFT-B01
+                - FTMFT-B02
+                - FTMFT-B03
+                - FTMFT-B04
+                - FTMFT-B05
+                - FTMFT-B06
+                - FTMFT-B07
+                - FTMFT-B08
+                - FTMFT-B09
+                - FTMFT-B10
+                - FTMFT-B11
+                - FTMFT-B12
+                - FTMFT-B13
+                - FTMFT-B14
+                - FTMFT-B15
+                - FTMFT-B16
+                - FTMFT-B17
+                - FTMFT-B18
+                - FTMFT-I01
+                - FTMFT-I02
+                - FTMFT-I03
+                - FTMFT-X01
+                - FTMFT-X02
+                - FTMFT-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: 3b4a1abd85c5
+            external/report.xml: 3b4a1abd85c5
+        at_rev: 3b4a1abd85c5
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/feature_test_match_test.go
       kind: test
       rev: 3884463747fb
@@ -2309,7 +3065,7 @@ nodes:
         - test
     - id: internal/gate/gate.feature
       kind: feature
-      rev: 46e8b2c448bc
+      rev: 9d467c750b07
       updated_at: "2026-09-23"
       code: GTENG
       layer: feature
@@ -2326,16 +3082,84 @@ nodes:
         - gate
     - id: internal/gate/gate.spec.md
       kind: spec
-      rev: 3bb52841dfe2
+      rev: 9a694bbc7881
       updated_at: "2026-09-23"
       code: GTENG
       layer: spec
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - GTENG-B01
+            - GTENG-B02
+            - GTENG-B03
+            - GTENG-B04
+            - GTENG-B05
+            - GTENG-B06
+            - GTENG-B07
+            - GTENG-B08
+            - GTENG-B09
+            - GTENG-B10
+            - GTENG-B11
+            - GTENG-B12
+            - GTENG-B13
+            - GTENG-B14
+            - GTENG-B15
+            - GTENG-B16
+            - GTENG-B17
+            - GTENG-B18
+            - GTENG-B19
+            - GTENG-B20
+            - GTENG-B21
+            - GTENG-B22
+            - GTENG-B23
+            - GTENG-I01
+            - GTENG-I02
+            - GTENG-I03
+            - GTENG-I04
+            - GTENG-X01
+            - GTENG-X02
+            - GTENG-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - GTENG-B01
+                - GTENG-B02
+                - GTENG-B03
+                - GTENG-B04
+                - GTENG-B05
+                - GTENG-B06
+                - GTENG-B07
+                - GTENG-B08
+                - GTENG-B09
+                - GTENG-B10
+                - GTENG-B11
+                - GTENG-B12
+                - GTENG-B13
+                - GTENG-B14
+                - GTENG-B15
+                - GTENG-B16
+                - GTENG-B17
+                - GTENG-B18
+                - GTENG-B19
+                - GTENG-B20
+                - GTENG-B21
+                - GTENG-B22
+                - GTENG-B23
+                - GTENG-I01
+                - GTENG-I02
+                - GTENG-I03
+                - GTENG-I04
+                - GTENG-X01
+                - GTENG-X02
+                - GTENG-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: 9a694bbc7881
+        at_rev: 9a694bbc7881
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/gate_test.go
       kind: test
-      rev: 2fc03679d70b
+      rev: 55a6806dfb1d
       updated_at: "2026-09-23"
       code: GTENG
       layer: teste
@@ -2367,6 +3191,64 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - IDCND-B01
+            - IDCND-B02
+            - IDCND-B03
+            - IDCND-B04
+            - IDCND-B05
+            - IDCND-B06
+            - IDCND-B07
+            - IDCND-B08
+            - IDCND-B09
+            - IDCND-B10
+            - IDCND-I01
+            - IDCND-I02
+            - IDCND-I03
+            - IDCND-X01
+            - IDCND-X02
+            - IDCND-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - IDCND-B01
+                - IDCND-B02
+                - IDCND-B03
+                - IDCND-B04
+                - IDCND-B05
+                - IDCND-B06
+                - IDCND-B07
+                - IDCND-B08
+                - IDCND-B09
+                - IDCND-B10
+                - IDCND-I01
+                - IDCND-I02
+                - IDCND-I03
+                - IDCND-X01
+                - IDCND-X02
+                - IDCND-X03
+            external/report.xml:
+                - IDCND-B01
+                - IDCND-B02
+                - IDCND-B03
+                - IDCND-B04
+                - IDCND-B05
+                - IDCND-B06
+                - IDCND-B07
+                - IDCND-B08
+                - IDCND-B09
+                - IDCND-B10
+                - IDCND-I01
+                - IDCND-I02
+                - IDCND-I03
+                - IDCND-X01
+                - IDCND-X02
+                - IDCND-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: 94abef875ff2
+            external/report.xml: 94abef875ff2
+        at_rev: 94abef875ff2
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/identity_consistent_test.go
       kind: test
       rev: 6335746413d6
@@ -2401,6 +3283,82 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - INCHN-B01
+            - INCHN-B02
+            - INCHN-B03
+            - INCHN-B04
+            - INCHN-B05
+            - INCHN-B06
+            - INCHN-B07
+            - INCHN-B08
+            - INCHN-B09
+            - INCHN-B10
+            - INCHN-B11
+            - INCHN-B12
+            - INCHN-B13
+            - INCHN-B14
+            - INCHN-B15
+            - INCHN-B16
+            - INCHN-I01
+            - INCHN-I02
+            - INCHN-I03
+            - INCHN-X01
+            - INCHN-X02
+            - INCHN-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - INCHN-B01
+                - INCHN-B02
+                - INCHN-B03
+                - INCHN-B04
+                - INCHN-B05
+                - INCHN-B06
+                - INCHN-B07
+                - INCHN-B08
+                - INCHN-B09
+                - INCHN-B10
+                - INCHN-B11
+                - INCHN-B12
+                - INCHN-B13
+                - INCHN-B14
+                - INCHN-B15
+                - INCHN-B16
+                - INCHN-I01
+                - INCHN-I02
+                - INCHN-I03
+                - INCHN-X01
+                - INCHN-X02
+                - INCHN-X03
+            external/report.xml:
+                - INCHN-B01
+                - INCHN-B02
+                - INCHN-B03
+                - INCHN-B04
+                - INCHN-B05
+                - INCHN-B06
+                - INCHN-B07
+                - INCHN-B08
+                - INCHN-B09
+                - INCHN-B10
+                - INCHN-B11
+                - INCHN-B12
+                - INCHN-B13
+                - INCHN-B14
+                - INCHN-B15
+                - INCHN-B16
+                - INCHN-I01
+                - INCHN-I02
+                - INCHN-I03
+                - INCHN-X01
+                - INCHN-X02
+                - INCHN-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: 37ef40be0165
+            external/report.xml: 37ef40be0165
+        at_rev: 37ef40be0165
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/internal_checks_test.go
       kind: test
       rev: f1e5a5093be0
@@ -2435,6 +3393,70 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - LYBNL-B01
+            - LYBNL-B02
+            - LYBNL-B03
+            - LYBNL-B04
+            - LYBNL-B05
+            - LYBNL-B06
+            - LYBNL-B07
+            - LYBNL-B08
+            - LYBNL-B09
+            - LYBNL-B10
+            - LYBNL-B11
+            - LYBNL-I01
+            - LYBNL-I02
+            - LYBNL-I03
+            - LYBNL-I04
+            - LYBNL-X01
+            - LYBNL-X02
+            - LYBNL-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - LYBNL-B01
+                - LYBNL-B02
+                - LYBNL-B03
+                - LYBNL-B04
+                - LYBNL-B05
+                - LYBNL-B06
+                - LYBNL-B07
+                - LYBNL-B08
+                - LYBNL-B09
+                - LYBNL-B10
+                - LYBNL-B11
+                - LYBNL-I01
+                - LYBNL-I02
+                - LYBNL-I03
+                - LYBNL-I04
+                - LYBNL-X01
+                - LYBNL-X02
+                - LYBNL-X03
+            external/report.xml:
+                - LYBNL-B01
+                - LYBNL-B02
+                - LYBNL-B03
+                - LYBNL-B04
+                - LYBNL-B05
+                - LYBNL-B06
+                - LYBNL-B07
+                - LYBNL-B08
+                - LYBNL-B09
+                - LYBNL-B10
+                - LYBNL-B11
+                - LYBNL-I01
+                - LYBNL-I02
+                - LYBNL-I03
+                - LYBNL-I04
+                - LYBNL-X01
+                - LYBNL-X02
+                - LYBNL-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: f4e846845a92
+            external/report.xml: f4e846845a92
+        at_rev: f4e846845a92
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/layer_boundary_test.go
       kind: test
       rev: 2c0df5559159
@@ -2469,6 +3491,58 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - MRPRM-B01
+            - MRPRM-B02
+            - MRPRM-B03
+            - MRPRM-B04
+            - MRPRM-B05
+            - MRPRM-B06
+            - MRPRM-B07
+            - MRPRM-B08
+            - MRPRM-B09
+            - MRPRM-I01
+            - MRPRM-I02
+            - MRPRM-X01
+            - MRPRM-X02
+            - MRPRM-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - MRPRM-B01
+                - MRPRM-B02
+                - MRPRM-B03
+                - MRPRM-B04
+                - MRPRM-B05
+                - MRPRM-B06
+                - MRPRM-B07
+                - MRPRM-B08
+                - MRPRM-B09
+                - MRPRM-I01
+                - MRPRM-I02
+                - MRPRM-X01
+                - MRPRM-X02
+                - MRPRM-X03
+            external/report.xml:
+                - MRPRM-B01
+                - MRPRM-B02
+                - MRPRM-B03
+                - MRPRM-B04
+                - MRPRM-B05
+                - MRPRM-B06
+                - MRPRM-B07
+                - MRPRM-B08
+                - MRPRM-B09
+                - MRPRM-I01
+                - MRPRM-I02
+                - MRPRM-X01
+                - MRPRM-X02
+                - MRPRM-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: bd977c8a1e05
+            external/report.xml: bd977c8a1e05
+        at_rev: bd977c8a1e05
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/marker_parity_test.go
       kind: test
       rev: 4d2770ca3202
@@ -2479,7 +3553,7 @@ nodes:
         - test
     - id: internal/gate/mock_stamp_gen.feature
       kind: feature
-      rev: 0957b7fe4fdf
+      rev: be880533c59c
       updated_at: "2026-09-24"
       code: MKSTP
       layer: feature
@@ -2496,16 +3570,44 @@ nodes:
         - gate
     - id: internal/gate/mock_stamp_gen.spec.md
       kind: spec
-      rev: 4375b6acec42
+      rev: cb7e98730e12
       updated_at: "2026-09-24"
       code: MKSTP
       layer: spec
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - MKSTP-B01
+            - MKSTP-B02
+            - MKSTP-B03
+            - MKSTP-B04
+            - MKSTP-B05
+            - MKSTP-B06
+            - MKSTP-B07
+            - MKSTP-I01
+            - MKSTP-I02
+            - MKSTP-X01
+        proven_by_suite:
+            .anchors/junit.xml:
+                - MKSTP-B01
+                - MKSTP-B02
+                - MKSTP-B03
+                - MKSTP-B04
+                - MKSTP-B05
+                - MKSTP-B06
+                - MKSTP-B07
+                - MKSTP-I01
+                - MKSTP-I02
+                - MKSTP-X01
+        proven_rev_by_suite:
+            .anchors/junit.xml: cb7e98730e12
+        at_rev: cb7e98730e12
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/mock_stamp_gen_test.go
       kind: test
-      rev: d6be7d11dd29
+      rev: d11cd090ec24
       updated_at: "2026-09-24"
       code: MKSTP
       layer: teste
@@ -2530,16 +3632,74 @@ nodes:
         - gate
     - id: internal/gate/mock_stamped.spec.md
       kind: spec
-      rev: 0b93524b7cac
+      rev: e39f54e9612d
       updated_at: "2026-09-24"
       code: MCSTM
       layer: spec
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - MCSTM-B01
+            - MCSTM-B02
+            - MCSTM-B03
+            - MCSTM-B04
+            - MCSTM-B05
+            - MCSTM-B06
+            - MCSTM-B07
+            - MCSTM-B08
+            - MCSTM-B09
+            - MCSTM-B10
+            - MCSTM-B11
+            - MCSTM-B12
+            - MCSTM-B13
+            - MCSTM-B14
+            - MCSTM-B15
+            - MCSTM-B16
+            - MCSTM-B17
+            - MCSTM-B18
+            - MCSTM-I01
+            - MCSTM-I02
+            - MCSTM-I03
+            - MCSTM-X01
+            - MCSTM-X02
+            - MCSTM-X03
+            - MCSTM-X04
+        proven_by_suite:
+            .anchors/junit.xml:
+                - MCSTM-B01
+                - MCSTM-B02
+                - MCSTM-B03
+                - MCSTM-B04
+                - MCSTM-B05
+                - MCSTM-B06
+                - MCSTM-B07
+                - MCSTM-B08
+                - MCSTM-B09
+                - MCSTM-B10
+                - MCSTM-B11
+                - MCSTM-B12
+                - MCSTM-B13
+                - MCSTM-B14
+                - MCSTM-B15
+                - MCSTM-B16
+                - MCSTM-B17
+                - MCSTM-B18
+                - MCSTM-I01
+                - MCSTM-I02
+                - MCSTM-I03
+                - MCSTM-X01
+                - MCSTM-X02
+                - MCSTM-X03
+                - MCSTM-X04
+        proven_rev_by_suite:
+            .anchors/junit.xml: e39f54e9612d
+        at_rev: e39f54e9612d
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/mock_stamped_test.go
       kind: test
-      rev: 30436b365336
+      rev: a3037731e344
       updated_at: "2026-09-23"
       code: MCSTM
       layer: teste
@@ -2571,6 +3731,76 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - MCTYM-B01
+            - MCTYM-B02
+            - MCTYM-B03
+            - MCTYM-B04
+            - MCTYM-B05
+            - MCTYM-B06
+            - MCTYM-B07
+            - MCTYM-B08
+            - MCTYM-B09
+            - MCTYM-B10
+            - MCTYM-B11
+            - MCTYM-B12
+            - MCTYM-I01
+            - MCTYM-I02
+            - MCTYM-I03
+            - MCTYM-X01
+            - MCTYM-X02
+            - MCTYM-X03
+            - MCTYM-X04
+            - MCTYM-X05
+        proven_by_suite:
+            .anchors/junit.xml:
+                - MCTYM-B01
+                - MCTYM-B02
+                - MCTYM-B03
+                - MCTYM-B04
+                - MCTYM-B05
+                - MCTYM-B06
+                - MCTYM-B07
+                - MCTYM-B08
+                - MCTYM-B09
+                - MCTYM-B10
+                - MCTYM-B11
+                - MCTYM-B12
+                - MCTYM-I01
+                - MCTYM-I02
+                - MCTYM-I03
+                - MCTYM-X01
+                - MCTYM-X02
+                - MCTYM-X03
+                - MCTYM-X04
+                - MCTYM-X05
+            external/report.xml:
+                - MCTYM-B01
+                - MCTYM-B02
+                - MCTYM-B03
+                - MCTYM-B04
+                - MCTYM-B05
+                - MCTYM-B06
+                - MCTYM-B07
+                - MCTYM-B08
+                - MCTYM-B09
+                - MCTYM-B10
+                - MCTYM-B11
+                - MCTYM-B12
+                - MCTYM-I01
+                - MCTYM-I02
+                - MCTYM-I03
+                - MCTYM-X01
+                - MCTYM-X02
+                - MCTYM-X03
+                - MCTYM-X04
+                - MCTYM-X05
+        proven_rev_by_suite:
+            .anchors/junit.xml: 34927f73f0e3
+            external/report.xml: 34927f73f0e3
+        at_rev: 34927f73f0e3
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/mock_typed_test.go
       kind: test
       rev: 3157696ee091
@@ -2656,6 +3886,61 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - OBHNB-B01
+            - OBHNB-B02
+            - OBHNB-B03
+            - OBHNB-B04
+            - OBHNB-B05
+            - OBHNB-B06
+            - OBHNB-B07
+            - OBHNB-B08
+            - OBHNB-B09
+            - OBHNB-I01
+            - OBHNB-I02
+            - OBHNB-I03
+            - OBHNB-X01
+            - OBHNB-X02
+            - OBHNB-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - OBHNB-B01
+                - OBHNB-B02
+                - OBHNB-B03
+                - OBHNB-B04
+                - OBHNB-B05
+                - OBHNB-B06
+                - OBHNB-B07
+                - OBHNB-B08
+                - OBHNB-B09
+                - OBHNB-I01
+                - OBHNB-I02
+                - OBHNB-I03
+                - OBHNB-X01
+                - OBHNB-X02
+                - OBHNB-X03
+            external/report.xml:
+                - OBHNB-B01
+                - OBHNB-B02
+                - OBHNB-B03
+                - OBHNB-B04
+                - OBHNB-B05
+                - OBHNB-B06
+                - OBHNB-B07
+                - OBHNB-B08
+                - OBHNB-B09
+                - OBHNB-I01
+                - OBHNB-I02
+                - OBHNB-I03
+                - OBHNB-X01
+                - OBHNB-X02
+                - OBHNB-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: 6a2b40be85a0
+            external/report.xml: 6a2b40be85a0
+        at_rev: 6a2b40be85a0
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/obligation_honored_test.go
       kind: test
       rev: 6e324040b347
@@ -2706,6 +3991,52 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - OPQSP-B01
+            - OPQSP-B02
+            - OPQSP-B03
+            - OPQSP-B04
+            - OPQSP-B05
+            - OPQSP-B06
+            - OPQSP-B07
+            - OPQSP-I01
+            - OPQSP-I02
+            - OPQSP-I03
+            - OPQSP-X01
+            - OPQSP-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - OPQSP-B01
+                - OPQSP-B02
+                - OPQSP-B03
+                - OPQSP-B04
+                - OPQSP-B05
+                - OPQSP-B06
+                - OPQSP-B07
+                - OPQSP-I01
+                - OPQSP-I02
+                - OPQSP-I03
+                - OPQSP-X01
+                - OPQSP-X02
+            external/report.xml:
+                - OPQSP-B01
+                - OPQSP-B02
+                - OPQSP-B03
+                - OPQSP-B04
+                - OPQSP-B05
+                - OPQSP-B06
+                - OPQSP-B07
+                - OPQSP-I01
+                - OPQSP-I02
+                - OPQSP-I03
+                - OPQSP-X01
+                - OPQSP-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: a0e801be0909
+            external/report.xml: a0e801be0909
+        at_rev: a0e801be0909
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/open_questions_test.go
       kind: test
       rev: dc85b92ce7e5
@@ -2740,6 +4071,55 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - PGNHN-B01
+            - PGNHN-B02
+            - PGNHN-B03
+            - PGNHN-B04
+            - PGNHN-B05
+            - PGNHN-B06
+            - PGNHN-B07
+            - PGNHN-I01
+            - PGNHN-I02
+            - PGNHN-I03
+            - PGNHN-I04
+            - PGNHN-X01
+            - PGNHN-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - PGNHN-B01
+                - PGNHN-B02
+                - PGNHN-B03
+                - PGNHN-B04
+                - PGNHN-B05
+                - PGNHN-B06
+                - PGNHN-B07
+                - PGNHN-I01
+                - PGNHN-I02
+                - PGNHN-I03
+                - PGNHN-I04
+                - PGNHN-X01
+                - PGNHN-X02
+            external/report.xml:
+                - PGNHN-B01
+                - PGNHN-B02
+                - PGNHN-B03
+                - PGNHN-B04
+                - PGNHN-B05
+                - PGNHN-B06
+                - PGNHN-B07
+                - PGNHN-I01
+                - PGNHN-I02
+                - PGNHN-I03
+                - PGNHN-I04
+                - PGNHN-X01
+                - PGNHN-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: 9702f820d4bf
+            external/report.xml: 9702f820d4bf
+        at_rev: 9702f820d4bf
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/pagination_honored_test.go
       kind: test
       rev: 60adbe87019b
@@ -2774,6 +4154,76 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - PHORP-B01
+            - PHORP-B02
+            - PHORP-B03
+            - PHORP-B04
+            - PHORP-B05
+            - PHORP-B06
+            - PHORP-B07
+            - PHORP-B08
+            - PHORP-B09
+            - PHORP-B10
+            - PHORP-B11
+            - PHORP-B12
+            - PHORP-B13
+            - PHORP-I01
+            - PHORP-I02
+            - PHORP-I03
+            - PHORP-I04
+            - PHORP-X01
+            - PHORP-X02
+            - PHORP-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - PHORP-B01
+                - PHORP-B02
+                - PHORP-B03
+                - PHORP-B04
+                - PHORP-B05
+                - PHORP-B06
+                - PHORP-B07
+                - PHORP-B08
+                - PHORP-B09
+                - PHORP-B10
+                - PHORP-B11
+                - PHORP-B12
+                - PHORP-B13
+                - PHORP-I01
+                - PHORP-I02
+                - PHORP-I03
+                - PHORP-I04
+                - PHORP-X01
+                - PHORP-X02
+                - PHORP-X03
+            external/report.xml:
+                - PHORP-B01
+                - PHORP-B02
+                - PHORP-B03
+                - PHORP-B04
+                - PHORP-B05
+                - PHORP-B06
+                - PHORP-B07
+                - PHORP-B08
+                - PHORP-B09
+                - PHORP-B10
+                - PHORP-B11
+                - PHORP-B12
+                - PHORP-B13
+                - PHORP-I01
+                - PHORP-I02
+                - PHORP-I03
+                - PHORP-I04
+                - PHORP-X01
+                - PHORP-X02
+                - PHORP-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: 024a8fed5fb7
+            external/report.xml: 024a8fed5fb7
+        at_rev: 024a8fed5fb7
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/phase_ordered_test.go
       kind: test
       rev: 3705ed32086d
@@ -2808,6 +4258,43 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - PLCFL-B01
+            - PLCFL-B02
+            - PLCFL-B03
+            - PLCFL-B04
+            - PLCFL-B05
+            - PLCFL-B06
+            - PLCFL-I01
+            - PLCFL-X01
+            - PLCFL-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - PLCFL-B01
+                - PLCFL-B02
+                - PLCFL-B03
+                - PLCFL-B04
+                - PLCFL-B05
+                - PLCFL-B06
+                - PLCFL-I01
+                - PLCFL-X01
+                - PLCFL-X02
+            external/report.xml:
+                - PLCFL-B01
+                - PLCFL-B02
+                - PLCFL-B03
+                - PLCFL-B04
+                - PLCFL-B05
+                - PLCFL-B06
+                - PLCFL-I01
+                - PLCFL-X01
+                - PLCFL-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: 9afea8a33146
+            external/report.xml: 9afea8a33146
+        at_rev: 9afea8a33146
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/placeholder_filled_test.go
       kind: test
       rev: a28a04e74cce
@@ -2843,6 +4330,76 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - PCJPL-B01
+            - PCJPL-B02
+            - PCJPL-B03
+            - PCJPL-B04
+            - PCJPL-B05
+            - PCJPL-B06
+            - PCJPL-B07
+            - PCJPL-B08
+            - PCJPL-B09
+            - PCJPL-B10
+            - PCJPL-B11
+            - PCJPL-B12
+            - PCJPL-B13
+            - PCJPL-B14
+            - PCJPL-I01
+            - PCJPL-I02
+            - PCJPL-I03
+            - PCJPL-X01
+            - PCJPL-X02
+            - PCJPL-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - PCJPL-B01
+                - PCJPL-B02
+                - PCJPL-B03
+                - PCJPL-B04
+                - PCJPL-B05
+                - PCJPL-B06
+                - PCJPL-B07
+                - PCJPL-B08
+                - PCJPL-B09
+                - PCJPL-B10
+                - PCJPL-B11
+                - PCJPL-B12
+                - PCJPL-B13
+                - PCJPL-B14
+                - PCJPL-I01
+                - PCJPL-I02
+                - PCJPL-I03
+                - PCJPL-X01
+                - PCJPL-X02
+                - PCJPL-X03
+            external/report.xml:
+                - PCJPL-B01
+                - PCJPL-B02
+                - PCJPL-B03
+                - PCJPL-B04
+                - PCJPL-B05
+                - PCJPL-B06
+                - PCJPL-B07
+                - PCJPL-B08
+                - PCJPL-B09
+                - PCJPL-B10
+                - PCJPL-B11
+                - PCJPL-B12
+                - PCJPL-B13
+                - PCJPL-B14
+                - PCJPL-I01
+                - PCJPL-I02
+                - PCJPL-I03
+                - PCJPL-X01
+                - PCJPL-X02
+                - PCJPL-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: b3b5b06b1b14
+            external/report.xml: b3b5b06b1b14
+        at_rev: b3b5b06b1b14
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/plan_change_justified_test.go
       kind: test
       rev: 54610a39e105
@@ -2884,6 +4441,67 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - PLRVP-B01
+            - PLRVP-B02
+            - PLRVP-B03
+            - PLRVP-B04
+            - PLRVP-B05
+            - PLRVP-B06
+            - PLRVP-B07
+            - PLRVP-B08
+            - PLRVP-B09
+            - PLRVP-B10
+            - PLRVP-B11
+            - PLRVP-I01
+            - PLRVP-I02
+            - PLRVP-I03
+            - PLRVP-X01
+            - PLRVP-X02
+            - PLRVP-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - PLRVP-B01
+                - PLRVP-B02
+                - PLRVP-B03
+                - PLRVP-B04
+                - PLRVP-B05
+                - PLRVP-B06
+                - PLRVP-B07
+                - PLRVP-B08
+                - PLRVP-B09
+                - PLRVP-B10
+                - PLRVP-B11
+                - PLRVP-I01
+                - PLRVP-I02
+                - PLRVP-I03
+                - PLRVP-X01
+                - PLRVP-X02
+                - PLRVP-X03
+            external/report.xml:
+                - PLRVP-B01
+                - PLRVP-B02
+                - PLRVP-B03
+                - PLRVP-B04
+                - PLRVP-B05
+                - PLRVP-B06
+                - PLRVP-B07
+                - PLRVP-B08
+                - PLRVP-B09
+                - PLRVP-B10
+                - PLRVP-B11
+                - PLRVP-I01
+                - PLRVP-I02
+                - PLRVP-I03
+                - PLRVP-X01
+                - PLRVP-X02
+                - PLRVP-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: e1584e40e09a
+            external/report.xml: e1584e40e09a
+        at_rev: e1584e40e09a
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/plan_revised_test.go
       kind: test
       rev: ca557add6267
@@ -2918,6 +4536,70 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - PSVPL-B01
+            - PSVPL-B02
+            - PSVPL-B03
+            - PSVPL-B04
+            - PSVPL-B05
+            - PSVPL-B06
+            - PSVPL-B07
+            - PSVPL-B08
+            - PSVPL-B09
+            - PSVPL-B10
+            - PSVPL-B11
+            - PSVPL-I01
+            - PSVPL-I02
+            - PSVPL-I03
+            - PSVPL-I04
+            - PSVPL-X01
+            - PSVPL-X02
+            - PSVPL-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - PSVPL-B01
+                - PSVPL-B02
+                - PSVPL-B03
+                - PSVPL-B04
+                - PSVPL-B05
+                - PSVPL-B06
+                - PSVPL-B07
+                - PSVPL-B08
+                - PSVPL-B09
+                - PSVPL-B10
+                - PSVPL-B11
+                - PSVPL-I01
+                - PSVPL-I02
+                - PSVPL-I03
+                - PSVPL-I04
+                - PSVPL-X01
+                - PSVPL-X02
+                - PSVPL-X03
+            external/report.xml:
+                - PSVPL-B01
+                - PSVPL-B02
+                - PSVPL-B03
+                - PSVPL-B04
+                - PSVPL-B05
+                - PSVPL-B06
+                - PSVPL-B07
+                - PSVPL-B08
+                - PSVPL-B09
+                - PSVPL-B10
+                - PSVPL-B11
+                - PSVPL-I01
+                - PSVPL-I02
+                - PSVPL-I03
+                - PSVPL-I04
+                - PSVPL-X01
+                - PSVPL-X02
+                - PSVPL-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: fded58d21d3c
+            external/report.xml: fded58d21d3c
+        at_rev: fded58d21d3c
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/plan_seeds_valid_test.go
       kind: test
       rev: 2aeb17450445
@@ -2952,6 +4634,58 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - PSDPL-B01
+            - PSDPL-B02
+            - PSDPL-B03
+            - PSDPL-B04
+            - PSDPL-B05
+            - PSDPL-B06
+            - PSDPL-B07
+            - PSDPL-B08
+            - PSDPL-B09
+            - PSDPL-I01
+            - PSDPL-I02
+            - PSDPL-X01
+            - PSDPL-X02
+            - PSDPL-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - PSDPL-B01
+                - PSDPL-B02
+                - PSDPL-B03
+                - PSDPL-B04
+                - PSDPL-B05
+                - PSDPL-B06
+                - PSDPL-B07
+                - PSDPL-B08
+                - PSDPL-B09
+                - PSDPL-I01
+                - PSDPL-I02
+                - PSDPL-X01
+                - PSDPL-X02
+                - PSDPL-X03
+            external/report.xml:
+                - PSDPL-B01
+                - PSDPL-B02
+                - PSDPL-B03
+                - PSDPL-B04
+                - PSDPL-B05
+                - PSDPL-B06
+                - PSDPL-B07
+                - PSDPL-B08
+                - PSDPL-B09
+                - PSDPL-I01
+                - PSDPL-I02
+                - PSDPL-X01
+                - PSDPL-X02
+                - PSDPL-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: a2ce1c4f09ad
+            external/report.xml: a2ce1c4f09ad
+        at_rev: a2ce1c4f09ad
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/plan_source_declared_test.go
       kind: test
       rev: ca36506dc987
@@ -2994,6 +4728,70 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - PRHNP-B01
+            - PRHNP-B02
+            - PRHNP-B03
+            - PRHNP-B04
+            - PRHNP-B05
+            - PRHNP-B06
+            - PRHNP-B07
+            - PRHNP-B08
+            - PRHNP-B09
+            - PRHNP-B10
+            - PRHNP-B11
+            - PRHNP-I01
+            - PRHNP-I02
+            - PRHNP-I03
+            - PRHNP-I04
+            - PRHNP-X01
+            - PRHNP-X02
+            - PRHNP-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - PRHNP-B01
+                - PRHNP-B02
+                - PRHNP-B03
+                - PRHNP-B04
+                - PRHNP-B05
+                - PRHNP-B06
+                - PRHNP-B07
+                - PRHNP-B08
+                - PRHNP-B09
+                - PRHNP-B10
+                - PRHNP-B11
+                - PRHNP-I01
+                - PRHNP-I02
+                - PRHNP-I03
+                - PRHNP-I04
+                - PRHNP-X01
+                - PRHNP-X02
+                - PRHNP-X03
+            external/report.xml:
+                - PRHNP-B01
+                - PRHNP-B02
+                - PRHNP-B03
+                - PRHNP-B04
+                - PRHNP-B05
+                - PRHNP-B06
+                - PRHNP-B07
+                - PRHNP-B08
+                - PRHNP-B09
+                - PRHNP-B10
+                - PRHNP-B11
+                - PRHNP-I01
+                - PRHNP-I02
+                - PRHNP-I03
+                - PRHNP-I04
+                - PRHNP-X01
+                - PRHNP-X02
+                - PRHNP-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: 35732567ca9c
+            external/report.xml: 35732567ca9c
+        at_rev: 35732567ca9c
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/progress_honest_test.go
       kind: test
       rev: 1c6588589b2d
@@ -3043,6 +4841,55 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - PRGTP-B01
+            - PRGTP-B02
+            - PRGTP-B03
+            - PRGTP-B04
+            - PRGTP-B05
+            - PRGTP-B06
+            - PRGTP-B07
+            - PRGTP-B08
+            - PRGTP-B09
+            - PRGTP-I01
+            - PRGTP-I02
+            - PRGTP-X01
+            - PRGTP-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - PRGTP-B01
+                - PRGTP-B02
+                - PRGTP-B03
+                - PRGTP-B04
+                - PRGTP-B05
+                - PRGTP-B06
+                - PRGTP-B07
+                - PRGTP-B08
+                - PRGTP-B09
+                - PRGTP-I01
+                - PRGTP-I02
+                - PRGTP-X01
+                - PRGTP-X02
+            external/report.xml:
+                - PRGTP-B01
+                - PRGTP-B02
+                - PRGTP-B03
+                - PRGTP-B04
+                - PRGTP-B05
+                - PRGTP-B06
+                - PRGTP-B07
+                - PRGTP-B08
+                - PRGTP-B09
+                - PRGTP-I01
+                - PRGTP-I02
+                - PRGTP-X01
+                - PRGTP-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: 9e03864f7e62
+            external/report.xml: 9e03864f7e62
+        at_rev: 9e03864f7e62
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/promotable_test.go
       kind: test
       rev: d6a0e76ee023
@@ -3077,6 +4924,76 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - PCBPR-B01
+            - PCBPR-B02
+            - PCBPR-B03
+            - PCBPR-B04
+            - PCBPR-B05
+            - PCBPR-B06
+            - PCBPR-B07
+            - PCBPR-B08
+            - PCBPR-B09
+            - PCBPR-B10
+            - PCBPR-B11
+            - PCBPR-B12
+            - PCBPR-B13
+            - PCBPR-B14
+            - PCBPR-I01
+            - PCBPR-I02
+            - PCBPR-I03
+            - PCBPR-X01
+            - PCBPR-X02
+            - PCBPR-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - PCBPR-B01
+                - PCBPR-B02
+                - PCBPR-B03
+                - PCBPR-B04
+                - PCBPR-B05
+                - PCBPR-B06
+                - PCBPR-B07
+                - PCBPR-B08
+                - PCBPR-B09
+                - PCBPR-B10
+                - PCBPR-B11
+                - PCBPR-B12
+                - PCBPR-B13
+                - PCBPR-B14
+                - PCBPR-I01
+                - PCBPR-I02
+                - PCBPR-I03
+                - PCBPR-X01
+                - PCBPR-X02
+                - PCBPR-X03
+            external/report.xml:
+                - PCBPR-B01
+                - PCBPR-B02
+                - PCBPR-B03
+                - PCBPR-B04
+                - PCBPR-B05
+                - PCBPR-B06
+                - PCBPR-B07
+                - PCBPR-B08
+                - PCBPR-B09
+                - PCBPR-B10
+                - PCBPR-B11
+                - PCBPR-B12
+                - PCBPR-B13
+                - PCBPR-B14
+                - PCBPR-I01
+                - PCBPR-I02
+                - PCBPR-I03
+                - PCBPR-X01
+                - PCBPR-X02
+                - PCBPR-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: eab6f1ca920a
+            external/report.xml: eab6f1ca920a
+        at_rev: eab6f1ca920a
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/proof_crosses_boundary_test.go
       kind: test
       rev: c75f2fed24c6
@@ -3111,6 +5028,73 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - RFRSR-B01
+            - RFRSR-B02
+            - RFRSR-B03
+            - RFRSR-B04
+            - RFRSR-B05
+            - RFRSR-B06
+            - RFRSR-B07
+            - RFRSR-B08
+            - RFRSR-B09
+            - RFRSR-B10
+            - RFRSR-B11
+            - RFRSR-B12
+            - RFRSR-B13
+            - RFRSR-I01
+            - RFRSR-I02
+            - RFRSR-X01
+            - RFRSR-X02
+            - RFRSR-X03
+            - RFRSR-X04
+        proven_by_suite:
+            .anchors/junit.xml:
+                - RFRSR-B01
+                - RFRSR-B02
+                - RFRSR-B03
+                - RFRSR-B04
+                - RFRSR-B05
+                - RFRSR-B06
+                - RFRSR-B07
+                - RFRSR-B08
+                - RFRSR-B09
+                - RFRSR-B10
+                - RFRSR-B11
+                - RFRSR-B13
+                - RFRSR-B12
+                - RFRSR-I01
+                - RFRSR-I02
+                - RFRSR-X01
+                - RFRSR-X02
+                - RFRSR-X03
+                - RFRSR-X04
+            external/report.xml:
+                - RFRSR-B01
+                - RFRSR-B02
+                - RFRSR-B03
+                - RFRSR-B04
+                - RFRSR-B05
+                - RFRSR-B06
+                - RFRSR-B07
+                - RFRSR-B08
+                - RFRSR-B09
+                - RFRSR-B10
+                - RFRSR-B11
+                - RFRSR-B13
+                - RFRSR-B12
+                - RFRSR-I01
+                - RFRSR-I02
+                - RFRSR-X01
+                - RFRSR-X02
+                - RFRSR-X03
+                - RFRSR-X04
+        proven_rev_by_suite:
+            .anchors/junit.xml: d47236bd4e64
+            external/report.xml: d47236bd4e64
+        at_rev: d47236bd4e64
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/ref_resolves_test.go
       kind: test
       rev: 6da05772a011
@@ -3145,6 +5129,55 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - RPHRG-B01
+            - RPHRG-B02
+            - RPHRG-B03
+            - RPHRG-B04
+            - RPHRG-B05
+            - RPHRG-B06
+            - RPHRG-B07
+            - RPHRG-I01
+            - RPHRG-I02
+            - RPHRG-I03
+            - RPHRG-X01
+            - RPHRG-X02
+            - RPHRG-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - RPHRG-B01
+                - RPHRG-B02
+                - RPHRG-B03
+                - RPHRG-B04
+                - RPHRG-B05
+                - RPHRG-B06
+                - RPHRG-B07
+                - RPHRG-I01
+                - RPHRG-I02
+                - RPHRG-I03
+                - RPHRG-X01
+                - RPHRG-X02
+                - RPHRG-X03
+            external/report.xml:
+                - RPHRG-B01
+                - RPHRG-B02
+                - RPHRG-B03
+                - RPHRG-B04
+                - RPHRG-B05
+                - RPHRG-B06
+                - RPHRG-B07
+                - RPHRG-I01
+                - RPHRG-I02
+                - RPHRG-I03
+                - RPHRG-X01
+                - RPHRG-X02
+                - RPHRG-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: "762971562134"
+            external/report.xml: "762971562134"
+        at_rev: "762971562134"
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/region_pair_honored_test.go
       kind: test
       rev: ff9405c70307
@@ -3195,6 +5228,43 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - RVORP-B01
+            - RVORP-B02
+            - RVORP-B03
+            - RVORP-B04
+            - RVORP-B05
+            - RVORP-B06
+            - RVORP-B07
+            - RVORP-I01
+            - RVORP-X01
+        proven_by_suite:
+            .anchors/junit.xml:
+                - RVORP-B01
+                - RVORP-B02
+                - RVORP-B03
+                - RVORP-B04
+                - RVORP-B05
+                - RVORP-B06
+                - RVORP-B07
+                - RVORP-I01
+                - RVORP-X01
+            external/report.xml:
+                - RVORP-B01
+                - RVORP-B02
+                - RVORP-B03
+                - RVORP-B04
+                - RVORP-B05
+                - RVORP-B06
+                - RVORP-B07
+                - RVORP-I01
+                - RVORP-X01
+        proven_rev_by_suite:
+            .anchors/junit.xml: c90dd77d59b8
+            external/report.xml: c90dd77d59b8
+        at_rev: c90dd77d59b8
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/revision_orphans_test.go
       kind: test
       rev: bbd306286488
@@ -3230,6 +5300,43 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - RVRNR-B01
+            - RVRNR-B02
+            - RVRNR-B03
+            - RVRNR-B04
+            - RVRNR-B05
+            - RVRNR-B06
+            - RVRNR-I01
+            - RVRNR-I02
+            - RVRNR-X01
+        proven_by_suite:
+            .anchors/junit.xml:
+                - RVRNR-B01
+                - RVRNR-B02
+                - RVRNR-B03
+                - RVRNR-B04
+                - RVRNR-B05
+                - RVRNR-B06
+                - RVRNR-I01
+                - RVRNR-I02
+                - RVRNR-X01
+            external/report.xml:
+                - RVRNR-B01
+                - RVRNR-B02
+                - RVRNR-B03
+                - RVRNR-B04
+                - RVRNR-B05
+                - RVRNR-B06
+                - RVRNR-I01
+                - RVRNR-I02
+                - RVRNR-X01
+        proven_rev_by_suite:
+            .anchors/junit.xml: 29b9744660ef
+            external/report.xml: 29b9744660ef
+        at_rev: 29b9744660ef
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/revision_renumber_test.go
       kind: test
       rev: 5d962fa98a42
@@ -3264,6 +5371,43 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - RTDCL-B01
+            - RTDCL-B02
+            - RTDCL-B03
+            - RTDCL-B04
+            - RTDCL-B05
+            - RTDCL-I01
+            - RTDCL-I02
+            - RTDCL-X01
+            - RTDCL-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - RTDCL-B01
+                - RTDCL-B02
+                - RTDCL-B03
+                - RTDCL-B04
+                - RTDCL-B05
+                - RTDCL-I01
+                - RTDCL-I02
+                - RTDCL-X01
+                - RTDCL-X02
+            external/report.xml:
+                - RTDCL-B01
+                - RTDCL-B02
+                - RTDCL-B03
+                - RTDCL-B04
+                - RTDCL-B05
+                - RTDCL-I01
+                - RTDCL-I02
+                - RTDCL-X01
+                - RTDCL-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: 25efb10781b6
+            external/report.xml: 25efb10781b6
+        at_rev: 25efb10781b6
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/route_declared_test.go
       kind: test
       rev: dd73d4573ac3
@@ -3298,6 +5442,76 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - RTEXR-B01
+            - RTEXR-B02
+            - RTEXR-B03
+            - RTEXR-B04
+            - RTEXR-B05
+            - RTEXR-B06
+            - RTEXR-B07
+            - RTEXR-B08
+            - RTEXR-B09
+            - RTEXR-B10
+            - RTEXR-B11
+            - RTEXR-B12
+            - RTEXR-B13
+            - RTEXR-I01
+            - RTEXR-I02
+            - RTEXR-I03
+            - RTEXR-I04
+            - RTEXR-X01
+            - RTEXR-X02
+            - RTEXR-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - RTEXR-B01
+                - RTEXR-B02
+                - RTEXR-B03
+                - RTEXR-B04
+                - RTEXR-B05
+                - RTEXR-B06
+                - RTEXR-B07
+                - RTEXR-B08
+                - RTEXR-B09
+                - RTEXR-B10
+                - RTEXR-B11
+                - RTEXR-B12
+                - RTEXR-B13
+                - RTEXR-I01
+                - RTEXR-I02
+                - RTEXR-I03
+                - RTEXR-I04
+                - RTEXR-X01
+                - RTEXR-X02
+                - RTEXR-X03
+            external/report.xml:
+                - RTEXR-B01
+                - RTEXR-B02
+                - RTEXR-B03
+                - RTEXR-B04
+                - RTEXR-B05
+                - RTEXR-B06
+                - RTEXR-B07
+                - RTEXR-B08
+                - RTEXR-B09
+                - RTEXR-B10
+                - RTEXR-B11
+                - RTEXR-B12
+                - RTEXR-B13
+                - RTEXR-I01
+                - RTEXR-I02
+                - RTEXR-I03
+                - RTEXR-I04
+                - RTEXR-X01
+                - RTEXR-X02
+                - RTEXR-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: 3a64df45c89b
+            external/report.xml: 3a64df45c89b
+        at_rev: 3a64df45c89b
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/route_exists_test.go
       kind: test
       rev: 77716f6577d5
@@ -3332,6 +5546,85 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - RLUEX-B01
+            - RLUEX-B02
+            - RLUEX-B03
+            - RLUEX-B04
+            - RLUEX-B05
+            - RLUEX-B06
+            - RLUEX-B07
+            - RLUEX-B08
+            - RLUEX-B09
+            - RLUEX-B10
+            - RLUEX-B11
+            - RLUEX-B12
+            - RLUEX-B13
+            - RLUEX-B14
+            - RLUEX-B15
+            - RLUEX-B16
+            - RLUEX-B17
+            - RLUEX-I01
+            - RLUEX-I02
+            - RLUEX-I03
+            - RLUEX-X01
+            - RLUEX-X02
+            - RLUEX-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - RLUEX-B01
+                - RLUEX-B02
+                - RLUEX-B03
+                - RLUEX-B04
+                - RLUEX-B05
+                - RLUEX-B06
+                - RLUEX-B07
+                - RLUEX-B08
+                - RLUEX-B09
+                - RLUEX-B10
+                - RLUEX-B11
+                - RLUEX-B12
+                - RLUEX-B13
+                - RLUEX-B14
+                - RLUEX-B15
+                - RLUEX-B16
+                - RLUEX-B17
+                - RLUEX-I01
+                - RLUEX-I02
+                - RLUEX-I03
+                - RLUEX-X01
+                - RLUEX-X02
+                - RLUEX-X03
+            external/report.xml:
+                - RLUEX-B01
+                - RLUEX-B02
+                - RLUEX-B03
+                - RLUEX-B04
+                - RLUEX-B05
+                - RLUEX-B06
+                - RLUEX-B07
+                - RLUEX-B08
+                - RLUEX-B09
+                - RLUEX-B10
+                - RLUEX-B11
+                - RLUEX-B12
+                - RLUEX-B13
+                - RLUEX-B14
+                - RLUEX-B15
+                - RLUEX-B16
+                - RLUEX-B17
+                - RLUEX-I01
+                - RLUEX-I02
+                - RLUEX-I03
+                - RLUEX-X01
+                - RLUEX-X02
+                - RLUEX-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: 3f3024ebe16c
+            external/report.xml: 3f3024ebe16c
+        at_rev: 3f3024ebe16c
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/rule_implemented.feature
       kind: feature
       rev: 8a1cc95ed73a
@@ -3358,6 +5651,46 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - RLIMR-B01
+            - RLIMR-B02
+            - RLIMR-B03
+            - RLIMR-B04
+            - RLIMR-B05
+            - RLIMR-B06
+            - RLIMR-I01
+            - RLIMR-I02
+            - RLIMR-X01
+            - RLIMR-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - RLIMR-B01
+                - RLIMR-B02
+                - RLIMR-B03
+                - RLIMR-B04
+                - RLIMR-B05
+                - RLIMR-B06
+                - RLIMR-I01
+                - RLIMR-I02
+                - RLIMR-X01
+                - RLIMR-X02
+            external/report.xml:
+                - RLIMR-B01
+                - RLIMR-B02
+                - RLIMR-B03
+                - RLIMR-B04
+                - RLIMR-B05
+                - RLIMR-B06
+                - RLIMR-I01
+                - RLIMR-I02
+                - RLIMR-X01
+                - RLIMR-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: ed225a32388a
+            external/report.xml: ed225a32388a
+        at_rev: ed225a32388a
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/rule_implemented_test.go
       kind: test
       rev: 700390a56eab
@@ -3408,6 +5741,73 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - RLTYR-B01
+            - RLTYR-B02
+            - RLTYR-B03
+            - RLTYR-B04
+            - RLTYR-B05
+            - RLTYR-B06
+            - RLTYR-B07
+            - RLTYR-B08
+            - RLTYR-B09
+            - RLTYR-B10
+            - RLTYR-B11
+            - RLTYR-B12
+            - RLTYR-I01
+            - RLTYR-I02
+            - RLTYR-I03
+            - RLTYR-X01
+            - RLTYR-X02
+            - RLTYR-X03
+            - RLTYR-X04
+        proven_by_suite:
+            .anchors/junit.xml:
+                - RLTYR-B01
+                - RLTYR-B02
+                - RLTYR-B03
+                - RLTYR-B04
+                - RLTYR-B05
+                - RLTYR-B06
+                - RLTYR-B07
+                - RLTYR-B08
+                - RLTYR-B09
+                - RLTYR-B10
+                - RLTYR-B11
+                - RLTYR-B12
+                - RLTYR-I01
+                - RLTYR-I02
+                - RLTYR-I03
+                - RLTYR-X01
+                - RLTYR-X02
+                - RLTYR-X03
+                - RLTYR-X04
+            external/report.xml:
+                - RLTYR-B01
+                - RLTYR-B02
+                - RLTYR-B03
+                - RLTYR-B04
+                - RLTYR-B05
+                - RLTYR-B06
+                - RLTYR-B07
+                - RLTYR-B08
+                - RLTYR-B09
+                - RLTYR-B10
+                - RLTYR-B11
+                - RLTYR-B12
+                - RLTYR-I01
+                - RLTYR-I02
+                - RLTYR-I03
+                - RLTYR-X01
+                - RLTYR-X02
+                - RLTYR-X03
+                - RLTYR-X04
+        proven_rev_by_suite:
+            .anchors/junit.xml: 6ab06f981fd1
+            external/report.xml: 6ab06f981fd1
+        at_rev: 6ab06f981fd1
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/rule_types_requires_test.go
       kind: test
       rev: ee5d4f60c417
@@ -3449,6 +5849,61 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - SCASS-B01
+            - SCASS-B02
+            - SCASS-B03
+            - SCASS-B04
+            - SCASS-B05
+            - SCASS-B06
+            - SCASS-B07
+            - SCASS-B08
+            - SCASS-B09
+            - SCASS-I01
+            - SCASS-I02
+            - SCASS-I03
+            - SCASS-X01
+            - SCASS-X02
+            - SCASS-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - SCASS-B01
+                - SCASS-B02
+                - SCASS-B03
+                - SCASS-B04
+                - SCASS-B05
+                - SCASS-B06
+                - SCASS-B07
+                - SCASS-B08
+                - SCASS-B09
+                - SCASS-I01
+                - SCASS-I02
+                - SCASS-I03
+                - SCASS-X01
+                - SCASS-X02
+                - SCASS-X03
+            external/report.xml:
+                - SCASS-B01
+                - SCASS-B02
+                - SCASS-B03
+                - SCASS-B04
+                - SCASS-B05
+                - SCASS-B06
+                - SCASS-B07
+                - SCASS-B08
+                - SCASS-B09
+                - SCASS-I01
+                - SCASS-I02
+                - SCASS-I03
+                - SCASS-X01
+                - SCASS-X02
+                - SCASS-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: 608893f82f00
+            external/report.xml: 608893f82f00
+        at_rev: 608893f82f00
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/scenario_asserts_test.go
       kind: test
       rev: c32ff528fcec
@@ -3499,6 +5954,67 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - SCIDS-B01
+            - SCIDS-B02
+            - SCIDS-B03
+            - SCIDS-B04
+            - SCIDS-B05
+            - SCIDS-B06
+            - SCIDS-B07
+            - SCIDS-B08
+            - SCIDS-B09
+            - SCIDS-B10
+            - SCIDS-B11
+            - SCIDS-I01
+            - SCIDS-I02
+            - SCIDS-X01
+            - SCIDS-X02
+            - SCIDS-X03
+            - SCIDS-X04
+        proven_by_suite:
+            .anchors/junit.xml:
+                - SCIDS-B01
+                - SCIDS-B02
+                - SCIDS-B03
+                - SCIDS-B04
+                - SCIDS-B05
+                - SCIDS-B06
+                - SCIDS-B07
+                - SCIDS-B08
+                - SCIDS-B09
+                - SCIDS-B10
+                - SCIDS-B11
+                - SCIDS-I01
+                - SCIDS-I02
+                - SCIDS-X01
+                - SCIDS-X02
+                - SCIDS-X03
+                - SCIDS-X04
+            external/report.xml:
+                - SCIDS-B01
+                - SCIDS-B02
+                - SCIDS-B03
+                - SCIDS-B04
+                - SCIDS-B05
+                - SCIDS-B06
+                - SCIDS-B07
+                - SCIDS-B08
+                - SCIDS-B09
+                - SCIDS-B10
+                - SCIDS-B11
+                - SCIDS-I01
+                - SCIDS-I02
+                - SCIDS-X01
+                - SCIDS-X02
+                - SCIDS-X03
+                - SCIDS-X04
+        proven_rev_by_suite:
+            .anchors/junit.xml: 80bb393d42f4
+            external/report.xml: 80bb393d42f4
+        at_rev: 80bb393d42f4
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/scenario_identity_test.go
       kind: test
       rev: 27474d7bb7b1
@@ -3533,6 +6049,52 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - SCLTR-B01
+            - SCLTR-B02
+            - SCLTR-B03
+            - SCLTR-B04
+            - SCLTR-B05
+            - SCLTR-B06
+            - SCLTR-B07
+            - SCLTR-I01
+            - SCLTR-I02
+            - SCLTR-I03
+            - SCLTR-X01
+            - SCLTR-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - SCLTR-B01
+                - SCLTR-B02
+                - SCLTR-B03
+                - SCLTR-B04
+                - SCLTR-B05
+                - SCLTR-B06
+                - SCLTR-B07
+                - SCLTR-I01
+                - SCLTR-I02
+                - SCLTR-I03
+                - SCLTR-X01
+                - SCLTR-X02
+            external/report.xml:
+                - SCLTR-B01
+                - SCLTR-B02
+                - SCLTR-B03
+                - SCLTR-B04
+                - SCLTR-B05
+                - SCLTR-B06
+                - SCLTR-B07
+                - SCLTR-I01
+                - SCLTR-I02
+                - SCLTR-I03
+                - SCLTR-X01
+                - SCLTR-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: ab3e8cd92792
+            external/report.xml: ab3e8cd92792
+        at_rev: ab3e8cd92792
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/scenario_letter_declared_test.go
       kind: test
       rev: 6f1c54eb2a25
@@ -3567,6 +6129,76 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - STASC-B01
+            - STASC-B02
+            - STASC-B03
+            - STASC-B04
+            - STASC-B05
+            - STASC-B06
+            - STASC-B07
+            - STASC-B08
+            - STASC-B09
+            - STASC-B10
+            - STASC-B11
+            - STASC-B12
+            - STASC-I01
+            - STASC-I02
+            - STASC-I03
+            - STASC-I04
+            - STASC-X01
+            - STASC-X02
+            - STASC-X03
+            - STASC-X04
+        proven_by_suite:
+            .anchors/junit.xml:
+                - STASC-B01
+                - STASC-B02
+                - STASC-B03
+                - STASC-B04
+                - STASC-B05
+                - STASC-B06
+                - STASC-B07
+                - STASC-B08
+                - STASC-B09
+                - STASC-B10
+                - STASC-B11
+                - STASC-B12
+                - STASC-I01
+                - STASC-I02
+                - STASC-I03
+                - STASC-I04
+                - STASC-X01
+                - STASC-X02
+                - STASC-X03
+                - STASC-X04
+            external/report.xml:
+                - STASC-B01
+                - STASC-B02
+                - STASC-B03
+                - STASC-B04
+                - STASC-B05
+                - STASC-B06
+                - STASC-B07
+                - STASC-B08
+                - STASC-B09
+                - STASC-B10
+                - STASC-B11
+                - STASC-B12
+                - STASC-I01
+                - STASC-I02
+                - STASC-I03
+                - STASC-I04
+                - STASC-X01
+                - STASC-X02
+                - STASC-X03
+                - STASC-X04
+        proven_rev_by_suite:
+            .anchors/junit.xml: 882996e77635
+            external/report.xml: 882996e77635
+        at_rev: 882996e77635
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/scenario_type_aligned_test.go
       kind: test
       rev: abf2df75a37f
@@ -3608,6 +6240,52 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - SBGRD-B01
+            - SBGRD-B02
+            - SBGRD-B03
+            - SBGRD-B04
+            - SBGRD-B05
+            - SBGRD-B06
+            - SBGRD-B07
+            - SBGRD-B08
+            - SBGRD-I01
+            - SBGRD-I02
+            - SBGRD-X01
+            - SBGRD-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - SBGRD-B01
+                - SBGRD-B02
+                - SBGRD-B03
+                - SBGRD-B04
+                - SBGRD-B05
+                - SBGRD-B06
+                - SBGRD-B07
+                - SBGRD-B08
+                - SBGRD-I01
+                - SBGRD-I02
+                - SBGRD-X01
+                - SBGRD-X02
+            external/report.xml:
+                - SBGRD-B01
+                - SBGRD-B02
+                - SBGRD-B03
+                - SBGRD-B04
+                - SBGRD-B05
+                - SBGRD-B06
+                - SBGRD-B07
+                - SBGRD-B08
+                - SBGRD-I01
+                - SBGRD-I02
+                - SBGRD-X01
+                - SBGRD-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: 72ba8e907a0a
+            external/report.xml: 72ba8e907a0a
+        at_rev: 72ba8e907a0a
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/sibling_guard_test.go
       kind: test
       rev: c9a83baf38be
@@ -3642,6 +6320,67 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - SFMSP-B01
+            - SFMSP-B02
+            - SFMSP-B03
+            - SFMSP-B04
+            - SFMSP-B05
+            - SFMSP-B06
+            - SFMSP-B07
+            - SFMSP-B08
+            - SFMSP-B09
+            - SFMSP-B10
+            - SFMSP-B11
+            - SFMSP-B12
+            - SFMSP-I01
+            - SFMSP-I02
+            - SFMSP-X01
+            - SFMSP-X02
+            - SFMSP-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - SFMSP-B01
+                - SFMSP-B02
+                - SFMSP-B03
+                - SFMSP-B04
+                - SFMSP-B05
+                - SFMSP-B06
+                - SFMSP-B07
+                - SFMSP-B08
+                - SFMSP-B09
+                - SFMSP-B10
+                - SFMSP-B11
+                - SFMSP-B12
+                - SFMSP-I01
+                - SFMSP-I02
+                - SFMSP-X01
+                - SFMSP-X02
+                - SFMSP-X03
+            external/report.xml:
+                - SFMSP-B01
+                - SFMSP-B02
+                - SFMSP-B03
+                - SFMSP-B04
+                - SFMSP-B05
+                - SFMSP-B06
+                - SFMSP-B07
+                - SFMSP-B08
+                - SFMSP-B09
+                - SFMSP-B10
+                - SFMSP-B11
+                - SFMSP-B12
+                - SFMSP-I01
+                - SFMSP-I02
+                - SFMSP-X01
+                - SFMSP-X02
+                - SFMSP-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: ea93955127d7
+            external/report.xml: ea93955127d7
+        at_rev: ea93955127d7
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/spec_feature_match_test.go
       kind: test
       rev: c00b2740d61b
@@ -3685,6 +6424,73 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - TSTRT-B01
+            - TSTRT-B02
+            - TSTRT-B03
+            - TSTRT-B04
+            - TSTRT-B05
+            - TSTRT-B06
+            - TSTRT-B07
+            - TSTRT-B08
+            - TSTRT-B09
+            - TSTRT-B10
+            - TSTRT-B11
+            - TSTRT-I01
+            - TSTRT-I02
+            - TSTRT-I03
+            - TSTRT-I04
+            - TSTRT-X01
+            - TSTRT-X02
+            - TSTRT-X03
+            - TSTRT-X04
+        proven_by_suite:
+            .anchors/junit.xml:
+                - TSTRT-B01
+                - TSTRT-B02
+                - TSTRT-B03
+                - TSTRT-B04
+                - TSTRT-B05
+                - TSTRT-B06
+                - TSTRT-B07
+                - TSTRT-B08
+                - TSTRT-B09
+                - TSTRT-B10
+                - TSTRT-B11
+                - TSTRT-I01
+                - TSTRT-I02
+                - TSTRT-I03
+                - TSTRT-I04
+                - TSTRT-X01
+                - TSTRT-X02
+                - TSTRT-X03
+                - TSTRT-X04
+            external/report.xml:
+                - TSTRT-B01
+                - TSTRT-B02
+                - TSTRT-B03
+                - TSTRT-B04
+                - TSTRT-B05
+                - TSTRT-B06
+                - TSTRT-B07
+                - TSTRT-B08
+                - TSTRT-B09
+                - TSTRT-B10
+                - TSTRT-B11
+                - TSTRT-I01
+                - TSTRT-I02
+                - TSTRT-I03
+                - TSTRT-I04
+                - TSTRT-X01
+                - TSTRT-X02
+                - TSTRT-X03
+                - TSTRT-X04
+        proven_rev_by_suite:
+            .anchors/junit.xml: 4d854a87db9b
+            external/report.xml: 4d854a87db9b
+        at_rev: 4d854a87db9b
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/test_traceable_test.go
       kind: test
       rev: e36fd20a0749
@@ -3750,6 +6556,79 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - TQETS-B01
+            - TQETS-B02
+            - TQETS-B03
+            - TQETS-B04
+            - TQETS-B05
+            - TQETS-B06
+            - TQETS-B07
+            - TQETS-B08
+            - TQETS-B09
+            - TQETS-B10
+            - TQETS-B11
+            - TQETS-B12
+            - TQETS-B13
+            - TQETS-B14
+            - TQETS-B15
+            - TQETS-I01
+            - TQETS-I02
+            - TQETS-I03
+            - TQETS-X01
+            - TQETS-X02
+            - TQETS-X03
+        proven_by_suite:
+            .anchors/junit.xml:
+                - TQETS-B01
+                - TQETS-B02
+                - TQETS-B03
+                - TQETS-B04
+                - TQETS-B05
+                - TQETS-B06
+                - TQETS-B07
+                - TQETS-B08
+                - TQETS-B09
+                - TQETS-B10
+                - TQETS-B11
+                - TQETS-B12
+                - TQETS-B13
+                - TQETS-B14
+                - TQETS-B15
+                - TQETS-I01
+                - TQETS-I02
+                - TQETS-I03
+                - TQETS-X01
+                - TQETS-X02
+                - TQETS-X03
+            external/report.xml:
+                - TQETS-B01
+                - TQETS-B02
+                - TQETS-B03
+                - TQETS-B04
+                - TQETS-B05
+                - TQETS-B06
+                - TQETS-B07
+                - TQETS-B08
+                - TQETS-B09
+                - TQETS-B10
+                - TQETS-B11
+                - TQETS-B12
+                - TQETS-B13
+                - TQETS-B14
+                - TQETS-B15
+                - TQETS-I01
+                - TQETS-I02
+                - TQETS-I03
+                - TQETS-X01
+                - TQETS-X02
+                - TQETS-X03
+        proven_rev_by_suite:
+            .anchors/junit.xml: e5b41c5acab6
+            external/report.xml: e5b41c5acab6
+        at_rev: e5b41c5acab6
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/testid_queried_exists_test.go
       kind: test
       rev: 14cc644d666d
@@ -3792,6 +6671,61 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - TRCMT-B01
+            - TRCMT-B02
+            - TRCMT-B03
+            - TRCMT-B04
+            - TRCMT-B05
+            - TRCMT-B06
+            - TRCMT-B07
+            - TRCMT-B08
+            - TRCMT-B09
+            - TRCMT-I01
+            - TRCMT-I02
+            - TRCMT-I03
+            - TRCMT-I04
+            - TRCMT-X01
+            - TRCMT-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - TRCMT-B01
+                - TRCMT-B02
+                - TRCMT-B03
+                - TRCMT-B04
+                - TRCMT-B05
+                - TRCMT-B06
+                - TRCMT-B07
+                - TRCMT-B08
+                - TRCMT-B09
+                - TRCMT-I01
+                - TRCMT-I02
+                - TRCMT-I03
+                - TRCMT-I04
+                - TRCMT-X01
+                - TRCMT-X02
+            external/report.xml:
+                - TRCMT-B01
+                - TRCMT-B02
+                - TRCMT-B03
+                - TRCMT-B04
+                - TRCMT-B05
+                - TRCMT-B06
+                - TRCMT-B07
+                - TRCMT-B08
+                - TRCMT-B09
+                - TRCMT-I01
+                - TRCMT-I02
+                - TRCMT-I03
+                - TRCMT-I04
+                - TRCMT-X01
+                - TRCMT-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: cb72cac8df93
+            external/report.xml: cb72cac8df93
+        at_rev: cb72cac8df93
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/triad_complete_test.go
       kind: test
       rev: bb34a908336f
@@ -3826,6 +6760,79 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - TRDCT-B01
+            - TRDCT-B02
+            - TRDCT-B03
+            - TRDCT-B04
+            - TRDCT-B05
+            - TRDCT-B06
+            - TRDCT-B07
+            - TRDCT-B08
+            - TRDCT-B09
+            - TRDCT-B10
+            - TRDCT-B11
+            - TRDCT-B12
+            - TRDCT-B13
+            - TRDCT-I01
+            - TRDCT-I02
+            - TRDCT-I03
+            - TRDCT-I04
+            - TRDCT-X01
+            - TRDCT-X02
+            - TRDCT-X03
+            - TRDCT-X04
+        proven_by_suite:
+            .anchors/junit.xml:
+                - TRDCT-B01
+                - TRDCT-B02
+                - TRDCT-B03
+                - TRDCT-B04
+                - TRDCT-B05
+                - TRDCT-B06
+                - TRDCT-B07
+                - TRDCT-B08
+                - TRDCT-B09
+                - TRDCT-B10
+                - TRDCT-B11
+                - TRDCT-B12
+                - TRDCT-B13
+                - TRDCT-I01
+                - TRDCT-I02
+                - TRDCT-I03
+                - TRDCT-I04
+                - TRDCT-X01
+                - TRDCT-X02
+                - TRDCT-X03
+                - TRDCT-X04
+            external/report.xml:
+                - TRDCT-B01
+                - TRDCT-B02
+                - TRDCT-B03
+                - TRDCT-B04
+                - TRDCT-B05
+                - TRDCT-B06
+                - TRDCT-B07
+                - TRDCT-B08
+                - TRDCT-B09
+                - TRDCT-B10
+                - TRDCT-B11
+                - TRDCT-B12
+                - TRDCT-B13
+                - TRDCT-I01
+                - TRDCT-I02
+                - TRDCT-I03
+                - TRDCT-I04
+                - TRDCT-X01
+                - TRDCT-X02
+                - TRDCT-X03
+                - TRDCT-X04
+        proven_rev_by_suite:
+            .anchors/junit.xml: 237a7b31edbb
+            external/report.xml: 237a7b31edbb
+        at_rev: 237a7b31edbb
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/trigger_declared_test.go
       kind: test
       rev: 072b39c05efc
@@ -3843,7 +6850,7 @@ nodes:
         - test
     - id: internal/gate/value_anchored.feature
       kind: feature
-      rev: 3863c9d685ce
+      rev: 99031adb4dd8
       updated_at: "2026-09-23"
       code: VLANV
       layer: feature
@@ -3860,16 +6867,50 @@ nodes:
         - gate
     - id: internal/gate/value_anchored.spec.md
       kind: spec
-      rev: 20efe8571733
+      rev: c21205abd340
       updated_at: "2026-09-23"
       code: VLANV
       layer: spec
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - VLANV-B01
+            - VLANV-B02
+            - VLANV-B03
+            - VLANV-B04
+            - VLANV-B05
+            - VLANV-B06
+            - VLANV-B07
+            - VLANV-B08
+            - VLANV-I01
+            - VLANV-I02
+            - VLANV-I03
+            - VLANV-X01
+            - VLANV-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - VLANV-B01
+                - VLANV-B02
+                - VLANV-B03
+                - VLANV-B04
+                - VLANV-B05
+                - VLANV-B06
+                - VLANV-B07
+                - VLANV-B08
+                - VLANV-I01
+                - VLANV-I02
+                - VLANV-I03
+                - VLANV-X01
+                - VLANV-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: c21205abd340
+        at_rev: c21205abd340
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/value_anchored_test.go
       kind: test
-      rev: a2c4415840aa
+      rev: e3b25938441a
       updated_at: "2026-09-23"
       code: VLANV
       layer: teste
@@ -3901,6 +6942,55 @@ nodes:
       code_declared: true
       tags:
         - spec
+      signal:
+        proven_codes:
+            - VRBSV-B01
+            - VRBSV-B02
+            - VRBSV-B03
+            - VRBSV-B04
+            - VRBSV-B05
+            - VRBSV-B06
+            - VRBSV-B07
+            - VRBSV-B08
+            - VRBSV-B09
+            - VRBSV-I01
+            - VRBSV-I02
+            - VRBSV-X01
+            - VRBSV-X02
+        proven_by_suite:
+            .anchors/junit.xml:
+                - VRBSV-B01
+                - VRBSV-B02
+                - VRBSV-B03
+                - VRBSV-B04
+                - VRBSV-B05
+                - VRBSV-B06
+                - VRBSV-B07
+                - VRBSV-B08
+                - VRBSV-B09
+                - VRBSV-I01
+                - VRBSV-I02
+                - VRBSV-X01
+                - VRBSV-X02
+            external/report.xml:
+                - VRBSV-B01
+                - VRBSV-B02
+                - VRBSV-B03
+                - VRBSV-B04
+                - VRBSV-B05
+                - VRBSV-B06
+                - VRBSV-B07
+                - VRBSV-B08
+                - VRBSV-B09
+                - VRBSV-I01
+                - VRBSV-I02
+                - VRBSV-X01
+                - VRBSV-X02
+        proven_rev_by_suite:
+            .anchors/junit.xml: 9ac63acbe2cb
+            external/report.xml: 9ac63acbe2cb
+        at_rev: 9ac63acbe2cb
+        ingested_at: "2026-09-26T13:08:16-03:00"
     - id: internal/gate/vr_baseline_test.go
       kind: test
       rev: 6bb66197b2b8

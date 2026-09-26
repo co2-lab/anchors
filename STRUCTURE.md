@@ -305,3 +305,13 @@ está documentada em [`PROJECT_STRUCTURE.md`](./PROJECT_STRUCTURE.md):
 - O núcleo e os pacotes de suporte em [`internal/`](./internal/);
 - As regras de fronteira e direcionalidade de imports.
 
+---
+
+## Compliance points
+
+- CK1: project layers and their permitted dependency directions are declared in configuration and strictly honored.
+- CK2: file placement follows declared glob patterns and directory conventions for each layer and artifact type.
+- CK3: layer boundary checks prevent reverse or forbidden dependencies between architectural layers.
+- CK4: all project components belong to a recognized layer; undefined or ambiguous structural placements fail validation.
+
+

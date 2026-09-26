@@ -268,6 +268,10 @@ derived:
     feature: ["{{dir}}/{{name}}.feature"]
     test: ["{{dir}}/{{name}}_test.go"]
 
+tests:
+  - layer: unit
+    run: "bash scripts/anchors-test.sh"
+    junit: ".anchors/junit.xml"
 
 gates:
   # SEGURANÇA — a leva que existe para o que não tem volta.
@@ -276,7 +280,6 @@ gates:
   # o único achado desta lista sem conserto barato — rotacionar chave custa, e o histórico
   # do git guarda a original. Os demais são informativos porque um achado deles é uma
   # PERGUNTA sobre contexto, e bloquear no primeiro dia treina a equipe a ignorar.
-
   - name: no-secret-leaked
     on: [code, test, doc, spec, feature, guide, plan]
     scope: batch
@@ -296,7 +299,7 @@ gates:
     run: "bash scripts/anchors-deps-vuln.sh"
     needs_tool: osv-scanner
     install_hint: "brew install osv-scanner"
-    blocking: false
+    blocking: true
     when: [pre-push, ci]
     cost: fast
     category: security
@@ -320,7 +323,7 @@ gates:
     run: "bash scripts/anchors-sbom.sh"
     needs_tool: syft
     install_hint: "brew install syft"
-    blocking: false
+    blocking: true
     when: [ci]
     cost: slow
     category: security
@@ -333,7 +336,7 @@ gates:
     run: "bash scripts/anchors-semgrep.sh {{files}}"
     needs_tool: semgrep
     install_hint: "brew install semgrep"
-    blocking: false
+    blocking: true
     when: [pre-push, ci]
     cost: fast
     category: security
@@ -345,33 +348,29 @@ gates:
     measures: "as fronteiras entre camadas do CLI, verificadas por import real"
 
   - name: code-cataloged
-    blocking: false
+    blocking: true
 
   - name: code-reference-valid
-    blocking: false
+    blocking: true
 
-  # TRINCA — informativos por enquanto: o projeto tem 0 specs para 127 arquivos de código,
-  # e promovê-los a bloqueante hoje barraria todo commit. Sobem conforme a adoção avança.
+  # TRINCA — agora cobertos pelas specs do framework
   - name: triad-complete
-    blocking: false
+    blocking: true
 
   - name: spec-has-code
-    blocking: false
+    blocking: true
 
   - name: spec-complete
-    blocking: false
+    blocking: true
 
   - name: feature-not-empty
-    blocking: false
+    blocking: true
 
   # ── OS TRES QUE FECHAM O CIRCUITO CENARIO↔TESTE ─────────────────────────────────
   # Sem eles a trinca fecha ESTRUTURALMENTE e ninguem confere se os cenarios tem prova:
   # o `triad-complete` responde "as tres pecas existem", e nao "elas dizem a mesma
   # coisa". Uma feature com onze cenarios e um teste que prova dois passa igual.
   #
-  # Ficam informativos ate o acervo de features crescer — promover agora reprovaria
-  # cada unidade que ainda nao tem feature, que e' a lista inteira menos uma.
-
   # O cenario esta implementado no teste ligado? Confronta por CODIGO (reprova se
   # falta) e por DESCRICAO (avisa se divergiu). Pega o agente que pula um cenario,
   # renomeia ou muda os passos sem mexer no teste.
@@ -379,54 +378,54 @@ gates:
   # Este declara `on:`/`check:` e os dois vizinhos nao — e a diferenca nao e' estilo: o
   # `feature-test-match` nao esta no catalogo canonico (`initx/default_gates.go`), entao
   # nao ha de onde herdar. Declarar so o `name:` o faria ser aceito EM SILENCIO e nunca
-  # medir nada, que e' o ATRITO 4 registrado acima.
+  # medir nada, que e' o ATRITO 4 registrado abaixo.
   - name: feature-test-match
     on: [feature]
     check: feature-test-match
-    blocking: false
+    blocking: true
     measures: "cada cenario da feature esta implementado no teste ligado (por codigo e por descricao)"
 
-  # O passo de resultado AFIRMA algo observavel? Um `Then` que diz "o efeito X se
-  # verifica" e' tautologia: nao afirma resultado nenhum, passa nos gates, e dois
-  # cenarios de regras diferentes ficam indistinguiveis.
+  # O passo de resultado AFIRMA algo observável? Um `Then` que diz "o efeito X se
+  # verifica" é tautologia: não afirma resultado nenhum, passa nos gates, e dois
+  # cenários de regras diferentes ficam indistinguíveis.
   - name: scenario-asserts
-    blocking: false
+    blocking: true
 
-  # Cada cenario da spec tem um teste que PASSOU — cobertura semantica, nao de linha.
-  # E' o unico dos tres que depende de sinal ingerido: sem `anchors ingest` dos
+  # Cada cenário da spec tem um teste que PASSOU — cobertura semântica, não de linha.
+  # É o único dos três que depende de sinal ingerido: sem `anchors ingest` dos
   # resultados, ele fica indeterminado e diz que ficou.
   - name: scenario-coverage
-    blocking: false
+    blocking: true
 
   - name: docs-fresh
-    blocking: false
+    blocking: true
 
   - name: sibling-guard
-    blocking: false
+    blocking: true
 
   - name: no-duplication
-    blocking: false
+    blocking: true
 
   - name: domain-declared
-    blocking: false
+    blocking: true
 
   - name: open-questions-resolved
     blocking: false
 
   - name: rule-types
-    blocking: false
+    blocking: true
 
   - name: spec-feature-match
-    blocking: false
+    blocking: true
 
   - name: dependency-honored
-    blocking: false
+    blocking: true
 
   - name: count-honored
     blocking: false
 
   - name: ref-resolves
-    blocking: false
+    blocking: true
 
   # A COBERTURA da documentacao, ao lado do `docs-fresh`: aquele confere se a pagina
   # compilada reflete a spec, este se a spec chega a ALGUMA pagina. O segundo defeito e'
@@ -440,27 +439,23 @@ gates:
     blocking: false
 
   - name: spec-doctrine-exists
-    blocking: false
+    blocking: true
 
   - name: doctrine-not-duplicated
-    blocking: false
+    blocking: true
 
   # THE WAY BACK OF EACH PAIR OF THE TRIAD. `spec-feature-match` and `feature-test-match`
   # walk the ORIGIN looking for the destination; these walk the destination asking whether
   # the origin still exists — which is what catches what a revert leaves behind.
   - name: feature-spec-match
-    blocking: false
+    blocking: true
 
   - name: test-feature-match
-    blocking: false
+    blocking: true
 
   # A REVISAO QUE MUDOU O SIGNIFICADO DE UMA PALAVRA, e nao disse a quem.
-  #
-  # INFORMATIVO ao nascer: nenhuma revisao escrita ate hoje carrega `Checked:`, entao
-  # toda revisao existente nasce achado. Medir a fila antes de cobra-la e' o que impede o
-  # gate de nascer sendo ignorado.
   - name: revision-orphans
-    blocking: false
+    blocking: true
 
   # O EIXO DAS FEATURE FLAGS — os cenarios que o valor da flag abre.
   #
@@ -475,11 +470,11 @@ gates:
   # The WAY BACK of `flag-scenario-exists`: that one confronts the spec citing a scenario
   # that does not exist; this one, the scenario nobody cites.
   - name: flag-scenario-governs
-    blocking: false
+    blocking: true
 
   # INFORMATIVO: teste por cenario e' a regua certa e a mais cara de cumprir.
   - name: flag-covered
-    blocking: false
+    blocking: true
 
   # Declarado e SEM camada que o acione: este repositorio e' um FRAMEWORK, e das 841
   # regras catalogadas a esmagadora maioria e' mecanica de gate, nao decisao de produto.
@@ -489,9 +484,10 @@ gates:
   - name: spec-realizes-doctrine
     blocking: false
 
-  # A FALHA declarada, tratada e registrada. Este repositorio nao declara regras `-E`
-  # (um CLI falha por retorno, nao por excecao em producao), entao os tres saem
-  # indeterminados aqui — o veredito honesto para "nao ha' o que confrontar".
+  # A FALHA declarada, tratada e registrada.
+  # failure-handled e failure-logged saem indeterminados aqui porque este repositorio nao
+  # declara regras `-E` (um CLI falha por retorno, nao por excecao em producao).
+  # Mas failure-declared acha os caminhos de erro no codigo e relata achados (informativo).
   - name: failure-handled
     blocking: false
 
@@ -502,13 +498,13 @@ gates:
     blocking: false
 
   - name: docs-covered
-    blocking: false
+    blocking: true
 
   - name: guide-checklist
-    blocking: false
+    blocking: true
 
   - name: test-traceable
-    blocking: false
+    blocking: true
 
   # ── FERRAMENTA GO — `run:`, não `check:` ─────────────────────────────────────────
   # O Anchors não reimplementa o que a ferramenta do stack já faz: ele CHAMA e lê o

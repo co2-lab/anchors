@@ -984,3 +984,14 @@ O que o pilar entrega: qualidade que não depende da memória nem do cuidado de 
 sessão. Ela está ancorada em gates versionados, medida a cada mudança de forma
 incremental, e o nível de maturidade do projeto é legível no estado desses gates.
 O "bem feito" para de ser sensação e vira propriedade verificável.
+
+---
+
+## Compliance points
+
+- CK1: quality gates are anchors with measurable thresholds, evaluating deterministic commands or agent judgment.
+- CK2: a failing gate produces an immutable, recorded issue; `--no-block` waives blocking promotion but never silences the issue.
+- CK3: gate maturity is declared per gate (`blocking: true` vs `blocking: false`), separating permanent policy from punctual overrides.
+- CK4: semantic scenario coverage links spec rules, feature scenarios, and tests via stable scenario codes.
+- CK5: all boundary cases and missing measurements are caught by coverage gates; absence of measurement is reported, never passed.
+

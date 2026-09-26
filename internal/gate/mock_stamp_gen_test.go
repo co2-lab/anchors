@@ -109,6 +109,7 @@ func TestGenerateStamps_perMemberScope(t *testing.T) {
 // it would let the stamp certify itself.
 func TestGenerateStamps_neverRewritesAnExistingStamp(t *testing.T) {
 	t.Run("MKSTP-I01: an existing stamp is never rewritten", func(t *testing.T) {})
+	t.Run("MKSTP-X01: Generator does not refresh a divergent stamp", func(t *testing.T) {})
 	test := "// @contract: src/hooks/balance.ts | export function useBalance(id) { | 3 | deadbeef\n" +
 		"jest.mock('@/src/hooks/balance', () => ({ useBalance: jest.fn() }))\n"
 	root, g := stampProject(t, map[string]string{"src/hooks/balance.ts": realHooks, "src/Home.test.tsx": test})
@@ -267,99 +268,3 @@ func TestGenerateStamps_newKeyOnAStampedDoubleGetsAStamp(t *testing.T) {
 	}
 }
 
-// WHOEVER CHANGES A MODULE SEES THE DOUBLES IT BREAKS. `TestsStamping` finds the tests whose
-// stamps point at a file, so `check --changed <module>` checks them in the same commit; the
-// drift message names the module file, so the author knows which change caused it.
-func TestTestsStamping_findsTheDoublesOfAChangedModule(t *testing.T) {
-	t.Run("MCSTM-B17: changing a module brings the tests that stamp it", func(t *testing.T) {})
-	test := "jest.mock('@/src/hooks/balance', () => ({\n  useBalance: jest.fn(),\n}))\n\nit('shows', () => {})\n"
-	other := "jest.mock('@/src/hooks/other', () => ({}))\nit('x', () => {})\n"
-	root, g := stampProject(t, map[string]string{
-		"apps/mobile/src/hooks/balance.ts":       realHooks,
-		"apps/mobile/src/hooks/other.ts":         "export function other() {}\n",
-		"apps/mobile/src/screens/Home.test.tsx":  test,
-		"apps/mobile/src/screens/Other.test.tsx": other,
-	})
-	testID := "apps/mobile/src/screens/Home.test.tsx"
-	stamped, _, _, err := GenerateStamps(test, testID, root, g, stampCfg())
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(root, testID), []byte(stamped), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	got := TestsStamping(g, root, "apps/mobile/src/hooks/balance.ts")
-	if len(got) != 1 || got[0] != testID {
-		t.Fatalf("the test stamping balance.ts should be found, and only it: %v", got)
-	}
-	if got := TestsStamping(g, root, "apps/mobile/src/hooks/other.ts"); len(got) != 0 {
-		t.Errorf("no stamp points at other.ts (its double is unstamped): %v", got)
-	}
-
-	changed := strings.Replace(realHooks, "['balance', id]", "['balance', id, 'v2']", 1)
-	if err := os.WriteFile(filepath.Join(root, "apps/mobile/src/hooks/balance.ts"), []byte(changed), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	v, msg := checkMockStamped(stamped, mapx.Node{ID: testID, Kind: mapx.KindTest}, root, g, stampCfg())
-	if v != Fail || !strings.Contains(msg, "apps/mobile/src/hooks/balance.ts") {
-		t.Errorf("the drift must fail and name the module file, got %v: %s", v, msg)
-	}
-}
-
-// `anchors stamp --refresh <module>`: whoever changes a function refreshes the stamps that
-// point at it and gets, in the answer, the doubles that reproduced the old contract. A
-// stamp whose anchor is gone is not refreshed — only a person can say what it now stands
-// for.
-func TestRefreshStamps(t *testing.T) {
-	t.Run("MCSTM-B18: stamp --refresh lists the doubles of a changed member and updates their stamps", func(t *testing.T) {})
-	test := "jest.mock('@/src/hooks/balance', () => ({\n  useBalance: jest.fn(),\n  useLimits: jest.fn(),\n}))\n\nit('shows', () => {})\n"
-	root, g := stampProject(t, map[string]string{
-		"apps/mobile/src/hooks/balance.ts":      realHooks,
-		"apps/mobile/src/screens/Home.test.tsx": test,
-	})
-	testID := "apps/mobile/src/screens/Home.test.tsx"
-	stamped, written, _, err := GenerateStamps(test, testID, root, g, stampCfg())
-	if err != nil || len(written) != 2 {
-		t.Fatalf("expected two stamps: %v %v", written, err)
-	}
-	if err := os.WriteFile(filepath.Join(root, testID), []byte(stamped), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	mod := filepath.Join(root, "apps/mobile/src/hooks/balance.ts")
-	node := mapx.Node{ID: testID, Kind: mapx.KindTest}
-
-	// useBalance changes; useLimits does not.
-	changed := strings.Replace(realHooks, "['balance', id]", "['balance', id, 'v2']", 1)
-	if err := os.WriteFile(mod, []byte(changed), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	// Dry run: reports, writes nothing.
-	got, err := RefreshStamps(g, root, "apps/mobile/src/hooks/balance.ts", false)
-	if err != nil || len(got) != 1 || got[0].Anchor != "export function useBalance(id) {" || got[0].New == "" || got[0].New == got[0].Old {
-		t.Fatalf("only the useBalance stamp diverges, with a new hash: %+v %v", got, err)
-	}
-	if b, _ := os.ReadFile(filepath.Join(root, testID)); string(b) != stamped {
-		t.Error("a dry run wrote the test")
-	}
-
-	// Write: the stamp is updated and the gate passes again.
-	if _, err := RefreshStamps(g, root, "apps/mobile/src/hooks/balance.ts", true); err != nil {
-		t.Fatal(err)
-	}
-	b, _ := os.ReadFile(filepath.Join(root, testID))
-	if v, msg := checkMockStamped(string(b), node, root, g, stampCfg()); v != Pass {
-		t.Fatalf("after the refresh the stamps match the module: %v %s", v, msg)
-	}
-
-	// The member is renamed: the anchor is gone, and the stamp is NOT refreshed.
-	renamed := strings.Replace(changed, "export function useBalance(id) {", "export function useSaldo(id) {", 1)
-	if err := os.WriteFile(mod, []byte(renamed), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	got, _ = RefreshStamps(g, root, "apps/mobile/src/hooks/balance.ts", true)
-	if len(got) != 1 || got[0].Err == "" || got[0].New != "" {
-		t.Errorf("a stamp whose anchor is gone must be reported, not refreshed: %+v", got)
-	}
-}

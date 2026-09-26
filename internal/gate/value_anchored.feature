@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: VLANV
-#   updated_at: 2026-09-23
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @VLANV
@@ -58,6 +58,24 @@ Feature: ValueAnchored — a replicated key is declared where it is used, and ev
     Given a comment that explains the anchor syntax in a sentence
     When the gate confronts the file
     Then the mention is not charged
+
+  @VLANV-I01 @unit-level
+  Scenario: A pattern with fewer than two capture groups is treated as not declared
+    Given a project declaring a value_anchor pattern with only one capture group
+    When the gate confronts a code file
+    Then it skips, treating the pattern as undeclared
+
+  @VLANV-I02 @unit-level
+  Scenario: Declarations are indexed once per graph instance
+    Given a built graph with code declarations
+    When the index is requested multiple times for the same graph
+    Then the cached index is returned without re-indexing
+
+  @VLANV-I03 @unit-level
+  Scenario: With no built map the verdict is never approval
+    Given a code file with value declarations and no built graph
+    When the gate confronts the file
+    Then it returns Pending and never Pass
 
   @VLANV-X01 @unit-level
   Scenario: A prose rule declares no value

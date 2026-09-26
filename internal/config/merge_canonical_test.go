@@ -147,3 +147,59 @@ func TestGateSemBlockingEhInformativo(t *testing.T) {
 		t.Error("gate sem severidade declarada não pode barrar")
 	}
 }
+
+// Run and Check are mutually exclusive dispatch mechanisms: Check routes to an internal
+// Go checker, while Run routes to an external shell command. In the runner, Check has
+// precedence over Run. If merge inherited one when the other was declared, the canonical
+// default would silence the project's explicit choice (e.g., canonical check: tests-pass
+// shadowing a project's custom run: "go test ./...").
+func TestLoadMergeCanonicalRunCheckMutuallyExclusive(t *testing.T) {
+	// Case a: canonical declares check, project declares only run -> merged gate has only run (empty check)
+	t.Run("canonical check and project run", func(t *testing.T) {
+		SetCanonicalGateResolver(func(string) (Gate, bool) {
+			return Gate{Name: "tests-green", Check: "tests-pass"}, true
+		})
+		defer SetCanonicalGateResolver(nil)
+
+		p := filepath.Join(t.TempDir(), "anchors.yaml")
+		if err := os.WriteFile(p, []byte("version: 1\ngates:\n  - name: tests-green\n    run: \"go test ./...\"\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		c, err := Load(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		g := c.Gates[0]
+		if g.Run != "go test ./..." {
+			t.Errorf("expected run 'go test ./...', got %q", g.Run)
+		}
+		if g.Check != "" {
+			t.Errorf("expected empty check so run is not shadowed, got %q", g.Check)
+		}
+	})
+
+	// Case b: canonical declares run, project declares only check -> merged gate has only check (empty run)
+	t.Run("canonical run and project check", func(t *testing.T) {
+		SetCanonicalGateResolver(func(string) (Gate, bool) {
+			return Gate{Name: "linter", Run: "golangci-lint run"}, true
+		})
+		defer SetCanonicalGateResolver(nil)
+
+		p := filepath.Join(t.TempDir(), "anchors.yaml")
+		if err := os.WriteFile(p, []byte("version: 1\ngates:\n  - name: linter\n    check: custom-linter\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		c, err := Load(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		g := c.Gates[0]
+		if g.Check != "custom-linter" {
+			t.Errorf("expected check 'custom-linter', got %q", g.Check)
+		}
+		if g.Run != "" {
+			t.Errorf("expected empty run when check is declared, got %q", g.Run)
+		}
+	})
+}
+

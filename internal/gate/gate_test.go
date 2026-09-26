@@ -433,6 +433,57 @@ func TestGateSemComandoNemCheckEhIndeterminado(t *testing.T) {
 	}
 }
 
+// A gate declared with run: executes the custom runner, even when its canonical definition
+// specifies check:. In the runner, check: takes precedence over run:. If mergeCanonical had
+// inherited check: from canonical, the internal checker would have executed instead of the
+// custom command.
+func TestGateDeclaredWithRunExecutesCommandEvenWhenCanonicalHasCheck(t *testing.T) {
+	t.Run("GTENG-B23: A gate declared with run executes the custom runner even when canonical specifies check", func(t *testing.T) {})
+
+	config.SetCanonicalGateResolver(func(name string) (config.Gate, bool) {
+		if name == "custom-gate" {
+			return config.Gate{
+				Name:  "custom-gate",
+				On:    []string{"code"},
+				Check: "mock-stamped",
+			}, true
+		}
+		return config.Gate{}, false
+	})
+	defer config.SetCanonicalGateResolver(nil)
+
+	tmp := t.TempDir()
+	yamlPath := filepath.Join(tmp, "anchors.yaml")
+	yamlContent := "version: 1\ngates:\n  - name: custom-gate\n    run: \"echo from-custom-run-command; exit 42\"\n"
+	if err := os.WriteFile(yamlPath, []byte(yamlContent), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	cfg, err := config.Load(yamlPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	targetPath := filepath.Join(tmp, "dummy.go")
+	if err := os.WriteFile(targetPath, []byte("package main\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	nodes := []mapx.Node{{ID: "dummy.go", Kind: mapx.KindCode}}
+	results := RunWithConfig(cfg.Gates, nodes, tmp, nil, cfg)
+	if len(results) == 0 {
+		t.Fatal("expected at least one gate result")
+	}
+
+	res := results[0]
+	if res.Verdict != Fail {
+		t.Fatalf("expected command execution to fail with exit 42, got: %v", res.Verdict)
+	}
+	if !strings.Contains(res.Detail, "from-custom-run-command") {
+		t.Fatalf("expected detail to contain output from custom run command ('from-custom-run-command'), got: %q", res.Detail)
+	}
+}
+
 // Só a pendência que diz "há decisão POR TOMAR" impede a promoção. A que diz "não tive o
 // que confrontar" não: medido num repositório real, tratar todos igual reprovou 411 nós
 // de uma vez, e 410 eram gates sem sinal ingerido.

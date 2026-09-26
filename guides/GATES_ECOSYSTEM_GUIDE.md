@@ -300,3 +300,11 @@
 | **`license-compatible`**| — | `go-licenses` | `license-checker` | `pip-licenses` | `cargo-deny` |
 | **`circular`** | — | Compilador Go / `go vet` | `madge` | `import-linter` | Compilador Rust |
 | **`deadcode`** | — | `deadcode` (x/tools) | `knip` | `vulture` | `cargo-udeps` |
+
+---
+
+## Compliance points
+
+- CK1: external quality and security gates declare appropriate scope (`batch` vs `project`) matching the external tool's capability.
+- CK2: tools that require external binaries declare `needs_tool` and `install_hint` so missing dependencies are not reported as rule failures.
+- CK3: security and safety gates that cannot be safely retrofitted or undone start as blocking gates.

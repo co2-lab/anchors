@@ -511,3 +511,13 @@ O que o pilar entrega: um projeto onde nada se perde e nada é uma ilha. Cada
 requisito pode ser seguido do desejo à realização e de volta; cada peça sabe a que
 pertence; e o organismo permanece um só à medida que cresce. É o que impede que um
 projeto grande vire um monte de arquivos que ninguém sabe mais como se conectam.
+
+---
+
+## Compliance points
+
+- CK1: requirements carry stable alphanumeric codes that remain continuous across spec, feature, test, and code.
+- CK2: traceability edges form a single, queryable graph mapping both requirement identity (vertical) and file dependencies (horizontal).
+- CK3: graph nodes carry content revisions (`rev`) and freshness timestamps (`updated_at`); edges carry validation verdicts.
+- CK4: orphan artifacts or unlinked requirement codes are detected and reported as defects.
+
