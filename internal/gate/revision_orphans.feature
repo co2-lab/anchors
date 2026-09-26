@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RVORP
-#   updated_at: 2026-09-22
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @RVORP
@@ -50,6 +50,13 @@ Feature: RevisionOrphans — the rules a revision changed the meaning of, withou
     Given a spec whose revision declares Checked for a vocabulary-sharing sibling
     When the gate confronts it
     Then that sibling leaves the accusation
+
+  @RVORP-B08 @unit-level
+  Scenario: The gate is of the blocking class
+    Given the default gates of a new project and of an existing one
+    When revision-orphans is seeded
+    Then it is blocking in the new project and informative in the existing one
+    And it is not among the gates that depend on an ingested signal
 
   @RVORP-I01 @unit-level
   Scenario: A revised rule is never its own orphan

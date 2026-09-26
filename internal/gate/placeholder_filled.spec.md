@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PLCFL
-  updated_at: 2026-09-20
+  updated_at: 2026-09-26
   layer: gate
 -->
 # PlaceholderFilled — the skeleton the generator emits must be FILLED IN
@@ -49,6 +49,7 @@ writes, fills in, and that the gate charges only what was left behind.
 | `PLCFL-B04` | A TITLE or body line opening with the marker fails. |
 | `PLCFL-B05` | The verdict NAMES what was left behind, so the reader does not hunt the file for it. |
 | `PLCFL-B06` | An artifact with every marker replaced passes — the gate charges the generator's leftovers and nothing else. |
+| `PLCFL-B07` | The marker vocabulary is the project's, declared in `placeholder_markers`; with none declared it is `TODO`, the only word the `anchors new` templates write. A word outside the vocabulary is an ordinary value, and `<…>` is a marker in any vocabulary, because it is a shape and not a word. |
 
 ## Invariants
 
@@ -73,4 +74,4 @@ writes, fills in, and that the gate charges only what was left behind.
 
 | Code | Question | Who decides | Becomes |
 | --- | --- | --- | --- |
-| `PLCFL-Q01` | Should the marker vocabulary come from the project's Structure instead of being fixed in this unit? The detector TAKES the Structure as a parameter and never reads it: a project that writes its pending items with another word is not charged, and one that legitimately uses these words in a value position is. Closing this means either declaring the vocabulary and reading it, or dropping the unused parameter so the signature stops promising what it does not do. | whoever owns the Structure's surface | either a declared vocabulary field, or a narrower signature | <!-- @no-scenario: an OPEN QUESTION has no behaviour to confront — it names a decision nobody has taken yet. A scenario here would assert as true the very thing still undecided. It earns scenarios when it closes, as whichever rule it becomes. -->
+| `PLCFL-Q01` <!-- @no-scenario: a decided question is history, not behaviour; the rule it became has the scenario --> | Should the marker vocabulary come from the project's Structure instead of being fixed in this unit? | the user | decided: declared in `placeholder_markers`, defaulting to the templates' `TODO` — became `PLCFL-B07` |

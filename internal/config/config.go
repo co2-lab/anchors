@@ -140,6 +140,11 @@ type Config struct {
 	// (`contract: "Modelo de Dado"`). Sem isto, o `anchors new` emite os títulos do
 	// framework e as specs nascem em dialeto diferente do dos vizinhos.
 	SectionTitles SectionTitles `yaml:"section_titles,omitempty"`
+	// PlaceholderMarkers: the words that mark a value nobody filled in yet (`layer: TODO`),
+	// for the `placeholder-filled` gate. Empty → DefaultPlaceholderMarkers, the word the
+	// `anchors new` templates write. A project whose own generator leaves another word
+	// (`PENDENTE`) declares it here, or the gate does not see its skeletons.
+	PlaceholderMarkers []string `yaml:"placeholder_markers,omitempty"`
 	// RouteRegistry: onde o projeto REGISTRA suas rotas de navegação (globs). O Anchors
 	// não pode adivinhar — cada stack tem o seu lugar e a sua sintaxe. Sem isto, o gate
 	// `route-exists` fica Pendente em vez de afirmar que uma rota existe sem ter olhado.
@@ -510,6 +515,26 @@ func (c *Config) SectionTitle(chave, padrao, camada string) string {
 		return t
 	}
 	return padrao
+}
+
+// DefaultPlaceholderMarkers is the vocabulary of the `anchors new` templates: the only
+// word they leave where a value belongs.
+var DefaultPlaceholderMarkers = []string{"TODO"}
+
+// Placeholders returns the project's placeholder vocabulary, or the templates' default.
+func (c *Config) Placeholders() []string {
+	if c != nil {
+		var out []string
+		for _, m := range c.PlaceholderMarkers {
+			if m = strings.TrimSpace(m); m != "" {
+				out = append(out, m)
+			}
+		}
+		if len(out) > 0 {
+			return out
+		}
+	}
+	return DefaultPlaceholderMarkers
 }
 
 // RuleType liga uma LETRA de código ao termo que a origina e às seções de spec que a

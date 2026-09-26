@@ -4,6 +4,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -99,17 +100,6 @@ func TestPlaceholderFilled(t *testing.T) {
 			t.Errorf("expected failure message to name 'layer: TODO'; got %s", msg)
 		}
 
-		fixmeSpec := `<!-- @anchors
-  code: PHVAL
-  layer: gate
-  updated_at: FIXME
--->
-# Placeholder Value — legitimate purpose
-`
-		vFixme, msgFixme := checkPlaceholderFilled(fixmeSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil)
-		if vFixme != Fail || !strings.Contains(msgFixme, "updated_at: FIXME") {
-			t.Errorf("expected Fail naming 'updated_at: FIXME'; got %v (%s)", vFixme, msgFixme)
-		}
 	})
 
 	t.Run("PLCFL-B03: A table cell holding only the marker fails", func(t *testing.T) {
@@ -301,4 +291,34 @@ The author still has TODO items to weigh here, and says so on purpose.
 			t.Fatalf("expected Skip for code artifact; got %v", v)
 		}
 	})
+}
+
+// The vocabulary is the PROJECT's (`placeholder_markers`), defaulting to the only word the
+// `anchors new` templates write. Decided in PLCFL-Q01.
+func TestPlaceholderVocabulary(t *testing.T) {
+	fixmeSpec := `<!-- @anchors
+  code: PHVAL
+  layer: gate
+  updated_at: FIXME
+-->
+# Placeholder Value — legitimate purpose
+`
+	t.Run("PLCFL-B07: The marker vocabulary is the project's, and TODO by default", func(t *testing.T) {})
+	// FIXME is no word the templates write: by default it is an ordinary value.
+	if v, msg := checkPlaceholderFilled(fixmeSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, nil); v != Pass {
+		t.Errorf("with the default vocabulary FIXME is a value, got %v (%s)", v, msg)
+	}
+	// Declared by the project, it is a marker in every position.
+	cfg := &config.Config{PlaceholderMarkers: []string{"FIXME"}}
+	vFixme, msgFixme := checkPlaceholderFilled(fixmeSpec, mapx.Node{Kind: mapx.KindSpec}, "", nil, cfg)
+	if vFixme != Fail || !strings.Contains(msgFixme, "updated_at: FIXME") {
+		t.Errorf("expected Fail naming 'updated_at: FIXME'; got %v (%s)", vFixme, msgFixme)
+	}
+	cell := "| `PHVAL-B01` | FIXME |\n"
+	if v, _ := checkPlaceholderFilled(cell, mapx.Node{Kind: mapx.KindSpec}, "", nil, cfg); v != Fail {
+		t.Errorf("a declared word in a table cell is a marker too, got %v", v)
+	}
+	if v, _ := checkPlaceholderFilled("<!-- @anchors\n  layer: TODO\n-->\n", mapx.Node{Kind: mapx.KindSpec}, "", nil, cfg); v != Pass {
+		t.Errorf("a declared vocabulary REPLACES the default: TODO is a value here, got %v", v)
+	}
 }

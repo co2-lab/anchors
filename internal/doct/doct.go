@@ -556,10 +556,36 @@ func (c *Compiler) inputsHash(tmpl []byte) string {
 	for _, sp := range c.specs {
 		h.Write([]byte(sp.Path))
 		h.Write([]byte{0})
-		h.Write([]byte(sp.raw))
+		h.Write([]byte(withoutHeaderDate(sp.raw)))
 		h.Write([]byte{0})
 	}
 	return hex.EncodeToString(h.Sum(nil)[:8])
+}
+
+// headerDateRE is the `updated_at:` line of an @anchors header.
+var headerDateRE = regexp.MustCompile(`^\s*(?://|#|\*)?\s*updated_at:.*$`)
+
+// headerDateLines is how far from the top the @anchors header may carry its date — the
+// same reach `anchors touch` uses to find the header it dates.
+const headerDateLines = 10
+
+// withoutHeaderDate drops the header's `updated_at:` line from a spec before hashing.
+//
+// No template renders the date, so it is not an input of the document. Hashing it made
+// `docs-fresh` fail on the first commit of the day of any spec change: the pre-commit
+// dates the staged headers (`touch.pre_commit`) and only then runs the gates, so the
+// docs built a minute before were already "out of date" — the same content, a new date.
+// Measured in this repository: 42 blocking `docs-fresh` failures on a commit whose docs
+// had just been built.
+func withoutHeaderDate(raw string) string {
+	lines := strings.SplitN(raw, "\n", headerDateLines+1)
+	for i := 0; i < len(lines) && i < headerDateLines; i++ {
+		if headerDateRE.MatchString(lines[i]) {
+			lines = append(lines[:i], lines[i+1:]...)
+			break
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 func (c *Compiler) compile(tmplPath, saida string) ([]byte, error) {

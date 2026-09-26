@@ -51,6 +51,7 @@ This gate operates in distinct territory from neighbouring gates:
 | `RVORP-B05` | When a sibling rule shares significant vocabulary with a revised rule and appears in neither `Revises:` nor `Checked:`, the gate reports it as an orphan, naming the shared terms. |
 | `RVORP-B06` | When every vocabulary-sharing sibling appears in `Revises:` or `Checked:`, the gate passes. |
 | `RVORP-B07` | When a rule appears in `Checked:`, it leaves the accusation without asserting that it is correct — only that somebody read it. |
+| `RVORP-B08` | The gate is of the BLOCKING class: a new project is born with it blocking, and an existing one takes it through the same maturation as every structural gate — informative until the project promotes it. It never depends on an ingested signal, so it can block from day one. |
 | `RVORP-I01` | A rule never accuses itself: the revised rule is excluded from its own orphan candidates. |
 | `RVORP-X01` | Negations and waiver comments are stripped from a rule title before comparison: they are not what the rule asserts. |
 
@@ -58,4 +59,4 @@ This gate operates in distinct territory from neighbouring gates:
 
 | Code | Question |
 | --- | --- |
-| `RVORP-Q01` <!-- @no-scenario: uma decisão em aberto não é requisito — não há comportamento a exercitar até que ela seja tomada --> | Should the gate block or inform? No revision written to date carries `Checked:`, so every existing revision is born a finding. Informative measures the queue before charging it; blocking ends the silence sooner. |
+| `RVORP-Q01` <!-- @no-scenario: a decided question is history, not behaviour; the rule it became has the scenario --> | Should the gate block or inform? Decided by the user: it blocks — became `RVORP-B08`. |

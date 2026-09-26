@@ -1,6 +1,10 @@
 package initx
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+)
 
 func TestDefaultGates(t *testing.T) {
 	// projeto com spec+feature+test → gates de teste presentes
@@ -77,5 +81,33 @@ func TestGateSemSinalNaoBloqueiaNemEmProjetoNovo(t *testing.T) {
 		if gate.Blocking != nil && *gate.Blocking {
 			t.Errorf("%q depende de sinal ingerido e nasceu bloqueante — barraria por falta de dado", gate.Name)
 		}
+	}
+}
+
+// revision-orphans blocks (RVORP-Q01, decided by the user): it is of the blocking class,
+// born blocking in a new project and matured in an existing one.
+func TestRevisionOrphansIsOfTheBlockingClass(t *testing.T) {
+	t.Run("RVORP-B08: The gate is of the blocking class", func(t *testing.T) {})
+	find := func(gates []config.Gate) *config.Gate {
+		for i := range gates {
+			if gates[i].Name == "revision-orphans" {
+				return &gates[i]
+			}
+		}
+		return nil
+	}
+	all := map[string]bool{"spec": true, "feature": true, "test": true, "code": true, "guide": true, "plan": true}
+	novo, existente := find(DefaultGates(all, true)), find(DefaultGates(all, false))
+	if novo == nil || existente == nil {
+		t.Fatal("revision-orphans must be seeded in both")
+	}
+	if !novo.IsBlocking() {
+		t.Error("a new project is born with revision-orphans blocking")
+	}
+	if existente.IsBlocking() {
+		t.Error("an existing project takes it through maturation: informative until promoted")
+	}
+	if dependOnIngestedSignal["revision-orphans"] {
+		t.Error("revision-orphans reads the spec alone; it must not wait for an ingested signal")
 	}
 }

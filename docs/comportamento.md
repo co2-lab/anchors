@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:22672fef1a1858f7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d5673f03912467d0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -860,6 +860,8 @@ teste prova.
 
 - [An artifact with every marker replaced passes](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B06`
 
+- [The marker vocabulary is the project's, and TODO by default](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B07`
+
 - [A section written on purpose to list pending work is not accused](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-I01`
 
 - [The gate does not judge the quality of replacement text](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-X01`
@@ -1191,6 +1193,8 @@ teste prova.
 - [Every vocabulary-sharing sibling accounted for passes](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B06`
 
 - [Checked clears the accusation without asserting correctness](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B07`
+
+- [The gate is of the blocking class](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B08`
 
 - [A revised rule is never its own orphan](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-I01`
 

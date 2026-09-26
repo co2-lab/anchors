@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: PLCFL
-#   updated_at: 2026-09-20
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @PLCFL
@@ -42,6 +42,13 @@ Feature: PlaceholderFilled — the skeleton the generator emits must be FILLED I
     Given an artifact where every generator marker has been replaced with written content
     When the gate confronts the artifact
     Then it returns Pass, charging only generator leftovers and nothing else
+
+  @PLCFL-B07 @unit-level
+  Scenario: The marker vocabulary is the project's, and TODO by default
+    Given a header field whose value is FIXME
+    When the gate confronts it with no vocabulary declared
+    Then it returns Pass, because FIXME is not a word the templates write
+    And with FIXME declared in placeholder_markers it returns Fail, naming the field
 
   @PLCFL-I01 @unit-level
   Scenario: A section written on purpose to list pending work is not accused

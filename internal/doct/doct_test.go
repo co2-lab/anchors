@@ -405,3 +405,25 @@ func projetoDoisRecortes(t *testing.T) (string, *mapx.Graph) {
 		{ID: "pkg/C.spec.md", Kind: mapx.KindSpec, Code: "CCCCC", Layer: "beta"},
 	}}
 }
+
+// The header's date is not an input of the document: the pre-commit dates staged headers
+// before the gates run, and hashing the date failed `docs-fresh` on docs just built.
+func TestInputsHashIgnoresTheHeaderDate(t *testing.T) {
+	hash := func(raw string) string {
+		c := &Compiler{specs: []Spec{{Path: "a.spec.md", raw: raw}}}
+		return c.inputsHash([]byte("tmpl"))
+	}
+	spec := "<!-- @anchors\n  code: AAAAA\n  updated_at: 2026-09-01\n-->\n# A\n\nbody\n"
+	base := hash(spec)
+	if got := hash(strings.Replace(spec, "2026-09-01", "2026-09-26", 1)); got != base {
+		t.Errorf("only the header date changed and the docs were declared out of date")
+	}
+	if got := hash(strings.Replace(spec, "body", "new body", 1)); got == base {
+		t.Error("the content changed and the hash did not")
+	}
+	// Below the header an `updated_at:` line is content, not the header's date.
+	deep := func(date string) string { return spec + strings.Repeat("x\n", 12) + "updated_at: " + date + "\n" }
+	if hash(deep("2026-09-01")) == hash(deep("2026-09-26")) {
+		t.Error("an updated_at line far below the header is content and must change the hash")
+	}
+}

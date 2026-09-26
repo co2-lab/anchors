@@ -4,6 +4,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
@@ -41,17 +42,44 @@ func checkPlaceholderFilled(content string, n mapx.Node, root string, g *mapx.Gr
 	return Fail, i18n.T("gate.placeholder.unfilled", len(achados), strings.Join(achados, "; "))
 }
 
-// placeholderFieldRE: campo de header cujo VALOR é o marcador (`layer: TODO`). É o caso
-// mais grave — `layer: TODO` não é camada nenhuma, e o gate de header aprovava.
-var placeholderFieldRE = regexp.MustCompile(`(?mi)^\s*(?://|#|<!--|\*)?\s*([a-z_]+):\s*(TODO|FIXME|XXX|<[^>]+>)\s*$`)
+// placeholderRegexps are the three positions where a marker means "nobody filled this in",
+// built from the project's vocabulary (`placeholder_markers`, default: the templates' word):
+//
+//	field  a header field whose VALUE is the marker (`layer: TODO`). The gravest case —
+//	       `layer: TODO` is no layer at all, and the header gate approved it.
+//	cell   a table cell holding only the marker (`| MTVRX-B01 | TODO |`): the rule exists
+//	       as a code and says nothing.
+//	title  a title or body line that opens with the marker (`# X — TODO purpose`,
+//	       `TODO: what the unit does`).
+//
+// `<…>` is a placeholder in any vocabulary: it is the shape, not a word.
+type placeholderRegexps struct{ field, cell, title *regexp.Regexp }
 
-// placeholderCellRE: célula de tabela que só tem o marcador (`| MTVRX-B01 | TODO |`) —
-// a regra existe como código e não diz nada.
-var placeholderCellRE = regexp.MustCompile(`(?m)^\s*\|[^|\n]*\|[^|\n]*\bTODO\b[^|\n]*\|`)
+var (
+	placeholderMu    sync.Mutex
+	placeholderCache = map[string]placeholderRegexps{}
+)
 
-// placeholderTitleRE: título ou linha de corpo que abre com o marcador
-// (`# X — TODO propósito`, `TODO: o que a unidade faz`).
-var placeholderTitleRE = regexp.MustCompile(`(?m)^(?:#{1,6}\s+.*—\s*TODO\b.*|TODO[: ].*)$`)
+func placeholderREs(markers []string) placeholderRegexps {
+	key := strings.Join(markers, "\x00")
+	placeholderMu.Lock()
+	defer placeholderMu.Unlock()
+	if r, ok := placeholderCache[key]; ok {
+		return r
+	}
+	quoted := make([]string, len(markers))
+	for i, m := range markers {
+		quoted[i] = regexp.QuoteMeta(m)
+	}
+	words := strings.Join(quoted, "|")
+	r := placeholderRegexps{
+		field: regexp.MustCompile(`(?mi)^\s*(?://|#|<!--|\*)?\s*([a-z_]+):\s*(` + words + `|<[^>]+>)\s*$`),
+		cell:  regexp.MustCompile(`(?m)^\s*\|[^|\n]*\|[^|\n]*\b(?:` + words + `)\b[^|\n]*\|`),
+		title: regexp.MustCompile(`(?m)^(?:#{1,6}\s+.*—\s*(?:` + words + `)\b.*|(?:` + words + `)[: ].*)$`),
+	}
+	placeholderCache[key] = r
+	return r
+}
 
 // openPlaceholders acha os marcadores que o GERADOR deixou, e só eles.
 //
@@ -73,13 +101,14 @@ func openPlaceholders(content string, cfg *config.Config) []string {
 			out = append(out, "«"+s+"»")
 		}
 	}
-	for _, m := range placeholderFieldRE.FindAllStringSubmatch(content, -1) {
+	re := placeholderREs(cfg.Placeholders())
+	for _, m := range re.field.FindAllStringSubmatch(content, -1) {
 		add(m[1] + ": " + m[2])
 	}
-	for _, m := range placeholderCellRE.FindAllString(content, -1) {
+	for _, m := range re.cell.FindAllString(content, -1) {
 		add(m)
 	}
-	for _, m := range placeholderTitleRE.FindAllString(content, -1) {
+	for _, m := range re.title.FindAllString(content, -1) {
 		add(m)
 	}
 	return out
