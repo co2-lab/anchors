@@ -10,7 +10,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 )
 
-const touchHeader = "// @anchors\n//   code: CODEX\n//   updated_at: 2026-09-01\n"
+const touchHeader = "// @anchors\n//   code: CODEX\n//   updated_at: 2026-09-25\n"
 
 // What `anchors touch` does with one file: it does not lie about what changed.
 func TestDecideTouch(t *testing.T) {
@@ -173,5 +173,45 @@ func TestPrintPreCommitTouch(t *testing.T) {
 	}
 	if out := captureStdout(t, func() { printPreCommitTouch(nil, map[touchSkip][]string{}, nil) }); out != "" {
 		t.Errorf("nothing dated, nothing said; printed:\n%s", out)
+	}
+}
+
+// A PARTIAL COMMIT (`git commit -- <paths>`) runs the hook on a temporary index
+// (`next-index-<pid>.lock`) and prepares the real one in `index.lock`. Staging only in the
+// temporary index dated the commit and left the real index with the old date (`MM`,
+// reported from MIF). Both must end dated. The state git builds is simulated here: both
+// indexes hold the pre-hook worktree version.
+func TestTouch_stagedInAPartialCommit(t *testing.T) {
+	root := touchRepo(t)
+	touchWrite(t, root, "a.ts", touchHeader+"export const x = 2\n")
+	gitDir := filepath.Join(root, ".git")
+	temp := filepath.Join(gitDir, "next-index-4242.lock")
+	real := filepath.Join(gitDir, "index.lock")
+	for _, idx := range []string{temp, real} {
+		b, err := os.ReadFile(filepath.Join(gitDir, "index"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(idx, b, 0o644); err != nil {
+			t.Fatal(err)
+		}
+		c := exec.Command("git", "-C", root, "add", "a.ts")
+		c.Env = append(os.Environ(), "GIT_INDEX_FILE="+idx)
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Fatalf("stage in %s: %v %s", idx, err, out)
+		}
+	}
+	t.Setenv("GIT_INDEX_FILE", temp)
+
+	if _, _, err := touchRun(root, true, false, "2026-09-25", nil); err != nil {
+		t.Fatal(err)
+	}
+	for _, idx := range []string{temp, real} {
+		c := exec.Command("git", "-C", root, "show", ":a.ts")
+		c.Env = append(os.Environ(), "GIT_INDEX_FILE="+idx)
+		out, _ := c.Output()
+		if !strings.Contains(string(out), "updated_at: 2026-09-25") {
+			t.Errorf("%s must hold the dated a.ts:\n%s", filepath.Base(idx), out)
+		}
 	}
 }

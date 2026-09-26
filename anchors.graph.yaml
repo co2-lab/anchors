@@ -1247,6 +1247,7 @@ nodes:
     - id: cmd/anchors/quality/findings_summary_test.go
       kind: test
       rev: baef431621a3
+      updated_at: "2026-09-25"
       layer: teste
       tags:
         - test
@@ -1365,7 +1366,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/touch.go
       kind: code
-      rev: ce04b94cfeac
+      rev: b54eb82affad
       updated_at: "2026-09-25"
       layer: comando
       tags:
@@ -1373,7 +1374,7 @@ nodes:
         - comando
     - id: cmd/anchors/quality/touch_test.go
       kind: test
-      rev: e40d0f85ba91
+      rev: 7ee2b2adabf4
       updated_at: "2026-09-25"
       layer: teste
       tags:

@@ -270,9 +270,43 @@ func touchRun(absRoot string, staged, dryRun bool, date string, exclude []string
 			if out, err := exec.Command("git", "-C", absRoot, "add", "--", f).CombinedOutput(); err != nil {
 				return bumped, skipped, fmt.Errorf("re-stage %s: %v %s", f, err, out)
 			}
+			if err := restageRealIndex(absRoot, f); err != nil {
+				return bumped, skipped, err
+			}
 		}
 	}
 	return bumped, skipped, nil
+}
+
+// restageRealIndex keeps the REAL index in step during a partial commit.
+//
+// `git commit -- <paths>` runs the hook against a temporary index (`next-index-<pid>.lock`,
+// in GIT_INDEX_FILE), and prepares the real one separately in `index.lock` of the same
+// directory, from the worktree as it was BEFORE the hook. The hook's `git add` reached
+// only the temporary index: the commit came out dated, and the real index kept the old
+// date — `MM` in `git status`, and a later `git add` could revert the date (reported from
+// MIF, where every commit names its paths so another session's changes never mix in).
+// Staging the file in that `index.lock` too makes the real index end equal to HEAD.
+//
+// Outside a partial commit it does nothing: a plain commit's hook stages in the real index
+// already, and `commit -a` stages in `index.lock`, which becomes the index.
+func restageRealIndex(root, f string) error {
+	idx := os.Getenv("GIT_INDEX_FILE")
+	if !strings.HasPrefix(filepath.Base(idx), "next-index-") {
+		return nil
+	}
+	real := filepath.Join(filepath.Dir(idx), "index.lock")
+	if _, err := os.Stat(real); err != nil {
+		fmt.Printf("· touch: partial commit, and the real index was not found — after the commit, "+
+			"`git restore --staged %s` puts the index back in step with HEAD\n", f)
+		return nil
+	}
+	c := exec.Command("git", "-C", root, "add", "--", f)
+	c.Env = append(os.Environ(), "GIT_INDEX_FILE="+real)
+	if out, err := c.CombinedOutput(); err != nil {
+		return fmt.Errorf("re-stage %s in the real index: %v %s", f, err, out)
+	}
+	return nil
 }
 
 // touchOnPreCommit says whether the pre-commit phase bumps the staged files first: on
