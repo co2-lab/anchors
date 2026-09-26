@@ -10,7 +10,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 )
 
-const touchHeader = "// @anchors\n//   code: CODEX\n//   updated_at: 2026-09-25\n"
+const touchHeader = "// @anchors\n//   code: CODEX\n//   updated_at: 2026-09-01\n"
 
 // What `anchors touch` does with one file: it does not lie about what changed.
 func TestDecideTouch(t *testing.T) {
@@ -29,6 +29,11 @@ func TestDecideTouch(t *testing.T) {
 		{"already dated", strings.Replace(touchHeader, "2026-09-01", "2026-09-25", 1) + "export const a = 2\n", base, true, false, skipAlready},
 		{"new file", touchHeader + "export const b = 1\n", "", false, true, ""},
 		{"updated_at outside a header", "// updated_at: 2026-09-01 in a comment\n", "", false, false, skipNoHeader},
+		// The incident: header text inside a Go constant of a test file — not a header,
+		// and the pre-commit rewrote it and broke the test.
+		{"header text inside code", "package x\n\nconst h = \"// @anchors\\n//   updated_at: 2026-09-01\\n\"\n", "", false, false, skipNoHeader},
+		{"HTML header of a spec", "<!-- @anchors\n  code: CODEX\n  updated_at: 2026-09-01\n-->\n# Spec\n", "", false, true, ""},
+		{"header below the top", strings.Repeat("x\n", 12) + touchHeader, "", false, false, skipNoHeader},
 	} {
 		d := decideTouch("a.ts", c.current, c.base, c.hasBase, "2026-09-25")
 		if d.Bump != c.bump || d.Skip != c.skip {
