@@ -160,6 +160,75 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 	return
 }
 
+// ExternalSuitePrefix marks the suite of a report ingested from OUTSIDE the repository
+// (`anchors ingest --junit /tmp/report.xml`). See DropExternalSuites.
+const ExternalSuitePrefix = "external/"
+
+// DropExternalSuites removes the proof and the coverage that reports from outside the
+// repository left in the map, and returns the suites it removed.
+//
+// Such a report is an ad-hoc run: nothing in the project writes it again, so its suite
+// never runs a second time. Since a partial run keeps the other suites' proof (see
+// IngestExecutionSuite), the entry stayed in the map for good — and once the spec changed,
+// its old rev kept the node STALE forever through `unionRev`, since the suite that
+// could refresh it does not exist. Measured in this repository: `external/report.xml`,
+// left by one manual `go test | go-junit-report > /tmp/report.xml`, sat on 20 nodes
+// after every later `anchors test`. The caller drops them when a FULL run of a suite
+// inside the repository lands: that run is the measurement the ad-hoc one stood in for.
+func (g *Graph) DropExternalSuites() (dropped []string) {
+	seen := map[string]bool{}
+	for i := range g.Nodes {
+		sig := g.Nodes[i].Signal
+		if sig == nil {
+			continue
+		}
+		execChanged := false
+		for s := range sig.ProvenBySuite {
+			if strings.HasPrefix(s, ExternalSuitePrefix) {
+				delete(sig.ProvenBySuite, s)
+				delete(sig.ProvenRevBySuite, s)
+				seen[s], execChanged = true, true
+			}
+		}
+		for s := range sig.ProvenRevBySuite {
+			if strings.HasPrefix(s, ExternalSuitePrefix) {
+				delete(sig.ProvenRevBySuite, s)
+				seen[s], execChanged = true, true
+			}
+		}
+		if execChanged {
+			sig.ProvenCodes = unionProven(sig.ProvenBySuite)
+			sig.AtRev = unionRev(sig, g.Nodes[i].Rev)
+			if len(sig.ProvenBySuite) == 0 {
+				sig.ProvenBySuite, sig.ProvenRevBySuite = nil, nil
+			}
+		}
+		covChanged := false
+		for s := range sig.CoverageBySuite {
+			if strings.HasPrefix(s, ExternalSuitePrefix) {
+				delete(sig.CoverageBySuite, s)
+				seen[s], covChanged = true, true
+			}
+		}
+		if covChanged {
+			c, t := unionCoverage(sig.CoverageBySuite, g.Nodes[i].Rev)
+			sig.CoveredLines, sig.TotalLines, sig.LineCoverage = c, t, 0
+			if t > 0 {
+				sig.LineCoverage = float64(c) / float64(t) * 100
+			}
+			sig.AtRev = oldestSuiteRev(sig.CoverageBySuite, g.Nodes[i].Rev)
+			if len(sig.CoverageBySuite) == 0 {
+				sig.CoverageBySuite = nil
+			}
+		}
+	}
+	for s := range seen {
+		dropped = append(dropped, s)
+	}
+	sort.Strings(dropped)
+	return dropped
+}
+
 func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now string) (matched int) {
 	for i := range g.Nodes {
 		n := &g.Nodes[i]

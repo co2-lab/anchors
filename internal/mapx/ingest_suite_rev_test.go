@@ -104,3 +104,44 @@ func TestIngestPartialRunKeepsWhatItDidNotSee(t *testing.T) {
 		t.Errorf("a full run that proved nothing of money erases its proof, has %v", got)
 	}
 }
+
+// A report ingested from outside the repository is an ad-hoc run that never runs again.
+// Its proof must not keep the node stale forever: a full run of an in-repo suite drops it,
+// and the in-repo proof stands alone and fresh.
+func TestDropExternalSuites(t *testing.T) {
+	g := &Graph{Nodes: []Node{
+		{ID: "a.spec.md", Kind: KindSpec, Rev: "rev1"},
+		{ID: "a.go", Kind: KindCode, Rev: "c1"},
+	}}
+	decl := map[string][]string{"a.spec.md": {"AAAAA-B01", "AAAAA-B02"}}
+
+	g.IngestExecutionSuite(nil, map[string]bool{"AAAAA-B02": true}, nil, decl, "", ExternalSuitePrefix+"report.xml", "t1")
+	g.IngestCoverageSuite(map[string]FileCov{"a.go": {Covered: 1, Total: 2, Lines: map[int]bool{1: true, 2: false}}}, ExternalSuitePrefix+"lcov.info", "t1")
+	g.Nodes[0].Rev = "rev2"
+	g.IngestExecutionSuite(nil, map[string]bool{"AAAAA-B01": true}, nil, decl, "", ".anchors/junit.xml", "t2")
+	if !g.Nodes[0].SignalStale() {
+		t.Fatal("precondition: the external suite measured rev1 and keeps the node stale")
+	}
+
+	dropped := g.DropExternalSuites()
+	if len(dropped) != 2 || dropped[0] != "external/lcov.info" || dropped[1] != "external/report.xml" {
+		t.Fatalf("both external suites are dropped and named: %v", dropped)
+	}
+	spec := g.Nodes[0].Signal
+	if g.Nodes[0].SignalStale() {
+		t.Errorf("with the external suite gone, the in-repo suite is fresh (at_rev=%s)", spec.AtRev)
+	}
+	if len(spec.ProvenCodes) != 1 || spec.ProvenCodes[0] != "AAAAA-B01" {
+		t.Errorf("only the in-repo proof remains: %v", spec.ProvenCodes)
+	}
+	if _, ok := spec.ProvenBySuite[".anchors/junit.xml"]; !ok {
+		t.Errorf("the in-repo suite must stay: %v", spec.ProvenBySuite)
+	}
+	code := g.Nodes[1].Signal
+	if len(code.CoverageBySuite) != 0 || code.TotalLines != 0 || code.LineCoverage != 0 {
+		t.Errorf("the external coverage leaves no number behind: %+v", code)
+	}
+	if again := g.DropExternalSuites(); len(again) != 0 {
+		t.Errorf("nothing left to drop, dropped %v", again)
+	}
+}

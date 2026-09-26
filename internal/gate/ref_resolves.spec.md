@@ -10,12 +10,12 @@
 > **RFRSR-R0001:** when no sibling spec exists on disk, the gate now consults the project
 > graph to prevent references to invented or phantom identities. Previously, absence of a sibling
 > spec caused the gate to stay silent (Skip), which left 42% of references uninspected and allowed
-> phantom identities through as undetermined. Decided by the user: infra files with no sibling
-> spec remain valid (Skip) only if the referenced identity actually exists in the project; references
+> phantom identities through as undetermined. An infra file with no sibling spec remains
+> valid (Skip) only if the referenced identity actually exists in the project; references
 > to codes declared nowhere in the project fail.
 >
-> **Revises:** `I01`, `X03`
-> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B10`, `B11`, `B12`, `B13`, `B14`, `B15`, `B16`, `B17`, `I02`, `X01`, `X02`, `X04`
+> **Revises:** `I01`, `X03`, `B14`, `B15`, `B16`, `B17`
+> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B10`, `B11`, `B12`, `B13`, `I02`, `X01`, `X02`, `X04`
 
 ## Overview
 

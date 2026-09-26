@@ -169,6 +169,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 				if len(byFile) > 0 && mf == 0 {
 					fmt.Println("  warning: no test file matched — does the JUnit have the 'file' attribute? (use a reporter that emits it)")
 				}
+				dropExternal(g, key, partial)
 			}
 
 			if lcov != "" {
@@ -190,6 +191,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 				}
 				m := g.IngestCoverageSuite(byFile, key, now)
 				fmt.Printf("coverage: %d file(s) in the lcov, %d code node(s) matched\n", len(rep.Files), m)
+				dropExternal(g, key, partial)
 			}
 
 			if mutation != "" {
@@ -288,9 +290,23 @@ func resolveByFile[T any](g *mapx.Graph, kind mapx.Kind, byFile map[string]T, ab
 func suiteKey(absRoot, report string) string {
 	rel := relToRoot(absRoot, report)
 	if rel == ".." || strings.HasPrefix(rel, "../") {
-		return "external/" + filepath.Base(report)
+		return mapx.ExternalSuitePrefix + filepath.Base(report)
 	}
 	return rel
+}
+
+// dropExternal removes, after a FULL run of a suite inside the repository, what reports
+// from outside it left in the map (see mapx.DropExternalSuites). A partial run measured
+// only its cut, so it replaces nothing it did not run; and an external report does not
+// drop its own kind.
+func dropExternal(g *mapx.Graph, key string, partial bool) {
+	if partial || strings.HasPrefix(key, mapx.ExternalSuitePrefix) {
+		return
+	}
+	if dropped := g.DropExternalSuites(); len(dropped) > 0 {
+		fmt.Printf("  dropped the proof of %d suite(s) ingested from outside the repository: %s — this run replaces that ad-hoc one\n",
+			len(dropped), strings.Join(dropped, ", "))
+	}
 }
 
 // relToRoot returns the report's path relative to the project root, with `/`.

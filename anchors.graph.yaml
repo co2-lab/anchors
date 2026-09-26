@@ -1,7 +1,7 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
 version: 4
-generated_by: 0.1.196
+generated_by: 0.1.197
 nodes:
     - id: BOOTSTRAP.md
       kind: doc
@@ -747,6 +747,13 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: cmd/anchors/mapcmd/drop_external_test.go
+      kind: test
+      rev: 4140b04c979d
+      code: AAAAA
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/mapcmd/failures.go
       kind: code
       rev: b3fcd7a78a4b
@@ -781,7 +788,7 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/ingest.go
       kind: code
-      rev: 12f9ec0d7991
+      rev: 56da5778f3e9
       updated_at: "2026-09-26"
       code: SPCRX
       layer: comando
@@ -1431,7 +1438,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: fb4602a6d65a
         at_rev: fb4602a6d65a
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: guides/GATES_ECOSYSTEM_GUIDE.md
       kind: guide
       rev: aaa30844e96f
@@ -1860,7 +1867,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4396eeed49d2
         at_rev: 4396eeed49d2
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/code_cataloged_test.go
       kind: test
       rev: c0bf8e1d17ec
@@ -1917,21 +1924,10 @@ nodes:
                 - CDLNG-X01
                 - CDLNG-X02
                 - CDLNG-X03
-            external/report.xml:
-                - CDLNG-B01
-                - CDLNG-B02
-                - CDLNG-B03
-                - CDLNG-B04
-                - CDLNG-B05
-                - CDLNG-I01
-                - CDLNG-X01
-                - CDLNG-X02
-                - CDLNG-X03
         proven_rev_by_suite:
             .anchors/junit.xml: 0cef6cb6fcf7
-            external/report.xml: 0cef6cb6fcf7
         at_rev: 0cef6cb6fcf7
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/code_language_test.go
       kind: test
       rev: 18771b1c2646
@@ -2003,7 +1999,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 0d71bdc68c49
         at_rev: 0d71bdc68c49
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/code_reference_valid_test.go
       kind: test
       rev: a640b48e0215
@@ -2081,7 +2077,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 538cf9e1e3e0
         at_rev: 538cf9e1e3e0
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/contract_status_declared_test.go
       kind: test
       rev: 4b9e8d72e548
@@ -2161,7 +2157,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 78d639d1ccaa
         at_rev: 78d639d1ccaa
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/count_honored_test.go
       kind: test
       rev: b640e62d5144
@@ -2229,7 +2225,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 308d3a4f0df5
         at_rev: 308d3a4f0df5
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/dependency_honored_test.go
       kind: test
       rev: 52b0cb2a3f59
@@ -2297,7 +2293,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 490867e398d6
         at_rev: 490867e398d6
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/doc_required_section_test.go
       kind: test
       rev: 609f442fea29
@@ -2376,7 +2372,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 0bb781577697
         at_rev: 0bb781577697
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/doc_self_contained_test.go
       kind: test
       rev: 0c3351e58d13
@@ -2465,7 +2461,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: eeb5575a9fb5
         at_rev: eeb5575a9fb5
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/docs_fresh_test.go
       kind: test
       rev: 1a8bdc1a21ac
@@ -2546,7 +2542,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 2976bbe71690
         at_rev: 2976bbe71690
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/domain_declared_test.go
       kind: test
       rev: 7721f39faa76
@@ -2620,7 +2616,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: ed965f862654
         at_rev: ed965f862654
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/evidence_fresh_test.go
       kind: test
       rev: 5fd361f9df74
@@ -2698,7 +2694,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 5bdf042e8f33
         at_rev: 5bdf042e8f33
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/external_test.go
       kind: test
       rev: aa633d4bc42f
@@ -2811,7 +2807,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e107ba20696a
         at_rev: e107ba20696a
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/feature_test_match_test.go
       kind: test
       rev: 3884463747fb
@@ -2937,7 +2933,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9a694bbc7881
         at_rev: 9a694bbc7881
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/gate_test.go
       kind: test
       rev: 55a6806dfb1d
@@ -3011,7 +3007,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9f5d6fdfa169
         at_rev: 9f5d6fdfa169
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/identity_consistent_test.go
       kind: test
       rev: 6335746413d6
@@ -3097,7 +3093,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 5da07853b7dc
         at_rev: 5da07853b7dc
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/internal_checks_test.go
       kind: test
       rev: f1e5a5093be0
@@ -3175,7 +3171,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 64732847af87
         at_rev: 64732847af87
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/layer_boundary_test.go
       kind: test
       rev: 2c0df5559159
@@ -3245,7 +3241,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 73449694a8eb
         at_rev: 73449694a8eb
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/marker_parity_test.go
       kind: test
       rev: 4d2770ca3202
@@ -3307,7 +3303,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: cb7e98730e12
         at_rev: cb7e98730e12
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/mock_stamp_gen_test.go
       kind: test
       rev: 4ec80f3d8256
@@ -3399,7 +3395,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e39f54e9612d
         at_rev: e39f54e9612d
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/mock_stamped_test.go
       kind: test
       rev: d618fec40147
@@ -3481,7 +3477,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 2b6ef4d3b3cf
         at_rev: 2b6ef4d3b3cf
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/mock_typed_test.go
       kind: test
       rev: 3157696ee091
@@ -3604,7 +3600,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: f52d8fdd4d3f
         at_rev: f52d8fdd4d3f
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/obligation_honored_test.go
       kind: test
       rev: 6e324040b347
@@ -3686,10 +3682,10 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 8a28a6f2262f
         at_rev: 8a28a6f2262f
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/open_questions_test.go
       kind: test
-      rev: 5b229c2e3c35
+      rev: 27e7241ead70
       updated_at: "2026-09-26"
       code: OPQSP
       layer: teste
@@ -3754,7 +3750,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 81c76d7c64fe
         at_rev: 81c76d7c64fe
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/pagination_honored_test.go
       kind: test
       rev: 60adbe87019b
@@ -3836,7 +3832,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 72568f65537b
         at_rev: 72568f65537b
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/phase_ordered_test.go
       kind: test
       rev: 3705ed32086d
@@ -3893,21 +3889,10 @@ nodes:
                 - PLCFL-I01
                 - PLCFL-X01
                 - PLCFL-X02
-            external/report.xml:
-                - PLCFL-B01
-                - PLCFL-B02
-                - PLCFL-B03
-                - PLCFL-B04
-                - PLCFL-B05
-                - PLCFL-B06
-                - PLCFL-I01
-                - PLCFL-X01
-                - PLCFL-X02
         proven_rev_by_suite:
             .anchors/junit.xml: 9afea8a33146
-            external/report.xml: 9afea8a33146
         at_rev: 9afea8a33146
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/placeholder_filled_test.go
       kind: test
       rev: a28a04e74cce
@@ -3990,7 +3975,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: d1b1d053eb18
         at_rev: d1b1d053eb18
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/plan_change_justified_test.go
       kind: test
       rev: 54610a39e105
@@ -4073,7 +4058,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 91c71e8c57ef
         at_rev: 91c71e8c57ef
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/plan_revised_test.go
       kind: test
       rev: ca557add6267
@@ -4151,7 +4136,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4678f45ba6dd
         at_rev: 4678f45ba6dd
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/plan_seeds_valid_test.go
       kind: test
       rev: 2aeb17450445
@@ -4221,7 +4206,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: f91c140cc1ff
         at_rev: f91c140cc1ff
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/plan_source_declared_test.go
       kind: test
       rev: ca36506dc987
@@ -4307,7 +4292,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 79fea6b72ea9
         at_rev: 79fea6b72ea9
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/progress_honest_test.go
       kind: test
       rev: 1c6588589b2d
@@ -4387,25 +4372,10 @@ nodes:
                 - PRGTP-I02
                 - PRGTP-X01
                 - PRGTP-X02
-            external/report.xml:
-                - PRGTP-B01
-                - PRGTP-B02
-                - PRGTP-B03
-                - PRGTP-B04
-                - PRGTP-B05
-                - PRGTP-B06
-                - PRGTP-B07
-                - PRGTP-B08
-                - PRGTP-B09
-                - PRGTP-I01
-                - PRGTP-I02
-                - PRGTP-X01
-                - PRGTP-X02
         proven_rev_by_suite:
             .anchors/junit.xml: 9e03864f7e62
-            external/report.xml: 9e03864f7e62
         at_rev: 9e03864f7e62
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/promotable_test.go
       kind: test
       rev: d6a0e76ee023
@@ -4487,7 +4457,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 719ccb32a621
         at_rev: 719ccb32a621
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/proof_crosses_boundary_test.go
       kind: test
       rev: c75f2fed24c6
@@ -4515,7 +4485,7 @@ nodes:
         - gate
     - id: internal/gate/ref_resolves.spec.md
       kind: spec
-      rev: 9d8f8f449e50
+      rev: 205c430e0d76
       updated_at: "2026-09-26"
       code: RFRSR
       layer: spec
@@ -4573,9 +4543,9 @@ nodes:
                 - RFRSR-X03
                 - RFRSR-X04
         proven_rev_by_suite:
-            .anchors/junit.xml: 9d8f8f449e50
-        at_rev: 9d8f8f449e50
-        ingested_at: "2026-09-26T14:01:50-03:00"
+            .anchors/junit.xml: 205c430e0d76
+        at_rev: 205c430e0d76
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/ref_resolves_test.go
       kind: test
       rev: af0e0d471784
@@ -4640,25 +4610,10 @@ nodes:
                 - RPHRG-X01
                 - RPHRG-X02
                 - RPHRG-X03
-            external/report.xml:
-                - RPHRG-B01
-                - RPHRG-B02
-                - RPHRG-B03
-                - RPHRG-B04
-                - RPHRG-B05
-                - RPHRG-B06
-                - RPHRG-B07
-                - RPHRG-I01
-                - RPHRG-I02
-                - RPHRG-I03
-                - RPHRG-X01
-                - RPHRG-X02
-                - RPHRG-X03
         proven_rev_by_suite:
             .anchors/junit.xml: "762971562134"
-            external/report.xml: "762971562134"
         at_rev: "762971562134"
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/region_pair_honored_test.go
       kind: test
       rev: ff9405c70307
@@ -4734,7 +4689,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 188024b0aa1f
         at_rev: 188024b0aa1f
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/revision_orphans_test.go
       kind: test
       rev: 5c3138b72ee2
@@ -4795,7 +4750,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9704d52decd3
         at_rev: 9704d52decd3
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/revision_renumber_test.go
       kind: test
       rev: 5d962fa98a42
@@ -4852,21 +4807,10 @@ nodes:
                 - RTDCL-I02
                 - RTDCL-X01
                 - RTDCL-X02
-            external/report.xml:
-                - RTDCL-B01
-                - RTDCL-B02
-                - RTDCL-B03
-                - RTDCL-B04
-                - RTDCL-B05
-                - RTDCL-I01
-                - RTDCL-I02
-                - RTDCL-X01
-                - RTDCL-X02
         proven_rev_by_suite:
             .anchors/junit.xml: 25efb10781b6
-            external/report.xml: 25efb10781b6
         at_rev: 25efb10781b6
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/route_declared_test.go
       kind: test
       rev: 4a5fded1f71d
@@ -4948,7 +4892,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 193b54318a87
         at_rev: 193b54318a87
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/route_exists_test.go
       kind: test
       rev: 77716f6577d5
@@ -5036,7 +4980,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 928b2930860e
         at_rev: 928b2930860e
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/rule_implemented.feature
       kind: feature
       rev: 8a1cc95ed73a
@@ -5090,7 +5034,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e92ae12ffd30
         at_rev: e92ae12ffd30
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/rule_implemented_test.go
       kind: test
       rev: 700390a56eab
@@ -5183,31 +5127,10 @@ nodes:
                 - RLTYR-X02
                 - RLTYR-X03
                 - RLTYR-X04
-            external/report.xml:
-                - RLTYR-B01
-                - RLTYR-B02
-                - RLTYR-B03
-                - RLTYR-B04
-                - RLTYR-B05
-                - RLTYR-B06
-                - RLTYR-B07
-                - RLTYR-B08
-                - RLTYR-B09
-                - RLTYR-B10
-                - RLTYR-B11
-                - RLTYR-B12
-                - RLTYR-I01
-                - RLTYR-I02
-                - RLTYR-I03
-                - RLTYR-X01
-                - RLTYR-X02
-                - RLTYR-X03
-                - RLTYR-X04
         proven_rev_by_suite:
             .anchors/junit.xml: 6ab06f981fd1
-            external/report.xml: 6ab06f981fd1
         at_rev: 6ab06f981fd1
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/rule_types_requires_test.go
       kind: test
       rev: ee5d4f60c417
@@ -5286,7 +5209,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 1d4bfb589a46
         at_rev: 1d4bfb589a46
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/scenario_asserts_test.go
       kind: test
       rev: c32ff528fcec
@@ -5375,29 +5298,10 @@ nodes:
                 - SCIDS-X02
                 - SCIDS-X03
                 - SCIDS-X04
-            external/report.xml:
-                - SCIDS-B01
-                - SCIDS-B02
-                - SCIDS-B03
-                - SCIDS-B04
-                - SCIDS-B05
-                - SCIDS-B06
-                - SCIDS-B07
-                - SCIDS-B08
-                - SCIDS-B09
-                - SCIDS-B10
-                - SCIDS-B11
-                - SCIDS-I01
-                - SCIDS-I02
-                - SCIDS-X01
-                - SCIDS-X02
-                - SCIDS-X03
-                - SCIDS-X04
         proven_rev_by_suite:
             .anchors/junit.xml: 80bb393d42f4
-            external/report.xml: 80bb393d42f4
         at_rev: 80bb393d42f4
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/scenario_identity_test.go
       kind: test
       rev: 27474d7bb7b1
@@ -5460,24 +5364,10 @@ nodes:
                 - SCLTR-I03
                 - SCLTR-X01
                 - SCLTR-X02
-            external/report.xml:
-                - SCLTR-B01
-                - SCLTR-B02
-                - SCLTR-B03
-                - SCLTR-B04
-                - SCLTR-B05
-                - SCLTR-B06
-                - SCLTR-B07
-                - SCLTR-I01
-                - SCLTR-I02
-                - SCLTR-I03
-                - SCLTR-X01
-                - SCLTR-X02
         proven_rev_by_suite:
             .anchors/junit.xml: ab3e8cd92792
-            external/report.xml: ab3e8cd92792
         at_rev: ab3e8cd92792
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/scenario_letter_declared_test.go
       kind: test
       rev: 23bed2a4e5a7
@@ -5556,32 +5446,10 @@ nodes:
                 - STASC-X02
                 - STASC-X03
                 - STASC-X04
-            external/report.xml:
-                - STASC-B01
-                - STASC-B02
-                - STASC-B03
-                - STASC-B04
-                - STASC-B05
-                - STASC-B06
-                - STASC-B07
-                - STASC-B08
-                - STASC-B09
-                - STASC-B10
-                - STASC-B11
-                - STASC-B12
-                - STASC-I01
-                - STASC-I02
-                - STASC-I03
-                - STASC-I04
-                - STASC-X01
-                - STASC-X02
-                - STASC-X03
-                - STASC-X04
         proven_rev_by_suite:
             .anchors/junit.xml: 882996e77635
-            external/report.xml: 882996e77635
         at_rev: 882996e77635
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/scenario_type_aligned_test.go
       kind: test
       rev: abf2df75a37f
@@ -5654,7 +5522,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: da5d5a437a7d
         at_rev: da5d5a437a7d
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/sibling_guard_test.go
       kind: test
       rev: c9a83baf38be
@@ -5730,7 +5598,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 3e1318b1064f
         at_rev: 3e1318b1064f
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/spec_feature_match_test.go
       kind: test
       rev: c00b2740d61b
@@ -5819,7 +5687,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 223602adb939
         at_rev: 223602adb939
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/test_traceable_test.go
       kind: test
       rev: e36fd20a0749
@@ -5934,7 +5802,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9d4fb014b5b4
         at_rev: 9d4fb014b5b4
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/testid_queried_exists_test.go
       kind: test
       rev: 14cc644d666d
@@ -6014,7 +5882,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 546bc794325f
         at_rev: 546bc794325f
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/triad_complete_test.go
       kind: test
       rev: bb34a908336f
@@ -6098,7 +5966,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e6d98b670a14
         at_rev: e6d98b670a14
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/trigger_declared_test.go
       kind: test
       rev: 072b39c05efc
@@ -6173,7 +6041,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: c21205abd340
         at_rev: c21205abd340
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/value_anchored_test.go
       kind: test
       rev: 9a180555b06b
@@ -6238,25 +6106,10 @@ nodes:
                 - VRBSV-I02
                 - VRBSV-X01
                 - VRBSV-X02
-            external/report.xml:
-                - VRBSV-B01
-                - VRBSV-B02
-                - VRBSV-B03
-                - VRBSV-B04
-                - VRBSV-B05
-                - VRBSV-B06
-                - VRBSV-B07
-                - VRBSV-B08
-                - VRBSV-B09
-                - VRBSV-I01
-                - VRBSV-I02
-                - VRBSV-X01
-                - VRBSV-X02
         proven_rev_by_suite:
             .anchors/junit.xml: 9ac63acbe2cb
-            external/report.xml: 9ac63acbe2cb
         at_rev: 9ac63acbe2cb
-        ingested_at: "2026-09-26T14:01:50-03:00"
+        ingested_at: "2026-09-26T14:27:37-03:00"
     - id: internal/gate/vr_baseline_test.go
       kind: test
       rev: 6bb66197b2b8
@@ -6798,7 +6651,7 @@ nodes:
       no_propagation: true
     - id: internal/mapx/ingest.go
       kind: code
-      rev: 4d2ffe6c40f4
+      rev: addbd658929f
       updated_at: "2026-09-26"
       layer: mapa
       tags:
@@ -6813,7 +6666,7 @@ nodes:
         - test
     - id: internal/mapx/ingest_suite_rev_test.go
       kind: test
-      rev: fb4fc6ba4248
+      rev: 7bc88e890daa
       updated_at: "2026-09-26"
       code: AAAAA
       layer: teste
