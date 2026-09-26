@@ -3690,7 +3690,7 @@ nodes:
     - id: internal/gate/open_questions_test.go
       kind: test
       rev: 5b229c2e3c35
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-26"
       code: OPQSP
       layer: teste
       tags:
@@ -4498,8 +4498,8 @@ nodes:
         - test
     - id: internal/gate/ref_resolves.feature
       kind: feature
-      rev: 3de65b205746
-      updated_at: "2026-09-19"
+      rev: b4af15dcbc7a
+      updated_at: "2026-09-26"
       code: RFRSR
       layer: feature
       tags:
