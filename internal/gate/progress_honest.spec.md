@@ -80,6 +80,14 @@ is the only way to reach a file that, by design, is not a node.
 | `PRHNP-X02` | Does not judge the CONTENT of an item beyond the path it cites. | Whether the description is accurate, whether the phase makes sense, whether the order is right — all of it is judgement. The ruler here is the disk, which is deterministic and needs no opinion. |
 | `PRHNP-X03` | Does not put the progress file into the map, nor demand a justification for changing it. | It exists in order to change. A gate that reached it as a node would charge every edit of the very artifact that records work, which is the opposite of what it is for. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `PRHNP-E01` | REF[PRHNP-B02]: a companion progress file that cannot be read is answered as the missing one of B02: skipped, not failed | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

@@ -73,6 +73,14 @@ the document itself instead of letting drift happen by omission.
 | `PCJPL-X02` | Does not enforce identity codes on files without one. | Code presence is enforced by `spec-has-code`; duplicating that check here would produce two findings for a single defect. |
 | `PCJPL-X03` | Does not run or enforce revisions during full-project checks (`--all`). | In a full run there is no diff context, and charging files that never needed revision would penalize units designed correctly from the start. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `PCJPL-E01` | REF[PCJPL-B13]: a git that cannot report the changed files is the outside-a-repository case B13 answers: the caller's list is trusted | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

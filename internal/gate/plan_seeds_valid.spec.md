@@ -84,6 +84,15 @@ references rather than actionable seeds.
 | `PSVPL-X02` | Does not check whether the plan progress file is synchronized with execution state. | Tracking task execution status is the dedicated responsibility of plan progress gates. |
 | `PSVPL-X03` | Does not enforce specification contents or scenario definitions within seeded files. | Quality and completeness of specification content belong to specification and triad gates once created. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `PSVPL-E01` | REF[PSVPL-B02]: with no configuration there is nothing to confront, and B02 answers Pending | — | — |
+| `PSVPL-E02` | REF[PSVPL-B06]: a path whose top directory is not on disk is answered by B06: read as prose, not charged | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

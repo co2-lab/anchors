@@ -58,6 +58,14 @@ Exposed as `anchors stamp [tests...]`, with `--dry-run`.
 | --- | --- | --- |
 | `MKSTP-X01` | Does not refresh a divergent stamp. | Refreshing would let the stamp certify itself; a divergence calls for a person looking at the double. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `MKSTP-E01` | The project's `derived.mock_detect` does not compile as a regular expression, or has no capture group. | `GenerateStamps` returns the error and the content unchanged; no stamp is written. | The pattern is the only way to find a double: a broken one would find none, and an empty result would read as "nothing to stamp" in a test full of doubles. The error sends the author to fix the configuration. |
+| `MKSTP-E02` | The project does not declare `derived.mock_detect`. | `GenerateStamps` returns an error naming `derived.mock_detect`, and the content unchanged. | Without the pattern no double can be found; returning no stamps and no error would claim the test has no double to stamp. |
+| `MKSTP-E03` | The file the map resolves a double to is no longer on disk. | That double is listed as skipped, with a reason naming the file that could not be read; the other doubles of the test are still stamped. | A stamp is a hash of the real module's snippet, and a file that is not there has no snippet to hash. Reporting it as skipped tells the author which double is still unstamped, and one stale map node must not block the stamps the rest of the test can get. |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

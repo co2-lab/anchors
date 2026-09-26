@@ -66,6 +66,12 @@ DECLARES, rule by rule, whether it has code.
 | `RLIMR-X01` | Does not judge whether the implementation is RIGHT — only whether it exists and declares itself. | Whether the code fulfills what the rule says is judgment, and judgment belongs to another class of gate. The ruler here is deterministic: the mark exists, or the waiver exists with a reason. |
 | `RLIMR-X02` | Does not require a mark on EVERY rule. | A constraint is satisfied by the absence of code, and absence has nowhere to receive a comment. Charging the 3.121 occurrences that the naive ruler would produce would train the team to ignore the whole list. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `RLIMR-E01` | The code file the spec describes is on disk but cannot be read (no read permission). | `Pending` naming the file that could not be read. | The file exists, so `RLIMR-B05` does not apply; but unread code carries no mark to find, and failing would accuse the rules of being unrealized in code nobody looked at. `Pending` names the file so the reader can fix the access. |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

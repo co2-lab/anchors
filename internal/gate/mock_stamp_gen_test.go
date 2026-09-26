@@ -268,3 +268,44 @@ func TestGenerateStamps_newKeyOnAStampedDoubleGetsAStamp(t *testing.T) {
 	}
 }
 
+func TestGenerateStamps_errors(t *testing.T) {
+	t.Run("MKSTP-E01: A double detector that does not compile stops the generator with an error", func(t *testing.T) {
+		for _, pattern := range []string{`[`, `jest\.mock`} {
+			cfg := &config.Config{Derived: &config.Derived{MockDetect: pattern}}
+			out, written, _, err := GenerateStamps("jest.mock('x')\n", "test.ts", "", &mapx.Graph{}, cfg)
+			if err == nil || strings.Contains(err.Error(), "does not declare") || out != "jest.mock('x')\n" || len(written) != 0 {
+				t.Fatalf("pattern %q: expected the pattern's own error and the content unchanged, got err=%v written=%v", pattern, err, written)
+			}
+		}
+	})
+
+	t.Run("MKSTP-E02: An undeclared double detector stops the generator with an error", func(t *testing.T) {
+		cfg := &config.Config{Derived: &config.Derived{}}
+		_, _, _, err := GenerateStamps("content", "test.ts", "", &mapx.Graph{}, cfg)
+		if err == nil || !strings.Contains(err.Error(), "mock_detect") {
+			t.Fatalf("expected an error naming mock_detect, got %v", err)
+		}
+	})
+
+	t.Run("MKSTP-E03: A module missing from disk is skipped and the other doubles are still stamped", func(t *testing.T) {
+		test := "jest.mock('@/src/hooks/balance')\njest.mock('@/src/hooks/other')\n"
+		root, g := stampProject(t, map[string]string{
+			"src/hooks/balance.ts": realHooks,
+			"src/hooks/other.ts":   "export const other = 1\n",
+			"src/Home.test.tsx":    test,
+		})
+		if err := os.Remove(filepath.Join(root, "src/hooks/balance.ts")); err != nil {
+			t.Fatal(err)
+		}
+		_, written, skipped, err := GenerateStamps(test, "src/Home.test.tsx", root, g, stampCfg())
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if len(skipped) != 1 || !strings.Contains(skipped[0].Reason, "src/hooks/balance.ts") {
+			t.Fatalf("expected the missing module skipped naming its file, got %v", skipped)
+		}
+		if len(written) != 1 || written[0].File != "src/hooks/other.ts" {
+			t.Fatalf("expected the present module still stamped, got %v", written)
+		}
+	})
+}

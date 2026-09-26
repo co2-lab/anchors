@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: TRCMT
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @TRCMT
@@ -111,3 +111,16 @@ Feature: TriadComplete — the pieces that realise a spec EXIST
     Then it returns Pass, because the ruler here is EXISTENCE — confronting the content
       belongs to another gate, and mixing the two would fail by a criterion this one
       cannot measure
+
+  @TRCMT-E01 @unit-level
+  Scenario: A test missing from disk does not orphan a reference another test resolves
+    Given the map lists a test that is gone from disk, and a test on disk citing the code the @no-test points at
+    When the gate confronts the spec
+    Then it returns Pass
+
+  @TRCMT-E02 @unit-level
+  Scenario: A feature missing from disk does not hide the scenario of the covered feature
+    Given the spec is covered by a feature that is gone from disk and by a feature with a scenario
+    And the spec waives the test with @no-test
+    When the gate confronts the spec
+    Then it fails, naming the feature whose scenario contradicts the waiver

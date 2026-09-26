@@ -272,3 +272,27 @@ func TestDependencyHonored(t *testing.T) {
 		}
 	})
 }
+
+func TestDependencyHonored_Errors(t *testing.T) {
+	t.Run("DEPHN-E01: A specified code file missing from disk is left out of the confrontation", func(t *testing.T) {
+		root := t.TempDir()
+		if err := os.WriteFile(filepath.Join(root, "app.go"), []byte("package main\n\nfunc Run() {\n\tresolveVersion()\n}\n"), 0644); err != nil {
+			t.Fatal(err)
+		}
+		grafo := func(method string) *mapx.Graph {
+			return &mapx.Graph{Edges: []mapx.Edge{
+				{From: "s.spec.md", To: "dep.go", Type: mapx.EdgeDependsOn, Method: method},
+				{From: "s.spec.md", To: "app.go", Type: mapx.EdgeSpecifies},
+				{From: "s.spec.md", To: "gone.go", Type: mapx.EdgeSpecifies},
+			}}
+		}
+		n := mapx.Node{ID: "s.spec.md", Kind: mapx.KindSpec}
+		if v, msg := checkDependencyHonored("# spec", n, root, grafo("`resolveVersion`"), nil); v != Pass {
+			t.Fatalf("the missing file must be left out and the present one confronted, got %v (%s)", v, msg)
+		}
+		v, msg := checkDependencyHonored("# spec", n, root, grafo("`resolveVersion`, `applyEdit`"), nil)
+		if v != Fail || !strings.Contains(msg, "applyEdit") || strings.Contains(msg, "resolveVersion") {
+			t.Fatalf("a symbol no file on disk uses must be charged as unused, got %v (%s)", v, msg)
+		}
+	})
+}

@@ -157,3 +157,25 @@ func TestCodeReferenceNoExternalCitationsPasses(t *testing.T) {
 		t.Fatalf("spec sem citações externas deve passar: %s (%s)", v, d)
 	}
 }
+
+func TestCodeReferenceValid_Errors(t *testing.T) {
+	t.Run("CRVCD-E01: A spec missing from disk is left out of the declared codes", func(t *testing.T) {
+		root := t.TempDir()
+		codeA := "EX" + "TNL"
+		codeB := "MY" + "SPC"
+		specA := "<!-- @anchors\n  code: " + codeA + "\n-->\n# External Unit\n"
+		if err := os.WriteFile(filepath.Join(root, "extnl.spec.md"), []byte(specA), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		g := &mapx.Graph{Nodes: []mapx.Node{
+			{ID: "gone.spec.md", Kind: mapx.KindSpec}, // listed by the map, deleted from disk
+			{ID: "extnl.spec.md", Kind: mapx.KindSpec},
+			{ID: "myspc.spec.md", Kind: mapx.KindSpec, Code: codeB},
+		}}
+		mySpec := "<!-- @anchors\n  code: " + codeB + "\n-->\nCites `" + codeA + "-B01`.\n"
+		v, d := checkCodeReferenceValid(mySpec, mapx.Node{ID: "myspc.spec.md", Kind: mapx.KindSpec}, root, g, nil)
+		if v != Pass {
+			t.Fatalf("the missing spec must be left out and the one on disk still resolve the citation, got %v (%s)", v, d)
+		}
+	})
+}

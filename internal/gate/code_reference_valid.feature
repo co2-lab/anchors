@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CRVCD
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @CRVCD
@@ -96,3 +96,10 @@ Feature: CodeReferenceValid — cross-referenced requirement codes must resolve 
     Given a specification that contains no external requirement code references
     When the gate confronts it
     Then it passes without demanding external citations
+
+  @CRVCD-E01 @unit-level
+  Scenario: A spec missing from disk is left out of the declared codes
+    Given a map listing, without their codes, one spec on disk and one spec no longer on disk
+    And a specification citing a requirement of the spec on disk
+    When the gate confronts it
+    Then it passes, resolving the citation against the spec still on disk

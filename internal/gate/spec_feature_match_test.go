@@ -372,3 +372,74 @@ func TestDefinedRequirementsRespeitaCodeLengthsDoProjeto(t *testing.T) {
 		t.Errorf("feature-test-match: titleCodeRE achou %d códigos, esperava 2", n)
 	}
 }
+
+func TestSpecFeatureMatch_Errors(t *testing.T) {
+	t.Run("SFMSP-E01: Without a built map the confrontation is pending", func(t *testing.T) {
+		v, msg := checkSpecFeatureMatch("# Spec\n\n### AAAAX-B01 — x\n", mapx.Node{Kind: mapx.KindSpec, ID: "x.spec.md"}, t.TempDir(), nil, nil)
+		if v != Pending || !strings.Contains(msg, "map") {
+			t.Fatalf("expected Pending with the no-map message, got %v (%s)", v, msg)
+		}
+	})
+
+	t.Run("SFMSP-E02: A feature missing from disk does not hide the scenarios of the other features", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.WriteFile(filepath.Join(dir, "valid.feature"), []byte("@AAAAX\nFeature: x\n  @AAAAX-B01 @unit\n  Scenario: a\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		g := &mapx.Graph{Edges: []mapx.Edge{
+			{From: "x.spec.md", To: "missing.feature", Type: "covered-by"},
+			{From: "x.spec.md", To: "valid.feature", Type: "covered-by"},
+		}}
+		spec := "# Spec\n\n### AAAAX-B01 — x\n"
+		v, msg := checkSpecFeatureMatch(spec, mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}, dir, g, nil)
+		if v != Pass {
+			t.Fatalf("the missing feature is left out and the present one still covers AAAAX-B01, got %v (%s)", v, msg)
+		}
+	})
+}
+
+// A rule catalogued under one letter while its behaviour is stated under another is an
+// ALIAS: `REF[CODE]: reason`. It has no scenario of its own — the target's scenario is the
+// proof — and it must point at a real rule, with a reason.
+func TestSpecFeatureMatchRuleAlias(t *testing.T) {
+	feature := "@AAAAX\nFeature: x\n\n  @AAAAX-B01 @unit-level\n  Scenario: a\n"
+	spec := func(alias string) string {
+		return "# Spec\n\n| Rule | Description |\n| --- | --- |\n| `AAAAX-B01` | a missing file is skipped |\n\n" +
+			"## Errors\n\n| Code | Condition | Result | Why |\n| --- | --- | --- | --- |\n| `AAAAX-E01` | " + alias + " | — | — |\n"
+	}
+
+	t.Run("SFMSP-B13: A rule alias needs no scenario of its own", func(t *testing.T) {
+		if v, d := rodaSpecFeature(t, spec("REF[AAAAX-B01]: the missing file is the failure B01 already answers"), feature); v != Pass {
+			t.Fatalf("an alias of a covered rule is covered, got %s (%s)", v, d)
+		}
+		// Without the alias the same row is an uncovered requirement.
+		if v, d := rodaSpecFeature(t, spec("a missing file is skipped"), feature); v != Fail || !strings.Contains(d, "AAAAX-E01") {
+			t.Fatalf("a plain -E row with no scenario is charged, got %s (%s)", v, d)
+		}
+	})
+
+	t.Run("SFMSP-B14: An alias that stands for no rule fails", func(t *testing.T) {
+		for name, alias := range map[string]string{
+			"unknown target": "REF[AAAAX-B09]: points at nothing",
+			"no reason":      "REF[AAAAX-B01]:",
+			"bare":           "REF[AAAAX-B01]",
+		} {
+			if v, d := rodaSpecFeature(t, spec(alias), feature); v != Fail || !strings.Contains(d, "AAAAX-E01") {
+				t.Errorf("%s: the alias must fail naming it, got %s (%s)", name, v, d)
+			}
+		}
+		chain := spec("REF[AAAAX-E02]: chained") + "| `AAAAX-E02` | REF[AAAAX-B01]: the real one | — | — |\n"
+		if v, d := rodaSpecFeature(t, chain, feature); v != Fail || !strings.Contains(d, "AAAAX-E02") {
+			t.Errorf("an alias of an alias must fail, got %s (%s)", v, d)
+		}
+		// Quoted inside a rule's statement, `REF[...]` is prose, not an alias.
+		prose := "# Spec\n\n| Rule | Description |\n| --- | --- |\n| `AAAAX-B01` | an alias is written as REF[AAAAX-B09]: reason |\n"
+		if v, d := rodaSpecFeature(t, prose, feature); v != Pass {
+			t.Errorf("REF quoted in a statement must not be read as an alias, got %s (%s)", v, d)
+		}
+		// Checked even with no feature: the alias would otherwise drop the rule unseen.
+		if v, d := rodaSpecFeature(t, spec("REF[AAAAX-B09]: nothing"), ""); v != Fail {
+			t.Errorf("a dangling alias fails even before the feature is looked for, got %s (%s)", v, d)
+		}
+	})
+}

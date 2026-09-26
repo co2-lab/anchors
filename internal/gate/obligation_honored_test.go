@@ -257,3 +257,39 @@ func TestObligation_declaracaoNoCorpoNaoVale(t *testing.T) {
 		t.Fatalf("declaração fora do header não exime, foi %s (%s)", v, d)
 	}
 }
+
+func TestObligationHonored_Errors(t *testing.T) {
+	t.Run("OBHNB-E01: An unreadable destination file is not proof, and the others are still searched", func(t *testing.T) {
+		cfg := &config.Config{Obligations: []config.Obligation{{
+			Name:         "pii-purgavel",
+			When:         "carries: pii",
+			MustAppearIn: []string{"purge/*.sql"},
+			IdentifiedBy: "screaming-snake",
+		}}}
+		content := "<!-- @anchors\n  carries: pii\n-->\n"
+		root := t.TempDir()
+		if err := os.MkdirAll(filepath.Join(root, "purge"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		locked := filepath.Join(root, "purge", "a.sql")
+		if err := os.WriteFile(locked, []byte("DELETE FROM METADATA_ENTRY;\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(locked, 0o000); err != nil {
+			t.Skip("cannot chmod 0000 on this platform")
+		}
+		defer os.Chmod(locked, 0o644)
+		if _, err := os.ReadFile(locked); err == nil {
+			t.Skip("running with privileges that read a 0000 file")
+		}
+		if v, d := checkObligationHonored(content, obligNode(), root, nil, cfg); v != Fail || !strings.Contains(d, "purge/*.sql") {
+			t.Fatalf("a token only inside an unreadable file must not count as present; got %v: %s", v, d)
+		}
+		if err := os.WriteFile(filepath.Join(root, "purge", "b.sql"), []byte("DELETE FROM METADATA_ENTRY;\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if v, d := checkObligationHonored(content, obligNode(), root, nil, cfg); v != Pass {
+			t.Fatalf("the readable file that carries the token must still be found; got %v: %s", v, d)
+		}
+	})
+}

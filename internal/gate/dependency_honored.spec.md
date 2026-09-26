@@ -73,6 +73,12 @@ The ruler is **static, without execution**:
 | `DEPHN-X01` | Static textual confrontation without runtime execution. | The gate inspects non-comment source tokens rather than executing target code or inspecting call graphs; dynamic verification belongs to test suites. |
 | `DEPHN-X02` | Does not interpret dependency semantics, parameter signatures, or method types. | The gate enforces relational honesty between declared symbols and source references; semantic and type checking belongs to language compilers. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `DEPHN-E01` | A code file the map says the spec specifies is no longer on disk. | That file contributes no code; the files still on disk are confronted as usual, so the gate passes when they use every promised symbol, and a symbol used only by the missing file is charged as unused (`DEPHN-B06`). | The map can be older than the tree (a file deleted since the last build). A deleted file uses nothing, so what only it used is really no longer used, and one stale edge must not stop the confrontation of the code that is there. <!-- @resilient: a stale map edge is expected between builds, and the next map build removes it --> |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

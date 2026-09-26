@@ -81,6 +81,13 @@ This gate confronts three complementary structural ordering contracts:
 | `PHORP-X02` | Does not enforce timing deadlines or calendar durations for phases. | This gate validates logical ordering prerequisites; calendar scheduling belongs to external project management tools. |
 | `PHORP-X03` | Does not restrict parent references to a single hierarchy kind. | Projects organize work flexibly; both artifact codes and plan phase codes are permitted as valid parent references. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `PHORP-E01` | No map has been built when a spec's `needs:` or an artifact's `parent:` is confronted. | Pending ("without map cannot find plans" / "without map cannot find parent"): no reference is judged. | The phases live in the plans and the parents in other artifacts, and only the map lists them: approving would assert a reference nobody resolved, and failing would accuse it of pointing at nothing when nothing was looked at. |
+| `PHORP-E02` | A plan the map lists is no longer on disk when the phases it catalogues are collected. | That plan is passed over and the phases of every other plan still resolve `needs:` and `parent:`; a reference only the missing plan catalogued fails as unknown (`PHORP-B11`, `PHORP-B13`). | The map can be older than the tree (a plan deleted since the last build): a plan that is gone catalogues nothing, and one stale node must not unresolve the phases of the plans that are there. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

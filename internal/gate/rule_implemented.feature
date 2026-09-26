@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RLIMR
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @RLIMR
@@ -82,3 +82,9 @@ Feature: RuleImplemented — the spec catalogues rules, and the code shows it re
     When the gate confronts it
     Then it returns Pass, because absence has nowhere to receive a comment — demanding
       it would produce thousands of findings and teach the team to ignore the list
+
+  @RLIMR-E01 @unit-level
+  Scenario: A code file that cannot be read is pending, naming the file
+    Given a spec whose code file is on disk without read permission
+    When the gate confronts it
+    Then it returns Pending naming the file that could not be read

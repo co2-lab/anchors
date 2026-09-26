@@ -58,6 +58,12 @@ gate exists to catch.
 | `MRPRM-B08` | The marking crosses LANGUAGE: the mapping between a `.ts` page and a `.go` handler is the same mapping. |
 | `MRPRM-B09` | Directories of the ignore list, `node_modules` among them, never count towards parity. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `MRPRM-E01` | A directory or file under the root cannot be read (permissions) while the markings are walked. | It is skipped and the walk goes on; a rule marked only there counts as absent from that end, so the gate returns Fail naming the rule and the empty scope (`MRPRM-B02`). | An unreadable file is not evidence that the marking is there. Charging the end as missing keeps the gate closed — the one answer it must never give without looking is Pass — and one locked directory must not abort the scan of every other rule. |
+
 ## Invariants
 
 | Rule | Always holds | How it is proven |

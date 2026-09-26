@@ -482,3 +482,34 @@ func TestSpecWaivers_tableRowIsTheRulesNotTheUnits(t *testing.T) {
 		t.Error("a unit-level waiver outside the table stopped counting")
 	}
 }
+
+func TestTriadComplete_Errors(t *testing.T) {
+	t.Run("TRCMT-E01: A test missing from disk does not orphan a reference another test resolves", func(t *testing.T) {
+		root := raizComProva(t, "AAAAX-B01")
+		if err := os.WriteFile(filepath.Join(root, "x.feature"), []byte("Feature: X\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		g := trincaGraph(true, true, false)
+		g.Nodes = append([]mapx.Node{{ID: "gone.test.ts", Kind: mapx.KindTest}}, g.Nodes...)
+		spec := "@no-test: one-line gateway, proven by `AAAAX-B01`\n"
+		if v, msg := checkTriadComplete(spec, specNode(), root, g, &config.Config{}); v != Pass {
+			t.Fatalf("the test on disk must still resolve the reference, got %v: %s", v, msg)
+		}
+	})
+
+	t.Run("TRCMT-E02: A feature missing from disk does not hide the scenario of the covered feature", func(t *testing.T) {
+		root := raizComProva(t, "AAAAX-B01")
+		if err := os.WriteFile(filepath.Join(root, "x.feature"),
+			[]byte("Feature: X\n\n  Scenario: does something\n    Given a\n    When b\n    Then c\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		g := trincaGraph(true, true, false)
+		g.Nodes = append(g.Nodes, mapx.Node{ID: "a-gone.feature", Kind: mapx.KindFeature})
+		g.Edges = append(g.Edges, mapx.Edge{From: "x.spec.md", To: "a-gone.feature", Type: mapx.EdgeCoveredBy})
+		spec := "@no-test: one-line gateway, proven by `AAAAX-B01`\n"
+		v, msg := checkTriadComplete(spec, specNode(), root, g, &config.Config{})
+		if v != Fail || !strings.Contains(msg, "x.feature") {
+			t.Fatalf("the scenario of the feature on disk must contradict the waiver, got %v: %s", v, msg)
+		}
+	})
+}

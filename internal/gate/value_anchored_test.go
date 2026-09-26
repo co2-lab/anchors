@@ -251,3 +251,29 @@ func TestValueAnchored_anchorInsideProseIsAMention(t *testing.T) {
 		t.Errorf("a standalone declaration that lies must still fail: %v", v)
 	}
 }
+
+func TestValueAnchored_Errors(t *testing.T) {
+	t.Run("VLANV-E01: A spec missing from disk does not drop the values of the other specs", func(t *testing.T) {
+		root, g := project(t, map[string]string{
+			"tokens.spec.md": "| `TKNSX-R01` | success | `#1F8A5B` |\n",
+			"theme.ts":       "// @code-reference-[TKNSX-R01]-[#000000]\nsuccess: '#000000',\n",
+		})
+		g.Nodes = append([]mapx.Node{{ID: "gone.spec.md", Kind: mapx.KindSpec}}, g.Nodes...)
+		v, msg := runOn(t, root, g, "theme.ts")
+		if v != Fail || !strings.Contains(msg, "tokens.spec.md") {
+			t.Fatalf("the spec still on disk must be confronted, got %v: %s", v, msg)
+		}
+	})
+
+	t.Run("VLANV-E02: A code file missing from disk does not hide the copies in the other files", func(t *testing.T) {
+		root, g := project(t, map[string]string{
+			"a.ts": "// @code-reference-[K]-[red]\nc = 'red'\n",
+			"b.ts": "// @code-reference-[K]-[blue]\nc = 'blue'\n",
+		})
+		g.Nodes = append([]mapx.Node{{ID: "gone.ts", Kind: mapx.KindCode}}, g.Nodes...)
+		v, msg := runOn(t, root, g, "a.ts")
+		if v != Fail || !strings.Contains(msg, "b.ts") {
+			t.Fatalf("the copy in the file still on disk must be confronted, got %v: %s", v, msg)
+		}
+	})
+}

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: PHORP
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @PHORP
@@ -126,3 +126,15 @@ Feature: PhaseOrdered — plan phases and phase dependencies must be ordered and
     Given artifacts declaring either artifact codes or phase codes as parent
     When parent validation runs
     Then it accepts both kinds of valid hierarchy roots symmetrically
+
+  @PHORP-E01 @unit-level
+  Scenario: With no map a phase or parent reference is not judged
+    Given a spec declaring needs and an artifact declaring a parent, and no built map
+    When phase existence and parent validation confront them
+    Then both return Pending
+
+  @PHORP-E02 @unit-level
+  Scenario: A plan missing from disk does not unresolve the phases of the other plans
+    Given the map lists a plan that is gone from disk, and a plan on disk cataloguing the phase
+    When phase existence and parent validation confront references to that phase
+    Then both pass

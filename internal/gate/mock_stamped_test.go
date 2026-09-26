@@ -577,3 +577,24 @@ func TestRefreshStamps(t *testing.T) {
 	}
 }
 
+func TestMockStamped_Errors(t *testing.T) {
+	t.Run("MCSTM-E01: A stamp with a non-positive line count is not a stamp", func(t *testing.T) {
+		root, g := stampProject(t, map[string]string{"src/hooks/balance.ts": realHooks})
+		test := "// @contract: src/hooks/balance.ts | export function useBalance(id) { | 0 | deadbeef\n" +
+			"jest.mock('@/src/hooks/balance', () => ({ useBalance: jest.fn() }))\n"
+		v, msg := checkMockStamped(test, mapx.Node{ID: "src/Home.test.tsx", Kind: mapx.KindTest}, root, g, stampCfg())
+		if v != Fail || !strings.Contains(msg, "without contract stamp") {
+			t.Fatalf("a zero-line stamp must leave the double charged as unstamped, got %v: %s", v, msg)
+		}
+	})
+
+	t.Run("MCSTM-E02: A test missing from disk is left out of the doubles of a changed module", func(t *testing.T) {
+		test := "// @contract: src/hooks/balance.ts | export function useBalance(id) { | 3 | deadbeef\n"
+		root, g := stampProject(t, map[string]string{"src/hooks/balance.ts": realHooks, "src/Home.test.tsx": test})
+		g.Nodes = append(g.Nodes, mapx.Node{ID: "src/Gone.test.tsx", Kind: mapx.KindTest})
+		got := TestsStamping(g, root, "src/hooks/balance.ts")
+		if len(got) != 1 || got[0] != "src/Home.test.tsx" {
+			t.Fatalf("the missing test is left out and the present one still found: %v", got)
+		}
+	})
+}

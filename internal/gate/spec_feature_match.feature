@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SFMSP
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @SFMSP
@@ -95,6 +95,19 @@ Feature: SpecFeatureMatch — every requirement the spec defines has at least on
     When the gate confronts it
     Then it returns Skip, because only a spec defines requirements
 
+  @SFMSP-B13 @unit-level
+  Scenario: A rule alias needs no scenario of its own
+    Given a spec whose failure rule is written as REF to a behaviour rule with a reason
+    And a feature with a scenario for the behaviour rule only
+    When the gate confronts the spec
+    Then it returns Pass, and the same row without the alias is charged as uncovered
+
+  @SFMSP-B14 @unit-level
+  Scenario: An alias that stands for no rule fails
+    Given aliases pointing at an undefined rule, at another alias, or with no reason
+    When the gate confronts the spec
+    Then it returns Fail naming the alias, even when the spec has no feature
+
   @SFMSP-I01 @unit-level
   Scenario: Every waiver requires a written reason
     Given in turn a bare per-requirement marker and a bare whole-spec marker
@@ -132,3 +145,15 @@ Feature: SpecFeatureMatch — every requirement the spec defines has at least on
     When the gate confronts it
     Then it returns Pass, because that edge already has its own watcher and this gate
       exists for the edge before it, which had none
+
+  @SFMSP-E01 @unit-level
+  Scenario: Without a built map the confrontation is pending
+    Given a spec confronted with no map built
+    When the gate confronts it
+    Then it returns Pending with the no-map message
+
+  @SFMSP-E02 @unit-level
+  Scenario: A feature missing from disk does not hide the scenarios of the other features
+    Given a spec linked to a feature that is gone from disk and to a feature that tags its requirement
+    When the gate confronts it
+    Then it returns Pass

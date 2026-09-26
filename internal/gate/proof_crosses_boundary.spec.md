@@ -70,6 +70,13 @@ it does not go hunting duplicated concepts across the project.
 | `PCBPR-B13` | A rule with no relation claim at all leaves without a verdict — there was nothing to charge. |
 | `PCBPR-B14` | Imports in other language shapes (`require`, `from `, `use `, `using `, `#include`, or the project's configured pattern) satisfy the charge the same way. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `PCBPR-E01` | A spec is confronted with no map built. | Pending, saying no map is loaded — even when a rule carries the single-source mark. | The governed code and the targets named by rule code are only reachable through the map. Without it nothing was looked at, and neither Pass nor Fail can be said about an import nobody read. |
+| `PCBPR-E02` | A marked rule demands an import, and every file the spec governs (`specifies`) is gone from disk or unreadable. | Pending, saying the linked code could not be read. | A map older than the tree can point at code that was moved or deleted. Failing would charge a missing import on a file that is not there; passing would approve a proof nobody saw. The next map build points the spec at the real files. |
+
 ## Invariants
 
 | Rule | Always holds | How it is proven |

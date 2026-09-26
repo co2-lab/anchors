@@ -251,3 +251,24 @@ func TestMarkerParityNaoLeForaDaListaDeTexto(t *testing.T) {
 		t.Fatalf("a regra do binario nao podia aparecer no laudo; veio: %s", d)
 	}
 }
+
+func TestMarkerParity_Errors(t *testing.T) {
+	t.Run("MRPRM-E01: A marking inside an unreadable directory counts as absent from its end", func(t *testing.T) {
+		root := arvore(t, map[string]string{
+			"web/scopes.ts":          "// @data-purge-rule-conta: o que a página promete\n",
+			"server/locked/purge.ts": "// @data-purge-rule-conta: o que o handler apaga\n",
+		})
+		locked := filepath.Join(root, "server", "locked")
+		if err := os.Chmod(locked, 0o000); err != nil {
+			t.Skip("cannot chmod 0000 on this platform")
+		}
+		defer os.Chmod(locked, 0o755)
+		if _, err := os.ReadDir(locked); err == nil {
+			t.Skip("running with privileges that read a 0000 directory")
+		}
+		v, d := checkMarkerParity(gateDePara(), root, nil, nil)
+		if v != Fail || !strings.Contains(d, "conta") || !strings.Contains(d, "server/**") {
+			t.Fatalf("the unreadable end must be charged as missing, naming rule and scope; got %v: %s", v, d)
+		}
+	})
+}

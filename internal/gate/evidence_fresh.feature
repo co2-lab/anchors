@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: EVFRV
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @EVFRV
@@ -110,3 +110,4 @@ Feature: EvidenceFresh — the score of this test holds against TODAY's code
     When the gate confronts it
     Then it returns Pass, because the confronted truth lives in the map — a ruler depending
       on settings could be turned off by a default nobody chose
+

@@ -71,6 +71,16 @@ charging a review of a compiler's output — so there is nowhere to start but th
 | `DCFRD-X03` | Does not charge documents written by hand. | The build refuses to overwrite a page with no generation marker. Charging an update of a file the compiler will not write would send the author to run a command that changes nothing. |
 | `DCFRD-X04` | Does not confront the compiled document as an artifact of its own. | It is generated output, not a declared unit. Giving it a node would demand a spec, a feature and a test for a build product. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `DCFRD-E01` | REF[DCFRD-B05]: a missing template directory is the project that never opted in, answered by B05 | — | — |
+| `DCFRD-E02` | REF[DCFRD-B08]: a template that fails to compile is answered by B08: it fails with the compiler error | — | — |
+| `DCFRD-E03` | REF[DCFRD-B09]: specs that cannot be read are answered by B09: no verdict, with the reason | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

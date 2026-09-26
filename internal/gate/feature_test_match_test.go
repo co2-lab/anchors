@@ -465,3 +465,21 @@ describe('Form', () => {
 		t.Errorf("the @nivel-compilacao scenario (unmapped) was not confronted: %v %s", v, detail)
 	}
 }
+
+func TestFeatureTestMatch_Errors(t *testing.T) {
+	t.Run("FTMFT-E01: A linked test gone from disk implements nothing while the others still count", func(t *testing.T) {
+		root := t.TempDir()
+		feat := "packages/backend/dedup.feature"
+		present := "packages/backend/dedup.test.ts"
+		writeFile(t, root, feat, featureSrc)
+		writeFile(t, root, present, "it('DDTDX-B01: Duplicata automática quando descrição e valor idênticos', () => {})\n")
+		g := featureGraph(feat, present)
+		gone := "packages/backend/gone.test.ts"
+		g.Nodes = append(g.Nodes, mapx.Node{ID: gone, Kind: mapx.KindTest})
+		g.Edges = append(g.Edges, mapx.Edge{From: feat, To: gone, Type: mapx.EdgeTestedBy})
+		v, d := checkFeatureTestMatch(featureSrc, mapx.Node{ID: feat, Kind: mapx.KindFeature}, root, g, regimeCfg())
+		if v != Fail || !strings.Contains(d, "DDTDX-B02") || strings.Contains(d, "DDTDX-B01") {
+			t.Fatalf("only the scenario the missing test would prove is charged; got %v: %s", v, d)
+		}
+	})
+}

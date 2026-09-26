@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MRPRM
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @MRPRM
@@ -72,6 +72,13 @@ Feature: MarkerParity — the same rule has to appear at both ends that fulfil i
     And a third copy of the marking inside node_modules
     When the gate confronts it
     Then it returns Pass, and the vendored copy is not counted as an end
+
+  @MRPRM-E01 @unit-level
+  Scenario: A marking inside an unreadable directory counts as absent from its end
+    Given the rule marked in the page tree
+    And marked again in a server directory that cannot be read
+    When the gate confronts it
+    Then it returns Fail naming the rule and the server scope as the empty end
 
   @MRPRM-I01 @unit-level
   Scenario: The failing verdict names the rule and the empty scope

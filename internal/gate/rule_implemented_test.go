@@ -302,3 +302,19 @@ func TestRegraImplementada_naoExigeMarcaDeTodaRegra(t *testing.T) {
 		t.Errorf("a restrição dispensada com razão fecha a conta: %v (%s)", v, msg)
 	}
 }
+
+func TestRuleImplemented_Errors(t *testing.T) {
+	t.Run("RLIMR-E01: A code file that cannot be read is pending, naming the file", func(t *testing.T) {
+		root := t.TempDir()
+		target := filepath.Join(root, "u.ts")
+		must(t, os.WriteFile(target, []byte("export const x = 1\n"), 0o000))
+		if _, err := os.ReadFile(target); err == nil {
+			t.Skip("the file is still readable (running as root): the condition cannot be built here")
+		}
+		spec := "<!-- @anchors\n  code: SBNKX\n-->\n| `SBNKX-B01` | does something |\n"
+		v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}, root, nil, nil)
+		if v != Pending || !strings.Contains(msg, "u.ts") {
+			t.Fatalf("expected Pending naming u.ts, got %v (%s)", v, msg)
+		}
+	})
+}

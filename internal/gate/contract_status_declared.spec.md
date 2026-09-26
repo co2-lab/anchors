@@ -78,6 +78,14 @@ is nothing to confront.
 | `CSDCN-X02` | Does not judge WHEN each status is right — only whether the number appears on both sides. | Whether the 403 belongs on that branch is judgement about the design. Here the ruler is the correspondence between two sets of numbers, which is deterministic and does not depend on reading intent. |
 | `CSDCN-X03` | Does not charge the phantom side when the code builds the status dynamically. | With a helper receiving the code by parameter, a declared value may well be emitted through a call textual reading cannot reach. Accusing would be a false positive, and mass false positives are what makes a team turn the gate off. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `CSDCN-E01` | No map has been built, so the gate receives no graph. | `Pending` with the no-map message. | The code a spec specifies is found through the map's `specifies` edges: without them there is nothing to confront, and `Pending` says "not measured" where `Pass` would claim a contract was checked. |
+| `CSDCN-E02` | The map links the spec to code, but none of those files can be read (all gone from disk since the last build, or empty). | `Pending` saying the linked code could not be read. | No code read is no status measured. Letting it fall through to `CSDCN-B08` would answer "the code returns no status", a claim about code the gate never saw. |
+| `CSDCN-E03` | The project's `dialect.http_status` does not compile as a regular expression. | `Pending` saying the pattern does not compile. | Without a lexicon there is no way to read the code's statuses; `Pending` sends the reader to fix the configuration instead of reporting a divergence nobody measured. |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

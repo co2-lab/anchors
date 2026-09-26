@@ -69,3 +69,21 @@ Feature: MockStampGenerator — writes the missing `@contract` stamps, and never
     When the generator runs
     Then the divergent stamp is not refreshed or rewritten, preserving the signal for human review
 
+  @MKSTP-E01 @unit-level
+  Scenario: A double detector that does not compile stops the generator with an error
+    Given a project whose mock_detect pattern does not compile, or has no capture group
+    When the generator runs
+    Then it returns the error and writes no stamp
+
+  @MKSTP-E02 @unit-level
+  Scenario: An undeclared double detector stops the generator with an error
+    Given a project that does not declare mock_detect
+    When the generator runs
+    Then it returns an error naming mock_detect and writes no stamp
+
+  @MKSTP-E03 @unit-level
+  Scenario: A module missing from disk is skipped and the other doubles are still stamped
+    Given a test doubling a module that is gone from disk and a module that is present
+    When the generator runs
+    Then the missing module is listed as skipped naming its file, and the present one is stamped
+

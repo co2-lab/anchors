@@ -88,6 +88,15 @@ demanding scenario codes from unlinked tests would require referencing nonexiste
 | `TSTRT-X03` | Does not require scenario codes in standalone test files unattached to features. | Helper tests and unit tests for internal tools without business features have no specification or scenarios to cite. |
 | `TSTRT-X04` | Does not inspect the semantic validity or quality of test assertions. | Detecting at least one scenario code establishes relational visibility; semantic depth is evaluated by code review and test execution. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `TSTRT-E01` | REF[TSTRT-B02]: with no map the link to the feature cannot be followed, and B02 answers Pending | — | — |
+| `TSTRT-E02` | REF[TSTRT-B04]: a linked feature that cannot be read is answered by B04: the confrontation is skipped | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

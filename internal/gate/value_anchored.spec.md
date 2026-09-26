@@ -14,7 +14,7 @@
 > is for values that live in more than one place, and it is the way those places are linked.
 >
 > **Revises:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `I02`, `X01`, `X02`
-> **Checked:** `B07`, `B08`, `I01`, `I03`, `X03`
+> **Checked:** `B07`, `B08`, `I01`, `I03`, `X03`, `E01`, `E02`
 
 ## Overview
 
@@ -79,6 +79,13 @@ copies are the truth.
 | `VLANV-X01` | A rule whose defining line declares no value is not charged against the spec. | Most rules are prose. Reading any backticked identifier as a value would charge every declaration pointing at an ordinary rule. |
 | `VLANV-X02` | A literal nobody declared is not charged. | Anchoring is for REPLICATED keys, and whoever replicates declares. Charging every value of every set was the first version, and it was replaced. |
 | `VLANV-X03` <!-- @no-scenario: architectural boundary delegating comment syntax and token patterns to project dialect in anchors.yaml --> | Does not decide the anchor's syntax. | The project declares it (`derived.value_anchor`), because it belongs to how the codebase writes. The gate only requires that the anchor stand alone on its comment line (`VLANV-B08`). |
+
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `VLANV-E01` | A spec the map lists is no longer on disk when the project index is built. | That spec is left out of the index: its rules declare no value, and the declarations pointing at them are not charged against the spec. The rules of every other spec are still confronted (`VLANV-B05`). | The map can be older than the tree (a spec deleted since the last build): a missing spec declares nothing, and one stale node must not drop the source of every other rule. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
+| `VLANV-E02` | A code file the map lists is no longer on disk when the project index is built. | That file contributes no copy of any key; the copies in every other file are still confronted (`VLANV-B04`). | A file that is gone carries no copy that could disagree, and one stale node must not hide the divergence between the files that are there. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
 
 ## Dependencies
 

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: FTMFT
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @FTMFT
@@ -150,3 +150,10 @@ Feature: FeatureTestMatch — scenarios in feature must be implemented in test b
     Given a scenario tagged with a regime the project does not map
     When the feature is confronted with its test
     Then the scenario is still charged against the test
+
+  @FTMFT-E01 @unit-level
+  Scenario: A linked test gone from disk implements nothing while the others still count
+    Given a feature linked to a present test that implements one scenario
+    And linked to a second test that no longer exists on disk
+    When the gate confronts it
+    Then it returns Fail charging only the scenario the missing test would have implemented

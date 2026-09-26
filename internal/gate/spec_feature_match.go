@@ -35,6 +35,11 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.spec_feature.skip_not_spec")
 	}
+	// A rule ALIAS must resolve before anything else is read: a dangling one would drop a
+	// requirement from every scenario check without standing for any other rule.
+	if bad := invalidRuleAliases(content); len(bad) > 0 {
+		return Fail, i18n.T("gate.spec_feature.alias_invalid", len(bad), strings.Join(bad, "; "))
+	}
 	if g == nil {
 		return pendingNoMap()
 	}
@@ -134,6 +139,11 @@ func definedRequirements(content string) []string {
 		if waivedByNoScenario(linha) {
 			continue
 		}
+		// An ALIAS (`REF[CODE-B05]: reason`) has no scenario of its own: the rule it
+		// points at is the one the scenario and the test prove.
+		if _, ok := ruleAliasTarget(linha); ok {
+			continue
+		}
 		m := re.FindStringSubmatch(linha)
 		if m == nil {
 			continue
@@ -159,6 +169,78 @@ func definedRequirements(content string) []string {
 func defineRuleCaptureRE() *regexp.Regexp {
 	return regexp.MustCompile(
 		"(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2})")
+}
+
+// ruleAliasRE is a rule declared as an ALIAS of another rule of the same spec:
+//
+//	| `DCFRD-E01` | REF[DCFRD-B09]: a spec missing from disk is the stale map B09 answers |
+//
+// It exists for the rule that must be catalogued under one letter while its behaviour is
+// already stated under another — a failure (`-E`) the spec had declared as a behaviour
+// (`-B`). Writing the rule twice would put one decision in two places, and the copies
+// would drift; waiving the letter would lose the catalogue. The alias keeps both: the
+// code exists where its letter is looked for, and the statement lives once, in the
+// target. The reason is mandatory, as for every waiver: it says why the target answers.
+var ruleAliasRE = regexp.MustCompile("^REF\\[`?([A-Z0-9]{3,6}-[A-Z]\\d{2})`?\\]([^\\S\\n]*:[^\\S\\n]*[^\\s|])?")
+
+// ruleAliasTarget returns the rule a DEFINING line aliases, if it is an alias.
+//
+// The alias is the FIRST thing after the rule's code — the whole statement of the rule.
+// Anywhere else on the line it is prose: a rule that explains the syntax by quoting
+// `REF[CODE-B05]` would otherwise turn into an alias of that example.
+func ruleAliasTarget(linha string) (string, bool) {
+	m := aliasOf(linha)
+	if m == nil {
+		return "", false
+	}
+	return m[1], true
+}
+
+// aliasOf matches the alias that opens a defining line's statement, or returns nil.
+func aliasOf(linha string) []string {
+	loc := defineRuleCaptureRE().FindStringSubmatchIndex(linha)
+	if loc == nil {
+		return nil
+	}
+	rest := strings.TrimLeft(linha[loc[3]:], "`* \t|—–-:")
+	return ruleAliasRE.FindStringSubmatch(rest)
+}
+
+// invalidRuleAliases lists every alias that does not stand for a real rule: a target the
+// spec does not define, a target that is itself an alias (a chain hides where the
+// statement lives), or no written reason.
+func invalidRuleAliases(content string) []string {
+	re := defineRuleCaptureRE()
+	defined := map[string]bool{}
+	aliased := map[string]bool{}
+	for _, linha := range strings.Split(content, "\n") {
+		if m := re.FindStringSubmatch(linha); m != nil {
+			defined[m[1]] = true
+			if _, ok := ruleAliasTarget(linha); ok {
+				aliased[m[1]] = true
+			}
+		}
+	}
+	var bad []string
+	for _, linha := range strings.Split(content, "\n") {
+		m := re.FindStringSubmatch(linha)
+		if m == nil {
+			continue
+		}
+		a := aliasOf(linha)
+		if a == nil {
+			continue
+		}
+		switch {
+		case !defined[a[1]]:
+			bad = append(bad, i18n.T("gate.spec_feature.alias_unknown", m[1], a[1]))
+		case aliased[a[1]]:
+			bad = append(bad, i18n.T("gate.spec_feature.alias_chain", m[1], a[1]))
+		case a[2] == "":
+			bad = append(bad, i18n.T("gate.spec_feature.alias_no_reason", m[1], a[1]))
+		}
+	}
+	return bad
 }
 
 // noScenarioRE — o opt-out por requisito, com razão obrigatória depois dos dois-pontos.

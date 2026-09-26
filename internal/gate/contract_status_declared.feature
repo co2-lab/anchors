@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CSDCN
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @CSDCN
@@ -139,3 +139,21 @@ Feature: ContractStatusDeclared — the output contract lists the status codes t
     When the gate confronts it
     Then it never names that status, because mass false positives are what makes a team
       turn the gate off
+
+  @CSDCN-E01 @unit-level
+  Scenario: Without a built map the confrontation is pending
+    Given a spec with an output contract and no map built
+    When the gate confronts it
+    Then it returns Pending with the no-map message
+
+  @CSDCN-E02 @unit-level
+  Scenario: Linked code gone from disk is pending, not a code without status
+    Given a spec whose only linked code file is gone from disk
+    When the gate confronts it
+    Then it returns Pending saying the linked code could not be read
+
+  @CSDCN-E03 @unit-level
+  Scenario: A dialect status pattern that does not compile is pending
+    Given a project whose dialect http_status is a malformed regular expression
+    When the gate confronts a spec with an output contract
+    Then it returns Pending saying the pattern does not compile

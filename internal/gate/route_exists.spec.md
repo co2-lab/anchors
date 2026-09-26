@@ -79,6 +79,15 @@ rather than falsely approving uninspected routes.
 | `RTEXR-X02` | Does not validate route parameter schemas, HTTP payload structures, or response codes. | This gate validates whether the route exists in the application registry; parameter and payload validation belong to interface and contract gates. |
 | `RTEXR-X03` | Does not evaluate authentication or access permissions attached to the route. | Verifying user roles and permissions belongs to authorization gates rather than registry existence checks. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `RTEXR-E01` | REF[RTEXR-B04]: a registry glob that does not parse is answered by B04: Pending with the glob error | — | — |
+| `RTEXR-E02` | REF[RTEXR-B12]: a route pattern that does not compile, or has no capture group, is answered by B12: Pending | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

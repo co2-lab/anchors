@@ -100,6 +100,12 @@ looked at.
 | `INCHN-X02` | Does not invoke external tooling. | These checkers answer by reading TEXT. The ones that shell out belong to the external path of the engine, and mixing them would make a registry lookup depend on what is installed on the machine. |
 | `INCHN-X03` | Does not judge whether the text it reads is GOOD. | The rulers here are presence and shape — the file is not empty, it carries an identity, it carries a header. Whether the content is right is judgment, and a deterministic checker that attempted it would fail by a criterion it cannot measure. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `INCHN-E01` | A test the map lists is no longer on disk when `scenario-coverage` looks for the tests that name each scenario code. | That test names nothing; the tests still on disk are read, so a code one of them names is still counted as written. | The map can be older than the tree (a test deleted since the last build): a missing file names no code, and one stale node must not make the codes the other tests name look untested. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

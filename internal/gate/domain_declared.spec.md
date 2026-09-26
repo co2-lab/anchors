@@ -60,6 +60,14 @@ someone on the other side.
 | `DMDCD-X01` | Does not judge whether the declared input is RIGHT — only whether it exists and has an owner. | Whether the set of accepted values corresponds to the real domain is judgement, and judgement belongs to another class of gate. Here the ruler is the PRESENCE of the declaration, which is deterministic. |
 | `DMDCD-X02` | Does not confront the code to check whether the validation in fact exists. | This layer reads TEXT. Crossing the declaration with the implementation is the work of the relational gate, which has the map; doing it here would duplicate the ruler in two places that would diverge. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `DMDCD-E01` | REF[DMDCD-B02]: the one handled path is the absent domain section, and B02 answers it: the spec fails | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

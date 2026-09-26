@@ -13,7 +13,7 @@
 > `anchors doctor --fix` replaces whole. Decided by the user: those files are upstream-owned.
 >
 > **Revises:** `B22`
-> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B13`, `B14`, `B15`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `I01`, `I02`, `I03`, `X01`, `X02`, `X03`
+> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B13`, `B14`, `B15`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `I01`, `I02`, `I03`, `X01`, `X02`, `X03`, `E01`
 
 ## Overview
 
@@ -119,6 +119,15 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 | `GTENG-X01` | Does not decide WHETHER a target is correct. | The ruler belongs to the checker or to the external tool. An engine that judged would put the measurement inside the router, and the same defect would have two owners. |
 | `GTENG-X02` | Does not compute the verdict of a judgment gate. | The question is judgment, and the CLI cannot answer it. All the engine knows is whether SOMEBODY already answered — and that answer lives in a stamp in the map, carrying the revisions of both ends so it ages when the target changes. |
 | `GTENG-X03` | Does not invent a map, a configuration or a waiver when it receives none. | Absence is a case, not an error. Fabricating one would make the run answer about a project state that does not exist, and the verdict would be about nothing. |
+
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `GTENG-E01` | REF[GTENG-B06]: a target that cannot be read is answered by B06: the gate does not apply to it | — | — |
+| `GTENG-E02` | REF[GTENG-B08]: a required binary missing from the PATH is answered by B08: the gate steps aside | — | — |
 
 ## Dependencies
 

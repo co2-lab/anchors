@@ -83,6 +83,12 @@ a baseline is the physical proof of THIS specific unit, not a pointer to where i
 | `IDCND-X02` | Does not charge specs for code absence. | Code presence is governed by `spec-has-code`; charging it here would create two findings for a single defect. |
 | `IDCND-X03` | Does not forbid components from referencing parent screen codes in testIDs. | Child components regularly identify their screen context for end-to-end flow navigation; forbidding this would break flow selectors. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `IDCND-E01` | A file the spec governs (`specifies`) is gone from disk when its testIDs are read. | That file is left out; the other governed files are still confronted, and an orphan acronym in any of them still fails (`IDCND-B05`). | A file that no longer exists carries no testID, so there is nothing in it to be inconsistent; and one stale edge must not hide the orphan identity in the files that are there. <!-- @resilient: a stale map edge is expected between builds, and the next map build removes it --> |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DEPHN
-#   updated_at: 2026-09-20
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @DEPHN
@@ -84,3 +84,11 @@ Feature: DependencyHonored — methods promised in the dependency table are cons
     Given a dependency table promising an identifier name without type annotations or signatures
     When the gate confronts the unit
     Then it verifies only exact identifier token presence, delegating type semantics to the compiler
+
+  @DEPHN-E01 @unit-level
+  Scenario: A specified code file missing from disk is left out of the confrontation
+    Given a spec whose map lists two specified code files, one of them no longer on disk
+    And the file still on disk uses every promised symbol
+    When the gate confronts the spec
+    Then it passes, confronting only the file that is there
+    And a symbol used by no file still on disk is charged as unused

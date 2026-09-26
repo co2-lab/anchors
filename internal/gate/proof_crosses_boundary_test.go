@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -451,4 +452,24 @@ func TestFronteira_prosaEmiteAchadoEDeixaOBloqueioParaAConfig(t *testing.T) {
 	if strings.Contains(msg, "blocking") || strings.Contains(msg, "bloque") {
 		t.Errorf("o gate não decide bloqueio — só reporta o achado; msg = %q", msg)
 	}
+}
+
+func TestProofCrossesBoundary_Errors(t *testing.T) {
+	spec := "| `SEATX-B01` | ***{fonte-unica}*** `orgBilling.ts` |\n"
+	t.Run("PCBPR-E01: Without a map the demand is left pending, not approved", func(t *testing.T) {
+		v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, "", nil, nil)
+		if v != Pending || msg != i18n.T("gate.no_map_loaded") {
+			t.Fatalf("a marked rule without a map must stay Pending on the missing map; got %v: %s", v, msg)
+		}
+	})
+	t.Run("PCBPR-E02: Governed code gone from disk leaves the demand pending", func(t *testing.T) {
+		g := &mapx.Graph{
+			Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: "u.ts", Kind: mapx.KindCode}},
+			Edges: []mapx.Edge{{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies}},
+		}
+		v, msg := checkProofCrossesBoundary(spec, mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, t.TempDir(), g, nil)
+		if v != Pending || msg != i18n.T("gate.proof_crosses_boundary.pending_read_code") {
+			t.Fatalf("with no governed code readable the charge must stay Pending; got %v: %s", v, msg)
+		}
+	})
 }

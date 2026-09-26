@@ -65,6 +65,16 @@ the gate.
 | `DCRQD-X01` | Does not understand the document's CONTENT. | The search is coarse on purpose: it looks for the identity code and the file name. A contract that cites the route and describes the wrong shape passes here — and that is acceptable. The gate separates "not documented" from "documented"; judging the quality of the documentation is another ruler. |
 | `DCRQD-X02` | Does not decide WHICH documents are mandatory. | That is a decision of the project, declared in the Structure. A gate that invented duties would charge what nobody committed to. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `DCRQD-E01` | REF[DCRQD-I03]: with no map built the aggregate cannot look, and I03 answers it: skipped, never approved | — | — |
+| `DCRQD-E02` | REF[DCRQD-B01]: a mandatory document that cannot be read is answered as the missing one of B01 — either way the reader is sent to that file | — | — |
+| `DCRQD-E03` | REF[DCRQD-B06]: with no configuration there is no declared duty, and B06 answers that nothing is charged | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

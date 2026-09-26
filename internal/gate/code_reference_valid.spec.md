@@ -61,6 +61,12 @@ This gate operates in distinct territory from neighbouring gates:
 | `CRVCD-X02` | Does not inspect non-specification artifacts like code or tests for dangling requirement citations. | Code and tests are verified against their owning specifications through feature-test matching and marker parity. |
 | `CRVCD-X03` | Does not mandate that a specification must cite external requirements. | Isolated self-contained units legitimately reference no other specifications. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `CRVCD-E01` | A spec the map carries without its code is no longer on disk, so its header cannot be read when the declared codes are collected. | That spec contributes no code; the codes of the other specs are still collected, so a citation of theirs resolves and passes, and a citation of the missing spec's code is charged as unresolved (`CRVCD-B05`). | The map can be older than the tree (a spec deleted since the last build). A deleted spec declares no unit any more, so citing it really is a dangling reference, and one stale node must not empty the universe every other citation resolves against. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

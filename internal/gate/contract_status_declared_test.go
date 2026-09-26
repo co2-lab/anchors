@@ -503,3 +503,41 @@ export const handler = async () => {
 		t.Errorf("o 409 pode ser emitido por um caminho que a leitura textual não alcança; msg = %q", msg)
 	}
 }
+
+func TestContractStatusDeclared_Errors(t *testing.T) {
+	spec := "## Contrato de Saída\n| Status | Quando |\n| --- | --- |\n| 200 | ok |\n"
+	specNode := mapx.Node{ID: "h.spec.md", Kind: mapx.KindSpec}
+	linkedTo := func(code string) *mapx.Graph {
+		return &mapx.Graph{
+			Nodes: []mapx.Node{specNode, {ID: code, Kind: mapx.KindCode}},
+			Edges: []mapx.Edge{{From: "h.spec.md", To: code, Type: mapx.EdgeSpecifies}},
+		}
+	}
+
+	t.Run("CSDCN-E01: Without a built map the confrontation is pending", func(t *testing.T) {
+		v, msg := checkContractStatusDeclared(spec, specNode, t.TempDir(), nil, nil)
+		if v != Pending || !strings.Contains(msg, "map") {
+			t.Fatalf("expected Pending with the no-map message, got %v (%s)", v, msg)
+		}
+	})
+
+	t.Run("CSDCN-E02: Linked code gone from disk is pending, not a code without status", func(t *testing.T) {
+		cfg := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+		v, msg := checkContractStatusDeclared(spec, specNode, t.TempDir(), linkedTo("gone.ts"), cfg)
+		if v != Pending || !strings.Contains(msg, "could not be read") {
+			t.Fatalf("expected Pending saying the code could not be read, got %v (%s)", v, msg)
+		}
+	})
+
+	t.Run("CSDCN-E03: A dialect status pattern that does not compile is pending", func(t *testing.T) {
+		root := t.TempDir()
+		if err := os.WriteFile(filepath.Join(root, "h.ts"), []byte("export const h = () => ({ statusCode: 200 })"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		cfg := &config.Config{Dialect: &config.Dialect{HTTPStatus: `[`}}
+		v, msg := checkContractStatusDeclared(spec, specNode, root, linkedTo("h.ts"), cfg)
+		if v != Pending || !strings.Contains(msg, "compile") {
+			t.Fatalf("expected Pending saying the pattern does not compile, got %v (%s)", v, msg)
+		}
+	})
+}

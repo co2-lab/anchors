@@ -80,6 +80,12 @@ governs spec-level declaration.
 | `TQETS-X02` | Does not execute flows or evaluate runtime JavaScript expressions. | Dynamic runtime string evaluation requires a running emulator or engine; static analysis inspects only the static prefix or skips interpolation. |
 | `TQETS-X03` | Does not assume a default test handle attribute (such as `testID`). | Assuming defaults without project declaration would stamp approval over unverified codebases in unfamiliar stacks. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `TQETS-E01` | The project declares an E2E surface, but the directory its pattern points to does not exist on disk. | `Skip` with the no-E2E-surface message; nothing is confronted. | A directory that is not there holds no flow, so there is nothing to confront: `Skip` says "not measured", where `Pass` would claim flows were checked and found clean. |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

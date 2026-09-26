@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MCTYM
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @MCTYM
@@ -150,3 +150,4 @@ Feature: MockTyped — every test double must derive from the module it replaces
     And a test with an automock and a spy mock of governed modules
     When the gate confronts it
     Then neither is charged, and an unannotated factory still is
+

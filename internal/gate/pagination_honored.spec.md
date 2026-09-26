@@ -63,6 +63,14 @@ weaker, and it only accuses when the name promises a set unambiguously.
 | `PGNHN-X01` | Does not invent a cursor where the provider offers none. | Accusing the absence of a mechanism the dependency does not have would transfer to the author a defect that is not theirs — and the advice would be impossible to follow. |
 | `PGNHN-X02` | Does not measure PERFORMANCE nor page size. | The ruler is the broken promise, not the cost of the query. Judging whether a hundred is a lot or a little depends on the domain, and that is the project's decision, not the gate's. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `PGNHN-E01` | REF[PGNHN-B07]: an undeclared dialect is answered by B07: indeterminate, and it says so | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

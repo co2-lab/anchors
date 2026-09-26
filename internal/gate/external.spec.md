@@ -62,6 +62,15 @@ Executes an external command (such as jest, eslint, or tsc) defined in `anchors.
 | `EXCMX-X01` | Does not parse or interpret linter or test tool diagnostics beyond reading stdout and stderr. | Following design principle D5, the framework reimplements spec and relation parsing but delegates tool execution directly to external linters and test runners. |
 | `EXCMX-X02` | Does not aggregate cross-file state across partitioned batches. | Batch scope assumes file-by-file independent validation; cross-file analysis must declare project scope and scan all targets itself. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `EXCMX-E01` | REF[EXCMX-B02]: a command that exits non-zero is answered by B02: Fail with its trimmed output | — | — |
+| `EXCMX-E02` | REF[EXCMX-B03]: a command that fails with no output is answered by B03: the detail says it produced none, with the execution error | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

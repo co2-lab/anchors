@@ -61,6 +61,13 @@ requires that they exist —, it asks "do the pieces exist?".
 | `TRCMT-X01` | Does not confront whether the pieces MATCH one another — only whether they exist. | Matching is the work of the relational gates. This one exists precisely because they fail open when the piece does not exist; doing both here would duplicate the ruler. |
 | `TRCMT-X02` | Does not judge the QUALITY of any piece. | An empty test satisfies this gate, and that is correct: the ruler here is EXISTENCE. The one that confronts the content is another gate, and confusing the two would make this one fail for a reason it does not know how to measure. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `TRCMT-E01` | A test the map lists is no longer on disk while the gate looks for the test that the `@no-test` reference points at. | That test is passed over and the search goes on through the others: the reference still resolves to a test that is on disk, and fails as orphaned (`TRCMT-I03`) only when none is. | The map can be older than the tree (a test deleted since the last build): a file that is gone proves nothing, and one stale node must not fail a reference that another test resolves. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
+| `TRCMT-E02` | A feature the spec is `covered-by` is no longer on disk while the gate counts the scenarios that would contradict `@no-test`. | That feature is passed over and the next covered feature is counted: a scenario in a feature that is on disk still fails as a contradiction (`TRCMT-I02`). | A feature that is gone asserts no behaviour, so it cannot contradict the waiver; stopping at it would hide the scenario of the feature that is there. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

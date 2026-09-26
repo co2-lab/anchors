@@ -224,3 +224,38 @@ func TestLetraDaFaseEhCanonica(t *testing.T) {
 		t.Error("o regex de fase não casa o formato que o próprio gate documenta")
 	}
 }
+
+func TestPhaseOrdered_Errors(t *testing.T) {
+	t.Run("PHORP-E01: With no map a phase or parent reference is not judged", func(t *testing.T) {
+		spec := mapx.Node{Kind: mapx.KindSpec, Needs: []string{"FNDTN-F01"}}
+		if v, msg := checkPhaseExists("", spec, t.TempDir(), nil, nil); v != Pending {
+			t.Fatalf("needs with no map must be Pending, got %v (%s)", v, msg)
+		}
+		child := mapx.Node{Code: "X", Parent: "FNDTN-F01"}
+		if v, msg := checkParentValid("", child, t.TempDir(), nil, nil); v != Pending {
+			t.Fatalf("parent with no map must be Pending, got %v (%s)", v, msg)
+		}
+	})
+
+	t.Run("PHORP-E02: A plan missing from disk does not unresolve the phases of the other plans", func(t *testing.T) {
+		dir := t.TempDir()
+		if err := os.MkdirAll(filepath.Join(dir, "plans"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "plans/0002.md"), []byte("### FNDTN-F01 — the tree\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		g := &mapx.Graph{Nodes: []mapx.Node{
+			{ID: "plans/0001.md", Kind: mapx.KindPlan},
+			{ID: "plans/0002.md", Kind: mapx.KindPlan},
+		}}
+		spec := mapx.Node{Kind: mapx.KindSpec, Needs: []string{"FNDTN-F01"}}
+		if v, msg := checkPhaseExists("", spec, dir, g, nil); v != Pass {
+			t.Fatalf("the phase of the plan on disk must resolve needs, got %v (%s)", v, msg)
+		}
+		child := mapx.Node{Code: "X", Parent: "FNDTN-F01"}
+		if v, msg := checkParentValid("", child, dir, g, nil); v != Pass {
+			t.Fatalf("the phase of the plan on disk must resolve parent, got %v (%s)", v, msg)
+		}
+	})
+}

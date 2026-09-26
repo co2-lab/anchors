@@ -80,6 +80,15 @@ to any human reader opening the document.
 | `CNHNC-X02` | Does not charge specs that contain no count declaration markers. | Not every spec makes numerical claims, and forcing every spec to declare counts would impose empty bureaucracy. |
 | `CNHNC-X03` | Does not confront prose statements that qualify a subset rather than the total. | Differentiating subsets from totals requires deep semantic understanding; conservatively silencing alerts on qualified phrases prevents noisy false positives. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `CNHNC-E01` | REF[CNHNC-B08]: a declared glob that does not parse is the configuration failure B08 answers: the gate fails carrying the glob error | — | — |
+| `CNHNC-E02` | REF[CNHNC-B09]: a count pattern that does not compile is the configuration failure B09 answers: the gate fails carrying the regex error | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

@@ -109,6 +109,10 @@ func TestMockTipado_semContratoDeclaradoPula(t *testing.T) {
 	if !strings.Contains(msg, "mock_contract") {
 		t.Errorf("a mensagem deve dizer o que declarar: %s", msg)
 	}
+	// testa com config nil
+	if c := mockContract(nil); c != "" {
+		t.Errorf("esperava vazio para cfg nil, veio %q", c)
+	}
 }
 
 // A cobrança é do TESTE — é lá que o dublê vive. Rodar sobre a spec acusaria o
@@ -239,6 +243,7 @@ func TestMockTipado_regidoEhDecididoPeloGrafo(t *testing.T) {
 	if v, _ := rodaMock(t, "jest.mock('@terceiro/nada', () => ({ f: jest.fn() }))", cfgComContrato()); v != Skip {
 		t.Errorf("o que não resolve no grafo não é regido; obteve %v", v)
 	}
+
 }
 
 // A forma de amarra não declarada PULA em vez de adivinhar. Inferir `Partial<typeof …>`

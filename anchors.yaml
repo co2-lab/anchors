@@ -235,6 +235,16 @@ governs:
 # de aprovar o que nao conferiram.
 dialect:
   family: go
+  # How a handled failure is RECORDED here, for `failure-logged`. A declared list replaces
+  # the family's, so the Go defaults are repeated. The last one is this project's own: a
+  # gate records a failure by returning `Fail` or `Pending` WITH its message, which the
+  # check prints and mirrors to `.anchors/check-all.txt` — a CLI that fails by return has
+  # no logger to call, and its verdict is the record. `Skip` is left out on purpose: it
+  # is counted, not shown.
+  log_patterns:
+    - '\b(?:log|logger|slog)\.(?:Error|Warn|Fatal|Printf|Print)\b'
+    - '\bfmt\.Errorf\('
+    - '\breturn\s+(?:Fail|Pending),\s'
 
 derived:
   # A SPEC é a âncora: dela nascem o código e o teste (CONCEPT: "da spec nascem o

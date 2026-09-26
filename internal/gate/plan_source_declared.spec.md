@@ -73,6 +73,14 @@ plans. If the adapter exists in another plan and this one does not declare it in
 | `PSDPL-X02` | Does not charge a source whose adapter nobody seeds. | It may be the source of a plan that does not exist yet. Charging it would demand a `needs:` pointing at nothing — and the gate would be asking for a lie instead of catching one. |
 | `PSDPL-X03` | Does not read the plan's prose to understand WHAT the source is for. | The ruler is the bold name on the source line, which is deterministic. Judging whether the plan really consumes that source, or only mentions it, is interpretation — and interpretation is not what a blocking gate can hold. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `PSDPL-E01` | REF[PSDPL-I01]: with no map nothing was measured, and I01 answers Pending, never approval | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

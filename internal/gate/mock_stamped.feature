@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MCSTM
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @MCSTM
@@ -189,3 +189,15 @@ Feature: MockStamped — the double carries the mark of the snippet it replaces,
     Then only the stamp of the changed member is listed, with the old and the new hash
     And its hash is updated, and the gate passes again
     And a stamp whose anchor is gone is listed and not refreshed
+
+  @MCSTM-E01 @unit-level
+  Scenario: A stamp with a non-positive line count is not a stamp
+    Given a governed double whose stamp declares a line count of 0
+    When the gate confronts the test
+    Then it returns Fail charging the double as unstamped
+
+  @MCSTM-E02 @unit-level
+  Scenario: A test missing from disk is left out of the doubles of a changed module
+    Given a map listing a test that no longer exists on disk
+    When the tests stamping a module are looked up
+    Then that test is left out and no error is raised

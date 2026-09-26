@@ -88,6 +88,14 @@ rather than approving unverified vocabulary or penalizing projects without compl
 | `TRDCT-X03` | Does not enforce implementation of the cited obligations within code. | Verifying that declared obligations are satisfied is the dedicated responsibility of `obligation-honored`. |
 | `TRDCT-X04` | Does not inspect unquoted natural language mentions of compliance concepts. | Only explicit backticked symbols represent actionable syntax instructions. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `TRDCT-E01` | REF[TRDCT-B03]: with no vocabulary declared in the configuration or the packs, B03 answers Pending | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

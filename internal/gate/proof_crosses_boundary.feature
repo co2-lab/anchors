@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: PCBPR
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @PCBPR
@@ -105,6 +105,20 @@ Feature: ProofCrossesBoundary — when a rule claims a relation, the proof must 
     When the gate confronts the spec
     Then it returns Pass, because the ruler is the import line and not one ecosystem's
       spelling of it
+
+  @PCBPR-E01 @unit-level
+  Scenario: Without a map the demand is left pending, not approved
+    Given a spec whose rule carries the single-source mark
+    And no map has been built
+    When the gate confronts the spec
+    Then it returns Pending saying no map is loaded
+
+  @PCBPR-E02 @unit-level
+  Scenario: Governed code gone from disk leaves the demand pending
+    Given a spec whose rule carries the single-source mark
+    And every file the spec governs is gone from disk
+    When the gate confronts the spec
+    Then it returns Pending saying the linked code could not be read
 
   @PCBPR-I01 @unit-level
   Scenario: The claim and the target must be on the same rule line

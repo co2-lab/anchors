@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d5673f03912467d0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:3652c8966886856a — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -43,6 +43,10 @@ teste prova.
 - [The gate knows no language, the project declares what is public](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-X03`
 
 - [The gate does not charge the absence of code](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-X04`
+
+- [With no map the gate does not approve](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E01`
+
+- [A code file missing from disk does not hide the orphans of the other target](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E02`
 
 - [An identifier in the wrong language is accused, and an English one passes](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B01`
 
@@ -92,6 +96,8 @@ teste prova.
 
 - [External requirement citations are not mandatory](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-X03`
 
+- [A spec missing from disk is left out of the declared codes](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units) `CRVCD-E01`
+
 - [A status emitted and not declared is accused by number](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B01`
 
 - [A status declared and emitted by no path is accused as a phantom](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-B02`
@@ -127,6 +133,12 @@ teste prova.
 - [The gate does not judge when each status is right](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-X02`
 
 - [The gate does not charge the phantom side under a dynamic status](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-X03`
+
+- [Without a built map the confrontation is pending](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-E01`
+
+- [Linked code gone from disk is pending, not a code without status](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-E02`
+
+- [A dialect status pattern that does not compile is pending](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those) `CSDCN-E03`
 
 - [Confronting an artifact that is not a spec skips](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B01`
 
@@ -191,6 +203,8 @@ teste prova.
 - [The gate performs static textual confrontation without runtime execution](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-X01`
 
 - [The gate does not interpret dependency semantics or parameter signatures](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-X02`
+
+- [A specified code file missing from disk is left out of the confrontation](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-E01`
 
 - [A mandatory document that does not exist fails](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B01`
 
@@ -418,6 +432,8 @@ teste prova.
 
 - [An unmapped regime tag does not exempt a scenario](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B18`
 
+- [A linked test gone from disk implements nothing while the others still count](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-E01`
+
 - [A gate reaches only the kinds it declares](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B01`
 
 - [A gate that names labels reaches only the nodes carrying one](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B02`
@@ -510,6 +526,8 @@ teste prova.
 
 - [Components referencing parent screen codes in testIDs are not forbidden](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-X03`
 
+- [A governed file gone from disk is left out and the others are still confronted](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-E01`
+
 - [A declared name routes to the function registered under it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B01`
 
 - [A name that does not resolve answers undetermined](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B02`
@@ -553,6 +571,8 @@ teste prova.
 - [The registry does not invoke external tooling](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-X02`
 
 - [The registry does not judge whether the text is good](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-X03`
+
+- [A test missing from disk does not hide the codes the other tests name](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-E01`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -608,6 +628,8 @@ teste prova.
 
 - [Ignored directories never count towards parity](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-B09`
 
+- [A marking inside an unreadable directory counts as absent from its end](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-E01`
+
 - [The failing verdict names the rule and the empty scope](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-I01`
 
 - [What was not measured is never approved](camadas/gate.md#mrprm--markerparity--the-same-rule-has-to-appear-at-both-ends-that-fulfil-it) `MRPRM-I02`
@@ -637,6 +659,12 @@ teste prova.
 - [A repeated line never anchors a stamp](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-I02`
 
 - [Generator does not refresh a divergent stamp](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-X01`
+
+- [A double detector that does not compile stops the generator with an error](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-E01`
+
+- [An undeclared double detector stops the generator with an error](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-E02`
+
+- [A module missing from disk is skipped and the other doubles are still stamped](camadas/gate.md#mkstp--mockstampgenerator--writes-the-missing-contract-stamps-and-never-rewrites-one) `MKSTP-E03`
 
 - [An artifact that is not a test leaves without a verdict](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B01`
 
@@ -687,6 +715,10 @@ teste prova.
 - [Changing a module checks the doubles stamped against it](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B17`
 
 - [The author of a change refreshes the stamps and gets the doubles to adjust](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B18`
+
+- [A stamp with a non-positive line count is not a stamp](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-E01`
+
+- [A test missing from disk is left out of the doubles of a changed module](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-E02`
 
 - [A double with no tie fails and the verdict names the loose module](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B01`
 
@@ -757,6 +789,8 @@ teste prova.
 - [The gate does not understand what the destination does with the token](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-X02`
 
 - [A declaration written in the body is not read](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-X03`
+
+- [An unreadable destination file is not proof, and the others are still searched](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-E01`
 
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B01`
 
@@ -847,6 +881,10 @@ teste prova.
 - [Phase duration and calendar timing are not verified](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-X02`
 
 - [Both artifact codes and phase codes are accepted as parents](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-X03`
+
+- [With no map a phase or parent reference is not judged](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-E01`
+
+- [A plan missing from disk does not unresolve the phases of the other plans](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-E02`
 
 - [A raw skeleton fails confrontation](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B01`
 
@@ -1096,6 +1134,10 @@ teste prova.
 
 - [Imports in other language shapes satisfy the charge](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-B14`
 
+- [Without a map the demand is left pending, not approved](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-E01`
+
+- [Governed code gone from disk leaves the demand pending](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-E02`
+
 - [The claim and the target must be on the same rule line](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-I01`
 
 - [The import is charged on the governed code, never on the test](camadas/gate.md#pcbpr--proofcrossesboundary--when-a-rule-claims-a-relation-the-proof-must-reach-the-other-side) `PCBPR-I02`
@@ -1342,6 +1384,8 @@ teste prova.
 
 - [The gate does not demand a mark on EVERY rule](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-X02`
 
+- [A code file that cannot be read is pending, naming the file](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-E01`
+
 - [A letter that is not declared in the vocabulary fails](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B01`
 
 - [A declared letter under a claimed section passes](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B02`
@@ -1556,6 +1600,10 @@ teste prova.
 
 - [An artifact that is not a spec returns Skip](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B12`
 
+- [A rule alias needs no scenario of its own](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B13`
+
+- [An alias that stands for no rule fails](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B14`
+
 - [Every waiver requires a written reason](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-I01`
 
 - [Each gate accuses one thing](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-I02`
@@ -1565,6 +1613,10 @@ teste prova.
 - [A cited code produces no accusation](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-X02`
 
 - [The gate does not confront feature against test](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-X03`
+
+- [Without a built map the confrontation is pending](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-E01`
+
+- [A feature missing from disk does not hide the scenarios of the other features](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-E02`
 
 - [Non-test artifacts skip confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B01`
 
@@ -1646,6 +1698,8 @@ teste prova.
 
 - [Default test handle attributes are not inferred](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-X03`
 
+- [A declared E2E directory missing from disk skips the gate](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-E01`
+
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B01`
 
 - [A recognised layer leaves without a verdict](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B02`
@@ -1675,6 +1729,10 @@ teste prova.
 - [A piece declared TO BE DEVELOPED leaves the verdict undetermined](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B08`
 
 - [The gate does not judge the QUALITY of any piece](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-X02`
+
+- [A test missing from disk does not orphan a reference another test resolves](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-E01`
+
+- [A feature missing from disk does not hide the scenario of the covered feature](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-E02`
 
 - [Non-spec artifacts skip confrontation](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-B01`
 
@@ -1743,6 +1801,10 @@ teste prova.
 - [A prose rule declares no value](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-X01`
 
 - [A literal nobody declared is not charged](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-X02`
+
+- [A spec missing from disk does not drop the values of the other specs](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E01`
+
+- [A code file missing from disk does not hide the copies in the other files](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E02`
 
 - [Artifacts that are not feature files leave with verdict Skip](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B01`
 

@@ -63,6 +63,15 @@ This gate operates in distinct territory from neighbouring gates:
 | `PLRVP-X02` | Does not assess the semantic accuracy or completeness of the explanatory prose written beside a revision marker. | Deterministic gates verify structural cross-references and marker presence; evaluating descriptive text quality requires human review. |
 | `PLRVP-X03` | Does not enforce section amendment markers on plans that are not targeted by any revision. | Unrevised documents represent current baseline intent and require no diff annotations. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `PLRVP-E01` | REF[PLRVP-B02]: with no map the revision links cannot be resolved, and B02 answers Pending | — | — |
+| `PLRVP-E02` | REF[PLRVP-B05]: a revised plan whose file cannot be read carries no notice, which B05 answers with the pending reminder | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

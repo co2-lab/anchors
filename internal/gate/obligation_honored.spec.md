@@ -73,6 +73,12 @@ points at, triggered by an attribute the node itself declares.
 | `OBHNB-X02` | Does not understand what the destination file DOES with the token. | The ruler is presence, which is deterministic. A purge script that names the table and then never erases it passes here — separating "forgotten" from "remembered" is already the defect this gate was built for; judging the implementation is another ruler. |
 | `OBHNB-X03` | Does not read a declaration written in the body of the document. | Only the beginning of the file counts as header. Without that cut, a mention in the prose — an example, a quotation — would waive an obligation nobody meant to waive. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `OBHNB-E01` | A file matched by a `must_appear_in` glob cannot be read (permissions). | It counts as not carrying the token and the search goes on through the other matched files: the duty passes if a readable one carries the token, and fails naming the glob (`OBHNB-B01`) if none does. | An unreadable file is not evidence that the duty is fulfilled, so it can never approve it; and one locked file must not hide the readable one where the token really is. |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

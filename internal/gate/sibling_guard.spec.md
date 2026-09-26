@@ -65,6 +65,14 @@ ignored defends nothing.
 | `SBGRD-X01` | Does not invent what an exported function or a guard looks like. | Both come from the dialect the project declares. A pattern hardcoded here would recognise one ecosystem and report green over every other, which is the worst failure a measuring instrument can have. |
 | `SBGRD-X02` | Does not accuse a single function in isolation. | With no siblings there is no asymmetry, and asymmetry is the whole evidence. Accusing a lone function would mean judging the domain — which this gate explicitly cannot do. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `SBGRD-E01` | REF[SBGRD-B02]: an undeclared exported-function pattern is answered by B02: undetermined, and it says so | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

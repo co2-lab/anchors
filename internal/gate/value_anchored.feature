@@ -88,3 +88,15 @@ Feature: ValueAnchored — a replicated key is declared where it is used, and ev
     Given a closed set with no declaration
     When the gate confronts the file
     Then it skips
+
+  @VLANV-E01 @unit-level
+  Scenario: A spec missing from disk does not drop the values of the other specs
+    Given the map lists a spec that is gone from disk, and another spec whose rule declares a value
+    When a declaration of that rule carries a different value
+    Then the gate fails, naming the spec that is still there
+
+  @VLANV-E02 @unit-level
+  Scenario: A code file missing from disk does not hide the copies in the other files
+    Given the map lists a code file that is gone from disk, and two files declaring the same key with different values
+    When the gate confronts one of them
+    Then it fails, listing the copy in the other file

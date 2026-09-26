@@ -75,6 +75,13 @@ knowing how to read, the gate goes quiet; it never approves.**
 | `CDCTC-X03` | Does not know any language: whoever declares what is public is the project. | Recognising a public symbol depends on the language, and Anchors does not presume. The built-in TypeScript pattern is only ever a SUGGESTION to a project that has not declared its own, never a silent default. |
 | `CDCTC-X04` | Does not charge the absence of code — that belongs to `triad-complete`. | Accusing the same debt in two gates would duplicate the finding, and whoever fixed one would still see the other. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `CDCTC-E01` | No map has been built when the gate confronts a spec. | Pending ("no map loaded"): the code the spec governs is not read. | The governed code is reached only through the `specifies` edge; approving without it would assert a catalogue nobody confronted, and failing would accuse a spec of a defect nobody measured. |
+| `CDCTC-E02` | A code file the spec `specifies` is no longer on disk. | That file is passed over and the next `specifies` target is confronted; with no other target on disk, the gate leaves without a verdict, as with no code linked (`CDCTC-B07`). | The map can be older than the tree (a file deleted since the last build): a file that is gone exports nothing, and one stale edge must not hide the orphans of the code that is there. <!-- @resilient: a stale map edge is expected between builds, and the next map build removes it --> |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

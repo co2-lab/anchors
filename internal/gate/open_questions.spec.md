@@ -64,6 +64,14 @@ a code, and the item leaves the section.
 | `OPQSP-X01` | Does not judge whether the question is GOOD nor whether the answer is right. | The ruler is deterministic: either an open item exists, or it does not. Evaluating the merit of a doubt is judgement, and judgement belongs to another class of gate. |
 | `OPQSP-X02` | Does not FAIL the spec that does not have the section — it records the pendency and says how to close it. | The absence does not distinguish "everything was decided" from "the section was deleted", and the two ask for opposite things. Failing would be treating migration as a defect; going quiet would be the silence the gate exists to eliminate. The verdict stays undetermined and TEACHES the way out: close with the declaration that there is no question, or write down what was not decided. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `OPQSP-E01` | REF[OPQSP-X02]: the one handled path is the absent section, which X02 answers: recorded as pending, never failed | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

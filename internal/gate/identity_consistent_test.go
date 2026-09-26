@@ -65,8 +65,10 @@ func TestIdentityConsistent_testIDBateComOCodigo(t *testing.T) {
 	t.Run("IDCND-B04: A testID prefix matching the spec identity code passes", func(t *testing.T) {})
 	t.Run("IDCND-B10: When no orphan testID prefixes or baseline discrepancies exist the gate passes", func(t *testing.T) {})
 	n, g, root := identidadeFixture(t, "BGET", `<View testID=":bget-screen" />`)
+	// Adiciona aresta specifies para arquivo inexistente
+	g.Edges = append(g.Edges, mapx.Edge{From: "x.spec.md", To: "nonexistent.tsx", Type: mapx.EdgeSpecifies})
 	if v, msg := checkIdentityConsistent("", n, root, g, &config.Config{}); v != Pass {
-		t.Errorf("testID igual ao código deveria passar: %v (%s)", v, msg)
+		t.Errorf("testID igual ao código deveria passar ignorando arquivo inexistente: %v (%s)", v, msg)
 	}
 }
 
@@ -135,4 +137,15 @@ func TestIdentityConsistent_palavraCurtaNaoEhSigla(t *testing.T) {
 	if v, msg := checkIdentityConsistent("", n, root, g, &config.Config{}); v != Pass {
 		t.Errorf("prefixo curto não tem forma de código: %v (%s)", v, msg)
 	}
+}
+
+func TestIdentityConsistent_Errors(t *testing.T) {
+	t.Run("IDCND-E01: A governed file gone from disk is left out and the others are still confronted", func(t *testing.T) {
+		n, g, root := identidadeFixture(t, "BGET", `<View testID=":bdge-screen" />`)
+		g.Edges = append([]mapx.Edge{{From: "x.spec.md", To: "gone.tsx", Type: mapx.EdgeSpecifies}}, g.Edges...)
+		v, msg := checkIdentityConsistent("", n, root, g, &config.Config{})
+		if v != Fail || !strings.Contains(msg, "BDGE") || strings.Contains(msg, "gone.tsx") {
+			t.Fatalf("the missing file must be left out and the orphan in the present one still charged; got %v: %s", v, msg)
+		}
+	})
 }

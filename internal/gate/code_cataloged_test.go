@@ -339,3 +339,36 @@ func TestCodeCatalogedNuncaAprovaOQueNaoSabeLer(t *testing.T) {
 		})
 	}
 }
+
+func TestCodeCataloged_Errors(t *testing.T) {
+	t.Run("CDCTC-E01: With no map the gate does not approve", func(t *testing.T) {
+		cfg := &config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}}
+		v, msg := checkCodeCataloged("# Spec", mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, t.TempDir(), nil, cfg)
+		if v != Pending || !strings.Contains(msg, "no map") {
+			t.Fatalf("with no map the verdict must be Pending, got %v (%s)", v, msg)
+		}
+	})
+
+	t.Run("CDCTC-E02: A code file missing from disk does not hide the orphans of the other target", func(t *testing.T) {
+		root := t.TempDir()
+		if err := os.WriteFile(filepath.Join(root, "u.ts"), []byte("export function uncatalogued() {}\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		g := &mapx.Graph{
+			Nodes: []mapx.Node{
+				{ID: "u.spec.md", Kind: mapx.KindSpec},
+				{ID: "a-gone.ts", Kind: mapx.KindCode},
+				{ID: "u.ts", Kind: mapx.KindCode},
+			},
+			Edges: []mapx.Edge{
+				{From: "u.spec.md", To: "a-gone.ts", Type: mapx.EdgeSpecifies},
+				{From: "u.spec.md", To: "u.ts", Type: mapx.EdgeSpecifies},
+			},
+		}
+		cfg := &config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}}
+		v, msg := checkCodeCataloged("# Spec\n", mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
+		if v != Fail || !strings.Contains(msg, "u.ts") || !strings.Contains(msg, "uncatalogued") {
+			t.Fatalf("the orphan of the file on disk must be charged, got %v (%s)", v, msg)
+		}
+	})
+}

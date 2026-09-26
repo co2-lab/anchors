@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: TQETS
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @TQETS
@@ -143,3 +143,9 @@ Feature: TestidQueriedExists — every handle queried by an E2E flow must exist 
     Given a project configuration without derived test handle settings
     When the gate confronts the artifact
     Then it skips execution instead of presuming testID or data-testid conventions
+
+  @TQETS-E01 @unit-level
+  Scenario: A declared E2E directory missing from disk skips the gate
+    Given a project that declares an E2E surface whose directory does not exist
+    When the gate confronts the artifact
+    Then it returns Skip instead of Pass

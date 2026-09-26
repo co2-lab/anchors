@@ -251,3 +251,16 @@ func TestConsultadoExiste_agrupaAchadosPorHandleID(t *testing.T) {
 		t.Fatalf("esperava ambos os flows citados na mesma linha do handle; laudo: %s", d)
 	}
 }
+
+func TestQueriedTestIDExists_Errors(t *testing.T) {
+	t.Run("TQETS-E01: A declared E2E directory missing from disk skips the gate", func(t *testing.T) {
+		root, cfg := fixtureConsultado(t, `<View testID=":abcd-tela" />`, "- tapOn:\n    id: ':abcd-missing'\n")
+		if err := os.RemoveAll(filepath.Join(root, "flows")); err != nil {
+			t.Fatal(err)
+		}
+		v, msg := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg)
+		if v != Skip {
+			t.Fatalf("a declared but missing E2E directory must skip, got %v: %s", v, msg)
+		}
+	})
+}

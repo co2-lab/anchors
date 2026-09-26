@@ -780,3 +780,14 @@ func TestAnyCodeRECapturesTheDataStateName(t *testing.T) {
 		}
 	}
 }
+
+func TestInternalChecks_Errors(t *testing.T) {
+	t.Run("INCHN-E01: A test missing from disk does not hide the codes the other tests name", func(t *testing.T) {
+		root, g := rootWithTest(t, "const c = \"CREDX-B01\"\nfunc TestX(t *testing.T) {}\n")
+		g.Nodes = append([]mapx.Node{{ID: "gone_test.go", Kind: mapx.KindTest}}, g.Nodes...)
+		v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, nil)
+		if v != Fail || !strings.Contains(msg, "ingest") || !strings.Contains(msg, "CREDX-B01") {
+			t.Fatalf("CREDX-B01 must still count as written despite the missing test, got %v: %s", v, msg)
+		}
+	})
+}

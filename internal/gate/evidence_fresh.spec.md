@@ -73,6 +73,14 @@ choice belongs to whoever knows the product.
 | `EVFRV-X02` | Does not RUN the test, nor judge whether the change actually broke it. | The gate measures whether the evidence still covers the current code, not whether the behaviour changed. Deciding that the diff was harmless is judgement, and the cheap fix — run it again — settles it for real instead of by opinion. |
 | `EVFRV-X03` | Does not read the project's configuration. | The confronted truth — the revision moved — lives in the map, not in a convention. A ruler that depended on settings could be turned off by a default nobody chose. |
 
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `EVFRV-E01` | REF[EVFRV-B02]: with no map there is no closure to walk, and B02 answers that the gate stays quiet | — | — |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

@@ -84,6 +84,12 @@ A spec is not all alike — it specializes according to what makes the unit vary
 - Co-location. The spec lives beside the artifact it describes.
 - A rule that holds for OTHER units is not this spec's: it is product doctrine. Reference
   it with ` + "`@realizes`" + ` instead of writing it again here.
+- A rule this spec already states under ANOTHER letter is aliased, not rewritten. The
+  failure gates look for failures under ` + "`-E`" + `; when the failure is already a behaviour
+  (` + "`-B`" + `), catalogue it as an alias on the rule's line:
+      | ` + "`CODE-E01`" + ` | REF[CODE-B05]: <why B05 is this failure> |
+  The alias needs no scenario — the target's scenario proves it — and it must point at a
+  rule this spec defines (not at another alias), with a reason, or ` + "`spec-feature-match`" + ` fails.
 
 ## The rule that is not yours: product doctrine
 

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INCHN
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @INCHN
@@ -158,3 +158,9 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     When the header ruler confronts it
     Then it returns Pass, because the ruler here is presence and shape — judging the
       content belongs to another gate
+
+  @INCHN-E01 @unit-level
+  Scenario: A test missing from disk does not hide the codes the other tests name
+    Given a map listing a test that is gone from disk and a test that names a scenario code
+    When scenario-coverage checks which codes are written
+    Then the code the present test names is reported as written, not as missing a test

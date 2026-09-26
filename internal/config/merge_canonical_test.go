@@ -202,4 +202,3 @@ func TestLoadMergeCanonicalRunCheckMutuallyExclusive(t *testing.T) {
 		}
 	})
 }
-

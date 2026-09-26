@@ -62,6 +62,12 @@ in automated test suites.
 | `FTMFT-B17` | The exported function `RootCode` strips scenario sub-indices (`#01`) and returns the root requirement code. |
 | `FTMFT-B18` | Only a regime tag the project MAPS under `regimes:` (or a canonical regime name) exempts a scenario as belonging to another surface; an unmapped tag that merely looks like a regime (`@nivel-compilacao`) leaves the scenario confronted. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `FTMFT-E01` | A test the map links by `tested-by` is gone from disk (or cannot be read). | Its content is left out of the confrontation; the other linked tests still count, and every scenario only the missing test would have implemented is charged as missing — Fail naming those codes (`FTMFT-B06`). | A file that is not there implements nothing: counting it as proof would approve scenarios no test runs. Reading the rest keeps one stale edge from hiding what the present tests do prove, and the verdict points at exactly the scenarios left without a test. |
+
 ## Invariants
 
 | Rule | Always holds | How it is proven |

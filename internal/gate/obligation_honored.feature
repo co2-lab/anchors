@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: OBHNB
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @OBHNB
@@ -120,3 +120,11 @@ Feature: ObligationHonored — the cross-cutting duty that lives OUTSIDE the uni
     When the gate confronts it
     Then it returns Fail, because without that cut a quotation in the prose would waive an
       obligation nobody meant to waive
+
+  @OBHNB-E01 @unit-level
+  Scenario: An unreadable destination file is not proof, and the others are still searched
+    Given a node that carries the trigger
+    And the only destination file naming its token cannot be read
+    When the gate confronts the node
+    Then it returns Fail naming the demanded glob
+    And once a readable destination file names the token, it returns Pass

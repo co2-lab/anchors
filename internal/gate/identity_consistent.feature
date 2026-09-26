@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: IDCND
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @IDCND
@@ -102,3 +102,10 @@ Feature: IdentityConsistent — a unit's spec identity must match its exposed te
     Given a child component exposing a testID prefixed with its parent screen code
     When the gate confronts it
     Then it returns Pass, preserving end-to-end selector navigation
+
+  @IDCND-E01 @unit-level
+  Scenario: A governed file gone from disk is left out and the others are still confronted
+    Given a spec that governs a file carrying an orphan testID acronym
+    And also governs a file that no longer exists on disk
+    When the gate confronts the spec
+    Then it returns Fail naming the orphan acronym, and no error is raised for the missing file

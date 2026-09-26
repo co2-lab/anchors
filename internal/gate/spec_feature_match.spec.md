@@ -59,6 +59,8 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 | `SFMSP-B10` | A spec with NO feature returns Skip: that absence is the ruler of `triad-complete`. |
 | `SFMSP-B11` | A spec covered by SEVERAL features has its requirements looked for across all of them — the requirement only needs to be in some. |
 | `SFMSP-B12` | An artifact that is not a spec returns Skip: the gate has no jurisdiction over code, test or feature. |
+| `SFMSP-B13` | A rule written as an ALIAS of another rule of the same spec — `REF[CODE-B05]: <reason>` on its line — needs no scenario of its own: the target's scenario is the proof. It is how a rule is catalogued under one letter (a failure, `-E`) while its behaviour is already stated under another, without writing the decision twice. |
+| `SFMSP-B14` | An alias that stands for no rule FAILS, naming it: a target this spec does not define, a target that is itself an alias, or no reason after the colon. It is checked before the feature is looked for, because a dangling alias would drop the rule from every scenario check unseen. |
 
 ## Invariants
 
@@ -74,6 +76,13 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 | `SFMSP-X01` | Does not judge whether the scenario PROVES the requirement. | The ruler is the tag, which is deterministic. Whether the Given/When/Then really exercises the behaviour is judgement, and `scenario-asserts` is the ruler that looks at the shape of the assertion. Holding both here would put the same rule in two places that would diverge. |
 | `SFMSP-X02` | Does not charge a code the spec merely CITES. | A spec names other units' codes in Dependency Tables, notes and cross-references, and contracts nothing by doing so. Charging them would produce an accusation per citation — and a gate that cries wolf gets switched off, which costs more than the defect it was catching. |
 | `SFMSP-X03` | Does not confront feature→test. | That edge already has a watcher, `feature-test-match`. This gate exists precisely because the edge BEFORE it had none. |
+
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `SFMSP-E01` | No map has been built, so the gate receives no graph. | `Pending` with the no-map message. | The features that cover a spec are found through the map's `covered-by` edges: without them there is nothing to confront, and `Pending` says "not measured" where `Pass` or `Fail` would claim a coverage nobody checked. |
+| `SFMSP-E02` | A feature the map links to the spec is no longer on disk. | That feature covers nothing; the other linked features are still read, and a requirement one of them tags is covered. | The map can be older than the tree (a feature deleted or renamed since the last build): a missing file has no scenario, and one stale edge must not make the requirements the other features tag look uncovered. <!-- @resilient: a stale map edge is expected between builds, and the next map build removes it --> |
 
 ## Dependencies
 

@@ -15,7 +15,7 @@
 > to codes declared nowhere in the project fail.
 >
 > **Revises:** `I01`, `X03`, `B14`, `B15`, `B16`, `B17`
-> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B10`, `B11`, `B12`, `B13`, `I02`, `X01`, `X02`, `X04`
+> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B10`, `B11`, `B12`, `B13`, `I02`, `X01`, `X02`, `X04`, `E01`
 
 ## Overview
 
@@ -85,6 +85,14 @@ defect become noise.
 | `RFRSR-X02` | Does not charge the absence of the sibling spec. | The missing piece of a triad is the triad gate's charge. Here the absence is simply a case where there is nothing to compare. |
 | `RFRSR-X03` | Does not consult the map when a sibling spec is present on disk. | The co-located file takes precedence so stale graph builds cannot override the filesystem truth. When no sibling spec exists, the map is queried solely to prevent references to phantom identities. |
 | `RFRSR-X04` | Does not judge whether the sibling spec DESCRIBES the unit well. | The ruler here is identity: which spec owns this file. Whether the spec's content matches the code is judgement, and judgement belongs to another class of gate. |
+
+## Errors
+
+Each failure the code handles is already stated as a rule of another letter; the rows below catalogue it as a failure and point at that rule.
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `RFRSR-E01` | REF[RFRSR-B06]: a sibling spec that cannot be read is answered as the missing sibling of B06: the gate goes quiet | — | — |
 
 ## Dependencies
 

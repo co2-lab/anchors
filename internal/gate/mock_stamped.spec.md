@@ -84,6 +84,13 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | `MCSTM-X03` | Does not skip the absence of a stamp to accommodate legacy code. | Turning the charge on in an old project produces hundreds of findings at once, and designing for that case would turn a MIGRATION problem into a permanent property of the framework: every future project would inherit the slack. A project born with Anchors has no debt — the first double is written after the gate exists. Legacy is handled with the vocabulary that already exists: a non-blocking gate during adoption, and per-unit opt-out with a written reason. |
 | `MCSTM-X04` | Does not guarantee cryptographic strength: the hash is truncated. | The stamp lives in a comment line and is read by a human. Thirty-two bits are enough to detect the accidental change this gate pursues — there is no adversary forging a collision against their own test. |
 
+## Errors
+
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `MCSTM-E01` | A stamp declares a line count that is not a positive number (`0`, `-3`, `x`). | The comment is not read as a stamp, so the double it sits on is charged as UNSTAMPED (`MCSTM-B11`). | A window of zero lines covers nothing: accepting it would certify a double against an empty snippet, which never diverges. Reading it as absent sends the author to write a real one. |
+| `MCSTM-E02` | A test the map still lists is no longer on disk when `TestsStamping` looks for the doubles of a changed module. | That test is left out of the list; the others are still returned. | The map can be older than the tree (a test deleted since the last build): a missing file carries no stamp, and one stale node must not hide the doubles that are there. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
+
 ## Dependencies
 
 | Code | File | Method | Layer |
