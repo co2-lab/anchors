@@ -178,3 +178,30 @@ func TestCountIgnoraNumeroNaoDeclarado(t *testing.T) {
 		t.Fatal("número em prosa sem declaração não é confrontável — deveria ser Skip")
 	}
 }
+
+// Only files count, and an unread file never undercounts.
+func TestCountFilesOnlyAndUnreadable(t *testing.T) {
+	t.Run("CNHNC-B14: Only files are counted, never directories", func(t *testing.T) {
+		arquivos := map[string]string{"models/A.ts": "x", "models/sub/B.ts": "y"}
+		spec := "# Spec\n<!-- @anchors-count: 1 = models/* -->\n"
+		if v, d := rodaContagem(t, spec, arquivos); v != Pass {
+			t.Fatalf("one file and one subdirectory is a count of 1, got %s (%s)", v, d)
+		}
+	})
+	t.Run("CNHNC-E03: An unreadable file fails the pattern count naming it", func(t *testing.T) {
+		if os.Geteuid() == 0 {
+			t.Skip("root reads a chmod 000 file")
+		}
+		dir := t.TempDir()
+		os.MkdirAll(filepath.Join(dir, "rules"), 0o755)
+		os.WriteFile(filepath.Join(dir, "rules", "a.go"), []byte("allow\nallow\n"), 0o644)
+		locked := filepath.Join(dir, "rules", "b.go")
+		os.WriteFile(locked, []byte("allow\n"), 0o000)
+		defer os.Chmod(locked, 0o644)
+		spec := "# Spec\n<!-- @anchors-count: 3 regras = rules/*.go /allow/ -->\n"
+		v, d := checkCountHonored(spec, mapx.Node{Kind: mapx.KindSpec}, dir, nil, nil)
+		if v != Fail || !strings.Contains(d, "rules/b.go") {
+			t.Fatalf("an unread file must fail naming it, not undercount, got %s (%s)", v, d)
+		}
+	})
+}

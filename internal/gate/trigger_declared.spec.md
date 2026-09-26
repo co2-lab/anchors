@@ -95,6 +95,7 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `TRDCT-E01` | REF[TRDCT-B03]: with no vocabulary declared in the configuration or the packs, B03 answers Pending | — | — |
+| `TRDCT-E02` | A pack the project declares cannot be loaded. | `Pending` carrying the load error; no trigger is judged. | Part of the vocabulary is missing: judging against the rest would charge a correct trigger as unknown, or read "no vocabulary" where the project declared one. |
 
 ## Dependencies
 

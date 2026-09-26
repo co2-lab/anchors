@@ -85,6 +85,7 @@ governs spec-level declaration.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `TQETS-E01` | The project declares an E2E surface, but the directory its pattern points to does not exist on disk. | `Skip` with the no-E2E-surface message; nothing is confronted. | A directory that is not there holds no flow, so there is nothing to confront: `Skip` says "not measured", where `Pass` would claim flows were checked and found clean. |
+| `TQETS-E02` | A flow of the E2E surface, or a source file of the project, cannot be read. | `Pending` naming every unreadable file — never `Pass`, and no handle is accused while one is unread. | An unreadable flow may be the one that queries a missing handle, and an unreadable source the one that exposes it. Skipping them answered `Pass` over a flow the gate never read, or accused a handle that the unread source exposes. |
 
 ## Dependencies
 

@@ -1468,6 +1468,9 @@ func Load(path string) (*Config, error) {
 	if err := c.validarMinVersion(); err != nil {
 		return nil, err
 	}
+	if err := c.validarPadroes(); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
 	// O IDIOMA vale a partir da CARGA, e não de cada comando.
 	//
 	// Ligá-lo aqui é o que faz toda mensagem sair no idioma certo sem que cada comando
@@ -1614,6 +1617,64 @@ func (c *Config) validarWorkflow() error {
 		return fmt.Errorf("workflow: `mode: %q` desconhecido — use `local`, `manual` ou `github` "+
 			"(não há fallback entre eles: o modo é declarado, não adivinhado)", w.Mode)
 	}
+}
+
+// validarPadroes refuses a declared pattern (`dialect.*`, `derived.*`) that does not
+// compile, naming the field.
+//
+// The gates compile these patterns where they use them, and several treated a failed
+// compile as "not declared": `sibling-guard` skipped with "fewer than 3 exported
+// functions", `pagination-honored` accused a function that drains its cursor, and
+// `code-cataloged` said the project had not declared the `export_detect` it had
+// declared. Each verdict named a false cause, and the broken pattern went unseen. A
+// pattern that cannot compile is a configuration error, and the one place that sees the
+// whole configuration is here: refusing it at load says what is wrong, where, before any
+// gate answers for it.
+//
+// `{{param}}` (guard patterns) stands for a parameter name and is replaced before the
+// compile, as the gate does.
+func (c *Config) validarPadroes() error {
+	check := func(field, p string) error {
+		if p == "" {
+			return nil
+		}
+		if _, err := regexp.Compile(strings.ReplaceAll(p, "{{param}}", "x")); err != nil {
+			return fmt.Errorf("`%s` does not compile: %w", field, err)
+		}
+		return nil
+	}
+	if d := c.Dialect; d != nil {
+		for field, p := range map[string]string{
+			"exported_func": d.ExportedFunc, "param_name": d.ParamName, "loop": d.Loop,
+			"collection_query": d.CollectionQuery, "cursor": d.Cursor, "set_promise": d.SetPromise,
+			"set_slice": d.SetSlice, "http_status": d.HTTPStatus, "http_status_dynamic": d.HTTPStatusDynamic,
+			"import_pattern": d.ImportPattern,
+		} {
+			if err := check("dialect."+field, p); err != nil {
+				return err
+			}
+		}
+		for field, ps := range map[string][]string{
+			"guard_patterns": d.GuardPatterns, "handle_patterns": d.HandlePatterns, "log_patterns": d.LogPatterns,
+		} {
+			for i, p := range ps {
+				if err := check(fmt.Sprintf("dialect.%s[%d]", field, i), p); err != nil {
+					return err
+				}
+			}
+		}
+	}
+	if d := c.Derived; d != nil {
+		for field, p := range map[string]string{
+			"mock_detect": d.MockDetect, "export_detect": d.ExportDetect,
+			"route_pattern": d.RoutePattern, "value_anchor": d.ValueAnchor,
+		} {
+			if err := check("derived."+field, p); err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // mergeCanonical completa os campos OMITIDOS de um gate canônico a partir da declaração

@@ -91,11 +91,14 @@ func checkRevisionOrphans(content string, n mapx.Node, root string, g *mapx.Grap
 	// `R0002` rewrote. Reading it the neighbour's way, the gate reported `B07` as an unknown
 	// code — a false positive on the very rule that motivated it.
 	titleByShort := ruleTitles(content)
-	if len(titleByShort) == 0 {
-		return Skip, i18n.T("gate.revision_orphans.no_rules")
-	}
 	revised := codesIn(revisesRE(), content)
 	checked := codesIn(checkedRE(), content)
+	// No rules AND nothing revised: nothing to confront. With a `Revises:` naming codes,
+	// a spec whose rules were not recognised is exactly the case B04 exists for — every
+	// named code is unknown — and skipping here let that revision pass unseen.
+	if len(titleByShort) == 0 && len(revised) == 0 {
+		return Skip, i18n.T("gate.revision_orphans.no_rules")
+	}
 
 	// WITHOUT `Revises:` THE GATE ABSTAINS instead of accusing.
 	//

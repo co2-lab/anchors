@@ -51,6 +51,11 @@ func checkMockTyped(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 	}
 
 	todos := declaredDoubles(content, cfg, forma)
+	// With no map, which doubles are the PROJECT's cannot be told (MCTYM-E02): answering
+	// "it only mocks modules outside the project" would state a cause nobody measured.
+	if g == nil && len(todos) > 0 {
+		return pendingNoMap()
+	}
 	// Só o que o PROJETO rege é cobrado. Ver `ehModuloRegido`.
 	var dubles []declaredDouble
 	for _, d := range todos {

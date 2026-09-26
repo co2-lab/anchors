@@ -88,6 +88,7 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `MCTYM-E01` | REF[MCTYM-B05]: with no configuration or no tie shape declared, B05 answers that the gate goes quiet naming what to declare | — | — |
+| `MCTYM-E02` | No map has been built and the test mocks modules. | `Pending` with the no-map message. | Which doubles are the project's is decided by the map (`MCTYM-I01`): without it, "only mocks modules outside the project" would be a cause nobody measured. |
 
 ## Dependencies
 

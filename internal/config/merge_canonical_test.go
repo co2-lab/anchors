@@ -3,6 +3,7 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -201,4 +202,32 @@ func TestLoadMergeCanonicalRunCheckMutuallyExclusive(t *testing.T) {
 			t.Errorf("expected empty run when check is declared, got %q", g.Run)
 		}
 	})
+}
+
+// A declared pattern that does not compile is refused at load, naming the field. Before,
+// each gate read a failed compile as "not declared" and answered with a false cause.
+func TestLoadRefusesAPatternThatDoesNotCompile(t *testing.T) {
+	for field, yaml := range map[string]string{
+		"dialect.cursor":            "dialect:\n  family: go\n  cursor: \"(unclosed\"\n",
+		"dialect.guard_patterns[0]": "dialect:\n  family: go\n  guard_patterns: [\"{{param}} (\"]\n",
+		"derived.export_detect":     "derived:\n  anchor: spec\n  export_detect: \"^func\\\\s+([A-Z]\"\n",
+		"derived.mock_detect":       "derived:\n  anchor: spec\n  mock_detect: \"[\"\n",
+	} {
+		p := filepath.Join(t.TempDir(), "anchors.yaml")
+		if err := os.WriteFile(p, []byte("version: 1\n"+yaml), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		_, err := Load(p)
+		if err == nil || !strings.Contains(err.Error(), field) {
+			t.Errorf("%s: a broken pattern must be refused naming the field, got %v", field, err)
+		}
+	}
+	// A valid guard pattern with its placeholder loads.
+	p := filepath.Join(t.TempDir(), "anchors.yaml")
+	if err := os.WriteFile(p, []byte("version: 1\ndialect:\n  family: go\n  guard_patterns: [\"if {{param}} == nil\"]\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(p); err != nil {
+		t.Errorf("a valid pattern must load: %v", err)
+	}
 }

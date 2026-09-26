@@ -196,3 +196,15 @@ func TestTriggerDeclared_ListaDeclaradosTemTetoDeQuatro(t *testing.T) {
 		t.Errorf("a mensagem não lista gatilho declarado nenhum — o conselho sumiu: %s", msg)
 	}
 }
+
+// A pack that does not load is never read as "no vocabulary" nor as an unknown trigger.
+func TestTriggerDeclared_PackThatDoesNotLoad(t *testing.T) {
+	t.Run("TRDCT-E02: A declared pack that does not load leaves the verdict pending", func(t *testing.T) {})
+	cfg := cfgComObrigacoes()
+	cfg.Packs = []string{"no-such-pack-anywhere"}
+	spec := "Declare `carries: personal-data`."
+	v, msg := checkTriggerDeclared(spec, mapx.Node{Kind: mapx.KindSpec}, t.TempDir(), nil, cfg)
+	if v != Pending || !strings.Contains(msg, "no-such-pack-anywhere") {
+		t.Fatalf("a pack that does not load must leave the verdict Pending with its error, got %v (%s)", v, msg)
+	}
+}

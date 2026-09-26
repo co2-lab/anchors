@@ -151,3 +151,8 @@ Feature: MockTyped — every test double must derive from the module it replaces
     When the gate confronts it
     Then neither is charged, and an unannotated factory still is
 
+  @MCTYM-E02 @unit-level
+  Scenario: With no map the verdict is pending, not an external-only skip
+    Given a test that mocks a module and no map built
+    When the gate confronts the test
+    Then it returns Pending with the no-map message

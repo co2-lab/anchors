@@ -410,3 +410,14 @@ func TestMockTyped_doubleWithoutFactoryIsNotCharged(t *testing.T) {
 		}
 	}
 }
+
+// With no map the gate cannot tell the project's doubles from third-party ones, and says
+// so instead of claiming they are all external.
+func TestMockTipado_noMapIsPending(t *testing.T) {
+	t.Run("MCTYM-E02: With no map the verdict is pending, not an external-only skip", func(t *testing.T) {})
+	content := "jest.mock('@backend/repositories/lotes', () => ({\n  listar: jest.fn(),\n}))\n"
+	v, msg := checkMockTyped(content, testNode(), "", nil, cfgComContrato())
+	if v != Pending {
+		t.Fatalf("with no map the verdict must be Pending, got %v (%s)", v, msg)
+	}
+}

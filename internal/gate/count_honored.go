@@ -125,7 +125,10 @@ func declaredCounts(content string) []count {
 // countOf resolve a contagem contra o disco: arquivos que casam o glob, ou ocorrências do
 // padrão dentro deles.
 func countOf(root string, d count) (int, error) {
-	arquivos, err := doublestar.Glob(os.DirFS(root), d.Glob)
+	// FILES only: a directory the glob also matches is not a file, and counting it made
+	// `models/*` say 2 for one model and one subfolder — while the pattern mode skipped
+	// the same directory, so the two modes disagreed on the same glob.
+	arquivos, err := doublestar.Glob(os.DirFS(root), d.Glob, doublestar.WithFilesOnly())
 	if err != nil {
 		return 0, fmt.Errorf("%s", i18n.T("gate.count_honored.err_invalid_glob", err))
 	}
@@ -145,7 +148,9 @@ func countOf(root string, d count) (int, error) {
 	for _, f := range arquivos {
 		b, rerr := os.ReadFile(filepath.Join(root, f))
 		if rerr != nil {
-			continue
+			// An unread file would undercount, and the gate would accuse the declared
+			// number of a divergence it never measured.
+			return 0, fmt.Errorf("%s", i18n.T("gate.count_honored.err_unreadable", f))
 		}
 		total += len(re.FindAllIndex(b, -1))
 	}

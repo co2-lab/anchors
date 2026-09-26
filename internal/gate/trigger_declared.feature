@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: TRDCT
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @TRDCT
@@ -135,3 +135,10 @@ Feature: TriggerDeclared — cited compliance triggers and obligations must exis
     Given prose sentences containing trigger keywords without backticks
     When the gate confronts it
     Then it treats the text as unquoted narrative rather than syntax citations
+
+  @TRDCT-E02 @unit-level
+  Scenario: A declared pack that does not load leaves the verdict pending
+    Given a project declaring an obligation and a pack that cannot be loaded
+    And a spec citing the obligation's trigger
+    When the gate confronts the spec
+    Then it returns Pending carrying the load error, and never charges the trigger

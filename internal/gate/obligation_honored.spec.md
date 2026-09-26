@@ -78,6 +78,7 @@ points at, triggered by an attribute the node itself declares.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `OBHNB-E01` | A file matched by a `must_appear_in` glob cannot be read (permissions). | It counts as not carrying the token and the search goes on through the other matched files: the duty passes if a readable one carries the token, and fails naming the glob (`OBHNB-B01`) if none does. | An unreadable file is not evidence that the duty is fulfilled, so it can never approve it; and one locked file must not hide the readable one where the token really is. |
+| `OBHNB-E02` | A `must_appear_in` glob of a triggered obligation does not parse (`purge[.ts`). | `Fail` naming the obligation and the glob. | A glob that cannot be read is a configuration defect. Read as "matched no file" (`OBHNB-I02`), it dropped the duty and the node passed with nothing checked. |
 
 ## Dependencies
 

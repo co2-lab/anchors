@@ -40,6 +40,13 @@ func checkObligationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 		if ob.When == "" || !headerHasAttr(content, ob.When) {
 			continue // o nó não dispara esta obrigação
 		}
+		// A glob that does not parse is a configuration defect, and it FAILS naming the
+		// glob (OBHNB-E02). Read as "matched no file", it dropped the duty and passed.
+		for _, glob := range ob.MustAppearIn {
+			if !doublestar.ValidatePattern(glob) {
+				return Fail, i18n.T("gate.obligation_honored.invalid_glob", ob.Name, glob)
+			}
+		}
 		if reason := waiverFor(content, ob.Name); reason != "" {
 			continue // exceção declarada COM motivo
 		}

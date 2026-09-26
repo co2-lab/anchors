@@ -55,8 +55,8 @@ func checkQueriedTestIDExists(_ string, _ mapx.Node, root string, g *mapx.Graph,
 	// handle pode nascer num componente que nenhuma spec de tela reivindica (o
 	// `tabBarButtonTestID` do navegador é o caso real — `:tab-import` não pertence a
 	// tela nenhuma), e cobrar dele por ausência no grafo acusaria quem cumpre.
-	expostos := projectExposedHandles(root, attr, cfg)
-	if len(expostos) == 0 {
+	expostos, codigoIlegivel := projectExposedHandles(root, attr, cfg)
+	if len(expostos) == 0 && len(codigoIlegivel) == 0 {
 		return Skip, i18n.T("gate.testid_queried_exists.skip_no_handles_found", attr)
 	}
 
@@ -64,12 +64,17 @@ func checkQueriedTestIDExists(_ string, _ mapx.Node, root string, g *mapx.Graph,
 	var achados []achado
 	vistos := map[string]bool{}
 
+	// What could not be READ is never approved (TQETS-E02): an unreadable flow may be
+	// the one querying the missing handle, and an unreadable source may be the one that
+	// exposes it. Skipping them made the gate answer Pass over a flow it never read.
+	var fluxoIlegivel []string
 	for _, f := range flows {
+		rel, _ := filepath.Rel(root, f.path)
 		b, err := os.ReadFile(f.path)
 		if err != nil {
+			fluxoIlegivel = append(fluxoIlegivel, rel)
 			continue
 		}
-		rel, _ := filepath.Rel(root, f.path)
 		for _, id := range queriedHandles(string(b)) {
 			if vistos[id+"|"+rel] {
 				continue
@@ -82,6 +87,10 @@ func checkQueriedTestIDExists(_ string, _ mapx.Node, root string, g *mapx.Graph,
 		}
 	}
 
+	if ilegiveis := append(fluxoIlegivel, codigoIlegivel...); len(ilegiveis) > 0 {
+		sort.Strings(ilegiveis)
+		return Pending, i18n.T("gate.testid_queried_exists.unreadable", len(ilegiveis), strings.Join(ilegiveis, ", "))
+	}
 	if len(achados) == 0 {
 		return Pass, ""
 	}
@@ -218,15 +227,17 @@ func queriedHandles(src string) []string {
 // (`.test.tsx`) NÃO conta como exposto: teste consulta handle, não o cria — e foi
 // exatamente assim que um id fantasma (`:recent-import-item` no app de referência) sobreviveu
 // referenciado por um teste de unidade.
-func projectExposedHandles(root, attr string, cfg *config.Config) []string {
+func projectExposedHandles(root, attr string, cfg *config.Config) (out, unreadable []string) {
 	ignorar := map[string]bool{
 		"node_modules": true, ".git": true, "dist": true, "build": true,
 		".anchors": true, "coverage": true, "ios": true, "android": true,
 		"test-output": true, ".next": true,
 	}
-	var out []string
 	_ = filepath.Walk(root, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
+			if rel, e := filepath.Rel(root, p); e == nil {
+				unreadable = append(unreadable, rel)
+			}
 			return nil
 		}
 		if info.IsDir() {
@@ -246,6 +257,9 @@ func projectExposedHandles(root, attr string, cfg *config.Config) []string {
 		}
 		b, e := os.ReadFile(p)
 		if e != nil {
+			if rel, e2 := filepath.Rel(root, p); e2 == nil {
+				unreadable = append(unreadable, rel)
+			}
 			return nil
 		}
 		src := string(b)
@@ -266,7 +280,7 @@ func projectExposedHandles(root, attr string, cfg *config.Config) []string {
 		out = append(out, propComposedSuffixes(src)...)
 		return nil
 	})
-	return out
+	return out, unreadable
 }
 
 // handleExists confronta um handle consultado contra o universo exposto.

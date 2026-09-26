@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:3652c8966886856a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:bf24ca961595ad85 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -177,6 +177,10 @@ teste prova.
 - [Specs without count markers are not penalized](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-X02`
 
 - [Prose phrases qualifying subsets are not accused as total count divergences](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-X03`
+
+- [Only files are counted, never directories](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-B14`
+
+- [An unreadable file fails the pattern count naming it](camadas/gate.md#cnhnc--counthonored--a-numerical-assertion-written-in-a-spec-must-match-reality-in-code) `CNHNC-E03`
 
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dephn--dependencyhonored--methods-promised-in-the-dependency-table-are-consumed-in-code) `DEPHN-B01`
 
@@ -760,6 +764,8 @@ teste prova.
 
 - [A double with no factory is not charged](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-X05`
 
+- [With no map the verdict is pending, not an external-only skip](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-E02`
+
 - [A node that carries the trigger and is absent from the demanded file fails](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B01`
 
 - [A node that carries the trigger and does appear passes](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B02`
@@ -791,6 +797,8 @@ teste prova.
 - [A declaration written in the body is not read](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-X03`
 
 - [An unreadable destination file is not proof, and the others are still searched](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-E01`
+
+- [A must_appear_in glob that does not parse fails naming it](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-E02`
 
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-B01`
 
@@ -1700,6 +1708,8 @@ teste prova.
 
 - [A declared E2E directory missing from disk skips the gate](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-E01`
 
+- [An unreadable flow or source leaves the verdict pending](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-E02`
+
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B01`
 
 - [A recognised layer leaves without a verdict](camadas/gate.md#trcmt--triadcomplete--the-pieces-that-realize-a-spec-exist) `TRCMT-B02`
@@ -1775,6 +1785,8 @@ teste prova.
 - [Code obligation implementation is not evaluated by this gate](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X03`
 
 - [Unquoted prose text is not evaluated as symbol citations](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-X04`
+
+- [A declared pack that does not load leaves the verdict pending](camadas/gate.md#trdct--triggerdeclared--cited-compliance-triggers-and-obligations-must-exist-in-the-declared-vocabulary) `TRDCT-E02`
 
 - [A declaration matching its code line passes](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-B01`
 

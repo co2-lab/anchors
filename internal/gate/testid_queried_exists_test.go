@@ -264,3 +264,33 @@ func TestQueriedTestIDExists_Errors(t *testing.T) {
 		}
 	})
 }
+
+// What the gate could not read is never approved, and no handle is accused while a source
+// that might expose it is unread.
+func TestConsultadoExiste_unreadableIsPending(t *testing.T) {
+	t.Run("TQETS-E02: An unreadable flow or source leaves the verdict pending", func(t *testing.T) {})
+	if os.Geteuid() == 0 {
+		t.Skip("root reads a chmod 000 file")
+	}
+	// An unreadable flow: it may be the one querying a missing handle.
+	root, cfg := fixtureConsultado(t, `<View testID=":abcd-tela" />`, "- assertVisible:\n    id: ':abcd-tela'\n")
+	hidden := filepath.Join(root, "flows", "F-A02.yaml")
+	if err := os.WriteFile(hidden, []byte("- assertVisible:\n    id: ':abcd-ghost'\n"), 0o000); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chmod(hidden, 0o644)
+	if v, d := checkQueriedTestIDExists("", mapx.Node{}, root, nil, cfg); v != Pending || !strings.Contains(d, "F-A02.yaml") {
+		t.Fatalf("an unreadable flow must leave the verdict Pending naming it, got %v: %s", v, d)
+	}
+
+	// An unreadable source: the handle the flow queries may live there.
+	root2, cfg2 := fixtureConsultado(t, `<View testID=":abcd-tela" />`, "- assertVisible:\n    id: ':abcd-other'\n")
+	src := filepath.Join(root2, "other.tsx")
+	if err := os.WriteFile(src, []byte(`<View testID=":abcd-other" />`), 0o000); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chmod(src, 0o644)
+	if v, d := checkQueriedTestIDExists("", mapx.Node{}, root2, nil, cfg2); v != Pending || !strings.Contains(d, "other.tsx") {
+		t.Fatalf("with a source unread, the missing handle is not accused: want Pending naming it, got %v: %s", v, d)
+	}
+}

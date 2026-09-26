@@ -38,7 +38,13 @@ func checkTriggerDeclared(content string, n mapx.Node, root string, g *mapx.Grap
 	if len(citados) == 0 {
 		return Skip, i18n.T("gate.trigger_declared.skip_no_triggers")
 	}
-	declarados, obrigacoes := declaredVocabulary(root, cfg)
+	declarados, obrigacoes, packErr := declaredVocabulary(root, cfg)
+	// A pack that does not load leaves part of the vocabulary out (TRDCT-E02): judging
+	// against the rest would charge a correct trigger as unknown, or read "no vocabulary"
+	// where the project declared one.
+	if packErr != nil {
+		return Pending, i18n.T("gate.trigger_declared.pending_pack_error", packErr)
+	}
 	if len(declarados) == 0 {
 		// Sem packs nem obrigações, não há vocabulário contra o que confrontar. Calar é o
 		// certo: acusar aqui seria cobrar de um projeto que não adotou compliance.
@@ -117,10 +123,10 @@ func citedObligations(content string) []string {
 
 // declaredVocabulary reúne os gatilhos e os nomes de obrigação que o projeto de fato
 // tem — dos packs adotados e das obrigações escritas direto no `anchors.yaml`.
-func declaredVocabulary(root string, cfg *config.Config) (map[string]bool, map[string]bool) {
+func declaredVocabulary(root string, cfg *config.Config) (map[string]bool, map[string]bool, error) {
 	gatilhos, obrigacoes := map[string]bool{}, map[string]bool{}
 	if cfg == nil {
-		return gatilhos, obrigacoes
+		return gatilhos, obrigacoes, nil
 	}
 	registra := func(when, name string) {
 		if name != "" {
@@ -139,14 +145,14 @@ func declaredVocabulary(root string, cfg *config.Config) (map[string]bool, map[s
 	}
 	packs, _, err := pack.LoadAll(root, cfg.Packs, cfg.PackValues, cfg.Jurisdictions)
 	if err != nil {
-		return gatilhos, obrigacoes
+		return gatilhos, obrigacoes, err
 	}
 	for _, p := range packs {
 		for _, ob := range p.Obligations {
 			registra(ob.When, ob.Name)
 		}
 	}
-	return gatilhos, obrigacoes
+	return gatilhos, obrigacoes, nil
 }
 
 // suggestion aponta o gatilho declarado mais parecido — a correção costuma ser um sinônimo

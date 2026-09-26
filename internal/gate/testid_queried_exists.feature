@@ -149,3 +149,9 @@ Feature: TestidQueriedExists — every handle queried by an E2E flow must exist 
     Given a project that declares an E2E surface whose directory does not exist
     When the gate confronts the artifact
     Then it returns Skip instead of Pass
+
+  @TQETS-E02 @unit-level
+  Scenario: An unreadable flow or source leaves the verdict pending
+    Given a flow that cannot be read, or a source file that cannot be read
+    When the gate confronts the artifact
+    Then it returns Pending naming the unreadable file, and never Pass

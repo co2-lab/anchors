@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CNHNC
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @CNHNC
@@ -124,3 +124,16 @@ Feature: CountHonored — a numerical assertion written in a spec must match rea
     Given prose referring to subsets of models or items
     When the gate confronts it
     Then it avoids flagging the subset statements as mismatches against the total
+
+  @CNHNC-B14 @unit-level
+  Scenario: Only files are counted, never directories
+    Given a glob that matches one file and one subdirectory
+    When the gate counts the files
+    Then the count is 1
+
+  @CNHNC-E03 @unit-level
+  Scenario: An unreadable file fails the pattern count naming it
+    Given a glob matching a file that cannot be read
+    And a count of occurrences of a pattern
+    When the gate counts
+    Then it returns Fail naming the unreadable file

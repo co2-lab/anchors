@@ -292,4 +292,18 @@ func TestObligationHonored_Errors(t *testing.T) {
 			t.Fatalf("the readable file that carries the token must still be found; got %v: %s", v, d)
 		}
 	})
+
+	t.Run("OBHNB-E02: A must_appear_in glob that does not parse fails naming it", func(t *testing.T) {
+		cfg := &config.Config{Obligations: []config.Obligation{{
+			Name:         "pii-purgavel",
+			When:         "carries: pii",
+			MustAppearIn: []string{"purge[.sql"},
+			IdentifiedBy: "screaming-snake",
+		}}}
+		content := "<!-- @anchors\n  carries: pii\n-->\n"
+		v, d := checkObligationHonored(content, obligNode(), t.TempDir(), nil, cfg)
+		if v != Fail || !strings.Contains(d, "purge[.sql") || !strings.Contains(d, "pii-purgavel") {
+			t.Fatalf("a malformed glob must fail naming it, never pass as 'no file'; got %v: %s", v, d)
+		}
+	})
 }

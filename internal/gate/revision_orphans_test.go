@@ -80,6 +80,12 @@ func TestRevisionOrphans_unknownCode(t *testing.T) {
 	if !strings.Contains(msg, "B99") {
 		t.Errorf("the verdict does not carry the code: %q", msg)
 	}
+	// With NO rule recognised in the spec, every named code is unknown — the revision
+	// must not slip past as "no rules".
+	noRules := "# X\n\n> **XXXXX-R0001:** rewrote the badge.\n>\n> **Revises:** `B03`\n\nProse only, no rule table.\n"
+	if v, msg := checkRevisionOrphans(noRules, specNodeRev(), "", nil, nil); v != Fail || !strings.Contains(msg, "B03") {
+		t.Errorf("a revision naming a rule in a spec with no rules must fail naming it, got %v (%q)", v, msg)
+	}
 }
 
 // THE CASE THAT PRODUCED THE GATE: I02 speaks of the same badge and was not mentioned.

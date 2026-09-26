@@ -128,3 +128,10 @@ Feature: ObligationHonored — the cross-cutting duty that lives OUTSIDE the uni
     When the gate confronts the node
     Then it returns Fail naming the demanded glob
     And once a readable destination file names the token, it returns Pass
+
+  @OBHNB-E02 @unit-level
+  Scenario: A must_appear_in glob that does not parse fails naming it
+    Given an obligation whose must_appear_in glob is malformed
+    And a node that carries the trigger
+    When the gate confronts the node
+    Then it returns Fail naming the obligation and the glob

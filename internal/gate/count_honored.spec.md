@@ -63,6 +63,7 @@ to any human reader opening the document.
 | `CNHNC-B11` | Non-restrictive complements attached to prose labels are confronted as claims about the total count. |
 | `CNHNC-B12` | Qualifying words following the label indicate subset claims and are excluded from total count confrontation. |
 | `CNHNC-B13` | Arbitrary numbers in prose without an explicit count declaration are ignored and skip confrontation. |
+| `CNHNC-B14` | Only FILES are counted: a directory the glob also matches is not a file. Counting it made `models/*` say 2 for one model and one subfolder, while the pattern mode skipped the same directory — the two modes disagreed on the same glob. |
 
 ## Invariants
 
@@ -88,6 +89,7 @@ Each failure the code handles is already stated as a rule of another letter; the
 | --- | --- | --- | --- |
 | `CNHNC-E01` | REF[CNHNC-B08]: a declared glob that does not parse is the configuration failure B08 answers: the gate fails carrying the glob error | — | — |
 | `CNHNC-E02` | REF[CNHNC-B09]: a count pattern that does not compile is the configuration failure B09 answers: the gate fails carrying the regex error | — | — |
+| `CNHNC-E03` | A file the glob matches cannot be read while occurrences of a pattern are counted. | `Fail` naming the file. | An unread file would undercount, and the gate would accuse the declared number of a divergence it never measured. |
 
 ## Dependencies
 
