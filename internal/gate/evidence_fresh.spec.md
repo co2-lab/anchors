@@ -73,12 +73,6 @@ choice belongs to whoever knows the product.
 | `EVFRV-X02` | Does not RUN the test, nor judge whether the change actually broke it. | The gate measures whether the evidence still covers the current code, not whether the behaviour changed. Deciding that the diff was harmless is judgement, and the cheap fix — run it again — settles it for real instead of by opinion. |
 | `EVFRV-X03` | Does not read the project's configuration. | The confronted truth — the revision moved — lives in the map, not in a convention. A ruler that depended on settings could be turned off by a default nobody chose. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `EVFRV-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

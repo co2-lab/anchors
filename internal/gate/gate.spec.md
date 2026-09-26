@@ -120,12 +120,6 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 | `GTENG-X02` | Does not compute the verdict of a judgment gate. | The question is judgment, and the CLI cannot answer it. All the engine knows is whether SOMEBODY already answered — and that answer lives in a stamp in the map, carrying the revisions of both ends so it ages when the target changes. |
 | `GTENG-X03` | Does not invent a map, a configuration or a waiver when it receives none. | Absence is a case, not an error. Fabricating one would make the run answer about a project state that does not exist, and the verdict would be about nothing. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `GTENG-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

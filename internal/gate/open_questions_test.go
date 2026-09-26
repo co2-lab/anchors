@@ -64,6 +64,14 @@ func TestOpenQuestionsFechamentoHonesto(t *testing.T) {
 	}
 }
 
+// A spec using English heading ## Open Decisions closed with "none" releases the spec.
+func TestOpenQuestionsOpenDecisionsEnglishTitle(t *testing.T) {
+	spec := "# Spec\n\n## Open Decisions\n\nnone\n"
+	if v, d := rodaAberto(t, spec); v != Pass {
+		t.Fatalf("spec with '## Open Decisions' closed with 'none' should pass, got %s (%s)", v, d)
+	}
+}
+
 // A pergunta respondida vira REGRA; o item fica marcado como resolvido em vez de sumir.
 // O rastro tem valor: mostra que a decisão foi tomada, não esquecida.
 func TestOpenQuestionsItemResolvidoNaoBloqueia(t *testing.T) {

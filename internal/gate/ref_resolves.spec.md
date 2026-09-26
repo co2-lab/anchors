@@ -7,6 +7,16 @@
 
 > **Code**: `RFRSR`
 
+> **RFRSR-R0001:** when no sibling spec exists on disk, the gate now consults the project
+> graph to prevent references to invented or phantom identities. Previously, absence of a sibling
+> spec caused the gate to stay silent (Skip), which left 42% of references uninspected and allowed
+> phantom identities through as undetermined. Decided by the user: infra files with no sibling
+> spec remain valid (Skip) only if the referenced identity actually exists in the project; references
+> to codes declared nowhere in the project fail.
+>
+> **Revises:** `I01`, `X03`
+> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B10`, `B11`, `B12`, `B13`, `B14`, `B15`, `B16`, `B17`, `I02`, `X01`, `X02`, `X04`
+
 ## Overview
 
 Confronts an artifact against the spec co-located with it: **the reference field is
@@ -55,12 +65,16 @@ defect become noise.
 | `RFRSR-B11` | The reference is read from the header whatever the comment syntax of the language — the three families of line marker are accepted. |
 | `RFRSR-B13` | A leading dot is not a stem separator: a hidden file keeps its whole name, so it is never attributed to a spec named only by the suffix. |
 | `RFRSR-B12` | The accepted identity length comes from the project's Structure, read at confrontation time and not frozen at process start. |
+| `RFRSR-B14` | A reference to a code that exists nowhere in the project fails when no sibling spec exists, reporting the unknown code. |
+| `RFRSR-B15` | Without a sibling spec on disk, an existing declared code in the graph skips. |
+| `RFRSR-B16` | An inferred identity (`CodeDeclarado: false`) does not satisfy the reference. |
+| `RFRSR-B17` | Without a graph, absence is not asserted and the gate skips. |
 
 ## Invariants
 
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
-| `RFRSR-I01` | The ruler is the SIBLING spec on disk, never the map. A reference is confronted against the file the convention co-locates, so the gate answers the same with a graph and without one. | confronts the same pair with no graph and verifies the verdict |
+| `RFRSR-I01` | The sibling spec on disk is the primary ruler. When a sibling spec exists, the verdict depends on the filesystem alone. When no sibling spec exists, the graph is consulted solely to verify that the cited reference exists as a declared identity. | confronts the same pair with no graph and verifies the verdict |
 | `RFRSR-I02` | The gate never writes and never repairs. It reads the artifact and the sibling and returns a verdict; a gate that fixed what it points at would pass on the second run. | confronts a divergent pair and verifies the artifact on disk is untouched |
 
 ## Constraints
@@ -69,14 +83,8 @@ defect become noise.
 | --- | --- | --- |
 | `RFRSR-X01` | Does not charge the ABSENCE of the reference field. | That is the header gate's ruler, and it already states it. Two gates on the same defect produce two messages for one fix — the reader turns both off. |
 | `RFRSR-X02` | Does not charge the absence of the sibling spec. | The missing piece of a triad is the triad gate's charge. Here the absence is simply a case where there is nothing to compare. |
-| `RFRSR-X03` | Does not consult the map to resolve the reference. | The convention that co-locates spec and code is the ruler, and it is legible from the filesystem alone. Going through the graph would make the verdict depend on a build that may be stale, and stale is exactly the defect this gate exists to catch. |
+| `RFRSR-X03` | Does not consult the map when a sibling spec is present on disk. | The co-located file takes precedence so stale graph builds cannot override the filesystem truth. When no sibling spec exists, the map is queried solely to prevent references to phantom identities. |
 | `RFRSR-X04` | Does not judge whether the sibling spec DESCRIBES the unit well. | The ruler here is identity: which spec owns this file. Whether the spec's content matches the code is judgement, and judgement belongs to another class of gate. |
-
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `RFRSR-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

@@ -63,12 +63,6 @@ This gate operates in distinct territory from neighbouring gates:
 | `PLRVP-X02` | Does not assess the semantic accuracy or completeness of the explanatory prose written beside a revision marker. | Deterministic gates verify structural cross-references and marker presence; evaluating descriptive text quality requires human review. |
 | `PLRVP-X03` | Does not enforce section amendment markers on plans that are not targeted by any revision. | Unrevised documents represent current baseline intent and require no diff annotations. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `PLRVP-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

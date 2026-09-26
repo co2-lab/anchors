@@ -75,12 +75,6 @@ already touches the spec.
 | `DSCDC-X02` | Does not offer a command that fixes it, and does not block. | Rewriting a sentence is the work of whoever wrote it — there is nothing to generate. Blocking a commit over a question of form would stop the flow, and the gate that stops the flow is the gate that gets turned off. |
 | `DSCDC-X03` | Errs on the side of letting things through when measuring whether a line explains something. | The threshold is a coarse and admittedly imperfect ruler. This is an informative gate, and mass false positives are what make someone switch it off — so the error is deliberately pushed to the permissive side. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `DSCDC-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

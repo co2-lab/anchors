@@ -61,12 +61,6 @@ This gate operates in distinct territory from neighbouring gates:
 | `CRVCD-X02` | Does not inspect non-specification artifacts like code or tests for dangling requirement citations. | Code and tests are verified against their owning specifications through feature-test matching and marker parity. |
 | `CRVCD-X03` | Does not mandate that a specification must cite external requirements. | Isolated self-contained units legitimately reference no other specifications. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `CRVCD-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

@@ -14,7 +14,7 @@
 > is for values that live in more than one place, and it is the way those places are linked.
 >
 > **Revises:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `I02`, `X01`, `X02`
-> **Checked:** `B07`, `B08`, `I01`, `I03`, `X03`, `E01`
+> **Checked:** `B07`, `B08`, `I01`, `I03`, `X03`
 
 ## Overview
 
@@ -79,12 +79,6 @@ copies are the truth.
 | `VLANV-X01` | A rule whose defining line declares no value is not charged against the spec. | Most rules are prose. Reading any backticked identifier as a value would charge every declaration pointing at an ordinary rule. |
 | `VLANV-X02` | A literal nobody declared is not charged. | Anchoring is for REPLICATED keys, and whoever replicates declares. Charging every value of every set was the first version, and it was replaced. |
 | `VLANV-X03` <!-- @no-scenario: architectural boundary delegating comment syntax and token patterns to project dialect in anchors.yaml --> | Does not decide the anchor's syntax. | The project declares it (`derived.value_anchor`), because it belongs to how the codebase writes. The gate only requires that the anchor stand alone on its comment line (`VLANV-B08`). |
-
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `VLANV-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

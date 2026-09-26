@@ -61,12 +61,6 @@ This gate operates in distinct territory from neighbouring gates:
 | `SCASS-X02` | Does not inspect setup and action steps for requirement code references. | Setup and trigger steps legitimately reference requirement context without needing to assert system outcomes. |
 | `SCASS-X03` | Does not enforce the presence of scenarios or tests. | Scenario presence is governed by feature-to-spec alignment gates and triad completeness rules. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `SCASS-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

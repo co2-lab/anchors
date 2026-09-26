@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:4e8374df2862e09e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:9e0bea0bf8cb0537 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1131,6 +1131,14 @@ teste prova.
 - [The accepted identity length comes from the project's Structure](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B12`
 
 - [A leading dot is not a stem separator](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B13`
+
+- [A reference to a code that exists nowhere fails](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B14`
+
+- [Without sibling spec, an existing code still skips](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B15`
+
+- [An inferred identity does not satisfy the reference](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B16`
+
+- [Without a graph, absence is not asserted](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-B17`
 
 - [The ruler is the sibling on disk, never the map](camadas/gate.md#rfrsr--refresolves--the-reference-points-at-the-spec-that-really-describes-the-unit) `RFRSR-I01`
 

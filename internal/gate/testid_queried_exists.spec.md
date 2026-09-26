@@ -80,12 +80,6 @@ governs spec-level declaration.
 | `TQETS-X02` | Does not execute flows or evaluate runtime JavaScript expressions. | Dynamic runtime string evaluation requires a running emulator or engine; static analysis inspects only the static prefix or skips interpolation. |
 | `TQETS-X03` | Does not assume a default test handle attribute (such as `testID`). | Assuming defaults without project declaration would stamp approval over unverified codebases in unfamiliar stacks. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `TQETS-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

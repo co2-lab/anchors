@@ -78,12 +78,6 @@ is nothing to confront.
 | `CSDCN-X02` | Does not judge WHEN each status is right — only whether the number appears on both sides. | Whether the 403 belongs on that branch is judgement about the design. Here the ruler is the correspondence between two sets of numbers, which is deterministic and does not depend on reading intent. |
 | `CSDCN-X03` | Does not charge the phantom side when the code builds the status dynamically. | With a helper receiving the code by parameter, a declared value may well be emitted through a call textual reading cannot reach. Accusing would be a false positive, and mass false positives are what makes a team turn the gate off. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `CSDCN-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

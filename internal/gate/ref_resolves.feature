@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RFRSR
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @RFRSR
@@ -95,6 +95,35 @@ Feature: RefResolves — the reference points at the spec that really describes 
     When the gate confronts it
     Then it returns Skip, because truncating at a leading dot would leave an empty stem and
       attribute every hidden file to that one spec
+
+  @RFRSR-B14 @unit-level
+  Scenario: A reference to a code that exists nowhere fails
+    Given a code file whose reference points to a code declared nowhere in the project
+    And no sibling spec exists on disk
+    And a project graph is provided
+    When the gate confronts it
+    Then it returns Fail, naming the invented code
+
+  @RFRSR-B15 @unit-level
+  Scenario: Without sibling spec, an existing code still skips
+    Given an artifact whose reference matches a declared code in the graph
+    And no sibling spec exists on disk
+    When the gate confronts it
+    Then it returns Skip, because an infra file with no spec is legitimate as long as the code is real
+
+  @RFRSR-B16 @unit-level
+  Scenario: An inferred identity does not satisfy the reference
+    Given an artifact referencing an identity that only appears as inferred in the graph
+    And no sibling spec exists on disk
+    When the gate confronts it
+    Then it returns Fail, because an inferred identity owns nothing
+
+  @RFRSR-B17 @unit-level
+  Scenario: Without a graph, absence is not asserted
+    Given an artifact with a reference and no sibling spec on disk
+    And no project graph is provided to the gate
+    When the gate confronts it
+    Then it returns Skip, because without a graph absence cannot be asserted
 
   @RFRSR-I01 @unit-level
   Scenario: The ruler is the sibling on disk, never the map

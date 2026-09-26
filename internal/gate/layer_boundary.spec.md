@@ -72,12 +72,6 @@ a distant list nobody revisits.
 | `LYBNL-X02` | Does not parse the language: it does not read imports, it matches TEXT. | Understanding the import graph of every language would tie the engine to a set of ecosystems. The project writes the pattern in its own dialect, and that is what makes the gate agnostic. |
 | `LYBNL-X03` | Does not judge whether the forbidden thing is architecturally wrong. | The ruler here is the DECLARATION. Whether the boundary is the right one to draw is design judgement, and judgement belongs to whoever writes `anchors.yaml`. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `LYBNL-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

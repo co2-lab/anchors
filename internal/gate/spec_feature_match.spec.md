@@ -75,12 +75,6 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 | `SFMSP-X02` | Does not charge a code the spec merely CITES. | A spec names other units' codes in Dependency Tables, notes and cross-references, and contracts nothing by doing so. Charging them would produce an accusation per citation — and a gate that cries wolf gets switched off, which costs more than the defect it was catching. |
 | `SFMSP-X03` | Does not confront feature→test. | That edge already has a watcher, `feature-test-match`. This gate exists precisely because the edge BEFORE it had none. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `SFMSP-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

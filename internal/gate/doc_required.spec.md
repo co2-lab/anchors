@@ -65,12 +65,6 @@ the gate.
 | `DCRQD-X01` | Does not understand the document's CONTENT. | The search is coarse on purpose: it looks for the identity code and the file name. A contract that cites the route and describes the wrong shape passes here — and that is acceptable. The gate separates "not documented" from "documented"; judging the quality of the documentation is another ruler. |
 | `DCRQD-X02` | Does not decide WHICH documents are mandatory. | That is a decision of the project, declared in the Structure. A gate that invented duties would charge what nobody committed to. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `DCRQD-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

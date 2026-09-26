@@ -73,12 +73,6 @@ The ruler is **static, without execution**:
 | `DEPHN-X01` | Static textual confrontation without runtime execution. | The gate inspects non-comment source tokens rather than executing target code or inspecting call graphs; dynamic verification belongs to test suites. |
 | `DEPHN-X02` | Does not interpret dependency semantics, parameter signatures, or method types. | The gate enforces relational honesty between declared symbols and source references; semantic and type checking belongs to language compilers. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `DEPHN-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

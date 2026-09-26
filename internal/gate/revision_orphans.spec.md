@@ -54,12 +54,6 @@ This gate operates in distinct territory from neighbouring gates:
 | `RVORP-I01` | A rule never accuses itself: the revised rule is excluded from its own orphan candidates. |
 | `RVORP-X01` | Negations and waiver comments are stripped from a rule title before comparison: they are not what the rule asserts. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `RVORP-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Open Decisions
 
 | Code | Question |

@@ -1,7 +1,7 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
 version: 4
-generated_by: dev
+generated_by: 0.1.196
 nodes:
     - id: BOOTSTRAP.md
       kind: doc
@@ -1431,7 +1431,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: fb4602a6d65a
         at_rev: fb4602a6d65a
-        ingested_at: "2026-09-26T13:25:36-03:00"
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: guides/GATES_ECOSYSTEM_GUIDE.md
       kind: guide
       rev: aaa30844e96f
@@ -1812,8 +1812,8 @@ nodes:
         - gate
     - id: internal/gate/code_cataloged.spec.md
       kind: spec
-      rev: 81b3c98da1cf
-      updated_at: "2026-09-19"
+      rev: 4396eeed49d2
+      updated_at: "2026-09-26"
       code: CDCTC
       layer: spec
       code_declared: true
@@ -1858,9 +1858,9 @@ nodes:
                 - CDCTC-X03
                 - CDCTC-X04
         proven_rev_by_suite:
-            .anchors/junit.xml: 81b3c98da1cf
-        at_rev: 81b3c98da1cf
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 4396eeed49d2
+        at_rev: 4396eeed49d2
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/code_cataloged_test.go
       kind: test
       rev: c0bf8e1d17ec
@@ -1931,7 +1931,7 @@ nodes:
             .anchors/junit.xml: 0cef6cb6fcf7
             external/report.xml: 0cef6cb6fcf7
         at_rev: 0cef6cb6fcf7
-        ingested_at: "2026-09-26T13:25:36-03:00"
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/code_language_test.go
       kind: test
       rev: 18771b1c2646
@@ -1959,8 +1959,8 @@ nodes:
         - gate
     - id: internal/gate/code_reference_valid.spec.md
       kind: spec
-      rev: 07afd90747be
-      updated_at: "2026-09-19"
+      rev: 0d71bdc68c49
+      updated_at: "2026-09-26"
       code: CRVCD
       layer: spec
       code_declared: true
@@ -2001,9 +2001,9 @@ nodes:
                 - CRVCD-X02
                 - CRVCD-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 07afd90747be
-        at_rev: 07afd90747be
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 0d71bdc68c49
+        at_rev: 0d71bdc68c49
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/code_reference_valid_test.go
       kind: test
       rev: a640b48e0215
@@ -2031,8 +2031,8 @@ nodes:
         - gate
     - id: internal/gate/contract_status_declared.spec.md
       kind: spec
-      rev: dbbafeee1f97
-      updated_at: "2026-09-19"
+      rev: 538cf9e1e3e0
+      updated_at: "2026-09-26"
       code: CSDCN
       layer: spec
       code_declared: true
@@ -2079,9 +2079,9 @@ nodes:
                 - CSDCN-X02
                 - CSDCN-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: dbbafeee1f97
-        at_rev: dbbafeee1f97
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 538cf9e1e3e0
+        at_rev: 538cf9e1e3e0
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/contract_status_declared_test.go
       kind: test
       rev: 4b9e8d72e548
@@ -2109,8 +2109,8 @@ nodes:
         - gate
     - id: internal/gate/count_honored.spec.md
       kind: spec
-      rev: daa39dee4008
-      updated_at: "2026-09-19"
+      rev: 78d639d1ccaa
+      updated_at: "2026-09-26"
       code: CNHNC
       layer: spec
       code_declared: true
@@ -2159,9 +2159,9 @@ nodes:
                 - CNHNC-X02
                 - CNHNC-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: daa39dee4008
-        at_rev: daa39dee4008
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 78d639d1ccaa
+        at_rev: 78d639d1ccaa
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/count_honored_test.go
       kind: test
       rev: b640e62d5144
@@ -2189,8 +2189,8 @@ nodes:
         - gate
     - id: internal/gate/dependency_honored.spec.md
       kind: spec
-      rev: 036a258abf72
-      updated_at: "2026-09-20"
+      rev: 308d3a4f0df5
+      updated_at: "2026-09-26"
       code: DEPHN
       layer: spec
       code_declared: true
@@ -2227,9 +2227,9 @@ nodes:
                 - DEPHN-X01
                 - DEPHN-X02
         proven_rev_by_suite:
-            .anchors/junit.xml: 036a258abf72
-        at_rev: 036a258abf72
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 308d3a4f0df5
+        at_rev: 308d3a4f0df5
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/dependency_honored_test.go
       kind: test
       rev: 52b0cb2a3f59
@@ -2257,8 +2257,8 @@ nodes:
         - gate
     - id: internal/gate/doc_required.spec.md
       kind: spec
-      rev: ac8e6b38923b
-      updated_at: "2026-09-19"
+      rev: 490867e398d6
+      updated_at: "2026-09-26"
       code: DCRQD
       layer: spec
       code_declared: true
@@ -2295,9 +2295,9 @@ nodes:
                 - DCRQD-X01
                 - DCRQD-X02
         proven_rev_by_suite:
-            .anchors/junit.xml: ac8e6b38923b
-        at_rev: ac8e6b38923b
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 490867e398d6
+        at_rev: 490867e398d6
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/doc_required_section_test.go
       kind: test
       rev: 609f442fea29
@@ -2332,8 +2332,8 @@ nodes:
         - gate
     - id: internal/gate/doc_self_contained.spec.md
       kind: spec
-      rev: 416c1503eda5
-      updated_at: "2026-09-19"
+      rev: 0bb781577697
+      updated_at: "2026-09-26"
       code: DSCDC
       layer: spec
       code_declared: true
@@ -2374,9 +2374,9 @@ nodes:
                 - DSCDC-X02
                 - DSCDC-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 416c1503eda5
-        at_rev: 416c1503eda5
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 0bb781577697
+        at_rev: 0bb781577697
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/doc_self_contained_test.go
       kind: test
       rev: 0c3351e58d13
@@ -2419,8 +2419,8 @@ nodes:
         - gate
     - id: internal/gate/docs_fresh.spec.md
       kind: spec
-      rev: d06dbdf7bbb3
-      updated_at: "2026-09-19"
+      rev: eeb5575a9fb5
+      updated_at: "2026-09-26"
       code: DCFRD
       layer: spec
       code_declared: true
@@ -2463,9 +2463,9 @@ nodes:
                 - DCFRD-X03
                 - DCFRD-X04
         proven_rev_by_suite:
-            .anchors/junit.xml: d06dbdf7bbb3
-        at_rev: d06dbdf7bbb3
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: eeb5575a9fb5
+        at_rev: eeb5575a9fb5
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/docs_fresh_test.go
       kind: test
       rev: 1a8bdc1a21ac
@@ -2510,8 +2510,8 @@ nodes:
         - gate
     - id: internal/gate/domain_declared.spec.md
       kind: spec
-      rev: 81bcde46d1a1
-      updated_at: "2026-09-19"
+      rev: 2976bbe71690
+      updated_at: "2026-09-26"
       code: DMDCD
       layer: spec
       code_declared: true
@@ -2544,9 +2544,9 @@ nodes:
                 - DMDCD-X01
                 - DMDCD-X02
         proven_rev_by_suite:
-            .anchors/junit.xml: 81bcde46d1a1
-        at_rev: 81bcde46d1a1
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 2976bbe71690
+        at_rev: 2976bbe71690
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/domain_declared_test.go
       kind: test
       rev: 7721f39faa76
@@ -2574,8 +2574,8 @@ nodes:
         - gate
     - id: internal/gate/evidence_fresh.spec.md
       kind: spec
-      rev: 2bc784300f71
-      updated_at: "2026-09-19"
+      rev: ed965f862654
+      updated_at: "2026-09-26"
       code: EVFRV
       layer: spec
       code_declared: true
@@ -2618,9 +2618,9 @@ nodes:
                 - EVFRV-X02
                 - EVFRV-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 2bc784300f71
-        at_rev: 2bc784300f71
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: ed965f862654
+        at_rev: ed965f862654
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/evidence_fresh_test.go
       kind: test
       rev: 5fd361f9df74
@@ -2648,8 +2648,8 @@ nodes:
         - gate
     - id: internal/gate/external.spec.md
       kind: spec
-      rev: 7aa2fd70a1df
-      updated_at: "2026-09-19"
+      rev: 5bdf042e8f33
+      updated_at: "2026-09-26"
       code: EXCMX
       layer: spec
       code_declared: true
@@ -2696,9 +2696,9 @@ nodes:
                 - EXCMX-X01
                 - EXCMX-X02
         proven_rev_by_suite:
-            .anchors/junit.xml: 7aa2fd70a1df
-        at_rev: 7aa2fd70a1df
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 5bdf042e8f33
+        at_rev: 5bdf042e8f33
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/external_test.go
       kind: test
       rev: aa633d4bc42f
@@ -2749,8 +2749,8 @@ nodes:
         - gate
     - id: internal/gate/feature_test_match.spec.md
       kind: spec
-      rev: 5ef69b22e717
-      updated_at: "2026-09-24"
+      rev: e107ba20696a
+      updated_at: "2026-09-26"
       code: FTMFT
       layer: spec
       code_declared: true
@@ -2809,9 +2809,9 @@ nodes:
                 - FTMFT-X02
                 - FTMFT-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 5ef69b22e717
-        at_rev: 5ef69b22e717
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: e107ba20696a
+        at_rev: e107ba20696a
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/feature_test_match_test.go
       kind: test
       rev: 3884463747fb
@@ -2863,7 +2863,7 @@ nodes:
         - gate
     - id: internal/gate/gate.spec.md
       kind: spec
-      rev: 4c2ff0fb498a
+      rev: 9a694bbc7881
       updated_at: "2026-09-26"
       code: GTENG
       layer: spec
@@ -2935,9 +2935,9 @@ nodes:
                 - GTENG-X02
                 - GTENG-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 4c2ff0fb498a
-        at_rev: 4c2ff0fb498a
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 9a694bbc7881
+        at_rev: 9a694bbc7881
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/gate_test.go
       kind: test
       rev: 55a6806dfb1d
@@ -2965,8 +2965,8 @@ nodes:
         - gate
     - id: internal/gate/identity_consistent.spec.md
       kind: spec
-      rev: 6226de45def3
-      updated_at: "2026-09-19"
+      rev: 9f5d6fdfa169
+      updated_at: "2026-09-26"
       code: IDCND
       layer: spec
       code_declared: true
@@ -3009,9 +3009,9 @@ nodes:
                 - IDCND-X02
                 - IDCND-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 6226de45def3
-        at_rev: 6226de45def3
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 9f5d6fdfa169
+        at_rev: 9f5d6fdfa169
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/identity_consistent_test.go
       kind: test
       rev: 6335746413d6
@@ -3039,8 +3039,8 @@ nodes:
         - gate
     - id: internal/gate/internal_checks.spec.md
       kind: spec
-      rev: 42843319d0fe
-      updated_at: "2026-09-19"
+      rev: 5da07853b7dc
+      updated_at: "2026-09-26"
       code: INCHN
       layer: spec
       code_declared: true
@@ -3095,9 +3095,9 @@ nodes:
                 - INCHN-X02
                 - INCHN-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 42843319d0fe
-        at_rev: 42843319d0fe
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 5da07853b7dc
+        at_rev: 5da07853b7dc
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/internal_checks_test.go
       kind: test
       rev: f1e5a5093be0
@@ -3125,8 +3125,8 @@ nodes:
         - gate
     - id: internal/gate/layer_boundary.spec.md
       kind: spec
-      rev: 23ee16375894
-      updated_at: "2026-09-19"
+      rev: 64732847af87
+      updated_at: "2026-09-26"
       code: LYBNL
       layer: spec
       code_declared: true
@@ -3173,9 +3173,9 @@ nodes:
                 - LYBNL-X02
                 - LYBNL-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 23ee16375894
-        at_rev: 23ee16375894
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 64732847af87
+        at_rev: 64732847af87
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/layer_boundary_test.go
       kind: test
       rev: 2c0df5559159
@@ -3203,8 +3203,8 @@ nodes:
         - gate
     - id: internal/gate/marker_parity.spec.md
       kind: spec
-      rev: cd7e4eef37df
-      updated_at: "2026-09-19"
+      rev: 73449694a8eb
+      updated_at: "2026-09-26"
       code: MRPRM
       layer: spec
       code_declared: true
@@ -3243,9 +3243,9 @@ nodes:
                 - MRPRM-X02
                 - MRPRM-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: cd7e4eef37df
-        at_rev: cd7e4eef37df
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 73449694a8eb
+        at_rev: 73449694a8eb
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/marker_parity_test.go
       kind: test
       rev: 4d2770ca3202
@@ -3273,7 +3273,7 @@ nodes:
         - gate
     - id: internal/gate/mock_stamp_gen.spec.md
       kind: spec
-      rev: 8edb9cd1d385
+      rev: cb7e98730e12
       updated_at: "2026-09-26"
       code: MKSTP
       layer: spec
@@ -3305,9 +3305,9 @@ nodes:
                 - MKSTP-I02
                 - MKSTP-X01
         proven_rev_by_suite:
-            .anchors/junit.xml: 8edb9cd1d385
-        at_rev: 8edb9cd1d385
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: cb7e98730e12
+        at_rev: cb7e98730e12
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/mock_stamp_gen_test.go
       kind: test
       rev: 4ec80f3d8256
@@ -3335,7 +3335,7 @@ nodes:
         - gate
     - id: internal/gate/mock_stamped.spec.md
       kind: spec
-      rev: 6d00de2f80da
+      rev: e39f54e9612d
       updated_at: "2026-09-26"
       code: MCSTM
       layer: spec
@@ -3397,9 +3397,9 @@ nodes:
                 - MCSTM-X03
                 - MCSTM-X04
         proven_rev_by_suite:
-            .anchors/junit.xml: 6d00de2f80da
-        at_rev: 6d00de2f80da
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: e39f54e9612d
+        at_rev: e39f54e9612d
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/mock_stamped_test.go
       kind: test
       rev: d618fec40147
@@ -3427,8 +3427,8 @@ nodes:
         - gate
     - id: internal/gate/mock_typed.spec.md
       kind: spec
-      rev: 0ca430b1a4c3
-      updated_at: "2026-09-24"
+      rev: 2b6ef4d3b3cf
+      updated_at: "2026-09-26"
       code: MCTYM
       layer: spec
       code_declared: true
@@ -3479,9 +3479,9 @@ nodes:
                 - MCTYM-X04
                 - MCTYM-X05
         proven_rev_by_suite:
-            .anchors/junit.xml: 0ca430b1a4c3
-        at_rev: 0ca430b1a4c3
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 2b6ef4d3b3cf
+        at_rev: 2b6ef4d3b3cf
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/mock_typed_test.go
       kind: test
       rev: 3157696ee091
@@ -3560,8 +3560,8 @@ nodes:
       no_propagation: true
     - id: internal/gate/obligation_honored.spec.md
       kind: spec
-      rev: 1744a804e820
-      updated_at: "2026-09-19"
+      rev: f52d8fdd4d3f
+      updated_at: "2026-09-26"
       code: OBHNB
       layer: spec
       code_declared: true
@@ -3602,9 +3602,9 @@ nodes:
                 - OBHNB-X02
                 - OBHNB-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 1744a804e820
-        at_rev: 1744a804e820
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: f52d8fdd4d3f
+        at_rev: f52d8fdd4d3f
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/obligation_honored_test.go
       kind: test
       rev: 6e324040b347
@@ -3640,7 +3640,7 @@ nodes:
     - id: internal/gate/open_questions.go
       kind: code
       rev: 40b38601859d
-      updated_at: "2026-09-19"
+      updated_at: "2026-09-26"
       code: OPQSP
       layer: gate
       tags:
@@ -3648,8 +3648,8 @@ nodes:
         - gate
     - id: internal/gate/open_questions.spec.md
       kind: spec
-      rev: ea70f17711c7
-      updated_at: "2026-09-19"
+      rev: 8a28a6f2262f
+      updated_at: "2026-09-26"
       code: OPQSP
       layer: spec
       code_declared: true
@@ -3684,12 +3684,12 @@ nodes:
                 - OPQSP-X01
                 - OPQSP-X02
         proven_rev_by_suite:
-            .anchors/junit.xml: ea70f17711c7
-        at_rev: ea70f17711c7
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 8a28a6f2262f
+        at_rev: 8a28a6f2262f
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/open_questions_test.go
       kind: test
-      rev: dc85b92ce7e5
+      rev: 5b229c2e3c35
       updated_at: "2026-09-19"
       code: OPQSP
       layer: teste
@@ -3714,8 +3714,8 @@ nodes:
         - gate
     - id: internal/gate/pagination_honored.spec.md
       kind: spec
-      rev: 7479e9f7b45c
-      updated_at: "2026-09-19"
+      rev: 81c76d7c64fe
+      updated_at: "2026-09-26"
       code: PGNHN
       layer: spec
       code_declared: true
@@ -3752,9 +3752,9 @@ nodes:
                 - PGNHN-X01
                 - PGNHN-X02
         proven_rev_by_suite:
-            .anchors/junit.xml: 7479e9f7b45c
-        at_rev: 7479e9f7b45c
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 81c76d7c64fe
+        at_rev: 81c76d7c64fe
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/pagination_honored_test.go
       kind: test
       rev: 60adbe87019b
@@ -3782,8 +3782,8 @@ nodes:
         - gate
     - id: internal/gate/phase_ordered.spec.md
       kind: spec
-      rev: 376af0ff50ac
-      updated_at: "2026-09-19"
+      rev: 72568f65537b
+      updated_at: "2026-09-26"
       code: PHORP
       layer: spec
       code_declared: true
@@ -3834,9 +3834,9 @@ nodes:
                 - PHORP-X02
                 - PHORP-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 376af0ff50ac
-        at_rev: 376af0ff50ac
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 72568f65537b
+        at_rev: 72568f65537b
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/phase_ordered_test.go
       kind: test
       rev: 3705ed32086d
@@ -3907,7 +3907,7 @@ nodes:
             .anchors/junit.xml: 9afea8a33146
             external/report.xml: 9afea8a33146
         at_rev: 9afea8a33146
-        ingested_at: "2026-09-26T13:25:36-03:00"
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/placeholder_filled_test.go
       kind: test
       rev: a28a04e74cce
@@ -3936,8 +3936,8 @@ nodes:
         - gate
     - id: internal/gate/plan_change_justified.spec.md
       kind: spec
-      rev: d0576fe40ed6
-      updated_at: "2026-09-19"
+      rev: d1b1d053eb18
+      updated_at: "2026-09-26"
       code: PCJPL
       layer: spec
       code_declared: true
@@ -3988,9 +3988,9 @@ nodes:
                 - PCJPL-X02
                 - PCJPL-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: d0576fe40ed6
-        at_rev: d0576fe40ed6
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: d1b1d053eb18
+        at_rev: d1b1d053eb18
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/plan_change_justified_test.go
       kind: test
       rev: 54610a39e105
@@ -4025,8 +4025,8 @@ nodes:
         - gate
     - id: internal/gate/plan_revised.spec.md
       kind: spec
-      rev: 4a30f5ce70b7
-      updated_at: "2026-09-19"
+      rev: 91c71e8c57ef
+      updated_at: "2026-09-26"
       code: PLRVP
       layer: spec
       code_declared: true
@@ -4071,9 +4071,9 @@ nodes:
                 - PLRVP-X02
                 - PLRVP-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 4a30f5ce70b7
-        at_rev: 4a30f5ce70b7
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 91c71e8c57ef
+        at_rev: 91c71e8c57ef
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/plan_revised_test.go
       kind: test
       rev: ca557add6267
@@ -4101,8 +4101,8 @@ nodes:
         - gate
     - id: internal/gate/plan_seeds_valid.spec.md
       kind: spec
-      rev: 1b4d4993e3b2
-      updated_at: "2026-09-19"
+      rev: 4678f45ba6dd
+      updated_at: "2026-09-26"
       code: PSVPL
       layer: spec
       code_declared: true
@@ -4149,9 +4149,9 @@ nodes:
                 - PSVPL-X02
                 - PSVPL-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 1b4d4993e3b2
-        at_rev: 1b4d4993e3b2
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 4678f45ba6dd
+        at_rev: 4678f45ba6dd
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/plan_seeds_valid_test.go
       kind: test
       rev: 2aeb17450445
@@ -4179,8 +4179,8 @@ nodes:
         - gate
     - id: internal/gate/plan_source_declared.spec.md
       kind: spec
-      rev: afa852280386
-      updated_at: "2026-09-19"
+      rev: f91c140cc1ff
+      updated_at: "2026-09-26"
       code: PSDPL
       layer: spec
       code_declared: true
@@ -4219,9 +4219,9 @@ nodes:
                 - PSDPL-X02
                 - PSDPL-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: afa852280386
-        at_rev: afa852280386
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: f91c140cc1ff
+        at_rev: f91c140cc1ff
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/plan_source_declared_test.go
       kind: test
       rev: ca36506dc987
@@ -4257,8 +4257,8 @@ nodes:
         - gate
     - id: internal/gate/progress_honest.spec.md
       kind: spec
-      rev: 2f3a9398bae0
-      updated_at: "2026-09-19"
+      rev: 79fea6b72ea9
+      updated_at: "2026-09-26"
       code: PRHNP
       layer: spec
       code_declared: true
@@ -4305,9 +4305,9 @@ nodes:
                 - PRHNP-X02
                 - PRHNP-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 2f3a9398bae0
-        at_rev: 2f3a9398bae0
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 79fea6b72ea9
+        at_rev: 79fea6b72ea9
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/progress_honest_test.go
       kind: test
       rev: 1c6588589b2d
@@ -4405,7 +4405,7 @@ nodes:
             .anchors/junit.xml: 9e03864f7e62
             external/report.xml: 9e03864f7e62
         at_rev: 9e03864f7e62
-        ingested_at: "2026-09-26T13:25:36-03:00"
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/promotable_test.go
       kind: test
       rev: d6a0e76ee023
@@ -4433,8 +4433,8 @@ nodes:
         - gate
     - id: internal/gate/proof_crosses_boundary.spec.md
       kind: spec
-      rev: 3981c8f7451b
-      updated_at: "2026-09-19"
+      rev: 719ccb32a621
+      updated_at: "2026-09-26"
       code: PCBPR
       layer: spec
       code_declared: true
@@ -4485,9 +4485,9 @@ nodes:
                 - PCBPR-X02
                 - PCBPR-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 3981c8f7451b
-        at_rev: 3981c8f7451b
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 719ccb32a621
+        at_rev: 719ccb32a621
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/proof_crosses_boundary_test.go
       kind: test
       rev: c75f2fed24c6
@@ -4498,7 +4498,7 @@ nodes:
         - test
     - id: internal/gate/ref_resolves.feature
       kind: feature
-      rev: e890d0168a98
+      rev: 3de65b205746
       updated_at: "2026-09-19"
       code: RFRSR
       layer: feature
@@ -4515,8 +4515,8 @@ nodes:
         - gate
     - id: internal/gate/ref_resolves.spec.md
       kind: spec
-      rev: da6e2bf3fd44
-      updated_at: "2026-09-19"
+      rev: 9d8f8f449e50
+      updated_at: "2026-09-26"
       code: RFRSR
       layer: spec
       code_declared: true
@@ -4537,6 +4537,10 @@ nodes:
             - RFRSR-B11
             - RFRSR-B12
             - RFRSR-B13
+            - RFRSR-B14
+            - RFRSR-B15
+            - RFRSR-B16
+            - RFRSR-B17
             - RFRSR-I01
             - RFRSR-I02
             - RFRSR-X01
@@ -4558,6 +4562,10 @@ nodes:
                 - RFRSR-B11
                 - RFRSR-B13
                 - RFRSR-B12
+                - RFRSR-B14
+                - RFRSR-B15
+                - RFRSR-B16
+                - RFRSR-B17
                 - RFRSR-I01
                 - RFRSR-I02
                 - RFRSR-X01
@@ -4565,13 +4573,13 @@ nodes:
                 - RFRSR-X03
                 - RFRSR-X04
         proven_rev_by_suite:
-            .anchors/junit.xml: da6e2bf3fd44
-        at_rev: da6e2bf3fd44
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 9d8f8f449e50
+        at_rev: 9d8f8f449e50
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/ref_resolves_test.go
       kind: test
-      rev: e921708886f9
-      updated_at: "2026-09-23"
+      rev: af0e0d471784
+      updated_at: "2026-09-26"
       code: RFRSR
       layer: teste
       tags:
@@ -4650,7 +4658,7 @@ nodes:
             .anchors/junit.xml: "762971562134"
             external/report.xml: "762971562134"
         at_rev: "762971562134"
-        ingested_at: "2026-09-26T13:25:36-03:00"
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/region_pair_honored_test.go
       kind: test
       rev: ff9405c70307
@@ -4694,8 +4702,8 @@ nodes:
         - gate
     - id: internal/gate/revision_orphans.spec.md
       kind: spec
-      rev: 506d47b472d2
-      updated_at: "2026-09-22"
+      rev: 188024b0aa1f
+      updated_at: "2026-09-26"
       code: RVORP
       layer: spec
       code_declared: true
@@ -4724,13 +4732,13 @@ nodes:
                 - RVORP-I01
                 - RVORP-X01
         proven_rev_by_suite:
-            .anchors/junit.xml: 506d47b472d2
-        at_rev: 506d47b472d2
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 188024b0aa1f
+        at_rev: 188024b0aa1f
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/revision_orphans_test.go
       kind: test
       rev: 5c3138b72ee2
-      updated_at: "2026-09-23"
+      updated_at: "2026-09-26"
       code: NTCNN
       layer: teste
       code_declared: true
@@ -4755,8 +4763,8 @@ nodes:
         - gate
     - id: internal/gate/revision_renumber.spec.md
       kind: spec
-      rev: a490ce7f3f08
-      updated_at: "2026-09-23"
+      rev: 9704d52decd3
+      updated_at: "2026-09-26"
       code: RVRNR
       layer: spec
       code_declared: true
@@ -4785,9 +4793,9 @@ nodes:
                 - RVRNR-I02
                 - RVRNR-X01
         proven_rev_by_suite:
-            .anchors/junit.xml: a490ce7f3f08
-        at_rev: a490ce7f3f08
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 9704d52decd3
+        at_rev: 9704d52decd3
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/revision_renumber_test.go
       kind: test
       rev: 5d962fa98a42
@@ -4858,11 +4866,11 @@ nodes:
             .anchors/junit.xml: 25efb10781b6
             external/report.xml: 25efb10781b6
         at_rev: 25efb10781b6
-        ingested_at: "2026-09-26T13:25:36-03:00"
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/route_declared_test.go
       kind: test
       rev: 4a5fded1f71d
-      updated_at: "2026-09-20"
+      updated_at: "2026-09-26"
       code: RTDCL
       layer: teste
       tags:
@@ -4886,8 +4894,8 @@ nodes:
         - gate
     - id: internal/gate/route_exists.spec.md
       kind: spec
-      rev: 06aa7734df23
-      updated_at: "2026-09-19"
+      rev: 193b54318a87
+      updated_at: "2026-09-26"
       code: RTEXR
       layer: spec
       code_declared: true
@@ -4938,9 +4946,9 @@ nodes:
                 - RTEXR-X02
                 - RTEXR-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 06aa7734df23
-        at_rev: 06aa7734df23
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 193b54318a87
+        at_rev: 193b54318a87
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/route_exists_test.go
       kind: test
       rev: 77716f6577d5
@@ -4968,8 +4976,8 @@ nodes:
         - gate
     - id: internal/gate/rule.spec.md
       kind: spec
-      rev: 35183036ebc0
-      updated_at: "2026-09-19"
+      rev: 928b2930860e
+      updated_at: "2026-09-26"
       code: RLUEX
       layer: spec
       code_declared: true
@@ -5026,9 +5034,9 @@ nodes:
                 - RLUEX-X02
                 - RLUEX-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 35183036ebc0
-        at_rev: 35183036ebc0
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 928b2930860e
+        at_rev: 928b2930860e
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/rule_implemented.feature
       kind: feature
       rev: 8a1cc95ed73a
@@ -5048,8 +5056,8 @@ nodes:
         - gate
     - id: internal/gate/rule_implemented.spec.md
       kind: spec
-      rev: 926c15922a81
-      updated_at: "2026-09-19"
+      rev: e92ae12ffd30
+      updated_at: "2026-09-26"
       code: RLIMR
       layer: spec
       code_declared: true
@@ -5080,9 +5088,9 @@ nodes:
                 - RLIMR-X01
                 - RLIMR-X02
         proven_rev_by_suite:
-            .anchors/junit.xml: 926c15922a81
-        at_rev: 926c15922a81
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: e92ae12ffd30
+        at_rev: e92ae12ffd30
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/rule_implemented_test.go
       kind: test
       rev: 700390a56eab
@@ -5199,7 +5207,7 @@ nodes:
             .anchors/junit.xml: 6ab06f981fd1
             external/report.xml: 6ab06f981fd1
         at_rev: 6ab06f981fd1
-        ingested_at: "2026-09-26T13:25:36-03:00"
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/rule_types_requires_test.go
       kind: test
       rev: ee5d4f60c417
@@ -5234,8 +5242,8 @@ nodes:
         - gate
     - id: internal/gate/scenario_asserts.spec.md
       kind: spec
-      rev: 9f6347895b8e
-      updated_at: "2026-09-19"
+      rev: 1d4bfb589a46
+      updated_at: "2026-09-26"
       code: SCASS
       layer: spec
       code_declared: true
@@ -5276,9 +5284,9 @@ nodes:
                 - SCASS-X02
                 - SCASS-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 9f6347895b8e
-        at_rev: 9f6347895b8e
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 1d4bfb589a46
+        at_rev: 1d4bfb589a46
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/scenario_asserts_test.go
       kind: test
       rev: c32ff528fcec
@@ -5389,7 +5397,7 @@ nodes:
             .anchors/junit.xml: 80bb393d42f4
             external/report.xml: 80bb393d42f4
         at_rev: 80bb393d42f4
-        ingested_at: "2026-09-26T13:25:36-03:00"
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/scenario_identity_test.go
       kind: test
       rev: 27474d7bb7b1
@@ -5469,11 +5477,11 @@ nodes:
             .anchors/junit.xml: ab3e8cd92792
             external/report.xml: ab3e8cd92792
         at_rev: ab3e8cd92792
-        ingested_at: "2026-09-26T13:25:36-03:00"
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/scenario_letter_declared_test.go
       kind: test
       rev: 23bed2a4e5a7
-      updated_at: "2026-09-20"
+      updated_at: "2026-09-26"
       code: SCLTR
       layer: teste
       tags:
@@ -5573,7 +5581,7 @@ nodes:
             .anchors/junit.xml: 882996e77635
             external/report.xml: 882996e77635
         at_rev: 882996e77635
-        ingested_at: "2026-09-26T13:25:36-03:00"
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/scenario_type_aligned_test.go
       kind: test
       rev: abf2df75a37f
@@ -5608,8 +5616,8 @@ nodes:
         - gate
     - id: internal/gate/sibling_guard.spec.md
       kind: spec
-      rev: a257bf229962
-      updated_at: "2026-09-19"
+      rev: da5d5a437a7d
+      updated_at: "2026-09-26"
       code: SBGRD
       layer: spec
       code_declared: true
@@ -5644,9 +5652,9 @@ nodes:
                 - SBGRD-X01
                 - SBGRD-X02
         proven_rev_by_suite:
-            .anchors/junit.xml: a257bf229962
-        at_rev: a257bf229962
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: da5d5a437a7d
+        at_rev: da5d5a437a7d
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/sibling_guard_test.go
       kind: test
       rev: c9a83baf38be
@@ -5674,8 +5682,8 @@ nodes:
         - gate
     - id: internal/gate/spec_feature_match.spec.md
       kind: spec
-      rev: e05b0baa0fe5
-      updated_at: "2026-09-19"
+      rev: 3e1318b1064f
+      updated_at: "2026-09-26"
       code: SFMSP
       layer: spec
       code_declared: true
@@ -5720,9 +5728,9 @@ nodes:
                 - SFMSP-X02
                 - SFMSP-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: e05b0baa0fe5
-        at_rev: e05b0baa0fe5
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 3e1318b1064f
+        at_rev: 3e1318b1064f
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/spec_feature_match_test.go
       kind: test
       rev: c00b2740d61b
@@ -5759,8 +5767,8 @@ nodes:
         - gate
     - id: internal/gate/test_traceable.spec.md
       kind: spec
-      rev: f2e6caddce16
-      updated_at: "2026-09-19"
+      rev: 223602adb939
+      updated_at: "2026-09-26"
       code: TSTRT
       layer: spec
       code_declared: true
@@ -5809,9 +5817,9 @@ nodes:
                 - TSTRT-X03
                 - TSTRT-X04
         proven_rev_by_suite:
-            .anchors/junit.xml: f2e6caddce16
-        at_rev: f2e6caddce16
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 223602adb939
+        at_rev: 223602adb939
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/test_traceable_test.go
       kind: test
       rev: e36fd20a0749
@@ -5870,8 +5878,8 @@ nodes:
         - gate
     - id: internal/gate/testid_queried_exists.spec.md
       kind: spec
-      rev: 29a1abf925a6
-      updated_at: "2026-09-19"
+      rev: 9d4fb014b5b4
+      updated_at: "2026-09-26"
       code: TQETS
       layer: spec
       code_declared: true
@@ -5924,9 +5932,9 @@ nodes:
                 - TQETS-X02
                 - TQETS-X03
         proven_rev_by_suite:
-            .anchors/junit.xml: 29a1abf925a6
-        at_rev: 29a1abf925a6
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 9d4fb014b5b4
+        at_rev: 9d4fb014b5b4
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/testid_queried_exists_test.go
       kind: test
       rev: 14cc644d666d
@@ -5962,8 +5970,8 @@ nodes:
         - gate
     - id: internal/gate/triad_complete.spec.md
       kind: spec
-      rev: eeec941f6818
-      updated_at: "2026-09-24"
+      rev: 546bc794325f
+      updated_at: "2026-09-26"
       code: TRCMT
       layer: spec
       code_declared: true
@@ -6004,9 +6012,9 @@ nodes:
                 - TRCMT-X01
                 - TRCMT-X02
         proven_rev_by_suite:
-            .anchors/junit.xml: eeec941f6818
-        at_rev: eeec941f6818
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: 546bc794325f
+        at_rev: 546bc794325f
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/triad_complete_test.go
       kind: test
       rev: bb34a908336f
@@ -6034,8 +6042,8 @@ nodes:
         - gate
     - id: internal/gate/trigger_declared.spec.md
       kind: spec
-      rev: ca37cf3923eb
-      updated_at: "2026-09-19"
+      rev: e6d98b670a14
+      updated_at: "2026-09-26"
       code: TRDCT
       layer: spec
       code_declared: true
@@ -6088,9 +6096,9 @@ nodes:
                 - TRDCT-X03
                 - TRDCT-X04
         proven_rev_by_suite:
-            .anchors/junit.xml: ca37cf3923eb
-        at_rev: ca37cf3923eb
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: e6d98b670a14
+        at_rev: e6d98b670a14
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/trigger_declared_test.go
       kind: test
       rev: 072b39c05efc
@@ -6125,7 +6133,7 @@ nodes:
         - gate
     - id: internal/gate/value_anchored.spec.md
       kind: spec
-      rev: 34d633d96f0f
+      rev: c21205abd340
       updated_at: "2026-09-26"
       code: VLANV
       layer: spec
@@ -6163,9 +6171,9 @@ nodes:
                 - VLANV-X01
                 - VLANV-X02
         proven_rev_by_suite:
-            .anchors/junit.xml: 34d633d96f0f
-        at_rev: 34d633d96f0f
-        ingested_at: "2026-09-26T13:25:36-03:00"
+            .anchors/junit.xml: c21205abd340
+        at_rev: c21205abd340
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/value_anchored_test.go
       kind: test
       rev: 9a180555b06b
@@ -6248,7 +6256,7 @@ nodes:
             .anchors/junit.xml: 9ac63acbe2cb
             external/report.xml: 9ac63acbe2cb
         at_rev: 9ac63acbe2cb
-        ingested_at: "2026-09-26T13:25:36-03:00"
+        ingested_at: "2026-09-26T14:01:50-03:00"
     - id: internal/gate/vr_baseline_test.go
       kind: test
       rev: 6bb66197b2b8

@@ -73,12 +73,6 @@ the document itself instead of letting drift happen by omission.
 | `PCJPL-X02` | Does not enforce identity codes on files without one. | Code presence is enforced by `spec-has-code`; duplicating that check here would produce two findings for a single defect. |
 | `PCJPL-X03` | Does not run or enforce revisions during full-project checks (`--all`). | In a full run there is no diff context, and charging files that never needed revision would penalize units designed correctly from the start. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `PCJPL-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

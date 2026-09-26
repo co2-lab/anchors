@@ -73,12 +73,6 @@ gate exists to catch.
 | `MRPRM-X02` | Does not decide WHICH rules live at two ends. | That is a decision of the project, declared in its Structure. A gate that invented parities would charge mappings nobody committed to — and the whole reason this gate is generic is that the catalogue of such rules belongs to the project, not to the framework. |
 | `MRPRM-X03` | Does not read files whose extension is not in the text list. | The cost of erring low here is not seeing a marking in an exotic place; the cost of erring high is reading megabytes of image on every walk. The marking lives in code and documentation, and that is what the list covers. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `MRPRM-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

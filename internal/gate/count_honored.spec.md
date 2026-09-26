@@ -80,12 +80,6 @@ to any human reader opening the document.
 | `CNHNC-X02` | Does not charge specs that contain no count declaration markers. | Not every spec makes numerical claims, and forcing every spec to declare counts would impose empty bureaucracy. |
 | `CNHNC-X03` | Does not confront prose statements that qualify a subset rather than the total. | Differentiating subsets from totals requires deep semantic understanding; conservatively silencing alerts on qualified phrases prevents noisy false positives. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `CNHNC-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

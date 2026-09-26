@@ -83,12 +83,6 @@ a baseline is the physical proof of THIS specific unit, not a pointer to where i
 | `IDCND-X02` | Does not charge specs for code absence. | Code presence is governed by `spec-has-code`; charging it here would create two findings for a single defect. |
 | `IDCND-X03` | Does not forbid components from referencing parent screen codes in testIDs. | Child components regularly identify their screen context for end-to-end flow navigation; forbidding this would break flow selectors. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `IDCND-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

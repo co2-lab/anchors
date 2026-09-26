@@ -61,12 +61,6 @@ requires that they exist —, it asks "do the pieces exist?".
 | `TRCMT-X01` | Does not confront whether the pieces MATCH one another — only whether they exist. | Matching is the work of the relational gates. This one exists precisely because they fail open when the piece does not exist; doing both here would duplicate the ruler. |
 | `TRCMT-X02` | Does not judge the QUALITY of any piece. | An empty test satisfies this gate, and that is correct: the ruler here is EXISTENCE. The one that confronts the content is another gate, and confusing the two would make this one fail for a reason it does not know how to measure. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `TRCMT-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

@@ -78,12 +78,6 @@ in automated test suites.
 | `FTMFT-X02` | Does not confront E2E or visual regression scenarios. | Non-unit testing surfaces inhabit different directories and runners, governed by dedicated surfaces. |
 | `FTMFT-X03` | Does not fail tests for minor natural language variations in test titles. | Human scenario language and implementation code descriptions naturally vary; classifying drift as warning prevents disruption while preserving traceability. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `FTMFT-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

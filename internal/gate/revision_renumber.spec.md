@@ -58,12 +58,6 @@ reasoning decides which citations move: only those on a line the branch added.
 | --- | --- | --- |
 | `RVRNR-X01` | Does not rewrite a revision cited without its unit code. | `R0003` alone names a revision only inside its own spec; rewriting it in another file would guess which unit it meant. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `RVRNR-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

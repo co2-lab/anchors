@@ -84,12 +84,6 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | `MCSTM-X03` | Does not skip the absence of a stamp to accommodate legacy code. | Turning the charge on in an old project produces hundreds of findings at once, and designing for that case would turn a MIGRATION problem into a permanent property of the framework: every future project would inherit the slack. A project born with Anchors has no debt — the first double is written after the gate exists. Legacy is handled with the vocabulary that already exists: a non-blocking gate during adoption, and per-unit opt-out with a written reason. |
 | `MCSTM-X04` | Does not guarantee cryptographic strength: the hash is truncated. | The stamp lives in a comment line and is read by a human. Thirty-two bits are enough to detect the accidental change this gate pursues — there is no adversary forging a collision against their own test. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `MCSTM-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |

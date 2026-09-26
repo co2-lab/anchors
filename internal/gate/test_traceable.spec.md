@@ -88,12 +88,6 @@ demanding scenario codes from unlinked tests would require referencing nonexiste
 | `TSTRT-X03` | Does not require scenario codes in standalone test files unattached to features. | Helper tests and unit tests for internal tools without business features have no specification or scenarios to cite. |
 | `TSTRT-X04` | Does not inspect the semantic validity or quality of test assertions. | Detecting at least one scenario code establishes relational visibility; semantic depth is evaluated by code review and test execution. |
 
-## Errors / Failures
-
-| Rule | Condition | Effect |
-| --- | --- | --- |
-| `TSTRT-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
-
 ## Dependencies
 
 | Code | File | Method | Layer |
