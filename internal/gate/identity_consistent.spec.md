@@ -88,6 +88,7 @@ a baseline is the physical proof of THIS specific unit, not a pointer to where i
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `IDCND-E01` | A file the spec governs (`specifies`) is gone from disk when its testIDs are read. | That file is left out; the other governed files are still confronted, and an orphan acronym in any of them still fails (`IDCND-B05`). | A file that no longer exists carries no testID, so there is nothing in it to be inconsistent; and one stale edge must not hide the orphan identity in the files that are there. <!-- @resilient: a stale map edge is expected between builds, and the next map build removes it --> |
+| `IDCND-E02` | The spec lives under a directory whose name holds glob metacharacters (a Next.js `[slug]` route). | Its baselines are still found and confronted. | The path is data: read as a pattern, `[slug]` became a character class that matched no baseline, and the check passed without looking. |
 
 ## Dependencies
 

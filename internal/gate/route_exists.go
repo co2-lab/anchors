@@ -103,14 +103,16 @@ func registeredRoutes(root string, globs []string, cfg *config.Config) (map[stri
 	}
 
 	for _, glob := range globs {
-		arquivos, err := doublestar.Glob(fsys, glob)
+		arquivos, err := doublestar.Glob(fsys, glob, doublestar.WithFilesOnly())
 		if err != nil {
 			return nil, fmt.Errorf("%s", i18n.T("gate.route_exists.err_invalid_glob", glob, err))
 		}
 		for _, f := range arquivos {
 			b, rerr := os.ReadFile(filepath.Join(root, f))
 			if rerr != nil {
-				continue
+				// An unread registry file may be the one that registers the route: skipping
+				// it accused a route that exists (RTEXR-E03).
+				return nil, fmt.Errorf("%s", i18n.T("gate.route_exists.err_unreadable", f))
 			}
 			for _, m := range reRoute.FindAllStringSubmatch(string(b), -1) {
 				for _, sub := range m[1:] {

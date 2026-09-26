@@ -74,6 +74,27 @@ func TestFailureDeclared_handlingWithoutDeclarationFails(t *testing.T) {
 	}
 }
 
+// A unit whose handling matches are all normal flow closes its failure section with
+// `none — <why>`. The reason is mandatory: a bare `none` does not close it.
+func TestFailureDeclared_sectionClosedAsNone(t *testing.T) {
+	code := "func f(m map[string]int) {\n\tif m == nil {\n\t\tm = map[string]int{}\n\t}\n}\n"
+	for name, c := range map[string]struct {
+		spec string
+		want Verdict
+	}{
+		"none with a reason": {"# spec\n\n## Errors\n\nnone — the only nil check is a lazy map init\n", Pass},
+		"pt-BR none":         {"# spec\n\n## Erros\n\nnenhuma: o nil check inicializa o mapa\n", Pass},
+		"bare none":          {"# spec\n\n## Errors\n\nnone\n", Fail},
+		"none outside it":    {"# spec\n\nnone — said in the overview\n", Fail},
+		"section with prose": {"# spec\n\n## Errors\n\nThe unit fails when… none — later\n", Fail},
+	} {
+		root, n, g, cfg := failureProject(t, c.spec, code)
+		if v, msg := checkFailureDeclared(c.spec, n, root, g, cfg); v != c.want {
+			t.Errorf("%s: got %v, want %v (%s)", name, v, c.want, msg)
+		}
+	}
+}
+
 // `@resilient` is a THIRD assertion, different from the two that already existed:
 //
 //	@no-<thing>: <reason>   "it will never have one"  — permanent waiver

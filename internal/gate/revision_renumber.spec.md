@@ -58,6 +58,10 @@ reasoning decides which citations move: only those on a line the branch added.
 | --- | --- | --- |
 | `RVRNR-X01` | Does not rewrite a revision cited without its unit code. | `R0003` alone names a revision only inside its own spec; rewriting it in another file would guess which unit it meant. |
 
+## Errors
+
+none — the nil checks create each code's set of numbers on first use, and the number conversion cannot fail — the revision pattern captures four digits only.
+
 ## Dependencies
 
 | Code | File | Method | Layer |

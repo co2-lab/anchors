@@ -277,3 +277,14 @@ func TestValueAnchored_Errors(t *testing.T) {
 		}
 	})
 }
+
+// A declared value anchor with too few groups is still treated as not declared (I01), but
+// the message names it.
+func TestValueAnchored_declaredWithTooFewGroups(t *testing.T) {
+	t.Run("VLANV-E03: A declared value anchor with too few groups is named, not called undeclared", func(t *testing.T) {})
+	cfg := &config.Config{Derived: &config.Derived{ValueAnchor: `@code-reference-\[([^\]]+)\]`}}
+	v, msg := checkValueAnchored("// @code-reference-[K]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, t.TempDir(), &mapx.Graph{}, cfg)
+	if v != Skip || !strings.Contains(msg, "two capture groups") {
+		t.Fatalf("the declared pattern must be named with the missing group, got %v (%s)", v, msg)
+	}
+}

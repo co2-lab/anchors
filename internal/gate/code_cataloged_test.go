@@ -372,3 +372,13 @@ func TestCodeCataloged_Errors(t *testing.T) {
 		}
 	})
 }
+
+// A declared export pattern that cannot name the symbol is reported as what it is.
+func TestCodeCataloged_exportDetectWithoutGroup(t *testing.T) {
+	t.Run("CDCTC-E03: A declared export pattern with no capture group is named, not called undeclared", func(t *testing.T) {})
+	cfg := &config.Config{Derived: &config.Derived{ExportDetect: `^func\s+[A-Z]\w*`}}
+	v, msg := rodaCatalogadoCfg(t, "# U\n\n## UUUUU-B01 — algo\n", "package u\n\nfunc Publica() int { return 1 }\n", "u.go", cfg)
+	if v != Skip || !strings.Contains(msg, `^func\s+[A-Z]\w*`) || !strings.Contains(msg, "capture group") {
+		t.Fatalf("the declared pattern must be named with the missing group, got %v (%s)", v, msg)
+	}
+}

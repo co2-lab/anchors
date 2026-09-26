@@ -109,3 +109,9 @@ Feature: IdentityConsistent — a unit's spec identity must match its exposed te
     And also governs a file that no longer exists on disk
     When the gate confronts the spec
     Then it returns Fail naming the orphan acronym, and no error is raised for the missing file
+
+  @IDCND-E02 @unit-level
+  Scenario: A spec under a bracketed directory still has its baselines confronted
+    Given a spec under app/[slug]/ with a baseline carrying another unit's acronym
+    When the gate confronts the spec
+    Then it returns Fail naming the baseline

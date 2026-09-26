@@ -68,10 +68,7 @@ func checkMarkerParity(g config.Gate, root string, _ *mapx.Graph, cfg *config.Co
 		return Pending, i18n.T("gate.marker_parity.pending_no_count_or_scopes")
 	}
 
-	ocorr, err := scanMarkings(root, prefixo, escopos, cfg)
-	if err != nil {
-		return Fail, fmt.Sprintf(i18n.T("gate.marker_parity.fail_scan_err"), err.Error())
-	}
+	ocorr := scanMarkings(root, prefixo, escopos, cfg)
 	if len(ocorr) == 0 {
 		// AUSÊNCIA TOTAL não é aprovação. Um prefixo que não aparece em lugar nenhum é
 		// quase sempre erro de digitação na declaração — e devolver Pass ali faria o
@@ -127,13 +124,15 @@ func checkMarkerParity(g config.Gate, root string, _ *mapx.Graph, cfg *config.Co
 
 // scanMarkings devolve, por NOME de regra, os arquivos onde ela aparece, agrupados
 // pelo escopo declarado que os contém.
-func scanMarkings(root, prefixo string, escopos []string, cfg *config.Config) (map[string]map[string][]string, error) {
+// Never fails: an unreadable directory is skipped (MRPRM-E01), so the walk has no error
+// to return — the "scan error" verdict it once fed could not happen.
+func scanMarkings(root, prefixo string, escopos []string, cfg *config.Config) map[string]map[string][]string {
 	// O nome da regra é o que vem depois do prefixo: letras, dígitos, `-` e `_`. Para
 	// aqui de propósito — a marcação costuma ser seguida de `:` e da prosa que explica.
 	re := regexp.MustCompile(`@` + regexp.QuoteMeta(prefixo) + `-([A-Za-z0-9_-]+)`)
 	ocorr := map[string]map[string][]string{}
 
-	err := filepath.WalkDir(root, func(caminho string, d os.DirEntry, err error) error {
+	_ = filepath.WalkDir(root, func(caminho string, d os.DirEntry, err error) error {
 		if err != nil {
 			return nil // diretório ilegível não derruba a varredura inteira
 		}
@@ -173,7 +172,7 @@ func scanMarkings(root, prefixo string, escopos []string, cfg *config.Config) (m
 		return nil
 	})
 	_ = cfg
-	return ocorr, err
+	return ocorr
 }
 
 // scopeOf diz a QUAL escopo declarado o arquivo pertence. Sem escopos declarados (ou

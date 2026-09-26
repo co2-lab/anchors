@@ -741,13 +741,17 @@ func globEscape(s string) string {
 	var b strings.Builder
 	for _, r := range s {
 		switch r {
-		case '*', '?', '[', ']', '\\':
+		case '*', '?', '[', ']', '{', '}', '\\':
 			b.WriteByte('\\')
 		}
 		b.WriteRune(r)
 	}
 	return b.String()
 }
+
+// GlobEscape is globEscape for the other packages that turn a real path into a pattern.
+// `{` and `}` are escaped too: doublestar reads them as alternation.
+func GlobEscape(s string) string { return globEscape(s) }
 
 // stemOfDerived corta os sufixos de um artefato DERIVADO até o nome da unidade.
 //

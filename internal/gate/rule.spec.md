@@ -84,6 +84,10 @@ list entirely, and waiving four new specs would erase the gate for the whole rep
 | `RLUEX-X02` | Does not decide whether a rule PASSES. | The verdict belongs to the checker. This unit only knows how a verification is named and whether it was waived; mixing the two would put the escape hatch inside the ruler. |
 | `RLUEX-X03` | Does not read files, the map, or the project structure. | Identity and waiver are pure text arriving by flag, by environment variable or by commit message. A unit that went looking at disk would make the waiver depend on the state of the repository, and the same waiver would mean different things in two checkouts. |
 
+## Errors
+
+none — the nil checks in `Merge` create the maps a zero-value waiver lacks before copying into them; every refusal of a waiver is already a rule of its own (B05–B08, B16).
+
 ## Dependencies
 
 | Code | File | Method | Layer |

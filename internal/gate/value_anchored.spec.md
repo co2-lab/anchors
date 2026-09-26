@@ -14,7 +14,7 @@
 > is for values that live in more than one place, and it is the way those places are linked.
 >
 > **Revises:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `I02`, `X01`, `X02`
-> **Checked:** `B07`, `B08`, `I01`, `I03`, `X03`, `E01`, `E02`
+> **Checked:** `B07`, `B08`, `I01`, `I03`, `X03`, `E01`, `E02`, `E03`
 
 ## Overview
 
@@ -86,6 +86,7 @@ copies are the truth.
 | --- | --- | --- | --- |
 | `VLANV-E01` | A spec the map lists is no longer on disk when the project index is built. | That spec is left out of the index: its rules declare no value, and the declarations pointing at them are not charged against the spec. The rules of every other spec are still confronted (`VLANV-B05`). | The map can be older than the tree (a spec deleted since the last build): a missing spec declares nothing, and one stale node must not drop the source of every other rule. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
 | `VLANV-E02` | A code file the map lists is no longer on disk when the project index is built. | That file contributes no copy of any key; the copies in every other file are still confronted (`VLANV-B04`). | A file that is gone carries no copy that could disagree, and one stale node must not hide the divergence between the files that are there. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
+| `VLANV-E03` | `derived.value_anchor` is declared with fewer than two capture groups. | `Skip` (the pattern counts as not declared, `VLANV-I01`), naming the declared pattern and the missing group. | The skip is decided; only the cause was wrong — "not declared" about a declared pattern. |
 
 ## Dependencies
 

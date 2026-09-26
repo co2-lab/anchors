@@ -100,3 +100,9 @@ Feature: ValueAnchored — a replicated key is declared where it is used, and ev
     Given the map lists a code file that is gone from disk, and two files declaring the same key with different values
     When the gate confronts one of them
     Then it fails, listing the copy in the other file
+
+  @VLANV-E03 @unit-level
+  Scenario: A declared value anchor with too few groups is named, not called undeclared
+    Given a project that declares the pattern without the capture groups the gate needs
+    When the gate confronts a code file
+    Then it returns Skip naming the declared pattern instead of saying it is not declared

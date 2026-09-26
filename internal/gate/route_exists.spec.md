@@ -87,6 +87,7 @@ Each failure the code handles is already stated as a rule of another letter; the
 | --- | --- | --- | --- |
 | `RTEXR-E01` | REF[RTEXR-B04]: a registry glob that does not parse is answered by B04: Pending with the glob error | — | — |
 | `RTEXR-E02` | REF[RTEXR-B12]: a route pattern that does not compile, or has no capture group, is answered by B12: Pending | — | — |
+| `RTEXR-E03` | A file of the route registry cannot be read. | `Pending` naming the file. | That file may be the one that registers the route: skipping it accused a route that exists, with a `Fail` whose cause nobody measured. |
 
 ## Dependencies
 

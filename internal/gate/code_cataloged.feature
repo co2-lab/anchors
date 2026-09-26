@@ -139,3 +139,9 @@ Feature: CodeCataloged — what the code exports must be in the spec, or waived 
     Given a spec that specifies a file gone from disk and a file with an export it never names
     When the gate confronts the spec
     Then it fails, naming the file that is on disk
+
+  @CDCTC-E03 @unit-level
+  Scenario: A declared export pattern with no capture group is named, not called undeclared
+    Given a project that declares the pattern without the capture groups the gate needs
+    When the gate confronts a code file
+    Then it returns Skip naming the declared pattern instead of saying it is not declared

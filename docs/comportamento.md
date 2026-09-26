@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:bf24ca961595ad85 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:4ef2eccc6352a458 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -47,6 +47,8 @@ teste prova.
 - [With no map the gate does not approve](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E01`
 
 - [A code file missing from disk does not hide the orphans of the other target](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E02`
+
+- [A declared export pattern with no capture group is named, not called undeclared](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E03`
 
 - [An identifier in the wrong language is accused, and an English one passes](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B01`
 
@@ -531,6 +533,8 @@ teste prova.
 - [Components referencing parent screen codes in testIDs are not forbidden](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-X03`
 
 - [A governed file gone from disk is left out and the others are still confronted](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-E01`
+
+- [A spec under a bracketed directory still has its baselines confronted](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-E02`
 
 - [A declared name routes to the function registered under it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B01`
 
@@ -1326,6 +1330,8 @@ teste prova.
 
 - [Route access permissions and authentication middlewares are outside evaluation scope](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-X03`
 
+- [An unreadable registry file leaves the route pending](camadas/gate.md#rtexr--routeexists--declared-route-in-specification-must-exist-in-application-route-registry) `RTEXR-E03`
+
 - [Building an identifier joins the gate and the rule](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B01`
 
 - [A gate with a single verification gains no separator](camadas/gate.md#rluex--rule--the-identity-of-a-verification-inside-a-gate-and-the-waiver-that-names-it) `RLUEX-B02`
@@ -1817,6 +1823,8 @@ teste prova.
 - [A spec missing from disk does not drop the values of the other specs](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E01`
 
 - [A code file missing from disk does not hide the copies in the other files](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E02`
+
+- [A declared value anchor with too few groups is named, not called undeclared](camadas/gate.md#vlanv--valueanchored--a-replicated-key-is-declared-where-it-is-used-and-every-copy-carries-the-same-value) `VLANV-E03`
 
 - [Artifacts that are not feature files leave with verdict Skip](camadas/gate.md#vrbsv--vrbaseline--ensures-visual-regression-scenarios-have-captured-reference-baseline-images) `VRBSV-B01`
 

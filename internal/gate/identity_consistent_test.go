@@ -149,3 +149,29 @@ func TestIdentityConsistent_Errors(t *testing.T) {
 		}
 	})
 }
+
+// A spec under a directory whose name holds glob metacharacters (a Next.js `[slug]`
+// route) still finds its baselines: the path is data, escaped before the glob.
+func TestIdentityConsistent_bracketDirectoryFindsBaselines(t *testing.T) {
+	t.Run("IDCND-E02: A spec under a bracketed directory still has its baselines confronted", func(t *testing.T) {})
+	root := t.TempDir()
+	dir := filepath.Join(root, "app", "[slug]")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "x.tsx"), []byte(`<View testID=":bget-screen" />`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "x.BDEDX-VR-loaded.png"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	spec := mapx.Node{ID: "app/[slug]/x.spec.md", Kind: mapx.KindSpec, Code: "BGET"}
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{spec, {ID: "app/[slug]/x.tsx", Kind: mapx.KindCode}, {ID: "outro/a.spec.md", Kind: mapx.KindSpec, Code: "BDEDX"}},
+		Edges: []mapx.Edge{{From: spec.ID, To: "app/[slug]/x.tsx", Type: mapx.EdgeSpecifies}},
+	}
+	v, msg := checkIdentityConsistent("", spec, root, g, &config.Config{})
+	if v != Fail || !strings.Contains(msg, "x.BDEDX-VR-loaded.png") {
+		t.Fatalf("the divergent baseline beside a [slug] spec must be found, got %v (%s)", v, msg)
+	}
+}

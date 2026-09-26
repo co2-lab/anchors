@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RTEXR
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @RTEXR
@@ -135,3 +135,10 @@ Feature: RouteExists — declared route in specification must exist in applicati
     Given a specification declaring an authenticated route
     When the gate confronts it
     Then it validates registry existence without checking route guard middlewares
+
+  @RTEXR-E03 @unit-level
+  Scenario: An unreadable registry file leaves the route pending
+    Given a route registry where one file cannot be read
+    And a spec whose route is not in the readable files
+    When the gate confronts the spec
+    Then it returns Pending naming the unreadable file, not Fail

@@ -63,6 +63,11 @@ func checkValueAnchored(content string, n mapx.Node, root string, g *mapx.Graph,
 	}
 	anchorRE := valueAnchorDe(cfg)
 	if anchorRE == nil {
+		// Treated as not declared (VLANV-I01), but the message says what is there: a
+		// pattern with fewer than two groups, not an absent one (VLANV-E03).
+		if cfg != nil && cfg.Derived != nil && strings.TrimSpace(cfg.Derived.ValueAnchor) != "" {
+			return Skip, i18n.T("gate.value_anchored.skip_value_anchor_groups", cfg.Derived.ValueAnchor)
+		}
 		return Skip, i18n.T("gate.value_anchored.skip_no_value_anchor")
 	}
 	if g == nil {

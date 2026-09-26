@@ -85,7 +85,10 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 	// código-de-outra-unidade: o baseline é a prova DESTA unidade, não um ponteiro
 	// para onde ela aparece.
 	base := strings.TrimSuffix(n.ID, ".spec.md")
-	pngs, _ := doublestar.Glob(os.DirFS(root), base+".*-VR*.png")
+	// The spec's path is DATA, escaped before it becomes a pattern: a Next.js route
+	// directory `app/[slug]/` read as a character class matched no baseline, and the check
+	// passed without looking (IDCND-E02).
+	pngs, _ := doublestar.Glob(os.DirFS(root), mapx.GlobEscape(base)+".*-VR*.png")
 	for _, p := range pngs {
 		if sigla := baselineAcronym(filepath.Base(p)); sigla != "" && !strings.EqualFold(sigla, code) {
 			orfas = append(orfas, i18n.T("gate.identity_consistent.baseline_item", sigla, filepath.Base(p)))

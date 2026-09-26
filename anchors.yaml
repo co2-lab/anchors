@@ -284,6 +284,16 @@ tests:
     junit: ".anchors/junit.xml"
     lcov: ".anchors/lcov.info"
 
+# MUTATION runs apart (`anchors mutation`), never in the pre-commit: it re-runs the suite
+# once per mutant, which takes minutes. Scoped to internal/gate — the gates are where a
+# rule that looks proven and is not costs the most, since every project trusts their
+# verdicts. `isolated`: each package's mutants face only its own tests.
+mutation:
+  - layer: unit
+    run: "gremlins unleash ./internal/gate --output .anchors/mutation.json"
+    report: ".anchors/mutation.json"
+    scope: isolated
+
 gates:
   # SEGURANÇA — a leva que existe para o que não tem volta.
   #
@@ -571,6 +581,7 @@ gates:
   # para que a ausência da medição seja VISÍVEL, em vez de silêncio.
   - name: mutation-score
     blocking: false
+    format: gremlins
 
   - name: line-coverage
     blocking: false

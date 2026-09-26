@@ -60,3 +60,8 @@ This gate operates in distinct territory from neighbouring gates:
 | Code | Question |
 | --- | --- |
 | `RVORP-Q01` <!-- @no-scenario: a decided question is history, not behaviour; the rule it became has the scenario --> | Should the gate block or inform? Decided by the user: it blocks — became `RVORP-B08`. |
+
+## Errors
+
+none — the one nil check (`m == nil` in the rule-title reader) is a line that defines no rule, skipped as it should be; the gate reads the spec it is handed and has no failing input of its own.
+

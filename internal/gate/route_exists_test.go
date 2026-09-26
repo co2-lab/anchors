@@ -230,3 +230,22 @@ func TestRouteExists_B13_RotaInexistenteFalha(t *testing.T) {
 		t.Errorf("mensagem deve conter o glob pesquisado; veio %s", msg)
 	}
 }
+
+// An unread registry file may register the route: it never turns into an accusation.
+func TestRouteExists_unreadableRegistryIsPending(t *testing.T) {
+	t.Run("RTEXR-E03: An unreadable registry file leaves the route pending", func(t *testing.T) {})
+	if os.Geteuid() == 0 {
+		t.Skip("root reads a chmod 000 file")
+	}
+	cfg := rootComRotas(t)
+	root := os.Getenv("ANCHORS_TEST_ROOT")
+	locked := filepath.Join(root, "nav", "Other.tsx")
+	if err := os.WriteFile(locked, []byte(`<Stack.Screen name="Carteira" />`), 0o000); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Chmod(locked, 0o644)
+	v, msg := checkRouteExists("> **Rota**: `Carteira`", mapx.Node{Kind: mapx.KindSpec}, root, nil, cfg)
+	if v != Pending || !strings.Contains(msg, "Other.tsx") {
+		t.Fatalf("an unreadable registry file must leave the route Pending naming it, got %v (%s)", v, msg)
+	}
+}

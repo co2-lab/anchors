@@ -295,5 +295,40 @@ func checkFailureDeclared(content string, n mapx.Node, root string, g *mapx.Grap
 	if len(all) > 0 {
 		return Pass, ""
 	}
+	if reason := errorsClosedAsNone(content); reason != "" {
+		return Pass, ""
+	}
 	return Fail, fmt.Sprintf(i18n.T("gate.failure_declared.undeclared"), hits, len(all))
+}
+
+// errorsSectionRE opens the spec's failure section, in the languages the catalogue writes.
+var errorsSectionRE = regexp.MustCompile(`(?im)^#{2,4}\s*(?:errors?|failures?|erros?|falhas?|errores?|fallos?)\b[^\n]*\n`)
+
+// errorsNoneRE is the section closed as "this unit handles no failure", with the reason.
+var errorsNoneRE = regexp.MustCompile(`(?i)^(?:none|nenhum[a]?|ningun[oa]?)\s*(?:—|–|-|:)\s*(\S.*)$`)
+
+// errorsClosedAsNone returns the reason when the failure section is closed with `none`.
+//
+// The handling patterns are textual, and in Go `== nil {` is also a lazy map init
+// (`if m[k] == nil { m[k] = … }`) and a regex that did not match (`if m == nil {
+// continue }`) — normal flow, not a defence. A unit whose only matches are those has no
+// failure to declare and nothing to alias, and the honest answer is to say so: `none —
+// <why>`, like a decisions section closed with `none`. The reason is mandatory, so the
+// claim is written where a reviewer reads it; a bare `none` does not close the section.
+func errorsClosedAsNone(content string) string {
+	loc := errorsSectionRE.FindStringIndex(content)
+	if loc == nil {
+		return ""
+	}
+	for _, line := range strings.Split(content[loc[1]:], "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		if m := errorsNoneRE.FindStringSubmatch(line); m != nil {
+			return strings.TrimSpace(m[1])
+		}
+		return ""
+	}
+	return ""
 }

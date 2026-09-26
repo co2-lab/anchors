@@ -70,6 +70,11 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 	// símbolos e devolvia Pass: verde sobre o que não conferiu, com `blocking: true`.
 	exportRE := exportDetectDe(cfg)
 	if exportRE == nil {
+		// Declared but unusable is not "not declared": saying so sent the author to write
+		// what was already there (CDCTC-E03).
+		if cfg != nil && cfg.Derived != nil && strings.TrimSpace(cfg.Derived.ExportDetect) != "" {
+			return Skip, i18n.T("gate.code_cataloged.skip_export_detect_no_group", cfg.Derived.ExportDetect)
+		}
 		return Skip, i18n.T("gate.code_cataloged.skip_no_export_detect", exportedREDefaultTS)
 	}
 

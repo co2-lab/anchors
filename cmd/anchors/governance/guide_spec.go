@@ -90,6 +90,11 @@ A spec is not all alike — it specializes according to what makes the unit vary
       | ` + "`CODE-E01`" + ` | REF[CODE-B05]: <why B05 is this failure> |
   The alias needs no scenario — the target's scenario proves it — and it must point at a
   rule this spec defines (not at another alias), with a reason, or ` + "`spec-feature-match`" + ` fails.
+- A unit that handles no failure says so. When every match the failure gates find is
+  normal flow (a map created on first use, a pattern that did not match), close the
+  section with the reason instead of inventing a failure:
+      ## Errors
+      none — <why the matches are not defences>
 
 ## The rule that is not yours: product doctrine
 
