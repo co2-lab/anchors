@@ -57,7 +57,7 @@ func graphWith(codes ...string) *mapx.Graph {
 // and a hand-made `ref: KYBDX` — a code that is no spec's `code:` — gave `~1`, not `✗1`.
 // An infra file with no spec is legitimate; citing a phantom identity is not.
 func TestRefResolvesCodeMissingFromTheProject(t *testing.T) {
-	t.Run("RFRSR-B05: A reference to a code that exists nowhere fails", func(t *testing.T) {})
+	t.Run("A reference to a code that exists nowhere fails", func(t *testing.T) {})
 	v, d := runRefResolvesWithGraph(t,
 		"kybDocs.ts", "// @anchors\n//   ref: KYBDX\n//   layer: infra\n",
 		graphWith("ORAT1", "MORQX"))
@@ -73,7 +73,7 @@ func TestRefResolvesCodeMissingFromTheProject(t *testing.T) {
 // as long as the `ref:` points at a REAL identity. Failing here would steal the other
 // gate's finding.
 func TestRefResolvesNoSiblingSpecButCodeExists(t *testing.T) {
-	t.Run("RFRSR-B06: Without sibling spec, an existing code still skips", func(t *testing.T) {})
+	t.Run("Without sibling spec, an existing code still skips", func(t *testing.T) {})
 	v, _ := runRefResolvesWithGraph(t,
 		"helper.ts", "// @anchors\n//   ref: MORQX\n//   layer: infra\n",
 		graphWith("ORAT1", "MORQX"))
@@ -85,7 +85,7 @@ func TestRefResolvesNoSiblingSpecButCodeExists(t *testing.T) {
 // An INFERRED identity owns nothing: accepting `CodeDeclarado: false` would let through
 // the ref that points at an example string in a fixture or in documentation.
 func TestRefResolvesInferredIdentityDoesNotCount(t *testing.T) {
-	t.Run("RFRSR-B07: An inferred identity does not satisfy the reference", func(t *testing.T) {})
+	t.Run("An inferred identity does not satisfy the reference", func(t *testing.T) {})
 	g := &mapx.Graph{Nodes: []mapx.Node{
 		{ID: "fixture.md", Kind: mapx.KindDoc, Code: "FAKEX", CodeDeclarado: false},
 	}}
@@ -98,7 +98,7 @@ func TestRefResolvesInferredIdentityDoesNotCount(t *testing.T) {
 // Without a graph (a call that does not provide one) the gate cannot assert absence — and
 // asserting what was not measured is worse than staying silent.
 func TestRefResolvesWithoutGraphDoesNotAssertAbsence(t *testing.T) {
-	t.Run("RFRSR-B08: Without a graph, absence is not asserted", func(t *testing.T) {})
+	t.Run("Without a graph, absence is not asserted", func(t *testing.T) {})
 	v, _ := runRefResolvesWithGraph(t, "x.ts", "// @anchors\n//   ref: QUALQ\n", nil)
 	if v != Skip {
 		t.Fatalf("without a graph it should skip, got %s", v)

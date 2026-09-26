@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EXCMX
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # ExternalCommand — executes external tools via shell passing targets as positional arguments
@@ -61,6 +61,12 @@ Executes an external command (such as jest, eslint, or tsc) defined in `anchors.
 | --- | --- | --- |
 | `EXCMX-X01` | Does not parse or interpret linter or test tool diagnostics beyond reading stdout and stderr. | Following design principle D5, the framework reimplements spec and relation parsing but delegates tool execution directly to external linters and test runners. |
 | `EXCMX-X02` | Does not aggregate cross-file state across partitioned batches. | Batch scope assumes file-by-file independent validation; cross-file analysis must declare project scope and scan all targets itself. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `EXCMX-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

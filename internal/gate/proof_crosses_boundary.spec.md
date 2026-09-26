@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PCBPR
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # ProofCrossesBoundary — when a rule claims a relation, the proof must reach the other side
@@ -85,6 +85,12 @@ it does not go hunting duplicated concepts across the project.
 | `PCBPR-X01` | Does not hunt for duplicated concepts across the project. | That would demand sweeping the cartesian product of the layers, or judgement. The gate acts only on what the spec DECLARED — the same economy as `dependency-honored`, which charges only the symbol promised in backticks. Duplication nobody named is not reached; the gate stops it from COMING BACK once named. |
 | `PCBPR-X02` | Does not compare the VALUES on the two sides. | It asks whether the proof reaches across, not whether the two sides agree today. Reading and comparing both definitions would demand a language-specific extractor and judgement about what "the same" means; the import is what makes the divergence impossible to keep silently. |
 | `PCBPR-X03` | Does not decide whether an unmarked prose claim blocks. | The verdict is emitted and the `blocking` setting of the gate in the project's Structure decides. It is born informative — visible without barring — and promoting it is a project decision, not the gate's. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `PCBPR-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

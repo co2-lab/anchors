@@ -58,6 +58,12 @@ Exposed as `anchors stamp [tests...]`, with `--dry-run`.
 | --- | --- | --- |
 | `MKSTP-X01` | Does not refresh a divergent stamp. | Refreshing would let the stamp certify itself; a divergence calls for a person looking at the double. |
 
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `MKSTP-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
+
 ## Dependencies
 
 | Code | File | Method | Layer |

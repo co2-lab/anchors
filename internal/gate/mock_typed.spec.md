@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCTYM
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # MockTyped — every test double must DERIVE from the module it replaces
@@ -80,6 +80,12 @@ there is no structural type to lean on.
 | `MCTYM-X03` | Carries no built-in tie shape and no built-in ecosystem. | The shape comes from `derived.mock_contract` and the dialect from `derived.mock_detect`, both in the project's Structure. The gate is language-agnostic BY DESIGN: in Go there is no call to detect at all, because the double is a satisfied interface, and the right verdict there is that the gate does not apply — not a green over an unchecked file. |
 | `MCTYM-X04` | Does not charge third-party library doubles. | The drift it pursues is "the neighbour changed and the double did not know", and the neighbour that changes every week is the own module: an external dependency has its version pinned in the lockfile, and its double usually swaps a component for a stub instead of reproducing a contract. There is a harder, measured reason: in the reference app the gate accused 305 files at once, 245 of them third-party doubles. A gate that accuses everything is not read — it is switched off, and it takes the legitimate findings with it. |
 | `MCTYM-X05` | When the tie is a type on the factory (the form carries `{{module}}`), does not charge a double with no factory — an automock (no second argument) or an options object such as Vitest's `{ spy: true }`. When the tie is an option on the call (`autospec=True`), the bare call is still charged: Python's `patch` without it is a `MagicMock`, not the module. | Both derive from the real module BY CONSTRUCTION: the automock mirrors its exports and the spy mock IS the module with spies, so there is no hand-written contract to go stale and nothing a `Partial<typeof X>` could bind. `derived.mock_detect` says what a DOUBLE is — a project declares it for `mock-stamped` too — and it must not decide what needs a type: measured in the project that declared it, 38 tests failed at once on 51 doubles, 42 automocks and 9 spy mocks, not one hand-written factory. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `MCTYM-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

@@ -17,7 +17,7 @@ func cfgLetras() *config.Config {
 
 func TestCenarioLetraDeclarada_acusaLetraInventada(t *testing.T) {
 	t.Run("SCLTR-B05: a letter outside the vocabulary is undetermined, not a failure", func(t *testing.T) {})
-	t.Run("SCLTR-B06: the verdict names the letters outside and the codes carrying them", func(t *testing.T) {})
+	t.Run("SCLTR-B06: The verdict names the letters that are outside and the codes carrying them", func(t *testing.T) {})
 	t.Run("SCLTR-I03: a valid letter is never named in the verdict", func(t *testing.T) {})
 	t.Run("SCLTR-I01: the scan is over the shape of a code, never over the vocabulary", func(t *testing.T) {})
 	t.Run("SCLTR-X01: the gate does not choose between declaring and remapping", func(t *testing.T) {})

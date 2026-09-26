@@ -468,7 +468,7 @@ func TestMockCarimbado_hashEhTruncadoParaLeituraHumana(t *testing.T) {
 // the double of `@/src/stores/auth.store`. Measured after stamping a real project: 93
 // tests still failed as "double without stamp", all like this.
 func TestGenerateStamps_moduleWithADotInItsName(t *testing.T) {
-	t.Run("MCSTM-B16: a module whose name has a dot is matched to its stamp", func(t *testing.T) {})
+	t.Run("MCSTM-B16: A module with a dot in its name is matched to its stamp", func(t *testing.T) {})
 	test := "jest.mock('@/src/stores/auth.store')\n"
 	root, g := stampProject(t, map[string]string{"src/stores/auth.store.ts": realHooks, "src/Home.test.tsx": test})
 	out, written, _, err := GenerateStamps(test, "src/Home.test.tsx", root, g, stampCfg())

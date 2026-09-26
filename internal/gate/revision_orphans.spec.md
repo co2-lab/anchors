@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RVORP
-  updated_at: 2026-09-22
+  updated_at: 2026-09-26
   layer: gate
 -->
 # RevisionOrphans — the rules a revision changed the meaning of, without saying so
@@ -53,6 +53,12 @@ This gate operates in distinct territory from neighbouring gates:
 | `RVORP-B07` | When a rule appears in `Checked:`, it leaves the accusation without asserting that it is correct — only that somebody read it. |
 | `RVORP-I01` | A rule never accuses itself: the revised rule is excluded from its own orphan candidates. |
 | `RVORP-X01` | Negations and waiver comments are stripped from a rule title before comparison: they are not what the rule asserts. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `RVORP-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Open Decisions
 

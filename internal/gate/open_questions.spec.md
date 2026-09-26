@@ -1,6 +1,6 @@
 <!-- @anchors
   code: OPQSP
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # OpenQuestions — a spec with an open question is not ready to implement
@@ -63,6 +63,12 @@ a code, and the item leaves the section.
 | --- | --- | --- |
 | `OPQSP-X01` | Does not judge whether the question is GOOD nor whether the answer is right. | The ruler is deterministic: either an open item exists, or it does not. Evaluating the merit of a doubt is judgement, and judgement belongs to another class of gate. |
 | `OPQSP-X02` | Does not FAIL the spec that does not have the section — it records the pendency and says how to close it. | The absence does not distinguish "everything was decided" from "the section was deleted", and the two ask for opposite things. Failing would be treating migration as a defect; going quiet would be the silence the gate exists to eliminate. The verdict stays undetermined and TEACHES the way out: close with the declaration that there is no question, or write down what was not decided. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `OPQSP-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

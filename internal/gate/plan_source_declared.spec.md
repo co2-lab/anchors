@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PSDPL
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # PlanSourceDeclared — a plan that NAMES a source has to declare who builds it
@@ -72,6 +72,12 @@ plans. If the adapter exists in another plan and this one does not declare it in
 | `PSDPL-X01` | Does not confront the ORDER of the phases. | Whether the plan that builds the adapter comes before the plan that consumes it is another question, and `fase-ordenada` is the ruler for it. Answering it here would put the same rule in two places that would then diverge. |
 | `PSDPL-X02` | Does not charge a source whose adapter nobody seeds. | It may be the source of a plan that does not exist yet. Charging it would demand a `needs:` pointing at nothing — and the gate would be asking for a lie instead of catching one. |
 | `PSDPL-X03` | Does not read the plan's prose to understand WHAT the source is for. | The ruler is the bold name on the source line, which is deterministic. Judging whether the plan really consumes that source, or only mentions it, is interpretation — and interpretation is not what a blocking gate can hold. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `PSDPL-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCFRD
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # DocsFresh — the compiled document has to reflect the spec
@@ -70,6 +70,12 @@ charging a review of a compiler's output — so there is nowhere to start but th
 | `DCFRD-X02` | Does not run the build, even knowing the fix. | A gate that alters files makes the result depend on having run before. The check runs in a hook and in CI, and the second execution would always pass. |
 | `DCFRD-X03` | Does not charge documents written by hand. | The build refuses to overwrite a page with no generation marker. Charging an update of a file the compiler will not write would send the author to run a command that changes nothing. |
 | `DCFRD-X04` | Does not confront the compiled document as an artifact of its own. | It is generated output, not a declared unit. Giving it a node would demand a spec, a feature and a test for a build product. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `DCFRD-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

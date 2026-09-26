@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PSVPL
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # PlanSeedsValid — specifications seeded in a plan must target valid governed layers
@@ -83,6 +83,12 @@ references rather than actionable seeds.
 | `PSVPL-X01` | Does not verify whether seeded specifications currently exist on disk. | A plan describes future work to be executed; seeds are expected to be created during subsequent development. |
 | `PSVPL-X02` | Does not check whether the plan progress file is synchronized with execution state. | Tracking task execution status is the dedicated responsibility of plan progress gates. |
 | `PSVPL-X03` | Does not enforce specification contents or scenario definitions within seeded files. | Quality and completeness of specification content belong to specification and triad gates once created. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `PSVPL-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

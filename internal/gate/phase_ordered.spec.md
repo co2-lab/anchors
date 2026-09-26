@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PHORP
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # PhaseOrdered — plan phases and phase dependencies must be ordered and consistent
@@ -80,6 +80,12 @@ This gate confronts three complementary structural ordering contracts:
 | `PHORP-X01` | Does not mandate that small plans define catalogued phases. | Phase ordering is optional for small single-phase plans; requiring phases everywhere would impose ceremony on simple tasks. |
 | `PHORP-X02` | Does not enforce timing deadlines or calendar durations for phases. | This gate validates logical ordering prerequisites; calendar scheduling belongs to external project management tools. |
 | `PHORP-X03` | Does not restrict parent references to a single hierarchy kind. | Projects organize work flexibly; both artifact codes and plan phase codes are permitted as valid parent references. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `PHORP-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

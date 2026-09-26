@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SBGRD
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # SiblingGuard — sibling functions treat the same parameter consistently
@@ -64,6 +64,12 @@ ignored defends nothing.
 | --- | --- | --- |
 | `SBGRD-X01` | Does not invent what an exported function or a guard looks like. | Both come from the dialect the project declares. A pattern hardcoded here would recognise one ecosystem and report green over every other, which is the worst failure a measuring instrument can have. |
 | `SBGRD-X02` | Does not accuse a single function in isolation. | With no siblings there is no asymmetry, and asymmetry is the whole evidence. Accusing a lone function would mean judging the domain — which this gate explicitly cannot do. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `SBGRD-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

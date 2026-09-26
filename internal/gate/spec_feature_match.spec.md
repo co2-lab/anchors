@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SFMSP
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario
@@ -74,6 +74,12 @@ observable by scenario — and leaves the trace that it was a decision, not forg
 | `SFMSP-X01` | Does not judge whether the scenario PROVES the requirement. | The ruler is the tag, which is deterministic. Whether the Given/When/Then really exercises the behaviour is judgement, and `scenario-asserts` is the ruler that looks at the shape of the assertion. Holding both here would put the same rule in two places that would diverge. |
 | `SFMSP-X02` | Does not charge a code the spec merely CITES. | A spec names other units' codes in Dependency Tables, notes and cross-references, and contracts nothing by doing so. Charging them would produce an accusation per citation — and a gate that cries wolf gets switched off, which costs more than the defect it was catching. |
 | `SFMSP-X03` | Does not confront feature→test. | That edge already has a watcher, `feature-test-match`. This gate exists precisely because the edge BEFORE it had none. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `SFMSP-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

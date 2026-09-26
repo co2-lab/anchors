@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INCHN
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # InternalChecks — the registry that routes a declared check name to a function
@@ -99,6 +99,12 @@ looked at.
 | `INCHN-X01` | Does not decide WHICH checks a project runs. | That is declared in the Structure. A registry that ran what nobody asked for would charge a project for a ruler it never adopted. |
 | `INCHN-X02` | Does not invoke external tooling. | These checkers answer by reading TEXT. The ones that shell out belong to the external path of the engine, and mixing them would make a registry lookup depend on what is installed on the machine. |
 | `INCHN-X03` | Does not judge whether the text it reads is GOOD. | The rulers here are presence and shape — the file is not empty, it carries an identity, it carries a header. Whether the content is right is judgment, and a deterministic checker that attempted it would fail by a criterion it cannot measure. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `INCHN-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

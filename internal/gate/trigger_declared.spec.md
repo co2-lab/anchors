@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TRDCT
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # TriggerDeclared — cited compliance triggers and obligations must exist in the declared vocabulary
@@ -87,6 +87,12 @@ rather than approving unverified vocabulary or penalizing projects without compl
 | `TRDCT-X02` | Does not validate compliance triggers in source code, features, or test files. | Instructional trigger definitions belong to specifications; code and tests realize requirements rather than teaching vocabulary. |
 | `TRDCT-X03` | Does not enforce implementation of the cited obligations within code. | Verifying that declared obligations are satisfied is the dedicated responsibility of `obligation-honored`. |
 | `TRDCT-X04` | Does not inspect unquoted natural language mentions of compliance concepts. | Only explicit backticked symbols represent actionable syntax instructions. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `TRDCT-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

@@ -140,7 +140,7 @@ func TestRevisionOrphans_ruleNeverAccusesItself(t *testing.T) {
 // every rule to every other. Measured on the real spec: with negation counting, three
 // rules were reported; without it, one — the one that actually contradicted.
 func TestRevisionOrphans_negationDoesNotLink(t *testing.T) {
-	t.Run("RVORP-X01: Terms that do not name the subject do not link rules", func(t *testing.T) {})
+	t.Run("RVORP-X01: Terms shared by the whole unit do not discriminate", func(t *testing.T) {})
 	fixture := `> **NTCNN-R0001:** mudou.
 >
 > **Revises:** ` + "`B01`" + `

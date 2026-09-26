@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CDCTC
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -74,6 +74,12 @@ knowing how to read, the gate goes quiet; it never approves.**
 | `CDCTC-X02` | Does not decide which symbols deserve a rule. | That is the project's call, and the waiver is where it records it — with a written reason. Deciding here would take away exactly the calibration that makes a granular gate usable. |
 | `CDCTC-X03` | Does not know any language: whoever declares what is public is the project. | Recognising a public symbol depends on the language, and Anchors does not presume. The built-in TypeScript pattern is only ever a SUGGESTION to a project that has not declared its own, never a silent default. |
 | `CDCTC-X04` | Does not charge the absence of code — that belongs to `triad-complete`. | Accusing the same debt in two gates would duplicate the finding, and whoever fixed one would still see the other. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `CDCTC-E01` | Read failure on governed code file | Returns Skip or continues gracefully | @no-scenario: file read errors are handled by continuing or returning skip @resilient: returns early without panic |
 
 ## Dependencies
 

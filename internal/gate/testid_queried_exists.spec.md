@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TQETS
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # TestidQueriedExists — every handle queried by an E2E flow must exist in code
@@ -79,6 +79,12 @@ governs spec-level declaration.
 | `TQETS-X01` | Does not charge code for exposing handles that no flow queries. | Not every marked element needs an automated flow, and spec-level coverage is already measured by `testid-consistent`. |
 | `TQETS-X02` | Does not execute flows or evaluate runtime JavaScript expressions. | Dynamic runtime string evaluation requires a running emulator or engine; static analysis inspects only the static prefix or skips interpolation. |
 | `TQETS-X03` | Does not assume a default test handle attribute (such as `testID`). | Assuming defaults without project declaration would stamp approval over unverified codebases in unfamiliar stacks. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `TQETS-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PRHNP
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # ProgressHonest — the progress file tells the truth about the disk
@@ -79,6 +79,12 @@ is the only way to reach a file that, by design, is not a node.
 | `PRHNP-X01` | Does not charge the EXISTENCE of the progress file. | The plan may predate the mechanism, and a dedicated command exists to create the companion. Merging "does it exist" with "is it true" would report two different debts as one finding. |
 | `PRHNP-X02` | Does not judge the CONTENT of an item beyond the path it cites. | Whether the description is accurate, whether the phase makes sense, whether the order is right — all of it is judgement. The ruler here is the disk, which is deterministic and needs no opinion. |
 | `PRHNP-X03` | Does not put the progress file into the map, nor demand a justification for changing it. | It exists in order to change. A gate that reached it as a node would charge every edit of the very artifact that records work, which is the opposite of what it is for. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `PRHNP-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

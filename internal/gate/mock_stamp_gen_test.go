@@ -52,7 +52,7 @@ func stampProject(t *testing.T, files map[string]string) (string, *mapx.Graph) {
 // THE ROUND TRIP: what the generator writes is what the gate recomputes. After stamping,
 // the gate passes; after the stamped member changes, it fails.
 func TestGenerateStamps_roundTripWithTheGate(t *testing.T) {
-	t.Run("MKSTP-B01: a generated stamp passes the gate, and a change to the stamped member fails it", func(t *testing.T) {})
+	t.Run("MKSTP-B01: A generated stamp passes the gate, and a change to its snippet fails it", func(t *testing.T) {})
 	test := "jest.mock('@/src/hooks/balance', () => ({\n  useBalance: jest.fn(),\n}))\n\nit('shows', () => {})\n"
 	root, g := stampProject(t, map[string]string{
 		"apps/mobile/src/hooks/balance.ts":      realHooks,
@@ -89,7 +89,7 @@ func TestGenerateStamps_roundTripWithTheGate(t *testing.T) {
 // A change to a member the double does NOT cover does not make the stamp diverge — the
 // point of stamping per member.
 func TestGenerateStamps_perMemberScope(t *testing.T) {
-	t.Run("MKSTP-B03: each factory key naming an export gets a stamp covering only that export", func(t *testing.T) {})
+	t.Run("MKSTP-B03: A stamp per factory key covers only that export", func(t *testing.T) {})
 	test := "jest.mock('@/src/hooks/balance', () => ({ useBalance: jest.fn() }))\n"
 	root, g := stampProject(t, map[string]string{"src/hooks/balance.ts": realHooks, "src/Home.test.tsx": test})
 	out, _, _, err := GenerateStamps(test, "src/Home.test.tsx", root, g, stampCfg())
@@ -124,7 +124,7 @@ func TestGenerateStamps_neverRewritesAnExistingStamp(t *testing.T) {
 
 // With no factory key naming an export, one stamp covers the whole module.
 func TestGenerateStamps_wholeModuleWhenNoKeyNamesAnExport(t *testing.T) {
-	t.Run("MKSTP-B04: with no factory key naming an export, one stamp covers the whole module", func(t *testing.T) {})
+	t.Run("MKSTP-B04: An automock gets one stamp over the whole module", func(t *testing.T) {})
 	test := "jest.mock('@/src/hooks/balance')\n"
 	root, g := stampProject(t, map[string]string{"src/hooks/balance.ts": realHooks, "src/Home.test.tsx": test})
 	out, written, _, err := GenerateStamps(test, "src/Home.test.tsx", root, g, stampCfg())
@@ -141,7 +141,7 @@ func TestGenerateStamps_wholeModuleWhenNoKeyNamesAnExport(t *testing.T) {
 
 // Two workspaces with the same path: the test's own workspace wins; a real tie is skipped.
 func TestGenerateStamps_ambiguousModule(t *testing.T) {
-	t.Run("MKSTP-B02: a specifier matching several files resolves to the test's workspace, or is skipped", func(t *testing.T) {})
+	t.Run("MKSTP-B02: An ambiguous specifier resolves to the test's workspace, or is skipped", func(t *testing.T) {})
 	test := "jest.mock('@/src/hooks/balance')\n"
 	root, g := stampProject(t, map[string]string{
 		"apps/mobile/src/hooks/balance.ts":  realHooks,
@@ -160,7 +160,7 @@ func TestGenerateStamps_ambiguousModule(t *testing.T) {
 }
 
 func TestGenerateStamps_thirdPartyIsNotStamped(t *testing.T) {
-	t.Run("MKSTP-B05: a double of a module outside the map is not stamped", func(t *testing.T) {})
+	t.Run("MKSTP-B05: A third-party double is not stamped", func(t *testing.T) {})
 	test := "jest.mock('react-query')\n"
 	root, g := stampProject(t, map[string]string{"src/Home.test.tsx": test})
 	_, written, skipped, _ := GenerateStamps(test, "src/Home.test.tsx", root, g, stampCfg())
@@ -172,7 +172,7 @@ func TestGenerateStamps_thirdPartyIsNotStamped(t *testing.T) {
 // A line that occurs twice cannot anchor: the gate refuses an ambiguous anchor, and a stamp
 // on it would fail the moment it was written. The generator moves on to a unique line.
 func TestGenerateStamps_ambiguousAnchorLineIsAvoided(t *testing.T) {
-	t.Run("MKSTP-I02: a line that occurs twice in the module is never an anchor", func(t *testing.T) {})
+	t.Run("MKSTP-I02: A repeated line never anchors a stamp", func(t *testing.T) {})
 	module := "'use client'\n'use client'\n" + realHooks
 	test := "jest.mock('@/src/hooks/balance')\n"
 	root, g := stampProject(t, map[string]string{"src/hooks/balance.ts": module, "src/Home.test.tsx": test})
@@ -191,7 +191,7 @@ func TestGenerateStamps_ambiguousAnchorLineIsAvoided(t *testing.T) {
 // The header stays out of the hash: `check --fix` rewrites `updated_at:` on every edit, and
 // a stamp covering it failed on any change to the module — even one the double never saw.
 func TestGenerateStamps_wholeModuleSkipsTheAnchorsHeader(t *testing.T) {
-	t.Run("MKSTP-B06: a whole-module stamp starts after the @anchors header", func(t *testing.T) {})
+	t.Run("MKSTP-B06: The header stays out of a whole-module stamp", func(t *testing.T) {})
 	header := func(date string) string {
 		return "'use client'\n// @anchors\n//   ref: BALNC\n//   updated_at: " + date + "\n//\n// notes about the unit\n"
 	}
@@ -228,7 +228,7 @@ func TestGenerateStamps_wholeModuleSkipsTheAnchorsHeader(t *testing.T) {
 // alone. Measured in the reference project: `s3ObjectExists` added to a mock that already
 // stamped s3GetObject/s3PutObject came out with no stamp.
 func TestGenerateStamps_newKeyOnAStampedDoubleGetsAStamp(t *testing.T) {
-	t.Run("MKSTP-B07: a key added to a stamped double gets a stamp, and existing stamps are untouched", func(t *testing.T) {})
+	t.Run("MKSTP-B07: A key added to a stamped double gets a stamp", func(t *testing.T) {})
 	node := mapx.Node{ID: "src/Home.test.tsx", Kind: mapx.KindTest}
 	first := "jest.mock('@/src/hooks/balance', () => ({ useBalance: jest.fn() }))\n"
 	root, g := stampProject(t, map[string]string{"src/hooks/balance.ts": realHooks, "src/Home.test.tsx": first})

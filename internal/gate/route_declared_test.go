@@ -7,7 +7,7 @@ import (
 )
 
 func TestRouteDeclared(t *testing.T) {
-	t.Run("RTDCL-B01: an artifact that is not a screen leaves without a verdict", func(t *testing.T) {})
+	t.Run("RTDCL-B01: An artifact that is not a screen leaves without a verdict, and says why", func(t *testing.T) {})
 	t.Run("RTDCL-B02: a screen with no named route fails", func(t *testing.T) {})
 	t.Run("RTDCL-B03: a navigation row carrying a generic term fails", func(t *testing.T) {})
 	t.Run("RTDCL-B04: a screen with a named route and concrete neighbours passes", func(t *testing.T) {})
@@ -21,27 +21,27 @@ func TestRouteDeclared(t *testing.T) {
 		want    Verdict
 	}{
 		{
-			"RTDCL-B04: tela com rota e navegação concreta",
+			"RTDCL-B04: screen with route and concrete navigation",
 			screen("> **Rota**: `Home`\n\n### Entrada\n| Origem | Tela |\n| --- | --- |\n| MainTabs | HomeScreen |\n"),
 			Pass,
 		},
 		{
-			"RTDCL-B02: tela sem rota",
+			"RTDCL-B02: screen with no route",
 			screen("## Visão Geral\nsem linha de rota\n"),
 			Fail,
 		},
 		{
-			"RTDCL-B03: tela com rota mas navegação genérica",
+			"RTDCL-B03: screen with route but generic navigation",
 			screen("> **Rota**: `Home`\n\n### Saída\n| Destino | Tela |\n| --- | --- |\n| botão | Próxima tela |\n"),
 			Fail,
 		},
 		{
-			"RTDCL-B01: hook não é cobrado (Skip)",
+			"hook is skipped (Skip)",
 			"<!-- @anchors\n  layer: hook\n-->\n## useAuth\nsem rota, tudo bem\n",
 			Skip,
 		},
 		{
-			"RTDCL-B01: business-logic não é cobrado (Skip)",
+			"business-logic is skipped (Skip)",
 			"<!-- @anchors\n  layer: business-logic\n-->\n### FOO-B01\n",
 			Skip,
 		},

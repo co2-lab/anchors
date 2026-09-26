@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNHNC
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # CountHonored — a numerical assertion written in a spec must match reality in code
@@ -79,6 +79,12 @@ to any human reader opening the document.
 | `CNHNC-X01` | Does not guess or infer what to count from arbitrary text in prose. | Multiple domain counts evaluate over the same files; guessing heuristics would create rampant false positives. |
 | `CNHNC-X02` | Does not charge specs that contain no count declaration markers. | Not every spec makes numerical claims, and forcing every spec to declare counts would impose empty bureaucracy. |
 | `CNHNC-X03` | Does not confront prose statements that qualify a subset rather than the total. | Differentiating subsets from totals requires deep semantic understanding; conservatively silencing alerts on qualified phrases prevents noisy false positives. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `CNHNC-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

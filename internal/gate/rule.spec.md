@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RLUEX
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # Rule — the identity of a verification INSIDE a gate, and the waiver that names it
@@ -83,6 +83,12 @@ list entirely, and waiving four new specs would erase the gate for the whole rep
 | `RLUEX-X01` | Does not accept a PATH as the waiver target. | A path is not identity. It changes when somebody reorganises folders and the waiver stops holding in SILENCE; it is ambiguous by nature and invites broad forms that rebuild the very problem per-target granularity came to solve; and an artifact with no code is an earlier problem that another gate charges — a side exit here would hide the cause. |
 | `RLUEX-X02` | Does not decide whether a rule PASSES. | The verdict belongs to the checker. This unit only knows how a verification is named and whether it was waived; mixing the two would put the escape hatch inside the ruler. |
 | `RLUEX-X03` | Does not read files, the map, or the project structure. | Identity and waiver are pure text arriving by flag, by environment variable or by commit message. A unit that went looking at disk would make the waiver depend on the state of the repository, and the same waiver would mean different things in two checkouts. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `RLUEX-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

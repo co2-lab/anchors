@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RTEXR
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # RouteExists — declared route in specification must exist in application route registry
@@ -78,6 +78,12 @@ rather than falsely approving uninspected routes.
 | `RTEXR-X01` | Does not mandate that every specification declare a route. | Demanding route declaration is the exclusive responsibility of `route-declared`; duplicating it here would produce redundant gate failures. |
 | `RTEXR-X02` | Does not validate route parameter schemas, HTTP payload structures, or response codes. | This gate validates whether the route exists in the application registry; parameter and payload validation belong to interface and contract gates. |
 | `RTEXR-X03` | Does not evaluate authentication or access permissions attached to the route. | Verifying user roles and permissions belongs to authorization gates rather than registry existence checks. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `RTEXR-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

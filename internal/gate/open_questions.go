@@ -148,7 +148,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 //
 // A lista de variantes continua como ÚLTIMO recurso, para o projeto que não declarou
 // nada: tirá-la quebraria as specs que já existem, e o padrão do framework é português.
-var decisionsRE = regexp.MustCompile(`(?im)^#{1,4}\s*(decis(ões|oes|ão|ao)\s+em\s+aberto|em\s+aberto|quest(ões|oes)\s+em\s+aberto|open\s+questions|pend(ências|encias)\s+de\s+decis(ão|ao))\b[^\n]*\n`)
+var decisionsRE = regexp.MustCompile(`(?im)^#{1,4}\s*(decis(ões|oes|ão|ao)\s+em\s+aberto|em\s+aberto|quest(ões|oes)\s+em\s+aberto|open\s+questions|open\s+decisions|pend(ências|encias)\s+de\s+decis(ão|ao))\b[^\n]*\n`)
 
 // declaredTitleRE monta o casador para o título que o PROJETO declarou.
 func declaredTitleRE(titulo string) *regexp.Regexp {

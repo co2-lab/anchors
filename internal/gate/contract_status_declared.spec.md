@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CSDCN
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # ContractStatusDeclared — the output contract lists the status codes the code really returns, and only those
@@ -77,6 +77,12 @@ is nothing to confront.
 | `CSDCN-X01` | Does not demand the generic ranges, and does not invent their semantics. | `4xx` and `5xx` are what the spec writes for "any failure". Treating them as status codes would require guessing which numbers they cover, and the guess would be charged as if it were a declaration. |
 | `CSDCN-X02` | Does not judge WHEN each status is right — only whether the number appears on both sides. | Whether the 403 belongs on that branch is judgement about the design. Here the ruler is the correspondence between two sets of numbers, which is deterministic and does not depend on reading intent. |
 | `CSDCN-X03` | Does not charge the phantom side when the code builds the status dynamically. | With a helper receiving the code by parameter, a declared value may well be emitted through a call textual reading cannot reach. Accusing would be a false positive, and mass false positives are what makes a team turn the gate off. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `CSDCN-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

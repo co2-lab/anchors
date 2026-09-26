@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PCJPL
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # PlanChangeJustified — a modified plan or spec must declare why it changed
@@ -72,6 +72,12 @@ the document itself instead of letting drift happen by omission.
 | `PCJPL-X01` | Does not distinguish between innocuous corrections and directional changes. | That distinction requires semantic understanding and contextual judgment belonging to a human or agent; the gate only verifies that a conscious decision was recorded. |
 | `PCJPL-X02` | Does not enforce identity codes on files without one. | Code presence is enforced by `spec-has-code`; duplicating that check here would produce two findings for a single defect. |
 | `PCJPL-X03` | Does not run or enforce revisions during full-project checks (`--all`). | In a full run there is no diff context, and charging files that never needed revision would penalize units designed correctly from the start. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `PCJPL-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

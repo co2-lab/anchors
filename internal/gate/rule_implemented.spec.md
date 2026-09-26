@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RLIMR
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # RuleImplemented — a spec catalogues rules, and the code shows it realized them
@@ -65,6 +65,12 @@ DECLARES, rule by rule, whether it has code.
 | --- | --- | --- |
 | `RLIMR-X01` | Does not judge whether the implementation is RIGHT — only whether it exists and declares itself. | Whether the code fulfills what the rule says is judgment, and judgment belongs to another class of gate. The ruler here is deterministic: the mark exists, or the waiver exists with a reason. |
 | `RLIMR-X02` | Does not require a mark on EVERY rule. | A constraint is satisfied by the absence of code, and absence has nowhere to receive a comment. Charging the 3.121 occurrences that the naive ruler would produce would train the team to ignore the whole list. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `RLIMR-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

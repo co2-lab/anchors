@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EVFRV
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # EvidenceFresh — the score of this test holds against TODAY's code
@@ -72,6 +72,12 @@ choice belongs to whoever knows the product.
 | `EVFRV-X01` | Does not charge the ABSENCE of a green test. | That is another gate's ruler — coverage. Charging it here would merge "never ran" with "ran and aged", which are different debts with different fixes. |
 | `EVFRV-X02` | Does not RUN the test, nor judge whether the change actually broke it. | The gate measures whether the evidence still covers the current code, not whether the behaviour changed. Deciding that the diff was harmless is judgement, and the cheap fix — run it again — settles it for real instead of by opinion. |
 | `EVFRV-X03` | Does not read the project's configuration. | The confronted truth — the revision moved — lives in the map, not in a convention. A ruler that depended on settings could be turned off by a default nobody chose. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `EVFRV-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

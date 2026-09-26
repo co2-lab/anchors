@@ -53,7 +53,7 @@ func runOn(t *testing.T, root string, g *mapx.Graph, file string) (Verdict, stri
 // --- LOCAL: the declaration against the code line below it ---
 
 func TestValueAnchored_declarationMatchingItsLinePasses(t *testing.T) {
-	t.Run("VLANV-B01: a declaration whose next code line contains the value passes", func(t *testing.T) {})
+	t.Run("VLANV-B01: A declaration matching its code line passes", func(t *testing.T) {})
 	root, g := project(t, map[string]string{"theme.ts": "// @code-reference-[COLOR-OK]-[#1F8A5B]\nsuccess: '#1F8A5B',\n"})
 	if v, msg := runOn(t, root, g, "theme.ts"); v != Pass {
 		t.Errorf("the line carries the value and the verdict was %v: %s", v, msg)
@@ -61,7 +61,7 @@ func TestValueAnchored_declarationMatchingItsLinePasses(t *testing.T) {
 }
 
 func TestValueAnchored_declarationThatLiesFails(t *testing.T) {
-	t.Run("VLANV-B02: a declaration whose next code line does not contain the value fails", func(t *testing.T) {})
+	t.Run("VLANV-B02: A declaration whose code line says another value fails", func(t *testing.T) {})
 	root, g := project(t, map[string]string{"theme.ts": "// @code-reference-[COLOR-OK]-[#1F8A5B]\nsuccess: '#2A9D6B',\n"})
 	v, msg := runOn(t, root, g, "theme.ts")
 	if v != Fail {
@@ -89,7 +89,7 @@ func TestValueAnchored_commentLinesAreSkipped(t *testing.T) {
 }
 
 func TestValueAnchored_declarationWithNoCodeBelowFails(t *testing.T) {
-	t.Run("VLANV-B07: a declaration with no code line below it fails", func(t *testing.T) {})
+	t.Run("VLANV-B07: A declaration with nothing below annotates nothing", func(t *testing.T) {})
 	root, g := project(t, map[string]string{"theme.ts": "x = 1\n// @code-reference-[COLOR-OK]-[#1F8A5B]\n"})
 	v, msg := runOn(t, root, g, "theme.ts")
 	if v != Fail || !strings.Contains(msg, "COLOR-OK") {
@@ -102,7 +102,7 @@ func TestValueAnchored_declarationWithNoCodeBelowFails(t *testing.T) {
 // The propagation: the colour changed in one place, declaration included, and the other
 // place stayed behind. Each file is locally consistent — only the comparison catches it.
 func TestValueAnchored_divergentCopiesAreReported(t *testing.T) {
-	t.Run("VLANV-B04: declarations of the same key with different values are reported", func(t *testing.T) {})
+	t.Run("VLANV-B04: Copies of the same key with different values are reported", func(t *testing.T) {})
 	root, g := project(t, map[string]string{
 		"theme.ts":  "// @code-reference-[COLOR-OK]-[#2A9D6B]\nsuccess: '#2A9D6B',\n",
 		"banner.ts": "// @code-reference-[COLOR-OK]-[#1F8A5B]\nfill: '#1F8A5B',\n",
@@ -133,7 +133,7 @@ func TestValueAnchored_agreeingCopiesPass(t *testing.T) {
 // The rule is the source: the value changed in the spec, and every place still carrying
 // the old one is reported — even when all the copies agree with each other.
 func TestValueAnchored_ruleValueInTheSpecIsTheSource(t *testing.T) {
-	t.Run("VLANV-B05: a declaration disagreeing with the value its rule declares fails", func(t *testing.T) {})
+	t.Run("VLANV-B05: The value a rule declares in the spec is the source", func(t *testing.T) {})
 	root, g := project(t, map[string]string{
 		"tokens.spec.md": "| Rule | Token | Value |\n| --- | --- | --- |\n| `TKNSX-R01` | success | `#2A9D6B` |\n",
 		"theme.ts":       "// @code-reference-[TKNSX-R01]-[#1F8A5B]\nsuccess: '#1F8A5B',\n",
@@ -162,7 +162,7 @@ func TestValueAnchored_ruleValueMatchingPasses(t *testing.T) {
 // or a prose cell carries backticked identifiers all the time, and reading them as values
 // would charge every declaration pointing at an ordinary rule.
 func TestValueAnchored_proseRuleDeclaresNoValue(t *testing.T) {
-	t.Run("VLANV-X01: a rule whose line declares no value is not charged against the spec", func(t *testing.T) {})
+	t.Run("VLANV-X01: A prose rule declares no value", func(t *testing.T) {})
 	root, g := project(t, map[string]string{
 		"credit.spec.md": "### CREDX-B01 — validates the `limit` before submitting\n\n" +
 			"| `CREDX-B02` | uses `calcLimit` to decide |\n",
@@ -178,7 +178,7 @@ func TestValueAnchored_proseRuleDeclaresNoValue(t *testing.T) {
 // A value nobody declared is not charged: anchoring is for REPLICATED keys, and whoever
 // replicates declares.
 func TestValueAnchored_undeclaredValuesAreNotCharged(t *testing.T) {
-	t.Run("VLANV-X02: a literal with no declaration is not charged", func(t *testing.T) {})
+	t.Run("VLANV-X02: A literal nobody declared is not charged", func(t *testing.T) {})
 	root, g := project(t, map[string]string{"windows.ts": "export const WINDOWS = [\n  '15m',\n  '1h',\n]\n"})
 	if v, _ := runOn(t, root, g, "windows.ts"); v != Skip {
 		t.Errorf("no declaration in the file: expected Skip, got %v", v)
@@ -186,7 +186,7 @@ func TestValueAnchored_undeclaredValuesAreNotCharged(t *testing.T) {
 }
 
 func TestValueAnchored_skips(t *testing.T) {
-	t.Run("VLANV-B06: without a declared pattern the gate skips and names the setting", func(t *testing.T) {})
+	t.Run("VLANV-B06: Without a declared pattern the gate skips and says how to enable it", func(t *testing.T) {})
 	root, g := project(t, map[string]string{"a.ts": "// @code-reference-[K]-[v]\nv\n"})
 	v, msg := checkValueAnchored("// @code-reference-[K]-[v]\nv\n", mapx.Node{ID: "a.ts", Kind: mapx.KindCode}, root, g, &config.Config{})
 	if v != Skip || !strings.Contains(msg, "derived.value_anchor") {
@@ -211,7 +211,7 @@ func TestValueAnchored_skips(t *testing.T) {
 
 // Every declaration of the project is indexed once per graph instance, not once per file.
 func TestValueAnchored_indexIsCachedPerGraph(t *testing.T) {
-	t.Run("VLANV-I02: every declaration of the project is indexed once per map", func(t *testing.T) {})
+	t.Run("VLANV-I02: Declarations are indexed once per graph instance", func(t *testing.T) {})
 	root, g := project(t, map[string]string{"theme.ts": "// @code-reference-[COLOR-OK]-[#1F8A5B]\nsuccess: '#1F8A5B',\n"})
 	re := regexp.MustCompile(anchorPattern)
 	first := anchorIndexFor(root, g, re)
@@ -225,7 +225,7 @@ func TestValueAnchored_indexIsCachedPerGraph(t *testing.T) {
 // anchor too, and reading it as a declaration charged the explanation — measured in the
 // project that adopted the gate: key "key", failed.
 func TestValueAnchored_anchorInsideProseIsAMention(t *testing.T) {
-	t.Run("VLANV-B08: only an anchor standing alone on a comment line is a declaration", func(t *testing.T) {})
+	t.Run("VLANV-B08: An anchor inside prose is a mention, not a declaration", func(t *testing.T) {})
 	// Text AFTER the anchor, and text BEFORE it: each is caught by its own half of the rule.
 	prose := "// @code-reference-[key]-[value] is the syntax each entry carries\n" +
 		"// the syntax each entry carries is @code-reference-[key]-[value]\n" +

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MRPRM
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # MarkerParity — the same rule has to appear at BOTH ends that fulfil it
@@ -72,6 +72,12 @@ gate exists to catch.
 | `MRPRM-X01` | Does not read the CONTENT of what each end does. | It confronts that the marking is present at both ends, not that the two implementations agree. Judging whether the page's list and the handler's list say the same thing is semantics, and semantics is not deterministic; presence is. The gate separates "only one end" from "both ends", which is the failure that has no other watcher. |
 | `MRPRM-X02` | Does not decide WHICH rules live at two ends. | That is a decision of the project, declared in its Structure. A gate that invented parities would charge mappings nobody committed to — and the whole reason this gate is generic is that the catalogue of such rules belongs to the project, not to the framework. |
 | `MRPRM-X03` | Does not read files whose extension is not in the text list. | The cost of erring low here is not seeing a marking in an exotic place; the cost of erring high is reading megabytes of image on every walk. The marking lives in code and documentation, and that is what the list covers. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `MRPRM-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

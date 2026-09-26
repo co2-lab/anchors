@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PGNHN
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # PaginationHonored — what promises a SET does not return the first page in silence
@@ -62,6 +62,12 @@ weaker, and it only accuses when the name promises a set unambiguously.
 | --- | --- | --- |
 | `PGNHN-X01` | Does not invent a cursor where the provider offers none. | Accusing the absence of a mechanism the dependency does not have would transfer to the author a defect that is not theirs — and the advice would be impossible to follow. |
 | `PGNHN-X02` | Does not measure PERFORMANCE nor page size. | The ruler is the broken promise, not the cost of the query. Judging whether a hundred is a lot or a little depends on the domain, and that is the project's decision, not the gate's. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `PGNHN-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 

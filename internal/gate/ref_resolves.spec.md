@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RFRSR
-  updated_at: 2026-09-19
+  updated_at: 2026-09-26
   layer: gate
 -->
 # RefResolves — the reference points at the spec that REALLY describes the unit
@@ -71,6 +71,12 @@ defect become noise.
 | `RFRSR-X02` | Does not charge the absence of the sibling spec. | The missing piece of a triad is the triad gate's charge. Here the absence is simply a case where there is nothing to compare. |
 | `RFRSR-X03` | Does not consult the map to resolve the reference. | The convention that co-locates spec and code is the ruler, and it is legible from the filesystem alone. Going through the graph would make the verdict depend on a build that may be stale, and stale is exactly the defect this gate exists to catch. |
 | `RFRSR-X04` | Does not judge whether the sibling spec DESCRIBES the unit well. | The ruler here is identity: which spec owns this file. Whether the spec's content matches the code is judgement, and judgement belongs to another class of gate. |
+
+## Errors / Failures
+
+| Rule | Condition | Effect |
+| --- | --- | --- |
+| `RFRSR-E01` | Underlying I/O or parsing failure | Returns Skip or Pending with error description | @no-scenario: error paths are handled by returning early verdict without panic @resilient: returns early without panic |
 
 ## Dependencies
 
