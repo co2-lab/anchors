@@ -88,3 +88,22 @@ func TestCodesInCase(t *testing.T) {
 		t.Fatalf("esperava 2 códigos, veio %v", got)
 	}
 }
+
+// SeenCodes counts every case — passed, failed or skipped: a partial run measured all of
+// them, and a code it saw FAIL must lose its proof, not keep it.
+func TestSeenCodesCountsEveryOutcome(t *testing.T) {
+	r := &ExecReport{Cases: []CaseResult{
+		{Name: "MBDT-B01 passes"},
+		{Name: "MBDT-B02 fails", Failed: true},
+		{Name: "MBDT-B03 skipped", Skipped: true},
+	}}
+	seen := r.SeenCodes()
+	for _, c := range []string{"MBDT-B01", "MBDT-B02", "MBDT-B03"} {
+		if !seen[c] {
+			t.Errorf("%s ran and must be seen: %v", c, seen)
+		}
+	}
+	if r.PassedCodes()["MBDT-B02"] {
+		t.Error("control: a failed case is not proven")
+	}
+}

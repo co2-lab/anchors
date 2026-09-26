@@ -781,7 +781,7 @@ nodes:
         - test
     - id: cmd/anchors/mapcmd/ingest.go
       kind: code
-      rev: ba0609512bc7
+      rev: 12f9ec0d7991
       updated_at: "2026-09-24"
       code: SPCRX
       layer: comando
@@ -1351,7 +1351,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/suite.go
       kind: code
-      rev: a16726cb1860
+      rev: 9f933f0c07b5
       updated_at: "2026-09-23"
       layer: comando
       tags:
@@ -1366,7 +1366,7 @@ nodes:
         - test
     - id: cmd/anchors/quality/touch.go
       kind: code
-      rev: b54eb82affad
+      rev: 0fc6ca4af3c7
       updated_at: "2026-09-25"
       layer: comando
       tags:
@@ -1374,7 +1374,7 @@ nodes:
         - comando
     - id: cmd/anchors/quality/touch_test.go
       kind: test
-      rev: 7ee2b2adabf4
+      rev: e5c5b7b4d280
       updated_at: "2026-09-25"
       layer: teste
       tags:
@@ -4442,7 +4442,7 @@ nodes:
       no_propagation: true
     - id: internal/mapx/ingest.go
       kind: code
-      rev: 49e1fc2bd2de
+      rev: 4d2ffe6c40f4
       updated_at: "2026-09-24"
       layer: mapa
       tags:
@@ -4457,7 +4457,7 @@ nodes:
         - test
     - id: internal/mapx/ingest_suite_rev_test.go
       kind: test
-      rev: 21cf5637e690
+      rev: fb4fc6ba4248
       updated_at: "2026-09-23"
       code: AAAAA
       layer: teste
@@ -4465,7 +4465,7 @@ nodes:
         - test
     - id: internal/mapx/ingest_test.go
       kind: test
-      rev: bfcf869cebf6
+      rev: b42a4ff7b3f1
       updated_at: "2026-09-23"
       code: AAAAX
       layer: teste
@@ -4834,7 +4834,7 @@ nodes:
         - test
     - id: internal/testsig/junit.go
       kind: code
-      rev: 022f398d8fd1
+      rev: a604f81e6b8b
       updated_at: "2026-09-10"
       layer: infra
       tags:
@@ -4880,7 +4880,7 @@ nodes:
         - test
     - id: internal/testsig/testsig_test.go
       kind: test
-      rev: 8a99d3718b4f
+      rev: 040495099c2b
       updated_at: "2026-09-10"
       code: SPCRX
       layer: teste

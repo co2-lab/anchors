@@ -24,7 +24,7 @@ type ExecByFile struct {
 // códigos de cenário ELES declaram (lido do arquivo pelo comando — o mapx não toca
 // disco). IngestExecution cruza esses declarados com os provados.
 func (g *Graph) IngestExecution(byFile map[string]ExecByFile, proven map[string]bool, declaredByNode map[string][]string, layer, now string) (matchedFiles, matchedCodes int) {
-	return g.IngestExecutionSuite(byFile, proven, declaredByNode, layer, "", now)
+	return g.IngestExecutionSuite(byFile, proven, nil, declaredByNode, layer, "", now)
 }
 
 // IngestExecutionSuite is IngestExecution with the SUITE named (the report the execution
@@ -35,7 +35,15 @@ func (g *Graph) IngestExecution(byFile map[string]ExecByFile, proven map[string]
 //
 // An old proof with no suite (ingested before this field existed) has no known owner;
 // the first suite ingestion touching the spec replaces it with the measured union.
-func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven map[string]bool, declaredByNode map[string][]string, layer, suite, now string) (matchedFiles, matchedCodes int) {
+//
+// `seen` marks a PARTIAL run (`anchors test --changed`): the codes its cases named. A
+// full run is the whole measurement, and what it did not prove stops being proven — that
+// is how a deleted test loses its proof. A partial run measured only its cut: each spec
+// keeps its earlier proof for the codes this run did not see, and takes this run's result
+// for the codes it did. Before, a partial run of 4 test files erased the proof of every
+// spec outside the cut (reported from MIF: MoneyDetailScreen lost 12 green scenarios to a
+// run that never executed its test). nil = full run.
+func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen map[string]bool, declaredByNode map[string][]string, layer, suite, now string) (matchedFiles, matchedCodes int) {
 	if layer == "" {
 		layer = "unit" // camada default quando não informada
 	}
@@ -71,6 +79,33 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven map[st
 				if proven[code] {
 					pc = append(pc, code)
 				}
+			}
+			if seen != nil {
+				// PARTIAL: what this run did not see keeps its earlier proof.
+				var antes []string
+				if n.Signal != nil {
+					if suite == "" {
+						antes = n.Signal.ProvenCodes
+					} else {
+						antes = n.Signal.ProvenBySuite[suite]
+					}
+				}
+				tocou := false
+				for _, code := range declared {
+					if seen[code] {
+						tocou = true
+						break
+					}
+				}
+				if !tocou {
+					continue // outside the cut: nothing measured here, nothing changes
+				}
+				for _, code := range antes {
+					if !seen[code] && !proven[code] {
+						pc = append(pc, code)
+					}
+				}
+				sort.Strings(pc)
 			}
 			// GRAVA MESMO VAZIO. "Nenhum cenário provado" é informação, não ausência
 			// dela — e a ingestão é a medição inteira, não um acréscimo à anterior.

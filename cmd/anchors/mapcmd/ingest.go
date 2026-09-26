@@ -32,6 +32,7 @@ var ViaAnchorsTest bool
 
 func newIngestCmd() *cobra.Command {
 	var root, mapPath, junit, lcov, mutation, layer, scope, suite string
+	var partial bool
 	var logs bool
 	cmd := &cobra.Command{
 		Use:   "ingest",
@@ -58,7 +59,7 @@ Run 'anchors coverage' afterwards to see the spec requirements with no green tes
 				return err
 			}
 			if junit != "" || lcov != "" || mutation != "" {
-				if err := IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite); err != nil {
+				if err := IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite, partial); err != nil {
 					return err
 				}
 			}
@@ -76,6 +77,7 @@ Run 'anchors coverage' afterwards to see the spec requirements with no green tes
 	cmd.Flags().StringVar(&lcov, "lcov", "", "lcov .info file (line coverage)")
 	cmd.Flags().StringVar(&mutation, "mutation", "", "mutation JSON report. The FORMAT belongs to the project: declare it in the mutation-score gate of anchors.yaml, key 'format' (default 'mutation-testing-elements' — Stryker/PIT/Infection/mutmut; 'gremlins' for Go)")
 	cmd.Flags().StringVar(&layer, "layer", "", "test layer of this suite (unit|integration|e2e…); default unit — merges several")
+	cmd.Flags().BoolVar(&partial, "partial", false, "the report is a PARTIAL run (only some tests): scenarios it did not run keep their earlier proof. `anchors test --changed` sets it")
 	cmd.Flags().StringVar(&suite, "suite", "", "name of this suite in the map (default: the JUnit path relative to the root). Proofs are kept per suite, so each workspace's report only speaks for itself")
 	cmd.Flags().StringVar(&scope, "scope", "", "scope of the suite that ran the mutants: `isolated` (only the unit's test) or `full` (with the dependents). Ingesting both allows reading the DIFFERENCE — how much the unit depends on third parties to prove itself")
 	return cmd
@@ -85,7 +87,7 @@ Run 'anchors coverage' afterwards to see the spec requirements with no green tes
 // `anchors mutation` possam ingerir o que acabaram de produzir sem reimplementar nada
 // nem invocar o próprio binário de novo. É o que fecha o par "rodar" / "ingerir" que
 // antes exigia um humano no meio.
-func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite string) error {
+func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suite string, partial bool) error {
 	if err := warnIfManualIngest(absRoot); err != nil {
 		return err
 	}
@@ -157,7 +159,11 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 				if key == "" {
 					key = suiteKey(absRoot, junit)
 				}
-				mf, mc := g.IngestExecutionSuite(byFile, proven, declaredByNode, layer, key, now)
+				var seen map[string]bool
+				if partial {
+					seen = rep.SeenCodes()
+				}
+				mf, mc := g.IngestExecutionSuite(byFile, proven, seen, declaredByNode, layer, key, now)
 				fmt.Printf("execution: %d case(s), %d test file(s) matched, %d scenario(s) proven\n",
 					len(rep.Cases), mf, mc)
 				if len(byFile) > 0 && mf == 0 {

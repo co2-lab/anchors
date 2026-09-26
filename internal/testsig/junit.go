@@ -121,3 +121,16 @@ func (r *ExecReport) PassedCodes() map[string]bool {
 	}
 	return out
 }
+
+// SeenCodes are the scenario codes named by ANY case of the report — passed, failed or
+// skipped. A partial run uses it to know which scenarios it actually measured: a code it
+// did not see keeps the proof it had (see mapx.IngestExecutionSuite).
+func (r *ExecReport) SeenCodes() map[string]bool {
+	out := map[string]bool{}
+	for _, c := range r.Cases {
+		for _, code := range CodesInCase(c.Name) {
+			out[strings.ToUpper(code)] = true
+		}
+	}
+	return out
+}

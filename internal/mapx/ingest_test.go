@@ -185,8 +185,8 @@ func TestIngestPerSuiteDoesNotEraseAnotherSuitesProof(t *testing.T) {
 		return nil
 	}
 
-	g.IngestExecutionSuite(nil, map[string]bool{"AAAA-B01": true}, declared, "unit", "back/junit.xml", "t1")
-	g.IngestExecutionSuite(nil, map[string]bool{"BBBB-B01": true}, declared, "unit", "mob/junit.xml", "t2")
+	g.IngestExecutionSuite(nil, map[string]bool{"AAAA-B01": true}, nil, declared, "unit", "back/junit.xml", "t1")
+	g.IngestExecutionSuite(nil, map[string]bool{"BBBB-B01": true}, nil, declared, "unit", "mob/junit.xml", "t2")
 
 	if got := proven("back/A.spec.md"); len(got) != 1 || got[0] != "AAAA-B01" {
 		t.Errorf("the mobile suite erased the backend's proof: %v", got)
@@ -196,7 +196,7 @@ func TestIngestPerSuiteDoesNotEraseAnotherSuitesProof(t *testing.T) {
 	}
 
 	// re-ingesting the SAME suite without the proof still erases — the rule of the test above holds
-	g.IngestExecutionSuite(nil, map[string]bool{}, declared, "unit", "back/junit.xml", "t3")
+	g.IngestExecutionSuite(nil, map[string]bool{}, nil, declared, "unit", "back/junit.xml", "t3")
 	if got := proven("back/A.spec.md"); len(got) != 0 {
 		t.Errorf("the proof the suite itself stopped giving stayed in the map: %v", got)
 	}

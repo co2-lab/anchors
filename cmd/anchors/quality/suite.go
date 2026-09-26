@@ -227,7 +227,7 @@ func runSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, a
 		// sobre a única que já se sabe ruim, e o vermelho pareceria ausência de medida.
 		//
 		// O relatório é a evidência do que aconteceu, não um prêmio por ter passado.
-		if err := ingestIfRecent(absRoot, junit, lcov, mutation, s, inicio); err != nil {
+		if err := ingestIfRecent(absRoot, junit, lcov, mutation, s, inicio, len(alvos) > 0); err != nil {
 			return fmt.Errorf("layer %q: ingest report: %w", s.Layer, err)
 		}
 		if errRun != nil {
@@ -250,7 +250,9 @@ func runSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, a
 // não é zelo: quando o comando morre antes de escrever (erro de config, dependência
 // faltando), o relatório da rodada ANTERIOR continua no disco — ingeri-lo gravaria no
 // mapa um número velho como se fosse o de agora, que é pior que não ter número nenhum.
-func ingestIfRecent(absRoot, junit, lcov, mutation string, s config.Suite, inicio time.Time) error {
+// partial is the incremental mode (`--changed`): the run executed only the impact path, and
+// its report must not erase the proof of the tests it did not run.
+func ingestIfRecent(absRoot, junit, lcov, mutation string, s config.Suite, inicio time.Time, partial bool) error {
 	// A ingestão vem do `anchors test`: a suíte ACABOU de rodar, e o sinal corresponde a
 	// ela. É o que distingue esta chamada de um `ingest` à mão.
 	mapcmd.ViaAnchorsTest = true
@@ -275,7 +277,7 @@ func ingestIfRecent(absRoot, junit, lcov, mutation string, s config.Suite, inici
 	if j == "" && l == "" && m == "" {
 		return nil
 	}
-	return mapcmd.IngestArtifacts(absRoot, "", j, l, m, s.Layer, s.Scope, "")
+	return mapcmd.IngestArtifacts(absRoot, "", j, l, m, s.Layer, s.Scope, "", partial)
 }
 
 // workspaceLabel prefixa o workspace no cabeçalho quando existe. Sem ele, duas suítes
