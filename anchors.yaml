@@ -282,6 +282,7 @@ tests:
   - layer: unit
     run: "bash scripts/anchors-test.sh"
     junit: ".anchors/junit.xml"
+    lcov: ".anchors/lcov.info"
 
 gates:
   # SEGURANÇA — a leva que existe para o que não tem volta.

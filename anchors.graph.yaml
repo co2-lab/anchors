@@ -190,6 +190,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 14
+        total_lines: 64
+        line_coverage: 21.875
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 20-42,44-48,50,54-62,66-75,77,83-97
+                covered: 20-24,54-62
+                covered_lines: 14
+                total_lines: 64
+                at_rev: c4f167a21355
+        at_rev: c4f167a21355
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/common/errors.go
       kind: code
       rev: 64f1fe731585
@@ -198,6 +211,15 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        total_lines: 3
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 15-17
+                total_lines: 3
+                at_rev: 64f1fe731585
+        at_rev: 64f1fe731585
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/common/flags_compat.go
       kind: code
       rev: 227f79076131
@@ -206,6 +228,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 10
+        total_lines: 21
+        line_coverage: 47.61904761904761
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 10-13,15-19,21-22,26-31,33-35,37
+                covered: 10-12,15-19,21-22
+                covered_lines: 10
+                total_lines: 21
+                at_rev: 227f79076131
+        at_rev: 227f79076131
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/common/path.go
       kind: code
       rev: 9638883f43cb
@@ -214,6 +249,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 17
+        total_lines: 26
+        line_coverage: 65.38461538461539
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 12-16,18-26,30-37,39,43-45
+                covered: 12-16,18-19,22-23,26,30-31,34-37,39
+                covered_lines: 17
+                total_lines: 26
+                at_rev: 9638883f43cb
+        at_rev: 9638883f43cb
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/common/roles.go
       kind: code
       rev: 3ff6c043d0a3
@@ -222,6 +270,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 12
+        total_lines: 63
+        line_coverage: 19.047619047619047
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 14-24,26,30-36,40-51,55-69,71,75-84,88-93
+                covered: 75-81,84,88-90,93
+                covered_lines: 12
+                total_lines: 63
+                at_rev: 3ff6c043d0a3
+        at_rev: 3ff6c043d0a3
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/common/spec.go
       kind: code
       rev: b5afc7a47b1e
@@ -230,6 +291,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 8
+        total_lines: 40
+        line_coverage: 20
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 14-16,19-23,27-37,39-42,44,48-58,60-63,65
+                covered: 14-16,19-23
+                covered_lines: 8
+                total_lines: 40
+                at_rev: b5afc7a47b1e
+        at_rev: b5afc7a47b1e
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/common/telemetry.go
       kind: code
       rev: b6735b9c46a6
@@ -238,6 +312,15 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        total_lines: 37
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 15-22,24-26,28-34,37-41,45-49,51-55,59-62
+                total_lines: 37
+                at_rev: b6735b9c46a6
+        at_rev: b6735b9c46a6
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/common/version.go
       kind: code
       rev: 4c5dd1d26ab8
@@ -261,6 +344,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 25
+        total_lines: 190
+        line_coverage: 13.157894736842104
+        prev_line_coverage: 13.157894736842104
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 34-91,99-107,109-115,135-141,144-145,147-150,152-154,156-159,161-167,169-175,177-182,184-186,188-193,196-201,203-211,213-221,223-226,251-257,259-262,264-267,269-280,282-283,286-292,295-297
+                covered: 34-55,295-297
+                covered_lines: 25
+                total_lines: 190
+                at_rev: 928a28361051
+        at_rev: 928a28361051
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/backfill_labels_test.go
       kind: test
       rev: 17c74c0dc099
@@ -276,6 +373,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 50
+        total_lines: 171
+        line_coverage: 29.239766081871345
+        prev_line_coverage: 29.239766081871345
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 32-72,84-93,108-133,135-151,153,156-160,168-189,192-194,196,206-213,227-249,260-272,274
+                covered: 32-62,65-66,69-72,156-160,206-213
+                covered_lines: 50
+                total_lines: 171
+                at_rev: ce41234ddf98
+        at_rev: ce41234ddf98
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/decided_test.go
       kind: test
       rev: 4936d17c5055
@@ -292,6 +403,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 115
+        total_lines: 232
+        line_coverage: 49.56896551724138
+        prev_line_coverage: 49.56896551724138
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 30-67,69-80,100-112,114-158,168-190,193-221,226-229,234-242,244-246,248,253-258,271-282,284-302,310-322,324-327,329
+                covered: 30-61,64-65,69,73-74,77,100-102,110-112,114-147,193-221,234-237,253-255,258
+                covered_lines: 115
+                total_lines: 232
+                at_rev: de2f2ad08b83
+        at_rev: de2f2ad08b83
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/deliver_confront.go
       kind: code
       rev: "274398864836"
@@ -300,6 +425,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 19
+        total_lines: 115
+        line_coverage: 16.52173913043478
+        prev_line_coverage: 16.52173913043478
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 35-51,53-63,73-77,85-89,91-94,96,98-102,104,106,111-128,130-136,138-142,144,157-166,169-178,180-182,184-188,192-196,198
+                covered: 73-77,85-89,98-101,104,106,192-193,198
+                covered_lines: 19
+                total_lines: 115
+                at_rev: "274398864836"
+        at_rev: "274398864836"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/deliver_confront_git_test.go
       kind: test
       rev: 453adac67da2
@@ -329,6 +468,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 38
+        total_lines: 79
+        line_coverage: 48.10126582278481
+        prev_line_coverage: 15.18987341772152
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 27-53,55-66,71-81,83-85,87,89-93,96-99,106-111,113-120,124-125
+                covered: 27-48,96-99,106-109,113-118,124-125
+                covered_lines: 38
+                total_lines: 79
+                at_rev: c0d97c2bb580
+        at_rev: c0d97c2bb580
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/discard_test.go
       kind: test
       rev: ea4a0247f7da
@@ -344,6 +497,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 143
+        total_lines: 444
+        line_coverage: 32.207207207207205
+        prev_line_coverage: 13.963963963963963
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 45-116,122-140,151-158,160,162,196-206,209-230,242-247,249-268,272-279,293-315,320-397,401-429,431-452,455-473,477-479,486-515,517-529,531-542,548-568,576-585,587,599-613
+                covered: 45-108,455-470,473,477-479,486-488,490-499,517-529,531-542,548-568
+                covered_lines: 143
+                total_lines: 444
+                at_rev: 5d0e23327021
+        at_rev: 5d0e23327021
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/escalate_dup.go
       kind: code
       rev: 3271f04df70f
@@ -352,6 +519,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 26
+        total_lines: 28
+        line_coverage: 92.85714285714286
+        prev_line_coverage: 92.85714285714286
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 29-32,36-51,53-58,60,62
+                covered: 29-32,36-49,53-58,60,62
+                covered_lines: 26
+                total_lines: 28
+                at_rev: 3271f04df70f
+        at_rev: 3271f04df70f
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/escalate_dup_test.go
       kind: test
       rev: 59db6ec3e2c5
@@ -374,6 +555,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 35
+        total_lines: 38
+        line_coverage: 92.10526315789474
+        prev_line_coverage: 92.10526315789474
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 33-35,43-45,49-59,61,65-70,76-89
+                covered: 43-45,49-59,61,65-70,76-89
+                covered_lines: 35
+                total_lines: 38
+                at_rev: 7d016daa9f92
+        at_rev: 7d016daa9f92
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/notifications_test.go
       kind: test
       rev: e0f1a29fab0c
@@ -389,6 +584,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 40
+        total_lines: 121
+        line_coverage: 33.057851239669425
+        prev_line_coverage: 9.090909090909092
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 63-105,107-112,117-124,126-140,142,144,147-151,154-160,164-170,172,174-178,182-203
+                covered: 63-86,147-151,164-170,172,174-175,178
+                covered_lines: 40
+                total_lines: 121
+                at_rev: 59a1cb2aa836
+        at_rev: 59a1cb2aa836
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/pr_body_test.go
       kind: test
       rev: b0d720c9dfbc
@@ -404,6 +613,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 89
+        total_lines: 97
+        line_coverage: 91.75257731958763
+        prev_line_coverage: 91.75257731958763
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 54-57,74-77,84-89,99-103,105-125,128-131,146-180,184-198,201-203
+                covered: 54-57,74-77,84-89,99-103,105-125,128,131,146-166,169-170,173-178,184-198,201-203
+                covered_lines: 89
+                total_lines: 97
+                at_rev: 32498cca0e30
+        at_rev: 32498cca0e30
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/progress_merge.go
       kind: code
       rev: 48b19d2b554e
@@ -412,6 +635,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 24
+        total_lines: 50
+        line_coverage: 48
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 29-64,66-71,73-79,82
+                covered: 29-51,82
+                covered_lines: 24
+                total_lines: 50
+                at_rev: 48b19d2b554e
+        at_rev: 48b19d2b554e
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/progress_test.go
       kind: test
       rev: 0f38df5912ea
@@ -429,6 +665,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 207
+        total_lines: 679
+        line_coverage: 30.486008836524302
+        prev_line_coverage: 16.789396170839467
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 31-71,74-80,83-84,87-118,137-143,146-149,152-172,175-193,196-198,201-231,233-244,246-247,249-251,253,255-260,263-267,270-288,291-292,295-325,327,330-333,338-343,367-375,378-391,396-398,400,406-410,419-431,433-436,438,440-441,450-451,453-478,480,492-501,503,515-524,526-530,542-545,550-560,562-566,573-578,580,596-601,613-616,618-654,657-661,668-688,690,703-713,725-734,736-743,745-760,762-763,771-778,780-783,790-791,801-805,807,816-821,829-840,842,855-878,886-890,899-903,905-949,963-991,1009-1013,1016-1022,1030-1035
+                covered: 31-41,83-84,87-111,196-198,201-221,263-267,270-279,291-292,295-304,330-333,367-375,378-380,383-389,396-398,400,492-499,503,542-545,550-551,554-555,558-559,562-566,573-578,801-805,816-820,829-832,899-903,905-910,912-937,940-949
+                covered_lines: 207
+                total_lines: 679
+                at_rev: 9ea1c8e1132c
+        at_rev: 9ea1c8e1132c
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/queue_seed_tally_test.go
       kind: test
       rev: 84dd7bc13791
@@ -444,6 +694,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 18
+        total_lines: 18
+        line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 6-23
+                covered: 6-23
+                covered_lines: 18
+                total_lines: 18
+                at_rev: 34a67aa8da27
+        at_rev: 34a67aa8da27
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/review_work_test.go
       kind: test
       rev: 742707cc95c9
@@ -459,6 +722,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 29
+        total_lines: 192
+        line_coverage: 15.104166666666666
+        prev_line_coverage: 2.083333333333333
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 67-106,109-111,117-124,126-133,135-139,144-149,152-171,175-178,185-202,205-226,228-231,234,242-262,275-278,281-300,305-311,313
+                covered: 67-88,109-111,275-278
+                covered_lines: 29
+                total_lines: 192
+                at_rev: ee291019585b
+        at_rev: ee291019585b
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/task_status_render.go
       kind: code
       rev: 2981207d72ca
@@ -467,6 +744,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 118
+        total_lines: 145
+        line_coverage: 81.37931034482759
+        prev_line_coverage: 81.37931034482759
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 28-42,52-59,63-97,100-108,113-132,140-144,146-149,153-159,167-175,177,182-197,200-206,211-215,219-222
+                covered: 28-36,39-42,52-59,63-81,84-97,100-108,113-114,121-122,125-126,140-141,146-149,153-159,167-173,177,182-195,200,203-206,211-215,219-222
+                covered_lines: 118
+                total_lines: 145
+                at_rev: 2981207d72ca
+        at_rev: 2981207d72ca
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/task_status_test.go
       kind: test
       rev: 4f2d9e9d853f
@@ -482,6 +773,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 23
+        total_lines: 117
+        line_coverage: 19.65811965811966
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 38-62,64-75,77-125,128-131,138-164
+                covered: 38-56,128-131
+                covered_lines: 23
+                total_lines: 117
+                at_rev: 66022cd7dcdd
+        at_rev: 66022cd7dcdd
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/watch.go
       kind: code
       rev: 4bb5082bab90
@@ -490,6 +794,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 66
+        total_lines: 460
+        line_coverage: 14.347826086956522
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 25-45,48-51,53-55,59-74,78-103,106-107,112-131,134-136,141-159,161-162,165-173,175-176,179-191,193-194,197-206,209-218,220-221,230-265,270-279,282-283,285-297,305-318,320,322,329-338,340,348-356,363-385,394-403,411-417,420-449,451,454-457,466-478,480-482,484-486,488,494-503,507,509-519,526-538,544-566,570-575,584-590,600-605,610-614,616,622-630,632-635,638-645
+                covered: 25-45,53-55,59-63,106-107,112-118,134-136,141-143,161-162,165-167,175-176,179-181,193-194,197-199,205-206,209-211,220-221
+                covered_lines: 66
+                total_lines: 460
+                at_rev: 4bb5082bab90
+        at_rev: 4bb5082bab90
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/watch_unix.go
       kind: code
       rev: c8ddcff4c49f
@@ -498,6 +815,15 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        total_lines: 3
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 12-14
+                total_lines: 3
+                at_rev: c8ddcff4c49f
+        at_rev: c8ddcff4c49f
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/watch_windows.go
       kind: code
       rev: ba2bd88fa6be
@@ -514,6 +840,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 398
+        total_lines: 930
+        line_coverage: 42.795698924731184
+        prev_line_coverage: 39.67741935483871
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 39-104,107-109,115-129,143-162,164-194,197-211,219-237,243-245,249-252,255-270,280-284,296-343,354-366,378-394,397-447,449-480,492-503,505-506,511-523,525-537,543-546,548,550-551,556-607,609,614-802,804,809-825,827,832-833,839-844,846-849,853-856,858-860,862-865,871-885,887,890-894,896,906-910,913-917,920-933,938-976,978-983,986,999-1003,1006-1009,1021-1033,1035-1036,1038-1040,1042-1053,1062-1070,1086-1109,1114-1116,1118-1120,1122-1123,1130-1138,1144-1149,1151,1157-1170,1172,1177-1189,1191,1194-1207,1219-1228
+                covered: 39-64,107-109,115-123,125,127-129,143,152,164,172,178-188,197,205-211,219,226-237,243,249-252,255-266,280,296-329,354-366,378,397-432,443-447,449-457,471-480,492-494,497-499,505-506,511-512,517-523,525-527,530-531,534-535,543,548,550-551,556-557,590-595,614-615,780-786,839-842,846-849,853-856,871-876,879-885,887,890-894,906-909,920-933,938-974,986,1086-1088,1091-1109,1114,1130-1138,1144-1145,1151,1157-1159,1162-1163,1166-1167,1172,1177-1187,1194-1196,1219-1221,1227-1228
+                covered_lines: 398
+                total_lines: 930
+                at_rev: ccfa58b32e9e
+        at_rev: ccfa58b32e9e
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/flow/work_declarative_test.go
       kind: test
       rev: db4f57dc85ab
@@ -543,6 +883,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 21
+        total_lines: 119
+        line_coverage: 17.647058823529413
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 24-59,62-70,72-76,80-84,87-90,93-106,108-113,115-117,119-126,129-132,134-138,140-143,145-153,155-156,159-163
+                covered: 24-40,87-90
+                covered_lines: 21
+                total_lines: 119
+                at_rev: dd11bb26c572
+        at_rev: dd11bb26c572
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/governance/compliance.go
       kind: code
       rev: c5b2349a8428
@@ -551,6 +904,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 20
+        total_lines: 135
+        line_coverage: 14.814814814814813
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 27-55,57-63,65-70,73-79,82-84,86-94,96,99-116,118-142,144-145,147,150-156,159-161,167-177,180-185
+                covered: 27-43,159-161
+                covered_lines: 20
+                total_lines: 135
+                at_rev: c5b2349a8428
+        at_rev: c5b2349a8428
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/governance/governs.go
       kind: code
       rev: 4db590ea3fce
@@ -559,6 +925,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 18
+        total_lines: 88
+        line_coverage: 20.454545454545457
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 20-45,48-65,67,71-88,90-98,101-103,106-111,114-120
+                covered: 20-34,101-103
+                covered_lines: 18
+                total_lines: 88
+                at_rev: 4db590ea3fce
+        at_rev: 4db590ea3fce
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/governance/guide.go
       kind: code
       rev: a7327c927888
@@ -567,6 +946,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 83
+        total_lines: 111
+        line_coverage: 74.77477477477478
+        prev_line_coverage: 74.77477477477478
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 264-285,287-309,314-321,325-334,338-347,351-360,364-373,382-397,400-401
+                covered: 264-282,287-309,314-318,325-331,338-344,351-357,364-370,382-387,400-401
+                covered_lines: 83
+                total_lines: 111
+                at_rev: a7327c927888
+        at_rev: a7327c927888
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/governance/guide_autonomy.go
       kind: code
       rev: 39107cff3837
@@ -575,6 +968,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 64
+        total_lines: 67
+        line_coverage: 95.52238805970148
+        prev_line_coverage: 95.52238805970148
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 28-40,55-81,88-111,115-117
+                covered: 28-40,55-81,88-111
+                covered_lines: 64
+                total_lines: 67
+                at_rev: 39107cff3837
+        at_rev: 39107cff3837
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/governance/guide_autonomy_test.go
       kind: test
       rev: 2b7fb7ab6a9a
@@ -731,6 +1138,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 6
+        total_lines: 6
+        line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 6-11
+                covered: 6-11
+                covered_lines: 6
+                total_lines: 6
+                at_rev: 15dbc7db9d92
+        at_rev: 15dbc7db9d92
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/governance/spec_guide.go
       kind: code
       rev: d31eba720fb9
@@ -739,6 +1159,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 99
+        total_lines: 102
+        line_coverage: 97.05882352941177
+        prev_line_coverage: 97.05882352941177
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 34-96,98-101,103-126,131-135,138-143
+                covered: 34-35,38-96,98-101,103-126,131-134,138-143
+                covered_lines: 99
+                total_lines: 102
+                at_rev: d31eba720fb9
+        at_rev: d31eba720fb9
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/governance/spec_guide_test.go
       kind: test
       rev: dfd8ad511a0d
@@ -763,6 +1197,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 27
+        total_lines: 91
+        line_coverage: 29.67032967032967
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 30-63,66-70,80-84,86-88,90-103,105,110-111,113-122,124-133,136,139-144
+                covered: 30-51,66-70
+                covered_lines: 27
+                total_lines: 91
+                at_rev: b3fcd7a78a4b
+        at_rev: b3fcd7a78a4b
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/mapcmd/flow.go
       kind: code
       rev: fd0aae8b16e7
@@ -771,6 +1218,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 53
+        total_lines: 294
+        line_coverage: 18.027210884353742
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 16-29,31-66,68-79,81,84-85,88-111,113-125,127,129,132-137,140-167,169-174,177-178,180-193,201-203,205,208-209,212-224,234-242,244-246,249-251,253-278,288-298,300-320,324-326,328-333,339-342,347-351,353-356,361-366,368-374,376,380-382,385-387
+                covered: 16-29,31-36,84-85,88-100,132-137,140-149,208-209
+                covered_lines: 53
+                total_lines: 294
+                at_rev: fd0aae8b16e7
+        at_rev: fd0aae8b16e7
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/mapcmd/impact.go
       kind: code
       rev: 6ae8e3b5e5a0
@@ -780,6 +1240,20 @@ nodes:
         - cli
         - comando
       no_propagation: true
+      signal:
+        covered_lines: 28
+        total_lines: 73
+        line_coverage: 38.35616438356164
+        prev_line_coverage: 13.698630136986301
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 14-39,41-44,46-48,51-53,76-80,82-90,93-97,99,102-111,113-119
+                covered: 14-28,51-53,76-80,82-83,86-87,90
+                covered_lines: 28
+                total_lines: 73
+                at_rev: 6ae8e3b5e5a0
+        at_rev: 6ae8e3b5e5a0
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/mapcmd/impact_relto_test.go
       kind: test
       rev: 532ee3334b03
@@ -796,6 +1270,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 127
+        total_lines: 333
+        line_coverage: 38.13813813813814
+        prev_line_coverage: 28.22822822822823
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 33-64,66-69,72-83,90-102,109-124,126-133,135,137-149,151-153,155-172,175-194,197-217,220-224,233-254,256-261,263,265-269,271-277,279,290-295,302-309,313-318,320,329-336,339-355,364-385,389-393,395-397,399-402,404-408,412-414,416-418,420-424,428-439,450-462,464-467
+                covered: 33-53,72-83,233-253,256-261,263,265-269,271,279,290-295,302-309,313-318,320,329-334,339-355,450-452,455-462,464-467
+                covered_lines: 127
+                total_lines: 333
+                at_rev: 56da5778f3e9
+        at_rev: 56da5778f3e9
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/mapcmd/ingest_manual_test.go
       kind: test
       rev: f2dc5ac5cc6e
@@ -825,6 +1313,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 89
+        total_lines: 273
+        line_coverage: 32.6007326007326
+        prev_line_coverage: 12.82051282051282
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 26-77,80-82,84-93,95-99,107-111,113-115,117-120,124-142,144-155,160-174,177-200,205-215,217-249,251-255,258-266,280-285,287,290-300,302-307,311-314,318-323,325,345-357,361-369,371,377-381
+                covered: 26-70,258-266,280-285,287,345-357,361-369,371,377-381
+                covered_lines: 89
+                total_lines: 273
+                at_rev: 63d818dfdaf6
+        at_rev: 63d818dfdaf6
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/mapcmd/judge_manual_test.go
       kind: test
       rev: c75c27deea86
@@ -847,6 +1349,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 126
+        total_lines: 280
+        line_coverage: 45
+        prev_line_coverage: 45
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 18-28,30-51,53-67,69,72-78,81-96,99-106,109-116,118-122,126-146,149-155,160-190,192-199,202-204,211-223,227-232,234-235,237-242,245-268,270-274,276-279,304-307,311-321,323-331,342-348,350,352-362,364-367,369-378
+                covered: 18-28,30-40,72-78,126-136,139-140,143-144,149-155,160-161,188,192-196,199,202-204,245-247,250-252,304-307,311-321,323-331,342-348,350,352-362,364-367,369-378
+                covered_lines: 126
+                total_lines: 280
+                at_rev: 706de68185ea
+        at_rev: 706de68185ea
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/mapcmd/map_ambiguity_test.go
       kind: test
       rev: cf2f993d4b91
@@ -862,6 +1378,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 108
+        total_lines: 120
+        line_coverage: 90
+        prev_line_coverage: 90
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 44-80,82-127,130,139-150,154-162,173-184,188-190
+                covered: 44-74,77-78,82-117,120-127,130,139-140,143-150,154-155,158-162,173-174,177-184,188-190
+                covered_lines: 108
+                total_lines: 120
+                at_rev: da998f82fa30
+        at_rev: da998f82fa30
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/mapcmd/map_merge_test.go
       kind: test
       rev: ee5224fef80e
@@ -877,6 +1407,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 20
+        total_lines: 27
+        line_coverage: 74.07407407407408
+        prev_line_coverage: 74.07407407407408
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 27-41,43-50,52-54,56
+                covered: 27-28,31-32,38-41,43-50,52-54,56
+                covered_lines: 20
+                total_lines: 27
+                at_rev: f53389d13bb4
+        at_rev: f53389d13bb4
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/mapcmd/map_staleness_test.go
       kind: test
       rev: ba728c76dfe3
@@ -900,6 +1444,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 26
+        total_lines: 100
+        line_coverage: 26
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 24-60,63-80,83-87,89-97,99-111,113-127,130-132
+                covered: 24-46,130-132
+                covered_lines: 26
+                total_lines: 100
+                at_rev: a3b4ac834daf
+        at_rev: a3b4ac834daf
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/mapcmd/register.go
       kind: code
       rev: d996b569e86b
@@ -908,6 +1465,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 10
+        total_lines: 10
+        line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 6-15
+                covered: 6-15
+                covered_lines: 10
+                total_lines: 10
+                at_rev: d996b569e86b
+        at_rev: d996b569e86b
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/mapcmd/renumber.go
       kind: code
       rev: 919845643f10
@@ -916,6 +1486,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 125
+        total_lines: 166
+        line_coverage: 75.30120481927712
+        prev_line_coverage: 75.30120481927712
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 28-75,77-86,90-101,103-110,112-117,121-130,132-135,137-156,158-160,163-166,171-176,181-196,198-199,203-208,211-220,222
+                covered: 28-56,59-60,63,66-67,70-73,77-78,82-86,90-93,96-101,103-104,107,112-117,121-129,132-135,137-151,154,158-160,163-166,181-183,186-187,190-196,198-199,203-205,208,211-216,222
+                covered_lines: 125
+                total_lines: 166
+                at_rev: 919845643f10
+        at_rev: 919845643f10
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/mapcmd/renumber_test.go
       kind: test
       rev: d9e71543ed1b
@@ -931,6 +1515,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 47
+        total_lines: 286
+        line_coverage: 16.433566433566433
+        prev_line_coverage: 16.433566433566433
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 41-48,50-86,89-92,94-108,110-113,115-120,124-128,145-153,156-163,169-177,180-183,198-205,209-222,224,228-238,245-249,288-324,326-328,330-340,344-348,362-365,388-391,393-395,397-400,402-403,406-431,433-454,456-461,463-464,466,468-475
+                covered: 41-48,50-79,124-128,362-365
+                covered_lines: 47
+                total_lines: 286
+                at_rev: e668381db13a
+        at_rev: e668381db13a
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/board_serve_test.go
       kind: test
       rev: 6985a3add8dc
@@ -947,6 +1545,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 137
+        total_lines: 397
+        line_coverage: 34.5088161209068
+        prev_line_coverage: 27.455919395465994
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 23-56,59-67,71-73,79-94,98-108,111-122,124,127-131,136-141,143-146,155,162-187,194-200,217-221,226-230,232-245,247-248,250,252-254,261-263,265-276,278-285,287-296,309-320,322-323,325,327-328,330-344,353-405,407-415,418-424,429-438,444-455,460-463,465,477-487,489-499,504-506,510-512,514,518-526,531-540,542,547-556,558,562-571,573
+                covered: 23-45,127-131,162-182,185,194,197-198,217,309-320,322-323,325,327-328,330-335,339-342,353,407-415,418-424,444-449,452-455,460-463,465,477-479,482-486,489-499,504-506,510,514
+                covered_lines: 137
+                total_lines: 397
+                at_rev: 9833ee9bec5b
+        at_rev: 9833ee9bec5b
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/code_list_test.go
       kind: test
       rev: 7c188ddab15a
@@ -962,6 +1574,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 74
+        total_lines: 102
+        line_coverage: 72.54901960784314
+        prev_line_coverage: 72.54901960784314
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 52-55,67-69,75-94,99-109,112-115,118-122,124,129-133,135,138-177,180,184-188,190,192
+                covered: 52-55,67-69,75-94,99-102,105-109,112-115,118-122,124,129-133,135,138-151,180,184-188,190,192
+                covered_lines: 74
+                total_lines: 102
+                at_rev: dbd8b8362923
+        at_rev: dbd8b8362923
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/commit_msg_test.go
       kind: test
       rev: 6de0c9340ecf
@@ -977,6 +1603,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 99
+        total_lines: 194
+        line_coverage: 51.03092783505154
+        prev_line_coverage: 30.927835051546392
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 17-35,37-52,84-107,109-112,117-122,125-137,140-147,151-159,161-164,168-172,179-204,208-212,215-217,226-262,264-274,277-280
+                covered: 17-35,37-47,50-52,84-87,91-96,100-101,104-107,109-110,117-122,125-137,140-142,145-147,151,161,164,179-185,215-217,226-231,277-280
+                covered_lines: 99
+                total_lines: 194
+                at_rev: 7ecf62a39b24
+        at_rev: 7ecf62a39b24
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/docs_test.go
       kind: test
       rev: aa85630f274e
@@ -994,6 +1634,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 50
+        total_lines: 272
+        line_coverage: 18.38235294117647
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 39-79,86-104,108-115,117-121,124-130,133-145,148-174,176-187,190-201,204-208,211-217,224-228,231-232,236-245,247,249,258-272,274,289-305,308-321,324-330,336-357,360-380
+                covered: 39-61,133-140,145,148-160,211-214,217
+                covered_lines: 50
+                total_lines: 272
+                at_rev: 682d7e19f600
+        at_rev: 682d7e19f600
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/generated_paths.go
       kind: code
       rev: ecdaaedb3ae8
@@ -1002,6 +1655,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 21
+        total_lines: 51
+        line_coverage: 41.17647058823529
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 33-53,56-58,62-81,84-87,95-97
+                covered: 33-49,84-87
+                covered_lines: 21
+                total_lines: 51
+                at_rev: ecdaaedb3ae8
+        at_rev: ecdaaedb3ae8
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/init.go
       kind: code
       rev: d54b724511a7
@@ -1010,6 +1676,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 38
+        total_lines: 297
+        line_coverage: 12.794612794612794
+        prev_line_coverage: 4.040404040404041
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 18-33,37-40,43-56,65-76,81-94,101-103,105-117,119-123,128-144,150-163,169-194,199-212,218-232,235-238,251-263,265-267,289-294,297-302,307-320,324-337,342-353,355,360-379,381,388-401,403,406-426
+                covered: 18-29,43-56,65-76
+                covered_lines: 38
+                total_lines: 297
+                at_rev: d54b724511a7
+        at_rev: d54b724511a7
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/init_discover.go
       kind: code
       rev: e5981cb152ad
@@ -1018,6 +1698,15 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        total_lines: 105
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 29-37,42-66,71-96,98-100,102-103,108-122,130-135,139-145,147-150,152,154-157,163-165
+                total_lines: 105
+                at_rev: e5981cb152ad
+        at_rev: e5981cb152ad
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/init_git.go
       kind: code
       rev: 3ff1128c2034
@@ -1026,6 +1715,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 18
+        total_lines: 86
+        line_coverage: 20.930232558139537
+        prev_line_coverage: 20.930232558139537
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 23-27,29-38,40-49,53-60,62-64,66-73,78-81,85-90,95-100,103-105,111-120,122-123,128-133,135-139
+                covered: 85-87,90,95-97,100,103,111,122-123,128-133
+                covered_lines: 18
+                total_lines: 86
+                at_rev: 3ff1128c2034
+        at_rev: 3ff1128c2034
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/init_git_test.go
       kind: test
       rev: b5759dd11f87
@@ -1048,6 +1751,15 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        total_lines: 174
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 34-70,73,87-97,106-129,131-139,144-148,152-158,160,163-168,173-196,202-211,213-215,219-228,230,235-240,243-252,254,256,261-267
+                total_lines: 174
+                at_rev: abb7a0769cb1
+        at_rev: abb7a0769cb1
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/install_hooks.go
       kind: code
       rev: a858b3a9a1e5
@@ -1056,6 +1768,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 23
+        total_lines: 170
+        line_coverage: 13.529411764705882
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 23-47,50-52,59-63,66-73,75-77,79-88,97-103,109-115,117-119,121-141,149-174,197-207,209-225,230-238,241-249,252-257
+                covered: 23-42,50-52
+                covered_lines: 23
+                total_lines: 170
+                at_rev: a858b3a9a1e5
+        at_rev: a858b3a9a1e5
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/install_hooks_test.go
       kind: test
       rev: b9f9fa2c78a4
@@ -1071,6 +1796,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 22
+        total_lines: 73
+        line_coverage: 30.136986301369863
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 18-56,58-60,62-78,81-88,92-94,97-99
+                covered: 18-36,97-99
+                covered_lines: 22
+                total_lines: 73
+                at_rev: e8973d4d464e
+        at_rev: e8973d4d464e
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/new.go
       kind: code
       rev: 58c7e98c2b3c
@@ -1079,6 +1817,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 191
+        total_lines: 446
+        line_coverage: 42.82511210762332
+        prev_line_coverage: 35.2017937219731
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 29-58,60-72,86-91,93-97,106-110,113-116,118-131,138-145,147-173,176-177,180-188,246-274,280-286,288,292-300,302-309,311-314,316,321-340,342-352,354-357,359,365-377,380-384,386,389-395,399-411,415-417,419-430,432-433,438-444,450-460,463-466,468,479-486,488-492,494-496,498-502,504,511-518,520-523,525,533-563,565,571-573,575-579,597-602,607-611,614-618,625-628,630,633-636,646-653,665-675,683-690,695-705,707-709,714-717,720-723
+                covered: 29-53,180-188,246-252,255-272,280-286,288,321-322,326,329-330,333-338,342-352,354,359,365-377,380-384,386,511-518,520-523,525,533-534,537-538,541-547,550,553-560,563,571-573,575-578,597-602,614-618,625-626,630,633-636,646-650,665-668,671-675,683-690
+                covered_lines: 191
+                total_lines: 446
+                at_rev: 58c7e98c2b3c
+        at_rev: 58c7e98c2b3c
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/new_dialect_test.go
       kind: test
       rev: 3fe0b887fb47
@@ -1102,6 +1854,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 76
+        total_lines: 91
+        line_coverage: 83.51648351648352
+        prev_line_coverage: 83.51648351648352
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 28-33,41-45,54-59,393-425,429-437,439-441,443,445,448-454,456-461,463,466-475,738-740
+                covered: 28-33,54-55,393-425,429-437,439,443,445,448-452,456-461,463,466-468,471-475,738-740
+                covered_lines: 76
+                total_lines: 91
+                at_rev: f6868b3c5fa9
+        at_rev: f6868b3c5fa9
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/new_templates_test.go
       kind: test
       rev: 9ca4d17b5265
@@ -1125,6 +1891,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 16
+        total_lines: 16
+        line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 6-21
+                covered: 6-21
+                covered_lines: 16
+                total_lines: 16
+                at_rev: 3a428102df9b
+        at_rev: 3a428102df9b
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/settings.go
       kind: code
       rev: 9d8d37765130
@@ -1133,6 +1912,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 61
+        total_lines: 159
+        line_coverage: 38.36477987421384
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 16-31,34-65,67-82,85-87,90-118,121-122,125-155,157-169,172-174,182-194,196
+                covered: 16-31,34-49,85-87,90-95,121-122,125-139,172-174
+                covered_lines: 61
+                total_lines: 159
+                at_rev: 9d8d37765130
+        at_rev: 9d8d37765130
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/suggest.go
       kind: code
       rev: 5ba0d2be0734
@@ -1141,6 +1933,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 72
+        total_lines: 157
+        line_coverage: 45.85987261146497
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 21-41,43-69,72-74,77-94,97-99,102-122,126-144,147-151,154-173,176-179,183-197,199
+                covered: 21-41,43-48,72-74,77-83,97-99,102-113,147-151,154-164,176-179
+                covered_lines: 72
+                total_lines: 157
+                at_rev: 5ba0d2be0734
+        at_rev: 5ba0d2be0734
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/synthesize.go
       kind: code
       rev: 56133592bd31
@@ -1149,6 +1954,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 81
+        total_lines: 212
+        line_coverage: 38.20754716981132
+        prev_line_coverage: 25.943396226415093
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 41-77,85-101,103-109,111-126,128-132,135-176,178-180,182-189,191-195,198-203,210-216,225-246,248-253,255,258-277,280-284,287-291
+                covered: 41-60,198-203,225-246,248-253,255,258-277,280-281,284,287-288,291
+                covered_lines: 81
+                total_lines: 212
+                at_rev: 56133592bd31
+        at_rev: 56133592bd31
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/ops/synthesize_test.go
       kind: test
       rev: c182e98a6c9c
@@ -1164,6 +1983,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 728
+        total_lines: 1103
+        line_coverage: 66.00181323662738
+        prev_line_coverage: 66.00181323662738
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 28-58,69-75,77-82,84-88,91-94,97-114,116-132,142-144,149-153,157-164,166-167,174-208,214-218,221-223,230,233-235,237-243,260-265,282-288,290,297-302,305-312,315-333,344-348,350-351,353-354,358-359,366-368,370,372,378-388,404-429,442-445,461-466,468-478,480-482,484-485,487,496-505,507,515,520-529,538-548,555-562,564-604,606-607,609-621,623,625-637,639-653,655-662,669-677,680-685,701-703,705-710,715-721,729-740,742,744-748,751-759,761-764,766-769,774-779,795-801,811-820,822-832,841-844,851-858,867-872,874,886,888-897,899-910,912,926-936,941-945,950-952,965-968,970-986,989-993,996-1006,1015-1021,1034-1039,1042-1052,1056-1059,1076-1085,1087-1095,1110-1114,1122-1132,1134,1152-1162,1164-1182,1185-1189,1191,1194-1195,1210-1226,1230-1234,1237-1241,1256-1260,1262-1272,1275-1285,1287,1291-1299,1301-1308,1310,1313,1319-1324,1326,1329-1345,1351-1354,1360-1363,1368-1386,1391-1398,1406-1411,1413-1427,1431-1460,1462-1486,1488-1493,1496,1509-1513,1517-1527,1529,1531,1536-1543,1556-1574,1576,1590-1602,1604,1618-1623,1625,1631-1638,1640,1663-1679,1681-1684,1686-1692,1696-1698,1705-1709,1714-1716,1718,1725-1734,1736,1742-1746,1752-1759,1761,1763,1767-1776,1778,1786-1790,1800-1805,1807
+                covered: 28-50,315-333,344-347,350,353-354,358-359,366,370,372,378-388,404,409-412,415,418-429,442-445,461-466,468-473,476-478,480-481,484-485,487,496-505,507,515,520-529,538-539,542-543,545-548,555-561,564-579,625-630,633-635,639-646,655-656,659,669-671,674-677,680-682,685,715-716,719,729-740,742,751-756,759,774-779,795-799,811-820,822-827,830,841-842,851-858,867-872,874,886,888-897,899-910,912,926-936,941-945,950-952,965-966,970-986,989-993,996-1006,1015-1021,1034-1039,1042-1052,1056-1059,1110-1114,1152-1162,1164-1182,1185-1189,1191,1194-1195,1210-1224,1230-1233,1237-1241,1256-1258,1262-1272,1275-1285,1287,1291-1295,1301-1307,1310,1313,1319-1320,1323-1324,1329-1339,1342-1345,1351-1354,1360-1363,1368-1386,1391,1406-1411,1413-1425,1431-1460,1462-1463,1470-1486,1488-1493,1496,1509-1513,1517-1525,1529,1531,1536-1543,1556-1574,1576,1590-1595,1598-1602,1604,1618-1623,1625,1631-1638,1640,1663-1668,1671-1679,1681-1684,1686-1690,1696-1698,1705-1709,1714-1716,1718,1725-1734,1736,1742-1743,1746,1786-1790,1800-1805,1807
+                covered_lines: 728
+                total_lines: 1103
+                at_rev: d41aca145ace
+        at_rev: d41aca145ace
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/check_judgment_brief_test.go
       kind: test
       rev: d97b4dba6404
@@ -1229,6 +2062,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 46
+        total_lines: 350
+        line_coverage: 13.142857142857142
+        prev_line_coverage: 4.857142857142857
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 20-23,31-55,57-73,76-83,88-93,96-111,113-123,125-133,136-144,146-148,150-154,156-160,162-168,171-175,179-182,184-191,195-200,202-211,215-227,231-236,240-241,243-253,257-282,285-302,308-325,327-330,332-335,337-347,349-351,353-363,365-376,381-387,389-398,400-405,407-409,414-421,423,429-431,450-459,461-464,466
+                covered: 20-23,31-51,76-83,450-452,455-459,461-464,466
+                covered_lines: 46
+                total_lines: 350
+                at_rev: 1d808b48b71f
+        at_rev: 1d808b48b71f
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/coverage_test.go
       kind: test
       rev: dd1174ee1ded
@@ -1245,6 +2092,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 43
+        total_lines: 322
+        line_coverage: 13.354037267080745
+        prev_line_coverage: 1.5527950310559007
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 22-72,74-79,82-97,100-108,111-117,120-129,131-140,142,145-146,160-165,178-180,190-215,217-225,230-235,240-242,250-257,263-265,269-271,277-324,326-327,345-349,356-376,378,380,382,389-398,400-405,407-409,412-426,434-442,458-465,472-475,477-485
+                covered: 22-43,82-97,345-349
+                covered_lines: 43
+                total_lines: 322
+                at_rev: 01e8078dc4b7
+        at_rev: 01e8078dc4b7
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/doctor_test.go
       kind: test
       rev: 88a7d187a3fd
@@ -1281,6 +2142,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 39
+        total_lines: 39
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 26-28,30-50,54,58-71
+                covered: 26-28,30-50,54,58-71
+                covered_lines: 39
+                total_lines: 39
+                at_rev: dc1d87d75dc3
+        at_rev: dc1d87d75dc3
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/local_backlog_test.go
       kind: test
       rev: fce14da4299f
@@ -1303,6 +2178,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 13
+        total_lines: 13
+        line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 6-18
+                covered: 6-18
+                covered_lines: 13
+                total_lines: 13
+                at_rev: 6860c78bd611
+        at_rev: 6860c78bd611
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/report.go
       kind: code
       rev: 364e147be14b
@@ -1311,6 +2199,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 40
+        total_lines: 227
+        line_coverage: 17.62114537444934
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 48-68,73-92,95-98,101-120,122-126,129-131,134-147,150-154,157-159,161-171,173-184,188-204,206-208,211-219,221-223,225-228,230-242,244-249,252-262,264-267,271-277,279-283,285-288,290-297,299-304,306-307,310-316
+                covered: 48-68,73-78,95-98,101-106,129-131
+                covered_lines: 40
+                total_lines: 227
+                at_rev: 364e147be14b
+        at_rev: 364e147be14b
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/report_renderers.go
       kind: code
       rev: 7f23b33eb62e
@@ -1319,6 +2220,15 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        total_lines: 264
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 20-37,39-44,46-52,54-59,62-66,70-99,103-108,112-130,132-147,150-155,157-161,165-189,191,193-200,202-207,213-218,221-229,231-232,236-250,252-261,263-267,269,273-281,283-284,288-290,295-297,299-302,305-310,312-320,322,324-325,328-334,339-343,345
+                total_lines: 264
+                at_rev: 7f23b33eb62e
+        at_rev: 7f23b33eb62e
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/stale.go
       kind: code
       rev: a121244f8dc0
@@ -1327,6 +2237,19 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 12
+        total_lines: 58
+        line_coverage: 20.689655172413794
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 17-36,41-45,47-55,57,59,62-67,70-80,82-83,86-88
+                covered: 17-25,86-88
+                covered_lines: 12
+                total_lines: 58
+                at_rev: a121244f8dc0
+        at_rev: a121244f8dc0
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/stamp.go
       kind: code
       rev: 179ead7e85d1
@@ -1335,6 +2258,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 88
+        total_lines: 168
+        line_coverage: 52.38095238095239
+        prev_line_coverage: 29.166666666666668
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 25-75,77-86,89-97,99-104,106-120,125-131,134-139,145-155,157-165,167-177,180-189,193-208,210,212-215,217,219
+                covered: 25-57,134-139,145-150,153,157-162,167-173,177,180,183,187-189,193-208,210,212-215,217,219
+                covered_lines: 88
+                total_lines: 168
+                at_rev: 179ead7e85d1
+        at_rev: 179ead7e85d1
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/stamp_refresh_test.go
       kind: test
       rev: 88c883cbe525
@@ -1350,6 +2287,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 90
+        total_lines: 187
+        line_coverage: 48.1283422459893
+        prev_line_coverage: 40.106951871657756
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 28-45,48-49,55-65,69-80,82-112,116-122,127-154,163-170,173,178-201,212-214,219-223,225,230-239,241,253-275,277,279
+                covered: 28-40,48-49,55-60,63-65,69-80,82-87,90-95,99-107,116-117,119-122,178-189,196-199,212-214,219-220,225,230-234
+                covered_lines: 90
+                total_lines: 187
+                at_rev: 663cb5bde7d5
+        at_rev: 663cb5bde7d5
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/status_test.go
       kind: test
       rev: d7a29978a1cf
@@ -1365,6 +2316,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 210
+        total_lines: 326
+        line_coverage: 64.41717791411043
+        prev_line_coverage: 38.65030674846626
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 36-71,73-102,114-129,131-138,140-147,151-154,160-176,179-181,185,188-197,203-216,218-235,237-244,246,255-274,276-280,285-289,295-299,306-318,321-325,345-357,359-366,369,378-382,384-387,393-400,407-412,416-423,429-433,435-442,444-448,450,456-472,474-478,484-488
+                covered: 36-71,73-102,114-121,188-197,203-206,209-211,218-230,233-235,237-244,246,255-263,276-279,285-288,295-298,306-318,321-324,345-357,359-366,369,378-379,384,387,393-400,407-412,416-420,423,429-433,435-436,441-442,450
+                covered_lines: 210
+                total_lines: 326
+                at_rev: 9f933f0c07b5
+        at_rev: 9f933f0c07b5
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/suite_test.go
       kind: test
       rev: c2faef0a9190
@@ -1380,6 +2345,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 203
+        total_lines: 239
+        line_coverage: 84.93723849372385
+        prev_line_coverage: 84.93723849372385
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 61-70,73-82,84-87,89-95,98-100,102-149,151-152,155-161,166-184,186-193,196-197,201-209,212-217,221-223,225-229,231,237-250,252-255,257-261,263-269,271-273,275-284,287,302-318,323-325,338-345,347-357,359,361-364,366,369-373,375
+                covered: 61-70,73-82,84-87,89-95,98-100,102-129,132,135-136,139-140,143-149,151-152,155-161,166-170,173-176,179-181,184,186-193,196-197,201-206,209,212-217,221-223,225-229,231,237-238,241-242,245-250,252-253,257-261,263-269,271-272,275,278-279,282,287,302-308,313-315,318,323-325,338-345,347-357,361-364,366,369-373,375
+                covered_lines: 203
+                total_lines: 239
+                at_rev: 0fc6ca4af3c7
+        at_rev: 0fc6ca4af3c7
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/touch_test.go
       kind: test
       rev: e5c5b7b4d280
@@ -1395,6 +2374,20 @@ nodes:
       tags:
         - cli
         - comando
+      signal:
+        covered_lines: 103
+        total_lines: 156
+        line_coverage: 66.02564102564102
+        prev_line_coverage: 41.02564102564102
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 30-67,69-78,80-82,87,90-100,106-116,118-122,124,132-139,141-143,147-158,161-175,181-188,197-209,213-223,225-227,232-234
+                covered: 30-57,90-100,132-134,136-139,141-143,147-158,161-175,197-209,213-214,218-223,225-227,232-234
+                covered_lines: 103
+                total_lines: 156
+                at_rev: e29dbe08c178
+        at_rev: e29dbe08c178
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: cmd/anchors/quality/verify_exitcode_test.go
       kind: test
       rev: 5434186ee633
@@ -1439,7 +2432,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: fb4602a6d65a
         at_rev: fb4602a6d65a
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: guides/GATES_ECOSYSTEM_GUIDE.md
       kind: guide
       rev: aaa30844e96f
@@ -1506,6 +2499,15 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        total_lines: 75
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 68-70,73-75,79-94,99-105,108-114,116,120-128,132-139,141-144,146,148-149,154-162,166-170
+                total_lines: 75
+                at_rev: 6b0e1d55f021
+        at_rev: 6b0e1d55f021
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/checklog/checklog.go
       kind: code
       rev: 838f30bb9ac7
@@ -1514,6 +2516,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 62
+        total_lines: 71
+        line_coverage: 87.32394366197182
+        prev_line_coverage: 87.32394366197182
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 33-37,55-67,69-84,89-97,101-105,114-132,134-137
+                covered: 33-37,55-61,64,69-70,74-84,89-97,101-104,114-132,134-137
+                covered_lines: 62
+                total_lines: 71
+                at_rev: 838f30bb9ac7
+        at_rev: 838f30bb9ac7
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/checklog/checklog_test.go
       kind: test
       rev: 2ea13e617f8a
@@ -1536,6 +2552,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 124
+        total_lines: 155
+        line_coverage: 80
+        prev_line_coverage: 67.74193548387096
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 42-47,49-51,57-60,64-68,70,74-81,84-91,93,95,99,106-111,113-115,117-123,126-132,134,136-144,146-151,153,159-163,165-169,171-174,177-182,185-188,194-196,199-203,207-216,218-221,223,225,232-235,237-242,245-250,253-257,260-264,266,274,282
+                covered: 42-47,49-51,57-60,64-68,70,74-81,84-88,93,95,99,106-107,117-119,126-127,136-139,142-144,146-151,153,159-161,165-169,171-174,177-182,185,188,194-196,199-203,207-208,211-216,218-221,232-235,237-242,245-250,253-257,260-264,266,274
+                covered_lines: 124
+                total_lines: 155
+                at_rev: 57b94815a710
+        at_rev: 57b94815a710
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/code/code_test.go
       kind: test
       rev: 2d7d7d3f6791
@@ -1551,6 +2581,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 24
+        total_lines: 28
+        line_coverage: 85.71428571428571
+        prev_line_coverage: 85.71428571428571
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 19-21,40-47,50,55-60,62-65,69-74
+                covered: 19-21,40-47,50,55-60,62,65,69-71,74
+                covered_lines: 24
+                total_lines: 28
+                at_rev: 9e3142fbcf60
+        at_rev: 9e3142fbcf60
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/code/path_test.go
       kind: test
       rev: 5f1d6242b431
@@ -1573,6 +2617,15 @@ nodes:
       tags:
         - nucleo
         - config
+      signal:
+        total_lines: 14
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 50-52,59-63,65-69,71
+                total_lines: 14
+                at_rev: 6fa8ee0287b4
+        at_rev: 6fa8ee0287b4
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/config/config.go
       kind: code
       rev: c1cfbf4b3d75
@@ -1581,6 +2634,20 @@ nodes:
       tags:
         - nucleo
         - config
+      signal:
+        covered_lines: 477
+        total_lines: 537
+        line_coverage: 88.8268156424581
+        prev_line_coverage: 70.01862197392924
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 321-325,333-337,345-347,350-352,355-365,369,378-380,387-394,397-399,402-404,503-511,514-517,525-531,533-535,537,586-595,598,602-606,608,613-615,674-677,686-699,704-713,715-716,718-721,928-930,949-952,954-956,958,965,970,973,992-997,1005-1013,1036-1040,1042,1058-1065,1067,1077,1080,1334-1338,1358-1366,1368,1370-1371,1400-1402,1423,1426-1473,1482-1484,1486-1495,1497-1507,1514,1537-1549,1551,1554-1574,1577,1586-1618,1636-1644,1646-1655,1657-1663,1667-1674,1677,1701-1730,1735-1743,1747-1765,1769-1776,1780-1784,1896-1902,1904,1906-1911,1913-1914,1916-1917,1919,1925-1934,1936-1939,1941-1944,1946,1949,1954-1955,1958-1959,1966-1967,1970-1976,1978-1979,1981,1999-2027,2029-2033,2059-2068
+                covered: 321-325,333-337,345-347,350-352,355-363,369,378-380,387-394,397-399,402-404,503-507,514-517,525-531,533-535,537,586-587,590-595,598,613-615,674-677,686-694,704-712,715-716,718,721,928-930,949-952,954-956,958,965,970,973,992-997,1005-1013,1036-1040,1042,1058-1061,1077,1334-1335,1338,1358-1366,1368,1370-1371,1400-1402,1423,1426-1462,1465-1468,1471-1473,1482,1486-1489,1497-1507,1514,1537-1544,1549,1551,1554-1574,1577,1586-1618,1636-1644,1646-1655,1657-1663,1667-1674,1677,1701-1730,1735-1743,1747-1765,1780-1781,1784,1896-1902,1904,1906-1911,1913-1914,1916-1917,1919,1925-1934,1936-1939,1941-1944,1946,1949,1954-1955,1958-1959,1970-1976,1978-1979,1981,1999-2027,2029-2033,2059-2065,2068
+                covered_lines: 477
+                total_lines: 537
+                at_rev: c1cfbf4b3d75
+        at_rev: c1cfbf4b3d75
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/config/config_test.go
       kind: test
       rev: c09298819609
@@ -1596,6 +2663,19 @@ nodes:
       tags:
         - nucleo
         - config
+      signal:
+        covered_lines: 17
+        total_lines: 26
+        line_coverage: 65.38461538461539
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 60-64,68-73,75,83-88,91,98-103,105
+                covered: 60-61,64,83-88,91,98-103,105
+                covered_lines: 17
+                total_lines: 26
+                at_rev: 73d80d78a299
+        at_rev: 73d80d78a299
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/config/dialect.go
       kind: code
       rev: da051f61af2b
@@ -1604,6 +2684,19 @@ nodes:
       tags:
         - nucleo
         - config
+      signal:
+        covered_lines: 104
+        total_lines: 105
+        line_coverage: 99.04761904761905
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 150-157,159-167,169-173,175,181-188,190-191,195-202,206,335-368,370-376,381-387,392-400,409-413,415
+                covered: 150-157,159-167,169-173,175,181-188,190-191,195-202,335-368,370-376,381-387,392-400,409-413,415
+                covered_lines: 104
+                total_lines: 105
+                at_rev: da051f61af2b
+        at_rev: da051f61af2b
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/config/docs.go
       kind: code
       rev: 6ae3ecebcb0c
@@ -1612,6 +2705,20 @@ nodes:
       tags:
         - nucleo
         - config
+      signal:
+        covered_lines: 27
+        total_lines: 29
+        line_coverage: 93.10344827586206
+        prev_line_coverage: 75.86206896551724
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 86-94,96,104-116,118,122-126
+                covered: 86-94,96,104-105,108-116,118,122-126
+                covered_lines: 27
+                total_lines: 29
+                at_rev: 6ae3ecebcb0c
+        at_rev: 6ae3ecebcb0c
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/config/docs_trigger_test.go
       kind: test
       rev: dc64f7e7aedd
@@ -1641,6 +2748,20 @@ nodes:
       tags:
         - nucleo
         - config
+      signal:
+        covered_lines: 49
+        total_lines: 53
+        line_coverage: 92.45283018867924
+        prev_line_coverage: 92.45283018867924
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 27-41,44,52-67,69,81-89,103-113
+                covered: 27-33,36-41,44,52-55,58-67,69,81-89,103-113
+                covered_lines: 49
+                total_lines: 53
+                at_rev: 383968ae2ae4
+        at_rev: 383968ae2ae4
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/config/min_version_test.go
       kind: test
       rev: 256c8a1263c5
@@ -1663,6 +2784,20 @@ nodes:
       tags:
         - nucleo
         - config
+      signal:
+        covered_lines: 13
+        total_lines: 25
+        line_coverage: 52
+        prev_line_coverage: 52
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 30-48,50,56-60
+                covered: 30-34,37-41,44,47-48
+                covered_lines: 13
+                total_lines: 25
+                at_rev: 50bb24921e13
+        at_rev: 50bb24921e13
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/config/patterns_test.go
       kind: test
       rev: 8110d5d51dba
@@ -1678,6 +2813,19 @@ nodes:
       tags:
         - nucleo
         - config
+      signal:
+        covered_lines: 18
+        total_lines: 24
+        line_coverage: 75
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 22-36,45-53
+                covered: 22-24,27-33,36,45-47,50-53
+                covered_lines: 18
+                total_lines: 24
+                at_rev: 3cbb6f987969
+        at_rev: 3cbb6f987969
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/config/suite_test.go
       kind: test
       rev: 15ba87752496
@@ -1700,6 +2848,19 @@ nodes:
       tags:
         - nucleo
         - config
+      signal:
+        covered_lines: 1
+        total_lines: 6
+        line_coverage: 16.666666666666664
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 37,40-44
+                covered: "37"
+                covered_lines: 1
+                total_lines: 6
+                at_rev: 6c1ad1de5544
+        at_rev: 6c1ad1de5544
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/config/vocabulary_test.go
       kind: test
       rev: 135d486315c9
@@ -1722,6 +2883,15 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        total_lines: 64
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 26-35,39-52,56-63,68-71,73-76,80-93,98-103,106-109
+                total_lines: 64
+                at_rev: e5455470ddec
+        at_rev: e5455470ddec
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/daemon/daemon_unix.go
       kind: code
       rev: dcc1df780462
@@ -1730,6 +2900,15 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        total_lines: 9
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 11-16,21-23
+                total_lines: 9
+                at_rev: dcc1df780462
+        at_rev: dcc1df780462
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/daemon/daemon_windows.go
       kind: code
       rev: 8354b85bcf7a
@@ -1818,6 +2997,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 91
+        total_lines: 95
+        line_coverage: 95.78947368421052
+        prev_line_coverage: 95.78947368421052
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 54-60,62-65,71-74,77-80,82-83,87,89-92,115-126,128-137,148-154,156-160,163-164,176-177,179,183-186,188-190,192,194,202-209,213-215,218,220,223-227,229-230,232
+                covered: 54-60,62-65,71-74,77-80,82-83,87,89-92,115-126,128-137,148-154,156-160,163,176-177,179,183-185,188-190,192,194,202-209,213-215,218,220,223-226,229-230
+                covered_lines: 91
+                total_lines: 95
+                at_rev: cdb096d3b2fb
+        at_rev: cdb096d3b2fb
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/code_cataloged.spec.md
       kind: spec
       rev: 5a2085585f96
@@ -1872,7 +3065,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 5a2085585f96
         at_rev: 5a2085585f96
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/code_cataloged_test.go
       kind: test
       rev: 08cb4f55a6d8
@@ -1898,6 +3091,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 33
+        total_lines: 37
+        line_coverage: 89.1891891891892
+        prev_line_coverage: 89.1891891891892
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 130-137,140-142,148-150,152-154,156-158,160-162,164,180-184,186,194-199,201
+                covered: 130-137,140-142,148-150,152-154,156,160,164,180-184,186,194-199,201
+                covered_lines: 33
+                total_lines: 37
+                at_rev: 2ffa6610870b
+        at_rev: 2ffa6610870b
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/code_language.spec.md
       kind: spec
       rev: 0cef6cb6fcf7
@@ -1932,7 +3139,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 0cef6cb6fcf7
         at_rev: 0cef6cb6fcf7
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/code_language_test.go
       kind: test
       rev: 18771b1c2646
@@ -1958,6 +3165,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 51
+        total_lines: 53
+        line_coverage: 96.22641509433963
+        prev_line_coverage: 96.22641509433963
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 36-42,44-48,50-54,56,58-60,62-67,76-78,86-88,90-94,100-105,107-108,110-112,114-116,118
+                covered: 36-42,44-48,50-54,56,58-60,62-67,76-78,86-88,90-93,100-105,107,110-112,114-116,118
+                covered_lines: 51
+                total_lines: 53
+                at_rev: f991e2c7dd2e
+        at_rev: f991e2c7dd2e
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/code_reference_valid.spec.md
       kind: spec
       rev: 11f53b9e468c
@@ -2006,7 +3227,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 11f53b9e468c
         at_rev: 11f53b9e468c
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/code_reference_valid_test.go
       kind: test
       rev: bd9a9866d4d5
@@ -2032,6 +3253,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 98
+        total_lines: 100
+        line_coverage: 98
+        prev_line_coverage: 98
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 64-70,72-86,88,92-96,98-100,102-106,110-111,113-116,124-130,132-135,137-143,145-149,152-154,156-159,162-166,169,177-184,187-199,201
+                covered: 64-70,72-86,88,92-96,98,102-106,110-111,113-116,124-130,132-135,137-143,145-149,152-154,156-159,162-166,169,177-184,187-199,201
+                covered_lines: 98
+                total_lines: 100
+                at_rev: eba61b62d923
+        at_rev: eba61b62d923
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/contract_status_declared.spec.md
       kind: spec
       rev: 36c2e9095d0c
@@ -2090,7 +3325,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 36c2e9095d0c
         at_rev: 36c2e9095d0c
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/contract_status_declared_test.go
       kind: test
       rev: 5ab2036b6aa7
@@ -2116,6 +3351,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 117
+        total_lines: 124
+        line_coverage: 94.35483870967742
+        prev_line_coverage: 94.35483870967742
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 39-42,44-50,52-57,63-68,70-80,83-87,104-109,111-113,115-120,122,127-155,157,163-183,185-186,188-189,191-192,210-216,226-229,231
+                covered: 39-42,44-50,52-57,63-68,70-72,75-80,83-87,104-109,111-112,115-120,122,127-132,135-155,157,163-183,185-186,188-189,191-192,210-214,226-229,231
+                covered_lines: 117
+                total_lines: 124
+                at_rev: bd766c8c0224
+        at_rev: bd766c8c0224
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/count_honored.spec.md
       kind: spec
       rev: 14184f6494ca
@@ -2174,7 +3423,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 14184f6494ca
         at_rev: 14184f6494ca
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/count_honored_test.go
       kind: test
       rev: 5e44491372dc
@@ -2200,6 +3449,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 109
+        total_lines: 110
+        line_coverage: 99.0909090909091
+        prev_line_coverage: 99.0909090909091
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 28-34,36-47,49-51,53,55-57,60-64,66-68,71-75,77-78,80-87,89-96,99-103,112-116,120-122,125-140,142,147-150,152-154,164-172,174-176,179-181,183
+                covered: 28-34,36-47,49-51,53,55-57,60-64,66-68,71-75,77-78,80-87,89-96,99-103,112-116,120-122,125-140,142,147-150,152-154,164-171,174-176,179-181,183
+                covered_lines: 109
+                total_lines: 110
+                at_rev: 9ebc588be760
+        at_rev: 9ebc588be760
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/dependency_honored.spec.md
       kind: spec
       rev: 2747098bf517
@@ -2244,7 +3507,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 2747098bf517
         at_rev: 2747098bf517
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/dependency_honored_test.go
       kind: test
       rev: 4f2d0c10089a
@@ -2270,6 +3533,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 179
+        total_lines: 184
+        line_coverage: 97.28260869565217
+        prev_line_coverage: 97.28260869565217
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 72-78,81-92,94-106,108-110,114-127,130-132,136-141,145-154,167-171,173-178,180-182,185-187,189-202,215-234,238-243,246-250,274-278,283-288,290,294-299,303-312,320-324,326,335-347,353-359
+                covered: 72-73,76-78,81-91,94-106,108-110,114-127,130-132,136-141,145-154,167-171,173-178,180-182,185-187,189-202,215-234,238-241,246-250,274-278,283-288,290,294-299,303-312,320-324,326,335-347,353-359
+                covered_lines: 179
+                total_lines: 184
+                at_rev: 4bec3c03b9b8
+        at_rev: 4bec3c03b9b8
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/doc_required.spec.md
       kind: spec
       rev: 568103a8807c
@@ -2312,7 +3589,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 568103a8807c
         at_rev: 568103a8807c
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/doc_required_section_test.go
       kind: test
       rev: 609f442fea29
@@ -2345,6 +3622,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 81
+        total_lines: 88
+        line_coverage: 92.04545454545455
+        prev_line_coverage: 92.04545454545455
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 63-76,81-83,86-88,103-113,129-135,144-149,152-158,161-162,165-168,174-177,180-189,193-201,203,207-213
+                covered: 63-76,81,86,103-113,129-135,144-149,152-158,161-162,165-168,174-177,180-184,188-189,193-201,203,207-213
+                covered_lines: 81
+                total_lines: 88
+                at_rev: 4555e1b800e7
+        at_rev: 4555e1b800e7
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/doc_self_contained.spec.md
       kind: spec
       rev: cdaba8b7eb3a
@@ -2391,7 +3682,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: cdaba8b7eb3a
         at_rev: cdaba8b7eb3a
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/doc_self_contained_test.go
       kind: test
       rev: 0c3351e58d13
@@ -2408,6 +3699,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 28
+        total_lines: 38
+        line_coverage: 73.68421052631578
+        prev_line_coverage: 73.68421052631578
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 47-60,64-68,71-84,88-91,93
+                covered: 47-50,53-54,58-60,64-68,71-79,88-91,93
+                covered_lines: 28
+                total_lines: 38
+                at_rev: e465b4dcc5a8
+        at_rev: e465b4dcc5a8
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/docs_covered_test.go
       kind: test
       rev: 462ad8b8ea3e
@@ -2432,6 +3737,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 40
+        total_lines: 41
+        line_coverage: 97.5609756097561
+        prev_line_coverage: 97.5609756097561
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 64-77,83-87,90-96,101-110,112-114,116-117
+                covered: 64-77,83-87,90-96,101-109,112-114,116-117
+                covered_lines: 40
+                total_lines: 41
+                at_rev: 613927a5e421
+        at_rev: 613927a5e421
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/docs_fresh.spec.md
       kind: spec
       rev: b9a0614c3e1b
@@ -2480,7 +3799,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: b9a0614c3e1b
         at_rev: b9a0614c3e1b
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/docs_fresh_test.go
       kind: test
       rev: 1a8bdc1a21ac
@@ -2498,6 +3817,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 188
+        total_lines: 302
+        line_coverage: 62.251655629139066
+        prev_line_coverage: 62.251655629139066
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 67-87,89-95,99-110,123-129,132-145,147-150,153-155,159-162,164-166,169-175,177-182,193-199,202-205,207-209,211-213,217-220,224-228,230-232,234-236,238-241,244-252,265-268,297-303,306-309,311-313,315-317,319-321,323-341,348-359,361-363,365-367,369-382,384-388,397-402,404-413,415,426-438,440,457-466,468-472,474,476-480,482-484,486-488,490-497,511-516,518-521,525-528,530-534,536-538,541
+                covered: 67-70,123-127,132-145,147-150,153,159,164,169-173,177,181-182,193-196,265-268,297-301,306-308,311-312,315-317,319,323-341,348,351-359,361-362,365-366,369-382,384-388,397-402,404-413,415,426-438,440,457-461,464-466,468-471,474,476-480,482-484,486-488,490-497,511-513,525-528,530-534,541
+                covered_lines: 188
+                total_lines: 302
+                at_rev: 0db866ce8699
+        at_rev: 0db866ce8699
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/doctrine_test.go
       kind: test
       rev: 723dd68cc0f8
@@ -2523,6 +3856,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 81
+        total_lines: 89
+        line_coverage: 91.01123595505618
+        prev_line_coverage: 91.01123595505618
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 36-39,41-67,70-73,75-79,81-84,90-99,104-109,111-112,115-116,118,120,132-144,166-175
+                covered: 36-39,41-67,70-73,75-79,81-84,90-96,99,104-109,111-112,115-116,118,120,132-134,137-144,166-168,171-172,175
+                covered_lines: 81
+                total_lines: 89
+                at_rev: 996abb62116a
+        at_rev: 996abb62116a
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/domain_declared.spec.md
       kind: spec
       rev: 20df3c089566
@@ -2561,7 +3908,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 20df3c089566
         at_rev: 20df3c089566
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/domain_declared_test.go
       kind: test
       rev: 7721f39faa76
@@ -2587,6 +3934,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 29
+        total_lines: 29
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 36-49,51-63,65,68
+                covered: 36-49,51-63,65,68
+                covered_lines: 29
+                total_lines: 29
+                at_rev: 8a9b87073030
+        at_rev: 8a9b87073030
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/evidence_fresh.spec.md
       kind: spec
       rev: c1abed8885a9
@@ -2635,7 +3996,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: c1abed8885a9
         at_rev: c1abed8885a9
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/evidence_fresh_test.go
       kind: test
       rev: 5fd361f9df74
@@ -2661,6 +4022,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 64
+        total_lines: 66
+        line_coverage: 96.96969696969697
+        prev_line_coverage: 96.96969696969697
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 25-27,48-52,54-57,74-82,84-86,91,93-95,97-108,113-119,127-133,135-145,147
+                covered: 25-27,48-52,54,57,74-82,84-86,91,93-95,97-108,113-119,127-133,135-145,147
+                covered_lines: 64
+                total_lines: 66
+                at_rev: 431421bde9ae
+        at_rev: 431421bde9ae
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/external.spec.md
       kind: spec
       rev: 3eec5aae3fd3
@@ -2713,7 +4088,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 3eec5aae3fd3
         at_rev: 3eec5aae3fd3
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/external_test.go
       kind: test
       rev: aa633d4bc42f
@@ -2730,6 +4105,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 126
+        total_lines: 157
+        line_coverage: 80.2547770700637
+        prev_line_coverage: 80.2547770700637
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 82-94,97,110-118,122-125,129-134,136-140,143,147-155,157-159,161-163,165,169-173,175,179-196,200-203,209-216,218-222,226-241,244-258,260-264,273-289,291-298
+                covered: 82-94,97,110-116,122-125,129-133,136-140,143,147-148,151-154,157-158,161-163,165,169-173,175,179-184,187-194,200-203,209-216,218-222,226-231,234-235,238-239,244,247-251,254-258,260,263-264,273-278,281-282,285-289,291,294-295,298
+                covered_lines: 126
+                total_lines: 157
+                at_rev: 042bf7ddae82
+        at_rev: 042bf7ddae82
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/failure_test.go
       kind: test
       rev: fd6fbb0680a3
@@ -2762,6 +4151,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 272
+        total_lines: 301
+        line_coverage: 90.36544850498339
+        prev_line_coverage: 90.36544850498339
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 30-36,41-46,49-53,55-60,63-67,69-72,74-103,105-107,118-142,146-159,207-209,216-218,221-225,232-243,245-259,261-263,265,277-285,287-289,291-295,297-301,303,315-323,325,330-335,337,343-349,351-355,358-367,369-370,372,386-388,393-402,404,407-412,414-415,417,421-426,442-453,455-459,468-470,485-519,521-524,526
+                covered: 30-36,41-46,49-53,55-60,63-67,69-72,74-103,105-107,118-123,146-159,207-209,216-218,221-224,232-243,245-259,261-263,265,277-285,287-289,291-295,297-301,303,315-323,325,330-335,337,343-349,351-355,358,361,364-367,369-370,372,386-388,393-395,398-402,404,407-412,414-415,417,421-426,442-451,455-459,468-470,485-519,521-524
+                covered_lines: 272
+                total_lines: 301
+                at_rev: d60cb7c32713
+        at_rev: d60cb7c32713
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/feature_test_match.spec.md
       kind: spec
       rev: 767e7b495043
@@ -2828,7 +4231,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 767e7b495043
         at_rev: 767e7b495043
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/feature_test_match_test.go
       kind: test
       rev: 93f86080fffd
@@ -2845,6 +4248,15 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        total_lines: 46
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 31-34,38-43,45-47,49-52,54-56,58-60,62,65,72-76,79-90,92-95
+                total_lines: 46
+                at_rev: f8e68a18e0fa
+        at_rev: f8e68a18e0fa
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/flag.go
       kind: code
       rev: 6a3dff4c49a3
@@ -2853,6 +4265,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 137
+        total_lines: 148
+        line_coverage: 92.56756756756756
+        prev_line_coverage: 92.56756756756756
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 56-68,70-75,88-98,102-105,114-132,134-143,165-175,180-184,187-190,195-196,198,200-205,239-249,255-260,262-267,269-272,275-280,282-290,294-300,302,306-311
+                covered: 56-61,64-68,70-75,88-98,102-105,114-123,126-132,134-143,165-173,180-184,187-190,195-196,198,200-205,239-247,255-260,262-267,269-272,275-280,282-290,294-297,302,306-311
+                covered_lines: 137
+                total_lines: 148
+                at_rev: 6a3dff4c49a3
+        at_rev: 6a3dff4c49a3
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/flag_test.go
       kind: test
       rev: 5f9c24ab2099
@@ -2878,6 +4304,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 188
+        total_lines: 199
+        line_coverage: 94.47236180904522
+        prev_line_coverage: 94.47236180904522
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 93-96,102-104,109-112,114-119,122-124,126-128,136-140,149-151,156-158,165-167,175-186,188-191,198-204,206-223,225-228,232,241-267,270-271,275-295,300-311,313,316-329,341-353,355,363-371,378-385,394-398,402-404
+                covered: 93-96,102-104,109-112,114-119,122-124,126-128,136-140,149-151,156-158,165-167,175-186,188-191,198-204,206-223,225-228,232,241-253,257,261-267,270-271,275-295,300-308,313,316-329,341-353,355,363-368,371,378-385,394-398,402-404
+                covered_lines: 188
+                total_lines: 199
+                at_rev: 37f82f3d2673
+        at_rev: 37f82f3d2673
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/gate.spec.md
       kind: spec
       rev: b9eddc00a175
@@ -2954,7 +4394,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: b9eddc00a175
         at_rev: b9eddc00a175
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/gate_test.go
       kind: test
       rev: 55a6806dfb1d
@@ -2980,6 +4420,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 75
+        total_lines: 79
+        line_coverage: 94.9367088607595
+        prev_line_coverage: 94.9367088607595
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 44-56,58-67,69-71,73-75,77-78,87-92,95-100,105-110,112,123-131,133,137-146,149-156,158
+                covered: 44-56,58-66,69-71,73-75,77-78,87-92,95-100,105-110,112,123-131,133,137-139,142-145,149-156,158
+                covered_lines: 75
+                total_lines: 79
+                at_rev: 585d6a699b96
+        at_rev: 585d6a699b96
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/identity_consistent.spec.md
       kind: spec
       rev: 2cbbe8a1d58c
@@ -3030,7 +4484,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 2cbbe8a1d58c
         at_rev: 2cbbe8a1d58c
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/identity_consistent_test.go
       kind: test
       rev: ea25ee2cf946
@@ -3056,6 +4510,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 437
+        total_lines: 495
+        line_coverage: 88.28282828282829
+        prev_line_coverage: 88.28282828282829
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 114-129,151-159,177-184,200-202,207-209,214-216,225-249,253-260,277-279,284-286,306-312,325-327,329-332,334-337,351-354,358-362,365,371-375,378-385,396-401,403-408,411-414,417-431,437-443,458-461,464-467,469-477,479-481,483,485-488,492-497,499-501,503,511-515,517-518,522-524,526,528,551-561,563-565,577-582,584-585,588-593,595-597,599-606,634-635,637-639,641,648-655,657,674-676,684-687,689-693,713-718,720-723,733-743,756-762,777-782,784-790,792-794,796-799,802-804,806-818,820,829-838,840-844,847-850,852-856,859,864-875,881-892,908-920,932-934,952-996,999-1006,1015-1020,1024-1031,1036-1046,1049-1056,1063-1068
+                covered: 114-129,151-159,177-184,200-202,207-209,214-216,225-249,277-279,284-286,306-310,325,329-332,334-337,351-352,358-362,365,371-375,378-385,396-401,403-408,411-414,417-431,437-443,458-461,464-467,469-470,473-477,479-480,483,485-488,492-497,499-501,503,511-515,517-518,522-524,526,528,551-561,563-565,577-582,584-585,588-593,595-597,599-606,634-635,637-639,641,648-655,657,674-676,684-687,689-693,713-718,720,723,733-743,756-760,777-782,784-789,792-794,796-799,802-804,806-816,820,829-835,840-844,847-850,852-856,859,864-867,881-884,908-920,932-934,952-977,980-993,996,999-1006,1015-1020,1024-1027,1030-1031,1036-1039,1049-1056,1063-1065,1068
+                covered_lines: 437
+                total_lines: 495
+                at_rev: 13f4fb5609b0
+        at_rev: 13f4fb5609b0
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/internal_checks.spec.md
       kind: spec
       rev: 4c542c9ffc73
@@ -3118,7 +4586,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4c542c9ffc73
         at_rev: 4c542c9ffc73
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/internal_checks_test.go
       kind: test
       rev: 1392b71a1112
@@ -3144,6 +4612,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 88
+        total_lines: 94
+        line_coverage: 93.61702127659575
+        prev_line_coverage: 93.61702127659575
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 36-44,50-55,57-59,61-82,84-90,92-97,101-103,107-114,117-126,129-134,144-146,149-153,160-164,166
+                covered: 36-44,50-55,57-59,61-82,84-90,92-97,101-103,107-111,114,117-126,129-131,134,144-146,149-150,153,160-164,166
+                covered_lines: 88
+                total_lines: 94
+                at_rev: 5fdc00c22b91
+        at_rev: 5fdc00c22b91
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/layer_boundary.spec.md
       kind: spec
       rev: d9543b7a1a7c
@@ -3196,7 +4678,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: d9543b7a1a7c
         at_rev: d9543b7a1a7c
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/layer_boundary_test.go
       kind: test
       rev: 2c0df5559159
@@ -3222,6 +4704,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 118
+        total_lines: 126
+        line_coverage: 93.65079365079364
+        prev_line_coverage: 93.65079365079364
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 56-60,62-69,71-80,82-99,101-105,109-116,119-122,124-125,130-144,146-171,173,175-176,181-185,187,190-194,196,200-203,205,212-213,215-216,218
+                covered: 56-60,62-69,71-72,75-80,82-99,101-105,109-116,119-122,124-125,130-144,146-150,153-156,159-171,173,175-176,181-185,187,190-192,196,200-203,205,212-213,215-216,218
+                covered_lines: 118
+                total_lines: 126
+                at_rev: eff4e9bb74c1
+        at_rev: eff4e9bb74c1
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/marker_parity.spec.md
       kind: spec
       rev: f613b1189c9d
@@ -3268,7 +4764,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: f613b1189c9d
         at_rev: f613b1189c9d
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/marker_parity_test.go
       kind: test
       rev: 8c58ca3117f5
@@ -3294,6 +4790,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 230
+        total_lines: 251
+        line_coverage: 91.63346613545816
+        prev_line_coverage: 91.63346613545816
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 58-80,82-84,86-94,96-99,101-108,110,114-115,117-121,123,126-132,135-143,149-154,157-159,161-167,170,174-182,184-187,189-192,194-198,200-207,210-213,217-223,232-248,250-259,261-262,265-274,276,280-284,286-291,293,303-306,308-310,312,321-325,327-331,333,341-350,352,358-363,365-366,368-369,371-374,378-381,383,386-388,391-397,399-407,409
+                covered: 58-79,82-84,86-94,96-99,101-108,110,114-115,117-119,123,126-132,135-143,149-154,157-158,161-167,170,174-176,179-182,184-187,189-192,194,197-198,200-207,210-213,217-223,232-234,237-243,245-248,250-259,261-262,265,268-274,276,280-284,286,289-291,303-306,308-310,321-325,327-331,333,341-343,346-350,352,358-363,365-366,368-369,371-374,378-379,383,386-388,391-397,399-407,409
+                covered_lines: 230
+                total_lines: 251
+                at_rev: a429d4290ecd
+        at_rev: a429d4290ecd
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/mock_stamp_gen.spec.md
       kind: spec
       rev: 46edda4af936
@@ -3336,7 +4846,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 46edda4af936
         at_rev: 46edda4af936
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/mock_stamp_gen_test.go
       kind: test
       rev: 7f1a5f2a0ccc
@@ -3362,6 +4872,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 196
+        total_lines: 211
+        line_coverage: 92.89099526066352
+        prev_line_coverage: 87.67772511848341
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 35-47,49-71,73-75,77-83,85-90,92-95,97-101,118-126,128-134,137,157-162,164-166,168,176-190,193-200,203-207,213-216,223-238,242-247,249,260-267,269-271,273-276,280,306-319,321-324,326-331,333-334,336-339,341-344,347,352-360,363-370
+                covered: 35-47,49-71,73-75,77-83,85-90,92-95,97-101,118-120,123-126,128-134,137,157-162,164-166,168,176-190,193-200,203-207,213-216,223-238,242-247,249,260-261,264-267,269-271,273-276,280,306-311,314-319,321-323,326-331,333-334,336-339,341-342,347,352-357,360,363,366-367,370
+                covered_lines: 196
+                total_lines: 211
+                at_rev: 5e4b6a3c15ab
+        at_rev: 5e4b6a3c15ab
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/mock_stamped.spec.md
       kind: spec
       rev: 4be7ef27f64d
@@ -3432,7 +4956,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4be7ef27f64d
         at_rev: 4be7ef27f64d
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/mock_stamped_test.go
       kind: test
       rev: 75c04e0ab86c
@@ -3458,6 +4982,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 151
+        total_lines: 160
+        line_coverage: 94.375
+        prev_line_coverage: 94.375
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 41-51,53-58,60-64,66-70,76-80,82-86,90-96,121-124,129-138,140-146,148,153-157,186-207,210-223,226,230-238,251-267,269-282,285-293,301-303
+                covered: 41-51,53-58,60-64,66-70,76-80,82-86,90-96,121-122,129-138,140,143-146,148,153-157,186-207,210-223,226,230-238,251-253,256-262,264-267,269-282,285-289,292-293,301-303
+                covered_lines: 151
+                total_lines: 160
+                at_rev: b05ae5553274
+        at_rev: b05ae5553274
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/mock_typed.spec.md
       kind: spec
       rev: 57ef16b4b323
@@ -3516,7 +5054,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 57ef16b4b323
         at_rev: 57ef16b4b323
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/mock_typed_test.go
       kind: test
       rev: 54df2652d782
@@ -3593,6 +5131,20 @@ nodes:
         - regra
         - gate
       no_propagation: true
+      signal:
+        covered_lines: 145
+        total_lines: 155
+        line_coverage: 93.54838709677419
+        prev_line_coverage: 93.54838709677419
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 32-36,38-41,45-48,50-51,53-81,83-87,89-91,93-98,110-113,115,118-130,136-138,142-150,155-161,166-172,177-181,186-191,193,199-215,217,222-224,228-232,237-241,243-245,247,252-257
+                covered: 32-36,38-41,45-48,50-51,53-73,76-79,83-87,89-91,93-98,110-113,115,118-127,130,136-138,142-144,147-150,155-161,166-172,177-181,186-191,199-215,222-224,228-232,237-241,243-245,247,252-257
+                covered_lines: 145
+                total_lines: 155
+                at_rev: 440840549afa
+        at_rev: 440840549afa
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/obligation_honored.spec.md
       kind: spec
       rev: 7ceb94b587eb
@@ -3643,7 +5195,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 7ceb94b587eb
         at_rev: 7ceb94b587eb
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/obligation_honored_test.go
       kind: test
       rev: e81c7adae789
@@ -3660,6 +5212,15 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        total_lines: 34
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 14-16,37-48,50-52,54-58,60-67,70-71,73
+                total_lines: 34
+                at_rev: caf2f21f4399
+        at_rev: caf2f21f4399
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/obligations_source.go
       kind: code
       rev: d2879674cc33
@@ -3668,6 +5229,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 7
+        total_lines: 54
+        line_coverage: 12.962962962962962
+        prev_line_coverage: 12.962962962962962
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 22-33,35-45,47-61,63-64,68-81
+                covered: 22-28
+                covered_lines: 7
+                total_lines: 54
+                at_rev: d2879674cc33
+        at_rev: d2879674cc33
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/open_questions.feature
       kind: feature
       rev: c4da43aaff09
@@ -3685,6 +5260,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 160
+        total_lines: 167
+        line_coverage: 95.80838323353294
+        prev_line_coverage: 94.61077844311377
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 46-49,55-73,75-78,85-89,91-93,95-99,104,135,154-156,158-160,162-168,170-174,179-185,195-200,202-203,206-207,210-211,215-216,237-238,254-255,257,259,268-279,281,285-296,298-299,302-307,316-321,329-361,365-367,374-378
+                covered: 46-49,55-73,75-78,85-89,91-93,95-97,104,135,154-156,162-168,170-174,179-185,195-200,202-203,206-207,210-211,215-216,237-238,254-255,257,259,268-279,281,285-296,298-299,302-307,316-321,329-357,360-361,365-367,374-378
+                covered_lines: 160
+                total_lines: 167
+                at_rev: 40b38601859d
+        at_rev: 40b38601859d
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/open_questions.spec.md
       kind: spec
       rev: a5d8bce5f1b8
@@ -3725,7 +5314,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: a5d8bce5f1b8
         at_rev: a5d8bce5f1b8
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/open_questions_test.go
       kind: test
       rev: 27e7241ead70
@@ -3751,6 +5340,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 94
+        total_lines: 100
+        line_coverage: 94
+        prev_line_coverage: 94
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 51-75,78-80,82-85,87-90,94-98,101-104,106-107,128-130,132-133,135,138-150,152,162-166,169-172,179-183,186,217-221,223-225,229-231,233-236,239,241,251
+                covered: 51-75,78-80,82-85,87-88,94-98,101-104,106-107,128-130,132-133,135,138-145,147-150,152,162-166,169-172,179-181,186,217-221,223-225,229-231,233-236,241,251
+                covered_lines: 94
+                total_lines: 100
+                at_rev: b77317cb562c
+        at_rev: b77317cb562c
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/pagination_honored.spec.md
       kind: spec
       rev: 9dbbe212d05c
@@ -3793,7 +5396,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9dbbe212d05c
         at_rev: 9dbbe212d05c
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/pagination_honored_test.go
       kind: test
       rev: 60adbe87019b
@@ -3819,6 +5422,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 128
+        total_lines: 131
+        line_coverage: 97.70992366412213
+        prev_line_coverage: 97.70992366412213
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 38-40,43-48,56-73,77-82,86-93,95-101,103-105,107-109,112-115,124-133,135-138,140-142,144-146,148-152,154-157,168-177,180-186,188-190,192-194,196-198,201-208,210,214-218,220,232-234
+                covered: 38-40,43-48,56-73,77-82,86-93,95-101,103-105,107-109,112-115,124-128,131-133,135-137,140-142,144-146,148-152,154-157,168-177,180-186,188-190,192-194,196-198,201-208,210,214-218,220,232-234
+                covered_lines: 128
+                total_lines: 131
+                at_rev: 6e09dbdbb21b
+        at_rev: 6e09dbdbb21b
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/phase_ordered.spec.md
       kind: spec
       rev: e1610b0ef72a
@@ -3879,7 +5496,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e1610b0ef72a
         at_rev: e1610b0ef72a
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/phase_ordered_test.go
       kind: test
       rev: fdfb668dcd6c
@@ -3905,6 +5522,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 52
+        total_lines: 52
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 33-42,63-81,91-102,104-114
+                covered: 33-42,63-81,91-102,104-114
+                covered_lines: 52
+                total_lines: 52
+                at_rev: c8b8726cf321
+        at_rev: c8b8726cf321
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/placeholder_filled.spec.md
       kind: spec
       rev: 96e464ce8c13
@@ -3941,7 +5572,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 96e464ce8c13
         at_rev: 96e464ce8c13
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/placeholder_filled_test.go
       kind: test
       rev: efb3ff354bd1
@@ -3968,6 +5599,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 107
+        total_lines: 114
+        line_coverage: 93.85964912280701
+        prev_line_coverage: 93.85964912280701
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 56-59,69-74,76,78,87-97,109-114,116-119,123-127,138-140,142-144,148-152,154-156,158-160,164-171,175-179,181,189-193,195,205-212,221-246,250-254
+                covered: 56-59,69-73,76,78,87-97,109-112,116-119,123-127,138-140,142-144,148-152,154-156,158-160,164-165,168,171,175-179,181,189-193,195,205-212,221-246,250-254
+                covered_lines: 107
+                total_lines: 114
+                at_rev: 72708379eee1
+        at_rev: 72708379eee1
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/plan_change_justified.spec.md
       kind: spec
       rev: 3e3f418ae7e0
@@ -4024,7 +5669,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 3e3f418ae7e0
         at_rev: 3e3f418ae7e0
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/plan_change_justified_test.go
       kind: test
       rev: 54610a39e105
@@ -4057,6 +5702,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 66
+        total_lines: 66
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 57-60,67-70,73-79,82-85,87-90,93-102,104-106,108-111,120-125,127-131,143-146,150-154,161-166
+                covered: 57-60,67-70,73-79,82-85,87-90,93-102,104-106,108-111,120-125,127-131,143-146,150-154,161-166
+                covered_lines: 66
+                total_lines: 66
+                at_rev: 5e4d49692700
+        at_rev: 5e4d49692700
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/plan_revised.spec.md
       kind: spec
       rev: 9e6e35f0cc78
@@ -4107,7 +5766,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9e6e35f0cc78
         at_rev: 9e6e35f0cc78
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/plan_revised_test.go
       kind: test
       rev: ca557add6267
@@ -4133,6 +5792,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 80
+        total_lines: 84
+        line_coverage: 95.23809523809523
+        prev_line_coverage: 95.23809523809523
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 31,46-52,54-61,63,72-76,78-79,81-83,90-92,94-102,105-117,119-121,124-140,146-157
+                covered: 31,46-52,54-61,63,72-75,78,81-83,90-92,94-102,105-117,119-121,124-140,146-153,156-157
+                covered_lines: 80
+                total_lines: 84
+                at_rev: 288ada51dee6
+        at_rev: 288ada51dee6
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/plan_seeds_valid.spec.md
       kind: spec
       rev: ae6126b27cb3
@@ -4185,7 +5858,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: ae6126b27cb3
         at_rev: ae6126b27cb3
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/plan_seeds_valid_test.go
       kind: test
       rev: 2aeb17450445
@@ -4211,6 +5884,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 61
+        total_lines: 62
+        line_coverage: 98.38709677419355
+        prev_line_coverage: 98.38709677419355
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 51-57,59-62,65-68,70-73,75-79,81,83-88,92-101,104,112-118,120-122,124-125,127,132-137,139
+                covered: 51-57,59-62,65-68,70-73,75-79,81,83-88,92-101,104,112-117,120-122,124-125,127,132-137,139
+                covered_lines: 61
+                total_lines: 62
+                at_rev: 60217bbda172
+        at_rev: 60217bbda172
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/plan_source_declared.spec.md
       kind: spec
       rev: 979f30be2a7f
@@ -4255,7 +5942,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 979f30be2a7f
         at_rev: 979f30be2a7f
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/plan_source_declared_test.go
       kind: test
       rev: ca36506dc987
@@ -4272,6 +5959,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 42
+        total_lines: 63
+        line_coverage: 66.66666666666666
+        prev_line_coverage: 42.857142857142854
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 41-74,76-80,82,95-100,103-106,108-113,117-123
+                covered: 41-56,76-77,80,82,95-99,103-106,108-113,117-123
+                covered_lines: 42
+                total_lines: 63
+                at_rev: 6dfdeac5c4be
+        at_rev: 6dfdeac5c4be
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/progress_honest.feature
       kind: feature
       rev: 85dfc1b8ad3a
@@ -4289,6 +5990,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 75
+        total_lines: 75
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 82-85,88-95,97-107,120-126,128-131,133-153,162-164,170-181,183-184,186-187,189
+                covered: 82-85,88-95,97-107,120-126,128-131,133-153,162-164,170-181,183-184,186-187,189
+                covered_lines: 75
+                total_lines: 75
+                at_rev: ad717349150f
+        at_rev: ad717349150f
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/progress_honest.spec.md
       kind: spec
       rev: 4cc31069feee
@@ -4341,7 +6056,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4cc31069feee
         at_rev: 4cc31069feee
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/progress_honest_test.go
       kind: test
       rev: 1c6588589b2d
@@ -4382,6 +6097,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 8
+        total_lines: 8
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 33-38,40,42
+                covered: 33-38,40,42
+                covered_lines: 8
+                total_lines: 8
+                at_rev: a5da8054ce15
+        at_rev: a5da8054ce15
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/promotable.spec.md
       kind: spec
       rev: 9e03864f7e62
@@ -4424,7 +6153,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9e03864f7e62
         at_rev: 9e03864f7e62
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/promotable_test.go
       kind: test
       rev: d6a0e76ee023
@@ -4450,6 +6179,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 159
+        total_lines: 173
+        line_coverage: 91.90751445086705
+        prev_line_coverage: 91.90751445086705
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 82-84,100-102,108-114,116-129,131-136,139-150,152-156,158-161,164-170,172-173,175-178,184-186,188-195,197,204-207,209-212,215-221,228-232,234-236,238-242,247-248,250-253,255-258,260,262-265,269-271,273,281-291,297-308,310-312,314,318-322,333-337,339-342,346-350,353
+                covered: 82-84,100-102,108-114,116-129,131-136,139-150,152-156,158-161,164-169,172-173,175-178,184-186,188-195,197,204-207,209-212,215-221,228-232,234,238-242,247-248,250-253,255-258,260,262-265,269-271,273,281-283,286-287,297-300,302-308,310-312,314,318-321,333-337,339,346-350,353
+                covered_lines: 159
+                total_lines: 173
+                at_rev: ab915f3a27eb
+        at_rev: ab915f3a27eb
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/proof_crosses_boundary.spec.md
       kind: spec
       rev: 9c9043e52939
@@ -4510,7 +6253,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9c9043e52939
         at_rev: 9c9043e52939
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/proof_crosses_boundary_test.go
       kind: test
       rev: f813debaf122
@@ -4536,6 +6279,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 63
+        total_lines: 63
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 31-35,38-61,63-66,74-78,80,86-88,93-95,99-116
+                covered: 31-35,38-61,63-66,74-78,80,86-88,93-95,99-116
+                covered_lines: 63
+                total_lines: 63
+                at_rev: ccd502049f82
+        at_rev: ccd502049f82
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/ref_resolves.spec.md
       kind: spec
       rev: e394d7283cbf
@@ -4598,7 +6355,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e394d7283cbf
         at_rev: e394d7283cbf
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/ref_resolves_test.go
       kind: test
       rev: af0e0d471784
@@ -4624,6 +6381,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 25
+        total_lines: 27
+        line_coverage: 92.5925925925926
+        prev_line_coverage: 92.5925925925926
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 37-47,51,53-66,69
+                covered: 37-47,51,53-61,64-66,69
+                covered_lines: 25
+                total_lines: 27
+                at_rev: dbf225025f79
+        at_rev: dbf225025f79
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/region_pair_honored.spec.md
       kind: spec
       rev: "762971562134"
@@ -4666,7 +6437,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: "762971562134"
         at_rev: "762971562134"
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/region_pair_honored_test.go
       kind: test
       rev: ff9405c70307
@@ -4683,6 +6454,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 141
+        total_lines: 153
+        line_coverage: 92.15686274509804
+        prev_line_coverage: 92.15686274509804
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 50-54,62-67,69,73-81,96-101,110-113,120-130,133-137,139-143,147-152,154-159,161-163,165-175,177-178,181-182,184-185,187-189,192-197,206-212,215-219,221-223,225-230,232-237,241-243,247-262,267-270,272-273,275-276,278-283
+                covered: 50-54,62-67,69,73-81,96-101,110-113,120-124,127-128,133-137,139-143,147-151,154-159,161,165-175,177-178,181-182,184-185,187-189,192-197,206-210,215-219,221-223,225-229,232-237,241,247-262,267-270,272-273,275-276,278-283
+                covered_lines: 141
+                total_lines: 153
+                at_rev: 029f5f645c9b
+        at_rev: 029f5f645c9b
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/reverse_match_test.go
       kind: test
       rev: fa60dd8f1c7a
@@ -4708,6 +6493,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 118
+        total_lines: 125
+        line_coverage: 94.39999999999999
+        prev_line_coverage: 94.39999999999999
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 42-43,47-51,54-59,61,72-75,77-80,93-101,116-118,121-125,127-131,134-138,140-142,144-152,154-158,161-162,164-165,167-170,172-179,183-188,190,199-205,211-216,218,220,231-236,238,285-287,290-300
+                covered: 42-43,47-51,54-59,61,72-75,77-80,93-99,116-118,121-125,127-131,134-138,140,144-152,154-158,161-162,164-165,167-170,172-179,183-188,190,199-205,211-215,218,220,231-236,238,285-287,290-297,300
+                covered_lines: 118
+                total_lines: 125
+                at_rev: 983d75e99e46
+        at_rev: 983d75e99e46
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/revision_orphans.spec.md
       kind: spec
       rev: 43d03efb4fa4
@@ -4744,7 +6543,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 43d03efb4fa4
         at_rev: 43d03efb4fa4
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/revision_orphans_test.go
       kind: test
       rev: 5840a6061233
@@ -4771,6 +6570,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 97
+        total_lines: 102
+        line_coverage: 95.09803921568627
+        prev_line_coverage: 95.09803921568627
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 53-58,60,62,67-72,88-97,99-104,107-111,113-124,126,129-132,134-147,149-150,152-156,158-162,164-165,169,173-175,186-196,198-203,206
+                covered: 53-57,60,62,67-72,88-97,99-104,107-111,113-124,126,129-132,134-147,149-150,152-156,158-161,164-165,169,173-175,186-187,190-196,198-202,206
+                covered_lines: 97
+                total_lines: 102
+                at_rev: 06c848be7601
+        at_rev: 06c848be7601
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/revision_renumber.spec.md
       kind: spec
       rev: 9704d52decd3
@@ -4805,7 +6618,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9704d52decd3
         at_rev: 9704d52decd3
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/revision_renumber_test.go
       kind: test
       rev: 5d962fa98a42
@@ -4831,6 +6644,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 27
+        total_lines: 27
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 42-50,52-55,57-60,64,69-76,78
+                covered: 42-50,52-55,57-60,64,69-76,78
+                covered_lines: 27
+                total_lines: 27
+                at_rev: 8402fe2e58cf
+        at_rev: 8402fe2e58cf
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/route_declared.spec.md
       kind: spec
       rev: 25efb10781b6
@@ -4865,7 +6692,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 25efb10781b6
         at_rev: 25efb10781b6
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/route_declared_test.go
       kind: test
       rev: 4a5fded1f71d
@@ -4891,6 +6718,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 62
+        total_lines: 63
+        line_coverage: 98.4126984126984
+        prev_line_coverage: 98.4126984126984
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 33-61,76-80,92-102,105-113,115-122,127
+                covered: 33-61,76-80,92-102,105-112,115-122,127
+                covered_lines: 62
+                total_lines: 63
+                at_rev: 8310e693fce7
+        at_rev: 8310e693fce7
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/route_exists.spec.md
       kind: spec
       rev: 5eed9aed6c2b
@@ -4947,7 +6788,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 5eed9aed6c2b
         at_rev: 5eed9aed6c2b
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/route_exists_test.go
       kind: test
       rev: 77716f6577d5
@@ -4973,6 +6814,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 117
+        total_lines: 129
+        line_coverage: 90.69767441860465
+        prev_line_coverage: 90.69767441860465
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 31-34,38-41,45-49,87-91,96-99,116-134,137,141-151,155-162,171-177,179-188,193-197,200-202,204-206,208-212,214,237-244,246-250,252,258-277
+                covered: 31-34,38-41,45-49,87-91,96-99,116-133,137,141-151,155-162,171-176,179-188,193-197,200-202,204-206,208-212,214,237-244,246-250,252,258-259,262,265-268,271,274,277
+                covered_lines: 117
+                total_lines: 129
+                at_rev: b8bfb7f8b694
+        at_rev: b8bfb7f8b694
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/rule.spec.md
       kind: spec
       rev: 928b2930860e
@@ -5035,7 +6890,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 928b2930860e
         at_rev: 928b2930860e
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/rule_implemented.feature
       kind: feature
       rev: d720c6cbac73
@@ -5053,6 +6908,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 100
+        total_lines: 112
+        line_coverage: 89.28571428571429
+        prev_line_coverage: 89.28571428571429
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 50-83,85-86,88,90-92,113-117,119-128,173-177,181-188,191,198-200,202-206,212-220,222,226-234,236,239-243,249-253,255,260-263
+                covered: 50-55,58-59,62-83,85-86,88,90-92,113-117,119-124,127-128,173-177,181-188,191,198-200,202-205,212-220,222,226-228,231-234,236,239-242,249-251,255,260-263
+                covered_lines: 100
+                total_lines: 112
+                at_rev: bea14df81b37
+        at_rev: bea14df81b37
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/rule_implemented.spec.md
       kind: spec
       rev: 7204a1f0ae44
@@ -5091,7 +6960,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 7204a1f0ae44
         at_rev: 7204a1f0ae44
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/rule_implemented_test.go
       kind: test
       rev: 5146a7a5ff4d
@@ -5133,6 +7002,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 167
+        total_lines: 169
+        line_coverage: 98.81656804733728
+        prev_line_coverage: 98.81656804733728
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 30-32,40-50,52-53,55-59,65-80,83-85,87-90,93-98,100-101,103-106,109-111,121-124,129-139,141-146,159-162,167-172,174-182,184-185,187-189,193-194,198-199,201-202,204-210,213-215,228-233,235-237,239-251,253-257,259-260,262-268,270-282
+                covered: 30-32,40-50,52-53,55-59,65-80,83-85,87-90,93-98,100-101,103-106,109-111,121-124,129-139,141-146,159-162,167-172,174-182,184-185,187-189,193,198,201-202,204-210,213-215,228-233,235-237,239-251,253-257,259-260,262-268,270-282
+                covered_lines: 167
+                total_lines: 169
+                at_rev: 642ddfd947bc
+        at_rev: 642ddfd947bc
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/rule_types.spec.md
       kind: spec
       rev: 6ab06f981fd1
@@ -5187,7 +7070,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 6ab06f981fd1
         at_rev: 6ab06f981fd1
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/rule_types_requires_test.go
       kind: test
       rev: ee5d4f60c417
@@ -5220,6 +7103,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 65
+        total_lines: 67
+        line_coverage: 97.01492537313433
+        prev_line_coverage: 97.01492537313433
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 38-41,43-51,53-62,64-66,68-70,72-74,76-78,83-87,89-97,103-105,117-122,125-132,134
+                covered: 38-41,43-51,53-62,64-66,68-70,72-74,76-78,83-87,89-97,103-105,117-119,122,125-132,134
+                covered_lines: 65
+                total_lines: 67
+                at_rev: 219efdd9d6c6
+        at_rev: 219efdd9d6c6
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/scenario_asserts.spec.md
       kind: spec
       rev: 1d4bfb589a46
@@ -5266,7 +7163,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 1d4bfb589a46
         at_rev: 1d4bfb589a46
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/scenario_asserts_test.go
       kind: test
       rev: c32ff528fcec
@@ -5308,6 +7205,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 38
+        total_lines: 41
+        line_coverage: 92.6829268292683
+        prev_line_coverage: 92.6829268292683
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 30-37,41-44,46-49,51-52,54-60,65-71,73,78-85
+                covered: 30-37,41-44,46-49,51-52,54-60,65-71,73,78-79,82-84
+                covered_lines: 38
+                total_lines: 41
+                at_rev: 396c865f461a
+        at_rev: 396c865f461a
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/scenario_identity.spec.md
       kind: spec
       rev: 80bb393d42f4
@@ -5358,7 +7269,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 80bb393d42f4
         at_rev: 80bb393d42f4
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/scenario_identity_test.go
       kind: test
       rev: 27474d7bb7b1
@@ -5384,6 +7295,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 47
+        total_lines: 49
+        line_coverage: 95.91836734693877
+        prev_line_coverage: 95.91836734693877
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 32-42,49-52,56-60,62-65,67-69,71-83,86-90,92,100-102
+                covered: 32-42,49-52,56-60,62-65,67-69,71-83,86-88,92,100-102
+                covered_lines: 47
+                total_lines: 49
+                at_rev: e5faa87abd02
+        at_rev: e5faa87abd02
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/scenario_letter_declared.spec.md
       kind: spec
       rev: ab3e8cd92792
@@ -5424,7 +7349,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: ab3e8cd92792
         at_rev: ab3e8cd92792
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/scenario_letter_declared_test.go
       kind: test
       rev: 23bed2a4e5a7
@@ -5450,6 +7375,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 71
+        total_lines: 75
+        line_coverage: 94.66666666666667
+        prev_line_coverage: 94.66666666666667
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 35-41,45-49,52-54,56-59,61-65,71-75,77-83,85-86,89-94,99-117,119,122-126,130-134,136
+                covered: 35-41,45-49,52-54,56-59,61-65,71-75,77-83,85-86,89-94,99-102,105-115,119,122-126,130-134,136
+                covered_lines: 71
+                total_lines: 75
+                at_rev: ae3973b6f62f
+        at_rev: ae3973b6f62f
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/scenario_type_aligned.spec.md
       kind: spec
       rev: 882996e77635
@@ -5506,7 +7445,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 882996e77635
         at_rev: 882996e77635
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/scenario_type_aligned_test.go
       kind: test
       rev: abf2df75a37f
@@ -5539,6 +7478,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 107
+        total_lines: 112
+        line_coverage: 95.53571428571429
+        prev_line_coverage: 95.53571428571429
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 33-46,49-53,56-67,69-74,85-86,90-100,103-107,121-135,138-139,141-155,157,159,165-173,175,177-188,190
+                covered: 33-46,49-53,56-67,69-74,85-86,90-94,97-100,103-107,121-123,126-135,138,141-155,157,159,165-173,175,177-188,190
+                covered_lines: 107
+                total_lines: 112
+                at_rev: 8e7e3e0e5ab0
+        at_rev: 8e7e3e0e5ab0
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/sibling_guard.spec.md
       kind: spec
       rev: b049ce58fd72
@@ -5579,7 +7532,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: b049ce58fd72
         at_rev: b049ce58fd72
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/sibling_guard_test.go
       kind: test
       rev: c9a83baf38be
@@ -5605,6 +7558,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 121
+        total_lines: 125
+        line_coverage: 96.8
+        prev_line_coverage: 96.8
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 34-37,40-45,48-52,54-58,74-76,78-81,85-89,91-103,107-111,113-123,134-140,144-145,147-149,151-155,157,169-172,191-196,200-206,212-221,224-228,230-232,234-240,243,252-254
+                covered: 34-37,40-45,48-52,54-58,74-76,78-79,85-89,91-103,107-111,113-120,123,134-140,144-145,147-149,151-155,157,169-172,191-196,200-206,212-221,224-228,230-232,234-240,243,252-254
+                covered_lines: 121
+                total_lines: 125
+                at_rev: 8bd2e16d1156
+        at_rev: 8bd2e16d1156
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/spec_feature_match.spec.md
       kind: spec
       rev: 6332554c5bb2
@@ -5663,7 +7630,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 6332554c5bb2
         at_rev: 6332554c5bb2
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/spec_feature_match_test.go
       kind: test
       rev: 8bf6c464f6ad
@@ -5698,6 +7665,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 43
+        total_lines: 45
+        line_coverage: 95.55555555555556
+        prev_line_coverage: 95.55555555555556
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 37-43,47-50,52-55,57-60,62-63,67-71,73,77-88,90,93-97
+                covered: 37-43,47-50,52-55,57-60,62-63,67-71,73,77-88,90,93-94,97
+                covered_lines: 43
+                total_lines: 45
+                at_rev: 90e382def2b3
+        at_rev: 90e382def2b3
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/test_traceable.spec.md
       kind: spec
       rev: a3fcf0ef928c
@@ -5752,7 +7733,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: a3fcf0ef928c
         at_rev: a3fcf0ef928c
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/test_traceable_test.go
       kind: test
       rev: e36fd20a0749
@@ -5769,6 +7750,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 95
+        total_lines: 101
+        line_coverage: 94.05940594059405
+        prev_line_coverage: 94.05940594059405
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 45-57,60-64,66-69,71-73,76-83,89-100,102-104,121-131,133-134,137-142,145-149,155-159,164-168,170,177-181,184-186,188-192,196-200
+                covered: 45-49,52-57,60-64,66-69,71,76-83,89-100,102-104,121-131,133-134,137-142,145-149,155-159,164-168,170,177-181,184,188-192,196-200
+                covered_lines: 95
+                total_lines: 101
+                at_rev: f8cb7c8aff9e
+        at_rev: f8cb7c8aff9e
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/testid_consistent_consumption_test.go
       kind: test
       rev: 8b5a6fa0f36c
@@ -5792,6 +7787,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 97
+        total_lines: 122
+        line_coverage: 79.50819672131148
+        prev_line_coverage: 79.50819672131148
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 44-48,52-60,67-70,72,74-76,82-91,93-96,98,104-108,127-156,158-161,164,169-181,190-199,202-211,214-216,218-219,223-229
+                covered: 44-48,52-60,67-70,72,74-76,82-90,93-96,98,104-108,127-134,137-156,158-161,164,169-181,190-199
+                covered_lines: 97
+                total_lines: 122
+                at_rev: 1372f5ca495f
+        at_rev: 1372f5ca495f
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/testid_queried_exists.feature
       kind: feature
       rev: d551aa2f169a
@@ -5809,6 +7818,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 184
+        total_lines: 205
+        line_coverage: 89.75609756097562
+        prev_line_coverage: 89.75609756097562
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 40-52,58-61,63-76,78-80,82-83,85-86,90-101,105-111,113-118,131-138,141-149,153-161,164-168,170,186-195,200-201,203-215,217,219,230-241,243-247,249-252,255-263,265-281,283,291-294,297-301,312-316,320,334-342,344,346,364-370,372,374
+                covered: 40-52,58-61,63-76,78-79,82-83,85-86,90-98,101,105-111,113-118,131-132,135-136,141-146,153-161,164,167-168,170,186-194,200-201,203-214,217,219,230-237,243-244,247,249-252,255-263,265-281,283,291-294,297-301,312-316,320,334-342,344,346,364-369,372,374
+                covered_lines: 184
+                total_lines: 205
+                at_rev: 540208cf44d5
+        at_rev: 540208cf44d5
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/testid_queried_exists.spec.md
       kind: spec
       rev: 369486c0fbea
@@ -5871,7 +7894,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 369486c0fbea
         at_rev: 369486c0fbea
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/testid_queried_exists_test.go
       kind: test
       rev: aaa3030f0fa3
@@ -5888,6 +7911,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 60
+        total_lines: 66
+        line_coverage: 90.9090909090909
+        prev_line_coverage: 90.9090909090909
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 23-27,30,44-51,54-64,68-70,73-82,84,96-105,109-113,115-117,119-121,124,131-135
+                covered: 23-27,30,44-45,48-51,54-61,68-70,73-82,84,96-105,109-112,115-117,119-121,124,131-135
+                covered_lines: 60
+                total_lines: 66
+                at_rev: 6bfcac5a9898
+        at_rev: 6bfcac5a9898
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/triad_complete.feature
       kind: feature
       rev: a56ba7a592ab
@@ -5905,6 +7942,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 197
+        total_lines: 209
+        line_coverage: 94.25837320574163
+        prev_line_coverage: 94.25837320574163
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 34-40,42-44,50-57,63-86,99-123,126-129,132-136,138-140,142,144-152,158-162,166-173,178-181,183-185,194-201,203-207,212,283-287,289,314-319,339-345,347-349,351-353,355,365-369,371-373,375,378-401,406-412,414-416,420,422,440-445,447-454,457
+                covered: 34-40,42-44,50-57,63-86,99-123,126-129,132-136,138-140,142,144-152,158-162,166-173,178-180,183-185,194-201,212,283-287,289,314-316,319,339-340,343-345,347-349,351-353,355,365-369,371-373,375,378-401,406-407,410-412,414-416,420,422,440-445,447-454,457
+                covered_lines: 197
+                total_lines: 209
+                at_rev: 42724f298c85
+        at_rev: 42724f298c85
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/triad_complete.spec.md
       kind: spec
       rev: b9880f076f30
@@ -5955,7 +8006,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: b9880f076f30
         at_rev: b9880f076f30
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/triad_complete_test.go
       kind: test
       rev: 3a5828dd2271
@@ -5981,6 +8032,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 96
+        total_lines: 100
+        line_coverage: 96
+        prev_line_coverage: 96
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 33-52,54-57,59-60,62-65,67-72,90-95,97-99,101-102,104,111-116,118-119,121,126-134,137-140,143-153,155,160-166,169-178,180
+                covered: 33-52,54-57,59-60,62-65,67-72,90-95,97-99,101-102,104,111-115,118-119,121,126-134,137-140,143-150,155,160-166,169-178,180
+                covered_lines: 96
+                total_lines: 100
+                at_rev: 0aeb35b0a332
+        at_rev: 0aeb35b0a332
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/trigger_declared.spec.md
       kind: spec
       rev: 71d161c4e467
@@ -6041,7 +8106,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 71d161c4e467
         at_rev: 71d161c4e467
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/trigger_declared_test.go
       kind: test
       rev: bb4df1eea093
@@ -6074,6 +8139,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 189
+        total_lines: 190
+        line_coverage: 99.47368421052632
+        prev_line_coverage: 99.47368421052632
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 60-70,72-75,77-84,86-91,93-94,96,99-106,108-114,118-122,124-130,132-136,138-140,142-145,151-159,171-173,188-194,196-200,202-203,205,207,212-220,223-230,232-236,238,242-246,248,277-286,288,290,295-305,307-309,311-314,316-321,325-328,330-332,334-336,338-343,346-348,352-358
+                covered: 60-70,72-75,77-84,86-91,93-94,96,99-106,108-114,118-121,124-130,132-136,138-140,142-145,151-159,171-173,188-194,196-200,202-203,205,207,212-220,223-230,232-236,238,242-246,248,277-286,288,290,295-305,307-309,311-314,316-321,325-328,330-332,334-336,338-343,346-348,352-358
+                covered_lines: 189
+                total_lines: 190
+                at_rev: 6272de809839
+        at_rev: 6272de809839
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/value_anchored.spec.md
       kind: spec
       rev: 7c8f9818595f
@@ -6120,7 +8199,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 7c8f9818595f
         at_rev: 7c8f9818595f
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/value_anchored_test.go
       kind: test
       rev: cfb5fd1ec580
@@ -6146,6 +8225,20 @@ nodes:
       tags:
         - regra
         - gate
+      signal:
+        covered_lines: 50
+        total_lines: 50
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 39-46,48-57,59-63,77-83,85-91,94,98-108,111
+                covered: 39-46,48-57,59-63,77-83,85-91,94,98-108,111
+                covered_lines: 50
+                total_lines: 50
+                at_rev: 7c491d9418fc
+        at_rev: 7c491d9418fc
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/vr_baseline.spec.md
       kind: spec
       rev: 9ac63acbe2cb
@@ -6188,7 +8281,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9ac63acbe2cb
         at_rev: 9ac63acbe2cb
-        ingested_at: "2026-09-26T19:03:11-03:00"
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gate/vr_baseline_test.go
       kind: test
       rev: 6bb66197b2b8
@@ -6205,6 +8298,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 20
+        total_lines: 22
+        line_coverage: 90.9090909090909
+        prev_line_coverage: 90.9090909090909
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 27-40,51-58
+                covered: 27-28,31-40,51-58
+                covered_lines: 20
+                total_lines: 22
+                at_rev: 649cc782a80a
+        at_rev: 649cc782a80a
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gitmeta/availability_test.go
       kind: test
       rev: 554977654afb
@@ -6220,6 +8327,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 37
+        total_lines: 62
+        line_coverage: 59.67741935483871
+        prev_line_coverage: 50
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 15,22-32,40-51,53-55,57-59,61,72-75,81-87,96-105,115-124
+                covered: 15,22-25,28-32,40-45,72-75,81-87,115-124
+                covered_lines: 37
+                total_lines: 62
+                at_rev: ace465de1973
+        at_rev: ace465de1973
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/gitmeta/gitmeta_test.go
       kind: test
       rev: ca08d5dc2a5a
@@ -6242,6 +8363,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 21
+        total_lines: 64
+        line_coverage: 32.8125
+        prev_line_coverage: 32.8125
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 31-54,59-75,83-93,98-109
+                covered: 31-32,35-36,39-44,59-63,66-69,74-75
+                covered_lines: 21
+                total_lines: 64
+                at_rev: cb8908e15cb5
+        at_rev: cb8908e15cb5
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/health/approval_test.go
       kind: test
       rev: 279bb7cee1f2
@@ -6257,6 +8392,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 33
+        total_lines: 40
+        line_coverage: 82.5
+        prev_line_coverage: 82.5
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 24-27,32-34,39-44,51-54,58-62,74-91
+                covered: 24-27,32-34,39-44,51-54,58-62,74-75,78-86
+                covered_lines: 33
+                total_lines: 40
+                at_rev: e474db4524ce
+        at_rev: e474db4524ce
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/health/github_environment_test.go
       kind: test
       rev: c9f0f8b520a9
@@ -6272,6 +8421,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 68
+        total_lines: 78
+        line_coverage: 87.17948717948718
+        prev_line_coverage: 87.17948717948718
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 14-17,19-23,25-28,31-39,43-59,63-71,75-83,87-92,95-102,105,110-115
+                covered: 14-15,19-23,25-28,31-39,43-59,63-71,75-83,87-90,95-102,105
+                covered_lines: 68
+                total_lines: 78
+                at_rev: 6683ba21896b
+        at_rev: 6683ba21896b
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/health/governance_test.go
       kind: test
       rev: f8bc14748a14
@@ -6288,6 +8451,20 @@ nodes:
         - infra
       regime: declarativo
       shared_code: true
+      signal:
+        covered_lines: 301
+        total_lines: 335
+        line_coverage: 89.8507462686567
+        prev_line_coverage: 89.8507462686567
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 46-51,53,58-76,85-91,93,99-102,106-107,109-112,114-117,119-130,132-135,137,142-148,150,152-156,158,164-169,171-175,178-181,183-184,189-194,196-201,204-207,209,214-221,223-224,230-234,236-238,241,246-252,254-257,260-264,266-272,274,279-285,287-291,293-302,304,323-340,344-360,363-368,378-392,395,411-418,420-421,423-427,429,446-448,454-457,459-472,478-488,504-509,511-513,516-520,523-530,532-536,541-555,557-559,561-565,569
+                covered: 58-76,85-91,93,99-102,106,109-112,114-117,119-130,132-135,137,142-148,152-156,158,164-169,171-175,178,183-184,189-194,196-201,204-205,209,214-221,223-224,230-234,236-238,241,246-252,254-257,260-264,266-272,274,279-285,287-291,293-302,304,323-330,333,344-345,349-356,360,363-368,378-379,382-392,395,411-412,415-418,420-421,423-427,429,446-448,454-457,459-472,478-488,504-509,511-513,516-520,523-529,532-536,541-555,557-559,561-565,569
+                covered_lines: 301
+                total_lines: 335
+                at_rev: c0f2617085e2
+        at_rev: c0f2617085e2
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/health/health_test.go
       kind: test
       rev: 4b9bd483bfc6
@@ -6317,6 +8494,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 28
+        total_lines: 30
+        line_coverage: 93.33333333333333
+        prev_line_coverage: 93.33333333333333
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 27-39,41-43,45-48,50-53,56-61
+                covered: 27-28,31-39,41-43,45-48,50-53,56-61
+                covered_lines: 28
+                total_lines: 30
+                at_rev: 5acadf48a82d
+        at_rev: 5acadf48a82d
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/health/pending_decision_test.go
       kind: test
       rev: 0ae4eec37787
@@ -6333,6 +8524,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 80
+        total_lines: 82
+        line_coverage: 97.5609756097561
+        prev_line_coverage: 97.5609756097561
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 117-120,122-125,127-130,132-138,140-143,147-148,151-160,163-168,171-172,177-181,183-185,193-200,202-203,206,208,210,216-221,224-228,230,233-237,239
+                covered: 117-118,122-125,127-130,132-138,140-143,147-148,151-160,163-168,171-172,177-181,183-185,193-200,202-203,206,208,210,216-221,224-228,230,233-237,239
+                covered_lines: 80
+                total_lines: 82
+                at_rev: dfdb7fccf860
+        at_rev: dfdb7fccf860
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/health/spec_sections_test.go
       kind: test
       rev: 7ec6baaeaf91
@@ -6364,6 +8569,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 23
+        total_lines: 31
+        line_coverage: 74.19354838709677
+        prev_line_coverage: 74.19354838709677
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 18-28,35-51,55-56,58
+                covered: 18-19,22-28,35-45,55-56,58
+                covered_lines: 23
+                total_lines: 31
+                at_rev: 76226103da14
+        at_rev: 76226103da14
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/artifacts.go
       kind: code
       rev: 998ee667b76a
@@ -6372,6 +8591,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 53
+        total_lines: 60
+        line_coverage: 88.33333333333333
+        prev_line_coverage: 88.33333333333333
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 30-47,55-67,69-71,76-81,94-113
+                covered: 30-44,47,55-56,59-67,69-71,76-81,94-109,113
+                covered_lines: 53
+                total_lines: 60
+                at_rev: 998ee667b76a
+        at_rev: 998ee667b76a
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/artifacts_test.go
       kind: test
       rev: 4c3705d1bbd5
@@ -6401,6 +8634,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 50
+        total_lines: 56
+        line_coverage: 89.28571428571429
+        prev_line_coverage: 89.28571428571429
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 12-34,37-48,56-60,64,69-72,75-79,82-87
+                covered: 12-34,37-48,56,64,69-72,75-76,79,82-87
+                covered_lines: 50
+                total_lines: 56
+                at_rev: a97bdeab9580
+        at_rev: a97bdeab9580
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/decide.go
       kind: code
       rev: 451b25d70aca
@@ -6409,6 +8656,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 41
+        total_lines: 41
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 16-21,23-24,30-34,36,41-46,48-53,58-70,72,74
+                covered: 16-21,23-24,30-34,36,41-46,48-53,58-70,72,74
+                covered_lines: 41
+                total_lines: 41
+                at_rev: 451b25d70aca
+        at_rev: 451b25d70aca
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/decide_test.go
       kind: test
       rev: e6d27eb7d671
@@ -6424,6 +8685,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 700
+        total_lines: 706
+        line_coverage: 99.15014164305948
+        prev_line_coverage: 97.30878186968839
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 37-166,169-174,177-421,426-431,433-437,439-461,464-552,564-569,576-600,616-621,623-628,630-640,655-768,771-781,784,792-796,798,803-809,819,827-834
+                covered: 37-166,169-174,177-421,426-431,433-437,439-461,464-552,564-569,576-600,616-621,623-628,630-640,655-768,771-781,784,792-796,798,803-809,819,827-828
+                covered_lines: 700
+                total_lines: 706
+                at_rev: a1be63c70d6e
+        at_rev: a1be63c70d6e
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/default_gates_test.go
       kind: test
       rev: 74e5cb01fde7
@@ -6440,6 +8715,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 10
+        total_lines: 18
+        line_coverage: 55.55555555555556
+        prev_line_coverage: 55.55555555555556
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 14-19,41-51,53
+                covered: 14-16,19,41-43,46-47,53
+                covered_lines: 10
+                total_lines: 18
+                at_rev: 9c20a1e67058
+        at_rev: 9c20a1e67058
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/expose_board_test.go
       kind: test
       rev: e349223970f9
@@ -6455,6 +8744,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 66
+        total_lines: 66
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 40-50,52-58,64-71,73-75,78-79,85-95,102-122,129-131
+                covered: 40-50,52-58,64-71,73-75,78-79,85-95,102-122,129-131
+                covered_lines: 66
+                total_lines: 66
+                at_rev: 79d478128e0e
+        at_rev: 79d478128e0e
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/git_test.go
       kind: test
       rev: a4d75cb6a44a
@@ -6472,6 +8775,20 @@ nodes:
       regime: declarativo
       no_propagation: true
       shared_code: true
+      signal:
+        covered_lines: 88
+        total_lines: 89
+        line_coverage: 98.87640449438202
+        prev_line_coverage: 98.87640449438202
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 22-27,35-42,44-113,116-120
+                covered: 22-27,35-42,44-60,62-113,116-120
+                covered_lines: 88
+                total_lines: 89
+                at_rev: c6f7abed81da
+        at_rev: c6f7abed81da
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/header_guide_language_test.go
       kind: test
       rev: d1d9dcabd862
@@ -6494,6 +8811,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 146
+        total_lines: 161
+        line_coverage: 90.6832298136646
+        prev_line_coverage: 90.6832298136646
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 48-64,70-107,111,113-115,117-124,140-145,147-150,153-157,162-167,169,172-178,180-183,186-190,192,195-197,201-205,214-218,223-232,237-246,248-253,256-269,271,273
+                covered: 48-57,60-64,70-83,88-107,111,113,117-124,140-143,147-149,153-157,162-167,169,172-178,180-183,186-190,192,195-197,201-205,214-215,218,223-231,237-246,248-253,256-268,271,273
+                covered_lines: 146
+                total_lines: 161
+                at_rev: 86a303aff113
+        at_rev: 86a303aff113
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/infer_test.go
       kind: test
       rev: af48bcefe65b
@@ -6510,6 +8841,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 40
+        total_lines: 50
+        line_coverage: 80
+        prev_line_coverage: 80
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 49-55,58-60,64-67,72-84,86,91,100-104,110-114,116,141-150
+                covered: 49-50,53-55,58,64-67,72-73,76-84,86,91,100-104,110-114,116,141-144,149-150
+                covered_lines: 40
+                total_lines: 50
+                at_rev: c735d8c718d2
+        at_rev: c735d8c718d2
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/operator_test.go
       kind: test
       rev: 1fb8f85f484f
@@ -6525,6 +8870,15 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        total_lines: 41
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 36-57,59-61,66-77,79-82
+                total_lines: 41
+                at_rev: f2e8588506ab
+        at_rev: f2e8588506ab
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/presets.go
       kind: code
       rev: 767fe4e59f37
@@ -6533,6 +8887,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 19
+        total_lines: 26
+        line_coverage: 73.07692307692307
+        prev_line_coverage: 73.07692307692307
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 42-54,56,296-300,302,305-310
+                covered: 42-54,56,296-300
+                covered_lines: 19
+                total_lines: 26
+                at_rev: 767fe4e59f37
+        at_rev: 767fe4e59f37
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/presets_test.go
       kind: test
       rev: c156258fe6a1
@@ -6548,6 +8916,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 197
+        total_lines: 207
+        line_coverage: 95.16908212560386
+        prev_line_coverage: 95.16908212560386
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 64-70,73-83,86-183,192-205,207-225,227-247,249,251,258-262,264,269-271,273,275-279,282-286,289-296,298,301-305,307
+                covered: 64-67,73-81,86-183,192-205,207-222,227-247,249,251,258-262,264,269-271,273,275-279,282-286,289-294,298,301-305,307
+                covered_lines: 197
+                total_lines: 207
+                at_rev: 3b445841a4bc
+        at_rev: 3b445841a4bc
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/questions_test.go
       kind: test
       rev: 288c1bcca238
@@ -6563,6 +8945,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 13
+        total_lines: 13
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 39-51
+                covered: 39-51
+                covered_lines: 13
+                total_lines: 13
+                at_rev: cd911b1e869f
+        at_rev: cd911b1e869f
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/tbd_instruction_test.go
       kind: test
       rev: 63bf05c83521
@@ -6585,6 +8981,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 78
+        total_lines: 110
+        line_coverage: 70.9090909090909
+        prev_line_coverage: 55.45454545454545
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 205,314,368,371,462-466,468,473-478,480,490-494,496-498,500-503,505,532-537,545-549,551-553,555-557,559-562,564,578-587,589-597,601-606,632-637,639-643,646-649,652-658,665-674,676
+                covered: 205,473-478,480,490-494,496-498,500-503,505,532-537,545-549,551-552,555-556,559-562,564,578-580,583-587,589-590,593-594,597,601-602,605-606,632-635,639-643,646-649,652,655,658,665-668
+                covered_lines: 78
+                total_lines: 110
+                at_rev: e23a5a24368e
+        at_rev: e23a5a24368e
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/initx/workflows_review_status_test.go
       kind: test
       rev: 6767b5224f3a
@@ -6621,6 +9031,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 10
+        total_lines: 82
+        line_coverage: 12.195121951219512
+        prev_line_coverage: 12.195121951219512
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 45-51,64-78,82-85,87,94-111,114-125,141-147,151-158,162-170,172
+                covered: 162-170,172
+                covered_lines: 10
+                total_lines: 82
+                at_rev: 8bef3d384cf6
+        at_rev: 8bef3d384cf6
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/issue/github_test.go
       kind: test
       rev: a2179e5599e2
@@ -6636,6 +9060,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 207
+        total_lines: 256
+        line_coverage: 80.859375
+        prev_line_coverage: 80.859375
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 106-110,117-121,124-127,133-135,137-140,143-153,156-170,173-199,203-205,210-217,220,226-229,235-251,257-259,267-282,286-293,295-299,301,315-330,332-346,348-351,362-370,375-384,386,395-416,423-427,441-443,446,463-476,478-479,481-487,490,494-499
+                covered: 106-110,117-119,124-127,133-135,137-140,143-147,150-153,156-164,169-170,173-199,203-205,210-217,220,226-229,235-236,239-245,248,251,257-259,267-268,271-276,279,282,286-292,295-299,301,315-318,322-323,326-328,332-340,348,351,362-364,367-370,375-377,380-384,386,395-398,401-416,423-427,441-443,446,463-464,467-470,473-476,478-479,481-482,485-487,490,494-498
+                covered_lines: 207
+                total_lines: 256
+                at_rev: e9cf2efd7f15
+        at_rev: e9cf2efd7f15
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/issue/issue_test.go
       kind: test
       rev: 6a332acfc88b
@@ -6665,6 +9103,20 @@ nodes:
       tags:
         - nucleo
         - mapa
+      signal:
+        covered_lines: 400
+        total_lines: 460
+        line_coverage: 86.95652173913044
+        prev_line_coverage: 86.95652173913044
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 28-56,59-67,77-86,88-95,98,110-114,121-125,133-137,142-146,149-160,162-167,169-172,180-183,185-187,189-192,194-211,216-219,222,227-230,233,238-241,243-246,248-253,259-268,273-283,285-287,289-293,298-302,309-317,327-343,345-350,353-355,357,363-368,383-386,388-391,394-402,404,408-418,421-425,427-429,431-432,436,443-451,455-458,460-464,466-469,471,475,501-506,510,513-518,522-524,529-532,542-551,567-570,578-581,583-586,588-589,591-597,599-602,604,609,611-615,618-627,644-662,664-672,688-699,701-705,714-719,721-728,730-731,740-745,747,749,762-774,776-779,788-792,799-803
+                covered: 28-56,59-67,77-86,88-95,98,110-114,121-125,133-135,142-144,149-157,180,194-211,216-219,222,227,233,238-241,243-246,248-253,259-268,273-282,285-287,289-293,309-317,327-343,345-350,353-355,357,363-368,383-386,388-391,394-401,404,408-418,421-425,436,443-451,455-458,460-463,466-468,471,475,501-506,510,513-517,529-532,542-551,567-570,578-581,583-586,588-589,591-597,599-602,604,609,611-615,618-626,644-646,649-662,664-672,688-689,692-696,701-703,714-719,721-728,730-731,740-745,747,749,762-774,776-778,788-791,799-803
+                covered_lines: 400
+                total_lines: 460
+                at_rev: 67b0ec90f60d
+        at_rev: 67b0ec90f60d
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/mapx/build_seed_path_test.go
       kind: test
       rev: 8750ced62ea0
@@ -6689,6 +9141,20 @@ nodes:
         - nucleo
         - mapa
       no_propagation: true
+      signal:
+        covered_lines: 49
+        total_lines: 51
+        line_coverage: 96.07843137254902
+        prev_line_coverage: 96.07843137254902
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 39-53,55-59,72-78,80-89,91-97,100,103-107,109
+                covered: 39-53,55-59,72-78,80-88,91-97,100,103-107
+                covered_lines: 49
+                total_lines: 51
+                at_rev: 3ffea2c5fbae
+        at_rev: 3ffea2c5fbae
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/mapx/evidence_test.go
       kind: test
       rev: 379f1ac3cbe4
@@ -6705,6 +9171,20 @@ nodes:
       tags:
         - nucleo
         - mapa
+      signal:
+        covered_lines: 32
+        total_lines: 32
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 51-69,76-88
+                covered: 51-69,76-88
+                covered_lines: 32
+                total_lines: 32
+                at_rev: 5c6c73854705
+        at_rev: 5c6c73854705
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/mapx/format_test.go
       kind: test
       rev: a34853117140
@@ -6721,6 +9201,20 @@ nodes:
         - nucleo
         - mapa
       no_propagation: true
+      signal:
+        covered_lines: 57
+        total_lines: 59
+        line_coverage: 96.61016949152543
+        prev_line_coverage: 96.61016949152543
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 28-34,37-42,44,48-57,62-72,74-79,82-83,90-100,102-104,107-108
+                covered: 28-34,37-42,44,48-57,62-71,74-79,82-83,90-99,102-104,107-108
+                covered_lines: 57
+                total_lines: 59
+                at_rev: 2d8df5dfde2a
+        at_rev: 2d8df5dfde2a
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/mapx/impact_test.go
       kind: test
       rev: 49c3c2845bd0
@@ -6737,6 +9231,20 @@ nodes:
       tags:
         - nucleo
         - mapa
+      signal:
+        covered_lines: 372
+        total_lines: 418
+        line_coverage: 88.99521531100478
+        prev_line_coverage: 88.51674641148325
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 26-28,46-59,62-71,76-81,83-91,93-97,100-101,103-106,108,122-130,132-156,160,178-183,185-191,193-197,199-204,206-211,213-222,225-229,232-236,238-240,242-254,256-276,279,296-301,303-315,317-323,325,329-340,343,347-362,364-367,369-370,372-373,377-381,383-386,388-391,394-396,398,403-411,414-415,428-441,443,447-449,456-463,465-481,485,491-493,508-512,514-532,534-537,541,571-573,575-581,584-587,594-599,601-603,605-608,611-620,622,640-648,650-663,666-668,670,673,677-683
+                covered: 26-28,46-59,62-71,76-81,83-87,89-91,93-97,100-101,103-106,108,122-130,132-156,160,178-182,185-191,193-194,199-204,206-211,213-216,219-222,225-229,232-236,238-239,242-254,256-276,279,296-301,303-315,317-323,325,329-340,343,347-362,364-367,369-370,372-373,377-381,383-385,388-390,394-396,398,403-411,414-415,428-441,443,447-449,456-463,465-470,473-481,485,571-573,575-581,584-587,594-599,601-603,605-608,611-615,618-620,622,640-648,650-663,666-668,670,673,677-683
+                covered_lines: 372
+                total_lines: 418
+                at_rev: addbd658929f
+        at_rev: addbd658929f
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/mapx/ingest_coverage_suite_test.go
       kind: test
       rev: f57b8d0c51cd
@@ -6777,6 +9285,20 @@ nodes:
         - mapa
       no_propagation: true
       shared_code: true
+      signal:
+        covered_lines: 15
+        total_lines: 16
+        line_coverage: 93.75
+        prev_line_coverage: 75
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 346-348,489-495,498-502,504
+                covered: 346-348,489-495,498-502
+                covered_lines: 15
+                total_lines: 16
+                at_rev: c854d6ae3da0
+        at_rev: c854d6ae3da0
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/mapx/node_code_test.go
       kind: test
       rev: 4f86019884fe
@@ -6800,6 +9322,20 @@ nodes:
       tags:
         - nucleo
         - mapa
+      signal:
+        covered_lines: 114
+        total_lines: 120
+        line_coverage: 95
+        prev_line_coverage: 94.16666666666667
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 19-24,26-27,32-37,39,43-51,53-55,60-70,72-73,85-93,96-104,117-123,125,128-138,140-142,144-148,151-155,157-165,167-176,178-179,182-187,189-190,192
+                covered: 19-24,26-27,32-37,39,43-51,53-55,60-70,72-73,85-93,96-98,101-104,117-123,128-137,140-141,144-148,151-155,157-164,167-176,178-179,182-187,189-190,192
+                covered_lines: 114
+                total_lines: 120
+                at_rev: 78f9a2dc632e
+        at_rev: 78f9a2dc632e
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/mapx/query_test.go
       kind: test
       rev: db2c5ba932d0
@@ -6815,6 +9351,20 @@ nodes:
       tags:
         - nucleo
         - mapa
+      signal:
+        covered_lines: 96
+        total_lines: 110
+        line_coverage: 87.27272727272727
+        prev_line_coverage: 87.27272727272727
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 26-47,50-57,59-64,73-74,76-81,83,90-96,98,113-115,128-133,138-156,158-163,166-168,170,172,181-184,186-188,190-191,193,196,201-206,208
+                covered: 26-47,50-57,59-64,73-74,76-81,83,90-96,98,128-132,138-151,158-159,166-168,170,172,181-183,186-188,190-191,193,196,201-206,208
+                covered_lines: 96
+                total_lines: 110
+                at_rev: e425b5133736
+        at_rev: e425b5133736
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/mapx/stamp_test.go
       kind: test
       rev: 119bd203817c
@@ -6830,6 +9380,20 @@ nodes:
       tags:
         - nucleo
         - mapa
+      signal:
+        covered_lines: 39
+        total_lines: 45
+        line_coverage: 86.66666666666667
+        prev_line_coverage: 66.66666666666666
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 25-37,44-53,57-65,73-76,80-85,90-92
+                covered: 25-35,44-53,57-63,73,76,80-85,90-92
+                covered_lines: 39
+                total_lines: 45
+                at_rev: 0c00da6a4980
+        at_rev: 0c00da6a4980
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/mapx/store_test.go
       kind: test
       rev: 93f5cd8d00ca
@@ -6859,6 +9423,19 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 21
+        total_lines: 80
+        line_coverage: 26.25
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 84-99,110-116,118-128,130-138,140-141,145-150,152,158-163,165-170,174-179,183-192
+                covered: 84-88,110-114,118-123,140-141,145-146,152
+                covered_lines: 21
+                total_lines: 80
+                at_rev: 189b3544a107
+        at_rev: 189b3544a107
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/queue/queue.go
       kind: code
       rev: f24a7a8b6df2
@@ -6867,6 +9444,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 216
+        total_lines: 250
+        line_coverage: 86.4
+        prev_line_coverage: 86
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 83-87,89,95-151,157-158,162-164,166-175,181-185,187-194,196-205,209-216,218-221,223-225,227-229,231-233,235-246,248,250-251,268-276,278-288,290-299,301-302,304,310-320,322,329-335,337,354,358,366-375,377,380-389,391-392,394-402,404,408-417,419,435-443,447-450,454
+                covered: 83-87,95-151,157-158,162-164,166-167,170-172,175,181-183,187-188,191-194,196-198,201-202,205,209-215,218-220,223-224,227-229,231-232,235-246,248,250-251,268-271,274-276,278-288,290-295,301-302,304,310-313,316-320,329-335,337,354,358,366-368,371-375,377,380-383,386-389,391-392,394-402,404,408-410,413-417,419,435-440,443,447-450,454
+                covered_lines: 216
+                total_lines: 250
+                at_rev: f24a7a8b6df2
+        at_rev: f24a7a8b6df2
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/queue/queue_test.go
       kind: test
       rev: 49f7fb08d8a8
@@ -6889,6 +9480,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 48
+        total_lines: 50
+        line_coverage: 96
+        prev_line_coverage: 96
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 14-19,27-31,35-48,53-57,66-68,72-77,79,85-93,96
+                covered: 14-19,27-31,35-48,53-54,57,66-68,72-77,79,85-93,96
+                covered_lines: 48
+                total_lines: 50
+                at_rev: ec357dbf481f
+        at_rev: ec357dbf481f
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/recode/dialect_test.go
       kind: test
       rev: 09dbf0291acd
@@ -6911,6 +9516,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 94
+        total_lines: 133
+        line_coverage: 70.67669172932331
+        prev_line_coverage: 70.67669172932331
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 48-57,59-62,65-69,74-80,82-87,89-104,107-108,110-113,117-120,125-129,131-135,140-147,149-157,159,161-162,165-168,170,176-188,190-194,196,214-221,227-232,236-242
+                covered: 48-49,52,55,59-60,65-67,74-80,82-86,89-104,107,110-113,117-120,125-129,131,134-135,140-144,147,149-150,153-157,159,161-162,165-166,170,214-221,227-232,236-242
+                covered_lines: 94
+                total_lines: 133
+                at_rev: 53d7dabfefa0
+        at_rev: 53d7dabfefa0
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/recode/plan_dialect_test.go
       kind: test
       rev: c1c1f37192e3
@@ -6927,6 +9546,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 72
+        total_lines: 75
+        line_coverage: 96
+        prev_line_coverage: 96
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 21-23,26,38-52,58-67,70-74,79-83,85,90-101,107-119,122-127,129,133-135
+                covered: 21-23,26,38-52,58-67,70-74,79-83,85,90-101,107-119,122-127,129
+                covered_lines: 72
+                total_lines: 75
+                at_rev: 3f6f75361f71
+        at_rev: 3f6f75361f71
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/recode/rewrite_test.go
       kind: test
       rev: 68667ef8be95
@@ -6943,6 +9576,20 @@ nodes:
       tags:
         - nucleo
         - scan
+      signal:
+        covered_lines: 113
+        total_lines: 120
+        line_coverage: 94.16666666666667
+        prev_line_coverage: 92.5
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 91-96,98,118-120,126-132,134-150,152-158,161-170,172,174,180-191,195-202,207-216,218-219,221,223,232-236,238,243-249,251,256-262,264,271-280,283
+                covered: 91-96,98,118-120,126-132,134-149,152-158,161-170,172,174,180-185,188-191,195-199,202,207-216,218-219,221,223,232-236,238,243-247,251,256-262,264,271-280,283
+                covered_lines: 113
+                total_lines: 120
+                at_rev: 76847b83ed8c
+        at_rev: 76847b83ed8c
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/scan/ignore_test.go
       kind: test
       rev: e704f450bf8a
@@ -6965,6 +9612,20 @@ nodes:
       tags:
         - nucleo
         - scan
+      signal:
+        covered_lines: 54
+        total_lines: 56
+        line_coverage: 96.42857142857143
+        prev_line_coverage: 85.71428571428571
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 27-29,37-42,67-72,78-84,86-90,98-103,105-107,109-113,116-123,127-132,134
+                covered: 27-29,37-42,67-72,78-84,86-90,98-103,105-107,109-113,116,119-123,127-132,134
+                covered_lines: 54
+                total_lines: 56
+                at_rev: a2a12e8c1203
+        at_rev: a2a12e8c1203
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/scan/progress_merge_test.go
       kind: test
       rev: 3ce86a1f3dcd
@@ -6988,6 +9649,20 @@ nodes:
       tags:
         - nucleo
         - scan
+      signal:
+        covered_lines: 67
+        total_lines: 67
+        line_coverage: 100
+        prev_line_coverage: 100
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 62-64,66-68,75-92,94-110,112-114,117-120,125-128,150-161,163-164,166
+                covered: 62-64,66-68,75-92,94-110,112-114,117-120,125-128,150-161,163-164,166
+                covered_lines: 67
+                total_lines: 67
+                at_rev: d1b270e16cd2
+        at_rev: d1b270e16cd2
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/scan/region_test.go
       kind: test
       rev: b52460c5ff69
@@ -7006,6 +9681,20 @@ nodes:
         - scan
       no_propagation: true
       shared_code: true
+      signal:
+        covered_lines: 421
+        total_lines: 493
+        line_coverage: 85.39553752535497
+        prev_line_coverage: 78.70182555780933
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 39-44,50-52,60,170-175,178-195,200-205,207-209,219-255,257,263-265,312-316,318-319,328-330,332-353,355-356,358-361,363,373-380,397-403,405,407-408,410,413-414,416-420,422,425-429,431,440-445,448-451,458-470,472,482-493,497-500,502-506,508,511-515,517,534-539,541-544,597-602,604,610-623,625,638-644,648-662,664,666,673-675,680-690,692,694,703-706,711-716,718,723-735,737,739,751-756,758-767,769-773,775-776,778-779,781,783-800,802-806,808-811,813-821,823,830-843,846,859-872,874,877-883,886-890,892,896,899-906,922-925,929,936-938,941-945,978-980,989-991,995-1020,1022-1023,1026,1039-1052,1072-1073,1075-1076,1078,1085-1089
+                covered: 39-40,43-44,50-52,60,170-175,178-193,200-205,207,219-227,230-255,257,263-265,312-316,318-319,328-330,332-353,355,358-361,363,373-379,397-402,405,407,410,413-414,416-420,422,425-426,431,440-442,445,448-451,458-470,472,482-487,497-500,502-503,508,511-515,517,534-539,541,544,597-602,604,610-617,638-644,648-652,680-684,703-706,711-713,716,718,723-734,737,739,751-756,758-766,769-773,775-776,778,781,783,786-800,802-803,806,808-811,813-821,823,830-843,846,859-872,877-883,886-890,896,899-903,906,922-925,936-938,941-945,978-980,989-991,995-1020,1022-1023,1026,1039-1052,1072-1073,1075-1076,1078,1085-1089
+                covered_lines: 421
+                total_lines: 493
+                at_rev: 126ab2487ff8
+        at_rev: 126ab2487ff8
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/scan/scan_test.go
       kind: test
       rev: dbbcd713e264
@@ -7023,6 +9712,20 @@ nodes:
         - nucleo
         - scan
       shared_code: true
+      signal:
+        covered_lines: 35
+        total_lines: 40
+        line_coverage: 87.5
+        prev_line_coverage: 87.5
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 33-38,53-58,60-73,75,77,82-86,88,91-95,97
+                covered: 33-38,53-58,60-65,70-73,75,77,82-86,91-95,97
+                covered_lines: 35
+                total_lines: 40
+                at_rev: f692f9656173
+        at_rev: f692f9656173
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/scan/upstream_test.go
       kind: test
       rev: b66fb0b64681
@@ -7054,6 +9757,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 117
+        total_lines: 138
+        line_coverage: 84.78260869565217
+        prev_line_coverage: 73.91304347826086
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 50-57,59,61,69-80,82-83,86-89,98-112,114-118,120,134-145,147-157,159-163,165,168-173,176-184,208-217,241-245,252-265,267,270-274,281-289,291
+                covered: 50-51,54-57,59,61,69-72,75-79,82-83,86-89,98-100,103-112,114-115,118,120,134-136,139-145,147-155,159-160,163,165,168-173,176-184,208-209,212-213,216-217,241-245,252-265,267,270-271,274,281-289,291
+                covered_lines: 117
+                total_lines: 138
+                at_rev: 5de399ad005c
+        at_rev: 5de399ad005c
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/similarity/similarity_test.go
       kind: test
       rev: bf7c7d004c24
@@ -7069,6 +9786,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 66
+        total_lines: 88
+        line_coverage: 75
+        prev_line_coverage: 75
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 90-93,96-100,102-110,117-140,143-147,151-157,159-163,165-166,170-180,183-198
+                covered: 90-91,96-100,102-103,106-107,110,117-118,121-128,131-132,135-137,140,143-147,151-153,159-163,165-166,170-172,175-176,179-180,183-198
+                covered_lines: 66
+                total_lines: 88
+                at_rev: bc5ca3de8421
+        at_rev: bc5ca3de8421
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/suggestion/suggestion_test.go
       kind: test
       rev: 6fd0dfea62a6
@@ -7098,6 +9829,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 3
+        total_lines: 11
+        line_coverage: 27.27272727272727
+        prev_line_coverage: 27.27272727272727
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 36-39,43-46,51-53
+                covered: 51-53
+                covered_lines: 3
+                total_lines: 11
+                at_rev: e3fa43c931df
+        at_rev: e3fa43c931df
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/testsig/code_letters_test.go
       kind: test
       rev: 424c3ab27ce5
@@ -7114,6 +9859,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 47
+        total_lines: 69
+        line_coverage: 68.11594202898551
+        prev_line_coverage: 68.11594202898551
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 21-30,35-40,46-68,70-71,75-78,80,85-95,99-110
+                covered: 35-37,40,46-68,75-76,80,85-87,90-95,99-101,104-106,109-110
+                covered_lines: 47
+                total_lines: 69
+                at_rev: 49198d076b73
+        at_rev: 49198d076b73
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/testsig/diff_test.go
       kind: test
       rev: 2fd16ecd81a2
@@ -7129,6 +9888,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 50
+        total_lines: 55
+        line_coverage: 90.9090909090909
+        prev_line_coverage: 90.9090909090909
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 58-71,74-79,82-94,96-98,106-108,112-116,118-120,122,128-133,135
+                covered: 58-60,63-71,74-78,82-94,96,106-108,112-116,118-120,122,128-133,135
+                covered_lines: 50
+                total_lines: 55
+                at_rev: a604f81e6b8b
+        at_rev: a604f81e6b8b
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/testsig/lcov.go
       kind: code
       rev: d3248d5715e6
@@ -7137,6 +9910,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 70
+        total_lines: 74
+        line_coverage: 94.5945945945946
+        prev_line_coverage: 94.5945945945946
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 23-28,30,35-40,42,46-50,68-93,96-116,118-123,126-127
+                covered: 23-28,30,35-40,42,46-47,50,68-70,73-93,96-116,118-123,126-127
+                covered_lines: 70
+                total_lines: 74
+                at_rev: d3248d5715e6
+        at_rev: d3248d5715e6
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/testsig/mutation.go
       kind: code
       rev: cb0c10fc0915
@@ -7145,6 +9932,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 73
+        total_lines: 83
+        line_coverage: 87.95180722891565
+        prev_line_coverage: 87.95180722891565
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 104-106,112-125,129-138,140-147,149-174,179-193,195,201-206
+                covered: 104-106,112-114,117-125,129-138,140-141,149-174,179-193,195,201-203,206
+                covered_lines: 73
+                total_lines: 83
+                at_rev: cb0c10fc0915
+        at_rev: cb0c10fc0915
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/testsig/mutation_gremlins.go
       kind: code
       rev: fcd47cb08f8f
@@ -7153,6 +9954,20 @@ nodes:
       tags:
         - infra
       regime: declarativo
+      signal:
+        covered_lines: 43
+        total_lines: 46
+        line_coverage: 93.47826086956522
+        prev_line_coverage: 93.47826086956522
+        coverage_by_suite:
+            .anchors/lcov.info:
+                instrumented: 64-75,77-94,100-103,105,114-124
+                covered: 64-72,77-94,100-103,105,114-124
+                covered_lines: 43
+                total_lines: 46
+                at_rev: fcd47cb08f8f
+        at_rev: fcd47cb08f8f
+        ingested_at: "2026-09-26T19:09:52-03:00"
     - id: internal/testsig/mutation_gremlins_test.go
       kind: test
       rev: f3c46f69f06e

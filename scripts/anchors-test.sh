@@ -1,18 +1,28 @@
 #!/usr/bin/env bash
+# The unit suite as `anchors test` runs it: the JUnit report proves the scenarios, and the
+# lcov report measures the lines. Both are declared in anchors.yaml (`tests:`), and a tool
+# that is missing only drops its own report — the suite still runs.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 mkdir -p .anchors
 
-JUNIT_CMD="go-junit-report"
-if ! command -v go-junit-report >/dev/null 2>&1; then
-  if [ -x "$HOME/go/bin/go-junit-report" ]; then
-    JUNIT_CMD="$HOME/go/bin/go-junit-report"
+tool() {
+  if command -v "$1" >/dev/null 2>&1; then
+    command -v "$1"
+  elif [ -x "$HOME/go/bin/$1" ]; then
+    echo "$HOME/go/bin/$1"
   fi
+}
+JUNIT_CMD="$(tool go-junit-report)"
+LCOV_CMD="$(tool gcov2lcov)"
+
+if [ -n "$JUNIT_CMD" ]; then
+  go test -v -coverpkg=./... -coverprofile=.anchors/cover.out ./... | "$JUNIT_CMD" > .anchors/junit.xml
+else
+  go test -coverpkg=./... -coverprofile=.anchors/cover.out ./...
 fi
 
-if command -v "$JUNIT_CMD" >/dev/null 2>&1 || [ -x "$JUNIT_CMD" ]; then
-  go test -v ./... | "$JUNIT_CMD" > .anchors/junit.xml
-else
-  go test ./...
+if [ -n "$LCOV_CMD" ]; then
+  "$LCOV_CMD" -infile .anchors/cover.out -outfile .anchors/lcov.info
 fi
