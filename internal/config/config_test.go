@@ -380,6 +380,33 @@ func TestLoadRefusesAPatternThatDoesNotCompile(t *testing.T) {
 	}
 }
 
+func TestTestLevelAccepts(t *testing.T) {
+	t.Run("CNFGO-B44: A test level's code filter accepts by allow and refuses by exclude", func(t *testing.T) {})
+	none := TestLevel{}
+	vr := TestLevel{Allow: []string{`-VR$`}}
+	unit := TestLevel{Allow: []string{`^SMCS-`}, Exclude: []string{`-VR$`}}
+	for _, c := range []struct {
+		f    TestLevel
+		code string
+		want bool
+	}{
+		{none, "SMCS-B04", true}, {none, "SMCS-VR", true},
+		{vr, "SMCS-B04", false}, {vr, "SMCS-VR", true},
+		{unit, "SMCS-B04", true}, {unit, "SMCS-VR", false}, {unit, "OTHR-B01", false},
+	} {
+		if got := c.f.Accepts(c.code); got != c.want {
+			t.Errorf("%+v accepts %s = %v, want %v", c.f, c.code, got, c.want)
+		}
+	}
+	_, err := load(t, "version: 1\ngates:\n  - name: test-level-codes\n    check: test-level-codes\n    levels:\n      vr-level:\n        exclude: [\"ok\", \"(\"]\n")
+	if err == nil || !strings.Contains(err.Error(), "gates[test-level-codes].levels.vr-level.exclude[1]") {
+		t.Errorf("a broken filter pattern must be refused naming level, list and index, got %v", err)
+	}
+	if _, err := load(t, "version: 1\ngates:\n  - name: test-level-codes\n    check: test-level-codes\n    levels:\n      vr-level:\n        allow: [\"-VR$\"]\n"); err != nil {
+		t.Errorf("a valid filter must load: %v", err)
+	}
+}
+
 func TestLoad_languageIsSetAtLoad(t *testing.T) {
 	t.Run("CNFGO-B12: An unsupported language fails the load", func(t *testing.T) {})
 	t.Cleanup(func() { _ = i18n.Set("") })

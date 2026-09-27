@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:c03c8d56213e72ac — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:b8646de1ecb8a4eb — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -340,6 +340,8 @@ abra a página dela em `camadas/`.
 ### [SBGRD — SiblingGuard — sibling functions treat the same parameter consistently](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently)
 
 ### [SFMSP — SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
+
+### [TLVCD — TestLevelCodes — each scenario references only codes its test level accepts](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts)
 
 ### [TSTRT — TestTraceable — a test linked to a feature must declare what scenario it proves](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves)
 

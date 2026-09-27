@@ -77,6 +77,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"placeholder-filled":       checkPlaceholderFilled,
 	"rule-implemented":         checkRuleImplemented,
 	"vr-baseline":              checkVRBaseline,
+	"test-level-codes":         checkTestLevelCodes,
 	"ref-resolves":             checkRefResolves,
 	"layer-boundary":           checkLayerBoundary,
 	"dependency-honored":       checkDependencyHonored,

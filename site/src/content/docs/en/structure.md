@@ -191,6 +191,29 @@ virtual graph knows not only *that* a requirement must be tested, but *in
 which regime* and *where* that verification lives — and the gate confronts
 each scenario against the right surface.
 
+
+Each scenario also **references rules** of the spec by code, and the project can say
+**which codes each level accepts**, in the `levels` of the `test-level-codes` gate
+(keyed by the level's tag):
+
+```yaml
+gates:
+  - name: test-level-codes
+    on: [feature]
+    check: test-level-codes
+    blocking: true
+    levels:
+      vr-level:   { allow: ['-VR$'] }     # accepts only -VR codes
+      unit-level: { exclude: ['-VR$'] }   # refuses -VR codes
+```
+
+A level with no filter accepts everything; `exclude` refuses what matches; `allow`, when
+declared, accepts only what matches. The gate `test-level-codes` confronts each scenario
+with the filter of each level it declares. A convention between level and code is
+configuration, not a gate of its own. It lives on the gate itself, not in `derived`:
+`derived` links one file to another by pattern (the regime mapping is one such mapping),
+while accepting or refusing codes is the configuration of the gate that confronts it.
+
 ---
 
 ## 3. Meta-level: the Structure defines the layers; specs live inside them

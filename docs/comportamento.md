@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:5cbfff535bc90a5a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:bd2d98a85d33f9bf — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2460,6 +2460,8 @@ teste prova.
 
 - [An unknown workflow mode fails with no fallback](camadas/config.md#cnfgo-b10--an-unknown-workflow-mode-fails-with-no-fallback) `CNFGO-B10`
 
+- [A test level's code filter accepts by allow and refuses by exclude](camadas/config.md#cnfgo-b44--a-test-levels-code-filter-accepts-by-allow-and-refuses-by-exclude) `CNFGO-B44`
+
 - [A declared pattern that does not compile fails the load naming the field](camadas/config.md#cnfgo-b11--a-declared-pattern-that-does-not-compile-fails-the-load-naming-the-field) `CNFGO-B11`
 
 - [An unsupported language fails the load](camadas/config.md#cnfgo-b12--an-unsupported-language-fails-the-load) `CNFGO-B12`
@@ -4567,6 +4569,24 @@ teste prova.
 - [Without a built map the confrontation is pending](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-E01`
 
 - [A feature missing from disk does not hide the scenarios of the other features](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-E02`
+
+- [A node that is not a feature is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B01`
+
+- [A project with no filter per level is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B02`
+
+- [A feature with no filtered level is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B03`
+
+- [A level with allow accepts only matching codes](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B04`
+
+- [A level with exclude refuses matching codes even when allowed](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B05`
+
+- [Every code of the scenario is confronted without its suffix](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B06`
+
+- [The failure names each refused code with its level, sorted](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B07`
+
+- [Accepted codes pass](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B08`
+
+- [Levels come from the gate's own entries, and two entries add their lists](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B09`
 
 - [Non-test artifacts skip confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B01`
 

@@ -168,6 +168,29 @@ teste mora, co-localizada ou por padrão de localização §2.2). Assim o grafo 
 não só *que* um requisito deve ser testado, mas *em que regime* e *onde* essa
 verificação mora — e o gate confronta cada cenário contra a superfície certa.
 
+
+Cada cenário também **referencia regras** da spec pelo código, e o projeto pode dizer
+**quais códigos cada nível aceita**, nos `levels` do gate `test-level-codes` (chave = a
+tag do nível):
+
+```yaml
+gates:
+  - name: test-level-codes
+    on: [feature]
+    check: test-level-codes
+    blocking: true
+    levels:
+      nivel-vr:   { allow: ['-VR$'] }     # só aceita códigos -VR
+      nivel-unit: { exclude: ['-VR$'] }   # recusa códigos -VR
+```
+
+Nível sem filtro aceita tudo; `exclude` recusa o que casa; `allow`, quando declarado,
+aceita só o que casa. O gate `test-level-codes` confronta cada cenário com o filtro de
+cada nível que ele declara. Uma convenção entre nível e código é configuração, não um
+gate próprio. Fica no próprio gate, e não em `derived`: `derived` liga um arquivo a outro
+por padrão (e o de-para de regime é um desses mapeamentos); aceitar ou recusar códigos é
+configuração do gate que confronta.
+
 ---
 
 ## 3. Meta-nível: a Estrutura define as camadas; as specs vivem dentro delas

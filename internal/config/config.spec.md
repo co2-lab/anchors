@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNFGO
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: config
 -->
 # Config — loads the project's anchors.yaml, refuses what it cannot honour, and answers every setting with its default
@@ -64,6 +64,7 @@ patterns a spec governs.
 | `CNFGO-B13` | A code length outside 2 to 8 fails the load; valid lengths become the lengths the engine recognizes and are handed to the code generator's hook when one is registered (`SetCodeLengths`, `SetSlotsHook`). |
 | `CNFGO-B42` | A file that declares no code lengths sets the default length, 5, in the engine and the generator's hook, whatever lengths an earlier load in the same process set. |
 | `CNFGO-B43` | The language is set before any other check of the load, so every refusal of the load comes out in the language the file declares; the header `Save` writes on top of the file is in the language of the configuration being saved, English when it declares none (`Save`). |
+| `CNFGO-B44` | A test level declared on a gate (`levels`) accepts every code when it declares nothing, only the codes matching one of `allow` when it declares it, and never a code matching one of `exclude`; a filter pattern that does not compile fails the load naming the gate, the level, the list and the index (`TestLevel.Accepts`). |
 
 ### Canonical gate declarations
 

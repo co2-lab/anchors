@@ -938,6 +938,14 @@ type Gate struct {
 	// NÃO barra sozinho: o veredito é o do gate que o hospeda. Num `spec-complete`
 	// informativo, isto aparece como divergência; num bloqueante, barra como o resto.
 	EnforceSectionLanguage *bool `yaml:"enforce_section_language,omitempty"`
+
+	// Levels — for the `test-level-codes` gate: per test LEVEL (the tag a feature scenario
+	// carries, without @), which rule codes the level accepts. A scenario is tagged with
+	// its level and references rules of the spec by code; a level not declared here
+	// accepts every code. It lives on the gate that reads it, like `format`, and not in
+	// `derived`: derived links one file to another by pattern, and accepting or refusing
+	// codes is the gate's own configuration.
+	Levels map[string]TestLevel `yaml:"levels,omitempty"`
 }
 
 // ChecksSectionLanguage diz se o gate cobra o idioma dos títulos de seção.
@@ -1700,6 +1708,17 @@ func (c *Config) validarPadroes() error {
 			}
 		}
 	}
+	for _, g := range c.Gates {
+		for level, l := range g.Levels {
+			for field, ps := range map[string][]string{"allow": l.Allow, "exclude": l.Exclude} {
+				for i, p := range ps {
+					if err := check(fmt.Sprintf("gates[%s].levels.%s.%s[%d]", g.Name, level, field, i), p); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
 	return nil
 }
 
@@ -2101,4 +2120,32 @@ func fileFormat(data []byte) int {
 		return 1
 	}
 	return v
+}
+
+// TestLevel is what one test level accepts among the rule codes (see Gate.Levels).
+// Both lists are regular expressions matched against the whole scenario code
+// (`SMCS-B04`, `SMCS-VR`).
+type TestLevel struct {
+	// Allow, when not empty, is the only codes the level accepts.
+	Allow []string `yaml:"allow,omitempty"`
+	// Exclude is the codes the level refuses, even when Allow accepts them.
+	Exclude []string `yaml:"exclude,omitempty"`
+}
+
+// Accepts reports whether the level accepts the code: it matches one of Allow (when Allow
+// is declared) and none of Exclude. A pattern that does not compile matches nothing;
+// loading the configuration already refuses one.
+func (l TestLevel) Accepts(code string) bool {
+	matches := func(ps []string) bool {
+		for _, p := range ps {
+			if re, err := regexp.Compile(p); err == nil && re.MatchString(code) {
+				return true
+			}
+		}
+		return false
+	}
+	if len(l.Allow) > 0 && !matches(l.Allow) {
+		return false
+	}
+	return !matches(l.Exclude)
 }

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CNFGO
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @CNFGO
@@ -67,6 +67,13 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a workflow with mode "guithub"
     When the file is loaded
     Then the load fails and says there is no fallback between modes
+
+  @CNFGO-B44 @unit-level
+  Scenario: A test level's code filter accepts by allow and refuses by exclude
+    Given a level with no filter, a level that allows only VR codes, and a level that allows its unit prefix but excludes VR codes
+    When each is asked about a rule code and a VR code
+    Then the first accepts both, the second only the VR code, the third only the rule code
+    And a filter pattern that does not compile fails the load naming the gate, the level, the list and the index
 
   @CNFGO-B11 @unit-level
   Scenario: A declared pattern that does not compile fails the load naming the field

@@ -129,6 +129,7 @@ Quatro vereditos, e a diferença importa:
 | `trinca-completa` | uma spec de camada REGIDA precisa das três peças que a realizam — |
 | `updated-at-atual` | o `updated_at` do header bate com a data do ÚLTIMO COMMIT que |
 | `vr-baseline` | o cenário de regressão VISUAL prometido tem imagem de referência |
+| `test-level-codes` | cada cenário referencia só códigos que o seu nível de teste aceita (`levels` do próprio gate: `allow`/`exclude`) |
 
 Gates externos (`run:`) chamam a ferramenta do seu stack (`tsc`, `eslint`, `go vet`) — o
 Anchors não reimplementa o que a ferramenta já faz, só lê o veredito. O `scope:` decide se
