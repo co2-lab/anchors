@@ -61,6 +61,7 @@ the visual baseline, revision codes, and other units' codes cited to build fixtu
 | `RVMTR-B12` | A code the test names that no exercised feature declares as a scenario fails the gate, naming the code. |
 | `RVMTR-B13` | A scenario declared as a numbered variant makes its rule a declared scenario for the test. |
 | `RVMTR-B14` | A revision code named by the test is not read as a rule and is not charged. |
+| `RVMTR-B15` | A data state a spec defines with the unit prefix is read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, `TREXXXX-DS-data-present` defines `DS-data-present`. |
 
 ## Invariants
 

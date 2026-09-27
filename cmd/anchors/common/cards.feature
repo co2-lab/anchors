@@ -10,7 +10,7 @@ Feature: AgentCards — the cards this agent owns, and the card a pull request d
   @AGCRG-B01 @unit-level
   Scenario: Without an agent name, a workflow or the tracker client there are no cards
     Given a tracker client that would list one card
-    And either no ANCHORS_AGENT, no configuration, no workflow block, or no client on the PATH
+    And either no ANCHORS_AGENT, no configuration, no workflow block, a workflow with no label, or no client on the PATH
     When the agent's cards are listed
     Then the list is empty and no error is raised
 
@@ -46,9 +46,9 @@ Feature: AgentCards — the cards this agent owns, and the card a pull request d
 
   @AGCRG-B07 @unit-level
   Scenario: A long title is cut to 70 with an ellipsis
-    Given a reason of 80 characters and another of exactly 70
+    Given a reason of 80 characters and another of exactly 70, each once in ASCII and once with accented letters
     When each reason becomes an issue title
-    Then the first becomes 70 long ending in "..." and the second is kept whole
+    Then the first becomes 70 characters long ending in "..." and valid UTF-8, and the second is kept whole
 
   @AGCRG-B08 @unit-level
   Scenario: The issue number is read from the last segment of the URL

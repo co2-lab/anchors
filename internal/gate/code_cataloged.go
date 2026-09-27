@@ -59,8 +59,8 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 		return pendingNoMap()
 	}
 
-	alvo, texto, ok := specTarget(n, root, g)
-	if !ok {
+	alvos := specTargets(n, root, g)
+	if len(alvos) == 0 {
 		return Skip, i18n.T("gate.code_cataloged.skip_no_code")
 	}
 
@@ -79,22 +79,46 @@ func checkCodeCataloged(content string, n mapx.Node, root string, g *mapx.Graph,
 	}
 
 	// Os símbolos que a spec já nomeia ou que o código dispensa saem da conta.
-	var orfaos []string
-	for _, s := range symbolsWithLine(texto, exportRE) {
-		if strings.Contains(content, s.nome) {
-			continue
-		}
-		if noRuleRE.MatchString(s.linha) {
-			continue
-		}
-		// O nome sozinho obriga quem lê a caçar o símbolo no arquivo; com a linha,
-		// o endereço está completo.
-		orfaos = append(orfaos, i18n.T("gate.code_cataloged.orphan_line", s.nome, s.num))
+	//
+	// TODO arquivo que a spec governa entra, não só o primeiro: uma spec coordenadora
+	// governa vários, e ler só `specifies[0]` deixava os exports dos outros sem
+	// confronto nenhum — a spec passava com órfãos no segundo arquivo.
+	type orfao struct {
+		arquivo, nome string
+		num           int
 	}
-	if len(orfaos) == 0 {
+	var achados []orfao
+	var comOrfao []string
+	for _, a := range alvos {
+		antes := len(achados)
+		for _, s := range symbolsWithLine(a.texto, exportRE) {
+			if strings.Contains(content, s.nome) {
+				continue
+			}
+			if noRuleRE.MatchString(s.linha) {
+				continue
+			}
+			achados = append(achados, orfao{a.arquivo, s.nome, s.num})
+		}
+		if len(achados) > antes {
+			comOrfao = append(comOrfao, a.arquivo)
+		}
+	}
+	if len(achados) == 0 {
 		return Pass, ""
 	}
-	return Fail, i18n.T("gate.code_cataloged.unmet_exports", len(orfaos), alvo, firstOnes(orfaos, 5))
+	// O nome sozinho obriga quem lê a caçar o símbolo no arquivo; com a linha, o
+	// endereço está completo — e, com órfãos em mais de um arquivo, com o arquivo.
+	orfaos := make([]string, 0, len(achados))
+	for _, o := range achados {
+		if len(comOrfao) > 1 {
+			orfaos = append(orfaos, i18n.T("gate.code_cataloged.orphan_file_line", o.arquivo, o.nome, o.num))
+			continue
+		}
+		orfaos = append(orfaos, i18n.T("gate.code_cataloged.orphan_line", o.nome, o.num))
+	}
+	return Fail, i18n.T("gate.code_cataloged.unmet_exports", len(orfaos),
+		strings.Join(comOrfao, "`, `"), firstOnes(orfaos, 5))
 }
 
 // noRuleRE — a dispensa por SÍMBOLO, com razão obrigatória. Mesmo padrão do
@@ -184,8 +208,12 @@ func symbolsWithLine(codigo string, re *regexp.Regexp) []exportedSymbol {
 	return out
 }
 
-// specTarget lê o arquivo que a spec descreve (aresta `specifies`).
-func specTarget(n mapx.Node, root string, g *mapx.Graph) (alvo, texto string, ok bool) {
+type specFile struct{ arquivo, texto string }
+
+// specTargets lê TODOS os arquivos que a spec descreve (arestas `specifies`), na ordem
+// das arestas. O que não está mais no disco fica de fora (CDCTC-E02).
+func specTargets(n mapx.Node, root string, g *mapx.Graph) []specFile {
+	var out []specFile
 	for _, e := range g.Neighbors(n.ID).Out {
 		if e.Type != mapx.EdgeSpecifies {
 			continue
@@ -194,9 +222,9 @@ func specTarget(n mapx.Node, root string, g *mapx.Graph) (alvo, texto string, ok
 		if err != nil {
 			continue
 		}
-		return e.To, string(b), true
+		out = append(out, specFile{e.To, string(b)})
 	}
-	return "", "", false
+	return out
 }
 
 // symbolContext devolve a linha do símbolo mais o bloco de comentário acima dela.

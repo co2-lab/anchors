@@ -45,7 +45,13 @@ var noAbsentRE = regexp.MustCompile(`(?i)(^|[^` + "`" + `])@no-absent[^\S\n]*:[^
 // gatedByRE finds `@gated-by` citations in a spec. Mirrors `scan.gatedByRE`, including
 // the fixed `G`: `@gated-by CRED-B03` is not a flag, it is a typo, and matching any letter
 // would have the gate hunt for a scenario that can never exist.
-var gatedByRE = regexp.MustCompile("@gated-by\\s+`?([A-Z0-9]{3,6}-G[0-9]{2})`?")
+//
+// Compiled per CALL, as defineRuleCaptureRE: the code length comes from `code_lengths`,
+// loaded after the package globals. As a `var` with a fixed `{3,6}` it never saw a code
+// of another declared length (a 7- or 8-character code was invisible to the gate).
+func gatedByRE() *regexp.Regexp {
+	return regexp.MustCompile("@gated-by\\s+`?([A-Z0-9]" + config.CodeLengthPattern() + "-G[0-9]{2})`?")
+}
 
 // --- is the condition written in the grammar? ---
 //
@@ -115,13 +121,17 @@ func checkFlagScenarioExists(content string, n mapx.Node, root string, g *mapx.G
 	if n.Kind != mapx.KindSpec {
 		return Skip, i18n.T("gate.flag_scenario_exists.skip_not_spec")
 	}
-	cited := gatedByRE.FindAllStringSubmatch(content, -1)
+	cited := gatedByRE().FindAllStringSubmatch(content, -1)
 	if len(cited) == 0 {
 		return Skip, i18n.T("gate.flag_scenario_exists.no_citation")
 	}
+	// A missing flags folder is no flags; an unreadable folder or flag file is an error,
+	// and the gate cannot say which scenarios exist. Pending, naming THAT cause: the
+	// branch answered with the "no map loaded" message, which sent the reader to build
+	// a map this gate never reads.
 	flags, err := flagx.Load(root)
 	if err != nil {
-		return pendingNoMap()
+		return Pending, i18n.T("gate.flag_scenario_exists.pending_unreadable", err)
 	}
 	known := flagx.ByCode(flags)
 

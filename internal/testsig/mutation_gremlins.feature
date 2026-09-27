@@ -55,11 +55,23 @@ Feature: GremlinsIngest — the mutation score per file, read from a gremlins re
     When the report is read
     Then they score 75 and 25
 
+  @GRING-B08 @unit-level
+  Scenario: A mutant no test covered is counted apart and does not enter the score
+    Given a file with one KILLED and one NOT COVERED mutant
+    When the report is read
+    Then it has 1 no-coverage mutant, no survivor, and scores 100
+
+  @GRING-B09 @unit-level
+  Scenario: A file where no mutant ran scores 100
+    Given a file whose mutants are NOT VIABLE and SKIPPED, and a file whose only mutant is NOT COVERED
+    When the report is read
+    Then both score 100, and the second keeps its no-coverage count
+
   @GRING-X01 @unit-level
   Scenario: The report's own efficacy figure is not used
-    Given a report stating an efficacy of 66.6 whose statuses give 50
+    Given a report stating an efficacy of 40.0 whose statuses give two killed of three that ran
     When it is read
-    Then the score is 50
+    Then the score is two thirds of one hundred, not 40.0
 
   @GRING-E01 @unit-level
   Scenario: A canonical-format report under the gremlins format is refused naming format

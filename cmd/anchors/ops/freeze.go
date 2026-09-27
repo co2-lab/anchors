@@ -229,24 +229,40 @@ func writeFreeze(path, motivo string) error {
 	// O motivo entra entre aspas: ele é texto livre e costuma ter `:`, que sem aspas
 	// quebraria o YAML.
 	bloco := fmt.Sprintf("enabled: false\nfreeze_reason: %q\n", motivo)
-	return os.WriteFile(path, append([]byte(bloco), b...), 0o644)
+	// Um `enabled: true` (ou um freeze_reason velho) já declarado SAI antes: empilhar o
+	// bloco em cima dele deixava a chave duplicada, o yaml recusava o arquivo, e o projeto
+	// inteiro — o `thaw` incluso — parava de carregar a configuração.
+	return os.WriteFile(path, []byte(bloco+stripFreezeLines(string(b))), 0o644)
 }
 
-// removeFreeze apaga as duas linhas, e SÓ elas.
+// removeFreeze apaga as linhas do congelamento, e SÓ elas.
 func removeFreeze(path string) error {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
 	}
+	return os.WriteFile(path, []byte(stripFreezeLines(string(b))), 0o644)
+}
+
+// stripFreezeLines apaga as chaves `enabled:` e `freeze_reason:` do NÍVEL DE CIMA — e as
+// linhas indentadas que continuam o valor delas (um `freeze_reason: |` escrito à mão).
+//
+// Só a coluna zero: é onde o `writeFreeze` escreve, e uma chave indentada pertence a
+// outra seção, que não é deste comando apagar.
+func stripFreezeLines(s string) string {
 	var out []string
-	for _, l := range strings.Split(string(b), "\n") {
-		t := strings.TrimSpace(l)
-		if strings.HasPrefix(t, "enabled:") || strings.HasPrefix(t, "freeze_reason:") {
+	dropping := false
+	for _, l := range strings.Split(s, "\n") {
+		if dropping && (strings.HasPrefix(l, " ") || strings.HasPrefix(l, "\t")) {
+			continue
+		}
+		dropping = strings.HasPrefix(l, "enabled:") || strings.HasPrefix(l, "freeze_reason:")
+		if dropping {
 			continue
 		}
 		out = append(out, l)
 	}
-	return os.WriteFile(path, []byte(strings.Join(out, "\n")), 0o644)
+	return strings.Join(out, "\n")
 }
 
 // commitAndPush grava o anchors.yaml no remoto, contornando os hooks.

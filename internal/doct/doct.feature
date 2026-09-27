@@ -104,6 +104,12 @@ Feature: DocTemplateCompiler — compiles documentation pages from templates tha
     When each is inspected
     Then the first is generated, the second is handwritten, and the third is neither
 
+  @DTCDC-B17 @unit-level
+  Scenario: A page with the unhashed marker is stale only when its body differs
+    Given a compiled page whose marker line is replaced by the unhashed marker of an earlier version
+    When the stale pages are asked, before and after a line is added to its body
+    Then the page is fresh first, and "x.md" is stale after the edit
+
   @DTCDC-I01 @unit-level
   Scenario: Right after a build nothing is stale
     Given templates at the root and in a subfolder

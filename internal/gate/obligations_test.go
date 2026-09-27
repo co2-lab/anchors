@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -197,6 +198,23 @@ func TestAllObligations_cachedPerRoot(t *testing.T) {
 	}
 }
 
+// The cache is keyed by what decides the list, not by the root alone. A later call in
+// the same process with another set of packs (a long-running `watch`, a test run over one
+// root) got the first call's pack duties back.
+func TestAllObligations_cacheFollowsThePackSet(t *testing.T) {
+	t.Run("BLGTN-B12: Another set of packs for the same root is read, not served from the cache", func(t *testing.T) {})
+	root := t.TempDir()
+	writePackFile(t, root, "packs/lgpd.yaml", erasurePack)
+	writePackFile(t, root, "packs/one.yaml", "name: one\ndomain: privacy\nobligations:\n  - name: only-one\n    when: \"carries: pii\"\n    must_appear_in: [\"x.ts\"]\n")
+	if got := allObligations(root, &config.Config{Packs: []string{"packs/lgpd.yaml"}}); len(got) != 2 {
+		t.Fatalf("first set: %+v", got)
+	}
+	got := allObligations(root, &config.Config{Packs: []string{"packs/one.yaml"}})
+	if len(got) != 1 || got[0].Name != "only-one" {
+		t.Errorf("the second set of packs must be read, got %+v", got)
+	}
+}
+
 // A pack error is a configuration error and must be seen: it goes to stderr.
 func TestAllObligations_aBrokenPackIsReportedOnStderr(t *testing.T) {
 	t.Run("BLGTN-B05: A pack that fails to load keeps the inline duties", func(t *testing.T) {})
@@ -212,6 +230,10 @@ func TestAllObligations_aBrokenPackIsReportedOnStderr(t *testing.T) {
 	out, _ := io.ReadAll(r)
 	if !strings.Contains(string(out), "packs") {
 		t.Errorf("the broken pack was not reported on stderr: %q", out)
+	}
+	// In the project's language: the line was a Portuguese literal in every project.
+	if want := strings.SplitN(i18n.T("gate.obligations.pack_load_error"), "%", 2)[0]; !strings.HasPrefix(string(out), want) || strings.HasPrefix(want, "gate.") {
+		t.Errorf("the pack error is not the translated line %q: %q", want, out)
 	}
 }
 

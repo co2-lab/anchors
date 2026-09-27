@@ -50,6 +50,7 @@ stays a failure.
 | `VPFVR-B07` | A project that turned pre-commit dating off gets no dating: the staged files keep their dates. |
 | `VPFVR-B08` | A staged file that also has changes outside the index is named as not dated. |
 | `VPFVR-B09` | The phase, the commit message file, the category, the skip-slow and the no-record choices reach the check unchanged. |
+| `VPFVR-B10` | A project root below the repository's top hands the check only its own staged files, named from the project root. |
 
 ## Invariants
 
@@ -77,7 +78,8 @@ stays a failure.
 
 | Code | File | Method | Layer |
 | --- | --- | --- | --- |
-| DEP1 | `cmd/anchors/quality/check.go` | `ExitNotGoverned`, `errNotGoverned` | comando — the check the facade delegates to |
+| DEP1 | `cmd/anchors/quality/check.go` | `errNotGoverned` | comando — the check the facade delegates to |
+| DEP5 | `cmd/anchors/common/errors.go` | `ExitNotGoverned` | comando — the one not-governed exit code |
 | DEP2 | `cmd/anchors/quality/touch.go` | `touchRun`, `touchOnPreCommit` | comando — dating the staged files |
 | DEP3 | `internal/gitmeta/availability.go` | `Check`, `Explain` | infra — why the index cannot be read |
 | DEP4 | `internal/config/config.go` | `Load` | config — the touch setting |

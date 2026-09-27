@@ -29,10 +29,11 @@ A duty with subjects and nobody complying is rarely total violation; it is usual
 | --- | --- |
 | `CMPLN-B01` | Each duty is printed under its norm: a pack duty under the pack's authority, or the pack's name when it declares none; an inline obligation under "declared in the project". Norms and the duties inside each norm are sorted by name. |
 | `CMPLN-B02` | Each duty line is marked · when no node is subject, ✗ when fewer subjects comply than are subject, and ✓ otherwise. It shows the subject and complying counts, the pack article when there is one, and appends the assumed debts and the waivers when there are any. |
-| `CMPLN-B03` | A duty with subjects, none complying and no declared debt gets a "⚠ NONE complies" line naming its targets, warning that a disconnected target looks like total violation. A duty whose only gap is declared debt does not warn. |
+| `CMPLN-B03` | A duty with subjects, none complying and no declared debt gets a "⚠ NONE complies" line naming its targets, warning that a disconnected target looks like total violation, and naming where the target is declared: `pack_values:` for a pack duty, the obligation's `must_appear_in:` for an inline one. A duty whose only gap is declared debt does not warn. |
 | `CMPLN-B04` | With `--verbose`, each duty lists the nodes that do not comply. Without it, when some duty has a gap, the report ends with the hint "(use --verbose …)". |
 | `CMPLN-B05` | With no duty in force the report says "No duty declared." and still lists the packs available. |
-| `CMPLN-B06` | The embedded packs the project did not adopt are listed, sorted, after the report. A pack adopted by its short name or as `./packs/<name>.yaml` is not offered again, and when every pack is adopted nothing is printed. |
+| `CMPLN-B06` | The embedded packs the project did not adopt are listed, sorted, after the report. A pack adopted by its short name or by any path the pack loader accepts (`packs/<name>.yaml`, `./packs/<name>.yaml`, or either with `.yml`) is not offered again, and when every pack is adopted nothing is printed. |
+| `CMPLN-B07` | The report ends with the totals: the number of duties, the number of subject node-duty pairs — a node subject to two duties counts twice, so it is not a count of nodes — and how many of those pairs are fulfilled. |
 
 ## Invariants
 

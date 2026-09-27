@@ -12,7 +12,7 @@ import (
 // (internal/mutator/mutator.go): KILLED, LIVED, NOT COVERED, NOT VIABLE, TIMED OUT.
 const fixtureGremlins = `{
   "go_module": "example-service",
-  "test_efficacy": 66.6,
+  "test_efficacy": 40.0,
   "mutations_coverage": 75.0,
   "mutants_total": 6,
   "mutants_killed": 2,
@@ -57,18 +57,18 @@ func TestParseMutationFormat_Gremlins(t *testing.T) {
 	if fm.Killed != 2 {
 		t.Errorf("Killed = %d, want 2", fm.Killed)
 	}
-	// LIVED + NOT COVERED = 2 survivors today (see the report: MTE keeps NoCoverage out).
-	if fm.Survived != 2 {
-		t.Errorf("Survived = %d, want 2", fm.Survived)
+	// LIVED is the one survivor; NOT COVERED is counted apart, as MTE does (GRING-B08).
+	if fm.Survived != 1 || fm.NoCoverage != 1 {
+		t.Errorf("Survived = %d, NoCoverage = %d, want 1 and 1", fm.Survived, fm.NoCoverage)
 	}
-	// NOT VIABLE and RUNNABLE stay out of the denominator: 2/(2+2) = 50%, not the
-	// report's own 66.6.
-	if fm.Score != 50 {
-		t.Errorf("Score = %v, want 50", fm.Score)
+	// NOT COVERED, NOT VIABLE and RUNNABLE stay out of the denominator: 2/(2+1), not the
+	// report's own 40.0.
+	if want := float64(2) / 3 * 100; fm.Score != want {
+		t.Errorf("Score = %v, want %v", fm.Score, want)
 	}
 	// The survivors' lines are what the author needs to act.
-	if len(fm.SurvivedAt) != 2 || fm.SurvivedAt[0] != 42 || fm.SurvivedAt[1] != 88 {
-		t.Errorf("SurvivedAt = %v, want [42 88]", fm.SurvivedAt)
+	if len(fm.SurvivedAt) != 1 || fm.SurvivedAt[0] != 42 {
+		t.Errorf("SurvivedAt = %v, want [42]", fm.SurvivedAt)
 	}
 	// gremlins writes no threshold in the report — Low/High stay absent (zero) and the
 	// engine falls back to the default, instead of inheriting a ruler invented here.
@@ -156,6 +156,34 @@ func TestGremlinsStatusesAndPaths(t *testing.T) {
 	t.Run("GRING-E02: A report without files is refused", func(t *testing.T) {
 		if _, err := readGremlins(t, `{"go_module":"m","files":[]}`); err == nil {
 			t.Error("an empty file list must be refused")
+		}
+	})
+}
+
+// The two readings disagreed on the same facts: a NOT COVERED mutant was a survivor here and
+// NoCoverage (out of the score) in the canonical reading, and a file where no mutant ran
+// scored 0 here and 100 there. The gate compared scores from different arithmetics.
+func TestGremlinsAgreesWithCanonical(t *testing.T) {
+	t.Run("GRING-B08: A mutant no test covered is counted apart and does not enter the score", func(t *testing.T) {
+		rep, err := readGremlins(t, `{"files":[{"file_name":"a.go","mutations":[
+			{"status":"KILLED","line":1},{"status":"NOT COVERED","line":2}]}]}`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fm := rep.Files["a.go"]
+		if fm.NoCoverage != 1 || fm.Survived != 0 || len(fm.SurvivedAt) != 0 || fm.Score != 100 {
+			t.Errorf("want 1 no-coverage, no survivor, score 100; got %+v", fm)
+		}
+	})
+	t.Run("GRING-B09: A file where no mutant ran scores 100", func(t *testing.T) {
+		rep, err := readGremlins(t, `{"files":[{"file_name":"a.go","mutations":[
+			{"status":"NOT VIABLE","line":1},{"status":"SKIPPED","line":2}]},
+			{"file_name":"b.go","mutations":[{"status":"NOT COVERED","line":1}]}]}`)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if a, b := rep.Files["a.go"], rep.Files["b.go"]; a.Score != 100 || b.Score != 100 || b.NoCoverage != 1 {
+			t.Errorf("want both 100 with b's no-coverage kept; got a=%+v b=%+v", a, b)
 		}
 	})
 }

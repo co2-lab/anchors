@@ -54,7 +54,7 @@ written in the configuration file).
 | `DLCTI-B03` | The family name is matched ignoring case. |
 | `DLCTI-B04` | An unknown family contributes nothing; the known families are listed in alphabetical order for the messages that name them (`KnownDialectFamilies`). |
 | `DLCTI-B05` | The two naming conventions (the set-promise and the set-slice verbs) apply whatever the family, and a declared one replaces its default. |
-| `DLCTI-B06` | The Gherkin language defaults to English and is looked up in lower case, so `PT` is Portuguese; a language outside the table keeps its code and gets the English keywords (`GherkinFor`). |
+| `DLCTI-B06` | The Gherkin language defaults to English and is looked up ignoring case, answering the table's own spelling of the code, so `PT` is `pt` and `zh-cn` is `zh-CN`; a language outside the table keeps its code as declared and gets the English keywords (`GherkinFor`). |
 | `DLCTI-B07` | The recognised ways to open a scenario are those of every language in the table — scenario, outline and synonyms — each once, longest first, so an outline that contains the word for scenario is tried before it (`GherkinScenarioAlternatives`). |
 | `DLCTI-B08` | The recognised result keywords are those of every language in the table, in alphabetical order (`GherkinThenAlternatives`). |
 | `DLCTI-B09` | An empty or invalid pattern compiles to nothing, which the gates read as "not declared" (`Compile`). |

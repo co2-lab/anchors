@@ -63,9 +63,10 @@ Feature: GitState — classify the project's versioning before `init` scans it, 
 
   @GTSTG-B09 @unit-level
   Scenario: Each unready state has its own warning and ready has none
-    Given each of the four versioning states
+    Given each of the four versioning states, in English and in Portuguese
     When the warning is asked for each
-    Then "not installed" says git is not installed
+    Then it is written in the project's language
+    And "not installed" says git is not installed
     And "not initialised" says the project is not under git
     And "no commit yet" says there is no commit
     And "ready" has an empty warning

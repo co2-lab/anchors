@@ -293,3 +293,53 @@ esac`)
 		t.Errorf("thaw --sem-push still pushed: %q", got)
 	}
 }
+
+// A config that already declares `enabled: true` (and a stale freeze_reason) used to get a
+// SECOND `enabled:` key on top: yaml refuses the duplicate, the config stopped loading, and
+// with it every command — including the thaw that would undo it. The freeze now replaces
+// the top-level lines instead of stacking on them.
+func TestFreezeReplacesAnExistingEnabledLine(t *testing.T) {
+	t.Run("FRZEX-B13: A config that already declares enabled is frozen with a single key and still loads", func(t *testing.T) {})
+	const orig = "version: 1\nenabled: true\nfreeze_reason: \"old\"\nlang: en\n"
+	root, _ := frozenRepo(t, orig)
+	err, out := runCmd(t, newFreezeCmd(), "--root", root, "--reason", "stop now", "--no-push")
+	if err != nil {
+		t.Fatalf("freeze: %v\n%s", err, out)
+	}
+	p := filepath.Join(root, config.DefaultFile)
+	b, _ := os.ReadFile(p)
+	if n := strings.Count(string(b), "enabled:"); n != 1 {
+		t.Errorf("want exactly one enabled: key, got %d:\n%s", n, b)
+	}
+	if n := strings.Count(string(b), "freeze_reason:"); n != 1 {
+		t.Errorf("want exactly one freeze_reason: key, got %d:\n%s", n, b)
+	}
+	cfg, lerr := config.Load(p)
+	if lerr != nil {
+		t.Fatalf("the frozen config no longer loads: %v\n%s", lerr, b)
+	}
+	if !cfg.Frozen() || cfg.FreezeReason != "stop now" {
+		t.Errorf("frozen = %v, reason = %q", cfg.Frozen(), cfg.FreezeReason)
+	}
+
+	// The thaw takes both lines away, and the project loads enabled (the default).
+	if err, out := runCmd(t, newThawCmd(), "--root", root, "--no-push"); err != nil {
+		t.Fatalf("thaw: %v\n%s", err, out)
+	}
+	b, _ = os.ReadFile(p)
+	if string(b) != "version: 1\nlang: en\n" {
+		t.Errorf("after thaw: %q", b)
+	}
+	if cfg, lerr := config.Load(p); lerr != nil || cfg.Frozen() {
+		t.Errorf("after thaw: load err = %v, frozen = %v", lerr, cfg != nil && cfg.Frozen())
+	}
+	// A hand-written block reason goes with its continuation lines, not leaving them orphaned.
+	writeFile(t, root, config.DefaultFile, "version: 1\nenabled: true\nfreeze_reason: |\n  multi\n  line\nlang: en\n")
+	if err := writeFreeze(p, "x"); err != nil {
+		t.Fatal(err)
+	}
+	if cfg, lerr := config.Load(p); lerr != nil || cfg.FreezeReason != "x" {
+		b, _ := os.ReadFile(p)
+		t.Errorf("block reason: load err = %v\n%s", lerr, b)
+	}
+}

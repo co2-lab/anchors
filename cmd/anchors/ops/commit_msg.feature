@@ -85,6 +85,18 @@ Feature: CommitMsg — the commit subject is confronted with the format the chan
     When it is confronted
     Then it is refused with its own diagnosis
 
+  @CMMSC-B14 @unit-level
+  Scenario: The subject limit counts characters, not bytes
+    Given a subject of exactly 100 characters, 94 of them "ç"
+    When it is confronted, and again with one more "ã"
+    Then the first passes and the second is refused saying it has 101 characters
+
+  @CMMSC-B15 @unit-level
+  Scenario: A subject with no space after the colon is refused
+    Given the subject "feat:x"
+    When it is confronted
+    Then it is refused with its own diagnosis
+
   @CMMSC-X01 @unit-level
   Scenario: The command only accepts or refuses
     Given an empty message file

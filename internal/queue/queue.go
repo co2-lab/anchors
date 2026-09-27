@@ -18,6 +18,8 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/co2-lab/anchors/internal/i18n"
 )
 
 // Dir é a subpasta (sob .anchors/) onde as tasks VIVAS vivem (pending + claimed).
@@ -38,6 +40,10 @@ const (
 )
 
 // Task é uma unidade de trabalho: uma mudança que pede um passo do ciclo de vida.
+// KindJudgment is the kind of a task the check enqueues for a judgment gate: one task per
+// gate and target, told apart by its ID.
+const KindJudgment = "judgment"
+
 type Task struct {
 	ID string `yaml:"id"` // estável: <seq>-<kind>-<slug>
 
@@ -146,7 +152,11 @@ func SuggestNext(kind string) (next, reason string) {
 			"REVIEW the whole unit (`anchors work review --for <target>`): green gates " +
 			"do not prove it is right"
 	case "guide":
-		return "review-governed", "a ruler changed — review the artifacts it governs"
+		// `review`, not `review-governed`: that verb was never one `anchors work` composes,
+		// so a guide's task left whoever pulled it with a step it could not run. A ruler has
+		// no unit of its own; the review is of each unit it governs.
+		return "review", "a ruler changed — find what it governs (`anchors impact <guide>`) and " +
+			"REVIEW each of those units against it (`anchors work review --for <unit>`)"
 	default:
 		return "triage", "change of an unmapped kind — decide the next step"
 	}
@@ -175,9 +185,10 @@ func parseFileName(name string) (state State, id string, ok bool) {
 	return State(st), id, true
 }
 
-// Enqueue grava uma nova task no estado pending. Idempotente por ID: se já existe
-// uma task (em qualquer estado) para o mesmo (changed, suggested_next) ainda não
-// concluída, NÃO duplica — evita enxurrada quando um arquivo é salvo várias vezes.
+// Enqueue grava uma nova task no estado pending. Idempotent by (changed, suggested_next),
+// not by ID: while a live task holds the same target and step, nothing is created — this
+// avoids a flood when a file is saved many times. An ID a live task already holds for
+// another target or step is refused (see below).
 func Enqueue(root string, t Task) (created bool, err error) {
 	d := dirFor(root)
 	if err := os.MkdirAll(d, 0o755); err != nil {
@@ -189,8 +200,22 @@ func Enqueue(root string, t Task) (created bool, err error) {
 		return false, err
 	}
 	for _, e := range existing {
-		if e.State != Done && e.Changed == t.Changed && e.SuggestedNext == t.SuggestedNext {
+		// The SAME work is the same file, verb and kind — and, for a judgment, the same
+		// gate, which its ID carries. Comparing file and verb alone made two judgment
+		// gates on one spec collapse into one task, and a judgment vanish behind a
+		// watcher's review of the same file once both said `review`.
+		if e.State != Done && e.Changed == t.Changed && e.SuggestedNext == t.SuggestedNext &&
+			e.Kind == t.Kind && (t.Kind != KindJudgment || e.ID == t.ID) {
 			return false, nil // já enfileirada; não duplica
+		}
+	}
+	// The ID is the file name, so a live task already holding it for another target or
+	// step would be overwritten: the write replaced its file and that task vanished from
+	// the queue with no trace. The claimed file counts too — a pending file beside it would
+	// be taken for the residue of a dead claim and deleted by the next Claim.
+	for _, e := range existing {
+		if e.ID == t.ID && (e.State == Pending || e.State == Claimed) {
+			return false, fmt.Errorf("%s", i18n.T("queue.enqueue.id_taken", t.ID))
 		}
 	}
 	t.State = Pending
@@ -199,8 +224,21 @@ func Enqueue(root string, t Task) (created bool, err error) {
 		return false, err
 	}
 	path := filepath.Join(d, fileName(Pending, t.ID))
-	if err := os.WriteFile(path, data, 0o644); err != nil {
+	// O_EXCL closes the window between the check above and this write.
+	f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
+	if err != nil {
+		if os.IsExist(err) {
+			return false, fmt.Errorf("%s", i18n.T("queue.enqueue.id_taken", t.ID))
+		}
 		return false, err
+	}
+	_, werr := f.Write(data)
+	if cerr := f.Close(); werr == nil {
+		werr = cerr
+	}
+	if werr != nil {
+		_ = os.Remove(path)
+		return false, werr
 	}
 	return true, nil
 }
@@ -220,7 +258,7 @@ func List(root string) ([]Task, error) {
 		if e.IsDir() {
 			continue
 		}
-		state, _, ok := parseFileName(e.Name())
+		state, id, ok := parseFileName(e.Name())
 		if !ok {
 			continue
 		}
@@ -229,8 +267,15 @@ func List(root string) ([]Task, error) {
 			continue
 		}
 		var t Task
-		if yaml.Unmarshal(data, &t) != nil {
-			continue
+		if uerr := yaml.Unmarshal(data, &t); uerr != nil {
+			// A task file that is not valid YAML used to be skipped: never listed, never
+			// claimed, never cleaned — a task lost in plain sight, with the queue saying
+			// nothing. It is listed instead as a triage task named by its file, so `anchors
+			// queue` shows it and it can be claimed, done or dropped by its ID.
+			t = Task{
+				ID: id, SuggestedNext: "triage",
+				Reason: i18n.T("queue.corrupt_task.reason", e.Name(), uerr, id),
+			}
 		}
 		t.State = state // o nome do arquivo é a fonte da verdade do estado
 		// Task cujo ALVO não existe mais é ruído: o arquivo foi apagado (uma sonda de
@@ -444,8 +489,15 @@ func staleClaim(t Task) bool {
 }
 
 // existsAtRoot diz se o alvo de uma task ainda está no disco.
+//
+// An absolute target is looked up as it is: joined under the root it named a path that
+// never exists, and a live task was deleted as a ghost by the next List.
 func existsAtRoot(root, rel string) bool {
-	_, err := os.Stat(filepath.Join(root, rel))
+	p := rel
+	if !filepath.IsAbs(p) {
+		p = filepath.Join(root, rel)
+	}
+	_, err := os.Stat(p)
 	return err == nil
 }
 

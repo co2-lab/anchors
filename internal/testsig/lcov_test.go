@@ -105,3 +105,34 @@ func TestLCOVTotalsAndRecords(t *testing.T) {
 		}
 	})
 }
+
+// `DA:<line>,<hits>,<checksum>` is legal lcov (geninfo --checksum). Splitting in two left
+// "5,abc" as the hit count, which failed to parse and marked a covered line uncovered.
+func TestLCOVChecksumField(t *testing.T) {
+	t.Run("LCINL-B08: A line entry with a checksum field keeps its hit count", func(t *testing.T) {
+		rep, err := ParseLCOV(write(t, "c.info", "SF:a.ts\nDA:1,5,PF4Rz2r7RTliO9u6bZ7h6g\nDA:2,0,XyZ\nend_of_record\n"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if f := rep.Files[0]; !f.Lines[1] || f.Lines[2] || f.CoveredLines != 1 || f.TotalLines != 2 {
+			t.Errorf("want line 1 covered, line 2 not, 1/2; got %+v", f)
+		}
+	})
+}
+
+// Entries before the first `SF:` belong to no file. They were counted and the counts were
+// not reset, so they leaked into the first record's totals.
+func TestLCOVEntriesBeforeFirstRecord(t *testing.T) {
+	t.Run("LCINL-B09: Entries before the first source-file line belong to no file", func(t *testing.T) {
+		rep, err := ParseLCOV(write(t, "c.info", "DA:1,1\nDA:2,1\nLF:9\nLH:9\nSF:a.ts\nDA:1,0\nend_of_record\n"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(rep.Files) != 1 {
+			t.Fatalf("want one file, got %+v", rep.Files)
+		}
+		if f := rep.Files[0]; f.TotalLines != 1 || f.CoveredLines != 0 {
+			t.Errorf("a.ts is 0/1, got %d/%d", f.CoveredLines, f.TotalLines)
+		}
+	})
+}

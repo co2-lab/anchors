@@ -25,10 +25,23 @@ var KnownArtifactLayers = []ArtifactLayer{
 	{Name: "plan", Kind: "plan", Pattern: "plans/*.md"},
 }
 
+// CodeArtifact is the artifact choice for the project's CODE. It is offered with the
+// artifact layers but has no layer of its own: the code layers come from inference and
+// the preset (one per directory), and PruneCodeLayers decides which stay.
+//
+// Without it among the options, `anchors init` could never seed the gates that run on
+// code (no-secret-leaked, layer-boundary, the external-tool checks), `--artifacts=code`
+// was rejected as an unknown value, and colocation never declared the code beside the
+// spec — every one of them tests `chosen["code"]`, which nothing could set.
+const CodeArtifact = "code"
+
 // DetectedArtifacts devolve os nomes dos artefatos que a inferência achou — usado
 // para PRÉ-MARCAR as opções (não para gatear a pergunta).
 func (p *Proposal) DetectedArtifacts() map[string]bool {
 	m := map[string]bool{}
+	if len(p.CodeDirs) > 0 {
+		m[CodeArtifact] = true
+	}
 	if p.HasSpecMD {
 		m["spec"] = true
 	}
@@ -72,13 +85,14 @@ func ApplyArtifactChoice(cfg *config.Config, chosen map[string]bool, dirs map[st
 	}
 }
 
-// ArtifactNames devolve os nomes conhecidos, em ordem estável (para as opções).
+// ArtifactNames devolve os nomes conhecidos, em ordem estável (para as opções): as
+// camadas de artefato e, por último, o código (CodeArtifact).
 func ArtifactNames() []string {
-	out := make([]string, len(KnownArtifactLayers))
-	for i, a := range KnownArtifactLayers {
-		out[i] = a.Name
+	out := make([]string, 0, len(KnownArtifactLayers)+1)
+	for _, a := range KnownArtifactLayers {
+		out = append(out, a.Name)
 	}
-	return out
+	return append(out, CodeArtifact)
 }
 
 // ApplyColocation monta ou remove o `derived` do cfg conforme a escolha do usuário.
@@ -92,8 +106,18 @@ func ArtifactNames() []string {
 // (a extensão vinha dele), e da spec não há de onde tirá-la. `ext` é o que o projeto
 // decidiu no PROJECT.md.
 func ApplyColocation(cfg *config.Config, use bool, chosenArtifacts map[string]bool) {
-	if !use || !chosenArtifacts["spec"] {
+	// Only the colocation part of `derived` is this function's. The rest — the test
+	// handle the inference found — was dropped with it, and never reached anchors.yaml.
+	prev := cfg.Derived
+	keepRest := func() {
+		if prev != nil && prev.TestHandle != "" {
+			cfg.Derived = &config.Derived{TestHandle: prev.TestHandle}
+			return
+		}
 		cfg.Derived = nil
+	}
+	if !use || !chosenArtifacts["spec"] {
+		keepRest()
 		return
 	}
 	files := map[string]config.Padroes{}
@@ -107,8 +131,13 @@ func ApplyColocation(cfg *config.Config, use bool, chosenArtifacts map[string]bo
 		files["test"] = config.Padroes{"{{dir}}/{{name}}.test.{{ext}}"}
 	}
 	if len(files) == 0 {
-		cfg.Derived = nil
+		keepRest()
 		return
 	}
-	cfg.Derived = &config.Derived{Anchor: "spec", Files: files}
+	d := config.Derived{}
+	if prev != nil {
+		d = *prev
+	}
+	d.Anchor, d.Files = "spec", files
+	cfg.Derived = &d
 }

@@ -300,3 +300,57 @@ func TestTouchOnPreCommitIsOnByDefault(t *testing.T) {
 		}
 	}
 }
+
+// The project root may be a subdirectory of the git repository (a monorepo package). git
+// names the changed files from the repository's top, and the touch works relative to the
+// project root: every path must be the project's, and files outside it are not its own.
+func TestTouch_projectRootBelowTheRepositoryTop(t *testing.T) {
+	t.Run("HDTHD-B13: A project root below the repository top dates its own files and nothing outside it", func(t *testing.T) {})
+	repo := touchRepo(t)
+	for _, f := range []string{"sub/x.ts", "sub/y.ts"} {
+		touchWrite(t, repo, f, touchHeader+"export const x = 1\n")
+	}
+	if out, err := exec.Command("git", "-C", repo, "-c", "user.email=t@t", "-c", "user.name=t", "add", ".").CombinedOutput(); err != nil {
+		t.Fatalf("git add: %v %s", err, out)
+	}
+	if out, err := exec.Command("git", "-C", repo, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "sub").CombinedOutput(); err != nil {
+		t.Fatalf("git commit: %v %s", err, out)
+	}
+	sub := filepath.Join(repo, "sub")
+
+	// --staged: x staged clean, y staged with a change on top, a.ts (outside) staged too
+	touchWrite(t, repo, "sub/x.ts", touchHeader+"export const x = 2\n")
+	touchWrite(t, repo, "sub/y.ts", touchHeader+"export const x = 2\n")
+	touchWrite(t, repo, "a.ts", touchHeader+"export const x = 2\n")
+	if out, err := exec.Command("git", "-C", repo, "add", "sub/x.ts", "sub/y.ts", "a.ts").CombinedOutput(); err != nil {
+		t.Fatalf("git add: %v %s", err, out)
+	}
+	touchWrite(t, repo, "sub/y.ts", touchHeader+"export const x = 3\n")
+
+	out := runTouch(t, "--root", sub, "--staged", "--date", "2026-09-25")
+	if !strings.Contains(out, "bumped x.ts") || !strings.Contains(out, "skipped y.ts — "+string(skipUnstaged)) {
+		t.Errorf("staged under a sub-root: x.ts bumped, y.ts skipped:\n%s", out)
+	}
+	if strings.Contains(out, "a.ts") {
+		t.Errorf("a file outside the project root is not the project's:\n%s", out)
+	}
+	idx, _ := exec.Command("git", "-C", repo, "show", ":sub/x.ts").Output()
+	if !strings.Contains(string(idx), "updated_at: 2026-09-25") {
+		t.Errorf("the bumped sub/x.ts must be re-staged:\n%s", idx)
+	}
+	if _, err := os.Stat(filepath.Join(sub, "sub")); err == nil {
+		t.Error("a path from the repository top was joined to the project root")
+	}
+
+	// the worktree mode: the changed and the untracked files of the project, by its paths
+	touchWrite(t, repo, "sub/new.ts", touchHeader+"export const n = 1\n")
+	out = runTouch(t, "--root", sub, "--date", "2026-09-26", "--dry-run")
+	for _, want := range []string{"x.ts", "new.ts"} {
+		if !strings.Contains(out, "would bump "+want) {
+			t.Errorf("the worktree mode under a sub-root should bump %s:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "a.ts") {
+		t.Errorf("a file outside the project root is not the project's:\n%s", out)
+	}
+}

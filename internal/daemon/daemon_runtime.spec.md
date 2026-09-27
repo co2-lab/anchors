@@ -36,6 +36,7 @@ to honour.
 | --- | --- |
 | `DMRND-B01` | A process that exists is reported alive, and one that has exited is reported not alive. |
 | `DMRND-B02` | On Unix-like systems, terminating sends SIGTERM, a signal the watcher can catch to exit cleanly, not an uncatchable kill. |
+| `DMRND-B03` | On Unix-like systems, a process the probe may not signal (the probe answers "operation not permitted", EPERM) exists, so it is reported alive: a live watcher of another user is never taken for a stale one. |
 
 ## Invariants
 

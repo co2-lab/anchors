@@ -101,6 +101,41 @@ func TestConfront_modifiedAndNewDirectoryFilesAreTouched(t *testing.T) {
 	}
 }
 
+// A renamed file is touched, and so is a file under a `--root` that is a subdirectory of
+// the repository: git names paths from the top of the repository, and the declared files
+// are relative to the root. Before, `R  old -> new` was read as one path and every file
+// under a subdirectory root was accused.
+func TestConfront_renamedFilesAndSubdirectoryRoot(t *testing.T) {
+	t.Run("DLCND-B08: A renamed file and a file under a subdirectory root are not accused", func(t *testing.T) {})
+	repo := t.TempDir()
+	writeFile(t, repo, "app/src/old.ts", "export const o = 1\n")
+	writeFile(t, repo, "app/src/pricing.ts", "export const p = 1\n")
+	writeFile(t, repo, "app/src/quiet.ts", "export const q = 1\n")
+	writeFile(t, repo, "other/pricing.ts", "export const p = 1\n")
+	gitRepo(t, repo)
+	if out, err := exec.Command("git", "-C", repo, "mv", "app/src/old.ts", "app/src/renamed.ts").CombinedOutput(); err != nil {
+		t.Fatalf("git mv: %s", out)
+	}
+	writeFile(t, repo, "app/src/pricing.ts", "export const p = 2\n")
+	writeFile(t, repo, "other/pricing.ts", "export const p = 2\n")
+
+	// from the top of the repository, the renamed file is touched
+	warnings, confronted := untouchedFiles(repo, []string{"app/src/renamed.ts", "app/src/pricing.ts"})
+	if !confronted || len(warnings) != 0 {
+		t.Errorf("a renamed and a modified file are touched: confronted=%v %v", confronted, warnings)
+	}
+	// with the root a subdirectory, paths are relative to it
+	root := filepath.Join(repo, "app")
+	warnings, confronted = untouchedFiles(root, []string{"src/renamed.ts", "src/pricing.ts", "src/quiet.ts"})
+	if !confronted || strings.Join(warnings, ",") != "src/quiet.ts" {
+		t.Errorf("under a subdirectory root only the untouched file is accused, got confronted=%v %v", confronted, warnings)
+	}
+	// a change outside the root does not clear a file of the same name inside it
+	if w, _ := untouchedFiles(filepath.Join(repo, "other"), []string{"pricing.ts"}); len(w) != 0 {
+		t.Errorf("other/pricing.ts is modified: %v", w)
+	}
+}
+
 // The confrontation prints and never refuses: blocking would push authors to declare less.
 func TestConfront_neverBlocksTheDelivery(t *testing.T) {
 	t.Run("DLCND-B01: The confrontation never blocks the delivery", func(t *testing.T) {})

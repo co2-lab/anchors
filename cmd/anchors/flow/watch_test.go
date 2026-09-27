@@ -279,11 +279,12 @@ func TestRunWatchLoop_queuesChangesUntilSignalled(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	ready := watchReady(t)
 	done := make(chan error, 1)
 	out := stdoutOf(t, func() {
 		go func() { done <- runWatchLoop(root, cfg, &mapx.Graph{}, 10*time.Millisecond) }()
-		waitFor(t, func() bool { return watchIgnore != nil }) // the loop is set up
-		time.Sleep(100 * time.Millisecond)                    // fsnotify registration
+		<-ready                            // the loop is set up
+		time.Sleep(100 * time.Millisecond) // fsnotify registration
 		writeFile(t, root, "src/pricing.ts", "export const p = 1\n")
 		writeFile(t, root, "src/fresh/handler.ts", "export const h = 1\n")
 		waitFor(t, func() bool { return len(queued(t, root)) >= 2 })
@@ -310,6 +311,62 @@ func TestRunWatchLoop_queuesChangesUntilSignalled(t *testing.T) {
 	}
 	if _, err := os.Stat(p.PID); err == nil {
 		t.Error("the loop cleans its pid file on exit")
+	}
+}
+
+// watchReady makes the loop signal when it is listening, and restores the hook after.
+func watchReady(t *testing.T) <-chan struct{} {
+	t.Helper()
+	ready := make(chan struct{})
+	prev := onWatchReady
+	onWatchReady = func() { close(ready) }
+	t.Cleanup(func() { onWatchReady = prev })
+	return ready
+}
+
+// A change still inside its debounce window when the signal arrives is handled before the
+// loop returns, and nothing touches the graph after it: every change is handled by the
+// loop itself, never by a timer running on its own. Run under `go test -race`, the old
+// loop (handleChange inside time.AfterFunc) reported the write to the node after return.
+func TestRunWatchLoop_handlesEveryChangeInTheLoop(t *testing.T) {
+	t.Run("WTCHA-I02: A change pending at the signal is handled before the loop returns, and none after", func(t *testing.T) {})
+	root := t.TempDir()
+	cfg := watchCfg()
+	writeFile(t, root, "src/keep.ts", "x\n")
+	prev := watchIgnore
+	t.Cleanup(func() { watchIgnore = prev })
+	if err := daemon.WritePID(daemon.PathsFor(root), os.Getpid()); err != nil {
+		t.Fatal(err)
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "src/pricing.ts", Rev: "old"}}}
+
+	ready := watchReady(t)
+	done := make(chan error, 1)
+	stdoutOf(t, func() {
+		go func() { done <- runWatchLoop(root, cfg, g, 400*time.Millisecond) }()
+		<-ready
+		time.Sleep(100 * time.Millisecond) // fsnotify registration
+		writeFile(t, root, "src/pricing.ts", "export const p = 1\n")
+		time.Sleep(100 * time.Millisecond) // the event is received; its 400ms window is open
+		if err := syscall.Kill(os.Getpid(), syscall.SIGTERM); err != nil {
+			t.Fatal(err)
+		}
+		select {
+		case <-done:
+		case <-time.After(5 * time.Second):
+			t.Fatal("the loop did not stop on SIGTERM")
+		}
+	})
+	if !containsStr(queued(t, root), "src/pricing.ts→feature") {
+		t.Errorf("the change pending at the signal must be queued before the loop returns, got %v", queued(t, root))
+	}
+	rev := g.Nodes[0].Rev
+	if rev == "old" {
+		t.Error("the pending change must update the node before the loop returns")
+	}
+	time.Sleep(600 * time.Millisecond) // past the debounce window
+	if g.Nodes[0].Rev != rev {
+		t.Error("nothing may touch the graph after the loop returned")
 	}
 }
 

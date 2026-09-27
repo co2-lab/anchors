@@ -111,6 +111,12 @@ Feature: Watch — the background watcher that turns "a file changed" into "ther
     When "src/pricing.ts" changes again
     Then the output says "already in the queue (test)" and the queue keeps one task
 
+  @WTCHA-I02 @unit-level
+  Scenario: A change pending at the signal is handled before the loop returns, and none after
+    Given a running loop with a 400ms debounce and the node "src/pricing.ts" in the map
+    When "src/pricing.ts" is written and the loop receives SIGTERM inside the debounce window
+    Then the task "src/pricing.ts→feature" is queued and the node's rev updated when the loop returns, and the node does not change after it
+
   @WTCHA-X01 @unit-level
   Scenario: Handling a change writes nothing outside the queue
     Given the unit "src/pricing.ts"

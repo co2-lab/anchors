@@ -69,6 +69,7 @@ Feature: Reports — markdown perspectives on what Anchors already measures, wri
     When every report is generated
     Then the structure report counts "| code | 2 |" and "| spec | 3 |", "8 nodes, 2 edges.", "| `GUIDE.md` | 2 |"
     And it lists nocode.spec.md under "Missing identity (1)"
+    And it lists the three specs with no implementation under "Orphans (spec with no implementation) (3)"
 
   @RPRTS-B10 @unit-level
   Scenario: The configuration perspective lists what anchors.yaml declares and what it misses
@@ -104,6 +105,7 @@ Feature: Reports — markdown perspectives on what Anchors already measures, wri
     When the quality, configuration and issues perspectives are rendered
     Then they read "_No gate declared in anchors.yaml._", "_anchors.yaml not found._" and "_Empty queue._"
     And the issues perspective prints no empty list
+    And the structure and inconsistencies perspectives say the health validator needs anchors.yaml, and report all writes every perspective without panicking
 
   @RPRTS-I01 @unit-level
   Scenario: An issue waiting on the user is listed only as the user's

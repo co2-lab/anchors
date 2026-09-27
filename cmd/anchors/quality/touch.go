@@ -163,16 +163,22 @@ After a ` + "`stamp --refresh`" + `, order does not matter: a ` + "`@contract`" 
 
 // touchCandidates lists the files to consider: changed vs HEAD in the worktree (plus the
 // untracked ones), or in the index with --staged. Deleted files are not candidates.
+//
+// Every path is the project root's, and only the project's files are listed: `--relative`
+// makes `git diff` name them from the root (it names them from the repository's top
+// otherwise) and drops the ones outside it. Without it, a project in a subdirectory of the
+// repository (a monorepo package) read `sub/x.ts` as `<root>/sub/x.ts` and the touch failed
+// on a file that does not exist.
 func touchCandidates(root string, staged bool) ([]string, error) {
 	var lists [][]string
 	if staged {
-		out, err := exec.Command("git", "-C", root, "diff", "--cached", "--name-only", "--diff-filter=ACMR").Output()
+		out, err := exec.Command("git", "-C", root, "diff", "--cached", "--relative", "--name-only", "--diff-filter=ACMR").Output()
 		if err != nil {
 			return nil, fmt.Errorf("git diff --cached: %w", err)
 		}
 		lists = append(lists, strings.Fields(string(out)))
 	} else {
-		out, err := exec.Command("git", "-C", root, "diff", "HEAD", "--name-only", "--diff-filter=ACMR").Output()
+		out, err := exec.Command("git", "-C", root, "diff", "HEAD", "--relative", "--name-only", "--diff-filter=ACMR").Output()
 		if err != nil {
 			return nil, fmt.Errorf("git diff HEAD: %w", err)
 		}
@@ -209,7 +215,13 @@ func touchCurrent(root, f string, staged bool) (string, bool) {
 	return string(b), true
 }
 
+// gitShow reads a blob at `<rev>:<path>`, the path relative to root. git reads the path
+// of `<rev>:<path>` from the repository's top unless it starts with `./`, so the spec is
+// rewritten to `<rev>:./<path>` — the same file whether root is the top or below it.
 func gitShow(root, spec string) (string, bool) {
+	if rev, path, ok := strings.Cut(spec, ":"); ok {
+		spec = rev + ":./" + path
+	}
 	out, err := exec.Command("git", "-C", root, "show", spec).Output()
 	if err != nil {
 		return "", false

@@ -90,6 +90,7 @@ not match) closes its failure section with `none — <why>`, and that satisfies 
 | --- | --- |
 | `FLRAI-B17` | For each declared failure (`FailureConclusions`), the reasons of `@resilient` and `@observing` are read whole; a failure with neither carries no conclusion. |
 | `FLRAI-B18` | A conclusion's reason ends at its table cell: the next column is never read into it. |
+| `FLRAI-B19` | A failure rule and its conclusion are read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a 7-character `-E` rule is a declared failure. |
 
 ## Invariants
 

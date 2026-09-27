@@ -62,7 +62,7 @@ STOP: a production script under a heading that forbids the piece made workers cr
 | `WRPRW-B11` | Each stage has its procedure; a declarative layer gets the declarative procedure, and the layer's own extra steps for the stage are appended. |
 | `WRPRW-B12` | "What the gates will demand" lists, once per check, the gates that apply to the stage (the test stage also owes the feature-test match), marks informative ones, and omits gates it has no description for. |
 | `WRPRW-B13` | A review confronts the pieces that exist and the pending delivery records of the unit, sorted; without one it says the record is in the card's comments in github mode, and that there is no record otherwise. |
-| `WRPRW-B14` | The open findings recorded for the unit (to do and in progress) are listed before writing. |
+| `WRPRW-B14` | The open findings recorded for the unit (to do and in progress) are listed before writing: an issue counts when one of the paths in its name is a piece of the unit — the unit's stem followed by the piece's suffix — so a unit whose name only contains the stem (`src/pricing-v2.ts`, `lib/src/pricing.ts`) is another unit. |
 | `WRPRW-B15` | The test stage and the unit review explain the execution signals: ingesting the suite's report and the unit's mutation report. |
 | `WRPRW-B16` | Producing stages end with how to record the delivery with `anchors deliver`; reviews end with how to close the review with `anchors judge`, including findings in another unit. |
 | `WRPRW-B17` | The verification runs the checks over the piece this stage produces — not over a code file that may not exist yet — first without recording, then once more recording. |
@@ -81,6 +81,7 @@ STOP: a production script under a heading that forbids the piece made workers cr
 | Rule | Boundary | Why |
 | --- | --- | --- |
 | `WRPRW-X01` | Composing the prompt writes nothing to the project. | The prompt describes work for someone else; a prompt that created files would do part of the stage behind the worker's back. |
+| `WRPRW-X02` | Wherever the prompt cites the open-decisions section it uses one title and one "none" value, the catalogue's; and it cites configuration keys and checks by their current names (`optional_triad_edges`, `rule-implemented`, `tests-pass`). | A prompt that names the same section two ways, or a key no configuration accepts, sends the worker to write what no gate reads. |
 
 ## Errors
 

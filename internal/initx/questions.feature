@@ -89,3 +89,18 @@ Feature: InitQuestions — describe the human decisions of `init` so an agent ca
     Given the answer "preset-que-nao-existe" for the preset
     When the answers are validated
     Then the preset verdict keeps "preset-que-nao-existe" as its value and is refused
+
+  @INQSN-B11 @unit-level
+  Scenario: The artifacts question offers the artifact options, code included
+    Given the questions of a project
+    When the artifacts are answered with spec and code
+    Then the answer is accepted
+    And the artifacts options are the artifact names init offers
+    And a project where inference found code, specs and tests has code, spec and test pre-checked, in that order, on every call
+
+  @INQSN-B12 @unit-level
+  Scenario: The question texts, their reasons and the refusal details are in the project's language
+    Given the project language set to English, then Portuguese, then Spanish
+    When the questions are asked and an unknown preset is answered
+    Then the preset question, its reason and the refusal detail are written in that language
+    And no question shows a bare catalog key

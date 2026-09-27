@@ -49,6 +49,18 @@ Feature: LcovIngest — line coverage per file, and the uncovered lines of a cha
     When the report is read
     Then both files are read with their own lines
 
+  @LCINL-B08 @unit-level
+  Scenario: A line entry with a checksum field keeps its hit count
+    Given a record with "DA:1,5,PF4Rz2r7RTliO9u6bZ7h6g" and "DA:2,0,XyZ"
+    When the report is read
+    Then line 1 is covered, line 2 is not, and the file is 1 of 2
+
+  @LCINL-B09 @unit-level
+  Scenario: Entries before the first source-file line belong to no file
+    Given two covered line entries and totals of 9 of 9 before the first "SF:a.ts", whose record has one uncovered line
+    When the report is read
+    Then the report has one file, "a.ts", at 0 of 1
+
   @LCINL-I01 @unit-level
   Scenario: Uncovered changed lines never exceed the instrumented changed lines
     Given a file's coverage and a change with covered, uncovered and non-instrumented lines

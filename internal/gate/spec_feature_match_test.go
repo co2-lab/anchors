@@ -443,3 +443,18 @@ func TestSpecFeatureMatchRuleAlias(t *testing.T) {
 		}
 	})
 }
+
+// An alias follows the declared code length: a 7-character code is aliased like any other.
+func TestSpecFeatureMatchAliasFollowsTheCodeLength(t *testing.T) {
+	t.Run("SFMSP-B13: A rule alias needs no scenario of its own", func(t *testing.T) {})
+	prev := config.CodeLengths
+	config.SetCodeLengths([]int{7})
+	SetRuleLetters(config.DefaultRuleLetters) // what RunWithConfig does once the config is loaded
+	defer func() { config.SetCodeLengths(prev); SetRuleLetters(config.DefaultRuleLetters) }()
+	spec := "# Spec\n\n| Rule | Description |\n| --- | --- |\n| `ABCDEFG-B01` | a missing file is skipped |\n\n" +
+		"## Errors\n\n| Code | Condition | Result | Why |\n| --- | --- | --- | --- |\n| `ABCDEFG-E01` | REF[ABCDEFG-B01]: B01 answers it | — | — |\n"
+	feature := "@ABCDEFG\nFeature: x\n\n  @ABCDEFG-B01 @unit-level\n  Scenario: a\n"
+	if v, d := rodaSpecFeature(t, spec, feature); v != Pass {
+		t.Fatalf("an alias of a 7-character code must be recognised, got %s (%s)", v, d)
+	}
+}

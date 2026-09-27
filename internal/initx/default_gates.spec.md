@@ -15,11 +15,16 @@ is new or already exists. The same list, with every artifact turned on, is the c
 the one place where each gate's wording lives, which configuration loading uses to complete a gate the
 project declared by name alone.
 
-The gates follow the artifacts. A project that chose nothing is seeded with nothing, because a gate born
-with nothing to measure is the impression of a defence that does not exist. Spec, feature and test each
-bring their own gates; the gates that cross two artifacts appear only when both are chosen; guides bring
-their checklist gate; the gate that confronts the declared parent runs on whichever of spec, plan and code
-were chosen.
+The gates follow the artifacts they run on. A project that chose nothing is seeded with nothing, because a
+gate born with nothing to measure is the impression of a defence that does not exist. Spec, feature, test and
+code each bring their own gates — the spec's include the documentation, doctrine, flag and failure gates —
+and plans bring only the gates that run on plans; the gates that cross two artifacts appear only when both
+are chosen; guides bring their checklist gate; the gates that confront the declared parent and the justified
+change run on whichever of their artifacts were chosen. Choosing every artifact `anchors init` offers seeds
+the whole catalog.
+
+What a gate carries — its question, its measure, its install hint — is written into the project's
+configuration, so it is written in English.
 
 The age of the project decides the maturation state. In an existing project a gate is born informative,
 because a real project almost never meets on day one the threshold it wants to reach, and blocking at once
@@ -49,7 +54,7 @@ A judgment gate that asks whether the code or a test realises a rule carries the
 | --- | --- |
 | `DFGTD-B01` | A project with no artifact chosen is seeded with no gate, new or existing. |
 | `DFGTD-B02` | A project with spec, feature and test is born with the gates of each, among them the spec completeness, feature non-emptiness, green tests, line coverage and scenario coverage gates. |
-| `DFGTD-B03` | The gates that cross spec and feature (spec-feature match and scenario coverage) are seeded only when both are chosen. |
+| `DFGTD-B03` | The gates that cross spec and feature (spec-feature match, feature-spec match and scenario coverage) are seeded only when both are chosen, and the test-feature match only when test and feature are both chosen. |
 | `DFGTD-B04` | Choosing only guides seeds only the guide checklist gate. |
 | `DFGTD-B05` | The parent gate is seeded when spec, plan or code is chosen, and confronts exactly the chosen ones among them. |
 | `DFGTD-B06` | In an existing project every gate is born informative, except five born blocking by nature: the leaked-secret, contracted-document and the three flag-scenario grammar, completeness and existence gates. |
@@ -59,6 +64,9 @@ A judgment gate that asks whether the code or a test realises a rule carries the
 | `DFGTD-B10` | The canonical declaration of a gate is found by name in the catalog of every artifact, including gates seeded only for guides or plans; an unknown name is not found. |
 | `DFGTD-B11` | Loading a configuration completes a canonical gate declared by name alone with the catalog's declaration. |
 | `DFGTD-B12` | The gate is of the BLOCKING class: a new project is born with it blocking, and an existing one takes it through the same maturation as every structural gate — informative until the project promotes it. It never depends on an ingested signal, so it can block from day one. |
+| `DFGTD-B13` | Choosing every artifact `anchors init` offers (ARCHR-B01) seeds every gate of the catalog, the code gates included. |
+| `DFGTD-B14` | The gates that run on specs, features and tests — documentation, doctrine, flags, failures, the way back of the triad, the contracted document and the justified change — are seeded without plans; the justified-change gate then runs on specs alone, and the gates that run only on plans are not seeded. |
+| `DFGTD-B15` | The gate names registered for the vocabulary check (`RegisterGateNames`) are the full catalog, in catalog order. |
 
 ## Invariants
 
@@ -67,12 +75,14 @@ A judgment gate that asks whether the code or a test realises a rule carries the
 | `DFGTD-I01` | The list of seeded gates, and its order, does not change with the age of the project; only the maturation state does. | seeds the same artifacts as a new and as an existing project and compares the lists name by name |
 | `DFGTD-I02` | Every gate of the full catalog has a unique name, and its id is its name. | seeds every artifact and checks names for repetition and id equality |
 | `DFGTD-I03` | Every canonical name the format migration renames a legacy gate to is a gate of the full catalog. | walks every rename of the migration steps and looks each target up in the catalog |
+| `DFGTD-I04` | Choosing plans adds only gates that run on plans. | seeds two choices with and without plans and checks every added gate runs on plans |
 
 ## Constraints
 
 | Rule | Boundary | Why |
 | --- | --- | --- |
 | `DFGTD-X01` | No default gate carries a legacy name. | Gate names are identifiers written into every project's configuration; a legacy name would be renamed by the migration and then stamped twice in the map. |
+| `DFGTD-X02` | No default gate writes Portuguese into the project: its question, measure and install hint are English. | They are written into every new project's configuration, read by the judge and by people of any language; the catalog of translations is for what Anchors prints, not for what it writes into a project. |
 
 ## Errors
 

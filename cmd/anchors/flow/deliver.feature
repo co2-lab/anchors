@@ -16,10 +16,10 @@ Feature: Deliver — record what a stage delivered, where the reviewer reads it,
   @DLVRE-B02 @unit-level
   Scenario: The first delivery of a unit is accepted by its spec
     Given a project where only "src/pricing.spec.md" exists
-    When `anchors deliver --stage spec --unit src/pricing.ts` runs
+    When `anchors deliver --stage spec --unit <root>/src/pricing.ts` runs, with the unit absolute
     Then the delivery succeeds
-    And the output names "src/pricing.spec.md" as the piece found
-    And the record's unit is "src/pricing.ts"
+    And the output says "`src/pricing.ts` does not exist yet", names "src/pricing.spec.md" as the piece found and says the record keeps the unit "src/pricing.ts"
+    And the record's unit is "src/pricing.ts" and its files list "src/pricing.ts", with no absolute path
 
   @DLVRE-B03 @unit-level
   Scenario: Prose with commas is one decision, and files split on commas

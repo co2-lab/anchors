@@ -134,10 +134,10 @@ Feature: Doctor — the global health check that hunts the systemic loose ends o
     Then there is one needs-quebrado finding naming 0099-nao-existe
 
   @DCTRO-B22 @unit-level
-  Scenario: A cycle of needs gives one finding showing a path
-    Given plan a needs b and plan b needs a
-    When the plan needs are checked
-    Then there is one needs-ciclo finding whose text shows a path with arrows
+  Scenario: A cycle of needs gives one finding naming only the cycle, the same on every run
+    Given plans c ⇄ d, a ⇄ b, and "plans/0.md" (first in path order) needing a, declared in a shuffled order
+    When the plan needs are checked fifty times
+    Then every run gives the same single needs-ciclo finding, on "plans/b.md", whose path is "plans/a.md → plans/b.md → plans/a.md"
 
   @DCTRO-B23 @unit-level
   Scenario: A chain in order, or no plan at all, gives nothing

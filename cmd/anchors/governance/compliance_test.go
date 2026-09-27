@@ -87,14 +87,15 @@ func TestComplianceReportsEachDutyByNorm(t *testing.T) {
 	if !strings.Contains(out, "── declared in the project\n") {
 		t.Errorf("an inline obligation is grouped as declared in the project:\n%s", out)
 	}
-	if !strings.Contains(out, "⚠ NONE complies — check whether `handlers/log.go`") {
-		t.Errorf("zero complying with subjects must point at the target path:\n%s", out)
+	if !strings.Contains(out, "⚠ NONE complies — check whether `handlers/log.go` is still the right path "+
+		"in the obligation's `must_appear_in:`") || strings.Contains(out, "pack_values") {
+		t.Errorf("zero complying with subjects must point at the inline target's own key:\n%s", out)
 	}
 	// a duty whose only subject ASSUMED the debt is known and scheduled, not disconnected
 	if strings.Count(out, "⚠ NONE complies") != 1 {
 		t.Errorf("only audit-logged warns; retention carries declared debt:\n%s", out)
 	}
-	if !strings.Contains(out, "total: 3 subject duty(ies) across 5 node(s), 1 fulfilled") {
+	if !strings.Contains(out, "total: 3 duty(ies), 5 subject node-duty pair(s), 1 fulfilled") {
 		t.Errorf("the totals add both norms:\n%s", out)
 	}
 	if !strings.Contains(out, "(use --verbose") {
@@ -187,6 +188,50 @@ func TestPrintAvailableSkipsAdoptedPacks(t *testing.T) {
 	out = captureStdout(t, func() { printAvailable(&config.Config{Packs: all}) })
 	if out != "" {
 		t.Errorf("with every pack adopted there is nothing to offer; got:\n%s", out)
+	}
+
+	// every spelling the loader accepts counts as adopted
+	var spelled []string
+	for i, n := range all {
+		switch i % 4 {
+		case 0:
+			spelled = append(spelled, "packs/"+n+".yaml")
+		case 1:
+			spelled = append(spelled, "./packs/"+n+".yml")
+		case 2:
+			spelled = append(spelled, "packs/"+n+".yml")
+		default:
+			spelled = append(spelled, "./packs/"+n+".yaml")
+		}
+	}
+	if out = captureStdout(t, func() { printAvailable(&config.Config{Packs: spelled}) }); out != "" {
+		t.Errorf("a pack adopted as packs/x.yaml or x.yml is adopted; got:\n%s", out)
+	}
+}
+
+// The total counts node-duty pairs, not nodes: `models/event.go` is subject to two duties.
+// And a pack duty's NONE-complies hint points at `pack_values:`, where its target comes from.
+func TestComplianceTotalsPairsAndPointsEachHintAtItsKey(t *testing.T) {
+	t.Run("CMPLN-B07: The total counts node-duty pairs, and each hint names where its target is declared", func(t *testing.T) {})
+	files := complianceFiles()
+	files["models/event.go"] = "// audited: yes\n// retained: yes\npackage models\n"
+	files["handlers/erase.go"] = "package handlers\n"
+	files["models/order.go"] = "// carries: personal-data\npackage models\n"
+	dir := govProject(t, complianceYAML, files, complianceGraph())
+
+	out, err := runCmd(t, newComplianceCmd(), "--root", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// erasure 3 + audit-logged 1 + retention 2 = 6 pairs, over 5 distinct nodes
+	if !strings.Contains(out, "total: 3 duty(ies), 6 subject node-duty pair(s), 0 fulfilled") || strings.Contains(out, "node(s)") {
+		t.Errorf("the total counts node-duty pairs:\n%s", out)
+	}
+	if !strings.Contains(out, "check whether `handlers/erase.go` is still the right path in `pack_values:`") {
+		t.Errorf("a pack duty's hint points at pack_values:\n%s", out)
+	}
+	if !strings.Contains(out, "check whether `handlers/log.go` is still the right path in the obligation's `must_appear_in:`") {
+		t.Errorf("an inline duty's hint points at its must_appear_in:\n%s", out)
 	}
 }
 

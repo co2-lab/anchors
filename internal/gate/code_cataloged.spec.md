@@ -57,6 +57,7 @@ knowing how to read, the gate goes quiet; it never approves.**
 | `CDCTC-B08` | Without a declared export pattern the gate SKIPS and says it skipped, naming how to enable it. It never approves what it cannot read. |
 | `CDCTC-B09` | With the pattern declared the gate confronts for real, in any language — the project's own `export_detect` is the ruler. |
 | `CDCTC-B10` | The declared dialect family also supplies the pattern: a Go project needs only name its family. |
+| `CDCTC-B11` | Every file the spec governs (`specifies`) is confronted, not only the first; the verdict names the files that hold orphans, and when more than one does, each orphan carries its file beside its line. |
 
 ## Invariants
 

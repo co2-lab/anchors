@@ -51,25 +51,22 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 		n := &g.Nodes[i]
 		// execução: casa nós de teste pelo caminho, ACUMULANDO por camada
 		if n.Kind == KindTest {
-			for file, ex := range byFile {
-				if pathMatches(n.ID, file) {
-					ensureSignal(n)
-					if n.Signal.ByLayer == nil {
-						n.Signal.ByLayer = map[string]LayerExec{}
-					}
-					// substitui a camada (reingerir a mesma camada atualiza; outras
-					// camadas permanecem — é o merge).
-					n.Signal.ByLayer[layer] = LayerExec{Passed: ex.Passed, Failed: ex.Failed, Skipped: ex.Skipped}
-					n.Signal.Passed, n.Signal.Failed, n.Signal.Skipped = sumLayers(n.Signal.ByLayer)
-					n.Signal.AtRev = n.Rev
-					// Carimba também as revs do FECHO — o que este teste alcança descendo.
-					// É o que permite dizer depois "a evidência venceu porque o util que ele
-					// compõe mudou", e não só "o próprio arquivo de teste mudou".
-					n.Signal.ClosureRev = g.EvidenceClosure(n.ID)
-					n.Signal.IngestedAt = now
-					matchedFiles++
-					break
+			if ex, ok := matchReport(n.ID, byFile); ok {
+				ensureSignal(n)
+				if n.Signal.ByLayer == nil {
+					n.Signal.ByLayer = map[string]LayerExec{}
 				}
+				// substitui a camada (reingerir a mesma camada atualiza; outras
+				// camadas permanecem — é o merge).
+				n.Signal.ByLayer[layer] = LayerExec{Passed: ex.Passed, Failed: ex.Failed, Skipped: ex.Skipped}
+				n.Signal.Passed, n.Signal.Failed, n.Signal.Skipped = sumLayers(n.Signal.ByLayer)
+				n.Signal.AtRev = n.Rev
+				// Carimba também as revs do FECHO — o que este teste alcança descendo.
+				// É o que permite dizer depois "a evidência venceu porque o util que ele
+				// compõe mudou", e não só "o próprio arquivo de teste mudou".
+				n.Signal.ClosureRev = g.EvidenceClosure(n.ID)
+				n.Signal.IngestedAt = now
+				matchedFiles++
 			}
 		}
 		// cobertura semântica: dos cenários que ESTE nó declara, quais estão provados?
@@ -235,10 +232,7 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now stri
 		if n.Kind != KindCode {
 			continue
 		}
-		for file, cov := range byFile {
-			if !pathMatches(n.ID, file) {
-				continue
-			}
+		if cov, ok := matchReport(n.ID, byFile); ok {
 			ensureSignal(n)
 			if n.Signal.TotalLines > 0 {
 				n.Signal.PrevLineCoverage = n.Signal.LineCoverage
@@ -267,13 +261,10 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now stri
 			}
 			c, t := unionCoverage(n.Signal.CoverageBySuite, n.Rev)
 			n.Signal.CoveredLines, n.Signal.TotalLines = c, t
-			if t > 0 {
-				n.Signal.LineCoverage = float64(c) / float64(t) * 100
-			}
+			n.Signal.LineCoverage = percent(c, t)
 			n.Signal.AtRev = oldestSuiteRev(n.Signal.CoverageBySuite, n.Rev)
 			n.Signal.IngestedAt = now
 			matched++
-			break
 		}
 	}
 	return
@@ -462,24 +453,19 @@ func (g *Graph) IngestCoverageSuite(byFile map[string]FileCov, suite, now string
 		if n.Kind != KindCode {
 			continue
 		}
-		for file, cov := range byFile {
-			if pathMatches(n.ID, file) {
-				ensureSignal(n)
-				// preserva a cobertura anterior como baseline do delta (só quando já
-				// havia uma medição real, para não criar um baseline falso de 0).
-				if n.Signal.TotalLines > 0 {
-					n.Signal.PrevLineCoverage = n.Signal.LineCoverage
-				}
-				n.Signal.CoveredLines = cov.Covered
-				n.Signal.TotalLines = cov.Total
-				if cov.Total > 0 {
-					n.Signal.LineCoverage = float64(cov.Covered) / float64(cov.Total) * 100
-				}
-				n.Signal.AtRev = n.Rev
-				n.Signal.IngestedAt = now
-				matched++
-				break
+		if cov, ok := matchReport(n.ID, byFile); ok {
+			ensureSignal(n)
+			// preserva a cobertura anterior como baseline do delta (só quando já
+			// havia uma medição real, para não criar um baseline falso de 0).
+			if n.Signal.TotalLines > 0 {
+				n.Signal.PrevLineCoverage = n.Signal.LineCoverage
 			}
+			n.Signal.CoveredLines = cov.Covered
+			n.Signal.TotalLines = cov.Total
+			n.Signal.LineCoverage = percent(cov.Covered, cov.Total)
+			n.Signal.AtRev = n.Rev
+			n.Signal.IngestedAt = now
+			matched++
 		}
 	}
 	return
@@ -511,31 +497,28 @@ func (g *Graph) IngestMutationScoped(byFile map[string]FileMutation, scope, now 
 		if n.Kind != KindCode {
 			continue
 		}
-		for file, mu := range byFile {
-			if pathMatches(n.ID, file) {
-				ensureSignal(n)
-				n.Signal.MutantsKilled = mu.Killed
-				n.Signal.MutantsSurvived = mu.Survived
-				n.Signal.MutantsNoCoverage = mu.NoCoverage
-				n.Signal.MutantsIgnored = mu.Ignored
-				n.Signal.MutationScore = mu.Score
-				n.Signal.MutationLow, n.Signal.MutationHigh = low, high
-				if scope != "" {
-					if n.Signal.MutationByScope == nil {
-						n.Signal.MutationByScope = map[string]MutationScope{}
-					}
-					n.Signal.MutationByScope[scope] = MutationScope{
-						AtRev:  n.Rev,
-						Killed: mu.Killed, Survived: mu.Survived,
-						NoCoverage: mu.NoCoverage, Ignored: mu.Ignored,
-						Score: mu.Score,
-					}
+		if mu, ok := matchReport(n.ID, byFile); ok {
+			ensureSignal(n)
+			n.Signal.MutantsKilled = mu.Killed
+			n.Signal.MutantsSurvived = mu.Survived
+			n.Signal.MutantsNoCoverage = mu.NoCoverage
+			n.Signal.MutantsIgnored = mu.Ignored
+			n.Signal.MutationScore = mu.Score
+			n.Signal.MutationLow, n.Signal.MutationHigh = low, high
+			if scope != "" {
+				if n.Signal.MutationByScope == nil {
+					n.Signal.MutationByScope = map[string]MutationScope{}
 				}
-				n.Signal.AtRev = n.Rev
-				n.Signal.IngestedAt = now
-				matched++
-				break
+				n.Signal.MutationByScope[scope] = MutationScope{
+					AtRev:  n.Rev,
+					Killed: mu.Killed, Survived: mu.Survived,
+					NoCoverage: mu.NoCoverage, Ignored: mu.Ignored,
+					Score: mu.Score,
+				}
 			}
+			n.Signal.AtRev = n.Rev
+			n.Signal.IngestedAt = now
+			matched++
 		}
 	}
 	return
@@ -585,6 +568,51 @@ func ensureSignal(n *Node) {
 	if n.Signal == nil {
 		n.Signal = &TestSignal{}
 	}
+}
+
+// percent is covered over total in percent — 0 when nothing was instrumented.
+//
+// The percentage used to be written only when the total was positive, so a report that
+// instrumented no line of the file left the PREVIOUS ingestion's percentage next to a
+// total of zero: the map read "0 lines, 80%".
+func percent(covered, total int) float64 {
+	if total <= 0 {
+		return 0
+	}
+	return float64(covered) / float64(total) * 100
+}
+
+// matchReport picks, among the report paths that match the node, the one it receives:
+// the exact path first, then the one closest in length to the node's (the most specific
+// suffix), then the first in lexical order.
+//
+// The ingestion loops used to take whichever matching path the MAP ITERATION reached
+// first, and Go randomises that order: a test file matched by two entries of the same
+// report (its own path and a shorter suffix of it) recorded different counts from run
+// to run.
+func matchReport[T any](nodeID string, byFile map[string]T) (T, bool) {
+	var best string
+	found := false
+	dist := func(p string) int {
+		d := len(filepath.ToSlash(p)) - len(filepath.ToSlash(nodeID))
+		if d < 0 {
+			d = -d
+		}
+		return d
+	}
+	for file := range byFile {
+		if !pathMatches(nodeID, file) {
+			continue
+		}
+		if !found || dist(file) < dist(best) || (dist(file) == dist(best) && file < best) {
+			best, found = file, true
+		}
+	}
+	if !found {
+		var zero T
+		return zero, false
+	}
+	return byFile[best], true
 }
 
 // pathMatches: o caminho do nó (relativo à raiz) casa o caminho do relatório? Casa

@@ -107,6 +107,7 @@ rule to realize.
 | `DCTRN-B29` | A rule deferred with `@TBD` is Pending, not failure. |
 | `DCTRN-B30` | A blank line ends the rule a tag belongs to: a `@realizes` after a blank line declares nothing for the rule above. |
 | `DCTRN-B31` | The demanding layer is resolved from the target the spec describes: the layers of the code its specifies edges reach, or, before that code exists, the layer the target's path would have. |
+| `DCTRN-B32` | A catalogued rule and a `@realizes` citation are read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a 7-character rule and citation are read. |
 
 ## Invariants
 

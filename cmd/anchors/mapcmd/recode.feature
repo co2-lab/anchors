@@ -40,6 +40,12 @@ Feature: Recode — renames an identity code and carries the change to every tex
     Then the rebuilt map gives the login spec the code SIGNN
     And the report says "map rebuilt (5 nodes)"
 
+  @RCDEO-B06 @unit-level
+  Scenario: Applying keeps the judgments, stamps and flow of the previous map
+    Given a project whose map has a judged and stamped edge on the login spec and a flow graph
+    When the recode runs from LOGIN to SIGNN with the apply switch
+    Then the rebuilt map still has that edge's judgment and stamp, and the flow graph
+
   @RCDEO-I01 @unit-level
   Scenario: After applying, neither the spec nor the map carries the old code
     Given a project whose login spec has the code LOGIN

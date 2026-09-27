@@ -63,7 +63,7 @@ func TestCollectTaskState_discoversWhatTheMachineKnows(t *testing.T) {
 		t.Errorf("the needs-user cards: got %+v", e.Blocked)
 	}
 	if e.PR == nil || e.PR.Number != 368 || e.PR.Total != 3 ||
-		e.PR.Checks["passou"] != 2 || e.PR.Checks["reprovou"] != 1 {
+		e.PR.Checks[checkPassed] != 2 || e.PR.Checks[checkFailed] != 1 {
 		t.Errorf("the PR and its verdict: got %+v", e.PR)
 	}
 	// Only the bot's reversal counts, cut to its first line and without markup.
@@ -152,14 +152,21 @@ func TestEmitTurnEnded_sendsTheStateTheTurnEndedIn(t *testing.T) {
 
 	emitTurnEnded(taskState{
 		Card: testCard(303, "anchors:in-review", "secret title"),
-		PR:   &branchPR{Number: 368, State: "OPEN", Total: 4, Checks: map[string]int{"reprovou": 3}},
+		PR:   &branchPR{Number: 368, State: "OPEN", Total: 4, Checks: map[string]int{checkFailed: 3}},
 	})
 	common.Emitter.Flush()
 
 	body := <-got
-	for _, want := range []string{"in-review", "checks_reprovaram", "open"} {
+	// the attribute names are stable English identifiers, whatever the user's language
+	for _, want := range []string{"in-review", "open", `"key":"checks_failed"`, `"key":"checks_running"`,
+		`"key":"card_state"`, `"key":"pr_state"`, `"key":"has_card"`, `"key":"clean_tree"`} {
 		if !strings.Contains(body, want) {
 			t.Errorf("the event lacks %q: %s", want, body)
+		}
+	}
+	for _, old := range []string{"reprovaram", "rodando", "estado", "tem_card", "arvore_limpa", "nao_enviado"} {
+		if strings.Contains(body, old) {
+			t.Errorf("the attribute names are English identifiers, found %q: %s", old, body)
 		}
 	}
 	for _, leak := range []string{"secret title", "anchors:in-review"} {
@@ -173,7 +180,7 @@ func boardClientFor() board.Client {
 	return board.Client{Repo: "acme/app", Labels: []string{"anchors"}}
 }
 
-// A check still running has no conclusion yet. It is running ("em curso"), not a failure: counting
+// A check still running has no conclusion yet. It is running, not a failure: counting
 // it as failed makes task-status tell the agent to fix a PR whose CI simply has not
 // finished.
 func TestCurrentBranchPR_runningChecksAreInProgressNotFailed(t *testing.T) {
@@ -193,8 +200,8 @@ func TestCurrentBranchPR_runningChecksAreInProgressNotFailed(t *testing.T) {
 	if p == nil {
 		t.Fatal("the PR must be read")
 	}
-	if p.Checks["em curso"] != 3 || p.Checks["reprovou"] != 1 || p.Checks["passou"] != 2 || p.Total != 6 ||
-		p.Checks["em curso"]+p.Checks["reprovou"]+p.Checks["passou"] != p.Total {
+	if p.Checks[checkRunning] != 3 || p.Checks[checkFailed] != 1 || p.Checks[checkPassed] != 2 || p.Total != 6 ||
+		p.Checks[checkRunning]+p.Checks[checkFailed]+p.Checks[checkPassed] != p.Total {
 		t.Errorf("3 running (one a pending commit status), 1 failed, 2 passed: got %+v", p.Checks)
 	}
 	steps := strings.Join(nextStep(taskState{Clean: true, PR: p}), "\n")

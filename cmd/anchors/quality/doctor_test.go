@@ -350,3 +350,20 @@ func TestRepairEnvironmentRequiresGHLogin(t *testing.T) {
 		t.Error("nothing is seeded before the credential check passes")
 	}
 }
+
+// --check-pipelines honours --root: CI calls it from anywhere, and the answer must be the
+// named project's, not the working directory's.
+func TestCheckPipelinesHonoursRoot(t *testing.T) {
+	t.Run("HLDCH-B13: The pipelines check reads the project named by the root flag", func(t *testing.T) {})
+	englishOutput(t)
+	local := qProject(t, "version: 2\nlayers: {}\n", nil, nil)
+	gh := qProject(t, doctorGitHubYAML, nil, nil)
+	t.Chdir(local)
+	out, err := runQ(t, newDoctorCmd(), "--check-pipelines", "--root", gh)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out, "local mode") || !strings.Contains(out, "MISSING") {
+		t.Errorf("the check read the working directory instead of --root:\n%s", out)
+	}
+}

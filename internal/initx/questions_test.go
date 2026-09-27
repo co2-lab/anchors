@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 )
 
 func testQuestions() []Question {
@@ -141,13 +142,13 @@ func TestQuestionsInvalidAnswerRefusesEverything(t *testing.T) {
 	if s.Valor != bad {
 		t.Errorf("the invalid value must be kept as given, got %v", s.Valor)
 	}
-	if !strings.Contains(s.Detalhe, "aceitos:") {
+	if !strings.Contains(s.Detalhe, "nenhum, go, nextjs") {
 		t.Errorf("the message should list the valid values: %s", s.Detalhe)
 	}
 
 	// A list answer outside the options is refused the same way.
-	code := []string{"code"}
-	if a := verdictOf(t, ValidateAnswers(qs, Respostas{Artifacts: &code}), "artifacts"); a.Aceita || !strings.Contains(a.Detalhe, "aceitos:") {
+	docs := []string{"docs"}
+	if a := verdictOf(t, ValidateAnswers(qs, Respostas{Artifacts: &docs}), "artifacts"); a.Aceita || !strings.Contains(a.Detalhe, "spec, feature, test, guide, plan, code") {
 		t.Errorf("an artifact outside the options must be refused with the accepted values: %+v", a)
 	}
 	// A multiple choice with no declared options (the labels) accepts any value.
@@ -271,5 +272,63 @@ func TestQuestionsLocalRefusesGitHubFields(t *testing.T) {
 
 	if verdictOf(t, st, "repo").Aceita {
 		t.Error("`repo` in local mode makes the file lie about the integration being active")
+	}
+}
+
+// `code` is an artifact answer like the others. It used to be refused as unknown, so
+// no non-interactive init could ever seed the gates that run on code.
+func TestQuestionsAcceptCodeAsAnArtifact(t *testing.T) {
+	t.Run("INQSN-B11: The artifacts question offers the artifact options, code included", func(t *testing.T) {})
+	qs := testQuestions()
+	code := []string{"spec", "code"}
+	a := verdictOf(t, ValidateAnswers(qs, Respostas{Artifacts: &code}), "artifacts")
+	if !a.Aceita {
+		t.Errorf("`--artifacts=spec,code` must be accepted, got %+v", a)
+	}
+	var opts []string
+	for _, q := range qs {
+		if q.ID == "artifacts" {
+			opts = q.Opcoes
+		}
+	}
+	if !reflect.DeepEqual(opts, ArtifactNames()) {
+		t.Errorf("the artifacts options = %v, want ArtifactNames() = %v", opts, ArtifactNames())
+	}
+	// The detected ones come pre-checked in a stable order, code among them.
+	p := &Proposal{CodeDirs: []string{"src"}, HasTest: true, HasSpecMD: true}
+	for range 10 {
+		for _, q := range Questions(p, nil) {
+			if q.ID == "artifacts" && !reflect.DeepEqual(q.Default, []string{"code", "spec", "test"}) {
+				t.Fatalf("detected artifacts default = %v, want [code spec test] in name order", q.Default)
+			}
+		}
+	}
+}
+
+// The agent relays the texts to the user, who reads them in the project's language.
+func TestQuestionsSpeakTheProjectLanguage(t *testing.T) {
+	t.Run("INQSN-B12: The question texts, their reasons and the refusal details are in the project's language", func(t *testing.T) {})
+	t.Cleanup(func() { _ = i18n.Set(i18n.Default) })
+	bad := "x"
+	for lang, want := range map[string][3]string{
+		"en":    {"Which stack preset to use?", "the preset fills", "unknown preset; accepted:"},
+		"pt-BR": {"Qual preset de stack usar?", "o preset preenche", "preset desconhecido; aceitos:"},
+		"es":    {"¿Qué preset de stack usar?", "el preset llena", "preset desconocido; aceptados:"},
+	} {
+		if err := i18n.Set(lang); err != nil {
+			t.Fatal(err)
+		}
+		qs := testQuestions()
+		if qs[0].Texto != want[0] || !strings.HasPrefix(qs[0].PorQue, want[1]) {
+			t.Errorf("%s: preset question = %q / %q", lang, qs[0].Texto, qs[0].PorQue)
+		}
+		if d := verdictOf(t, ValidateAnswers(qs, Respostas{Preset: &bad}), "preset").Detalhe; !strings.HasPrefix(d, want[2]) {
+			t.Errorf("%s: refusal detail = %q", lang, d)
+		}
+		for _, q := range qs {
+			if strings.HasPrefix(q.Texto, "init.question.") || strings.HasPrefix(q.PorQue, "init.question.") {
+				t.Errorf("%s: question %s shows a bare catalog key", lang, q.ID)
+			}
+		}
 	}
 }

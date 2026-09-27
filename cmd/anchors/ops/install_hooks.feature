@@ -108,3 +108,10 @@ Feature: InstallHooks — the git hooks that confront every commit and push with
     Given a directory with anchors.yaml outside git
     When install-hooks runs
     Then it fails explaining it needs git to install the pre-commit
+
+  @INHKN-B12 @unit-level
+  Scenario: The pre-push warns when the remote map was written by another version
+    Given a remote whose anchors.graph.yaml says "generated_by: 0.9.0" (and, again, the legacy "gerado_por: 0.9.0")
+    When a binary of version 1.0.0 pushes
+    Then the push succeeds with the warning "was written by 'anchors 0.9.0'"
+    And a binary of version 0.9.0 pushes with no such warning

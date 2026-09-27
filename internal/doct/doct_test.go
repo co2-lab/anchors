@@ -550,3 +550,30 @@ func TestSpecs_onlyFromTheMap(t *testing.T) {
 		}
 	})
 }
+
+// A page compiled before the stamp existed carries the unhashed marker. The fallback
+// compiled today's page — which opens with the HASHED marker — and compared the bytes, so
+// the marker line alone made every such page stale, current content or not.
+func TestStale_unhashedMarkerComparesTheBody(t *testing.T) {
+	t.Run("DTCDC-B17: A page with the unhashed marker is stale only when its body differs", func(t *testing.T) {
+		c, _, page := staleProject(t)
+		b, err := os.ReadFile(page)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, body, _ := strings.Cut(string(b), "\n")
+		old := fmt.Sprintf(GeneratedMarker, "doct/x.md.tmpl") + "\n" + body
+		if err := os.WriteFile(page, []byte(old), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if s, _ := c.Stale(); len(s) != 0 {
+			t.Errorf("an unhashed page with today's body is fresh, got %v", s)
+		}
+		if err := os.WriteFile(page, []byte(old+"drift\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if s, _ := c.Stale(); strings.Join(s, ",") != "x.md" {
+			t.Errorf("an unhashed page with another body is stale, got %v", s)
+		}
+	})
+}

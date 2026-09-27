@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gate"
 	"github.com/co2-lab/anchors/internal/issue"
@@ -96,6 +97,7 @@ gates:
 func TestCheckQueuedJudgmentBarsOnlyTheChangedCheck(t *testing.T) {
 	t.Run("CGPCH-B21: A pending judgment becomes one task in the local queue", func(t *testing.T) {})
 	t.Run("CGPCH-B22: A queued judgment bars the incremental check only", func(t *testing.T) {})
+	t.Run("CGPCH-B69: A judge task suggests the review stage, a verb the work command composes", func(t *testing.T) {})
 	dir := qProject(t, judgmentYAML, map[string]string{"a.go": "package a\n"},
 		&mapx.Graph{Nodes: []mapx.Node{{ID: "a.go", Kind: mapx.KindCode}}})
 	code, out := runCheckInChild(t, "--root", dir, "--all")
@@ -103,8 +105,16 @@ func TestCheckQueuedJudgmentBarsOnlyTheChangedCheck(t *testing.T) {
 		t.Fatalf("a queued judgment must not bar --all, got %d:\n%s", code, out)
 	}
 	tasks, _ := queue.List(dir)
-	if len(tasks) != 1 || tasks[0].ID != "judge-rule-kept-a" || tasks[0].SuggestedNext != "judge" {
+	if len(tasks) != 1 || tasks[0].ID != "judge-rule-kept-a" || tasks[0].Kind != "judgment" {
 		t.Fatalf("one judge task per judged target, got %+v", tasks)
+	}
+	// whoever claims it with `anchors next` composes the prompt with `anchors work <verb>`:
+	// a verb `work` refuses leaves the task with no route.
+	if !queue.ValidWorkArtifact(tasks[0].SuggestedNext) || tasks[0].SuggestedNext != "review" {
+		t.Fatalf("the judge task must suggest the review stage, a verb `anchors work` accepts; got %q", tasks[0].SuggestedNext)
+	}
+	if !strings.Contains(tasks[0].Reason, "anchors judge a.go --gate rule-kept") {
+		t.Errorf("the reason must name the command that closes the task, with its gate: %q", tasks[0].Reason)
 	}
 	code, out = runCheckInChild(t, "--root", dir, "--changed", "a.go")
 	if code != 1 || !strings.Contains(out, "awaiting judgment") {
@@ -608,7 +618,7 @@ func TestSelectNodesTellsGovernedFromUngoverned(t *testing.T) {
 		}
 		var nr errNotGoverned
 		if errors.As(err, &nr) {
-			t.Fatalf("classified as UNGOVERNED (it would exit %d and the hook would continue): %v", ExitNotGoverned, err)
+			t.Fatalf("classified as UNGOVERNED (it would exit %d and the hook would continue): %v", common.ExitNotGoverned, err)
 		}
 		if !strings.Contains(err.Error(), "GOVERNED") {
 			t.Fatalf("the message does not say the file is governed: %v", err)
@@ -650,7 +660,7 @@ func TestSelectNodesTellsGovernedFromUngoverned(t *testing.T) {
 		_, _, err := selectNodes(g, cfg, false, []string{iss}, dir)
 		var nr errNotGoverned
 		if !errors.As(err, &nr) {
-			t.Fatalf("issues/ should be ungoverned (exit %d), got: %v", ExitNotGoverned, err)
+			t.Fatalf("issues/ should be ungoverned (exit %d), got: %v", common.ExitNotGoverned, err)
 		}
 	})
 }
@@ -951,16 +961,16 @@ func TestDropStaleJudgments(t *testing.T) {
 	}
 
 	live := queue.Task{
-		ID: "judge-no-test-proof-real-a", Changed: "a.spec.md",
+		ID: judgeTaskID("no-test-proof-real", "a.spec.md"), Changed: "a.spec.md",
 		Kind: "judgment", Origin: "check",
 	}
 	stale := queue.Task{
-		ID: "judge-no-test-proof-real-b", Changed: "b.spec.md",
+		ID: judgeTaskID("no-test-proof-real", "b.spec.md"), Changed: "b.spec.md",
 		Kind: "judgment", Origin: "check",
 	}
 	// work from another origin must NOT be dropped by this path
 	foreign := queue.Task{
-		ID: "judge-no-test-proof-real-c", Changed: "c.spec.md",
+		ID: judgeTaskID("no-test-proof-real", "c.spec.md"), Changed: "c.spec.md",
 		Kind: "judgment", Origin: "human",
 	}
 	for _, tk := range []queue.Task{live, stale, foreign} {
@@ -995,19 +1005,22 @@ func TestDropStaleJudgments(t *testing.T) {
 	}
 }
 
-// The ID is `judge-<gate>-<slug>`, and the gate name contains `-`: it is read by a known
-// prefix, not by splitting on the separator.
+// The ID is `judge-<gate>-<slug>`, and the gate name contains `-`: it is read by
+// rebuilding the ID from each known gate and the task's target, not by splitting on the
+// separator.
 func TestGateOfJudgeTask(t *testing.T) {
-	knownJudgmentGates = []string{"no-test-proof-real", "atomic-design"}
-	cases := map[string]string{
-		"judge-no-test-proof-real-apps-x-y.spec": "no-test-proof-real",
-		"judge-atomic-design-apps-x.tsx":         "atomic-design",
-		"judge-gate-that-does-not-exist-x":       "",
-		"something-else":                         "",
+	knownJudgmentGates = []string{"no-test-proof-real", "atomic-design", "review", "review-deep"}
+	cases := []struct{ id, changed, want string }{
+		{"judge-no-test-proof-real-apps-x-y.spec", "apps/x/y.spec.md", "no-test-proof-real"},
+		{"judge-atomic-design-apps-x", "apps/x.tsx", "atomic-design"},
+		{"judge-review-deep-src-x", "src/x.go", "review-deep"},
+		{"judge-review-deep-src-x", "deep/src/x.go", "review"},
+		{"judge-gate-that-does-not-exist-x", "x.go", ""},
+		{"something-else", "x.go", ""},
 	}
-	for id, want := range cases {
-		if got := gateDaTaskJudge(id); got != want {
-			t.Errorf("%s → %q, want %q", id, got, want)
+	for _, c := range cases {
+		if got := gateDaTaskJudge(c.id, c.changed); got != c.want {
+			t.Errorf("%s (%s) → %q, want %q", c.id, c.changed, got, c.want)
 		}
 	}
 }
@@ -1037,7 +1050,7 @@ func TestEnqueueJudgments_incrementalKeepsTheOtherTargets(t *testing.T) {
 	}
 	// already queued: the judgment of `b`, from an earlier round
 	if _, err := queue.Enqueue(root, queue.Task{
-		ID: "judge-no-test-proof-real-b", Changed: "b.spec.md",
+		ID: judgeTaskID("no-test-proof-real", "b.spec.md"), Changed: "b.spec.md",
 		Kind: "judgment", Origin: "check",
 	}); err != nil {
 		t.Fatal(err)
@@ -1058,7 +1071,7 @@ func TestEnqueueJudgments_incrementalKeepsTheOtherTargets(t *testing.T) {
 	for _, tk := range tasks {
 		left[tk.ID] = true
 	}
-	if !left["judge-no-test-proof-real-b"] {
+	if !left[judgeTaskID("no-test-proof-real", "b.spec.md")] {
 		t.Error("`--changed` erased the judgment of a target it did not even look at")
 	}
 
@@ -1070,7 +1083,7 @@ func TestEnqueueJudgments_incrementalKeepsTheOtherTargets(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, tk := range tasks {
-		if tk.ID == "judge-no-test-proof-real-b" {
+		if tk.ID == judgeTaskID("no-test-proof-real", "b.spec.md") {
 			t.Error("`--all` should have dropped the target the gate no longer enqueues")
 		}
 	}
@@ -1868,5 +1881,104 @@ func TestAListOfPathsStillBreaks(t *testing.T) {
 	}
 	if got := breakOccurrences(strings.Join(items, ", ")); !strings.Contains(got, "\n") {
 		t.Errorf("a list of paths did not break:\n%s", got)
+	}
+}
+
+// A gate whose name is a prefix of another's (`review`, `review-deep`) must not steal the
+// other's tasks: the gate is read from the ID and the task's target together, never by the
+// first known name that prefixes the ID.
+func TestDropStaleJudgments_prefixGateNameDoesNotStealTheTask(t *testing.T) {
+	t.Run("CGPCH-B68: A judge task is read back as the gate that queued it even when another gate's name prefixes it", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "src"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "src", "x.go"), []byte("package src\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cfg := &config.Config{Gates: []config.Gate{
+		{Name: "review", Measures: config.MeasuresJudgment},
+		{Name: "review-deep", Measures: config.MeasuresJudgment},
+	}}
+	deep := queue.Task{ID: "judge-review-deep-src-x", Changed: "src/x.go", Kind: "judgment", Origin: "check"}
+	if _, err := queue.Enqueue(root, deep); err != nil {
+		t.Fatal(err)
+	}
+	// this round, review-deep judged src/x.go again: its task is live
+	p := gate.Profile{Judged: []gate.Result{{Gate: "review-deep", Target: "src/x.go"}}}
+	knownJudgmentGates = []string{"review", "review-deep"}
+	dropStaleJudgments(root, cfg, p)
+	tasks, err := queue.List(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tasks) != 1 || tasks[0].ID != deep.ID {
+		t.Fatalf("the live review-deep task was dropped as a stale `review` task: %+v", tasks)
+	}
+}
+
+// A queue written before the judge task suggested `review` still holds `suggested_next:
+// judge`: those tasks are judgments too, and still bar the incremental check.
+func TestQueuedJudgmentsCountsTheLegacyVerb(t *testing.T) {
+	t.Run("CGPCH-B69: A judge task suggests the review stage, a verb the work command composes", func(t *testing.T) {})
+	root := t.TempDir()
+	for _, f := range []string{"a.go", "b.go", "c.go"} {
+		if err := os.WriteFile(filepath.Join(root, f), []byte("package a\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, tk := range []queue.Task{
+		{ID: "judge-g-a", Changed: "a.go", Kind: "judgment", Origin: "check", SuggestedNext: "review"},
+		{ID: "judge-g-b", Changed: "b.go", Kind: "judgment", Origin: "check", SuggestedNext: "judge"},
+		{ID: "001-change-c", Changed: "c.go", Kind: "change", Origin: "watch", SuggestedNext: "review"},
+	} {
+		if _, err := queue.Enqueue(root, tk); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if n := queuedJudgments(root); n != 2 {
+		t.Errorf("the two judge tasks (one with the legacy verb) are judgments, the watch review is not; got %d", n)
+	}
+}
+
+// The unit's pieces enter the impact by identity, whatever the language: a Go test is
+// `<stem>_test.go`, and the check of it must reach its spec, feature and code even when
+// the map holds no edge between them.
+func TestImpactOfBringsTheUnitsPiecesOfAGoUnit(t *testing.T) {
+	t.Run("CGPCH-B70: The pieces of the changed file's unit enter its impact path, for a Go unit as for a TypeScript one", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "pkg/foo.go", Kind: mapx.KindCode},
+		{ID: "pkg/foo_test.go", Kind: mapx.KindTest},
+		{ID: "pkg/foo.spec.md", Kind: mapx.KindSpec},
+		{ID: "pkg/foo.feature", Kind: mapx.KindFeature},
+		{ID: "pkg/bar.go", Kind: mapx.KindCode},
+		{ID: "web/x.ts", Kind: mapx.KindCode},
+		{ID: "web/x.test.ts", Kind: mapx.KindTest},
+		{ID: "web/x.spec.md", Kind: mapx.KindSpec},
+	}}
+	root := t.TempDir()
+	cases := map[string][]string{
+		"pkg/foo_test.go": {"pkg/foo.go", "pkg/foo.spec.md", "pkg/foo.feature"},
+		"pkg/foo.go":      {"pkg/foo_test.go", "pkg/foo.spec.md", "pkg/foo.feature"},
+		"pkg/foo.spec.md": {"pkg/foo.go", "pkg/foo_test.go", "pkg/foo.feature"},
+		"web/x.test.ts":   {"web/x.ts", "web/x.spec.md"},
+	}
+	for changed, want := range cases {
+		ids, err := impactOf(g, &config.Config{}, filepath.Join(root, changed), root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		has := map[string]bool{}
+		for _, id := range ids {
+			has[id] = true
+		}
+		for _, w := range want {
+			if !has[w] {
+				t.Errorf("--changed %s: the unit's piece %s is not in the impact: %v", changed, w, ids)
+			}
+		}
+		if has["pkg/bar.go"] {
+			t.Errorf("--changed %s: another unit entered the impact: %v", changed, ids)
+		}
 	}
 }

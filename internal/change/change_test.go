@@ -12,11 +12,12 @@ func TestKeyAndPath(t *testing.T) {
 	t.Run("CHRCC-B01: The key joins the stage and the normalised unit", func(t *testing.T) {})
 	t.Run("CHRCC-B02: A pending record lives in the changes folder under its key", func(t *testing.T) {})
 	c := Change{Stage: "code", Unit: "internal/gate/mock stamped.go"}
-	if got, want := c.Key(), "code--internal-gate-mock-stamped"; got != want {
+	// The slug, then a short hash of the unit that keeps the key injective (CHRCC-I02).
+	if got, want := c.Key(), "code--internal-gate-mock-stamped-4dc4c23f"; got != want {
 		t.Fatalf("Key() = %q, want %q", got, want)
 	}
 	root := t.TempDir()
-	if got, want := c.Path(root), filepath.Join(root, "changes", "code--internal-gate-mock-stamped.md"); got != want {
+	if got, want := c.Path(root), filepath.Join(root, "changes", "code--internal-gate-mock-stamped-4dc4c23f.md"); got != want {
 		t.Fatalf("Path() = %q, want %q", got, want)
 	}
 	// Windows separators and dotted names collapse the same way.
@@ -155,5 +156,79 @@ func TestPending_unreadableDirIsAnError(t *testing.T) {
 	}
 	if _, err := Save(root, Change{Stage: "code", Unit: "a.go"}); err == nil {
 		t.Fatal("Save must report a changes/ it cannot create")
+	}
+}
+
+func TestKey_differentUnitsNeverCollide(t *testing.T) {
+	t.Run("CHRCC-I02: Two different units never share a key", func(t *testing.T) {})
+	// Before: all three slugged to "a-b", so one delivery replaced another unit's record.
+	units := []string{"a/b.go", "a-b.go", "a/b.ts", "a.b.go", "a b.go"}
+	seen := map[string]string{}
+	for _, u := range units {
+		k := Change{Stage: "code", Unit: u}.Key()
+		if other, dup := seen[k]; dup {
+			t.Fatalf("units %q and %q share the key %q", other, u, k)
+		}
+		seen[k] = u
+	}
+	// The two separators still name the same unit.
+	if a, b := (Change{Stage: "code", Unit: `a\b.go`}).Key(), (Change{Stage: "code", Unit: "a/b.go"}).Key(); a != b {
+		t.Fatalf("`a\\b.go` and `a/b.go` must share a key: %q vs %q", a, b)
+	}
+	root := t.TempDir()
+	p1, _ := Save(root, Change{Stage: "code", Unit: "a/b.go", Intent: "one"})
+	p2, _ := Save(root, Change{Stage: "code", Unit: "a-b.go", Intent: "two"})
+	if got, _ := Pending(root); len(got) != 2 || p1 == p2 {
+		t.Fatalf("two units must keep two records, got %v", got)
+	}
+}
+
+func TestMarkReviewed_keepsAnEarlierReviewOfTheSameKey(t *testing.T) {
+	t.Run("CHRCC-B09: A second review of the same key keeps the first in the history", func(t *testing.T) {})
+	root := t.TempDir()
+	c := Change{Stage: "code", Unit: "a.go", Intent: "first"}
+	p, _ := Save(root, c)
+	d1, err := MarkReviewed(root, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.Intent = "second"
+	p, _ = Save(root, c)
+	d2, err := MarkReviewed(root, p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if d1 == d2 {
+		t.Fatalf("the second review landed on the first one's file %q", d1)
+	}
+	b1, _ := os.ReadFile(d1)
+	b2, _ := os.ReadFile(d2)
+	if !strings.Contains(string(b1), "first") || !strings.Contains(string(b2), "second") {
+		t.Fatalf("history lost a review:\n%s\n---\n%s", b1, b2)
+	}
+	if !strings.HasSuffix(d2, ".md") || filepath.Dir(d2) != filepath.Join(root, ReviewedDir) {
+		t.Fatalf("the second review must stay a record in the history, got %q", d2)
+	}
+}
+
+func TestRender_singleLineFieldsCannotBreakTheHeader(t *testing.T) {
+	t.Run("CHRCC-B10: A line break or a comment close in a field cannot break the header", func(t *testing.T) {})
+	out := Change{Stage: "code", Unit: "a.go\nlayer: forged\n-->", Date: "2026-01-02", Agent: "w\r\nx"}.Render()
+	header, _, ok := strings.Cut(out, "-->\n")
+	if !ok {
+		t.Fatalf("no header close:\n%s", out)
+	}
+	if strings.Contains(header, "\nlayer: forged") {
+		t.Fatalf("the unit forged a header line:\n%s", header)
+	}
+	if !strings.Contains(header, `unit: a.go\nlayer: forged`) || !strings.Contains(header, `agent: w\r\nx`) {
+		t.Fatalf("the field must survive escaped on its own line:\n%s", header)
+	}
+	if !strings.Contains(header, "  date: 2026-01-02\n") {
+		t.Fatalf("the date line must follow intact:\n%s", header)
+	}
+	title := strings.SplitN(strings.TrimPrefix(out, header+"-->\n"), "\n", 2)[0]
+	if !strings.HasPrefix(title, "# Delivery: code of `a.go\\nlayer: forged") {
+		t.Fatalf("the title must stay one line, got %q", title)
 	}
 }

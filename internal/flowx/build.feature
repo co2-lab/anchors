@@ -48,3 +48,15 @@ Feature: FlowBuild — assembling the work-flow graph from the project's flow an
     Given an action whose result STALE says "Sugere: `anchors map build`" and whose result FINE suggests nothing
     When the flow graph is built
     Then STALE carries the suggestion and FINE carries none
+
+  @FLBLF-B08 @unit-level
+  Scenario: A routed result keeps the prose around its two codes as its condition
+    Given a step whose results are "`ACTST-R01` STALE → `FLOWX-P02`", "`ACTST-R02` BLOCKED -> `FLOWX-P03` when the fix is ready." and "on `ACTST-R03` go to `FLOWX-P04`"
+    When the flow is built
+    Then the conditions are "STALE", "BLOCKED when the fix is ready" and "on go to"
+
+  @FLBLF-E01 @unit-level
+  Scenario: A flows folder, actions folder or flow file that cannot be read is an error
+    Given a project whose "flows" is a file, one whose "flows/actions" is a file, and ones with a flow file and an action file that cannot be read
+    When each is built
+    Then each build returns an error

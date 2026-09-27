@@ -217,3 +217,9 @@ Feature: Doctrine — the vertical axis: product doctrine exists, is realized, a
     Given a spec with a realizes edge naming "LIMIT-R03" to a doctrine file that was removed
     When spec-doctrine-exists confronts the spec declaring "LIMIT-R03" and "LIMIT-R06"
     Then it returns Fail naming "LIMIT-R06" and not "LIMIT-R03"
+
+  @DCTRN-B32 @unit-level
+  Scenario: Doctrine rules and realizes tags are read at the code length the project declares
+    Given a project that declares code length 7
+    When a rule "CREDITS-V01" with a line "@realizes LIMITED-R03" below it is parsed
+    Then the tag pairs "CREDITS-V01" with "LIMITED-R03", and the rule's text is read

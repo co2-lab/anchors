@@ -145,3 +145,9 @@ Feature: CodeCataloged — what the code exports must be in the spec, or waived 
     Given a project that declares the pattern without the capture groups the gate needs
     When the gate confronts a code file
     Then it returns Skip naming the declared pattern instead of saying it is not declared
+
+  @CDCTC-B11 @unit-level
+  Scenario: Every file the spec governs is confronted, not only the first
+    Given a spec that governs "a.ts", whose export it names, and "b.ts", which also exports "forgotten"
+    When code-cataloged confronts the spec
+    Then it fails naming "forgotten (line 1)" in "b.ts" and not "a.ts"; and with orphans in both, each orphan names its file

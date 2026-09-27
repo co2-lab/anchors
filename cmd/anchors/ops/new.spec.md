@@ -58,6 +58,7 @@ progress companion.
 | `NWARN-B13` | A plan is born with its progress companion beside it. |
 | `NWARN-B14` | `--list-sections` prints the kind's sections, marking defaults and optional ones, and the presets only for specs. |
 | `NWARN-B15` | The target layer of a spec or feature is the layer of the unit it describes: an existing code file wins, otherwise the most specific extension that a layer claims. |
+| `NWARN-B16` | The help and the unknown-kind refusal name every kind of the catalog (action, feature, flow, plan, product, spec, test), and the help of `--out` says it is mandatory, with no default. |
 
 ## Invariants
 

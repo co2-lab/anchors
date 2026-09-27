@@ -76,7 +76,7 @@ decide the product is told to escalate instead of asking whoever runs it.
 | `WRQUW-B16` | A spec card lists the documentation the project requires for that unit's changes, and nothing when the project declares none. |
 | `WRQUW-B17` | An agent that does not decide the product is told to escalate choices with `anchors escalate … --for-user` instead of asking whoever runs it; one that decides the product is not. |
 | `WRQUW-B18` | A card under review asks for the review of its target and ends with the two verdict lines for this agent — `anchors-review: approved by <agent>` and `anchors-review: rejected by <agent>` — never with a pull request of the reviewer's own; a review card that names no unit points to the pull request that references it. |
-| `WRQUW-B19` | Any other card ends by naming `anchors pr-body --cards <n>` for the pull request's body. |
+| `WRQUW-B19` | Any other card ends by naming `anchors pr-body --cards <n>` for the pull request's body, saying it brings the `Refs` that links the card and that the card stays open — never that it closes it. |
 
 ### The role question
 

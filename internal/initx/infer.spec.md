@@ -46,17 +46,19 @@ The proposal carries the configuration built from it (BLCNB).
 | `INPRN-B02` | The presence of specs, features and tests is detected from their file names. |
 | `INPRN-B03` | A markdown file in a plans folder is a plan, even inside a guides folder, and the first plans folder found is recorded. |
 | `INPRN-B04` | The first guides folder found is recorded, with every guide file found, sorted. |
-| `INPRN-B05` | A code directory is a top directory of up to two segments holding at least ten code files, and code directories are ordered by volume. |
-| `INPRN-B06` | The code extensions are the five most frequent, most frequent first. |
+| `INPRN-B05` | A code directory is a top directory of up to two segments holding at least ten code files, and code directories are ordered by volume, ties by name. |
+| `INPRN-B06` | The code extensions are the five most frequent, most frequent first, ties by name. |
 | `INPRN-B07` | Colocation is detected when at least three stems pair code with a spec, test or feature in the same place. |
 | `INPRN-B08` | The test handle is the known marking attribute used most, only from five uses; on a tie, the earlier attribute of the known list wins. |
 | `INPRN-B09` | The proposal carries the configuration built from it, with code layers and no artifact layer. |
+| `INPRN-B10` | A test named in any dialect inference knows (`.test.ts`, `.test.tsx`, `.test.js`, `.test.go`, `_test.go`, `.test.py`, `_test.py`, `.spec.ts`) has the stem of the code it tests, so `foo_test.go` pairs with `foo.go` for colocation. |
 
 ## Invariants
 
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
 | `INPRN-I01` | REF[INPRN-B01]: nothing under a skipped directory ever reaches the proposal, whatever it holds | — |
+| `INPRN-I02` | The same tree always gives the same code extensions, code directories and layer patterns, ties included. | infers a tree whose extensions and directories all tie, twenty times, and compares each proposal with the name order |
 
 ## Constraints
 

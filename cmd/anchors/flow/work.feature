@@ -103,10 +103,10 @@ Feature: WorkPrompt — compose the work prompt of one stage over one target, fr
 
   @WRPRW-B14 @unit-level
   Scenario: The findings already recorded for the unit are listed
-    Given the issues "issues/todo/stale-src-pricing-edge.md", "issues/doing/review-src-pricing-b04.md" and "issues/todo/stale-src-tax.md"
+    Given open issues about "src/pricing.spec.md" vs "src/pricing.ts", about "src/pricing.test.ts", about "src/tax.ts", about "src/pricing-v2.ts" and about "lib/src/pricing.ts"
     When the review prompt of "src/pricing.ts" is composed
     Then it lists the two pricing issues under "## Findings ALREADY RECORDED about this unit"
-    And it does not list the tax issue
+    And it does not list the tax, the pricing-v2 nor the lib/src/pricing issue
 
   @WRPRW-B15 @unit-level
   Scenario: Tests and unit reviews explain the execution signals
@@ -160,3 +160,10 @@ Feature: WorkPrompt — compose the work prompt of one stage over one target, fr
     Given an empty project root
     When the review prompt is composed
     Then the root is still empty
+
+  @WRPRW-X02 @unit-level
+  Scenario: The prompt cites one open-decisions title and value and the current names
+    Given a project whose gates include open-questions-resolved on specs and rule-implemented on code
+    When the spec, code and test prompts of "src/pricing.ts" and the feature and spec prompts of the waiving "models/user.ts" are composed
+    Then the spec prompt names "## Open Decisions" and "none" in both the procedure and the gates' demands, and never "Decisões em aberto" nor "nenhuma"
+    And the prompts cite "optional_triad_edges", "rule-implemented" and "tests-pass", and never "trinca_opcional", "regra-implementada" nor "testes-passam"

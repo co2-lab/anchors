@@ -50,6 +50,12 @@ Feature: TelemetryEmitter — decision events leave as OTLP logs, never block th
     When an event is emitted and flushed
     Then the collector sees a POST with content type "application/json" and that header
 
+  @TLEMT-B08 @unit-level
+  Scenario: With NoCodes a unit or rule code never leaves in an attribute
+    Given an event with the attributes unit "RLSGR", rule "RLSGR-B01", gate "triad-complete", card_state "in-progress" and n 3
+    When it is built by an emitter with NoCodes, and by one without
+    Then the first carries only gate, card_state and n, and the second carries all five
+
   @TLEMT-I01 @unit-level
   Scenario: A value that is not vocabulary becomes its type description
     Given an attribute value that is a map holding a file path

@@ -32,7 +32,7 @@ the helpers they share.
 | --- | --- | --- | --- |
 | the perspective | one of the six names, or all | any other name | the command tree: an unknown subcommand is not found |
 | the map | the project's map at its default path, or the one given | no map | this unit: it refuses (`RPRTS-E01`) |
-| the configuration | the project's anchors.yaml, or none | — | this unit: the tests, quality, configuration and issues perspectives say what is missing without it (`RPRTS-B14`) |
+| the configuration | the project's anchors.yaml, or none | — | this unit: every perspective says what is missing without it (`RPRTS-B14`) |
 | the destination | a file path that can be created | a path under an existing file | this unit: it fails (`RPRTS-E02`) |
 
 ## Effects
@@ -47,12 +47,12 @@ the helpers they share.
 | `RPRTS-B06` | The tests perspective lists the code files below 70% of lines, at most fifteen, and every file whose line coverage dropped since the previous ingestion. |
 | `RPRTS-B07` | The tests perspective with nothing ingested says so in each section and claims no failure and no stale signal. |
 | `RPRTS-B08` | The quality perspective gives, per gate, its force and its pass, fail and pending counts, the promotable or barred verdict, the divergences marked as blocking or informative, and the targets awaiting AI judgment. |
-| `RPRTS-B09` | The structure perspective counts nodes by kind, gives the totals, lists the guides with how many nodes each governs, and the identity collisions and missing identities the health validator found. |
+| `RPRTS-B09` | The structure perspective counts nodes by kind, gives the totals, lists the guides with how many nodes each governs, and the identity collisions, the orphans (specs with no implementation) and the missing identities the health validator found. |
 | `RPRTS-B10` | The configuration perspective lists the declared layers, governance rules, gates with their kind and force, the co-location setting, the guides with no governance and the kinds with no gate. |
 | `RPRTS-B11` | The issues perspective counts issues per state, then lists the open issues waiting on the user, the open agent work and the deferred ones, each list only when not empty, then the live tasks or an empty queue. |
 | `RPRTS-B12` | The inconsistencies perspective lists every health finding grouped by check, the failures of the quality gates, and the total. |
 | `RPRTS-B13` | A finding section takes the findings whose check starts with its name, titles itself with their count, caps the list at 25 saying how many are left, and is absent when there is none. |
-| `RPRTS-B14` | Without anchors.yaml the perspectives say what is missing instead of inventing: the quality one that no gate is declared, the configuration one that the file was not found, and the issues one its zero counts and empty queue. |
+| `RPRTS-B14` | Without anchors.yaml the perspectives say what is missing instead of inventing: the quality one that no gate is declared, the configuration one that the file was not found, the issues one its zero counts and empty queue, and the structure and inconsistencies ones that the health validator needs the file; the all form still writes every perspective. |
 
 ## Invariants
 

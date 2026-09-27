@@ -67,6 +67,19 @@ Feature: RecodePlan — planning and applying the rename of a code across the wh
     When it is moved to "moved.go"
     Then the move succeeds, "loose.go" is gone and "moved.go" exists
 
+  @RCPLR-B11 @unit-level
+  Scenario: A target code another unit already owns is refused
+    Given a project where "a/Foo.spec.md" owns "ABCDX" and "b/Bar.spec.md" owns "WXYZX", by its header or by its scenario code "WXYZX-B01"
+    When the rename of "ABCDX" to "WXYZX" is planned
+    Then it is refused naming "b/Bar.spec.md"
+    And the rename to "WXYZX" is planned when the other unit owns only "WXYZY"
+
+  @RCPLR-B12 @unit-level
+  Scenario: The malformed-code refusal names the lengths the project declares
+    Given a project whose code lengths are 5, and then 4 and 6
+    When a rename with a code of the wrong length is planned
+    Then the refusal says "expected 5 characters", and then "expected 4/6 characters"
+
   @RCPLR-X01 @unit-level
   Scenario: A git refusal is surfaced and never bypassed
     Given a repository where "a.go" and "b.go" are both tracked

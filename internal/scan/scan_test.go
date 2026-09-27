@@ -302,6 +302,7 @@ func TestLayerOfUnit(t *testing.T) {
 	write("pkg/lambdas/push/X.spec.md", "<!-- @anchors\n  code: XPTOX\n  layer: lambdas\n-->\n# X\n")
 	write("pkg/lambdas/push/X.ts", "export const x = 1;\n")
 	write("pkg/lambdas/push/NoHeader.spec.md", "# no header\n")
+	write("pkg/lambdas/push/Declared.ts", "// @anchors\n//   layer: handler\n\nexport const y = 1;\n")
 
 	cases := []struct{ name, rel, want string }{
 		{"the spec declares the unit's layer in the header", "pkg/lambdas/push/X.spec.md", "lambdas"},
@@ -309,6 +310,7 @@ func TestLayerOfUnit(t *testing.T) {
 		// Without a header it falls to `ClassifyPath` — and there the spec is of layer `spec`.
 		// Inventing another answer would be guessing.
 		{"a spec without a header falls to the pattern", "pkg/lambdas/push/NoHeader.spec.md", "spec"},
+		{"a code file's commented header declares its layer", "pkg/lambdas/push/Declared.ts", "handler"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -619,15 +621,15 @@ func TestResolveDepPathAcceptsSrcPrefixed(t *testing.T) {
 // doctrine would force the spec to change format.
 func TestExtractRealizes_theThreeRuleForms(t *testing.T) {
 	t.Run("RPSCR-B24: A realizes tag pairs with its rule in the three rule forms", func(t *testing.T) {})
-	c := "### CRED-V01 — limit respected    @realizes LIMIT-R03\n" +
-		"| `CRED-V02` | something else | @realizes `LIMIT-R04` |\n" +
-		"- **CRED-B03** third form\n" +
+	c := "### CREDT-V01 — limit respected    @realizes LIMIT-R03\n" +
+		"| `CREDT-V02` | something else | @realizes `LIMIT-R04` |\n" +
+		"- **CREDT-B03** third form\n" +
 		"  @realizes LIMIT-R05\n"
 	got := extractRealizes("spec", c)
 	want := []Realizes{
-		{From: "CRED-V01", To: "LIMIT-R03"},
-		{From: "CRED-V02", To: "LIMIT-R04"},
-		{From: "CRED-B03", To: "LIMIT-R05"},
+		{From: "CREDT-V01", To: "LIMIT-R03"},
+		{From: "CREDT-V02", To: "LIMIT-R04"},
+		{From: "CREDT-B03", To: "LIMIT-R05"},
 	}
 	if len(got) != len(want) {
 		t.Fatalf("want %d declarations, got %d: %+v", len(want), len(got), got)
@@ -644,7 +646,7 @@ func TestExtractRealizes_theThreeRuleForms(t *testing.T) {
 // worse than capturing nothing: the gate would confirm a realization nobody declared.
 func TestExtractRealizes_orphanTagDoesNotStealPreviousRule(t *testing.T) {
 	t.Run("RPSCR-B25: A tag after a blank line has no owning rule", func(t *testing.T) {})
-	c := "### CRED-B03 — a rule\n\nloose text with @realizes ORFA-R01\n"
+	c := "### CREDT-B03 — a rule\n\nloose text with @realizes ORFAN-R01\n"
 	got := extractRealizes("spec", c)
 	if len(got) != 1 {
 		t.Fatalf("want 1 declaration, got %+v", got)
@@ -658,7 +660,7 @@ func TestExtractRealizes_orphanTagDoesNotStealPreviousRule(t *testing.T) {
 // reading the tag in them would create an edge from something that owns no rule.
 func TestExtractRealizes_specOnly(t *testing.T) {
 	t.Run("RPSCR-B26: Only a spec declares rule tags", func(t *testing.T) {})
-	c := "### CRED-V01 — x    @realizes LIMIT-R03\n"
+	c := "### CREDT-V01 — x    @realizes LIMIT-R03\n"
 	for _, kind := range []string{"code", "test", "feature", "plan", "product"} {
 		if got := extractRealizes(kind, c); got != nil {
 			t.Errorf("kind %q: want nil, got %+v", kind, got)
@@ -670,10 +672,10 @@ func TestExtractRealizes_specOnly(t *testing.T) {
 // realizing the same one, are the two legitimate cases that 1-to-many exists to allow.
 func TestExtractRealizes_dedupesThePairNotTheCode(t *testing.T) {
 	t.Run("RPSCR-B27: A repeated pair is recorded once", func(t *testing.T) {})
-	c := "### CRED-V01 — x    @realizes LIMIT-R03\n" +
-		"\n### CRED-V01 — x again    @realizes LIMIT-R03\n" +
-		"\n### CRED-V02 — y    @realizes LIMIT-R03\n" +
-		"\n### CRED-V03 — z    @realizes LIMIT-R03 @realizes LIMIT-R09\n"
+	c := "### CREDT-V01 — x    @realizes LIMIT-R03\n" +
+		"\n### CREDT-V01 — x again    @realizes LIMIT-R03\n" +
+		"\n### CREDT-V02 — y    @realizes LIMIT-R03\n" +
+		"\n### CREDT-V03 — z    @realizes LIMIT-R03 @realizes LIMIT-R09\n"
 	got := extractRealizes("spec", c)
 	if len(got) != 4 {
 		t.Fatalf("want 4 (the repeated pair goes, the others stay), got %d: %+v", len(got), got)
@@ -682,10 +684,10 @@ func TestExtractRealizes_dedupesThePairNotTheCode(t *testing.T) {
 
 func TestExtractGatedBy_onlyFlagScenarios(t *testing.T) {
 	t.Run("RPSCR-B28: A gated-by tag names only a flag scenario", func(t *testing.T) {})
-	c := "### CRED-B01 — x @gated-by FLAGX-G01 @gated-by FLAGX-B02\n"
+	c := "### CREDT-B01 — x @gated-by FLAGX-G01 @gated-by FLAGX-B02\n"
 	got := extractGatedBy("spec", c)
-	if len(got) != 1 || got[0] != (Realizes{From: "CRED-B01", To: "FLAGX-G01"}) {
-		t.Errorf("only the G code is a gate, owned by CRED-B01; got %+v", got)
+	if len(got) != 1 || got[0] != (Realizes{From: "CREDT-B01", To: "FLAGX-G01"}) {
+		t.Errorf("only the G code is a gate, owned by CREDT-B01; got %+v", got)
 	}
 	if got := extractGatedBy("code", c); got != nil {
 		t.Errorf("a code file declares no gate, got %+v", got)
@@ -769,4 +771,74 @@ func writeDeep(path, content string) error {
 		return err
 	}
 	return os.WriteFile(path, []byte(content), 0o644)
+}
+
+// Header keys read over the whole file took prose and code as declarations: a body line
+// `code: BOGUS` became the unit's identity, `layer: bogus` its layer, and a `// dep:` comment
+// in the code a dependency edge — the same hole `parent:` had (RPSCR-B15).
+func TestHeaderKeysOnlyInsideHeader(t *testing.T) {
+	t.Run("RPSCR-B30: Header keys are read only inside the header", func(t *testing.T) {})
+	root := t.TempDir()
+	must(t, writeDeep(filepath.Join(root, "plans", "a.md"), "x"))
+	must(t, writeDeep(filepath.Join(root, "a.ts"), "x"))
+	body := "<!-- @anchors\n  updated_at: 2026-09-26\n-->\n# T\n\ncode: BOGUS\nlayer: bogus\nneeds: FNDTN-F02, plans/a.md\nrevises: plans/a.md\n"
+	if got := extractHeaderCode(body); got != "" {
+		t.Errorf("a body `code:` line is not the identity, got %q", got)
+	}
+	if got := extractHeaderLayer(body); got != "" {
+		t.Errorf("a body `layer:` line is not the unit layer, got %q", got)
+	}
+	if got := needsFor("spec", []byte(body), root, "s.spec.md"); got != nil {
+		t.Errorf("a body `needs:` line is not a spec's needs, got %v", got)
+	}
+	if got := needsFor("plan", []byte(body), root, "plans/c.md"); got != nil {
+		t.Errorf("a body `needs:` line is not a plan's needs, got %v", got)
+	}
+	if got := revisesDe("plan", []byte(body), root, "plans/c.md"); got != nil {
+		t.Errorf("a body `revises:` line is not a revision, got %v", got)
+	}
+	code := []byte("// @anchors\n//   updated_at: 2026-09-26\npackage p\n\n// dep: a.ts\n")
+	if got := extractHeaderDeps(code, root, "p.go"); got != nil {
+		t.Errorf("a `dep:` comment in the body is not a dependency, got %+v", got)
+	}
+	must(t, writeDeep(filepath.Join(root, "x", "B.spec.md"), body))
+	cfg := &config.Config{Layers: map[string]config.Layer{"spec": {Pattern: "**/*.spec.md", Kind: "spec"}}}
+	if got := LayerOfUnit(root, "x/B.spec.md", cfg); got != "spec" {
+		t.Errorf("LayerOfUnit reads the header only, got %q", got)
+	}
+}
+
+// A file that matches a layer and cannot be read was dropped with no error: the map lost a
+// unit and no gate ever saw it — the silence this unit is built against.
+func TestWalk_unreadableFileIsAnError(t *testing.T) {
+	t.Run("RPSCR-E02: A layer file that cannot be read fails the walk", func(t *testing.T) {})
+	if os.Geteuid() == 0 {
+		t.Skip("root reads a 0o000 file")
+	}
+	root := t.TempDir()
+	p := filepath.Join(root, "src", "a.ts")
+	must(t, writeDeep(p, "x"))
+	must(t, os.Chmod(p, 0))
+	t.Cleanup(func() { _ = os.Chmod(p, 0o644) })
+	cfg := &config.Config{Layers: map[string]config.Layer{"code": {Pattern: "src/*.ts", Kind: "code"}}}
+	files, err := Walk(root, cfg)
+	if err == nil || !strings.Contains(err.Error(), "src/a.ts") {
+		t.Errorf("want an error naming src/a.ts, got %v (files %v)", err, paths(files))
+	}
+}
+
+// The tags follow the declared code length: a project of 7-character codes gets its
+// @realizes and @gated-by edges like any other.
+func TestExtractRuleTags_followTheDeclaredCodeLength(t *testing.T) {
+	t.Run("RPSCR-B31: Rule tags follow the declared code length", func(t *testing.T) {})
+	prev := config.CodeLengths
+	config.SetCodeLengths([]int{7})
+	defer config.SetCodeLengths(prev)
+	c := "### CREDITS-B01 — a rule    @realizes LIMITED-R03 @gated-by FLAGSET-G01\n"
+	if got := extractRealizes("spec", c); len(got) != 1 || got[0] != (Realizes{From: "CREDITS-B01", To: "LIMITED-R03"}) {
+		t.Errorf("a 7-character @realizes must be read: %+v", got)
+	}
+	if got := extractGatedBy("spec", c); len(got) != 1 || got[0] != (Realizes{From: "CREDITS-B01", To: "FLAGSET-G01"}) {
+		t.Errorf("a 7-character @gated-by must be read: %+v", got)
+	}
 }

@@ -83,7 +83,8 @@ func Aggregate(results []Result) Profile {
 }
 
 // NodeVerdict é o resultado agregado por NÓ (um nó pode ser tocado por vários
-// gates). Failed = reprovou ao menos um gate BLOQUEANTE. É o insumo que o mapa usa
+// gates). Failed = barrou a promoção em ao menos um gate BLOQUEANTE (Fail, ou Pending
+// que `Impede`). É o insumo que o mapa usa
 // para carimbar as arestas (loop check→carimbo).
 type NodeVerdict struct {
 	ID     string
@@ -101,7 +102,10 @@ func (p Profile) NodeVerdicts() []NodeVerdict {
 			// IA não julgou) — só carimba quando `anchors judge` gravar o veredito.
 		}
 		confronted[r.Target] = true
-		if r.Verdict == Fail && r.Blocking {
+		// The same test `Aggregate` uses to block promotion: a blocking gate's Fail, or
+		// its Pending marked `Impede`. Only the Fail was counted here, so a node whose
+		// impeding pending refused the promotion was stamped as not failed on the map.
+		if r.Blocking && (r.Verdict == Fail || (r.Verdict == Pending && r.Impede)) {
 			failed[r.Target] = true
 		}
 	}

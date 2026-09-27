@@ -45,6 +45,12 @@ Feature: Judge — records an AI's verdict on a judgment gate with the same book
     When "src/login.tsx" is judged "pass" by review
     Then the output says it is "recording on `src/login.spec.md`"
 
+  @JDGUE-B12 @unit-level
+  Scenario: A test target not in the map is recorded on its unit's spec, for a Go unit as for a TypeScript one
+    Given a map holding pkg/foo.spec.md, web/x.spec.md and lib/only_code.go
+    When the existing piece is looked up for pkg/foo_test.go, pkg/foo.go, web/x.test.ts, lib/only_code_test.go and pkg/other_test.go
+    Then they resolve to pkg/foo.spec.md, pkg/foo.spec.md, web/x.spec.md, lib/only_code.go and nothing
+
   @JDGUE-B07 @unit-level
   Scenario: A fail opens an issue, a repeated report changes nothing, a new report reopens it
     Given the login project with the atomic judgment gate
@@ -77,7 +83,7 @@ Feature: Judge — records an AI's verdict on a judgment gate with the same book
 
   @JDGUE-B11 @unit-level
   Scenario: The verdict closes its judge task and the pending list shrinks
-    Given the queue holds the judge tasks "judge-review-src-login" and "judge-atomic-src-login"
+    Given the queue holds the judge tasks "judge-review-src-login" (judgment kind, review verb) and "judge-atomic-src-login" (legacy judge verb)
     When the pending list is shown, the login code is judged by review, and the list is shown again
     Then the first list shows "2 target(s)", the review task is done, and the second list shows "1 target(s)"
     And with an empty queue the list says "no target awaiting judgment"

@@ -94,6 +94,12 @@ Feature: CoverageCommand — answers the confidence questions from the ingested 
     Then it lists "⚠ low.go — 50% → 30% (-20)" and "✗ 1 file(s) lost coverage (worst: -20 points)"
     And it exits with status 1
 
+  @CVCMC-B14 @unit-level
+  Scenario: The diff coverage lists the changed files in path order, and resolves a path matching several coverage entries always to the same one
+    Given a diff of six files under pkg in shuffled order, and z.go whose suffix eight coverage entries share, only /a/z.go covering it
+    When the diff coverage runs twenty times
+    Then every run prints the same report, the files in path order, and z.go 100% covered
+
   @CVCMC-I01 @unit-level
   Scenario: Nothing measured is never reported as nothing below the threshold
     Given a map whose one code file has no line or mutation signal

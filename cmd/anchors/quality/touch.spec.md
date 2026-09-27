@@ -52,6 +52,7 @@ would bump. The installed pre-commit runs this bump by default; the project can 
 | `HDTHD-B10` | Each bump is listed with its old and new date and each skip with its reason, then the total. |
 | `HDTHD-B11` | Without a date the day of the run is written. |
 | `HDTHD-B12` | The pre-commit bump is on unless the project turns it off. |
+| `HDTHD-B13` | A project root below the repository's top considers only its own files, named from the project root, in both the worktree and the staged modes. |
 
 ## Invariants
 

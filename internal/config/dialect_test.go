@@ -82,7 +82,7 @@ func TestDialectFor_namingDefaultsAreOverridable(t *testing.T) {
 }
 
 func TestGherkinFor(t *testing.T) {
-	t.Run("DLCTI-B06: The Gherkin language defaults to English, and one outside the table keeps its code with English keywords", func(t *testing.T) {})
+	t.Run("DLCTI-B06: The Gherkin language defaults to English, is found in any case, and one outside the table keeps its code with English keywords", func(t *testing.T) {})
 	for _, tc := range []struct {
 		declared, lang, scenario string
 	}{
@@ -90,6 +90,11 @@ func TestGherkinFor(t *testing.T) {
 		{"pt", "pt", "Cenário"},
 		{"PT", "pt", "Cenário"},
 		{"eo", "eo", "Scenario"}, // Esperanto: Gherkin knows it, the table does not
+		// A table key with capitals: the lookup once lower-cased the declaration first,
+		// so zh-CN was never reached and got English keywords.
+		{"zh-CN", "zh-CN", "场景"},
+		{"ZH-cn", "zh-CN", "场景"},
+		{"en-AU", "en-AU", "Scenario"}, // outside the table: kept as declared
 	} {
 		lang, kw := Dialect{GherkinLanguage: tc.declared}.GherkinFor()
 		if lang != tc.lang || kw.Scenario != tc.scenario {

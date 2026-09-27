@@ -360,3 +360,49 @@ func TestJudgmentIsOnePerGateAndKeepsItsDate(t *testing.T) {
 		t.Fatalf("a new verdict replaces the gate's judgment and dates it t2, got %+v", js)
 	}
 }
+
+// Judging one node rewrote the stamp of every relation touching it, a waiver included:
+// the check keeps a waiver (EDSTD-B03) and the judge did not. A waiver answers ONE gate's
+// question; another gate's verdict does not answer it, the same gate judging again does.
+func TestJudgingANodeKeepsAnotherGatesWaiver(t *testing.T) {
+	t.Run("EDSTD-B14: Judging keeps a waiver another gate recorded, and the gate that waived replaces its own", func(t *testing.T) {})
+	waived := func(g *Graph) {
+		g.StampNodeByGate("A.tsx", "waived", "2026-01-01", "atomic")
+	}
+
+	// another gate on the node: the stamp stays waived, the new gate's judgment is recorded
+	g := stampGraph()
+	waived(g)
+	g.StampNodeByGate("A.tsx", "ok", "2026-02-02", "review")
+	for _, e := range g.Edges {
+		if e.Stamp == nil || e.Stamp.Verdict != "waived" || e.Stamp.Gate != "atomic" || e.Stamp.ChangedAt != "2026-01-01" {
+			t.Errorf("%s → %s: another gate rewrote the waiver: %+v", e.From, e.To, e.Stamp)
+		}
+	}
+	if v, ok := g.JudgedBy("A.tsx", "review"); !ok || v != "ok" {
+		t.Errorf("the other gate's judgment was not recorded: %q %v", v, ok)
+	}
+	// the same through the single-edge path (a gate with a guide)
+	g.StampEdgeByGate("A.spec.md", "A.tsx", "issue", "2026-02-03", "rule-fulfilled")
+	if st := g.Edges[0].Stamp; st.Verdict != "waived" || st.Gate != "atomic" {
+		t.Errorf("judging one edge with another gate rewrote the waiver: %+v", st)
+	}
+
+	// the gate that waived judges again: its own waiver is replaced
+	g = stampGraph()
+	waived(g)
+	g.StampNodeByGate("A.tsx", "ok", "2026-02-02", "atomic")
+	for _, e := range g.Edges {
+		if e.Stamp == nil || e.Stamp.Verdict != "ok" {
+			t.Errorf("%s → %s: the gate that waived could not replace its waiver: %+v", e.From, e.To, e.Stamp)
+		}
+	}
+
+	// a new waiver always lands
+	g = stampGraph()
+	waived(g)
+	g.StampNodeByGate("A.tsx", "waived", "2026-02-02", "review")
+	if st := g.Edges[0].Stamp; st.Verdict != "waived" || st.Gate != "review" {
+		t.Errorf("a new waiver did not land: %+v", st)
+	}
+}

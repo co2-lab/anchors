@@ -3189,9 +3189,11 @@ func TestFlowOutdatedWorkflows(t *testing.T) {
 // The integration branch is where the work arrives. A project on `develop` gets pipelines
 // that trigger on `develop`, and doctor does not call them outdated for it.
 func TestFlowIntegrationBranchIsAppliedAndNotOutdated(t *testing.T) {
-	t.Run("FLWRF-B09: A declared integration branch replaces every marked branch line", func(t *testing.T) {})
+	t.Run("FLWRF-B09: The integration branch, main when none is declared, replaces every marked branch line", func(t *testing.T) {})
 	t.Run("FLWRF-I01: What seeding writes is never outdated for the same configuration", func(t *testing.T) {})
-	for _, branch := range []string{"", "develop"} {
+	// `main` and the undeclared branch too: the resolve-queue template carried `develop`,
+	// and the early return for `main` left it there — on a `main` project it never ran.
+	for _, branch := range []string{"", "main", "develop"} {
 		dir := t.TempDir()
 		cfg := flowCfg(branch)
 		if _, _, err := SemeiaWorkflows(dir, cfg); err != nil {
@@ -3200,8 +3202,9 @@ func TestFlowIntegrationBranchIsAppliedAndNotOutdated(t *testing.T) {
 		if outdated := OutdatedWorkflows(dir, cfg); len(outdated) != 0 {
 			t.Errorf("branch %q: freshly seeded pipelines reported outdated: %v", branch, outdated)
 		}
-		if branch == "" {
-			continue
+		expected := branch
+		if expected == "" {
+			expected = "main"
 		}
 		marked := 0
 		for _, w := range WorkflowsDoFluxo {
@@ -3217,8 +3220,8 @@ func TestFlowIntegrationBranchIsAppliedAndNotOutdated(t *testing.T) {
 				}
 				marked++
 				indent := tl[i][:len(tl[i])-len(strings.TrimLeft(tl[i], " "))]
-				if want := indent + "branches: [develop] # anchors:integration-branch"; l != want {
-					t.Errorf("%s:%d = %q, want %q", w.Arquivo, i+1, l, want)
+				if want := indent + "branches: [" + expected + "] # anchors:integration-branch"; l != want {
+					t.Errorf("branch %q: %s:%d = %q, want %q", branch, w.Arquivo, i+1, l, want)
 				}
 			}
 		}

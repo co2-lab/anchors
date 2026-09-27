@@ -228,3 +228,31 @@ func TestTestBodyUnknownFamilyDoesNotGuess(t *testing.T) {
 		t.Fatalf("did not instruct the author:\n%s", got)
 	}
 }
+
+// The snake_case of a unit name names the Python and Rust test functions. It doubled the
+// separator (`My-Name` → `my__name`) and split an acronym letter by letter
+// (`HTTPServer` → `h_t_t_p_server`): a test name nobody would write, and in Python one
+// that a linter flags.
+func TestSnakeCaseOfAUnitName(t *testing.T) {
+	t.Run("NWTMN-B11: A unit name becomes snake_case with one separator and whole acronyms", func(t *testing.T) {})
+	for in, want := range map[string]string{
+		"My-Name":       "my_name",
+		"HTTPServer":    "http_server",
+		"calcTotal":     "calc_total",
+		"CalcTotal":     "calc_total",
+		"parseJSON":     "parse_json",
+		"getHTTPCode":   "get_http_code",
+		"my name.v2":    "my_name_v2",
+		"My_Name":       "my_name",
+		"version2Beta":  "version2_beta",
+		"calc -- total": "calc_total",
+		"-lead":         "lead",
+	} {
+		if got := toSnake(in); got != want {
+			t.Errorf("toSnake(%q) = %q, want %q", in, got, want)
+		}
+	}
+	if body := testBody("python", "HTTPServer", "XXXXX"); !strings.Contains(body, "def test_http_server(") {
+		t.Errorf("the python body must use the snake name:\n%s", body)
+	}
+}

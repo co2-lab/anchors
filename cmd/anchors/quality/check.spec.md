@@ -56,6 +56,7 @@ flag's own spec, not by this one.
 | `CGPCH-B01` | With the full-sweep flag, every node of the map is confronted, and the header names the scope, the number of nodes and of gates. |
 | `CGPCH-B02` | With changed files, the check confronts the union of their impact paths — each file, what propagates from it and what validates it — and no node off those paths. |
 | `CGPCH-B03` | The tests whose contract stamps point at a changed file enter that file's impact path; tests with no stamp on it do not. |
+| `CGPCH-B70` | The other pieces of a changed file's unit enter its impact path by name, whether or not the map links them: spec, feature, code and test, the test named with the Go suffix or the TypeScript one, and the code with the changed file's own extension. |
 | `CGPCH-B04` | Changed paths are compared in the map's form: relative to the root, cleaned, with forward slashes, whether the caller passed them absolute or relative. |
 | `CGPCH-B05` | A changed file is not governed when it matches no layer, or when it lies under a directory the scan ignores, such as the issues folder that holds the Anchors record. |
 | `CGPCH-B06` | In a batch of changed files, the not-governed ones are dropped and the rest confronted; when every file is not governed, the answer is not-governed, naming the first file and counting the others. |
@@ -90,8 +91,10 @@ flag's own spec, not by this one.
 | Effect | Description |
 | --- | --- |
 | `CGPCH-B21` | In the local modes, each target a judgment gate left pending becomes one judge task in the queue, named after the gate and the target. |
+| `CGPCH-B69` | A judge task is of the judgment kind and suggests the review stage, a verb the work command composes; its reason names the command that records the verdict with the task's own gate, and the guide and question when the gate declares them. A queued task with the legacy judge verb still counts as a judgment. |
 | `CGPCH-B22` | Judgments waiting in the queue bar an incremental check with exit 1, and never the full sweep. |
 | `CGPCH-B23` | On a full sweep, a judge task that came from the check, for a gate that ran, whose target this run did not enqueue, is dropped from the queue; tasks of another origin stay. |
+| `CGPCH-B68` | A judge task is read back as the gate whose name and the task's target rebuild its exact name, so a gate whose name prefixes another's never takes the other's tasks. |
 | `CGPCH-B24` | The drop of stale judge tasks happens only on the full sweep; an incremental check keeps the judge tasks of the targets it did not look at. |
 | `CGPCH-B25` | In github mode the check prints the judgment brief even without recording, and queues no judgment locally: the queue there is the board. |
 | `CGPCH-B26` | The judgment brief names every target awaiting judgment. |

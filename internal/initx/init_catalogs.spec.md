@@ -43,7 +43,7 @@ reads as the continuation of the question.
 | `INCTN-B01` | A preset layer with no declared kind becomes a code layer; a declared kind, pattern and tags are kept. |
 | `INCTN-B02` | Looking up a preset (`PresetByName`) by a name the catalog does not hold finds nothing and returns an empty preset. |
 | `INCTN-B03` | The preset names (`PresetNames`) are listed in the order of the catalog. |
-| `INCTN-B04` | The @TBD instruction tells the judge not to answer `pass`, to answer with a waiver that names the absence, and it names the piece the gate asks about. |
+| `INCTN-B04` | The @TBD instruction, in English like the question it closes, tells the judge not to answer `pass`, to answer `waived` naming the absence, and it names the piece the gate asks about. |
 | `INCTN-B05` | A modular preset declares the directory where its modules live. |
 
 ## Invariants

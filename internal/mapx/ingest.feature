@@ -115,6 +115,18 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     When src/atoms/Label.tsx is resolved for a report under the landing folder and for a report at the root
     Then it goes to the landing's Label.tsx first and is ambiguous, with no owner, second
 
+  @SGINA-B19 @unit-level
+  Scenario: A report with no instrumented line leaves no percentage behind
+    Given the A code file ingested at 4 of 5 lines, with and without a suite
+    When a report of 0 of 0 lines is ingested for it
+    Then it reads 0 lines at 0 percent
+
+  @SGINA-B20 @unit-level
+  Scenario: Among several report paths matching a node, the exact one, then the closest in length, is always chosen
+    Given reports where src/A.test.tsx and src/A.tsx are each matched by several paths
+    When the execution, coverage and mutation are ingested fifty times over
+    Then the test node always takes the exact path's counts, and the code node the closest path's coverage and, on a length tie, the first path's mutants
+
   @SGINA-I01 @unit-level
   Scenario: The proven rules are the sorted union of the suites
     Given suite one proving B02 and B01 and suite two proving B03 and B01

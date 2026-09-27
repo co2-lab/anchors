@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/co2-lab/anchors/internal/i18n"
 )
 
 // codePrefix tira o `[CODIGO]` do título: o código já aparece na linha do card, e
@@ -55,7 +57,9 @@ func renderTaskStatus(e taskState) string {
 			b.WriteString("  · " + r + "\n")
 		}
 		b.WriteString("  The card moves by FACT: the claim delivers, the checks move it to\n")
-		b.WriteString("  review, the merge closes it. If the movement was deliberate, put the label\n")
+		// "the merge closes it" was false: pr-body writes `Refs`, which links without
+		// closing, and the merge moves the card on to `ready-to-test`, open.
+		b.WriteString("  review, the merge moves it to ready-to-test. If the movement was deliberate, put the label\n")
 		b.WriteString("  `anchors:manual` on the card and redo it.\n")
 	}
 
@@ -135,12 +139,12 @@ func describeState(state string) string {
 
 // describeChecks nunca resume para uma palavra só.
 //
-// "passou" com 3 de 4 é exatamente o relato que mente por omissão — e um check EM CURSO
+// "passed" com 3 de 4 é exatamente o relato que mente por omissão — e um check EM CURSO
 // contado como sucesso é o defeito que este comando existe para impedir.
 func describeChecks(m map[string]int, total int) string {
 	if len(m) == 1 {
 		for k, v := range m {
-			return fmt.Sprintf("%d/%d %s", v, total, k)
+			return fmt.Sprintf("%d/%d %s", v, total, checkClassLabel(k))
 		}
 	}
 	keys := make([]string, 0, len(m))
@@ -148,15 +152,20 @@ func describeChecks(m map[string]int, total int) string {
 		keys = append(keys, k)
 	}
 	// Ordem fixa, e a pior primeiro: quem lê rápido tem de bater no problema, não no que
-	// deu certo. `sort.Strings` daria "em curso, passou, reprovou" — alfabético, e a
-	// reprovação no fim.
-	weight := map[string]int{"reprovou": 0, "em curso": 1, "passou": 2}
+	// deu certo. `sort.Strings` daria "failed, passed, running" — alfabético, e o que
+	// ainda roda no fim.
+	weight := map[string]int{checkFailed: 0, checkRunning: 1, checkPassed: 2}
 	sort.Slice(keys, func(i, j int) bool { return weight[keys[i]] < weight[keys[j]] })
 	parts := make([]string, 0, len(keys))
 	for _, k := range keys {
-		parts = append(parts, fmt.Sprintf("%d %s", m[k], k))
+		parts = append(parts, fmt.Sprintf("%d %s", m[k], checkClassLabel(k)))
 	}
 	return strings.Join(parts, ", ")
+}
+
+// checkClassLabel is the check class as the user reads it, in the user's language.
+func checkClassLabel(class string) string {
+	return i18n.T("task_status.check." + class)
 }
 
 // nextStep é DERIVADO do estado, não da intenção do agente.
@@ -180,19 +189,21 @@ func nextStep(e taskState) []string {
 	// `in-review` isso é conselho errado: o trabalho já foi entregue, o que falta é
 	// julgá-lo. Um próximo passo errado é pior que nenhum: ele parece derivado do estado.
 	case e.PR == nil && e.Card != nil && canOpenPR(e):
-		ps = append(ps, "open the PR — `anchors pr-body --cards <n>` writes the closing lines")
+		// "the closing lines" was false: pr-body writes `Refs`, which links the card and
+		// does not close it (see linkSyntax).
+		ps = append(ps, "open the PR — `anchors pr-body --cards <n>` writes the lines that link the card")
 	case e.PR == nil && e.Card != nil && inReview(e.Card.State):
 		ps = append(ps, fmt.Sprintf("card #%d is under review and this branch has no PR — "+
 			"its PR is on another branch; `gh pr list --search %d` finds it", e.Card.Number, e.Card.Number))
 	case e.PR != nil && e.PR.State == "OPEN" && e.PR.Total == 0:
 		ps = append(ps, fmt.Sprintf("no check ran on PR #%d — do not trust the green that does not exist; "+
 			"trigger it (`gh workflow run`) and wait", e.PR.Number))
-	case e.PR != nil && e.PR.State == "OPEN" && e.PR.Checks["em curso"] > 0:
+	case e.PR != nil && e.PR.State == "OPEN" && e.PR.Checks[checkRunning] > 0:
 		ps = append(ps, fmt.Sprintf("the CI of PR #%d is running — `gh pr checks %d --watch` "+
 			"BLOCKS until the verdict (do not end the turn here)", e.PR.Number, e.PR.Number))
-	case e.PR != nil && e.PR.State == "OPEN" && e.PR.Checks["reprovou"] > 0:
+	case e.PR != nil && e.PR.State == "OPEN" && e.PR.Checks[checkFailed] > 0:
 		ps = append(ps, fmt.Sprintf("%d check(s) failed on PR #%d — it is work of THIS card: "+
-			"fix it, push and wait again", e.PR.Checks["reprovou"], e.PR.Number))
+			"fix it, push and wait again", e.PR.Checks[checkFailed], e.PR.Number))
 	case e.PR != nil && e.PR.State == "OPEN":
 		ps = append(ps, fmt.Sprintf("the checks of PR #%d passed — the review is missing", e.PR.Number))
 	}

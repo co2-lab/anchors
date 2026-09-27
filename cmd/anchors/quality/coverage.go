@@ -341,7 +341,15 @@ func coverageDiff(root, ref, diffFile, lcov string, threshold float64) error {
 	fmt.Println(":")
 	var totalInstr, totalUncov int
 	shown := false
-	for file, lines := range changed {
+	// In path order: ranging over the map printed the files in a different order on every
+	// run, and two runs over the same diff could not be compared line by line.
+	files := make([]string, 0, len(changed))
+	for file := range changed {
+		files = append(files, file)
+	}
+	sort.Strings(files)
+	for _, file := range files {
+		lines := changed[file]
 		fc, ok := matchCoverage(file, covByFile)
 		if !ok {
 			continue // arquivo mudado sem cobertura ingerida (ex.: não é código)
@@ -415,9 +423,17 @@ func matchCoverage(diffFile string, covByFile map[string]testsig.FileCoverage) (
 	if fc, ok := covByFile[diffFile]; ok {
 		return fc, true
 	}
-	for cf, fc := range covByFile {
+	// The candidates in path order, and the first match wins: ranging over the map picked
+	// whichever matching entry came first on that run, so a file whose suffix two entries
+	// share (two builds of the same package) was covered on one run and not on the next.
+	keys := make([]string, 0, len(covByFile))
+	for cf := range covByFile {
+		keys = append(keys, cf)
+	}
+	sort.Strings(keys)
+	for _, cf := range keys {
 		if strings.HasSuffix(cf, "/"+diffFile) || strings.HasSuffix(diffFile, "/"+cf) {
-			return fc, true
+			return covByFile[cf], true
 		}
 	}
 	return testsig.FileCoverage{}, false

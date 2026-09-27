@@ -36,16 +36,16 @@ returning it later only costs waiting, and forcing is explicit.
 | Input | Accepts | Outside the domain | Who guarantees |
 | --- | --- | --- | --- |
 | the task ID | a stable, file-name-safe `<seq>-<kind>-<slug>` | — | the watcher, which enqueues |
-| the target | a path relative to the project root | — | the watcher; a target that disappears is cleaned by this unit |
+| the target | a path relative to the project root, or an absolute path | — | the watcher; a target that disappears is cleaned by this unit |
 | the claim moment | an RFC 3339 time, or empty | an unparsable time | this unit: an empty or unparsable moment counts as old |
-| the task files | files written by this unit | hand-edited files that are not valid YAML | this unit: they are skipped when listing |
+| the task files | files written by this unit | hand-edited files that are not valid YAML | this unit: they are listed as triage tasks (E03) |
 
 ## Effects
 
 | Effect | Description |
 | --- | --- |
 | `TSQUT-B01` | Enqueuing writes the task as `pending__<id>.yaml` in `.anchors/tasks/`, in the pending state. (`Enqueue`) |
-| `TSQUT-B02` | Enqueuing a task whose target and suggested step are already held by a live (pending or claimed) task creates nothing. |
+| `TSQUT-B02` | Enqueuing a task whose target, suggested step and kind are already held by a live (pending or claimed) task creates nothing — and for a judgment the gate must match too, carried by its ID: two judgment gates on one target are two tasks, and a judgment never collapses into a review of another kind. |
 | `TSQUT-B03` | Listing gives every live task sorted by ID, taking each task's state from its file name, and nothing when the queue folder does not exist. |
 | `TSQUT-B04` | A task whose target file no longer exists is removed from disk when the queue is listed. |
 | `TSQUT-B05` | Claiming takes the first pending task, records the worker and the claim moment, and leaves only its claimed file; an empty queue gives no task. |
@@ -55,9 +55,10 @@ returning it later only costs waiting, and forcing is explicit.
 | `TSQUT-B09` | Reclaiming returns to pending, with no worker or moment, every claim older than four hours or with no claim moment; the returned tasks can be claimed again. (`ClaimIsOld`) |
 | `TSQUT-B10` | Forced reclaiming returns every claimed task, however recent. (`ReclaimForce`) |
 | `TSQUT-B11` | The count of recently held claims is the number of claimed tasks a reclaim would keep because they are within the window, so a reclaim of zero can explain itself. (`RecentlyHeld`) |
-| `TSQUT-B12` | The next step suggested for a changed file follows its kind: a draft plan goes to plan review, a plan to spec, a spec to code, code to feature, a feature to test, a test to review, a guide to reviewing what it governs, and any other kind to triage; every suggestion carries its reason. (`SuggestNext`) |
-| `TSQUT-B13` | The suggestion for a plan, a spec, a feature, code and a test is a verb `anchors work` can compose. (`ValidWorkArtifact`) |
+| `TSQUT-B12` | The next step suggested for a changed file follows its kind: a draft plan goes to plan review, a plan to spec, a spec to code, code to feature, a feature to test, a test to review, a guide to review (of each unit it governs), and any other kind to triage; every suggestion carries its reason. (`SuggestNext`) |
+| `TSQUT-B13` | The suggestion for every mapped kind (a draft plan, a plan, a spec, a feature, code, a test, a guide) is a verb `anchors work` can compose; only an unmapped kind gets `triage`, the queue's marker for a step decided by hand. (`ValidWorkArtifact`) |
 | `TSQUT-B14` | The pending count is the number of live tasks, pending and claimed. (`PendingCount`) |
+| `TSQUT-B15` | A task whose target is an absolute path is checked at that path, so it is kept while the file exists. |
 
 ## Invariants
 
@@ -77,7 +78,8 @@ returning it later only costs waiting, and forcing is explicit.
 | --- | --- | --- | --- |
 | `TSQUT-E01` | A task to mark done is neither pending nor claimed. | Refused with "task not found"; nothing moves. | Recording as done a task that is not in the queue would fabricate history. |
 | `TSQUT-E02` | A task to drop is neither pending nor claimed. | Refused with "task not found". | The caller asked to discard something that is not there; saying it was dropped would hide a wrong ID. |
-| `TSQUT-E03` | A task file in the queue is not valid YAML. | Listing skips it and returns the other tasks. | One corrupted file must not stop every worker from reading the queue. |
+| `TSQUT-E03` | A task file in the queue is not valid YAML. | Listing returns it among the other tasks as a triage task with the ID and state of its file name and a reason naming the file and the parse error; it can be claimed, done or dropped by that ID. | One corrupted file must not stop every worker from reading the queue, and a skipped file would be a task nobody sees, claims or cleans. |
+| `TSQUT-E04` | A task is enqueued under an ID a pending or claimed task already holds (for another target or step). | Refused naming the ID; the live task is untouched. | The ID is the file name: writing would replace the live task's file, and it would vanish from the queue with no trace. |
 
 ## Dependencies
 

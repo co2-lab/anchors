@@ -94,7 +94,7 @@ same diagnosis and sorted into the same report.
 | Effect | Description |
 | --- | --- |
 | `DCTRO-B21` | A plan whose `needs` names a plan that does not exist is a warning `needs-quebrado` on it, naming the missing target. |
-| `DCTRO-B22` | A cycle of `needs` between plans gives one warning `needs-ciclo`, showing a path through the cycle. |
+| `DCTRO-B22` | A cycle of `needs` between plans gives one warning `needs-ciclo` on a plan of the cycle, whose path names only the cycle's plans, closing on the first; plans are walked in path order, so the same map always gives the same finding. |
 | `DCTRO-B23` | A chain of needs in order, or a project without plans, gives no finding. |
 
 ### Signals

@@ -5,6 +5,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/spf13/cobra"
 )
@@ -49,11 +50,6 @@ var tiposConvencionais = []string{
 	"feat", "fix", "docs", "style", "refactor", "perf", "test", "build", "ci", "chore", "revert",
 }
 
-func subjectRE() *regexp.Regexp {
-	return regexp.MustCompile(`^(` + strings.Join(tiposConvencionais, "|") +
-		`)(\([^)]+\))?(!)?: .+`)
-}
-
 // LimiteDoAssunto é onde o assunto para de caber onde as pessoas o leem.
 //
 // 100 é o número do commitlint, e o motivo de adotá-lo não é autoridade: é que as
@@ -65,7 +61,7 @@ const LimiteDoAssunto = 100
 // headerRE separa as partes do assunto para confrontá-las uma a uma. Um `^...$` único
 // diria só "não casou", e quem foi barrado precisa saber QUAL parte está errada.
 func headerRE() *regexp.Regexp {
-	return regexp.MustCompile(`^([A-Za-z]+)(\(([^)]*)\))?(!)?: *(.*)$`)
+	return regexp.MustCompile(`^([A-Za-z]+)(\(([^)]*)\))?(!)?:( *)(.*)$`)
 }
 
 // subjectProblem devolve o defeito e como consertá-lo, ou "" se o assunto está bom.
@@ -80,7 +76,7 @@ func subjectProblem(assunto string) string {
 	if m == nil {
 		return "is not in the `type(scope): what changed` format"
 	}
-	tipo, temEscopo, escopo, texto := m[1], m[2] != "", m[3], m[5]
+	tipo, temEscopo, escopo, espaco, texto := m[1], m[2] != "", m[3], m[5], m[6]
 
 	// TIPO em minúsculas: `Feat` e `feat` viram grupos SEPARADOS no changelog, e ninguém
 	// percebe até ver a mesma seção duas vezes na mesma versão.
@@ -102,10 +98,19 @@ func subjectProblem(assunto string) string {
 	if strings.TrimSpace(texto) == "" {
 		return "the type is right, but there is no subject after the colon"
 	}
-	if len(assunto) > LimiteDoAssunto {
+	// SEM ESPAÇO depois dos dois-pontos (`feat:x`): o parser do Conventional Commits não
+	// separa o tipo do assunto, e o commitlint recusa. Só a regex morta dos testes pegava
+	// isto; a régua real deixava passar — divergindo para o lado frouxo (CMMSC-I01).
+	if espaco == "" {
+		return "there is no space after the colon — write `feat: what changed`, otherwise the changelog " +
+			"cannot tell the type from the subject"
+	}
+	// CHARACTERS, not bytes: `len` counted `ç` and `ã` twice, and an accented subject of 60
+	// letters was refused as if it had 120.
+	if n := utf8.RuneCountInString(assunto); n > LimiteDoAssunto {
 		return fmt.Sprintf("the subject has %d characters and the limit is %d — it is cut off in the "+
 			"commit list and in the changelog. The detail goes in the BODY of the message, which has "+
-			"no limit", len(assunto), LimiteDoAssunto)
+			"no limit", n, LimiteDoAssunto)
 	}
 	// PONTO FINAL: o changelog junta o assunto a marcadores e links, e a frase termina
 	// com dois pontos.

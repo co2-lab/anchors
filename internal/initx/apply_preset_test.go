@@ -1,6 +1,7 @@
 package initx
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/code"
@@ -110,5 +111,46 @@ func TestDeduceModulePrefixesReadsNoDisk(t *testing.T) {
 	got := DeduceModulePrefixes([]string{"/does/not/exist/family"})
 	if got["family"] != "FM" {
 		t.Errorf("a module that does not exist on disk still gets its prefix, got %v", got)
+	}
+}
+
+// Two modules with the same folder name are two modules. Keyed by the basename alone,
+// the second overwrote the first and one module vanished from the mapping.
+func TestDeduceModulePrefixesKeepsModulesWithTheSameName(t *testing.T) {
+	t.Run("APPRP-B06: Modules sharing a folder name are each keyed by their path, with distinct prefixes", func(t *testing.T) {})
+	pfx := DeduceModulePrefixes([]string{"packages/auth", "apps/auth/", "m/family"})
+	if len(pfx) != 3 {
+		t.Fatalf("every module must be in the mapping, got %v", pfx)
+	}
+	a, b := pfx["apps/auth"], pfx["packages/auth"]
+	if a == "" || b == "" || a == b {
+		t.Errorf("the two auth modules need distinct prefixes under their paths, got %v", pfx)
+	}
+	if pfx["family"] != "FM" {
+		t.Errorf("a module with a unique name stays keyed by its name, got %v", pfx)
+	}
+}
+
+// After the 26 second letters of an initial are taken, the next module used to keep the
+// prefix ALREADY taken — two modules with one identity, and nothing said so.
+func TestDeduceModulePrefixesNeverReusesAPrefix(t *testing.T) {
+	t.Run("APPRP-I02: No two modules ever share a prefix while a free one exists", func(t *testing.T) {})
+	var mods []string
+	for i := range 30 {
+		mods = append(mods, fmt.Sprintf("m/a%02d", i)) // every one starts with A
+	}
+	pfx := DeduceModulePrefixes(mods)
+	seen := map[string]string{}
+	for m, p := range pfx {
+		if len(p) != 2 {
+			t.Errorf("%s has prefix %q", m, p)
+		}
+		if other, dup := seen[p]; dup {
+			t.Errorf("%s and %s share the prefix %s", m, other, p)
+		}
+		seen[p] = m
+	}
+	if len(pfx) != 30 {
+		t.Errorf("expected 30 modules, got %d", len(pfx))
 	}
 }

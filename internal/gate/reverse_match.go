@@ -85,7 +85,14 @@ func indicesOf(s, sub string) []int {
 // dataStateDefRE finds where a spec DEFINES a data state: `DS-<name>` at the start of a
 // heading, a bullet or a table's first cell — the same positions that define a rule. The
 // unit prefix is optional, because specs write the short form inside their own unit.
-var dataStateDefRE = regexp.MustCompile("(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}(?:[A-Z0-9]{3,6}-)?(DS-[A-Za-z0-9-]+)")
+//
+// Compiled per CALL, as defineRuleCaptureRE: the code length comes from `code_lengths`,
+// loaded after the package globals. As a `var` with a fixed `{3,6}` it never saw a code
+// of another declared length (a 7- or 8-character code was invisible to the gate).
+func dataStateDefRE() *regexp.Regexp {
+	return regexp.MustCompile("(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|\\s*)`?\\*{0,2}(?:[A-Z0-9]" +
+		config.CodeLengthPattern() + "-)?(DS-[A-Za-z0-9-]+)")
+}
 
 // dataStatesOf returns the data states a spec defines, in short form (`DS-data-present`).
 //
@@ -95,7 +102,7 @@ var dataStateDefRE = regexp.MustCompile("(?m)^\\s*(?:#{2,6}\\s+|[-*]\\s+\\**|\\|
 // 94 of 103 `feature-spec-match` failures were this — states the spec DID define.
 func dataStatesOf(content string) map[string]bool {
 	out := map[string]bool{}
-	for _, m := range dataStateDefRE.FindAllStringSubmatch(content, -1) {
+	for _, m := range dataStateDefRE().FindAllStringSubmatch(content, -1) {
 		out[strings.TrimRight(m[1], "-")] = true
 	}
 	return out

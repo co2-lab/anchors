@@ -18,7 +18,7 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     Given an existing project that chose spec, feature and test
     When the default gates are seeded
     Then the spec-complete, feature-not-empty, tests-green, line-coverage and scenario-coverage gates are present
-    And none of them is blocking
+    And none is blocking except the gates blocking by nature
 
   @DFGTD-B03 @unit-level
   Scenario: The gates that cross spec and feature are seeded only when both are chosen
@@ -26,6 +26,7 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     When the default gates are seeded for each
     Then none has scenario-coverage nor spec-feature-match
     And the choice spec with feature has both
+    And feature-spec-match is seeded only with spec and feature, and test-feature-match only with test and feature
 
   @DFGTD-B04 @unit-level
   Scenario: Choosing only guides seeds only the guide checklist gate
@@ -109,3 +110,35 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     When revision-orphans is seeded
     Then it is blocking in the new project and informative in the existing one
     And it is not among the gates that depend on an ingested signal
+
+  @DFGTD-B13 @unit-level
+  Scenario: Choosing every artifact init offers seeds every gate of the catalog
+    Given every artifact name init offers, chosen
+    When the default gates are seeded
+    Then every gate of the canonical catalog is seeded, no-secret-leaked and layer-boundary among them
+
+  @DFGTD-B14 @unit-level
+  Scenario: The gates that run on specs, features and tests are seeded without plans
+    Given a project that chose spec, feature and test, and no plans
+    When the default gates are seeded
+    Then docs-fresh, the doctrine, flag and failure gates, feature-spec-match, test-feature-match, doc-required and plan-change-justified are seeded
+    And plan-change-justified runs on specs alone
+    And plan-seeds-valid, plan-source-declared, plan-doctrine-exists, plan-revised and phase-ordered are not seeded
+
+  @DFGTD-B15 @unit-level
+  Scenario: The gate names registered for the vocabulary check are the full catalog
+    Given the names registered with the configuration package
+    When they are compared with the canonical catalog
+    Then they are the same names in the same order
+
+  @DFGTD-I04 @unit-level
+  Scenario: Choosing plans adds only gates that run on plans
+    Given the triad, and the triad with code and guides
+    When each is seeded with and without plans
+    Then every gate that plans added runs on plans
+
+  @DFGTD-X02 @unit-level
+  Scenario: No default gate writes Portuguese into the project
+    Given every default gate of every artifact
+    When its question, measure and install hint are read
+    Then none carries Portuguese letters or words

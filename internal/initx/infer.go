@@ -169,10 +169,16 @@ func detectColocation(stems map[string]map[string]bool) bool {
 	return hits >= 3 // alguns casos = padrão, não coincidência
 }
 
+// testSuffixes are the file endings that mark a test, in every dialect inference knows.
+// isTest and stemOf read the SAME list: stemOf kept a shorter copy without `_test.go`,
+// `_test.py` and `.spec.ts`, so `foo_test.go` reduced to `foo_test` instead of `foo`,
+// never met `foo.go`, and a colocated Go project was never detected as colocated.
+var testSuffixes = []string{".test.ts", ".test.tsx", ".test.js", ".test.go", "_test.go", ".test.py", "_test.py", ".spec.ts"}
+
 func stemOf(rel string) string {
 	dir := filepath.Dir(rel)
 	base := filepath.Base(rel)
-	for _, suf := range []string{".spec.md", ".feature", ".test.tsx", ".test.ts", ".test.js", ".test.go", ".test.py"} {
+	for _, suf := range append([]string{".spec.md", ".feature"}, testSuffixes...) {
 		if cut, ok := strings.CutSuffix(base, suf); ok {
 			return filepath.Join(dir, cut)
 		}
@@ -184,7 +190,7 @@ func stemOf(rel string) string {
 }
 
 func isTest(name string) bool {
-	for _, s := range []string{".test.ts", ".test.tsx", ".test.js", ".test.go", "_test.go", ".test.py", "_test.py", ".spec.ts"} {
+	for _, s := range testSuffixes {
 		if strings.HasSuffix(name, s) {
 			return true
 		}
@@ -245,7 +251,14 @@ func codeRoots(dirCode map[string]int) []string {
 			kvs = append(kvs, kv{d, n})
 		}
 	}
-	sort.Slice(kvs, func(i, j int) bool { return kvs[i].n > kvs[j].n })
+	// Ties break by name: map order is random, and a tie decided by it proposed the
+	// code layers in a different order on each run.
+	sort.Slice(kvs, func(i, j int) bool {
+		if kvs[i].n != kvs[j].n {
+			return kvs[i].n > kvs[j].n
+		}
+		return kvs[i].dir < kvs[j].dir
+	})
 	var out []string
 	for _, k := range kvs {
 		out = append(out, k.dir)
@@ -262,7 +275,14 @@ func topKeys(m map[string]int, n int) []string {
 	for k, v := range m {
 		kvs = append(kvs, kv{k, v})
 	}
-	sort.Slice(kvs, func(i, j int) bool { return kvs[i].v > kvs[j].v })
+	// Ties break by key: two extensions with the same count came out in map order, so
+	// the inferred layer pattern (`*.{ts,js}` vs `*.{js,ts}`) changed between runs.
+	sort.Slice(kvs, func(i, j int) bool {
+		if kvs[i].v != kvs[j].v {
+			return kvs[i].v > kvs[j].v
+		}
+		return kvs[i].k < kvs[j].k
+	})
 	var out []string
 	for i, k := range kvs {
 		if i >= n {

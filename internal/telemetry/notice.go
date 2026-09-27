@@ -5,6 +5,9 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/i18n"
 )
 
 // --- O AVISO, e por que ele vive no PersistentPreRunE ---
@@ -20,12 +23,14 @@ import (
 //
 // A última propriedade é a que decide: o aviso aparece antes de o primeiro evento sair.
 //
-// UMA VEZ POR MÁQUINA. O marcador vive em `.anchors/`, que não é versionado — cada pessoa
-// vê uma vez, e o aviso não vira ruído a partir do segundo comando. Repetir seria pior que
-// não avisar: quem lê a mesma coisa toda vez para de ler.
+// ONCE PER PROJECT ON THIS MACHINE. O marcador vive em `.anchors/` da raiz do projeto, que
+// não é versionado — cada pessoa vê uma vez por projeto (por clone), e o aviso não vira ruído
+// a partir do segundo comando. Repetir seria pior que não avisar: quem lê a mesma coisa toda
+// vez para de ler. (The notice once said "once per machine"; the marker was always per
+// project root, and the text now says so.)
 
-// noticeFile marca que esta máquina já viu. At `.anchors/` porque é estado da MÁQUINA:
-// versioná-lo faria a primeira pessoa a commitar calar o aviso para todo o time.
+// noticeFile marca que este projeto, nesta máquina, já viu. At `.anchors/` porque é estado
+// local: versioná-lo faria a primeira pessoa a commitar calar o aviso para todo o time.
 const noticeFile = ".anchors/telemetry-noticed"
 
 // AlreadyNoticed responde se esta máquina já viu o aviso neste projeto.
@@ -43,7 +48,7 @@ func MarkNoticed(root string) {
 	if os.MkdirAll(filepath.Dir(p), 0o755) != nil {
 		return
 	}
-	_ = os.WriteFile(p, []byte("a telemetry foi anunciada nesta máquina\n"), 0o644)
+	_ = os.WriteFile(p, []byte("the telemetry notice was shown for this project\n"), 0o644)
 }
 
 // Notice escreve o aviso, uma vez.
@@ -55,23 +60,15 @@ func Notice(w io.Writer, root string) {
 	if AlreadyNoticed(root) {
 		return
 	}
-	fmt.Fprint(w, `
-┌─ telemetry ──────────────────────────────────────────────────────────────┐
-│ O Anchors envia eventos de DECISÃO — quantos candidatos o claim viu, qual  │
-│ gate reprovou, em que estado um turno terminou. É como o produto encontra  │
-│ padrões que ninguém vê de dentro de um projeto só.                        │
-│                                                                           │
-│ NÃO envia: conteúdo de arquivo, spec, diff, mensagem de erro, nome de      │
-│ repositório, de usuário ou de branch. Só números e o vocabulário do        │
-│ próprio Anchors.                                                          │
-│                                                                           │
-│ Para desligar, qualquer um destes:                                        │
-│     export ANCHORS_TELEMETRY=off                                          │
-│     telemetry: off      (no anchors.yaml, vale para o projeto)            │
-│                                                                           │
-│ Este aviso aparece uma vez por máquina.                                   │
-└───────────────────────────────────────────────────────────────────────────┘
-
-`)
+	// The text comes from the catalog, in the project's language: it was a Portuguese
+	// literal, shown as is to every project whatever its `lang:`. The frame has no right
+	// border, so a translation of any line length still closes it.
+	var b strings.Builder
+	b.WriteString("\n┌─ telemetry ─────────────────────────────────────────────────────────────\n")
+	for _, l := range strings.Split(i18n.T("telemetry.notice"), "\n") {
+		b.WriteString(strings.TrimRight("│ "+l, " ") + "\n")
+	}
+	b.WriteString("└─────────────────────────────────────────────────────────────────────────\n\n")
+	fmt.Fprint(w, b.String())
 	MarkNoticed(root)
 }

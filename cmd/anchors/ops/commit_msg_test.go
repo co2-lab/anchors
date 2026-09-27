@@ -1,6 +1,7 @@
 package ops
 
 import (
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -13,7 +14,7 @@ func TestAssuntoAceitaOFormatoQueOChangelogLe(t *testing.T) {
 		"feat(gate)!: `--changed` passa a exigir caminho relativo",
 		"chore: sobe a versão",
 	} {
-		if !subjectRE().MatchString(ok) {
+		if p := subjectProblem(ok); p != "" {
 			t.Errorf("deveria aceitar %q", ok)
 		}
 	}
@@ -24,6 +25,7 @@ func TestAssuntoAceitaOFormatoQueOChangelogLe(t *testing.T) {
 // no formato do card. Esse commit — o que introduziu o plano — não apareceria no
 // changelog, e ninguém notaria até a primeira versão ser gerada.
 func TestAssuntoRecusaOQueSumiriaDoChangelog(t *testing.T) {
+	t.Run("CMMSC-B15: A subject with no space after the colon is refused", func(t *testing.T) {})
 	for _, ruim := range []string{
 		"[MTUAO] Plano 0017 — mutação, revisando o plano 0001",
 		"ajustes",
@@ -32,7 +34,7 @@ func TestAssuntoRecusaOQueSumiriaDoChangelog(t *testing.T) {
 		"feat:sem espaço depois",
 		"feat: ", // tipo certo, assunto vazio
 	} {
-		if subjectRE().MatchString(ruim) {
+		if subjectProblem(ruim) == "" {
 			t.Errorf("deveria recusar %q — sumiria do changelog", ruim)
 		}
 	}
@@ -144,6 +146,20 @@ func TestLongSubjectIsRefusedAndPointsToTheBody(t *testing.T) {
 	}
 }
 
+// The limit is in CHARACTERS: counting bytes refused an accented subject of 60 letters as
+// if it had 120, in a project whose history is written in Portuguese.
+func TestSubjectLimitCountsCharactersNotBytes(t *testing.T) {
+	t.Run("CMMSC-B14: The subject limit counts characters, not bytes", func(t *testing.T) {})
+	atLimit := "feat: " + strings.Repeat("ç", LimiteDoAssunto-6)
+	if p := subjectProblem(atLimit); p != "" {
+		t.Errorf("a subject of exactly %d characters (%d bytes) should pass; got: %s", LimiteDoAssunto, len(atLimit), p)
+	}
+	over := atLimit + "ã"
+	if p := subjectProblem(over); !strings.Contains(p, fmt.Sprintf("has %d characters", LimiteDoAssunto+1)) {
+		t.Errorf("a subject of %d characters must be refused counting characters; got: %q", LimiteDoAssunto+1, p)
+	}
+}
+
 // EACH DEFECT has its OWN diagnosis. A generic "invalid format" forces whoever was refused
 // to guess which rule broke — and guessing three times is what makes someone turn the hook off.
 func TestEachDefectHasItsOwnDiagnosis(t *testing.T) {
@@ -151,7 +167,7 @@ func TestEachDefectHasItsOwnDiagnosis(t *testing.T) {
 	t.Run("CMMSC-B13: A type with nothing after the colon is refused", func(t *testing.T) {})
 	seen := map[string]string{}
 	for _, a := range []string{
-		"Feat: x", "feat(): x", "feat: x.", "bugfix: x", "no format at all", "feat: ",
+		"Feat: x", "feat(): x", "feat: x.", "bugfix: x", "no format at all", "feat: ", "feat:x",
 	} {
 		p := subjectProblem(a)
 		if p == "" {

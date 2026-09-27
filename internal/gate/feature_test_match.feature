@@ -163,3 +163,9 @@ Feature: FeatureTestMatch — scenarios in feature must be implemented in test b
     Given code lines with "--label", a URL and an i-- decrement before a symbol
     When the comments are stripped
     Then each symbol after them is still in the code, and a real trailing comment is removed
+
+  @FTMFT-B20 @unit-level
+  Scenario: The drift verdict is written in the project's language
+    Given a feature whose scenarios a linked test cites with unrelated titles
+    When the gate confronts them in an English and in a Portuguese project
+    Then the drift message names the verdict "divergent" in English and "divergente" in Portuguese

@@ -109,7 +109,7 @@ var WorkflowsDoFluxo = []Workflow{
 	},
 	{
 		Arquivo: "anchors-decided.yml",
-		Papel:   "devolve à fila o card cujos desbloqueios foram todos entregues",
+		Papel:   "returns to the queue the card whose unblocking cards were all delivered",
 		// SERIAL: ele escreve label, e duas execuções sobre o mesmo card — uma vinda do
 		// comentário, outra do cron — removeriam a mesma label duas vezes e comentariam
 		// duas vezes no card.
@@ -662,9 +662,13 @@ func semeiaBoard(root string) (BoardOutcome, error) {
 // declarou. A linha alvo é marcada com `# anchors:integration-branch` — um marcador, e
 // não uma busca por "main", porque "main" aparece em comentário e em outros contextos, e
 // substituir a ocorrência errada quebraria o pipeline de um jeito difícil de ver.
+//
+// Applied for EVERY branch, `main` included (an empty one reads as `main`). It used to
+// return early for `main`, trusting each template to carry `main` already — and the
+// resolve-queue template carried `develop`, so on a `main` project it never ran.
 func applyIntegrationBranch(conteudo []byte, branch string) []byte {
-	if branch == "" || branch == "main" {
-		return conteudo
+	if branch == "" {
+		branch = "main"
 	}
 	linhas := strings.Split(string(conteudo), "\n")
 	for i, l := range linhas {

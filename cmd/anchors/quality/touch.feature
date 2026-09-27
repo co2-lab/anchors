@@ -82,6 +82,12 @@ Feature: HeaderDateTouch — bumps the header date of the files that changed, an
     When the pre-commit bump switch is read
     Then it is on in every case but the last
 
+  @HDTHD-B13 @unit-level
+  Scenario: A project root below the repository top dates its own files and nothing outside it
+    Given a repository whose project root is its sub directory, with sub/x.ts staged clean, sub/y.ts staged with a change on top and a.ts staged at the top
+    When touch runs with the staged flag over the sub directory, then in the worktree mode with sub/new.ts untracked
+    Then x.ts is bumped and re-staged, y.ts is skipped, new.ts would be bumped, and a.ts is never named
+
   @HDTHD-I01 @unit-level
   Scenario: Touching twice bumps nothing the second time
     Given a repository where a.ts changed and was just touched for 2026-09-25

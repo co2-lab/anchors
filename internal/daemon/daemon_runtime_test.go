@@ -76,3 +76,24 @@ func TestStop_removesThePIDFileWithoutTheLoop(t *testing.T) {
 		t.Fatalf("the PID file must be gone after Stop: %v", err)
 	}
 }
+
+func TestAlive_aProcessWeMayNotSignalIsAlive(t *testing.T) {
+	t.Run("DMRND-B03: A live process of another user is alive", func(t *testing.T) {})
+	if runtime.GOOS == "windows" {
+		t.Skip("the permission probe is the Unix one")
+	}
+	if os.Geteuid() == 0 {
+		t.Skip("root may signal every process: no EPERM to observe")
+	}
+	// PID 1 (init/launchd) is alive and owned by root, so signal 0 answers EPERM.
+	pid1, err := os.FindProcess(1)
+	if err != nil {
+		t.Skip("cannot find pid 1:", err)
+	}
+	if err := pid1.Signal(syscall.Signal(0)); !errors.Is(err, syscall.EPERM) {
+		t.Skipf("signal 0 to pid 1 = %v, not EPERM", err)
+	}
+	if !alive(1) {
+		t.Fatal("pid 1 answers EPERM, so it exists: it must be reported alive")
+	}
+}

@@ -144,3 +144,15 @@ func TestDiffPathsContextAndFile(t *testing.T) {
 		}
 	})
 }
+
+// An added line whose text starts with `++ ` reads `+++ …` in the diff. It was taken as a
+// new-file header: the line was lost and every later line was booked under a bogus file.
+func TestDiffAddedLineLooksLikeHeader(t *testing.T) {
+	t.Run("DCLDF-B07: An added line that starts with two plus signs is a line, not a header", func(t *testing.T) {
+		diff := "--- a/x.go\n+++ b/x.go\n@@ -1,0 +1,3 @@\n+a\n+++ counter\n+b\n--- a/y.go\n+++ b/y.go\n@@ -1,1 +1,1 @@\n--- old\n+new\n"
+		want := ChangedLines{"x.go": {1: true, 2: true, 3: true}, "y.go": {1: true}}
+		if got := parseUnifiedDiff(diff); !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+}

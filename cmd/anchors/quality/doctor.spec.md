@@ -23,7 +23,8 @@ ensures the state labels. It never creates the board, which is structure shared 
 the repository. Running it again on a repository already set up changes nothing.
 
 The pipelines flag answers one question for CI: are the pipelines in place and current? It names the
-missing and outdated ones, and fails only when the project opted into blocking on a stale pipeline.
+missing and outdated ones, and fails only when the project opted into blocking on a stale pipeline. Like
+the rest of the doctor, it answers about the project the root flag names.
 
 ## Domain
 
@@ -49,6 +50,7 @@ missing and outdated ones, and fails only when the project opted into blocking o
 | `HLDCH-B10` | The pipelines check in local mode says there is no workflow pipeline to check. |
 | `HLDCH-B11` | The pipelines check names each missing or outdated pipeline and, by default, warns and lets CI continue; when every pipeline is current it says so. |
 | `HLDCH-B12` | The pipelines check fails, counting the missing and outdated pipelines, when the project declared that a stale pipeline blocks. |
+| `HLDCH-B13` | The pipelines check reads the project the root flag names, not the working directory's. |
 
 ## Invariants
 

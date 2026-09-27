@@ -32,6 +32,13 @@ Feature: DeliveryConfront — confront what a delivery declares against the disk
     When those declared files are confronted
     Then neither is accused
 
+  @DLCND-B08 @unit-level
+  Scenario: A renamed file and a file under a subdirectory root are not accused
+    Given a git repository where "app/src/old.ts" was renamed to "app/src/renamed.ts", "app/src/pricing.ts" is modified and "app/src/quiet.ts" is untouched
+    When "src/renamed.ts", "src/pricing.ts" and "src/quiet.ts" are confronted with the root "app"
+    Then only "src/quiet.ts" is accused
+    And confronted from the top of the repository, "app/src/renamed.ts" is not accused
+
   @DLCND-B05 @unit-level
   Scenario: A tested unit without a mutation signal is warned
     Given the unit "src/pricing.ts" with the test "src/pricing.test.ts" and a map with no mutation signal for it

@@ -77,13 +77,19 @@ Feature: TaskQueue — the file-backed queue between "something changed" and "so
   Scenario: The next step follows the kind that changed
     Given the kinds plan, plan-draft, spec, feature, code, test, guide and an unknown kind
     When the next step is suggested for each
-    Then they are spec, review-plan-draft, code, test, feature, review, review-governed and triage, each with a reason
+    Then they are spec, review-plan-draft, code, test, feature, review, review and triage, each with a reason
 
   @TSQUT-B13 @unit-level
   Scenario: The suggestions of the triad kinds are composable by the work command
-    Given the kinds plan, spec, feature, code and test
+    Given the kinds plan-draft, plan, spec, feature, code, test and guide
     When the next step is suggested for each
     Then every suggestion is a verb the work command accepts, with a reason
+
+  @TSQUT-B15 @unit-level
+  Scenario: A task whose target is an absolute path that exists is kept
+    Given a task enqueued with the absolute path of a file that exists
+    When the queue is listed twice
+    Then both times the task is listed, and its file stays on disk
 
   @TSQUT-B14 @unit-level
   Scenario: The pending count counts pending and claimed tasks
@@ -116,7 +122,14 @@ Feature: TaskQueue — the file-backed queue between "something changed" and "so
     Then an error is returned
 
   @TSQUT-E03 @unit-level
-  Scenario: A corrupted task file is skipped
-    Given a queue holding the valid task "1-a" and the file "pending__bad.yaml" that is not YAML
+  Scenario: A corrupted task file is listed as triage, and can be claimed and dropped
+    Given a queue holding the valid task "1-a" and the file "pending__0-bad.yaml" that is not YAML
     When the queue is listed
-    Then only "1-a" is listed and no error is returned
+    Then "0-bad" and "1-a" are listed with no error, "0-bad" as a pending triage task whose reason names its file
+    And "0-bad" can be claimed and then dropped, leaving only "1-a"
+
+  @TSQUT-E04 @unit-level
+  Scenario: Enqueuing an ID a live task already holds for another target is refused
+    Given a live task "1-x" on "a.go"
+    When a task "1-x" on "b.go" is enqueued, before and after the first is claimed
+    Then both times it is refused naming "1-x", and the first task is untouched

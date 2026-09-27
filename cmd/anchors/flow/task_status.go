@@ -59,10 +59,21 @@ type taskState struct {
 // branchPR é o PR do branch atual e o veredito dos checks dele.
 type branchPR struct {
 	Number int
-	State  string // OPEN, MERGED, CLOSED
-	Checks map[string]int
+	State  string         // OPEN, MERGED, CLOSED
+	Checks map[string]int // counts by check class: checkPassed, checkRunning, checkFailed
 	Total  int
 }
+
+// The check classes are stable English identifiers. They were the Portuguese words
+// "passou", "em curso" and "reprovou", printed as is to every user whatever the language,
+// and the telemetry attributes were named after them. Now the counts are keyed by these
+// identifiers, the telemetry names derive from them, and the report translates them
+// through i18n only when it prints (checkClassLabel).
+const (
+	checkPassed  = "passed"
+	checkRunning = "running"
+	checkFailed  = "failed"
+)
 
 func newTaskStatusCmd() *cobra.Command {
 	var root string
@@ -259,7 +270,7 @@ func currentBranchPR(root, repo string) *branchPR {
 			// A commit status has no status/conclusion pair: its `state` is the verdict,
 			// and PENDING/EXPECTED are the ones still waiting.
 			if c.State == "PENDING" || c.State == "EXPECTED" {
-				p.Checks["em curso"]++
+				p.Checks[checkRunning]++
 				continue
 			}
 			c.Conclusion, c.Status = c.State, "COMPLETED"
@@ -272,11 +283,11 @@ func currentBranchPR(root, repo string) *branchPR {
 		// failed, and the report told the agent to "fix" a PR whose CI was only running.
 		switch {
 		case c.Conclusion == "" || (c.Status != "" && c.Status != "COMPLETED"):
-			p.Checks["em curso"]++
+			p.Checks[checkRunning]++
 		case c.Conclusion == "SUCCESS" || c.Conclusion == "NEUTRAL" || c.Conclusion == "SKIPPED":
-			p.Checks["passou"]++
+			p.Checks[checkPassed]++
 		default:
-			p.Checks["reprovou"]++
+			p.Checks[checkFailed]++
 		}
 	}
 	return p
@@ -288,22 +299,24 @@ func currentBranchPR(root, repo string) *branchPR {
 // título do card, nem o nome da branch, nem o repositório — quem investiga um caso
 // específico pede o relatório local, não o painel.
 func emitTurnEnded(e taskState) {
+	// Attribute names are stable English identifiers, like the check classes they count:
+	// a dashboard reads them by name, and they must not follow the user's language.
 	attrs := map[string]any{
-		"tem_card":     e.Card != nil,
-		"tem_pr":       e.PR != nil,
-		"arvore_limpa": e.Clean,
-		"nao_enviado":  e.Unpushed,
+		"has_card":   e.Card != nil,
+		"has_pr":     e.PR != nil,
+		"clean_tree": e.Clean,
+		"unpushed":   e.Unpushed,
 	}
 	if e.Card != nil {
 		// O ESTADO, sem o prefixo: `in-progress`, não `anchors:in-progress`. É vocabulário
 		// do produto, o mesmo em todo projeto.
-		attrs["estado"] = strings.TrimPrefix(e.Card.State, "anchors:")
+		attrs["card_state"] = strings.TrimPrefix(e.Card.State, "anchors:")
 	}
 	if e.PR != nil {
-		attrs["pr_estado"] = strings.ToLower(e.PR.State)
+		attrs["pr_state"] = strings.ToLower(e.PR.State)
 		attrs["checks_total"] = e.PR.Total
-		attrs["checks_reprovaram"] = e.PR.Checks["reprovou"]
-		attrs["checks_rodando"] = e.PR.Checks["em curso"]
+		attrs["checks_"+checkFailed] = e.PR.Checks[checkFailed]
+		attrs["checks_"+checkRunning] = e.PR.Checks[checkRunning]
 	}
 	if common.Emitter != nil {
 		common.Emitter.Emit(telemetry.New(telemetry.TurnEnded, attrs, time.Now))

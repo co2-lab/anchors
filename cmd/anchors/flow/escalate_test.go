@@ -290,6 +290,22 @@ func TestEscalateCmd_ordinaryCardIsBornUnderTheOriginAndStopsNothing(t *testing.
 	}
 }
 
+// `#44` is how people write a card; it reached the label as `under-#44`, which no
+// `--label anchors:under-44` query finds.
+func TestEscalateCmd_cardWithHashIsTheSameCard(t *testing.T) {
+	t.Run("SCLTE-B17: A card written with its hash is the same card", func(t *testing.T) {})
+	_, _, err, calls := runEscalate(t, nil, "--card", "#44", "--for-user", "which currency?")
+	if err != nil {
+		t.Fatal(err)
+	}
+	create := onlyCall(t, calls, "issue create")
+	if !strings.Contains(create, "--label "+initx.LabelSob("44")) || strings.Contains(create, "#44") {
+		t.Errorf("the new card must carry %s: %s", initx.LabelSob("44"), create)
+	}
+	onlyCall(t, calls, "label create "+initx.LabelSob("44"))
+	onlyCall(t, calls, "issue edit 44 ")
+}
+
 // A decision stops the origin card with needs-user AND the link to the decision, and
 // tells how to resume.
 func TestEscalateCmd_decisionStopsTheCardAndLinksIt(t *testing.T) {
@@ -479,11 +495,12 @@ func TestEscalateCmd_warnsWhenTheTargetAlreadyHasCards(t *testing.T) {
 	cards := `[{"number":1,"title":"a src/x.ts","body":""},{"number":2,"title":"b","body":"on src/x.ts"},` +
 		`{"number":3,"title":"c src/x.ts","body":""},{"number":4,"title":"d src/x.ts","body":""},` +
 		`{"number":5,"title":"unrelated","body":"src/x.tsx"}]`
-	_, errOut, err, _ := runEscalate(t, []ghRule{{match: "issue list *--search src/x.ts*", out: cards}},
+	_, errOut, err, calls := runEscalate(t, []ghRule{{match: "issue list *--search src/x.ts*", out: cards}},
 		"--card", "44", "--about", "src/x.ts", "dup")
 	if err != nil {
 		t.Fatal(err)
 	}
+	onlyCall(t, calls, "issue list", "--repo acme/app") // the project's board, not the cwd's
 	for _, want := range []string{"#1 a src/x.ts", "#2 b", "#3 c src/x.ts"} {
 		if !strings.Contains(errOut, want) {
 			t.Errorf("the warning must list %q: %q", want, errOut)

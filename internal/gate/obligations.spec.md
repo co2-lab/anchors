@@ -48,8 +48,9 @@ trust without checking.
 | `BLGTN-B02` | With no configuration there is no duty; with no pack adopted, the duties in force are the inline list as declared. |
 | `BLGTN-B03` | The pack duties come first and the inline duties last, and each pack duty keeps its trigger, its target files and how it is identified. |
 | `BLGTN-B04` | A pack duty's reason gets its source appended in parentheses: the authority and the article when both exist, either one alone otherwise; with no reason, the source alone is the reason. |
-| `BLGTN-B05` | A pack that fails to load is reported on the error output, and the inline duties remain in force. |
-| `BLGTN-B06` | The pack duties are read once per project root; later calls for the same root are served from that first read. |
+| `BLGTN-B05` | A pack that fails to load is reported on the error output, in the project's language, and the inline duties remain in force. |
+| `BLGTN-B06` | The pack duties are read once per project root and pack set (the adopted packs, their values and the jurisdictions); later calls with the same root and set are served from that first read. |
+| `BLGTN-B12` | A call with the same root and another pack set reads that set, instead of being served the list of the first. |
 
 ### The compliance report
 

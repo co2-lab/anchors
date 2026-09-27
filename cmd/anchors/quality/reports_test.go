@@ -373,3 +373,45 @@ func TestReportToAnUnwritableDestinationFails(t *testing.T) {
 		t.Error("a destination under a file must fail")
 	}
 }
+
+// The structure perspective's orphans are the specs with no implementation — the finding
+// the health validator emits. It filtered on `orfao`, a check nobody emits, and the
+// section could never print.
+func TestStructureListsTheSpecsWithNoImplementation(t *testing.T) {
+	t.Run("RPRTS-B09: The structure perspective counts nodes by kind, the governance and the identity findings", func(t *testing.T) {})
+	cfg := &config.Config{Layers: map[string]config.Layer{"code": {Kind: "code"}}}
+	ctx := reportCtx{g: reportGraph(), cfg: cfg, root: t.TempDir(), when: "now"}
+	out := renderStructure(ctx)
+	if !strings.Contains(out, "## Orphans (spec with no implementation) (3)") || !strings.Contains(out, "- `c.spec.md`") {
+		t.Errorf("the specs with no implementation must be listed as orphans:\n%s", out)
+	}
+}
+
+// Without anchors.yaml the perspectives that read the health validator say it cannot run,
+// instead of panicking on the missing configuration.
+func TestHealthPerspectivesWithoutConfig(t *testing.T) {
+	t.Run("RPRTS-B14: Without anchors.yaml the perspectives say what is missing instead of inventing", func(t *testing.T) {})
+	englishOutput(t)
+	ctx := reportCtx{g: reportGraph(), root: t.TempDir(), when: "now"}
+	for name, render := range map[string]func(reportCtx) string{
+		"structure": renderStructure, "inconsistencies": renderInconsistencies,
+	} {
+		var out string
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					t.Fatalf("%s without anchors.yaml panicked: %v", name, r)
+				}
+			}()
+			out = render(ctx)
+		}()
+		if !strings.Contains(out, "anchors.yaml not found") {
+			t.Errorf("%s without anchors.yaml must say the health validator needs it:\n%s", name, out)
+		}
+	}
+	// and `report all` over such a project writes every perspective
+	dir := qProject(t, "", reportFiles(), reportGraph())
+	if _, err := runQ(t, newReportCmd(), "all", "--root", dir); err != nil {
+		t.Fatalf("report all without anchors.yaml: %v", err)
+	}
+}

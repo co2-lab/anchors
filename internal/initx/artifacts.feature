@@ -8,16 +8,16 @@
 Feature: ArtifactChoice — turns the artifacts the user chose at init into artifact layers and colocation
 
   @ARCHR-B01 @unit-level
-  Scenario: The artifact options are spec, feature, test, guide and plan, in that order
+  Scenario: The artifact options are spec, feature, test, guide, plan and code, in that order
     Given the artifacts init offers
     When the options are listed several times
-    Then every listing is spec, feature, test, guide, plan
+    Then every listing is spec, feature, test, guide, plan, code
 
   @ARCHR-B02 @unit-level
   Scenario: Each artifact inference found is pre-checked, and nothing else
-    Given an inference that found specs, tests and a plans folder
+    Given an inference that found specs, tests, a plans folder and a code directory
     When the detected artifacts are asked for
-    Then exactly spec, test and plan are pre-checked
+    Then exactly spec, test, plan and code are pre-checked
     And an inference that found features and a guides folder pre-checks exactly feature and guide
     And an inference that found nothing pre-checks nothing
 
@@ -57,9 +57,22 @@ Feature: ArtifactChoice — turns the artifacts the user chose at init into arti
     When colocation is applied
     Then the anchor is the spec, with three derivatives and no spec among them
     And the feature derivative is the spec's name with the feature extension in the same folder
+    And choosing every offered artifact puts the code beside the spec, with the spec's name and the declared extension
 
   @ARCHR-B08 @unit-level
   Scenario: No colocation is declared when it is not wanted, when spec is not chosen, or when nothing derives from the spec
     Given a configuration with a colocation declared
     When colocation is applied without spec, then turned off, then with only spec and guide chosen
     Then each time the colocation declaration is removed
+
+  @ARCHR-B09 @unit-level
+  Scenario: Choosing code or leaving it out creates and removes no layer
+    Given a configuration with a code layer named code and another code layer
+    When the choice is applied with code chosen, and again with nothing chosen
+    Then both code layers stay exactly as they were
+
+  @ARCHR-B10 @unit-level
+  Scenario: Colocation keeps the rest of derived
+    Given an inferred test handle in the derived block
+    When colocation is applied, on or off
+    Then the test handle is still in the derived block

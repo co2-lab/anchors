@@ -21,7 +21,7 @@ func failureProject(t *testing.T, spec, code string) (string, mapx.Node, *mapx.G
 	return root, n, g, &config.Config{Dialect: &config.Dialect{Family: "go"}}
 }
 
-const specWithFailure = "| `CRED-E01` | insufficient balance | refuses |\n"
+const specWithFailure = "| `CREDT-E01` | insufficient balance | refuses |\n"
 
 // A failure catalogued and not handled is a promise the code does not keep: the spec says
 // how the unit fails, and nothing in it deals with that.
@@ -32,7 +32,7 @@ func TestFailureHandled_declaredAndUntreatedFails(t *testing.T) {
 	if v != Fail {
 		t.Fatalf("expected Fail, got %v (%s)", v, msg)
 	}
-	if !strings.Contains(msg, "CRED-E01") {
+	if !strings.Contains(msg, "CREDT-E01") {
 		t.Errorf("the verdict must name the failure: %s", msg)
 	}
 }
@@ -43,7 +43,7 @@ func TestFailureHandled_anyHandlingShapeCounts(t *testing.T) {
 	t.Run("FLRAI-B08: Any handling path in the governed code passes failure-handled", func(t *testing.T) {})
 	t.Run("FLRAI-X01: One handling path answers for every declared failure", func(t *testing.T) {})
 	code := "func f() error {\n\tif err != nil {\n\t\treturn err\n\t}\n\treturn nil\n}\n"
-	spec := specWithFailure + "| `CRED-E02` | partner down | retries |\n"
+	spec := specWithFailure + "| `CREDT-E02` | partner down | retries |\n"
 	root, n, g, cfg := failureProject(t, spec, code)
 	if v, msg := checkFailureHandled(spec, n, root, g, cfg); v != Pass {
 		t.Errorf("an `if err != nil` handles the failure: %v (%s)", v, msg)
@@ -59,7 +59,7 @@ func TestFailureLogged_handledAndSilentFails(t *testing.T) {
 	code := "func f() error {\n\tif err != nil {\n\t\treturn nil\n\t}\n\treturn nil\n}\n"
 	root, n, g, cfg := failureProject(t, specWithFailure, code)
 	v, msg := checkFailureLogged(specWithFailure, n, root, g, cfg)
-	if v != Fail || !strings.Contains(msg, "CRED-E01") {
+	if v != Fail || !strings.Contains(msg, "CREDT-E01") {
 		t.Fatalf("a silent handling must fail, naming the failure: %v (%s)", v, msg)
 	}
 	withLog := "func f() error {\n\tif err != nil {\n\t\tlog.Error(\"x\")\n\t\treturn err\n\t}\n\treturn nil\n}\n"
@@ -114,7 +114,7 @@ func TestFailureDeclared_sectionClosedAsNone(t *testing.T) {
 // alert.
 func TestFailureHandled_resilientStopsTheCharge(t *testing.T) {
 	t.Run("FLRAI-B09: A failure marked resilient with a reason is not charged", func(t *testing.T) {})
-	spec := "| `CRED-E01` | insufficient balance | refuses | @resilient: the partner returns null during migration |\n"
+	spec := "| `CREDT-E01` | insufficient balance | refuses | @resilient: the partner returns null during migration |\n"
 	root, n, g, cfg := failureProject(t, spec, "func f() int {\n\treturn 1\n}\n")
 	if v, msg := checkFailureHandled(spec, n, root, g, cfg); v != Pass {
 		t.Errorf("a failure marked resilient must not be charged: %v (%s)", v, msg)
@@ -130,7 +130,7 @@ func TestFailureHandled_resilientStopsTheCharge(t *testing.T) {
 // no why would be the silence the gates exist to end.
 func TestFailureHandled_bareResilientMarkerDoesNotCount(t *testing.T) {
 	t.Run("FLRAI-B10: A bare resilient marker exempts nothing", func(t *testing.T) {})
-	spec := "| `CRED-E01` | insufficient balance | refuses | @resilient |\n"
+	spec := "| `CREDT-E01` | insufficient balance | refuses | @resilient |\n"
 	root, n, g, cfg := failureProject(t, spec, "func f() int {\n\treturn 1\n}\n")
 	if v, _ := checkFailureHandled(spec, n, root, g, cfg); v != Fail {
 		t.Errorf("a bare @resilient must not waive: got %v", v)
@@ -152,21 +152,21 @@ func TestFailureHandled_noDialectIsUndetermined(t *testing.T) {
 // out what somebody already ruled out.
 func TestFailureConclusions_readsTheThreeOutcomes(t *testing.T) {
 	t.Run("FLRAI-B17: The conclusions read the resilient and observing reasons of each failure whole", func(t *testing.T) {})
-	spec := "| `CRED-E01` | balance | refuses |\n" +
-		"| `CRED-E02` | partner down | retries | @resilient: the partner restarts at 3am daily; the retry covers it |\n" +
-		"| `CRED-E03` | timeout | refuses | @observing: ruled out partner retry and network latency; only on migrated accounts |\n"
+	spec := "| `CREDT-E01` | balance | refuses |\n" +
+		"| `CREDT-E02` | partner down | retries | @resilient: the partner restarts at 3am daily; the retry covers it |\n" +
+		"| `CREDT-E03` | timeout | refuses | @observing: ruled out partner retry and network latency; only on migrated accounts |\n"
 	got := FailureConclusions(spec)
 
-	if c := got["CRED-E01"]; c.Resilient != "" || c.Observing != "" {
+	if c := got["CREDT-E01"]; c.Resilient != "" || c.Observing != "" {
 		t.Errorf("a failure with no conclusion must carry none: %+v", c)
 	}
 	// The WHOLE reason is what matters. The marker pattern stops at the first token —
 	// it only proves the reason exists — and reading the reason from it truncated
 	// `@resilient: the partner restarts...` down to `the`.
-	if c := got["CRED-E02"]; !strings.Contains(c.Resilient, "retry covers it") {
+	if c := got["CREDT-E02"]; !strings.Contains(c.Resilient, "retry covers it") {
 		t.Errorf("the reason must be read whole, got %q", c.Resilient)
 	}
-	if c := got["CRED-E03"]; !strings.Contains(c.Observing, "migrated accounts") {
+	if c := got["CREDT-E03"]; !strings.Contains(c.Observing, "migrated accounts") {
 		t.Errorf("the reason must be read whole, got %q", c.Observing)
 	}
 }
@@ -176,8 +176,8 @@ func TestFailureConclusions_readsTheThreeOutcomes(t *testing.T) {
 // field.
 func TestFailureConclusions_theReasonStopsAtTheCell(t *testing.T) {
 	t.Run("FLRAI-B18: A conclusion reason ends at its table cell", func(t *testing.T) {})
-	spec := "| `CRED-E01` | cond | @resilient: the real reason | another column |\n"
-	c := FailureConclusions(spec)["CRED-E01"]
+	spec := "| `CREDT-E01` | cond | @resilient: the real reason | another column |\n"
+	c := FailureConclusions(spec)["CREDT-E01"]
 	if strings.Contains(c.Resilient, "another column") {
 		t.Errorf("the reason swallowed the next cell: %q", c.Resilient)
 	}
@@ -209,13 +209,13 @@ func TestFailureGates_onlyConfrontSpecs(t *testing.T) {
 // cited in prose is a mention, not a declaration.
 func TestFailureHandled_readsTheThreeCataloguedForms(t *testing.T) {
 	t.Run("FLRAI-B02: A failure rule is read in the heading, table row and bullet forms, not in prose", func(t *testing.T) {})
-	spec := "### CRED-E01 — balance\n| `CRED-E02` | partner down | retries |\n- **CRED-E03** timeout\n"
+	spec := "### CREDT-E01 — balance\n| `CREDT-E02` | partner down | retries |\n- **CREDT-E03** timeout\n"
 	root, n, g, cfg := failureProject(t, spec, "func f() int {\n\treturn 1\n}\n")
 	v, msg := checkFailureHandled(spec, n, root, g, cfg)
-	if v != Fail || !strings.Contains(msg, "CRED-E01, CRED-E02, CRED-E03") {
+	if v != Fail || !strings.Contains(msg, "CREDT-E01, CREDT-E02, CREDT-E03") {
 		t.Errorf("the three forms are declared failures, sorted: %v (%s)", v, msg)
 	}
-	prose := "The unit may raise CRED-E01 when the balance is short.\n"
+	prose := "The unit may raise CREDT-E01 when the balance is short.\n"
 	if v, msg := checkFailureHandled(prose, n, root, g, cfg); v != Skip {
 		t.Errorf("a code in prose declares nothing: %v (%s)", v, msg)
 	}
@@ -223,7 +223,7 @@ func TestFailureHandled_readsTheThreeCataloguedForms(t *testing.T) {
 
 func TestFailureHandledAndLogged_skipASpecWithNoFailure(t *testing.T) {
 	t.Run("FLRAI-B03: A spec that declares no failure is skipped by failure-handled and failure-logged", func(t *testing.T) {})
-	const spec = "# spec\n\n| `CRED-B01` | a behaviour |\n"
+	const spec = "# spec\n\n| `CREDT-B01` | a behaviour |\n"
 	root, n, g, cfg := failureProject(t, spec, "func f() int {\n\treturn 1\n}\n")
 	if v, msg := checkFailureHandled(spec, n, root, g, cfg); v != Skip {
 		t.Errorf("failure-handled: %v (%s)", v, msg)
@@ -311,5 +311,20 @@ func TestFailureDeclared_aDeclaredFailurePasses(t *testing.T) {
 	root, n, g, cfg := failureProject(t, specWithFailure, code)
 	if v, msg := checkFailureDeclared(specWithFailure, n, root, g, cfg); v != Pass {
 		t.Errorf("a declared failure answers the handling: %v (%s)", v, msg)
+	}
+}
+
+// The failure regex was fixed at 3..6 characters: in a project that declares a length
+// of 7, a spec's `-E` rules were not read and both failure gates skipped it.
+func TestFailure_readsEveryDeclaredCodeLength(t *testing.T) {
+	t.Run("FLRAI-B19: A failure rule is read at the code length the project declares", func(t *testing.T) {})
+	codeLengthsForTest(t, 7)
+	spec := "| `CREDITS-E01` | partner down | @resilient: retried by the queue |\n- **CREDITS-E02** timeout\n"
+	all, resilient := declaredFailures(spec)
+	if strings.Join(all, " ") != "CREDITS-E01 CREDITS-E02" || strings.Join(resilient, " ") != "CREDITS-E01" {
+		t.Errorf("declaredFailures = %v, %v; want both failures, E01 resilient", all, resilient)
+	}
+	if c := FailureConclusions(spec)["CREDITS-E01"]; c.Resilient == "" {
+		t.Errorf("FailureConclusions lost the resilient reason of CREDITS-E01: %+v", c)
 	}
 }

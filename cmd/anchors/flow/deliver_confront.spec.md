@@ -45,6 +45,7 @@ and the record's value is in declaring more.
 | `DLCND-B05` | A unit that has a test file beside it and no mutation signal in the map is warned that no mutation signal was ingested; a unit without a test, a unit already measured, or no unit, gets no warning. |
 | `DLCND-B06` | The project's gates run on the map's nodes of the declared files and the unit, and each failing gate is listed as gate, target and the first sentence of its detail — informative gates included. |
 | `DLCND-B07` | Without configured gates, without a map, or without a delivered file in the map, no gate is listed. |
+| `DLCND-B08` | A renamed file is touched (its new and its old path), and the comparison is made relative to the root: with the root a subdirectory of the repository, each path git reports is taken relative to that subdirectory, and a path outside it is not a declared file. |
 
 ## Invariants
 

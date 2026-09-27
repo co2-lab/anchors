@@ -3,6 +3,7 @@ package governance
 import (
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
@@ -130,13 +131,17 @@ func printAudit(target string, withImpact bool, nodes []mapx.Node, results []gat
 		fmt.Println("✓ nothing pending — the file (and the scope) is compliant.")
 		return nil
 	}
-	// imprime o alvo primeiro, depois os demais nós do impacto
-	order := []string{target}
+	// imprime o alvo primeiro, depois os demais nós do impacto — SORTED: they came
+	// straight from ranging over a map, and two runs of `--impact` on the same tree
+	// printed the dossier in different orders.
+	var rest []string
 	for id := range byNode {
 		if id != target {
-			order = append(order, id)
+			rest = append(rest, id)
 		}
 	}
+	sort.Strings(rest)
+	order := append([]string{target}, rest...)
 	for _, id := range order {
 		lines := byNode[id]
 		if len(lines) == 0 {

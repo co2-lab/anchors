@@ -43,6 +43,12 @@ Feature: Obligations — the duties in force, resolved from packs and config, an
     When the duties in force are resolved again for the same root
     Then the two pack duties are still returned
 
+  @BLGTN-B12 @unit-level
+  Scenario: Another set of packs for the same root is read, not served from the cache
+    Given a project whose lgpd pack was resolved once
+    When the duties in force are resolved for the same root with only the pack "one"
+    Then the one duty of "one" is returned, and none of lgpd
+
   @BLGTN-B07 @unit-level
   Scenario: The report gives one status per duty, in the order handed
     Given the duties "pii-purgavel" and "untriggered", both targeting purge.ts

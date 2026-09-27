@@ -31,7 +31,7 @@ Feature: InitCatalogs — the stack preset catalog and the @TBD instruction that
   Scenario: The @TBD instruction forbids pass, orders a waiver naming the absence, and names the piece asked about
     Given a judgment gate asking about the code
     When its @TBD instruction is produced
-    Then the text mentions @TBD, the waiver answer and the naming of the absence, and forbids pass
+    Then the English text mentions @TBD, the `waived` answer and the naming of the absence, and forbids `pass`
     And the instruction produced for the test names the test
 
   @INCTN-B05 @unit-level

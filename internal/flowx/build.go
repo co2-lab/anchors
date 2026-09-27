@@ -93,8 +93,12 @@ func Build(root string) (*mapx.FlowGraph, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
 		// A project with no `flows/` is not an error: it is a project that has not declared
-		// any flow yet.
-		return nil, nil
+		// any flow yet. Any OTHER failure is: it used to be read as "no flow" too, and a
+		// `flows/` that could not be read gave an empty graph with nothing said.
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
 	}
 	var names []string
 	for _, e := range entries {
@@ -109,7 +113,10 @@ func Build(root string) (*mapx.FlowGraph, error) {
 	// The ACTIONS live in a subfolder and enter the SAME graph: they are nodes like the
 	// steps, and the difference is the role, not the structure. A result (`ACHCK-R02`) is
 	// the target of a transition just like a step — what changes is who declares it.
-	actionEntries, _ := os.ReadDir(filepath.Join(root, ActionsDir))
+	actionEntries, err := os.ReadDir(filepath.Join(root, ActionsDir))
+	if err != nil && !os.IsNotExist(err) {
+		return nil, err // an unreadable actions folder is not "no actions"
+	}
 	var actionNames []string
 	for _, e := range actionEntries {
 		if !e.IsDir() && strings.HasSuffix(e.Name(), ActionSuffix) {
@@ -123,7 +130,9 @@ func Build(root string) (*mapx.FlowGraph, error) {
 		rel := filepath.ToSlash(filepath.Join(ActionsDir, nome))
 		b, err := os.ReadFile(filepath.Join(root, ActionsDir, nome))
 		if err != nil {
-			continue
+			// Skipping it dropped its states from the graph in silence, and every flow
+			// routed to them looked dangling.
+			return nil, err
 		}
 		states, transitions := parse(string(b), rel)
 		g.States = append(g.States, states...)
@@ -133,7 +142,7 @@ func Build(root string) (*mapx.FlowGraph, error) {
 		rel := filepath.ToSlash(filepath.Join(Dir, nome))
 		b, err := os.ReadFile(filepath.Join(dir, nome))
 		if err != nil {
-			continue
+			return nil, err // as with an action: a flow that cannot be read is not absent
 		}
 		states, transitions := parse(string(b), rel)
 		g.States = append(g.States, states...)
@@ -195,10 +204,29 @@ func parse(content, flowPath string) ([]mapx.FlowState, []mapx.FlowTransition) {
 
 // conditionOf keeps the prose of the line minus the two codes — what whoever works reads
 // to recognise the result.
+//
+// Only the CODES (and the arrow) go. The first version removed the whole match, which runs
+// from the first code to the second, so the prose between them — `STALE` in
+// "`ACTST-R01` STALE → `FLOWX-P01`", the usual place of the condition — was dropped with
+// them and the routed result had no condition left. The line is one `resultLinkRE` matched.
 func conditionOf(line string) string {
-	out := resultLinkRE.ReplaceAllString(line, "")
-	out = strings.TrimSpace(strings.Trim(strings.TrimSpace(out), "-*→>` "))
-	return out
+	m := resultLinkRE.FindStringSubmatchIndex(line)
+	// The spans of the two codes, widened over the backticks around them.
+	cut := func(start, end int) (int, int) {
+		if start > 0 && line[start-1] == '`' {
+			start--
+		}
+		if end < len(line) && line[end] == '`' {
+			end++
+		}
+		return start, end
+	}
+	a0, a1 := cut(m[2], m[3])
+	b0, b1 := cut(m[4], m[5])
+	rest := line[:a0] + " " + line[a1:b0] + " " + line[b1:]
+	rest = strings.NewReplacer("→", " ", "->", " ").Replace(rest)
+	rest = strings.Join(strings.Fields(rest), " ")
+	return strings.TrimSpace(strings.Trim(rest, "-*>`.;, "))
 }
 
 // fitsDeclaredAfter reads which PIECE a step fits — between its heading and the next.

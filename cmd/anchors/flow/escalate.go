@@ -124,6 +124,11 @@ card to change one word is bureaucracy.`,
 				return fmt.Errorf("`workflow.labels` is empty: the issue would be born without the " +
 					"label the claim pipeline uses to find it, and would be orphaned")
 			}
+			// `--card "#44"` is how a person writes a card, and it reached the label as
+			// `anchors:under-#44` — a label no `--label anchors:under-44` query finds, so
+			// the finding was born linked to nothing. `--reviewing-pr` already dropped the
+			// `#`; the card now does the same, before any use of it.
+			card = strings.TrimPrefix(strings.TrimSpace(card), "#")
 			if bug && (paraUsuario || incerto) {
 				cmd.SilenceUsage = true
 				return fmt.Errorf("`--bug` is not a decision: it cannot go with `--for-user` or `--unsure`")
@@ -149,7 +154,7 @@ card to change one word is bureaucracy.`,
 			// O `claim` impede dois agentes de pegarem o mesmo card. Não impedia um
 			// agente de CRIAR um card para trabalho que já está em andamento noutro.
 			if sobre != "" && len(cfg.Workflow.Labels) > 0 {
-				if outros := openCardsAbout(sobre, cfg.Workflow.Labels[0]); len(outros) > 0 {
+				if outros := openCardsAbout(sobre, cfg.Workflow.Labels[0], cfg.Workflow.Repo); len(outros) > 0 {
 					fmt.Fprintln(os.Stderr)
 					fmt.Fprintln(os.Stderr, i18n.T("escalate.already_open", sobre))
 					for i, o := range outros {

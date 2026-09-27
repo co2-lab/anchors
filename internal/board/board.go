@@ -249,10 +249,11 @@ func (c Client) declines(card Card) bool {
 // Só LÊ. A atribuição é do pipeline (ver `Ask`), e este cliente nunca escreve
 // `anchors-owner` — é o que mantém a serialização que evita dois agentes no mesmo card.
 //
-// Qualquer estado vivo conta: `to-do` (a sessão anterior parou antes de começar),
-// `in-progress`, `ready-to-review` e `in-review` (o card voltou para correção). O que não
-// conta é `needs-user`: ali o trabalho espera decisão de gente, e entregá-lo faria o
-// agente decidir sozinho.
+// Only work UNDER WAY is resumed: `in-progress` (implementation half done) and
+// `in-review` (the review is still to be done — see `emCurso` and card #321). A card the
+// agent owns in `to-do` or `ready-to-review` is not returned: nothing of it is under way.
+// A `needs-user` card is declined as well: its work waits for a person's decision, and
+// handing it over would make the agent decide alone.
 func (c Client) Mine(agent string) (*Card, error) {
 	cards, err := c.list("")
 	if err != nil {
@@ -277,8 +278,11 @@ func (c Client) Mine(agent string) (*Card, error) {
 	return nil, nil
 }
 
+// liveState names the state `Mine` reports. Only the two states `emCurso` lets through can
+// reach it, so only those two are looked for (to-do and ready-to-review were listed here
+// too, and could never be answered).
 func liveState(c Card) string {
-	for _, s := range []string{StateInProgress, StateInReview, StateReadyToReview, StateToDo} {
+	for _, s := range []string{StateInProgress, StateInReview} {
 		if has(c.Labels, s) {
 			return s
 		}

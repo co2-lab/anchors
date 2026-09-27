@@ -28,6 +28,13 @@ its verdict is also recorded as a judgment of its own — a field the check neve
 check rewrites the stamp on every round and would otherwise erase what was already answered. A judgment
 holds while both ends keep the revisions it was given at; when either moves, it is a question again.
 
+Judging keeps a waiver too, with one difference from the check, and it is chosen: a waiver answers ONE
+gate's question. Another gate's verdict answers a different question, so it is recorded as that gate's
+judgment and the waived stamp stays; the gate that waived, judging again, is a person answering the same
+question again and replaces its own waiver; and a new waiver always lands. Keeping every waiver against
+every judgment would leave a waiver its own gate could never undo; replacing it on any judgment would let
+an unrelated gate erase a person's decision, which is what the check already refuses to do.
+
 ## Domain
 
 | Input | Accepts | Outside the domain | Who guarantees |
@@ -49,11 +56,12 @@ holds while both ends keep the revisions it was given at; when either moves, it 
 | `EDSTD-B06` | A stamp with no date takes the given date even when nothing else changed. |
 | `EDSTD-B07` | One relation can be stamped by its two ends; stamping a relation that does not exist answers false and stamps nothing. |
 | `EDSTD-B08` | Stamping one relation with a gate named records the gate on the stamp and a judgment of that gate on the relation. |
-| `EDSTD-B09` | Stamping a node stamps every relation that touches it, coming in or going out, reports how many, and with a gate named records that gate's judgment on each. |
+| `EDSTD-B09` | Stamping a node stamps every relation that touches it, coming in or going out (a waiver aside, B14), reports how many, and with a gate named records that gate's judgment on each. |
 | `EDSTD-B10` | A node counts as judged by a gate only while some relation touching it holds that gate's judgment at both ends' current revisions; another gate's judgment never answers for it. |
 | `EDSTD-B11` | A judgment survives the next round of the check, which rewrites the stamp. |
 | `EDSTD-B12` | A relation holds one judgment per gate: judging again replaces it, and keeps its date when the verdict and revisions are the same. |
 | `EDSTD-B13` | The stale relations are listed: the never stamped and those with an end moved since the stamp. |
+| `EDSTD-B14` | Judging a node or a single relation keeps a waived stamp recorded by another gate, or when no gate is named, and still records the judging gate's judgment; the gate that recorded the waiver replaces it, and a new waiver always replaces the stamp. |
 
 ## Invariants
 

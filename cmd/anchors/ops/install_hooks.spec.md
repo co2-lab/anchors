@@ -52,6 +52,7 @@ theirs and is not replaced without `--force`.
 | `INHKN-B09` | The installed commit-msg refuses the commit when the message check refuses the subject. |
 | `INHKN-B10` | The installed pre-push refuses a push when the local binary is older than the minimum version the remote's configuration declares, and lets that exact version through. |
 | `INHKN-B11` | The install registers the map and progress merge drivers in the repository's git config and adds their attribute lines to `.gitattributes`. |
+| `INHKN-B12` | The installed pre-push warns, without refusing, when the map on the remote was written by a version other than the local binary, reading the writer from the map's `generated_by:` key or the legacy `gerado_por:`; the same version is silent. |
 
 ## Invariants
 

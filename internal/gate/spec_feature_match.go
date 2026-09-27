@@ -181,7 +181,11 @@ func defineRuleCaptureRE() *regexp.Regexp {
 // would drift; waiving the letter would lose the catalogue. The alias keeps both: the
 // code exists where its letter is looked for, and the statement lives once, in the
 // target. The reason is mandatory, as for every waiver: it says why the target answers.
-var ruleAliasRE = regexp.MustCompile("^REF\\[`?([A-Z0-9]{3,6}-[A-Z]\\d{2})`?\\]([^\\S\\n]*:[^\\S\\n]*[^\\s|])?")
+// Built per call from `code_lengths`, like defineRuleCaptureRE: a fixed length made an
+// alias of a 7-character code unrecognised, and its rule was then charged a scenario.
+func ruleAliasRE() *regexp.Regexp {
+	return regexp.MustCompile("^REF\\[`?([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]\\d{2})`?\\]([^\\S\\n]*:[^\\S\\n]*[^\\s|])?")
+}
 
 // ruleAliasTarget returns the rule a DEFINING line aliases, if it is an alias.
 //
@@ -203,7 +207,7 @@ func aliasOf(linha string) []string {
 		return nil
 	}
 	rest := strings.TrimLeft(linha[loc[3]:], "`* \t|—–-:")
-	return ruleAliasRE.FindStringSubmatch(rest)
+	return ruleAliasRE().FindStringSubmatch(rest)
 }
 
 // invalidRuleAliases lists every alias that does not stand for a real rule: a target the

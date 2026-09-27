@@ -1,15 +1,18 @@
 package recode
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/scan"
 )
 
@@ -46,11 +49,14 @@ type Plan struct {
 //
 // Não escreve nada — só lê. O comando decide dry-run vs apply.
 func BuildPlan(root string, cfg *config.Config, old, new string) (*Plan, error) {
+	// O comprimento vem do `code_lengths` do projeto, e a mensagem diz qual. Ela dizia
+	// "expected 4 chars" fixo — mentira num projeto de código de 5, que recebia a
+	// recusa de um código de 4 com a instrução de usar 4.
 	if !ValidCode(old) {
-		return nil, fmt.Errorf("source code %q invalid (expected 4 chars A-Z0-9)", old)
+		return nil, errors.New(i18n.T("recode.source_invalid", old, lengthsText()))
 	}
 	if !ValidCode(new) {
-		return nil, fmt.Errorf("target code %q invalid (expected 4 chars A-Z0-9)", new)
+		return nil, errors.New(i18n.T("recode.target_invalid", new, lengthsText()))
 	}
 	if old == new {
 		return nil, fmt.Errorf("source and target are the same code (%s)", old)
@@ -61,12 +67,13 @@ func BuildPlan(root string, cfg *config.Config, old, new string) (*Plan, error) 
 		return nil, fmt.Errorf("scanning the project: %w", err)
 	}
 
-	// Colisão: NEW já é o code DONO de alguma unidade? (o scan carimba Codes por header)
+	// Colisão: NEW já é de alguma unidade? Pelo header (`code: NEW`) ou por um código de
+	// cenário dela (`NEW-B01`). A versão anterior comparava o NEW nu com `f.Codes`, que
+	// só guarda códigos de cenário (`NEW-B01`) — nunca iguais a um código nu, então a
+	// checagem nunca disparava e o recode fundia duas identidades em silêncio.
 	for _, f := range files {
-		for _, c := range f.Codes {
-			if c == new {
-				return nil, fmt.Errorf("the target code %s is already used by %s — choose another", new, f.Path)
-			}
+		if owns(f, new) {
+			return nil, errors.New(i18n.T("recode.target_in_use", new, f.Path))
 		}
 	}
 
@@ -133,6 +140,30 @@ func BuildPlan(root string, cfg *config.Config, old, new string) (*Plan, error) 
 	}
 	sort.Slice(plan.Files, func(i, j int) bool { return plan.Files[i].Path < plan.Files[j].Path })
 	return plan, nil
+}
+
+// owns diz se o arquivo já pertence ao código: declarado no header ou prefixo de um
+// dos seus códigos de cenário.
+func owns(f scan.File, code string) bool {
+	if f.HeaderCode == code {
+		return true
+	}
+	for _, c := range f.Codes {
+		if strings.HasPrefix(c, code+"-") {
+			return true
+		}
+	}
+	return false
+}
+
+// lengthsText descreve os comprimentos de código aceitos (`5`, `4/6`) — os mesmos que o
+// ValidCode aplica.
+func lengthsText() string {
+	parts := make([]string, len(config.CodeLengths))
+	for i, l := range config.CodeLengths {
+		parts[i] = strconv.Itoa(l)
+	}
+	return strings.Join(parts, "/")
 }
 
 // findRenames varre o filesystem (não só as layers — .png/.yaml podem estar fora do

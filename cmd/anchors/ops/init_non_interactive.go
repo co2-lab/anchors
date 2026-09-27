@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -212,6 +213,24 @@ func applyAnswers(root string, p *initx.Proposal, status []initx.StatusResposta)
 			Mode:   config.ModeGitHub,
 			Repo:   repo,
 			Labels: asList(valor("labels")),
+		}
+	}
+
+	// GOVERNS — validated and echoed as accepted, and then never written: the success
+	// JSON said the rules were in while the file governed nothing. One rule per tag, the
+	// shape the TUI writes (initx.BuildGovernRules), guides in sorted order.
+	if gov, _ := valor("governs").(map[string][]string); len(gov) > 0 {
+		guides := make([]string, 0, len(gov))
+		for g := range gov {
+			guides = append(guides, g)
+		}
+		sort.Strings(guides)
+		for _, g := range guides {
+			for _, tag := range gov[g] {
+				if tag = strings.TrimSpace(tag); tag != "" {
+					cfg.Governs = append(cfg.Governs, config.GovernRule{From: g, Governs: tag})
+				}
+			}
 		}
 	}
 

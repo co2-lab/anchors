@@ -81,6 +81,7 @@ must not have, and the value changes per user and per minute. The gates confront
 | `FLSCF-B14` | Coverage is judged per scenario: a scenario among the flag's ingested proven codes is green, and a flag whose every scenario is green passes. |
 | `FLSCF-B15` | A scenario that no test names fails as having no test; a code that appears only in a comment of a test does not count as written. |
 | `FLSCF-B16` | A scenario a test names but that is not proven fails with a different message: written but not ingested when no execution was ingested, written and not passing when it was. |
+| `FLSCF-B17` | A `@gated-by` citation is read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a citation of a 7-character scenario is confronted. |
 
 ## Invariants
 
@@ -99,6 +100,7 @@ must not have, and the value changes per user and per minute. The gates confront
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `FLSCF-E01` | REF[FLSCF-B03]: a condition the parser refuses is the failure the grammar gate reports, naming the scenario and the parse error | — | — |
+| `FLSCF-E02` | The `flags/` folder, or a flag file in it, cannot be read when a spec cites a flag scenario. | Pending, naming the read error and the `flags/` folder — not the "no map" message. | Without the flags the gate cannot say which scenarios exist: Pass would approve a citation never checked, Fail would accuse one that may exist, and blaming the map would send the reader to build a map this gate never reads. |
 
 ## Dependencies
 

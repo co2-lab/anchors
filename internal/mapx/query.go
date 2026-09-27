@@ -28,7 +28,7 @@ func (g *Graph) Governs(guideID string) []string {
 }
 
 // GovernanceSummary devolve, para cada guide que rege algo, quantos nós ele rege
-// diretamente. Ordenado por contagem desc (via GovernanceCounts para saída estável).
+// diretamente. É um map, sem ordem: quem imprime ordena.
 func (g *Graph) GovernanceSummary() map[string]int {
 	counts := map[string]int{}
 	for _, e := range g.Edges {

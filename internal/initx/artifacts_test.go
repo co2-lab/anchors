@@ -121,8 +121,8 @@ func TestApplyColocation(t *testing.T) {
 }
 
 func TestArtifactNamesInStableOrder(t *testing.T) {
-	t.Run("ARCHR-B01: The artifact options are spec, feature, test, guide and plan, in that order", func(t *testing.T) {})
-	want := []string{"spec", "feature", "test", "guide", "plan"}
+	t.Run("ARCHR-B01: The artifact options are spec, feature, test, guide, plan and code, in that order", func(t *testing.T) {})
+	want := []string{"spec", "feature", "test", "guide", "plan", "code"}
 	for i := 0; i < 3; i++ {
 		if got := ArtifactNames(); !reflect.DeepEqual(got, want) {
 			t.Fatalf("ArtifactNames = %v, want %v", got, want)
@@ -132,9 +132,9 @@ func TestArtifactNamesInStableOrder(t *testing.T) {
 
 func TestDetectedArtifactsPreChecksWhatInferenceFound(t *testing.T) {
 	t.Run("ARCHR-B02: Each artifact inference found is pre-checked, and nothing else", func(t *testing.T) {})
-	p := &Proposal{HasSpecMD: true, HasTest: true, PlanDir: "plans"}
+	p := &Proposal{HasSpecMD: true, HasTest: true, PlanDir: "plans", CodeDirs: []string{"src/app"}}
 	got := p.DetectedArtifacts()
-	want := map[string]bool{"spec": true, "test": true, "plan": true}
+	want := map[string]bool{"spec": true, "test": true, "plan": true, "code": true}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("DetectedArtifacts = %v, want %v", got, want)
 	}
@@ -144,5 +144,62 @@ func TestDetectedArtifactsPreChecksWhatInferenceFound(t *testing.T) {
 	}
 	if got := (&Proposal{}).DetectedArtifacts(); len(got) != 0 {
 		t.Errorf("nothing detected pre-checks nothing, got %v", got)
+	}
+}
+
+// `code` is an artifact CHOICE, not a layer: the code layers come from inference and the
+// preset, one per directory. Choosing it must create nothing, and leaving it out must
+// remove nothing — PruneCodeLayers decides which code layers stay.
+func TestApplyArtifactChoice_codeIsAChoiceWithoutALayer(t *testing.T) {
+	t.Run("ARCHR-B09: Choosing code or leaving it out creates and removes no layer", func(t *testing.T) {})
+	for _, chosen := range []map[string]bool{{"code": true}, {}} {
+		cfg := &config.Config{Layers: map[string]config.Layer{
+			"code":     {Kind: "code", Pattern: "src/**/*.go"},
+			"app-code": {Kind: "code", Pattern: "app/**/*.go"},
+		}}
+		ApplyArtifactChoice(cfg, chosen, nil)
+		if len(cfg.Layers) != 2 || cfg.Layers["code"].Pattern != "src/**/*.go" {
+			t.Errorf("choice %v: the code layers must stay as they were, got %v", chosen, cfg.Layers)
+		}
+	}
+}
+
+// The chain the option exists for: the TUI and `--artifacts` offer ArtifactNames, and
+// colocation declares the code beside the spec only when `code` was chosen.
+func TestApplyColocation_codeFromTheOfferedChoice(t *testing.T) {
+	t.Run("ARCHR-B07: Colocation is declared from the spec as anchor, and the spec is never a derivative", func(t *testing.T) {})
+	chosen := map[string]bool{}
+	for _, n := range ArtifactNames() {
+		chosen[n] = true
+	}
+	cfg := &config.Config{}
+	ApplyColocation(cfg, true, chosen)
+	if cfg.Derived == nil {
+		t.Fatal("colocation with every offered artifact must be declared")
+	}
+	if got := cfg.Derived.Files["code"]; len(got) != 1 || got[0] != "{{dir}}/{{name}}.{{ext}}" {
+		t.Errorf("choosing every offered artifact must put the code beside the spec, got %v", cfg.Derived.Files)
+	}
+}
+
+// The colocation owns only its part of `derived`: the test handle the inference found
+// survives colocation on and off.
+func TestApplyColocation_keepsTheInferredTestHandle(t *testing.T) {
+	t.Run("ARCHR-B10: Colocation keeps the rest of derived", func(t *testing.T) {})
+	all := map[string]bool{"spec": true, "feature": true, "test": true}
+	on := &config.Config{Derived: &config.Derived{TestHandle: "testID"}}
+	ApplyColocation(on, true, all)
+	if on.Derived == nil || on.Derived.TestHandle != "testID" || on.Derived.Anchor != "spec" {
+		t.Errorf("colocation on must keep the test handle: %+v", on.Derived)
+	}
+	off := &config.Config{Derived: &config.Derived{TestHandle: "testID"}}
+	ApplyColocation(off, false, all)
+	if off.Derived == nil || off.Derived.TestHandle != "testID" || len(off.Derived.Files) != 0 {
+		t.Errorf("colocation off must keep only the test handle: %+v", off.Derived)
+	}
+	none := &config.Config{}
+	ApplyColocation(none, false, all)
+	if none.Derived != nil {
+		t.Errorf("with nothing to keep, derived stays empty: %+v", none.Derived)
 	}
 }

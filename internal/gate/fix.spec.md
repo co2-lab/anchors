@@ -39,9 +39,10 @@ reported. Each repair written, or attempted and failed, is returned for the call
 | `FXIXX-B02` | A stale `updated_at` on a committed file with no pending edit is rewritten to the date of the file's last commit, and the repair is reported as fixed, naming the gate and the file. |
 | `FXIXX-B03` | A file with an uncommitted edit takes today's date. |
 | `FXIXX-B04` | A date that already matches is left alone, and nothing is reported for that file. |
-| `FXIXX-B05` | Only gates with a fixer are run, only on the nodes the gate applies to, and only for files present on disk. |
+| `FXIXX-B05` | Only gates with a fixer are run, on every node the gate applies to whatever its verdict (the fixer decides whether there is anything to correct), and only for files present on disk. |
 | `FXIXX-B06` | Outside a git repository the file is left untouched: there is no right date to find. |
 | `FXIXX-B07` | A file that was never committed and has no pending edit is left untouched: there is nothing to compare against. |
+| `FXIXX-B08` | The detail of each repair (fixed, or a write that failed) is written in the project's language, through i18n. |
 
 ## Invariants
 
@@ -69,6 +70,7 @@ reported. Each repair written, or attempted and failed, is returned for the call
 | DEP1 | `internal/config/config.go` | `Gate` | core — the configured gates and their checks |
 | DEP2 | `internal/gitmeta/gitmeta.go` | `UncommittedChanges`, `LastCommitDate`, `Today` | infra — the dates git knows |
 | DEP3 | `internal/mapx/model.go` | `Node` | core — the nodes the gates apply to |
+| DEP4 | `internal/i18n/i18n.go` | `T` | core — the localized detail of each repair |
 
 ## Open Decisions
 

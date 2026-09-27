@@ -158,6 +158,11 @@ func TestLoad_fileInTheCurrentFormatNeverAdvisesMigration(t *testing.T) {
 	if strings.Contains(err.Error(), "anchors migrate") {
 		t.Errorf("the file is already in the current format — migrating changes nothing:\n%s", err)
 	}
+	// A trailing comment does not hide the version.
+	_, err = load(t, fmt.Sprintf("version: %d  # current\nlayers: {}\ntrinca_opcional: 1\n", FormatoAtualDeConfig))
+	if err == nil || strings.Contains(err.Error(), "anchors migrate") {
+		t.Errorf("a commented version line is still the current format; got:\n%v", err)
+	}
 }
 
 // A file WITHOUT `version:` is format 1, not the current format: the first files of the
@@ -197,7 +202,7 @@ func TestLoad_repeatedGateIDFails(t *testing.T) {
 // The real case: `scope: repo` (the right value is `project`) loaded without complaint and
 // three gates had nothing to measure. A wrong enum is a gate turned OFF in silence.
 func TestLoad_invalidScopeFails(t *testing.T) {
-	t.Run("CNFGO-B07: An unknown scope, cost or phase value fails the load", func(t *testing.T) {})
+	t.Run("CNFGO-B07: An unknown scope, full scope, cost, phase or perspective value fails the load", func(t *testing.T) {})
 	_, err := load(t, "version: 1\nlayers: {}\ngates:\n  - name: build\n    run: go build ./...\n    scope: repo\n")
 	if err == nil {
 		t.Fatal("an invalid scope must fail — falling back to per-node silently turns the gate off")
@@ -208,15 +213,32 @@ func TestLoad_invalidScopeFails(t *testing.T) {
 }
 
 func TestLoad_invalidCostFails(t *testing.T) {
-	t.Run("CNFGO-B07: An unknown scope, cost or phase value fails the load", func(t *testing.T) {})
+	t.Run("CNFGO-B07: An unknown scope, full scope, cost, phase or perspective value fails the load", func(t *testing.T) {})
 	_, err := load(t, "version: 1\nlayers: {}\ngates:\n  - name: x\n    cost: lento\n")
 	if err == nil || !strings.Contains(err.Error(), "lento") {
 		t.Fatalf("an invalid cost must fail citing the value, got: %v", err)
 	}
 }
 
+// `scope_full` and `skip_on` were read but never validated: a typo loaded, and the gate
+// silently ran the ordinary scope in the full scan, or ran in the perspective the file
+// said it skipped.
+func TestLoad_invalidScopeFullAndSkipOnFail(t *testing.T) {
+	t.Run("CNFGO-B07: An unknown scope, full scope, cost, phase or perspective value fails the load", func(t *testing.T) {})
+	for field, yaml := range map[string]string{
+		"projct": "    scope_full: projct\n",
+		"node":   "    scope_full: node\n",
+		"chnage": "    skip_on: [chnage]\n",
+	} {
+		_, err := load(t, "version: 1\nlayers: {}\ngates:\n  - name: x\n"+yaml)
+		if err == nil || !strings.Contains(err.Error(), field) || !strings.Contains(err.Error(), "gate \"x\"") {
+			t.Errorf("%q must fail naming the gate and the value, got: %v", field, err)
+		}
+	}
+}
+
 func TestLoad_invalidPhaseFails(t *testing.T) {
-	t.Run("CNFGO-B07: An unknown scope, cost or phase value fails the load", func(t *testing.T) {})
+	t.Run("CNFGO-B07: An unknown scope, full scope, cost, phase or perspective value fails the load", func(t *testing.T) {})
 	_, err := load(t, "version: 1\nlayers: {}\ngates:\n  - name: x\n    when: [precommit]\n")
 	if err == nil || !strings.Contains(err.Error(), "precommit") {
 		t.Fatalf("an invalid phase must fail, got: %v", err)
@@ -225,7 +247,7 @@ func TestLoad_invalidPhaseFails(t *testing.T) {
 
 // Counter-proof: the legitimate values of the three lists load.
 func TestLoad_validEnumsLoad(t *testing.T) {
-	t.Run("CNFGO-B07: An unknown scope, cost or phase value fails the load", func(t *testing.T) {})
+	t.Run("CNFGO-B07: An unknown scope, full scope, cost, phase or perspective value fails the load", func(t *testing.T) {})
 	c, err := load(t, `version: 1
 layers: {}
 gates:
@@ -239,6 +261,8 @@ gates:
     when: [pre-commit, pre-push, manual]
   - name: c
     scope: node
+    scope_full: batch
+    skip_on: [change, all]
 `)
 	if err != nil {
 		t.Fatalf("valid enums must load: %v", err)
@@ -290,7 +314,7 @@ func TestLoad_githubRequiresRepo(t *testing.T) {
 	t.Run("CNFGO-B09: GitHub mode requires an owner/name repository and a label", func(t *testing.T) {})
 	t.Run("CNFGO-X01: GitHub mode never infers the repository from the git remote", func(t *testing.T) {})
 	_, err := load(t, "version: 1\nlayers: {}\nworkflow:\n  mode: github\n  labels: [anchors]\n")
-	if err == nil || !strings.Contains(err.Error(), "repo: owner/nome") {
+	if err == nil || !strings.Contains(err.Error(), "repo: owner/name") {
 		t.Fatalf("expected an error requiring repo, got %v", err)
 	}
 }
@@ -330,7 +354,7 @@ func TestLoad_unknownModeHasNoFallback(t *testing.T) {
 	if err == nil {
 		t.Fatal("an unknown mode must fail, not fall back")
 	}
-	if !strings.Contains(err.Error(), "não há fallback") {
+	if !strings.Contains(err.Error(), "no fallback") {
 		t.Errorf("the message must say there is no fallback, got: %v", err)
 	}
 }
@@ -389,6 +413,27 @@ func TestLoad_codeLengths(t *testing.T) {
 	}
 	if fmt.Sprint(CodeLengths) != "[4 5]" || fmt.Sprint(hooked) != "[4 5]" {
 		t.Errorf("engine lengths %v, hook got %v; want [4 5] in both", CodeLengths, hooked)
+	}
+}
+
+// The lengths are a process global. A file that declares none used to leave them as the
+// previous load set them, so a long-running process that loaded a `[4]` project and
+// then a project with no declaration read that project's 5-character codes as non-codes.
+func TestLoad_noCodeLengthsRestoresTheDefault(t *testing.T) {
+	t.Run("CNFGO-B42: A file with no code lengths restores the default, whatever an earlier load set", func(t *testing.T) {})
+	prev := append([]int{}, CodeLengths...)
+	t.Cleanup(func() { CodeLengths = prev; SetSlotsHook(nil) })
+	var hooked []int
+	SetSlotsHook(func(ls []int) { hooked = ls })
+
+	if _, err := load(t, "version: 1\ncode_lengths: [4]\n"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := load(t, "version: 1\n"); err != nil {
+		t.Fatal(err)
+	}
+	if fmt.Sprint(CodeLengths) != "[5]" || fmt.Sprint(hooked) != "[5]" {
+		t.Errorf("after a file with no code_lengths: engine %v, hook %v; want [5] in both", CodeLengths, hooked)
 	}
 }
 
@@ -865,20 +910,25 @@ func TestTagLetters_everyLetterDeclaringTheTag(t *testing.T) {
 }
 
 func TestCodeLengthPattern_singleAndContiguous(t *testing.T) {
-	t.Run("CNFGO-B33: The code length pattern is exact for one length and a range for contiguous lengths", func(t *testing.T) {})
+	t.Run("CNFGO-B33: The code length pattern matches exactly the declared lengths, contiguous or not", func(t *testing.T) {})
 	prev := append([]int{}, CodeLengths...)
 	t.Cleanup(func() { CodeLengths = prev })
 	for _, tc := range []struct {
 		lengths []int
-		want    string // which lengths among 3..6 match
+		want    string // which lengths among 2..9 match
 	}{
 		{[]int{5}, "[5]"},
 		{[]int{5, 4}, "[4 5]"},
+		// Non-contiguous: the pattern once matched 5 and 7 for [4, 6], and 6 and 8 for
+		// [5, 7], because the class before it lengthened each alternative by one.
+		{[]int{6, 4}, "[4 6]"},
+		{[]int{5, 7}, "[5 7]"},
+		{[]int{3, 5, 8}, "[3 5 8]"},
 	} {
 		CodeLengths = tc.lengths
 		re := regexp.MustCompile(`^[A-Z0-9]` + CodeLengthPattern() + `$`)
 		var matched []int
-		for n := 3; n <= 6; n++ {
+		for n := 2; n <= 9; n++ {
 			if re.MatchString(strings.Repeat("A", n)) {
 				matched = append(matched, n)
 			}
@@ -1171,6 +1221,55 @@ func TestSave_whatIsWrittenLoadsBack(t *testing.T) {
 	}
 	if back.Layers["spec"].Kind != "spec" || len(back.Gates) != 1 || !back.Gates[0].IsBlocking() {
 		t.Errorf("reloaded config differs: layers %+v gates %+v", back.Layers, back.Gates)
+	}
+}
+
+// A `lang: en` project got some load errors in Portuguese: the cost, the three GitHub
+// ones and the unknown mode were hardcoded Portuguese, code_lengths was half of each, and
+// the gate-ID and workflow checks ran before the language was set, so they came out in
+// the language of the previous load.
+func TestLoad_refusalsFollowTheProjectLanguage(t *testing.T) {
+	t.Run("CNFGO-B43: Every load refusal and the header Save writes are in the project's language", func(t *testing.T) {})
+	t.Cleanup(func() { _ = i18n.Set(i18n.Default) })
+	refusals := map[string]string{
+		"cost":         "gates:\n  - name: x\n    cost: lento\n",
+		"no repo":      "workflow:\n  mode: github\n  labels: [a]\n",
+		"no label":     "workflow:\n  mode: github\n  repo: o/r\n",
+		"bad repo":     "workflow:\n  mode: github\n  repo: r\n  labels: [a]\n",
+		"unknown mode": "workflow:\n  mode: guithub\n",
+		"local fields": "workflow:\n  mode: local\n  repo: o/r\n",
+		"length":       "code_lengths: [9]\n",
+		"duplicate id": "gates:\n  - name: a\n  - name: b\n    id: a\n",
+	}
+	portuguese := regexp.MustCompile(`desconhecido|exige|identificador|não|já é usado|só valem`)
+	for name, body := range refusals {
+		// A pt-BR load first, so a refusal emitted before the language is set shows up.
+		if _, err := load(t, "version: 1\nlang: pt-BR\n"); err != nil {
+			t.Fatal(err)
+		}
+		_, err := load(t, "version: 1\nlang: en\n"+body)
+		if err == nil || portuguese.MatchString(err.Error()) {
+			t.Errorf("%s, lang en: %v; want an English refusal", name, err)
+		}
+		_, err = load(t, "version: 1\nlang: pt-BR\n"+body)
+		if err == nil || !portuguese.MatchString(err.Error()) {
+			t.Errorf("%s, lang pt-BR: %v; want a Portuguese refusal", name, err)
+		}
+	}
+
+	for lang, want := range map[string]string{
+		"":      "# anchors.yaml — Anchors project configuration\n",
+		"en":    "# anchors.yaml — Anchors project configuration\n",
+		"pt-BR": "# anchors.yaml — configuração do projeto Anchors\n",
+	} {
+		p := filepath.Join(t.TempDir(), "anchors.yaml")
+		if err := Save(&Config{Lang: lang}, p); err != nil {
+			t.Fatal(err)
+		}
+		data, _ := os.ReadFile(p)
+		if !strings.HasPrefix(string(data), want) {
+			t.Errorf("Save with lang %q wrote %q; want it to start with %q", lang, data, want)
+		}
 	}
 }
 

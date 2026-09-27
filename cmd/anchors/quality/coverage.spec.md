@@ -55,6 +55,7 @@ Against the previous ingestion: did any file lose line coverage? A drop fails th
 | `CVCMC-B11` | Changed lines covered below the threshold fail the diff coverage with exit status 1. |
 | `CVCMC-B12` | The delta compares each code file with a previous line coverage against it, ignores files with none, and when nothing dropped says so with how many improved. |
 | `CVCMC-B13` | A file that lost more than a hundredth of a point of line coverage is listed with its old and new coverage, and the delta fails with exit status 1 naming the worst drop. |
+| `CVCMC-B14` | The diff coverage lists the changed files in path order, and a changed file whose path suffix matches several coverage entries is crossed with the first of them in path order, so the same inputs print the same report on every run. |
 
 ## Invariants
 

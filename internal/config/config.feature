@@ -45,10 +45,10 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Then the load fails naming both gates, while gates with distinct IDs load
 
   @CNFGO-B07 @unit-level
-  Scenario: An unknown scope, cost or phase value fails the load
-    Given gates declaring scope "repo", cost "lento" and phase "precommit"
+  Scenario: An unknown scope, full scope, cost, phase or perspective value fails the load
+    Given gates declaring scope "repo", cost "lento", phase "precommit", scope_full "projct" or "node", and skip_on "chnage"
     When each file is loaded
-    Then each load fails naming the wrong value, and the valid values of the three lists load
+    Then each load fails naming the gate and the wrong value, and the valid values of the five lists load
 
   @CNFGO-B08 @unit-level
   Scenario: Local and manual modes refuse the GitHub fields
@@ -85,6 +85,18 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given anchors.yaml files declaring code lengths [1], [9] and [4, 5], and a registered generator hook
     When each file is loaded
     Then the first two fail naming the length, and after the third the engine and the hook both hold [4, 5]
+
+  @CNFGO-B42 @unit-level
+  Scenario: A file with no code lengths restores the default, whatever an earlier load set
+    Given an anchors.yaml declaring code lengths [4] already loaded, and a registered generator hook
+    When an anchors.yaml that declares no code lengths is loaded
+    Then the engine and the hook both hold [5]
+
+  @CNFGO-B43 @unit-level
+  Scenario: Every load refusal and the header Save writes are in the project's language
+    Given a pt-BR file loaded first, and files with a bad cost, an incomplete GitHub workflow, an unknown mode, GitHub fields in local mode, a length of 9 and a repeated gate ID
+    When each is loaded declaring lang "en", and again declaring lang "pt-BR", and configurations with no lang, "en" and "pt-BR" are saved
+    Then every refusal under "en" has no Portuguese and every one under "pt-BR" is Portuguese, and each saved file starts with the header of its own language
 
   @CNFGO-B14 @unit-level
   Scenario: A canonical gate inherits every field the project omitted
@@ -203,10 +215,10 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Then the first maps to S and V, and the second is unknown
 
   @CNFGO-B33 @unit-level
-  Scenario: The code length pattern is exact for one length and a range for contiguous lengths
-    Given the engine configured with lengths [5], and then with [4, 5]
-    When the pattern is placed after one character class and matched against codes of 3 to 6 characters
-    Then only 5 matches with [5], and only 4 and 5 match with [4, 5]
+  Scenario: The code length pattern matches exactly the declared lengths, contiguous or not
+    Given the engine configured with lengths [5], [4, 5], [4, 6], [5, 7] and [3, 5, 8]
+    When the pattern is placed after one character class and matched against codes of 2 to 9 characters
+    Then exactly the declared lengths match each time: 4 and 6 for [4, 6], never 5 or 7
 
   @CNFGO-B41 @unit-level
   Scenario: A rule type catalogues the sections it declares, ignoring case and surrounding spaces

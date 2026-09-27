@@ -54,7 +54,7 @@ func Tags(cfg *config.Config) []string {
 }
 
 // BuildGovernRules monta as regras de governs a partir das respostas do usuário:
-// answers[guidePath] = tag (ou "" / "(nenhuma)" para pular). Puro e testável.
+// answers[guidePath] = tag (ou "" / NoneTag para pular). Puro e testável.
 func BuildGovernRules(answers map[string]string) []config.GovernRule {
 	// ordena por guide para saída determinística
 	var guides []string
@@ -75,4 +75,5 @@ func BuildGovernRules(answers map[string]string) []config.GovernRule {
 }
 
 // NoneTag é a opção "nenhuma" apresentada ao usuário no governs.
-const NoneTag = "(nenhuma)"
+// In English: it is an option shown in the terminal UI, and was Portuguese.
+const NoneTag = "(none)"

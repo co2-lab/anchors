@@ -47,11 +47,35 @@ func parseUnifiedDiff(diff string) ChangedLines {
 	changed := ChangedLines{}
 	var curFile string
 	newLine := 0
+	// oldLeft/newLeft: the lines the current hunk still owes on each side, from its header.
+	// Inside a hunk every line is content, whatever it looks like: an added line whose
+	// text starts with `++ ` reads `+++ …`, and it used to be taken as a new-file header —
+	// the line was lost and the next ones were booked under a file named after its text.
+	oldLeft, newLeft := 0, 0
 
 	sc := bufio.NewScanner(strings.NewReader(diff))
 	sc.Buffer(make([]byte, 0, 64*1024), 8*1024*1024)
 	for sc.Scan() {
 		line := sc.Text()
+		if oldLeft > 0 || newLeft > 0 {
+			switch {
+			case strings.HasPrefix(line, "+"):
+				if curFile != "" {
+					changed[curFile][newLine] = true
+				}
+				newLine++
+				newLeft--
+			case strings.HasPrefix(line, "-"):
+				oldLeft-- // remoção: não avança o cursor do lado novo
+			case strings.HasPrefix(line, `\`):
+				// "\ No newline at end of file": not a line of either side
+			default:
+				newLine++ // contexto
+				oldLeft--
+				newLeft--
+			}
+			continue
+		}
 		switch {
 		case strings.HasPrefix(line, "+++ "):
 			curFile = stripDiffPath(strings.TrimPrefix(line, "+++ "))
@@ -60,6 +84,7 @@ func parseUnifiedDiff(diff string) ChangedLines {
 			}
 		case strings.HasPrefix(line, "@@"):
 			newLine = hunkNewStart(line)
+			oldLeft, newLeft = hunkCounts(line)
 		case strings.HasPrefix(line, "+") && !strings.HasPrefix(line, "+++"):
 			if curFile != "" {
 				changed[curFile][newLine] = true
@@ -93,6 +118,26 @@ func stripDiffPath(p string) string {
 	p = strings.TrimPrefix(p, "a/")
 	p = strings.TrimPrefix(p, "b/")
 	return filepath.ToSlash(p)
+}
+
+// hunkCounts reads the line counts of both sides of a hunk header "@@ -a,b +c,d @@"; a side
+// written without a count ("-a" or "+c") has one line, as in the unified format.
+func hunkCounts(hunk string) (old, new int) {
+	f := strings.Fields(hunk)
+	count := func(side string, sign byte) int {
+		if len(side) == 0 || side[0] != sign {
+			return 0
+		}
+		if i := strings.IndexByte(side, ','); i >= 0 {
+			n, _ := strconv.Atoi(side[i+1:])
+			return n
+		}
+		return 1
+	}
+	if len(f) >= 3 {
+		return count(f[1], '-'), count(f[2], '+')
+	}
+	return 0, 0
 }
 
 // hunkNewStart extrai o início do lado novo de um cabeçalho de hunk "@@ -a,b +c,d @@".

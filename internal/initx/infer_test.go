@@ -307,3 +307,57 @@ func TestInfer_walkFailure(t *testing.T) {
 		t.Errorf("a missing root should fail with no proposal, got %+v %v", p, err)
 	}
 }
+
+// A Go project names its tests `foo_test.go`. The stem of that file must be `foo`, or it
+// never meets `foo.go` and a colocated Go project reads as a separate tree.
+func TestInfer_testOfEveryDialectPairsWithItsCode(t *testing.T) {
+	t.Run("INPRN-B10: A test named in any known dialect pairs with the code of the same stem", func(t *testing.T) {})
+	for _, c := range []struct{ code, test string }{
+		{".go", "_test.go"},
+		{".py", "_test.py"},
+		{".ts", ".spec.ts"},
+	} {
+		dir := t.TempDir()
+		files := map[string]string{}
+		for _, stem := range []string{"a", "b", "c"} {
+			files["pkg/"+stem+c.code] = ""
+			files["pkg/"+stem+c.test] = ""
+		}
+		writeTree(t, dir, files)
+		p, err := Infer(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !p.HasTest || !p.Colocated {
+			t.Errorf("%s beside %s: HasTest=%v Colocated=%v, want both true", c.test, c.code, p.HasTest, p.Colocated)
+		}
+	}
+}
+
+// Map order is random. A tie decided by it gave a different layer pattern, and a
+// different order of code layers, from one run to the next over the same tree.
+func TestInfer_tiesGiveTheSameProposalOnEveryRun(t *testing.T) {
+	t.Run("INPRN-I02: The same tree always gives the same code extensions and code directories, ties included", func(t *testing.T) {})
+	dir := t.TempDir()
+	files := map[string]string{}
+	for _, ext := range []string{".ts", ".js", ".go", ".py"} {
+		for k, v := range codeFiles("src/"+ext[1:], ext, "", 11) {
+			files[k] = v
+		}
+	}
+	writeTree(t, dir, files)
+	wantExts := []string{".go", ".js", ".py", ".ts"}
+	wantDirs := []string{"src/go", "src/js", "src/py", "src/ts"}
+	for range 20 {
+		p, err := Infer(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(p.CodeExts, wantExts) || !reflect.DeepEqual(p.CodeDirs, wantDirs) {
+			t.Fatalf("tied counts must break by name: exts %v dirs %v, want %v %v", p.CodeExts, p.CodeDirs, wantExts, wantDirs)
+		}
+		if got := p.Config.Layers["go-code"].Pattern; got != "src/go/**/*.{go,js,py,ts}" {
+			t.Fatalf("layer pattern = %q, want the extensions in name order", got)
+		}
+	}
+}

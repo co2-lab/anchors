@@ -44,6 +44,7 @@ optional mirror.
 | `GHEGT-B05` | When the branch protection cannot be read (the platform answers that there is none), the finding is a warning `main-sem-protecao` on the repository saying a direct push skips the card, the review and the pipeline. |
 | `GHEGT-B06` | A branch protection that exists but does not require pull request reviews gives the same check with the "partially protected" message. |
 | `GHEGT-B07` | Without the platform CLI, the branch protection is not asked and gives no finding: another finding already names the missing tool. |
+| `GHEGT-B08` | The branch whose protection is read is the declared integration branch (`main` when none is declared), and the finding's message names it. |
 
 ## Invariants
 

@@ -26,6 +26,7 @@ Feature: TaskStatusReport — the format of the round's report: where the task i
     When the report is rendered
     Then "UNDONE" appears before the pull request line, with what was undone
     And the report names the label "anchors:manual"
+    And it says the merge moves the card to ready-to-test, never that the merge closes it
     And without a reversion there is no "UNDONE" section
 
   @TSRTS-B04 @unit-level
@@ -68,9 +69,15 @@ Feature: TaskStatusReport — the format of the round's report: where the task i
   Scenario: Without a pull request the step depends on where the card is
     Given a card in progress on a clean pushed tree, a card under review, a card ready for review and a card to do, none with a pull request
     When the next step is derived for each
-    Then the card in progress is told to open the PR
+    Then the card in progress is told to open the PR, whose `anchors pr-body` lines link the card without closing it
     And the cards under or ready for review are told `gh pr list --search` finds theirs
     And the card to do is not told to open a PR
+
+  @TSRTS-B12 @unit-level
+  Scenario: The check classes are printed in the user's language
+    Given a pull request with one failed, one running and one passed check
+    When the report is rendered in English, in Portuguese and in Spanish
+    Then the pull request line reads "1 failed, 1 running, 1 passed", "1 reprovou, 1 em curso, 1 passou" and "1 falló, 1 en curso, 1 pasó"
 
   @TSRTS-B10 @unit-level
   Scenario: With an open pull request the step follows the checks

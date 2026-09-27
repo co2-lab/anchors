@@ -35,10 +35,9 @@ func (p *Proposal) buildConfig() *config.Config {
 
 	// derived: co-location, se detectada
 	if p.Colocated {
+		// The spec is the ANCHOR and never one of its own derivatives (ARCHR-B07): listing
+		// it here proposed a config that derived the spec from itself.
 		files := map[string]config.Padroes{}
-		if p.HasSpecMD {
-			files["spec"] = config.Padroes{"{{dir}}/{{name}}.spec.md"}
-		}
 		if p.HasFeature {
 			files["feature"] = config.Padroes{"{{dir}}/{{name}}.feature"}
 		}

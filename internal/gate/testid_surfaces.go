@@ -20,14 +20,44 @@ import (
 // queriedID — o id aparece em alguma superfície consumidora? Para o template
 // (`bdgt-item-*`), basta o PREFIXO ser consultado: o sufixo é dado de runtime, e o
 // flow que casa `bdgt-item-.*` ou constrói `bdgt-item-${id}` está usando o contrato.
+//
+// A menção vale só numa FRONTEIRA de id: antes dela nada que continue um id, e (fora
+// do curinga) nada depois. Era substring nua, e um teste que só consultava
+// `btn-save` contava como consulta de `btn` — um handle que ninguém usa passava por
+// consumido. A marca `:` não é caractere de id, então `:btn` casa pela mesma régua
+// (a superfície pode ter sido escrita antes da convenção de marcação).
 func queriedID(blob, id string) bool {
 	nu := strings.TrimPrefix(id, ":")
 	if strings.HasSuffix(nu, "-*") {
-		return strings.Contains(blob, strings.TrimSuffix(nu, "*"))
+		return mentionsAtBoundary(blob, strings.TrimSuffix(nu, "*"), false)
 	}
-	// Confronta as duas formas (com e sem a marca), porque a superfície consumidora
-	// pode ter sido escrita antes da convenção de marcação.
-	return strings.Contains(blob, nu) || strings.Contains(blob, ":"+nu)
+	return mentionsAtBoundary(blob, nu, true)
+}
+
+// mentionsAtBoundary procura `needle` em `blob` sem caractere de id colado antes e,
+// quando `closed`, também depois.
+func mentionsAtBoundary(blob, needle string, closed bool) bool {
+	if needle == "" {
+		return false
+	}
+	for from := 0; ; {
+		i := strings.Index(blob[from:], needle)
+		if i < 0 {
+			return false
+		}
+		i += from
+		end := i + len(needle)
+		if (i == 0 || !isIDByte(blob[i-1])) && (!closed || end == len(blob) || !isIDByte(blob[end])) {
+			return true
+		}
+		from = i + 1
+	}
+}
+
+// isIDByte: os caracteres que um handle aceita (`[a-zA-Z0-9._-]`, ver handleRegex).
+func isIDByte(c byte) bool {
+	return c == '-' || c == '_' || c == '.' ||
+		(c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')
 }
 
 // readE2ESurface lê os flows de ponta a ponta declarados pelo projeto.
@@ -124,13 +154,22 @@ func readNeighborTests(root, specID string) []string {
 	return out
 }
 
-// primeiroSegmentoEstatico corta o template no primeiro placeholder (`{{module}}`,
-// `{unit}`), devolvendo o prefixo fixo — a raiz que dá para varrer.
-var placeholderRE = regexp.MustCompile(`\{\{?[a-zA-Z_]+\}?\}`)
+// firstStaticSegment corta o template no primeiro placeholder (`{{module}}`, `{unit}`)
+// ou curinga de glob (`*`, `?`, `[`), devolvendo o DIRETÓRIO fixo antes dele — a raiz
+// que dá para varrer.
+//
+// O glob não era cortado: `e2e/**/*.spec.ts` virava o caminho literal, o Walk não
+// achava diretório nenhum, e a superfície inteira sumia em silêncio (todo id usado só
+// pelos flows virava órfão). E o corte no MEIO de um segmento (`e2e/login-*.yaml`,
+// `apps/x-{{m}}`) deixa um nome que não existe; a raiz é o diretório que o contém.
+var placeholderRE = regexp.MustCompile(`\{\{?[a-zA-Z_]+\}?\}|[*?\[]`)
 
 func firstStaticSegment(padrao string) string {
 	if loc := placeholderRE.FindStringIndex(padrao); loc != nil {
 		padrao = padrao[:loc[0]]
+		if padrao != "" && !strings.HasSuffix(padrao, "/") {
+			padrao = filepath.Dir(padrao)
+		}
 	}
 	return strings.TrimSuffix(filepath.Clean(padrao), "/")
 }

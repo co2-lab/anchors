@@ -310,3 +310,26 @@ func TestPrintPreCommitTouch(t *testing.T) {
 		t.Errorf("nothing dated, nothing said; printed:\n%s", out)
 	}
 }
+
+// The project root may sit below the repository's top (a monorepo package): the staged
+// files are handed to check by the project root's paths, and only the project's files.
+func TestVerifyStagedUnderAProjectBelowTheRepositoryTop(t *testing.T) {
+	t.Run("VPFVR-B10: A project root below the repository top hands check its own staged files, by its own paths", func(t *testing.T) {})
+	repo := touchRepo(t)
+	touchWrite(t, repo, "sub/x.ts", touchHeader+"export const x = 1\n")
+	gitIn(t, repo, "add", "sub/x.ts")
+	gitIn(t, repo, "commit", "-qm", "sub")
+	touchWrite(t, repo, "sub/x.ts", touchHeader+"export const x = 2\n")
+	touchWrite(t, repo, "a.ts", touchHeader+"export const x = 2\n")
+	gitIn(t, repo, "add", "sub/x.ts", "a.ts")
+	sub := filepath.Join(repo, "sub")
+	argsFile := fakeChild(t, 0)
+
+	if _, err := runQ(t, newVerifyCmd(), "--root", sub, "--staged"); err != nil {
+		t.Fatal(err)
+	}
+	child := strings.Join(strings.Split(readQ(t, argsFile), "\n"), " ")
+	if want := "check --root " + sub + " --changed x.ts"; child != want {
+		t.Errorf("the child check got %q, want %q", child, want)
+	}
+}

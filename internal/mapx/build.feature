@@ -68,10 +68,11 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Then the spec specifies the tsx code file
 
   @GRBLG-B11 @unit-level
-  Scenario: A code override replaces every template for that unit
-    Given a TSCTY spec whose code override names packages/*/tsconfig.json, while the default templates name a ts file and a test
+  Scenario: A code override replaces the templates of the kinds it declares, and the others fall back to the default
+    Given a TSCTY spec whose code override names only packages/*/tsconfig.json, while the default templates name a ts file, a feature and a test
     When the graph is built
-    Then the spec specifies each packages tsconfig.json and nothing the default templates name
+    Then the spec specifies each packages tsconfig.json and not the ts file, and is covered by its default feature, tested by its default test
+    And with the override also naming config/tsconfig.feature and an empty test list, the spec is covered by that feature and no test is linked
 
   @GRBLG-B12 @unit-level
   Scenario: A bracketed directory is literal and a template wildcard expands

@@ -465,3 +465,23 @@ func TestNewFollowsTheProjectDialect(t *testing.T) {
 		t.Errorf("the test does not follow the python family:\n%s", test)
 	}
 }
+
+// The help said `--out` defaulted to the root (it is mandatory, and the root is refused)
+// and named 3 of the 7 kinds the catalog gives birth to; the unknown-kind refusal did too.
+func TestNewHelpTellsTheTruth(t *testing.T) {
+	t.Run("NWARN-B16: The help and the unknown-kind refusal name every kind, and --out is mandatory", func(t *testing.T) {})
+	cmd := newNewCmd()
+	usage := cmd.Flags().Lookup("out").Usage
+	if strings.Contains(usage, "default") || !strings.Contains(usage, "mandatory") {
+		t.Errorf("--out usage = %q; it is mandatory, with no default", usage)
+	}
+	err, _ := runNew(t, "widget", "X")
+	for kind := range templates {
+		if !strings.Contains(cmd.Long, kind) {
+			t.Errorf("the help does not name the kind %q:\n%s", kind, cmd.Long)
+		}
+		if err == nil || !strings.Contains(err.Error(), kind) {
+			t.Errorf("the unknown-kind refusal does not name %q: %v", kind, err)
+		}
+	}
+}

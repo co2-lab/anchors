@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -503,4 +504,33 @@ func TestStripLineCommentsRespectsQuotes(t *testing.T) {
 			t.Errorf("the trailing comment %q must be removed: %q", gone, res)
 		}
 	}
+}
+
+// The similarity verdict in the drift message is translated. It was the raw
+// `similarity.Verdict.String`, in Portuguese ("divergente", "limítrofe") whatever the
+// project's language.
+func TestFeatureTestMatch_verdictIsTranslated(t *testing.T) {
+	t.Run("FTMFT-B20: The drift verdict is written in the project's language", func(t *testing.T) {})
+	root := t.TempDir()
+	feat := "business-logic/dedup.feature"
+	test := "__tests__/dedup.test.ts"
+	writeFile(t, root, feat, featureSrc)
+	writeFile(t, root, test, `
+describe('x', () => {
+  it('DDTDX-B01: xyz qwe abc', () => {})
+  it('DDTDX-B02: foo bar baz', () => {})
+})`)
+	g := featureGraph(feat, test)
+	n := mapx.Node{ID: feat, Kind: mapx.KindFeature}
+	for _, tc := range []struct{ lang, want, not string }{
+		{"en", "(divergent,", "divergente"},
+		{"pt-BR", "(divergente,", "(divergent,"},
+	} {
+		i18n.Set(tc.lang)
+		_, detail := checkFeatureTestMatch(featureSrc, n, root, g, regimeCfg())
+		if !strings.Contains(detail, tc.want) || strings.Contains(detail, tc.not) {
+			t.Errorf("[%s] detail %q: want the verdict %q, not %q", tc.lang, detail, tc.want, tc.not)
+		}
+	}
+	i18n.Set(i18n.Default)
 }

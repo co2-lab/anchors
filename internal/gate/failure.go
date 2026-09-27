@@ -37,7 +37,14 @@ import (
 // `guard_patterns`, which already existed.
 
 // failureRuleRE finds a FAILURE rule (`-E`) in the three catalogued forms.
-var failureRuleRE = regexp.MustCompile(`(?m)(?:^#{1,6}\s+|^\s*\|\s*` + "`?" + `|^\s*-\s+\*\*)([A-Z0-9]{3,6}-E[0-9]{2})`)
+//
+// Compiled per CALL, as defineRuleCaptureRE: the code length comes from `code_lengths`,
+// loaded after the package globals. As a `var` with a fixed `{3,6}` it never saw a code
+// of another declared length (a 7- or 8-character code was invisible to the gate).
+func failureRuleRE() *regexp.Regexp {
+	return regexp.MustCompile(`(?m)(?:^#{1,6}\s+|^\s*\|\s*` + "`?" + `|^\s*-\s+\*\*)([A-Z0-9]` +
+		config.CodeLengthPattern() + `-E[0-9]{2})`)
+}
 
 // resilientRE — the failure UNDERSTOOD and absorbed by the flow.
 //
@@ -81,8 +88,9 @@ type FailureConclusion struct {
 // FailureConclusions reads, per rule, what the spec concluded about each failure.
 func FailureConclusions(content string) map[string]FailureConclusion {
 	out := map[string]FailureConclusion{}
+	ruleRE := failureRuleRE()
 	for _, line := range strings.Split(content, "\n") {
-		for _, m := range failureRuleRE.FindAllStringSubmatch(line, -1) {
+		for _, m := range ruleRE.FindAllStringSubmatch(line, -1) {
 			c := out[m[1]]
 			c.Rule = m[1]
 			if mm := reasonOf(resilientRE, line); mm != "" {
@@ -128,8 +136,9 @@ func reasonOf(re *regexp.Regexp, line string) string {
 // declaredFailures reads the `-E` rules from the spec, separating the ones marked resilient.
 func declaredFailures(content string) (all, resilient []string) {
 	seen := map[string]bool{}
+	ruleRE := failureRuleRE()
 	for _, line := range strings.Split(content, "\n") {
-		for _, m := range failureRuleRE.FindAllStringSubmatch(line, -1) {
+		for _, m := range ruleRE.FindAllStringSubmatch(line, -1) {
 			if seen[m[1]] {
 				continue
 			}

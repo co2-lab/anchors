@@ -52,11 +52,12 @@ applicable suggestion, and recording a verdict closes the judge task the queue h
 | `JDGUE-B04` | A gate that declares a guide is stamped on the edge from the guide to the target, with `ok` for pass, `issue` for fail and `waived` for waiver, and the judgment counts as answered for that gate. |
 | `JDGUE-B05` | A gate with no guide edge to the target is stamped on every edge of the target, with the gate's name. |
 | `JDGUE-B06` | A target not in the map is recorded on the piece of the same unit that is in the map, and the output says which. |
+| `JDGUE-B12` | The piece of the same unit is found by name from a code or a test target: the test suffixes (`.test`, `.spec`, `_test`) are dropped, and the candidates are the spec, the feature, and the Go and TypeScript code and test names, plus the target's own extension. |
 | `JDGUE-B07` | A fail opens an issue whose body is the report; the same report again changes nothing, and a different report reopens the issue and appends it. |
 | `JDGUE-B08` | A pass resolves the open issue of that gate and target; a waiver resolves it too, announcing a waiver and never a pass. |
 | `JDGUE-B09` | In manual workflow mode the verdict is stamped and the report printed, but no issue is written unless recording issues is asked; in every other mode the issue is written. |
 | `JDGUE-B10` | A fail with a patch opens a fix suggestion named after the gate and the target, carrying the patch. |
-| `JDGUE-B11` | Recording a verdict closes the queue's judge task for that gate and target; the pending switch lists the queued judge tasks, or says none is waiting. |
+| `JDGUE-B11` | Recording a verdict closes the queue's judge task for that gate and target; the pending switch lists the queued judge tasks — those of the judgment kind, and those with the legacy judge verb — or says none is waiting. |
 
 ## Invariants
 

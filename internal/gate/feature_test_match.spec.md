@@ -62,6 +62,7 @@ in automated test suites.
 | `FTMFT-B17` | The exported function `RootCode` strips scenario sub-indices (`#01`) and returns the root requirement code. |
 | `FTMFT-B18` | Only a regime tag the project MAPS under `regimes:` (or a canonical regime name) exempts a scenario as belonging to another surface; an unmapped tag that merely looks like a regime (`@nivel-compilacao`) leaves the scenario confronted. |
 | `FTMFT-B19` | A trailing comment marker counts only OUTSIDE quotes, and `--` or `#` only after whitespace: `"--label"`, `"https://…"` and a `i--` keep the rest of their line. Cut anywhere, the flag argument hid the symbol after it and dependency-honored accused a dependency the code uses. |
+| `FTMFT-B20` | The similarity verdict named beside each drifting scenario (`FTMFT-B09`) is written in the project's language, through i18n (`divergent` in English, `divergente` in Portuguese). |
 
 ## Errors
 
@@ -93,7 +94,7 @@ in automated test suites.
 | DEP2 | `internal/config/dialect.go` | `GherkinScenarioAlternatives` | core — multilingual Gherkin scenario keywords |
 | DEP3 | `internal/i18n/i18n.go` | `T` | core — localized messages for failures and warnings |
 | DEP4 | `internal/mapx/model.go` | `EdgeTestedBy`, `Graph`, `KindFeature`, `Node` | core — graph model and test relationship edges |
-| DEP5 | `internal/similarity/similarity.go` | `Classify`, `Identico`, `Weights` | core — weighted term similarity analysis for title matching |
+| DEP5 | `internal/similarity/similarity.go` | `Classify`, `Identico`, `Limitrofe`, `Similar`, `Verdict`, `Weights` | core — weighted term similarity analysis for title matching |
 
 ## Open Decisions
 

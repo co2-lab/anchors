@@ -28,6 +28,8 @@ change, neither as uncovered nor in the denominator.
 | `LCINL-B05` | The instrumented count of a change is the number of changed lines the report instrumented. |
 | `LCINL-B06` | The coverage percentage is covered over total lines times one hundred, and zero when the file has no line. |
 | `LCINL-B07` | A record left without its end-of-record line is closed by the next source-file line or by the end of the report. |
+| `LCINL-B08` | A line-hit entry that carries the optional checksum field is read by its hit count; the checksum does not change whether the line is covered. |
+| `LCINL-B09` | Line-hit and line-total entries before the first source-file line belong to no file and change no file's counts. |
 
 ## Domain
 

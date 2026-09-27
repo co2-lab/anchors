@@ -52,9 +52,10 @@ doctor warn without touching the repository of someone who did not ask.
 | `MGFLM-B05` | A value is renamed only under the key the step names and only when the whole value matches an old name. |
 | `MGFLM-B06` | The steps are applied in order, each on the result of the previous, so a key renamed twice across formats ends under its latest name. |
 | `MGFLM-B07` | The `version:` line is raised to the target, even when no key or value changed. |
-| `MGFLM-B08` | A map without a `version:` line gets one inserted right after its leading comment block. |
+| `MGFLM-B08` | A map or a configuration without a `version:` line gets one inserted right after its leading comment block. |
 | `MGFLM-B09` | The result counts each renamed key, and each renamed `key: value`, by its old form, and reports whether the text changed. |
 | `MGFLM-B10` | A dry run reports what would change, counts included, without writing the file. |
+| `MGFLM-B11` | A top-level `version:` line followed by a comment is read by its number, and raised in place keeping the comment. |
 
 ## Invariants
 
@@ -73,7 +74,7 @@ doctor warn without touching the repository of someone who did not ask.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `MGFLM-E01` | The file cannot be read. | The read error is returned and nothing is written. | There is no format to read, and nothing to migrate. |
-| `MGFLM-E02` | The `version:` line holds a number too large to represent. | An error naming the file and saying the version is not a number. | Guessing a format would apply the wrong steps. |
+| `MGFLM-E02` | The top-level `version:` line holds something that is not a number (text such as `abc`, or a number too large to represent). | An error naming the file and saying the version is not a number; nothing is written. | Guessing a format would apply the wrong steps, and reading it as format 1 inserted a second `version:` line. |
 | `MGFLM-E03` | A step between the file's format and the target is missing. | The chain's error is returned and the file is left untouched. | Writing the new number with part of the conversion missing would make the file lie about its own format. |
 
 ## Dependencies

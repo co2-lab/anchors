@@ -44,7 +44,7 @@ It also records, as telemetry, the state the turn ended in — only numbers and 
 | `TSSTT-B05` | The pull request is the one of the root's branch, looked up from the root; each check counts as running when it has no conclusion or has not completed, as passed when it succeeded, was neutral or was skipped, and as failed otherwise; a legacy commit status that is pending or expected counts as running, and its state is the verdict otherwise. |
 | `TSSTT-B06` | The moves the state lock undid on the card are the comments that start with the lock's marker AND were written by the automation's account; each is reduced to its first line, without bold or code marks and without the marker. |
 | `TSSTT-B07` | The command prints the report of the state it discovered. |
-| `TSSTT-B08` | The state the turn ended in is recorded as telemetry: the card's state without its prefix, whether there is a pull request, its state, and the counts of checks — never the card's title nor the labels' full names. |
+| `TSSTT-B08` | The state the turn ended in is recorded as telemetry: the card's state without its prefix, whether there is a pull request, its state, and the counts of checks — never the card's title nor the labels' full names. The attribute names are stable English identifiers (`has_card`, `has_pr`, `clean_tree`, `unpushed`, `card_state`, `pr_state`, `checks_total`, `checks_failed`, `checks_running`), whatever the user's language. |
 
 ## Invariants
 

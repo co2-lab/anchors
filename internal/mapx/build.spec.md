@@ -72,7 +72,7 @@ of the nodes whose content did not change.
 | `GRBLG-B08` | When the anchor is the code, the spec is found from it as a derived file and the relations keep the same direction, from the spec down. |
 | `GRBLG-B09` | With no feature, the spec is tested by the test directly. |
 | `GRBLG-B10` | A per-layer override applies when its layer is the UNIT's layer — the layer a spec declares in its header wins over the layer its own file matched — and replaces the templates of the layers it lists. |
-| `GRBLG-B11` | A per-code override replaces every template for the anchor with that identity, and the unit then links only what the override names. |
+| `GRBLG-B11` | A per-code override, for the anchor with that identity, replaces the templates of the kinds it declares — an empty list declaring none — and every kind it does not declare keeps the default template (after the per-layer overrides). |
 | `GRBLG-B12` | The anchor's directory and name are matched literally (`GlobEscape`), brackets included, while a template's own wildcards expand to every existing match, each of them linked. |
 
 ### Scenario and declared relations

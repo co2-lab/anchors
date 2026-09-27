@@ -38,8 +38,9 @@ import (
 // fila e a evidência tem de ser refeita.
 //
 // União e não escolha: se um lado julgou a aresta A e o outro a aresta B, o resultado tem
-// as duas. Quando os DOIS julgaram a mesma aresta, vence o mais recente pela rev — que é a
-// regra que o `PreserveStamps` já aplica.
+// as duas; se os dois julgaram a MESMA aresta com gates diferentes, ela fica com os dois
+// julgamentos. Quando os dois julgaram a mesma aresta com o MESMO gate, vence o de
+// `changed_at` mais recente, e no empate o nosso.
 
 func newMapMergeCmd() *cobra.Command {
 	cmd := &cobra.Command{
@@ -107,12 +108,16 @@ The result is written to <ours>, which is what git expects.`,
 			// julgamento dela sumia — o `PreserveStamps` não tinha onde pousá-lo.
 			addMissingEdges(gNosso, gDeles)
 
-			// E DEPOIS os carimbos das arestas comuns. Duas passadas porque
-			// `PreserveStamps(novo, antigo)` leva numa direção só; rodar nos dois
-			// sentidos garante que nenhum lado perca o que era só dele.
-			mapx.PreserveStamps(gNosso, gDeles)
-			mapx.PreserveStamps(gDeles, gNosso)
-			mapx.PreserveStamps(gNosso, gDeles)
+			// E DEPOIS o estado das arestas e dos nós comuns, e o fluxo.
+			//
+			// Isto era três passadas de `PreserveStamps`, que SUBSTITUI a lista de
+			// julgamentos da aresta pela do outro lado: se o nosso julgou com `review` e
+			// o deles com `atomic`, o resultado ficava só com `atomic`. Ele também não
+			// olha as falhas dos nós nem o fluxo, e os dois saíam só com o lado nosso —
+			// um fluxo construído no outro branch sumia num merge sem conflito.
+			mergeCommonEdges(gNosso, gDeles)
+			mergeCommonNodes(gNosso, gDeles)
+			gNosso.Flow = mergeFlow(gNosso.Flow, gDeles.Flow)
 
 			if err := mapx.Save(gNosso, nosso); err != nil {
 				return fmt.Errorf("write the result: %w", err)
@@ -187,4 +192,132 @@ func addMissingEdges(destino, origem *mapx.Graph) {
 
 func edgeKey(e mapx.Edge) string {
 	return string(e.Type) + "\x00" + e.From + "\x00" + e.To
+}
+
+// mergeCommonEdges junta, em cada aresta que os dois lados têm, o estado do outro lado.
+//
+// Julgamentos se unem POR GATE: gates diferentes somam, e o mesmo gate dos dois lados
+// fica com o de `changed_at` mais recente (empate: o nosso). O carimbo do `check` segue
+// a mesma regra. Um lado sem nada nunca apaga o outro.
+func mergeCommonEdges(nosso, deles *mapx.Graph) {
+	delas := make(map[string]*mapx.Edge, len(deles.Edges))
+	for i := range deles.Edges {
+		delas[edgeKey(deles.Edges[i])] = &deles.Edges[i]
+	}
+	for i := range nosso.Edges {
+		e := &nosso.Edges[i]
+		o, ok := delas[edgeKey(*e)]
+		if !ok {
+			continue
+		}
+		e.Julgamentos = mergeJudgments(e.Julgamentos, o.Julgamentos)
+		if o.Stamp != nil && (e.Stamp == nil || o.Stamp.ChangedAt > e.Stamp.ChangedAt) {
+			e.Stamp = o.Stamp
+		}
+	}
+}
+
+func mergeJudgments(nossos, deles []mapx.Judgment) []mapx.Judgment {
+	if len(deles) == 0 {
+		return nossos
+	}
+	out := append([]mapx.Judgment{}, nossos...)
+	pos := make(map[string]int, len(out))
+	for i, j := range out {
+		pos[j.Gate] = i
+	}
+	for _, j := range deles {
+		i, ok := pos[j.Gate]
+		switch {
+		case !ok:
+			pos[j.Gate] = len(out)
+			out = append(out, j)
+		case j.ChangedAt > out[i].ChangedAt:
+			out[i] = j
+		}
+	}
+	return out
+}
+
+// mergeCommonNodes junta, em cada nó que os dois lados têm, o que o outro lado ingeriu.
+//
+// Falhas observadas se unem POR REGRA (a de `last` mais recente vence; empate: a nossa).
+// O sinal de teste vem do outro lado quando a rev é a mesma — o que as passadas de
+// `PreserveStamps` já faziam, e que este driver mantém.
+func mergeCommonNodes(nosso, deles *mapx.Graph) {
+	delas := make(map[string]*mapx.Node, len(deles.Nodes))
+	for i := range deles.Nodes {
+		delas[deles.Nodes[i].ID] = &deles.Nodes[i]
+	}
+	for i := range nosso.Nodes {
+		n := &nosso.Nodes[i]
+		o, ok := delas[n.ID]
+		if !ok {
+			continue
+		}
+		if o.Signal != nil && o.Rev == n.Rev {
+			n.Signal = o.Signal
+		}
+		n.Failures = mergeFailures(n.Failures, o.Failures)
+	}
+}
+
+func mergeFailures(nossas, delas []mapx.FailureSignal) []mapx.FailureSignal {
+	if len(delas) == 0 {
+		return nossas
+	}
+	out := append([]mapx.FailureSignal{}, nossas...)
+	pos := make(map[string]int, len(out))
+	for i, f := range out {
+		pos[f.Rule] = i
+	}
+	for _, f := range delas {
+		i, ok := pos[f.Rule]
+		switch {
+		case !ok:
+			pos[f.Rule] = len(out)
+			out = append(out, f)
+		case f.Last > out[i].Last:
+			out[i] = f
+		}
+	}
+	return out
+}
+
+// mergeFlow une os dois grafos de fluxo: estados por código e transições por valor, o
+// nosso primeiro. O fluxo é derivado de `flows/*.flow.md`, e o `flow build` seguinte o
+// reconstrói da árvore mesclada; até lá, perder o que o outro branch construiu faria
+// o fluxo inteiro desaparecer sem aviso.
+func mergeFlow(nosso, deles *mapx.FlowGraph) *mapx.FlowGraph {
+	if deles == nil {
+		return nosso
+	}
+	if nosso == nil {
+		return deles
+	}
+	out := &mapx.FlowGraph{
+		States:      append([]mapx.FlowState{}, nosso.States...),
+		Transitions: append([]mapx.FlowTransition{}, nosso.Transitions...),
+	}
+	temEstado := make(map[string]bool, len(out.States))
+	for _, s := range out.States {
+		temEstado[s.Code] = true
+	}
+	for _, s := range deles.States {
+		if !temEstado[s.Code] {
+			temEstado[s.Code] = true
+			out.States = append(out.States, s)
+		}
+	}
+	temTransicao := make(map[mapx.FlowTransition]bool, len(out.Transitions))
+	for _, t := range out.Transitions {
+		temTransicao[t] = true
+	}
+	for _, t := range deles.Transitions {
+		if !temTransicao[t] {
+			temTransicao[t] = true
+			out.Transitions = append(out.Transitions, t)
+		}
+	}
+	return out
 }

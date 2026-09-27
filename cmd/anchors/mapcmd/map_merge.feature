@@ -43,6 +43,20 @@ Feature: MapMerge — the git merge driver that unites two versions of the map i
     When the map merge driver runs
     Then the error stream says "2 judgment(s) preserved (1 came from the other side)"
 
+  @MPMRM-B07 @unit-level
+  Scenario: Judgments of different gates on a shared edge are joined, and one gate judged on both sides keeps the latest
+    Given our side judged and stamped a shared edge with "review", "atomic" (issue, older) and "tie", and the other side, later, with "rule-fulfilled", "atomic" (ok, newer) and "tie" on the same date
+    When the map merge driver runs
+    Then the edge carries "review", "rule-fulfilled", the other side's "atomic" and our "tie"
+    And the edge keeps the other side's newer check stamp
+
+  @MPMRM-B08 @unit-level
+  Scenario: The other side's flow states and transitions and the failures of a shared node reach the merged map
+    Given the other side has a flow and failures on a node both sides have, one rule observed on both sides
+    When the map merge driver runs, with and without a flow on our side
+    Then the result has the flow states of both sides and the other side's transition
+    And the shared node has the failures of both sides, the rule observed on both keeping the latest
+
   @MPMRM-I01 @unit-level
   Scenario: Nothing of either side is missing from the merged map
     Given our side and the other side each have an edge and a node the other lacks

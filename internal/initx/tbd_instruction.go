@@ -31,21 +31,26 @@ package initx
 // distingue "declarou que o código não existe" de "declarou que falta o teste". Essa
 // leitura é o que nenhum filtro faz.
 
-// tbdInstruction devolve a instrução a acrescentar ao `ask:` de um gate de julgamento.
+// tbdInstruction returns the instruction appended to the `ask:` of a judgment gate.
 //
-// `peca` é o que o gate interroga, na forma como o `ask:` já fala dele ("o código", "o
-// teste") — o texto tem de soar como continuação da pergunta, não como aviso pregado ao
-// fim.
-func tbdInstruction(peca string) string {
-	return " ANTES DE RESPONDER, confira se esta unidade declara `@TBD` para a peça que " +
-		"esta pergunta interroga (`@TBD: code`, `@TBD: code,test`, …). Se declarar, " +
-		peca + " ainda NÃO existe por decisão registrada, e não há o que confrontar: " +
-		"responda DISPENSADO, nomeando a ausência (\"a spec declara @TBD para esta peça " +
-		"e ela não existe no repositório\"). NÃO responda `pass` — o `pass` é uma " +
-		"afirmação SOBRE " + peca + ", e sem " + peca + " ele afirma o que ninguém " +
-		"verificou; o carimbo fica no mapa parecendo verificação real. " +
-		"Confira também se o `@TBD` é VERDADE: se a peça já existe no repositório, o " +
-		"marcador está desatualizado, o julgamento é devido normalmente, e a declaração " +
-		"obsoleta é um achado — enquanto ela estiver lá, todo gate que a lê dispensa o " +
-		"que devia cobrar."
+// `piece` is what the gate asks about, as the `ask:` already names it ("the code", "the
+// test") — the text has to read as the continuation of the question, not as a notice
+// pinned to the end.
+//
+// In English, like the rest of the `ask:` it closes: the text is written into every new
+// project's anchors.yaml and read by the judge in any language. It used to be Portuguese,
+// and told the judge to answer "DISPENSADO" — a word the verdict vocabulary only accepts
+// as a legacy alias of `waived`.
+func tbdInstruction(piece string) string {
+	return " BEFORE ANSWERING, check whether this unit declares `@TBD` for the piece " +
+		"this question asks about (`@TBD: code`, `@TBD: code,test`, …). If it does, " +
+		piece + " does NOT exist yet by a recorded decision, and there is nothing to " +
+		"confront: answer `waived`, naming the absence (\"the spec declares @TBD for " +
+		"this piece and it does not exist in the repository\"). Do NOT answer `pass` — " +
+		"`pass` is a statement ABOUT " + piece + ", and without " + piece + " it states " +
+		"what nobody verified; the stamp stays in the map looking like real verification. " +
+		"Also check that the `@TBD` is TRUE: if the piece already exists in the " +
+		"repository, the marker is stale, the judgment is due as usual, and the stale " +
+		"declaration is a finding — while it stays there, every gate that reads it " +
+		"waives what it should demand."
 }

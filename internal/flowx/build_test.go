@@ -209,3 +209,62 @@ func TestBuild_readsActionsThenFlowsSorted(t *testing.T) {
 		t.Errorf("read order = %v, want %v", files, want)
 	}
 }
+
+func TestBuild_aRoutedResultKeepsItsCondition(t *testing.T) {
+	t.Run("FLBLF-B08: A routed result keeps the prose around its two codes as its condition", func(t *testing.T) {})
+	root := t.TempDir()
+	os.MkdirAll(filepath.Join(root, Dir), 0o755)
+	os.WriteFile(filepath.Join(root, Dir, "f"+FlowSuffix), []byte(
+		"### FLOWX-P01 — a step\n\nResults:\n"+
+			"- `ACTST-R01` STALE → `FLOWX-P02`\n"+
+			"- `ACTST-R02` BLOCKED -> `FLOWX-P03` when the fix is ready.\n"+
+			"- on `ACTST-R03` go to `FLOWX-P04`\n"), 0o644)
+	g, err := Build(root)
+	if err != nil || g == nil || len(g.Transitions) != 3 {
+		t.Fatalf("build: %+v, %v", g, err)
+	}
+	// Before: the whole match, from the first code to the second, was dropped with the
+	// codes, so the condition between them was lost ("STALE" became "").
+	want := []string{"STALE", "BLOCKED when the fix is ready", "on go to"}
+	for i, tr := range g.Transitions {
+		if tr.When != want[i] {
+			t.Errorf("transition %d (%s→%s) condition = %q, want %q", i, tr.On, tr.To, tr.When, want[i])
+		}
+	}
+}
+
+func TestBuild_aReadFailureIsAnError(t *testing.T) {
+	t.Run("FLBLF-E01: A flows folder, actions folder or flow file that cannot be read is an error", func(t *testing.T) {})
+	// flows/ exists but is a file: reading it fails with something other than "does not exist".
+	root := t.TempDir()
+	os.WriteFile(filepath.Join(root, Dir), []byte("x"), 0o644)
+	if g, err := Build(root); err == nil {
+		t.Errorf("Build over an unreadable flows/ = %+v, nil; want the error", g)
+	}
+
+	// flows/actions exists but is a file.
+	root = projectWithFlow(t, destravar)
+	os.WriteFile(filepath.Join(root, ActionsDir), []byte("x"), 0o644)
+	if g, err := Build(root); err == nil {
+		t.Errorf("Build over an unreadable flows/actions/ = %+v, nil; want the error", g)
+	}
+
+	// A flow file that cannot be read: before, it was skipped and its states vanished.
+	root = projectWithFlow(t, destravar)
+	p := filepath.Join(root, Dir, "locked"+FlowSuffix)
+	os.WriteFile(p, []byte(destravar), 0o000)
+	if _, err := os.ReadFile(p); err == nil {
+		t.Skip("this user reads a 0000 file (root?): no read failure to observe")
+	}
+	if g, err := Build(root); err == nil {
+		t.Errorf("Build with an unreadable flow file = %+v, nil; want the error", g)
+	}
+
+	// An action file that cannot be read.
+	root = projectWithFlow(t, destravar)
+	os.MkdirAll(filepath.Join(root, ActionsDir), 0o755)
+	os.WriteFile(filepath.Join(root, ActionsDir, "locked"+ActionSuffix), []byte("### ACTST-R01 — a result\n"), 0o000)
+	if g, err := Build(root); err == nil {
+		t.Errorf("Build with an unreadable action file = %+v, nil; want the error", g)
+	}
+}

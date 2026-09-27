@@ -301,7 +301,10 @@ func listPendingJudgments(root string) error {
 	}
 	n := 0
 	for _, t := range tasks {
-		if t.SuggestedNext == "judge" {
+		// A judge task is known by its kind: the check now queues it with the `review`
+		// stage as the verb (`anchors work` refused `judge`), a verb the watch's review
+		// tasks share. `judge` is the verb of a queue written before.
+		if t.Kind == "judgment" || t.SuggestedNext == "judge" {
 			n++
 			fmt.Printf("○ %s\n    %s\n", t.Changed, t.Reason)
 		}
@@ -322,9 +325,23 @@ func closeJudgeTask(root, gateName, target string) {
 
 // unitExistingPiece acha, para um alvo ausente do mapa, outra peça da MESMA unidade
 // que já esteja lá — a spec, tipicamente, quando o código ainda não nasceu.
+//
+// It cut only the last extension and knew only TypeScript's names, so a TEST target
+// never reached its unit: `foo_test.go` looked for `foo_test.spec.md`, `x.test.ts` for
+// `x.test.spec.md`, and the judgment was refused as "not in the map". The stem now drops
+// the test suffixes (`.test`, `.spec`, `_test`), and the candidates carry the Go names and
+// the target's own extension, the same identity `check` uses (`unitPieces`).
 func unitExistingPiece(g *mapx.Graph, target string) string {
-	base := strings.TrimSuffix(target, filepath.Ext(target))
-	for _, suf := range []string{".spec.md", ".feature", ".test.ts", ".test.tsx", ".ts", ".tsx"} {
+	ext := filepath.Ext(target)
+	base := strings.TrimSuffix(target, ext)
+	for _, suf := range []string{".spec", ".test", "_test"} {
+		base = strings.TrimSuffix(base, suf)
+	}
+	sufs := []string{".spec.md", ".feature", ".test.ts", ".test.tsx", ".ts", ".tsx", ".go", "_test.go"}
+	if ext != ".md" && ext != ".feature" && ext != "" {
+		sufs = append(sufs, ext, "_test"+ext, ".test"+ext, ".spec"+ext)
+	}
+	for _, suf := range sufs {
 		if cand := base + suf; cand != target && common.NodeExists(g, cand) {
 			return cand
 		}

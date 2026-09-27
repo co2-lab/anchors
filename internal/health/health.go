@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -546,8 +547,11 @@ func checkPlanNeeds(g *mapx.Graph) []Finding {
 		caminho = append(caminho, p)
 		for _, alvo := range depende[p] {
 			if estado[alvo] == 1 {
+				// Only the cycle: the path from where the walk STARTED can carry plans that
+				// merely lead into it (`x → a ⇄ b` read "x → a → b → a"), and x is not stuck.
+				ciclo := caminho[slices.Index(caminho, alvo):]
 				out = append(out, Finding{"needs-ciclo", Warn, p,
-					i18n.T("health.needs_cycle", strings.Join(caminho, " → ")+" → "+alvo)})
+					i18n.T("health.needs_cycle", strings.Join(ciclo, " → ")+" → "+alvo)})
 				return true
 			}
 			if estado[alvo] == 0 && visita(alvo) {
@@ -558,7 +562,15 @@ func checkPlanNeeds(g *mapx.Graph) []Finding {
 		estado[p] = 2
 		return false
 	}
+	// In path order, not map order: ranging over the map picked the starting plan at
+	// random, and with two cycles, or a plan leading into one, the finding changed
+	// between two runs over the same map.
+	ordem := make([]string, 0, len(planos))
 	for p := range planos {
+		ordem = append(ordem, p)
+	}
+	sort.Strings(ordem)
+	for _, p := range ordem {
 		if estado[p] == 0 {
 			caminho = nil
 			if visita(p) {

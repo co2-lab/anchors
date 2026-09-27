@@ -16,8 +16,9 @@
 # Antes disso, um PR que declarou domínio em 85 specs derrubou 16 de uma vez — e a
 # drenagem foi manual, um PR por vez, dez minutos cada por causa do `gates`.
 #
-# Este workflow fecha o ciclo: o gatilho passa a ser o `push` no `develop`, que é onde o
-# conflito de fato nasce.
+# This workflow closes the loop: the trigger is the `push` to the integration branch
+# (`integration_branch` in anchors.yaml, `main` by default), which is where the conflict
+# is really born.
 #
 # IT PUSHES ONLY WITH A GITHUB APP TOKEN. Without one, it comments instead.
 #
@@ -35,7 +36,7 @@ name: anchors · a fila se resolve depois do merge
 
 on:
   push:
-    branches: [develop] # anchors:integration-branch
+    branches: [main] # anchors:integration-branch
   # À MÃO, para varrer sem esperar um merge — útil quando a fila já está conflitando.
   workflow_dispatch:
 

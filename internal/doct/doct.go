@@ -670,11 +670,23 @@ func (c *Compiler) Stale() ([]string, error) {
 		if !markerRE.Match(atual) {
 			continue
 		}
-		if !bytes.Equal(atual, esperado) {
+		// The page carries the unhashed marker (a hashed one took the shortcut above), and
+		// `compile` opens with the hashed one: comparing whole files made the marker line
+		// alone differ, so every page of an earlier version was stale forever. The body
+		// below the marker line is what the templates decide.
+		if !bytes.Equal(afterFirstLine(atual), afterFirstLine(esperado)) {
 			out = append(out, saida)
 		}
 	}
 	return out, nil
+}
+
+// afterFirstLine returns what follows the first line — the marker line of a compiled page.
+func afterFirstLine(b []byte) []byte {
+	if i := bytes.IndexByte(b, '\n'); i >= 0 {
+		return b[i+1:]
+	}
+	return nil
 }
 
 // comentarioHTMLRE casa um comentário HTML inteiro, inclusive o que atravessa linhas.

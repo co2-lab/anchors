@@ -19,7 +19,9 @@ reason, so whoever hits the brake knows what happened. `thaw` undoes the three l
 The reason is mandatory, because a freeze with no written reason is indistinguishable from
 a broken configuration, and whoever hits it tries to work around it instead of reading. The
 freeze is written as two lines at the top of the file, without reserializing it, so the
-thaw can remove exactly those lines and give back the file as it was.
+thaw can remove exactly those lines and give back the file as it was. A file that already
+declares those keys has them replaced, because a duplicated key stops the configuration
+from loading at all.
 
 The commit and the push go out past the hooks, on purpose: the hooks the freeze has just
 armed would refuse the freeze itself, and while the remote still says frozen they would
@@ -51,18 +53,19 @@ holds, never a failure that loses the local brake.
 | `FRZEX-B10` | Thawing a project that is not frozen changes nothing and says so. |
 | `FRZEX-B11` | When the remote has no freeze rule and no open freeze issue, the thaw deletes and closes nothing, without error. |
 | `FRZEX-B12` | The deprecated Portuguese flag names (`--motivo`, `--sem-ruleset`, `--sem-push`) still drive the commands. |
+| `FRZEX-B13` | A configuration that already declares a top-level `enabled:` or `freeze_reason:` (with any indented continuation lines) has those lines replaced, not stacked on: the frozen file holds exactly one of each key and still loads, frozen, with the new reason; the thaw then removes them and the project loads enabled. |
 
 ## Invariants
 
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
-| `FRZEX-I01` | A freeze followed by a thaw gives back the configuration byte for byte. | freezes a project, thaws it, and compares the file with the original |
+| `FRZEX-I01` | A freeze followed by a thaw gives back the configuration byte for byte, when it declared no top-level `enabled:` or `freeze_reason:` of its own (otherwise see `FRZEX-B13`). | freezes a project, thaws it, and compares the file with the original |
 
 ## Constraints
 
 | Rule | Boundary | Why |
 | --- | --- | --- |
-| `FRZEX-X01` | The configuration is never reserialized: the freeze only adds and the thaw only removes its own lines. | Reserializing would drop comments and reorder keys, turning a brake into an unreviewable diff. |
+| `FRZEX-X01` | The configuration is never reserialized: the freeze only adds its two lines (after removing any top-level `enabled:`/`freeze_reason:` already there) and the thaw only removes top-level lines with those keys. | Reserializing would drop comments and reorder keys, turning a brake into an unreviewable diff. |
 
 ## Errors
 

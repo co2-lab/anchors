@@ -292,10 +292,15 @@ func colocationEdges(files []scan.File, cfg *config.Config) []Edge {
 			if ov.Code == "" || ov.Code != nodeCode(f, nil) {
 				continue
 			}
-			// O override por código SUBSTITUI a camada inteira, e não a completa: uma
+			// O override por código SUBSTITUI os padrões das camadas que ele DECLARA: uma
 			// spec de configuração não tem o `{{name}}.ts` da co-location, e herdá-lo
-			// faria o mapa procurar um arquivo que ninguém vai escrever.
-			tmpls = map[string]config.Padroes{}
+			// faria o mapa procurar um arquivo que ninguém vai escrever. Uma lista vazia
+			// (`test: []`) declara "nenhum".
+			//
+			// As camadas que ele NÃO declara ficam com o default. Antes ele zerava o mapa
+			// inteiro, e um override que nomeava só `code:` perdia a feature e o teste da
+			// unidade em silêncio — por isso os overrides do anchors.yaml repetiam a
+			// trinca à mão.
 			for layer, tmpl := range ov.PadroesDe() {
 				tmpls[layer] = tmpl
 			}

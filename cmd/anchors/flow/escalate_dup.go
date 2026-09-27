@@ -26,16 +26,25 @@ import (
 // AVISO e não recusa: escalar duas vezes o mesmo arquivo é legítimo (dois problemas
 // distintos na mesma spec), e recusar transformaria um caso comum em trabalho parado. O que
 // faltava era DIZER que já há alguém ali.
-func openCardsAbout(target, label string) []string {
+func openCardsAbout(target, label, repo string) []string {
 	if target == "" || label == "" {
 		return nil
 	}
 	// A BUSCA é por texto e devolve aproximações — o GitHub não expõe outra forma de
 	// procurar no corpo. É o bastante para um AVISO: um falso positivo custa uma linha
 	// a mais na tela, e um falso negativo devolve o comportamento de antes.
-	out, err := exec.Command("gh", "issue", "list",
-		"--state", "open", "--label", label, "--limit", "60",
-		"--search", target, "--json", "number,title,body").Output()
+	//
+	// `--repo` explicit, as every other `gh` call of `escalate`: without it `gh` asks the
+	// repository of the current directory, and an `escalate --root` run from another
+	// checkout (or with a `workflow.repo` that is not the git remote) searched the WRONG
+	// board — the warning said "no card" about a board it never looked at.
+	argv := []string{"issue", "list"}
+	if repo != "" {
+		argv = append(argv, "--repo", repo)
+	}
+	argv = append(argv, "--state", "open", "--label", label, "--limit", "60",
+		"--search", target, "--json", "number,title,body")
+	out, err := exec.Command("gh", argv...).Output()
 	if err != nil {
 		// Sem a consulta, segue sem o aviso: esta é uma conferência auxiliar, e
 		// impedir o `escalate` por causa dela seria pior que a duplicata que ela evita.

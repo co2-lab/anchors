@@ -138,6 +138,30 @@ func TestEachGuideSubcommandPrintsItsGuide(t *testing.T) {
 	}
 }
 
+// The Long help's hand-written list named 8 of the 13 subcommands.
+func TestGuideHelpListsEverySubcommand(t *testing.T) {
+	t.Run("GVGDG-B14: guide --help lists every subcommand", func(t *testing.T) {})
+	guide, _, err := governanceRoot().Find([]string{"guide"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	listed := map[string]int{}
+	for _, l := range strings.Split(guide.Long, "\n") {
+		if rest, ok := strings.CutPrefix(strings.TrimSpace(l), "anchors guide "); ok {
+			listed[strings.Fields(rest)[0]]++
+		}
+	}
+	for _, c := range guide.Commands() {
+		if listed[c.Name()] != 1 {
+			t.Errorf("`anchors guide --help` must list `guide %s` once, listed %d time(s)", c.Name(), listed[c.Name()])
+		}
+		delete(listed, c.Name())
+	}
+	for name := range listed {
+		t.Errorf("`anchors guide --help` lists `guide %s`, which is not a subcommand", name)
+	}
+}
+
 func TestReviewAndWorkAppendTheAutonomySection(t *testing.T) {
 	t.Run("GVGDG-B03: The review and work guides append the autonomy section of the root they are given", func(t *testing.T) {})
 	dev := t.TempDir()

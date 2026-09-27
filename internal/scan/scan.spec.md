@@ -98,6 +98,13 @@ heuristic decided.
 | --- | --- |
 | `RPSCR-B29` | A plan seeds the backticked `.spec.md` and `.doctrine.md` paths it cites that contain a directory, carry no glob character and are not templates, each once; no other kind seeds. |
 
+### Header keys — where a declaration is read
+
+| Effect | Description |
+| --- | --- |
+| `RPSCR-B30` | The header keys `code:`, `layer:`, `needs:`, `revises:` and `dep:` are read only inside the file's `@anchors` header, like `parent:`; a body line starting with one of them is not a declaration. |
+| `RPSCR-B31` | The rule tags `@realizes` and `@gated-by`, and the rule a tag belongs to, are read with the code length the project declares (`code_lengths`): a fixed length left the edges of every other length undrawn. |
+
 ## Invariants
 
 | Rule | Always holds | How it is proven |
@@ -116,6 +123,7 @@ heuristic decided.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `RPSCR-E01` | The root cannot be walked (it does not exist or cannot be read). | The walk error is returned to the caller. | A map built from an unreadable root would be empty without saying so. |
+| `RPSCR-E02` | A file that matches a layer cannot be read (other than having vanished since the listing). | The walk fails with an error naming the file. | Dropping it would shrink the map without a line of error; a file that vanished has nothing to map and is skipped. |
 
 ## Dependencies
 

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/board"
+	"github.com/co2-lab/anchors/internal/i18n"
 )
 
 // The command exists because of a report that was RIGHT and insufficient: an agent
@@ -34,7 +35,7 @@ func TestTaskStatus_sectionsComeInTheOrderThatDecides(t *testing.T) {
 	out := renderTaskStatus(taskState{
 		Card:     testCard(303, "anchors:in-progress", "[INDTN] implement spec"),
 		Reverted: []string{"Reverted: closed by hand"},
-		PR:       &branchPR{Number: 368, State: "OPEN", Total: 1, Checks: map[string]int{"passou": 1}},
+		PR:       &branchPR{Number: 368, State: "OPEN", Total: 1, Checks: map[string]int{checkPassed: 1}},
 		Branch:   "impl-x", Clean: true,
 		Blocked: []board.Card{{Number: 99, Title: "[DEC1] which vocabulary?"}},
 	})
@@ -86,11 +87,33 @@ func TestTaskStatus_prWithoutChecksDoesNotPassAsChecked(t *testing.T) {
 		t.Errorf("the next step should refuse the PR with no check; output:\n%s", out)
 	}
 	if line := prLine(renderTaskStatus(taskState{PR: &branchPR{Number: 5, State: "OPEN", Total: 4,
-		Checks: map[string]int{"passou": 4}}})); !strings.Contains(line, "checks: 4/4 passou") {
+		Checks: map[string]int{checkPassed: 4}}})); !strings.Contains(line, "checks: 4/4 passed") {
 		t.Errorf("one class alone reads as count over total: %q", line)
 	}
 	if line := prLine(renderTaskStatus(taskState{})); line != "PR    none for this branch" {
 		t.Errorf("without a PR the line says so: %q", line)
+	}
+}
+
+// The check classes are printed in the user's language. They were the Portuguese words
+// "passou", "em curso" and "reprovou" whatever the language, since they were the map keys.
+func TestTaskStatus_checkClassesSpeakTheUsersLanguage(t *testing.T) {
+	t.Run("TSRTS-B12: The check classes are printed in the user's language", func(t *testing.T) {})
+	prev := i18n.Current()
+	t.Cleanup(func() { _ = i18n.Set(prev) })
+	e := taskState{PR: &branchPR{Number: 5, State: "OPEN", Total: 3,
+		Checks: map[string]int{checkPassed: 1, checkRunning: 1, checkFailed: 1}}}
+	for lang, want := range map[string]string{
+		"en":    "1 failed, 1 running, 1 passed",
+		"pt-BR": "1 reprovou, 1 em curso, 1 passou",
+		"es":    "1 falló, 1 en curso, 1 pasó",
+	} {
+		if err := i18n.Set(lang); err != nil {
+			t.Fatal(err)
+		}
+		if line := prLine(renderTaskStatus(e)); !strings.Contains(line, want) {
+			t.Errorf("%s: the classes must read %q: %q", lang, want, line)
+		}
 	}
 }
 
@@ -102,12 +125,12 @@ func TestTaskStatus_runningCheckIsNotAPassedCheck(t *testing.T) {
 		Card:   testCard(303, "anchors:in-progress", "x"),
 		Branch: "impl-x", Clean: true,
 		PR: &branchPR{Number: 368, State: "OPEN", Total: 4,
-			Checks: map[string]int{"passou": 3, "em curso": 1}},
+			Checks: map[string]int{checkPassed: 3, checkRunning: 1}},
 	})
 	if strings.Contains(out, "4/4") {
 		t.Errorf("3 passed and 1 is running: it is not 4/4; output:\n%s", out)
 	}
-	if !strings.Contains(prLine(out), "1 em curso, 3 passou") {
+	if !strings.Contains(prLine(out), "1 running, 3 passed") {
 		t.Errorf("the running check must appear, before the passed ones; output:\n%s", out)
 	}
 }
@@ -117,13 +140,13 @@ func TestTaskStatus_failedCheckIsWorkOfThisCard(t *testing.T) {
 		Card:   testCard(303, "anchors:in-progress", "x"),
 		Branch: "impl-x", Clean: true,
 		PR: &branchPR{Number: 368, State: "OPEN", Total: 4,
-			Checks: map[string]int{"passou": 3, "reprovou": 1}},
+			Checks: map[string]int{checkPassed: 3, checkFailed: 1}},
 	})
 	if !strings.Contains(out, "work of THIS card") {
 		t.Errorf("the red is not a new card; output:\n%s", out)
 	}
 	// The order matters: a fast reader must hit the problem, not what went right.
-	if line := prLine(out); strings.Index(line, "reprovou") > strings.Index(line, "passou") {
+	if line := prLine(out); strings.Index(line, "failed") > strings.Index(line, "passed") {
 		t.Errorf("the failure should come before what passed; line: %q", line)
 	}
 }
@@ -138,9 +161,9 @@ func TestTaskStatus_nextStepFollowsTheChecks(t *testing.T) {
 		want   []string
 	}{
 		{map[string]int{}, 0, []string{"no check ran on PR #368", "do not trust the green that does not exist"}},
-		{map[string]int{"passou": 3, "em curso": 1}, 4, []string{"`gh pr checks 368 --watch`", "do not end the turn here"}},
-		{map[string]int{"passou": 3, "reprovou": 1}, 4, []string{"1 check(s) failed on PR #368", "work of THIS card"}},
-		{map[string]int{"passou": 4}, 4, []string{"the checks of PR #368 passed — the review is missing"}},
+		{map[string]int{checkPassed: 3, checkRunning: 1}, 4, []string{"`gh pr checks 368 --watch`", "do not end the turn here"}},
+		{map[string]int{checkPassed: 3, checkFailed: 1}, 4, []string{"1 check(s) failed on PR #368", "work of THIS card"}},
+		{map[string]int{checkPassed: 4}, 4, []string{"the checks of PR #368 passed — the review is missing"}},
 	} {
 		steps := strings.Join(nextStep(taskState{Card: card, Clean: true,
 			PR: &branchPR{Number: 368, State: "OPEN", Total: c.total, Checks: c.checks}}), "\n")
@@ -165,8 +188,9 @@ func TestTaskStatus_doesNotAdviseOpeningAPRForACardInReview(t *testing.T) {
 			t.Errorf("%s: the report must say where its PR is; output:\n%s", state, out)
 		}
 	}
-	if steps := strings.Join(nextStep(taskState{Card: testCard(303, "anchors:in-progress", "x"), Clean: true}), "\n"); !strings.Contains(steps, "open the PR") {
-		t.Errorf("a card in progress on a clean pushed tree is told to open the PR:\n%s", steps)
+	if steps := strings.Join(nextStep(taskState{Card: testCard(303, "anchors:in-progress", "x"), Clean: true}), "\n"); !strings.Contains(steps, "open the PR") ||
+		!strings.Contains(steps, "writes the lines that link the card") || strings.Contains(steps, "closing") {
+		t.Errorf("a card in progress on a clean pushed tree is told to open the PR, whose lines link the card without closing it:\n%s", steps)
 	}
 	if steps := strings.Join(nextStep(taskState{Card: testCard(303, "anchors:to-do", "x"), Clean: true}), "\n"); strings.Contains(steps, "open the PR") {
 		t.Errorf("a card nobody took has no PR to open:\n%s", steps)
@@ -281,6 +305,10 @@ func TestTaskStatus_theReversionAppearsBeforeTheRest(t *testing.T) {
 	// And HOW TO AUTHORISE: without it the agent concludes the pipeline is broken.
 	if !strings.Contains(out, "anchors:manual") {
 		t.Error("the report should say how to authorise the deliberate move")
+	}
+	// pr-body links with `Refs`: the merge does not close the card.
+	if strings.Contains(out, "closes") || !strings.Contains(out, "the merge moves it to ready-to-test") {
+		t.Errorf("the merge moves the card to ready-to-test and does not close it:\n%s", out)
 	}
 }
 

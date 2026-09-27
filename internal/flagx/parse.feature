@@ -48,3 +48,9 @@ Feature: FlagParse — reading a project's flag files and the scenarios their va
     Given the new-checkout flag
     When its scenarios are indexed
     Then "CHKUT-G03" resolves to the gte scenario and "CHKUT-G99" to nothing
+
+  @FLPRF-E02 @unit-level
+  Scenario: A flags folder or flag file that cannot be read is an error
+    Given a project whose "flags" is a file, and a project with a flag file that cannot be read
+    When each is loaded
+    Then each load returns an error

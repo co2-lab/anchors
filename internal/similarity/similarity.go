@@ -148,8 +148,14 @@ func Cosine(a, b string, weights map[string]float64) float64 {
 		p := weights[tok]
 		nb += p * p
 	}
-	if na == 0 || nb == 0 {
+	if na == 0 && nb == 0 {
 		// Corpus homogêneo: sem peso para projetar, cai na contagem de tokens.
+		//
+		// A MESMA condição do fallback de `Score` (nenhum token do par pesa). Antes o
+		// cosseno caía aqui quando UM lado só não pesava, e o Jaccard seguia ponderado:
+		// as réguas discordavam por construção e o par saía "limítrofe" falso
+		// (Jaccard 0, cosseno 0,82 para "componente props" contra "componente props
+		// onChange").
 		var comum int
 		for tok := range ta {
 			if tb[tok] {
@@ -161,6 +167,12 @@ func Cosine(a, b string, weights map[string]float64) float64 {
 			return 0
 		}
 		return float64(comum) / den
+	}
+	if na == 0 || nb == 0 {
+		// Um lado é o vetor nulo: todo token dele é ruído, e ele não aponta para
+		// assunto nenhum. Zero — o mesmo que o Jaccard ponderado dá, já que o que os
+		// dois compartilham pesa 0.
+		return 0
 	}
 	return num / (math.Sqrt(na) * math.Sqrt(nb))
 }
@@ -205,16 +217,21 @@ const (
 	Divergente
 )
 
+// String is the verdict's stable English name, for logs and test failures. It is NOT
+// the text a user reads: the Portuguese words it used to return ("idêntico",
+// "limítrofe", "divergente") were printed as-is into the feature-test-match gate
+// message of every project, whatever its language. A gate translates the verdict
+// through i18n (see `gate.feature_test_match.verdict_*`).
 func (v Verdict) String() string {
 	switch v {
 	case Identico:
-		return "idêntico"
+		return "identical"
 	case Similar:
 		return "similar"
 	case Limitrofe:
-		return "limítrofe"
+		return "borderline"
 	default:
-		return "divergente"
+		return "divergent"
 	}
 }
 
@@ -239,10 +256,15 @@ const limiarSimilar = 0.5
 //     aparece nesses dois textos é evidência forte de que tratam do mesmo assunto,
 //     e ele se dilui num Jaccard cheio de palavras comuns.
 func Classify(a, b string, weights map[string]float64) (Verdict, float64) {
-	ta, tb := Tokenize(a), Tokenize(b)
-	if len(ta) > 0 && strings.Join(ta, " ") == strings.Join(tb, " ") {
+	// Identity reads EVERY letter-or-digit run, not the scoring tokens: those drop numbers
+	// and one-character words, and comparing them made "radius 9999" identical to
+	// "radius 0" (a doctrine rule restated with another value was reported as a verbatim
+	// copy) while "123" against "123", with no token at all, came out divergent. Two texts
+	// with no run at all ("", "!!") are the same text too.
+	if identityKey(a) == identityKey(b) {
 		return Identico, 1
 	}
+	ta, tb := Tokenize(a), Tokenize(b)
 	// DUAS RÉGUAS, e a discordância entre elas é informação.
 	//
 	// O Jaccard pune o texto mais longo (cada palavra a mais entra na união); o
@@ -265,6 +287,19 @@ func Classify(a, b string, weights map[string]float64) (Verdict, float64) {
 		return Similar, largest(j, c)
 	}
 	return Divergente, largest(j, c)
+}
+
+// identityKey is the text as the equality layer sees it: upper-cased, every run of
+// letters or digits kept (numbers and one-character words included), punctuation and
+// spacing collapsed to a single space.
+func identityKey(s string) string {
+	var runs []string
+	for _, t := range separadorRE.Split(strings.ToUpper(s), -1) {
+		if t != "" {
+			runs = append(runs, t)
+		}
+	}
+	return strings.Join(runs, " ")
 }
 
 func largest(a, b float64) float64 {

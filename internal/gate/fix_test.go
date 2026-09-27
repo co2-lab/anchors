@@ -4,10 +4,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -67,6 +69,28 @@ func TestFix_rewritesAStaleDateToTheCommitDate(t *testing.T) {
 	b, _ := os.ReadFile(filepath.Join(dir, rel))
 	if want := "<!-- @anchors\n  updated_at: 2024-03-05\n-->\nbody\n"; string(b) != want {
 		t.Errorf("only the date is replaced, by the commit date:\n got %q\nwant %q", b, want)
+	}
+}
+
+// The detail of a repair is written in the project's language. It was a Portuguese
+// literal ("updated_at corrigido para a data do commit") in every project.
+func TestFix_detailIsTranslated(t *testing.T) {
+	t.Run("FXIXX-B08: The repair detail is written in the project's language", func(t *testing.T) {})
+	const rel = "a.spec.md"
+	t.Cleanup(func() { i18n.Set(i18n.Default) })
+	for lang, want := range map[string]string{
+		"en":    i18n.TIn("en", "gate.fix.updated_at_fixed"),
+		"pt-BR": i18n.TIn("pt-BR", "gate.fix.updated_at_fixed"),
+	} {
+		i18n.Set(lang)
+		dir := fixRepo(t, rel, "<!-- @anchors\n  updated_at: 2020-01-01\n-->\n")
+		got := Fix([]config.Gate{fixGate()}, []mapx.Node{{ID: rel, Kind: mapx.KindSpec}}, dir)
+		if len(got) != 1 || got[0].Detail != want || want == "" || strings.HasPrefix(want, "gate.fix.") {
+			t.Errorf("[%s] detail %+v, want %q", lang, got, want)
+		}
+	}
+	if i18n.TIn("en", "gate.fix.updated_at_fixed") == i18n.TIn("pt-BR", "gate.fix.updated_at_fixed") {
+		t.Errorf("the two languages must differ, or the case proves nothing")
 	}
 }
 

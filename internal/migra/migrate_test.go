@@ -234,7 +234,7 @@ func TestMigrateFile_versionRaisedEvenWithNothingElse(t *testing.T) {
 // A map from before the `version:` field existed: it is format 1, and migrating it requires
 // INSERTING the line — not just replacing it.
 func TestMigrateFile_mapWithoutVersionGetsTheField(t *testing.T) {
-	t.Run("MGFLM-B08: A map without a version gets one after its comment header", func(t *testing.T) {})
+	t.Run("MGFLM-B08: A map or a configuration without a version gets one after its comment header", func(t *testing.T) {})
 	dir := t.TempDir()
 	p := escreve(t, dir, "anchors.graph.yaml", "# anchors.graph.yaml — o mapa\n# derivado\nnodes: []\n")
 
@@ -252,6 +252,19 @@ func TestMigrateFile_mapWithoutVersionGetsTheField(t *testing.T) {
 	// them would move on the next save.
 	if strings.HasPrefix(text, "version:") {
 		t.Error("`version:` went in BEFORE the comment header")
+	}
+	// The configuration too: it was migrated but never stamped, so it stayed format 1 and
+	// every run found it old again (`anchors migrate` said "already in format N").
+	cfg := escreve(t, dir, "anchors.yaml", "# config\nproject: x\n")
+	r, err := MigrateFile(cfg, 2, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := string(mustRead(t, cfg)); !r.Changed || got != "# config\nversion: 2\nproject: x\n" {
+		t.Errorf("the configuration gets `version: 2` after its header; changed=%v text=%q", r.Changed, got)
+	}
+	if f, _ := FormatOf(cfg); f != 2 {
+		t.Errorf("after the migration the configuration is format 2, got %d", f)
 	}
 }
 
@@ -349,7 +362,7 @@ func TestMigrateFile_missingFileIsAnError(t *testing.T) {
 }
 
 func TestFormatOf_hugeVersionIsAnError(t *testing.T) {
-	t.Run("MGFLM-E02: A version too large to represent is an error", func(t *testing.T) {})
+	t.Run("MGFLM-E02: A version that is not a number is an error and nothing is written", func(t *testing.T) {})
 	p := escreve(t, t.TempDir(), "anchors.yaml", "version: 99999999999999999999999\n")
 	_, err := FormatOf(p)
 	if err == nil || !strings.Contains(err.Error(), "not a number") {
@@ -379,4 +392,43 @@ func mustRead(t *testing.T, p string) []byte {
 		t.Fatal(err)
 	}
 	return b
+}
+
+// `version: 3  # why` is valid YAML and read as format 3; the anchored pattern missed it,
+// took the file for format 1, and then inserted a second `version:` line into a map.
+func TestVersionLineWithTrailingComment(t *testing.T) {
+	t.Run("MGFLM-B11: A version line with a trailing comment is read and raised keeping the comment", func(t *testing.T) {
+		p := escreve(t, t.TempDir(), "anchors.graph.yaml", "version: 1  # the first\nnodes: []\n")
+		if f, err := FormatOf(p); err != nil || f != 1 {
+			t.Fatalf("want format 1, got %d, %v", f, err)
+		}
+		if _, err := MigrateFile(p, 2, false); err != nil {
+			t.Fatal(err)
+		}
+		if got := string(mustRead(t, p)); got != "version: 2  # the first\nnodes: []\n" {
+			t.Errorf("want the line raised in place with its comment, got %q", got)
+		}
+		three := escreve(t, t.TempDir(), "anchors.yaml", "version: 3 # c\n")
+		if f, err := FormatOf(three); err != nil || f != 3 {
+			t.Errorf("want format 3, got %d, %v", f, err)
+		}
+	})
+}
+
+// `version: abc` was not matched at all, so the file read as format 1 and a map got a
+// second `version:` line inserted above the bad one.
+func TestVersionThatIsNotANumber(t *testing.T) {
+	t.Run("MGFLM-E02: A version that is not a number is an error and nothing is written", func(t *testing.T) {
+		original := "# h\nversion: abc\nnodes: []\n"
+		p := escreve(t, t.TempDir(), "anchors.graph.yaml", original)
+		if _, err := FormatOf(p); err == nil || !strings.Contains(err.Error(), "not a number") {
+			t.Errorf("want a `not a number` error, got %v", err)
+		}
+		if _, err := MigrateFile(p, 2, false); err == nil {
+			t.Error("migrating a file whose version is not a number must fail")
+		}
+		if got := string(mustRead(t, p)); got != original {
+			t.Errorf("the file was written: %q", got)
+		}
+	})
 }

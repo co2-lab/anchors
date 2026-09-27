@@ -8,6 +8,8 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
+	"fmt"
 	"io/fs"
 	"math"
 	"os"
@@ -151,14 +153,6 @@ type Dep struct {
 	Layer  string // tipo/camada declarado da dependência (p/ gate de limite de camada)
 }
 
-var ignored = map[string]bool{
-	"node_modules": true, ".git": true, "dist": true, "build": true,
-	"vendor": true, ".next": true, "coverage": true, ".expo": true,
-}
-
-// Walk percorre root e classifica cada arquivo pelas CAMADAS da config. Um arquivo
-// que não casa nenhuma camada é ignorado. Quando casa mais de uma, vence a de
-// pattern mais específico (heurística: maior comprimento do pattern).
 // nestedCheckout reports whether a directory below the root is another checkout — a git
 // worktree or a nested repository, marked by its own `.git` (a file in a worktree, a
 // directory in a clone). Its files belong to that checkout, not to this project.
@@ -175,6 +169,9 @@ func nestedCheckout(path, rel string) bool {
 	return err == nil
 }
 
+// Walk percorre root e classifica cada arquivo pelas CAMADAS da config. Um arquivo
+// que não casa nenhuma camada é ignorado. Quando casa mais de uma, vence a de
+// pattern mais específico (heurística: maior comprimento do pattern).
 func Walk(root string, cfg *config.Config) ([]File, error) {
 	// O vocabulário é ligado AQUI, na porta de entrada, e não em cada chamador: um
 	// chamador novo que esquecesse a ligação não daria erro — daria um mapa sem as
@@ -225,7 +222,13 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 		}
 		content, readErr := os.ReadFile(path)
 		if readErr != nil {
-			return nil
+			// A file that vanished between the listing and the read has nothing to map.
+			// Any other failure (a permission) used to drop the file here with no word:
+			// the map lost a unit of a declared layer and no gate ever confronted it.
+			if errors.Is(readErr, fs.ErrNotExist) {
+				return nil
+			}
+			return fmt.Errorf(i18n.T("scan.err_unreadable"), rel, readErr)
 		}
 		out = append(out, File{
 			Path:          rel,
@@ -294,7 +297,10 @@ func Classify(rel string, cfg *config.Config) (layer, kind string) {
 // que muda entre duas rodadas do mesmo comando envenena todo gate que depende dela. Por
 // isso o desempate final é o NOME da camada: arbitrário, mas estável.
 // headerLayerRE lê a camada que o próprio arquivo DECLARA no header.
-var headerLayerRE = regexp.MustCompile(`(?m)^\s*layer:\s*([a-zA-Z0-9_-]+)`)
+//
+// The comment prefix is part of the line: a code file's header writes `//   layer: x`
+// (or `#`, `--`, ` * `), and without the prefix the layer a code file declared was never read.
+var headerLayerRE = regexp.MustCompile(`(?m)^\s*(?://|#|--|\*)?\s*layer:\s*([a-zA-Z0-9_-]+)`)
 
 // LayerOfUnit devolve a camada da UNIDADE a que um arquivo pertence — não a do arquivo.
 //
@@ -311,7 +317,7 @@ var headerLayerRE = regexp.MustCompile(`(?m)^\s*layer:\s*([a-zA-Z0-9_-]+)`)
 // `ClassifyPath` — que para todo arquivo que não é spec já devolve a camada da unidade.
 func LayerOfUnit(root, rel string, cfg *config.Config) string {
 	if b, err := os.ReadFile(filepath.Join(root, rel)); err == nil {
-		if m := headerLayerRE.FindSubmatch(b); m != nil {
+		if m := headerLayerRE.FindSubmatch(AnchorsHeader(b)); m != nil {
 			return string(m[1])
 		}
 	}
@@ -547,6 +553,11 @@ func escapeAll(xs []string) []string {
 // depCodeRE valida o código de uma linha de dependência: DEP seguido de dígitos.
 var depCodeRE = regexp.MustCompile(`^DEP\d+$`)
 
+// The header keys below (`dep:`, `needs:`, `revises:`, and `code:`/`layer:` further down)
+// are matched only against AnchorsHeader(content), never the whole file. Over the whole file
+// a body line was a declaration: a spec citing `code: X` in prose took X as its identity, and
+// a `// dep:` comment in code became an edge — the hole `parent:` had first (parentDe).
+//
 // headerDepRE captura a linha `dep:` do cabeçalho @anchors (camadas reconhecidas sem
 // spec declaram aqui os ARQUIVOS de que dependem — a "Tabela de Dependências inline",
 // já que não têm .spec.md). Aceita 1+ caminhos separados por vírgula.
@@ -611,7 +622,7 @@ func revisesDe(kind string, content []byte, root, rel string) []string {
 	if kind != "plan" {
 		return nil
 	}
-	m := headerRevisesRE.FindSubmatch(content)
+	m := headerRevisesRE.FindSubmatch(AnchorsHeader(content))
 	if m == nil {
 		return nil
 	}
@@ -646,7 +657,7 @@ func parentDe(content []byte) string {
 
 // extractNeedsCode lê o `needs:` de uma spec, onde o valor é o código da fase.
 func extractNeedsCode(content []byte) []string {
-	m := headerNeedsRE.FindSubmatch(content)
+	m := headerNeedsRE.FindSubmatch(AnchorsHeader(content))
 	if m == nil {
 		return nil
 	}
@@ -678,7 +689,7 @@ func phaseCodeRE() *regexp.Regexp {
 // sentido em plano — um `needs:` numa spec seria a pergunta errada: spec não espera
 // trabalho terminar, ela É o trabalho.
 func extractNeeds(content []byte, root, rel string) []string {
-	m := headerNeedsRE.FindSubmatch(content)
+	m := headerNeedsRE.FindSubmatch(AnchorsHeader(content))
 	if m == nil {
 		return nil
 	}
@@ -721,7 +732,7 @@ func depsFor(kind string, content []byte, root, rel string) []Dep {
 // extractHeaderDeps lê a linha `dep:` do cabeçalho e resolve cada caminho para um alvo
 // relativo à raiz. Sem código local (DEPn) — a identidade da dep é o próprio arquivo.
 func extractHeaderDeps(content []byte, root, rel string) []Dep {
-	m := headerDepRE.FindSubmatch(content)
+	m := headerDepRE.FindSubmatch(AnchorsHeader(content))
 	if m == nil {
 		return nil
 	}
@@ -939,7 +950,7 @@ func headerCodeRE() *regexp.Regexp {
 
 // extractHeaderCode devolve a identidade DECLARADA, ou vazio se o header não a declara.
 func extractHeaderCode(content string) string {
-	if m := headerCodeRE().FindStringSubmatch(content); m != nil {
+	if m := headerCodeRE().FindStringSubmatch(string(AnchorsHeader([]byte(content)))); m != nil {
 		return m[1]
 	}
 	return ""
@@ -949,7 +960,9 @@ func extractHeaderCode(content string) string {
 // codigo entre crases ou nu, porque quem escreve a spec alterna entre os dois sem pensar
 // nisso — e recusar um dos formatos faria a declaracao sumir em silencio, que e' o modo
 // de falha que os gates existem para acabar.
-var realizesRE = regexp.MustCompile("@realizes\\s+`?([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`?")
+func realizesRE() *regexp.Regexp {
+	return regexp.MustCompile("@realizes\\s+`?([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]{1,2}[0-9]{2})`?")
+}
 
 // gatedByRE acha as declaracoes `@gated-by` — a regra desta spec so' vale sob um CENARIO
 // de feature flag. Mesma tolerancia de crases do `@realizes`, pela mesma razao: quem
@@ -959,11 +972,15 @@ var realizesRE = regexp.MustCompile("@realizes\\s+`?([A-Z0-9]{3,6}-[A-Z]{1,2}[0-
 // A letra e' fixa em `G` de proposito. `@gated-by CRED-B03` nao e' uma flag — e' um erro
 // de quem escreveu, e casar qualquer letra faria o mapa criar uma aresta para um cenario
 // que nunca vai existir, em vez de deixar o gate reportar o codigo errado.
-var gatedByRE = regexp.MustCompile("@gated-by\\s+`?([A-Z0-9]{3,6}-G[0-9]{2})`?")
+func gatedByRE() *regexp.Regexp {
+	return regexp.MustCompile("@gated-by\\s+`?([A-Z0-9]" + config.CodeLengthPattern() + "-G[0-9]{2})`?")
+}
 
 // localRuleRE acha o codigo da regra DESTA spec numa linha — as tres formas catalogadas
 // (cabecalho, linha de tabela, bullet-negrito).
-var localRuleRE = regexp.MustCompile("(?:^#{1,6}\\s+|^\\s*\\|\\s*`?|^\\s*-\\s+\\*\\*)([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})")
+func localRuleRE() *regexp.Regexp {
+	return regexp.MustCompile("(?:^#{1,6}\\s+|^\\s*\\|\\s*`?|^\\s*-\\s+\\*\\*)([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]{1,2}[0-9]{2})")
+}
 
 // extractRealizes le as declaracoes `@realizes` de uma spec.
 //
@@ -976,7 +993,7 @@ var localRuleRE = regexp.MustCompile("(?:^#{1,6}\\s+|^\\s*\\|\\s*`?|^\\s*-\\s+\\
 // regra visto antes dela: `### CRED-V01 — limite` numa linha e `@realizes LIMIT-R03` na
 // seguinte e' a forma natural de escrever quando a descricao e' longa.
 func extractRealizes(kind, content string) []Realizes {
-	return extractRuleTags(kind, content, realizesRE)
+	return extractRuleTags(kind, content, realizesRE())
 }
 
 // extractGatedBy le as declaracoes `@gated-by` de uma spec.
@@ -987,7 +1004,7 @@ func extractRealizes(kind, content string) []Realizes {
 // correcao aplicada a uma so'. E' a licao que a lista de letras ja' deu tres vezes neste
 // mesmo repositorio.
 func extractGatedBy(kind, content string) []Realizes {
-	return extractRuleTags(kind, content, gatedByRE)
+	return extractRuleTags(kind, content, gatedByRE())
 }
 
 // extractRuleTags varre as declaracoes de uma tag que vive NA LINHA DA REGRA e aponta
@@ -999,8 +1016,11 @@ func extractRuleTags(kind, content string, tagRE *regexp.Regexp) []Realizes {
 	var out []Realizes
 	visto := map[string]bool{}
 	current := ""
+	// Built per call from `code_lengths`: a fixed {3,6} never saw a code of another
+	// declared length, and its @realizes / @gated-by edges were never drawn.
+	localRE := localRuleRE()
 	for _, linha := range strings.Split(content, "\n") {
-		if m := localRuleRE.FindStringSubmatch(linha); m != nil {
+		if m := localRE.FindStringSubmatch(linha); m != nil {
 			current = m[1]
 		} else if strings.TrimSpace(linha) == "" {
 			// A LINHA EM BRANCO fecha o escopo da regra. Sem isso, um `@realizes` escrito
@@ -1083,7 +1103,7 @@ func extractSeeds(kind, content string) []string {
 // Vazio quando não há declaração — e aí quem consulta cai no `Layer` do arquivo, que para
 // tudo o que não é spec já é a camada da unidade.
 func extractHeaderLayer(content string) string {
-	if m := headerLayerRE.FindStringSubmatch(content); m != nil {
+	if m := headerLayerRE.FindStringSubmatch(string(AnchorsHeader([]byte(content)))); m != nil {
 		return m[1]
 	}
 	return ""

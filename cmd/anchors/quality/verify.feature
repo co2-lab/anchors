@@ -61,6 +61,12 @@ Feature: VerifyPhaseFacade — one invocation per phase, delegated to the check 
     When the check invocation is built for a.md and b.md
     Then it carries each of those flags and one changed-file argument per file
 
+  @VPFVR-B10 @unit-level
+  Scenario: A project root below the repository top hands check its own staged files, by its own paths
+    Given a repository whose project root is its sub directory, with sub/x.ts and a.ts staged
+    When verify runs with the staged flag over the sub directory
+    Then the child check gets "--changed x.ts" and nothing else
+
   @VPFVR-I01 @unit-level
   Scenario: Verify never asks check for both the full sweep and a file list
     Given a verify over a list of files, and another over the full sweep

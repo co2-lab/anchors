@@ -227,6 +227,11 @@ func newWatchLogsCmd() *cobra.Command {
 // iniciar o daemon. Ver internal/scan/ignore.go.
 var watchIgnore *scan.Ignore
 
+// onWatchReady runs once the loop is set up and about to wait for events. It does nothing
+// in the CLI; a test replaces it to know when the loop is listening without polling
+// `watchIgnore`, which the loop writes (a poll there is itself a data race).
+var onWatchReady = func() {}
+
 func runWatchLoop(root string, cfg *config.Config, g *mapx.Graph, debounce time.Duration) error {
 	// Carregado uma vez: o `.gitignore` não muda no meio de uma sessão de trabalho, e
 	// relê-lo a cada evento tornaria o watcher mais caro sem ganho.
@@ -250,15 +255,43 @@ func runWatchLoop(root string, cfg *config.Config, g *mapx.Graph, debounce time.
 	// SIGTERM/SIGINT → encerra limpo (o defer Cleanup roda).
 	sigc := make(chan os.Signal, 1)
 	signal.Notify(sigc, syscall.SIGTERM, syscall.SIGINT)
+	defer signal.Stop(sigc)
 
+	// The debounce timers do NOT call handleChange themselves: they only hand the path
+	// back to this goroutine, which is the one that handles every change.
+	//
+	// Measured with `go test -race`: each `time.AfterFunc` ran handleChange in its own
+	// goroutine — two timers at once wrote the map's nodes (updateNodeRev) and the queue
+	// side by side, and a timer still pending when the signal arrived ran AFTER the loop
+	// had returned, reading `watchIgnore` and the graph under whoever came next. Now the
+	// loop is the only writer, and on the way out it handles what was still waiting (a
+	// change seen before the signal is not lost) and stops the rest, so nothing runs after
+	// it returns.
 	pending := map[string]*time.Timer{}
+	fired := make(chan string)
+	stop := make(chan struct{})
+	defer close(stop) // releases a timer that fired and is still waiting to be received
+	flush := func() {
+		for rel, t := range pending {
+			if t.Stop() {
+				handleChange(root, cfg, g, rel)
+			}
+			delete(pending, rel)
+		}
+	}
+	onWatchReady()
 	for {
 		select {
 		case sig := <-sigc:
 			fmt.Printf("received %s — shutting down\n", sig)
+			flush()
 			return nil
+		case rel := <-fired:
+			delete(pending, rel)
+			handleChange(root, cfg, g, rel)
 		case ev, ok := <-w.Events:
 			if !ok {
+				flush()
 				return nil
 			}
 			if ev.Op&(fsnotify.Write|fsnotify.Create|fsnotify.Rename) == 0 {
@@ -288,10 +321,14 @@ func runWatchLoop(root string, cfg *config.Config, g *mapx.Graph, debounce time.
 			}
 			relCopy := rel
 			pending[relCopy] = time.AfterFunc(debounce, func() {
-				handleChange(root, cfg, g, relCopy)
+				select {
+				case fired <- relCopy:
+				case <-stop:
+				}
 			})
 		case err, ok := <-w.Errors:
 			if !ok {
+				flush()
 				return nil
 			}
 			fmt.Fprintln(os.Stderr, "watch error:", err)

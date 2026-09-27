@@ -104,7 +104,9 @@ func (g *Graph) StampEdgeByGate(from, to, verdict, now, gateName string) bool {
 				st.Gate = gateName
 				g.recordJudgment(e, gateName, verdict, now)
 			}
-			e.Stamp = st
+			if !keepsWaiver(e.Stamp, verdict, gateName) {
+				e.Stamp = st
+			}
 			return true
 		}
 	}
@@ -150,13 +152,28 @@ func (g *Graph) StampNodeByGate(id, verdict, now, gateName string) int {
 		// pergunta sobre ela —, então ele não faz a data avançar.
 		st := stamp(e.Stamp, g.nodeRev(e.From), g.nodeRev(e.To), verdict, now)
 		st.Gate = gateName
-		e.Stamp = st
+		if !keepsWaiver(e.Stamp, verdict, gateName) {
+			e.Stamp = st
+		}
 		if gateName != "" {
 			g.recordJudgment(e, gateName, verdict, now)
 		}
 		stamped++
 	}
 	return stamped
+}
+
+// keepsWaiver diz se um julgamento deve deixar de pé o `waived` que a aresta carrega.
+//
+// O `StampEdges` já não reescreve um waiver (o check mecânico não confirma a decisão de
+// uma pessoa); o `judge` reescrevia, e as duas portas divergiam sem nada dizer. A regra
+// escolhida para o julgamento: um waiver responde à pergunta de UM gate. O veredito de
+// OUTRO gate responde outra pergunta e não o desfaz — o julgamento dele vai para
+// `Julgamentos`, e o carimbo fica. O MESMO gate julgando de novo é a pessoa respondendo
+// de novo à mesma pergunta, e substitui o próprio waiver; um waiver novo sempre grava.
+func keepsWaiver(atual *Stamp, verdict, gateName string) bool {
+	return atual != nil && atual.Verdict == "waived" && verdict != "waived" &&
+		(gateName == "" || atual.Gate != gateName)
 }
 
 // JudgedBy diz se o nó já recebeu veredito DESTE gate e se ele ainda vale — isto é,

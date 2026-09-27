@@ -53,7 +53,7 @@ change.`,
 			// O raio-X completo seria ruído no CI: ele responde dezenas de perguntas, e
 			// quem chama daqui quer uma.
 			if soPipelines {
-				return checkPipelines(cmd)
+				return checkPipelines(cmd, root)
 			}
 			absRoot, err := config.AbsRoot(root)
 			if err != nil {
@@ -386,9 +386,16 @@ func protectBranches(cfg *config.Config) error {
 //
 // Sai com 1 quando algo está desatualizado ou faltando, para o CI poder barrar. Um aviso
 // que não muda o código de saída seria ignorado pelo próprio pipeline que o emitiu.
-func checkPipelines(cmd *cobra.Command) error {
-	root := config.ProjectRoot(".")
-	cfg, err := config.Load(filepath.Join(root, "anchors.yaml"))
+//
+// The root comes from `--root`, as for the rest of the doctor. It was always the working
+// directory's project (`ProjectRoot(".")`), so `--check-pipelines --root <p>` answered
+// about whatever project the caller stood in.
+func checkPipelines(cmd *cobra.Command, rootFlag string) error {
+	root, err := config.AbsRoot(rootFlag)
+	if err != nil {
+		return err
+	}
+	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
 	if err != nil {
 		return err
 	}

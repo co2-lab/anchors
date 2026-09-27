@@ -44,7 +44,7 @@ confronts the declaration against the disk (see the delivery confrontation).
 | Effect | Description |
 | --- | --- |
 | `DLVRE-B01` | The command refuses without `--stage` or `--unit`, with a stage outside spec, code, feature, test and plan, with a blank `--intent`, and without `--date`, saying the tool does not read the clock. |
-| `DLVRE-B02` | A unit that does not exist is accepted when a piece of the same unit exists (its spec, feature, test or code by the same stem); the output names the piece found, and the record keeps the unit given. |
+| `DLVRE-B02` | A unit that does not exist is accepted when a piece of the same unit exists (its spec, feature, test or code by the same stem); the output says the unit does not exist yet, names the piece found, and that the record keeps the unit given — which it does. The unit and every file given as an absolute path are recorded relative to the root. |
 | `DLVRE-B03` | Each `--decision` and `--uncovered` value is one item even when it holds commas, while `--file` splits on commas. |
 | `DLVRE-B04` | In local mode the record is written under `changes/` with the unit and the intent, and the output names the file. |
 | `DLVRE-B05` | In github mode with `--card`, the record is a comment on that open card, and the output names the card. |

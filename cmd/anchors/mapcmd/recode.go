@@ -19,8 +19,8 @@ import (
 //
 // É a base da estabilidade REVERSÍVEL do código: antes, renomear à mão espalhava
 // resíduo (o app de referência tem um TXDT→TCDT incompleto que prova isso). Este comando fecha essa
-// lacuna. (Fase 1: o motor genérico — testIDs e rename de ARQUIVOS vêm depois, guiados
-// por convenção declarada no anchors.yaml.)
+// lacuna. O prefixo de testID e o rename de ARQUIVOS seguem o dialeto que o projeto
+// declara em `recode:` no anchors.yaml; sem ele, só o texto muda.
 func newRecodeCmd() *cobra.Command {
 	var root string
 	var apply bool
@@ -35,13 +35,16 @@ func newRecodeCmd() *cobra.Command {
 DRY-RUN by default: shows each occurrence classified, writes nothing. --apply writes and
 rebuilds the map (the graph is reindexed from the headers, the source of truth).
 
-Validates: NEW must not already belong to another unit (collision); OLD must exist.
+When anchors.yaml declares a ` + "`recode:`" + ` block, it also:
+  • swaps the testID prefix derived from the code (recode.test_id: lower);
+  • renames (git mv) the files whose name matches recode.file_patterns for the code.
+Without that block, no testID and no file name is touched.
+
+Validates: NEW must not already belong to another unit (collision); OLD must exist; both
+must have a length declared in code_lengths.
 
   anchors recode TCDT TCTX            # dry-run: what would change
-  anchors recode TCDT TCTX --apply    # applies + rebuilds the map
-
-Out of scope in this version (phase 2): swapping the testID prefix and renaming FILES
-whose name contains the code — both depend on a convention declared in anchors.yaml.`,
+  anchors recode TCDT TCTX --apply    # applies + rebuilds the map`,
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			absRoot, err := config.AbsRoot(root)
@@ -119,10 +122,25 @@ whose name contains the code — both depend on a convention declared in anchors
 				return fmt.Errorf("map rebuild (scan): %w", serr)
 			}
 			g := mapx.Build(files, cfg, gitmeta.AllCommitDates(absRoot))
-			if serr := mapx.Save(g, filepath.Join(absRoot, mapx.DefaultPath)); serr != nil {
+			mapPath := filepath.Join(absRoot, mapx.DefaultPath)
+			// O rebuild segue o do `map build`: carrega o mapa anterior e preserva o que
+			// os headers não contêm — carimbos e julgamentos das arestas que sobreviveram,
+			// e o grafo de FLUXO, que só o `flow build` preenche. Antes o recode
+			// construía do zero e salvava: todo julgamento de IA e o fluxo inteiro sumiam
+			// em silêncio (medido: julgamentos 1→0, flow nil).
+			var perdidos string
+			if anterior, lerr := mapx.Load(mapPath); lerr == nil {
+				mapx.PreserveStamps(g, anterior)
+				g.Flow = anterior.Flow
+				perdidos = stampLossWarning(anterior, g)
+			}
+			if serr := mapx.Save(g, mapPath); serr != nil {
 				return fmt.Errorf("map rebuild (save): %w", serr)
 			}
 			fmt.Printf("✓ map rebuilt (%d nodes).\n", len(g.Nodes))
+			if perdidos != "" {
+				fmt.Print(perdidos)
+			}
 			fmt.Println("  check it with `anchors check --all`.")
 			return nil
 		},

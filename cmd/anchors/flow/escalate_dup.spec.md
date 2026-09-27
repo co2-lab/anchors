@@ -36,7 +36,7 @@ in one spec), and a lookup that fails yields nothing instead of stopping the esc
 | Effect | Description |
 | --- | --- |
 | `ESDPS-B01` | Without a target or without a label, the board is not asked at all. |
-| `ESDPS-B02` | The board is searched for open cards carrying the label, with the target as the search text. |
+| `ESDPS-B02` | The board of the project's repository (`workflow.repo`, passed as `--repo`) is searched for open cards carrying the label, with the target as the search text — never the repository of the current directory. |
 | `ESDPS-B03` | A search hit counts when the exact target appears in its title or in its body. |
 | `ESDPS-B04` | Each card found is reported as `#<number> <title>`, so the reader knows which card to open and whether it is the same work. |
 

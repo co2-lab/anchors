@@ -85,3 +85,9 @@ Feature: InitNonInteractive — the init that an agent answers with flags: it as
     Given an empty directory
     When init runs with --governs guides/A.md
     Then it fails naming GUIDE=tag1,tag2
+
+  @ININT-B10 @unit-level
+  Scenario: The governs rules reach the configuration, one rule per tag
+    Given an empty project
+    When init runs with --governs guides/STYLE.md=backend,web and --governs guides/API.md=backend
+    Then the written anchors.yaml has the governs rules API.md=backend, STYLE.md=backend and STYLE.md=web

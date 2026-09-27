@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/co2-lab/anchors/internal/config"
 )
@@ -95,6 +96,10 @@ func TestAgentCards_nothingWithoutTheIngredients(t *testing.T) {
 	if got := AgentCards(nil); got != nil {
 		t.Errorf("without a config: %+v", got)
 	}
+	// a workflow with no label: nothing to filter by, and no panic
+	if got := AgentCards(&config.Config{Workflow: &config.Workflow{Repo: "acme/app"}}); got != nil {
+		t.Errorf("without a workflow label: %+v", got)
+	}
 
 	fakeGH(t, "12\tFix\tanchors:doing\n", 1)
 	if got := AgentCards(workflowCfg()); got != nil {
@@ -120,6 +125,15 @@ func TestFirstLineOfReason(t *testing.T) {
 	}
 	if exact := strings.Repeat("y", 70); FirstLineOfReason(exact) != exact {
 		t.Error("a line of exactly 70 must not be cut")
+	}
+	// characters, not bytes: a multi-byte character is never split
+	accented := strings.Repeat("ção ", 20) // 80 characters, 120 bytes
+	got = FirstLineOfReason(accented)
+	if !utf8.ValidString(got) || utf8.RuneCountInString(got) != 70 || !strings.HasSuffix(got, "...") {
+		t.Errorf("a long accented line is cut to 70 characters, valid UTF-8: %q (%d)", got, utf8.RuneCountInString(got))
+	}
+	if exact := strings.Repeat("é", 70); FirstLineOfReason(exact) != exact {
+		t.Error("70 accented characters (140 bytes) must not be cut")
 	}
 }
 

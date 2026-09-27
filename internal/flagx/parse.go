@@ -108,11 +108,17 @@ func parse(content, rel string) Flag {
 // Load scans the project's `flags/` folder.
 //
 // A project with no `flags/` is not an error — it is a project that has not declared a
-// flag yet, the same reading `flowx.Build` gives an absent `flows/`.
+// flag yet, the same reading `flowx.Build` gives an absent `flows/`. Only "does not
+// exist" is read that way: every read error used to be, so a `flags/` or a flag file that
+// could not be read made its scenarios vanish, and `@gated-by` citations of them were
+// accused of pointing at nothing.
 func Load(root string) ([]Flag, error) {
 	entries, err := os.ReadDir(filepath.Join(root, Dir))
 	if err != nil {
-		return nil, nil
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
 	}
 	var names []string
 	for _, e := range entries {
@@ -129,7 +135,7 @@ func Load(root string) ([]Flag, error) {
 		rel := filepath.ToSlash(filepath.Join(Dir, name))
 		f, err := ParseFile(filepath.Join(root, Dir, name), rel)
 		if err != nil {
-			continue
+			return nil, err
 		}
 		out = append(out, f)
 	}

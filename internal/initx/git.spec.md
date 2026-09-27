@@ -48,7 +48,7 @@ classification can be proven on any machine.
 | `GTSTG-B06` | A root inside an existing repository (the repository is in an ancestor folder) is "ready", so no nested repository is ever offered. |
 | `GTSTG-B07` | A root whose repository marker is a file (a worktree or a submodule pointer) is "ready". |
 | `GTSTG-B08` | There is an action to offer (`OfferAction`) only for "not initialised" (initialise) and "no commit yet" (commit); never for "not installed" or "ready". |
-| `GTSTG-B09` | Each of the three unready states has its own warning (`AvisoGit`) — install git, the folder is not under git, there is no commit yet — and "ready" has none. |
+| `GTSTG-B09` | Each of the three unready states has its own warning (`AvisoGit`), in the project's language — install git, the folder is not under git, there is no commit yet — and "ready" has none. |
 | `GTSTG-B10` | The seeded ignore list covers the system clutter and the Anchors working area, with no exception inside that area and nothing that guesses the stack. |
 
 ## Invariants

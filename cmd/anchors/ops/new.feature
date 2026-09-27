@@ -122,3 +122,10 @@ Feature: NewArtifact — a new artifact is born beside its unit, with a resolved
     Given src/auth/Login.spec.md with code LGNSP
     When new feature Login runs beside it
     Then the feature's header references LGNSP
+
+  @NWARN-B16 @unit-level
+  Scenario: The help and the unknown-kind refusal name every kind, and --out is mandatory
+    Given the new command
+    When its help is read and it runs with the kind widget
+    Then the help and the refusal name action, feature, flow, plan, product, spec and test
+    And the --out help says it is mandatory and names no default

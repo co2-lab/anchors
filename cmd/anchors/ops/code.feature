@@ -105,3 +105,17 @@ Feature: CodeCommand — a new unit gets an identity code that no other unit in 
     Given a directory with no anchors.yaml, then one with a config and no map
     When code list runs
     Then it fails with "load anchors.yaml", then with "read the map"
+
+  @CDCMC-B13 @unit-level
+  Scenario: A second check in the same process judges only its own map
+    Given a first map that declares WLTX and a second map that only cites WLTX
+    When code list --check runs on the first and then on the second
+    Then the second passes, counting WLTX as only cited
+    And the JSON of the second names app/fixture_test.go as the file
+
+  @CDCMC-B14 @unit-level
+  Scenario: The length check points each divergence to anchors recode, and there is no --fix
+    Given a map that declares WLTX for app/Wallet.spec.md
+    When code list --check runs
+    Then the output has "anchors recode WLTX" followed by the canonical code, and never "--fix"
+    And the command declares no --fix flag

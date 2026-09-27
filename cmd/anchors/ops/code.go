@@ -12,6 +12,7 @@ import (
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/code"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/spf13/cobra"
@@ -161,7 +162,7 @@ func (*collisionError) Error() string { return "code already in use" }
 // que flag — o help de cada um fica separado e as flags de um não poluem o outro.
 func newCodeListCmd() *cobra.Command {
 	var root, mapPath, filtro string
-	var conferir, corrigir, emJSON bool
+	var conferir, emJSON bool
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List the identity codes IN USE in the project (from the map, not by regex)",
@@ -194,10 +195,11 @@ reports it, and here it becomes visible for free.`,
 			if _, cerr := config.Load(filepath.Join(absRoot, config.DefaultFile)); cerr != nil {
 				return fmt.Errorf("load %s: %w", config.DefaultFile, cerr)
 			}
-			_, owners, err := takenCodes(mapPath)
+			idx, err := readCodes(mapPath)
 			if err != nil {
 				return fmt.Errorf("read the map: %w (run `anchors map build`)", err)
 			}
+			owners := idx.owners
 
 			// --check: confere o COMPRIMENTO de cada código contra o `code_lengths` do
 			// projeto, e propõe o conserto.
@@ -258,7 +260,7 @@ reports it, and here it becomes visible for free.`,
 					// identidade. Medido no Anchors: sem este filtro, 29 falsos positivos e
 					// zero achados — o projeto tem 0 specs, e todo "código em uso" vinha de
 					// string de teste.
-					if !codeDecl[c] {
+					if !idx.declared[c] {
 						citados++
 						continue
 					}
@@ -271,7 +273,7 @@ reports it, and here it becomes visible for free.`,
 					// o algoritmo extrai mais uma LETRA DO NOME, e o X é só último recurso
 					// para nome curto. `AuditDetailScreen` canônico é `ADDTD`, não `ADDTX`.
 					// Deixar o X seria plantar divergência para o próximo check acusar.
-					forem := unitName(codeFile[c])
+					forem := unitName(idx.file[c])
 					canonico := code.GenerateUnique(forem, semOsErrados)
 					divs = append(divs, divergencia{atual: c, correto: canonico, onde: donos})
 				}
@@ -292,7 +294,14 @@ reports it, and here it becomes visible for free.`,
 				fmt.Printf("\n  %d conforming. The proposal is the CANONICAL code (%d chars) — the one the\n", ok, alvo)
 				fmt.Println("  algorithm would generate for the unit name, with collision resolved against the")
 				fmt.Println("  codes that ALREADY conform (the wrong ones reserve no place: they will change).")
-				fmt.Println("  Apply with `anchors code list --check --fix` (uses `anchors recode`, which propagates).")
+				// There was a `--fix` here, declared and never read, and this line told people
+				// to run it: the command promised a fix it did not make. Each rename is a mass
+				// rewrite that `recode` shows in a dry-run before `--apply`, so the hint is the
+				// exact command per divergence, to be reviewed one by one.
+				fmt.Println(i18n.T("code.check.apply_hint"))
+				for _, d := range divs {
+					fmt.Printf("    anchors recode %s %s\n", d.atual, d.correto)
+				}
 				return errCollision
 			}
 			// modo --list: enumera os códigos EM USO, com quem os usa.
@@ -385,7 +394,7 @@ reports it, and here it becomes visible for free.`,
 				revs := revisesByFile(mapPath)
 				out := make([]saida, 0, len(linhas))
 				for _, l := range linhas {
-					arq := codeFile[l.code]
+					arq := idx.file[l.code]
 					out = append(out, saida{
 						Code:    l.code,
 						Onde:    l.onde,
@@ -419,7 +428,6 @@ reports it, and here it becomes visible for free.`,
 	cmd.Flags().StringVar(&mapPath, "map", "", "path to the map")
 	cmd.Flags().StringVar(&filtro, "in", "", "only the codes under this path prefix (e.g.: apps/mobile)")
 	cmd.Flags().BoolVar(&conferir, "check", false, "check the LENGTH of each code against code_lengths and show the fix")
-	cmd.Flags().BoolVar(&corrigir, "fix", false, "with --check: apply the fix via `anchors recode` (propagates through spec/feature/test/map)")
 	cmd.Flags().BoolVar(&emJSON, "json", false, "emit the list as JSON (for script/pipeline consumption)")
 	return cmd
 }
@@ -465,22 +473,41 @@ func fileTitle(root, rel string) string {
 	return ""
 }
 
+// codeIndex é o que o mapa diz sobre os códigos em uso, lido de UM mapa.
+//
+// `file` e `declared` eram variáveis de pacote que só cresciam: uma segunda leitura no
+// mesmo processo (o servidor MCP, o binário de testes) ainda via o WLTX declarado do mapa
+// anterior e acusava um código que o mapa atual só CITA.
+type codeIndex struct {
+	taken  map[string]bool     // os códigos em uso
+	owners map[string][]string // por código, as pastas das unidades que o usam
+	// file guarda, por código, o arquivo que melhor representa a unidade (a spec quando
+	// existe) — lido pelo --check para regenerar o código canônico.
+	file map[string]string
+	// declared marca os códigos cuja identidade é DECLARADA — os únicos que o --check confere.
+	declared map[string]bool
+}
+
 // takenCodes lê o mapa e devolve o conjunto de códigos em uso + quem os usa (por
-// unidade), para sugestão e para --check.
-// codeFile guarda, por código, o arquivo que melhor representa a unidade (a spec quando
-// existe). Preenchido por takenCodes; lido pelo --check para regenerar o código canônico.
-var codeFile = map[string]string{}
-
-// codeDecl marca os códigos cuja identidade é DECLARADA — os únicos que o --check confere.
-var codeDecl = map[string]bool{}
-
+// unidade), para sugestão.
 func takenCodes(mapPath string) (taken map[string]bool, owners map[string][]string, err error) {
-	g, err := mapx.Load(mapPath)
+	idx, err := readCodes(mapPath)
 	if err != nil {
 		return nil, nil, err
 	}
-	taken = map[string]bool{}
-	owners = map[string][]string{}
+	return idx.taken, idx.owners, nil
+}
+
+// readCodes lê o índice de códigos de um mapa, do zero a cada chamada.
+func readCodes(mapPath string) (*codeIndex, error) {
+	g, err := mapx.Load(mapPath)
+	if err != nil {
+		return nil, err
+	}
+	taken := map[string]bool{}
+	owners := map[string][]string{}
+	codeFile := map[string]string{}
+	codeDecl := map[string]bool{}
 	seen := map[string]bool{}
 	for _, n := range g.Nodes {
 		if n.Code == "" {
@@ -511,7 +538,7 @@ func takenCodes(mapPath string) (taken map[string]bool, owners map[string][]stri
 			codeDecl[n.Code] = true
 		}
 	}
-	return taken, owners, nil
+	return &codeIndex{taken: taken, owners: owners, file: codeFile, declared: codeDecl}, nil
 }
 
 // joinLens formata os comprimentos aceitos para a mensagem ("4", "4 ou 5").

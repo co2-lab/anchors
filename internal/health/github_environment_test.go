@@ -181,7 +181,7 @@ func TestEnvironmentChecksBranchProtection(t *testing.T) {
 	t.Run("GHEGT-B05: An unreadable branch protection is an unprotected branch", func(t *testing.T) {
 		fakeGH(t) // the read fails, as a 404 for an unprotected branch does
 		fs := checkBranchProtection(cfgGitHub())
-		want := Finding{"main-sem-protecao", Warn, "acme/exemplo", i18n.T("health.main_unprotected")}
+		want := Finding{"main-sem-protecao", Warn, "acme/exemplo", i18n.T("health.main_unprotected", "main")}
 		if len(fs) != 1 || fs[0] != want {
 			t.Fatalf("checkBranchProtection = %+v, want [%+v]", fs, want)
 		}
@@ -190,7 +190,7 @@ func TestEnvironmentChecksBranchProtection(t *testing.T) {
 	t.Run("GHEGT-B06: A protection without required reviews is partially protected", func(t *testing.T) {
 		fakeGH(t, ghAnswer{match: q, out: "false"})
 		fs := checkBranchProtection(cfgGitHub())
-		want := Finding{"main-sem-protecao", Warn, "acme/exemplo", i18n.T("health.main_partially_unprotected")}
+		want := Finding{"main-sem-protecao", Warn, "acme/exemplo", i18n.T("health.main_partially_unprotected", "main")}
 		if len(fs) != 1 || fs[0] != want {
 			t.Fatalf("checkBranchProtection = %+v, want [%+v]", fs, want)
 		}
@@ -198,6 +198,24 @@ func TestEnvironmentChecksBranchProtection(t *testing.T) {
 		fakeGH(t, ghAnswer{match: q, out: "true"})
 		if fs := checkBranchProtection(cfgGitHub()); len(fs) != 0 {
 			t.Fatalf("a protection that requires reviews gives no finding: %+v", fs)
+		}
+	})
+
+	// The protection was read on a hard-coded `main`: a project whose work lands on
+	// `develop` was told its protected branch was unprotected, and an unprotected
+	// `develop` passed whenever `main` happened to be protected.
+	t.Run("GHEGT-B08: The protection is read on the declared integration branch", func(t *testing.T) {
+		cfg := cfgGitHub()
+		cfg.Workflow.IntegrationBranch = "develop"
+		dev := "'api repos/acme/exemplo/branches/develop/protection --jq .required_pull_request_reviews != null'"
+		fakeGH(t, ghAnswer{match: dev, out: "true"}, ghAnswer{match: q, out: "false"})
+		if fs := checkBranchProtection(cfg); len(fs) != 0 {
+			t.Fatalf("a protected develop gives no finding: %+v", fs)
+		}
+		fakeGH(t, ghAnswer{match: q, out: "true"})
+		fs := checkBranchProtection(cfg)
+		if len(fs) != 1 || !strings.Contains(fs[0].Detail, "`develop`") {
+			t.Fatalf("an unprotected develop is the finding, named in the message: %+v", fs)
 		}
 	})
 

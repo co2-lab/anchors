@@ -45,14 +45,16 @@ does a message with no subject, which git refuses on its own with a better messa
 | `CMMSC-B03` | A subject of the form `type: text`, `type(scope): text`, with an optional `!` before the colon, passes when the type is known. |
 | `CMMSC-B04` | The type must be lowercase and one of feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert; anything else is refused naming the type. |
 | `CMMSC-B05` | An empty scope, `type():`, is refused. |
-| `CMMSC-B06` | A subject longer than the limit of 100 is refused, and the diagnosis says the detail belongs in the body; a subject of exactly the limit passes. |
+| `CMMSC-B06` | A subject longer than the limit of 100 characters (see `CMMSC-B14`) is refused, and the diagnosis says the detail belongs in the body; a subject of exactly the limit passes. |
 | `CMMSC-B07` | A subject whose text ends in a period is refused. |
 | `CMMSC-B08` | Each defect has its own diagnosis, distinct from every other. |
 | `CMMSC-B09` | A capital letter at the start of the subject text is allowed. |
 | `CMMSC-B10` | A rejection repeats the subject, teaches the `type(scope): what changed` format with examples, and lists the accepted types. |
 | `CMMSC-B11` | A message with no subject (empty, or only comments) passes. |
-| `CMMSC-B12` | The checks run in order (format, lowercase type, known type, non-empty scope, non-empty text, length, final period) and only the first defect is reported. |
+| `CMMSC-B12` | The checks run in order (format, lowercase type, known type, non-empty scope, non-empty text, a space after the colon, length, final period) and only the first defect is reported. |
 | `CMMSC-B13` | A known type followed by nothing after the colon is refused. |
+| `CMMSC-B14` | The subject limit counts characters, not bytes: a subject of 100 accented letters passes, and the diagnosis of a longer one gives its length in characters. |
+| `CMMSC-B15` | A subject with no space after the colon (`feat:x`) is refused with its own diagnosis, as commitlint refuses it. |
 
 ## Invariants
 

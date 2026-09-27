@@ -37,8 +37,9 @@ reading. Failing to record the marker never stops a command — at worst the not
 | Effect | Description |
 | --- | --- |
 | `TLNTT-B01` | `Notice`: The first call writes the notice; a later call for the same project root writes nothing, because the first one left its marker. |
-| `TLNTT-B02` | The text states what is sent, what is not sent — naming file content — and both ways to turn telemetry off: the `ANCHORS_TELEMETRY=off` environment variable and `telemetry: off` in the configuration. |
+| `TLNTT-B02` | The text states what is sent, what is not sent — naming file content — both ways to turn telemetry off: the `ANCHORS_TELEMETRY=off` environment variable and `telemetry: off` in the configuration — and that it appears once per project on this machine, which is where its marker lives. |
 | `TLNTT-B03` | The marker, recorded by `MarkNoticed`, is written at `.anchors/telemetry-noticed` under the project root, a directory that is kept out of version control, so one person seeing the notice does not silence it for the team. |
+| `TLNTT-B04` | The text comes from the translation catalog, so it is written in the project's language. |
 
 ## Invariants
 

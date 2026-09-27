@@ -53,7 +53,14 @@ var tbdLineRE = regexp.MustCompile("(?i)(^|[^`])@TBD[^\\S\\n]*:[^\\S\\n]*\\S+")
 // doctrineRuleRE finds a catalogued rule in the THREE valid forms (heading, table row,
 // bold bullet) — the same grammar the specs use, because doctrine catalogues rules the
 // same way.
-var doctrineRuleRE = regexp.MustCompile(`(?m)(?:^#{1,6}\s+|^\s*\|\s*` + "`?" + `|^\s*-\s+\*\*)([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`)
+//
+// Compiled per CALL, as defineRuleCaptureRE: the code length comes from `code_lengths`,
+// loaded after the package globals. As a `var` with a fixed `{3,6}` it never saw a code
+// of another declared length (a 7- or 8-character code was invisible to the gate).
+func doctrineRuleRE() *regexp.Regexp {
+	return regexp.MustCompile(`(?m)(?:^#{1,6}\s+|^\s*\|\s*` + "`?" + `|^\s*-\s+\*\*)([A-Z0-9]` +
+		config.CodeLengthPattern() + `-[A-Z]{1,2}[0-9]{2})`)
+}
 
 // doctrineSeedCiteRE finds the doctrine a plan cites inside backticks.
 var doctrineSeedCiteRE = regexp.MustCompile("`([^`]+\\.doctrine\\.md)`")
@@ -131,9 +138,10 @@ func checkDoctrineRealized(content string, n mapx.Node, root string, g *mapx.Gra
 	// The rules THIS doctrine catalogues, minus the ones deferred on their own line.
 	rules := map[string]bool{}
 	deferred := map[string]bool{}
+	ruleRE := doctrineRuleRE()
 	for _, line := range strings.Split(content, "\n") {
 		isDeferred := tbdLineRE.MatchString(line)
-		for _, m := range doctrineRuleRE.FindAllStringSubmatch(line, -1) {
+		for _, m := range ruleRE.FindAllStringSubmatch(line, -1) {
 			// An OPEN QUESTION (`-Q`) is not a realizable rule: it names a decision
 			// nobody has taken yet. Demanding a realizer would ask a spec to concretise
 			// the very thing still undecided — and the only way to comply would be to
@@ -200,11 +208,12 @@ func checkSpecDoctrineExists(content string, n mapx.Node, root string, g *mapx.G
 
 	// What the spec DECLARES, minus what is deferred on its own line.
 	declared := map[string]bool{}
+	tagRE := realizesTagRE()
 	for _, line := range strings.Split(content, "\n") {
 		if tbdLineRE.MatchString(line) {
 			continue
 		}
-		for _, m := range realizesTagRE.FindAllStringSubmatch(line, -1) {
+		for _, m := range tagRE.FindAllStringSubmatch(line, -1) {
 			declared[m[1]] = true
 		}
 	}
@@ -223,6 +232,7 @@ func checkSpecDoctrineExists(content string, n mapx.Node, root string, g *mapx.G
 	// rule inside it exists is a separate question, answered by reading the file.
 	if len(declared) > 0 {
 		live := map[string]bool{}
+		ruleRE := doctrineRuleRE()
 		for _, e := range g.Neighbors(n.ID).Out {
 			if e.Type != mapx.EdgeRealizes {
 				continue
@@ -231,7 +241,7 @@ func checkSpecDoctrineExists(content string, n mapx.Node, root string, g *mapx.G
 			if err != nil {
 				continue
 			}
-			for _, m := range doctrineRuleRE.FindAllStringSubmatch(string(b), -1) {
+			for _, m := range ruleRE.FindAllStringSubmatch(string(b), -1) {
 				live[m[1]] = true
 			}
 		}
@@ -255,7 +265,13 @@ func checkSpecDoctrineExists(content string, n mapx.Node, root string, g *mapx.G
 // realizesTagRE — the `@realizes` tag in a spec. Deliberately duplicated from `scan`:
 // this gate reads the CONTENT it is handed rather than the already-scanned node, because
 // it needs to know which LINE the tag sits on in order to pair it with the waiver.
-var realizesTagRE = regexp.MustCompile("@realizes\\s+`?([A-Z0-9]{3,6}-[A-Z]{1,2}[0-9]{2})`?")
+//
+// Compiled per CALL, as defineRuleCaptureRE: the code length comes from `code_lengths`,
+// loaded after the package globals. As a `var` with a fixed `{3,6}` it never saw a code
+// of another declared length (a 7- or 8-character code was invisible to the gate).
+func realizesTagRE() *regexp.Regexp {
+	return regexp.MustCompile("@realizes\\s+`?([A-Z0-9]" + config.CodeLengthPattern() + "-[A-Z]{1,2}[0-9]{2})`?")
+}
 
 // isOpenQuestion says whether a code names an open question (`-Q`) rather than a rule.
 //
@@ -396,8 +412,9 @@ func checkDoctrineNotDuplicated(content string, n mapx.Node, root string, g *map
 // heading would drag in prose belonging to no rule.
 func ruleTexts(content string) map[string]string {
 	out := map[string]string{}
+	ruleRE := doctrineRuleRE()
 	for _, line := range strings.Split(content, "\n") {
-		m := doctrineRuleRE.FindStringSubmatch(line)
+		m := ruleRE.FindStringSubmatch(line)
 		if m == nil {
 			continue
 		}
@@ -426,14 +443,15 @@ type realizesOnLine struct {
 func parseRealizesWithLines(content string) []realizesOnLine {
 	var out []realizesOnLine
 	current := ""
+	ruleRE, tagRE := doctrineRuleRE(), realizesTagRE()
 	for _, line := range strings.Split(content, "\n") {
-		if m := doctrineRuleRE.FindStringSubmatch(line); m != nil {
+		if m := ruleRE.FindStringSubmatch(line); m != nil {
 			current = m[1]
 		} else if strings.TrimSpace(line) == "" {
 			current = ""
 		}
 		deferred := tbdLineRE.MatchString(line)
-		for _, m := range realizesTagRE.FindAllStringSubmatch(line, -1) {
+		for _, m := range tagRE.FindAllStringSubmatch(line, -1) {
 			out = append(out, realizesOnLine{from: current, to: m[1], deferred: deferred})
 		}
 	}
@@ -474,8 +492,9 @@ func checkSpecRealizesDoctrine(content string, n mapx.Node, root string, g *mapx
 		declared[r.from] = true
 	}
 	var naked []string
+	ruleRE := doctrineRuleRE()
 	for _, line := range strings.Split(content, "\n") {
-		m := doctrineRuleRE.FindStringSubmatch(line)
+		m := ruleRE.FindStringSubmatch(line)
 		if m == nil {
 			continue
 		}

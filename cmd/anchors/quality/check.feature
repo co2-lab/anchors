@@ -25,6 +25,12 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     When the impact path of the module is resolved
     Then the stamping test is in it and the other test is not
 
+  @CGPCH-B70 @unit-level
+  Scenario: The pieces of the changed file's unit enter its impact path, for a Go unit as for a TypeScript one
+    Given a map with pkg/foo.go, pkg/foo_test.go, pkg/foo.spec.md, pkg/foo.feature, pkg/bar.go, web/x.ts, web/x.test.ts and web/x.spec.md, and no edge
+    When the impact path of each of pkg/foo_test.go, pkg/foo.go, pkg/foo.spec.md and web/x.test.ts is computed
+    Then each reaches the other pieces of its own unit, and pkg/bar.go never enters
+
   @CGPCH-B04 @unit-level
   Scenario: Changed paths are normalised to the map's form
     Given an absolute path under the root, a path starting with ./ and a path with ..
@@ -137,7 +143,13 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
   Scenario: A pending judgment becomes one task in the local queue
     Given a local project with a judgment gate over a.go
     When the check runs over everything
-    Then the queue holds one task judge-rule-kept-a suggesting judge
+    Then the queue holds one task judge-rule-kept-a of the judgment kind
+
+  @CGPCH-B69 @unit-level
+  Scenario: A judge task suggests the review stage, a verb the work command composes
+    Given a local project with a judgment gate over a.go, and a queue holding a judge task with the legacy judge verb
+    When the check runs over everything, and the queued judgments are counted
+    Then the task suggests "review", which the work command accepts, its reason reads "anchors judge a.go --gate rule-kept", and the legacy task counts as a judgment while a watch review task does not
 
   @CGPCH-B22 @unit-level
   Scenario: A queued judgment bars the incremental check only
@@ -156,6 +168,12 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a queued judge task for b and an incremental run that judged only a
     When the judgments are enqueued incrementally, and then on a full sweep
     Then b stays after the incremental run and is dropped after the full sweep
+
+  @CGPCH-B68 @unit-level
+  Scenario: A judge task is read back as the gate that queued it even when another gate's name prefixes it
+    Given the judgment gates review and review-deep, and a live review-deep task over src/x.go
+    When the stale judgments are dropped after a run where review-deep judged src/x.go
+    Then the review-deep task stays in the queue
 
   @CGPCH-B25 @unit-level
   Scenario: In github mode the brief is printed without recording and nothing is queued

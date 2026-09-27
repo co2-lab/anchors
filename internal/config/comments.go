@@ -7,8 +7,9 @@ import "strings"
 // O CLI nunca parseia código; ele só precisa saber onde uma anotação (que vive
 // num comentário) começa, para extraí-la do texto. Ver DECISIONS.md D2/D4.
 //
-// Defaults embutidos cobrem as linguagens comuns; o projeto pode estender ou
-// sobrescrever via anchors.yaml (a carregar em config.Load — TODO).
+// The table is built in and fixed: anchors.yaml has no key that extends or overrides it,
+// and Load does not touch it. An extension missing here gets no prefix from MarkersFor
+// and the hash comment from LineCommentFor.
 var CommentMarkers = map[string][]string{
 	// C-family / chaves
 	".go":    {"//"},

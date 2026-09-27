@@ -50,6 +50,7 @@ reading order.
 | `NWTMN-B08` | For a family it does not know, the test body is an instruction to write a case with the scenario code in its name, not a guessed syntax. |
 | `NWTMN-B09` | The eleven spec presets (backend-logic, component, handler, hook, mobile-logic, repository, schema, screen, service, store, validation) are each an ordered set of catalog sections, opening with the title and closing with the open decisions. |
 | `NWTMN-B10` | Product doctrine has sections of its own, emits `-R` rules, and its header declares no layer. |
+| `NWTMN-B11` | The Python and Rust test functions are named by the snake_case of the unit name: each run of separators (`-`, space, `.`, `_`) becomes one `_`, an uppercase letter starts a new word only after a lowercase letter or a digit or when it opens a word after an acronym, and there is no leading or trailing `_` (`My-Name` → `my_name`, `HTTPServer` → `http_server`). |
 
 ## Invariants
 

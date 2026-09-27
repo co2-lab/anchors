@@ -59,7 +59,7 @@ type CoverageReport struct {
 // -func não, mas gcov/istanbul/pytest-cov sim). Cada registro:
 //
 //	SF:<arquivo>
-//	DA:<linha>,<hits>      (uma por linha instrumentada)
+//	DA:<linha>,<hits>[,<checksum>]  (uma por linha instrumentada)
 //	LF:<total de linhas>   (opcional; se ausente, contamos as DA)
 //	LH:<linhas cobertas>   (opcional)
 //	end_of_record
@@ -101,9 +101,16 @@ func ParseLCOV(path string) (*CoverageReport, error) {
 		case strings.HasPrefix(line, "SF:"):
 			flush()
 			cur = &FileCoverage{File: strings.TrimPrefix(line, "SF:"), Lines: map[int]bool{}}
+		case cur == nil && (strings.HasPrefix(line, "DA:") || strings.HasPrefix(line, "LF:") || strings.HasPrefix(line, "LH:")):
+			// Before the first `SF:` an entry belongs to no file. It used to be counted, and
+			// the counts — never reset by a flush with no record open — leaked into the
+			// first file's totals.
 		case strings.HasPrefix(line, "DA:"):
-			parts := strings.SplitN(strings.TrimPrefix(line, "DA:"), ",", 2)
-			if len(parts) == 2 {
+			// `DA:<line>,<hits>[,<checksum>]`: the checksum is optional lcov (geninfo
+			// --checksum). Splitting in two read "5,abc" as the hit count, which failed to
+			// parse and marked a covered line uncovered.
+			parts := strings.SplitN(strings.TrimPrefix(line, "DA:"), ",", 3)
+			if len(parts) >= 2 {
 				daTotal++
 				ln, _ := strconv.Atoi(parts[0])
 				hits, err := strconv.Atoi(parts[1])
@@ -111,7 +118,7 @@ func ParseLCOV(path string) (*CoverageReport, error) {
 				if covered {
 					daCovered++
 				}
-				if cur != nil && ln > 0 {
+				if ln > 0 {
 					cur.Lines[ln] = covered
 				}
 			}

@@ -85,6 +85,13 @@ Feature: EdgeStamping — recording on each relation that it was confronted, wit
     When one of them is stamped
     Then two relations are listed stale before and one after
 
+  @EDSTD-B14 @unit-level
+  Scenario: Judging keeps a waiver another gate recorded, and the gate that waived replaces its own
+    Given the relations of the code node waived by the gate "atomic"
+    When the gate "review" judges the node ok and the gate "rule-fulfilled" judges one relation as an issue
+    Then every relation's stamp is still waived by "atomic" with its date, and "review" has its judgment recorded
+    And when "atomic" judges the node ok the stamps read ok, and a new waiver by "review" lands
+
   @EDSTD-I01 @unit-level
   Scenario: The same round on the same day gives the same stamps
     Given two identical graphs

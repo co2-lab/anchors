@@ -8,6 +8,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/gate"
 	"github.com/co2-lab/anchors/internal/health"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/issue"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/queue"
@@ -100,10 +101,20 @@ func renderStructure(ctx reportCtx) string {
 	}
 
 	// colisões e órfãos vêm do health (recorte por check)
-	rep := health.Diagnose(ctx.g, ctx.cfg, ctx.root)
-	b.WriteString(findingSection(rep, "identidade-duplicada", "Identity collisions"))
-	b.WriteString(findingSection(rep, "orfao", "Orphans (code with no spec)"))
-	b.WriteString(findingSection(rep, "identidade-ausente", "Missing identity"))
+	//
+	// The health validator reads the configuration's layers, and with no anchors.yaml it
+	// dereferenced nil: `report structure` and `report all` panicked instead of saying what
+	// is missing. The orphans are the specs with no implementation, the finding the
+	// validator emits (code with no spec is the normal case, never an orphan); the section
+	// filtered on `orfao`, which nothing emits, and never printed.
+	if ctx.cfg == nil {
+		b.WriteString(i18n.T("report.health_needs_config") + "\n")
+	} else {
+		rep := health.Diagnose(ctx.g, ctx.cfg, ctx.root)
+		b.WriteString(findingSection(rep, "identidade-duplicada", "Identity collisions"))
+		b.WriteString(findingSection(rep, "spec-sem-realizacao", "Orphans (spec with no implementation)"))
+		b.WriteString(findingSection(rep, "identidade-ausente", "Missing identity"))
+	}
 	b.WriteString(reportFooter())
 	return b.String()
 }
@@ -239,8 +250,14 @@ func renderInconsistencies(ctx reportCtx) string {
 	b.WriteString("> Everything the validators detect that has NOT yet become an issue — the raw\n")
 	b.WriteString("> debt backlog. Triage and promote to an issue whatever will be handled (detection → issue → plan).\n\n")
 
-	// 1. saúde do grafo (health) — todos os findings, agrupados por check
-	rep := health.Diagnose(ctx.g, ctx.cfg, ctx.root)
+	// 1. saúde do grafo (health) — todos os findings, agrupados por check. Without
+	// anchors.yaml the validator cannot run (it read nil layers and panicked): say so.
+	var rep health.Report
+	if ctx.cfg == nil {
+		b.WriteString(i18n.T("report.health_needs_config") + "\n\n")
+	} else {
+		rep = health.Diagnose(ctx.g, ctx.cfg, ctx.root)
+	}
 	byCheck := map[string][]health.Finding{}
 	var order []string
 	for _, f := range rep.Findings {

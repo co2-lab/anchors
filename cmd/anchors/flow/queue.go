@@ -783,11 +783,15 @@ func printBoardWork(root string, card *board.Card, agent string) {
 	}
 	// O CORPO DO PR pelo comando, e não à mão.
 	//
-	// O `Closes #N` é o que fecha o card no merge, e ele é fácil de esquecer quando o
-	// corpo é escrito à mão — medido: o card #319 ficou aberto em `in-progress` depois do
-	// merge, e o #321 fechou sozinho, porque um PR tinha a linha e o outro não. O estado
-	// do board passou a divergir do repositório sem nada acusar.
-	fmt.Printf("When done:         anchors pr-body --cards %d  (brings the `Closes` that closes the card)\n", card.Number)
+	// A linha de vínculo é fácil de esquecer quando o corpo é escrito à mão — medido: o
+	// card #319 ficou em `in-progress` depois do merge, e o #321 andou, porque um PR tinha
+	// a linha e o outro não. O estado do board passou a divergir do repositório sem nada
+	// acusar.
+	//
+	// The line is `Refs`, NOT `Closes`: pr-body links without closing (see linkSyntax),
+	// and this hint still promised "the `Closes` that closes the card" — telling the
+	// agent the card would end at the merge, when it stays open for the CD columns.
+	fmt.Printf("When done:         anchors pr-body --cards %d  (brings the `Refs` that links the card; it stays open)\n", card.Number)
 	fmt.Printf("                   open the PR with that body — the pipeline moves the card, not you\n")
 }
 

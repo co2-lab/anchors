@@ -56,6 +56,7 @@ Feature: TaskStatus — discover what the machine knows about the task at hand, 
     Given a card in review titled "secret title" and a pull request with three failed checks of four
     When the turn-ended event is sent
     Then it carries "in-review", "open" and the failed-checks count
+    And its attribute names are the English identifiers "card_state", "pr_state", "has_card", "clean_tree", "checks_failed" and "checks_running"
     And it does not carry "secret title" nor "anchors:in-review"
 
   @TSSTT-I01 @unit-level

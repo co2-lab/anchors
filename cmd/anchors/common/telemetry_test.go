@@ -57,6 +57,7 @@ func TestNoticeTelemetry_noticeOnceThenQuiet(t *testing.T) {
 	t.Run("TLSTT-I01: No emitter without the notice", func(t *testing.T) {})
 	isolateTelemetry(t)
 	root := t.TempDir()
+	writeFile(t, filepath.Join(root, "anchors.yaml"), "version: 4\n")
 	cmd := cmdWithRoot(root)
 
 	first := captureStderr(t, func() { NoticeTelemetry(cmd) })
@@ -143,7 +144,9 @@ func TestNoticeTelemetry_startingSendsNothing(t *testing.T) {
 	defer srv.Close()
 	t.Setenv("ANCHORS_TELEMETRY_ENDPOINT", srv.URL)
 
-	captureStderr(t, func() { NoticeTelemetry(cmdWithRoot(t.TempDir())) })
+	proj := t.TempDir()
+	writeFile(t, filepath.Join(proj, "anchors.yaml"), "version: 4\n")
+	captureStderr(t, func() { NoticeTelemetry(cmdWithRoot(proj)) })
 	if Emitter == nil {
 		t.Fatal("telemetry on, and the emitter was not built")
 	}
@@ -187,4 +190,41 @@ func TestProjectRoot(t *testing.T) {
 	if got != want {
 		t.Errorf("no --root, from a subdirectory: got %q, want %q", got, want)
 	}
+}
+
+// A configuration that does not load (an unknown key, a format to migrate) was skipped, and
+// the project's `telemetry: off` with it: the notice showed and the emitter was built for
+// a project that had opted out.
+func TestNoticeTelemetry_optOutHoldsWhenTheConfigDoesNotLoad(t *testing.T) {
+	t.Run("TLSTT-B07: A declared opt-out holds when the configuration does not load", func(t *testing.T) {
+		isolateTelemetry(t)
+		root := t.TempDir()
+		writeFile(t, filepath.Join(root, "anchors.yaml"), "telemetry: off\nnot_a_key_anchors_knows: 1\n")
+		out := captureStderr(t, func() { NoticeTelemetry(cmdWithRoot(root)) })
+		if out != "" || Emitter != nil {
+			t.Errorf("the declared opt-out was ignored: notice=%q emitter=%v", out, Emitter)
+		}
+	})
+}
+
+// Outside a project the root fell back to the working directory, and the notice's marker
+// was written there — a `.anchors/` left in whatever directory the command ran from.
+func TestNoticeTelemetry_outsideAProjectWritesNothing(t *testing.T) {
+	t.Run("TLSTT-B08: Outside a project there is no notice, no emitter and no mark", func(t *testing.T) {
+		isolateTelemetry(t)
+		dir := t.TempDir()
+		t.Chdir(dir)
+		if got := ProjectRoot(&cobra.Command{Use: "noflag"}); got != "" {
+			t.Errorf("outside a project the root is empty, got %q", got)
+		}
+		for _, cmd := range []*cobra.Command{cmdWithRoot(""), cmdWithRoot(dir)} {
+			out := captureStderr(t, func() { NoticeTelemetry(cmd) })
+			if out != "" || Emitter != nil {
+				t.Errorf("outside a project: notice=%q emitter=%v", out, Emitter)
+			}
+		}
+		if _, err := os.Stat(filepath.Join(dir, ".anchors")); err == nil {
+			t.Error("outside a project a `.anchors/` mark was written in the working directory")
+		}
+	})
 }

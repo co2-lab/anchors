@@ -48,6 +48,14 @@ Feature: AutonomyGuide — what an agent does with what it does not know, by the
     When the autonomy section is rendered for each
     Then both read "Do not ask whoever is running you.", "move on to the next card" and "What is NOT to be escalated"
 
+  @ATGDT-B07 @unit-level
+  Scenario: The old user_issues flag with no role is named as such, never as an empty role
+    Given a project that declares only the old flag user_issues true, and one that declares it false
+    When the autonomy section is rendered for each
+    Then neither reads "Your role" nor "()"
+    And the first reads that its declaration by the old user_issues flag says it decides the direction of this product
+    And the second reads that it does NOT decide, and "Do not ask whoever is running you."
+
   @ATGDT-I01 @unit-level
   Scenario: An unreadable declaration reads as no role
     Given a project whose local settings file holds malformed content naming product-owner

@@ -184,6 +184,12 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     When its seeds are read, and the same text is read as a spec
     Then the plan seeds "apps/x/Tela.spec.md" and "a/b.doctrine.md" once each, and the spec seeds nothing
 
+  @RPSCR-B30 @unit-level
+  Scenario: Header keys are read only inside the header
+    Given a spec whose header declares nothing but whose body has the lines "code: BOGUS", "layer: bogus", "needs: FNDTN-F02, plans/a.md" and "revises: plans/a.md", and a code file whose body has the comment "// dep: a.ts"
+    When its identity, unit layer, needs, revisions and dependencies are read
+    Then none of them is taken: no identity, no declared layer, no needs, no revision, no dependency, and the unit layer is the file's layer "spec"
+
   @RPSCR-I01 @unit-level
   Scenario: The classification is stable across runs
     Given two layers that both match "pkg/models/a.ts"
@@ -207,3 +213,16 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a root path that does not exist
     When the repository is walked
     Then the walk returns an error
+
+  @RPSCR-E02 @unit-level
+  Scenario: A layer file that cannot be read fails the walk
+    Given the file "src/a.ts" in the layer "src/*.ts", with no read permission
+    When the repository is walked
+    Then the walk returns an error naming "src/a.ts"
+
+  @RPSCR-B31 @unit-level
+  Scenario: Rule tags follow the declared code length
+    Given a project that declares 7-character codes
+    And a rule carrying @realizes and @gated-by tags of that length
+    When the spec is scanned
+    Then both edges are read, from the rule to each tagged code

@@ -47,6 +47,7 @@ the map.
 | `ININT-B07` | A stack preset fills the code layers of that stack, whether or not the project already has code. |
 | `ININT-B08` | `--layers` keeps only the chosen code layers and prunes the others; without it, no layer is pruned. |
 | `ININT-B09` | The success JSON has `escrito: true`, the written file, the answers' status and the next step: the DISCOVER phase when the project needs it, otherwise `anchors map build`. |
+| `ININT-B10` | Each `--governs GUIDE=tag1,tag2` rule is written to the configuration as one governs rule per non-blank tag, guides in sorted order. |
 
 ## Invariants
 

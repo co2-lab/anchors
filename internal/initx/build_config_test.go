@@ -89,3 +89,20 @@ func TestBuildConfigProposesNoArtifactLayerNorGoverns(t *testing.T) {
 		t.Errorf("governs should start empty, got %+v", c.Governs)
 	}
 }
+
+// The spec is the ANCHOR of colocation, never one of its own derivatives. Detected
+// specs used to be listed among the templates, so the proposal derived the spec from itself.
+func TestBuildConfigColocationNeverDerivesTheSpec(t *testing.T) {
+	t.Run("BLCNB-B04: Colocation is proposed only when detected, with templates only for the detected kinds", func(t *testing.T) {})
+	p := &Proposal{Colocated: true, HasSpecMD: true, HasFeature: true, HasTest: true}
+	c := p.buildConfig()
+	if c.Derived == nil || c.Derived.Anchor != "spec" {
+		t.Fatalf("detected colocation should be anchored on the spec, got %+v", c.Derived)
+	}
+	if _, derived := c.Derived.Files["spec"]; derived {
+		t.Errorf("the spec is the anchor and must not be among the templates, got %v", c.Derived.Files)
+	}
+	if len(c.Derived.Files) != 2 {
+		t.Errorf("feature and test are the derivatives, got %v", c.Derived.Files)
+	}
+}

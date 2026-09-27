@@ -45,7 +45,7 @@ actually confronted, and which of them failed a blocking gate.
 | `PRFLO-B05` | A pending verdict blocks promotion only when its gate is blocking and the gate marked the pending as one that impedes. |
 | `PRFLO-B06` | Every result awaiting an AI judgement is listed as awaiting judgement. |
 | `PRFLO-B07` | The per-node verdicts (`NodeVerdicts`) include only nodes that were confronted: a node touched only by skips or by verdicts awaiting judgement is left out, and the list is sorted by node. |
-| `PRFLO-B08` | A node is marked failed when a blocking gate failed on it; a failure of a non-blocking gate leaves it confronted but not failed. |
+| `PRFLO-B08` | A node is marked failed when a blocking gate failed on it, or left on it a pending marked as one that impedes (the same results that block promotion, `PRFLO-B05`); a failure of a non-blocking gate, or a pending that does not impede, leaves it confronted but not failed. |
 
 ## Invariants
 

@@ -45,10 +45,15 @@ simply not declared any, and files are read in a stable order.
 | `FLBLF-B05` | A state is terminal only when its section declares `@terminal`. |
 | `FLBLF-B06` | The piece a step fits is read from its section's "fits" line, written with the keyword of any supported language; a step without one fits nothing. |
 | `FLBLF-B07` | The reaction a result suggests is read from its section's "suggests" line and recorded on the state, never as a transition; a result without one suggests nothing. |
+| `FLBLF-B08` | The condition of a routed result is the prose of its line before, between and after the two codes, without the codes, their backticks, the arrow (`→` or `->`), the bullet and trailing punctuation. |
 
 ## Errors
 
-none — a project without flows has none (B01); a flow's findings (unreachable, unhandled, dangling) are answered by `FLMDF`, not failures of the build.
+| Code | Condition | Result | Why |
+| --- | --- | --- | --- |
+| `FLBLF-E01` | `flows/` or `flows/actions/` exists but cannot be read as a folder, or a flow or action file in them cannot be read. | The build returns the read error and no graph. Only a folder that does not exist is read as "no flows" (B01). | Skipping it would drop its states from the graph in silence, and the flows routed to them would look dangling. |
+
+A flow's findings (unreachable, unhandled, dangling) are answered by `FLMDF`, not failures of the build.
 
 ## Dependencies
 

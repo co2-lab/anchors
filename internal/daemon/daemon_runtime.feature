@@ -19,6 +19,12 @@ Feature: DaemonRuntime — how each platform probes and terminates the backgroun
     When it is terminated
     Then it ends by the signal SIGTERM, not by a kill
 
+  @DMRND-B03 @unit-level
+  Scenario: A live process of another user is alive
+    Given a Unix-like system, a test not run as root, and pid 1 answering the probe with EPERM
+    When pid 1 is probed
+    Then it is reported alive
+
   @DMRND-I01 @unit-level
   Scenario: Stopping leaves no PID file even when the process cleans nothing
     Given a PID file holding the PID of a child that never cleans the state folder

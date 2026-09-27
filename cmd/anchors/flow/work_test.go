@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/issue"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -154,6 +155,33 @@ func TestComposeWorkPrompt_testWithOverrideAndRegimes(t *testing.T) {
 	}
 }
 
+// The prompt cites what the project and the tool really call things. It told an English
+// project to write `## Open Decisions` … `none` in the procedure and `## Decisões em
+// aberto` … `nenhuma` in the gates' demands, and cited `trinca_opcional`,
+// `regra-implementada` and `testes-passam`, names no configuration or check has.
+func TestComposeWorkPrompt_speaksTheCurrentVocabulary(t *testing.T) {
+	t.Run("WRPRW-X02: The prompt cites one open-decisions title and value and the current names", func(t *testing.T) {})
+	cfg := workCfg()
+	cfg.Gates = append(cfg.Gates,
+		config.Gate{Name: "open", Check: "open-questions-resolved", On: []string{"spec"}},
+		config.Gate{Name: "rules", Check: "rule-implemented", On: []string{"code"}})
+	title, none := openSectionTitle(), noneValue()
+	spec := prompt(t, t.TempDir(), "src/pricing.ts", "spec", cfg)
+	wantAll(t, spec, "Write the question in `## "+title+"`", "The section **`## "+title+"`** is REQUIRED",
+		"write `"+none+"`", "or it carries `"+none+"`")
+	if title == "Open Decisions" {
+		wantNone(t, spec, "Decisões em aberto", "nenhuma")
+	}
+	all := spec +
+		prompt(t, t.TempDir(), "src/pricing.ts", "code", cfg) +
+		prompt(t, t.TempDir(), "src/pricing.ts", "test", cfg) +
+		prompt(t, t.TempDir(), "models/user.ts", "feature", cfg) +
+		prompt(t, t.TempDir(), "models/user.ts", "spec", cfg)
+	wantAll(t, all, "`optional_triad_edges` in anchors.yaml", "the check `rule-implemented` confronts it",
+		"the check `tests-pass` reads from here")
+	wantNone(t, all, "trinca_opcional", "regra-implementada", "testes-passam")
+}
+
 // A piece the layer waives is refused at the top, before any production script.
 func TestComposeWorkPrompt_waivedPieceStops(t *testing.T) {
 	t.Run("WRPRW-B03: A waived piece stops the prompt", func(t *testing.T) {})
@@ -163,7 +191,7 @@ func TestComposeWorkPrompt_waivedPieceStops(t *testing.T) {
 
 	// and in the triad listing of another stage, the waived piece says so
 	spec := prompt(t, t.TempDir(), "models/user.ts", "spec", workCfg())
-	wantAll(t, spec, "`models/user.feature` — feature  ← WAIVED by this layer (`trinca_opcional`): do NOT create")
+	wantAll(t, spec, "`models/user.feature` — feature  ← WAIVED by this layer (`optional_triad_edges`): do NOT create")
 }
 
 // A recognized (declarative) layer has no triad: the triad stages stop, and the code
@@ -187,9 +215,15 @@ func TestComposeWorkPrompt_reviewWithDeliveryRecords(t *testing.T) {
 	writeFile(t, root, "changes/2026-09-01-code.md", "stage: code\nunit: src/pricing.ts\nintent: the code\n")
 	writeFile(t, root, "changes/2026-09-02-test.md", "stage: test\nunit: src/pricing.ts\nintent: the tests\n")
 	writeFile(t, root, "changes/2026-09-03-other.md", "stage: code\nunit: src/tax.ts\nintent: other unit\n")
-	writeFile(t, root, "issues/todo/stale-src-pricing-edge.md", "x\n")
-	writeFile(t, root, "issues/doing/review-src-pricing-b04.md", "x\n")
-	writeFile(t, root, "issues/todo/stale-src-tax.md", "x\n")
+	// real issue names: `<date>--<kind>--[gate--][anchor--vs--]target.md`
+	stale := issue.Issue{Kind: issue.Stale, Anchor: "src/pricing.spec.md", Target: "src/pricing.ts", Date: "2026-09-01"}.ID()
+	review := issue.Issue{Kind: issue.Violation, Gate: "review", Target: "src/pricing.test.ts", Date: "2026-09-02"}.ID()
+	writeFile(t, root, "issues/todo/"+stale, "x\n")
+	writeFile(t, root, "issues/doing/"+review, "x\n")
+	writeFile(t, root, "issues/todo/"+issue.Issue{Kind: issue.Stale, Target: "src/tax.ts", Date: "2026-09-01"}.ID(), "x\n")
+	// a unit whose name only CONTAINS the target's stem is another unit
+	writeFile(t, root, "issues/todo/"+issue.Issue{Kind: issue.Violation, Gate: "g", Target: "src/pricing-v2.ts", Date: "2026-09-01"}.ID(), "x\n")
+	writeFile(t, root, "issues/todo/"+issue.Issue{Kind: issue.Violation, Gate: "g", Target: "lib/src/pricing.ts", Date: "2026-09-01"}.ID(), "x\n")
 
 	out := prompt(t, root, "src/pricing.ts", "review", workCfg())
 	wantAll(t, out,
@@ -199,10 +233,10 @@ func TestComposeWorkPrompt_reviewWithDeliveryRecords(t *testing.T) {
 		"**Do not correct the code**",
 		"anchors judge src/pricing.ts --gate review --verdict pass",
 		"## Findings ALREADY RECORDED about this unit",
-		"`issues/doing/review-src-pricing-b04.md`", "`issues/todo/stale-src-pricing-edge.md`",
+		"`issues/doing/"+review+"`", "`issues/todo/"+stale+"`",
 		"## Execution signals",
 	)
-	wantNone(t, out, "other unit", "stale-src-tax", "How to RECORD the delivery")
+	wantNone(t, out, "other unit", "src-tax", "src-pricing-v2", "lib-src-pricing", "How to RECORD the delivery")
 	if strings.Index(out, "intent: the code") > strings.Index(out, "intent: the tests") {
 		t.Error("the records come in order")
 	}

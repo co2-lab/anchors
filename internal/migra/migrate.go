@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -29,7 +30,12 @@ import (
 //
 // Não usa o parser de propósito: o arquivo pode estar num formato que o parser atual
 // recusa — que é exatamente o caso que se quer detectar e consertar.
-var versionRE = regexp.MustCompile(`(?m)^version:[[:space:]]*([0-9]+)[[:space:]]*$`)
+//
+// It matches ANY top-level `version:` line, with or without a trailing comment, and the
+// value is judged apart. Matching only a bare number made `version: 3  # why` and
+// `version: abc` invisible: both read as format 1, and a map then got a SECOND `version:`
+// line inserted above the one it already had.
+var versionRE = regexp.MustCompile(`(?m)^version:[ \t]*([^\s#]*)([ \t]*#.*)?[ \t]*$`)
 
 // FormatOf lê a versão de formato declarada no arquivo.
 //
@@ -44,8 +50,8 @@ func FormatOf(path string) (int, error) {
 	if m == nil {
 		return 1, nil
 	}
-	var v int
-	if _, err := fmt.Sscanf(string(m[1]), "%d", &v); err != nil {
+	v, err := strconv.Atoi(strings.Trim(string(m[1]), `"'`))
+	if err != nil {
 		return 0, fmt.Errorf("%s: `version:` is not a number", path)
 	}
 	return v, nil
@@ -137,11 +143,14 @@ func MigrateFile(path string, destino int, dryRun bool) (*Result, error) {
 	// acaso contém. Um mapa sem julgamento nenhum ainda é formato 2 depois de migrado, e
 	// deixá-lo em 1 faria a migração rodar de novo a cada comando.
 	if versionRE.MatchString(texto) {
-		texto = versionRE.ReplaceAllString(texto, fmt.Sprintf("version: %d", destino))
-	} else if base == "anchors.graph.yaml" {
-		// O mapa SEM `version:` é de antes de o campo existir. Ele entra logo depois do
+		texto = versionRE.ReplaceAllString(texto, fmt.Sprintf("version: %d", destino)+"${2}")
+	} else {
+		// O arquivo SEM `version:` é de antes de o campo existir. Ele entra logo depois do
 		// cabeçalho de comentário, que é onde o `Save` o escreve — acima dele, sairia do
 		// lugar na próxima gravação.
+		//
+		// The configuration too, not only the map: an `anchors.yaml` without the line was
+		// migrated and never stamped, so it stayed format 1 and read as old on every run.
 		linhas := strings.SplitAfter(texto, "\n")
 		i := 0
 		for i < len(linhas) && strings.HasPrefix(linhas[i], "#") {

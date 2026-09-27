@@ -13,6 +13,12 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     When anchors guide runs with no subcommand
     Then it prints "# Operating Anchors (guide for AI agents)" with the development flow and the command reference
 
+  @GVGDG-B14 @unit-level
+  Scenario: guide --help lists every subcommand
+    Given the governance commands registered on a root
+    When the help of anchors guide is read
+    Then its list names each of the thirteen subcommands exactly once, and nothing else
+
   @GVGDG-B02 @unit-level
   Scenario: Each guide subcommand prints its own guide
     Given the governance commands registered on a root

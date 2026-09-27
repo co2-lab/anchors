@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -128,6 +129,10 @@ func (e *Emitter) send(body []byte) {
 func (e *Emitter) build(ev Event) ([]byte, error) {
 	attrs := make([]map[string]any, 0, len(ev.Attrs))
 	for k, v := range ev.Attrs {
+		// NoCodes was declared and never read: a unit's code left with the switch on.
+		if s, ok := v.(string); ok && e.cfg.NoCodes && unitCodeRE.MatchString(s) {
+			continue
+		}
 		attrs = append(attrs, map[string]any{"key": k, "value": otlpValue(v)})
 	}
 	payload := map[string]any{
@@ -151,6 +156,11 @@ func (e *Emitter) build(ev Event) ([]byte, error) {
 	}
 	return json.Marshal(payload)
 }
+
+// unitCodeRE recognises a unit's identity code (`RLSGR`) or one of its rule codes
+// (`RLSGR-B01`) as a whole attribute value. The product's vocabulary — gate names, card
+// states — is lower case, so an upper-case code is the project's own word.
+var unitCodeRE = regexp.MustCompile(`^[A-Z0-9]{3,}(?:-[A-Z]{1,2}[0-9]{2}(?:-[a-z0-9-]+)?)?$`)
 
 // otlpValue converte um valor Go para o formato do protocolo.
 //

@@ -47,7 +47,7 @@ output and would feed the work queue with its own reports.
 | `SCIGS-B06` | A `.gitignore` pattern with a leading or an inner slash is anchored at the root; a pattern with no slash matches the basename or any path segment at any depth. |
 | `SCIGS-B07` | A pattern with a trailing slash matches directories only, and everything below an ignored directory is ignored with it; a plain file with that name is not ignored. |
 | `SCIGS-B08` | The `.gitignore` rules apply in order and the last one that matches decides, so a later `!pattern` re-includes a file an earlier rule excluded. |
-| `SCIGS-B09` | Without a loaded ignore set, the built-in directories and the Anchors records are still skipped and ephemera are still not files; nothing else is ignored. |
+| `SCIGS-B09` | Without a loaded ignore set, the built-in directories, the machinery (`.git`, `.anchors`) and the Anchors records are still skipped and ephemera are still not files; nothing else is ignored. |
 
 ## Invariants
 

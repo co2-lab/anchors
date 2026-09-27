@@ -80,6 +80,20 @@ func TestEnqueueDedup(t *testing.T) {
 	if n, _ := PendingCount(root); n != 1 {
 		t.Fatalf("want 1 pending, got %d", n)
 	}
+
+	// Two judgment gates on the same spec are two tasks; a judgment is not a review of
+	// another kind of the same file.
+	j1 := Task{ID: "judge-no-test-proof-real-addItem", Changed: "AddItem.spec.md", Kind: KindJudgment, SuggestedNext: "review", Reason: "r"}
+	j2 := Task{ID: "judge-rule-fulfilled-addItem", Changed: "AddItem.spec.md", Kind: KindJudgment, SuggestedNext: "review", Reason: "r"}
+	w := Task{ID: "3-spec-add", Changed: "AddItem.spec.md", Kind: "spec", SuggestedNext: "review", Reason: "r"}
+	for _, tk := range []Task{w, j1, j2} {
+		if created, err := Enqueue(root, tk); err != nil || !created {
+			t.Errorf("%s must be enqueued, created=%v err=%v", tk.ID, created, err)
+		}
+	}
+	if created, _ := Enqueue(root, j1); created {
+		t.Error("the same judgment enqueued twice must not duplicate")
+	}
 }
 
 func TestClaimEmpty(t *testing.T) {
@@ -298,7 +312,7 @@ func TestSuggestNext(t *testing.T) {
 		// `test` closes the triad — and that is where the work LOOKS done. The chain does not
 		// end in verifying: it calls the REVIEW. Measured in three rounds of a real E2E, 7
 		// serious defects passed with every gate green; none was found by a gate.
-		"code": "feature", "test": "review", "guide": "review-governed",
+		"code": "feature", "test": "review", "guide": "review",
 		"mistério": "triage",
 	}
 	for kind, want := range cases {
@@ -372,8 +386,10 @@ func TestReclaimWithoutStampReturns(t *testing.T) {
 // their own — the only point where the cycle did not route itself.
 func TestQueueSuggestionIsComposableByWork(t *testing.T) {
 	t.Run("TSQUT-B13: The suggestions of the triad kinds are composable by the work command", func(t *testing.T) {})
-	// every triad kind must suggest a verb `work` accepts
-	for _, k := range []string{"plan", "spec", "feature", "code", "test"} {
+	// every mapped kind must suggest a verb `work` accepts; only an unmapped kind gets
+	// `triage`, the queue's marker for "decide by hand". `guide` used to suggest
+	// `review-governed`, which `work` refuses.
+	for _, k := range []string{"plan-draft", "plan", "spec", "feature", "code", "test", "guide"} {
 		verb, why := SuggestNext(k)
 		if verb == "" {
 			continue // a kind with no next step is legitimate
@@ -495,16 +511,80 @@ func TestPendingCount_countsPendingAndClaimed(t *testing.T) {
 	}
 }
 
-func TestList_skipsACorruptedTaskFile(t *testing.T) {
-	t.Run("TSQUT-E03: A corrupted task file is skipped", func(t *testing.T) {})
+func TestList_surfacesACorruptedTaskFile(t *testing.T) {
+	t.Run("TSQUT-E03: A corrupted task file is listed as triage, and can be claimed and dropped", func(t *testing.T) {})
 	root := t.TempDir()
 	withTarget(t, root, "a.md")
 	_, _ = Enqueue(root, task("1-a", "a.md", "doc", "triage"))
-	if err := os.WriteFile(filepath.Join(dirFor(root), "pending__bad.yaml"), []byte("id: [unclosed\n"), 0o644); err != nil {
+	if err := os.WriteFile(filepath.Join(dirFor(root), "pending__0-bad.yaml"), []byte("id: [unclosed\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
+	// Before: it was skipped — never listed, never claimed, never cleaned.
 	tasks, err := List(root)
-	if err != nil || len(tasks) != 1 || tasks[0].ID != "1-a" {
-		t.Fatalf("List = %+v, %v; want only 1-a and no error", tasks, err)
+	if err != nil || len(tasks) != 2 || tasks[0].ID != "0-bad" || tasks[1].ID != "1-a" {
+		t.Fatalf("List = %+v, %v; want 0-bad and 1-a, no error", tasks, err)
+	}
+	bad := tasks[0]
+	if bad.State != Pending || bad.SuggestedNext != "triage" || !strings.Contains(bad.Reason, "pending__0-bad.yaml") {
+		t.Fatalf("the corrupted file must surface as a pending triage task naming its file, got %+v", bad)
+	}
+	c, err := Claim(root, "w", "2026-08-07T00:00:00Z")
+	if err != nil || c == nil || c.ID != "0-bad" {
+		t.Fatalf("Claim = %+v, %v; want the corrupted task", c, err)
+	}
+	if err := Drop(root, "0-bad"); err != nil {
+		t.Fatalf("Drop of the corrupted task: %v", err)
+	}
+	if tasks, _ := List(root); len(tasks) != 1 || tasks[0].ID != "1-a" {
+		t.Fatalf("after the drop only 1-a remains, got %+v", tasks)
+	}
+}
+
+func TestList_keepsATaskWithAnAbsoluteTarget(t *testing.T) {
+	t.Run("TSQUT-B15: A task whose target is an absolute path that exists is kept", func(t *testing.T) {})
+	root := t.TempDir()
+	withTarget(t, root, "src/a.go")
+	abs := filepath.Join(root, "src", "a.go")
+	if created, err := Enqueue(root, task("1-code-a", abs, "code", "feature")); err != nil || !created {
+		t.Fatalf("enqueue: %v %v", created, err)
+	}
+	// Before: the absolute target was joined under the root, never found, and the task was
+	// deleted as a ghost by the very next List.
+	for i := 0; i < 2; i++ {
+		tasks, err := List(root)
+		if err != nil || len(tasks) != 1 || tasks[0].Changed != abs {
+			t.Fatalf("List #%d = %+v, %v; want the task on %s", i+1, tasks, err, abs)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(dirFor(root), "pending__1-code-a.yaml")); err != nil {
+		t.Fatalf("the task file must stay on disk: %v", err)
+	}
+}
+
+func TestEnqueue_refusesAnIDHeldByAnotherTarget(t *testing.T) {
+	t.Run("TSQUT-E04: Enqueuing an ID a live task already holds for another target is refused", func(t *testing.T) {})
+	root := t.TempDir()
+	withTarget(t, root, "a.go")
+	withTarget(t, root, "b.go")
+	if _, err := Enqueue(root, task("1-x", "a.go", "code", "feature")); err != nil {
+		t.Fatal(err)
+	}
+	created, err := Enqueue(root, task("1-x", "b.go", "code", "feature"))
+	if err == nil || created {
+		t.Fatalf("Enqueue over a live ID = %v, %v; want a refusal", created, err)
+	}
+	if !strings.Contains(err.Error(), "1-x") {
+		t.Errorf("the refusal must name the ID: %v", err)
+	}
+	tasks, _ := List(root)
+	if len(tasks) != 1 || tasks[0].Changed != "a.go" {
+		t.Fatalf("the first task must survive untouched, got %+v", tasks)
+	}
+	// A claimed holder counts too.
+	if _, err := Claim(root, "w", "2026-08-07T00:00:00Z"); err != nil {
+		t.Fatal(err)
+	}
+	if created, err := Enqueue(root, task("1-x", "b.go", "code", "feature")); err == nil || created {
+		t.Fatalf("Enqueue over a claimed ID = %v, %v; want a refusal", created, err)
 	}
 }

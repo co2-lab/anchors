@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:423fe30a5f457e80 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:3becc066cf637822 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -126,6 +126,8 @@ teste prova.
 
 - [Generated and handwritten markers are recognised](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B16`
 
+- [A page with the unhashed marker is stale only when its body differs](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B17`
+
 - [Right after a build nothing is stale](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-I01`
 
 - [Asking for stale pages writes nothing](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-X01`
@@ -238,6 +240,8 @@ teste prova.
 
 - [Scenarios are indexed by code](camadas/apoio.md#flprf--flagparse--reading-a-projects-flag-files-and-the-scenarios-their-values-open) `FLPRF-B07`
 
+- [A flags folder or flag file that cannot be read is an error](camadas/apoio.md#flprf--flagparse--reading-a-projects-flag-files-and-the-scenarios-their-values-open) `FLPRF-E02`
+
 - [Actions then flows are read in a stable order, and no flows give no graph](camadas/apoio.md#flblf--flowbuild--assembling-the-work-flow-graph-from-the-projects-flow-and-action-files) `FLBLF-B01`
 
 - [Every coded heading is a state of its file](camadas/apoio.md#flblf--flowbuild--assembling-the-work-flow-graph-from-the-projects-flow-and-action-files) `FLBLF-B02`
@@ -251,6 +255,10 @@ teste prova.
 - [The piece a step fits is read in any language](camadas/apoio.md#flblf--flowbuild--assembling-the-work-flow-graph-from-the-projects-flow-and-action-files) `FLBLF-B06`
 
 - [A suggested reaction is recorded as a suggestion](camadas/apoio.md#flblf--flowbuild--assembling-the-work-flow-graph-from-the-projects-flow-and-action-files) `FLBLF-B07`
+
+- [A routed result keeps the prose around its two codes as its condition](camadas/apoio.md#flblf--flowbuild--assembling-the-work-flow-graph-from-the-projects-flow-and-action-files) `FLBLF-B08`
+
+- [A flows folder, actions folder or flow file that cannot be read is an error](camadas/apoio.md#flblf--flowbuild--assembling-the-work-flow-graph-from-the-projects-flow-and-action-files) `FLBLF-E01`
 
 - [From a state, only its declared exits](camadas/apoio.md#flmdf--flowmodel--the-questions-a-work-flow-graph-answers-what-comes-next-and-what-is-broken) `FLMDF-B01`
 
@@ -326,11 +334,13 @@ teste prova.
 
 - [The version is raised even when nothing else changes](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-B07`
 
-- [A map without a version gets one after its comment header](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-B08`
+- [A map or a configuration without a version gets one after its comment header](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-B08`
 
 - [The result counts each rename by its old form](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-B09`
 
 - [A dry run reports without writing](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-B10`
+
+- [A version line with a trailing comment is read and raised keeping the comment](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-B11`
 
 - [Migrating twice changes nothing the second time](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-I01`
 
@@ -338,7 +348,7 @@ teste prova.
 
 - [A missing file is an error and nothing is written](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-E01`
 
-- [A version too large to represent is an error](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-E02`
+- [A version that is not a number is an error and nothing is written](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-E02`
 
 - [A hole in the chain leaves the file untouched](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-E03`
 
@@ -436,6 +446,8 @@ teste prova.
 
 - [The marker is written under the project's unversioned anchors directory](camadas/apoio.md#tlntt--telemetrynotice--the-telemetry-notice-reaches-whoever-did-not-ask-for-it-once-and-says-how-to-turn-it-off) `TLNTT-B03`
 
+- [The notice is written in the project's language](camadas/apoio.md#tlntt--telemetrynotice--the-telemetry-notice-reaches-whoever-did-not-ask-for-it-once-and-says-how-to-turn-it-off) `TLNTT-B04`
+
 - [After the notice is written it counts as already shown](camadas/apoio.md#tlntt--telemetrynotice--the-telemetry-notice-reaches-whoever-did-not-ask-for-it-once-and-says-how-to-turn-it-off) `TLNTT-I01`
 
 - [The notice does not consult the opt-out itself](camadas/apoio.md#tlntt--telemetrynotice--the-telemetry-notice-reaches-whoever-did-not-ask-for-it-once-and-says-how-to-turn-it-off) `TLNTT-X01`
@@ -455,6 +467,8 @@ teste prova.
 - [Flushing has its own deadline independent of the HTTP client](camadas/apoio.md#tlemt--telemetryemitter--decision-events-leave-as-otlp-logs-never-block-the-work-and-never-carry-who-uses-the-product) `TLEMT-B06`
 
 - [Each request is a JSON POST carrying the configured headers](camadas/apoio.md#tlemt--telemetryemitter--decision-events-leave-as-otlp-logs-never-block-the-work-and-never-carry-who-uses-the-product) `TLEMT-B07`
+
+- [With NoCodes a unit or rule code never leaves in an attribute](camadas/apoio.md#tlemt--telemetryemitter--decision-events-leave-as-otlp-logs-never-block-the-work-and-never-carry-who-uses-the-product) `TLEMT-B08`
 
 - [A value that is not vocabulary becomes its type description](camadas/apoio.md#tlemt--telemetryemitter--decision-events-leave-as-otlp-logs-never-block-the-work-and-never-carry-who-uses-the-product) `TLEMT-I01`
 
@@ -574,6 +588,10 @@ teste prova.
 
 - [Waiting at exit with no emitter returns at once](camadas/comando.md#tlstt--telemetrysetup--every-command-starts-telemetry-the-same-way-the-opt-outs-first-then-the-notice-then-the-emitter) `TLSTT-B06`
 
+- [A declared opt-out holds when the configuration does not load](camadas/comando.md#tlstt--telemetrysetup--every-command-starts-telemetry-the-same-way-the-opt-outs-first-then-the-notice-then-the-emitter) `TLSTT-B07`
+
+- [Outside a project there is no notice, no emitter and no mark](camadas/comando.md#tlstt--telemetrysetup--every-command-starts-telemetry-the-same-way-the-opt-outs-first-then-the-notice-then-the-emitter) `TLSTT-B08`
+
 - [No emitter without the notice](camadas/comando.md#tlstt--telemetrysetup--every-command-starts-telemetry-the-same-way-the-opt-outs-first-then-the-notice-then-the-emitter) `TLSTT-I01`
 
 - [Starting telemetry sends nothing](camadas/comando.md#tlstt--telemetrysetup--every-command-starts-telemetry-the-same-way-the-opt-outs-first-then-the-notice-then-the-emitter) `TLSTT-X01`
@@ -676,6 +694,8 @@ teste prova.
 
 - [Modified files and files in a new directory are not accused](camadas/comando.md#dlcnd--deliveryconfront--confront-what-a-delivery-declares-against-the-disk-at-the-moment-it-is-declared) `DLCND-B04`
 
+- [A renamed file and a file under a subdirectory root are not accused](camadas/comando.md#dlcnd--deliveryconfront--confront-what-a-delivery-declares-against-the-disk-at-the-moment-it-is-declared) `DLCND-B08`
+
 - [A tested unit without a mutation signal is warned](camadas/comando.md#dlcnd--deliveryconfront--confront-what-a-delivery-declares-against-the-disk-at-the-moment-it-is-declared) `DLCND-B05`
 
 - [A failing informative gate is listed by its first sentence](camadas/comando.md#dlcnd--deliveryconfront--confront-what-a-delivery-declares-against-the-disk-at-the-moment-it-is-declared) `DLCND-B06`
@@ -727,6 +747,8 @@ teste prova.
 - [The title is the exit's prefix and the reason's first line](camadas/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must) `SCLTE-B07`
 
 - [The labels follow the exit](camadas/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must) `SCLTE-B08`
+
+- [A card written with its hash is the same card](camadas/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must) `SCLTE-B17`
 
 - [The origin card and the reviewed pull request are both labels](camadas/comando.md#sclte--escalate--open-the-right-card-for-a-change-the-plan-the-spec-or-the-tool-needs-and-stop-the-work-only-when-it-must) `SCLTE-B09`
 
@@ -942,6 +964,8 @@ teste prova.
 
 - [Without a pull request the step depends on where the card is](camadas/comando.md#tsrts--taskstatusreport--the-format-of-the-rounds-report-where-the-task-is-the-verdict-what-is-missing-and-what-comes-next) `TSRTS-B09`
 
+- [The check classes are printed in the user's language](camadas/comando.md#tsrts--taskstatusreport--the-format-of-the-rounds-report-where-the-task-is-the-verdict-what-is-missing-and-what-comes-next) `TSRTS-B12`
+
 - [With an open pull request the step follows the checks](camadas/comando.md#tsrts--taskstatusreport--the-format-of-the-rounds-report-where-the-task-is-the-verdict-what-is-missing-and-what-comes-next) `TSRTS-B10`
 
 - [A closed card and an idle state have their steps](camadas/comando.md#tsrts--taskstatusreport--the-format-of-the-rounds-report-where-the-task-is-the-verdict-what-is-missing-and-what-comes-next) `TSRTS-B11`
@@ -1008,6 +1032,8 @@ teste prova.
 
 - [A task in the queue is not queued twice](camadas/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue) `WTCHA-I01`
 
+- [A change pending at the signal is handled before the loop returns, and none after](camadas/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue) `WTCHA-I02`
+
 - [Handling a change writes nothing outside the queue](camadas/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue) `WTCHA-X01`
 
 - [On unix a detached child leads its own process group](camadas/comando.md#wtdmw--watchdaemon--the-watcher-started-in-the-background-survives-the-terminal-that-started-it) `WTDMW-B01`
@@ -1060,6 +1086,8 @@ teste prova.
 
 - [Composing writes nothing](camadas/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares) `WRPRW-X01`
 
+- [The prompt cites one open-decisions title and value and the current names](camadas/comando.md#wrprw--workprompt--compose-the-work-prompt-of-one-stage-over-one-target-from-what-the-project-declares) `WRPRW-X02`
+
 - [A file the map does not know is refused](camadas/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass) `DTAUI-B01`
 
 - [Without impact the dossier covers the file alone](camadas/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass) `DTAUI-B02`
@@ -1075,6 +1103,8 @@ teste prova.
 - [A scope with nothing pending says so](camadas/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass) `DTAUI-B07`
 
 - [The target prints first and the impact nodes after it](camadas/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass) `DTAUI-B08`
+
+- [The impact nodes print sorted by path, the same on every run](camadas/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass) `DTAUI-B09`
 
 - [Nothing outside the audited scope reaches the dossier](camadas/comando.md#dtaui--audit--the-dossier-of-everything-pending-on-one-file-for-fixing-it-in-one-pass) `DTAUI-I01`
 
@@ -1094,6 +1124,8 @@ teste prova.
 
 - [The embedded packs the project did not adopt are listed](camadas/comando.md#cmpln--compliance--the-state-of-each-regulatory-duty-grouped-by-the-norm-that-imposes-it) `CMPLN-B06`
 
+- [The total counts node-duty pairs, and each hint names where its target is declared](camadas/comando.md#cmpln--compliance--the-state-of-each-regulatory-duty-grouped-by-the-norm-that-imposes-it) `CMPLN-B07`
+
 - [Every duty in force has its line even when no node is subject](camadas/comando.md#cmpln--compliance--the-state-of-each-regulatory-duty-grouped-by-the-norm-that-imposes-it) `CMPLN-I01`
 
 - [A pack missing a required value fails naming it](camadas/comando.md#cmpln--compliance--the-state-of-each-regulatory-duty-grouped-by-the-norm-that-imposes-it) `CMPLN-E01`
@@ -1103,6 +1135,8 @@ teste prova.
 - [A project without a map fails pointing at the map build](camadas/comando.md#cmpln--compliance--the-state-of-each-regulatory-duty-grouped-by-the-norm-that-imposes-it) `CMPLN-E03`
 
 - [Bare guide prints the operating playbook](camadas/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B01`
+
+- [guide --help lists every subcommand](camadas/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B14`
 
 - [Each guide subcommand prints its own guide](camadas/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B02`
 
@@ -1161,6 +1195,8 @@ teste prova.
 - [A role with a lens reads it](camadas/comando.md#atgdt--autonomyguide--what-an-agent-does-with-what-it-does-not-know-by-the-role-declared-locally) `ATGDT-B05`
 
 - [Whoever does not decide is told not to ask, to move on and what not to escalate](camadas/comando.md#atgdt--autonomyguide--what-an-agent-does-with-what-it-does-not-know-by-the-role-declared-locally) `ATGDT-B06`
+
+- [The old user_issues flag with no role is named as such, never as an empty role](camadas/comando.md#atgdt--autonomyguide--what-an-agent-does-with-what-it-does-not-know-by-the-role-declared-locally) `ATGDT-B07`
 
 - [An unreadable declaration reads as no role](camadas/comando.md#atgdt--autonomyguide--what-an-agent-does-with-what-it-does-not-know-by-the-role-declared-locally) `ATGDT-I01`
 
@@ -1306,6 +1342,8 @@ teste prova.
 
 - [A target not in the map is recorded on its unit's spec](camadas/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B06`
 
+- [A test target not in the map is recorded on its unit's spec, for a Go unit as for a TypeScript one](camadas/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B12`
+
 - [A fail opens an issue, a repeated report changes nothing, a new report reopens it](camadas/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B07`
 
 - [A pass resolves the open issue and a waiver resolves it as a waiver](camadas/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B08`
@@ -1382,6 +1420,10 @@ teste prova.
 
 - [The driver reports on the error stream what it kept and what came from the other side](camadas/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text) `MPMRM-B06`
 
+- [Judgments of different gates on a shared edge are joined, and one gate judged on both sides keeps the latest](camadas/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text) `MPMRM-B07`
+
+- [The other side's flow states and transitions and the failures of a shared node reach the merged map](camadas/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text) `MPMRM-B08`
+
 - [Nothing of either side is missing from the merged map](camadas/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text) `MPMRM-I01`
 
 - [The base version is never read](camadas/comando.md#mpmrm--mapmerge--the-git-merge-driver-that-unites-two-versions-of-the-map-instead-of-merging-text) `MPMRM-X01`
@@ -1415,6 +1457,8 @@ teste prova.
 - [Applying rewrites the header and the scenario codes of the spec and the test](camadas/comando.md#rcdeo--recode--renames-an-identity-code-and-carries-the-change-to-every-textual-surface-of-the-project) `RCDEO-B04`
 
 - [Applying rebuilds the map from the headers](camadas/comando.md#rcdeo--recode--renames-an-identity-code-and-carries-the-change-to-every-textual-surface-of-the-project) `RCDEO-B05`
+
+- [Applying keeps the judgments, stamps and flow of the previous map](camadas/comando.md#rcdeo--recode--renames-an-identity-code-and-carries-the-change-to-every-textual-surface-of-the-project) `RCDEO-B06`
 
 - [After applying, neither the spec nor the map carries the old code](camadas/comando.md#rcdeo--recode--renames-an-identity-code-and-carries-the-change-to-every-textual-surface-of-the-project) `RCDEO-I01`
 
@@ -1516,6 +1560,10 @@ teste prova.
 
 - [The list refuses a project without config or without map](camadas/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-E02`
 
+- [A second check in the same process judges only its own map](camadas/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B13`
+
+- [The length check points each divergence to anchors recode, and there is no --fix](camadas/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B14`
+
 - [The subject is the first line that is neither blank nor a comment](camadas/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-B01`
 
 - [Messages git generates pass](camadas/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-B02`
@@ -1541,6 +1589,10 @@ teste prova.
 - [Checks run in order and only the first defect is reported](camadas/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-B12`
 
 - [A type with nothing after the colon is refused](camadas/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-B13`
+
+- [The subject limit counts characters, not bytes](camadas/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-B14`
+
+- [A subject with no space after the colon is refused](camadas/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-B15`
 
 - [The command only accepts or refuses](camadas/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-X01`
 
@@ -1594,6 +1646,8 @@ teste prova.
 
 - [The deprecated Portuguese flag names still work](camadas/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B12`
 
+- [A config that already declares enabled is frozen with a single key and still loads](camadas/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-B13`
+
 - [Freeze and thaw give back the file byte for byte](camadas/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-I01`
 
 - [The configuration is never reserialized](camadas/comando.md#frzex--freeze--the-project-is-stopped-in-three-layers-with-a-written-reason-and-thawed-by-undoing-exactly-those-layers) `FRZEX-X01`
@@ -1637,6 +1691,8 @@ teste prova.
 - [The non-interactive mode never prompts](camadas/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-X01`
 
 - [A malformed governs rule is refused with the expected form](camadas/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-E01`
+
+- [The governs rules reach the configuration, one rule per tag](camadas/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B10`
 
 - [An existing config is kept when the overwrite is not confirmed](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B01`
 
@@ -1704,6 +1760,8 @@ teste prova.
 
 - [Outside a repository the error explains what needs git](camadas/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-E02`
 
+- [The pre-push warns when the remote map was written by another version](camadas/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B12`
+
 - [Both the map and the config reach the current format](camadas/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B01`
 
 - [A missing file is reported and the other still migrates](camadas/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B02`
@@ -1756,6 +1814,8 @@ teste prova.
 
 - [A feature references the spec's identity instead of owning one](camadas/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-X01`
 
+- [The help and the unknown-kind refusal name every kind, and --out is mandatory](camadas/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B16`
+
 - [The catalog holds seven kinds and each is born by new](camadas/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B01`
 
 - [A markdown header is an HTML comment with the identity and placeholders](camadas/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B02`
@@ -1775,6 +1835,8 @@ teste prova.
 - [Each spec preset is an ordered set of catalog sections](camadas/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B09`
 
 - [Product doctrine has its own sections and no layer](camadas/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B10`
+
+- [A unit name becomes snake_case with one separator and whole acronyms](camadas/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B11`
 
 - [The root receives the fourteen operation commands](camadas/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-B01`
 
@@ -1854,6 +1916,8 @@ teste prova.
 
 - [The tests that stamp a changed module enter its impact path](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B03`
 
+- [The pieces of the changed file's unit enter its impact path, for a Go unit as for a TypeScript one](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B70`
+
 - [Changed paths are normalised to the map's form](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B04`
 
 - [Files the project does not govern are recognised as not governed](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B05`
@@ -1892,11 +1956,15 @@ teste prova.
 
 - [A pending judgment becomes one task in the local queue](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B21`
 
+- [A judge task suggests the review stage, a verb the work command composes](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B69`
+
 - [A queued judgment bars the incremental check only](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B22`
 
 - [Stale judge tasks leave the queue](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B23`
 
 - [An incremental check keeps the judgments it did not look at](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B24`
+
+- [A judge task is read back as the gate that queued it even when another gate's name prefixes it](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B68`
 
 - [In github mode the brief is printed without recording and nothing is queued](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B25`
 
@@ -2030,6 +2098,8 @@ teste prova.
 
 - [A file that lost line coverage fails the delta](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B13`
 
+- [The diff coverage lists the changed files in path order, and resolves a path matching several coverage entries always to the same one](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B14`
+
 - [Nothing measured is never reported as nothing below the threshold](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-I01`
 
 - [The diff coverage needs no map](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-X01`
@@ -2069,6 +2139,8 @@ teste prova.
 - [Missing pipelines are named and CI continues by default](camadas/comando.md#hldch--doctorcommand--the-global-health-x-ray-and-the-repair-of-the-github-mode-environment) `HLDCH-B11`
 
 - [A project that declared stale pipelines as blocking fails the check](camadas/comando.md#hldch--doctorcommand--the-global-health-x-ray-and-the-repair-of-the-github-mode-environment) `HLDCH-B12`
+
+- [The pipelines check reads the project named by the root flag](camadas/comando.md#hldch--doctorcommand--the-global-health-x-ray-and-the-repair-of-the-github-mode-environment) `HLDCH-B13`
 
 - [The diagnosis never fails the doctor](camadas/comando.md#hldch--doctorcommand--the-global-health-x-ray-and-the-repair-of-the-github-mode-environment) `HLDCH-I01`
 
@@ -2238,6 +2310,8 @@ teste prova.
 
 - [An impact path with no code file runs nothing](camadas/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B10`
 
+- [A passing run chains the check over the suite's own scope](camadas/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B11`
+
 - [A report older than the run is never ingested](camadas/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-I01`
 
 - [The declared command runs as declared](camadas/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-X01`
@@ -2284,6 +2358,8 @@ teste prova.
 
 - [The pre-commit bump is on unless the project turns it off](camadas/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B12`
 
+- [A project root below the repository top dates its own files and nothing outside it](camadas/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B13`
+
 - [Touching twice bumps nothing the second time](camadas/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-I01`
 
 - [A changed file with no dated header is neither touched nor listed](camadas/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-X01`
@@ -2309,6 +2385,8 @@ teste prova.
 - [A staged file with changes outside the index is named, not dated](camadas/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-B08`
 
 - [The facade's flags reach check unchanged](camadas/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-B09`
+
+- [A project root below the repository top hands check its own staged files, by its own paths](camadas/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-B10`
 
 - [Verify never asks check for both the full sweep and a file list](camadas/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-I01`
 
@@ -2372,7 +2450,7 @@ teste prova.
 
 - [Two gates sharing an ID fail the load](camadas/config.md#cnfgo-b06--two-gates-sharing-an-id-fail-the-load) `CNFGO-B06`
 
-- [An unknown scope, cost or phase value fails the load](camadas/config.md#cnfgo-b07--an-unknown-scope-cost-or-phase-value-fails-the-load) `CNFGO-B07`
+- [An unknown scope, full scope, cost, phase or perspective value fails the load](camadas/config.md#cnfgo-b07--an-unknown-scope-full-scope-cost-phase-or-perspective-value-fails-the-load) `CNFGO-B07`
 
 - [Local and manual modes refuse the GitHub fields](camadas/config.md#cnfgo-b08--local-and-manual-modes-refuse-the-github-fields) `CNFGO-B08`
 
@@ -2385,6 +2463,10 @@ teste prova.
 - [An unsupported language fails the load](camadas/config.md#cnfgo-b12--an-unsupported-language-fails-the-load) `CNFGO-B12`
 
 - [Code lengths outside two to eight fail, and valid ones reach the engine](camadas/config.md#cnfgo-b13--code-lengths-outside-two-to-eight-fail-and-valid-ones-reach-the-engine) `CNFGO-B13`
+
+- [A file with no code lengths restores the default, whatever an earlier load set](camadas/config.md#cnfgo-b42--a-file-with-no-code-lengths-restores-the-default-whatever-an-earlier-load-set) `CNFGO-B42`
+
+- [Every load refusal and the header Save writes are in the project's language](camadas/config.md#cnfgo-b43--every-load-refusal-and-the-header-save-writes-are-in-the-projects-language) `CNFGO-B43`
 
 - [A canonical gate inherits every field the project omitted](camadas/config.md#cnfgo-b14--a-canonical-gate-inherits-every-field-the-project-omitted) `CNFGO-B14`
 
@@ -2424,7 +2506,7 @@ teste prova.
 
 - [A scenario tag maps to every letter that declares it](camadas/config.md#cnfgo-b32--a-scenario-tag-maps-to-every-letter-that-declares-it) `CNFGO-B32`
 
-- [The code length pattern is exact for one length and a range for contiguous lengths](camadas/config.md#cnfgo-b33--the-code-length-pattern-is-exact-for-one-length-and-a-range-for-contiguous-lengths) `CNFGO-B33`
+- [The code length pattern matches exactly the declared lengths, contiguous or not](camadas/config.md#cnfgo-b33--the-code-length-pattern-matches-exactly-the-declared-lengths-contiguous-or-not) `CNFGO-B33`
 
 - [A rule type catalogues the sections it declares, ignoring case and surrounding spaces](camadas/config.md#cnfgo-b41--a-rule-type-catalogues-the-sections-it-declares-ignoring-case-and-surrounding-spaces) `CNFGO-B41`
 
@@ -2482,7 +2564,7 @@ teste prova.
 
 - [The naming conventions apply to any family and a declared one replaces them](camadas/config.md#dlcti-b05--the-naming-conventions-apply-to-any-family-and-a-declared-one-replaces-them) `DLCTI-B05`
 
-- [The Gherkin language defaults to English, and one outside the table keeps its code with English keywords](camadas/config.md#dlcti-b06--the-gherkin-language-defaults-to-english-and-one-outside-the-table-keeps-its-code-with-english-keywords) `DLCTI-B06`
+- [The Gherkin language defaults to English, is found in any case, and one outside the table keeps its code with English keywords](camadas/config.md#dlcti-b06--the-gherkin-language-defaults-to-english-is-found-in-any-case-and-one-outside-the-table-keeps-its-code-with-english-keywords) `DLCTI-B06`
 
 - [Every way to open a scenario, in every language, deduplicated and longest first](camadas/config.md#dlcti-b07--every-way-to-open-a-scenario-in-every-language-deduplicated-and-longest-first) `DLCTI-B07`
 
@@ -2609,6 +2691,8 @@ teste prova.
 - [A code file missing from disk does not hide the orphans of the other target](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E02`
 
 - [A declared export pattern with no capture group is named, not called undeclared](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-E03`
+
+- [Every file the spec governs is confronted, not only the first](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B11`
 
 - [An identifier in the wrong language is accused, and an English one passes](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B01`
 
@@ -2944,6 +3028,8 @@ teste prova.
 
 - [A resolved doctrine that cannot be read confirms none of its rules](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-E01`
 
+- [Doctrine rules and realizes tags are read at the code length the project declares](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B32`
+
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B01`
 
 - [A spec without the domain section is failed](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B02`
@@ -3074,6 +3160,8 @@ teste prova.
 
 - [One handling path answers for every declared failure](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-X01`
 
+- [A failure rule is read at the code length the project declares](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B19`
+
 - [Non-feature artifacts skip confrontation](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B01`
 
 - [A nil graph returns pending without approving](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B02`
@@ -3126,6 +3214,8 @@ teste prova.
 
 - [Comment markers inside strings or glued to a name keep the line](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B19`
 
+- [The drift verdict is written in the project's language](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B20`
+
 - [Only a check with a registered fixer is fixable](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B01`
 
 - [A stale date on a committed file is rewritten to its last commit date](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B02`
@@ -3145,6 +3235,8 @@ teste prova.
 - [A header without the date field is never given one](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-X01`
 
 - [A write that fails is reported as not fixed, with the cause](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-E01`
+
+- [The repair detail is written in the project's language](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B08`
 
 - [The flag gates skip what is not a flag, and a flag with no scenario](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B01`
 
@@ -3181,6 +3273,10 @@ teste prova.
 - [A gate that could not measure never answers Pass](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-I01`
 
 - [No waiver is accepted without a written reason](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-X01`
+
+- [A gated-by citation is read at the code length the project declares](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B17`
+
+- [Flags that cannot be read leave the citation Pending, naming the flags folder](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-E02`
 
 - [A gate reaches only the kinds it declares](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B01`
 
@@ -3558,6 +3654,8 @@ teste prova.
 
 - [The pack duties are read once per root](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B06`
 
+- [Another set of packs for the same root is read, not served from the cache](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B12`
+
 - [The report gives one status per duty, in the order handed](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B07`
 
 - [A node is a subject only when its header carries the duty's trigger](camadas/gate.md#blgtn--obligations--the-duties-in-force-resolved-from-packs-and-config-and-their-status-across-the-project) `BLGTN-B08`
@@ -3840,7 +3938,7 @@ teste prova.
 
 - [Per-node verdicts include only confronted nodes, sorted](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B07`
 
-- [A node is failed when a blocking gate failed on it](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B08`
+- [A node is failed when a blocking gate failed on it or left it an impeding pending](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B08`
 
 - [Promotion is refused exactly when something blocks](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-I01`
 
@@ -4059,6 +4157,8 @@ teste prova.
 - [Codes of another unit are never charged](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-X01`
 
 - [A code named only in a comment is not a claim of proof](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-X02`
+
+- [A data state defined with the unit prefix is read at the code length the project declares](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B15`
 
 - [Non-spec artifacts skip confrontation](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B01`
 
@@ -4538,6 +4638,10 @@ teste prova.
 
 - [A handle only a consumer mentions is not charged to the spec](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-X01`
 
+- [A surface declared with a glob is read from the directory before the first wildcard](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B21`
+
+- [A consumer that names only a longer id does not query the shorter one](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B22`
+
 - [Linked code that cannot be read is not an end](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-E01`
 
 - [The gate skips when no test handle attribute is declared](camadas/gate.md#tqets--testidqueriedexists--every-handle-queried-by-an-e2e-flow-must-exist-in-code) `TQETS-B01`
@@ -4740,7 +4844,13 @@ teste prova.
 
 - [Marking a record reviewed moves it to the history under the same name](camadas/infra.md#chrcc--changerecord--the-delivery-record-an-agent-leaves-when-it-finishes-a-stage) `CHRCC-B08`
 
+- [A second review of the same key keeps the first in the history](camadas/infra.md#chrcc--changerecord--the-delivery-record-an-agent-leaves-when-it-finishes-a-stage) `CHRCC-B09`
+
+- [A line break or a comment close in a field cannot break the header](camadas/infra.md#chrcc--changerecord--the-delivery-record-an-agent-leaves-when-it-finishes-a-stage) `CHRCC-B10`
+
 - [A reviewed record leaves the pending list and stays in the history](camadas/infra.md#chrcc--changerecord--the-delivery-record-an-agent-leaves-when-it-finishes-a-stage) `CHRCC-I01`
+
+- [Two different units never share a key](camadas/infra.md#chrcc--changerecord--the-delivery-record-an-agent-leaves-when-it-finishes-a-stage) `CHRCC-I02`
 
 - [A subfolder of changes is never listed as pending](camadas/infra.md#chrcc--changerecord--the-delivery-record-an-agent-leaves-when-it-finishes-a-stage) `CHRCC-X01`
 
@@ -4824,6 +4934,8 @@ teste prova.
 
 - [Termination on Unix-like systems is a catchable SIGTERM](camadas/infra.md#dmrnd--daemonruntime--how-each-platform-probes-and-terminates-the-background-watcher) `DMRND-B02`
 
+- [A live process of another user is alive](camadas/infra.md#dmrnd--daemonruntime--how-each-platform-probes-and-terminates-the-background-watcher) `DMRND-B03`
+
 - [Stopping leaves no PID file even when the process cleans nothing](camadas/infra.md#dmrnd--daemonruntime--how-each-platform-probes-and-terminates-the-background-watcher) `DMRND-I01`
 
 - [Without git on the PATH the answer is no binary](camadas/infra.md#gtavg--gitavailability--why-a-git-operation-cannot-happen-named-with-its-fix) `GTAVG-B01`
@@ -4890,6 +5002,8 @@ teste prova.
 
 - [Without the platform CLI the branch protection is not asked](camadas/infra.md#ghegt--githubenvironment--the-doctor-warns-before-the-work-starts-about-the-pieces-the-github-flow-silently-needs) `GHEGT-B07`
 
+- [The protection is read on the declared integration branch](camadas/infra.md#ghegt--githubenvironment--the-doctor-warns-before-the-work-starts-about-the-pieces-the-github-flow-silently-needs) `GHEGT-B08`
+
 - [After the fix seeds the pipelines no pipeline finding remains](camadas/infra.md#ghegt--githubenvironment--the-doctor-warns-before-the-work-starts-about-the-pieces-the-github-flow-silently-needs) `GHEGT-I01`
 
 - [The board is never charged](camadas/infra.md#ghegt--githubenvironment--the-doctor-warns-before-the-work-starts-about-the-pieces-the-github-flow-silently-needs) `GHEGT-X01`
@@ -4954,7 +5068,7 @@ teste prova.
 
 - [A needs to a plan that does not exist is broken](camadas/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B21`
 
-- [A cycle of needs gives one finding showing a path](camadas/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B22`
+- [A cycle of needs gives one finding naming only the cycle, the same on every run](camadas/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B22`
 
 - [A chain in order, or no plan at all, gives nothing](camadas/infra.md#dctro--doctor--the-global-health-check-that-hunts-the-systemic-loose-ends-of-a-project) `DCTRO-B23`
 
@@ -5018,7 +5132,11 @@ teste prova.
 
 - [Prefixes are deduced from the given paths without reading the disk](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module) `APPRP-X01`
 
-- [The artifact options are spec, feature, test, guide and plan, in that order](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation) `ARCHR-B01`
+- [Modules sharing a folder name are each keyed by their path, with distinct prefixes](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module) `APPRP-B06`
+
+- [No two modules ever share a prefix while a free one exists](camadas/infra.md#apprp--applypreset--writes-a-stack-presets-layers-into-the-configuration-and-deduces-one-identity-prefix-per-module) `APPRP-I02`
+
+- [The artifact options are spec, feature, test, guide, plan and code, in that order](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation) `ARCHR-B01`
 
 - [Each artifact inference found is pre-checked, and nothing else](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation) `ARCHR-B02`
 
@@ -5033,6 +5151,10 @@ teste prova.
 - [Colocation is declared from the spec as anchor, and the spec is never a derivative](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation) `ARCHR-B07`
 
 - [No colocation is declared when it is not wanted, when spec is not chosen, or when nothing derives from the spec](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation) `ARCHR-B08`
+
+- [Choosing code or leaving it out creates and removes no layer](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation) `ARCHR-B09`
+
+- [Colocation keeps the rest of derived](camadas/infra.md#archr--artifactchoice--turns-the-artifacts-the-user-chose-at-init-into-artifact-layers-and-colocation) `ARCHR-B10`
 
 - [Each detected code directory becomes a code layer named after its last segment](camadas/infra.md#blcnb--buildconfig--builds-the-configuration-that-inference-proposes-as-the-default-for-the-init-questions) `BLCNB-B01`
 
@@ -5089,6 +5211,16 @@ teste prova.
 - [No default gate carries a legacy name](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-X01`
 
 - [The gate is of the blocking class](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B12`
+
+- [Choosing every artifact init offers seeds every gate of the catalog](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B13`
+
+- [The gates that run on specs, features and tests are seeded without plans](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B14`
+
+- [The gate names registered for the vocabulary check are the full catalog](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B15`
+
+- [Choosing plans adds only gates that run on plans](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-I04`
+
+- [No default gate writes Portuguese into the project](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-X02`
 
 - [The local board page is the published page](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B01`
 
@@ -5168,6 +5300,10 @@ teste prova.
 
 - [A root that cannot be walked fails the inference with no proposal](camadas/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-E01`
 
+- [A test named in any known dialect pairs with the code of the same stem](camadas/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-B10`
+
+- [The same tree always gives the same code extensions and code directories, ties included](camadas/infra.md#inprn--inferproposal--walks-the-project-and-proposes-its-structure-deterministically-for-init-to-confirm) `INPRN-I02`
+
 - [A preset layer with no kind becomes a code layer](camadas/infra.md#inctn--initcatalogs--the-stack-preset-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B01`
 
 - [Looking up a preset by an unknown name finds nothing](camadas/infra.md#inctn--initcatalogs--the-stack-preset-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B02`
@@ -5246,6 +5382,10 @@ teste prova.
 
 - [An invalid answer is not corrected](camadas/infra.md#inqsn--initquestions--describe-the-human-decisions-of-init-so-an-agent-can-answer-them-without-the-terminal-ui-and-judge-every-answer) `INQSN-X01`
 
+- [The artifacts question offers the artifact options, code included](camadas/infra.md#inqsn--initquestions--describe-the-human-decisions-of-init-so-an-agent-can-answer-them-without-the-terminal-ui-and-judge-every-answer) `INQSN-B11`
+
+- [The question texts, their reasons and the refusal details are in the project's language](camadas/infra.md#inqsn--initquestions--describe-the-human-decisions-of-init-so-an-agent-can-answer-them-without-the-terminal-ui-and-judge-every-answer) `INQSN-B12`
+
 - [Every declared pipeline has a carried template, a role and its serialization need](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B01`
 
 - [A pipeline is missing only when its file is absent](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B02`
@@ -5262,7 +5402,7 @@ teste prova.
 
 - [An intact pipeline that differs from its template is outdated](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B08`
 
-- [A declared integration branch replaces every marked branch line](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B09`
+- [The integration branch, main when none is declared, replaces every marked branch line](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B09`
 
 - [Anchors writes the board columns only up to READY TO TEST](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B10`
 
@@ -5378,6 +5518,8 @@ teste prova.
 
 - [The suggestions of the triad kinds are composable by the work command](camadas/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-B13`
 
+- [A task whose target is an absolute path that exists is kept](camadas/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-B15`
+
 - [The pending count counts pending and claimed tasks](camadas/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-B14`
 
 - [Concurrent workers never claim the same task](camadas/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-I01`
@@ -5388,7 +5530,9 @@ teste prova.
 
 - [Dropping an unknown task is refused](camadas/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-E02`
 
-- [A corrupted task file is skipped](camadas/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-E03`
+- [A corrupted task file is listed as triage, and can be claimed and dropped](camadas/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-E03`
+
+- [Enqueuing an ID a live task already holds for another target is refused](camadas/infra.md#tsqut--taskqueue--the-file-backed-queue-between-something-changed-and-someone-works-on-it) `TSQUT-E04`
 
 - [The lower convention derives the lower-case prefix](camadas/infra.md#rcdlr--recodedialect--the-projects-own-surfaces-of-a-code-testid-prefixes-and-file-names) `RCDLR-B01`
 
@@ -5425,6 +5569,10 @@ teste prova.
 - [Moves go through git inside a repository and are plain renames outside](camadas/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project) `RCPLR-B09`
 
 - [An untracked file inside a repository is moved by a plain rename](camadas/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project) `RCPLR-B10`
+
+- [A target code another unit already owns is refused](camadas/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project) `RCPLR-B11`
+
+- [The malformed-code refusal names the lengths the project declares](camadas/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project) `RCPLR-B12`
 
 - [A git refusal is surfaced and never bypassed](camadas/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project) `RCPLR-X01`
 
@@ -5465,6 +5613,14 @@ teste prova.
 - [Different subjects are divergent](camadas/infra.md#txsmt--textsimilarity--how-close-two-texts-that-should-be-equal-are-weighted-by-what-each-word-discriminates) `TXSMT-B08`
 
 - [The reported score is the larger of the two rulers](camadas/infra.md#txsmt--textsimilarity--how-close-two-texts-that-should-be-equal-are-weighted-by-what-each-word-discriminates) `TXSMT-B09`
+
+- [Texts that differ only by a number are not identical](camadas/infra.md#txsmt--textsimilarity--how-close-two-texts-that-should-be-equal-are-weighted-by-what-each-word-discriminates) `TXSMT-B10`
+
+- [Equal texts without any word are identical](camadas/infra.md#txsmt--textsimilarity--how-close-two-texts-that-should-be-equal-are-weighted-by-what-each-word-discriminates) `TXSMT-B11`
+
+- [The rulers fall back together, so one weightless side does not make a borderline](camadas/infra.md#txsmt--textsimilarity--how-close-two-texts-that-should-be-equal-are-weighted-by-what-each-word-discriminates) `TXSMT-B12`
+
+- [A verdict prints its English name](camadas/infra.md#txsmt--textsimilarity--how-close-two-texts-that-should-be-equal-are-weighted-by-what-each-word-discriminates) `TXSMT-B13`
 
 - [A new suggestion is born in pending with its context and reason](camadas/infra.md#sgsts--suggestionstore--a-proposed-fix-as-a-patch-plus-its-reason-waiting-for-someone-to-decide) `SGSTS-B01`
 
@@ -5524,6 +5680,8 @@ teste prova.
 
 - [Git compares the working copy with the current commit or with a reference](camadas/infra.md#dcldf--diffchangedlines--which-lines-of-which-files-a-change-added-read-from-a-unified-diff) `DCLDF-B06`
 
+- [An added line that starts with two plus signs is a line, not a header](camadas/infra.md#dcldf--diffchangedlines--which-lines-of-which-files-a-change-added-read-from-a-unified-diff) `DCLDF-B07`
+
 - [Removals do not shift the new-side numbering](camadas/infra.md#dcldf--diffchangedlines--which-lines-of-which-files-a-change-added-read-from-a-unified-diff) `DCLDF-I01`
 
 - [A diff file is read without git](camadas/infra.md#dcldf--diffchangedlines--which-lines-of-which-files-a-change-added-read-from-a-unified-diff) `DCLDF-X01`
@@ -5569,6 +5727,10 @@ teste prova.
 - [The percentage is covered over total, and zero for a file without lines](camadas/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-B06`
 
 - [A record without its end line is closed by the next record or the end of the report](camadas/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-B07`
+
+- [A line entry with a checksum field keeps its hit count](camadas/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-B08`
+
+- [Entries before the first source-file line belong to no file](camadas/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-B09`
 
 - [Uncovered changed lines never exceed the instrumented changed lines](camadas/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-I01`
 
@@ -5622,6 +5784,10 @@ teste prova.
 
 - [The score is killed over killed plus survived](camadas/infra.md#gring--gremlinsingest--the-mutation-score-per-file-read-from-a-gremlins-report) `GRING-I01`
 
+- [A mutant no test covered is counted apart and does not enter the score](camadas/infra.md#gring--gremlinsingest--the-mutation-score-per-file-read-from-a-gremlins-report) `GRING-B08`
+
+- [A file where no mutant ran scores 100](camadas/infra.md#gring--gremlinsingest--the-mutation-score-per-file-read-from-a-gremlins-report) `GRING-B09`
+
 - [The report's own efficacy figure is not used](camadas/infra.md#gring--gremlinsingest--the-mutation-score-per-file-read-from-a-gremlins-report) `GRING-X01`
 
 - [A canonical-format report under the gremlins format is refused naming format](camadas/infra.md#gring--gremlinsingest--the-mutation-score-per-file-read-from-a-gremlins-report) `GRING-E01`
@@ -5650,7 +5816,7 @@ teste prova.
 
 - [A layer override reaches the spec through the layer it declares](camadas/mapa.md#grblg-b10--a-layer-override-reaches-the-spec-through-the-layer-it-declares) `GRBLG-B10`
 
-- [A code override replaces every template for that unit](camadas/mapa.md#grblg-b11--a-code-override-replaces-every-template-for-that-unit) `GRBLG-B11`
+- [A code override replaces the templates of the kinds it declares, and the others fall back to the default](camadas/mapa.md#grblg-b11--a-code-override-replaces-the-templates-of-the-kinds-it-declares-and-the-others-fall-back-to-the-default) `GRBLG-B11`
 
 - [A bracketed directory is literal and a template wildcard expands](camadas/mapa.md#grblg-b12--a-bracketed-directory-is-literal-and-a-template-wildcard-expands) `GRBLG-B12`
 
@@ -5762,6 +5928,10 @@ teste prova.
 
 - [Report paths resolve by the report's folder, or stay unowned](camadas/mapa.md#sgina-b18--report-paths-resolve-by-the-reports-folder-or-stay-unowned) `SGINA-B18`
 
+- [A report with no instrumented line leaves no percentage behind](camadas/mapa.md#sgina-b19--a-report-with-no-instrumented-line-leaves-no-percentage-behind) `SGINA-B19`
+
+- [Among several report paths matching a node, the exact one, then the closest in length, is always chosen](camadas/mapa.md#sgina-b20--among-several-report-paths-matching-a-node-the-exact-one-then-the-closest-in-length-is-always-chosen) `SGINA-B20`
+
 - [The proven rules are the sorted union of the suites](camadas/mapa.md#sgina-i01--the-proven-rules-are-the-sorted-union-of-the-suites) `SGINA-I01`
 
 - [Each measurement lands only on its kind of node](camadas/mapa.md#sgina-x01--each-measurement-lands-only-on-its-kind-of-node) `SGINA-X01`
@@ -5825,6 +5995,8 @@ teste prova.
 - [One judgment per gate, its date kept when nothing changed](camadas/mapa.md#edstd-b12--one-judgment-per-gate-its-date-kept-when-nothing-changed) `EDSTD-B12`
 
 - [The stale relations are listed](camadas/mapa.md#edstd-b13--the-stale-relations-are-listed) `EDSTD-B13`
+
+- [Judging keeps a waiver another gate recorded, and the gate that waived replaces its own](camadas/mapa.md#edstd-b14--judging-keeps-a-waiver-another-gate-recorded-and-the-gate-that-waived-replaces-its-own) `EDSTD-B14`
 
 - [The same round on the same day gives the same stamps](camadas/mapa.md#edstd-i01--the-same-round-on-the-same-day-gives-the-same-stamps) `EDSTD-I01`
 
@@ -5980,6 +6152,8 @@ teste prova.
 
 - [A plan seeds only concrete spec and doctrine paths](camadas/scan.md#rpscr-b29--a-plan-seeds-only-concrete-spec-and-doctrine-paths) `RPSCR-B29`
 
+- [Header keys are read only inside the header](camadas/scan.md#rpscr-b30--header-keys-are-read-only-inside-the-header) `RPSCR-B30`
+
 - [The classification is stable across runs](camadas/scan.md#rpscr-i01--the-classification-is-stable-across-runs) `RPSCR-I01`
 
 - [A guide's dependencies table is not a dependency](camadas/scan.md#rpscr-x01--a-guides-dependencies-table-is-not-a-dependency) `RPSCR-X01`
@@ -5987,6 +6161,10 @@ teste prova.
 - [A spec does not read a dep header line](camadas/scan.md#rpscr-x02--a-spec-does-not-read-a-dep-header-line) `RPSCR-X02`
 
 - [A root that cannot be walked returns the error](camadas/scan.md#rpscr-e01--a-root-that-cannot-be-walked-returns-the-error) `RPSCR-E01`
+
+- [A layer file that cannot be read fails the walk](camadas/scan.md#rpscr-e02--a-layer-file-that-cannot-be-read-fails-the-walk) `RPSCR-E02`
+
+- [Rule tags follow the declared code length](camadas/scan.md#rpscr-b31--rule-tags-follow-the-declared-code-length) `RPSCR-B31`
 
 - [Only a marked workflow is owned upstream](camadas/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

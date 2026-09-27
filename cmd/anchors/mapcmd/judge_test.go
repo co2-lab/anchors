@@ -208,8 +208,10 @@ func TestJudge_legacyDispensadoIsAWaiver(t *testing.T) {
 func TestJudge_reviewStampsTheNodeAndClosesTheTask(t *testing.T) {
 	t.Run("JDGUE-B05: The review verdict stamps every edge of the target", func(t *testing.T) {})
 	t.Run("JDGUE-B11: The verdict closes its judge task and the pending list shrinks", func(t *testing.T) {})
+	// the first task is as the check queues it now (kind judgment, the review stage as the
+	// verb); the second as a queue written before (the legacy `judge` verb).
 	root := fixtureProject(t)
-	if _, err := queue.Enqueue(root, queue.Task{ID: "judge-review-src-login", Changed: "src/login.ts", SuggestedNext: "judge", Reason: "delivered"}); err != nil {
+	if _, err := queue.Enqueue(root, queue.Task{ID: "judge-review-src-login", Changed: "src/login.ts", Kind: "judgment", SuggestedNext: "review", Reason: "delivered"}); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := queue.Enqueue(root, queue.Task{ID: "judge-atomic-src-login", Changed: "src/login.test.ts", SuggestedNext: "judge", Reason: "changed"}); err != nil {
@@ -384,6 +386,29 @@ func TestJudgeWritesIssue(t *testing.T) {
 	} {
 		if got := judgeWritesIssue(c.cfg, c.record); got != c.want {
 			t.Errorf("%s: judgeWritesIssue = %v, want %v", c.name, got, c.want)
+		}
+	}
+}
+
+// The fallback knows the unit by identity in any language: a Go test not yet in the map
+// lands on its unit's spec, as a TypeScript one does.
+func TestUnitExistingPiece_goAndTestTargets(t *testing.T) {
+	t.Run("JDGUE-B12: A test target not in the map is recorded on its unit's spec, for a Go unit as for a TypeScript one", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "pkg/foo.spec.md", Kind: mapx.KindSpec},
+		{ID: "web/x.spec.md", Kind: mapx.KindSpec},
+		{ID: "lib/only_code.go", Kind: mapx.KindCode},
+	}}
+	cases := map[string]string{
+		"pkg/foo_test.go":       "pkg/foo.spec.md",
+		"pkg/foo.go":            "pkg/foo.spec.md",
+		"web/x.test.ts":         "web/x.spec.md",
+		"lib/only_code_test.go": "lib/only_code.go",
+		"pkg/other_test.go":     "",
+	}
+	for target, want := range cases {
+		if got := unitExistingPiece(g, target); got != want {
+			t.Errorf("%s → %q, want %q", target, got, want)
 		}
 	}
 }

@@ -89,6 +89,14 @@ Feature: Freeze — the project is stopped in three layers with a written reason
     Then the freeze uses the reason and skips the rule
     And the thaw does not push
 
+  @FRZEX-B13 @unit-level
+  Scenario: A config that already declares enabled is frozen with a single key and still loads
+    Given a configuration with "enabled: true" and a stale freeze_reason
+    When freeze runs with the reason "stop now"
+    Then the file has exactly one enabled: and one freeze_reason: line
+    And it loads frozen with the reason "stop now"
+    And after thaw it loads not frozen
+
   @FRZEX-I01 @unit-level
   Scenario: Freeze and thaw give back the file byte for byte
     Given a configuration in github mode

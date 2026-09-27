@@ -57,10 +57,10 @@ Feature: MigrateFile — takes one project file from its declared format to the 
     Then it has "version: 2" and the result reports a change
 
   @MGFLM-B08 @unit-level
-  Scenario: A map without a version gets one after its comment header
-    Given a map starting with two comment lines and no version line
-    When it is migrated to format 2
-    Then it has "version: 2" and the text does not start with it
+  Scenario: A map or a configuration without a version gets one after its comment header
+    Given a map starting with two comment lines and no version line, and a configuration "# config" then "project: x"
+    When each is migrated to format 2
+    Then the map has "version: 2" and the text does not start with it, and the configuration reads "# config", "version: 2", "project: x" and is format 2
 
   @MGFLM-B09 @unit-level
   Scenario: The result counts each rename by its old form
@@ -74,6 +74,12 @@ Feature: MigrateFile — takes one project file from its declared format to the 
     When it is migrated to format 2 as a dry run
     Then the result reports a change and counts "gerado_por" once
     And the file on disk is unchanged
+
+  @MGFLM-B11 @unit-level
+  Scenario: A version line with a trailing comment is read and raised keeping the comment
+    Given a map with "version: 1  # the first", and a configuration with "version: 3 # c"
+    When their formats are read and the map is migrated to format 2
+    Then they are formats 1 and 3, and the map's line reads "version: 2  # the first"
 
   @MGFLM-I01 @unit-level
   Scenario: Migrating twice changes nothing the second time
@@ -94,10 +100,10 @@ Feature: MigrateFile — takes one project file from its declared format to the 
     Then the answer is an error and no file is created
 
   @MGFLM-E02 @unit-level
-  Scenario: A version too large to represent is an error
-    Given a configuration with "version: 99999999999999999999999"
-    When its format is read
-    Then the answer is an error saying the version is not a number
+  Scenario: A version that is not a number is an error and nothing is written
+    Given a configuration with "version: 99999999999999999999999", and a map with "version: abc"
+    When their formats are read, and the map is migrated to format 2
+    Then each answer is an error saying the version is not a number, and the map's text is unchanged
 
   @MGFLM-E03 @unit-level
   Scenario: A hole in the chain leaves the file untouched

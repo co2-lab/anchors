@@ -318,7 +318,7 @@ derived:
           - "cmd/anchors/governance/guide_spec.go"
           - "cmd/anchors/governance/guide_tests.go"
           - "cmd/anchors/governance/guide_work.go"
-        # the override by code REPLACES every derived layer, so the triad is named too
+        # declared explicitly; a kind an override leaves out falls back to the default template (GRBLG-B11)
         feature: ["{{dir}}/{{name}}.feature"]
         test: ["{{dir}}/{{name}}_test.go"]
     - code: WTDMW   # WatchDaemon

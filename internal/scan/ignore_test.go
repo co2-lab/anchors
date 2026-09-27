@@ -202,6 +202,11 @@ func TestNilIgnoreKeepsTheFixedExclusions(t *testing.T) {
 	if !ig.SkipDir("node_modules", "node_modules") || !ig.SkipDir("issues", "issues") {
 		t.Error("the built-in directories and Anchors' records are skipped without an ignore set")
 	}
+	// The machinery too: a nil set skipped `node_modules` but walked into `.git`, while a
+	// loaded one skipped it — the same question with two answers.
+	if !ig.SkipDir(".git", ".git") || !ig.SkipDir(".anchors", ".anchors") {
+		t.Error("the machinery directories are skipped without an ignore set")
+	}
 	if !ig.SkipFile("a.swp") {
 		t.Error("ephemera are skipped without an ignore set")
 	}

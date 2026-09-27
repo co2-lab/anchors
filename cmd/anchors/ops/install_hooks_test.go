@@ -386,3 +386,42 @@ func TestInstalledPrePushRefusesAnOlderBinary(t *testing.T) {
 		t.Fatalf("the minimum version itself was refused (%v):\n%s", err, out)
 	}
 }
+
+// The map's writer is `generated_by:` since the format moved to English; the pre-push
+// grepped the old `gerado_por:` and the warning never fired. It reads both: a remote
+// still on the old format has to be understood too.
+func TestInstalledPrePushWarnsWhenTheMapWriterDiffers(t *testing.T) {
+	t.Run("INHKN-B12: The pre-push warns when the remote map was written by another version", func(t *testing.T) {})
+	for _, key := range []string{"generated_by", "gerado_por"} {
+		t.Run(key, func(t *testing.T) {
+			root := hookedRepo(t, "version: 1\n")
+			t.Setenv("FAKE_VERSION", "1.0.0")
+			writeFile(t, root, "anchors.graph.yaml", key+": 0.9.0\nnodes: {}\n")
+			for _, args := range [][]string{
+				{"add", "anchors.graph.yaml"},
+				{"commit", "-q", "--no-verify", "-m", "chore: map"},
+				{"push", "-q", "--no-verify", "origin", "main"},
+				{"commit", "-q", "--no-verify", "--allow-empty", "-m", "feat: x"},
+			} {
+				if out, err := runGit(root, args...); err != nil {
+					t.Fatalf("git %v: %s", args, out)
+				}
+			}
+			out, err := runGit(root, "push", "-q", "origin", "main")
+			if err != nil {
+				t.Fatalf("a version divergence must warn, not refuse (%v):\n%s", err, out)
+			}
+			if !strings.Contains(out, "was written by 'anchors 0.9.0'") {
+				t.Errorf("no warning for a map written by 0.9.0 (key %s):\n%s", key, out)
+			}
+			// The same version is silent.
+			t.Setenv("FAKE_VERSION", "0.9.0")
+			if out, _ := runGit(root, "commit", "-q", "--no-verify", "--allow-empty", "-m", "feat: y"); out != "" {
+				t.Fatal(out)
+			}
+			if out, _ := runGit(root, "push", "-q", "origin", "main"); strings.Contains(out, "was written by") {
+				t.Errorf("the same version warned:\n%s", out)
+			}
+		})
+	}
+}

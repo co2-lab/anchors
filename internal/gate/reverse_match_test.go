@@ -349,3 +349,14 @@ func TestFeatureSpecMatch_unionOfCoveringSpecs(t *testing.T) {
 		t.Errorf("B01 and B10 are each defined by one of the specs: %v / %s", v, msg)
 	}
 }
+
+// The data-state regex fixed the unit prefix at 3..6 characters: with a declared length
+// of 7, `TREXXXX-DS-…` did not match and the state the spec defined was lost.
+func TestDataStatesOf_readsEveryDeclaredCodeLength(t *testing.T) {
+	t.Run("RVMTR-B15: A data state defined with the unit prefix is read at the code length the project declares", func(t *testing.T) {})
+	codeLengthsForTest(t, 7)
+	got := dataStatesOf("| `TREXXXX-DS-data-present` | some month is non-zero |\n")
+	if !got["DS-data-present"] || len(got) != 1 {
+		t.Errorf("dataStatesOf = %v, want only DS-data-present", got)
+	}
+}

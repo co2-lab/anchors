@@ -7,9 +7,7 @@
 package gate
 
 import (
-	"fmt"
 	"regexp"
-	"sort"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -181,9 +179,9 @@ func rowCells(linha string) []string {
 	return partes
 }
 
-// diferenca devolve o que está em `a` e não em `b`, comparando sem o `:` de marcação
-// — a spec pode citar `bdgt-screen` ou `:bdgt-screen` e as duas dizem a mesma coisa.
-// O curinga casa dos DOIS lados: exposto `otp-input-*` covers o declarado
+// covers diz se `padrao` cobre `id`, comparando sem o `:` de marcação — a spec pode
+// citar `bdgt-screen` ou `:bdgt-screen` e as duas dizem a mesma coisa. Quem compara
+// chama nos DOIS sentidos, porque o curinga casa dos dois lados: exposto `otp-input-*` covers o declarado
 // `otp-input-0`, e declarado `abcd-item-*` covers o exposto `abcd-item-3`. Sem isso o
 // gate acusaria em ambos os sentidos um id que o outro lado descreve corretamente —
 // só que na forma genérica em vez da concreta, ou vice-versa.
@@ -197,34 +195,4 @@ func covers(padrao, id string) bool {
 		return strings.HasPrefix(i, strings.TrimSuffix(p, "*"))
 	}
 	return false
-}
-
-func difference(a, b []string) []string {
-	var out []string
-	for _, s := range a {
-		coberto := false
-		for _, t := range b {
-			// Nos dois sentidos: o curinga pode estar em qualquer lado, porque a forma
-			// genérica tanto é exposta pelo código (template) quanto declarada na spec.
-			if covers(t, s) || covers(s, t) {
-				coberto = true
-				break
-			}
-		}
-		if !coberto {
-			out = append(out, s)
-		}
-	}
-	sort.Strings(out)
-	return out
-}
-
-// list formata a lista de ids, truncando para a mensagem não virar despejo.
-func list(ids []string) string {
-	const max = 8
-	if len(ids) <= max {
-		return "`" + strings.Join(ids, "`, `") + "`"
-	}
-	return "`" + strings.Join(ids[:max], "`, `") + "` (+" +
-		fmt.Sprint(len(ids)-max) + ")"
 }

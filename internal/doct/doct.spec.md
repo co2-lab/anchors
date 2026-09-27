@@ -60,6 +60,7 @@ reaches at all.
 | `DTCDC-B12` | The stamp covers the template and every loaded spec, so editing either makes the page stale. |
 | `DTCDC-B13` | A spec header's `updated_at:` line, within the first ten lines, is not part of the stamp; the same line further down is content and is. |
 | `DTCDC-B14` | A page without the generated marker is never reported stale. |
+| `DTCDC-B17` | A page whose generated marker carries no stamp (compiled by an earlier version) is compared by its body below the marker line: stale when the body differs from today's compilation, fresh when it is the same. |
 
 ### Coverage and markers
 

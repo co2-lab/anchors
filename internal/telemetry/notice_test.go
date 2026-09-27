@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/i18n"
 )
 
 // The NOTICE appears ONCE. Repeating it would be worse than not showing it: whoever reads the
@@ -32,21 +34,44 @@ func TestNotice_saysWhatItSendsWhatItDoesNotAndHowToTurnItOff(t *testing.T) {
 	t.Run("TLNTT-B02: The text says what is sent, what is not, and how to turn it off", func(t *testing.T) {})
 	var buf strings.Builder
 	Notice(&buf, t.TempDir())
-	// The comparison normalizes case: the notice writes DECISÃO in upper case for emphasis,
+	// The comparison normalizes case: the notice writes DECISION in upper case for emphasis,
 	// and tying the assertion to the exact form would test the typography, not the information.
 	text := strings.ToLower(buf.String())
 
 	for _, want := range []string{
-		"decisão",               // what it collects
-		"não envia",             // what it does not collect
-		"conteúdo de arquivo",   // the most likely fear of whoever reads it
+		"decision",              // what it collects
+		"does not send",         // what it does not collect
+		"file content",          // the most likely fear of whoever reads it
 		"anchors_telemetry=off", // how to turn it off, without editing a file
 		"telemetry: off",
+		"once per project on this machine", // where the marker lives: the project root
 	} {
 		if !strings.Contains(text, strings.ToLower(want)) {
 			t.Errorf("the notice should contain %q", want)
 		}
 	}
+}
+
+// The notice was a Portuguese literal shown to every project whatever its `lang:`, and it
+// said "once per machine" while the marker lives under each project root.
+func TestNotice_inTheProjectLanguage(t *testing.T) {
+	t.Run("TLNTT-B04: The notice is written in the project's language", func(t *testing.T) {
+		t.Cleanup(func() { _ = i18n.Set(i18n.Default) })
+		for lang, want := range map[string]string{
+			"en":    "once per project on this machine",
+			"pt-BR": "uma vez por projeto nesta máquina",
+			"es":    "una vez por proyecto en esta máquina",
+		} {
+			if err := i18n.Set(lang); err != nil {
+				t.Fatal(err)
+			}
+			var buf strings.Builder
+			Notice(&buf, t.TempDir())
+			if !strings.Contains(buf.String(), want) || !strings.Contains(buf.String(), "ANCHORS_TELEMETRY=off") {
+				t.Errorf("%s: the notice should say %q and how to turn it off:\n%s", lang, want, buf.String())
+			}
+		}
+	})
 }
 
 func TestNotice_theMarkerStaysOutOfGit(t *testing.T) {

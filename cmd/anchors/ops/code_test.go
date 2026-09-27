@@ -388,3 +388,53 @@ func TestFileTitleDropsTheRedundantPrefix(t *testing.T) {
 		t.Errorf("a non-markdown file returned %q", got)
 	}
 }
+
+// The file and declared-identity indexes were package-level maps that takenCodes only
+// ever added to: a second run in the same process (the MCP server, a test binary) still
+// saw the first map's declared WLTX and accused a code the second map only CITES.
+func TestCodeListCheckForgetsThePreviousMap(t *testing.T) {
+	t.Run("CDCMC-B13: A second check in the same process judges only its own map", func(t *testing.T) {})
+	first := codeProject(t, "version: 1\n", `    - id: app/Wallet.spec.md
+      kind: spec
+      code: WLTX
+      code_declared: true
+`)
+	if err, out := runCmd(t, newCodeListCmd(), "--root", first, "--check"); !errors.Is(err, errCollision) {
+		t.Fatalf("the first map has a declared divergent code: %v\n%s", err, out)
+	}
+	second := codeProject(t, "version: 1\n", `    - id: app/fixture_test.go
+      kind: test
+      code: WLTX
+`)
+	err, out := runCmd(t, newCodeListCmd(), "--root", second, "--check")
+	if err != nil || strings.Contains(out, "WLTX →") || !strings.Contains(out, "1 code(s) only CITED") {
+		t.Errorf("the second map only cites WLTX; got %v:\n%s", err, out)
+	}
+	// And the JSON's file comes from the map being read, not a previous one.
+	err, out = runCmd(t, newCodeListCmd(), "--root", second, "--json")
+	if err != nil || !strings.Contains(out, `"arquivo": "app/fixture_test.go"`) {
+		t.Errorf("the file must come from the second map; got %v:\n%s", err, out)
+	}
+}
+
+// `--fix` was declared and never read, while the output told people to run it: the
+// command did nothing and said it would. The fix is one `anchors recode` per divergence,
+// reviewed in its dry-run — so the hint names that, and the flag is gone.
+func TestCodeListCheckPointsToRecodeNotToAMissingFix(t *testing.T) {
+	t.Run("CDCMC-B14: The length check points each divergence to anchors recode, and there is no --fix", func(t *testing.T) {})
+	if newCodeListCmd().Flags().Lookup("fix") != nil {
+		t.Error("--fix is declared but does nothing")
+	}
+	root := codeProject(t, "version: 1\n", `    - id: app/Wallet.spec.md
+      kind: spec
+      code: WLTX
+      code_declared: true
+`)
+	_, out := runCmd(t, newCodeListCmd(), "--root", root, "--check")
+	if strings.Contains(out, "--fix") {
+		t.Errorf("the output still recommends --fix:\n%s", out)
+	}
+	if want := "anchors recode WLTX " + code.Generate("Wallet"); !strings.Contains(out, want) {
+		t.Errorf("want the exact recode command %q in:\n%s", want, out)
+	}
+}

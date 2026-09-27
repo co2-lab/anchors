@@ -182,7 +182,7 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 			// O encadeamento é OPT-IN e só acontece depois do sucesso: um `check` sobre
 			// sinal que não foi produzido diria o mesmo de antes, e um sobre suíte que
 			// falhou culparia o gate por um teste vermelho.
-			return runChained(then, absRoot)
+			return runChained(then, absRoot, changed)
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
@@ -426,7 +426,11 @@ func absPath(absRoot, p string) string {
 // runChained roda os comandos do Anchors pedidos em `--then`, no processo atual
 // (não re-invoca o binário: o mapa acabou de ser salvo, e um subprocesso só pagaria
 // carregamento de novo).
-func runChained(then, absRoot string) error {
+//
+// The chained check gets the suite's own scope: the changed files of an incremental run,
+// the full sweep otherwise. It got only `--root`, and a check with neither `--changed`
+// nor `--all` refuses — so `--then check` failed after every passing suite.
+func runChained(then, absRoot string, changed []string) error {
 	for _, nome := range strings.Split(then, ",") {
 		nome = strings.ToLower(strings.TrimSpace(nome))
 		if nome == "" {
@@ -442,7 +446,15 @@ func runChained(then, absRoot string) error {
 			return fmt.Errorf("--then %q is not chainable; use `check` or `coverage`", nome)
 		}
 		fmt.Printf("━━━ then: anchors %s ━━━\n", nome)
-		sub.SetArgs([]string{"--root", absRoot})
+		args := []string{"--root", absRoot}
+		if nome == "check" {
+			if len(changed) > 0 {
+				args = append(args, "--changed", strings.Join(changed, ","))
+			} else {
+				args = append(args, "--all")
+			}
+		}
+		sub.SetArgs(args)
 		if err := sub.Execute(); err != nil {
 			return err
 		}

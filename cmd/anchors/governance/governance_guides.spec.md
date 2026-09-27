@@ -45,6 +45,7 @@ The review and work guides are also the two that tell an agent what to do with w
 | `GVGDG-B11` | The work guide sends a finding that is not the card's own through `anchors escalate` tied to the card, and has the open decision queue read before a new `--for-user` escalation is taught. |
 | `GVGDG-B12` | The project guide covers the discover phase — `PROJECT.md`, `INSIGHTS.md`, the five technical stages, one question at a time — and the playbook points to it before the plan phase. |
 | `GVGDG-B13` | The test guide names the proving instrument for each shape of input space and teaches the stamp refresh for a doubled function. |
+| `GVGDG-B14` | `anchors guide --help` lists every subcommand once, with what it teaches, and lists nothing that is not a subcommand. |
 
 ## Invariants
 

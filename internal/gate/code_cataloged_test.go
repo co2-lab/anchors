@@ -382,3 +382,39 @@ func TestCodeCataloged_exportDetectWithoutGroup(t *testing.T) {
 		t.Fatalf("the declared pattern must be named with the missing group, got %v (%s)", v, msg)
 	}
 }
+
+// A coordinating spec governs several files, and every one of them is read. Only the
+// first `specifies` target was: the exports of the others were never confronted, and a
+// spec whose first file was fully catalogued passed over orphans in the second.
+func TestCodeCataloged_everyGovernedFileIsRead(t *testing.T) {
+	t.Run("CDCTC-B11: Every file the spec governs is confronted, not only the first", func(t *testing.T) {})
+	root := t.TempDir()
+	for name, src := range map[string]string{
+		"a.ts": "export function named() {}\n",
+		"b.ts": "export function forgotten() {}\n\nexport function named() {}\n",
+	} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(src), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{{ID: "u.spec.md", Kind: mapx.KindSpec}, {ID: "a.ts", Kind: mapx.KindCode}, {ID: "b.ts", Kind: mapx.KindCode}},
+		Edges: []mapx.Edge{
+			{From: "u.spec.md", To: "a.ts", Type: mapx.EdgeSpecifies},
+			{From: "u.spec.md", To: "b.ts", Type: mapx.EdgeSpecifies},
+		},
+	}
+	cfg := &config.Config{Derived: &config.Derived{ExportDetect: exportedREDefaultTS}}
+	v, msg := checkCodeCataloged("# Spec\n\n## UUUUU-B01 — `named` does it\n", mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "forgotten") || !strings.Contains(msg, "b.ts") || strings.Contains(msg, "a.ts") {
+		t.Fatalf("the orphan of the second file must be charged, naming only that file: %v (%s)", v, msg)
+	}
+	if !strings.Contains(msg, "forgotten (line 1)") {
+		t.Errorf("the orphan keeps its line: %s", msg)
+	}
+	// Orphans in two files: each one names its file.
+	_, msg = checkCodeCataloged("# Spec\n", mapx.Node{ID: "u.spec.md", Kind: mapx.KindSpec}, root, g, cfg)
+	if !strings.Contains(msg, "a.ts: named (line 1)") || !strings.Contains(msg, "b.ts: forgotten (line 1)") {
+		t.Errorf("with orphans in two files each names its file: %s", msg)
+	}
+}

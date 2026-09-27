@@ -19,7 +19,7 @@ import (
 //	telemetry: off                 no `anchors.yaml` (vale para o projeto, versionado)
 //
 // E o AVISO aparece duas vezes: no `anchors init`, e na PRIMEIRA execução de qualquer
-// comando numa máquina que ainda não viu o aviso. A segunda é o que alcança quem instalou
+// comando num projeto que, nesta máquina, ainda não viu o aviso. A segunda é o que alcança quem instalou
 // com `go install` num projeto que outra pessoa configurou — que é o caso comum num time.
 
 // EnvVar desliga sem editar arquivo. `off`, `0`, `false` e `no` funcionam: quem

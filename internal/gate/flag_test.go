@@ -429,3 +429,37 @@ func TestFlagCovered_ingestedButNotGreenSaysSo(t *testing.T) {
 		t.Errorf("the verdict does not name the scenario: %q", msg)
 	}
 }
+
+// The @gated-by regex was fixed at 3..6 characters: with a declared length of 7, a
+// citation of a scenario that does not exist was read as no citation and skipped.
+func TestFlagScenarioExists_readsEveryDeclaredCodeLength(t *testing.T) {
+	t.Run("FLSCF-B17: A gated-by citation is read at the code length the project declares", func(t *testing.T) {})
+	codeLengthsForTest(t, 7)
+	spec := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
+	v, msg := checkFlagScenarioExists("### CREDITS-V01 — x   @gated-by CHKUTXY-G99\n", spec, projectWithFlag(t), nil, nil)
+	if v != Fail || !strings.Contains(msg, "CHKUTXY-G99") {
+		t.Errorf("a citation of a missing 7-character scenario = %v (%s); want Fail naming it", v, msg)
+	}
+}
+
+// An unreadable flags folder is Pending, and the verdict names that cause. The branch
+// answered with the "no map loaded" message, which sent the reader to build a map this
+// gate never reads.
+func TestFlagScenarioExists_unreadableFlagsIsPendingWithTheCause(t *testing.T) {
+	t.Run("FLSCF-E02: Flags that cannot be read leave the citation Pending, naming the flags folder", func(t *testing.T) {})
+	if os.Geteuid() == 0 {
+		t.Skip("root reads a folder without permission")
+	}
+	root := projectWithFlag(t)
+	dir := filepath.Join(root, "flags")
+	if err := os.Chmod(dir, 0o000); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(dir, 0o755) })
+	spec := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
+	v, msg := checkFlagScenarioExists("### CRED-V01 — x   @gated-by CHKUT-G02\n", spec, root, nil, nil)
+	_, noMap := pendingNoMap()
+	if v != Pending || msg == noMap || !strings.Contains(msg, "flags") {
+		t.Errorf("unreadable flags: want Pending naming the flags folder, got %v (%s)", v, msg)
+	}
+}

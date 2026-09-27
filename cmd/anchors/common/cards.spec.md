@@ -38,13 +38,13 @@ installed, not authenticated or offline: every missing ingredient answers "nothi
 
 | Effect | Description |
 | --- | --- |
-| `AGCRG-B01` | With no agent name, no configuration or no workflow block, or with no tracker client on the PATH, the agent's card list is empty and no error is raised. |
+| `AGCRG-B01` | With no agent name, no configuration, no workflow block or a workflow with no label, or with no tracker client on the PATH, the agent's card list is empty and no error is raised. |
 | `AGCRG-B02` | The tracker is asked for the open cards of the workflow repository carrying the workflow's first label, keeping only those whose last ownership comment names this agent. |
 | `AGCRG-B03` | Each card line becomes a card with its number, its title and its state, the state losing the `anchors:` prefix of its label. |
 | `AGCRG-B04` | A line that does not have exactly three fields, or whose number is empty, is skipped; the other cards are kept. |
 | `AGCRG-B05` | A card with no state label is kept wherever it appears, including as the last line of the answer. |
 | `AGCRG-B06` | `FirstLineOfReason`: an issue title made from a reason keeps only the reason's first line, trimmed of surrounding spaces. |
-| `AGCRG-B07` | `FirstLineOfReason`: a title longer than 70 is cut so that, with a trailing ellipsis, it is exactly 70 long; a title of 70 or less is kept whole. |
+| `AGCRG-B07` | `FirstLineOfReason`: a title longer than 70 characters is cut so that, with a trailing ellipsis, it is exactly 70 characters long; a title of 70 characters or less is kept whole. Characters, not bytes: a multi-byte character is never split, and the title stays valid UTF-8. |
 | `AGCRG-B08` | `NumeroDaIssue`: the issue number is the last path segment of an issue URL, trimmed, and only when it is made of digits alone; otherwise the answer is empty. |
 | `AGCRG-B09` | `CardDoPR`: the card a pull request declares is the number after the first `Refs`, `Closes`, `Fixes` or `Resolves #N` that starts a line of its body, in any letter case; a keyword in the middle of a line does not count. |
 | `AGCRG-B10` | `CardDoPR`: the pull request reference is trimmed and loses its leading `#` before the tracker is asked; with no repository or no reference the answer is empty. |

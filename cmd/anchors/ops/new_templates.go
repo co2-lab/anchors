@@ -3,6 +3,7 @@ package ops
 import (
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/co2-lab/anchors/internal/config"
 )
@@ -426,21 +427,33 @@ func testBody(family, name, id string) string {
 	}
 }
 
+// toSnake is the snake_case of a unit name, for the Python and Rust test functions.
+//
+// A separator run becomes ONE `_`, and an uppercase letter starts a word only after a
+// lowercase letter or digit, or when it opens a new word after an acronym. It used to
+// write `_` before every capital and for every separator: `My-Name` became `my__name`
+// and `HTTPServer` became `h_t_t_p_server`.
 func toSnake(s string) string {
+	rs := []rune(s)
 	var b strings.Builder
-	for i, r := range s {
-		if r >= 'A' && r <= 'Z' {
-			if i > 0 {
-				b.WriteByte('_')
+	sep := false
+	for i, r := range rs {
+		if r == '-' || r == ' ' || r == '.' || r == '_' {
+			sep = true
+			continue
+		}
+		if unicode.IsUpper(r) && i > 0 {
+			prev := rs[i-1]
+			nextLower := i+1 < len(rs) && unicode.IsLower(rs[i+1])
+			if unicode.IsLower(prev) || unicode.IsDigit(prev) || (unicode.IsUpper(prev) && nextLower) {
+				sep = true
 			}
-			b.WriteRune(r + 32)
-			continue
 		}
-		if r == '-' || r == ' ' || r == '.' {
+		if sep && b.Len() > 0 {
 			b.WriteByte('_')
-			continue
 		}
-		b.WriteRune(r)
+		sep = false
+		b.WriteRune(unicode.ToLower(r))
 	}
 	return b.String()
 }

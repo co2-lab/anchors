@@ -35,6 +35,7 @@ The dossier separates what is actionable from what is only shown. A failing gate
 | `DTAUI-B06` | Only a failing gate and a warning finding count toward "N actionable pending item(s)"; pending, judgment and informational lines are shown but not counted. |
 | `DTAUI-B07` | When nothing is left to show, the dossier says "✓ nothing pending". |
 | `DTAUI-B08` | The target's block prints first, marked ●; every other node in scope prints after it, marked ○ and "(impact)". |
+| `DTAUI-B09` | The impact nodes print sorted by path, so the same tree gives the same dossier on every run. |
 
 ## Invariants
 

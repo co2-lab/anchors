@@ -47,6 +47,7 @@ same order, so two scans of the same repository report the same way.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `FLPRF-E01` | REF[FLPRF-B04]: a condition the grammar refuses is the failure B04 keeps as a finding | — | — |
+| `FLPRF-E02` | `flags/` exists but cannot be read as a folder, or a flag file in it cannot be read. | Loading returns the read error and no flags; only a `flags/` that does not exist gives nothing without error (B06). | Skipping it would make its scenarios vanish, and every `@gated-by` citing them would be accused of pointing at nothing. |
 
 ## Dependencies
 

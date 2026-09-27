@@ -71,9 +71,21 @@ func confrontDelivery(root string, files []string, unit string) {
 // e "não tive como olhar" seriam o mesmo `nil` — e quem lê a saída concluiria que está
 // tudo certo por não ver aviso nenhum.
 func untouchedFiles(root string, files []string) (avisos []string, confrontou bool) {
-	out, err := exec.Command("git", "-C", root, "status", "--porcelain").Output()
+	// `git status` names every path from the TOP of the repository, while the declared
+	// files are relative to `root`. With `--root` a subdirectory of the repository, no
+	// path ever matched and every declared file was accused. The prefix of `root` inside
+	// the repository is stripped from each path, and what is outside `root` is dropped.
+	pre, err := exec.Command("git", "-C", root, "rev-parse", "--show-prefix").Output()
 	if err != nil {
 		return nil, false // sem git: não há como confrontar, e inventar seria pior
+	}
+	prefix := strings.TrimSpace(string(pre))
+	// `-z`: a renamed file is `R  new -> old` in the plain format, and that whole string
+	// was taken as ONE path — the renamed file was reported untouched. With `-z` the
+	// entry is `R  new` followed by the old path as its own field, and no path is quoted.
+	out, err := exec.Command("git", "-C", root, "status", "--porcelain", "-z").Output()
+	if err != nil {
+		return nil, false
 	}
 	// `git status --porcelain` COLAPSA um diretório inteiramente novo numa linha só
 	// (`?? pasta/`), sem listar o que há dentro. Comparar caminho exato cegava o confronto
@@ -84,16 +96,36 @@ func untouchedFiles(root string, files []string) (avisos []string, confrontou bo
 	// Então uma linha terminada em `/` marca um PREFIXO tocado, não um caminho.
 	tocado := map[string]bool{}
 	var prefixos []string
-	for _, l := range strings.Split(string(out), "\n") {
+	entradas := strings.Split(string(out), "\x00")
+	for i := 0; i < len(entradas); i++ {
+		l := entradas[i]
 		if len(l) < 4 {
 			continue
 		}
-		p := strings.TrimSpace(l[3:])
-		if strings.HasSuffix(p, "/") {
-			prefixos = append(prefixos, p)
-			continue
+		caminhos := []string{l[3:]}
+		if l[0] == 'R' || l[0] == 'C' {
+			// the next field is the path it came from — touched too (it left)
+			if i+1 < len(entradas) {
+				caminhos = append(caminhos, entradas[i+1])
+			}
+			i++
 		}
-		tocado[p] = true
+		for _, p := range caminhos {
+			if strings.HasSuffix(p, "/") && strings.HasPrefix(prefix, p) {
+				// a new directory that holds `root` itself: everything under root is new
+				prefixos = append(prefixos, "")
+				continue
+			}
+			if !strings.HasPrefix(p, prefix) {
+				continue // outside root: not a declared file
+			}
+			p = strings.TrimPrefix(p, prefix)
+			if strings.HasSuffix(p, "/") {
+				prefixos = append(prefixos, p)
+				continue
+			}
+			tocado[p] = true
+		}
 	}
 	var faltando []string
 	for _, f := range files {

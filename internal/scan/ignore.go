@@ -183,7 +183,9 @@ func (ig *Ignore) SkipDir(nome, rel string) bool {
 		return true
 	}
 	if ig == nil {
-		return universalIgnored[nome]
+		// The machinery too: this branch once checked only the built-in list, so a nil set
+		// walked into `.git` while a loaded one skipped it (SCIGS-B09).
+		return universalIgnored[nome] || maquinaria[nome]
 	}
 	if ig.dirs[nome] {
 		return true

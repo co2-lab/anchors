@@ -589,3 +589,54 @@ func TestIngestLandsOnlyOnItsKindOfNode(t *testing.T) {
 		t.Errorf("the test file takes the execution only: %+v", s)
 	}
 }
+
+// A report that instruments no line of the file is a measurement too: nothing to cover.
+// The percentage was only written when the total was positive, so the node kept the
+// previous ingestion's percentage next to a total of zero.
+func TestIngestCoverage_zeroTotalClearsThePercentage(t *testing.T) {
+	t.Run("SGINA-B19: A report with no instrumented line leaves no percentage behind", func(t *testing.T) {})
+	for _, suite := range []string{"", "unit"} {
+		g := ingestGraph()
+		g.IngestCoverageSuite(map[string]FileCov{"src/A.tsx": {Covered: 4, Total: 5, Lines: coverageLines([]int{1, 2, 3, 4}, []int{5})}}, suite, "t1")
+		g.IngestCoverageSuite(map[string]FileCov{"src/A.tsx": {Covered: 0, Total: 0}}, suite, "t2")
+		sig := g.Nodes[1].Signal
+		if sig.TotalLines != 0 || sig.LineCoverage != 0 {
+			t.Errorf("suite %q: after a report of zero lines the node reads %d lines at %.0f%%, want 0 lines at 0%%",
+				suite, sig.TotalLines, sig.LineCoverage)
+		}
+	}
+}
+
+// A test file whose path several report entries match (the report's own path and a
+// shorter suffix of it) used to take whichever the map iteration reached first, so the
+// same report recorded different counts from run to run.
+func TestIngest_severalMatchingReportPathsChooseTheSameOne(t *testing.T) {
+	t.Run("SGINA-B20: Among several report paths matching a node, the exact one, then the closest in length, is always chosen", func(t *testing.T) {})
+	exec := map[string]ExecByFile{
+		"A.test.tsx":           {Passed: 1},
+		"src/A.test.tsx":       {Passed: 2},
+		"app/src/A.test.tsx":   {Passed: 3},
+		"x/app/src/A.test.tsx": {Passed: 4},
+	}
+	cov := map[string]FileCov{
+		"A.tsx":           {Covered: 1, Total: 10},
+		"p/src/A.tsx":     {Covered: 3, Total: 10},
+		"b/app/src/A.tsx": {Covered: 5, Total: 10},
+	}
+	mut := map[string]FileMutation{"A.tsx": {Killed: 1}, "z/src/A.tsx": {Killed: 2}, "y/src/A.tsx": {Killed: 3}}
+	for i := 0; i < 50; i++ {
+		g := ingestGraph()
+		g.IngestExecution(exec, nil, nil, "unit", "t")
+		g.IngestCoverage(cov, "t")
+		g.IngestMutation(mut, "t")
+		if p := g.Nodes[2].Signal.Passed; p != 2 {
+			t.Fatalf("run %d: the test node took %d passed, want 2 (the exact path)", i, p)
+		}
+		if c := g.Nodes[1].Signal.CoveredLines; c != 3 {
+			t.Fatalf("run %d: the code node took %d covered lines, want 3 (the closest in length)", i, c)
+		}
+		if k := g.Nodes[1].Signal.MutantsKilled; k != 3 {
+			t.Fatalf("run %d: the code node took %d killed mutants, want 3 (a length tie goes to the first path in order)", i, k)
+		}
+	}
+}

@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/pack"
 )
 
@@ -17,7 +18,8 @@ import (
 // declaração local é a mais específica e vence. O contrário faria o pack silenciosamente
 // apagar uma decisão do projeto.
 //
-// O resultado é memoizado por raiz: `check --all` chama isto milhares de vezes, e reler os
+// O resultado é memoizado por raiz E pelo conjunto de packs (valores e jurisdições
+// incluídos): `check --all` chama isto milhares de vezes, e reler os
 // packs a cada nó tornaria o gate o passo mais lento do pipeline.
 func allObligations(root string, cfg *config.Config) []config.Obligation {
 	if cfg == nil {
@@ -26,9 +28,14 @@ func allObligations(root string, cfg *config.Config) []config.Obligation {
 	if len(cfg.Packs) == 0 {
 		return cfg.Obligations
 	}
+	// The key is everything `pack.LoadAll` reads, not the root alone. Keyed by root, a
+	// later call in the same process with other packs, values or jurisdictions (a
+	// long-running `watch`, a second config over one root) got the first call's list.
+	// `%v` prints a map with sorted keys, so the key is stable.
+	key := fmt.Sprintf("%s\x00%q\x00%v\x00%q", root, cfg.Packs, cfg.PackValues, cfg.Jurisdictions)
 	packsCacheMu.Lock()
 	defer packsCacheMu.Unlock()
-	if v, ok := packsCache[root]; ok {
+	if v, ok := packsCache[key]; ok {
 		return append(append([]config.Obligation{}, v...), cfg.Obligations...)
 	}
 
@@ -36,8 +43,9 @@ func allObligations(root string, cfg *config.Config) []config.Obligation {
 	if err != nil {
 		// Erro de pack é erro de CONFIG e precisa aparecer. Silenciar transformaria um
 		// conjunto inteiro de deveres em nada, com o relatório verde — o pior desfecho.
-		fmt.Fprintf(os.Stderr, "anchors: erro ao carregar packs: %v\n", err)
-		packsCache[root] = nil
+		// Por i18n: era um literal em português, impresso assim em todo projeto.
+		fmt.Fprintln(os.Stderr, i18n.T("gate.obligations.pack_load_error", err))
+		packsCache[key] = nil
 		return cfg.Obligations
 	}
 	for _, a := range avisos {
@@ -60,7 +68,7 @@ func allObligations(root string, cfg *config.Config) []config.Obligation {
 			})
 		}
 	}
-	packsCache[root] = doPack
+	packsCache[key] = doPack
 	return append(append([]config.Obligation{}, doPack...), cfg.Obligations...)
 }
 

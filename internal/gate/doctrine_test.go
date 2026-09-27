@@ -24,7 +24,7 @@ func projectWithDoctrine(t *testing.T, doctrine string) (string, *mapx.Graph, ma
 		Nodes: []mapx.Node{{ID: "product/l.doctrine.md", Kind: mapx.KindProduct, Code: "LIMIT"}},
 		Edges: []mapx.Edge{{
 			From: "s.spec.md", To: "product/l.doctrine.md",
-			Type: mapx.EdgeRealizes, Method: "LIMIT-R03", Dep: "CRED-V01",
+			Type: mapx.EdgeRealizes, Method: "LIMIT-R03", Dep: "CREDT-V01",
 		}},
 	}
 	return root, g, mapx.Node{ID: "s.spec.md", Kind: mapx.KindSpec}
@@ -45,12 +45,12 @@ const doctrineRule = "### LIMIT-R03 — o limite de credito nunca e excedido em 
 func TestDoctrineNotDuplicated_copyFails(t *testing.T) {
 	t.Run("DCTRN-B21: A spec rule that copies the doctrine rule it realizes fails, naming both and the score", func(t *testing.T) {})
 	root, g, n := projectWithDoctrine(t, doctrineRule)
-	spec := "### CRED-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
+	spec := "### CREDT-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
 	v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil)
 	if v != Fail {
 		t.Fatalf("expected Fail for a copy, got %v (%s)", v, msg)
 	}
-	if !strings.Contains(msg, "CRED-V01") || !strings.Contains(msg, "LIMIT-R03") {
+	if !strings.Contains(msg, "CREDT-V01") || !strings.Contains(msg, "LIMIT-R03") {
 		t.Errorf("the verdict must name both ends: %s", msg)
 	}
 }
@@ -60,7 +60,7 @@ func TestDoctrineNotDuplicated_copyFails(t *testing.T) {
 func TestDoctrineNotDuplicated_specificTextPasses(t *testing.T) {
 	t.Run("DCTRN-B23: A spec rule with text specific to its unit passes", func(t *testing.T) {})
 	root, g, n := projectWithDoctrine(t, doctrineRule)
-	spec := "### CRED-V01 — desabilita o botao enviar quando o campo valor esta vazio    @realizes LIMIT-R03\n"
+	spec := "### CREDT-V01 — desabilita o botao enviar quando o campo valor esta vazio    @realizes LIMIT-R03\n"
 	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil); v != Pass {
 		t.Errorf("unit-specific text must not be accused: %v (%s)", v, msg)
 	}
@@ -72,7 +72,7 @@ func TestDoctrineNotDuplicated_specificTextPasses(t *testing.T) {
 func TestDoctrineNotDuplicated_tbdDefersTheCharge(t *testing.T) {
 	t.Run("DCTRN-B24: A copy on a line deferred with TBD is not charged", func(t *testing.T) {})
 	root, g, n := projectWithDoctrine(t, doctrineRule)
-	spec := "### CRED-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03 @TBD: redacao em revisao\n"
+	spec := "### CREDT-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03 @TBD: redacao em revisao\n"
 	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil); v != Pass {
 		t.Errorf("@TBD on the line must defer the charge: %v (%s)", v, msg)
 	}
@@ -97,7 +97,7 @@ func TestDoctrineNotDuplicated_nearCopyWithAWordChangedFails(t *testing.T) {
 	t.Run("DCTRN-B22: A near copy with a word changed still fails", func(t *testing.T) {})
 	root, g, n := projectWithDoctrine(t, doctrineRule)
 	// Same sentence as the doctrine, with "credito" -> "emprestimo" and one word dropped.
-	spec := "### CRED-V01 — o limite de emprestimo nunca e excedido em operacao    @realizes LIMIT-R03\n"
+	spec := "### CREDT-V01 — o limite de emprestimo nunca e excedido em operacao    @realizes LIMIT-R03\n"
 	v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil)
 	if v != Fail {
 		t.Fatalf("a near copy must be accused — exact comparison would let it through: %v (%s)", v, msg)
@@ -117,14 +117,14 @@ func TestSpecRealizesDoctrine_onlyWhereTheLayerDemands(t *testing.T) {
 		"screen": {RequiresDoctrine: true},
 		"gate":   {},
 	}}
-	spec := "### CRED-V01 — a rule with no declaration\n"
+	spec := "### CREDT-V01 — a rule with no declaration\n"
 
 	demanding := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
 	v, msg := checkSpecRealizesDoctrine(spec, demanding, "", nil, cfg)
 	if v != Fail {
 		t.Errorf("a demanding layer must accuse a naked rule: %v (%s)", v, msg)
 	}
-	if !strings.Contains(msg, "CRED-V01") {
+	if !strings.Contains(msg, "CREDT-V01") {
 		t.Errorf("the verdict must name the rule: %s", msg)
 	}
 
@@ -142,10 +142,10 @@ func TestSpecRealizesDoctrine_declaredPassesAndTbdDefers(t *testing.T) {
 	cfg := &config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}}
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
 
-	if v, msg := checkSpecRealizesDoctrine("### CRED-V01 — a rule    @realizes LIMIT-R03\n", n, "", nil, cfg); v != Pass {
+	if v, msg := checkSpecRealizesDoctrine("### CREDT-V01 — a rule    @realizes LIMIT-R03\n", n, "", nil, cfg); v != Pass {
 		t.Errorf("a declared rule must pass: %v (%s)", v, msg)
 	}
-	if v, msg := checkSpecRealizesDoctrine("### CRED-V01 — a rule    @TBD: doctrine being written\n", n, "", nil, cfg); v != Pending {
+	if v, msg := checkSpecRealizesDoctrine("### CREDT-V01 — a rule    @TBD: doctrine being written\n", n, "", nil, cfg); v != Pending {
 		t.Errorf("`@TBD` must be debt, not failure: %v (%s)", v, msg)
 	}
 }
@@ -298,10 +298,10 @@ func TestSpecDoctrineExists(t *testing.T) {
 	if v, _ := checkSpecDoctrineExists("@realizes LIMIT-R03\n", n, root, nil, nil); v != Pending {
 		t.Errorf("without a map there is nothing to confront: %v", v)
 	}
-	if v, _ := checkSpecDoctrineExists("### CRED-V01 — no tag\n", n, root, g, nil); v != Skip {
+	if v, _ := checkSpecDoctrineExists("### CREDT-V01 — no tag\n", n, root, g, nil); v != Skip {
 		t.Errorf("a spec that declares nothing: %v", v)
 	}
-	if v, msg := checkSpecDoctrineExists("### CRED-V01 — x @realizes LIMIT-R03\n", n, root, g, nil); v != Pass {
+	if v, msg := checkSpecDoctrineExists("### CREDT-V01 — x @realizes LIMIT-R03\n", n, root, g, nil); v != Pass {
 		t.Errorf("the rule the edge resolved: %v (%s)", v, msg)
 	}
 	// Two rules of the same doctrine on ONE line: the map holds one edge per FILE, and the
@@ -327,7 +327,7 @@ func TestDoctrineNotDuplicated_theFloorItselfMeasures(t *testing.T) {
 		"### LIMIT-R04 — a sessao expira apos trinta minutos sem interacao\n" +
 		"### LIMIT-R05 — o relatorio mensal inclui apenas transacoes aprovadas\n"
 	root, g, n := projectWithDoctrine(t, three)
-	spec := "### CRED-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
+	spec := "### CREDT-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
 	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil); v != Fail {
 		t.Errorf("a corpus of %d rules is measured: %v (%s)", minCorpusForIDF, v, msg)
 	}
@@ -336,7 +336,7 @@ func TestDoctrineNotDuplicated_theFloorItselfMeasures(t *testing.T) {
 func TestDoctrineNotDuplicated_reportsTheScoreAsAPercentage(t *testing.T) {
 	t.Run("DCTRN-B21: A spec rule that copies the doctrine rule it realizes fails, naming both and the score", func(t *testing.T) {})
 	root, g, n := projectWithDoctrine(t, doctrineRule)
-	spec := "### CRED-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
+	spec := "### CREDT-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
 	_, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil)
 	if !strings.Contains(msg, "(100%)") {
 		t.Errorf("an identical copy scores 100%%: %s", msg)
@@ -344,20 +344,20 @@ func TestDoctrineNotDuplicated_reportsTheScoreAsAPercentage(t *testing.T) {
 }
 
 func TestRuleTexts_aRuleWithOnlyATagHasNoText(t *testing.T) {
-	got := ruleTexts("### CRED-V01 @realizes LIMIT-R03\n### CRED-V02 — real text @realizes LIMIT-R04\n")
-	if len(got) != 1 || got["CRED-V02"] != "real text" {
+	got := ruleTexts("### CREDT-V01 @realizes LIMIT-R03\n### CREDT-V02 — real text @realizes LIMIT-R04\n")
+	if len(got) != 1 || got["CREDT-V02"] != "real text" {
 		t.Errorf("got %q", got)
 	}
 }
 
 func TestParseRealizesWithLines(t *testing.T) {
-	content := "### CRED-V01 — text\n" +
+	content := "### CREDT-V01 — text\n" +
 		"continued, @realizes LIMIT-R03 and @realizes LIMIT-R04 @TBD: wording\n" +
 		"\n" +
 		"@realizes LIMIT-R05\n"
 	want := []realizesOnLine{
-		{from: "CRED-V01", to: "LIMIT-R03", deferred: true},
-		{from: "CRED-V01", to: "LIMIT-R04", deferred: true},
+		{from: "CREDT-V01", to: "LIMIT-R03", deferred: true},
+		{from: "CREDT-V01", to: "LIMIT-R04", deferred: true},
 		{from: "", to: "LIMIT-R05"},
 	}
 	if got := parseRealizesWithLines(content); !reflect.DeepEqual(got, want) {
@@ -369,7 +369,7 @@ func TestSpecRealizesDoctrine_aTagOnTheNextLineDeclares(t *testing.T) {
 	t.Run("DCTRN-B28: A rule that declares what it realizes passes", func(t *testing.T) {})
 	cfg := &config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}}
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
-	if v, msg := checkSpecRealizesDoctrine("### CRED-V01 — a rule\n  @realizes LIMIT-R03\n", n, "", nil, cfg); v != Pass {
+	if v, msg := checkSpecRealizesDoctrine("### CREDT-V01 — a rule\n  @realizes LIMIT-R03\n", n, "", nil, cfg); v != Pass {
 		t.Errorf("the tag below the rule declares for it: %v (%s)", v, msg)
 	}
 }
@@ -466,7 +466,7 @@ func TestSpecDoctrineExists_anUnreadableDoctrineConfirmsNothing(t *testing.T) {
 
 func TestDoctrineNotDuplicated_skipsWithoutRealizedDoctrineText(t *testing.T) {
 	t.Run("DCTRN-B19: A spec with no readable realized doctrine is skipped", func(t *testing.T) {})
-	spec := "### CRED-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
+	spec := "### CREDT-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
 	root, g, n := projectWithDoctrine(t, doctrineRule)
 	other := &mapx.Graph{Edges: []mapx.Edge{{From: n.ID, To: "product/l.doctrine.md", Type: mapx.EdgeSpecifies}}}
 	if v, msg := checkDoctrineNotDuplicated(spec, n, root, other, nil); v != Skip {
@@ -487,7 +487,7 @@ func TestDoctrineNotDuplicated_aSmallCorpusIsUndetermined(t *testing.T) {
 	two := "### LIMIT-R03 — o limite de credito nunca e excedido em nenhuma operacao\n" +
 		"### LIMIT-R04 — a sessao expira apos trinta minutos sem interacao\n"
 	root, g, n := projectWithDoctrine(t, two)
-	spec := "### CRED-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
+	spec := "### CREDT-V01 — o limite de credito nunca e excedido em nenhuma operacao    @realizes LIMIT-R03\n"
 	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil); v != Pending {
 		t.Errorf("a corpus of 3 rules cannot be measured: %v (%s)", v, msg)
 	}
@@ -496,7 +496,7 @@ func TestDoctrineNotDuplicated_aSmallCorpusIsUndetermined(t *testing.T) {
 func TestSpecRealizesDoctrine_skipsNonSpecAndMissingConfig(t *testing.T) {
 	t.Run("DCTRN-B25: spec-realizes-doctrine skips a non-spec and a project with no configuration", func(t *testing.T) {})
 	cfg := &config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}}
-	spec := "### CRED-V01 — a rule with no declaration\n"
+	spec := "### CREDT-V01 — a rule with no declaration\n"
 	code := mapx.Node{ID: "x.go", Kind: mapx.KindCode, Tags: []string{"screen"}}
 	if v, _ := checkSpecRealizesDoctrine(spec, code, "", nil, cfg); v != Skip {
 		t.Errorf("a code node: %v", v)
@@ -513,8 +513,8 @@ func TestSpecRealizesDoctrine_aTagAfterABlankLineDeclaresNothing(t *testing.T) {
 	t.Run("DCTRN-B30: A realizes tag after a blank line declares nothing for the rule above", func(t *testing.T) {})
 	cfg := &config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}}
 	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
-	v, msg := checkSpecRealizesDoctrine("### CRED-V01 — a rule\n\n@realizes LIMIT-R03\n", n, "", nil, cfg)
-	if v != Fail || !strings.Contains(msg, "CRED-V01") {
+	v, msg := checkSpecRealizesDoctrine("### CREDT-V01 — a rule\n\n@realizes LIMIT-R03\n", n, "", nil, cfg)
+	if v != Fail || !strings.Contains(msg, "CREDT-V01") {
 		t.Errorf("an orphan tag declares nothing: %v (%s)", v, msg)
 	}
 }
@@ -530,8 +530,32 @@ func TestDoctrineNotDuplicated_aSharedRareWordIsNotACopy(t *testing.T) {
 		"### LIMIT-R09 — as notificacoes param durante a madrugada\n" +
 		"### LIMIT-R10 — um cartao bloqueado nao aceita compras\n"
 	root, g, n := projectWithDoctrine(t, eight)
-	spec := "### CRED-V01 — exibe a mensagem excedido no rodape    @realizes LIMIT-R03\n"
+	spec := "### CREDT-V01 — exibe a mensagem excedido no rodape    @realizes LIMIT-R03\n"
 	if v, msg := checkDoctrineNotDuplicated(spec, n, root, g, nil); v != Pass {
 		t.Errorf("sharing the rule's rare word is realizing it, not copying it: %v (%s)", v, msg)
+	}
+}
+
+// codeLengthsForTest declares the project's code lengths for one test, as a Load of
+// `code_lengths` would, and restores the previous ones at the end.
+func codeLengthsForTest(t *testing.T, ls ...int) {
+	t.Helper()
+	prev := append([]int{}, config.CodeLengths...)
+	t.Cleanup(func() { config.SetCodeLengths(prev) })
+	config.SetCodeLengths(ls)
+}
+
+// The rule and @realizes regexes were fixed at 3..6 characters; a project that declares
+// a length of 7 had no doctrine rule and no @realizes the gates could see.
+func TestDoctrine_readsEveryDeclaredCodeLength(t *testing.T) {
+	t.Run("DCTRN-B32: Doctrine rules and realizes tags are read at the code length the project declares", func(t *testing.T) {})
+	codeLengthsForTest(t, 7)
+	content := "### CREDITS-V01 — the rule text\n@realizes LIMITED-R03\n"
+	want := []realizesOnLine{{from: "CREDITS-V01", to: "LIMITED-R03"}}
+	if got := parseRealizesWithLines(content); !reflect.DeepEqual(got, want) {
+		t.Errorf("parseRealizesWithLines = %+v, want %+v", got, want)
+	}
+	if got := ruleTexts(content)["CREDITS-V01"]; !strings.Contains(got, "the rule text") {
+		t.Errorf("ruleTexts[CREDITS-V01] = %q, want the rule's text", got)
 	}
 }

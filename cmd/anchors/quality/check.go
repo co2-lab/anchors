@@ -408,19 +408,22 @@ func enqueueJudgments(root string, cfg *config.Config, p gate.Profile, varredura
 	}
 	n := 0
 	for _, r := range p.Judged {
-		reason := fmt.Sprintf("gate '%s'", r.Gate)
+		// The reason carries the command that closes the task: the verb is the review
+		// stage, whose prompt ends in `anchors judge --gate review`, and a task of another
+		// judgment gate closes only with ITS gate.
+		reason := i18n.T("check.judge_task.reason", r.Gate, r.Target, r.Gate)
 		if gd := guideOf[r.Gate]; gd != "" {
-			reason += " — leia " + gd
+			reason += i18n.T("check.judge_task.guide", gd)
 		}
 		if ask := askOf[r.Gate]; ask != "" {
-			reason += " — pergunta: " + strings.TrimSpace(ask)
+			reason += i18n.T("check.judge_task.ask", strings.TrimSpace(ask))
 		}
 		t := queue.Task{
-			ID:            "judge-" + r.Gate + "-" + strings.ReplaceAll(relSlug(r.Target), "/", "-"),
+			ID:            judgeTaskID(r.Gate, r.Target),
 			Changed:       r.Target,
-			Kind:          "judgment",
+			Kind:          queue.KindJudgment,
 			Origin:        "check",
-			SuggestedNext: "judge",
+			SuggestedNext: judgeTaskVerb,
 			Reason:        reason,
 			CreatedAt:     time.Now().Format(time.RFC3339),
 		}
@@ -477,7 +480,7 @@ func dropStaleJudgments(root string, cfg *config.Config, p gate.Profile) {
 		if t.Kind != "judgment" || t.Origin != "check" {
 			continue
 		}
-		gateName := gateDaTaskJudge(t.ID)
+		gateName := gateDaTaskJudge(t.ID, t.Changed)
 		if gateName == "" || !rodou[gateName] {
 			continue
 		}
@@ -488,19 +491,24 @@ func dropStaleJudgments(root string, cfg *config.Config, p gate.Profile) {
 	}
 }
 
+// judgeTaskID is the ID of the judge task of a gate over a target:
+// `judge-<gate>-<slug-of-the-target>`.
+func judgeTaskID(gateName, target string) string {
+	return "judge-" + gateName + "-" + strings.ReplaceAll(relSlug(target), "/", "-")
+}
+
 // gateDaTaskJudge extrai o nome do gate do ID `judge-<gate>-<slug-do-alvo>`.
 //
 // O ID é montado com `-` como separador e o nome do gate também os contém
-// (`no-test-prova-real`), então não dá para partir pelo separador: a leitura é por
-// PREFIXO conhecido, comparando com os gates de julgamento declarados.
-func gateDaTaskJudge(id string) string {
-	const pref = "judge-"
-	if !strings.HasPrefix(id, pref) {
-		return ""
-	}
-	resto := id[len(pref):]
+// (`no-test-prova-real`), então não dá para partir pelo separador. It was read by the
+// first known gate that PREFIXED the rest of the ID, and a gate whose name prefixes
+// another's took the other's tasks: with `review` and `review-deep` declared,
+// `judge-review-deep-src-x` read as `review`, and the full sweep dropped the live
+// review-deep judgment as stale. The ID is rebuilt instead, from each declared judgment
+// gate and the task's own target, and only the exact match is the gate.
+func gateDaTaskJudge(id, changed string) string {
 	for _, g := range knownJudgmentGates {
-		if strings.HasPrefix(resto, g+"-") {
+		if id == judgeTaskID(g, changed) {
 			return g
 		}
 	}
@@ -685,17 +693,13 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn, 
 	return nil
 }
 
-// ExitNotGoverned é o código de saída para "este caminho não é regido pela Estrutura".
-// Não é uma reprovação — é a resposta "não tenho jurisdição sobre isto".
-//
-// Existe como CÓDIGO, e não como texto a ser grepado, porque o pre-commit precisa
-// distinguir isto de uma reprovação real. O hook antes fazia `grep "não está no mapa"`
-// na saída: um casamento de string frágil que passava a valer para as DUAS situações
-// assim que elas compartilharam uma mensagem — e o furo entrou por aí.
-const ExitNotGoverned = 3
-
 // errNotGoverned sinaliza o caminho não-regido. Carrega o alvo para a mensagem, e é
-// reconhecida em main() para virar ExitNaoRegido em vez do exit 1 genérico.
+// reconhecida em main() (as common.ErrNotGoverned) para virar common.ExitNotGoverned em
+// vez do exit 1 genérico.
+//
+// The exit code is a CODE, not text to grep, because the pre-commit must tell this from a
+// real failure. There is one constant, in common: this package kept a second copy, and two
+// copies of an exit code only agree until someone changes one of them.
 type errNotGoverned struct{ target string }
 
 func (e errNotGoverned) Error() string {
@@ -1722,14 +1726,29 @@ func driftCount(p gate.Profile, gateName string) int {
 // feature, teste e código. É a vizinhança que a IDENTIDADE define, e não a que as arestas
 // registram: as duas costumam coincidir, mas a segunda depende de o mapa já ter ligado as
 // pontas, e o `check` precisa funcionar antes disso.
+//
+// The names were TypeScript's only (`.test.ts`, `.ts`, `.tsx`): a Go test, `foo_test.go`,
+// reduced to the stem `foo_test` and reached no piece, and `foo.go` never brought in its
+// test — `check --changed` of a Go unit ran without its feature, spec or test. The stem
+// now also drops the `_test` suffix, and the candidates carry the target's own extension
+// in its code and test forms, besides the fixed Go and TypeScript names a spec target
+// (whose extension says nothing about the code) needs. A candidate only enters when the
+// map holds it, so a name that does not exist costs nothing.
 func unitPieces(target string) []string {
-	base := strings.TrimSuffix(target, filepath.Ext(target))
-	for _, suf := range []string{".spec.md", ".feature", ".test", ".spec"} {
+	ext := filepath.Ext(target)
+	base := strings.TrimSuffix(target, ext)
+	for _, suf := range []string{".spec", ".test", "_test"} {
 		base = strings.TrimSuffix(base, suf)
 	}
+	sufs := []string{".spec.md", ".feature", ".test.ts", ".test.tsx", ".ts", ".tsx", ".go", "_test.go"}
+	if ext != ".md" && ext != ".feature" && ext != "" {
+		sufs = append(sufs, ext, "_test"+ext, ".test"+ext, ".spec"+ext)
+	}
+	seen := map[string]bool{target: true}
 	var out []string
-	for _, suf := range []string{".spec.md", ".feature", ".test.ts", ".test.tsx", ".ts", ".tsx"} {
-		if cand := base + suf; cand != target {
+	for _, suf := range sufs {
+		if cand := base + suf; !seen[cand] {
+			seen[cand] = true
 			out = append(out, cand)
 		}
 	}
@@ -1771,11 +1790,25 @@ func queuedJudgments(root string) int {
 	}
 	n := 0
 	for _, t := range tasks {
-		if t.SuggestedNext == "judge" {
+		if isJudgeTask(t) {
 			n++
 		}
 	}
 	return n
+}
+
+// judgeTaskVerb is the stage a judge task suggests. It was `judge`, which is a command
+// but not a stage: `anchors next` handed the task out with "suggestion: judge", and
+// `anchors work judge` refused it as an unknown artifact — the one task of the queue
+// with no route. The review stage is the one that confronts delivered work and closes
+// with `anchors judge`; the gate and its question travel in the task's reason.
+const judgeTaskVerb = "review"
+
+// isJudgeTask says whether a queued task is a judgment awaiting its verdict: by its kind,
+// now that the verb is a stage other tasks share, or by the legacy `judge` verb of a queue
+// written before.
+func isJudgeTask(t queue.Task) bool {
+	return t.Kind == "judgment" || t.SuggestedNext == "judge"
 }
 
 // staleBinaryWarning compara quem gravou o mapa com quem está rodando.

@@ -20,12 +20,19 @@ Feature: TelemetryNotice — the telemetry notice reaches whoever did not ask fo
     When the notice is written
     Then it mentions decision events, says what it does not send including file content
     And it names both "ANCHORS_TELEMETRY=off" and "telemetry: off"
+    And it says it appears "once per project on this machine"
 
   @TLNTT-B03 @unit-level
   Scenario: The marker is written under the project's unversioned anchors directory
     Given a project root that never showed the notice
     When the notice is written
     Then the file ".anchors/telemetry-noticed" exists under that root
+
+  @TLNTT-B04 @unit-level
+  Scenario: The notice is written in the project's language
+    Given the languages "en", "pt-BR" and "es"
+    When the notice is shown in each
+    Then each says, in its language, that it appears once per project on this machine, and each shows "ANCHORS_TELEMETRY=off"
 
   @TLNTT-I01 @unit-level
   Scenario: After the notice is written it counts as already shown

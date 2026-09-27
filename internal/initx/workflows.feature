@@ -65,10 +65,11 @@ Feature: FlowWorkflows — declare the pipelines of the work flow, find what is 
     Then only "anchors-claim.yml" is outdated
 
   @FLWRF-B09 @unit-level
-  Scenario: A declared integration branch replaces every marked branch line
-    Given a project whose integration branch is "develop"
-    When the pipelines are seeded
-    Then every line the templates mark as the integration branch reads "branches: [develop] # anchors:integration-branch" with the template's indentation
+  Scenario: The integration branch, main when none is declared, replaces every marked branch line
+    Given a project whose integration branch is "develop", one that declares "main", and one that declares none
+    When the pipelines are seeded for each
+    Then every line the templates mark as the integration branch reads "branches: [develop] # anchors:integration-branch" in the first, with the template's indentation
+    And reads "branches: [main] # anchors:integration-branch" in the other two, the resolve-queue pipeline included
 
   @FLWRF-B10 @unit-level
   Scenario: Anchors writes the board columns only up to READY TO TEST

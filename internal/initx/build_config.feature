@@ -32,6 +32,7 @@ Feature: BuildConfig — builds the configuration that inference proposes as the
     When the proposal is built
     Then the colocation is anchored on the spec with only the feature template
     And an inference that detected no colocation proposes none, even with features and tests found
+    And an inference that detected colocation with specs, features and tests has only the feature and test templates, never a spec one
 
   @BLCNB-B05 @unit-level
   Scenario: The test handle is proposed only when inference found one

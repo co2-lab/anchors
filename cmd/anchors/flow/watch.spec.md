@@ -72,6 +72,7 @@ unless the unit's layer waives the test.
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
 | `WTCHA-I01` | A task still in the queue is never queued twice: the same change again is reported as already in the queue. | the same change is handled twice and the queue keeps one task |
+| `WTCHA-I02` | Every change is handled by the loop itself, one at a time — the debounce timer only hands the path back to it. A change still inside its debounce window when the loop ends is handled before the loop returns, and nothing is handled after it. | a change pending at SIGTERM is queued, and its node updated, by the time the loop returns; the node does not change afterwards; `go test -race` is clean |
 
 ## Constraints
 

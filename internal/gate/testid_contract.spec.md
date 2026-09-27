@@ -80,9 +80,11 @@ belongs to a project-scope gate.
 
 | Effect | Description |
 | --- | --- |
-| `TICTS-B18` | A handle is queried when a consumer mentions it, with or without the mark; a wildcard handle, when a consumer mentions its prefix. |
+| `TICTS-B18` | A handle is queried when a consumer mentions it, with or without the mark; a wildcard handle, when a consumer mentions its prefix. A mention counts only at an id boundary (`TICTS-B22`). |
 | `TICTS-B19` | The end-to-end flows are consumers when the project declares the surface with a path: the surface's file template, or else the first override that gives one, whose static prefix is read as a whole; a surface with no path contributes nothing. |
 | `TICTS-B20` | The test files beside the spec and in the sibling folders of its folder are consumers, even when flows exist, without any edge to them. |
+| `TICTS-B21` | The static root read for a surface is the directory before the first placeholder or glob wildcard (`*`, `?`, `[`) of its path: `e2e/**/*.yaml` and `e2e/login-*.yaml` read `e2e`, `apps/x-{{module}}/flows` reads `apps`, and a path that opens with a wildcard reads the project root. |
+| `TICTS-B22` | A mention is a query only when no id character (letter, digit, `.`, `_`, `-`) touches it before, and, for a concrete handle, after: a consumer naming only `abcd-screen-header` or `my-abcd-screen` does not query `abcd-screen`. |
 
 ## Invariants
 

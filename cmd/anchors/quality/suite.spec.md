@@ -28,7 +28,7 @@ Without an incremental command declared it refuses rather than silently running 
 Each report the run wrote is ingested even when the suite failed, because a failing run is exactly the one
 with something to say; a report older than the run is never ingested, because it would record an earlier
 number as if it were now. The first failing suite stops the ones after it. On success the run can chain
-coverage.
+coverage, or the check over the run's own scope: the same changed files, or the full sweep.
 
 ## Domain
 
@@ -54,6 +54,7 @@ coverage.
 | `STPRS-B08` | A command declaring a target placeholder gets the given target in its place; a command without the placeholder is left as declared. |
 | `STPRS-B09` | After every suite passed, a chain naming coverage runs the coverage answer; an empty chain does nothing. |
 | `STPRS-B10` | An impact path with no code file runs nothing. |
+| `STPRS-B11` | After every suite passed, a chain naming check runs the check over the run's own scope: the changed files of an incremental run, the full sweep otherwise. |
 
 ## Invariants
 

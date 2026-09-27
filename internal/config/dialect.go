@@ -192,13 +192,19 @@ func GherkinThenAlternatives() []string {
 }
 
 // GherkinFor devolve as palavras-chave do idioma configurado (ou `en`).
+//
+// The lookup ignores case and answers the table's own spelling of the code. It used to
+// lower-case the declaration and look that up, so `zh-CN` (a key with capitals) was never
+// reached: a project that declared it got English keywords.
 func (d Dialect) GherkinFor() (string, GherkinKeywords) {
-	lang := strings.ToLower(d.GherkinLanguage)
+	lang := d.GherkinLanguage
 	if lang == "" {
 		lang = "en"
 	}
-	if kw, ok := gherkinByLang[lang]; ok {
-		return lang, kw
+	for code, kw := range gherkinByLang {
+		if strings.EqualFold(code, lang) {
+			return code, kw
+		}
 	}
 	// Idioma que o Gherkin suporta mas não temos na tabela: preserva a declaração do
 	// projeto na linha `# language:` (o parser dele resolve) e usa o inglês no esqueleto,

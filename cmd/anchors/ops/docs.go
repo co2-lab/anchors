@@ -164,13 +164,6 @@ func printDocsResult(res doct.Result, dryRun bool) error {
 	return nil
 }
 
-// docsFreshHint é o que o gate diz quando o compilado está defasado.
-func docsFreshHint(arquivos []string) string {
-	return fmt.Sprintf("%d documento(s) fora de data: %s.\n"+
-		"  Rode `anchors docs build`.",
-		len(arquivos), strings.Join(arquivos, ", "))
-}
-
 // newDocsInitCmd escreve o ESQUELETO da documentação.
 //
 // Existe para que ninguém precise inventar a organização do zero. Inventar a cada projeto

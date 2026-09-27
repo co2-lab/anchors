@@ -13,8 +13,9 @@
 rename over the whole project, without writing anything, so the command can show a dry run; and it
 applies a plan when asked.
 
-Planning refuses what cannot be a rename: a malformed code, a code renamed to itself, or an old code that
-appears nowhere (nothing to rename). For every project file that holds the old code, the plan carries the
+Planning refuses what cannot be a rename: a malformed code, a code renamed to itself, a new code another
+unit already owns (the rename would merge two identities), or an old code that appears nowhere (nothing
+to rename). For every project file that holds the old code, the plan carries the
 rewritten content (through `RCRWR`) and the classified occurrences. When the project declares its own
 recode dialect, the plan also rewrites the testID prefix derived from the code and lists the files whose
 names carry the code, to be renamed (through `RCDLR`). A testID prefix that does not follow the
@@ -30,7 +31,7 @@ the disk in silence.
 
 | Input | Accepts | Outside the domain | Who guarantees |
 | --- | --- | --- | --- |
-| the old and new codes | upper-case codes of the project's declared lengths, distinct | malformed or equal codes | this unit: planning is refused |
+| the old and new codes | upper-case codes of the project's declared lengths, distinct, the new one owned by no unit | malformed or equal codes, a new code already in use | this unit: planning is refused |
 | the project | the files the project's layers declare, read from disk | files outside the layers | the scanner; file renames also look outside the layers (snapshots, flows) |
 | the recode dialect | the project's `recode:` block, or none | — | the configuration |
 
@@ -48,6 +49,8 @@ the disk in silence.
 | `RCPLR-B08` | Applying writes every planned file with its original mode and performs every rename, and answers how many files were written and renamed. |
 | `RCPLR-B09` | Inside a repository a tracked file is renamed through git, so the index records the rename; outside a repository it is a plain rename. |
 | `RCPLR-B10` | Inside a repository a file git does not track is moved by a plain rename, and a reported success means the file really moved. |
+| `RCPLR-B11` | A target code another unit already owns — declared in its header, or the prefix of one of its scenario codes — is refused naming that file; a code that merely contains the target is not a collision. |
+| `RCPLR-B12` | The refusal of a malformed code names the lengths the project declares in `code_lengths`, the same ones the validation applies. |
 
 ## Constraints
 
@@ -65,6 +68,7 @@ the disk in silence.
 | `RCPLR-E03` | REF[RCPLR-B07]: an old code with nothing to rename is refused by B07 | — | — |
 | `RCPLR-E04` | REF[RCPLR-X01]: git refusing a move is surfaced by X01 | — | — |
 | `RCPLR-E05` | A planned file cannot be written while applying. | Applying stops with an error naming the file, and answers how many files were written before it. | The caller must know the rename is partial, and where it stopped. |
+| `RCPLR-E06` | REF[RCPLR-B11]: a target code owned by another unit is refused by B11 | — | — |
 
 ## Dependencies
 

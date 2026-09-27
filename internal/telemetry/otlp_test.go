@@ -310,3 +310,33 @@ func TestFlush_nilDoesNotPanic(t *testing.T) {
 	var e *Emitter
 	e.Flush()
 }
+
+// Config.NoCodes was declared and never read: an event carrying a unit's code (`RLSGR`) or
+// a rule code (`RLSGR-B01`) sent it with the switch on.
+func TestEmit_noCodesDropsUnitCodes(t *testing.T) {
+	t.Run("TLEMT-B08: With NoCodes a unit or rule code never leaves in an attribute", func(t *testing.T) {
+		attrs := map[string]any{"unit": "RLSGR", "rule": "RLSGR-B01", "gate": "triad-complete", "card_state": "in-progress", "n": 3}
+		keys := func(cfg Config) map[string]bool {
+			body, err := NewEmitter(cfg, "v").build(New(CheckFinished, attrs, fixedClock))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var p otlpBody
+			if err := json.Unmarshal(body, &p); err != nil {
+				t.Fatal(err)
+			}
+			got := map[string]bool{}
+			for _, a := range p.ResourceLogs[0].ScopeLogs[0].LogRecords[0].Attributes {
+				got[a.Key] = true
+			}
+			return got
+		}
+		off := keys(Config{Enabled: true, NoCodes: true})
+		if off["unit"] || off["rule"] || !off["gate"] || !off["card_state"] || !off["n"] || len(off) != 3 {
+			t.Errorf("with NoCodes only the codes are dropped, got %v", off)
+		}
+		if on := keys(Config{Enabled: true}); !on["unit"] || !on["rule"] || len(on) != 5 {
+			t.Errorf("without NoCodes every attribute is sent, got %v", on)
+		}
+	})
+}

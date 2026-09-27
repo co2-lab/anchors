@@ -134,7 +134,7 @@ Feature: WorkQueue — list, pull, close and discard the work, from the local qu
   Scenario: Other cards end naming the pull request body command
     Given card 42 in progress
     When `anchors next` resumes it
-    Then the output says "anchors pr-body --cards 42"
+    Then the output says "anchors pr-body --cards 42" and "brings the `Refs` that links the card; it stays open", and never "Closes"
 
   @WRQUW-B20 @unit-level
   Scenario: The role is asked at most once, and never without a terminal

@@ -45,6 +45,7 @@ a no-op, so callers need no guard around each call.
 | `TLEMT-B05` | Flushing waits for the sends still in flight, so an event emitted just before the process ends reaches the collector. |
 | `TLEMT-B06` | Flushing waits at most two seconds, on a deadline of its own that does not depend on the HTTP client's timeout. |
 | `TLEMT-B07` | Each request is a POST with a JSON content type and carries the authentication headers of the configuration. |
+| `TLEMT-B08` | With `NoCodes` set, an attribute whose value is a unit's identity code or one of its rule codes (upper-case letters and digits, optionally followed by a rule suffix such as `-B01`) is not sent; every other attribute is. Without it, every attribute is sent. |
 
 ## Invariants
 

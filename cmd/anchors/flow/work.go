@@ -142,7 +142,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 	// proibido — e a régua tinha dito as duas coisas.
 	if hasLayer && waivedPieces(layer, cfg)[artifact] {
 		fmt.Fprintf(&b, "## STOP\n\n`%s` — the layer **%s** WAIVES the piece `%s` "+
-			"(`trinca_opcional` in anchors.yaml).\n\nThe waiver is declared, not an "+
+			"(`optional_triad_edges` in anchors.yaml).\n\nThe waiver is declared, not an "+
 			"oversight: this layer does not prove behavior with this piece. Creating it "+
 			"would produce the empty artifact the declaration exists to avoid.\n\n"+
 			"Do not create the %s. If the queue gave you this task, it is noise — discard it "+
@@ -332,7 +332,7 @@ func composeWorkPrompt(root, rel, artifact string, cfg *config.Config, g *mapx.G
 			"What separates the two is mutation: change the line and see if the test falls.\n\n")
 		b.WriteString("```sh\n")
 		b.WriteString("# 1) the suite, and the result for the map\n")
-		b.WriteString("#    (the gate `testes-passam` reads from here: without it it stays ~, and the gate that\n")
+		b.WriteString("#    (the check `tests-pass` reads from here: without it it stays ~, and the gate that\n")
 		b.WriteString("#     counts `it()` in the source gives ✓ even in a file that does not COMPILE)\n")
 		b.WriteString("anchors ingest --junit <JUnit report of the suite>\n\n")
 		fmt.Fprintf(&b, "# 2) mutation OF THIS unit (the whole project is expensive; scope it to the target)\n"+
@@ -544,7 +544,7 @@ func writeTriadPaths(b *strings.Builder, root, rel, artifact, layer string, cfg 
 		// dizia "opt-out honesto, em vez de 49 features/testes vazios", e o mesmo prompt
 		// mandava criar os dois.
 		if dispensadas[k] {
-			fmt.Fprintf(b, "  `%s` — %s  ← WAIVED by this layer (`trinca_opcional`): "+
+			fmt.Fprintf(b, "  `%s` — %s  ← WAIVED by this layer (`optional_triad_edges`): "+
 				"do NOT create\n", p, k)
 			continue
 		}
@@ -954,9 +954,13 @@ func gateRequirements(artifact string, cfg *config.Config) []string {
 		"dependency-honored": "Every symbol promised in the **Dependency Table** (in backticks) is used in the code.",
 		"spec-feature-match": "Every declared requirement has a **scenario in the feature** (or `@no-scenario: <reason>`).",
 		"rule-implemented":   "Every catalogued rule appears **in the code** (the excerpt that realizes it carries its code in a comment) — or is waived on its line with `@no-code: <reason>`, for what is satisfied by the ABSENCE of code. Declare rule by rule: it is what trades guessing for confrontation.",
-		"open-questions-resolved": "The section **`## Decisões em aberto`** is REQUIRED and never " +
-			"stays empty: either it lists what the spec does not decide, or it carries `nenhuma`. Writing " +
-			"`nenhuma` is an ASSERTION — \"I looked and there is no doubt\" —, different from omitting the " +
+		// The title and the "none" value come from the same catalogue as the procedure's
+		// (openSectionTitle/noneValue). They were fixed in Portuguese here, and the same
+		// prompt told an English project to write `## Open Decisions` … `none` in one
+		// section and `## Decisões em aberto` … `nenhuma` in the next.
+		"open-questions-resolved": "The section **`## " + openSectionTitle() + "`** is REQUIRED and never " +
+			"stays empty: either it lists what the spec does not decide, or it carries `" + noneValue() + "`. Writing `" +
+			noneValue() + "` is an ASSERTION — \"I looked and there is no doubt\" —, different from omitting the " +
 			"section, which says nothing. Whatever is open there holds the spec until it is decided.",
 		"code-reference-valid": "Every **cited code** must exist in the project (an orphan citation fails).",
 		"scenario-asserts":     "The RESULT step asserts an **observable result** — not `\\\"effect X is verified\\\"`.",
@@ -1188,7 +1192,7 @@ func writeOpenIssues(b *strings.Builder, root, rel string) {
 	for _, st := range []issue.State{issue.Todo, issue.Doing} {
 		nomes, _ := issue.List(root, st)
 		for _, nome := range nomes {
-			if !strings.Contains(nome, slug) {
+			if !issueNamesUnit(nome, slug) {
 				continue
 			}
 			achadas = append(achadas, filepath.Join(issue.Dir, string(st), nome))
@@ -1210,21 +1214,42 @@ func writeOpenIssues(b *strings.Builder, root, rel string) {
 		"An issue nobody reads is a defect the pipeline already saw and let through.\n")
 }
 
+// issueNamesUnit says whether the issue file `nome` (`<date>--<kind>--[gate--][anchor--vs--]
+// target.md`, each path slugged with `-`) is about a piece of the unit whose slugged stem is
+// `slug`: some `--` field is the stem followed by the piece's suffix (`.ts`, `.spec.md`,
+// `_test.go`).
+//
+// A plain substring test listed the findings of ANOTHER unit: `src-pricing` is inside
+// `src-pricing-v2.ts` and `lib-src-pricing.ts`, and the review of `src/pricing.ts` was
+// told to resolve `src/pricing-v2.ts`'s findings as its own.
+func issueNamesUnit(nome, slug string) bool {
+	for _, campo := range strings.Split(strings.TrimSuffix(nome, ".md"), "--") {
+		resto, ok := strings.CutPrefix(campo, slug)
+		if !ok {
+			continue
+		}
+		if resto == "" || strings.HasPrefix(resto, ".") || strings.HasPrefix(resto, "_test.") {
+			return true
+		}
+	}
+	return false
+}
+
 // ruleMarking emite o passo de ligar regra↔código conforme o projeto a EXIGE ou não.
 //
 // A ressalva "se o projeto usa esse padrão" existia para não impor a prática a quem não
 // a adotou — mas ela também dava saída a quem a adotou: quem implementa lê "se", decide
-// que não, e a marcação nunca acontece. O gate `regra-implementada` então cobra algo que
+// que não, e a marcação nunca acontece. O check `rule-implemented` então cobra algo que
 // o procedimento apresentou como opcional, e a dívida só aparece depois de reprovar.
 //
-// Com `derived.rule_marking: required` declarado, o passo vira obrigação — e o
+// Com `derived.rule_marking_policy: required` declarado, o passo vira obrigação — e o
 // procedimento passa a ensinar ANTES o que o gate cobra DEPOIS.
 func ruleMarking(cfg *config.Config) string {
 	if cfg != nil && cfg.Derived != nil &&
 		strings.EqualFold(strings.TrimSpace(cfg.Derived.RuleMarkingPolicy), "required") {
 		return "Implement each rule of the spec and MARK in the code the excerpt that realizes it " +
-			"(`// {CODE}-B01: …`) — this project REQUIRES the marking, and the gate " +
-			"`regra-implementada` confronts it. Whatever has no code, waive on the line " +
+			"(`// {CODE}-B01: …`) — this project REQUIRES the marking, and the check " +
+			"`rule-implemented` confronts it. Whatever has no code, waive on the line " +
 			"of the rule (`@no-code: <reason>`)."
 	}
 	return "Implement each rule of the spec; cite the rule code (`{CODE}-B01`) in the " +

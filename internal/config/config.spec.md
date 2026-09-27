@@ -36,11 +36,11 @@ patterns a spec governs.
 | Input | Accepts | Outside the domain | Who guarantees |
 | --- | --- | --- | --- |
 | the configuration file | a YAML file whose every key is a field the tool knows | unknown keys, invalid YAML, a file that cannot be read | this unit: the load fails naming the cause |
-| gate declarations | gates with distinct IDs (the name stands in when there is no ID) and scope, cost and phase values from their closed lists | a repeated ID, an enum value outside its list | this unit: the load fails naming the gate and the value |
+| gate declarations | gates with distinct IDs (the name stands in when there is no ID) and scope, full-scan scope, cost, phase and skipped-perspective values from their closed lists | a repeated ID, an enum value outside its list | this unit: the load fails naming the gate and the value |
 | the workflow block | an absent block, `local`, `manual`, or `github` with an `owner/name` repository and at least one label | GitHub fields in local or manual mode, an unknown mode | this unit: the load fails naming what is missing or extra |
 | declared patterns | dialect and derived regular expressions that compile | a pattern that does not compile | this unit: the load fails naming the field |
 | the language | a supported language, or none | a language the catalog does not translate | this unit: the load fails listing the supported ones |
-| identity code lengths | lengths from 2 to 8 | lengths outside that range | this unit: the load fails naming the length |
+| identity code lengths | lengths from 2 to 8, or none (the default, 5) | lengths outside that range | this unit: the load fails naming the length |
 | suite filters | any names, in any case and spacing | nothing is outside: an unknown name is reported, not refused | this unit: it labels each missing name by its axis |
 
 ## Effects
@@ -52,16 +52,18 @@ patterns a spec governs.
 | `CNFGO-B01` | A key the configuration does not know, at the top level or inside a list item, is a load error that names the key. |
 | `CNFGO-B02` | The error for an unknown key adds two hypotheses: the key is misspelled, or the binary is older than the file, with the command that updates it. |
 | `CNFGO-B03` | When the file's format is older than the current one (a file with no `version:` is format 1) and the migration registry says the key was renamed, the error advises running the migration and does not advise updating the binary. |
-| `CNFGO-B04` | The migration advice needs both conditions: a file already in the current format, a key the registry does not know as renamed, or no registry at all gets the general hint. |
+| `CNFGO-B04` | The migration advice needs both conditions: a file already in the current format, a key the registry does not know as renamed, or no registry at all gets the general hint. The top-level `version:` is read with or without a trailing comment. |
 | `CNFGO-B05` | An error that is not about an unknown key (a YAML syntax error) carries no version hint. |
 | `CNFGO-B06` | Every gate has a distinct ID, the name standing in when no ID is declared; two gates with the same ID fail the load naming both. |
-| `CNFGO-B07` | A gate's `scope`, `cost` and each `when` phase must come from their closed lists; a value outside fails the load naming the value and the valid ones. |
+| `CNFGO-B07` | A gate's `scope`, `scope_full` (`batch` or `project`), `cost`, each `when` phase and each `skip_on` perspective (`change`, `all`) must come from their closed lists; a value outside fails the load naming the gate, the value and the valid ones. |
 | `CNFGO-B08` | With no workflow block, or mode `local` or `manual`, the workflow is local; a `repo` or `labels` declared in those modes fails the load (`ManualMode`). |
 | `CNFGO-B09` | Mode `github` fails the load without a `repo`, with a `repo` not in `owner/name` form, or without at least one label (`GitHubMode`). |
 | `CNFGO-B10` | An unknown workflow mode fails the load, saying there is no fallback between modes. |
 | `CNFGO-B11` | A declared dialect or derived pattern that does not compile fails the load naming the field (list patterns name their index), and a valid pattern loads. |
 | `CNFGO-B12` | The declared language becomes the language of every message from the load on; an unsupported language fails the load listing the supported ones. |
 | `CNFGO-B13` | A code length outside 2 to 8 fails the load; valid lengths become the lengths the engine recognizes and are handed to the code generator's hook when one is registered (`SetCodeLengths`, `SetSlotsHook`). |
+| `CNFGO-B42` | A file that declares no code lengths sets the default length, 5, in the engine and the generator's hook, whatever lengths an earlier load in the same process set. |
+| `CNFGO-B43` | The language is set before any other check of the load, so every refusal of the load comes out in the language the file declares; the header `Save` writes on top of the file is in the language of the configuration being saved, English when it declares none (`Save`). |
 
 ### Canonical gate declarations
 
@@ -106,7 +108,7 @@ patterns a spec governs.
 | `CNFGO-B30` | The placeholder words are the declared ones, trimmed and without blanks, or the templates' single default marker word when none remain (`Placeholders`). |
 | `CNFGO-B31` | The rule letters are the declared rule types' letters, upper-cased, one character each, without repeats, in declaration order; with none valid they are the canonical `SRVAXBNMDEIQFG` (`RuleLetters`). |
 | `CNFGO-B32` | A scenario tag maps to every letter whose rule type declares it, ignoring case and surrounding spaces; a tag no rule type declares is reported as unknown (`TagLetters`). |
-| `CNFGO-B33` | The code length pattern, placed after one character class, matches exactly the declared length when there is one, and exactly the range when the lengths are contiguous (`CodeLengthPattern`). |
+| `CNFGO-B33` | The code length pattern, placed after one character class, matches exactly the declared lengths: the one length, the contiguous range, or each of lengths that are not contiguous and nothing between them (`CodeLengthPattern`). |
 | `CNFGO-B41` | A rule type catalogues a section when the section's title is one it declares as requiring a code, ignoring case and surrounding spaces (`RequiresCodeIn`). |
 
 ### Suite selection

@@ -18,6 +18,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// kindList names every kind of the catalog, sorted. The help and the refusal named 3 of
+// the 7 (spec, feature, test), hiding plan, product, flow and action; reading the catalog
+// keeps them from drifting again.
+func kindList() string {
+	kinds := make([]string, 0, len(templates))
+	for k := range templates {
+		kinds = append(kinds, k)
+	}
+	sort.Strings(kinds)
+	return strings.Join(kinds, ", ")
+}
+
 // `anchors new <kind> <nome>` emite o ESQUELETO de um artefato da trinca (spec,
 // feature, test) já com o cabeçalho @anchors e a identidade (code/ref) resolvidos —
 // o piso que o `check` exige. O anchors "não gera conteúdo", mas gerar a MOLDURA
@@ -33,7 +45,7 @@ func newNewCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "new <kind> <name>",
-		Short: "Emit the skeleton of an artifact (spec/feature/test) per the ruler",
+		Short: "Emit the skeleton of an artifact (spec, feature, test, plan…) per the ruler",
 		Long: `Generates the frame of a triad artifact with the @anchors header and the
 identity already resolved:
 
@@ -47,14 +59,15 @@ identity already resolved:
 --out is mandatory: the artifact is born NEXT TO the unit it describes (the spec beside
 the code, the feature beside the spec) — never at the repository root.
 
-Kinds: spec, feature, test. A spec gets a new CODE (unique in the map); feature and test
-get a REF (pointing at the spec). Use --code to pin the identity by hand.`,
+Kinds: ` + kindList() + `. A spec, plan, product, flow or action gets a new CODE
+(unique in the map); feature and test get a REF (pointing at the spec). Use --code to pin
+the identity by hand.`,
 		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			kind := strings.ToLower(args[0])
 			tpl, ok := templates[kind]
 			if !ok {
-				return fmt.Errorf("unknown kind %q — use: spec, feature or test", kind)
+				return fmt.Errorf("unknown kind %q — use: %s", kind, kindList())
 			}
 
 			if listSections {
@@ -180,7 +193,9 @@ get a REF (pointing at the spec). Use --code to pin the identity by hand.`,
 	cmd.AddCommand(flow.NewProgressCmd())
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().StringVar(&codeStr, "code", "", "use this identity code (otherwise generate a unique one)")
-	cmd.Flags().StringVar(&out, "out", "", "output path (default: <name><ext> at the root)")
+	// It said "default: <name><ext> at the root" — but --out is mandatory, and the root
+	// is exactly where the command refuses to write.
+	cmd.Flags().StringVar(&out, "out", "", "output path, mandatory: next to the unit the artifact describes")
 	cmd.Flags().StringSliceVar(&with, "with", nil, "add OPTIONAL sections (csv)")
 	cmd.Flags().StringSliceVar(&without, "without", nil, "remove DEFAULT sections (csv)")
 	cmd.Flags().StringVar(&preset, "preset", "", "section set of a unit kind (see --list-sections)")

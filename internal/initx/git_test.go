@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/i18n"
 )
 
 // isolatedRoot returns a folder that is NOT inside any git repository. Without it the test
@@ -52,18 +54,23 @@ func TestGitNotInstalledIsNotTheSameAsNotInitialised(t *testing.T) {
 // to "install" it sends them looking for the problem where it is not.
 func TestGitWarningSaysWhatToDoInEachState(t *testing.T) {
 	t.Run("GTSTG-B09: Each unready state has its own warning and ready has none", func(t *testing.T) {})
-	cases := []struct {
+	// In the project's language: the warnings were hard-coded in Portuguese.
+	t.Cleanup(func() { _ = i18n.Set(i18n.Default) })
+	for lang, cases := range map[string][]struct {
 		state    GitState
 		contains string
 	}{
-		{GitNaoInstalado, "não está instalado"},
-		{GitNaoIniciado, "não está sob git"},
-		{GitSemCommit, "nenhum commit"},
-	}
-	for _, c := range cases {
-		w := AvisoGit(c.state)
-		if !strings.Contains(w, c.contains) {
-			t.Errorf("the warning for %v should contain %q, got: %s", c.state, c.contains, w)
+		"en":    {{GitNaoInstalado, "git is not installed"}, {GitNaoIniciado, "not under git"}, {GitSemCommit, "no commit yet"}},
+		"pt-BR": {{GitNaoInstalado, "não está instalado"}, {GitNaoIniciado, "não está sob git"}, {GitSemCommit, "nenhum commit"}},
+	} {
+		if err := i18n.Set(lang); err != nil {
+			t.Fatal(err)
+		}
+		for _, c := range cases {
+			w := AvisoGit(c.state)
+			if !strings.Contains(w, c.contains) {
+				t.Errorf("%s: the warning for %v should contain %q, got: %s", lang, c.state, c.contains, w)
+			}
 		}
 	}
 	if AvisoGit(GitPronto) != "" {

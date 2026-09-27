@@ -301,3 +301,23 @@ func TestNonInteractivePresetWithCodeKeepsThePresetLayers(t *testing.T) {
 		}
 	}
 }
+
+// --governs was validated and echoed as accepted, and then never written: the file
+// governed nothing while the JSON said it did.
+func TestNonInteractiveGovernsReachesTheFile(t *testing.T) {
+	t.Run("ININT-B10: The governs rules reach the configuration, one rule per tag", func(t *testing.T) {})
+	root := t.TempDir()
+	err, doc, out := runNonInteractive(t, root, "--artifacts=spec",
+		"--governs", "guides/STYLE.md=backend,web", "--governs", "guides/API.md=backend")
+	if err != nil || doc["escrito"] != true {
+		t.Fatalf("init: %v\n%s", err, out)
+	}
+	var got []string
+	for _, g := range loadWritten(t, root).Governs {
+		got = append(got, g.From+"="+g.Governs)
+	}
+	want := []string{"guides/API.md=backend", "guides/STYLE.md=backend", "guides/STYLE.md=web"}
+	if strings.Join(got, " ") != strings.Join(want, " ") {
+		t.Errorf("governs written = %v, want %v", got, want)
+	}
+}

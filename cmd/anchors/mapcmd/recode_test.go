@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
 )
 
@@ -121,5 +122,54 @@ func TestRecode_partialApplySaysHalfConverted(t *testing.T) {
 	}
 	if !strings.Contains(out, "1 file(s) had ALREADY been changed") || !strings.Contains(out, "half converted") {
 		t.Errorf("the partial state was not reported:\n%s", out)
+	}
+}
+
+// The rebuild after --apply must keep what the map knew beyond the headers: the
+// judgments and stamps of the edges that survive, and the flow graph that only
+// `flow build` fills. It used to build the map from scratch, and a recode silently
+// erased every AI judgment and the whole flow.
+func TestRecode_applyKeepsJudgmentsAndFlow(t *testing.T) {
+	t.Run("RCDEO-B06: Applying keeps the judgments, stamps and flow of the previous map", func(t *testing.T) {})
+	root := fixtureProject(t)
+	g := loadMap(t, root)
+	judged := -1
+	for i, e := range g.Edges {
+		if e.From == "src/login.spec.md" || e.To == "src/login.spec.md" {
+			judged = i
+			break
+		}
+	}
+	if judged < 0 {
+		t.Fatalf("the fixture has no edge touching the spec: %+v", g.Edges)
+	}
+	g.Edges[judged].Julgamentos = []mapx.Judgment{{Gate: "atomic", Verdict: "ok"}}
+	g.Edges[judged].Stamp = &mapx.Stamp{Verdict: "ok"}
+	g.Flow = &mapx.FlowGraph{States: []mapx.FlowState{{Code: "WORKR-P01", Title: "pull", Flow: "flows/w.flow.md"}}}
+	if err := mapx.Save(g, filepath.Join(root, mapx.DefaultPath)); err != nil {
+		t.Fatal(err)
+	}
+	key := g.Edges[judged]
+
+	runCmd(t, newRecodeCmd(), "LOGIN", "SIGNN", "--apply", "--root", root)
+
+	after := loadMap(t, root)
+	if after.Flow == nil || len(after.Flow.States) != 1 {
+		t.Errorf("the recode erased the flow graph: %+v", after.Flow)
+	}
+	found := false
+	for _, e := range after.Edges {
+		if e.From == key.From && e.To == key.To && e.Type == key.Type {
+			found = true
+			if len(e.Julgamentos) != 1 || e.Julgamentos[0].Gate != "atomic" {
+				t.Errorf("the recode erased the judgment of %s → %s: %+v", e.From, e.To, e.Julgamentos)
+			}
+			if e.Stamp == nil || e.Stamp.Verdict != "ok" {
+				t.Errorf("the recode erased the stamp of %s → %s: %+v", e.From, e.To, e.Stamp)
+			}
+		}
+	}
+	if !found {
+		t.Errorf("the judged edge %s → %s is gone from the rebuilt map", key.From, key.To)
 	}
 }

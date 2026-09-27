@@ -55,6 +55,35 @@ func TestAutonomyGuideChangesWithTheDeclaration(t *testing.T) {
 // WITHOUT A DECLARATION, the ruler is the closed one — the same default as the claim, for
 // the same reason: erring on the open side lets someone decide the product with no
 // authority, and that is invisible after the fact.
+// A declaration by the old `user_issues` flag has no role: the guide printed "Your role ()".
+func TestAutonomyGuideLegacyFlagNamesNoEmptyRole(t *testing.T) {
+	t.Run("ATGDT-B07: The old user_issues flag with no role is named as such, never as an empty role", func(t *testing.T) {})
+	yes, no := true, false
+	for _, c := range []struct {
+		flag *bool
+		want string
+		ban  bool
+	}{
+		{&yes, "Your declaration (the old `user_issues` flag, with no role yet — declare one with `anchors settings role`) says you decide the direction of this product.", false},
+		{&no, "**Your declaration (the old `user_issues` flag, with no role yet) says you do NOT decide the direction\nof this product**", true},
+	} {
+		root := t.TempDir()
+		if err := settings.Save(root, settings.Settings{UserIssues: c.flag, DecidedAt: "2026-09-26"}); err != nil {
+			t.Fatal(err)
+		}
+		text := autonomyGuide(root)
+		if strings.Contains(text, "()") || strings.Contains(text, "Your role") {
+			t.Errorf("user_issues=%v: no role was declared, none may be named:\n%s", *c.flag, text)
+		}
+		if !strings.Contains(text, c.want) {
+			t.Errorf("user_issues=%v: the guide must say what was declared (%q):\n%s", *c.flag, c.want, text)
+		}
+		if got := strings.Contains(text, "Do not ask whoever is running you."); got != c.ban {
+			t.Errorf("user_issues=%v: the ban on asking is %v, want %v", *c.flag, got, c.ban)
+		}
+	}
+}
+
 func TestAutonomyGuideWithoutDeclarationIsClosed(t *testing.T) {
 	t.Run("ATGDT-B03: With no role declared the guide is the closed one", func(t *testing.T) {})
 	text := autonomyGuide(t.TempDir())

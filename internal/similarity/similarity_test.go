@@ -140,3 +140,59 @@ func TestWeights_idfOverTheCorpus(t *testing.T) {
 		t.Errorf("YY is in one of two texts and must weigh ln 2, got %v", w["YY"])
 	}
 }
+
+// Identity counts EVERY letter-or-digit run, numbers and one-character words included.
+// Before, it compared the scoring tokens, which drop numbers: "radius 9999" and "radius 0"
+// came out identical with 1.00, and a doctrine rule restated with a different value was
+// reported as a verbatim copy; "123" against "123" came out divergent with 0.00.
+func TestNumbersCountForIdentity(t *testing.T) {
+	t.Run("TXSMT-B10: Texts that differ only by a number are not identical", func(t *testing.T) {})
+	w := Weights(corpusReal)
+	if v, s := Classify("radius 9999", "radius 0", w); v == Identico {
+		t.Errorf("verdict %v %.2f for texts with different numbers, want anything but identical", v, s)
+	}
+	if v, s := Classify("the card has 2 rows", "the card has 3 rows", w); v == Identico {
+		t.Errorf("verdict %v %.2f for texts with different one-digit numbers, want anything but identical", v, s)
+	}
+	if v, s := Classify("123", "123", w); v != Identico || s != 1 {
+		t.Errorf("verdict %v %.2f for the same number, want identical 1", v, s)
+	}
+}
+
+// Two texts with nothing to tokenize are still the same text: "" against "" came out
+// divergent with 0.00, because identity demanded at least one token.
+func TestTokenlessEqualTextsAreIdentical(t *testing.T) {
+	t.Run("TXSMT-B11: Equal texts without any word are identical", func(t *testing.T) {})
+	w := Weights(corpusReal)
+	for _, p := range [][2]string{{"", ""}, {"!!", "!!"}, {"!!", "??"}} {
+		if v, s := Classify(p[0], p[1], w); v != Identico || s != 1 {
+			t.Errorf("Classify(%q, %q) = %v %.2f, want identical 1 — no word differs", p[0], p[1], v, s)
+		}
+	}
+}
+
+// Both rulers fall back to the unweighted count under the SAME condition: no word of the pair
+// carries weight. Before, the cosine fell back as soon as ONE side weighed nothing, while the
+// Jaccard stayed weighted — the rulers disagreed by construction and the pair came out a false
+// borderline (Jaccard 0, cosine 0.82).
+func TestRulersFallBackTogether(t *testing.T) {
+	t.Run("TXSMT-B12: The rulers fall back together, so one weightless side does not make a borderline", func(t *testing.T) {})
+	corpus := []string{"componente props", "componente props onChange", "componente props valor"}
+	w := Weights(corpus)
+	a, b := corpus[0], corpus[1]
+	j, c := Score(a, b, w), Cosine(a, b, w)
+	if j != c {
+		t.Errorf("jaccard %.2f and cosine %.2f disagree on a pair whose shared words weigh nothing", j, c)
+	}
+	if v, s := Classify(a, b, w); v != Divergente {
+		t.Errorf("verdict %v %.2f, want divergent — only noise words are shared", v, s)
+	}
+}
+
+func TestVerdictStringIsEnglish(t *testing.T) {
+	t.Run("TXSMT-B13: A verdict prints its English name", func(t *testing.T) {})
+	got := []string{Identico.String(), Similar.String(), Limitrofe.String(), Divergente.String()}
+	if want := []string{"identical", "similar", "borderline", "divergent"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("verdict names = %v, want %v", got, want)
+	}
+}

@@ -21,6 +21,8 @@ from that root, not from the working directory, is what makes `telemetry: off` h
 from a subdirectory or points at another project.
 
 The emitter authenticates only with a key given in the environment; the repository never holds one.
+The emitter is built with unit codes allowed: the emitter can drop them (`NoCodes`), but no project
+setting declares that yet, so this step never asks for it.
 At exit, the command waits for the events still in flight, and does nothing when telemetry never started.
 
 ## Domain
@@ -40,8 +42,10 @@ At exit, the command waits for the events still in flight, and does nothing when
 | `TLSTT-B02` | With telemetry turned off by the environment or by the project, no notice is shown, no emitter is built and nothing is written in the project. |
 | `TLSTT-B03` | `NoticeTelemetry`: with telemetry on, the notice is shown once, saying how to turn it off, the fact that it was shown is marked in the project, the emitter is built, and the next run shows no notice. |
 | `TLSTT-B04` | The emitter carries an authentication header only when `ANCHORS_TELEMETRY_KEY` is set, and then only that header. |
-| `TLSTT-B05` | `ProjectRoot`: the project root is the explicit `--root` as given; without it, the nearest directory above the working directory that holds the project configuration. |
+| `TLSTT-B05` | `ProjectRoot`: the project root is the explicit `--root` as given; without it, the nearest directory above the working directory that holds the project configuration, and empty when no directory above holds one. |
 | `TLSTT-B06` | `FlushTelemetry`: waiting for events in flight at exit returns at once when no emitter was built. |
+| `TLSTT-B07` | When the project configuration does not load, a top-level `telemetry:` line is still read from its text, so a declared `telemetry: off` still builds nothing. |
+| `TLSTT-B08` | Outside a project — no root found, or a root without the project configuration — no notice is shown, no emitter is built and no mark is written anywhere. |
 
 ## Invariants
 
@@ -57,7 +61,7 @@ At exit, the command waits for the events still in flight, and does nothing when
 
 ## Errors
 
-none — the only failure path, a project configuration that does not load, is reported as a possible bug (a declared `telemetry: off` is then ignored) and is not stated as a rule until it is decided.
+none — a project configuration that does not load is not an error here: its `telemetry:` line is read as text (see TLSTT-B07), and the command itself reports the configuration error when it loads it.
 
 ## Dependencies
 

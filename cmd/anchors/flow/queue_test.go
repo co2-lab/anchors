@@ -306,10 +306,13 @@ func TestNextCmd_githubResumesTheAgentsCard(t *testing.T) {
 	for _, want := range []string{"Release on Friday.", "(no terminal to ask", "resuming your card",
 		"card claimed: #42", "state:    in-progress", "owner:    " + host + "/dev3",
 		"1. anchors work code    --for src/pricing.ts", "YOU DO NOT DECIDE THE DIRECTION",
-		"anchors pr-body --cards 42"} {
+		"anchors pr-body --cards 42", "brings the `Refs` that links the card; it stays open"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("the output lacks %q:\n%s", want, out)
 		}
+	}
+	if strings.Contains(out, "Closes") {
+		t.Errorf("pr-body links with Refs and does not close the card:\n%s", out)
 	}
 	if len(callsWith(calls(), "workflow run")) != 0 {
 		t.Error("with a card in hand nothing is asked of the pipeline")

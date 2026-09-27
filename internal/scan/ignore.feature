@@ -59,8 +59,8 @@ Feature: ScanIgnore — what the scan never sees: the built-in list, the project
   @SCIGS-B09 @unit-level
   Scenario: Without a loaded ignore set the fixed exclusions still hold
     Given no ignore set at all
-    When the scan asks about the directories "node_modules" and "issues" and the files "a.swp" and "a.ts"
-    Then both directories and "a.swp" are skipped, and "a.ts" is kept
+    When the scan asks about the directories "node_modules", "issues", ".git" and ".anchors" and the files "a.swp" and "a.ts"
+    Then the four directories and "a.swp" are skipped, and "a.ts" is kept
 
   @SCIGS-I01 @unit-level
   Scenario: No declaration re-enables the machinery directories

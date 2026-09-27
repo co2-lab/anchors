@@ -15,7 +15,9 @@ terminal UI into a two-call contract: the first call returns the questions, each
 to DECIDE (the accepted values, what Anchors inferred from the disk, and what the answer changes in the
 project); the second call brings the answers and gets back a verdict for every one of them.
 
-The questions come in the order of the terminal UI, because each answer narrows the next. The defaults are
+The questions come in the order of the terminal UI, because each answer narrows the next. Their texts, the
+reasons and the refusal details are in the project's language: the agent relays them to the user, who is the
+one who really decides. The defaults are
 what the inference read from the real project, so an agent with no ground to disagree should accept them.
 
 The verdict covers EVERY question, not only the invalid ones: that is what lets the agent check that Anchors
@@ -42,7 +44,7 @@ file conclude that the integration is active.
 | --- | --- |
 | `INQSN-B01` | The questions are, in this order: preset, header, artifacts, gates, colocation, layers, workflow, repo, labels, governs. |
 | `INQSN-B02` | Every question carries its identifier, its text, its answer type and what the answer changes; every single-choice question carries its options. |
-| `INQSN-B03` | The defaults come from the inference: the artifacts detected on disk, whether the project is colocated, and the code layers of the inferred configuration as both the options and the default of the layers question; with no proposal or no configuration, those defaults are empty. |
+| `INQSN-B03` | The defaults come from the inference: the artifacts detected on disk (in name order), whether the project is colocated, and the code layers of the inferred configuration as both the options and the default of the layers question; with no proposal or no configuration, those defaults are empty. |
 | `INQSN-B04` | The preset is chosen among "none" and the catalog, "none" by default; the work queue among `local`, `manual` and `github`, `local` by default. |
 | `INQSN-B05` | The verdict (`ValidateAnswers`) has one entry per question, in the questions' order; an answer not given takes the question's default and is marked as default. |
 | `INQSN-B06` | An answer outside the question's options is refused, and the verdict lists the accepted values; a multiple-choice question with no declared options accepts any value. |
@@ -50,6 +52,8 @@ file conclude that the integration is active.
 | `INQSN-B08` | Outside `github` mode, a repository answer is refused. |
 | `INQSN-B09` | A single refused answer makes the whole set refused (`TudoAceito`). |
 | `INQSN-B10` | An answer given empty is a decision, not the default: it is kept as given and not marked as default. |
+| `INQSN-B11` | The artifacts question offers exactly the artifact options (ARCHR-B01), code included, so an answer of code is accepted. |
+| `INQSN-B12` | The question texts, their reasons and the refusal details are written in the project's language. |
 
 ## Invariants
 

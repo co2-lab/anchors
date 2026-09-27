@@ -27,7 +27,9 @@ the code length each project declares. The output is one line per code with the 
 use it, sorted, so it pipes cleanly; a JSON form gives consumers each code's file, kind,
 title and work order fields. `code list --check` confronts each DECLARED code's length with
 the project's accepted lengths and proposes the canonical code for each one outside them;
-codes that are only cited (fixtures, examples) are counted and left alone.
+codes that are only cited (fixtures, examples) are counted and left alone. It changes
+nothing: each proposal ends as the `anchors recode` command that applies it, because a
+rename rewrites the whole project and deserves its own dry-run.
 
 ## Domain
 
@@ -55,6 +57,8 @@ codes that are only cited (fixtures, examples) are counted and left alone.
 | `CDCMC-B10` | `list --check` accuses only DECLARED codes whose length is outside the accepted lengths, proposing the canonical code of the unit's name, resolved against the conforming codes; a cited code is counted and not accused; the check fails when anything diverges and passes with a summary otherwise. |
 | `CDCMC-B11` | The unit name of a path drops the `.spec.md`, `.feature` and `.test.<ext>` suffixes, or the plain extension. |
 | `CDCMC-B12` | A map with no identity node makes `list` say so and point at `anchors map build`. |
+| `CDCMC-B13` | Every run reads its codes, owning files and declared identities from its own map: a second run in the same process never inherits what a previous map declared. |
+| `CDCMC-B14` | When the length check accuses codes, it ends with the exact `anchors recode <old> <new>` command for each one, to be reviewed in its dry-run and applied with `--apply`; the check itself changes nothing and has no `--fix`. |
 
 ## Invariants
 

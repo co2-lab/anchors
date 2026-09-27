@@ -75,6 +75,12 @@ Feature: SuiteProxy — runs the test and mutation suites the project declared, 
     Then it prints "the impact path reaches no code file — nothing to run."
     And the suite does not run
 
+  @STPRS-B11 @unit-level
+  Scenario: A passing run chains the check over the suite's own scope
+    Given a unit suite that passes and a gate that passes
+    When the test command runs chaining check, once in full and once for the changed a.go
+    Then the full run's check reads "check --all" and the incremental run's check does not
+
   @STPRS-I01 @unit-level
   Scenario: A report older than the run is never ingested
     Given a suite whose declared report was last written before the run

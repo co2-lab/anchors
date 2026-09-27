@@ -17,7 +17,8 @@ derived from it, and in bare mentions of the code in other units' cross-referenc
 
 It is a dry run by default. It shows the plan — which files change and how many occurrences of each kind
 — and writes nothing. With the apply switch it writes the files and then rebuilds the map from the
-headers, which are the source of truth, instead of editing the map's text. Writing is done in bulk and
+headers, which are the source of truth, instead of editing the map's text — keeping, as the map build
+does, the stamps, judgments and flow graph the headers do not carry. Writing is done in bulk and
 stops at the first file it cannot write; when that happens after some files were already rewritten, the
 command says the project is half converted, because a user who does not know it would run it again over
 a project that is partly in the new form.
@@ -42,6 +43,7 @@ engine; this unit is the command that shows it, applies it and puts the map back
 | `RCDEO-B03` | Without the apply switch nothing is written, and the report ends saying it was a dry run. |
 | `RCDEO-B04` | With the apply switch every surface is rewritten — the header, the scenario codes of the spec and of the test — and the report says how many files were rewritten. |
 | `RCDEO-B05` | After applying, the map is rebuilt from the rewritten headers, so its node carries the new code, and the report gives the node count. |
+| `RCDEO-B06` | The rebuild after applying keeps what the previous map knew beyond the headers, as the map build does: the stamps and judgments of every edge that survives, and the flow graph; a judgment lost with an edge that did not survive is reported. |
 
 ## Invariants
 
@@ -70,7 +72,7 @@ engine; this unit is the command that shows it, applies it and puts the map back
 | --- | --- | --- | --- |
 | DEP1 | `internal/recode/plan.go` | `BuildPlan`, `Apply` | infra — finding, classifying and rewriting the occurrences |
 | DEP2 | `internal/scan/scan.go` | `Walk` | scan — the files the rebuilt map is made of |
-| DEP3 | `internal/mapx/build.go` | `Build` | mapa — rebuilding the map from the headers |
+| DEP3 | `internal/mapx/build.go` | `Build`, `PreserveStamps` | mapa — rebuilding the map from the headers, keeping the previous stamps and judgments |
 | DEP4 | `internal/config/config.go` | `Load` | config — the project's layers |
 
 ## Open Decisions

@@ -64,3 +64,27 @@ Feature: TextSimilarity — how close two texts that should be equal are, weight
     Given the borderline pair of the real corpus
     When it is classified
     Then the score equals the larger of the Jaccard and the cosine
+
+  @TXSMT-B10 @unit-level
+  Scenario: Texts that differ only by a number are not identical
+    Given the pairs "radius 9999" and "radius 0", and "the card has 2 rows" and "the card has 3 rows"
+    When they are classified
+    Then neither verdict is identical, and "123" against "123" is identical with score 1
+
+  @TXSMT-B11 @unit-level
+  Scenario: Equal texts without any word are identical
+    Given the pairs "" and "", "!!" and "!!", "!!" and "??"
+    When they are classified
+    Then every verdict is identical with score 1
+
+  @TXSMT-B12 @unit-level
+  Scenario: The rulers fall back together, so one weightless side does not make a borderline
+    Given the corpus "componente props", "componente props onChange" and "componente props valor"
+    When the first two are measured and classified
+    Then the Jaccard and the cosine are equal and the verdict is divergent
+
+  @TXSMT-B13 @unit-level
+  Scenario: A verdict prints its English name
+    Given the four verdicts
+    When each is printed
+    Then they read "identical", "similar", "borderline" and "divergent"

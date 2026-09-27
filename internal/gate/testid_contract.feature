@@ -139,6 +139,18 @@ Feature: TestIDContract — a test handle is one contract with four ends: the co
     When testid-consistent confronts the spec
     Then it returns Pass
 
+  @TICTS-B21 @unit-level
+  Scenario: A surface declared with a glob is read from the directory before the first wildcard
+    Given the e2e surface declared as "e2e/**/*.yaml" and a flow in "e2e/login" that queries ":abcd-screen"
+    When testid-consistent confronts a spec that exposes and declares ":abcd-screen"
+    Then it returns Pass, and "e2e/login-*.yaml" and "apps/x-{{module}}/flows" are read from "e2e" and "apps"
+
+  @TICTS-B22 @unit-level
+  Scenario: A consumer that names only a longer id does not query the shorter one
+    Given a linked test that queries only ":abcd-screen-header" and "xabcd-screen"
+    When testid-consistent confronts a spec that exposes and declares ":abcd-screen"
+    Then it returns Fail naming "abcd-screen" as queried by nobody
+
   @TICTS-E01 @unit-level
   Scenario: Linked code that cannot be read is not an end
     Given a spec whose only specifies edge points to a missing file

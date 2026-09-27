@@ -119,7 +119,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		switch {
 		case temTitulo && !sharedTitle(body, sc.Code):
 			if v, score := similarity.Classify(sc.Title, titulo, pesos); v != similarity.Identico {
-				driftDesc = append(driftDesc, fmt.Sprintf("%s (%s, %.0f%%)", sc.Code, v, score*100))
+				driftDesc = append(driftDesc, fmt.Sprintf("%s (%s, %.0f%%)", sc.Code, verdictLabel(v), score*100))
 			}
 		case !descriptionMatches(sc.Title, bodyNorm):
 			// Duas situações caem aqui, e nas duas não existe UM título para comparar
@@ -545,4 +545,20 @@ func cutInlineComment(ln string) string {
 		}
 	}
 	return ln
+}
+
+// verdictLabel is the similarity verdict in the project's language. The verdict's own
+// `String` used to be printed here, and it was Portuguese ("divergente", "limítrofe") in
+// every project, whatever `lang:` said.
+func verdictLabel(v similarity.Verdict) string {
+	switch v {
+	case similarity.Identico:
+		return i18n.T("gate.feature_test_match.verdict_identical")
+	case similarity.Similar:
+		return i18n.T("gate.feature_test_match.verdict_similar")
+	case similarity.Limitrofe:
+		return i18n.T("gate.feature_test_match.verdict_borderline")
+	default:
+		return i18n.T("gate.feature_test_match.verdict_divergent")
+	}
 }

@@ -76,6 +76,7 @@ instead — an under-estimate, never a double count.
 | `SGINA-B12` | Only suites measured against the node's current revision join the union; a suite measured against an earlier one stays stored and keeps the node stale. |
 | `SGINA-B13` | A report older than the file's current text is kept with no revision: it neither joins the union nor passes for fresh. |
 | `SGINA-B14` | The lines of a suite are stored as compact ranges and read back as the same lines. |
+| `SGINA-B19` | A report that instruments no line of the file sets the node's percentage to zero with its zero total, with or without a suite: the previous ingestion's percentage is never left beside a total of zero. |
 
 ### Mutation
 
@@ -90,6 +91,7 @@ instead — an under-estimate, never a double count.
 | `SGINA-B16` | A node's signal is stale when it recorded a revision and the node has moved since; a signal with no recorded revision is not stale. |
 | `SGINA-B17` | A report path matches a node when the two are equal or one ends with the other at a path boundary, in either direction. |
 | `SGINA-B18` | Resolving report paths gives each path its only matching node, keeps a path no node matches as it came, breaks a tie by the node sharing the most leading directories with the report file, and returns a path still tied as ambiguous, with no owner. |
+| `SGINA-B20` | When several paths of one report match a node, the node receives exactly one of them, always the same: the exact path, else the one closest in length to the node's, else the first in lexical order. |
 
 ## Invariants
 

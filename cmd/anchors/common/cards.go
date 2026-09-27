@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/co2-lab/anchors/internal/config"
 )
@@ -19,7 +20,10 @@ type AgentCard struct {
 // AgentCards devolve os cards cujo último dono é este agente.
 func AgentCards(cfg *config.Config) []AgentCard {
 	agente := strings.TrimSpace(os.Getenv("ANCHORS_AGENT"))
-	if agente == "" || cfg == nil || cfg.Workflow == nil {
+	// A workflow with no label has nothing to filter by, and `Labels[0]` below panicked on
+	// it: `config.Load` demands the label only in github mode, so a hand-built or local
+	// configuration reached this with an empty list.
+	if agente == "" || cfg == nil || cfg.Workflow == nil || len(cfg.Workflow.Labels) == 0 {
 		return nil
 	}
 	if _, err := exec.LookPath("gh"); err != nil {
@@ -59,8 +63,12 @@ func FirstLineOfReason(s string) string {
 		s = s[:i]
 	}
 	s = strings.TrimSpace(s)
-	if len(s) > 70 {
-		return s[:67] + "..."
+	// Counted and cut in characters, not bytes: `s[:67]` split a multi-byte character in
+	// two (a title in Portuguese or with an em dash), and the issue title carried an
+	// invalid UTF-8 byte; a 70-character title with accents was also cut for being over
+	// 70 BYTES.
+	if utf8.RuneCountInString(s) > 70 {
+		return string([]rune(s)[:67]) + "..."
 	}
 	return s
 }

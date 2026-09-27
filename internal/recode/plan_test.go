@@ -355,3 +355,57 @@ func TestMoveDoesNotBypassAGitRefusal(t *testing.T) {
 		t.Errorf("the destination was overwritten: %q", b)
 	}
 }
+
+// The collision check compared the bare target code against the file's scenario codes
+// (`WXYZX-B01`), which never equal a bare code: renaming onto a code another unit owns
+// was planned, merging two identities.
+func TestBuildPlan_refusesATargetOwnedByAnotherUnit(t *testing.T) {
+	t.Run("RCPLR-B11: A target code another unit already owns is refused", func(t *testing.T) {})
+	for name, other := range map[string]string{
+		"declared in the header":  "<!-- @anchors\n  code: WXYZX\n-->\n# Bar\n",
+		"carried by its scenario": "# Bar\n\n### WXYZX-B01 x\n",
+	} {
+		t.Run(name, func(t *testing.T) {
+			root := writeProject(t, map[string]string{
+				"a/Foo.spec.md": "<!-- @anchors\n  code: ABCDX\n-->\n### ABCDX-B01 x\n",
+				"b/Bar.spec.md": other,
+			})
+			_, err := BuildPlan(root, plainCfg(), "ABCDX", "WXYZX")
+			if err == nil || !strings.Contains(err.Error(), "b/Bar.spec.md") {
+				t.Fatalf("BuildPlan onto a code owned by b/Bar.spec.md = %v, want the collision refusal naming it", err)
+			}
+		})
+	}
+	// A code that merely CONTAINS the target is not a collision.
+	root := writeProject(t, map[string]string{
+		"a/Foo.spec.md": "<!-- @anchors\n  code: ABCDX\n-->\n### ABCDX-B01 x\n",
+		"b/Bar.spec.md": "<!-- @anchors\n  code: WXYZY\n-->\n### WXYZY-B01 x\n",
+	})
+	if _, err := BuildPlan(root, plainCfg(), "ABCDX", "WXYZX"); err != nil {
+		t.Errorf("an unrelated code was taken for a collision: %v", err)
+	}
+}
+
+// The malformed-code refusal said "expected 4 chars" whatever the project declared; the
+// lengths come from `code_lengths`.
+func TestBuildPlan_malformedCodeNamesTheDeclaredLengths(t *testing.T) {
+	t.Run("RCPLR-B12: The malformed-code refusal names the lengths the project declares", func(t *testing.T) {})
+	prev := config.CodeLengths
+	t.Cleanup(func() { config.SetCodeLengths(prev) })
+	root := writeProject(t, map[string]string{"Foo.spec.md": "<!-- @anchors\n  code: ABCDX\n-->\n"})
+	for _, c := range []struct {
+		lengths []int
+		valid   string
+		want    string
+	}{{[]int{5}, "ABCDX", "expected 5 characters"}, {[]int{4, 6}, "ABCD", "expected 4/6 characters"}} {
+		config.SetCodeLengths(c.lengths)
+		_, err := BuildPlan(root, plainCfg(), "ABC", "WXYZX")
+		if err == nil || !strings.Contains(err.Error(), c.want) {
+			t.Errorf("lengths %v: BuildPlan(ABC) = %v, want it to say %q", c.lengths, err, c.want)
+		}
+		_, err = BuildPlan(root, plainCfg(), c.valid, "WX")
+		if err == nil || !strings.Contains(err.Error(), c.want) {
+			t.Errorf("lengths %v: BuildPlan(→ WX) = %v, want it to say %q", c.lengths, err, c.want)
+		}
+	}
+}

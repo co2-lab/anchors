@@ -25,7 +25,7 @@ Feature: Compliance — the state of each regulatory duty, grouped by the norm t
   Scenario: A duty that no subject complies with and no debt explains warns of a disconnected target
     Given an inline duty whose only subject does not comply and another whose only subject declared the debt
     When anchors compliance runs
-    Then only the first gets "⚠ NONE complies — check whether `handlers/log.go`"
+    Then only the first gets "⚠ NONE complies — check whether `handlers/log.go` is still the right path in the obligation's `must_appear_in:`"
 
   @CMPLN-B04 @unit-level
   Scenario: Verbose lists the missing nodes and the plain report only hints at them
@@ -46,6 +46,14 @@ Feature: Compliance — the state of each regulatory duty, grouped by the norm t
     When the available packs are printed
     Then every other embedded pack is offered and the adopted one is not
     And with every pack adopted nothing is printed
+    And with every pack adopted as packs/<name>.yaml, ./packs/<name>.yml or packs/<name>.yml nothing is printed either
+
+  @CMPLN-B07 @unit-level
+  Scenario: The total counts node-duty pairs, and each hint names where its target is declared
+    Given a pack duty with three subjects, an inline duty with one and another inline duty with two, one node subject to both inline duties, and nobody complying
+    When anchors compliance runs
+    Then the report ends with "total: 3 duty(ies), 6 subject node-duty pair(s), 0 fulfilled"
+    And the pack duty's hint says "in `pack_values:`" and the inline duty's says "in the obligation's `must_appear_in:`"
 
   @CMPLN-I01 @unit-level
   Scenario: Every duty in force has its line even when no node is subject

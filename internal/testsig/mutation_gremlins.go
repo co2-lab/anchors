@@ -86,12 +86,16 @@ func parseGremlins(b []byte) (*MutationReport, error) {
 				fm.Killed++
 				rodados++
 			case "survived":
-				// LIVED (sobreviveu ao teste) e NOT COVERED (nenhum teste sequer o
-				// executou) contam igual: em ambos a linha não foi provada. É a mesma
-				// decisão que o MTE toma com Survived/NoCoverage.
+				// LIVED: the test ran the mutated line and did not notice.
 				fm.Survived++
 				fm.SurvivedAt = append(fm.SurvivedAt, m.Line)
 				rodados++
+			case "nocoverage":
+				// NOT COVERED: no test ran the line. Counted apart and out of the score, as
+				// the canonical reading does with NoCoverage (see FileMutation.NoCoverage).
+				// It used to count as a survivor here while the comment claimed the two
+				// readings agreed — the same file scored 50 from gremlins and 100 from MTE.
+				fm.NoCoverage++
 			}
 			// NOT VIABLE (não compilou) e RUNNABLE/SKIPPED (não chegaram a rodar) ficam
 			// FORA do denominador: não dizem nada sobre a qualidade do teste. É a mesma
@@ -99,14 +103,19 @@ func parseGremlins(b []byte) (*MutationReport, error) {
 		}
 		if rodados > 0 {
 			fm.Score = float64(fm.Killed) / float64(rodados) * 100
+		} else {
+			// No mutant ran: 0/0 is 100, as in the canonical reading (parseMTE says why).
+			// It used to stay 0, so the same file failed from one tool and passed from the
+			// other; the NoCoverage count keeps the 100 from lying.
+			fm.Score = 100
 		}
 		rep.Files[normalizeMutationPath(f.Filename)] = fm
 	}
 	return rep, nil
 }
 
-// normalizeGremlinsStatus traduz o vocabulário do gremlins para as duas classes que
-// mudam a conta. Os literais vêm de `internal/mutator/mutator.go` (método String()):
+// normalizeGremlinsStatus traduz o vocabulário do gremlins para as classes que mudam a
+// conta (killed, survived, nocoverage; o resto fica fora). Os literais vêm de `internal/mutator/mutator.go` (método String()):
 // NOT COVERED, RUNNABLE, SKIPPED, LIVED, KILLED, NOT VIABLE, TIMED OUT.
 //
 // A normalização remove espaço e caixa porque o status viaja como texto humano ("NOT
@@ -115,8 +124,10 @@ func normalizeGremlinsStatus(s string) string {
 	switch strings.ToLower(strings.ReplaceAll(strings.TrimSpace(s), " ", "")) {
 	case "killed", "timedout":
 		return "killed"
-	case "lived", "notcovered":
+	case "lived":
 		return "survived"
+	case "notcovered":
+		return "nocoverage"
 	default:
 		// notviable, runnable, skipped — e qualquer status futuro que não saibamos
 		// classificar. Ficar fora do denominador é a escolha CONSERVADORA: um status

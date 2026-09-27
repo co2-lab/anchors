@@ -54,3 +54,16 @@ Feature: ApplyPreset — writes a stack preset's layers into the configuration a
     Given the module path /does/not/exist/family, which is absent from disk
     When the prefixes are deduced
     Then family still receives FM
+
+  @APPRP-B06 @unit-level
+  Scenario: Modules sharing a folder name are each keyed by their path, with distinct prefixes
+    Given the modules packages/auth, apps/auth/ and m/family
+    When their prefixes are deduced
+    Then apps/auth and packages/auth are each in the mapping under their path, with different prefixes
+    And family stays keyed by its name with FM
+
+  @APPRP-I02 @unit-level
+  Scenario: No two modules ever share a prefix while a free one exists
+    Given thirty modules whose names all start with A
+    When their prefixes are deduced
+    Then all thirty have a two-letter prefix and no prefix repeats

@@ -114,3 +114,15 @@ Feature: FlagScenarios — the scenarios a feature flag declares are written, co
     Given a flag with a bare `@no-absent`, and a flag with a bare `@no-govern`
     When their gates confront them
     Then both fail
+
+  @FLSCF-B17 @unit-level
+  Scenario: A gated-by citation is read at the code length the project declares
+    Given a project that declares code length 7 and a flag that declares no scenario "CHKUTXY-G99"
+    When flag-scenario-exists confronts a spec citing "@gated-by CHKUTXY-G99"
+    Then it returns Fail naming "CHKUTXY-G99"
+
+  @FLSCF-E02 @unit-level
+  Scenario: Flags that cannot be read leave the citation Pending, naming the flags folder
+    Given a spec citing "CHKUT-G02" and a "flags" folder that cannot be read
+    When flag-scenario-exists confronts the spec
+    Then it returns Pending with a message that names the flags folder, not the missing map

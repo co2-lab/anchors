@@ -75,7 +75,7 @@ func TestNoReportInventsNoPath(t *testing.T) {
 // the flag into a disguised shell runner, which is exactly what these commands are NOT.
 func TestChainRefusesAnUnknownCommand(t *testing.T) {
 	t.Run("STPRS-E08: A chain naming another command is refused", func(t *testing.T) {})
-	err := runChained("deploy", t.TempDir())
+	err := runChained("deploy", t.TempDir(), nil)
 	if err == nil {
 		t.Fatal("--then deploy should have been refused")
 	}
@@ -87,10 +87,10 @@ func TestChainRefusesAnUnknownCommand(t *testing.T) {
 // The opt-in is the default. Without `--then`, it runs and stops.
 func TestEmptyChainDoesNothing(t *testing.T) {
 	t.Run("STPRS-B09: A passing run chains coverage, and an empty chain does nothing", func(t *testing.T) {})
-	if err := runChained("", t.TempDir()); err != nil {
+	if err := runChained("", t.TempDir(), nil); err != nil {
 		t.Errorf("without --then there is nothing to chain; got %v", err)
 	}
-	if err := runChained("  ,  ", t.TempDir()); err != nil {
+	if err := runChained("  ,  ", t.TempDir(), nil); err != nil {
 		t.Errorf("empty separators are not a command; got %v", err)
 	}
 }
@@ -472,7 +472,7 @@ func TestSuiteThenChainsCoverage(t *testing.T) {
 		t.Errorf("coverage should run after the suite:\n%s", out)
 	}
 	for _, empty := range []string{"", "  ,  "} {
-		if err := runChained(empty, dir); err != nil {
+		if err := runChained(empty, dir, nil); err != nil {
 			t.Errorf("an empty chain %q runs nothing; got %v", empty, err)
 		}
 	}
@@ -539,5 +539,37 @@ func TestSuiteChangedWithoutMapFails(t *testing.T) {
 	_, err := runQ(t, newTestCmd(), "--root", dir, "--changed", "a.go")
 	if err == nil || !strings.Contains(err.Error(), "anchors map build") {
 		t.Errorf("--changed needs the map; got %v", err)
+	}
+}
+
+// `--then check` hands the check the suite's own scope: the full sweep after a full run,
+// the same changed files after an incremental one. A chained check with neither refused
+// ("provide --changed or --all") every time.
+func TestSuiteThenChainsCheckWithTheSuitesScope(t *testing.T) {
+	t.Run("STPRS-B11: A passing run chains the check over the suite's own scope", func(t *testing.T) {})
+	englishOutput(t)
+	yaml := suiteLayers + `gates:
+  - name: always-fine
+    on: [code]
+    run: "true"
+tests:
+  - layer: unit
+    run: "true"
+    run_changed: "true"
+`
+	dir := qProject(t, yaml, suiteFiles(), suiteGraph())
+	out, err := runQ(t, newTestCmd(), "--root", dir, "--then", "check")
+	if err != nil {
+		t.Fatalf("a full run chaining check must pass: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "━━━ then: anchors check ━━━") || !strings.Contains(out, "check --all — ") {
+		t.Errorf("the chained check of a full run is the full sweep:\n%s", out)
+	}
+	out, err = runQ(t, newTestCmd(), "--root", dir, "--changed", "a.go", "--then", "check")
+	if err != nil {
+		t.Fatalf("an incremental run chaining check must pass: %v\n%s", err, out)
+	}
+	if !strings.Contains(out, "━━━ then: anchors check ━━━") || strings.Contains(out, "check --all — ") {
+		t.Errorf("the chained check of an incremental run is incremental:\n%s", out)
 	}
 }

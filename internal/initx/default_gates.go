@@ -33,7 +33,7 @@ var dependOnIngestedSignal = map[string]bool{
 // A exceção são os gates que dependem de sinal ingerido: sem relatório, eles barrariam
 // por ausência de dado, não por defeito.
 //
-// `chosen` são os artefatos escolhidos no init (spec/feature/test/guide/plan).
+// `chosen` são os artefatos escolhidos no init (spec/feature/test/guide/plan/code).
 func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	var gates []config.Gate
 
@@ -77,13 +77,13 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 				// o tamanho do projeto em vez do tamanho do trabalho.
 				Requires: "@no-test",
 				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
-				Ask: "Esta spec dispensa o teste próprio com `@no-test` e aponta um código " +
-					"de cenário como prova em outro lugar. Encontre o teste que menciona esse " +
-					"código e responda: ele EXERCITA o comportamento que esta spec descreve, " +
-					"ou apenas cita o código? Reprove se a menção for de comentário, se o " +
-					"teste exercitar outro comportamento, ou se a prova for indireta a ponto " +
-					"de uma quebra nesta unidade não derrubá-lo. A pergunta é sobre o que o " +
-					"teste EXECUTA, não sobre o que o nome dele promete.",
+				Ask: "This spec waives its own test with `@no-test` and points at a scenario " +
+					"code as the proof elsewhere. Find the test that mentions that code and " +
+					"answer: does it EXERCISE the behaviour this spec describes, or does it only " +
+					"cite the code? Fail it if the mention is in a comment, if the test exercises " +
+					"another behaviour, or if the proof is so indirect that a break in this unit " +
+					"would not bring it down. The question is about what the test RUNS, not about " +
+					"what its name promises.",
 			},
 			// O PAR do `regra-implementada`, e a divisão entre eles é de NATUREZA, não de
 			// rigor:
@@ -100,15 +100,15 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			config.Gate{
 				Name: "rule-fulfilled", ID: "rule-fulfilled", On: []string{"spec"},
 				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
-				Ask: "Cada regra desta spec está marcada no código por um comentário com o " +
-					"código dela (`// ABCDX-B01: …`). Leia a regra e o trecho que ela marca e " +
-					"responda: o trecho REALIZA o que a regra descreve? Reprove quando o " +
-					"comentário estiver sobre código que faz outra coisa, quando a regra " +
-					"descrever um caso que o trecho não trata, ou quando a marcação estiver " +
-					"num lugar genérico (topo do arquivo, import) em vez do trecho que decide. " +
-					"A pergunta é sobre o que o código EXECUTA, não sobre o que o comentário " +
-					"afirma. Ao reprovar, PROPONHA a correção como patch. " +
-					tbdInstruction("o código"),
+				Ask: "Each rule of this spec is marked in the code by a comment carrying its " +
+					"code (`// ABCDX-B01: …`). Read the rule and the snippet it marks and answer: " +
+					"does the snippet DO what the rule describes? Fail it when the comment sits " +
+					"on code that does something else, when the rule describes a case the snippet " +
+					"does not handle, or when the mark is in a generic place (top of the file, an " +
+					"import) instead of the snippet that decides. The question is about what the " +
+					"code RUNS, not about what the comment claims. When failing it, PROPOSE the " +
+					"fix as a patch." +
+					tbdInstruction("the code"),
 			},
 			// O vocabulário de letras do código é do PROJETO (`rule_types`), mas o gate
 			// que impede conflito e letra não declarada é universal: uma letra fora do
@@ -192,6 +192,12 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "plan-source-declared", Blocking: config.Bool(false),
 			Measures: "the source the plan names has the adapter's plan in `needs:`",
 		})
+	}
+	// Each gate below is seeded by the artifacts it RUNS ON, not by `plan`. They used to
+	// sit inside the `plan` block, so a project that chose spec, feature and test without
+	// plans was born without ~20 gates over its own specs (docs, doctrine, flags, failure,
+	// the way back of the triad) — and `anchors init` never offered them.
+	if chosen["spec"] {
 		// A DOC COMPILADA envelhece em silêncio. O conteúdo mora na spec; o `docs/*.md`
 		// é derivado dela por template, e quem altera uma regra e esquece de recompilar
 		// deixa a documentação afirmando a versão ANTIGA — com conteúdo real, e por isso
@@ -206,6 +212,8 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "docs-fresh", Blocking: config.Bool(false),
 			Measures: "the compiled `docs/*.md` reflects the spec it came from",
 		})
+	}
+	if chosen["plan"] {
 		// O EIXO VERTICAL — a doutrina de produto e quem a realiza.
 		//
 		// Quatro perguntas distintas, cada uma pegando um silencio que as outras nao
@@ -218,6 +226,8 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "plan-doctrine-exists", Blocking: config.Bool(false),
 			Measures: "the product doctrine the plan seeds exists",
 		})
+	}
+	if chosen["spec"] {
 		gates = append(gates, config.Gate{
 			Name: "doctrine-realized", ID: "doctrine-realized", On: []string{"product"},
 			Check: "doctrine-realized", Blocking: config.Bool(false),
@@ -241,16 +251,25 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		//
 		// Informational at birth: every historical revert left leftovers, and a large batch
 		// of identical findings becomes noise people learn to scroll past.
-		gates = append(gates, config.Gate{
-			Name: "feature-spec-match", ID: "feature-spec-match", On: []string{"feature"},
-			Check: "feature-spec-match", Blocking: config.Bool(false),
-			Measures: "every scenario of the feature matches a rule the spec declares",
-		})
+		//
+		// Each needs both ends of its pair: with no spec there is no rule for a scenario to
+		// match, and with no feature there is no scenario for a test to match.
+		if chosen["feature"] {
+			gates = append(gates, config.Gate{
+				Name: "feature-spec-match", ID: "feature-spec-match", On: []string{"feature"},
+				Check: "feature-spec-match", Blocking: config.Bool(false),
+				Measures: "every scenario of the feature matches a rule the spec declares",
+			})
+		}
+	}
+	if chosen["test"] && chosen["feature"] {
 		gates = append(gates, config.Gate{
 			Name: "test-feature-match", ID: "test-feature-match", On: []string{"test"},
 			Check: "test-feature-match", Blocking: config.Bool(false),
 			Measures: "every code the test proves matches a declared scenario",
 		})
+	}
+	if chosen["spec"] {
 
 		// A REVISAO QUE MUDOU O SIGNIFICADO DE UMA PALAVRA, e nao disse a quem.
 		//
@@ -390,8 +409,8 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "doc-self-contained", Blocking: config.Bool(false),
 			Measures: "the spec carries the text it cites, instead of pointing at another file",
 		})
-		// A ORDEM dentro do plano. Um plano sem fases catalogadas passa (elas são
-		// opcionais); o gate só cobra a coerência de quem as declarou.
+	}
+	if chosen["plan"] {
 		// O PLANO REVISADO avisa quem o lê. Sem isso, quem abre um plano antigo segue uma
 		// decisão que foi revista — e o plano parece coerente, porque ele É o registro
 		// coerente do que se decidiu na época.
@@ -400,6 +419,16 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Check: "plan-revised", Blocking: config.Bool(projetoNovo),
 			Measures: "a plan revised by another tells whoever reads it",
 		})
+	}
+	if chosen["plan"] || chosen["spec"] {
+		// Runs on whichever of plan and spec were chosen, like `parent-valid`: a project
+		// without plans still changes specs, and each change owes its revision.
+		var on []string
+		for _, k := range []string{"plan", "spec"} {
+			if chosen[k] {
+				on = append(on, k)
+			}
+		}
 		// O PLANO ALTERADO diz por que mudou. Quem implementa é quem descobre o erro do
 		// plano, e corrigi-lo em silêncio faz o projeto caminhar para um destino que
 		// ninguém escolheu — deriva que nenhum gate de ESTADO vê, porque o plano
@@ -409,10 +438,14 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		// revisão de todo plano acusaria quem acertou de primeira.
 		gates = append(gates, config.Gate{
 			Name: "plan-change-justified", ID: "plan-change-justified",
-			On: []string{"plan", "spec"}, Check: "plan-change-justified",
+			On: on, Check: "plan-change-justified",
 			Blocking: config.Bool(projetoNovo), SkipOn: []string{"all"},
 			Measures: "the changed plan/spec records the revision that says why it changed",
 		})
+	}
+	if chosen["plan"] {
+		// A ORDEM dentro do plano. Um plano sem fases catalogadas passa (elas são
+		// opcionais); o gate só cobra a coerência de quem as declarou.
 		gates = append(gates, config.Gate{
 			Name: "phase-ordered", ID: "phase-ordered", On: []string{"plan"}, Check: "phase-ordered",
 			Blocking: config.Bool(projetoNovo),
@@ -499,15 +532,15 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			config.Gate{
 				Name: "mock-detect-covers-dialect", ID: "mock-detect-covers-dialect", On: []string{"test"},
 				Blocking: config.Bool(false), Measures: config.MeasuresJudgment,
-				Ask: "O projeto declara `derived.mock_detect` — o regex que reconhece um " +
-					"dublê de teste neste ecossistema. Leia este arquivo de teste e responda: " +
-					"o padrão declarado alcança TODAS as formas de dublê que ele usa? " +
-					"Reprove se houver dublê que o regex não casa (outra função, outro " +
-					"dialeto, decorator em vez de chamada, dublê de módulo inteiro vs de " +
-					"membro). Um regex que casa zero faz o gate `mock-carimbado` reportar " +
-					"verde sem ter conferido nada. Ao reprovar, PROPONHA o padrão corrigido " +
-					"como patch do `anchors.yaml`." +
-					tbdInstruction("o teste"),
+				Ask: "The project declares `derived.mock_detect` — the regex that recognises a " +
+					"test double in this ecosystem. Read this test file and answer: does the " +
+					"declared pattern reach EVERY form of double it uses? Fail it if there is a " +
+					"double the regex does not match (another function, another dialect, a " +
+					"decorator instead of a call, a whole-module double vs a member double). A " +
+					"regex that matches nothing makes the `mock-stamped` gate report green " +
+					"without having checked anything. When failing it, PROPOSE the corrected " +
+					"pattern as a patch of `anchors.yaml`." +
+					tbdInstruction("the test"),
 			},
 			config.Gate{
 				Name: "mock-stamped", ID: "mock-stamped", On: []string{"test"}, Check: "mock-stamped",
@@ -708,7 +741,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 				Name: "no-duplication", ID: "no-duplication", On: []string{"code"},
 				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
 				Run:       "npx --yes jscpd . --reporters console --silent",
-				NeedsTool: "npx", InstallHint: "instale Node.js (npx acompanha)",
+				NeedsTool: "npx", InstallHint: "install Node.js (npx ships with it)",
 				Blocking: config.Bool(false), When: []string{"ci"}, Cost: "slow",
 				Category: "quality",
 				Measures: "no code block appears copied in two places",
@@ -826,7 +859,11 @@ func init() { config.SetCanonicalGateResolver(CanonicalGate) }
 // passaria despercebido.
 func init() {
 	config.RegisterGateNames(func() []string {
-		todos := DefaultGates(map[string]bool{"spec": true, "feature": true, "test": true}, false)
+		// The FULL catalog: registering only the spec/feature/test gates left out every
+		// gate seeded for code, plans and guides (no-secret-leaked, plan-revised,
+		// guide-checklist…), so a migration rename pointing at one of them read as a
+		// rename to a gate that does not exist.
+		todos := canonicalCatalog()
 		out := make([]string, 0, len(todos))
 		for _, g := range todos {
 			out = append(out, g.Name)

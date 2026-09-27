@@ -36,7 +36,7 @@ unit replaces the first, because what matters is the current state of the delive
 
 | Effect | Description |
 | --- | --- |
-| `CHRCC-B01` | The key of a record is its stage, two hyphens, and its unit with the extension dropped and every `/`, `\`, space and `.` turned into a hyphen (leading and trailing hyphens trimmed). |
+| `CHRCC-B01` | The key of a record is its stage, two hyphens, its unit with the extension dropped and every `/`, `\`, space and `.` turned into a hyphen (leading and trailing hyphens trimmed), a hyphen, and the first 8 hex digits of the SHA-256 of the unit with `\` written as `/`. |
 | `CHRCC-B02` | A record waiting for review lives at `changes/<key>.md` under the project root. |
 | `CHRCC-B03` | The rendered record opens with an @anchors header of layer `change` carrying the stage, the unit and the date; the agent line is written only when an agent is named. |
 | `CHRCC-B04` | The rendered record states the delivery title, the intent (trimmed) under "What was done", and one line per touched file under "Files". |
@@ -44,12 +44,15 @@ unit replaces the first, because what matters is the current state of the delive
 | `CHRCC-B06` | Saving writes the rendered record at its path, creating `changes/` when missing; saving a second delivery with the same stage and unit replaces the first. (`Save`) |
 | `CHRCC-B07` | The pending list holds only the `.md` files directly inside `changes/`, sorted, and is empty (without error) when the folder does not exist. |
 | `CHRCC-B08` | Marking a record reviewed moves it, under the same file name, to `changes/reviewed/`, creating that folder when missing. (`MarkReviewed`) |
+| `CHRCC-B09` | When the history already holds a record of that file name, the reviewed record takes the first free name `<key>.<n>.md` (n from 2), so every earlier review stays. |
+| `CHRCC-B10` | In the header and the title, a line break in the stage, unit, date or agent is written escaped (`\n`, `\r`) and `-->` is written `-- >`, so no field can add a header line or close the header. |
 
 ## Invariants
 
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
 | `CHRCC-I01` | A reviewed record is never lost: after the move it is no longer pending and it exists in the history. | saves two records, marks one reviewed, and checks it left `changes/`, exists in `changes/reviewed/`, and only the other stays pending |
+| `CHRCC-I02` | Two different units never share a key; the two separator spellings of one unit do. | keys `a/b.go`, `a-b.go`, `a/b.ts`, `a.b.go` and `a b.go` and finds five keys, checks `a\b.go` and `a/b.go` share one, and saves two of them to find two pending records |
 
 ## Constraints
 

@@ -32,6 +32,7 @@ unified diff serves.
 | `DCLDF-B04` | A deleted file (new side `/dev/null`) records nothing, and a file left with no added line is dropped from the result. |
 | `DCLDF-B05` | Unchanged context lines advance the new-side line number without being recorded. |
 | `DCLDF-B06` | `GitDiff`: From git, the working copy is compared against the current commit when no reference is given, and against the reference when one is. |
+| `DCLDF-B07` | Inside a hunk, every line up to the counts its header gives is content: an added line whose text starts with `++ ` (it reads `+++ `) is recorded as a line, and a removed line whose text starts with `-- ` is a removal, never a file header. |
 
 ## Domain
 

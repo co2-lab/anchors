@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -25,7 +26,7 @@ func TestDefaultGates(t *testing.T) {
 	g := DefaultGates(map[string]bool{"spec": true, "feature": true, "test": true}, false)
 	names := gateNames(g)
 	for _, x := range g {
-		if x.IsBlocking() {
+		if x.IsBlocking() && !blockingByNature[x.Name] {
 			t.Errorf("gate %s should be born informative", x.Name)
 		}
 	}
@@ -34,6 +35,12 @@ func TestDefaultGates(t *testing.T) {
 			t.Errorf("default gate %q missing", want)
 		}
 	}
+}
+
+// blockingByNature are the five gates born blocking whatever the age (DFGTD-B06).
+var blockingByNature = map[string]bool{
+	"no-secret-leaked": true, "doc-required": true,
+	"flag-scenario-grammar": true, "flag-scenarios-complete": true, "flag-scenario-exists": true,
 }
 
 func TestDefaultGatesNoScenarioWithoutSpec(t *testing.T) {
@@ -51,6 +58,112 @@ func TestDefaultGatesNoScenarioWithoutSpec(t *testing.T) {
 	names := gateNames(DefaultGates(map[string]bool{"spec": true, "feature": true}, false))
 	if !names["scenario-coverage"] || !names["spec-feature-match"] {
 		t.Error("with spec and feature both chosen, scenario-coverage and spec-feature-match are seeded")
+	}
+	// The way back of each pair needs both ends too.
+	for _, c := range []struct {
+		chosen map[string]bool
+		gate   string
+		want   bool
+	}{
+		{map[string]bool{"feature": true}, "feature-spec-match", false},
+		{map[string]bool{"spec": true}, "feature-spec-match", false},
+		{map[string]bool{"spec": true, "feature": true}, "feature-spec-match", true},
+		{map[string]bool{"test": true}, "test-feature-match", false},
+		{map[string]bool{"feature": true}, "test-feature-match", false},
+		{map[string]bool{"feature": true, "test": true}, "test-feature-match", true},
+	} {
+		if got := gateNames(DefaultGates(c.chosen, false))[c.gate]; got != c.want {
+			t.Errorf("%v: %s seeded = %v, want %v", c.chosen, c.gate, got, c.want)
+		}
+	}
+}
+
+// `anchors init` offers ArtifactNames; choosing every one of them must seed the whole
+// catalog. Before `code` was an option, nine canonical gates — no-secret-leaked among
+// them — could never be seeded by any answer.
+func TestEveryOfferedArtifactSeedsTheFullCatalog(t *testing.T) {
+	t.Run("DFGTD-B13: Choosing every artifact init offers seeds every gate of the catalog", func(t *testing.T) {})
+	offered := map[string]bool{}
+	for _, n := range ArtifactNames() {
+		offered[n] = true
+	}
+	seeded := gateNames(DefaultGates(offered, true))
+	for _, g := range canonicalCatalog() {
+		if !seeded[g.Name] {
+			t.Errorf("gate %q is in the catalog but no init answer seeds it", g.Name)
+		}
+	}
+	if !seeded["no-secret-leaked"] || !seeded["layer-boundary"] {
+		t.Error("the code gates must be seeded when every offered artifact is chosen")
+	}
+}
+
+// The gates over specs, features and tests used to sit inside the `plan` block: a project
+// with the triad and no plans was born without them.
+func TestTriadGatesAreSeededWithoutPlans(t *testing.T) {
+	t.Run("DFGTD-B14: The gates that run on specs, features and tests are seeded without plans", func(t *testing.T) {})
+	triad := map[string]bool{"spec": true, "feature": true, "test": true}
+	gates := DefaultGates(triad, false)
+	names := gateNames(gates)
+	for _, want := range []string{
+		"docs-fresh", "doctrine-realized", "spec-doctrine-exists", "feature-spec-match",
+		"test-feature-match", "revision-orphans", "flag-scenario-grammar",
+		"flag-scenarios-complete", "flag-scenario-exists", "flag-scenario-governs",
+		"flag-covered", "doctrine-not-duplicated", "spec-realizes-doctrine",
+		"failure-handled", "failure-logged", "failure-declared", "docs-covered",
+		"doc-required", "doc-self-contained", "plan-change-justified",
+	} {
+		if !names[want] {
+			t.Errorf("%q runs on the triad and must be seeded without plans", want)
+		}
+	}
+	for _, planOnly := range []string{"plan-seeds-valid", "plan-source-declared", "plan-doctrine-exists", "plan-revised", "phase-ordered"} {
+		if names[planOnly] {
+			t.Errorf("%q runs on plans only and must not be seeded without them", planOnly)
+		}
+	}
+	for _, g := range gates {
+		if g.Name == "plan-change-justified" && !reflect.DeepEqual(g.On, []string{"spec"}) {
+			t.Errorf("without plans, plan-change-justified runs on [spec], got %v", g.On)
+		}
+	}
+}
+
+// What choosing plans adds is exactly what runs on plans — nothing over the other
+// artifacts hides behind the plan choice.
+func TestChoosingPlansAddsOnlyPlanGates(t *testing.T) {
+	t.Run("DFGTD-I04: Choosing plans adds only gates that run on plans", func(t *testing.T) {})
+	for _, base := range []map[string]bool{
+		{"spec": true, "feature": true, "test": true},
+		{"spec": true, "feature": true, "test": true, "code": true, "guide": true},
+	} {
+		without := gateNames(DefaultGates(base, false))
+		withPlan := map[string]bool{"plan": true}
+		for k := range base {
+			withPlan[k] = true
+		}
+		for _, g := range DefaultGates(withPlan, false) {
+			if without[g.Name] {
+				continue
+			}
+			if !slices.Contains(g.On, "plan") {
+				t.Errorf("%v: choosing plans added %q, which runs on %v", base, g.Name, g.On)
+			}
+		}
+	}
+}
+
+// The vocabulary check confronts the migration's renames against the registered names;
+// with only the triad's gates registered, a rename to a code, plan or guide gate read as
+// a rename to nothing.
+func TestRegisteredGateNamesAreTheFullCatalog(t *testing.T) {
+	t.Run("DFGTD-B15: The gate names registered for the vocabulary check are the full catalog", func(t *testing.T) {})
+	var want []string
+	for _, g := range canonicalCatalog() {
+		want = append(want, g.Name)
+	}
+	if got := config.DefaultGateNamesForTest(); !reflect.DeepEqual(got, want) {
+		t.Errorf("registered names = %v\nwant the full catalog = %v", got, want)
 	}
 }
 
@@ -117,17 +230,13 @@ func TestNewProjectIsBornWithBlockingGates(t *testing.T) {
 func TestExistingProjectIsBornInformative(t *testing.T) {
 	t.Run("DFGTD-B06: An existing project is born with its gates informative, except the five blocking by nature", func(t *testing.T) {})
 	all := map[string]bool{"spec": true, "feature": true, "test": true, "code": true, "guide": true, "plan": true}
-	byNature := map[string]bool{
-		"no-secret-leaked": true, "doc-required": true,
-		"flag-scenario-grammar": true, "flag-scenarios-complete": true, "flag-scenario-exists": true,
-	}
 	got := map[string]bool{}
 	for _, g := range DefaultGates(all, false) {
 		if g.IsBlocking() {
 			got[g.Name] = true
 		}
 	}
-	if !reflect.DeepEqual(got, byNature) {
+	if !reflect.DeepEqual(got, blockingByNature) {
 		t.Errorf("an existing project should only have the gates blocking by nature blocking; got %v", got)
 	}
 }
@@ -247,7 +356,7 @@ func TestJudgmentGateOnAPieceCarriesTheTBDInstruction(t *testing.T) {
 				"Without it, facing a spec that declares the piece still to be written the "+
 				"question has no subject, and the easy way out is to `pass` to unblock — "+
 				"a stamp that stays in the map looking like real verification.\n\n"+
-				"Append `tbdInstruction(\"o código\")` (or \"o teste\") to the end of "+
+				"Append `tbdInstruction(\"the code\")` (or \"the test\") to the end of "+
 				"`Ask:`, or declare the gate in this test's `exempt` list with the reason.\n\n"+
 				"current ask: %s", g.Name, g.Ask)
 		}
@@ -364,5 +473,23 @@ func allArtifacts() map[string]bool {
 	return map[string]bool{
 		"spec": true, "feature": true, "test": true,
 		"code": true, "plan": true, "guide": true, "doc": true,
+	}
+}
+
+// What a default gate carries is written into every new project's anchors.yaml. The
+// judgment questions, the @TBD instruction and an install hint were Portuguese.
+func TestDefaultGateTextsAreEnglish(t *testing.T) {
+	t.Run("DFGTD-X02: No default gate writes Portuguese into the project", func(t *testing.T) {})
+	for _, g := range DefaultGates(allArtifacts(), false) {
+		for field, text := range map[string]string{"ask": g.Ask, "measures": g.Measures, "install_hint": g.InstallHint} {
+			words := " " + strings.ToLower(text) + " "
+			portuguese := strings.ContainsAny(text, "ãõçáéíóúâêôÃÕÇÁÉÍÓÚ")
+			for _, w := range []string{" que ", " de ", " da ", " não ", " um ", " uma ", " para ", "instale ", " acompanha"} {
+				portuguese = portuguese || strings.Contains(words, w)
+			}
+			if portuguese {
+				t.Errorf("gate %q: %s is not English: %s", g.Name, field, text)
+			}
+		}
 	}
 }

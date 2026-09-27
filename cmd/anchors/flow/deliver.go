@@ -99,8 +99,11 @@ After this, the watcher queues the review task.`,
 			// nenhuma — aí não há trabalho, e o `deliver` ainda mandaria revisá-lo.
 			relUnit := common.RelTo(absRoot, unit)
 			if peca, ok := existingPiece(absRoot, relUnit); ok {
+				// The unit recorded is still `relUnit` — the old wording ("recording the
+				// unit by <piece>") said the opposite of what the record then held.
 				if peca != relUnit {
-					fmt.Printf("   (recording the unit by `%s`, the piece that already exists in this stage)\n", peca)
+					fmt.Printf("   (`%s` does not exist yet — accepted because `%s`, a piece of the same unit, "+
+						"exists; the record keeps the unit `%s`)\n", relUnit, peca, relUnit)
 				}
 			} else {
 				return fmt.Errorf("%q does not exist on disk, and no piece of this unit "+
@@ -110,9 +113,18 @@ After this, the watcher queues the review task.`,
 			if len(files) == 0 {
 				files = []string{unit}
 			}
+			// The record's Files are read by the reviewer and confronted against the tree
+			// of whoever reads it, so they are relative to the root, like the unit. An
+			// absolute `--unit` (the default file) or `--file` was written as is, and the
+			// record named a path that exists only on the machine that recorded it.
+			for i, f := range files {
+				if filepath.IsAbs(f) {
+					files[i] = common.RelTo(absRoot, f)
+				}
+			}
 
 			c := change.Change{
-				Stage: stage, Unit: common.RelTo(absRoot, unit), Files: files,
+				Stage: stage, Unit: relUnit, Files: files,
 				Intent: intent, Decisions: decisions, Uncovered: uncovered,
 				Date: date, Agent: agent,
 			}

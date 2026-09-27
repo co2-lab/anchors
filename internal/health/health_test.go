@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -472,7 +473,7 @@ func TestNeedsToMissingPlanIsReported(t *testing.T) {
 // A cycle: none of the plans can ever start. Without this check the board holds cards
 // nobody takes and nobody knows why.
 func TestNeedsCycleIsReportedWithThePath(t *testing.T) {
-	t.Run("DCTRO-B22: A cycle of needs gives one finding showing a path", func(t *testing.T) {})
+	t.Run("DCTRO-B22: A cycle of needs gives one finding naming only the cycle, the same on every run", func(t *testing.T) {})
 	g := plans(
 		mapx.Node{ID: "plans/a.md", Needs: []string{"plans/b.md"}},
 		mapx.Node{ID: "plans/b.md", Needs: []string{"plans/a.md"}},
@@ -627,4 +628,29 @@ func TestDiagnose_healthyProjectHasNoWarnings(t *testing.T) {
 	if w := Diagnose(g, cfg, root).Warnings(); len(w) != 0 {
 		t.Fatalf("a healthy project has no warnings: %+v", w)
 	}
+}
+
+// The DFS started from each plan in map order, and the reported path began at the plan
+// the walk started from: with `x → a ⇄ b` the finding changed between runs and could read
+// "x → a → b → a", naming a plan that is not in the cycle.
+func TestNeedsCycleNamesOnlyTheCycleDeterministically(t *testing.T) {
+	t.Run("DCTRO-B22: A cycle of needs gives one finding naming only the cycle, the same on every run", func(t *testing.T) {
+		g := plans(
+			mapx.Node{ID: "plans/c.md", Needs: []string{"plans/d.md"}},
+			mapx.Node{ID: "plans/a.md", Needs: []string{"plans/b.md"}},
+			mapx.Node{ID: "plans/0.md", Needs: []string{"plans/a.md"}}, // walked first: leads into the cycle
+			mapx.Node{ID: "plans/b.md", Needs: []string{"plans/a.md"}},
+			mapx.Node{ID: "plans/d.md", Needs: []string{"plans/c.md"}},
+		)
+		want := checkPlanNeeds(g)
+		if len(want) != 1 || want[0].Subject != "plans/b.md" ||
+			want[0].Detail != i18n.T("health.needs_cycle", "plans/a.md → plans/b.md → plans/a.md") {
+			t.Fatalf("want the a⇄b cycle, found first in path order; got %+v", want)
+		}
+		for i := 0; i < 50; i++ {
+			if got := checkPlanNeeds(g); len(got) != 1 || got[0] != want[0] {
+				t.Fatalf("run %d gave %+v, want %+v", i, got, want[0])
+			}
+		}
+	})
 }

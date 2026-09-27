@@ -393,39 +393,66 @@ func TestBuild_layerOverrideReachesTheSpec(t *testing.T) {
 }
 
 // A configuration spec governs several files scattered around (`TypeScriptConfig` describes six
-// `tsconfig.json`). The per-code override REPLACES the templates: inheriting `{{name}}.ts` would
-// have the map look for a file nobody will write.
+// `tsconfig.json`). The per-code override REPLACES the templates of the kinds it declares:
+// inheriting `{{name}}.ts` would have the map look for a file nobody will write. A kind it
+// does not declare falls back to the default template — it used to be dropped, so an
+// override naming only `code:` silently lost the unit's feature and test.
 func TestBuild_codeOverrideReplacesTheTemplates(t *testing.T) {
-	t.Run("GRBLG-B11: A code override replaces every template for that unit", func(t *testing.T) {})
+	t.Run("GRBLG-B11: A code override replaces the templates of the kinds it declares, and the others fall back to the default", func(t *testing.T) {})
 	t.Run("GRBLG-B12: A bracketed directory is literal and a template wildcard expands", func(t *testing.T) {})
-	cfg := &config.Config{
-		Derived: &config.Derived{
-			Anchor: "spec",
-			Files: map[string]config.Padroes{
-				"code": {"{{dir}}/{{name}}.ts"},
-				"test": {"{{dir}}/{{name}}.test.ts"},
+	build := func(ov config.DerivedOverride) *Graph {
+		cfg := &config.Config{
+			Derived: &config.Derived{
+				Anchor: "spec",
+				Files: map[string]config.Padroes{
+					"code":    {"{{dir}}/{{name}}.ts"},
+					"feature": {"{{dir}}/{{name}}.feature"},
+					"test":    {"{{dir}}/{{name}}.test.ts"},
+				},
+				Overrides: []config.DerivedOverride{ov},
 			},
-			Overrides: []config.DerivedOverride{
-				{Code: "TSCTY", Files: map[string]config.Padroes{"code": {"packages/*/tsconfig.json"}}},
-			},
-		},
+		}
+		files := []scan.File{
+			{Path: "config/TypeScriptConfig.spec.md", Kind: "spec", HeaderCode: "TSCTY"},
+			{Path: "config/TypeScriptConfig.ts", Kind: "code"},
+			{Path: "config/TypeScriptConfig.feature", Kind: "feature"},
+			{Path: "config/TypeScriptConfig.test.ts", Kind: "test"},
+			{Path: "config/tsconfig.feature", Kind: "feature"},
+			{Path: "packages/a/tsconfig.json", Kind: "code"},
+			{Path: "packages/b/tsconfig.json", Kind: "code"},
+		}
+		return Build(files, cfg, nil)
 	}
-	files := []scan.File{
-		{Path: "config/TypeScriptConfig.spec.md", Kind: "spec", HeaderCode: "TSCTY"},
-		{Path: "config/TypeScriptConfig.ts", Kind: "code"},
-		{Path: "config/TypeScriptConfig.test.ts", Kind: "test"},
-		{Path: "packages/a/tsconfig.json", Kind: "code"},
-		{Path: "packages/b/tsconfig.json", Kind: "code"},
-	}
-	g := Build(files, cfg, nil)
 	spec := "config/TypeScriptConfig.spec.md"
+
+	// only `code:` declared: code replaced, feature and test from the default
+	g := build(config.DerivedOverride{Code: "TSCTY", Files: map[string]config.Padroes{"code": {"packages/*/tsconfig.json"}}})
 	for _, want := range []string{"packages/a/tsconfig.json", "packages/b/tsconfig.json"} {
 		if !hasEdge(g, spec, want, EdgeSpecifies) {
 			t.Errorf("the wildcard template should link %s", want)
 		}
 	}
-	if hasEdge(g, spec, "config/TypeScriptConfig.ts", EdgeSpecifies) || hasEdge(g, spec, "config/TypeScriptConfig.test.ts", EdgeTestedBy) {
-		t.Errorf("the code override replaces the default templates; got %+v", g.Edges)
+	if hasEdge(g, spec, "config/TypeScriptConfig.ts", EdgeSpecifies) {
+		t.Errorf("the code override replaces the default code template; got %+v", g.Edges)
+	}
+	if !hasEdge(g, spec, "config/TypeScriptConfig.feature", EdgeCoveredBy) ||
+		!hasEdge(g, "config/TypeScriptConfig.feature", "config/TypeScriptConfig.test.ts", EdgeTestedBy) {
+		t.Errorf("the kinds the override does not declare must fall back to the default; got %+v", g.Edges)
+	}
+
+	// a declared kind replaces the default one; an empty list declares "none"
+	g = build(config.DerivedOverride{Code: "TSCTY", Files: map[string]config.Padroes{
+		"code":    {"packages/*/tsconfig.json"},
+		"feature": {"config/tsconfig.feature"},
+		"test":    {},
+	}})
+	if !hasEdge(g, spec, "config/tsconfig.feature", EdgeCoveredBy) || hasEdge(g, spec, "config/TypeScriptConfig.feature", EdgeCoveredBy) {
+		t.Errorf("a declared feature must replace the default one; got %+v", g.Edges)
+	}
+	for _, e := range g.Edges {
+		if e.To == "config/TypeScriptConfig.test.ts" {
+			t.Errorf("an empty test list must link no test; got %+v", e)
+		}
 	}
 }
 

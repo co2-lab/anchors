@@ -1,6 +1,7 @@
 package governance
 
 import (
+	"sort"
 	"strings"
 	"testing"
 
@@ -168,6 +169,35 @@ func TestPrintAuditCountsOnlyActionableItems(t *testing.T) {
 	}
 	if strings.Index(out, "● a.go") > strings.Index(out, "○ a.spec.md") {
 		t.Errorf("the target prints before the impact nodes:\n%s", out)
+	}
+}
+
+// The impact nodes come sorted by path, the same on every run: they were printed in the
+// order of a map's iteration.
+func TestPrintAuditImpactNodesAreSorted(t *testing.T) {
+	t.Run("DTAUI-B09: The impact nodes print sorted by path, the same on every run", func(t *testing.T) {})
+	impact := []string{"e.feature", "b.spec.md", "d_test.go", "a.feature", "c.go", "f.md"}
+	ids := map[string]bool{"z.go": true}
+	var results []gate.Result
+	for _, id := range impact {
+		ids[id] = true
+		results = append(results, gate.Result{Gate: "g", Target: id, Verdict: gate.Fail, Detail: "x"})
+	}
+	want := "● z.go"
+	sorted := append([]string{}, impact...)
+	sort.Strings(sorted)
+	rep := health.Report{Findings: []health.Finding{{Check: "c", Subject: "z.go", Severity: health.Warn, Detail: "d"}}}
+	for run := 0; run < 20; run++ {
+		out := captureStdout(t, func() { _ = printAudit("z.go", true, nil, results, rep, ids) })
+		var got []string
+		for _, l := range strings.Split(out, "\n") {
+			if n, ok := strings.CutPrefix(l, "○ "); ok {
+				got = append(got, strings.TrimSuffix(n, " (impact)"))
+			}
+		}
+		if !strings.HasPrefix(out[strings.Index(out, "\n\n")+2:], want) || strings.Join(got, ",") != strings.Join(sorted, ",") {
+			t.Fatalf("run %d: the target first, then the impact nodes sorted %v; got %v:\n%s", run, sorted, got, out)
+		}
 	}
 }
 

@@ -75,3 +75,16 @@ Feature: InferProposal — walks the project and proposes its structure determin
     Given a project root that does not exist
     When the project is inferred
     Then the inference fails with no proposal
+
+  @INPRN-B10 @unit-level
+  Scenario: A test named in any known dialect pairs with the code of the same stem
+    Given three Go files each beside its `_test.go`, and the same with `_test.py` and `.spec.ts`
+    When each project is inferred
+    Then each is detected as having tests and as colocated
+
+  @INPRN-I02 @unit-level
+  Scenario: The same tree always gives the same code extensions and code directories, ties included
+    Given four code directories of eleven files each, one extension per directory
+    When the project is inferred twenty times
+    Then every run lists the extensions and the directories in name order
+    And the layer pattern lists the extensions in name order

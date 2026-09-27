@@ -123,12 +123,15 @@ func HasProjectMD(root string) bool {
 // Curto de propósito: manda ler a régua em vez de reproduzi-la. O `anchors guide
 // project` é a fonte da verdade da entrevista, e um prompt que a resumisse
 // desatualizaria em silêncio na primeira vez que o guide mudasse.
-const PromptDescobrir = `Rode "anchors guide project" e siga essa régua à risca: ` +
-	`conduza comigo, aqui nesta conversa, a entrevista de 5 etapas da fase DESCOBRIR ` +
-	`(propósito e forma → linguagem → arquitetura e paradigma → estrutura macro e ` +
-	`convenções → ferramental e formatação). Uma pergunta por vez, esperando minha ` +
-	`resposta antes da próxima. No fim, faça a revisão de inconsistências e escreva ` +
-	`PROJECT.md e INSIGHTS.md na raiz. Depois disso rodamos "anchors init".`
+//
+// In English: it is handed to an AI, like the `ask:` of the judgment gates, and the AI
+// conducts the interview in whatever language the user answers in. It was Portuguese.
+const PromptDescobrir = `Run "anchors guide project" and follow that ruler to the letter: ` +
+	`conduct with me, here in this conversation, the 5-step interview of the DISCOVER phase ` +
+	`(purpose and shape → language → architecture and paradigm → macro structure and ` +
+	`conventions → tooling and formatting). One question at a time, waiting for my ` +
+	`answer before the next. At the end, review the inconsistencies and write ` +
+	`PROJECT.md and INSIGHTS.md at the root. After that we run "anchors init".`
 
 // CommandToOpenAI devolve o argv que abre a IA detectada já com o prompt, ou nil
 // quando não há como saber qual abrir. Só ferramentas cuja invocação por linha de comando

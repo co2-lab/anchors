@@ -261,6 +261,9 @@ BEFORE writing each type of artifact. If the project has no guide for something
 you are going to produce, warn the user — it is a loose end.
 `
 
+// The Long help lists the subcommands by hand, and it had fallen behind: 8 of the 13 were
+// listed, and `anchors guide --help` never mentioned review, work, product, flag nor flow.
+// TestGuideHelpListsEverySubcommand confronts the list with the registered commands.
 func newGuideCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "guide",
@@ -272,12 +275,17 @@ and what to report to the user. The AI runs this first and operates Anchors as a
 Subcommands print the guides for the specific rulers:
   anchors guide project  how to discover a project that does not yet exist (PROJECT.md)
   anchors guide plan     how to structure a plan (the origin of the movement)
+  anchors guide product  the product doctrine (the rule that cuts across targets)
+  anchors guide flag     the feature flag (the scenarios a flag's value opens)
+  anchors guide flow     actions and flows (work driven by shape, not by memory)
   anchors guide spec     how to write a spec (the source of truth)
   anchors guide code     how to implement the code guided by the spec
   anchors guide feature  how to write the feature (the behaviour scenarios)
   anchors guide test     how to write the tests (the executable ruler)
   anchors guide guide    how to write a guide (the ruler of a ruler)
-  anchors guide header   the header block of every file (cross-cutting, mandatory)`,
+  anchors guide header   the header block of every file (cross-cutting, mandatory)
+  anchors guide work     how to work a card (the order, and a finding that is not its own)
+  anchors guide review   how to review a PR (what is yours and what check already measured)`,
 		// sem subcomando → o playbook de operação
 		RunE: func(cmd *cobra.Command, args []string) error {
 			fmt.Print(agentGuide)
@@ -310,7 +318,9 @@ Subcommands print the guides for the specific rulers:
 }
 
 // newGuideSubCmd fabrica um subcomando de guia que só imprime um texto embutido.
-// As quatro réguas (spec/code/feature/test) compartilham essa casca fina.
+// Every guide that only prints its text (project, spec, code, feature, test, guide,
+// header) shares this thin shell; plan, product, flag and flow carry their own Long, and
+// review and work append the autonomy section (newGuideComAutonomia).
 func newGuideSubCmd(use, short, body string) *cobra.Command {
 	return &cobra.Command{
 		Use:   use,

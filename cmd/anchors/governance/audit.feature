@@ -58,6 +58,12 @@ Feature: Audit — the dossier of everything pending on one file, for fixing it 
     When the dossier is printed
     Then "● a.go" appears before "○ a.spec.md (impact)"
 
+  @DTAUI-B09 @unit-level
+  Scenario: The impact nodes print sorted by path, the same on every run
+    Given pending items on the target z.go and on six impact nodes
+    When the dossier is printed twenty times
+    Then every run prints "● z.go" first and then the six impact nodes in path order
+
   @DTAUI-I01 @unit-level
   Scenario: Nothing outside the audited scope reaches the dossier
     Given a warning finding about elsewhere.go, which is not in the scope

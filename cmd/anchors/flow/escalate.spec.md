@@ -78,6 +78,7 @@ day.
 | `SCLTE-B14` | A blocking bug stops the origin card with `blocked-by-<new card>` alone, comments that a bug blocks it, and says it resumes when the bug closes. |
 | `SCLTE-B15` | A non-blocking bug and an ordinary card leave the origin card going on, with a comment tracing the new card. |
 | `SCLTE-B16` | The number of the new card is read from the address the platform answers only when its last segment is all digits; otherwise no blocked-by label is made. |
+| `SCLTE-B17` | `--card` accepts the card as `44` or `#44`: the `#` is dropped before any use, so the label is `under-44` and the origin card touched is 44. |
 
 ## Invariants
 

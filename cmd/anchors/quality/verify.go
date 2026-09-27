@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/i18n"
@@ -67,7 +68,13 @@ README-only commit does not trigger the monorepo's typecheck.`,
 				}
 			}
 			if staged {
-				lista, err := stagedFiles(root)
+				// The project root, not the raw flag: the default "." climbs to the
+				// directory that holds anchors.yaml, and the index is listed from there.
+				absRoot, err := config.AbsRoot(root)
+				if err != nil {
+					return err
+				}
+				lista, err := stagedFiles(absRoot)
 				if err != nil {
 					return err
 				}
@@ -103,8 +110,12 @@ README-only commit does not trigger the monorepo's typecheck.`,
 // stagedFiles lista o que está no índice do git (ACMR — sem deleções, que não há
 // como verificar). É a mesma lista que o pre-commit usava, agora obtida pelo próprio
 // anchors: o hook deixa de precisar saber a sintaxe do git.
+//
+// `--relative` names the files from root and leaves out those outside it. git names them
+// from the repository's top otherwise, and a project below the top (a monorepo package)
+// handed check `sub/x.ts` for its `x.ts`, plus every staged file of the other packages.
 func stagedFiles(root string) ([]string, error) {
-	cmd := exec.Command("git", "diff", "--cached", "--name-only", "--diff-filter=ACMR")
+	cmd := exec.Command("git", "diff", "--cached", "--relative", "--name-only", "--diff-filter=ACMR")
 	cmd.Dir = root
 	out, err := cmd.Output()
 	if err != nil {
@@ -203,7 +214,7 @@ func translateChildOutput(err error) error {
 	// pre-commit barrava um commit só de configuração (package.json, yarn.lock),
 	// que é exatamente o caso que o código 3 existe para permitir.
 	var ee *exec.ExitError
-	if errors.As(err, &ee) && ee.ExitCode() == ExitNotGoverned {
+	if errors.As(err, &ee) && ee.ExitCode() == common.ExitNotGoverned {
 		return errNotGoverned{target: i18n.T("verify.staged_files")}
 	}
 	return err

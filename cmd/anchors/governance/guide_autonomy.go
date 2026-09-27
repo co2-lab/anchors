@@ -67,8 +67,17 @@ func autonomyGuide(root string) string {
 
 	b.WriteString("\n## When you do not know\n\n")
 
+	// A declaration by the old `user_issues` flag has no role, and "Your role (%s)" printed
+	// "Your role () decides…" — naming a role nobody declared. It says what WAS declared,
+	// and that the role is still missing.
+	legacy := s.Role == "" && s.UserIssues != nil
 	if s.HandlesUserIssues() {
-		fmt.Fprintf(&b, "Your role (%s) decides the direction of this product.\n\n", s.Role.Title())
+		if legacy {
+			b.WriteString("Your declaration (the old `user_issues` flag, with no role yet — declare one with " +
+				"`anchors settings role`) says you decide the direction of this product.\n\n")
+		} else {
+			fmt.Fprintf(&b, "Your role (%s) decides the direction of this product.\n\n", s.Role.Title())
+		}
 		b.WriteString("Even so, the ruler holds: what changes the project's DIRECTION is " +
 			"written, not\ndiscussed. A decision taken mid-session leaves no trace of why " +
 			"it was taken,\nand whoever inherits it will have no way to know whether it " +
@@ -85,7 +94,11 @@ func autonomyGuide(root string) string {
 	// A frase distingue DECLARADO de NÃO DECLARADO, e a distinção importa para quem lê:
 	// dizer "ficou declarado" a quem nunca declarou é afirmar um fato que não aconteceu, e
 	// o leitor vai procurar a declaração que não existe.
-	if s.Decided() {
+	if legacy {
+		b.WriteString("**Your declaration (the old `user_issues` flag, with no role yet) says you do NOT " +
+			"decide the direction\nof this product** — who decides is the `product-owner` or the `architect`. " +
+			"Declare your role\nwith `anchors settings role`.\n\n")
+	} else if s.Decided() {
 		fmt.Fprintf(&b, "**Your role (%s) does NOT decide the direction of this product** — who decides "+
 			"is the\n`product-owner` or the `architect`.\n\n", s.Role.Title())
 	} else {

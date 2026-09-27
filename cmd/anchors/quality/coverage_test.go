@@ -431,3 +431,50 @@ func TestCoverageDiffOutsideGitExplains(t *testing.T) {
 		t.Errorf("outside git the diff must be refused pointing at --diff-file; got %v", err)
 	}
 }
+
+// The diff coverage prints the same report on every run: the changed files in path order,
+// and a changed file whose path suffix matches two coverage entries always crossed with
+// the same one (the first in path order). Both came from ranging over maps.
+func TestCoverageDiffIsDeterministic(t *testing.T) {
+	t.Run("CVCMC-B14: The diff coverage lists the changed files in path order, and resolves a path matching several coverage entries always to the same one", func(t *testing.T) {})
+	var diff, lcov strings.Builder
+	names := []string{"pkg/f", "pkg/b", "pkg/e", "pkg/a", "pkg/d", "pkg/c"}
+	for _, n := range names {
+		fmt.Fprintf(&diff, "diff --git a/%[1]s.go b/%[1]s.go\n--- a/%[1]s.go\n+++ b/%[1]s.go\n@@ -1 +1,2 @@\n package pkg\n+func X() {}\n", n)
+		fmt.Fprintf(&lcov, "SF:/build/%s.go\nDA:2,1\nend_of_record\n", n)
+	}
+	// one more changed file, whose suffix eight coverage entries share: only the first in
+	// path order covers the line
+	diff.WriteString("diff --git a/z.go b/z.go\n--- a/z.go\n+++ b/z.go\n@@ -1 +1,2 @@\n package z\n+func Z() {}\n")
+	lcov.WriteString("SF:/a/z.go\nDA:2,1\nend_of_record\n")
+	for _, d := range []string{"b", "c", "d", "e", "f", "g", "h"} {
+		fmt.Fprintf(&lcov, "SF:/%s/z.go\nDA:2,0\nend_of_record\n", d)
+	}
+	dir := qProject(t, "", map[string]string{"change.diff": diff.String(), "cov.info": lcov.String()}, nil)
+
+	first := ""
+	for i := 0; i < 20; i++ {
+		out, err := runQ(t, newCoverageCmd(), "--root", dir, "--diff-file", dir+"/change.diff", "--lcov", dir+"/cov.info", "--threshold", "0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if i == 0 {
+			first = out
+			last := -1
+			for _, n := range []string{"pkg/a", "pkg/b", "pkg/c", "pkg/d", "pkg/e", "pkg/f", "z"} {
+				at := strings.Index(out, "  "+n+".go — ")
+				if at <= last {
+					t.Fatalf("the changed files are not in path order (%s):\n%s", n, out)
+				}
+				last = at
+			}
+			if !strings.Contains(out, "  z.go — 1 instrumented changed line(s), 100% covered") {
+				t.Errorf("z.go is crossed with the first matching entry in path order (/a/z.go):\n%s", out)
+			}
+			continue
+		}
+		if out != first {
+			t.Fatalf("run %d printed a different report:\n%s\n--- first:\n%s", i, out, first)
+		}
+	}
+}

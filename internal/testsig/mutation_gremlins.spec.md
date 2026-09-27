@@ -31,6 +31,8 @@ not in the report.
 | `GRING-B05` | The status is matched ignoring case and spaces. |
 | `GRING-B06` | The thresholds stay zero, which means absent: the engine's default decides. |
 | `GRING-B07` | A file's path is normalized as in the canonical reading: a leading `./` is dropped, and a path containing `/src/` is cut to start at `src/`. |
+| `GRING-B08` | A mutant not covered by any test is counted apart as no-coverage and does not enter the score, as in the canonical reading. |
+| `GRING-B09` | A file where no mutant ran scores 100, as in the canonical reading; its no-coverage count stays recorded. |
 
 ## Domain
 

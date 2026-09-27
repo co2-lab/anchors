@@ -255,3 +255,110 @@ func TestMapMerge_failures(t *testing.T) {
 		t.Errorf("two arguments must be refused: %v", err)
 	}
 }
+
+// Two branches can judge the SAME edge with DIFFERENT gates. The driver used to hand
+// the edge the other side's whole judgment list, so our gate's verdict vanished.
+func TestMapMerge_joinsTheJudgmentsOfDifferentGatesOnASharedEdge(t *testing.T) {
+	t.Run("MPMRM-B07: Judgments of different gates on a shared edge are joined, and one gate judged on both sides keeps the latest", func(t *testing.T) {})
+	dir := t.TempDir()
+	edge := func(js ...mapx.Judgment) mapx.Edge {
+		e := judgedEdge("a.spec.md", "a.ts")
+		e.Julgamentos = js
+		return e
+	}
+	oursEdge := edge(
+		mapx.Judgment{Gate: "review", Verdict: "ok", ChangedAt: "2026-09-01"},
+		mapx.Judgment{Gate: "atomic", Verdict: "issue", ChangedAt: "2026-09-01"},
+		mapx.Judgment{Gate: "tie", Verdict: "ok", ChangedAt: "2026-09-05"},
+	)
+	oursEdge.Stamp = &mapx.Stamp{Verdict: "issue", ChangedAt: "2026-09-01"}
+	theirsEdge := edge(
+		mapx.Judgment{Gate: "rule-fulfilled", Verdict: "ok", ChangedAt: "2026-09-02"},
+		mapx.Judgment{Gate: "atomic", Verdict: "ok", ChangedAt: "2026-09-10"},
+		mapx.Judgment{Gate: "tie", Verdict: "issue", ChangedAt: "2026-09-05"},
+	)
+	theirsEdge.Stamp = &mapx.Stamp{Verdict: "ok", ChangedAt: "2026-09-10"}
+	ours := saveGraph(t, dir, "ours.yaml", &mapx.Graph{Edges: []mapx.Edge{oursEdge}})
+	theirs := saveGraph(t, dir, "theirs.yaml", &mapx.Graph{Edges: []mapx.Edge{theirsEdge}})
+	if _, err := runMerge(t, ours, ours, theirs); err != nil {
+		t.Fatal(err)
+	}
+	g, err := mapx.Load(ours)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(g.Edges) != 1 {
+		t.Fatalf("want the one shared edge, got %+v", g.Edges)
+	}
+	got := map[string]string{}
+	for _, j := range g.Edges[0].Julgamentos {
+		got[j.Gate] = j.Verdict
+	}
+	if st := g.Edges[0].Stamp; st == nil || st.Verdict != "ok" {
+		t.Errorf("the edge's stamp = %+v, want the other side's newer one", st)
+	}
+	want := map[string]string{"review": "ok", "rule-fulfilled": "ok", "atomic": "ok", "tie": "ok"}
+	if len(got) != len(want) {
+		t.Errorf("judgments = %v, want %v", got, want)
+	}
+	for gate, v := range want {
+		if got[gate] != v {
+			t.Errorf("gate %s: verdict %q, want %q (judgments %v)", gate, got[gate], v, got)
+		}
+	}
+}
+
+// The flow graph and the observed failures are part of the map too. The driver kept
+// only our side's: a flow built on the other branch, or a failure ingested there on a
+// node both sides have, vanished in a conflict-free merge.
+func TestMapMerge_keepsTheOtherSidesFlowAndFailures(t *testing.T) {
+	t.Run("MPMRM-B08: The other side's flow states and transitions and the failures of a shared node reach the merged map", func(t *testing.T) {})
+	dir := t.TempDir()
+	st := func(code string) mapx.FlowState {
+		return mapx.FlowState{Code: code, Title: code, Flow: "flows/w.flow.md"}
+	}
+	tr := mapx.FlowTransition{From: "WORKR-P01", To: "WORKR-P02", Flow: "flows/w.flow.md"}
+	node := func(fs ...mapx.FailureSignal) mapx.Node {
+		return mapx.Node{ID: "a.spec.md", Kind: "spec", Rev: "r1", Failures: fs}
+	}
+
+	for _, c := range []struct {
+		name     string
+		oursFlow *mapx.FlowGraph
+	}{{"our side has no flow", nil}, {"our side has its own flow", &mapx.FlowGraph{States: []mapx.FlowState{st("WORKR-P01")}}}} {
+		t.Run(c.name, func(t *testing.T) {
+			ours := saveGraph(t, dir, "ours-"+c.name+".yaml", &mapx.Graph{
+				Nodes: []mapx.Node{node(
+					mapx.FailureSignal{Rule: "AAAAA-E01", Count: 1, Last: "2026-09-01"},
+					mapx.FailureSignal{Rule: "AAAAA-E02", Count: 1, Last: "2026-09-01"},
+				)},
+				Flow: c.oursFlow,
+			})
+			theirs := saveGraph(t, dir, "theirs-"+c.name+".yaml", &mapx.Graph{
+				Nodes: []mapx.Node{node(
+					mapx.FailureSignal{Rule: "AAAAA-E02", Count: 7, Last: "2026-09-09"},
+					mapx.FailureSignal{Rule: "AAAAA-E03", Count: 2, Last: "2026-09-02"},
+				)},
+				Flow: &mapx.FlowGraph{States: []mapx.FlowState{st("WORKR-P01"), st("WORKR-P02")}, Transitions: []mapx.FlowTransition{tr}},
+			})
+			if _, err := runMerge(t, ours, ours, theirs); err != nil {
+				t.Fatal(err)
+			}
+			g, err := mapx.Load(ours)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if g.Flow == nil || len(g.Flow.States) != 2 || len(g.Flow.Transitions) != 1 {
+				t.Errorf("the flow of the other side did not arrive whole: %+v", g.Flow)
+			}
+			counts := map[string]int{}
+			for _, f := range g.Nodes[0].Failures {
+				counts[f.Rule] = f.Count
+			}
+			if want := map[string]int{"AAAAA-E01": 1, "AAAAA-E02": 7, "AAAAA-E03": 2}; len(counts) != 3 ||
+				counts["AAAAA-E01"] != 1 || counts["AAAAA-E02"] != 7 || counts["AAAAA-E03"] != 2 {
+				t.Errorf("failures of the shared node = %v, want %v", counts, want)
+			}
+		})
+	}
+}

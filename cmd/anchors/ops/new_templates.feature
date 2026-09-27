@@ -72,3 +72,10 @@ Feature: NewTemplates — the catalog of artifact skeletons: which kinds exist, 
     Then every section key starts with doctrine_
     And it emits CRLMT-R01 and no spec rule
     And its header has no layer
+
+  @NWTMN-B11 @unit-level
+  Scenario: A unit name becomes snake_case with one separator and whole acronyms
+    Given the unit names "My-Name", "HTTPServer", "getHTTPCode" and "calc -- total"
+    When they are turned into snake_case
+    Then they are "my_name", "http_server", "get_http_code" and "calc_total"
+    And the Python test body for "HTTPServer" is "def test_http_server("

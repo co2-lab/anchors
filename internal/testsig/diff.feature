@@ -43,6 +43,12 @@ Feature: DiffChangedLines — which lines of which files a change added, read fr
     When the diff is taken without a reference, and after committing, against HEAD~1
     Then both give pkg/a.go with lines 2 and 4, and a clean tree gives nothing
 
+  @DCLDF-B07 @unit-level
+  Scenario: An added line that starts with two plus signs is a line, not a header
+    Given a hunk of three added lines whose second reads "+++ counter", and a later file whose hunk removes a line reading "--- old"
+    When the diff is read
+    Then the first file has lines 1, 2 and 3, the second has line 1, and no file named "counter" appears
+
   @DCLDF-I01 @unit-level
   Scenario: Removals do not shift the new-side numbering
     Given a hunk "-20,1 +22,1" that removes one line and adds one

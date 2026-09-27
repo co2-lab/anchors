@@ -85,7 +85,7 @@ func TestAggregate_whatBlocksPromotion(t *testing.T) {
 
 func TestProfile_NodeVerdicts(t *testing.T) {
 	t.Run("PRFLO-B07: Per-node verdicts include only confronted nodes, sorted", func(t *testing.T) {})
-	t.Run("PRFLO-B08: A node is failed when a blocking gate failed on it", func(t *testing.T) {})
+	t.Run("PRFLO-B08: A node is failed when a blocking gate failed on it or left it an impeding pending", func(t *testing.T) {})
 	p := Aggregate([]Result{
 		{Gate: "a", Target: "c.go", Verdict: Pass, Blocking: true},
 		{Gate: "b", Target: "c.go", Verdict: Fail, Blocking: true},
@@ -94,13 +94,18 @@ func TestProfile_NodeVerdicts(t *testing.T) {
 		{Gate: "a", Target: "skip.go", Verdict: Skip},
 		{Gate: "a", Target: "judge.go", Verdict: Judge},
 		{Gate: "a", Target: "pend.go", Verdict: Pending, Blocking: true},
+		// A pending that impedes blocks promotion (PRFLO-B05), so the node is failed too.
+		{Gate: "a", Target: "impede.go", Verdict: Pending, Blocking: true, Impede: true},
+		{Gate: "a", Target: "soft.go", Verdict: Pending, Impede: true}, // non-blocking gate
 	})
 	got := p.NodeVerdicts()
 	want := []NodeVerdict{
 		{ID: "a.go"},
 		{ID: "b.go"},
 		{ID: "c.go", Failed: true},
+		{ID: "impede.go", Failed: true},
 		{ID: "pend.go"},
+		{ID: "soft.go"},
 	}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("NodeVerdicts:\n got %+v\nwant %+v", got, want)

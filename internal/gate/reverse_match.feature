@@ -114,3 +114,9 @@ Feature: ReverseMatch — every scenario still has its rule, and every proven co
     Given a feature declaring UNITX-B01, and a test naming UNITX-B10 only in a comment
     When test-feature-match confronts the test
     Then it returns Pass
+
+  @RVMTR-B15 @unit-level
+  Scenario: A data state defined with the unit prefix is read at the code length the project declares
+    Given a project that declares code length 7
+    When a spec's table row defines "TREXXXX-DS-data-present"
+    Then the spec defines exactly the data state "DS-data-present"

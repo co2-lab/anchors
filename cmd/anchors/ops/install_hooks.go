@@ -604,12 +604,12 @@ fi
 # um gate que passou a pegar algo que passava batido, um defeito que produz dado errado em
 # silêncio.
 #
-# Ele é DECLARADO, e por isso serve. A conferência abaixo, contra o 'gerado_por' do mapa,
+# Ele é DECLARADO, e por isso serve. A conferência abaixo, contra o 'generated_by' do mapa,
 # usa um campo DERIVADO — o próximo 'map build' de qualquer agente o reescreve com a versão
 # dele, apagando a exigência sem ninguém decidir nada. Medido: o campo voltou a "dev" num
 # projeto onde a release corrente era a v0.1.83.
 #
-# Este BARRA, e a diferença de força é deliberada: o 'gerado_por' avisa sobre uma
+# Este BARRA, e a diferença de força é deliberada: o 'generated_by' avisa sobre uma
 # divergência que talvez não importe; o 'min_version' é alguém dizendo "abaixo disto não".
 min_ver=$(printf '%s' "$remota" | sed -n 's/^min_version:[[:space:]]*//p' | head -1 | tr -d '"'"'"' ')
 local_ver=$(anchors --version 2>/dev/null | sed -n 's/^anchors version \([^ ]*\).*/\1/p')
@@ -640,8 +640,13 @@ fi
 # Uma versão diferente não torna o trabalho errado; torna o mapa suscetível a oscilar. E
 # barrar por isso transformaria "atualize quando puder" em "pare agora", caro no meio de
 # uma entrega.
+#
+# A chave é 'generated_by' desde que o formato do mapa passou ao inglês; procurar só o
+# 'gerado_por' antigo deixava este aviso mudo em todo mapa novo. A antiga continua lida:
+# um remoto ainda no formato velho também tem de ser entendido.
 remota_ver=$(printf '%s' "$(git show "$remoto/$base:anchors.graph.yaml" 2>/dev/null || true)" \
-  | sed -n 's/^gerado_por:[[:space:]]*//p' | head -1)
+  | sed -n -e 's/^generated_by:[[:space:]]*//p' -e 's/^gerado_por:[[:space:]]*//p' \
+  | head -1 | tr -d '"'"'"' ')
 
 if [ -n "$remota_ver" ] && [ -n "$local_ver" ] && [ "$remota_ver" != "$local_ver" ]; then
   echo ""

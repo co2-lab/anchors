@@ -72,3 +72,9 @@ Feature: Fix — the self-healer that applies the mechanical, safe repairs of `c
     When the fixable gates are applied to the spec
     Then one repair is reported as not fixed
     And the report carries the cause of the failure
+
+  @FXIXX-B08 @unit-level
+  Scenario: The repair detail is written in the project's language
+    Given a committed spec whose updated_at is stale
+    When the fixer repairs it in an English and in a Portuguese project
+    Then the detail of the repair is the English text in the first and the Portuguese text in the second

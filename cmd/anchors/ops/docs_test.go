@@ -311,11 +311,3 @@ func TestDocsBuildReportsSkippedDryRunAndNothing(t *testing.T) {
 		t.Errorf("--no-map-rebuild without a map must say so: %v", err)
 	}
 }
-
-func TestDocsFreshHintNamesEveryStalePage(t *testing.T) {
-	got := docsFreshHint([]string{"docs/a.md", "docs/b.md"})
-	if !strings.Contains(got, "2 documento(s)") || !strings.Contains(got, "docs/a.md, docs/b.md") ||
-		!strings.Contains(got, "anchors docs build") {
-		t.Errorf("hint = %q", got)
-	}
-}

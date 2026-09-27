@@ -62,7 +62,10 @@ func checkPipelines(root string, cfg *config.Config) []Finding {
 	return out
 }
 
-// checkBranchProtection confere que a `main` exige PR.
+// checkBranchProtection confere que o branch de integração (`integration_branch`, default
+// `main`) exige PR. It used to ask about a hard-coded `main`: a project whose work lands
+// on `develop` got a wrong answer either way — its protected branch reported unprotected,
+// or an unprotected one passing because `main` was protected.
 //
 // É a regra que o fluxo inteiro pressupõe, e a única cuja ausência não produz erro em
 // lugar nenhum: sem proteção, um push direto na main funciona — e pula o card, pula a
@@ -76,17 +79,18 @@ func checkBranchProtection(cfg *config.Config) []Finding {
 		return nil // sem `gh` o doctor já reclama noutro achado; não duplicar
 	}
 	repo := cfg.Workflow.Repo
+	branch := cfg.Workflow.IntegrationBranchOrDefault()
 	out, err := exec.Command("gh", "api",
-		"repos/"+repo+"/branches/main/protection",
+		"repos/"+repo+"/branches/"+branch+"/protection",
 		"--jq", ".required_pull_request_reviews != null").Output()
 	if err != nil {
 		// 404 é a resposta para branch sem proteção — e é o achado, não um erro.
 		return []Finding{{"main-sem-protecao", Warn, repo,
-			i18n.T("health.main_unprotected")}}
+			i18n.T("health.main_unprotected", branch)}}
 	}
 	if strings.TrimSpace(string(out)) != "true" {
 		return []Finding{{"main-sem-protecao", Warn, repo,
-			i18n.T("health.main_partially_unprotected")}}
+			i18n.T("health.main_partially_unprotected", branch)}}
 	}
 	return nil
 }

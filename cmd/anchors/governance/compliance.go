@@ -132,9 +132,16 @@ signals that instead of letting you conclude wrongly.`,
 					// alvo apontando para caminho que não existe mais. Dizer isso evita a
 					// conclusão errada — e a correção é uma linha de `pack_values`.
 					if r.Subject > 0 && r.Fulfilled == 0 && r.Debt == 0 {
+						// A pack's target comes from `pack_values:`; an inline obligation's is
+						// its own `must_appear_in:`. Pointing an inline duty at `pack_values`
+						// sent the reader to a key that has nothing to do with it.
+						onde := "`pack_values:`"
+						if _, doPack := origem[r.Name]; !doPack {
+							onde = "the obligation's `must_appear_in:`"
+						}
 						fmt.Printf("       ⚠ NONE complies — check whether `%s` is still the right path "+
-							"in `pack_values:`; a disconnected target looks like total violation\n",
-							strings.Join(r.Targets, ", "))
+							"in %s; a disconnected target looks like total violation\n",
+							strings.Join(r.Targets, ", "), onde)
 					}
 					if verbose && len(r.Missing) > 0 {
 						for _, m := range r.Missing {
@@ -147,7 +154,10 @@ signals that instead of letting you conclude wrongly.`,
 				fmt.Println()
 			}
 
-			fmt.Printf("total: %d subject duty(ies) across %d node(s), %d fulfilled\n",
+			// The sum of the subjects counts a node once PER DUTY it is subject to, so it is
+			// a count of node-duty pairs. It was printed as "across N node(s)", and a node
+			// under two duties was counted as two nodes.
+			fmt.Printf("total: %d duty(ies), %d subject node-duty pair(s), %d fulfilled\n",
 				len(res), totalSujeitos, totalCumpre)
 			if !verbose && totalCumpre < totalSujeitos {
 				fmt.Println("(use --verbose to see which nodes are missing in each duty)")
@@ -165,9 +175,17 @@ signals that instead of letting you conclude wrongly.`,
 // sugestão de adotar — é a diferença entre "não se aplica a mim" e "esqueci", que só o
 // projeto sabe qual é, mas precisa poder ver.
 func printAvailable(cfg *config.Config) {
+	// A pack is adopted by its short name or by a path to it, and the loader accepts
+	// `packs/x.yaml`, `./packs/x.yaml` and `.yml` alike (pack.resolveRef). Only
+	// `./packs/<x>.yaml` was recognised here, and a pack adopted as `packs/x.yaml` or
+	// `x.yml` was offered again as not adopted.
 	adotado := map[string]bool{}
 	for _, p := range cfg.Packs {
-		adotado[strings.TrimSuffix(strings.TrimPrefix(p, "./packs/"), ".yaml")] = true
+		n := filepath.ToSlash(p)
+		n = strings.TrimPrefix(n, "./")
+		n = strings.TrimPrefix(n, pack.Dir+"/")
+		n = strings.TrimSuffix(strings.TrimSuffix(n, ".yaml"), ".yml")
+		adotado[n] = true
 	}
 	var falta []string
 	for _, nomes := range initx.AvailablePacks() {

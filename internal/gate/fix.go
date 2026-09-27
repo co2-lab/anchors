@@ -6,6 +6,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -33,8 +34,10 @@ func Fixable(check string) bool {
 	return ok
 }
 
-// Fix roda os gates reparáveis sobre os nós e aplica as correções em disco. Devolve o
-// que foi consertado. Só toca em nós cujo gate REPROVOU e cujo check é reparável.
+// Fix roda o FIXER de cada gate reparável sobre todo nó a que o gate se aplica e grava
+// as correções em disco. Devolve o que foi consertado (ou tentado). Não consulta o
+// veredito do gate: é o fixer quem decide se há o que corrigir, e um nó já correto
+// não muda e não entra no resultado.
 func Fix(gates []config.Gate, nodes []mapx.Node, root string) []FixResult {
 	var out []FixResult
 	for _, g := range gates {
@@ -56,10 +59,12 @@ func Fix(gates []config.Gate, nodes []mapx.Node, root string) []FixResult {
 				continue
 			}
 			if err := os.WriteFile(path, []byte(newContent), 0o644); err != nil {
-				out = append(out, FixResult{g.Name, n.ID, false, "falha ao escrever: " + err.Error()})
+				// Os detalhes passam por i18n: eram literais em português, impressos
+				// assim em projeto de qualquer `lang:`.
+				out = append(out, FixResult{g.Name, n.ID, false, i18n.T("gate.fix.write_failed", err)})
 				continue
 			}
-			out = append(out, FixResult{g.Name, n.ID, true, "updated_at corrigido para a data do commit"})
+			out = append(out, FixResult{g.Name, n.ID, true, i18n.T("gate.fix.updated_at_fixed")})
 		}
 	}
 	return out

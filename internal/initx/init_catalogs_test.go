@@ -95,20 +95,20 @@ func TestPresetLookup(t *testing.T) {
 func TestTBDInstructionForbidsPassAndNamesTheAbsence(t *testing.T) {
 	t.Run("INCTN-B04: The @TBD instruction forbids pass, orders a waiver naming the absence, and names the piece asked about", func(t *testing.T) {})
 	t.Run("INCTN-I02: The @TBD instruction demands checking that the @TBD is still true", func(t *testing.T) {})
-	got := tbdInstruction("o código")
-	for _, required := range []string{"@TBD", "DISPENSADO", "pass", "nomeando a ausência"} {
+	got := tbdInstruction("the code")
+	for _, required := range []string{"@TBD", "`waived`", "`pass`", "naming the absence"} {
 		if !strings.Contains(got, required) {
 			t.Errorf("the instruction does not mention %q:\n%s", required, got)
 		}
 	}
 	// The piece goes into the text: without it the instruction would speak of "the code"
 	// in a gate that asks about a test.
-	if !strings.Contains(tbdInstruction("o teste"), "o teste") {
+	if !strings.Contains(tbdInstruction("the test"), "the test") {
 		t.Error("the instruction does not use the piece it received")
 	}
 	// The stale `@TBD` is the other half: a piece that came to exist with the marker still
 	// in the file makes every gate that reads it waive what it should charge.
-	if !strings.Contains(got, "desatualizado") {
+	if !strings.Contains(got, "stale") {
 		t.Errorf("the instruction does not cover the `@TBD` that stopped being true:\n%s", got)
 	}
 }

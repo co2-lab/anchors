@@ -611,20 +611,61 @@ func TestTestIDHonored_componentExercisedByTheScreen(t *testing.T) {
 	}
 }
 
-// Not linked to a rule: `list` has no caller outside this test (see the report).
-func TestList_truncatesAfterEight(t *testing.T) {
-	ids := func(n int) []string {
-		var out []string
-		for i := 0; i < n; i++ {
-			out = append(out, string(rune('a'+i)))
+// A surface declared with a glob is read from its static root. The glob stayed in the
+// path (`e2e/**/*.yaml`), the walk found no directory, and every id only the flows use
+// was accused as an orphan — the same trap as the key-for-path one above.
+func TestTestIDHonored_globSurfaceIsReadFromItsRoot(t *testing.T) {
+	t.Run("TICTS-B21: A surface declared with a glob is read from the directory before the first wildcard", func(t *testing.T) {})
+	for pattern, want := range map[string]string{
+		"e2e/**/*.yaml":           "e2e",
+		"e2e/login-*.yaml":        "e2e",
+		"e2e/{{name}}.yaml":       "e2e",
+		"apps/x-{{module}}/flows": "apps",
+		"e2e/flows":               "e2e/flows",
+		"**/*.yaml":               ".",
+	} {
+		if got := firstStaticSegment(pattern); got != want {
+			t.Errorf("firstStaticSegment(%q) = %q, want %q", pattern, got, want)
 		}
-		return out
 	}
-	if got := list(ids(8)); got != "`a`, `b`, `c`, `d`, `e`, `f`, `g`, `h`" {
-		t.Errorf("eight ids are listed whole: %s", got)
+	n, g, root := consumerFixture(t, `render(<X />)`)
+	if err := os.MkdirAll(filepath.Join(root, "e2e", "login"), 0o755); err != nil {
+		t.Fatal(err)
 	}
-	got := list(ids(10))
-	if !strings.HasSuffix(got, "`h` (+2)") || strings.Contains(got, "`i`") {
-		t.Errorf("ten ids list eight and count two: %s", got)
+	if err := os.WriteFile(filepath.Join(root, "e2e", "login", "f.yaml"), []byte("- tapOn:\n    id: ':abcd-screen'\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cfg := e2eConfig()
+	cfg.Derived.Files = map[string]config.Padroes{"e2e": {"e2e/**/*.yaml"}}
+	if v, msg := checkTestIDCoherent(sectionOK, n, root, g, cfg); v != Pass {
+		t.Errorf("the flow under the glob queries the id: %v (%s)", v, msg)
+	}
+}
+
+// A handle is queried only when a consumer names THAT handle. The mention was a bare
+// substring: a test that only queries `:abcd-screen-header` counted as querying
+// `:abcd-screen`, and an id nobody uses passed as consumed.
+func TestTestIDHonored_longerIdIsNotAQuery(t *testing.T) {
+	t.Run("TICTS-B22: A consumer that names only a longer id does not query the shorter one", func(t *testing.T) {})
+	n, g, root := consumerFixture(t, `getByTestId(':abcd-screen-header'); getByTestId('xabcd-screen')`)
+	v, msg := checkTestIDCoherent(sectionOK, n, root, g, cfgHandle("testID"))
+	if v != Fail || !strings.Contains(msg, "abcd-screen") {
+		t.Errorf("abcd-screen is queried by nobody: %v (%s)", v, msg)
+	}
+	for blob, want := range map[string]bool{
+		`getByTestId('abcd-screen')`:        true,
+		`getByTestId(":abcd-screen")`:       true,
+		"id: abcd-screen\n":                 true,
+		`getByTestId('abcd-screen-header')`: false,
+		`getByTestId('abcd-screens')`:       false,
+		`getByTestId('my-abcd-screen')`:     false,
+		"getByTestId(`abcd-screen-${i}`)":   false,
+	} {
+		if got := queriedID(blob, ":abcd-screen"); got != want {
+			t.Errorf("queriedID(%q, :abcd-screen) = %v, want %v", blob, got, want)
+		}
+	}
+	if !queriedID("id: 'abcd-item-.*'", ":abcd-item-*") || queriedID("id: 'xabcd-item-3'", ":abcd-item-*") {
+		t.Errorf("a wildcard is queried by its prefix, and only at an id boundary")
 	}
 }

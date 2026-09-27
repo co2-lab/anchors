@@ -143,3 +143,9 @@ Feature: Failure — the failure a spec declares must be handled, recorded, and 
     And governed code with a single error check
     When failure-handled confronts the spec
     Then it returns Pass for both failures together
+
+  @FLRAI-B19 @unit-level
+  Scenario: A failure rule is read at the code length the project declares
+    Given a project that declares code length 7
+    When a spec with the table row "CREDITS-E01" marked resilient and the bullet "CREDITS-E02" is read
+    Then both are declared failures, "CREDITS-E01" is resilient, and its resilient reason is read

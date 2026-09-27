@@ -87,6 +87,12 @@ Feature: DoctorCommand — the global health x-ray, and the repair of the github
     When the doctor runs with the pipelines check
     Then it fails naming "stale_pipeline_blocks: true"
 
+  @HLDCH-B13 @unit-level
+  Scenario: The pipelines check reads the project named by the root flag
+    Given the working directory in a local-mode project, and a github-mode project with no pipeline elsewhere
+    When the doctor runs the pipelines check with the root flag naming the github-mode project
+    Then it names the MISSING pipelines and does not answer local mode
+
   @HLDCH-I01 @unit-level
   Scenario: The diagnosis never fails the doctor
     Given a map whose diagnosis has warning findings

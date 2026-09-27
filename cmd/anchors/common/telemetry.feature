@@ -44,6 +44,18 @@ Feature: TelemetrySetup — every command starts telemetry the same way: the opt
     When the command waits for events in flight at exit
     Then it returns without error
 
+  @TLSTT-B07 @unit-level
+  Scenario: A declared opt-out holds when the configuration does not load
+    Given a project whose configuration declares "telemetry: off" next to a key Anchors does not know
+    When a command starts with --root pointing at it
+    Then no notice is printed and no emitter is built
+
+  @TLSTT-B08 @unit-level
+  Scenario: Outside a project there is no notice, no emitter and no mark
+    Given a working directory with no project configuration in it or above it
+    When the project root is resolved, and a command starts with no --root and with --root pointing at that directory
+    Then the root is empty, no notice is printed, no emitter is built, and the directory has no ".anchors"
+
   @TLSTT-I01 @unit-level
   Scenario: No emitter without the notice
     Given each opt-out, and then none

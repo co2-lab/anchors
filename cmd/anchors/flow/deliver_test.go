@@ -107,8 +107,9 @@ func TestDeliverCmd_specStageAcceptsTheSpecAsTheUnitsPiece(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(out, "recording the unit by `src/pricing.spec.md`") {
-		t.Errorf("the existing piece must be named:\n%s", out)
+	if !strings.Contains(out, "`src/pricing.ts` does not exist yet — accepted because `src/pricing.spec.md`, "+
+		"a piece of the same unit, exists; the record keeps the unit `src/pricing.ts`") || strings.Contains(out, "recording the unit by") {
+		t.Errorf("the existing piece must be named, and the unit kept said to be the one given:\n%s", out)
 	}
 	if strings.Contains(out, "the watcher is not running") || strings.Contains(out, "ZERO free decisions") {
 		t.Errorf("hints that do not apply must not be printed:\n%s", out)
@@ -121,8 +122,13 @@ func TestDeliverCmd_specStageAcceptsTheSpecAsTheUnitsPiece(t *testing.T) {
 	if len(recs) != 1 {
 		t.Fatalf("expected one record, got %v", recs)
 	}
-	if rec, _ := os.ReadFile(recs[0]); !strings.Contains(string(rec), "unit: src/pricing.ts\n") {
+	rec, _ := os.ReadFile(recs[0])
+	if !strings.Contains(string(rec), "unit: src/pricing.ts\n") {
 		t.Errorf("the record's unit is the one given:\n%s", rec)
+	}
+	// the default file is the unit, relative to the root even when given absolute
+	if !strings.Contains(string(rec), "- `src/pricing.ts`") || strings.Contains(string(rec), root) {
+		t.Errorf("the record's files are relative to the root:\n%s", rec)
 	}
 }
 

@@ -62,6 +62,12 @@ Feature: Escalate — open the right card for a change the plan, the spec or the
     Then every card carries "anchors" and "anchors:to-do"
     And the decision adds needs-user, the framing question adds needs-user and needs-framing, and the bug adds the bug label
 
+  @SCLTE-B17 @unit-level
+  Scenario: A card written with its hash is the same card
+    Given origin card 44
+    When `anchors escalate --card "#44" --for-user "which currency?"` runs
+    Then the new card carries under-44, never under-#44, and the card stopped is 44
+
   @SCLTE-B09 @unit-level
   Scenario: The origin card and the reviewed pull request are both labels
     Given origin card 44

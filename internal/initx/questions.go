@@ -1,6 +1,11 @@
 package initx
 
-import "strings"
+import (
+	"sort"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/i18n"
+)
 
 // Question é uma decisão HUMANA do `init`, descrita de forma que um agente possa
 // respondê-la sem ver a TUI.
@@ -70,6 +75,9 @@ func Questions(p *Proposal, presets []string) []Question {
 			}
 		}
 	}
+	// Map order is random: unsorted, the same disk gave a default in a different order
+	// on each call.
+	sort.Strings(artefatosDetectados)
 	colocado := false
 	var camadas []string
 	if p != nil {
@@ -83,101 +91,83 @@ func Questions(p *Proposal, presets []string) []Question {
 		}
 	}
 
+	// Texts and reasons go through i18n: the agent relays them to the user, who reads them
+	// in the project's `lang:`. They were hard-coded in Portuguese.
 	qs := []Question{
 		{
 			ID:      "preset",
-			Texto:   "Qual preset de stack usar?",
+			Texto:   i18n.T("init.question.preset.text"),
 			Tipo:    "select",
 			Opcoes:  append([]string{"nenhum"}, presets...),
 			Default: "nenhum",
-			PorQue: "o preset preenche as camadas de código com uma estrutura consagrada da stack. " +
-				"`nenhum` mantém a inferência do disco — escolha um só se ele casar com o que o " +
-				"PROJECT.md decidiu, porque camada errada faz gate reprovar arquivo certo.",
+			PorQue:  i18n.T("init.question.preset.why"),
 		},
 		{
 			ID:      "header",
-			Texto:   "Semear guides/HEADER_GUIDE.md?",
+			Texto:   i18n.T("init.question.header.text"),
 			Tipo:    "confirm",
 			Default: true,
-			PorQue: "é o padrão MANDATÓRIO do bloco @anchors dos arquivos. Sem ele, cada arquivo " +
-				"novo negocia o formato do cabeçalho de novo, e o gate de header não tem régua.",
+			PorQue:  i18n.T("init.question.header.why"),
 		},
 		{
 			ID:      "artifacts",
-			Texto:   "Quais tipos de âncora o projeto usa (ou vai usar)?",
+			Texto:   i18n.T("init.question.artifacts.text"),
 			Tipo:    "multiselect",
 			Opcoes:  ArtifactNames(),
 			Default: artefatosDetectados,
-			PorQue: "define as camadas de artefato e quais gates padrão fazem sentido. Num projeto " +
-				"novo, marque o que PRETENDE usar — o default vem do que existe no disco, que " +
-				"ainda é nada.",
+			PorQue:  i18n.T("init.question.artifacts.why"),
 		},
 		{
 			ID:      "gates",
-			Texto:   "Semear os gates padrão (informativos) dos artefatos escolhidos?",
+			Texto:   i18n.T("init.question.gates.text"),
 			Tipo:    "confirm",
 			Default: true,
-			PorQue: "os gates nascem INFORMATIVOS (não bloqueiam). É o que amarra os sinais de teste " +
-				"ao ciclo sem escrever tudo à mão; promover para bloqueante é decisão posterior.",
+			PorQue:  i18n.T("init.question.gates.why"),
 		},
 		{
 			ID:      "colocation",
-			Texto:   "Os derivados (spec/feature/teste) ficam AO LADO do código?",
+			Texto:   i18n.T("init.question.colocation.text"),
 			Tipo:    "confirm",
 			Default: colocado,
-			PorQue: "decide o glob de cada camada de artefato: ao lado do código (co-location) ou em " +
-				"árvore separada. Responder o contrário do que o projeto faz deixa os artefatos " +
-				"fora do mapa, e o que está fora do mapa não existe para os gates.",
+			PorQue:  i18n.T("init.question.colocation.why"),
 		},
 		{
 			ID:      "layers",
-			Texto:   "Quais diretórios de código tratar como camadas?",
+			Texto:   i18n.T("init.question.layers.text"),
 			Tipo:    "multiselect",
 			Opcoes:  camadas,
 			Default: camadas,
-			PorQue: "só o que for camada é REGIDO pelos gates. Num projeto vazio a lista vem vazia — " +
-				"declare as camadas no anchors.yaml quando o código existir.",
+			PorQue:  i18n.T("init.question.layers.why"),
 		},
 		{
 			ID:      "workflow",
-			Texto:   "Onde a fila de trabalho mora?",
+			Texto:   i18n.T("init.question.workflow.text"),
 			Tipo:    "select",
 			Opcoes:  []string{"local", "manual", "github"},
 			Default: "local",
-			PorQue: "os modos são EXCLUDENTES (WORKFLOW.md §2): `local` guarda a fila em " +
-				"`.anchors/tasks/` e as issues em `issues/`; `manual` é o local sem issue " +
-				"automática — o `check` só relata, e `issues/` recebe arquivo apenas com " +
-				"`--record-issues`; `github` a põe nas issues do " +
-				"repositório, com o estado de cada trabalho na coluna de um Project. Nunca um " +
-				"com o outro de reserva — de qual fila veio esta task? é pergunta que ninguém " +
-				"consegue responder depois do fato. O modo `github` EXIGE --repo e --labels.",
+			PorQue:  i18n.T("init.question.workflow.why"),
 		},
 		{
 			ID:      "repo",
-			Texto:   "Qual repositório do GitHub (owner/nome)?",
+			Texto:   i18n.T("init.question.repo.text"),
 			Tipo:    "texto",
 			Default: "",
-			PorQue: "obrigatório no modo `github`, e NUNCA inferido do remote: num fork, inferir " +
-				"faria a escrita cair no repositório errado — e escrita em lugar errado não se " +
-				"desfaz com revert.",
+			PorQue:  i18n.T("init.question.repo.why"),
 		},
 		{
 			ID:      "labels",
-			Texto:   "Quais labels marcam os cards do Anchors?",
+			Texto:   i18n.T("init.question.labels.text"),
 			Tipo:    "multiselect",
 			Default: []string{"anchors"},
-			PorQue: "obrigatório no modo `github`. O board é COMPARTILHADO — carrega issues de " +
-				"produto e de infra —, e a label é o que separa o que é do Anchors. Sem ela, um " +
-				"agente pegaria uma issue de produto e a moveria para `IN PROGRESS`.",
+			PorQue:  i18n.T("init.question.labels.why"),
 		},
 		{
 			ID:      "governs",
-			Texto:   "Qual guide rege quais tags?",
+			Texto:   i18n.T("init.question.governs.text"),
 			Tipo:    "multiselect",
 			Opcoes:  nil, // guide=tag1,tag2 — depende dos guides que existirem
 			Default: map[string][]string{},
-			PorQue: "a regra `governs` liga um guide aos arquivos que ele governa. Um guide que não " +
-				"rege ninguém é débito que o doctor reporta; declare quando os guides existirem.",
+			PorQue:  i18n.T("init.question.governs.why"),
 		},
 	}
 	return qs
@@ -201,7 +191,7 @@ func ValidateAnswers(qs []Question, r Respostas) []StatusResposta {
 				st.Valor = *r.Preset
 				if !contem(q.Opcoes, *r.Preset) {
 					st.Aceita = false
-					st.Detalhe = "preset desconhecido; aceitos: " + strings.Join(q.Opcoes, ", ")
+					st.Detalhe = i18n.T("init.question.detail.unknown_preset", strings.Join(q.Opcoes, ", "))
 				}
 			}
 		case "header":
@@ -221,7 +211,7 @@ func ValidateAnswers(qs []Question, r Respostas) []StatusResposta {
 				st.Valor = *r.Workflow
 				if !contem(q.Opcoes, *r.Workflow) {
 					st.Aceita = false
-					st.Detalhe = "modo desconhecido; aceitos: " + strings.Join(q.Opcoes, ", ")
+					st.Detalhe = i18n.T("init.question.detail.unknown_mode", strings.Join(q.Opcoes, ", "))
 				}
 			}
 		case "repo":
@@ -230,17 +220,17 @@ func ValidateAnswers(qs []Question, r Respostas) []StatusResposta {
 			// lê o arquivo concluir que a integração está ativa (WORKFLOW.md §2).
 			if modoGitHub(r) && empty(r.Repo) {
 				st.Aceita = false
-				st.Detalhe = "obrigatório no modo `github` — sem ele, o fluxo não sabe de qual repositório puxar"
+				st.Detalhe = i18n.T("init.question.detail.repo_required")
 			}
 			if !modoGitHub(r) && !empty(r.Repo) {
 				st.Aceita = false
-				st.Detalhe = "só vale no modo `github`; no `local` este campo faz o arquivo mentir sobre a integração estar ativa"
+				st.Detalhe = i18n.T("init.question.detail.repo_only_github")
 			}
 		case "labels":
 			st.Valor, st.UsouPada, st.Aceita, st.Detalhe = listValue(r.Labels, q)
 			if st.Aceita && modoGitHub(r) && (r.Labels == nil || len(*r.Labels) == 0) {
 				st.Aceita = false
-				st.Detalhe = "obrigatório no modo `github` — sem ela, o fluxo pegaria qualquer issue do repositório, inclusive as de produto"
+				st.Detalhe = i18n.T("init.question.detail.labels_required")
 			}
 		case "governs":
 			st.Valor = r.Governs
@@ -292,7 +282,7 @@ func listValue(p *[]string, q Question) (valor any, usouDefault, aceita bool, de
 	}
 	for _, v := range *p {
 		if len(q.Opcoes) > 0 && !contem(q.Opcoes, v) {
-			return *p, false, false, "valor inválido: " + v + "; aceitos: " + strings.Join(q.Opcoes, ", ")
+			return *p, false, false, i18n.T("init.question.detail.invalid_value", v, strings.Join(q.Opcoes, ", "))
 		}
 	}
 	return *p, false, true, ""

@@ -142,3 +142,25 @@ func TestByCode(t *testing.T) {
 		t.Error("ByCode resolved a code that does not exist")
 	}
 }
+
+func TestLoad_aReadFailureIsAnError(t *testing.T) {
+	t.Run("FLPRF-E02: A flags folder or flag file that cannot be read is an error", func(t *testing.T) {})
+	// flags/ exists but is a file: reading it fails with something other than "does not exist".
+	root := t.TempDir()
+	os.WriteFile(filepath.Join(root, Dir), []byte("x"), 0o644)
+	if flags, err := Load(root); err == nil {
+		t.Fatalf("Load over an unreadable flags/ = %+v, nil; want the error", flags)
+	}
+
+	// A flag file that cannot be read: before, it was skipped and its scenarios vanished.
+	root = t.TempDir()
+	os.MkdirAll(filepath.Join(root, Dir), 0o755)
+	p := filepath.Join(root, Dir, "locked"+Suffix)
+	os.WriteFile(p, []byte(example), 0o000)
+	if _, err := os.ReadFile(p); err == nil {
+		t.Skip("this user reads a 0000 file (root?): no read failure to observe")
+	}
+	if flags, err := Load(root); err == nil {
+		t.Fatalf("Load with an unreadable flag file = %+v, nil; want the error", flags)
+	}
+}

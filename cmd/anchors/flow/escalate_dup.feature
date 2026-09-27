@@ -16,9 +16,9 @@ Feature: EscalateDuplicate — find the open cards that already deal with the ta
 
   @ESDPS-B02 @unit-level
   Scenario: The board is searched for open cards with the label and the target
-    Given the target "src/x.spec.md" and the label "anchors"
+    Given the target "src/x.spec.md", the label "anchors" and the repository "acme/app"
     When the open cards about the target are looked up
-    Then the board is asked for open issues labelled "anchors" searching "src/x.spec.md"
+    Then the board of "acme/app" is asked for open issues labelled "anchors" searching "src/x.spec.md"
 
   @ESDPS-B03 @unit-level
   Scenario: A hit counts when the exact target is in its title or its body

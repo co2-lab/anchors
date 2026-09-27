@@ -50,10 +50,10 @@ Feature: Profile — the verdicts of a run, gathered per gate and per node
     Then the nodes are a.go, b.go, c.go and pend.go, in that order, without skip.go or judge.go
 
   @PRFLO-B08 @unit-level
-  Scenario: A node is failed when a blocking gate failed on it
-    Given "c.go" failed by a blocking gate and "a.go" failed by a non-blocking gate
+  Scenario: A node is failed when a blocking gate failed on it or left it an impeding pending
+    Given "c.go" failed by a blocking gate, "impede.go" left an impeding pending by a blocking gate, and "a.go" failed by a non-blocking gate
     When the per-node verdicts are collapsed
-    Then "c.go" is marked failed and "a.go" is confronted but not failed
+    Then "c.go" and "impede.go" are marked failed and "a.go" is confronted but not failed
 
   @PRFLO-I01 @unit-level
   Scenario: Promotion is refused exactly when something blocks

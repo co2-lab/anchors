@@ -52,6 +52,12 @@ Feature: GitHubEnvironment — the doctor warns, before the work starts, about t
     When the branch protection is checked
     Then there is no finding
 
+  @GHEGT-B08 @unit-level
+  Scenario: The protection is read on the declared integration branch
+    Given a GitHub-mode project whose integration branch is "develop", on a platform where "develop" requires reviews and "main" does not
+    When the branch protection is checked, and again after "develop" loses its protection
+    Then the first check gives no finding, and the second gives one whose message names "`develop`"
+
   @GHEGT-I01 @unit-level
   Scenario: After the fix seeds the pipelines no pipeline finding remains
     Given an empty project in GitHub mode that has pipeline findings

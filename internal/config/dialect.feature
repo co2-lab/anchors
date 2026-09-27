@@ -38,10 +38,10 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Then each keeps its declared convention and gets the default for the other
 
   @DLCTI-B06 @unit-level
-  Scenario: The Gherkin language defaults to English, and one outside the table keeps its code with English keywords
-    Given the Gherkin languages "", "pt", "PT" and "eo"
+  Scenario: The Gherkin language defaults to English, is found in any case, and one outside the table keeps its code with English keywords
+    Given the Gherkin languages "", "pt", "PT", "eo", "zh-CN", "ZH-cn" and "en-AU"
     When the keywords are resolved for each
-    Then they give en with "Scenario", pt with "Cenário" twice, and eo with "Scenario"
+    Then they give en with "Scenario", pt with "Cenário" twice, eo with "Scenario", zh-CN with "场景" twice, and en-AU kept as declared with "Scenario"
 
   @DLCTI-B07 @unit-level
   Scenario: Every way to open a scenario, in every language, deduplicated and longest first

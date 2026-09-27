@@ -32,6 +32,7 @@ So whoever does not decide the product reads a different instruction, in the pla
 | `ATGDT-B04` | Every profile, and a project with no role declared, reads "Preparing the environment does not ask for authorization": the idempotent preparation commands (`doctor --fix`, `settings role <role> --date`, `map build`), that `settings role` takes its arguments so an agent is not left waiting, and that REVERSIBILITY is the ruler for what DOES ask. |
 | `ATGDT-B05` | A role with a lens reads "This role's lens (<title>)" followed by the lens; a role with no lens gets no such section. |
 | `ATGDT-B06` | Whoever does not decide the product — declared or not — reads to escalate with `--for-user`, "Do not ask whoever is running you", to move on to the next card, and what is NOT to be escalated. |
+| `ATGDT-B07` | A declaration by the old `user_issues` flag, with no role, is named as such — "Your declaration (the old `user_issues` flag, with no role yet …)" — saying whether it decides the direction of the product and to declare a role; no empty role is ever named. |
 
 ## Invariants
 

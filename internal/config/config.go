@@ -666,19 +666,29 @@ var DefaultRuleLetters = "SRVAXBNMDEIQFG"
 // escrito e por isso pode nascer no formato canônico — e um default permissivo (`[4,5]`)
 // faria todo projeto novo aceitar dois formatos para sempre, sem nunca ter decidido qual
 // usa. Quem tem código legado declara e o engine obedece.
-var CodeLengths = []int{5}
+var CodeLengths = []int{DefaultCodeLength}
+
+// DefaultCodeLength is the length the engine recognises when the project declares none.
+const DefaultCodeLength = 5
 
 // SetCodeLengths reconfigura os comprimentos aceitos. Chamada na porta de entrada (o Walk),
 // como o SetRuleLetters — os pacotes que leem código precisam concordar sobre o que É um
 // código, senão cada um reconhece um conjunto diferente e a cola se parte em silêncio.
+//
+// An empty list restores the default. It used to be ignored, and since the lengths are a
+// process global, a Load of a project that declares nothing kept the lengths of the
+// project loaded before it (`[4]`), so a long-running process read the second project's
+// 5-character codes as not being codes.
 func SetCodeLengths(ls []int) {
-	if len(ls) > 0 {
-		CodeLengths = ls
+	if len(ls) == 0 {
+		ls = []int{DefaultCodeLength}
 	}
+	CodeLengths = ls
 }
 
 // CodeLengthPattern devolve o trecho de regex que casa os comprimentos aceitos —
-// `{4}` para um só, `{4,5}` para uma faixa contígua, `{4}|{6}` alternado para o resto.
+// `{4}` para um só, `{4,5}` para uma faixa contígua, `{4}(?:[A-Z0-9]{2}|)` para o resto
+// (4 ou 6). It is a QUANTIFIER: the caller writes it right after one character class.
 //
 // Existe para que os 25 regexes espalhados pelo engine deixem de repetir o número: cada
 // cópia era um lugar a esquecer numa mudança, e foi exatamente o que aconteceu — a troca de
@@ -692,11 +702,18 @@ func CodeLengthPattern() string {
 	if ls[len(ls)-1]-ls[0] == len(ls)-1 {
 		return fmt.Sprintf("{%d,%d}", ls[0], ls[len(ls)-1])
 	}
-	partes := make([]string, len(ls))
-	for i, l := range ls {
-		partes[i] = fmt.Sprintf("[A-Z0-9]{%d}", l)
+	// Non-contiguous lengths: the pattern is appended to ONE character class, so it must
+	// repeat that class exactly the declared lengths. It used to be an alternation of
+	// whole codes (`(?:[A-Z0-9]{4}|[A-Z0-9]{6})`), which the class before it lengthened
+	// by one: `[4, 6]` accepted 5 and 7. Now the shortest length is the quantifier and
+	// each longer one adds its difference, longest first so a longer code is not cut.
+	partes := make([]string, 0, len(ls))
+	for i := len(ls) - 1; i > 0; i-- {
+		if d := ls[i] - ls[0]; d > 0 {
+			partes = append(partes, fmt.Sprintf("[A-Z0-9]{%d}", d))
+		}
 	}
-	return "(?:" + strings.Join(partes, "|") + ")"
+	return fmt.Sprintf("{%d}(?:%s|)", ls[0], strings.Join(partes, "|"))
 }
 
 // RuleLetters devolve a classe de letras válidas do projeto (para compor os regexes de
@@ -1463,6 +1480,21 @@ func Load(path string) (*Config, error) {
 	for i := range c.Gates {
 		c.Gates[i] = mergeCanonical(c.Gates[i])
 	}
+	// O IDIOMA vale a partir da CARGA, e não de cada comando.
+	//
+	// Ligá-lo aqui é o que faz toda mensagem sair no idioma certo sem que cada comando
+	// precise lembrar — e um comando novo nasce traduzido por construção.
+	//
+	// Um idioma fora da lista é ERRO de carga, não aviso: o projeto declarou algo que o
+	// Anchors não sabe entregar, e seguir em inglês em silêncio faria a pessoa achar que
+	// a tradução não existe quando o que há é um código errado (`pt` em vez de `pt-BR`).
+	//
+	// It is set BEFORE the validations below: set after them, the gate-ID and workflow
+	// refusals came out in whatever language the process held, so a `lang: en` project
+	// got some load errors in English and others in Portuguese.
+	if err := i18n.Set(c.Lang); err != nil {
+		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
+	}
 	if err := c.validarIDsDeGate(); err != nil {
 		return nil, err
 	}
@@ -1475,18 +1507,6 @@ func Load(path string) (*Config, error) {
 	if err := c.validarPadroes(); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
-	// O IDIOMA vale a partir da CARGA, e não de cada comando.
-	//
-	// Ligá-lo aqui é o que faz toda mensagem sair no idioma certo sem que cada comando
-	// precise lembrar — e um comando novo nasce traduzido por construção.
-	//
-	// Um idioma fora da lista é ERRO de carga, não aviso: o projeto declarou algo que o
-	// Anchors não sabe entregar, e seguir em inglês em silêncio faria a pessoa achar que
-	// a tradução não existe quando o que há é um código errado (`pt` em vez de `pt-BR`).
-	if err := i18n.Set(c.Lang); err != nil {
-		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
-	}
-
 	if err := c.validarEnumsDeGate(); err != nil {
 		return nil, err
 	}
@@ -1494,8 +1514,7 @@ func Load(path string) (*Config, error) {
 		// 2 é o mínimo que ainda distingue unidades; acima de 8 o código deixa de ser
 		// legível de relance, que é a razão de ele ser curto. Fora disso é typo.
 		if l < 2 || l > 8 {
-			return nil, fmt.Errorf("code_lengths: %d out of range (2..8) — the code is "+
-				"identificador curto, lido de relance; comprimento assim costuma ser typo", l)
+			return nil, fmt.Errorf("%s", i18n.T("config.code_lengths.out_of_range", l))
 		}
 	}
 	SetCodeLengths(c.CodeLengths)
@@ -1546,9 +1565,7 @@ func (c *Config) validarIDsDeGate() error {
 			id = g.Name // sem ID declarado, o nome identifica
 		}
 		if anterior, ok := vistos[id]; ok {
-			return fmt.Errorf("gate %q: `id: %q` is already used by gate %q — the ID is what the "+
-				"report prints and what a waiver cites; repeated, it points at two "+
-				"places and disables what nobody asked for", g.Name, id, anterior)
+			return fmt.Errorf("%s", i18n.T("config.gate.duplicate_id", g.Name, id, anterior))
 		}
 		vistos[id] = g.Name
 	}
@@ -1563,18 +1580,30 @@ func (c *Config) validarEnumsDeGate() error {
 	}
 	for _, g := range c.Gates {
 		if g.Scope != "" && !escopos[g.Scope] {
-			return fmt.Errorf("gate %q: unknown `scope: %q` — use %q (one run per target), "+
-				"%q (one run with the targets as arguments) or %q (one run, no targets)",
-				g.Name, g.Scope, ScopeNode, ScopeBatch, ScopeProject)
+			return fmt.Errorf("%s", i18n.T("config.gate.unknown_scope",
+				g.Name, g.Scope, ScopeNode, ScopeBatch, ScopeProject))
+		}
+		// `scope_full` and `skip_on` are enums too, and were not checked: ScopeForScan
+		// reads any other `scope_full` as "none declared", and SkipsOn never matches a
+		// misspelled perspective (`skip_on: [chnage]`), so the file asserted a full-scan
+		// scope or a skipped perspective that did not exist.
+		if g.ScopeFull != "" && g.ScopeFull != ScopeBatch && g.ScopeFull != ScopeProject {
+			return fmt.Errorf("%s", i18n.T("config.gate.unknown_scope_full",
+				g.Name, g.ScopeFull, ScopeBatch, ScopeProject))
 		}
 		if g.Cost != "" && !custos[g.Cost] {
-			return fmt.Errorf("gate %q: `cost: %q` desconhecido — use %q ou %q",
-				g.Name, g.Cost, CostFast, CostSlow)
+			return fmt.Errorf("%s", i18n.T("config.gate.unknown_cost", g.Name, g.Cost, CostFast, CostSlow))
 		}
 		for _, f := range g.When {
 			if !fases[f] {
-				return fmt.Errorf("gate %q: `when: [%q]` is not a phase — use %q, %q, %q or %q",
-					g.Name, f, PhasePreCommit, PhasePrePush, PhaseCI, PhaseManual)
+				return fmt.Errorf("%s", i18n.T("config.gate.unknown_phase",
+					g.Name, f, PhasePreCommit, PhasePrePush, PhaseCI, PhaseManual))
+			}
+		}
+		for _, p := range g.SkipOn {
+			if p != PerspectiveChange && p != PerspectiveAll {
+				return fmt.Errorf("%s", i18n.T("config.gate.unknown_perspective",
+					g.Name, p, PerspectiveChange, PerspectiveAll))
 			}
 		}
 	}
@@ -1597,29 +1626,22 @@ func (c *Config) validarWorkflow() error {
 		// O modo local (e o manual) não usa Repo nem Labels. Declará-los aqui não é inofensivo: quem lê
 		// o arquivo conclui que a integração está ativa, e ela não está.
 		if w.Repo != "" || len(w.Labels) > 0 {
-			return fmt.Errorf("workflow: `repo`/`labels` only apply under `mode: github` — " +
-				"in local mode they are not read, and leaving them declared makes the file " +
-				"assert an integration that does not exist")
+			return fmt.Errorf("%s", i18n.T("config.workflow.github_fields_outside_github"))
 		}
 		return nil
 	case ModeGitHub:
 		if w.Repo == "" {
-			return fmt.Errorf("workflow: `mode: github` exige `repo: owner/nome` — " +
-				"o Anchors não infere do remote do git de propósito: num fork, inferir " +
-				"faria a escrita cair no repositório errado")
+			return fmt.Errorf("%s", i18n.T("config.workflow.github_needs_repo"))
 		}
 		if !strings.Contains(w.Repo, "/") {
-			return fmt.Errorf("workflow: `repo: %q` is not in `owner/name` format", w.Repo)
+			return fmt.Errorf("%s", i18n.T("config.workflow.repo_not_owner_name", w.Repo))
 		}
 		if len(w.Labels) == 0 {
-			return fmt.Errorf("workflow: `mode: github` exige ao menos uma label em " +
-				"`labels` — sem ela, `anchors next` puxaria qualquer issue do repositório, " +
-				"inclusive as de produto, que não têm a forma que o ciclo espera")
+			return fmt.Errorf("%s", i18n.T("config.workflow.github_needs_label"))
 		}
 		return nil
 	default:
-		return fmt.Errorf("workflow: `mode: %q` desconhecido — use `local`, `manual` ou `github` "+
-			"(não há fallback entre eles: o modo é declarado, não adivinhado)", w.Mode)
+		return fmt.Errorf("%s", i18n.T("config.workflow.unknown_mode", w.Mode))
 	}
 }
 
@@ -1775,9 +1797,15 @@ func Save(c *Config, path string) error {
 	if err != nil {
 		return err
 	}
-	header := []byte("# anchors.yaml — configuração do projeto Anchors\n" +
-		"# A seção `layers` é a Estrutura de Projeto (o grafo virtual).\n")
-	return os.WriteFile(path, append(header, data...), 0o644)
+	// The header is read by people, so it is written in the language the file declares
+	// (English when none, or when the declared one has no catalog); it used to be fixed
+	// Portuguese text in every project's file.
+	header := i18n.TIn(c.Lang, "config.save.header")
+	if header == "" {
+		header = i18n.TIn(i18n.Default, "config.save.header")
+	}
+	data = append([]byte(header), data...)
+	return os.WriteFile(path, data, 0o644)
 }
 
 // RouteRegistry devolve os globs onde o projeto registra rotas de navegação.
@@ -2054,7 +2082,10 @@ const FormatoAtualDeConfig = 4
 
 // fileVersionRE lê o `version:` de topo sem passar pelo parser — que é justamente
 // quem acabou de recusar o arquivo.
-var fileVersionRE = regexp.MustCompile(`(?m)^version:[[:space:]]*([0-9]+)[[:space:]]*$`)
+//
+// A trailing comment is part of the line, not of the value: `version: 4  # current` read
+// as "no version" made a current file look like format 1 and advised a migration.
+var fileVersionRE = regexp.MustCompile(`(?m)^version:[ \t]*([0-9]+)[ \t]*(?:#.*)?$`)
 
 // fileFormat devolve o formato declarado, ou 1 quando não há `version:`.
 //

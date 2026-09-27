@@ -29,8 +29,8 @@ permission — and is never rewritten nor called outdated. The board page is see
 says what it did with it; an identical page is never reported as updated, because a notice that fires
 when nothing changed trains people to ignore it.
 
-The project's integration branch — where the work arrives — is written into the branch lines the templates
-mark for it. The unit also holds the flow's vocabulary: the work states, the board columns, and the
+The project's integration branch — where the work arrives, `main` when none is declared — is written into
+the branch lines the templates mark for it, whatever branch the template itself carries. The unit also holds the flow's vocabulary: the work states, the board columns, and the
 labels, including the per-card ones built from a prefix and the card.
 
 ## Domain
@@ -54,7 +54,7 @@ labels, including the per-card ones built from a prefix and the card.
 | `FLWRF-B06` | Seeding also writes the board page, outside the pipelines folder, carrying the marker. |
 | `FLWRF-B07` | The board page seeding reports "created" when there was no page, "updated" when Anchors' own page differed, and "unchanged" when the page was identical or belongs to the team. |
 | `FLWRF-B08` | A pipeline is outdated (`OutdatedWorkflows`) when it still carries the marker and its content differs from the template as seeding would write it now; team-owned and absent pipelines are never outdated. |
-| `FLWRF-B09` | When the project declares an integration branch other than `main`, every template line marked as the integration branch becomes a branch list with that branch, keeping its indentation. |
+| `FLWRF-B09` | Every template line marked as the integration branch becomes a branch list with the project's integration branch — `main` when none is declared — keeping its indentation; this holds for `main` too, so no template's own branch survives the seeding. |
 | `FLWRF-B10` | Anchors writes the board columns (`ColumnsAnchorsWrites`) only from TO DO up to READY TO TEST. |
 | `FLWRF-B11` | A per-card label (`LabelSob`, `LabelDesbloqueia`, `LabelDePR`, `LabelBlockedBy`) is its prefix followed by the card. |
 

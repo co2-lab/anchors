@@ -21,7 +21,8 @@ Artifact layers are not proposed here: they come from the user's choice, which i
 (ARCHR-B03). The governs rules are left empty, because matching a guide to a tag is a semantic answer that
 only the user gives.
 
-Colocation is proposed only when inference detected it, with a template only for the kinds it found. The
+Colocation is proposed only when inference detected it, anchored on the spec, with a template only for the
+derivative kinds it found (feature, test); the spec is the anchor and never one of its own templates. The
 test handle is proposed only when inference found one in use: a backend, a library, or a project that marks
 nothing gets no handle, so the gates that inventory handles skip instead of accusing the whole repository of
 breaking a convention the project never promised.
@@ -39,7 +40,7 @@ breaking a convention the project never promised.
 | `BLCNB-B01` | Each detected code directory becomes a code layer named (`LayerNameFor`) after the directory's last segment with the `-code` suffix, tagged with that name. |
 | `BLCNB-B02` | The pattern of a code layer covers its directory recursively: one detected extension is written alone, several are written as a set. |
 | `BLCNB-B03` | A proposed code layer excludes specs, features and test files. |
-| `BLCNB-B04` | Colocation is proposed only when inference detected it, anchored on the spec, with a template only for the kinds inference found. |
+| `BLCNB-B04` | Colocation is proposed only when inference detected it, anchored on the spec, with a template only for the derivative kinds inference found (feature, test); the spec is never among the templates. |
 | `BLCNB-B05` | The test handle is proposed only when inference found one, with or without colocation; with none found, no default handle is written. |
 
 ## Invariants
