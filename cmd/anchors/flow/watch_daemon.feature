@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: WTDMW
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @WTDMW
@@ -13,6 +13,12 @@ Feature: WatchDaemon — the watcher started in the background survives the term
     When it is detached and then started
     Then its process group id is its own pid
     And its process group is not the parent's
+
+  @WTDMW-B02 @unit-level
+  Scenario: On Windows a detached child is created in a new process group
+    Given a child process prepared on Windows
+    When it is detached
+    Then it is set to be created with the new-process-group flag
 
   @WTDMW-I01 @unit-level
   Scenario: Exactly one detachment implementation builds per platform

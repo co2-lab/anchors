@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MPCMM
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @MPCMM
@@ -41,6 +41,13 @@ Feature: MapCommand — builds the dependency map from the project and answers q
     Then it counts "3 file(s)", shows "shared beat test" with "(2 file(s)" and "lambdas beat test"
     And it says the wrong layer takes the file out of reach of "EVERY gate"
     And the build of a project whose test file matches both a test and a shared layer shows "shared beat test"
+
+  @MPCMM-B11 @unit-level
+  Scenario: A declared priority silences the layer ambiguity warning
+    Given two test files matched by both a test layer and a longer shared layer, neither declaring a priority
+    When the layer ambiguities are found
+    Then both files are reported, decided in favour of shared by pattern length
+    And once the test layer declares a priority, no file is reported
 
   @MPCMM-B06 @unit-level
   Scenario: Showing the login code lists what governs it and marks it a leaf

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPCMM
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: comando
 -->
 # MapCommand — builds the dependency map from the project and answers questions about it
@@ -46,6 +46,7 @@ grouped, because it is where the decision is made. Both warnings inform and neve
 | `MPCMM-B03` | When a gate has fewer judgment stamps than in the previous map, the build warns naming the gate and the count before and after; with no loss, or with a gain, it says nothing. |
 | `MPCMM-B04` | The edge summary lists the triad's edge types first, in a fixed order, then every other type alphabetically, so no type is hidden; with no edges there is no summary. |
 | `MPCMM-B05` | When the layer of a file was decided by pattern length, the build warns once per pair of winning and losing layers, with the number of files and one example, and says what the wrong choice costs; with no such file it says nothing. |
+| `MPCMM-B11` | A file whose layer is decided by a declared priority is not reported as a guess: once one of the matching layers declares a priority, the build no longer warns about that file. |
 
 ### Show
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WTDMW
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: comando
 -->
 # WatchDaemon — the watcher started in the background survives the terminal that started it
@@ -18,7 +18,8 @@ built for any target.
 On unix-like systems the child starts in a new session, so it leads its own process group and the
 terminal's hang-up and interrupt signals, which go to the terminal's group, do not reach it. On
 Windows, which has no sessions, the child is created in a new process group, the closest portable
-equivalent: the console's Ctrl+C sent to the parent's group does not reach it. That half is not stated as a rule here: its test only runs on Windows, and no run has proven it yet.
+equivalent: the console's Ctrl+C sent to the parent's group does not reach it. Each half's test runs
+on its own platform and is skipped on the other, so the Windows half is proven only by a run on Windows.
 
 The detachment only prepares how the child will be started; starting it, writing its pid and its
 metadata belong to the watch command.
@@ -34,6 +35,7 @@ metadata belong to the watch command.
 | Effect | Description |
 | --- | --- |
 | `WTDMW-B01` | On a unix-like system, a detached child leads its own process group, distinct from the parent's. |
+| `WTDMW-B02` | On Windows, a detached child is created in a new process group, so the console's Ctrl+C sent to the parent's group does not reach it. |
 
 ## Invariants
 

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:abc977ffd293362c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:fb8cad8bf627fb4c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1040,6 +1040,8 @@ teste prova.
 
 - [On unix a detached child leads its own process group](camadas/comando.md#wtdmw--watchdaemon--the-watcher-started-in-the-background-survives-the-terminal-that-started-it) `WTDMW-B01`
 
+- [On Windows a detached child is created in a new process group](camadas/comando.md#wtdmw--watchdaemon--the-watcher-started-in-the-background-survives-the-terminal-that-started-it) `WTDMW-B02`
+
 - [Exactly one detachment implementation builds per platform](camadas/comando.md#wtdmw--watchdaemon--the-watcher-started-in-the-background-survives-the-terminal-that-started-it) `WTDMW-I01`
 
 - [Detaching does not start the child](camadas/comando.md#wtdmw--watchdaemon--the-watcher-started-in-the-background-survives-the-terminal-that-started-it) `WTDMW-X01`
@@ -1387,6 +1389,8 @@ teste prova.
 - [The edge summary shows every type, the triad's first](camadas/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it) `MPCMM-B04`
 
 - [The layer ambiguity warning is grouped by pair of layers](camadas/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it) `MPCMM-B05`
+
+- [A declared priority silences the layer ambiguity warning](camadas/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it) `MPCMM-B11`
 
 - [Showing the login code lists what governs it and marks it a leaf](camadas/comando.md#mpcmm--mapcommand--builds-the-dependency-map-from-the-project-and-answers-questions-about-it) `MPCMM-B06`
 
@@ -5372,7 +5376,37 @@ teste prova.
 
 - [Both collect shapes are accepted and cut before the redirection](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B03`
 
+- [The active agents are counted from the snapshot](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B04`
+
+- [A live board counts the active agents from now](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B05`
+
+- [The agent chips filter the cards by agent](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B06`
+
+- [A released card is collected with no owner](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B07`
+
+- [With no card waiting for a person the blocked strip is hidden and empty](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B08`
+
+- [The strip orders the waiting cards by how many cards each blocks](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B09`
+
+- [An escalated card in a work state appears in the strip with the state it stopped in](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B10`
+
+- [The strip tells a card waiting for a person from one waiting for decided work](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B11`
+
+- [A hostile title is escaped in the strip](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B12`
+
+- [An escalated card is marked in its column](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B13`
+
+- [The roadmap opens a card's details](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B14`
+
+- [A blocked card says which card blocks it](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B15`
+
+- [Decisions and framing requests are listed apart](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B16`
+
+- [Bugs are listed apart from decisions](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B17`
+
 - [The extracted expression never carries the redirection](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-I01`
+
+- [The page's data attributes are written and read in pairs](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-I02`
 
 - [A collect step of another shape yields no expression](camadas/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-X01`
 
@@ -5552,7 +5586,29 @@ teste prova.
 
 - [A per-card label is its prefix followed by the card](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B11`
 
+- [The stale pipeline releases an idle owned card once](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B12`
+
+- [A rejected card is released after the shorter rework window](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B13`
+
+- [The review status follows the assigned reviewer's verdict line](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B14`
+
+- [The review job is wired to verdict comments and feeds the mover](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B15`
+
+- [A merge without the review outcome is said on the card](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B16`
+
+- [A green PR publishes the review as pending](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B17`
+
+- [The claim teaches the reviewer the verdict line](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B18`
+
+- [A verdict releases the reviewer once](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B19`
+
+- [The closing line wins over a reference](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B20`
+
+- [A rejection sends the card back to its author](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-B21`
+
 - [What seeding writes is never outdated for the same configuration](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-I01`
+
+- [The parsed verdict line is the one the review guide teaches](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-I02`
 
 - [A file without the marker is never taken over](camadas/infra.md#flwrf--flowworkflows--declare-the-pipelines-of-the-work-flow-find-what-is-missing-or-broken-and-seed-them-without-taking-over-what-the-team-owns) `FLWRF-X01`
 

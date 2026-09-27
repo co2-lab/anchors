@@ -341,3 +341,66 @@ func TestMapShow_errors(t *testing.T) {
 		t.Errorf("--pending without anchors.yaml: expected a config error, got %v", err)
 	}
 }
+
+// THE AMBIGUITY IS DETECTED, and a declared priority silences it. `scan.Ambiguities` existed
+// — complete and tested — and nobody called it: the comment of the `priority` field promised
+// "declare it when the heuristic is wrong; `check` warns where it decided alone", and it did
+// not warn.
+//
+// Cost measured in the reference app: `**/*.test.*` and `packages/shared/**/*.ts` matched the
+// same `AreaStatus.test.ts`, the length tie-break chose `shared`, and the project had ZERO
+// `kind: test` nodes with 70 green tests. In cascade FOUR gates went blind, including the
+// blocking `test-traceable`. It was only found by counting the map's nodes by hand.
+func TestLayerAmbiguity_thePairOfLayersIsReportedUntilAPriorityIsDeclared(t *testing.T) {
+	t.Run("MPCMM-B05: The layer ambiguity warning is grouped by pair of layers", func(t *testing.T) {})
+	t.Run("MPCMM-B11: A declared priority silences the layer ambiguity warning", func(t *testing.T) {})
+	cfg := &config.Config{Layers: map[string]config.Layer{
+		"test":   {Pattern: "**/*.test.ts", Kind: "test"},
+		"shared": {Pattern: "packages/shared/**/*.ts", Kind: "code"},
+	}}
+	files := []scan.File{
+		{Path: "packages/shared/AreaStatus.test.ts"},
+		{Path: "packages/shared/QueryScope.test.ts"},
+	}
+
+	amb := scan.Ambiguities(files, cfg)
+	if len(amb) != 2 {
+		t.Fatalf("Ambiguities returned %d, want 2 — both files match both layers", len(amb))
+	}
+	// `packages/shared/**/*.ts` (23) is longer than `**/*.test.ts` (12), so the length
+	// tie-break hands the TEST to the code layer — the defect of #100.
+	if amb[0].Vencedora != "shared" {
+		t.Errorf("winner = %q; the pattern length favours `shared`", amb[0].Vencedora)
+	}
+
+	// declaring `priority` on the right layer SILENCES the warning: the project has already
+	// decided, and there is no guess to report.
+	cfg.Layers["test"] = config.Layer{Pattern: "**/*.test.ts", Kind: "test", Priority: 100}
+	if amb := scan.Ambiguities(files, cfg); len(amb) != 0 {
+		t.Errorf("with `priority` declared the warning stayed: %+v", amb)
+	}
+}
+
+// capturaStdout collects what the function writes to `os.Stdout`.
+//
+// The commands print with `fmt.Println` directly (and not through `cmd.OutOrStdout()`), so
+// testing the OUTPUT requires intercepting the descriptor. It is what lets a test assert on
+// the text the user reads, instead of only on the return value.
+func capturaStdout(t *testing.T, f func()) string {
+	t.Helper()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	old := os.Stdout
+	os.Stdout = w
+	defer func() { os.Stdout = old }()
+
+	f()
+	w.Close()
+	b, err := io.ReadAll(r)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return string(b)
+}

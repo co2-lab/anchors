@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: FLWRF
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @FLWRF
@@ -83,11 +83,91 @@ Feature: FlowWorkflows — declare the pipelines of the work flow, find what is 
     When the per-card labels are built
     Then they read "anchors:under-44", "anchors:desbloqueia-44", "anchors:from-pr-556" and "anchors:blocked-by-900"
 
+  @FLWRF-B12 @unit-level
+  Scenario: The stale pipeline releases an idle owned card once
+    Given in-progress cards 5, 6 and 7 idle past the window, 6 already released and the comments of 7 unreadable, and card 8 with recent progress
+    When the stale pipeline runs
+    Then card 5 is released naming its previous owner "a/one"
+    And cards 6 and 8 are not released, and card 7 is skipped and named
+    And the card list never asks for comments
+
+  @FLWRF-B13 @unit-level
+  Scenario: A rejected card is released after the shorter rework window
+    Given to-do cards 5 and 6 idle for 1h30, where only 5's owner came back from a rejected review, and card 7 idle for 3h
+    When the stale pipeline runs
+    Then cards 5 and 7 are released
+    And card 6 keeps its owner
+
+  @FLWRF-B14 @unit-level
+  Scenario: The review status follows the assigned reviewer's verdict line
+    Given card 12 moved to review with "agent-b" as its owner, and a pull request that references it
+    When the review job runs over each history of pull request comments
+    Then "anchors-review: approved by agent-b" publishes success and "rejected" publishes failure, the last verdict winning
+    And another agent's line, a line from before the move, inside a code block, mid-sentence or by someone without write access leaves it pending
+    And a card back in ready-to-review is pending awaiting a reviewer, and a pull request with no card or a card never moved to review gets no status
+
+  @FLWRF-B15 @unit-level
+  Scenario: The review job is wired to verdict comments and feeds the mover
+    Given the pull request checks pipeline
+    When its triggers, permissions and jobs are read
+    Then it listens to pull request comments and may write statuses
+    And the review job runs on comments carrying "anchors-review:"
+    And the mover needs the review job, runs always but never on a comment, and receives its state and reviewer
+
+  @FLWRF-B16 @unit-level
+  Scenario: A merge without the review outcome is said on the card
+    Given a card whose pull request merges with the review status success, pending, failure or none
+    When the mover runs on the merge
+    Then the card moves to ready-to-test every time
+    And only when the status was not success does the card say "merged WITHOUT the review outcome", naming the reviewer and the status or that no reviewer had been assigned
+
+  @FLWRF-B17 @unit-level
+  Scenario: A green PR publishes the review as pending
+    Given an in-progress card whose pull request turned green
+    When the mover runs
+    Then the card moves to ready-to-review
+    And the review status is published as pending "awaiting a reviewer"
+
+  @FLWRF-B18 @unit-level
+  Scenario: The claim teaches the reviewer the verdict line
+    Given the claim pipeline
+    When its instructions to the reviewer are read
+    Then they teach "anchors-review: approved by <você>" and "anchors-review: rejected by <você>"
+    And they no longer tell the reviewer to move the card on approval
+
+  @FLWRF-B19 @unit-level
+  Scenario: A verdict releases the reviewer once
+    Given a card in review with the reviewer as owner
+    When the reviewer posts an approved or a rejected verdict
+    Then the card's owner is released
+    And with no verdict yet, or with the card already released, nothing is released
+
+  @FLWRF-B20 @unit-level
+  Scenario: The closing line wins over a reference
+    Given a pull request body that opens with "Refs #13" and ends with "Closes #12"
+    When the review job and the mover run
+    Then the review status is published for card 12
+    And the merge moves card 12 and leaves card 13 alone
+
+  @FLWRF-B21 @unit-level
+  Scenario: A rejection sends the card back to its author
+    Given a card implemented by "agent-a" and in review with "agent-b"
+    When agent-b posts a rejected verdict
+    Then the reviewer is released, the card goes to "anchors:to-do" and its owner is "agent-a" again
+    And an approved verdict does none of that
+
   @FLWRF-I01 @unit-level
   Scenario: What seeding writes is never outdated for the same configuration
     Given a project seeded with the default branch, and one seeded with the branch "develop"
     When the outdated pipelines are listed with the same configuration
     Then none is outdated
+
+  @FLWRF-I02 @unit-level
+  Scenario: The parsed verdict line is the one the review guide teaches
+    Given the review guide and the review job of the pull request checks pipeline
+    When the verdict lines are compared
+    Then the guide teaches "anchors-review: approved by <you>" and "anchors-review: rejected by <you>"
+    And the review job parses "anchors-review: (approved|rejected) by "
 
   @FLWRF-X01 @unit-level
   Scenario: A file without the marker is never taken over

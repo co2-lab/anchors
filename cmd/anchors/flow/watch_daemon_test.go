@@ -1,33 +1,39 @@
-//go:build !windows
-
 package flow
 
 import (
 	"os"
 	"os/exec"
+	"reflect"
+	"runtime"
+	"strconv"
 	"strings"
-	"syscall"
 	"testing"
 )
+
+// This file builds on every platform, because it is the one test file linked to the
+// WatchDaemon rules: a `_windows_test.go` or `//go:build` split would leave the half it
+// excludes with no link. Each platform's half runs on its platform and is skipped on the
+// other, and it reads nothing that exists on one platform only: the process group comes
+// from `ps`, and the Windows creation flags are read by field name.
 
 // The watcher started by `watch start` must survive the terminal: on unix it leads its own
 // session, so it is the leader of a process group that is not the terminal's.
 func TestDetach_childLeadsItsOwnSession(t *testing.T) {
 	t.Run("WTDMW-B01: On unix a detached child leads its own process group", func(t *testing.T) {})
+	if runtime.GOOS == "windows" {
+		t.Skip("unix-only: Windows has no sessions (WTDMW-B02 is its half)")
+	}
 	c := exec.Command("sleep", "30")
 	detach(c)
 	if err := c.Start(); err != nil {
 		t.Fatal(err)
 	}
 	defer func() { _ = c.Process.Kill(); _, _ = c.Process.Wait() }()
-	pgid, err := syscall.Getpgid(c.Process.Pid)
-	if err != nil {
-		t.Fatal(err)
-	}
+	pgid := processGroupOf(t, c.Process.Pid)
 	if pgid != c.Process.Pid {
 		t.Errorf("a detached child leads its own group: pgid %d, pid %d", pgid, c.Process.Pid)
 	}
-	if mine, _ := syscall.Getpgid(os.Getpid()); pgid == mine {
+	if mine := processGroupOf(t, os.Getpid()); pgid == mine {
 		t.Error("the child must not stay in the parent's process group")
 	}
 }
@@ -71,5 +77,45 @@ func TestDetach_oneImplementationPerPlatform(t *testing.T) {
 		if !strings.Contains(got, want) || strings.Contains(got, other) {
 			t.Errorf("%s must build %s and not %s: %s", goos, want, other, got)
 		}
+	}
+}
+
+// processGroupOf reads a process's group id through `ps`, which answers the same on every
+// unix-like system; `syscall.Getpgid` would keep this file from building on Windows.
+func processGroupOf(t *testing.T, pid int) int {
+	t.Helper()
+	if _, err := exec.LookPath("ps"); err != nil {
+		t.Skip("ps not on PATH")
+	}
+	out, err := exec.Command("ps", "-o", "pgid=", "-p", strconv.Itoa(pid)).Output()
+	if err != nil {
+		t.Fatalf("ps for pid %d: %v", pid, err)
+	}
+	pgid, err := strconv.Atoi(strings.TrimSpace(string(out)))
+	if err != nil {
+		t.Fatalf("ps gave no process group for pid %d: %q", pid, out)
+	}
+	return pgid
+}
+
+// On Windows there is no session: the child is created in a new process group, so the
+// console's CTRL_C_EVENT sent to the parent's group does not reach it.
+//
+// The flag is read by field name because `SysProcAttr.CreationFlags` and
+// `syscall.CREATE_NEW_PROCESS_GROUP` exist only in the Windows build of `syscall`.
+func TestDetach_childGetsANewProcessGroup(t *testing.T) {
+	t.Run("WTDMW-B02: On Windows a detached child is created in a new process group", func(t *testing.T) {})
+	if runtime.GOOS != "windows" {
+		t.Skip("Windows-only: unix-like systems detach with a new session (WTDMW-B01)")
+	}
+	const createNewProcessGroup = 0x00000200 // syscall.CREATE_NEW_PROCESS_GROUP
+	c := exec.Command("cmd", "/c", "exit")
+	detach(c)
+	if c.SysProcAttr == nil {
+		t.Fatal("detach left no attribute for the start")
+	}
+	flags := reflect.ValueOf(c.SysProcAttr).Elem().FieldByName("CreationFlags")
+	if !flags.IsValid() || flags.Uint()&createNewProcessGroup == 0 {
+		t.Errorf("the child must be created with CREATE_NEW_PROCESS_GROUP: %+v", c.SysProcAttr)
 	}
 }
