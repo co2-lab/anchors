@@ -1,7 +1,7 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
 version: 4
-generated_by: dev
+generated_by: 0.1.209
 nodes:
     - id: BOOTSTRAP.md
       kind: doc
@@ -5805,8 +5805,19 @@ nodes:
                 covered_lines: 134
                 total_lines: 159
                 at_rev: 872d4f8b4cb3
+        mutants_killed: 36
+        mutants_survived: 4
+        mutation_score: 90
+        mutants_no_coverage: 3
+        mutation_by_scope:
+            isolated:
+                killed: 36
+                survived: 4
+                no_coverage: 3
+                score: 90
+                at_rev: 872d4f8b4cb3
         at_rev: 872d4f8b4cb3
-        ingested_at: "2026-09-27T16:39:57-03:00"
+        ingested_at: "2026-09-27T16:51:18-03:00"
     - id: cmd/anchors/quality/budget.spec.md
       kind: spec
       rev: 628601c0e48b
@@ -5869,8 +5880,17 @@ nodes:
                 covered_lines: 15
                 total_lines: 17
                 at_rev: a4e648b0674b
+        mutants_killed: 4
+        mutants_survived: 1
+        mutation_score: 80
+        mutation_by_scope:
+            isolated:
+                killed: 4
+                survived: 1
+                score: 80
+                at_rev: a4e648b0674b
         at_rev: a4e648b0674b
-        ingested_at: "2026-09-27T16:39:57-03:00"
+        ingested_at: "2026-09-27T16:56:13-03:00"
     - id: cmd/anchors/quality/budget_windows.go
       kind: code
       rev: 75486e93f5bd
@@ -6667,8 +6687,17 @@ nodes:
                 covered_lines: 204
                 total_lines: 212
                 at_rev: 88676a75e7ed
+        mutants_killed: 52
+        mutants_survived: 14
+        mutation_score: 78.78787878787878
+        mutation_by_scope:
+            isolated:
+                killed: 52
+                survived: 14
+                score: 78.78787878787878
+                at_rev: 88676a75e7ed
         at_rev: 88676a75e7ed
-        ingested_at: "2026-09-27T16:39:57-03:00"
+        ingested_at: "2026-09-27T16:56:13-03:00"
     - id: cmd/anchors/quality/selection.spec.md
       kind: spec
       rev: dc131f5cde9a
@@ -8061,14 +8090,13 @@ nodes:
                 at_rev: 6e10a1397a39
         mutants_killed: 3
         mutation_score: 100
-        mutants_timed_out: 3
         mutation_by_scope:
             isolated:
                 killed: 3
                 score: 100
                 at_rev: 6e10a1397a39
         at_rev: 6e10a1397a39
-        ingested_at: "2026-09-27T16:39:57-03:00"
+        ingested_at: "2026-09-27T16:53:12-03:00"
     - id: internal/config/comments.spec.md
       kind: spec
       rev: 37df0e1deae0

@@ -19,6 +19,10 @@
 # internal/testlist: 32 of 32 timed out (a false 100%), and 30 killed / 1 survived with
 # the larger coefficient.
 #
+# ANCHORS_MUTATION_TIMEOUT_COEFFICIENT overrides the 10: when mutation-score reports a file
+# measured under load, measure it once with a large coefficient (100) to learn how long a
+# mutant really takes, as the gate says.
+#
 # Usage: scripts/anchors-mutation.sh [package-dir | file.go ...]   (default: every package)
 set -uo pipefail
 
@@ -49,6 +53,7 @@ else
   done < <(go list ./... | grep -v "^$mod\$")
 fi
 
+coefficient="${ANCHORS_MUTATION_TIMEOUT_COEFFICIENT:-10}"
 i=0
 for entry in "${pkgs[@]}"; do
   i=$((i + 1))
@@ -63,7 +68,7 @@ for entry in "${pkgs[@]}"; do
     done
   fi
   echo "[$i/${#pkgs[@]}] $entry"
-  if ! gremlins unleash "./$pkg" "${excludes[@]}" --timeout-coefficient 10 --output "$tmp/raw.json" >"$tmp/log" 2>&1; then
+  if ! gremlins unleash "./$pkg" "${excludes[@]}" --timeout-coefficient "$coefficient" --output "$tmp/raw.json" >"$tmp/log" 2>&1; then
     echo "  gremlins failed on $pkg:" >&2
     tail -5 "$tmp/log" >&2
     continue
