@@ -8,6 +8,7 @@ import (
 	"encoding/xml"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -19,6 +20,8 @@ type CaseResult struct {
 	File    string // arquivo, se o reporter emitiu (atributo file)
 	Failed  bool
 	Skipped bool
+	// Seconds is the case's run time, from its `time` attribute; 0 when absent or unreadable.
+	Seconds float64
 }
 
 // SuiteResult agrupa casos por arquivo/suite.
@@ -46,6 +49,7 @@ type junitTestcase struct {
 	Name      string       `xml:"name,attr"`
 	Classname string       `xml:"classname,attr"`
 	File      string       `xml:"file,attr"`
+	Time      string       `xml:"time,attr"`
 	Failure   *junitDetail `xml:"failure"`
 	Error     *junitDetail `xml:"error"`
 	Skipped   *junitDetail `xml:"skipped"`
@@ -93,6 +97,7 @@ func collectSuite(s junitTestsuite, rep *ExecReport) {
 			File:    file,
 			Failed:  c.Failure != nil || c.Error != nil,
 			Skipped: c.Skipped != nil,
+			Seconds: caseSeconds(c.Time),
 		})
 	}
 	for _, nested := range s.Suites {
@@ -152,4 +157,15 @@ func (r *ExecReport) SeenCodes() map[string]bool {
 		}
 	}
 	return out
+}
+
+// caseSeconds reads a case's `time` attribute: seconds, possibly fractional. A missing,
+// malformed or negative value is 0 — a case the report did not time, not an error in the
+// report.
+func caseSeconds(v string) float64 {
+	f, err := strconv.ParseFloat(strings.TrimSpace(v), 64)
+	if err != nil || f < 0 {
+		return 0
+	}
+	return f
 }

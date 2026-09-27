@@ -142,6 +142,18 @@ O Anchors não roda mutação nem conhece ferramenta: ele consome o formato aber
 **Mutation Testing Elements** (`schemaVersion 1.x`), que Stryker, PIT, Infection
 e mutmut emitem.
 
+### `--budget`: o máximo que cabe num tempo
+
+`anchors test --budget 60s` e `anchors mutation --budget 10m` rodam os arquivos **do mais
+rápido para o mais lento**, em lotes pelo `run_changed:` da suíte, até o tempo acabar; o que
+não coube fica para uma próxima rodada — um smoke do que cabe. O lote que ainda roda quando o
+tempo acaba é parado inteiro, com os processos que ele criou.
+
+A ordem vem dos tempos que as rodadas anteriores gravaram no mapa, por suíte: o de um arquivo
+de teste vem dos casos do JUnit; o de um arquivo de código, do Anchors cronometrando a mutação
+dele — por isso a mutação com orçamento roda um arquivo por vez. Arquivo que nunca foi
+cronometrado vai por último, e a rodada dele é que grava o tempo.
+
 ---
 
 ## O trabalho (modo GitHub)

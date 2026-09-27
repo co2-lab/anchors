@@ -114,6 +114,7 @@ type suiteCommand struct {
 func newSuiteCommand(cs suiteCommand) *cobra.Command {
 	var root, target, then string
 	var workspaces, changed, escopos []string
+	var budget time.Duration
 	cmd := &cobra.Command{
 		Use:   cs.nome + " [layers...]",
 		Short: cs.curto,
@@ -176,6 +177,15 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 				fmt.Printf("incremental: %d file(s) on the impact path\n\n", len(alvos))
 			}
 
+			if budget > 0 {
+				if len(changed) > 0 {
+					return fmt.Errorf("`--budget` and `--changed` choose the files two different ways; use one")
+				}
+				if err := runWithBudget(cs, sel, absRoot, target, budget); err != nil {
+					return err
+				}
+				return runChained(then, absRoot, nil)
+			}
 			if err := runSuites(cs, sel, absRoot, target, alvos); err != nil {
 				return err
 			}
@@ -193,6 +203,7 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 	cmd.Flags().StringSliceVar(&escopos, "scope", nil, "filters by the declared SCOPE (`isolated`, `full`) — only on mutation. Without this, runs whichever are declared")
 	cmd.Flags().StringVar(&target, "target", "", "target that replaces `{{target}}` in the declared `run:` (e.g. the file to mutate)")
 	cmd.Flags().StringSliceVar(&changed, "changed", nil, "INCREMENTAL mode: changed file(s) — runs the `run_changed:` over the union of the impact paths, the same slice as `check --changed`")
+	cmd.Flags().DurationVar(&budget, "budget", 0, "run the files FASTEST FIRST, in batches through `run_changed:`, until this much time is spent (e.g. 60s, 10m); the rest is left for a later run. The order comes from the times recorded by earlier runs; files never timed go last")
 	cmd.Flags().StringVar(&then, "then", "", "on PASSING, chains Anchors commands: `check`, `coverage` (separate by comma). Opt-in — without this, it runs and stops")
 	return cmd
 }

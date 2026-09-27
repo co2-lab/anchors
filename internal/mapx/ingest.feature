@@ -144,3 +144,15 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Given a mutation report where some killed mutants timed out
     When it is ingested
     Then the node records the killed and, apart, how many of them timed out
+
+  @SGINA-B22 @unit-level
+  Scenario: An execution ingestion records each test file's run time under its suite
+    Given a report where one test file's cases took 1.5 seconds and another's carry no time
+    When it is ingested under a suite, and under a layer with no suite
+    Then the first records 1.5 seconds under the suite, then under the layer, and the second records nothing
+
+  @SGINA-B23 @unit-level
+  Scenario: A run time Anchors measured is recorded on the node
+    Given a map with a code file
+    When a run time is recorded for it and for a file the map does not have
+    Then the file carries the time under the suite and nothing else changes

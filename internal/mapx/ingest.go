@@ -18,6 +18,8 @@ import (
 // conjunto global de códigos provados. `now` é carimbado por quem chama.
 type ExecByFile struct {
 	Passed, Failed, Skipped int
+	// Seconds is the file's run time in this report: the sum of its cases' times.
+	Seconds float64
 }
 
 // declaredByNode: para os nós que precisam de cobertura semântica (specs), quais
@@ -60,6 +62,11 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 				// camadas permanecem — é o merge).
 				n.Signal.ByLayer[layer] = LayerExec{Passed: ex.Passed, Failed: ex.Failed, Skipped: ex.Skipped}
 				n.Signal.Passed, n.Signal.Failed, n.Signal.Skipped = sumLayers(n.Signal.ByLayer)
+				// The file's run time in this suite, what `--budget` orders by. Kept per
+				// suite: in a monorepo each workspace's runner times its own files.
+				if ex.Seconds > 0 {
+					n.Signal.recordSeconds(suiteOrLayer(suite, layer), ex.Seconds)
+				}
 				n.Signal.AtRev = n.Rev
 				// Carimba também as revs do FECHO — o que este teste alcança descendo.
 				// É o que permite dizer depois "a evidência venceu porque o util que ele
@@ -712,4 +719,34 @@ func commonDirPrefix(a, b string) int {
 		n++
 	}
 	return n
+}
+
+// suiteOrLayer is the key a run time is kept under: the suite, or the layer when the
+// ingestion names no suite.
+func suiteOrLayer(suite, layer string) string {
+	if suite != "" {
+		return suite
+	}
+	return layer
+}
+
+// recordSeconds keeps a file's run time under a suite.
+func (s *TestSignal) recordSeconds(key string, seconds float64) {
+	if s.SecondsBySuite == nil {
+		s.SecondsBySuite = map[string]float64{}
+	}
+	s.SecondsBySuite[key] = seconds
+}
+
+// RecordRunSeconds keeps the time a run of `id` took under a suite, when the time comes
+// from Anchors timing the run itself (a mutation run of one file) rather than from a
+// report. An unknown node is ignored.
+func (g *Graph) RecordRunSeconds(id, key string, seconds float64) {
+	for i := range g.Nodes {
+		if g.Nodes[i].ID == id {
+			ensureSignal(&g.Nodes[i])
+			g.Nodes[i].Signal.recordSeconds(key, seconds)
+			return
+		}
+	}
 }

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f9dd688e126c5186 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:96707b340d36f682 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1336,6 +1336,10 @@ teste prova.
 
 - [Ingesting a report without a map fails and asks for the map build](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-E05`
 
+- [A test file's run time is the sum of its cases](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B14`
+
+- [A report's signals are kept under its path from the root](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B15`
+
 - [The legacy spelling of the waiver is a waiver all the way to the stamp](camadas/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B01`
 
 - [A reason is required for fail and waived, not for pass](camadas/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B02`
@@ -1935,6 +1939,22 @@ teste prova.
 - [The card never picks a side](camadas/comando.md#sycms--synthesizecommand--two-pull-requests-in-content-conflict-become-one-card-that-asks-for-the-best-of-each-and-every-end-points-at-it) `SYCMS-X01`
 
 - [A card that cannot be opened fails with the host's message](camadas/comando.md#sycms--synthesizecommand--two-pull-requests-in-content-conflict-become-one-card-that-asks-for-the-best-of-each-and-every-end-points-at-it) `SYCMS-E01`
+
+- [The plan is the timed files fastest first, then the untimed](camadas/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B01`
+
+- [Batches take what fits and then the untimed one by one](camadas/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B02`
+
+- [A batch still running at the deadline is stopped with its group](camadas/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B03`
+
+- [A budget runs batches fastest first and reports what ran and what was left](camadas/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B04`
+
+- [A mutation budget runs one file per batch and records its time](camadas/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B05`
+
+- [A failed batch does not stop the budget](camadas/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B06`
+
+- [What the budget cannot run is refused before anything runs](camadas/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B07`
+
+- [A budget without a map is refused saying to build it](camadas/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-E02`
 
 - [The full sweep confronts every node of the map](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B01`
 
@@ -5986,6 +6006,8 @@ teste prova.
 
 - [An unreadable report returns the read error](camadas/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report) `JUIJN-E01`
 
+- [Each case carries its run time](camadas/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report) `JUIJN-B10`
+
 - [Each record becomes one file's coverage in report order](camadas/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-B01`
 
 - [A line with hits is covered and a line without is not](camadas/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-B02`
@@ -6211,6 +6233,10 @@ teste prova.
 - [Each measurement lands only on its kind of node](camadas/mapa.md#sgina-x01--each-measurement-lands-only-on-its-kind-of-node) `SGINA-X01`
 
 - [A mutation ingestion records the timed-out apart](camadas/mapa.md#sgina-b21--a-mutation-ingestion-records-the-timed-out-apart) `SGINA-B21`
+
+- [An execution ingestion records each test file's run time under its suite](camadas/mapa.md#sgina-b22--an-execution-ingestion-records-each-test-files-run-time-under-its-suite) `SGINA-B22`
+
+- [A run time Anchors measured is recorded on the node](camadas/mapa.md#sgina-b23--a-run-time-anchors-measured-is-recorded-on-the-node) `SGINA-B23`
 
 - [A relation never stamped is stale](camadas/mapa.md#grmdg-b01--a-relation-never-stamped-is-stale) `GRMDG-B01`
 

@@ -346,6 +346,14 @@ derived:
         # declared explicitly; a kind an override leaves out falls back to the default template (GRBLG-B11)
         feature: ["{{dir}}/{{name}}.feature"]
         test: ["{{dir}}/{{name}}_test.go"]
+    - code: BDGRN   # BudgetRun
+      files:
+        code:
+          - "cmd/anchors/quality/budget.go"
+          - "cmd/anchors/quality/budget_unix.go"
+          - "cmd/anchors/quality/budget_windows.go"
+        feature: ["cmd/anchors/quality/budget.feature"]
+        test: ["cmd/anchors/quality/budget_test.go"]
     - code: WTDMW   # WatchDaemon
       files:
         code:
@@ -440,6 +448,9 @@ mutation:
   - layer: unit
     # Every package, one gremlins run each, merged with full paths (see the script).
     run: "bash scripts/anchors-mutation.sh"
+    # One file at a time, for `anchors mutation --budget` (the script mutates only the
+    # files it is given, excluding their package siblings).
+    run_changed: "bash scripts/anchors-mutation.sh {{files}}"
     report: ".anchors/mutation.json"
     scope: isolated
 
@@ -735,6 +746,7 @@ gates:
       "cmd/anchors/*/register.go": "wires the commands into the root: no operator to mutate"
       "cmd/anchors/flow/watch_unix.go": "sets one process attribute: no operator to mutate"
       "cmd/anchors/flow/watch_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "cmd/anchors/quality/budget_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
       "internal/migra/format_{2,3,4}.go": "rename tables of a format migration: data, no operator to mutate"
 
   - name: line-coverage
@@ -745,6 +757,7 @@ gates:
       "cmd/anchors/common/version.go": "version variables set by the linker: no statement to cover"
       "cmd/anchors/flow/watch_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
       "internal/daemon/daemon_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "cmd/anchors/quality/budget_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
 
   # ── THE PROJECT'S LANGUAGE POLICY ───────────────────────────────────────────────
   #

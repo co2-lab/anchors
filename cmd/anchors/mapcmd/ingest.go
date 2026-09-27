@@ -130,6 +130,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 						continue // sem arquivo, não dá para amarrar ao nó
 					}
 					e := byFile[c.File]
+					e.Seconds += c.Seconds
 					switch {
 					case c.Failed:
 						e.Failed++
@@ -293,6 +294,10 @@ func resolveByFile[T any](g *mapx.Graph, kind mapx.Kind, byFile map[string]T, ab
 // that depends on where the runner checked the repository out. It is keyed by its file
 // name instead; two external reports with the same name then share an entry, which is the
 // behaviour before suites existed — and `--suite` names it explicitly when that matters.
+// SuiteKey is the key a report's signals are kept under in the map: the report's path
+// relative to the root. `--budget` reads the recorded run times under the same key.
+func SuiteKey(absRoot, report string) string { return suiteKey(absRoot, report) }
+
 func suiteKey(absRoot, report string) string {
 	rel := relToRoot(absRoot, report)
 	if rel == ".." || strings.HasPrefix(rel, "../") {

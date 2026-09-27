@@ -273,6 +273,10 @@ type TestSignal struct {
 	// MutantsTimedOut: of the killed, how many were killed by the time limit. A share
 	// above the gate's `timeout_ceiling` means the run was measured under load.
 	MutantsTimedOut int `yaml:"mutants_timed_out,omitempty"`
+	// SecondsBySuite: how long this file took in each suite's last run of it — a test file
+	// from its JUnit cases, a code file from Anchors timing its mutation run. It is what
+	// `--budget` orders by, fastest first.
+	SecondsBySuite map[string]float64 `yaml:"seconds_by_suite,omitempty"`
 	// MutationByScope: o mesmo arquivo medido em dois ESCOPOS de suíte.
 	//
 	//   isolated — só o teste da própria unidade

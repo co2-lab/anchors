@@ -649,3 +649,30 @@ func TestIngestMutation_RecordsTheTimedOut(t *testing.T) {
 		t.Fatalf("want 10 killed with 7 timed out recorded apart, got %+v", s)
 	}
 }
+
+func TestIngestExecution_RecordsRunSeconds(t *testing.T) {
+	t.Run("SGINA-B22: An execution ingestion records each test file's run time under its suite", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "a.test.ts", Kind: KindTest, Rev: "r"}, {ID: "b.test.ts", Kind: KindTest, Rev: "r"}}}
+	exec := map[string]ExecByFile{"a.test.ts": {Passed: 2, Seconds: 1.5}, "b.test.ts": {Passed: 1}}
+	g.IngestExecutionSuite(exec, nil, nil, nil, "unit", "out/junit.xml", "now")
+	if s := g.Nodes[0].Signal; s == nil || s.SecondsBySuite["out/junit.xml"] != 1.5 {
+		t.Fatalf("a.test.ts must record 1.5s under the suite, got %+v", s)
+	}
+	if s := g.Nodes[1].Signal; s == nil || len(s.SecondsBySuite) != 0 {
+		t.Fatalf("a file whose cases carry no time records none, got %+v", s)
+	}
+	g.IngestExecutionSuite(exec, nil, nil, nil, "e2e", "", "now")
+	if s := g.Nodes[0].Signal; s.SecondsBySuite["e2e"] != 1.5 {
+		t.Fatalf("with no suite the time goes under the layer, got %+v", s.SecondsBySuite)
+	}
+}
+
+func TestRecordRunSeconds(t *testing.T) {
+	t.Run("SGINA-B23: A run time Anchors measured is recorded on the node", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "a.go", Kind: KindCode}}}
+	g.RecordRunSeconds("a.go", "out/mutation.json", 12.5)
+	g.RecordRunSeconds("gone.go", "out/mutation.json", 3)
+	if s := g.Nodes[0].Signal; s == nil || s.SecondsBySuite["out/mutation.json"] != 12.5 || len(g.Nodes) != 1 {
+		t.Fatalf("a.go must carry 12.5s under the suite and no node be added, got %+v (%d nodes)", s, len(g.Nodes))
+	}
+}

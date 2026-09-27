@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: JUIJN
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @JUIJN
@@ -78,3 +78,9 @@ Feature: JUnitIngest — the run's outcome per test case, and the scenario codes
     Given a path where no report exists
     When the report is read
     Then the error says the file does not exist
+
+  @JUIJN-B10 @unit-level
+  Scenario: Each case carries its run time
+    Given cases timed 0.25 and 3 seconds, one with no time, one with a malformed time and one with a negative time
+    When the report is read
+    Then the first two carry their seconds and the others carry 0

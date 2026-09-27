@@ -429,3 +429,27 @@ func TestIngestLogs_errors(t *testing.T) {
 		t.Errorf("nothing to ingest: expected the usage error, got %v", err)
 	}
 }
+
+func TestIngest_runTimeIsTheSumOfTheCases(t *testing.T) {
+	t.Run("NGSTI-B14: A test file's run time is the sum of its cases", func(t *testing.T) {})
+	root := fixtureProject(t)
+	timed := strings.Replace(strings.Replace(junitReport,
+		`name="LOGIN-B01: checks the password" file="src/login.test.ts"`, `name="LOGIN-B01: checks the password" file="src/login.test.ts" time="0.5"`, 1),
+		`name="later" file="src/login.test.ts"`, `name="later" file="src/login.test.ts" time="0.75"`, 1)
+	writeProjectFile(t, root, "reports/junit.xml", timed)
+	runCmd(t, newIngestCmd(), "--root", root, "--junit", filepath.Join(root, "reports/junit.xml"))
+	if s := node(t, root, "src/login.test.ts").Signal; s == nil || s.SecondsBySuite["reports/junit.xml"] != 1.25 {
+		t.Fatalf("the test file must record 1.25s under its suite, got %+v", s)
+	}
+}
+
+func TestSuiteKey(t *testing.T) {
+	t.Run("NGSTI-B15: A report's signals are kept under its path from the root", func(t *testing.T) {})
+	root := t.TempDir()
+	if got := SuiteKey(root, filepath.Join(root, "out", "junit.xml")); got != "out/junit.xml" {
+		t.Errorf("a report inside the repository is keyed by its path from the root, got %q", got)
+	}
+	if got := SuiteKey(root, filepath.Join(filepath.Dir(root), "elsewhere", "report.xml")); got != "external/report.xml" {
+		t.Errorf("a report outside it is keyed under external/, got %q", got)
+	}
+}

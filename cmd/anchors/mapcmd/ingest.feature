@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: NGSTI
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @NGSTI
@@ -127,3 +127,15 @@ Feature: Ingest — binds the test and log signals the project produced to the n
     Given a directory with no map
     When an execution report is ingested there
     Then it fails with a hint to run the map build
+
+  @NGSTI-B14 @unit-level
+  Scenario: A test file's run time is the sum of its cases
+    Given a JUnit report whose test file has cases timed 0.5 and 0.75 seconds
+    When it is ingested
+    Then the test node records 1.25 seconds under the report's suite
+
+  @NGSTI-B15 @unit-level
+  Scenario: A report's signals are kept under its path from the root
+    Given a report inside the repository and one outside it
+    When the key of each is read
+    Then the first is its path from the root and the second is external/ and its file name

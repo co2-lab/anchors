@@ -1,6 +1,7 @@
 package testsig
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -188,5 +189,24 @@ func TestPassedCodesReadOnlyTheCaseName(t *testing.T) {
 	}
 	if !proven["ABCDX-B02"] {
 		t.Error("control: a code in the case name is proven")
+	}
+}
+
+func TestParseJUnitCaseTime(t *testing.T) {
+	t.Run("JUIJN-B10: Each case carries its run time", func(t *testing.T) {})
+	xml := `<testsuites><testsuite name="s" file="a.test.ts">
+  <testcase name="a" time="0.25"/><testcase name="b" time=" 3 "/><testcase name="c"/>
+  <testcase name="d" time="soon"/><testcase name="e" time="-1"/>
+</testsuite></testsuites>`
+	rep, err := ParseJUnit(write(t, "t.xml", xml))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []float64
+	for _, c := range rep.Cases {
+		got = append(got, c.Seconds)
+	}
+	if want := []float64{0.25, 3, 0, 0, 0}; fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Fatalf("want %v, got %v", want, got)
 	}
 }

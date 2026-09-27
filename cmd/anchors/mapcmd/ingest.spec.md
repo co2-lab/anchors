@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NGSTI
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: comando
 -->
 # Ingest — binds the test and log signals the project produced to the nodes of the map
@@ -47,6 +47,8 @@ spec declares is reported, never bound to an invented owner.
 | `NGSTI-B11` | A line coverage entry for a file changed after the report was written is marked as predating the file; a file older than the report, or one not on disk, is not. |
 | `NGSTI-B12` | Log ingestion binds each occurrence of a declared failure code to the spec that declares it, with the number of occurrences, stamped with the spec's current revision. |
 | `NGSTI-B13` | Log ingestion reports the failure codes found in the logs that no spec declares. |
+| `NGSTI-B14` | A test file's run time in the report is the sum of its cases' times, kept in the map under the report's suite. |
+| `NGSTI-B15` | A report's signals are kept under its path relative to the root; a report outside the repository is kept under `external/` and its file name. (`SuiteKey`) |
 
 ## Domain
 

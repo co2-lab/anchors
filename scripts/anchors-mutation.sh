@@ -19,7 +19,7 @@
 # internal/testlist: 32 of 32 timed out (a false 100%), and 30 killed / 1 survived with
 # the larger coefficient.
 #
-# Usage: scripts/anchors-mutation.sh [package-dir ...]   (default: every package)
+# Usage: scripts/anchors-mutation.sh [package-dir | file.go ...]   (default: every package)
 set -uo pipefail
 
 cd "$(dirname "$0")/.."
@@ -28,8 +28,19 @@ out=.anchors/mutation.json
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
+# Each entry is "package-dir" or "package-dir|file.go". A `.go` argument (relative, or
+# absolute under the repository, as `run_changed: {{files}}` passes it) mutates that file
+# alone: gremlins takes a package, so its sibling files are excluded one by one.
+root="$(pwd)"
 if [ "$#" -gt 0 ]; then
-  pkgs=("$@")
+  pkgs=()
+  for a in "$@"; do
+    a="${a#"$root"/}"
+    case "$a" in
+      *.go) pkgs+=("$(dirname "$a")|$(basename "$a")") ;;
+      *) pkgs+=("$a") ;;
+    esac
+  done
 else
   mod="$(go list -m)"
   pkgs=()
@@ -39,10 +50,20 @@ else
 fi
 
 i=0
-for pkg in "${pkgs[@]}"; do
+for entry in "${pkgs[@]}"; do
   i=$((i + 1))
-  echo "[$i/${#pkgs[@]}] $pkg"
-  if ! gremlins unleash "./$pkg" -E / --timeout-coefficient 10 --output "$tmp/raw.json" >"$tmp/log" 2>&1; then
+  pkg="${entry%%|*}"
+  excludes=(-E /)
+  if [ "$entry" != "$pkg" ]; then
+    only="${entry#*|}"
+    for sibling in "$pkg"/*.go; do
+      name="$(basename "$sibling")"
+      [ "$name" = "$only" ] && continue
+      excludes+=(-E "^${name//./\\.}\$")
+    done
+  fi
+  echo "[$i/${#pkgs[@]}] $entry"
+  if ! gremlins unleash "./$pkg" "${excludes[@]}" --timeout-coefficient 10 --output "$tmp/raw.json" >"$tmp/log" 2>&1; then
     echo "  gremlins failed on $pkg:" >&2
     tail -5 "$tmp/log" >&2
     continue

@@ -82,6 +82,17 @@ architecture?") become **AI-judgment gates**: the AI reads the guide's
 *conformance points*, confronts the target item by item, and the verdict
 enters the same mechanics (stamp + issue) — aging if the target changes.
 
+## `--budget`: as much as fits in a time
+
+`anchors test --budget 60s` and `anchors mutation --budget 10m` run the files **fastest
+first**, in batches through the suite's `run_changed:`, until the time is spent; what did not
+fit is left for a later run — a smoke run of whatever fits. A batch still running when the time
+is up is stopped whole, with the processes it started.
+
+The order comes from the times earlier runs recorded in the map, per suite: a test file's from
+its JUnit cases, a code file's from Anchors timing its mutation run — which is why a mutation
+budget runs one file at a time. A file never timed goes last, and its run is what times it.
+
 ## Project status
 
 Under construction, and honest about it. The **doctrine** of the 6 pillars

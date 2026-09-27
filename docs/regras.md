@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:40a0fd96c0226186 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:8337d038ff9c9eba — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -180,6 +180,8 @@ abra a página dela em `camadas/`.
 ### [SGCMS — SuggestCommand — the proposed fixes are listed, shown, applied or rejected, and every decision keeps its record](camadas/comando.md#sgcms--suggestcommand--the-proposed-fixes-are-listed-shown-applied-or-rejected-and-every-decision-keeps-its-record)
 
 ### [SYCMS — SynthesizeCommand — two pull requests in content conflict become one card that asks for the best of each, and every end points at it](camadas/comando.md#sycms--synthesizecommand--two-pull-requests-in-content-conflict-become-one-card-that-asks-for-the-best-of-each-and-every-end-points-at-it)
+
+### [BDGRN — BudgetRun — run a suite's files fastest first until a time budget is spent](camadas/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent)
 
 ### [CGPCH — CheckGatePipeline — confronts the map's nodes against the declared gates, records the verdicts and reports the profile](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: JUIJN
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: infra
 -->
 # JUnitIngest — the run's outcome per test case, and the scenario codes each case proves, read from a JUnit report
@@ -31,6 +31,7 @@ case's NAME by the rule code grammar, in the project's vocabulary.
 | `JUIJN-B07` | The seen codes are the codes named by every case, passed, failed or skipped. |
 | `JUIJN-B08` | `CodesInCase`: Every code a case's name mentions is extracted, in the vocabulary the project declared. |
 | `JUIJN-B09` | A file that is not a JUnit report is read as a report with no cases: nothing is proven by it. |
+| `JUIJN-B10` | Each case carries its run time in seconds from its `time` attribute; a missing, malformed or negative time reads as 0. |
 
 ## Domain
 
