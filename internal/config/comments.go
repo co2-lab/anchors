@@ -63,7 +63,7 @@ func LineCommentFor(path string) string {
 		ext = strings.ToLower(path[i:])
 	}
 	// `.test.ts` / `_test.py`: a extensão real é sempre a última.
-	if markers, ok := CommentMarkers[ext]; ok && len(markers) > 0 {
+	if markers, ok := CommentMarkers[ext]; ok { // every entry of the table has a prefix
 		if markers[0] == "<!--" {
 			return "<!--" // markup: quem chama trata o fechamento
 		}

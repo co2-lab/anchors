@@ -182,9 +182,6 @@ func lettersFrom(w string, n int, preferInitial bool) []byte {
 			}
 		}
 	}
-	if len(out) > n {
-		out = out[:n]
-	}
 	return out
 }
 

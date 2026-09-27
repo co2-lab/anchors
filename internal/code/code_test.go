@@ -3,6 +3,7 @@ package code
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -32,7 +33,13 @@ func TestGenerateShape(t *testing.T) {
 			}
 		}
 	}
-	for name, want := range map[string]string{"Spacer": "SPCRA", "Login": "LGNOI", "AlertsScreen": "LRTSA"} {
+	for name, want := range map[string]string{
+		"Spacer": "SPCRA", "Login": "LGNOI", "AlertsScreen": "LRTSA",
+		// z and Z are consonants, 0 and 9 are digits: the ends of each range count.
+		"Buzz": "BZZUX", "BUZZ": "BZZUX", "X0": "X0XXX", "X9": "X9XXX",
+		// a vowel repeated in another case is taken once: "Anna" has one A, not two.
+		"Anna": "NNAXX",
+	} {
 		if got := Generate(name); got != want {
 			t.Errorf("%s → %q, want %q", name, got, want)
 		}
@@ -60,6 +67,24 @@ func TestGenerate_wordSplitting(t *testing.T) {
 			t.Errorf("%s → %q, want %q", name, got, want)
 		}
 	}
+	// The ends of each letter range decide a boundary as much as the middle does.
+	for name, want := range map[string][]string{
+		"fooAbc":    {"foo", "Abc"},
+		"fooZed":    {"foo", "Zed"},
+		"dataBase":  {"data", "Base"},
+		"fizzBuzz":  {"fizz", "Buzz"},
+		"fooB":      {"foo", "B"},
+		"AParser":   {"A", "Parser"},
+		"XYZParser": {"XYZ", "Parser"},
+		"XMLTzar":   {"XML", "Tzar"},
+		"ABC":       {"ABC"},
+		// only a lowercase ASCII letter after the capital closes an acronym; é is not one
+		"ABCé": {"ABCé"},
+	} {
+		if got := tokenize(name); !reflect.DeepEqual(got, want) {
+			t.Errorf("tokenize(%q) = %q, want %q", name, got, want)
+		}
+	}
 }
 
 func TestGenerate_longNameTakesInitials(t *testing.T) {
@@ -80,6 +105,12 @@ func TestGenerateMultiWordUsesEachWord(t *testing.T) {
 	}
 	if c[0] != 'T' || !contains([]byte(c), 'D') {
 		t.Errorf("TransactionDetail → %q: must start with T and hold the D of the 2nd word", c)
+	}
+	// A word short of consonants completes its share with vowels, and never takes more than
+	// its share: the next word keeps its own.
+	withSlots(t, 6)
+	if got := Generate("AudioPlayer"); got != "ADUPLY" {
+		t.Errorf("AudioPlayer at 6 → %q, want ADUPLY", got)
 	}
 }
 
@@ -129,6 +160,26 @@ func TestGenerateUnique_prefixAndCanonical(t *testing.T) {
 	}
 	if got := GenerateUniqueWithPrefix("Login", "AU", taken); got != "AULGN" {
 		t.Errorf("only the prefix positions left → %q, want AULGN: the prefix is never varied", got)
+	}
+	// Z is tried too: with A..Y taken in the last position, the last position becomes Z.
+	upToY := map[string]bool{}
+	for c := byte('A'); c < 'Z'; c++ {
+		upToY["AULG"+string(c)] = true
+	}
+	if got := GenerateUniqueWithPrefix("Login", "AU", upToY); got != "AULGZ" {
+		t.Errorf("A..Y taken in the last position → %q, want AULGZ", got)
+	}
+	// The first position after the prefix is varied too, when every later one is full.
+	laterFull := map[string]bool{}
+	for pos := 3; pos < 5; pos++ {
+		for c := byte('A'); c <= 'Z'; c++ {
+			v := []byte("AULGN")
+			v[pos] = c
+			laterFull[string(v)] = true
+		}
+	}
+	if got := GenerateUniqueWithPrefix("Login", "AU", laterFull); got != "AUAGN" {
+		t.Errorf("positions after the third full → %q, want AUAGN", got)
 	}
 }
 
@@ -203,5 +254,9 @@ func TestSlots_followTheProjectsSmallestLength(t *testing.T) {
 	SetSlots(nil)
 	if Slots != 4 {
 		t.Errorf("lengths below 2 or none must leave the length unchanged, got %d", Slots)
+	}
+	SetSlots([]int{2})
+	if Slots != 2 {
+		t.Errorf("a declared length of 2 is the smallest accepted, got %d", Slots)
 	}
 }

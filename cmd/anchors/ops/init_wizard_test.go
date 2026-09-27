@@ -5,10 +5,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/initx"
 )
 
@@ -323,6 +327,11 @@ func TestPrintFindingsReportsOnlyWhatExists(t *testing.T) {
 			t.Errorf("the findings report %q, which the proposal does not have:\n%s", absent, out)
 		}
 	}
+	// No code directory, no code line: not even an empty list.
+	out = captureStdout(t, func() { printFindings(&initx.Proposal{}) })
+	if strings.Contains(out, "code in") {
+		t.Errorf("the findings report code for a proposal without it:\n%s", out)
+	}
 }
 
 // The `init` command routes --non-interactive to the flag-driven mode instead of the TUI.
@@ -388,6 +397,248 @@ func TestRunInitInLineModeRefusesToWriteOnEndOfInput(t *testing.T) {
 	}
 	if strings.Contains(out, "written") {
 		t.Errorf("the output announces a write that did not happen:\n%s", out)
+	}
+}
+
+// promptStep is one answer of a scripted terminal: `answer` is typed once `waitFor`
+// shows on the screen.
+type promptStep struct{ waitFor, answer string }
+
+// driveLineMode runs fn in huh's line mode (TERM=dumb) against a scripted terminal:
+// stdin and stdout are pipes, and each answer is typed only after its prompt is on the
+// screen. The timing matters: every prompt builds a fresh line reader, so an answer typed
+// ahead would be swallowed by the reader of the prompt before it. After the last step, or
+// when an expected prompt does not show within the deadline, the input is closed, so any
+// further prompt hits end of input and the init refuses to write. It returns the whole
+// output and the prompts that never showed.
+func driveLineMode(t *testing.T, steps []promptStep, fn func()) (string, []string) {
+	t.Helper()
+	t.Setenv("TERM", "dumb")
+	inR, inW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	outR, outW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var (
+		mu     sync.Mutex
+		screen strings.Builder
+	)
+	shown := make(chan struct{}, 1)
+	readDone := make(chan struct{})
+	go func() {
+		defer close(readDone)
+		buf := make([]byte, 4096)
+		for {
+			n, rerr := outR.Read(buf)
+			mu.Lock()
+			screen.Write(buf[:n])
+			mu.Unlock()
+			select {
+			case shown <- struct{}{}:
+			default:
+			}
+			if rerr != nil {
+				return
+			}
+		}
+	}()
+	stop := make(chan struct{})
+	var unmet []string
+	driveDone := make(chan struct{})
+	go func() {
+		defer close(driveDone)
+		defer inW.Close()
+		cursor := 0
+		for i, s := range steps {
+			for {
+				mu.Lock()
+				rest := screen.String()[cursor:]
+				mu.Unlock()
+				if at := strings.Index(rest, s.waitFor); at >= 0 {
+					cursor += at + len(s.waitFor)
+					if _, werr := inW.WriteString(s.answer + "\n"); werr != nil {
+						unmet = append(unmet, s.waitFor)
+						return
+					}
+					break
+				}
+				select {
+				case <-shown:
+				case <-stop:
+					return
+				case <-time.After(10 * time.Second):
+					for _, left := range steps[i:] {
+						unmet = append(unmet, left.waitFor)
+					}
+					return
+				}
+			}
+		}
+	}()
+	origIn, origOut := os.Stdin, os.Stdout
+	os.Stdin, os.Stdout = inR, outW
+	fn()
+	os.Stdin, os.Stdout = origIn, origOut
+	close(stop)
+	<-driveDone
+	outW.Close()
+	<-readDone
+	inR.Close()
+	return screen.String(), unmet
+}
+
+// presetNumber is the menu number of a preset in the preset prompt: "none" is 1.
+func presetNumber(t *testing.T, name string) (string, initx.Preset) {
+	t.Helper()
+	for i, p := range initx.Presets {
+		if p.Name == name {
+			return strconv.Itoa(i + 2), p
+		}
+	}
+	t.Fatalf("no preset %q", name)
+	return "", initx.Preset{}
+}
+
+// repoWithCode is a repository whose only commit holds ten code files and a spec.
+func repoWithCode(t *testing.T) string {
+	t.Helper()
+	root := newGitRepo(t)
+	for i := 0; i < 10; i++ {
+		writeFile(t, root, "src/app/m"+string(rune('a'+i))+".ts", "export const x = 1\n")
+	}
+	writeFile(t, root, "src/app/calc.spec.md", "# Calc\n")
+	if out, err := runGit(root, "add", "-A"); err != nil {
+		t.Fatalf("git add: %v\n%s", err, out)
+	}
+	if out, err := runGit(root, "commit", "-q", "-m", "code"); err != nil {
+		t.Fatalf("git commit: %v\n%s", err, out)
+	}
+	return root
+}
+
+// The path where every question gets an answer: the only one that writes. It proves the
+// yes of the overwrite, the preset picked from the menu, the header guide landing in
+// guides/ when the project has no guide directory, and the accepted gates in the file.
+func TestRunInitWritesWhatTheAnswersChose(t *testing.T) {
+	t.Run("INWZN-B01: An existing config is kept when the overwrite is not confirmed", func(t *testing.T) {})
+	t.Run("INWZN-B15: A stack preset picked from the menu is applied and announced", func(t *testing.T) {})
+	t.Run("INWZN-B16: The header guide is seeded in guides/ when the project has no guide directory", func(t *testing.T) {})
+	t.Run("INWZN-B17: The default gates are offered only when the chosen artifacts have any, and accepted ones are written", func(t *testing.T) {})
+	resetPromptError(t)
+	root := repoWithCode(t)
+	const original = "version: 1\n# mine\n"
+	writeFile(t, root, config.DefaultFile, original)
+	number, preset := presetNumber(t, "express-ts")
+
+	var runErr error
+	out, unmet := driveLineMode(t, []promptStep{
+		{"already exists. Overwrite?", "y"},
+		{"Use a project structure preset", number},
+		{"Seed guides/HEADER_GUIDE.md", "y"},
+		{"Which anchor kinds", "0"},
+		{"default gate(s)", "y"},
+		{"derivatives", "n"},
+		{"Which code directories", "0"},
+		{"work queue live in GitHub", "n"},
+		{"write its findings as files", "y"},
+	}, func() { runErr = runInit(root) })
+	if runErr != nil {
+		t.Fatalf("init with every question answered failed: %v\n%s", runErr, out)
+	}
+	if len(unmet) > 0 {
+		t.Errorf("prompts that never showed: %q\n%s", unmet, out)
+	}
+	if !strings.Contains(out, "Preset '"+preset.Title+"' applied") {
+		t.Errorf("the chosen preset was not applied:\n%s", out)
+	}
+	cfg, err := config.Load(filepath.Join(root, config.DefaultFile))
+	if err != nil {
+		t.Fatalf("the written anchors.yaml does not load: %v", err)
+	}
+	if len(cfg.Gates) == 0 {
+		t.Errorf("the accepted default gates are not in anchors.yaml")
+	}
+	// Only the code layers: the artifact layers are rebuilt from the artifact choice.
+	for _, l := range preset.Layers {
+		if l.Kind != "code" {
+			continue
+		}
+		if _, ok := cfg.Layers[l.Name]; !ok {
+			t.Errorf("layer %q of the chosen preset is not in anchors.yaml", l.Name)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(root, "guides", "HEADER_GUIDE.md")); err != nil {
+		t.Errorf("the header guide is not in guides/: %v", err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "HEADER_GUIDE.md")); err == nil {
+		t.Error("the header guide was written at the root")
+	}
+}
+
+// runInitAtEndOfInput runs the init in line mode on an input that already ended. Every
+// prompt still prints its question before it fails, so the output lists which questions
+// the init asked; it then refuses to write, which the caller need not check again.
+func runInitAtEndOfInput(t *testing.T, root string) string {
+	t.Helper()
+	t.Setenv("TERM", "dumb")
+	devNull, err := os.Open(os.DevNull)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer devNull.Close()
+	origStdin := os.Stdin
+	os.Stdin = devNull
+	defer func() { os.Stdin = origStdin }()
+	var runErr error
+	out := captureStdout(t, func() { runErr = runInit(root) })
+	if runErr == nil {
+		t.Fatalf("init on an input that ended must not succeed:\n%s", out)
+	}
+	return out
+}
+
+// An empty project is told it is new, gets no question about code layers (there are none,
+// and it is told so) and, with no artifact chosen, no offer of zero gates.
+func TestRunInitOnAnEmptyProjectSkipsTheQuestionsWithNothingToAsk(t *testing.T) {
+	t.Run("INWZN-B18: A project with no code, spec, feature or test is announced as new", func(t *testing.T) {})
+	t.Run("INWZN-B19: The code-layer question is asked only when there are code layers, and a new project is told to declare them later", func(t *testing.T) {})
+	t.Run("INWZN-B17: The default gates are offered only when the chosen artifacts have any, and accepted ones are written", func(t *testing.T) {})
+	resetPromptError(t)
+	out := runInitAtEndOfInput(t, newGitRepo(t))
+	for _, want := range []string{i18n.T("init.empty_project"), i18n.T("init.no_code_yet")} {
+		if !strings.Contains(out, want) {
+			t.Errorf("an empty project was not told %q:\n%s", want, out)
+		}
+	}
+	for _, absent := range []string{"Which code directories", "default gate(s)"} {
+		if strings.Contains(out, absent) {
+			t.Errorf("an empty project was asked %q:\n%s", absent, out)
+		}
+	}
+}
+
+// A project with code and a guide is asked which code directories are layers and which
+// tag the guide governs, and is not called new.
+func TestRunInitOnAProjectWithCodeAndAGuideAsksAboutBoth(t *testing.T) {
+	t.Run("INWZN-B18: A project with no code, spec, feature or test is announced as new", func(t *testing.T) {})
+	t.Run("INWZN-B19: The code-layer question is asked only when there are code layers, and a new project is told to declare them later", func(t *testing.T) {})
+	t.Run("INWZN-B20: Each guide found is asked which tag it governs", func(t *testing.T) {})
+	resetPromptError(t)
+	root := repoWithCode(t)
+	writeFile(t, root, "guides/STYLE_GUIDE.md", "# Style\n")
+	out := runInitAtEndOfInput(t, root)
+	for _, want := range []string{"Which code directories", "The guide STYLE_GUIDE.md governs which tag?"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the init did not ask %q:\n%s", want, out)
+		}
+	}
+	for _, absent := range []string{i18n.T("init.empty_project"), i18n.T("init.no_code_yet")} {
+		if strings.Contains(out, absent) {
+			t.Errorf("a project with code was told %q:\n%s", absent, out)
+		}
 	}
 }
 

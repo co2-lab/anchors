@@ -27,6 +27,9 @@ func TestRecode_dryRunWritesNothing(t *testing.T) {
 	if !strings.Contains(out, "  src/login.spec.md\n      header         1\n      scenario-code  1\n") {
 		t.Errorf("the spec's occurrences must be counted by kind, header first:\n%s", out)
 	}
+	if strings.Contains(out, "bare-ref") {
+		t.Errorf("a kind with no occurrence must be omitted:\n%s", out)
+	}
 	if !strings.Contains(out, "(dry-run — nothing was written") {
 		t.Errorf("the dry run is not announced:\n%s", out)
 	}
@@ -146,12 +149,19 @@ func TestRecode_applyKeepsJudgmentsAndFlow(t *testing.T) {
 	g.Edges[judged].Julgamentos = []mapx.Judgment{{Gate: "atomic", Verdict: "ok"}}
 	g.Edges[judged].Stamp = &mapx.Stamp{Verdict: "ok"}
 	g.Flow = &mapx.FlowGraph{States: []mapx.FlowState{{Code: "WORKR-P01", Title: "pull", Flow: "flows/w.flow.md"}}}
+	// An edge between files that do not exist: the rebuild cannot keep it, and its judgment
+	// is lost — which the report must say.
+	g.Edges = append(g.Edges, mapx.Edge{From: "src/ghost.ts", To: "src/ghost.spec.md", Type: g.Edges[judged].Type,
+		Julgamentos: []mapx.Judgment{{Gate: "review", Verdict: "ok"}}})
 	if err := mapx.Save(g, filepath.Join(root, mapx.DefaultPath)); err != nil {
 		t.Fatal(err)
 	}
 	key := g.Edges[judged]
 
-	runCmd(t, newRecodeCmd(), "LOGIN", "SIGNN", "--apply", "--root", root)
+	out := runCmd(t, newRecodeCmd(), "LOGIN", "SIGNN", "--apply", "--root", root)
+	if !strings.Contains(out, "⚠ the map LOST judgment stamp(s):") || !strings.Contains(out, "review") {
+		t.Errorf("the judgment lost with the ghost edge was not reported:\n%s", out)
+	}
 
 	after := loadMap(t, root)
 	if after.Flow == nil || len(after.Flow.States) != 1 {
@@ -171,5 +181,66 @@ func TestRecode_applyKeepsJudgmentsAndFlow(t *testing.T) {
 	}
 	if !found {
 		t.Errorf("the judged edge %s → %s is gone from the rebuilt map", key.From, key.To)
+	}
+}
+
+// The project's recode dialect adds testIDs and file renames to the plan; the report
+// counts both and lists each rename. Without the dialect none of these lines appears.
+func TestRecode_dialectReportsTestIDsAndRenames(t *testing.T) {
+	t.Run("RCDEO-B07: The plan reports the testIDs and the file renames of the project's dialect", func(t *testing.T) {})
+	root := fixtureProjectWith(t, "recode:\n  test_id: lower\n  file_patterns: [\"**/{{code}}-*.png\"]\n", fixtureSpec)
+	writeProjectFile(t, root, "src/login.ts", "export const login = () => <b testID=\"login-button\" />\n")
+	writeProjectFile(t, root, "assets/LOGIN-icon.png", "png")
+
+	out := runCmd(t, newRecodeCmd(), "LOGIN", "SIGNN", "--root", root)
+	if !strings.Contains(out, ", 1 testID(s), 1 file(s) to rename\n\n") {
+		t.Errorf("the testIDs and renames are not counted:\n%s", out)
+	}
+	if !strings.Contains(out, "\n  rename (git mv):\n      assets/LOGIN-icon.png → assets/SIGNN-icon.png\n") {
+		t.Errorf("the rename is not listed:\n%s", out)
+	}
+
+	plain := runCmd(t, newRecodeCmd(), "LOGIN", "SIGNN", "--root", fixtureProject(t))
+	if !strings.Contains(plain, "content substitution(s)\n\n") || strings.Contains(plain, "rename (git mv)") {
+		t.Errorf("without the dialect, no testID or rename line may appear:\n%s", plain)
+	}
+}
+
+// The dialect's testID prefix is absent but the triad's files carry testIDs with another
+// prefix: a previous manual rename. The recode does not guess, and says so.
+func TestRecode_dialectWarnsAboutDivergentTestIDs(t *testing.T) {
+	t.Run("RCDEO-B08: The plan warns when the files carry testIDs with a prefix other than the dialect's", func(t *testing.T) {})
+	root := fixtureProjectWith(t, "recode:\n  test_id: lower\n", fixtureSpec)
+	writeProjectFile(t, root, "src/login.test.ts", "test('LOGIN-B01: x', () => render(<b testID=\"old-button\" />))\n")
+
+	out := runCmd(t, newRecodeCmd(), "LOGIN", "SIGNN", "--root", root)
+	if !strings.Contains(out, "\n  ⚠ the expected testID prefix \"login\" was not found") {
+		t.Errorf("the divergent testID prefix is not reported:\n%s", out)
+	}
+	if plain := runCmd(t, newRecodeCmd(), "LOGIN", "SIGNN", "--root", fixtureProject(t)); strings.Contains(plain, "⚠") {
+		t.Errorf("a plan with nothing to warn about printed a warning:\n%s", plain)
+	}
+}
+
+// When the very first write fails, nothing changed: the project is not half converted and
+// the command must not say it is.
+func TestRecode_firstWriteFailureIsNotHalfConverted(t *testing.T) {
+	t.Run("RCDEO-B09: A write failure before any file changed fails without saying the project is half converted", func(t *testing.T) {})
+	root := fixtureProject(t)
+	locked := filepath.Join(root, "src/login.spec.md") // the first file of the plan
+	if err := os.Chmod(locked, 0o444); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(locked, 0o644) })
+	if f, err := os.OpenFile(locked, os.O_WRONLY, 0); err == nil {
+		f.Close()
+		t.Skip("the file is writable despite its mode (running as root?)")
+	}
+	out, err := runCmdErr(newRecodeCmd(), t, "LOGIN", "SIGNN", "--apply", "--root", root)
+	if err == nil {
+		t.Fatal("a write failure must fail the recode")
+	}
+	if strings.Contains(out, "ALREADY") || strings.Contains(out, "half converted") {
+		t.Errorf("nothing was changed, yet the project is called half converted:\n%s", out)
 	}
 }

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: AGRLG
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @AGRLG
@@ -42,6 +42,12 @@ Feature: AgentRoles — who is who in a project, and the capabilities each role 
     Given the typed names "po", "arquiteto", "segurança", "perf", " DEV " and "tech-lead"
     When they are parsed
     Then they are product-owner, architect, reviewer-security, reviewer-performance, dev and nothing
+
+  @AGRLG-B07 @unit-level
+  Scenario: A role lists its capabilities in alphabetical order
+    Given the architect, whose capabilities are declared out of alphabetical order
+    When its capabilities are listed
+    Then they come in alphabetical order, and so do every known role's
 
   @AGRLG-X01 @unit-level
   Scenario: An unknown role can do nothing

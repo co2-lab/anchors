@@ -29,6 +29,7 @@ func TestLineCommentFor(t *testing.T) {
 		"web/a.test.ts":        "//", // the real extension is the last one
 		"scripts/run_test.py":  "#",
 		"db/001.SQL":           "--", // case-insensitive
+		".SQL":                 "--", // the extension is the whole name: still lowered
 		"docs/README.md":       "<!--",
 		"Makefile":             "#", // no extension: the visible-mistake default
 		"assets/logo.svg":      "#", // unknown extension: same default

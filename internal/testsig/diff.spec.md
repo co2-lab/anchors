@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCLDF
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: infra
 -->
 # DiffChangedLines — which lines of which files a change added, read from a unified diff
@@ -33,6 +33,7 @@ unified diff serves.
 | `DCLDF-B05` | Unchanged context lines advance the new-side line number without being recorded. |
 | `DCLDF-B06` | `GitDiff`: From git, the working copy is compared against the current commit when no reference is given, and against the reference when one is. |
 | `DCLDF-B07` | Inside a hunk, every line up to the counts its header gives is content: an added line whose text starts with `++ ` (it reads `+++ `) is recorded as a line, and a removed line whose text starts with `-- ` is a removal, never a file header. |
+| `DCLDF-B08` | A very long line in the diff, hundreds of kilobytes on one line, is read like any other: it and every line after it are still recorded. |
 
 ## Domain
 

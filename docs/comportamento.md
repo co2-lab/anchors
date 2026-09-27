@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:4d438bebad035a53 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a19a9b1634b23e6d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -395,6 +395,8 @@ teste prova.
 - [Each reviewing role has its own lens](camadas/apoio.md#agrlg--agentroles--who-is-who-in-a-project-and-the-capabilities-each-role-carries) `AGRLG-B05`
 
 - [Typed roles are recognised by name and abbreviation](camadas/apoio.md#agrlg--agentroles--who-is-who-in-a-project-and-the-capabilities-each-role-carries) `AGRLG-B06`
+
+- [A role lists its capabilities in alphabetical order](camadas/apoio.md#agrlg--agentroles--who-is-who-in-a-project-and-the-capabilities-each-role-carries) `AGRLG-B07`
 
 - [An unknown role can do nothing](camadas/apoio.md#agrlg--agentroles--who-is-who-in-a-project-and-the-capabilities-each-role-carries) `AGRLG-X01`
 
@@ -1462,6 +1464,12 @@ teste prova.
 
 - [Applying keeps the judgments, stamps and flow of the previous map](camadas/comando.md#rcdeo--recode--renames-an-identity-code-and-carries-the-change-to-every-textual-surface-of-the-project) `RCDEO-B06`
 
+- [The plan reports the testIDs and the file renames of the project's dialect](camadas/comando.md#rcdeo--recode--renames-an-identity-code-and-carries-the-change-to-every-textual-surface-of-the-project) `RCDEO-B07`
+
+- [The plan warns when the files carry testIDs with a prefix other than the dialect's](camadas/comando.md#rcdeo--recode--renames-an-identity-code-and-carries-the-change-to-every-textual-surface-of-the-project) `RCDEO-B08`
+
+- [A write failure before any file changed fails without saying the project is half converted](camadas/comando.md#rcdeo--recode--renames-an-identity-code-and-carries-the-change-to-every-textual-surface-of-the-project) `RCDEO-B09`
+
 - [After applying, neither the spec nor the map carries the old code](camadas/comando.md#rcdeo--recode--renames-an-identity-code-and-carries-the-change-to-every-textual-surface-of-the-project) `RCDEO-I01`
 
 - [The map is rebuilt from the files, not edited as text](camadas/comando.md#rcdeo--recode--renames-an-identity-code-and-carries-the-change-to-every-textual-surface-of-the-project) `RCDEO-X01`
@@ -1724,6 +1732,18 @@ teste prova.
 
 - [Non-interactive routes to the JSON mode](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B14`
 
+- [A stack preset picked from the menu is applied and announced](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B15`
+
+- [The header guide is seeded in guides/ when the project has no guide directory](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B16`
+
+- [The default gates are offered only when the chosen artifacts have any, and accepted ones are written](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B17`
+
+- [A project with no code, spec, feature or test is announced as new](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B18`
+
+- [The code-layer question is asked only when there are code layers, and a new project is told to declare them later](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B19`
+
+- [Each guide found is asked which tag it governs](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B20`
+
 - [A prompt that cannot run makes the init write nothing](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-I01`
 
 - [Git is never initialized nor committed without a yes](camadas/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-X01`
@@ -1956,11 +1976,21 @@ teste prova.
 
 - [The full check closes the violations it did not reproduce](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B20`
 
+- [A record that fails is warned about and the check still reports](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B72`
+
+- [When the check writes no issue it says why](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B75`
+
+- [In github mode the issues go to the board, never to the local folders](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B76`
+
+- [The record summary counts what the record did](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B77`
+
 - [A pending judgment becomes one task in the local queue](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B21`
 
 - [A judge task suggests the review stage, a verb the work command composes](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B69`
 
 - [A queued judgment bars the incremental check only](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B22`
+
+- [The check says how many judgments it queued, and nothing when it queued none](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B73`
 
 - [Stale judge tasks leave the queue](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B23`
 
@@ -1980,6 +2010,8 @@ teste prova.
 
 - [The judgment brief lists ten targets per gate and counts the rest](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B30`
 
+- [With nothing awaiting judgment there is no judgment brief](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B71`
+
 - [Governed files missing from the map make a stale-map warning](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B31`
 
 - [Nodes edited after the map build are warned about on the incremental check](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B32`
@@ -1994,6 +2026,8 @@ teste prova.
 
 - [Governance tips appear on the full sweep only](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B37`
 
+- [With no governance tip the full sweep prints neither a tip nor the pointer to the doctor](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B74`
+
 - [The report is mirrored to a file](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B38`
 
 - [A blocking failure exits 1 with the mirror complete](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B39`
@@ -2005,6 +2039,8 @@ teste prova.
 - [The always-present columns are at least one wide](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B42`
 
 - [Without drift the drift column does not exist](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B43`
+
+- [The indeterminate counter is the skipped and pending less the drift](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B78`
 
 - [An empty drift cell is measured in terminal columns](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B44`
 
@@ -2034,7 +2070,11 @@ teste prova.
 
 - [The findings heading counts every kind](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B57`
 
+- [Each failure is listed with its detail, and no finding means no findings heading](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B82`
+
 - [The verdict line says what is still open](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B58`
+
+- [A clean informative gate is named as ready to become blocking](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B83`
 
 - [Occurrences of a detail are printed one per line](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B59`
 
@@ -2051,6 +2091,12 @@ teste prova.
 - [Long prose with commas stays whole](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B65`
 
 - [A list of paths still breaks](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B66`
+
+- [The time table counts each gate's targets and aligns its columns](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B79`
+
+- [The slowest targets are listed slowest first, and only when a time was recorded](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B80`
+
+- [Times are rounded to what a decision needs](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B81`
 
 - [Declaring a perspective does not change the cost axis](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-I01`
 
@@ -2460,6 +2506,8 @@ teste prova.
 
 - [An unknown workflow mode fails with no fallback](camadas/config.md#cnfgo-b10--an-unknown-workflow-mode-fails-with-no-fallback) `CNFGO-B10`
 
+- [The tests source is one source with a pattern that compiles](camadas/config.md#cnfgo-b45--the-tests-source-is-one-source-with-a-pattern-that-compiles) `CNFGO-B45`
+
 - [A test level's code filter accepts by allow and refuses by exclude](camadas/config.md#cnfgo-b44--a-test-levels-code-filter-accepts-by-allow-and-refuses-by-exclude) `CNFGO-B44`
 
 - [A declared pattern that does not compile fails the load naming the field](camadas/config.md#cnfgo-b11--a-declared-pattern-that-does-not-compile-fails-the-load-naming-the-field) `CNFGO-B11`
@@ -2589,6 +2637,8 @@ teste prova.
 - [No family brings a collection query, which is the project's to declare](camadas/config.md#dlcti-x01--no-family-brings-a-collection-query-which-is-the-projects-to-declare) `DLCTI-X01`
 
 - [The Go family recognises both shapes of error handling](camadas/config.md#dlcti-b13--the-go-family-recognises-both-shapes-of-error-handling) `DLCTI-B13`
+
+- [The Go and TS families say how a test is written](camadas/config.md#dlcti-b14--the-go-and-ts-families-say-how-a-test-is-written) `DLCTI-B14`
 
 - [A trigger naming a layer charges every change in that layer, whatever the unit](camadas/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
@@ -3238,6 +3288,10 @@ teste prova.
 
 - [The drift verdict is written in the project's language](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B20`
 
+- [A parametrised, focused or skipped test is read by its own title](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B21`
+
+- [A failing tests source fails the gate naming the error](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-E02`
+
 - [Only a check with a registered fixer is fixable](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B01`
 
 - [A stale date on a committed file is rewritten to its last commit date](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B02`
@@ -3299,6 +3353,10 @@ teste prova.
 - [A gated-by citation is read at the code length the project declares](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B17`
 
 - [Flags that cannot be read leave the citation Pending, naming the flags folder](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-E02`
+
+- [With a tests source a flag scenario is written only when a title cites it](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B18`
+
+- [A failing tests source fails flag-covered naming the error](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-E03`
 
 - [A gate reaches only the kinds it declares](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B01`
 
@@ -3443,6 +3501,10 @@ teste prova.
 - [The registry does not judge whether the text is good](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-X03`
 
 - [A test missing from disk does not hide the codes the other tests name](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-E01`
+
+- [With a tests source a scenario is written only when a title cites it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B17`
+
+- [A failing tests source fails scenario-coverage naming the error](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-E02`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -4642,6 +4704,10 @@ teste prova.
 
 - [Test assertion semantics and quality are not evaluated](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-X04`
 
+- [With a tests source a test traces only through its titles](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B12`
+
+- [A failing tests source fails the gate naming the error](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-E03`
+
 - [The gate skips what is not a spec, and is Pending without a map](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B01`
 
 - [Without a declared handle attribute the gate skips](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B02`
@@ -5648,6 +5714,8 @@ teste prova.
 
 - [The dry run classifies each occurrence](camadas/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-B06`
 
+- [Each listed occurrence carries its line, counted from one](camadas/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-B07`
+
 - [A text without the old code is left unchanged](camadas/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-I01`
 
 - [Longer codes and neighbours are never touched](camadas/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-X01`
@@ -5708,6 +5776,28 @@ teste prova.
 
 - [Asking the patch of a suggestion without one is refused](camadas/infra.md#sgsts--suggestionstore--a-proposed-fix-as-a-patch-plus-its-reason-waiting-for-someone-to-decide) `SGSTS-E05`
 
+- [A pattern reads each call followed by a literal as a test](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B01`
+
+- [Titles may be quoted three ways, with escapes](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B02`
+
+- [A call without a literal title is left out](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B03`
+
+- [The pattern's tests come in file order then position](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B04`
+
+- [A script's contract output is the list of tests](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B05`
+
+- [Output outside the contract is refused naming what is wrong](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B06`
+
+- [A script's file paths are normalised to the map's form](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B07`
+
+- [A source that declares nothing lists nothing](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B08`
+
+- [A source with both a pattern and a script is refused](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-E01`
+
+- [A pattern that does not compile is refused](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-E02`
+
+- [A failing script is an error naming why](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-E03`
+
 - [A rule code of each canonical letter is recognized in a test name](camadas/infra.md#rcgrl--rulecodegrammar--the-grammar-that-recognizes-a-scenario-code-in-a-tests-name-in-the-projects-vocabulary) `RCGRL-B01`
 
 - [A rule code with a lowercase slug is recognized with the slug](camadas/infra.md#rcgrl--rulecodegrammar--the-grammar-that-recognizes-a-scenario-code-in-a-tests-name-in-the-projects-vocabulary) `RCGRL-B02`
@@ -5737,6 +5827,8 @@ teste prova.
 - [Git compares the working copy with the current commit or with a reference](camadas/infra.md#dcldf--diffchangedlines--which-lines-of-which-files-a-change-added-read-from-a-unified-diff) `DCLDF-B06`
 
 - [An added line that starts with two plus signs is a line, not a header](camadas/infra.md#dcldf--diffchangedlines--which-lines-of-which-files-a-change-added-read-from-a-unified-diff) `DCLDF-B07`
+
+- [A very long line in the diff is read like any other](camadas/infra.md#dcldf--diffchangedlines--which-lines-of-which-files-a-change-added-read-from-a-unified-diff) `DCLDF-B08`
 
 - [Removals do not shift the new-side numbering](camadas/infra.md#dcldf--diffchangedlines--which-lines-of-which-files-a-change-added-read-from-a-unified-diff) `DCLDF-I01`
 

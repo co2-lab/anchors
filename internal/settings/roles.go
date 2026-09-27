@@ -1,7 +1,7 @@
 package settings
 
 import (
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -155,7 +155,7 @@ func KnownRoles() []Role {
 	for r := range roles {
 		out = append(out, r)
 	}
-	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	slices.Sort(out)
 	return out
 }
 
@@ -233,6 +233,6 @@ func (r Role) Caps() []Capability {
 		return nil
 	}
 	out := append([]Capability(nil), d.Caps...)
-	sort.Slice(out, func(i, j int) bool { return out[i] < out[j] })
+	slices.Sort(out)
 	return out
 }

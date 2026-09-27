@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:c793ad1f7a3a1035 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:8173f4646a602867 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -434,6 +434,8 @@ abra a página dela em `camadas/`.
 ### [TXSMT — TextSimilarity — how close two texts that should be equal are, weighted by what each word discriminates](camadas/infra.md#txsmt--textsimilarity--how-close-two-texts-that-should-be-equal-are-weighted-by-what-each-word-discriminates)
 
 ### [SGSTS — SuggestionStore — a proposed fix, as a patch plus its reason, waiting for someone to decide](camadas/infra.md#sgsts--suggestionstore--a-proposed-fix-as-a-patch-plus-its-reason-waiting-for-someone-to-decide)
+
+### [TSTLS — TestList — the project's tests, read the way the project says they are written](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written)
 
 ### [RCGRL — RuleCodeGrammar — the grammar that recognizes a scenario code in a test's name, in the project's vocabulary](camadas/infra.md#rcgrl--rulecodegrammar--the-grammar-that-recognizes-a-scenario-code-in-a-tests-name-in-the-projects-vocabulary)
 

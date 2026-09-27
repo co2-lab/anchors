@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RCDEO
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: comando
 -->
 # Recode — renames an identity code and carries the change to every textual surface of the project
@@ -44,6 +44,9 @@ engine; this unit is the command that shows it, applies it and puts the map back
 | `RCDEO-B04` | With the apply switch every surface is rewritten — the header, the scenario codes of the spec and of the test — and the report says how many files were rewritten. |
 | `RCDEO-B05` | After applying, the map is rebuilt from the rewritten headers, so its node carries the new code, and the report gives the node count. |
 | `RCDEO-B06` | The rebuild after applying keeps what the previous map knew beyond the headers, as the map build does: the stamps and judgments of every edge that survives, and the flow graph; a judgment lost with an edge that did not survive is reported. |
+| `RCDEO-B07` | When the project declares a recode dialect, the report also counts the testIDs and the files to rename and lists each rename from its old name to its new one; without them, no testID or rename line appears. |
+| `RCDEO-B08` | When the dialect's testID prefix appears nowhere but the files that carry the code hold testIDs with another prefix, the report warns about the divergent prefix; with nothing to warn about, no warning appears. |
+| `RCDEO-B09` | A write failure before any file changed fails the apply without saying the project is half converted. |
 
 ## Invariants
 

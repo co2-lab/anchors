@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: C4CNC
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @C4CNC
@@ -10,9 +10,10 @@ Feature: C4Containers — the declared containers, each with the units that run 
   @C4CNC-B01 @unit-level
   Scenario: A container carries the specs of the layers it declares, in layer then code order
     Given a container "app" declaring the layers " SHARED " and "lambdas"
-    And specs ROTAX in lambdas, UTILY and UTILX in shared
+    And specs ZROTA in lambdas, UTILY and UTILX in shared
     When the containers are listed
-    Then "app" carries ROTAX, UTILX, UTILY in that order
+    Then "app" carries ZROTA, UTILX, UTILY in that order, the layer deciding before the code
+    And two specs of one layer with no code come out in path order, whatever order they were found in
 
   @C4CNC-B02 @unit-level
   Scenario: An external container gets no level 3

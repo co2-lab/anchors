@@ -66,7 +66,8 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// state that existed only on its machine; the next local check closed one under
 			// a person's account, the state lock reverted that as a manual close, and the
 			// claim handed the spurious card back to the agent in a loop.
-			if cfg != nil && cfg.GitHubMode() && len(cfg.Workflow.Labels) > 0 {
+			// `config.Load` refuses a github mode with no label, so the first label is there.
+			if cfg.GitHubMode() {
 				issue.UseGitHub(cfg.Workflow.Repo, cfg.Workflow.Labels[0])
 			}
 			issuesOn := issuesOnFor(cfg, recordIssues, os.Getenv("GITHUB_ACTIONS") == "true")

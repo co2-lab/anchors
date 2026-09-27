@@ -67,7 +67,13 @@ func (c *Compiler) fnContainers() []Container {
 			if box.Units[i].Layer != box.Units[j].Layer {
 				return box.Units[i].Layer < box.Units[j].Layer
 			}
-			return box.Units[i].Code < box.Units[j].Code
+			// The path breaks the last tie. Two units of one layer with the same code (two
+			// specs without one) had no defined order, and sort.Slice is not stable: the
+			// compiled diagram could swap them between builds and read as stale.
+			if box.Units[i].Code != box.Units[j].Code {
+				return box.Units[i].Code < box.Units[j].Code
+			}
+			return box.Units[i].Path < box.Units[j].Path
 		})
 		out = append(out, box)
 	}

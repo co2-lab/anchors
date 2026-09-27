@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INWZN
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @INWZN
@@ -13,6 +13,7 @@ Feature: InitWizard — the interactive init walks a person from an unconfigured
     When init runs
     Then it returns without error
     And anchors.yaml is byte for byte the original and nothing announces a write
+    And answering yes to the overwrite, with every other question answered, rewrites anchors.yaml
 
   @INWZN-B02 @unit-level
   Scenario: A ready repository makes the git step silent
@@ -102,6 +103,47 @@ Feature: InitWizard — the interactive init walks a person from an unconfigured
     Given an empty directory
     When init runs with --non-interactive
     Then it prints the questions as JSON
+
+  @INWZN-B15 @unit-level
+  Scenario: A stack preset picked from the menu is applied and announced
+    Given a repository with code and every question answered
+    When the express-ts preset is picked from the menu
+    Then the init announces the preset by title
+    And its code layers are in the written anchors.yaml
+
+  @INWZN-B16 @unit-level
+  Scenario: The header guide is seeded in guides/ when the project has no guide directory
+    Given a repository with code and no guide directory
+    When the header guide is accepted and every other question is answered
+    Then guides/HEADER_GUIDE.md exists
+    And no HEADER_GUIDE.md is written at the root
+
+  @INWZN-B17 @unit-level
+  Scenario: The default gates are offered only when the chosen artifacts have any, and accepted ones are written
+    Given a repository with a spec, whose artifacts yield default gates
+    When the gates are accepted and every other question is answered
+    Then the written anchors.yaml holds gates
+    And an empty project, with no artifact chosen, is never offered gates
+
+  @INWZN-B18 @unit-level
+  Scenario: A project with no code, spec, feature or test is announced as new
+    Given an empty repository, and a repository with code
+    When init runs on an input that already ended
+    Then the empty one is announced as new
+    And the one with code is not
+
+  @INWZN-B19 @unit-level
+  Scenario: The code-layer question is asked only when there are code layers, and a new project is told to declare them later
+    Given an empty repository, and a repository with code
+    When init runs on an input that already ended
+    Then the empty one is not asked about code directories and is told to declare them once they exist
+    And the one with code is asked which code directories are layers
+
+  @INWZN-B20 @unit-level
+  Scenario: Each guide found is asked which tag it governs
+    Given a repository with code and guides/STYLE_GUIDE.md
+    When init runs on an input that already ended
+    Then it asks which tag STYLE_GUIDE.md governs
 
   @INWZN-I01 @unit-level
   Scenario: A prompt that cannot run makes the init write nothing

@@ -17,6 +17,7 @@ import (
 	"github.com/co2-lab/anchors/internal/issue"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/queue"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // The check ends a blocking failure (and a queued judgment on `--changed`) with
@@ -116,6 +117,10 @@ func TestCheckQueuedJudgmentBarsOnlyTheChangedCheck(t *testing.T) {
 	if !strings.Contains(tasks[0].Reason, "anchors judge a.go --gate rule-kept") {
 		t.Errorf("the reason must name the command that closes the task, with its gate: %q", tasks[0].Reason)
 	}
+	// the gate declares a guide and a question, and whoever judges needs both
+	if !strings.Contains(tasks[0].Reason, "SPEC.md") || !strings.Contains(tasks[0].Reason, "Does the code do what the rule says?") {
+		t.Errorf("the reason must carry the gate's guide and question: %q", tasks[0].Reason)
+	}
 	code, out = runCheckInChild(t, "--root", dir, "--changed", "a.go")
 	if code != 1 || !strings.Contains(out, "awaiting judgment") {
 		t.Errorf("a queued judgment must bar --changed with exit 1, got %d:\n%s", code, out)
@@ -211,6 +216,7 @@ func TestCheckGovernanceTipsOnTheFullSweepOnly(t *testing.T) {
 
 func TestRecordCheck_passResolvesAndPendingOpensDecisionOrDebt(t *testing.T) {
 	t.Run("CGPCH-B19: Passes resolve, decisions and debts open in their folders", func(t *testing.T) {})
+	t.Run("CGPCH-B77: The record summary counts what the record did", func(t *testing.T) {})
 	englishOutput(t)
 	issue.UseFiles()
 	root := t.TempDir()
@@ -249,19 +255,23 @@ func TestRecordCheck_passResolvesAndPendingOpensDecisionOrDebt(t *testing.T) {
 	if st, _ := issue.Exists(root, undetermined.Key()); st != "" {
 		t.Errorf("a plain pending opens no issue, found it in %q", st)
 	}
-	if !strings.Contains(out, "1 new issue(s), 1 resolved") || !strings.Contains(out, "1 assumed debt(s) recorded") {
+	if !strings.Contains(out, "; 1 new issue(s), 1 resolved") || !strings.Contains(out, "1 assumed debt(s) recorded") {
 		t.Errorf("the record summary must count what it did:\n%s", out)
 	}
 
 	// the decision closes by its own kind when the gate passes again
 	pass := gate.Profile{Results: []gate.Result{{Gate: "open-questions-resolved", Target: "b.spec.md", Verdict: gate.Pass}}}
-	captureStdout(t, func() {
+	out = captureStdout(t, func() {
 		if err := recordCheck(root, mapPath, g, pass, true, false); err != nil {
 			t.Fatal(err)
 		}
 	})
 	if st, _ := issue.Exists(root, dec.Key()); st != issue.Done {
 		t.Errorf("a pass of open-questions-resolved must resolve the decision, it is %q", st)
+	}
+	// the closed decision is counted as resolved, and no debt line appears without a debt
+	if !strings.Contains(out, "; 0 new issue(s), 1 resolved") || strings.Contains(out, "assumed debt") {
+		t.Errorf("the summary must count the resolved decision and nothing else:\n%s", out)
 	}
 }
 
@@ -291,6 +301,11 @@ func TestSelectNodesBatchesAndRefusals(t *testing.T) {
 	var ng errNotGoverned
 	if !errors.As(err, &ng) || !strings.Contains(err.Error(), "package.json (and 1 more)") {
 		t.Errorf("an all-ungoverned batch names one file and counts the rest, got %v", err)
+	}
+	// a lone ungoverned file has no others to count
+	_, _, err = selectNodes(g, cfg, false, []string{"package.json"}, dir)
+	if !errors.As(err, &ng) || ng.target != "package.json" {
+		t.Errorf("a lone ungoverned file is named alone, got %v", err)
 	}
 }
 
@@ -353,6 +368,37 @@ func TestCheckWarnsAboutRevStaleMapNodesOnChangedOnly(t *testing.T) {
 	if strings.Contains(errOut, "the map is OLDER than") {
 		t.Errorf("the full sweep does not warn about rev-stale nodes:\n%s", errOut)
 	}
+
+	// a map built after the last edit has nothing to warn about, even on --changed
+	fresh := qProject(t, checkYAML, checkFiles(), nil)
+	cfg, err := config.Load(filepath.Join(fresh, config.DefaultFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, err := scan.Walk(fresh, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rev := map[string]string{}
+	for _, f := range files {
+		rev[f.Path] = f.Rev
+	}
+	built := checkGraph()
+	for i := range built.Nodes {
+		built.Nodes[i].Rev = rev[built.Nodes[i].ID]
+	}
+	if err := mapx.Save(built, filepath.Join(fresh, mapx.DefaultPath)); err != nil {
+		t.Fatal(err)
+	}
+	errOut = captureStderr(t, func() {
+		_, runErr = runQ(t, newCheckCmd(), "--root", fresh, "--changed", "a.go", "--no-record")
+	})
+	if runErr != nil {
+		t.Fatal(runErr)
+	}
+	if strings.Contains(errOut, "the map is OLDER than") {
+		t.Errorf("a map built after the last edit must not be warned about:\n%s", errOut)
+	}
 }
 
 func TestPrintProfileFooterSaysWhatIsStillOpen(t *testing.T) {
@@ -376,6 +422,21 @@ func TestPrintProfileFooterSaysWhatIsStillOpen(t *testing.T) {
 			t.Errorf("%s: the footer must say %q:\n%s", c.name, c.want, out)
 		}
 	}
+
+	// the pending items ride along with the informative findings only when there are any
+	drift := gate.Result{Gate: "g", Target: "b", Verdict: gate.Pending, Detail: "x"}
+	withDrift := footer(gate.Profile{Passed: true, Results: []gate.Result{info, drift}, Failures: []gate.Result{info}})
+	if !strings.Contains(withDrift, "(+1 pending item(s)") {
+		t.Errorf("informative findings with a pending item must count it:\n%s", withDrift)
+	}
+	if out := footer(gate.Profile{Passed: true, Results: []gate.Result{info}, Failures: []gate.Result{info}}); strings.Contains(out, "pending item(s) —") {
+		t.Errorf("informative findings with no pending item must not mention pending items:\n%s", out)
+	}
+	// a failed check with no informative finding says only the blocking count
+	block := gate.Result{Gate: "g", Target: "a", Verdict: gate.Fail, Blocking: true}
+	if out := footer(gate.Profile{Blocked: []gate.Result{block}, Results: []gate.Result{block}, Failures: []gate.Result{block}}); !strings.Contains(out, "✗ blocked — 1 blocking gate(s) failed\n") {
+		t.Errorf("a failed check with no informative finding must not add a count of them:\n%s", out)
+	}
 }
 
 func TestSkipReasonsShownOnASmallScan(t *testing.T) {
@@ -386,6 +447,22 @@ func TestSkipReasonsShownOnASmallScan(t *testing.T) {
 	out := captureStdout(t, func() { printProfile(p, false, false) })
 	if !strings.Contains(out, "~ 1 indeterminate — not a failure") || !strings.Contains(out, "  ~ g @ n.ts\n      not a screen\n") {
 		t.Errorf("a small scan lists the reason of each ~:\n%s", out)
+	}
+
+	// forty results is still "at most forty"
+	for len(p.Results) < maxResultsForSkipDetail {
+		p.Results = append(p.Results, gate.Result{Gate: "g", Verdict: gate.Pass, Target: "p.ts"})
+	}
+	out = captureStdout(t, func() { printProfile(p, false, false) })
+	if !strings.Contains(out, "  ~ g @ n.ts\n      not a screen\n") {
+		t.Errorf("a scan of exactly forty results lists the reasons:\n%s", out)
+	}
+
+	// no skip with a reason, nothing to list
+	clean := profileOf(gate.GateSummary{Gate: "g", Pass: 1})
+	clean.Results = []gate.Result{{Gate: "g", Verdict: gate.Pass, Target: "n.ts"}}
+	if out := captureStdout(t, func() { printProfile(clean, false, false) }); strings.Contains(out, "indeterminate — not a failure") {
+		t.Errorf("with no reason to list, no indeterminate block:\n%s", out)
 	}
 }
 
@@ -881,17 +958,22 @@ func TestIssuesOnFor(t *testing.T) {
 // only on its machine. With issues on (CI, or --record-issues) the failure is filed.
 func TestRecordCheck_issuesOnlyWhenOn(t *testing.T) {
 	t.Run("CGPCH-B18: A blocking failure is filed only when issues are on", func(t *testing.T) {})
+	t.Run("CGPCH-B77: The record summary counts what the record did", func(t *testing.T) {})
 	issue.UseFiles()
 	fail := gate.Profile{Results: []gate.Result{{
 		Gate: "docs-fresh", Target: "a.spec.md", Verdict: gate.Fail, Blocking: true, Detail: "stale",
 	}}}
+	englishOutput(t)
+	var out string
 	run := func(on bool) (string, int) {
 		root := t.TempDir()
 		mapPath := filepath.Join(root, mapx.DefaultPath)
 		g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: mapx.KindSpec, Rev: "r1"}}}
-		if err := recordCheck(root, mapPath, g, fail, on, false); err != nil {
-			t.Fatal(err)
-		}
+		out = captureStdout(t, func() {
+			if err := recordCheck(root, mapPath, g, fail, on, false); err != nil {
+				t.Fatal(err)
+			}
+		})
 		if _, err := os.Stat(mapPath); err != nil {
 			t.Fatalf("the map was not saved (on=%v): %v", on, err)
 		}
@@ -910,14 +992,21 @@ func TestRecordCheck_issuesOnlyWhenOn(t *testing.T) {
 	if _, n := run(true); n == 0 {
 		t.Error("with issues on, the blocking failure opened no issue")
 	}
+	// the opened issue is counted, and a record with no debt says nothing about debts
+	if !strings.Contains(out, "; 1 new issue(s), 0 resolved") || strings.Contains(out, "assumed debt") {
+		t.Errorf("the summary must count the opened issue and no debt:\n%s", out)
+	}
 }
 
 // The FULL check closes the open violations it did not reproduce; a partial check does not
 // (it did not confront everything, so it cannot say a violation is gone).
 func TestRecordCheck_fullCheckClosesWhatItDidNotReproduce(t *testing.T) {
 	t.Run("CGPCH-B20: The full check closes the violations it did not reproduce", func(t *testing.T) {})
+	t.Run("CGPCH-B77: The record summary counts what the record did", func(t *testing.T) {})
 	issue.UseFiles()
+	englishOutput(t)
 	pass := gate.Profile{Results: []gate.Result{{Gate: "header-conforms", Target: "a.ts", Verdict: gate.Pass}}}
+	var out string
 	run := func(full bool) issue.State {
 		root := t.TempDir()
 		mapPath := filepath.Join(root, mapx.DefaultPath)
@@ -926,17 +1015,35 @@ func TestRecordCheck_fullCheckClosesWhatItDidNotReproduce(t *testing.T) {
 		if _, _, err := issue.Open(root, old); err != nil {
 			t.Fatal(err)
 		}
-		if err := recordCheck(root, mapPath, g, pass, true, full); err != nil {
-			t.Fatal(err)
-		}
+		out = captureStdout(t, func() {
+			if err := recordCheck(root, mapPath, g, pass, true, full); err != nil {
+				t.Fatal(err)
+			}
+		})
 		st, _ := issue.Exists(root, old.Key())
 		return st
 	}
 	if st := run(true); st != issue.Done {
 		t.Errorf("a full check must close the violation it did not reproduce, it is %s", st)
 	}
+	// the closed violation is announced and counted among the resolved
+	if !strings.Contains(out, "1 open violation issue(s) in issues/ not reproduced") || !strings.Contains(out, "; 0 new issue(s), 1 resolved") {
+		t.Errorf("the full check must announce and count what it closed:\n%s", out)
+	}
 	if st := run(false); st != issue.Todo {
 		t.Errorf("a partial check must leave it alone, it is %s", st)
+	}
+
+	// a full check with nothing left to close does not announce a closing
+	root := t.TempDir()
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.ts", Kind: mapx.KindCode, Rev: "r1"}}}
+	out = captureStdout(t, func() {
+		if err := recordCheck(root, filepath.Join(root, mapx.DefaultPath), g, pass, true, true); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if strings.Contains(out, "not reproduced by this full check") {
+		t.Errorf("nothing was closed, and the closing line appeared:\n%s", out)
 	}
 }
 
@@ -1238,6 +1345,17 @@ func TestMapStaleDoesNotDependOnMtime(t *testing.T) {
 	if strings.Contains(out, "changed") {
 		t.Errorf("the message must say 'not in the map', not 'changed'.\ngot: %s", out)
 	}
+	// It counts the files and names one: alone, with nothing else to count.
+	if !strings.HasPrefix(out, "⚠ STALE map: 1 governed file(s) are not in the map — e.g.: b.spec.md\n") {
+		t.Errorf("one missing file must be counted and named alone.\ngot: %s", out)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "c.spec.md"), []byte("# C\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out = capturaSaida(t, func() { warnIfMapStale(dir, mapPath, cfg, g) })
+	if !strings.HasPrefix(out, "⚠ STALE map: 2 governed file(s) are not in the map — e.g.: b.spec.md (and 1 more)\n") {
+		t.Errorf("two missing files: one named, the other counted.\ngot: %s", out)
+	}
 }
 
 // With no graph the warning keeps quiet: there is nothing to compare, and guessing would
@@ -1339,10 +1457,18 @@ func TestFindingsSummaryCountsEveryKind(t *testing.T) {
 	p := gate.Profile{Results: []gate.Result{block, info, info, drift}, Failures: []gate.Result{block, info, info}}
 
 	out := captureStdout(t, func() { printProfile(p, false, false) })
-	for _, want := range []string{"3 failure(s)", "1 blocking", "2 informative", "1 divergence(s)", "--show-drift"} {
+	for _, want := range []string{"3 failure(s) — 1 blocking, 2 informative — and 1 divergence(s)", "--show-drift"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("the summary should say %q:\n%s", want, out)
 		}
+	}
+
+	// Only failures: the heading is printed all the same.
+	out = captureStdout(t, func() {
+		printProfile(gate.Profile{Results: []gate.Result{info}, Failures: []gate.Result{info}}, false, false)
+	})
+	if !strings.Contains(out, "1 failure(s) — 0 blocking, 1 informative — and 0 divergence(s)") {
+		t.Errorf("failures alone must still be counted:\n%s", out)
 	}
 	if strings.Contains(out, "issue(s) — divergences recorded") {
 		t.Errorf("the old ambiguous header is back:\n%s", out)
@@ -1407,6 +1533,19 @@ func TestWidthIsPerColumn(t *testing.T) {
 	if w.skip != 3 {
 		t.Errorf("skip: %d, want 3 (because of 582)", w.skip)
 	}
+
+	// The skip column's number is the skipped plus the pending, less the drift: a hundred
+	// pending items need three places, and twelve pending that are all drift need one.
+	if w := computeWidths(profileOf(gate.GateSummary{Gate: "a", Pending: 100})); w.skip != 3 {
+		t.Errorf("skip: %d, want 3 (because of 100 pending)", w.skip)
+	}
+	allDrift := profileOf(gate.GateSummary{Gate: "a", Pending: 12})
+	for i := 0; i < 12; i++ {
+		allDrift.Results = append(allDrift.Results, gate.Result{Gate: "a", Verdict: gate.Pending, Detail: "diverged", Target: fmt.Sprint(i)})
+	}
+	if w := computeWidths(allDrift); w.skip != 1 || w.drift != 2 {
+		t.Errorf("skip %d / drift %d, want 1 / 2 (the twelve pending are drift)", w.skip, w.drift)
+	}
 }
 
 // The ALWAYS-present columns have a floor of 1: `%*d` with width 0 would print glued to
@@ -1468,6 +1607,7 @@ func TestCleanGateRequiresNothingPending(t *testing.T) {
 		{"with drift", gate.GateSummary{Pass: 10}, 3, false},
 		{"with skip", gate.GateSummary{Pass: 10, Skip: 2}, 0, false},
 		{"with pending", gate.GateSummary{Pass: 10, Pending: 2}, 0, false},
+		{"with as many skips as pending", gate.GateSummary{Pass: 10, Skip: 2, Pending: 2}, 0, false},
 		{"awaiting AI", gate.GateSummary{Pass: 10, Judge: 1}, 0, false},
 	}
 	for _, c := range cases {
@@ -1690,6 +1830,9 @@ func TestLegendShowsOnlyTheSymbolsUsed(t *testing.T) {
 	}
 	if !strings.Contains(noDrift, "✓  passed") || !strings.Contains(noDrift, "~  indeterminate") {
 		t.Errorf("incomplete legend:\n%s", noDrift)
+	}
+	if strings.Contains(noDrift, "⏳") {
+		t.Errorf("the legend explained ⏳ on a table with no judgment pending:\n%s", noDrift)
 	}
 
 	withJudge := captureProfile(t, func() {
@@ -1955,6 +2098,8 @@ func TestImpactOfBringsTheUnitsPiecesOfAGoUnit(t *testing.T) {
 		{ID: "web/x.ts", Kind: mapx.KindCode},
 		{ID: "web/x.test.ts", Kind: mapx.KindTest},
 		{ID: "web/x.spec.md", Kind: mapx.KindSpec},
+		{ID: "py/baz.py", Kind: mapx.KindCode},
+		{ID: "py/baz_test.py", Kind: mapx.KindTest},
 	}}
 	root := t.TempDir()
 	cases := map[string][]string{
@@ -1962,6 +2107,9 @@ func TestImpactOfBringsTheUnitsPiecesOfAGoUnit(t *testing.T) {
 		"pkg/foo.go":      {"pkg/foo_test.go", "pkg/foo.spec.md", "pkg/foo.feature"},
 		"pkg/foo.spec.md": {"pkg/foo.go", "pkg/foo_test.go", "pkg/foo.feature"},
 		"web/x.test.ts":   {"web/x.ts", "web/x.spec.md"},
+		// a language with no fixed name: the code and the test carry the file's own extension
+		"py/baz_test.py": {"py/baz.py"},
+		"py/baz.py":      {"py/baz_test.py"},
 	}
 	for changed, want := range cases {
 		ids, err := impactOf(g, &config.Config{}, filepath.Join(root, changed), root)
@@ -1979,6 +2127,444 @@ func TestImpactOfBringsTheUnitsPiecesOfAGoUnit(t *testing.T) {
 		}
 		if has["pkg/bar.go"] {
 			t.Errorf("--changed %s: another unit entered the impact: %v", changed, ids)
+		}
+	}
+}
+
+// ── the command's announcements ─────────────────────────────────────────────────────
+
+// The version warning reaches the command's error output: the pure function above says
+// what the warning is, this proves the check prints it.
+func TestCheckPrintsTheVersionWarning(t *testing.T) {
+	t.Run("CGPCH-B33: A map written by another version is warned about", func(t *testing.T) {})
+	englishOutput(t)
+	prev := mapx.GeneratedBy
+	mapx.GeneratedBy = "0.0.1-elsewhere"
+	dir := qProject(t, checkYAML, checkFiles(), checkGraph())
+	mapx.GeneratedBy = prev
+	var runErr error
+	errOut := captureStderr(t, func() {
+		_, runErr = runQ(t, newCheckCmd(), "--root", dir, "--all", "--no-record")
+	})
+	if runErr != nil {
+		t.Fatal(runErr)
+	}
+	if !strings.Contains(errOut, "0.0.1-elsewhere") {
+		t.Errorf("a map written by another version must be warned about on the error output:\n%s", errOut)
+	}
+}
+
+func TestCheckPrintsNoJudgmentBriefWithNothingToJudge(t *testing.T) {
+	t.Run("CGPCH-B71: With nothing awaiting judgment there is no judgment brief", func(t *testing.T) {})
+	englishOutput(t)
+	t.Setenv("GITHUB_ACTIONS", "")
+	defer issue.UseFiles()
+	dir := qProject(t, checkYAML+githubWorkflowYAML, checkFiles(), checkGraph())
+	out, err := runQ(t, newCheckCmd(), "--root", dir, "--all", "--no-record")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out, "awaiting judgment") {
+		t.Errorf("no gate judges here, and a judgment brief was printed:\n%s", out)
+	}
+}
+
+func TestCheckWarnsOnlyWhenTheRecordFails(t *testing.T) {
+	t.Run("CGPCH-B72: A record that fails is warned about and the check still reports", func(t *testing.T) {})
+	englishOutput(t)
+	dir := qProject(t, checkYAML, checkFiles(), checkGraph())
+	var runErr error
+	var out string
+	errOut := captureStderr(t, func() {
+		out, runErr = runQ(t, newCheckCmd(), "--root", dir, "--changed", "a.spec.md")
+	})
+	if runErr != nil {
+		t.Fatal(runErr)
+	}
+	if strings.Contains(errOut, "failed to record") || !strings.Contains(out, "recorded: 1 edge(s) stamped") {
+		t.Errorf("a record that succeeded must raise no warning:\nstdout:\n%s\nstderr:\n%s", out, errOut)
+	}
+
+	// the map lives in a folder the check cannot write
+	locked := t.TempDir()
+	mapPath := filepath.Join(locked, "graph.yaml")
+	if err := mapx.Save(checkGraph(), mapPath); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(mapPath, 0o444); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(locked, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(locked, 0o755); _ = os.Chmod(mapPath, 0o644) })
+	errOut = captureStderr(t, func() {
+		out, runErr = runQ(t, newCheckCmd(), "--root", dir, "--map", mapPath, "--changed", "a.spec.md")
+	})
+	if runErr != nil {
+		t.Fatal(runErr)
+	}
+	if !strings.Contains(errOut, "warning: failed to record") || !strings.Contains(out, "can promote") {
+		t.Errorf("a record that failed must be warned about, and the verdict still printed:\nstdout:\n%s\nstderr:\n%s", out, errOut)
+	}
+}
+
+func TestCheckSaysHowManyJudgmentsItQueued(t *testing.T) {
+	t.Run("CGPCH-B73: The check says how many judgments it queued, and nothing when it queued none", func(t *testing.T) {})
+	englishOutput(t)
+	dir := qProject(t, judgmentYAML, map[string]string{"a.go": "package a\n"},
+		&mapx.Graph{Nodes: []mapx.Node{{ID: "a.go", Kind: mapx.KindCode}}})
+	out, err := runQ(t, newCheckCmd(), "--root", dir, "--all")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "1 target(s) awaiting AI judgment") {
+		t.Errorf("the first run queues one judgment and must say so:\n%s", out)
+	}
+	// the task already waits in the queue: this run queues nothing new
+	out, err = runQ(t, newCheckCmd(), "--root", dir, "--all")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out, "target(s) awaiting AI judgment") {
+		t.Errorf("a run that queued nothing must not announce a queued judgment:\n%s", out)
+	}
+}
+
+func TestCheckWithoutGovernanceTipsPrintsNoPointer(t *testing.T) {
+	t.Run("CGPCH-B74: With no governance tip the full sweep prints neither a tip nor the pointer to the doctor", func(t *testing.T) {})
+	englishOutput(t)
+	// a project of specs only: no code, no test, nothing the tips ask about
+	yaml := "version: 2\nlayers:\n  spec:\n    kind: spec\n    pattern: \"*.spec.md\"\ngates:\n  - name: spec-ok\n    on: [spec]\n    run: \"true\"\n"
+	dir := qProject(t, yaml, map[string]string{"a.spec.md": "# A\n"},
+		&mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: mapx.KindSpec}}})
+	out, err := runQ(t, newCheckCmd(), "--root", dir, "--all", "--no-record")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out, "Governance Tip") || strings.Contains(out, "anchors doctor") {
+		t.Errorf("with no tip to give, the full sweep must print neither a tip nor the pointer:\n%s", out)
+	}
+}
+
+func TestRecordSaysWhyNoIssueWasWritten(t *testing.T) {
+	t.Run("CGPCH-B75: When the check writes no issue it says why", func(t *testing.T) {})
+	englishOutput(t)
+	issue.UseFiles()
+	root := qProject(t, "version: 2\nworkflow:\n  mode: manual\n", nil, nil)
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.go", Kind: mapx.KindCode, Rev: "r1"}}}
+	out := captureStdout(t, func() {
+		if err := recordCheck(root, filepath.Join(root, mapx.DefaultPath), g, gate.Profile{}, false, false); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if !strings.Contains(out, "no issue written (mode: manual") {
+		t.Errorf("in manual mode the record must say the mode is why no issue was written:\n%s", out)
+	}
+}
+
+// fakeBoard puts on the PATH a `gh` that answers nothing and logs every call, so a test
+// can tell whether the check talked to the board without ever reaching GitHub.
+func fakeBoard(t *testing.T) string {
+	t.Helper()
+	bin := t.TempDir()
+	log := filepath.Join(bin, "calls.log")
+	script := "#!/bin/sh\necho \"gh $*\" >> \"" + log + "\"\nexit 1\n"
+	if err := os.WriteFile(filepath.Join(bin, "gh"), []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+	return log
+}
+
+func TestCheckRecordsOnTheBoardInGitHubMode(t *testing.T) {
+	t.Run("CGPCH-B75: When the check writes no issue it says why", func(t *testing.T) {})
+	t.Run("CGPCH-B76: In github mode the issues go to the board, never to the local folders", func(t *testing.T) {})
+	englishOutput(t)
+	t.Setenv("GITHUB_ACTIONS", "")
+	defer issue.UseFiles()
+	log := fakeBoard(t)
+	calls := func() string { b, _ := os.ReadFile(log); return string(b) }
+
+	dir := qProject(t, checkYAML+githubWorkflowYAML, checkFiles(), checkGraph())
+	// a local run leaves the board to CI, and says so
+	out, err := runQ(t, newCheckCmd(), "--root", dir, "--all")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "board issues are left to CI") || calls() != "" {
+		t.Errorf("a local run in github mode must leave the board to CI:\n%s\ngh calls:\n%s", out, calls())
+	}
+	// asked to record, it records on the board, never in the local folders
+	if _, err := runQ(t, newCheckCmd(), "--root", dir, "--all", "--record-issues"); err != nil {
+		t.Fatal(err)
+	}
+	if calls() == "" {
+		t.Error("with --record-issues in github mode the check must record on the board")
+	}
+	if _, err := os.Stat(filepath.Join(dir, issue.Dir)); err == nil {
+		t.Errorf("in github mode no issue folder may be written")
+	}
+
+}
+
+func TestTableIndeterminateCounterLeavesTheDriftOut(t *testing.T) {
+	t.Run("CGPCH-B78: The indeterminate counter is the skipped and pending less the drift", func(t *testing.T) {})
+	p := profileOf(gate.GateSummary{Gate: "g", Pass: 1, Skip: 1, Pending: 2})
+	p.Results = []gate.Result{{Gate: "g", Verdict: gate.Pending, Detail: "diverged", Target: "x"}}
+	out := captureProfile(t, func() { printProfile(p, false, false) })
+	if !strings.Contains(out, "⚠1  ~2\n") {
+		t.Errorf("one skip and two pending, one of them drift: ⚠1 and ~2:\n%s", out)
+	}
+}
+
+func TestFindingsListEachFailureWithItsDetail(t *testing.T) {
+	t.Run("CGPCH-B82: Each failure is listed with its detail, and no finding means no findings heading", func(t *testing.T) {})
+	block := gate.Result{Gate: "g1", Target: "a.go", Verdict: gate.Fail, Blocking: true, Detail: "broken on line 3"}
+	info := gate.Result{Gate: "g2", Target: "b.go", Verdict: gate.Fail}
+	p := gate.Profile{Results: []gate.Result{block, info}, Failures: []gate.Result{block, info}}
+	out := captureProfile(t, func() { printProfile(p, false, false) })
+	if !strings.Contains(out, "  ✗ [BLOCKS] g1 @ a.go\n      broken on line 3\n  ✗ [informative] g2 @ b.go\n") {
+		t.Errorf("each failure with its mark, and the detail under the one that has it:\n%s", out)
+	}
+
+	pass := gate.Result{Gate: "g", Target: "a.go", Verdict: gate.Pass}
+	out = captureProfile(t, func() {
+		printProfile(gate.Profile{Passed: true, Results: []gate.Result{pass}}, false, false)
+	})
+	if strings.Contains(out, "failure(s)") {
+		t.Errorf("with no failure and no divergence there is no findings heading:\n%s", out)
+	}
+}
+
+func TestMaturationNamesTheCleanInformativeGates(t *testing.T) {
+	t.Run("CGPCH-B83: A clean informative gate is named as ready to become blocking", func(t *testing.T) {})
+	englishOutput(t)
+	clean := profileOf(gate.GateSummary{Gate: "lint", Pass: 3})
+	out := captureStdout(t, func() { rememberMaturation(clean, false) })
+	if !strings.Contains(out, "1 informative gate(s) CLEAN") || !strings.Contains(out, "lint") {
+		t.Errorf("a clean informative gate must be named as ready to become blocking:\n%s", out)
+	}
+	blocking := profileOf(gate.GateSummary{Gate: "lint", Pass: 3, Blocking: true})
+	if out := captureStdout(t, func() { rememberMaturation(blocking, false) }); out != "" {
+		t.Errorf("with no gate to promote nothing is said:\n%s", out)
+	}
+}
+
+// The limits of the list break, each at its boundary.
+func TestListBreakBoundaries(t *testing.T) {
+	t.Run("CGPCH-B63: A long list of items breaks one per line", func(t *testing.T) {})
+	item := func(n int, c string) string { return strings.Repeat(c, n) }
+	// four tokens of 26 make exactly 110 characters: not longer than the threshold
+	at := strings.Join([]string{item(26, "a"), item(26, "b"), item(26, "c"), item(26, "d")}, ", ")
+	if len([]rune(at)) != listBreakThreshold {
+		t.Fatalf("fixture is %d runes", len([]rune(at)))
+	}
+	if strings.Contains(breakOccurrences(at), "\n") {
+		t.Errorf("a line of exactly %d characters must not break", listBreakThreshold)
+	}
+	// four tokens of 27: longer, and four items is enough
+	four := strings.Join([]string{item(27, "a"), item(27, "b"), item(27, "c"), item(27, "d")}, ", ")
+	if strings.Count(breakOccurrences(four), "\n") != 3 {
+		t.Errorf("four items over the threshold must break one per line:\n%s", breakOccurrences(four))
+	}
+	// half of the items with an inner space is not "most of them without"
+	half := strings.Join([]string{item(27, "a"), item(27, "b"), "some words " + item(20, "c"), "more words " + item(20, "d")}, ", ")
+	if strings.Contains(breakOccurrences(half), "\n") {
+		t.Errorf("a line whose items are only half tokens must not break:\n%s", breakOccurrences(half))
+	}
+}
+
+// The SCENARIOS of the `timing-metrics` flag (`flags/timing-metrics.flag.md`).
+//
+// The flag governs whether `check` measures and prints the time per gate. The three
+// scenarios are here, each with its code in a subtest NAME: that is how `flag-covered`
+// recognises them as proven once the execution is ingested.
+//
+// `--timing` was born to find what makes a scan expensive, and it found it: `docs-fresh`
+// was 97% of a 6m49s run. But it was born with no test at all, and it was `flag-covered`
+// itself that charged it — the first work the flag axis found.
+
+// profileWithTime builds a Profile with measured time, which is what `printTiming` reads.
+func profileWithTime() gate.Profile {
+	return gate.Profile{
+		ByGate: map[string]gate.GateSummary{
+			"docs-fresh": {Gate: "docs-fresh", Pass: 3, Duracao: 900 * time.Millisecond, Pior: 800 * time.Millisecond},
+			"build":      {Gate: "build", Pass: 1, Duracao: 50 * time.Millisecond, Pior: 50 * time.Millisecond},
+		},
+		Results: []gate.Result{
+			{Gate: "docs-fresh", Target: "a.spec.md", Duracao: 800 * time.Millisecond},
+			{Gate: "build", Target: "b.go", Duracao: 50 * time.Millisecond},
+		},
+	}
+}
+
+// TIMNG-G01 — the value is `off`: check prints only the verdicts, and measures NO time.
+//
+// The proof is the absence: with the flag off neither the timing header nor the target
+// list may print. A test that only checked "nothing broke" would pass with the whole
+// table on screen.
+func TestTimingG01_offPrintsNoTiming(t *testing.T) {
+	t.Run("TIMNG-G01: with the flag off, check prints no timing at all", func(t *testing.T) {})
+	// It confronts the VARIABLE the command reads, not a literal: `if off := false` would
+	// be a tautology — it would pass with `printTiming` called unconditionally in
+	// production, which is exactly the regression this scenario exists to catch.
+	cmd := newCheckCmd()
+	if err := cmd.Flags().Parse([]string{"--timing=false"}); err != nil {
+		t.Fatal(err)
+	}
+
+	on, err := cmd.Flags().GetBool("timing")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The PRODUCTION function, not a copy of the condition: `RunE` calls exactly this.
+	out := capturaSaida(t, func() { reportTiming(on, profileWithTime()) })
+	if out != "" {
+		t.Errorf("with the flag `off` check printed timing:\n%s", out)
+	}
+}
+
+// TIMNG-G02 — the value is `on`: check also prints time per gate, and the slowest
+// targets.
+//
+// Both blocks are charged, not just one: the per-gate header and the target list answer
+// different questions ("which gate costs" and "which file costs"), and it was the second
+// that pointed at `fnSize` reading ~43,000 files.
+func TestTimingG02_onPrintsTimePerGateAndTargets(t *testing.T) {
+	t.Run("TIMNG-G02: with the flag on, check prints time per gate and the slowest targets", func(t *testing.T) {})
+	cmd := newCheckCmd()
+	if err := cmd.Flags().Parse([]string{"--timing"}); err != nil {
+		t.Fatal(err)
+	}
+
+	on, err := cmd.Flags().GetBool("timing")
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := capturaSaida(t, func() { reportTiming(on, profileWithTime()) })
+	if out == "" {
+		t.Fatal("with the flag `on` check printed nothing")
+	}
+	for _, want := range []string{"docs-fresh", "build"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the output does not name the gate %q:\n%s", want, out)
+		}
+	}
+	// The most expensive individual TARGET — the block the per-gate average does not show.
+	if !strings.Contains(out, "a.spec.md") {
+		t.Errorf("the output does not list the slowest target:\n%s", out)
+	}
+	// And the most expensive comes first: the order is what makes the table actionable.
+	if strings.Index(out, "docs-fresh") > strings.Index(out, "build") {
+		t.Errorf("the most expensive gate did not come first:\n%s", out)
+	}
+}
+
+// TIMNG-G03 — the value is ABSENT: the same as `off`. Measuring is opt-in, never a
+// default cost.
+//
+// It is the scenario `flag-scenarios-complete` charges and the one nobody writes. It
+// matters here for a concrete reason: an inverted default would raise no error at all — it
+// would just spend everyone's time, forever, in silence.
+func TestTimingG03_absentMeansTheDefaultWhichIsOff(t *testing.T) {
+	t.Run("TIMNG-G03: with the flag absent, the declared default holds — measuring is opt-in", func(t *testing.T) {})
+	// The absence of the VALUE is the absence of the flag on the command line. Parsing an
+	// argv without `--timing` leaves the flag in the state the scenario describes — and it
+	// is that state, not a literal, that the call site reads.
+	cmd := newCheckCmd()
+	if err := cmd.Flags().Parse([]string{}); err != nil {
+		t.Fatal(err)
+	}
+
+	on, err := cmd.Flags().GetBool("timing")
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := capturaSaida(t, func() { reportTiming(on, profileWithTime()) })
+	if out != "" {
+		t.Errorf("without `--timing` check measured and printed — measuring must be opt-in:\n%s", out)
+	}
+	// And the DEFAULT declared in cobra must be the same. It is the other half of the
+	// scenario: the block above proves the behaviour with the value absent, and this one
+	// proves that absent is really what the command delivers when nobody passes `--timing`.
+	f := newCheckCmd().Flags().Lookup("timing")
+	if f == nil {
+		t.Fatal("the `--timing` flag disappeared from the command")
+	}
+	if f.DefValue != "false" {
+		t.Errorf("the default of `--timing` is %q — measuring stopped being opt-in", f.DefValue)
+	}
+}
+
+// timingTable prints the time table of three gates: one with a target of every verdict,
+// one with five targets and one with a single target.
+func timingTable(t *testing.T) string {
+	t.Helper()
+	englishOutput(t)
+	p := gate.Profile{
+		ByGate: map[string]gate.GateSummary{
+			"alpha-long-name": {Gate: "alpha-long-name", Pass: 1, Fail: 2, Skip: 3, Pending: 4, Judge: 5, Duracao: 900 * time.Millisecond, Pior: 300 * time.Millisecond},
+			"b":               {Gate: "b", Pass: 5, Duracao: 100 * time.Millisecond, Pior: 50 * time.Millisecond},
+			"one":             {Gate: "one", Pass: 1, Duracao: 500 * time.Millisecond, Pior: 500 * time.Millisecond},
+		},
+		// the slowest target belongs to the gate whose name sorts last
+		Results: []gate.Result{
+			{Gate: "b", Target: "x.go", Duracao: 50 * time.Millisecond},
+			{Gate: "alpha-long-name", Target: "y.go", Duracao: 300 * time.Millisecond},
+			{Gate: "one", Target: "z.go", Duracao: 500 * time.Millisecond},
+		},
+	}
+	return capturaSaida(t, func() { printTiming(p) })
+}
+
+func TestTimingTableCountsAndAlignsTheTargets(t *testing.T) {
+	t.Run("CGPCH-B79: The time table counts each gate's targets and aligns its columns", func(t *testing.T) {})
+	out := timingTable(t)
+	for _, want := range []string{
+		// every verdict counts: 1+2+3+4+5
+		"    alpha-long-name     900ms  15 targets  worst    300ms\n",
+		// the name padded to the longest, the number to the widest
+		"    b                   100ms   5 targets  worst     50ms\n",
+		// one target: singular, and no worst time to compare
+		"    one                 500ms   1 target\n",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in:\n%s", want, out)
+		}
+	}
+}
+
+func TestTimingListsTheSlowestTargetsFirst(t *testing.T) {
+	t.Run("CGPCH-B80: The slowest targets are listed slowest first, and only when a time was recorded", func(t *testing.T) {})
+	out := timingTable(t)
+	z, y, x := strings.Index(out, "one @ z.go"), strings.Index(out, "alpha-long-name @ y.go"), strings.Index(out, "b @ x.go")
+	if z < 0 || y < 0 || x < 0 || !(z < y && y < x) {
+		t.Errorf("the targets must come slowest first (z.go, y.go, x.go):\n%s", out)
+	}
+
+	englishOutput(t)
+	byGate := map[string]gate.GateSummary{"g": {Gate: "g", Pass: 1}}
+	for name, results := range map[string][]gate.Result{
+		"no result":        nil,
+		"no time recorded": {{Gate: "g", Target: "a.go"}},
+	} {
+		out := capturaSaida(t, func() { printTiming(gate.Profile{ByGate: byGate, Results: results}) })
+		if strings.Contains(out, "slowest targets") {
+			t.Errorf("%s: the list of slowest targets must be left out:\n%s", name, out)
+		}
+	}
+}
+
+func TestTimingRoundsToWhatADecisionNeeds(t *testing.T) {
+	t.Run("CGPCH-B81: Times are rounded to what a decision needs", func(t *testing.T) {})
+	for d, want := range map[time.Duration]string{
+		1234567890 * time.Nanosecond: "1.23s",
+		1234567 * time.Nanosecond:    "1.2ms",
+		1234 * time.Nanosecond:       "1µs",
+	} {
+		if got := arredonda(d); got != want {
+			t.Errorf("%v rounds to %q, want %q", d, got, want)
 		}
 	}
 }

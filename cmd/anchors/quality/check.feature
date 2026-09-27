@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CGPCH
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @CGPCH
@@ -27,8 +27,8 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
 
   @CGPCH-B70 @unit-level
   Scenario: The pieces of the changed file's unit enter its impact path, for a Go unit as for a TypeScript one
-    Given a map with pkg/foo.go, pkg/foo_test.go, pkg/foo.spec.md, pkg/foo.feature, pkg/bar.go, web/x.ts, web/x.test.ts and web/x.spec.md, and no edge
-    When the impact path of each of pkg/foo_test.go, pkg/foo.go, pkg/foo.spec.md and web/x.test.ts is computed
+    Given a map with pkg/foo.go, pkg/foo_test.go, pkg/foo.spec.md, pkg/foo.feature, pkg/bar.go, web/x.ts, web/x.test.ts, web/x.spec.md, py/baz.py and py/baz_test.py, and no edge
+    When the impact path of each of pkg/foo_test.go, pkg/foo.go, pkg/foo.spec.md, web/x.test.ts, py/baz_test.py and py/baz.py is computed
     Then each reaches the other pieces of its own unit, and pkg/bar.go never enters
 
   @CGPCH-B04 @unit-level
@@ -139,6 +139,30 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     When the check records a full run, and then an incremental one
     Then the full run closes it and the incremental one leaves it in todo
 
+  @CGPCH-B72 @unit-level
+  Scenario: A record that fails is warned about and the check still reports
+    Given a project whose map lives in a folder the check cannot write
+    When the incremental check runs and records, once with the project's own map and once with the locked one
+    Then the successful record raises no warning, and the failed one warns "failed to record" on the error output while the verdict is still printed
+
+  @CGPCH-B75 @unit-level
+  Scenario: When the check writes no issue it says why
+    Given a project in manual mode, and a project in github mode run locally
+    When each check records with issues off
+    Then the first says no issue was written because of the manual mode, and the second says the board issues are left to CI
+
+  @CGPCH-B76 @unit-level
+  Scenario: In github mode the issues go to the board, never to the local folders
+    Given a project in github mode with a label, and a board command that logs its calls
+    When the full sweep runs locally, and then asked to record issues
+    Then the local run leaves the board untouched, the recording run calls the board, and no issue folder is written
+
+  @CGPCH-B77 @unit-level
+  Scenario: The record summary counts what the record did
+    Given records that open a blocking failure, open a decision, resolve a decision, and close a violation a full check did not reproduce
+    When each record is written
+    Then each summary counts the issues opened and resolved, the closing is announced only when a violation was closed, and the debt line appears only with a debt
+
   @CGPCH-B21 @unit-level
   Scenario: A pending judgment becomes one task in the local queue
     Given a local project with a judgment gate over a.go
@@ -156,6 +180,12 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a local project whose queue holds a judge task for a.go
     When the check runs over everything, and then over the changed a.go
     Then the full sweep exits 0 and the incremental check exits 1 saying targets await judgment
+
+  @CGPCH-B73 @unit-level
+  Scenario: The check says how many judgments it queued, and nothing when it queued none
+    Given a judgment gate over one code file in local mode
+    When the full sweep runs twice
+    Then the first run says "1 target(s) awaiting AI judgment" and the second, which queued nothing new, does not
 
   @CGPCH-B23 @unit-level
   Scenario: Stale judge tasks leave the queue
@@ -211,6 +241,12 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     When the judgment brief is printed
     Then ten targets are listed and it prints "… and 15 more"
 
+  @CGPCH-B71 @unit-level
+  Scenario: With nothing awaiting judgment there is no judgment brief
+    Given a project in github mode whose gates judge nothing
+    When the full sweep runs without recording
+    Then no judgment brief is printed
+
   @CGPCH-B31 @unit-level
   Scenario: Governed files missing from the map make a stale-map warning
     Given a map holding a.spec.md, older on disk than the file, and then a new b.spec.md
@@ -253,6 +289,12 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     When the check runs over everything, and then over a changed file
     Then the full sweep prints the governance tips and the incremental check does not
 
+  @CGPCH-B74 @unit-level
+  Scenario: With no governance tip the full sweep prints neither a tip nor the pointer to the doctor
+    Given a project of specs only, about which the tips have nothing to say
+    When the full sweep runs
+    Then neither a governance tip nor the pointer to the doctor is printed
+
   @CGPCH-B38 @unit-level
   Scenario: The report is mirrored to a file
     Given a project with a map and gates
@@ -288,6 +330,12 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given two gates, neither with drift
     When the profile table is printed
     Then no line holds more than the two-space separator between the fail counter and the skip counter
+
+  @CGPCH-B78 @unit-level
+  Scenario: The indeterminate counter is the skipped and pending less the drift
+    Given a gate with one skip and two pending results, one of them drift
+    When the profile table is printed
+    Then its line reads "⚠1  ~2"
 
   @CGPCH-B44 @unit-level
   Scenario: An empty drift cell is measured in terminal columns
@@ -373,11 +421,23 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     When the profile table is printed
     Then it counts 3 failure(s), 1 blocking, 2 informative and 1 divergence(s), pointing at show-drift
 
+  @CGPCH-B82 @unit-level
+  Scenario: Each failure is listed with its detail, and no finding means no findings heading
+    Given a blocking failure with the detail "broken on line 3" and an informative failure with none, and then a profile of passes only
+    When the profile tables are printed
+    Then the first lists both failures with their marks and the detail under the blocking one, and the second has no findings heading
+
   @CGPCH-B58 @unit-level
   Scenario: The verdict line says what is still open
     Given profiles with an informative failure, a divergence, a skip, only passes, and a blocking failure
     When the profile table is printed
     Then each verdict line names what is open, and the blocked one reads "✗ blocked — 1 blocking gate(s) failed (+1 informative finding(s))"
+
+  @CGPCH-B83 @unit-level
+  Scenario: A clean informative gate is named as ready to become blocking
+    Given an informative gate that passed three nodes and failed none, and then the same gate declared blocking
+    When the maturation reminder is printed for each
+    Then the first names the gate as ready to become blocking, and the second says nothing
 
   @CGPCH-B59 @unit-level
   Scenario: Occurrences of a detail are printed one per line
@@ -426,6 +486,24 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given twenty paths joined by commas
     When its occurrences are broken
     Then it takes more than one line
+
+  @CGPCH-B79 @unit-level
+  Scenario: The time table counts each gate's targets and aligns its columns
+    Given a gate with targets of every verdict, a gate with five targets and a gate with one
+    When the time table is printed
+    Then the first counts 15 targets, the five are right-aligned to its width, the names are padded to the longest, and the single target reads "1 target" with no worst time
+
+  @CGPCH-B80 @unit-level
+  Scenario: The slowest targets are listed slowest first, and only when a time was recorded
+    Given targets of 500ms, 300ms and 50ms whose gate names sort the other way, and then profiles with no target and with no time recorded
+    When the time tables are printed
+    Then the first lists the targets slowest first, and the others leave the list out
+
+  @CGPCH-B81 @unit-level
+  Scenario: Times are rounded to what a decision needs
+    Given the durations 1.23456789s, 1.234567ms and 1.234µs
+    When they are rounded for the table
+    Then they read 1.23s, 1.2ms and 1µs
 
   @CGPCH-I01 @unit-level
   Scenario: Declaring a perspective does not change the cost axis

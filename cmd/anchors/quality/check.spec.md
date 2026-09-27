@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CGPCH
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: comando
 -->
 # CheckGatePipeline — confronts the map's nodes against the declared gates, records the verdicts and reports the profile
@@ -34,8 +34,8 @@ reviewer.
 The profile table is read by eye over dozens of gates, so its format is part of the behaviour: columns that
 align, a drift column only when there is drift, the clean gates omitted on request but counted, the drift
 listed in full on request and grouped by reason, a legend of the symbols used, and a last line that says what
-is still open even when the check passes. The time measurement per gate is governed by the timing-metrics
-flag's own spec, not by this one.
+is still open even when the check passes. Whether the time measurement per gate is printed is governed by the
+timing-metrics flag's own spec; what the measurement shows is stated here.
 
 ## Domain
 
@@ -85,6 +85,10 @@ flag's own spec, not by this one.
 | `CGPCH-B18` | A blocking failure opens a violation issue only when issues are on; the map is stamped either way. |
 | `CGPCH-B19` | A pass resolves the open issue of the same gate and target; a pending open decision opens a user-owned decision in todo and is resolved by its own kind when the gate passes; an assumed debt opens in the future folder; a plain pending opens nothing. |
 | `CGPCH-B20` | A full check closes the open violations it did not reproduce; an incremental check leaves them alone. |
+| `CGPCH-B72` | When the stamps or the issues cannot be written, the check warns on the error output and still prints the verdict; a record that succeeds raises no warning. |
+| `CGPCH-B75` | When issues are off, the record says why no issue was written: the manual mode, or a local run that leaves the board issues to CI. |
+| `CGPCH-B76` | In github mode the recorded issues go to the board, never to the local issue folders. |
+| `CGPCH-B77` | The record summary counts the edges stamped, the issues opened, open decisions included, and the issues resolved, closed decisions and reconciled violations included; the reconciled violations and the assumed debts get a line of their own only when there are any. |
 
 ### Judgment — the queue and the brief
 
@@ -93,6 +97,7 @@ flag's own spec, not by this one.
 | `CGPCH-B21` | In the local modes, each target a judgment gate left pending becomes one judge task in the queue, named after the gate and the target. |
 | `CGPCH-B69` | A judge task is of the judgment kind and suggests the review stage, a verb the work command composes; its reason names the command that records the verdict with the task's own gate, and the guide and question when the gate declares them. A queued task with the legacy judge verb still counts as a judgment. |
 | `CGPCH-B22` | Judgments waiting in the queue bar an incremental check with exit 1, and never the full sweep. |
+| `CGPCH-B73` | After recording, the check says how many judge tasks this run queued, and says nothing when it queued none. |
 | `CGPCH-B23` | On a full sweep, a judge task that came from the check, for a gate that ran, whose target this run did not enqueue, is dropped from the queue; tasks of another origin stay. |
 | `CGPCH-B68` | A judge task is read back as the gate whose name and the task's target rebuild its exact name, so a gate whose name prefixes another's never takes the other's tasks. |
 | `CGPCH-B24` | The drop of stale judge tasks happens only on the full sweep; an incremental check keeps the judge tasks of the targets it did not look at. |
@@ -102,6 +107,7 @@ flag's own spec, not by this one.
 | `CGPCH-B28` | The judgment brief groups the targets by gate, so each question is asked once. |
 | `CGPCH-B29` | The judgment brief says the pipeline does not judge and points at the review checklist item. |
 | `CGPCH-B30` | The judgment brief lists at most ten targets per gate and counts the rest. |
+| `CGPCH-B71` | The judgment brief is printed only when some target awaits judgment. |
 
 ### Warnings that do not bar
 
@@ -114,6 +120,7 @@ flag's own spec, not by this one.
 | `CGPCH-B35` | A declared gate that no node reached is named in a warning instead of vanishing from the table. |
 | `CGPCH-B36` | The local backlog is printed on the full sweep of a mode other than github, and never on an incremental check. |
 | `CGPCH-B37` | The governance tips are printed on the full sweep only, with the pointer to the doctor. |
+| `CGPCH-B74` | When there is no governance tip to give, the full sweep prints neither a tip nor the pointer to the doctor. |
 
 ### The mirror and the exit
 
@@ -130,6 +137,7 @@ flag's own spec, not by this one.
 | `CGPCH-B41` | Each counter column has its own width, that of its largest number. |
 | `CGPCH-B42` | The pass, fail, skip and judgment columns are at least 1 wide; the drift column is 0 wide when no gate has drift. |
 | `CGPCH-B43` | When no gate has drift, the drift column and its separator are absent from every line. |
+| `CGPCH-B78` | A gate's indeterminate counter is its skipped and pending results less its drift, which the drift column counts apart. |
 | `CGPCH-B44` | An empty drift cell is as many terminal columns wide as a filled one: the symbol plus the digits. |
 | `CGPCH-B45` | A gate is clean when it has no failure, no drift, nothing skipped or pending and nothing awaiting judgment. |
 | `CGPCH-B46` | By default every gate appears in the table, clean or not. |
@@ -144,7 +152,9 @@ flag's own spec, not by this one.
 | `CGPCH-B55` | In the drift listing, targets with distinct reasons are listed one by one, each with its reason. |
 | `CGPCH-B56` | The drift listing's heading counts the items and the gates they are in. |
 | `CGPCH-B57` | The findings heading counts the failures, split into blocking and informative, and the divergences, and says how to list the divergences. |
+| `CGPCH-B82` | Under the findings heading each failure is listed with its blocking or informative mark, its gate and its target, and its detail indented below when it has one; with neither failure nor divergence there is no findings heading. |
 | `CGPCH-B58` | The last line says what is still open even when the check passes: informative findings, pending items, confrontations that did not happen, or nothing; a failed check says how many blocking gates failed and how many informative findings came with them. |
+| `CGPCH-B83` | An informative gate that passed and failed nothing is named as ready to become blocking; when no gate is, nothing is said. |
 | `CGPCH-B59` | A detail with occurrences joined by a semicolon and a space is printed one occurrence per line, every line indented. |
 | `CGPCH-B60` | One separator is enough to break a detail. |
 | `CGPCH-B61` | A detail with a single occurrence stays on one line. |
@@ -153,6 +163,14 @@ flag's own spec, not by this one.
 | `CGPCH-B64` | A short sentence with commas stays on one line. |
 | `CGPCH-B65` | Long prose with commas is not broken, since its items carry spaces. |
 | `CGPCH-B66` | A long list of paths joined by commas is broken. |
+
+### The time measurement
+
+| Effect | Description |
+| --- | --- |
+| `CGPCH-B79` | The time table counts each gate's targets over every verdict, as one target or as N targets with the numbers right-aligned to the widest, pads the gate names to the longest, and shows the worst target's time only for a gate with more than one target. |
+| `CGPCH-B80` | The slowest targets are listed slowest first, and the list is left out when no target recorded any time. |
+| `CGPCH-B81` | Times are rounded to what a decision needs: to ten milliseconds from one second up, to a tenth of a millisecond from one millisecond up, and to the microsecond below. |
 
 ## Invariants
 

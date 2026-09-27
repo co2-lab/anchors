@@ -154,3 +154,51 @@ func TestDeduceModulePrefixesNeverReusesAPrefix(t *testing.T) {
 		t.Errorf("expected 30 modules, got %d", len(pfx))
 	}
 }
+
+// The search order of a free prefix: the same first letter with the second from A to Z,
+// then every other first letter from A, each with its second letter from A to Z. Each case
+// pins one end of that order: the second letter after A, the last second letter Z, the
+// first letter after the colliding one, and the last first letter Z.
+func TestFirstFreePrefixSearchOrder(t *testing.T) {
+	t.Run("APPRP-B04: A colliding prefix keeps its first letter and takes the first free second letter", func(t *testing.T) {})
+	takeAll := func(taken map[string]bool, first byte) {
+		for c := byte('A'); c <= 'Z'; c++ {
+			taken[string([]byte{first, c})] = true
+		}
+	}
+	cases := []struct {
+		name  string
+		first byte
+		taken func() map[string]bool
+		want  string
+	}{
+		{"second letter moves forward from A", 'A', func() map[string]bool {
+			return map[string]bool{"AA": true}
+		}, "AB"},
+		{"second letter reaches Z", 'A', func() map[string]bool {
+			m := map[string]bool{}
+			takeAll(m, 'A')
+			delete(m, "AZ")
+			return m
+		}, "AZ"},
+		{"other first letters are tried forward from A", 'B', func() map[string]bool {
+			m := map[string]bool{}
+			takeAll(m, 'A')
+			takeAll(m, 'B')
+			return m
+		}, "CA"},
+		{"first letter reaches Z", 'A', func() map[string]bool {
+			m := map[string]bool{}
+			for f := byte('A'); f <= 'Z'; f++ {
+				takeAll(m, f)
+			}
+			delete(m, "ZZ")
+			return m
+		}, "ZZ"},
+	}
+	for _, tc := range cases {
+		if got := firstFreePrefix(tc.first, tc.taken()); got != tc.want {
+			t.Errorf("%s: firstFreePrefix(%q) = %q, want %q", tc.name, tc.first, got, tc.want)
+		}
+	}
+}

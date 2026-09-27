@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DCLDF
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @DCLDF
@@ -45,9 +45,15 @@ Feature: DiffChangedLines — which lines of which files a change added, read fr
 
   @DCLDF-B07 @unit-level
   Scenario: An added line that starts with two plus signs is a line, not a header
-    Given a hunk of three added lines whose second reads "+++ counter", and a later file whose hunk removes a line reading "--- old"
+    Given a hunk of three added lines whose second reads "+++ counter", a second file whose hunk has a context line, removes a line reading "--- old" and adds one, and a third file whose hunk header has no closing "@@" and adds a line reading "+++ z"
     When the diff is read
-    Then the first file has lines 1, 2 and 3, the second has line 1, and no file named "counter" appears
+    Then the first file has lines 1, 2 and 3, the second has line 2, the third has line 1, and no file named "counter" or "z" appears
+
+  @DCLDF-B08 @unit-level
+  Scenario: A very long line in the diff is read like any other
+    Given a hunk adding a line of 200 KiB followed by the line "after"
+    When the diff is read
+    Then the file has lines 1 and 2
 
   @DCLDF-I01 @unit-level
   Scenario: Removals do not shift the new-side numbering

@@ -109,9 +109,7 @@ func parseUnifiedDiff(diff string) ChangedLines {
 // de diff. "/dev/null" (arquivo deletado) vira vazio.
 func stripDiffPath(p string) string {
 	p = strings.TrimSpace(p)
-	if i := strings.IndexAny(p, "\t"); i >= 0 {
-		p = p[:i]
-	}
+	p, _, _ = strings.Cut(p, "\t")
 	if p == "/dev/null" {
 		return ""
 	}
@@ -128,8 +126,8 @@ func hunkCounts(hunk string) (old, new int) {
 		if len(side) == 0 || side[0] != sign {
 			return 0
 		}
-		if i := strings.IndexByte(side, ','); i >= 0 {
-			n, _ := strconv.Atoi(side[i+1:])
+		if _, c, ok := strings.Cut(side, ","); ok {
+			n, _ := strconv.Atoi(c)
 			return n
 		}
 		return 1
@@ -142,11 +140,10 @@ func hunkCounts(hunk string) (old, new int) {
 
 // hunkNewStart extrai o início do lado novo de um cabeçalho de hunk "@@ -a,b +c,d @@".
 func hunkNewStart(hunk string) int {
-	plus := strings.Index(hunk, "+")
-	if plus < 0 {
+	_, rest, ok := strings.Cut(hunk, "+")
+	if !ok {
 		return 0
 	}
-	rest := hunk[plus+1:]
 	end := strings.IndexAny(rest, ", ")
 	if end < 0 {
 		end = len(rest)

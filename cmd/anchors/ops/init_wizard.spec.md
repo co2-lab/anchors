@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INWZN
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: comando
 -->
 # InitWizard — the interactive init walks a person from an unconfigured directory to a reviewed anchors.yaml, and writes nothing on answers nobody gave
@@ -63,6 +63,12 @@ the file, which is a successful no.
 | `INWZN-B12` | A person with a detected AI tool is offered to open it: accepting runs the tool in the project root with the interview prompt as one argument, without a shell; declining prints the step-by-step. |
 | `INWZN-B13` | A modular stack preset takes its module prefixes from the module directories that exist under its glob; files there are not modules. |
 | `INWZN-B14` | `--non-interactive` routes the command to the JSON mode instead of the prompts. |
+| `INWZN-B15` | A stack preset picked from the menu writes its code layers into the configuration, and the init announces it by title. |
+| `INWZN-B16` | Accepting the header guide seeds `HEADER_GUIDE.md` in the project's guide directory, or in `guides/` when the project has none. |
+| `INWZN-B17` | The default gates are offered only when the chosen artifacts yield at least one, and accepting them writes them into `anchors.yaml`. |
+| `INWZN-B18` | A project with no code, spec, feature or test is announced as new before the questions; a project with any of them is not. |
+| `INWZN-B19` | The code-layer question is asked only when the configuration has code layers; a new project without any is told to declare them once they exist. |
+| `INWZN-B20` | Each guide found on disk gets a question asking which tag it governs. |
 
 ## Invariants
 

@@ -11,6 +11,7 @@ package recode
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
 )
@@ -101,17 +102,27 @@ func Find(content, old string) []Occurrence {
 		}
 	}
 	// scenario-codes e header podem se sobrepor a bare; classificamos na mesma ordem do
-	// Rewrite e removemos do texto-sombra para não recontar. NOTA: o shadow encurta ao
-	// remover, então Occurrence.Line dos kinds posteriores é aproximado — a CONTAGEM por
-	// kind (o que o dry-run usa) é exata; a linha é só para debug.
+	// Rewrite, e cada ocorrência já contada é MASCARADA no texto-sombra para não recontar.
+	//
+	// Mascarar, e não remover: o shadow guarda o comprimento do original, então as
+	// posições dos kinds seguintes continuam valendo no `content`. Removendo, o shadow
+	// encurtava, e o `Match` e a `Line` de um header ou de uma menção depois de um
+	// scenario-code saíam de outro trecho do texto. Só o código é mascarado, como o
+	// Rewrite só troca o código: o sufixo e o prefixo `code:` ficam, e a máscara é
+	// alfanumérica como o código novo seria — as fronteiras que os padrões seguintes
+	// leem são as mesmas do Rewrite.
 	shadow := content
 	scen := scenarioRE.FindAllStringIndex(shadow, -1)
 	add("scenario-code", scen)
-	shadow = scenarioRE.ReplaceAllString(shadow, "")
+	for _, loc := range scen {
+		shadow = maskCode(shadow, loc[0], loc[0]+len(old))
+	}
 
 	hdr := headerRE.FindAllStringIndex(shadow, -1)
 	add("header", hdr)
-	shadow = headerRE.ReplaceAllString(shadow, "")
+	for _, loc := range hdr {
+		shadow = maskCode(shadow, loc[1]-len(old), loc[1])
+	}
 
 	bare := bareRE.FindAllStringIndex(shadow, -1)
 	add("bare-ref", bare)
@@ -119,14 +130,16 @@ func Find(content, old string) []Occurrence {
 	return occ
 }
 
+// maskCode overwrites s[from:to] with lower-case letters, keeping the length. Lower case
+// never forms a code, and a letter keeps the boundaries a replaced code would.
+func maskCode(s string, from, to int) string {
+	return s[:from] + strings.Repeat("x", to-from) + s[to:]
+}
+
+// lineOf gives the 1-indexed line of a byte offset. The offset never passes the end of s:
+// it comes from a match in s or in the shadow text, which has the same length as s.
 func lineOf(s string, byteIdx int) int {
-	line := 1
-	for i := 0; i < byteIdx && i < len(s); i++ {
-		if s[i] == '\n' {
-			line++
-		}
-	}
-	return line
+	return strings.Count(s[:byteIdx], "\n") + 1
 }
 
 // String — util p/ debug.

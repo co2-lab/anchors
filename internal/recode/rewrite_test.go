@@ -58,9 +58,9 @@ func TestRewrite_scenarioCodeVariety(t *testing.T) {
 func TestRewrite_bareCrossRef(t *testing.T) {
 	t.Run("RCRWR-B05: A bare mention is replaced and its neighbour kept", func(t *testing.T) {})
 	in := "Ver a regra em TCDTX (a tela de detalhe)."
-	got, _ := Rewrite(in, "TCDTX", "TCTXX")
-	if got != "Ver a regra em TCTXX (a tela de detalhe)." {
-		t.Errorf("bare ref not replaced: %q", got)
+	got, n := Rewrite(in, "TCDTX", "TCTXX")
+	if got != "Ver a regra em TCTXX (a tela de detalhe)." || n != 1 {
+		t.Errorf("bare ref not replaced as one replacement (n=%d): %q", n, got)
 	}
 }
 
@@ -105,6 +105,42 @@ func TestFind_classifies(t *testing.T) {
 	}
 	if kinds["bare-ref"] != 1 {
 		t.Errorf("want 1 bare-ref, got %d", kinds["bare-ref"])
+	}
+	// Every occurrence of a kind is listed, not only the first.
+	two := "// @anchors\n//   code: TCDTX\n//   ref: TCDTX\n\nit('TCDTX-S02: x')\nit('TCDTX-B01: y')\n// ver TCDTX e TCDTX.\n"
+	kinds = map[string]int{}
+	for _, o := range Find(two, "TCDTX") {
+		kinds[o.Kind]++
+	}
+	if kinds["scenario-code"] != 2 || kinds["header"] != 2 || kinds["bare-ref"] != 2 {
+		t.Errorf("want two of each kind, got %v", kinds)
+	}
+}
+
+func TestFind_lineOfEachOccurrence(t *testing.T) {
+	t.Run("RCRWR-B07: Each listed occurrence carries its line, counted from one", func(t *testing.T) {})
+	in := "TCDTX-B01 first\nnothing here\n\nit('TCDTX-S02: x')\n"
+	occ := Find(in, "TCDTX")
+	if len(occ) != 2 || occ[0].Line != 1 || occ[1].Line != 4 {
+		t.Errorf("want scenario codes on lines 1 and 4, got %v", occ)
+	}
+	// After scenario codes, a header and a mention keep their own text and line: the
+	// codes counted before are masked, not removed, so positions still hold.
+	in = "TCDTX-B01 TCDTX-B02\ncode: TCDTX\nsee TCDTX here\n"
+	want := []Occurrence{
+		{Kind: "scenario-code", Match: "TCDTX-B01", Line: 1},
+		{Kind: "scenario-code", Match: "TCDTX-B02", Line: 1},
+		{Kind: "header", Match: "code: TCDTX", Line: 2},
+		{Kind: "bare-ref", Match: "TCDTX ", Line: 3},
+	}
+	got := Find(in, "TCDTX")
+	if len(got) != len(want) {
+		t.Fatalf("want %v, got %v", want, got)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("occurrence %d: want %v, got %v", i, want[i], got[i])
+		}
 	}
 }
 

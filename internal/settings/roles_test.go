@@ -2,6 +2,7 @@ package settings
 
 import (
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -133,5 +134,19 @@ func TestKnownRoles_allPresentThemselves(t *testing.T) {
 		if len(r.Caps()) == 0 {
 			t.Errorf("%s has no capability — so it does nothing", r)
 		}
+	}
+}
+
+// A role shows its capabilities in one stable order, not in the order they were declared.
+func TestRole_capsAreSorted(t *testing.T) {
+	t.Run("AGRLG-B07: A role lists its capabilities in alphabetical order", func(t *testing.T) {})
+	for _, r := range KnownRoles() {
+		caps := r.Caps()
+		if !sort.SliceIsSorted(caps, func(i, j int) bool { return caps[i] < caps[j] }) {
+			t.Errorf("%s: capabilities %v are not in alphabetical order", r, caps)
+		}
+	}
+	if caps := RoleArchitect.Caps(); len(caps) < 2 {
+		t.Fatalf("the architect has %d capabilities; the order needs at least two", len(caps))
 	}
 }

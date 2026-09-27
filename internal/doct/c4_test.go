@@ -82,7 +82,9 @@ func TestContainers_unitsComeFromTheDeclaredLayers(t *testing.T) {
 func TestContainers_layerMatchAndOrder(t *testing.T) {
 	t.Run("C4CNC-B01: A container carries the specs of the layers it declares, in layer then code order", func(t *testing.T) {
 		root, g := projetoDeTeste(t, map[string]string{
-			"a/R.spec.md": "---\ncode: ROTAX\nlayer: lambdas\n---\n\n# R — r\n",
+			// ZROTA sorts after the shared codes by code and before them by layer: the
+			// order can only come out right if the layer decides first.
+			"a/R.spec.md": "---\ncode: ZROTA\nlayer: lambdas\n---\n\n# R — r\n",
 			"a/Y.spec.md": "---\ncode: UTILY\nlayer: shared\n---\n\n# Y — y\n",
 			"a/X.spec.md": "---\ncode: UTILX\nlayer: shared\n---\n\n# X — x\n",
 		})
@@ -97,8 +99,16 @@ func TestContainers_layerMatchAndOrder(t *testing.T) {
 		for _, u := range c.fnContainers()[0].Units {
 			got = append(got, u.Code)
 		}
-		if strings.Join(got, ",") != "ROTAX,UTILX,UTILY" {
-			t.Errorf("units = %v, want ROTAX, UTILX, UTILY", got)
+		if strings.Join(got, ",") != "ZROTA,UTILX,UTILY" {
+			t.Errorf("units = %v, want ZROTA, UTILX, UTILY", got)
+		}
+		// Same layer, same code: the path decides, whatever order they arrive in.
+		box := Container{Name: "app", Layers: []string{"shared"}}
+		c.specs = []Spec{{Path: "b/B.spec.md", Layer: "shared"}, {Path: "a/A.spec.md", Layer: "shared"}}
+		c.Config = &config.Config{ContainersDecl: []config.Container{{Name: box.Name, Layers: box.Layers}}}
+		units := c.fnContainers()[0].Units
+		if len(units) != 2 || units[0].Path != "a/A.spec.md" || units[1].Path != "b/B.spec.md" {
+			t.Errorf("same layer and code must be ordered by path, got %+v", units)
 		}
 	})
 }

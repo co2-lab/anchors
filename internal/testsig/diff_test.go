@@ -5,6 +5,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -149,8 +150,26 @@ func TestDiffPathsContextAndFile(t *testing.T) {
 // new-file header: the line was lost and every later line was booked under a bogus file.
 func TestDiffAddedLineLooksLikeHeader(t *testing.T) {
 	t.Run("DCLDF-B07: An added line that starts with two plus signs is a line, not a header", func(t *testing.T) {
-		diff := "--- a/x.go\n+++ b/x.go\n@@ -1,0 +1,3 @@\n+a\n+++ counter\n+b\n--- a/y.go\n+++ b/y.go\n@@ -1,1 +1,1 @@\n--- old\n+new\n"
-		want := ChangedLines{"x.go": {1: true, 2: true, 3: true}, "y.go": {1: true}}
+		// y.go's hunk mixes a context line, a removal and an addition, and z.go's header has
+		// no closing @@: each hunk ends exactly where its counts say, so the headers after
+		// it are read as headers again, and z.go's "+++ z" is still a line.
+		diff := "--- a/x.go\n+++ b/x.go\n@@ -1,0 +1,3 @@\n+a\n+++ counter\n+b\n" +
+			"--- a/y.go\n+++ b/y.go\n@@ -1,2 +1,2 @@\n ctx\n--- old\n+new\n" +
+			"--- a/z.go\n+++ b/z.go\n@@ -0,0 +1\n+++ z\n"
+		want := ChangedLines{"x.go": {1: true, 2: true, 3: true}, "y.go": {2: true}, "z.go": {1: true}}
+		if got := parseUnifiedDiff(diff); !reflect.DeepEqual(got, want) {
+			t.Errorf("got %v, want %v", got, want)
+		}
+	})
+}
+
+// bufio.Scanner refuses a line longer than its buffer; a minified bundle or a lockfile can
+// put hundreds of kilobytes on one line, and every line after it would be lost.
+func TestDiffVeryLongLine(t *testing.T) {
+	t.Run("DCLDF-B08: A very long line in the diff is read like any other", func(t *testing.T) {
+		long := "+" + strings.Repeat("x", 200*1024)
+		diff := "--- a/min.js\n+++ b/min.js\n@@ -0,0 +1,2 @@\n" + long + "\n+after\n"
+		want := ChangedLines{"min.js": {1: true, 2: true}}
 		if got := parseUnifiedDiff(diff); !reflect.DeepEqual(got, want) {
 			t.Errorf("got %v, want %v", got, want)
 		}

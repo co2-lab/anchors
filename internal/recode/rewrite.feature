@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RCRWR
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @RCRWR
@@ -36,12 +36,21 @@ Feature: RecodeRewrite — renaming an identity code inside a text, on every sur
     Given the text "Ver a regra em TCDTX (a tela de detalhe)."
     When "TCDTX" is rewritten to "TCTXX"
     Then the text is "Ver a regra em TCTXX (a tela de detalhe)."
+    And one replacement is counted
 
   @RCRWR-B06 @unit-level
   Scenario: The dry run classifies each occurrence
     Given a text with a "ref: TCDTX" header, the scenario code "TCDTX-S02" and a bare "TCDTX"
     When the occurrences of "TCDTX" are listed
     Then there is one scenario code, one header and one bare reference
+    And a text with two of each kind lists two scenario codes, two headers and two bare references
+
+  @RCRWR-B07 @unit-level
+  Scenario: Each listed occurrence carries its line, counted from one
+    Given a text with the scenario code "TCDTX-B01" on line 1 and "TCDTX-S02" on line 4
+    When the occurrences of "TCDTX" are listed
+    Then the first is on line 1 and the second on line 4
+    And in a text with two scenario codes, then a header, then a mention, each occurrence carries its own text and line
 
   @RCRWR-I01 @unit-level
   Scenario: A text without the old code is left unchanged

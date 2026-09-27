@@ -1,6 +1,6 @@
 <!-- @anchors
   code: AGRLG
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: apoio
 -->
 # AgentRoles — who is who in a project, and the capabilities each role carries
@@ -41,6 +41,7 @@ hand-written settings file, can do nothing.
 | `AGRLG-B04` | Dev, QA and the reviewers decide neither the product nor the structure, and all of them can review. |
 | `AGRLG-B05` | QA and each reviewer role carry a review lens, all distinct; the dev carries none. |
 | `AGRLG-B06` | A typed role is recognised by its name or a common abbreviation, in English or Portuguese, ignoring case and surrounding spaces; anything else is not recognised. (`ParseRole`) |
+| `AGRLG-B07` | A role lists its capabilities in alphabetical order, whatever order they were declared in, so the same role always shows them the same way. (`Caps`) |
 
 ## Constraints
 
