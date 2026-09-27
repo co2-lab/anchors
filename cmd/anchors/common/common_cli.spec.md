@@ -57,7 +57,7 @@ says so plainly (`dev`, `none`, `unknown`) instead of pretending to be a release
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `CMCLC-E01` | The path cannot be expressed relative to the root (the root is relative and the path absolute). | The path is returned as given, with forward slashes. | A path the caller can still show is better than an empty one that would match nothing and hide the cause. |
+| `CMCLC-E01` | The path cannot be expressed relative to the root (the root is relative and the path absolute). | The path is returned as given, with forward slashes. | A path the caller can still show is better than an empty one that would match nothing and hide the cause. <!-- @resilient: the path as given is still a correct name for the file, and the caller that fails to find it as a node reports that with the path in hand --> |
 
 ## Dependencies
 

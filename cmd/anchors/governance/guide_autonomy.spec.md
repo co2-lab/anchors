@@ -33,12 +33,13 @@ So whoever does not decide the product reads a different instruction, in the pla
 | `ATGDT-B05` | A role with a lens reads "This role's lens (<title>)" followed by the lens; a role with no lens gets no such section. |
 | `ATGDT-B06` | Whoever does not decide the product — declared or not — reads to escalate with `--for-user`, "Do not ask whoever is running you", to move on to the next card, and what is NOT to be escalated. |
 | `ATGDT-B07` | A declaration by the old `user_issues` flag, with no role, is named as such — "Your declaration (the old `user_issues` flag, with no role yet …)" — saying whether it decides the direction of the product and to declare a role; no empty role is ever named. |
+| `ATGDT-B08` | A settings file that exists but cannot be read keeps the closed guide and names the read error, instead of saying no role was declared. |
 
 ## Invariants
 
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
-| `ATGDT-I01` | A declaration that cannot be read never opens the door: the section is the one for no role declared. | a settings file with malformed content yields "You did not declare a role" and the ban on asking |
+| `ATGDT-I01` | A declaration that cannot be read never opens the door: the guide stays on the closed side, with no role applied. | a settings file with malformed content yields no role and the ban on asking |
 
 ## Constraints
 
@@ -50,7 +51,7 @@ So whoever does not decide the product reads a different instruction, in the pla
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `ATGDT-E01` | REF[ATGDT-I01]: a settings file that cannot be read is the one failure the unit handles, and I01 states how: it falls on the closed side | — | — |
+| `ATGDT-E01` | REF[ATGDT-B08]: a settings file that cannot be read is the one failure the unit handles, and B08 states how: named, on the closed side <!-- @resilient: the cause is written into the guide the agent reads --> | — | — |
 
 ## Dependencies
 

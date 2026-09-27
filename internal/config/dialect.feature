@@ -96,3 +96,9 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given every built-in family
     When each family's effective dialect is resolved
     Then its collection query pattern is empty
+
+  @DLCTI-B13 @unit-level
+  Scenario: The Go family recognises both shapes of error handling
+    Given the Go family's handle patterns
+    When they read "if err != nil {" and "if err := os.Remove(p); err != nil {"
+    Then both lines are recognised as handling a failure

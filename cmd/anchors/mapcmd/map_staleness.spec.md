@@ -58,7 +58,7 @@ taking down the report the user came for.
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `MPSTM-E01` | The project root cannot be walked. | Nothing is named and no error is raised. | The check is auxiliary: failing here would take down the `check` report that prints it. |
+| `MPSTM-E01` | The project root cannot be walked. | Nothing is named and no error is raised. | The check is auxiliary: failing here would take down the `check` report that prints it. <!-- @resilient: the staleness notice is a warning beside the check, never its verdict; a root that cannot be walked only loses the warning --> |
 
 ## Dependencies
 

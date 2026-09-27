@@ -78,8 +78,8 @@ trust without checking.
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `BLGTN-E01` | REF[BLGTN-B05]: a pack that fails to load is the configuration failure B05 reports on the error output while keeping the inline duties | — | — |
-| `BLGTN-E02` | A node of the map whose file cannot be read. | It is not counted as a subject of any duty. | A node that cannot be read cannot be shown to carry the trigger; counting it as missing would accuse a file that is not there. |
+| `BLGTN-E01` | REF[BLGTN-B05]: a pack that fails to load is the configuration failure B05 reports on the error output while keeping the inline duties | — | — <!-- @resilient: the pack failure is printed on the error output, and the inline duties still apply, so the check goes on with what it can trust --> |
+| `BLGTN-E02` | A node of the map whose file cannot be read. | It is not counted as a subject of any duty. | A node that cannot be read cannot be shown to carry the trigger; counting it as missing would accuse a file that is not there. <!-- @resilient: a node that cannot be read cannot be shown to carry the trigger, and counting it would accuse a file that is not there --> |
 
 ## Dependencies
 

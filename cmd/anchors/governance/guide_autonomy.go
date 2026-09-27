@@ -26,7 +26,10 @@ import (
 
 // autonomyGuide devolve a seção do guia sobre o que fazer diante do que não se sabe.
 func autonomyGuide(root string) string {
-	s, _ := settings.Load(root)
+	// A settings file that cannot be read still leaves the guide on the closed side
+	// (ATGDT-I01), but the guide says WHY: it said "you did not declare a role" to someone
+	// who had, and whose file was malformed — the wrong diagnosis, and no way to fix it.
+	s, loadErr := settings.Load(root)
 
 	var b strings.Builder
 
@@ -101,6 +104,9 @@ func autonomyGuide(root string) string {
 	} else if s.Decided() {
 		fmt.Fprintf(&b, "**Your role (%s) does NOT decide the direction of this product** — who decides "+
 			"is the\n`product-owner` or the `architect`.\n\n", s.Role.Title())
+	} else if loadErr != nil {
+		fmt.Fprintf(&b, "**Your local settings could not be read** (%v), so no role applies and "+
+			"the agent decides\nnothing. Fix the file, or declare the role again with `anchors settings role`.\n\n", loadErr)
 	} else {
 		b.WriteString("**You did not declare a role**, and without a role the agent decides " +
 			"nothing.\nDeclare one with `anchors settings role`.\n\n")

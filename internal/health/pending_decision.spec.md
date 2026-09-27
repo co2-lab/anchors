@@ -52,7 +52,7 @@ exists to be TAKEN to whoever decides, and that person needs to know where to st
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `PNDCP-E01` | A spec node's file cannot be read. | The spec is skipped silently, and the other specs are still reported. | The map knowing a file the disk lost is already the doctor's `no-fantasma` finding; repeating it here would report one problem twice. |
+| `PNDCP-E01` | A spec node's file cannot be read. | The spec is skipped silently, and the other specs are still reported. | The map knowing a file the disk lost is already the doctor's `no-fantasma` finding; repeating it here would report one problem twice. <!-- @resilient: the lost file is the doctor's no-fantasma finding already, and repeating it here would report one problem twice --> |
 
 ## Dependencies
 

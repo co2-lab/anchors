@@ -63,7 +63,7 @@ and the record's value is in declaring more.
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `DLCND-E01` | REF[DLCND-B02]: git cannot be read, and B02 says the confrontation did not happen instead of accusing or clearing any file | — | — |
+| `DLCND-E01` | REF[DLCND-B02]: git cannot be read, and B02 says the confrontation did not happen instead of accusing or clearing any file | — | — <!-- @resilient: without git the delivery goes on by design, and the output already says the confrontation did not happen, so the failure is visible where the person reads --> |
 
 ## Dependencies
 

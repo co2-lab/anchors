@@ -43,8 +43,8 @@ something else, and no git cause is invented.
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `GTAVG-E01` | REF[GTAVG-B01]: git missing from the PATH is the failure B01 classifies, with its fix in B04 | — | — |
-| `GTAVG-E02` | REF[GTAVG-B03]: a root outside any repository is the failure B03 classifies, with its fix in B05 | — | — |
+| `GTAVG-E01` | REF[GTAVG-B01]: git missing from the PATH is the failure B01 classifies, with its fix in B04 | — | — <!-- @resilient: the missing binary is not swallowed: it becomes the classification the caller turns into the explanation that names the fix --> |
+| `GTAVG-E02` | REF[GTAVG-B03]: a root outside any repository is the failure B03 classifies, with its fix in B05 | — | — <!-- @resilient: the missing repository is not swallowed: it becomes the classification the caller turns into the explanation that sends to git init --> |
 
 ## Dependencies
 

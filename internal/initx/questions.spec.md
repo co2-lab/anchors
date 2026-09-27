@@ -71,8 +71,8 @@ file conclude that the integration is active.
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `INQSN-E01` | REF[INQSN-B06]: an answer outside the options is the input failure B06 refuses, with the accepted values | — | — |
-| `INQSN-E02` | REF[INQSN-B07]: `github` mode without a repository or labels is the dependency failure B07 refuses | — | — |
+| `INQSN-E01` | REF[INQSN-B06]: an answer outside the options is the input failure B06 refuses, with the accepted values | — | — <!-- @resilient: the refusal is the answer's status, with the accepted values, returned for every answer; nothing is written until every answer is accepted --> |
+| `INQSN-E02` | REF[INQSN-B07]: `github` mode without a repository or labels is the dependency failure B07 refuses | — | — <!-- @resilient: the refusal is the answer's status, with the reason, returned for every answer; nothing is written until every answer is accepted --> |
 
 ## Dependencies
 

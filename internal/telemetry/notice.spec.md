@@ -57,7 +57,7 @@ reading. Failing to record the marker never stops a command — at worst the not
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `TLNTT-E01` | The marker cannot be written (the `.anchors` directory cannot be created under the root). | The notice is still written, nothing fails, and the next call shows it again. | Showing the notice twice is better than blocking a command over an announcement. |
+| `TLNTT-E01` | The marker cannot be written (the `.anchors` directory cannot be created under the root). | The notice is still written, nothing fails, and the next call shows it again. | Showing the notice twice is better than blocking a command over an announcement. <!-- @resilient: showing the notice again on the next call is the whole cost, and blocking a command over an announcement would be worse --> |
 
 ## Dependencies
 

@@ -257,7 +257,10 @@ var dialectFamilies = map[string]Dialect{
 		HTTPStatus:        `WriteHeader\(\s*(\d{3})\s*\)|\bJSON\(\s*(\d{3})\s*,|http\.Status(\w+)`,
 		HTTPStatusDynamic: `WriteHeader\(\s*[a-z]`,
 		HandlePatterns: []string{
-			`if\s+err\s*!=\s*nil`,
+			// Both shapes: `if err != nil` and `if err := f(); err != nil`. The second is
+			// the commoner one in Go (986 of them in Anchors itself) and the first pattern
+			// alone missed it, so the handling it does was invisible to the failure gates.
+			`\bif\b[^\n{]*\berr\s*!=\s*nil`,
 			`\brecover\(\)`,
 			`==\s*nil\s*\{`,
 			`\berrors\.(?:Is|As)\(`,

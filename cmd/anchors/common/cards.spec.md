@@ -65,8 +65,8 @@ installed, not authenticated or offline: every missing ingredient answers "nothi
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `AGCRG-E01` | The tracker client exits with an error while listing the agent's cards. | No cards, no error. | The list is a hint for the next step; an offline or unauthenticated client must not stop the command that asked. |
-| `AGCRG-E02` | The tracker client exits with an error while reading a pull request body. | No card (empty answer). | Same reason: the caller treats "no card" as "no link declared" and moves on. |
+| `AGCRG-E01` | The tracker client exits with an error while listing the agent's cards. | No cards, no error. | The list is a hint for the next step; an offline or unauthenticated client must not stop the command that asked. <!-- @resilient: the card list is only a hint for the next step, and an offline or unauthenticated tracker is an ordinary state of a workstation, not a defect to report --> |
+| `AGCRG-E02` | The tracker client exits with an error while reading a pull request body. | No card (empty answer). | Same reason: the caller treats "no card" as "no link declared" and moves on. <!-- @resilient: a PR body that cannot be read is read as no card linked, which is the answer the caller already handles; the tracker being unreachable is not this lookup's to report --> |
 
 ## Dependencies
 

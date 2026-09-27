@@ -155,7 +155,7 @@ func TestAutonomyGuideUnreadableSettingsIsClosed(t *testing.T) {
 		t.Fatal(err)
 	}
 	g := autonomyGuide(dir)
-	if !strings.Contains(g, "**You did not declare a role**") || !strings.Contains(g, "Do not ask whoever is running you.") {
+	if strings.Contains(g, "Your role (") || !strings.Contains(g, "Do not ask whoever is running you.") {
 		t.Errorf("an unreadable declaration must fall on the closed side:\n%s", g)
 	}
 }
@@ -276,5 +276,25 @@ func TestAutonomyGuidePreparationHoldsForEveryProfile(t *testing.T) {
 		if g := autonomyGuide(dir); !strings.Contains(g, "does not ask for authorization") {
 			t.Errorf("role %s does not see the preparation section", role)
 		}
+	}
+}
+
+// A settings file that cannot be read keeps the closed guide and says why, instead of
+// claiming no role was declared.
+func TestAutonomyGuideNamesAnUnreadableSettingsFile(t *testing.T) {
+	t.Run("ATGDT-B08: An unreadable settings file is named, and the guide stays closed", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Dir(settings.Path(root)), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(settings.Path(root), []byte("role: [not: a role\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	text := autonomyGuide(root)
+	if !strings.Contains(text, "could not be read") || strings.Contains(text, "You did not declare a role") {
+		t.Errorf("an unreadable settings file must be named, not reported as no declaration:\n%s", text)
+	}
+	if !strings.Contains(text, "Do not ask whoever is running you.") {
+		t.Errorf("the guide must stay on the closed side:\n%s", text)
 	}
 }

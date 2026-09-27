@@ -2,6 +2,7 @@ package config
 
 import (
 	"reflect"
+	"regexp"
 	"sort"
 	"testing"
 )
@@ -256,6 +257,24 @@ func TestDialectFamilies_noVendorQuery(t *testing.T) {
 	for _, fam := range KnownDialectFamilies() {
 		if q := (&Config{Dialect: &Dialect{Family: fam}}).DialectFor().CollectionQuery; q != "" {
 			t.Errorf("family %s brings collection_query %q", fam, q)
+		}
+	}
+}
+
+// The Go family recognises both shapes of error handling, the plain check and the one with
+// an init statement.
+func TestGoHandlePatternsSeeBothShapes(t *testing.T) {
+	t.Run("DLCTI-B13: The Go family recognises both shapes of error handling", func(t *testing.T) {})
+	d := (&Config{Dialect: &Dialect{Family: "go"}}).DialectFor()
+	for _, line := range []string{"if err != nil {", "if err := os.Remove(p); err != nil {"} {
+		found := false
+		for _, p := range d.HandlePatterns {
+			if regexp.MustCompile(p).MatchString(line) {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("the Go handle patterns must see %q", line)
 		}
 	}
 }

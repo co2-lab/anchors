@@ -64,7 +64,7 @@ declared, the finding is informational and asks to adopt the section and declare
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `SPSCS-E01` | A spec node's file cannot be read. | The spec is left out of the counts; with no readable spec there is no finding. | An unread spec has no titles to confront, and counting it as lacking every section would invent a pattern; the missing file is the doctor's `no-fantasma` finding. |
+| `SPSCS-E01` | A spec node's file cannot be read. | The spec is left out of the counts; with no readable spec there is no finding. | An unread spec has no titles to confront, and counting it as lacking every section would invent a pattern; the missing file is the doctor's `no-fantasma` finding. <!-- @resilient: an unread spec has no titles to confront, and the lost file is the doctor's no-fantasma finding already --> |
 
 ## Dependencies
 

@@ -62,8 +62,8 @@ Each failure the unit reports is already stated as a behaviour; the rows below c
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `MPFRM-E01` | REF[MPFRM-B02]: a map newer than the binary is the failure B02 answers with the upgrade message | — | — |
-| `MPFRM-E02` | REF[MPFRM-B03]: a map older than the readable range is the failure B03 answers with the migration message | — | — |
+| `MPFRM-E01` | REF[MPFRM-B02]: a map newer than the binary is the failure B02 answers with the upgrade message | — | — <!-- @resilient: the newer map is refused with a typed error carrying the upgrade message, which the loader returns and the command prints --> |
+| `MPFRM-E02` | REF[MPFRM-B03]: a map older than the readable range is the failure B03 answers with the migration message | — | — <!-- @resilient: the older map is refused with a typed error carrying the migration message, which the loader returns and the command prints --> |
 
 ## Dependencies
 

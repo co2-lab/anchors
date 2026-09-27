@@ -67,3 +67,9 @@ Feature: AutonomyGuide — what an agent does with what it does not know, by the
     Given a project whose local settings declare the role product-owner
     When the autonomy section is rendered
     Then it does not contain "Do not ask whoever is running you."
+
+  @ATGDT-B08 @unit-level
+  Scenario: An unreadable settings file is named, and the guide stays closed
+    Given a settings file that exists but cannot be parsed
+    When the autonomy guide is rendered
+    Then it names the read error instead of saying no role was declared, and keeps the closed instructions

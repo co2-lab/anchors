@@ -61,6 +61,7 @@ written in the configuration file).
 | `DLCTI-B10` | A lexicon field is waived only when the opt-out list names it by its configuration name, ignoring case and spaces; its name in the code does not waive it (`WaivedField`). |
 | `DLCTI-B11` | The default set-promise convention recognises the verb after a provider prefix (a cloud-provider list call) and never inside another word (allocate, callback, enlistment). |
 | `DLCTI-B12` | The default set-slice convention is a query verb opening the name, followed by a slice word (first, recent, top, page…). |
+| `DLCTI-B13` | The Go family recognises both shapes of error handling: `if err != nil` and `if err := f(); err != nil`. The second is the commoner, and matching only the first left the handling of most Go code invisible to the failure gates. |
 
 ## Invariants
 
@@ -79,7 +80,7 @@ written in the configuration file).
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `DLCTI-E01` | REF[DLCTI-B09]: a pattern that does not compile is the failure B09 absorbs: it compiles to nothing, and the gate answers as for an undeclared pattern | — | — |
+| `DLCTI-E01` | REF[DLCTI-B09]: a pattern that does not compile is the failure B09 absorbs: it compiles to nothing, and the gate answers as for an undeclared pattern | — | — <!-- @resilient: loading the configuration already refuses a pattern that does not compile and names it, so the nil here only reaches a hand-built dialect --> |
 
 ## Dependencies
 

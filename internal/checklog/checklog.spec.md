@@ -61,7 +61,7 @@ screen.
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `CHLGC-E01` | REF[CHLGC-B04]: the state folder or the mirror file cannot be created, which B04 answers by running the check without a mirror | — | — |
+| `CHLGC-E01` | REF[CHLGC-B04]: the state folder or the mirror file cannot be created, which B04 answers by running the check without a mirror | — | — <!-- @resilient: the mirror is a convenience copy of what standard output already shows, so a check without it loses nothing the person sees --> |
 
 ## Dependencies
 

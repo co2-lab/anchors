@@ -56,7 +56,7 @@ never on an incremental check) belongs to the check command that calls it.
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `LCBCL-E01` | An issue state folder (or the queue) exists but cannot be listed. | That part counts as zero and the check goes on. | The backlog is informative and never blocks: a check that failed because its closing summary could not read a folder would hide the verdict it already reached. |
+| `LCBCL-E01` | An issue state folder (or the queue) exists but cannot be listed. | That part counts as zero and the check goes on. | The backlog is informative and never blocks: a check that failed because its closing summary could not read a folder would hide the verdict it already reached. <!-- @resilient: the backlog is an informative summary after the verdict, and an unlistable folder can only lower a count, never change what the check decided --> |
 
 ## Dependencies
 

@@ -56,7 +56,7 @@ in one spec), and a lookup that fails yields nothing instead of stopping the esc
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `ESDPS-E01` | The board lookup fails, or answers with something that is not a list of cards. | Nothing is reported, and no error reaches the escalation. | The check is auxiliary; stopping the escalation for it would be worse than the duplicate it prevents. |
+| `ESDPS-E01` | The board lookup fails, or answers with something that is not a list of cards. | Nothing is reported, and no error reaches the escalation. | The check is auxiliary; stopping the escalation for it would be worse than the duplicate it prevents. <!-- @resilient: the duplicate lookup is auxiliary, and a board that cannot be read must not stop the escalation it only advises --> |
 
 ## Dependencies
 

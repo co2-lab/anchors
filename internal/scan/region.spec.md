@@ -65,9 +65,9 @@ script a dependency of the hundreds of scripts that run it.
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `SRRGS-E01` | A region is opened and never closed. | A defect of kind `sem-fecho` naming the opening line and code. | An open interval has no end, and a revision measured to the end of the file would be the wrong one. |
-| `SRRGS-E02` | A close appears with no open region. | A defect of kind `fecho-orfao` naming the line and the code it carries. | The close delimits nothing, and ignoring it would hide a marker the author thought was working. |
-| `SRRGS-E03` | A close names a code other than the open region's. | A defect of kind `fecho-trocado` naming the line, the open code and the code found. | A swapped nesting measures the wrong interval in silence; the name-against-name confrontation is why the close repeats the code. |
+| `SRRGS-E01` | A region is opened and never closed. | A defect of kind `sem-fecho` naming the opening line and code. | An open interval has no end, and a revision measured to the end of the file would be the wrong one. <!-- @resilient: the unclosed region is not absorbed in silence: it becomes a pairing defect returned to the caller, which region-pair-honored fails on --> |
+| `SRRGS-E02` | A close appears with no open region. | A defect of kind `fecho-orfao` naming the line and the code it carries. | The close delimits nothing, and ignoring it would hide a marker the author thought was working. <!-- @resilient: the orphan close is not absorbed in silence: it becomes a pairing defect returned to the caller, which region-pair-honored fails on --> |
+| `SRRGS-E03` | A close names a code other than the open region's. | A defect of kind `fecho-trocado` naming the line, the open code and the code found. | A swapped nesting measures the wrong interval in silence; the name-against-name confrontation is why the close repeats the code. <!-- @resilient: the swapped close is not absorbed in silence: it becomes a pairing defect returned to the caller, which region-pair-honored fails on --> |
 
 ## Dependencies
 

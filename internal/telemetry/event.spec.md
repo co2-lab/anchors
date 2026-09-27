@@ -54,11 +54,7 @@ caller's and a test can pass a fixed clock instead of sleeping.
 
 ## Errors
 
-| Code | Condition | Result | Why |
-| --- | --- | --- | --- |
-
-none — creating an event only assembles values the caller passed; nothing is read, parsed or
-sent here.
+none — creating an event only assembles values the caller passed; nothing is read, parsed or sent here. The one nil check is not a defence: absent attributes are a legitimate input, normalised to an empty set (`TLEVT-B02`).
 
 ## Dependencies
 

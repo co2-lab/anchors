@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:3becc066cf637822 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:04ffb142c3bf5efc — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1201,6 +1201,8 @@ teste prova.
 - [An unreadable declaration reads as no role](camadas/comando.md#atgdt--autonomyguide--what-an-agent-does-with-what-it-does-not-know-by-the-role-declared-locally) `ATGDT-I01`
 
 - [A role that decides the product is not forbidden to ask](camadas/comando.md#atgdt--autonomyguide--what-an-agent-does-with-what-it-does-not-know-by-the-role-declared-locally) `ATGDT-X01`
+
+- [An unreadable settings file is named, and the guide stays closed](camadas/comando.md#atgdt--autonomyguide--what-an-agent-does-with-what-it-does-not-know-by-the-role-declared-locally) `ATGDT-B08`
 
 - [An empty example code defaults to LOGI](camadas/comando.md#spgds--specguide--the-projects-own-spec-guide-instantiated-with-its-dialect-and-a-complete-example) `SPGDS-B01`
 
@@ -2583,6 +2585,8 @@ teste prova.
 - [The keywords written for any language are among those every reader recognises](camadas/config.md#dlcti-i02--the-keywords-written-for-any-language-are-among-those-every-reader-recognises) `DLCTI-I02`
 
 - [No family brings a collection query, which is the project's to declare](camadas/config.md#dlcti-x01--no-family-brings-a-collection-query-which-is-the-projects-to-declare) `DLCTI-X01`
+
+- [The Go family recognises both shapes of error handling](camadas/config.md#dlcti-b13--the-go-family-recognises-both-shapes-of-error-handling) `DLCTI-B13`
 
 - [A trigger naming a layer charges every change in that layer, whatever the unit](camadas/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 

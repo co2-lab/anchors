@@ -60,8 +60,8 @@ reported. Each repair written, or attempted and failed, is returned for the call
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `FXIXX-E01` | Writing the repaired file fails. | The file is reported as not fixed, with the cause in the detail. | A repair that silently did not happen would let the caller claim the finding was fixed. |
-| `FXIXX-E02` | REF[FXIXX-B05]: a node whose file cannot be read is one of the files B05 leaves out, and nothing is reported for it | — | — |
+| `FXIXX-E01` | Writing the repaired file fails. | The file is reported as not fixed, with the cause in the detail. | A repair that silently did not happen would let the caller claim the finding was fixed. <!-- @resilient: the write failure is not hidden: it becomes the file's result, not fixed and with the cause, which the caller prints; the other files are still repaired --> |
+| `FXIXX-E02` | REF[FXIXX-B05]: a node whose file cannot be read is one of the files B05 leaves out, and nothing is reported for it | — | — <!-- @resilient: an unreadable file has no content to repair, and a node missing from disk is already reported by the map's own checks --> |
 
 ## Dependencies
 

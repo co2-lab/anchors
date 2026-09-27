@@ -62,7 +62,7 @@ optional mirror.
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `GHEGT-E01` | REF[GHEGT-B05]: a failed read of the branch protection is the answer for an unprotected branch, so it becomes the finding, not an error | — | — |
+| `GHEGT-E01` | REF[GHEGT-B05]: a failed read of the branch protection is the answer for an unprotected branch, so it becomes the finding, not an error | — | — <!-- @resilient: the failed read becomes the unprotected-branch warning the doctor prints, so it is reported as a finding and not lost --> |
 
 ## Dependencies
 

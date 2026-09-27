@@ -54,8 +54,8 @@ snapshot that never existed.
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `GTMTG-E01` | REF[GTMTG-X01]: git failing to list the tree's status is the failure X01 answers with a negative count | — | — |
-| `GTMTG-E02` | REF[GTMTG-X02]: git failing to report a file's status is the failure X02 answers with "not known" | — | — |
+| `GTMTG-E01` | REF[GTMTG-X01]: git failing to list the tree's status is the failure X01 answers with a negative count | — | — <!-- @resilient: the failure becomes a negative count that no caller can read as a clean tree, and the report header says the tree is unknown --> |
+| `GTMTG-E02` | REF[GTMTG-X02]: git failing to report a file's status is the failure X02 answers with "not known" | — | — <!-- @resilient: the failure becomes not known, which the caller distinguishes from no change and answers by giving no verdict --> |
 
 ## Dependencies
 

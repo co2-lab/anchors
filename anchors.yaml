@@ -259,10 +259,25 @@ dialect:
   # check prints and mirrors to `.anchors/check-all.txt` — a CLI that fails by return has
   # no logger to call, and its verdict is the record. `Skip` is left out on purpose: it
   # is counted, not shown.
+  # How a failure is HANDLED here. A declared list replaces the family's, so the Go
+  # defaults are repeated; the last one is Go's `throw new`: returning a freshly built
+  # error hands the failure to the caller as part of the flow.
+  handle_patterns:
+    - '\bif\b[^\n{]*\b(?:err|e)\s*!=\s*nil'
+    - '\brecover\(\)'
+    - '==\s*nil\s*\{'
+    - '\berrors\.(?:Is|As)\('
+    - '\breturn\b[^\n]*\b(?:fmt\.Errorf|errors\.New)\('
   log_patterns:
     - '\b(?:log|logger|slog)\.(?:Error|Warn|Fatal|Printf|Print)\b'
     - '\bfmt\.Errorf\('
     - '\breturn\s+(?:Fail|Pending),\s'
+    # Outside the gates a failure is handled by giving it BACK to the caller, which prints
+    # it — `return err`, `return nil, err`. Propagating is not swallowing: the silence
+    # failure-logged exists to catch is a handled failure that returns nothing about it.
+    - '\breturn\b[^\n]*\b(?:err|e)\b'
+    # A command's last stop: the error printed on stderr before the exit code.
+    - '\bfmt\.Fprint(?:ln|f)?\(\s*os\.Stderr\b'
 
 derived:
   # A SPEC é a âncora: dela nascem o código e o teste (CONCEPT: "da spec nascem o
