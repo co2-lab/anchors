@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
@@ -598,5 +599,43 @@ func TestSuiteIncrementalRespectsSuitePaths(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(dir, "there.txt")); err == nil || !strings.Contains(out, "[there/unit] the impact path reaches none of this suite's") {
 		t.Errorf("the other suite runs nothing and says why:\n%s", out)
+	}
+}
+
+// On Linux a file's mtime comes from a coarse clock, a tick behind `time.Now()`: a report
+// written in the run's first milliseconds carried a time BEFORE the start, and was dropped
+// as older — in CI, one of the two suite tests above failed on most pushes.
+func TestIngestIfRecentToleratesACoarseClock(t *testing.T) {
+	t.Run("STPRS-B13: A report stamped by a coarse clock just before the start is this run's", func(t *testing.T) {})
+	yaml := suiteLayers + `tests:
+  - layer: unit
+    run: "true"
+    lcov: "lcov.info"
+`
+	files := suiteFiles()
+	files["lcov.info"] = "SF:a.go\nDA:1,1\nDA:2,0\nend_of_record\n"
+	dir := qProject(t, yaml, files, suiteGraph())
+	start := time.Now()
+	just := start.Add(-500 * time.Millisecond)
+	if err := os.Chtimes(filepath.Join(dir, "lcov.info"), just, just); err != nil {
+		t.Fatal(err)
+	}
+	s := config.Suite{Layer: "unit"}
+	if err := ingestIfRecent(dir, "", filepath.Join(dir, "lcov.info"), "", s, start, false); err != nil {
+		t.Fatal(err)
+	}
+	g, _ := mapx.Load(filepath.Join(dir, mapx.DefaultPath))
+	for _, n := range g.Nodes {
+		if n.ID == "a.go" && (n.Signal == nil || n.Signal.CoverageBySuite["lcov.info"].TotalLines != 2) {
+			t.Fatalf("a report half a second before the start is this run's, got %+v", n.Signal)
+		}
+	}
+	old := start.Add(-10 * time.Second)
+	if err := os.Chtimes(filepath.Join(dir, "lcov.info"), old, old); err != nil {
+		t.Fatal(err)
+	}
+	out := captureStdout(t, func() { _ = ingestIfRecent(dir, "", filepath.Join(dir, "lcov.info"), "", s, start, false) })
+	if !strings.Contains(out, "report OLDER than this run") {
+		t.Errorf("a report ten seconds before the start is still older, got %q", out)
 	}
 }

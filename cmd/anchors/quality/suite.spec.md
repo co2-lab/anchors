@@ -55,6 +55,7 @@ coverage, or the check over the run's own scope: the same changed files, or the 
 | `STPRS-B09` | After every suite passed, a chain naming coverage runs the coverage answer; an empty chain does nothing. |
 | `STPRS-B10` | An impact path with no code file runs nothing. |
 | `STPRS-B11` | After every suite passed, a chain naming check runs the check over the run's own scope: the changed files of an incremental run, the full sweep otherwise. |
+| `STPRS-B13` | A report whose modification time is up to two seconds before the run's start is this run's: a file system's clock is coarser than the process's (Linux stamps from a tick behind `now`, FAT to two seconds), and a report written in the run's first milliseconds must not read as older. |
 | `STPRS-B12` | An incremental run hands each suite only the impact files its `paths:` cover; a suite the impact path does not reach says so and runs nothing. |
 
 ## Invariants

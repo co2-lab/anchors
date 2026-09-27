@@ -299,6 +299,13 @@ func runSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, a
 // mapa um número velho como se fosse o de agora, que é pior que não ter número nenhum.
 // partial is the incremental mode (`--changed`): the run executed only the impact path, and
 // its report must not erase the proof of the tests it did not run.
+// mtimeSlack is how far before the run's start a report may be stamped and still be this
+// run's. A file system stamps from a clock coarser than the process's — Linux from a tick
+// behind `time.Now()`, FAT to two seconds — so a report written in the run's first
+// milliseconds can carry a time before the start. A report from an earlier run is older
+// than that by the whole run.
+const mtimeSlack = 2 * time.Second
+
 func ingestIfRecent(absRoot, junit, lcov, mutation string, s config.Suite, inicio time.Time, partial bool) error {
 	// A ingestão vem do `anchors test`: a suíte ACABOU de rodar, e o sinal corresponde a
 	// ela. É o que distingue esta chamada de um `ingest` à mão.
@@ -313,7 +320,7 @@ func ingestIfRecent(absRoot, junit, lcov, mutation string, s config.Suite, inici
 			fmt.Printf("  [%s] the declared report did not show up: %s\n", s.Layer, p)
 			return ""
 		}
-		if fi.ModTime().Before(inicio) {
+		if fi.ModTime().Before(inicio.Add(-mtimeSlack)) {
 			fmt.Printf("  [%s] report OLDER than this run (%s) — not ingested, so as not to record an earlier number as if it were from now.\n",
 				s.Layer, p)
 			return ""

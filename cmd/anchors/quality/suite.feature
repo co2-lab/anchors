@@ -81,6 +81,12 @@ Feature: SuiteProxy — runs the test and mutation suites the project declared, 
     When the test command runs chaining check, once in full and once for the changed a.go
     Then the full run's check reads "check --all" and the incremental run's check does not
 
+  @STPRS-B13 @unit-level
+  Scenario: A report stamped by a coarse clock just before the start is this run's
+    Given a report whose modification time is half a second before the run's start
+    When the run's reports are ingested
+    Then it reaches the map, and a report from years before still does not
+
   @STPRS-I01 @unit-level
   Scenario: A report older than the run is never ingested
     Given a suite whose declared report was last written before the run
