@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GVGDG
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @GVGDG
@@ -123,3 +123,9 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     When their flags and output are inspected
     Then only review and work take --root
     And no other guide prints the autonomy section
+
+  @GVGDG-B15 @unit-level
+  Scenario: The guides tell a fix from a bug and ask for the marker
+    Given the work, code and review guides
+    When they are printed
+    Then the work guide says a bug is a defect that shipped, shows the fix commit with its Bug footer and asks for the failing test first, and the code and review guides point to it

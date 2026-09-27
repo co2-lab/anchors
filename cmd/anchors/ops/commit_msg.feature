@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CMMSC
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @CMMSC
@@ -108,3 +108,9 @@ Feature: CommitMsg — the commit subject is confronted with the format the chan
     Given a path that does not exist
     When commit-msg runs on it
     Then it fails with "read the message"
+
+  @CMMSC-B16 @unit-level
+  Scenario: The Bug footer marks a fix of a defect that shipped
+    Given fix commits with a Bug footer, without one, with an empty one, with a misspelled one, a feat with a Bug footer, and a body sentence starting with "Bug:"
+    When each message is confronted
+    Then the fix with a filled Bug footer and the ones without a footer pass, and the empty, misspelled and non-fix footers are refused saying why

@@ -106,6 +106,10 @@ Tests of git behaviour (`touch`, hooks, ingestion) run against a real temporary 
   `build`, `ci`, `chore`, `revert`, with an optional scope: `fix(touch): …`. There is no
   `merge` type; use `chore(merge): …`.
 - **The subject line is at most 100 characters.** The detail goes in the body.
+- **A fix is its own `fix` commit; a bug also gets a `Bug:` footer.** A bug is a defect
+  that shipped (a released version); the footer says where it was seen:
+  `Bug: v0.1.204 — reported from the reference app`. A correction of work that never shipped
+  has no footer.
 - **The body says why, with the measurement.** Say what failed, where, and how you know the
   fix works. The history is how the next person understands a rule.
 - **AI agents** end the message with their `Co-Authored-By:` line.

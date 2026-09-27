@@ -61,7 +61,8 @@ PR: you already have the context in hand, and separating them would make one of 
 
 If the fix is trivial AND it is in the file you are already editing, fix it and record the
 revision in the file itself (` + "`{CODIGO}-R0001: o que mudou e por quê`" + `). Opening a card
-to change one word is bureaucracy.
+to change one word is bureaucracy. That fix is still a commit of its own — see "When
+what you deliver fixes something".
 
 ### READ THE OPEN DECISIONS BEFORE OPENING ANOTHER
 
@@ -112,6 +113,36 @@ choose, and the fix lives where you do not edit (` + "`.github/workflows/anchors
     anchors escalate "<what is wrong, with the measurement>" --about <file> --bug [--blocking]
 
 ` + "`--blocking`" + ` when your card cannot go on until it is fixed; without it the card goes on.
+
+## When what you deliver fixes something
+
+It holds in every mode, whether the problem came from a card, an issue file, a user's
+report, or something you tripped over halfway through a feature.
+
+**A FIX and a BUG are not the same thing.** Every correction is a ` + "`fix`" + ` commit. A BUG
+is a defect that SHIPPED — reached a release or production, where someone could hit it.
+Correcting something broken earlier in this same work, which never reached anyone, is a
+fix and not a bug.
+
+    fix(<scope>): <what was wrong, in the user's terms>
+
+    <what failed, where, and how you measured it>
+    <the test that fails without the fix>
+
+    Bug: <where it was seen — the release or version, the card, the report>
+
+- **The ` + "`Bug:`" + ` footer marks a bug, and only a bug.** It is how the history is searched for
+  bugs later, and what a changelog lists as bugs fixed. On a correction that never shipped
+  it would name something no user ever saw. The ` + "`commit-msg`" + ` hook refuses the footer
+  empty, misspelled, or on a commit that is not a ` + "`fix`" + `.
+- **Its own commit.** A fix folded into a ` + "`feat`" + `, a ` + "`refactor`" + ` or a ` + "`chore`" + `
+  disappears from the changelog and from whoever later asks "what fixed this?". A problem
+  found halfway through a feature is committed apart from it, even in the same PR. A
+  correction of your own work that is not pushed yet is better folded into the commit it
+  corrects.
+- **Reproduce first.** Write the test that fails on the problem, named after the rule it
+  breaks, and watch it fail before fixing. If no rule of the spec covers the behaviour, the
+  problem is a GAP IN THE SPEC: the rule and its scenario come first, and the fix proves them.
 
 ## Before committing
 

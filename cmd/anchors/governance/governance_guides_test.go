@@ -530,3 +530,20 @@ func TestTestGuideNamesInstrumentsAndTheStampRefresh(t *testing.T) {
 		}
 	}
 }
+
+func TestGuidesTellAFixFromABug(t *testing.T) {
+	t.Run("GVGDG-B15: The guides tell a fix from a bug and ask for the marker", func(t *testing.T) {})
+	work := guideIn(t, "work")
+	for _, want := range []string{"## When what you deliver fixes something", "SHIPPED", "fix(<scope>):",
+		"Bug: <where it was seen", "Its own commit", "Reproduce first", "GAP IN THE SPEC"} {
+		if !strings.Contains(work, want) {
+			t.Errorf("the work guide should say %q", want)
+		}
+	}
+	if !strings.Contains(guideIn(t, "code"), "When what you deliver fixes something") {
+		t.Error("the code guide should point to the fix section")
+	}
+	if !strings.Contains(guideIn(t, "review"), "Is each fix its own commit, and is each bug marked?") {
+		t.Error("the review guide should ask whether each fix is its own commit and each bug is marked")
+	}
+}

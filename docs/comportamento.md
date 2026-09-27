@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:edfa3e08d7b2c0c5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8f33723675fafaa5 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1174,6 +1174,8 @@ teste prova.
 
 - [Only the review and work guides depend on the project](camadas/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-X01`
 
+- [The guides tell a fix from a bug and ask for the marker](camadas/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B15`
+
 - [The board ranks each guide by how many files it governs](camadas/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
 - [A map without governance has an empty board](camadas/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B02`
@@ -1615,6 +1617,8 @@ teste prova.
 - [The command only accepts or refuses](camadas/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-X01`
 
 - [A message file that cannot be read fails naming the read](camadas/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-E01`
+
+- [The Bug footer marks a fix of a defect that shipped](camadas/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-B16`
 
 - [Build compiles from the tree, even what the map on disk does not know](camadas/comando.md#dccmd--docscommand--the-documentation-is-compiled-from-the-specs-through-templates-against-a-map-rebuilt-from-the-tree) `DCCMD-B01`
 

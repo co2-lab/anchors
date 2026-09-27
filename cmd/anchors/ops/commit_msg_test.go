@@ -2,7 +2,9 @@ package ops
 
 import (
 	"fmt"
+	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -250,5 +252,43 @@ func TestCommitMsgCommandOnTheMessageFile(t *testing.T) {
 	err, _ = runCmd(t, newCommitMsgCmd(), dir+"/missing")
 	if err == nil || !strings.Contains(err.Error(), "read the message") {
 		t.Errorf("an unreadable message file must fail naming the read, got %v", err)
+	}
+}
+
+func TestCommitMsg_BugFooter(t *testing.T) {
+	t.Run("CMMSC-B16: The Bug footer marks a fix of a defect that shipped", func(t *testing.T) {})
+	for _, c := range []struct {
+		msg, why string // why == "" means it passes
+	}{
+		{"fix(board): the count no longer doubles\n\nit doubled on refresh\n\nBug: v0.1.204 — card #812\n", ""},
+		{"fix: the gate read the wrong file\n\nfound while writing the feature\n", ""},
+		{"fix: x\n", ""},
+		{"feat: a thing\n\nBug: the old flow was confusing — this sentence is prose\n\nCo-Authored-By: A <a@b>\n", ""},
+		{"fix: x\n\nbody\n\nBug:   \n", "is empty"},
+		{"fix: x\n\nbody\n\nbug: v1 — card #1\n", "write `Bug:`"},
+		{"feat(board): x\n\nbody\n\nBug: v1\n", "a `Bug:` footer on a `feat` commit"},
+		{"# a git comment\nfix: x\n\nBug: v2\n# another\n", ""},
+		// git's comments after the footer are not a paragraph of the message
+		{"feat: x\n\nBug: v1\n\n# Please enter the commit message\n", "a `Bug:` footer on a `feat` commit"},
+		// in the subject's own paragraph it is not a footer: git needs the blank line
+		{"feat: x\nBug: v1\n", ""},
+	} {
+		first := firstUsefulLine(c.msg)
+		got := bugFooterProblem(c.msg, first)
+		if (c.why == "") != (got == "") || (c.why != "" && !strings.Contains(got, c.why)) {
+			t.Errorf("%q: want %q, got %q", c.msg, c.why, got)
+		}
+	}
+	// Through the command: the refusal carries what a bug is and how to write it.
+	p := filepath.Join(t.TempDir(), "MSG")
+	if err := os.WriteFile(p, []byte("chore: x\n\nbody\n\nBug: v1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := newCommitMsgCmd()
+	cmd.SetArgs([]string{p})
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	if err := cmd.Execute(); err == nil || !strings.Contains(err.Error(), "SHIPPED") {
+		t.Fatalf("the command must refuse and explain, got %v", err)
 	}
 }

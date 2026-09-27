@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GVGDG
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: comando
 -->
 # GovernanceGuides — the guides an agent reads to operate Anchors, and the contracts other code relies on
@@ -46,6 +46,7 @@ The review and work guides are also the two that tell an agent what to do with w
 | `GVGDG-B12` | The project guide covers the discover phase — `PROJECT.md`, `INSIGHTS.md`, the five technical stages, one question at a time — and the playbook points to it before the plan phase. |
 | `GVGDG-B13` | The test guide names the proving instrument for each shape of input space and teaches the stamp refresh for a doubled function. |
 | `GVGDG-B14` | `anchors guide --help` lists every subcommand once, with what it teaches, and lists nothing that is not a subcommand. |
+| `GVGDG-B15` | The work guide, in every mode, tells a fix from a bug — a bug is a defect that shipped —, asks for each fix as its own `fix` commit with a `Bug:` footer only on a bug, and for the failing test first; the code and review guides point to it. |
 
 ## Invariants
 

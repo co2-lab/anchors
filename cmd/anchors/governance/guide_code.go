@@ -61,6 +61,9 @@ looks crooked, ask whether it is a sanctioned EXCEPTION (documented, with a reas
 real VIOLATION (a symptom of wrong coupling). Fix the violation; respect the
 exception — and if it is not documented, document why.
 
+Fixing a violation is a fix: its own ` + "`fix`" + ` commit, with a ` + "`Bug:`" + ` footer if the
+defect had already shipped — ` + "`anchors guide work`" + `, "When what you deliver fixes something".
+
 ## Conventions (in spirit, agnostic)
 
 - The file name matches what it exports.

@@ -75,6 +75,13 @@ map. Your job is different: to confront the JUDGMENT with the excerpt. A verdict
 "pass" over a marker in a generic place (top of the file, an import) is the defect the
 automation gets wrong most often.
 
+### Is each fix its own commit, and is each bug marked?
+
+A correction folded into a ` + "`feat`" + ` disappears from the changelog. And a ` + "`Bug:`" + ` footer
+is a claim that the defect shipped: on a correction of work that never left this PR it lists
+a bug no user ever saw, and without it a real bug fix is lost among the fixes. The hook checks
+the footer's format; only you know whether the defect shipped.
+
 ### What did the checks leave AWAITING JUDGMENT?
 
 The pipeline does not judge, and that is deliberate: judgment asks for a credential,
