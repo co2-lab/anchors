@@ -248,7 +248,9 @@ var dialectFamilies = map[string]Dialect{
 		HTTPStatus:        `statusCode:\s*(\d{3})|\b[A-Za-z_$][\w$]*\(\s*(\d{3})\s*[,)]`,
 		HTTPStatusDynamic: `statusCode:\s*[A-Za-z_$]`,
 		HandlePatterns: []string{
-			`\bcatch\s*\(`,
+			// `catch (e) {` and `catch {`: the binding is optional since ES2019, and a
+			// handler without it was invisible (reported from the reference app).
+			`\bcatch\s*[({]`,
 			`\.catch\(`,
 			`if\s*\([^)]*(?:==|===)\s*null`,
 			`if\s*\(\s*!`,

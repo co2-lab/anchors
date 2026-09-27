@@ -308,3 +308,26 @@ func TestFamiliesSayHowATestIsWritten(t *testing.T) {
 		t.Errorf("a family that does not say how a test is written leaves it undeclared, got %+v", d.Tests)
 	}
 }
+
+func TestTSFamilyRecognisesCatchWithoutBinding(t *testing.T) {
+	t.Run("DLCTI-B15: The TS family recognises catch with or without its binding", func(t *testing.T) {})
+	d := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor()
+	handles := func(src string) bool {
+		for _, p := range d.HandlePatterns {
+			if regexp.MustCompile(p).MatchString(src) {
+				return true
+			}
+		}
+		return false
+	}
+	for src, want := range map[string]bool{
+		"try { f() } catch (e) { log(e) }":  true,
+		"try { f() } catch { return null }": true,
+		"try { f() } catch{ return null }":  true,
+		"const catchPhrase = 'x'":           false,
+	} {
+		if got := handles(src); got != want {
+			t.Errorf("%q: want %v, got %v", src, want, got)
+		}
+	}
+}

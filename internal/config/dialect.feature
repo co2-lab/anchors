@@ -108,3 +108,9 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given the go and ts families, and a ts project that declares its own tests script
     When the effective dialect is read
     Then go reads t.Run, ts reads it, test and describe with their modifiers, and the project's script wins
+
+  @DLCTI-B15 @unit-level
+  Scenario: The TS family recognises catch with or without its binding
+    Given a try block closed by catch (e) and one closed by catch with no binding
+    When the ts family's handle patterns read them
+    Then both are recognised as handling, and a word merely containing catch is not

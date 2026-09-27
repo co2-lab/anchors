@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8f33723675fafaa5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8c73101b52451cbf — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2705,6 +2705,8 @@ teste prova.
 - [The Go family recognises both shapes of error handling](camadas/config.md#dlcti-b13--the-go-family-recognises-both-shapes-of-error-handling) `DLCTI-B13`
 
 - [The Go and TS families say how a test is written](camadas/config.md#dlcti-b14--the-go-and-ts-families-say-how-a-test-is-written) `DLCTI-B14`
+
+- [The TS family recognises catch with or without its binding](camadas/config.md#dlcti-b15--the-ts-family-recognises-catch-with-or-without-its-binding) `DLCTI-B15`
 
 - [A trigger naming a layer charges every change in that layer, whatever the unit](camadas/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
