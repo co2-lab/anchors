@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RPSCR
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @RPSCR
@@ -226,3 +226,9 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     And a rule carrying @realizes and @gated-by tags of that length
     When the spec is scanned
     Then both edges are read, from the rule to each tagged code
+
+  @RPSCR-B32 @unit-level
+  Scenario: A file in its layer's support list is marked as support
+    Given a test layer whose support list covers its utils folder, and another layer whose support list covers everything
+    When the project is scanned
+    Then the utils file is support, the flow beside it is not, and the other layer's list marks nothing here

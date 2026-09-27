@@ -842,3 +842,25 @@ func TestExtractRuleTags_followTheDeclaredCodeLength(t *testing.T) {
 		t.Errorf("a 7-character @gated-by must be read: %+v", got)
 	}
 }
+
+func TestWalk_marksSupportFiles(t *testing.T) {
+	t.Run("RPSCR-B32: A file in its layer's support list is marked as support", func(t *testing.T) {})
+	root := t.TempDir()
+	must(t, writeDeep(filepath.Join(root, "flows", "screens", "login.yaml"), "x"))
+	must(t, writeDeep(filepath.Join(root, "flows", "utils", "loginClean.yaml"), "x"))
+	cfg := &config.Config{Layers: map[string]config.Layer{
+		"e2e":   {Pattern: "flows/**/*.yaml", Kind: "test", Support: []string{"flows/utils/**"}},
+		"other": {Pattern: "docs/**", Kind: "doc", Support: []string{"**"}},
+	}}
+	files, err := Walk(root, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := map[string]bool{}
+	for _, f := range files {
+		got[f.Path] = f.Support
+	}
+	if !got["flows/utils/loginClean.yaml"] || got["flows/screens/login.yaml"] || len(got) != 2 {
+		t.Errorf("only the utils file is support, got %v", got)
+	}
+}

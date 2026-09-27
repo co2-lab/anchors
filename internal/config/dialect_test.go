@@ -278,3 +278,33 @@ func TestGoHandlePatternsSeeBothShapes(t *testing.T) {
 		}
 	}
 }
+
+func TestFamiliesSayHowATestIsWritten(t *testing.T) {
+	t.Run("DLCTI-B14: The Go and TS families say how a test is written", func(t *testing.T) {})
+	re := func(family string) *regexp.Regexp {
+		c := &Config{Dialect: &Dialect{Family: family}}
+		d := c.DialectFor()
+		if d.Tests == nil || d.Tests.Pattern == "" {
+			t.Fatalf("family %s must say how a test is written", family)
+		}
+		return regexp.MustCompile(d.Tests.Pattern)
+	}
+	goRe := re("go")
+	if !goRe.MatchString(`t.Run("X", f)`) || goRe.MatchString(`it('X', f)`) {
+		t.Error("go reads t.Run and only it")
+	}
+	tsRe := re("ts")
+	for _, call := range []string{`it('x'`, `test("x"`, "describe(`x`", `it.only('x'`, `test.skip('x'`,
+		`it.each([[1, 2], [f(3), {a: [4]}]])('x'`, "it.each(\n  rows,\n)('x'"} {
+		if loc := tsRe.FindStringIndex(call); loc == nil || loc[0] != 0 || call[loc[1]] != '\'' && call[loc[1]] != '"' && call[loc[1]] != '`' {
+			t.Errorf("ts must read %q up to its title", call)
+		}
+	}
+	own := &Config{Dialect: &Dialect{Family: "ts", Tests: &TestsSource{Script: "node list.mjs"}}}
+	if d := own.DialectFor(); d.Tests == nil || d.Tests.Script != "node list.mjs" || d.Tests.Pattern != "" {
+		t.Errorf("the project's own tests must win over the family's, got %+v", d.Tests)
+	}
+	if d := (&Config{Dialect: &Dialect{Family: "python"}}).DialectFor(); d.Tests != nil {
+		t.Errorf("a family that does not say how a test is written leaves it undeclared, got %+v", d.Tests)
+	}
+}

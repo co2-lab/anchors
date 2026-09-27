@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSTRT
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: gate
 -->
 # TestTraceable — a test linked to a feature must declare what scenario it proves
@@ -69,6 +69,8 @@ demanding scenario codes from unlinked tests would require referencing nonexiste
 | `TSTRT-B09` | A test covering behavior with transposed or misspelled codes fails exact substring confrontation. |
 | `TSTRT-B10` | When failing, the verdict names the linked feature path, lists up to three expected codes, and suggests the first code as a fix hint. |
 | `TSTRT-B11` | Scenario codes occurring anywhere in the test file content (such as in comments or test titles) satisfy the traceability check. |
+| `TSTRT-B12` | When the project says how its tests are written (`dialect.tests`, or its family's), a test traces to its feature only through a test TITLE that cites one of the feature's codes; a code elsewhere in the file (a fixture, a helper) does not trace it. Without that declaration the code counts anywhere in the file. |
+| `TSTRT-B13` | A support file is not charged with tracing to a scenario (Skip, saying why), even when a feature links to it. |
 
 ## Invariants
 
@@ -96,6 +98,7 @@ Each failure the code handles is already stated as a rule of another letter; the
 | --- | --- | --- | --- |
 | `TSTRT-E01` | REF[TSTRT-B02]: with no map the link to the feature cannot be followed, and B02 answers Pending | — | — |
 | `TSTRT-E02` | REF[TSTRT-B04]: a linked feature that cannot be read is answered by B04: the confrontation is skipped | — | — |
+| `TSTRT-E03` | The project's tests source fails, or answers outside its contract | Fail, naming the source's error | The titles could not be read; answering as if the test cited nothing, or approving it, would both be about tests nobody read |
 
 ## Dependencies
 

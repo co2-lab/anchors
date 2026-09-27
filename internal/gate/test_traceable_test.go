@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -179,5 +180,62 @@ func TestTestTraceable_NaoAvaliaSemanticaDoTeste(t *testing.T) {
 	v, msg := rodaRastreavel(t, testeVazio, feat)
 	if v != Pass {
 		t.Fatalf("validacao de semantica de assercao nao pertence a este gate: %v (%s)", v, msg)
+	}
+}
+
+// traceableWithSource confronts a test file written to disk, under a configuration.
+func traceableWithSource(t *testing.T, test string, cfg *config.Config) (Verdict, string) {
+	t.Helper()
+	resetProjectTestsCache()
+	t.Cleanup(resetProjectTestsCache)
+	root := t.TempDir()
+	for p, body := range map[string]string{"u.feature": featureComCodigos, "u.test.ts": test} {
+		if err := os.WriteFile(filepath.Join(root, p), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{{ID: "u.feature", Kind: mapx.KindFeature}, {ID: "u.test.ts", Kind: mapx.KindTest}},
+		Edges: []mapx.Edge{{From: "u.feature", To: "u.test.ts", Type: mapx.EdgeTestedBy}},
+	}
+	return checkTestTraceable(test, mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest}, root, g, cfg)
+}
+
+const featureComCodigos = "@TRACX-B01 @unit-level\nScenario: one\n"
+
+func TestTestTraceable_TitlesWhenDeclared(t *testing.T) {
+	t.Run("TSTRT-B12: With a tests source a test traces only through its titles", func(t *testing.T) {})
+	test := "const fixture = 'TRACX-B01'\nit('does something else', () => {})\n"
+	ts := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	if v, msg := traceableWithSource(t, test, ts); v != Fail {
+		t.Fatalf("a code only in a fixture must not trace the test when titles are declared, got %v (%s)", v, msg)
+	}
+	if v, msg := traceableWithSource(t, test, nil); v != Pass {
+		t.Fatalf("without a declaration the code anywhere in the file traces it, got %v (%s)", v, msg)
+	}
+	titled := "it('TRACX-B01: one', () => {})\n"
+	if v, msg := traceableWithSource(t, titled, ts); v != Pass {
+		t.Fatalf("a title citing the code traces the test, got %v (%s)", v, msg)
+	}
+}
+
+func TestTestTraceable_FailingSource(t *testing.T) {
+	t.Run("TSTRT-E03: A failing tests source fails the gate naming the error", func(t *testing.T) {})
+	cfg := &config.Config{Dialect: &config.Dialect{Tests: &config.TestsSource{Script: "echo 'runner missing' >&2; exit 2"}}}
+	v, msg := traceableWithSource(t, "it('TRACX-B01: one', () => {})\n", cfg)
+	if v != Fail || !strings.Contains(msg, "runner missing") {
+		t.Fatalf("a failing source must fail the gate naming its error, got %v (%s)", v, msg)
+	}
+}
+
+func TestTestTraceable_SkipsSupport(t *testing.T) {
+	t.Run("TSTRT-B13: A support file is not charged with tracing", func(t *testing.T) {})
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{{ID: "u.feature", Kind: mapx.KindFeature}, {ID: "u.test.ts", Kind: mapx.KindTest, Support: true}},
+		Edges: []mapx.Edge{{From: "u.feature", To: "u.test.ts", Type: mapx.EdgeTestedBy}},
+	}
+	v, msg := checkTestTraceable("helper()", mapx.Node{ID: "u.test.ts", Kind: mapx.KindTest, Support: true}, t.TempDir(), g, nil)
+	if v != Skip || !strings.Contains(msg, "support") {
+		t.Fatalf("a support file must be skipped saying why, got %v (%s)", v, msg)
 	}
 }

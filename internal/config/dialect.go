@@ -108,6 +108,19 @@ type Dialect struct {
 	// path that swallows the failure without recording anything is the perfect silence —
 	// the failure happens, nothing knows, and no tool downstream has anything to read.
 	LogPatterns []string `yaml:"log_patterns,omitempty"`
+	// Tests says how the project's tests are written, so the gates that read a test's
+	// title (feature-test-match, test-traceable, scenario-coverage) can find it. It is the
+	// project's knowledge, not the engine's: the test library decides how a test opens.
+	// Either a fixed `pattern` (the call that opens a test, up to its parenthesis; the
+	// title is the string literal after it) or a `script` the project provides, which
+	// prints the tests under the contract of the `testlist` package. Never both.
+	Tests *TestsSource `yaml:"tests,omitempty"`
+}
+
+// TestsSource is how the project's tests are read: a fixed pattern or a script.
+type TestsSource struct {
+	Pattern string `yaml:"pattern,omitempty"`
+	Script  string `yaml:"script,omitempty"`
 }
 
 // GherkinKeywords são as palavras-chave da feature no idioma do projeto. Só os idiomas
@@ -245,6 +258,9 @@ var dialectFamilies = map[string]Dialect{
 			`\b(?:logger|log|console)\s*\.\s*(?:error|warn|fatal|exception)\b`,
 			`\bcaptureException\b`,
 		},
+		// Jest, Vitest and Mocha: `it`/`test`/`describe`, also modified by `.only`,
+		// `.skip`, or `.each(table)` with the table's parentheses nested one level.
+		Tests: &TestsSource{Pattern: `\b(?:it|test|describe)(?:\.each\s*\((?:[^()]|\([^()]*\))*\)|\.only|\.skip)?\s*\(`},
 	},
 	"go": {
 		// Em Go a exportação é a MAIÚSCULA inicial — não uma palavra-chave.
@@ -269,6 +285,8 @@ var dialectFamilies = map[string]Dialect{
 			`\b(?:log|logger|slog)\.(?:Error|Warn|Fatal|Printf|Print)\b`,
 			`\bfmt\.Errorf\(`,
 		},
+		// The standard library: a test names its cases with `t.Run("title", …)`.
+		Tests: &TestsSource{Pattern: `\bt\.Run\(`},
 	},
 	"python": {
 		// Sem palavra-chave de exportação: convenção é o underscore inicial marcar o
@@ -374,6 +392,9 @@ func (c *Config) DialectFor() Dialect {
 		}
 		if len(d.LogPatterns) == 0 {
 			d.LogPatterns = base.LogPatterns
+		}
+		if d.Tests == nil {
+			d.Tests = base.Tests
 		}
 	}
 	if d.SetPromise == "" {

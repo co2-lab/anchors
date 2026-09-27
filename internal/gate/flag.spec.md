@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLSCF
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: gate
 -->
 # FlagScenarios — the scenarios a feature flag declares are written, complete, cited and tested
@@ -82,6 +82,7 @@ must not have, and the value changes per user and per minute. The gates confront
 | `FLSCF-B15` | A scenario that no test names fails as having no test; a code that appears only in a comment of a test does not count as written. |
 | `FLSCF-B16` | A scenario a test names but that is not proven fails with a different message: written but not ingested when no execution was ingested, written and not passing when it was. |
 | `FLSCF-B17` | A `@gated-by` citation is read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a citation of a 7-character scenario is confronted. |
+| `FLSCF-B18` | When the project says how its tests are written, a flag scenario is written only when a test TITLE cites its code; without that declaration a code anywhere in a test outside comments counts. |
 
 ## Invariants
 
@@ -101,6 +102,7 @@ must not have, and the value changes per user and per minute. The gates confront
 | --- | --- | --- | --- |
 | `FLSCF-E01` | REF[FLSCF-B03]: a condition the parser refuses is the failure the grammar gate reports, naming the scenario and the parse error | — | — |
 | `FLSCF-E02` | The `flags/` folder, or a flag file in it, cannot be read when a spec cites a flag scenario. | Pending, naming the read error and the `flags/` folder — not the "no map" message. | Without the flags the gate cannot say which scenarios exist: Pass would approve a citation never checked, Fail would accuse one that may exist, and blaming the map would send the reader to build a map this gate never reads. |
+| `FLSCF-E03` | The project's tests source fails, or answers outside its contract | Fail, naming the source's error | Which flag scenarios have a test cannot be told, and the gate says why instead of answering about tests nobody read |
 
 ## Dependencies
 

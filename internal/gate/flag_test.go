@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/config"
 	"os"
 	"path/filepath"
 	"strings"
@@ -461,5 +462,42 @@ func TestFlagScenarioExists_unreadableFlagsIsPendingWithTheCause(t *testing.T) {
 	_, noMap := pendingNoMap()
 	if v != Pending || msg == noMap || !strings.Contains(msg, "flags") {
 		t.Errorf("unreadable flags: want Pending naming the flags folder, got %v (%s)", v, msg)
+	}
+}
+
+// flagWithTest confronts the complete flag with one test file under a configuration.
+func flagWithTest(t *testing.T, body string, cfg *config.Config) (Verdict, string) {
+	t.Helper()
+	resetProjectTestsCache()
+	t.Cleanup(resetProjectTestsCache)
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "t_test.go"), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "t_test.go", Kind: mapx.KindTest}}}
+	return checkFlagCovered(completeFlag, flagNode(), root, g, cfg)
+}
+
+func TestFlagCovered_TitlesWhenDeclared(t *testing.T) {
+	t.Run("FLSCF-B18: With a tests source a flag scenario is written only when a title cites it", func(t *testing.T) {})
+	body := "var fixture = \"CHKUT-G01\"\nfunc TestX(t *testing.T) { t.Run(\"unrelated\", nil) }\n"
+	goFamily := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	if _, msg := flagWithTest(t, body, goFamily); strings.Contains(msg, "WRITTEN") {
+		t.Fatalf("with titles declared, a code in a fixture writes no test, got %s", msg)
+	}
+	if _, msg := flagWithTest(t, body, nil); !strings.Contains(msg, "WRITTEN") {
+		t.Fatalf("without a declaration the code in the file counts as written, got %s", msg)
+	}
+	titled := "func TestX(t *testing.T) { t.Run(\"CHKUT-G01: on\", nil) }\n"
+	if _, msg := flagWithTest(t, titled, goFamily); !strings.Contains(msg, "WRITTEN") {
+		t.Fatalf("a title citing the code writes its test, got %s", msg)
+	}
+}
+
+func TestFlagCovered_FailingSource(t *testing.T) {
+	t.Run("FLSCF-E03: A failing tests source fails flag-covered naming the error", func(t *testing.T) {})
+	cfg := &config.Config{Dialect: &config.Dialect{Tests: &config.TestsSource{Script: "echo 'lister crashed' >&2; exit 1"}}}
+	if v, msg := flagWithTest(t, "func TestX(t *testing.T) {}\n", cfg); v != Fail || !strings.Contains(msg, "lister crashed") {
+		t.Fatalf("a failing source must fail naming its error, got %v: %s", v, msg)
 	}
 }

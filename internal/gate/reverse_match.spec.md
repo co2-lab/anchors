@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RVMTR
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: gate
 -->
 # ReverseMatch — every scenario still has its rule, and every proven code still has its scenario
@@ -62,6 +62,7 @@ the visual baseline, revision codes, and other units' codes cited to build fixtu
 | `RVMTR-B13` | A scenario declared as a numbered variant makes its rule a declared scenario for the test. |
 | `RVMTR-B14` | A revision code named by the test is not read as a rule and is not charged. |
 | `RVMTR-B15` | A data state a spec defines with the unit prefix is read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, `TREXXXX-DS-data-present` defines `DS-data-present`. |
+| `RVMTR-B16` | A support file is not confronted as a test (Skip, saying why): it proves no scenario, so there is no feature to link it to. |
 
 ## Invariants
 

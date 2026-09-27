@@ -81,6 +81,24 @@ wrongly: a pattern with many alternatives beat one pointing at a subset of it.
 Declare `priority` when it gets it wrong. `check` tells you where it decided on
 its own.
 
+
+### `support` — files of a test layer that are not tests
+
+A test layer's pattern often catches files that serve the tests without being tests:
+sub-flows other flows call (`runFlow`), suite aggregators, helper files. List them:
+
+```yaml
+layers:
+  e2e-flow:
+    pattern: "apps/mobile/.maestro/**/*.yaml"
+    kind: test
+    support: ["apps/mobile/.maestro/utils/**", "apps/mobile/.maestro/suites/**"]
+```
+
+They stay in the map, so a change to a helper still reaches every test that uses it. The
+gates that judge a test as a test (`tests-pass`, `test-feature-match`, `test-traceable`)
+skip them, and they don't count as tests that name a scenario.
+
 ---
 
 ## `derived` — how to find a unit's pieces
@@ -209,6 +227,41 @@ Freezes the whole project. See [Freezing the project](/en/docs/congelar/).
 
 **An absent field means ENABLED.** Only an explicit `false` freezes — otherwise
 every project that never declared the field would be born stopped.
+
+---
+
+## `dialect.tests` — how your tests are written
+
+The gates that read a test's title (`feature-test-match`, `test-traceable`,
+`scenario-coverage`, `flag-covered`) need to know how a test opens in your test library.
+That is your project's knowledge, not Anchors', so you declare it — with a fixed pattern or
+with a script, whichever fits:
+
+```yaml
+dialect:
+  family: ts
+  tests:
+    pattern: '\b(?:it|test)(?:\.only|\.skip)?\s*\('   # the call that opens a test
+    # or
+    script: "node scripts/anchors-tests.mjs"            # a lister you provide
+```
+
+- **`pattern`** — the call that opens a test, up to its parenthesis. The title is the string
+  literal right after it.
+- **`script`** — a command Anchors runs at the project root, once per scan. It can ask your
+  test library itself (`jest --listTests`, `pytest --collect-only`, `go/ast`), so when the
+  library changes, the answer changes with it. It prints one JSON object:
+
+  ```json
+  {"version": 1, "tests": [{"file": "src/a.test.ts", "line": 12, "title": "ABCDX-B01: …"}]}
+  ```
+
+  `file` relative to the root, `line` from 1, `title` as written. Anything else — another
+  field, another version, a script that fails — is reported by the gates, naming the problem.
+
+Declare one, never both. Without either, the `go` and `ts` families bring a default
+(`t.Run(`; `it`/`test`/`describe` with `.only`, `.skip`, `.each(table)`). With no source at
+all, the gates fall back to finding the code anywhere in the test file.
 
 ---
 

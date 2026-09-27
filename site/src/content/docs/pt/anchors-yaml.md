@@ -82,6 +82,25 @@ para um subconjunto seu.
 
 Declare `priority` quando ela errar. O `check` avisa onde decidiu sozinho.
 
+
+### `support` — arquivos de uma camada de teste que não são testes
+
+O pattern de uma camada de teste costuma pegar arquivos que servem aos testes sem ser
+testes: sub-flows que outros flows chamam (`runFlow`), agregadores de suíte, arquivos de
+helper. Liste-os:
+
+```yaml
+layers:
+  e2e-flow:
+    pattern: "apps/mobile/.maestro/**/*.yaml"
+    kind: test
+    support: ["apps/mobile/.maestro/utils/**", "apps/mobile/.maestro/suites/**"]
+```
+
+Eles continuam no mapa, então mudar um helper ainda alcança todo teste que o usa. Os gates
+que julgam um teste como teste (`tests-pass`, `test-feature-match`, `test-traceable`)
+os pulam, e eles não contam como teste que nomeia um cenário.
+
 ---
 
 ## `derived` — como achar as peças de uma unidade
@@ -208,6 +227,41 @@ Congela o projeto inteiro. Ver [Congelar o projeto](/docs/congelar/).
 
 **A ausência do campo significa HABILITADO.** Só o `false` explícito congela —
 senão todo projeto que nunca declarou o campo nasceria parado.
+
+---
+
+## `dialect.tests` — como os seus testes são escritos
+
+Os gates que leem o título de um teste (`feature-test-match`, `test-traceable`,
+`scenario-coverage`, `flag-covered`) precisam saber como um teste abre na sua biblioteca de
+teste. Esse conhecimento é do projeto, não do Anchors, então você o declara — com um padrão
+fixo ou com um script, o que servir melhor:
+
+```yaml
+dialect:
+  family: ts
+  tests:
+    pattern: '\b(?:it|test)(?:\.only|\.skip)?\s*\('   # a chamada que abre um teste
+    # ou
+    script: "node scripts/anchors-tests.mjs"            # um listador que você fornece
+```
+
+- **`pattern`** — a chamada que abre um teste, até o parêntese. O título é o literal de string
+  logo depois.
+- **`script`** — um comando que o Anchors roda na raiz do projeto, uma vez por varredura. Ele
+  pode perguntar à própria biblioteca de teste (`jest --listTests`, `pytest --collect-only`,
+  `go/ast`), então quando a biblioteca muda, a resposta muda junto. Ele imprime um objeto JSON:
+
+  ```json
+  {"version": 1, "tests": [{"file": "src/a.test.ts", "line": 12, "title": "ABCDX-B01: …"}]}
+  ```
+
+  `file` relativo à raiz, `line` a partir de 1, `title` como escrito. Qualquer outra coisa —
+  outro campo, outra versão, um script que falha — é acusada pelos gates, nomeando o problema.
+
+Declare um, nunca os dois. Sem nenhum, as famílias `go` e `ts` trazem um default
+(`t.Run(`; `it`/`test`/`describe` com `.only`, `.skip`, `.each(tabela)`). Sem fonte alguma, os
+gates voltam a procurar o código em qualquer ponto do arquivo de teste.
 
 ---
 

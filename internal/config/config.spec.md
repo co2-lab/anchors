@@ -65,6 +65,8 @@ patterns a spec governs.
 | `CNFGO-B42` | A file that declares no code lengths sets the default length, 5, in the engine and the generator's hook, whatever lengths an earlier load in the same process set. |
 | `CNFGO-B43` | The language is set before any other check of the load, so every refusal of the load comes out in the language the file declares; the header `Save` writes on top of the file is in the language of the configuration being saved, English when it declares none (`Save`). |
 | `CNFGO-B44` | A test level declared on a gate (`levels`) accepts every code when it declares nothing, only the codes matching one of `allow` when it declares it, and never a code matching one of `exclude`; a filter pattern that does not compile fails the load naming the gate, the level, the list and the index (`TestLevel.Accepts`). |
+| `CNFGO-B45` | `dialect.tests` that declares both a pattern and a script fails the load, and a tests pattern that does not compile fails it naming `dialect.tests.pattern`. |
+| `CNFGO-B46` | A layer's `support` list is a list of globs among its files; a glob that is not valid fails the load naming the layer and the index. |
 
 ### Canonical gate declarations
 

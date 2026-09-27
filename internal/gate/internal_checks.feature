@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INCHN
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @INCHN
@@ -164,3 +164,21 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     Given a map listing a test that is gone from disk and a test that names a scenario code
     When scenario-coverage checks which codes are written
     Then the code the present test names is reported as written, not as missing a test
+
+  @INCHN-B17 @unit-level
+  Scenario: With a tests source a scenario is written only when a title cites it
+    Given a spec whose code appears in its test's fixture but in no title
+    When scenario-coverage runs with the project's tests declared, and without
+    Then with the declaration the scenario has no test, and without it the scenario is written
+
+  @INCHN-E02 @unit-level
+  Scenario: A failing tests source fails scenario-coverage naming the error
+    Given a project whose tests script exits with an error
+    When scenario-coverage runs
+    Then it fails naming the script's error
+
+  @INCHN-B18 @unit-level
+  Scenario: A support file is neither run nor counted as naming a scenario
+    Given a support file with no execution, and a support file that is the only one citing a spec's code
+    When tests-pass judges the first and scenario-coverage reads the second
+    Then tests-pass skips saying it is support, and the scenario has no test

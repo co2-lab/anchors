@@ -68,6 +68,12 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     When the file is loaded
     Then the load fails and says there is no fallback between modes
 
+  @CNFGO-B45 @unit-level
+  Scenario: The tests source is one source with a pattern that compiles
+    Given a dialect whose tests declare both a pattern and a script, and one whose tests pattern does not compile
+    When each configuration is loaded
+    Then the first fails naming the conflict and the second names dialect.tests.pattern
+
   @CNFGO-B44 @unit-level
   Scenario: A test level's code filter accepts by allow and refuses by exclude
     Given a level with no filter, a level that allows only VR codes, and a level that allows its unit prefix but excludes VR codes
@@ -316,3 +322,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a path inside a directory that does not exist
     When a configuration is saved there
     Then saving returns a file-not-found error
+
+  @CNFGO-B46 @unit-level
+  Scenario: A layer's support globs must be valid
+    Given a layer whose support list holds a malformed glob, and one whose globs are valid
+    When each configuration is loaded
+    Then the first fails naming the layer and the index, and the second loads

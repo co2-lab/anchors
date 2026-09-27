@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:8173f4646a602867 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:26bf3d0f962ee2d1 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -306,6 +306,8 @@ abra a página dela em `camadas/`.
 ### [PRFLO — Profile — the verdicts of a run, gathered per gate and per node](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node)
 
 ### [PRHNP — ProgressHonest — the progress file tells the truth about the disk](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk)
+
+### [PRJTS — ProjectTests — the gates read the project's tests through the source the project declares](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares)
 
 ### [PRGTP — PromotableGates — identifies clean informative gates ready for promotion to blocking](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking)
 

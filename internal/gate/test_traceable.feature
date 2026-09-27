@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: TSTRT
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @TSTRT
@@ -121,3 +121,21 @@ Feature: TestTraceable — a test linked to a feature must declare what scenario
     Given a test file containing a valid scenario code without valid assertion semantics
     When the gate confronts it
     Then it returns Pass, validating relational visibility rather than test logic
+
+  @TSTRT-B12 @unit-level
+  Scenario: With a tests source a test traces only through its titles
+    Given a test file whose feature code appears in a fixture string but in no test title
+    When the project declares how tests are written, and when it does not
+    Then with the declaration the test does not trace, and without it the code in the file traces it
+
+  @TSTRT-E03 @unit-level
+  Scenario: A failing tests source fails the gate naming the error
+    Given a project whose tests script exits with an error
+    When a test is confronted
+    Then the gate fails naming the script's error
+
+  @TSTRT-B13 @unit-level
+  Scenario: A support file is not charged with tracing
+    Given a support file a feature links to, which cites no code
+    When test-traceable judges it
+    Then it skips saying the file is support

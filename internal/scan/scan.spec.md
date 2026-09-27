@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPSCR
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: scan
 -->
 # RepoScan — the repository read as text: which files exist, of which layer, and what each declares
@@ -104,6 +104,7 @@ heuristic decided.
 | --- | --- |
 | `RPSCR-B30` | The header keys `code:`, `layer:`, `needs:`, `revises:` and `dep:` are read only inside the file's `@anchors` header, like `parent:`; a body line starting with one of them is not a declaration. |
 | `RPSCR-B31` | The rule tags `@realizes` and `@gated-by`, and the rule a tag belongs to, are read with the code length the project declares (`code_lengths`): a fixed length left the edges of every other length undrawn. |
+| `RPSCR-B32` | A file that matches its own layer's `support` list is marked as support; a file of the layer outside the list, or matching only another layer's list, is not. |
 
 ## Invariants
 

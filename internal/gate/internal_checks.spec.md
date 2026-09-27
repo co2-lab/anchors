@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INCHN
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: gate
 -->
 # InternalChecks — the registry that routes a declared check name to a function
@@ -83,6 +83,8 @@ looked at.
 | `INCHN-B14` | A BINARY file steps aside from the header ruler: there is no comment syntax in an image, and charging one would bar every visual baseline commit. |
 | `INCHN-B15` | An executable test script steps aside too, by a different path: its format belongs to the runner, and its identity is in the file name. |
 | `INCHN-B16` | A guide with no compliance-points section, or with the section and no item in it, fails — the AI judgment gate would otherwise fall back on vague heuristics. |
+| `INCHN-B17` | When the project says how its tests are written, `scenario-coverage` counts a scenario as written only when a test TITLE cites its code; without that declaration a code anywhere in a test outside comments counts. |
+| `INCHN-B18` | A support file is not judged by `tests-pass` (Skip, saying why), and it does not count as a test that names a scenario for `scenario-coverage`. |
 
 ## Invariants
 
@@ -105,6 +107,7 @@ looked at.
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `INCHN-E01` | A test the map lists is no longer on disk when `scenario-coverage` looks for the tests that name each scenario code. | That test names nothing; the tests still on disk are read, so a code one of them names is still counted as written. | The map can be older than the tree (a test deleted since the last build): a missing file names no code, and one stale node must not make the codes the other tests name look untested. <!-- @resilient: a stale map node is expected between builds, and the next map build removes it --> |
+| `INCHN-E02` | The project's tests source fails, or answers outside its contract, when `scenario-coverage` looks for the tests that name each code | Fail, naming the source's error | Which scenarios have a test cannot be told; calling them untested would send the reader to write tests that may exist |
 
 ## Dependencies
 

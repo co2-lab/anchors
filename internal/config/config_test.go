@@ -407,6 +407,32 @@ func TestTestLevelAccepts(t *testing.T) {
 	}
 }
 
+func TestLoadChecksTheTestsSource(t *testing.T) {
+	t.Run("CNFGO-B45: The tests source is one source with a pattern that compiles", func(t *testing.T) {})
+	_, err := load(t, "version: 1\ndialect:\n  family: go\n  tests:\n    pattern: \"x\"\n    script: \"y\"\n")
+	if err == nil || !strings.Contains(err.Error(), "both a pattern and a script") {
+		t.Errorf("both sources must fail the load naming the conflict, got %v", err)
+	}
+	_, err = load(t, "version: 1\ndialect:\n  family: go\n  tests:\n    pattern: \"it(\"\n")
+	if err == nil || !strings.Contains(err.Error(), "dialect.tests.pattern") {
+		t.Errorf("a tests pattern that does not compile must fail naming the field, got %v", err)
+	}
+	if _, err := load(t, "version: 1\ndialect:\n  family: go\n  tests:\n    script: \"go run ./scripts/tests\"\n"); err != nil {
+		t.Errorf("a script alone must load: %v", err)
+	}
+}
+
+func TestLoadChecksTheSupportGlobs(t *testing.T) {
+	t.Run("CNFGO-B46: A layer's support globs must be valid", func(t *testing.T) {})
+	_, err := load(t, "version: 1\nlayers:\n  e2e:\n    pattern: \"flows/**/*.yaml\"\n    kind: test\n    support: [\"flows/utils/**\", \"flows/[a\"]\n")
+	if err == nil || !strings.Contains(err.Error(), "layers.e2e.support[1]") {
+		t.Errorf("a malformed support glob must fail the load naming layer and index, got %v", err)
+	}
+	if _, err := load(t, "version: 1\nlayers:\n  e2e:\n    pattern: \"flows/**/*.yaml\"\n    kind: test\n    support: [\"flows/utils/**\"]\n"); err != nil {
+		t.Errorf("valid support globs must load: %v", err)
+	}
+}
+
 func TestLoad_languageIsSetAtLoad(t *testing.T) {
 	t.Run("CNFGO-B12: An unsupported language fails the load", func(t *testing.T) {})
 	t.Cleanup(func() { _ = i18n.Set("") })

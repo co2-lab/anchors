@@ -131,7 +131,7 @@ layers:
   # how a mutation report is scored. Declarative, `anchors new spec` refused their spec
   # and every triad gate skipped them — rules nobody could state, let alone prove.
   infra:
-    pattern: "internal/{change,checklog,code,daemon,gitmeta,health,initx,issue,pack,queue,recode,similarity,suggestion,testsig}/*.go"
+    pattern: "internal/{change,checklog,code,daemon,gitmeta,health,initx,issue,pack,queue,recode,similarity,suggestion,testlist,testsig}/*.go"
     kind: code
     tags: [infra]
     regime: comportamental
@@ -153,6 +153,16 @@ layers:
     pattern: "**/*_test.go"
     kind: test
     tags: [test]
+    # Test files that hold only helpers and fixtures shared by other tests: no Test
+    # function of their own, no scenario to prove. They stay in the map (a change to a
+    # helper still reaches the tests that use it); the gates that judge a test skip them.
+    support:
+      - "cmd/anchors/common/helpers_test.go"
+      - "cmd/anchors/flow/gh_script_test.go"
+      - "cmd/anchors/mapcmd/fixture_test.go"
+      - "cmd/anchors/quality/report_test.go"
+      - "cmd/anchors/quality/stamp_refresh_test.go"
+      - "internal/gate/rule_types_requires_test.go"
 
   spec:
     pattern: "**/*.spec.md"

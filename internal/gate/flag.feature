@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: FLSCF
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @FLSCF
@@ -126,3 +126,15 @@ Feature: FlagScenarios — the scenarios a feature flag declares are written, co
     Given a spec citing "CHKUT-G02" and a "flags" folder that cannot be read
     When flag-scenario-exists confronts the spec
     Then it returns Pending with a message that names the flags folder, not the missing map
+
+  @FLSCF-B18 @unit-level
+  Scenario: With a tests source a flag scenario is written only when a title cites it
+    Given a flag scenario code that appears in a test's fixture but in no title
+    When flag-covered runs with the project's tests declared, and without
+    Then with the declaration the scenario has no test, and without it the scenario is written
+
+  @FLSCF-E03 @unit-level
+  Scenario: A failing tests source fails flag-covered naming the error
+    Given a project whose tests script exits with an error
+    When flag-covered runs
+    Then it fails naming the script's error

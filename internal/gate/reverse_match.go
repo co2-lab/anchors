@@ -214,6 +214,9 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	if n.Kind != mapx.KindTest {
 		return Skip, i18n.T("gate.test_feature.skip_not_test")
 	}
+	if n.Support {
+		return Skip, i18n.T("gate.support.skip")
+	}
 	if g == nil {
 		return pendingNoMap()
 	}

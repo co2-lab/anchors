@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GRBLG
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @GRBLG
@@ -151,3 +151,9 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Given declarations naming missing files: a dependency row, a seed path and a need
     When the graph is built
     Then no relation points to any of the missing files
+
+  @GRBLG-B22 @unit-level
+  Scenario: A support file becomes a node marked as support
+    Given a scanned test file marked as support and one that is not
+    When the map is built
+    Then the first node is marked as support, the second is not, and both keep their kind

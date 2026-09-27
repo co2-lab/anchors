@@ -783,7 +783,10 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 			proven[c] = true
 		}
 	}
-	written := codesNamedByTests(declared, root, g, n.ID)
+	written, err := codesNamedByTests(declared, root, g, n.ID, cfg)
+	if err != nil {
+		return Fail, i18n.T("gate.tests_source.failed", err)
+	}
 
 	var noTest, notGreen []string
 	seen := map[string]bool{}
@@ -826,12 +829,19 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 //
 // It walks the tests LINKED to this node (`tested-by` edges) and, when there are none,
 // every test in the graph — a flag has no edge to its tests, and a spec does not always
-// have one. A comment does not count, by the same ruler as `feature-test-match`: a code
-// cited in a comment is a REFERENCE to another unit, not an implementation.
-func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string) map[string]bool {
+// have one.
+//
+// When the project says how its tests are written (`dialect.tests`, or its family's), a
+// code is named when a test's TITLE cites it: that is where a test says which scenario it
+// proves, and a code elsewhere in the file (a fixture, a helper, a comment) is not a test
+// of it. Without that declaration the engine cannot tell a title from the rest, and the
+// code counts anywhere in the file outside comments — a comment cites another unit, it
+// does not implement it. An error reading the declared source is returned, not taken for
+// "no test names it".
+func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string, cfg *config.Config) (map[string]bool, error) {
 	written := map[string]bool{}
 	if g == nil || root == "" {
-		return written
+		return written, nil
 	}
 	var paths []string
 	for _, e := range g.Neighbors(id).Out {
@@ -846,6 +856,21 @@ func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string) ma
 			}
 		}
 	}
+	paths = realTests(g, paths)
+	tests, declared, err := projectTests(root, g, cfg)
+	if err != nil {
+		return nil, err
+	}
+	if declared {
+		for _, t := range testsIn(tests, paths) {
+			for _, c := range codes {
+				if strings.Contains(t.Title, c) {
+					written[c] = true
+				}
+			}
+		}
+		return written, nil
+	}
 	for _, tp := range paths {
 		b, err := os.ReadFile(filepath.Join(root, tp))
 		if err != nil {
@@ -858,7 +883,7 @@ func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string) ma
 			}
 		}
 	}
-	return written
+	return written, nil
 }
 
 // line-coverage: a cobertura de linha do nó de código está >= 70%? (limiar fixo por
@@ -1036,6 +1061,9 @@ func compareDelta(delta float64) string {
 
 // tests-pass: o nó de teste tem 0 falhas (do resultado de execução ingerido)?
 func checkTestsPass(_ string, n mapx.Node) (Verdict, string) {
+	if n.Support {
+		return Skip, i18n.T("gate.support.skip")
+	}
 	if n.Signal == nil || (n.Signal.Passed == 0 && n.Signal.Failed == 0 && n.Signal.Skipped == 0) {
 		return Pending, i18n.T("gate.tests_pass.no_signal")
 	}

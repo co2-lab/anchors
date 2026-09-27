@@ -113,6 +113,9 @@ type File struct {
 	Parent string
 	// Upstream: the file is a copy Anchors seeded and still owns — see IsUpstreamOwned.
 	Upstream bool
+	// Support: the file matches its layer's `support:` list — it serves the tests without
+	// being one (see config.Layer.Support).
+	Support bool
 	// Revises são os planos que ESTE revisa — caminhos, como o `needs`.
 	Revises []string
 	// Realizes: as REGRAS DE DOUTRINA DE PRODUTO que as regras desta spec concretizam,
@@ -244,6 +247,7 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 			Needs:         needsFor(kind, content, root, rel),
 			Parent:        parentDe(content),
 			Upstream:      IsUpstreamOwned(rel, content),
+			Support:       excluded(rel, cfg.Layers[layer].Support),
 			Revises:       revisesDe(kind, content, root, rel),
 			NoPropagation: noPropRE.Match(content),
 			SharedCode:    sharedCodeRE.Match(content),

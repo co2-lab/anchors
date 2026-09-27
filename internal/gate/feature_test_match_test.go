@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"github.com/co2-lab/anchors/internal/testlist"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,10 +15,14 @@ import (
 // cfg de teste com o de-para de regime do app de referência: @nivel-unit→unit, @nivel-integration→
 // integration (superfície test); @nivel-e2e→e2e (outra superfície).
 func regimeCfg() *config.Config {
-	return &config.Config{Derived: &config.Derived{
-		Regimes:  map[string]string{"nivel-unit": "unit", "nivel-integration": "integration", "nivel-e2e": "e2e"},
-		Surfaces: map[string]string{"unit": "test", "integration": "test", "e2e": "e2e"},
-	}}
+	return &config.Config{
+		Derived: &config.Derived{
+			Regimes:  map[string]string{"nivel-unit": "unit", "nivel-integration": "integration", "nivel-e2e": "e2e"},
+			Surfaces: map[string]string{"unit": "test", "integration": "test", "e2e": "e2e"},
+		},
+		// The fixtures are TypeScript tests; the family says how a test opens.
+		Dialect: &config.Dialect{Family: "ts"},
+	}
 }
 
 func writeFile(t *testing.T, root, rel, content string) {
@@ -533,4 +538,132 @@ describe('x', () => {
 		}
 	}
 	i18n.Set(i18n.Default)
+}
+
+func TestTestTitleForReadsModifiedCalls(t *testing.T) {
+	t.Run("FTMFT-B21: A parametrised, focused or skipped test is read by its own title", func(t *testing.T) {})
+	next := "\n  it('RMIHX-E11 nota ausente é aceita como vazia', () => {})\n"
+	for _, decl := range []string{
+		"it.each([[\"a\", 1], [fn(2), {x: [3]}]])",
+		"test.each([1, 2])",
+		"it.each(\n    cases,\n  )",
+		"it.only",
+		"test.skip",
+	} {
+		body := decl + "('RMIHX-E11 relato fora da forma (%p) responde 400', (x) => {})" + next
+		got, ok := testTitleFor(body, "RMIHX-E11")
+		if !ok || got != "relato fora da forma (%p) responde 400" {
+			t.Errorf("%s: want the title of that test, got %q (%v)", decl, got, ok)
+		}
+	}
+}
+
+// testTitleFor reads `body` as one test file through the ts and go families' patterns and
+// returns the title of the test of `code`, as the gate does through the project's source.
+func testTitleFor(body, code string) (string, bool) {
+	title, _, ok := titleFor(listBody(body), code)
+	return title, ok
+}
+
+// sharedTitle says whether the test of `code` in `body` cites other codes too.
+func sharedTitle(body, code string) bool {
+	_, shared, ok := titleFor(listBody(body), code)
+	return ok && shared
+}
+
+func listBody(body string) []testlist.Test {
+	dir, err := os.MkdirTemp("", "titles-")
+	if err != nil {
+		panic(err)
+	}
+	defer os.RemoveAll(dir)
+	if err := os.WriteFile(filepath.Join(dir, "x.test.ts"), []byte(body), 0o644); err != nil {
+		panic(err)
+	}
+	ts := (&config.Config{Dialect: &config.Dialect{Family: "ts"}}).DialectFor().Tests.Pattern
+	golang := (&config.Config{Dialect: &config.Dialect{Family: "go"}}).DialectFor().Tests.Pattern
+	tests, err := testlist.List(dir, []string{"x.test.ts"}, testlist.Source{Pattern: ts + "|" + golang})
+	if err != nil {
+		panic(err)
+	}
+	return tests
+}
+
+func TestFeatureTestMatch_TitlesComeFromTheSource(t *testing.T) {
+	t.Run("FTMFT-B21: A parametrised, focused or skipped test is read by its own title", func(t *testing.T) {})
+	resetProjectTestsCache()
+	t.Cleanup(resetProjectTestsCache)
+	root := t.TempDir()
+	feat := "business-logic/dedup.feature"
+	test := "__tests__/dedup.test.ts"
+	writeFile(t, root, feat, featureSrc)
+	// The file itself cites the codes with titles that diverge from the feature; the
+	// project's script lists other titles. The script is what the gate must read.
+	writeFile(t, root, test, "it('DDTDX-B01: xyz qwe abc', f)\nit('DDTDX-B02: foo bar baz', f)\n")
+	g := featureGraph(feat, test)
+	n := mapx.Node{ID: feat, Kind: mapx.KindFeature}
+	cfg := regimeCfg()
+	cfg.Dialect = &config.Dialect{Tests: &config.TestsSource{}}
+	titles := featureTitles(t, featureSrc)
+	out := `{"version":1,"tests":[{"file":"` + test + `","line":1,"title":"DDTDX-B01: ` + titles[0] + `"},` +
+		`{"file":"` + test + `","line":2,"title":"DDTDX-B02: ` + titles[1] + `"}]}`
+	cfg.Dialect.Tests.Script = "printf '%s' '" + out + "'"
+	if v, detail := checkFeatureTestMatch(featureSrc, n, root, g, cfg); v != Pass {
+		t.Fatalf("the script's titles match the feature and must be the ones read, got %v (%s)", v, detail)
+	}
+	resetProjectTestsCache()
+	if v, detail := checkFeatureTestMatch(featureSrc, n, root, g, regimeCfg()); v == Pass || !strings.Contains(detail, "DDTDX-B01") {
+		t.Fatalf("through the ts pattern the file's own diverging titles are read, got %v (%s)", v, detail)
+	}
+}
+
+func TestFeatureTestMatch_FailingSource(t *testing.T) {
+	t.Run("FTMFT-E02: A failing tests source fails the gate naming the error", func(t *testing.T) {})
+	resetProjectTestsCache()
+	t.Cleanup(resetProjectTestsCache)
+	root := t.TempDir()
+	feat := "business-logic/dedup.feature"
+	test := "__tests__/dedup.test.ts"
+	writeFile(t, root, feat, featureSrc)
+	writeFile(t, root, test, "it('DDTDX-B01: a', f)\nit('DDTDX-B02: b', f)\n")
+	cfg := regimeCfg()
+	cfg.Dialect = &config.Dialect{Tests: &config.TestsSource{Script: `echo '{"version":9,"tests":[]}'`}}
+	v, detail := checkFeatureTestMatch(featureSrc, mapx.Node{ID: feat, Kind: mapx.KindFeature}, root, featureGraph(feat, test), cfg)
+	if v != Fail || !strings.Contains(detail, "`version` must be 1") {
+		t.Fatalf("a source outside the contract must fail the gate naming the violation, got %v (%s)", v, detail)
+	}
+}
+
+// featureTitles lists the scenario titles of a feature, in order.
+func featureTitles(t *testing.T, src string) []string {
+	t.Helper()
+	var out []string
+	for _, sc := range parseFeatureScenarios(src) {
+		out = append(out, sc.Title)
+	}
+	if len(out) < 2 {
+		t.Fatalf("the fixture needs two scenarios, has %v", out)
+	}
+	return out
+}
+
+func TestFeatureTestMatch_SupportIsNotItsTest(t *testing.T) {
+	t.Run("FTMFT-B22: A support file linked to a feature is not confronted as its test", func(t *testing.T) {})
+	resetProjectTestsCache()
+	t.Cleanup(resetProjectTestsCache)
+	root := t.TempDir()
+	feat := "business-logic/dedup.feature"
+	test := "__tests__/dedup.test.ts"
+	writeFile(t, root, feat, featureSrc)
+	writeFile(t, root, test, "it('DDTDX-B01: x', f)\nit('DDTDX-B02: y', f)\n")
+	g := featureGraph(feat, test)
+	for i := range g.Nodes {
+		if g.Nodes[i].ID == test {
+			g.Nodes[i].Support = true
+		}
+	}
+	v, detail := checkFeatureTestMatch(featureSrc, mapx.Node{ID: feat, Kind: mapx.KindFeature}, root, g, regimeCfg())
+	if v != Pending || !strings.Contains(detail, i18n.T("gate.feature_test_match.pending_no_linked_tests")) {
+		t.Fatalf("with only a support file linked there is no test to confront, got %v (%s)", v, detail)
+	}
 }

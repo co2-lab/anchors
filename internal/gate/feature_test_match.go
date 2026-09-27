@@ -12,6 +12,7 @@ import (
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/similarity"
+	"github.com/co2-lab/anchors/internal/testlist"
 )
 
 // checkFeatureTestMatch — gate RELACIONAL da trinca (STRUCTURE/TRACEABILITY): confronta
@@ -52,6 +53,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 			testPaths = append(testPaths, e.To)
 		}
 	}
+	testPaths = realTests(g, testPaths)
 	if len(testPaths) == 0 {
 		// sem teste ligado: se a feature declara cenários, isto é uma lacuna da trinca —
 		// mas quem cobra a EXISTÊNCIA do teste é a co-location/tested-by; aqui só
@@ -72,6 +74,12 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		bodyComComentarios.WriteString("\n")
 	}
 	body := testBody.String()
+	// The titles of the linked tests, read the way the project says its tests are written.
+	all, _, err := projectTests(root, g, cfg)
+	if err != nil {
+		return Fail, i18n.T("gate.tests_source.failed", err)
+	}
+	mine := testsIn(all, testPaths)
 	// Duas leituras do mesmo teste, para duas perguntas diferentes.
 	//
 	// `body` (sem comentários) responde "o código está IMPLEMENTADO aqui?" — e um
@@ -115,9 +123,9 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		// vai consertar saber o que fazer:
 		//   similar    → mesmo assunto, palavras diferentes: reescreva um dos lados.
 		//   divergente → assuntos diferentes: decida qual dos dois está velho.
-		titulo, temTitulo := testTitleFor(body, sc.Code)
+		titulo, compartilhado, temTitulo := titleFor(mine, sc.Code)
 		switch {
-		case temTitulo && !sharedTitle(body, sc.Code):
+		case temTitulo && !compartilhado:
 			if v, score := similarity.Classify(sc.Title, titulo, pesos); v != similarity.Identico {
 				driftDesc = append(driftDesc, fmt.Sprintf("%s (%s, %.0f%%)", sc.Code, verdictLabel(v), score*100))
 			}
@@ -414,105 +422,73 @@ func quoteAll(xs []string) []string {
 	return out
 }
 
-// testTitleReCache evita recompilar o regex por cenário (features grandes têm 40+).
-var testTitleReCache = map[string]*regexp.Regexp{}
-
-// testTitleFor extrai o título do teste que cita `code`.
-//
-// Casa as formas usuais — `it('CODE: título')`, `it('[CODE] título')`,
-// `it("CODE — título")` — e devolve ok=false quando o código aparece só em
-// comentário ou num teste que prova vários cenários de uma vez: nesses casos não
-// há UM título para comparar, e forçar a comparação inventaria divergência.
-// sharedTitle diz se o `it` que cita `code` cita OUTRO código também.
-//
-// Um título com vários códigos descreve o conjunto, não cada um: comparar o
-// título com cada cenário por igualdade condenaria N-1 deles sempre.
-func sharedTitle(body, code string) bool {
-	re, ok := siblingTitleRECache[code]
-	if !ok {
-		cod := regexp.QuoteMeta(code)
-		re = regexp.MustCompile(
-			`(?:it|test|t\.Run|describe)\s*\(\s*['"` + "`" + `][^'"` + "`" + `]*` + cod + `[^'"` + "`" + `]*['"` + "`" + `]`)
-		siblingTitleRECache[code] = re
-	}
-	m := re.FindString(body)
-	if m == "" {
-		return false
-	}
-	// quantos códigos DISTINTOS o título cita?
-	achados := map[string]bool{}
-	for _, c := range titleCodeRE().FindAllString(m, -1) {
-		achados[c] = true
-	}
-	return len(achados) > 1
-}
-
-var siblingTitleRECache = map[string]*regexp.Regexp{}
-
-// Compiled per CALL and not in a `var` — the same rule as `codeRE` (rule_implemented.go):
-// the code length comes from `code_lengths`, loaded AFTER the globals. In a `var` this
-// regex froze the default `[5]`, and in a `[4]` project it matched no requirement at all —
-// a title citing three scenarios counted zero.
+// titleCodeRE matches a scenario code inside a title. Compiled per CALL and not in a
+// `var` — the same rule as `codeRE` (rule_implemented.go): the code length comes from
+// `code_lengths`, loaded AFTER the globals. In a `var` this regex froze the default `[5]`,
+// and in a `[4]` project it matched no requirement at all — a title citing three
+// scenarios counted zero.
 func titleCodeRE() *regexp.Regexp {
 	return regexp.MustCompile(`[A-Z0-9]` + config.CodeLengthPattern() + `-[A-Z]{1,2}\d{2}(?:#\d{2})?`)
 }
 
-// testTitleFor extrai o título do teste (`it`, `test`, `t.Run`, etc.) que cita `code`.
+// titleFor finds, among the listed tests, the first whose title LEADS with `code` — alone
+// or in a list of sibling codes — and returns the text after the codes, and whether that
+// title cites more than one code.
 //
-// Um teste pode provar VÁRIOS cenários e citar todos no título — a forma usada no
-// projeto é `it('AATAX-S03 / AATAX-B02 / AATAX-M01: sem iniciais exibe o fallback')`,
-// e ela é legítima: três cenários que descrevem a mesma situação por eixos
-// diferentes do vocabulário (estado, comportamento, mensagem) têm uma prova só.
+// A test may prove several scenarios and cite all of them in the title — the form used in
+// the project is `it('AATAX-S03 / AATAX-B02 / AATAX-M01: sem iniciais exibe o fallback')`,
+// and it is legitimate: three scenarios describing the same situation along different
+// axes of the vocabulary (state, behaviour, message) have one proof. Such a title
+// describes the set, not each one, and `shared` tells the caller so.
 //
-// O título desse teste é o texto DEPOIS de todos os códigos. Antes o prefixo de
-// códigos era casado como `\[?CODE\]?`, um código exato, e isso errava nos dois
-// sentidos: para o PRIMEIRO código o título capturado vinha com o resto do prefixo
-// grudado ("/ AATAX-B02 / AATAX-M01: sem iniciais…"), e para os SEGUINTES nada
-// casava — caindo na régua de corpo, que responde outra pergunta. As duas falhas
-// viravam divergência de descrição relatada onde os dois lados diziam o mesmo.
-func testTitleFor(body, code string) (string, bool) {
-	re, ok := testTitleReCache[code]
-	if !ok {
-		// RE2 não tem backreference, então "fecha com o mesmo delimitador que abriu"
-		// não cabe numa expressão só: são três ramos, unidos por alternância.
-		//
-		// `prefixo` cobre a lista de códigos irmãos que pode vir antes ou depois do
-		// nosso, separados por `/`, `,` ou espaço. O corpo capturado começa só
-		// depois do último deles.
-		// Cada código pode vir entre colchetes por conta própria (`[A], [B]`) ou o
-		// colchete pode envolver a lista inteira (`[A / B]`): o `\[?`/`\]?` fica em
-		// cada peça, e não numa volta só.
-		// O código tem de TERMINAR aqui: sem a fronteira, `ABCDX-DS-delta-up` casava
-		// dentro de `ABCDX-DS-delta-up-high` e o gate lia o título do teste vizinho —
-		// comparando o cenário de "até 20%" com a prova de "acima de 20%".
-		cod := `\[?` + regexp.QuoteMeta(code) + `\]?(?:[^\w#-]|$)`
-		// O irmão pode ser numérico (`ABCDX-B01`, `ABCDX-B01#02`) ou NOMINAL
-		// (`ABCDX-DS-fatura-marcado`) — o vocabulário aceita as duas formas, e deixar a
-		// segunda de fora fazia o título do primeiro código vir com o prefixo do irmão
-		// grudado, o que produzia "similar 100%": mesmo texto, comparação diferente.
-		outro := `\[?[A-Z0-9]` + config.CodeLengthPattern() + `-(?:[A-Z]{1,2}\d{2}(?:#\d{2})?|DS-[\w-]+)\]?`
-		irmaos := `(?:\s*[/,]?\s*` + outro + `)*`
-		abre := `(?:it|test|t\.Run|describe)\s*\(\s*`
-		meio := `\[?` + irmaos + `\s*[/,]?\s*` + cod + irmaos + `\]?\s*[:—-]?\s*`
-		re = regexp.MustCompile(
-			abre + `'` + meio + `([^']*)'` + `|` +
-				abre + `"` + meio + `([^"]*)"` + `|` +
-				abre + "`" + meio + "([^`]*)`",
-		)
-		testTitleReCache[code] = re
-	}
-	m := re.FindStringSubmatch(body)
-	if m == nil {
-		return "", false
-	}
-	// Só um dos três ramos casou; os outros grupos vêm vazios.
-	for _, g := range m[1:] {
-		if g != "" {
-			return strings.TrimSpace(g), true
+// The title of that test is the text AFTER all the codes. The prefix used to be matched
+// as `\[?CODE\]?`, an exact code, and that was wrong both ways: for the FIRST code the
+// captured title came with the rest of the prefix stuck on ("/ AATAX-B02 / AATAX-M01: sem
+// iniciais…"), and for the following ones nothing matched. Both failures became
+// description drift reported where the two sides said the same.
+//
+// The tests come from the project's `tests` source (see projectTests): how a test opens
+// is the test library's business, and reading the call here would tie the gate to one.
+func titleFor(tests []testlist.Test, code string) (title string, shared, ok bool) {
+	re := leadingCodesRE(code)
+	for _, t := range tests {
+		m := re.FindStringSubmatch(t.Title)
+		if m == nil {
+			continue
 		}
+		distinct := map[string]bool{}
+		for _, c := range titleCodeRE().FindAllString(t.Title, -1) {
+			distinct[c] = true
+		}
+		return strings.TrimSpace(m[1]), len(distinct) > 1, true
 	}
-	return "", false
+	return "", false, false
 }
+
+// leadingCodesRE matches a title that opens with a list of codes containing `code`, and
+// captures the text after the list.
+func leadingCodesRE(code string) *regexp.Regexp {
+	if re, ok := leadingCodesCache[code]; ok {
+		return re
+	}
+	// The code has to END here: without the boundary, `ABCDX-DS-delta-up` matched inside
+	// `ABCDX-DS-delta-up-high` and the gate read the neighbouring test's title — comparing
+	// the "up to 20%" scenario with the proof of "above 20%".
+	cod := `\[?` + regexp.QuoteMeta(code) + `\]?(?:[^\w#-]|$)`
+	// A sibling may be numeric (`ABCDX-B01`, `ABCDX-B01#02`) or NOMINAL
+	// (`ABCDX-DS-fatura-marcado`); leaving the second out stuck the sibling's prefix onto
+	// the first code's title, which produced "similar 100%": same text, different
+	// comparison. Each code may carry its own brackets (`[A], [B]`), or one bracket may
+	// wrap the whole list (`[A / B]`).
+	outro := `\[?[A-Z0-9]` + config.CodeLengthPattern() + `-(?:[A-Z]{1,2}\d{2}(?:#\d{2})?|DS-[\w-]+)\]?`
+	irmaos := `(?:\s*[/,]?\s*` + outro + `)*`
+	re := regexp.MustCompile(`(?s)^\s*\[?` + irmaos + `\s*[/,]?\s*` + cod + irmaos + `\]?\s*[:—-]?\s*(.*)$`)
+	leadingCodesCache[code] = re
+	return re
+}
+
+// leadingCodesCache avoids recompiling per scenario (large features have 40+).
+var leadingCodesCache = map[string]*regexp.Regexp{}
 
 // cutInlineComment drops a trailing comment from a code line, and only a comment.
 //

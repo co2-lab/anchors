@@ -791,3 +791,55 @@ func TestInternalChecks_Errors(t *testing.T) {
 		}
 	})
 }
+
+func TestScenarioCoverage_TitlesWhenDeclared(t *testing.T) {
+	t.Run("INCHN-B17: With a tests source a scenario is written only when a title cites it", func(t *testing.T) {})
+	t.Cleanup(resetProjectTestsCache)
+	body := "const c = \"CREDX-B01\"\nfunc TestX(t *testing.T) { t.Run(\"unrelated\", nil) }\n"
+	goFamily := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	resetProjectTestsCache()
+	root, g := rootWithTest(t, body)
+	v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, goFamily)
+	if v != Fail || strings.Contains(msg, "ingest") {
+		t.Fatalf("with titles declared, a code in a fixture writes no test, got %v: %s", v, msg)
+	}
+	resetProjectTestsCache()
+	root, g = rootWithTest(t, body)
+	if v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, nil); v != Fail || !strings.Contains(msg, "ingest") {
+		t.Fatalf("without a declaration the code in the file counts as written, got %v: %s", v, msg)
+	}
+	resetProjectTestsCache()
+	root, g = rootWithTest(t, "func TestX(t *testing.T) { t.Run(\"CREDX-B01: validates the limit\", nil) }\n")
+	if _, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, goFamily); !strings.Contains(msg, "ingest") {
+		t.Fatalf("a title citing the code writes its test, got %s", msg)
+	}
+}
+
+func TestScenarioCoverage_FailingSource(t *testing.T) {
+	t.Run("INCHN-E02: A failing tests source fails scenario-coverage naming the error", func(t *testing.T) {})
+	resetProjectTestsCache()
+	t.Cleanup(resetProjectTestsCache)
+	root, g := rootWithTest(t, "func TestX(t *testing.T) {}\n")
+	cfg := &config.Config{Dialect: &config.Dialect{Tests: &config.TestsSource{Script: "echo 'no go toolchain' >&2; exit 1"}}}
+	if v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, cfg); v != Fail || !strings.Contains(msg, "no go toolchain") {
+		t.Fatalf("a failing source must fail naming its error, got %v: %s", v, msg)
+	}
+}
+
+func TestSupportFilesAreNotTests(t *testing.T) {
+	t.Run("INCHN-B18: A support file is neither run nor counted as naming a scenario", func(t *testing.T) {})
+	if v, msg := checkTestsPass("", mapx.Node{ID: "utils/login.yaml", Kind: mapx.KindTest, Support: true}); v != Skip || !strings.Contains(msg, "support") {
+		t.Fatalf("tests-pass must skip a support file saying why, got %v (%s)", v, msg)
+	}
+	resetProjectTestsCache()
+	t.Cleanup(resetProjectTestsCache)
+	root, g := rootWithTest(t, "const c = \"CREDX-B01\"\n")
+	for i := range g.Nodes {
+		if g.Nodes[i].ID == "credx_test.go" {
+			g.Nodes[i].Support = true
+		}
+	}
+	if _, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, nil); strings.Contains(msg, "ingest") {
+		t.Fatalf("a support file must not count as a test naming the code, got %s", msg)
+	}
+}

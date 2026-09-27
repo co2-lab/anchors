@@ -269,7 +269,10 @@ func checkFlagCovered(content string, n mapx.Node, root string, g *mapx.Graph, c
 			green[c] = true
 		}
 	}
-	written := codesNamedByTests(scenarioCodes(f), root, g, n.ID)
+	written, err := codesNamedByTests(scenarioCodes(f), root, g, n.ID, cfg)
+	if err != nil {
+		return Fail, i18n.T("gate.tests_source.failed", err)
+	}
 
 	var noTest, notGreen []string
 	for _, s := range f.Scenarios {

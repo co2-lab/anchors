@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DLCTI
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @DLCTI
@@ -102,3 +102,9 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given the Go family's handle patterns
     When they read "if err != nil {" and "if err := os.Remove(p); err != nil {"
     Then both lines are recognised as handling a failure
+
+  @DLCTI-B14 @unit-level
+  Scenario: The Go and TS families say how a test is written
+    Given the go and ts families, and a ts project that declares its own tests script
+    When the effective dialect is read
+    Then go reads t.Run, ts reads it, test and describe with their modifiers, and the project's script wins

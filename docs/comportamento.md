@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a19a9b1634b23e6d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:abc977ffd293362c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2590,6 +2590,8 @@ teste prova.
 
 - [Save to a path that cannot be written returns the write error](camadas/config.md#cnfgo-e02--save-to-a-path-that-cannot-be-written-returns-the-write-error) `CNFGO-E02`
 
+- [A layer's support globs must be valid](camadas/config.md#cnfgo-b46--a-layers-support-globs-must-be-valid) `CNFGO-B46`
+
 - [The declared containers come back as written, and a missing config has none](camadas/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](camadas/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -3292,6 +3294,8 @@ teste prova.
 
 - [A failing tests source fails the gate naming the error](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-E02`
 
+- [A support file linked to a feature is not confronted as its test](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B22`
+
 - [Only a check with a registered fixer is fixable](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B01`
 
 - [A stale date on a committed file is rewritten to its last commit date](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B02`
@@ -3505,6 +3509,8 @@ teste prova.
 - [With a tests source a scenario is written only when a title cites it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B17`
 
 - [A failing tests source fails scenario-coverage naming the error](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-E02`
+
+- [A support file is neither run nor counted as naming a scenario](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B18`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -4072,6 +4078,18 @@ teste prova.
 
 - [The gate does not put the progress file into the map](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-X03`
 
+- [The project's own source wins over its family's, and neither declares nothing](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B01`
+
+- [A pattern reads only the map's test files](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B02`
+
+- [The tests are read once per scan](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B03`
+
+- [The tests of a set of files come in file order then line](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B04`
+
+- [A source error is returned with the declaration](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B05`
+
+- [Support files are not read as tests](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B06`
+
 - [Returns an empty list of Promotable gates when profile contains no gates](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B01`
 
 - [An informative gate with passes and zero failures is included](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B02`
@@ -4251,6 +4269,8 @@ teste prova.
 - [A code named only in a comment is not a claim of proof](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-X02`
 
 - [A data state defined with the unit prefix is read at the code length the project declares](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B15`
+
+- [A support file is not confronted as a test](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B16`
 
 - [Non-spec artifacts skip confrontation](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B01`
 
@@ -4707,6 +4727,8 @@ teste prova.
 - [With a tests source a test traces only through its titles](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B12`
 
 - [A failing tests source fails the gate naming the error](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-E03`
+
+- [A support file is not charged with tracing](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B13`
 
 - [The gate skips what is not a spec, and is Pending without a map](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B01`
 
@@ -5992,6 +6014,8 @@ teste prova.
 
 - [No relation points to a file that was not scanned](camadas/mapa.md#grblg-x02--no-relation-points-to-a-file-that-was-not-scanned) `GRBLG-X02`
 
+- [A support file becomes a node marked as support](camadas/mapa.md#grblg-b22--a-support-file-becomes-a-node-marked-as-support) `GRBLG-B22`
+
 - [A test that was never ingested has no verdict](camadas/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 
 - [The test's own change expires its evidence](camadas/mapa.md#evfra-b02--the-tests-own-change-expires-its-evidence) `EVFRA-B02`
@@ -6313,6 +6337,8 @@ teste prova.
 - [A layer file that cannot be read fails the walk](camadas/scan.md#rpscr-e02--a-layer-file-that-cannot-be-read-fails-the-walk) `RPSCR-E02`
 
 - [Rule tags follow the declared code length](camadas/scan.md#rpscr-b31--rule-tags-follow-the-declared-code-length) `RPSCR-B31`
+
+- [A file in its layer's support list is marked as support](camadas/scan.md#rpscr-b32--a-file-in-its-layers-support-list-is-marked-as-support) `RPSCR-B32`
 
 - [Only a marked workflow is owned upstream](camadas/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

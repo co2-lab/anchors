@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: FTMFT
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @FTMFT
@@ -169,3 +169,21 @@ Feature: FeatureTestMatch — scenarios in feature must be implemented in test b
     Given a feature whose scenarios a linked test cites with unrelated titles
     When the gate confronts them in an English and in a Portuguese project
     Then the drift message names the verdict "divergent" in English and "divergente" in Portuguese
+
+  @FTMFT-B21 @unit-level
+  Scenario: A parametrised, focused or skipped test is read by its own title
+    Given a test declared with it.each over a table that cites a code, followed by a plain test citing the same code
+    When the title of the code's test is read through the ts family's pattern, and when a project script lists a title of its own
+    Then the it.each title is the one read, the script's title is the one confronted, and with no source the body is confronted
+
+  @FTMFT-E02 @unit-level
+  Scenario: A failing tests source fails the gate naming the error
+    Given a project whose tests script answers outside the contract
+    When a feature is confronted with its tests
+    Then the gate fails naming the violation
+
+  @FTMFT-B22 @unit-level
+  Scenario: A support file linked to a feature is not confronted as its test
+    Given a feature whose only linked file is a support file that cites its codes
+    When the feature is confronted with its tests
+    Then it has no test to confront, as if nothing were linked

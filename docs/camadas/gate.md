@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:1d0b8e7d260473df — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:320e1708a06965ac — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 65 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 66 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -237,6 +237,12 @@
 
 
 ## PRHNP — ProgressHonest — the progress file tells the truth about the disk
+
+
+
+
+
+## PRJTS — ProjectTests — the gates read the project's tests through the source the project declares
 
 
 

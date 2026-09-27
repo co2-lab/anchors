@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DLCTI
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: config
 -->
 # Dialect — the lexicon of the project's language, between an agnostic gate and concrete code
@@ -62,6 +62,7 @@ written in the configuration file).
 | `DLCTI-B11` | The default set-promise convention recognises the verb after a provider prefix (a cloud-provider list call) and never inside another word (allocate, callback, enlistment). |
 | `DLCTI-B12` | The default set-slice convention is a query verb opening the name, followed by a slice word (first, recent, top, page…). |
 | `DLCTI-B13` | The Go family recognises both shapes of error handling: `if err != nil` and `if err := f(); err != nil`. The second is the commoner, and matching only the first left the handling of most Go code invisible to the failure gates. |
+| `DLCTI-B14` | The Go and TS families say how a test is written — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` — and a project that declares its own `tests` keeps it over the family's. |
 
 ## Invariants
 

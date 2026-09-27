@@ -3,6 +3,7 @@ package config
 import (
 	"bytes"
 	"fmt"
+	"github.com/bmatcuk/doublestar/v4"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -1116,6 +1117,14 @@ type Layer struct {
 	Tags    []string `yaml:"tags,omitempty"`    // rótulos p/ governs (ex.: frontend, mobile)
 	Regime  string   `yaml:"regime,omitempty"`  // comportamental|declarativo|misto
 	Exclude []string `yaml:"exclude,omitempty"` // globs a excluir (derivados que casam o glob amplo)
+	// Support: globs, among the files of this layer, of files that SUPPORT the tests
+	// without being tests — sub-flows other flows call, suite aggregators, helper files.
+	// They stay in the map (a change to a helper still reaches every test that uses it),
+	// and the gates that judge a test as a test (tests-pass, test-feature-match,
+	// test-traceable) skip them: such a file has no execution of its own and proves no
+	// scenario. Measured in the reference app: ~190 pending in tests-pass and ~86 in
+	// test-feature-match came from its Maestro utils and suites.
+	Support []string `yaml:"support,omitempty"`
 	// Priority: desempate DECLARADO quando dois patterns casam o mesmo arquivo. Maior
 	// vence; ausente = 0. Sem isso, o Anchors desempata por comprimento do pattern —
 	// uma heurística que mede verbosidade, não precisão, e que já classificou errado
@@ -1688,6 +1697,14 @@ func (c *Config) validarPadroes() error {
 				return err
 			}
 		}
+		if t := d.Tests; t != nil {
+			if t.Pattern != "" && t.Script != "" {
+				return fmt.Errorf("`dialect.tests` declares both a pattern and a script; declare one")
+			}
+			if err := check("dialect.tests.pattern", t.Pattern); err != nil {
+				return err
+			}
+		}
 		for field, ps := range map[string][]string{
 			"guard_patterns": d.GuardPatterns, "handle_patterns": d.HandlePatterns, "log_patterns": d.LogPatterns,
 		} {
@@ -1705,6 +1722,13 @@ func (c *Config) validarPadroes() error {
 		} {
 			if err := check("derived."+field, p); err != nil {
 				return err
+			}
+		}
+	}
+	for name, l := range c.Layers {
+		for i, p := range l.Support {
+			if !doublestar.ValidatePattern(p) {
+				return fmt.Errorf("`layers.%s.support[%d]` is not a valid glob: %q", name, i, p)
 			}
 		}
 	}

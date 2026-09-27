@@ -38,6 +38,9 @@ func checkTestTraceable(content string, n mapx.Node, root string, g *mapx.Graph,
 	if n.Kind != mapx.KindTest {
 		return Skip, i18n.T("gate.test_traceable.skip_not_test")
 	}
+	if n.Support {
+		return Skip, i18n.T("gate.support.skip")
+	}
 	if g == nil {
 		return pendingNoMap()
 	}
@@ -54,9 +57,28 @@ func checkTestTraceable(content string, n mapx.Node, root string, g *mapx.Graph,
 		return Skip, i18n.T("gate.test_traceable.skip_no_scenario_codes")
 	}
 
-	for _, c := range codigos {
-		if strings.Contains(content, c) {
-			return Pass, ""
+	// Where the code has to appear depends on what the project declares. With the way its
+	// tests are written (`dialect.tests`, or its family's), a test traces to a scenario
+	// through its TITLE — a code in a fixture or a helper of the file traces nothing.
+	// Without it the engine cannot tell a title from the rest, and the code counts
+	// anywhere in the file.
+	tests, declared, err := projectTests(root, g, cfg)
+	if err != nil {
+		return Fail, i18n.T("gate.tests_source.failed", err)
+	}
+	if declared {
+		for _, t := range testsIn(tests, []string{n.ID}) {
+			for _, c := range codigos {
+				if strings.Contains(t.Title, c) {
+					return Pass, ""
+				}
+			}
+		}
+	} else {
+		for _, c := range codigos {
+			if strings.Contains(content, c) {
+				return Pass, ""
+			}
 		}
 	}
 	return Fail, i18n.T("gate.test_traceable.test_untraceable",

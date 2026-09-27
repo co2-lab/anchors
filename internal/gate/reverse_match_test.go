@@ -360,3 +360,11 @@ func TestDataStatesOf_readsEveryDeclaredCodeLength(t *testing.T) {
 		t.Errorf("dataStatesOf = %v, want only DS-data-present", got)
 	}
 }
+
+func TestTestFeatureMatch_SkipsSupport(t *testing.T) {
+	t.Run("RVMTR-B16: A support file is not confronted as a test", func(t *testing.T) {})
+	n := mapx.Node{ID: "utils/login.yaml", Kind: mapx.KindTest, Support: true}
+	if v, msg := checkTestFeatureMatch("", n, "", &mapx.Graph{Nodes: []mapx.Node{n}}, nil); v != Skip || !strings.Contains(msg, "support") {
+		t.Fatalf("a support file must be skipped saying why, got %v (%s)", v, msg)
+	}
+}

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FTMFT
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: gate
 -->
 # FeatureTestMatch — scenarios in feature must be implemented in test by code and description
@@ -63,12 +63,15 @@ in automated test suites.
 | `FTMFT-B18` | Only a regime tag the project MAPS under `regimes:` (or a canonical regime name) exempts a scenario as belonging to another surface; an unmapped tag that merely looks like a regime (`@nivel-compilacao`) leaves the scenario confronted. |
 | `FTMFT-B19` | A trailing comment marker counts only OUTSIDE quotes, and `--` or `#` only after whitespace: `"--label"`, `"https://…"` and a `i--` keep the rest of their line. Cut anywhere, the flag argument hid the symbol after it and dependency-honored accused a dependency the code uses. |
 | `FTMFT-B20` | The similarity verdict named beside each drifting scenario (`FTMFT-B09`) is written in the project's language, through i18n (`divergent` in English, `divergente` in Portuguese). |
+| `FTMFT-B21` | A test's title is read from the project's tests source — its `dialect.tests` pattern or script, or its family's — so how a test opens (`t.Run`, `it.each(table)`, `.only`) is the project's declaration, and a later test citing the same code is not taken for an earlier one's proof. Without a source no title is read, and the description is confronted with the test's body. |
+| `FTMFT-B22` | A support file linked to a feature is not among the tests its scenarios are confronted with. |
 
 ## Errors
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `FTMFT-E01` | A test the map links by `tested-by` is gone from disk (or cannot be read). | Its content is left out of the confrontation; the other linked tests still count, and every scenario only the missing test would have implemented is charged as missing — Fail naming those codes (`FTMFT-B06`). | A file that is not there implements nothing: counting it as proof would approve scenarios no test runs. Reading the rest keeps one stale edge from hiding what the present tests do prove, and the verdict points at exactly the scenarios left without a test. |
+| `FTMFT-E02` | The project's tests source fails, or answers outside its contract. | Fail, naming the source's error. | The titles could not be read: comparing descriptions against nothing, or approving, would both speak of tests nobody read. |
 
 ## Invariants
 

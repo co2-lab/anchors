@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RVMTR
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @RVMTR
@@ -120,3 +120,9 @@ Feature: ReverseMatch — every scenario still has its rule, and every proven co
     Given a project that declares code length 7
     When a spec's table row defines "TREXXXX-DS-data-present"
     Then the spec defines exactly the data state "DS-data-present"
+
+  @RVMTR-B16 @unit-level
+  Scenario: A support file is not confronted as a test
+    Given a support file of a test layer with no feature linked
+    When test-feature-match judges it
+    Then it skips saying the file is support

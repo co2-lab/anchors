@@ -847,3 +847,20 @@ func TestPreserveSignalsOnlyForUnchangedFiles(t *testing.T) {
 		t.Errorf("the edited file's signal is no longer valid, got %+v", s)
 	}
 }
+
+func TestBuild_carriesTheSupportMark(t *testing.T) {
+	t.Run("GRBLG-B22: A support file becomes a node marked as support", func(t *testing.T) {})
+	files := []scan.File{
+		{Path: "flows/utils/login.yaml", Layer: "e2e", Kind: "test", Support: true},
+		{Path: "flows/screens/home.yaml", Layer: "e2e", Kind: "test"},
+	}
+	g := Build(files, &config.Config{Layers: map[string]config.Layer{"e2e": {Pattern: "flows/**", Kind: "test"}}}, nil)
+	by := map[string]Node{}
+	for _, n := range g.Nodes {
+		by[n.ID] = n
+	}
+	if !by["flows/utils/login.yaml"].Support || by["flows/screens/home.yaml"].Support ||
+		by["flows/utils/login.yaml"].Kind != KindTest {
+		t.Errorf("the support mark must reach the node and the kind stay test, got %+v", by)
+	}
+}

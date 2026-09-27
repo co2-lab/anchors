@@ -180,6 +180,9 @@ type Node struct {
 	// upstream: the node carries no local code, and the internal gates do not charge it a
 	// triad the project could never honestly write.
 	Upstream bool `yaml:"upstream,omitempty"`
+	// Support: a file of a test layer that serves the tests without being one (the layer's
+	// `support:` list). It stays in the map for impact; the gates that judge a test skip it.
+	Support bool `yaml:"support,omitempty"`
 	// Revises — os planos que ESTE revisa (`revises:` no header).
 	Revises []string `yaml:"revises,omitempty"`
 	// Signal — sinais de qualidade INGERIDOS do runner (o Anchors não roda o teste;
