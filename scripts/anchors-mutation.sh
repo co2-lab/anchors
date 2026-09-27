@@ -13,6 +13,12 @@
 # package (the regexp is matched against paths relative to the target, and only a file of
 # a subdirectory has a `/` in it).
 #
+# `--timeout-coefficient 10`: gremlins times each mutant against the coverage run, which
+# is fast when the build cache is warm. A mutant that needs a rebuild after the cache was
+# trimmed then exceeds it, and a TIMED OUT mutant counts as killed — measured on
+# internal/testlist: 32 of 32 timed out (a false 100%), and 30 killed / 1 survived with
+# the larger coefficient.
+#
 # Usage: scripts/anchors-mutation.sh [package-dir ...]   (default: every package)
 set -uo pipefail
 
@@ -36,7 +42,7 @@ i=0
 for pkg in "${pkgs[@]}"; do
   i=$((i + 1))
   echo "[$i/${#pkgs[@]}] $pkg"
-  if ! gremlins unleash "./$pkg" -E / --output "$tmp/raw.json" >"$tmp/log" 2>&1; then
+  if ! gremlins unleash "./$pkg" -E / --timeout-coefficient 10 --output "$tmp/raw.json" >"$tmp/log" 2>&1; then
     echo "  gremlins failed on $pkg:" >&2
     tail -5 "$tmp/log" >&2
     continue

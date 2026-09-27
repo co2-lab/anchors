@@ -9787,7 +9787,7 @@ nodes:
                 score: 78.04878048780488
                 at_rev: 1b806923de44
         at_rev: 1b806923de44
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/code_cataloged.spec.md
       kind: spec
       rev: 9f701a292005
@@ -9896,7 +9896,7 @@ nodes:
                 score: 80
                 at_rev: 2ffa6610870b
         at_rev: 2ffa6610870b
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/code_language.spec.md
       kind: spec
       rev: c76a47a6483c
@@ -9981,7 +9981,7 @@ nodes:
                 score: 100
                 at_rev: f991e2c7dd2e
         at_rev: f991e2c7dd2e
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/code_reference_valid.spec.md
       kind: spec
       rev: 11f53b9e468c
@@ -10068,15 +10068,17 @@ nodes:
                 covered_lines: 98
                 total_lines: 100
                 at_rev: eba61b62d923
-        mutants_killed: 32
-        mutation_score: 100
+        mutants_killed: 29
+        mutants_survived: 3
+        mutation_score: 90.625
         mutation_by_scope:
             isolated:
-                killed: 32
-                score: 100
+                killed: 29
+                survived: 3
+                score: 90.625
                 at_rev: eba61b62d923
         at_rev: eba61b62d923
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/contract_status_declared.spec.md
       kind: spec
       rev: 36c2e9095d0c
@@ -10173,15 +10175,17 @@ nodes:
                 covered_lines: 117
                 total_lines: 124
                 at_rev: bd766c8c0224
-        mutants_killed: 29
-        mutation_score: 100
+        mutants_killed: 28
+        mutants_survived: 1
+        mutation_score: 96.55172413793103
         mutation_by_scope:
             isolated:
-                killed: 29
-                score: 100
+                killed: 28
+                survived: 1
+                score: 96.55172413793103
                 at_rev: bd766c8c0224
         at_rev: bd766c8c0224
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/count_honored.spec.md
       kind: spec
       rev: 14184f6494ca
@@ -10278,15 +10282,17 @@ nodes:
                 covered_lines: 109
                 total_lines: 110
                 at_rev: 9ebc588be760
-        mutants_killed: 25
-        mutation_score: 100
+        mutants_killed: 23
+        mutants_survived: 2
+        mutation_score: 92
         mutation_by_scope:
             isolated:
-                killed: 25
-                score: 100
+                killed: 23
+                survived: 2
+                score: 92
                 at_rev: 9ebc588be760
         at_rev: 9ebc588be760
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/dependency_honored.spec.md
       kind: spec
       rev: 2747098bf517
@@ -10369,19 +10375,19 @@ nodes:
                 covered_lines: 179
                 total_lines: 184
                 at_rev: 4bec3c03b9b8
-        mutants_killed: 49
-        mutants_survived: 10
-        mutation_score: 83.05084745762711
+        mutants_killed: 45
+        mutants_survived: 14
+        mutation_score: 76.27118644067797
         mutants_no_coverage: 2
         mutation_by_scope:
             isolated:
-                killed: 49
-                survived: 10
+                killed: 45
+                survived: 14
                 no_coverage: 2
-                score: 83.05084745762711
+                score: 76.27118644067797
                 at_rev: 4bec3c03b9b8
         at_rev: 4bec3c03b9b8
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/doc_required.spec.md
       kind: spec
       rev: c84620f109f8
@@ -10464,19 +10470,19 @@ nodes:
                 covered_lines: 81
                 total_lines: 88
                 at_rev: 4555e1b800e7
-        mutants_killed: 29
-        mutants_survived: 6
-        mutation_score: 82.85714285714286
+        mutants_killed: 26
+        mutants_survived: 9
+        mutation_score: 74.28571428571429
         mutants_no_coverage: 2
         mutation_by_scope:
             isolated:
-                killed: 29
-                survived: 6
+                killed: 26
+                survived: 9
                 no_coverage: 2
-                score: 82.85714285714286
+                score: 74.28571428571429
                 at_rev: 4555e1b800e7
         at_rev: 4555e1b800e7
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/doc_self_contained.spec.md
       kind: spec
       rev: cdaba8b7eb3a
@@ -10569,7 +10575,7 @@ nodes:
                 score: 100
                 at_rev: e465b4dcc5a8
         at_rev: e465b4dcc5a8
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/docs_covered.spec.md
       kind: spec
       rev: e4b8c38f33b0
@@ -10648,7 +10654,7 @@ nodes:
                 score: 100
                 at_rev: 613927a5e421
         at_rev: 613927a5e421
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/docs_fresh.spec.md
       kind: spec
       rev: b9a0614c3e1b
@@ -10735,17 +10741,17 @@ nodes:
                 covered_lines: 313
                 total_lines: 315
                 at_rev: dfdb732eb98a
-        mutants_killed: 72
-        mutants_survived: 3
-        mutation_score: 96
+        mutants_killed: 71
+        mutants_survived: 4
+        mutation_score: 94.66666666666667
         mutation_by_scope:
             isolated:
-                killed: 72
-                survived: 3
-                score: 96
+                killed: 71
+                survived: 4
+                score: 94.66666666666667
                 at_rev: dfdb732eb98a
         at_rev: dfdb732eb98a
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/doctrine.spec.md
       kind: spec
       rev: 2c8e9a5a9c28
@@ -10882,7 +10888,7 @@ nodes:
                 score: 93.75
                 at_rev: 996abb62116a
         at_rev: 996abb62116a
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/domain_declared.spec.md
       kind: spec
       rev: 20df3c089566
@@ -10967,7 +10973,7 @@ nodes:
                 score: 100
                 at_rev: ed7ca50cde9b
         at_rev: ed7ca50cde9b
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/duplication.spec.md
       kind: spec
       rev: 655c2c9adf75
@@ -11038,15 +11044,17 @@ nodes:
                 covered_lines: 29
                 total_lines: 29
                 at_rev: 8a9b87073030
-        mutants_killed: 11
-        mutation_score: 100
+        mutants_killed: 10
+        mutants_survived: 1
+        mutation_score: 90.9090909090909
         mutation_by_scope:
             isolated:
-                killed: 11
-                score: 100
+                killed: 10
+                survived: 1
+                score: 90.9090909090909
                 at_rev: 8a9b87073030
         at_rev: 8a9b87073030
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/evidence_fresh.spec.md
       kind: spec
       rev: c1abed8885a9
@@ -11133,17 +11141,17 @@ nodes:
                 covered_lines: 64
                 total_lines: 66
                 at_rev: 431421bde9ae
-        mutants_killed: 22
-        mutants_survived: 2
-        mutation_score: 91.66666666666666
+        mutants_killed: 19
+        mutants_survived: 5
+        mutation_score: 79.16666666666666
         mutation_by_scope:
             isolated:
-                killed: 22
-                survived: 2
-                score: 91.66666666666666
+                killed: 19
+                survived: 5
+                score: 79.16666666666666
                 at_rev: 431421bde9ae
         at_rev: 431421bde9ae
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/external.spec.md
       kind: spec
       rev: 3eec5aae3fd3
@@ -11234,17 +11242,17 @@ nodes:
                 covered_lines: 176
                 total_lines: 180
                 at_rev: c60bfdb2b762
-        mutants_killed: 34
-        mutants_survived: 4
-        mutation_score: 89.47368421052632
+        mutants_killed: 31
+        mutants_survived: 7
+        mutation_score: 81.57894736842105
         mutation_by_scope:
             isolated:
-                killed: 34
-                survived: 4
-                score: 89.47368421052632
+                killed: 31
+                survived: 7
+                score: 81.57894736842105
                 at_rev: c60bfdb2b762
         at_rev: c60bfdb2b762
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/failure.spec.md
       kind: spec
       rev: b3ae9d707eba
@@ -11341,19 +11349,19 @@ nodes:
                 covered_lines: 272
                 total_lines: 299
                 at_rev: cd789c109c0e
-        mutants_killed: 74
-        mutants_survived: 11
-        mutation_score: 87.05882352941177
+        mutants_killed: 70
+        mutants_survived: 15
+        mutation_score: 82.35294117647058
         mutants_no_coverage: 19
         mutation_by_scope:
             isolated:
-                killed: 74
-                survived: 11
+                killed: 70
+                survived: 15
                 no_coverage: 19
-                score: 87.05882352941177
+                score: 82.35294117647058
                 at_rev: cd789c109c0e
         at_rev: cd789c109c0e
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/feature_test_match.spec.md
       kind: spec
       rev: 5ebdc65cf961
@@ -11478,7 +11486,7 @@ nodes:
                 score: 100
                 at_rev: 01d26a9c16f0
         at_rev: 01d26a9c16f0
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/fix.spec.md
       kind: spec
       rev: fa98a7a8fb05
@@ -11555,17 +11563,19 @@ nodes:
                 covered_lines: 153
                 total_lines: 153
                 at_rev: 44330f509127
-        mutants_killed: 32
-        mutation_score: 100
+        mutants_killed: 29
+        mutants_survived: 3
+        mutation_score: 90.625
         mutants_no_coverage: 2
         mutation_by_scope:
             isolated:
-                killed: 32
+                killed: 29
+                survived: 3
                 no_coverage: 2
-                score: 100
+                score: 90.625
                 at_rev: 44330f509127
         at_rev: 44330f509127
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/flag.spec.md
       kind: spec
       rev: f571b48ee213
@@ -11664,17 +11674,19 @@ nodes:
                 covered_lines: 188
                 total_lines: 199
                 at_rev: 37f82f3d2673
-        mutants_killed: 30
-        mutation_score: 100
+        mutants_killed: 27
+        mutants_survived: 3
+        mutation_score: 90
         mutants_no_coverage: 2
         mutation_by_scope:
             isolated:
-                killed: 30
+                killed: 27
+                survived: 3
                 no_coverage: 2
-                score: 100
+                score: 90
                 at_rev: 37f82f3d2673
         at_rev: 37f82f3d2673
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/gate.spec.md
       kind: spec
       rev: 76e4d906c391
@@ -11789,15 +11801,17 @@ nodes:
                 covered_lines: 82
                 total_lines: 87
                 at_rev: 01ad5375b831
-        mutants_killed: 15
-        mutation_score: 100
+        mutants_killed: 14
+        mutants_survived: 5
+        mutation_score: 73.68421052631578
         mutation_by_scope:
             isolated:
-                killed: 15
-                score: 100
+                killed: 14
+                survived: 5
+                score: 73.68421052631578
                 at_rev: 01ad5375b831
         at_rev: 01ad5375b831
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/identity_consistent.spec.md
       kind: spec
       rev: 9bc238863863
@@ -11890,17 +11904,19 @@ nodes:
                 covered_lines: 459
                 total_lines: 517
                 at_rev: 34919520b417
-        mutants_killed: 117
-        mutation_score: 100
+        mutants_killed: 106
+        mutants_survived: 24
+        mutation_score: 81.53846153846153
         mutants_no_coverage: 20
         mutation_by_scope:
             isolated:
-                killed: 117
+                killed: 106
+                survived: 24
                 no_coverage: 20
-                score: 100
+                score: 81.53846153846153
                 at_rev: 34919520b417
         at_rev: 34919520b417
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/internal_checks.spec.md
       kind: spec
       rev: 55c3f1c23fd7
@@ -12033,15 +12049,17 @@ nodes:
                 covered_lines: 92
                 total_lines: 94
                 at_rev: 5fdc00c22b91
-        mutants_killed: 39
-        mutation_score: 100
+        mutants_killed: 37
+        mutants_survived: 2
+        mutation_score: 94.87179487179486
         mutation_by_scope:
             isolated:
-                killed: 39
-                score: 100
+                killed: 37
+                survived: 2
+                score: 94.87179487179486
                 at_rev: 5fdc00c22b91
         at_rev: 5fdc00c22b91
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/layer_boundary.spec.md
       kind: spec
       rev: d9543b7a1a7c
@@ -12140,7 +12158,7 @@ nodes:
                 score: 100
                 at_rev: d08e7cadf54d
         at_rev: d08e7cadf54d
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/marker_parity.spec.md
       kind: spec
       rev: d697a9c3624a
@@ -12225,19 +12243,19 @@ nodes:
                 covered_lines: 230
                 total_lines: 251
                 at_rev: a429d4290ecd
-        mutants_killed: 116
-        mutants_survived: 3
-        mutation_score: 97.47899159663865
+        mutants_killed: 86
+        mutants_survived: 33
+        mutation_score: 72.26890756302521
         mutants_no_coverage: 4
         mutation_by_scope:
             isolated:
-                killed: 116
-                survived: 3
+                killed: 86
+                survived: 33
                 no_coverage: 4
-                score: 97.47899159663865
+                score: 72.26890756302521
                 at_rev: a429d4290ecd
         at_rev: a429d4290ecd
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/mock_stamp_gen.spec.md
       kind: spec
       rev: 46edda4af936
@@ -12318,17 +12336,19 @@ nodes:
                 covered_lines: 198
                 total_lines: 211
                 at_rev: 5e4b6a3c15ab
-        mutants_killed: 48
-        mutation_score: 100
+        mutants_killed: 47
+        mutants_survived: 9
+        mutation_score: 83.92857142857143
         mutants_no_coverage: 13
         mutation_by_scope:
             isolated:
-                killed: 48
+                killed: 47
+                survived: 9
                 no_coverage: 13
-                score: 100
+                score: 83.92857142857143
                 at_rev: 5e4b6a3c15ab
         at_rev: 5e4b6a3c15ab
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/mock_stamped.spec.md
       kind: spec
       rev: 4be7ef27f64d
@@ -12437,17 +12457,19 @@ nodes:
                 covered_lines: 156
                 total_lines: 160
                 at_rev: b05ae5553274
-        mutants_killed: 32
-        mutation_score: 100
+        mutants_killed: 55
+        mutants_survived: 8
+        mutation_score: 87.3015873015873
         mutants_no_coverage: 6
         mutation_by_scope:
             isolated:
-                killed: 32
+                killed: 55
+                survived: 8
                 no_coverage: 6
-                score: 100
+                score: 87.3015873015873
                 at_rev: b05ae5553274
         at_rev: b05ae5553274
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/mock_typed.spec.md
       kind: spec
       rev: 57ef16b4b323
@@ -12545,17 +12567,19 @@ nodes:
                 covered_lines: 148
                 total_lines: 155
                 at_rev: 440840549afa
-        mutants_killed: 34
-        mutation_score: 100
+        mutants_killed: 31
+        mutants_survived: 3
+        mutation_score: 91.17647058823529
         mutants_no_coverage: 8
         mutation_by_scope:
             isolated:
-                killed: 34
+                killed: 31
+                survived: 3
                 no_coverage: 8
-                score: 100
+                score: 91.17647058823529
                 at_rev: 440840549afa
         at_rev: 440840549afa
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/obligation_honored.spec.md
       kind: spec
       rev: 7ceb94b587eb
@@ -12698,7 +12722,7 @@ nodes:
                 score: 100
                 at_rev: caf2f21f4399
         at_rev: caf2f21f4399
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/obligations_source.go
       kind: code
       rev: 62c6d5793db7
@@ -12719,17 +12743,17 @@ nodes:
                 covered_lines: 54
                 total_lines: 56
                 at_rev: 62c6d5793db7
-        mutants_killed: 7
+        mutants_killed: 11
         mutation_score: 100
         mutants_no_coverage: 2
         mutation_by_scope:
             isolated:
-                killed: 7
+                killed: 11
                 no_coverage: 2
                 score: 100
                 at_rev: 62c6d5793db7
         at_rev: 62c6d5793db7
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/obligations_test.go
       kind: test
       rev: c38ffeef7f20
@@ -12767,17 +12791,19 @@ nodes:
                 covered_lines: 160
                 total_lines: 167
                 at_rev: fa891dc05325
-        mutants_killed: 28
-        mutation_score: 100
+        mutants_killed: 32
+        mutants_survived: 4
+        mutation_score: 88.88888888888889
         mutants_no_coverage: 2
         mutation_by_scope:
             isolated:
-                killed: 28
+                killed: 32
+                survived: 4
                 no_coverage: 2
-                score: 100
+                score: 88.88888888888889
                 at_rev: fa891dc05325
         at_rev: fa891dc05325
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/open_questions.spec.md
       kind: spec
       rev: a5d8bce5f1b8
@@ -12856,17 +12882,19 @@ nodes:
                 covered_lines: 94
                 total_lines: 100
                 at_rev: b77317cb562c
-        mutants_killed: 19
-        mutation_score: 100
+        mutants_killed: 26
+        mutants_survived: 2
+        mutation_score: 92.85714285714286
         mutants_no_coverage: 5
         mutation_by_scope:
             isolated:
-                killed: 19
+                killed: 26
+                survived: 2
                 no_coverage: 5
-                score: 100
+                score: 92.85714285714286
                 at_rev: b77317cb562c
         at_rev: b77317cb562c
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/pagination_honored.spec.md
       kind: spec
       rev: 9dbbe212d05c
@@ -12947,15 +12975,17 @@ nodes:
                 covered_lines: 128
                 total_lines: 131
                 at_rev: 6e09dbdbb21b
-        mutants_killed: 3
-        mutation_score: 100
+        mutants_killed: 33
+        mutants_survived: 6
+        mutation_score: 84.61538461538461
         mutation_by_scope:
             isolated:
-                killed: 3
-                score: 100
+                killed: 33
+                survived: 6
+                score: 84.61538461538461
                 at_rev: 6e09dbdbb21b
         at_rev: 6e09dbdbb21b
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/phase_ordered.spec.md
       kind: spec
       rev: e1610b0ef72a
@@ -13054,17 +13084,17 @@ nodes:
                 covered_lines: 52
                 total_lines: 52
                 at_rev: c8b8726cf321
-        mutants_killed: 21
-        mutants_survived: 4
-        mutation_score: 84
+        mutants_killed: 20
+        mutants_survived: 5
+        mutation_score: 80
         mutation_by_scope:
             isolated:
-                killed: 21
-                survived: 4
-                score: 84
+                killed: 20
+                survived: 5
+                score: 80
                 at_rev: c8b8726cf321
         at_rev: c8b8726cf321
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/placeholder_filled.spec.md
       kind: spec
       rev: 96e464ce8c13
@@ -13139,17 +13169,19 @@ nodes:
                 covered_lines: 107
                 total_lines: 114
                 at_rev: 5861c14925f9
-        mutants_killed: 23
-        mutation_score: 100
+        mutants_killed: 21
+        mutants_survived: 4
+        mutation_score: 84
         mutants_no_coverage: 1
         mutation_by_scope:
             isolated:
-                killed: 23
+                killed: 21
+                survived: 4
                 no_coverage: 1
-                score: 100
+                score: 84
                 at_rev: 5861c14925f9
         at_rev: 5861c14925f9
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/plan_change_justified.spec.md
       kind: spec
       rev: 89bf1d1ffe46
@@ -13246,15 +13278,17 @@ nodes:
                 covered_lines: 66
                 total_lines: 66
                 at_rev: 5e4d49692700
-        mutants_killed: 18
-        mutation_score: 100
+        mutants_killed: 17
+        mutants_survived: 1
+        mutation_score: 94.44444444444444
         mutation_by_scope:
             isolated:
-                killed: 18
-                score: 100
+                killed: 17
+                survived: 1
+                score: 94.44444444444444
                 at_rev: 5e4d49692700
         at_rev: 5e4d49692700
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/plan_revised.spec.md
       kind: spec
       rev: 9e6e35f0cc78
@@ -13343,15 +13377,17 @@ nodes:
                 covered_lines: 80
                 total_lines: 84
                 at_rev: 288ada51dee6
-        mutants_killed: 21
-        mutation_score: 100
+        mutants_killed: 19
+        mutants_survived: 2
+        mutation_score: 90.47619047619048
         mutation_by_scope:
             isolated:
-                killed: 21
-                score: 100
+                killed: 19
+                survived: 2
+                score: 90.47619047619048
                 at_rev: 288ada51dee6
         at_rev: 288ada51dee6
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/plan_seeds_valid.spec.md
       kind: spec
       rev: ae6126b27cb3
@@ -13442,15 +13478,15 @@ nodes:
                 covered_lines: 61
                 total_lines: 62
                 at_rev: 8fb05c435bca
-        mutants_killed: 18
+        mutants_killed: 20
         mutation_score: 100
         mutation_by_scope:
             isolated:
-                killed: 18
+                killed: 20
                 score: 100
                 at_rev: 8fb05c435bca
         at_rev: 8fb05c435bca
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/plan_source_declared.spec.md
       kind: spec
       rev: 50d4a849e7b2
@@ -13537,15 +13573,17 @@ nodes:
                 covered_lines: 66
                 total_lines: 66
                 at_rev: ff39f7f4685b
-        mutants_killed: 13
-        mutation_score: 100
+        mutants_killed: 11
+        mutants_survived: 2
+        mutation_score: 84.61538461538461
         mutation_by_scope:
             isolated:
-                killed: 13
-                score: 100
+                killed: 11
+                survived: 2
+                score: 84.61538461538461
                 at_rev: ff39f7f4685b
         at_rev: ff39f7f4685b
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/profile.spec.md
       kind: spec
       rev: b858f9b66e97
@@ -13620,15 +13658,15 @@ nodes:
                 covered_lines: 75
                 total_lines: 75
                 at_rev: cc96df1b6830
-        mutants_killed: 15
+        mutants_killed: 24
         mutation_score: 100
         mutation_by_scope:
             isolated:
-                killed: 15
+                killed: 24
                 score: 100
                 at_rev: cc96df1b6830
         at_rev: cc96df1b6830
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/progress_honest.spec.md
       kind: spec
       rev: 2b9cec987058
@@ -13721,15 +13759,17 @@ nodes:
                 covered_lines: 71
                 total_lines: 73
                 at_rev: 6af5918215d7
-        mutants_killed: 14
-        mutation_score: 100
+        mutants_killed: 12
+        mutants_survived: 2
+        mutation_score: 85.71428571428571
         mutation_by_scope:
             isolated:
-                killed: 14
-                score: 100
+                killed: 12
+                survived: 2
+                score: 85.71428571428571
                 at_rev: 6af5918215d7
         at_rev: 6af5918215d7
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/project_tests.spec.md
       kind: spec
       rev: 834f52145994
@@ -13804,7 +13844,7 @@ nodes:
                 score: 100
                 at_rev: a5da8054ce15
         at_rev: a5da8054ce15
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/promotable.spec.md
       kind: spec
       rev: 9e03864f7e62
@@ -13885,17 +13925,19 @@ nodes:
                 covered_lines: 159
                 total_lines: 173
                 at_rev: ab915f3a27eb
-        mutants_killed: 49
-        mutation_score: 100
+        mutants_killed: 40
+        mutants_survived: 10
+        mutation_score: 80
         mutants_no_coverage: 2
         mutation_by_scope:
             isolated:
-                killed: 49
+                killed: 40
+                survived: 10
                 no_coverage: 2
-                score: 100
+                score: 80
                 at_rev: ab915f3a27eb
         at_rev: ab915f3a27eb
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/proof_crosses_boundary.spec.md
       kind: spec
       rev: 9c9043e52939
@@ -14002,7 +14044,7 @@ nodes:
                 score: 100
                 at_rev: a12e150ff78b
         at_rev: a12e150ff78b
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/ref_resolves.spec.md
       kind: spec
       rev: e394d7283cbf
@@ -14103,15 +14145,17 @@ nodes:
                 covered_lines: 25
                 total_lines: 27
                 at_rev: dbf225025f79
-        mutants_killed: 8
-        mutation_score: 100
+        mutants_killed: 7
+        mutants_survived: 1
+        mutation_score: 87.5
         mutation_by_scope:
             isolated:
-                killed: 8
-                score: 100
+                killed: 7
+                survived: 1
+                score: 87.5
                 at_rev: dbf225025f79
         at_rev: dbf225025f79
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/region_pair_honored.spec.md
       kind: spec
       rev: "762971562134"
@@ -14192,15 +14236,17 @@ nodes:
                 covered_lines: 160
                 total_lines: 160
                 at_rev: b508f1e2c65a
-        mutants_killed: 38
-        mutation_score: 100
+        mutants_killed: 34
+        mutants_survived: 4
+        mutation_score: 89.47368421052632
         mutation_by_scope:
             isolated:
-                killed: 38
-                score: 100
+                killed: 34
+                survived: 4
+                score: 89.47368421052632
                 at_rev: b508f1e2c65a
         at_rev: b508f1e2c65a
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/reverse_match.spec.md
       kind: spec
       rev: 0749d7def0b4
@@ -14295,15 +14341,17 @@ nodes:
                 covered_lines: 120
                 total_lines: 125
                 at_rev: 8c9dcadbdbaa
-        mutants_killed: 29
-        mutation_score: 100
+        mutants_killed: 27
+        mutants_survived: 2
+        mutation_score: 93.10344827586206
         mutation_by_scope:
             isolated:
-                killed: 29
-                score: 100
+                killed: 27
+                survived: 2
+                score: 93.10344827586206
                 at_rev: 8c9dcadbdbaa
         at_rev: 8c9dcadbdbaa
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/revision_orphans.spec.md
       kind: spec
       rev: d6d115081eac
@@ -14376,15 +14424,17 @@ nodes:
                 covered_lines: 98
                 total_lines: 102
                 at_rev: 06c848be7601
-        mutants_killed: 20
-        mutation_score: 100
+        mutants_killed: 18
+        mutants_survived: 2
+        mutation_score: 90
         mutation_by_scope:
             isolated:
-                killed: 20
-                score: 100
+                killed: 18
+                survived: 2
+                score: 90
                 at_rev: 06c848be7601
         at_rev: 06c848be7601
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/revision_renumber.spec.md
       kind: spec
       rev: 76028e0cb11b
@@ -14465,7 +14515,7 @@ nodes:
                 score: 100
                 at_rev: a96b7a45d184
         at_rev: a96b7a45d184
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/route_declared.spec.md
       kind: spec
       rev: 57c57e902d63
@@ -14546,7 +14596,7 @@ nodes:
                 score: 100
                 at_rev: 0a496a0f54f6
         at_rev: 0a496a0f54f6
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/route_exists.spec.md
       kind: spec
       rev: 4dcd86bb1d6f
@@ -14643,15 +14693,17 @@ nodes:
                 covered_lines: 116
                 total_lines: 127
                 at_rev: f9b47d22db80
-        mutants_killed: 28
-        mutation_score: 100
+        mutants_killed: 27
+        mutants_survived: 1
+        mutation_score: 96.42857142857143
         mutation_by_scope:
             isolated:
-                killed: 28
-                score: 100
+                killed: 27
+                survived: 1
+                score: 96.42857142857143
                 at_rev: f9b47d22db80
         at_rev: f9b47d22db80
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/rule.spec.md
       kind: spec
       rev: a1f7f6b17436
@@ -14744,15 +14796,17 @@ nodes:
                 covered_lines: 100
                 total_lines: 112
                 at_rev: bea14df81b37
-        mutants_killed: 33
-        mutation_score: 100
+        mutants_killed: 28
+        mutants_survived: 5
+        mutation_score: 84.84848484848484
         mutation_by_scope:
             isolated:
-                killed: 33
-                score: 100
+                killed: 28
+                survived: 5
+                score: 84.84848484848484
                 at_rev: bea14df81b37
         at_rev: bea14df81b37
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/rule_implemented.spec.md
       kind: spec
       rev: 7204a1f0ae44
@@ -14837,15 +14891,17 @@ nodes:
                 covered_lines: 167
                 total_lines: 169
                 at_rev: 642ddfd947bc
-        mutants_killed: 38
-        mutation_score: 100
+        mutants_killed: 33
+        mutants_survived: 5
+        mutation_score: 86.8421052631579
         mutation_by_scope:
             isolated:
-                killed: 38
-                score: 100
+                killed: 33
+                survived: 5
+                score: 86.8421052631579
                 at_rev: 642ddfd947bc
         at_rev: 642ddfd947bc
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/rule_types.spec.md
       kind: spec
       rev: 6ab06f981fd1
@@ -14956,7 +15012,7 @@ nodes:
                 score: 100
                 at_rev: 219efdd9d6c6
         at_rev: 219efdd9d6c6
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/scenario_asserts.spec.md
       kind: spec
       rev: b60366a60a3c
@@ -15041,15 +15097,17 @@ nodes:
                 covered_lines: 38
                 total_lines: 41
                 at_rev: 396c865f461a
-        mutants_killed: 11
-        mutation_score: 100
+        mutants_killed: 10
+        mutants_survived: 1
+        mutation_score: 90.9090909090909
         mutation_by_scope:
             isolated:
-                killed: 11
-                score: 100
+                killed: 10
+                survived: 1
+                score: 90.9090909090909
                 at_rev: 396c865f461a
         at_rev: 396c865f461a
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/scenario_identity.spec.md
       kind: spec
       rev: 80bb393d42f4
@@ -15146,7 +15204,7 @@ nodes:
                 score: 100
                 at_rev: e5faa87abd02
         at_rev: e5faa87abd02
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/scenario_letter_declared.spec.md
       kind: spec
       rev: ab3e8cd92792
@@ -15225,15 +15283,17 @@ nodes:
                 covered_lines: 71
                 total_lines: 75
                 at_rev: ae3973b6f62f
-        mutants_killed: 35
-        mutation_score: 100
+        mutants_killed: 27
+        mutants_survived: 8
+        mutation_score: 77.14285714285715
         mutation_by_scope:
             isolated:
-                killed: 35
-                score: 100
+                killed: 27
+                survived: 8
+                score: 77.14285714285715
                 at_rev: ae3973b6f62f
         at_rev: ae3973b6f62f
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/scenario_type_aligned.spec.md
       kind: spec
       rev: 882996e77635
@@ -15328,15 +15388,17 @@ nodes:
                 covered_lines: 107
                 total_lines: 112
                 at_rev: 8e7e3e0e5ab0
-        mutants_killed: 50
-        mutation_score: 100
+        mutants_killed: 39
+        mutants_survived: 11
+        mutation_score: 78
         mutation_by_scope:
             isolated:
-                killed: 50
-                score: 100
+                killed: 39
+                survived: 11
+                score: 78
                 at_rev: 8e7e3e0e5ab0
         at_rev: 8e7e3e0e5ab0
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/sibling_guard.spec.md
       kind: spec
       rev: b049ce58fd72
@@ -15415,17 +15477,19 @@ nodes:
                 covered_lines: 124
                 total_lines: 128
                 at_rev: cff0c04f063d
-        mutants_killed: 22
-        mutation_score: 100
+        mutants_killed: 21
+        mutants_survived: 1
+        mutation_score: 95.45454545454545
         mutants_no_coverage: 3
         mutation_by_scope:
             isolated:
-                killed: 22
+                killed: 21
+                survived: 1
                 no_coverage: 3
-                score: 100
+                score: 95.45454545454545
                 at_rev: cff0c04f063d
         at_rev: cff0c04f063d
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/spec_feature_match.spec.md
       kind: spec
       rev: 93542b2f24b7
@@ -15532,7 +15596,7 @@ nodes:
                 score: 100
                 at_rev: eb4ac9f838da
         at_rev: eb4ac9f838da
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/test_level_codes.spec.md
       kind: spec
       rev: 13d6e743902a
@@ -15605,15 +15669,17 @@ nodes:
                 covered_lines: 57
                 total_lines: 59
                 at_rev: 2ec247a1ca61
-        mutants_killed: 11
-        mutation_score: 100
+        mutants_killed: 10
+        mutants_survived: 1
+        mutation_score: 90.9090909090909
         mutation_by_scope:
             isolated:
-                killed: 11
-                score: 100
+                killed: 10
+                survived: 1
+                score: 90.9090909090909
                 at_rev: 2ec247a1ca61
         at_rev: 2ec247a1ca61
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/test_traceable.spec.md
       kind: spec
       rev: db10d8420e37
@@ -15711,7 +15777,7 @@ nodes:
                 score: 100
                 at_rev: f8cb7c8aff9e
         at_rev: f8cb7c8aff9e
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/testid_contract.feature
       kind: feature
       rev: 0b960bad34e6
@@ -15819,15 +15885,17 @@ nodes:
                 covered_lines: 99
                 total_lines: 100
                 at_rev: 76f3ada7f7b0
-        mutants_killed: 28
-        mutation_score: 100
+        mutants_killed: 26
+        mutants_survived: 2
+        mutation_score: 92.85714285714286
         mutation_by_scope:
             isolated:
-                killed: 28
-                score: 100
+                killed: 26
+                survived: 2
+                score: 92.85714285714286
                 at_rev: 76f3ada7f7b0
         at_rev: 76f3ada7f7b0
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/testid_queried_exists.feature
       kind: feature
       rev: d551aa2f169a
@@ -15857,15 +15925,17 @@ nodes:
                 covered_lines: 196
                 total_lines: 205
                 at_rev: 540208cf44d5
-        mutants_killed: 50
-        mutation_score: 100
+        mutants_killed: 48
+        mutants_survived: 2
+        mutation_score: 96
         mutation_by_scope:
             isolated:
-                killed: 50
-                score: 100
+                killed: 48
+                survived: 2
+                score: 96
                 at_rev: 540208cf44d5
         at_rev: 540208cf44d5
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/testid_queried_exists.spec.md
       kind: spec
       rev: 369486c0fbea
@@ -15957,15 +16027,17 @@ nodes:
                 covered_lines: 82
                 total_lines: 87
                 at_rev: c7e9ae0925fa
-        mutants_killed: 41
-        mutation_score: 100
+        mutants_killed: 30
+        mutants_survived: 11
+        mutation_score: 73.17073170731707
         mutation_by_scope:
             isolated:
-                killed: 41
-                score: 100
+                killed: 30
+                survived: 11
+                score: 73.17073170731707
                 at_rev: c7e9ae0925fa
         at_rev: c7e9ae0925fa
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/triad_complete.feature
       kind: feature
       rev: a56ba7a592ab
@@ -16005,7 +16077,7 @@ nodes:
                 score: 100
                 at_rev: c337d13ce09c
         at_rev: c337d13ce09c
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/triad_complete.spec.md
       kind: spec
       rev: e9429b6e3471
@@ -16094,15 +16166,17 @@ nodes:
                 covered_lines: 98
                 total_lines: 102
                 at_rev: 397b432d5384
-        mutants_killed: 26
-        mutation_score: 100
+        mutants_killed: 24
+        mutants_survived: 2
+        mutation_score: 92.3076923076923
         mutation_by_scope:
             isolated:
-                killed: 26
-                score: 100
+                killed: 24
+                survived: 2
+                score: 92.3076923076923
                 at_rev: 397b432d5384
         at_rev: 397b432d5384
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/trigger_declared.spec.md
       kind: spec
       rev: 71d161c4e467
@@ -16201,15 +16275,17 @@ nodes:
                 covered_lines: 194
                 total_lines: 194
                 at_rev: f297ca784511
-        mutants_killed: 56
-        mutation_score: 100
+        mutants_killed: 54
+        mutants_survived: 2
+        mutation_score: 96.42857142857143
         mutation_by_scope:
             isolated:
-                killed: 56
-                score: 100
+                killed: 54
+                survived: 2
+                score: 96.42857142857143
                 at_rev: f297ca784511
         at_rev: f297ca784511
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/value_anchored.spec.md
       kind: spec
       rev: 51798b84efc3
@@ -16304,7 +16380,7 @@ nodes:
                 score: 100
                 at_rev: 7c491d9418fc
         at_rev: 7c491d9418fc
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T13:37:06-03:00"
     - id: internal/gate/vr_baseline.spec.md
       kind: spec
       rev: 9ac63acbe2cb
@@ -21426,8 +21502,19 @@ nodes:
                 covered_lines: 101
                 total_lines: 102
                 at_rev: b7bf106013fd
+        mutants_killed: 31
+        mutants_survived: 1
+        mutation_score: 96.875
+        mutants_no_coverage: 16
+        mutation_by_scope:
+            isolated:
+                killed: 31
+                survived: 1
+                no_coverage: 16
+                score: 96.875
+                at_rev: b7bf106013fd
         at_rev: b7bf106013fd
-        ingested_at: "2026-09-27T12:39:53-03:00"
+        ingested_at: "2026-09-27T12:46:05-03:00"
     - id: internal/testlist/testlist.spec.md
       kind: spec
       rev: d2969ba3a694
