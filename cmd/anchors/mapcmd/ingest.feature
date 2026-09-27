@@ -134,6 +134,12 @@ Feature: Ingest — binds the test and log signals the project produced to the n
     When it is ingested
     Then the test node records 1.25 seconds under the report's suite
 
+  @NGSTI-B16 @unit-level
+  Scenario: A run's proofs are stamped with the tree's revs
+    Given a spec edited after the last map build
+    When a run's report is ingested, and the map is rebuilt
+    Then the spec's proof is fresh, while a manual ingestion of the same report leaves it stale
+
   @NGSTI-B15 @unit-level
   Scenario: A report's signals are kept under its path from the root
     Given a report inside the repository and one outside it

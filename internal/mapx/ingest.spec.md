@@ -94,6 +94,7 @@ instead — an under-estimate, never a double count.
 | `SGINA-B20` | When several paths of one report match a node, the node receives exactly one of them, always the same: the exact path, else the one closest in length to the node's, else the first in lexical order. |
 | `SGINA-B21` | A mutation ingestion records, beside the killed, how many of them were killed by the time limit. |
 | `SGINA-B22` | An execution ingestion records each test file's run time — the sum of its cases' times — under the suite, or under the layer when the ingestion names no suite; a file whose cases carry no time records none. |
+| `SGINA-B24` | The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. (`RefreshRevs`) |
 | `SGINA-B23` | A run time Anchors measured itself is recorded on the node under the suite; a node the map does not have is ignored. (`RecordRunSeconds`) |
 
 ## Invariants

@@ -676,3 +676,20 @@ func TestRecordRunSeconds(t *testing.T) {
 		t.Fatalf("a.go must carry 12.5s under the suite and no node be added, got %+v (%d nodes)", s, len(g.Nodes))
 	}
 }
+
+func TestRefreshRevs(t *testing.T) {
+	t.Run("SGINA-B24: The tree's revs replace the map's", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "a.spec.md", Rev: "old"}, {ID: "a.go", Rev: "same"}, {ID: "a_test.go", Rev: "t1"}}}
+	if n := g.RefreshRevs(map[string]string{"a.spec.md": "new", "a.go": "same", "gone.go": "x"}); n != 1 {
+		t.Errorf("only the changed node is counted, got %d", n)
+	}
+	want := []string{"new", "same", "t1"}
+	for i, n := range g.Nodes {
+		if n.Rev != want[i] {
+			t.Errorf("%s: rev %q, want %q", n.ID, n.Rev, want[i])
+		}
+	}
+	if len(g.Nodes) != 3 {
+		t.Errorf("a path the map does not have adds no node, got %d nodes", len(g.Nodes))
+	}
+}

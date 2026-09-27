@@ -151,6 +151,12 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     When it is ingested under a suite, and under a layer with no suite
     Then the first records 1.5 seconds under the suite, then under the layer, and the second records nothing
 
+  @SGINA-B24 @unit-level
+  Scenario: The tree's revs replace the map's
+    Given a map with a spec, a code file and a test file
+    When the revs of the spec and the code are refreshed, one of them unchanged, with a path the map does not have
+    Then only the changed one is counted, both carry the tree's rev, and the test keeps its own
+
   @SGINA-B23 @unit-level
   Scenario: A run time Anchors measured is recorded on the node
     Given a map with a code file

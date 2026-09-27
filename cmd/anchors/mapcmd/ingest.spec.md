@@ -48,6 +48,7 @@ spec declares is reported, never bound to an invented owner.
 | `NGSTI-B12` | Log ingestion binds each occurrence of a declared failure code to the spec that declares it, with the number of occurrences, stamped with the spec's current revision. |
 | `NGSTI-B13` | Log ingestion reports the failure codes found in the logs that no spec declares. |
 | `NGSTI-B14` | A test file's run time in the report is the sum of its cases' times, kept in the map under the report's suite. |
+| `NGSTI-B16` | An ingestion that follows a run of `anchors test` or `anchors mutation` first takes the revs of the tree as it is now, so a proof of a spec edited after the last `map build` stays fresh once the map is rebuilt; a manual ingestion keeps the map's revs, since its report may be older than the tree. |
 | `NGSTI-B15` | A report's signals are kept under its path relative to the root; a report outside the repository is kept under `external/` and its file name. (`SuiteKey`) |
 
 ## Domain

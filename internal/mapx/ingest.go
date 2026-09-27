@@ -750,3 +750,18 @@ func (g *Graph) RecordRunSeconds(id, key string, seconds float64) {
 		}
 	}
 }
+
+// RefreshRevs sets each node's rev to the one the tree has now, given by path. A run that
+// just ended ran against the tree as it is, not against the map's photo of it: a spec
+// edited after the last `map build` still carries its old rev here, and a proof stamped
+// with it reads as stale once the map is rebuilt — the run proved the new text, and the
+// map said nobody had. A node the tree no longer has keeps its rev. (`RefreshRevs`)
+func (g *Graph) RefreshRevs(revs map[string]string) (changed int) {
+	for i := range g.Nodes {
+		if r, ok := revs[g.Nodes[i].ID]; ok && r != "" && r != g.Nodes[i].Rev {
+			g.Nodes[i].Rev = r
+			changed++
+		}
+	}
+	return changed
+}

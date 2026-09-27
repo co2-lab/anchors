@@ -453,3 +453,30 @@ func TestSuiteKey(t *testing.T) {
 		t.Errorf("a report outside it is keyed under external/, got %q", got)
 	}
 }
+
+// The case that lost proofs: a spec edited, `anchors test`, then `map build`. The run
+// proved the new text, but the proof was stamped with the map's old rev of the spec, and
+// the rebuilt map read it as stale — scenario-coverage said "no execution ingested".
+func TestIngest_aRunStampsTheTreesRevs(t *testing.T) {
+	t.Run("NGSTI-B16: A run's proofs are stamped with the tree's revs", func(t *testing.T) {})
+	for _, viaRun := range []bool{true, false} {
+		root := fixtureProject(t)
+		writeProjectFile(t, root, "src/login.spec.md", fixtureSpec+"\nEdited after the map build.\n")
+		writeProjectFile(t, root, "reports/junit.xml", junitReport)
+		ViaAnchorsTest = viaRun
+		err := IngestArtifacts(root, "", filepath.Join(root, "reports/junit.xml"), "", "", "unit", "", "", false)
+		ViaAnchorsTest = false
+		if err != nil {
+			t.Fatal(err)
+		}
+		runCmd(t, newMapCmd(), "build", "--root", root)
+		n := node(t, root, "src/login.spec.md")
+		fresh := n.Signal != nil && n.Signal.AtRev == n.Rev
+		if viaRun && !fresh {
+			t.Errorf("after a run, the spec's proof must be fresh once the map is rebuilt, got %+v (rev %s)", n.Signal, n.Rev)
+		}
+		if !viaRun && fresh {
+			t.Errorf("a manual ingestion must keep the map's revs, so the proof stays stale")
+		}
+	}
+}

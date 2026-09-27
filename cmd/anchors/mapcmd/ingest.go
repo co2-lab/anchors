@@ -13,6 +13,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/logscan"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/co2-lab/anchors/internal/testsig"
 	"github.com/spf13/cobra"
 )
@@ -116,6 +117,21 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 					testsig.SetCodeLenPattern(config.CodeLengthPattern())
 				}
 				mutationFormat = cfg.MutationFormat()
+				// A run that just ended ran against the tree as it is. A spec edited after
+				// the last `map build` still has its old rev in the map, and a proof
+				// stamped with it read as stale once the map was rebuilt: the run proved
+				// the new text, and scenario-coverage said "no execution ingested". A
+				// manual ingestion keeps the map's revs — its report may be older than
+				// the tree.
+				if ViaAnchorsTest {
+					if files, werr := scan.Walk(absRoot, cfg); werr == nil {
+						revs := make(map[string]string, len(files))
+						for _, f := range files {
+							revs[f.Path] = f.Rev
+						}
+						g.RefreshRevs(revs)
+					}
+				}
 			}
 			now := time.Now().Format(time.RFC3339)
 
