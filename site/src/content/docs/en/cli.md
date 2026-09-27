@@ -82,6 +82,22 @@ architecture?") become **AI-judgment gates**: the AI reads the guide's
 *conformance points*, confronts the target item by item, and the verdict
 enters the same mechanics (stamp + issue) — aging if the target changes.
 
+## Which files a run takes
+
+By default `anchors test` and `anchors mutation` run only the files whose last result is
+**stale and below the minimum**, plus the ones never measured: what is known and current is
+skipped, so the everyday run is light. Each flag opens one side of the square:
+
+| | fresh | stale |
+| --- | --- | --- |
+| **passing** | `--include-fresh --include-passing` | `--include-passing` |
+| **below the minimum** | `--include-fresh` | runs by default |
+
+`--skip-unmeasured` leaves out the files never measured; `--all` runs everything through the
+suite's `run:`. A test file is stale when it or the code it exercises changed; a mutation
+result measured under load counts as stale. A suite with no `run_changed:` cannot run a subset
+and runs whole. `--budget` applies to the selected files.
+
 ## `--budget`: as much as fits in a time
 
 `anchors test --budget 60s` and `anchors mutation --budget 10m` run the files **fastest

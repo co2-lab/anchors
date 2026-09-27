@@ -53,7 +53,12 @@ func newTestCmd() *cobra.Command {
     junit: "apps/mobile/test-output/junit/e2e.xml"`,
 		usoLongo: `Runs what the PROJECT declared in ` + "`tests:`" + ` and ingests what the run left behind.
 
-  anchors test                    every declared layer, in the file's order
+  anchors test                    every declared layer: only its files STALE and below the minimum,
+                                  and the never measured (each suite's run_changed: receives them)
+  anchors test --all              every file, through run: — the whole run
+  anchors test --include-fresh    also the fresh files below the minimum
+  anchors test --include-passing  also the stale files at the minimum or above
+  anchors test --budget 60s       fastest first, until the time is spent
   anchors test unit               unit only
   anchors test unit integration   more than one, in the file's order
   anchors test -w backend         filters by workspace (monorepo)
@@ -83,7 +88,9 @@ func newMutationCmd() *cobra.Command {
     scope: full`,
 		usoLongo: `Runs what the PROJECT declared in ` + "`mutation:`" + ` and ingests the report.
 
-  anchors mutation                          every declared layer
+  anchors mutation                          only the files stale and below the floor, and the never measured
+  anchors mutation --all                    every file, through run:
+  anchors mutation --budget 10m             fastest first, one file per run, until the time is spent
   anchors mutation unit                     unit only
   anchors mutation unit --target x/y.ts     fills {{target}} in the declared command
   anchors mutation --changed x/y.ts         INCREMENTAL: mutates the impact path
@@ -115,6 +122,8 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 	var root, target, then string
 	var workspaces, changed, escopos []string
 	var budget time.Duration
+	var all bool
+	var picked runSelection
 	cmd := &cobra.Command{
 		Use:   cs.nome + " [layers...]",
 		Short: cs.curto,
@@ -154,6 +163,27 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 					joinOrDash(args), joinOrDash(workspaces), joinOrDash(escopos), cs.secao)
 			}
 
+			// The way the files are chosen is settled before anything loads or runs.
+			if budget > 0 && len(changed) > 0 {
+				return fmt.Errorf("`--budget` and `--changed` choose the files two different ways; use one")
+			}
+			narrowed := picked.IncludeFresh || picked.IncludePassing || picked.SkipUnmeasured
+			if all && (len(changed) > 0 || narrowed) {
+				return fmt.Errorf("`--all` runs every file; it does not combine with `--changed` or with the state flags")
+			}
+			if len(changed) > 0 && narrowed {
+				return fmt.Errorf("`--changed` runs the impact path as it is; the state flags choose among the files instead — use one")
+			}
+			// By default a run takes only what is stale and below the minimum, and what was
+			// never measured — see runSelective. `--all`, `--changed` and `--target` choose
+			// the files their own way.
+			if !all && len(changed) == 0 && target == "" {
+				if err := runSelective(cs, sel, cfg, absRoot, target, budget, picked); err != nil {
+					return err
+				}
+				return runChained(then, absRoot, nil)
+			}
+
 			// O caminho de impacto sai da MESMA função que o `check --changed` usa: se
 			// as duas divergissem, "os gates que o meu commit move" e "os testes que o
 			// meu commit move" passariam a ser conjuntos diferentes, e o incremental
@@ -178,9 +208,6 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 			}
 
 			if budget > 0 {
-				if len(changed) > 0 {
-					return fmt.Errorf("`--budget` and `--changed` choose the files two different ways; use one")
-				}
 				if err := runWithBudget(cs, sel, absRoot, target, budget); err != nil {
 					return err
 				}
@@ -203,6 +230,10 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 	cmd.Flags().StringSliceVar(&escopos, "scope", nil, "filters by the declared SCOPE (`isolated`, `full`) — only on mutation. Without this, runs whichever are declared")
 	cmd.Flags().StringVar(&target, "target", "", "target that replaces `{{target}}` in the declared `run:` (e.g. the file to mutate)")
 	cmd.Flags().StringSliceVar(&changed, "changed", nil, "INCREMENTAL mode: changed file(s) — runs the `run_changed:` over the union of the impact paths, the same slice as `check --changed`")
+	cmd.Flags().BoolVar(&all, "all", false, "run every file of the suites through `run:`, whatever their state — the whole run, as before the state selection")
+	cmd.Flags().BoolVar(&picked.IncludeFresh, "include-fresh", false, "also run files measured at the current version that are below the minimum (by default only STALE files below the minimum run)")
+	cmd.Flags().BoolVar(&picked.IncludePassing, "include-passing", false, "also run stale files at the minimum or above (by default only files BELOW the minimum run); with --include-fresh, fresh passing files too")
+	cmd.Flags().BoolVar(&picked.SkipUnmeasured, "skip-unmeasured", false, "leave out the files never measured (by default they run)")
 	cmd.Flags().DurationVar(&budget, "budget", 0, "run the files FASTEST FIRST, in batches through `run_changed:`, until this much time is spent (e.g. 60s, 10m); the rest is left for a later run. The order comes from the times recorded by earlier runs; files never timed go last")
 	cmd.Flags().StringVar(&then, "then", "", "on PASSING, chains Anchors commands: `check`, `coverage` (separate by comma). Opt-in — without this, it runs and stops")
 	return cmd

@@ -142,6 +142,22 @@ O Anchors não roda mutação nem conhece ferramenta: ele consome o formato aber
 **Mutation Testing Elements** (`schemaVersion 1.x`), que Stryker, PIT, Infection
 e mutmut emitem.
 
+### Quais arquivos uma rodada pega
+
+Por padrão, `anchors test` e `anchors mutation` rodam só os arquivos cujo último resultado está
+**defasado e abaixo do mínimo**, mais os nunca medidos: o que é conhecido e atual é pulado, e a
+rodada do dia a dia fica leve. Cada flag abre um lado do quadrado:
+
+| | atual | defasado |
+| --- | --- | --- |
+| **passando** | `--include-fresh --include-passing` | `--include-passing` |
+| **abaixo do mínimo** | `--include-fresh` | roda por padrão |
+
+`--skip-unmeasured` deixa de fora os nunca medidos; `--all` roda tudo pelo `run:` da suíte. Um
+arquivo de teste está defasado quando ele ou o código que ele exercita mudou; um resultado de
+mutação medido sob carga conta como defasado. Uma suíte sem `run_changed:` não roda um recorte e
+roda inteira. `--budget` vale sobre os arquivos selecionados.
+
 ### `--budget`: o máximo que cabe num tempo
 
 `anchors test --budget 60s` e `anchors mutation --budget 10m` rodam os arquivos **do mais

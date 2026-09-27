@@ -99,9 +99,16 @@ func runWithBudget(cs suiteCommand, suites []config.Suite, absRoot, target strin
 		}
 	}
 	deadline := time.Now().Add(budget)
+	only := make([]map[string]bool, len(suites))
+	return budgetSuites(cs, suites, only, absRoot, target, deadline)
+}
+
+// budgetSuites runs each suite under the shared deadline, each over the files `only`
+// allows (nil: every file), and reports what ran and what was left.
+func budgetSuites(cs suiteCommand, suites []config.Suite, only []map[string]bool, absRoot, target string, deadline time.Time) error {
 	var failed []string
-	for _, s := range suites {
-		out, err := runSuiteWithBudget(cs, s, absRoot, target, deadline)
+	for i, s := range suites {
+		out, err := runSuiteWithBudget(cs, s, absRoot, target, deadline, only[i])
 		if err != nil {
 			return fmt.Errorf("layer %q: %w", s.Layer, err)
 		}
@@ -117,7 +124,7 @@ func runWithBudget(cs suiteCommand, suites []config.Suite, absRoot, target strin
 	return nil
 }
 
-func runSuiteWithBudget(cs suiteCommand, s config.Suite, absRoot, target string, deadline time.Time) (budgetOutcome, error) {
+func runSuiteWithBudget(cs suiteCommand, s config.Suite, absRoot, target string, deadline time.Time, only map[string]bool) (budgetOutcome, error) {
 	var out budgetOutcome
 	report, kind, oneAtATime := s.JUnit, mapx.KindTest, false
 	if cs.secao == "mutation" {
@@ -132,6 +139,9 @@ func runSuiteWithBudget(cs suiteCommand, s config.Suite, absRoot, target string,
 		return out, fmt.Errorf("load map: %w (run `anchors map build`)", err)
 	}
 	timed, untimed := budgetPlan(g, kind, key)
+	if only != nil {
+		timed, untimed = keepOnly(timed, untimed, only)
+	}
 	for {
 		remaining := time.Until(deadline)
 		var batch []string
@@ -219,4 +229,21 @@ func budgetRunnable(cs suiteCommand, s config.Suite) error {
 		return fmt.Errorf("`--budget` needs the suite's report to ingest each batch, and this suite declares none")
 	}
 	return nil
+}
+
+// keepOnly narrows a plan to the files a selection took, keeping its order.
+func keepOnly(timed []timedFile, untimed []string, only map[string]bool) ([]timedFile, []string) {
+	var t []timedFile
+	for _, f := range timed {
+		if only[f.ID] {
+			t = append(t, f)
+		}
+	}
+	var u []string
+	for _, id := range untimed {
+		if only[id] {
+			u = append(u, id)
+		}
+	}
+	return t, u
 }

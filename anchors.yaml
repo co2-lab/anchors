@@ -441,9 +441,10 @@ tests:
     lcov: ".anchors/lcov.info"
 
 # MUTATION runs apart (`anchors mutation`), never in the pre-commit: it re-runs the suite
-# once per mutant, which takes minutes. Scoped to internal/gate — the gates are where a
-# rule that looks proven and is not costs the most, since every project trusts their
-# verdicts. `isolated`: each package's mutants face only its own tests.
+# once per mutant, which takes minutes. It covers every package, and by default a run takes
+# only the files stale and below the floor (and the never measured); `--all` runs everything,
+# and `--budget 10m` fits as much as it can in the time, fastest first. `isolated`: each
+# package's mutants face only its own tests.
 mutation:
   - layer: unit
     # Every package, one gremlins run each, merged with full paths (see the script).

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:96707b340d36f682 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:03bc273c199e60d5 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2287,6 +2287,30 @@ teste prova.
 - [The reports without a map point at the map build](camadas/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs) `RPRTS-E01`
 
 - [A destination that cannot be written fails the report](camadas/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs) `RPRTS-E02`
+
+- [A file is placed in one of four boxes](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B01`
+
+- [The default takes stale below the minimum and never measured, and each flag opens a side](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B02`
+
+- [A test file is stale through what it exercises and passes by its own layer](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B03`
+
+- [A mutation result under load counts as stale and passes at the floor](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B04`
+
+- [A test file belongs to the suite that ran it](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B05`
+
+- [Support files and no_signal targets never run](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B06`
+
+- [The run says what it selected and what it left out](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B07`
+
+- [A suite without run_changed runs whole](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B08`
+
+- [A selection that takes nothing runs nothing](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B09`
+
+- [The selected files run in as few batches as the ceiling allows](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B10`
+
+- [--all runs whole and does not combine with the other choices](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B11`
+
+- [A selective run without a map is refused](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-E01`
 
 - [Expired test evidence is listed before the stale edges](camadas/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges) `STEDS-B01`
 

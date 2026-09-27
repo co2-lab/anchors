@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:8337d038ff9c9eba — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:c8f8d6e28699d5d0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -194,6 +194,8 @@ abra a página dela em `camadas/`.
 ### [QLCMQ — QualityCommands — the quality domain puts its eleven commands under the root command](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-eleven-commands-under-the-root-command)
 
 ### [RPRTS — Reports — markdown perspectives on what Anchors already measures, written into docs](camadas/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs)
+
+### [SLCTN — RunSelection — a run takes only what is stale and below the minimum, unless told otherwise](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise)
 
 ### [STEDS — StaleEdges — lists the confrontation debt: expired test evidence and stale edges](camadas/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges)
 
