@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:06706a27de8e8292 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:160b7e6b8f087e47 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -474,6 +474,8 @@ abra a página dela em `camadas/`.
 ### [EDSTD — EdgeStamping — recording on each relation that it was confronted, with what result, and since when](camadas/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 
 ### [GRPRG — GraphPersistence — saving and loading the map file without churn and without partial reads](camadas/mapa.md#grprg--graphpersistence--saving-and-loading-the-map-file-without-churn-and-without-partial-reads)
+
+### [TSUNT — TestedUnits — which code a test tests, found by the project's own derivation](camadas/mapa.md#tsunt--testedunits--which-code-a-test-tests-found-by-the-projects-own-derivation)
 
 ## scan
 

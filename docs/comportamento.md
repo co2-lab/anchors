@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:fb5fc3f0bede4b9f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:edfa3e08d7b2c0c5 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -4372,6 +4372,8 @@ teste prova.
 
 - [A support file is not confronted as a test](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B16`
 
+- [A test of a declarative unit is not charged a feature](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B17`
+
 - [Non-spec artifacts skip confrontation](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B01`
 
 - [A spec with no revision has nothing to confront](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B02`
@@ -6355,6 +6357,16 @@ teste prova.
 - [Loading text that is not the map returns the parse error](camadas/mapa.md#grprg-e02--loading-text-that-is-not-the-map-returns-the-parse-error) `GRPRG-E02`
 
 - [Saving into a missing directory returns the write error](camadas/mapa.md#grprg-e04--saving-into-a-missing-directory-returns-the-write-error) `GRPRG-E04`
+
+- [With code as the anchor a code file tests through its own name](camadas/mapa.md#tsunt-b01--with-code-as-the-anchor-a-code-file-tests-through-its-own-name) `TSUNT-B01`
+
+- [With the spec as the anchor the code path gives the variables](camadas/mapa.md#tsunt-b02--with-the-spec-as-the-anchor-the-code-path-gives-the-variables) `TSUNT-B02`
+
+- [An override of the code's layer places its test elsewhere](camadas/mapa.md#tsunt-b03--an-override-of-the-codes-layer-places-its-test-elsewhere) `TSUNT-B03`
+
+- [A glob test template matches the tests it covers, a code template is read literally](camadas/mapa.md#tsunt-b04--a-glob-test-template-matches-the-tests-it-covers-a-code-template-is-read-literally) `TSUNT-B04`
+
+- [Only the map's tests are answered, each unit once, in order](camadas/mapa.md#tsunt-b05--only-the-maps-tests-are-answered-each-unit-once-in-order) `TSUNT-B05`
 
 ## scan
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -366,5 +367,30 @@ func TestTestFeatureMatch_SkipsSupport(t *testing.T) {
 	n := mapx.Node{ID: "utils/login.yaml", Kind: mapx.KindTest, Support: true}
 	if v, msg := checkTestFeatureMatch("", n, "", &mapx.Graph{Nodes: []mapx.Node{n}}, nil); v != Skip || !strings.Contains(msg, "support") {
 		t.Fatalf("a support file must be skipped saying why, got %v (%s)", v, msg)
+	}
+}
+
+func TestTestFeatureMatch_DeclarativeUnit(t *testing.T) {
+	t.Run("RVMTR-B17: A test of a declarative unit is not charged a feature", func(t *testing.T) {})
+	resetTestedUnits()
+	t.Cleanup(resetTestedUnits)
+	// Code is the anchor and its test sits beside it: no spec, so no edge to the test.
+	cfg := &config.Config{Derived: &config.Derived{Anchor: "code",
+		Files: map[string]config.Padroes{"test": {"{{dir}}/{{name}}.test.{{ext}}"}}}}
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "utils/fmt.ts", Kind: mapx.KindCode, Regime: "declarativo"},
+		{ID: "screens/home.tsx", Kind: mapx.KindCode, Regime: "comportamental"},
+		{ID: "utils/fmt.test.ts", Kind: mapx.KindTest},
+		{ID: "screens/home.test.tsx", Kind: mapx.KindTest},
+		{ID: "orphan.test.ts", Kind: mapx.KindTest},
+	}}
+	for id, want := range map[string]Verdict{"utils/fmt.test.ts": Skip, "screens/home.test.tsx": Pending, "orphan.test.ts": Pending} {
+		v, msg := checkTestFeatureMatch("", mapx.Node{ID: id, Kind: mapx.KindTest}, "", g, cfg)
+		if v != want {
+			t.Errorf("%s: want %v, got %v (%s)", id, want, v, msg)
+		}
+		if want == Skip && !strings.Contains(msg, "declarativo") {
+			t.Errorf("%s: the skip must say the unit is declarative, got %s", id, msg)
+		}
 	}
 }

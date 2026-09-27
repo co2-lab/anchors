@@ -572,6 +572,7 @@
   "gate.scenario_asserts.skip_not_feature": "el paso de resultado corresponde a la feature — es la que describe el escenario",
   "gate.vr_baseline.skip_not_feature": "el escenario de regresión visual se declara en la feature — de ella parte la confrontación",
   "gate.vr_baseline.skip_no_vr_scenarios": "la feature no declara escenario de regresión visual",
+  "gate.test_feature.skip_declarative_unit": "la unidad bajo prueba está en una capa reconocida (`regime: declarativo`): por la Estructura del proyecto no tiene feature, así que no hay vínculo que exigir",
   "gate.no_signal": "declarado sin nada que medir para este gate (`no_signal`): %s",
   "gate.mutation.under_load": "%d de %d mutantes agotaron el tiempo (%.0f%%, por encima del techo de %.0f%%): el score se midió bajo carga y no es confiable. Mida de nuevo — primero una vez sin límite de tiempo (o con uno absurdo) para saber cuánto tarda de verdad un mutante, luego baje el límite desde ahí",
   "gate.mutation.timed_out_note": " (%d de los muertos murieron por el límite de tiempo)",

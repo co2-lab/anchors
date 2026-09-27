@@ -126,3 +126,9 @@ Feature: ReverseMatch — every scenario still has its rule, and every proven co
     Given a support file of a test layer with no feature linked
     When test-feature-match judges it
     Then it skips saying the file is support
+
+  @RVMTR-B17 @unit-level
+  Scenario: A test of a declarative unit is not charged a feature
+    Given tests with no feature linked, found beside their code by the derivation: one of a declarative util, one of a governed screen, and one with no unit
+    When test-feature-match judges them
+    Then the first is skipped saying its unit is declarative, and the others stay pending

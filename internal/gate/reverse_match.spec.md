@@ -63,6 +63,7 @@ the visual baseline, revision codes, and other units' codes cited to build fixtu
 | `RVMTR-B14` | A revision code named by the test is not read as a rule and is not charged. |
 | `RVMTR-B15` | A data state a spec defines with the unit prefix is read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, `TREXXXX-DS-data-present` defines `DS-data-present`. |
 | `RVMTR-B16` | A support file is not confronted as a test (Skip, saying why): it proves no scenario, so there is no feature to link it to. |
+| `RVMTR-B17` | A test with no feature linked whose units under test — the code the project's derivation says the test belongs to — all lie in layers of `regime: declarativo` is skipped, saying why; a test with no unit found, or one of whose units is governed, stays pending. |
 
 ## Invariants
 

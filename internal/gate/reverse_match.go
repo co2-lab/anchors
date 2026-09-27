@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
@@ -229,6 +230,9 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		}
 	}
 	if len(featPaths) == 0 {
+		if testsDeclarativeUnit(n, g, cfg) {
+			return Skip, i18n.T("gate.test_feature.skip_declarative_unit")
+		}
 		return Pending, i18n.T("gate.test_feature.pending_no_feature")
 	}
 
@@ -291,4 +295,58 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	sort.Strings(orphans)
 	return Fail, fmt.Sprintf(i18n.T("gate.test_feature.orphan"),
 		len(orphans), strings.Join(orphans, ", "))
+}
+
+// testsDeclarativeUnit says whether the test's unit under test lies wholly in layers of
+// `regime: declarativo`. Such a unit originates no rule and has no feature by the
+// project's own Structure, so there is no link from its test to demand. The units are
+// the code the project's derivation says the test belongs to (mapx.TestedUnits): a unit
+// with no spec has no edge to its test in the map. A test with no unit found stays
+// charged. Reported from the reference
+// app: 113 of 128 "no feature linked" were tests of utils, presentation, models and
+// barrels.
+func testsDeclarativeUnit(n mapx.Node, g *mapx.Graph, cfg *config.Config) bool {
+	regime := make(map[string]string, len(g.Nodes))
+	kind := make(map[string]mapx.Kind, len(g.Nodes))
+	for _, x := range g.Nodes {
+		regime[x.ID], kind[x.ID] = x.Regime, x.Kind
+	}
+	units := testedUnits(g, cfg)[n.ID]
+	if len(units) == 0 {
+		return false
+	}
+	for _, u := range units {
+		if kind[u] != mapx.KindCode || regime[u] != "declarativo" {
+			return false
+		}
+	}
+	return true
+}
+
+// ONE DERIVATION PER SCAN: the answer is the same for every test of the map.
+var (
+	tuMu    sync.Mutex
+	tuGraph *mapx.Graph
+	tuCfg   *config.Config
+	tuMap   map[string][]string
+)
+
+func testedUnits(g *mapx.Graph, cfg *config.Config) map[string][]string {
+	tuMu.Lock()
+	defer tuMu.Unlock()
+	if tuMap != nil && tuGraph == g && tuCfg == cfg {
+		return tuMap
+	}
+	tuGraph, tuCfg, tuMap = g, cfg, mapx.TestedUnits(g, cfg)
+	if tuMap == nil {
+		tuMap = map[string][]string{}
+	}
+	return tuMap
+}
+
+// resetTestedUnits clears the memory between scans, for the tests.
+func resetTestedUnits() {
+	tuMu.Lock()
+	defer tuMu.Unlock()
+	tuGraph, tuCfg, tuMap = nil, nil, nil
 }
