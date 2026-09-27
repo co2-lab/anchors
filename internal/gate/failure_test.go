@@ -26,6 +26,7 @@ const specWithFailure = "| `CRED-E01` | insufficient balance | refuses |\n"
 // A failure catalogued and not handled is a promise the code does not keep: the spec says
 // how the unit fails, and nothing in it deals with that.
 func TestFailureHandled_declaredAndUntreatedFails(t *testing.T) {
+	t.Run("FLRAI-B07: A declared failure with no handling in the governed code fails, naming it", func(t *testing.T) {})
 	root, n, g, cfg := failureProject(t, specWithFailure, "func f() int {\n\treturn 1\n}\n")
 	v, msg := checkFailureHandled(specWithFailure, n, root, g, cfg)
 	if v != Fail {
@@ -36,12 +37,15 @@ func TestFailureHandled_declaredAndUntreatedFails(t *testing.T) {
 	}
 }
 
-// TREATING IS NOT "having a catch". An `if err != nil` handles just as much, and cravings
-// for one syntax would nail the gate to one family of languages.
+// HANDLING IS NOT "having a catch". An `if err != nil` handles just as much, and nailing
+// one syntax would tie the gate to one family of languages.
 func TestFailureHandled_anyHandlingShapeCounts(t *testing.T) {
+	t.Run("FLRAI-B08: Any handling path in the governed code passes failure-handled", func(t *testing.T) {})
+	t.Run("FLRAI-X01: One handling path answers for every declared failure", func(t *testing.T) {})
 	code := "func f() error {\n\tif err != nil {\n\t\treturn err\n\t}\n\treturn nil\n}\n"
-	root, n, g, cfg := failureProject(t, specWithFailure, code)
-	if v, msg := checkFailureHandled(specWithFailure, n, root, g, cfg); v != Pass {
+	spec := specWithFailure + "| `CRED-E02` | partner down | retries |\n"
+	root, n, g, cfg := failureProject(t, spec, code)
+	if v, msg := checkFailureHandled(spec, n, root, g, cfg); v != Pass {
 		t.Errorf("an `if err != nil` handles the failure: %v (%s)", v, msg)
 	}
 }
@@ -50,11 +54,13 @@ func TestFailureHandled_anyHandlingShapeCounts(t *testing.T) {
 // that swallows the failure without logging is the perfect silence — it happens, nothing
 // knows, and no tool downstream has anything to read.
 func TestFailureLogged_handledAndSilentFails(t *testing.T) {
+	t.Run("FLRAI-B11: A handling that records nothing fails failure-logged, naming the failure", func(t *testing.T) {})
+	t.Run("FLRAI-B12: A handling that records the occurrence passes failure-logged", func(t *testing.T) {})
 	code := "func f() error {\n\tif err != nil {\n\t\treturn nil\n\t}\n\treturn nil\n}\n"
 	root, n, g, cfg := failureProject(t, specWithFailure, code)
 	v, msg := checkFailureLogged(specWithFailure, n, root, g, cfg)
-	if v != Fail {
-		t.Fatalf("a silent handling must fail: %v (%s)", v, msg)
+	if v != Fail || !strings.Contains(msg, "CRED-E01") {
+		t.Fatalf("a silent handling must fail, naming the failure: %v (%s)", v, msg)
 	}
 	withLog := "func f() error {\n\tif err != nil {\n\t\tlog.Error(\"x\")\n\t\treturn err\n\t}\n\treturn nil\n}\n"
 	root2, n2, g2, cfg2 := failureProject(t, specWithFailure, withLog)
@@ -67,6 +73,7 @@ func TestFailureLogged_handledAndSilentFails(t *testing.T) {
 // it prevents. The defence may be right — what is missing is the spec saying which failure
 // it answers, so whoever reads it later knows whether it still applies.
 func TestFailureDeclared_handlingWithoutDeclarationFails(t *testing.T) {
+	t.Run("FLRAI-B13: Handling in the code with no failure declared in the spec fails", func(t *testing.T) {})
 	code := "func f() error {\n\tif err != nil {\n\t\treturn err\n\t}\n\treturn nil\n}\n"
 	root, n, g, cfg := failureProject(t, "# spec with no failures\n", code)
 	if v, msg := checkFailureDeclared("# spec with no failures\n", n, root, g, cfg); v != Fail {
@@ -77,6 +84,7 @@ func TestFailureDeclared_handlingWithoutDeclarationFails(t *testing.T) {
 // A unit whose handling matches are all normal flow closes its failure section with
 // `none — <why>`. The reason is mandatory: a bare `none` does not close it.
 func TestFailureDeclared_sectionClosedAsNone(t *testing.T) {
+	t.Run("FLRAI-B16: An Errors section closed with none and a reason passes failure-declared", func(t *testing.T) {})
 	code := "func f(m map[string]int) {\n\tif m == nil {\n\t\tm = map[string]int{}\n\t}\n}\n"
 	for name, c := range map[string]struct {
 		spec string
@@ -105,16 +113,23 @@ func TestFailureDeclared_sectionClosedAsNone(t *testing.T) {
 // is knowledge acquired, and the written reason is what tells it apart from silencing an
 // alert.
 func TestFailureHandled_resilientStopsTheCharge(t *testing.T) {
+	t.Run("FLRAI-B09: A failure marked resilient with a reason is not charged", func(t *testing.T) {})
 	spec := "| `CRED-E01` | insufficient balance | refuses | @resilient: the partner returns null during migration |\n"
 	root, n, g, cfg := failureProject(t, spec, "func f() int {\n\treturn 1\n}\n")
-	if v, msg := checkFailureHandled(spec, n, root, g, cfg); v == Fail {
-		t.Errorf("a failure marked resilient must not be charged: %s", msg)
+	if v, msg := checkFailureHandled(spec, n, root, g, cfg); v != Pass {
+		t.Errorf("a failure marked resilient must not be charged: %v (%s)", v, msg)
+	}
+	silent := "func f() error {\n\tif err != nil {\n\t\treturn nil\n\t}\n\treturn nil\n}\n"
+	root, n, g, cfg = failureProject(t, spec, silent)
+	if v, msg := checkFailureLogged(spec, n, root, g, cfg); v != Pass {
+		t.Errorf("failure-logged does not charge a resilient failure either: %v (%s)", v, msg)
 	}
 }
 
 // A bare marker waives nothing — the same rule as every other opt-out. `@resilient` with
 // no why would be the silence the gates exist to end.
 func TestFailureHandled_bareResilientMarkerDoesNotCount(t *testing.T) {
+	t.Run("FLRAI-B10: A bare resilient marker exempts nothing", func(t *testing.T) {})
 	spec := "| `CRED-E01` | insufficient balance | refuses | @resilient |\n"
 	root, n, g, cfg := failureProject(t, spec, "func f() int {\n\treturn 1\n}\n")
 	if v, _ := checkFailureHandled(spec, n, root, g, cfg); v != Fail {
@@ -136,6 +151,7 @@ func TestFailureHandled_noDialectIsUndetermined(t *testing.T) {
 // not know". The second is KNOWLEDGE — without it the next person starts from zero, ruling
 // out what somebody already ruled out.
 func TestFailureConclusions_readsTheThreeOutcomes(t *testing.T) {
+	t.Run("FLRAI-B17: The conclusions read the resilient and observing reasons of each failure whole", func(t *testing.T) {})
 	spec := "| `CRED-E01` | balance | refuses |\n" +
 		"| `CRED-E02` | partner down | retries | @resilient: the partner restarts at 3am daily; the retry covers it |\n" +
 		"| `CRED-E03` | timeout | refuses | @observing: ruled out partner retry and network latency; only on migrated accounts |\n"
@@ -159,6 +175,7 @@ func TestFailureConclusions_readsTheThreeOutcomes(t *testing.T) {
 // swallowing the next one would attribute to the conclusion a text belonging to another
 // field.
 func TestFailureConclusions_theReasonStopsAtTheCell(t *testing.T) {
+	t.Run("FLRAI-B18: A conclusion reason ends at its table cell", func(t *testing.T) {})
 	spec := "| `CRED-E01` | cond | @resilient: the real reason | another column |\n"
 	c := FailureConclusions(spec)["CRED-E01"]
 	if strings.Contains(c.Resilient, "another column") {
@@ -166,5 +183,133 @@ func TestFailureConclusions_theReasonStopsAtTheCell(t *testing.T) {
 	}
 	if !strings.Contains(c.Resilient, "the real reason") {
 		t.Errorf("the reason was lost: %q", c.Resilient)
+	}
+}
+
+// failureGates are the three gates of this file, for the rules they share.
+var failureGates = map[string]func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string){
+	"failure-handled":  checkFailureHandled,
+	"failure-logged":   checkFailureLogged,
+	"failure-declared": checkFailureDeclared,
+}
+
+func TestFailureGates_onlyConfrontSpecs(t *testing.T) {
+	t.Run("FLRAI-B01: Every failure gate skips an artifact that is not a spec", func(t *testing.T) {})
+	root, _, g, cfg := failureProject(t, specWithFailure, "func f() {}\n")
+	for name, check := range failureGates {
+		for _, k := range []mapx.Kind{mapx.KindCode, mapx.KindTest, mapx.KindFeature} {
+			if v, _ := check(specWithFailure, mapx.Node{ID: "x.spec.md", Kind: k}, root, g, cfg); v != Skip {
+				t.Errorf("%s on %s: expected Skip, got %v", name, k, v)
+			}
+		}
+	}
+}
+
+// A failure rule is a CATALOGUED item: a heading, a table row or a bold bullet. A code
+// cited in prose is a mention, not a declaration.
+func TestFailureHandled_readsTheThreeCataloguedForms(t *testing.T) {
+	t.Run("FLRAI-B02: A failure rule is read in the heading, table row and bullet forms, not in prose", func(t *testing.T) {})
+	spec := "### CRED-E01 — balance\n| `CRED-E02` | partner down | retries |\n- **CRED-E03** timeout\n"
+	root, n, g, cfg := failureProject(t, spec, "func f() int {\n\treturn 1\n}\n")
+	v, msg := checkFailureHandled(spec, n, root, g, cfg)
+	if v != Fail || !strings.Contains(msg, "CRED-E01, CRED-E02, CRED-E03") {
+		t.Errorf("the three forms are declared failures, sorted: %v (%s)", v, msg)
+	}
+	prose := "The unit may raise CRED-E01 when the balance is short.\n"
+	if v, msg := checkFailureHandled(prose, n, root, g, cfg); v != Skip {
+		t.Errorf("a code in prose declares nothing: %v (%s)", v, msg)
+	}
+}
+
+func TestFailureHandledAndLogged_skipASpecWithNoFailure(t *testing.T) {
+	t.Run("FLRAI-B03: A spec that declares no failure is skipped by failure-handled and failure-logged", func(t *testing.T) {})
+	const spec = "# spec\n\n| `CRED-B01` | a behaviour |\n"
+	root, n, g, cfg := failureProject(t, spec, "func f() int {\n\treturn 1\n}\n")
+	if v, msg := checkFailureHandled(spec, n, root, g, cfg); v != Skip {
+		t.Errorf("failure-handled: %v (%s)", v, msg)
+	}
+	if v, msg := checkFailureLogged(spec, n, root, g, cfg); v != Skip {
+		t.Errorf("failure-logged: %v (%s)", v, msg)
+	}
+}
+
+// Without the patterns that recognise a handling (or, for failure-logged, a record) the
+// gates measured nothing, and a Pass would stamp what was never checked.
+func TestFailureGates_undeterminedWithoutTheDialectPatterns(t *testing.T) {
+	t.Run("FLRAI-B04: Without the dialect patterns the failure gates are Pending", func(t *testing.T) {})
+	code := "func f() error {\n\tif err != nil {\n\t\treturn err\n\t}\n\treturn nil\n}\n"
+	root, n, g, _ := failureProject(t, specWithFailure, code)
+	for name, check := range failureGates {
+		if v, msg := check(specWithFailure, n, root, g, &config.Config{}); v != Pending {
+			t.Errorf("%s with no dialect: expected Pending, got %v (%s)", name, v, msg)
+		}
+	}
+	handleOnly := &config.Config{Dialect: &config.Dialect{HandlePatterns: []string{`if\s+err\s*!=\s*nil`}}}
+	if v, msg := checkFailureLogged(specWithFailure, n, root, g, handleOnly); v != Pending {
+		t.Errorf("failure-logged with no log patterns: expected Pending, got %v (%s)", v, msg)
+	}
+}
+
+// No governed code, or none that can be read: there is nothing to confront, and the
+// verdict stays open rather than green.
+func TestFailureGates_undeterminedWithoutGovernedCode(t *testing.T) {
+	t.Run("FLRAI-B05: Without governed code that can be read the failure gates are Pending", func(t *testing.T) {})
+	root, n, _, cfg := failureProject(t, specWithFailure, "func f() {}\n")
+	unreadable := &mapx.Graph{Edges: []mapx.Edge{{From: n.ID, To: "gone.go", Type: mapx.EdgeSpecifies}}}
+	otherType := &mapx.Graph{Edges: []mapx.Edge{{From: n.ID, To: "x.go", Type: mapx.EdgeRealizes}}}
+	for name, check := range failureGates {
+		for label, g := range map[string]*mapx.Graph{"no map": nil, "unreadable file": unreadable, "no specifies edge": otherType} {
+			if v, msg := check(specWithFailure, n, root, g, cfg); v != Pending {
+				t.Errorf("%s, %s: expected Pending, got %v (%s)", name, label, v, msg)
+			}
+		}
+	}
+}
+
+// A handling that only exists in a comment handles nothing.
+func TestFailureHandled_aHandlingInACommentDoesNotCount(t *testing.T) {
+	t.Run("FLRAI-B06: A handling written only in a comment line does not count", func(t *testing.T) {})
+	code := "func f() int {\n\t// if err != nil { return err }\n\treturn 1\n}\n"
+	root, n, g, cfg := failureProject(t, specWithFailure, code)
+	if v, msg := checkFailureHandled(specWithFailure, n, root, g, cfg); v != Fail {
+		t.Errorf("a commented-out handling must not count: %v (%s)", v, msg)
+	}
+}
+
+// The two gates never charge the same failure together: with no handling at all
+// failure-handled charges it and failure-logged steps aside; with handling that records
+// nothing it is the other way round.
+func TestFailureHandledAndLogged_neverChargeTheSameDefectTwice(t *testing.T) {
+	t.Run("FLRAI-I01: failure-handled and failure-logged never both fail the same spec", func(t *testing.T) {})
+	for name, c := range map[string]struct {
+		code            string
+		handled, logged Verdict
+	}{
+		"no handling":         {"func f() int {\n\treturn 1\n}\n", Fail, Skip},
+		"handling, no record": {"func f() error {\n\tif err != nil {\n\t\treturn nil\n\t}\n\treturn nil\n}\n", Pass, Fail},
+	} {
+		root, n, g, cfg := failureProject(t, specWithFailure, c.code)
+		h, _ := checkFailureHandled(specWithFailure, n, root, g, cfg)
+		l, _ := checkFailureLogged(specWithFailure, n, root, g, cfg)
+		if h != c.handled || l != c.logged {
+			t.Errorf("%s: handled=%v logged=%v, want %v and %v", name, h, l, c.handled, c.logged)
+		}
+	}
+}
+
+func TestFailureDeclared_noHandlingIsSkipped(t *testing.T) {
+	t.Run("FLRAI-B14: Code with no handling is skipped by failure-declared", func(t *testing.T) {})
+	root, n, g, cfg := failureProject(t, "# spec\n", "func f() int {\n\treturn 1\n}\n")
+	if v, msg := checkFailureDeclared("# spec\n", n, root, g, cfg); v != Skip {
+		t.Errorf("no handling, nothing to declare: %v (%s)", v, msg)
+	}
+}
+
+func TestFailureDeclared_aDeclaredFailurePasses(t *testing.T) {
+	t.Run("FLRAI-B15: Handling in the code and a failure declared in the spec passes", func(t *testing.T) {})
+	code := "func f() error {\n\tif err != nil {\n\t\treturn err\n\t}\n\treturn nil\n}\n"
+	root, n, g, cfg := failureProject(t, specWithFailure, code)
+	if v, msg := checkFailureDeclared(specWithFailure, n, root, g, cfg); v != Pass {
+		t.Errorf("a declared failure answers the handling: %v (%s)", v, msg)
 	}
 }

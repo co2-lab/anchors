@@ -63,6 +63,10 @@ func complianceGraph() *mapx.Graph {
 }
 
 func TestComplianceReportsEachDutyByNorm(t *testing.T) {
+	t.Run("CMPLN-B01: Each duty is reported under the norm that originates it", func(t *testing.T) {})
+	t.Run("CMPLN-B02: Each duty is marked by how many of its subjects comply", func(t *testing.T) {})
+	t.Run("CMPLN-B03: A duty that no subject complies with and no debt explains warns of a disconnected target", func(t *testing.T) {})
+	t.Run("CMPLN-B04: Verbose lists the missing nodes and the plain report only hints at them", func(t *testing.T) {})
 	dir := govProject(t, complianceYAML, complianceFiles(), complianceGraph())
 
 	out, err := runCmd(t, newComplianceCmd(), "--root", dir)
@@ -106,6 +110,7 @@ func TestComplianceReportsEachDutyByNorm(t *testing.T) {
 }
 
 func TestComplianceVerboseListsTheMissingNodes(t *testing.T) {
+	t.Run("CMPLN-B04: Verbose lists the missing nodes and the plain report only hints at them", func(t *testing.T) {})
 	dir := govProject(t, complianceYAML, complianceFiles(), complianceGraph())
 
 	out, err := runCmd(t, newComplianceCmd(), "--root", dir, "--verbose")
@@ -124,6 +129,7 @@ func TestComplianceVerboseListsTheMissingNodes(t *testing.T) {
 }
 
 func TestComplianceWithoutDuties(t *testing.T) {
+	t.Run("CMPLN-B05: A project without duties says so", func(t *testing.T) {})
 	dir := govProject(t, "version: 2\nlayers: {}\n", nil, &mapx.Graph{})
 
 	out, err := runCmd(t, newComplianceCmd(), "--root", dir)
@@ -139,6 +145,7 @@ func TestComplianceWithoutDuties(t *testing.T) {
 }
 
 func TestComplianceFailsOnAPackMissingItsValues(t *testing.T) {
+	t.Run("CMPLN-E01: A pack missing a required value fails naming it", func(t *testing.T) {})
 	yaml := strings.Replace(complianceYAML, "pack_values:\n  erasure_handler: \"handlers/erase.go\"\n", "", 1)
 	dir := govProject(t, yaml, complianceFiles(), complianceGraph())
 
@@ -151,6 +158,7 @@ func TestComplianceFailsOnAPackMissingItsValues(t *testing.T) {
 // printAvailable separates "does not apply to me" from "I forgot": an adopted pack,
 // written either as a short name or as its path under ./packs/, is not offered again.
 func TestPrintAvailableSkipsAdoptedPacks(t *testing.T) {
+	t.Run("CMPLN-B06: The embedded packs the project did not adopt are listed", func(t *testing.T) {})
 	var all []string
 	for _, names := range initx.AvailablePacks() {
 		all = append(all, names...)
@@ -179,5 +187,53 @@ func TestPrintAvailableSkipsAdoptedPacks(t *testing.T) {
 	out = captureStdout(t, func() { printAvailable(&config.Config{Packs: all}) })
 	if out != "" {
 		t.Errorf("with every pack adopted there is nothing to offer; got:\n%s", out)
+	}
+}
+
+// Every state a duty line can take, in one report: a pack with no authority is grouped
+// under its name, a duty no node triggers is marked ·, and a duty whose subjects all
+// comply — one of them by a waiver — is marked ✓ and counts the waiver.
+func TestComplianceMarksEveryDutyState(t *testing.T) {
+	t.Run("CMPLN-I01: Every duty in force has its line even when no node is subject", func(t *testing.T) {})
+	t.Run("CMPLN-B01: Each duty is reported under the norm that originates it", func(t *testing.T) {})
+	t.Run("CMPLN-B02: Each duty is marked by how many of its subjects comply", func(t *testing.T) {})
+	yaml := strings.Replace(complianceYAML, "obligations:\n", "obligations:\n  - name: ghost\n    when: \"never: yes\"\n    must_appear_in: [\"handlers/log.go\"]\n", 1)
+	files := complianceFiles()
+	files["packs/local-privacy.yaml"] = strings.Replace(localPack, "authority: \"Local Privacy Act\"\n", "", 1)
+	files["models/order.go"] = "// carries: personal-data\n// obligation_waived: erasure — shared data\npackage models\n"
+	files["models/profile.go"] = "package models\n"
+	dir := govProject(t, yaml, files, complianceGraph())
+
+	out, err := runCmd(t, newComplianceCmd(), "--root", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "── local-privacy\n") {
+		t.Errorf("a pack with no authority is grouped under its name:\n%s", out)
+	}
+	if !strings.Contains(out, "   · ghost") || !strings.Contains(out, "  0 subject,   0 complying") {
+		t.Errorf("a duty no node triggers is listed and marked ·:\n%s", out)
+	}
+	if !strings.Contains(out, "   ✓ erasure") || !strings.Contains(out, "  2 subject,   2 complying, 1 waiver(s)") {
+		t.Errorf("a duty whose subjects all comply, one by waiver, is marked ✓ and counts the waiver:\n%s", out)
+	}
+	if strings.Index(out, "── declared in the project") > strings.Index(out, "── local-privacy") {
+		t.Errorf("the norms are sorted by name:\n%s", out)
+	}
+	if strings.Index(out, "audit-logged") > strings.Index(out, "ghost") || strings.Index(out, "ghost") > strings.Index(out, "retention") {
+		t.Errorf("the duties of a norm are sorted by name:\n%s", out)
+	}
+}
+
+func TestComplianceWithoutConfigOrMapFails(t *testing.T) {
+	t.Run("CMPLN-E02: A project without configuration fails loading it", func(t *testing.T) {})
+	t.Run("CMPLN-E03: A project without a map fails pointing at the map build", func(t *testing.T) {})
+	if _, err := runCmd(t, newComplianceCmd(), "--root", t.TempDir()); err == nil || !strings.Contains(err.Error(), "load config") {
+		t.Errorf("no anchors.yaml must fail loading the config; got %v", err)
+	}
+	dir := govProject(t, complianceYAML, complianceFiles(), nil)
+	if _, err := runCmd(t, newComplianceCmd(), "--root", dir); err == nil || !strings.Contains(err.Error(), "load map") ||
+		!strings.Contains(err.Error(), "run `anchors map build`") {
+		t.Errorf("no map must fail loading the map and point at `anchors map build`; got %v", err)
 	}
 }

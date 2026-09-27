@@ -1,194 +1,257 @@
 package mapcmd
 
 import (
+	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
-// O git trata o `anchors.graph.yaml` como TEXTO, e ele é derivado.
-//
-// Medido no blue-eyes (co2-lab/anchors#12): um `git merge origin/develop` mesclou o mapa
-// SEM CONFLITO e apagou 62 carimbos de julgamento. O aviso do `map build` (v0.1.43) não
-// pega esse caso — ele compara com o arquivo anterior, e a perda acontece no `git merge`,
-// antes de o Anchors ser chamado.
-//
-// Um carimbo é estado do trabalho, e o LAUDO vive no `--reason` do `anchors judge`, não no
-// arquivo: perder o carimbo manda o julgamento de volta para a fila e a evidência tem de
-// ser refeita.
-func TestMapMerge_uneOsCarimbosDosDoisLados(t *testing.T) {
-	dir := t.TempDir()
-
-	aresta := func(from, to string, gates ...string) mapx.Edge {
-		e := mapx.Edge{Type: "specifies", From: from, To: to}
-		for _, g := range gates {
-			e.Julgamentos = append(e.Julgamentos, mapx.Judgment{Gate: g, Verdict: "ok"})
-		}
-		return e
+// saveGraph writes g to dir/name and returns the path.
+func saveGraph(t *testing.T, dir, name string, g *mapx.Graph) string {
+	t.Helper()
+	p := filepath.Join(dir, name)
+	if err := mapx.Save(g, p); err != nil {
+		t.Fatal(err)
 	}
-	grava := func(nome string, g *mapx.Graph) string {
-		p := filepath.Join(dir, nome)
-		if err := mapx.Save(g, p); err != nil {
-			t.Fatal(err)
-		}
-		return p
-	}
+	return p
+}
 
-	// os dois lados compartilham a aresta A (julgada nos dois) e têm uma exclusiva cada
-	base := grava("base.yaml", &mapx.Graph{Edges: []mapx.Edge{aresta("a.spec.md", "a.ts")}})
-	nosso := grava("nosso.yaml", &mapx.Graph{Edges: []mapx.Edge{
-		aresta("a.spec.md", "a.ts", "review"),
-		aresta("b.spec.md", "b.ts", "rule-fulfilled"), // só nós
-	}})
-	deles := grava("deles.yaml", &mapx.Graph{Edges: []mapx.Edge{
-		aresta("a.spec.md", "a.ts", "review"),
-		aresta("c.spec.md", "c.ts", "review"), // só eles
-	}})
-
-	cmd := newMapMergeCmd()
-	cmd.SetArgs([]string{base, nosso, deles})
-	cmd.SetOut(os.Stderr)
-	cmd.SetErr(os.Stderr)
-	if err := cmd.Execute(); err != nil {
-		t.Fatalf("map merge: %v", err)
-	}
-
-	// o resultado vai em `nosso`, que é o que o git espera
-	g, err := mapx.Load(nosso)
+// runMerge runs the merge driver with the three paths git passes, and returns what it
+// wrote to stderr.
+func runMerge(t *testing.T, base, ours, theirs string) (string, error) {
+	t.Helper()
+	r, w, err := os.Pipe()
 	if err != nil {
 		t.Fatal(err)
 	}
-	por := map[string][]string{}
+	prev := os.Stderr
+	os.Stderr = w
+	cmd := newMapMergeCmd()
+	cmd.SetArgs([]string{base, ours, theirs})
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	cmd.SilenceUsage = true
+	runErr := cmd.Execute()
+	os.Stderr = prev
+	w.Close()
+	b, _ := io.ReadAll(r)
+	return string(b), runErr
+}
+
+func judgedEdge(from, to string, gates ...string) mapx.Edge {
+	e := mapx.Edge{Type: "specifies", From: from, To: to}
+	for _, g := range gates {
+		e.Julgamentos = append(e.Julgamentos, mapx.Judgment{Gate: g, Verdict: "ok"})
+	}
+	return e
+}
+
+// git treats `anchors.graph.yaml` as TEXT, and it is derived. Measured in blue-eyes
+// (co2-lab/anchors#12): a `git merge origin/develop` merged the map WITHOUT A CONFLICT and
+// erased 62 judgment stamps. A stamp is state of the work, and the REPORT lives in the
+// `--reason` of `anchors judge`, not in the file.
+func TestMapMerge_unitesTheStampsOfBothSides(t *testing.T) {
+	t.Run("MPMRM-B01: The merged map is written onto our side's file", func(t *testing.T) {})
+	t.Run("MPMRM-B04: An edge created only on the other branch arrives with its judgment", func(t *testing.T) {})
+	dir := t.TempDir()
+
+	// both sides share edge A (judged on both) and each has an exclusive one
+	base := saveGraph(t, dir, "base.yaml", &mapx.Graph{Edges: []mapx.Edge{judgedEdge("a.spec.md", "a.ts")}})
+	ours := saveGraph(t, dir, "ours.yaml", &mapx.Graph{Edges: []mapx.Edge{
+		judgedEdge("a.spec.md", "a.ts", "review"),
+		judgedEdge("b.spec.md", "b.ts", "rule-fulfilled"), // ours only
+	}})
+	theirs := saveGraph(t, dir, "theirs.yaml", &mapx.Graph{Edges: []mapx.Edge{
+		judgedEdge("a.spec.md", "a.ts", "review"),
+		judgedEdge("c.spec.md", "c.ts", "review"), // theirs only
+	}})
+
+	if _, err := runMerge(t, base, ours, theirs); err != nil {
+		t.Fatalf("map merge: %v", err)
+	}
+
+	// the result goes to `ours`, which is what git expects
+	g, err := mapx.Load(ours)
+	if err != nil {
+		t.Fatal(err)
+	}
+	by := map[string][]string{}
 	for _, e := range g.Edges {
 		for _, j := range e.Julgamentos {
-			por[e.From] = append(por[e.From], j.Gate)
+			by[e.From] = append(by[e.From], j.Gate)
 		}
 	}
-	for _, caso := range []struct{ from, gate string }{
-		{"a.spec.md", "review"},         // dos dois
-		{"b.spec.md", "rule-fulfilled"}, // só nosso — não pode sumir
-		{"c.spec.md", "review"},         // só deles — tem de vir
+	for _, c := range []struct{ from, gate string }{
+		{"a.spec.md", "review"},         // both
+		{"b.spec.md", "rule-fulfilled"}, // ours only — must not vanish
+		{"c.spec.md", "review"},         // theirs only — must arrive
 	} {
-		achou := false
-		for _, g := range por[caso.from] {
-			if g == caso.gate {
-				achou = true
+		found := false
+		for _, g := range by[c.from] {
+			if g == c.gate {
+				found = true
 			}
 		}
-		if !achou {
-			t.Errorf("o julgamento %q de %s sumiu na união: %v", caso.gate, caso.from, por)
+		if !found {
+			t.Errorf("the %q judgment of %s vanished in the union: %v", c.gate, c.from, by)
 		}
 	}
 }
 
-// União e não substituição: o lado que só tem carimbo NÃO pode perdê-lo para um lado que
-// não tem nenhum. É o caso do merge que apagou os 62 — um lado vazio venceria.
-func TestMapMerge_ladoVazioNaoApagaOOutro(t *testing.T) {
+// Union, not replacement: the side that has the stamp must NOT lose it to a side that has
+// none. That is the merge that erased the 62 — an empty side would win.
+func TestMapMerge_anEmptySideDoesNotEraseTheOther(t *testing.T) {
+	t.Run("MPMRM-B05: A side with no judgment on a shared edge does not erase the other side's", func(t *testing.T) {})
 	dir := t.TempDir()
-	comCarimbo := &mapx.Graph{Edges: []mapx.Edge{{
-		Type: "specifies", From: "a.spec.md", To: "a.ts",
-		Julgamentos: []mapx.Judgment{{Gate: "review", Verdict: "ok"}},
-	}}}
-	semCarimbo := &mapx.Graph{Edges: []mapx.Edge{{
-		Type: "specifies", From: "a.spec.md", To: "a.ts",
-	}}}
+	stamped := &mapx.Graph{Edges: []mapx.Edge{judgedEdge("a.spec.md", "a.ts", "review")}}
+	unstamped := &mapx.Graph{Edges: []mapx.Edge{judgedEdge("a.spec.md", "a.ts")}}
 
-	p := func(nome string, g *mapx.Graph) string {
-		caminho := filepath.Join(dir, nome)
-		if err := mapx.Save(g, caminho); err != nil {
-			t.Fatal(err)
-		}
-		return caminho
-	}
-
-	for _, caso := range []struct {
-		nome         string
-		nosso, deles *mapx.Graph
+	for _, c := range []struct {
+		name         string
+		ours, theirs *mapx.Graph
 	}{
-		{"o carimbo está do nosso lado", comCarimbo, semCarimbo},
-		{"o carimbo está do outro lado", semCarimbo, comCarimbo},
+		{"the stamp is on our side", stamped, unstamped},
+		{"the stamp is on the other side", unstamped, stamped},
 	} {
-		t.Run(caso.nome, func(t *testing.T) {
-			base := p("base-"+caso.nome+".yaml", semCarimbo)
-			nosso := p("nosso-"+caso.nome+".yaml", caso.nosso)
-			deles := p("deles-"+caso.nome+".yaml", caso.deles)
-
-			cmd := newMapMergeCmd()
-			cmd.SetArgs([]string{base, nosso, deles})
-			cmd.SetOut(os.Stderr)
-			cmd.SetErr(os.Stderr)
-			if err := cmd.Execute(); err != nil {
+		t.Run(c.name, func(t *testing.T) {
+			base := saveGraph(t, dir, "base-"+c.name+".yaml", unstamped)
+			ours := saveGraph(t, dir, "ours-"+c.name+".yaml", c.ours)
+			theirs := saveGraph(t, dir, "theirs-"+c.name+".yaml", c.theirs)
+			if _, err := runMerge(t, base, ours, theirs); err != nil {
 				t.Fatal(err)
 			}
-			g, err := mapx.Load(nosso)
+			g, err := mapx.Load(ours)
 			if err != nil {
 				t.Fatal(err)
 			}
 			if n := countJudgments(g); n != 1 {
-				t.Errorf("resultado com %d julgamento(s), queria 1 — o lado vazio apagou o outro", n)
+				t.Errorf("result with %d judgment(s), want 1 — the empty side erased the other", n)
 			}
 		})
 	}
 }
 
-// O DRIVER UNIA ARESTAS E CARIMBOS, E NUNCA OS NÓS.
-//
-// `Graph` guarda `Nodes` e `Edges` em listas separadas. O `addMissingEdges` reconciliava
-// uma delas; a outra saía do merge como o lado `nosso` a tinha, e todo nó que existia só
-// no lado incoming desaparecia.
-//
-// MEDIDO no blue-eyes (#730): base 329 nós, nosso 330, deles 332, resultado 330 — sumiram
-// os três que só existiam do lado deles. E o git reporta "Automatic merge went well".
-//
-// O formato do dano é o pior possível: o arquivo continua REGIDO (o `check` o reconhece)
-// e não está no mapa, então nenhum gate o confronta. O `map build` seguinte reinsere os
-// nós — quem mescla e roda `map build` nunca vê o problema, e quem mescla e empurra
-// publica um mapa que perdeu governança em silêncio.
-func TestMapMerge_naoPerdeNoQueSoExisteDoOutroLado(t *testing.T) {
+// THE DRIVER UNITED EDGES AND STAMPS, AND NEVER THE NODES. Measured in blue-eyes (#730):
+// base 329 nodes, ours 330, theirs 332, result 330 — and git reports "Automatic merge went
+// well". The file stays governed and is not in the map, so no gate confronts it.
+func TestMapMerge_keepsTheNodesOnlyTheOtherSideHas(t *testing.T) {
+	t.Run("MPMRM-B02: A node created only on the other branch reaches the merged map", func(t *testing.T) {})
+	t.Run("MPMRM-I01: Nothing of either side is missing from the merged map", func(t *testing.T) {})
 	dir := t.TempDir()
-	grava := func(nome string, g *mapx.Graph) string {
-		p := filepath.Join(dir, nome)
-		if err := mapx.Save(g, p); err != nil {
-			t.Fatal(err)
-		}
-		return p
-	}
-	no := func(id string) mapx.Node { return mapx.Node{ID: id, Kind: "spec", Rev: "r1"} }
+	node := func(id string) mapx.Node { return mapx.Node{ID: id, Kind: "spec", Rev: "r1"} }
 
-	base := grava("base.yaml", &mapx.Graph{Nodes: []mapx.Node{no("comum.spec.md")}})
-	nosso := grava("nosso.yaml", &mapx.Graph{Nodes: []mapx.Node{
-		no("comum.spec.md"), no("so-nosso.spec.md"),
-	}})
-	deles := grava("deles.yaml", &mapx.Graph{Nodes: []mapx.Node{
-		no("comum.spec.md"), no("so-deles-1.spec.md"), no("so-deles-2.spec.md"),
-	}})
+	base := saveGraph(t, dir, "base.yaml", &mapx.Graph{Nodes: []mapx.Node{node("common.spec.md")}})
+	ours := saveGraph(t, dir, "ours.yaml", &mapx.Graph{
+		Nodes: []mapx.Node{node("common.spec.md"), node("ours-only.spec.md")},
+		Edges: []mapx.Edge{judgedEdge("ours-only.spec.md", "o.ts")},
+	})
+	theirs := saveGraph(t, dir, "theirs.yaml", &mapx.Graph{
+		Nodes: []mapx.Node{node("common.spec.md"), node("theirs-only-1.spec.md"), node("theirs-only-2.spec.md")},
+		Edges: []mapx.Edge{judgedEdge("theirs-only-1.spec.md", "t.ts")},
+	})
 
-	cmd := newMapMergeCmd()
-	cmd.SetArgs([]string{base, nosso, deles})
-	cmd.SetOut(os.Stderr)
-	cmd.SetErr(os.Stderr)
-	if err := cmd.Execute(); err != nil {
+	if _, err := runMerge(t, base, ours, theirs); err != nil {
 		t.Fatalf("map merge: %v", err)
 	}
-
-	g, err := mapx.Load(nosso)
+	g, err := mapx.Load(ours)
 	if err != nil {
 		t.Fatal(err)
 	}
-	tem := map[string]bool{}
+	has := map[string]bool{}
 	for _, n := range g.Nodes {
-		tem[n.ID] = true
+		has[n.ID] = true
 	}
-	for _, id := range []string{
-		"comum.spec.md",      // dos dois
-		"so-nosso.spec.md",   // só nosso — não pode sumir
-		"so-deles-1.spec.md", // só deles — tem de vir
-		"so-deles-2.spec.md", // só deles — tem de vir
-	} {
-		if !tem[id] {
-			t.Errorf("o nó %q sumiu na união (mapa ficou com %d nós: %v)", id, len(g.Nodes), tem)
+	for _, id := range []string{"common.spec.md", "ours-only.spec.md", "theirs-only-1.spec.md", "theirs-only-2.spec.md"} {
+		if !has[id] {
+			t.Errorf("node %q vanished in the union (the map kept %d nodes: %v)", id, len(g.Nodes), has)
 		}
+	}
+	edges := map[string]bool{}
+	for _, e := range g.Edges {
+		edges[e.From] = true
+	}
+	if !edges["ours-only.spec.md"] || !edges["theirs-only-1.spec.md"] {
+		t.Errorf("an edge of one side is missing from the result: %v", edges)
+	}
+}
+
+func TestMapMerge_aCommonNodeKeepsOurRevision(t *testing.T) {
+	t.Run("MPMRM-B03: A node both sides have keeps our side's revision", func(t *testing.T) {})
+	dir := t.TempDir()
+	ours := saveGraph(t, dir, "ours.yaml", &mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: "spec", Rev: "r-ours"}}})
+	theirs := saveGraph(t, dir, "theirs.yaml", &mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: "spec", Rev: "r-theirs"}}})
+	if _, err := runMerge(t, ours, ours, theirs); err != nil {
+		t.Fatal(err)
+	}
+	g, err := mapx.Load(ours)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(g.Nodes) != 1 || g.Nodes[0].Rev != "r-ours" {
+		t.Errorf("the common node must keep our revision, got %+v", g.Nodes)
+	}
+}
+
+func TestMapMerge_reportsOnStderr(t *testing.T) {
+	t.Run("MPMRM-B06: The driver reports on the error stream what it kept and what came from the other side", func(t *testing.T) {})
+	dir := t.TempDir()
+	ours := saveGraph(t, dir, "ours.yaml", &mapx.Graph{Edges: []mapx.Edge{judgedEdge("a.spec.md", "a.ts", "review")}})
+	theirs := saveGraph(t, dir, "theirs.yaml", &mapx.Graph{Edges: []mapx.Edge{judgedEdge("b.spec.md", "b.ts", "review")}})
+	out, err := runMerge(t, ours, ours, theirs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "2 judgment(s) preserved (1 came from the other side)") {
+		t.Errorf("unexpected report:\n%s", out)
+	}
+	// Nothing new from the other side: no "came from" clause.
+	again, _ := runMerge(t, ours, ours, theirs)
+	if !strings.Contains(again, "2 judgment(s) preserved\n") {
+		t.Errorf("a merge that brought nothing must not claim anything came from the other side:\n%s", again)
+	}
+}
+
+func TestMapMerge_neverReadsTheBase(t *testing.T) {
+	t.Run("MPMRM-X01: The base version is never read", func(t *testing.T) {})
+	dir := t.TempDir()
+	ours := saveGraph(t, dir, "ours.yaml", &mapx.Graph{Edges: []mapx.Edge{judgedEdge("a.spec.md", "a.ts")}})
+	theirs := saveGraph(t, dir, "theirs.yaml", &mapx.Graph{Edges: []mapx.Edge{judgedEdge("a.spec.md", "a.ts", "review")}})
+	if _, err := runMerge(t, filepath.Join(dir, "no-such-base.yaml"), ours, theirs); err != nil {
+		t.Errorf("a missing base must not matter: %v", err)
+	}
+}
+
+func TestMapMerge_failures(t *testing.T) {
+	t.Run("MPMRM-E01: An unreadable side fails the merge naming the side", func(t *testing.T) {})
+	t.Run("MPMRM-E02: A call with two paths is refused", func(t *testing.T) {})
+	dir := t.TempDir()
+	ours := saveGraph(t, dir, "ours.yaml", &mapx.Graph{Edges: []mapx.Edge{judgedEdge("a.spec.md", "a.ts", "review")}})
+	before, _ := os.ReadFile(ours)
+
+	if _, err := runMerge(t, ours, ours, filepath.Join(dir, "missing.yaml")); err == nil ||
+		!strings.Contains(err.Error(), "read the other side") {
+		t.Errorf("a missing other side: got %v", err)
+	}
+	if after, _ := os.ReadFile(ours); string(after) != string(before) {
+		t.Error("a failed merge rewrote our side")
+	}
+	bad := filepath.Join(dir, "bad.yaml")
+	if err := os.WriteFile(bad, []byte(":::\n\tnot yaml"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runMerge(t, ours, bad, ours); err == nil || !strings.Contains(err.Error(), "read our side") {
+		t.Errorf("an unparseable side of ours: got %v", err)
+	}
+
+	cmd := newMapMergeCmd()
+	cmd.SetArgs([]string{ours, ours})
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	if err := cmd.Execute(); err == nil || !strings.Contains(err.Error(), "accepts 3 arg") {
+		t.Errorf("two arguments must be refused: %v", err)
 	}
 }

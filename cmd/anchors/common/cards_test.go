@@ -34,6 +34,11 @@ func workflowCfg() *config.Config {
 // The cards whose LAST owner is this agent, parsed from gh's tab-separated lines; the
 // state label loses its `anchors:` prefix, and malformed lines are skipped.
 func TestAgentCards_parsesTheCardsOfThisAgent(t *testing.T) {
+	t.Run("AGCRG-B02: The tracker is asked for the open cards of the repository owned by this agent", func(t *testing.T) {})
+	t.Run("AGCRG-B03: A card line becomes a card whose state loses the anchors prefix", func(t *testing.T) {})
+	t.Run("AGCRG-B04: Malformed card lines are skipped", func(t *testing.T) {})
+	t.Run("AGCRG-I01: Every returned card has a number and a state without prefix", func(t *testing.T) {})
+	t.Run("AGCRG-X01: Ownership is selected by the question sent to the tracker", func(t *testing.T) {})
 	args := fakeGH(t, "12\tFix the parser\tanchors:doing\n40\tWrite docs\t\nbroken line\n\tno number\tx\n51\tShip it\tanchors:review\n", 0)
 	t.Setenv("ANCHORS_AGENT", "host/worker-1")
 
@@ -61,6 +66,7 @@ func TestAgentCards_parsesTheCardsOfThisAgent(t *testing.T) {
 // A card with no state label is kept in the LAST position too: its line ends in the tab
 // of the empty field, and trimming the whole output ate it.
 func TestAgentCards_lastCardWithoutStateIsKept(t *testing.T) {
+	t.Run("AGCRG-B05: A card with no state kept as the last line", func(t *testing.T) {})
 	fakeGH(t, "12\tFix the parser\tanchors:doing\n40\tWrite docs\t\n", 0)
 	t.Setenv("ANCHORS_AGENT", "host/worker-1")
 	got := AgentCards(workflowCfg())
@@ -75,6 +81,8 @@ func TestAgentCards_lastCardWithoutStateIsKept(t *testing.T) {
 
 // No agent name, no workflow, no gh, or gh failing: no cards, and no error to trip on.
 func TestAgentCards_nothingWithoutTheIngredients(t *testing.T) {
+	t.Run("AGCRG-B01: Without an agent name, a workflow or the tracker client there are no cards", func(t *testing.T) {})
+	t.Run("AGCRG-E01: A failing tracker client gives no cards", func(t *testing.T) {})
 	fakeGH(t, "12\tFix\tanchors:doing\n", 0)
 	t.Setenv("ANCHORS_AGENT", "")
 	if got := AgentCards(workflowCfg()); got != nil {
@@ -100,6 +108,8 @@ func TestAgentCards_nothingWithoutTheIngredients(t *testing.T) {
 }
 
 func TestFirstLineOfReason(t *testing.T) {
+	t.Run("AGCRG-B06: The issue title keeps the first line of the reason", func(t *testing.T) {})
+	t.Run("AGCRG-B07: A long title is cut to 70 with an ellipsis", func(t *testing.T) {})
 	if got := FirstLineOfReason("  the parser drops the header  \nmore detail\n"); got != "the parser drops the header" {
 		t.Errorf("first line: %q", got)
 	}
@@ -114,6 +124,7 @@ func TestFirstLineOfReason(t *testing.T) {
 }
 
 func TestNumeroDaIssue(t *testing.T) {
+	t.Run("AGCRG-B08: The issue number is read from the last segment of the URL", func(t *testing.T) {})
 	for url, want := range map[string]string{
 		"https://github.com/acme/app/issues/433":   "433",
 		"https://github.com/acme/app/issues/433\n": "433",
@@ -129,6 +140,9 @@ func TestNumeroDaIssue(t *testing.T) {
 
 // The card a PR declares is read from `Refs/Closes/Fixes/Resolves #N` at a line start.
 func TestCardDoPR_readsTheLinkInTheBody(t *testing.T) {
+	t.Run("AGCRG-B09: The card of a pull request is the first closing keyword at a line start", func(t *testing.T) {})
+	t.Run("AGCRG-B10: The pull request reference is normalised before asking the tracker", func(t *testing.T) {})
+	t.Run("AGCRG-E02: A failing tracker client gives no pull request card", func(t *testing.T) {})
 	args := fakeGH(t, "Some summary.\n\nCloses #77\nRefs #80\n", 0)
 	if got := CardDoPR("acme/app", " #15 "); got != "77" {
 		t.Errorf("got %q, want 77", got)
@@ -136,6 +150,11 @@ func TestCardDoPR_readsTheLinkInTheBody(t *testing.T) {
 	b, _ := os.ReadFile(args)
 	if !strings.HasPrefix(string(b), "pr\nview\n15\n--repo\nacme/app\n") {
 		t.Errorf("gh called with the wrong arguments:\n%s", b)
+	}
+
+	fakeGH(t, "fixes #5\n", 0)
+	if got := CardDoPR("acme/app", "15"); got != "5" {
+		t.Errorf("the keyword is matched in any letter case: got %q, want 5", got)
 	}
 
 	fakeGH(t, "mentions closes #9 in the middle of a line\n", 0)

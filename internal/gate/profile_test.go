@@ -7,6 +7,9 @@ import (
 )
 
 func TestAggregate_countsVerdictsPerGate(t *testing.T) {
+	t.Run("PRFLO-B01: Each gate gets a summary counting its verdicts", func(t *testing.T) {})
+	t.Run("PRFLO-B03: Every failed result is listed as a failure", func(t *testing.T) {})
+	t.Run("PRFLO-B06: Results awaiting judgement are listed as awaiting judgement", func(t *testing.T) {})
 	results := []Result{
 		{Gate: "a", Target: "x", Verdict: Pass, Blocking: true, Duracao: 2 * time.Millisecond},
 		{Gate: "a", Target: "y", Verdict: Pass, Blocking: true, Duracao: 5 * time.Millisecond},
@@ -43,6 +46,7 @@ func TestAggregate_countsVerdictsPerGate(t *testing.T) {
 }
 
 func TestAggregate_worstIsTheMostExpensiveSingleRun(t *testing.T) {
+	t.Run("PRFLO-B02: The summary carries the total time and the most expensive run", func(t *testing.T) {})
 	p := Aggregate([]Result{
 		{Gate: "a", Verdict: Pass, Duracao: 7 * time.Millisecond},
 		{Gate: "a", Verdict: Pass, Duracao: 7 * time.Millisecond},
@@ -54,12 +58,17 @@ func TestAggregate_worstIsTheMostExpensiveSingleRun(t *testing.T) {
 }
 
 func TestAggregate_whatBlocksPromotion(t *testing.T) {
+	t.Run("PRFLO-B04: Only a failure of a blocking gate blocks promotion", func(t *testing.T) {})
+	t.Run("PRFLO-B05: A pending verdict blocks only when its gate blocks and it impedes", func(t *testing.T) {})
+	t.Run("PRFLO-I01: Promotion is refused exactly when something blocks", func(t *testing.T) {})
+	t.Run("PRFLO-X01: The profile does not decide whether a pending impedes", func(t *testing.T) {})
 	cases := []struct {
 		name   string
 		r      Result
 		passed bool
 	}{
 		{"a non-blocking fail does not block", Result{Gate: "a", Verdict: Fail}, true},
+		{"a blocking fail blocks", Result{Gate: "a", Verdict: Fail, Blocking: true}, false},
 		{"a blocking pending that does not impede does not block", Result{Gate: "a", Verdict: Pending, Blocking: true}, true},
 		{"a pending that impedes on a non-blocking gate does not block", Result{Gate: "a", Verdict: Pending, Impede: true}, true},
 		{"a blocking pending that impedes blocks", Result{Gate: "a", Verdict: Pending, Blocking: true, Impede: true}, false},
@@ -75,6 +84,8 @@ func TestAggregate_whatBlocksPromotion(t *testing.T) {
 }
 
 func TestProfile_NodeVerdicts(t *testing.T) {
+	t.Run("PRFLO-B07: Per-node verdicts include only confronted nodes, sorted", func(t *testing.T) {})
+	t.Run("PRFLO-B08: A node is failed when a blocking gate failed on it", func(t *testing.T) {})
 	p := Aggregate([]Result{
 		{Gate: "a", Target: "c.go", Verdict: Pass, Blocking: true},
 		{Gate: "b", Target: "c.go", Verdict: Fail, Blocking: true},

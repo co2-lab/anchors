@@ -5,97 +5,115 @@ import (
 	"testing"
 )
 
-// A CORRENTE de passos é o que torna a atualização barata: acrescentar um formato é
-// acrescentar um arquivo `formato_N.go`, e nada mais precisa saber que ele existe.
+// The CHAIN of steps is what makes upgrading cheap: adding a format is adding a
+// `format_N.go` file, and nothing else needs to know it exists.
 //
-// O que estes testes protegem é a propriedade que faz isso funcionar — que não há BURACO.
-// Um projeto no formato 2 indo para o 4 sem o passo que produz o 3 receberia o número novo
-// com o conteúdo velho, e o arquivo passaria a mentir sobre o próprio formato.
+// What these tests protect is the property that makes it work — that there is no HOLE. A
+// project on format 2 going to 4 without the step that produces 3 would get the new number
+// with the old content, and the file would start lying about its own format.
 
-func TestStepsFrom_devolveOsPassosEmOrdem(t *testing.T) {
-	original := steps
-	defer func() { steps = original }()
-	steps = nil
-	Register(Step{To: 3, Why: "terceiro"})
-	Register(Step{To: 2, Why: "segundo"})
+func TestStepsFrom_returnsTheStepsInOrder(t *testing.T) {
+	t.Run("MSCMG-B02: The steps between two formats come in ascending order", func(t *testing.T) {})
+	withSteps(t, Step{To: 3, Why: "third"}, Step{To: 2, Why: "second"})
 
 	got, err := StepsFrom(1, 3)
 	if err != nil {
-		t.Fatalf("erro inesperado: %v", err)
+		t.Fatalf("unexpected error: %v", err)
 	}
 	if len(got) != 2 || got[0].To != 2 || got[1].To != 3 {
-		t.Fatalf("esperava 1→2→3 nessa ordem; veio %v", got)
+		t.Fatalf("expected 1→2→3 in that order; got %v", got)
 	}
 }
 
-// Registrar fora de ordem não pode produzir migração fora de ordem: os arquivos
-// `formato_N.go` são carregados na ordem que o Go decidir, não na numérica.
-func TestRegister_ordenaIndependenteDaOrdemDeRegistro(t *testing.T) {
-	original := steps
-	defer func() { steps = original }()
-	steps = nil
-	Register(Step{To: 4})
-	Register(Step{To: 2})
-	Register(Step{To: 3})
+// Registering out of order cannot produce a migration out of order: the `format_N.go` files
+// load in the order Go decides, not the numeric one.
+func TestRegister_sortsWhateverTheRegistrationOrder(t *testing.T) {
+	t.Run("MSCMG-B01: Steps registered out of order are kept sorted", func(t *testing.T) {})
+	withSteps(t, Step{To: 4}, Step{To: 2}, Step{To: 3})
 
 	for i, s := range steps {
 		if s.To != i+2 {
-			t.Fatalf("os passos deveriam estar ordenados por formato; veio %v", steps)
+			t.Fatalf("the steps should be sorted by format; got %v", steps)
 		}
 	}
 }
 
-// O BURACO é erro, e não silêncio. Sem o passo que produz o 3, um projeto no 2 não pode ir
-// para o 4 fingindo que o 3 não existiu — e a mensagem tem de dizer QUAL passo falta, senão
-// quem lê não sabe o que escrever.
-func TestStepsFrom_buracoNaCorrenteEhErro(t *testing.T) {
-	original := steps
-	defer func() { steps = original }()
-	steps = nil
-	Register(Step{To: 2})
-	Register(Step{To: 4}) // falta o 3
+// The HOLE is an error, not silence. Without the step that produces 3, a project on 2 cannot
+// go to 4 pretending 3 never existed — and the message must say WHICH step is missing, or
+// whoever reads does not know what to write.
+func TestStepsFrom_aHoleInTheChainIsAnError(t *testing.T) {
+	t.Run("MSCMG-E01: A hole in the chain is an error naming the missing format", func(t *testing.T) {})
+	withSteps(t, Step{To: 2}, Step{To: 4}) // 3 is missing
 
 	_, err := StepsFrom(1, 4)
 	if err == nil {
-		t.Fatal("um buraco na corrente tem de ser erro")
+		t.Fatal("a hole in the chain must be an error")
 	}
 	if !strings.Contains(err.Error(), "format 3") {
-		t.Errorf("a mensagem deveria nomear o passo que falta; veio: %v", err)
+		t.Errorf("the message should name the missing step; got: %v", err)
 	}
 }
 
-// Nada a fazer é resposta válida, e não erro: um projeto já no formato atual chama o
-// migrador a cada comando, e responder erro faria o `check` reprovar por estar em dia.
-func TestStepsFrom_jaNoFormatoAtualNaoTemPasso(t *testing.T) {
+func TestStepsFrom_aTargetBeyondTheLastStepIsAnError(t *testing.T) {
+	t.Run("MSCMG-E02: A target beyond the last step is an error naming the first missing format", func(t *testing.T) {})
+	withSteps(t, Step{To: 2}, Step{To: 3})
+
+	_, err := StepsFrom(1, 5)
+	if err == nil || !strings.Contains(err.Error(), "format 4") {
+		t.Errorf("expected an error naming format 4, got %v", err)
+	}
+}
+
+// Nothing to do is a valid answer, not an error: a project already on the current format
+// calls the migrator on every command, and answering an error would make `check` fail for
+// being up to date.
+func TestStepsFrom_alreadyAtTheTargetHasNoStep(t *testing.T) {
+	t.Run("MSCMG-B03: A file already at the target needs no step", func(t *testing.T) {})
 	got, err := StepsFrom(2, 2)
 	if err != nil {
-		t.Fatalf("estar em dia não é erro: %v", err)
+		t.Fatalf("being up to date is not an error: %v", err)
 	}
 	if len(got) != 0 {
-		t.Errorf("nada a migrar deveria devolver zero passos; veio %d", len(got))
+		t.Errorf("nothing to migrate should return zero steps; got %d", len(got))
 	}
 }
 
-// O PASSO 1→2 está registrado de verdade — não só a mecânica funciona, o conteúdo existe.
-// Sem esta asserção, remover o `formato_2.go` deixaria a suíte verde e o produto sem
-// migração nenhuma.
-func TestPassoDoFormato2_estaRegistradoEConverte(t *testing.T) {
-	var p *Step
-	for i := range steps {
-		if steps[i].To == 2 {
-			p = &steps[i]
+func TestStepsFrom_onlyTheStepsInsideTheInterval(t *testing.T) {
+	t.Run("MSCMG-X01: Only the steps inside the interval are returned", func(t *testing.T) {})
+	withSteps(t, Step{To: 2}, Step{To: 3}, Step{To: 4})
+
+	got, err := StepsFrom(2, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || got[0].To != 3 {
+		t.Errorf("expected only the step producing 3; got %v", got)
+	}
+}
+
+func TestRenamedKey_answersForAnyStepAndFile(t *testing.T) {
+	t.Run("MSCMG-B04: A key some step renames is reported as renamed", func(t *testing.T) {})
+	for key, want := range map[string]bool{
+		"julgamentos":  true,  // format 2, the map
+		"rule_marking": true,  // format 4, the configuration
+		"no_such_key":  false, // a typo
+		"judgments":    false, // a NEW name is not an old key
+	} {
+		if got := RenamedKey(key); got != want {
+			t.Errorf("RenamedKey(%q) = %v, want %v", key, got, want)
 		}
 	}
-	if p == nil {
-		t.Fatal("o passo que produz o formato 2 não está registrado")
+}
+
+func TestAllSteps_returnsACopy(t *testing.T) {
+	t.Run("MSCMG-I01: The listed steps are a copy of the registry", func(t *testing.T) {})
+	listed := AllSteps()
+	if len(listed) == 0 {
+		t.Fatal("the real registry should have steps")
 	}
-	if p.RenameKeys["anchors.graph.yaml"]["julgamentos"] != "judgments" {
-		t.Error("o passo 1→2 tem de converter `julgamentos` — é o que preserva os carimbos")
-	}
-	if p.RenameValues["anchors.graph.yaml"]["gate"]["regra-cumprida"] != "rule-fulfilled" {
-		t.Error("o passo 1→2 tem de converter os NOMES DE GATE gravados nos carimbos")
-	}
-	if p.Why == "" {
-		t.Error("todo passo precisa dizer o que mudou — é o que quem revisa o diff lê antes de abri-lo")
+	why := listed[0].Why
+	listed[0].Why = "changed by a caller"
+	if AllSteps()[0].Why != why {
+		t.Error("changing the listed steps changed the registry")
 	}
 }

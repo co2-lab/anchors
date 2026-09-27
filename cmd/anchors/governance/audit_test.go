@@ -46,6 +46,8 @@ func auditFiles() map[string]string {
 // Without --impact the dossier is the file alone: the gates that apply to its kind,
 // grouped under the target, and nothing about the other nodes.
 func TestAuditFileOnly(t *testing.T) {
+	t.Run("DTAUI-B02: Without impact the dossier covers the file alone", func(t *testing.T) {})
+	t.Run("DTAUI-B04: A gate result shows by verdict with the first line of its detail", func(t *testing.T) {})
 	dir := govProject(t, auditYAML, auditFiles(), auditGraph())
 
 	out, err := runCmd(t, newAuditCmd(), "--root", dir, "a.go")
@@ -78,6 +80,7 @@ func TestAuditFileOnly(t *testing.T) {
 
 // With --impact the unit's other nodes join the scope and print after the target.
 func TestAuditWithImpactIncludesTheUnit(t *testing.T) {
+	t.Run("DTAUI-B03: With impact the dossier covers the unit on the impact path", func(t *testing.T) {})
 	dir := govProject(t, auditYAML, auditFiles(), auditGraph())
 
 	out, err := runCmd(t, newAuditCmd(), "--root", dir, "--impact", "a.spec.md")
@@ -96,6 +99,7 @@ func TestAuditWithImpactIncludesTheUnit(t *testing.T) {
 }
 
 func TestAuditRefusesAFileOutsideTheMap(t *testing.T) {
+	t.Run("DTAUI-B01: A file the map does not know is refused", func(t *testing.T) {})
 	files := auditFiles()
 	files["new.go"] = "package a\n"
 	dir := govProject(t, auditYAML, files, auditGraph())
@@ -107,19 +111,26 @@ func TestAuditRefusesAFileOutsideTheMap(t *testing.T) {
 }
 
 func TestAuditWithoutConfigOrMapFails(t *testing.T) {
+	t.Run("DTAUI-E01: A project without configuration fails loading it", func(t *testing.T) {})
+	t.Run("DTAUI-E02: A project without a map fails pointing at the map build", func(t *testing.T) {})
 	dir := t.TempDir()
 	if _, err := runCmd(t, newAuditCmd(), "--root", dir, "a.go"); err == nil || !strings.Contains(err.Error(), "load config") {
 		t.Errorf("no anchors.yaml must fail loading the config; got %v", err)
 	}
 	dir = govProject(t, auditYAML, auditFiles(), nil)
-	if _, err := runCmd(t, newAuditCmd(), "--root", dir, "a.go"); err == nil || !strings.Contains(err.Error(), "load map") {
-		t.Errorf("no map must fail loading the map; got %v", err)
+	if _, err := runCmd(t, newAuditCmd(), "--root", dir, "a.go"); err == nil || !strings.Contains(err.Error(), "load map") ||
+		!strings.Contains(err.Error(), "run `anchors map build`") {
+		t.Errorf("no map must fail loading the map and point at `anchors map build`; got %v", err)
 	}
 }
 
 // printAudit is the dossier's shape: pass/skip vanish, a warn doctor finding counts, an
 // info one does not, and a finding about a node outside the scope is dropped.
 func TestPrintAuditCountsOnlyActionableItems(t *testing.T) {
+	t.Run("DTAUI-B05: A doctor finding shows by severity when it cites a node in scope", func(t *testing.T) {})
+	t.Run("DTAUI-B06: Only a failing gate and a warning finding count as actionable", func(t *testing.T) {})
+	t.Run("DTAUI-B08: The target prints first and the impact nodes after it", func(t *testing.T) {})
+	t.Run("DTAUI-I01: Nothing outside the audited scope reaches the dossier", func(t *testing.T) {})
 	ids := map[string]bool{"a.go": true, "a.spec.md": true}
 	results := []gate.Result{
 		{Gate: "ok", Target: "a.go", Verdict: gate.Pass},
@@ -161,6 +172,7 @@ func TestPrintAuditCountsOnlyActionableItems(t *testing.T) {
 }
 
 func TestPrintAuditNothingPending(t *testing.T) {
+	t.Run("DTAUI-B07: A scope with nothing pending says so", func(t *testing.T) {})
 	out := captureStdout(t, func() {
 		_ = printAudit("a.go", false, nil, []gate.Result{{Gate: "ok", Target: "a.go", Verdict: gate.Pass}}, health.Report{}, map[string]bool{"a.go": true})
 	})

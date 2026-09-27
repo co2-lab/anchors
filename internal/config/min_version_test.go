@@ -1,148 +1,200 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
 
-// `min_version` existe para o momento em que uma correção do Anchors precisa alcançar todo
-// mundo antes que o trabalho continue. A conferência anterior comparava o binário com o
-// `gerado_por` do mapa — campo DERIVADO, reescrito pelo próximo `map build` de qualquer
-// agente. Medido: ele voltou a "dev" num projeto onde a release corrente era a v0.1.83.
+// `min_version` exists for the moment an Anchors fix must reach everyone before work goes
+// on. The previous check compared the binary with the map's `gerado_por` — a DERIVED field,
+// rewritten by any agent's next `map build`. Measured: it went back to "dev" in a project
+// whose current release was v0.1.83.
 //
-// Aqui a declaração é de uma pessoa, no arquivo que o time versiona.
+// Here the declaration is a person's, in the file the team versions.
 
-func TestAtendeMinVersion_aOrdemEhOrdinalNaoIgualdade(t *testing.T) {
-	casos := []struct {
-		minimo, rodando string
-		atende          bool
+func TestAtendeMinVersion_orderIsOrdinalNotEquality(t *testing.T) {
+	t.Run("MNVRM-B01: Versions are ordered part by part as numbers", func(t *testing.T) {})
+	cases := []struct {
+		minimum, running string
+		satisfies        bool
 	}{
-		{"0.1.84", "0.1.84", true},  // exatamente o mínimo
-		{"0.1.84", "0.1.85", true},  // mais novo atende
-		{"0.1.84", "0.2.0", true},   // minor maior
-		{"0.1.84", "1.0.0", true},   // major maior
-		{"0.1.84", "0.1.83", false}, // patch menor
-		{"0.1.84", "0.1.9", false},  // 9 < 84: é NÚMERO, não texto
-		{"0.2.0", "0.1.99", false},  // minor manda sobre patch
-		{"1.0.0", "0.99.99", false}, // major manda sobre tudo
+		{"0.1.84", "0.1.84", true},  // exactly the minimum
+		{"0.1.84", "0.1.85", true},  // newer satisfies
+		{"0.1.84", "0.2.0", true},   // greater minor
+		{"0.1.84", "1.0.0", true},   // greater major
+		{"0.1.84", "0.1.83", false}, // smaller patch
+		{"0.1.84", "0.1.9", false},  // 9 < 84: a NUMBER, not text
+		{"0.2.0", "0.1.99", false},  // minor rules over patch
+		{"1.0.0", "0.99.99", false}, // major rules over everything
 	}
-	for _, c := range casos {
-		got, err := AtendeMinVersion(c.minimo, c.rodando)
+	for _, c := range cases {
+		got, err := AtendeMinVersion(c.minimum, c.running)
 		if err != nil {
-			t.Errorf("min=%s rodando=%s: erro inesperado %v", c.minimo, c.rodando, err)
+			t.Errorf("min=%s running=%s: unexpected error %v", c.minimum, c.running, err)
 			continue
 		}
-		if got != c.atende {
-			t.Errorf("min=%s rodando=%s: esperava atende=%v", c.minimo, c.rodando, c.atende)
+		if got != c.satisfies {
+			t.Errorf("min=%s running=%s: want satisfies=%v", c.minimum, c.running, c.satisfies)
 		}
 	}
 }
 
-// A comparação por TEXTO daria a resposta errada aqui, e este é o caso que a expõe:
-// "0.1.9" > "0.1.84" em ordem lexicográfica, e é MENOR em versão.
-func TestAtendeMinVersion_naoComparaComoTexto(t *testing.T) {
+// Comparing as TEXT would give the wrong answer here, and this is the case that exposes it:
+// "0.1.9" > "0.1.84" in lexicographic order, and it is SMALLER as a version.
+func TestAtendeMinVersion_doesNotCompareAsText(t *testing.T) {
+	t.Run("MNVRM-B01: Versions are ordered part by part as numbers", func(t *testing.T) {})
 	if "0.1.9" <= "0.1.84" {
-		t.Skip("a premissa do teste mudou: a ordem lexicográfica deixou de inverter aqui")
+		t.Skip("the test's premise changed: lexicographic order no longer inverts here")
 	}
-	atende, err := AtendeMinVersion("0.1.84", "0.1.9")
+	satisfies, err := AtendeMinVersion("0.1.84", "0.1.9")
 	if err != nil {
-		t.Fatalf("erro inesperado: %v", err)
+		t.Fatalf("unexpected error: %v", err)
 	}
-	if atende {
-		t.Error("0.1.9 é MENOR que 0.1.84 — a comparação está sendo feita como texto")
+	if satisfies {
+		t.Error("0.1.9 is SMALLER than 0.1.84 — the comparison is being made as text")
 	}
 }
 
-// Sem mínimo declarado, todo binário atende: a maioria dos projetos não declara, e exigir a
-// declaração para poder trabalhar inverteria o padrão.
-func TestAtendeMinVersion_semMinimoTodoMundoAtende(t *testing.T) {
-	for _, rodando := range []string{"0.0.1", "dev", "", "qualquer-coisa"} {
-		atende, err := AtendeMinVersion("", rodando)
+// With no minimum declared, every binary satisfies: most projects do not declare one, and
+// requiring the declaration in order to work would invert the default.
+func TestAtendeMinVersion_noMinimumEveryoneSatisfies(t *testing.T) {
+	t.Run("MNVRM-B03: With no minimum declared, any running binary satisfies it", func(t *testing.T) {})
+	for _, running := range []string{"0.0.1", "dev", "", "anything"} {
+		satisfies, err := AtendeMinVersion("", running)
 		if err != nil {
-			t.Errorf("rodando=%q: sem mínimo não deveria haver erro, veio %v", rodando, err)
+			t.Errorf("running=%q: with no minimum there should be no error, got %v", running, err)
 		}
-		if !atende {
-			t.Errorf("rodando=%q: sem mínimo declarado, deveria atender", rodando)
+		if !satisfies {
+			t.Errorf("running=%q: with no minimum declared, it should satisfy", running)
 		}
 	}
 }
 
-// `dev` NÃO É ORDENÁVEL, e fingir que é seria pior que recusar a comparação.
+// `dev` IS NOT ORDERABLE, and pretending it is would be worse than refusing to compare.
 //
-// Um build local pode ser mais novo que qualquer release (a árvore de quem desenvolve o
-// Anchors) ou mais velho que todas. Quem chama decide o que fazer com o erro; o que não se
-// faz é responder "atende" ou "não atende" sem base.
-func TestAtendeMinVersion_devNaoEhOrdenavel(t *testing.T) {
-	for _, rodando := range []string{"dev", "0.1", "0.1.84-rc1", "v-nada", "1.2.3.4"} {
-		_, err := AtendeMinVersion("0.1.84", rodando)
+// A local build may be newer than any release (the tree of whoever develops Anchors) or
+// older than all of them. The caller decides what to do with the error; what is not done
+// is answering "satisfies" or "does not" without grounds.
+func TestAtendeMinVersion_devIsNotOrderable(t *testing.T) {
+	t.Run("MNVRM-B04: A running version that cannot be ordered does not satisfy, and says why", func(t *testing.T) {})
+	t.Run("MNVRM-X01: A pre-release is never compared as if it were its final release", func(t *testing.T) {})
+	for _, running := range []string{"dev", "", "0.1", "0.1.84-rc1", "0.1.85-rc1", "v-nothing", "1.2.3.4"} {
+		satisfies, err := AtendeMinVersion("0.1.84", running)
 		if err == nil {
-			t.Errorf("rodando=%q deveria recusar a comparação, e respondeu sem erro", rodando)
+			t.Errorf("running=%q should refuse the comparison, and answered without error", running)
+		}
+		if satisfies {
+			t.Errorf("running=%q cannot be ordered and must not satisfy", running)
 		}
 	}
 }
 
-// O `v` da tag é aceito nos dois lados: a release se chama `v0.1.84` e o binário se
-// reporta como `0.1.84`, e exigir que quem declara saiba qual dos dois usar é o tipo de
-// detalhe que se erra uma vez e some.
-func TestAtendeMinVersion_aceitaOPrefixoDaTag(t *testing.T) {
-	for _, par := range [][2]string{
+// The tag's `v` is accepted on both sides: the release is called `v0.1.84` and the binary
+// reports itself as `0.1.84`, and requiring whoever declares to know which of the two to use
+// is the kind of detail that is got wrong once and vanishes.
+func TestAtendeMinVersion_acceptsTheTagPrefix(t *testing.T) {
+	t.Run("MNVRM-B02: The tag prefix v is accepted on either side", func(t *testing.T) {})
+	for _, pair := range [][2]string{
 		{"v0.1.84", "0.1.84"},
 		{"0.1.84", "v0.1.84"},
 		{"v0.1.84", "v0.1.85"},
 	} {
-		atende, err := AtendeMinVersion(par[0], par[1])
+		satisfies, err := AtendeMinVersion(pair[0], pair[1])
 		if err != nil {
-			t.Errorf("min=%s rodando=%s: erro %v", par[0], par[1], err)
+			t.Errorf("min=%s running=%s: error %v", pair[0], pair[1], err)
 		}
-		if !atende {
-			t.Errorf("min=%s rodando=%s: deveria atender", par[0], par[1])
+		if !satisfies {
+			t.Errorf("min=%s running=%s: should satisfy", pair[0], pair[1])
 		}
 	}
 }
 
-// O CAMPO só aceita `MAJOR.MINOR.PATCH`, e a recusa é na CARGA.
+// The FIELD accepts only `MAJOR.MINOR.PATCH`, and the refusal is at LOAD.
 //
-// Falhar só na comparação faria o efeito de um valor mal escrito ser o AVISO SUMIR — e o
-// campo existe justamente para forçar uma atualização. Um `min_version: latest` produziria
-// o silêncio que ele deveria quebrar.
-func TestValidarMinVersion_recusaOQueNaoEhMmP(t *testing.T) {
-	ruins := []string{
-		"dev",        // um binário de desenvolvimento é um fato que se encontra, não uma decisão que se declara
-		"latest",     // parece razoável e não se compara com nada
-		"0.1",        // falta o patch
-		"0.1.84-rc1", // pré-release comparada como final responderia "atende" a quem tem menos
+// Failing only at comparison would make the effect of a mistyped value be the WARNING
+// VANISHING — and the field exists precisely to force an upgrade. A `min_version: latest`
+// would produce the silence it should break.
+func TestValidarMinVersion_refusesWhatIsNotMajorMinorPatch(t *testing.T) {
+	t.Run("MNVRM-B05: A declared minimum that is not MAJOR.MINOR.PATCH is refused, dev included", func(t *testing.T) {})
+	bad := []string{
+		"dev",        // a development binary is a fact one finds, not a decision one declares
+		"latest",     // looks reasonable and compares with nothing
+		"0.1",        // the patch is missing
+		"0.1.84-rc1", // a pre-release compared as final would answer "satisfies" to whoever has less
 		"1.2.3.4",
 		"abc",
 		"0.1.x",
 	}
-	for _, v := range ruins {
+	for _, v := range bad {
 		c := &Config{MinVersion: v}
 		if err := c.validarMinVersion(); err == nil {
-			t.Errorf("min_version=%q deveria ser recusado na carga", v)
+			t.Errorf("min_version=%q should be refused at load", v)
 		}
 	}
 }
 
-func TestValidarMinVersion_aceitaOFormatoEOVazio(t *testing.T) {
+func TestValidarMinVersion_acceptsTheFormatAndEmpty(t *testing.T) {
+	t.Run("MNVRM-B06: An absent or well-formed minimum is accepted", func(t *testing.T) {})
 	for _, v := range []string{"", "0.1.84", "v0.1.84", "1.0.0", "10.20.30"} {
 		c := &Config{MinVersion: v}
 		if err := c.validarMinVersion(); err != nil {
-			t.Errorf("min_version=%q deveria ser aceito, veio: %v", v, err)
+			t.Errorf("min_version=%q should be accepted, got: %v", v, err)
 		}
 	}
 }
 
-// A mensagem de erro tem de dizer O FORMATO e A CONSEQUÊNCIA. Um "valor inválido" seco
-// manda quem lê adivinhar, e o campo é raro o bastante para ninguém lembrar de cabeça.
-func TestValidarMinVersion_aMensagemEnsina(t *testing.T) {
+// The error message must say THE FORMAT and THE CONSEQUENCE. A dry "invalid value" leaves
+// the reader guessing, and the field is rare enough that nobody remembers it by heart.
+func TestValidarMinVersion_theMessageTeaches(t *testing.T) {
+	t.Run("MNVRM-B07: The refusal names the expected format, an example and what a bad value silences", func(t *testing.T) {})
 	c := &Config{MinVersion: "latest"}
 	err := c.validarMinVersion()
 	if err == nil {
-		t.Fatal("esperava erro")
+		t.Fatal("expected an error")
 	}
-	for _, quer := range []string{"MAJOR.MINOR.PATCH", "0.1.84", "silences"} {
-		if !strings.Contains(err.Error(), quer) {
-			t.Errorf("a mensagem deveria conter %q; veio: %s", quer, err)
+	for _, want := range []string{"MAJOR.MINOR.PATCH", "0.1.84", "silences", `"latest"`} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("the message should contain %q; got: %s", want, err)
+		}
+	}
+}
+
+func TestLoad_refusesABadMinVersion(t *testing.T) {
+	t.Run("MNVRM-B05: A declared minimum that is not MAJOR.MINOR.PATCH is refused, dev included", func(t *testing.T) {})
+	dir := t.TempDir()
+	path := filepath.Join(dir, DefaultFile)
+	if err := os.WriteFile(path, []byte("min_version: latest\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(path); err == nil || !strings.Contains(err.Error(), "min_version") {
+		t.Errorf("loading a project with min_version: latest should fail naming the field, got %v", err)
+	}
+	if err := os.WriteFile(path, []byte("min_version: 0.1.84\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if c, err := Load(path); err != nil || c.MinVersion != "0.1.84" {
+		t.Errorf("a well-formed min_version should load, got %v, %v", c, err)
+	}
+}
+
+func TestVersionOrder_isAntisymmetric(t *testing.T) {
+	t.Run("MNVRM-I01: Swapping the two versions always flips the order", func(t *testing.T) {})
+	versions := []string{"0.1.9", "0.1.84", "v0.2.0", "1.0.0", "0.99.99"}
+	for _, a := range versions {
+		for _, b := range versions {
+			ab, err1 := VersionOrder(a, b)
+			ba, err2 := VersionOrder(b, a)
+			if err1 != nil || err2 != nil {
+				t.Fatalf("%s vs %s: %v %v", a, b, err1, err2)
+			}
+			if ab != -ba {
+				t.Errorf("VersionOrder(%s,%s)=%d but VersionOrder(%s,%s)=%d", a, b, ab, b, a, ba)
+			}
+			if (a == b) != (ab == 0) {
+				t.Errorf("VersionOrder(%s,%s)=%d", a, b, ab)
+			}
 		}
 	}
 }

@@ -90,6 +90,7 @@ func fakeClock() ClaimWait {
 // `next` WAITS for its claim instead of telling the agent to run `next` again: the card
 // that arrives a few looks later is returned by the same call, with ONE dispatch.
 func TestAskAndWait_returnsTheCardOfTheRunItDispatched(t *testing.T) {
+	t.Run("CLWTC-B04: The card is returned as soon as it arrives", func(t *testing.T) {})
 	f := &fakeBoard{t: t}
 	f.onPoll = func(f *fakeBoard, poll int) {
 		if poll == 3 {
@@ -111,6 +112,7 @@ func TestAskAndWait_returnsTheCardOfTheRunItDispatched(t *testing.T) {
 // A CLAIM OF THIS AGENT STILL PENDING is waited on, never dispatched again — a second
 // dispatch cancels the pending run or queues a duplicate claim (blue-eyes #679).
 func TestAskAndWait_neverDispatchesWhileItsRunIsPending(t *testing.T) {
+	t.Run("CLWTC-B02: No dispatch while the agent's run is pending", func(t *testing.T) {})
 	f := &fakeBoard{t: t}
 	pending := f.queue(ClaimRunTitle(waitAgent), "in_progress", "").ID
 	f.onPoll = func(f *fakeBoard, poll int) {
@@ -134,6 +136,7 @@ func TestAskAndWait_neverDispatchesWhileItsRunIsPending(t *testing.T) {
 
 // ANOTHER agent's pending run does not hold this one back: the title tells them apart.
 func TestAskAndWait_anotherAgentsRunDoesNotCount(t *testing.T) {
+	t.Run("CLWTC-B01: Another agent's pending run does not count", func(t *testing.T) {})
 	f := &fakeBoard{t: t}
 	f.queue(ClaimRunTitle("other/session"), "queued", "")
 	f.onPoll = func(f *fakeBoard, poll int) { f.card = true }
@@ -149,6 +152,7 @@ func TestAskAndWait_anotherAgentsRunDoesNotCount(t *testing.T) {
 // THE RUN FINISHED WITHOUT A CARD (empty board, frozen project): the wait ends there,
 // with the run, instead of spending the whole timeout.
 func TestAskAndWait_runDoneWithoutCardEndsTheWait(t *testing.T) {
+	t.Run("CLWTC-B05: A finished run ends the wait after one more look", func(t *testing.T) {})
 	f := &fakeBoard{t: t}
 	f.onDispatch = func(f *fakeBoard) {
 		f.queue(ClaimRunTitle(waitAgent), "completed", "success")
@@ -170,6 +174,7 @@ func TestAskAndWait_runDoneWithoutCardEndsTheWait(t *testing.T) {
 // AN OLDER FINISHED RUN of the same agent is not the answer to this request: taking it
 // would end the wait with "no card" before the new claim even ran.
 func TestAskAndWait_ignoresTheAgentsOlderRuns(t *testing.T) {
+	t.Run("CLWTC-B03: An older finished run is not the answer", func(t *testing.T) {})
 	f := &fakeBoard{t: t}
 	f.queue(ClaimRunTitle(waitAgent), "completed", "success") // a previous `next`
 	f.onPoll = func(f *fakeBoard, poll int) {
@@ -188,6 +193,7 @@ func TestAskAndWait_ignoresTheAgentsOlderRuns(t *testing.T) {
 
 // THE WAIT IS BOUNDED, and running out of time does not dispatch a second claim.
 func TestAskAndWait_timesOutWithoutASecondDispatch(t *testing.T) {
+	t.Run("CLWTC-B07: The wait is bounded and does not dispatch twice", func(t *testing.T) {})
 	f := &fakeBoard{t: t}
 	out, err := f.client().AskAndWait(waitAgent, fakeClock())
 	if err != nil {
@@ -207,6 +213,7 @@ func TestAskAndWait_timesOutWithoutASecondDispatch(t *testing.T) {
 // A CANCELLED run never ran — another agent's dispatch replaced it in the concurrency
 // group. Asking again is not a second claim, and it is bounded.
 func TestAskAndWait_redispatchesACancelledRunBounded(t *testing.T) {
+	t.Run("CLWTC-B06: A cancelled run is asked again, bounded", func(t *testing.T) {})
 	f := &fakeBoard{t: t}
 	f.onDispatch = func(f *fakeBoard) {
 		f.queue(ClaimRunTitle(waitAgent), "completed", "cancelled")
@@ -221,5 +228,71 @@ func TestAskAndWait_redispatchesACancelledRunBounded(t *testing.T) {
 	}
 	if out.Run == nil || out.Run.Conclusion != "cancelled" {
 		t.Errorf("the last cancelled run should be reported: %+v", out)
+	}
+}
+
+// The card can land between the look at the board and the look at the run: a finished run
+// gets one more look before the wait concludes there is no card.
+func TestAskAndWait_oneMoreLookAfterTheRunFinishes(t *testing.T) {
+	t.Run("CLWTC-B05: A finished run ends the wait after one more look", func(t *testing.T) {})
+	f := &fakeBoard{t: t}
+	f.onDispatch = func(f *fakeBoard) {
+		f.queue(ClaimRunTitle(waitAgent), "completed", "success")
+	}
+	f.onPoll = func(f *fakeBoard, poll int) {
+		if poll == 2 {
+			f.card = true
+		}
+	}
+	out, err := f.client().AskAndWait(waitAgent, fakeClock())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out.Card == nil {
+		t.Fatalf("the card that landed right after the run finished was missed: %+v", out)
+	}
+}
+
+func TestAskAndWait_defaultBounds(t *testing.T) {
+	t.Run("CLWTC-B07: The wait is bounded and does not dispatch twice", func(t *testing.T) {})
+	f := &fakeBoard{t: t}
+	now := time.Date(2026, 9, 23, 12, 0, 0, 0, time.UTC)
+	start := now
+	var sleeps []time.Duration
+	w := ClaimWait{
+		Now:   func() time.Time { return now },
+		Sleep: func(d time.Duration) { sleeps = append(sleeps, d); now = now.Add(d) },
+	}
+	out, err := f.client().AskAndWait(waitAgent, w)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !out.TimedOut || now.Sub(start) != DefaultClaimTimeout || DefaultClaimTimeout != 3*time.Minute {
+		t.Fatalf("want a timeout after %s, got %+v after %s", DefaultClaimTimeout, out, now.Sub(start))
+	}
+	for _, d := range sleeps {
+		if d != 5*time.Second {
+			t.Fatalf("the default interval is 5s, slept %s", d)
+		}
+	}
+	if f.dispatches != 1 {
+		t.Errorf("dispatches = %d, want 1", f.dispatches)
+	}
+}
+
+func TestAskAndWait_unreadableRunListFailsBeforeDispatching(t *testing.T) {
+	t.Run("CLWTC-E01: An unreadable run list fails before dispatching", func(t *testing.T) {})
+	dispatched := 0
+	c := Client{Repo: "o/r", Labels: []string{"anchors"}, run: func(args ...string) ([]byte, error) {
+		if args[0] == "workflow" {
+			dispatched++
+		}
+		return []byte("not json"), nil
+	}}
+	if _, err := c.AskAndWait(waitAgent, fakeClock()); err == nil {
+		t.Fatal("an unreadable run list must fail the wait")
+	}
+	if dispatched != 0 {
+		t.Errorf("dispatched %d claim(s) without knowing whether one was pending", dispatched)
 	}
 }

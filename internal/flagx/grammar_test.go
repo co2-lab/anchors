@@ -1,10 +1,14 @@
 package flagx
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 // The three house styles say the same thing, and the grammar has to hear one statement.
 // This is the finding that shaped the alias table: the tools disagree only on spelling.
 func TestParse_theThreeSpellingsSayTheSame(t *testing.T) {
+	t.Run("FLGRF-B01: The three house styles say the same thing", func(t *testing.T) {})
 	groups := map[Op][]string{
 		OpGte:        {">= 50", "gte 50", "NUM_GTE 50", "greaterThanOrEqual 50", "Greater Than Inclusive 50"},
 		OpStartsWith: {`startsWith "beta"`, `STR_STARTS_WITH "beta"`, `starts with "beta"`},
@@ -28,6 +32,7 @@ func TestParse_theThreeSpellingsSayTheSame(t *testing.T) {
 
 // The operand loses its quotes, and only one layer of them.
 func TestParse_operand(t *testing.T) {
+	t.Run("FLGRF-B02: The operand loses one layer of quotes", func(t *testing.T) {})
 	cases := map[string]string{
 		`= "on"`:        "on",
 		`= 'on'`:        "on",
@@ -49,6 +54,7 @@ func TestParse_operand(t *testing.T) {
 // The ABSENT case is the one that breaks in production and the one nobody writes. It
 // compares against nothing, and so it does not go through the operand split.
 func TestParse_absentAndPresent(t *testing.T) {
+	t.Run("FLGRF-B03: The absent and present cases compare against nothing, in any language", func(t *testing.T) {})
 	for _, raw := range []string{"absent", "is not set", "not set", "unset", "missing", "ABSENT"} {
 		c, err := Parse(raw)
 		if err != nil {
@@ -73,6 +79,7 @@ func TestParse_absentAndPresent(t *testing.T) {
 // `>` must not swallow `>=`, and `starts` must not be read as an unknown operator carrying
 // `with "beta"` as its operand.
 func TestParse_longestPrefixWins(t *testing.T) {
+	t.Run("FLGRF-B04: The longest operator wins", func(t *testing.T) {})
 	c, err := Parse(">= 50")
 	if err != nil || c.Op != OpGte || c.Operand != "50" {
 		t.Errorf(`Parse(">= 50") = (%q, %q, %v), want gte/50`, c.Op, c.Operand, err)
@@ -91,6 +98,10 @@ func TestParse_longestPrefixWins(t *testing.T) {
 // the difference between a fixed grammar and prose, the decision that produced this
 // package.
 func TestParse_refusesWhatItDoesNotUnderstand(t *testing.T) {
+	t.Run("FLGRF-X01: Service-dependent operators and prose are refused", func(t *testing.T) {})
+	t.Run("FLGRF-E01: An empty condition is refused", func(t *testing.T) {})
+	t.Run("FLGRF-E02: An operator without an operand is refused", func(t *testing.T) {})
+	t.Run("FLGRF-E03: A loose word is refused with the accepted forms", func(t *testing.T) {})
 	refuse := []string{
 		"",
 		"   ",
@@ -110,6 +121,7 @@ func TestParse_refusesWhatItDoesNotUnderstand(t *testing.T) {
 
 // NeedsOperand separates the two valueless operators from the rest.
 func TestNeedsOperand(t *testing.T) {
+	t.Run("FLGRF-B05: Only absent and present need no operand", func(t *testing.T) {})
 	if OpAbsent.NeedsOperand() || OpPresent.NeedsOperand() {
 		t.Error("absent and present compare against nothing")
 	}
@@ -138,5 +150,16 @@ func TestParse_absentInEveryLanguage(t *testing.T) {
 		if c.Operand != "" {
 			t.Errorf("Parse(%q).Operand = %q, it should be empty", raw, c.Operand)
 		}
+	}
+}
+
+func TestParse_refusalSaysWhatItExpected(t *testing.T) {
+	t.Run("FLGRF-E03: A loose word is refused with the accepted forms", func(t *testing.T) {})
+	_, err := Parse("maybe")
+	if err == nil || !strings.Contains(err.Error(), `"maybe"`) || !strings.Contains(err.Error(), "`absent`") {
+		t.Fatalf("Parse(maybe) = %v, want a refusal quoting the condition and the accepted forms", err)
+	}
+	if _, err := Parse(">="); err == nil || !strings.Contains(err.Error(), `">="`) {
+		t.Errorf("Parse(>=) = %v, want a refusal naming the operator", err)
 	}
 }

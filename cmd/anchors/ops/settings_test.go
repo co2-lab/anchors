@@ -35,6 +35,7 @@ func loadSettings(t *testing.T, root string) settings.Settings {
 
 // The date is stamped by whoever declares — the command does not read the clock.
 func TestSettingsDecisionsRequireADate(t *testing.T) {
+	t.Run("STCMS-B01: A decision without a date is refused", func(t *testing.T) {})
 	root := t.TempDir()
 	for _, sub := range []string{"role", "user-issues"} {
 		err, _ := runCmd(t, newSettingsCmd(), sub, "--root", root, "dev")
@@ -50,6 +51,10 @@ func TestSettingsDecisionsRequireADate(t *testing.T) {
 // Declaring a role records it with the agent and the date, and drops the legacy
 // user_issues field so the next read has one source; `show` then lists what it allows.
 func TestSettingsRoleIsRecordedAndShown(t *testing.T) {
+	t.Run("STCMS-B03: Declaring a role records it with the agent and the date", func(t *testing.T) {})
+	t.Run("STCMS-B07: Show lists the role's capabilities", func(t *testing.T) {})
+	t.Run("STCMS-I01: A role declaration leaves one source for the escalated-cards question", func(t *testing.T) {})
+	t.Run("STCMS-X01: The decisions go to the local settings file", func(t *testing.T) {})
 	root := t.TempDir()
 	if err, _ := runCmd(t, newSettingsCmd(), "user-issues", "--root", root, "--date", "2026-09-01", "sim"); err != nil {
 		t.Fatal(err)
@@ -84,6 +89,7 @@ func TestSettingsRoleIsRecordedAndShown(t *testing.T) {
 }
 
 func TestSettingsRejectsAnUnknownRoleOrAnswer(t *testing.T) {
+	t.Run("STCMS-B02: An unknown role or answer is refused naming it", func(t *testing.T) {})
 	root := t.TempDir()
 	if err, _ := runCmd(t, newSettingsCmd(), "role", "--root", root, "--date", "2026-09-26", "wizard"); err == nil ||
 		!strings.Contains(err.Error(), `"wizard"`) {
@@ -100,6 +106,7 @@ func TestSettingsRejectsAnUnknownRoleOrAnswer(t *testing.T) {
 
 // Without a role, `show` teaches how to declare one.
 func TestSettingsShowWithoutRoleTeachesHowToDeclare(t *testing.T) {
+	t.Run("STCMS-B08: Show without a role teaches how to declare one", func(t *testing.T) {})
 	err, out := runCmd(t, newSettingsCmd(), "show", "--root", t.TempDir())
 	if err != nil {
 		t.Fatal(err)
@@ -111,6 +118,8 @@ func TestSettingsShowWithoutRoleTeachesHowToDeclare(t *testing.T) {
 
 // Asked on the terminal, a reply it does not understand is asked AGAIN, never assumed.
 func TestSettingsUserIssuesAsksUntilItUnderstands(t *testing.T) {
+	t.Run("STCMS-B04: The escalated-cards answer is recorded with the agent and the date", func(t *testing.T) {})
+	t.Run("STCMS-B06: An unclear reply is asked again and never assumed", func(t *testing.T) {})
 	root := t.TempDir()
 	var err error
 	var out string
@@ -127,9 +136,14 @@ func TestSettingsUserIssuesAsksUntilItUnderstands(t *testing.T) {
 	if s.UserIssues == nil || *s.UserIssues {
 		t.Errorf("recorded %v, want false (the `nao` after the retry)", s.UserIssues)
 	}
+	if s.DecidedAt != "2026-09-26" || s.Agent == "" {
+		t.Errorf("recorded date %q and agent %q; want 2026-09-26 and the agent", s.DecidedAt, s.Agent)
+	}
 }
 
 func TestAskUserIssuesGivesUpWithoutAnAnswer(t *testing.T) {
+	t.Run("STCMS-B06: An unclear reply is asked again and never assumed", func(t *testing.T) {})
+	t.Run("STCMS-E01: A closed input fails instead of assuming no", func(t *testing.T) {})
 	var err error
 	captureStdout(t, func() {
 		withStdin(t, "a\nb\nc\n", func() { _, err = askUserIssues() })
@@ -147,6 +161,7 @@ func TestAskUserIssuesGivesUpWithoutAnAnswer(t *testing.T) {
 
 // Without the argument, the role is asked on the terminal.
 func TestSettingsRoleAsksWhenNotGiven(t *testing.T) {
+	t.Run("STCMS-B05: The role is asked on the terminal when not given", func(t *testing.T) {})
 	root := t.TempDir()
 	var err error
 	withStdin(t, "qa\n", func() {

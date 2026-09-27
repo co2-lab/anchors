@@ -51,6 +51,10 @@ func writePack(t *testing.T, root, rel, body string) string {
 }
 
 func TestLoad(t *testing.T) {
+	t.Run("OBPCB-B01: A pack file gives its metadata and its obligations", func(t *testing.T) {})
+	t.Run("OBPCB-E01: A pack without a name is refused", func(t *testing.T) {})
+	t.Run("OBPCB-E02: A pack without obligations is refused", func(t *testing.T) {})
+	t.Run("OBPCB-E03: An invalid or missing pack file is refused", func(t *testing.T) {})
 	root := t.TempDir()
 	p, err := Load(writePack(t, root, "packs/privacy/lgpd.yaml", lgpdFixture))
 	if err != nil {
@@ -77,6 +81,7 @@ func TestLoad(t *testing.T) {
 }
 
 func TestResolveRef(t *testing.T) {
+	t.Run("OBPCB-B02: A reference is a path or a name under packs", func(t *testing.T) {})
 	for ref, want := range map[string]string{
 		"privacy/lgpd":          filepath.Join("/r", "packs", "privacy", "lgpd.yaml"),
 		"./internal/mine.yaml":  filepath.Join("/r", "internal", "mine.yaml"),
@@ -90,6 +95,9 @@ func TestResolveRef(t *testing.T) {
 }
 
 func TestLoadAll_resolvesPlaceholdersAndSorts(t *testing.T) {
+	t.Run("OBPCB-B03: Placeholders are replaced by the project's values", func(t *testing.T) {})
+	t.Run("OBPCB-B04: Packs come back sorted by name", func(t *testing.T) {})
+	t.Run("OBPCB-B06: Global packs and projects without jurisdictions load everything", func(t *testing.T) {})
 	root := t.TempDir()
 	writePack(t, root, "packs/privacy/lgpd.yaml", lgpdFixture)
 	writePack(t, root, "packs/accessibility/wcag.yaml", wcagFixture)
@@ -112,6 +120,7 @@ func TestLoadAll_resolvesPlaceholdersAndSorts(t *testing.T) {
 }
 
 func TestLoadAll_skipsUndeclaredJurisdictionWithWarning(t *testing.T) {
+	t.Run("OBPCB-B05: A pack of an undeclared jurisdiction is skipped with a warning", func(t *testing.T) {})
 	root := t.TempDir()
 	writePack(t, root, "packs/privacy/gdpr.yaml", gdprFixture)
 	writePack(t, root, "packs/accessibility/wcag.yaml", wcagFixture)
@@ -136,6 +145,7 @@ func TestLoadAll_skipsUndeclaredJurisdictionWithWarning(t *testing.T) {
 }
 
 func TestLoadAll_refusesUnresolvedPlaceholders(t *testing.T) {
+	t.Run("OBPCB-E04: Unresolved placeholders refuse the whole load", func(t *testing.T) {})
 	root := t.TempDir()
 	writePack(t, root, "packs/privacy/lgpd.yaml", lgpdFixture)
 

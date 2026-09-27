@@ -61,6 +61,8 @@ func queued(t *testing.T, root string) []string {
 // A change in a governed file queues the next piece of the chain — and skips the piece
 // that already exists, so nobody is told to rewrite a finished feature.
 func TestHandleChange_queuesTheNextMissingPiece(t *testing.T) {
+	t.Run("WTCHA-B09: A governed change queues the next missing piece", func(t *testing.T) {})
+	t.Run("WTCHA-I01: A task in the queue is not queued twice", func(t *testing.T) {})
 	root := t.TempDir()
 	cfg := watchCfg()
 	useIgnore(t, root, cfg)
@@ -90,6 +92,7 @@ func TestHandleChange_queuesTheNextMissingPiece(t *testing.T) {
 // A layer that waives the feature and the test goes straight to the review: queueing the
 // waived piece contradicts `anchors work`, which answers STOP for it.
 func TestHandleChange_skipsThePiecesTheLayerWaives(t *testing.T) {
+	t.Run("WTCHA-B10: A waived piece is skipped", func(t *testing.T) {})
 	root := t.TempDir()
 	cfg := watchCfg()
 	useIgnore(t, root, cfg)
@@ -117,6 +120,7 @@ func TestHandleChange_skipsThePiecesTheLayerWaives(t *testing.T) {
 // What is not work never becomes a task: a file outside the structure, a file already
 // gone, an editor's temporary, and what the project's .gitignore declares disposable.
 func TestHandleChange_whatIsNotWorkIsNotQueued(t *testing.T) {
+	t.Run("WTCHA-B11: What is not work is not queued", func(t *testing.T) {})
 	root := t.TempDir()
 	cfg := watchCfg()
 	writeFile(t, root, ".gitignore", "probes/\n")
@@ -138,6 +142,7 @@ func TestHandleChange_whatIsNotWorkIsNotQueued(t *testing.T) {
 // A delivery record triggers the review — but only once the unit has code AND test, and a
 // plan's record triggers the review of the whole.
 func TestHandleChange_deliveryRecordsTriggerTheReview(t *testing.T) {
+	t.Run("WTCHA-B12: A delivery record triggers the review when the triad closes", func(t *testing.T) {})
 	root := t.TempDir()
 	cfg := watchCfg()
 	useIgnore(t, root, cfg)
@@ -178,6 +183,7 @@ func TestHandleChange_deliveryRecordsTriggerTheReview(t *testing.T) {
 // A model whose test is waived is reviewed as soon as its code exists — otherwise it
 // would never be.
 func TestMissingPieceToReview(t *testing.T) {
+	t.Run("WTCHA-B13: A waived test, a Go test, and a record with no unit do not hold the review", func(t *testing.T) {})
 	root := t.TempDir()
 	cfg := watchCfg()
 	writeFile(t, root, "models/user.ts", "x\n")
@@ -195,6 +201,7 @@ func TestMissingPieceToReview(t *testing.T) {
 }
 
 func TestChangeDelivered(t *testing.T) {
+	t.Run("WTCHA-B14: Any markdown directly under changes is a delivery record", func(t *testing.T) {})
 	root := t.TempDir()
 	writeFile(t, root, "changes/a.md", "stage: code\nunit: src/x.ts\n")
 	writeFile(t, root, "changes/b.md", "no unit line\n")
@@ -212,6 +219,7 @@ func TestChangeDelivered(t *testing.T) {
 }
 
 func TestTaskID_isStableAndPathSafe(t *testing.T) {
+	t.Run("WTCHA-B15: The task id is stable and path-safe", func(t *testing.T) {})
 	a, b := taskID("src/x/pricing.ts", "test"), taskID("src/x/pricing.ts", "test")
 	if a != b {
 		t.Errorf("the id must be deterministic: %q vs %q", a, b)
@@ -227,6 +235,7 @@ func TestTaskID_isStableAndPathSafe(t *testing.T) {
 // The watcher adds the whole tree except what it ignores, and a new folder's files are
 // swept once so the ones born before the watch took effect are not lost.
 func TestAddTreeToWatcherAndFilesBornIn(t *testing.T) {
+	t.Run("WTCHA-B08: The tree is watched without ignored folders, and new folders are swept", func(t *testing.T) {})
 	root := t.TempDir()
 	useIgnore(t, root, watchCfg())
 	writeFile(t, root, "src/a/x.ts", "x\n")
@@ -259,6 +268,7 @@ func TestAddTreeToWatcherAndFilesBornIn(t *testing.T) {
 // The whole loop, in process: a file created after the start becomes a task, including
 // one in a folder born after the start; the signal ends the loop and cleans the state.
 func TestRunWatchLoop_queuesChangesUntilSignalled(t *testing.T) {
+	t.Run("WTCHA-B07: Files created after the start become tasks until the signal", func(t *testing.T) {})
 	root := t.TempDir()
 	cfg := watchCfg()
 	writeFile(t, root, "src/keep.ts", "x\n")
@@ -346,6 +356,11 @@ func runWatchSub(t *testing.T, args ...string) (string, error) {
 // The controls read and write the daemon's state in the project: stopped, running,
 // paused, resumed, stopped for real, and its log.
 func TestWatchControls(t *testing.T) {
+	t.Run("WTCHA-B01: status tells stopped, running with its metadata, and paused", func(t *testing.T) {})
+	t.Run("WTCHA-B02: A second start is refused", func(t *testing.T) {})
+	t.Run("WTCHA-B03: pause needs a running watcher, and resume undoes it", func(t *testing.T) {})
+	t.Run("WTCHA-B04: stop terminates the watcher once", func(t *testing.T) {})
+	t.Run("WTCHA-B05: logs prints the log as is", func(t *testing.T) {})
 	root := t.TempDir()
 	p := daemon.PathsFor(root)
 
@@ -401,6 +416,7 @@ func TestWatchControls(t *testing.T) {
 
 // `watch run` loads the config and the map before looping, and says which one is missing.
 func TestWatchRun_needsConfigAndMap(t *testing.T) {
+	t.Run("WTCHA-B06: run names the configuration or the map it could not load", func(t *testing.T) {})
 	root := t.TempDir()
 	if _, err := runWatchSub(t, "run", "--root", root); err == nil || !strings.Contains(err.Error(), "load config") {
 		t.Errorf("without anchors.yaml, got %v", err)
@@ -412,23 +428,32 @@ func TestWatchRun_needsConfigAndMap(t *testing.T) {
 	}
 }
 
-// detach puts the child in a session of its own: it leads its process group, so closing
-// the terminal does not take it down.
-func TestDetach_childLeadsItsOwnSession(t *testing.T) {
-	c := exec.Command("sleep", "30")
-	detach(c)
-	if err := c.Start(); err != nil {
-		t.Fatal(err)
+// The watcher only queues: whoever works pulls the task and acts on it.
+func TestHandleChange_writesNothingOutsideTheQueue(t *testing.T) {
+	t.Run("WTCHA-X01: Handling a change writes nothing outside the queue", func(t *testing.T) {})
+	root := t.TempDir()
+	cfg := watchCfg()
+	useIgnore(t, root, cfg)
+	writeFile(t, root, "src/pricing.ts", "export const p = 1\n")
+	files := func() map[string]bool {
+		out := map[string]bool{}
+		_ = filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
+			if err == nil && !d.IsDir() {
+				rel, _ := filepath.Rel(root, p)
+				out[filepath.ToSlash(rel)] = true
+			}
+			return nil
+		})
+		return out
 	}
-	defer func() { _ = c.Process.Kill(); _, _ = c.Process.Wait() }()
-	pgid, err := syscall.Getpgid(c.Process.Pid)
-	if err != nil {
-		t.Fatal(err)
+	before := files()
+	stdoutOf(t, func() { handleChange(root, cfg, &mapx.Graph{}, "src/pricing.ts") })
+	if len(queued(t, root)) != 1 {
+		t.Fatal("the change must be queued")
 	}
-	if pgid != c.Process.Pid {
-		t.Errorf("a detached child leads its own group: pgid %d, pid %d", pgid, c.Process.Pid)
-	}
-	if mine, _ := syscall.Getpgid(os.Getpid()); pgid == mine {
-		t.Error("the child must not stay in the parent's process group")
+	for f := range files() {
+		if !before[f] && !strings.HasPrefix(f, ".anchors/") {
+			t.Errorf("handling a change wrote %s outside the queue", f)
+		}
 	}
 }

@@ -53,6 +53,9 @@ func stateOf(t *testing.T, root, id string) suggestion.State {
 }
 
 func TestSuggestListAndShow(t *testing.T) {
+	t.Run("SGCMS-B01: List shows the ids of a state and points pending ones at show", func(t *testing.T) {})
+	t.Run("SGCMS-B02: Show prints the reason and the diff, or says it was not found", func(t *testing.T) {})
+	t.Run("SGCMS-X01: The command decides only suggestions others proposed", func(t *testing.T) {})
 	err, out := runCmd(t, newSuggestCmd(), "list", "--root", t.TempDir())
 	if err != nil || !strings.Contains(out, "no suggestion in pending") {
 		t.Errorf("empty list: %v\n%s", err, out)
@@ -79,6 +82,7 @@ func TestSuggestListAndShow(t *testing.T) {
 
 // --dry-run only checks: the file and the state stay as they were.
 func TestSuggestApplyDryRunChangesNothing(t *testing.T) {
+	t.Run("SGCMS-B03: A dry run only checks the patch", func(t *testing.T) {})
 	root := suggestRepo(t)
 	err, out := runCmd(t, newSuggestCmd(), "apply", "--root", root, "fix-a", "--dry-run")
 	if err != nil || !strings.Contains(out, "applies cleanly") {
@@ -91,6 +95,7 @@ func TestSuggestApplyDryRunChangesNothing(t *testing.T) {
 
 // Applying changes the file FIRST and only then approves, with the default reason.
 func TestSuggestApplyPatchesAndApproves(t *testing.T) {
+	t.Run("SGCMS-B04: Apply patches the file and then approves with a default reason", func(t *testing.T) {})
 	root := suggestRepo(t)
 	err, out := runCmd(t, newSuggestCmd(), "apply", "--root", root, "fix-a")
 	if err != nil {
@@ -110,6 +115,8 @@ func TestSuggestApplyPatchesAndApproves(t *testing.T) {
 
 // A patch that no longer matches fails BEFORE touching anything, and says why.
 func TestSuggestApplyStalePatchTouchesNothing(t *testing.T) {
+	t.Run("SGCMS-I01: A failed apply leaves the file and the state as they were", func(t *testing.T) {})
+	t.Run("SGCMS-E01: A stale patch fails before touching anything", func(t *testing.T) {})
 	root := suggestRepo(t)
 	writeFile(t, root, "a.txt", "changed meanwhile\n")
 	err, _ := runCmd(t, newSuggestCmd(), "apply", "--root", root, "fix-a")
@@ -123,6 +130,7 @@ func TestSuggestApplyStalePatchTouchesNothing(t *testing.T) {
 
 // A suggestion IS a patch: outside git the error says git is what is missing.
 func TestSuggestApplyOutsideGitNamesTheCause(t *testing.T) {
+	t.Run("SGCMS-E02: Outside git the failure names the suggestion patch", func(t *testing.T) {})
 	root := suggestRepo(t)
 	if err := os.RemoveAll(filepath.Join(root, ".git")); err != nil {
 		t.Fatal(err)
@@ -135,6 +143,8 @@ func TestSuggestApplyOutsideGitNamesTheCause(t *testing.T) {
 
 // Rejecting requires the reason, and the rejected one is KEPT, with it.
 func TestSuggestRejectKeepsTheRecordWithTheReason(t *testing.T) {
+	t.Run("SGCMS-B01: List shows the ids of a state and points pending ones at show", func(t *testing.T) {})
+	t.Run("SGCMS-B05: Rejecting needs a reason and keeps the record", func(t *testing.T) {})
 	root := suggestRepo(t)
 	if err, _ := runCmd(t, newSuggestCmd(), "reject", "--root", root, "fix-a"); err == nil {
 		t.Error("a rejection without a reason must be refused")

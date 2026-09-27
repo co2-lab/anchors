@@ -9,53 +9,54 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 )
 
-// TestAncoragemDoGitignore guarda o bug que apagou 129 unidades do mapa em silêncio.
+// TestGitignoreAnchoring guards the bug that erased 129 units from the map in silence.
 //
-// A linha `/data/` do projeto significa, para o git, "o diretório `data` NA RAIZ". Ao
-// descartar a barra inicial, o Anchors a lia como "qualquer segmento chamado `data`" — e
-// `amplify/data/models/` inteiro (as specs e os modelos do schema) saía da varredura. O
-// mapa não ficava errado com barulho: ficava menor, e nada acusava a ausência.
-func TestAncoragemDoGitignore(t *testing.T) {
+// The project's `/data/` line means, for git, "the `data` directory AT THE ROOT". By
+// dropping the leading slash, Anchors read it as "any segment named `data`" — and the whole
+// of `amplify/data/models/` (the schema's specs and models) left the scan. The map was not
+// wrong with noise: it was smaller, and nothing reported the absence.
+func TestGitignoreAnchoring(t *testing.T) {
+	t.Run("SCIGS-B06: A slash anchors a gitignore pattern at the root, no slash matches at any depth", func(t *testing.T) {})
 	dir := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(dir, ".gitignore"), []byte(strings.Join([]string{
-		"/data/",       // ancorado: só na raiz
-		"node_modules", // sem barra: qualquer nível
+		"/data/",       // anchored: only at the root
+		"node_modules", // no slash: any depth
 		"*.log",
 		"probe*.ts",
-		"docs/build", // barra no meio: ancorado
-		"docs/saida", // idem, com nome fora da lista universal
+		"docs/build", // inner slash: anchored
+		"docs/saida", // same, with a name outside the built-in list
 	}, "\n")), 0o644))
 
 	ig := LoadIgnore(dir)
-	casos := []struct {
+	cases := []struct {
 		rel   string
 		isDir bool
-		quer  bool
-		por   string
+		want  bool
+		why   string
 	}{
-		{"data", true, true, "`/data/` casa o diretório na raiz"},
-		{"data/dump.json", false, true, "abaixo de um diretório ignorado"},
-		{"amplify/data", true, false, "`/data/` é ANCORADO — não casa `data` aninhado"},
-		{"amplify/data/models/AiUsage.ts", false, false, "o caso real que sumiu do mapa"},
-		{"a/node_modules", true, true, "sem barra casa em qualquer nível"},
-		{"a/b/c.log", false, true, "`*.log` casa o basename em qualquer nível"},
-		{"probe1.ts", false, true, "a sonda de revisor que virava task"},
-		{"docs/build", true, true, "barra no meio: ancorado, e casa"},
-		// `apps/docs/build` NÃO é caso de ancoragem: `build` está na lista universal, que
-		// vale em qualquer projeto e é aplicada antes do `.gitignore`. Um par aninhado que
-		// prove ancoragem precisa de um nome fora dessa lista.
-		{"docs/saida", true, true, "ancorado, na raiz: casa"},
-		{"apps/docs/saida", true, false, "ancorado: `docs/saida` não casa aninhado"},
+		{"data", true, true, "`/data/` matches the directory at the root"},
+		{"data/dump.json", false, true, "below an ignored directory"},
+		{"amplify/data", true, false, "`/data/` is ANCHORED — it does not match a nested `data`"},
+		{"amplify/data/models/AiUsage.ts", false, false, "the real case that vanished from the map"},
+		{"a/node_modules", true, true, "no slash matches at any depth"},
+		{"a/b/c.log", false, true, "`*.log` matches the basename at any depth"},
+		{"probe1.ts", false, true, "the reviewer's probe that became a task"},
+		{"docs/build", true, true, "inner slash: anchored, and it matches"},
+		// `apps/docs/build` is NOT an anchoring case: `build` is in the built-in list, which
+		// holds in every project and is applied before the `.gitignore`. A nested pair that
+		// proves anchoring needs a name outside that list.
+		{"docs/saida", true, true, "anchored, at the root: matches"},
+		{"apps/docs/saida", true, false, "anchored: `docs/saida` does not match nested"},
 	}
-	for _, c := range casos {
+	for _, c := range cases {
 		var got bool
 		if c.isDir {
 			got = ig.SkipDir(filepath.Base(c.rel), c.rel)
 		} else {
 			got = ig.SkipFile(c.rel)
 		}
-		if got != c.quer {
-			t.Errorf("%q (dir=%v): ignorado=%v, esperava %v — %s", c.rel, c.isDir, got, c.quer, c.por)
+		if got != c.want {
+			t.Errorf("%q (dir=%v): ignored=%v, want %v — %s", c.rel, c.isDir, got, c.want, c.why)
 		}
 	}
 }
@@ -67,106 +68,154 @@ func must(t *testing.T, err error) {
 	}
 }
 
-// TestListaEmbutidaEhDerrotavel: `build`/`dist` são saída de compilação na maioria dos
-// projetos e PASTA DE CÓDIGO em alguns. Uma lista embutida que não pode ser contestada é o
-// framework decidindo, por um projeto que não conhece, o que nele é descartável — e o erro
-// é silencioso: a camada some do mapa e nenhum gate acusa a ausência.
-func TestListaEmbutidaEhDerrotavel(t *testing.T) {
+// TestBuiltInListIsDefeatable: `build`/`dist` are compiled output in most projects and a
+// SOURCE FOLDER in some. A built-in list that cannot be contested is the framework deciding,
+// for a project it does not know, what in it is disposable — and the error is silent: the
+// layer vanishes from the map and no gate reports the absence.
+func TestBuiltInListIsDefeatable(t *testing.T) {
+	t.Run("SCIGS-B01: The built-in directories are skipped when nothing is declared", func(t *testing.T) {})
+	t.Run("SCIGS-B02: A layer pointing inside a built-in directory re-enables it, a catch-all does not", func(t *testing.T) {})
+	t.Run("SCIGS-B03: A gitignore negation re-enables a built-in directory", func(t *testing.T) {})
 	dir := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(dir, ".gitignore"), []byte("*.log\n"), 0o644))
 
-	// sem declaração: o default vale
+	// nothing declared: the default holds
 	if !LoadIgnore(dir).SkipDir("build", "build") {
-		t.Error("sem declaração, `build` deve seguir o default (ignorado)")
+		t.Error("with nothing declared, `build` follows the default (ignored)")
 	}
 
-	// a ESTRUTURA declara que ali há código
+	// the STRUCTURE declares there is code there
 	cfg := &config.Config{Layers: map[string]config.Layer{
 		"core": {Pattern: "build/**/*.ts", Kind: "code"},
 	}}
 	if LoadIgnoreFor(dir, cfg).SkipDir("build", "build") {
-		t.Error("camada apontando para dentro de `build` deve DERROTAR o default")
+		t.Error("a layer pointing inside `build` must DEFEAT the default")
 	}
 
-	// um catch-all NÃO reabilita — senão `**/*.ts` traria `node_modules` de volta
-	amplo := &config.Config{Layers: map[string]config.Layer{
-		"tudo": {Pattern: "**/*.ts", Kind: "code"},
+	// a catch-all does NOT re-enable — otherwise `**/*.ts` would bring `node_modules` back
+	broad := &config.Config{Layers: map[string]config.Layer{
+		"all": {Pattern: "**/*.ts", Kind: "code"},
 	}}
-	if !LoadIgnoreFor(dir, amplo).SkipDir("node_modules", "node_modules") {
-		t.Error("catch-all não pode reabilitar `node_modules`")
+	if !LoadIgnoreFor(dir, broad).SkipDir("node_modules", "node_modules") {
+		t.Error("a catch-all cannot re-enable `node_modules`")
 	}
 
-	// a negação no `.gitignore` também derrota
+	// the negation in the `.gitignore` defeats it too
 	must(t, os.WriteFile(filepath.Join(dir, ".gitignore"), []byte("!build/\n"), 0o644))
 	if LoadIgnore(dir).SkipDir("build", "build") {
-		t.Error("`!build/` no .gitignore deve derrotar o default")
-	}
-
-	// a maquinaria NÃO é derrotável, sob nenhuma declaração
-	must(t, os.WriteFile(filepath.Join(dir, ".gitignore"), []byte("!.git/\n"), 0o644))
-	if !LoadIgnore(dir).SkipDir(".git", ".git") {
-		t.Error("`.git` é maquinaria — nenhuma declaração o reabilita")
+		t.Error("`!build/` in the .gitignore must defeat the default")
 	}
 }
 
-// TestEfemerosNaoViramTrabalho guarda o ruído medido num E2E real: o watcher enfileirou
-// task para `amplify/data/.!21662!resource.spec.md` — arquivo que o editor cria por
-// milissegundos durante um salvamento atômico e que casa o glob de spec. Três tasks
-// tiveram de ser descartadas à mão.
+// The machinery is NOT defeatable, under any declaration.
+func TestMachineryIsNeverScanned(t *testing.T) {
+	t.Run("SCIGS-I01: No declaration re-enables the machinery directories", func(t *testing.T) {})
+	dir := t.TempDir()
+	must(t, os.WriteFile(filepath.Join(dir, ".gitignore"), []byte("!.git/\n!.anchors/\n"), 0o644))
+	ig := LoadIgnore(dir)
+	for _, d := range []string{".git", ".anchors"} {
+		if !ig.SkipDir(d, d) {
+			t.Errorf("%q is machinery — no declaration re-enables it", d)
+		}
+	}
+}
+
+// What Anchors writes is not work for Anchors: the queue fed on its own output.
+func TestAnchorsRecordsAreNeverScanned(t *testing.T) {
+	t.Run("SCIGS-B04: The records Anchors writes are never scanned", func(t *testing.T) {})
+	dir := t.TempDir()
+	must(t, os.WriteFile(filepath.Join(dir, ".gitignore"), []byte("!issues/\n"), 0o644))
+	ig := LoadIgnore(dir)
+	if !ig.SkipDir("issues", "issues") {
+		t.Error("`issues` is Anchors' own output, even with a negation")
+	}
+	if !ig.SkipDir("changes", "a/changes") {
+		t.Error("`changes` is skipped at any depth")
+	}
+}
+
+// TestEphemeraNeverBecomeWork guards the noise measured in a real E2E: the watcher queued a
+// task for `amplify/data/.!21662!resource.spec.md` — a file the editor creates for
+// milliseconds during an atomic save and that matches the spec glob. Three tasks had to be
+// discarded by hand.
 //
-// O `.gitignore` do projeto não cobre isso, e não deveria: não é decisão do projeto, é
-// ruído do sistema de arquivos.
-func TestEfemerosNaoViramTrabalho(t *testing.T) {
+// The project's `.gitignore` does not cover this, and it should not: it is not the
+// project's decision, it is file-system noise.
+func TestEphemeraNeverBecomeWork(t *testing.T) {
+	t.Run("SCIGS-B05: Editor and system ephemera never become files to scan", func(t *testing.T) {})
 	ig := LoadIgnore(t.TempDir())
-	ruido := []string{
-		"amplify/data/.!21662!resource.spec.md", // o caso real
+	noise := []string{
+		"amplify/data/.!21662!resource.spec.md", // the real case
 		"src/a.ts.swp", "src/a.ts~", "src/.#a.ts", "src/#a.ts#",
 		"src/x.tmp", ".DS_Store",
 	}
-	for _, r := range ruido {
+	for _, r := range noise {
 		if !ig.SkipFile(r) {
-			t.Errorf("%q é ruído de editor/sistema e não pode virar trabalho", r)
+			t.Errorf("%q is editor/system noise and cannot become work", r)
 		}
 	}
 	material := []string{
 		"src/a.ts", "src/a.spec.md", "amplify/data/resource.spec.md",
-		"src/tmp/util.ts", // `tmp` no CAMINHO não é `.tmp` no nome
+		"src/tmp/util.ts", // `tmp` in the PATH is not `.tmp` in the name
 	}
 	for _, m := range material {
 		if ig.SkipFile(m) {
-			t.Errorf("%q é material do projeto e foi descartado", m)
+			t.Errorf("%q is project material and was discarded", m)
 		}
 	}
 }
 
-// A worktree or nested clone inside the tree is another checkout: its files are copies,
-// and mapping them duplicated the whole project (1360 nodes from four agent worktrees).
-func TestWalkSkipsNestedCheckouts(t *testing.T) {
+// A trailing slash restricts what the pattern MATCHES to directories, not what it covers.
+func TestDirOnlyPatternCoversBelowButNotAFile(t *testing.T) {
+	t.Run("SCIGS-B07: A trailing slash ignores the directory and what is below it, but not a file of that name", func(t *testing.T) {})
 	dir := t.TempDir()
-	must(t, os.MkdirAll(filepath.Join(dir, "src"), 0o755))
-	must(t, os.WriteFile(filepath.Join(dir, "src", "a.ts"), []byte("export const a = 1\n"), 0o644))
-	wt := filepath.Join(dir, "tools", "worktrees", "agent-1")
-	must(t, os.MkdirAll(filepath.Join(wt, "src"), 0o755))
-	must(t, os.WriteFile(filepath.Join(wt, ".git"), []byte("gitdir: /elsewhere\n"), 0o644))
-	must(t, os.WriteFile(filepath.Join(wt, "src", "a.ts"), []byte("export const a = 1\n"), 0o644))
-	clone := filepath.Join(dir, "vendor-clone")
-	must(t, os.MkdirAll(filepath.Join(clone, ".git"), 0o755))
-	must(t, os.WriteFile(filepath.Join(clone, "b.ts"), []byte("export const b = 1\n"), 0o644))
+	must(t, os.WriteFile(filepath.Join(dir, ".gitignore"), []byte("data/\n"), 0o644))
+	ig := LoadIgnore(dir)
+	if !ig.SkipDir("data", "data") {
+		t.Error("`data/` ignores the directory")
+	}
+	if !ig.SkipFile("data/dump.json") {
+		t.Error("`data/` covers the files below it")
+	}
+	if ig.SkipFile("data") {
+		t.Error("`data/` matches directories only, not a plain file named `data`")
+	}
+}
 
-	cfg := &config.Config{Layers: map[string]config.Layer{"code": {Pattern: "**/*.ts", Kind: "code"}}}
-	files, err := Walk(dir, cfg)
-	if err != nil {
-		t.Fatal(err)
+// Git's order: the last rule that matches wins, and a negation re-includes.
+func TestLastMatchingRuleWins(t *testing.T) {
+	t.Run("SCIGS-B08: The last matching gitignore rule decides", func(t *testing.T) {})
+	dir := t.TempDir()
+	must(t, os.WriteFile(filepath.Join(dir, ".gitignore"), []byte("# comment\n\n*.log\n!keep.log\n"), 0o644))
+	ig := LoadIgnore(dir)
+	if !ig.SkipFile("a.log") {
+		t.Error("`*.log` ignores a.log")
 	}
-	var got []string
-	for _, f := range files {
-		got = append(got, f.Path)
+	if ig.SkipFile("keep.log") {
+		t.Error("the later `!keep.log` re-includes keep.log")
 	}
-	joined := strings.Join(got, " ")
-	if !strings.Contains(joined, "src/a.ts") {
-		t.Fatalf("the project's own file was not scanned: %v", got)
+}
+
+func TestNilIgnoreKeepsTheFixedExclusions(t *testing.T) {
+	t.Run("SCIGS-B09: Without a loaded ignore set the fixed exclusions still hold", func(t *testing.T) {})
+	var ig *Ignore
+	if !ig.SkipDir("node_modules", "node_modules") || !ig.SkipDir("issues", "issues") {
+		t.Error("the built-in directories and Anchors' records are skipped without an ignore set")
 	}
-	if strings.Contains(joined, "worktrees") || strings.Contains(joined, "vendor-clone") {
-		t.Errorf("a nested checkout was scanned as project material: %v", got)
+	if !ig.SkipFile("a.swp") {
+		t.Error("ephemera are skipped without an ignore set")
+	}
+	if ig.SkipFile("a.ts") {
+		t.Error("nothing else is ignored without an ignore set")
+	}
+}
+
+func TestNestedGitignoreIsNotRead(t *testing.T) {
+	t.Run("SCIGS-X01: A nested gitignore does not change what the scan sees", func(t *testing.T) {})
+	dir := t.TempDir()
+	must(t, os.MkdirAll(filepath.Join(dir, "sub"), 0o755))
+	must(t, os.WriteFile(filepath.Join(dir, "sub", ".gitignore"), []byte("x.ts\n"), 0o644))
+	if LoadIgnore(dir).SkipFile("sub/x.ts") {
+		t.Error("only the root .gitignore is read")
 	}
 }

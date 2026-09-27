@@ -11,225 +11,252 @@ import (
 	"github.com/co2-lab/anchors/internal/scan"
 )
 
-// As duas constantes têm de ser a MESMA string.
+// The two constants must be the SAME string.
 //
-// O `scan` mantém o arquivo fora do mapa; o comando o cria. Se divergirem, o `new` gera
-// um arquivo com um sufixo e o mapa exclui outro — e o progresso volta a ser confrontado
-// pelos gates, reintroduzindo em silêncio o defeito que a separação removeu. Nenhum teste
-// de comportamento pegaria isso: os dois lados funcionariam, cada um com a sua régua.
-func TestProgresso_sufixoBateComOScan(t *testing.T) {
+// `scan` keeps the file out of the map; the command creates it. If they diverge, `new`
+// generates a file with one suffix and the map excludes another — and the progress is
+// confronted by the gates again, silently reintroducing the defect the separation removed.
+// No behaviour test would catch it: both sides would work, each with its own ruler.
+func TestProgress_suffixMatchesTheScanner(t *testing.T) {
+	t.Run("PLPRP-I01: The suffix is the one the scanner keeps out of the map", func(t *testing.T) {})
 	if !scan.IsProgressFile("plans/0001-x" + progressSuffix) {
-		t.Fatalf("o sufixo do comando (%q) não é reconhecido pelo scan — o `new` criaria "+
-			"um arquivo que o mapa NÃO exclui, e os gates voltariam a confrontá-lo",
+		t.Fatalf("the command's suffix (%q) is not recognised by the scanner — `new` would "+
+			"create a file the map does NOT exclude, and the gates would confront it again",
 			progressSuffix)
 	}
 }
 
-func TestProgresso_caminhoFicaAoLadoDoPlano(t *testing.T) {
-	got := progressPath("plans/0017-mutacao.md")
-	want := "plans/0017-mutacao" + progressSuffix
-	if got != want {
-		t.Fatalf("caminho: %q, queria %q", got, want)
+func TestProgress_pathSitsBesideThePlan(t *testing.T) {
+	t.Run("PLPRP-B01: The progress file sits beside the plan", func(t *testing.T) {})
+	got := progressPath("plans/0017-mutation.md")
+	if want := "plans/0017-mutation-progress.md"; got != want {
+		t.Fatalf("path: %q, want %q", got, want)
 	}
 }
 
-// O progresso nasce com uma seção por FASE DECLARADA, lida do cabeçalho.
+// The progress is born with one section per DECLARED PHASE, read from the headers.
 //
-// A fonte é a mesma que os gates `fase-existe` e `fase-ordenada` usam. Manter uma segunda
-// lista faria o progresso falar de fases que não existem — e a divergência só apareceria
-// quando alguém renomeasse uma fase.
-func TestProgresso_umaSecaoPorFaseDoPlano(t *testing.T) {
-	plano := `# Plano 0017
+// The source is the same one the phase gates use. Keeping a second list would make the
+// progress talk about phases that do not exist — and the divergence would only show when
+// someone renamed a phase.
+func TestProgress_oneSectionPerPhaseOfThePlan(t *testing.T) {
+	t.Run("PLPRP-B02: One section per phase declared in the plan's headers", func(t *testing.T) {})
+	plan := `# Plan 0017
 
-## Fases
+## Phases
 
-### MTUAO-F01 — a ferramenta e o relatório
+### MTUAO-F01 — the tool and the report
 
 - ` + "`packages/shared/MutationHarness.spec.md`" + `
 
-### MTUAO-F02 — o CI ingere o sinal (depende de MTUAO-F01)
+### MTUAO-F02 — CI ingests the signal (depends on MTUAO-F01)
+
+## ABCDE-F03 — two
+
+#### ABCDE-F04 — four
+
+# ABCDE-F05 — one is the title level
+
+##### ABCDE-F06 — five is below the phases
 `
 	dir := t.TempDir()
-	p := filepath.Join(dir, "0017-mutacao.md")
-	if err := os.WriteFile(p, []byte(plano), 0o644); err != nil {
+	p := filepath.Join(dir, "0017-mutation.md")
+	if err := os.WriteFile(p, []byte(plan), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	destino, err := writeInitialProgress(p, plano, "MTUAO")
+	dest, err := writeInitialProgress(p, plan, "MTUAO")
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := os.ReadFile(destino)
+	b, err := os.ReadFile(dest)
 	if err != nil {
 		t.Fatal(err)
 	}
 	got := string(b)
 
-	for _, fase := range []string{"MTUAO-F01", "MTUAO-F02"} {
-		if !strings.Contains(got, "## "+fase) {
-			t.Errorf("falta a seção da fase %s:\n%s", fase, got)
+	for _, phase := range []string{"MTUAO-F01", "MTUAO-F02", "ABCDE-F03", "ABCDE-F04"} {
+		if !strings.Contains(got, "## "+phase) {
+			t.Errorf("the section of phase %s is missing:\n%s", phase, got)
 		}
 	}
-	// O TÍTULO da fase vem junto: sem ele o arquivo é uma lista de códigos, e quem o abre
-	// tem de voltar ao plano para saber do que cada um trata.
-	if !strings.Contains(got, "a ferramenta e o relatório") {
-		t.Errorf("o título da fase não foi copiado:\n%s", got)
+	for _, phase := range []string{"ABCDE-F05", "ABCDE-F06"} {
+		if strings.Contains(got, phase) {
+			t.Errorf("a level-one or level-five header is not a phase, but %s got a section:\n%s", phase, got)
+		}
 	}
-	// O checkbox mora AQUI, e é o ponto inteiro da separação.
-	if !strings.Contains(got, "- [ ]") {
-		t.Errorf("o progresso nasce sem checkbox — é onde o `[x]` deve ser marcado:\n%s", got)
+	// The phase TITLE comes along: without it the file is a list of codes, and whoever opens
+	// it has to go back to the plan to know what each one is about.
+	if !strings.Contains(got, "## MTUAO-F01 — the tool and the report") {
+		t.Errorf("the phase title was not copied:\n%s", got)
+	}
+	// The checkbox lives HERE, and that is the whole point of the separation.
+	if strings.Count(got, "- [ ]") != 4 {
+		t.Errorf("each phase gets one unchecked item — where `[x]` is marked:\n%s", got)
 	}
 }
 
-// NÃO SOBRESCREVE: o arquivo guarda estado, e regravá-lo apagaria o trabalho registrado.
-func TestProgresso_naoSobrescreveEstadoExistente(t *testing.T) {
+// IT DOES NOT OVERWRITE: the file holds state, and rewriting it would erase recorded work.
+func TestProgress_doesNotOverwriteExistingState(t *testing.T) {
+	t.Run("PLPRP-B05: An existing progress file is never overwritten", func(t *testing.T) {})
 	dir := t.TempDir()
 	p := filepath.Join(dir, "0001-x.md")
-	if err := os.WriteFile(p, []byte("# Plano\n\n### ABCDE-F01 — fase\n"), 0o644); err != nil {
+	if err := os.WriteFile(p, []byte("# Plan\n\n### ABCDE-F01 — phase\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	jaFeito := "# Progresso — ABCDE\n\n## ABCDE-F01\n\n- [x] feito\n"
-	if err := os.WriteFile(progressPath(p), []byte(jaFeito), 0o644); err != nil {
+	done := "# Progress — ABCDE\n\n## ABCDE-F01\n\n- [x] done\n"
+	if err := os.WriteFile(progressPath(p), []byte(done), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := writeInitialProgress(p, "# Plano\n\n### ABCDE-F01 — fase\n", "ABCDE"); err == nil {
-		t.Fatal("sobrescreveu o progresso existente — o `[x]` de quem trabalhou seria apagado")
+	if _, err := writeInitialProgress(p, "# Plan\n\n### ABCDE-F01 — phase\n", "ABCDE"); err == nil {
+		t.Fatal("it overwrote the existing progress — the `[x]` of whoever worked would be erased")
 	}
 
 	b, _ := os.ReadFile(progressPath(p))
-	if string(b) != jaFeito {
-		t.Fatalf("o conteúdo mudou:\n%s", b)
+	if string(b) != done {
+		t.Fatalf("the content changed:\n%s", b)
 	}
 }
 
-// Um plano SEM fases declaradas ainda ganha o arquivo, com o que fazer escrito.
-func TestProgresso_planoSemFasesDizOQueFazer(t *testing.T) {
+// A plan WITHOUT declared phases still gets the file, with what to do written in it.
+func TestProgress_planWithoutPhasesSaysWhatToDo(t *testing.T) {
+	t.Run("PLPRP-B04: A plan with no phases gets a note saying what to add", func(t *testing.T) {})
 	dir := t.TempDir()
 	p := filepath.Join(dir, "0002-y.md")
-	plano := "# Plano\n\n## Objetivo\n\nnada de fases ainda\n"
-	if err := os.WriteFile(p, []byte(plano), 0o644); err != nil {
+	plan := "# Plan\n\n## Goal\n\nno phases yet\n"
+	if err := os.WriteFile(p, []byte(plan), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	destino, err := writeInitialProgress(p, plano, "YYYYY")
+	dest, err := writeInitialProgress(p, plan, "YYYYY")
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, _ := os.ReadFile(destino)
-	if !strings.Contains(string(b), "TODO") {
-		t.Errorf("plano sem fases devia dizer o que fazer:\n%s", b)
+	b, _ := os.ReadFile(dest)
+	if !strings.Contains(string(b), "the plan does not declare phases yet") {
+		t.Errorf("a plan without phases should say what to do:\n%s", b)
 	}
 }
 
-// O TAMANHO DO CÓDIGO vem da CONFIG, não de um literal.
+// THE CODE LENGTH comes from the CONFIG, not from a literal.
 //
-// `code_lengths` é configurável por projeto. Enquanto o regex fixava `{4,5}`, um projeto
-// com código de 3 letras tinha as fases reconhecidas pelos gates (que usam
-// `config.CodeLengthPattern()`) e IGNORADAS por este comando — o progresso nascia vazio,
-// sem nada acusar. O comentário do código afirmava paridade com os gates; o código só a
-// tinha para quem estivesse no default.
-//
-// Achado no review do próprio PR que introduziu o arquivo.
-func TestProgresso_respeitaCodeLengthsDoProjeto(t *testing.T) {
+// `code_lengths` is configurable per project. While the regex fixed `{4,5}`, a project with
+// three-letter codes had its phases recognised by the gates (which use
+// `config.CodeLengthPattern()`) and IGNORED by this command — the progress was born empty,
+// with nothing to accuse it.
+func TestProgress_honoursTheProjectsCodeLengths(t *testing.T) {
+	t.Run("PLPRP-B03: The phase code length follows the project's configuration", func(t *testing.T) {})
 	original := config.CodeLengths
 	t.Cleanup(func() { config.CodeLengths = original })
 	config.CodeLengths = []int{3}
 
-	plano := "# Plano\n\n### ABC-F01 — fase de código curto\n"
+	plan := "# Plan\n\n### ABC-F01 — short code phase\n"
 	dir := t.TempDir()
-	p := filepath.Join(dir, "0001-curto.md")
-	if err := os.WriteFile(p, []byte(plano), 0o644); err != nil {
+	p := filepath.Join(dir, "0001-short.md")
+	if err := os.WriteFile(p, []byte(plan), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	destino, err := writeInitialProgress(p, plano, "ABC")
+	dest, err := writeInitialProgress(p, plan, "ABC")
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, _ := os.ReadFile(destino)
+	b, _ := os.ReadFile(dest)
 	if !strings.Contains(string(b), "## ABC-F01") {
-		t.Fatalf("a fase de um projeto com code_lengths=[3] não foi reconhecida — os gates "+
-			"a veem e este comando não:\n%s", b)
+		t.Fatalf("the phase of a project with code_lengths=[3] was not recognised — the gates "+
+			"see it and this command does not:\n%s", b)
 	}
 }
 
-// O `anchors new progress --for <plano>` existe para os planos que nasceram ANTES do
-// mecanismo. O `anchors new plan` cria o companheiro junto — mas só ele, e um projeto que
-// adotou o Anchors antes desta versão fica com todos os planos sem companheiro, para
-// sempre, sem nada acusar.
+func runNewProgress(t *testing.T, args ...string) error {
+	t.Helper()
+	cmd := newProgressCmd()
+	cmd.SetArgs(args)
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	var err error
+	stdoutOf(t, func() { err = cmd.Execute() })
+	return err
+}
+
+// `anchors new progress --for <plan>` exists for the plans born BEFORE the mechanism.
+// `anchors new plan` creates the companion along with the plan — but only it, and a project
+// that adopted Anchors before this version is left with every plan without a companion.
 //
-// Medido no blue-eyes: 17 planos, ZERO com `-progress.md`, e 17 com checkbox DENTRO do
-// plano — que é exatamente o que este arquivo existe para tirar de lá. O caminho feliz
-// (plano novo) funcionava; era a ADOÇÃO que não tinha caminho.
-func TestNewProgress_criaParaPlanoExistente(t *testing.T) {
+// Measured: 17 plans, ZERO with `-progress.md`, and 17 with checkboxes INSIDE the plan.
+func TestNewProgress_createsForAnExistingPlan(t *testing.T) {
+	t.Run("PLPRP-B06: new progress creates the file for an existing plan", func(t *testing.T) {})
+	t.Run("PLPRP-X01: The progress takes its code from the plan's header", func(t *testing.T) {})
 	root := t.TempDir()
-	plano := filepath.Join(root, "plans", "0002-plataforma.md")
-	if err := os.MkdirAll(filepath.Dir(plano), 0o755); err != nil {
+	plan := filepath.Join(root, "plans", "0002-platform.md")
+	if err := os.MkdirAll(filepath.Dir(plan), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	const conteudo = `<!-- @anchors
+	const content = `<!-- @anchors
   code: PLTFR
   layer: plan
 -->
-# Plataforma
+# Platform
 
-### PLTFR-F01 — o contrato
+### PLTFR-F01 — the contract
 
-### PLTFR-F02 — o acesso às fontes
+### PLTFR-F02 — access to the sources
 `
-	if err := os.WriteFile(plano, []byte(conteudo), 0o644); err != nil {
+	if err := os.WriteFile(plan, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	cmd := newProgressCmd()
-	cmd.SetArgs([]string{"--root", root, "--for", "plans/0002-plataforma.md"})
-	cmd.SetOut(io.Discard)
-	cmd.SetErr(io.Discard)
-	if err := cmd.Execute(); err != nil {
-		t.Fatalf("criar o progresso: %v", err)
+	if err := runNewProgress(t, "--root", root, "--for", "plans/0002-platform.md"); err != nil {
+		t.Fatalf("create the progress: %v", err)
 	}
 
-	prog := filepath.Join(root, "plans", "0002-plataforma-progress.md")
+	prog := filepath.Join(root, "plans", "0002-platform-progress.md")
 	b, err := os.ReadFile(prog)
 	if err != nil {
-		t.Fatalf("o arquivo não foi criado: %v", err)
+		t.Fatalf("the file was not created: %v", err)
 	}
 	got := string(b)
-	// a IDENTIDADE vem do plano, não de um argumento: um progresso com código
-	// divergente do plano que ele acompanha deixaria de ser localizável.
+	// The IDENTITY comes from the plan, not from an argument: a progress with a code that
+	// diverges from its plan would no longer be locatable.
 	if !strings.Contains(got, "# Progress — PLTFR") {
-		t.Errorf("o progresso não herdou o código do plano:\n%s", got)
+		t.Errorf("the progress did not inherit the plan's code:\n%s", got)
 	}
-	for _, fase := range []string{"## PLTFR-F01", "## PLTFR-F02"} {
-		if !strings.Contains(got, fase) {
-			t.Errorf("falta a seção %q — as fases vêm dos cabeçalhos do plano", fase)
+	for _, phase := range []string{"## PLTFR-F01", "## PLTFR-F02"} {
+		if !strings.Contains(got, phase) {
+			t.Errorf("section %q is missing — the phases come from the plan's headers", phase)
 		}
 	}
 
-	// NÃO SOBRESCREVE: o arquivo guarda estado, e regravá-lo apagaria o que já foi
-	// registrado. É o que torna seguro rodar o comando sobre um projeto inteiro.
-	cmd2 := newProgressCmd()
-	cmd2.SetArgs([]string{"--root", root, "--for", "plans/0002-plataforma.md"})
-	cmd2.SetOut(io.Discard)
-	cmd2.SetErr(io.Discard)
-	if err := cmd2.Execute(); err == nil {
-		t.Error("rodar de novo sobrescreveu o estado — devia recusar")
+	// IT DOES NOT OVERWRITE: that is what makes running it over a whole project safe.
+	if err := runNewProgress(t, "--root", root, "--for", "plans/0002-platform.md"); err == nil {
+		t.Error("running it again overwrote the state — it should refuse")
 	}
 }
 
-// Sem `code:` no header o progresso nasceria sem identidade, e o par plano/progresso
-// deixaria de ser localizável por código.
-func TestNewProgress_recusaPlanoSemCodigo(t *testing.T) {
+// Without `code:` in the header the progress would be born without identity.
+func TestNewProgress_refusesAPlanWithoutCode(t *testing.T) {
+	t.Run("PLPRP-E01: A plan without a code is refused", func(t *testing.T) {})
 	root := t.TempDir()
-	plano := filepath.Join(root, "p.md")
-	if err := os.WriteFile(plano, []byte("# Plano sem header\n\n### ABCDE-F01 — fase\n"), 0o644); err != nil {
+	plan := filepath.Join(root, "p.md")
+	if err := os.WriteFile(plan, []byte("# Plan without header\n\n### ABCDE-F01 — phase\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	cmd := newProgressCmd()
-	cmd.SetArgs([]string{"--root", root, "--for", "p.md"})
-	cmd.SetOut(io.Discard)
-	cmd.SetErr(io.Discard)
-	if err := cmd.Execute(); err == nil {
-		t.Error("aceitou plano sem `code:` — o progresso nasceria sem identidade")
+	if err := runNewProgress(t, "--root", root, "--for", "p.md"); err == nil {
+		t.Error("it accepted a plan without `code:` — the progress would be born without identity")
+	}
+	if _, err := os.Stat(progressPath(plan)); !os.IsNotExist(err) {
+		t.Errorf("no progress file may be created for a plan without code (stat: %v)", err)
+	}
+}
+
+func TestNewProgress_requiresAReadablePlan(t *testing.T) {
+	t.Run("PLPRP-B07: new progress without the plan is refused", func(t *testing.T) {})
+	t.Run("PLPRP-E02: A plan that cannot be read is refused", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := runNewProgress(t, "--root", root); err == nil || !strings.Contains(err.Error(), "--for") {
+		t.Errorf("without --for the command must refuse naming the flag, got %v", err)
+	}
+	if err := runNewProgress(t, "--root", root, "--for", "plans/none.md"); err == nil || !strings.Contains(err.Error(), "read the plan") {
+		t.Errorf("a missing plan must fail reading it, got %v", err)
 	}
 }

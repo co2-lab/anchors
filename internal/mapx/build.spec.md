@@ -1,0 +1,127 @@
+<!-- @anchors
+  code: GRBLG
+  updated_at: 2026-09-26
+  layer: mapa
+-->
+# GraphBuild — projecting the declared structure onto the scanned files: one node per file, and the relations between them
+
+> **Code**: `GRBLG`
+
+## Overview
+
+The map is the projection of the declared structure (the configuration) onto the real files. This unit
+takes the scanned files and the configuration and assembles the graph: one node per file, and the
+relations between them. It knows nothing of any language or file name — every decision comes from the
+configuration, and the dates of each file come from the caller, so the unit neither reads the disk nor
+calls version control.
+
+A node's identity is decided in a fixed order. What the author DECLARES in the header wins: it is where
+the author says whose file this is. A derived artefact (a test, a feature, the code) with no header takes
+the declared identity of its anchor — the spec with the same stem in the same directory — because a test
+proves a unit and does not own one; reading its text would take test data for a declaration. Only when
+neither exists is the identity inferred from the first rule code in the text. A vendored copy that Anchors
+seeded and still owns gets no local identity at all.
+
+Relations come from four sources:
+- Co-location. From each anchor file, the configured path templates give where its derived files live,
+  and the triad is linked: the spec specifies the code (every file it matches), is covered by the feature,
+  which is tested by the test; with no feature, the spec is tested by the test directly. A template can be
+  overridden per layer of the UNIT (the layer the spec declares, not the layer its own file matched), or
+  replaced whole for one identity code. The anchor's directory and name are data and are matched
+  literally; only the template's own wildcards expand.
+- Scenario codes. A spec or feature and a test that carry the same rule code, in different directories,
+  are linked by an inferred tested-by relation — but only for codes whose root is the file's own identity.
+  Citing a sibling unit's rule is not declaring it.
+- Governance. Each governing rule links its guide to every file of every layer carrying the rule's tag,
+  never to the guide itself.
+- Declarations. A spec's dependency table, a plan's seeds and needs, and a spec's realized doctrine and
+  flag scenarios become relations — only when the target exists. A relation to nothing would be an anchor
+  that lies.
+
+Finally the graph is sorted, so the committed file does not change between runs, and a rebuild keeps what
+the previous graph already knew: the stamps and judgments of the relations that survived, and the signals
+of the nodes whose content did not change.
+
+## Domain
+
+| Input | Accepts | Outside the domain | Who guarantees |
+| --- | --- | --- | --- |
+| the scanned files | every file the scan matched to a layer, with its kind, revision, header and codes | — | the scan decides which files exist and their kinds |
+| the configuration | layers, derived templates (possibly absent), governing rules | templates naming variables other than dir, name, ext and module | the configuration loader; an absent derived section simply yields no co-location |
+| the dates per path | a map from path to last-change date, or nothing | — | the caller, from version control; with nothing, dates stay empty |
+| the previous graph | a graph loaded from disk, or nothing | — | the caller; with nothing, nothing is carried over |
+
+## Effects
+
+### Nodes and identity
+
+| Effect | Description |
+| --- | --- |
+| `GRBLG-B01` | Every scanned file becomes one node carrying its path, kind, revision and layer, the date the caller gave for that path, and its layer's tags and regime. |
+| `GRBLG-B02` | The identity declared in a file's header wins over everything else, including an anchor's identity and codes cited earlier in the text. |
+| `GRBLG-B03` | A derived file with no header takes the declared identity of the anchor with the same stem in the same directory; another unit in that directory does not receive it. |
+| `GRBLG-B04` | With neither header nor anchor, the identity is the root (`RuleRoot`) of the first rule code in the text, and empty when there is none. |
+| `GRBLG-B05` | A vendored file that Anchors still owns has no local identity, whatever its text or header says. |
+| `GRBLG-B06` | A node is marked as having a declared identity only when its header declares one. |
+
+### Co-location
+
+| Effect | Description |
+| --- | --- |
+| `GRBLG-B07` | The files of one unit, named after the anchor stripped of its artifact suffix (`StemOfAnchor`), are linked by the templates: the spec specifies the code, the spec is covered by the feature, and the feature is tested by the test. |
+| `GRBLG-B08` | When the anchor is the code, the spec is found from it as a derived file and the relations keep the same direction, from the spec down. |
+| `GRBLG-B09` | With no feature, the spec is tested by the test directly. |
+| `GRBLG-B10` | A per-layer override applies when its layer is the UNIT's layer — the layer a spec declares in its header wins over the layer its own file matched — and replaces the templates of the layers it lists. |
+| `GRBLG-B11` | A per-code override replaces every template for the anchor with that identity, and the unit then links only what the override names. |
+| `GRBLG-B12` | The anchor's directory and name are matched literally (`GlobEscape`), brackets included, while a template's own wildcards expand to every existing match, each of them linked. |
+
+### Scenario and declared relations
+
+| Effect | Description |
+| --- | --- |
+| `GRBLG-B13` | A spec or feature and a test in different directories that carry the same rule code of their own unit are linked by an inferred tested-by relation; files in the same directory, pairs already linked by co-location, and codes cited from another unit are not. |
+| `GRBLG-B14` | A governing rule links its guide to every file of every layer carrying the rule's tag, never to the guide itself, and never to files of layers without the tag. |
+| `GRBLG-B15` | Each row of a spec's dependency table becomes a depends-on relation to the named file, carrying the method and the row's code, when that file exists. |
+| `GRBLG-B16` | A plan's seed that names a path links to that exact path only; a bare file name links to the one file with that name, and to nothing when several share it. |
+| `GRBLG-B17` | A plan's need becomes a needs relation only when the needed plan exists. |
+| `GRBLG-B18` | A realized doctrine rule or a flag scenario is resolved by its unit code to the doctrine or flag file declaring that code, carrying the local rule and the target rule; an unknown unit code links nothing. |
+
+### Order and rebuild
+
+| Effect | Description |
+| --- | --- |
+| `GRBLG-B19` | The nodes are sorted by path and the relations by source, target and type. |
+| `GRBLG-B20` | A rebuild (`PreserveStamps`) carries over the stamp and the judgments of every relation that survived with the same type, source and target. |
+| `GRBLG-B21` | A rebuild carries over a node's signal only when the node's revision did not change. |
+
+## Invariants
+
+| Rule | Always holds | How it is proven |
+| --- | --- | --- |
+| `GRBLG-I01` | The same files and configuration always build the same graph, whatever order the files arrive in. | builds from the files in two orders and compares the graphs |
+
+## Constraints
+
+| Rule | Boundary | Why |
+| --- | --- | --- |
+| `GRBLG-X01` | The build does not ask version control or the disk for anything: a file's date is the one the caller gave, and empty when none was given. | Keeping version control out keeps the map buildable from any list of files, and testable. |
+| `GRBLG-X02` | No relation points to a file that was not scanned. | A relation to a missing file is an anchor that lies; the gates that confront the declaration report the missing target instead. |
+
+## Errors
+
+none — every branch that skips a relation is normal flow (a target that does not exist, a tag no layer carries, an ambiguous name), stated as behaviours B13–B18 and X02; assembling the graph in memory cannot fail.
+
+## Dependencies
+
+| Code | File | Method | Layer |
+| --- | --- | --- | --- |
+| DEP1 | `internal/scan/scan.go` | `File` | scan — the scanned files, their headers, codes and declarations |
+| DEP2 | `internal/config/config.go` | `Config` | config — layers, derived templates and governing rules |
+| DEP3 | `internal/mapx/model.go` | `Graph`, `Node`, `Edge` | mapa — the graph assembled |
+
+## Open Decisions
+
+| Code | Question | Who decides | Becomes |
+| --- | --- | --- | --- |
+
+none

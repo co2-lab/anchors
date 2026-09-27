@@ -14,6 +14,9 @@ import (
 // issues in todo/doing (with those waiting for the user apart) and the tasks not done.
 // Before, a backlog from earlier runs stayed silent under a clean-looking check.
 func TestLocalBacklog(t *testing.T) {
+	t.Run("LCBCL-B01: The issues in todo and doing are counted, with the user-owned ones apart", func(t *testing.T) {})
+	t.Run("LCBCL-B02: The pending and claimed tasks are counted", func(t *testing.T) {})
+	t.Run("LCBCL-B03: A project with nothing open prints no backlog", func(t *testing.T) {})
 	root := t.TempDir()
 	if b := readLocalBacklog(root); !b.empty() {
 		t.Fatalf("an empty project has no backlog: %+v", b)
@@ -63,20 +66,84 @@ func TestLocalBacklog(t *testing.T) {
 	}
 }
 
-// Wired on the full sweep of the LOCAL mode only: in github mode the backlog is the board,
-// and on `--changed` (every pre-commit) the same lines would be noise.
-func TestLocalBacklogIsPrintedOnTheFullLocalCheckOnly(t *testing.T) {
-	b, err := os.ReadFile("check.go")
-	if err != nil {
+func TestLocalBacklogPrintsOnlyTheSideWithWork(t *testing.T) {
+	t.Run("LCBCL-B04: Only the side that has something open gets its line", func(t *testing.T) {})
+	out := captureStdout(t, func() { printLocalBacklog(localBacklog{Pending: 2}) })
+	if !strings.Contains(out, "anchors next") {
+		t.Errorf("the tasks line is missing:\n%s", out)
+	}
+	if strings.Contains(out, "/todo/") || strings.Contains(out, "/doing/") {
+		t.Errorf("with no issue open, the issues line must not be printed:\n%s", out)
+	}
+	out = captureStdout(t, func() { printLocalBacklog(localBacklog{Doing: 1}) })
+	if !strings.Contains(out, "/doing/") || strings.Contains(out, "anchors next") {
+		t.Errorf("with only an issue in doing, only the issues line is printed:\n%s", out)
+	}
+}
+
+func TestLocalBacklogSubsetCountsAloneAreEmpty(t *testing.T) {
+	t.Run("LCBCL-I01: User-owned and past-window counts alone do not make a backlog", func(t *testing.T) {})
+	b := localBacklog{ForUser: 3, Old: 2}
+	if !b.empty() {
+		t.Fatalf("user-owned and past-window counts alone must leave the backlog empty: %+v", b)
+	}
+	if out := captureStdout(t, func() { printLocalBacklog(b) }); out != "" {
+		t.Errorf("an empty backlog prints nothing, printed:\n%s", out)
+	}
+}
+
+func TestLocalBacklogReadsWithoutChanging(t *testing.T) {
+	t.Run("LCBCL-X01: Reading the backlog changes no issue and no task", func(t *testing.T) {})
+	root := t.TempDir()
+	if _, _, err := issue.Open(root, issue.Issue{Kind: issue.Violation, Gate: "g", Target: "a.ts", Date: "2026-09-25"}); err != nil {
 		t.Fatal(err)
 	}
-	s := string(b)
-	i := strings.Index(s, "printLocalBacklog(readLocalBacklog(absRoot))")
-	if i < 0 {
-		t.Fatal("check no longer prints the local backlog")
+	if err := os.WriteFile(filepath.Join(root, "x.ts"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
 	}
-	guard := s[max(0, i-120):i]
-	if !strings.Contains(guard, "if all && !cfg.GitHubMode() {") {
-		t.Errorf("the backlog must be printed under `all && !GitHubMode()`, found:\n%s", guard)
+	if _, err := queue.Enqueue(root, queue.Task{ID: "0001-code-x", Changed: "x.ts", Kind: "code", Origin: "manual", CreatedAt: "2026-09-25T10:00:00Z"}); err != nil {
+		t.Fatal(err)
+	}
+	snapshot := func() map[string]string {
+		m := map[string]string{}
+		filepath.WalkDir(root, func(p string, d os.DirEntry, err error) error {
+			if err == nil && !d.IsDir() {
+				b, _ := os.ReadFile(p)
+				m[p] = string(b)
+			}
+			return nil
+		})
+		return m
+	}
+	before := snapshot()
+	b := readLocalBacklog(root)
+	if b.Todo != 1 || b.Pending != 1 {
+		t.Fatalf("backlog = %+v, want 1 todo and 1 pending", b)
+	}
+	after := snapshot()
+	if len(before) != len(after) {
+		t.Fatalf("reading the backlog changed the files: %d before, %d after", len(before), len(after))
+	}
+	for p, c := range before {
+		if after[p] != c {
+			t.Errorf("reading the backlog changed %s", p)
+		}
+	}
+}
+
+func TestLocalBacklogUnlistableFolderCountsZero(t *testing.T) {
+	t.Run("LCBCL-E01: An issue folder that cannot be listed counts as zero", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, issue.Dir), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, issue.Dir, string(issue.Todo)), []byte("not a folder"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := issue.List(root, issue.Todo); err == nil {
+		t.Fatal("precondition: listing a todo that is a file must fail")
+	}
+	if b := readLocalBacklog(root); b.Todo != 0 || !b.empty() {
+		t.Errorf("an unlistable todo must count zero, got %+v", b)
 	}
 }

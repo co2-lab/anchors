@@ -2,6 +2,8 @@ package common
 
 import (
 	"io"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
@@ -51,6 +53,8 @@ func cmdWithRoot(root string) *cobra.Command {
 // First run on a machine: the notice is shown, with the ways to turn it off, the emitter
 // is turned on — and the second run is silent.
 func TestNoticeTelemetry_noticeOnceThenQuiet(t *testing.T) {
+	t.Run("TLSTT-B03: The notice is shown once, then telemetry runs quietly", func(t *testing.T) {})
+	t.Run("TLSTT-I01: No emitter without the notice", func(t *testing.T) {})
 	isolateTelemetry(t)
 	root := t.TempDir()
 	cmd := cmdWithRoot(root)
@@ -76,6 +80,9 @@ func TestNoticeTelemetry_noticeOnceThenQuiet(t *testing.T) {
 
 // The environment turns it off with no file edited: no notice, no emitter.
 func TestNoticeTelemetry_envOffCreatesNothing(t *testing.T) {
+	t.Run("TLSTT-I01: No emitter without the notice", func(t *testing.T) {})
+	t.Run("TLSTT-B02: The environment opt-out builds nothing", func(t *testing.T) {})
+	t.Run("TLSTT-B06: Waiting at exit with no emitter returns at once", func(t *testing.T) {})
 	isolateTelemetry(t)
 	t.Setenv("ANCHORS_TELEMETRY", "off")
 	root := t.TempDir()
@@ -92,6 +99,7 @@ func TestNoticeTelemetry_envOffCreatesNothing(t *testing.T) {
 
 // `telemetry: off` in anchors.yaml turns it off for the project (run from its root).
 func TestNoticeTelemetry_projectFileOff(t *testing.T) {
+	t.Run("TLSTT-B01: The project opt-out is read from the project root", func(t *testing.T) {})
 	isolateTelemetry(t)
 	root := t.TempDir()
 	writeFile(t, filepath.Join(root, "anchors.yaml"), "telemetry: off\n")
@@ -106,6 +114,7 @@ func TestNoticeTelemetry_projectFileOff(t *testing.T) {
 // The project's `telemetry: off` holds from a subdirectory and with `--root` too: the
 // config is read from the project root, not from the cwd.
 func TestNoticeTelemetry_projectFileOffFromElsewhere(t *testing.T) {
+	t.Run("TLSTT-B01: The project opt-out is read from the project root", func(t *testing.T) {})
 	isolateTelemetry(t)
 	root := t.TempDir()
 	writeFile(t, filepath.Join(root, "anchors.yaml"), "telemetry: off\n")
@@ -124,7 +133,29 @@ func TestNoticeTelemetry_projectFileOffFromElsewhere(t *testing.T) {
 	}
 }
 
+// Starting telemetry builds the emitter and sends nothing: the endpoint is a local server
+// that counts requests, and after the start and the exit wait it has received none.
+func TestNoticeTelemetry_startingSendsNothing(t *testing.T) {
+	t.Run("TLSTT-X01: Starting telemetry sends nothing", func(t *testing.T) {})
+	isolateTelemetry(t)
+	hits := 0
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { hits++ }))
+	defer srv.Close()
+	t.Setenv("ANCHORS_TELEMETRY_ENDPOINT", srv.URL)
+
+	captureStderr(t, func() { NoticeTelemetry(cmdWithRoot(t.TempDir())) })
+	if Emitter == nil {
+		t.Fatal("telemetry on, and the emitter was not built")
+	}
+	FlushTelemetry()
+	srv.Close() // waits for any request still being served
+	if hits != 0 {
+		t.Errorf("starting telemetry sent %d request(s)", hits)
+	}
+}
+
 func TestTelemetryHeaders_onlyFromTheEnvironment(t *testing.T) {
+	t.Run("TLSTT-B04: The authentication header comes only from the environment", func(t *testing.T) {})
 	t.Setenv("ANCHORS_TELEMETRY_KEY", "")
 	if h := telemetryHeaders(); h != nil {
 		t.Errorf("no key, no headers: %v", h)
@@ -138,6 +169,7 @@ func TestTelemetryHeaders_onlyFromTheEnvironment(t *testing.T) {
 // An explicit --root is taken as given; with none, the root is found walking up to the
 // directory that has anchors.yaml.
 func TestProjectRoot(t *testing.T) {
+	t.Run("TLSTT-B05: The project root is the explicit root or the nearest configured directory above", func(t *testing.T) {})
 	root := t.TempDir()
 	if got := ProjectRoot(cmdWithRoot(root)); got != root {
 		t.Errorf("explicit --root: got %q, want %q", got, root)

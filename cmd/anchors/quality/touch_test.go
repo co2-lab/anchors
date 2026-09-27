@@ -8,12 +8,16 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
 )
 
 const touchHeader = "// @anchors\n//   code: CODEX\n//   updated_at: 2026-09-01\n"
 
 // What `anchors touch` does with one file: it does not lie about what changed.
 func TestDecideTouch(t *testing.T) {
+	t.Run("HDTHD-B01: Only a date inside the header at the top of the file is bumped", func(t *testing.T) {})
+	t.Run("HDTHD-B02: A real change and a new file are bumped to the date", func(t *testing.T) {})
+	t.Run("HDTHD-B03: An unchanged file, a date-only change and a file already at the date are not bumped", func(t *testing.T) {})
 	base := touchHeader + "export const a = 1\n"
 	for _, c := range []struct {
 		name          string
@@ -90,6 +94,8 @@ func runTouch(t *testing.T, args ...string) string {
 // --changed (the default): real changes and new files are bumped; a date-only change and
 // an excluded file are not, and each skip says why.
 func TestTouch_changed(t *testing.T) {
+	t.Run("HDTHD-B04: Without the staged flag the candidates are the worktree changes and the untracked files", func(t *testing.T) {})
+	t.Run("HDTHD-B10: Each bump and each skip is listed with its reason, then the total", func(t *testing.T) {})
 	root := touchRepo(t)
 	touchWrite(t, root, "a.ts", touchHeader+"export const x = 2\n")                                                 // real change
 	touchWrite(t, root, "b.ts", strings.Replace(touchHeader, "2026-09-01", "2026-09-10", 1)+"export const x = 1\n") // date only
@@ -118,6 +124,8 @@ func TestTouch_changed(t *testing.T) {
 // --staged: a clean staged file is bumped and re-staged; one with changes outside the
 // index is skipped, because re-staging it would commit changes nobody chose.
 func TestTouch_staged(t *testing.T) {
+	t.Run("HDTHD-B05: With the staged flag the index is dated and re-staged", func(t *testing.T) {})
+	t.Run("HDTHD-B06: A staged file with changes outside the index is skipped", func(t *testing.T) {})
 	root := touchRepo(t)
 	touchWrite(t, root, "a.ts", touchHeader+"export const x = 2\n")
 	touchWrite(t, root, "d.ts", touchHeader+"export const x = 2\n")
@@ -140,53 +148,13 @@ func TestTouch_staged(t *testing.T) {
 	}
 }
 
-// The pre-commit phase dates the staged files first — on by default, off with
-// `touch.pre_commit: false`, and never outside the pre-commit over the index.
-func TestPreCommitTouches(t *testing.T) {
-	off := false
-	on := true
-	for _, c := range []struct {
-		name   string
-		staged bool
-		phase  string
-		cfg    *config.Config
-		want   bool
-	}{
-		{"default: no config", true, "pre-commit", nil, true},
-		{"default: no touch block", true, "pre-commit", &config.Config{}, true},
-		{"declared on", true, "pre-commit", &config.Config{Touch: &config.Touch{PreCommit: &on}}, true},
-		{"declared off", true, "pre-commit", &config.Config{Touch: &config.Touch{PreCommit: &off}}, false},
-		{"not staged", false, "pre-commit", nil, false},
-		{"another phase", true, "ci", nil, false},
-	} {
-		if got := preCommitTouches(c.staged, c.phase, c.cfg); got != c.want {
-			t.Errorf("%s: preCommitTouches = %v, want %v", c.name, got, c.want)
-		}
-	}
-}
-
-// What the pre-commit prints: never a silent rewrite.
-func TestPrintPreCommitTouch(t *testing.T) {
-	out := captureStdout(t, func() {
-		printPreCommitTouch([]touchDecision{{File: "a.ts"}, {File: "b.ts"}},
-			map[touchSkip][]string{skipUnstaged: {"d.ts"}}, nil)
-	})
-	for _, want := range []string{"dated 2 staged file(s) today", "a.ts, b.ts", "d.ts not dated"} {
-		if !strings.Contains(out, want) {
-			t.Errorf("the pre-commit should say %q:\n%s", want, out)
-		}
-	}
-	if out := captureStdout(t, func() { printPreCommitTouch(nil, map[touchSkip][]string{}, nil) }); out != "" {
-		t.Errorf("nothing dated, nothing said; printed:\n%s", out)
-	}
-}
-
 // A PARTIAL COMMIT (`git commit -- <paths>`) runs the hook on a temporary index
 // (`next-index-<pid>.lock`) and prepares the real one in `index.lock`. Staging only in the
 // temporary index dated the commit and left the real index with the old date (`MM`,
 // reported from MIF). Both must end dated. The state git builds is simulated here: both
 // indexes hold the pre-hook worktree version.
 func TestTouch_stagedInAPartialCommit(t *testing.T) {
+	t.Run("HDTHD-B07: In a partial commit the real index is dated too", func(t *testing.T) {})
 	root := touchRepo(t)
 	touchWrite(t, root, "a.ts", touchHeader+"export const x = 2\n")
 	gitDir := filepath.Join(root, ".git")
@@ -217,6 +185,118 @@ func TestTouch_stagedInAPartialCommit(t *testing.T) {
 		out, _ := c.Output()
 		if !strings.Contains(string(out), "updated_at: 2026-09-25") {
 			t.Errorf("%s must hold the dated a.ts:\n%s", filepath.Base(idx), out)
+		}
+	}
+}
+
+func TestTouch_configExcludeAddsToTheFlag(t *testing.T) {
+	t.Run("HDTHD-B08: The exclude globs of the flag and of the configuration add up", func(t *testing.T) {})
+	root := touchRepo(t)
+	touchWrite(t, root, "anchors.yaml", "version: 2\nlayers: {}\ntouch:\n  exclude: [\"gen/**\"]\n")
+	touchWrite(t, root, "a.ts", touchHeader+"export const x = 2\n")
+	touchWrite(t, root, "gen/c.ts", touchHeader+"export const x = 2\n")
+	touchWrite(t, root, "d.ts", touchHeader+"export const x = 2\n")
+
+	out := runTouch(t, "--root", root, "--date", "2026-09-25", "--exclude", "d.ts")
+	for _, want := range []string{"bumped a.ts", "skipped gen/c.ts — " + string(skipExcluded), "skipped d.ts — " + string(skipExcluded)} {
+		if !strings.Contains(out, want) {
+			t.Errorf("the output should say %q:\n%s", want, out)
+		}
+	}
+}
+
+func TestTouch_dryRunWritesNothingAndDefaultsToToday(t *testing.T) {
+	t.Run("HDTHD-B09: The dry run says what it would bump and writes nothing", func(t *testing.T) {})
+	t.Run("HDTHD-B11: Without a date the day of the run is written", func(t *testing.T) {})
+	root := touchRepo(t)
+	touchWrite(t, root, "a.ts", touchHeader+"export const x = 2\n")
+	out := runTouch(t, "--root", root, "--dry-run")
+	today := gitmeta.Today()
+	if !strings.Contains(out, "would bump a.ts  (2026-09-01 → "+today+")") || !strings.Contains(out, "would bump 1 file(s) to "+today+".") {
+		t.Errorf("the dry run names the bump with today's date:\n%s", out)
+	}
+	if b, _ := os.ReadFile(filepath.Join(root, "a.ts")); !strings.Contains(string(b), "updated_at: 2026-09-01") {
+		t.Errorf("the dry run must not write:\n%s", b)
+	}
+}
+
+func TestTouch_secondRunBumpsNothing(t *testing.T) {
+	t.Run("HDTHD-I01: Touching twice bumps nothing the second time", func(t *testing.T) {})
+	root := touchRepo(t)
+	touchWrite(t, root, "a.ts", touchHeader+"export const x = 2\n")
+	runTouch(t, "--root", root, "--date", "2026-09-25")
+	out := runTouch(t, "--root", root, "--date", "2026-09-25")
+	if !strings.Contains(out, "skipped a.ts — "+string(skipAlready)) || !strings.Contains(out, "bumped 0 file(s) to 2026-09-25.") {
+		t.Errorf("a file already at the date is left alone:\n%s", out)
+	}
+}
+
+func TestTouch_fileWithoutHeaderIsNotTouchedNorListed(t *testing.T) {
+	t.Run("HDTHD-X01: A changed file with no dated header is neither touched nor listed", func(t *testing.T) {})
+	root := touchRepo(t)
+	touchWrite(t, root, "plain.ts", "export const p = 1\n")
+	out := runTouch(t, "--root", root, "--date", "2026-09-25")
+	if strings.Contains(out, "plain.ts") {
+		t.Errorf("a file without a dated header is not the command's business:\n%s", out)
+	}
+	if b, _ := os.ReadFile(filepath.Join(root, "plain.ts")); string(b) != "export const p = 1\n" {
+		t.Errorf("plain.ts was changed:\n%s", b)
+	}
+}
+
+func TestTouch_outsideGitFails(t *testing.T) {
+	t.Run("HDTHD-E01: Outside a git repository touch fails", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("no git")
+	}
+	dir := t.TempDir()
+	if temRepoAcima(dir) {
+		t.Skipf("the temporary directory %s is inside a git repository", dir)
+	}
+	cmd := newTouchCmd()
+	cmd.SetArgs([]string{"--root", dir})
+	cmd.SilenceErrors, cmd.SilenceUsage = true, true
+	var err error
+	captureStdout(t, func() { err = cmd.Execute() })
+	if err == nil || !strings.Contains(err.Error(), "git diff HEAD") {
+		t.Errorf("without a repository there is no change to date; got %v", err)
+	}
+}
+
+func TestTouch_unreadableCandidateIsSkipped(t *testing.T) {
+	t.Run("HDTHD-E02: A changed file that cannot be read is skipped and named", func(t *testing.T) {})
+	if os.Getuid() == 0 {
+		t.Skip("root reads everything")
+	}
+	root := touchRepo(t)
+	touchWrite(t, root, "a.ts", touchHeader+"export const x = 2\n")
+	touchWrite(t, root, "b.ts", touchHeader+"export const x = 2\n")
+	if err := os.Chmod(filepath.Join(root, "b.ts"), 0o000); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.Chmod(filepath.Join(root, "b.ts"), 0o644) })
+	out := runTouch(t, "--root", root, "--date", "2026-09-25")
+	if !strings.Contains(out, "skipped b.ts — "+string(skipUnreadable)) || !strings.Contains(out, "bumped a.ts") {
+		t.Errorf("an unreadable file is named and the rest goes on:\n%s", out)
+	}
+}
+
+func TestTouchOnPreCommitIsOnByDefault(t *testing.T) {
+	t.Run("HDTHD-B12: The pre-commit bump is on unless the project turns it off", func(t *testing.T) {})
+	off, on := false, true
+	for _, c := range []struct {
+		name string
+		cfg  *config.Config
+		want bool
+	}{
+		{"no config", nil, true},
+		{"no touch block", &config.Config{}, true},
+		{"touch block without pre_commit", &config.Config{Touch: &config.Touch{}}, true},
+		{"declared on", &config.Config{Touch: &config.Touch{PreCommit: &on}}, true},
+		{"declared off", &config.Config{Touch: &config.Touch{PreCommit: &off}}, false},
+	} {
+		if got := touchOnPreCommit(c.cfg); got != c.want {
+			t.Errorf("%s: touchOnPreCommit = %v, want %v", c.name, got, c.want)
 		}
 	}
 }

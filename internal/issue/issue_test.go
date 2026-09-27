@@ -15,34 +15,41 @@ func viol() Issue {
 }
 
 func TestKeyIsStableAcrossDates(t *testing.T) {
+	t.Run("ISLFS-B01: The key is stable across dates and distinct per gate", func(t *testing.T) {})
 	a := viol()
 	b := viol()
-	b.Date = "2027-01-01" // outra data
+	b.Date = "2027-01-01" // another date
 	if a.Key() != b.Key() {
-		t.Fatalf("a Key deve ser estável no tempo: %q vs %q", a.Key(), b.Key())
+		t.Fatalf("the Key must be stable in time: %q vs %q", a.Key(), b.Key())
 	}
 	if a.ID() == b.ID() {
-		t.Fatal("o ID (nome de arquivo) deve variar com a data")
+		t.Fatal("the ID (file name) must vary with the date")
 	}
-	// gate diferente → Key diferente (mesmo alvo pode violar dois gates)
+	// a different gate → a different Key (the same target may violate two gates)
 	c := viol()
 	c.Gate = "spec-has-code"
 	if a.Key() == c.Key() {
-		t.Fatal("gates distintos deveriam gerar Keys distintas")
+		t.Fatal("distinct gates should give distinct Keys")
+	}
+	if got := (Issue{Kind: Stale, Anchor: "a/x.spec.md", Target: "a/x.go"}).Key(); got != "stale--a-x.spec.md--vs--a-x.go" {
+		t.Errorf("an anchored edge key = %q, want stale--a-x.spec.md--vs--a-x.go", got)
 	}
 }
 
 func TestIDIsLegibleAndSanitized(t *testing.T) {
+	t.Run("ISLFS-B02: The file name is the date and the key, with no slash", func(t *testing.T) {})
 	id := viol().ID()
-	if !strings.HasPrefix(id, "2026-08-07--violation--") {
-		t.Fatalf("ID inesperado: %s", id)
+	if !strings.HasPrefix(id, "2026-08-07--violation--") || !strings.HasSuffix(id, ".md") {
+		t.Fatalf("unexpected ID: %s", id)
 	}
 	if strings.Contains(id, "/") {
-		t.Fatalf("ID não deve conter barra: %s", id)
+		t.Fatalf("the ID must not hold a slash: %s", id)
 	}
 }
 
 func TestOpenCreatesInTodo(t *testing.T) {
+	t.Run("ISLFS-B04: A new issue is opened in todo", func(t *testing.T) {})
+	t.Run("ISLFS-B03: The body names the kind, the target, the gate and the detail", func(t *testing.T) {})
 	root := t.TempDir()
 	created, at, err := Open(root, viol())
 	if err != nil || !created || at != Todo {
@@ -50,99 +57,106 @@ func TestOpenCreatesInTodo(t *testing.T) {
 	}
 	ids, _ := List(root, Todo)
 	if len(ids) != 1 {
-		t.Fatalf("esperava 1 issue em todo/, veio %v", ids)
+		t.Fatalf("want 1 issue in todo/, got %v", ids)
 	}
 	body, _ := os.ReadFile(filepath.Join(root, Dir, string(Todo), ids[0]))
 	s := string(body)
-	for _, want := range []string{"VIOLATION", "features/x/A.spec.md", "spec-sections", "falta a seção Regras"} {
+	for _, want := range []string{"# VIOLATION: features/x/A.spec.md", "**gate:** spec-sections", "**owner:** agente",
+		"**detected on:** 2026-08-07", "## Violated invariant\n\nfalta a seção Regras"} {
 		if !strings.Contains(s, want) {
-			t.Errorf("corpo não contém %q:\n%s", want, s)
+			t.Errorf("the body lacks %q:\n%s", want, s)
 		}
 	}
 }
 
 func TestOpenIsIdempotentAcrossDates(t *testing.T) {
+	t.Run("ISLFS-B05: The same issue is not opened twice", func(t *testing.T) {})
 	root := t.TempDir()
 	_, _, _ = Open(root, viol())
-	// reconfrontar em OUTRO dia não duplica (mesma Key)
+	// confronting again on ANOTHER day does not duplicate (same Key)
 	later := viol()
 	later.Date = "2026-09-15"
 	created, at, _ := Open(root, later)
 	if created {
-		t.Fatal("não deveria recriar issue já existente (mesma Key, outra data)")
+		t.Fatal("must not recreate an existing issue (same Key, another date)")
 	}
 	if at != Todo {
-		t.Fatalf("estado atual deveria ser todo, veio %v", at)
+		t.Fatalf("the current state should be todo, got %v", at)
 	}
 	if ids, _ := List(root, Todo); len(ids) != 1 {
-		t.Fatalf("esperava 1 issue, veio %d", len(ids))
+		t.Fatalf("want 1 issue, got %d", len(ids))
 	}
 }
 
 func TestResolveMovesToDone(t *testing.T) {
+	t.Run("ISLFS-B08: Resolving moves a live issue to done, and only once", func(t *testing.T) {})
+	t.Run("ISLFS-I01: A resolved issue is moved, not copied, and never resurrected", func(t *testing.T) {})
 	root := t.TempDir()
 	_, _, _ = Open(root, viol())
-	// o confronto voltou a passar → resolve
+	// the confrontation passes again → resolve
 	ok, err := Resolve(root, viol().Key())
 	if err != nil || !ok {
 		t.Fatalf("resolve: ok=%v err=%v", ok, err)
 	}
 	if ids, _ := List(root, Todo); len(ids) != 0 {
-		t.Fatalf("todo/ deveria esvaziar após resolve, veio %v", ids)
+		t.Fatalf("todo/ should be empty after resolve, got %v", ids)
 	}
 	if ids, _ := List(root, Done); len(ids) != 1 {
-		t.Fatalf("done/ deveria ter 1, veio %v", ids)
+		t.Fatalf("done/ should hold 1, got %v", ids)
 	}
-	// resolver de novo é no-op
+	// resolving again is a no-op
 	ok2, _ := Resolve(root, viol().Key())
 	if ok2 {
-		t.Fatal("resolver uma issue já resolvida deveria ser no-op")
+		t.Fatal("resolving an already resolved issue should be a no-op")
+	}
+	// and opening again does not resurrect it
+	if created, at, _ := Open(root, viol()); created || at != Done {
+		t.Fatalf("opening a resolved issue = %v, %q; want nothing created, done", created, at)
 	}
 }
 
 func TestResolveFromDoing(t *testing.T) {
+	t.Run("ISLFS-B08: Resolving moves a live issue to done, and only once", func(t *testing.T) {})
 	root := t.TempDir()
-	// simula issue em doing/ (alguém pegou para resolver)
+	// simulates an issue in doing/ (someone took it)
 	i := viol()
 	doingDir := filepath.Join(root, Dir, string(Doing))
 	_ = os.MkdirAll(doingDir, 0o755)
 	_ = os.WriteFile(filepath.Join(doingDir, i.ID()), []byte(i.Body()), 0o644)
-	// o check passa → resolve mesmo estando em doing/
+	// the check passes → resolve even from doing/
 	ok, _ := Resolve(root, i.Key())
 	if !ok {
-		t.Fatal("deveria resolver issue que estava em doing/")
+		t.Fatal("should resolve an issue that was in doing/")
 	}
 	if ids, _ := List(root, Done); len(ids) != 1 {
-		t.Fatalf("done/ deveria ter 1, veio %v", ids)
+		t.Fatalf("done/ should hold 1, got %v", ids)
 	}
 }
 
 func TestOpenDoesNotResurrectResolvedIssue(t *testing.T) {
+	t.Run("ISLFS-B05: The same issue is not opened twice", func(t *testing.T) {})
 	root := t.TempDir()
 	i := viol()
-	// já resolvida (em done/)
+	// already resolved (in done/)
 	doneDir := filepath.Join(root, Dir, string(Done))
 	_ = os.MkdirAll(doneDir, 0o755)
-	_ = os.WriteFile(filepath.Join(doneDir, i.ID()), []byte("resolvida"), 0o644)
+	_ = os.WriteFile(filepath.Join(doneDir, i.ID()), []byte("resolved"), 0o644)
 	created, at, _ := Open(root, i)
 	if created {
-		t.Fatal("não deveria reabrir issue já em done/")
+		t.Fatal("must not reopen an issue already in done/")
 	}
 	if at != Done {
-		t.Fatalf("deveria reportar done, veio %v", at)
+		t.Fatalf("should report done, got %v", at)
 	}
 	if todos, _ := List(root, Todo); len(todos) != 0 {
-		t.Fatalf("todo/ deveria ficar vazio, veio %v", todos)
+		t.Fatalf("todo/ should stay empty, got %v", todos)
 	}
 }
 
-// TestDividaNasceEmFutureEFechaAoSerPaga prova o ciclo de vida da dívida assumida.
-//
-// Antes, `obligation_pending` era uma linha no cabeçalho de um arquivo: visível só para
-// quem o abrisse, sem estado, sem como ser paga, sem como vencer. O gate afirmava que quem
-// declara diz três coisas — conhece o dever, ele vale, e QUANDO será pago — e o "quando"
-// era prosa livre que nada confrontava.
-func TestDividaNasceEmFutureEFechaAoSerPaga(t *testing.T) {
+// The lifecycle of an assumed debt. `obligation_pending` used to be a line in a file header:
+// visible only to whoever opened it, with no state, no way to be paid, no way to fall due.
+func TestDebtIsBornInFutureAndClosesWhenPaid(t *testing.T) {
+	t.Run("ISLFS-B06: An assumed debt is born in future and shows when it is due", func(t *testing.T) {})
 	root := t.TempDir()
 	iss := Issue{
 		Kind: Violation, Target: "infra/models/X.spec.md", Gate: "obligation-honored",
@@ -152,192 +166,277 @@ func TestDividaNasceEmFutureEFechaAoSerPaga(t *testing.T) {
 
 	created, at, err := OpenAt(root, iss, Future)
 	if err != nil || !created {
-		t.Fatalf("dívida deveria nascer: created=%v err=%v", created, err)
+		t.Fatalf("the debt should be born: created=%v err=%v", created, err)
 	}
 	if at != Future {
-		t.Errorf("dívida nasce em `future/`, não em %q — quem lê `todo/` pergunta "+
-			"'o que faço AGORA'", at)
+		t.Errorf("a debt is born in `future/`, not in %q — whoever reads `todo/` asks "+
+			"'what do I do NOW'", at)
 	}
 
-	// Reconfrontar não duplica nem promove para `todo/`: continua adiada.
+	// Confronting again neither duplicates nor promotes it to `todo/`: it stays deferred.
 	if created, at, _ := OpenAt(root, iss, Future); created || at != Future {
-		t.Errorf("reconfronto não pode duplicar; veio created=%v at=%q", created, at)
+		t.Errorf("confronting again must not duplicate; got created=%v at=%q", created, at)
 	}
 
-	// Pagar a dívida (o gate volta a passar) fecha a issue — o mesmo ciclo das demais.
+	// Paying the debt (the gate passes again) closes the issue — the same cycle as the others.
 	ok, err := Resolve(root, iss.Key())
 	if err != nil || !ok {
-		t.Fatalf("dívida paga deve fechar: ok=%v err=%v", ok, err)
+		t.Fatalf("a paid debt must close: ok=%v err=%v", ok, err)
 	}
-	if st, existe := Exists(root, iss.Key()); !existe || st != Done {
-		t.Errorf("depois de paga a dívida vive em `done/`; veio %q (existe=%v)", st, existe)
+	if st, exists := Exists(root, iss.Key()); !exists || st != Done {
+		t.Errorf("once paid the debt lives in `done/`; got %q (exists=%v)", st, exists)
 	}
-}
 
-// O prazo tem de aparecer no corpo: uma dívida sem vencimento à vista é um TODO com nome
-// melhor.
-func TestCorpoDaDividaMostraOVencimento(t *testing.T) {
-	iss := Issue{
-		Kind: Violation, Target: "a.ts", Gate: "obligation-honored",
-		Detail: "laudo", Date: "2026-08-13", Prazo: "`x` — na Fase 2",
-	}
-	corpo := iss.Body()
-	for _, quer := range []string{"When it will be paid", "na Fase 2", "ASSUMED debt"} {
-		if !strings.Contains(corpo, quer) {
-			t.Errorf("o corpo da dívida precisa conter %q", quer)
+	// The due moment must be in the body: a debt with no visible due date is a TODO with a
+	// better name.
+	body := iss.Body()
+	for _, want := range []string{"When it will be paid", "na etapa de código da Fase 1", "ASSUMED debt"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("the debt body must hold %q", want)
 		}
 	}
 }
 
-// TestAchadoNovoNaoSomeEmSilencio guarda o defeito medido num E2E: um segundo `anchors
-// judge --verdict fail` sobre a MESMA unidade só imprimia "issue já registrada" e
-// descartava o `--reason`. Dois laudos distintos foram perdidos assim, e a issue seguiu
-// com o texto antigo.
-//
-// Idempotência é a política certa para o MESMO problema detectado duas vezes; não é para
-// um problema DIFERENTE no mesmo lugar.
-func TestAchadoNovoNaoSomeEmSilencio(t *testing.T) {
+func TestDecisionBodySaysHowToCloseIt(t *testing.T) {
+	t.Run("ISLFS-B07: A decision explains how to close it", func(t *testing.T) {})
+	body := Issue{Kind: Decision, Target: "b.spec.md", Gate: "open-questions-resolved", Detail: "which cache?", Date: "2026-08-29"}.Body()
+	for _, want := range []string{"## The open question", "**How to close it:**", "PROMOTE the answer to a rule", "**What NOT to do:**"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("the decision body lacks %q:\n%s", want, body)
+		}
+	}
+}
+
+// Guards the defect measured in an E2E: a second `anchors judge --verdict fail` on the SAME
+// unit only printed "issue already recorded" and discarded the `--reason`. Two distinct reports
+// were lost like that. Idempotence is the right policy for the SAME problem detected twice;
+// it is not for a DIFFERENT problem in the same place.
+func TestNewFindingDoesNotVanishInSilence(t *testing.T) {
+	t.Run("ISLFS-B09: A new finding reopens the issue and keeps the old report", func(t *testing.T) {})
 	root := t.TempDir()
 	base := Issue{Kind: Violation, Target: "a.ts", Gate: "review", Date: "2026-08-13"}
 
-	primeiro := base
-	primeiro.Detail = "## Laudo A\nperda de dado na leitura"
-	if created, _, err := Open(root, primeiro); err != nil || !created {
-		t.Fatalf("primeira issue deveria nascer: %v", err)
+	first := base
+	first.Detail = "## Laudo A\nperda de dado na leitura"
+	if created, _, err := Open(root, first); err != nil || !created {
+		t.Fatalf("the first issue should be born: %v", err)
+	}
+	if _, err := Resolve(root, base.Key()); err != nil {
+		t.Fatal(err)
 	}
 
-	// achado DIFERENTE no mesmo alvo: acrescenta, preservando o anterior
-	segundo := base
-	segundo.Detail = "## Laudo B\ncontradição entre duas regras"
-	reaberta, err := Reopen(root, segundo)
-	if err != nil || !reaberta {
-		t.Fatalf("achado novo deveria reabrir: reaberta=%v err=%v", reaberta, err)
+	// a DIFFERENT finding on the same target: appended, keeping the previous one
+	second := base
+	second.Detail = "## Laudo B\ncontradição entre duas regras"
+	reopened, err := Reopen(root, second)
+	if err != nil || !reopened {
+		t.Fatalf("a new finding should reopen: reopened=%v err=%v", reopened, err)
 	}
-	_, name, _ := byKey(root, base.Key())
-	corpo, _ := os.ReadFile(pathFor(root, Todo, name))
-	for _, quer := range []string{"Laudo A", "Laudo B", "perda de dado", "contradição"} {
-		if !strings.Contains(string(corpo), quer) {
-			t.Errorf("o corpo precisa preservar %q — laudo antigo E novo", quer)
+	st, name, _ := byKey(root, base.Key())
+	if st != Todo {
+		t.Fatalf("the reopened issue must be in todo/, is in %s", st)
+	}
+	body, _ := os.ReadFile(pathFor(root, Todo, name))
+	for _, want := range []string{"Laudo A", "Laudo B", "## Additional finding", "perda de dado", "contradição"} {
+		if !strings.Contains(string(body), want) {
+			t.Errorf("the body must keep %q — old AND new report", want)
 		}
 	}
 
-	// MESMO achado de novo: idempotente, não duplica
-	if reaberta, _ := Reopen(root, segundo); reaberta {
-		t.Error("o mesmo achado não pode ser acrescentado duas vezes")
+	// the SAME finding again: idempotent, no duplicate
+	if reopened, _ := Reopen(root, second); reopened {
+		t.Error("the same finding cannot be appended twice")
 	}
-	corpo2, _ := os.ReadFile(pathFor(root, Todo, name))
-	if strings.Count(string(corpo2), "Laudo B") != 1 {
-		t.Errorf("`Laudo B` deve aparecer 1x; apareceu %d", strings.Count(string(corpo2), "Laudo B"))
+	body2, _ := os.ReadFile(pathFor(root, Todo, name))
+	if strings.Count(string(body2), "Laudo B") != 1 {
+		t.Errorf("`Laudo B` must appear once; it appeared %d times", strings.Count(string(body2), "Laudo B"))
 	}
 }
 
-// DE QUEM é a issue é um eixo INDEPENDENTE do kind: uma `violation` costuma ser do agente
-// e uma `decision` é sempre do usuário, mas a correspondência não é fixa — o agente que
-// esbarra numa pergunta que só uma pessoa responde precisa passar a issue adiante SEM que
-// ela deixe de ser a violação que era.
-func TestDonoFiltraEReatribui(t *testing.T) {
+// WHOSE issue it is is an axis INDEPENDENT of the kind: an agent that hits a question only a
+// person answers must hand the issue over WITHOUT it ceasing to be the violation it was.
+func TestOwnerFiltersAndReassigns(t *testing.T) {
+	t.Run("ISLFS-B10: Issues are listed by owner, and no owner means the agent", func(t *testing.T) {})
+	t.Run("ISLFS-B11: Reassigning hands the issue over with its reason", func(t *testing.T) {})
 	root := t.TempDir()
 
-	daAgente := Issue{Kind: Violation, Target: "src/a.ts", Gate: "layer-boundary",
-		Detail: "importou o que não devia", Date: "2026-08-29"}
-	doUsuario := Issue{Kind: Decision, Target: "src/b.spec.md", Gate: "open-questions-resolved",
-		Detail: "1 decisão em aberto", Date: "2026-08-29", Dono: DonoUsuário}
-	for _, i := range []Issue{daAgente, doUsuario} {
+	agents := Issue{Kind: Violation, Target: "src/a.ts", Gate: "layer-boundary",
+		Detail: "imported what it should not", Date: "2026-08-29"}
+	users := Issue{Kind: Decision, Target: "src/b.spec.md", Gate: "open-questions-resolved",
+		Detail: "1 open decision", Date: "2026-08-29", Dono: DonoUsuário}
+	for _, i := range []Issue{agents, users} {
 		if _, _, err := Open(root, i); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	// O FILTRO é o que torna a lista utilizável: a de quem decide não pode vir misturada
-	// com o trabalho do agente, ou as duas deixam de ser lidas.
-	doUser, err := ListByOwner(root, Todo, DonoUsuário)
+	// The FILTER is what makes the list usable: the decider's list cannot come mixed with the
+	// agent's work, or both stop being read.
+	forUser, err := ListByOwner(root, Todo, DonoUsuário)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(doUser) != 1 || !strings.Contains(doUser[0], "b.spec.md") {
-		t.Fatalf("o filtro por usuário deveria trazer só a decisão, veio %v", doUser)
+	if len(forUser) != 1 || !strings.Contains(forUser[0], "b.spec.md") {
+		t.Fatalf("the user filter should bring only the decision, got %v", forUser)
 	}
-	doAgente, _ := ListByOwner(root, Todo, DonoAgente)
-	if len(doAgente) != 1 || !strings.Contains(doAgente[0], "a.ts") {
-		t.Fatalf("o filtro por agente deveria trazer só a violação, veio %v", doAgente)
+	forAgent, _ := ListByOwner(root, Todo, DonoAgente)
+	if len(forAgent) != 1 || !strings.Contains(forAgent[0], "a.ts") {
+		t.Fatalf("the agent filter should bring only the violation, got %v", forAgent)
 	}
 
-	// REATRIBUIR: o agente tentou, esbarrou, e passa adiante. A issue continua sendo a
-	// violação que era — muda o dono, não o kind.
-	if err := Reassign(root, Todo, doAgente[0], DonoUsuário,
-		"a fronteira depende de qual camada é dona do cache, e isso não está decidido"); err != nil {
+	// REASSIGN: the agent tried, hit a wall, and hands it over. The issue is still the violation
+	// it was — the owner changes, not the kind.
+	if err := Reassign(root, Todo, forAgent[0], DonoUsuário,
+		"the boundary depends on which layer owns the cache, and that is not decided"); err != nil {
 		t.Fatal(err)
 	}
-	depois, _ := ListByOwner(root, Todo, DonoUsuário)
-	if len(depois) != 2 {
-		t.Errorf("as duas deveriam estar com o usuário agora, veio %d", len(depois))
+	after, _ := ListByOwner(root, Todo, DonoUsuário)
+	if len(after) != 2 {
+		t.Errorf("both should be the user's now, got %d", len(after))
 	}
-	if restou, _ := ListByOwner(root, Todo, DonoAgente); len(restou) != 0 {
-		t.Errorf("o agente não deveria ter mais nada, veio %v", restou)
+	if left, _ := ListByOwner(root, Todo, DonoAgente); len(left) != 0 {
+		t.Errorf("the agent should have nothing left, got %v", left)
 	}
-	// O PORQUÊ vai junto: quem recebe a issue sem contexto pergunta o que já se tentou.
-	b, _ := os.ReadFile(filepath.Join(root, Dir, string(Todo), doAgente[0]))
-	if !strings.Contains(string(b), "dona do cache") {
-		t.Error("a razão da passagem deveria ficar registrada na issue")
+	// The WHY goes along: whoever receives an issue without context asks what was tried.
+	b, _ := os.ReadFile(filepath.Join(root, Dir, string(Todo), forAgent[0]))
+	if !strings.Contains(string(b), "owns the cache") {
+		t.Error("the reason for the handover should be recorded in the issue")
 	}
 	if !strings.Contains(string(b), "violation") {
-		t.Error("mudou o dono, não o kind — continua sendo a violação que era")
+		t.Error("the owner changed, not the kind — it is still the violation it was")
 	}
 }
 
-// Issue gravada ANTES do campo existir é do agente, que era o único caso. Lê-la como do
-// usuário encheria a lista de quem decide com trabalho que não é dele.
-func TestDonoAusenteEhDoAgente(t *testing.T) {
+// An issue written BEFORE the field existed is the agent's, which was the only case. Reading it
+// as the user's would fill the decider's list with work that is not theirs.
+func TestMissingOwnerIsTheAgents(t *testing.T) {
+	t.Run("ISLFS-B10: Issues are listed by owner, and no owner means the agent", func(t *testing.T) {})
 	root := t.TempDir()
 	dir := filepath.Join(root, Dir, string(Todo))
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	antiga := filepath.Join(dir, "2026-01-01--violation--x--y.md")
-	if err := os.WriteFile(antiga, []byte("# VIOLATION: y\n\n- **kind:** violation\n- **alvo (regido):** y\n"), 0o644); err != nil {
+	old := filepath.Join(dir, "2026-01-01--violation--x--y.md")
+	if err := os.WriteFile(old, []byte("# VIOLATION: y\n\n- **kind:** violation\n- **alvo (regido):** y\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if d := FileOwner(antiga); d != DonoAgente {
-		t.Errorf("issue sem o campo é do agente, veio %q", d)
+	if d := FileOwner(old); d != DonoAgente {
+		t.Errorf("an issue without the field is the agent's, got %q", d)
 	}
 }
 
-// A full check closes every open violation it did not reproduce — and nothing else. The
-// renamed gate is the measured case: 40 `header-conforme` issues nothing could close once
-// the gate became `header-conforms`.
+// `Reassign` must find its anchor in an OLD issue — the one with the Portuguese label. The
+// fallback branch ONLY runs on an issue older than the `owner` field, which was written by the
+// old binary with `- **alvo`. And the failure is SILENT: the replace does not match, the owner
+// line does not go in, and Reassign ends with no error and the issue without an owner.
+func TestReassignFindsTheAnchorInAnIssueWithTheOldLabel(t *testing.T) {
+	t.Run("ISLFS-B11: Reassigning hands the issue over with its reason", func(t *testing.T) {})
+	root := t.TempDir()
+	dir := filepath.Join(root, Dir, string(Todo))
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	// An issue as the OLD binary wrote it: Portuguese label and NO owner field.
+	old := "# algo quebrou\n\n- **alvo (regido):** `src/a.ts`\n- **detectada em:** 2026-01-01\n"
+	name := "0001-algo.md"
+	if err := os.WriteFile(filepath.Join(dir, name), []byte(old), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := Reassign(root, Todo, name, DonoUsuário, "only a person decides this"); err != nil {
+		t.Fatalf("reassign failed: %v", err)
+	}
+
+	b, err := os.ReadFile(filepath.Join(dir, name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	text := string(b)
+	if !strings.Contains(text, "- **owner:**") {
+		t.Fatalf("the owner line was not inserted into an issue with the old label — the reassign "+
+			"passed silently and the issue kept no owner:\n%s", text)
+	}
+	// And the owner read back must be the one asked for: writing the line and not being able to
+	// read it back would be the same defect one step later.
+	if got := Owner(strings.TrimSpace(string(ownerRE.FindSubmatch(b)[1]))); got != DonoUsuário {
+		t.Errorf("owner read back = %q, want %q", got, DonoUsuário)
+	}
+}
+
+// A full check closes every open violation it did not reproduce — and nothing else. The renamed
+// gate is the measured case: 40 `header-conforme` issues nothing could close once the gate
+// became `header-conforms`.
 func TestReconcileViolations(t *testing.T) {
+	t.Run("ISLFS-B12: A full check closes the violations it no longer reproduces", func(t *testing.T) {})
+	t.Run("ISLFS-X01: Reconciling spares decisions and the user's violations", func(t *testing.T) {})
 	UseFiles()
 	root := t.TempDir()
-	vivo := Issue{Kind: Violation, Gate: "header-conforms", Target: "a.ts", Date: "2026-09-25"}
-	renomeado := Issue{Kind: Violation, Gate: "header-conforme", Target: "a.ts", Date: "2026-09-11"}
-	doUsuario := Issue{Kind: Violation, Gate: "spec-complete", Target: "b.spec.md", Date: "2026-09-11", Dono: DonoUsuário}
-	decisao := Issue{Kind: Decision, Gate: "open-questions-resolved", Target: "c.spec.md", Date: "2026-09-11"}
-	for _, i := range []Issue{vivo, renomeado, doUsuario, decisao} {
+	alive := Issue{Kind: Violation, Gate: "header-conforms", Target: "a.ts", Date: "2026-09-25"}
+	renamed := Issue{Kind: Violation, Gate: "header-conforme", Target: "a.ts", Date: "2026-09-11"}
+	users := Issue{Kind: Violation, Gate: "spec-complete", Target: "b.spec.md", Date: "2026-09-11", Dono: DonoUsuário}
+	decision := Issue{Kind: Decision, Gate: "open-questions-resolved", Target: "c.spec.md", Date: "2026-09-11"}
+	for _, i := range []Issue{alive, renamed, users, decision} {
 		if _, _, err := Open(root, i); err != nil {
 			t.Fatal(err)
 		}
 	}
 	// One more, already being worked on.
-	emAndamento := Issue{Kind: Violation, Gate: "feature-test-match", Target: "d.feature", Date: "2026-09-11"}
-	if _, _, err := OpenAt(root, emAndamento, Doing); err != nil {
+	inProgress := Issue{Kind: Violation, Gate: "feature-test-match", Target: "d.feature", Date: "2026-09-11"}
+	if _, _, err := OpenAt(root, inProgress, Doing); err != nil {
 		t.Fatal(err)
 	}
 
-	closed, err := ReconcileViolations(root, map[string]bool{vivo.Key(): true})
+	closed, err := ReconcileViolations(root, map[string]bool{alive.Key(): true})
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(closed) != 2 {
 		t.Fatalf("the renamed-gate and the doing violation should close, closed %v", closed)
 	}
-	for _, i := range []Issue{renomeado, emAndamento} {
+	for _, i := range []Issue{renamed, inProgress} {
 		if st, _ := Exists(root, i.Key()); st != Done {
 			t.Errorf("%s should be done, is %s", i.Key(), st)
 		}
 	}
-	for _, i := range []Issue{vivo, doUsuario, decisao} {
+	for _, i := range []Issue{alive, users, decision} {
 		if st, _ := Exists(root, i.Key()); st != Todo {
 			t.Errorf("%s must stay open (reproduced, the user's, or not a violation), is %s", i.Key(), st)
 		}
+	}
+}
+
+// The DEFAULT backend is files. A local project, or any caller that configured nothing, cannot
+// end up talking to the network without asking.
+func TestDefaultBackendIsFiles(t *testing.T) {
+	t.Run("ISLFS-B13: Issues are files unless GitHub is configured", func(t *testing.T) {})
+	UseFiles()
+	if target != nil {
+		t.Fatal("without configuration, the backend must be files")
+	}
+	UseGitHub("acme/x", "anchors")
+	if target == nil || target.Repo != "acme/x" {
+		t.Fatal("UseGitHub should route to the declared repository")
+	}
+	UseFiles() // does not leak into the other tests of the package
+	if target != nil {
+		t.Fatal("UseFiles should route back to files")
+	}
+}
+
+func TestOpen_reportsAStateFolderItCannotCreate(t *testing.T) {
+	t.Run("ISLFS-E01: An issue that cannot be written is reported", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, Dir), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if created, _, err := Open(root, viol()); err == nil || created {
+		t.Fatalf("Open where issues/ is a file = %v, %v; want the error and nothing created", created, err)
+	}
+}
+
+func TestReassign_reportsAMissingIssue(t *testing.T) {
+	t.Run("ISLFS-E02: Reassigning a missing issue is reported", func(t *testing.T) {})
+	if err := Reassign(t.TempDir(), Todo, "nope.md", DonoUsuário, "x"); err == nil {
+		t.Fatal("reassigning a missing issue must fail")
 	}
 }

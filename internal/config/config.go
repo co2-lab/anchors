@@ -962,6 +962,7 @@ func (c *Config) MutationFormat() string {
 const MeasuresJudgment = "judgment"
 
 // IsJudgment diz se este é um gate de julgamento por IA (não computável).
+// @no-rule: compares one declared field with a constant; nothing is decided here
 func (g Gate) IsJudgment() bool { return g.Measures == MeasuresJudgment }
 
 // IsBlocking devolve se o gate barra a promoção. O default é INFORMATIVO: um gate cuja
@@ -970,6 +971,7 @@ func (g Gate) IsJudgment() bool { return g.Measures == MeasuresJudgment }
 func (g Gate) IsBlocking() bool { return g.Blocking != nil && *g.Blocking }
 
 // Bool devolve um ponteiro para o literal — açúcar para declarar gates.
+// @no-rule: syntax sugar that takes the address of a literal
 func Bool(b bool) *bool { return &b }
 
 // Os escopos de execução de um gate.
@@ -1074,9 +1076,11 @@ const (
 )
 
 // IsSlow diz se o gate foi declarado caro.
+// @no-rule: reads the declared cost, whose closed list CNFGO-B07 states
 func (g Gate) IsSlow() bool { return g.Cost == CostSlow }
 
 // IsExternal diz se o gate delega a uma ferramenta de terceiro (`run:`).
+// @no-rule: says whether a `run` command was declared; nothing is decided here
 func (g Gate) IsExternal() bool { return g.Run != "" }
 
 // Layer — uma camada declarada: como reconhecer seus arquivos, o kind do nó, e as

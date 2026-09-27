@@ -14,7 +14,7 @@ is there any scenario that exercises it?**
 
 `feature-test-match` confronts feature→test; `triad-complete` confronts that the PIECES
 exist. Nobody confronted spec→feature — and that is where a silent hole lives: the spec
-declares `XXXXX-X02`, the feature has no scenario carrying that tag, and the requirement
+declares a constraint rule, the feature has no scenario carrying its tag, and the requirement
 crosses the whole pipeline with nothing verifying it. **Every gate stays green**: the spec
 has a code, the feature exists, the feature matches the test. The requirement simply
 belongs to nobody.

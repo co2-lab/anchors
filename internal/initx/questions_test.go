@@ -1,194 +1,275 @@
 package initx
 
 import (
+	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
 )
 
-func qsDeTeste() []Question {
+func testQuestions() []Question {
 	return Questions(&Proposal{Config: nil}, []string{"go", "nextjs"})
 }
 
-// O contrato existe para um agente responder sem ver a TUI. Cada pergunta precisa trazer
-// o que ele precisa para DECIDIR: o que é aceito, o que o Anchors inferiu, e o que a
-// resposta muda no projeto.
-func TestCadaPerguntaTrazOQueOAgentePrecisaParaDecidir(t *testing.T) {
-	for _, q := range qsDeTeste() {
-		if q.ID == "" || q.Texto == "" || q.Tipo == "" {
-			t.Errorf("pergunta incompleta: %+v", q)
+// verdictOf returns the verdict of one question, failing the test when it is missing.
+func verdictOf(t *testing.T, st []StatusResposta, id string) StatusResposta {
+	t.Helper()
+	for _, s := range st {
+		if s.ID == id {
+			return s
 		}
-		// Sem o "por que", o agente escolhe pelo NOME da opção — que é como se escolhe
-		// errado. É a diferença entre responder e adivinhar.
+	}
+	t.Fatalf("no verdict for %q", id)
+	return StatusResposta{}
+}
+
+// The contract exists so an agent can answer without seeing the TUI. Every question must
+// carry what it needs to DECIDE: what is accepted, what Anchors inferred, and what the
+// answer changes in the project.
+func TestQuestionsCarryWhatTheAgentNeedsToDecide(t *testing.T) {
+	t.Run("INQSN-B02: Every question carries what the agent needs to decide", func(t *testing.T) {})
+	for _, q := range testQuestions() {
+		if q.ID == "" || q.Texto == "" || q.Tipo == "" {
+			t.Errorf("incomplete question: %+v", q)
+		}
+		// Without the "why", the agent chooses by the option's NAME — which is how one
+		// chooses wrong. It is the difference between answering and guessing.
 		if q.PorQue == "" {
-			t.Errorf("%s não diz o que a resposta muda no projeto", q.ID)
+			t.Errorf("%s does not say what the answer changes in the project", q.ID)
 		}
 		if q.Tipo == "select" && len(q.Opcoes) == 0 {
-			t.Errorf("%s é select e não oferece opções", q.ID)
+			t.Errorf("%s is a select and offers no options", q.ID)
 		}
 	}
 }
 
-// As sete decisões da TUI têm de estar todas aqui: uma pergunta que ficasse de fora
-// seria decidida em silêncio pelo default, num arquivo que o usuário acha que decidiu.
-func TestTodasAsDecisoesDaTUIEstaoNoContrato(t *testing.T) {
-	esperadas := []string{"preset", "header", "artifacts", "gates", "colocation", "layers",
-		"governs", "workflow", "repo", "labels"}
-	achadas := map[string]bool{}
-	for _, q := range qsDeTeste() {
-		achadas[q.ID] = true
+// Every decision of the TUI must be here, in the TUI's order: a question left out would be
+// decided in silence by the default, in a file the user thinks they decided.
+func TestQuestionsFollowTheTUIOrder(t *testing.T) {
+	t.Run("INQSN-B01: The questions come in the order of the terminal UI", func(t *testing.T) {})
+	want := []string{"preset", "header", "artifacts", "gates", "colocation", "layers",
+		"workflow", "repo", "labels", "governs"}
+	var got []string
+	for _, q := range testQuestions() {
+		got = append(got, q.ID)
 	}
-	for _, e := range esperadas {
-		if !achadas[e] {
-			t.Errorf("falta a pergunta %q — ela seria decidida em silêncio", e)
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("questions = %v, want %v", got, want)
+	}
+}
+
+// The defaults are the reading of the real project, never a guess.
+func TestQuestionsDefaultsComeFromTheInference(t *testing.T) {
+	t.Run("INQSN-B03: The defaults come from the inference", func(t *testing.T) {})
+	p := &Proposal{
+		Colocated: true,
+		HasSpecMD: true,
+		Config: &config.Config{Layers: map[string]config.Layer{
+			"web-code": {Kind: "code"},
+			"api-code": {Kind: "code"},
+			"spec":     {Kind: "spec"},
+		}},
+	}
+	byID := map[string]Question{}
+	for _, q := range Questions(p, nil) {
+		byID[q.ID] = q
+	}
+	if byID["colocation"].Default != true {
+		t.Errorf("colocation default = %v, want true", byID["colocation"].Default)
+	}
+	layers := []string{"api-code", "web-code"}
+	if !reflect.DeepEqual(byID["layers"].Opcoes, layers) || !reflect.DeepEqual(byID["layers"].Default, layers) {
+		t.Errorf("layers = %v / %v, want %v", byID["layers"].Opcoes, byID["layers"].Default, layers)
+	}
+	if d, _ := byID["artifacts"].Default.([]string); !contem(d, "spec") {
+		t.Errorf("artifacts default = %v, want it to include spec", byID["artifacts"].Default)
+	}
+
+	// No proposal at all: empty defaults, and no panic.
+	for _, q := range Questions(nil, nil) {
+		switch q.ID {
+		case "colocation":
+			if q.Default != false {
+				t.Errorf("with no proposal colocation defaults to false, got %v", q.Default)
+			}
+		case "layers":
+			if len(q.Opcoes) != 0 {
+				t.Errorf("with no proposal there are no layers, got %v", q.Opcoes)
+			}
 		}
 	}
 }
 
-// Uma resposta inválida recusa o CONJUNTO. Escrever as válidas produziria um
-// anchors.yaml que ninguém decidiu por completo — e um arquivo assim carrega sem erro,
-// governa errado, e não acusa a causa.
-func TestRespostaInvalidaRecusaTudo(t *testing.T) {
-	qs := qsDeTeste()
-	ruim := "preset-que-nao-existe"
+// The work-queue mode is a HUMAN decision (where the queue lives) and `init` did not make
+// it: every project was born `local` by omission, and whoever wanted `github` had to find
+// the field and edit the YAML by hand.
+func TestQuestionsPresetAndWorkflowChoices(t *testing.T) {
+	t.Run("INQSN-B04: The preset and the work-queue mode have their choices and defaults", func(t *testing.T) {})
+	byID := map[string]Question{}
+	for _, q := range testQuestions() {
+		byID[q.ID] = q
+	}
+	if p := byID["preset"]; !reflect.DeepEqual(p.Opcoes, []string{"nenhum", "go", "nextjs"}) || p.Default != "nenhum" {
+		t.Errorf("preset = %v (default %v)", p.Opcoes, p.Default)
+	}
+	if w := byID["workflow"]; !reflect.DeepEqual(w.Opcoes, []string{"local", "manual", "github"}) || w.Default != "local" {
+		t.Errorf("workflow = %v (default %v)", w.Opcoes, w.Default)
+	}
+}
 
-	st := ValidateAnswers(qs, Respostas{Preset: &ruim})
+// One invalid answer refuses the SET. Writing the valid ones would produce an anchors.yaml
+// nobody decided in full — and such a file loads without error, governs wrong, and does
+// not point at the cause.
+func TestQuestionsInvalidAnswerRefusesEverything(t *testing.T) {
+	t.Run("INQSN-B06: An answer outside the options is refused with the accepted values", func(t *testing.T) {})
+	t.Run("INQSN-B09: One refused answer refuses the whole set", func(t *testing.T) {})
+	t.Run("INQSN-X01: An invalid answer is not corrected", func(t *testing.T) {})
+	qs := testQuestions()
+	bad := "preset-que-nao-existe"
+
+	st := ValidateAnswers(qs, Respostas{Preset: &bad})
 
 	if TudoAceito(st) {
-		t.Fatal("preset inexistente deveria recusar o conjunto")
+		t.Fatal("a nonexistent preset should refuse the set")
 	}
-	// E o status tem de dizer QUAL falhou e por quê — não basta "algo deu errado".
-	var achou bool
-	for _, s := range st {
-		if s.ID == "preset" {
-			achou = true
-			if s.Aceita {
-				t.Error("o preset inválido foi aceito")
-			}
-			if !strings.Contains(s.Detalhe, "aceitos:") {
-				t.Errorf("a mensagem deveria listar os valores válidos: %s", s.Detalhe)
-			}
-		}
+	// And the verdict must say WHICH failed and why — "something went wrong" is not enough.
+	s := verdictOf(t, st, "preset")
+	if s.Aceita {
+		t.Error("the invalid preset was accepted")
 	}
-	if !achou {
-		t.Error("o status do preset não foi reportado")
+	if s.Valor != bad {
+		t.Errorf("the invalid value must be kept as given, got %v", s.Valor)
+	}
+	if !strings.Contains(s.Detalhe, "aceitos:") {
+		t.Errorf("the message should list the valid values: %s", s.Detalhe)
+	}
+
+	// A list answer outside the options is refused the same way.
+	code := []string{"code"}
+	if a := verdictOf(t, ValidateAnswers(qs, Respostas{Artifacts: &code}), "artifacts"); a.Aceita || !strings.Contains(a.Detalhe, "aceitos:") {
+		t.Errorf("an artifact outside the options must be refused with the accepted values: %+v", a)
+	}
+	// A multiple choice with no declared options (the labels) accepts any value.
+	free := []string{"whatever"}
+	if l := verdictOf(t, ValidateAnswers(qs, Respostas{Labels: &free}), "labels"); !l.Aceita {
+		t.Errorf("a free label should be accepted: %+v", l)
 	}
 }
 
-// O status é de TODAS as respostas, não só das inválidas. É o que permite ao agente
-// conferir que o Anchors entendeu o que ele quis dizer — uma flag escrita errada, sem
-// isso, seria indistinguível de uma resposta aceita.
-func TestStatusReportaTodasAsRespostas(t *testing.T) {
-	qs := qsDeTeste()
-	sim := true
+// The verdict covers ALL the answers, not only the invalid ones. It is what lets the agent
+// check that Anchors understood what it meant — a misspelt flag, without it, would be
+// indistinguishable from an accepted answer.
+func TestQuestionsVerdictCoversEveryAnswer(t *testing.T) {
+	t.Run("INQSN-B05: Every question gets a verdict and unanswered ones take the default", func(t *testing.T) {})
+	t.Run("INQSN-I01: No answer goes missing from the verdict", func(t *testing.T) {})
+	qs := testQuestions()
+	yes := true
 
-	st := ValidateAnswers(qs, Respostas{Header: &sim})
+	st := ValidateAnswers(qs, Respostas{Header: &yes})
 
 	if len(st) != len(qs) {
-		t.Fatalf("esperava %d status (um por pergunta), veio %d", len(qs), len(st))
+		t.Fatalf("expected %d verdicts (one per question), got %d", len(qs), len(st))
 	}
-	for _, s := range st {
-		if s.ID == "header" && s.UsouPada {
-			t.Error("header foi respondido explicitamente — não é default")
+	for i, s := range st {
+		if s.ID != qs[i].ID {
+			t.Errorf("verdict %d is %q, want %q", i, s.ID, qs[i].ID)
 		}
-		if s.ID == "gates" && !s.UsouPada {
-			t.Error("gates não foi respondido — tinha de constar como default")
+		switch s.ID {
+		case "header":
+			if s.UsouPada {
+				t.Error("header was answered explicitly — it is not the default")
+			}
+		case "repo":
+			// Outside github, repo is answered by its default "" and marked as such.
+			if !s.UsouPada {
+				t.Error("repo was not answered — it must show as the default")
+			}
+		case "governs":
+			if !s.UsouPada {
+				t.Error("governs was not answered — it must show as the default")
+			}
+		default:
+			if !s.UsouPada {
+				t.Errorf("%s was not answered — it must show as the default", s.ID)
+			}
+			if !reflect.DeepEqual(s.Valor, qs[i].Default) {
+				t.Errorf("%s: unanswered value %v, want the default %v", s.ID, s.Valor, qs[i].Default)
+			}
 		}
 	}
 }
 
-// A distinção que motiva os ponteiros: "não respondi" (vale o default inferido do disco)
-// e "respondi vazio" (`--artifacts=""`, nenhum artefato) são decisões OPOSTAS, e um bool
-// zero-value não as separa.
-func TestNaoRespondidoNaoEhOMesmoQueRespondidoVazio(t *testing.T) {
+// The distinction behind the pointers: "not answered" (the default inferred from disk
+// applies) and "answered empty" (`--artifacts=""`, no artifact) are OPPOSITE decisions,
+// and a zero-value bool does not tell them apart.
+func TestQuestionsNotAnsweredIsNotAnsweredEmpty(t *testing.T) {
+	t.Run("INQSN-B10: An answer given empty is not the default", func(t *testing.T) {})
 	qs := Questions(&Proposal{}, nil)
-	vazio := []string{}
+	empty := []string{}
 
-	semResposta := ValidateAnswers(qs, Respostas{})
-	comVazio := ValidateAnswers(qs, Respostas{Artifacts: &vazio})
+	unanswered := verdictOf(t, ValidateAnswers(qs, Respostas{}), "artifacts")
+	answeredEmpty := verdictOf(t, ValidateAnswers(qs, Respostas{Artifacts: &empty}), "artifacts")
 
-	for _, s := range semResposta {
-		if s.ID == "artifacts" && !s.UsouPada {
-			t.Error("sem a flag, artifacts tem de cair no default")
-		}
+	if !unanswered.UsouPada {
+		t.Error("without the flag, artifacts must fall back to the default")
 	}
-	for _, s := range comVazio {
-		if s.ID == "artifacts" && s.UsouPada {
-			t.Error("`--artifacts=` vazio é uma escolha deliberada, não ausência de resposta")
-		}
+	if answeredEmpty.UsouPada {
+		t.Error("an empty `--artifacts=` is a deliberate choice, not a missing answer")
 	}
-}
-
-// O modo de trabalho é decisão HUMANA (onde a fila mora) e o `init` não a fazia: todo
-// projeto nascia `local` por omissão, e quem queria `github` tinha de descobrir o campo e
-// editar o YAML à mão.
-func TestModoDeTrabalhoEhPerguntado(t *testing.T) {
-	var achou bool
-	for _, q := range qsDeTeste() {
-		if q.ID == "workflow" {
-			achou = true
-			if !contem(q.Opcoes, "local") || !contem(q.Opcoes, "github") {
-				t.Errorf("os dois modos têm de ser oferecidos: %v", q.Opcoes)
-			}
-			if q.Default != "local" {
-				t.Errorf("o default é local (bloco ausente = local), veio %v", q.Default)
-			}
-		}
-	}
-	if !achou {
-		t.Fatal("o modo de trabalho não é perguntado — o projeto nasce local sem ninguém decidir")
+	if v, ok := answeredEmpty.Valor.([]string); !ok || len(v) != 0 {
+		t.Errorf("the empty answer must be kept as given, got %#v", answeredEmpty.Valor)
 	}
 }
 
-// No modo `github`, `repo` e `labels` são obrigatórios (WORKFLOW.md §2). Sem repo, a
-// escrita cairia no lugar errado; sem label, o fluxo pegaria issue de produto.
-func TestGitHubExigeRepoELabels(t *testing.T) {
-	qs := qsDeTeste()
+// In `github` mode, `repo` and `labels` are required (WORKFLOW.md §2). Without the repo, the
+// writing would land in the wrong place; without the label, the flow would take a product
+// issue.
+func TestQuestionsGitHubRequiresRepoAndLabels(t *testing.T) {
+	t.Run("INQSN-B07: The github mode requires repository and labels", func(t *testing.T) {})
+	qs := testQuestions()
 	github := "github"
 
 	st := ValidateAnswers(qs, Respostas{Workflow: &github})
 
 	if TudoAceito(st) {
-		t.Fatal("modo github sem repo nem labels deveria recusar")
+		t.Fatal("github mode with no repo nor labels should refuse")
 	}
-	faltando := map[string]bool{}
+	missing := map[string]bool{}
 	for _, s := range st {
 		if !s.Aceita {
-			faltando[s.ID] = true
+			missing[s.ID] = true
 		}
 	}
 	for _, id := range []string{"repo", "labels"} {
-		if !faltando[id] {
-			t.Errorf("%s é obrigatório no modo github e passou", id)
+		if !missing[id] {
+			t.Errorf("%s is required in github mode and passed", id)
+		}
+	}
+
+	// The happy path: github with both requirements met passes.
+	repo := "acme/exemplo"
+	labels := []string{"anchors"}
+	st = ValidateAnswers(qs, Respostas{Workflow: &github, Repo: &repo, Labels: &labels})
+	if !TudoAceito(st) {
+		for _, s := range st {
+			if !s.Aceita {
+				t.Errorf("%s refused: %s", s.ID, s.Detalhe)
+			}
 		}
 	}
 }
 
-// No modo `local`, declarar `repo` não é campo inofensivo: quem lê o arquivo conclui que
-// a integração está ativa (WORKFLOW.md §2).
-func TestLocalRecusaCamposDoGitHub(t *testing.T) {
-	qs := qsDeTeste()
+// In `local` mode, declaring `repo` is not a harmless field: whoever reads the file
+// concludes the integration is active (WORKFLOW.md §2).
+func TestQuestionsLocalRefusesGitHubFields(t *testing.T) {
+	t.Run("INQSN-B08: A repository outside the github mode is refused", func(t *testing.T) {})
+	qs := testQuestions()
 	local, repo := "local", "owner/nome"
 
 	st := ValidateAnswers(qs, Respostas{Workflow: &local, Repo: &repo})
 
-	if TudoAceito(st) {
-		t.Error("`repo` no modo local faz o arquivo mentir sobre a integração estar ativa")
-	}
-}
-
-// O caminho feliz: github com as duas exigências satisfeitas passa.
-func TestGitHubCompletoEhAceito(t *testing.T) {
-	qs := qsDeTeste()
-	github, repo := "github", "acme/exemplo"
-	labels := []string{"anchors"}
-
-	st := ValidateAnswers(qs, Respostas{Workflow: &github, Repo: &repo, Labels: &labels})
-
-	if !TudoAceito(st) {
-		for _, s := range st {
-			if !s.Aceita {
-				t.Errorf("%s recusado: %s", s.ID, s.Detalhe)
-			}
-		}
+	if verdictOf(t, st, "repo").Aceita {
+		t.Error("`repo` in local mode makes the file lie about the integration being active")
 	}
 }

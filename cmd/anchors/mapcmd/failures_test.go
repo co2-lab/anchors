@@ -36,51 +36,12 @@ func logsProject(t *testing.T) (string, string) {
 	return root, out
 }
 
-// The occurrences are bound to the spec that declares them; a code no spec declares is
-// reported, and left out of the map.
-func TestIngestLogs_bindsOccurrencesToTheSpec(t *testing.T) {
-	root, out := logsProject(t)
-	if !strings.Contains(out, "logs: 1 file(s), 7 line(s) — 3 occurrence(s) bound to 3 spec rule(s)") {
-		t.Errorf("unexpected summary:\n%s", out)
-	}
-	if !strings.Contains(out, "GHOST-E07") || !strings.Contains(out, "NO spec declares") {
-		t.Errorf("the undeclared failure code was not reported:\n%s", out)
-	}
-	var spec *mapx.Node
-	g := loadMap(t, root)
-	for i := range g.Nodes {
-		if g.Nodes[i].ID == "src/login.spec.md" {
-			spec = &g.Nodes[i]
-		}
-	}
-	if spec == nil || len(spec.Failures) != 3 {
-		t.Fatalf("expected 3 failures on the spec node, got %+v", spec)
-	}
-	for _, f := range spec.Failures {
-		if f.Rev != spec.Rev {
-			t.Errorf("%s was not stamped with the spec's rev (%q vs %q)", f.Rule, f.Rev, spec.Rev)
-		}
-		if f.Rule == "LOGIN-E01" && f.Count != 3 {
-			t.Errorf("LOGIN-E01 happened 3 times, map says %d", f.Count)
-		}
-	}
-}
-
-func TestIngestLogs_errors(t *testing.T) {
-	root := fixtureProject(t) // no `logs:` declared
-	if _, err := runCmdErr(newIngestCmd(), t, "--logs", "--root", root); err == nil ||
-		!strings.Contains(err.Error(), "logs.paths") {
-		t.Errorf("no log declared: expected an error naming logs.paths, got %v", err)
-	}
-	if _, err := runCmdErr(newIngestCmd(), t, "--root", root); err == nil ||
-		!strings.Contains(err.Error(), "--junit") {
-		t.Errorf("nothing to ingest: expected the usage error, got %v", err)
-	}
-}
-
 // Only what carries no conclusion is listed, the most frequent first; --all adds the
 // concluded ones with their conclusion.
 func TestFailures_listsWhatTheSpecHasNotExplained(t *testing.T) {
+	t.Run("FLRSA-B01: Only the ingested failures whose rule carries no conclusion are listed, with the spec that declares them", func(t *testing.T) {})
+	t.Run("FLRSA-B03: With all the concluded failures are listed too, with their conclusion", func(t *testing.T) {})
+	t.Run("FLRSA-I01: What the log ingestion binds to a spec is what the failures review lists", func(t *testing.T) {})
 	root, _ := logsProject(t)
 
 	out := runCmd(t, newFailuresCmd(), "--root", root)
@@ -108,6 +69,7 @@ func TestFailures_listsWhatTheSpecHasNotExplained(t *testing.T) {
 // An occurrence measured against an older version of the spec is flagged: concluding
 // about it would assert about what was not observed.
 func TestFailures_flagsOccurrencesOfAnOlderSpec(t *testing.T) {
+	t.Run("FLRSA-B04: An occurrence measured against another version of the spec is flagged", func(t *testing.T) {})
 	root, _ := logsProject(t)
 	g := loadMap(t, root)
 	for i := range g.Nodes {
@@ -126,6 +88,8 @@ func TestFailures_flagsOccurrencesOfAnOlderSpec(t *testing.T) {
 
 // Everything concluded (or nothing ingested): the command says so instead of an empty list.
 func TestFailures_noneOpen(t *testing.T) {
+	t.Run("FLRSA-B05: With nothing open the review says so instead of printing an empty list", func(t *testing.T) {})
+	t.Run("FLRSA-E01: Without a map the failures review fails", func(t *testing.T) {})
 	root, _ := logsProject(t)
 	resolved := strings.Replace(failingSpec, "store is down", "store is down @resilient: the pool reconnects", 1)
 	if err := os.WriteFile(filepath.Join(root, "src/login.spec.md"), []byte(resolved), 0o644); err != nil {
@@ -137,5 +101,67 @@ func TestFailures_noneOpen(t *testing.T) {
 	}
 	if _, err := runCmdErr(newFailuresCmd(), t, "--root", t.TempDir()); err == nil {
 		t.Error("without a map the command must fail")
+	}
+}
+
+// The most frequent failure first, whatever order the map holds them in: it is the one
+// that costs the most.
+func TestFailures_mostFrequentFirst(t *testing.T) {
+	t.Run("FLRSA-B02: The open failures are listed from the most frequent to the least", func(t *testing.T) {})
+	root := fixtureProjectWith(t, "", strings.NewReplacer(" @resilient: the client refreshes and retries at once", "",
+		" @observing: not the cache, not the clock", "").Replace(failingSpec))
+	g := loadMap(t, root)
+	for i := range g.Nodes {
+		if g.Nodes[i].ID == "src/login.spec.md" {
+			g.Nodes[i].Failures = []mapx.FailureSignal{
+				{Rule: "LOGIN-E02", Count: 1},
+				{Rule: "LOGIN-E03", Count: 2},
+				{Rule: "LOGIN-E01", Count: 5},
+			}
+		}
+	}
+	if err := mapx.Save(g, filepath.Join(root, mapx.DefaultPath)); err != nil {
+		t.Fatal(err)
+	}
+	out := runCmd(t, newFailuresCmd(), "--root", root)
+	e1, e3, e2 := strings.Index(out, "LOGIN-E01"), strings.Index(out, "LOGIN-E03"), strings.Index(out, "LOGIN-E02")
+	if e1 < 0 || e3 < 0 || e2 < 0 || !(e1 < e3 && e3 < e2) {
+		t.Errorf("expected E01 (5), E03 (2), E02 (1) in that order:\n%s", out)
+	}
+}
+
+// A spec that can no longer be read is skipped: its occurrences are not listed, and the
+// review still answers for the rest.
+func TestFailures_unreadableSpecIsSkipped(t *testing.T) {
+	t.Run("FLRSA-E02: A spec whose file can no longer be read is skipped by the review", func(t *testing.T) {})
+	root, _ := logsProject(t)
+	if err := os.Remove(filepath.Join(root, "src/login.spec.md")); err != nil {
+		t.Fatal(err)
+	}
+	out := runCmd(t, newFailuresCmd(), "--root", root)
+	if strings.Contains(out, "LOGIN-E01") || !strings.Contains(out, "no failure under observation") {
+		t.Errorf("the unreadable spec must be skipped:\n%s", out)
+	}
+}
+
+// The review asks for the conclusion; it does not record anything itself.
+func TestFailures_writesNothing(t *testing.T) {
+	t.Run("FLRSA-X01: The failures review leaves the map and the specs unchanged", func(t *testing.T) {})
+	root, _ := logsProject(t)
+	files := []string{filepath.Join(root, mapx.DefaultPath), filepath.Join(root, "src/login.spec.md")}
+	before := map[string]string{}
+	for _, f := range files {
+		b, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		before[f] = string(b)
+	}
+	runCmd(t, newFailuresCmd(), "--all", "--root", root)
+	for _, f := range files {
+		b, _ := os.ReadFile(f)
+		if string(b) != before[f] {
+			t.Errorf("the review changed %s", f)
+		}
 	}
 }

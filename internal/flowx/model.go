@@ -139,6 +139,7 @@ func ActionTitle(g *mapx.FlowGraph, action string) (string, bool) {
 // several steps have no incoming edge (or none at all), and the reader knows where the
 // work starts by where the author wrote it first.
 func Entry(g *mapx.FlowGraph, flow string) (mapx.FlowState, bool) {
+	// @no-guard: it delegates to StatesOf, which already answers nothing for a nil graph
 	for _, s := range StatesOf(g, flow) {
 		if !IsResult(s.Code) {
 			return s, true

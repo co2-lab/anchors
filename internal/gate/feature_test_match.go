@@ -354,19 +354,7 @@ func stripLineComments(s string) string {
 			!strings.HasPrefix(t, "#endif") {
 			continue
 		}
-		// corta comentário inline
-		if i := strings.Index(ln, "//"); i >= 0 {
-			ln = ln[:i]
-		}
-		if i := strings.Index(ln, "--"); i >= 0 {
-			ln = ln[:i]
-		}
-		for _, sep := range []string{" #", "\t#"} {
-			if i := strings.Index(ln, sep); i >= 0 {
-				ln = ln[:i]
-			}
-		}
-		b.WriteString(ln)
+		b.WriteString(cutInlineComment(ln))
 		b.WriteString("\n")
 	}
 	return b.String()
@@ -524,4 +512,37 @@ func testTitleFor(body, code string) (string, bool) {
 		}
 	}
 	return "", false
+}
+
+// cutInlineComment drops a trailing comment from a code line, and only a comment.
+//
+// It scanned for the markers anywhere, strings included: `"--label"` cut the line at the
+// dashes, so every symbol after a CLI flag argument vanished and dependency-honored
+// accused dependencies the code does use; `"https://…"` cut a URL; and a Go/TS `i--`
+// cut the loop body that followed it. Markers now count only OUTSIDE quotes, and `--`
+// and `#` only after whitespace — the SQL/Lua and shell forms — never glued to a name.
+func cutInlineComment(ln string) string {
+	var quote byte
+	for i := 0; i < len(ln); i++ {
+		c := ln[i]
+		if quote != 0 {
+			if c == '\\' && quote != '`' {
+				i++
+			} else if c == quote {
+				quote = 0
+			}
+			continue
+		}
+		switch {
+		case c == '"' || c == '\'' || c == '`':
+			quote = c
+		case c == '/' && i+1 < len(ln) && ln[i+1] == '/':
+			return ln[:i]
+		case (c == '-' && i+1 < len(ln) && ln[i+1] == '-') || c == '#':
+			if i > 0 && (ln[i-1] == ' ' || ln[i-1] == '\t') {
+				return ln[:i]
+			}
+		}
+	}
+	return ln
 }

@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:a7821f03270a5ef5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:8ddb7b00bb505b25 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 54 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 63 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -56,7 +56,19 @@
 
 
 
+## DCCVD — DocsCovered — every spec must reach some page of the compiled documentation
+
+
+
+
+
 ## DCFRD — DocsFresh — the compiled document has to reflect the spec
+
+
+
+
+
+## DCTRN — Doctrine — the vertical axis: product doctrine exists, is realized, and is never copied
 
 
 
@@ -80,7 +92,25 @@
 
 
 
+## FLRAI — Failure — the failure a spec declares must be handled, recorded, and every handling declared
+
+
+
+
+
 ## FTMFT — FeatureTestMatch — scenarios in feature must be implemented in test by code and description
+
+
+
+
+
+## FXIXX — Fix — the self-healer that applies the mechanical, safe repairs of `check --fix`
+
+
+
+
+
+## FLSCF — FlagScenarios — the scenarios a feature flag declares are written, complete, cited and tested
 
 
 
@@ -140,6 +170,12 @@
 
 
 
+## BLGTN — Obligations — the duties in force, resolved from packs and config, and their status across the project
+
+
+
+
+
 ## OPQSP — OpenQuestions — a spec with an open question is not ready to implement
 
 
@@ -188,6 +224,12 @@
 
 
 
+## PRFLO — Profile — the verdicts of a run, gathered per gate and per node
+
+
+
+
+
 ## PRHNP — ProgressHonest — the progress file tells the truth about the disk
 
 
@@ -213,6 +255,12 @@
 
 
 ## RPHRG — RegionPairHonored — every opened source region must close with its own identity code
+
+
+
+
+
+## RVMTR — ReverseMatch — every scenario still has its rule, and every proven code still has its scenario
 
 
 
@@ -297,6 +345,12 @@
 
 
 ## TSTRT — TestTraceable — a test linked to a feature must declare what scenario it proves
+
+
+
+
+
+## TICTS — TestIDContract — a test handle is one contract with four ends: the code exposes it, the spec declares it, a consumer queries it
 
 
 

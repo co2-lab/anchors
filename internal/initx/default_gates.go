@@ -254,7 +254,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 
 		// A REVISAO QUE MUDOU O SIGNIFICADO DE UMA PALAVRA, e nao disse a quem.
 		//
-		// A BLOCKING-class gate (RVORP-B08, decided by the user): a new project is born with
+		// A BLOCKING-class gate (DFGTD-B12, decided by the user): a new project is born with
 		// it blocking. `false` here is the maturation state of an EXISTING project, like
 		// every structural gate: its old revisions carry no `Checked:`, so each is born a
 		// finding, and the project measures that queue before promoting the gate.

@@ -9,36 +9,38 @@ import (
 	"time"
 )
 
-func TestEspelhoDuplicaSaidaNoArquivo(t *testing.T) {
+func TestMirrorCopiesOutputToTheFile(t *testing.T) {
+	t.Run("CHLGC-B02: The header comes first and the output is copied after it", func(t *testing.T) {})
 	dir := t.TempDir()
-	e := Open(dir, true, "# cabeçalho\n\n")
+	e := Open(dir, true, "# header\n\n")
 	if e == nil {
-		t.Fatal("Abrir devolveu nil")
+		t.Fatal("Open returned nil")
 	}
-	fmt.Println("linha do relatório")
+	fmt.Println("report line")
 	e.Close()
 
 	b, err := os.ReadFile(filepath.Join(dir, Dir, "check-all.txt"))
 	if err != nil {
-		t.Fatalf("ler espelho: %v", err)
+		t.Fatalf("reading the mirror: %v", err)
 	}
 	got := string(b)
-	if !strings.Contains(got, "# cabeçalho") {
-		t.Errorf("cabeçalho ausente:\n%s", got)
+	if !strings.HasPrefix(got, "# header") {
+		t.Errorf("the header is not first:\n%s", got)
 	}
-	if !strings.Contains(got, "linha do relatório") {
-		t.Errorf("saída não espelhada:\n%s", got)
+	if !strings.Contains(got, "report line") {
+		t.Errorf("output not mirrored:\n%s", got)
 	}
 }
 
-// O `--all` custa minutos e o `--changed` roda a cada commit. Se os dois
-// escrevessem no mesmo arquivo, o pre-commit apagaria a foto completa — que é
-// justamente a cara de reproduzir.
-func TestEscoposNaoSeSobrescrevem(t *testing.T) {
+// `--all` takes minutes and `--changed` runs on every commit. If both wrote to the same
+// file, the pre-commit would erase the full snapshot — the expensive one to reproduce.
+func TestScopesDoNotOverwriteEachOther(t *testing.T) {
+	t.Run("CHLGC-B01: Each scope is mirrored to its own file", func(t *testing.T) {})
+	t.Run("CHLGC-I01: The changed-files mirror leaves the full snapshot intact", func(t *testing.T) {})
 	dir := t.TempDir()
 
 	e := Open(dir, true, "# all\n")
-	fmt.Println("foto completa")
+	fmt.Println("full snapshot")
 	e.Close()
 
 	e = Open(dir, false, "# changed\n")
@@ -47,88 +49,120 @@ func TestEscoposNaoSeSobrescrevem(t *testing.T) {
 
 	all, err := os.ReadFile(filepath.Join(dir, Dir, "check-all.txt"))
 	if err != nil {
-		t.Fatalf("ler check-all: %v", err)
+		t.Fatalf("reading check-all: %v", err)
 	}
-	if !strings.Contains(string(all), "foto completa") {
-		t.Errorf("o --changed sobrescreveu a foto do --all:\n%s", all)
+	if !strings.Contains(string(all), "full snapshot") {
+		t.Errorf("--changed overwrote the --all snapshot:\n%s", all)
 	}
 	chg, err := os.ReadFile(filepath.Join(dir, Dir, "check-changed.txt"))
 	if err != nil {
-		t.Fatalf("ler check-changed: %v", err)
+		t.Fatalf("reading check-changed: %v", err)
 	}
-	if strings.Contains(string(chg), "foto completa") {
-		t.Errorf("escopos misturados no mesmo arquivo:\n%s", chg)
+	if strings.Contains(string(chg), "full snapshot") || !strings.Contains(string(chg), "incremental") {
+		t.Errorf("scopes mixed in the same file:\n%s", chg)
 	}
 }
 
-// Saída maior que o buffer do pipe (64KB no Linux/macOS): sem alguém drenando
-// do outro lado, o comando travaria ao escrever o próprio relatório.
-func TestSaidaLongaNaoTrava(t *testing.T) {
+// Output larger than the pipe buffer (64KB on Linux/macOS): with nobody draining the other
+// end, the command would hang writing its own report.
+func TestLongOutputDoesNotHang(t *testing.T) {
+	t.Run("CHLGC-B03: A long output is copied whole without hanging", func(t *testing.T) {})
 	dir := t.TempDir()
 	e := Open(dir, true, "")
-	linha := strings.Repeat("x", 200)
+	line := strings.Repeat("x", 200)
 	for i := 0; i < 2000; i++ { // ~400KB
-		fmt.Println(linha)
+		fmt.Println(line)
 	}
-	fim := make(chan struct{})
-	go func() { e.Close(); close(fim) }()
+	done := make(chan struct{})
+	go func() { e.Close(); close(done) }()
 	select {
-	case <-fim:
+	case <-done:
 	case <-time.After(10 * time.Second):
-		t.Fatal("Fechar travou — o pipe não estava sendo drenado")
+		t.Fatal("Close hung — the pipe was not being drained")
 	}
 
 	b, err := os.ReadFile(filepath.Join(dir, Dir, "check-all.txt"))
 	if err != nil {
-		t.Fatalf("ler espelho: %v", err)
+		t.Fatalf("reading the mirror: %v", err)
 	}
-	if n := strings.Count(string(b), linha); n != 2000 {
-		t.Errorf("espelho truncado: %d linhas de 2000", n)
+	if n := strings.Count(string(b), line); n != 2000 {
+		t.Errorf("mirror truncated: %d lines of 2000", n)
 	}
 }
 
-// O espelho é conveniência. Se o diretório não puder ser criado, o check tem de
-// seguir escrevendo na tela — trocar a varredura pelo relatório seria trocar o
-// essencial pelo acessório.
-func TestFalhaAoAbrirNaoDerruba(t *testing.T) {
+// The mirror is a convenience. If the folder cannot be created, the check must keep writing
+// to the screen — trading the scan for the report would trade the essential for the accessory.
+func TestFailureToOpenDoesNotStopTheCheck(t *testing.T) {
+	t.Run("CHLGC-B04: A mirror that cannot be opened does not stop the check", func(t *testing.T) {})
 	dir := t.TempDir()
-	// Um ARQUIVO onde o `.anchors/` deveria ser: o MkdirAll falha.
+	// A FILE where `.anchors/` should be: MkdirAll fails.
 	if err := os.WriteFile(filepath.Join(dir, Dir), []byte("x"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	e := Open(dir, true, "# nada\n")
+	e := Open(dir, true, "# nothing\n")
 	if e != nil {
-		t.Error("Abrir devolveu espelho onde não podia criar o diretório")
+		t.Error("Open returned a mirror where it could not create the folder")
 	}
-	e.Close() // seguro com nil
+	e.Close() // safe with nil
 	if c := e.Path(); c != "" {
-		t.Errorf("Caminho() = %q, queria vazio", c)
+		t.Errorf("Path() = %q, want empty", c)
 	}
 	if os.Stdout == nil {
-		t.Error("stdout ficou inválido após falha")
+		t.Error("stdout became invalid after the failure")
 	}
 }
 
-func TestCabecalhoRegistraContexto(t *testing.T) {
-	quando := time.Date(2026, 8, 18, 14, 32, 0, 0, time.UTC)
-	h := Header("anchors check --all", "abc1234", "fix: algo", 3, quando)
+func TestHeaderRecordsTheContext(t *testing.T) {
+	t.Run("CHLGC-B05: The header records the command, the moment and the HEAD", func(t *testing.T) {})
+	when := time.Date(2026, 8, 18, 14, 32, 0, 0, time.UTC)
+	h := Header("anchors check --all", "abc1234", "fix: something", 3, when)
 
-	for _, quer := range []string{
+	for _, want := range []string{
 		"anchors check --all",
 		"2026-08-18 14:32:00",
-		"abc1234 fix: algo",
+		"abc1234 fix: something",
 		"3 modified file(s)",
 	} {
-		if !strings.Contains(h, quer) {
-			t.Errorf("cabeçalho sem %q:\n%s", quer, h)
+		if !strings.Contains(h, want) {
+			t.Errorf("header without %q:\n%s", want, h)
 		}
 	}
 
-	if limpa := Header("c", "abc", "s", 0, quando); !strings.Contains(limpa, "tree: clean") {
-		t.Errorf("árvore limpa não registrada:\n%s", limpa)
+	// Without git (a new repo, or git missing) the header must not invent a HEAD.
+	if noGit := Header("c", "", "", 0, when); strings.Contains(noGit, "HEAD:") {
+		t.Errorf("HEAD invented without git:\n%s", noGit)
 	}
-	// Sem git (repo novo, ou git ausente) o cabeçalho não pode inventar um HEAD.
-	if semGit := Header("c", "", "", 0, quando); strings.Contains(semGit, "HEAD:") {
-		t.Errorf("HEAD inventado sem git:\n%s", semGit)
+}
+
+// The header stamps the tree state for whoever REREADS the report later. Without a
+// repository the dirty files cannot be counted — and writing "clean" there asserts a state
+// nobody checked, to a reader who has no way to suspect it.
+func TestHeaderDoesNotClaimACleanTreeWithoutKnowing(t *testing.T) {
+	t.Run("CHLGC-X01: A tree that could not be counted is never called clean", func(t *testing.T) {})
+	when := time.Date(2026, 8, 28, 10, 0, 0, 0, time.UTC)
+
+	h := Header("anchors check", "abc123", "subject", -1, when)
+
+	if strings.Contains(h, "tree: clean") {
+		t.Errorf("claimed a clean tree without being able to count: %s", h)
+	}
+	if !strings.Contains(h, "unknown") {
+		t.Errorf("the header must say it does not know: %s", h)
+	}
+}
+
+// The counterpart: a real count is still reported.
+func TestHeaderReportsTheRealCount(t *testing.T) {
+	t.Run("CHLGC-B06: The tree line reports the real count", func(t *testing.T) {})
+	when := time.Date(2026, 8, 28, 10, 0, 0, 0, time.UTC)
+
+	if h := Header("c", "h", "a", 0, when); !strings.Contains(h, "tree: clean") {
+		t.Errorf("0 dirty files IS a clean tree: %s", h)
+	}
+	if h := Header("c", "h", "a", 1, when); !strings.Contains(h, "tree: 1 modified file (") {
+		t.Errorf("1 dirty file: %s", h)
+	}
+	if h := Header("c", "h", "a", 5, when); !strings.Contains(h, "5 modified file(s)") {
+		t.Errorf("5 dirty files: %s", h)
 	}
 }

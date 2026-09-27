@@ -483,3 +483,24 @@ func TestFeatureTestMatch_Errors(t *testing.T) {
 		}
 	})
 }
+
+// A marker inside a string, or glued to a name, is not a comment.
+func TestStripLineCommentsRespectsQuotes(t *testing.T) {
+	t.Run("FTMFT-B19: Comment markers inside strings or glued to a name keep the line", func(t *testing.T) {})
+	src := "run(\"gh\", \"--add-label\", initx.LabelManual)\n" +
+		"get(\"https://x\", client.Fetch)\n" +
+		"for i := n; i-- > 0; { step.Apply() }\n" +
+		"val := 1 -- a SQL-style comment\n" +
+		"x := Real() // a real comment\n"
+	res := stripLineComments(src)
+	for _, keep := range []string{"LabelManual", "client.Fetch", "step.Apply", "val := 1", "Real()"} {
+		if !strings.Contains(res, keep) {
+			t.Errorf("%q was cut away: %q", keep, res)
+		}
+	}
+	for _, gone := range []string{"a SQL-style comment", "a real comment"} {
+		if strings.Contains(res, gone) {
+			t.Errorf("the trailing comment %q must be removed: %q", gone, res)
+		}
+	}
+}

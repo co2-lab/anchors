@@ -7,83 +7,108 @@ import (
 	"testing"
 )
 
-// raizIsolada devolve um diretório que NÃO está dentro de nenhum repo git. Sem isso o
-// teste seria falso-positivo: t.TempDir() no macOS cai em /var/folders, mas rodar a
-// suíte de dentro do próprio repo do Anchors com um caminho relativo acharia o `.git`
-// de cima e todo estado viraria GitPronto.
-func raizIsolada(t *testing.T) string {
+// isolatedRoot returns a folder that is NOT inside any git repository. Without it the test
+// would be a false positive: t.TempDir() on macOS lands in /var/folders, but running the
+// suite from inside the Anchors repository with a relative path would find the `.git`
+// above and every state would become GitPronto.
+func isolatedRoot(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
-	if _, dentro := repoAcima(dir); dentro {
-		t.Skipf("o diretório temporário %s está dentro de um repo git", dir)
+	if _, inside := repoAcima(dir); inside {
+		t.Skipf("the temporary folder %s is inside a git repository", dir)
 	}
 	return dir
 }
 
-// A distinção que motiva os quatro estados: "não há git" na máquina é OUTRA coisa de
-// "não há git neste projeto", porque a ação do Anchors é diferente — sem o binário não
-// existe `git init` a oferecer.
-func TestGitNaoInstaladoNaoEhOMesmoQueNaoIniciado(t *testing.T) {
-	dir := raizIsolada(t)
+// The distinction behind the four states: "no git" on the machine is NOT the same as
+// "no git in this project", because Anchors acts differently — without the program there
+// is no `git init` to offer.
+func TestGitNotInstalledIsNotTheSameAsNotInitialised(t *testing.T) {
+	t.Run("GTSTG-B01: With git not installed the state is not installed", func(t *testing.T) {})
+	t.Run("GTSTG-B02: With git installed and no repository anywhere the state is not initialised", func(t *testing.T) {})
+	t.Run("GTSTG-I01: Not installed and not initialised stay two states with different offers", func(t *testing.T) {})
+	t.Run("GTSTG-X02: Whether git is installed comes from the caller", func(t *testing.T) {})
+	dir := isolatedRoot(t)
 
-	semBinario := DetectGit(dir, false)
-	if semBinario != GitNaoInstalado {
-		t.Fatalf("sem o binário, o estado tem de ser GitNaoInstalado, foi %v", semBinario)
+	withoutProgram := DetectGit(dir, false)
+	if withoutProgram != GitNaoInstalado {
+		t.Fatalf("without the program the state must be GitNaoInstalado, got %v", withoutProgram)
 	}
-	comBinario := DetectGit(dir, true)
-	if comBinario != GitNaoIniciado {
-		t.Fatalf("com o binário e sem repo, o estado tem de ser GitNaoIniciado, foi %v", comBinario)
+	withProgram := DetectGit(dir, true)
+	if withProgram != GitNaoIniciado {
+		t.Fatalf("with the program and no repository the state must be GitNaoIniciado, got %v", withProgram)
 	}
 
-	// E a ação difere: só um dos dois tem o que oferecer.
+	// And the action differs: only one of the two has something to offer.
 	if OfferAction(GitNaoInstalado) {
-		t.Error("não há `git init` a oferecer numa máquina sem git — perguntar prometeria o que falharia")
+		t.Error("there is no `git init` to offer on a machine without git — asking would promise what would fail")
 	}
 	if !OfferAction(GitNaoIniciado) {
-		t.Error("com git instalado e sem repo, a oferta de inicializar é justamente o passo")
+		t.Error("with git installed and no repository, offering to initialise is exactly the step")
 	}
 }
 
-// Cada estado ensina uma coisa diferente. Uma mensagem que mande "instalar" quem já tem
-// git faz o usuário procurar o problema onde ele não está.
-func TestAvisoDizOQueFazerEmCadaEstado(t *testing.T) {
-	casos := []struct {
-		estado GitState
-		contém string
+// Each state teaches something different. A message telling someone who already has git
+// to "install" it sends them looking for the problem where it is not.
+func TestGitWarningSaysWhatToDoInEachState(t *testing.T) {
+	t.Run("GTSTG-B09: Each unready state has its own warning and ready has none", func(t *testing.T) {})
+	cases := []struct {
+		state    GitState
+		contains string
 	}{
 		{GitNaoInstalado, "não está instalado"},
 		{GitNaoIniciado, "não está sob git"},
 		{GitSemCommit, "nenhum commit"},
 	}
-	for _, c := range casos {
-		av := AvisoGit(c.estado)
-		if !strings.Contains(av, c.contém) {
-			t.Errorf("aviso de %v deveria conter %q, foi: %s", c.estado, c.contém, av)
+	for _, c := range cases {
+		w := AvisoGit(c.state)
+		if !strings.Contains(w, c.contains) {
+			t.Errorf("the warning for %v should contain %q, got: %s", c.state, c.contains, w)
 		}
 	}
 	if AvisoGit(GitPronto) != "" {
-		t.Error("repo pronto não tem o que avisar")
+		t.Error("a ready repository has nothing to warn about")
 	}
 }
 
-// Repo criado e sem commit é estado PRÓPRIO: dizer "tem git" aqui seria dizer que
-// `git log`/`git diff` funcionam, e eles não funcionam sem HEAD.
-func TestRepoSemCommitNaoContaComoPronto(t *testing.T) {
-	dir := raizIsolada(t)
+// Offering is decided per state, exhaustively over the four.
+func TestGitOfferOnlyWhereThereIsAStepToTake(t *testing.T) {
+	t.Run("GTSTG-B08: Only the not-initialised and no-commit states have an action to offer", func(t *testing.T) {})
+	want := map[GitState]bool{GitNaoInstalado: false, GitNaoIniciado: true, GitSemCommit: true, GitPronto: false}
+	for state, offer := range want {
+		if got := OfferAction(state); got != offer {
+			t.Errorf("OfferAction(%v) = %v, want %v", state, got, offer)
+		}
+	}
+}
+
+// A repository created and never committed is a state of its OWN: calling it "has git"
+// would claim `git log`/`git diff` work, and they do not without HEAD.
+func TestGitRepositoryWithoutCommitIsNotReady(t *testing.T) {
+	t.Run("GTSTG-B05: A repository with no reference at all has no commit yet", func(t *testing.T) {})
+	dir := isolatedRoot(t)
 	if err := os.MkdirAll(filepath.Join(dir, ".git", "refs", "heads"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
 	if e := DetectGit(dir, true); e != GitSemCommit {
-		t.Fatalf("repo sem ref nenhuma tem de ser GitSemCommit, foi %v", e)
+		t.Fatalf("a repository with no reference must be GitSemCommit, got %v", e)
+	}
+	// An EMPTY packed list is no history either.
+	if err := os.WriteFile(filepath.Join(dir, ".git", "packed-refs"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if e := DetectGit(dir, true); e != GitSemCommit {
+		t.Fatalf("an empty packed-refs is no commit, got %v", e)
 	}
 	if !OfferAction(GitSemCommit) {
-		t.Error("falta o commit — e é isso que o Anchors tem a oferecer aqui")
+		t.Error("the commit is what is missing — and that is what Anchors has to offer here")
 	}
 }
 
-func TestRepoComCommitEhPronto(t *testing.T) {
-	dir := raizIsolada(t)
+func TestGitRepositoryWithCommitIsReady(t *testing.T) {
+	t.Run("GTSTG-B03: A repository with a branch reference is ready", func(t *testing.T) {})
+	dir := isolatedRoot(t)
 	heads := filepath.Join(dir, ".git", "refs", "heads")
 	if err := os.MkdirAll(heads, 0o755); err != nil {
 		t.Fatal(err)
@@ -93,17 +118,19 @@ func TestRepoComCommitEhPronto(t *testing.T) {
 	}
 
 	if e := DetectGit(dir, true); e != GitPronto {
-		t.Fatalf("repo com ref em heads/ é pronto, foi %v", e)
+		t.Fatalf("a repository with a reference in heads/ is ready, got %v", e)
 	}
 	if OfferAction(GitPronto) {
-		t.Error("nada a oferecer num repo pronto")
+		t.Error("nothing to offer on a ready repository")
 	}
 }
 
-// `git gc` empacota as refs: heads/ fica vazio e o histórico vive em packed-refs. Ler
-// só heads/ classificaria um repo com anos de histórico como "sem commit".
-func TestRepoComRefsEmpacotadasEhPronto(t *testing.T) {
-	dir := raizIsolada(t)
+// `git gc` packs the references: heads/ becomes empty and the history lives in
+// packed-refs. Reading heads/ alone would classify a repository with years of history as
+// "no commit".
+func TestGitRepositoryWithPackedRefsIsReady(t *testing.T) {
+	t.Run("GTSTG-B04: A repository with packed references is ready", func(t *testing.T) {})
+	dir := isolatedRoot(t)
 	if err := os.MkdirAll(filepath.Join(dir, ".git", "refs", "heads"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -113,15 +140,16 @@ func TestRepoComRefsEmpacotadasEhPronto(t *testing.T) {
 	}
 
 	if e := DetectGit(dir, true); e != GitPronto {
-		t.Fatalf("refs empacotadas contam como commit, foi %v", e)
+		t.Fatalf("packed references count as a commit, got %v", e)
 	}
 }
 
-// Rodar `init` numa subpasta de um repo existente NÃO deve oferecer criar repo
-// aninhado: o histórico do subprojeto sumiria do repo de cima, e isso não se desfaz
-// com revert.
-func TestSubpastaDeRepoExistenteNaoOfereceRepoAninhado(t *testing.T) {
-	dir := raizIsolada(t)
+// Running `init` in a subfolder of an existing repository must NOT offer a nested
+// repository: the subproject's history would vanish from the repository above, and that
+// is not undone with a revert.
+func TestGitSubfolderOfExistingRepositoryOffersNoNestedRepository(t *testing.T) {
+	t.Run("GTSTG-B06: A subfolder of an existing repository is ready", func(t *testing.T) {})
+	dir := isolatedRoot(t)
 	heads := filepath.Join(dir, ".git", "refs", "heads")
 	if err := os.MkdirAll(heads, 0o755); err != nil {
 		t.Fatal(err)
@@ -135,42 +163,45 @@ func TestSubpastaDeRepoExistenteNaoOfereceRepoAninhado(t *testing.T) {
 	}
 
 	if e := DetectGit(sub, true); e != GitPronto {
-		t.Fatalf("subpasta de repo existente já está versionada, foi %v", e)
+		t.Fatalf("a subfolder of an existing repository is already versioned, got %v", e)
 	}
 }
 
-// Worktree e submódulo têm `.git` como ARQUIVO (ponteiro `gitdir: …`). Tratar como
-// "sem repo" ofereceria reinicializar por cima de um worktree válido.
-func TestGitComoArquivoEhPronto(t *testing.T) {
-	dir := raizIsolada(t)
+// Worktrees and submodules have `.git` as a FILE (a `gitdir: …` pointer). Treating it as
+// "no repository" would offer to initialise over a valid worktree.
+func TestGitMarkerAsFileIsReady(t *testing.T) {
+	t.Run("GTSTG-B07: A repository marker that is a file is ready", func(t *testing.T) {})
+	dir := isolatedRoot(t)
 	if err := os.WriteFile(filepath.Join(dir, ".git"), []byte("gitdir: /outro/lugar/.git/worktrees/x\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
 	if e := DetectGit(dir, true); e != GitPronto {
-		t.Fatalf("`.git` como arquivo é worktree/submódulo — repo real existe, foi %v", e)
+		t.Fatalf("`.git` as a file is a worktree or submodule — the real repository exists, got %v", e)
 	}
 }
 
-// O .gitignore semeado cobre o que o PRÓPRIO Anchors gera. Não adivinha stack: neste
-// ponto do init o preset ainda não foi escolhido.
-func TestGitignoreCobreOQueOAnchorsGera(t *testing.T) {
-	for _, esperado := range []string{".DS_Store", ".anchors/"} {
-		if !strings.Contains(GitignorePadrão, esperado) {
-			t.Errorf(".gitignore padrão deveria ignorar %q", esperado)
+// The seeded .gitignore covers what Anchors ITSELF generates. It does not guess the
+// stack: at this point of init the preset has not been chosen yet.
+func TestGitignoreCoversWhatAnchorsGenerates(t *testing.T) {
+	t.Run("GTSTG-B10: The seeded ignore list covers what Anchors generates", func(t *testing.T) {})
+	t.Run("GTSTG-X01: The seeded ignore list does not guess the stack", func(t *testing.T) {})
+	for _, want := range []string{".DS_Store", ".anchors/"} {
+		if !strings.Contains(GitignorePadrão, want) {
+			t.Errorf("the default .gitignore should ignore %q", want)
 		}
 	}
-	// SEM EXCEÇÃO dentro de `.anchors/`. Uma negação ali é frágil de um jeito silencioso:
-	// `.anchors/` exclui o DIRETÓRIO, o git nem desce nele, e o arquivo "salvo" pela
-	// negação some sem erro nenhum. O que precisa ser versionado nasce FORA — foi o que
-	// se fez com o sbom.json, que hoje é gerado na raiz.
+	// NO EXCEPTION inside `.anchors/`. A negation there fails silently: `.anchors/`
+	// excludes the FOLDER, git never descends into it, and the file "saved" by the
+	// negation vanishes with no error. What must be versioned is born OUTSIDE — as was
+	// done with sbom.json, which is now generated at the root.
 	if strings.Contains(GitignorePadrão, "!.anchors/") {
-		t.Error("exceção dentro de `.anchors/` não funciona (o diretório é excluído antes) " +
-			"e some em silêncio: o artefato versionável deve nascer fora da área de trabalho")
+		t.Error("an exception inside `.anchors/` does not work (the folder is excluded first) " +
+			"and vanishes silently: the versionable artifact must be born outside the working area")
 	}
 	for _, stack := range []string{"node_modules", "target/", "vendor/"} {
 		if strings.Contains(GitignorePadrão, stack) {
-			t.Errorf(".gitignore não deve chutar stack (%q): o preset ainda não foi escolhido", stack)
+			t.Errorf(".gitignore must not guess the stack (%q): the preset has not been chosen yet", stack)
 		}
 	}
 }

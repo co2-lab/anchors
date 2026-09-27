@@ -23,6 +23,9 @@ func generatedPaths(t *testing.T, root string, args ...string) (string, error) {
 // The `re` form is what a conflict script feeds to `grep -E`: it must tell the generated
 // files from the work files — and the dot must be literal.
 func TestGeneratedPathsRegexSeparatesNoiseFromDivergence(t *testing.T) {
+	t.Run("GNPTG-B01: The patterns match the map, the compiled docs and plan progress files only", func(t *testing.T) {})
+	t.Run("GNPTG-B03: The re format is one valid alternation", func(t *testing.T) {})
+	t.Run("GNPTG-B04: The dot of a path matches only a literal dot", func(t *testing.T) {})
 	root := t.TempDir()
 	writeFile(t, root, config.DefaultFile, "version: 1\n")
 	out, err := generatedPaths(t, root, "--format", "re")
@@ -50,6 +53,10 @@ func TestGeneratedPathsRegexSeparatesNoiseFromDivergence(t *testing.T) {
 
 // The default form is one pattern per line — the same patterns.
 func TestGeneratedPathsLinesAndConfigRequired(t *testing.T) {
+	t.Run("GNPTG-B02: The default output is one pattern per line", func(t *testing.T) {})
+	t.Run("GNPTG-I01: Both forms carry the same patterns", func(t *testing.T) {})
+	t.Run("GNPTG-X01: The command only names the derived files", func(t *testing.T) {})
+	t.Run("GNPTG-E01: A directory without anchors.yaml is refused", func(t *testing.T) {})
 	root := t.TempDir()
 	writeFile(t, root, config.DefaultFile, "version: 1\n")
 	lines, err := generatedPaths(t, root)

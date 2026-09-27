@@ -1,38 +1,40 @@
 package initx
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"testing"
 )
 
-// writeFixture cria um projeto de brinquedo em dir: uma trinca co-localizada no
-// mobile, código no backend, guides, e ruído a ignorar (node_modules).
+// writeFixture creates a toy project in dir: a colocated triad in mobile, code in the
+// backend, guides, and noise to ignore (node_modules).
 func writeFixture(t *testing.T, dir string) {
 	t.Helper()
 	files := map[string]string{
-		// trinca co-localizada (screen no mobile)
+		// colocated triad (a screen in mobile)
 		"apps/mobile/src/screens/Login.tsx":      "export const Login = () => null // LOGIX-A01",
 		"apps/mobile/src/screens/Login.spec.md":  "> **Código**: `LOGIX`\n### LOGIX-A01: entrar",
 		"apps/mobile/src/screens/Login.feature":  "@LOGIX-A01\nCenário: entrar",
 		"apps/mobile/src/screens/Login.test.tsx": "it('LOGIX-A01: entra', () => {})",
-		// mais um alvo, para bater o limiar de co-location (>=3)
+		// more targets, to reach the colocation threshold (>=3)
 		"apps/mobile/src/screens/Home.tsx":      "export const Home = () => null",
 		"apps/mobile/src/screens/Home.spec.md":  "> **Código**: `HOMEX`",
 		"apps/mobile/src/screens/Home.test.tsx": "it('HOMEX-S01', () => {})",
 		"apps/mobile/src/screens/Prof.tsx":      "export const Prof = () => null",
 		"apps/mobile/src/screens/Prof.spec.md":  "> **Código**: `PROF`",
-		// backend (só código, sem trinca)
+		// backend (code only, no triad)
 		"packages/backend/handlers/auth.ts": "export function auth() {}",
 		"packages/backend/repos/user.ts":    "export function getUser() {}",
 		// guides
 		"guides/FRONTEND_GUIDE.md": "# Frontend",
 		"guides/BACKEND_GUIDE.md":  "# Backend",
-		// ruído: tem que ser ignorado
+		// noise: must be ignored
 		"node_modules/react/index.js": "module.exports = {}",
 	}
-	// garante massa de código suficiente (codeRoots exige >=10 por dir): enche o backend
+	// ensures enough code mass (codeRoots demands >=10 per dir): fills the backend
 	for i := range 12 {
 		files["packages/backend/gen/f"+itoa(i)+".ts"] = "export const x = 1"
 	}
@@ -53,6 +55,9 @@ func writeFixture(t *testing.T, dir string) {
 func itoa(i int) string { return string(rune('0'+i/10)) + string(rune('0'+i%10)) }
 
 func TestInfer(t *testing.T) {
+	t.Run("INPRN-B02: The presence of specs, features and tests is detected", func(t *testing.T) {})
+	t.Run("INPRN-B04: The first guides directory is detected with every guide file in it", func(t *testing.T) {})
+	t.Run("INPRN-B07: Colocation is detected when at least three stems pair code with a spec, test or feature", func(t *testing.T) {})
 	dir := t.TempDir()
 	writeFixture(t, dir)
 
@@ -62,71 +67,243 @@ func TestInfer(t *testing.T) {
 	}
 
 	if !p.HasSpecMD || !p.HasFeature || !p.HasTest {
-		t.Errorf("deveria detectar spec/feature/test; got spec=%v feature=%v test=%v",
+		t.Errorf("should detect spec/feature/test; got spec=%v feature=%v test=%v",
 			p.HasSpecMD, p.HasFeature, p.HasTest)
 	}
 	if !p.Colocated {
-		t.Error("deveria detectar co-location (há trinca ao lado do código)")
+		t.Error("should detect colocation (there is a triad beside the code)")
 	}
 	if p.GuideDir != "guides" {
 		t.Errorf("GuideDir = %q, want \"guides\"", p.GuideDir)
 	}
 	if len(p.GuideFiles) != 2 {
-		t.Errorf("esperava 2 guides, got %d (%v)", len(p.GuideFiles), p.GuideFiles)
+		t.Errorf("expected 2 guides, got %d (%v)", len(p.GuideFiles), p.GuideFiles)
 	}
 	if !contains(p.CodeDirs, "apps/mobile") || !contains(p.CodeDirs, "packages/backend") {
-		t.Errorf("CodeDirs deveria conter apps/mobile e packages/backend; got %v", p.CodeDirs)
+		t.Errorf("CodeDirs should contain apps/mobile and packages/backend; got %v", p.CodeDirs)
 	}
 	if !contains(p.CodeExts, ".ts") || !contains(p.CodeExts, ".tsx") {
-		t.Errorf("CodeExts deveria conter .ts e .tsx; got %v", p.CodeExts)
+		t.Errorf("CodeExts should contain .ts and .tsx; got %v", p.CodeExts)
 	}
 }
 
 func TestInfer_ignoresNodeModules(t *testing.T) {
+	t.Run("INPRN-B01: Dependency, build and tool directories are not walked", func(t *testing.T) {})
 	dir := t.TempDir()
 	writeFixture(t, dir)
 	p, err := Infer(dir)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// node_modules não pode virar um dir de código
+	// node_modules must not become a code dir
 	for _, d := range p.CodeDirs {
 		if d == "node_modules" || filepath.Base(d) == "react" {
-			t.Errorf("node_modules deveria ser ignorado, mas apareceu em CodeDirs: %v", p.CodeDirs)
+			t.Errorf("node_modules should be ignored, but appeared in CodeDirs: %v", p.CodeDirs)
 		}
 	}
 }
 
 func TestInfer_buildsConfig(t *testing.T) {
+	t.Run("INPRN-B09: Inference carries a proposed configuration with code layers and no artifact layer", func(t *testing.T) {})
 	dir := t.TempDir()
 	writeFixture(t, dir)
 	p, _ := Infer(dir)
 	cfg := p.Config
 
-	// as layers de ARTEFATO NÃO são pré-criadas pela inferência — vêm da escolha
-	// do usuário no init (ApplyArtifactChoice), que é sempre perguntada.
+	// ARTIFACT layers are NOT pre-created by inference — they come from the user's choice
+	// at init (ApplyArtifactChoice), which is always asked.
 	for _, name := range []string{"spec", "feature", "test", "guide"} {
 		if _, ok := cfg.Layers[name]; ok {
-			t.Errorf("a inferência não deveria pré-criar a layer de artefato %q (é escolha do usuário)", name)
+			t.Errorf("inference should not pre-create the artifact layer %q (it is the user's choice)", name)
 		}
 	}
-	// mas os artefatos DETECTADOS são reportados (para pré-marcar as opções)
+	// but the DETECTED artifacts are reported (to pre-check the options)
 	det := p.DetectedArtifacts()
 	for _, name := range []string{"spec", "feature", "test", "guide"} {
 		if !det[name] {
-			t.Errorf("DetectedArtifacts deveria conter %q (está no fixture)", name)
+			t.Errorf("DetectedArtifacts should contain %q (it is in the fixture)", name)
 		}
 	}
-	// há ao menos uma layer de código (essas a inferência propõe como default)
+	// there is at least one code layer (inference proposes those as default)
 	if len(CodeLayerNames(cfg)) == 0 {
-		t.Error("config proposta deveria ter camadas de código")
+		t.Error("the proposed config should have code layers")
 	}
-	// governs começa vazio (é preenchido na P&R)
+	// governs starts empty (filled in the Q&A)
 	if len(cfg.Governs) != 0 {
-		t.Errorf("governs deveria começar vazio, got %+v", cfg.Governs)
+		t.Errorf("governs should start empty, got %+v", cfg.Governs)
 	}
 }
 
 func contains(s []string, v string) bool {
 	return slices.Contains(s, v)
+}
+
+// writeTree writes each file (relative path → content) under dir.
+func writeTree(t *testing.T, dir string, files map[string]string) {
+	t.Helper()
+	for rel, content := range files {
+		full := filepath.Join(dir, rel)
+		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(full, []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+// codeFiles returns n code files named <dir>/f<i><ext>, each with content.
+func codeFiles(dir, ext, content string, n int) map[string]string {
+	out := map[string]string{}
+	for i := range n {
+		out[fmt.Sprintf("%s/f%03d%s", dir, i, ext)] = content
+	}
+	return out
+}
+
+func TestInfer_ignoresEveryToolDir(t *testing.T) {
+	t.Run("INPRN-B01: Dependency, build and tool directories are not walked", func(t *testing.T) {})
+	dir := t.TempDir()
+	for _, ignored := range []string{"node_modules", ".git", "dist", "build", "vendor", ".next", "coverage", ".expo", ".anchors"} {
+		files := codeFiles(ignored+"/pkg", ".ts", "", 12)
+		files[ignored+"/x/a.spec.md"] = "spec"
+		writeTree(t, dir, files)
+	}
+	p, err := Infer(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(p.CodeDirs) != 0 || len(p.CodeExts) != 0 || p.HasSpecMD {
+		t.Errorf("nothing under an ignored dir should be seen, got dirs=%v exts=%v spec=%v",
+			p.CodeDirs, p.CodeExts, p.HasSpecMD)
+	}
+}
+
+func TestInfer_planWinsOverGuide(t *testing.T) {
+	t.Run("INPRN-B03: A markdown file in a plans directory is a plan, even inside a guides directory", func(t *testing.T) {})
+	dir := t.TempDir()
+	writeTree(t, dir, map[string]string{
+		"docs/guides/plans/0001.md": "# plan",
+		"docs/guides/STYLE.md":      "# guide",
+	})
+	p, err := Infer(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.PlanDir != "docs/guides/plans" {
+		t.Errorf("PlanDir = %q, want docs/guides/plans", p.PlanDir)
+	}
+	if !reflect.DeepEqual(p.GuideFiles, []string{"docs/guides/STYLE.md"}) {
+		t.Errorf("the plan must not be counted as a guide, GuideFiles = %v", p.GuideFiles)
+	}
+}
+
+func TestInfer_codeDirNeedsTenFiles(t *testing.T) {
+	t.Run("INPRN-B05: A code directory is a top directory of up to two segments holding at least ten code files, ordered by volume", func(t *testing.T) {})
+	dir := t.TempDir()
+	files := codeFiles("small/x/deep", ".go", "", 9)
+	for k, v := range codeFiles("mid/y/deep", ".go", "", 10) {
+		files[k] = v
+	}
+	for k, v := range codeFiles("big/z", ".go", "", 15) {
+		files[k] = v
+	}
+	writeTree(t, dir, files)
+	p, err := Infer(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(p.CodeDirs, []string{"big/z", "mid/y"}) {
+		t.Errorf("CodeDirs = %v, want [big/z mid/y]", p.CodeDirs)
+	}
+}
+
+func TestInfer_topFiveExtensions(t *testing.T) {
+	t.Run("INPRN-B06: The code extensions are the five most frequent, most frequent first", func(t *testing.T) {})
+	dir := t.TempDir()
+	files := map[string]string{}
+	for i, ext := range []string{".ts", ".go", ".py", ".rb", ".java", ".rs"} {
+		for k, v := range codeFiles("src/"+ext[1:], ext, "", 12-i) {
+			files[k] = v
+		}
+	}
+	writeTree(t, dir, files)
+	p, err := Infer(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(p.CodeExts, []string{".ts", ".go", ".py", ".rb", ".java"}) {
+		t.Errorf("CodeExts = %v, want the five most frequent in order", p.CodeExts)
+	}
+}
+
+func TestInfer_colocationNeedsThreeStems(t *testing.T) {
+	t.Run("INPRN-B07: Colocation is detected when at least three stems pair code with a spec, test or feature", func(t *testing.T) {})
+	dir := t.TempDir()
+	writeTree(t, dir, map[string]string{
+		"src/a.ts": "", "src/a.test.ts": "",
+		"src/b.ts": "", "src/b.spec.md": "",
+		"src/c.ts": "", "other/c.feature": "", // a different directory: not the same stem
+	})
+	p, err := Infer(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Colocated {
+		t.Error("two paired stems are a coincidence, not colocation")
+	}
+}
+
+func TestInfer_testHandle(t *testing.T) {
+	t.Run("INPRN-B08: The test handle is the known attribute used most, and only from five uses", func(t *testing.T) {})
+	cases := []struct {
+		name    string
+		content string
+		want    string
+	}{
+		{"dominant", `testID="a" testID="b" data-testid="c" data-testid="d" data-testid="e" data-testid="f" data-testid="g"`, "data-testid"},
+		{"below five uses", `testID="a" testID="b" testID="c" testID="d"`, ""},
+		{"tie goes to the earlier known attribute", `data-testid="a" testID="b"`, "testID"},
+	}
+	for _, c := range cases {
+		dir := t.TempDir()
+		// the tie case reaches the threshold by repetition over files
+		n := 1
+		if c.name != "below five uses" {
+			n = 5
+		}
+		writeTree(t, dir, codeFiles("src", ".tsx", c.content, n))
+		p, err := Infer(dir)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if p.TestHandle != c.want {
+			t.Errorf("%s: TestHandle = %q, want %q", c.name, p.TestHandle, c.want)
+		}
+	}
+}
+
+func TestInfer_handleSampleIsBounded(t *testing.T) {
+	t.Run("INPRN-X01: Only the first three hundred code files are read in search of the test handle", func(t *testing.T) {})
+	dir := t.TempDir()
+	files := codeFiles("a/plain", ".ts", "", 300)
+	for k, v := range codeFiles("z/marked", ".ts", `testID="x"`, 20) {
+		files[k] = v
+	}
+	writeTree(t, dir, files)
+	p, err := Infer(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.TestHandle != "" {
+		t.Errorf("the handle only appears after the sample, so none is proposed; got %q", p.TestHandle)
+	}
+}
+
+func TestInfer_walkFailure(t *testing.T) {
+	t.Run("INPRN-E01: A root that cannot be walked fails the inference with no proposal", func(t *testing.T) {})
+	p, err := Infer(filepath.Join(t.TempDir(), "missing"))
+	if err == nil || p != nil {
+		t.Errorf("a missing root should fail with no proposal, got %+v %v", p, err)
+	}
 }

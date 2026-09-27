@@ -40,7 +40,7 @@ func withSpec(t *testing.T, spec string) (string, *mapx.Graph) {
 // --- feature-spec-match ---
 
 func TestFeatureSpecMatch_scenarioWithoutRuleIsReported(t *testing.T) {
-	t.Run("FSPMT-B01: a scenario whose rule the spec no longer declares is reported", func(t *testing.T) {})
+	t.Run("RVMTR-B05: A scenario whose rule the spec no longer declares fails, named as written", func(t *testing.T) {})
 	root, g := withSpec(t, "### UNITX-B01 — the rule that stayed\n")
 
 	v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), root, g, nil)
@@ -56,7 +56,7 @@ func TestFeatureSpecMatch_scenarioWithoutRuleIsReported(t *testing.T) {
 }
 
 func TestFeatureSpecMatch_allBackedByRulesPasses(t *testing.T) {
-	t.Run("FSPMT-B02: every scenario backed by a declared rule passes", func(t *testing.T) {})
+	t.Run("RVMTR-B05: A scenario whose rule the spec no longer declares fails, named as written", func(t *testing.T) {})
 	root, g := withSpec(t, "### UNITX-B01 — stayed\n\n### UNITX-B10 — also stayed\n")
 
 	if v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), root, g, nil); v != Pass {
@@ -68,7 +68,7 @@ func TestFeatureSpecMatch_allBackedByRulesPasses(t *testing.T) {
 // local spec would have the gate ask the impossible — the mistake `scenario-coverage`
 // already measured, with 18 scenarios charged to a spec that defined 6.
 func TestFeatureSpecMatch_doesNotChargeAnotherUnitsCode(t *testing.T) {
-	t.Run("FSPMT-X01: a code from another unit is not charged of this spec", func(t *testing.T) {})
+	t.Run("RVMTR-X01: Codes of another unit are never charged", func(t *testing.T) {})
 	root, g := withSpec(t, "### UNITX-B01 — the rule\n")
 	withNeighbour := "@UNITX\nFeature: X\n\n  @UNITX-B01 @OTHER-B07\n  Scenario: runs against the neighbour\n"
 
@@ -78,6 +78,9 @@ func TestFeatureSpecMatch_doesNotChargeAnotherUnitsCode(t *testing.T) {
 }
 
 func TestFeatureSpecMatch_skips(t *testing.T) {
+	t.Run("RVMTR-B01: feature-spec-match skips a node that is not a feature, and a feature with no coded scenario", func(t *testing.T) {})
+	t.Run("RVMTR-B03: A feature no spec covers is Pending", func(t *testing.T) {})
+	t.Run("RVMTR-I01: Neither gate answers Pass when it had nothing to match against", func(t *testing.T) {})
 	notFeature := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec}
 	if v, _ := checkFeatureSpecMatch(featureWithOrphan, notFeature, "", nil, nil); v != Skip {
 		t.Errorf("not a feature and the verdict was %v", v)
@@ -109,7 +112,7 @@ func withFeature(t *testing.T, feat string) (string, *mapx.Graph) {
 
 // A green test over a reverted rule is worse than a missing test, because it ATTESTS.
 func TestTestFeatureMatch_testProvesCodeWithoutScenario(t *testing.T) {
-	t.Run("TFTMT-B01: a code the test claims to prove and no scenario declares is reported", func(t *testing.T) {})
+	t.Run("RVMTR-B12: A code the test names that no scenario declares fails", func(t *testing.T) {})
 	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01\n  Scenario: the one that stayed\n")
 	test := "it('UNITX-B01 ok', () => {})\nit('UNITX-B10 orphan', () => {})\n"
 
@@ -124,7 +127,7 @@ func TestTestFeatureMatch_testProvesCodeWithoutScenario(t *testing.T) {
 
 // COMMENTS OUT: a code cited in a comment is a reference, not proof.
 func TestTestFeatureMatch_commentDoesNotCount(t *testing.T) {
-	t.Run("TFTMT-X01: a code cited only in a comment is not a claim of proof", func(t *testing.T) {})
+	t.Run("RVMTR-X02: A code named only in a comment is not a claim of proof", func(t *testing.T) {})
 	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01\n  Scenario: the one that stayed\n")
 	test := "// UNITX-B10 was reverted, see #811\nit('UNITX-B01 ok', () => {})\n"
 
@@ -134,6 +137,7 @@ func TestTestFeatureMatch_commentDoesNotCount(t *testing.T) {
 }
 
 func TestTestFeatureMatch_doesNotChargeAnotherUnitsCode(t *testing.T) {
+	t.Run("RVMTR-X01: Codes of another unit are never charged", func(t *testing.T) {})
 	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01\n  Scenario: the one that stayed\n")
 	test := "it('UNITX-B01 ok', () => { buildFixture(OTHER-B07) })\n"
 
@@ -143,6 +147,8 @@ func TestTestFeatureMatch_doesNotChargeAnotherUnitsCode(t *testing.T) {
 }
 
 func TestTestFeatureMatch_skips(t *testing.T) {
+	t.Run("RVMTR-B10: test-feature-match skips what is not a test, and a test no feature exercises is Pending", func(t *testing.T) {})
+	t.Run("RVMTR-I01: Neither gate answers Pass when it had nothing to match against", func(t *testing.T) {})
 	notTest := mapx.Node{ID: "x.feature", Kind: mapx.KindFeature}
 	if v, _ := checkTestFeatureMatch("", notTest, "", nil, nil); v != Skip {
 		t.Errorf("not a test and the verdict was %v", v)
@@ -163,7 +169,7 @@ func TestTestFeatureMatch_skips(t *testing.T) {
 // declared. A gate that accuses what is right teaches people to ignore it, and would have
 // buried the real case (the reverted `DTSTD-B10`) in the noise.
 func TestFeatureSpecMatch_variantIsNotAnotherRule(t *testing.T) {
-	t.Run("FSPMT-X02: a numbered variant resolves to the rule it varies", func(t *testing.T) {})
+	t.Run("RVMTR-B06: A numbered variant is the same rule", func(t *testing.T) {})
 	root, g := withSpec(t, "### UNITX-B01 — the rule\n")
 	withVariants := "@UNITX\nFeature: X\n\n" +
 		"  @UNITX-B01#01\n  Scenario: first slice\n\n" +
@@ -176,6 +182,7 @@ func TestFeatureSpecMatch_variantIsNotAnotherRule(t *testing.T) {
 
 // And an ORPHAN variant is still reported — handling the suffix must not become amnesty.
 func TestFeatureSpecMatch_variantOfMissingRuleIsReported(t *testing.T) {
+	t.Run("RVMTR-B06: A numbered variant is the same rule", func(t *testing.T) {})
 	root, g := withSpec(t, "### UNITX-B01 — the rule that stayed\n")
 	withOrphan := "@UNITX\nFeature: X\n\n  @UNITX-B10#01\n  Scenario: variant of the reverted one\n"
 
@@ -190,7 +197,7 @@ func TestFeatureSpecMatch_variantOfMissingRuleIsReported(t *testing.T) {
 }
 
 func TestTestFeatureMatch_variantIsNotAnotherRule(t *testing.T) {
-	t.Run("TFTMT-X02: a numbered variant resolves to the rule it varies", func(t *testing.T) {})
+	t.Run("RVMTR-B13: A rule declared as a variant is a declared scenario for the test", func(t *testing.T) {})
 	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01#01\n  Scenario: slice\n")
 	test := "it('UNITX-B01 exercises the rule', () => {})\n"
 
@@ -207,7 +214,7 @@ func TestTestFeatureMatch_variantIsNotAnotherRule(t *testing.T) {
 //
 // MEASURED in the reference app: two of the three findings were this.
 func TestTestFeatureMatch_revisionIsNotReported(t *testing.T) {
-	t.Run("TFTMT-X03: a revision code is not charged as a rule", func(t *testing.T) {})
+	t.Run("RVMTR-B14: A revision code is not charged as a rule", func(t *testing.T) {})
 	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01\n  Scenario: the rule\n")
 	test := "describe('UNITX-R0002 — the decision', () => {\n  it('UNITX-B01 ok', () => {})\n})\n"
 
@@ -224,7 +231,7 @@ func TestTestFeatureMatch_revisionIsNotReported(t *testing.T) {
 // gate were states the spec DID define. The fixture keeps one real orphan (`DS-filter`)
 // to prove the fix is not an amnesty.
 func TestFeatureSpecMatch_dataStatesAreDefinedByName(t *testing.T) {
-	t.Run("FSPMT-X03: a data state the spec defines in short form is not an orphan", func(t *testing.T) {})
+	t.Run("RVMTR-B07: A data state is defined by its name", func(t *testing.T) {})
 	spec := "### TREXX-B01 — the rule\n\n## Data states\n\n" +
 		"| State | When |\n| --- | --- |\n" +
 		"| `DS-data-present` | some month is non-zero |\n" +
@@ -260,12 +267,85 @@ func TestFeatureSpecMatch_dataStatesAreDefinedByName(t *testing.T) {
 
 // The VISUAL BASELINE is not a rule the spec defines: `vr-baseline` charges it.
 func TestFeatureSpecMatch_visualBaselineIsNotCharged(t *testing.T) {
-	t.Run("FSPMT-X04: the unit's VR baseline is left to vr-baseline", func(t *testing.T) {})
+	t.Run("RVMTR-B08: The visual baseline is never charged", func(t *testing.T) {})
 	root, g := withSpec(t, "### UNITX-B01 — the rule\n")
 	withVR := "@UNITX\nFeature: X\n\n  @UNITX-B01\n  Scenario: rule\n\n" +
 		"  @UNITX-VR @nivel-vr\n  Scenario: the screen's picture\n"
 
 	if v, msg := checkFeatureSpecMatch(withVR, featNodeRev(), root, g, nil); v != Pass {
 		t.Errorf("the VR baseline was charged as an orphan: %v / %s", v, msg)
+	}
+}
+
+// Without a map neither gate can know who covers whom, and a feature with no coded
+// scenario gives feature-spec-match nothing to confront.
+func TestReverseMatch_noMapAndNothingToConfront(t *testing.T) {
+	t.Run("RVMTR-I01: Neither gate answers Pass when it had nothing to match against", func(t *testing.T) {})
+	t.Run("RVMTR-B01: feature-spec-match skips a node that is not a feature, and a feature with no coded scenario", func(t *testing.T) {})
+	t.Run("RVMTR-B02: Without a map both gates are Pending", func(t *testing.T) {})
+	if v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), "", nil, nil); v != Pending || !strings.Contains(msg, "map") {
+		t.Errorf("feature-spec-match with no map: %v / %s", v, msg)
+	}
+	if v, msg := checkTestFeatureMatch("it('UNITX-B01')", testNodeRev(), "", nil, nil); v != Pending || !strings.Contains(msg, "map") {
+		t.Errorf("test-feature-match with no map: %v / %s", v, msg)
+	}
+	root, g := withSpec(t, "### UNITX-B01 — the rule\n")
+	if v, _ := checkFeatureSpecMatch("@UNITX\nFeature: X\n", featNodeRev(), root, g, nil); v != Skip {
+		t.Errorf("a feature with no scenario should Skip, got %v", v)
+	}
+}
+
+// A linked origin that declares nothing is Pending, not Pass: there was nothing to match.
+func TestReverseMatch_originDeclaringNothingIsPending(t *testing.T) {
+	t.Run("RVMTR-B04: A covering spec that defines no requirement leaves feature-spec-match Pending", func(t *testing.T) {})
+	t.Run("RVMTR-B11: A linked feature with no coded scenario leaves test-feature-match Pending", func(t *testing.T) {})
+	root, g := withSpec(t, "# A spec with prose only\n")
+	if v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), root, g, nil); v != Pending || !strings.Contains(msg, "no requirement") {
+		t.Errorf("a spec with no requirement: %v / %s", v, msg)
+	}
+	root, g = withFeature(t, "Feature: X\n\n  Scenario: uncoded\n")
+	if v, msg := checkTestFeatureMatch("it('UNITX-B10')", testNodeRev(), root, g, nil); v != Pending || !strings.Contains(msg, "no coded scenario") {
+		t.Errorf("a feature with no coded scenario: %v / %s", v, msg)
+	}
+}
+
+// A linked file that cannot be read contributes nothing; when none can be read, the gate
+// has nothing to match against and stays Pending instead of accusing every code.
+func TestReverseMatch_unreadableOriginIsPending(t *testing.T) {
+	t.Run("RVMTR-E01: A linked spec or feature that cannot be read contributes nothing", func(t *testing.T) {})
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{featNodeRev()},
+		Edges: []mapx.Edge{{From: "missing.spec.md", To: "x.feature", Type: mapx.EdgeCoveredBy}},
+	}
+	if v, _ := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), t.TempDir(), g, nil); v != Pending {
+		t.Errorf("an unreadable spec: expected Pending, got %v", v)
+	}
+	gt := &mapx.Graph{
+		Nodes: []mapx.Node{testNodeRev()},
+		Edges: []mapx.Edge{{From: "missing.feature", To: "x.test.ts", Type: mapx.EdgeTestedBy}},
+	}
+	if v, _ := checkTestFeatureMatch("it('UNITX-B10')", testNodeRev(), t.TempDir(), gt, nil); v != Pending {
+		t.Errorf("an unreadable feature: expected Pending, got %v", v)
+	}
+}
+
+// A feature may cover more than one spec: a scenario matching ANY of them has an owner.
+func TestFeatureSpecMatch_unionOfCoveringSpecs(t *testing.T) {
+	t.Run("RVMTR-B09: The rules of every covering spec count together", func(t *testing.T) {})
+	root := t.TempDir()
+	for name, body := range map[string]string{"a.spec.md": "### UNITX-B01 — one\n", "b.spec.md": "### UNITX-B10 — other\n"} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{featNodeRev()},
+		Edges: []mapx.Edge{
+			{From: "a.spec.md", To: "x.feature", Type: mapx.EdgeCoveredBy},
+			{From: "b.spec.md", To: "x.feature", Type: mapx.EdgeCoveredBy},
+		},
+	}
+	if v, msg := checkFeatureSpecMatch(featureWithOrphan, featNodeRev(), root, g, nil); v != Pass {
+		t.Errorf("B01 and B10 are each defined by one of the specs: %v / %s", v, msg)
 	}
 }

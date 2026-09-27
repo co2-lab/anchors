@@ -23,6 +23,8 @@ func flagNode() mapx.Node {
 
 // The ABSENT case is the one that breaks in production and the one nobody writes.
 func TestFlagScenariosComplete(t *testing.T) {
+	t.Run("FLSCF-B04: A flag that declares the absent case passes completeness", func(t *testing.T) {})
+	t.Run("FLSCF-B05: A flag without the absent case fails, naming the waiver", func(t *testing.T) {})
 	v, _ := checkFlagScenariosComplete(completeFlag, flagNode(), "", nil, nil)
 	if v != Pass {
 		t.Errorf("the flag declares `absent` and the verdict was %v", v)
@@ -41,6 +43,8 @@ func TestFlagScenariosComplete(t *testing.T) {
 // The waiver is `@no-absent` with a reason — a bare marker does not count, by the same
 // rule as every other opt-out: the reason is what answers the question six months later.
 func TestFlagScenariosComplete_waiver(t *testing.T) {
+	t.Run("FLSCF-B06: The absent waiver needs a written reason, outside backticks", func(t *testing.T) {})
+	t.Run("FLSCF-X01: No waiver is accepted without a written reason", func(t *testing.T) {})
 	noAbsent := "| `CHKUT-G01` | `= \"on\"` | turns on |\n"
 
 	withReason := noAbsent + "\n@no-absent: read from a local constant, never missing\n"
@@ -55,6 +59,7 @@ func TestFlagScenariosComplete_waiver(t *testing.T) {
 }
 
 func TestFlagScenariosComplete_skips(t *testing.T) {
+	t.Run("FLSCF-B01: The flag gates skip what is not a flag, and a flag with no scenario", func(t *testing.T) {})
 	notFlag := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
 	if v, _ := checkFlagScenariosComplete(completeFlag, notFlag, "", nil, nil); v != Skip {
 		t.Errorf("not a flag and the verdict was %v", v)
@@ -68,6 +73,8 @@ func TestFlagScenariosComplete_skips(t *testing.T) {
 
 // The grammar is fixed in order to REFUSE. Prose passes any ruler and confronts nothing.
 func TestFlagScenarioGrammar(t *testing.T) {
+	t.Run("FLSCF-B02: A flag whose every condition is in the grammar passes", func(t *testing.T) {})
+	t.Run("FLSCF-B03: A condition in prose fails the grammar, naming the scenario", func(t *testing.T) {})
 	if v, _ := checkFlagScenarioGrammar(completeFlag, flagNode(), "", nil, nil); v != Pass {
 		t.Errorf("every condition is in the grammar and the verdict was %v", v)
 	}
@@ -98,6 +105,9 @@ func projectWithFlag(t *testing.T) string {
 }
 
 func TestFlagScenarioExists(t *testing.T) {
+	t.Run("FLSCF-B07: Only a citation of a G code is confronted", func(t *testing.T) {})
+	t.Run("FLSCF-B08: A citation of a declared scenario passes", func(t *testing.T) {})
+	t.Run("FLSCF-B09: Citations of scenarios that do not exist fail, each named once and sorted", func(t *testing.T) {})
 	root := projectWithFlag(t)
 	spec := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
 
@@ -125,6 +135,7 @@ func TestFlagScenarioExists(t *testing.T) {
 // Per SCENARIO, not per flag: it is precisely the disabled branch that goes unproven under
 // a per-flag ruler, and it is the one that will break.
 func TestFlagCovered_perScenarioNotPerFlag(t *testing.T) {
+	t.Run("FLSCF-B14: Coverage is judged per scenario", func(t *testing.T) {})
 	// A test proves only G01. Under a per-FLAG ruler this would pass.
 	n := flagNode()
 	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CHKUT-G01"}}
@@ -144,6 +155,7 @@ func TestFlagCovered_perScenarioNotPerFlag(t *testing.T) {
 }
 
 func TestFlagCovered_allProven(t *testing.T) {
+	t.Run("FLSCF-B14: Coverage is judged per scenario", func(t *testing.T) {})
 	n := flagNode()
 	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CHKUT-G01", "CHKUT-G02", "CHKUT-G03"}}
 	g := &mapx.Graph{Nodes: []mapx.Node{n}}
@@ -154,6 +166,7 @@ func TestFlagCovered_allProven(t *testing.T) {
 
 // Without a map there is no way to know what was proven — and Pass here would be a lie.
 func TestFlagCovered_noMapDoesNotClaimPass(t *testing.T) {
+	t.Run("FLSCF-I01: A gate that could not measure never answers Pass", func(t *testing.T) {})
 	if v, _ := checkFlagCovered(completeFlag, flagNode(), "", nil, nil); v == Pass {
 		t.Error("with no map the gate claimed Pass — it had no way to know")
 	}
@@ -170,6 +183,7 @@ func TestFlagCovered_noMapDoesNotClaimPass(t *testing.T) {
 // And the static question alone would be the opposite error, a worse one: a written test
 // may never have run.
 func TestFlagCovered_noTestAtAllIsReportedEvenWithoutIngestion(t *testing.T) {
+	t.Run("FLSCF-B15: A scenario no test names fails as having no test", func(t *testing.T) {})
 	root := t.TempDir()
 	// A test node that exists and names NO scenario.
 	if err := os.WriteFile(filepath.Join(root, "t_test.go"), []byte("func TestNothing(t *testing.T) {}\n"), 0o644); err != nil {
@@ -193,6 +207,7 @@ func TestFlagCovered_noTestAtAllIsReportedEvenWithoutIngestion(t *testing.T) {
 // It is the case the request named: a test may have been written and never had its result
 // collected. The fix is different — run the suite, not write a test.
 func TestFlagCovered_writtenButNotRunSaysWhichOfTheTwo(t *testing.T) {
+	t.Run("FLSCF-B16: A written test not yet proven is told apart: not ingested, or ingested and not green", func(t *testing.T) {})
 	root := t.TempDir()
 	body := "func TestX(t *testing.T) { /* CHKUT-G01 */ }\nconst c = \"CHKUT-G01\"\n"
 	if err := os.WriteFile(filepath.Join(root, "t_test.go"), []byte(body), 0o644); err != nil {
@@ -216,6 +231,7 @@ func TestFlagCovered_writtenButNotRunSaysWhichOfTheTwo(t *testing.T) {
 // A CODE IN A COMMENT does not count as a written test — the same ruler as
 // `feature-test-match`: a citation is a reference, not an implementation.
 func TestFlagCovered_codeInCommentIsNotAWrittenTest(t *testing.T) {
+	t.Run("FLSCF-B15: A scenario no test names fails as having no test", func(t *testing.T) {})
 	root := t.TempDir()
 	commentOnly := "// CHKUT-G01 is handled elsewhere\nfunc TestX(t *testing.T) {}\n"
 	if err := os.WriteFile(filepath.Join(root, "t_test.go"), []byte(commentOnly), 0o644); err != nil {
@@ -261,6 +277,7 @@ func citing(codes ...string) *mapx.Graph {
 }
 
 func TestFlagScenarioGoverns_scenarioWithoutRuleIsReported(t *testing.T) {
+	t.Run("FLSCF-B11: A scenario no rule cites fails governance", func(t *testing.T) {})
 	t.Run("CHKUT-G0X: a scenario no rule invokes is reported", func(t *testing.T) {})
 	// Only G01 is cited; G02 and G03 are left loose.
 	v, msg := checkFlagScenarioGoverns(completeFlag, flagNode(), "", citing("CHKUT-G01"), nil)
@@ -278,6 +295,7 @@ func TestFlagScenarioGoverns_scenarioWithoutRuleIsReported(t *testing.T) {
 }
 
 func TestFlagScenarioGoverns_allCitedPasses(t *testing.T) {
+	t.Run("FLSCF-B11: A scenario no rule cites fails governance", func(t *testing.T) {})
 	g := citing("CHKUT-G01", "CHKUT-G02", "CHKUT-G03")
 	if v, msg := checkFlagScenarioGoverns(completeFlag, flagNode(), "", g, nil); v != Pass {
 		t.Errorf("all cited and the verdict was %v: %s", v, msg)
@@ -287,6 +305,8 @@ func TestFlagScenarioGoverns_allCitedPasses(t *testing.T) {
 // The per-scenario waiver: some paths exist and need no rule to name them — the `off` that
 // returns to the old behaviour, already governed by the rules that always held.
 func TestFlagScenarioGoverns_perScenarioWaiver(t *testing.T) {
+	t.Run("FLSCF-B12: A scenario with a reasoned governance waiver is not charged", func(t *testing.T) {})
+	t.Run("FLSCF-X01: No waiver is accepted without a written reason", func(t *testing.T) {})
 	withWaiver := "| Scenario | When the value | Then |\n| --- | --- | --- |\n" +
 		"| `CHKUT-G01` | `= \"off\"` | the old behaviour holds @no-govern: the rules that always held already govern it |\n"
 	if v, msg := checkFlagScenarioGoverns(withWaiver, flagNode(), "", citing(), nil); v != Pass {
@@ -300,11 +320,112 @@ func TestFlagScenarioGoverns_perScenarioWaiver(t *testing.T) {
 }
 
 func TestFlagScenarioGoverns_skips(t *testing.T) {
+	t.Run("FLSCF-I01: A gate that could not measure never answers Pass", func(t *testing.T) {})
 	notFlag := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
 	if v, _ := checkFlagScenarioGoverns(completeFlag, notFlag, "", citing(), nil); v != Skip {
 		t.Errorf("not a flag and the verdict was %v", v)
 	}
 	if v, _ := checkFlagScenarioGoverns(completeFlag, flagNode(), "", nil, nil); v == Pass {
 		t.Error("with no map the gate claimed Pass — it had no way to know who cites")
+	}
+}
+
+// Every flag-side gate skips a node that is not a flag, and a flag that declares no
+// scenario; the citation gate skips a node that is not a spec.
+func TestFlagGates_skipWhatTheyDoNotConfront(t *testing.T) {
+	t.Run("FLSCF-B01: The flag gates skip what is not a flag, and a flag with no scenario", func(t *testing.T) {})
+	notFlag := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
+	g := &mapx.Graph{Nodes: []mapx.Node{flagNode()}}
+	gates := map[string]func(string, mapx.Node, string, *mapx.Graph) (Verdict, string){
+		"flag-scenario-grammar": func(c string, n mapx.Node, r string, g *mapx.Graph) (Verdict, string) {
+			return checkFlagScenarioGrammar(c, n, r, g, nil)
+		},
+		"flag-scenarios-complete": func(c string, n mapx.Node, r string, g *mapx.Graph) (Verdict, string) {
+			return checkFlagScenariosComplete(c, n, r, g, nil)
+		},
+		"flag-scenario-governs": func(c string, n mapx.Node, r string, g *mapx.Graph) (Verdict, string) {
+			return checkFlagScenarioGoverns(c, n, r, g, nil)
+		},
+		"flag-covered": func(c string, n mapx.Node, r string, g *mapx.Graph) (Verdict, string) {
+			return checkFlagCovered(c, n, r, g, nil)
+		},
+	}
+	for name, check := range gates {
+		if v, _ := check(completeFlag, notFlag, "", g); v != Skip {
+			t.Errorf("%s: a spec node should Skip, got %v", name, v)
+		}
+		if v, _ := check("# no table\n", flagNode(), "", g); v != Skip {
+			t.Errorf("%s: a flag with no scenario should Skip, got %v", name, v)
+		}
+	}
+	cite := "### CRED-V01 — x   @gated-by CHKUT-G02\n"
+	if v, _ := checkFlagScenarioExists(cite, flagNode(), projectWithFlag(t), nil, nil); v != Skip {
+		t.Errorf("flag-scenario-exists: a flag node should Skip, got %v", v)
+	}
+}
+
+// A waiver quoted in backticks is prose ABOUT the waiver, not the waiver itself.
+func TestFlagScenariosComplete_quotedWaiverDoesNotCount(t *testing.T) {
+	t.Run("FLSCF-B06: The absent waiver needs a written reason, outside backticks", func(t *testing.T) {})
+	noAbsent := "| `CHKUT-G01` | `= \"on\"` | turns on |\n"
+	quoted := noAbsent + "\nwaive with `@no-absent: a reason` when needed\n"
+	if v, _ := checkFlagScenariosComplete(quoted, flagNode(), "", nil, nil); v != Fail {
+		t.Errorf("a waiver quoted in backticks was accepted: %v", v)
+	}
+}
+
+// Only a `G` code is a flag citation, and the unknown codes come back once each, sorted.
+func TestFlagScenarioExists_citationsAndTheirReport(t *testing.T) {
+	t.Run("FLSCF-B07: Only a citation of a G code is confronted", func(t *testing.T) {})
+	t.Run("FLSCF-B09: Citations of scenarios that do not exist fail, each named once and sorted", func(t *testing.T) {})
+	root := projectWithFlag(t)
+	spec := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
+
+	if v, _ := checkFlagScenarioExists("### CRED-V01 — x   @gated-by CRED-B03\n", spec, root, nil, nil); v != Skip {
+		t.Errorf("a citation of a B code is not a flag citation, and the verdict was %v", v)
+	}
+
+	twice := "### A-V01 @gated-by CHKUT-G98\n### A-V02 @gated-by CHKUT-G97\n### A-V03 @gated-by `CHKUT-G98`\n"
+	v, msg := checkFlagScenarioExists(twice, spec, root, nil, nil)
+	if v != Fail {
+		t.Fatalf("expected Fail, got %v", v)
+	}
+	if strings.Count(msg, "CHKUT-G98") != 1 || !strings.Contains(msg, "CHKUT-G97, CHKUT-G98") {
+		t.Errorf("the unknown codes should appear once each, sorted: %q", msg)
+	}
+}
+
+// Without a map the per-scenario gates answer Pending: neither Pass nor Fail.
+func TestFlagGates_noMapIsPending(t *testing.T) {
+	t.Run("FLSCF-B10: Without a map the governance gate is Pending", func(t *testing.T) {})
+	t.Run("FLSCF-B13: Without a map the coverage gate is Pending", func(t *testing.T) {})
+	if v, _ := checkFlagScenarioGoverns(completeFlag, flagNode(), "", nil, nil); v != Pending {
+		t.Errorf("flag-scenario-governs with no map: %v", v)
+	}
+	if v, _ := checkFlagCovered(completeFlag, flagNode(), "", nil, nil); v != Pending {
+		t.Errorf("flag-covered with no map: %v", v)
+	}
+}
+
+// Execution was ingested and the written test is not among the proven codes: the gate
+// says the test did not pass, not that it never ran.
+func TestFlagCovered_ingestedButNotGreenSaysSo(t *testing.T) {
+	t.Run("FLSCF-B16: A written test not yet proven is told apart: not ingested, or ingested and not green", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "t_test.go"), []byte("const c = \"CHKUT-G01\"\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	n := flagNode()
+	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CHKUT-G02", "CHKUT-G03"}}
+	g := &mapx.Graph{Nodes: []mapx.Node{n, {ID: "t_test.go", Kind: mapx.KindTest}}}
+	v, msg := checkFlagCovered(completeFlag, n, root, g, nil)
+	if v != Fail {
+		t.Fatalf("expected Fail, got %v", v)
+	}
+	if !strings.Contains(msg, "did NOT pass") || strings.Contains(msg, "no execution ingested") {
+		t.Errorf("the verdict should say the written test did not pass: %q", msg)
+	}
+	if !strings.Contains(msg, "CHKUT-G01") {
+		t.Errorf("the verdict does not name the scenario: %q", msg)
 	}
 }

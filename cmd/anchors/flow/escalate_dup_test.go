@@ -1,82 +1,75 @@
 package flow
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
 
-// ghFalso põe no PATH um `gh` que responde o JSON dado — sem rede e sem repositório.
-func ghFalso(t *testing.T, saida string) {
-	t.Helper()
-	dir := t.TempDir()
-	script := "#!/bin/sh\ncat <<'FIM'\n" + saida + "\nFIM\n"
-	if err := os.WriteFile(filepath.Join(dir, "gh"), []byte(script), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
-}
-
-// ESCALAR UM ALVO QUE JÁ TEM CARD precisa avisar.
+// ESCALATING A TARGET THAT ALREADY HAS A CARD must warn.
 //
-// Dois agentes entregaram o MESMO trabalho no mesmo dia no projeto de referência: um pegou
-// o card do gate para `MetricCard.spec.md` às 11:38; outro, trabalhando noutro card,
-// encontrou o mesmo problema às 12:02 e abriu um card NOVO. Os dois PRs acrescentaram a
-// mesma seção ao mesmo documento.
-//
-// O `claim` impede dois agentes de pegarem o mesmo card — não impedia um agente de CRIAR um
-// card para trabalho já em andamento noutro.
-func TestAvisaQuandoOAlvoJaTemCardAberto(t *testing.T) {
-	ghFalso(t, `[{"number":405,"title":"[doc-required] Violação @ apps/mobile/src/components/MetricCard.spec.md","body":"corpo"}]`)
-	got := openCardsAbout("apps/mobile/src/components/MetricCard.spec.md", "anchors")
-	if len(got) != 1 {
-		t.Fatalf("o card aberto do alvo não foi achado: %v", got)
+// Two agents delivered the SAME work on the same day in the reference project: one took the
+// gate's card for `MetricCard.spec.md` at 11:38; the other, working on another card, found
+// the same problem at 12:02 and opened a NEW card. Both PRs added the same section to the
+// same document.
+func TestOpenCardsAbout_warnsWhenTheTargetAlreadyHasAnOpenCard(t *testing.T) {
+	t.Run("ESDPS-B02: The board is searched for open cards with the label and the target", func(t *testing.T) {})
+	t.Run("ESDPS-B03: A hit counts when the exact target is in its title or its body", func(t *testing.T) {})
+	t.Run("ESDPS-B04: Each card found carries its number and its title", func(t *testing.T) {})
+	t.Run("ESDPS-X01: The lookup only reads the board", func(t *testing.T) {})
+	target := "apps/mobile/src/components/MetricCard.spec.md"
+	calls := scriptedGH(t, ghRule{match: "issue list *", out: `[` +
+		`{"number":405,"title":"[doc-required] Violation @ ` + target + `","body":"body"},` +
+		`{"number":406,"title":"a human finding","body":"the section is missing in ` + target + `"}]`})
+	got := openCardsAbout(target, "anchors")
+	// The CONTENT of the warning, not just the count. Whoever reads it needs to know WHICH
+	// card to look at — a warning that says "there is a card" without saying which sends
+	// them searching the whole queue, and that is when they give up and create the new
+	// card anyway.
+	want := []string{"#405 [doc-required] Violation @ " + target, "#406 a human finding"}
+	if strings.Join(got, "|") != strings.Join(want, "|") {
+		t.Fatalf("the open cards of the target:\n got  %v\n want %v", got, want)
 	}
-	// O CONTEÚDO do aviso, e não só a contagem. Quem o lê precisa saber QUAL card ir
-	// ver — um aviso que diz "há um card" sem dizer qual manda procurar na fila inteira,
-	// e é aí que a pessoa desiste e cria o card novo mesmo assim.
-	if !strings.Contains(got[0], "#405") {
-		t.Errorf("o aviso não traz o NÚMERO do card: %q", got[0])
-	}
-	if !strings.Contains(got[0], "MetricCard.spec.md") {
-		t.Errorf("o aviso não traz o TÍTULO, que é o que diz se é o mesmo trabalho: %q", got[0])
+	c := calls()
+	if len(c) != 1 || len(callsWith(c, "issue list", "--state open", "--label anchors", "--search "+target)) != 1 {
+		t.Errorf("one search of open cards with the label and the target; calls: %v", c)
 	}
 }
 
-// A BUSCA DO GITHUB É APROXIMADA, e sem confirmação ela casa o alvo errado.
-//
-// É a mesma defesa que o `internal/issue` tem com o marcador: `MetricCard.spec.md` casaria
-// `MetricCardList.spec.md` numa busca por texto, e o aviso apontaria trabalho que não é o
-// mesmo — ensinando a ignorar o aviso.
-func TestNaoConfundeAlvoComOutroQueOContem(t *testing.T) {
-	ghFalso(t, `[{"number":999,"title":"[doc-required] Violação @ apps/mobile/src/components/MetricCardList.spec.md","body":"outro alvo"}]`)
+// GITHUB'S SEARCH IS APPROXIMATE, and without confirmation it matches the wrong target:
+// `MetricCard.spec.md` would match `MetricCardList.spec.md` in a text search, and the warning
+// would point at work that is not the same — teaching people to ignore the warning.
+func TestOpenCardsAbout_doesNotConfuseTheTargetWithOneThatContainsIt(t *testing.T) {
+	t.Run("ESDPS-I01: A card about a file that merely contains the target's name is not reported", func(t *testing.T) {})
+	scriptedGH(t, ghRule{match: "issue list *", out: `[{"number":999,"title":"[doc-required] Violation @ apps/mobile/src/components/MetricCardList.spec.md","body":"another target"}]`})
 	if v := openCardsAbout("apps/mobile/src/components/MetricCard.spec.md", "anchors"); len(v) != 0 {
-		t.Errorf("casou um alvo DIFERENTE que apenas contém o nome: %v", v)
+		t.Errorf("it matched a DIFFERENT target that only contains the name: %v", v)
 	}
 }
 
-// SEM ALVO não há o que perguntar — e chamar o `gh` à toa atrasaria todo `escalate` sem
-// `--about`.
-func TestSemAlvoNaoConsulta(t *testing.T) {
-	ghFalso(t, `[{"number":1,"title":"qualquer","body":"x"}]`)
+// WITHOUT A TARGET there is nothing to ask — and calling `gh` for nothing would slow every
+// `escalate` without `--about`.
+func TestOpenCardsAbout_withoutTargetAsksNothing(t *testing.T) {
+	t.Run("ESDPS-B01: Without a target or a label the board is not asked", func(t *testing.T) {})
+	calls := scriptedGH(t, ghRule{match: "*", out: `[{"number":1,"title":"X.spec.md","body":"X.spec.md"}]`})
 	if v := openCardsAbout("", "anchors"); len(v) != 0 {
-		t.Errorf("consultou sem alvo: %v", v)
+		t.Errorf("it asked without a target: %v", v)
 	}
 	if v := openCardsAbout("X.spec.md", ""); len(v) != 0 {
-		t.Errorf("consultou sem label: %v", v)
+		t.Errorf("it asked without a label: %v", v)
+	}
+	if c := calls(); len(c) != 0 {
+		t.Errorf("no call may reach the board: %v", c)
 	}
 }
 
-// O `gh` QUE FALHA não pode derrubar o `escalate`: a conferência é auxiliar, e impedir o
-// registro por causa dela seria pior que a duplicata que ela evita.
-func TestFalhaDaConsultaNaoDerrubaOEscalate(t *testing.T) {
-	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "gh"), []byte("#!/bin/sh\nexit 1\n"), 0o755); err != nil {
-		t.Fatal(err)
-	}
-	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
-	if v := openCardsAbout("X.spec.md", "anchors"); v != nil {
-		t.Errorf("devolveu %v quando o `gh` falhou — deveria seguir sem aviso", v)
+// A `gh` THAT FAILS must not take `escalate` down: the check is auxiliary, and blocking the
+// record because of it would be worse than the duplicate it prevents.
+func TestOpenCardsAbout_failedLookupDoesNotStopTheEscalate(t *testing.T) {
+	t.Run("ESDPS-E01: A failed or unreadable lookup yields nothing", func(t *testing.T) {})
+	for _, r := range []ghRule{{match: "*", code: 1}, {match: "*", out: "not json"}} {
+		scriptedGH(t, r)
+		if v := openCardsAbout("X.spec.md", "anchors"); v != nil {
+			t.Errorf("it returned %v when the lookup failed — it should go on without a warning", v)
+		}
 	}
 }

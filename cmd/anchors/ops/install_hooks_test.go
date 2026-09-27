@@ -55,6 +55,7 @@ func hookProject(t *testing.T) string {
 
 // Without anchors.yaml there is nothing to govern: the command refuses and says why.
 func TestInstallHooksRequiresAnAnchorsProject(t *testing.T) {
+	t.Run("INHKN-E01: A directory without anchors.yaml gets no hook", func(t *testing.T) {})
 	root := newGitRepo(t)
 	err, _ := installHooks(t, root)
 	if err == nil || !strings.Contains(err.Error(), "anchors init") {
@@ -68,6 +69,7 @@ func TestInstallHooksRequiresAnAnchorsProject(t *testing.T) {
 // Outside a repository the hook has nowhere to live, and the error says that — not a raw
 // git message about rev-parse.
 func TestInstallHooksOutsideGitExplainsWhy(t *testing.T) {
+	t.Run("INHKN-E02: Outside a repository the error explains what needs git", func(t *testing.T) {})
 	isolateGit(t)
 	root := t.TempDir()
 	writeFile(t, root, config.DefaultFile, "version: 1\n")
@@ -80,6 +82,8 @@ func TestInstallHooksOutsideGitExplainsWhy(t *testing.T) {
 // A fresh install writes the three hooks (executable, with the marker) and registers both
 // merge drivers: the attribute line and the git config that says how to call them.
 func TestInstallHooksWritesTheHooksAndTheMergeDrivers(t *testing.T) {
+	t.Run("INHKN-B02: A fresh install writes the three managed hooks, executable", func(t *testing.T) {})
+	t.Run("INHKN-B11: Both merge drivers are registered in git config and .gitattributes", func(t *testing.T) {})
 	root := hookProject(t)
 	err, out := installHooks(t, root)
 	if err != nil {
@@ -124,6 +128,7 @@ func TestInstallHooksWritesTheHooksAndTheMergeDrivers(t *testing.T) {
 // Reinstalling is safe: the managed hooks are replaced, and the attribute lines are not
 // appended a second time.
 func TestInstallHooksIsIdempotent(t *testing.T) {
+	t.Run("INHKN-I01: Reinstalling never duplicates an attribute line nor damages the user's lines", func(t *testing.T) {})
 	root := hookProject(t)
 	writeFile(t, root, ".gitattributes", "*.png binary") // no trailing newline
 	if err, out := installHooks(t, root); err != nil {
@@ -149,6 +154,8 @@ func TestInstallHooksIsIdempotent(t *testing.T) {
 // --force; a foreign commit-msg or pre-push is left alone with a warning. --force replaces
 // them.
 func TestInstallHooksRespectsForeignHooksUnlessForced(t *testing.T) {
+	t.Run("INHKN-B03: Foreign hooks are respected unless forced", func(t *testing.T) {})
+	t.Run("INHKN-X01: A hook the user wrote is never replaced without --force", func(t *testing.T) {})
 	root := hookProject(t)
 	hooks := filepath.Join(root, ".git", "hooks")
 	const mine = "#!/bin/sh\necho mine\n"
@@ -198,6 +205,7 @@ func TestInstallHooksRespectsForeignHooksUnlessForced(t *testing.T) {
 
 // core.hooksPath wins over .git/hooks — relative to the root, or absolute.
 func TestGitHooksDirHonorsCoreHooksPath(t *testing.T) {
+	t.Run("INHKN-B01: The hooks go where git looks for them", func(t *testing.T) {})
 	root := newGitRepo(t)
 	def, err := gitHooksDir(root)
 	if err != nil {
@@ -226,6 +234,7 @@ func TestGitHooksDirHonorsCoreHooksPath(t *testing.T) {
 // --force took the hook anchors itself wrote for the user's, and never updated it. A
 // commit-msg with that old header is anchors' own too, and is replaced.
 func TestInstallHooksUpdatesItsOwnCommitMsg(t *testing.T) {
+	t.Run("INHKN-B04: The hooks anchors wrote, old or new, are updated on reinstall", func(t *testing.T) {})
 	for name, script := range map[string]string{
 		"pre-commit": preCommitScript, "commit-msg": commitMsgScript, "pre-push": prePushScript,
 	} {
@@ -258,5 +267,122 @@ func TestInstallHooksUpdatesItsOwnCommitMsg(t *testing.T) {
 	}
 	if b, _ := os.ReadFile(filepath.Join(hooks, "commit-msg")); string(b) != commitMsgScript {
 		t.Errorf("the commit-msg anchors wrote was not updated on reinstall:\n%s", b)
+	}
+}
+
+// --- the installed scripts, run by a real git against a fake `anchors` ---
+
+// fakeAnchors puts a fake `anchors` first on the PATH. `commit-msg` exits with
+// $FAKE_MSG_STATUS, `verify` with $FAKE_VERIFY_STATUS, `--version` prints $FAKE_VERSION.
+func fakeAnchors(t *testing.T) {
+	t.Helper()
+	dir := t.TempDir()
+	script := `#!/bin/bash
+case "$1" in
+commit-msg) exit "${FAKE_MSG_STATUS:-0}" ;;
+verify) exit "${FAKE_VERIFY_STATUS:-0}" ;;
+--version) echo "anchors version ${FAKE_VERSION:-1.0.0}" ;;
+esac
+exit 0
+`
+	if err := os.WriteFile(filepath.Join(dir, "anchors"), []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+}
+
+// hookedRepo is a repository pushed to a bare remote whose main holds `remoteCfg`, with
+// the hooks installed and a fake `anchors` on the PATH.
+func hookedRepo(t *testing.T, remoteCfg string) (root string) {
+	t.Helper()
+	root, _ = frozenRepo(t, remoteCfg)
+	fakeAnchors(t)
+	if err, out := installHooks(t, root); err != nil {
+		t.Fatalf("install-hooks: %v\n%s", err, out)
+	}
+	return root
+}
+
+// commitFile stages a new file and commits it through the hooks.
+func commitFile(t *testing.T, root, name, subject string) (string, error) {
+	t.Helper()
+	writeFile(t, root, name, "x\n")
+	if out, err := runGit(root, "add", name); err != nil {
+		t.Fatal(out)
+	}
+	return runGit(root, "commit", "-q", "-m", subject)
+}
+
+// A frozen remote stops the commit and the push, and says why.
+func TestInstalledHooksRefuseWorkOnAFrozenRemote(t *testing.T) {
+	t.Run("INHKN-B05: The pre-commit refuses a commit while the remote is frozen", func(t *testing.T) {})
+	t.Run("INHKN-B08: The pre-push refuses a push while the remote is frozen", func(t *testing.T) {})
+	root := hookedRepo(t, "enabled: false\nfreeze_reason: \"rotate the key\"\nversion: 1\n")
+
+	out, err := commitFile(t, root, "a.txt", "feat: a")
+	if err == nil || !strings.Contains(out, "COMMIT REFUSED — the project is FROZEN") ||
+		!strings.Contains(out, "rotate the key") {
+		t.Fatalf("the pre-commit let a commit through on a frozen remote (%v):\n%s", err, out)
+	}
+
+	// Committed past the hooks, the push is still stopped.
+	if out, err := runGit(root, "commit", "-q", "--no-verify", "-m", "feat: a"); err != nil {
+		t.Fatal(out)
+	}
+	out, err = runGit(root, "push", "-q", "origin", "main")
+	if err == nil || !strings.Contains(out, "PUSH REFUSED — the project is FROZEN") {
+		t.Fatalf("the pre-push let a push through on a frozen remote (%v):\n%s", err, out)
+	}
+}
+
+// The gates' verdict: "not governed" (exit 3) passes; a failure is deferred by the
+// pre-commit to the commit-msg, which has the message in hand and blocks.
+func TestInstalledHooksDeferTheVerdictToTheCommitMsg(t *testing.T) {
+	t.Run("INHKN-B06: A staged set with nothing governed passes the pre-commit", func(t *testing.T) {})
+	t.Run("INHKN-B07: A gate failure is deferred to the commit-msg, which blocks it", func(t *testing.T) {})
+	t.Run("INHKN-B09: The commit-msg refuses a subject the message check refuses", func(t *testing.T) {})
+	root := hookedRepo(t, "version: 1\n")
+
+	t.Setenv("FAKE_VERIFY_STATUS", "3")
+	out, err := commitFile(t, root, "package.json", "chore: deps")
+	if err != nil {
+		t.Fatalf("a commit with nothing governed was refused (%v):\n%s", err, out)
+	}
+	if !strings.Contains(out, "no staged file is governed by the Structure") || strings.Contains(out, "gates failed") {
+		t.Errorf("exit 3 must read as \"nothing to confront\", not as a failure:\n%s", out)
+	}
+
+	t.Setenv("FAKE_VERIFY_STATUS", "1")
+	out, err = commitFile(t, root, "b.txt", "feat: b")
+	if err == nil {
+		t.Fatalf("a failing gate let the commit through:\n%s", out)
+	}
+	if !strings.Contains(out, "gates failed. If it is deliberate") ||
+		!strings.Contains(out, "commit BLOCKED by the anchors gates.\n  If the failure is deliberate") {
+		t.Errorf("the pre-commit must defer and the commit-msg must block:\n%s", out)
+	}
+
+	t.Setenv("FAKE_VERIFY_STATUS", "0")
+	t.Setenv("FAKE_MSG_STATUS", "1")
+	if out, err := commitFile(t, root, "c.txt", "whatever"); err == nil {
+		t.Fatalf("the commit-msg let a refused subject through:\n%s", out)
+	}
+}
+
+// A remote that requires a newer binary stops the push.
+func TestInstalledPrePushRefusesAnOlderBinary(t *testing.T) {
+	t.Run("INHKN-B10: The pre-push refuses a binary older than the remote's minimum version", func(t *testing.T) {})
+	root := hookedRepo(t, "version: 1\nmin_version: 2.0.0\n")
+	t.Setenv("FAKE_VERSION", "1.9.0")
+	if out, err := runGit(root, "commit", "-q", "--allow-empty", "-m", "feat: x"); err != nil {
+		t.Fatal(out)
+	}
+	out, err := runGit(root, "push", "-q", "origin", "main")
+	if err == nil || !strings.Contains(out, "requires 'anchors' 2.0.0 or newer") {
+		t.Fatalf("an older binary pushed (%v):\n%s", err, out)
+	}
+	t.Setenv("FAKE_VERSION", "2.0.0")
+	if out, err := runGit(root, "push", "-q", "origin", "main"); err != nil {
+		t.Fatalf("the minimum version itself was refused (%v):\n%s", err, out)
 	}
 }

@@ -1,255 +1,306 @@
 package flow
 
 import (
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"os/exec"
+	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/board"
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/initx"
+	"github.com/co2-lab/anchors/internal/telemetry"
 )
 
-// O comando existe por um relato que estava CERTO e insuficiente: o agente de outro dev
-// diagnosticou uma falha de CI, consertou, empurrou, e encerrou o turno com "aguardando a
-// nova rodada" — com o card `in-progress` no nome dele e o veredito do check sem ninguém
-// para ler.
-//
-// Estes testes cobram o que o formato tem de dizer nos estados em que o silêncio custa.
+// The round's state is discovered, not typed: the card and its label, the people-bound
+// decisions, the PR and its checks, what the lock reverted, and the working tree.
+func TestCollectTaskState_discoversWhatTheMachineKnows(t *testing.T) {
+	t.Run("TSSTT-B01: The working tree is read from the root", func(t *testing.T) {})
+	t.Run("TSSTT-B02: A card given by number carries its state, and a closed card reads closed", func(t *testing.T) {})
+	t.Run("TSSTT-B04: The decisions waiting on a person are listed", func(t *testing.T) {})
+	t.Run("TSSTT-B06: Only the lock's own reversal counts, reduced to a clean first line", func(t *testing.T) {})
+	root := githubProject(t)
+	gitRepo(t, root)
+	writeFile(t, root, "src/dirty.ts", "export const x = 1\n")
 
-func testCard(n int, state, titulo string) *board.Card {
-	return &board.Card{Number: n, Title: titulo, State: state}
+	scriptedGH(t,
+		ghRule{match: "issue view 303 --json number,title,labels,state*",
+			out: `{"number":303,"title":"[INDTN] implement spec","state":"OPEN",` +
+				`"labels":[{"name":"anchors"},{"name":"anchors:in-progress"}]}`},
+		ghRule{match: "issue list --label anchors:needs-user*",
+			out: `[{"number":701,"title":"which currency"},{"number":702,"title":"which region"}]`},
+		ghRule{match: "pr view main --json number,state,statusCheckRollup*",
+			out: `{"number":368,"state":"OPEN","statusCheckRollup":[` +
+				`{"conclusion":"SUCCESS","status":"COMPLETED"},{"conclusion":"SKIPPED","status":"COMPLETED"},` +
+				`{"conclusion":"FAILURE","status":"COMPLETED"}]}`},
+		ghRule{match: "issue view 303 --json comments*",
+			out: `{"comments":[` +
+				`{"body":"` + initx.MarcadorDeReversao + ` **Reverted: closed by hand** (by ` + "`bob`" + `)\n\nlong rule text","author":{"login":"github-actions"}},` +
+				`{"body":"` + initx.MarcadorDeReversao + ` I locked this","author":{"login":"bob"}}]}`},
+	)
+	cfg, err := config.Load(root + "/anchors.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	e := collectTaskState(root, cfg, 303)
+
+	if e.Branch != "main" {
+		t.Errorf("branch: got %q", e.Branch)
+	}
+	if e.Clean {
+		t.Error("an untracked file makes the tree NOT clean")
+	}
+	if e.Card == nil || e.Card.Number != 303 || e.Card.State != "anchors:in-progress" {
+		t.Fatalf("the card and its state label: got %+v", e.Card)
+	}
+	if len(e.Blocked) != 2 || e.Blocked[1].Number != 702 || e.Blocked[1].Title != "which region" {
+		t.Errorf("the needs-user cards: got %+v", e.Blocked)
+	}
+	if e.PR == nil || e.PR.Number != 368 || e.PR.Total != 3 ||
+		e.PR.Checks["passou"] != 2 || e.PR.Checks["reprovou"] != 1 {
+		t.Errorf("the PR and its verdict: got %+v", e.PR)
+	}
+	// Only the bot's reversal counts, cut to its first line and without markup.
+	if len(e.Reverted) != 1 || e.Reverted[0] != "Reverted: closed by hand (by bob)" {
+		t.Errorf("reversals: got %q", e.Reverted)
+	}
 }
 
-func TestTaskStatus_prSemCheckNaoPassaPorConferido(t *testing.T) {
-	// O caso medido nesta sessão: o PR #368 abriu e NENHUM check rodou. "PR #368 open"
-	// sozinho lê-se como trabalho conferido, e é a família de defeito que este projeto já
-	// mediu três vezes — o verde que não fez o trabalho.
-	out := renderTaskStatus(taskState{
-		Card:   testCard(303, "anchors:in-progress", "[INDTN] implementar spec"),
-		Branch: "impl-x", Clean: true,
-		PR: &branchPR{Number: 368, State: "OPEN", Total: 0, Checks: map[string]int{}},
+// A CLOSED card has no state label worth telling: the leftover label would lie.
+func TestCardByNumber_closedCardSaysClosed(t *testing.T) {
+	scriptedGH(t, ghRule{match: "issue view 9 *",
+		out: `{"number":9,"title":"x","state":"CLOSED","labels":[{"name":"anchors:ready-to-review"}]}`})
+	c := cardByNumber(boardClientFor(), 9)
+	if c == nil || c.State != "closed" {
+		t.Fatalf("a closed card must read as closed, got %+v", c)
+	}
+	if len(c.Labels) != 1 || c.Labels[0] != "anchors:ready-to-review" {
+		t.Errorf("the labels are still reported: %v", c.Labels)
+	}
+}
+
+// Every source fails silently: a partial report beats none.
+func TestCollectTaskState_everySourceFailingYieldsAnEmptyReport(t *testing.T) {
+	t.Run("TSSTT-E01: Failed and unreadable lookups leave the part absent", func(t *testing.T) {})
+	scriptedGH(t, ghRule{match: "*", out: "not json"})
+	if c := cardByNumber(boardClientFor(), 9); c != nil {
+		t.Errorf("unreadable card: got %+v", c)
+	}
+	if b := escalatedCards(boardClientFor()); b != nil {
+		t.Errorf("unreadable list: got %+v", b)
+	}
+	if p := currentBranchPR(t.TempDir(), "acme/app"); p != nil {
+		t.Errorf("unreadable PR: got %+v", p)
+	}
+	if r := revertedOn("acme/app", 9); r != nil {
+		t.Errorf("unreadable comments: got %+v", r)
+	}
+
+	scriptedGH(t, ghRule{match: "*", code: 1})
+	e := collectTaskState(t.TempDir(), &config.Config{}, 0)
+	if e.Card != nil || e.PR != nil || e.Blocked != nil || e.Reverted != nil || e.Branch != "" {
+		t.Errorf("with no source answering, nothing is invented: %+v", e)
+	}
+}
+
+// Without --card, the card is the one the board says this agent owns.
+func TestTaskStatusCmd_findsTheAgentsCardOnTheBoard(t *testing.T) {
+	t.Run("TSSTT-B03: Without a number the agent's own card is found on the board", func(t *testing.T) {})
+	t.Run("TSSTT-B07: The command prints the report", func(t *testing.T) {})
+	root := githubProject(t)
+	host, _ := os.Hostname()
+	if host == "" {
+		host = "local"
+	}
+	t.Setenv("ANCHORS_SESSION", "dev7")
+	scriptedGH(t,
+		ghRule{match: "api graphql*",
+			out: `{"number":41,"title":"[ABCDE] other","body":"","labels":[{"name":"anchors"},{"name":"anchors:in-progress"}],"comments":[{"body":"anchors-owner: someone/else"}]}` + "\n" +
+				`{"number":42,"title":"[ABCDE] mine","body":"","labels":[{"name":"anchors"},{"name":"anchors:in-progress"}],"comments":[{"body":"anchors-owner: ` + host + `/dev7"}]}`},
+	)
+	cmd := newTaskStatusCmd()
+	cmd.SetArgs([]string{"--root", root})
+	var err error
+	out := stdoutOf(t, func() { err = cmd.Execute() })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "Task  #42 · mine") {
+		t.Errorf("the report must be about the agent's own card:\n%s", out)
+	}
+}
+
+// The turn-ended event carries numbers and vocabulary only: the state without its
+// prefix, and the check counts.
+func TestEmitTurnEnded_sendsTheStateTheTurnEndedIn(t *testing.T) {
+	t.Run("TSSTT-B08: The turn-ended event carries numbers and vocabulary only", func(t *testing.T) {})
+	got := make(chan string, 1)
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, _ := io.ReadAll(r.Body)
+		got <- string(b)
+	}))
+	defer srv.Close()
+	prev := common.Emitter
+	common.Emitter = telemetry.NewEmitter(telemetry.Config{Enabled: true, Endpoint: srv.URL}, "test")
+	defer func() { common.Emitter = prev }()
+
+	emitTurnEnded(taskState{
+		Card: testCard(303, "anchors:in-review", "secret title"),
+		PR:   &branchPR{Number: 368, State: "OPEN", Total: 4, Checks: map[string]int{"reprovou": 3}},
 	})
-	// Duas asserções para DOIS lugares distintos, e a distinção importa: a linha do PR é
-	// o que quem lê rápido vê, e o próximo passo é o que o agente segue. Mutar só a linha
-	// do PR (`· nenhum check rodou` → `· ok`) passava batido enquanto as duas asserções
-	// compartilhavam a mesma busca no texto todo — o próximo passo repete a frase, e
-	// cobria a ausência na linha de cima.
-	linhaDoPR := ""
-	for _, l := range strings.Split(out, "\n") {
-		if strings.HasPrefix(l, "PR ") {
-			linhaDoPR = l
-			break
+	common.Emitter.Flush()
+
+	body := <-got
+	for _, want := range []string{"in-review", "checks_reprovaram", "open"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("the event lacks %q: %s", want, body)
 		}
 	}
-	if !strings.Contains(linhaDoPR, "no check ran") {
-		t.Errorf("a LINHA DO PR tem de dizer que nenhum check rodou; era %q", linhaDoPR)
-	}
-	if !strings.Contains(out, "do not trust the green that does not exist") {
-		t.Errorf("o próximo passo deveria recusar o PR sem check; saída:\n%s", out)
-	}
-}
-
-func TestTaskStatus_checkEmCursoNaoEhCheckQuePassou(t *testing.T) {
-	// A confusão exata que encerrou o turno errado. Um relato que soma "em curso" ao
-	// "passou" produz "4/4 passou" para um PR que ainda não terminou de rodar.
-	out := renderTaskStatus(taskState{
-		Card:   testCard(303, "anchors:in-progress", "x"),
-		Branch: "impl-x", Clean: true,
-		PR: &branchPR{Number: 368, State: "OPEN", Total: 4,
-			Checks: map[string]int{"passou": 3, "em curso": 1}},
-	})
-	if strings.Contains(out, "4/4") {
-		t.Errorf("3 passaram e 1 está em curso: não é 4/4; saída:\n%s", out)
-	}
-	if !strings.Contains(out, "em curso") {
-		t.Errorf("o check em curso tem de aparecer; saída:\n%s", out)
-	}
-	if !strings.Contains(out, "--watch") {
-		t.Errorf("o próximo passo de um CI rodando é ESPERAR o veredito; saída:\n%s", out)
-	}
-	if !strings.Contains(out, "do not end the turn here") {
-		t.Errorf("o formato tem de negar que esperar é uma parada; saída:\n%s", out)
-	}
-}
-
-func TestTaskStatus_checkReprovadoEhTrabalhoDesteCard(t *testing.T) {
-	out := renderTaskStatus(taskState{
-		Card:   testCard(303, "anchors:in-progress", "x"),
-		Branch: "impl-x", Clean: true,
-		PR: &branchPR{Number: 368, State: "OPEN", Total: 4,
-			Checks: map[string]int{"passou": 3, "reprovou": 1}},
-	})
-	if !strings.Contains(out, "work of THIS card") {
-		t.Errorf("o vermelho não é um card novo; saída:\n%s", out)
-	}
-	// A ordem importa: quem lê rápido tem de bater no problema, não no que deu certo.
-	if strings.Index(out, "reprovou") > strings.Index(out, "passou") {
-		t.Errorf("a reprovação deveria vir antes do que passou; saída:\n%s", out)
-	}
-}
-
-func TestTaskStatus_naoAconselhaAbrirPRDeCardEmRevisao(t *testing.T) {
-	// A primeira versão dizia "abrir o PR" para qualquer card aberto sem PR no branch, e
-	// num `in-review` isso é conselho errado — o trabalho já foi entregue. Um próximo passo
-	// errado é pior que nenhum: ele parece derivado do estado.
-	out := renderTaskStatus(taskState{
-		Card:   testCard(301, "anchors:in-review", "[X] tela"),
-		Branch: "develop", Clean: true,
-	})
-	if strings.Contains(out, "open the PR") {
-		t.Errorf("um card em revisão não tem PR a abrir; saída:\n%s", out)
-	}
-	if !strings.Contains(out, "under review") {
-		t.Errorf("o estado do card tem de aparecer traduzido; saída:\n%s", out)
-	}
-}
-
-func TestTaskStatus_escalonadosAparecemSeparados(t *testing.T) {
-	// `needs-user` é a única pendência que NÃO se resolve continuando a trabalhar. Um
-	// relato que a omite convida o leitor a esperar por algo que só ele pode destravar.
-	out := renderTaskStatus(taskState{
-		Card:   testCard(303, "anchors:in-progress", "x"),
-		Branch: "impl-x", Clean: true,
-		Blocked: []board.Card{
-			{Number: 99, Title: "[DEC1] qual vocabulário?"},
-			{Number: 12, Title: "[DEC2] onde fica o limite?"},
-		},
-	})
-	if !strings.Contains(out, "Waiting on a person's decision") {
-		t.Errorf("os escalatedCards precisam de seção própria; saída:\n%s", out)
-	}
-	if !strings.Contains(out, "#99") || !strings.Contains(out, "#12") {
-		t.Errorf("os dois números têm de aparecer; saída:\n%s", out)
-	}
-	if !strings.Contains(out, "no agent resolves these") {
-		t.Errorf("o formato tem de dizer POR QUE estas não avançam; saída:\n%s", out)
-	}
-}
-
-func TestTaskStatus_semEscalonadoNaoInventaSecao(t *testing.T) {
-	out := renderTaskStatus(taskState{
-		Card: testCard(303, "anchors:in-progress", "x"), Branch: "impl-x", Clean: true,
-	})
-	if strings.Contains(out, "Waiting on a person's decision") {
-		t.Errorf("sem escalonado a seção não deveria existir; saída:\n%s", out)
-	}
-}
-
-func TestTaskStatus_asDuasLacunasSaoExplicitas(t *testing.T) {
-	// O que a máquina não sabe, ela PEDE. Uma lacuna nomeada é preenchida; uma seção
-	// ausente não é notada — e era a ausência dela que deixava cada agente improvisar.
-	out := renderTaskStatus(taskState{Branch: "develop", Clean: true})
-	for _, want := range []string{"What I proved", "What was left out"} {
-		if !strings.Contains(out, want) {
-			t.Errorf("o formato deveria pedir %q; saída:\n%s", want, out)
+	for _, leak := range []string{"secret title", "anchors:in-review"} {
+		if strings.Contains(body, leak) {
+			t.Errorf("the event must not carry %q: %s", leak, body)
 		}
 	}
 }
 
-func TestTaskStatus_mudancaNaoCommitadaVemAntesDeQualquerOutroPasso(t *testing.T) {
-	// Trabalho não commitado é o único estado em que TODO conselho seguinte é prematuro.
-	out := renderTaskStatus(taskState{
-		Card: testCard(303, "anchors:in-progress", "x"), Branch: "impl-x", Clean: false,
-	})
-	if !strings.Contains(out, "uncommitted change") {
-		t.Errorf("a mudança pendente tem de aparecer; saída:\n%s", out)
+func boardClientFor() board.Client {
+	return board.Client{Repo: "acme/app", Labels: []string{"anchors"}}
+}
+
+// A check still running has no conclusion yet. It is running ("em curso"), not a failure: counting
+// it as failed makes task-status tell the agent to fix a PR whose CI simply has not
+// finished.
+func TestCurrentBranchPR_runningChecksAreInProgressNotFailed(t *testing.T) {
+	t.Run("TSSTT-B05: Running checks are running, not failed", func(t *testing.T) {})
+	t.Run("TSSTT-I01: The check classes add up to the total", func(t *testing.T) {})
+	root := t.TempDir()
+	gitRepo(t, root)
+	scriptedGH(t, ghRule{match: "pr view *",
+		out: `{"number":368,"state":"OPEN","statusCheckRollup":[` +
+			`{"conclusion":"SUCCESS","status":"COMPLETED"},` +
+			`{"conclusion":"","status":"IN_PROGRESS"},` +
+			`{"conclusion":"","status":"QUEUED"},` +
+			`{"conclusion":"FAILURE","status":"COMPLETED"},` +
+			`{"state":"PENDING"},{"state":"SUCCESS"}]}`})
+
+	p := currentBranchPR(root, "acme/app")
+	if p == nil {
+		t.Fatal("the PR must be read")
 	}
-	if strings.Contains(out, "open the PR") {
-		t.Errorf("com trabalho não commitado, abrir PR é prematuro; saída:\n%s", out)
+	if p.Checks["em curso"] != 3 || p.Checks["reprovou"] != 1 || p.Checks["passou"] != 2 || p.Total != 6 ||
+		p.Checks["em curso"]+p.Checks["reprovou"]+p.Checks["passou"] != p.Total {
+		t.Errorf("3 running (one a pending commit status), 1 failed, 2 passed: got %+v", p.Checks)
+	}
+	steps := strings.Join(nextStep(taskState{Clean: true, PR: p}), "\n")
+	if !strings.Contains(steps, "is running") || strings.Contains(steps, "failed") {
+		t.Errorf("a running CI must be waited on, not fixed:\n%s", steps)
 	}
 }
 
-// A REVERSÃO precisa aparecer no relato, e ANTES de tudo o mais.
-//
-// Medido: um agente fechou o card à mão, a trava de estado desfez no mesmo minuto, e ele
-// encerrou o turno escrevendo "issue closed e resolvida, nada mais a fazer" — sem saber. O
-// comentário da reversão estava no card e estava correto; quem já saiu da conversa não o lê.
-//
-// Este relato é o último lugar onde a informação ainda muda o desfecho.
-func TestTaskStatus_aReversaoApareceAntesDoResto(t *testing.T) {
-	out := renderTaskStatus(taskState{
-		Card:   testCard(483, "anchors:in-progress", "[DTSTD] a spec exclui o estado"),
-		Branch: "fix-483", Clean: true,
-		Reverted: []string{"Revertido: fechado à mão (por alguem), e o card foi reaberto."},
-	})
+// task-status reads the CONFIGURED repo, never the one the working directory points at,
+// and the branch of --root, never the branch of the cwd. From a fork, or with --root
+// elsewhere, anything else reports another repo's card and PR.
+func TestCollectTaskState_readsTheConfiguredRepoAndTheRootsBranch(t *testing.T) {
+	t.Run("TSSTT-X01: Every lookup names the configured repository and the root's branch", func(t *testing.T) {})
+	root := githubProject(t)
+	gitRepo(t, root)
+	c := exec.Command("git", "checkout", "-q", "-b", "feat-303")
+	c.Dir = root
+	if out, err := c.CombinedOutput(); err != nil {
+		t.Fatalf("git checkout: %s", out)
+	}
+	calls := scriptedGH(t,
+		ghRule{match: "issue view 303 --json number,title,labels,state*",
+			out: `{"number":303,"title":"x","state":"OPEN","labels":[{"name":"anchors:in-progress"}]}`},
+		ghRule{match: "pr view *", out: `{"number":368,"state":"OPEN","statusCheckRollup":[]}`},
+	)
+	cfg, err := config.Load(root + "/anchors.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
 
-	if !strings.Contains(out, "UNDONE") {
-		t.Fatal("a reversão precisa aparecer — o agente não a viu no card")
+	collectTaskState(root, cfg, 303)
+
+	got := calls()
+	for _, want := range [][]string{
+		{"issue view 303 ", "--json number,title,labels,state"},
+		{"issue list ", "anchors:needs-user"},
+		{"pr view ", "statusCheckRollup"},
+		{"issue view 303 ", "--json comments"},
+	} {
+		hits := callsWith(got, want...)
+		if len(hits) != 1 || !strings.Contains(hits[0], "--repo acme/app") {
+			t.Errorf("%v must name the configured repo; calls: %v", want, got)
+		}
 	}
-	if !strings.Contains(out, "fechado à mão") {
-		t.Error("o relato deveria dizer O QUE foi desfeito")
-	}
-	// ANTES do PR: uma reversão muda o que o agente pensa que fez, e ler isso depois do
-	// veredito do CI é ler tarde demais.
-	if i, j := strings.Index(out, "UNDONE"), strings.Index(out, "PR "); i > 0 && j > 0 && i > j {
-		t.Error("a reversão deveria vir ANTES do veredito do PR")
-	}
-	// E COMO AUTORIZAR: sem isso o agente conclui que o pipeline está quebrado, e a
-	// próxima reação é tentar contorná-lo.
-	if !strings.Contains(out, "anchors:manual") {
-		t.Error("o relato deveria dizer como autorizar o movimento deliberado")
+	if pr := callsWith(got, "pr view "); len(pr) != 1 || !strings.Contains(pr[0], "pr view feat-303 ") {
+		t.Errorf("the PR looked up must be the one of --root's branch; calls: %v", got)
 	}
 }
 
-// SEM REVERSÃO a seção não existe. Uma seção que aparece sempre — vazia na maioria das
-// vezes — treina quem lê a pular, e aí ela deixa de servir quando houver algo.
-func TestTaskStatus_semReversaoNaoInventaSecao(t *testing.T) {
-	out := renderTaskStatus(taskState{
-		Card: testCard(303, "anchors:in-progress", "x"), Branch: "impl-x", Clean: true,
-	})
-	if strings.Contains(out, "UNDONE") {
-		t.Error("sem reversão a seção não deveria existir")
+// Outside github mode a card is not an issue, and no card is looked up.
+func TestCollectTaskState_localModeLooksUpNoCard(t *testing.T) {
+	t.Run("TSSTT-X02: Local mode looks up no card", func(t *testing.T) {})
+	root := localProject(t)
+	calls := scriptedGH(t, ghRule{match: "issue view 303 *",
+		out: `{"number":303,"title":"x","state":"OPEN","labels":[{"name":"anchors:in-progress"}]}`})
+	cfg, err := config.Load(root + "/anchors.yaml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	e := collectTaskState(root, cfg, 303)
+	if e.Card != nil || e.Blocked != nil {
+		t.Errorf("local mode has no card to report: %+v", e)
+	}
+	if got := callsWith(calls(), "issue "); len(got) != 0 {
+		t.Errorf("no card lookup may be made in local mode: %v", got)
 	}
 }
 
-// O PARSER da reversão só aceita o que a TRAVA escreveu.
+// THE REVERSION PARSER only accepts what the LOCK wrote.
 //
-// Duas condições, e as duas importam: o marcador `🔒` E o autor ser o bot. Um comentário de
-// pessoa que por acaso comece com o mesmo símbolo não é uma reversão — e tratá-lo como uma
-// faria o relato acusar algo que não aconteceu.
-func TestRevertedOn_soContaOQueATravaEscreveu(t *testing.T) {
-	casos := []struct {
-		nome  string
-		corpo string
-		autor string
-		conta bool
+// Two conditions, and both matter: the marker AND the author being the bot. A person's
+// comment that happens to start with the same symbol is not a reversion — treating it as
+// one would make the report accuse something that did not happen.
+func TestRevertedOn_countsOnlyWhatTheLockWrote(t *testing.T) {
+	t.Run("TSSTT-B06: Only the lock's own reversal counts, reduced to a clean first line", func(t *testing.T) {})
+	cases := []struct {
+		name   string
+		body   string
+		author string
+		counts bool
 	}{
-		{"a reversão de verdade", initx.MarcadorDeReversao + " **Revertido: fechado à mão**", "github-actions", true},
-		{"pessoa usando o mesmo símbolo", initx.MarcadorDeReversao + " tranquei isto aqui", "alguem", false},
-		{"bot dizendo outra coisa", "▶️ De volta à fila.", "github-actions", false},
-		{"comentário comum", "trabalhando nisso", "alguem", false},
+		{"the real reversion", initx.MarcadorDeReversao + " **Reverted: closed by hand**", "github-actions", true},
+		{"a person using the same symbol", initx.MarcadorDeReversao + " I locked this here", "someone", false},
+		{"the bot saying something else", "▶️ Back to the queue.", "github-actions", false},
+		{"an ordinary comment", "working on it", "someone", false},
 	}
-	for _, c := range casos {
-		// Chama O QUE O CÓDIGO USA. A primeira versão reescrevia a condição aqui, e
-		// sobreviveu à mutação que removia a checagem do autor — o teste media a si mesmo.
-		if ehReversao(c.corpo, c.autor) != c.conta {
-			t.Errorf("%s: esperava conta=%v", c.nome, c.conta)
+	for _, c := range cases {
+		// Calls WHAT THE CODE USES. The first version rewrote the condition here, and
+		// survived the mutation that removed the author check — the test measured itself.
+		if ehReversao(c.body, c.author) != c.counts {
+			t.Errorf("%s: expected counts=%v", c.name, c.counts)
 		}
 	}
 }
 
-// A PRIMEIRA LINHA basta, sem a marcação de negrito. O comentário inteiro tem seis
-// parágrafos explicando a regra — despejá-los no terminal faria o relato virar um muro, e
-// quem precisa do detalhe abre o card.
-func TestRevertedOn_mostraSoAPrimeiraLinhaLimpa(t *testing.T) {
-	corpo := initx.MarcadorDeReversao + " **Revertido: fechado à mão** (por `alguem`), e o card foi reaberto.\n" +
-		"\nO card se move pelo FATO, não à mão: `in-progress` porque o claim entregou...\n" +
-		"\n**O que isto evita:** um card fechado antes do merge sai de `ready-to-review`..."
+// THE FIRST LINE is enough, without the bold markup. The whole comment has six paragraphs
+// explaining the rule — dumping them in the terminal would turn the report into a wall.
+func TestRevertedOn_showsOnlyTheCleanFirstLine(t *testing.T) {
+	body := initx.MarcadorDeReversao + " **Reverted: closed by hand** (by `someone`), and the card was reopened.\n" +
+		"\nThe card moves by FACT, not by hand: `in-progress` because the claim delivered...\n" +
+		"\n**What this prevents:** a card closed before the merge leaves `ready-to-review`..."
+	scriptedGH(t, ghRule{match: "issue view 9 --json comments*",
+		out: `{"comments":[{"body":` + strconv.Quote(body) + `,"author":{"login":"github-actions"}}]}`})
 
-	linha := corpo
-	if i := strings.IndexByte(linha, '\n'); i > 0 {
-		linha = linha[:i]
-	}
-	linha = strings.ReplaceAll(linha, "**", "")
-	linha = strings.ReplaceAll(linha, "`", "")
-	limpa := strings.TrimSpace(strings.TrimPrefix(linha, initx.MarcadorDeReversao))
-
-	if strings.Contains(limpa, "**") || strings.Contains(limpa, "`") {
-		t.Errorf("a marcação de negrito é ruído no terminal; veio %q", limpa)
-	}
-	if strings.Contains(limpa, "O que isto evita") {
-		t.Error("só a primeira linha — o resto faria o relato virar um muro")
-	}
-	if !strings.Contains(limpa, "fechado à mão") {
-		t.Errorf("a informação essencial se perdeu; veio %q", limpa)
+	got := revertedOn("acme/app", 9)
+	if len(got) != 1 || got[0] != "Reverted: closed by hand (by someone), and the card was reopened." {
+		t.Errorf("only the first line, without markup nor marker; got %q", got)
 	}
 }

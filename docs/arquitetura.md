@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/arquitetura.md.tmpl — inputs:184e464c42f80d8e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/arquitetura.md.tmpl — inputs:bbed983b1bbe8b6f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Arquitetura
@@ -69,7 +69,13 @@ conhecimento que não temos.
 Estas camadas existem no projeto e nenhum contêiner as declara — não aparecem em diagrama
 de nível 3 nenhum. Ou falta declará-las, ou elas não rodam em lugar nenhum:
 
+- `apoio`
+- `comando`
+- `config`
 - `gate`
+- `infra`
+- `mapa`
+- `scan`
 
 
 ## Nível 4 — Código

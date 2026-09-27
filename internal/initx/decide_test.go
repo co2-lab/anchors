@@ -21,53 +21,57 @@ func sampleConfig() *config.Config {
 }
 
 func TestCodeLayerNames(t *testing.T) {
+	t.Run("INDCN-B01: The code layer names are listed sorted, and only code layers", func(t *testing.T) {})
 	got := CodeLayerNames(sampleConfig())
-	want := []string{"backend-code", "generated", "mobile-code"} // ordenado, só kind=code
+	want := []string{"backend-code", "generated", "mobile-code"} // sorted, kind=code only
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("CodeLayerNames = %v, want %v", got, want)
 	}
 }
 
 func TestPruneCodeLayers(t *testing.T) {
+	t.Run("INDCN-B02: Pruning removes the code layers not kept and never an artifact layer", func(t *testing.T) {})
 	cfg := sampleConfig()
-	// usuário mantém só mobile-code e backend-code (desmarca generated)
+	// the user keeps only mobile-code and backend-code (unchecks generated)
 	PruneCodeLayers(cfg, map[string]bool{"mobile-code": true, "backend-code": true})
 
 	if _, ok := cfg.Layers["generated"]; ok {
-		t.Error("layer de código não escolhida 'generated' deveria ter sido removida")
+		t.Error("the unchosen code layer 'generated' should have been removed")
 	}
-	// camadas de código escolhidas permanecem
+	// the chosen code layers remain
 	for _, name := range []string{"mobile-code", "backend-code"} {
 		if _, ok := cfg.Layers[name]; !ok {
-			t.Errorf("layer de código escolhida %q foi removida indevidamente", name)
+			t.Errorf("the chosen code layer %q was wrongly removed", name)
 		}
 	}
-	// camadas de artefato NUNCA são removidas por PruneCodeLayers
+	// artifact layers are NEVER removed by PruneCodeLayers
 	for _, name := range []string{"spec", "guide"} {
 		if _, ok := cfg.Layers[name]; !ok {
-			t.Errorf("layer de artefato %q não deveria ser afetada", name)
+			t.Errorf("artifact layer %q should not be affected", name)
 		}
 	}
 }
 
 func TestTags(t *testing.T) {
+	t.Run("INDCN-B03: The candidate tags are the union of every layer's tags, deduplicated and sorted", func(t *testing.T) {})
 	got := Tags(sampleConfig())
-	want := []string{"backend", "frontend", "generated", "guide", "mobile", "spec"} // dedup, ordenado
+	want := []string{"backend", "frontend", "generated", "guide", "mobile", "spec"} // deduplicated, sorted
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("Tags = %v, want %v", got, want)
 	}
 }
 
 func TestBuildGovernRules(t *testing.T) {
+	t.Run("INDCN-B04: One governs rule per guide answered with a tag, ordered by guide, skipping the unanswered and none", func(t *testing.T) {})
 	answers := map[string]string{
 		"guides/FRONTEND_GUIDE.md": "frontend",
 		"guides/BACKEND_GUIDE.md":  "backend",
-		"guides/SENTRY_GUIDE.md":   NoneTag, // pulado
-		"guides/ASSETS_GUIDE.md":   "",      // pulado (sem resposta)
+		"guides/SENTRY_GUIDE.md":   NoneTag, // skipped
+		"guides/ASSETS_GUIDE.md":   "",      // skipped (no answer)
 	}
 	got := BuildGovernRules(answers)
 
-	// só 2 regras (as pulas ficam de fora), ordenadas por guide
+	// only 2 rules (the skipped ones are left out), ordered by guide
 	want := []config.GovernRule{
 		{From: "guides/BACKEND_GUIDE.md", Governs: "backend"},
 		{From: "guides/FRONTEND_GUIDE.md", Governs: "frontend"},
@@ -78,7 +82,16 @@ func TestBuildGovernRules(t *testing.T) {
 }
 
 func TestBuildGovernRules_empty(t *testing.T) {
+	t.Run("INDCN-B05: No answer gives no governs rule", func(t *testing.T) {})
 	if got := BuildGovernRules(map[string]string{}); len(got) != 0 {
-		t.Fatalf("esperava nenhuma regra, veio %+v", got)
+		t.Fatalf("expected no rule, got %+v", got)
+	}
+}
+
+func TestPruneThenListKeepsExactlyTheKept(t *testing.T) {
+	t.Run("INDCN-I01: After pruning, the code layer names are exactly the kept code layers", func(t *testing.T) {})
+	cfg := PruneCodeLayers(sampleConfig(), map[string]bool{"mobile-code": true, "spec": true, "ghost": true})
+	if got := CodeLayerNames(cfg); !reflect.DeepEqual(got, []string{"mobile-code"}) {
+		t.Errorf("CodeLayerNames after pruning = %v, want [mobile-code]", got)
 	}
 }

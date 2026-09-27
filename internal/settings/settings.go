@@ -167,6 +167,7 @@ func (s Settings) Describe() string {
 }
 
 // Bool devolve o ponteiro que o campo pede, para quem monta o Settings.
+// @no-rule: a pointer helper for building settings; it holds no behaviour of its own
 func Bool(v bool) *bool { return &v }
 
 // ParseAnswer lê o que uma pessoa digitou e devolve a decisão.

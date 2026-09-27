@@ -52,6 +52,8 @@ func layerNames(cfg *config.Config) []string {
 // Without answers the command ASKS: it returns the questions and writes nothing. Writing
 // the defaults of a new project would produce an anchors.yaml that governs nothing.
 func TestNonInteractiveWithoutAnswersOnlyAsks(t *testing.T) {
+	t.Run("ININT-B01: Without answers the command only asks", func(t *testing.T) {})
+	t.Run("ININT-X01: The non-interactive mode never prompts", func(t *testing.T) {})
 	root := t.TempDir()
 	err, doc, out := runNonInteractive(t, root)
 	if err != nil {
@@ -81,6 +83,8 @@ func TestNonInteractiveWithoutAnswersOnlyAsks(t *testing.T) {
 // With answers, each one reaches the file: the artifact layers, co-location, the gates,
 // the manual workflow and the header guide.
 func TestNonInteractiveAppliesTheAnswers(t *testing.T) {
+	t.Run("ININT-B02: The given answers reach the configuration", func(t *testing.T) {})
+	t.Run("ININT-B09: The success document names the file and the next step", func(t *testing.T) {})
 	root := t.TempDir()
 	err, doc, out := runNonInteractive(t, root,
 		"--artifacts=spec,feature,test", "--colocation", "--workflow=manual")
@@ -118,6 +122,8 @@ func TestNonInteractiveAppliesTheAnswers(t *testing.T) {
 // github mode carries the repository and labels; --gates=false and --header=false are
 // deliberate NOs and must be honored, not replaced by the defaults.
 func TestNonInteractiveGithubModeAndExplicitNos(t *testing.T) {
+	t.Run("ININT-B03: A false flag is a deliberate no", func(t *testing.T) {})
+	t.Run("ININT-B04: The github workflow carries the repository and labels", func(t *testing.T) {})
 	root := t.TempDir()
 	err, doc, out := runNonInteractive(t, root, "--artifacts=spec",
 		"--workflow=github", "--repo=acme/app", "--labels=anchors,work",
@@ -141,6 +147,8 @@ func TestNonInteractiveGithubModeAndExplicitNos(t *testing.T) {
 // One invalid answer refuses the WHOLE set: writing the valid ones would produce a file
 // nobody fully decided.
 func TestNonInteractiveRefusesTheSetOnOneInvalidAnswer(t *testing.T) {
+	t.Run("ININT-B05: One invalid answer refuses the whole set", func(t *testing.T) {})
+	t.Run("ININT-I01: Either the whole set is written or nothing is", func(t *testing.T) {})
 	root := t.TempDir()
 	err, doc, out := runNonInteractive(t, root, "--artifacts=spec", "--workflow=github")
 	if err == nil {
@@ -165,6 +173,7 @@ func TestNonInteractiveRefusesTheSetOnOneInvalidAnswer(t *testing.T) {
 }
 
 func TestNonInteractiveRejectsAMalformedGovernsRule(t *testing.T) {
+	t.Run("ININT-E01: A malformed governs rule is refused with the expected form", func(t *testing.T) {})
 	root := t.TempDir()
 	err, _, _ := runNonInteractive(t, root, "--governs", "guides/A.md")
 	if err == nil || !strings.Contains(err.Error(), "GUIDE=tag1,tag2") {
@@ -175,6 +184,7 @@ func TestNonInteractiveRejectsAMalformedGovernsRule(t *testing.T) {
 // --defaults is the explicit "accept everything": only then does a call with no answers
 // write the file.
 func TestNonInteractiveDefaultsWritesWhenAskedTo(t *testing.T) {
+	t.Run("ININT-B06: Defaults writes when asked to", func(t *testing.T) {})
 	root := t.TempDir()
 	err, doc, out := runNonInteractive(t, root, "--defaults")
 	if err != nil || doc["escrito"] != true {
@@ -188,6 +198,7 @@ func TestNonInteractiveDefaultsWritesWhenAskedTo(t *testing.T) {
 // The project has a module DIRECTORY but no code yet. The case with code on disk is
 // TestNonInteractivePresetWithCodeKeepsThePresetLayers.
 func TestNonInteractivePresetFillsTheCodeLayers(t *testing.T) {
+	t.Run("ININT-B07: A stack preset fills the code layers", func(t *testing.T) {})
 	root := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(root, "src", "modules", "users"), 0o755); err != nil {
 		t.Fatal(err)
@@ -207,6 +218,8 @@ func TestNonInteractivePresetFillsTheCodeLayers(t *testing.T) {
 
 // --layers keeps only the chosen code layers: the others are pruned from the file.
 func TestNonInteractiveLayersPrunesTheOthers(t *testing.T) {
+	t.Run("ININT-B08: Layers prunes the other code layers", func(t *testing.T) {})
+	t.Run("ININT-B09: The success document names the file and the next step", func(t *testing.T) {})
 	root := t.TempDir()
 	for i := 0; i < 10; i++ {
 		writeFile(t, root, filepath.Join("src", "api", "a"+string(rune('a'+i))+".go"), "package api\n")
@@ -268,6 +281,8 @@ func containsStr(list []string, s string) bool {
 // preset; pruning with it dropped `core` and `common` and left `modules` renamed — while
 // the TUI, which asks after the preset, keeps them all.
 func TestNonInteractivePresetWithCodeKeepsThePresetLayers(t *testing.T) {
+	t.Run("ININT-B07: A stack preset fills the code layers", func(t *testing.T) {})
+	t.Run("ININT-B08: Layers prunes the other code layers", func(t *testing.T) {})
 	root := t.TempDir()
 	for i := 0; i < 10; i++ {
 		n := string(rune('a' + i))

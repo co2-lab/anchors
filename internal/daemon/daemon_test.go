@@ -11,6 +11,7 @@ import (
 )
 
 func TestPathsFor(t *testing.T) {
+	t.Run("DMSTD-B01: The state files live in the project's state folder", func(t *testing.T) {})
 	p := PathsFor("/proj")
 	want := Paths{
 		Dir:    filepath.Join("/proj", ".anchors"),
@@ -25,6 +26,9 @@ func TestPathsFor(t *testing.T) {
 }
 
 func TestRunning(t *testing.T) {
+	t.Run("DMSTD-B02: Running answers the live PID and 0 otherwise", func(t *testing.T) {})
+	t.Run("DMSTD-B03: A PID file of an exited process is removed", func(t *testing.T) {})
+	t.Run("DMSTD-I01: The PID file of an exited process does not outlive the check", func(t *testing.T) {})
 	p := PathsFor(t.TempDir())
 
 	if pid := Running(p); pid != 0 {
@@ -58,6 +62,7 @@ func TestRunning(t *testing.T) {
 }
 
 func TestMeta(t *testing.T) {
+	t.Run("DMSTD-B08: The meta records the start moment and the root", func(t *testing.T) {})
 	p := PathsFor(t.TempDir())
 	if got := ReadMeta(p); got != "" {
 		t.Fatalf("missing meta: ReadMeta = %q, want empty", got)
@@ -73,6 +78,8 @@ func TestMeta(t *testing.T) {
 }
 
 func TestPauseResumeCleanup(t *testing.T) {
+	t.Run("DMSTD-B06: Pause is the existence of the flag file", func(t *testing.T) {})
+	t.Run("DMSTD-B07: Cleanup removes the PID file and the pause flag", func(t *testing.T) {})
 	p := PathsFor(t.TempDir())
 	os.MkdirAll(p.Dir, 0o755)
 	if IsPaused(p) {
@@ -102,6 +109,8 @@ func TestPauseResumeCleanup(t *testing.T) {
 }
 
 func TestStop(t *testing.T) {
+	t.Run("DMSTD-B04: Stopping with no watcher is refused", func(t *testing.T) {})
+	t.Run("DMSTD-B05: Stopping a running watcher terminates it and removes the PID file", func(t *testing.T) {})
 	p := PathsFor(t.TempDir())
 	if err := Stop(p); err == nil || !strings.Contains(err.Error(), "not running") {
 		t.Fatalf("Stop without a daemon = %v, want 'not running'", err)
@@ -133,5 +142,21 @@ func TestStop(t *testing.T) {
 	}
 	if _, err := os.Stat(p.PID); !os.IsNotExist(err) {
 		t.Fatalf("Stop must remove the PID file: %v", err)
+	}
+}
+
+func TestWritePID_stateFolderCannotBeCreated(t *testing.T) {
+	t.Run("DMSTD-E02: A state folder that cannot be created fails the PID write", func(t *testing.T) {})
+	root := t.TempDir()
+	// A FILE where `.anchors/` should be: the folder cannot be created.
+	if err := os.WriteFile(filepath.Join(root, StateDir), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	p := PathsFor(root)
+	if err := WritePID(p, os.Getpid()); err == nil {
+		t.Fatal("WritePID must report a state folder it cannot create")
+	}
+	if _, err := os.Stat(p.PID); err == nil {
+		t.Fatal("no PID file may exist after a failed write")
 	}
 }

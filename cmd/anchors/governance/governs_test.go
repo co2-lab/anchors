@@ -94,6 +94,8 @@ func governsGraph() *mapx.Graph {
 }
 
 func TestGovernsBoardRanksGuidesByCount(t *testing.T) {
+	t.Run("GVRNS-B01: The board ranks each guide by how many files it governs", func(t *testing.T) {})
+	t.Run("GVRNS-I01: Only governs edges count as governance", func(t *testing.T) {})
 	dir := govProject(t, "version: 2\nlayers: {}\n", governsFiles(), governsGraph())
 
 	out, err := runCmd(t, newGovernsCmd(), "--root", dir)
@@ -114,6 +116,7 @@ func TestGovernsBoardRanksGuidesByCount(t *testing.T) {
 }
 
 func TestGovernsDetailGroupsByKind(t *testing.T) {
+	t.Run("GVRNS-B03: The detail of a guide groups the files it governs by kind", func(t *testing.T) {})
 	dir := govProject(t, "version: 2\nlayers: {}\n", governsFiles(), governsGraph())
 
 	out, err := runCmd(t, newGovernsCmd(), "--root", dir, "GUIDE.md")
@@ -136,6 +139,8 @@ func TestGovernsDetailGroupsByKind(t *testing.T) {
 }
 
 func TestGovernsNobody(t *testing.T) {
+	t.Run("GVRNS-B02: A map without governance has an empty board", func(t *testing.T) {})
+	t.Run("GVRNS-B04: A file that governs nobody is answered, not refused", func(t *testing.T) {})
 	dir := govProject(t, "version: 2\nlayers: {}\n", governsFiles(), governsGraph())
 
 	out, err := runCmd(t, newGovernsCmd(), "--root", dir, "a.go")
@@ -157,9 +162,28 @@ func TestGovernsNobody(t *testing.T) {
 }
 
 func TestGovernsWithoutMapFails(t *testing.T) {
+	t.Run("GVRNS-E01: A missing map fails pointing at the map build", func(t *testing.T) {})
 	dir := govProject(t, "version: 2\nlayers: {}\n", nil, nil)
 	_, err := runCmd(t, newGovernsCmd(), "--root", dir)
 	if err == nil || !strings.Contains(err.Error(), "anchors map build") {
 		t.Errorf("a missing map must fail pointing at `anchors map build`; got %v", err)
+	}
+}
+
+// The argument is a path like any other: an absolute one is made relative to the root
+// before the map is asked, and --map reads a map kept somewhere else.
+func TestGovernsResolvesTheGuideAndTheMap(t *testing.T) {
+	t.Run("GVRNS-B05: The guide argument is resolved against the root and the map can be given", func(t *testing.T) {})
+	dir := govProject(t, "version: 2\nlayers: {}\n", governsFiles(), nil)
+	elsewhere := filepath.Join(t.TempDir(), "graph.yaml")
+	if err := mapx.Save(governsGraph(), elsewhere); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runCmd(t, newGovernsCmd(), "--root", dir, "--map", elsewhere, filepath.Join(dir, "GUIDE.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasPrefix(out, "GUIDE.md governs 3 file(s):") {
+		t.Errorf("an absolute guide path is answered by its path in the map, read from --map:\n%s", out)
 	}
 }

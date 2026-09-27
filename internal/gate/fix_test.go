@@ -43,6 +43,7 @@ func fixGate() config.Gate {
 }
 
 func TestFixable(t *testing.T) {
+	t.Run("FXIXX-B01: Only a check with a registered fixer is fixable", func(t *testing.T) {})
 	if !Fixable("updated-at-atual") {
 		t.Error("updated-at-atual has a registered fixer")
 	}
@@ -52,6 +53,8 @@ func TestFixable(t *testing.T) {
 }
 
 func TestFix_rewritesAStaleDateToTheCommitDate(t *testing.T) {
+	t.Run("FXIXX-B02: A stale date on a committed file is rewritten to its last commit date", func(t *testing.T) {})
+	t.Run("FXIXX-I01: Only the date changes, the rest of the file is kept byte for byte", func(t *testing.T) {})
 	const rel = "a.spec.md"
 	dir := fixRepo(t, rel, "<!-- @anchors\n  updated_at: 2020-01-01\n-->\nbody\n")
 	nodes := []mapx.Node{{ID: rel, Kind: mapx.KindSpec}}
@@ -68,6 +71,7 @@ func TestFix_rewritesAStaleDateToTheCommitDate(t *testing.T) {
 }
 
 func TestFix_leavesACorrectDateAlone(t *testing.T) {
+	t.Run("FXIXX-B04: A date that already matches is left alone and reported as nothing", func(t *testing.T) {})
 	const rel = "a.spec.md"
 	content := "<!-- @anchors\n  updated_at: 2024-03-05\n-->\n"
 	dir := fixRepo(t, rel, content)
@@ -78,6 +82,7 @@ func TestFix_leavesACorrectDateAlone(t *testing.T) {
 }
 
 func TestFix_skipsGatesWithoutFixerNodesOutOfScopeAndMissingFiles(t *testing.T) {
+	t.Run("FXIXX-B05: Only fixable gates, the nodes they apply to and files on disk are touched", func(t *testing.T) {})
 	const rel = "a.spec.md"
 	dir := fixRepo(t, rel, "<!-- @anchors\n  updated_at: 2020-01-01\n-->\n")
 	other := config.Gate{Name: "x", Check: "header-conforme", On: []string{"spec"}}
@@ -94,6 +99,7 @@ func TestFix_skipsGatesWithoutFixerNodesOutOfScopeAndMissingFiles(t *testing.T) 
 }
 
 func TestFix_reportsAFailedWrite(t *testing.T) {
+	t.Run("FXIXX-E01: A write that fails is reported as not fixed, with the cause", func(t *testing.T) {})
 	if os.Geteuid() == 0 {
 		t.Skip("root writes through read-only permissions")
 	}
@@ -117,6 +123,7 @@ func TestFixUpdatedAt(t *testing.T) {
 	n := mapx.Node{ID: rel, Kind: mapx.KindSpec}
 
 	t.Run("without the field there is nothing to correct", func(t *testing.T) {
+		t.Run("FXIXX-X01: A header without the date field is never given one", func(t *testing.T) {})
 		content := "<!-- @anchors\n  code: ABCDE\n-->\n"
 		dir := fixRepo(t, rel, content)
 		if got, changed := fixUpdatedAt(content, n, dir); changed || got != content {
@@ -125,6 +132,7 @@ func TestFixUpdatedAt(t *testing.T) {
 	})
 
 	t.Run("a file with a pending edit takes today's date", func(t *testing.T) {
+		t.Run("FXIXX-B03: A file with an uncommitted edit takes today's date", func(t *testing.T) {})
 		dir := fixRepo(t, rel, "<!-- @anchors\n  updated_at: 2024-03-05\n-->\n")
 		edited := "<!-- @anchors\n  updated_at: 2024-03-05\n-->\nnew line\n"
 		if err := os.WriteFile(filepath.Join(dir, rel), []byte(edited), 0o644); err != nil {
@@ -138,6 +146,7 @@ func TestFixUpdatedAt(t *testing.T) {
 	})
 
 	t.Run("outside a repository there is no correct date to write", func(t *testing.T) {
+		t.Run("FXIXX-B06: Outside a git repository the file is left untouched", func(t *testing.T) {})
 		dir := t.TempDir()
 		if gitmeta.Check(dir) == gitmeta.Disponível {
 			t.Skip("the temp dir sits inside a git repository")
@@ -149,6 +158,7 @@ func TestFixUpdatedAt(t *testing.T) {
 	})
 
 	t.Run("an ignored file that was never committed is left alone", func(t *testing.T) {
+		t.Run("FXIXX-B07: A file never committed and not edited is left untouched", func(t *testing.T) {})
 		dir := fixRepo(t, rel, "x\n")
 		content := "updated_at: 2020-01-01\n"
 		// never committed, and ignored so status reports nothing either

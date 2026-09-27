@@ -9,59 +9,63 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 )
 
-// O CARD DE SÍNTESE NÃO ESCOLHE LADO, e é isso que o distingue de "resolva o conflito".
+// THE SYNTHESIS CARD DOES NOT PICK A SIDE, and that is what sets it apart from "resolve the
+// conflict".
 //
-// Conflito de conteúdo é duas pessoas escrevendo coisas diferentes sobre o mesmo lugar.
-// Escolher um lado por automação é escolher sem ler o outro — e num caso real medido (os
-// PRs #693 e #556 do projeto de referência), os dois lados estavam CERTOS e eram sobre
-// coisas diferentes: um documentava que o corpo da regra contradizia a decisão, o outro que
-// o marcador de dispensa fazia o gate responder INDETERMINADO. As duas coisas entravam.
+// A content conflict is two people writing different things about the same place. Picking
+// a side by automation is choosing without reading the other — and in a real measured case
+// (PRs #693 and #556 of the reference project) both sides were RIGHT and about different
+// things: one documented that the rule's body contradicted the decision, the other that the
+// waiver marker made the gate answer INDETERMINATE. Both belonged.
 //
-// O QUE O CARD PEDE é o que nenhum dos dois PRs entrega sozinho.
-func TestCardDeSinteseNaoEscolheLado(t *testing.T) {
-	corpo := corpoDaSintese("693", "556", "666", "198", "fix(DSHBR): a B01", "feat: o índice", "x.spec.md")
+// WHAT THE CARD ASKS FOR is what neither PR delivers alone.
+func TestSynthesisCardDoesNotPickASide(t *testing.T) {
+	t.Run("SYCMS-B03: The card cites both PRs and cards and asks for the best of each", func(t *testing.T) {})
+	t.Run("SYCMS-X01: The card never picks a side", func(t *testing.T) {})
+	body := corpoDaSintese("693", "556", "666", "198", "fix(DSHBR): the B01", "feat: the index", "x.spec.md")
 
-	// OS DOIS PRs e os dois cards aparecem: sem eles o card não é rastreável para trás.
-	for _, ref := range []string{"#693", "#556", "#666", "#198"} {
-		if !strings.Contains(corpo, ref) {
-			t.Errorf("o card não cita %s — a rastreabilidade se perde quando os PRs fecham", ref)
+	// BOTH PRs and both cards appear: without them the card cannot be traced back.
+	for _, ref := range []string{"#693", "#556", "#666", "#198", "fix(DSHBR): the B01", "feat: the index", "`x.spec.md`"} {
+		if !strings.Contains(body, ref) {
+			t.Errorf("the card does not cite %s — traceability is lost when the PRs close", ref)
 		}
 	}
-	// E O QUE ELE PEDE não pode ser "escolha um".
-	if !strings.Contains(corpo, "best of each") {
-		t.Error("o card não pede a síntese — se pedisse escolha, a automação já teria escolhido")
+	// And WHAT IT ASKS FOR cannot be "pick one".
+	if !strings.Contains(body, "best of each") {
+		t.Error("the card does not ask for the synthesis — if it asked for a choice, the automation would already have chosen")
 	}
-	// O AVISO sobre descartar sem dizer por quê: é o modo de falha desta tarefa.
-	if !strings.Contains(corpo, "without saying why") {
-		t.Error("o card não avisa contra descartar um lado em silêncio — o trabalho dos " +
-			"dois está fechado, e o que se perder ninguém vai saber o que era")
+	// The WARNING against discarding without saying why: it is how this task fails.
+	if !strings.Contains(body, "without saying why") {
+		t.Error("the card does not warn against silently discarding a side — both works are " +
+			"closed, and whatever is lost nobody will know what it was")
 	}
 }
 
-// COM UM LADO SÓ o card nasce assim mesmo, e diz que falta.
+// WITH ONE SIDE ONLY the card is still born, and says what is missing.
 //
-// Quando o conflito é contra o branch de integração, o "outro lado" é trabalho já mesclado.
-// Achá-lo exige ler o histórico do arquivo, e adivinhar erraria — um card com um lado só
-// ainda é melhor que um PR parado sem dono.
-func TestCardDeSinteseComUmLadoSo(t *testing.T) {
-	corpo := corpoDaSintese("693", "", "666", "", "fix(DSHBR): a B01", "", "x.spec.md")
+// When the conflict is against the integration branch, the "other side" is work already
+// merged. Finding it takes reading the file's history, and guessing would be wrong — a
+// one-sided card is still better than a PR stalled with no owner.
+func TestSynthesisCardWithOneSideOnly(t *testing.T) {
+	t.Run("SYCMS-B04: A one-sided card says the other side is missing and where to look", func(t *testing.T) {})
+	body := corpoDaSintese("693", "", "666", "", "fix(DSHBR): the B01", "", "x.spec.md")
 
-	if strings.Contains(corpo, "| # |") || strings.Contains(corpo, "#  ") {
-		t.Error("o card cita um PR vazio — o segundo lado não existe, e a tabela mente")
+	if strings.Contains(body, "| # |") || strings.Contains(body, "#  ") {
+		t.Error("the card cites an empty PR — the second side does not exist, and the table lies")
 	}
-	// DIZER QUE FALTA é o que torna o card acionável: quem o pega sabe que tem de
-	// descobrir o outro lado, e onde procurar.
-	if !strings.Contains(corpo, "was not identified") {
-		t.Error("o card não diz que o outro lado falta — quem o pegar vai procurar um PR " +
-			"que não existe")
+	// SAYING WHAT IS MISSING makes the card actionable: whoever takes it knows they must
+	// find the other side, and where to look.
+	if !strings.Contains(body, "was not identified") {
+		t.Error("the card does not say the other side is missing — whoever takes it will look for a PR " +
+			"that does not exist")
 	}
-	if !strings.Contains(corpo, "git log") {
-		t.Error("o card não diz ONDE procurar o outro lado — a instrução sem o caminho " +
-			"transfere o trabalho de descobrir para quem já foi interrompido")
+	if !strings.Contains(body, "git log") {
+		t.Error("the card does not say WHERE to look for the other side — the instruction without the path " +
+			"hands the discovery to whoever was already interrupted")
 	}
-	// E A INSTRUÇÃO no singular: "leia os dois PRs fechados" seria falso com um só.
-	if strings.Contains(corpo, "Read both closed PRs") {
-		t.Error("o card manda ler DOIS PRs quando só um foi fechado")
+	// And the instruction in the singular: "read both closed PRs" would be false with one.
+	if strings.Contains(body, "Read both closed PRs") {
+		t.Error("the card says to read TWO PRs when only one was closed")
 	}
 }
 
@@ -100,6 +104,7 @@ func runSynth(t *testing.T, args ...string) (err error, out, errOut string) {
 }
 
 func TestSynthesizeExistsOnlyInGithubModeAndNeedsAPR(t *testing.T) {
+	t.Run("SYCMS-B01: Only github mode is accepted and the first PR is required", func(t *testing.T) {})
 	log := synthGH(t, "")
 	if err, _, _ := runSynth(t, "--root", synthProject(t, "version: 1\n"), "--pr-a", "693"); err == nil ||
 		!strings.Contains(err.Error(), "github mode") {
@@ -116,6 +121,8 @@ func TestSynthesizeExistsOnlyInGithubModeAndNeedsAPR(t *testing.T) {
 
 // --dry-run shows the card — both PRs, both cards, both titles — and touches nothing.
 func TestSynthesizeDryRunShowsTheCardOnly(t *testing.T) {
+	t.Run("SYCMS-B02: A leading # on a PR number is dropped", func(t *testing.T) {})
+	t.Run("SYCMS-B09: A dry run shows the card and changes nothing", func(t *testing.T) {})
 	log := synthGH(t, "")
 	err, out, _ := runSynth(t, "--root", synthProject(t, githubModeConfig),
 		"--pr-a", "#693", "--pr-b", "556", "--files", "Dashboards.spec.md", "--dry-run")
@@ -139,6 +146,8 @@ func TestSynthesizeDryRunShowsTheCardOnly(t *testing.T) {
 // The real run links the five ends: the card (labelled under both origin cards), both
 // PRs commented and closed, both origin cards pointed at the new one.
 func TestSynthesizeLinksTheFiveEnds(t *testing.T) {
+	t.Run("SYCMS-B05: The card is labelled for the board and under each origin card", func(t *testing.T) {})
+	t.Run("SYCMS-B06: Each PR is commented and closed and each origin card is pointed at the new card", func(t *testing.T) {})
 	log := synthGH(t, "")
 	err, out, errOut := runSynth(t, "--root", synthProject(t, githubModeConfig),
 		"--pr-a", "693", "--pr-b", "556")
@@ -173,6 +182,8 @@ func TestSynthesizeLinksTheFiveEnds(t *testing.T) {
 // With one side only, the other end is the integration branch, and only that PR closes.
 // Every failed link is WARNED — the card already exists.
 func TestSynthesizeOneSideWarnsOnEachFailedLink(t *testing.T) {
+	t.Run("SYCMS-B06: Each PR is commented and closed and each origin card is pointed at the new card", func(t *testing.T) {})
+	t.Run("SYCMS-B07: Each failed link is a warning and the command succeeds", func(t *testing.T) {})
 	log := synthGH(t, `case "$*" in "pr comment"*|"pr close"*|"issue comment"*) echo nope >&2; exit 1 ;; esac`)
 	err, _, errOut := runSynth(t, "--root", synthProject(t, githubModeConfig), "--pr-a", "693")
 	if err != nil {
@@ -196,6 +207,8 @@ func TestSynthesizeOneSideWarnsOnEachFailedLink(t *testing.T) {
 }
 
 func TestSynthesizeFailsWhenTheCardCannotBeOpened(t *testing.T) {
+	t.Run("SYCMS-E01: A card that cannot be opened fails with the host's message", func(t *testing.T) {})
+	t.Run("SYCMS-I01: No PR is closed unless the synthesis card exists", func(t *testing.T) {})
 	log := synthGH(t, `case "$*" in "issue create"*) echo "HTTP 403" >&2; exit 1 ;; esac`)
 	err, _, _ := runSynth(t, "--root", synthProject(t, githubModeConfig), "--pr-a", "693", "--pr-b", "556")
 	if err == nil || !strings.Contains(err.Error(), "open the synthesis card") || !strings.Contains(err.Error(), "HTTP 403") {
@@ -210,6 +223,7 @@ func TestSynthesizeFailsWhenTheCardCannotBeOpened(t *testing.T) {
 // print "PRs #693 and # were closed, and the four ends point at each other" — a second PR
 // that does not exist, and four ends where there are three.
 func TestSynthesizeOneSideReportsOnePRClosed(t *testing.T) {
+	t.Run("SYCMS-B08: The closing line names only the PRs actually closed", func(t *testing.T) {})
 	synthGH(t, "")
 	err, out, errOut := runSynth(t, "--root", synthProject(t, githubModeConfig), "--pr-a", "693")
 	if err != nil {
@@ -226,6 +240,7 @@ func TestSynthesizeOneSideReportsOnePRClosed(t *testing.T) {
 // The closing line names only what gh actually closed: a PR whose close failed is
 // reported as still open, never as closed.
 func TestSynthesizeReportsAFailedCloseAsStillOpen(t *testing.T) {
+	t.Run("SYCMS-B08: The closing line names only the PRs actually closed", func(t *testing.T) {})
 	synthGH(t, `case "$*" in "pr close 556"*) echo "GraphQL: cannot close" >&2; exit 1 ;; esac`)
 	err, out, errOut := runSynth(t, "--root", synthProject(t, githubModeConfig), "--pr-a", "693", "--pr-b", "556")
 	if err != nil {
@@ -242,6 +257,7 @@ func TestSynthesizeReportsAFailedCloseAsStillOpen(t *testing.T) {
 // The synthesis card speaks the project's language: title, body and comments come from
 // the message catalog, not from English written into the code.
 func TestSynthesisCardFollowsTheLanguage(t *testing.T) {
+	t.Run("SYCMS-B10: The card follows the project language", func(t *testing.T) {})
 	prev := i18n.Current()
 	if err := i18n.Set("pt-BR"); err != nil {
 		t.Fatal(err)

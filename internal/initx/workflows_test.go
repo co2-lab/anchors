@@ -1,33 +1,22 @@
 package initx
 
 import (
+	"embed"
 	"encoding/json"
 	"gopkg.in/yaml.v3"
 	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"regexp"
+	"sort"
 	"strings"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/board"
 	"github.com/co2-lab/anchors/internal/config"
 )
-
-// Todo pipeline declarado na lista precisa EXISTIR embutido. A lista é o que o doctor
-// confere e o que o `--fix` semeia — um nome sem arquivo faria o doctor cobrar algo que
-// o Anchors não sabe criar, e o `--fix` falharia no meio.
-func TestTodoWorkflowDeclaradoTemTemplate(t *testing.T) {
-	for _, w := range WorkflowsDoFluxo {
-		if _, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo); err != nil {
-			t.Errorf("%s está na lista e não tem template embutido: %v", w.Arquivo, err)
-		}
-		if w.Papel == "" {
-			t.Errorf("%s sem Papel — a mensagem do doctor não teria o que dizer que fica sem acontecer", w.Arquivo)
-		}
-	}
-}
 
 // A serialização não é detalhe de performance: é o mecanismo que impede duas execuções
 // de atribuírem o mesmo card ou de criarem o card duas vezes. Um template que a perdesse
@@ -362,91 +351,6 @@ func TestStalePreservaOHistorico(t *testing.T) {
 	}
 }
 
-func TestFaltaWorkflowVeOQueNaoExiste(t *testing.T) {
-	dir := t.TempDir()
-
-	if faltam := MissingWorkflow(dir); len(faltam) != len(WorkflowsDoFluxo) {
-		t.Fatalf("projeto vazio: esperava %d faltando, veio %d", len(WorkflowsDoFluxo), len(faltam))
-	}
-
-	escritos, _, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}})
-	if err != nil {
-		t.Fatalf("semear: %v", err)
-	}
-	if len(escritos) != len(WorkflowsDoFluxo) {
-		t.Errorf("esperava %d escritos, veio %d", len(WorkflowsDoFluxo), len(escritos))
-	}
-	if faltam := MissingWorkflow(dir); len(faltam) != 0 {
-		t.Errorf("depois de semear nada deveria faltar: %v", faltam)
-	}
-	if quebrados := SemConcurrency(dir); len(quebrados) != 0 {
-		t.Errorf("os templates semeados trazem concurrency: %v", quebrados)
-	}
-}
-
-// Um pipeline que o time editou — outro ritmo de stale, uma permissão a mais, um passo
-// próprio — é trabalho deliberado. Reescrevê-lo pelo padrão apagaria a customização sem
-// avisar. Mesma régua do `install-hooks` com um pre-commit alheio.
-func TestSemeiaNaoSobrescreveOQueOTimeEditou(t *testing.T) {
-	dir := t.TempDir()
-	wf := filepath.Join(dir, DirWorkflows)
-	if err := os.MkdirAll(wf, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	meu := "# pipeline do time, editado à mão\nname: meu\n"
-	alvo := filepath.Join(wf, WorkflowsDoFluxo[0].Arquivo)
-	if err := os.WriteFile(alvo, []byte(meu), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	escritos, _, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}})
-	if err != nil {
-		t.Fatalf("semear: %v", err)
-	}
-
-	b, _ := os.ReadFile(alvo)
-	if string(b) != meu {
-		t.Error("o pipeline editado pelo time foi sobrescrito")
-	}
-	for _, e := range escritos {
-		if e == WorkflowsDoFluxo[0].Arquivo {
-			t.Error("o arquivo existente não deveria constar como escrito")
-		}
-	}
-}
-
-// Um pipeline PRESENTE mas sem serialização é o pior caso: parece configurado e devolve
-// a corrida em silêncio. Tem de ser um achado próprio, distinto de "está faltando".
-func TestSemConcurrencyPegaPipelineQuePareceOK(t *testing.T) {
-	dir := t.TempDir()
-	wf := filepath.Join(dir, DirWorkflows)
-	if err := os.MkdirAll(wf, 0o755); err != nil {
-		t.Fatal(err)
-	}
-	semSerial := "name: claim\non:\n  workflow_dispatch:\njobs:\n  x:\n    runs-on: ubuntu-latest\n"
-	if err := os.WriteFile(filepath.Join(wf, "anchors-claim.yml"), []byte(semSerial), 0o644); err != nil {
-		t.Fatal(err)
-	}
-
-	quebrados := SemConcurrency(dir)
-
-	achou := false
-	for _, w := range quebrados {
-		if w.Arquivo == "anchors-claim.yml" {
-			achou = true
-		}
-	}
-	if !achou {
-		t.Error("claim sem `concurrency` atribuiria o mesmo card a dois agentes — tem de ser achado")
-	}
-	// E não pode ser contado como ausente: o arquivo está lá.
-	for _, w := range MissingWorkflow(dir) {
-		if w.Arquivo == "anchors-claim.yml" {
-			t.Error("o arquivo existe — contá-lo como ausente reportaria o mesmo problema duas vezes")
-		}
-	}
-}
-
 // O BOARD NÃO PODE SUBSTITUIR O SITE. `actions/deploy-pages` publica o artefato como o
 // site INTEIRO — num projeto que já tem landing page ou documentação no Pages, isso
 // trocaria o site pelo board. A perda é silenciosa: só se descobre quando alguém abre o
@@ -476,28 +380,6 @@ func TestBoardNaoSubstituiOSiteExistente(t *testing.T) {
 	// E a escrita tem de ser numa SUBPASTA, não na raiz do branch.
 	if !strings.Contains(texto, "SUBPASTA") {
 		t.Error("o board deveria escrever numa subpasta, para não tocar no resto do site")
-	}
-}
-
-// A PÁGINA acompanha o pipeline que a publica: semear um sem o outro deixa o fluxo pela
-// metade — o workflow roda e falha ao copiar um arquivo que não existe.
-func TestSemeiaEscreveAPaginaDoBoard(t *testing.T) {
-	dir := t.TempDir()
-	if _, _, err := SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}}); err != nil {
-		t.Fatal(err)
-	}
-	b, err := os.ReadFile(filepath.Join(dir, BoardFile))
-	if err != nil {
-		t.Fatalf("a página do board não foi semeada: %v", err)
-	}
-	if !strings.Contains(string(b), MarcadorDeTemplate) {
-		t.Error("a página deveria trazer o marcador — sem ele o `--fix` nunca a atualiza")
-	}
-	// O HTML fica FORA de `.github/workflows/`: o GitHub executa tudo que está lá, e um
-	// HTML naquele diretório vira um workflow inválido — erro de sintaxe permanente no
-	// repositório de quem adotou.
-	if strings.Contains(BoardFile, DirWorkflows) {
-		t.Errorf("a página não pode morar em %s: o GitHub tentaria executá-la", DirWorkflows)
 	}
 }
 
@@ -783,97 +665,6 @@ func TestPipelineConfrontaOVinculoENaoAPalavra(t *testing.T) {
 		t.Error("o pipeline deve conferir o que FALTA (os achados sob os cards declarados), " +
 			"e não repetir o que o corpo já diz")
 	}
-}
-
-// O `doctor --fix` imprimia "os pipelines já existem e estão atualizados" enquanto
-// REESCREVIA a página do board em silêncio. A mudança aparecia no `git status` de quem
-// rodou o comando sem nada tê-la anunciado — e a única forma de saber de quem era era ler
-// o diff inteiro.
-//
-// `semeiaBoard` passou a devolver O QUE FEZ. Estes testes cobram as três respostas, e a
-// terceira é a que evita o ruído: idêntico NÃO é atualização.
-func TestSemeiaBoard_dizOQueFez(t *testing.T) {
-	cfg := &config.Config{Workflow: &config.Workflow{}}
-
-	t.Run("não existia: criado", func(t *testing.T) {
-		dir := t.TempDir()
-		_, board, err := SemeiaWorkflows(dir, cfg)
-		if err != nil {
-			t.Fatalf("semear: %v", err)
-		}
-		if board != BoardCreated {
-			t.Errorf("página nova deveria ser BoardCreated, e foi %v", board)
-		}
-	})
-
-	t.Run("já idêntica: intocada, e não diz que atualizou", func(t *testing.T) {
-		// Dizer "atualizei" quando nada mudou treina quem lê a ignorar o aviso — e aí ele
-		// deixa de servir quando a mudança for real.
-		dir := t.TempDir()
-		if _, _, err := SemeiaWorkflows(dir, cfg); err != nil {
-			t.Fatalf("primeira semeadura: %v", err)
-		}
-		_, board, err := SemeiaWorkflows(dir, cfg)
-		if err != nil {
-			t.Fatalf("segunda semeadura: %v", err)
-		}
-		if board != BoardUnchanged {
-			t.Errorf("página idêntica deveria ser BoardUnchanged, e foi %v", board)
-		}
-	})
-
-	t.Run("do Anchors e para trás: atualizada", func(t *testing.T) {
-		dir := t.TempDir()
-		if _, _, err := SemeiaWorkflows(dir, cfg); err != nil {
-			t.Fatalf("primeira semeadura: %v", err)
-		}
-		// Uma página VELHA do Anchors: o marcador está lá, e o conteúdo difere.
-		alvo := filepath.Join(dir, BoardFile)
-		b, err := os.ReadFile(alvo)
-		if err != nil {
-			t.Fatalf("ler: %v", err)
-		}
-		velha := strings.Replace(string(b), "<meta charset=\"utf-8\">",
-			"<meta charset=\"utf-8\">\n<!-- versão antiga -->", 1)
-		if velha == string(b) {
-			t.Fatal("o teste não conseguiu envelhecer a página: o alvo do replace mudou")
-		}
-		if err := os.WriteFile(alvo, []byte(velha), 0o644); err != nil {
-			t.Fatalf("escrever: %v", err)
-		}
-
-		_, board, err := SemeiaWorkflows(dir, cfg)
-		if err != nil {
-			t.Fatalf("segunda semeadura: %v", err)
-		}
-		if board != BoardUpdated {
-			t.Errorf("página do Anchors que ficou para trás deveria ser BoardUpdated, e foi %v", board)
-		}
-	})
-
-	t.Run("editada pelo time: intocada, e o conteúdo fica", func(t *testing.T) {
-		dir := t.TempDir()
-		if _, _, err := SemeiaWorkflows(dir, cfg); err != nil {
-			t.Fatalf("primeira semeadura: %v", err)
-		}
-		alvo := filepath.Join(dir, BoardFile)
-		minha := "<!doctype html><p>a página é do time agora</p>"
-		if err := os.WriteFile(alvo, []byte(minha), 0o644); err != nil {
-			t.Fatalf("escrever: %v", err)
-		}
-
-		_, board, err := SemeiaWorkflows(dir, cfg)
-		if err != nil {
-			t.Fatalf("segunda semeadura: %v", err)
-		}
-		if board != BoardUnchanged {
-			t.Errorf("página do time deveria ser BoardUnchanged, e foi %v", board)
-		}
-		b, _ := os.ReadFile(alvo)
-		if string(b) != minha {
-			t.Error("o Anchors sobrescreveu uma página que o time assumiu")
-		}
-	})
 }
 
 // O CLAIM SERIALIZA QUEM PEGA O CARD, e isso não basta.
@@ -3082,5 +2873,414 @@ func TestClaimHandsOutAReviewCardThatHasItsPR(t *testing.T) {
 	}
 	if out, handed := runClaim(t, prs); handed {
 		t.Errorf("control: a to-do card with an open PR must still be skipped:\n%s", out)
+	}
+}
+
+// --- The Go side of the flow's pipelines (FLWRF): the list, the doctor's findings, the
+// seeding and the board page. The tests above this block prove the templates themselves.
+
+// Every pipeline declared in the list must EXIST embedded. The list is what the doctor
+// checks and what `--fix` seeds — a name with no file would make the doctor demand
+// something Anchors cannot create, and `--fix` would fail halfway.
+func TestFlowEveryDeclaredWorkflowHasATemplate(t *testing.T) {
+	t.Run("FLWRF-B01: Every declared pipeline has a carried template, a role and its serialization need", func(t *testing.T) {})
+	notSerial := map[string]bool{"anchors-gates.yml": true, "anchors-board.yml": true}
+	for _, w := range WorkflowsDoFluxo {
+		if _, err := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo); err != nil {
+			t.Errorf("%s is in the list and has no embedded template: %v", w.Arquivo, err)
+		}
+		if w.Papel == "" {
+			t.Errorf("%s has no role — the doctor's message would have nothing to say about what stops happening", w.Arquivo)
+		}
+		if w.ExigeSerial == notSerial[w.Arquivo] {
+			t.Errorf("%s: requires serialization = %v, want %v", w.Arquivo, w.ExigeSerial, !notSerial[w.Arquivo])
+		}
+	}
+}
+
+func flowCfg(branch string) *config.Config {
+	return &config.Config{Workflow: &config.Workflow{IntegrationBranch: branch}}
+}
+
+func writePipeline(t *testing.T, dir, name, content string) string {
+	t.Helper()
+	wf := filepath.Join(dir, DirWorkflows)
+	if err := os.MkdirAll(wf, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	p := filepath.Join(wf, name)
+	if err := os.WriteFile(p, []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+func TestFlowMissingWorkflowSeesWhatIsAbsent(t *testing.T) {
+	t.Run("FLWRF-B02: A pipeline is missing only when its file is absent", func(t *testing.T) {})
+	t.Run("FLWRF-B04: Seeding writes the missing pipelines and returns them sorted", func(t *testing.T) {})
+	dir := t.TempDir()
+
+	if missing := MissingWorkflow(dir); len(missing) != len(WorkflowsDoFluxo) {
+		t.Fatalf("empty project: expected %d missing, got %d", len(WorkflowsDoFluxo), len(missing))
+	}
+	// Presence only: any content counts as present.
+	writePipeline(t, dir, "anchors-claim.yml", "not even yaml")
+	for _, w := range MissingWorkflow(dir) {
+		if w.Arquivo == "anchors-claim.yml" {
+			t.Error("a present file, whatever its content, is not missing")
+		}
+	}
+	if err := os.Remove(filepath.Join(dir, DirWorkflows, "anchors-claim.yml")); err != nil {
+		t.Fatal(err)
+	}
+
+	written, _, err := SemeiaWorkflows(dir, flowCfg(""))
+	if err != nil {
+		t.Fatalf("seeding: %v", err)
+	}
+	if len(written) != len(WorkflowsDoFluxo) {
+		t.Errorf("expected %d written, got %d", len(WorkflowsDoFluxo), len(written))
+	}
+	if !sort.StringsAreSorted(written) {
+		t.Errorf("the written list should be sorted: %v", written)
+	}
+	if missing := MissingWorkflow(dir); len(missing) != 0 {
+		t.Errorf("after seeding nothing should be missing: %v", missing)
+	}
+	if broken := SemConcurrency(dir); len(broken) != 0 {
+		t.Errorf("the seeded templates carry concurrency: %v", broken)
+	}
+}
+
+// A pipeline the team edited — another stale rhythm, one more permission, a step of its
+// own — is deliberate work. Rewriting it with the default would erase the customization
+// without warning. Same ruler as `install-hooks` with someone else's pre-commit.
+func TestFlowSeedingDoesNotOverwriteWhatTheTeamEdited(t *testing.T) {
+	t.Run("FLWRF-B05: Seeding leaves a pipeline without the marker untouched", func(t *testing.T) {})
+	t.Run("FLWRF-X01: A file without the marker is never taken over", func(t *testing.T) {})
+	dir := t.TempDir()
+	mine := "# the team's pipeline, edited by hand\nname: mine\n"
+	target := writePipeline(t, dir, WorkflowsDoFluxo[0].Arquivo, mine)
+
+	written, _, err := SemeiaWorkflows(dir, flowCfg(""))
+	if err != nil {
+		t.Fatalf("seeding: %v", err)
+	}
+
+	b, _ := os.ReadFile(target)
+	if string(b) != mine {
+		t.Error("the pipeline the team edited was overwritten")
+	}
+	for _, e := range written {
+		if e == WorkflowsDoFluxo[0].Arquivo {
+			t.Error("the existing file should not be listed as written")
+		}
+	}
+	if outdated := OutdatedWorkflows(dir, flowCfg("")); len(outdated) != 0 {
+		t.Errorf("a team-owned file is never outdated: %v", outdated)
+	}
+}
+
+// A pipeline that still carries the marker is Anchors' own: seeding brings it up to date,
+// whatever it holds.
+func TestFlowSeedingUpdatesAnIntactTemplate(t *testing.T) {
+	t.Run("FLWRF-B04: Seeding writes the missing pipelines and returns them sorted", func(t *testing.T) {})
+	dir := t.TempDir()
+	name := WorkflowsDoFluxo[0].Arquivo
+	target := writePipeline(t, dir, name, "# "+MarcadorDeTemplate+"\nname: old\n")
+
+	written, _, err := SemeiaWorkflows(dir, flowCfg(""))
+	if err != nil {
+		t.Fatalf("seeding: %v", err)
+	}
+	want, _ := fs.ReadFile(workflowsFS, "workflows/"+name)
+	if b, _ := os.ReadFile(target); string(b) != string(want) {
+		t.Error("an intact template should be rewritten with the current one")
+	}
+	found := false
+	for _, e := range written {
+		found = found || e == name
+	}
+	if !found {
+		t.Errorf("%s was rewritten and should be listed as written: %v", name, written)
+	}
+}
+
+// A pipeline PRESENT but without serialization is the worst case: it looks configured and
+// brings the race back in silence. It must be a finding of its own, distinct from "missing".
+func TestFlowNoConcurrencyCatchesAPipelineThatLooksOK(t *testing.T) {
+	t.Run("FLWRF-B03: A serial pipeline without serialization is flagged", func(t *testing.T) {})
+	dir := t.TempDir()
+	noSerial := "name: claim\non:\n  workflow_dispatch:\njobs:\n  x:\n    runs-on: ubuntu-latest\n"
+	writePipeline(t, dir, "anchors-claim.yml", noSerial)
+	// Serialized, but cancelling the run in progress: still broken.
+	writePipeline(t, dir, "anchors-stale.yml", "concurrency:\n  group: x\n  cancel-in-progress: true\n")
+	// Not serial by design: never flagged.
+	writePipeline(t, dir, "anchors-gates.yml", noSerial)
+
+	flagged := map[string]bool{}
+	for _, w := range SemConcurrency(dir) {
+		flagged[w.Arquivo] = true
+	}
+	if !flagged["anchors-claim.yml"] {
+		t.Error("claim without `concurrency` would hand the same card to two agents — it must be a finding")
+	}
+	if !flagged["anchors-stale.yml"] {
+		t.Error("a pipeline that cancels the run in progress must be a finding")
+	}
+	if flagged["anchors-gates.yml"] {
+		t.Error("gates does not require serialization")
+	}
+	// An absent file is another finding (missing), never counted twice.
+	if len(flagged) != 2 {
+		t.Errorf("only the two broken files should be flagged, got %v", flagged)
+	}
+	for _, w := range MissingWorkflow(dir) {
+		if w.Arquivo == "anchors-claim.yml" {
+			t.Error("the file exists — counting it as missing would report the same problem twice")
+		}
+	}
+}
+
+// The PAGE goes with the pipeline that publishes it: seeding one without the other leaves
+// the flow halfway — the workflow runs and fails copying a file that does not exist.
+func TestFlowSeedingWritesTheBoardPage(t *testing.T) {
+	t.Run("FLWRF-B06: The board page is seeded outside the pipelines folder, with the marker", func(t *testing.T) {})
+	dir := t.TempDir()
+	if _, _, err := SemeiaWorkflows(dir, flowCfg("")); err != nil {
+		t.Fatal(err)
+	}
+	b, err := os.ReadFile(filepath.Join(dir, BoardFile))
+	if err != nil {
+		t.Fatalf("the board page was not seeded: %v", err)
+	}
+	if !strings.Contains(string(b), MarcadorDeTemplate) {
+		t.Error("the page should carry the marker — without it `--fix` never updates it")
+	}
+	// The HTML stays OUTSIDE `.github/workflows/`: GitHub runs everything there, and an HTML
+	// in that folder becomes an invalid workflow — a permanent syntax error in the adopter's
+	// repository.
+	if strings.Contains(BoardFile, DirWorkflows) {
+		t.Errorf("the page cannot live in %s: GitHub would try to run it", DirWorkflows)
+	}
+}
+
+// `doctor --fix` printed "the pipelines already exist and are up to date" while it
+// REWROTE the board page in silence. The change showed up in the `git status` of whoever
+// ran the command with nothing having announced it.
+//
+// The board seeding now returns WHAT IT DID. These tests demand the answers, and the one
+// that avoids the noise is: identical is NOT an update.
+func TestFlowBoardSeedingSaysWhatItDid(t *testing.T) {
+	t.Run("FLWRF-B07: The board page seeding reports created, updated or unchanged", func(t *testing.T) {})
+	t.Run("FLWRF-X01: A file without the marker is never taken over", func(t *testing.T) {})
+	cfg := flowCfg("")
+
+	t.Run("absent: created", func(t *testing.T) {
+		dir := t.TempDir()
+		_, board, err := SemeiaWorkflows(dir, cfg)
+		if err != nil {
+			t.Fatalf("seeding: %v", err)
+		}
+		if board != BoardCreated {
+			t.Errorf("a new page should be BoardCreated, got %v", board)
+		}
+	})
+
+	t.Run("already identical: untouched, and it does not say it updated", func(t *testing.T) {
+		// Saying "updated" when nothing changed trains the reader to ignore the notice —
+		// and then it stops serving when the change is real.
+		dir := t.TempDir()
+		if _, _, err := SemeiaWorkflows(dir, cfg); err != nil {
+			t.Fatalf("first seeding: %v", err)
+		}
+		_, board, err := SemeiaWorkflows(dir, cfg)
+		if err != nil {
+			t.Fatalf("second seeding: %v", err)
+		}
+		if board != BoardUnchanged {
+			t.Errorf("an identical page should be BoardUnchanged, got %v", board)
+		}
+	})
+
+	t.Run("Anchors' own and behind: updated", func(t *testing.T) {
+		dir := t.TempDir()
+		if _, _, err := SemeiaWorkflows(dir, cfg); err != nil {
+			t.Fatalf("first seeding: %v", err)
+		}
+		// An OLD Anchors page: the marker is there, and the content differs.
+		target := filepath.Join(dir, BoardFile)
+		b, err := os.ReadFile(target)
+		if err != nil {
+			t.Fatalf("read: %v", err)
+		}
+		old := strings.Replace(string(b), "<meta charset=\"utf-8\">",
+			"<meta charset=\"utf-8\">\n<!-- old version -->", 1)
+		if old == string(b) {
+			t.Fatal("the test could not age the page: the replace target changed")
+		}
+		if err := os.WriteFile(target, []byte(old), 0o644); err != nil {
+			t.Fatalf("write: %v", err)
+		}
+
+		_, board, err := SemeiaWorkflows(dir, cfg)
+		if err != nil {
+			t.Fatalf("second seeding: %v", err)
+		}
+		if board != BoardUpdated {
+			t.Errorf("an Anchors page left behind should be BoardUpdated, got %v", board)
+		}
+	})
+
+	t.Run("edited by the team: untouched, and the content stays", func(t *testing.T) {
+		dir := t.TempDir()
+		if _, _, err := SemeiaWorkflows(dir, cfg); err != nil {
+			t.Fatalf("first seeding: %v", err)
+		}
+		target := filepath.Join(dir, BoardFile)
+		mine := "<!doctype html><p>the page belongs to the team now</p>"
+		if err := os.WriteFile(target, []byte(mine), 0o644); err != nil {
+			t.Fatalf("write: %v", err)
+		}
+
+		_, board, err := SemeiaWorkflows(dir, cfg)
+		if err != nil {
+			t.Fatalf("second seeding: %v", err)
+		}
+		if board != BoardUnchanged {
+			t.Errorf("the team's page should be BoardUnchanged, got %v", board)
+		}
+		b, _ := os.ReadFile(target)
+		if string(b) != mine {
+			t.Error("Anchors overwrote a page the team took over")
+		}
+	})
+}
+
+// Outdated means: still Anchors' own (marker intact) and different from what seeding
+// would write now.
+func TestFlowOutdatedWorkflows(t *testing.T) {
+	t.Run("FLWRF-B08: An intact pipeline that differs from its template is outdated", func(t *testing.T) {})
+	dir := t.TempDir()
+	cfg := flowCfg("")
+	if _, _, err := SemeiaWorkflows(dir, cfg); err != nil {
+		t.Fatal(err)
+	}
+	// One intact file falls behind; one becomes the team's; one disappears.
+	aged := filepath.Join(dir, DirWorkflows, "anchors-claim.yml")
+	b, _ := os.ReadFile(aged)
+	if err := os.WriteFile(aged, append(b, []byte("# an older line\n")...), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	writePipeline(t, dir, "anchors-stale.yml", "name: ours now\n")
+	if err := os.Remove(filepath.Join(dir, DirWorkflows, "anchors-guard.yml")); err != nil {
+		t.Fatal(err)
+	}
+
+	var got []string
+	for _, w := range OutdatedWorkflows(dir, cfg) {
+		got = append(got, w.Arquivo)
+	}
+	if len(got) != 1 || got[0] != "anchors-claim.yml" {
+		t.Errorf("outdated = %v, want only anchors-claim.yml", got)
+	}
+}
+
+// The integration branch is where the work arrives. A project on `develop` gets pipelines
+// that trigger on `develop`, and doctor does not call them outdated for it.
+func TestFlowIntegrationBranchIsAppliedAndNotOutdated(t *testing.T) {
+	t.Run("FLWRF-B09: A declared integration branch replaces every marked branch line", func(t *testing.T) {})
+	t.Run("FLWRF-I01: What seeding writes is never outdated for the same configuration", func(t *testing.T) {})
+	for _, branch := range []string{"", "develop"} {
+		dir := t.TempDir()
+		cfg := flowCfg(branch)
+		if _, _, err := SemeiaWorkflows(dir, cfg); err != nil {
+			t.Fatal(err)
+		}
+		if outdated := OutdatedWorkflows(dir, cfg); len(outdated) != 0 {
+			t.Errorf("branch %q: freshly seeded pipelines reported outdated: %v", branch, outdated)
+		}
+		if branch == "" {
+			continue
+		}
+		marked := 0
+		for _, w := range WorkflowsDoFluxo {
+			b, err := os.ReadFile(filepath.Join(dir, DirWorkflows, w.Arquivo))
+			if err != nil {
+				t.Fatal(err)
+			}
+			tmpl, _ := fs.ReadFile(workflowsFS, "workflows/"+w.Arquivo)
+			tl := strings.Split(string(tmpl), "\n")
+			for i, l := range strings.Split(string(b), "\n") {
+				if !strings.Contains(tl[i], "# anchors:integration-branch") {
+					continue
+				}
+				marked++
+				indent := tl[i][:len(tl[i])-len(strings.TrimLeft(tl[i], " "))]
+				if want := indent + "branches: [develop] # anchors:integration-branch"; l != want {
+					t.Errorf("%s:%d = %q, want %q", w.Arquivo, i+1, l, want)
+				}
+			}
+		}
+		if marked == 0 {
+			t.Fatal("no template carries a marked branch line — the test proves nothing")
+		}
+	}
+}
+
+// Anchors writes only up to READY TO TEST; the columns after it belong to people.
+func TestFlowColumnsAnchorsWrites(t *testing.T) {
+	t.Run("FLWRF-B10: Anchors writes the board columns only up to READY TO TEST", func(t *testing.T) {})
+	want := []string{"TO DO", "IN PROGRESS", "READY TO REVIEW", "IN REVIEW", "READY TO TEST"}
+	if got := ColumnsAnchorsWrites(); !reflect.DeepEqual(got, want) {
+		t.Errorf("ColumnsAnchorsWrites = %v, want %v", got, want)
+	}
+}
+
+func TestFlowPerCardLabels(t *testing.T) {
+	t.Run("FLWRF-B11: A per-card label is its prefix followed by the card", func(t *testing.T) {})
+	for got, want := range map[string]string{
+		LabelSob("44"):         "anchors:under-44",
+		LabelDesbloqueia("44"): "anchors:desbloqueia-44",
+		LabelDePR("556"):       "anchors:from-pr-556",
+		LabelBlockedBy("900"):  "anchors:blocked-by-900",
+	} {
+		if got != want {
+			t.Errorf("label = %q, want %q", got, want)
+		}
+	}
+}
+
+func TestFlowSeedingFailures(t *testing.T) {
+	t.Run("FLWRF-E01: A pipelines folder that cannot be created fails the seeding", func(t *testing.T) {})
+	t.Run("FLWRF-E02: A pipeline that cannot be written fails the seeding", func(t *testing.T) {})
+	t.Run("FLWRF-E03: A template the binary does not carry fails the seeding", func(t *testing.T) {})
+
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, ".github"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := SemeiaWorkflows(dir, flowCfg("")); err == nil || !strings.Contains(err.Error(), "creating") {
+		t.Errorf("a folder that cannot be created must fail, got %v", err)
+	}
+
+	dir = t.TempDir()
+	wf := filepath.Join(dir, DirWorkflows)
+	if err := os.MkdirAll(wf, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chmod(wf, 0o555); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = os.Chmod(wf, 0o755) })
+	if written, _, err := SemeiaWorkflows(dir, flowCfg("")); err == nil || !strings.Contains(err.Error(), "writing") || len(written) != 0 {
+		t.Errorf("a pipeline that cannot be written must fail, got %v (written %v)", err, written)
+	}
+
+	saved := workflowsFS
+	t.Cleanup(func() { workflowsFS = saved })
+	workflowsFS = embed.FS{}
+	if _, _, err := SemeiaWorkflows(t.TempDir(), flowCfg("")); err == nil || !strings.Contains(err.Error(), "reading the template") {
+		t.Errorf("a template the binary does not carry must fail, got %v", err)
 	}
 }

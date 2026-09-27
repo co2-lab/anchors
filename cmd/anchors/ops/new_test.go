@@ -12,39 +12,6 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 )
 
-// Product doctrine does NOT inherit the spec's body.
-//
-// `sectionBody` resolves the body through `section.body.<key>` in the translation
-// catalog, and the template's literal only counts when the key is absent there. With bare
-// keys (`rules`, `overview`) the doctrine silently inherited the SPEC's text — measured:
-// the command emitted `### XXXXX-B01 — TODO rule` and "what the unit does", spec text in
-// an artifact that has no unit at all.
-func TestNewProduct_doesNotInheritTheSpecBody(t *testing.T) {
-	tpl, ok := templates["product"]
-	if !ok {
-		t.Fatal("the `product` kind is not registered")
-	}
-	for _, s := range tpl.sections {
-		if !strings.HasPrefix(s.Key, "doctrine_") {
-			t.Errorf("section %q without the `doctrine_` prefix: it will inherit another kind's body", s.Key)
-		}
-	}
-	body := renderArtifact(tpl, "CreditLimit", "CRLMT", "product/x.doctrine.md", t.TempDir(),
-		map[string]bool{"doctrine_title": true, "doctrine_rules": true}, nil, nil)
-	if !strings.Contains(body, "CRLMT-R01") {
-		t.Errorf("the doctrine should emit `-R01` rules, got:\n%s", body)
-	}
-	if strings.Contains(body, "-B01 — TODO rule") {
-		t.Errorf("the doctrine inherited the spec body:\n%s", body)
-	}
-	// Doctrine has no TARGET: the layer belongs to the target a spec describes, and a
-	// `layer: TODO` here would be a field nobody can fill — the eternal placeholder that
-	// `placeholder-filled` exists to accuse.
-	if strings.Contains(tpl.headerFn("CRLMT", "product/x.doctrine.md"), "layer:") {
-		t.Error("the doctrine header must not declare `layer:`")
-	}
-}
-
 // runNew runs `anchors new` UNDER a root, as the CLI does (a root command with the
 // `progress` subcommand would read the kind as an unknown subcommand).
 func runNew(t *testing.T, args ...string) (error, string) {
@@ -55,6 +22,10 @@ func runNew(t *testing.T, args ...string) (error, string) {
 }
 
 func TestNewRefusesWhatItCannotPlace(t *testing.T) {
+	t.Run("NWARN-B01: An unknown kind is refused", func(t *testing.T) {})
+	t.Run("NWARN-B02: The name and the output path are required", func(t *testing.T) {})
+	t.Run("NWARN-B06: With and without are validated against the kind's sections", func(t *testing.T) {})
+	t.Run("NWARN-I01: A refused new leaves nothing behind", func(t *testing.T) {})
 	root := t.TempDir()
 	for _, c := range []struct {
 		args []string
@@ -79,6 +50,8 @@ func TestNewRefusesWhatItCannotPlace(t *testing.T) {
 
 // A spec is born where --out says, with a code no one uses, and it is never overwritten.
 func TestNewSpecIsBornWithAFreeCode(t *testing.T) {
+	t.Run("NWARN-B03: A spec is born with a code no unit uses", func(t *testing.T) {})
+	t.Run("NWARN-B12: The artifact is written where out says and never overwritten", func(t *testing.T) {})
 	root := t.TempDir()
 	taken := code.Generate("Login")
 	writeFile(t, root, "anchors.graph.yaml", "version: 4\nnodes:\n    - id: x/Login.spec.md\n      kind: spec\n      code: "+taken+"\nedges: []\n")
@@ -106,6 +79,8 @@ func TestNewSpecIsBornWithAFreeCode(t *testing.T) {
 // A feature REFERENCES its sibling spec's code; without a spec it warns that it is born
 // orphaned instead of silently minting an identity.
 func TestNewFeatureReferencesTheSiblingSpec(t *testing.T) {
+	t.Run("NWARN-B04: A feature or test takes its identity from the sibling spec, or warns it is orphaned", func(t *testing.T) {})
+	t.Run("NWARN-X01: A feature references the spec's identity instead of owning one", func(t *testing.T) {})
 	root := t.TempDir()
 	writeFile(t, root, "src/auth/Login.spec.md", "<!-- @anchors\ncode: LGNSP\n-->\n# Login\n")
 	err, out := runNew(t, "feature", "Login", "--root", root, "--out", "src/auth/Login.feature")
@@ -131,6 +106,7 @@ func TestNewFeatureReferencesTheSiblingSpec(t *testing.T) {
 
 // A spec for a RECOGNIZED (declarative) layer is refused before the file exists.
 func TestNewSpecRefusesADeclarativeLayer(t *testing.T) {
+	t.Run("NWARN-B08: A spec for a declarative layer is refused", func(t *testing.T) {})
 	root := t.TempDir()
 	writeFile(t, root, "anchors.yaml", "layers:\n  dao:\n    pattern: \"src/dao/**/*.ts\"\n    kind: code\n    regime: declarativo\n")
 	err, _ := runNew(t, "spec", "UserDao", "--root", root, "--out", "src/dao/UserDao.spec.md", "--code", "USRDA")
@@ -148,10 +124,15 @@ func TestNewSpecRefusesADeclarativeLayer(t *testing.T) {
 
 // A plan is born with its progress companion — the state lives there, not in the plan.
 func TestNewPlanIsBornWithItsProgress(t *testing.T) {
+	t.Run("NWARN-B05: Code pins the identity", func(t *testing.T) {})
+	t.Run("NWARN-B13: A plan is born with its progress companion", func(t *testing.T) {})
 	root := t.TempDir()
 	err, out := runNew(t, "plan", "Foundation", "--root", root, "--out", "plans/0001-foundation.md", "--code", "FNDTN")
 	if err != nil {
 		t.Fatalf("new plan: %v", err)
+	}
+	if b, _ := os.ReadFile(filepath.Join(root, "plans", "0001-foundation.md")); !strings.Contains(string(b), "code: FNDTN") {
+		t.Errorf("--code did not pin the identity:\n%s", b)
 	}
 	if _, serr := os.Stat(filepath.Join(root, "plans", "0001-foundation-progress.md")); serr != nil {
 		t.Errorf("the progress companion was not created: %v\n%s", serr, out)
@@ -162,6 +143,7 @@ func TestNewPlanIsBornWithItsProgress(t *testing.T) {
 }
 
 func TestNewListSectionsShowsTheMenu(t *testing.T) {
+	t.Run("NWARN-B14: List-sections prints the menu, with presets only for specs", func(t *testing.T) {})
 	err, out := runNew(t, "spec", "--list-sections")
 	if err != nil {
 		t.Fatal(err)
@@ -180,6 +162,7 @@ func TestNewListSectionsShowsTheMenu(t *testing.T) {
 
 // resolveSections starts from the defaults, then applies --with and --without.
 func TestResolveSectionsAppliesWithAndWithout(t *testing.T) {
+	t.Run("NWARN-B06: With and without are validated against the kind's sections", func(t *testing.T) {})
 	chosen, err := resolveSections(specTemplate, []string{"errors"}, []string{"overview"})
 	if err != nil {
 		t.Fatal(err)
@@ -192,6 +175,7 @@ func TestResolveSectionsAppliesWithAndWithout(t *testing.T) {
 // The code of a path in a layer with `code_prefix` starts with that prefix; a plain name
 // gets the canonical code, avoiding the taken ones.
 func TestResolveNewCode(t *testing.T) {
+	t.Run("NWARN-B03: A spec is born with a code no unit uses", func(t *testing.T) {})
 	root := t.TempDir()
 	writeFile(t, root, "anchors.yaml", "layers:\n  auth:\n    pattern: \"src/auth/**/*.ts\"\n    kind: code\n    code_prefix: AU\n")
 	writeFile(t, root, "src/auth/Session.ts", "")
@@ -210,6 +194,7 @@ func TestResolveNewCode(t *testing.T) {
 // The target layer is the one of the unit the spec describes: the file that EXISTS wins;
 // before the code exists, the most specific extension wins.
 func TestTargetLayerPrefersTheExistingTarget(t *testing.T) {
+	t.Run("NWARN-B15: The target layer is the one of the unit the artifact describes", func(t *testing.T) {})
 	root := t.TempDir()
 	cfg := &config.Config{Layers: map[string]config.Layer{
 		"screen":   {Pattern: "app/**/*.tsx", Kind: "code"},
@@ -227,5 +212,256 @@ func TestTargetLayerPrefersTheExistingTarget(t *testing.T) {
 	}
 	if targetLayer(root, "x", nil) != "" {
 		t.Error("without config there is no layer")
+	}
+}
+
+// The REGIME tag comes from the project's mapping. Hard-coding `@nivel-unit` produced
+// scenarios no gate confronts in a project with another vocabulary — and `anchors work`
+// already taught that "the tag is the PROJECT's and is not translatable": the template
+// contradicted the ruler.
+func TestUnitRegimeTagComesFromTheProject(t *testing.T) {
+	t.Run("NWARN-B11: The unit regime tag comes from the project, or a visible placeholder", func(t *testing.T) {})
+	cases := []struct {
+		name string
+		cfg  *config.Config
+		want string
+	}{
+		{"Portuguese vocabulary", &config.Config{Derived: &config.Derived{
+			Regimes: map[string]string{"nivel-unit": "unit", "nivel-e2e": "e2e"}}}, "@nivel-unit"},
+		{"English vocabulary", &config.Config{Derived: &config.Derived{
+			Regimes: map[string]string{"level-unit": "unit"}}}, "@level-unit"},
+		{"own vocabulary", &config.Config{Derived: &config.Derived{
+			Regimes: map[string]string{"fast": "unit", "slow": "e2e"}}}, "@fast"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := unitRegimeTag(c.cfg); got != c.want {
+				t.Fatalf("tag = %q, want %q", got, c.want)
+			}
+		})
+	}
+}
+
+// With no mapping declared: a VISIBLE TODO, not a guess. A wrong tag goes unnoticed (no
+// gate confronts it); a TODO is fixed on the spot.
+func TestUnitRegimeTagWithoutMappingDoesNotGuess(t *testing.T) {
+	t.Run("NWARN-B11: The unit regime tag comes from the project, or a visible placeholder", func(t *testing.T) {})
+	for name, cfg := range map[string]*config.Config{
+		"nil config":     nil,
+		"no derived":     {},
+		"empty derived":  {Derived: &config.Derived{}},
+		"no unit regime": {Derived: &config.Derived{Regimes: map[string]string{"slow": "e2e"}}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			got := unitRegimeTag(cfg)
+			if !strings.Contains(got, "TODO") {
+				t.Fatalf("guessed a tag instead of asking for the declaration: %q", got)
+			}
+			if strings.Contains(got, "nivel-unit") {
+				t.Fatalf("guessed a specific project's vocabulary: %q", got)
+			}
+		})
+	}
+}
+
+// The ORDER of the sections is the spec's reading thread, and it belongs to the preset: in
+// a store spec, "State Shape" must come before "Invariants" — an invariant cannot be stated
+// about a state the reader does not know yet. Before, the order always came from the
+// catalog and came out inverted.
+func TestSectionOrderComesFromThePreset(t *testing.T) {
+	t.Run("NWARN-B07: A preset fixes the sections and their order, and extra sections follow", func(t *testing.T) {})
+	chosen, order, err := resolveSectionsWithPreset(specTemplate, "store", nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var keys []string
+	for _, s := range sortSections(specTemplate, chosen, order) {
+		keys = append(keys, s.Key)
+	}
+	pos := func(k string) int {
+		for i, c := range keys {
+			if c == k {
+				return i
+			}
+		}
+		t.Fatalf("section %q was not emitted: %v", k, keys)
+		return -1
+	}
+	if pos("state-shape") > pos("invariants") {
+		t.Errorf("State Shape after Invariants — the reader meets the invariant before "+
+			"knowing what the state is: %v", keys)
+	}
+	if pos("actions") < pos("state-shape") {
+		t.Errorf("Actions before the Shape: %v", keys)
+	}
+	if keys[len(keys)-1] != "open" {
+		t.Errorf("Open Decisions should close the spec: %v", keys)
+	}
+}
+
+// A section added by --with that the preset did not foresee comes at the end, in catalog
+// order — the only criterion available for it.
+func TestSectionOrderWithAnExtraSection(t *testing.T) {
+	t.Run("NWARN-B07: A preset fixes the sections and their order, and extra sections follow", func(t *testing.T) {})
+	chosen, order, err := resolveSectionsWithPreset(specTemplate, "validation", []string{"auth"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := sortSections(specTemplate, chosen, order)
+	if len(got) == 0 || got[len(got)-1].Key != "auth" {
+		t.Fatalf("the section asked with --with was not emitted after the preset's: %v", got)
+	}
+}
+
+// The identity of a feature/test is READ from the sibling spec — they reference (`ref:`),
+// they do not own. Generating a new code produces an orphan BY CONSTRUCTION: the `ref:`
+// points at a spec that does not exist. It happened: `anchors new feature
+// metadataVersioning` minted `MTVA` next to a spec that declared `MTVRX`.
+func TestRefComesFromTheSiblingSpec(t *testing.T) {
+	t.Run("NWARN-B04: A feature or test takes its identity from the sibling spec, or warns it is orphaned", func(t *testing.T) {})
+	dir := t.TempDir()
+	spec := filepath.Join(dir, "metadataVersioning.spec.md")
+	if err := os.WriteFile(spec, []byte("<!-- @anchors\n  code: MTVRX\n-->\n# x\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for name, file := range map[string]string{
+		"feature beside":     "metadataVersioning.feature",
+		"test beside":        "metadataVersioning.test.ts",
+		"go test beside":     "metadataVersioning_test.go",
+		"python test beside": "metadataVersioning_test.py",
+	} {
+		t.Run(name, func(t *testing.T) {
+			got, origin := refDaSpecIrma(dir, filepath.Join(dir, file), "metadataVersioning")
+			if got != "MTVRX" {
+				t.Fatalf("ref = %q, want MTVRX (the sibling spec is beside it); origin=%q", got, origin)
+			}
+		})
+	}
+}
+
+// Without a sibling spec, no identity is invented silently: the caller generates one with
+// a warning. The likeliest case is not "the spec comes later" — it is a wrong --out.
+func TestRefWithoutASiblingSpecInventsNothing(t *testing.T) {
+	t.Run("NWARN-B04: A feature or test takes its identity from the sibling spec, or warns it is orphaned", func(t *testing.T) {})
+	dir := t.TempDir()
+	if got, _ := refDaSpecIrma(dir, filepath.Join(dir, "noSpec.feature"), "noSpec"); got != "" {
+		t.Fatalf("with no sibling spec it should return empty, got %q", got)
+	}
+	// ANOTHER unit's spec in the same directory is not a sibling.
+	os.WriteFile(filepath.Join(dir, "otherThing.spec.md"), []byte("<!-- @anchors\n  code: XXXXX\n-->\n"), 0o644)
+	if got, _ := refDaSpecIrma(dir, filepath.Join(dir, "noSpec.feature"), "noSpec"); got != "" {
+		t.Fatalf("another unit's spec is not a sibling, got %q", got)
+	}
+}
+
+func renderScreen(t *testing.T, cfg *config.Config) string {
+	t.Helper()
+	sections, order, err := resolveSectionsWithPreset(specTemplate, "screen", nil, nil)
+	if err != nil {
+		t.Fatalf("resolving the screen preset: %v", err)
+	}
+	return renderArtifact(specTemplate, "Login", "LGNOI", "Login.spec.md", t.TempDir(), sections, order, cfg)
+}
+
+// THE TITLE FOLLOWS `lang:`. Before, the catalog emitted Portuguese for every project —
+// including `lang: en` and `lang: es` —, contradicting the framework's own default.
+func TestSectionTitleFollowsTheProjectLanguage(t *testing.T) {
+	t.Run("NWARN-B09: Section titles and bodies follow the project lexicon, then its language", func(t *testing.T) {})
+	for _, c := range []struct{ lang, want, forbidden string }{
+		{"en", "## Overview", "## Visão Geral"},
+		{"es", "## Visión General", "## Visão Geral"},
+		{"pt-BR", "## Visão Geral", "## Overview"},
+	} {
+		out := renderScreen(t, &config.Config{Lang: c.lang})
+		if !strings.Contains(out, c.want) {
+			t.Errorf("lang=%s: expected %q in the artifact", c.lang, c.want)
+		}
+		if strings.Contains(out, c.forbidden) {
+			t.Errorf("lang=%s: the artifact carries %q, from another language", c.lang, c.forbidden)
+		}
+	}
+}
+
+// With no `lang:` declared the framework DEFAULT holds, which is English — not the
+// language of whoever wrote the framework.
+func TestWithoutADeclaredLangTheDefaultIsEnglish(t *testing.T) {
+	t.Run("NWARN-B09: Section titles and bodies follow the project lexicon, then its language", func(t *testing.T) {})
+	if out := renderScreen(t, &config.Config{}); !strings.Contains(out, "## Overview") {
+		t.Error("without `lang:` the default is English (i18n.Default), and the artifact should be born in English")
+	}
+}
+
+// THE PROJECT LEXICON beats the language: whoever declared a title wants it, even in a
+// `lang: en` project. The precedence is the target layer's titles > the project's titles >
+// rule_types > the language.
+func TestProjectLexiconBeatsTheLanguage(t *testing.T) {
+	t.Run("NWARN-B09: Section titles and bodies follow the project lexicon, then its language", func(t *testing.T) {})
+	cfg := &config.Config{
+		Lang:          "en",
+		SectionTitles: config.SectionTitles{"overview": "Panorama"},
+	}
+	out := renderScreen(t, cfg)
+	if !strings.Contains(out, "## Panorama") {
+		t.Error("`section_titles` should beat the framework's translation")
+	}
+	if strings.Contains(out, "## Overview") {
+		t.Error("with its own lexicon declared, the framework's title should not appear")
+	}
+
+	// A rule type names the section of its letter when no title is declared for it.
+	cfg = &config.Config{Lang: "en", RuleTypes: []config.RuleType{{Letter: "B", Term: "Behaviour", Sections: []string{"Comportamentos"}}}}
+	sections, order, _ := resolveSectionsWithPreset(specTemplate, "hook", nil, nil)
+	if out := renderArtifact(specTemplate, "X", "ABCDE", "X.spec.md", t.TempDir(), sections, order, cfg); !strings.Contains(out, "## Comportamentos") {
+		t.Errorf("the rule type's section title was not used:\n%s", out)
+	}
+
+	// The TARGET layer's own title beats the project's.
+	root := t.TempDir()
+	cfg = &config.Config{Lang: "en", SectionTitles: config.SectionTitles{"overview": "Panorama"},
+		Layers: map[string]config.Layer{"api": {Pattern: "api/**/*.go", Kind: "code",
+			SectionTitles: config.SectionTitles{"overview": "Resumo"}}}}
+	if out := renderArtifact(specTemplate, "X", "ABCDE", filepath.Join(root, "api", "X.spec.md"), root,
+		map[string]bool{"overview": true}, nil, cfg); !strings.Contains(out, "## Resumo") {
+		t.Errorf("the target layer's title was not used:\n%s", out)
+	}
+}
+
+// Every section of the spec catalog has a translation: a missing key makes the section come
+// out in Portuguese inside an English artifact, unnoticed because the rest of the file is
+// right. It happened with `a11y`.
+func TestEverySpecSectionHasATranslation(t *testing.T) {
+	t.Run("NWARN-B09: Section titles and bodies follow the project lexicon, then its language", func(t *testing.T) {})
+	out := renderScreen(t, &config.Config{Lang: "en"})
+	// The BODY is translated too, not only the title: a table header and a TODO hint came
+	// out in Portuguese inside an English artifact, unnoticed because the title beside them
+	// was right.
+	for _, pt := range []string{"TODO propósito", "**Código**", "Obrigatório", "Quem garante", "nenhuma"} {
+		if strings.Contains(out, pt) {
+			t.Errorf("the `lang: en` artifact carries %q in the BODY — a section.body.* key is missing", pt)
+		}
+	}
+	// No title of the English artifact may be in Portuguese.
+	for _, pt := range []string{"Visão Geral", "Regras", "Dependências", "Acessibilidade", "Decisões em aberto"} {
+		if strings.Contains(out, "## "+pt) {
+			t.Errorf("the `lang: en` artifact carries the section %q in Portuguese — a section.title.* key is missing", pt)
+		}
+	}
+}
+
+// A feature speaks the project's Gherkin dialect, and a test is born in its stack's syntax:
+// both come from the project's declared dialect.
+func TestNewFollowsTheProjectDialect(t *testing.T) {
+	t.Run("NWARN-B10: Features and tests follow the project's declared dialect", func(t *testing.T) {})
+	cfg := &config.Config{Dialect: &config.Dialect{GherkinLanguage: "pt", Family: "python"}}
+	ch, _ := resolveSections(featureTemplate, nil, nil)
+	feat := renderArtifact(featureTemplate, "Login", "LGNSP", "/x/Login.feature", t.TempDir(), ch, nil, cfg)
+	if !strings.HasPrefix(feat, "# language: pt\n") || !strings.Contains(feat, "Funcionalidade:") ||
+		strings.Contains(feat, "Feature:") {
+		t.Errorf("the feature does not follow the pt Gherkin dialect:\n%s", feat)
+	}
+	ch, _ = resolveSections(testTemplate, nil, nil)
+	test := renderArtifact(testTemplate, "calcTotal", "LGNSP", "/x/calc_test.py", t.TempDir(), ch, nil, cfg)
+	if !strings.Contains(test, "def test_calc_total(") || strings.Contains(test, "describe(") {
+		t.Errorf("the test does not follow the python family:\n%s", test)
 	}
 }

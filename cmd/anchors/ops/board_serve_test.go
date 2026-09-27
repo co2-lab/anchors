@@ -2,12 +2,18 @@ package ops
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
+	"net"
+	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/co2-lab/anchors/internal/initx"
 )
 
 // O BOARD PUBLICADO E UMA FOTO, e a foto envelhece.
@@ -122,6 +128,7 @@ func TestIncrementalPerguntaPelaMaisRecente(t *testing.T) {
 // the stamp of a read the floor keeps handing back, and active agents would drop off the
 // list while still working. Without `takenAt`, the header read "Invalid Date".
 func TestServePayloadIsLiveAndStamped(t *testing.T) {
+	t.Run("BRSRB-B01: The live payload says it is live and stamps the read time", func(t *testing.T) {})
 	agora := time.Date(2026, 9, 24, 12, 0, 0, 0, time.FixedZone("BRT", -3*3600))
 	var b struct {
 		TakenAt string           `json:"takenAt"`
@@ -186,6 +193,7 @@ func decodeBoard(t *testing.T, b []byte) boardDoc {
 // The full sweep goes through REST, stitches the pages, drops the pull requests, and
 // takes the owner from the `anchors-owner:` comment fetched through GraphQL.
 func TestFullCollectionStitchesPagesAndKeepsTheOwner(t *testing.T) {
+	t.Run("BRSRB-B05: The full sweep stitches pages, drops pull requests and keeps the owner", func(t *testing.T) {})
 	if _, err := exec.LookPath("jq"); err != nil {
 		t.Skip("jq is not installed")
 	}
@@ -208,6 +216,7 @@ func TestFullCollectionStitchesPagesAndKeepsTheOwner(t *testing.T) {
 
 // A refusal from GitHub is an error that carries gh's own message.
 func TestFullCollectionReportsTheRefusal(t *testing.T) {
+	t.Run("BRSRB-E01: A refused sweep carries the host's message", func(t *testing.T) {})
 	fakeGH(t, `echo "API rate limit exceeded" >&2; exit 1`)
 	_, err := coletaCompleta("acme/app")
 	if err == nil || !strings.Contains(err.Error(), "collect from GitHub") ||
@@ -218,6 +227,8 @@ func TestFullCollectionReportsTheRefusal(t *testing.T) {
 
 // The read floor, the incremental question, and the fallback — through `leia`.
 func TestBoardSourceReadsOnlyWhenSomethingChanged(t *testing.T) {
+	t.Run("BRSRB-B02: A read inside the floor does not call the host", func(t *testing.T) {})
+	t.Run("BRSRB-B03: Past the floor the board sweeps only when something newer exists", func(t *testing.T) {})
 	if _, err := exec.LookPath("jq"); err != nil {
 		t.Skip("jq is not installed")
 	}
@@ -261,6 +272,7 @@ func TestBoardSourceReadsOnlyWhenSomethingChanged(t *testing.T) {
 // When the sweep fails after a good read, the board keeps serving the previous read; with
 // no previous read, the failure is the answer.
 func TestBoardSourceFallsBackToTheLastGoodRead(t *testing.T) {
+	t.Run("BRSRB-B04: A failed sweep after a good read serves the good read", func(t *testing.T) {})
 	fakeGH(t, `exit 1`)
 	fresh := &boardSource{repo: "acme/app"}
 	if _, err := fresh.leia(); err == nil {
@@ -275,6 +287,7 @@ func TestBoardSourceFallsBackToTheLastGoodRead(t *testing.T) {
 }
 
 func TestAlgoMudouComparesWithTheNewestSeen(t *testing.T) {
+	t.Run("BRSRB-B03: Past the floor the board sweeps only when something newer exists", func(t *testing.T) {})
 	log := fakeGH(t, `echo "2026-09-21T10:00:00Z"`)
 	f := &boardSource{repo: "acme/app", desdeAt: "2026-09-20T00:00:00Z"}
 	if changed, err := f.algoMudou(); err != nil || !changed {
@@ -290,6 +303,7 @@ func TestAlgoMudouComparesWithTheNewestSeen(t *testing.T) {
 }
 
 func TestMaisRecenteTakesTheNewestUpdated(t *testing.T) {
+	t.Run("BRSRB-I01: The incremental baseline is the newest update of the served board", func(t *testing.T) {})
 	got := maisRecente([]byte(`{"items":[{"updated":"2026-01-02"},{"updated":"2026-03-01"},{"updated":"2026-02-01"}]}`))
 	if got != "2026-03-01" {
 		t.Errorf("maisRecente = %q, want 2026-03-01", got)
@@ -300,6 +314,7 @@ func TestMaisRecenteTakesTheNewestUpdated(t *testing.T) {
 }
 
 func TestRepoAtualAsksTheClone(t *testing.T) {
+	t.Run("BRSRB-B07: The repository comes from the clone and the banner says what is served", func(t *testing.T) {})
 	fakeGH(t, `echo "acme/app"`)
 	if r, err := repoAtual(); err != nil || r != "acme/app" {
 		t.Errorf("repoAtual = %q, %v", r, err)
@@ -313,6 +328,7 @@ func TestRepoAtualAsksTheClone(t *testing.T) {
 // The comments come in pages; a failure keeps what was read, and a malformed repository
 // name reads nothing.
 func TestCommentsOfOpenCardsFollowsTheCursor(t *testing.T) {
+	t.Run("BRSRB-B06: The comments of open cards follow the cursor and failures yield none", func(t *testing.T) {})
 	log := fakeGH(t, `case "$*" in
 *cursor=C1*) echo '{"data":{"repository":{"issues":{"pageInfo":{"hasNextPage":false},"nodes":[{"number":7,"comments":{"nodes":[{"body":"b7"}]}}]}}}}' ;;
 *) echo '{"data":{"repository":{"issues":{"pageInfo":{"hasNextPage":true,"endCursor":"C1"},"nodes":[{"number":5,"comments":{"nodes":[{"body":"b5"}]}}]}}}}' ;;
@@ -343,6 +359,7 @@ esac`)
 }
 
 func TestCommentsToFileWritesTheMapAndCleansUp(t *testing.T) {
+	t.Run("BRSRB-B06: The comments of open cards follow the cursor and failures yield none", func(t *testing.T) {})
 	fakeGH(t, `echo '`+ghOwnerComments+`'`)
 	path, cleanup := commentsToFile("acme/app")
 	if path == "" {
@@ -361,6 +378,8 @@ func TestCommentsToFileWritesTheMapAndCleansUp(t *testing.T) {
 // `board serve` without --repo asks the clone; when that fails the error says how to
 // declare it. With a repository, it prints where it serves and returns the listen error.
 func TestBoardServeCommandDiscoversTheRepoOrFails(t *testing.T) {
+	t.Run("BRSRB-B07: The repository comes from the clone and the banner says what is served", func(t *testing.T) {})
+	t.Run("BRSRB-E03: Without a repository the command points at --repo", func(t *testing.T) {})
 	fakeGH(t, `exit 1`)
 	c := newBoardServeCmd()
 	c.SetArgs([]string{})
@@ -382,4 +401,93 @@ func TestBoardServeCommandDiscoversTheRepoOrFails(t *testing.T) {
 	if !strings.Contains(out, "repository: acme/app") || !strings.Contains(out, "localhost:-1") {
 		t.Errorf("the banner does not say what is served:\n%s", out)
 	}
+}
+
+// serveBoard brings `board serve` up on a free local port and returns its base URL. The
+// server lives until the test binary exits: the command has no shutdown, by design.
+func serveBoard(t *testing.T) string {
+	t.Helper()
+	l, err := net.Listen("tcp", "localhost:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := l.Addr().(*net.TCPAddr).Port
+	l.Close()
+	c := newBoardServeCmd()
+	c.SetArgs([]string{"--repo", "acme/app", "--port", strconv.Itoa(port), "--interval", "1h"})
+	c.SetOut(io.Discard)
+	c.SetErr(io.Discard)
+	go func() { _ = c.Execute() }()
+	base := fmt.Sprintf("http://localhost:%d", port)
+	for i := 0; i < 100; i++ {
+		if r, err := http.Get(base + "/"); err == nil {
+			r.Body.Close()
+			return base
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
+	t.Fatalf("board serve did not come up on %s", base)
+	return ""
+}
+
+func get(t *testing.T, url string) (*http.Response, string) {
+	t.Helper()
+	r, err := http.Get(url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer r.Body.Close()
+	b, _ := io.ReadAll(r.Body)
+	return r, string(b)
+}
+
+// The server hands out the SAME page the pipeline publishes, and the live JSON beside it,
+// never cached by the browser.
+func TestBoardServeServesThePageAndTheLiveJSON(t *testing.T) {
+	t.Run("BRSRB-B08: The server hands out the published page and the live JSON", func(t *testing.T) {})
+	t.Run("BRSRB-X01: The page is the pipeline's own board page", func(t *testing.T) {})
+	if _, err := exec.LookPath("jq"); err != nil {
+		t.Skip("jq is not installed")
+	}
+	fakeBoardGH(t, "")
+	captureStdout(t, func() {
+		base := serveBoard(t)
+		want, err := initx.BoardHTML()
+		if err != nil {
+			t.Fatal(err)
+		}
+		r, page := get(t, base+"/")
+		if page != want || !strings.HasPrefix(r.Header.Get("Content-Type"), "text/html") {
+			t.Errorf("/ must serve the published board page as HTML (Content-Type %q)", r.Header.Get("Content-Type"))
+		}
+		r, body := get(t, base+"/board.json")
+		if r.StatusCode != http.StatusOK || r.Header.Get("Content-Type") != "application/json" ||
+			r.Header.Get("Cache-Control") != "no-store" {
+			t.Errorf("/board.json: status %d, Content-Type %q, Cache-Control %q",
+				r.StatusCode, r.Header.Get("Content-Type"), r.Header.Get("Cache-Control"))
+		}
+		if d := decodeBoard(t, []byte(body)); !d.Live || len(d.Items) != 2 {
+			t.Errorf("/board.json = %s", body)
+		}
+	})
+}
+
+// With no previous read and GitHub refusing, the JSON route answers 502 with the error as
+// JSON — the page shows why instead of an empty board.
+func TestBoardServeAnswers502WhenThereIsNothingToServe(t *testing.T) {
+	t.Run("BRSRB-E02: With nothing to serve the data route answers 502", func(t *testing.T) {})
+	fakeGH(t, `echo "API rate limit exceeded" >&2; exit 1`)
+	captureStdout(t, func() {
+		base := serveBoard(t)
+		r, body := get(t, base+"/board.json")
+		if r.StatusCode != http.StatusBadGateway {
+			t.Errorf("status = %d, want 502", r.StatusCode)
+		}
+		var e struct {
+			Error string `json:"error"`
+		}
+		if err := json.Unmarshal([]byte(body), &e); err != nil || !strings.Contains(e.Error, "API rate limit exceeded") {
+			t.Errorf("the 502 body is not the JSON error with gh's message: %q (%v)", body, err)
+		}
+	})
 }

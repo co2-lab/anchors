@@ -60,6 +60,7 @@ func remoteSubject(t *testing.T, remote string) string {
 
 // The reason is mandatory: without it, the freeze is indistinguishable from broken config.
 func TestFreezeRequiresAReason(t *testing.T) {
+	t.Run("FRZEX-B01: A blank reason is refused", func(t *testing.T) {})
 	root, _ := frozenRepo(t, "version: 1\n")
 	err, _ := runCmd(t, newFreezeCmd(), "--root", root, "--reason", "  ")
 	if err == nil || !strings.Contains(err.Error(), "--reason is required") {
@@ -74,6 +75,12 @@ func TestFreezeRequiresAReason(t *testing.T) {
 // The three layers in one operation: the file (pushed), the ruleset, and the issue.
 // Then `thaw` undoes all three.
 func TestFreezeAndThawDriveTheThreeLayers(t *testing.T) {
+	t.Run("FRZEX-B02: The freeze writes two quoted lines on top and the file still loads", func(t *testing.T) {})
+	t.Run("FRZEX-B05: In github mode the freeze creates the rule and opens the issue", func(t *testing.T) {})
+	t.Run("FRZEX-B07: Freezing twice changes nothing and shows the reason", func(t *testing.T) {})
+	t.Run("FRZEX-B09: The thaw undoes the three layers", func(t *testing.T) {})
+	t.Run("FRZEX-B10: Thawing a project that is not frozen is a no-op", func(t *testing.T) {})
+	t.Run("FRZEX-I01: Freeze and thaw give back the file byte for byte", func(t *testing.T) {})
 	root, remote := frozenRepo(t, githubModeConfig)
 	log := fakeGH(t, `case "$*" in
 "issue create"*) echo "https://github.com/acme/app/issues/99" ;;
@@ -142,6 +149,8 @@ esac`)
 // In local mode there is no remote to lock: no ruleset, no issue. --no-push keeps the
 // change local, uncommitted.
 func TestFreezeLocalModeNoPushTouchesOnlyTheFile(t *testing.T) {
+	t.Run("FRZEX-B04: No-push leaves the frozen file as a local change", func(t *testing.T) {})
+	t.Run("FRZEX-B05: In github mode the freeze creates the rule and opens the issue", func(t *testing.T) {})
 	root, remote := frozenRepo(t, "version: 1\n")
 	log := fakeGH(t, `exit 1`)
 	err, out := runCmd(t, newFreezeCmd(), "--root", root, "--reason", "stop", "--no-push")
@@ -162,6 +171,7 @@ func TestFreezeLocalModeNoPushTouchesOnlyTheFile(t *testing.T) {
 // Each failing layer is WARNED, and the freeze of the file still holds: a brake that
 // half-applies must say which half.
 func TestFreezeAndThawWarnWhenALayerFails(t *testing.T) {
+	t.Run("FRZEX-B08: Each failing layer is a warning and the local brake holds", func(t *testing.T) {})
 	root := newGitRepo(t) // no remote: the push fails
 	writeFile(t, root, config.DefaultFile, githubModeConfig)
 	fakeGH(t, `echo "forbidden" >&2; exit 1`)
@@ -192,6 +202,7 @@ func TestFreezeAndThawWarnWhenALayerFails(t *testing.T) {
 
 // No ruleset and no open issue is not an error: there is simply nothing to remove.
 func TestThawWithNothingOnTheRemoteRemovesNothing(t *testing.T) {
+	t.Run("FRZEX-B11: With nothing on the remote the thaw removes nothing", func(t *testing.T) {})
 	log := fakeGH(t, `exit 0`)
 	if err := deleteRuleset("acme/app"); err != nil {
 		t.Errorf("deleteRuleset: %v", err)
@@ -206,6 +217,7 @@ func TestThawWithNothingOnTheRemoteRemovesNothing(t *testing.T) {
 }
 
 func TestFreezeWithoutConfigFails(t *testing.T) {
+	t.Run("FRZEX-E01: Freeze and thaw refuse a project without config", func(t *testing.T) {})
 	for _, c := range []*cobra.Command{newFreezeCmd(), newThawCmd()} {
 		args := []string{"--root", t.TempDir()}
 		if c.Name() == "freeze" {
@@ -219,6 +231,8 @@ func TestFreezeWithoutConfigFails(t *testing.T) {
 
 // removeFreeze removes the two lines and ONLY them, wherever they are.
 func TestRemoveFreezeKeepsEveryOtherLine(t *testing.T) {
+	t.Run("FRZEX-B02: The freeze writes two quoted lines on top and the file still loads", func(t *testing.T) {})
+	t.Run("FRZEX-X01: The configuration is never reserialized", func(t *testing.T) {})
 	p := writeFile(t, t.TempDir(), "anchors.yaml", "version: 1\n")
 	if err := writeFreeze(p, `a: "quoted" reason`); err != nil {
 		t.Fatal(err)
@@ -235,5 +249,47 @@ func TestRemoveFreezeKeepsEveryOtherLine(t *testing.T) {
 	}
 	if writeFreeze(filepath.Join(t.TempDir(), "missing"), "x") == nil || removeFreeze(filepath.Join(t.TempDir(), "missing")) == nil {
 		t.Error("a missing file must be an error")
+	}
+}
+
+// The freeze commits and pushes PAST the hooks: the hooks it has just armed would refuse
+// the freeze itself. The deprecated Portuguese flags still drive the command, and
+// --no-ruleset leaves the remote rules alone while the issue is still opened.
+func TestFreezeGoesPastTheHooksAndHonorsTheOldFlagNames(t *testing.T) {
+	t.Run("FRZEX-B03: The freeze is committed and pushed past refusing hooks", func(t *testing.T) {})
+	t.Run("FRZEX-B06: No-ruleset skips the ruleset and still opens the issue", func(t *testing.T) {})
+	t.Run("FRZEX-B12: The deprecated Portuguese flag names still work", func(t *testing.T) {})
+	root, remote := frozenRepo(t, githubModeConfig)
+	for _, hook := range []string{"pre-commit", "commit-msg", "pre-push"} {
+		writeFile(t, root, filepath.Join(".git", "hooks", hook), "#!/bin/sh\necho refused >&2\nexit 1\n")
+		if err := os.Chmod(filepath.Join(root, ".git", "hooks", hook), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	log := fakeGH(t, `case "$*" in
+"issue create"*) echo "https://github.com/acme/app/issues/7" ;;
+esac`)
+	err, out := runCmd(t, newFreezeCmd(), "--root", root, "--motivo", "release blocked", "--sem-ruleset")
+	if err != nil {
+		t.Fatalf("freeze with the old flag names: %v\n%s", err, out)
+	}
+	if got := remoteSubject(t, remote); got != "chore(anchors): freeze — release blocked" {
+		t.Errorf("the freeze did not go past the hooks to the remote; last subject = %q\n%s", got, out)
+	}
+	calls := readLog(t, log)
+	if strings.Contains(calls, "rulesets") {
+		t.Errorf("--sem-ruleset still touched the ruleset:\n%s", calls)
+	}
+	if !strings.Contains(calls, "issue create") {
+		t.Errorf("the issue must be opened even without the ruleset:\n%s", calls)
+	}
+
+	// --sem-push on thaw: the change stays local.
+	err, out = runCmd(t, newThawCmd(), "--root", root, "--sem-push")
+	if err != nil {
+		t.Fatalf("thaw --sem-push: %v\n%s", err, out)
+	}
+	if got := remoteSubject(t, remote); !strings.HasPrefix(got, "chore(anchors): freeze") {
+		t.Errorf("thaw --sem-push still pushed: %q", got)
 	}
 }

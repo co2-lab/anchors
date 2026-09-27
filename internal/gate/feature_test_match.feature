@@ -157,3 +157,9 @@ Feature: FeatureTestMatch — scenarios in feature must be implemented in test b
     And linked to a second test that no longer exists on disk
     When the gate confronts it
     Then it returns Fail charging only the scenario the missing test would have implemented
+
+  @FTMFT-B19 @unit-level
+  Scenario: Comment markers inside strings or glued to a name keep the line
+    Given code lines with "--label", a URL and an i-- decrement before a symbol
+    When the comments are stripped
+    Then each symbol after them is still in the code, and a real trailing comment is removed

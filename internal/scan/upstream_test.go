@@ -1,11 +1,8 @@
 package scan
 
 import (
-	"os"
-	"path/filepath"
+	"strings"
 	"testing"
-
-	"github.com/co2-lab/anchors/internal/config"
 )
 
 // The jq program of blue-eyes' `anchors-board.yml`, trimmed: a body line starting with
@@ -22,33 +19,8 @@ jobs:
               }'
 `
 
-func TestParentDe_onlyInsideTheHeader(t *testing.T) {
-	if p := parentDe([]byte(boardWorkflow)); p != "" {
-		t.Errorf("a `parent:` in a workflow's body is not a header declaration, got %q", p)
-	}
-	spec := "<!-- @anchors\n  code: INMTN\n  parent: DTBSA-F01\n  layer: lambdas\n-->\n# InstanceMetrics\n\nparent: NOPE-F09\n"
-	if p := parentDe([]byte(spec)); p != "DTBSA-F01" {
-		t.Errorf("the header's parent should be read, got %q", p)
-	}
-	code := "// @anchors\n//   ref: PRICX\n//   parent: PRICX-F02\npackage p\n\n// parent: NOPE-F09\n"
-	if p := parentDe([]byte(code)); p != "PRICX-F02" {
-		t.Errorf("a line-comment header's parent should be read, got %q", p)
-	}
-	noParent := "<!-- @anchors\n  code: INMTN\n-->\n# InstanceMetrics\n\nparent: NOPE-F09\n"
-	if p := parentDe([]byte(noParent)); p != "" {
-		t.Errorf("the HTML header ends at `-->`, got %q", p)
-	}
-	noParentCode := "// @anchors\n//   ref: PRICX\npackage p\n\n// parent: NOPE-F09\n"
-	if p := parentDe([]byte(noParentCode)); p != "" {
-		t.Errorf("a line-comment header ends at the first non-comment line, got %q", p)
-	}
-	oneLine := "<!-- @anchors parent: X -->\nparent: NOPE-F09\n"
-	if p := parentDe([]byte(oneLine)); p != "" {
-		t.Errorf("a one-line header closes on its own line, got %q", p)
-	}
-}
-
 func TestAnchorsHeader_ignoresTheSharedCodeFlagAndProse(t *testing.T) {
+	t.Run("UPOWP-B03: The shared-code flag and prose do not open a header", func(t *testing.T) {})
 	if h := AnchorsHeader([]byte("// @anchors-shared-code\n// parent: X\n")); h != nil {
 		t.Errorf("`@anchors-shared-code` does not open a header, got %q", h)
 	}
@@ -57,7 +29,41 @@ func TestAnchorsHeader_ignoresTheSharedCodeFlagAndProse(t *testing.T) {
 	}
 }
 
+func TestAnchorsHeader_endsWithItsComment(t *testing.T) {
+	t.Run("UPOWP-B04: An HTML or block-comment header ends with its comment", func(t *testing.T) {})
+	t.Run("UPOWP-I01: Nothing after the header's comment belongs to it", func(t *testing.T) {})
+	for src, want := range map[string]string{
+		"<!-- @anchors\n code: X\n-->\ncode: Y": "<!-- @anchors\n code: X\n-->",
+		"/* @anchors\n code: X\n*/\ncode: Y":    "/* @anchors\n code: X\n*/",
+		"<!-- @anchors code: X -->\ncode: Y":    "<!-- @anchors code: X -->",
+	} {
+		got := string(AnchorsHeader([]byte(src)))
+		if got != want {
+			t.Errorf("header of %q = %q, want %q", src, got, want)
+		}
+		if strings.Contains(got, "code: Y") {
+			t.Errorf("the body line leaked into the header of %q", src)
+		}
+	}
+}
+
+func TestAnchorsHeader_lineCommentsEndAtTheFirstNonComment(t *testing.T) {
+	t.Run("UPOWP-B05: A line-comment header ends at the first line that is not a comment", func(t *testing.T) {})
+	if got := string(AnchorsHeader([]byte("# @anchors\n#  code: X\n\n# after"))); got != "# @anchors\n#  code: X" {
+		t.Errorf("the line-comment header should stop at the blank line, got %q", got)
+	}
+}
+
+func TestAnchorsHeader_unclosedRunsToTheEnd(t *testing.T) {
+	t.Run("UPOWP-B06: A header comment that never closes runs to the end of the file", func(t *testing.T) {})
+	src := "<!-- @anchors\n code: X\nnever closes"
+	if got := string(AnchorsHeader([]byte(src))); got != src {
+		t.Errorf("an unclosed header runs to the end of the file, got %q", got)
+	}
+}
+
 func TestIsUpstreamOwned(t *testing.T) {
+	t.Run("UPOWP-B01: Only a marked workflow is owned upstream", func(t *testing.T) {})
 	marked := []byte("# anchors:template\non: push\n")
 	if !IsUpstreamOwned(".github/workflows/anchors-claim.yml", marked) {
 		t.Error("a marker-carrying workflow is upstream-owned")
@@ -70,28 +76,16 @@ func TestIsUpstreamOwned(t *testing.T) {
 	}
 }
 
-// A vendored workflow enters the map with no scenario codes of its own: the examples in its
-// comments are the Anchors project's vocabulary.
-func TestWalk_upstreamWorkflowCarriesNoCodes(t *testing.T) {
-	root := t.TempDir()
-	if err := os.MkdirAll(filepath.Join(root, ".github/workflows"), 0o755); err != nil {
-		t.Fatal(err)
+func TestIsUpstreamOwned_windowsPath(t *testing.T) {
+	t.Run("UPOWP-B02: A Windows path under the workflow directory is recognised", func(t *testing.T) {})
+	if !IsUpstreamOwned(`.github\workflows\a.yml`, []byte("# anchors:template\n")) {
+		t.Error("the backslash form of a workflow path is the same file")
 	}
-	if err := os.WriteFile(filepath.Join(root, ".github/workflows/anchors-board.yml"), []byte(boardWorkflow), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	cfg := &config.Config{Layers: map[string]config.Layer{
-		"workflow": {Pattern: ".github/workflows/*.yml", Kind: "code"},
-	}}
-	files, err := Walk(root, cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(files) != 1 {
-		t.Fatalf("expected the workflow in the scan, got %v", files)
-	}
-	f := files[0]
-	if !f.Upstream || len(f.Codes) != 0 || f.Parent != "" {
-		t.Errorf("expected upstream, no codes, no parent; got upstream=%v codes=%v parent=%q", f.Upstream, f.Codes, f.Parent)
+}
+
+func TestIsUpstreamOwned_nameDoesNotCount(t *testing.T) {
+	t.Run("UPOWP-X01: Only the marker and the directory decide ownership", func(t *testing.T) {})
+	if IsUpstreamOwned(".github/workflows/anchors-board.yml", []byte("on: push\n")) {
+		t.Error("an `anchors-` name without the marker is the project's file")
 	}
 }

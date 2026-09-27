@@ -3,6 +3,8 @@ package ops
 import (
 	"encoding/json"
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -33,6 +35,7 @@ func runCode(t *testing.T, args ...string) (error, string) {
 
 // --check answers whether a proposed code is free, and exits non-zero on a collision.
 func TestCodeCheckSaysWhoOwnsTheCode(t *testing.T) {
+	t.Run("CDCMC-B05: Check answers whether a code is free, ignoring case, and names the owners", func(t *testing.T) {})
 	root := codeProject(t, "version: 1\n", `    - id: src/auth/Login.spec.md
       kind: spec
       code: LOGNS
@@ -52,6 +55,8 @@ func TestCodeCheckSaysWhoOwnsTheCode(t *testing.T) {
 
 // Generating for a name whose canonical code is taken gives ANOTHER code, and says why.
 func TestCodeGenerateAvoidsATakenCanonical(t *testing.T) {
+	t.Run("CDCMC-B01: A free canonical code is the suggestion", func(t *testing.T) {})
+	t.Run("CDCMC-B02: A taken canonical is adjusted to a free code naming its owner", func(t *testing.T) {})
 	canonical := code.Generate("Spacer")
 	root := codeProject(t, "version: 1\n", `    - id: ui/Spacer.spec.md
       kind: spec
@@ -77,6 +82,8 @@ func TestCodeGenerateAvoidsATakenCanonical(t *testing.T) {
 // A path in a layer with `code_prefix` starts with the module prefix; a generic basename
 // takes its identity from the parent directory.
 func TestCodeGenerateFromAPath(t *testing.T) {
+	t.Run("CDCMC-B03: A path in a layer with a code prefix gets the module prefix", func(t *testing.T) {})
+	t.Run("CDCMC-B04: A generic basename takes its identity from the parent directory", func(t *testing.T) {})
 	cfg := "layers:\n  auth:\n    pattern: \"src/auth/**/*.ts\"\n    kind: code\n    code_prefix: AU\n"
 	root := codeProject(t, cfg, "")
 	writeFile(t, root, "src/auth/Session.ts", "export {}\n")
@@ -99,6 +106,7 @@ func TestCodeGenerateFromAPath(t *testing.T) {
 }
 
 func TestCodeRequiresANameAndAMap(t *testing.T) {
+	t.Run("CDCMC-E01: Without a name or a map the command fails and says what to do", func(t *testing.T) {})
 	root := codeProject(t, "version: 1\n", "")
 	if err, _ := runCode(t, "--root", root); err == nil || !strings.Contains(err.Error(), "provide the unit name") {
 		t.Errorf("no name: %v", err)
@@ -111,6 +119,7 @@ func TestCodeRequiresANameAndAMap(t *testing.T) {
 // `code list --check` accuses a DECLARED code outside `code_lengths` and proposes the
 // canonical code of the unit's name; a merely CITED one is counted, not accused.
 func TestCodeListCheckAccusesOnlyDeclaredCodesOfTheWrongLength(t *testing.T) {
+	t.Run("CDCMC-B10: The length check accuses only declared codes and proposes the canonical code", func(t *testing.T) {})
 	root := codeProject(t, "version: 1\n", `    - id: app/Wallet.spec.md
       kind: spec
       code: WLTX
@@ -163,6 +172,7 @@ func TestCodeListCheckAccusesOnlyDeclaredCodesOfTheWrongLength(t *testing.T) {
 
 // --json gives each code its folder, file, kind, title and the work order fields.
 func TestCodeListJSONCarriesWhatAConsumerNeeds(t *testing.T) {
+	t.Run("CDCMC-B08: The JSON list carries each code's folder, file, kind, title and work order fields", func(t *testing.T) {})
 	root := codeProject(t, "version: 1\n", `    - id: plans/0002-build.md
       kind: plan
       code: PLNBB
@@ -199,6 +209,8 @@ func TestCodeListJSONCarriesWhatAConsumerNeeds(t *testing.T) {
 }
 
 func TestCodeListEmptyAndBrokenInputs(t *testing.T) {
+	t.Run("CDCMC-B12: An empty map says no node has an identity", func(t *testing.T) {})
+	t.Run("CDCMC-E02: The list refuses a project without config or without map", func(t *testing.T) {})
 	err, out := runCmd(t, newCodeListCmd(), "--root", codeProject(t, "version: 1\n", ""))
 	if err != nil || !strings.Contains(out, "the map has no node with identity") {
 		t.Errorf("empty map: %v\n%s", err, out)
@@ -219,6 +231,7 @@ func TestCodeListEmptyAndBrokenInputs(t *testing.T) {
 }
 
 func TestUnitNameStripsTheArtifactSuffixes(t *testing.T) {
+	t.Run("CDCMC-B11: The unit name drops the artifact suffixes", func(t *testing.T) {})
 	for in, want := range map[string]string{
 		"src/auth/Login.spec.md":    "Login",
 		"src/auth/Login.feature":    "Login",
@@ -240,5 +253,138 @@ func TestJoinLens(t *testing.T) {
 	}
 	if errCollision.Error() != "code already in use" {
 		t.Errorf("errCollision = %q", errCollision.Error())
+	}
+}
+
+// mapWithCodes writes a minimal map with identity nodes in different workspaces.
+func mapWithCodes(t *testing.T) string {
+	t.Helper()
+	dir := t.TempDir()
+	p := filepath.Join(dir, "anchors.graph.yaml")
+	const y = `version: 2
+nodes:
+    - id: apps/mobile/src/features/auth/LoginScreen.spec.md
+      kind: spec
+      code: LOGI
+    - id: apps/mobile/src/features/auth/LoginScreen.tsx
+      kind: code
+      code: LOGI
+    - id: packages/backend/services/security.spec.md
+      kind: spec
+      code: SGSB
+    - id: apps/mobile/src/components/atoms/Button.spec.md
+      kind: spec
+      code: BTTN
+edges: []
+`
+	if err := os.WriteFile(p, []byte(y), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return p
+}
+
+// runList runs `code list` on a map and returns only what reaches STDOUT.
+func runList(t *testing.T, mapPath string, args ...string) string {
+	t.Helper()
+	cmd := newCodeListCmd()
+	var out strings.Builder
+	cmd.SetOut(&out)
+	cmd.SetErr(&out)
+	cmd.SetArgs(append([]string{"--map", mapPath}, args...))
+	// The command prints to os.Stdout; capture it through a pipe.
+	orig := os.Stdout
+	r, w, _ := os.Pipe()
+	os.Stdout = w
+	err := cmd.Execute()
+	w.Close()
+	os.Stdout = orig
+	buf := make([]byte, 4096)
+	n, _ := r.Read(buf)
+	if err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+	return string(buf[:n])
+}
+
+func TestCodeListEnumeratesFromTheMap(t *testing.T) {
+	t.Run("CDCMC-B06: The list prints one sorted code per line with its folder, the summary kept off stdout", func(t *testing.T) {})
+	t.Run("CDCMC-X01: The codes come from the map's identity field", func(t *testing.T) {})
+	// Why the command exists: the alternative is grepping for a code pattern, which matches
+	// a mention in prose, a comment and a file name — and depends on the length of the code,
+	// which varies per project (`code_lengths`). Here the source is the map's structured field.
+	out := runList(t, mapWithCodes(t))
+	for _, c := range []string{"LOGI\tapps/mobile/src/features/auth", "SGSB\tpackages/backend/services", "BTTN"} {
+		if !strings.Contains(out, c) {
+			t.Errorf("the code line %q should appear, got:\n%s", c, out)
+		}
+	}
+	// Sorted: whoever reads looks for a code, and an unsorted list forces looking twice.
+	if i, j := strings.Index(out, "BTTN"), strings.Index(out, "LOGI"); i > j {
+		t.Errorf("the output must be sorted by code, got:\n%s", out)
+	}
+	// The summary goes to stderr, so the list pipes clean.
+	if strings.Contains(out, "code(s) in use") {
+		t.Errorf("the summary reached stdout:\n%s", out)
+	}
+}
+
+func TestCodeListOneLinePerCodeEvenWithSeveralFiles(t *testing.T) {
+	t.Run("CDCMC-B06: The list prints one sorted code per line with its folder, the summary kept off stdout", func(t *testing.T) {})
+	// LOGI is in the spec AND in the .tsx — ONE unit, not two. Repeating the line would make
+	// the count lie about how many identities exist.
+	out := runList(t, mapWithCodes(t))
+	if n := strings.Count(out, "LOGI"); n != 1 {
+		t.Errorf("LOGI should appear on ONE line (same folder), appeared %d× in:\n%s", n, out)
+	}
+}
+
+func TestCodeListFiltersByWorkspace(t *testing.T) {
+	t.Run("CDCMC-B07: The list filters by path prefix and names a filter that matched nothing", func(t *testing.T) {})
+	// The real question in a monorepo: "the codes of THIS workspace".
+	out := runList(t, mapWithCodes(t), "--in", "packages/backend")
+	if !strings.Contains(out, "SGSB") {
+		t.Errorf("SGSB is under packages/backend and should appear, got:\n%s", out)
+	}
+	for _, outside := range []string{"LOGI", "BTTN"} {
+		if strings.Contains(out, outside) {
+			t.Errorf("%s is outside the filter and should not appear, got:\n%s", outside, out)
+		}
+	}
+}
+
+func TestCodeListFilterWithNoResultDoesNotClaimAnEmptyProject(t *testing.T) {
+	t.Run("CDCMC-B07: The list filters by path prefix and names a filter that matched nothing", func(t *testing.T) {})
+	// "no code under X" differs from "the project has no code" — the second message would
+	// send the user to run `map build` for nothing.
+	out := runList(t, mapWithCodes(t), "--in", "apps/web")
+	if !strings.Contains(out, `no code in use under "apps/web"`) {
+		t.Errorf("the message must cite the filter that did not match, got:\n%s", out)
+	}
+}
+
+// The artifact's title NAMES the work in a card, so the part that repeats the kind and the
+// number ("Plano 0001 — ") is dropped: the consumer already has the kind and the code, and
+// the repetition only makes the text grow.
+func TestFileTitleDropsTheRedundantPrefix(t *testing.T) {
+	t.Run("CDCMC-B09: The title drops the text before the dash", func(t *testing.T) {})
+	dir := t.TempDir()
+	cases := map[string]string{
+		"# Login\n":                      "Login",
+		"# Plano 0001 — Fundação\n":      "Fundação",
+		"# Spec 0042 — Recuperação\n":    "Recuperação",
+		"no title\n":                     "",
+		"<!-- @anchors -->\n\n# After\n": "After",
+	}
+	for content, want := range cases {
+		if err := os.WriteFile(filepath.Join(dir, "a.md"), []byte(content), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if got := fileTitle(dir, "a.md"); got != want {
+			t.Errorf("%q → %q, want %q", content, got, want)
+		}
+	}
+	// A file that is not markdown has no title to extract.
+	if got := fileTitle(dir, "x.go"); got != "" {
+		t.Errorf("a non-markdown file returned %q", got)
 	}
 }

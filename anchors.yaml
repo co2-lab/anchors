@@ -87,7 +87,7 @@ layers:
     pattern: "cmd/anchors/**/*.go"
     kind: code
     tags: [cli, comando]
-    exclude: ["**/*_test.go", "cmd/anchors/main.go", "cmd/anchors/root.go"]
+    exclude: ["**/*_test.go"]
 
   # ── AS REGRAS ───────────────────────────────────────────────────────────────────
   # Cada gate é uma REGRA do framework, com doutrina no cabeçalho do arquivo. É a
@@ -120,14 +120,32 @@ layers:
     exclude: ["**/*_test.go"]
 
   # ── INFRA ───────────────────────────────────────────────────────────────────────
-  # Os pacotes de apoio: materializam artefato (issue, change, suggestion), leem
-  # ambiente (gitmeta, daemon), medem (similarity, testsig, health) ou orquestram
-  # (queue, recode, initx, pack, code, checklog). RECONHECIDA: não origina regra.
+  # The support packages: they materialise artifacts (issue, change, suggestion), read
+  # the environment (gitmeta, daemon), measure (similarity, testsig, health) or
+  # orchestrate (queue, recode, initx, pack, code, checklog).
+  #
+  # BEHAVIOURAL, not declarative. The layer was declared "originates no rule", and the
+  # classification of its 45 files (2026-09-26) found the opposite in all 14 packages:
+  # queue decides the atomic claim and the reclaim window, similarity the identical /
+  # borderline / divergent verdicts, initx which gates a project is born with, testsig
+  # how a mutation report is scored. Declarative, `anchors new spec` refused their spec
+  # and every triad gate skipped them — rules nobody could state, let alone prove.
   infra:
     pattern: "internal/{change,checklog,code,daemon,gitmeta,health,initx,issue,pack,queue,recode,similarity,suggestion,testsig}/*.go"
     kind: code
     tags: [infra]
-    regime: declarativo
+    regime: comportamental
+    exclude: ["**/*_test.go"]
+
+  # ── SUPPORT ─────────────────────────────────────────────────────────────────────
+  # Packages that were in no layer at all, so their files were not in the map and no
+  # spec could attach to them: the board, the flag grammar and flow model, the message
+  # catalogue, the log scanner, the settings, the doc compiler, the format migrations
+  # and the telemetry.
+  apoio:
+    pattern: "internal/{board,flagx,flowx,i18n,logscan,settings,doct,migra,telemetry}/*.go"
+    kind: code
+    tags: [apoio]
     exclude: ["**/*_test.go"]
 
   # ── A TRINCA ────────────────────────────────────────────────────────────────────
@@ -277,6 +295,111 @@ derived:
     code: ["{{dir}}/{{name}}.go"]
     feature: ["{{dir}}/{{name}}.feature"]
     test: ["{{dir}}/{{name}}_test.go"]
+  # COORDINATING specs: one spec governs a set of files that hold no rule of their own
+  # apart from the set (platform shims, command wiring, guide texts, format steps). The
+  # override by CODE links the spec to every file of its set; the file-name convention
+  # above would link it to none.
+  overrides:
+    - code: GVGDG   # GovernanceGuides
+      files:
+        code:
+          - "cmd/anchors/governance/register.go"
+          - "cmd/anchors/governance/guide.go"
+          - "cmd/anchors/governance/guide_code.go"
+          - "cmd/anchors/governance/guide_feature.go"
+          - "cmd/anchors/governance/guide_flag.go"
+          - "cmd/anchors/governance/guide_flow.go"
+          - "cmd/anchors/governance/guide_guide.go"
+          - "cmd/anchors/governance/guide_header.go"
+          - "cmd/anchors/governance/guide_plan.go"
+          - "cmd/anchors/governance/guide_product.go"
+          - "cmd/anchors/governance/guide_project.go"
+          - "cmd/anchors/governance/guide_review.go"
+          - "cmd/anchors/governance/guide_spec.go"
+          - "cmd/anchors/governance/guide_tests.go"
+          - "cmd/anchors/governance/guide_work.go"
+        # the override by code REPLACES every derived layer, so the triad is named too
+        feature: ["{{dir}}/{{name}}.feature"]
+        test: ["{{dir}}/{{name}}_test.go"]
+    - code: WTDMW   # WatchDaemon
+      files:
+        code:
+          - "cmd/anchors/flow/watch_unix.go"
+          - "cmd/anchors/flow/watch_windows.go"
+        feature: ["cmd/anchors/flow/watch_daemon.feature"]
+        test: ["cmd/anchors/flow/watch_daemon_test.go"]
+    - code: INWZN   # InitWizard
+      files:
+        code:
+          - "cmd/anchors/ops/init.go"
+          - "cmd/anchors/ops/init_discover.go"
+          - "cmd/anchors/ops/init_git.go"
+        feature:
+          - "cmd/anchors/ops/init_wizard.feature"
+        test:
+          - "cmd/anchors/ops/init_wizard_test.go"
+    - code: RPRTS   # Reports
+      files:
+        code:
+          - "cmd/anchors/quality/report.go"
+          - "cmd/anchors/quality/report_renderers.go"
+        feature:
+          - "cmd/anchors/quality/reports.feature"
+        test:
+          - "cmd/anchors/quality/reports_test.go"
+    - code: CMCLC   # CommonCLI
+      files:
+        code:
+          - "cmd/anchors/common/errors.go"
+          - "cmd/anchors/common/path.go"
+          - "cmd/anchors/common/version.go"
+        feature:
+          - "cmd/anchors/common/common_cli.feature"
+        test:
+          - "cmd/anchors/common/common_cli_test.go"
+    - code: BLGTN   # Obligations
+      files:
+        code:
+          - "internal/gate/obligations_report.go"
+          - "internal/gate/obligations_source.go"
+        feature:
+          - "internal/gate/obligations.feature"
+        test:
+          - "internal/gate/obligations_test.go"
+    - code: TICTS   # TestIDContract
+      files:
+        code:
+          - "internal/gate/testid_consistent.go"
+          - "internal/gate/testid_helpers.go"
+          - "internal/gate/testid_surfaces.go"
+        feature:
+          - "internal/gate/testid_contract.feature"
+        test:
+          - "internal/gate/testid_contract_test.go"
+    - code: INCTN   # InitCatalogs
+      files:
+        code:
+          - "internal/initx/presets.go"
+          - "internal/initx/tbd_instruction.go"
+        feature:
+          - "internal/initx/init_catalogs.feature"
+        test:
+          - "internal/initx/init_catalogs_test.go"
+    - code: DMRND   # DaemonRuntime
+      files:
+        code:
+          - "internal/daemon/daemon_unix.go"
+          - "internal/daemon/daemon_windows.go"
+        feature: ["internal/daemon/daemon_runtime.feature"]
+        test: ["internal/daemon/daemon_runtime_test.go"]
+    - code: MGSTM   # MigrationSteps
+      files:
+        code:
+          - "internal/migra/format_2.go"
+          - "internal/migra/format_3.go"
+          - "internal/migra/format_4.go"
+        feature: ["{{dir}}/{{name}}.feature"]
+        test: ["{{dir}}/{{name}}_test.go"]
 
 tests:
   - layer: unit

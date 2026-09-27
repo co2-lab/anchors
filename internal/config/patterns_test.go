@@ -7,10 +7,12 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// O campo aceita as DUAS formas: string para a spec que governa um arquivo (a maioria) e
-// lista para a de configuração, que governa vários. Exigir lista de todas seria ruído em
-// troca de nada.
-func TestPadroesAceitaStringOuLista(t *testing.T) {
+// The field accepts BOTH shapes: a string for the spec that governs one file (most of them)
+// and a list for a configuration spec, which governs several. Requiring a list from all of
+// them would be noise in exchange for nothing.
+func TestPadroesAcceptsStringOrList(t *testing.T) {
+	t.Run("DRPTD-B01: A single pattern written as text becomes a list of one", func(t *testing.T) {})
+	t.Run("DRPTD-B02: A list of patterns is kept whole and in order", func(t *testing.T) {})
 	var d Derived
 	if err := yaml.Unmarshal([]byte(`
 anchor: spec
@@ -23,63 +25,17 @@ files:
 		t.Fatal(err)
 	}
 	if got := d.PadroesDe()["code"]; len(got) != 1 || got[0] != "{{dir}}/{{name}}.ts" {
-		t.Errorf("string deveria virar lista de um, veio %v", got)
+		t.Errorf("a string should become a list of one, got %v", got)
 	}
-	if got := d.PadroesDe()["test"]; len(got) != 2 {
-		t.Errorf("lista deveria manter os dois, veio %v", got)
-	}
-}
-
-// `patterns` é uma chave DENTRO de `files`, irmã de `code`/`feature`/`test`, e substitui
-// o `code` quando declarada — mas o resto de `files` sobrevive.
-//
-// Uma spec de configuração pode ter `patterns` para o código e continuar querendo o
-// `feature`/`test` da co-location. Descartar o mapa inteiro obrigaria a repetir o que não
-// mudou, e repetição em config é onde a divergência começa.
-func TestPatternsSubstituiCodeEMantemOResto(t *testing.T) {
-	var d Derived
-	if err := yaml.Unmarshal([]byte(`
-anchor: spec
-files:
-  code: "{{dir}}/{{name}}.ts"
-  feature: "{{dir}}/{{name}}.feature"
-  test: "{{dir}}/{{name}}.test.ts"
-  patterns:
-    - "tsconfig.base.json"
-    - "packages/*/tsconfig.json"
-`), &d); err != nil {
-		t.Fatal(err)
-	}
-	got := d.PadroesDe()
-	// O código vem de `patterns`.
-	if len(got["code"]) != 2 || got["code"][0] != "tsconfig.base.json" {
-		t.Errorf("`patterns` deveria substituir `code`, veio %v", got["code"])
-	}
-	// E o resto continua vindo de `files`.
-	if len(got["feature"]) != 1 || got["feature"][0] != "{{dir}}/{{name}}.feature" {
-		t.Errorf("`feature` deveria sobreviver, veio %v", got["feature"])
-	}
-	// `patterns` NÃO é uma camada: não pode virar um derivado com esse nome, ou o mapa
-	// passaria a procurar um arquivo "patterns" que ninguém escreveu.
-	if _, virouCamada := got[PatternKey]; virouCamada {
-		t.Error("`patterns` não é camada e não pode sobrar no mapa de derivados")
-	}
-}
-
-// Sem `patterns`, o comportamento é o de sempre: todo anchors.yaml que já existe continua
-// funcionando sem tocar em nada.
-func TestSemPatternsUsaFiles(t *testing.T) {
-	var d Derived
-	if err := yaml.Unmarshal([]byte("anchor: spec\nfiles:\n  code: \"x.ts\"\n"), &d); err != nil {
-		t.Fatal(err)
-	}
-	if got := d.PadroesDe()["code"]; len(got) != 1 || got[0] != "x.ts" {
-		t.Errorf("sem patterns, `files` manda: %v", got)
+	if got := d.PadroesDe()["test"]; len(got) != 2 || got[0] != "{{dir}}/{{name}}.test.ts" || got[1] != "__tests__/{{name}}.test.ts" {
+		t.Errorf("a list should keep both, in order, got %v", got)
 	}
 }
 
 // The loader refuses what is neither text nor a non-empty list of text, and says why.
 func TestPadroesRejectsOtherShapes(t *testing.T) {
+	t.Run("DRPTD-B03: An empty list is refused, naming the cause", func(t *testing.T) {})
+	t.Run("DRPTD-B04: Any shape other than text or a list of text is refused", func(t *testing.T) {})
 	for name, doc := range map[string]string{
 		"empty list":       "code: []\n",
 		"mapping":          "code: {a: b}\n",
@@ -99,6 +55,7 @@ func TestPadroesRejectsOtherShapes(t *testing.T) {
 
 // Writing back keeps the simplest shape: one pattern is a string, several are a list.
 func TestPadroesMarshalsToTheSimplestShape(t *testing.T) {
+	t.Run("DRPTD-B05: Written back, one pattern is text and several are a list", func(t *testing.T) {})
 	out, err := yaml.Marshal(map[string]Padroes{
 		"code": {"x.ts"},
 		"test": {"a.test.ts", "b.test.ts"},
@@ -108,5 +65,34 @@ func TestPadroesMarshalsToTheSimplestShape(t *testing.T) {
 	}
 	if want := "code: x.ts\ntest:\n    - a.test.ts\n    - b.test.ts\n"; string(out) != want {
 		t.Errorf("Marshal = %q, want %q", out, want)
+	}
+}
+
+func TestPadroes_roundTrip(t *testing.T) {
+	t.Run("DRPTD-I01: What is written back reads back as the same patterns", func(t *testing.T) {})
+	for _, p := range []Padroes{{"x.ts"}, {"a.test.ts", "b.test.ts", "c.test.ts"}} {
+		out, err := yaml.Marshal(map[string]Padroes{"code": p})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var back map[string]Padroes
+		if err := yaml.Unmarshal(out, &back); err != nil {
+			t.Fatal(err)
+		}
+		if got := back["code"]; strings.Join(got, "|") != strings.Join(p, "|") {
+			t.Errorf("%v came back as %v", p, got)
+		}
+	}
+}
+
+func TestPadroes_keptAsWritten(t *testing.T) {
+	t.Run("DRPTD-X01: The patterns are kept as written, neither expanded nor checked as globs", func(t *testing.T) {})
+	var m map[string]Padroes
+	doc := "code:\n  - \"src/[bad\"\n  - \" spaced/*.ts \"\n"
+	if err := yaml.Unmarshal([]byte(doc), &m); err != nil {
+		t.Fatalf("reading the shape must not judge the glob, got %v", err)
+	}
+	if got := m["code"]; len(got) != 2 || got[0] != "src/[bad" || got[1] != " spaced/*.ts " {
+		t.Errorf("patterns = %q, want them exactly as written", got)
 	}
 }

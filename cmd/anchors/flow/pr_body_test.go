@@ -5,74 +5,182 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/initx"
 )
 
-// A SINTAXE É DA PLATAFORMA, e por isso vive num mapa — acrescentar uma é acrescentar
-// uma linha, e o gerador não precisa saber quantas existem.
+// THE SYNTAX IS THE PLATFORM'S, and that is why it lives in a map — adding one is adding a
+// line, and the generator does not need to know how many exist.
 //
-// O que NÃO pode é a sintaxe vazar para a doutrina: o Anchors é multi-idioma, e um gate
-// que obrigue o corpo do PR a estar em inglês não é régua do Anchors — é uma exigência do
-// GitHub disfarçada de regra.
-func TestSintaxeDeVinculoEhPorPlataforma(t *testing.T) {
+// What must NOT happen is the syntax leaking into the doctrine: Anchors is multi-language,
+// and a gate that forces the PR body to be in English is not a rule of Anchors — it is a
+// GitHub requirement disguised as a rule.
+func TestLinkSyntax_isPerPlatformAndNeverCloses(t *testing.T) {
+	t.Run("PRBDP-B02: The link syntax links and never closes", func(t *testing.T) {})
 	if _, ok := linkSyntax["github"]; !ok {
-		t.Fatal("o github precisa ter sintaxe declarada — é a plataforma do modo `github`")
+		t.Fatal("github must have a declared syntax — it is the platform of the `github` mode")
 	}
-	// O formato tem de conter `%s`: sem ele o número do card não entra, e o comando
-	// imprimiria a mesma linha para todos.
-	for plataforma, forma := range linkSyntax {
-		if !strings.Contains(forma, "%s") {
-			t.Errorf("a sintaxe de %q não tem onde pôr o número do card: %q", plataforma, forma)
+	// The format must hold `%s`: without it the card number does not go in, and the
+	// command would print the same line for every card.
+	for platform, form := range linkSyntax {
+		if !strings.Contains(form, "%s") {
+			t.Errorf("the syntax of %q has no place for the card number: %q", platform, form)
 		}
 	}
 
-	// VINCULAR E NÃO FECHAR — e esta é a régua que não deixa voltar.
+	// LINK AND DO NOT CLOSE — and this is the rule that keeps it from coming back.
 	//
-	// Isto gerava `Closes #N`, que faz duas afirmações de uma vez: o pipeline lia "o PR
-	// concluiu a implementação" e o GitHub lia "feche a issue". A esteira não acaba em
-	// `ready-to-test` — vêm `in-test`, `ready-to-release` e `production`, que são do CD e
-	// o Anchors não rastreia. O card fechava com três estados à frente.
+	// This used to generate `Closes #N`, which makes two claims at once: the pipeline read
+	// "the PR finished the implementation" and GitHub read "close the issue". The pipeline
+	// does not end at `ready-to-test` — `in-test`, `ready-to-release` and `production`
+	// follow, which belong to the CD and Anchors does not track. The card closed with three
+	// states ahead of it.
 	//
-	// MEDIDO no projeto de referência: 71 cards fechados em `ready-to-test` contra 7
-	// abertos, 35 num só dia. A coluna que devia acumular o que espera teste mostrava só
-	// o resíduo, e ninguém testava porque ninguém via.
+	// MEASURED in the reference project: 71 cards closed at `ready-to-test` against 7 open,
+	// 35 in a single day.
 	//
-	// As palavras que o GitHub trata como fechamento estão em
+	// The words GitHub treats as closing are at
 	// docs.github.com/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue
-	// e nenhuma delas pode aparecer no que o `pr-body` GERA. Elas seguem ACEITAS na
-	// leitura do pipeline (PR antigo, PR escrito à mão) — o que se proíbe é gerar.
-	for plataforma, forma := range linkSyntax {
-		palavra := strings.ToLower(strings.Fields(forma)[0])
-		for _, fecha := range []string{
+	// and none of them may appear in what `pr-body` GENERATES.
+	for platform, form := range linkSyntax {
+		word := strings.ToLower(strings.Fields(form)[0])
+		for _, closing := range []string{
 			"close", "closes", "closed", "fix", "fixes", "fixed",
 			"resolve", "resolves", "resolved",
 		} {
-			if palavra == fecha {
-				t.Errorf("a sintaxe de %q gera %q, que FECHA a issue no merge — o card "+
-					"precisa ficar aberto em `ready-to-test` porque a esteira segue no CD",
-					plataforma, forma)
+			if word == closing {
+				t.Errorf("the syntax of %q generates %q, which CLOSES the issue on merge — the card "+
+					"must stay open at `ready-to-test` because the pipeline continues in the CD",
+					platform, form)
 			}
 		}
 	}
 }
 
-// `--cards` aceita as formas que uma pessoa escreve: com `#`, sem, com espaço.
-// Recusar "#44" por causa do sustenido seria atrito sem razão — é como o card aparece
-// em todo lugar do GitHub.
-func TestCardsPedidosAceitaAsFormasQueSeEscreve(t *testing.T) {
+// `--cards` accepts the forms a person writes: with `#`, without, with spaces. Refusing
+// "#44" because of the hash would be friction for no reason — it is how the card appears
+// everywhere on GitHub.
+func TestRequestedCards_acceptsTheFormsAPersonWrites(t *testing.T) {
+	t.Run("PRBDP-B03: The requested cards accept the forms a person writes", func(t *testing.T) {})
 	cfg := &config.Config{}
-	for _, entrada := range []string{"44", "#44", " 44 ", "#44 "} {
-		got := requestedCards(entrada, cfg)
+	for _, in := range []string{"44", "#44", " 44 ", "#44 "} {
+		got := requestedCards(in, cfg)
 		if len(got) != 1 || got[0] != "44" {
-			t.Errorf("%q deveria virar [44], veio %v", entrada, got)
+			t.Errorf("%q should become [44], got %v", in, got)
 		}
 	}
-	// Vários de uma vez: o trabalho fecha o card E os achados que nasceram sob ele.
-	if got := requestedCards("44, #49,50", cfg); len(got) != 3 {
-		t.Errorf("três cards deveriam virar três entradas, veio %v", got)
+	// Several at once: the work delivers the card AND the findings born under it.
+	if got := requestedCards("44, #49,50", cfg); strings.Join(got, ",") != "44,49,50" {
+		t.Errorf("three cards should become three entries, got %v", got)
 	}
-	// Vazio não inventa card: sem `--cards` e sem agente, quem chama recebe erro em vez
-	// de um PR que não fecha nada.
+	// Blank does not invent a card: without `--cards` and without an agent, the caller gets
+	// an error instead of a PR that links nothing.
 	if got := requestedCards("  ", cfg); len(got) != 0 {
-		t.Errorf("entrada vazia não pode inventar card, veio %v", got)
+		t.Errorf("a blank input must not invent a card, got %v", got)
+	}
+}
+
+// Each card drags what was born under it, and the lines come out in numeric order — so
+// #101 does not sort before #45 as text would. A finding that is also a root is linked once.
+func TestPRBodyCmd_linksTheCardsAndWhatWasBornUnderThem(t *testing.T) {
+	t.Run("PRBDP-B06: Each root drags the open findings born under it", func(t *testing.T) {})
+	t.Run("PRBDP-B07: The lines come out in numeric order", func(t *testing.T) {})
+	t.Run("PRBDP-I01: A card that is both a root and a finding is linked once", func(t *testing.T) {})
+	t.Run("PRBDP-X01: pr-body writes nothing to the platform", func(t *testing.T) {})
+	root := githubProject(t)
+	calls := scriptedGH(t,
+		ghRule{match: "issue list *--label " + initx.LabelSob("44") + " *", out: `[{"number":101},{"number":45},{"number":50}]`},
+		ghRule{match: "issue list *--label " + initx.LabelSob("50") + " *", out: `[]`},
+	)
+	cmd := newPRBodyCmd()
+	cmd.SetArgs([]string{"--root", root, "--cards", "#44, 50"})
+	var err error
+	out := stdoutOf(t, func() { err = cmd.Execute() })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out != "Refs #44\nRefs #45\nRefs #50\nRefs #101\n" {
+		t.Errorf("unexpected body:\n%s", out)
+	}
+	c := calls()
+	if len(callsWith(c, "--repo acme/app", "--state open")) != 2 {
+		t.Errorf("the open findings are looked up in the configured repo: %v", c)
+	}
+	for _, call := range c {
+		if !strings.HasPrefix(call, "issue list ") {
+			t.Errorf("pr-body only reads the board, but called: %s", call)
+		}
+	}
+}
+
+// `--so-sob` prints only what was born under the given cards — what CI checks is present.
+func TestPRBodyCmd_onlyUnderLeavesTheRootsOut(t *testing.T) {
+	t.Run("PRBDP-B08: The only-under switch leaves the roots out", func(t *testing.T) {})
+	root := githubProject(t)
+	scriptedGH(t, ghRule{match: "issue list *", out: `[{"number":45}]`})
+	cmd := newPRBodyCmd()
+	cmd.SetArgs([]string{"--root", root, "--cards", "44", "--so-sob"})
+	var err error
+	out := stdoutOf(t, func() { err = cmd.Execute() })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out != "Refs #45\n" {
+		t.Errorf("only the finding under #44 is printed, got:\n%s", out)
+	}
+}
+
+// Without --cards, the cards are the agent's own on the board.
+func TestPRBodyCmd_discoversTheAgentsCards(t *testing.T) {
+	t.Run("PRBDP-B04: Without requested cards the agent's own card is linked", func(t *testing.T) {})
+	root := githubProject(t)
+	scriptedGH(t,
+		ghRule{match: "issue list *--json number,title,labels,comments*", out: "12\tmine\tanchors:in-progress"},
+		ghRule{match: "issue list *", out: `[]`},
+	)
+	t.Setenv("ANCHORS_AGENT", "host/dev1")
+	cmd := newPRBodyCmd()
+	cmd.SetArgs([]string{"--root", root})
+	var err error
+	out := stdoutOf(t, func() { err = cmd.Execute() })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out != "Refs #12\n" {
+		t.Errorf("the agent's card must be linked, got:\n%s", out)
+	}
+}
+
+func TestPRBodyCmd_refusals(t *testing.T) {
+	t.Run("PRBDP-B05: pr-body with no card from either source is refused", func(t *testing.T) {})
+	t.Run("PRBDP-B01: pr-body in local mode is refused", func(t *testing.T) {})
+	scriptedGH(t)
+	cmd := newPRBodyCmd()
+	cmd.SetArgs([]string{"--root", githubProject(t)})
+	if err := cmd.Execute(); err == nil || !strings.Contains(err.Error(), "no card") ||
+		!strings.Contains(err.Error(), "--cards") || !strings.Contains(err.Error(), "ANCHORS_AGENT") {
+		t.Errorf("without cards nothing can be linked, got %v", err)
+	}
+
+	cmd = newPRBodyCmd()
+	cmd.SetArgs([]string{"--root", localProject(t), "--cards", "4"})
+	if err := cmd.Execute(); err == nil || !strings.Contains(err.Error(), "github mode") {
+		t.Errorf("local mode must be refused, got %v", err)
+	}
+}
+
+func TestCardsUnder_failureYieldsNothing(t *testing.T) {
+	t.Run("PRBDP-E01: A failed findings lookup contributes nothing and the root is still linked", func(t *testing.T) {})
+	for _, r := range []ghRule{{match: "*", code: 1}, {match: "*", out: "not json"}} {
+		scriptedGH(t, r)
+		if got := cardsUnder(cfgGitHub(), "44"); got != nil {
+			t.Errorf("a failed lookup yields nothing, got %v", got)
+		}
+		cmd := newPRBodyCmd()
+		cmd.SetArgs([]string{"--root", githubProject(t), "--cards", "44"})
+		var err error
+		out := stdoutOf(t, func() { err = cmd.Execute() })
+		if err != nil || out != "Refs #44\n" {
+			t.Errorf("the root is still linked when its findings cannot be read, got %q, %v", out, err)
+		}
 	}
 }

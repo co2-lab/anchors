@@ -19,6 +19,8 @@ const example = "<!-- @anchors\n  code: CHKUT\n-->\n" + `# Flag: new-checkout
 `
 
 func TestParse_readsTheScenarios(t *testing.T) {
+	t.Run("FLPRF-B01: The G rows of the table are the scenarios", func(t *testing.T) {})
+	t.Run("FLPRF-B02: The flag's code and name", func(t *testing.T) {})
 	f := parse(example, "flags/new-checkout.flag.md")
 	if len(f.Scenarios) != 4 {
 		t.Fatalf("len(Scenarios) = %d, want 4", len(f.Scenarios))
@@ -42,6 +44,7 @@ func TestParse_readsTheScenarios(t *testing.T) {
 
 // The line is recorded so the verdict can point at it.
 func TestParse_recordsTheLine(t *testing.T) {
+	t.Run("FLPRF-B03: Each scenario records its line", func(t *testing.T) {})
 	f := parse(example, "flags/new-checkout.flag.md")
 	if f.Scenarios[0].Line == 0 {
 		t.Error("Line was not recorded — the verdict would have nowhere to point")
@@ -54,6 +57,7 @@ func TestParse_recordsTheLine(t *testing.T) {
 // The ABSENT case is the question a flag most often forgets. (Its spelling in other
 // languages, `ausente`, has its own test in grammar_test.go.)
 func TestAbsent(t *testing.T) {
+	t.Run("FLPRF-B05: The flag says whether it declares the absent case", func(t *testing.T) {})
 	f := parse(example, "x.flag.md")
 	if !f.Absent() {
 		t.Error("the example declares `absent` and Absent() said no")
@@ -68,6 +72,7 @@ func TestAbsent(t *testing.T) {
 // A condition the grammar refuses becomes a FINDING, it does not vanish. A line that
 // vanishes is exactly the silence the gates exist to end.
 func TestParse_invalidConditionBecomesAFindingNotAVanishing(t *testing.T) {
+	t.Run("FLPRF-B04: A refused condition becomes a finding", func(t *testing.T) {})
 	src := "| `CHKUT-G01` | when the user is a beta tester | turns on |\n"
 	f := parse(src, "x.flag.md")
 	if len(f.Scenarios) != 1 {
@@ -95,6 +100,7 @@ func TestParse_onlyTheLetterG(t *testing.T) {
 // A project with no `flags/` is not an error: it is a project that has not declared a
 // flag yet.
 func TestLoad_noFolderIsNotAnError(t *testing.T) {
+	t.Run("FLPRF-B06: Flags load in a stable order, and none without a folder", func(t *testing.T) {})
 	fs, err := Load(t.TempDir())
 	if err != nil || fs != nil {
 		t.Errorf("Load with no flags/ = (%v, %v), want (nil, nil)", fs, err)
@@ -127,6 +133,7 @@ func TestLoad_stableOrder(t *testing.T) {
 }
 
 func TestByCode(t *testing.T) {
+	t.Run("FLPRF-B07: Scenarios are indexed by code", func(t *testing.T) {})
 	idx := ByCode([]Flag{parse(example, "x.flag.md")})
 	if s, ok := idx["CHKUT-G03"]; !ok || s.Cond.Op != OpGte {
 		t.Errorf("ByCode did not resolve CHKUT-G03: %v/%v", s.Cond.Op, ok)

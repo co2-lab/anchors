@@ -5,87 +5,112 @@ import (
 	"testing"
 )
 
-// O CONTRATO: o `version:` do mapa diz em que FORMATO o arquivo está, e o binário recusa o
-// que não sabe ler.
+// THE CONTRACT: the map's `version:` says in which FORMAT the file is written, and the binary
+// refuses what it cannot read.
 //
-// Sem isso, um binário que encontra formato desconhecido interpreta o que reconhece, ignora
-// o resto, e a próxima gravação escreve só o que sobrou — perdendo dado sem nada acusar. O
-// exemplo concreto é o `julgamentos` renomeado: os carimbos de julgamento de IA evaporam e
-// o `check` recobra o que alguém já respondeu.
+// Without it, a binary that meets an unknown format interprets what it recognises, ignores the
+// rest, and the next save writes only what survived — losing data with nothing reported. The
+// concrete example is the renamed `judgments` key: the AI judgment stamps evaporate and `check`
+// asks again what someone already answered.
 
-func TestConfereFormato_aceitaSoAFaixaQueSabeLer(t *testing.T) {
+func TestCheckFormat_acceptsOnlyTheRangeItReads(t *testing.T) {
+	t.Run("MPFRM-B01: The written format and the oldest readable format are both accepted", func(t *testing.T) {})
 	if err := ConfereFormato("m.yaml", FormatoAtual); err != nil {
-		t.Errorf("o formato que este binário escreve tem de ser legível: %v", err)
+		t.Errorf("the format this binary writes must be readable: %v", err)
 	}
 	if err := ConfereFormato("m.yaml", FormatoMinimoLegivel); err != nil {
-		t.Errorf("o mínimo legível tem de ser aceito: %v", err)
+		t.Errorf("the oldest readable format must be accepted: %v", err)
 	}
 }
 
-// Um mapa do FUTURO pede atualização do binário, e a mensagem tem de dizer o RISCO —
-// senão a saída barata é apagar o arquivo e reconstruir, que perde os julgamentos.
-func TestConfereFormato_formatoDoFuturoPedeAtualizacao(t *testing.T) {
-	err := ConfereFormato("m.yaml", FormatoAtual+1)
-	if err == nil {
-		t.Fatal("um formato acima do que o binário escreve tem de ser recusado")
+// Every format from below the range to above it gets the answer the range dictates — the
+// endpoints alone would leave an off-by-one inside or outside unnoticed.
+func TestCheckFormat_everyFormatAgainstTheRange(t *testing.T) {
+	t.Run("MPFRM-I01: Exactly formats 2 through 4 are readable", func(t *testing.T) {})
+	if FormatoAtual != 4 || FormatoMinimoLegivel != 2 {
+		t.Fatalf("the spec states the binary writes 4 and reads from 2; got %d and %d", FormatoAtual, FormatoMinimoLegivel)
 	}
-	msg := err.Error()
-	for _, quer := range []string{"NEWER", "in silence", "judgment stamps", "upgrade"} {
-		if !strings.Contains(msg, quer) {
-			t.Errorf("a mensagem deveria conter %q; veio:\n%s", quer, msg)
+	for v := -1; v <= FormatoAtual+2; v++ {
+		err := ConfereFormato("m.yaml", v)
+		readable := v >= 2 && v <= 4
+		if readable && err != nil {
+			t.Errorf("format %d is inside the range and was refused: %v", v, err)
+		}
+		if !readable && err == nil {
+			t.Errorf("format %d is outside the range and was accepted", v)
 		}
 	}
 }
 
-// Um mapa do PASSADO pede MIGRAÇÃO, e a mensagem nomeia o comando. Um erro que diz "rode X"
-// sem que X exista é pior que nenhum: quem lê tenta, falha, e desconfia da próxima
-// mensagem.
-func TestConfereFormato_formatoAntigoPedeMigracao(t *testing.T) {
+// A map from the FUTURE asks for a newer binary, and the message must state the RISK —
+// otherwise the cheap way out is to delete the file and rebuild it, which loses the judgments.
+func TestCheckFormat_futureFormatAsksForUpgrade(t *testing.T) {
+	t.Run("MPFRM-B02: A map from a newer binary is refused with the upgrade message", func(t *testing.T) {})
+	err := ConfereFormato("m.yaml", FormatoAtual+1)
+	if err == nil {
+		t.Fatal("a format above the one the binary writes must be refused")
+	}
+	msg := err.Error()
+	for _, want := range []string{"NEWER", "in silence", "judgment stamps", "upgrade"} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("the message should contain %q; got:\n%s", want, msg)
+		}
+	}
+}
+
+// A map from the PAST asks for MIGRATION, and the message names the command. An error that
+// says "run X" when X does not exist is worse than none: the reader tries, fails, and distrusts
+// the next message.
+func TestCheckFormat_oldFormatAsksForMigration(t *testing.T) {
+	t.Run("MPFRM-B03: A map older than the readable range asks for migration", func(t *testing.T) {})
+	t.Run("MPFRM-X01: Format 1 is migrated, not read", func(t *testing.T) {})
 	err := ConfereFormato("m.yaml", 1)
 	if err == nil {
-		t.Fatal("o formato 1 tem de ser recusado — ele é migrado, não lido")
+		t.Fatal("format 1 must be refused — it is migrated, not read")
 	}
 	if !strings.Contains(err.Error(), "anchors migrate") {
-		t.Errorf("a mensagem deveria nomear o comando que conserta; veio:\n%s", err)
+		t.Errorf("the message should name the command that fixes it; got:\n%s", err)
 	}
 }
 
-// Mapa SEM `version:` é de antes de o campo existir — formato 1, e migrável. Tratá-lo como
-// "0" e recusar com a mensagem do futuro mandaria a pessoa atualizar um binário que já é o
-// mais novo.
-func TestConfereFormato_semVersionEhFormatoUm(t *testing.T) {
+// A map WITHOUT `version:` predates the field — format 1, and migratable. Treating it as "0"
+// and refusing with the future message would send the person to upgrade a binary that is
+// already the newest.
+func TestCheckFormat_noVersionIsFormatOne(t *testing.T) {
+	t.Run("MPFRM-B04: A map with no version is format 1 and asks for migration", func(t *testing.T) {})
 	err := ConfereFormato("m.yaml", 0)
 	if err == nil {
-		t.Fatal("sem `version:` o mapa é formato 1, e precisa migrar")
+		t.Fatal("with no `version:` the map is format 1, and needs migrating")
 	}
 	if !strings.Contains(err.Error(), "migrate") {
-		t.Errorf("deveria pedir MIGRAÇÃO, não atualização; veio:\n%s", err)
+		t.Errorf("it should ask for MIGRATION, not an upgrade; got:\n%s", err)
 	}
-	// A mensagem tem de dizer FORMATO 1, e não "formato 0".
+	// The message must say FORMAT 1, not "format 0".
 	//
-	// Sem a normalização, o 0 ainda cai na faixa "abaixo do mínimo" e produz a mensagem
-	// certa pelo motivo errado — e quem lê "está no formato 0" procura um arquivo
-	// corrompido, não um arquivo antigo. A mutação que remove a normalização passava com
-	// a primeira versão deste teste.
+	// Without the normalisation, 0 still falls in the "below the minimum" range and produces
+	// the right message for the wrong reason — and whoever reads "is in format 0" looks for a
+	// corrupted file, not an old one. The mutation that removes the normalisation passed the
+	// first version of this test.
 	if !strings.Contains(err.Error(), "format 1") {
-		t.Errorf("a mensagem deveria dizer FORMATO 1 (o arquivo é antigo, não corrompido); veio:\n%s", err)
+		t.Errorf("the message should say FORMAT 1 (the file is old, not corrupted); got:\n%s", err)
 	}
 	if strings.Contains(err.Error(), "format 0") {
-		t.Error("`format 0` não existe: um mapa sem `version:` é o formato 1")
+		t.Error("`format 0` does not exist: a map with no `version:` is format 1")
 	}
 }
 
-// As duas mensagens são DISTINTAS, e a distinção é o que manda a pessoa para o lado certo:
-// o futuro pede binário novo, o passado pede migração. Um "erro ao carregar o mapa" para os
-// dois faria procurar corrupção onde há só versão.
-func TestConfereFormato_asDuasMensagensNaoSeConfundem(t *testing.T) {
-	futuro := ConfereFormato("m.yaml", FormatoAtual+1).Error()
-	passado := ConfereFormato("m.yaml", 1).Error()
+// The two messages are DISTINCT, and the distinction is what sends the person the right way:
+// the future asks for a new binary, the past asks for migration. One "error loading the map"
+// for both would send them looking for corruption where there is only a version.
+func TestCheckFormat_theTwoMessagesDoNotMix(t *testing.T) {
+	t.Run("MPFRM-B05: The newer-map refusal never names the migration command", func(t *testing.T) {})
+	future := ConfereFormato("m.yaml", FormatoAtual+1).Error()
+	past := ConfereFormato("m.yaml", 1).Error()
 
-	if strings.Contains(futuro, "anchors migrate") {
-		t.Error("o mapa do futuro não se conserta migrando — ele pede binário novo")
+	if strings.Contains(future, "anchors migrate") {
+		t.Error("a map from the future is not fixed by migrating — it asks for a new binary")
 	}
-	if strings.Contains(passado, "mais NOVO") {
-		t.Error("o mapa antigo não foi gravado por binário mais novo")
+	if strings.Contains(past, "NEWER") {
+		t.Error("the old map was not written by a newer binary")
 	}
 }

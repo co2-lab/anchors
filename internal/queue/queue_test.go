@@ -1,22 +1,23 @@
 package queue
 
 import (
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 func task(id, changed, kind, next string) Task {
 	return Task{ID: id, Changed: changed, Kind: kind, Origin: "watch", SuggestedNext: next, CreatedAt: "2026-08-07T00:00:00Z"}
 }
 
-// comAlvo cria o arquivo-alvo no disco. Desde que `List` descarta task cujo alvo não
-// existe (a task-fantasma que sobrava em toda execução real), o alvo tem de ser material.
-func comAlvo(t *testing.T, root, rel string) {
+// withTarget creates the target file on disk. Since `List` discards a task whose target does
+// not exist (the ghost task left over in every real run), the target has to be material.
+func withTarget(t *testing.T, root, rel string) {
 	t.Helper()
 	p := filepath.Join(root, rel)
 	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
@@ -28,80 +29,104 @@ func comAlvo(t *testing.T, root, rel string) {
 }
 
 func TestEnqueueAndList(t *testing.T) {
+	t.Run("TSQUT-B01: An enqueued task is born pending", func(t *testing.T) {})
 	root := t.TempDir()
-	comAlvo(t, root, "AddItem.spec.md")
+	withTarget(t, root, "AddItem.spec.md")
 	created, err := Enqueue(root, task("1-spec-add", "AddItem.spec.md", "spec", "implement"))
 	if err != nil || !created {
 		t.Fatalf("enqueue: created=%v err=%v", created, err)
+	}
+	if _, err := os.Stat(filepath.Join(root, ".anchors", "tasks", "pending__1-spec-add.yaml")); err != nil {
+		t.Fatalf("the task file must be pending__1-spec-add.yaml: %v", err)
 	}
 	tasks, err := List(root)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(tasks) != 1 || tasks[0].State != Pending || tasks[0].Changed != "AddItem.spec.md" {
-		t.Fatalf("esperava 1 task pending; veio %+v", tasks)
+		t.Fatalf("want 1 pending task; got %+v", tasks)
+	}
+}
+
+func TestList_sortedAndEmptyWithoutAQueue(t *testing.T) {
+	t.Run("TSQUT-B03: Listing gives the live tasks sorted, and nothing without a queue", func(t *testing.T) {})
+	root := t.TempDir()
+	if tasks, err := List(root); err != nil || tasks != nil {
+		t.Fatalf("no queue folder: %v, %v; want nothing, no error", tasks, err)
+	}
+	withTarget(t, root, "a.md")
+	withTarget(t, root, "b.md")
+	_, _ = Enqueue(root, task("2-b", "b.md", "doc", "triage"))
+	_, _ = Enqueue(root, task("1-a", "a.md", "doc", "triage"))
+	tasks, _ := List(root)
+	if len(tasks) != 2 || tasks[0].ID != "1-a" || tasks[1].ID != "2-b" {
+		t.Fatalf("want 1-a then 2-b, got %+v", tasks)
 	}
 }
 
 func TestEnqueueDedup(t *testing.T) {
+	t.Run("TSQUT-B02: The same target and step are not enqueued twice", func(t *testing.T) {})
 	root := t.TempDir()
-	comAlvo(t, root, "AddItem.spec.md")
+	withTarget(t, root, "AddItem.spec.md")
 	_, _ = Enqueue(root, task("1-spec-add", "AddItem.spec.md", "spec", "implement"))
-	// mesma (changed, suggested_next) com ID diferente → NÃO duplica
+	// the same (changed, suggested_next) with a different ID → NOT duplicated
 	created, err := Enqueue(root, task("2-spec-add", "AddItem.spec.md", "spec", "implement"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if created {
-		t.Fatal("não deveria duplicar task viva para o mesmo alvo+passo")
+		t.Fatal("must not duplicate a live task for the same target and step")
 	}
 	if n, _ := PendingCount(root); n != 1 {
-		t.Fatalf("esperava 1 pendente, veio %d", n)
+		t.Fatalf("want 1 pending, got %d", n)
 	}
 }
 
 func TestClaimEmpty(t *testing.T) {
+	t.Run("TSQUT-B05: Claiming takes a pending task and records the worker", func(t *testing.T) {})
 	root := t.TempDir()
 	got, err := Claim(root, "w1", "2026-08-13T00:00:00-03:00")
 	if err != nil {
 		t.Fatal(err)
 	}
 	if got != nil {
-		t.Fatalf("fila vazia deveria devolver nil, veio %+v", got)
+		t.Fatalf("an empty queue should give nil, got %+v", got)
 	}
 }
 
 func TestClaimMovesToClaimed(t *testing.T) {
+	t.Run("TSQUT-B05: Claiming takes a pending task and records the worker", func(t *testing.T) {})
 	root := t.TempDir()
-	comAlvo(t, root, "AddItem.spec.md")
+	withTarget(t, root, "AddItem.spec.md")
 	_, _ = Enqueue(root, task("1-spec-add", "AddItem.spec.md", "spec", "implement"))
 	got, err := Claim(root, "worker-A", "2026-08-13T00:00:00-03:00")
 	if err != nil || got == nil {
 		t.Fatalf("claim: %+v err=%v", got, err)
 	}
-	if got.State != Claimed || got.ClaimedBy != "worker-A" {
-		t.Fatalf("esperava claimed por worker-A, veio %+v", got)
+	if got.State != Claimed || got.ClaimedBy != "worker-A" || got.ClaimedAt != "2026-08-13T00:00:00-03:00" {
+		t.Fatalf("want claimed by worker-A at the given moment, got %+v", got)
 	}
-	// o arquivo pending sumiu, o claimed existe
+	// the pending file is gone, the claimed one exists
 	d := dirFor(root)
 	if _, err := os.Stat(filepath.Join(d, fileName(Pending, "1-spec-add"))); !os.IsNotExist(err) {
-		t.Fatal("arquivo pending deveria ter sumido")
+		t.Fatal("the pending file should be gone")
 	}
 	if _, err := os.Stat(filepath.Join(d, fileName(Claimed, "1-spec-add"))); err != nil {
-		t.Fatal("arquivo claimed deveria existir")
+		t.Fatal("the claimed file should exist")
 	}
 }
 
-// TestClaimAtomicNoDoubleClaim: N workers concorrentes sobre M tasks nunca pegam a
-// mesma task. É a garantia que permite dois terminais rodando `anchors next`.
+// N concurrent workers over M tasks never take the same task. It is the guarantee that allows
+// two terminals running `anchors next`.
 func TestClaimAtomicNoDoubleClaim(t *testing.T) {
+	t.Run("TSQUT-I01: Concurrent workers never claim the same task", func(t *testing.T) {})
 	root := t.TempDir()
 	const M = 20
 	for i := 0; i < M; i++ {
 		id := filepath.Base(t.Name()) + "-" + string(rune('a'+i))
-		alvo := "f" + string(rune('a'+i)) + ".spec.md"
-		comAlvo(t, root, alvo)
-		_, _ = Enqueue(root, task(id, alvo, "spec", "implement"))
+		target := "f" + string(rune('a'+i)) + ".spec.md"
+		withTarget(t, root, target)
+		_, _ = Enqueue(root, task(id, target, "spec", "implement"))
 	}
 	var mu sync.Mutex
 	claimed := map[string]int{}
@@ -123,131 +148,183 @@ func TestClaimAtomicNoDoubleClaim(t *testing.T) {
 	}
 	wg.Wait()
 	if len(claimed) != M {
-		t.Fatalf("esperava %d tasks reivindicadas, veio %d", M, len(claimed))
+		t.Fatalf("want %d tasks claimed, got %d", M, len(claimed))
 	}
 	for id, n := range claimed {
 		if n != 1 {
-			t.Fatalf("task %s reivindicada %d vezes (double-claim!)", id, n)
+			t.Fatalf("task %s claimed %d times (double claim!)", id, n)
 		}
 	}
 }
 
-func TestMarkDoneMovesToHistory(t *testing.T) {
+// The worst case of replacing the rename with O_EXCL: if the process dies between creating
+// claimed__X and deleting pending__X, both files coexist. What must NOT happen is the pending
+// residue being served as if the task were free — the double claim back through another door.
+func TestClaimDoesNotTakeWhatAlreadyHasAnOwner(t *testing.T) {
+	t.Run("TSQUT-B06: A pending residue of a dead claim is not served and is cleaned", func(t *testing.T) {})
 	root := t.TempDir()
-	comAlvo(t, root, "AddItem.spec.md")
+	withTarget(t, root, "fa.spec.md")
+	if _, err := Enqueue(root, task("residuo-a", "fa.spec.md", "spec", "implement")); err != nil {
+		t.Fatal(err)
+	}
+
+	// Simulates the death midway: the claimed file exists, the pending one stayed behind.
+	d := dirFor(root)
+	claimed := filepath.Join(d, fileName(Claimed, "residuo-a"))
+	if err := os.WriteFile(claimed, []byte("id: residuo-a\nstate: claimed\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	pending := filepath.Join(d, fileName(Pending, "residuo-a"))
+	if _, err := os.Stat(pending); err != nil {
+		t.Fatalf("the scenario needs the pending file still on disk: %v", err)
+	}
+
+	got, err := Claim(root, "w2", "2026-08-22T00:00:00-03:00")
+	if err != nil {
+		t.Fatalf("Claim returned an error: %v", err)
+	}
+	if got != nil {
+		t.Fatalf("claimed %q, which already has an owner", got.ID)
+	}
+	// And the residue cleans itself: whoever meets it deletes it, instead of leaving the queue
+	// forever showing a pending task nobody can take.
+	if _, err := os.Stat(pending); !os.IsNotExist(err) {
+		t.Error("the pending residue should have been removed on meeting the claimed file")
+	}
+}
+
+func TestMarkDoneMovesToHistory(t *testing.T) {
+	t.Run("TSQUT-B07: A done task moves to the history", func(t *testing.T) {})
+	root := t.TempDir()
+	withTarget(t, root, "AddItem.spec.md")
 	_, _ = Enqueue(root, task("1-spec-add", "AddItem.spec.md", "spec", "implement"))
 	_, _ = Claim(root, "w1", "2026-08-13T00:00:00-03:00")
 	if err := MarkDone(root, "1-spec-add"); err != nil {
 		t.Fatal(err)
 	}
-	// sumiu da fila viva
+	// gone from the live queue
 	if n, _ := PendingCount(root); n != 0 {
-		t.Fatalf("esperava fila vazia após done, veio %d", n)
+		t.Fatalf("want an empty queue after done, got %d", n)
 	}
-	// apareceu no histórico
+	// it appeared in the history
 	donePath := filepath.Join(root, DoneDir, fileName(Done, "1-spec-add"))
 	if _, err := os.Stat(donePath); err != nil {
-		t.Fatalf("task concluída deveria estar em %s: %v", DoneDir, err)
+		t.Fatalf("the done task should be in %s: %v", DoneDir, err)
 	}
-	// e uma nova task para o mesmo alvo agora É permitida (a anterior saiu da fila)
+	// and a new task for the same target IS allowed now (the previous one left the queue)
 	created, _ := Enqueue(root, task("2-spec-add", "AddItem.spec.md", "spec", "implement"))
 	if !created {
-		t.Fatal("após done, novo enqueue do mesmo alvo deveria ser permitido")
+		t.Fatal("after done, a new enqueue of the same target should be allowed")
+	}
+}
+
+func TestMarkDone_refusesAnUnknownTask(t *testing.T) {
+	t.Run("TSQUT-E01: Marking an unknown task done is refused", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := MarkDone(root, "ghost"); err == nil || !strings.Contains(err.Error(), "task not found") {
+		t.Fatalf("MarkDone of an unknown task = %v, want the refusal", err)
+	}
+	if entries, _ := os.ReadDir(filepath.Join(root, DoneDir)); len(entries) != 0 {
+		t.Errorf("nothing may reach the history: %v", entries)
 	}
 }
 
 func TestDropRemovesFromQueue(t *testing.T) {
+	t.Run("TSQUT-B08: Dropping deletes without history", func(t *testing.T) {})
+	t.Run("TSQUT-E02: Dropping an unknown task is refused", func(t *testing.T) {})
 	root := t.TempDir()
-	comAlvo(t, root, "plans/x.md")
+	withTarget(t, root, "plans/x.md")
 	_, _ = Enqueue(root, task("1-doc-x", "plans/x.md", "doc", "triage"))
 	if err := Drop(root, "1-doc-x"); err != nil {
 		t.Fatal(err)
 	}
 	if n, _ := PendingCount(root); n != 0 {
-		t.Fatalf("após drop a fila deveria esvaziar, veio %d", n)
+		t.Fatalf("after drop the queue should be empty, got %d", n)
 	}
-	// drop não cria histórico (diferente de done)
+	// drop creates no history (unlike done)
 	if _, err := os.Stat(filepath.Join(root, DoneDir)); !os.IsNotExist(err) {
-		t.Fatal("drop não deveria criar .anchors/done/")
+		t.Fatal("drop should not create .anchors/done/")
 	}
-	// drop de task inexistente → erro
+	// dropping a task that does not exist → error
 	if err := Drop(root, "nao-existe"); err == nil {
-		t.Fatal("drop de task inexistente deveria falhar")
+		t.Fatal("dropping a task that does not exist should fail")
 	}
 }
 
 func TestReclaimReturnsClaimedToPending(t *testing.T) {
+	t.Run("TSQUT-B09: Old and unstamped claims are returned to pending", func(t *testing.T) {})
 	root := t.TempDir()
-	comAlvo(t, root, "A.spec.md")
-	comAlvo(t, root, "B.spec.md")
+	withTarget(t, root, "A.spec.md")
+	withTarget(t, root, "B.spec.md")
 	_, _ = Enqueue(root, task("1-spec-a", "A.spec.md", "spec", "implement"))
 	_, _ = Enqueue(root, task("2-spec-b", "B.spec.md", "spec", "implement"))
-	// Dois workers pegam as duas — HÁ MUITO TEMPO (fora da janela de trabalho), que é o
-	// caso do worker que morreu sem fechar.
-	antigo := time.Now().Add(-2 * JanelaDeTrabalho).Format(time.RFC3339)
-	_, _ = Claim(root, "worker-morto-1", antigo)
-	_, _ = Claim(root, "worker-morto-2", antigo)
+	// Two workers take both — LONG AGO (outside the work window), which is the case of a
+	// worker that died without closing.
+	old := time.Now().Add(-2 * JanelaDeTrabalho).Format(time.RFC3339)
+	_, _ = Claim(root, "dead-worker-1", old)
+	_, _ = Claim(root, "dead-worker-2", old)
 	n, err := Reclaim(root)
 	if err != nil || n != 2 {
-		t.Fatalf("reclaim: n=%d err=%v (esperava 2)", n, err)
+		t.Fatalf("reclaim: n=%d err=%v (want 2)", n, err)
 	}
-	// ambas voltaram a pending e sem claimed_by
+	// both are back to pending with no claimed_by
 	tasks, _ := List(root)
 	for _, tk := range tasks {
 		if tk.State != Pending {
-			t.Errorf("task %s deveria estar pending, veio %s", tk.ID, tk.State)
+			t.Errorf("task %s should be pending, got %s", tk.ID, tk.State)
 		}
 		if tk.ClaimedBy != "" {
-			t.Errorf("task %s deveria ter claimed_by limpo, veio %q", tk.ID, tk.ClaimedBy)
+			t.Errorf("task %s should have claimed_by cleared, got %q", tk.ID, tk.ClaimedBy)
 		}
 	}
-	// e são puxáveis de novo
-	got, _ := Claim(root, "worker-novo", "2026-08-13T00:00:00-03:00")
+	// and they can be claimed again
+	got, _ := Claim(root, "new-worker", "2026-08-13T00:00:00-03:00")
 	if got == nil {
-		t.Fatal("task recuperada deveria ser puxável por Claim")
+		t.Fatal("a returned task should be claimable")
 	}
 }
 
 func TestSuggestNext(t *testing.T) {
+	t.Run("TSQUT-B12: The next step follows the kind that changed", func(t *testing.T) {})
 	cases := map[string]string{
-		// O plano PROMOVIDO (já revisado, em `plans/`) semeia trabalho; o RASCUNHO
-		// (`plans/review/`) vai para o review antes. São dois kinds porque o estado é a
-		// PASTA — sem isso, editar o plano durante a execução dispararia review de novo a
-		// cada vez, até o passo virar ruído.
-		// Os verbos são os ARTEFATOS do `anchors work` — ver ArtefatosDeTrabalho. Já
-		// foram `specify`/`implement`/`verify`, que o `work` recusa: quem puxava a task
-		// não conseguia compor o prompt e traduzia por conta própria, todas as vezes.
+		// The PROMOTED plan (already reviewed, in `plans/`) seeds work; the DRAFT
+		// (`plans/review/`) goes to review first. They are two kinds because the state is the
+		// FOLDER — otherwise editing the plan during execution would trigger review again
+		// every time, until the step became noise.
+		// The verbs are the ARTIFACTS of `anchors work` — see ArtefatosDeTrabalho. They used to
+		// be `specify`/`implement`/`verify`, which `work` refuses.
 		"plan":       "spec",
 		"plan-draft": "review-plan-draft", "spec": "code", "feature": "test",
-		// `test` fecha a trinca — e é aí que o trabalho PARECE pronto. A cadeia não
-		// termina em verificar: chama o REVIEW. Medido em três rodadas de um E2E real, 7
-		// defeitos graves passaram com todos os gates verdes; nenhum foi achado por gate.
+		// `test` closes the triad — and that is where the work LOOKS done. The chain does not
+		// end in verifying: it calls the REVIEW. Measured in three rounds of a real E2E, 7
+		// serious defects passed with every gate green; none was found by a gate.
 		"code": "feature", "test": "review", "guide": "review-governed",
 		"mistério": "triage",
 	}
 	for kind, want := range cases {
-		if got, _ := SuggestNext(kind); got != want {
-			t.Errorf("SuggestNext(%q) = %q, quer %q", kind, got, want)
+		got, reason := SuggestNext(kind)
+		if got != want {
+			t.Errorf("SuggestNext(%q) = %q, want %q", kind, got, want)
+		}
+		if reason == "" {
+			t.Errorf("SuggestNext(%q) gives no reason", kind)
 		}
 	}
 }
 
-// O `reclaim` RESPEITA quem pegou a task há pouco. Sem isso ele devolve tudo — inclusive
-// o que um worker ATIVO está fazendo — e dois agentes passam a escrever no mesmo arquivo
-// sem saber. Aconteceu, medido: um subagente rodou 90 minutos numa etapa, pareceu travado
-// a quem observava de fora, alguém deu reclaim, e o trabalho foi duplicado.
-func TestReclaimRespeitaClaimRecente(t *testing.T) {
+// `reclaim` RESPECTS whoever took the task recently. Without it, it returns everything —
+// including what an ACTIVE worker is doing — and two agents start writing the same file
+// without knowing. It happened, measured: a subagent ran 90 minutes on one step, looked stuck
+// from outside, someone reclaimed, and the work was duplicated.
+func TestReclaimRespectsARecentClaim(t *testing.T) {
+	t.Run("TSQUT-X01: A recent claim is not reclaimed", func(t *testing.T) {})
+	t.Run("TSQUT-B10: Forced reclaiming returns even recent claims", func(t *testing.T) {})
 	root := t.TempDir()
-	comAlvo(t, root, "A.spec.md")
+	withTarget(t, root, "A.spec.md")
 	_, _ = Enqueue(root, task("1-spec-a", "A.spec.md", "spec", "implement"))
-	// o ALVO tem de existir: o  descarta task de arquivo apagado (ver o comentário
-	// dele), e sem isto as tasks somem antes de serem contadas.
-	if err := os.WriteFile(filepath.Join(root, "x.md"), []byte("# x\n"), 0o644); err != nil {
-		t.Fatal(err)
-	}
 
-	agora := time.Now().Format(time.RFC3339)
-	if _, err := Claim(root, "worker-ativo", agora); err != nil {
+	now := time.Now().Format(time.RFC3339)
+	if _, err := Claim(root, "worker-ativo", now); err != nil {
 		t.Fatal(err)
 	}
 
@@ -256,63 +333,68 @@ func TestReclaimRespeitaClaimRecente(t *testing.T) {
 		t.Fatal(err)
 	}
 	if n != 0 {
-		t.Fatalf("reclaim devolveu %d task(s) de um worker ATIVO — é assim que dois agentes "+
-			"acabam no mesmo arquivo", n)
+		t.Fatalf("reclaim returned %d task(s) of an ACTIVE worker — that is how two agents end up "+
+			"in the same file", n)
 	}
 
-	// `--force` é a saída explícita de quem SABE que o worker parou.
+	// `--force` is the explicit way out for whoever KNOWS the worker stopped.
 	if n, err := ReclaimForce(root); err != nil || n != 1 {
-		t.Fatalf("reclaim --force: n=%d err=%v (esperava 1)", n, err)
+		t.Fatalf("reclaim --force: n=%d err=%v (want 1)", n, err)
 	}
 }
 
-// Task sem carimbo de quando foi reivindicada não tem o que respeitar — devolve.
-func TestReclaimSemCarimboDevolve(t *testing.T) {
+// A task with no stamp of when it was claimed has nothing to respect — it is returned.
+func TestReclaimWithoutStampReturns(t *testing.T) {
+	t.Run("TSQUT-B09: Old and unstamped claims are returned to pending", func(t *testing.T) {})
 	root := t.TempDir()
-	comAlvo(t, root, "A.spec.md")
+	withTarget(t, root, "A.spec.md")
 	_, _ = Enqueue(root, task("1-spec-a", "A.spec.md", "spec", "implement"))
-	if _, err := Claim(root, "worker-sem-carimbo", ""); err != nil {
+	if _, err := Claim(root, "worker-without-stamp", ""); err != nil {
 		t.Fatal(err)
 	}
 	if n, _ := Reclaim(root); n != 1 {
-		t.Fatalf("claim sem carimbo deveria ser devolvido, veio %d", n)
+		t.Fatalf("a claim with no stamp should be returned, got %d", n)
+	} // ClaimIsOld answers the same test the reclaim uses.
+	if !ClaimIsOld(Task{}) || !ClaimIsOld(Task{ClaimedAt: "not a time"}) {
+		t.Error("a claim with no stamp, or an unreadable one, is old")
+	}
+	if ClaimIsOld(Task{ClaimedAt: time.Now().Format(time.RFC3339)}) {
+		t.Error("a claim taken now is not old")
+	}
+	if !ClaimIsOld(Task{ClaimedAt: time.Now().Add(-2 * JanelaDeTrabalho).Format(time.RFC3339)}) {
+		t.Error("a claim older than the window is old")
 	}
 }
 
-// TestSugestaoDaFilaEhComponivelPeloWork trava a divergência que quebrou o roteamento num
-// E2E real: a fila sugeria `specify`/`implement`/`verify`, e o `anchors work` recusa os
-// três ("artefato desconhecido"). Quem puxava a task não conseguia compor o prompt e tinha
-// de traduzir os verbos por conta própria — o único ponto onde o ciclo não se auto-roteia.
-//
-// Dois vocabulários para a mesma coisa no mesmo binário é a forma mais barata do modo de
-// falha mais caro deste framework: duas fontes da régua discordando.
-func TestSugestaoDaFilaEhComponivelPeloWork(t *testing.T) {
-	// todo kind que a fila reconhece precisa sugerir um verbo que o `work` aceita
-	kinds := []string{"plan", "spec", "feature", "code", "test"}
-	for _, k := range kinds {
-		verbo, porque := SuggestNext(k)
-		if verbo == "" {
-			continue // kind sem próxima etapa é legítimo
+// Locks the divergence that broke routing in a real E2E: the queue suggested
+// `specify`/`implement`/`verify`, and `anchors work` refuses all three ("unknown artifact").
+// Whoever pulled the task could not compose the prompt and had to translate the verbs on
+// their own — the only point where the cycle did not route itself.
+func TestQueueSuggestionIsComposableByWork(t *testing.T) {
+	t.Run("TSQUT-B13: The suggestions of the triad kinds are composable by the work command", func(t *testing.T) {})
+	// every triad kind must suggest a verb `work` accepts
+	for _, k := range []string{"plan", "spec", "feature", "code", "test"} {
+		verb, why := SuggestNext(k)
+		if verb == "" {
+			continue // a kind with no next step is legitimate
 		}
-		if !ValidWorkArtifact(verbo) {
-			t.Errorf("kind %q sugere %q, que o `anchors work` recusa — quem puxa a task não "+
-				"consegue compor o prompt", k, verbo)
+		if !ValidWorkArtifact(verb) {
+			t.Errorf("kind %q suggests %q, which `anchors work` refuses — whoever pulls the task "+
+				"cannot compose the prompt", k, verb)
 		}
-		if porque == "" {
-			t.Errorf("kind %q sugere %q sem dizer por quê", k, verbo)
+		if why == "" {
+			t.Errorf("kind %q suggests %q without saying why", k, verb)
 		}
 	}
 }
 
-// TestTaskDeAlvoInexistenteEhDescartada guarda o ruído medido em quatro execuções reais:
-// o watcher enfileira na MUDANÇA e nunca desenfileira na DELEÇÃO, então a sonda de um
-// revisor (`__probe.test.tsx`), apagada logo depois, deixava uma task viva para sempre.
-//
-// O orquestrador tinha de descartá-la à mão em toda rodada — e uma fila que exige triagem
-// manual deixa de ser fila.
-func TestTaskDeAlvoInexistenteEhDescartada(t *testing.T) {
+// Guards the noise measured in four real runs: the watcher enqueues on CHANGE and never
+// dequeues on DELETION, so a reviewer's probe (`__probe.test.tsx`), deleted right after, left a
+// task alive forever.
+func TestTaskWithAMissingTargetIsDiscarded(t *testing.T) {
+	t.Run("TSQUT-B04: A task whose target was deleted is removed", func(t *testing.T) {})
 	root := t.TempDir()
-	comAlvo(t, root, "vive.ts")
+	withTarget(t, root, "vive.ts")
 	if _, err := Enqueue(root, task("1-code-vive", "vive.ts", "code", "feature")); err != nil {
 		t.Fatal(err)
 	}
@@ -325,85 +407,104 @@ func TestTaskDeAlvoInexistenteEhDescartada(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(tasks) != 1 || tasks[0].Changed != "vive.ts" {
-		t.Fatalf("a task do alvo apagado devia sumir; veio %+v", tasks)
+		t.Fatalf("the task of the deleted target should be gone; got %+v", tasks)
 	}
-	// E some do DISCO, não só da listagem: filtrar sem remover faria a fantasma
-	// reaparecer no `list` seguinte.
-	restantes, _ := os.ReadDir(filepath.Join(root, ".anchors", "tasks"))
-	for _, e := range restantes {
+	// And gone from DISK, not only from the listing: filtering without removing would make the
+	// ghost reappear in the next `list`.
+	left, _ := os.ReadDir(filepath.Join(root, ".anchors", "tasks"))
+	for _, e := range left {
 		if strings.Contains(e.Name(), "sonda") {
-			t.Error("a task-fantasma continua no disco — reapareceria na próxima listagem")
+			t.Error("the ghost task is still on disk — it would reappear in the next listing")
 		}
 	}
 }
 
-// O ZERO do reclaim precisa se explicar.
-//
-// Medido no blue-eyes: `anchors reclaim` respondia "0 task(s) devolvida(s)" com uma task
-// visivelmente `claimed` na fila. O número estava CERTO — ela foi reivindicada há minutos,
-// dentro da JanelaDeTrabalho — e o zero sozinho parece defeito. Custou dois comandos para
-// descartar, e a task ali na frente é justamente o que faz alguém desconfiar da
-// ferramenta.
-func TestRecentesRetidas(t *testing.T) {
+// The ZERO of reclaim needs to explain itself: `anchors reclaim` answered "0 task(s) returned"
+// with a task visibly `claimed` in the queue. The number was RIGHT — it was claimed minutes ago,
+// within JanelaDeTrabalho — and the zero alone looks like a defect.
+func TestRecentlyHeld(t *testing.T) {
+	t.Run("TSQUT-B11: Recently held claims are counted", func(t *testing.T) {})
 	root := t.TempDir()
-	// o ALVO tem de existir: o List descarta task de arquivo apagado, e sem isto elas
-	// somem antes de serem contadas.
+	// the TARGET must exist: List discards a task of a deleted file.
 	if err := os.WriteFile(filepath.Join(root, "x.md"), []byte("# x\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	agora := time.Now().Format(time.RFC3339)
-	antiga := time.Now().Add(-2 * JanelaDeTrabalho).Format(time.RFC3339)
+	now := time.Now().Format(time.RFC3339)
+	old := time.Now().Add(-2 * JanelaDeTrabalho).Format(time.RFC3339)
 
-	// Escrevo os arquivos `claimed__` diretamente: o `Claim` pega a PRIMEIRA pending e
-	// devolve uma por chamada, então montar três estados distintos por ele dependeria da
-	// ordem de varredura — que é do sistema de arquivos, não do teste.
-	//
-	// O que se testa aqui é a CONTAGEM sobre um estado dado, e o estado é o arquivo.
-	for _, c := range []struct{ id, quando string }{
-		{"recente-1", agora},
-		{"recente-2", agora},
-		{"velha", antiga},
+	// The `claimed__` files are written directly: `Claim` takes the FIRST pending one per call,
+	// so building three distinct states through it would depend on the scan order.
+	for _, c := range []struct{ id, when string }{
+		{"recent-1", now},
+		{"recent-2", now},
+		{"old", old},
 	} {
-		t.Helper()
 		task := Task{
 			ID: c.id, Changed: "x.md", Kind: "plan",
-			State: Claimed, ClaimedBy: "worker", ClaimedAt: c.quando,
+			State: Claimed, ClaimedBy: "worker", ClaimedAt: c.when,
 		}
 		data, err := yaml.Marshal(task)
 		if err != nil {
 			t.Fatal(err)
 		}
-		alvo := filepath.Join(dirFor(root), fileName(Claimed, c.id))
-		if err := os.MkdirAll(filepath.Dir(alvo), 0o755); err != nil {
+		target := filepath.Join(dirFor(root), fileName(Claimed, c.id))
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(alvo, data, 0o644); err != nil {
+		if err := os.WriteFile(target, data, 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}
 
 	if got := RecentlyHeld(root); got != 2 {
-		t.Errorf("RecentesRetidas = %d, queria 2 (as duas de agora)", got)
+		t.Errorf("RecentlyHeld = %d, want 2 (the two from now)", got)
 	}
 
-	// o Reclaim leva só a que passou da janela
+	// Reclaim takes only the one past the window
 	n, err := Reclaim(root)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if n != 1 {
-		t.Errorf("Reclaim devolveu %d, queria 1", n)
+		t.Errorf("Reclaim returned %d, want 1", n)
 	}
 	if got := RecentlyHeld(root); got != 2 {
-		t.Errorf("depois do Reclaim, RecentesRetidas = %d, queria 2", got)
+		t.Errorf("after Reclaim, RecentlyHeld = %d, want 2", got)
 	}
 
-	// e o force leva as duas
+	// and force takes both
 	if n, _ := ReclaimForce(root); n != 2 {
-		t.Errorf("ReclaimForce devolveu %d, queria 2", n)
+		t.Errorf("ReclaimForce returned %d, want 2", n)
 	}
 	if got := RecentlyHeld(root); got != 0 {
-		t.Errorf("depois do force, RecentesRetidas = %d, queria 0", got)
+		t.Errorf("after force, RecentlyHeld = %d, want 0", got)
+	}
+}
+
+func TestPendingCount_countsPendingAndClaimed(t *testing.T) {
+	t.Run("TSQUT-B14: The pending count counts pending and claimed tasks", func(t *testing.T) {})
+	root := t.TempDir()
+	withTarget(t, root, "a.md")
+	withTarget(t, root, "b.md")
+	_, _ = Enqueue(root, task("1-a", "a.md", "doc", "triage"))
+	_, _ = Enqueue(root, task("2-b", "b.md", "doc", "triage"))
+	_, _ = Claim(root, "w", time.Now().Format(time.RFC3339))
+	if n, err := PendingCount(root); err != nil || n != 2 {
+		t.Fatalf("PendingCount = %d, %v; want 2", n, err)
+	}
+}
+
+func TestList_skipsACorruptedTaskFile(t *testing.T) {
+	t.Run("TSQUT-E03: A corrupted task file is skipped", func(t *testing.T) {})
+	root := t.TempDir()
+	withTarget(t, root, "a.md")
+	_, _ = Enqueue(root, task("1-a", "a.md", "doc", "triage"))
+	if err := os.WriteFile(filepath.Join(dirFor(root), "pending__bad.yaml"), []byte("id: [unclosed\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	tasks, err := List(root)
+	if err != nil || len(tasks) != 1 || tasks[0].ID != "1-a" {
+		t.Fatalf("List = %+v, %v; want only 1-a and no error", tasks, err)
 	}
 }

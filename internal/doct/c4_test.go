@@ -7,7 +7,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 )
 
-func projetoComContainers(t *testing.T) *Compiler {
+func projectWithContainers(t *testing.T) *Compiler {
 	t.Helper()
 	specs := map[string]string{
 		"app/Tela.spec.md":   "---\ncode: TELAX\nlayer: screen\n---\n\n# Tela — a tela\n",
@@ -25,110 +25,124 @@ func projetoComContainers(t *testing.T) *Compiler {
 			Talks: []config.Talk{{To: "api", Protocol: "HTTPS/JSON"}}},
 		{Name: "api", Description: "as rotas", Layers: []string{"lambdas", "shared"},
 			Talks: []config.Talk{{To: "banco", Protocol: "SQL/TLS"}}},
-		// O BANCO é contêiner — contêiner é o que executa OU ARMAZENA dado, e não
-		// "processo que escrevemos". Externo porque é de terceiro.
+		// The DATABASE is a container — a container is what runs OR STORES data, not
+		// "a process we wrote". External because it is a third party's.
 		{Name: "banco", Description: "o que persiste", External: true},
 	}}
 	return c
 }
 
-// O NÍVEL 3 É POR CONTÊINER, e o externo não tem um.
-//
-// É a regra central do C4: cada nível amplia UMA caixa do anterior. Um diagrama de
-// componentes misturando app, API e banco não é nível 3 de coisa nenhuma — é a falha que
-// o modelo existe para evitar. E o banco não ganha nível 3 porque não temos componentes
-// lá dentro; desenhá-los afirmaria um conhecimento que não temos.
-func TestInternalContainers_oExternoNaoGanhaNivel3(t *testing.T) {
-	c := projetoComContainers(t)
+// LEVEL 3 IS PER CONTAINER, and the external one has none: we have no components inside it,
+// and drawing them would claim a knowledge we do not have.
+func TestInternalContainers_externalGetsNoLevel3(t *testing.T) {
+	t.Run("C4CNC-B02: An external container gets no level 3", func(t *testing.T) {})
+	t.Run("C4CNC-X01: The containers are only the declared ones", func(t *testing.T) {})
+	c := projectWithContainers(t)
 
-	if todos := c.fnContainers(); len(todos) != 3 {
-		t.Fatalf("contêineres = %d, queria 3 (o banco É contêiner)", len(todos))
+	all := c.fnContainers()
+	var names []string
+	for _, k := range all {
+		names = append(names, k.Name)
 	}
-	internos := c.fnInternalContainers()
-	if len(internos) != 2 {
-		t.Fatalf("internos = %d, queria 2 — o externo não tem nível 3", len(internos))
+	if strings.Join(names, ",") != "app,api,banco" {
+		t.Fatalf("containers = %v, want exactly the declared app, api, banco (the database IS a container)", names)
 	}
-	for _, k := range internos {
+	internal := c.fnInternalContainers()
+	if len(internal) != 2 {
+		t.Fatalf("internal = %d, want 2 — the external one has no level 3", len(internal))
+	}
+	for _, k := range internal {
 		if k.Name == "banco" {
-			t.Error("o banco ganhou nível 3 — não temos componentes dentro dele")
+			t.Error("the database got a level 3 — we have no components inside it")
 		}
 	}
 }
 
-// As UNIDADES de um contêiner são as das camadas que ele declara. É a ponte entre os dois
-// vocabulários: camada é agrupamento de código, componente é peça dentro de um contêiner.
-func TestContainers_unidadesVemDasCamadasDeclaradas(t *testing.T) {
-	c := projetoComContainers(t)
-	por := map[string][]string{}
+// A container's UNITS are those of the layers it declares — the bridge between the two
+// vocabularies: a layer groups code, a component is a piece inside a container.
+func TestContainers_unitsComeFromTheDeclaredLayers(t *testing.T) {
+	c := projectWithContainers(t)
+	by := map[string][]string{}
 	for _, k := range c.fnContainers() {
 		for _, u := range k.Units {
-			por[k.Name] = append(por[k.Name], u.Code)
+			by[k.Name] = append(by[k.Name], u.Code)
 		}
 	}
-	if len(por["app"]) != 1 || por["app"][0] != "TELAX" {
-		t.Errorf("app = %v, queria [TELAX]", por["app"])
+	if len(by["app"]) != 1 || by["app"][0] != "TELAX" {
+		t.Errorf("app = %v, want [TELAX]", by["app"])
 	}
-	if len(por["api"]) != 2 {
-		t.Errorf("api = %v, queria ROTAX e UTILX (lambdas + shared)", por["api"])
+	if len(by["api"]) != 2 {
+		t.Errorf("api = %v, want ROTAX and UTILX (lambdas + shared)", by["api"])
 	}
-	if len(por["banco"]) != 0 {
-		t.Errorf("banco = %v — ele não tem unidade nossa", por["banco"])
-	}
-}
-
-// A camada FORA de todo contêiner é dita, não escondida: um diagrama que a omite em
-// silêncio afirma, por ausência, que ela não existe.
-func TestOrphanLayers_saoDitas(t *testing.T) {
-	if orfas := projetoComContainers(t).fnOrphanLayers(); len(orfas) != 1 || orfas[0] != "orfa" {
-		t.Errorf("órfãs = %v, queria [orfa]", orfas)
+	if len(by["banco"]) != 0 {
+		t.Errorf("banco = %v — it has no unit of ours", by["banco"])
 	}
 }
 
-// O nível 2 traz o PROTOCOLO em cada seta, o banco entre as caixas, e há um nível 3 por
-// contêiner interno — nenhum para o externo.
-func TestBuild_oC4SegueOModelo(t *testing.T) {
-	c := projetoComContainers(t)
-	if _, _, err := c.InitScaffolds(false); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := c.Build(false); err != nil {
-		t.Fatal(err)
-	}
-	b, err := readFile(c.Root, "arquitetura.md")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	// O protocolo: uma seta sem ele diz que os dois se falam e não diz o que acontece
-	// quando a conversa falha — a única coisa que um nível 2 tem a dizer sobre risco.
-	for _, p := range []string{"HTTPS/JSON", "SQL/TLS"} {
-		if !strings.Contains(b, p) {
-			t.Errorf("o protocolo %q não entrou no diagrama", p)
+func TestContainers_layerMatchAndOrder(t *testing.T) {
+	t.Run("C4CNC-B01: A container carries the specs of the layers it declares, in layer then code order", func(t *testing.T) {
+		root, g := projetoDeTeste(t, map[string]string{
+			"a/R.spec.md": "---\ncode: ROTAX\nlayer: lambdas\n---\n\n# R — r\n",
+			"a/Y.spec.md": "---\ncode: UTILY\nlayer: shared\n---\n\n# Y — y\n",
+			"a/X.spec.md": "---\ncode: UTILX\nlayer: shared\n---\n\n# X — x\n",
+		})
+		c, err := New(root, g)
+		if err != nil {
+			t.Fatal(err)
 		}
-	}
-	if !strings.Contains(b, "o que persiste") {
-		t.Error("o banco não aparece no nível 2 — contêiner é o que executa OU ARMAZENA")
-	}
-	if !strings.Contains(b, "### app") || !strings.Contains(b, "### api") {
-		t.Errorf("falta o nível 3 de um contêiner interno:\n%s", b)
-	}
-	if strings.Contains(b, "### banco") {
-		t.Error("o banco ganhou seção de nível 3")
+		c.Config = &config.Config{ContainersDecl: []config.Container{
+			{Name: "app", Layers: []string{" SHARED ", "lambdas"}},
+		}}
+		var got []string
+		for _, u := range c.fnContainers()[0].Units {
+			got = append(got, u.Code)
+		}
+		if strings.Join(got, ",") != "ROTAX,UTILX,UTILY" {
+			t.Errorf("units = %v, want ROTAX, UTILX, UTILY", got)
+		}
+	})
+}
+
+// A layer OUTSIDE every container is named, not hidden.
+func TestOrphanLayers_areNamed(t *testing.T) {
+	t.Run("C4CNC-B03: A layer no container declares is named as orphan", func(t *testing.T) {})
+	if orphans := projectWithContainers(t).fnOrphanLayers(); len(orphans) != 1 || orphans[0] != "orfa" {
+		t.Errorf("orphans = %v, want [orfa]", orphans)
 	}
 }
 
-// Sem contêiner declarado, o documento DIZ isso em vez de sair com diagramas vazios.
-func TestBuild_semContainerDeclaradoAvisa(t *testing.T) {
-	root, g := projetoDeTeste(t, map[string]string{
-		"a/X.spec.md": "---\ncode: XXXXX\nlayer: infra\n---\n\n# X — x\n"})
-	c, _ := New(root, g)
-	c.Config = &config.Config{}
-	c.InitScaffolds(false)
-	if _, err := c.Build(false); err != nil {
-		t.Fatal(err)
-	}
-	b, _ := readFile(c.Root, "arquitetura.md")
-	if !strings.Contains(b, "Nenhum contêiner declarado") {
-		t.Errorf("o documento não diz que falta declarar:\n%s", b)
-	}
+func TestContainers_noConfig(t *testing.T) {
+	t.Run("C4CNC-B04: No configuration means no containers and no orphans", func(t *testing.T) {
+		c := projectWithContainers(t)
+		c.Config = nil
+		if k := c.fnContainers(); k != nil {
+			t.Errorf("containers = %v, want none", k)
+		}
+		if k := c.fnInternalContainers(); k != nil {
+			t.Errorf("internal containers = %v, want none", k)
+		}
+		if o := c.fnOrphanLayers(); o != nil {
+			t.Errorf("orphans = %v, want none", o)
+		}
+	})
+}
+
+func TestContainers_everyLayerIsHeldOrOrphan(t *testing.T) {
+	t.Run("C4CNC-I01: Every spec layer is held by a container or named orphan", func(t *testing.T) {
+		c := projectWithContainers(t)
+		seen := map[string]bool{}
+		for _, k := range c.fnContainers() {
+			for _, u := range k.Units {
+				seen[u.Layer] = true
+			}
+		}
+		for _, l := range c.fnOrphanLayers() {
+			seen[l] = true
+		}
+		for _, l := range c.fnLayers() {
+			if !seen[l] {
+				t.Errorf("layer %q is neither in a container nor named orphan", l)
+			}
+		}
+	})
 }

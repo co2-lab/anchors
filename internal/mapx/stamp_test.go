@@ -2,7 +2,7 @@ package mapx
 
 import "testing"
 
-// grafo: spec(rev a) ──specifies──▶ code(rev b), e code ──tested-by──▶ test(rev c)
+// graph: spec(rev a) ──specifies──▶ code(rev b), and code ──tested-by──▶ test(rev c)
 func stampGraph() *Graph {
 	return &Graph{
 		Version: 1,
@@ -19,109 +19,123 @@ func stampGraph() *Graph {
 }
 
 func TestStampOnlyEdgesWithBothEndsConfronted(t *testing.T) {
+	t.Run("EDSTD-B01: Only relations with both ends confronted are stamped", func(t *testing.T) {})
 	g := stampGraph()
-	// só spec e code foram confrontados; test não entrou nesta rodada
+	// only spec and code were confronted; test was not in this round
 	n := g.StampEdges([]NodeVerdict{{ID: "A.spec.md"}, {ID: "A.tsx"}}, "2026-08-07T00:00:00Z")
 	if n != 1 {
-		t.Fatalf("esperava carimbar 1 aresta (spec→code), veio %d", n)
+		t.Fatalf("expected to stamp 1 edge (spec→code), got %d", n)
 	}
 	if g.Edges[0].Stamp == nil {
-		t.Fatal("aresta spec→code deveria ter carimbo")
+		t.Fatal("the spec→code edge should be stamped")
 	}
 	if g.Edges[1].Stamp != nil {
-		t.Fatal("aresta code→test NÃO deveria ter carimbo (test não confrontado)")
+		t.Fatal("the code→test edge should NOT be stamped (test not confronted)")
 	}
 }
 
 func TestStampVerdictIssueWhenEndFails(t *testing.T) {
+	t.Run("EDSTD-B02: The verdict is issue when an end failed and ok when both passed", func(t *testing.T) {})
 	g := stampGraph()
 	g.StampEdges([]NodeVerdict{{ID: "A.spec.md", Failed: true}, {ID: "A.tsx"}}, "t")
 	if got := g.Edges[0].Stamp.Verdict; got != "issue" {
-		t.Fatalf("ponta falha → verdict issue, veio %q", got)
+		t.Fatalf("a failed end → verdict issue, got %q", got)
+	}
+	g = stampGraph()
+	g.StampEdges([]NodeVerdict{{ID: "A.spec.md"}, {ID: "A.tsx", Failed: true}}, "t")
+	if got := g.Edges[0].Stamp.Verdict; got != "issue" {
+		t.Fatalf("a failed target end → verdict issue, got %q", got)
 	}
 }
 
 func TestStampVerdictOkWhenBothPass(t *testing.T) {
+	t.Run("EDSTD-B02: The verdict is issue when an end failed and ok when both passed", func(t *testing.T) {})
 	g := stampGraph()
 	g.StampEdges([]NodeVerdict{{ID: "A.spec.md"}, {ID: "A.tsx"}}, "t")
 	if got := g.Edges[0].Stamp.Verdict; got != "ok" {
-		t.Fatalf("ambos passam → verdict ok, veio %q", got)
+		t.Fatalf("both pass → verdict ok, got %q", got)
 	}
 }
 
 func TestStaleBecomesValidatedAfterStamp(t *testing.T) {
+	t.Run("EDSTD-B04: A stamp is fresh until an end moves", func(t *testing.T) {})
 	g := stampGraph()
-	// antes: nunca validada → stale
+	// before: never validated → stale
 	if !g.Stale(g.Edges[0]) {
-		t.Fatal("aresta nunca validada deveria ser stale")
+		t.Fatal("a never-validated edge should be stale")
 	}
 	g.StampEdges([]NodeVerdict{{ID: "A.spec.md"}, {ID: "A.tsx"}}, "t")
-	// depois do carimbo com as revs atuais → não stale
+	// after the stamp with the current revs → not stale
 	if g.Stale(g.Edges[0]) {
-		t.Fatal("aresta recém-carimbada não deveria ser stale")
+		t.Fatal("a freshly stamped edge should not be stale")
 	}
 }
 
 func TestStaleReappearsWhenRevAdvances(t *testing.T) {
+	t.Run("EDSTD-B04: A stamp is fresh until an end moves", func(t *testing.T) {})
 	g := stampGraph()
 	g.StampEdges([]NodeVerdict{{ID: "A.spec.md"}, {ID: "A.tsx"}}, "t")
-	// a spec é editada → rev avança → a aresta volta a ficar stale
+	// the spec is edited → its rev moves → the edge goes stale again
 	g.Nodes[0].Rev = "a2"
 	if !g.Stale(g.Edges[0]) {
-		t.Fatal("após a ponta avançar de rev, a aresta deveria voltar a ser stale")
+		t.Fatal("after an end moved, the edge should be stale again")
 	}
 }
 
 func TestStampEdgeSingle(t *testing.T) {
+	t.Run("EDSTD-B07: One relation is stamped by its ends, a missing one answers false", func(t *testing.T) {})
 	g := stampGraph()
-	// carimba só a aresta spec→code com verdict issue (julgamento por IA)
+	// stamps only the spec→code edge with verdict issue (an AI judgment)
 	ok := g.StampEdge("A.spec.md", "A.tsx", "issue", "2026-08-07T00:00:00Z")
 	if !ok {
-		t.Fatal("StampEdge deveria achar a aresta A.spec.md→A.tsx")
+		t.Fatal("StampEdge should find the edge A.spec.md→A.tsx")
 	}
 	if g.Edges[0].Stamp == nil || g.Edges[0].Stamp.Verdict != "issue" {
-		t.Fatalf("aresta deveria ter carimbo issue, veio %+v", g.Edges[0].Stamp)
+		t.Fatalf("the edge should carry an issue stamp, got %+v", g.Edges[0].Stamp)
 	}
-	// a outra aresta permanece sem carimbo
+	// the other edge stays unstamped
 	if g.Edges[1].Stamp != nil {
-		t.Fatal("só a aresta pedida deveria ser carimbada")
+		t.Fatal("only the edge asked for should be stamped")
 	}
-	// aresta inexistente → false
+	// missing edge → false
 	if g.StampEdge("X", "Y", "ok", "t") {
-		t.Fatal("StampEdge de aresta inexistente deveria devolver false")
+		t.Fatal("StampEdge of a missing edge should return false")
 	}
 }
 
 func TestStampEdgeGoesStaleOnRevChange(t *testing.T) {
+	t.Run("EDSTD-B04: A stamp is fresh until an end moves", func(t *testing.T) {})
 	g := stampGraph()
 	g.StampEdge("A.spec.md", "A.tsx", "ok", "t")
 	if g.Stale(g.Edges[0]) {
-		t.Fatal("recém-carimbada não deveria ser stale")
+		t.Fatal("freshly stamped, it should not be stale")
 	}
-	g.Nodes[1].Rev = "b2" // o alvo (código) mudou
+	g.Nodes[1].Rev = "b2" // the target (code) changed
 	if !g.Stale(g.Edges[0]) {
-		t.Fatal("o veredito de IA deveria envelhecer quando o alvo muda")
+		t.Fatal("the AI verdict should expire when the target changes")
 	}
 }
 
 func TestStaleEdgesListing(t *testing.T) {
+	t.Run("EDSTD-B13: The stale relations are listed", func(t *testing.T) {})
 	g := stampGraph()
 	if len(g.StaleEdges()) != 2 {
-		t.Fatalf("no início as 2 arestas são stale, veio %d", len(g.StaleEdges()))
+		t.Fatalf("at first both edges are stale, got %d", len(g.StaleEdges()))
 	}
 	g.StampEdges([]NodeVerdict{{ID: "A.spec.md"}, {ID: "A.tsx"}}, "t")
 	if got := len(g.StaleEdges()); got != 1 {
-		t.Fatalf("após carimbar 1, resta 1 stale, veio %d", got)
+		t.Fatalf("after stamping 1, 1 stays stale, got %d", got)
 	}
 }
 
-// O CARIMBO REGISTRA A MUDANÇA, NÃO A VERIFICAÇÃO.
+// THE STAMP RECORDS THE CHANGE, NOT THE VERIFICATION.
 //
-// `changed_at` responde "desde quando esta relação está como está". Confrontar de novo e
-// achar o mesmo resultado NÃO é fato novo — e registrar cada confronto fazia o mapa mudar
-// sozinho: 26 linhas por execução do check no projeto de referência, conflito em PR onde
-// duas pessoas rodaram o check, e `git status` sujo o tempo todo.
-func TestCarimboNaoAvancaQuandoNadaMudou(t *testing.T) {
+// `changed_at` answers "since when is this relation as it is". Confronting again and finding the
+// same result is NOT a new fact — and recording each confrontation made the map change on its
+// own: 26 lines per check run in the reference project, PR conflicts where two people ran the
+// check, and a dirty `git status` all the time.
+func TestStampDateDoesNotMoveWhenNothingChanged(t *testing.T) {
+	t.Run("EDSTD-B05: The date moves only when revisions or verdict change", func(t *testing.T) {})
 	g := &Graph{
 		Nodes: []Node{{ID: "a", Rev: "r1"}, {ID: "b", Rev: "r1"}},
 		Edges: []Edge{{From: "a", To: "b", Type: EdgeSpecifies}},
@@ -129,84 +143,79 @@ func TestCarimboNaoAvancaQuandoNadaMudou(t *testing.T) {
 	v := []NodeVerdict{{ID: "a"}, {ID: "b"}}
 
 	g.StampEdges(v, "2026-08-30")
-	// Dias DEPOIS, mesma rev e mesmo veredito: nada mudou, e a data não pode avançar.
+	// Days LATER, same rev and same verdict: nothing changed, and the date cannot move.
 	g.StampEdges(v, "2026-09-15")
 	if got := g.Edges[0].Stamp.ChangedAt; got != "2026-08-30" {
-		t.Fatalf("sem mudança a data tem de ficar onde estava, veio %q", got)
+		t.Fatalf("with no change the date must stay where it was, got %q", got)
 	}
 
-	// A REV muda → a relação mudou, e a data avança.
+	// The REV changes → the relation changed, and the date moves.
 	g.Nodes[1].Rev = "r2"
 	g.StampEdges(v, "2026-09-20")
 	if got := g.Edges[0].Stamp.ChangedAt; got != "2026-09-20" {
-		t.Fatalf("rev nova é mudança e a data deve avançar, veio %q", got)
+		t.Fatalf("a new rev is a change and the date must move, got %q", got)
 	}
 
-	// O VEREDITO muda → também é mudança, mesmo com as revs iguais.
+	// The VERDICT changes → also a change, even with the same revs.
 	g.StampEdges([]NodeVerdict{{ID: "a"}, {ID: "b", Failed: true}}, "2026-09-25")
 	if got := g.Edges[0].Stamp.ChangedAt; got != "2026-09-25" {
-		t.Fatalf("veredito novo é mudança e a data deve avançar, veio %q", got)
+		t.Fatalf("a new verdict is a change and the date must move, got %q", got)
 	}
 }
 
-// O CARIMBO NÃO PODE MUDAR SOZINHO.
+// THE STAMP CANNOT CHANGE ON ITS OWN.
 //
-// `changed_at` responde "quando esta relação foi confrontada" — pergunta de auditoria
-// — e NÃO entra na regra de staleness, que compara `rev` (PROPAGATION.md §3). Com
-// precisão de segundo, cada `anchors check` reescrevia as 26 linhas de carimbo do mapa:
-// conflito em todo PR onde duas pessoas rodaram o check, e um diff que muda sozinho sem
-// dizer nada.
-//
-// Duas validações no MESMO DIA, com o mesmo veredito e as mesmas revs, têm de produzir o
-// mesmo mapa. O que muda o carimbo é o veredito ou a rev — que é quando há o que registrar.
-func TestCarimboIgualEmDuasExecucoes(t *testing.T) {
-	monta := func() *Graph {
+// Two validations on the SAME DAY, with the same verdict and the same revs, must produce the same
+// map. What changes the stamp is the verdict or the rev — which is when there is something to
+// record.
+func TestStampSameInTwoRuns(t *testing.T) {
+	t.Run("EDSTD-I01: The same round on the same day gives the same stamps", func(t *testing.T) {})
+	build := func() *Graph {
 		return &Graph{
 			Nodes: []Node{{ID: "a", Rev: "r1"}, {ID: "b", Rev: "r1"}},
 			Edges: []Edge{{From: "a", To: "b", Type: EdgeSpecifies}},
 		}
 	}
-	g1, g2 := monta(), monta()
+	g1, g2 := build(), build()
 	v := []NodeVerdict{{ID: "a"}, {ID: "b"}}
 
-	// Mesmo DIA, instantes diferentes — é o caso real: dois `check` seguidos.
+	// Same DAY — the real case: two `check` runs in a row.
 	g1.StampEdges(v, "2026-08-30")
 	g2.StampEdges(v, "2026-08-30")
 
-	if g1.Edges[0].Stamp.ChangedAt != g2.Edges[0].Stamp.ChangedAt {
-		t.Fatalf("mesmo dia deveria produzir o mesmo carimbo: %q vs %q",
-			g1.Edges[0].Stamp.ChangedAt, g2.Edges[0].Stamp.ChangedAt)
+	if *g1.Edges[0].Stamp != *g2.Edges[0].Stamp {
+		t.Fatalf("the same day should produce the same stamp: %+v vs %+v", *g1.Edges[0].Stamp, *g2.Edges[0].Stamp)
 	}
-	// E o campo não pode ficar vazio: perder a resposta seria trocar um problema por outro.
+	// And the field cannot be empty: losing the answer would trade one problem for another.
 	if g1.Edges[0].Stamp.ChangedAt == "" {
-		t.Error("o carimbo ainda tem de dizer QUANDO — reduzir a precisão não é apagar")
+		t.Error("the stamp still has to say WHEN — less precision is not erasure")
 	}
 }
 
-// CARIMBO SEM DATA não pode perpetuar o buraco.
+// AN UNDATED STAMP cannot perpetuate the gap.
 //
-// Medido: ao renomear o campo, o mapa existente trazia `last_validated` e o parser novo
-// leu `changed_at` vazio. Como nada mais mudava, o vazio era preservado a cada execução —
-// e o campo simplesmente sumiu do mapa (`omitempty`), para sempre.
-//
-// Sem data, a de hoje é a melhor resposta disponível: é quando se soube que a relação
-// estava assim.
-func TestCarimboSemDataAdotaAdeHoje(t *testing.T) {
+// Measured: when the field was renamed, the existing map carried `last_validated` and the new
+// parser read an empty `changed_at`. As nothing else changed, the empty value was kept on every
+// run — and the field simply vanished from the map (`omitempty`), for good.
+func TestStampWithoutDateTakesToday(t *testing.T) {
+	t.Run("EDSTD-B06: An undated stamp takes today's date", func(t *testing.T) {})
+	t.Run("EDSTD-X01: The stamp carries the caller's date", func(t *testing.T) {})
 	g := &Graph{
 		Nodes: []Node{{ID: "a", Rev: "r1"}, {ID: "b", Rev: "r1"}},
 		Edges: []Edge{{From: "a", To: "b", Type: EdgeSpecifies,
-			// O carimbo herdado: revs e veredito iguais, mas SEM data.
+			// The inherited stamp: same revs and verdict, but NO date.
 			Stamp: &Stamp{ValidatedFromRev: "r1", ValidatedToRev: "r1", Verdict: "ok"}}},
 	}
 	g.StampEdges([]NodeVerdict{{ID: "a"}, {ID: "b"}}, "2026-09-01")
 	if got := g.Edges[0].Stamp.ChangedAt; got != "2026-09-01" {
-		t.Fatalf("carimbo sem data deve adotar a de hoje, senão o buraco se perpetua; veio %q", got)
+		t.Fatalf("an undated stamp must take today's date, or the gap persists; got %q", got)
 	}
 }
 
-// A WAIVER is a person's decision; the mechanical check does not re-validate it. One
-// commit in blue-eyes turned 21 waived judgments into `ok` through this loop.
+// A WAIVER is a person's decision; the mechanical check does not re-validate it. One commit in
+// blue-eyes turned 21 waived judgments into `ok` through this loop.
 func TestStampKeepsAWaiver(t *testing.T) {
+	t.Run("EDSTD-B03: A waived stamp is kept as it was", func(t *testing.T) {})
 	g := stampGraph()
 	waiver := &Stamp{ValidatedFromRev: "old", ValidatedToRev: "old", ChangedAt: "2026-09-01", Verdict: "waived"}
 	g.Edges[0].Stamp = waiver
@@ -216,5 +225,138 @@ func TestStampKeepsAWaiver(t *testing.T) {
 	}
 	if !g.Stale(g.Edges[0]) {
 		t.Error("the ends changed rev since the waiver, and the edge does not read stale — a person must decide again")
+	}
+}
+
+// The judgment gate computes nothing: it is the stamp that says whether someone already read it.
+// And the stamp carries the ends' revs, so the verdict expires if the target changes — then it
+// is a question again, which is the judgment's anti-drift.
+func TestJudgedBy(t *testing.T) {
+	t.Run("EDSTD-B10: A judgment holds only at the revisions it was given and only for its gate", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{
+			{ID: "a.spec.md", Rev: "r1"},
+			{ID: "a.test.ts", Rev: "r1"},
+		},
+		Edges: []Edge{{From: "a.spec.md", To: "a.test.ts"}},
+	}
+
+	// before judging: nobody answered
+	if _, ok := g.JudgedBy("a.spec.md", "my-gate"); ok {
+		t.Error("with no stamp, JudgedBy should say there is no verdict")
+	}
+
+	// judged: the verdict holds
+	if n := g.StampNodeByGate("a.spec.md", "ok", "now", "my-gate"); n != 1 {
+		t.Fatalf("stamped %d edges, wanted 1", n)
+	}
+	v, ok := g.JudgedBy("a.spec.md", "my-gate")
+	if !ok || v != "ok" {
+		t.Errorf("verdict = %q (ok=%v), wanted ok/true", v, ok)
+	}
+
+	// ANOTHER gate's stamp does not answer for this one
+	if _, ok := g.JudgedBy("a.spec.md", "other-gate"); ok {
+		t.Error("one gate's stamp does NOT answer for another")
+	}
+
+	// the target changed afterwards → the verdict expires and is a question again
+	g.Nodes[0].Rev = "r2"
+	if _, ok := g.JudgedBy("a.spec.md", "my-gate"); ok {
+		t.Error("target changed after the stamp: the verdict should have expired")
+	}
+}
+
+// The `check` rewrites the Stamp on every round (it sums up the worst verdict of all the node's
+// gates). The judgment must NOT die there — that is what erased 16 verdicts and kept the counter
+// at 16.
+func TestJudgmentSurvivesTheCheckStamp(t *testing.T) {
+	t.Run("EDSTD-B11: A judgment survives the next check round", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{
+			{ID: "a.spec.md", Rev: "r1"},
+			{ID: "a.test.ts", Rev: "r1"},
+		},
+		Edges: []Edge{{From: "a.spec.md", To: "a.test.ts"}},
+	}
+	g.StampNodeByGate("a.spec.md", "ok", "t0", "my-gate")
+
+	// the check runs and rewrites the Stamp of the two confronted ends
+	g.StampEdges([]NodeVerdict{{ID: "a.spec.md"}, {ID: "a.test.ts"}}, "t1")
+
+	v, ok := g.JudgedBy("a.spec.md", "my-gate")
+	if !ok || v != "ok" {
+		t.Errorf("the judgment should survive the check stamp: verdict=%q ok=%v", v, ok)
+	}
+}
+
+// A judgment gate that declares `guide:` stamps its guide→target edge; without the record,
+// JudgedBy never saw it and the next check asked the same judgment again.
+func TestStampEdgeByGateRecordsTheJudgment(t *testing.T) {
+	t.Run("EDSTD-B08: Stamping a relation by gate records the gate and a judgment", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{{ID: "GUIDE.md", Rev: "g1"}, {ID: "a.spec.md", Rev: "s1"}},
+		Edges: []Edge{{From: "GUIDE.md", To: "a.spec.md", Type: EdgeGoverns}},
+	}
+	if !g.StampEdgeByGate("GUIDE.md", "a.spec.md", "ok", "2026-09-26", "guide-judge") {
+		t.Fatal("the edge exists and should be stamped")
+	}
+	if st := g.Edges[0].Stamp; st == nil || st.Gate != "guide-judge" || st.Verdict != "ok" {
+		t.Errorf("the stamp should name the gate, got %+v", st)
+	}
+	if v, ok := g.JudgedBy("a.spec.md", "guide-judge"); !ok || v != "ok" {
+		t.Errorf("the target should count as judged by the gate: verdict=%q ok=%v", v, ok)
+	}
+	// with no gate named, no judgment is recorded
+	g2 := &Graph{Nodes: g.Nodes, Edges: []Edge{{From: "GUIDE.md", To: "a.spec.md", Type: EdgeGoverns}}}
+	g2.StampEdge("GUIDE.md", "a.spec.md", "ok", "2026-09-26")
+	if len(g2.Edges[0].Julgamentos) != 0 {
+		t.Errorf("a stamp with no gate records no judgment, got %+v", g2.Edges[0].Julgamentos)
+	}
+}
+
+// `anchors judge` judges ONE target, so no edge has both ends in a round: stamping the node is
+// the only way its edges stop reading "never validated" (measured: a node with 42 edges, 0 stamped).
+func TestStampNodeByGateStampsEveryTouchingEdge(t *testing.T) {
+	t.Run("EDSTD-B09: Stamping a node stamps every relation touching it", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{{ID: "a.spec.md", Rev: "s"}, {ID: "a.go", Rev: "c"}, {ID: "a_test.go", Rev: "t"}, {ID: "x", Rev: "x"}, {ID: "y", Rev: "y"}},
+		Edges: []Edge{
+			{From: "a.spec.md", To: "a.go", Type: EdgeSpecifies},
+			{From: "a.go", To: "a_test.go", Type: EdgeTestedBy},
+			{From: "x", To: "y", Type: EdgeDependsOn},
+		},
+	}
+	if n := g.StampNodeByGate("a.go", "ok", "2026-09-26", "code-judge"); n != 2 {
+		t.Fatalf("the incoming and the outgoing edge should be stamped, got %d", n)
+	}
+	for _, e := range g.Edges[:2] {
+		if e.Stamp == nil || len(e.Julgamentos) != 1 || e.Julgamentos[0].Gate != "code-judge" {
+			t.Errorf("edge %s→%s should carry the stamp and the code-judge judgment, got %+v / %+v", e.From, e.To, e.Stamp, e.Julgamentos)
+		}
+	}
+	if e := g.Edges[2]; e.Stamp != nil || len(e.Julgamentos) != 0 {
+		t.Errorf("an edge that does not touch the node must stay untouched, got %+v", e)
+	}
+}
+
+// Re-judging and finding the same is not a new fact: without keeping the date, every
+// `anchors judge` would rewrite the date of every judgment.
+func TestJudgmentIsOnePerGateAndKeepsItsDate(t *testing.T) {
+	t.Run("EDSTD-B12: One judgment per gate, its date kept when nothing changed", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{{ID: "a", Rev: "r1"}, {ID: "b", Rev: "r1"}},
+		Edges: []Edge{{From: "a", To: "b"}},
+	}
+	g.StampNodeByGate("a", "ok", "t0", "my-gate")
+	g.StampNodeByGate("a", "ok", "t1", "my-gate")
+	js := g.Edges[0].Julgamentos
+	if len(js) != 1 || js[0].ChangedAt != "t0" {
+		t.Fatalf("the same verdict at the same revs keeps one judgment dated t0, got %+v", js)
+	}
+	g.StampNodeByGate("a", "issue", "t2", "my-gate")
+	js = g.Edges[0].Julgamentos
+	if len(js) != 1 || js[0].Verdict != "issue" || js[0].ChangedAt != "t2" {
+		t.Fatalf("a new verdict replaces the gate's judgment and dates it t2, got %+v", js)
 	}
 }

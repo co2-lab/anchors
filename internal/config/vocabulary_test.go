@@ -5,30 +5,29 @@ import (
 	"testing"
 )
 
-// A TABELA DE ALIAS que este arquivo testava FOI REMOVIDA.
+// THE ALIAS TABLE this file used to test WAS REMOVED.
 //
-// Ela aceitava os nomes de gate em português e os convertia na carga, para sempre. Os
-// testes daqui provavam que a conversão funcionava — e ela funcionava; o problema era o
-// desenho: o arquivo nunca se consertava, e o mapa acumulava carimbos nos dois formatos.
-// Medido no blue-eyes: 40 julgamentos gravados como `regra-cumprida` convivendo com 2 como
-// `rule-fulfilled`.
+// It accepted the Portuguese gate names and converted them at load, forever. The tests here
+// proved the conversion worked — and it did; the problem was the design: the file never got
+// fixed, and the map piled up stamps in both forms. Measured in blue-eyes: 40 judgments
+// recorded as `regra-cumprida` living next to 2 as `rule-fulfilled`.
 //
-// Havia também uma assimetria: a LEITURA normalizava (`mapx.mesmoGate`), a ESCRITA não —
-// um projeto que renomeasse o gate ganhava um SEGUNDO carimbo em vez de atualizar o
-// primeiro.
+// There was also an asymmetry: READING normalised (`mapx.mesmoGate`), WRITING did not — a
+// project that renamed the gate got a SECOND stamp instead of updating the first.
 //
-// A conversão virou o passo de migração `1→2` (`internal/migra/formato_2.go`), e as réguas
-// que valiam a pena foram com ela:
+// The conversion became migration step `1→2` (`internal/migra/formato_2.go`), and the
+// rulers worth keeping went with it:
 //
-//   · `internal/migra` testa a conversão em si (renomeia chave e valor, não toca em
-//     comentário, é idempotente, respeita o arquivo de destino);
-//   · `internal/initx/vocabulario_test.go` confere que todo destino do de-para corresponde
-//     a um gate que EXISTE, e que nenhum gate default nasceu com nome em português.
+//   - `internal/migra` tests the conversion itself (renames key and value, leaves comments
+//     alone, is idempotent, respects the target file);
+//   - `internal/initx/vocabulario_test.go` checks that every target of the mapping is a
+//     gate that EXISTS, and that no default gate was born with a Portuguese name.
 //
-// Este arquivo fica como registro: quem procurar pelos testes do alias encontra por que
-// eles não estão mais aqui.
+// This file stays as a record: whoever looks for the alias tests finds why they are gone.
 
 func TestDefaultGateNamesForTest(t *testing.T) {
+	t.Run("GTVCG-B01: With no source registered, the default gate names are absent, not a failure", func(t *testing.T) {})
+	t.Run("GTVCG-B02: With a source registered, the default gate names are the ones it gives", func(t *testing.T) {})
 	saved := defaultGateNames
 	t.Cleanup(func() { defaultGateNames = saved })
 
@@ -39,5 +38,31 @@ func TestDefaultGateNamesForTest(t *testing.T) {
 	RegisterGateNames(func() []string { return []string{"spec-complete", "rule-fulfilled"} })
 	if got, want := DefaultGateNamesForTest(), []string{"spec-complete", "rule-fulfilled"}; !reflect.DeepEqual(got, want) {
 		t.Fatalf("DefaultGateNamesForTest = %v, want %v", got, want)
+	}
+}
+
+func TestRegisterGateNames_lastRegistrationWins(t *testing.T) {
+	t.Run("GTVCG-I01: The answer always comes from the source registered last", func(t *testing.T) {})
+	saved := defaultGateNames
+	t.Cleanup(func() { defaultGateNames = saved })
+
+	RegisterGateNames(func() []string { return []string{"first"} })
+	RegisterGateNames(func() []string { return []string{"second"} })
+	if got := DefaultGateNamesForTest(); !reflect.DeepEqual(got, []string{"second"}) {
+		t.Fatalf("DefaultGateNamesForTest = %v, want the second source's list", got)
+	}
+}
+
+func TestDefaultGateNamesForTest_asksTheSourceEachTime(t *testing.T) {
+	t.Run("GTVCG-X01: The names are not cached: each question asks the registered source again", func(t *testing.T) {})
+	saved := defaultGateNames
+	t.Cleanup(func() { defaultGateNames = saved })
+
+	calls := 0
+	RegisterGateNames(func() []string { calls++; return []string{"g"} })
+	DefaultGateNamesForTest()
+	DefaultGateNamesForTest()
+	if calls != 2 {
+		t.Fatalf("the source was asked %d times for two questions, want 2", calls)
 	}
 }

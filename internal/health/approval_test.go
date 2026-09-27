@@ -12,30 +12,31 @@ import (
 	"github.com/co2-lab/anchors/internal/i18n"
 )
 
-// O GitHub RECUSA que o autor aprove o próprio PR — regra de plataforma, sem toggle. Como
-// agentes na mesma máquina compartilham a conta, `required_approvals: 1` trava o fluxo
-// inteiro: o card chega a `ready-to-review`, o revisor confronta e aprova… e não consegue.
+// GitHub REFUSES to let the author approve their own PR — a platform rule, with no toggle.
+// Since agents on one machine share the account, `required_approvals: 1` stops the whole
+// flow: the card reaches `ready-to-review`, the reviewer confronts and approves… and cannot.
 //
-// O doctor precisa DIZER isso antes de alguém descobrir no meio de um merge.
-func TestAvisaQuandoAprovacaoEhInalcancavel(t *testing.T) {
-	// Com ZERO exigido não há o que ficar inalcançável.
+// The doctor must SAY so before someone discovers it in the middle of a merge.
+func TestApprovalReachable_nothingToReachIsSilent(t *testing.T) {
+	t.Run("APRCP-B03: Zero required approvals or no configuration reports nothing", func(t *testing.T) {})
+	// With ZERO required there is nothing to be unreachable.
 	zero := 0
 	cfg := &config.Config{Workflow: &config.Workflow{
 		Mode: config.ModeGitHub, Repo: "acme/x", RequiredApprovals: &zero,
 	}}
 	if fs := checkApprovalReachable(cfg); len(fs) != 0 {
-		t.Errorf("zero exigido não pode gerar achado: %+v", fs)
+		t.Errorf("zero required must not give a finding: %+v", fs)
 	}
 
-	// Sem `gh` no PATH o doctor já reclama noutro achado — não duplicar.
 	if fs := checkApprovalReachable(nil); len(fs) != 0 {
-		t.Errorf("config nula não deveria gerar achado: %+v", fs)
+		t.Errorf("a nil config must not give a finding: %+v", fs)
 	}
 }
 
-// A mensagem precisa NOMEAR as duas saídas. Um aviso que diz "está travado" sem dizer o
-// que fazer transfere o problema em vez de resolvê-lo.
-func TestMensagemNomeiaAsDuasSaidas(t *testing.T) {
+// The message must NAME both ways out. A warning that says "it is stuck" without saying
+// what to do hands the problem over instead of solving it.
+func TestApprovalReachable_messageNamesBothWaysOut(t *testing.T) {
+	t.Run("APRCP-B06: The warning names both ways out", func(t *testing.T) {})
 	um := 1
 	cfg := &config.Config{Workflow: &config.Workflow{
 		Mode: config.ModeGitHub, Repo: "acme/x", RequiredApprovals: &um,
@@ -48,13 +49,13 @@ func TestMensagemNomeiaAsDuasSaidas(t *testing.T) {
 		t.Fatal("a writer with no escape must produce the finding")
 	}
 	d := fs[0].Detail
-	for _, esperado := range []string{"required_approvals: 0", "doctor --fix"} {
-		if !strings.Contains(d, esperado) {
-			t.Errorf("a mensagem deveria citar %q: %s", esperado, d)
+	for _, want := range []string{"required_approvals: 0", "doctor --fix"} {
+		if !strings.Contains(d, want) {
+			t.Errorf("the message should mention %q: %s", want, d)
 		}
 	}
 	if !strings.Contains(d, "conta de serviço") && !strings.Contains(d, "service account") {
-		t.Errorf("a mensagem deveria citar conta de serviço / service account: %s", d)
+		t.Errorf("the message should mention a service account: %s", d)
 	}
 }
 
@@ -101,6 +102,8 @@ var (
 )
 
 func TestCanBypassProtection(t *testing.T) {
+	t.Run("APRCP-B01: Only an administrator whose protection spares administrators can bypass it", func(t *testing.T) {})
+	t.Run("APRCP-B02: Each refusal of the bypass names its reason", func(t *testing.T) {})
 	for name, tc := range map[string]struct {
 		answers []ghAnswer
 		ok      bool
@@ -136,6 +139,8 @@ func TestCanBypassProtection(t *testing.T) {
 }
 
 func TestCheckApprovalReachable_withFakeGH(t *testing.T) {
+	t.Run("APRCP-B05: A required approval the account cannot bypass gives one warning on the repository", func(t *testing.T) {})
+	t.Run("APRCP-B04: Without the platform CLI the reachability check stays silent", func(t *testing.T) {})
 	um := 1
 	cfg := &config.Config{Workflow: &config.Workflow{
 		Mode: config.ModeGitHub, Repo: "acme/x", RequiredApprovals: &um,
@@ -163,6 +168,8 @@ func TestCheckApprovalReachable_withFakeGH(t *testing.T) {
 }
 
 func TestDisableApprovalRequirement(t *testing.T) {
+	t.Run("APRCP-B07: Turning the requirement off sends a protection with zero approvals", func(t *testing.T) {})
+	t.Run("APRCP-E01: A refused protection update names the branch and carries the platform output", func(t *testing.T) {})
 	calls, stdin := fakeGH(t, ghAnswer{match: "'api --method PUT repos/acme/x/branches/main/protection --input -'"})
 	if err := DisableApprovalRequirement("acme/x", "main"); err != nil {
 		t.Fatal(err)
@@ -187,6 +194,43 @@ func TestDisableApprovalRequirement(t *testing.T) {
 	err := DisableApprovalRequirement("acme/x", "main")
 	if err == nil || err.Error() != "main: no rule" {
 		t.Fatalf("a failed PUT must name the branch and carry gh's output, got %v", err)
+	}
+}
+
+// The warning appears exactly when the bypass is refused: both read the same answers.
+func TestApprovalReachable_agreesWithTheBypass(t *testing.T) {
+	t.Run("APRCP-I01: The warning appears exactly when the bypass is refused", func(t *testing.T) {})
+	um := 1
+	cfg := &config.Config{Workflow: &config.Workflow{
+		Mode: config.ModeGitHub, Repo: "acme/x", RequiredApprovals: &um,
+	}}
+	for name, answers := range map[string][]ghAnswer{
+		"admin with an escape": {ghUser, ghAdmin, ghNoEnforce},
+		"admin, enforced":      {ghUser, ghAdmin, ghEnforce},
+		"writer":               {ghUser, ghWriter},
+	} {
+		fakeGH(t, answers...)
+		ok, _ := CanBypassProtection("acme/x", "main")
+		warned := len(checkApprovalReachable(cfg)) == 1
+		if ok == warned {
+			t.Errorf("%s: bypass=%v but warned=%v — they must be opposite", name, ok, warned)
+		}
+	}
+}
+
+// Diagnosing never changes the repository's protection: that is the fix's job, on request.
+func TestApprovalReachable_onlyReads(t *testing.T) {
+	t.Run("APRCP-X01: The reachability check never changes the branch protection", func(t *testing.T) {})
+	um := 1
+	cfg := &config.Config{Workflow: &config.Workflow{
+		Mode: config.ModeGitHub, Repo: "acme/x", RequiredApprovals: &um,
+	}}
+	calls, _ := fakeGH(t, ghUser, ghWriter, ghAnswer{match: "*PUT*"})
+	if fs := checkApprovalReachable(cfg); len(fs) != 1 {
+		t.Fatalf("setup: a writer must be warned, got %+v", fs)
+	}
+	if strings.Contains(calls(), "PUT") || strings.Contains(calls(), "--method") {
+		t.Fatalf("the check must only read the platform, calls were:\n%s", calls())
 	}
 }
 

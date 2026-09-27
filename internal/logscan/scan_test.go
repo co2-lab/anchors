@@ -3,6 +3,8 @@ package logscan
 import (
 	"os"
 	"path/filepath"
+	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -30,10 +32,12 @@ func projectWithLogs(t *testing.T, files map[string]string) (string, *config.Con
 // anything. The three lines below say the same thing in JSON, plain text and syslog — and
 // the scanner reads them alike, because it looks for the CODE, not the format.
 func TestScan_theFormatDoesNotMatter(t *testing.T) {
+	t.Run("LGSCL-B02: The format does not matter", func(t *testing.T) {})
+	t.Run("LGSCL-B07: Each occurrence records its time window", func(t *testing.T) {})
 	root, cfg := projectWithLogs(t, map[string]string{
-		"a.jsonl":  `{"level":"error","msg":"#[CRED-E01] failed","ts":"2026-09-01T10:00:00Z"}` + "\n",
-		"b.txt":    "2026-09-05 11:00:00 ERROR #[CRED-E01] refused\n",
-		"c.syslog": "<134>1 2026-09-19T08:00:00Z app - - - #[CRED-E01] refused\n",
+		"a.jsonl":  `{"level":"error","msg":"#[CRED-E01] failed","ts":"2026-09-05T10:00:00Z"}` + "\n",
+		"b.txt":    "2026-09-19 11:00:00 ERROR #[CRED-E01] refused\n",
+		"c.syslog": "<134>1 2026-09-01T08:00:00Z app - - - #[CRED-E01] refused\n",
 	})
 	r, err := Scan(root, cfg, specDeclaring(t, root, "CRED-E01"))
 	if err != nil || r == nil {
@@ -47,8 +51,11 @@ func TestScan_theFormatDoesNotMatter(t *testing.T) {
 	}
 	// The window spans the three files: a failure that happened a lot and STOPPED says
 	// something different from one happening now, and `last` is what tells them apart.
-	if r.Occurrences[0].First == "" || r.Occurrences[0].Last == "" {
-		t.Errorf("the window must be filled: %+v", r.Occurrences[0])
+	if !strings.HasPrefix(r.Occurrences[0].First, "2026-09-01") || !strings.HasPrefix(r.Occurrences[0].Last, "2026-09-19") {
+		t.Errorf("the window must span the earliest and the latest line: %+v", r.Occurrences[0])
+	}
+	if r.Files != 3 || r.Lines != 3 {
+		t.Errorf("read %d files and %d lines, want 3 and 3", r.Files, r.Lines)
 	}
 }
 
@@ -56,6 +63,7 @@ func TestScan_theFormatDoesNotMatter(t *testing.T) {
 // log shows an error the spec never foresaw. Without this separation it would be
 // discarded in silence — which is exactly the case nobody is watching.
 func TestScan_separatesWhatNoSpecDeclares(t *testing.T) {
+	t.Run("LGSCL-B04: An undeclared failure is reported apart", func(t *testing.T) {})
 	root, cfg := projectWithLogs(t, map[string]string{
 		"a.log": "ERROR #[CRED-E01] known\nERROR #[ORPHA-E99] nobody declared this\n",
 	})
@@ -79,6 +87,7 @@ func TestScan_separatesWhatNoSpecDeclares(t *testing.T) {
 // Hunting for files that look like logs would read what it should not — a log usually
 // carries exactly what must not leak.
 func TestScan_withoutDeclaredPathScansNothing(t *testing.T) {
+	t.Run("LGSCL-B01: Without a declared log path nothing is scanned", func(t *testing.T) {})
 	root, _ := projectWithLogs(t, map[string]string{"a.log": "ERROR #[CRED-E01] x\n"})
 	r, err := Scan(root, &config.Config{}, nil)
 	if err != nil || r != nil {
@@ -91,6 +100,7 @@ func TestScan_withoutDeclaredPathScansNothing(t *testing.T) {
 // needs no guess, and letting the guess override the identity would trade certainty for
 // approximation.
 func TestScan_aliasIsOnlyForWhatCarriesNoCode(t *testing.T) {
+	t.Run("LGSCL-B06: The alias only serves lines that carry no code", func(t *testing.T) {})
 	root, cfg := projectWithLogs(t, map[string]string{
 		"a.log": "ERROR INSUFFICIENT_BALANCE legacy line\nERROR #[CRED-E02] carries the code\n",
 	})
@@ -132,6 +142,7 @@ func specDeclaring(t *testing.T, root string, codes ...string) *mapx.Graph {
 // inside a URL. Eighty per cent false positive — worse than the language heuristic this
 // project already discarded for erring nine times in ten.
 func TestScan_doesNotCaptureWhatMerelyLooksLikeACode(t *testing.T) {
+	t.Run("LGSCL-B03: Look-alikes of a code are not captured", func(t *testing.T) {})
 	root, cfg := projectWithLogs(t, map[string]string{
 		"a.log": "INFO build BUILD-E01 finished\n" +
 			"INFO cache key USER-E42 evicted\n" +
@@ -155,14 +166,28 @@ func TestScan_doesNotCaptureWhatMerelyLooksLikeACode(t *testing.T) {
 // false positives back.
 func TestScan_theUndeclaredCodeNeedsAFailureLine(t *testing.T) {
 	root, cfg := projectWithLogs(t, map[string]string{
-		"a.log": "INFO cache USER-E42 evicted\nERROR #[ORPHA-E88] undeclared failure\n",
+		"a.log": "INFO cache USER-E42 evicted\nERROR #[ORPHA-E88] undeclared failure\nINFO #[ORPHA-E98] delimited\n",
 	})
 	r, _ := Scan(root, cfg, specDeclaring(t, root, "CRED-E01"))
-	if r.Unknown["ORPHA-E88"] != 1 {
-		t.Errorf("an undeclared code on a failure line must be reported: %+v", r.Unknown)
+	if r.Unknown["ORPHA-E88"] != 1 || r.Unknown["ORPHA-E98"] != 1 {
+		t.Errorf("a delimited undeclared code must be reported, with or without a level word: %+v", r.Unknown)
 	}
 	if _, ok := r.Unknown["USER-E42"]; ok {
 		t.Errorf("a look-alike on an INFO line must not be reported: %+v", r.Unknown)
+	}
+
+	// With no delimiter the level word is the only defence left: the bare code is believed
+	// only on a failure line.
+	bare, bcfg := projectWithLogs(t, map[string]string{
+		"a.log": "ERROR ORPHA-E77 bare failure\nINFO ORPHA-E76 bare id\n",
+	})
+	bcfg.Logs.Delimiters = []string{"", ""}
+	rb, _ := Scan(bare, bcfg, specDeclaring(t, bare, "CRED-E01"))
+	if rb.Unknown["ORPHA-E77"] != 1 {
+		t.Errorf("a bare undeclared code on a failure line must be reported: %+v", rb.Unknown)
+	}
+	if _, ok := rb.Unknown["ORPHA-E76"]; ok {
+		t.Errorf("a bare undeclared code on an INFO line must not be reported: %+v", rb.Unknown)
 	}
 }
 
@@ -176,6 +201,7 @@ func TestScan_theUndeclaredCodeNeedsAFailureLine(t *testing.T) {
 // All three catch the real failures alike — what changes is what they capture BESIDES. And
 // writing `#[` instead of `[` costs whoever logs exactly the same.
 func TestScan_theDelimiterIsWhatRemovesTheAmbiguity(t *testing.T) {
+	t.Run("LGSCL-B05: The delimiter removes the ambiguity", func(t *testing.T) {})
 	noise := "INFO markdown [CRED-E01] cited in prose\n" +
 		"INFO array logs[CRED-E01] index\n" +
 		`INFO json {"tags":["CRED-E01"]}` + "\n"
@@ -194,5 +220,36 @@ func TestScan_theDelimiterIsWhatRemovesTheAmbiguity(t *testing.T) {
 	r2, _ := Scan(root, cfg, g)
 	if r2.Occurrences[0].Count == 1 {
 		t.Error("with no delimiter the bare code captures the noise too — that is the cost the default avoids")
+	}
+}
+
+func TestScan_occurrencesSortedByRule(t *testing.T) {
+	t.Run("LGSCL-B08: Occurrences are sorted by rule", func(t *testing.T) {})
+	root, cfg := projectWithLogs(t, map[string]string{"a.log": "ERROR #[CRED-E02] b\nERROR #[CRED-E01] a\n"})
+	r, _ := Scan(root, cfg, specDeclaring(t, root, "CRED-E01", "CRED-E02"))
+	if len(r.Occurrences) != 2 || r.Occurrences[0].Rule != "CRED-E01" || r.Occurrences[1].Rule != "CRED-E02" {
+		t.Errorf("occurrences = %+v, want CRED-E01 then CRED-E02", r.Occurrences)
+	}
+}
+
+func TestSpecFailureCodes_everyForm(t *testing.T) {
+	t.Run("LGSCL-B09: A spec's failure rules are listed in every form", func(t *testing.T) {})
+	spec := "### ABCDE-E01 — a heading\n\n| `ABCDE-E02` | a row |\n\n- **ABCDE-E03** a bullet\n\n| `ABCDE-B01` | a behaviour |\n"
+	if got := SpecFailureCodes(spec); !reflect.DeepEqual(got, []string{"ABCDE-E01", "ABCDE-E02", "ABCDE-E03"}) {
+		t.Errorf("SpecFailureCodes = %v, want the three -E rules", got)
+	}
+}
+
+func TestScan_invalidPatternsFail(t *testing.T) {
+	t.Run("LGSCL-E01: An invalid alias or timestamp pattern fails the scan", func(t *testing.T) {})
+	root, cfg := projectWithLogs(t, map[string]string{"a.log": "ERROR #[CRED-E01] x\n"})
+	cfg.Logs.Aliases = map[string]string{"CRED-E01": "("}
+	if r, err := Scan(root, cfg, nil); err == nil || r != nil {
+		t.Errorf("an invalid alias = %+v, %v; want the error and no result", r, err)
+	}
+	cfg.Logs.Aliases = nil
+	cfg.Logs.Timestamp = "("
+	if r, err := Scan(root, cfg, nil); err == nil || r != nil {
+		t.Errorf("an invalid timestamp = %+v, %v; want the error and no result", r, err)
 	}
 }

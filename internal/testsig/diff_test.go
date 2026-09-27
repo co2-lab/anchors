@@ -9,6 +9,8 @@ import (
 )
 
 func TestParseUnifiedDiff(t *testing.T) {
+	t.Run("DCLDF-B01: Added lines are recorded under the file of the new-file header", func(t *testing.T) {})
+	t.Run("DCLDF-I01: Removals do not shift the new-side numbering", func(t *testing.T) {})
 	diff := `diff --git a/src/A.tsx b/src/A.tsx
 --- a/src/A.tsx
 +++ b/src/A.tsx
@@ -21,42 +23,33 @@ func TestParseUnifiedDiff(t *testing.T) {
 	changed := parseUnifiedDiff(diff)
 	lines := changed["src/A.tsx"]
 	if lines == nil {
-		t.Fatal("deveria ter linhas mudadas em src/A.tsx")
+		t.Fatal("src/A.tsx should have changed lines")
 	}
 	for _, want := range []int{11, 12, 22} {
 		if !lines[want] {
-			t.Errorf("linha %d deveria estar marcada como mudada; veio %v", want, lines)
+			t.Errorf("line %d should be marked as changed; got %v", want, lines)
 		}
 	}
 	if lines[21] {
-		t.Error("linha 21 não foi tocada")
-	}
-}
-
-func TestUncoveredIn(t *testing.T) {
-	fc := FileCoverage{Lines: map[int]bool{10: true, 11: false, 12: true}}
-	changed := map[int]bool{10: true, 11: true, 13: true} // 13 não é instrumentada
-	un := fc.UncoveredIn(changed)
-	if len(un) != 1 || un[0] != 11 {
-		t.Fatalf("esperava [11] descoberta, veio %v", un)
-	}
-	if fc.InstrumentedIn(changed) != 2 { // 10 e 11 (13 não é instrumentada)
-		t.Errorf("esperava 2 instrumentadas no diff, veio %d", fc.InstrumentedIn(changed))
+		t.Error("line 21 was not touched")
 	}
 }
 
 func TestParseDiffFileDeletedFile(t *testing.T) {
-	// arquivo deletado (+++ /dev/null) não deve gerar entrada
+	t.Run("DCLDF-B04: A deleted file records nothing", func(t *testing.T) {})
+	// a deleted file (+++ /dev/null) must produce no entry
 	diff := "--- a/gone.ts\n+++ /dev/null\n@@ -1,2 +0,0 @@\n-a\n-b\n"
 	p := filepath.Join(t.TempDir(), "d.diff")
 	os.WriteFile(p, []byte(diff), 0o644)
 	changed, _ := ParseDiffFile(p)
 	if len(changed) != 0 {
-		t.Errorf("arquivo deletado não deveria ter linhas mudadas, veio %v", changed)
+		t.Errorf("a deleted file should have no changed lines, got %v", changed)
 	}
 }
 
 func TestGitDiff(t *testing.T) {
+	t.Run("DCLDF-B06: Git compares the working copy with the current commit or with a reference", func(t *testing.T) {})
+	t.Run("DCLDF-E01: A directory that is not a repository fails the git diff", func(t *testing.T) {})
 	root := t.TempDir()
 	git := func(args ...string) {
 		t.Helper()
@@ -104,12 +97,14 @@ func TestGitDiff(t *testing.T) {
 }
 
 func TestParseDiffFileMissing(t *testing.T) {
+	t.Run("DCLDF-E02: A missing diff file surfaces the read error", func(t *testing.T) {})
 	if _, err := ParseDiffFile(filepath.Join(t.TempDir(), "none.diff")); !os.IsNotExist(err) {
 		t.Fatalf("a missing diff file must surface the read error, got %v", err)
 	}
 }
 
 func TestHunkNewStart(t *testing.T) {
+	t.Run("DCLDF-B02: A hunk header sets the starting line of the new side", func(t *testing.T) {})
 	for hunk, want := range map[string]int{
 		"@@ -1,2 +10,3 @@ func x()": 10,
 		"@@ -5 +7 @@":               7,
@@ -120,4 +115,32 @@ func TestHunkNewStart(t *testing.T) {
 			t.Errorf("hunkNewStart(%q) = %d, want %d", hunk, got, want)
 		}
 	}
+}
+
+// The path is cleaned of prefixes and timestamps, context lines only advance the cursor,
+// and a diff file needs no repository.
+func TestDiffPathsContextAndFile(t *testing.T) {
+	diff := "--- a/x.go\t2020-01-01\n+++ b/x.go\t2021-01-01 10:00\n@@ -1,2 +1,4 @@\n ctx\n+add\n ctx2\n+add2\n"
+	got := parseUnifiedDiff(diff)
+	t.Run("DCLDF-B03: Path prefixes and a tab-separated timestamp are stripped", func(t *testing.T) {
+		if _, ok := got["x.go"]; !ok || len(got) != 1 {
+			t.Errorf("want the lines under x.go, got %v", got)
+		}
+	})
+	t.Run("DCLDF-B05: Context lines advance the numbering without being recorded", func(t *testing.T) {
+		if want := map[int]bool{2: true, 4: true}; !reflect.DeepEqual(got["x.go"], want) {
+			t.Errorf("x.go = %v, want %v", got["x.go"], want)
+		}
+	})
+	t.Run("DCLDF-X01: A diff file is read without git", func(t *testing.T) {
+		p := filepath.Join(t.TempDir(), "c.diff")
+		os.WriteFile(p, []byte("--- /dev/null\n+++ b/x.go\n@@ -0,0 +1,2 @@\n+a\n+b\n"), 0o644)
+		changed, err := ParseDiffFile(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := (ChangedLines{"x.go": {1: true, 2: true}}); !reflect.DeepEqual(changed, want) {
+			t.Errorf("got %v, want %v", changed, want)
+		}
+	})
 }

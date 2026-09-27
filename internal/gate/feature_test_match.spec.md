@@ -61,6 +61,7 @@ in automated test suites.
 | `FTMFT-B16` | Line comments using `#` and `--` syntax are stripped when evaluating code presence. |
 | `FTMFT-B17` | The exported function `RootCode` strips scenario sub-indices (`#01`) and returns the root requirement code. |
 | `FTMFT-B18` | Only a regime tag the project MAPS under `regimes:` (or a canonical regime name) exempts a scenario as belonging to another surface; an unmapped tag that merely looks like a regime (`@nivel-compilacao`) leaves the scenario confronted. |
+| `FTMFT-B19` | A trailing comment marker counts only OUTSIDE quotes, and `--` or `#` only after whitespace: `"--label"`, `"https://…"` and a `i--` keep the rest of their line. Cut anywhere, the flag argument hid the symbol after it and dependency-honored accused a dependency the code uses. |
 
 ## Errors
 

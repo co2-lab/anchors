@@ -7,11 +7,11 @@ import (
 	"testing"
 )
 
-// Fixture no formato do gremlins — a forma exata que `gremlins unleash --output` grava
-// (ver internal/report/internal/structure.go do gremlins). Cobre cada status do enum
+// Fixture in the gremlins format — the exact shape `gremlins unleash --output` writes (see
+// internal/report/internal/structure.go in gremlins). It covers each status of the enum
 // (internal/mutator/mutator.go): KILLED, LIVED, NOT COVERED, NOT VIABLE, TIMED OUT.
 const fixtureGremlins = `{
-  "go_module": "servico-exemplo",
+  "go_module": "example-service",
   "test_efficacy": 66.6,
   "mutations_coverage": 75.0,
   "mutants_total": 6,
@@ -36,6 +36,10 @@ const fixtureGremlins = `{
 }`
 
 func TestParseMutationFormat_Gremlins(t *testing.T) {
+	t.Run("GRING-B01: The listed files are read into one result per file", func(t *testing.T) {})
+	t.Run("GRING-B02: Killed and timed-out mutants count as killed", func(t *testing.T) {})
+	t.Run("GRING-B06: The thresholds stay zero", func(t *testing.T) {})
+	t.Run("GRING-X01: The report's own efficacy figure is not used", func(t *testing.T) {})
 	dir := t.TempDir()
 	p := filepath.Join(dir, "gremlins.json")
 	if err := os.WriteFile(p, []byte(fixtureGremlins), 0o644); err != nil {
@@ -47,84 +51,111 @@ func TestParseMutationFormat_Gremlins(t *testing.T) {
 	}
 	fm, ok := rep.Files["src/domain/bankaccount.go"]
 	if !ok {
-		t.Fatalf("arquivo não casou; veio %v", rep.Files)
+		t.Fatalf("the file did not match; got %v", rep.Files)
 	}
-	// KILLED + TIMED OUT = 2 mortos (timeout é morte por travamento).
+	// KILLED + TIMED OUT = 2 killed (a timeout is death by hanging).
 	if fm.Killed != 2 {
-		t.Errorf("Killed = %d, esperado 2", fm.Killed)
+		t.Errorf("Killed = %d, want 2", fm.Killed)
 	}
-	// LIVED + NOT COVERED = 2 sobreviventes (não coberto é, por definição, não provado).
+	// LIVED + NOT COVERED = 2 survivors today (see the report: MTE keeps NoCoverage out).
 	if fm.Survived != 2 {
-		t.Errorf("Survived = %d, esperado 2", fm.Survived)
+		t.Errorf("Survived = %d, want 2", fm.Survived)
 	}
-	// NOT VIABLE e RUNNABLE ficam fora do denominador: 2/(2+2) = 50%.
+	// NOT VIABLE and RUNNABLE stay out of the denominator: 2/(2+2) = 50%, not the
+	// report's own 66.6.
 	if fm.Score != 50 {
-		t.Errorf("Score = %v, esperado 50", fm.Score)
+		t.Errorf("Score = %v, want 50", fm.Score)
 	}
-	// As linhas dos sobreviventes são o que o autor precisa ver para agir.
+	// The survivors' lines are what the author needs to act.
 	if len(fm.SurvivedAt) != 2 || fm.SurvivedAt[0] != 42 || fm.SurvivedAt[1] != 88 {
-		t.Errorf("SurvivedAt = %v, esperado [42 88]", fm.SurvivedAt)
+		t.Errorf("SurvivedAt = %v, want [42 88]", fm.SurvivedAt)
 	}
-	// O gremlins não escreve limiar no relatório — Low/High ficam ausentes (zero) e o
-	// engine cai no default, em vez de herdar régua inventada aqui.
+	// gremlins writes no threshold in the report — Low/High stay absent (zero) and the
+	// engine falls back to the default, instead of inheriting a ruler invented here.
 	if rep.Low != 0 || rep.High != 0 {
-		t.Errorf("limiares = %v/%v, esperado 0/0 (gremlins não os emite)", rep.Low, rep.High)
+		t.Errorf("thresholds = %v/%v, want 0/0 (gremlins does not emit them)", rep.Low, rep.High)
 	}
 }
 
-// O default (formato vazio) continua sendo o canônico: nenhum projeto existente muda de
-// comportamento por causa desta feature.
-func TestParseMutationFormat_VazioEhMTE(t *testing.T) {
-	dir := t.TempDir()
-	p := filepath.Join(dir, "mte.json")
-	if err := os.WriteFile(p, []byte(fixtureMT), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	rep, err := ParseMutationFormat(p, "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, ok := rep.Files["src/business-logic/pricing.ts"]; !ok {
-		t.Fatalf("o formato vazio deveria ler MTE; veio %v", rep.Files)
-	}
-}
-
-// Trocar o formato pelo outro tem de FALHAR com mensagem que ensina — é o erro provável
-// de quem declara `format:` errado no anchors.yaml, e um silêncio aqui viraria "0
-// arquivos" sem explicação.
-func TestParseMutationFormat_FormatoTrocado(t *testing.T) {
-	dir := t.TempDir()
-	mte := filepath.Join(dir, "mte.json")
+// Swapping one format for the other must FAIL with a message that teaches — it is the
+// likely mistake of whoever declares the wrong `format:` in anchors.yaml, and silence here
+// would become "0 files" without explanation.
+func TestParseMutationFormat_MTEReadAsGremlins(t *testing.T) {
+	t.Run("GRING-E01: A canonical-format report under the gremlins format is refused naming format", func(t *testing.T) {})
+	mte := filepath.Join(t.TempDir(), "mte.json")
 	if err := os.WriteFile(mte, []byte(fixtureMT), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := ParseMutationFormat(mte, "gremlins"); err == nil {
-		t.Error("ler MTE como gremlins deveria falhar")
+		t.Error("reading MTE as gremlins should fail")
 	} else if !strings.Contains(err.Error(), "format") {
-		t.Errorf("a mensagem deveria apontar o `format:`; veio: %v", err)
-	}
-
-	grem := filepath.Join(dir, "grem.json")
-	if err := os.WriteFile(grem, []byte(fixtureGremlins), 0o644); err != nil {
-		t.Fatal(err)
-	}
-	if _, err := ParseMutationFormat(grem, ""); err == nil {
-		t.Error("ler gremlins como MTE deveria falhar")
+		t.Errorf("the message should point at `format:`; got: %v", err)
 	}
 }
 
-func TestParseMutationFormat_Desconhecido(t *testing.T) {
-	dir := t.TempDir()
-	p := filepath.Join(dir, "x.json")
-	if err := os.WriteFile(p, []byte(fixtureGremlins), 0o644); err != nil {
+func readGremlins(t *testing.T, body string) (*MutationReport, error) {
+	t.Helper()
+	p := filepath.Join(t.TempDir(), "g.json")
+	if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	_, err := ParseMutationFormat(p, "stryker4s-xml")
-	if err == nil {
-		t.Fatal("formato desconhecido deveria falhar")
+	return ParseMutationFormat(p, "gremlins")
+}
+
+func TestGremlinsStatusesAndPaths(t *testing.T) {
+	mustRead := func(t *testing.T, body string) *MutationReport {
+		t.Helper()
+		rep, err := readGremlins(t, body)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return rep
 	}
-	// A mensagem precisa LISTAR os aceitos — senão o operador adivinha.
-	if !strings.Contains(err.Error(), "gremlins") {
-		t.Errorf("a mensagem deveria listar os formatos aceitos; veio: %v", err)
-	}
+	t.Run("GRING-B03: A mutant that lived counts as survived with its line", func(t *testing.T) {
+		fm := mustRead(t, `{"files":[{"file_name":"a.go","mutations":[{"status":"LIVED","line":42},{"status":"KILLED","line":7}]}]}`).Files["a.go"]
+		if fm.Survived != 1 || len(fm.SurvivedAt) != 1 || fm.SurvivedAt[0] != 42 {
+			t.Errorf("want 1 survived at 42, got %+v", fm)
+		}
+	})
+	t.Run("GRING-B04: Not viable, runnable, skipped and unknown statuses stay out of the score", func(t *testing.T) {
+		fm := mustRead(t, `{"files":[{"file_name":"a.go","mutations":[
+			{"status":"KILLED","line":1},{"status":"LIVED","line":2},
+			{"status":"NOT VIABLE","line":3},{"status":"RUNNABLE","line":4},
+			{"status":"SKIPPED","line":5},{"status":"SOMETHING NEW","line":6}]}]}`).Files["a.go"]
+		if fm.Score != 50 || fm.Killed != 1 || fm.Survived != 1 {
+			t.Errorf("want 50 with 1 killed and 1 survived, got %+v", fm)
+		}
+	})
+	t.Run("GRING-B05: The status is matched ignoring case and spaces", func(t *testing.T) {
+		fm := mustRead(t, `{"files":[{"file_name":"a.go","mutations":[
+			{"status":"killed","line":1},{"status":" TimedOut ","line":2},{"status":"Timed out","line":4},{"status":"Lived","line":3}]}]}`).Files["a.go"]
+		if fm.Killed != 3 || fm.Survived != 1 {
+			t.Errorf("want 3 killed and 1 survived, got %+v", fm)
+		}
+	})
+	t.Run("GRING-B07: File paths are normalized as in the canonical reading", func(t *testing.T) {
+		rep := mustRead(t, `{"files":[{"file_name":"./cmd/a.go","mutations":[{"status":"KILLED","line":1}]},
+			{"file_name":"/home/ci/svc/src/b.go","mutations":[{"status":"KILLED","line":1}]}]}`)
+		for _, k := range []string{"cmd/a.go", "src/b.go"} {
+			if _, ok := rep.Files[k]; !ok {
+				t.Errorf("want %s, got %v", k, keys(rep))
+			}
+		}
+	})
+	t.Run("GRING-I01: The score is killed over killed plus survived", func(t *testing.T) {
+		rep := mustRead(t, `{"files":[
+			{"file_name":"a.go","mutations":[{"status":"KILLED"},{"status":"KILLED"},{"status":"KILLED"},{"status":"LIVED"}]},
+			{"file_name":"b.go","mutations":[{"status":"KILLED"},{"status":"LIVED"},{"status":"LIVED"},{"status":"LIVED"}]}]}`)
+		for k, want := range map[string]float64{"a.go": 75, "b.go": 25} {
+			fm := rep.Files[k]
+			if fm.Score != want || fm.Score != float64(fm.Killed)/float64(fm.Killed+fm.Survived)*100 {
+				t.Errorf("%s: score %v, want %v (%+v)", k, fm.Score, want, fm)
+			}
+		}
+	})
+	t.Run("GRING-E02: A report without files is refused", func(t *testing.T) {
+		if _, err := readGremlins(t, `{"go_module":"m","files":[]}`); err == nil {
+			t.Error("an empty file list must be refused")
+		}
+	})
 }

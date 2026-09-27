@@ -1,6 +1,7 @@
 package quality
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -19,6 +20,10 @@ func englishOutput(t *testing.T) {
 }
 
 func TestStaleSeparatesNeverValidatedFromDrift(t *testing.T) {
+	t.Run("STEDS-B01: Expired test evidence is listed before the stale edges", func(t *testing.T) {})
+	t.Run("STEDS-B03: Stale edges are split into never validated and drifted", func(t *testing.T) {})
+	t.Run("STEDS-I01: An edge stamped at the current revisions is never listed", func(t *testing.T) {})
+	t.Run("STEDS-X01: Listing the stale edges leaves the map unchanged", func(t *testing.T) {})
 	englishOutput(t)
 	g := &mapx.Graph{
 		Nodes: []mapx.Node{
@@ -41,9 +46,20 @@ func TestStaleSeparatesNeverValidatedFromDrift(t *testing.T) {
 	}
 	dir := qProject(t, "version: 2\nlayers: {}\n", nil, g)
 
+	mapBefore := readQ(t, filepath.Join(dir, mapx.DefaultPath))
 	out, err := runQ(t, newStaleCmd(), "--root", dir)
 	if err != nil {
 		t.Fatal(err)
+	}
+	if readQ(t, filepath.Join(dir, mapx.DefaultPath)) != mapBefore {
+		t.Error("the stale command must not write the map")
+	}
+	ev, edges := strings.Index(out, "EXPIRED test evidence"), strings.Index(out, "stale edge(s):")
+	if ev < 0 || edges < 0 || ev > edges {
+		t.Errorf("the expired evidence must come before the stale edges:\n%s", out)
+	}
+	if !strings.Contains(out, "Expired evidence is not a test defect") {
+		t.Errorf("missing the closing note on expired evidence:\n%s", out)
 	}
 	for _, want := range []string{
 		"1 EXPIRED test evidence(s)",
@@ -66,6 +82,7 @@ func TestStaleSeparatesNeverValidatedFromDrift(t *testing.T) {
 }
 
 func TestStaleWithEverythingValidated(t *testing.T) {
+	t.Run("STEDS-B04: A map with every edge validated prints the clean message", func(t *testing.T) {})
 	englishOutput(t)
 	g := &mapx.Graph{
 		Nodes: []mapx.Node{{ID: "a.spec.md", Rev: "s1"}, {ID: "a.go", Rev: "c1"},
@@ -87,7 +104,35 @@ func TestStaleWithEverythingValidated(t *testing.T) {
 	}
 }
 
+func TestStaleExpiredEvidenceReasons(t *testing.T) {
+	t.Run("STEDS-B02: Each expired evidence names why it expired", func(t *testing.T) {})
+	englishOutput(t)
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{
+			{ID: "a.go", Kind: mapx.KindCode, Rev: "c1"},
+			{ID: "own_test.go", Kind: mapx.KindTest, Rev: "t2", Signal: &mapx.TestSignal{AtRev: "t1"}},
+			{ID: "both_test.go", Kind: mapx.KindTest, Rev: "u2", Signal: &mapx.TestSignal{
+				AtRev: "u1", ClosureRev: map[string]string{"a.go": "c0"},
+			}},
+		},
+	}
+	dir := qProject(t, "version: 2\nlayers: {}\n", nil, g)
+	out, err := runQ(t, newStaleCmd(), "--root", dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"  own_test.go\n      the test file itself changed\n",
+		"  both_test.go\n      1 dependencie(s) changed, e.g.: a.go (and the test itself)\n",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("missing %q in:\n%s", want, out)
+		}
+	}
+}
+
 func TestStaleWithoutMapFails(t *testing.T) {
+	t.Run("STEDS-E01: The stale command without a map points at the map build", func(t *testing.T) {})
 	dir := qProject(t, "version: 2\nlayers: {}\n", nil, nil)
 	if _, err := runQ(t, newStaleCmd(), "--root", dir); err == nil || !strings.Contains(err.Error(), "anchors map build") {
 		t.Errorf("no map: must point at map build; got %v", err)

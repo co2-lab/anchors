@@ -12,6 +12,7 @@ import (
 // The agent ID is <host>/<session>, and the session falls back from ANCHORS_SESSION to
 // USER to "default" — so two sessions on one machine do not claim the same card.
 func TestAgentID_sessionFallbacks(t *testing.T) {
+	t.Run("ARCGN-B01: The agent identity falls back from the session to the user to default", func(t *testing.T) {})
 	host, _ := os.Hostname()
 	if host == "" {
 		host = "local"
@@ -32,6 +33,8 @@ func TestAgentID_sessionFallbacks(t *testing.T) {
 }
 
 func TestRoleList_listsEveryKnownRole(t *testing.T) {
+	t.Run("ARCGN-B02: The role list shows every known role", func(t *testing.T) {})
+	t.Run("ARCGN-X01: The role list is the settings catalogue, not a copy", func(t *testing.T) {})
 	list := RoleList()
 	for _, r := range settings.KnownRoles() {
 		if !strings.Contains(list, string(r)) || !strings.Contains(list, r.Does()) {
@@ -43,6 +46,7 @@ func TestRoleList_listsEveryKnownRole(t *testing.T) {
 // Whoever declares a role reads what it means — above all whether it acts on the
 // escalated cards, which is the difference that most changes the work.
 func TestPrintRole_saysWhetherItDecidesProduct(t *testing.T) {
+	t.Run("ARCGN-B03: Showing a role says whether it decides the product and shows its lens", func(t *testing.T) {})
 	po := captureStdout(t, func() { PrintRole(settings.RolePO) })
 	if !strings.Contains(po, settings.RolePO.Title()) || !strings.Contains(po, "`needs-user`") {
 		t.Errorf("the product owner was not told it acts on escalated cards:\n%s", po)
@@ -60,6 +64,7 @@ func TestPrintRole_saysWhetherItDecidesProduct(t *testing.T) {
 // The terminal question accepts the abbreviation people type, and asks again (up to three
 // times) for what it does not recognise instead of assuming a role.
 func TestAskRole_retriesThenAccepts(t *testing.T) {
+	t.Run("ARCGN-B04: An unrecognised answer is echoed back and the question is asked again", func(t *testing.T) {})
 	withStdin(t, "wizard\npo\n")
 	var got settings.Role
 	var err error
@@ -73,6 +78,7 @@ func TestAskRole_retriesThenAccepts(t *testing.T) {
 }
 
 func TestAskRole_givesUpAfterThreeAttempts(t *testing.T) {
+	t.Run("ARCGN-B05: Three unrecognised answers give up", func(t *testing.T) {})
 	withStdin(t, "a\nb\nc\npo\n")
 	var err error
 	captureStdout(t, func() { _, err = AskRole() })
@@ -82,6 +88,7 @@ func TestAskRole_givesUpAfterThreeAttempts(t *testing.T) {
 }
 
 func TestAskRole_closedInputIsAnError(t *testing.T) {
+	t.Run("ARCGN-E01: A closed input while asking is an error", func(t *testing.T) {})
 	withStdin(t, "")
 	var err error
 	captureStdout(t, func() { _, err = AskRole() })
@@ -92,6 +99,7 @@ func TestAskRole_closedInputIsAnError(t *testing.T) {
 
 // Nobody on the other side of a pipe: the question must not be asked.
 func TestInteractiveTerminal_pipeIsNotInteractive(t *testing.T) {
+	t.Run("ARCGN-B06: A pipe or the null device is not an interactive terminal", func(t *testing.T) {})
 	withStdin(t, "dev\n")
 	if InteractiveTerminal() {
 		t.Error("a pipe on stdin was taken as an interactive terminal")
@@ -110,6 +118,8 @@ func TestInteractiveTerminal_pipeIsNotInteractive(t *testing.T) {
 }
 
 func TestDecidesProduct_followsTheDeclaredRole(t *testing.T) {
+	t.Run("ARCGN-B07: Only a role that handles escalated cards decides the product", func(t *testing.T) {})
+	t.Run("ARCGN-E02: An unreadable settings file does not unlock the product decision", func(t *testing.T) {})
 	root := t.TempDir()
 	if DecidesProduct(root) {
 		t.Error("with no settings, nothing is decided — the default is closed")

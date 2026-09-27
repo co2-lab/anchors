@@ -8,71 +8,76 @@ import (
 	"testing"
 )
 
-func semRepoAcima(t *testing.T) string {
+// outsideAnyRepo gives a temporary folder with no repository above it (or skips).
+func outsideAnyRepo(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
 	if Check(dir) == Disponível {
-		t.Skipf("o diretório temporário %s está dentro de um repo git", dir)
+		t.Skipf("the temporary folder %s is inside a git repository", dir)
 	}
 	return dir
 }
 
-// A razão de existir do diagnóstico: `exit status 128` não diz se falta INSTALAR ou
-// INICIAR, e os consertos são opostos. Cada causa tem de aparecer com o seu.
-func TestExplicaDizOConsertoDeCadaCausa(t *testing.T) {
-	semBin := Explain(SemBinário, "listar os arquivos staged")
-	if !strings.Contains(semBin, "não está instalado") {
-		t.Errorf("sem binário tem de mandar instalar: %s", semBin)
+// The reason the diagnosis exists: `exit status 128` does not say whether to INSTALL or to
+// INITIALISE, and the fixes are opposite. Each cause must come with its own.
+func TestExplainNamesTheFixOfEachCause(t *testing.T) {
+	t.Run("GTAVG-B04: The missing binary is explained with the install fix", func(t *testing.T) {})
+	t.Run("GTAVG-B05: The missing repository is explained with the init fix", func(t *testing.T) {})
+	noBin := Explain(SemBinário, "list the staged files")
+	if !strings.Contains(noBin, "não está instalado") || !strings.Contains(noBin, "list the staged files") {
+		t.Errorf("no binary must name the action and send to install: %s", noBin)
 	}
-	if strings.Contains(semBin, "git init") {
-		t.Errorf("`git init` não roda sem o binário — mandá-lo manda ao lugar errado: %s", semBin)
-	}
-
-	semRepo := Explain(SemRepo, "listar os arquivos staged")
-	if !strings.Contains(semRepo, "git init") {
-		t.Errorf("sem repo tem de mandar iniciar: %s", semRepo)
-	}
-	if strings.Contains(semRepo, "instalado") {
-		t.Errorf("o git ESTÁ instalado neste caso: %s", semRepo)
+	if strings.Contains(noBin, "git init") {
+		t.Errorf("`git init` does not run without the binary — it sends to the wrong place: %s", noBin)
 	}
 
-	// A ação do comando entra na frase: é o que liga o sintoma à causa numa linha.
-	if !strings.Contains(semRepo, "listar os arquivos staged") {
-		t.Errorf("a mensagem tem de nomear a ação que ficou incompleta: %s", semRepo)
+	noRepo := Explain(SemRepo, "list the staged files")
+	if !strings.Contains(noRepo, "git init") {
+		t.Errorf("no repo must send to init: %s", noRepo)
+	}
+	if strings.Contains(noRepo, "instalado") {
+		t.Errorf("git IS installed in this case: %s", noRepo)
+	}
+	// The command's action is in the sentence: it links the symptom to the cause in one line.
+	if !strings.Contains(noRepo, "list the staged files") {
+		t.Errorf("the message must name the action left incomplete: %s", noRepo)
 	}
 }
 
-// Com git disponível, a falha é OUTRA — inventar uma causa de git esconderia a real.
-func TestExplicaCalaQuandoGitEstaDisponivel(t *testing.T) {
-	if msg := Explain(Disponível, "qualquer coisa"); msg != "" {
-		t.Errorf("git disponível não deve produzir explicação: %q", msg)
+// With git available the failure is ANOTHER one — inventing a git cause would hide the real one.
+func TestExplainIsSilentWhenGitIsAvailable(t *testing.T) {
+	t.Run("GTAVG-B06: An available git is not explained", func(t *testing.T) {})
+	if msg := Explain(Disponível, "anything"); msg != "" {
+		t.Errorf("an available git must produce no explanation: %q", msg)
 	}
 }
 
-func TestVerificaDistingueRepoDeSemRepo(t *testing.T) {
+func TestCheckTellsRepoFromNoRepo(t *testing.T) {
+	t.Run("GTAVG-B03: A folder outside any repository is told apart from one inside", func(t *testing.T) {})
 	if _, err := exec.LookPath("git"); err != nil {
-		t.Skip("git não instalado")
+		t.Skip("git not installed")
 	}
-	dir := semRepoAcima(t)
+	dir := outsideAnyRepo(t)
 	if d := Check(dir); d != SemRepo {
-		t.Fatalf("diretório sem repo = %v, queria SemRepo", d)
+		t.Fatalf("folder without a repo = %v, want SemRepo", d)
 	}
 
 	if err := os.MkdirAll(filepath.Join(dir, ".git"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	if d := Check(dir); d != Disponível {
-		t.Fatalf("com .git = %v, queria Disponível", d)
+		t.Fatalf("with .git = %v, want Disponível", d)
 	}
 }
 
-// Subpasta de um repo está versionada: o `.git` fica acima, e reclamar ali mandaria
-// criar repo aninhado.
-func TestVerificaEnxergaRepoAcima(t *testing.T) {
+// A subfolder of a repo is versioned: the `.git` is above, and complaining there would send
+// the user to create a nested repo.
+func TestCheckSeesARepoAbove(t *testing.T) {
+	t.Run("GTAVG-B02: A repository above the root is seen", func(t *testing.T) {})
 	if _, err := exec.LookPath("git"); err != nil {
-		t.Skip("git não instalado")
+		t.Skip("git not installed")
 	}
-	dir := semRepoAcima(t)
+	dir := outsideAnyRepo(t)
 	if err := os.MkdirAll(filepath.Join(dir, ".git"), 0o755); err != nil {
 		t.Fatal(err)
 	}
@@ -82,6 +87,18 @@ func TestVerificaEnxergaRepoAcima(t *testing.T) {
 	}
 
 	if d := Check(sub); d != Disponível {
-		t.Fatalf("subpasta de repo = %v, queria Disponível", d)
+		t.Fatalf("subfolder of a repo = %v, want Disponível", d)
+	}
+}
+
+func TestCheck_noGitOnThePath(t *testing.T) {
+	t.Run("GTAVG-B01: Without git on the PATH the answer is no binary", func(t *testing.T) {})
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(dir, ".git"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", t.TempDir()) // an empty folder: no git to find
+	if d := Check(dir); d != SemBinário {
+		t.Fatalf("without git on the PATH = %v, want SemBinário", d)
 	}
 }

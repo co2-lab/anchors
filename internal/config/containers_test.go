@@ -29,6 +29,7 @@ containers:
 }
 
 func TestContainers(t *testing.T) {
+	t.Run("CNTNR-B01: The declared containers come back as written, and a missing config has none", func(t *testing.T) {})
 	var nilCfg *Config
 	if got := nilCfg.Containers(); got != nil {
 		t.Fatalf("a nil config has no containers, got %v", got)
@@ -44,6 +45,7 @@ func TestContainers(t *testing.T) {
 }
 
 func TestInternalContainers(t *testing.T) {
+	t.Run("CNTNR-B02: The internal containers are the declared ones without the external, in declared order", func(t *testing.T) {})
 	var names []string
 	for _, k := range containersFixture(t).InternalContainers() {
 		names = append(names, k.Name)
@@ -54,6 +56,9 @@ func TestInternalContainers(t *testing.T) {
 }
 
 func TestContainerOfLayer(t *testing.T) {
+	t.Run("CNTNR-B03: A layer is found in its container ignoring case and surrounding spaces", func(t *testing.T) {})
+	t.Run("CNTNR-B04: A layer no container claims has no container, and that is an answer, not an error", func(t *testing.T) {})
+	t.Run("CNTNR-B05: The layers of an external container are still claimed by it", func(t *testing.T) {})
 	c := containersFixture(t)
 	for layer, want := range map[string]string{
 		"screen":  "app",
@@ -68,6 +73,8 @@ func TestContainerOfLayer(t *testing.T) {
 }
 
 func TestOrphanLayers(t *testing.T) {
+	t.Run("CNTNR-B06: The orphan layers are the given ones no container claims, in the given order", func(t *testing.T) {})
+	t.Run("CNTNR-X01: With no container declared, no layer is placed by guessing: every layer is an orphan", func(t *testing.T) {})
 	c := containersFixture(t)
 	got := c.OrphanLayers([]string{"screen", "lambda", "service", "infra"})
 	if want := []string{"lambda", "infra"}; !reflect.DeepEqual(got, want) {
@@ -75,5 +82,20 @@ func TestOrphanLayers(t *testing.T) {
 	}
 	if got := (&Config{}).OrphanLayers([]string{"a"}); !reflect.DeepEqual(got, []string{"a"}) {
 		t.Fatalf("with no containers every layer is an orphan, got %v", got)
+	}
+}
+
+func TestOrphanLayers_agreeWithContainerOfLayer(t *testing.T) {
+	t.Run("CNTNR-I01: A layer is an orphan exactly when it has no container", func(t *testing.T) {})
+	c := containersFixture(t)
+	layers := []string{"screen", "HANDLER", "table", "lambda", "service", "infra"}
+	orphan := map[string]bool{}
+	for _, l := range c.OrphanLayers(layers) {
+		orphan[l] = true
+	}
+	for _, l := range layers {
+		if has := c.ContainerOfLayer(l) != ""; has == orphan[l] {
+			t.Errorf("layer %q: in container=%v and orphan=%v disagree", l, has, orphan[l])
+		}
 	}
 }

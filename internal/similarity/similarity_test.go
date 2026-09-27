@@ -1,9 +1,13 @@
 package similarity
 
-import "testing"
+import (
+	"math"
+	"reflect"
+	"testing"
+)
 
-// O corpus são os títulos de cenário de um componente real: palavras como
-// "componente" e "props" aparecem em quase todos e não distinguem nada.
+// The corpus is the scenario titles of a real component: words like "componente" and
+// "props" appear in almost every one and distinguish nothing.
 var corpusReal = []string{
 	"rounded verdadeiro aplica raio de pílula",
 	"Componente não busca dados",
@@ -13,57 +17,79 @@ var corpusReal = []string{
 	"Estado vazio exibe a mensagem de nenhuma conta cadastrada",
 }
 
-// O par que motivou tudo: cenário no vocabulário do DOMÍNIO ("raio de pílula"),
-// teste no da IMPLEMENTAÇÃO ("borderRadius 9999").
+// The pair that started it all: the scenario in the DOMAIN's words ("raio de pílula"),
+// the test in the IMPLEMENTATION's ("borderRadius 9999").
 //
-// As duas réguas DISCORDAM aqui — Jaccard 0,36 e cosseno 0,61 —, e é o caso
-// clássico: o teste é mais curto e específico, o que o Jaccard pune (cada palavra
-// a mais do cenário entra na união) e o cosseno não. Limítrofe é o veredito
-// honesto: os dois provavelmente falam do mesmo, e vale a leitura humana.
-func TestVocabularioDiferenteEhLimitrofe(t *testing.T) {
+// The two rulers DISAGREE here — Jaccard 0.36 and cosine 0.61 — and it is the classic case:
+// the test is shorter and more specific, which the Jaccard penalises (every extra word of the
+// scenario enters the union) and the cosine does not. Borderline is the honest verdict.
+func TestDifferentVocabularyIsBorderline(t *testing.T) {
+	t.Run("TXSMT-B06: Rulers that disagree make the pair borderline", func(t *testing.T) {})
 	w := Weights(corpusReal)
-	v, score := Classify(
-		"rounded verdadeiro aplica raio de pílula",
-		"rounded aplica borderRadius 9999", w)
-	if v != Limitrofe {
-		t.Errorf("veredito %v (score %.2f), queria limítrofe — as réguas discordam neste par", v, score)
+	a, b := "rounded verdadeiro aplica raio de pílula", "rounded aplica borderRadius 9999"
+	// The disagreement must BE a disagreement: if both rulers agreed, the verdict would be firm.
+	j, c := Score(a, b, w), Cosine(a, b, w)
+	if (j >= limiarSimilar) == (c >= limiarSimilar) {
+		t.Fatalf("the rulers agree (jaccard %.2f, cosine %.2f) — the case is no longer borderline", j, c)
+	}
+	if v, score := Classify(a, b, w); v != Limitrofe {
+		t.Errorf("verdict %v (score %.2f), want borderline — the rulers disagree on this pair", v, score)
 	}
 }
 
-// E a discordância tem de ser DE FATO uma discordância: se as duas réguas
-// concordassem, o veredito seria firme. Este teste guarda a mecânica.
-func TestLimitrofeEhDiscordanciaEntreAsReguas(t *testing.T) {
+func TestScoreIsTheLargerRuler(t *testing.T) {
+	t.Run("TXSMT-B09: The reported score is the larger of the two rulers", func(t *testing.T) {})
 	w := Weights(corpusReal)
 	a, b := "rounded verdadeiro aplica raio de pílula", "rounded aplica borderRadius 9999"
 	j, c := Score(a, b, w), Cosine(a, b, w)
-	if (j >= limiarSimilar) == (c >= limiarSimilar) {
-		t.Fatalf("as réguas concordam (jaccard %.2f, cosseno %.2f) — o caso deixou de ser limítrofe", j, c)
+	if _, score := Classify(a, b, w); score != math.Max(j, c) || j == c {
+		t.Errorf("score %.4f, want the larger of jaccard %.4f and cosine %.4f", score, j, c)
 	}
 }
 
-// Assunto realmente diferente: aqui não adianta reescrever, alguém precisa decidir
-// qual lado está velho.
-func TestAssuntosDiferentesSaoDivergentes(t *testing.T) {
+// A really different subject: rewriting does not help, someone must decide which side is stale.
+func TestDifferentSubjectsAreDivergent(t *testing.T) {
+	t.Run("TXSMT-B08: Different subjects are divergent", func(t *testing.T) {})
 	w := Weights(corpusReal)
 	v, score := Classify(
 		"Estado vazio exibe a mensagem de nenhuma conta cadastrada",
 		"tocar copiar abre o sheet de cópia seletiva", w)
 	if v != Divergente {
-		t.Errorf("veredito %v (score %.2f), queria divergente", v, score)
+		t.Errorf("verdict %v (score %.2f), want divergent", v, score)
 	}
 }
 
-// Igualdade é a régua; a similaridade nem entra em campo.
-func TestTextoIgualEhIdentico(t *testing.T) {
+// Equality is the ruler; similarity does not even enter the field.
+func TestEqualTextIsIdentical(t *testing.T) {
+	t.Run("TXSMT-B04: Texts differing only in case and punctuation are identical", func(t *testing.T) {})
 	w := Weights(corpusReal)
-	if v, _ := Classify("Toque no card dispara onPress", "toque no card dispara onPress!", w); v != Identico {
-		t.Errorf("veredito %v, queria idêntico — só caixa e pontuação diferem", v)
+	if v, s := Classify("Toque no card dispara onPress", "toque no card dispara onPress!", w); v != Identico || s != 1 {
+		t.Errorf("verdict %v %.2f, want identical 1 — only case and punctuation differ", v, s)
 	}
 }
 
-// O reforço estrutural: `onCustomUnit` só aparece nesses dois textos, e é evidência
-// forte de mesmo assunto mesmo com o resto das palavras diferindo.
-func TestTokenRaroCompartilhadoPuxaParaSimilar(t *testing.T) {
+func TestBothRulersAboveTheThresholdAreSimilar(t *testing.T) {
+	t.Run("TXSMT-B05: Both rulers above the threshold make the pair similar", func(t *testing.T) {})
+	corpus := []string{
+		"saving the draft keeps the typed title",
+		"the draft keeps the typed title after saving it",
+		"a tap opens the menu",
+		"an empty list shows a message",
+	}
+	w := Weights(corpus)
+	a, b := corpus[0], corpus[1]
+	if j, c := Score(a, b, w), Cosine(a, b, w); j < limiarSimilar || c < limiarSimilar {
+		t.Fatalf("both rulers must reach the threshold here (jaccard %.2f, cosine %.2f)", j, c)
+	}
+	if v, s := Classify(a, b, w); v != Similar {
+		t.Errorf("verdict %v (score %.2f), want similar", v, s)
+	}
+}
+
+// The structural boost: `onCustomUnit` appears only in these two texts, strong evidence of the
+// same subject even with the rest of the words differing.
+func TestSharedRareTokenPullsToSimilar(t *testing.T) {
+	t.Run("TXSMT-B07: A shared rare word pulls a low-scoring pair to similar", func(t *testing.T) {})
 	corpus := []string{
 		"Editar o campo personalizado dispara onCustomUnit",
 		"Toque num chip seleciona a unidade",
@@ -75,23 +101,42 @@ func TestTokenRaroCompartilhadoPuxaParaSimilar(t *testing.T) {
 		"Editar o campo personalizado dispara onCustomUnit",
 		"onCustomUnit recebe o texto digitado", w)
 	if v != Similar {
-		t.Errorf("veredito %v (score %.2f), queria similar — compartilham o token raro onCustomUnit", v, score)
+		t.Errorf("verdict %v (score %.2f), want similar — they share the rare token onCustomUnit", v, score)
 	}
 }
 
-// Corpus de um item só não tem contraste para ponderar: sem o fallback, dois
-// textos idênticos dariam score 0 — o pior erro possível.
-func TestCorpusHomogeneoCaiParaJaccardSimples(t *testing.T) {
+// A one-item corpus has no contrast to weigh: without the fallback, two identical texts would
+// score 0 — the worst possible error.
+func TestHomogeneousCorpusFallsBackToPlainJaccard(t *testing.T) {
+	t.Run("TXSMT-B03: A single-text corpus falls back to the unweighted count", func(t *testing.T) {})
 	w := Weights([]string{"toque dispara onPress"})
 	if got := Score("toque dispara onPress", "toque dispara onPress", w); got != 1 {
-		t.Errorf("score %.2f para textos idênticos em corpus homogêneo, queria 1", got)
+		t.Errorf("score %.2f for identical texts in a homogeneous corpus, want 1", got)
+	}
+	if got := Cosine("toque dispara onPress", "toque dispara onPress", w); math.Abs(got-1) > 1e-9 {
+		t.Errorf("cosine %.2f for identical texts in a homogeneous corpus, want 1", got)
 	}
 }
 
-// Número puro é valor, não assunto: dois textos sobre coisas diferentes que citem
-// o mesmo número não podem casar por isso.
-func TestNumeroPuroNaoEhToken(t *testing.T) {
+// A pure number is a value, not a subject: two texts about different things that cite the same
+// number must not match because of it.
+func TestPureNumberIsNotAToken(t *testing.T) {
+	t.Run("TXSMT-B01: Words are upper-cased, and one-character and digit-only words are dropped", func(t *testing.T) {})
 	if toks := Tokenize("borderRadius 9999"); len(toks) != 1 || toks[0] != "BORDERRADIUS" {
-		t.Errorf("tokens = %v, queria só BORDERRADIUS", toks)
+		t.Errorf("tokens = %v, want only BORDERRADIUS", toks)
+	}
+	if toks := Tokenize("a Bc 12 d-ef"); !reflect.DeepEqual(toks, []string{"BC", "EF"}) {
+		t.Errorf("tokens = %v, want [BC EF]", toks)
+	}
+}
+
+func TestWeights_idfOverTheCorpus(t *testing.T) {
+	t.Run("TXSMT-B02: A word in every text weighs nothing and a rarer word weighs the log of its rarity", func(t *testing.T) {})
+	w := Weights([]string{"xx yy", "xx zz"})
+	if w["XX"] != 0 {
+		t.Errorf("XX is in every text and must weigh 0, got %v", w["XX"])
+	}
+	if math.Abs(w["YY"]-math.Ln2) > 1e-12 {
+		t.Errorf("YY is in one of two texts and must weigh ln 2, got %v", w["YY"])
 	}
 }

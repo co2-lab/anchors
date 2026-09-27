@@ -2,6 +2,7 @@ package governance
 
 import (
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -9,66 +10,124 @@ import (
 	"github.com/co2-lab/anchors/internal/settings"
 )
 
-// O GUIA MUDA conforme a declaração local, e a diferença é o ponto.
+// THE GUIDE CHANGES with the local declaration, and the difference is the point.
 //
-// O `settings user-issues` fecha a porta do claim: quem não decide o produto não recebe
-// card escalonado. Mas a porta que mais se usa é outra, e não tem label — é o agente
-// PERGUNTAR ao dev que o está rodando.
-//
-// A pergunta parece inofensiva e não é: o dev conhece o código e vai responder, a resposta
-// é razoável, e vira decisão de produto tomada por quem não tinha autoridade — sem passar
-// pelo plano, sem revisão, e sem rastro de que foi decidido ali.
-func TestAutonomyGuide_mudaComADeclaracao(t *testing.T) {
-	semAutoridade := t.TempDir()
-	if err := settings.Save(semAutoridade, settings.Settings{
-		UserIssues: settings.Bool(false),
-	}); err != nil {
+// `settings user-issues` closes the claim's door: whoever does not decide the product gets
+// no escalated card. But the door used most is another, and it has no label — the agent
+// ASKING the dev who is running it. The dev knows the code and will answer; the answer is
+// reasonable, and becomes a product decision taken by someone with no authority.
+func TestAutonomyGuideChangesWithTheDeclaration(t *testing.T) {
+	t.Run("ATGDT-B01: A role that decides the product is told to record its decisions", func(t *testing.T) {})
+	t.Run("ATGDT-X01: A role that decides the product is not forbidden to ask", func(t *testing.T) {})
+	withoutAuthority := t.TempDir()
+	if err := settings.Save(withoutAuthority, settings.Settings{Role: "dev", DecidedAt: "2026-09-26"}); err != nil {
 		t.Fatal(err)
 	}
-	comAutoridade := t.TempDir()
-	if err := settings.Save(comAutoridade, settings.Settings{
-		UserIssues: settings.Bool(true),
-	}); err != nil {
+	withAuthority := t.TempDir()
+	if err := settings.Save(withAuthority, settings.Settings{Role: "product-owner", DecidedAt: "2026-09-26"}); err != nil {
 		t.Fatal(err)
 	}
 
-	texto := autonomyGuide(semAutoridade)
-	if !strings.Contains(texto, "Do not ask whoever is running you.") {
-		t.Errorf("quem não decide o produto precisa ler a proibição explícita:\n%s", texto)
+	text := autonomyGuide(withoutAuthority)
+	if !strings.Contains(text, "Do not ask whoever is running you.") {
+		t.Errorf("whoever does not decide the product must read the explicit ban:\n%s", text)
 	}
-	if !strings.Contains(texto, "--for-user") {
-		t.Error("a instrução não diz o que fazer no lugar de perguntar")
+	if !strings.Contains(text, "--for-user") {
+		t.Error("the instruction does not say what to do instead of asking")
 	}
-	// A razão importa mais que a proibição: uma regra sem porquê é a primeira a ser
-	// contornada quando atrapalha.
-	if !strings.Contains(texto, "authority") {
-		t.Error("a instrução proíbe sem dizer por quê")
+	// the reason matters more than the ban: a rule without a why is the first to be dodged
+	if !strings.Contains(text, "authority") {
+		t.Error("the instruction bans without saying why")
 	}
 
-	outro := autonomyGuide(comAutoridade)
-	if strings.Contains(outro, "Do not ask whoever is running you.") {
-		t.Error("quem declarou que decide o produto não recebe a proibição")
+	other := autonomyGuide(withAuthority)
+	if strings.Contains(other, "Do not ask whoever is running you.") {
+		t.Error("whoever decides the product does not get the ban")
 	}
-	if !strings.Contains(outro, "is written, not") {
-		t.Error("mesmo quem decide precisa ler que a decisão fica REGISTRADA")
+	if !strings.Contains(other, "Your role (Product Owner) decides the direction of this product.") {
+		t.Errorf("the deciding role should be told it decides:\n%s", other)
+	}
+	if !strings.Contains(other, "is written, not") || !strings.Contains(other, "--for-user") {
+		t.Error("even whoever decides must read that the decision is RECORDED, through an escalation")
 	}
 }
 
-// SEM DECLARAÇÃO, a régua é a fechada. O padrão é o mesmo do claim, e pela mesma razão: o
-// custo de errar para o lado aberto é alguém decidir o produto sem autoridade, e isso é
-// invisível depois do fato.
-func TestAutonomyGuide_semDeclaracaoEhFechado(t *testing.T) {
-	texto := autonomyGuide(t.TempDir())
-	if !strings.Contains(texto, "Do not ask whoever is running you.") {
-		t.Errorf("sem declaração, o padrão tem de ser o fechado:\n%s", texto)
+// WITHOUT A DECLARATION, the ruler is the closed one — the same default as the claim, for
+// the same reason: erring on the open side lets someone decide the product with no
+// authority, and that is invisible after the fact.
+func TestAutonomyGuideWithoutDeclarationIsClosed(t *testing.T) {
+	t.Run("ATGDT-B03: With no role declared the guide is the closed one", func(t *testing.T) {})
+	text := autonomyGuide(t.TempDir())
+	if !strings.Contains(text, "Do not ask whoever is running you.") {
+		t.Errorf("with no declaration the default has to be the closed one:\n%s", text)
 	}
-	// E o texto não pode AFIRMAR uma declaração que não houve: quem nunca declarou iria
-	// procurar em `.anchors/settings.yaml` o registro que não está lá.
-	if strings.Contains(texto, "Your role (") {
-		t.Error("o texto afirma uma declaração que não aconteceu")
+	// and the text cannot CLAIM a declaration that did not happen: whoever never declared
+	// would look in `.anchors/settings.yaml` for a record that is not there
+	if strings.Contains(text, "Your role (") {
+		t.Error("the text claims a declaration that did not happen")
 	}
-	if !strings.Contains(texto, "did not declare a role") {
-		t.Error("o texto não diz que a decisão está em aberto")
+	if !strings.Contains(text, "**You did not declare a role**") {
+		t.Error("the text does not say that no role was declared")
+	}
+}
+
+// A declared role that does not decide reads who does, and the three instructions every
+// non-decider needs: do not ask, move on after escalating, and what not to escalate.
+func TestAutonomyGuideForADeclaredNonDecider(t *testing.T) {
+	t.Run("ATGDT-B02: A declared role that does not decide is told who decides", func(t *testing.T) {})
+	t.Run("ATGDT-B06: Whoever does not decide is told not to ask, to move on and what not to escalate", func(t *testing.T) {})
+	dir := t.TempDir()
+	if err := settings.Save(dir, settings.Settings{Role: "dev", DecidedAt: "2026-09-26"}); err != nil {
+		t.Fatal(err)
+	}
+	for _, g := range []string{autonomyGuide(dir), autonomyGuide(t.TempDir())} {
+		for _, want := range []string{"Do not ask whoever is running you.", "move on to the next card", "### What is NOT to be escalated"} {
+			if !strings.Contains(g, want) {
+				t.Errorf("a non-decider should read %q:\n%s", want, g)
+			}
+		}
+	}
+	g := autonomyGuide(dir)
+	if !strings.Contains(g, "**Your role (Dev) does NOT decide the direction of this product**") ||
+		!strings.Contains(g, "`product-owner` or the `architect`") {
+		t.Errorf("a declared non-decider should read that its role does not decide, and who does:\n%s", g)
+	}
+}
+
+// "Reviewing" is not one thing: whoever hunts a data leak and whoever hunts a query in a
+// loop read the same code with different questions. A role with a lens reads it.
+func TestAutonomyGuideShowsTheRoleLens(t *testing.T) {
+	t.Run("ATGDT-B05: A role with a lens reads it", func(t *testing.T) {})
+	qa := t.TempDir()
+	if err := settings.Save(qa, settings.Settings{Role: "qa", DecidedAt: "2026-09-26"}); err != nil {
+		t.Fatal(err)
+	}
+	if g := autonomyGuide(qa); !strings.Contains(g, "## This role's lens (QA)\n\n"+settings.Role("qa").Lens()+".") {
+		t.Errorf("the qa role should read its lens:\n%s", g)
+	}
+	dev := t.TempDir()
+	if err := settings.Save(dev, settings.Settings{Role: "dev", DecidedAt: "2026-09-26"}); err != nil {
+		t.Fatal(err)
+	}
+	if g := autonomyGuide(dev); strings.Contains(g, "This role's lens") {
+		t.Errorf("a role with no lens gets no lens section:\n%s", g)
+	}
+}
+
+// A settings file that cannot be read must never turn into "you may ask": that would be
+// the most expensive silent failure of the mechanism.
+func TestAutonomyGuideUnreadableSettingsIsClosed(t *testing.T) {
+	t.Run("ATGDT-I01: An unreadable declaration reads as no role", func(t *testing.T) {})
+	dir := t.TempDir()
+	if err := os.MkdirAll(filepath.Dir(settings.Path(dir)), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(settings.Path(dir), []byte("role: [product-owner\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := autonomyGuide(dir)
+	if !strings.Contains(g, "**You did not declare a role**") || !strings.Contains(g, "Do not ask whoever is running you.") {
+		t.Errorf("an unreadable declaration must fall on the closed side:\n%s", g)
 	}
 }
 
@@ -127,67 +186,66 @@ func TestInteractiveTerminal_arquivoNaoEhTerminal(t *testing.T) {
 	}
 }
 
-// UM DEV NOVO pediu ao agente dele para contribuir. O agente leu o CONTRIBUTING, montou o
-// plano de onboarding CORRETO — instalar, `pnpm install`, declarar perfil, `doctor --fix`,
-// `guide work` — e parou no passo 4 pedindo autorização: "o passo 4 altera o repositório
-// remoto (branch protection, labels) (...) quero teu OK explícito".
+// A NEW DEV asked their agent to contribute. The agent read CONTRIBUTING, built the
+// CORRECT onboarding plan — install, declare the role, `doctor --fix`, `guide work` — and
+// stopped at step 4 asking for authorization: "step 4 changes the remote repository
+// (branch protection, labels) (...) I want your explicit OK".
 //
-// A cautela estava certa. O que faltava era saber que `doctor --fix` é IDEMPOTENTE: num
-// repositório já montado ele não muda nada. Sem isso, o agente escolhe entre dois erros —
-// pedir autorização para tudo (e não começar) ou não pedir para nada.
-//
-// Ele também temeu que `settings role` fosse interativo. É, sem argumento — e aceita o
-// perfil e a data como argumento, o que nenhum texto dizia.
-func TestAutonomyGuide_preparacaoNaoPedeAutorizacao(t *testing.T) {
-	dir := t.TempDir()
-	g := autonomyGuide(dir)
+// The caution was right. What was missing was knowing that `doctor --fix` is IDEMPOTENT:
+// on a repository already set up it changes nothing. Without that, the agent picks between
+// two errors — ask authorization for everything (and never start) or for nothing.
+func TestAutonomyGuidePreparationAsksNoAuthorization(t *testing.T) {
+	t.Run("ATGDT-B04: Every profile reads that preparing the environment asks no authorization", func(t *testing.T) {})
+	g := autonomyGuide(t.TempDir())
 
 	if !strings.Contains(g, "does not ask for authorization") {
-		t.Error("o guia deveria dizer que preparar o ambiente não pede autorização")
+		t.Error("the guide should say that preparing the environment asks no authorization")
 	}
 	if !strings.Contains(g, "idempotent") && !strings.Contains(g, "IDEMPOTENT") {
-		t.Error("a razão tem de estar dita: os comandos conferem antes de agir")
+		t.Error("the reason has to be said: the commands check before acting")
 	}
-	if !strings.Contains(g, "doctor --fix") {
-		t.Error("o comando que causou a parada tem de ser nomeado")
+	if !strings.Contains(g, "doctor --fix") || !strings.Contains(g, "anchors map build") {
+		t.Error("the preparation commands have to be named")
 	}
-	// A régua tem de ser NOMEADA, senão o agente generaliza errado — "tocar o remoto"
-	// incluiria `git push`, e ele voltaria a pedir OK para entregar trabalho.
+	// the ruler has to be NAMED, or the agent generalizes wrongly — "touching the remote"
+	// would include `git push`, and it would ask OK again to deliver work
 	if !strings.Contains(g, "REVERSIBILITY") {
-		t.Error("o guia deveria dizer QUAL é a régua, não só listar exceções")
+		t.Error("the guide should say WHICH is the ruler, not only list exceptions")
 	}
-	// E o contra-exemplo: sem ele, "preparação não pede autorização" lê-se como
-	// "nada pede autorização".
+	// and the counter-example: without it, "preparation asks no authorization" reads as
+	// "nothing asks authorization"
 	if !strings.Contains(g, "DOES ask for authorization") {
-		t.Error("o guia deveria dizer o que AINDA pede autorização")
+		t.Error("the guide should say what STILL asks for authorization")
 	}
 }
 
-func TestAutonomyGuide_dizQueSettingsRoleAceitaArgumento(t *testing.T) {
-	// O agente parou também por isto: "o passo 3 pode ser interativo (...) eu paro e
-	// devolvo o comando pra você rodar". O comando aceita perfil e data como argumento, e
-	// nenhum texto dizia — ele teria de rodar `--help` para descobrir.
+func TestAutonomyGuideSaysSettingsRoleTakesArguments(t *testing.T) {
+	t.Run("ATGDT-B04: Every profile reads that preparing the environment asks no authorization", func(t *testing.T) {})
+	// The agent also stopped for this: "step 3 may be interactive (...) I stop and hand the
+	// command back to you". The command takes the role and the date as arguments, and no
+	// text said so.
 	g := autonomyGuide(t.TempDir())
-	if !strings.Contains(g, "--date") {
-		t.Error("o guia deveria mostrar a forma NÃO interativa do `settings role`")
+	if !strings.Contains(g, "anchors settings role <role> --date") {
+		t.Error("the guide should show the NON-interactive form of `settings role`")
 	}
 	if !strings.Contains(g, "waits") && !strings.Contains(g, "waiting") {
-		t.Error("a consequência tem de estar dita: um agente sem terminal fica esperando")
+		t.Error("the consequence has to be said: an agent with no terminal waits")
 	}
 }
 
-// A seção vale para TODO perfil, e isso não é detalhe: a primeira versão a colocou depois
-// da bifurcação que separa quem decide produto de quem não decide, e o `architect` — que
-// retorna cedo — nunca a via. Quem monta o ambiente não é só o dev.
-func TestAutonomyGuide_preparacaoValeParaTodoPerfil(t *testing.T) {
-	for _, perfil := range []string{"dev", "architect", "product-owner", "qa", "reviewer"} {
+// The section holds for EVERY profile, and that is not a detail: the first version put it
+// after the fork that separates who decides the product from who does not, and the
+// `architect` — which returns early — never saw it.
+func TestAutonomyGuidePreparationHoldsForEveryProfile(t *testing.T) {
+	t.Run("ATGDT-B04: Every profile reads that preparing the environment asks no authorization", func(t *testing.T) {})
+	for _, role := range []string{"dev", "architect", "product-owner", "qa", "reviewer"} {
 		dir := t.TempDir()
-		s := settings.Settings{Role: settings.Role(perfil), DecidedAt: "2026-09-10"}
+		s := settings.Settings{Role: settings.Role(role), DecidedAt: "2026-09-10"}
 		if err := settings.Save(dir, s); err != nil {
-			t.Fatalf("salvar settings de %s: %v", perfil, err)
+			t.Fatalf("save the settings of %s: %v", role, err)
 		}
 		if g := autonomyGuide(dir); !strings.Contains(g, "does not ask for authorization") {
-			t.Errorf("perfil %s não vê a seção de preparação", perfil)
+			t.Errorf("role %s does not see the preparation section", role)
 		}
 	}
 }

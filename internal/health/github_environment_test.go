@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/initx"
 )
 
@@ -18,76 +19,82 @@ func cfgGitHub() *config.Config {
 	}}
 }
 
-// Cobrar board e pipelines de um projeto que declarou `mode: local` seria ruído garantido
-// — e ruído recorrente treina a equipe a ignorar o doctor, que é o oposto do que ele quer.
-func TestAmbienteNaoCobraNadaNoModoLocal(t *testing.T) {
+// Charging board and pipelines to a project that declared `mode: local` would be
+// guaranteed noise — and recurring noise trains the team to ignore the doctor.
+func TestEnvironmentChecksNothingInLocalMode(t *testing.T) {
+	t.Run("GHEGT-B01: Local mode checks nothing", func(t *testing.T) {})
 	dir := t.TempDir()
 
 	if fs := checkGitHubEnv(&config.Config{}, dir); len(fs) != 0 {
-		t.Errorf("modo local não usa board nem pipelines: %+v", fs)
+		t.Errorf("local mode uses neither board nor pipelines: %+v", fs)
+	}
+	if fs := checkGitHubEnv(nil, dir); len(fs) != 0 {
+		t.Errorf("no configuration checks nothing: %+v", fs)
 	}
 }
 
-// Um pipeline ausente não gera erro em lugar nenhum — gera SILÊNCIO, e os artefatos ficam
-// sem card para sempre. É por isso que o doctor tem de avisar: é a única coisa que
-// aparece.
-func TestAmbienteAvisaPipelineAusente(t *testing.T) {
+// A missing pipeline gives no error anywhere — it gives SILENCE, and the artefacts stay
+// without a card forever. That is why the doctor must warn: it is the only thing that shows.
+func TestEnvironmentWarnsMissingPipeline(t *testing.T) {
+	t.Run("GHEGT-B02: Each missing pipeline gives a warning that names what stops happening", func(t *testing.T) {})
 	dir := t.TempDir()
 
 	fs := checkPipelines(dir, cfgGitHub())
 
 	if len(fs) != len(initx.WorkflowsDoFluxo) {
-		t.Fatalf("esperava %d achados, veio %d", len(initx.WorkflowsDoFluxo), len(fs))
+		t.Fatalf("expected %d findings, got %d", len(initx.WorkflowsDoFluxo), len(fs))
 	}
 	for _, f := range fs {
 		if f.Check != "pipeline-ausente" || f.Severity != Warn {
-			t.Errorf("achado errado: %+v", f)
+			t.Errorf("wrong finding: %+v", f)
 		}
-		// A mensagem tem de dizer o que fica SEM ACONTECER — "falta um arquivo" não
-		// explica por que isso importa.
+		// The message must say what DOES NOT HAPPEN — "a file is missing" does not
+		// explain why it matters.
 		if !strings.Contains(f.Detail, "não acontece") && !strings.Contains(f.Detail, "does not happen") {
-			t.Errorf("a mensagem deveria nomear o que deixa de acontecer: %s", f.Detail)
+			t.Errorf("the message should name what stops happening: %s", f.Detail)
 		}
 		if !strings.Contains(f.Detail, "--fix") {
-			t.Errorf("a mensagem deveria apontar o conserto: %s", f.Detail)
+			t.Errorf("the message should point at the fix: %s", f.Detail)
 		}
 	}
 }
 
-// O pior caso: o pipeline ESTÁ lá, então parece configurado — mas sem `concurrency` ele
-// roda em paralelo consigo mesmo e devolve a corrida que existia para eliminar. Achado
-// próprio, e nunca contado como "ausente".
-func TestAmbientePegaPipelineSemSerializacao(t *testing.T) {
+// The worst case: the pipeline IS there, so it looks configured — but without
+// `concurrency` it runs in parallel with itself and brings back the race it existed to
+// remove. Its own finding, never counted as "missing".
+func TestEnvironmentCatchesPipelineWithoutSerialization(t *testing.T) {
+	t.Run("GHEGT-B03: A pipeline without serialization is its own finding, not a missing one", func(t *testing.T) {})
 	dir := t.TempDir()
 	if _, _, err := initx.SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}}); err != nil {
 		t.Fatal(err)
 	}
-	// Estraga um: tira a serialização, mantém o arquivo.
-	alvo := filepath.Join(dir, initx.DirWorkflows, "anchors-claim.yml")
-	if err := os.WriteFile(alvo, []byte("name: claim\non:\n  workflow_dispatch:\njobs:\n  x:\n    runs-on: ubuntu-latest\n"), 0o644); err != nil {
+	// Break one: remove the serialization, keep the file.
+	target := filepath.Join(dir, initx.DirWorkflows, "anchors-claim.yml")
+	if err := os.WriteFile(target, []byte("name: claim\non:\n  workflow_dispatch:\njobs:\n  x:\n    runs-on: ubuntu-latest\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
 	fs := checkPipelines(dir, cfgGitHub())
 
 	if len(fs) != 1 {
-		t.Fatalf("esperava 1 achado (o pipeline quebrado), veio %d: %+v", len(fs), fs)
+		t.Fatalf("expected 1 finding (the broken pipeline), got %d: %+v", len(fs), fs)
 	}
 	if fs[0].Check != "pipeline-sem-serializacao" {
-		t.Errorf("o arquivo existe — não pode ser reportado como ausente: %+v", fs[0])
+		t.Errorf("the file exists — it cannot be reported as missing: %+v", fs[0])
 	}
 	if !strings.Contains(fs[0].Detail, "mesmo card a dois agentes") && !strings.Contains(fs[0].Detail, "same card to two agents") {
-		t.Errorf("a mensagem deveria dizer o que quebra na prática: %s", fs[0].Detail)
+		t.Errorf("the message should say what breaks in practice: %s", fs[0].Detail)
 	}
 }
 
-// Depois do `--fix` não pode sobrar achado de pipeline: o que o doctor cobra e o que o
-// `--fix` cria saem da MESMA lista, e discordarem faria o doctor pedir eternamente algo
-// que ele mesmo acabou de criar.
-func TestFixSatisfazOQueODoctorCobra(t *testing.T) {
+// After `--fix` no pipeline finding may remain: what the doctor charges and what `--fix`
+// creates come from the SAME list, and a disagreement would make the doctor ask forever
+// for something it has just created.
+func TestFixSatisfiesWhatTheDoctorCharges(t *testing.T) {
+	t.Run("GHEGT-I01: After the fix seeds the pipelines no pipeline finding remains", func(t *testing.T) {})
 	dir := t.TempDir()
 	if fs := checkPipelines(dir, cfgGitHub()); len(fs) == 0 {
-		t.Fatal("preparo: o projeto vazio deveria ter achados")
+		t.Fatal("setup: the empty project should have findings")
 	}
 
 	if _, _, err := initx.SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}}); err != nil {
@@ -95,18 +102,19 @@ func TestFixSatisfazOQueODoctorCobra(t *testing.T) {
 	}
 
 	if fs := checkPipelines(dir, cfgGitHub()); len(fs) != 0 {
-		t.Errorf("o --fix criou os pipelines e o doctor ainda reclama: %+v", fs)
+		t.Errorf("--fix created the pipelines and the doctor still complains: %+v", fs)
 	}
 }
 
-// O board NÃO é conferido, e é deliberado: o estado do trabalho é uma label, e o
-// Project é espelho opcional (BOOTSTRAP.md §7.13). A decisão anterior — estado na coluna
-// — exigia um PAT com escopo `project` de todo adotante, e isso era atrito de adoção por
-// uma escolha de visualização.
+// The board is NOT checked, deliberately: the state of work is a label, and the Project
+// is an optional mirror (BOOTSTRAP.md §7.13). The previous decision — state in the column
+// — demanded a PAT with `project` scope from every adopter, an adoption cost for a
+// visualization choice.
 //
-// Este teste é o que impede a volta: cobrar board faria o doctor pedir uma peça que o
-// fluxo não usa.
-func TestDoctorNaoCobraBoard(t *testing.T) {
+// This test is what prevents the way back: charging the board would make the doctor ask
+// for a piece the flow does not use.
+func TestDoctorDoesNotChargeTheBoard(t *testing.T) {
+	t.Run("GHEGT-X01: The board is never charged", func(t *testing.T) {})
 	dir := t.TempDir()
 	if _, _, err := initx.SemeiaWorkflows(dir, &config.Config{Workflow: &config.Workflow{}}); err != nil {
 		t.Fatal(err)
@@ -117,48 +125,86 @@ func TestDoctorNaoCobraBoard(t *testing.T) {
 	for _, f := range fs {
 		if strings.Contains(strings.ToLower(f.Check), "board") ||
 			strings.Contains(strings.ToLower(f.Detail), "project") {
-			t.Errorf("o doctor cobra board, que virou opcional: %+v", f)
+			t.Errorf("the doctor charges the board, which became optional: %+v", f)
 		}
 	}
 }
 
-// O pipeline DESATUALIZADO é como uma correção no desenho do fluxo chega a quem já
-// instalou. Sem este achado, um defeito corrigido na fonte continua rodando no projeto
-// para sempre — e nada avisa, porque o arquivo ESTÁ lá.
-func TestAmbienteAvisaPipelineDesatualizado(t *testing.T) {
+// The OUTDATED pipeline is how a fix in the flow's design reaches whoever already
+// installed it. Without this finding, a defect fixed at the source keeps running in the
+// project forever — and nothing warns, because the file IS there.
+func TestEnvironmentWarnsOutdatedPipeline(t *testing.T) {
+	t.Run("GHEGT-B04: A pipeline behind its template is reported only while it carries the marker", func(t *testing.T) {})
 	dir := t.TempDir()
 	if _, _, err := initx.SemeiaWorkflows(dir, cfgGitHub()); err != nil {
 		t.Fatal(err)
 	}
-	// Envelhece um pipeline: conteúdo diferente do template, marcador INTACTO.
-	alvo := filepath.Join(dir, initx.DirWorkflows, initx.WorkflowsDoFluxo[0].Arquivo)
-	b, err := os.ReadFile(alvo)
+	// Age one pipeline: content different from the template, marker INTACT.
+	target := filepath.Join(dir, initx.DirWorkflows, initx.WorkflowsDoFluxo[0].Arquivo)
+	b, err := os.ReadFile(target)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(alvo, append(b, []byte("\n# deriva\n")...), 0o644); err != nil {
+	if err := os.WriteFile(target, append(b, []byte("\n# drift\n")...), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	var achou bool
+	var found bool
 	for _, f := range checkPipelines(dir, cfgGitHub()) {
 		if f.Check == "pipeline-desatualizado" {
-			achou = true
+			found = true
 		}
 	}
-	if !achou {
-		t.Error("o pipeline ficou para trás e o doctor não avisou")
+	if !found {
+		t.Error("the pipeline fell behind and the doctor did not warn")
 	}
 
-	// Agora SEM o marcador: o time adotou o arquivo, e a diferença passa a ser
-	// customização dele — avisar aqui seria cobrar que ele desfaça o próprio trabalho.
-	semMarcador := strings.ReplaceAll(string(b), initx.MarcadorDeTemplate, "# editado pelo time")
-	if err := os.WriteFile(alvo, []byte(semMarcador+"\n# deriva\n"), 0o644); err != nil {
+	// Now WITHOUT the marker: the team adopted the file, and the difference is its own
+	// customization — warning here would ask it to undo its own work.
+	noMarker := strings.ReplaceAll(string(b), initx.MarcadorDeTemplate, "# edited by the team")
+	if err := os.WriteFile(target, []byte(noMarker+"\n# drift\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	for _, f := range checkPipelines(dir, cfgGitHub()) {
 		if f.Check == "pipeline-desatualizado" {
-			t.Error("pipeline sem marcador é do time — não pode ser cobrado como desatualizado")
+			t.Error("a pipeline without the marker is the team's — it cannot be charged as outdated")
 		}
 	}
+}
+
+// The branch protection is the rule the whole flow assumes, and the only one whose absence
+// produces no error anywhere: a direct push works and skips the card. The fake `gh`
+// answers offline.
+func TestEnvironmentChecksBranchProtection(t *testing.T) {
+	q := "'api repos/acme/exemplo/branches/main/protection --jq .required_pull_request_reviews != null'"
+
+	t.Run("GHEGT-B05: An unreadable branch protection is an unprotected branch", func(t *testing.T) {
+		fakeGH(t) // the read fails, as a 404 for an unprotected branch does
+		fs := checkBranchProtection(cfgGitHub())
+		want := Finding{"main-sem-protecao", Warn, "acme/exemplo", i18n.T("health.main_unprotected")}
+		if len(fs) != 1 || fs[0] != want {
+			t.Fatalf("checkBranchProtection = %+v, want [%+v]", fs, want)
+		}
+	})
+
+	t.Run("GHEGT-B06: A protection without required reviews is partially protected", func(t *testing.T) {
+		fakeGH(t, ghAnswer{match: q, out: "false"})
+		fs := checkBranchProtection(cfgGitHub())
+		want := Finding{"main-sem-protecao", Warn, "acme/exemplo", i18n.T("health.main_partially_unprotected")}
+		if len(fs) != 1 || fs[0] != want {
+			t.Fatalf("checkBranchProtection = %+v, want [%+v]", fs, want)
+		}
+
+		fakeGH(t, ghAnswer{match: q, out: "true"})
+		if fs := checkBranchProtection(cfgGitHub()); len(fs) != 0 {
+			t.Fatalf("a protection that requires reviews gives no finding: %+v", fs)
+		}
+	})
+
+	t.Run("GHEGT-B07: Without the platform CLI the branch protection is not asked", func(t *testing.T) {
+		t.Setenv("PATH", t.TempDir())
+		if fs := checkBranchProtection(cfgGitHub()); len(fs) != 0 {
+			t.Fatalf("without gh there must be no finding: %+v", fs)
+		}
+	})
 }

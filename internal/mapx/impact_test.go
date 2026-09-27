@@ -1,13 +1,14 @@
 package mapx
 
 import (
+	"reflect"
 	"slices"
 	"testing"
 )
 
-// grafo: guide rege spec do Login E spec do Home (régua compartilhada). Trinca do
-// Login completa. Prova: subir do Login pega o guide (valida), mas NÃO desce do
-// guide para o Home (subir não re-propaga).
+// graph: a guide governs the Login spec AND the Home spec (a shared ruler). The Login triad is
+// complete. It proves that climbing from Login reaches the guide (validate), but does NOT go
+// down from the guide to Home (climbing does not re-propagate).
 func impactGraph() *Graph {
 	return &Graph{
 		Version: 1,
@@ -31,9 +32,11 @@ func impactGraph() *Graph {
 	}
 }
 
-// Mexer na SPEC do Login: propaga (desce) para código+feature+teste; valida (sobe)
-// contra o guide. NÃO deve tocar o Home (nem descendo nem subindo).
+// Changing the Login SPEC: propagates (down) to code+feature+test; validates (up) against the
+// guide. It must NOT touch Home, neither down nor up.
 func TestAnalyzeImpact_specChange(t *testing.T) {
+	t.Run("IMANM-B01: Changing a spec propagates down to its code, feature and test", func(t *testing.T) {})
+	t.Run("IMANM-B04: Climbing to a shared guide does not reach the sibling unit", func(t *testing.T) {})
 	imp := impactGraph().AnalyzeImpact("Login.spec.md")
 
 	wantProp := []string{"Login.feature", "Login.test.tsx", "Login.tsx"}
@@ -44,19 +47,20 @@ func TestAnalyzeImpact_specChange(t *testing.T) {
 	if !slices.Equal(imp.Validate, wantVal) {
 		t.Errorf("Validate = %v, want %v", imp.Validate, wantVal)
 	}
-	// o irmão Home NUNCA aparece — subir até o guide não re-desce para os irmãos
+	// the sibling Home NEVER appears — climbing to the guide does not come back down to siblings
 	if slices.Contains(imp.Propagate, "Home.spec.md") || slices.Contains(imp.Validate, "Home.spec.md") ||
 		slices.Contains(imp.Propagate, "Home.tsx") || slices.Contains(imp.Validate, "Home.tsx") {
-		t.Error("o alvo irmão Home não deveria ser alcançado (subir não re-propaga)")
+		t.Error("the sibling Home should not be reached (climbing does not re-propagate)")
 	}
 }
 
-// Mexer no CÓDIGO (folha da trinca): não propaga para ninguém (nada depende do
-// código abaixo); valida subindo contra spec e guide.
+// Changing the CODE (a leaf of the triad): propagates to nobody (nothing below depends on the
+// code); validates upward against the spec and the guide.
 func TestAnalyzeImpact_codeChange(t *testing.T) {
+	t.Run("IMANM-B03: Changing code is validated upward against its spec and the spec's guide", func(t *testing.T) {})
 	imp := impactGraph().AnalyzeImpact("Login.tsx")
 	if len(imp.Propagate) != 0 {
-		t.Errorf("mexer no código não deveria propagar para baixo; got %v", imp.Propagate)
+		t.Errorf("changing the code should not propagate down; got %v", imp.Propagate)
 	}
 	wantVal := []string{"Login.spec.md", "SPEC_GUIDE.md"}
 	if !slices.Equal(imp.Validate, wantVal) {
@@ -64,23 +68,22 @@ func TestAnalyzeImpact_codeChange(t *testing.T) {
 	}
 }
 
-// Mexer no GUIDE (pai de alto grau): propaga (desce) para TODAS as specs que ele
-// rege — a onda global. É o comportamento correto de mudar uma régua.
+// Changing the GUIDE (a high-degree parent): propagates down to EVERY spec it governs — the
+// global wave. That is the right behaviour when a ruler changes.
 func TestAnalyzeImpact_guideChange(t *testing.T) {
+	t.Run("IMANM-B01: Changing a spec propagates down to its code, feature and test", func(t *testing.T) {})
 	imp := impactGraph().AnalyzeImpact("SPEC_GUIDE.md")
-	// desce para as specs regidas e, delas, para os filhos das specs
 	for _, want := range []string{"Login.spec.md", "Home.spec.md", "Login.tsx", "Home.tsx"} {
 		if !slices.Contains(imp.Propagate, want) {
-			t.Errorf("mudar o guide deveria propagar para %q (onda global); got %v", want, imp.Propagate)
+			t.Errorf("changing the guide should propagate to %q (global wave); got %v", want, imp.Propagate)
 		}
 	}
 }
 
-// @noPropagation: um filho marcado não deixa a onda descer POR ELE.
+// @noPropagation: a marked child does not let the wave descend THROUGH it.
 func TestAnalyzeImpact_noPropagation(t *testing.T) {
+	t.Run("IMANM-B02: A no-propagation child is reached but the wave stops there", func(t *testing.T) {})
 	g := impactGraph()
-	// marca Login.feature como @noPropagation → a onda que desce da spec alcança a
-	// feature (ela é filha direta), mas NÃO continua da feature para o teste.
 	for i := range g.Nodes {
 		if g.Nodes[i].ID == "Login.feature" {
 			g.Nodes[i].NoPropagation = true
@@ -88,17 +91,43 @@ func TestAnalyzeImpact_noPropagation(t *testing.T) {
 	}
 	imp := g.AnalyzeImpact("Login.spec.md")
 	if !slices.Contains(imp.Propagate, "Login.feature") {
-		t.Error("a feature (filha direta) ainda deve ser alcançada")
+		t.Error("the feature (a direct child) must still be reached")
 	}
 	if slices.Contains(imp.Propagate, "Login.test.tsx") {
-		t.Error("o teste NÃO deveria ser alcançado — a feature @noPropagation não deixa a onda descer por ela")
+		t.Error("the test should NOT be reached — the @noPropagation feature does not let the wave through")
 	}
 }
 
-func TestAnalyzeImpact_isolado(t *testing.T) {
-	g := &Graph{Nodes: []Node{{ID: "solto.md"}}}
-	imp := g.AnalyzeImpact("solto.md")
+func TestAnalyzeImpact_isolated(t *testing.T) {
+	t.Run("IMANM-B05: A node with no edges has no impact", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "loose.md"}}}
+	imp := g.AnalyzeImpact("loose.md")
 	if len(imp.Propagate) != 0 || len(imp.Validate) != 0 {
-		t.Errorf("nó isolado não tem impacto; got prop=%v val=%v", imp.Propagate, imp.Validate)
+		t.Errorf("an isolated node has no impact; got prop=%v val=%v", imp.Propagate, imp.Validate)
+	}
+}
+
+func TestAnalyzeImpact_cycleNeverListsTheOrigin(t *testing.T) {
+	t.Run("IMANM-I01: The changed node is never in its own lists, even in a cycle", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{{ID: "A"}, {ID: "B"}},
+		Edges: []Edge{{From: "A", To: "B", Type: EdgeDependsOn}, {From: "B", To: "A", Type: EdgeDependsOn}},
+	}
+	imp := g.AnalyzeImpact("A")
+	if !slices.Equal(imp.Propagate, []string{"B"}) || !slices.Equal(imp.Validate, []string{"B"}) {
+		t.Errorf("the cycle should reach only B in both directions; got prop=%v val=%v", imp.Propagate, imp.Validate)
+	}
+}
+
+func TestAnalyzeImpact_leavesTheGraphUntouched(t *testing.T) {
+	t.Run("IMANM-X01: The analysis leaves the graph as it was", func(t *testing.T) {})
+	g := impactGraph()
+	g.Nodes[2].NoPropagation = true
+	before := impactGraph()
+	before.Nodes[2].NoPropagation = true
+	g.AnalyzeImpact("Login.spec.md")
+	g.AnalyzeImpact("Login.tsx")
+	if !reflect.DeepEqual(g, before) {
+		t.Errorf("the analysis changed the graph:\nbefore %+v\nafter  %+v", before, g)
 	}
 }

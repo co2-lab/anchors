@@ -8,6 +8,7 @@ import (
 )
 
 func TestAvailablePacks(t *testing.T) {
+	t.Run("PCSDP-B04: The available packs are grouped by domain", func(t *testing.T) {})
 	got := AvailablePacks()
 	want := map[string][]string{
 		"accessibility": {"accessibility/wcag"},
@@ -21,6 +22,11 @@ func TestAvailablePacks(t *testing.T) {
 }
 
 func TestSeedPacks_copiesAllAndPreservesAdapted(t *testing.T) {
+	t.Run("PCSDP-B01: Seeding copies every carried pack byte for byte", func(t *testing.T) {})
+	t.Run("PCSDP-B02: An adapted pack is preserved, not overwritten", func(t *testing.T) {})
+	t.Run("PCSDP-B03: The created and preserved lists come back sorted", func(t *testing.T) {})
+	t.Run("PCSDP-I01: Seeding twice is the same as seeding once", func(t *testing.T) {})
+	t.Run("PCSDP-X01: Seeding does not filter by the adopted jurisdiction", func(t *testing.T) {})
 	root := t.TempDir()
 
 	// The project already adapted its LGPD pack: seeding must not overwrite it.
@@ -28,12 +34,12 @@ func TestSeedPacks_copiesAllAndPreservesAdapted(t *testing.T) {
 	os.MkdirAll(filepath.Dir(adapted), 0o755)
 	os.WriteFile(adapted, []byte("name: lgpd # adapted\n"), 0o644)
 
-	criados, preservados, err := SeedPacks(root)
+	created, preserved, err := SeedPacks(root)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := []string{"packs/privacy/lgpd.yaml"}; !reflect.DeepEqual(preservados, want) {
-		t.Fatalf("preserved = %v, want %v", preservados, want)
+	if want := []string{"packs/privacy/lgpd.yaml"}; !reflect.DeepEqual(preserved, want) {
+		t.Fatalf("preserved = %v, want %v", preserved, want)
 	}
 	wantCreated := []string{
 		"packs/accessibility/wcag.yaml",
@@ -42,8 +48,8 @@ func TestSeedPacks_copiesAllAndPreservesAdapted(t *testing.T) {
 		"packs/privacy/ccpa.yaml",
 		"packs/privacy/gdpr.yaml",
 	}
-	if !reflect.DeepEqual(criados, wantCreated) {
-		t.Fatalf("created = %v, want %v", criados, wantCreated)
+	if !reflect.DeepEqual(created, wantCreated) {
+		t.Fatalf("created = %v, want %v", created, wantCreated)
 	}
 	if b, _ := os.ReadFile(adapted); string(b) != "name: lgpd # adapted\n" {
 		t.Fatalf("the adapted pack was overwritten: %q", b)
@@ -60,13 +66,14 @@ func TestSeedPacks_copiesAllAndPreservesAdapted(t *testing.T) {
 	}
 
 	// A second run creates nothing and preserves everything.
-	criados, preservados, err = SeedPacks(root)
-	if err != nil || len(criados) != 0 || len(preservados) != 6 {
-		t.Fatalf("re-seed = created %v, preserved %v, err %v", criados, preservados, err)
+	created, preserved, err = SeedPacks(root)
+	if err != nil || len(created) != 0 || len(preserved) != 6 {
+		t.Fatalf("re-seed = created %v, preserved %v, err %v", created, preserved, err)
 	}
 }
 
 func TestSeedPacks_reportsWriteFailure(t *testing.T) {
+	t.Run("PCSDP-E01: A folder that cannot be written fails the seeding", func(t *testing.T) {})
 	root := t.TempDir()
 	// `packs` is a file: the directories cannot be created.
 	os.WriteFile(filepath.Join(root, "packs"), []byte("x"), 0o644)

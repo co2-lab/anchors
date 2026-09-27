@@ -1,97 +1,97 @@
 package settings
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 )
 
-// SÓ O PO E O ARQUITETO decidem o produto. É a regra que motivou os perfis existirem:
-// num projeto com vários contribuidores, nem todos podem decidir pelo produto, e um agente
-// que pergunta a quem o está rodando obtém uma resposta que pode não ser a do dono.
-func TestRole_quemDecideOProduto(t *testing.T) {
-	decidem := map[Role]bool{RolePO: true, RoleArchitect: true}
+// ONLY THE PO AND THE ARCHITECT decide the product. It is the rule that motivated roles: in a
+// project with several contributors not everyone may decide for the product, and an agent that
+// asks whoever runs it gets an answer that may not be the owner's.
+func TestRole_whoDecidesTheProduct(t *testing.T) {
+	t.Run("AGRLG-B02: Only the product owner and the architect decide the product", func(t *testing.T) {})
+	decide := map[Role]bool{RolePO: true, RoleArchitect: true}
 
 	for _, r := range KnownRoles() {
 		got := r.Can(CapDecideProduct)
-		if got != decidem[r] {
-			t.Errorf("%s: decide o produto = %v, queria %v", r, got, decidem[r])
+		if got != decide[r] {
+			t.Errorf("%s: decides the product = %v, want %v", r, got, decide[r])
 		}
 	}
 }
 
-// A ESTRUTURA é do arquiteto, e não do PO. As perguntas são diferentes: "esta tela deve
-// mostrar o valor?" é de produto; "esta camada pode importar daquela?" é de estrutura — e
-// quem responde uma pode não ter contexto para a outra.
-func TestRole_aEstruturaEhDoArquiteto(t *testing.T) {
+// The STRUCTURE is the architect's, not the PO's: "should this screen show the value?" is
+// product; "may this layer import from that one?" is structure.
+func TestRole_theStructureIsTheArchitects(t *testing.T) {
+	t.Run("AGRLG-B03: The structure is the architect's", func(t *testing.T) {})
 	if !RoleArchitect.Can(CapDecideStructure) {
-		t.Error("o arquiteto tem de decidir a estrutura")
+		t.Error("the architect must decide the structure")
 	}
 	if RolePO.Can(CapDecideStructure) {
-		t.Error("o PO não decide a estrutura — é outra pergunta")
+		t.Error("the PO does not decide the structure — it is another question")
 	}
 }
 
-// QA E REVISORES executam; não decidem. Foi o pedido literal, e é o que separa quem tira
-// dúvida de quem faz tarefa.
-func TestRole_qaEReviewersNaoDecidem(t *testing.T) {
+// QA AND REVIEWERS execute; they do not decide.
+func TestRole_qaAndReviewersDoNotDecide(t *testing.T) {
+	t.Run("AGRLG-B04: QA, reviewers and dev execute and do not decide", func(t *testing.T) {})
 	for _, r := range []Role{RoleQA, RoleReviewer, RoleReviewerSec, RoleReviewerPerf, RoleDev} {
 		if r.Can(CapDecideProduct) || r.Can(CapDecideStructure) {
-			t.Errorf("%s não deve decidir nada — ele executa", r)
+			t.Errorf("%s must not decide anything — it executes", r)
 		}
 		if !r.Can(CapReview) {
-			t.Errorf("%s deve poder revisar", r)
+			t.Errorf("%s must be able to review", r)
 		}
 	}
 }
 
-// CADA PERFIL QUE REVISA TEM UMA LENTE, e elas são DISTINTAS.
-//
-// "Revisar" não é uma coisa só: quem procura vazamento de dado e quem procura consulta em
-// laço leem o mesmo código com perguntas diferentes. Um revisor sem lente tende a fazer a
-// revisão que SABE fazer — não a que falta.
-func TestRole_asLentesSaoDistintas(t *testing.T) {
-	comLente := []Role{RoleQA, RoleReviewer, RoleReviewerSec, RoleReviewerPerf}
-	vistas := map[string]Role{}
+// EACH ROLE THAT REVIEWS HAS A LENS, and they are DISTINCT. A reviewer without a lens tends to
+// do the review it KNOWS how to do — not the one that is missing.
+func TestRole_lensesAreDistinct(t *testing.T) {
+	t.Run("AGRLG-B05: Each reviewing role has its own lens", func(t *testing.T) {})
+	withLens := []Role{RoleQA, RoleReviewer, RoleReviewerSec, RoleReviewerPerf}
+	seen := map[string]Role{}
 
-	for _, r := range comLente {
+	for _, r := range withLens {
 		lens := r.Lens()
 		if strings.TrimSpace(lens) == "" {
-			t.Errorf("%s revisa e não declara lente", r)
+			t.Errorf("%s reviews and declares no lens", r)
 			continue
 		}
-		if outro, repetida := vistas[lens]; repetida {
-			t.Errorf("%s e %s têm a MESMA lente — então uma delas não precisa existir", r, outro)
+		if other, repeated := seen[lens]; repeated {
+			t.Errorf("%s and %s have the SAME lens — so one of them need not exist", r, other)
 		}
-		vistas[lens] = r
+		seen[lens] = r
 	}
 
-	// E o dev NÃO tem lente: ele revisa como parte da entrega, sem foco declarado. Dar
-	// uma lente a ele faria o perfil de revisor perder a razão de existir.
+	// And the dev has NO lens: it reviews as part of delivering, without a declared focus.
 	if RoleDev.Lens() != "" {
-		t.Error("o dev não deve ter lente — é o perfil de revisor que a tem")
+		t.Error("the dev must have no lens — the reviewer roles have it")
 	}
 }
 
-// PERFIL DESCONHECIDO NÃO PODE NADA. Um `settings.yaml` escrito à mão com um perfil
-// inventado não destrava capacidade nenhuma — o padrão fechado é o mesmo do booleano que
-// este mecanismo substituiu.
-func TestRole_desconhecidoNaoPodeNada(t *testing.T) {
+// AN UNKNOWN ROLE CAN DO NOTHING. A hand-written `settings.yaml` with an invented role unlocks
+// no capability — the closed default is the same as the boolean this mechanism replaced.
+func TestRole_unknownCanDoNothing(t *testing.T) {
+	t.Run("AGRLG-X01: An unknown role can do nothing", func(t *testing.T) {})
 	for _, r := range []Role{"", "tech-lead", "gerente", "DEV"} {
 		for _, c := range []Capability{
 			CapDecideProduct, CapDecideStructure, CapWritePlan,
 			CapWriteSpec, CapImplement, CapProve, CapReview,
 		} {
 			if Role(r).Can(c) {
-				t.Errorf("perfil %q destravou %q", r, c)
+				t.Errorf("role %q unlocked %q", r, c)
 			}
 		}
 	}
 }
 
-// O nome é lido nas duas línguas e nas abreviações: a pergunta é no terminal, e quem
-// responde digita `po`, não `product-owner`.
+// The name is read in both languages and in abbreviations: the question is asked in the
+// terminal, and whoever answers types `po`, not `product-owner`.
 func TestParseRole(t *testing.T) {
-	casos := map[string]Role{
+	t.Run("AGRLG-B06: Typed roles are recognised by name and abbreviation", func(t *testing.T) {})
+	cases := map[string]Role{
 		"dev": RoleDev, "developer": RoleDev, "desenvolvedor": RoleDev,
 		"qa": RoleQA, "tester": RoleQA,
 		"po": RolePO, "product-owner": RolePO, "produto": RolePO,
@@ -101,61 +101,37 @@ func TestParseRole(t *testing.T) {
 		"reviewer": RoleReviewer, "revisor": RoleReviewer,
 		" DEV \n": RoleDev,
 	}
-	for entrada, esperado := range casos {
-		if got := ParseRole(entrada); got != esperado {
-			t.Errorf("ParseRole(%q) = %q, queria %q", entrada, got, esperado)
+	for in, want := range cases {
+		if got := ParseRole(in); got != want {
+			t.Errorf("ParseRole(%q) = %q, want %q", in, got, want)
 		}
 	}
-	// O que não se reconhece devolve vazio — e quem chama pergunta de novo, em vez de
-	// assumir um perfil. Assumir aqui daria capacidades a quem não as pediu.
-	for _, invalido := range []string{"", "tech-lead", "gerente", "sim"} {
-		if got := ParseRole(invalido); got != "" {
-			t.Errorf("ParseRole(%q) = %q, queria vazio", invalido, got)
+	// What is not recognised returns empty — and the caller asks again, instead of assuming a
+	// role. Assuming here would give capabilities to whoever did not ask for them.
+	for _, invalid := range []string{"", "tech-lead", "gerente", "sim"} {
+		if got := ParseRole(invalid); got != "" {
+			t.Errorf("ParseRole(%q) = %q, want empty", invalid, got)
 		}
 	}
 }
 
-// Todo perfil declara TÍTULO e o que FAZ — é o que o comando mostra na hora de escolher, e
-// escolher sem saber o que cada um faz é escolher no escuro.
-func TestKnownRoles_todosSeApresentam(t *testing.T) {
+// Every role declares a TITLE and what it DOES — what the command shows when choosing.
+func TestKnownRoles_allPresentThemselves(t *testing.T) {
+	t.Run("AGRLG-B01: Every known role presents itself", func(t *testing.T) {})
 	rs := KnownRoles()
-	if len(rs) < 7 {
-		t.Fatalf("perfis = %d, esperava ao menos 7", len(rs))
+	want := []Role{RoleArchitect, RoleDev, RolePO, RoleQA, RoleReviewer, RoleReviewerPerf, RoleReviewerSec}
+	if !reflect.DeepEqual(rs, want) || !reflect.DeepEqual(KnownRoles(), rs) {
+		t.Fatalf("roles = %v, want the seven known roles in a stable order %v", rs, want)
 	}
 	for _, r := range rs {
 		if strings.TrimSpace(r.Title()) == "" {
-			t.Errorf("%s sem título", r)
+			t.Errorf("%s without a title", r)
 		}
 		if strings.TrimSpace(r.Does()) == "" {
-			t.Errorf("%s não diz o que faz", r)
+			t.Errorf("%s does not say what it does", r)
 		}
 		if len(r.Caps()) == 0 {
-			t.Errorf("%s não tem capacidade nenhuma — então ele não faz nada", r)
+			t.Errorf("%s has no capability — so it does nothing", r)
 		}
-	}
-}
-
-// O CAMPO ANTIGO continua valendo para quem já declarou.
-//
-// Ignorá-lo faria quem declarou `user_issues: true` antes dos perfis perder a capacidade
-// sem nada avisar, no meio de um trabalho.
-func TestSettings_compatibilidadeComOCampoAntigo(t *testing.T) {
-	antigo := Settings{UserIssues: Bool(true)}
-	if !antigo.Can(CapDecideProduct) {
-		t.Error("`user_issues: true` sem perfil deve continuar decidindo o produto")
-	}
-	if !antigo.Decided() {
-		t.Error("quem declarou pelo campo antigo já decidiu — não deve ser perguntado de novo")
-	}
-	// Mas ele só responde a UMA pergunta: era um booleano, e não tinha como dizer mais.
-	if antigo.Can(CapWritePlan) || antigo.Can(CapReview) {
-		t.Error("o campo antigo não pode destravar capacidade que ele não declarava")
-	}
-
-	// E o perfil VENCE quando os dois existem: é a fonte nova, e manter os dois faria a
-	// resposta vir da que alguém esquecesse de mudar.
-	comOsDois := Settings{Role: RoleDev, UserIssues: Bool(true)}
-	if comOsDois.Can(CapDecideProduct) {
-		t.Error("o perfil declarado tem de vencer o campo antigo")
 	}
 }

@@ -18,12 +18,20 @@ func cmdWithFlags() (*cobra.Command, *string, *bool) {
 
 // The OLD name keeps working: a script that still passes it reaches the new flag.
 func TestAliasDeFlag_oldNameReachesTheNewFlag(t *testing.T) {
+	t.Run("FLALF-B01: A value passed under the old name reaches the current flag", func(t *testing.T) {})
+	t.Run("FLALF-B02: The alias of a switch flag is a switch", func(t *testing.T) {})
+	t.Run("FLALF-B03: The old name is hidden and deprecated", func(t *testing.T) {})
+	t.Run("FLALF-X01: Nothing is copied before the aliases are resolved", func(t *testing.T) {})
 	cmd, root, all := cmdWithFlags()
 	AliasDeFlag(cmd, "root", "raiz")
 	AliasDeFlag(cmd, "all", "todos")
 
 	if err := cmd.ParseFlags([]string{"--raiz", "/tmp/project", "--todos"}); err != nil {
 		t.Fatalf("the old names were not accepted: %v", err)
+	}
+	// Parsing alone copies nothing: the current flag keeps its default until the resolve.
+	if *root != "." || *all {
+		t.Errorf("the old value reached the current flag before the resolve: root=%q all=%v", *root, *all)
 	}
 	if err := ResolveAliases(cmd, map[string]string{"root": "raiz", "all": "todos"}); err != nil {
 		t.Fatal(err)
@@ -47,6 +55,8 @@ func TestAliasDeFlag_oldNameReachesTheNewFlag(t *testing.T) {
 // When BOTH are passed the new name wins: copying the old one over it would ignore the
 // value the person typed with the current name.
 func TestResolveAliases_newNameWins(t *testing.T) {
+	t.Run("FLALF-B04: The current name wins when both are passed", func(t *testing.T) {})
+	t.Run("FLALF-B05: A pair naming flags the command does not have is ignored", func(t *testing.T) {})
 	cmd, root, _ := cmdWithFlags()
 	AliasDeFlag(cmd, "root", "raiz")
 	if err := cmd.ParseFlags([]string{"--raiz", "/old", "--root", "/new"}); err != nil {
@@ -62,6 +72,7 @@ func TestResolveAliases_newNameWins(t *testing.T) {
 
 // A value the new flag cannot hold is an error that names the OLD flag — the one typed.
 func TestResolveAliases_badValueNamesTheOldFlag(t *testing.T) {
+	t.Run("FLALF-E01: A value the current flag cannot hold names the old flag", func(t *testing.T) {})
 	var n int
 	cmd := &cobra.Command{Use: "probe"}
 	cmd.Flags().IntVar(&n, "limit", 0, "limit")
@@ -77,6 +88,7 @@ func TestResolveAliases_badValueNamesTheOldFlag(t *testing.T) {
 
 // Declaring an alias of a flag that does not exist is a programming error, caught at start.
 func TestAliasDeFlag_panicsOnUnknownFlag(t *testing.T) {
+	t.Run("FLALF-E02: An alias of a flag the command does not have stops the program", func(t *testing.T) {})
 	defer func() {
 		r := recover()
 		if r == nil || !strings.Contains(r.(string), `"nope"`) {

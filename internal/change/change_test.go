@@ -9,6 +9,8 @@ import (
 )
 
 func TestKeyAndPath(t *testing.T) {
+	t.Run("CHRCC-B01: The key joins the stage and the normalised unit", func(t *testing.T) {})
+	t.Run("CHRCC-B02: A pending record lives in the changes folder under its key", func(t *testing.T) {})
 	c := Change{Stage: "code", Unit: "internal/gate/mock stamped.go"}
 	if got, want := c.Key(), "code--internal-gate-mock-stamped"; got != want {
 		t.Fatalf("Key() = %q, want %q", got, want)
@@ -24,6 +26,8 @@ func TestKeyAndPath(t *testing.T) {
 }
 
 func TestRender_filledSections(t *testing.T) {
+	t.Run("CHRCC-B03: The header carries the stage, the unit, the date and the agent only when named", func(t *testing.T) {})
+	t.Run("CHRCC-B04: The record states the intent and the touched files", func(t *testing.T) {})
 	c := Change{
 		Stage:     "test",
 		Unit:      "internal/x/y.go",
@@ -53,6 +57,7 @@ func TestRender_filledSections(t *testing.T) {
 }
 
 func TestRender_emptySectionsAreStillEmitted(t *testing.T) {
+	t.Run("CHRCC-B05: Empty decision and proof sections are still written", func(t *testing.T) {})
 	out := Change{Stage: "spec", Unit: "a.go", Date: "2026-01-02"}.Render()
 	if strings.Contains(out, "agent:") {
 		t.Errorf("an empty Agent must not be written:\n%s", out)
@@ -68,6 +73,12 @@ func TestRender_emptySectionsAreStillEmitted(t *testing.T) {
 }
 
 func TestSavePendingMarkReviewed(t *testing.T) {
+	t.Run("CHRCC-B06: Saving the same stage and unit again replaces the record", func(t *testing.T) {})
+	t.Run("CHRCC-B07: The pending list is the sorted markdown files of the changes folder", func(t *testing.T) {})
+	t.Run("CHRCC-B08: Marking a record reviewed moves it to the history under the same name", func(t *testing.T) {})
+	t.Run("CHRCC-I01: A reviewed record leaves the pending list and stays in the history", func(t *testing.T) {})
+	t.Run("CHRCC-X01: A subfolder of changes is never listed as pending", func(t *testing.T) {})
+	t.Run("CHRCC-E03: Marking a missing record reviewed fails", func(t *testing.T) {})
 	root := t.TempDir()
 
 	// No changes/ directory yet: nothing pending, and no error.
@@ -134,6 +145,8 @@ func TestSavePendingMarkReviewed(t *testing.T) {
 }
 
 func TestPending_unreadableDirIsAnError(t *testing.T) {
+	t.Run("CHRCC-E01: A changes folder that cannot be read is an error", func(t *testing.T) {})
+	t.Run("CHRCC-E02: A changes folder that cannot be created fails the save", func(t *testing.T) {})
 	root := t.TempDir()
 	// changes/ exists as a FILE: ReadDir fails with something other than NotExist.
 	os.WriteFile(filepath.Join(root, Dir), []byte("x"), 0o644)

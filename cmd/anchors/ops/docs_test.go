@@ -58,31 +58,34 @@ func TestDocsBuildReconstroiOMapaEmVezDeLerODisco(t *testing.T) {
 	}
 }
 
-// A MESMA GARANTIA, MEDIDA PELO RESULTADO.
+// THE SAME GUARANTEE, MEASURED BY THE RESULT.
 //
-// O teste acima confronta o FONTE — que as chamadas estão lá. Isto confronta o COMPILADO:
-// com um mapa em disco que não conhece a unidade, o cenário dela tem de aparecer assim
-// mesmo, e com `--no-map-rebuild` NÃO pode aparecer.
+// The test above confronts the SOURCE — that the calls are there. This one confronts the
+// COMPILED output: with a map on disk that does not know the unit, its scenario must appear
+// anyway, and with `--no-map-rebuild` it must NOT.
 //
-// Os dois juntos porque cada um sozinho mente de um jeito: o de fonte passaria se as
-// chamadas existissem num ramo morto, e este passaria se alguém trocasse a reconstrução por
-// qualquer outra coisa que produzisse o mesmo arquivo.
-func TestDocsBuildCompilaAUnidadeQueOMapaNaoConhece(t *testing.T) {
+// Both together, because each alone lies in its own way: the source test would pass if the
+// calls lived in a dead branch, and this one would pass if someone swapped the rebuild for
+// anything else producing the same file.
+func TestDocsBuildCompilesTheUnitTheMapDoesNotKnow(t *testing.T) {
+	t.Run("DCCMD-B01: Build compiles from the tree, even what the map on disk does not know", func(t *testing.T) {})
+	t.Run("DCCMD-B02: No-map-rebuild compiles against the map on disk and warns", func(t *testing.T) {})
+	t.Run("DCCMD-X01: Build never writes the map", func(t *testing.T) {})
 	root := t.TempDir()
 
-	escreve := func(rel, conteudo string) {
+	write := func(rel, content string) {
 		t.Helper()
 		full := filepath.Join(root, rel)
 		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
 			t.Fatal(err)
 		}
-		if err := os.WriteFile(full, []byte(conteudo), 0o644); err != nil {
+		if err := os.WriteFile(full, []byte(content), 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}
 
-	escreve("anchors.yaml", "lang: pt-BR\nlayers:\n  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n")
-	escreve("pkg/Coisa.spec.md", `<!-- @anchors
+	write("anchors.yaml", "lang: pt-BR\nlayers:\n  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n")
+	write("pkg/Coisa.spec.md", `<!-- @anchors
 code: ABCDE
 -->
 
@@ -92,16 +95,17 @@ code: ABCDE
 
 O que a unidade faz.
 `)
-	// O MAPA EM DISCO NÃO CONHECE A SPEC — é exatamente o estado que produziu o compilado
-	// com 31 entradas a menos: um merge tinha perdido os nós, e nada acusava.
-	escreve("anchors.graph.yaml", "version: 3\nnodes: []\nedges: []\n")
-	escreve(filepath.Join("doct", "camadas.md.tmpl"),
+	// THE MAP ON DISK DOES NOT KNOW THE SPEC — exactly the state that produced the compiled
+	// output with 31 entries missing: a merge had lost the nodes, and nothing complained.
+	const emptyMap = "version: 3\nnodes: []\nedges: []\n"
+	write("anchors.graph.yaml", emptyMap)
+	write(filepath.Join("doct", "camadas.md.tmpl"),
 		`{{range specs "layer=spec"}}## {{.Titulo}}
 
 {{section . "Visão Geral"}}
 {{end}}`)
 
-	compila := func(args ...string) string {
+	compile := func(args ...string) string {
 		t.Helper()
 		cmd := newDocsBuildCmd()
 		cmd.SetArgs(append([]string{"--root", root}, args...))
@@ -112,41 +116,58 @@ O que a unidade faz.
 		}
 		b, err := os.ReadFile(filepath.Join(root, "docs", "camadas.md"))
 		if err != nil {
-			t.Fatalf("nada compilado em docs/camadas.md: %v", err)
+			t.Fatalf("nothing compiled into docs/camadas.md: %v", err)
 		}
 		return string(b)
 	}
 
-	if out := compila(); !strings.Contains(out, "O que a unidade faz") {
-		t.Errorf("o compilado NÃO tem o cenário da spec que o mapa em disco desconhece — "+
-			"é o defeito medido: 687 entradas onde as specs produziam 718.\ncompilado:\n%s", out)
+	if out := compile(); !strings.Contains(out, "O que a unidade faz") {
+		t.Errorf("the compiled output does NOT have the scenario of the spec the map on disk does not know — "+
+			"the measured defect: 687 entries where the specs produced 718.\ncompiled:\n%s", out)
+	}
+	// The rebuild stays in memory: the map on disk is the map command's to write.
+	if b, _ := os.ReadFile(filepath.Join(root, "anchors.graph.yaml")); string(b) != emptyMap {
+		t.Errorf("docs build wrote the map:\n%s", b)
 	}
 
-	// E O OPT-OUT tem de continuar valendo: quem pede o mapa em disco recebe o mapa em
-	// disco, com o que ele não conhece de fora. Sem esta metade, `--no-map-rebuild` seria
-	// uma flag que não faz nada — e o teste acima passaria mesmo se a reconstrução fosse
-	// incondicional.
+	// AND THE OPT-OUT must keep working: whoever asks for the map on disk gets the map on
+	// disk, with what it does not know left out. Without this half, `--no-map-rebuild` would
+	// be a flag that does nothing — and the check above would pass even if the rebuild were
+	// unconditional.
 	//
-	// Aqui o mapa está VAZIO, então "a spec fica de fora" se manifesta como erro do
-	// template ("nenhuma spec na camada"), e não como compilado sem a linha. As duas
-	// formas são o mesmo fato: o que o mapa não conhece não chega ao compilado.
-	semRebuild := newDocsBuildCmd()
-	semRebuild.SetArgs([]string{"--root", root, "--no-map-rebuild"})
-	semRebuild.SetOut(io.Discard)
-	semRebuild.SetErr(io.Discard)
-	err := semRebuild.Execute()
+	// Here the map is EMPTY, so "the spec is left out" shows up as a template error ("no spec
+	// in layer"), not as compiled output without the line. Both are the same fact: what the
+	// map does not know does not reach the compiled output.
+	noRebuild := newDocsBuildCmd()
+	noRebuild.SetArgs([]string{"--root", root, "--no-map-rebuild"})
+	noRebuild.SetOut(io.Discard)
+	var stderr strings.Builder
+	noRebuild.SetErr(&stderr)
+	err := noRebuild.Execute()
+	if !strings.Contains(stderr.String(), "the compiled output comes from the map on disk") {
+		t.Errorf("--no-map-rebuild does not warn on stderr:\n%s", stderr.String())
+	}
 	if err == nil {
 		b, _ := os.ReadFile(filepath.Join(root, "docs", "camadas.md"))
 		if strings.Contains(string(b), "O que a unidade faz") {
-			t.Error("com `--no-map-rebuild` o compilado trouxe a spec que o mapa em disco " +
-				"NÃO tem — a flag não está sendo respeitada, e quem precisa de um mapa " +
-				"específico recebe outro")
+			t.Error("with `--no-map-rebuild` the compiled output brought the spec the map on disk " +
+				"does NOT have — the flag is not honored, and whoever needs a specific map gets another")
 		}
 		return
 	}
 	if !strings.Contains(err.Error(), "no spec in layer") {
-		t.Errorf("com `--no-map-rebuild` e mapa vazio, o erro devia ser a ausência da spec "+
-			"— veio outro: %v", err)
+		t.Errorf("with `--no-map-rebuild` and an empty map, the error should be the missing spec "+
+			"— got another: %v", err)
+	}
+}
+
+// Without anchors.yaml there is no tree to rebuild the map from, and the error says how to
+// create one.
+func TestDocsBuildWithoutConfigPointsAtInit(t *testing.T) {
+	t.Run("DCCMD-E01: Build without a config points at init", func(t *testing.T) {})
+	err, _ := runCmd(t, newDocsBuildCmd(), "--root", t.TempDir())
+	if err == nil || !strings.Contains(err.Error(), "anchors init") {
+		t.Errorf("want the load error pointing at `anchors init`, got %v", err)
 	}
 }
 
@@ -167,6 +188,7 @@ docs:
 `
 
 func TestDocsDutiesAnswersPerLayerAndPerUnit(t *testing.T) {
+	t.Run("DCCMD-B07: Duties answers for the project, a layer or a unit", func(t *testing.T) {})
 	root := t.TempDir()
 	writeFile(t, root, "anchors.yaml", dutiesConfig)
 	writeFile(t, root, "api/handler.go", "package api\n")
@@ -197,6 +219,8 @@ func TestDocsDutiesAnswersPerLayerAndPerUnit(t *testing.T) {
 }
 
 func TestDocsDutiesWithoutDeclarationTeachesTheKinds(t *testing.T) {
+	t.Run("DCCMD-B08: Duties without a declaration teaches the known kinds", func(t *testing.T) {})
+	t.Run("DCCMD-E02: Duties without a config fails", func(t *testing.T) {})
 	root := t.TempDir()
 	writeFile(t, root, "anchors.yaml", "version: 1\n")
 	err, out := runCmd(t, newDocsCmd(), "duties", "--root", root)
@@ -210,6 +234,7 @@ func TestDocsDutiesWithoutDeclarationTeachesTheKinds(t *testing.T) {
 
 // `docs init` writes the skeleton once; a second run skips what exists, --force rewrites.
 func TestDocsInitWritesTheSkeletonOnce(t *testing.T) {
+	t.Run("DCCMD-B06: Init writes the skeleton once and needs a map", func(t *testing.T) {})
 	root := t.TempDir()
 	if err, _ := runCmd(t, newDocsCmd(), "init", "--root", root); err == nil ||
 		!strings.Contains(err.Error(), "anchors map build") {
@@ -246,6 +271,10 @@ func TestDocsInitWritesTheSkeletonOnce(t *testing.T) {
 // What `build` reports: a hand-written page with a template is SKIPPED and named; a dry
 // run says nothing was written; with no template, it says there was nothing to compile.
 func TestDocsBuildReportsSkippedDryRunAndNothing(t *testing.T) {
+	t.Run("DCCMD-B03: A dry run compiles without writing", func(t *testing.T) {})
+	t.Run("DCCMD-B04: A hand-written page is skipped, kept and named", func(t *testing.T) {})
+	t.Run("DCCMD-B05: Build with no template says there is nothing to compile", func(t *testing.T) {})
+	t.Run("DCCMD-E03: No-map-rebuild without a map says so", func(t *testing.T) {})
 	root := t.TempDir()
 	writeFile(t, root, "anchors.yaml", "version: 1\n")
 	if err := os.MkdirAll(filepath.Join(root, "doct"), 0o755); err != nil {

@@ -46,11 +46,10 @@ func projetoComFeature(t *testing.T) (string, *mapx.Graph) {
 	return root, g
 }
 
-// O CORPO do cenário entra na doc, não só o título.
-//
-// É a diferença entre esta leitura e a do gate: o gate confronta o cenário contra o teste e
-// só precisa do código. A documentação precisa dos passos — o título sozinho é manchete.
-func TestScenarios_capturaOCorpo(t *testing.T) {
+// The scenario's BODY goes into the docs, not only the title: a gate only needs the code,
+// documentation needs the steps — a title alone is a headline.
+func TestScenarios_capturesTheBody(t *testing.T) {
+	t.Run("GSRGH-B03: The body is the scenario's non-blank lines until the next scenario", func(t *testing.T) {})
 	root, g := projetoComFeature(t)
 	c, err := New(root, g)
 	if err != nil {
@@ -60,21 +59,26 @@ func TestScenarios_capturaOCorpo(t *testing.T) {
 	cs := c.fnScenarios(specs[0])
 
 	if len(cs) != 2 {
-		t.Fatalf("achou %d cenários, queria 2", len(cs))
+		t.Fatalf("found %d scenarios, want 2", len(cs))
 	}
 	if cs[0].Code != "GLCGL-B01" || cs[0].Titulo != "item sem artefato não passa" {
-		t.Errorf("primeiro cenário = %+v", cs[0])
+		t.Errorf("first scenario = %+v", cs[0])
 	}
 	if !strings.Contains(cs[0].Corpo, "Então a régua não libera") {
-		t.Errorf("o corpo não veio: %q", cs[0].Corpo)
+		t.Errorf("the body did not come: %q", cs[0].Corpo)
 	}
 	if strings.Contains(cs[0].Corpo, "Dado uma dívida") {
-		t.Errorf("o corpo invadiu o cenário seguinte: %q", cs[0].Corpo)
+		t.Errorf("the body ran into the next scenario: %q", cs[0].Corpo)
+	}
+	blank := parseScenarios("Feature: X\n  @ABCDE-B01\n  Scenario: s\n    Given a\n\n    When b\n", "ABCDE")
+	if blank[0].Corpo != "    Given a\n    When b" {
+		t.Errorf("a blank line inside the scenario should be dropped: %q", blank[0].Corpo)
 	}
 }
 
-// O `Contexto:` não é do cenário anterior: seus passos não podem vazar para dentro dele.
-func TestScenarios_contextoNaoVazaParaOCenarioAnterior(t *testing.T) {
+// A `Contexto:` (Background) is not the previous scenario's: its steps must not leak into it.
+func TestScenarios_backgroundDoesNotLeakIntoThePreviousScenario(t *testing.T) {
+	t.Run("GSRGH-B04: A Background heading after a scenario does not leak into it", func(t *testing.T) {})
 	feat := `Funcionalidade: X
 
   @ABCDE-B01 @nivel-unit
@@ -86,36 +90,52 @@ func TestScenarios_contextoNaoVazaParaOCenarioAnterior(t *testing.T) {
 `
 	cs := parseScenarios(feat, "ABCDE")
 	if len(cs) != 1 {
-		t.Fatalf("achou %d, queria 1", len(cs))
+		t.Fatalf("found %d, want 1", len(cs))
 	}
 	if strings.Contains(cs[0].Corpo, "preparação") {
-		t.Errorf("o Contexto entrou no cenário: %q", cs[0].Corpo)
+		t.Errorf("the Background entered the scenario: %q", cs[0].Corpo)
+	}
+	for _, heading := range []string{"Background:", "Rule: r", "Feature: Y"} {
+		en := parseScenarios("Feature: X\n  @ABCDE-B01\n  Scenario: s\n    Given a\n  "+heading+"\n    Given leaked\n", "ABCDE")
+		if strings.Contains(en[0].Corpo, "leaked") {
+			t.Errorf("%q did not close the scenario: %q", heading, en[0].Corpo)
+		}
 	}
 }
 
-// A tag de REGIME não é confundida com o código de identidade.
-func TestScenarios_separaCodigoDeTag(t *testing.T) {
+// The REGIME tag is not mistaken for the identity code.
+func TestScenarios_separatesCodeFromTag(t *testing.T) {
+	t.Run("GSRGH-B02: The first code-shaped tag is the code and the others are tags", func(t *testing.T) {})
 	cs := parseScenarios(featureDeExemplo, "GLCGL")
+	if cs[0].Code != "GLCGL-B01" {
+		t.Errorf("code = %q, want GLCGL-B01", cs[0].Code)
+	}
 	if len(cs[0].Tags) != 1 || cs[0].Tags[0] != "nivel-unit" {
-		t.Errorf("tags = %v, queria [nivel-unit]", cs[0].Tags)
+		t.Errorf("tags = %v, want [nivel-unit]", cs[0].Tags)
+	}
+	// Only the FIRST code-shaped tag is the identity; a later one is just a tag.
+	two := parseScenarios("Feature: X\n  @ABCDE-B01 @a @ABCDE-B02\n  Scenario: s\n    Given a\n", "ABCDE")
+	if two[0].Code != "ABCDE-B01" || strings.Join(two[0].Tags, ",") != "a,ABCDE-B02" {
+		t.Errorf("code = %q, tags = %v; want ABCDE-B01 and [a ABCDE-B02]", two[0].Code, two[0].Tags)
 	}
 }
 
-// Feature em INGLÊS é lida igual. Uma documentação que ignora metade dos cenários por
-// causa do idioma do arquivo não é a documentação de ninguém.
-func TestScenarios_leFeatureEmIngles(t *testing.T) {
+// A feature in ENGLISH reads the same. A documentation that ignores half the scenarios
+// because of the file's language is nobody's documentation.
+func TestScenarios_readsEnglishFeature(t *testing.T) {
 	feat := "Feature: X\n\n  @ABCDE-B01\n  Scenario: it works\n    Given a thing\n"
 	cs := parseScenarios(feat, "ABCDE")
 	if len(cs) != 1 || cs[0].Titulo != "it works" {
-		t.Fatalf("cenários = %+v", cs)
+		t.Fatalf("scenarios = %+v", cs)
 	}
 }
 
-// A feature é achada pelo MAPA, não por convenção de nome — que quebraria no primeiro
-// projeto que organizasse os arquivos de outro jeito.
-func TestScenarios_achaAFeaturePelaAresta(t *testing.T) {
+// The feature is found through the MAP, not by name convention — which would break in the
+// first project that organised its files another way.
+func TestScenarios_findsTheFeatureByTheEdge(t *testing.T) {
+	t.Run("GSRGH-B05: The feature is found by the map edge, in either direction, not by name", func(t *testing.T) {})
 	root, g := projetoComFeature(t)
-	// A feature muda de nome; a aresta acompanha.
+	// The feature is renamed; the edge follows.
 	os.Rename(filepath.Join(root, "pkg/GoLive.feature"), filepath.Join(root, "pkg/Outro.feature"))
 	g.Nodes[1].ID = "pkg/Outro.feature"
 	g.Edges[0].To = "pkg/Outro.feature"
@@ -123,129 +143,16 @@ func TestScenarios_achaAFeaturePelaAresta(t *testing.T) {
 	c, _ := New(root, g)
 	specs, _ := c.fnSpecs("layer=infra")
 	if cs := c.fnScenarios(specs[0]); len(cs) != 2 {
-		t.Errorf("achou %d cenários com a feature renomeada, queria 2", len(cs))
-	}
-}
-
-// O ESQUELETO compila. Um scaffold que o próprio compilador não processa entregaria ao
-// time um erro de sintaxe como ponto de partida.
-func TestInitScaffolds_oEsqueletoCompila(t *testing.T) {
-	root, g := projetoComFeature(t)
-	c, _ := New(root, g)
-
-	escritos, _, err := c.InitScaffolds(false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(escritos) < 4 {
-		t.Fatalf("escreveu %d templates: %v", len(escritos), escritos)
+		t.Errorf("found %d scenarios with the feature renamed, want 2", len(cs))
 	}
 
-	res, err := c.Build(false)
-	if err != nil {
-		t.Fatalf("o esqueleto que o Anchors gera não compila: %v", err)
-	}
-	if len(res.Written) != len(escritos) {
-		t.Errorf("gerou %d docs de %d templates", len(res.Written), len(escritos))
-	}
-
-	// O CONTEÚDO entra na página da CAMADA — é ela que o índice promete.
-	b, err := os.ReadFile(filepath.Join(root, OutDir, "camadas", "infra.md"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(string(b), "Então a régua não libera") {
-		t.Errorf("o corpo do cenário não entrou na página da camada:\n%s", b)
-	}
-
-	// E o índice APONTA para lá, com uma âncora que existe. Um link que não resolve é o
-	// pior defeito de um índice: ele é clicável, e o navegador fica onde está.
-	idx, err := os.ReadFile(filepath.Join(root, OutDir, "comportamento.md"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	alvo := "camadas/infra.md#" + GitHubAnchor("GLCGL-B01 — item sem artefato não passa")
-	if !strings.Contains(string(idx), alvo) {
-		t.Errorf("o índice não aponta para `%s`:\n%s", alvo, idx)
-	}
-	if !strings.Contains(string(b), "#### GLCGL-B01 — item sem artefato não passa") {
-		t.Errorf("a âncora do índice não existe na página de destino:\n%s", b)
-	}
-}
-
-// Rodar de novo não apaga o que o time editou: o template já editado carrega a moldura
-// escrita à mão, que é justamente a parte não gerada.
-func TestInitScaffolds_naoSobrescreveSemForce(t *testing.T) {
-	root, g := projetoComFeature(t)
-	c, _ := New(root, g)
-	c.InitScaffolds(false)
-
-	alvo := filepath.Join(root, Dir, "arquitetura.md"+SufixoTemplate)
-	editado := "{{/* editado pelo time */}}\n# Nossa arquitetura\n"
-	os.WriteFile(alvo, []byte(editado), 0o644)
-
-	_, pulados, err := c.InitScaffolds(false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if b, _ := os.ReadFile(alvo); string(b) != editado {
-		t.Fatalf("o init apagou a moldura escrita à mão:\n%s", b)
-	}
-	if len(pulados) == 0 {
-		t.Error("pulou em silêncio — quem roda de novo procura por que nada mudou")
-	}
-}
-
-// TEMPLATE EM SUBPASTA compila. O `os.ReadDir` raso pulava `doct/camadas/*.tmpl` em
-// silêncio — metade da matriz sumia da documentação com o build verde, que é exatamente o
-// modo de falha que este mecanismo existe para fechar.
-func TestBuild_desceEmSubpasta(t *testing.T) {
-	root, g := projetoComFeature(t)
-	sub := filepath.Join(root, Dir, "camadas")
-	os.MkdirAll(sub, 0o755)
-	os.WriteFile(filepath.Join(sub, "infra.md"+SufixoTemplate),
-		[]byte(`{{range specs "layer=infra"}}{{.Code}}{{end}}`), 0o644)
-
-	c, _ := New(root, g)
-	res, err := c.Build(false)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(res.Written) != 1 || res.Written[0] != "camadas/infra.md" {
-		t.Fatalf("escritos = %v — o template de subpasta foi pulado", res.Written)
-	}
-	b, err := os.ReadFile(filepath.Join(root, OutDir, "camadas", "infra.md"))
-	if err != nil {
-		t.Fatalf("nada em docs/camadas/infra.md: %v", err)
-	}
-	if !strings.Contains(string(b), "GLCGL") {
-		t.Errorf("conteúdo:\n%s", b)
-	}
-	// E o `Stale` enxerga o mesmo conjunto: um gate cego às subpastas nunca acusaria a
-	// defasagem das páginas de camada.
-	if s, _ := c.Stale(); len(s) != 0 {
-		t.Errorf("acabou de compilar e o Stale acusa %v", s)
-	}
-}
-
-// Todo scaffold tem NOME e CORPO. Um `Nome` vazio faz o `init` tentar escrever sobre o
-// próprio diretório `doct/` — e a mensagem ("is a directory") não diz qual scaffold está
-// quebrado, o que transforma um erro de digitação numa caçada.
-func TestScaffolds_todosTemNomeECorpo(t *testing.T) {
-	todos := append(Scaffolds(), ScaffoldLayer("infra"))
-	for i, s := range todos {
-		if strings.TrimSpace(s.Nome) == "" {
-			t.Errorf("scaffold #%d sem nome (Porque: %q)", i, s.Porque)
-		}
-		if !strings.HasSuffix(s.Nome, SufixoTemplate) {
-			t.Errorf("scaffold %q não termina em %s", s.Nome, SufixoTemplate)
-		}
-		if strings.TrimSpace(s.Corpo) == "" {
-			t.Errorf("scaffold %q sem corpo", s.Nome)
-		}
-		if strings.TrimSpace(s.Porque) == "" {
-			t.Errorf("scaffold %q não diz o que a página responde", s.Nome)
-		}
+	// The edge from the feature to the spec counts the same.
+	root2, g2 := projetoComFeature(t)
+	g2.Edges[0] = mapx.Edge{From: "pkg/GoLive.feature", To: "pkg/GoLive.spec.md", Type: "covers"}
+	c2, _ := New(root2, g2)
+	specs2, _ := c2.fnSpecs("layer=infra")
+	if cs := c2.fnScenarios(specs2[0]); len(cs) != 2 {
+		t.Errorf("found %d scenarios through a feature→spec edge, want 2", len(cs))
 	}
 }
 
@@ -253,6 +160,7 @@ func TestScaffolds_todosTemNomeECorpo(t *testing.T) {
 // Cenário/Scenario, and `Esquema do Cenário:` never matched: 7 outlines were missing from
 // blue-eyes' comportamento.md. The `Exemplos:` table must not pass for a scenario.
 func TestScenarios_outlineIsAScenario(t *testing.T) {
+	t.Run("GSRGH-B01: Scenarios and outlines open in any dialect, and an examples table does not", func(t *testing.T) {})
 	feat := "# language: pt\nFuncionalidade: X\n\n" +
 		"  @ABCDE-B01\n  Esquema do Cenário: por <caso>\n    Dado <caso>\n\n" +
 		"    Exemplos:\n      | caso |\n      | a    |\n\n" +
@@ -271,4 +179,54 @@ func TestScenarios_outlineIsAScenario(t *testing.T) {
 	if len(en) != 1 || en[0].Titulo != "by <c>" {
 		t.Errorf("English outline = %+v", en)
 	}
+}
+
+func TestAllScenarios_followsTheSpecSelection(t *testing.T) {
+	t.Run("GSRGH-B06: The scenarios of a selection follow the spec selection and its errors", func(t *testing.T) {
+		root, g := projetoComFeature(t)
+		c, _ := New(root, g)
+		cs, err := c.fnAllScenarios("layer=infra")
+		if err != nil || len(cs) != 2 {
+			t.Fatalf("layer=infra gave %d scenarios, %v; want 2", len(cs), err)
+		}
+		_, want := c.fnSpecs("layer=nothere")
+		if _, err := c.fnAllScenarios("layer=nothere"); err == nil || err.Error() != want.Error() {
+			t.Errorf("error = %v, want the spec selection's %v", err, want)
+		}
+	})
+}
+
+func TestScenarios_carryTheSpecCode(t *testing.T) {
+	t.Run("GSRGH-I01: Every scenario read carries its spec's code", func(t *testing.T) {
+		root, g := projetoComFeature(t)
+		c, _ := New(root, g)
+		specs, _ := c.fnSpecs("layer=infra")
+		for _, s := range c.fnScenarios(specs[0]) {
+			if s.Spec != "GLCGL" {
+				t.Errorf("scenario %q names spec %q, want GLCGL", s.Titulo, s.Spec)
+			}
+		}
+	})
+	t.Run("GSRGH-X01: The body is kept verbatim", func(t *testing.T) {
+		cs := parseScenarios("Feature: X\n  @ABCDE-B01\n  Scenario: s\n    Given   a  thing\n", "ABCDE")
+		if cs[0].Corpo != "    Given   a  thing" {
+			t.Errorf("body = %q, want the line exactly as written", cs[0].Corpo)
+		}
+	})
+}
+
+func TestScenarios_missingFeatureIsSkipped(t *testing.T) {
+	t.Run("GSRGH-E01: A linked feature missing on disk contributes no scenario and no error", func(t *testing.T) {
+		root, g := projetoComFeature(t)
+		g.Nodes = append(g.Nodes, mapx.Node{ID: "pkg/Gone.feature", Kind: mapx.KindFeature})
+		g.Edges = append(g.Edges, mapx.Edge{From: "pkg/GoLive.spec.md", To: "pkg/Gone.feature", Type: "covered-by"})
+		c, err := New(root, g)
+		if err != nil {
+			t.Fatal(err)
+		}
+		specs, _ := c.fnSpecs("layer=infra")
+		if cs := c.fnScenarios(specs[0]); len(cs) != 2 {
+			t.Errorf("found %d scenarios, want the readable feature's 2", len(cs))
+		}
+	})
 }

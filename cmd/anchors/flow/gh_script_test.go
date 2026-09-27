@@ -1,6 +1,7 @@
 package flow
 
 import (
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -161,4 +162,36 @@ func gitRepo(t *testing.T, dir string) {
 // cfgGitHub is the in-memory config of githubProject.
 func cfgGitHub() *config.Config {
 	return &config.Config{Workflow: &config.Workflow{Mode: config.ModeGitHub, Repo: "acme/app", Labels: []string{"anchors"}}}
+}
+
+// stdoutOf returns what fn printed on standard output.
+func stdoutOf(t *testing.T, fn func()) string {
+	t.Helper()
+	orig := os.Stdout
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stdout = w
+	fn()
+	w.Close()
+	os.Stdout = orig
+	b, _ := io.ReadAll(r)
+	return string(b)
+}
+
+// stderrOf returns what fn printed on standard error.
+func stderrOf(t *testing.T, fn func()) string {
+	t.Helper()
+	orig := os.Stderr
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stderr = w
+	fn()
+	w.Close()
+	os.Stderr = orig
+	b, _ := io.ReadAll(r)
+	return string(b)
 }
