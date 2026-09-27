@@ -321,6 +321,12 @@ type TestSignal struct {
 	ProvenRevBySuite map[string]string `yaml:"proven_rev_by_suite,omitempty"`
 	// AtRev: a rev do nó quando o sinal foi ingerido (para detectar staleness).
 	AtRev string `yaml:"at_rev,omitempty"`
+	// MutationAtRev is the node's rev when its MUTATION was measured. `AtRev` is shared by
+	// every ingestion of the node, and a line-coverage ingestion after a code change moved
+	// it to the new rev: the old mutation score then read as fresh, and a default
+	// `anchors mutation` left the changed file out. Empty on a map written before this
+	// field: `MutationStale` falls back to `AtRev`.
+	MutationAtRev string `yaml:"mutation_at_rev,omitempty"`
 	// ClosureRev: a rev de cada nó do FECHO deste teste no momento da ingestão — o que ele
 	// alcança descendo pelas arestas de saída (utils que compõe, unidade que importa).
 	//

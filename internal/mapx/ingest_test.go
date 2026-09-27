@@ -693,3 +693,24 @@ func TestRefreshRevs(t *testing.T) {
 		t.Errorf("a path the map does not have adds no node, got %d nodes", len(g.Nodes))
 	}
 }
+
+func TestMutationStale(t *testing.T) {
+	t.Run("SGINA-B25: The mutation result keeps its own rev", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "a.go", Kind: KindCode, Rev: "r1"}}}
+	g.IngestMutationScoped(map[string]FileMutation{"a.go": {Killed: 9, Survived: 1, Score: 90}}, "", "now", 60, 80)
+	if g.Nodes[0].Signal.MutationAtRev != "r1" || g.Nodes[0].MutationStale() {
+		t.Fatalf("a fresh mutation records its rev and is not stale, got %+v", g.Nodes[0].Signal)
+	}
+	g.Nodes[0].Rev = "r2"
+	g.IngestCoverage(map[string]FileCov{"a.go": {Total: 2, Covered: 2}}, "now")
+	if g.Nodes[0].Signal.AtRev != "r2" {
+		t.Fatalf("the probe needs the coverage to move the shared rev, got %q", g.Nodes[0].Signal.AtRev)
+	}
+	if !g.Nodes[0].MutationStale() {
+		t.Error("a coverage ingestion after the change must not make the old mutation current")
+	}
+	old := Node{Rev: "r2", Signal: &TestSignal{AtRev: "r1"}}
+	if !old.MutationStale() || (Node{Rev: "r1", Signal: &TestSignal{AtRev: "r1"}}).MutationStale() || (Node{}).MutationStale() {
+		t.Error("with no mutation rev, the shared one decides; with no signal, nothing is stale")
+	}
+}

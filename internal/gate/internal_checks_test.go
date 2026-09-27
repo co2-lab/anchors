@@ -1184,6 +1184,11 @@ func TestMutationScoreStale(t *testing.T) {
 	if !strings.Contains(d, "stale") {
 		t.Fatalf("the detail does not explain the staleness: %q", d)
 	}
+	covered := mapx.Node{Kind: mapx.KindCode, Rev: "r2",
+		Signal: &mapx.TestSignal{MutantsKilled: 100, MutationScore: 100, AtRev: "r2", MutationAtRev: "r1"}}
+	if v, _ := checkMutationScore("", covered); v != Pending {
+		t.Errorf("a coverage ingestion at the new rev does not make an old mutation current, got %s", v)
+	}
 }
 
 func nodeWithScore(score, low, high float64, survived int) mapx.Node {

@@ -119,6 +119,7 @@ func TestSelection_MutationState(t *testing.T) {
 		{codeNode("stale", 1, 9, 0, 0, false), staleBelow},
 		{mapx.Node{ID: "none", Kind: mapx.KindCode, Rev: "r", Signal: &mapx.TestSignal{AtRev: "r", MutantsNoCoverage: 3}}, freshPassing},
 		{mapx.Node{ID: "never", Kind: mapx.KindCode}, unmeasured},
+		{mapx.Node{ID: "recovered", Kind: mapx.KindCode, Rev: "r2", Signal: &mapx.TestSignal{AtRev: "r2", MutationAtRev: "r1", MutantsKilled: 9, MutantsSurvived: 1, MutationScore: 90}}, stalePassing},
 	} {
 		if got := mutationState(c.n, config.DefaultTimeoutCeiling); got != c.want {
 			t.Errorf("%s: want %v, got %v", c.n.ID, c.want, got)

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a31aba7cdcafdb6d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e8f362d7498457c3 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1342,6 +1342,8 @@ teste prova.
 
 - [A test file's run time is the sum of its cases](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B14`
 
+- [A run's proofs are stamped with the tree's revs](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B16`
+
 - [A report's signals are kept under its path from the root](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B15`
 
 - [The legacy spelling of the waiver is a waiver all the way to the stamp](camadas/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B01`
@@ -2439,6 +2441,8 @@ teste prova.
 - [An impact path with no code file runs nothing](camadas/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B10`
 
 - [A passing run chains the check over the suite's own scope](camadas/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B11`
+
+- [A report stamped by a coarse clock just before the start is this run's](camadas/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B13`
 
 - [A report older than the run is never ingested](camadas/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-I01`
 
@@ -6329,6 +6333,10 @@ teste prova.
 - [A mutation ingestion records the timed-out apart](camadas/mapa.md#sgina-b21--a-mutation-ingestion-records-the-timed-out-apart) `SGINA-B21`
 
 - [An execution ingestion records each test file's run time under its suite](camadas/mapa.md#sgina-b22--an-execution-ingestion-records-each-test-files-run-time-under-its-suite) `SGINA-B22`
+
+- [The mutation result keeps its own rev](camadas/mapa.md#sgina-b25--the-mutation-result-keeps-its-own-rev) `SGINA-B25`
+
+- [The tree's revs replace the map's](camadas/mapa.md#sgina-b24--the-trees-revs-replace-the-maps) `SGINA-B24`
 
 - [A run time Anchors measured is recorded on the node](camadas/mapa.md#sgina-b23--a-run-time-anchors-measured-is-recorded-on-the-node) `SGINA-B23`
 

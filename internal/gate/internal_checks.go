@@ -980,7 +980,7 @@ func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 		n.Signal.MutantsIgnored == 0 && n.Signal.MutantsNoCoverage == 0) {
 		return Pending, i18n.T("gate.mutation.no_signal")
 	}
-	if n.SignalStale() {
+	if n.MutationStale() {
 		return Pending, i18n.T("gate.mutation.stale")
 	}
 	// Nenhum mutante EXECUTADO: o score é 100 por construção (ver ParseMutation) e não há

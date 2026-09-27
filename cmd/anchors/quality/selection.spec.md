@@ -39,7 +39,7 @@ whole, saying so.
 | `SLCTN-B01` | A file is placed by two answers — fresh or stale, passing or below the minimum — into one of four boxes; a file with no result is never measured. |
 | `SLCTN-B02` | By default a run takes the files stale and below the minimum and the ones never measured; `--include-fresh` adds the fresh ones below the minimum, `--include-passing` the stale passing ones, both together the fresh passing ones too, and `--skip-unmeasured` leaves out the never measured. |
 | `SLCTN-B03` | A test file is stale when it or anything it exercises changed since its result; its passing is read from the suite's own layer when the file ran in several; a file whose cases were all skipped is not passing. |
-| `SLCTN-B04` | A code file's mutation result taken under load — more timed-out mutants than the gate's ceiling — counts as stale; it passes at the report's floor or 70% when the report declares none, and a file where no mutant ran passes. |
+| `SLCTN-B04` | A code file's mutation result is stale when measured at another revision of the file — its own, not the one a later coverage ingestion moves —, and one taken under load — more timed-out mutants than the gate's ceiling — counts as stale; it passes at the report's floor or 70% when the report declares none, and a file where no mutant ran passes. |
 | `SLCTN-B05` | A test file belongs to the suite that timed it; before any time, to the suite whose layer ran it; a file no suite ran is offered to every suite. |
 | `SLCTN-B06` | Support files and targets the matching gate declares in `no_signal` are never run. |
 | `SLCTN-B07` | The run says how many files it selected and, by state, how many it left out and the flag that would take them. |

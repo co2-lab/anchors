@@ -109,7 +109,7 @@ func mutationState(n mapx.Node, ceiling float64) fileState {
 	}
 	ran := s.MutantsKilled + s.MutantsSurvived
 	underLoad := ran > 0 && float64(s.MutantsTimedOut)/float64(ran) > ceiling
-	stale := n.SignalStale() || underLoad
+	stale := n.MutationStale() || underLoad
 	floor := s.MutationLow
 	if floor <= 0 {
 		floor = 70

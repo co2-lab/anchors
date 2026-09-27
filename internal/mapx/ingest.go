@@ -525,6 +525,7 @@ func (g *Graph) IngestMutationScoped(byFile map[string]FileMutation, scope, now 
 				}
 			}
 			n.Signal.AtRev = n.Rev
+			n.Signal.MutationAtRev = n.Rev
 			n.Signal.IngestedAt = now
 			matched++
 		}
@@ -563,6 +564,21 @@ type FileCov struct {
 // ingestão. Um sinal stale não deve ser confiado (o teste rodou numa versão antiga).
 func (n Node) SignalStale() bool {
 	return n.Signal != nil && n.Signal.AtRev != "" && n.Signal.AtRev != n.Rev
+}
+
+// MutationStale says whether the node's mutation result was measured against another
+// rev of the file. It reads the mutation's own rev, not the one every ingestion shares:
+// a coverage run after a code change does not make an old mutation score current. A map
+// written before the mutation kept its own rev falls back to the shared one.
+func (n Node) MutationStale() bool {
+	if n.Signal == nil {
+		return false
+	}
+	rev := n.Signal.MutationAtRev
+	if rev == "" {
+		rev = n.Signal.AtRev
+	}
+	return rev != "" && rev != n.Rev
 }
 
 func sumLayers(byLayer map[string]LayerExec) (p, f, s int) {

@@ -151,6 +151,12 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     When it is ingested under a suite, and under a layer with no suite
     Then the first records 1.5 seconds under the suite, then under the layer, and the second records nothing
 
+  @SGINA-B25 @unit-level
+  Scenario: The mutation result keeps its own rev
+    Given a code file whose mutation was measured, then changed, then covered again
+    When its mutation freshness is read
+    Then it is stale, and a map with no mutation rev falls back to the shared one
+
   @SGINA-B24 @unit-level
   Scenario: The tree's revs replace the map's
     Given a map with a spec, a code file and a test file
