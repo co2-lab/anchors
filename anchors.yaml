@@ -586,14 +586,7 @@ gates:
   - name: ref-resolves
     blocking: true
 
-  # A COBERTURA da documentacao, ao lado do `docs-fresh`: aquele confere se a pagina
-  # compilada reflete a spec, este se a spec chega a ALGUMA pagina. O segundo defeito e'
-  # o silencioso — os templates filtram por camada, e a spec que nenhum filtro seleciona
-  # compila para lugar nenhum enquanto todas as paginas seguem corretas.
   # O EIXO VERTICAL — a doutrina de produto e quem a realiza.
-  - name: plan-doctrine-exists
-    blocking: false
-
   - name: doctrine-realized
     blocking: false
 
@@ -655,6 +648,10 @@ gates:
   - name: failure-declared
     blocking: true
 
+  # A COBERTURA da documentacao, ao lado do `docs-fresh`: aquele confere se a pagina
+  # compilada reflete a spec, este se a spec chega a ALGUMA pagina. O segundo defeito e'
+  # o silencioso — os templates filtram por camada, e a spec que nenhum filtro seleciona
+  # compila para lugar nenhum enquanto todas as paginas seguem corretas.
   - name: docs-covered
     blocking: true
 
