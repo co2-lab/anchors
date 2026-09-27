@@ -7,6 +7,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/co2-lab/anchors/internal/changelog"
 	"github.com/spf13/cobra"
 )
 
@@ -221,32 +222,27 @@ var bugFooterRE = regexp.MustCompile(`(?i)^(bug)\s*:(.*)$`)
 // search of the history and a changelog's bug list read.
 //
 // Only the format is checked. Whether the defect shipped the hook cannot know, so a `fix`
-// without the footer passes. The footer is read in the last paragraph, where git keeps
-// trailers: a sentence of the body that begins with "Bug:" is prose, not a footer.
+// without the footer passes. The footer is read as the changelog reads it: the trailing
+// paragraphs made only of `Key: value` lines, so a `Co-Authored-By:` block after the
+// `Bug:` does not hide it; a paragraph of prose that begins with "Bug:" is not a footer.
 func bugFooterProblem(msg, subject string) string {
-	var paragraphs [][]string
-	var cur []string
-	for _, l := range strings.Split(msg, "\n") {
+	// The footer is read as the changelog reads it (`changelog.FooterLines`), from the
+	// body only: the subject's paragraph — up to the first blank line — is never a footer.
+	var body []string
+	inSubject, started := true, false
+	for _, l := range strings.Split(strings.ReplaceAll(msg, "\r\n", "\n"), "\n") {
 		t := strings.TrimSpace(l)
 		if strings.HasPrefix(t, "#") {
 			continue
 		}
-		if t == "" {
-			if len(cur) > 0 {
-				paragraphs = append(paragraphs, cur)
-				cur = nil
-			}
+		if inSubject {
+			started = started || t != ""
+			inSubject = !(started && t == "")
 			continue
 		}
-		cur = append(cur, t)
+		body = append(body, l)
 	}
-	if len(cur) > 0 {
-		paragraphs = append(paragraphs, cur)
-	}
-	if len(paragraphs) < 2 {
-		return "" // the subject alone: no footer
-	}
-	for _, l := range paragraphs[len(paragraphs)-1] {
+	for _, l := range changelog.FooterLines(strings.Join(body, "\n")) {
 		m := bugFooterRE.FindStringSubmatch(l)
 		if m == nil {
 			continue

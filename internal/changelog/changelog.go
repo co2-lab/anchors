@@ -87,20 +87,52 @@ func Classify(version, date string, commits []Commit) Release {
 	return r
 }
 
-// lastParagraph reads the footers of a body: `Key: value` lines of its last paragraph,
-// where git keeps trailers.
+// lastParagraph reads the footers of a body into a map, by key.
 func lastParagraph(body string) map[string]string {
-	paras := strings.Split(strings.TrimSpace(strings.ReplaceAll(body, "\r\n", "\n")), "\n\n")
 	out := map[string]string{}
-	if len(paras) == 0 {
-		return out
+	for _, l := range FooterLines(body) {
+		k, v, _ := strings.Cut(l, ":")
+		out[strings.TrimSpace(k)] = strings.TrimSpace(v)
 	}
-	for _, l := range strings.Split(paras[len(paras)-1], "\n") {
-		k, v, ok := strings.Cut(strings.TrimSpace(l), ":")
-		if !ok {
+	return out
+}
+
+var footerLineRE = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9-]*( [A-Za-z][A-Za-z0-9-]*)*\s*:`)
+
+// FooterLines is the footer of a commit body: the paragraphs at its end made only of
+// `Key: value` lines, read from the last one back. Git keeps trailers in the last
+// paragraph, but a message often closes with two blocks — `Bug:` in one, and the
+// `Co-Authored-By:` a tool appends after a blank line in the next — and reading only the
+// last one lost the `Bug:`. A paragraph with any other line ends the footer. Lines are
+// trimmed, and comment lines (`#`) are not part of a message.
+func FooterLines(body string) []string {
+	var paras [][]string
+	var cur []string
+	for _, l := range strings.Split(strings.ReplaceAll(body, "\r\n", "\n"), "\n") {
+		t := strings.TrimSpace(l)
+		if strings.HasPrefix(t, "#") {
 			continue
 		}
-		out[strings.TrimSpace(k)] = strings.TrimSpace(v)
+		if t == "" {
+			if len(cur) > 0 {
+				paras = append(paras, cur)
+				cur = nil
+			}
+			continue
+		}
+		cur = append(cur, t)
+	}
+	if len(cur) > 0 {
+		paras = append(paras, cur)
+	}
+	var out []string
+	for i := len(paras) - 1; i >= 0; i-- {
+		for _, l := range paras[i] {
+			if !footerLineRE.MatchString(l) {
+				return out
+			}
+		}
+		out = append(append([]string{}, paras[i]...), out...)
 	}
 	return out
 }

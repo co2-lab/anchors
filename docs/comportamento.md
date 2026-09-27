@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e8f362d7498457c3 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b0c311e7a74ae970 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -5148,7 +5148,7 @@ teste prova.
 
 - [The internal types and free-form subjects are left out](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B04`
 
-- [Only the last paragraph holds footers](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B05`
+- [The trailing blocks of footers hold the footers](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B05`
 
 - [Each release holds the commits after the previous tag](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B06`
 

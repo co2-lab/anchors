@@ -55,7 +55,7 @@ does a message with no subject, which git refuses on its own with a better messa
 | `CMMSC-B13` | A known type followed by nothing after the colon is refused. |
 | `CMMSC-B14` | The subject limit counts characters, not bytes: a subject of 100 accented letters passes, and the diagnosis of a longer one gives its length in characters. |
 | `CMMSC-B15` | A subject with no space after the colon (`feat:x`) is refused with its own diagnosis, as commitlint refuses it. |
-| `CMMSC-B16` | A `Bug:` footer in the message's last paragraph marks a fix of a defect that shipped: it is refused when empty, when spelled other than `Bug:`, or on a commit that is not a `fix`; a message without it, or with a body sentence starting with "Bug:", passes. |
+| `CMMSC-B16` | A `Bug:` footer — in the trailing paragraphs made only of `Key: value` lines, so a `Co-Authored-By:` block after it does not hide it — marks a fix of a defect that shipped: it is refused when empty, when spelled other than `Bug:`, or on a commit that is not a `fix`; a message without it, or with a body paragraph of prose starting with "Bug:", passes. |
 
 ## Invariants
 

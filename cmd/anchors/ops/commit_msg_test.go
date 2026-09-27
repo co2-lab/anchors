@@ -263,7 +263,11 @@ func TestCommitMsg_BugFooter(t *testing.T) {
 		{"fix(board): the count no longer doubles\n\nit doubled on refresh\n\nBug: v0.1.204 — card #812\n", ""},
 		{"fix: the gate read the wrong file\n\nfound while writing the feature\n", ""},
 		{"fix: x\n", ""},
-		{"feat: a thing\n\nBug: the old flow was confusing — this sentence is prose\n\nCo-Authored-By: A <a@b>\n", ""},
+		{"feat: a thing\n\nBug: the old flow was confusing, and this paragraph\ngoes on as prose\n\nCo-Authored-By: A <a@b>\n", ""},
+		// the footer is every trailing block of `Key: value` lines: an agent appends its
+		// Co-Authored-By after a blank line, and the Bug: above it is still the footer
+		{"fix: x\n\nbody\n\nBug: v1 — card #3\n\nCo-Authored-By: A <a@b>\n", ""},
+		{"feat: x\n\nbody\n\nBug: v1\n\nCo-Authored-By: A <a@b>\n", "a `Bug:` footer on a `feat` commit"},
 		{"fix: x\n\nbody\n\nBug:   \n", "is empty"},
 		{"fix: x\n\nbody\n\nbug: v1 — card #1\n", "write `Bug:`"},
 		{"feat(board): x\n\nbody\n\nBug: v1\n", "a `Bug:` footer on a `feat` commit"},

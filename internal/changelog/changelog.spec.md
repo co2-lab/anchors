@@ -40,7 +40,7 @@ that keeps what it already holds.
 | `CHNGL-B02` | A `feat` goes to the features, with its scope and short hash. |
 | `CHNGL-B03` | A `fix` with a `Bug:` footer goes to the bugs fixed, carrying where the bug was seen; a `fix` without it goes to the fixes. |
 | `CHNGL-B04` | A commit of another type, or outside Conventional Commits, is left out; a release with nothing listed is empty. |
-| `CHNGL-B05` | Footers are read only from the last paragraph of the body, where git keeps them: a `Bug:` line in the middle of the text is not a footer. |
+| `CHNGL-B05` | Footers are the paragraphs at the end of the body made only of `Key: value` lines, read from the last one back — a `Bug:` block followed by a `Co-Authored-By:` block is still the footer —; a `Bug:` line in a paragraph of prose, or before one, is not a footer (`FooterLines`). |
 
 ### Releases from the history
 

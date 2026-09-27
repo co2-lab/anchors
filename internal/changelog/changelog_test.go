@@ -55,10 +55,20 @@ func TestClassify_LeftOut(t *testing.T) {
 }
 
 func TestClassify_FootersInLastParagraph(t *testing.T) {
-	t.Run("CHNGL-B05: Only the last paragraph holds footers", func(t *testing.T) {})
+	t.Run("CHNGL-B05: The trailing blocks of footers hold the footers", func(t *testing.T) {})
 	r := Classify("v1", "", []Commit{{Subject: "fix: x", Body: "Bug: this is prose\n\nmore prose here"}})
 	if len(r.Fixes) != 1 || len(r.Bugs) != 0 {
 		t.Fatalf("a Bug line mid-body is not a footer, got %+v", r)
+	}
+	r = Classify("v1", "", []Commit{{Subject: "fix: y", Body: "why\n\nBug: v0.1.2, the board\n\nCo-Authored-By: A <a@b>\n"}})
+	if len(r.Bugs) != 1 || r.Bugs[0].Bug != "v0.1.2, the board" {
+		t.Fatalf("a Bug block followed by a Co-Authored-By block is still the footer, got %+v", r)
+	}
+	if got := FooterLines("prose\nBug: in prose\n\n# comment\nA: 1\nB-C: 2\n"); strings.Join(got, "|") != "A: 1|B-C: 2" {
+		t.Errorf("a paragraph with prose ends the footer, comments are not lines, got %q", got)
+	}
+	if got := FooterLines("Bug: v1\n\nnot a footer\n"); got != nil {
+		t.Errorf("a body that ends in prose has no footer, got %q", got)
 	}
 }
 

@@ -32,10 +32,10 @@ Feature: Changelog — the releases of a project, read from its commits
     Then the release is empty
 
   @CHNGL-B05 @unit-level
-  Scenario: Only the last paragraph holds footers
-    Given a fix whose Bug line is in the middle of the body
+  Scenario: The trailing blocks of footers hold the footers
+    Given a fix whose Bug line is in the middle of the body, and one whose Bug block is followed by a Co-Authored-By block
     When the commits are classified
-    Then it is a fix, not a bug fixed
+    Then the first is a fix and the second a bug fixed
 
   @CHNGL-B06 @unit-level
   Scenario: Each release holds the commits after the previous tag
