@@ -33,7 +33,7 @@ their run is what times them.
 | --- | --- |
 | `BDGRN-B01` | The plan is the suite's timed files, fastest first with ties by path, then the files no suite has timed, by path; a file only other suites timed, a support file, and a file of another kind are left out. |
 | `BDGRN-B02` | A batch takes, from the front of the plan, the timed files whose times fit in what remains; when even the fastest does not fit, nothing more runs. After the timed files, the untimed ones run one per batch. |
-| `BDGRN-B03` | A batch still running at the deadline is stopped with its whole process group, and nothing of it is ingested. |
+| `BDGRN-B03` | A batch still running at the deadline is stopped with its whole process group — first a TERM, so a tool that works in place can restore the source, then a KILL of whatever is left after a grace of 10 seconds — and nothing of it is ingested. On Windows, which has no TERM to trap, the process is killed at once. |
 | `BDGRN-B04` | Each batch runs through `run_changed:` with its files and is ingested as a partial run; the end reports how many files ran, how many were left, and whether the deadline cut a batch. |
 | `BDGRN-B05` | A mutation budget runs one file per batch, and records in the map, under the suite, how long that file's run took. |
 | `BDGRN-B06` | A batch that fails does not stop the budget: the next batches run, and the command fails at the end naming the suites with a failed batch. |

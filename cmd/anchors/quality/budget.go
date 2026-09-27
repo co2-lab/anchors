@@ -199,9 +199,18 @@ func absFiles(absRoot string, ids []string) []string {
 	return out
 }
 
+// stopGrace is how long a cut batch has, after the TERM, to undo what it changed before
+// its group is killed. A variable so the tests do not wait ten seconds.
+var stopGrace = 10 * time.Second
+
 // execUntil runs the suite's command at the root until the deadline. A command still
 // running then is stopped with its whole process group — the runner's workers too, not
 // only the shell — and `cut` says so.
+//
+// The group gets a TERM first, and a KILL only if it is still there after stopGrace. A
+// mutation tool that works IN PLACE rewrites the source and restores it when it exits
+// normally or on a signal it can trap; a KILL runs no trap, and the cut batch left a
+// mutated file in the tree (reported from the reference app: Stryker with `inPlace`).
 func execUntil(linha, absRoot string, deadline time.Time) (err error, cut bool) {
 	ctx, cancel := context.WithDeadline(context.Background(), deadline)
 	defer cancel()
@@ -209,8 +218,8 @@ func execUntil(linha, absRoot string, deadline time.Time) (err error, cut bool) 
 	cmd.Dir = absRoot
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	ownProcessGroup(cmd)
-	cmd.Cancel = func() error { return killProcessGroup(cmd) }
-	cmd.WaitDelay = 5 * time.Second
+	cmd.Cancel = func() error { return stopProcessGroup(cmd, stopGrace) }
+	cmd.WaitDelay = stopGrace + 5*time.Second
 	err = cmd.Run()
 	return err, ctx.Err() == context.DeadlineExceeded
 }

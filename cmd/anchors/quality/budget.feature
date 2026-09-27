@@ -21,9 +21,9 @@ Feature: BudgetRun — run a suite's files fastest first until a time budget is 
 
   @BDGRN-B03 @unit-level
   Scenario: A batch still running at the deadline is stopped with its group
-    Given a command whose child process outlives the shell
-    When the deadline comes while it runs
-    Then the run is reported as cut and the child is stopped too
+    Given a command whose child process outlives the shell, one that restores the source on TERM, and a child that ignores TERM
+    When the deadline comes while each runs
+    Then the run is reported as cut, the child is stopped too, the restore runs, and the child ignoring TERM is killed after the grace
 
   @BDGRN-B04 @unit-level
   Scenario: A budget runs batches fastest first and reports what ran and what was left

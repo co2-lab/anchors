@@ -124,6 +124,13 @@ The order comes from the times earlier runs recorded in the map, per suite: a te
 its JUnit cases, a code file's from Anchors timing its mutation run — which is why a mutation
 budget runs one file at a time. A file never timed goes last, and its run is what times it.
 
+**Cutting a batch.** When the time is up, the running batch's process group gets a `TERM`,
+and whatever is still running 10 seconds later gets a `KILL`. A mutation tool that works **in
+place** (it rewrites the source and restores it at the end, like Stryker with `inPlace`) must
+restore the file on `TERM` — trap it in the `run_changed:` script if the tool does not — or a
+cut batch leaves mutated source in the tree. On Windows there is no `TERM`: the batch is
+killed at once, and an in-place tool can be cut mid-mutant.
+
 ## Project status
 
 Under construction, and honest about it. The **doctrine** of the 6 pillars

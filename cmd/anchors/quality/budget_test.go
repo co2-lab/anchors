@@ -85,6 +85,24 @@ func TestBudgetDeadlineStopsTheGroup(t *testing.T) {
 	if err, cut := execUntil("true", dir, time.Now().Add(10*time.Second)); err != nil || cut {
 		t.Fatalf("a run that ends in time is not cut, got %v %v", err, cut)
 	}
+
+	// The group gets a TERM first: a tool that restores the source on it gets to.
+	prev := stopGrace
+	stopGrace = time.Second
+	t.Cleanup(func() { stopGrace = prev })
+	if _, cut := execUntil("trap 'touch restored; exit 0' TERM; sleep 30", dir, time.Now().Add(300*time.Millisecond)); !cut {
+		t.Fatal("the run must be reported as cut")
+	}
+	if _, err := os.Stat(filepath.Join(dir, "restored")); err != nil {
+		t.Fatal("the TERM must reach the command, so its restore runs")
+	}
+	// A child that ignores the TERM is killed once the grace is over, before it finishes.
+	start = time.Now()
+	execUntil("(trap '' TERM; sleep 4; touch stubborn) & wait", dir, time.Now().Add(300*time.Millisecond))
+	time.Sleep(4500*time.Millisecond - time.Since(start))
+	if _, err := os.Stat(filepath.Join(dir, "stubborn")); err == nil {
+		t.Fatal("a child ignoring the TERM must be killed after the grace")
+	}
 }
 
 // budgetRunner is the fake runner: it logs each batch's files and writes a JUnit report

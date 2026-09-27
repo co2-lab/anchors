@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:599ddd2a7d9d77e1 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:fb5fc3f0bede4b9f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento

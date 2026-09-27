@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:283370ff8f82d5ef — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:06706a27de8e8292 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras

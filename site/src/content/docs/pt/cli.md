@@ -186,6 +186,13 @@ de teste vem dos casos do JUnit; o de um arquivo de código, do Anchors cronomet
 dele — por isso a mutação com orçamento roda um arquivo por vez. Arquivo que nunca foi
 cronometrado vai por último, e a rodada dele é que grava o tempo.
 
+**Cortar um lote.** Quando o tempo acaba, o grupo de processos do lote em curso recebe um
+`TERM`, e o que ainda estiver rodando 10 segundos depois recebe um `KILL`. Uma ferramenta de
+mutação que trabalha **no lugar** (reescreve o código e o restaura no fim, como o Stryker com
+`inPlace`) precisa restaurar o arquivo no `TERM` — capture-o no script do `run_changed:` se a
+ferramenta não o fizer — ou um lote cortado deixa código mutado na árvore. No Windows não há
+`TERM`: o lote é morto na hora, e uma ferramenta no lugar pode ser cortada no meio de um mutante.
+
 ---
 
 ## O trabalho (modo GitHub)
