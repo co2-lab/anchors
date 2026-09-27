@@ -719,10 +719,6 @@ gates:
   - name: line-coverage
     blocking: true
 
-  # ── CABEÇALHO ───────────────────────────────────────────────────────────────────
-  # Cada pacote do Anchors JÁ tem doutrina no cabeçalho (`// Package X faz Y porque Z`) —
-  # é a convenção mais consistente do repositório. O gate transforma hábito em régua.
-  # Informativo primeiro: 125 arquivos de código, e nem todos seguem o formato `@anchors`.
   # ── THE PROJECT'S LANGUAGE POLICY ───────────────────────────────────────────────
   #
   # EVERYTHING in this repository is written in ENGLISH. Identifiers, comments, specs,
@@ -754,5 +750,9 @@ gates:
     category: consistency
     measures: "nenhum identificador em português — o código é em inglês (comentários não contam)"
 
+  # ── CABEÇALHO ───────────────────────────────────────────────────────────────────
+  # O header `@anchors` é onde a spec e a feature carregam a identidade. Código e teste
+  # tiram a deles da co-location, e o `on:` canônico (spec, feature) os deixa de fora.
+  # Bloqueante desde que as 454 specs e features passaram.
   - name: header-valid
-    blocking: false
+    blocking: true
