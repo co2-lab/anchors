@@ -41,7 +41,7 @@ func (g *Graph) IngestExecution(byFile map[string]ExecByFile, proven map[string]
 // is how a deleted test loses its proof. A partial run measured only its cut: each spec
 // keeps its earlier proof for the codes this run did not see, and takes this run's result
 // for the codes it did. Before, a partial run of 4 test files erased the proof of every
-// spec outside the cut (reported from MIF: MoneyDetailScreen lost 12 green scenarios to a
+// spec outside the cut (reported from the reference app: MoneyDetailScreen lost 12 green scenarios to a
 // run that never executed its test). nil = full run.
 func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen map[string]bool, declaredByNode map[string][]string, layer, suite, now string) (matchedFiles, matchedCodes int) {
 	if layer == "" {
@@ -629,7 +629,7 @@ func hasPathSuffix(full, suffix string) bool {
 // their own workspace (`src/components/atoms/SectionLabel.tsx`). With two workspaces
 // holding the same file, the suffix matches BOTH nodes and both received the signal — the
 // landing's coverage showed up on the mobile component of the same name, and the next
-// ingestion flipped it. MEASURED in MIF (2026-09-23): 100 files in the lcov "matched" 101
+// ingestion flipped it. MEASURED in the reference app (2026-09-23): 100 files in the lcov "matched" 101
 // nodes.
 //
 // Tie-break: the node sharing the longest directory prefix with the report ITSELF

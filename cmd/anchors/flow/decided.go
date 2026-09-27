@@ -19,7 +19,7 @@ import (
 // `anchors:needs-user` no card e o claim para de entregá-lo. Isso é o comportamento certo
 // — é o que impede o agente seguinte de refazer o caminho até a mesma dúvida.
 //
-// O que faltava era o caminho de volta. Medido no blue-eyes (co2-lab/anchors#10): a
+// O que faltava era o caminho de volta. Medido no app de referência (co2-lab/anchors#10): a
 // decisão saiu, as revisões foram aplicadas nos 4 arquivos, a issue de decisão foi
 // fechada — e o card continuou parado. Removi a label à mão.
 //

@@ -126,7 +126,7 @@ func (g GitHub) Open(i Issue, nasce State) (created bool, at State, err error) {
 	// O NOME CANÔNICO, e não o legado.
 	//
 	// Os nomes de label migraram do português para o inglês, e este literal ficou para
-	// trás. Medido no blue-eyes: o gate `open-questions-resolved` reprovou uma spec com
+	// trás. Medido no app de referência: o gate `open-questions-resolved` reprovou uma spec com
 	// duas perguntas em aberto — o comportamento certo —, e a issue NÃO foi criada:
 	//
 	//     could not add label: 'anchors:precisa-do-usuario' not found

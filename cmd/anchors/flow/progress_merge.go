@@ -12,7 +12,7 @@ import (
 //
 // O irmão do `anchors map merge`, pelo mesmo motivo e com a mesma forma.
 //
-// Medido no blue-eyes: TRÊS PRs consecutivos conflitaram no `*-progress.md` do mesmo
+// Medido no app de referência: TRÊS PRs consecutivos conflitaram no `*-progress.md` do mesmo
 // plano (#217, #221, e o seguinte teria), sempre porque duas branches marcaram
 // checkboxes vizinhos. No mesmo período o `anchors.graph.yaml` — que TEM driver desde a
 // v0.1.48 — não conflitou nenhuma vez.

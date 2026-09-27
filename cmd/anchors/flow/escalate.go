@@ -416,7 +416,7 @@ card to change one word is bureaucracy.`,
 					// O CAMINHO DE VOLTA sai junto com o aviso de parada.
 					//
 					// Sem isto o comando gravava um estado e não dizia como revertê-lo:
-					// medido em blue-eyes#139, a decisão saiu, as revisões foram
+					// medido em app de referência, a decisão saiu, as revisões foram
 					// aplicadas, a issue fechada — e o card ficou parado, porque a
 					// instrução de remover a label só existia no corpo do card que o
 					// WORKFLOW abre. Descobrir exigia grepar o YAML.

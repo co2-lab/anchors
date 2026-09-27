@@ -10,7 +10,7 @@ package migra
 //
 //   · as quatro CHAVES que nasceram em português. A pior de perder é `julgamentos`: sem a
 //     conversão, os carimbos de julgamento de IA evaporam e o `check` refaz todos,
-//     cobrando de novo o que alguém já respondeu. Medido no blue-eyes: 120 arestas
+//     cobrando de novo o que alguém já respondeu. Medido no app de referência: 120 arestas
 //     carimbadas, 135 vereditos.
 //
 //   · os NOMES DE GATE gravados dentro dos carimbos. Estes vinham de uma tabela de alias

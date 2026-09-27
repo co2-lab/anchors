@@ -23,7 +23,7 @@ const UpstreamDir = ".github/workflows"
 //
 // Such a file belongs to the Anchors project, not to the one that received it. Its rules,
 // its spec and its tests live upstream; the local copy is replaced whole by `doctor --fix`.
-// Measured in blue-eyes: the map gave `anchors-claim.yml` no code, `anchors deliver`
+// Measured in the reference app: the map gave `anchors-claim.yml` no code, `anchors deliver`
 // refused to record a change to it for lacking one, and `anchors-board.yml` got a code
 // inferred from an example in its comments (`FNDTN`) — the project was being asked to own,
 // and to write a spec for, files it does not own.

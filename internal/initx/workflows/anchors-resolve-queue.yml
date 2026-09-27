@@ -24,7 +24,7 @@
 # A push made with `GITHUB_TOKEN` does not start the PR's workflows the normal way: GitHub
 # leaves every check of that PR at `action_required`, so the PR looks green with NO
 # Anchors check run — the resolution would land unverified and look verified. MEASURED
-# (blue-eyes #838).
+# (reference app).
 #
 # So: set the `ANCHORS_APP_ID` and `ANCHORS_APP_PRIVATE_KEY` secrets (a GitHub App
 # installed on this repository with Contents: write — plus Workflows: write if merges

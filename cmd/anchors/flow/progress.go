@@ -30,7 +30,7 @@ import (
 //     sobre spec e código, derrubado por um checkbox. O efeito é circular: concluir a
 //     fase invalida a verificação da spec que a fase entregou.
 //
-//  3. medido no blue-eyes: `plans/0017-mutacao.md` tinha DOIS commits — o que o criou (83
+//  3. medido no app de referência: `plans/0017-mutacao.md` tinha DOIS commits — o que o criou (83
 //     linhas) e um que mudou 1 linha, `- [ ]` para `- [x]`. Cem por cento das alterações
 //     pós-criação eram progresso.
 //
@@ -137,7 +137,7 @@ func WriteInitialProgress(planoPath, conteudoPlano, codigo string) (string, erro
 // adotou o Anchors antes deste mecanismo tem todos os planos sem companheiro, para
 // sempre, e nada acusa.
 //
-// Medido no blue-eyes: 17 planos, ZERO com `-progress.md`, e 17 com checkbox dentro do
+// Medido no app de referência: 17 planos, ZERO com `-progress.md`, e 17 com checkbox dentro do
 // plano — que é exatamente o que este arquivo existe para tirar de lá. O mecanismo
 // existia, estava testado, e não alcançava um único plano do projeto.
 var newProgressCmd = NewProgressCmd

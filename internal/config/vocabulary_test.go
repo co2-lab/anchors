@@ -9,7 +9,7 @@ import (
 //
 // It accepted the Portuguese gate names and converted them at load, forever. The tests here
 // proved the conversion worked — and it did; the problem was the design: the file never got
-// fixed, and the map piled up stamps in both forms. Measured in blue-eyes: 40 judgments
+// fixed, and the map piled up stamps in both forms. Measured in the reference app: 40 judgments
 // recorded as `regra-cumprida` living next to 2 as `rule-fulfilled`.
 //
 // There was also an asymmetry: READING normalised (`mapx.mesmoGate`), WRITING did not — a

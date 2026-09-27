@@ -22,7 +22,7 @@ import (
 // ser a mesma. O item que cita um CAMINHO de arquivo é verificável de forma trivial: o
 // arquivo existe ou não existe.
 //
-// Medido no blue-eyes: ao criar os 17 progressos, transportei o estado dos checkboxes que
+// Medido no app de referência: ao criar os 17 progressos, transportei o estado dos checkboxes que
 // viviam nos planos — e os planos estavam desatualizados. O progresso do `0002` dizia 6
 // itens abertos com 7 das 8 specs já no disco. CINCO itens mentiam, e eu transportei a
 // mentira fielmente.
@@ -51,7 +51,7 @@ var progressItemRE = regexp.MustCompile(
 // quando a fase não semeia nada — é um convite a preencher, e deveria sair quando alguém
 // decide o que a fase faz.
 //
-// Medido no blue-eyes: ficou no progresso do plano 0017, fase `MTUAO-F02`. E as três
+// Medido no app de referência: ficou no progresso do plano 0017, fase `MTUAO-F02`. E as três
 // direções deste gate não o veem — as duas primeiras confrontam itens que CITAM CAMINHO,
 // e a terceira olha as sementes do plano (aquela fase não semeia).
 //

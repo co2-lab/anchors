@@ -208,7 +208,7 @@ func TestSuccessReturnsNoError(t *testing.T) {
 
 // THE HOOK MUST NOT DUMP THE WHOLE REPORT — let alone twice.
 //
-// Measured in blue-eyes: `pre-commit` and `commit-msg` call the SAME
+// Measured in the reference app: `pre-commit` and `commit-msg` call the SAME
 // `anchors verify --phase pre-commit --staged` (on purpose: one reports early, the other
 // bars, and only the second has the message in hand). Without `--only-issues` the table of
 // 42 gates came out in both, ~88 lines per commit, and the push's `remote:` — the one line

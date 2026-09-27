@@ -664,7 +664,7 @@ func TestSelectNodesTellsGovernedFromUngoverned(t *testing.T) {
 // from the map, and `map build` never adding it — the commit barred forever by the very
 // mechanism that separated decision from state.
 //
-// Measured in blue-eyes when committing the 17 progress files `anchors new progress` had
+// Measured in the reference app when committing the 17 progress files `anchors new progress` had
 // just created.
 func TestSelectNodes_progressIsNotGoverned(t *testing.T) {
 	t.Run("CGPCH-B67: A plan's progress companion is not governed", func(t *testing.T) {})
@@ -867,7 +867,7 @@ func TestIssuesOnFor(t *testing.T) {
 }
 
 // A LOCAL check stamps the map but opens no issue: it runs on work in progress, and in
-// blue-eyes an agent's local check filed two `[docs-fresh]` cards for a state that existed
+// the reference app an agent's local check filed two `[docs-fresh]` cards for a state that existed
 // only on its machine. With issues on (CI, or --record-issues) the failure is filed.
 func TestRecordCheck_issuesOnlyWhenOn(t *testing.T) {
 	t.Run("CGPCH-B18: A blocking failure is filed only when issues are on", func(t *testing.T) {})
@@ -1018,7 +1018,7 @@ func TestGateOfJudgeTask(t *testing.T) {
 // when the check looked at EVERY node; on `--changed` it looked at one file, and the other
 // targets of the same gate look obsolete only because they were not looked at.
 //
-// Measured in blue-eyes: two `check --changed` on different tests left ONE task in the
+// Measured in the reference app: two `check --changed` on different tests left ONE task in the
 // queue, and `judge --pending` answered "no target awaiting" with five pending on
 // `check --all`.
 //

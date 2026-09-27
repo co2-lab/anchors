@@ -16,7 +16,7 @@ func mapaComAdaptador(planoAdaptador, semente string) *mapx.Graph {
 	}
 }
 
-// O CASO REAL, medido no blue-eyes.
+// O CASO REAL, medido no app de referência.
 //
 // O plano 0008 dizia "Fonte: **GA4**" e declarava `needs: plans/0005-home-e-indice.md`.
 // O adaptador vinha do 0002, e essa dependência existia SÓ NA PROSA. Quando o 0002

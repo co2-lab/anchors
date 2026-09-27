@@ -14,7 +14,7 @@ import (
 //
 // Whoever runs the project had no way to TELL the agents something. A comment on a card
 // reaches only the agent holding that card, and only if it rereads the card. Measured in
-// blue-eyes, 2026-09-24: five agents on another machine kept opening bugs as decisions
+// the reference app, 2026-09-24: five agents on another machine kept opening bugs as decisions
 // after `anchors escalate --bug` existed, and the only channel to say "update the binary"
 // was a comment on each escalation after the fact.
 //

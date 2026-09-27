@@ -45,7 +45,7 @@ permissions:
   # A `blocked-by-<n>` can name a PULL REQUEST (a card waiting for a PR to merge), and
   # reading its state goes through the same `gh issue view`. Without this the token gets
   # "Resource not accessible by integration", the check fails closed, and every card
-  # waiting on a PR is skipped as if still blocked — measured in blue-eyes (#1005): seven
+  # waiting on a PR is skipped as if still blocked — measured in the reference app: seven
   # cards skipped, and the claim ended in "no free card".
   pull-requests: read
 
@@ -125,11 +125,11 @@ jobs:
           # agente nunca chega aqui.
           # EM PÁGINAS DE 25, com os últimos 100 comentários de cada card. Pedir os
           # comentários de 200 cards numa consulta só estourava o GraphQL: medido no
-          # blue-eyes, com 114 cards abertos, `502` em toda execução — nenhum card era
+          # app de referência, com 114 cards abertos, `502` em toda execução — nenhum card era
           # entregue. É a mesma consulta que o `anchors next` usa desde a v0.1.160.
           # O ESCALADO fica de fora também aqui, e não só na lista de candidatos: um card
           # esperando decisão de gente não é "o meu trabalho em aberto". Medido no
-          # blue-eyes: o #651, estacionado com `needs-user` depois de o revisor reprovar o
+          # app de referência: o #651, estacionado com `needs-user` depois de o revisor reprovar o
           # PR, voltava ao mesmo agente a cada `anchors next`, somando "## Revisão N".
           meu=$(gh api graphql --paginate \
             -f owner="${GH_REPO%%/*}" -f name="${GH_REPO#*/}" -f label="$LABEL" \
@@ -162,14 +162,14 @@ jobs:
           # `in-progress` ENTRA, entre os dois: é o card que alguém começou e o stale
           # LIBEROU (`anchors-owner: (liberado)`). O stale não o devolve a `to-do` —
           # mover presumiria onde o trabalho está —, e sem este estado na lista o card
-          # ficava fora da fila para sempre. Medido no blue-eyes: 15 cards liberados entre
+          # ficava fora da fila para sempre. Medido no app de referência: 15 cards liberados entre
           # 16 e 20/09, parados em `in-progress` desde então. Só entra o que tem o
           # `(liberado)` explícito (ver o `case` do dono): um `in-progress` sem dono
           # declarado é de alguém que não passou pelo claim, e não é tomado.
           : > /tmp/andamento.txt
           : > /tmp/revisao.txt
           # `in-review` entra pelo mesmo motivo, logo depois de `ready-to-review`: é uma
-          # revisão que alguém começou e o stale liberou — 4 no blue-eyes, parados desde
+          # revisão que alguém começou e o stale liberou — 4 no app de referência, parados desde
           # 19/09 com os PRs abertos. A transição abaixo já a retoma sem regredir o estado.
           for estado in "anchors:ready-to-review" "anchors:in-review" "anchors:in-progress" "anchors:to-do"; do
             gh issue list --state open --label "$LABEL" --label "$estado" \
@@ -300,7 +300,7 @@ jobs:
             # mas a branch e o PR do primeiro agente continuam de pé. O claim seguinte o
             # entrega como se fosse trabalho novo.
             #
-            # Medido: três agentes resolveram a issue #375 do blue-eyes em paralelo, sete
+            # Medido: três agentes resolveram a issue #375 do app de referência em paralelo, sete
             # minutos entre o primeiro PR e o terceiro. Os três chegaram à MESMA solução
             # correta — o desperdício foi de coordenação, não de qualidade. Dois PRs
             # completos foram fechados como duplicata.
@@ -312,7 +312,7 @@ jobs:
             # Only a real REFERENCE counts: a linking keyword (`Closes`/`Refs`/`Fixes`/
             # `Resolves` and GitHub's variants, any case) before `#N`, or an issue URL
             # `/issues/N`. The old pattern accepted any `#N` or `/N`, and a PR body that
-            # reported a mutation score of `4/4` hid card #4 from every claim (blue-eyes
+            # reported a mutation score of `4/4` hid card #4 from every claim (the reference app
             # #679).
             #
             # Um PR já aberto NÃO significa que o card está pronto — significa que quem
@@ -321,7 +321,7 @@ jobs:
             #
             # SÓ PARA TRABALHO DE IMPLEMENTAÇÃO. Um card em `ready-to-review`/`in-review` com
             # PR aberto é exatamente o que se revisa — pulá-lo esvaziava a fila de revisão
-            # inteira. Medido no blue-eyes, 2026-09-24: o claim percorreu os 20 cards em
+            # inteira. Medido no app de referência, 2026-09-24: o claim percorreu os 20 cards em
             # `ready-to-review`, pulou 15 porque o PR estava aberto e 5 por bloqueio, e
             # nenhum revisor recebeu revisão pelo `anchors next`.
             if ! grep -qx "$n" /tmp/revisao.txt; then
@@ -399,13 +399,13 @@ jobs:
             # à mão um card em andamento terminou a sua parte — o revisor que reprovou e
             # devolveu a posse, por exemplo — e reentregá-lo como trabalho parado o
             # devolvia ao mesmo agente em toda chamada do `anchors next`. Medido no
-            # blue-eyes: o revisor do #766 reprovou o PR, liberou a posse e recebeu o
+            # app de referência: o revisor do #766 reprovou o PR, liberou a posse e recebeu o
             # mesmo card de volta, preso num laço.
             #
             # BUT ONLY FROM WHOEVER RELEASED IT. The guard used to skip every hand-released
             # card in flight, for everyone — and every release that is not the stale's is by
             # hand: an escalation, `anchors decided`, a reviewer who left without a verdict.
-            # Measured in blue-eyes, 2026-09-24: 31 cards in `in-progress`/`in-review`, two
+            # Measured in the reference app, 2026-09-24: 31 cards in `in-progress`/`in-review`, two
             # with a live owner; the rest offered to no one, while five agents found "no free
             # card". The loop of #766 was the SAME agent getting its card back, so that is
             # what is refused; another agent takes the card.
@@ -446,7 +446,7 @@ jobs:
                 # QUEM ESCREVEU NÃO REVISA. Um card em revisão que volta ao mesmo agente que
                 # o soltou é o autor revisando o próprio trabalho — e a revisão só vale
                 # porque um segundo par de olhos vê o que o primeiro não viu. A versão
-                # anterior entregava com um aviso (blue-eyes#82, pensada para um time de
+                # anterior entregava com um aviso (app de referência, pensada para um time de
                 # um); com dois agentes trabalhando, ela devolveu a revisão ao próprio autor
                 # seis vezes num dia, e cada uma parou o agente até alguém intervir. O card
                 # fica para OUTRO agente; um time de um revisa à mão.
@@ -504,7 +504,7 @@ jobs:
           # idêntico ao de uma revisão independente, e é justamente essa diferença que
           # precisa aparecer para quem ler o histórico depois.
           #
-          # Decidido em blue-eyes#82.
+          # Decidido em the reference app.
           if [ -n "$liberou_antes" ] && [ "$liberou_antes" = "$AGENT" ]; then
             printf '%s\n' \
               '⚠ **Mesmo agente nos dois papéis.**' '' \

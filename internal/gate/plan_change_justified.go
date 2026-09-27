@@ -45,7 +45,7 @@ import (
 //
 // O SEPARADOR aceita dois-pontos OU travessão, e os dois prefixos convivem.
 //
-// Medido no blue-eyes: a `ServiceMetrics` registrou a `R0001` como TÍTULO de seção —
+// Medido no app de referência: a `ServiceMetrics` registrou a `R0001` como TÍTULO de seção —
 // `### SRMTS-R0001 — a B06 afirmava um vocabulário que não existe` — que é o formato
 // natural quando a revisão ganha corpo, e a `R0002` no cabeçalho, com dois-pontos.
 //
@@ -89,7 +89,7 @@ func checkPlanChangeJustified(content string, n mapx.Node, root string, g *mapx.
 	// que depende dele —, e isso é certo para quase todo gate: quem quebrou por tabela tem
 	// de ser confrontado. Aqui não: um plano que não mudou não tem o que justificar.
 	//
-	// Medido no blue-eyes: sem esta conferência, alterar UM plano acusava 8 arquivos, 7
+	// Medido no app de referência: sem esta conferência, alterar UM plano acusava 8 arquivos, 7
 	// deles intocados. Um gate bloqueante que acusa inocente é pior que gate nenhum — a
 	// saída barata vira desligá-lo.
 	if cfg == nil || !actuallyChanged(n.ID, cfg.Alterados) {
@@ -224,7 +224,7 @@ func gitSaysIsNew(root, path string) bool {
 	// A diferença decide o gate. `git ls-files` consulta o INDEX, e o pre-commit roda com
 	// tudo já STAGED — então um arquivo que nasce neste commit aparece como rastreado, a
 	// guarda não dispara, e o gate cobra revisão de arquivo recém-nascido. Medido no
-	// blue-eyes: a `MutationHarness.spec.md` estava em `A` no `git status` e foi acusada
+	// app de referência: a `MutationHarness.spec.md` estava em `A` no `git status` e foi acusada
 	// de "foi ALTERADO e não diz por quê"; o arquivo que de fato mudou (`M`) não foi.
 	//
 	// Reproduzido isolado: `git ls-files --error-unmatch novo.md` erra antes do `git add`

@@ -1327,7 +1327,7 @@ type Derived struct {
 	//
 	// Por que por VALOR e não pelo símbolo: uma dispensa sobre `export const JANELAS`
 	// libera os quatro valores de uma vez, e cada valor de um conjunto fechado é uma
-	// decisão de domínio separada. MEDIDO: as telas do blue-eyes declaravam
+	// decisão de domínio separada. MEDIDO: as telas do app de referência declaravam
 	// `5m·15m·30m·1h·1d` enquanto o contrato aceitava `15m·1h·6h·24h` — três valores
 	// que não existiam, e o backend caindo no padrão `1h` em silêncio.
 	ValueAnchor string `yaml:"value_anchor,omitempty"`

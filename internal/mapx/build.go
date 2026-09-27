@@ -198,7 +198,7 @@ func seedEdges(files []scan.File) []Edge {
 				//
 				// A busca por nome existe para a CITAÇÃO em prosa, onde o autor escreve só
 				// o arquivo. Aplicá-la a um caminho inteiro faz o mapa apontar para outro
-				// diretório: medido no blue-eyes, o plano 0010 semeia
+				// diretório: medido no app de referência, o plano 0010 semeia
 				// `packages/lambdas/redis/InstanceList.spec.md`, o alvo não existia ainda,
 				// e a aresta foi para `packages/lambdas/database/InstanceList.spec.md` —
 				// a spec do plano 0009.
@@ -484,7 +484,7 @@ func governsEdges(files []scan.File, cfg *config.Config) []Edge {
 // então o `{{name}}` saía `X.spec` e o prompt mandava criar `X.spec.ts` e
 // `X.spec.test.ts`.
 //
-// Medido no blue-eyes: `anchors work code --for packages/infra/GoLiveChecklist.spec.md`
+// Medido no app de referência: `anchors work code --for packages/infra/GoLiveChecklist.spec.md`
 // dizia para escrever `GoLiveChecklist.spec.feature` e `GoLiveChecklist.spec.test.ts`,
 // quando o padrão do projeto — e o que o MAPA usa — é `GoLiveChecklist.ts` e
 // `GoLiveChecklist.test.ts`. O prompt de trabalho e o mapa discordavam sobre onde a peça
@@ -541,7 +541,7 @@ func resolveTemplateM(tmpl, dir, name, ext, module string) string {
 // DERIVADO da âncora irmã — ver `codeFromSibling`.
 func nodeCode(f scan.File, anchors map[string]string) string {
 	// A VENDORED file has no local identity. Inferring one from its text read an example in
-	// a comment as ownership: blue-eyes' `anchors-board.yml` entered the map as `FNDTN`,
+	// a comment as ownership: the reference app's `anchors-board.yml` entered the map as `FNDTN`,
 	// the code of a plan it merely quotes.
 	if f.Upstream {
 		return ""
@@ -555,7 +555,7 @@ func nodeCode(f scan.File, anchors map[string]string) string {
 	// unidade é a spec ao lado. Inferir do texto ali é ler o dado de teste como
 	// declaração.
 	//
-	// Medido no blue-eyes: `GoLiveChecklist.test.ts` citava `ELKAD-B01` numa string —
+	// Medido no app de referência: `GoLiveChecklist.test.ts` citava `ELKAD-B01` numa string —
 	// o `estadoAtual` de uma dívida fictícia, "o ELKAD-B01 preparou o caminho" — e o
 	// arquivo entrou no mapa com `code: ELKAD`. O `scenario-coverage` passou a cobrar
 	// vinte e um cenários de outras specs, e os três invariantes que o teste PROVAVA
@@ -736,7 +736,7 @@ func expandePadrao(padrao string, byPath map[string]scan.File) []string {
 // directory and name of the anchor are data. Unescaped, a Next.js route directory
 // `app/selo/[slug]/` turned `[slug]` into a character class that matches one letter, so
 // the spec there found neither its code nor its feature and `triad-complete` reported
-// both missing (reported from MIF, 2026-09-25).
+// both missing (reported from the reference app, 2026-09-25).
 func globEscape(s string) string {
 	var b strings.Builder
 	for _, r := range s {

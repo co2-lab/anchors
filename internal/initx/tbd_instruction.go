@@ -12,7 +12,7 @@ package initx
 // carimbo fica no mapa parecendo verificação real. É pior que pendência aberta: uma
 // pendência diz "ninguém olhou"; um PASS afirma que alguém olhou e aprovou.
 //
-// Medido no blue-eyes (#76): a `MutationHarness.spec.md` declarava `@TBD: code,feature,test`,
+// Medido no app de referência: a `MutationHarness.spec.md` declarava `@TBD: code,feature,test`,
 // o identificador MTHRN não existia em arquivo de código nenhum, e o `anchors check`
 // BARROU pedindo o julgamento de "o trecho REALIZA o que a regra descreve?".
 //

@@ -184,7 +184,7 @@ func repairEnvironment(root string, cfg *config.Config) error {
 	// outro de reserva"* — e diz que a validação é simples: *"no modo github,
 	// `.anchors/tasks/` não deve existir"*. Ninguém a havia escrito.
 	//
-	// Medido no blue-eyes: com `mode: github` no anchors.yaml, `.anchors/tasks/` tinha 11
+	// Medido no app de referência: com `mode: github` no anchors.yaml, `.anchors/tasks/` tinha 11
 	// arquivos e o `anchors next` lia dali — respondendo "fila vazia" com 84 cards abertos
 	// no board. Duas filas para a mesma pergunta, e a resposta vinha da errada.
 	warnOrphanLocalQueue(root)

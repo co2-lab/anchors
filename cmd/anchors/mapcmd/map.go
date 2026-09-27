@@ -172,7 +172,7 @@ map's edges by co-location (file names) and by scenario code
 				// PERDA DE CARIMBO é silenciosa, e o mapa continua VÁLIDO.
 				//
 				// O `PreserveStamps` preserva o que está no arquivo anterior — e num merge
-				// o arquivo anterior é o do OUTRO lado. Medido no blue-eyes
+				// o arquivo anterior é o do OUTRO lado. Medido no app de referência
 				// (co2-lab/anchors#12): resolvi um conflito com `checkout --theirs` +
 				// `map build`, e o carimbo de `review` de uma spec desapareceu. Descobri
 				// por acaso, contando: 18 onde eu esperava 19.
@@ -285,7 +285,7 @@ func printEdgeSummary(g *mapx.Graph) {
 // avisa onde ela decidiu sozinha." Ele não avisava — a `scan.Ambiguities` existia,
 // completa e testada, e NINGUÉM a chamava.
 //
-// O custo do silêncio, medido no blue-eyes (blue-eyes#100): `**/*.test.*` e
+// O custo do silêncio, medido no app de referência (app de referência): `**/*.test.*` e
 // `packages/shared/**/*.ts` casavam o mesmo `AreaStatus.test.ts`, o desempate por
 // comprimento escolheu `shared`, e o projeto ficou com ZERO nós `kind: test` tendo 70
 // testes verdes. Em cascata, QUATRO gates ficaram cegos — incluindo o `test-traceable`,

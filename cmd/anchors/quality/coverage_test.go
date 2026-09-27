@@ -15,7 +15,7 @@ import (
 // A spec CITES neighbouring rules in prose, and that is the project's style — not a
 // defect. The defect was treating the citation as a DECLARATION.
 //
-// MEASURED in blue-eyes: 37 of the 55 nodes with `proven_codes` carried a code of another
+// MEASURED in the reference app: 37 of the 55 nodes with `proven_codes` carried a code of another
 // unit. `InfraList.spec.md` cites `QSCOP-B02` ONCE, in prose, no InfraList test mentions
 // it — and still the map claimed InfraList proved it. That is worse than a gap: a gap
 // shows up in the report, and this one vanishes.

@@ -120,7 +120,7 @@ func cfgAlterado(paths ...string) *config.Config {
 // nó alterado: `--changed X` entrega o RAIO DE IMPACTO de X, e as specs que X semeia
 // entram no escopo sem terem mudado.
 //
-// Medido no blue-eyes: alterar UM plano acusava 8 arquivos, 7 intocados. Um gate
+// Medido no app de referência: alterar UM plano acusava 8 arquivos, 7 intocados. Um gate
 // bloqueante que acusa inocente é pior que gate nenhum — a saída barata vira desligá-lo.
 func TestAlterado_noRaioDeImpactoMasIntocadoPula(t *testing.T) {
 	t.Run("PCJPL-B01: An artifact reached only by the impact radius is skipped", func(t *testing.T) {})
@@ -226,7 +226,7 @@ func TestAlterado_arquivoNovoNaoTemOQueJustificar(t *testing.T) {
 //
 // A guarda usava `git ls-files`, que consulta o INDEX — um arquivo novo staged aparece
 // como rastreado, a guarda não disparava, e o gate cobrava `-R0001` de arquivo
-// recém-nascido. Medido no blue-eyes: a `MutationHarness.spec.md` estava em `A` no
+// recém-nascido. Medido no app de referência: a `MutationHarness.spec.md` estava em `A` no
 // `git status` e foi acusada de "foi ALTERADO e não diz por quê"; o arquivo que de fato
 // mudou (`M`) não foi acusado.
 //

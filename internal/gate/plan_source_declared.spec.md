@@ -12,7 +12,7 @@
 Confronts a plan against the dependency it wrote in PROSE and never declared in `needs:`:
 **the plan names a source — who is going to build the adapter for it?**
 
-The real case, measured in blue-eyes. Plan 0008 (Frontend/Web) said `Fonte: **GA4**, and
+The real case, measured in the reference app. Plan 0008 (Frontend/Web) said `Fonte: **GA4**, and
 it is the architectural exception of the project`, and declared only
 `needs: plans/0005-home-e-indice.md`. The GA4 adapter came from plan 0002, and **that
 dependency existed only in the prose.**

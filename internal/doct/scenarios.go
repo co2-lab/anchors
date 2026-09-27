@@ -39,7 +39,7 @@ var (
 	// O título aceita TODA palavra de cenário dos dialetos — a MESMA lista que os gates
 	// usam (`config.GherkinScenarioAlternatives`, a mais longa primeiro). A versão anterior
 	// exigia a linha COMEÇAR com Cenário/Scenario, e `Esquema do Cenário:` nunca casava:
-	// medido no blue-eyes, os 7 esquemas sumiam do `comportamento.md`. Os dois-pontos logo
+	// medido no app de referência, os 7 esquemas sumiam do `comportamento.md`. Os dois-pontos logo
 	// após a palavra impedem que a tabela `Exemplos:` passe por cenário `Exemplo`.
 	cenarioTituloRE = scenarioTitleRE()
 	// O código de identidade tem a forma `ABCDE-B01` (com `#NN` opcional).

@@ -734,7 +734,7 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 	// THE LAYER'S OPT-OUT HOLDS HERE TOO. A layer that declares `tested-by` in
 	// `optional_triad_edges` has no tests by declaration — "the model declares; the unit
 	// that consumes it is what proves it" — and `triad-complete` honours that. This gate
-	// ignored it and charged a green test for every rule: in MIF, every schema-model spec
+	// ignored it and charged a green test for every rule: in the reference app, every schema-model spec
 	// failed (about 130 findings) over tests the Structure says do not exist. Where the
 	// rules of such a layer must be proven, the proof belongs to the unit that consumes it,
 	// and that unit's scenarios are charged there.
@@ -744,7 +744,7 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 	// Só os requisitos DEFINIDOS por esta spec, não toda menção de código no texto.
 	//
 	// O `anyCodeRE` sobre o conteúdo inteiro casa também o que a spec CITA ao justificar
-	// as regras dela — e uma spec bem escrita cita muito. Medido no blue-eyes: a
+	// as regras dela — e uma spec bem escrita cita muito. Medido no app de referência: a
 	// `GoLiveChecklist` tinha 6 requisitos e o gate cobrava 18 cenários, 15 deles de
 	// outras unidades (`CRPNC-B03`, `MTTLM-B02`, `DTSTD-B06`…). Nenhum daqueles cenários
 	// poderia ser provado por um teste desta unidade — o gate pedia o impossível, e a

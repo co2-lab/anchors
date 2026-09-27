@@ -95,7 +95,7 @@ jobs:
           # liberar o dono. Desde que o stale parou de mover, a exclusão passou a
           # prender: um card pronto com dono morto ficava fora do alcance do `next`.
           # A LISTA VEM SEM COMENTÁRIOS. Pedir `comments` de 200 cards numa consulta só
-          # estourava o GraphQL do GitHub: medido no blue-eyes, 60 execuções seguidas em
+          # estourava o GraphQL do GitHub: medido no app de referência, 60 execuções seguidas em
           # `502`/`504`, e nenhum card liberado em dois dias e meio. A lista agora escolhe
           # pelo que é barato (labels e `updatedAt`), e o dono de cada candidato vem pela
           # API REST, um card por vez.

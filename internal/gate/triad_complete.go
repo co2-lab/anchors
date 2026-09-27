@@ -360,7 +360,7 @@ func provingTest(codigo, root string, g *mapx.Graph) (arquivo string, achou bool
 // does not define a rule. A waiver on a rule's own line — its table row, its heading
 // (`### CODE-S01: … @no-code: …`) or its bullet — is that RULE's (the per-rule shape
 // `rule-implemented` reads), not the unit's. Matching the whole spec turned every per-rule
-// `@no-code:` into a waiver of code, feature and test for the unit: measured in MIF, 293 of
+// `@no-code:` into a waiver of code, feature and test for the unit: measured in the reference app, 293 of
 // 308 triad failures were table rows, and 7 of the rest were rule headings.
 func unitWaiver(re *regexp.Regexp, content string) bool {
 	defines := definesRuleRE()

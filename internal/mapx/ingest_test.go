@@ -69,7 +69,7 @@ func TestIngestExecutionAccumulatesLayers(t *testing.T) {
 
 // An ingestion that only ADDS lets the map claim proof that stopped existing.
 //
-// MEASURED in blue-eyes: after fixing the filter that made a spec declare its neighbour's rule,
+// MEASURED in the reference app: after fixing the filter that made a spec declare its neighbour's rule,
 // seven nodes kept carrying someone else's `proven_codes`. `map build` and `ingest` ran again and
 // cleaned nothing — because `len(pc) > 0` meant "nothing to write", when the right answer is "no
 // proof any more", which is information, not the absence of it.
@@ -103,7 +103,7 @@ func TestIngestErasesProofThatStoppedExisting(t *testing.T) {
 }
 
 // Monorepo: each suite is ingested alone. Mobile's must not speak for the backend's —
-// MEASURED in MIF: the mobile ingestion wrote EMPTY on 131 backend specs.
+// MEASURED in the reference app: the mobile ingestion wrote EMPTY on 131 backend specs.
 func TestIngestPerSuiteDoesNotEraseAnotherSuitesProof(t *testing.T) {
 	t.Run("SGINA-B04: One suite never erases another suite's proof", func(t *testing.T) {})
 	g := &Graph{Nodes: []Node{
@@ -210,7 +210,7 @@ func TestIngestSuite_legacyEntryWithoutRevIsStale(t *testing.T) {
 	}
 }
 
-// A PARTIAL run (`anchors test --changed`) measured only its cut. Reported from MIF: a run of 4
+// A PARTIAL run (`anchors test --changed`) measured only its cut. Reported from the reference app: a run of 4
 // test files erased the proof of MoneyDetailScreen, whose test it never executed.
 func TestIngestPartialRunKeepsWhatItDidNotSee(t *testing.T) {
 	t.Run("SGINA-B07: A partial run changes only what it saw", func(t *testing.T) {})
@@ -516,7 +516,7 @@ func TestPathMatches(t *testing.T) {
 }
 
 // Monorepo: the runner writes paths relative to the workspace, and the same file exists in two
-// workspaces. Measured in MIF: the landing's coverage landed on mobile's SectionLabel.
+// workspaces. Measured in the reference app: the landing's coverage landed on mobile's SectionLabel.
 func monorepoGraph() *Graph {
 	return &Graph{Nodes: []Node{
 		{ID: "apps/landing-page/src/atoms/Label.tsx", Kind: KindCode, Rev: "r1"},

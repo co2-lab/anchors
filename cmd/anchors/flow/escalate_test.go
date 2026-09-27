@@ -179,7 +179,7 @@ func TestEscalate_keepsTheCardAndThePRTogether(t *testing.T) {
 	}
 }
 
-// A bug is not a decision (blue-eyes, 2026-09-24: six "decisions" in two hours, all bugs).
+// A bug is not a decision (reference app, 2026-09-24: six "decisions" in two hours, all bugs).
 // The body says so first, never asks for one, and names the card only as the flag says.
 func TestBugBody_isNotADecision(t *testing.T) {
 	b := bugBody("the review job picks the wrong card", ".github/workflows/anchors-pr-checks.yml", "966", true)

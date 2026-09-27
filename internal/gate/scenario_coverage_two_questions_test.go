@@ -91,7 +91,7 @@ func TestScenarioCoverage_provenPasses(t *testing.T) {
 }
 
 // A LAYER THAT DISPENSES `tested-by` has no tests by declaration, and `scenario-coverage`
-// honours it as `triad-complete` does. In MIF every schema-model spec failed "scenario with
+// honours it as `triad-complete` does. In the reference app every schema-model spec failed "scenario with
 // no green test" although the Structure says those tests do not exist. A layer without the
 // opt-out is still charged.
 func TestScenarioCoverage_honoursTheLayersTestedByOptOut(t *testing.T) {

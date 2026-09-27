@@ -261,7 +261,7 @@ func TestWorkGuideUsesTheRealLabelNames(t *testing.T) {
 	}
 }
 
-// THE VERDICT IS A LINE THE PIPELINE READS (blue-eyes #835). The closed cycle: each
+// THE VERDICT IS A LINE THE PIPELINE READS (reference app). The closed cycle: each
 // verdict line the guide shows, with a name in place of <you>, is parsed by the very
 // expression `anchors-pr-checks.yml` runs — a guide teaching another spelling would leave
 // every reviewed PR pending forever.
@@ -493,7 +493,7 @@ func TestProjectGuideCoversTheDiscoverPhase(t *testing.T) {
 }
 
 // A boundary rule applies to every input; the guide says which instrument proves it for
-// each shape of input space (blue-eyes #1016), and teaches the refresh of the stamp.
+// each shape of input space (reference app), and teaches the refresh of the stamp.
 func TestTestGuideNamesInstrumentsAndTheStampRefresh(t *testing.T) {
 	t.Run("GVGDG-B13: The test guide names the instrument per input shape and teaches the stamp refresh", func(t *testing.T) {})
 	test := guideIn(t, "test")

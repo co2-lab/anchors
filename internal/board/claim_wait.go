@@ -13,7 +13,7 @@ import (
 // agent to run `anchors next` again — and every re-run while the claim was still pending
 // dispatched ANOTHER claim. GitHub keeps one pending run per concurrency group, so each new
 // dispatch cancelled the previous pending one or, once the first had started, queued a
-// second claim for the same agent (blue-eyes #679).
+// second claim for the same agent (reference app).
 //
 // So `next` waits for the run it dispatched, and never asks twice while one of its runs is
 // still pending. The wait is bounded: a claim that does not finish in time is reported

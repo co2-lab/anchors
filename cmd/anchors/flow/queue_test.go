@@ -554,7 +554,7 @@ func TestSeedTally(t *testing.T) {
 }
 
 // A review card whose body names no unit (a plan card, a finding under another card)
-// printed `anchors work review --for ` with an empty target — seen in blue-eyes on #931.
+// printed `anchors work review --for ` with an empty target — seen in the reference app on #931.
 // It now points to the PR that references the card.
 func TestPrintReviewWork_cardWithNoUnitPointsToItsPR(t *testing.T) {
 	t.Run("WRQUW-B18: A card under review asks for a verdict", func(t *testing.T) {})
@@ -570,7 +570,7 @@ func TestPrintReviewWork_cardWithNoUnitPointsToItsPR(t *testing.T) {
 }
 
 // A review ends with the verdict line on the PR, and `anchors next` is the only place the
-// reviewer is told so (blue-eyes #998, #1001, #1009: reviewers ended with "Veredito: OK",
+// reviewer is told so (reference app: reviewers ended with "Veredito: OK",
 // `judge`, `decided`, and the card kept coming back). The output names the exact line for
 // this agent, and no longer sends a reviewer to open a PR of their own.
 func TestPrintReviewWork_endsWithTheVerdictLine(t *testing.T) {
@@ -588,7 +588,7 @@ func TestPrintReviewWork_endsWithTheVerdictLine(t *testing.T) {
 }
 
 // Without ANCHORS_SESSION the identity falls back to the OS user, and two agents of that
-// user collide (blue-eyes #650). The fallback is announced; a declared session is not.
+// user collide (reference app). The fallback is announced; a declared session is not.
 func TestAgentID_fallbackIsAnnounced(t *testing.T) {
 	t.Run("WRQUW-B11: The board identity falls back to the OS user, and says so", func(t *testing.T) {})
 	t.Setenv("ANCHORS_SESSION", "")
@@ -610,7 +610,7 @@ func TestAgentID_fallbackIsAnnounced(t *testing.T) {
 }
 
 // Claiming from the board requires a declared session: the fallback identity is shared by
-// every agent of the same user on one machine (blue-eyes #650).
+// every agent of the same user on one machine (reference app).
 func TestRequireSession(t *testing.T) {
 	t.Run("WRQUW-B10: The board is not claimed without a session", func(t *testing.T) {})
 	t.Setenv("ANCHORS_SESSION", "")

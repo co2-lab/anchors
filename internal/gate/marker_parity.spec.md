@@ -16,7 +16,7 @@ The defect class is the mapping that comes undone on one side only. A rule split
 two ends cannot be checked by any per-file gate: each side, looked at alone, is
 impeccable. What breaks is the RELATION, and it disappears without leaving an error.
 
-The case that motivated it, measured (MIF, `EXSC-Q01`): the data-deletion page LISTS
+The case that motivated it, measured (reference app, `EXSC-Q01`): the data-deletion page LISTS
 what will be erased in each scope, and the backend ERASES. The two lists were born
 together and nothing binds them. If a scope starts erasing more (or less), the page goes
 on showing the old version — and the data subject consents on the basis of it. That is

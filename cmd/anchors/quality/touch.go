@@ -20,7 +20,7 @@ import (
 //
 // The `updated-at-current` gate charges every touched file whose header date is not the
 // day of the change. Keeping it meant rewriting `updated_at:` by hand, or a one-off script:
-// measured in MIF, one `anchors stamp --refresh` rewrote the stamps of 111 tests and each
+// measured in the reference app, one `anchors stamp --refresh` rewrote the stamps of 111 tests and each
 // header had to be bumped after. `check --fix` bumps too, but only inside the full check,
 // with no scope and no filter.
 //
@@ -294,7 +294,7 @@ func touchRun(absRoot string, staged, dryRun bool, date string, exclude []string
 // directory, from the worktree as it was BEFORE the hook. The hook's `git add` reached
 // only the temporary index: the commit came out dated, and the real index kept the old
 // date — `MM` in `git status`, and a later `git add` could revert the date (reported from
-// MIF, where every commit names its paths so another session's changes never mix in).
+// the reference app, where every commit names its paths so another session's changes never mix in).
 // Staging the file in that `index.lock` too makes the real index end equal to HEAD.
 //
 // Outside a partial commit it does nothing: a plain commit's hook stages in the real index

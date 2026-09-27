@@ -129,7 +129,7 @@ After this, the watcher queues the review task.`,
 			cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
 			// A VENDORED pipeline has no card here: its code, its spec and its board live
 			// upstream, in the Anchors project that seeded it. Demanding the unit's code
-			// refused every delivery touching one — measured in blue-eyes, where the map
+			// refused every delivery touching one — measured in the reference app, where the map
 			// gives `anchors-claim.yml` no code, as it should.
 			//
 			// In `github` mode there is no card to carry the record, and writing it to
@@ -198,7 +198,7 @@ After this, the watcher queues the review task.`,
 	// `StringArray`, e NÃO `StringSlice`: estas duas flags recebem PROSA, e o
 	// `StringSlice` do pflag divide o valor na vírgula.
 	//
-	// Medido no blue-eyes, entregando a spec do DataStore:
+	// Medido no app de referência, entregando a spec do DataStore:
 	//
 	//	--decision "oito regras e dois invariantes, na letra B/I que as vizinhas usam"
 	//
@@ -265,7 +265,7 @@ func upstreamUnit(root, unit string) bool {
 // defeito que este caminho existe para fechar. Melhor o comando parar e dizer o que falta.
 //
 // `--card` names the card directly. The code lookup cannot find two real cases, and both
-// were measured in blue-eyes: a PLAN card (`[plano] …`) has no `[CODE]` in its title, and a
+// were measured in the reference app: a PLAN card (`[plano] …`) has no `[CODE]` in its title, and a
 // change to generated files only (`docs/`, the map) has no unit in the map. Agents fell
 // back to writing the record by hand, outside the format the reviewer reads.
 func deliverToBoard(root string, cfg *config.Config, c change.Change, cardNumber int) error {

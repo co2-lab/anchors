@@ -15,7 +15,7 @@ package config
 //
 // E tinha um defeito de assimetria: a LEITURA normalizava (`mapx.mesmoGate`), a ESCRITA
 // não. Um projeto que renomeasse o gate ganhava um SEGUNDO carimbo em vez de atualizar o
-// primeiro. Medido no blue-eyes: 40 julgamentos gravados como `regra-cumprida` convivendo
+// primeiro. Medido no app de referência: 40 julgamentos gravados como `regra-cumprida` convivendo
 // com 2 como `rule-fulfilled` — o mesmo gate contado duas vezes, e o `check` rejulgando o
 // que já fora respondido.
 //

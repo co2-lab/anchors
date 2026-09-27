@@ -13,7 +13,7 @@ import (
 // plan-source-declared: um plano que NOMEIA uma fonte na prosa tem de declarar, no
 // `needs:`, o plano que a constrói.
 //
-// O CASO REAL, medido no blue-eyes. O plano 0008 (Frontend/Web) dizia:
+// O CASO REAL, medido no app de referência. O plano 0008 (Frontend/Web) dizia:
 //
 //	Fonte: **GA4**, e ela é a exceção arquitetural do projeto.
 //

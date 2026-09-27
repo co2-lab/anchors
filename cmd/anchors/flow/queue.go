@@ -124,7 +124,7 @@ act on it before the card.`,
 			// reserva"*, *"no modo github, `.anchors/tasks/` não deve existir"* — e este
 			// comando desobedecia: chamava `queue.Claim` em qualquer modo.
 			//
-			// Medido no blue-eyes, com `mode: github` no anchors.yaml:
+			// Medido no app de referência, com `mode: github` no anchors.yaml:
 			//
 			//	$ anchors next
 			//	fila vazia — nada a fazer
@@ -361,7 +361,7 @@ func defaultWorkerID() string {
 // Without it the identity falls back to <host>/<user>, and two agents of the same user on
 // one machine are the SAME owner to the board: each resumes the other's card, and the
 // collision shows only after both have worked the same card. A warning was not enough —
-// blue-eyes #650: a machine claimed as `…/default` next to dev1..dev5. Claiming is the
+// the reference app: a machine claimed as `…/default` next to dev1..dev5. Claiming is the
 // one moment the identity is WRITTEN (the `anchors-owner:` comment), so that is where it
 // must be declared; commands that only read keep the fallback and its warning.
 func requireSession() error {
@@ -391,7 +391,7 @@ func agentID() string {
 		}
 		// SAID, not silent. Two agents of the same user on one machine share this
 		// identity, own each other's cards and collide on every claim — measured in
-		// blue-eyes (#650): a machine with no `ANCHORS_SESSION` claimed as `…/default`
+		// the reference app: a machine with no `ANCHORS_SESSION` claimed as `…/default`
 		// alongside dev1..dev5. One agent per user is fine; the warning says when it is not.
 		fmt.Fprintf(os.Stderr, "⚠ ANCHORS_SESSION is not set: this agent claims as %q. Two agents of the same\n"+
 			"  user on this machine would share that identity and take each other's cards —\n"+
@@ -463,7 +463,7 @@ func seedFromPlans(root string) (int, error) {
 			// momento), e guardá-lo fazia o texto envelhecer na fila: a task nasce dizendo
 			// "6 de 7", duas specs são entregues, e ela continua dizendo 6.
 			//
-			// Medido no blue-eyes (co2-lab/anchors#11): a razão velha me fez desconfiar de
+			// Medido no app de referência (co2-lab/anchors#11): a razão velha me fez desconfiar de
 			// uma correção que eu tinha acabado de publicar — passei quatro comandos
 			// investigando um defeito que não existia, porque a contagem estava certa e o
 			// texto era velho.
@@ -638,7 +638,7 @@ func nextFromBoard(root string, cfg *config.Config, agent string) error {
 		//
 		// This used to stop after the dispatch and tell the agent to run `anchors next`
 		// again. Each re-run while the claim was pending dispatched another one, which
-		// cancelled the pending run or duplicated the claim (blue-eyes #679). Now this
+		// cancelled the pending run or duplicated the claim (reference app). Now this
 		// same call waits, bounded, for the run it dispatched — or for the one of this
 		// agent that is already pending, which it never dispatches twice.
 		fmt.Printf("work requested from the pipeline (serialized claim) — waiting for it, up to %s\n",
@@ -928,7 +928,7 @@ func printReviewWork(root string, card *board.Card, agent string) {
 	//
 	// This used to say "open the PR with `anchors pr-body`" and "the finding becomes a
 	// correction in this card" — implementation instructions, for a card whose deliverable
-	// is a verdict on SOMEONE ELSE's PR. Measured in blue-eyes, 2026-09-24: reviewers posted
+	// is a verdict on SOMEONE ELSE's PR. Measured in the reference app, 2026-09-24: reviewers posted
 	// "Veredito: OK", stamped `judge --verdict fail`, ran `anchors decided`, and escalated
 	// three "decisions" (#998, #1001, #1009) because `anchors next` kept resuming the card.
 	// None of those ends a review: only the verdict line does. It publishes `anchors/review`

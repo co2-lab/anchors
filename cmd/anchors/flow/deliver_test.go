@@ -308,7 +308,7 @@ func TestDeliver_fileStillSplitsOnComma(t *testing.T) {
 }
 
 // A vendored pipeline has no local code and no card. In `github` mode the delivery used to
-// look the unit's code up in the map and refuse — measured in blue-eyes on
+// look the unit's code up in the map and refuse — measured in the reference app on
 // `anchors-claim.yml`. It must now succeed without demanding a code, and without falling
 // back to `changes/`, which is the local mode's mechanism.
 func TestDeliver_upstreamPipelineDemandsNoCode(t *testing.T) {

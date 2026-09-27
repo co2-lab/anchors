@@ -181,7 +181,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		})
 		// A FONTE que o plano nomeia tem de ter dono declarado.
 		//
-		// Medido no blue-eyes: o plano 0008 dizia "Fonte: **GA4**" e declarava
+		// Medido no app de referência: o plano 0008 dizia "Fonte: **GA4**" e declarava
 		// `needs:` só do 0005. O adaptador vinha do 0002, e a dependência existia SÓ
 		// NA PROSA — até o 0002 remover o adaptador numa revisão. Os dois planos
 		// seguiram internamente coerentes, e a contradição só apareceu ao começar o

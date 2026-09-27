@@ -21,7 +21,7 @@ import (
 // conferida por nenhum gate de arquivo: cada lado, olhado sozinho, está impecável. O que
 // falha é a RELAÇÃO, e ela some sem deixar erro.
 //
-// O caso que motivou (MIF, `EXSC-Q01`): a página de exclusão de dados LISTA o que será
+// O caso que motivou (app de referência, `EXSC-Q01`): a página de exclusão de dados LISTA o que será
 // apagado em cada escopo, e o backend APAGA. As duas listas nasceram juntas e nada as
 // liga. Se um escopo passar a apagar mais (ou menos), a página segue exibindo a versão
 // antiga — e o titular consente com base nela. É consentimento informado sobre exercício

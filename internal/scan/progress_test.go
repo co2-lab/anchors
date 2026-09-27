@@ -35,7 +35,7 @@ func TestProgressPathFor_replacesTheLastSegmentsExtension(t *testing.T) {
 	}
 }
 
-// THE REAL CASE, reproduced from the three conflicts measured in blue-eyes (#217, #221 and
+// THE REAL CASE, reproduced from the three conflicts measured in the reference app (#217, #221 and
 // the next one): two branches tick NEIGHBOURING checkboxes of the same plan, git cannot
 // resolve it, and the manual resolution is always the same.
 func TestMergeProgress_joinsBothSides(t *testing.T) {

@@ -62,7 +62,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// ...but only CI opens and closes those CARDS (or `--record-issues`). A local
 			// check runs on work in progress — before the `docs build`, halfway through a
 			// merge — and every blocking failure it saw became an issue on the board. Measured
-			// in blue-eyes: two `[docs-fresh]` cards opened by an agent's local check for a
+			// in the reference app: two `[docs-fresh]` cards opened by an agent's local check for a
 			// state that existed only on its machine; the next local check closed one under
 			// a person's account, the state lock reverted that as a manual close, and the
 			// claim handed the spurious card back to the agent in a loop.
@@ -434,7 +434,7 @@ func enqueueJudgments(root string, cfg *config.Config, p gate.Profile, varredura
 	// verdade quando o check olhou TODOS os nós; em `--changed` ele olhou um arquivo, e
 	// todos os outros alvos do mesmo gate parecem obsoletos por não terem sido olhados.
 	//
-	// Medido no blue-eyes: dois `check --changed` seguidos em testes diferentes deixaram
+	// Medido no app de referência: dois `check --changed` seguidos em testes diferentes deixaram
 	// UMA task na fila. O primeiro julgamento foi apagado pelo segundo check — e o
 	// `judge --pending` respondia "nenhum alvo aguardando" com cinco pendentes no
 	// `check --all`. Quem confia na fila para saber o que julgar perde trabalho em
@@ -805,7 +805,7 @@ func impactOf(g *mapx.Graph, cfg *config.Config, changed, root string) ([]string
 		// gates que cobram justificativa de mudança (ver `scan.IsProgressFile`).
 		//
 		// Sem esta linha o resultado era o descrito ali: o arquivo dito "regido", ausente
-		// do mapa, e `map build` não o acrescentando nunca. Medido no blue-eyes ao
+		// do mapa, e `map build` não o acrescentando nunca. Medido no app de referência ao
 		// commitar os 17 progressos que o `anchors new progress` acabara de criar — o
 		// commit ficava barrado para sempre, pelo próprio mecanismo que separou os dois.
 		if scan.IsProgressFile(target) {

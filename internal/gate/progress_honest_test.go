@@ -13,7 +13,7 @@ import (
 // O `-progress.md` é o único artefato do Anchors que nada confrontava — e "fora do mapa"
 // virou "fora de qualquer verificação", que não é a mesma coisa.
 //
-// Medido no blue-eyes: ao criar os 17 progressos, transportei o estado dos checkboxes que
+// Medido no app de referência: ao criar os 17 progressos, transportei o estado dos checkboxes que
 // viviam nos planos, e os planos estavam desatualizados. O progresso do `0002` dizia 6
 // itens abertos com 7 das 8 specs já no disco. CINCO itens mentiam, e eu transportei a
 // mentira fielmente.
@@ -262,7 +262,7 @@ func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
 		}
 	})
 
-	// O FALSO POSITIVO que apareceu no blue-eyes: a revisão `PLTFR-R0003` menciona
+	// O FALSO POSITIVO que apareceu no app de referência: a revisão `PLTFR-R0003` menciona
 	// `` `DataStore.spec.md` `` em prosa, SEM caminho. O regex antigo casava qualquer
 	// `x.spec.md` do arquivo, e o gate acusou o progresso de não listar uma spec que ele
 	// lista — três dos quatro achados eram menções assim.

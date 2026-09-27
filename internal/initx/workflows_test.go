@@ -500,7 +500,7 @@ func TestPipelinesComAnchorsSeAutoverificam(t *testing.T) {
 // UM `select` NO FIM DE UM PIPE não filtra o CAMPO — filtra o objeto inteiro: quando ele
 // reprova, o jq não produz valor nenhum, e o item some do array.
 //
-// Medido no blue-eyes: o board publicava 3 de 7 cards. Os 4 ausentes eram exatamente os
+// Medido no app de referência: o board publicava 3 de 7 cards. Os 4 ausentes eram exatamente os
 // de dono LIBERADO — que é o estado normal de quem terminou o trabalho. O board apagava o
 // trabalho concluído, e como ele ainda mostrava ALGUNS cards, parecia estar funcionando.
 func TestBoardNaoDerrubaCardPeloFiltroDeDono(t *testing.T) {
@@ -673,7 +673,7 @@ func TestPipelineConfrontaOVinculoENaoAPalavra(t *testing.T) {
 // REVISÃO — mas a branch e o PR do primeiro agente continuam de pé. O claim seguinte o
 // entrega como se fosse trabalho novo, e o agente que o recebe reimplementa do zero.
 //
-// Medido no blue-eyes: TRÊS agentes resolveram a issue #375 em paralelo, sete minutos entre
+// Medido no app de referência: TRÊS agentes resolveram a issue #375 em paralelo, sete minutos entre
 // o primeiro PR e o terceiro. Os três chegaram à mesma solução correta — o desperdício foi
 // de coordenação, não de qualidade. Dois PRs completos foram fechados como duplicata.
 func TestClaimPulaCardQueJaTemPRAberto(t *testing.T) {
@@ -1687,7 +1687,7 @@ func valorDeEnv(texto, nome string) string {
 
 // TODO ISSUE NASCE COM ESTADO, e o pipeline garante isso ao ve-la.
 //
-// MEDIDO no blue-eyes: 59 de 95 cards abertos estavam FORA do fluxo -- 53 sem label de
+// MEDIDO no app de referência: 59 de 95 cards abertos estavam FORA do fluxo -- 53 sem label de
 // estado nenhuma, 6 so com `anchors:under-N` (que e' bloqueio, nao estado). O `claim` so
 // varre `to-do` e `ready-to-review`, entao esse trabalho era invisivel: tres agentes
 // pediram card, ouviram "nenhum card livre", e pararam.
@@ -2175,7 +2175,7 @@ func runClaim(t *testing.T, env ...string) (string, bool) {
 }
 
 // Only a REAL reference to the card hides it: a linking keyword before `#N`, or an issue
-// URL. Measured in blue-eyes #679: a PR body reporting a mutation score of `4/4` matched
+// URL. Measured in the reference app: a PR body reporting a mutation score of `4/4` matched
 // the old `(#|/)N\b`, and card #4 was never handed out again.
 func TestClaimOnlyCountsARealReferenceToTheCard(t *testing.T) {
 	pr := func(body string) string {
@@ -2428,7 +2428,7 @@ esac`,
 // THE RESOLVER PUSHES ONLY WITH AN APP TOKEN.
 //
 // A push with `GITHUB_TOKEN` leaves every check of the PR at `action_required`: the PR
-// looks green with no Anchors check run (blue-eyes #838). The token has to be minted from
+// looks green with no Anchors check run (reference app). The token has to be minted from
 // the App's secrets, and a step's `if:` cannot read `secrets` — so the presence test lives
 // in the job's `env`, and the step reads `env`.
 func TestResolveQueuePushesOnlyWithAnAppToken(t *testing.T) {
@@ -2677,7 +2677,7 @@ func TestEveryFlowTemplateCarriesTheMarker(t *testing.T) {
 
 // A card the stale RELEASED in `in-progress` goes back to the queue: the stale keeps the
 // state (moving would presume where the work is), so the claim has to offer it. In
-// blue-eyes 15 released cards sat in `in-progress` for days, offered to nobody.
+// the reference app 15 released cards sat in `in-progress` for days, offered to nobody.
 // An `in-progress` card with NO declared owner is not taken: someone moved it by hand.
 func TestClaimOffersAReleasedInProgressCard(t *testing.T) {
 	if out, handed := runClaim(t, "FAKE_CARD_STATE=in-progress",
@@ -2696,7 +2696,7 @@ func TestClaimOffersAReleasedInProgressCard(t *testing.T) {
 }
 
 // A review the stale released in `in-review` is offered too, with the same guard: only an
-// explicit `(liberado)`. In blue-eyes 4 such reviews sat with their PRs open since 19/09.
+// explicit `(liberado)`. In the reference app 4 such reviews sat with their PRs open since 19/09.
 func TestClaimOffersAReleasedInReviewCard(t *testing.T) {
 	if out, handed := runClaim(t, "FAKE_CARD_STATE=in-review",
 		"FAKE_OWNER=anchors-owner: (liberado) — sem progresso há mais de 24h"); !handed {
@@ -2708,7 +2708,7 @@ func TestClaimOffersAReleasedInReviewCard(t *testing.T) {
 }
 
 // The claim reads "is there a card that is already mine?" in pages of 25: the old
-// `gh issue list --json ...,comments` over 200 cards got 502 on every run in blue-eyes.
+// `gh issue list --json ...,comments` over 200 cards got 502 on every run in the reference app.
 // A card already owned is resumed before anything new is handed out.
 func TestClaimReadsItsOwnCardInPages(t *testing.T) {
 	b, err := fs.ReadFile(workflowsFS, "workflows/anchors-claim.yml")
@@ -2735,8 +2735,8 @@ func TestClaimReadsItsOwnCardInPages(t *testing.T) {
 }
 
 // A card released by hand in flight is never handed back to WHOEVER RELEASED IT: that was
-// the loop of blue-eyes #766. Any other agent takes it — skipping it for everyone left 29
-// cards in the working columns with no owner (blue-eyes, 2026-09-24). An approved review
+// the loop of the reference app. Any other agent takes it — skipping it for everyone left 29
+// cards in the working columns with no owner (reference app, 2026-09-24). An approved review
 // released by the verdict waits for the merge, and is taken by no one.
 func TestClaimDoesNotReofferAHandReleasedCardInFlight(t *testing.T) {
 	for _, st := range []string{"in-review", "in-progress"} {
@@ -2765,7 +2765,7 @@ func TestClaimDoesNotReofferAHandReleasedCardInFlight(t *testing.T) {
 }
 
 // A card WAITING ON A PERSON is not the agent's open work: the own-card lookup skips
-// `needs-user` too. blue-eyes #651, parked after a rejected review, went back to the same
+// `needs-user` too. the reference app, parked after a rejected review, went back to the same
 // agent on every `anchors next`. Runs the workflow's real jq over GraphQL-shaped data.
 func TestClaimOwnCardLookupSkipsEscalated(t *testing.T) {
 	page := func(extra string) string {
@@ -2782,7 +2782,7 @@ func TestClaimOwnCardLookupSkipsEscalated(t *testing.T) {
 }
 
 // WHOEVER WROTE IT DOES NOT REVIEW IT. A card in review released by the same agent that
-// asks is its own work: it stays for another agent (blue-eyes: six self-reviews in one day
+// asks is its own work: it stays for another agent (reference app: six self-reviews in one day
 // with two agents working). A to-do card handed back to its implementer is still theirs.
 func TestClaimDoesNotHandAnAgentItsOwnReview(t *testing.T) {
 	released := "FAKE_OWNER=anchors-owner: (liberado) — implementação concluída"
@@ -2844,7 +2844,7 @@ func TestClaimNeverHandsOutABug(t *testing.T) {
 	}
 }
 
-// blue-eyes #1005: a `blocked-by-<n>` naming a PULL REQUEST could not be read without
+// the reference app: a `blocked-by-<n>` naming a PULL REQUEST could not be read without
 // `pull-requests: read`, and every card waiting on a PR was skipped as still blocked.
 func TestClaimCanReadABlockingPullRequest(t *testing.T) {
 	b, err := workflowsFS.ReadFile("workflows/anchors-claim.yml")
@@ -2864,7 +2864,7 @@ func TestClaimCanReadABlockingPullRequest(t *testing.T) {
 
 // A REVIEW CARD WITH AN OPEN PR IS THE REVIEW. The open-PR skip exists so nobody
 // reimplements a delivered card; applied to `ready-to-review` it emptied the review queue
-// (blue-eyes, 2026-09-24: 15 of 20 review cards skipped, no reviewer handed a review).
+// (reference app, 2026-09-24: 15 of 20 review cards skipped, no reviewer handed a review).
 func TestClaimHandsOutAReviewCardThatHasItsPR(t *testing.T) {
 	j, _ := json.Marshal([]map[string]any{{"number": 77, "body": "Closes #4"}})
 	prs := "FAKE_PRS=" + string(j)

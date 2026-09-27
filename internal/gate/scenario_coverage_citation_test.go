@@ -9,7 +9,7 @@ import (
 
 // O gate cobra os requisitos que a spec DEFINE, não os que ela CITA.
 //
-// Medido no blue-eyes: a `GoLiveChecklist` define 6 requisitos e o gate cobrava 18
+// Medido no app de referência: a `GoLiveChecklist` define 6 requisitos e o gate cobrava 18
 // cenários — 15 deles de outras unidades (`CRPNC-B03`, `MTTLM-B02`, `DTSTD-B06`…), citadas
 // na prosa ao justificar as regras dela.
 //

@@ -151,7 +151,7 @@ func TestTouch_staged(t *testing.T) {
 // A PARTIAL COMMIT (`git commit -- <paths>`) runs the hook on a temporary index
 // (`next-index-<pid>.lock`) and prepares the real one in `index.lock`. Staging only in the
 // temporary index dated the commit and left the real index with the old date (`MM`,
-// reported from MIF). Both must end dated. The state git builds is simulated here: both
+// reported from the reference app). Both must end dated. The state git builds is simulated here: both
 // indexes hold the pre-hook worktree version.
 func TestTouch_stagedInAPartialCommit(t *testing.T) {
 	t.Run("HDTHD-B07: In a partial commit the real index is dated too", func(t *testing.T) {})

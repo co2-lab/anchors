@@ -225,7 +225,7 @@ const LabelNeedsUser = "anchors:needs-user"
 //
 // Before it existed the only exit that reached a person was `--for-user`, so agents who
 // KNEW they had found a bug opened it as "This decision is not the agent's". Measured in
-// blue-eyes, 2026-09-24: six decisions in two hours (#982, #985, #987, #988, #989, #995),
+// the reference app, 2026-09-24: six decisions in two hours (#982, #985, #987, #988, #989, #995),
 // all of them bugs, and the board showed "waiting for you" for work that asked no decision.
 //
 // Like `needs-user` it is not a state: the claim never hands the card out (an agent could

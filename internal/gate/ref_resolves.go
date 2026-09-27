@@ -48,7 +48,7 @@ func checkRefResolves(content string, n mapx.Node, root string, g *mapx.Graph, c
 		// code is no spec's `code:` anywhere in the project) is not "cannot tell": it is
 		// wrong, and without this check it passed as undetermined.
 		//
-		// Measured in MIF: 3174 refs, 1830 confronted and 1344 with NO sibling spec — that
+		// Measured in the reference app: 3174 refs, 1830 confronted and 1344 with NO sibling spec — that
 		// is, 42% of the corpus fell into Skip. A hand-made `ref: KYBD`, pointing at a code
 		// that exists nowhere, was measured landing on `~1` and not on `✗1`.
 		//

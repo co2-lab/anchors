@@ -145,7 +145,7 @@ func TestNodeCodePreferHeader(t *testing.T) {
 
 // THE SIBLING ANCHOR beats the inference from the text, for a derived artefact.
 //
-// Measured in blue-eyes: `GoLiveChecklist.test.ts` cited `ELKAD-B01` in a data string, and the
+// Measured in the reference app: `GoLiveChecklist.test.ts` cited `ELKAD-B01` in a data string, and the
 // file entered the map as `code: ELKAD`. `scenario-coverage` then charged 21 scenarios of OTHER
 // specs, and the three invariants that test really proved appeared unproven.
 func TestNodeCode_siblingAnchorBeatsTheDerivedText(t *testing.T) {
@@ -209,7 +209,7 @@ func TestAnchorCodeByDerived_linksByTheStem(t *testing.T) {
 	}
 }
 
-// A VENDORED pipeline has no local identity, whatever its text quotes: blue-eyes'
+// A VENDORED pipeline has no local identity, whatever its text quotes: the reference app's
 // `anchors-board.yml` entered the map as `FNDTN`, the code of a plan it merely cites.
 func TestNodeCode_upstreamHasNone(t *testing.T) {
 	t.Run("GRBLG-B05: A vendored file has no local identity", func(t *testing.T) {})
@@ -431,7 +431,7 @@ func TestBuild_codeOverrideReplacesTheTemplates(t *testing.T) {
 
 // A directory with brackets (a Next.js route `app/selo/[slug]/`) is a literal path, not a
 // character class: the spec there finds its code, feature and test. Unescaped, `[slug]` matched
-// one letter and `triad-complete` reported code and feature missing (reported from MIF,
+// one letter and `triad-complete` reported code and feature missing (reported from the reference app,
 // 2026-09-25).
 func TestBuild_colocationInABracketDirectory(t *testing.T) {
 	t.Run("GRBLG-B12: A bracketed directory is literal and a template wildcard expands", func(t *testing.T) {})
@@ -618,7 +618,7 @@ func TestSeedResolvedByName(t *testing.T) {
 	}
 }
 
-// THE REAL CASE, measured in blue-eyes: plan 0010 (Redis) seeds
+// THE REAL CASE, measured in the reference app: plan 0010 (Redis) seeds
 // `packages/lambdas/redis/InstanceList.spec.md`, and plan 0009 (Database) had already delivered
 // `packages/lambdas/database/InstanceList.spec.md`. The by-name fallback — made for citations in
 // PROSE — was applied to a seed carrying the WHOLE PATH, and the map linked plan 0010 to plan

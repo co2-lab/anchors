@@ -5,7 +5,7 @@
 // o comentário de lá é literal — *"no modo github, `.anchors/tasks/` não deve existir"*.
 //
 // O `anchors next` não seguia isso: ele chamava `queue.Claim` em qualquer modo. Medido no
-// blue-eyes, com `mode: github` declarado no `anchors.yaml`:
+// app de referência, com `mode: github` declarado no `anchors.yaml`:
 //
 //	$ anchors next
 //	fila vazia — nada a fazer
@@ -144,7 +144,7 @@ func (c Client) list(state string) ([]Card, error) {
 	}
 	// THE BOARD IN PAGES OF 25, with each card's last 100 comments. `gh issue list --json
 	// ...,comments` asked GitHub's GraphQL for every comment of 100 cards per page, and
-	// with a hundred-odd open cards the page timed out: measured in blue-eyes, HTTP 504
+	// with a hundred-odd open cards the page timed out: measured in the reference app, HTTP 504
 	// after ~11s on every `anchors next`, so no agent could claim. The owner is the LAST
 	// `anchors-owner:` comment, which the last 100 comments hold in any real card.
 	//
@@ -382,7 +382,7 @@ func (c Client) FindByCode(code string) (*Card, error) {
 	}
 	// TWO OPEN CARDS WITH THE SAME CODE, and the code alone cannot tell which one this
 	// work belongs to. Picking the first recorded a delivery on the wrong card in
-	// blue-eyes (#995): `[RIMRD]` matched a review card for another PR before the card
+	// the reference app: `[RIMRD]` matched a review card for another PR before the card
 	// that asked for the work. The same rule as above applies — commenting on the wrong
 	// card is worse than not commenting — so the choice goes back to whoever knows it.
 	var lista []string

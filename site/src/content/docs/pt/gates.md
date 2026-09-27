@@ -191,7 +191,7 @@ Os primeiros a promover, quando o projeto tiver 3–4 specs:
 - name: fase-existe          # o plano aponta para fase que existe
 ```
 
-### Backend / serverless (o caso do blue-eyes)
+### Backend / serverless (o caso do app de referência)
 
 O que importa é **fronteira** e **segredo** — as duas coisas que quebram em
 produção e não aparecem em teste.

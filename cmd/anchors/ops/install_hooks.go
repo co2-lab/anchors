@@ -142,7 +142,7 @@ func runInstallHooks(root string, force bool) error {
 	// O MERGE DRIVER do mapa vem junto: sem ele, o git mescla o
 	// `anchors.graph.yaml` como texto e apaga carimbo sem conflito e sem aviso.
 	//
-	// Medido no blue-eyes (co2-lab/anchors#12): um `git merge` removeu 1212 linhas do
+	// Medido no app de referência (co2-lab/anchors#12): um `git merge` removeu 1212 linhas do
 	// mapa e 62 carimbos de julgamento. O aviso do `map build` não pega — a perda
 	// acontece antes de o Anchors ser chamado.
 	//

@@ -632,7 +632,7 @@ func revisesDe(kind string, content []byte, root, rel string) []string {
 // forma de organizar trabalho varia, e o Anchors não tem por que impor uma.
 //
 // ONLY INSIDE THE `@anchors` HEADER. The pattern alone matched any line starting with
-// `parent:` — measured in blue-eyes: `anchors-board.yml` carries a jq program whose line
+// `parent:` — measured in the reference app: `anchors-board.yml` carries a jq program whose line
 // `parent: ([$cod[0][] | select(...) | .parent // "")] | first // "")` became the node's
 // parent in the map, and the tree hung the workflow under a jq expression.
 func parentDe(content []byte) string {
@@ -1057,7 +1057,7 @@ func extractSeeds(kind, content string) []string {
 		// o que mudou, e isso não é a promessa de criar um arquivo: o plano semeia
 		// `packages/infra/MutualTls.spec.md`, com o caminho inteiro.
 		//
-		// Medido no blue-eyes: três menções assim (`MutualTls`, `CertificatePinning`,
+		// Medido no app de referência: três menções assim (`MutualTls`, `CertificatePinning`,
 		// `DataStore`, todas em revisões) fizeram o `anchors next` dizer "1 de 12 spec(s)
 		// deste plano ainda não existem" num plano com as 9 entregues — e semear trabalho
 		// para criar arquivos cujo nome sem diretório não aponta para lugar nenhum.

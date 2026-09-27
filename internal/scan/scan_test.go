@@ -720,7 +720,7 @@ func TestSeedIgnoresGlobInProse(t *testing.T) {
 // changed, and that is not the promise to create a file: the plan seeds
 // `packages/infra/MutualTls.spec.md`, with the whole path.
 //
-// Measured in blue-eyes: three such mentions (all in revisions) made `anchors next` say
+// Measured in the reference app: three such mentions (all in revisions) made `anchors next` say
 // "1 of 12 spec(s) of this plan do not exist yet" in a plan with all 9 delivered — and
 // seed work to create files whose directory-less name points nowhere. The plan looked
 // forever unfulfilled, and the queue handed out impossible work.

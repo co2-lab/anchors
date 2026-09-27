@@ -145,7 +145,7 @@ jobs:
           #
           # EM PÁGINAS DE 25, com os últimos 100 comentários de cada card. O `gh issue list
           # --json ...,comments` pedia todos os comentários de 100 cards por página, e com
-          # centenas de cards o GraphQL do GitHub estourava: medido no blue-eyes, o board
+          # centenas de cards o GraphQL do GitHub estourava: medido no app de referência, o board
           # falhava em toda execução. A consulta devolve cada card no MESMO formato do
           # `gh issue list`, e a expressão abaixo — a que o `board serve` também roda —
           # não muda.

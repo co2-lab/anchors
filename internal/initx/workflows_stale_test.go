@@ -92,7 +92,7 @@ func runStale(t *testing.T, env ...string) (out, calls string) {
 	return string(o), string(c)
 }
 
-// THE STALE JOB, RUN. Measured in blue-eyes: the list asked for the comments of 200 cards
+// THE STALE JOB, RUN. Measured in the reference app: the list asked for the comments of 200 cards
 // and GitHub's GraphQL answered 502/504 for 60 runs in a row. The list now carries no
 // comments; the owner comes per card from REST; a card already released is not
 // released again (the marker is the PREFIX); and an API failure skips the card.

@@ -110,7 +110,7 @@ func TestAskAndWait_returnsTheCardOfTheRunItDispatched(t *testing.T) {
 }
 
 // A CLAIM OF THIS AGENT STILL PENDING is waited on, never dispatched again — a second
-// dispatch cancels the pending run or queues a duplicate claim (blue-eyes #679).
+// dispatch cancels the pending run or queues a duplicate claim (reference app).
 func TestAskAndWait_neverDispatchesWhileItsRunIsPending(t *testing.T) {
 	t.Run("CLWTC-B02: No dispatch while the agent's run is pending", func(t *testing.T) {})
 	f := &fakeBoard{t: t}

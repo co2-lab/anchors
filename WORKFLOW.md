@@ -309,7 +309,7 @@ distinção não é *quem gerou* o arquivo, é **o que ele descreve**.
 
 ## 7.2 The review is a commit status the merge can see
 
-Decided in blue-eyes #835 and #782. Before, a PR could be merged while the review the
+Decided in the reference app. Before, a PR could be merged while the review the
 pipeline itself had assigned was still running, and the merge moved the card to
 `ready-to-test` all the same: the review was a column on the board, not a fact the merge
 button could see.
@@ -362,7 +362,7 @@ copies byte for byte and runs the snippet against each spelling `min_version` ac
 `anchors-resolve-queue` merges the integration branch into PRs that conflict only in
 generated files. A push made with `GITHUB_TOKEN` leaves every check of that PR at
 `action_required`: the PR looks green with **no** Anchors check run, so the resolution
-lands unverified and looks verified (measured: blue-eyes #838).
+lands unverified and looks verified (measured: the reference app).
 
 - With the secrets `ANCHORS_APP_ID` and `ANCHORS_APP_PRIVATE_KEY` (a GitHub App installed
   on the repository with Contents: write, plus Workflows: write if merges can touch

@@ -12,7 +12,7 @@ import "regexp"
 // mesmo tendo um teste que passa.
 // O DEFAULT tem de ser o mesmo do `config.DefaultRuleLetters`, e ele divergiu.
 //
-// Medido no blue-eyes: um projeto sem `rule_types:` declarado usa o default do `config`
+// Medido no app de referência: um projeto sem `rule_types:` declarado usa o default do `config`
 // (`SRVAXBNMDEIQF`, que inclui `I` de Invariant). O `SetRuleLetters` é chamado com esse
 // valor e a divergência não apareceria — MAS o `ingest` só o chama quando a config
 // carrega, e qualquer caminho que leia o relatório antes disso usa esta constante.

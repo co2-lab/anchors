@@ -8,7 +8,7 @@ import (
 
 // The package's DEFAULT has to match the letters `config` declares as canonical.
 //
-// Measured in blue-eyes: `testsig` had `SRVAXBNMD` and `config` had `SRVAXBNMDEIQF`. A
+// Measured in the reference app: `testsig` had `SRVAXBNMD` and `config` had `SRVAXBNMDEIQF`. A
 // project without `rule_types:` uses the `config` default — which includes `I` for
 // Invariant — and this package did not recognize `GLCGL-I01` in the JUnit case name.
 //

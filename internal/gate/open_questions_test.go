@@ -281,7 +281,7 @@ func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
 // TABELA HISTÓRICA não é pergunta aberta.
 //
 // Uma tabela é a forma mais legível de mostrar de onde a regra veio, e o `[x]` obriga a
-// bullet. Medido no blue-eyes (co2-lab/anchors#7): escrevi o histórico da spec do
+// bullet. Medido no app de referência (co2-lab/anchors#7): escrevi o histórico da spec do
 // DataStore como `| era | virou |` e o gate contou as duas linhas de dados como perguntas
 // ABERTAS — na seção que abre com `nenhuma.` e cuja tabela diz que elas viraram regra.
 //
@@ -329,7 +329,7 @@ func TestOpenItems_perguntaSemRegraAindaConta(t *testing.T) {
 // defeito medido:
 //
 //	R  revisão   quebrou o `cobraCodigoNaPergunta` (a coluna Vira traz `-R04`)
-//	F  fase      SILENCIOU a `THMEX-Q01` do blue-eyes: ela dizia "vira uma revisão
+//	F  fase      SILENCIOU a `THMEX-Q01` do app de referência: ela dizia "vira uma revisão
 //	             THMEX-R0001, ou uma spec de decisão no DSSYD-F01", e o `F01` fez a
 //	             linha parecer de-para. O gate passou `✓1` com a pergunta em aberto
 //	Q  pergunta  faria duas perguntas na mesma linha parecerem de-para
@@ -341,7 +341,7 @@ func TestOpenItems_colunaViraNaoFechaAPergunta(t *testing.T) {
 	casos := map[string]int{
 		// a coluna "Vira" citando REVISÃO — a pergunta continua aberta
 		"| `PARCX-Q01` | UTC ou local? | Produto | `PARCX-R04` |": 1,
-		// citando FASE e revisão — o caso do blue-eyes
+		// citando FASE e revisão — o caso do app de referência
 		"| `THMEX-Q01` | qual lib? | usuário | uma revisão `THMEX-R0001`, ou uma spec no `DSSYD-F01` |": 1,
 		// citando outra SPEC pelo código de fase dela
 		"| `ABCDE-Q02` | onde isto mora? | usuário | uma spec nova em `WXYZ-F03` |": 1,

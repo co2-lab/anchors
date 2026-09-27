@@ -164,7 +164,7 @@ func definedRequirements(content string) []string {
 // Compiled per CALL and not in a `var` — the same rule as `codeRE` (rule_implemented.go):
 // the code length comes from `code_lengths`, loaded AFTER the globals. In a `var` this
 // regex froze the default `[5]`, and in a `[4]` project it matched no requirement at all —
-// MEASURED in MIF (2026-09-23): `spec-feature-match` and `scenario-coverage` undetermined
+// MEASURED in the reference app (2026-09-23): `spec-feature-match` and `scenario-coverage` undetermined
 // on all 691 specs, blocking and blind.
 func defineRuleCaptureRE() *regexp.Regexp {
 	return regexp.MustCompile(

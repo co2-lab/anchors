@@ -158,7 +158,7 @@ func TestScenarios_findsTheFeatureByTheEdge(t *testing.T) {
 
 // A SCENARIO OUTLINE is a scenario. The title regex required the line to START with
 // Cenário/Scenario, and `Esquema do Cenário:` never matched: 7 outlines were missing from
-// blue-eyes' comportamento.md. The `Exemplos:` table must not pass for a scenario.
+// the reference app's comportamento.md. The `Exemplos:` table must not pass for a scenario.
 func TestScenarios_outlineIsAScenario(t *testing.T) {
 	t.Run("GSRGH-B01: Scenarios and outlines open in any dialect, and an examples table does not", func(t *testing.T) {})
 	feat := "# language: pt\nFuncionalidade: X\n\n" +

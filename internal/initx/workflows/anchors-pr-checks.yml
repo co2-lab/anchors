@@ -18,7 +18,7 @@
 # que abriu o PR não escreve label nenhuma: a obrigação dele é olhar o resultado e
 # consertar o que reprovou.
 #
-# THE REVIEW IS A COMMIT STATUS, `anchors/review` (blue-eyes #835).
+# THE REVIEW IS A COMMIT STATUS, `anchors/review` (reference app).
 #
 # Before it, a PR could be merged while the review this pipeline itself asked for was
 # still running — and the merge moved the card to `ready-to-test` all the same. The review
@@ -45,7 +45,7 @@
 # card. A merge with `--admin` still goes through; the difference is that the merger sees
 # `anchors/review` red or pending on the button, and the card says so afterwards (below).
 #
-# A MERGE WITHOUT THE OUTCOME IS NOT SILENT (blue-eyes #782): the card still moves to
+# A MERGE WITHOUT THE OUTCOME IS NOT SILENT (reference app): the card still moves to
 # `ready-to-test` — the work landed, and the board must not contradict the repository —
 # but the card gets a comment saying the PR merged without the review outcome, naming the
 # reviewer and the PR.
@@ -225,7 +225,7 @@ jobs:
           # The line that CLOSES wins over a `Refs`, whatever the order in the body. A body
           # that opens with `Refs #414` (a related card) and ends with `Closes #968` (the
           # card under review) resolved #414 — the verdict went to the wrong card and the
-          # status stayed `pending` for good (blue-eyes #988, #989). The mover below and its
+          # status stayed `pending` for good (reference app). The mover below and its
           # "other lines" check use the same order, so the three agree on which is first.
           card=$(printf '%s\n' "$corpo" \
             | sed 's/\r$//' \
@@ -285,7 +285,7 @@ jobs:
           #
           # `author_association` alone is NOT that test. A PRIVATE org membership is hidden
           # from the workflow's `GITHUB_TOKEN`: the same comment reads `MEMBER` to the
-          # member's own `gh` and `CONTRIBUTOR` to the job. Measured in blue-eyes (#982): an
+          # member's own `gh` and `CONTRIBUTOR` to the job. Measured in the reference app: an
           # org with no public members, where every `approved` line was dropped and
           # `anchors/review` stayed `pending` on every PR. When the association does not
           # vouch for the author, the repository PERMISSION of that login decides.
@@ -357,7 +357,7 @@ jobs:
               #
               # "It waits for the author" was the intent above, and nothing did it: the card
               # stayed in `in-review` with no owner, and no agent was ever handed it.
-              # Measured in blue-eyes, 2026-09-24: six rejected cards among 31 in the
+              # Measured in the reference app, 2026-09-24: six rejected cards among 31 in the
               # working columns, two with a live owner.
               #
               # `to-do` with the author as owner uses what already exists: the author's next
@@ -609,7 +609,7 @@ jobs:
           # O título serve para ENCONTRAR o card — relatório, contexto, saber de onde o
           # trabalho veio. Avançar de ESTADO exige o vínculo declarado no corpo.
           #
-          # Medido no blue-eyes: um PR entregou 1 das 3 specs de uma fase e removeu o
+          # Medido no app de referência: um PR entregou 1 das 3 specs de uma fase e removeu o
           # `Closes` de propósito, justamente porque não concluía o plano. O `mover` achou
           # o card pelo título `[PLTFR]` e o levou a `ready-to-test` — o fim da alçada do
           # agente, com duas specs por escrever. O card só voltou porque alguém olhou.
@@ -723,7 +723,7 @@ jobs:
               "estados à frente." \
               "" \
               "Quem fecha o card é quem termina a esteira.")"
-            # MERGED WITHOUT THE REVIEW OUTCOME (blue-eyes #782). The card moves all the
+            # MERGED WITHOUT THE REVIEW OUTCOME (reference app). The card moves all the
             # same — the work landed, and a card held back would make the board contradict
             # the repository. What must not happen is the move looking like every other
             # one: whoever reads the card later has to see that nobody signed the review.

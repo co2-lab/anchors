@@ -44,7 +44,7 @@ func ProgressPathFor(plano string) string {
 
 // --- o MERGE de dois lados de um progress ---
 //
-// Medido no blue-eyes: TRÊS PRs consecutivos conflitaram no mesmo arquivo (#217, #221 e o
+// Medido no app de referência: TRÊS PRs consecutivos conflitaram no mesmo arquivo (#217, #221 e o
 // seguinte), sempre pelo mesmo motivo — duas branches marcando checkboxes vizinhos do
 // mesmo plano. O `anchors.graph.yaml` tem driver desde a v0.1.48 e não conflitou nenhuma
 // vez no mesmo período; este arquivo não tinha, e a resolução à mão é sempre idêntica.

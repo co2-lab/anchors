@@ -57,7 +57,7 @@ func TestMapBuild_keepsTheFlowAndWarnsOfLostStamps(t *testing.T) {
 	}
 }
 
-// STAMP LOSS is silent, and the map stays VALID. Measured in blue-eyes
+// STAMP LOSS is silent, and the map stays VALID. Measured in the reference app
 // (co2-lab/anchors#12): a conflict resolved with `checkout --theirs` + `map build` lost the
 // `review` stamp of a spec — found by chance, counting 18 where 19 were expected. The cost is
 // the REPORT, which lives in the command's `--reason`, not in the file.
@@ -169,7 +169,7 @@ func TestLayerAmbiguity_warningGroupsByPairOfLayers(t *testing.T) {
 }
 
 // THE WIRING, not only the function. `scan.Ambiguities` was complete and tested, and
-// `map build` did not call it (blue-eyes#100): a test of the function alone passes with the
+// `map build` did not call it (reference app): a test of the function alone passes with the
 // mechanism switched off. Running the real command over an ambiguous project confronts the
 // wiring — and the warning must not fail the build.
 func TestMapBuild_warnsOfTheLayerAmbiguity(t *testing.T) {

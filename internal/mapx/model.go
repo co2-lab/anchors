@@ -299,7 +299,7 @@ type TestSignal struct {
 	// root), and `ProvenCodes` is the union. It exists for the same reason as the test
 	// nodes' `ByLayer`: in a monorepo each suite is ingested alone, and with a single field
 	// the mobile ingestion wrote EMPTY on the backend's specs — which were not in that
-	// report, not specs that had lost their proof. MEASURED in MIF (2026-09-23): 131
+	// report, not specs that had lost their proof. MEASURED in the reference app (2026-09-23): 131
 	// backend specs zeroed by the same ingestion that proved 390 mobile ones.
 	ProvenBySuite map[string][]string `yaml:"proven_by_suite,omitempty"`
 	// ProvenRevBySuite: the node's rev when EACH suite last measured it.

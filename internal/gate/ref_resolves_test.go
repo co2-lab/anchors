@@ -53,7 +53,7 @@ func graphWith(codes ...string) *mapx.Graph {
 }
 
 // The hole the Skip left: with no sibling spec the gate went silent, and an INVENTED
-// `ref:` passed as undetermined. Measured in MIF: 1344 of 3174 refs fell into Skip (42%),
+// `ref:` passed as undetermined. Measured in the reference app: 1344 of 3174 refs fell into Skip (42%),
 // and a hand-made `ref: KYBDX` — a code that is no spec's `code:` — gave `~1`, not `✗1`.
 // An infra file with no spec is legitimate; citing a phantom identity is not.
 func TestRefResolvesCodeMissingFromTheProject(t *testing.T) {

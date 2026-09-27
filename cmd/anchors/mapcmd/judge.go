@@ -278,7 +278,7 @@ it is declared.`,
 // O `Load` canoniza os nomes ao ler o arquivo: um `anchors.yaml` que declara
 // `mock-detect-cobre-o-dialeto` chega aqui com `g.Name == "mock-detect-covers-dialect"`.
 // Comparar só contra `g.Name` recusava justamente o nome que a pessoa tem na tela —
-// medido no blue-eyes: `--gate mock-detect-cobre-o-dialeto` respondia "gate não existe"
+// medido no app de referência: `--gate mock-detect-cobre-o-dialeto` respondia "gate não existe"
 // com o gate declarado, visível, três linhas acima no próprio arquivo.
 //
 // A mensagem era pior que o erro: ela manda procurar um gate que está ali, e não diz que
@@ -346,7 +346,7 @@ func unitExistingPiece(g *mapx.Graph, target string) string {
 // julga escolhe entre afirmar que o código realiza a regra (e o carimbo fica no mapa
 // parecendo verificação) ou reprovar trabalho que ninguém errou.
 //
-// Medido no blue-eyes (#76): a saída usada foi `pass`, com o motivo explicando que não
+// Medido no app de referência: a saída usada foi `pass`, com o motivo explicando que não
 // havia o que medir. Funcionou uma vez e ensina o hábito errado — carimbar julgamento sem
 // olhar é o que corrói o valor de `measures: judgment`.
 func ValidateVerdict(v, reason string) error {

@@ -9,7 +9,7 @@
 
 > **GTENG-R0001:** routing learned about VENDORED files. A pipeline Anchors seeded and still
 > owns (it carries the template marker) had every internal ruler charging it a triad and a
-> code — measured in blue-eyes, where the project was asked to own, and to specify, files
+> code — measured in the reference app, where the project was asked to own, and to specify, files
 > `anchors doctor --fix` replaces whole. Decided by the user: those files are upstream-owned.
 >
 > **Revises:** `B22`

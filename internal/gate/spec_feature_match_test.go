@@ -356,7 +356,7 @@ func TestSpecFeatureMatchNaoConfrontaFeatureContraTeste(t *testing.T) {
 
 // O projeto declara `code_lengths: [4]` DEPOIS de o pacote inicializar. Com o regex em
 // `var`, compilado no init com o default `[5]`, a spec de código de 4 caracteres devolvia
-// ZERO requisitos — medido no MIF: `spec-feature-match` e `scenario-coverage` ficaram
+// ZERO requisitos — medido no app de referência: `spec-feature-match` e `scenario-coverage` ficaram
 // indeterminados nas 691 specs, bloqueantes e cegos.
 func TestDefinedRequirementsRespeitaCodeLengthsDoProjeto(t *testing.T) {
 	config.SetCodeLengths([]int{4})

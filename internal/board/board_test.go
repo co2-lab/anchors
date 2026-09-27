@@ -148,7 +148,7 @@ func TestFindByCode_refusesACodeNoTitleHolds(t *testing.T) {
 	}
 }
 
-// Two open cards with the same code (blue-eyes #995): the code alone cannot say which one the
+// Two open cards with the same code (reference app): the code alone cannot say which one the
 // work belongs to, and picking the first recorded the delivery on the wrong card. The lookup
 // refuses and names both, so the agent chooses with `--card <n>`.
 func TestFindByCode_refusesAnAmbiguousCode(t *testing.T) {

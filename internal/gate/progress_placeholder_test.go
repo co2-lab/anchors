@@ -27,7 +27,7 @@ func escreveProgresso(t *testing.T, plano, progresso string) (root, planoPath st
 	return root, planoPath
 }
 
-// O PLACEHOLDER, medido no blue-eyes.
+// O PLACEHOLDER, medido no app de referência.
 //
 // O progresso do plano 0017 tinha, na fase F02:
 //

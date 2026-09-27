@@ -213,7 +213,7 @@ func TestStampWithoutDateTakesToday(t *testing.T) {
 }
 
 // A WAIVER is a person's decision; the mechanical check does not re-validate it. One commit in
-// blue-eyes turned 21 waived judgments into `ok` through this loop.
+// the reference app turned 21 waived judgments into `ok` through this loop.
 func TestStampKeepsAWaiver(t *testing.T) {
 	t.Run("EDSTD-B03: A waived stamp is kept as it was", func(t *testing.T) {})
 	g := stampGraph()

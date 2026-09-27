@@ -61,7 +61,7 @@ func TestJudge_acceptsWaivedAndRequiresAReason(t *testing.T) {
 //
 // An alias table used to convert `mock-detect-cobre-o-dialeto` to the canonical name. It
 // resolved and never closed — the file never fixed itself, and the map piled up stamps in
-// both forms (measured in blue-eyes: 40 judgments as `regra-cumprida` next to 2 as
+// both forms (measured in the reference app: 40 judgments as `regra-cumprida` next to 2 as
 // `rule-fulfilled`). The conversion became the `1→2` migration step, which runs once.
 func TestFindJudgmentGate_onlyTheCanonicalName(t *testing.T) {
 	t.Run("JDGUE-B03: Only the exact name of a declared judgment gate is accepted", func(t *testing.T) {})

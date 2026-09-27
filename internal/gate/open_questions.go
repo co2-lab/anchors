@@ -218,7 +218,7 @@ func openItems(corpo string) []string {
 		// DE-PARA também é histórico: a linha cita a pergunta E a regra que nasceu dela.
 		//
 		// Uma tabela é a forma mais legível de mostrar de onde a regra veio, e o `[x]`
-		// obriga a bullet. Medido no blue-eyes: escrevi o histórico da spec do DataStore
+		// obriga a bullet. Medido no app de referência: escrevi o histórico da spec do DataStore
 		// como `| era | virou |` e o gate contou as duas linhas de dados como perguntas
 		// ABERTAS — na seção que abre com `nenhuma.` e cuja tabela diz que elas viraram
 		// regra.
@@ -240,7 +240,7 @@ func openItems(corpo string) []string {
 		// CABEÇALHO DE TABELA com nome de coluna IMPREVISTO.
 		//
 		// A defesa acima cobre os títulos previstos (`código|pergunta|decisão`…), e
-		// `| era | virou |` não casa nenhum — entrava como item. Medido no blue-eyes: a
+		// `| era | virou |` não casa nenhum — entrava como item. Medido no app de referência: a
 		// tabela de histórico da spec do DataStore produziu 3 achados, e o cabeçalho era
 		// um deles.
 		//
@@ -337,7 +337,7 @@ func questionToRuleRE() *regexp.Regexp {
 	//        respondida — o oposto do que o gate faz. Medido: quebrou
 	//        `TestOpenQuestions_cobraCodigoNaPergunta`.
 	//   `F`  é a da FASE, pelo mesmo motivo, e este custou uma pergunta SILENCIADA: a
-	//        `THMEX-Q01` do blue-eyes dizia "vira uma revisão THMEX-R0001, ou uma spec de
+	//        `THMEX-Q01` do app de referência dizia "vira uma revisão THMEX-R0001, ou uma spec de
 	//        decisão no DSSYD-F01", e o `F01` fez a linha parecer de-para. O gate passou
 	//        `✓1` com a pergunta em aberto — exatamente o falso NEGATIVO que a correção
 	//        do de-para existia para não criar.

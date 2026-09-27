@@ -52,14 +52,14 @@ func init() {
 				// `name` é como o PROJETO chama a instância do gate, e `check` é o
 				// verificador interno que ela invoca. São os dois lugares onde estes
 				// oito aparecem hoje — medido: três deles no `anchors.yaml` do
-				// blue-eyes, nas duas chaves.
+				// app de referência, nas duas chaves.
 				"name":  gates3,
 				"check": gates3,
 			},
 			// `gate:` (nos julgamentos do grafo) e `id:` ficam de FORA, e não por
 			// esquecimento: nenhum destes oito tem gate nos defaults, então nenhum
 			// projeto os declara por `id` nem carimba julgamento com eles. Conferido no
-			// blue-eyes: zero ocorrências no `anchors.graph.yaml`.
+			// app de referência: zero ocorrências no `anchors.graph.yaml`.
 			//
 			// Migrar chave onde o valor não existe não é inofensivo — `id`/`gate`
 			// apontam para gates DECLARADOS, e a régua `TestVocabularioAntigoAponta…`

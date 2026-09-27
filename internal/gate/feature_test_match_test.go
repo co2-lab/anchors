@@ -433,7 +433,7 @@ func TestRootCode(t *testing.T) {
 }
 
 // An UNMAPPED regime tag used to pass for "another regime": `@nivel-compilacao` is not under
-// blue-eyes' `regimes:`, and every scenario carrying it was skipped by this gate silently.
+// the reference app's `regimes:`, and every scenario carrying it was skipped by this gate silently.
 func TestFeatureTestMatch_unmappedRegimeTagIsStillConfronted(t *testing.T) {
 	t.Run("FTMFT-B18: an unmapped regime tag does not exempt a scenario", func(t *testing.T) {})
 	root := t.TempDir()

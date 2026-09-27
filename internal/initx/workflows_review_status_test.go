@@ -13,8 +13,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// The review outcome as the `anchors/review` commit status (blue-eyes #835), and the merge
-// that happens without it (blue-eyes #782).
+// The review outcome as the `anchors/review` commit status (reference app), and the merge
+// that happens without it (reference app).
 //
 // These tests RUN the scripts of `anchors-pr-checks.yml` against a fake `gh` that serves
 // JSON fixtures through the real `jq` — the same filters the pipeline uses in CI. Reading
@@ -309,7 +309,7 @@ func TestPRChecksPublishesTheReviewStatus(t *testing.T) {
 			wantState: "pending",
 		},
 		{
-			// blue-eyes #982: an org with no PUBLIC members. The job's token sees the member's
+			// the reference app: an org with no PUBLIC members. The job's token sees the member's
 			// comment as CONTRIBUTOR, and every approval was dropped.
 			name: "a private org member's line counts by repository permission",
 			edit: func(rw *reviewWorld) {
@@ -625,7 +625,7 @@ func TestPRChecksVerdictReleasesTheReviewer(t *testing.T) {
 	}
 }
 
-// blue-eyes #988/#989: the body opens with `Refs #13` (a related card, itself in the
+// the reference app: the body opens with `Refs #13` (a related card, itself in the
 // queue) and ends with `Closes #12` (the card under review). The closing line wins in the
 // review job AND in the mover, whatever the order in the body.
 func TestPRChecksClosingLineWinsOverRefs(t *testing.T) {
@@ -666,7 +666,7 @@ func TestPRChecksClosingLineWinsOverRefs(t *testing.T) {
 // owned by the author again (the owner before the reviewer). Their `anchors next` resumes
 // it; if they do not ask for work, the stale releases it after the waiting window and any
 // agent takes it. Before, it stayed in `in-review` with no owner and was offered to no one
-// (blue-eyes, 2026-09-24). APPROVED leaves the card for the merge.
+// (reference app, 2026-09-24). APPROVED leaves the card for the merge.
 func TestPRChecksRejectedGoesBackToTheAuthor(t *testing.T) {
 	run := func(verdict string) string {
 		w := newGHWorld(t)

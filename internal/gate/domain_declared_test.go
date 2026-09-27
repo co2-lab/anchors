@@ -144,7 +144,7 @@ func TestANonAnswerInTheOwnerColumnIsNotAnOwnerRealCase(t *testing.T) {
 
 // A AUSENCIA DA SECAO era SILENCIO, e silencio nao e' dispensa.
 //
-// MEDIDO no blue-eyes: 85 specs, ZERO confrontadas -- `domain-declared` e' `blocking:
+// MEDIDO no app de referência: 85 specs, ZERO confrontadas -- `domain-declared` e' `blocking:
 // true` e nao protegia nada, porque so cobrava quem tinha ABERTO a secao. Ninguem abriu.
 //
 // A justificativa tinha merito ("exigir a secao de toda spec transformaria instrumento

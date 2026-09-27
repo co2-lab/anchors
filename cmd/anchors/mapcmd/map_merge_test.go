@@ -50,7 +50,7 @@ func judgedEdge(from, to string, gates ...string) mapx.Edge {
 	return e
 }
 
-// git treats `anchors.graph.yaml` as TEXT, and it is derived. Measured in blue-eyes
+// git treats `anchors.graph.yaml` as TEXT, and it is derived. Measured in the reference app
 // (co2-lab/anchors#12): a `git merge origin/develop` merged the map WITHOUT A CONFLICT and
 // erased 62 judgment stamps. A stamp is state of the work, and the REPORT lives in the
 // `--reason` of `anchors judge`, not in the file.
@@ -135,7 +135,7 @@ func TestMapMerge_anEmptySideDoesNotEraseTheOther(t *testing.T) {
 	}
 }
 
-// THE DRIVER UNITED EDGES AND STAMPS, AND NEVER THE NODES. Measured in blue-eyes (#730):
+// THE DRIVER UNITED EDGES AND STAMPS, AND NEVER THE NODES. Measured in the reference app:
 // base 329 nodes, ours 330, theirs 332, result 330 — and git reports "Automatic merge went
 // well". The file stays governed and is not in the map, so no gate confronts it.
 func TestMapMerge_keepsTheNodesOnlyTheOtherSideHas(t *testing.T) {

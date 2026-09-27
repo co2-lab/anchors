@@ -464,7 +464,7 @@ func TestTriadComplete_tbdIsDebtNotWaiver(t *testing.T) {
 }
 
 // A per-rule waiver lives in the rule's TABLE ROW; reading it as the unit's waived code,
-// feature and test for the whole unit (MIF: 293 of 308 triad failures).
+// feature and test for the whole unit (reference app: 293 of 308 triad failures).
 func TestSpecWaivers_tableRowIsTheRulesNotTheUnits(t *testing.T) {
 	t.Run("TRCMT-B09: a per-rule waiver in a table row does not waive the unit", func(t *testing.T) {})
 	spec := "| Rule | What |\n| --- | --- |\n" +

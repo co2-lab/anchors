@@ -10,7 +10,7 @@ package governance
 // e deixa passar justamente o que só ele veria.
 //
 // O PASSO ZERO existe porque a primeira versão deste guia dizia "os checks já
-// confrontaram" — e isso PRESSUPÕE que eles rodaram. Medido no PR #66 do blue-eyes: o
+// confrontaram" — e isso PRESSUPÕE que eles rodaram. Medido no PR #66 do app de referência: o
 // evento `pull_request` não disparou (o PR estava com conflito, e o GitHub não roda
 // workflow de PR em PR conflitado, sem avisar), nenhum check do Anchors existiu, e o PR
 // ficou com a cara de PR limpo. O guia mandava o revisor NÃO conferir exatamente o que

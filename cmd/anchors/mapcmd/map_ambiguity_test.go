@@ -14,7 +14,7 @@ import (
 // O comentário do campo `priority` promete: "Declare quando a heurística errar; o `check`
 // avisa onde ela decidiu sozinha." Não avisava.
 //
-// Custo medido no blue-eyes (blue-eyes#100): `**/*.test.*` e `packages/shared/**/*.ts`
+// Custo medido no app de referência (app de referência): `**/*.test.*` e `packages/shared/**/*.ts`
 // casavam o mesmo `AreaStatus.test.ts`, o desempate por comprimento escolheu `shared`, e
 // o projeto ficou com ZERO nós `kind: test` tendo 70 testes verdes. Em cascata QUATRO
 // gates ficaram cegos, incluindo o `test-traceable`, que é bloqueante.

@@ -310,7 +310,7 @@ func regimesForTestSurface(cfg *config.Config) map[string]bool {
 //
 // "Known" means MAPPED by the project (or a canonical regime name), not "looks like a
 // regime". The old test was the `nivel-` prefix, and an UNMAPPED tag passed for "another
-// regime": measured in blue-eyes, `@nivel-compilacao` is not under `regimes:`, and every
+// regime": measured in the reference app, `@nivel-compilacao` is not under `regimes:`, and every
 // scenario carrying it was skipped by this gate without a word.
 func scenarioHitsTestSurface(sc featureScenario, testRegimes, knownRegimes map[string]bool) bool {
 	sawRegimeTag := false

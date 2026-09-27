@@ -2,7 +2,7 @@ package gate
 
 import "testing"
 
-// O FORMATO COM TÍTULO DE SEÇÃO, medido no blue-eyes.
+// O FORMATO COM TÍTULO DE SEÇÃO, medido no app de referência.
 //
 // O guia mostra a revisão como `> **CODIGO-R0001:** o que mudou`, e o regex exige os dois
 // pontos. Mas uma spec pode registrá-la como TÍTULO de seção — que é o formato natural

@@ -441,7 +441,7 @@ func codesInFile(path string) ([]string, error) {
 // (`"SPCRX-V01: ..."`), onde todo código presente É o código do caso. Aplicada ao
 // arquivo INTEIRO, ela colhe também o que a prosa menciona.
 //
-// MEDIDO no blue-eyes: 37 dos 55 nós com `proven_codes` carregavam código de outra
+// MEDIDO no app de referência: 37 dos 55 nós com `proven_codes` carregavam código de outra
 // unidade. O `InfraList.spec.md` cita `QSCOP-B02` uma vez, em prosa; nenhum teste
 // do InfraList o menciona; e o mapa afirmava que o InfraList o provou. Isso é pior
 // que uma lacuna — a lacuna aparece no relatório, e uma prova falsa não.

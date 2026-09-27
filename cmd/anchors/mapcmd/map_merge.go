@@ -15,7 +15,7 @@ import (
 // manual — e um grafo com centenas de arestas e carimbos aninhados não tem resolução
 // manual confiável. Quando NÃO tocam, ele resolve sozinho, e é aí que o dano acontece.
 //
-// Medido no blue-eyes (co2-lab/anchors#12): um `git merge origin/develop` mesclou o mapa
+// Medido no app de referência (co2-lab/anchors#12): um `git merge origin/develop` mesclou o mapa
 // sem conflito e apagou SESSENTA E DOIS carimbos de julgamento:
 //
 //	git show HEAD --stat | grep graph
@@ -87,7 +87,7 @@ The result is written to <ours>, which is what git expects.`,
 			// este driver reconciliou só a segunda. O resultado saía com a lista de nós
 			// do lado `nosso`, e todo nó criado só no outro branch desaparecia.
 			//
-			// MEDIDO no blue-eyes (#730): base 329 nós, nosso 330, deles 332, resultado
+			// MEDIDO no app de referência: base 329 nós, nosso 330, deles 332, resultado
 			// 330 — e o git reporta "Automatic merge went well".
 			//
 			// O dano é calado por construção: o arquivo continua REGIDO, o `check` o
