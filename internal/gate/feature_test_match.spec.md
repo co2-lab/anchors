@@ -65,6 +65,7 @@ in automated test suites.
 | `FTMFT-B20` | The similarity verdict named beside each drifting scenario (`FTMFT-B09`) is written in the project's language, through i18n (`divergent` in English, `divergente` in Portuguese). |
 | `FTMFT-B21` | A test's title is read from the project's tests source — its `dialect.tests` pattern or script, or its family's — so how a test opens (`t.Run`, `it.each(table)`, `.only`) is the project's declaration, and a later test citing the same code is not taken for an earlier one's proof. Without a source no title is read, and the description is confronted with the test's body. |
 | `FTMFT-B22` | A support file linked to a feature is not among the tests its scenarios are confronted with. |
+| `FTMFT-B23` | A scenario tag may carry a `#nn` suffix that gives each scenario of one rule its own identity: every code on the tag line keeps its suffix, and a code with no suffix is read as before. |
 
 ## Errors
 

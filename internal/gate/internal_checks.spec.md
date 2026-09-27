@@ -85,6 +85,19 @@ looked at.
 | `INCHN-B16` | A guide with no compliance-points section, or with the section and no item in it, fails — the AI judgment gate would otherwise fall back on vague heuristics. |
 | `INCHN-B17` | When the project says how its tests are written, `scenario-coverage` counts a scenario as written in a file the source lists tests in only when a test TITLE cites its code; without a source, or in a file the source lists no test in, a code anywhere in the file outside comments counts. |
 | `INCHN-B18` | A support file is not judged by `tests-pass` (Skip, saying why), and it does not count as a test that names a scenario for `scenario-coverage`. |
+| `INCHN-B19` | `non-empty` passes a feature only when it declares a scenario, and a scenario opens with any keyword of the official Gherkin table, in any language and synonyms included; the examples table of an outline is not a scenario. |
+| `INCHN-B20` | `scenario-coverage` charges only the requirements the spec DEFINES: a code the spec merely cites in its prose is never charged, and a defined requirement with no proven scenario still fails, named. |
+| `INCHN-B21` | `scenario-coverage` tells a requirement no test names apart from one a test names but no ingested execution proved, even when no execution was ingested at all, and the verdict says which of the two each one is; a requirement an ingested execution proved is not charged. |
+| `INCHN-B22` | A spec whose layer dispenses `tested-by` is skipped by `scenario-coverage`, saying so, as `triad-complete` does; a layer without that opt-out is still charged. |
+| `INCHN-B23` | `mutation-score` passes a file whose score reaches the acceptable threshold — the threshold itself included, and a run that ignored every mutant — and fails one below it, naming how many mutants survived and the threshold. |
+| `INCHN-B24` | With no mutation signal ingested, or with one measured at another revision of the file, `mutation-score` answers Pending, saying what to ingest or that the signal is stale, and never a verdict. |
+| `INCHN-B25` | A score between the acceptable and the desirable threshold is Pending, naming both ranges and how far the desirable one is; at or above the desirable it passes clean; with no desirable threshold, or one not above the acceptable, the acceptable threshold alone decides. |
+| `INCHN-B26` | The mutation thresholds are the ones the ingested report declares; the engine's default of 70% applies only when the report declares none. |
+| `INCHN-B27` | With the mutation score measured per scope, the verdict follows the ISOLATED score, never the full one, and the report names both and their delta — a large delta read as coupling to dependents, a small one as a missing assertion, never both at once; with no scopes the total score decides. |
+| `INCHN-B28` | A mutation scope measured at an older revision than the file's decides nothing and is left out of the report; a scope carrying no revision stamp still counts. |
+| `INCHN-B29` | Outside a git repository `updated-at-atual` skips, naming the missing repository instead of blaming the file as uncommitted; inside one, a new file dated today passes and a wrong date still fails. |
+| `INCHN-B30` | `spec-sections` fails a section title written in another language of the catalogue than the project's, naming the expected title, unless the gate declares `enforce_section_language: false`; a title outside the catalogue, or a run with no configuration, is not charged for its language. |
+| `INCHN-B31` | The skeletons `anchors new` emits are born conforming: the spec passes the header and spec-sections rulers, and the feature and the test pass the header ruler. |
 
 ## Invariants
 

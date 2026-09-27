@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: PCJPL
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @PCJPL
@@ -93,6 +93,13 @@ Feature: PlanChangeJustified — a modified plan or spec must declare why it cha
     Given document content containing multiple revisions
     When RevisionsOf parses the text
     Then it returns all matching revisions in order with code, number, and explanation
+
+  @PCJPL-B15 @unit-level
+  Scenario: A revision written as a section title is read with the others
+    Given a spec whose first revision is the title of a section under its revisions
+    And whose second revision is written in the bold format at its top
+    When its revisions are read
+    Then both are found, the one in the title carrying its code and number
 
   @PCJPL-I01 @unit-level
   Scenario: Untouched nodes in the impact radius are never charged

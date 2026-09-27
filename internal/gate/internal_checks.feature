@@ -183,3 +183,95 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     Given a support file with no execution, and a support file that is the only one citing a spec's code
     When tests-pass judges the first and scenario-coverage reads the second
     Then tests-pass skips saying it is support, and the scenario has no test
+
+  @INCHN-B19 @unit-level
+  Scenario: A feature scenario is recognised in any Gherkin language
+    Given features whose scenarios open with Portuguese, English, Spanish and French keywords,
+      outlines, the Example synonym and unaccented spellings
+    And a feature holding only an examples table, and one holding only its title
+    When the emptiness ruler confronts each
+    Then every feature with a scenario passes and the other two fail
+
+  @INCHN-B20 @unit-level
+  Scenario: Scenario coverage charges what the spec defines, not what it cites
+    Given a spec defining two proven requirements whose prose cites other units' codes
+    And a spec defining two requirements of which only one was proven
+    When scenario-coverage confronts each
+    Then the first passes naming none of the cited codes
+    And the second fails naming the unproven requirement
+
+  @INCHN-B21 @unit-level
+  Scenario: Scenario coverage tells a missing test apart from a test never run
+    Given a spec with two requirements and no ingested execution
+    When scenario-coverage runs with no test naming them, and with a test naming only the first
+    Then the first run fails naming both requirements
+    And the second fails asking to ingest the run of the named one while still naming the other
+    And once an ingested execution proves both, it passes
+
+  @INCHN-B22 @unit-level
+  Scenario: Scenario coverage honours a layer that dispenses tested-by
+    Given a spec of a layer dispensing tested-by and a spec of a layer that does not, neither tested
+    When scenario-coverage confronts each
+    Then the first is skipped saying tested-by is dispensed, and the second fails
+
+  @INCHN-B23 @unit-level
+  Scenario: Mutation score passes at the threshold and fails below it naming the survivors
+    Given fresh mutation signals scoring above the threshold, exactly at it, below it, and with every mutant ignored
+    When mutation-score confronts each
+    Then the one below fails naming how many mutants survived and the threshold
+    And the others pass
+
+  @INCHN-B24 @unit-level
+  Scenario: A missing or stale mutation signal is pending
+    Given a file with no mutation signal, and a file whose perfect score was measured at an older revision
+    When mutation-score confronts each
+    Then both are pending, the first saying what to ingest and the second that the signal is stale
+
+  @INCHN-B25 @unit-level
+  Scenario: A score between acceptable and desirable is pending, not failed
+    Given an acceptable threshold of 70 and a desirable one of 90
+    When mutation-score confronts scores of 75 and 92
+    Then 75 is pending, naming both ranges and the 15 points left, and 92 passes clean
+    And with no desirable threshold, or one below the acceptable, 75 passes
+
+  @INCHN-B26 @unit-level
+  Scenario: The mutation thresholds come from the report
+    Given a score of 65
+    When the report declares an acceptable threshold of 60, and when it declares none
+    Then it passes against 60 and fails against the default of 70
+
+  @INCHN-B27 @unit-level
+  Scenario: The verdict follows the isolated scope and the report reads the delta
+    Given a file scoring 8% isolated and 77% full, and one scoring 30% isolated and 100% full
+    When mutation-score confronts each
+    Then both fail, and the first report names both scores, their delta and the dependents
+    And a low delta at a low score is reported as a missing assertion, never as coupling at the same time
+    And an isolated score above the threshold passes, as does a total score with no scopes
+
+  @INCHN-B28 @unit-level
+  Scenario: A scope measured at an older revision decides nothing
+    Given an isolated score of 30% measured at the previous revision and a full one of 95% at the current
+    When mutation-score confronts the file
+    Then it does not fail and the old score is not in the report
+    And the same isolated score measured at the current revision, or with no revision stamp, fails
+
+  @INCHN-B29 @unit-level
+  Scenario: Without a repository updated-at skips instead of blaming the file
+    Given a file with an identity date in a directory outside any git repository
+    When updated-at-atual confronts it
+    Then it skips naming the missing repository, not saying the file is uncommitted
+    And in a fresh repository the same file dated today passes and dated 2020 fails
+
+  @INCHN-B30 @unit-level
+  Scenario: A section title in another language fails unless the gate waives it
+    Given a Portuguese project and a spec whose section titles are in English
+    When spec-sections confronts it
+    Then it fails naming the expected Portuguese title
+    And it passes with enforce_section_language false, with no configuration, or when the titles are in Portuguese
+    And a section title outside the catalogue is not charged
+
+  @INCHN-B31 @unit-level
+  Scenario: The skeletons anchors new emits are born conforming
+    Given the spec, feature and test that anchors new emits for a unit
+    When the header ruler confronts each and spec-sections confronts the spec
+    Then every one of them passes

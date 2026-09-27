@@ -187,3 +187,11 @@ Feature: FeatureTestMatch — scenarios in feature must be implemented in test b
     Given a feature whose only linked file is a support file that cites its codes
     When the feature is confronted with its tests
     Then it has no test to confront, as if nothing were linked
+
+  @FTMFT-B23 @unit-level
+  Scenario: A scenario suffix gives each case of a rule its own identity
+    Given a feature with two scenarios of the same rule tagged with the suffixes 01 and 02
+    And a tag line carrying a second code with its own suffix
+    When the scenarios are read
+    Then each scenario carries its code with its suffix, the second code included
+    And a scenario tagged with no suffix is read by its plain code

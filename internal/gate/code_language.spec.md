@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CDLNG
-  updated_at: 2026-09-19
+  updated_at: 2026-09-27
   layer: gate
 -->
 # CodeLanguage — the code does not go back to mixing languages
@@ -46,6 +46,8 @@ turned off on the first day.
 | `CDLNG-B03` | Only a DECLARATION is the subject: what does not declare an identifier is not read. |
 | `CDLNG-B04` | The declarations are truly found, in every form the language offers — not only in the most common one. `PortugueseIdentifiers` sweeps the content and returns what accused. |
 | `CDLNG-B05` | `WordIsPortuguese` decides ONE word, and `IdentifierIsPortuguese` decides a whole identifier by breaking it into the words that compose it — it is the separation that lets the length floor hold per word, and not for the whole identifier. |
+| `CDLNG-B06` | The project's own production code declares no identifier this ruler accuses: every Go file outside tests, vendored code and test data is swept, and each accusation names the identifier, the word that caused it and the file. |
+| `CDLNG-B07` | No gate of this package decides by confronting prose in the team's language: the text a gate matches is stable vocabulary — a marker, a code or the document's structure — so translating the project never silences a gate. |
 
 ## Invariants
 

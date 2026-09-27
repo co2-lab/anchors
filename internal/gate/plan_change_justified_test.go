@@ -320,3 +320,47 @@ func TestRevisionsOf_extraiRevisoesEmOrdem(t *testing.T) {
 		t.Errorf("segunda revisão incorreta: %+v", revs[1])
 	}
 }
+
+// THE SECTION-TITLE FORMAT, measured in the reference app.
+//
+// The guide shows the revision as `> **CODE-R0001:** what changed`, and the regex demands
+// the colon. But a spec may record it as a section TITLE — the natural format when there is
+// more than one and they grow a body:
+//
+//	## Revisões
+//
+//	### SRMTS-R0001 — a `B06` afirmava um vocabulário que não existe
+//
+// Measured: `ServiceMetrics` had `R0001` like that and `R0002` in the header (with `:`). The
+// gate counted ONE revision, saw the highest as `-R0002` — and failed it as "not sequential".
+//
+// The diagnosis it gave was right about the symptom and wrong about the cause: the
+// revisions WERE sequential; one of them was not seen.
+func TestRevisionsOf_readsTheSectionTitle(t *testing.T) {
+	t.Run("PCJPL-B14: RevisionsOf parses declared revisions in order", func(t *testing.T) {})
+	t.Run("PCJPL-B15: A revision written as a section title is read with the others", func(t *testing.T) {})
+	content := "## Revisões\n\n" +
+		"### SRMTS-R0001 — a `B06` afirmava um vocabulário que não existe\n\n" +
+		"A regra dizia que as severidades já eram conhecidas.\n"
+
+	revs := RevisionsOf(content)
+
+	if len(revs) != 1 {
+		t.Fatalf("the revision in a section title was not seen: %d found", len(revs))
+	}
+	if revs[0].Number != 1 || revs[0].Code != "SRMTS" {
+		t.Errorf("read %s-R%04d", revs[0].Code, revs[0].Number)
+	}
+}
+
+// And the two formats live together in the same file: it is the real state of a spec that
+// got its second revision in the header after having the first one in a section.
+func TestRevisionsOf_bothFormatsLiveTogether(t *testing.T) {
+	t.Run("PCJPL-B15: A revision written as a section title is read with the others", func(t *testing.T) {})
+	content := "> **SRMTS-R0002:** a `B06` passou a citar o vocabulário publicado\n\n" +
+		"## Revisões\n\n### SRMTS-R0001 — a `B06` afirmava um vocabulário que não existe\n"
+
+	if revs := RevisionsOf(content); len(revs) != 2 {
+		t.Errorf("expected 2 revisions, got %d — the numbering would look non-sequential", len(revs))
+	}
+}

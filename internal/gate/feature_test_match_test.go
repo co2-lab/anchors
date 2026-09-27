@@ -667,3 +667,64 @@ func TestFeatureTestMatch_SupportIsNotItsTest(t *testing.T) {
 		t.Fatalf("with only a support file linked there is no test to confront, got %v (%s)", v, detail)
 	}
 }
+
+// A rule legitimately has more than one scenario — the happy path and the alternatives.
+// Without a suffix, the N scenarios carry the same code and nothing tells them apart: the
+// gate compares the N titles with the same test and at most one matches.
+func TestFeatureScenarios_suffixGivesEachScenarioItsIdentity(t *testing.T) {
+	t.Run("FTMFT-B23: A scenario suffix gives each case of a rule its own identity", func(t *testing.T) {})
+	feature := `
+  @USBPX-B01#01 @USBPX-B02#01 @nivel-unit
+  Cenário: busca pontos por userId+month
+    Então o repository é consultado
+
+  @USBPX-B01#02 @nivel-unit
+  Cenário: sem usuário logado nada é buscado
+    Então o repository não é consultado
+`
+	scenarios := parseFeatureScenarios(feature)
+	if len(scenarios) != 2 {
+		t.Fatalf("expected 2 scenarios, got %d", len(scenarios))
+	}
+	if scenarios[0].Code != "USBPX-B01#01" {
+		t.Errorf("code of the 1st: %q, want USBPX-B01#01", scenarios[0].Code)
+	}
+	if scenarios[1].Code != "USBPX-B01#02" {
+		t.Errorf("code of the 2nd: %q, want USBPX-B01#02", scenarios[1].Code)
+	}
+	// The second code of the tag line carries its suffix too.
+	if len(scenarios[0].Codes) != 2 || scenarios[0].Codes[1] != "USBPX-B02#01" {
+		t.Errorf("codes of the 1st: %v", scenarios[0].Codes)
+	}
+}
+
+// Backward compatible: the suffix is optional. A project that never adopts it keeps
+// working — and that is the condition for the gate to change without breaking anyone.
+func TestFeatureScenarios_codeWithoutSuffixStillHolds(t *testing.T) {
+	t.Run("FTMFT-B23: A scenario suffix gives each case of a rule its own identity", func(t *testing.T) {})
+	scenarios := parseFeatureScenarios(`
+  @SAUTX-B01 @nivel-unit
+  Cenário: Hidratar carrega a sessão
+    Então o usuário fica disponível
+`)
+	if len(scenarios) != 1 || scenarios[0].Code != "SAUTX-B01" {
+		t.Fatalf("a code without a suffix broke: %+v", scenarios)
+	}
+}
+
+// The gates that speak of a RULE need the root; the ones that speak of a SCENARIO, the
+// whole code. Confusing the two would make the rule `USBPX-B01` look like three rules.
+func TestRootCode_separatesRuleFromScenario(t *testing.T) {
+	t.Run("FTMFT-B17: RootCode returns the root requirement code without scenario sub-index", func(t *testing.T) {})
+	cases := map[string]string{
+		"USBPX-B01#02": "USBPX-B01",
+		"USBPX-B01":    "USBPX-B01",
+		"ATLNX-VR":     "ATLNX-VR",
+		"MNMTX-DS-kv":  "MNMTX-DS-kv",
+	}
+	for input, want := range cases {
+		if got := RootCode(input); got != want {
+			t.Errorf("RootCode(%q) = %q, want %q", input, got, want)
+		}
+	}
+}

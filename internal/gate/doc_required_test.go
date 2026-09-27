@@ -301,3 +301,72 @@ func TestDocRequiredAgregado_semMapaPula(t *testing.T) {
 		t.Errorf("sem mapa o gate deveria PULAR; veio %v", v)
 	}
 }
+
+// DOCUMENTING is opening a section for the unit. CITING is writing its name in the body of
+// another.
+//
+// Two real traps, in the same file of the reference project:
+//
+//	· a NOTE listed the components "the `doc-required` gate should flag", and `MetricCard`
+//	  was in it. The gate read it, found the name, and was satisfied — silenced by the very
+//	  note that said it still had to be documented.
+//
+//	· the `StatusBadge` section cited `MetricCard` while explaining when NOT to use one
+//	  instead of the other. Legitimate prose — and not documentation of the cited unit.
+//
+// In both cases the unit appeared in the file and had no entry. It stayed undocumented for
+// weeks, with the gate green.
+func TestDocRequired_mentionInTheBodyDoesNotCountAsDocumentation(t *testing.T) {
+	t.Run("DCRQD-B09: In a document with sections only a title of its own documents the unit", func(t *testing.T) {})
+	doc := "# Catálogo\n\n" +
+		"## `StatusBadge.spec.md` (`STBDS`)\n\n" +
+		"Use para o estado agregado; nunca para o ponto de status — isso é `MTCRM`.\n\n" +
+		"## Nota — este catálogo cresce por card\n\n" +
+		"Faltam entrada para `MTCRM` e `CHRTS`; cada um recebe a sua quando o gate sinalizar.\n"
+
+	if !mentionsUnit(doc, "STBDS", "StatusBadge.spec.md") {
+		t.Error("the unit WITH its own section stopped counting — false negative")
+	}
+	if mentionsUnit(doc, "MTCRM", "MetricCard.spec.md") {
+		t.Error("a citation in the body and a mention in a note counted as documentation — " +
+			"it is the defect that left MetricCard without an entry for weeks")
+	}
+	if mentionsUnit(doc, "CHRTS", "Charts.spec.md") {
+		t.Error("a mention only in the note counted as documentation")
+	}
+}
+
+// The TITLE may name the unit by its FILE, not only by its code — it is how the reference
+// project's catalogue writes it, and what the secondary net already covered in the body.
+func TestDocRequired_titleNamingTheFileCounts(t *testing.T) {
+	t.Run("DCRQD-B04: A mention by the file name also counts", func(t *testing.T) {})
+	t.Run("DCRQD-B09: In a document with sections only a title of its own documents the unit", func(t *testing.T) {})
+	doc := "## `apps/mobile/src/components/MetricCard.spec.md`\n\nO cartão de número.\n"
+	if !mentionsUnit(doc, "MTCRM", "apps/mobile/src/components/MetricCard.spec.md") {
+		t.Error("a title naming the FILE did not count — the real catalogue writes it that way")
+	}
+}
+
+// A DOCUMENT WITHOUT SECTIONS still counts by mention.
+//
+// An `openapi.yaml` has no Markdown titles, and demanding one section per unit there would
+// charge a structure the format does not have. That is why the mention has existed as a
+// secondary net from the start, and this case must keep working as before.
+func TestDocRequired_documentWithoutSectionsStillCountsByMention(t *testing.T) {
+	t.Run("DCRQD-B04: A mention by the file name also counts", func(t *testing.T) {})
+	t.Run("DCRQD-B09: In a document with sections only a title of its own documents the unit", func(t *testing.T) {})
+	yaml := "openapi: 3.1.0\npaths:\n  /services:\n    get:\n      operationId: ServiceList\n"
+	if !mentionsUnit(yaml, "SRLSS", "ServiceList.spec.md") {
+		t.Error("in a document without sections the mention stopped counting — OpenAPI has no " +
+			"Markdown titles, and charging a section there demands a structure the format lacks")
+	}
+}
+
+// The TITLE OF ANOTHER UNIT does not count for this one, even when it contains its name.
+func TestDocRequired_titleOfAnotherUnitDoesNotCount(t *testing.T) {
+	t.Run("DCRQD-B09: In a document with sections only a title of its own documents the unit", func(t *testing.T) {})
+	doc := "## `MetricCardList.spec.md` (`MTCLS`)\n\nA lista de cartões.\n"
+	if mentionsUnit(doc, "MTCRM", "MetricCard.spec.md") {
+		t.Error("the title of `MetricCardList` counted as documentation of `MetricCard`")
+	}
+}

@@ -342,3 +342,91 @@ func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
 		}
 	})
 }
+
+// writeProgress lays a plan and its companion out in a temporary directory.
+func writeProgress(t *testing.T, plan, progress string) (root, planPath string) {
+	t.Helper()
+	root = t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "plans"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	planPath = "plans/0017-mutacao.md"
+	if err := os.WriteFile(filepath.Join(root, planPath), []byte(plan), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	prog := filepath.Join(root, "plans/0017-mutacao-progress.md")
+	if err := os.WriteFile(prog, []byte(progress), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return root, planPath
+}
+
+// THE PLACEHOLDER, measured in the reference app.
+//
+// The progress of plan 0017 had, in phase F02:
+//
+//   - [ ] TODO: um item por spec que esta fase semeia
+//
+// `anchors new progress` writes it when the phase seeds nothing, and it should go once
+// someone decides what the phase does. It stayed.
+//
+// The three directions of this gate do not see it: the first two confront items that CITE
+// A PATH (this one does not), and the third looks at the plan's seeds (this phase seeds
+// nothing).
+//
+// And the effect is the opposite of what the gate protects: an eternal `[ ]` makes the plan
+// look unfinished forever — `anchors next` comes back to it, and whoever reads does not
+// know whether work is missing or the file needs cleaning.
+func TestProgressHonest_accusesTheTODOPlaceholder(t *testing.T) {
+	t.Run("PRHNP-B07: A checkbox item promising no file at all is failed", func(t *testing.T) {})
+	plan := "<!-- @anchors\ncode: MTUAO\n-->\n# Plano 0017\n\n## Fases\n\n### MTUAO-F02 — o CI\n\nEsta fase decide quando a mutação roda.\n"
+	progress := "# Progresso — MTUAO\n\n## MTUAO-F02 — o CI\n\n- [ ] TODO: um item por spec que esta fase semeia\n"
+
+	root, planPath := writeProgress(t, plan, progress)
+	n := mapx.Node{ID: planPath, Kind: mapx.KindPlan, Code: "MTUAO"}
+
+	v, msg := checkProgressHonest(plan, n, root, nil, nil)
+
+	if v != Fail {
+		t.Fatalf("the placeholder passed: %v — %s", v, msg)
+	}
+	if !strings.Contains(strings.ToUpper(msg), "TODO") {
+		t.Errorf("the message does not name the TODO:\n%s", msg)
+	}
+}
+
+// An item that cites an existing path still passes: the fourth direction must not accuse
+// the normal case.
+func TestProgressHonest_doesNotAccuseAnItemWithAValidPath(t *testing.T) {
+	t.Run("PRHNP-B10: A progress that agrees with the disk on every item passes", func(t *testing.T) {})
+	plan := "<!-- @anchors\ncode: MTUAO\n-->\n# Plano\n\n- [ ] `packages/shared/X.spec.md` — a spec\n"
+	progress := "# Progresso\n\n- [x] `packages/shared/X.spec.md` — a spec\n"
+
+	root, planPath := writeProgress(t, plan, progress)
+	if err := os.MkdirAll(filepath.Join(root, "packages/shared"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "packages/shared/X.spec.md"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	n := mapx.Node{ID: planPath, Kind: mapx.KindPlan, Code: "MTUAO"}
+
+	if v, msg := checkProgressHonest(plan, n, root, nil, nil); v != Pass {
+		t.Errorf("the normal case was accused: %v — %s", v, msg)
+	}
+}
+
+// And PROSE is not an item: a progress file may have explanatory text with the word TODO,
+// and a line that is not `- [ ]` is not a promise of work.
+func TestProgressHonest_ignoresProseWithTODO(t *testing.T) {
+	t.Run("PRHNP-B09: An item in prose citing no path is not charged", func(t *testing.T) {})
+	plan := "<!-- @anchors\ncode: MTUAO\n-->\n# Plano\n"
+	progress := "# Progresso\n\nEsta fase ainda tem TODO a decidir, e isso está no plano.\n"
+
+	root, planPath := writeProgress(t, plan, progress)
+	n := mapx.Node{ID: planPath, Kind: mapx.KindPlan, Code: "MTUAO"}
+
+	if v, msg := checkProgressHonest(plan, n, root, nil, nil); v == Fail {
+		t.Errorf("prose with TODO was accused as an item: %s", msg)
+	}
+}

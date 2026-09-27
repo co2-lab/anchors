@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCRQD
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: gate
 -->
 # DocRequired — the aggregated document the unit must feed
@@ -49,6 +49,7 @@ the gate.
 | `DCRQD-B06` | Without a declaration in the Structure nothing is charged: the ruler is what the project committed to, not what one supposes it owes. |
 | `DCRQD-B07` | A layer with no trigger declared is not charged, even when the document exists. |
 | `DCRQD-B08` | Aggregated, the verdict is ONE PER DOCUMENT, not one per unit. |
+| `DCRQD-B09` | In a document that has sections, the unit counts as documented only when a section TITLE names it, by code or by file name: a mention in the body of another section, or in a note, does not count, nor does the title of another unit whose name contains this one's; a document with no section still counts by mention. |
 
 ## Invariants
 

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:fb8cad8bf627fb4c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2d9b3771cd2dcc14 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2766,6 +2766,10 @@ teste prova.
 
 - [Deciding one word is separate from deciding a whole identifier](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B05`
 
+- [The project's own production code declares no identifier in the wrong language](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B06`
+
+- [No gate decides by matching prose in the team's language](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-B07`
+
 - [A short word does not count](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-I01`
 
 - [The gate does not read comments](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages) `CDLNG-X01`
@@ -2933,6 +2937,8 @@ teste prova.
 - [A layer with no trigger is not charged](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B07`
 
 - [Aggregated, the verdict is one per document](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B08`
+
+- [In a document with sections only a title of its own documents the unit](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B09`
 
 - [The duty starts from the spec, not from the code](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-I01`
 
@@ -3300,6 +3306,8 @@ teste prova.
 
 - [A support file linked to a feature is not confronted as its test](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B22`
 
+- [A scenario suffix gives each case of a rule its own identity](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B23`
+
 - [Only a check with a registered fixer is fixable](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B01`
 
 - [A stale date on a committed file is rewritten to its last commit date](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B02`
@@ -3515,6 +3523,32 @@ teste prova.
 - [A failing tests source fails scenario-coverage naming the error](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-E02`
 
 - [A support file is neither run nor counted as naming a scenario](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B18`
+
+- [A feature scenario is recognised in any Gherkin language](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B19`
+
+- [Scenario coverage charges what the spec defines, not what it cites](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B20`
+
+- [Scenario coverage tells a missing test apart from a test never run](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B21`
+
+- [Scenario coverage honours a layer that dispenses tested-by](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B22`
+
+- [Mutation score passes at the threshold and fails below it naming the survivors](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B23`
+
+- [A missing or stale mutation signal is pending](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B24`
+
+- [A score between acceptable and desirable is pending, not failed](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B25`
+
+- [The mutation thresholds come from the report](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B26`
+
+- [The verdict follows the isolated scope and the report reads the delta](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B27`
+
+- [A scope measured at an older revision decides nothing](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B28`
+
+- [Without a repository updated-at skips instead of blaming the file](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B29`
+
+- [A section title in another language fails unless the gate waives it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B30`
+
+- [The skeletons anchors new emits are born conforming](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B31`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -3909,6 +3943,8 @@ teste prova.
 - [Outside a git repository the gate trusts the changed list](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B13`
 
 - [RevisionsOf parses declared revisions in order](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B14`
+
+- [A revision written as a section title is read with the others](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-B15`
 
 - [Untouched nodes in the impact radius are never charged](camadas/gate.md#pcjpl--planchangejustified--a-modified-plan-or-spec-must-declare-why-it-changed) `PCJPL-I01`
 
@@ -4671,6 +4707,8 @@ teste prova.
 - [Without a built map the confrontation is pending](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-E01`
 
 - [A feature missing from disk does not hide the scenarios of the other features](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-E02`
+
+- [Scenarios tagged with a suffix cover the requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B15`
 
 - [A node that is not a feature is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B01`
 

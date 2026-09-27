@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SFMSP
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @SFMSP
@@ -157,3 +157,10 @@ Feature: SpecFeatureMatch — every requirement the spec defines has at least on
     Given a spec linked to a feature that is gone from disk and to a feature that tags its requirement
     When the gate confronts it
     Then it returns Pass
+
+  @SFMSP-B15 @unit-level
+  Scenario: Scenarios tagged with a suffix cover the requirement
+    Given a spec defining one requirement
+    And a feature whose two scenarios tag that requirement with the suffixes 01 and 02
+    When the gate confronts the spec
+    Then it does not fail, because the suffix identifies each case, not a new requirement

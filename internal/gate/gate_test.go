@@ -3,6 +3,7 @@ package gate
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -938,5 +939,183 @@ func TestOMotorNaoInventaMapaEstruturaNemDispensa(t *testing.T) {
 		root, nil, nil, false, Waiver{})
 	if len(res) != 1 || res[0].Verdict != Fail {
 		t.Errorf("dispensa vazia não pode poupar ninguém; veio %+v", res)
+	}
+}
+
+// The central contract of `needs_tool`: a missing tool STEPS ASIDE, it does not fail.
+//
+// The regression this test bars is the one that motivated the field — without it `sh`
+// exits 127 and the gate becomes Fail, saying "the project violated something" when what
+// is missing is the binary. A Fail here would fail every freshly created project that has
+// not yet installed the tool.
+func TestNeedsTool_missingToolIsSkipNotFail(t *testing.T) {
+	t.Run("GTENG-B08: A gate whose required binary is absent steps aside", func(t *testing.T) {})
+	t.Run("GTENG-I02: Stepping aside, not measuring and failing are three different answers", func(t *testing.T) {})
+	g := config.Gate{
+		Name: "gate-fantasma", On: []string{"code"},
+		Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
+		// `false` would fail (exit 1) IF it got to run — that is what makes the test
+		// conclusive: only the Skip explains the green, not a command that happened to pass.
+		Run:       "false",
+		NeedsTool: "binario-que-nao-existe-em-lugar-nenhum-xyz",
+		Blocking:  config.Bool(true),
+	}
+	nodes := []mapx.Node{{ID: "a.ts", Kind: mapx.Kind("code")}}
+
+	res := RunFull([]config.Gate{g}, nodes, t.TempDir(), nil, &config.Config{}, false)
+	if len(res) != 1 {
+		t.Fatalf("expected 1 verdict, got %d", len(res))
+	}
+	if res[0].Verdict != Skip {
+		t.Fatalf("a missing tool should give Skip, got %q (detail: %s)", res[0].Verdict, res[0].Detail)
+	}
+	if !strings.Contains(res[0].Detail, "binario-que-nao-existe") {
+		t.Errorf("the report must NAME the missing tool; got: %q", res[0].Detail)
+	}
+}
+
+// The counterpart: with the tool present the gate really runs. Without this case, a
+// `needs_tool` that always skipped would pass the test above and switch the gate off in
+// silence — the costliest failure possible, because it removes the measurement while
+// looking healthy.
+func TestNeedsTool_presentToolKeepsRunning(t *testing.T) {
+	t.Run("GTENG-B08: A gate whose required binary is absent steps aside", func(t *testing.T) {})
+	t.Run("GTENG-I02: Stepping aside, not measuring and failing are three different answers", func(t *testing.T) {})
+	g := config.Gate{
+		Name: "gate-real", On: []string{"code"},
+		Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
+		Run: "false", // fails on purpose
+		// `sh` exists on any POSIX — the safest present tool to assume.
+		NeedsTool: "sh",
+		Blocking:  config.Bool(true),
+	}
+	nodes := []mapx.Node{{ID: "a.ts", Kind: mapx.Kind("code")}}
+
+	res := RunFull([]config.Gate{g}, nodes, t.TempDir(), nil, &config.Config{}, false)
+	if len(res) != 1 {
+		t.Fatalf("expected 1 verdict, got %d", len(res))
+	}
+	if res[0].Verdict != Fail {
+		t.Fatalf("a present tool should let the gate RUN (and fail), got %q", res[0].Verdict)
+	}
+}
+
+// recordArgCount builds a gate command that records HOW MANY targets it received on each
+// run, one line per invocation. It is how "ran once over the project" is told apart from
+// "ran N times with the project chopped up".
+func recordArgCount(out string) string {
+	return "printf '%s\\n' \"$#\" >> " + out
+}
+
+func readLines(t *testing.T, p string) []string {
+	t.Helper()
+	b, err := os.ReadFile(p)
+	if err != nil {
+		return nil
+	}
+	var out []string
+	for _, l := range strings.Split(strings.TrimSpace(string(b)), "\n") {
+		if l != "" {
+			out = append(out, l)
+		}
+	}
+	return out
+}
+
+func codeNodes(n int) []mapx.Node {
+	out := make([]mapx.Node, 0, n)
+	for i := 0; i < n; i++ {
+		out = append(out, mapx.Node{ID: "src/arquivo" + string(rune('a'+i%26)) + string(rune('a'+i/26)) + ".ts", Kind: mapx.KindCode})
+	}
+	return out
+}
+
+// TestScopeFull_runsOnceWithNoTargets is the point of scope_full: on `--all` the slice is
+// the whole project, and passing the list stops making sense — the tool that can sweep on
+// its own must be called ONCE, with no target. Before this, the same gate ran in batches:
+// N invocations where one was enough (and, on Windows, N command-line overflows).
+func TestScopeFull_runsOnceWithNoTargets(t *testing.T) {
+	t.Run("GTENG-B20: The entry point that knows the sweep kind honours the full-sweep scope", func(t *testing.T) {})
+	root := t.TempDir()
+	out := filepath.ToSlash(filepath.Join(root, "invocacoes.txt"))
+
+	g := config.Gate{
+		Name:      "lint",
+		On:        []string{string(mapx.KindCode)},
+		Scope:     config.ScopeBatch,
+		ScopeFull: config.ScopeProject,
+		Run:       recordArgCount(out),
+	}
+
+	RunFull([]config.Gate{g}, codeNodes(300), root, nil, &config.Config{}, true)
+
+	got := readLines(t, out)
+	if len(got) != 1 {
+		t.Fatalf("on a full sweep the gate should run ONCE; it ran %d times", len(got))
+	}
+	if got[0] != "0" {
+		t.Errorf("on a full sweep the gate receives no targets; it received %s", got[0])
+	}
+}
+
+// TestScopeFull_withoutItBatchesContinue — the opt-in must not change who did not ask for
+// it. A batch gate without `scope_full` keeps receiving the targets, because its script may
+// well exit 0 when it receives nothing: promoting it to project on its own would leave it
+// green without looking at any file.
+func TestScopeFull_withoutItBatchesContinue(t *testing.T) {
+	t.Run("GTENG-B20: The entry point that knows the sweep kind honours the full-sweep scope", func(t *testing.T) {})
+	root := t.TempDir()
+	out := filepath.ToSlash(filepath.Join(root, "invocacoes.txt"))
+
+	g := config.Gate{
+		Name:  "lint",
+		On:    []string{string(mapx.KindCode)},
+		Scope: config.ScopeBatch,
+		Run:   recordArgCount(out),
+	}
+
+	RunFull([]config.Gate{g}, codeNodes(300), root, nil, &config.Config{}, true)
+
+	got := readLines(t, out)
+	if len(got) == 0 {
+		t.Fatal("the batch gate has to run")
+	}
+	total := 0
+	for _, l := range got {
+		if l == "0" {
+			t.Fatal("a batch gate without scope_full must not be called with no targets")
+		}
+		n, err := strconv.Atoi(l)
+		if err != nil {
+			t.Fatalf("unexpected line in the invocation record: %q", l)
+		}
+		total += n
+	}
+	if total != 300 {
+		t.Errorf("the batches cover %d targets; they should cover all 300", total)
+	}
+}
+
+// TestScopeFull_doesNotApplyIncrementally pins the other half of the rule: outside `--all`
+// the slice is small and specific, and it is exactly what the gate needs to receive.
+// Applying scope_full here would make a one-file commit sweep the whole project.
+func TestScopeFull_doesNotApplyIncrementally(t *testing.T) {
+	t.Run("GTENG-B20: The entry point that knows the sweep kind honours the full-sweep scope", func(t *testing.T) {})
+	root := t.TempDir()
+	out := filepath.ToSlash(filepath.Join(root, "invocacoes.txt"))
+
+	g := config.Gate{
+		Name:      "lint",
+		On:        []string{string(mapx.KindCode)},
+		Scope:     config.ScopeBatch,
+		ScopeFull: config.ScopeProject,
+		Run:       recordArgCount(out),
+	}
+
+	RunFull([]config.Gate{g}, codeNodes(3), root, nil, &config.Config{}, false)
+
+	got := readLines(t, out)
+	if len(got) != 1 || got[0] != "3" {
+		t.Errorf("incrementally the gate receives the 3 targets of the slice; got %v", got)
 	}
 }

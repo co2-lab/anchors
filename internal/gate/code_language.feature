@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CDLNG
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @CDLNG
@@ -40,6 +40,19 @@ Feature: CodeLanguage — the code does not go back to mixing languages
     Then it breaks the identifier into its words and decides each one
     And that separation is what lets the length floor apply per word instead of to
       the identifier as a whole
+
+  @CDLNG-B06 @unit-level
+  Scenario: The project's own production code declares no identifier in the wrong language
+    Given every Go file of the project outside tests, vendored code and test data
+    When the ruler sweeps each one
+    Then no identifier is accused, and any accusation would name the identifier, its word and its file
+
+  @CDLNG-B07 @unit-level
+  Scenario: No gate decides by matching prose in the team's language
+    Given every production file of the gate package
+    When the lines that confront text are read
+    Then none of them matches a phrase in Portuguese, because translating the project would
+      silence that gate without any error
 
   @CDLNG-I01 @unit-level
   Scenario: A short word does not count

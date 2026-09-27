@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DCRQD
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @DCRQD
@@ -59,6 +59,15 @@ Feature: DocRequired — the aggregated document the unit must feed
     Given three units of a triggering layer and one mandatory document
     When the gate runs over the whole project
     Then it reports ONE verdict for that document, not one per unit
+
+  @DCRQD-B09 @unit-level
+  Scenario: In a document with sections only a title of its own documents the unit
+    Given a document whose section of one unit cites another unit in its body
+    And a note in it that names units still missing an entry
+    When each unit is looked for
+    Then only the unit whose section title names it, by code or by file name, counts as documented
+    And the title of another unit whose name contains this one's does not count
+    And in a document with no sections, such as an OpenAPI file, a mention still counts
 
   @DCRQD-I01 @unit-level
   Scenario: The duty starts from the spec, not from the code

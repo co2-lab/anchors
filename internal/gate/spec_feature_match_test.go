@@ -458,3 +458,42 @@ func TestSpecFeatureMatchAliasFollowsTheCodeLength(t *testing.T) {
 		t.Fatalf("an alias of a 7-character code must be recognised, got %s (%s)", v, d)
 	}
 }
+
+// A requirement catalogued without a suffix is covered by scenarios WITH a suffix: `#01`/`#02`
+// give each case an identity, they do not create a new requirement. Without this, numbering
+// scenarios would suddenly make spec-feature-match accuse every requirement with more than
+// one case — measured in the reference app: 78 specs failed as soon as 269 scenarios got a
+// suffix.
+func TestSpecFeatureMatch_acceptsASuffixOnTheScenario(t *testing.T) {
+	t.Run("SFMSP-B15: Scenarios tagged with a suffix cover the requirement", func(t *testing.T) {})
+	root := t.TempDir()
+	spec := "business-logic/dedup.spec.md"
+	feat := "business-logic/dedup.feature"
+	writeFile(t, root, spec, "# Dedup\n\n## Rules\n\n| Regra | Descrição |\n| --- | --- |\n| `DDTDX-B01` | duplicata automática |\n")
+	writeFile(t, root, feat, `# language: pt
+Funcionalidade: Dedup
+
+  @comportamento @DDTDX-B01#01 @nivel-unit @P1
+  Cenário: Duplicata automática quando descrição e valor idênticos
+    Dado x
+    Então y
+
+  @comportamento @DDTDX-B01#02 @nivel-unit @P1
+  Cenário: Duplicata automática quando só a data difere
+    Dado x
+    Então y
+`)
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{{ID: spec, Kind: mapx.KindSpec}, {ID: feat, Kind: mapx.KindFeature}},
+		Edges: []mapx.Edge{{From: spec, To: feat, Type: "covered-by"}},
+	}
+	n := mapx.Node{ID: spec, Kind: mapx.KindSpec}
+	content, err := os.ReadFile(filepath.Join(root, spec))
+	if err != nil {
+		t.Fatal(err)
+	}
+	v, detail := checkSpecFeatureMatch(string(content), n, root, g, regimeCfg())
+	if v == Fail {
+		t.Errorf("a scenario suffix should not fail the root requirement: %s", detail)
+	}
+}

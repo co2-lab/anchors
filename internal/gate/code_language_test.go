@@ -1,6 +1,12 @@
 package gate
 
-import "testing"
+import (
+	"os"
+	"path/filepath"
+	"regexp"
+	"strings"
+	"testing"
+)
 
 // A DETECÇÃO acerta os dois lados — e o segundo é o que decide se o gate sobrevive.
 //
@@ -131,6 +137,96 @@ func TestIdioma_naoUsaDicionario(t *testing.T) {
 	for _, id := range compostos {
 		if palavra, ehPT := IdentifierIsPortuguese(id); ehPT {
 			t.Errorf("%q é inglês composto e foi acusado por %q — é o falso positivo do dicionário", id, palavra)
+		}
+	}
+}
+
+// NO identifier of the project is in Portuguese — and this test is what keeps the
+// migration work from coming undone.
+//
+// It sweeps the PRODUCTION code (the `_test.go` files stay out: a test may name a case in
+// Portuguese to describe what it tests) and fails naming each accusation with the word
+// that caused it.
+//
+// The ruler is in `code_language.go`: identifiers in English, comments in the team's
+// language, messages through i18n.
+func TestCodeLanguage_noProjectIdentifierInPortuguese(t *testing.T) {
+	t.Run("CDLNG-B06: The project's own production code declares no identifier in the wrong language", func(t *testing.T) {})
+	root := "../.."
+	findings := map[string]string{}
+
+	err := filepath.Walk(root, func(p string, fi os.FileInfo, err error) error {
+		if err != nil || fi.IsDir() || !strings.HasSuffix(p, ".go") {
+			return nil
+		}
+		if strings.Contains(p, "vendor") || strings.Contains(p, "testdata") ||
+			strings.HasSuffix(p, "_test.go") {
+			return nil
+		}
+		b, rerr := os.ReadFile(p)
+		if rerr != nil {
+			return nil
+		}
+		for id, word := range PortugueseIdentifiers(string(b)) {
+			findings[id] = word + "  " + p
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(findings) == 0 {
+		return
+	}
+	t.Errorf("%d identifier(s) in Portuguese — the code is in English, "+
+		"and it is the comments that stay in the team's language:", len(findings))
+	for id, where := range findings {
+		t.Errorf("    %-40s (%s)", id, where)
+	}
+}
+
+// NO GATE MAY DEPEND ON THE WORDING OF A TEXT IN PORTUGUESE.
+//
+// The project is going to be translated, and translation is mechanical substitution —
+// what survives it is the STABLE VOCABULARY (`@no-test`, `TODO`, `FNDTN-F01`,
+// `[decisao-em-aberto]`); what does not survive is prose.
+//
+// The cost of getting this wrong is silent: the gate does not fail, it stops firing. It
+// has bitten three times — `plano-revisado` matched "revisado por", `open-questions` read
+// its own report ("que a spec ainda NÃO tomou") to decide whether to BAR, and
+// `fase-ordenada` looked for the word "fase" (in an English plan it would never fire).
+func TestCodeLanguage_noGateMatchesPortugueseProse(t *testing.T) {
+	t.Run("CDLNG-B07: No gate decides by matching prose in the team's language", func(t *testing.T) {})
+	// An accented word, or a run of common words: it is prose, not vocabulary.
+	prose := regexp.MustCompile(`"[^"]*(?:[àáâãéêíóôõúç]|\b(?:que|não|para|com|uma|dos|das|pela|ainda|aqui|descrever)\b)[^"]*"`)
+
+	files, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, f := range files {
+		if strings.HasSuffix(f, "_test.go") {
+			continue
+		}
+		b, err := os.ReadFile(f)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for i, line := range strings.Split(string(b), "\n") {
+			// Only the lines that CONFRONT text. A report message may (and should) be
+			// prose — the problem is reading it back to decide.
+			if !strings.Contains(line, "strings.Contains(") &&
+				!strings.Contains(line, "strings.HasPrefix(") &&
+				!strings.Contains(line, "strings.HasSuffix(") {
+				continue
+			}
+			if m := prose.FindString(line); m != "" {
+				t.Errorf("%s:%d confronts PROSE (%s) — translate the project and the gate stops "+
+					"firing, with no error at all. Use stable vocabulary: a marker "+
+					"(`@something`, `[something]`), a code, or the STRUCTURE of the document.",
+					f, i+1, m)
+			}
 		}
 	}
 }

@@ -2,11 +2,13 @@ package gate
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
@@ -852,5 +854,780 @@ func TestScenarioCoverage_FileTheSourceDoesNotDescribe(t *testing.T) {
 	ts := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
 	if _, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, ts); !strings.Contains(msg, "ingest") {
 		t.Fatalf("in a file the source lists no test in, the code in it counts as written, got %s", msg)
+	}
+}
+
+// The `guide-checklist` recognises the compliance section in ANY language of the catalogue.
+//
+// The coupling this test locks: `anchors init` seeds HEADER_GUIDE.md with the title
+// translated by the project's `lang:`, and the old regex matched only the Portuguese
+// form. A `lang: en` project would be born failing the gate over a guide that init itself
+// had just written — the framework charging what it does not produce.
+//
+// Without this test the regression is silent on both sides: whoever translates the guide
+// without touching the gate breaks init; whoever narrows the gate back breaks the
+// translated projects. Neither shows up in the build.
+func TestChecklistHeading_recognisesEveryLanguage(t *testing.T) {
+	t.Run("INCHN-I03: The compliance ruler is recognised in every language of the catalogue", func(t *testing.T) {})
+	for _, title := range []string{
+		"Pontos de conformidade", // pt-BR
+		"Compliance points",      // en
+		"Puntos de conformidad",  // es
+	} {
+		if !checklistHeadingRE.MatchString("## " + title + "\n\n- CK1 item\n") {
+			t.Errorf("the gate did not recognise the section %q — a project in that language fails over a guide init wrote", title)
+		}
+	}
+	// And it still refuses what is NOT the section: accepting every language must not
+	// become accepting any title.
+	if checklistHeadingRE.MatchString("## Outra coisa\n\n- CK1 item\n") {
+		t.Error("the gate accepted a title that is not the compliance section")
+	}
+}
+
+// The letter vocabulary belongs to the PROJECT (`rule_types`). A code regex pinned to the
+// canonical letters makes EVERY scenario of a declared letter INVISIBLE — and the gate
+// reports green over what it did not check, the most dangerous failure mode. It really
+// happened with the letter `I` (Invariant): the scenario existed, the gate did not see
+// it, and nobody noticed.
+func TestRuleLetters_aLetterTheProjectDeclaresIsSeen(t *testing.T) {
+	t.Run("INCHN-B08: Setting the rule letters reconfigures every dependent pattern together", func(t *testing.T) {})
+	defer SetRuleLetters(config.DefaultRuleLetters) // do not leak into other tests
+
+	feature := "@ABCDX-P01 @nivel-unit\n  Cenário: a política vale sempre\n"
+
+	// before declaring: the letter is not in the vocabulary, so it is not seen — correct.
+	SetRuleLetters(config.DefaultRuleLetters)
+	if got := parseFeatureScenarios(feature); len(got) != 0 {
+		t.Fatalf("an UNdeclared letter should not be recognised, got %+v", got)
+	}
+
+	// after declaring: it is seen.
+	cfg := &config.Config{RuleTypes: []config.RuleType{
+		{Letter: "B", Term: "Behavior"}, {Letter: "P", Term: "Policy"},
+	}}
+	SetRuleLetters(cfg.RuleLetters())
+	got := parseFeatureScenarios(feature)
+	if len(got) != 1 || got[0].Code != "ABCDX-P01" {
+		t.Fatalf("the scenario of the declared letter is still invisible: %+v", got)
+	}
+}
+
+// `non-empty` counts SCENARIOS for a feature, and a scenario opens in any language of the
+// official Gherkin table — including the synonyms (`Example:` for `Scenario:`).
+//
+// The first version reused a regex with five keywords nailed in Portuguese and English,
+// and it failed valid features on a BLOCKING gate: a Spanish `Escenario:` and an English
+// `Rule:` + `Example:` both came out as "feature with no scenario".
+func TestNonEmpty_featureScenarioInAnyGherkinLanguage(t *testing.T) {
+	t.Run("INCHN-B19: A feature scenario is recognised in any Gherkin language", func(t *testing.T) {})
+	n := mapx.Node{Kind: mapx.KindFeature}
+	pass := map[string]string{
+		"pt":            "Funcionalidade: X\n\n  Cenário: a\n",
+		"pt outline":    "Funcionalidade: X\n\n  Esquema do Cenário: a\n",
+		"en outline":    "Feature: X\n\n  Scenario Outline: a\n",
+		"en example":    "Feature: X\n  Rule: r\n    Example: a\n",
+		"es":            "Característica: X\n\n  Escenario: a\n",
+		"fr":            "Fonctionnalité: X\n\n  Scénario: a\n",
+		"pt unaccented": "Funcionalidade: X\n\n  Cenario: a\n",
+	}
+	for name, content := range pass {
+		if v, msg := checkNonEmpty(content, n); v != Pass {
+			t.Errorf("%s: a valid scenario was not recognised (%v: %s)", name, v, msg)
+		}
+	}
+
+	fail := map[string]string{
+		// `Examples:` is the data table of an outline, not a scenario: the `:` right after
+		// the keyword keeps `Example` from matching it.
+		"examples table only": "Feature: X\n\n  Examples:\n    | a |\n",
+		"header only":         "Funcionalidade: X\n# nothing else\n",
+	}
+	for name, content := range fail {
+		if v, _ := checkNonEmpty(content, n); v != Fail {
+			t.Errorf("%s: a feature with no scenario passed", name)
+		}
+	}
+}
+
+// The gate charges the requirements the spec DEFINES, not the ones it CITES.
+//
+// Measured in the reference app: `GoLiveChecklist` defines 6 requirements and the gate
+// charged 18 scenarios — 15 of them from other units (`CRPNC-B03`, `MTTLM-B02`,
+// `DTSTD-B06`…), cited in the prose while justifying its rules.
+//
+// None of those scenarios could be proven by a test of this unit: the gate asked for the
+// impossible, and the message said the spec was poorly covered. And the side effect is
+// worse than the noise — a gate that always fails is a gate one learns to ignore.
+func TestScenarioCoverage_doesNotChargeWhatTheSpecOnlyCites(t *testing.T) {
+	t.Run("INCHN-B20: Scenario coverage charges what the spec defines, not what it cites", func(t *testing.T) {})
+	content := `# GoLiveChecklist
+
+## Regras
+
+### GLCGL-B01 — cada item tem um artefato
+
+É o que o ` + "`PLTFR`" + ` estabelece, e a ` + "`DTSTD-B06`" + ` confirma para
+infraestrutura. A ` + "`CRPNC-B03`" + ` usa o mesmo raciocínio na rotação.
+
+### GLCGL-B02 — as dívidas têm estado atual
+
+O ` + "`MTTLM-B02`" + ` nasce desligado, e a ` + "`CRPNC-B06`" + ` o liga.
+`
+	n := mapx.Node{
+		ID:   "packages/infra/GoLiveChecklist.spec.md",
+		Code: "GLCGL",
+		Signal: &mapx.TestSignal{
+			ProvenCodes: []string{"GLCGL-B01", "GLCGL-B02"},
+			AtRev:       "abc",
+		},
+		Rev: "abc",
+	}
+
+	v, msg := checkScenarioCoverage(content, n, "", nil, nil)
+
+	if v != Pass {
+		t.Errorf("verdict = %v — %s\n  both DEFINED requirements are proven; the "+
+			"rest is citation", v, msg)
+	}
+	for _, cited := range []string{"DTSTD-B06", "CRPNC-B03", "MTTLM-B02", "CRPNC-B06"} {
+		if strings.Contains(msg, cited) {
+			t.Errorf("the gate charged %q, which this spec only CITES", cited)
+		}
+	}
+}
+
+// And the DEFINED requirement with no proven scenario is still charged — the fix must
+// not have switched the gate off.
+func TestScenarioCoverage_stillChargesTheDefinedRequirement(t *testing.T) {
+	t.Run("INCHN-B20: Scenario coverage charges what the spec defines, not what it cites", func(t *testing.T) {})
+	content := "### ABCDX-B01 — a regra\n\nCorpo.\n\n### ABCDX-B02 — outra\n\nCorpo.\n"
+	n := mapx.Node{
+		Code:   "ABCDX",
+		Rev:    "r1",
+		Signal: &mapx.TestSignal{ProvenCodes: []string{"ABCDX-B01"}, AtRev: "r1"},
+	}
+
+	v, msg := checkScenarioCoverage(content, n, "", nil, nil)
+
+	if v != Fail {
+		t.Fatalf("verdict = %v — `ABCDX-B02` has no proven scenario", v)
+	}
+	if !strings.Contains(msg, "ABCDX-B02") {
+		t.Errorf("the message does not name the uncovered requirement: %s", msg)
+	}
+}
+
+// THE TWO QUESTIONS of `scenario-coverage` — the same ruler as `flag-covered`.
+//
+// The earlier version asked only "did it pass?", and on a project that never ingested a
+// report it answered Pending for everything: "nobody measured", hiding the scenarios
+// nobody tested. And the static question alone would be the opposite error — a written
+// test may never have run.
+//
+// Each state has a different fix, which is why the verdict must keep them apart: "no
+// test" asks someone to write one; "written and not run" asks someone to run it.
+
+const specWithTwoRequirements = "### CREDX-B01 — validates the limit\n\n### CREDX-B02 — refuses the balance\n"
+
+func specNodeCoverage() mapx.Node {
+	return mapx.Node{ID: "credx.spec.md", Kind: mapx.KindSpec, Code: "CREDX"}
+}
+
+func rootWithTest(t *testing.T, body string) (string, *mapx.Graph) {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "credx_test.go"), []byte(body), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return root, &mapx.Graph{Nodes: []mapx.Node{{ID: "credx_test.go", Kind: mapx.KindTest}}}
+}
+
+// NO TEST AT ALL: it is reported even without ingested execution. It is the case the
+// earlier version hid behind a Pending.
+func TestScenarioCoverage_noTestIsReportedEvenWithoutIngestion(t *testing.T) {
+	t.Run("INCHN-B21: Scenario coverage tells a missing test apart from a test never run", func(t *testing.T) {})
+	root, g := rootWithTest(t, "func TestNothing(t *testing.T) {}\n")
+
+	v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, nil)
+	if v != Fail {
+		t.Fatalf("no test names the requirements — expected Fail, got %v", v)
+	}
+	for _, c := range []string{"CREDX-B01", "CREDX-B02"} {
+		if !strings.Contains(msg, c) {
+			t.Errorf("the verdict does not name %s: %q", c, msg)
+		}
+	}
+}
+
+// WRITTEN AND NEVER RUN: the verdict has to say which of the two problems it is.
+func TestScenarioCoverage_writtenButNotRunSaysWhichOfTheTwo(t *testing.T) {
+	t.Run("INCHN-B21: Scenario coverage tells a missing test apart from a test never run", func(t *testing.T) {})
+	root, g := rootWithTest(t, "const c = \"CREDX-B01\"\nfunc TestX(t *testing.T) {}\n")
+
+	v, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, nil)
+	if v != Fail {
+		t.Fatalf("expected Fail, got %v", v)
+	}
+	if !strings.Contains(msg, "ingest") {
+		t.Errorf("the verdict does not tell written-but-not-run apart: %q", msg)
+	}
+	// B02 still has no test at all, and both states appear in the same verdict.
+	if !strings.Contains(msg, "CREDX-B02") {
+		t.Errorf("the verdict lost the requirement with no test: %q", msg)
+	}
+}
+
+// A CODE IN A COMMENT does not count — a citation is a reference, not an implementation.
+func TestScenarioCoverage_commentDoesNotCountAsATest(t *testing.T) {
+	t.Run("INCHN-B17: With a tests source a scenario is written only when a title cites it", func(t *testing.T) {})
+	root, g := rootWithTest(t, "// CREDX-B01 is covered elsewhere\nfunc TestX(t *testing.T) {}\n")
+
+	_, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, nil)
+	if strings.Contains(msg, "ingest") {
+		t.Errorf("a code only in a COMMENT passed as a written test: %q", msg)
+	}
+}
+
+// And what EXECUTION proved leaves the accusation, which is the original behaviour.
+func TestScenarioCoverage_provenPasses(t *testing.T) {
+	t.Run("INCHN-B21: Scenario coverage tells a missing test apart from a test never run", func(t *testing.T) {})
+	root, _ := rootWithTest(t, "func TestNothing(t *testing.T) {}\n")
+	n := specNodeCoverage()
+	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CREDX-B01", "CREDX-B02"}}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "credx_test.go", Kind: mapx.KindTest}}}
+
+	if v, msg := checkScenarioCoverage(specWithTwoRequirements, n, root, g, nil); v != Pass {
+		t.Errorf("both requirements proven and the verdict was %v: %s", v, msg)
+	}
+}
+
+// A LAYER THAT DISPENSES `tested-by` has no tests by declaration, and `scenario-coverage`
+// honours it as `triad-complete` does. In the reference app every schema-model spec failed "scenario with
+// no green test" although the Structure says those tests do not exist. A layer without the
+// opt-out is still charged.
+func TestScenarioCoverage_honoursTheLayersTestedByOptOut(t *testing.T) {
+	t.Run("INCHN-B22: Scenario coverage honours a layer that dispenses tested-by", func(t *testing.T) {})
+	root, g := rootWithTest(t, "package credx\n")
+	cfg := &config.Config{Layers: map[string]config.Layer{
+		"schema-model": {Kind: "spec", OptionalTriadEdges: []string{"covered-by", "tested-by"}},
+		"service":      {Kind: "spec"},
+	}}
+	optedOut := specNodeCoverage()
+	optedOut.Tags = []string{"schema-model"}
+	if v, msg := checkScenarioCoverage(specWithTwoRequirements, optedOut, root, g, cfg); v != Skip || !strings.Contains(msg, "tested-by") {
+		t.Errorf("a layer dispensing tested-by must skip and say why, got %v: %s", v, msg)
+	}
+	charged := specNodeCoverage()
+	charged.Tags = []string{"service"}
+	if v, _ := checkScenarioCoverage(specWithTwoRequirements, charged, root, g, cfg); v != Fail {
+		t.Errorf("a layer without the opt-out is still charged, got %v", v)
+	}
+}
+
+// The mutation gate is only worth something if it tells three situations apart; a gate
+// that always passes (or always fails) says nothing. Each case below pins one of them.
+func TestMutationScore(t *testing.T) {
+	t.Run("INCHN-B23: Mutation score passes at the threshold and fails below it naming the survivors", func(t *testing.T) {})
+	t.Run("INCHN-B24: A missing or stale mutation signal is pending", func(t *testing.T) {})
+	i18n.Set("pt-BR")
+	t.Cleanup(func() { i18n.Set(i18n.Default) })
+	cases := []struct {
+		name     string
+		sig      *mapx.TestSignal
+		expected Verdict
+		contains string
+	}{
+		{"no signal ingested → Pending, saying what is missing and what is lost",
+			nil, Pending, "ingest --mutation"},
+		{"score above the threshold → passes",
+			&mapx.TestSignal{MutantsKilled: 90, MutantsSurvived: 5, MutationScore: 94.7}, Pass, ""},
+		{"too many survivors → fails naming how many",
+			&mapx.TestSignal{MutantsKilled: 5, MutantsSurvived: 15, MutationScore: 25}, Fail, "15 mutante(s) sobreviveram"},
+		{"exact threshold → passes (the limit does not fail)",
+			&mapx.TestSignal{MutantsKilled: 7, MutantsSurvived: 3, MutationScore: 70}, Pass, ""},
+		// The tool RAN and ignored everything — a table of constants with `ignoreStatic`.
+		// Nothing survived, so it is 100 and the verdict is Pass. Before this the gate said
+		// "run the mutation tool" about a file it had already run on: a request running it
+		// again would not satisfy, and the kind of noise that teaches people to ignore the gate.
+		{"everything ignored → passes, without asking for a new run",
+			&mapx.TestSignal{MutantsIgnored: 12, MutationScore: 100}, Pass, ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			n := mapx.Node{Kind: mapx.KindCode, Rev: "r1", Signal: c.sig}
+			if c.sig != nil {
+				c.sig.AtRev = "r1" // fresh signal; the stale one has its own case
+			}
+			v, d := checkMutationScore("", n)
+			if v != c.expected {
+				t.Fatalf("verdict = %s, want %s (detail: %s)", v, c.expected, d)
+			}
+			if c.contains != "" && !strings.Contains(d, c.contains) {
+				t.Fatalf("detail %q does not mention %q", d, c.contains)
+			}
+		})
+	}
+}
+
+// A mutation signal measured at an EARLIER version of the file proves nothing about the
+// current one — the same rule as the other ingested signals, and the most misleading: the
+// number looks good.
+func TestMutationScoreStale(t *testing.T) {
+	t.Run("INCHN-B24: A missing or stale mutation signal is pending", func(t *testing.T) {})
+	n := mapx.Node{Kind: mapx.KindCode, Rev: "r2",
+		Signal: &mapx.TestSignal{MutantsKilled: 100, MutationScore: 100, AtRev: "r1"}}
+	v, d := checkMutationScore("", n)
+	if v != Pending {
+		t.Fatalf("a perfect score from an old revision should be Pending, was %s", v)
+	}
+	if !strings.Contains(d, "stale") {
+		t.Fatalf("the detail does not explain the staleness: %q", d)
+	}
+}
+
+func nodeWithScore(score, low, high float64, survived int) mapx.Node {
+	return mapx.Node{
+		ID:   "src/regra.ts",
+		Kind: mapx.KindCode,
+		Signal: &mapx.TestSignal{
+			MutantsKilled:   100,
+			MutantsSurvived: survived,
+			MutationScore:   score,
+			MutationLow:     low,
+			MutationHigh:    high,
+		},
+	}
+}
+
+// TestMutationRange_belowAcceptableFails — the bottom range is the only one that bars.
+func TestMutationRange_belowAcceptableFails(t *testing.T) {
+	t.Run("INCHN-B23: Mutation score passes at the threshold and fails below it naming the survivors", func(t *testing.T) {})
+	t.Run("INCHN-B25: A score between acceptable and desirable is pending, not failed", func(t *testing.T) {})
+	v, detail := checkMutationScore("", nodeWithScore(56, 70, 90, 142))
+	if v != Fail {
+		t.Fatalf("56%% with a minimum of 70%% must fail; got %v", v)
+	}
+	if !strings.Contains(detail, "70") {
+		t.Errorf("the report must say against which ruler it failed: %q", detail)
+	}
+}
+
+// TestMutationRange_betweenAcceptableAndDesirableDoesNotBar is the new concept: it passed,
+// and it still shows. If this became Fail it would be a threshold of 90 in disguise — and
+// the distinction between "must not" and "could be better" would be lost.
+func TestMutationRange_betweenAcceptableAndDesirableDoesNotBar(t *testing.T) {
+	t.Run("INCHN-B25: A score between acceptable and desirable is pending, not failed", func(t *testing.T) {})
+	i18n.Set("pt-BR")
+	t.Cleanup(func() { i18n.Set(i18n.Default) })
+	v, detail := checkMutationScore("", nodeWithScore(75, 70, 90, 30))
+	if v == Fail {
+		t.Fatalf("75%% is above the acceptable (70%%) — it must not fail")
+	}
+	if v != Pending {
+		t.Fatalf("the middle range has to SHOW (Pending), not vanish; got %v", v)
+	}
+	if !strings.Contains(detail, "aceitável") || !strings.Contains(detail, "desejável") {
+		t.Errorf("the report must name both ranges: %q", detail)
+	}
+	if !strings.Contains(detail, "15") {
+		t.Errorf("saying HOW MUCH is left is what makes the warning actionable: %q", detail)
+	}
+}
+
+// TestMutationRange_aboveDesirablePassesClean — no noise for whoever already got there.
+func TestMutationRange_aboveDesirablePassesClean(t *testing.T) {
+	t.Run("INCHN-B25: A score between acceptable and desirable is pending, not failed", func(t *testing.T) {})
+	v, detail := checkMutationScore("", nodeWithScore(92, 70, 90, 5))
+	if v != Pass || detail != "" {
+		t.Errorf("92%% with a desirable of 90%% passes clean; got %v %q", v, detail)
+	}
+}
+
+// TestMutationRange_withoutDesirableFallsBackToOneThreshold — no project is forced to
+// adopt the concept. With no `high` in the report, the gate behaves as before.
+func TestMutationRange_withoutDesirableFallsBackToOneThreshold(t *testing.T) {
+	t.Run("INCHN-B25: A score between acceptable and desirable is pending, not failed", func(t *testing.T) {})
+	if v, _ := checkMutationScore("", nodeWithScore(75, 70, 0, 30)); v != Pass {
+		t.Errorf("with no desirable declared, 75%% above the minimum passes clean; got %v", v)
+	}
+}
+
+// TestMutationRange_rulerComesFromTheReportNotTheEngine — the project that declares 60 as
+// acceptable has 65 approved, even though the engine default is 70. It is what keeps the
+// framework from deciding what is good enough quality for everyone.
+func TestMutationRange_rulerComesFromTheReportNotTheEngine(t *testing.T) {
+	t.Run("INCHN-B26: The mutation thresholds come from the report", func(t *testing.T) {})
+	if v, _ := checkMutationScore("", nodeWithScore(65, 60, 0, 40)); v != Pass {
+		t.Errorf("with a minimum of 60 declared, 65 passes; got %v", v)
+	}
+	if v, _ := checkMutationScore("", nodeWithScore(65, 0, 0, 40)); v != Fail {
+		t.Errorf("with no ruler in the report, the default 70 holds and 65 fails; got %v", v)
+	}
+}
+
+// TestMutationRange_invalidDesirableIsIgnored — `high` below `low` is a project
+// misconfiguration; the gate must not turn it into an impossible range that always fails.
+func TestMutationRange_invalidDesirableIsIgnored(t *testing.T) {
+	t.Run("INCHN-B25: A score between acceptable and desirable is pending, not failed", func(t *testing.T) {})
+	if v, _ := checkMutationScore("", nodeWithScore(75, 70, 50, 30)); v != Pass {
+		t.Errorf("a desirable below the acceptable is incoherent and must be ignored; got %v", v)
+	}
+}
+
+// ── an old scope does not decide the verdict ───────────────────────────────────
+
+func nodeWithRevScopes(rev string, iso, full mapx.MutationScope, total float64) mapx.Node {
+	return mapx.Node{
+		ID: "src/regra.ts", Kind: mapx.KindCode, Rev: rev,
+		Signal: &mapx.TestSignal{
+			MutantsKilled: 100, MutantsSurvived: 50,
+			MutationScore: total, MutationLow: 70,
+			AtRev:           rev,
+			MutationByScope: map[string]mapx.MutationScope{"isolated": iso, "full": full},
+		},
+	}
+}
+
+// TestMutationScope_oldScopeDoesNotDecideTheVerdict — the gate judges by the ISOLATED
+// scope. With one stamp for the whole signal, re-ingesting only `full` renewed the stamp
+// and the old isolated score rode along as if current: the verdict came from a number
+// measured against code that had already changed.
+func TestMutationScope_oldScopeDoesNotDecideTheVerdict(t *testing.T) {
+	t.Run("INCHN-B28: A scope measured at an older revision decides nothing", func(t *testing.T) {})
+	n := nodeWithRevScopes("rev2",
+		mapx.MutationScope{Score: 30, Survived: 200, AtRev: "rev1"}, // measured before
+		mapx.MutationScope{Score: 95, Survived: 3, AtRev: "rev2"},   // current
+		95)
+	v, detail := checkMutationScore("", n)
+	if v == Fail {
+		t.Fatalf("the isolated score of rev1 must not fail rev2; report: %q", detail)
+	}
+	if strings.Contains(detail, "30") {
+		t.Errorf("the old number must not appear in the report: %q", detail)
+	}
+}
+
+// TestMutationScope_currentScopeStillDecides — the guard must not switch the pair off when
+// both are at the same rev; otherwise the coupling finding (low isolated, high full) vanishes.
+func TestMutationScope_currentScopeStillDecides(t *testing.T) {
+	t.Run("INCHN-B28: A scope measured at an older revision decides nothing", func(t *testing.T) {})
+	n := nodeWithRevScopes("rev2",
+		mapx.MutationScope{Score: 30, Survived: 200, AtRev: "rev2"},
+		mapx.MutationScope{Score: 95, Survived: 3, AtRev: "rev2"},
+		95)
+	if v, _ := checkMutationScore("", n); v != Fail {
+		t.Errorf("an isolated 30%% at the current rev must fail; got %v", v)
+	}
+}
+
+// TestMutationScope_oldSignalWithoutScopeStampStillCounts — a signal recorded before the
+// field existed has no per-scope AtRev. Treating it as old would make the gate ask to
+// re-measure everything already in the map, with no basis to claim it is out of date.
+func TestMutationScope_oldSignalWithoutScopeStampStillCounts(t *testing.T) {
+	t.Run("INCHN-B28: A scope measured at an older revision decides nothing", func(t *testing.T) {})
+	n := nodeWithRevScopes("rev2",
+		mapx.MutationScope{Score: 30, Survived: 200},
+		mapx.MutationScope{Score: 95, Survived: 3},
+		95)
+	if v, _ := checkMutationScore("", n); v != Fail {
+		t.Errorf("with no scope stamp, the pair still holds; got %v", v)
+	}
+}
+
+// TestMutationScope_reportDoesNotContradictItself — the sentence about the delta was
+// concatenated unconditionally, so a LOW delta produced "the two scopes agree … A high
+// delta means …" in the same report. A report that contradicts itself is not read: whoever
+// reads it stops trusting it.
+func TestMutationScope_reportDoesNotContradictItself(t *testing.T) {
+	t.Run("INCHN-B27: The verdict follows the isolated scope and the report reads the delta", func(t *testing.T) {})
+	n := nodeWithRevScopes("r",
+		mapx.MutationScope{Score: 58, Survived: 175, AtRev: "r"},
+		mapx.MutationScope{Score: 61, Survived: 170, AtRev: "r"},
+		61)
+	_, detail := checkMutationScore("", n)
+	if strings.Contains(detail, "concordam") && strings.Contains(detail, "Delta alto") {
+		t.Errorf("contradictory report: %q", detail)
+	}
+}
+
+func nodeWithScopes(iso, full mapx.MutationScope) mapx.Node {
+	return mapx.Node{
+		Kind: mapx.KindCode, ID: "x.ts", Rev: "r1",
+		Signal: &mapx.TestSignal{
+			MutantsKilled: full.Killed, MutantsSurvived: full.Survived,
+			MutationScore: full.Score, AtRev: "r1",
+			MutationByScope: map[string]mapx.MutationScope{"isolated": iso, "full": full},
+		},
+	}
+}
+
+// The real case that motivated the change: a UI atom at 8% isolated and 77% full. Looking
+// only at the full score it seemed healthy — and 92% of the mutants survive its own tests.
+func TestMutationScope_scopesRevealCoupling(t *testing.T) {
+	t.Run("INCHN-B27: The verdict follows the isolated scope and the report reads the delta", func(t *testing.T) {})
+	i18n.Set("pt-BR")
+	t.Cleanup(func() { i18n.Set(i18n.Default) })
+	n := nodeWithScopes(
+		mapx.MutationScope{Killed: 7, Survived: 81, Score: 8},
+		mapx.MutationScope{Killed: 68, Survived: 20, Score: 77})
+
+	v, msg := checkMutationScore("", n)
+	if v != Fail {
+		t.Fatalf("verdict %v, want Fail — the isolated score is 8%%", v)
+	}
+	for _, want := range []string{"isolado 8%", "completo 77%", "delta 69p", "dependentes"} {
+		if !strings.Contains(msg, want) {
+			t.Errorf("message without %q:\n%s", want, msg)
+		}
+	}
+}
+
+// The verdict is about the ISOLATED score: a high full score does not save a unit that
+// does not prove itself alone. It is the difference between "someone proves it" and "this
+// unit's test proves it".
+func TestMutationScope_verdictFollowsIsolatedNotFull(t *testing.T) {
+	t.Run("INCHN-B27: The verdict follows the isolated scope and the report reads the delta", func(t *testing.T) {})
+	// full at 100%, isolated at 30% → still fails
+	n := nodeWithScopes(
+		mapx.MutationScope{Killed: 3, Survived: 7, Score: 30},
+		mapx.MutationScope{Killed: 10, Survived: 0, Score: 100})
+	if v, _ := checkMutationScore("", n); v != Fail {
+		t.Errorf("verdict %v, want Fail — a high full score does not make up for a low isolated one", v)
+	}
+}
+
+// A unit that proves itself alone passes, even if the full score is higher.
+func TestMutationScope_isolatedAboveThresholdPasses(t *testing.T) {
+	t.Run("INCHN-B27: The verdict follows the isolated scope and the report reads the delta", func(t *testing.T) {})
+	n := nodeWithScopes(
+		mapx.MutationScope{Killed: 8, Survived: 2, Score: 80},
+		mapx.MutationScope{Killed: 9, Survived: 1, Score: 90})
+	if v, msg := checkMutationScore("", n); v != Pass {
+		t.Errorf("verdict %v (%s), want Pass", v, msg)
+	}
+}
+
+// A low delta with a low score is another diagnosis: it is not coupling, it is a missing
+// assertion — and the message must say so, or the author looks in the wrong place.
+func TestMutationScope_lowDeltaPointsAtAssertionNotCoupling(t *testing.T) {
+	t.Run("INCHN-B27: The verdict follows the isolated scope and the report reads the delta", func(t *testing.T) {})
+	i18n.Set("pt-BR")
+	t.Cleanup(func() { i18n.Set(i18n.Default) })
+	n := nodeWithScopes(
+		mapx.MutationScope{Killed: 2, Survived: 8, Score: 20},
+		mapx.MutationScope{Killed: 3, Survived: 7, Score: 25})
+	_, msg := checkMutationScore("", n)
+	if !strings.Contains(msg, "asserção") {
+		t.Errorf("the message does not tell assertion apart from coupling:\n%s", msg)
+	}
+}
+
+// Backward compatible: whoever ingests without scopes keeps the old ruler over the total.
+func TestMutationScope_withoutScopesUsesTheTotal(t *testing.T) {
+	t.Run("INCHN-B27: The verdict follows the isolated scope and the report reads the delta", func(t *testing.T) {})
+	n := mapx.Node{Kind: mapx.KindCode, ID: "x.ts", Rev: "r1",
+		Signal: &mapx.TestSignal{MutantsKilled: 8, MutantsSurvived: 2, MutationScore: 80, AtRev: "r1"}}
+	if v, msg := checkMutationScore("", n); v != Pass {
+		t.Errorf("verdict %v (%s), want Pass without scopes", v, msg)
+	}
+}
+
+// The worst message gitmeta's silence produced: with no REPOSITORY, the gate fell into the
+// "committed" branch, `LastCommitDate` failed, and the verdict came out as
+// "arquivo sem commit no git (novo/untracked)" — a false and SPECIFIC claim about the
+// file, which sent the author to investigate exactly where the problem is not.
+func TestUpdatedAt_withoutRepoDoesNotBlameTheFile(t *testing.T) {
+	t.Run("INCHN-B29: Without a repository updated-at skips instead of blaming the file", func(t *testing.T) {})
+	dir := t.TempDir()
+	if gitmeta.Check(dir) == gitmeta.Disponível {
+		t.Skipf("the temporary directory %s is inside a git repo", dir)
+	}
+	content := "// @anchors\n// updated_at: 2026-01-01\n"
+	if err := os.WriteFile(filepath.Join(dir, "a.go"), []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	v, d := checkUpdatedAt(content, mapx.Node{ID: "a.go"}, dir)
+
+	if v != Skip {
+		t.Fatalf("with no repository there is no verdict to give about the date, got %s (%s)", v, d)
+	}
+	if strings.Contains(d, "novo/untracked") {
+		t.Errorf("blames the FILE for something the REPOSITORY lacks: %s", d)
+	}
+	if !strings.Contains(d, "reposit") {
+		t.Errorf("the message must name the real cause: %s", d)
+	}
+}
+
+// The counterpart: in a real repo, a new uncommitted file dated today still passes — the
+// gate's rule did not change.
+func TestUpdatedAt_withRepoStillChecksTheDate(t *testing.T) {
+	t.Run("INCHN-B29: Without a repository updated-at skips instead of blaming the file", func(t *testing.T) {})
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git not installed")
+	}
+	dir := t.TempDir()
+	if out, err := exec.Command("git", "-C", dir, "init").CombinedOutput(); err != nil {
+		t.Fatalf("setup: %s", out)
+	}
+	today := gitmeta.Today()
+	content := "// @anchors\n// updated_at: " + today + "\n"
+	if err := os.WriteFile(filepath.Join(dir, "a.go"), []byte(content), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	if v, d := checkUpdatedAt(content, mapx.Node{ID: "a.go"}, dir); v != Pass {
+		t.Fatalf("a file being edited dated today should pass, got %s (%s)", v, d)
+	}
+
+	// And the wrong date still fails.
+	wrong := "// @anchors\n// updated_at: 2020-01-01\n"
+	if err := os.WriteFile(filepath.Join(dir, "a.go"), []byte(wrong), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if v, _ := checkUpdatedAt(wrong, mapx.Node{ID: "a.go"}, dir); v != Fail {
+		t.Fatalf("a wrong date in a modified file should fail, got %s", v)
+	}
+}
+
+// specInEnglish has the catalogued rule (what the gate already charged) and the section
+// titles in ENGLISH — the case `enforce_section_language` exists to catch in a pt-BR project.
+const specInEnglish = `<!-- @anchors
+  code: LGNOI
+-->
+# Login
+
+## Overview
+Entra no app.
+
+## Rules
+
+### LGNOI-B01 — regra
+Comportamento.
+`
+
+const specInPortuguese = `<!-- @anchors
+  code: LGNOI
+-->
+# Login
+
+## Visão Geral
+Entra no app.
+
+## Regras
+
+### LGNOI-B01 — regra
+Comportamento.
+`
+
+func sectionsGateConfig(enforce *bool) *config.Config {
+	return &config.Config{
+		Lang:  "pt-BR",
+		Gates: []config.Gate{{Name: "spec-complete", Check: "spec-sections", EnforceSectionLanguage: enforce}},
+	}
+}
+
+// The DEFAULT is to charge: omitting the key must not mean "do not check", or the mixed
+// collection is born in silence — the very defect the option exists to make visible.
+func TestSpecSections_wrongLanguageFailsByDefault(t *testing.T) {
+	t.Run("INCHN-B30: A section title in another language fails unless the gate waives it", func(t *testing.T) {})
+	v, msg := checkSpecSections(specInEnglish, mapx.Node{}, "", nil, sectionsGateConfig(nil))
+	if v != Fail {
+		t.Fatalf("verdict = %v, want Fail: the spec is in English in a pt-BR project", v)
+	}
+	if !strings.Contains(msg, "Visão Geral") {
+		t.Errorf("the message should give the EXPECTED title, so the fix is obvious; got: %s", msg)
+	}
+}
+
+func TestSpecSections_rightLanguagePasses(t *testing.T) {
+	t.Run("INCHN-B30: A section title in another language fails unless the gate waives it", func(t *testing.T) {})
+	if v, msg := checkSpecSections(specInPortuguese, mapx.Node{}, "", nil, sectionsGateConfig(nil)); v != Pass {
+		t.Fatalf("verdict = %v (%s), want Pass", v, msg)
+	}
+}
+
+// Switching it off is a legitimate, declared decision: a migration under way, or a
+// bilingual project.
+func TestSpecSections_enforceFalseDoesNotChargeLanguage(t *testing.T) {
+	t.Run("INCHN-B30: A section title in another language fails unless the gate waives it", func(t *testing.T) {})
+	off := false
+	if v, msg := checkSpecSections(specInEnglish, mapx.Node{}, "", nil, sectionsGateConfig(&off)); v != Pass {
+		t.Fatalf("verdict = %v (%s), want Pass with enforce_section_language: false", v, msg)
+	}
+}
+
+// The project's OWN lexicon is not a wrong language — it is a section the framework does
+// not name. Accusing it would impose the engine's vocabulary on the project.
+func TestSpecSections_titleOutsideTheCatalogueIsNotWrongLanguage(t *testing.T) {
+	t.Run("INCHN-B30: A section title in another language fails unless the gate waives it", func(t *testing.T) {})
+	spec := specInPortuguese + "\n## Fora de escopo\nNada.\n\n## Decisões em aberto\nnenhuma\n"
+	if v, msg := checkSpecSections(spec, mapx.Node{}, "", nil, sectionsGateConfig(nil)); v != Pass {
+		t.Fatalf("verdict = %v (%s), want Pass: the project's own titles are not a wrong language", v, msg)
+	}
+}
+
+// Without config the gate cannot invent a language: it charges only what it always charged.
+func TestSpecSections_withoutConfigDoesNotChargeLanguage(t *testing.T) {
+	t.Run("INCHN-B30: A section title in another language fails unless the gate waives it", func(t *testing.T) {})
+	if v, msg := checkSpecSections(specInEnglish, mapx.Node{}, "", nil, nil); v != Pass {
+		t.Fatalf("verdict = %v (%s), want Pass without config", v, msg)
+	}
+}
+
+// These tests are the META-GATE of the `anchors new` templates: they ensure the skeleton
+// the command emits is BORN CONFORMING — it passes the SAME gate functions `check` runs
+// (checkHeaderConforms, checkSpecSections). Without them, the template could drift from
+// the ruler and nobody would notice (the template is not in the project's graph).
+//
+// The strings below are the canonical output of `new` (default) per kind — keeping them in
+// sync with cmd/anchors/new_templates.go is the contract. If the gate changes its ruler,
+// these tests break and force updating the template along with it.
+
+func newTemplateHeaderNode(kind mapx.Kind) mapx.Node {
+	// a generic governed node (not a recognised layer) → the header demands code|ref.
+	return mapx.Node{ID: "x/Login." + string(kind), Kind: kind}
+}
+
+func TestNewTemplate_specIsBornConforming(t *testing.T) {
+	t.Run("INCHN-B31: The skeletons anchors new emits are born conforming", func(t *testing.T) {})
+	// mirrors specTemplate (default: title+overview+rules) rendered for "Login"/"LGNOX".
+	spec := "<!-- @anchors\n  code: LGNOX\n  updated_at: TODO\n  layer: TODO\n-->\n" +
+		"# Login — TODO propósito em uma frase\n\n> **Código**: `LGNOX`\n\n" +
+		"## Visão Geral\nTODO: o que a unidade faz e para quem.\n\n" +
+		"## Regras\n\n### LGNOX-B01 — TODO regra\nDescreva o comportamento (não a implementação).\n\n"
+
+	if v, msg := checkHeaderConforms(spec, mapx.Node{ID: "x/Login.spec.md", Kind: "spec"}); v != Pass {
+		t.Fatalf("the spec from `new` fails header-valid: %s", msg)
+	}
+	if v, msg := checkSpecSections(spec, mapx.Node{ID: "x/Login.spec.md"}, "", nil, nil); v != Pass {
+		t.Fatalf("the spec from `new` fails spec-sections: %s", msg)
+	}
+}
+
+func TestNewTemplate_featureIsBornConforming(t *testing.T) {
+	t.Run("INCHN-B31: The skeletons anchors new emits are born conforming", func(t *testing.T) {})
+	feat := "# language: pt\n# @anchors\n#   ref: LGNOX\n#   updated_at: TODO\n#   layer: feature\n" +
+		"\n@LGNOX\nFuncionalidade: Login\n\n" +
+		"  @LGNOX-B01 @nivel-unit @P2\n  Cenário: TODO\n    Dado TODO\n    Quando TODO\n    Então o efeito LGNOX-B01 se verifica\n\n"
+
+	if v, msg := checkHeaderConforms(feat, newTemplateHeaderNode(mapx.KindFeature)); v != Pass {
+		t.Fatalf("the feature from `new` fails header-valid: %s", msg)
+	}
+	// non-empty: the feature has content beyond the header.
+	if strings.TrimSpace(strings.SplitN(feat, "feature\n", 2)[1]) == "" {
+		t.Fatal("the feature from `new` is empty after the header")
+	}
+}
+
+func TestNewTemplate_testIsBornConforming(t *testing.T) {
+	t.Run("INCHN-B31: The skeletons anchors new emits are born conforming", func(t *testing.T) {})
+	test := "// @anchors\n//   ref: LGNOX\n//   updated_at: TODO\n//   layer: test\n" +
+		"\ndescribe('Login', () => {\n  it('[LGNOX-B01] TODO', () => {\n    // TODO\n  })\n})\n"
+
+	if v, msg := checkHeaderConforms(test, newTemplateHeaderNode(mapx.KindTest)); v != Pass {
+		t.Fatalf("the test from `new` fails header-valid: %s", msg)
 	}
 }

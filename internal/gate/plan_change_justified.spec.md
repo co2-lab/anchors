@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PCJPL
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: gate
 -->
 # PlanChangeJustified — a modified plan or spec must declare why it changed
@@ -56,6 +56,7 @@ the document itself instead of letting drift happen by omission.
 | `PCJPL-B12` | An existing committed file that is modified without a revision fails. |
 | `PCJPL-B13` | When run outside a git repository, the gate trusts the caller's changed list rather than silencing itself. |
 | `PCJPL-B14` | The exported function `RevisionsOf` extracts all declared revisions in order with code, number, and explanation. |
+| `PCJPL-B15` | A revision recorded as a section TITLE (`### CODE-R0001 — what changed`) is a revision too, and it is read together with the revisions of the other formats in the same file. |
 
 ## Invariants
 
