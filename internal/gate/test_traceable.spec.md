@@ -69,7 +69,7 @@ demanding scenario codes from unlinked tests would require referencing nonexiste
 | `TSTRT-B09` | A test covering behavior with transposed or misspelled codes fails exact substring confrontation. |
 | `TSTRT-B10` | When failing, the verdict names the linked feature path, lists up to three expected codes, and suggests the first code as a fix hint. |
 | `TSTRT-B11` | Scenario codes occurring anywhere in the test file content (such as in comments or test titles) satisfy the traceability check. |
-| `TSTRT-B12` | When the project says how its tests are written (`dialect.tests`, or its family's), a test traces to its feature only through a test TITLE that cites one of the feature's codes; a code elsewhere in the file (a fixture, a helper) does not trace it. Without that declaration the code counts anywhere in the file. |
+| `TSTRT-B12` | When the project says how its tests are written (`dialect.tests`, or its family's) and the source lists a test in this file, the test traces to its feature only through a test TITLE that cites one of the feature's codes; a code elsewhere in the file (a fixture, a helper) does not trace it. Without a source, or in a file the source lists no test in — one it does not describe, such as a YAML flow under a Jest pattern — the code counts anywhere in the file. |
 | `TSTRT-B13` | A support file is not charged with tracing to a scenario (Skip, saying why), even when a feature links to it. |
 
 ## Invariants

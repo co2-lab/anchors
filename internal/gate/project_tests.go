@@ -122,3 +122,19 @@ func realTests(g *mapx.Graph, paths []string) []string {
 	}
 	return out
 }
+
+// listedFiles is the set of files in which the source lists at least one test.
+//
+// A source describes the files it can read, not every test file of the map: the ts
+// family's `it(` describes a Jest file and not a Maestro flow in YAML, which the same
+// project keeps under a test layer. A file where the source lists nothing is a file the
+// source does not describe, and the gates read it as they do without a source — the code
+// anywhere in it. Taking "no test listed" for "no test cites the code" failed 654 flows in
+// the reference app that name their scenario in `name:` and in `tags:`.
+func listedFiles(tests []testlist.Test) map[string]bool {
+	out := make(map[string]bool, len(tests))
+	for _, t := range tests {
+		out[t.File] = true
+	}
+	return out
+}

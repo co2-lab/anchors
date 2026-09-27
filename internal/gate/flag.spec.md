@@ -82,7 +82,7 @@ must not have, and the value changes per user and per minute. The gates confront
 | `FLSCF-B15` | A scenario that no test names fails as having no test; a code that appears only in a comment of a test does not count as written. |
 | `FLSCF-B16` | A scenario a test names but that is not proven fails with a different message: written but not ingested when no execution was ingested, written and not passing when it was. |
 | `FLSCF-B17` | A `@gated-by` citation is read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a citation of a 7-character scenario is confronted. |
-| `FLSCF-B18` | When the project says how its tests are written, a flag scenario is written only when a test TITLE cites its code; without that declaration a code anywhere in a test outside comments counts. |
+| `FLSCF-B18` | When the project says how its tests are written, a flag scenario is written in a file the source lists tests in only when a test TITLE cites its code; without a source, or in a file the source lists no test in, a code anywhere in the file outside comments counts. |
 
 ## Invariants
 

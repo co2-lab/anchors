@@ -170,6 +170,7 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     Given a spec whose code appears in its test's fixture but in no title
     When scenario-coverage runs with the project's tests declared, and without
     Then with the declaration the scenario has no test, and without it the scenario is written
+    And a file the source lists no test in, such as a YAML flow under a Jest pattern, is read as without a source
 
   @INCHN-E02 @unit-level
   Scenario: A failing tests source fails scenario-coverage naming the error

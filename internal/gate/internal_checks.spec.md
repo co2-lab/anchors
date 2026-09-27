@@ -83,7 +83,7 @@ looked at.
 | `INCHN-B14` | A BINARY file steps aside from the header ruler: there is no comment syntax in an image, and charging one would bar every visual baseline commit. |
 | `INCHN-B15` | An executable test script steps aside too, by a different path: its format belongs to the runner, and its identity is in the file name. |
 | `INCHN-B16` | A guide with no compliance-points section, or with the section and no item in it, fails — the AI judgment gate would otherwise fall back on vague heuristics. |
-| `INCHN-B17` | When the project says how its tests are written, `scenario-coverage` counts a scenario as written only when a test TITLE cites its code; without that declaration a code anywhere in a test outside comments counts. |
+| `INCHN-B17` | When the project says how its tests are written, `scenario-coverage` counts a scenario as written in a file the source lists tests in only when a test TITLE cites its code; without a source, or in a file the source lists no test in, a code anywhere in the file outside comments counts. |
 | `INCHN-B18` | A support file is not judged by `tests-pass` (Skip, saying why), and it does not count as a test that names a scenario for `scenario-coverage`. |
 
 ## Invariants

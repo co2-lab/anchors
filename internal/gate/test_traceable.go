@@ -58,15 +58,15 @@ func checkTestTraceable(content string, n mapx.Node, root string, g *mapx.Graph,
 	}
 
 	// Where the code has to appear depends on what the project declares. With the way its
-	// tests are written (`dialect.tests`, or its family's), a test traces to a scenario
-	// through its TITLE — a code in a fixture or a helper of the file traces nothing.
-	// Without it the engine cannot tell a title from the rest, and the code counts
-	// anywhere in the file.
+	// tests are written (`dialect.tests`, or its family's) and a test of this file listed
+	// by it, a test traces to a scenario through its TITLE — a code in a fixture or a
+	// helper of the file traces nothing. Without a source, or in a file the source lists
+	// no test in (it does not describe that file), the code counts anywhere in the file.
 	tests, declared, err := projectTests(root, g, cfg)
 	if err != nil {
 		return Fail, i18n.T("gate.tests_source.failed", err)
 	}
-	if declared {
+	if declared && listedFiles(tests)[n.ID] {
 		for _, t := range testsIn(tests, []string{n.ID}) {
 			for _, c := range codigos {
 				if strings.Contains(t.Title, c) {

@@ -127,6 +127,7 @@ Feature: TestTraceable — a test linked to a feature must declare what scenario
     Given a test file whose feature code appears in a fixture string but in no test title
     When the project declares how tests are written, and when it does not
     Then with the declaration the test does not trace, and without it the code in the file traces it
+    And a file the source lists no test in, such as a YAML flow under a Jest pattern, is read as without a source
 
   @TSTRT-E03 @unit-level
   Scenario: A failing tests source fails the gate naming the error

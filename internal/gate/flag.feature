@@ -132,6 +132,7 @@ Feature: FlagScenarios — the scenarios a feature flag declares are written, co
     Given a flag scenario code that appears in a test's fixture but in no title
     When flag-covered runs with the project's tests declared, and without
     Then with the declaration the scenario has no test, and without it the scenario is written
+    And a file the source lists no test in, such as a YAML flow under a Jest pattern, is read as without a source
 
   @FLSCF-E03 @unit-level
   Scenario: A failing tests source fails flag-covered naming the error

@@ -501,3 +501,11 @@ func TestFlagCovered_FailingSource(t *testing.T) {
 		t.Fatalf("a failing source must fail naming its error, got %v: %s", v, msg)
 	}
 }
+
+func TestFlagCovered_FileTheSourceDoesNotDescribe(t *testing.T) {
+	t.Run("FLSCF-B18: With a tests source a flag scenario is written only when a title cites it", func(t *testing.T) {})
+	ts := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	if _, msg := flagWithTest(t, "name: 'CHKUT-G01 on'\n", ts); !strings.Contains(msg, "WRITTEN") {
+		t.Fatalf("in a file the source lists no test in, the code in it counts as written, got %s", msg)
+	}
+}

@@ -832,11 +832,11 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 // have one.
 //
 // When the project says how its tests are written (`dialect.tests`, or its family's), a
-// code is named when a test's TITLE cites it: that is where a test says which scenario it
-// proves, and a code elsewhere in the file (a fixture, a helper, a comment) is not a test
-// of it. Without that declaration the engine cannot tell a title from the rest, and the
-// code counts anywhere in the file outside comments — a comment cites another unit, it
-// does not implement it. An error reading the declared source is returned, not taken for
+// code is named in a file the source lists tests in when a test's TITLE cites it: that is
+// where a test says which scenario it proves, and a code elsewhere in the file (a fixture,
+// a helper) is not a test of it. Without that declaration, or in a file the source lists
+// no test in (it does not describe that file), the code counts anywhere in the file
+// outside comments — a comment cites another unit, it does not implement it. An error reading the declared source is returned, not taken for
 // "no test names it".
 func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string, cfg *config.Config) (map[string]bool, error) {
 	written := map[string]bool{}
@@ -861,17 +861,22 @@ func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string, cf
 	if err != nil {
 		return nil, err
 	}
-	if declared {
-		for _, t := range testsIn(tests, paths) {
-			for _, c := range codes {
-				if strings.Contains(t.Title, c) {
-					written[c] = true
+	listed := listedFiles(tests)
+	var unread []string
+	for _, tp := range paths {
+		if declared && listed[tp] {
+			for _, t := range testsIn(tests, []string{tp}) {
+				for _, c := range codes {
+					if strings.Contains(t.Title, c) {
+						written[c] = true
+					}
 				}
 			}
+		} else {
+			unread = append(unread, tp)
 		}
-		return written, nil
 	}
-	for _, tp := range paths {
+	for _, tp := range unread {
 		b, err := os.ReadFile(filepath.Join(root, tp))
 		if err != nil {
 			continue

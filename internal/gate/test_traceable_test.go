@@ -239,3 +239,14 @@ func TestTestTraceable_SkipsSupport(t *testing.T) {
 		t.Fatalf("a support file must be skipped saying why, got %v (%s)", v, msg)
 	}
 }
+
+func TestTestTraceable_FileTheSourceDoesNotDescribe(t *testing.T) {
+	t.Run("TSTRT-B12: With a tests source a test traces only through its titles", func(t *testing.T) {})
+	// A Maestro flow under a ts project: the family's `it(` lists no test in it, so it is
+	// read as without a source, and the code in `name:` traces it.
+	flow := "appId: app\nname: 'TRACX-B01 - one'\ntags:\n  - TRACX-B01\n---\n- launchApp\n"
+	ts := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	if v, msg := traceableWithSource(t, flow, ts); v != Pass {
+		t.Fatalf("a file the source does not describe must be read as without a source, got %v (%s)", v, msg)
+	}
+}

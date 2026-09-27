@@ -843,3 +843,14 @@ func TestSupportFilesAreNotTests(t *testing.T) {
 		t.Fatalf("a support file must not count as a test naming the code, got %s", msg)
 	}
 }
+
+func TestScenarioCoverage_FileTheSourceDoesNotDescribe(t *testing.T) {
+	t.Run("INCHN-B17: With a tests source a scenario is written only when a title cites it", func(t *testing.T) {})
+	resetProjectTestsCache()
+	t.Cleanup(resetProjectTestsCache)
+	root, g := rootWithTest(t, "name: 'CREDX-B01 - validates the limit'\n- launchApp\n")
+	ts := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	if _, msg := checkScenarioCoverage(specWithTwoRequirements, specNodeCoverage(), root, g, ts); !strings.Contains(msg, "ingest") {
+		t.Fatalf("in a file the source lists no test in, the code in it counts as written, got %s", msg)
+	}
+}
