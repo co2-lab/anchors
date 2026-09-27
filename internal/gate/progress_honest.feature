@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: PRHNP
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @PRHNP
@@ -78,6 +78,13 @@ Feature: ProgressHonest — the progress file tells the truth about the disk
     When the gate confronts the plan
     Then the verdict names that path, so the reader does not have to diff the file
       against the disk by hand
+
+  @PRHNP-B12 @unit-level
+  Scenario: The verdict carries only the directions that found something
+    Given a progress whose only finding is of one direction
+    When the gate confronts the plan
+    Then the verdict carries that direction's finding and no heading for the directions
+      that found nothing, because a zero-item finding reads as a defect that is not there
 
   @PRHNP-I01 @unit-level
   Scenario: The companion's path has one definition, derived from the scanner

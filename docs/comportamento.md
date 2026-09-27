@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:04ffb142c3bf5efc — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:779b191fd62b70e9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3918,6 +3918,10 @@ teste prova.
 
 - [An artifact that is not a plan returns Skip](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B09`
 
+- [Every source line of the plan is read](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B10`
+
+- [Every letter and digit of the name counts in the match](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-B11`
+
 - [What was not measured is never approved](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-I01`
 
 - [A seeded file off the naming pattern owns nothing](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-I02`
@@ -3969,6 +3973,8 @@ teste prova.
 - [A progress that agrees with the disk on every item passes](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B10`
 
 - [The verdict names each offending path](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B11`
+
+- [The verdict carries only the directions that found something](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-B12`
 
 - [The companion's path has one definition, derived from the scanner](camadas/gate.md#prhnp--progresshonest--the-progress-file-tells-the-truth-about-the-disk) `PRHNP-I01`
 
@@ -4645,6 +4651,10 @@ teste prova.
 - [A surface declared with a glob is read from the directory before the first wildcard](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B21`
 
 - [A consumer that names only a longer id does not query the shorter one](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B22`
+
+- [The test linked to the spec's feature is a consumer wherever it lives](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B23`
+
+- [The report shows whether the feature describes each handle](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-B24`
 
 - [Linked code that cannot be read is not an end](camadas/gate.md#ticts--testidcontract--a-test-handle-is-one-contract-with-four-ends-the-code-exposes-it-the-spec-declares-it-a-consumer-queries-it) `TICTS-E01`
 

@@ -669,3 +669,85 @@ func TestTestIDHonored_longerIdIsNotAQuery(t *testing.T) {
 		t.Errorf("a wildcard is queried by its prefix, and only at an id boundary")
 	}
 }
+
+// farConsumerFixture: spec → feature → test, with the test in a folder no neighbour
+// scan reaches (`tests/far/`), plus a test beside the spec that queries nothing — so
+// a consumer surface exists either way, and only the two-hop link can make the handle
+// queried. The code exposes `:abcd-screen`; the feature's content is `featureSrc`.
+func farConsumerFixture(t *testing.T, farTestSrc, featureSrc string) (mapx.Node, *mapx.Graph, string) {
+	t.Helper()
+	root := t.TempDir()
+	files := map[string]string{
+		"mod/screens/x.tsx":          `<View testID=":abcd-screen" />`,
+		"mod/screens/x.feature":      featureSrc,
+		"mod/screens/other.test.tsx": `render(<Y />)`,
+		"tests/far/x.test.tsx":       farTestSrc,
+	}
+	for rel, body := range files {
+		p := filepath.Join(root, rel)
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	spec := mapx.Node{ID: "mod/screens/x.spec.md", Kind: mapx.KindSpec, Code: "ABCDX"}
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{spec,
+			{ID: "mod/screens/x.tsx", Kind: mapx.KindCode},
+			{ID: "mod/screens/x.feature", Kind: mapx.KindFeature},
+			{ID: "tests/far/x.test.tsx", Kind: mapx.KindTest}},
+		Edges: []mapx.Edge{
+			{From: "mod/screens/x.spec.md", To: "mod/screens/x.tsx", Type: mapx.EdgeSpecifies},
+			{From: "mod/screens/x.spec.md", To: "mod/screens/x.feature", Type: mapx.EdgeCoveredBy},
+			{From: "mod/screens/x.feature", To: "tests/far/x.test.tsx", Type: mapx.EdgeTestedBy},
+		},
+	}
+	return spec, g, root
+}
+
+// The existing consumer fixtures put the linked test beside the spec, where the
+// neighbour scan reads it anyway — so the two-hop link itself was never proven.
+func TestTestIDContract_linkedTestIsAConsumerWhereverItLives(t *testing.T) {
+	t.Run("TICTS-B23: The test linked to the spec's feature is a consumer wherever it lives", func(t *testing.T) {})
+	n, g, root := farConsumerFixture(t, `getByTestId(':abcd-screen')`, "Feature: x\n")
+	if v, msg := checkTestIDCoherent(sectionOK, n, root, g, cfgHandle("testID")); v != Pass {
+		t.Errorf("the test reached through the feature queries the handle: %v (%s)", v, msg)
+	}
+	// The counter-proof: the far test is what makes it queried.
+	n, g, root = farConsumerFixture(t, `render(<X />)`, "Feature: x\n")
+	if v, msg := checkTestIDCoherent(sectionOK, n, root, g, cfgHandle("testID")); v != Fail {
+		t.Errorf("with the far test querying nothing, the handle is an orphan: %v (%s)", v, msg)
+	}
+}
+
+// The feature column is information: a handle the feature describes reads ✓, one it
+// does not reads ✗ — and neither decides the verdict.
+func TestTestIDContract_reportShowsTheFeatureEnd(t *testing.T) {
+	t.Run("TICTS-B24: The report shows whether the feature describes each handle", func(t *testing.T) {})
+	n, g, root := farConsumerFixture(t, `render(<X />)`, "Then the element \":abcd-screen\" is visible\n")
+	if err := os.WriteFile(filepath.Join(root, "mod/screens/x.tsx"),
+		[]byte(`<View testID=":abcd-screen" /><View testID=":abcd-other" />`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	v, msg := checkTestIDCoherent("", n, root, g, cfgHandle("testID"))
+	if v != Fail {
+		t.Fatalf("neither handle is declared, expected Fail: %v (%s)", v, msg)
+	}
+	lineOf := func(id string) string {
+		for i, l := range strings.Split(msg, "\n") {
+			if strings.TrimSpace(l) == id {
+				return strings.Split(msg, "\n")[i+1]
+			}
+		}
+		t.Fatalf("no report line for %s: %s", id, msg)
+		return ""
+	}
+	if l := lineOf(":abcd-screen"); !strings.Contains(l, "feature ✓") {
+		t.Errorf("the feature describes :abcd-screen, the line must read feature ✓: %q", l)
+	}
+	if l := lineOf(":abcd-other"); !strings.Contains(l, "feature ✗") {
+		t.Errorf("the feature does not describe :abcd-other, the line must read feature ✗: %q", l)
+	}
+}

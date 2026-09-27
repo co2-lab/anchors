@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RTDCL
-  updated_at: 2026-09-20
+  updated_at: 2026-09-26
   layer: gate
 -->
 # RouteDeclared — a screen declares how one arrives, and names its neighbours
@@ -43,7 +43,7 @@ closes the question in one line.
 | --- | --- |
 | `RTDCL-B01` | An artifact whose layer is not `screen` leaves without a verdict, and the verdict SAYS why — a bare indeterminate count would leave the reader wondering whether the silence is their problem. |
 | `RTDCL-B02` | A screen with no named route FAILS: without it the screen is a node nobody can reach. |
-| `RTDCL-B03` | A screen whose navigation table carries a generic term FAILS — an edge that names no concrete screen points nowhere. |
+| `RTDCL-B03` | A screen whose navigation table carries a generic term FAILS — an edge that names no concrete screen points nowhere. Every navigation section is read, one right after another included; a section is navigation only when its heading names it as a whole word (`### In`, not `### Integração`). |
 | `RTDCL-B04` | A screen with a named route and concrete neighbours passes. |
 | `RTDCL-B05` | Route and navigation are recognised in either declared language, so a project writing in its own language is measured and not silently approved. |
 

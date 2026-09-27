@@ -57,6 +57,8 @@ plans. If the adapter exists in another plan and this one does not declare it in
 | `PSDPL-B07` | The plan that seeds the adapter itself is not charged — it does not depend on itself. |
 | `PSDPL-B08` | A plan with no source line returns Skip: there is nothing to confront, and that is not approval. |
 | `PSDPL-B09` | An artifact that is not a plan returns Skip: the gate has no jurisdiction over specs, code or features. |
+| `PSDPL-B10` | Every source line of the plan is read, not only the first: a plan may name its sources on more than one line, and a source on the second line is confronted like one on the first. |
+| `PSDPL-B11` | Only case and punctuation are ignored in the match: every letter and every digit of the name counts, so `B0`, `B9`, `Ab` and `Zb` do not match `BAdapter.spec.md` — dropping a character would charge a plan for another source's adapter. |
 
 ## Invariants
 

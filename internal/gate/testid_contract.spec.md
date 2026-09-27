@@ -85,6 +85,8 @@ belongs to a project-scope gate.
 | `TICTS-B20` | The test files beside the spec and in the sibling folders of its folder are consumers, even when flows exist, without any edge to them. |
 | `TICTS-B21` | The static root read for a surface is the directory before the first placeholder or glob wildcard (`*`, `?`, `[`) of its path: `e2e/**/*.yaml` and `e2e/login-*.yaml` read `e2e`, `apps/x-{{module}}/flows` reads `apps`, and a path that opens with a wildcard reads the project root. |
 | `TICTS-B22` | A mention is a query only when no id character (letter, digit, `.`, `_`, `-`) touches it before, and, for a concrete handle, after: a consumer naming only `abcd-screen-header` or `my-abcd-screen` does not query `abcd-screen`. |
+| `TICTS-B23` | The test the spec's feature is tested by is a consumer wherever it lives: the link runs spec → feature → test, two hops, and it needs no neighbour folder to reach the test. |
+| `TICTS-B24` | Each line of the report shows whether the spec's feature describes the handle — a ✓ when the feature mentions it, a ✗ when it does not. It is information, never the reason for the failure: not every handle belongs in a written scenario. |
 
 ## Invariants
 

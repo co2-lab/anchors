@@ -36,8 +36,40 @@ var navGenericTermRE = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)Main\s+menu`),
 }
 
-// navSectionRE isola as seções de navegação (Entrada/Saída / In/Out/Navigation) onde as arestas vivem.
-var navSectionRE = regexp.MustCompile(`(?si)###\s+(?:Entrada|Sa[íi]da|Entry|Exit|In|Out|Incoming|Outgoing|Navigation).*?(?:\n###|\z)`)
+// navHeadingRE is the heading of a navigation section (Entrada/Saída, In/Out, Navigation…),
+// the name as a whole word.
+var navHeadingRE = regexp.MustCompile(`(?i)^###\s+(?:Entrada|Sa[íi]da|Entry|Exit|In|Out|Incoming|Outgoing|Navigation)\b`)
+
+// navSections returns the body of every navigation section, each up to the next `###`.
+//
+// A single regex ending a match at `\n###` CONSUMED that heading, so a navigation section
+// right after another (`### Entrada` then `### Saída`) was never read, and a generic term
+// in it passed. And `In`/`Out` without a word boundary took `### Integração` or
+// `### Outline` for navigation.
+func navSections(content string) []string {
+	var out []string
+	var cur *strings.Builder
+	for _, line := range strings.Split(content, "\n") {
+		if strings.HasPrefix(strings.TrimSpace(line), "###") {
+			if cur != nil {
+				out = append(out, cur.String())
+				cur = nil
+			}
+			if navHeadingRE.MatchString(strings.TrimSpace(line)) {
+				cur = &strings.Builder{}
+			}
+			continue
+		}
+		if cur != nil {
+			cur.WriteString(line)
+			cur.WriteString("\n")
+		}
+	}
+	if cur != nil {
+		out = append(out, cur.String())
+	}
+	return out
+}
 
 func checkRouteDeclared(content string, n mapx.Node) (Verdict, string) {
 	if layerOf(n, content) != "screen" {
@@ -49,7 +81,7 @@ func checkRouteDeclared(content string, n mapx.Node) (Verdict, string) {
 		return Fail, i18n.T("gate.route.missing")
 	}
 	// navigation-naming: nas seções Entrada/Saída, proibir termos genéricos.
-	for _, section := range navSectionRE.FindAllString(content, -1) {
+	for _, section := range navSections(content) {
 		for _, line := range strings.Split(section, "\n") {
 			if !strings.HasPrefix(strings.TrimSpace(line), "|") || strings.Contains(line, "---") {
 				continue // só linhas de tabela de navegação

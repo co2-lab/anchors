@@ -248,3 +248,38 @@ func TestPlanSourceDeclared_naoInterpretaAProsa(t *testing.T) {
 		t.Errorf("o laudo tem de nomear a fonte que a linha declarou: %s", msg)
 	}
 }
+
+// Um plano pode nomear fontes em MAIS de uma linha. A fonte da segunda linha e confrontada
+// como a da primeira — ler so a primeira linha deixaria passar a dependencia da segunda.
+func TestPlanSourceDeclared_confrontaCadaLinhaDeFonte(t *testing.T) {
+	t.Run("PSDPL-B10: Every source line of the plan is read", func(t *testing.T) {})
+	g := mapaComAdaptador("plans/0002-plataforma.md", "packages/lambdas/fontes/ElkAdapter.spec.md")
+	n := mapx.Node{ID: "plans/0007-infraestrutura.md", Kind: mapx.KindPlan}
+
+	v, msg := checkPlanSourceDeclared("Fonte: **Datadog**.\n\nmais prosa\n\nFonte: **ELK**.\n", n, "", g, nil)
+	if v != Fail {
+		t.Fatalf("a fonte da SEGUNDA linha nao foi confrontada: %v — %s", v, msg)
+	}
+	if !strings.Contains(msg, "ELK") {
+		t.Errorf("o laudo tem de nomear a fonte da segunda linha: %s", msg)
+	}
+}
+
+// So caixa e pontuacao sao ignoradas. Cada letra e cada digito conta — inclusive os das
+// pontas do alfabeto (`a`, `z`) e dos digitos (`0`, `9`): perder um deles faria `B0` casar
+// com `BAdapter.spec.md` e cobraria do plano o adaptador de outra fonte.
+func TestPlanSourceDeclared_letraEDigitoContam(t *testing.T) {
+	t.Run("PSDPL-B11: Every letter and digit of the name counts in the match", func(t *testing.T) {})
+	g := mapaComAdaptador("plans/0002-plataforma.md", "packages/lambdas/fontes/BAdapter.spec.md")
+	n := mapx.Node{ID: "plans/0008-frontend-web.md", Kind: mapx.KindPlan}
+
+	for _, fonte := range []string{"Ab", "Zb", "B0", "B9"} {
+		if v, msg := checkPlanSourceDeclared("Fonte: **"+fonte+"**.", n, "", g, nil); v == Fail {
+			t.Errorf("`%s` nao e a fonte de `BAdapter.spec.md` — acusou: %s", fonte, msg)
+		}
+	}
+	// A contraprova: a pontuacao e a caixa, estas sim, nao contam.
+	if v, msg := checkPlanSourceDeclared("Fonte: **b.**", n, "", g, nil); v != Fail {
+		t.Errorf("`b.` devia casar com `BAdapter.spec.md`: %v — %s", v, msg)
+	}
+}

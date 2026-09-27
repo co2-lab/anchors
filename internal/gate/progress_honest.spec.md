@@ -62,6 +62,7 @@ is the only way to reach a file that, by design, is not a node.
 | `PRHNP-B09` | An item in prose, citing no path, is not charged — there is nothing to confront. |
 | `PRHNP-B10` | A progress file that agrees with the disk on every item PASSES. |
 | `PRHNP-B11` | The verdict NAMES each offending path, so the reader does not have to diff the file against the disk by hand. |
+| `PRHNP-B12` | The verdict carries only the directions that found something: a direction with nothing to accuse adds no heading, because a "0 item(s)" finding reads as a defect that is not there. |
 
 ## Invariants
 

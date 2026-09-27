@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: PSDPL
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-26
 #   layer: feature
 
 @PSDPL
@@ -70,6 +70,23 @@ Feature: PlanSourceDeclared — a plan that names a source has to declare who bu
     Given a spec whose text carries a source line
     When the gate confronts it
     Then it returns Skip, because the gate has jurisdiction over plans only
+
+  @PSDPL-B10 @unit-level
+  Scenario: Every source line of the plan is read
+    Given a plan with two source lines, each naming one source in bold
+    And another plan seeds the adapter of the source on the second line
+    And this plan's needs list does not name that other plan
+    When the gate confronts it
+    Then it returns Fail naming the source of the second line, because a plan may name
+      its sources on more than one line
+
+  @PSDPL-B11 @unit-level
+  Scenario: Every letter and digit of the name counts in the match
+    Given another plan seeds an adapter whose name differs from the named source only by
+      one letter or digit at the edge of the alphabet or of the digits
+    When the gate confronts the plan naming that source
+    Then it does not fail, because only case and punctuation are ignored and the two
+      names are different sources
 
   @PSDPL-I01 @unit-level
   Scenario: What was not measured is never approved

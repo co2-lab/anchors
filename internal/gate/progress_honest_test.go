@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
 )
@@ -126,13 +127,16 @@ func TestProgressHonest(t *testing.T) {
 	// eterno faz o plano parecer incompleto para sempre: o `anchors next` volta a ele, e
 	// quem lê não sabe se falta trabalho ou falta limpar o arquivo.
 	t.Run("PRHNP-B07: A checkbox item promising no file at all is failed", func(t *testing.T) {
-		root, n := monta(t, "- [ ] TODO: um item por spec que esta fase semeia\n")
+		root, n := monta(t, "- [ ] TODO: um item por spec que esta fase semeia\n- [ ] FIXME: a outra fase\n")
 		v, d := checkProgressHonest("", n, root, nil, nil)
 		if v != Fail {
 			t.Fatalf("veredito %v, queria Fail: %s", v, d)
 		}
-		if !strings.Contains(d, "TODO") {
-			t.Errorf("o laudo não mostra o item molde:\n%s", d)
+		// Cada molde é acusado, não só o primeiro: o segundo `[ ]` eterno engana do mesmo jeito.
+		for _, molde := range []string{"TODO", "FIXME"} {
+			if !strings.Contains(d, molde) {
+				t.Errorf("o laudo não mostra o item molde %q:\n%s", molde, d)
+			}
 		}
 	})
 
@@ -171,6 +175,37 @@ func TestProgressHonest(t *testing.T) {
 			"a.spec.md")
 		if v, d := checkProgressHonest("", n, root, nil, nil); v != Pass {
 			t.Errorf("veredito %v, queria Pass — a descrição não é confrontada: %s", v, d)
+		}
+	})
+
+	// Uma direção sem achado não entra no laudo: um "0 item(s)" lê como defeito que não há.
+	t.Run("PRHNP-B12: The verdict carries only the directions that found something", func(t *testing.T) {
+		vazio := func(chave string) string { return i18n.T(chave, 0, "") }
+
+		root, n := monta(t,
+			"- [ ] `packages/shared/Feito.spec.md` — entregue e não marcado\n",
+			"packages/shared/Feito.spec.md")
+		v, d := checkProgressHonest("", n, root, nil, nil)
+		if v != Fail {
+			t.Fatalf("veredito %v, queria Fail: %s", v, d)
+		}
+		for _, chave := range []string{
+			"gate.progress_honest.marked_but_missing",
+			"gate.progress_honest.seeds_missing",
+			"gate.progress_honest.placeholder_items",
+		} {
+			if strings.Contains(d, vazio(chave)) {
+				t.Errorf("a direção %s não achou nada e entrou no laudo:\n%s", chave, d)
+			}
+		}
+
+		root, n = monta(t, "- [x] `packages/shared/Nunca.spec.md` — nunca existiu\n")
+		v, d = checkProgressHonest("", n, root, nil, nil)
+		if v != Fail {
+			t.Fatalf("veredito %v, queria Fail: %s", v, d)
+		}
+		if strings.Contains(d, vazio("gate.progress_honest.open_but_exists")) {
+			t.Errorf("a direção do retrabalho não achou nada e entrou no laudo:\n%s", d)
 		}
 	})
 
@@ -246,10 +281,14 @@ func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
 	}
 
 	t.Run("PRHNP-B06: A spec the plan seeds and the progress does not list is failed", func(t *testing.T) {
+		// Várias sementes e vários itens: a ausente vem DEPOIS das listadas no plano, e o
+		// progresso lista mais de uma — cada semente e cada item contam, não só o primeiro.
 		root, n, conteudo := monta(t,
-			"- [ ] `packages/infra/MutualTls.spec.md` — o canal\n"+
-				"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n",
-			"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n")
+			"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n"+
+				"- [ ] `packages/infra/Cache.spec.md` — o cache\n"+
+				"- [ ] `packages/infra/MutualTls.spec.md` — o canal\n",
+			"- [ ] `packages/infra/DataStore.spec.md` — a tabela\n"+
+				"- [ ] `packages/infra/Cache.spec.md` — o cache\n")
 		v, d := checkProgressHonest(conteudo, n, root, nil, nil)
 		if v != Fail {
 			t.Fatalf("veredito %v, queria Fail: %s", v, d)
@@ -257,8 +296,10 @@ func TestProgressHonest_sementeForaDoProgresso(t *testing.T) {
 		if !strings.Contains(d, "MutualTls.spec.md") {
 			t.Errorf("o laudo não nomeia a spec ausente:\n%s", d)
 		}
-		if strings.Contains(d, "DataStore") {
-			t.Errorf("acusou uma spec que ESTÁ no progresso:\n%s", d)
+		for _, listada := range []string{"DataStore", "Cache"} {
+			if strings.Contains(d, listada) {
+				t.Errorf("acusou %s, uma spec que ESTÁ no progresso:\n%s", listada, d)
+			}
 		}
 	})
 

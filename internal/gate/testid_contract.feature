@@ -151,6 +151,20 @@ Feature: TestIDContract — a test handle is one contract with four ends: the co
     When testid-consistent confronts a spec that exposes and declares ":abcd-screen"
     Then it returns Fail naming "abcd-screen" as queried by nobody
 
+  @TICTS-B23 @unit-level
+  Scenario: The test linked to the spec's feature is a consumer wherever it lives
+    Given a spec whose feature is tested by a test in a folder far from the spec
+    And a test beside the spec that does not mention the handle
+    When testid-consistent confronts a spec that exposes, declares and has that far test query ":abcd-screen"
+    Then it returns Pass, because the far test reached through the feature queries the handle
+
+  @TICTS-B24 @unit-level
+  Scenario: The report shows whether the feature describes each handle
+    Given a spec whose feature mentions the handle ":abcd-hidden" and not ":abcd-other"
+    When testid-consistent confronts a spec whose code exposes both and declares neither
+    Then it returns Fail, and the line of ":abcd-hidden" reads feature ✓ while the line of
+      ":abcd-other" reads feature ✗
+
   @TICTS-E01 @unit-level
   Scenario: Linked code that cannot be read is not an end
     Given a spec whose only specifies edge points to a missing file

@@ -36,6 +36,26 @@ func TestRouteDeclared(t *testing.T) {
 			Fail,
 		},
 		{
+			// Every navigation section is confronted, not only the first: a clean entry
+			// table does not vouch for the exit table further down.
+			"RTDCL-B03: generic term in a later navigation section",
+			screen("> **Rota**: `Home`\n\n### Entrada\n| Origem | Tela |\n| --- | --- |\n| MainTabs | HomeScreen |\n\n### Notas\ntexto\n\n### Saída\n| Destino | Tela |\n| --- | --- |\n| botão | Próxima tela |\n"),
+			Fail,
+		},
+		{
+			// ADJACENT sections: the exit table right after the entry table is read too.
+			// One regex ending at `\n###` consumed the next heading and skipped it.
+			"RTDCL-B03: generic term in the navigation section right after another",
+			screen("> **Rota**: `Home`\n\n### Entrada\n| Origem | Tela |\n| --- | --- |\n| MainTabs | HomeScreen |\n### Saída\n| Destino | Tela |\n| --- | --- |\n| botão | Próxima tela |\n"),
+			Fail,
+		},
+		{
+			// A heading that only STARTS with In/Out is not a navigation section.
+			"RTDCL-B03: a section named Integração is not navigation",
+			screen("> **Rota**: `Home`\n\n### Integração\n| Destino | Tela |\n| --- | --- |\n| botão | Próxima tela |\n"),
+			Pass,
+		},
+		{
 			"hook is skipped (Skip)",
 			"<!-- @anchors\n  layer: hook\n-->\n## useAuth\nsem rota, tudo bem\n",
 			Skip,
