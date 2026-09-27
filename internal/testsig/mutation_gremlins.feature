@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GRING
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @GRING
@@ -18,6 +18,7 @@ Feature: GremlinsIngest — the mutation score per file, read from a gremlins re
     Given a file with one KILLED and one TIMED OUT mutant
     When the report is read
     Then the file has 2 killed
+    And the timed-out mutants are also counted apart
 
   @GRING-B03 @unit-level
   Scenario: A mutant that lived counts as survived with its line

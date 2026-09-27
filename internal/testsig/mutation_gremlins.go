@@ -81,9 +81,14 @@ func parseGremlins(b []byte) (*MutationReport, error) {
 		for _, m := range f.Mutations {
 			switch normalizeGremlinsStatus(m.Status) {
 			case "killed":
-				// KILLED e TIMED OUT: o teste percebeu a alteração. Timeout é morte por
-				// travamento — a mesma leitura que o parser de MTE faz.
+				// KILLED: o teste percebeu a alteração.
 				fm.Killed++
+				rodados++
+			case "timedout":
+				// TIMED OUT: morte por travamento, killed como no parser de MTE — e contado
+				// à parte, porque sob carga é o que infla o score (ver TimedOut).
+				fm.Killed++
+				fm.TimedOut++
 				rodados++
 			case "survived":
 				// LIVED: the test ran the mutated line and did not notice.
@@ -122,8 +127,10 @@ func parseGremlins(b []byte) (*MutationReport, error) {
 // COVERED"), não como enum — e uma versão futura pode variar a grafia.
 func normalizeGremlinsStatus(s string) string {
 	switch strings.ToLower(strings.ReplaceAll(strings.TrimSpace(s), " ", "")) {
-	case "killed", "timedout":
+	case "killed":
 		return "killed"
+	case "timedout":
+		return "timedout"
 	case "lived":
 		return "survived"
 	case "notcovered":

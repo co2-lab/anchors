@@ -67,6 +67,8 @@ patterns a spec governs.
 | `CNFGO-B44` | A test level declared on a gate (`levels`) accepts every code when it declares nothing, only the codes matching one of `allow` when it declares it, and never a code matching one of `exclude`; a filter pattern that does not compile fails the load naming the gate, the level, the list and the index (`TestLevel.Accepts`). |
 | `CNFGO-B45` | `dialect.tests` that declares both a pattern and a script fails the load, and a tests pattern that does not compile fails it naming `dialect.tests.pattern`. |
 | `CNFGO-B46` | A layer's `support` list is a list of globs among its files; a glob that is not valid fails the load naming the layer and the index. |
+| `CNFGO-B47` | A gate's `timeout_ceiling` is a share between 0 and 1, 0.2 when not declared; a value outside that range fails the load. |
+| `CNFGO-B48` | A gate's `no_signal` maps globs of targets to the reason they have nothing to measure; an invalid glob or an empty reason fails the load, and a target matching two globs always gets the reason of the first in sorted order. |
 
 ### Canonical gate declarations
 

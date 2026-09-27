@@ -1631,3 +1631,34 @@ func TestNewTemplate_testIsBornConforming(t *testing.T) {
 		t.Fatalf("the test from `new` fails header-valid: %s", msg)
 	}
 }
+
+func TestMutationScore_UnderLoad(t *testing.T) {
+	t.Run("INCHN-B32: A mutation score measured under load is not trusted", func(t *testing.T) {})
+	node := func(killed, survived, timedOut int) mapx.Node {
+		return mapx.Node{ID: "a.go", Kind: mapx.KindCode, Rev: "r", Signal: &mapx.TestSignal{AtRev: "r",
+			MutantsKilled: killed, MutantsSurvived: survived, MutantsTimedOut: timedOut,
+			MutationScore: 100 * float64(killed) / float64(killed+survived)}}
+	}
+	// 74 of 78 killed, 65 of them by the time limit: the reference app's measurement.
+	v, msg := checkMutationScoreUnderLoad("", node(74, 4, 65), "", nil, nil)
+	if v != Pending || !strings.Contains(msg, "65") || !strings.Contains(msg, "no time limit") {
+		t.Fatalf("above the ceiling the score is pending, saying to measure with no time limit, got %v (%s)", v, msg)
+	}
+	// Exactly at the ceiling (20 of 100) the score still decides.
+	if v, _ := checkMutationScoreUnderLoad("", node(95, 5, 19), "", nil, nil); v != Pass {
+		t.Fatalf("below the ceiling the score decides, got %v", v)
+	}
+	if v, _ := checkMutationScoreUnderLoad("", node(95, 5, 20), "", nil, nil); v != Pass {
+		t.Fatalf("at the ceiling the score still decides, got %v", v)
+	}
+	// A declared ceiling of 0.9 lets the same measurement decide.
+	cfg := &config.Config{Gates: []config.Gate{{Name: "mutation-score", Check: "mutation-score", TimeoutCeiling: 0.9}}}
+	if v, _ := checkMutationScoreUnderLoad("", node(74, 4, 65), "", nil, cfg); v != Pass {
+		t.Fatalf("under a declared ceiling of 0.9 the score decides, got %v", v)
+	}
+	// Below the floor with few timeouts: fails, and says how many timed out.
+	v, msg = checkMutationScoreUnderLoad("", node(5, 5, 1), "", nil, nil)
+	if v != Fail || !strings.Contains(msg, "1 of the killed") {
+		t.Fatalf("a failure says how many were killed by the time limit, got %v (%s)", v, msg)
+	}
+}

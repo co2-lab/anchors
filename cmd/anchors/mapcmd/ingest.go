@@ -210,7 +210,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 				for file, fm := range rep.Files {
 					byFile[file] = mapx.FileMutation{
 						Killed: fm.Killed, Survived: fm.Survived,
-						NoCoverage: fm.NoCoverage, Ignored: fm.Ignored, Score: fm.Score,
+						NoCoverage: fm.NoCoverage, Ignored: fm.Ignored, TimedOut: fm.TimedOut, Score: fm.Score,
 					}
 					sobreviventes += fm.Survived
 				}

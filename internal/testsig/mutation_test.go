@@ -49,6 +49,9 @@ func TestParseMutation(t *testing.T) {
 	if fm.Killed != 3 {
 		t.Errorf("killed = %d, want 3 (2 Killed + 1 Timeout)", fm.Killed)
 	}
+	if fm.TimedOut != 1 {
+		t.Errorf("timed out = %d, want 1 counted apart", fm.TimedOut)
+	}
 	// A SURVIVOR is only what the test EXECUTED and did not notice. NoCoverage used to count
 	// as a survivor here, and the decision changed on 08/25: "is there a test that runs this
 	// line?" is the COVERAGE gate's question. Adding both, the mutation gate reported 187

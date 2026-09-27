@@ -947,6 +947,50 @@ type Gate struct {
 	// `derived`: derived links one file to another by pattern, and accepting or refusing
 	// codes is the gate's own configuration.
 	Levels map[string]TestLevel `yaml:"levels,omitempty"`
+
+	// TimeoutCeiling — for `mutation-score`: the share of a file's mutants that may be
+	// killed by the time limit before its score counts as measured under load. Zero means
+	// the default, DefaultTimeoutCeiling. A timeout counts as killed, and under load the
+	// tool times out mutants the test would not have caught: in the reference app a file
+	// read 94.87% with 65 of 78 mutants timed out, and 47.44% measured clean.
+	TimeoutCeiling float64 `yaml:"timeout_ceiling,omitempty"`
+
+	// NoSignal — the targets this gate has nothing to measure on, each with the reason: a
+	// glob of the target's path → why. A coverage or mutation report never lists a file
+	// with no statement to instrument (text constants, a data table, code compiled only
+	// on another platform), and without the declaration the gate waited for a signal that
+	// never comes. The runner skips a matching target naming the reason. It is declared,
+	// not inferred: the project says which files have no signal and why.
+	NoSignal map[string]string `yaml:"no_signal,omitempty"`
+}
+
+// DefaultTimeoutCeiling is the share of timed-out mutants above which a mutation score is
+// read as measured under load: 20%. A clean run of this repository's gates had 0.4%.
+const DefaultTimeoutCeiling = 0.2
+
+// TimeoutCeilingOrDefault is the declared ceiling, or the default.
+func (g Gate) TimeoutCeilingOrDefault() float64 {
+	if g.TimeoutCeiling > 0 {
+		return g.TimeoutCeiling
+	}
+	return DefaultTimeoutCeiling
+}
+
+// NoSignalFor says whether the target is declared as having nothing to measure for this
+// gate, and why. The globs are tried in sorted order, so the reason is the same on every
+// run when two of them match.
+func (g Gate) NoSignalFor(target string) (string, bool) {
+	globs := make([]string, 0, len(g.NoSignal))
+	for glob := range g.NoSignal {
+		globs = append(globs, glob)
+	}
+	sort.Strings(globs)
+	for _, glob := range globs {
+		if ok, _ := doublestar.Match(glob, target); ok {
+			return g.NoSignal[glob], true
+		}
+	}
+	return "", false
 }
 
 // ChecksSectionLanguage diz se o gate cobra o idioma dos títulos de seção.
@@ -1733,6 +1777,17 @@ func (c *Config) validarPadroes() error {
 		}
 	}
 	for _, g := range c.Gates {
+		if g.TimeoutCeiling < 0 || g.TimeoutCeiling > 1 {
+			return fmt.Errorf("`gates[%s].timeout_ceiling` must be a share between 0 and 1, got %v", g.Name, g.TimeoutCeiling)
+		}
+		for glob, reason := range g.NoSignal {
+			if !doublestar.ValidatePattern(glob) {
+				return fmt.Errorf("`gates[%s].no_signal` has an invalid glob: %q", g.Name, glob)
+			}
+			if strings.TrimSpace(reason) == "" {
+				return fmt.Errorf("`gates[%s].no_signal[%q]` has no reason: say why the target has nothing to measure", g.Name, glob)
+			}
+		}
 		for level, l := range g.Levels {
 			for field, ps := range map[string][]string{"allow": l.Allow, "exclude": l.Exclude} {
 				for i, p := range ps {

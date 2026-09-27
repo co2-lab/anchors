@@ -1119,3 +1119,24 @@ func TestScopeFull_doesNotApplyIncrementally(t *testing.T) {
 		t.Errorf("incrementally the gate receives the 3 targets of the slice; got %v", got)
 	}
 }
+
+func TestRunOne_NoSignalSkipsWithTheReason(t *testing.T) {
+	t.Run("GTENG-B24: A target declared with nothing to measure is skipped with its reason", func(t *testing.T) {})
+	root := t.TempDir()
+	for _, f := range []string{"a/guide.go", "a/code.go"} {
+		if err := os.MkdirAll(filepath.Join(root, "a"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, f), []byte("package a\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	g := config.Gate{Name: "line-coverage", Check: "line-coverage", NoSignal: map[string]string{"a/guide.go": "text constants only"}}
+	r := runOne(g, mapx.Node{ID: "a/guide.go", Kind: mapx.KindCode}, root, &mapx.Graph{}, nil)
+	if r.Verdict != Skip || !strings.Contains(r.Detail, "text constants only") {
+		t.Fatalf("the declared file must be skipped naming the reason, got %v (%s)", r.Verdict, r.Detail)
+	}
+	if r := runOne(g, mapx.Node{ID: "a/code.go", Kind: mapx.KindCode}, root, &mapx.Graph{}, nil); r.Verdict == Skip {
+		t.Fatalf("another file is still checked, got %v (%s)", r.Verdict, r.Detail)
+	}
+}

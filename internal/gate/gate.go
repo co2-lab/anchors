@@ -274,6 +274,11 @@ func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, 
 // runOne executa um gate contra um alvo — despacha para interno ou externo.
 func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) Result {
 	r := Result{Gate: g.Name, Regra: idDoGate(g), Target: n.ID, Blocking: g.IsBlocking()}
+	// The project declared that this gate has nothing to measure on this target, and why.
+	if reason, ok := g.NoSignalFor(n.ID); ok {
+		r.Verdict, r.Detail = Skip, i18n.T("gate.no_signal", reason)
+		return r
+	}
 	switch {
 	case g.IsJudgment():
 		// gate de julgamento por IA: o CLI NÃO computa. Ele só sabe se ALGUÉM já

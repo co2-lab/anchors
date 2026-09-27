@@ -328,3 +328,15 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a layer whose support list holds a malformed glob, and one whose globs are valid
     When each configuration is loaded
     Then the first fails naming the layer and the index, and the second loads
+
+  @CNFGO-B47 @unit-level
+  Scenario: A gate's timeout ceiling is a share with a default
+    Given a gate with no ceiling, one with 0.5, and one with 1.5
+    When each is loaded and its ceiling read
+    Then the first reads 0.2, the second 0.5, and the third fails the load
+
+  @CNFGO-B48 @unit-level
+  Scenario: A gate's no_signal declares targets with their reason
+    Given a gate declaring no_signal globs with reasons, one with an invalid glob, and one with an empty reason
+    When each is loaded and targets are looked up
+    Then a matching target gets its reason, a target matching two globs gets the first sorted, and the invalid ones fail the load

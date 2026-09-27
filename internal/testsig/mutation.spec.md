@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MTINM
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: infra
 -->
 # MutationIngest — the mutation score per file, read from a Mutation Testing Elements report
@@ -31,7 +31,7 @@ project to declare them twice.
 | Effect | Description |
 | --- | --- |
 | `MTINM-B01` | `ParseMutationFormat` reads the canonical format for the names `mutation-testing-elements`, `mte`, `stryker` and the empty name, ignoring case and surrounding spaces; `ParseMutation` reads it with no name given. |
-| `MTINM-B02` | A killed mutant and a timed-out mutant both count as killed. |
+| `MTINM-B02` | A killed mutant and a timed-out mutant both count as killed. The timed-out are also counted apart, since under load they inflate the score. |
 | `MTINM-B03` | A surviving mutant counts as survived, and its starting line is recorded. |
 | `MTINM-B04` | A mutant no test covered is counted apart and does not enter the score. |
 | `MTINM-B05` | A mutant the tool ignored is counted apart and does not enter the score. |

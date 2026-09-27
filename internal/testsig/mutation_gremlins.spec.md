@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRING
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: infra
 -->
 # GremlinsIngest — the mutation score per file, read from a gremlins report
@@ -25,7 +25,7 @@ not in the report.
 | Effect | Description |
 | --- | --- |
 | `GRING-B01` | The report's listed files are read into one mutation result per file. |
-| `GRING-B02` | A killed mutant and a timed-out mutant both count as killed. |
+| `GRING-B02` | A killed mutant and a timed-out mutant both count as killed. The timed-out are also counted apart, since under load they inflate the score. |
 | `GRING-B03` | A mutant that lived counts as survived, and its line is recorded. |
 | `GRING-B04` | A mutant that was not viable, was only runnable or was skipped, or has a status the unit does not know, stays out of the score. |
 | `GRING-B05` | The status is matched ignoring case and spaces. |

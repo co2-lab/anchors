@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SGINA
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: mapa
 -->
 # SignalIngestion — hanging the runner's results on the map's nodes: executions, proven rules, coverage and mutation
@@ -92,6 +92,7 @@ instead — an under-estimate, never a double count.
 | `SGINA-B17` | A report path matches a node when the two are equal or one ends with the other at a path boundary, in either direction. |
 | `SGINA-B18` | Resolving report paths gives each path its only matching node, keeps a path no node matches as it came, breaks a tie by the node sharing the most leading directories with the report file, and returns a path still tied as ambiguous, with no owner. |
 | `SGINA-B20` | When several paths of one report match a node, the node receives exactly one of them, always the same: the exact path, else the one closest in length to the node's, else the first in lexical order. |
+| `SGINA-B21` | A mutation ingestion records, beside the killed, how many of them were killed by the time limit. |
 
 ## Invariants
 

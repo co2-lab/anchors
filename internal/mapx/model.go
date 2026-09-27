@@ -270,6 +270,9 @@ type TestSignal struct {
 	// separar dois 100% que significam coisas diferentes: "tudo foi provado" e "não havia
 	// o que provar". Um arquivo de tabela de constantes cai no segundo.
 	MutantsIgnored int `yaml:"mutants_ignored,omitempty"`
+	// MutantsTimedOut: of the killed, how many were killed by the time limit. A share
+	// above the gate's `timeout_ceiling` means the run was measured under load.
+	MutantsTimedOut int `yaml:"mutants_timed_out,omitempty"`
 	// MutationByScope: o mesmo arquivo medido em dois ESCOPOS de suíte.
 	//
 	//   isolated — só o teste da própria unidade

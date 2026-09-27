@@ -640,3 +640,12 @@ func TestIngest_severalMatchingReportPathsChooseTheSameOne(t *testing.T) {
 		}
 	}
 }
+
+func TestIngestMutation_RecordsTheTimedOut(t *testing.T) {
+	t.Run("SGINA-B21: A mutation ingestion records the timed-out apart", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "src/a.go", Kind: KindCode, Rev: "r1"}}}
+	g.IngestMutation(map[string]FileMutation{"src/a.go": {Killed: 10, Survived: 2, TimedOut: 7, Score: 83}}, "now")
+	if s := g.Nodes[0].Signal; s == nil || s.MutantsKilled != 10 || s.MutantsTimedOut != 7 {
+		t.Fatalf("want 10 killed with 7 timed out recorded apart, got %+v", s)
+	}
+}

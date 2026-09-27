@@ -54,6 +54,9 @@ func TestParseMutationFormat_Gremlins(t *testing.T) {
 		t.Fatalf("the file did not match; got %v", rep.Files)
 	}
 	// KILLED + TIMED OUT = 2 killed (a timeout is death by hanging).
+	if fm.TimedOut != 1 {
+		t.Errorf("TimedOut = %d, want 1 counted apart", fm.TimedOut)
+	}
 	if fm.Killed != 2 {
 		t.Errorf("Killed = %d, want 2", fm.Killed)
 	}

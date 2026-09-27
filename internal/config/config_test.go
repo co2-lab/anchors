@@ -433,6 +433,45 @@ func TestLoadChecksTheSupportGlobs(t *testing.T) {
 	}
 }
 
+func TestGateTimeoutCeiling(t *testing.T) {
+	t.Run("CNFGO-B47: A gate's timeout ceiling is a share with a default", func(t *testing.T) {})
+	if got := (Gate{}).TimeoutCeilingOrDefault(); got != 0.2 {
+		t.Errorf("the default ceiling is 0.2, got %v", got)
+	}
+	if got := (Gate{TimeoutCeiling: 0.5}).TimeoutCeilingOrDefault(); got != 0.5 {
+		t.Errorf("a declared ceiling wins, got %v", got)
+	}
+	for _, v := range []string{"1.5", "-0.1"} {
+		_, err := load(t, "version: 1\ngates:\n  - name: mutation-score\n    check: mutation-score\n    timeout_ceiling: "+v+"\n")
+		if err == nil || !strings.Contains(err.Error(), "timeout_ceiling") {
+			t.Errorf("ceiling %s must fail the load, got %v", v, err)
+		}
+	}
+	if _, err := load(t, "version: 1\ngates:\n  - name: mutation-score\n    check: mutation-score\n    timeout_ceiling: 1\n"); err != nil {
+		t.Errorf("a ceiling of 1 is in range: %v", err)
+	}
+}
+
+func TestGateNoSignal(t *testing.T) {
+	t.Run("CNFGO-B48: A gate's no_signal declares targets with their reason", func(t *testing.T) {})
+	g := Gate{NoSignal: map[string]string{"cmd/**/guide_*.go": "text constants", "cmd/**/*.go": "anything under cmd"}}
+	if r, ok := g.NoSignalFor("cmd/anchors/governance/guide_spec.go"); !ok || r != "anything under cmd" {
+		t.Errorf("two matching globs must give the first sorted (`cmd/**/*.go`), got %q %v", r, ok)
+	}
+	if _, ok := g.NoSignalFor("internal/gate/gate.go"); ok {
+		t.Error("a target no glob matches has a signal to measure")
+	}
+	for body, why := range map[string]string{
+		"    no_signal:\n      \"cmd/[x\": \"reason\"\n": "invalid glob",
+		"    no_signal:\n      \"cmd/*.go\": \"  \"\n":   "no reason",
+	} {
+		_, err := load(t, "version: 1\ngates:\n  - name: line-coverage\n    check: line-coverage\n"+body)
+		if err == nil || !strings.Contains(err.Error(), why) {
+			t.Errorf("%q must fail the load naming %q, got %v", body, why, err)
+		}
+	}
+}
+
 func TestLoad_languageIsSetAtLoad(t *testing.T) {
 	t.Run("CNFGO-B12: An unsupported language fails the load", func(t *testing.T) {})
 	t.Cleanup(func() { _ = i18n.Set("") })

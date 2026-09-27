@@ -726,9 +726,25 @@ gates:
   - name: mutation-score
     blocking: true
     format: gremlins
+    # Files gremlins finds no operator to mutate in: the report does not list them, and
+    # without this the gate waited for a score that never comes.
+    no_signal:
+      "cmd/anchors/governance/guide_{code,feature,guide,header}.go": "the ruler texts are constants: no operator to mutate"
+      "cmd/anchors/common/version.go": "version variables set by the linker: no operator to mutate"
+      "cmd/anchors/common/errors.go": "an exit code and an error type: no operator to mutate"
+      "cmd/anchors/*/register.go": "wires the commands into the root: no operator to mutate"
+      "cmd/anchors/flow/watch_unix.go": "sets one process attribute: no operator to mutate"
+      "cmd/anchors/flow/watch_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "internal/migra/format_{2,3,4}.go": "rename tables of a format migration: data, no operator to mutate"
 
   - name: line-coverage
     blocking: true
+    # Files the lcov has no line of: nothing to instrument here, or not compiled here.
+    no_signal:
+      "cmd/anchors/governance/guide_{code,feature,flag,flow,guide,header,plan,product,project,review,spec,tests,work}.go": "the ruler texts are constants: no statement to cover"
+      "cmd/anchors/common/version.go": "version variables set by the linker: no statement to cover"
+      "cmd/anchors/flow/watch_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "internal/daemon/daemon_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
 
   # ── THE PROJECT'S LANGUAGE POLICY ───────────────────────────────────────────────
   #

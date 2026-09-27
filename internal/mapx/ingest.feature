@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SGINA
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @SGINA
@@ -138,3 +138,9 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Given a spec, a code file and a test file all matched by the same report path
     When execution, coverage and mutation are ingested for that path
     Then only the test file holds the execution and only the code file holds coverage and mutation
+
+  @SGINA-B21 @unit-level
+  Scenario: A mutation ingestion records the timed-out apart
+    Given a mutation report where some killed mutants timed out
+    When it is ingested
+    Then the node records the killed and, apart, how many of them timed out

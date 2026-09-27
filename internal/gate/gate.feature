@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GTENG
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @GTENG
@@ -210,3 +210,9 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     When the run confronts the nodes
     Then it runs on what it received, because fabricating any of them would answer
       about a project state that does not exist
+
+  @GTENG-B24 @unit-level
+  Scenario: A target declared with nothing to measure is skipped with its reason
+    Given a gate whose no_signal declares a file with a reason
+    When the gate runs on that file and on another
+    Then the declared file is skipped naming the reason, and the other is checked

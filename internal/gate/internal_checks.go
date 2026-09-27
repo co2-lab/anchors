@@ -25,7 +25,6 @@ var internalCheckers = map[string]func(content string, n mapx.Node) (Verdict, st
 	"guide-has-checklist": checkGuideHasChecklist,
 	"line-coverage":       checkLineCoverage,
 	"coverage-delta":      checkCoverageDelta,
-	"mutation-score":      checkMutationScore,
 	"tests-pass":          checkTestsPass,
 	"header-valid":        checkHeaderConforms,
 	"route-declared":      checkRouteDeclared,
@@ -43,6 +42,7 @@ var checkersWithRoot = map[string]func(content string, n mapx.Node, root string)
 // que atravessa a trinca — ex.: feature↔test (cada cenário da feature está implementado
 // no teste ligado, roteado pelo regime do cenário?).
 var checkersWithGraph = map[string]func(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string){
+	"mutation-score":           checkMutationScoreUnderLoad,
 	"progress-honest":          checkProgressHonest,
 	"plan-doctrine-exists":     checkPlanDoctrineExists,
 	"doctrine-realized":        checkDoctrineRealized,
@@ -937,6 +937,39 @@ func checkCoverageDelta(_ string, n mapx.Node) (Verdict, string) {
 // viável. Mas Pending não é silêncio: aparece no status e no doctor com o que falta e o
 // que se perde por não ter. A alavanca do projeto é declarar o gate como blocking no
 // anchors.yaml quando ele já tiver a ferramenta rodando.
+// checkMutationScoreUnderLoad is `mutation-score` with the gate's own `timeout_ceiling`.
+//
+// A timed-out mutant counts as killed, and under load the tool times out mutants the
+// test would not have caught. When the timed-out share of a file's mutants is above the
+// ceiling, the score is not trusted either way: Pending, measure again — and the way to
+// measure again is to learn first how long a mutant really takes (a run with no time
+// limit, or an absurd one), then lower the limit from there. Below the ceiling the score
+// decides as usual, and a failure also says how many were killed by the time limit.
+func checkMutationScoreUnderLoad(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	v, msg := checkMutationScore(content, n)
+	if n.Signal == nil || n.Signal.MutantsTimedOut == 0 || v == Skip {
+		return v, msg
+	}
+	ceiling := config.DefaultTimeoutCeiling
+	if cfg != nil {
+		for _, g := range cfg.Gates {
+			if g.Check == "mutation-score" {
+				ceiling = g.TimeoutCeilingOrDefault()
+				break
+			}
+		}
+	}
+	ran := n.Signal.MutantsKilled + n.Signal.MutantsSurvived
+	if ran > 0 && float64(n.Signal.MutantsTimedOut)/float64(ran) > ceiling && v != Pending {
+		return Pending, i18n.T("gate.mutation.under_load", n.Signal.MutantsTimedOut, ran,
+			100*float64(n.Signal.MutantsTimedOut)/float64(ran), 100*ceiling)
+	}
+	if v == Fail {
+		msg += i18n.T("gate.mutation.timed_out_note", n.Signal.MutantsTimedOut)
+	}
+	return v, msg
+}
+
 func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 	// `MutantsIgnored` entra na condição, e é o que separa "a ferramenta nunca rodou aqui"
 	// de "ela rodou e não havia o que medir". Sem ele, um arquivo cujos mutantes foram

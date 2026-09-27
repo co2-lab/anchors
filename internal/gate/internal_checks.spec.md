@@ -98,6 +98,7 @@ looked at.
 | `INCHN-B29` | Outside a git repository `updated-at-atual` skips, naming the missing repository instead of blaming the file as uncommitted; inside one, a new file dated today passes and a wrong date still fails. |
 | `INCHN-B30` | `spec-sections` fails a section title written in another language of the catalogue than the project's, naming the expected title, unless the gate declares `enforce_section_language: false`; a title outside the catalogue, or a run with no configuration, is not charged for its language. |
 | `INCHN-B31` | The skeletons `anchors new` emits are born conforming: the spec passes the header and spec-sections rulers, and the feature and the test pass the header ruler. |
+| `INCHN-B32` | When the share of a file's mutants killed by the time limit is above the gate's `timeout_ceiling` (0.2 by default), its mutation score is Pending as measured under load, whatever the score, and the verdict says to measure first with no time limit to learn how long a mutant takes; below the ceiling the score decides, and a failure says how many were killed by the time limit. |
 
 ## Invariants
 

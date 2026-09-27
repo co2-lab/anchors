@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2d9b3771cd2dcc14 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f9dd688e126c5186 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2596,6 +2596,10 @@ teste prova.
 
 - [A layer's support globs must be valid](camadas/config.md#cnfgo-b46--a-layers-support-globs-must-be-valid) `CNFGO-B46`
 
+- [A gate's timeout ceiling is a share with a default](camadas/config.md#cnfgo-b47--a-gates-timeout-ceiling-is-a-share-with-a-default) `CNFGO-B47`
+
+- [A gate's no_signal declares targets with their reason](camadas/config.md#cnfgo-b48--a-gates-no-signal-declares-targets-with-their-reason) `CNFGO-B48`
+
 - [The declared containers come back as written, and a missing config has none](camadas/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](camadas/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -3434,6 +3438,8 @@ teste prova.
 
 - [The engine invents neither a map nor a Structure nor a waiver](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-X03`
 
+- [A target declared with nothing to measure is skipped with its reason](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B24`
+
 - [Confronting an artifact that is not a spec skips](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B01`
 
 - [Confronting without a graph returns Pending](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B02`
@@ -3549,6 +3555,8 @@ teste prova.
 - [A section title in another language fails unless the gate waives it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B30`
 
 - [The skeletons anchors new emits are born conforming](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B31`
+
+- [A mutation score measured under load is not trusted](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B32`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -6201,6 +6209,8 @@ teste prova.
 - [The proven rules are the sorted union of the suites](camadas/mapa.md#sgina-i01--the-proven-rules-are-the-sorted-union-of-the-suites) `SGINA-I01`
 
 - [Each measurement lands only on its kind of node](camadas/mapa.md#sgina-x01--each-measurement-lands-only-on-its-kind-of-node) `SGINA-X01`
+
+- [A mutation ingestion records the timed-out apart](camadas/mapa.md#sgina-b21--a-mutation-ingestion-records-the-timed-out-apart) `SGINA-B21`
 
 - [A relation never stamped is stale](camadas/mapa.md#grmdg-b01--a-relation-never-stamped-is-stale) `GRMDG-B01`
 

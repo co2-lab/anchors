@@ -503,6 +503,7 @@ func (g *Graph) IngestMutationScoped(byFile map[string]FileMutation, scope, now 
 			n.Signal.MutantsSurvived = mu.Survived
 			n.Signal.MutantsNoCoverage = mu.NoCoverage
 			n.Signal.MutantsIgnored = mu.Ignored
+			n.Signal.MutantsTimedOut = mu.TimedOut
 			n.Signal.MutationScore = mu.Score
 			n.Signal.MutationLow, n.Signal.MutationHigh = low, high
 			if scope != "" {
@@ -535,7 +536,9 @@ type FileMutation struct {
 	// gravados a parte — sao eles que separam "100% porque tudo foi provado" de "100%
 	// porque nao havia o que provar".
 	Ignored int
-	Score   float64
+	// TimedOut: killed by the time limit, counted apart (see TestSignal.MutantsTimedOut).
+	TimedOut int
+	Score    float64
 }
 
 // FileCov é a cobertura de um arquivo (desacopla o mapx do pacote testsig).

@@ -275,3 +275,9 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     Given the spec, feature and test that anchors new emits for a unit
     When the header ruler confronts each and spec-sections confronts the spec
     Then every one of them passes
+
+  @INCHN-B32 @unit-level
+  Scenario: A mutation score measured under load is not trusted
+    Given a file whose score passes with most of its killed mutants timed out, and one below the floor with few timeouts
+    When mutation-score judges them, with the default ceiling and with a declared one
+    Then the first is pending as measured under load and says to measure first with no time limit, and the second fails saying how many timed out

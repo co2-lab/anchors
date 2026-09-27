@@ -65,6 +65,11 @@ type FileMutation struct {
 	// porque tudo foi provado" e "arquivo 100% porque não havia o que provar" viram o
 	// mesmo número, e quem lê uma lista ordenada não consegue separar os dois.
 	Ignored int
+	// TimedOut are the mutants whose run hit the time limit. They stay counted as killed
+	// (a hang is the test noticing the mutation), and are also counted here, because a
+	// run under load times out mutants the test would NOT have caught: in the reference
+	// app a file read 94.87% with 65 of 78 mutants timed out, and 47.44% measured clean.
+	TimedOut int
 	// SurvivedAt são as linhas onde um mutante sobreviveu — o que o autor precisa ver
 	// para consertar o teste. Sem isso o score é um número sem ação.
 	SurvivedAt []int
@@ -164,8 +169,10 @@ func parseMTE(b []byte) (*MutationReport, error) {
 				// Nenhum teste executou. Contado à parte e fora do score — ver o campo.
 				fm.NoCoverage++
 			case "timeout":
-				// Timeout é morte por travamento — o teste percebeu a mutação.
+				// Timeout é morte por travamento — o teste percebeu a mutação. Contado
+				// também à parte: sob carga, é o que infla o score (ver TimedOut).
 				fm.Killed++
+				fm.TimedOut++
 				rodados++
 			case "ignored":
 				// A ferramenta descartou o mutante ANTES de rodar. Não é teste faltando

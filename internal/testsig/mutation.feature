@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MTINM
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @MTINM
@@ -18,6 +18,7 @@ Feature: MutationIngest — the mutation score per file, read from a Mutation Te
     Given a file with two killed mutants and one timed out
     When the report is read
     Then the file has 3 killed
+    And the timed-out mutants are also counted apart
 
   @MTINM-B03 @unit-level
   Scenario: A survivor counts as survived with its line
