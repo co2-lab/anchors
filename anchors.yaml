@@ -569,7 +569,7 @@ gates:
     blocking: true
 
   - name: open-questions-resolved
-    blocking: false
+    blocking: true
 
   - name: rule-types
     blocking: true
@@ -643,18 +643,17 @@ gates:
   - name: spec-realizes-doctrine
     blocking: false
 
-  # A FALHA declarada, tratada e registrada.
-  # failure-handled e failure-logged saem indeterminados aqui porque este repositorio nao
-  # declara regras `-E` (um CLI falha por retorno, nao por excecao em producao).
-  # Mas failure-declared acha os caminhos de erro no codigo e relata achados (informativo).
+  # A FALHA declarada, tratada e registrada. As specs declaram as regras `-E` (ou fecham
+  # `## Errors` com `none — <por quê>`), e o dialeto em `dialect:` diz como o Go trata e
+  # registra um erro. Bloqueantes desde que os tres ficaram limpos no repositorio inteiro.
   - name: failure-handled
-    blocking: false
+    blocking: true
 
   - name: failure-logged
-    blocking: false
+    blocking: true
 
   - name: failure-declared
-    blocking: false
+    blocking: true
 
   - name: docs-covered
     blocking: true
@@ -711,18 +710,17 @@ gates:
 
   # ── PROVA DE TESTE ──────────────────────────────────────────────────────────────
   # `mutation-score` é o único gate que responde "o teste PROVA a linha?" — todos os
-  # outros respondem "a linha executou?" ou "a peça existe?". O catálogo do framework diz
-  # que ele "nasce com o projeto", e o Anchors tem 85 arquivos de teste sem essa medição.
+  # outros respondem "a linha executou?" ou "a peça existe?". A medição vem do `anchors
+  # mutation` (gremlins sobre internal/gate) e a cobertura do `anchors test` (lcov).
   #
-  # Informativo e Pending até alguém ingerir o relatório: o Anchors não roda a ferramenta
-  # de mutação (depende do stack — para Go, `go-mutesting` ou `gremlins`). Fica declarado
-  # para que a ausência da medição seja VISÍVEL, em vez de silêncio.
+  # Bloqueantes desde que os dois ficaram limpos: um arquivo sem medição fica Pending e
+  # não barra; um arquivo medido abaixo do piso barra o commit que o deixou assim.
   - name: mutation-score
-    blocking: false
+    blocking: true
     format: gremlins
 
   - name: line-coverage
-    blocking: false
+    blocking: true
 
   # ── CABEÇALHO ───────────────────────────────────────────────────────────────────
   # Cada pacote do Anchors JÁ tem doutrina no cabeçalho (`// Package X faz Y porque Z`) —
