@@ -126,6 +126,7 @@ Quatro vereditos, e a diferença importa:
 | `teste-rastreavel` | um teste ligado a uma feature precisa DIZER o que prova |
 | `tests-pass` | o nó de teste tem 0 falhas (do resultado de execução ingerido)? |
 | `trigger-declared` | um gatilho de obrigação CITADO tem de existir |
+| `header-valid` | o header `@anchors` da spec e da feature carrega a identidade do artefato |
 | `trinca-completa` | uma spec de camada REGIDA precisa das três peças que a realizam — |
 | `updated-at-atual` | o `updated_at` do header bate com a data do ÚLTIMO COMMIT que |
 | `vr-baseline` | o cenário de regressão VISUAL prometido tem imagem de referência |

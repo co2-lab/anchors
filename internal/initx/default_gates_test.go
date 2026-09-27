@@ -399,6 +399,34 @@ func TestConfigLoadCompletesACanonicalGate(t *testing.T) {
 	}
 }
 
+func TestSpecsSeedHeaderValid(t *testing.T) {
+	t.Run("DFGTD-B16: Choosing specs seeds header-valid on specs and features", func(t *testing.T) {})
+	var hv *config.Gate
+	for _, g := range DefaultGates(map[string]bool{"spec": true}, false) {
+		if g.Name == "header-valid" {
+			g := g
+			hv = &g
+		}
+	}
+	if hv == nil {
+		t.Fatal("choosing specs must seed header-valid")
+	}
+	if hv.Check != "header-valid" || strings.Join(hv.On, ",") != "spec,feature" || hv.Blocking == nil || *hv.Blocking {
+		t.Errorf("header-valid must run its check on spec and feature, informative, got %+v", *hv)
+	}
+	p := filepath.Join(t.TempDir(), "anchors.yaml")
+	if err := os.WriteFile(p, []byte("version: 1\ngates:\n  - name: header-valid\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	c, err := config.Load(p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Join(c.Gates[0].On, ","); got != "spec,feature" {
+		t.Errorf("a bare header-valid must inherit on: spec,feature, got %q", got)
+	}
+}
+
 func TestDefaultGateNamesAreUnique(t *testing.T) {
 	t.Run("DFGTD-I02: Every gate of the full catalog has a unique name that is also its id", func(t *testing.T) {})
 	seen := map[string]bool{}

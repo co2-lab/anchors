@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:662940fce13bfc7e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8e3014bd07249b87 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -5253,6 +5253,8 @@ teste prova.
 - [The gates that run on specs, features and tests are seeded without plans](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B14`
 
 - [The gate names registered for the vocabulary check are the full catalog](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B15`
+
+- [Choosing specs seeds header-valid on specs and features](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B16`
 
 - [Choosing plans adds only gates that run on plans](camadas/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-I04`
 

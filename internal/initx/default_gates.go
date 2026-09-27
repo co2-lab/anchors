@@ -47,6 +47,15 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 				Name: "spec-has-code", ID: "spec-has-code", On: []string{"spec"}, Check: "has-code",
 				Blocking: config.Bool(false), Measures: "the spec carries a scenario code (identity)",
 			},
+			// The `@anchors` header is where a spec and a feature carry their identity, and
+			// the header guide `init` writes says so and names this gate. It was not in the
+			// catalog, so `init` never seeded it and a bare `- name: header-valid` got no
+			// `on:` and measured nothing. Code and tests are left out: they take their
+			// identity from co-location, not from a header.
+			config.Gate{
+				Name: "header-valid", ID: "header-valid", On: []string{"spec", "feature"}, Check: "header-valid",
+				Blocking: config.Bool(false), Measures: "the @anchors header carries the artifact's identity",
+			},
 			// A spec sozinha atravessa TODOS os gates relacionais — eles falham ABERTO
 			// (sem teste ligado, não há o que confrontar) e o pipeline conclui "pode
 			// promover" sobre trabalho que não existe. Este gate pergunta o oposto: as

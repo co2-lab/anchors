@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DFGTD
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @DFGTD
@@ -130,6 +130,13 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     Given the names registered with the configuration package
     When they are compared with the canonical catalog
     Then they are the same names in the same order
+
+  @DFGTD-B16 @unit-level
+  Scenario: Choosing specs seeds header-valid on specs and features
+    Given a project that chooses specs
+    When the default gates are seeded
+    Then header-valid is among them, informative, on specs and features
+    And a configuration naming header-valid alone inherits that on
 
   @DFGTD-I04 @unit-level
   Scenario: Choosing plans adds only gates that run on plans
