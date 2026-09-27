@@ -428,7 +428,8 @@ tests:
 # verdicts. `isolated`: each package's mutants face only its own tests.
 mutation:
   - layer: unit
-    run: "gremlins unleash ./internal/gate --output .anchors/mutation.json"
+    # Every package, one gremlins run each, merged with full paths (see the script).
+    run: "bash scripts/anchors-mutation.sh"
     report: ".anchors/mutation.json"
     scope: isolated
 
