@@ -138,6 +138,12 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     Then header-valid is among them, informative, on specs and features
     And a configuration naming header-valid alone inherits that on
 
+  @DFGTD-B17 @unit-level
+  Scenario: no-duplication is the native duplication check on code files
+    Given the canonical catalog
+    When no-duplication is looked up
+    Then it runs the duplication check on code, needs npx, and declares no command or project scope
+
   @DFGTD-I04 @unit-level
   Scenario: Choosing plans adds only gates that run on plans
     Given the triad, and the triad with code and guides

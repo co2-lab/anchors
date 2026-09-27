@@ -68,6 +68,7 @@ A judgment gate that asks whether the code or a test realises a rule carries the
 | `DFGTD-B14` | The gates that run on specs, features and tests — documentation, doctrine, flags, failures, the way back of the triad, the contracted document and the justified change — are seeded without plans; the justified-change gate then runs on specs alone, and the gates that run only on plans are not seeded. |
 | `DFGTD-B15` | The gate names registered for the vocabulary check (`RegisterGateNames`) are the full catalog, in catalog order. |
 | `DFGTD-B16` | Choosing specs seeds `header-valid`, informative, on specs and features: the artifacts whose identity lives in the `@anchors` header. A bare `- name: header-valid` in a configuration inherits that `on:`. |
+| `DFGTD-B17` | `no-duplication` is seeded as the native `duplication` check on code files, needing `npx`: one verdict per file read from jscpd's report, not a project-wide command judged by its exit code. |
 
 ## Invariants
 

@@ -734,10 +734,16 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// por semelhança acidental acopla o que o domínio quer solto. O gate mostra; quem
 			// conhece o domínio decide.
 			//
-			// Sem flags: a calibragem vive no `.jscpd.json` do projeto, que é o mecanismo
-			// OFICIAL da ferramenta (limiares, `ignore`, e os marcadores `jscpd:ignore-start`
-			// no código). Melhor um mecanismo que a ferramenta mantém do que um nosso, que
-			// teríamos de sustentar e explicar — e que envelheceria sozinho.
+			// A calibragem vive no `.jscpd.json` do projeto, que é o mecanismo OFICIAL da
+			// ferramenta (`minLines`, `ignore`, `threshold`, e os marcadores
+			// `jscpd:ignore-start` no código). Melhor um mecanismo que a ferramenta mantém do
+			// que um nosso, que teríamos de sustentar e explicar — e que envelheceria sozinho.
+			//
+			// O check é NATIVO e lê o RELATÓRIO do jscpd, não o código de saída: sem
+			// `threshold` o jscpd sai 0 com qualquer duplicação, e o gate aprovava o que não
+			// media (medido no app de referência: 35 clones, exit 0, anunciado "limpo"). O
+			// relatório dá um veredito POR ARQUIVO, com o outro lado de cada clone, e o
+			// `--changed` passa a cobrar só os clones que a mudança toca.
 			//
 			// A calibragem NÃO é detalhe: medido no projeto que originou o gate, o default
 			// (5 linhas) dava 487 achados, dos quais 375 eram teste × teste — setup e mocks
@@ -748,8 +754,7 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// junto).
 			config.Gate{
 				Name: "no-duplication", ID: "no-duplication", On: []string{"code"},
-				Scope: config.ScopeProject, ScopeFull: config.ScopeProject,
-				Run:       "npx --yes jscpd . --reporters console --silent",
+				Check:     "duplication",
 				NeedsTool: "npx", InstallHint: "install Node.js (npx ships with it)",
 				Blocking: config.Bool(false), When: []string{"ci"}, Cost: "slow",
 				Category: "quality",

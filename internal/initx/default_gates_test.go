@@ -427,6 +427,18 @@ func TestSpecsSeedHeaderValid(t *testing.T) {
 	}
 }
 
+func TestNoDuplicationIsTheNativeCheck(t *testing.T) {
+	t.Run("DFGTD-B17: no-duplication is the native duplication check on code files", func(t *testing.T) {})
+	g, ok := CanonicalGate("no-duplication")
+	if !ok {
+		t.Fatal("no-duplication must be in the catalog")
+	}
+	if g.Check != "duplication" || g.Run != "" || g.Scope != "" || g.ScopeFull != "" ||
+		strings.Join(g.On, ",") != "code" || g.NeedsTool != "npx" {
+		t.Errorf("no-duplication must be the per-file duplication check on code needing npx, got %+v", g)
+	}
+}
+
 func TestDefaultGateNamesAreUnique(t *testing.T) {
 	t.Run("DFGTD-I02: Every gate of the full catalog has a unique name that is also its id", func(t *testing.T) {})
 	seen := map[string]bool{}
