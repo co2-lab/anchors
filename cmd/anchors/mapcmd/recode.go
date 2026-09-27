@@ -129,13 +129,18 @@ must have a length declared in code_lengths.
 			// construía do zero e salvava: todo julgamento de IA e o fluxo inteiro sumiam
 			// em silêncio (medido: julgamentos 1→0, flow nil).
 			var perdidos string
-			if anterior, lerr := mapx.Load(mapPath); lerr == nil {
-				mapx.PreserveStamps(g, anterior)
-				g.Flow = anterior.Flow
-				perdidos = stampLossWarning(anterior, g)
-			}
-			if serr := mapx.Save(g, mapPath); serr != nil {
-				return fmt.Errorf("map rebuild (save): %w", serr)
+			if err := mapx.WithLock(mapPath, func() error {
+				if anterior, lerr := mapx.Load(mapPath); lerr == nil {
+					mapx.PreserveStamps(g, anterior)
+					g.Flow = anterior.Flow
+					perdidos = stampLossWarning(anterior, g)
+				}
+				if serr := mapx.Save(g, mapPath); serr != nil {
+					return fmt.Errorf("map rebuild (save): %w", serr)
+				}
+				return nil
+			}); err != nil {
+				return err
 			}
 			fmt.Printf("✓ map rebuilt (%d nodes).\n", len(g.Nodes))
 			if perdidos != "" {

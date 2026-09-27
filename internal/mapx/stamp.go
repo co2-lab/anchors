@@ -254,3 +254,62 @@ func (g *Graph) recordJudgment(e *Edge, gateName, verdict, now string) {
 		e.Julgamentos = append(e.Julgamentos, j)
 	}
 }
+
+func edgeKey(e *Edge) string { return string(e.Type) + "\x00" + e.From + "\x00" + e.To }
+
+// EdgeStamps is a snapshot of the stamps of the map's edges, by edge: what a command saw
+// before stamping, so ApplyStampChanges can tell its own changes from another process's.
+func (g *Graph) EdgeStamps() map[string]*Stamp {
+	out := make(map[string]*Stamp, len(g.Edges))
+	for i := range g.Edges {
+		if g.Edges[i].Stamp != nil {
+			s := *g.Edges[i].Stamp
+			out[edgeKey(&g.Edges[i])] = &s
+		}
+	}
+	return out
+}
+
+// ApplyStampChanges carries to g — the map as it is on disk now — the stamps `src` changed
+// since `before` (src's snapshot taken before it stamped). A stamp that another process
+// changed in g since `before` is kept: it is newer than what src saw. An edge g does not
+// have is left out. It returns how many stamps it applied and how many it kept.
+//
+// A command that confronts for minutes — `check --all` — cannot hold the map's lock while
+// it runs, so it stamps its own copy and brings over only what it changed.
+func (g *Graph) ApplyStampChanges(src *Graph, before map[string]*Stamp) (applied, kept int) {
+	here := make(map[string]*Edge, len(g.Edges))
+	for i := range g.Edges {
+		here[edgeKey(&g.Edges[i])] = &g.Edges[i]
+	}
+	for i := range src.Edges {
+		e := &src.Edges[i]
+		k := edgeKey(e)
+		if sameStamp(e.Stamp, before[k]) {
+			continue // src did not change it
+		}
+		d, ok := here[k]
+		if !ok {
+			continue
+		}
+		if !sameStamp(d.Stamp, before[k]) {
+			kept++ // changed by another process meanwhile: theirs is newer
+			continue
+		}
+		if e.Stamp == nil {
+			d.Stamp = nil
+		} else {
+			s := *e.Stamp
+			d.Stamp = &s
+		}
+		applied++
+	}
+	return applied, kept
+}
+
+func sameStamp(a, b *Stamp) bool {
+	if a == nil || b == nil {
+		return a == b
+	}
+	return *a == *b
+}

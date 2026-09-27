@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLWOX
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: comando
 -->
 # Flow — build, draw and navigate the work flows kept in the map
@@ -77,7 +77,7 @@ as a mermaid diagram. It is never stored, so it cannot age against the flow it d
 | --- | --- | --- | --- |
 | DEP1 | `internal/flowx/build.go` | `Build` | apoio — reads the declared flows and actions into a graph |
 | DEP2 | `internal/flowx/model.go` | `Next`, `StatesOf`, `Unhandled`, `StateByCode`, `Entry` | apoio — the queries over the flow graph |
-| DEP3 | `internal/mapx/store.go` | `Load`, `Save` | mapa — the map that stores the flow graph |
+| DEP3 | `internal/mapx/lock.go` | `Update` | mapa — the map that stores the flow graph, changed under its lock |
 | DEP4 | `internal/config/root.go` | `AbsRoot` | config — the project root |
 
 ## Open Decisions

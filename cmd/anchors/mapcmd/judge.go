@@ -164,19 +164,13 @@ it is declared.`,
 			// 1) CARIMBO — marca a aresta guide→alvo (o confronto da régua contra o
 			//    alvo) com o veredito da IA. Se o gate declara guide, carimba essa
 			//    aresta; senão, cai para o carimbo por-nó (todas as arestas do alvo).
+			//    The stamp is applied to the map as it is on disk NOW, under the lock: a check
+			//    or ingest that wrote since this command read the map is kept.
 			stamped := 0
-			if gc.Guide != "" && g.StampEdgeByGate(gc.Guide, target, verdictStr, now.Format(time.DateOnly), gateName) {
-				stamped = 1
-			} else {
-				// Carimbo por NÓ: o `judge` julga uma UNIDADE, e o `StampEdges` exige as
-				// duas pontas confrontadas na mesma rodada — com um alvo só, nenhuma
-				// aresta qualifica e o carimbo saía sempre zero. O veredito abria a issue
-				// e não tocava o grafo: um `check` posterior não via o achado.
-				// leva o NOME do gate: é ele que permite ao `check` posterior saber que
-				// este julgamento foi respondido, em vez de perguntar de novo.
-				stamped = g.StampNodeByGate(target, verdictStr, now.Format(time.DateOnly), gateName)
-			}
-			if err := mapx.Save(g, mapPath); err != nil {
+			if err := mapx.Update(mapPath, func(g *mapx.Graph) error {
+				stamped = stampJudgment(g, gc, target, verdictStr, now, gateName)
+				return nil
+			}); err != nil {
 				return fmt.Errorf("save stamp: %w", err)
 			}
 
@@ -403,4 +397,18 @@ func judgeWritesIssue(cfg *config.Config, recordIssues bool) bool {
 		return recordIssues
 	}
 	return true
+}
+
+// stampJudgment records a judgment on the map: on the guide→target edge when the gate
+// declares a guide, else on the target's edges. It returns how many edges it stamped.
+func stampJudgment(g *mapx.Graph, gc config.Gate, target, verdict string, now time.Time, gateName string) int {
+	if gc.Guide != "" && g.StampEdgeByGate(gc.Guide, target, verdict, now.Format(time.DateOnly), gateName) {
+		return 1
+	}
+	// Carimbo por NÓ: o `judge` julga uma UNIDADE, e o `StampEdges` exige as duas pontas
+	// confrontadas na mesma rodada — com um alvo só, nenhuma aresta qualifica e o carimbo
+	// saía sempre zero. O veredito abria a issue e não tocava o grafo: um `check`
+	// posterior não via o achado. Leva o NOME do gate: é ele que permite ao `check`
+	// posterior saber que este julgamento foi respondido, em vez de perguntar de novo.
+	return g.StampNodeByGate(target, verdict, now.Format(time.DateOnly), gateName)
 }

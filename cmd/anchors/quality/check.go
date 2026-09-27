@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/co2-lab/anchors/internal/i18n"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -544,8 +545,24 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn, 
 	//
 	// Com a data, o mapa só muda quando o VEREDITO ou a `rev` mudam — que é quando há o
 	// que registrar.
+	//
+	// The check confronted a copy it read minutes ago, and cannot hold the map's lock for
+	// the whole run. It stamps its copy, and carries to the map as it is on disk now only
+	// the stamps it changed — an ingest or a judge that wrote in between is kept, and a
+	// stamp another process changed meanwhile keeps theirs.
+	before := g.EdgeStamps()
 	stamped := g.StampEdges(verdicts, now.Format(time.DateOnly))
-	if err := mapx.Save(g, mapPath); err != nil {
+	if err := mapx.WithLock(mapPath, func() error {
+		fresh, err := mapx.Load(mapPath)
+		if errors.Is(err, fs.ErrNotExist) {
+			return mapx.Save(g, mapPath) // no map on disk: nothing to merge into
+		}
+		if err != nil {
+			return err
+		}
+		fresh.ApplyStampChanges(g, before)
+		return mapx.Save(fresh, mapPath)
+	}); err != nil {
 		return fmt.Errorf("save stamped map: %w", err)
 	}
 	if !issuesOn {

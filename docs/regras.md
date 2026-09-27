@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:207be7716cfbd7fa — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:895288535f08a9ca — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -470,6 +470,8 @@ abra a página dela em `camadas/`.
 ### [IMANM — ImpactAnalysis — what changing one file propagates to, and what it must be confronted against](camadas/mapa.md#imanm--impactanalysis--what-changing-one-file-propagates-to-and-what-it-must-be-confronted-against)
 
 ### [SGINA — SignalIngestion — hanging the runner's results on the map's nodes: executions, proven rules, coverage and mutation](camadas/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
+
+### [MPLCK — MapLock — the map changed by one writer at a time, each applying only what it changes](camadas/mapa.md#mplck--maplock--the-map-changed-by-one-writer-at-a-time-each-applying-only-what-it-changes)
 
 ### [GRMDG — GraphModel — the shape of the map file, and when a validated relation goes stale](camadas/mapa.md#grmdg--graphmodel--the-shape-of-the-map-file-and-when-a-validated-relation-goes-stale)
 

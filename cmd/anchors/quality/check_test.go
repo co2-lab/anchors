@@ -2568,3 +2568,52 @@ func TestTimingRoundsToWhatADecisionNeeds(t *testing.T) {
 		}
 	}
 }
+
+// The race reported from a project running ingests in parallel with the check: the check
+// read the map, an ingest wrote its signals, and the check wrote its whole copy back —
+// the ingestion disappeared.
+func TestRecordCheckKeepsWhatAnotherProcessWrote(t *testing.T) {
+	t.Run("CGPCH-B84: The check's stamps do not erase what another process wrote meanwhile", func(t *testing.T) {})
+	englishOutput(t)
+	issue.UseFiles()
+	root := qProject(t, "version: 2\nworkflow:\n  mode: manual\n", nil, nil)
+	mapPath := filepath.Join(root, mapx.DefaultPath)
+	base := &mapx.Graph{
+		Nodes: []mapx.Node{{ID: "a.spec.md", Kind: mapx.KindSpec, Rev: "s1"}, {ID: "a.go", Kind: mapx.KindCode, Rev: "c1"}},
+		Edges: []mapx.Edge{{From: "a.spec.md", To: "a.go", Type: mapx.EdgeSpecifies}},
+	}
+	if err := mapx.Save(base, mapPath); err != nil {
+		t.Fatal(err)
+	}
+	g, err := mapx.Load(mapPath) // what the check confronts
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := mapx.Update(mapPath, func(d *mapx.Graph) error { // an ingest, meanwhile
+		d.RecordRunSeconds("a.go", "out/mutation.json", 3)
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	p := gate.Profile{Results: []gate.Result{
+		{Gate: "g", Target: "a.spec.md", Verdict: gate.Pass, Blocking: true},
+		{Gate: "g", Target: "a.go", Verdict: gate.Pass, Blocking: true},
+	}}
+	captureStdout(t, func() {
+		if err := recordCheck(root, mapPath, g, p, false, false); err != nil {
+			t.Fatal(err)
+		}
+	})
+	disk, err := mapx.Load(mapPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if disk.Edges[0].Stamp == nil || disk.Edges[0].Stamp.Verdict != "ok" {
+		t.Errorf("the check's stamp reaches the map, got %+v", disk.Edges[0].Stamp)
+	}
+	for _, n := range disk.Nodes {
+		if n.ID == "a.go" && (n.Signal == nil || n.Signal.SecondsBySuite["out/mutation.json"] != 3) {
+			t.Errorf("the ingestion written meanwhile is kept, got %+v", n.Signal)
+		}
+	}
+}

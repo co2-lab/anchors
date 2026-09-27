@@ -146,6 +146,10 @@ Thumbs.db
 # What describes the PROJECT lives OUTSIDE — the SBOM, for example, is born at the root.
 # So this rule needs no exception, and an exception in .gitignore is where silence lives.
 .anchors/
+
+# the map's write lock: held for the time of one write, and left behind only by a process
+# that died holding it.
+anchors.graph.yaml.lock*
 `
 
 // FirstCommitMessage é o assunto do commit inicial. Diz o que é, não o que faz:

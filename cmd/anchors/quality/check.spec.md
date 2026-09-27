@@ -170,6 +170,7 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | --- | --- |
 | `CGPCH-B79` | The time table counts each gate's targets over every verdict, as one target or as N targets with the numbers right-aligned to the widest, pads the gate names to the longest, and shows the worst target's time only for a gate with more than one target. |
 | `CGPCH-B80` | The slowest targets are listed slowest first, and the list is left out when no target recorded any time. |
+| `CGPCH-B84` | The check stamps the copy of the map it confronted, and carries only the stamps it changed to the map as it is on disk when it records, under the map's lock: what another process wrote meanwhile — an ingestion's signals, another stamp — is kept. |
 | `CGPCH-B81` | Times are rounded to what a decision needs: to ten milliseconds from one second up, to a tenth of a millisecond from one millisecond up, and to the microsecond below. |
 
 ## Invariants

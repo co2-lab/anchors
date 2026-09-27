@@ -157,36 +157,44 @@ map's edges by co-location (file names) and by scenario code
 			// rodar `map build` antes de todo `check`, então sem isto cada etapa zerava o
 			// carimbo da anterior e o `anchors stale` acusava o repositório inteiro como
 			// "nunca validado".
+			// What the rebuild keeps from the previous map — stamps, judgments, signals, the
+			// flow — is read UNDER the lock, right before writing: an ingest that finished
+			// while the tree was being scanned is in it, and is kept.
 			var perdidos string
-			if anterior, err := mapx.Load(outPath); err == nil {
-				mapx.PreserveStamps(g, anterior)
-				// O FLUXO sobrevive ao rebuild do mapa, pela mesma razão dos carimbos e
-				// com um risco maior: quem o preenche é o `flow build`, que lê
-				// `flows/*.flow.md` — arquivos que o `map build` não varre.
-				//
-				// Sem esta linha, rodar `map build` apagaria o grafo de fluxo inteiro e
-				// nada acusaria: o arquivo continuaria válido, só sem a chave. É o modo
-				// de falha que o comentário do `Load` descreve ("os campos que ele
-				// reconhece carregam, os que não reconhece somem").
-				g.Flow = anterior.Flow
-				// PERDA DE CARIMBO é silenciosa, e o mapa continua VÁLIDO.
-				//
-				// O `PreserveStamps` preserva o que está no arquivo anterior — e num merge
-				// o arquivo anterior é o do OUTRO lado. Medido no app de referência
-				// (co2-lab/anchors#12): resolvi um conflito com `checkout --theirs` +
-				// `map build`, e o carimbo de `review` de uma spec desapareceu. Descobri
-				// por acaso, contando: 18 onde eu esperava 19.
-				//
-				// O custo não é o carimbo: é o LAUDO. Ele vive no `--reason` do comando,
-				// não no arquivo, e refazer uma revisão adversarial é caro.
-				//
-				// Remover um nó legitimamente remove os carimbos dele, então isto é AVISO
-				// e não reprovação. O que ele faz é transformar perda silenciosa em perda
-				// visível, que já é a maior parte do dano.
-				perdidos = stampLossWarning(anterior, g)
-			}
-			if err := mapx.Save(g, outPath); err != nil {
-				return fmt.Errorf("save: %w", err)
+			if err := mapx.WithLock(outPath, func() error {
+				if anterior, err := mapx.Load(outPath); err == nil {
+					mapx.PreserveStamps(g, anterior)
+					// O FLUXO sobrevive ao rebuild do mapa, pela mesma razão dos carimbos e
+					// com um risco maior: quem o preenche é o `flow build`, que lê
+					// `flows/*.flow.md` — arquivos que o `map build` não varre.
+					//
+					// Sem esta linha, rodar `map build` apagaria o grafo de fluxo inteiro e
+					// nada acusaria: o arquivo continuaria válido, só sem a chave. É o modo
+					// de falha que o comentário do `Load` descreve ("os campos que ele
+					// reconhece carregam, os que não reconhece somem").
+					g.Flow = anterior.Flow
+					// PERDA DE CARIMBO é silenciosa, e o mapa continua VÁLIDO.
+					//
+					// O `PreserveStamps` preserva o que está no arquivo anterior — e num merge
+					// o arquivo anterior é o do OUTRO lado. Medido no app de referência
+					// (co2-lab/anchors#12): resolvi um conflito com `checkout --theirs` +
+					// `map build`, e o carimbo de `review` de uma spec desapareceu. Descobri
+					// por acaso, contando: 18 onde eu esperava 19.
+					//
+					// O custo não é o carimbo: é o LAUDO. Ele vive no `--reason` do comando,
+					// não no arquivo, e refazer uma revisão adversarial é caro.
+					//
+					// Remover um nó legitimamente remove os carimbos dele, então isto é AVISO
+					// e não reprovação. O que ele faz é transformar perda silenciosa em perda
+					// visível, que já é a maior parte do dano.
+					perdidos = stampLossWarning(anterior, g)
+				}
+				if err := mapx.Save(g, outPath); err != nil {
+					return fmt.Errorf("save: %w", err)
+				}
+				return nil
+			}); err != nil {
+				return err
 			}
 
 			fmt.Println(i18n.T("map.built", len(g.Nodes), len(g.Edges)))

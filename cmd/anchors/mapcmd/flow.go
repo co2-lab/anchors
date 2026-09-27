@@ -2,6 +2,7 @@ package mapcmd
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -47,14 +48,17 @@ func newFlowBuildCmd() *cobra.Command {
 				return nil
 			}
 			path := filepath.Join(absRoot, mapx.DefaultPath)
-			g, err := mapx.Load(path)
-			if err != nil {
+			if _, err := os.Stat(path); err != nil {
 				// The map does not exist yet, and the flow is no reason to create it: a
 				// map with no nodes would have the relational gates confront a void.
 				return fmt.Errorf("build the map first (`anchors map build`): %w", err)
 			}
-			g.Flow = fg
-			if err := mapx.Save(g, path); err != nil {
+			// The flow graph is all this command changes: it is set on the map as it is
+			// on disk, under the lock.
+			if err := mapx.Update(path, func(g *mapx.Graph) error {
+				g.Flow = fg
+				return nil
+			}); err != nil {
 				return err
 			}
 			steps, results := 0, 0

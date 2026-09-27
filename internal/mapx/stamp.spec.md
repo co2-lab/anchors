@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EDSTD
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: mapa
 -->
 # EdgeStamping — recording on each relation that it was confronted, with what result, and since when
@@ -61,6 +61,7 @@ an unrelated gate erase a person's decision, which is what the check already ref
 | `EDSTD-B11` | A judgment survives the next round of the check, which rewrites the stamp. |
 | `EDSTD-B12` | A relation holds one judgment per gate: judging again replaces it, and keeps its date when the verdict and revisions are the same. |
 | `EDSTD-B13` | The stale relations are listed: the never stamped and those with an end moved since the stamp. |
+| `EDSTD-B15` | A snapshot of the stamps, taken before a round stamps its copy of the map, lets the round carry to the map as it is on disk only the stamps it changed; a stamp another process changed since the snapshot is kept as theirs and counted, and an edge the map on disk does not have is left out (`EdgeStamps`, `ApplyStampChanges`). |
 | `EDSTD-B14` | Judging a node or a single relation keeps a waived stamp recorded by another gate, or when no gate is named, and still records the judging gate's judgment; the gate that recorded the waiver replaces it, and a new waiver always replaces the stamp. |
 
 ## Invariants

@@ -181,12 +181,10 @@ func runSuiteWithBudget(cs suiteCommand, s config.Suite, absRoot, target string,
 
 // recordRunSeconds keeps the time Anchors measured for a file's run in the map.
 func recordRunSeconds(mapPath, id, key string, seconds float64) error {
-	g, err := mapx.Load(mapPath)
-	if err != nil {
-		return fmt.Errorf("load map: %w", err)
-	}
-	g.RecordRunSeconds(id, key, seconds)
-	return mapx.Save(g, mapPath)
+	return mapx.Update(mapPath, func(g *mapx.Graph) error {
+		g.RecordRunSeconds(id, key, seconds)
+		return nil
+	})
 }
 
 // absFiles turns map IDs into the absolute forward-slash paths the suite's command

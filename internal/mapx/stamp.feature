@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: EDSTD
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @EDSTD
@@ -97,6 +97,12 @@ Feature: EdgeStamping — recording on each relation that it was confronted, wit
     Given two identical graphs
     When each is stamped with the same verdicts on 2026-08-30
     Then the two stamps are identical and dated
+
+  @EDSTD-B15 @unit-level
+  Scenario: A round carries only the stamps it changed to the map on disk
+    Given a copy of the map snapshotted and stamped by a round, and the map on disk where another process changed one of the same stamps
+    When the round's changes are applied to the map on disk
+    Then the stamps only the round changed are applied, the other process's stamp is kept and counted, and an edge the disk does not have is left out
 
   @EDSTD-X01 @unit-level
   Scenario: The stamp carries the caller's date

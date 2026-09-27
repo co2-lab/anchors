@@ -97,6 +97,14 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 			if mapPath == "" {
 				mapPath = filepath.Join(absRoot, mapx.DefaultPath)
 			}
+			// The ingestion changes only signals, and it reads the map UNDER the lock: a
+			// parallel ingest or check writing in between is in what is read here, and
+			// what they wrote is kept (`mapx.Lock`).
+			unlock, err := mapx.Lock(mapPath)
+			if err != nil {
+				return err
+			}
+			defer unlock()
 			g, err := mapx.Load(mapPath)
 			if err != nil {
 				return fmt.Errorf("load map: %w (run `anchors map build`)", err)
@@ -399,6 +407,11 @@ func ingestLogs(absRoot, mapPath string) error {
 	if cfg.Logs == nil || len(cfg.Logs.Paths) == 0 {
 		return fmt.Errorf("no log declared — add `logs.paths` to anchors.yaml with the globs of your log files")
 	}
+	unlock, err := mapx.Lock(mapPath)
+	if err != nil {
+		return err
+	}
+	defer unlock()
 	g, err := mapx.Load(mapPath)
 	if err != nil {
 		return err

@@ -50,3 +50,7 @@ reports/
 # — versionar aqui concederia a permissao a todo mundo que clonasse o repositorio.
 # `.claude/settings.json` (se existir) continua versionado: esse e' configuracao do projeto.
 .claude/settings.local.json
+
+# a trava de escrita do mapa (`mapx.Lock`): dura uma gravação, e só fica para trás se o
+# processo morreu segurando-a.
+anchors.graph.yaml.lock*

@@ -570,3 +570,9 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given an empty map and a path that does not exist
     When the nodes are selected for that path
     Then it fails, and not as not-governed
+
+  @CGPCH-B84 @unit-level
+  Scenario: The check's stamps do not erase what another process wrote meanwhile
+    Given a check that read the map, and an ingestion that wrote a signal to the map on disk after it
+    When the check records its stamps
+    Then the map on disk has the check's stamp and still has the ingestion's signal

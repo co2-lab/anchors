@@ -748,6 +748,7 @@ gates:
       "cmd/anchors/flow/watch_unix.go": "sets one process attribute: no operator to mutate"
       "cmd/anchors/flow/watch_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
       "cmd/anchors/quality/budget_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "internal/mapx/lock_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
       "internal/migra/format_{2,3,4}.go": "rename tables of a format migration: data, no operator to mutate"
 
   - name: line-coverage
@@ -759,6 +760,7 @@ gates:
       "cmd/anchors/flow/watch_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
       "internal/daemon/daemon_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
       "cmd/anchors/quality/budget_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "internal/mapx/lock_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
 
   # ── THE PROJECT'S LANGUAGE POLICY ───────────────────────────────────────────────
   #

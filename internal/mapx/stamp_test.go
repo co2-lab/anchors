@@ -406,3 +406,41 @@ func TestJudgingANodeKeepsAnotherGatesWaiver(t *testing.T) {
 		t.Errorf("a new waiver did not land: %+v", st)
 	}
 }
+
+func TestApplyStampChanges(t *testing.T) {
+	t.Run("EDSTD-B15: A round carries only the stamps it changed to the map on disk", func(t *testing.T) {})
+	edges := func() []Edge {
+		return []Edge{
+			{From: "a", To: "b", Type: EdgeTestedBy},
+			{From: "a", To: "c", Type: EdgeTestedBy, Stamp: &Stamp{Verdict: "ok", ChangedAt: "d0"}},
+			{From: "a", To: "d", Type: EdgeTestedBy},
+			{From: "a", To: "e", Type: EdgeTestedBy, Stamp: &Stamp{Verdict: "ok", ChangedAt: "d0"}},
+		}
+	}
+	copyOf := &Graph{Edges: edges()}
+	before := copyOf.EdgeStamps()
+	copyOf.Edges[0].Stamp = &Stamp{Verdict: "ok", ChangedAt: "d1"}    // the round stamps a→b
+	copyOf.Edges[1].Stamp = &Stamp{Verdict: "issue", ChangedAt: "d1"} // and a→c
+	copyOf.Edges = append(copyOf.Edges, Edge{From: "a", To: "z", Type: EdgeTestedBy, Stamp: &Stamp{Verdict: "ok"}})
+
+	disk := &Graph{Edges: edges()}
+	disk.Edges[1].Stamp = &Stamp{Verdict: "waived", ChangedAt: "d1"} // a judge waived a→c meanwhile
+	disk.Edges[2].Stamp = &Stamp{Verdict: "ok", ChangedAt: "d1"}     // and another check stamped a→d
+	applied, kept := disk.ApplyStampChanges(copyOf, before)
+	if applied != 1 || kept != 1 {
+		t.Fatalf("one applied (a→b), one kept (a→c), got %d applied, %d kept", applied, kept)
+	}
+	if disk.Edges[0].Stamp == nil || disk.Edges[0].Stamp.ChangedAt != "d1" {
+		t.Errorf("the round's own stamp reaches the map on disk, got %+v", disk.Edges[0].Stamp)
+	}
+	if disk.Edges[1].Stamp.Verdict != "waived" || disk.Edges[2].Stamp.Verdict != "ok" || disk.Edges[3].Stamp.ChangedAt != "d0" {
+		t.Errorf("what the round did not change stays as the disk has it: %+v %+v %+v", disk.Edges[1].Stamp, disk.Edges[2].Stamp, disk.Edges[3].Stamp)
+	}
+	if len(disk.Edges) != 4 {
+		t.Errorf("an edge the disk does not have is not added, got %d edges", len(disk.Edges))
+	}
+	disk.Edges[0].Stamp.Verdict = "mutated"
+	if copyOf.Edges[0].Stamp.Verdict != "ok" || before[edgeKey(&copyOf.Edges[1])].Verdict != "ok" {
+		t.Error("the applied stamp and the snapshot are copies, not shared pointers")
+	}
+}

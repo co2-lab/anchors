@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b0c311e7a74ae970 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:6bda93766f29ce3e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2175,6 +2175,8 @@ teste prova.
 - [A governed file outside the map bars the check](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-E06`
 
 - [A path on neither disk nor map is an error](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-E07`
+
+- [The check's stamps do not erase what another process wrote meanwhile](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B84`
 
 - [The scenarios of one spec are listed as proven or not](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B01`
 
@@ -6340,6 +6342,22 @@ teste prova.
 
 - [A run time Anchors measured is recorded on the node](camadas/mapa.md#sgina-b23--a-run-time-anchors-measured-is-recorded-on-the-node) `SGINA-B23`
 
+- [The lock is a file beside the map with its owner](camadas/mapa.md#mplck-b01--the-lock-is-a-file-beside-the-map-with-its-owner) `MPLCK-B01`
+
+- [A second writer waits for the first](camadas/mapa.md#mplck-b02--a-second-writer-waits-for-the-first) `MPLCK-B02`
+
+- [An abandoned lock is taken over, a live one is not](camadas/mapa.md#mplck-b03--an-abandoned-lock-is-taken-over-a-live-one-is-not) `MPLCK-B03`
+
+- [Parallel processes each changing their part all reach the map](camadas/mapa.md#mplck-b04--parallel-processes-each-changing-their-part-all-reach-the-map) `MPLCK-B04`
+
+- [The lock is released when the function returns](camadas/mapa.md#mplck-b05--the-lock-is-released-when-the-function-returns) `MPLCK-B05`
+
+- [A lock held past the timeout](camadas/mapa.md#mplck-e01--a-lock-held-past-the-timeout) `MPLCK-E01`
+
+- [No map, or a refused change, writes nothing](camadas/mapa.md#mplck-e02--no-map-or-a-refused-change-writes-nothing) `MPLCK-E02`
+
+- [A lock that cannot be created names the file](camadas/mapa.md#mplck-e03--a-lock-that-cannot-be-created-names-the-file) `MPLCK-E03`
+
 - [A relation never stamped is stale](camadas/mapa.md#grmdg-b01--a-relation-never-stamped-is-stale) `GRMDG-B01`
 
 - [A stamp is fresh while both ends keep their revisions](camadas/mapa.md#grmdg-b02--a-stamp-is-fresh-while-both-ends-keep-their-revisions) `GRMDG-B02`
@@ -6403,6 +6421,8 @@ teste prova.
 - [Judging keeps a waiver another gate recorded, and the gate that waived replaces its own](camadas/mapa.md#edstd-b14--judging-keeps-a-waiver-another-gate-recorded-and-the-gate-that-waived-replaces-its-own) `EDSTD-B14`
 
 - [The same round on the same day gives the same stamps](camadas/mapa.md#edstd-i01--the-same-round-on-the-same-day-gives-the-same-stamps) `EDSTD-I01`
+
+- [A round carries only the stamps it changed to the map on disk](camadas/mapa.md#edstd-b15--a-round-carries-only-the-stamps-it-changed-to-the-map-on-disk) `EDSTD-B15`
 
 - [The stamp carries the caller's date](camadas/mapa.md#edstd-x01--the-stamp-carries-the-callers-date) `EDSTD-X01`
 
