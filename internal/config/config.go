@@ -108,6 +108,10 @@ type Config struct {
 	Layers   map[string]Layer    `yaml:"layers"`             // as camadas (Estrutura)
 	Derived  *Derived            `yaml:"derived,omitempty"`  // co-location dos derivados
 	Docs     *Docs               `yaml:"docs,omitempty"`     // as documentações que o projeto DEVE ter
+	// Changelog says how `anchors changelog --write` writes the changelog: one file the
+	// new releases are added to the top of (`incremental`, the default), or one file per
+	// release (`per_version`), and the template that renders a release.
+	Changelog *Changelog `yaml:"changelog,omitempty"`
 	// ContainersDecl é o que roda SEPARADO — o nível 2 do C4. A Estrutura diz o que cada
 	// peça é; isto diz onde ela roda. Ver containers.go.
 	ContainersDecl []Container  `yaml:"containers,omitempty"`
@@ -1769,6 +1773,15 @@ func (c *Config) validarPadroes() error {
 			}
 		}
 	}
+	if cl := c.Changelog; cl != nil {
+		known := false
+		for _, m := range ChangelogModes {
+			known = known || cl.Mode == "" || cl.Mode == m
+		}
+		if !known {
+			return fmt.Errorf("`changelog.mode` must be one of %s, got %q", strings.Join(ChangelogModes, ", "), cl.Mode)
+		}
+	}
 	for section, suites := range map[string][]Suite{"tests": c.Tests, "mutation": c.Mutation} {
 		for i, su := range suites {
 			for j, p := range su.Paths {
@@ -2257,4 +2270,40 @@ func (s Suite) Covers(rel string) bool {
 		}
 	}
 	return false
+}
+
+// Changelog is how the project's changelog is written.
+type Changelog struct {
+	// Mode is `incremental` (one file, new releases added to its top — the default) or
+	// `per_version` (one file per release, in a directory).
+	Mode string `yaml:"mode,omitempty"`
+	// Path is the file (incremental, default CHANGELOG.md) or the directory (per_version,
+	// default changelog/), relative to the root.
+	Path string `yaml:"path,omitempty"`
+	// Template is a text/template file that renders one release, relative to the root;
+	// empty uses the built-in one. It receives the release and a `t` function that
+	// translates the section headings to the project's language.
+	Template string `yaml:"template,omitempty"`
+}
+
+// ChangelogModes are the ways a changelog can be written.
+var ChangelogModes = []string{"incremental", "per_version"}
+
+// ModeOrDefault is the declared mode, or `incremental`.
+func (c *Changelog) ModeOrDefault() string {
+	if c == nil || c.Mode == "" {
+		return "incremental"
+	}
+	return c.Mode
+}
+
+// PathOrDefault is the declared path, or the mode's default.
+func (c *Changelog) PathOrDefault() string {
+	if c != nil && c.Path != "" {
+		return c.Path
+	}
+	if c.ModeOrDefault() == "per_version" {
+		return "changelog"
+	}
+	return "CHANGELOG.md"
 }

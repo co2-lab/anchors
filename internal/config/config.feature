@@ -346,3 +346,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a suite with no paths, one limited to its workspace, and one with a malformed glob
     When files are checked against each, and each configuration is loaded
     Then the first runs any file, the second only its workspace's, and the third fails the load naming it
+
+  @CNFGO-B50 @unit-level
+  Scenario: The changelog block has defaults and refuses an unknown mode
+    Given no changelog block, a per_version one, one with its own path, and one with an unknown mode
+    When each is read and loaded
+    Then the defaults are incremental into CHANGELOG.md and per_version into changelog/, the path wins, and the unknown mode fails the load

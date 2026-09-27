@@ -14,6 +14,7 @@ func Register(root *cobra.Command) {
 	root.AddCommand(newCommitMsgCmd())
 	root.AddCommand(newBoardCmd())
 	root.AddCommand(newDocsCmd())
+	root.AddCommand(newChangelogCmd())
 	root.AddCommand(newSuggestCmd())
 	root.AddCommand(newSynthesizeCmd())
 	root.AddCommand(newCodeCmd())

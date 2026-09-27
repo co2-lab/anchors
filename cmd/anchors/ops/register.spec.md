@@ -1,6 +1,6 @@
 <!-- @anchors
   code: OPRGP
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: comando
 -->
 # OpsRegister — the operation commands reach the CLI through one registration point
@@ -12,7 +12,7 @@
 The CLI is assembled by domain: each command package hands its commands to the root through
 one registration function, and the root knows only the domains. This unit is the registration
 of the operations domain — the commands that set a project up and operate it: init, new,
-migrate, freeze and thaw, settings, install-hooks, commit-msg, board, docs, suggest,
+migrate, freeze and thaw, settings, install-hooks, commit-msg, board, docs, changelog, suggest,
 synthesize, code and generated-paths.
 
 Registering in one place is what makes a command exist for the user, for the root's freeze
@@ -29,7 +29,7 @@ is an `unknown command` for whoever follows the instruction.
 
 | Effect | Description |
 | --- | --- |
-| `OPRGP-B01` | The root receives the fourteen operation commands: board, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, settings, suggest, synthesize and thaw. |
+| `OPRGP-B01` | The root receives the fifteen operation commands: board, changelog, code, commit-msg, docs, freeze, generated-paths, init, install-hooks, migrate, new, settings, suggest, synthesize and thaw. |
 
 ## Invariants
 

@@ -981,5 +981,11 @@
   "init.question.detail.repo_required": "required in `github` mode — without it, the flow does not know which repository to pull from",
   "init.question.detail.repo_only_github": "only valid in `github` mode; in `local` this field makes the file lie about the integration being active",
   "init.question.detail.labels_required": "required in `github` mode — without it, the flow would take any issue of the repository, including product ones",
-  "telemetry.notice": "Anchors sends DECISION events — how many candidates the claim saw, which\ngate failed, in which state a turn ended. It is how the product finds\npatterns no one sees from inside a single project.\n\nIt does NOT send: file content, spec, diff, error message, or the name of a\nrepository, user or branch. Only numbers and Anchors' own vocabulary.\n\nTo turn it off, any of these:\n    export ANCHORS_TELEMETRY=off\n    telemetry: off      (in anchors.yaml, for the whole project)\n\nThis notice appears once per project on this machine."
+  "telemetry.notice": "Anchors sends DECISION events — how many candidates the claim saw, which\ngate failed, in which state a turn ended. It is how the product finds\npatterns no one sees from inside a single project.\n\nIt does NOT send: file content, spec, diff, error message, or the name of a\nrepository, user or branch. Only numbers and Anchors' own vocabulary.\n\nTo turn it off, any of these:\n    export ANCHORS_TELEMETRY=off\n    telemetry: off      (in anchors.yaml, for the whole project)\n\nThis notice appears once per project on this machine.",
+  "changelog.unreleased": "Unreleased",
+  "changelog.breaking": "Breaking changes",
+  "changelog.features": "Features",
+  "changelog.bugs": "Bugs fixed",
+  "changelog.fixes": "Fixes",
+  "changelog.title": "Technical changelog"
 }

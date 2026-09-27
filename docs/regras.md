@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:fd4d1714a06a2521 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:f2ba8b72a69fccc2 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -150,6 +150,8 @@ abra a página dela em `camadas/`.
 ### [RNMBR — Renumber — moves the revisions a branch added when the base already took their number](camadas/comando.md#rnmbr--renumber--moves-the-revisions-a-branch-added-when-the-base-already-took-their-number)
 
 ### [BRSRB — BoardServe — the board page served locally with live state, read from the host only when something changed](camadas/comando.md#brsrb--boardserve--the-board-page-served-locally-with-live-state-read-from-the-host-only-when-something-changed)
+
+### [CLGCM — anchors changelog — the technical changelog, printed or written](camadas/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written)
 
 ### [CDCMC — CodeCommand — a new unit gets an identity code that no other unit in the map already owns, and the codes in use are listed from the map](camadas/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map)
 
@@ -368,6 +370,8 @@ abra a página dela em `camadas/`.
 ## infra
 
 ### [CHRCC — ChangeRecord — the delivery record an agent leaves when it finishes a stage](camadas/infra.md#chrcc--changerecord--the-delivery-record-an-agent-leaves-when-it-finishes-a-stage)
+
+### [CHNGL — Changelog — the releases of a project, read from its commits](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits)
 
 ### [CHLGC — CheckLog — the check's output mirrored to a file, so it can be reread without re-running](camadas/infra.md#chlgc--checklog--the-checks-output-mirrored-to-a-file-so-it-can-be-reread-without-re-running)
 

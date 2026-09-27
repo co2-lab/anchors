@@ -70,6 +70,7 @@ patterns a spec governs.
 | `CNFGO-B47` | A gate's `timeout_ceiling` is a share between 0 and 1, 0.2 when not declared; a value outside that range fails the load. |
 | `CNFGO-B48` | A gate's `no_signal` maps globs of targets to the reason they have nothing to measure; an invalid glob or an empty reason fails the load, and a target matching two globs always gets the reason of the first in sorted order. |
 | `CNFGO-B49` | A suite's `paths` are globs of the files it runs: with none it runs any file, otherwise only a file one of them matches; a glob that is not valid fails the load naming the section, the suite and the index. |
+| `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 
 ### Canonical gate declarations
 

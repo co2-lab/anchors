@@ -265,6 +265,30 @@ all, the gates fall back to finding the code anywhere in the test file.
 
 ---
 
+## `changelog` — how `anchors changelog --write` writes
+
+```yaml
+changelog:
+  mode: incremental          # or per_version
+  path: CHANGELOG.md         # the file; per_version: the directory (default changelog/)
+  template: doct/changelog.md.tmpl   # optional: your own template for one release
+```
+
+- **`incremental`** (the default) — one file; the releases it does not hold yet go on its top,
+  below a leading `# ` title, each after a `<!-- anchors:changelog vX -->` marker. What is
+  under a marker is yours to edit: it is never rewritten. The unreleased block is the one
+  exception — it is replaced on each write, since it grows until the next tag.
+- **`per_version`** — one file per release, `<path>/<version>.md`; a release's file that
+  exists is kept, and `unreleased.md` is rewritten.
+- **`template`** — a Go `text/template` rendering one release, like the docs templates. It
+  receives `.Version`, `.Date` and the lists `.Breaking`, `.Features`, `.Bugs`, `.Fixes`, each
+  entry with `.Type`, `.Scope`, `.Subject`, `.Hash` and `.Bug`; `{{t "changelog.features"}}`
+  and the other `changelog.*` keys translate the headings to `lang`.
+
+This is the technical changelog; see `anchors guide changelog` for the product one.
+
+---
+
 ## Advanced blocks
 
 You probably won't need these early on.

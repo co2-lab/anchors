@@ -487,6 +487,27 @@ func TestSuitePaths(t *testing.T) {
 	}
 }
 
+func TestChangelogConfig(t *testing.T) {
+	t.Run("CNFGO-B50: The changelog block has defaults and refuses an unknown mode", func(t *testing.T) {})
+	var none *Changelog
+	if none.ModeOrDefault() != "incremental" || none.PathOrDefault() != "CHANGELOG.md" {
+		t.Errorf("no block is incremental into CHANGELOG.md, got %s %s", none.ModeOrDefault(), none.PathOrDefault())
+	}
+	if p := (&Changelog{Mode: "per_version"}).PathOrDefault(); p != "changelog" {
+		t.Errorf("per_version defaults to changelog/, got %s", p)
+	}
+	if p := (&Changelog{Mode: "per_version", Path: "docs/releases"}).PathOrDefault(); p != "docs/releases" {
+		t.Errorf("a declared path wins, got %s", p)
+	}
+	if _, err := load(t, "version: 1\nchangelog:\n  mode: per_version\n"); err != nil {
+		t.Errorf("a known mode loads: %v", err)
+	}
+	_, err := load(t, "version: 1\nchangelog:\n  mode: weekly\n")
+	if err == nil || !strings.Contains(err.Error(), "incremental") || !strings.Contains(err.Error(), "per_version") {
+		t.Errorf("an unknown mode fails the load naming the known ones, got %v", err)
+	}
+}
+
 func TestLoad_languageIsSetAtLoad(t *testing.T) {
 	t.Run("CNFGO-B12: An unsupported language fails the load", func(t *testing.T) {})
 	t.Cleanup(func() { _ = i18n.Set("") })

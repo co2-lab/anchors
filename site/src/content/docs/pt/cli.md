@@ -249,6 +249,37 @@ Ver [Congelar o projeto](/docs/congelar/).
 
 ---
 
+## Changelog
+
+`anchors changelog` monta o changelog **técnico** a partir dos commits entre duas tags:
+
+| seção | vem de |
+| --- | --- |
+| Mudanças incompatíveis | um `!` depois do tipo, ou o rodapé `BREAKING CHANGE:` |
+| Funcionalidades | `feat` |
+| Bugs corrigidos | `fix` com o rodapé `Bug:` — um defeito que chegou a ser lançado |
+| Correções | `fix` sem ele — correção de algo que nunca chegou a ninguém |
+
+`refactor`, `test`, `chore` e os outros tipos internos ficam de fora.
+
+```sh
+anchors changelog                   # a última versão
+anchors changelog --from v0.2.0     # todas as versões depois da v0.2.0
+anchors changelog --all --unreleased
+anchors changelog --write           # no(s) arquivo(s) que o bloco `changelog:` indica
+```
+
+O `--write` acrescenta só as versões que o arquivo ainda não tem, e mantém o resto como
+está — uma entrada editada à mão continua editada. Os títulos seguem o `lang`.
+
+É o changelog de quem trabalha no código, não as notas de versão do produto. Para essas,
+peça a um agente que sintetize um **changelog de produto** a partir dele — mudanças
+incompatíveis, as funcionalidades que o usuário vê, os bugs corrigidos; sem as correções
+simples, sem chores a não ser que o produto as sinta. `anchors guide changelog` é a régua
+das duas.
+
+---
+
 ## Relatórios
 
 ```sh

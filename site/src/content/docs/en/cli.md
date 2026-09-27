@@ -131,6 +131,34 @@ restore the file on `TERM` — trap it in the `run_changed:` script if the tool 
 cut batch leaves mutated source in the tree. On Windows there is no `TERM`: the batch is
 killed at once, and an in-place tool can be cut mid-mutant.
 
+## The changelog
+
+`anchors changelog` builds the **technical** changelog from the commits between two tags:
+
+| section | from |
+| --- | --- |
+| Breaking changes | a `!` after the type, or a `BREAKING CHANGE:` footer |
+| Features | `feat` |
+| Bugs fixed | `fix` with a `Bug:` footer — a defect that shipped |
+| Fixes | `fix` without it — a correction of work that never reached anyone |
+
+`refactor`, `test`, `chore` and the other internal types are left out.
+
+```sh
+anchors changelog                   # the latest release
+anchors changelog --from v0.2.0     # every release after v0.2.0
+anchors changelog --all --unreleased
+anchors changelog --write           # into the file(s) the `changelog:` block names
+```
+
+`--write` adds only the releases the file does not hold yet, and keeps the rest as it is —
+edit an entry by hand and a later write leaves it alone. The headings follow `lang`.
+
+It is a changelog for whoever works on the code, not the product's release notes. For
+those, have an agent synthesize a **product changelog** from it — breaking changes, the
+features a user sees, the bugs fixed; no plain fixes, no chores unless the product feels
+them. `anchors guide changelog` is the ruler for both.
+
 ## Project status
 
 Under construction, and honest about it. The **doctrine** of the 6 pillars

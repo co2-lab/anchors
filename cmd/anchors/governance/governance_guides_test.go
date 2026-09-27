@@ -26,19 +26,20 @@ import (
 
 // guideTitles is the set of guide subcommands and the first line each one prints.
 var guideTitles = map[string]string{
-	"code":    "# Code guide",
-	"feature": "# Feature guide",
-	"flag":    "# Feature flag guide",
-	"flow":    "# Flow guide",
-	"guide":   "# Guide guide",
-	"header":  "# Header guide",
-	"plan":    "# Plan guide",
-	"product": "# Product doctrine guide",
-	"project": "# Project guide",
-	"review":  "# Review guide",
-	"spec":    "# Spec guide",
-	"test":    "# Test guide",
-	"work":    "# Work guide",
+	"code":      "# Code guide",
+	"feature":   "# Feature guide",
+	"flag":      "# Feature flag guide",
+	"flow":      "# Flow guide",
+	"guide":     "# Guide guide",
+	"header":    "# Header guide",
+	"changelog": "# Changelog guide",
+	"plan":      "# Plan guide",
+	"product":   "# Product doctrine guide",
+	"project":   "# Project guide",
+	"review":    "# Review guide",
+	"spec":      "# Spec guide",
+	"test":      "# Test guide",
+	"work":      "# Work guide",
 }
 
 // captureOut collects what fn writes to os.Stdout: the guides print with fmt.Print.
@@ -545,5 +546,17 @@ func TestGuidesTellAFixFromABug(t *testing.T) {
 	}
 	if !strings.Contains(guideIn(t, "review"), "Is each fix its own commit, and is each bug marked?") {
 		t.Error("the review guide should ask whether each fix is its own commit and each bug is marked")
+	}
+}
+
+func TestChangelogGuideTellsTechnicalFromProduct(t *testing.T) {
+	t.Run("GVGDG-B16: The changelog guide tells the technical changelog from the product one", func(t *testing.T) {})
+	g := guideIn(t, "changelog")
+	for _, want := range []string{"TECHNICAL changelog", "## The product changelog (recommended)",
+		"Write it with an agent, from the technical changelog", "**Bugs fixed**",
+		"**Fixes** without", "**Chores**", "If it matters to\n  the product"} {
+		if !strings.Contains(g, want) {
+			t.Errorf("the changelog guide should say %q", want)
+		}
 	}
 }

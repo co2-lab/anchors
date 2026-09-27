@@ -57,7 +57,7 @@ func TestTestedUnits_LayerOverride(t *testing.T) {
 }
 
 func TestTestedUnits_Globs(t *testing.T) {
-	t.Run("TSUNT-B04: A glob test template matches the tests it covers, a glob code template is not reversed", func(t *testing.T) {})
+	t.Run("TSUNT-B04: A glob test template matches the tests it covers, a code template is read literally", func(t *testing.T) {})
 	cfg := derivedCfg("code", map[string]config.Padroes{"test": {"{{dir}}/__tests__/**/{{name}}.test.ts"}})
 	g := graphOf([]string{"lib/a.ts"}, []string{"lib/__tests__/deep/a.test.ts", "lib/__tests__/deep/b.test.ts"}, "x")
 	if got := TestedUnits(g, cfg); !reflect.DeepEqual(got, map[string][]string{"lib/__tests__/deep/a.test.ts": {"lib/a.ts"}}) {

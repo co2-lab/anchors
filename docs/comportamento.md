@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8c73101b52451cbf — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a31aba7cdcafdb6d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1176,6 +1176,8 @@ teste prova.
 
 - [The guides tell a fix from a bug and ask for the marker](camadas/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B15`
 
+- [The changelog guide tells the technical changelog from the product one](camadas/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B16`
+
 - [The board ranks each guide by how many files it governs](camadas/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
 - [A map without governance has an empty board](camadas/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B02`
@@ -1550,6 +1552,28 @@ teste prova.
 
 - [Without a repository the command points at --repo](camadas/comando.md#brsrb--boardserve--the-board-page-served-locally-with-live-state-read-from-the-host-only-when-something-changed) `BRSRB-E03`
 
+- [The latest release by default](camadas/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B01`
+
+- [From a tag, or every release](camadas/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B02`
+
+- [What is not released yet](camadas/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B03`
+
+- [Writing the incremental file](camadas/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B04`
+
+- [One file per release](camadas/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B05`
+
+- [The project's template and language](camadas/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B06`
+
+- [No anchors.yaml](camadas/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B07`
+
+- [Nothing to list](camadas/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-B08`
+
+- [An unknown start tag](camadas/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-E01`
+
+- [A template that cannot be read](camadas/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-E02`
+
+- [A broken anchors.yaml](camadas/comando.md#clgcm--anchors-changelog--the-technical-changelog-printed-or-written) `CLGCM-E03`
+
 - [A free canonical code is the suggestion](camadas/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B01`
 
 - [A taken canonical is adjusted to a free code naming its owner](camadas/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B02`
@@ -1872,7 +1896,7 @@ teste prova.
 
 - [A unit name becomes snake_case with one separator and whole acronyms](camadas/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B11`
 
-- [The root receives the fourteen operation commands](camadas/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-B01`
+- [The root receives the fifteen operation commands](camadas/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-B01`
 
 - [Each operation command is registered exactly once](camadas/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-I01`
 
@@ -2655,6 +2679,8 @@ teste prova.
 - [A gate's no_signal declares targets with their reason](camadas/config.md#cnfgo-b48--a-gates-no-signal-declares-targets-with-their-reason) `CNFGO-B48`
 
 - [A suite's paths say which files it runs](camadas/config.md#cnfgo-b49--a-suites-paths-say-which-files-it-runs) `CNFGO-B49`
+
+- [The changelog block has defaults and refuses an unknown mode](camadas/config.md#cnfgo-b50--the-changelog-block-has-defaults-and-refuses-an-unknown-mode) `CNFGO-B50`
 
 - [The declared containers come back as written, and a missing config has none](camadas/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
@@ -5109,6 +5135,34 @@ teste prova.
 - [A changes folder that cannot be created fails the save](camadas/infra.md#chrcc--changerecord--the-delivery-record-an-agent-leaves-when-it-finishes-a-stage) `CHRCC-E02`
 
 - [Marking a missing record reviewed fails](camadas/infra.md#chrcc--changerecord--the-delivery-record-an-agent-leaves-when-it-finishes-a-stage) `CHRCC-E03`
+
+- [A breaking change is never silent](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B01`
+
+- [A feat is a feature](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B02`
+
+- [A fix with a Bug footer is a bug fixed, without it a fix](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B03`
+
+- [The internal types and free-form subjects are left out](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B04`
+
+- [Only the last paragraph holds footers](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B05`
+
+- [Each release holds the commits after the previous tag](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B06`
+
+- [What came after the last tag is unreleased](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B07`
+
+- [The built-in template translates its headings](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B08`
+
+- [A written release is marked by its version](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B09`
+
+- [New releases go on top and the file keeps what it holds](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B10`
+
+- [The unreleased block is replaced](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B11`
+
+- [An empty file gets a title](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B12`
+
+- [A template that does not parse is an error](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-E01`
+
+- [A git failure names the command](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-E02`
 
 - [Each scope is mirrored to its own file](camadas/infra.md#chlgc--checklog--the-checks-output-mirrored-to-a-file-so-it-can-be-reread-without-re-running) `CHLGC-B01`
 

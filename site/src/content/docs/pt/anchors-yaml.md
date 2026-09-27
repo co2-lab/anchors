@@ -265,6 +265,32 @@ gates voltam a procurar o código em qualquer ponto do arquivo de teste.
 
 ---
 
+## `changelog` — como o `anchors changelog --write` escreve
+
+```yaml
+changelog:
+  mode: incremental          # ou per_version
+  path: CHANGELOG.md         # o arquivo; per_version: o diretório (padrão changelog/)
+  template: doct/changelog.md.tmpl   # opcional: o seu template para uma versão
+```
+
+- **`incremental`** (o padrão) — um arquivo só; as versões que ele ainda não tem entram no
+  topo, abaixo de um título `# ` inicial, cada uma depois de um marcador
+  `<!-- anchors:changelog vX -->`. O que está sob um marcador é seu para editar: nunca é
+  reescrito. A exceção é o bloco do que não foi lançado — ele é substituído a cada escrita,
+  porque cresce até a próxima tag.
+- **`per_version`** — um arquivo por versão, `<path>/<versão>.md`; o arquivo de uma versão que
+  já existe é mantido, e o `unreleased.md` é reescrito.
+- **`template`** — um `text/template` do Go que renderiza uma versão, como os templates da
+  documentação. Recebe `.Version`, `.Date` e as listas `.Breaking`, `.Features`, `.Bugs`,
+  `.Fixes`, cada entrada com `.Type`, `.Scope`, `.Subject`, `.Hash` e `.Bug`;
+  `{{t "changelog.features"}}` e as outras chaves `changelog.*` traduzem os títulos para o
+  `lang`.
+
+Este é o changelog técnico; o de produto está em `anchors guide changelog`.
+
+---
+
 ## Blocos avançados
 
 Você provavelmente não vai precisar destes no começo.

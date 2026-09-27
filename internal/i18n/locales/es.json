@@ -981,5 +981,11 @@
   "init.question.detail.repo_required": "obligatorio en el modo `github` — sin él, el flujo no sabe de qué repositorio tirar",
   "init.question.detail.repo_only_github": "solo vale en el modo `github`; en `local` este campo hace que el archivo mienta sobre que la integración está activa",
   "init.question.detail.labels_required": "obligatorio en el modo `github` — sin ella, el flujo tomaría cualquier issue del repositorio, incluidas las de producto",
-  "telemetry.notice": "Anchors envía eventos de DECISIÓN — cuántos candidatos vio el claim, qué\ngate reprobó, en qué estado terminó un turno. Es como el producto encuentra\npatrones que nadie ve desde dentro de un solo proyecto.\n\nNO envía: contenido de archivos, spec, diff, mensaje de error, ni nombre de\nrepositorio, de usuario o de branch. Solo números y el vocabulario del\npropio Anchors.\n\nPara desactivarla, cualquiera de estos:\n    export ANCHORS_TELEMETRY=off\n    telemetry: off      (en anchors.yaml, vale para el proyecto)\n\nEste aviso aparece una vez por proyecto en esta máquina."
+  "telemetry.notice": "Anchors envía eventos de DECISIÓN — cuántos candidatos vio el claim, qué\ngate reprobó, en qué estado terminó un turno. Es como el producto encuentra\npatrones que nadie ve desde dentro de un solo proyecto.\n\nNO envía: contenido de archivos, spec, diff, mensaje de error, ni nombre de\nrepositorio, de usuario o de branch. Solo números y el vocabulario del\npropio Anchors.\n\nPara desactivarla, cualquiera de estos:\n    export ANCHORS_TELEMETRY=off\n    telemetry: off      (en anchors.yaml, vale para el proyecto)\n\nEste aviso aparece una vez por proyecto en esta máquina.",
+  "changelog.unreleased": "Sin publicar",
+  "changelog.breaking": "Cambios incompatibles",
+  "changelog.features": "Funcionalidades",
+  "changelog.bugs": "Errores corregidos",
+  "changelog.fixes": "Correcciones",
+  "changelog.title": "Registro de cambios técnico"
 }

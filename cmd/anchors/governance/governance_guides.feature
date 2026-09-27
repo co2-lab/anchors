@@ -129,3 +129,9 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     Given the work, code and review guides
     When they are printed
     Then the work guide says a bug is a defect that shipped, shows the fix commit with its Bug footer and asks for the failing test first, and the code and review guides point to it
+
+  @GVGDG-B16 @unit-level
+  Scenario: The changelog guide tells the technical changelog from the product one
+    Given the changelog guide
+    When it is printed
+    Then it says the generated changelog is technical and recommends a product changelog synthesized from it, with bugs but not fixes, and chores only when they matter to the product

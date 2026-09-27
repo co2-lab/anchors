@@ -46,6 +46,7 @@ The review and work guides are also the two that tell an agent what to do with w
 | `GVGDG-B12` | The project guide covers the discover phase — `PROJECT.md`, `INSIGHTS.md`, the five technical stages, one question at a time — and the playbook points to it before the plan phase. |
 | `GVGDG-B13` | The test guide names the proving instrument for each shape of input space and teaches the stamp refresh for a doubled function. |
 | `GVGDG-B14` | `anchors guide --help` lists every subcommand once, with what it teaches, and lists nothing that is not a subcommand. |
+| `GVGDG-B16` | The changelog guide says `anchors changelog` builds a technical changelog, not the product's, and recommends a product changelog an agent synthesizes from it: breaking changes, visible features and bugs fixed go in, fixes without `Bug:` stay out, and chores only when they matter to the product. |
 | `GVGDG-B15` | The work guide, in every mode, tells a fix from a bug — a bug is a defect that shipped —, asks for each fix as its own `fix` commit with a `Bug:` footer only on a bug, and for the failing test first; the code and review guides point to it. |
 
 ## Invariants
