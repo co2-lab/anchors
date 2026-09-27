@@ -49,6 +49,12 @@ Feature: BudgetRun — run a suite's files fastest first until a time budget is 
     When each runs with a budget
     Then each is refused saying why, and no command ran
 
+  @BDGRN-B08 @unit-level
+  Scenario: The plan holds only the suite's own files
+    Given a suite whose paths cover apps/mobile, and untimed test files of mobile and of the landing page
+    When the plan is made
+    Then it holds only the mobile file
+
   @BDGRN-E02 @unit-level
   Scenario: A budget without a map is refused saying to build it
     Given a project whose map was never built

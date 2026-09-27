@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -31,7 +32,7 @@ func TestBudgetPlan(t *testing.T) {
 		{ID: "helpers_test.go", Kind: mapx.KindTest, Support: true},
 		timedNode("a.go", mapx.KindCode, nil),
 	}}
-	timed, untimed := budgetPlan(g, mapx.KindTest, "out/junit.xml")
+	timed, untimed := budgetPlan(g, mapx.KindTest, "out/junit.xml", config.Suite{})
 	want := []timedFile{{"a_test.go", 1}, {"b_test.go", 1}, {"slow_test.go", 3}}
 	if !reflect.DeepEqual(timed, want) || !reflect.DeepEqual(untimed, []string{"m_new_test.go", "z_new_test.go"}) {
 		t.Fatalf("want %v then [m_new z_new], got %v then %v", want, timed, untimed)
@@ -259,5 +260,14 @@ func TestBudgetWithoutAMap(t *testing.T) {
 	}
 	if got := readLog(t, dir); len(got) != 0 {
 		t.Fatalf("no command may run, got %v", got)
+	}
+}
+
+func TestBudgetPlan_SuitePaths(t *testing.T) {
+	t.Run("BDGRN-B08: The plan holds only the suite's own files", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{timedNode("apps/mobile/a.test.ts", mapx.KindTest, nil), timedNode("apps/landing/b.test.ts", mapx.KindTest, nil)}}
+	timed, untimed := budgetPlan(g, mapx.KindTest, "k", config.Suite{Paths: []string{"apps/mobile/**"}})
+	if len(timed) != 0 || !reflect.DeepEqual(untimed, []string{"apps/mobile/a.test.ts"}) {
+		t.Fatalf("only the mobile file, got %v %v", timed, untimed)
 	}
 }

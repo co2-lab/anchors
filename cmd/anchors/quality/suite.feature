@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: STPRS
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @STPRS
@@ -149,3 +149,9 @@ Feature: SuiteProxy — runs the test and mutation suites the project declared, 
     Given a project with a suite and no map
     When the test command runs incrementally for a.go
     Then it fails with an error naming "anchors map build"
+
+  @STPRS-B12 @unit-level
+  Scenario: An incremental run hands each suite only its own impact files
+    Given two suites whose paths split the project, and a change whose impact path reaches only the first
+    When the incremental run goes
+    Then the first receives its files and the second says the impact path does not reach it

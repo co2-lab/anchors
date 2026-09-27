@@ -47,6 +47,7 @@ whole, saying so.
 | `SLCTN-B09` | When the selection takes no file, the suite says so and runs nothing. |
 | `SLCTN-B10` | The selected files run in as few batches as the command-line ceiling allows, each ingested as a partial run; a file longer than the ceiling still runs alone. |
 | `SLCTN-B11` | `--all` runs the suites whole through `run:`; it is refused with `--changed` or with a state flag, and the state flags are refused with `--changed`. |
+| `SLCTN-B12` | A suite that declares `paths:` is handed only the files they cover, test and code files alike; the files outside them are neither run nor counted as left out. |
 
 ## Errors
 

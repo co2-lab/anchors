@@ -573,3 +573,30 @@ tests:
 		t.Errorf("the chained check of an incremental run is incremental:\n%s", out)
 	}
 }
+
+func TestSuiteIncrementalRespectsSuitePaths(t *testing.T) {
+	t.Run("STPRS-B12: An incremental run hands each suite only its own impact files", func(t *testing.T) {})
+	yaml := suiteLayers + `tests:
+  - workspace: here
+    layer: unit
+    run: "echo FULL"
+    run_changed: "echo {{files}} > here.txt"
+    paths: ["*.go"]
+  - workspace: there
+    layer: unit
+    run: "echo FULL"
+    run_changed: "echo {{files}} > there.txt"
+    paths: ["web/**"]
+`
+	dir := qProject(t, yaml, suiteFiles(), suiteGraph())
+	out, err := runQ(t, newTestCmd(), "--root", dir, "--changed", "a.go")
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	if got := readQ(t, filepath.Join(dir, "here.txt")); !strings.Contains(got, "a.go") {
+		t.Errorf("the suite whose paths cover the change receives it, got %q", got)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "there.txt")); err == nil || !strings.Contains(out, "[there/unit] the impact path reaches none of this suite's") {
+		t.Errorf("the other suite runs nothing and says why:\n%s", out)
+	}
+}

@@ -146,17 +146,17 @@ func TestSelection_NeverSupportOrNoSignal(t *testing.T) {
 	g := &mapx.Graph{Nodes: []mapx.Node{support, testNode("a_test.go", 0, 1, false),
 		codeNode("gen.go", 0, 5, 0, 0, false), codeNode("a.go", 0, 5, 0, 0, false)}}
 	cfg := &config.Config{Gates: []config.Gate{{Name: "mutation-score", Check: "mutation-score", NoSignal: map[string]string{"gen.go": "generated"}}}}
-	if run, _ := selectFiles(g, cfg, false, "k", "unit", runSelection{}); !reflect.DeepEqual(run, []string{"a_test.go"}) {
+	if run, _ := selectFiles(g, cfg, false, "k", config.Suite{Layer: "unit"}, runSelection{}); !reflect.DeepEqual(run, []string{"a_test.go"}) {
 		t.Errorf("the support file is never run, got %v", run)
 	}
-	if run, _ := selectFiles(g, cfg, true, "k", "unit", runSelection{}); !reflect.DeepEqual(run, []string{"a.go"}) {
+	if run, _ := selectFiles(g, cfg, true, "k", config.Suite{Layer: "unit"}, runSelection{}); !reflect.DeepEqual(run, []string{"a.go"}) {
 		t.Errorf("the no_signal target is never run, got %v", run)
 	}
 	// A test file another suite owns is not this suite's to run.
 	other := testNode("web_test.go", 0, 1, false)
 	other.Signal.SecondsBySuite = map[string]float64{"web/junit.xml": 1}
 	g.Nodes = append(g.Nodes, other)
-	if run, _ := selectFiles(g, cfg, false, "k", "unit", runSelection{}); !reflect.DeepEqual(run, []string{"a_test.go"}) {
+	if run, _ := selectFiles(g, cfg, false, "k", config.Suite{Layer: "unit"}, runSelection{}); !reflect.DeepEqual(run, []string{"a_test.go"}) {
 		t.Errorf("another suite's test file is left to it, got %v", run)
 	}
 }
@@ -268,5 +268,21 @@ func TestSelection_NoMap(t *testing.T) {
 	}
 	if _, err := runQ(t, newTestCmd(), "--root", dir); err == nil || !strings.Contains(err.Error(), "--all") {
 		t.Fatalf("refused saying to build the map or use --all, got %v", err)
+	}
+}
+
+func TestSelection_SuitePaths(t *testing.T) {
+	t.Run("SLCTN-B12: A suite with paths is handed only its own files", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "apps/mobile/a.ts", Kind: mapx.KindCode}, {ID: "apps/landing/page.tsx", Kind: mapx.KindCode},
+		{ID: "apps/mobile/a.test.ts", Kind: mapx.KindTest}, {ID: "apps/landing/page.test.tsx", Kind: mapx.KindTest},
+	}}
+	mobile := config.Suite{Layer: "unit", Paths: []string{"apps/mobile/**"}}
+	run, left := selectFiles(g, nil, true, "k", mobile, runSelection{})
+	if !reflect.DeepEqual(run, []string{"apps/mobile/a.ts"}) || len(left) != 0 {
+		t.Fatalf("only the mobile code file, nothing counted as left, got %v %v", run, left)
+	}
+	if run, _ := selectFiles(g, nil, false, "k", mobile, runSelection{}); !reflect.DeepEqual(run, []string{"apps/mobile/a.test.ts"}) {
+		t.Fatalf("only the mobile test file, got %v", run)
 	}
 }

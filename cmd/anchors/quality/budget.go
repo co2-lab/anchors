@@ -28,9 +28,9 @@ type timedFile struct {
 //
 // There is no priority besides time: the project chooses the budget, and the run fits in
 // as much as it can.
-func budgetPlan(g *mapx.Graph, kind mapx.Kind, key string) (timed []timedFile, untimed []string) {
+func budgetPlan(g *mapx.Graph, kind mapx.Kind, key string, suite config.Suite) (timed []timedFile, untimed []string) {
 	for _, n := range g.Nodes {
-		if n.Kind != kind || n.Support {
+		if n.Kind != kind || n.Support || !suite.Covers(n.ID) {
 			continue
 		}
 		var bySuite map[string]float64
@@ -138,7 +138,7 @@ func runSuiteWithBudget(cs suiteCommand, s config.Suite, absRoot, target string,
 	if err != nil {
 		return out, fmt.Errorf("load map: %w (run `anchors map build`)", err)
 	}
-	timed, untimed := budgetPlan(g, kind, key)
+	timed, untimed := budgetPlan(g, kind, key, s)
 	if only != nil {
 		timed, untimed = keepOnly(timed, untimed, only)
 	}

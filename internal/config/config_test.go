@@ -472,6 +472,21 @@ func TestGateNoSignal(t *testing.T) {
 	}
 }
 
+func TestSuitePaths(t *testing.T) {
+	t.Run("CNFGO-B49: A suite's paths say which files it runs", func(t *testing.T) {})
+	if !(Suite{}).Covers("apps/landing/page.tsx") {
+		t.Error("a suite with no paths runs any file")
+	}
+	mobile := Suite{Paths: []string{"apps/mobile/**"}}
+	if !mobile.Covers("apps/mobile/src/a.ts") || mobile.Covers("apps/landing/page.tsx") {
+		t.Error("a suite with paths runs only the files they match")
+	}
+	_, err := load(t, "version: 1\nmutation:\n  - layer: unit\n    run: x\n    paths: [\"apps/mobile/**\", \"apps/[m\"]\n")
+	if err == nil || !strings.Contains(err.Error(), "mutation[0].paths[1]") {
+		t.Errorf("a malformed suite glob must fail the load naming it, got %v", err)
+	}
+}
+
 func TestLoad_languageIsSetAtLoad(t *testing.T) {
 	t.Run("CNFGO-B12: An unsupported language fails the load", func(t *testing.T) {})
 	t.Cleanup(func() { _ = i18n.Set("") })

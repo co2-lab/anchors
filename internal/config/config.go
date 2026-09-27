@@ -1769,6 +1769,15 @@ func (c *Config) validarPadroes() error {
 			}
 		}
 	}
+	for section, suites := range map[string][]Suite{"tests": c.Tests, "mutation": c.Mutation} {
+		for i, su := range suites {
+			for j, p := range su.Paths {
+				if !doublestar.ValidatePattern(p) {
+					return fmt.Errorf("`%s[%d].paths[%d]` is not a valid glob: %q", section, i, j, p)
+				}
+			}
+		}
+	}
 	for name, l := range c.Layers {
 		for i, p := range l.Support {
 			if !doublestar.ValidatePattern(p) {
@@ -1997,6 +2006,13 @@ type Suite struct {
 	// Ausente: `--changed` recusa a suíte em vez de rodar a completa. Rodar tudo quando
 	// se pediu o incremental é caro e, pior, mente sobre o que rodou.
 	RunChanged string `yaml:"run_changed,omitempty"`
+	// Paths — globs of the files this suite runs, relative to the root. A file outside
+	// them is never handed to the suite: not by the state selection, not by `--budget`,
+	// not by `--changed`. Empty means every file, right for a project with one suite per
+	// kind. In a monorepo each workspace's suite declares its own: without it the mobile
+	// mutation suite was handed the landing page's files (reported from the reference app).
+	// The files reach `run_changed:` as ABSOLUTE paths, with forward slashes.
+	Paths []string `yaml:"paths,omitempty"`
 	// JUnit e Lcov são os relatórios que a suíte DEIXA, ingeridos ao final se o
 	// comando passar. Vazios: o Anchors roda e não ingere nada — o que ainda é útil
 	// (um comando só) mas mantém o gate reclamando, e é melhor dizer isso do que
@@ -2227,4 +2243,18 @@ func (l TestLevel) Accepts(code string) bool {
 		return false
 	}
 	return !matches(l.Exclude)
+}
+
+// Covers says whether the suite runs this file (a path relative to the root): any file
+// when it declares no `paths:`, otherwise a file one of its globs matches.
+func (s Suite) Covers(rel string) bool {
+	if len(s.Paths) == 0 {
+		return true
+	}
+	for _, p := range s.Paths {
+		if ok, _ := doublestar.Match(p, filepath.ToSlash(rel)); ok {
+			return true
+		}
+	}
+	return false
 }

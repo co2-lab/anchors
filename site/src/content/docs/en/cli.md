@@ -98,6 +98,21 @@ suite's `run:`. A test file is stale when it or the code it exercises changed; a
 result measured under load counts as stale. A suite with no `run_changed:` cannot run a subset
 and runs whole. `--budget` applies to the selected files.
 
+In a monorepo, each suite says which files are its own with `paths:` (globs from the root), and
+a file outside them is never handed to it — not by the selection, `--budget` or `--changed`:
+
+```yaml
+mutation:
+  - workspace: mobile
+    layer: unit
+    run: "bash scripts/mutation.sh mobile"
+    run_changed: "bash scripts/mutation.sh mobile {{files}}"
+    paths: ["apps/mobile/**"]
+```
+
+`{{files}}` receives **absolute** paths with forward slashes; `{{target}}` receives what was
+passed to `--target`, as given.
+
 ## `--budget`: as much as fits in a time
 
 `anchors test --budget 60s` and `anchors mutation --budget 10m` run the files **fastest

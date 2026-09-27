@@ -73,6 +73,12 @@ Feature: RunSelection — a run takes only what is stale and below the minimum, 
     When it runs with --all, and with --all together with --changed or a state flag, and a state flag with --changed
     Then --all runs the whole command, and each combination is refused before anything runs
 
+  @SLCTN-B12 @unit-level
+  Scenario: A suite with paths is handed only its own files
+    Given a mobile mutation suite whose paths cover apps/mobile, and code files of mobile and of the landing page
+    When the selection is made for it
+    Then only the mobile files are selected and the landing page's are not counted
+
   @SLCTN-E01 @unit-level
   Scenario: A selective run without a map is refused
     Given a project whose map was never built

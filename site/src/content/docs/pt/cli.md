@@ -158,6 +158,22 @@ arquivo de teste está defasado quando ele ou o código que ele exercita mudou; 
 mutação medido sob carga conta como defasado. Uma suíte sem `run_changed:` não roda um recorte e
 roda inteira. `--budget` vale sobre os arquivos selecionados.
 
+Num monorepo, cada suíte diz quais arquivos são dela com `paths:` (globs a partir da raiz), e um
+arquivo fora deles nunca é entregue a ela — nem pela seleção, nem pelo `--budget`, nem pelo
+`--changed`:
+
+```yaml
+mutation:
+  - workspace: mobile
+    layer: unit
+    run: "bash scripts/mutation.sh mobile"
+    run_changed: "bash scripts/mutation.sh mobile {{files}}"
+    paths: ["apps/mobile/**"]
+```
+
+`{{files}}` recebe caminhos **absolutos**, com barras normais; `{{target}}` recebe o que foi
+passado em `--target`, como veio.
+
 ### `--budget`: o máximo que cabe num tempo
 
 `anchors test --budget 60s` e `anchors mutation --budget 10m` rodam os arquivos **do mais

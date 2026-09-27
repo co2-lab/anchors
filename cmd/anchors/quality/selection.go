@@ -134,7 +134,8 @@ func square(stale, passing bool) fileState {
 // selectFiles picks, for a suite, the files a run takes and counts the ones it leaves out
 // by state. Support files and targets the matching gate declares with nothing to measure
 // (`no_signal`) are never candidates.
-func selectFiles(g *mapx.Graph, cfg *config.Config, mutation bool, key, layer string, sel runSelection) (run []string, left map[fileState]int) {
+func selectFiles(g *mapx.Graph, cfg *config.Config, mutation bool, key string, suite config.Suite, sel runSelection) (run []string, left map[fileState]int) {
+	layer := suite.Layer
 	kind, check := mapx.KindTest, "tests-pass"
 	if mutation {
 		kind, check = mapx.KindCode, "mutation-score"
@@ -152,7 +153,7 @@ func selectFiles(g *mapx.Graph, cfg *config.Config, mutation bool, key, layer st
 	}
 	left = map[fileState]int{}
 	for _, n := range g.Nodes {
-		if n.Kind != kind || n.Support {
+		if n.Kind != kind || n.Support || !suite.Covers(n.ID) {
 			continue
 		}
 		if _, none := gateOf.NoSignalFor(n.ID); none {
@@ -238,7 +239,7 @@ func runSelective(cs suiteCommand, suites []config.Suite, cfg *config.Config, ab
 			if mutation {
 				report = s.Report
 			}
-			run, left := selectFiles(g, cfg, mutation, mapcmd.SuiteKey(absRoot, absPath(absRoot, report)), s.Layer, picked)
+			run, left := selectFiles(g, cfg, mutation, mapcmd.SuiteKey(absRoot, absPath(absRoot, report)), s, picked)
 			fmt.Printf("[%s%s] selected %d file(s) to run", workspaceLabel(s), s.Layer, len(run))
 			if d := describeLeftOut(left); d != "" {
 				fmt.Printf("; %s", d)

@@ -244,7 +244,12 @@ func newSuiteCommand(cs suiteCommand) *cobra.Command {
 // unit quebrar), e seguir adiante só produziria ruído sobre uma base já vermelha.
 func runSuites(cs suiteCommand, suites []config.Suite, absRoot, target string, alvos []string) error {
 	for _, s := range suites {
-		linha, err := pickCommand(s, alvos, target)
+		mine := coveredBy(s, absRoot, alvos)
+		if len(alvos) > 0 && len(mine) == 0 {
+			fmt.Printf("[%s%s] the impact path reaches none of this suite's `paths:` — nothing to run\n\n", workspaceLabel(s), s.Layer)
+			continue
+		}
+		linha, err := pickCommand(s, mine, target)
 		if err != nil {
 			return fmt.Errorf("layer %q: %w", s.Layer, err)
 		}
@@ -540,4 +545,22 @@ func joinOrDash(vs []string) string {
 		return "—"
 	}
 	return strings.Join(vs, ", ")
+}
+
+// coveredBy keeps, of absolute file paths, the ones the suite's `paths:` cover.
+func coveredBy(s config.Suite, absRoot string, files []string) []string {
+	if len(s.Paths) == 0 {
+		return files
+	}
+	var out []string
+	for _, f := range files {
+		rel, err := filepath.Rel(absRoot, filepath.FromSlash(f))
+		if err != nil {
+			rel = f
+		}
+		if s.Covers(filepath.ToSlash(rel)) {
+			out = append(out, f)
+		}
+	}
+	return out
 }

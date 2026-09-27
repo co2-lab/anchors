@@ -1,6 +1,6 @@
 <!-- @anchors
   code: STPRS
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: comando
 -->
 # SuiteProxy — runs the test and mutation suites the project declared, and binds their reports to the map
@@ -55,6 +55,7 @@ coverage, or the check over the run's own scope: the same changed files, or the 
 | `STPRS-B09` | After every suite passed, a chain naming coverage runs the coverage answer; an empty chain does nothing. |
 | `STPRS-B10` | An impact path with no code file runs nothing. |
 | `STPRS-B11` | After every suite passed, a chain naming check runs the check over the run's own scope: the changed files of an incremental run, the full sweep otherwise. |
+| `STPRS-B12` | An incremental run hands each suite only the impact files its `paths:` cover; a suite the impact path does not reach says so and runs nothing. |
 
 ## Invariants
 

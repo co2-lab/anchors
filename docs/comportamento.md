@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:03bc273c199e60d5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:599ddd2a7d9d77e1 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1954,6 +1954,8 @@ teste prova.
 
 - [What the budget cannot run is refused before anything runs](camadas/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B07`
 
+- [The plan holds only the suite's own files](camadas/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-B08`
+
 - [A budget without a map is refused saying to build it](camadas/comando.md#bdgrn--budgetrun--run-a-suites-files-fastest-first-until-a-time-budget-is-spent) `BDGRN-E02`
 
 - [The full sweep confronts every node of the map](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B01`
@@ -2310,6 +2312,8 @@ teste prova.
 
 - [--all runs whole and does not combine with the other choices](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B11`
 
+- [A suite with paths is handed only its own files](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B12`
+
 - [A selective run without a map is refused](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-E01`
 
 - [Expired test evidence is listed before the stale edges](camadas/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges) `STEDS-B01`
@@ -2429,6 +2433,8 @@ teste prova.
 - [A chain naming another command is refused](camadas/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-E08`
 
 - [The incremental mode without a map points at the map build](camadas/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-E09`
+
+- [An incremental run hands each suite only its own impact files](camadas/comando.md#stprs--suiteproxy--runs-the-test-and-mutation-suites-the-project-declared-and-binds-their-reports-to-the-map) `STPRS-B12`
 
 - [Only a date inside the header at the top of the file is bumped](camadas/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B01`
 
@@ -2643,6 +2649,8 @@ teste prova.
 - [A gate's timeout ceiling is a share with a default](camadas/config.md#cnfgo-b47--a-gates-timeout-ceiling-is-a-share-with-a-default) `CNFGO-B47`
 
 - [A gate's no_signal declares targets with their reason](camadas/config.md#cnfgo-b48--a-gates-no-signal-declares-targets-with-their-reason) `CNFGO-B48`
+
+- [A suite's paths say which files it runs](camadas/config.md#cnfgo-b49--a-suites-paths-say-which-files-it-runs) `CNFGO-B49`
 
 - [The declared containers come back as written, and a missing config has none](camadas/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 

@@ -38,6 +38,7 @@ their run is what times them.
 | `BDGRN-B05` | A mutation budget runs one file per batch, and records in the map, under the suite, how long that file's run took. |
 | `BDGRN-B06` | A batch that fails does not stop the budget: the next batches run, and the command fails at the end naming the suites with a failed batch. |
 | `BDGRN-B07` | A suite with no `run_changed:` or no report, or a budget together with `--changed`, is refused before anything runs. |
+| `BDGRN-B08` | The plan holds only the files the suite's `paths:` cover. |
 
 ## Errors
 

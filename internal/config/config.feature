@@ -340,3 +340,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a gate declaring no_signal globs with reasons, one with an invalid glob, and one with an empty reason
     When each is loaded and targets are looked up
     Then a matching target gets its reason, a target matching two globs gets the first sorted, and the invalid ones fail the load
+
+  @CNFGO-B49 @unit-level
+  Scenario: A suite's paths say which files it runs
+    Given a suite with no paths, one limited to its workspace, and one with a malformed glob
+    When files are checked against each, and each configuration is loaded
+    Then the first runs any file, the second only its workspace's, and the third fails the load naming it
