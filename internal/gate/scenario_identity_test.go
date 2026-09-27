@@ -179,11 +179,8 @@ func TestCenarioIdentidadeSemCenarioComCodigoNaoConfronta(t *testing.T) {
 	}
 }
 
-// Vários repetidos vêm JUNTOS e em ordem estável: um relatório que muda de ordem entre
-// execuções faz o achado parecer novo a cada rodada.
-func TestCenarioIdentidadeAgrupaVariosEmOrdemEstavel(t *testing.T) {
-	t.Run("SCIDS-B10: Several repeated codes are reported together in a stable order", func(t *testing.T) {})
-	feature := `
+// threeRepeatedCodes: three codes, each on two scenarios, written out of order.
+const threeRepeatedCodes = `
   @ZZZZX-B01
   Cenário: z um
 
@@ -202,6 +199,12 @@ func TestCenarioIdentidadeAgrupaVariosEmOrdemEstavel(t *testing.T) {
   @MMMMX-B01
   Cenário: m dois
 `
+
+// Vários repetidos vêm JUNTOS e em ordem estável: um relatório que muda de ordem entre
+// execuções faz o achado parecer novo a cada rodada.
+func TestCenarioIdentidadeAgrupaVariosEmOrdemEstavel(t *testing.T) {
+	t.Run("SCIDS-B10: Several repeated codes are reported together in a stable order", func(t *testing.T) {})
+	feature := threeRepeatedCodes
 	_, msg := checkScenarioIdentity(feature, featNode(), "", nil, nil)
 	for _, cod := range []string{"AAAAX-B01", "MMMMX-B01", "ZZZZX-B01"} {
 		if !strings.Contains(msg, cod) {
@@ -269,25 +272,7 @@ func TestCenarioIdentidadeAgrupaPeloCodigoCompleto(t *testing.T) {
 // aleatória, e um achado que muda de texto a cada rodada parece novo toda vez.
 func TestCenarioIdentidadeMensagemDeterministica(t *testing.T) {
 	t.Run("SCIDS-I02: The message is deterministic", func(t *testing.T) {})
-	feature := `
-  @ZZZZX-B01
-  Cenário: z um
-
-  @ZZZZX-B01
-  Cenário: z dois
-
-  @AAAAX-B01
-  Cenário: a um
-
-  @AAAAX-B01
-  Cenário: a dois
-
-  @MMMMX-B01
-  Cenário: m um
-
-  @MMMMX-B01
-  Cenário: m dois
-`
+	feature := threeRepeatedCodes
 	_, primeira := checkScenarioIdentity(feature, featNode(), "", nil, nil)
 	for i := 0; i < 20; i++ {
 		if _, outra := checkScenarioIdentity(feature, featNode(), "", nil, nil); outra != primeira {
