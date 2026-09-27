@@ -1,7 +1,7 @@
 # anchors.graph.yaml — o mapa de dependências (gerado por `anchors map build`)
 # Material e versionado. Fonte de verdade do grafo; índices em memória são cache.
 version: 4
-generated_by: 0.1.203
+generated_by: 0.1.204
 nodes:
     - id: BOOTSTRAP.md
       kind: doc
@@ -212,7 +212,7 @@ nodes:
                 total_lines: 74
                 at_rev: 8d924a6711d6
         at_rev: 8d924a6711d6
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/cards.spec.md
       kind: spec
       rev: 392c6fabc36b
@@ -257,7 +257,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 392c6fabc36b
         at_rev: 392c6fabc36b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/cards_test.go
       kind: test
       rev: 5cd67c900b98
@@ -308,7 +308,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 302593067d5e
         at_rev: 302593067d5e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/common_cli_test.go
       kind: test
       rev: 9113628ee4f2
@@ -338,7 +338,7 @@ nodes:
                 total_lines: 3
                 at_rev: 64f1fe731585
         at_rev: 64f1fe731585
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/flags_compat.feature
       kind: feature
       rev: a3a287d3d6a5
@@ -369,7 +369,7 @@ nodes:
                 total_lines: 21
                 at_rev: 227f79076131
         at_rev: 227f79076131
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/flags_compat.spec.md
       kind: spec
       rev: 67e9dab51e73
@@ -402,7 +402,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 67e9dab51e73
         at_rev: 67e9dab51e73
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/flags_compat_test.go
       kind: test
       rev: 68397c12c364
@@ -439,7 +439,7 @@ nodes:
                 total_lines: 26
                 at_rev: 9638883f43cb
         at_rev: 9638883f43cb
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/roles.feature
       kind: feature
       rev: f5ef09bedb1c
@@ -470,7 +470,7 @@ nodes:
                 total_lines: 63
                 at_rev: 3ff6c043d0a3
         at_rev: 3ff6c043d0a3
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/roles.spec.md
       kind: spec
       rev: 4bf01c53a799
@@ -507,7 +507,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4bf01c53a799
         at_rev: 4bf01c53a799
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/roles_test.go
       kind: test
       rev: 7b8da7879303
@@ -546,7 +546,7 @@ nodes:
                 total_lines: 40
                 at_rev: b5afc7a47b1e
         at_rev: b5afc7a47b1e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/spec.spec.md
       kind: spec
       rev: d350b65f4642
@@ -579,7 +579,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: d350b65f4642
         at_rev: d350b65f4642
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/spec_test.go
       kind: test
       rev: f4a583382a88
@@ -618,7 +618,7 @@ nodes:
                 total_lines: 59
                 at_rev: b37261e6a3a6
         at_rev: b37261e6a3a6
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/telemetry.spec.md
       kind: spec
       rev: 3636021114f7
@@ -655,7 +655,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 3636021114f7
         at_rev: 3636021114f7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/common/telemetry_test.go
       kind: test
       rev: 06c2d9e854fc
@@ -702,7 +702,7 @@ nodes:
                 total_lines: 190
                 at_rev: 928a28361051
         at_rev: 928a28361051
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/backfill_labels.spec.md
       kind: spec
       rev: 94113a3d24cb
@@ -751,7 +751,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 94113a3d24cb
         at_rev: 94113a3d24cb
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/backfill_labels_test.go
       kind: test
       rev: a84c61fe3ecc
@@ -790,7 +790,7 @@ nodes:
                 total_lines: 182
                 at_rev: e8f0067db3f4
         at_rev: e8f0067db3f4
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/decided.spec.md
       kind: spec
       rev: 77927aab38b2
@@ -835,7 +835,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 77927aab38b2
         at_rev: 77927aab38b2
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/decided_test.go
       kind: test
       rev: 20a08a469abe
@@ -874,7 +874,7 @@ nodes:
                 total_lines: 239
                 at_rev: 0e6e8b308715
         at_rev: 0e6e8b308715
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/deliver.spec.md
       kind: spec
       rev: 87366446b4f9
@@ -921,7 +921,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 87366446b4f9
         at_rev: 87366446b4f9
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/deliver_confront.feature
       kind: feature
       rev: c4e9f85fc256
@@ -952,7 +952,7 @@ nodes:
                 total_lines: 143
                 at_rev: 380148f88e6a
         at_rev: 380148f88e6a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/deliver_confront.spec.md
       kind: spec
       rev: 20eeb587ef7f
@@ -989,7 +989,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 20eeb587ef7f
         at_rev: 20eeb587ef7f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/deliver_confront_test.go
       kind: test
       rev: cf41c156cc66
@@ -1036,7 +1036,7 @@ nodes:
                 total_lines: 79
                 at_rev: c0d97c2bb580
         at_rev: c0d97c2bb580
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/discard.spec.md
       kind: spec
       rev: 6b27db5e1bbc
@@ -1079,7 +1079,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 6b27db5e1bbc
         at_rev: 6b27db5e1bbc
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/discard_test.go
       kind: test
       rev: d79a7aba45a2
@@ -1118,7 +1118,7 @@ nodes:
                 total_lines: 445
                 at_rev: d7d4ec8768c0
         at_rev: d7d4ec8768c0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/escalate.spec.md
       kind: spec
       rev: 70c94f6b491d
@@ -1177,7 +1177,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 70c94f6b491d
         at_rev: 70c94f6b491d
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/escalate_dup.feature
       kind: feature
       rev: b3531029f7ca
@@ -1208,7 +1208,7 @@ nodes:
                 total_lines: 32
                 at_rev: 31006210155d
         at_rev: 31006210155d
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/escalate_dup.spec.md
       kind: spec
       rev: 6164e510b01e
@@ -1239,7 +1239,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 6164e510b01e
         at_rev: 6164e510b01e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/escalate_dup_test.go
       kind: test
       rev: 95a095fabc1c
@@ -1293,7 +1293,7 @@ nodes:
                 total_lines: 38
                 at_rev: 05948bf02933
         at_rev: 05948bf02933
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/notifications.spec.md
       kind: spec
       rev: e7cafe7d7cc9
@@ -1326,7 +1326,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e7cafe7d7cc9
         at_rev: e7cafe7d7cc9
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/notifications_test.go
       kind: test
       rev: 0b3da1354705
@@ -1365,7 +1365,7 @@ nodes:
                 total_lines: 110
                 at_rev: 5b84a7aebac8
         at_rev: 5b84a7aebac8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/pr_body.spec.md
       kind: spec
       rev: 10b7e70cda54
@@ -1404,7 +1404,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 10b7e70cda54
         at_rev: 10b7e70cda54
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/pr_body_test.go
       kind: test
       rev: c65c0fb5e371
@@ -1443,7 +1443,7 @@ nodes:
                 total_lines: 97
                 at_rev: c453a048d0a3
         at_rev: c453a048d0a3
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/progress.spec.md
       kind: spec
       rev: 80d2a76598a7
@@ -1482,7 +1482,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 80d2a76598a7
         at_rev: 80d2a76598a7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/progress_merge.feature
       kind: feature
       rev: e0d438decdab
@@ -1513,7 +1513,7 @@ nodes:
                 total_lines: 50
                 at_rev: 61f9560e1ad3
         at_rev: 61f9560e1ad3
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/progress_merge.spec.md
       kind: spec
       rev: 83a2998f04cf
@@ -1548,7 +1548,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 83a2998f04cf
         at_rev: 83a2998f04cf
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/progress_merge_test.go
       kind: test
       rev: 4cb88f843780
@@ -1595,7 +1595,7 @@ nodes:
                 total_lines: 679
                 at_rev: 8c6d0c1b3951
         at_rev: 8c6d0c1b3951
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/queue.spec.md
       kind: spec
       rev: 320e45fbe927
@@ -1660,7 +1660,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 320e45fbe927
         at_rev: 320e45fbe927
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/queue_test.go
       kind: test
       rev: 27b7a295c916
@@ -1699,7 +1699,7 @@ nodes:
                 total_lines: 18
                 at_rev: 34a67aa8da27
         at_rev: 34a67aa8da27
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/register.spec.md
       kind: spec
       rev: 3cdf5a814087
@@ -1724,7 +1724,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 3cdf5a814087
         at_rev: 3cdf5a814087
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/register_test.go
       kind: test
       rev: f4e0ed65f111
@@ -1763,7 +1763,7 @@ nodes:
                 total_lines: 226
                 at_rev: 7c8ed6878ff0
         at_rev: 7c8ed6878ff0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/task_status.spec.md
       kind: spec
       rev: 70433ebf8b4e
@@ -1804,7 +1804,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 70433ebf8b4e
         at_rev: 70433ebf8b4e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/task_status_render.feature
       kind: feature
       rev: 8f1d627c7fd3
@@ -1835,7 +1835,7 @@ nodes:
                 total_lines: 152
                 at_rev: 9e65c25fd225
         at_rev: 9e65c25fd225
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/task_status_render.spec.md
       kind: spec
       rev: 9fe61f94e5e8
@@ -1880,7 +1880,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9fe61f94e5e8
         at_rev: 9fe61f94e5e8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/task_status_render_test.go
       kind: test
       rev: a5008b1598c9
@@ -1927,7 +1927,7 @@ nodes:
                 total_lines: 117
                 at_rev: 66022cd7dcdd
         at_rev: 66022cd7dcdd
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/unblock.spec.md
       kind: spec
       rev: 48733cf3dc0f
@@ -1970,7 +1970,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 48733cf3dc0f
         at_rev: 48733cf3dc0f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/unblock_test.go
       kind: test
       rev: b3ee85f410c2
@@ -2009,7 +2009,7 @@ nodes:
                 total_lines: 489
                 at_rev: b32cf5f49635
         at_rev: b32cf5f49635
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/watch.spec.md
       kind: spec
       rev: c46800082d5c
@@ -2062,7 +2062,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: c46800082d5c
         at_rev: c46800082d5c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/watch_daemon.feature
       kind: feature
       rev: c857b5fd79c1
@@ -2093,7 +2093,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4f4c56aacd0b
         at_rev: 4f4c56aacd0b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/watch_daemon_test.go
       kind: test
       rev: 5f04adf8dbbb
@@ -2138,7 +2138,7 @@ nodes:
                 total_lines: 3
                 at_rev: c8ddcff4c49f
         at_rev: c8ddcff4c49f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/watch_windows.go
       kind: code
       rev: ba2bd88fa6be
@@ -2177,7 +2177,7 @@ nodes:
                 total_lines: 946
                 at_rev: b1b81537c022
         at_rev: b1b81537c022
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/work.spec.md
       kind: spec
       rev: ce0ebf812ded
@@ -2240,7 +2240,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: ce0ebf812ded
         at_rev: ce0ebf812ded
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/flow/work_test.go
       kind: test
       rev: f241c5881e54
@@ -2279,7 +2279,7 @@ nodes:
                 total_lines: 121
                 at_rev: cb664c61a021
         at_rev: cb664c61a021
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/audit.spec.md
       kind: spec
       rev: b43c6a9d4441
@@ -2320,7 +2320,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: b43c6a9d4441
         at_rev: b43c6a9d4441
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/audit_test.go
       kind: test
       rev: 18db2fb6cc81
@@ -2359,7 +2359,7 @@ nodes:
                 total_lines: 149
                 at_rev: 98715a083b67
         at_rev: 98715a083b67
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/compliance.spec.md
       kind: spec
       rev: 7b9624c6e780
@@ -2398,7 +2398,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 7b9624c6e780
         at_rev: 7b9624c6e780
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/compliance_test.go
       kind: test
       rev: f57fe0a18a41
@@ -2467,7 +2467,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: d442fedc0b9b
         at_rev: d442fedc0b9b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/governance_guides_test.go
       kind: test
       rev: 25c970c39cca
@@ -2506,7 +2506,7 @@ nodes:
                 total_lines: 88
                 at_rev: 4db590ea3fce
         at_rev: 4db590ea3fce
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/governs.spec.md
       kind: spec
       rev: 3cb8431f319e
@@ -2537,7 +2537,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 3cb8431f319e
         at_rev: 3cb8431f319e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/governs_test.go
       kind: test
       rev: 9bd30d212fe5
@@ -2567,7 +2567,7 @@ nodes:
                 total_lines: 116
                 at_rev: 7eadb20af2a6
         at_rev: 7eadb20af2a6
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/guide_autonomy.feature
       kind: feature
       rev: d5df360f91ba
@@ -2598,7 +2598,7 @@ nodes:
                 total_lines: 85
                 at_rev: 716f2ba8e8ca
         at_rev: 716f2ba8e8ca
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/guide_autonomy.spec.md
       kind: spec
       rev: 4f077fb241c1
@@ -2635,7 +2635,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4f077fb241c1
         at_rev: 4f077fb241c1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/guide_autonomy_test.go
       kind: test
       rev: 921f94acc65c
@@ -2778,7 +2778,7 @@ nodes:
                 total_lines: 6
                 at_rev: 15dbc7db9d92
         at_rev: 15dbc7db9d92
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/spec_guide.feature
       kind: feature
       rev: ae7afef9eda7
@@ -2809,7 +2809,7 @@ nodes:
                 total_lines: 102
                 at_rev: d31eba720fb9
         at_rev: d31eba720fb9
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/spec_guide.spec.md
       kind: spec
       rev: 285cda4936ec
@@ -2840,7 +2840,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 285cda4936ec
         at_rev: 285cda4936ec
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/governance/spec_guide_test.go
       kind: test
       rev: 6fb30ae43d2a
@@ -2879,7 +2879,7 @@ nodes:
                 total_lines: 37
                 at_rev: b721dde61648
         at_rev: b721dde61648
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/main.spec.md
       kind: spec
       rev: 9d4343ad266c
@@ -2904,7 +2904,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9d4343ad266c
         at_rev: 9d4343ad266c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/main_test.go
       kind: test
       rev: d415fc61f6b6
@@ -2943,7 +2943,7 @@ nodes:
                 total_lines: 91
                 at_rev: b3fcd7a78a4b
         at_rev: b3fcd7a78a4b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/failures.spec.md
       kind: spec
       rev: 560095ab818e
@@ -2978,7 +2978,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 560095ab818e
         at_rev: 560095ab818e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/failures_test.go
       kind: test
       rev: c627e1808e5e
@@ -3024,7 +3024,7 @@ nodes:
                 total_lines: 294
                 at_rev: fd0aae8b16e7
         at_rev: fd0aae8b16e7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/flow.spec.md
       kind: spec
       rev: de8347271381
@@ -3071,7 +3071,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: de8347271381
         at_rev: de8347271381
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/flow_test.go
       kind: test
       rev: 43d28cfc6b51
@@ -3111,7 +3111,7 @@ nodes:
                 total_lines: 73
                 at_rev: 6ae8e3b5e5a0
         at_rev: 6ae8e3b5e5a0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/impact.spec.md
       kind: spec
       rev: 0eec207d282b
@@ -3146,7 +3146,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 0eec207d282b
         at_rev: 0eec207d282b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/impact_test.go
       kind: test
       rev: "867859557715"
@@ -3185,7 +3185,7 @@ nodes:
                 total_lines: 338
                 at_rev: 6711a88066f4
         at_rev: 6711a88066f4
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/ingest.spec.md
       kind: spec
       rev: d9182760bab1
@@ -3242,7 +3242,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: d9182760bab1
         at_rev: d9182760bab1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/ingest_test.go
       kind: test
       rev: 2a666cc267be
@@ -3281,7 +3281,7 @@ nodes:
                 total_lines: 287
                 at_rev: dfaa77136abe
         at_rev: dfaa77136abe
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/judge.spec.md
       kind: spec
       rev: 4844468ed5c5
@@ -3342,7 +3342,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4844468ed5c5
         at_rev: 4844468ed5c5
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/judge_test.go
       kind: test
       rev: 18880336db72
@@ -3381,7 +3381,7 @@ nodes:
                 total_lines: 280
                 at_rev: c76b8ba8be94
         at_rev: c76b8ba8be94
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/map.spec.md
       kind: spec
       rev: 52bf58ed2ce7
@@ -3432,7 +3432,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 52bf58ed2ce7
         at_rev: 52bf58ed2ce7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/map_ambiguity_test.go
       kind: test
       rev: 2b873e1c1e30
@@ -3470,7 +3470,7 @@ nodes:
                 total_lines: 218
                 at_rev: 1df3400d2e81
         at_rev: 1df3400d2e81
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/map_merge.spec.md
       kind: spec
       rev: 929c96593086
@@ -3511,7 +3511,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 929c96593086
         at_rev: 929c96593086
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/map_merge_test.go
       kind: test
       rev: 33ca6923f776
@@ -3550,7 +3550,7 @@ nodes:
                 total_lines: 27
                 at_rev: f53389d13bb4
         at_rev: f53389d13bb4
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/map_staleness.spec.md
       kind: spec
       rev: 3cd32359ca98
@@ -3583,7 +3583,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 3cd32359ca98
         at_rev: 3cd32359ca98
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/map_staleness_test.go
       kind: test
       rev: "101139613858"
@@ -3630,7 +3630,7 @@ nodes:
                 total_lines: 118
                 at_rev: e486b3ce05ea
         at_rev: e486b3ce05ea
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/recode.spec.md
       kind: spec
       rev: 841f856a1aea
@@ -3671,7 +3671,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 841f856a1aea
         at_rev: 841f856a1aea
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/recode_test.go
       kind: test
       rev: fe90a54fd93b
@@ -3710,7 +3710,7 @@ nodes:
                 total_lines: 10
                 at_rev: d996b569e86b
         at_rev: d996b569e86b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/register.spec.md
       kind: spec
       rev: 1de9b3374324
@@ -3731,7 +3731,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 1de9b3374324
         at_rev: 1de9b3374324
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/register_test.go
       kind: test
       rev: 823bf6423de5
@@ -3770,7 +3770,7 @@ nodes:
                 total_lines: 166
                 at_rev: 919845643f10
         at_rev: 919845643f10
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/renumber.spec.md
       kind: spec
       rev: 23a8a4186fa6
@@ -3815,7 +3815,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 23a8a4186fa6
         at_rev: 23a8a4186fa6
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/mapcmd/renumber_test.go
       kind: test
       rev: 96279b22bb86
@@ -3854,7 +3854,7 @@ nodes:
                 total_lines: 286
                 at_rev: e668381db13a
         at_rev: e668381db13a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/board_serve.spec.md
       kind: spec
       rev: 4974a86efec2
@@ -3897,7 +3897,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4974a86efec2
         at_rev: 4974a86efec2
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/board_serve_test.go
       kind: test
       rev: fac68cbda1d9
@@ -3936,7 +3936,7 @@ nodes:
                 total_lines: 428
                 at_rev: 8e3675b49de5
         at_rev: 8e3675b49de5
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/code.spec.md
       kind: spec
       rev: 41f3d05e7505
@@ -3987,7 +3987,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 41f3d05e7505
         at_rev: 41f3d05e7505
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/code_test.go
       kind: test
       rev: 704dce50f47e
@@ -4026,7 +4026,7 @@ nodes:
                 total_lines: 102
                 at_rev: c7545aab049d
         at_rev: c7545aab049d
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/commit_msg.spec.md
       kind: spec
       rev: a524e1d40491
@@ -4077,7 +4077,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: a524e1d40491
         at_rev: a524e1d40491
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/commit_msg_test.go
       kind: test
       rev: bfce7584d4b8
@@ -4116,7 +4116,7 @@ nodes:
                 total_lines: 189
                 at_rev: 33201ad723e5
         at_rev: 33201ad723e5
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/docs.spec.md
       kind: spec
       rev: 027baadffd15
@@ -4157,7 +4157,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 027baadffd15
         at_rev: 027baadffd15
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/docs_test.go
       kind: test
       rev: 5ee763ce900d
@@ -4196,7 +4196,7 @@ nodes:
                 total_lines: 280
                 at_rev: 29d51b80333a
         at_rev: 29d51b80333a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/freeze.spec.md
       kind: spec
       rev: 04a7f302003f
@@ -4245,7 +4245,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 04a7f302003f
         at_rev: 04a7f302003f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/freeze_test.go
       kind: test
       rev: ece9f5ac4cb3
@@ -4284,7 +4284,7 @@ nodes:
                 total_lines: 51
                 at_rev: ecdaaedb3ae8
         at_rev: ecdaaedb3ae8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/generated_paths.spec.md
       kind: spec
       rev: f59ca6e92224
@@ -4315,7 +4315,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: f59ca6e92224
         at_rev: f59ca6e92224
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/generated_paths_test.go
       kind: test
       rev: bbfed3481518
@@ -4345,7 +4345,7 @@ nodes:
                 total_lines: 311
                 at_rev: 0630e9107a9e
         at_rev: 0630e9107a9e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/init_discover.go
       kind: code
       rev: e5981cb152ad
@@ -4367,7 +4367,7 @@ nodes:
                 total_lines: 105
                 at_rev: e5981cb152ad
         at_rev: e5981cb152ad
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/init_git.go
       kind: code
       rev: 3ff1128c2034
@@ -4389,7 +4389,7 @@ nodes:
                 total_lines: 86
                 at_rev: 3ff1128c2034
         at_rev: 3ff1128c2034
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/init_non_interactive.feature
       kind: feature
       rev: e46919d7d0a0
@@ -4420,7 +4420,7 @@ nodes:
                 total_lines: 196
                 at_rev: 5de0f628a76f
         at_rev: 5de0f628a76f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/init_non_interactive.spec.md
       kind: spec
       rev: 22a02ca807e1
@@ -4463,7 +4463,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 22a02ca807e1
         at_rev: 22a02ca807e1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/init_non_interactive_test.go
       kind: test
       rev: 74a7e09e99c7
@@ -4532,7 +4532,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 6a23df852697
         at_rev: 6a23df852697
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/init_wizard_test.go
       kind: test
       rev: a87907478076
@@ -4571,7 +4571,7 @@ nodes:
                 total_lines: 174
                 at_rev: 69a51edaa269
         at_rev: 69a51edaa269
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/install_hooks.spec.md
       kind: spec
       rev: 8f1ea34233eb
@@ -4620,7 +4620,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 8f1ea34233eb
         at_rev: 8f1ea34233eb
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/install_hooks_test.go
       kind: test
       rev: 944841ab1cf2
@@ -4659,7 +4659,7 @@ nodes:
                 total_lines: 73
                 at_rev: e8973d4d464e
         at_rev: e8973d4d464e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/migrate.spec.md
       kind: spec
       rev: fc1b0adee431
@@ -4694,7 +4694,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: fc1b0adee431
         at_rev: fc1b0adee431
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/migrate_test.go
       kind: test
       rev: 186ae05d8bf8
@@ -4733,7 +4733,7 @@ nodes:
                 total_lines: 456
                 at_rev: 4b089f8a7106
         at_rev: 4b089f8a7106
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/new.spec.md
       kind: spec
       rev: 1cf158e421fc
@@ -4786,7 +4786,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 1cf158e421fc
         at_rev: 1cf158e421fc
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/new_templates.feature
       kind: feature
       rev: d55ff042ddb3
@@ -4817,7 +4817,7 @@ nodes:
                 total_lines: 97
                 at_rev: f1661d664da1
         at_rev: f1661d664da1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/new_templates.spec.md
       kind: spec
       rev: 4971cac33539
@@ -4856,7 +4856,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4971cac33539
         at_rev: 4971cac33539
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/new_templates_test.go
       kind: test
       rev: 5af172801da8
@@ -4903,7 +4903,7 @@ nodes:
                 total_lines: 16
                 at_rev: 3a428102df9b
         at_rev: 3a428102df9b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/register.spec.md
       kind: spec
       rev: c92e882c7347
@@ -4926,7 +4926,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: c92e882c7347
         at_rev: c92e882c7347
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/register_test.go
       kind: test
       rev: 0be4d4a31cb3
@@ -4965,7 +4965,7 @@ nodes:
                 total_lines: 159
                 at_rev: 9d8d37765130
         at_rev: 9d8d37765130
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/settings.spec.md
       kind: spec
       rev: 77cb982b96f7
@@ -5004,7 +5004,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 77cb982b96f7
         at_rev: 77cb982b96f7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/settings_test.go
       kind: test
       rev: 2b2495890a2c
@@ -5043,7 +5043,7 @@ nodes:
                 total_lines: 157
                 at_rev: 5ba0d2be0734
         at_rev: 5ba0d2be0734
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/suggest.spec.md
       kind: spec
       rev: 94d62bf84caf
@@ -5078,7 +5078,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 94d62bf84caf
         at_rev: 94d62bf84caf
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/suggest_test.go
       kind: test
       rev: c2c92a67e436
@@ -5117,7 +5117,7 @@ nodes:
                 total_lines: 196
                 at_rev: 1eedb9021a78
         at_rev: 1eedb9021a78
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/synthesize.spec.md
       kind: spec
       rev: 6aac9113d2ff
@@ -5160,7 +5160,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 6aac9113d2ff
         at_rev: 6aac9113d2ff
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/ops/synthesize_test.go
       kind: test
       rev: 2cc52aed4116
@@ -5199,7 +5199,7 @@ nodes:
                 total_lines: 1114
                 at_rev: 554e921ee881
         at_rev: 554e921ee881
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/check.spec.md
       kind: spec
       rev: c0302a2e20ce
@@ -5378,7 +5378,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: c0302a2e20ce
         at_rev: c0302a2e20ce
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/check_test.go
       kind: test
       rev: 277413fe3515
@@ -5425,7 +5425,7 @@ nodes:
                 total_lines: 363
                 at_rev: 5428eabd353d
         at_rev: 5428eabd353d
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/coverage.spec.md
       kind: spec
       rev: be653cf190a7
@@ -5486,7 +5486,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: be653cf190a7
         at_rev: be653cf190a7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/coverage_test.go
       kind: test
       rev: 0687ba0abc09
@@ -5525,7 +5525,7 @@ nodes:
                 total_lines: 325
                 at_rev: 432e68fba46b
         at_rev: 432e68fba46b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/doctor.spec.md
       kind: spec
       rev: 081dd74649d5
@@ -5584,7 +5584,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 081dd74649d5
         at_rev: 081dd74649d5
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/doctor_test.go
       kind: test
       rev: 764ea1ee6163
@@ -5623,7 +5623,7 @@ nodes:
                 total_lines: 39
                 at_rev: dc1d87d75dc3
         at_rev: dc1d87d75dc3
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/local_backlog.spec.md
       kind: spec
       rev: 33f25591efbb
@@ -5654,7 +5654,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 33f25591efbb
         at_rev: 33f25591efbb
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/local_backlog_test.go
       kind: test
       rev: c922d5b1053c
@@ -5693,7 +5693,7 @@ nodes:
                 total_lines: 13
                 at_rev: 6860c78bd611
         at_rev: 6860c78bd611
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/register.spec.md
       kind: spec
       rev: "493402061582"
@@ -5718,7 +5718,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: "493402061582"
         at_rev: "493402061582"
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/register_test.go
       kind: test
       rev: e9d24a20fbda
@@ -5748,7 +5748,7 @@ nodes:
                 total_lines: 227
                 at_rev: 364e147be14b
         at_rev: 364e147be14b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/report_renderers.go
       kind: code
       rev: 7200ccd7e90c
@@ -5770,7 +5770,7 @@ nodes:
                 total_lines: 274
                 at_rev: 7200ccd7e90c
         at_rev: 7200ccd7e90c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/report_test.go
       kind: test
       rev: 2c496fa92b7c
@@ -5838,7 +5838,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 56e4a9c7b39a
         at_rev: 56e4a9c7b39a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/reports_test.go
       kind: test
       rev: b6d7578c2c8a
@@ -5877,7 +5877,7 @@ nodes:
                 total_lines: 58
                 at_rev: a121244f8dc0
         at_rev: a121244f8dc0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/stale.spec.md
       kind: spec
       rev: fb9aa3c6cfde
@@ -5908,7 +5908,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: fb9aa3c6cfde
         at_rev: fb9aa3c6cfde
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/stale_test.go
       kind: test
       rev: fac11684410c
@@ -5947,7 +5947,7 @@ nodes:
                 total_lines: 168
                 at_rev: 179ead7e85d1
         at_rev: 179ead7e85d1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/stamp.spec.md
       kind: spec
       rev: 2acc86244a5a
@@ -5992,7 +5992,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 2acc86244a5a
         at_rev: 2acc86244a5a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/stamp_refresh_test.go
       kind: test
       rev: b64a27283939
@@ -6038,7 +6038,7 @@ nodes:
                 total_lines: 187
                 at_rev: 663cb5bde7d5
         at_rev: 663cb5bde7d5
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/status.spec.md
       kind: spec
       rev: 96d68d29a809
@@ -6087,7 +6087,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 96d68d29a809
         at_rev: 96d68d29a809
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/status_test.go
       kind: test
       rev: 5cdb9c6bee3a
@@ -6126,7 +6126,7 @@ nodes:
                 total_lines: 333
                 at_rev: 238a22805430
         at_rev: 238a22805430
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/suite.spec.md
       kind: spec
       rev: 78a436f507e8
@@ -6187,7 +6187,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 78a436f507e8
         at_rev: 78a436f507e8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/suite_test.go
       kind: test
       rev: 9b27bf1c6180
@@ -6226,7 +6226,7 @@ nodes:
                 total_lines: 242
                 at_rev: 715b207928ff
         at_rev: 715b207928ff
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/touch.spec.md
       kind: spec
       rev: 148fa546c9e9
@@ -6277,7 +6277,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 148fa546c9e9
         at_rev: 148fa546c9e9
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/touch_test.go
       kind: test
       rev: 3aa07b9e645c
@@ -6316,7 +6316,7 @@ nodes:
                 total_lines: 162
                 at_rev: 4bda221b1beb
         at_rev: 4bda221b1beb
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/verify.spec.md
       kind: spec
       rev: 1c82a6b98e12
@@ -6367,7 +6367,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 1c82a6b98e12
         at_rev: 1c82a6b98e12
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/quality/verify_test.go
       kind: test
       rev: 701679f8b4f6
@@ -6406,7 +6406,7 @@ nodes:
                 total_lines: 102
                 at_rev: 2ef829cf64a2
         at_rev: 2ef829cf64a2
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/root.spec.md
       kind: spec
       rev: 365428e850dd
@@ -6441,7 +6441,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 365428e850dd
         at_rev: 365428e850dd
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: cmd/anchors/root_test.go
       kind: test
       rev: 5e9ca562efb9
@@ -6473,7 +6473,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: fb4602a6d65a
         at_rev: fb4602a6d65a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: guides/GATES_ECOSYSTEM_GUIDE.md
       kind: guide
       rev: aaa30844e96f
@@ -6526,7 +6526,7 @@ nodes:
                 total_lines: 187
                 at_rev: 5757b3d5a84a
         at_rev: 5757b3d5a84a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/board/board.spec.md
       kind: spec
       rev: bc0e441869e1
@@ -6573,7 +6573,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: bc0e441869e1
         at_rev: bc0e441869e1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/board/board_test.go
       kind: test
       rev: 46400a42837c
@@ -6611,7 +6611,7 @@ nodes:
                 total_lines: 112
                 at_rev: c334c6c4f9eb
         at_rev: c334c6c4f9eb
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/board/claim_wait.spec.md
       kind: spec
       rev: 9874f93266a0
@@ -6644,7 +6644,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9874f93266a0
         at_rev: 9874f93266a0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/board/claim_wait_test.go
       kind: test
       rev: fdec9e808398
@@ -6682,7 +6682,7 @@ nodes:
                 total_lines: 28
                 at_rev: 1308bc657c00
         at_rev: 1308bc657c00
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/board/gh.spec.md
       kind: spec
       rev: dbed601fed19
@@ -6705,7 +6705,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: dbed601fed19
         at_rev: dbed601fed19
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/board/gh_test.go
       kind: test
       rev: ee9808ce3b85
@@ -6744,7 +6744,7 @@ nodes:
                 total_lines: 84
                 at_rev: dc7663ab770b
         at_rev: dc7663ab770b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/change/change.spec.md
       kind: spec
       rev: 34c2c2125de2
@@ -6793,7 +6793,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 34c2c2125de2
         at_rev: 34c2c2125de2
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/change/change_test.go
       kind: test
       rev: 177060d0e256
@@ -6832,7 +6832,7 @@ nodes:
                 total_lines: 71
                 at_rev: 838f30bb9ac7
         at_rev: 838f30bb9ac7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/checklog/checklog.spec.md
       kind: spec
       rev: c2d53c2da28b
@@ -6865,7 +6865,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: c2d53c2da28b
         at_rev: c2d53c2da28b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/checklog/checklog_test.go
       kind: test
       rev: 5dd67ad2a6d1
@@ -6904,7 +6904,7 @@ nodes:
                 total_lines: 155
                 at_rev: 57b94815a710
         at_rev: 57b94815a710
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/code/code.spec.md
       kind: spec
       rev: 71af0b4ff565
@@ -6945,7 +6945,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 71af0b4ff565
         at_rev: 71af0b4ff565
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/code/code_test.go
       kind: test
       rev: f8d7070aa19a
@@ -6984,7 +6984,7 @@ nodes:
                 total_lines: 28
                 at_rev: 9e3142fbcf60
         at_rev: 9e3142fbcf60
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/code/path.spec.md
       kind: spec
       rev: a2f5077c5d05
@@ -7011,7 +7011,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: a2f5077c5d05
         at_rev: a2f5077c5d05
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/code/path_test.go
       kind: test
       rev: f4cdec046d5a
@@ -7050,7 +7050,7 @@ nodes:
                 total_lines: 14
                 at_rev: 00aa23a3231b
         at_rev: 00aa23a3231b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/comments.spec.md
       kind: spec
       rev: 37df0e1deae0
@@ -7083,7 +7083,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 37df0e1deae0
         at_rev: 37df0e1deae0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/comments_test.go
       kind: test
       rev: fe3d6d196ae4
@@ -7122,7 +7122,7 @@ nodes:
                 total_lines: 557
                 at_rev: 592638c3d215
         at_rev: 592638c3d215
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/config.spec.md
       kind: spec
       rev: ba7d44efdff8
@@ -7241,7 +7241,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: ba7d44efdff8
         at_rev: ba7d44efdff8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/config_test.go
       kind: test
       rev: fedacc727ca1
@@ -7280,7 +7280,7 @@ nodes:
                 total_lines: 26
                 at_rev: 73d80d78a299
         at_rev: 73d80d78a299
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/containers.spec.md
       kind: spec
       rev: 9689fa8aba63
@@ -7313,7 +7313,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9689fa8aba63
         at_rev: 9689fa8aba63
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/containers_test.go
       kind: test
       rev: 25da47eef8c0
@@ -7352,7 +7352,7 @@ nodes:
                 total_lines: 106
                 at_rev: "1738143441e9"
         at_rev: "1738143441e9"
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/dialect.spec.md
       kind: spec
       rev: 4a163626fd69
@@ -7401,7 +7401,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4a163626fd69
         at_rev: 4a163626fd69
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/dialect_test.go
       kind: test
       rev: 5992045bfe2c
@@ -7440,7 +7440,7 @@ nodes:
                 total_lines: 29
                 at_rev: 6ae3ecebcb0c
         at_rev: 6ae3ecebcb0c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/docs.spec.md
       kind: spec
       rev: e93ad850b375
@@ -7473,7 +7473,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e93ad850b375
         at_rev: e93ad850b375
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/docs_test.go
       kind: test
       rev: 529dbd0dd151
@@ -7512,7 +7512,7 @@ nodes:
                 total_lines: 53
                 at_rev: 383968ae2ae4
         at_rev: 383968ae2ae4
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/min_version.spec.md
       kind: spec
       rev: 7e5ae0528d67
@@ -7547,7 +7547,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 7e5ae0528d67
         at_rev: 7e5ae0528d67
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/min_version_test.go
       kind: test
       rev: 248fe31fdd0c
@@ -7586,7 +7586,7 @@ nodes:
                 total_lines: 25
                 at_rev: 50bb24921e13
         at_rev: 50bb24921e13
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/patterns.spec.md
       kind: spec
       rev: 6059b9a4e727
@@ -7617,7 +7617,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 6059b9a4e727
         at_rev: 6059b9a4e727
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/patterns_test.go
       kind: test
       rev: 9c363d44589c
@@ -7656,7 +7656,7 @@ nodes:
                 total_lines: 24
                 at_rev: 3cbb6f987969
         at_rev: 3cbb6f987969
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/root.spec.md
       kind: spec
       rev: 7cb818a4080a
@@ -7683,7 +7683,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 7cb818a4080a
         at_rev: 7cb818a4080a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/root_test.go
       kind: test
       rev: 79a373184312
@@ -7722,7 +7722,7 @@ nodes:
                 total_lines: 6
                 at_rev: 9bea430cee32
         at_rev: 9bea430cee32
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/vocabulary.spec.md
       kind: spec
       rev: bb7c68466460
@@ -7747,7 +7747,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: bb7c68466460
         at_rev: bb7c68466460
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/config/vocabulary_test.go
       kind: test
       rev: 83a6df2cf589
@@ -7786,7 +7786,7 @@ nodes:
                 total_lines: 64
                 at_rev: e5455470ddec
         at_rev: e5455470ddec
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/daemon/daemon.spec.md
       kind: spec
       rev: 13564f649ceb
@@ -7823,7 +7823,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 13564f649ceb
         at_rev: 13564f649ceb
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/daemon/daemon_runtime.feature
       kind: feature
       rev: 3b2a8820e35d
@@ -7856,7 +7856,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: ab31fe9f662c
         at_rev: ab31fe9f662c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/daemon/daemon_runtime_test.go
       kind: test
       rev: 5a69a334414d
@@ -7894,7 +7894,7 @@ nodes:
                 total_lines: 10
                 at_rev: 02e144b7203a
         at_rev: 02e144b7203a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/daemon/daemon_windows.go
       kind: code
       rev: 8354b85bcf7a
@@ -7932,7 +7932,7 @@ nodes:
                 total_lines: 112
                 at_rev: bfa2a4d4a745
         at_rev: bfa2a4d4a745
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/anchor.spec.md
       kind: spec
       rev: 50be6a2c5e48
@@ -7969,7 +7969,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 50be6a2c5e48
         at_rev: 50be6a2c5e48
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/anchor_test.go
       kind: test
       rev: 779ffaae6bc9
@@ -8007,7 +8007,7 @@ nodes:
                 total_lines: 39
                 at_rev: 80a989788857
         at_rev: 80a989788857
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/c4.spec.md
       kind: spec
       rev: 9b98b971fa09
@@ -8036,7 +8036,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9b98b971fa09
         at_rev: 9b98b971fa09
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/c4_test.go
       kind: test
       rev: fb07811baf31
@@ -8074,7 +8074,7 @@ nodes:
                 total_lines: 320
                 at_rev: 2cb0696cbea1
         at_rev: 2cb0696cbea1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/doct.spec.md
       kind: spec
       rev: 44d8684b760a
@@ -8143,7 +8143,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 44d8684b760a
         at_rev: 44d8684b760a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/doct_test.go
       kind: test
       rev: 07419826cb34
@@ -8181,7 +8181,7 @@ nodes:
                 total_lines: 27
                 at_rev: 9eb476f8c6d1
         at_rev: 9eb476f8c6d1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/kinds.spec.md
       kind: spec
       rev: 31676eda9b47
@@ -8210,7 +8210,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 31676eda9b47
         at_rev: 31676eda9b47
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/kinds_test.go
       kind: test
       rev: ab99e52bea6d
@@ -8248,7 +8248,7 @@ nodes:
                 total_lines: 11
                 at_rev: d275e1ffd550
         at_rev: d275e1ffd550
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/layout.spec.md
       kind: spec
       rev: 1a30bbda6087
@@ -8275,7 +8275,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 1a30bbda6087
         at_rev: 1a30bbda6087
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/layout_test.go
       kind: test
       rev: 873540e8e2e6
@@ -8313,7 +8313,7 @@ nodes:
                 total_lines: 252
                 at_rev: c6f63c4e2f69
         at_rev: c6f63c4e2f69
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/scaffold.spec.md
       kind: spec
       rev: 355fccf92f68
@@ -8352,7 +8352,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 355fccf92f68
         at_rev: 355fccf92f68
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/scaffold_test.go
       kind: test
       rev: de9c90b5f25b
@@ -8390,7 +8390,7 @@ nodes:
                 total_lines: 85
                 at_rev: 7828d11eee2a
         at_rev: 7828d11eee2a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/scenarios.spec.md
       kind: spec
       rev: 456c4fdd01ae
@@ -8425,7 +8425,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 456c4fdd01ae
         at_rev: 456c4fdd01ae
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/doct/scenarios_test.go
       kind: test
       rev: 2d86a2b2ae22
@@ -8463,7 +8463,7 @@ nodes:
                 total_lines: 57
                 at_rev: 0285608c8a15
         at_rev: 0285608c8a15
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/flagx/grammar.spec.md
       kind: spec
       rev: 748c4ebe1890
@@ -8498,7 +8498,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 748c4ebe1890
         at_rev: 748c4ebe1890
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/flagx/grammar_test.go
       kind: test
       rev: 0afdb96bad7e
@@ -8536,7 +8536,7 @@ nodes:
                 total_lines: 63
                 at_rev: cd0c9b493d7e
         at_rev: cd0c9b493d7e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/flagx/parse.spec.md
       kind: spec
       rev: 0c44e494d54b
@@ -8569,7 +8569,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 0c44e494d54b
         at_rev: 0c44e494d54b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/flagx/parse_test.go
       kind: test
       rev: bb79b1a63308
@@ -8607,7 +8607,7 @@ nodes:
                 total_lines: 141
                 at_rev: 7524dd08540e
         at_rev: 7524dd08540e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/flowx/build.spec.md
       kind: spec
       rev: bb20cb28f954
@@ -8642,7 +8642,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: bb20cb28f954
         at_rev: bb20cb28f954
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/flowx/build_test.go
       kind: test
       rev: 6b3ad83a9b8a
@@ -8680,7 +8680,7 @@ nodes:
                 total_lines: 116
                 at_rev: 6426cc2eaa93
         at_rev: 6426cc2eaa93
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/flowx/model.spec.md
       kind: spec
       rev: d8ff0b1479f3
@@ -8717,7 +8717,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: d8ff0b1479f3
         at_rev: d8ff0b1479f3
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/flowx/model_test.go
       kind: test
       rev: f18a25620d5e
@@ -8772,7 +8772,7 @@ nodes:
                 score: 78.04878048780488
                 at_rev: 1b806923de44
         at_rev: 1b806923de44
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/code_cataloged.spec.md
       kind: spec
       rev: 9f701a292005
@@ -8831,7 +8831,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9f701a292005
         at_rev: 9f701a292005
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/code_cataloged_test.go
       kind: test
       rev: e1838f90723d
@@ -8881,7 +8881,7 @@ nodes:
                 score: 80
                 at_rev: 2ffa6610870b
         at_rev: 2ffa6610870b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/code_language.spec.md
       kind: spec
       rev: 0cef6cb6fcf7
@@ -8916,7 +8916,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 0cef6cb6fcf7
         at_rev: 0cef6cb6fcf7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/code_language_test.go
       kind: test
       rev: 18771b1c2646
@@ -8962,7 +8962,7 @@ nodes:
                 score: 100
                 at_rev: f991e2c7dd2e
         at_rev: f991e2c7dd2e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/code_reference_valid.spec.md
       kind: spec
       rev: 11f53b9e468c
@@ -9011,7 +9011,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 11f53b9e468c
         at_rev: 11f53b9e468c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/code_reference_valid_test.go
       kind: test
       rev: bd9a9866d4d5
@@ -9059,7 +9059,7 @@ nodes:
                 score: 90.625
                 at_rev: eba61b62d923
         at_rev: eba61b62d923
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/contract_status_declared.spec.md
       kind: spec
       rev: 36c2e9095d0c
@@ -9118,7 +9118,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 36c2e9095d0c
         at_rev: 36c2e9095d0c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/contract_status_declared_test.go
       kind: test
       rev: 5ab2036b6aa7
@@ -9166,7 +9166,7 @@ nodes:
                 score: 96.55172413793103
                 at_rev: bd766c8c0224
         at_rev: bd766c8c0224
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/count_honored.spec.md
       kind: spec
       rev: 14184f6494ca
@@ -9225,7 +9225,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 14184f6494ca
         at_rev: 14184f6494ca
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/count_honored_test.go
       kind: test
       rev: 5e44491372dc
@@ -9273,7 +9273,7 @@ nodes:
                 score: 92
                 at_rev: 9ebc588be760
         at_rev: 9ebc588be760
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/dependency_honored.spec.md
       kind: spec
       rev: 2747098bf517
@@ -9318,7 +9318,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 2747098bf517
         at_rev: 2747098bf517
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/dependency_honored_test.go
       kind: test
       rev: 4f2d0c10089a
@@ -9368,7 +9368,7 @@ nodes:
                 score: 76.27118644067797
                 at_rev: 4bec3c03b9b8
         at_rev: 4bec3c03b9b8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/doc_required.spec.md
       kind: spec
       rev: 568103a8807c
@@ -9411,7 +9411,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 568103a8807c
         at_rev: 568103a8807c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/doc_required_section_test.go
       kind: test
       rev: 609f442fea29
@@ -9468,7 +9468,7 @@ nodes:
                 score: 74.28571428571429
                 at_rev: 4555e1b800e7
         at_rev: 4555e1b800e7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/doc_self_contained.spec.md
       kind: spec
       rev: cdaba8b7eb3a
@@ -9515,7 +9515,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: cdaba8b7eb3a
         at_rev: cdaba8b7eb3a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/doc_self_contained_test.go
       kind: test
       rev: 0c3351e58d13
@@ -9561,7 +9561,7 @@ nodes:
                 score: 100
                 at_rev: e465b4dcc5a8
         at_rev: e465b4dcc5a8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/docs_covered.spec.md
       kind: spec
       rev: e4b8c38f33b0
@@ -9594,7 +9594,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e4b8c38f33b0
         at_rev: e4b8c38f33b0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/docs_covered_test.go
       kind: test
       rev: a813ce8daedb
@@ -9640,7 +9640,7 @@ nodes:
                 score: 100
                 at_rev: 613927a5e421
         at_rev: 613927a5e421
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/docs_fresh.spec.md
       kind: spec
       rev: b9a0614c3e1b
@@ -9689,7 +9689,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: b9a0614c3e1b
         at_rev: b9a0614c3e1b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/docs_fresh_test.go
       kind: test
       rev: 1a8bdc1a21ac
@@ -9737,7 +9737,7 @@ nodes:
                 score: 94.66666666666667
                 at_rev: dfdb732eb98a
         at_rev: dfdb732eb98a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/doctrine.spec.md
       kind: spec
       rev: 2c8e9a5a9c28
@@ -9824,7 +9824,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 2c8e9a5a9c28
         at_rev: 2c8e9a5a9c28
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/doctrine_test.go
       kind: test
       rev: 652f2a47a2a1
@@ -9874,7 +9874,7 @@ nodes:
                 score: 93.75
                 at_rev: 996abb62116a
         at_rev: 996abb62116a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/domain_declared.spec.md
       kind: spec
       rev: 20df3c089566
@@ -9913,7 +9913,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 20df3c089566
         at_rev: 20df3c089566
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/domain_declared_test.go
       kind: test
       rev: 8b1facf5b92b
@@ -9961,7 +9961,7 @@ nodes:
                 score: 90.9090909090909
                 at_rev: 8a9b87073030
         at_rev: 8a9b87073030
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/evidence_fresh.spec.md
       kind: spec
       rev: c1abed8885a9
@@ -10010,7 +10010,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: c1abed8885a9
         at_rev: c1abed8885a9
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/evidence_fresh_test.go
       kind: test
       rev: 5fd361f9df74
@@ -10058,7 +10058,7 @@ nodes:
                 score: 79.16666666666666
                 at_rev: 431421bde9ae
         at_rev: 431421bde9ae
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/external.spec.md
       kind: spec
       rev: 3eec5aae3fd3
@@ -10111,7 +10111,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 3eec5aae3fd3
         at_rev: 3eec5aae3fd3
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/external_test.go
       kind: test
       rev: aa633d4bc42f
@@ -10159,7 +10159,7 @@ nodes:
                 score: 81.57894736842105
                 at_rev: c60bfdb2b762
         at_rev: c60bfdb2b762
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/failure.spec.md
       kind: spec
       rev: b3ae9d707eba
@@ -10218,7 +10218,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: b3ae9d707eba
         at_rev: b3ae9d707eba
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/failure_test.go
       kind: test
       rev: bd88e6de0ce9
@@ -10276,7 +10276,7 @@ nodes:
                 score: 86.23853211009175
                 at_rev: f1f0470e2255
         at_rev: f1f0470e2255
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/feature_test_match.spec.md
       kind: spec
       rev: 494c79ac8904
@@ -10347,7 +10347,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 494c79ac8904
         at_rev: 494c79ac8904
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/feature_test_match_test.go
       kind: test
       rev: 804be4924e69
@@ -10393,7 +10393,7 @@ nodes:
                 score: 100
                 at_rev: 01d26a9c16f0
         at_rev: 01d26a9c16f0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/fix.spec.md
       kind: spec
       rev: fa98a7a8fb05
@@ -10432,7 +10432,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: fa98a7a8fb05
         at_rev: fa98a7a8fb05
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/fix_test.go
       kind: test
       rev: 7e7d33fa1c14
@@ -10482,7 +10482,7 @@ nodes:
                 score: 90.32258064516128
                 at_rev: d5defc402dcb
         at_rev: d5defc402dcb
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/flag.spec.md
       kind: spec
       rev: b25a76623c57
@@ -10539,7 +10539,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: b25a76623c57
         at_rev: b25a76623c57
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/flag_test.go
       kind: test
       rev: af88a869b079
@@ -10589,7 +10589,7 @@ nodes:
                 score: 90
                 at_rev: 37f82f3d2673
         at_rev: 37f82f3d2673
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/gate.spec.md
       kind: spec
       rev: 76e4d906c391
@@ -10666,7 +10666,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 76e4d906c391
         at_rev: 76e4d906c391
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/gate_test.go
       kind: test
       rev: 55a6806dfb1d
@@ -10705,7 +10705,7 @@ nodes:
                 total_lines: 87
                 at_rev: 01ad5375b831
         at_rev: 01ad5375b831
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/identity_consistent.spec.md
       kind: spec
       rev: 9bc238863863
@@ -10760,7 +10760,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9bc238863863
         at_rev: 9bc238863863
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/identity_consistent_test.go
       kind: test
       rev: 60318355f5fa
@@ -10799,7 +10799,7 @@ nodes:
                 total_lines: 495
                 at_rev: d5e5c1fdaf31
         at_rev: d5e5c1fdaf31
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/internal_checks.spec.md
       kind: spec
       rev: 4c542c9ffc73
@@ -10862,7 +10862,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4c542c9ffc73
         at_rev: 4c542c9ffc73
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/internal_checks_test.go
       kind: test
       rev: 1392b71a1112
@@ -10910,7 +10910,7 @@ nodes:
                 score: 94.87179487179486
                 at_rev: 5fdc00c22b91
         at_rev: 5fdc00c22b91
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/layer_boundary.spec.md
       kind: spec
       rev: d9543b7a1a7c
@@ -10963,7 +10963,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: d9543b7a1a7c
         at_rev: d9543b7a1a7c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/layer_boundary_test.go
       kind: test
       rev: 2d4e1c5e492f
@@ -11009,7 +11009,7 @@ nodes:
                 score: 100
                 at_rev: d08e7cadf54d
         at_rev: d08e7cadf54d
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/marker_parity.spec.md
       kind: spec
       rev: d697a9c3624a
@@ -11056,7 +11056,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: d697a9c3624a
         at_rev: d697a9c3624a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/marker_parity_test.go
       kind: test
       rev: 8c58ca3117f5
@@ -11106,7 +11106,7 @@ nodes:
                 score: 72.26890756302521
                 at_rev: a429d4290ecd
         at_rev: a429d4290ecd
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/mock_stamp_gen.spec.md
       kind: spec
       rev: 46edda4af936
@@ -11149,7 +11149,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 46edda4af936
         at_rev: 46edda4af936
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/mock_stamp_gen_test.go
       kind: test
       rev: 7f1a5f2a0ccc
@@ -11199,7 +11199,7 @@ nodes:
                 score: 83.92857142857143
                 at_rev: 5e4b6a3c15ab
         at_rev: 5e4b6a3c15ab
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/mock_stamped.spec.md
       kind: spec
       rev: 4be7ef27f64d
@@ -11270,7 +11270,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4be7ef27f64d
         at_rev: 4be7ef27f64d
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/mock_stamped_test.go
       kind: test
       rev: 75c04e0ab86c
@@ -11320,7 +11320,7 @@ nodes:
                 score: 87.3015873015873
                 at_rev: b05ae5553274
         at_rev: b05ae5553274
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/mock_typed.spec.md
       kind: spec
       rev: 57ef16b4b323
@@ -11379,7 +11379,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 57ef16b4b323
         at_rev: 57ef16b4b323
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/mock_typed_test.go
       kind: test
       rev: 57b8aa68f340
@@ -11480,7 +11480,7 @@ nodes:
                 score: 91.17647058823529
                 at_rev: 440840549afa
         at_rev: 440840549afa
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/obligation_honored.spec.md
       kind: spec
       rev: 7ceb94b587eb
@@ -11531,7 +11531,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 7ceb94b587eb
         at_rev: 7ceb94b587eb
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/obligation_honored_test.go
       kind: test
       rev: e81c7adae789
@@ -11594,7 +11594,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: c7996f41848a
         at_rev: c7996f41848a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/obligations_report.go
       kind: code
       rev: caf2f21f4399
@@ -11623,7 +11623,7 @@ nodes:
                 score: 100
                 at_rev: caf2f21f4399
         at_rev: caf2f21f4399
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/obligations_source.go
       kind: code
       rev: 62c6d5793db7
@@ -11654,7 +11654,7 @@ nodes:
                 score: 100
                 at_rev: 62c6d5793db7
         at_rev: 62c6d5793db7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/obligations_test.go
       kind: test
       rev: c38ffeef7f20
@@ -11704,7 +11704,7 @@ nodes:
                 score: 88.88888888888889
                 at_rev: fa891dc05325
         at_rev: fa891dc05325
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/open_questions.spec.md
       kind: spec
       rev: a5d8bce5f1b8
@@ -11745,7 +11745,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: a5d8bce5f1b8
         at_rev: a5d8bce5f1b8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/open_questions_test.go
       kind: test
       rev: e017bcea6bfe
@@ -11795,7 +11795,7 @@ nodes:
                 score: 92.85714285714286
                 at_rev: b77317cb562c
         at_rev: b77317cb562c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/pagination_honored.spec.md
       kind: spec
       rev: 9dbbe212d05c
@@ -11838,7 +11838,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9dbbe212d05c
         at_rev: 9dbbe212d05c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/pagination_honored_test.go
       kind: test
       rev: 60adbe87019b
@@ -11886,7 +11886,7 @@ nodes:
                 score: 84.61538461538461
                 at_rev: 6e09dbdbb21b
         at_rev: 6e09dbdbb21b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/phase_ordered.spec.md
       kind: spec
       rev: e1610b0ef72a
@@ -11947,7 +11947,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e1610b0ef72a
         at_rev: e1610b0ef72a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/phase_ordered_test.go
       kind: test
       rev: fdfb668dcd6c
@@ -11995,7 +11995,7 @@ nodes:
                 score: 80
                 at_rev: c8b8726cf321
         at_rev: c8b8726cf321
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/placeholder_filled.spec.md
       kind: spec
       rev: 96e464ce8c13
@@ -12032,7 +12032,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 96e464ce8c13
         at_rev: 96e464ce8c13
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/placeholder_filled_test.go
       kind: test
       rev: efb3ff354bd1
@@ -12082,7 +12082,7 @@ nodes:
                 score: 84
                 at_rev: 5861c14925f9
         at_rev: 5861c14925f9
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/plan_change_justified.spec.md
       kind: spec
       rev: 3e3f418ae7e0
@@ -12139,7 +12139,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 3e3f418ae7e0
         at_rev: 3e3f418ae7e0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/plan_change_justified_test.go
       kind: test
       rev: 2892b2d6dba6
@@ -12194,7 +12194,7 @@ nodes:
                 score: 94.44444444444444
                 at_rev: 5e4d49692700
         at_rev: 5e4d49692700
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/plan_revised.spec.md
       kind: spec
       rev: 9e6e35f0cc78
@@ -12245,7 +12245,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9e6e35f0cc78
         at_rev: 9e6e35f0cc78
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/plan_revised_test.go
       kind: test
       rev: ca557add6267
@@ -12293,7 +12293,7 @@ nodes:
                 score: 90.47619047619048
                 at_rev: 288ada51dee6
         at_rev: 288ada51dee6
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/plan_seeds_valid.spec.md
       kind: spec
       rev: ae6126b27cb3
@@ -12346,7 +12346,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: ae6126b27cb3
         at_rev: ae6126b27cb3
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/plan_seeds_valid_test.go
       kind: test
       rev: 2aeb17450445
@@ -12392,7 +12392,7 @@ nodes:
                 score: 100
                 at_rev: 8fb05c435bca
         at_rev: 8fb05c435bca
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/plan_source_declared.spec.md
       kind: spec
       rev: 50d4a849e7b2
@@ -12441,7 +12441,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 50d4a849e7b2
         at_rev: 50d4a849e7b2
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/plan_source_declared_test.go
       kind: test
       rev: fdafac1338c4
@@ -12489,7 +12489,7 @@ nodes:
                 score: 84.61538461538461
                 at_rev: ff39f7f4685b
         at_rev: ff39f7f4685b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/profile.spec.md
       kind: spec
       rev: b858f9b66e97
@@ -12526,7 +12526,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: b858f9b66e97
         at_rev: b858f9b66e97
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/profile_test.go
       kind: test
       rev: a5c3ef2cff18
@@ -12572,7 +12572,7 @@ nodes:
                 score: 100
                 at_rev: cc96df1b6830
         at_rev: cc96df1b6830
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/progress_honest.spec.md
       kind: spec
       rev: 2b9cec987058
@@ -12627,7 +12627,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 2b9cec987058
         at_rev: 2b9cec987058
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/progress_honest_test.go
       kind: test
       rev: 469609f110e3
@@ -12688,7 +12688,7 @@ nodes:
                 score: 100
                 at_rev: a5da8054ce15
         at_rev: a5da8054ce15
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/promotable.spec.md
       kind: spec
       rev: 9e03864f7e62
@@ -12731,7 +12731,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9e03864f7e62
         at_rev: 9e03864f7e62
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/promotable_test.go
       kind: test
       rev: d6a0e76ee023
@@ -12781,7 +12781,7 @@ nodes:
                 score: 80
                 at_rev: ab915f3a27eb
         at_rev: ab915f3a27eb
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/proof_crosses_boundary.spec.md
       kind: spec
       rev: 9c9043e52939
@@ -12842,7 +12842,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9c9043e52939
         at_rev: 9c9043e52939
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/proof_crosses_boundary_test.go
       kind: test
       rev: f813debaf122
@@ -12888,7 +12888,7 @@ nodes:
                 score: 100
                 at_rev: a12e150ff78b
         at_rev: a12e150ff78b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/ref_resolves.spec.md
       kind: spec
       rev: e394d7283cbf
@@ -12951,7 +12951,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e394d7283cbf
         at_rev: e394d7283cbf
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/ref_resolves_test.go
       kind: test
       rev: dbd92ae123da
@@ -12999,7 +12999,7 @@ nodes:
                 score: 87.5
                 at_rev: dbf225025f79
         at_rev: dbf225025f79
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/region_pair_honored.spec.md
       kind: spec
       rev: "762971562134"
@@ -13042,7 +13042,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: "762971562134"
         at_rev: "762971562134"
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/region_pair_honored_test.go
       kind: test
       rev: ff9405c70307
@@ -13090,7 +13090,7 @@ nodes:
                 score: 89.47368421052632
                 at_rev: 7cf277cef98b
         at_rev: 7cf277cef98b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/reverse_match.spec.md
       kind: spec
       rev: 20bee41387f5
@@ -13145,7 +13145,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 20bee41387f5
         at_rev: 20bee41387f5
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/reverse_match_test.go
       kind: test
       rev: b2d3c2b43c1e
@@ -13193,7 +13193,7 @@ nodes:
                 score: 93.10344827586206
                 at_rev: 8c9dcadbdbaa
         at_rev: 8c9dcadbdbaa
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/revision_orphans.spec.md
       kind: spec
       rev: d6d115081eac
@@ -13228,7 +13228,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: d6d115081eac
         at_rev: d6d115081eac
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/revision_orphans_test.go
       kind: test
       rev: 0701206537ba
@@ -13276,7 +13276,7 @@ nodes:
                 score: 90
                 at_rev: 06c848be7601
         at_rev: 06c848be7601
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/revision_renumber.spec.md
       kind: spec
       rev: 76028e0cb11b
@@ -13311,7 +13311,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 76028e0cb11b
         at_rev: 76028e0cb11b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/revision_renumber_test.go
       kind: test
       rev: 5d962fa98a42
@@ -13357,7 +13357,7 @@ nodes:
                 score: 100
                 at_rev: a96b7a45d184
         at_rev: a96b7a45d184
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/route_declared.spec.md
       kind: spec
       rev: 57c57e902d63
@@ -13392,7 +13392,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 57c57e902d63
         at_rev: 57c57e902d63
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/route_declared_test.go
       kind: test
       rev: 9eaa329e3d8e
@@ -13438,7 +13438,7 @@ nodes:
                 score: 100
                 at_rev: 0a496a0f54f6
         at_rev: 0a496a0f54f6
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/route_exists.spec.md
       kind: spec
       rev: 4dcd86bb1d6f
@@ -13497,7 +13497,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4dcd86bb1d6f
         at_rev: 4dcd86bb1d6f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/route_exists_test.go
       kind: test
       rev: 5124bae7cd98
@@ -13545,7 +13545,7 @@ nodes:
                 score: 96.42857142857143
                 at_rev: f9b47d22db80
         at_rev: f9b47d22db80
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/rule.spec.md
       kind: spec
       rev: a1f7f6b17436
@@ -13608,7 +13608,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: a1f7f6b17436
         at_rev: a1f7f6b17436
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/rule_implemented.feature
       kind: feature
       rev: d720c6cbac73
@@ -13648,7 +13648,7 @@ nodes:
                 score: 84.84848484848484
                 at_rev: bea14df81b37
         at_rev: bea14df81b37
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/rule_implemented.spec.md
       kind: spec
       rev: 7204a1f0ae44
@@ -13687,7 +13687,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 7204a1f0ae44
         at_rev: 7204a1f0ae44
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/rule_implemented_test.go
       kind: test
       rev: 5146a7a5ff4d
@@ -13750,7 +13750,7 @@ nodes:
                 score: 86.8421052631579
                 at_rev: 642ddfd947bc
         at_rev: 642ddfd947bc
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/rule_types.spec.md
       kind: spec
       rev: 6ab06f981fd1
@@ -13805,7 +13805,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 6ab06f981fd1
         at_rev: 6ab06f981fd1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/rule_types_requires_test.go
       kind: test
       rev: ee5d4f60c417
@@ -13860,7 +13860,7 @@ nodes:
                 score: 100
                 at_rev: 219efdd9d6c6
         at_rev: 219efdd9d6c6
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/scenario_asserts.spec.md
       kind: spec
       rev: b60366a60a3c
@@ -13907,7 +13907,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: b60366a60a3c
         at_rev: b60366a60a3c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/scenario_asserts_test.go
       kind: test
       rev: 87b208988ddf
@@ -13971,7 +13971,7 @@ nodes:
                 score: 90.9090909090909
                 at_rev: 396c865f461a
         at_rev: 396c865f461a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/scenario_identity.spec.md
       kind: spec
       rev: 80bb393d42f4
@@ -14022,7 +14022,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 80bb393d42f4
         at_rev: 80bb393d42f4
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/scenario_identity_test.go
       kind: test
       rev: 27474d7bb7b1
@@ -14068,7 +14068,7 @@ nodes:
                 score: 100
                 at_rev: e5faa87abd02
         at_rev: e5faa87abd02
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/scenario_letter_declared.spec.md
       kind: spec
       rev: ab3e8cd92792
@@ -14109,7 +14109,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: ab3e8cd92792
         at_rev: ab3e8cd92792
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/scenario_letter_declared_test.go
       kind: test
       rev: 23bed2a4e5a7
@@ -14157,7 +14157,7 @@ nodes:
                 score: 77.14285714285715
                 at_rev: ae3973b6f62f
         at_rev: ae3973b6f62f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/scenario_type_aligned.spec.md
       kind: spec
       rev: 882996e77635
@@ -14214,7 +14214,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 882996e77635
         at_rev: 882996e77635
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/scenario_type_aligned_test.go
       kind: test
       rev: abf2df75a37f
@@ -14269,7 +14269,7 @@ nodes:
                 score: 78
                 at_rev: 8e7e3e0e5ab0
         at_rev: 8e7e3e0e5ab0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/sibling_guard.spec.md
       kind: spec
       rev: b049ce58fd72
@@ -14310,7 +14310,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: b049ce58fd72
         at_rev: b049ce58fd72
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/sibling_guard_test.go
       kind: test
       rev: c9a83baf38be
@@ -14360,7 +14360,7 @@ nodes:
                 score: 95.45454545454545
                 at_rev: cff0c04f063d
         at_rev: cff0c04f063d
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/spec_feature_match.spec.md
       kind: spec
       rev: 97f943d78ea5
@@ -14419,7 +14419,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 97f943d78ea5
         at_rev: 97f943d78ea5
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/spec_feature_match_test.go
       kind: test
       rev: 0f8004088d55
@@ -14466,10 +14466,10 @@ nodes:
                 total_lines: 43
                 at_rev: eb4ac9f838da
         at_rev: eb4ac9f838da
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/test_level_codes.spec.md
       kind: spec
-      rev: a33828199bfe
+      rev: 13d6e743902a
       updated_at: "2026-09-27"
       code: TLVCD
       layer: spec
@@ -14499,9 +14499,9 @@ nodes:
                 - TLVCD-B08
                 - TLVCD-B09
         proven_rev_by_suite:
-            .anchors/junit.xml: a33828199bfe
-        at_rev: a33828199bfe
-        ingested_at: "2026-09-27T07:59:00-03:00"
+            .anchors/junit.xml: 13d6e743902a
+        at_rev: 13d6e743902a
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/test_level_codes_test.go
       kind: test
       rev: cfb5c8b4ea2b
@@ -14549,7 +14549,7 @@ nodes:
                 score: 90
                 at_rev: 90e382def2b3
         at_rev: 90e382def2b3
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/test_traceable.spec.md
       kind: spec
       rev: a3fcf0ef928c
@@ -14604,7 +14604,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: a3fcf0ef928c
         at_rev: a3fcf0ef928c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/test_traceable_test.go
       kind: test
       rev: e36fd20a0749
@@ -14641,7 +14641,7 @@ nodes:
                 score: 100
                 at_rev: f8cb7c8aff9e
         at_rev: f8cb7c8aff9e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/testid_contract.feature
       kind: feature
       rev: 0b960bad34e6
@@ -14720,7 +14720,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4e13bcc16bb7
         at_rev: 4e13bcc16bb7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/testid_contract_test.go
       kind: test
       rev: 3354becc94f8
@@ -14759,7 +14759,7 @@ nodes:
                 score: 92.85714285714286
                 at_rev: 76f3ada7f7b0
         at_rev: 76f3ada7f7b0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/testid_queried_exists.feature
       kind: feature
       rev: d551aa2f169a
@@ -14799,7 +14799,7 @@ nodes:
                 score: 96
                 at_rev: 540208cf44d5
         at_rev: 540208cf44d5
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/testid_queried_exists.spec.md
       kind: spec
       rev: 369486c0fbea
@@ -14862,7 +14862,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 369486c0fbea
         at_rev: 369486c0fbea
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/testid_queried_exists_test.go
       kind: test
       rev: 76e81ca8aaf9
@@ -14901,7 +14901,7 @@ nodes:
                 score: 97.5609756097561
                 at_rev: c7e9ae0925fa
         at_rev: c7e9ae0925fa
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/triad_complete.feature
       kind: feature
       rev: a56ba7a592ab
@@ -14941,7 +14941,7 @@ nodes:
                 score: 100
                 at_rev: c337d13ce09c
         at_rev: c337d13ce09c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/triad_complete.spec.md
       kind: spec
       rev: e9429b6e3471
@@ -14992,7 +14992,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e9429b6e3471
         at_rev: e9429b6e3471
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/triad_complete_test.go
       kind: test
       rev: de0c230b246f
@@ -15040,7 +15040,7 @@ nodes:
                 score: 92.3076923076923
                 at_rev: 397b432d5384
         at_rev: 397b432d5384
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/trigger_declared.spec.md
       kind: spec
       rev: 71d161c4e467
@@ -15101,7 +15101,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 71d161c4e467
         at_rev: 71d161c4e467
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/trigger_declared_test.go
       kind: test
       rev: c808467efa4a
@@ -15156,7 +15156,7 @@ nodes:
                 score: 96.42857142857143
                 at_rev: f297ca784511
         at_rev: f297ca784511
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/value_anchored.spec.md
       kind: spec
       rev: 51798b84efc3
@@ -15205,7 +15205,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 51798b84efc3
         at_rev: 51798b84efc3
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/value_anchored_test.go
       kind: test
       rev: 9e1d9390cede
@@ -15251,7 +15251,7 @@ nodes:
                 score: 100
                 at_rev: 7c491d9418fc
         at_rev: 7c491d9418fc
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/vr_baseline.spec.md
       kind: spec
       rev: 9ac63acbe2cb
@@ -15294,7 +15294,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9ac63acbe2cb
         at_rev: 9ac63acbe2cb
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gate/vr_baseline_test.go
       kind: test
       rev: 6bb66197b2b8
@@ -15333,7 +15333,7 @@ nodes:
                 total_lines: 22
                 at_rev: 649cc782a80a
         at_rev: 649cc782a80a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gitmeta/availability.spec.md
       kind: spec
       rev: 5af3aed377d1
@@ -15362,7 +15362,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 5af3aed377d1
         at_rev: 5af3aed377d1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gitmeta/availability_test.go
       kind: test
       rev: 66c36dc915cd
@@ -15401,7 +15401,7 @@ nodes:
                 total_lines: 62
                 at_rev: ace465de1973
         at_rev: ace465de1973
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gitmeta/gitmeta.spec.md
       kind: spec
       rev: 997954dd5684
@@ -15436,7 +15436,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 997954dd5684
         at_rev: 997954dd5684
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/gitmeta/gitmeta_test.go
       kind: test
       rev: 128cc2622104
@@ -15475,7 +15475,7 @@ nodes:
                 total_lines: 64
                 at_rev: cb8908e15cb5
         at_rev: cb8908e15cb5
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/health/approval.spec.md
       kind: spec
       rev: 167cd6086102
@@ -15512,7 +15512,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 167cd6086102
         at_rev: 167cd6086102
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/health/approval_test.go
       kind: test
       rev: 86a5db66eb09
@@ -15551,7 +15551,7 @@ nodes:
                 total_lines: 41
                 at_rev: 155d0f81cfe7
         at_rev: 155d0f81cfe7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/health/github_environment.spec.md
       kind: spec
       rev: 38775b8f9cdf
@@ -15588,7 +15588,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 38775b8f9cdf
         at_rev: 38775b8f9cdf
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/health/github_environment_test.go
       kind: test
       rev: f06b2f34b0c1
@@ -15627,7 +15627,7 @@ nodes:
                 total_lines: 78
                 at_rev: 6683ba21896b
         at_rev: 6683ba21896b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/health/governance.spec.md
       kind: spec
       rev: 6dd3c357a19d
@@ -15662,7 +15662,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 6dd3c357a19d
         at_rev: 6dd3c357a19d
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/health/governance_test.go
       kind: test
       rev: a4bf21cfe2ce
@@ -15702,7 +15702,7 @@ nodes:
                 total_lines: 343
                 at_rev: eac0edd4de76
         at_rev: eac0edd4de76
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/health/health.spec.md
       kind: spec
       rev: 75a64c51a344
@@ -15774,7 +15774,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 75a64c51a344
         at_rev: 75a64c51a344
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/health/health_test.go
       kind: test
       rev: 3b589087ff76
@@ -15813,7 +15813,7 @@ nodes:
                 total_lines: 30
                 at_rev: 5acadf48a82d
         at_rev: 5acadf48a82d
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/health/pending_decision.spec.md
       kind: spec
       rev: 393e16956c78
@@ -15844,7 +15844,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 393e16956c78
         at_rev: 393e16956c78
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/health/pending_decision_test.go
       kind: test
       rev: 723a589bccfb
@@ -15883,7 +15883,7 @@ nodes:
                 total_lines: 82
                 at_rev: dfdb7fccf860
         at_rev: dfdb7fccf860
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/health/spec_sections.spec.md
       kind: spec
       rev: 3e938afd3fb1
@@ -15924,7 +15924,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 3e938afd3fb1
         at_rev: 3e938afd3fb1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/health/spec_sections_test.go
       kind: test
       rev: df2884480de8
@@ -15962,7 +15962,7 @@ nodes:
                 total_lines: 93
                 at_rev: d55be95e021c
         at_rev: d55be95e021c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/i18n/i18n.spec.md
       kind: spec
       rev: fb81144a020c
@@ -15999,7 +15999,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: fb81144a020c
         at_rev: fb81144a020c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/i18n/i18n_test.go
       kind: test
       rev: 5cfee99d6dc2
@@ -16038,7 +16038,7 @@ nodes:
                 total_lines: 52
                 at_rev: "0171621390e6"
         at_rev: "0171621390e6"
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/apply_preset.spec.md
       kind: spec
       rev: 94f50dae4c00
@@ -16073,7 +16073,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 94f50dae4c00
         at_rev: 94f50dae4c00
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/apply_preset_test.go
       kind: test
       rev: be1a90934a8c
@@ -16112,7 +16112,7 @@ nodes:
                 total_lines: 77
                 at_rev: bde9bde5dba1
         at_rev: bde9bde5dba1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/artifacts.spec.md
       kind: spec
       rev: 0dfd2fbc6228
@@ -16149,7 +16149,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 0dfd2fbc6228
         at_rev: 0dfd2fbc6228
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/artifacts_test.go
       kind: test
       rev: 1646e50ad4d0
@@ -16202,7 +16202,7 @@ nodes:
                 total_lines: 55
                 at_rev: 6aba638964b5
         at_rev: 6aba638964b5
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/build_config.spec.md
       kind: spec
       rev: 66ebb57bcee4
@@ -16231,7 +16231,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 66ebb57bcee4
         at_rev: 66ebb57bcee4
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/build_config_test.go
       kind: test
       rev: "692848716983"
@@ -16270,7 +16270,7 @@ nodes:
                 total_lines: 41
                 at_rev: 295c8d2ac511
         at_rev: 295c8d2ac511
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/decide.spec.md
       kind: spec
       rev: e19c1e4e7287
@@ -16299,7 +16299,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e19c1e4e7287
         at_rev: e19c1e4e7287
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/decide_test.go
       kind: test
       rev: 1da3f06bfe97
@@ -16338,7 +16338,7 @@ nodes:
                 total_lines: 729
                 at_rev: 7eb45a4c294b
         at_rev: 7eb45a4c294b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/default_gates.spec.md
       kind: spec
       rev: 0eb005f7c5a7
@@ -16397,7 +16397,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 0eb005f7c5a7
         at_rev: 0eb005f7c5a7
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/default_gates_test.go
       kind: test
       rev: 2a93e9e94faf
@@ -16436,7 +16436,7 @@ nodes:
                 total_lines: 18
                 at_rev: 9c20a1e67058
         at_rev: 9c20a1e67058
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/expose_board.spec.md
       kind: spec
       rev: ede5f77b4786
@@ -16467,7 +16467,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: ede5f77b4786
         at_rev: ede5f77b4786
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/expose_board_test.go
       kind: test
       rev: a5c9ee8bf4c0
@@ -16506,7 +16506,7 @@ nodes:
                 total_lines: 55
                 at_rev: 0462e6202626
         at_rev: 0462e6202626
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/git.spec.md
       kind: spec
       rev: 07ca7f6f2128
@@ -16549,7 +16549,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 07ca7f6f2128
         at_rev: 07ca7f6f2128
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/git_test.go
       kind: test
       rev: 77ab946d455c
@@ -16590,7 +16590,7 @@ nodes:
                 total_lines: 89
                 at_rev: c6f7abed81da
         at_rev: c6f7abed81da
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/header_guide.spec.md
       kind: spec
       rev: 24c08a35ed4f
@@ -16623,7 +16623,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 24c08a35ed4f
         at_rev: 24c08a35ed4f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/header_guide_test.go
       kind: test
       rev: b78d1a1e7b9b
@@ -16662,7 +16662,7 @@ nodes:
                 total_lines: 169
                 at_rev: 67c6b496701e
         at_rev: 67c6b496701e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/infer.spec.md
       kind: spec
       rev: 63bc1cd55e85
@@ -16705,7 +16705,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 63bc1cd55e85
         at_rev: 63bc1cd55e85
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/infer_test.go
       kind: test
       rev: d416e3f44c66
@@ -16754,7 +16754,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 89717dbeae34
         at_rev: 89717dbeae34
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/init_catalogs_test.go
       kind: test
       rev: 1d0a8569a073
@@ -16793,7 +16793,7 @@ nodes:
                 total_lines: 50
                 at_rev: 2766a8cb892f
         at_rev: 2766a8cb892f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/operator.spec.md
       kind: spec
       rev: fd0b8592d8fc
@@ -16834,7 +16834,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: fd0b8592d8fc
         at_rev: fd0b8592d8fc
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/operator_test.go
       kind: test
       rev: 2c2bea7649c9
@@ -16873,7 +16873,7 @@ nodes:
                 total_lines: 41
                 at_rev: f2e8588506ab
         at_rev: f2e8588506ab
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/packs.spec.md
       kind: spec
       rev: d6e2801e7166
@@ -16904,7 +16904,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: d6e2801e7166
         at_rev: d6e2801e7166
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/packs_test.go
       kind: test
       rev: 48e00dc3eda9
@@ -16934,7 +16934,7 @@ nodes:
                 total_lines: 26
                 at_rev: 767fe4e59f37
         at_rev: 767fe4e59f37
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/questions.feature
       kind: feature
       rev: ef2324774086
@@ -16965,7 +16965,7 @@ nodes:
                 total_lines: 188
                 at_rev: 63c3ed1ba1e1
         at_rev: 63c3ed1ba1e1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/questions.spec.md
       kind: spec
       rev: fbd54fba9b1c
@@ -17010,7 +17010,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: fbd54fba9b1c
         at_rev: fbd54fba9b1c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/questions_test.go
       kind: test
       rev: d3cd55595a46
@@ -17040,7 +17040,7 @@ nodes:
                 total_lines: 13
                 at_rev: 54b8e3bcd724
         at_rev: 54b8e3bcd724
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/workflows.feature
       kind: feature
       rev: 0a7ebb269172
@@ -17071,7 +17071,7 @@ nodes:
                 total_lines: 110
                 at_rev: 8ecf1aece1b2
         at_rev: 8ecf1aece1b2
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/workflows.spec.md
       kind: spec
       rev: 9d1721d14c5b
@@ -17120,7 +17120,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9d1721d14c5b
         at_rev: 9d1721d14c5b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/initx/workflows_review_status_test.go
       kind: test
       rev: c7f41e0786ec
@@ -17173,7 +17173,7 @@ nodes:
                 total_lines: 82
                 at_rev: 66a08f625cc4
         at_rev: 66a08f625cc4
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/issue/github.spec.md
       kind: spec
       rev: a58599d9b793
@@ -17210,7 +17210,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: a58599d9b793
         at_rev: a58599d9b793
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/issue/github_test.go
       kind: test
       rev: 08e437940ec1
@@ -17249,7 +17249,7 @@ nodes:
                 total_lines: 256
                 at_rev: e9cf2efd7f15
         at_rev: e9cf2efd7f15
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/issue/issue.spec.md
       kind: spec
       rev: f398beb169f9
@@ -17300,7 +17300,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: f398beb169f9
         at_rev: f398beb169f9
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/issue/issue_test.go
       kind: test
       rev: 22c281359df6
@@ -17338,7 +17338,7 @@ nodes:
                 total_lines: 140
                 at_rev: 0431a848bd3a
         at_rev: 0431a848bd3a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/logscan/scan.spec.md
       kind: spec
       rev: 72656bed62a8
@@ -17375,7 +17375,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 72656bed62a8
         at_rev: 72656bed62a8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/logscan/scan_test.go
       kind: test
       rev: a55ece8c43e3
@@ -17414,7 +17414,7 @@ nodes:
                 total_lines: 460
                 at_rev: 18c75dc67932
         at_rev: 18c75dc67932
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/build.spec.md
       kind: spec
       rev: 82e63134b403
@@ -17479,7 +17479,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 82e63134b403
         at_rev: 82e63134b403
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/build_test.go
       kind: test
       rev: b6d7445a7b50
@@ -17519,7 +17519,7 @@ nodes:
                 total_lines: 51
                 at_rev: 3ffea2c5fbae
         at_rev: 3ffea2c5fbae
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/evidence.spec.md
       kind: spec
       rev: 072e850eed4b
@@ -17557,7 +17557,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 072e850eed4b
         at_rev: 072e850eed4b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/evidence_test.go
       kind: test
       rev: 9deed8412a04
@@ -17597,7 +17597,7 @@ nodes:
                 total_lines: 32
                 at_rev: 5c6c73854705
         at_rev: 5c6c73854705
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/format.spec.md
       kind: spec
       rev: 862367a56200
@@ -17628,7 +17628,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 862367a56200
         at_rev: 862367a56200
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/format_test.go
       kind: test
       rev: 84c3f5bff4fe
@@ -17668,7 +17668,7 @@ nodes:
                 total_lines: 59
                 at_rev: 2d8df5dfde2a
         at_rev: 2d8df5dfde2a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/impact.spec.md
       kind: spec
       rev: 9d1f8dda4a4c
@@ -17700,7 +17700,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 9d1f8dda4a4c
         at_rev: 9d1f8dda4a4c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/impact_test.go
       kind: test
       rev: 0edb7483acdd
@@ -17740,7 +17740,7 @@ nodes:
                 total_lines: 430
                 at_rev: a29041616b08
         at_rev: a29041616b08
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/ingest.spec.md
       kind: spec
       rev: c736f6c86d7d
@@ -17801,7 +17801,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: c736f6c86d7d
         at_rev: c736f6c86d7d
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/ingest_test.go
       kind: test
       rev: 79b36263d54b
@@ -17842,7 +17842,7 @@ nodes:
                 total_lines: 16
                 at_rev: 1d22949d5ff5
         at_rev: 1d22949d5ff5
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/model.spec.md
       kind: spec
       rev: 6ba03d41270c
@@ -17873,7 +17873,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 6ba03d41270c
         at_rev: 6ba03d41270c
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/model_test.go
       kind: test
       rev: 66c8b736b83a
@@ -17912,7 +17912,7 @@ nodes:
                 total_lines: 120
                 at_rev: 98445a6ba0e9
         at_rev: 98445a6ba0e9
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/query.spec.md
       kind: spec
       rev: d2ded8cd0c0b
@@ -17949,7 +17949,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: d2ded8cd0c0b
         at_rev: d2ded8cd0c0b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/query_test.go
       kind: test
       rev: 2c02d135111a
@@ -17988,7 +17988,7 @@ nodes:
                 total_lines: 128
                 at_rev: ce4cf1b4cc64
         at_rev: ce4cf1b4cc64
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/stamp.spec.md
       kind: spec
       rev: e314841c2edf
@@ -18037,7 +18037,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e314841c2edf
         at_rev: e314841c2edf
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/stamp_test.go
       kind: test
       rev: 4acda4588020
@@ -18076,7 +18076,7 @@ nodes:
                 total_lines: 45
                 at_rev: 0c00da6a4980
         at_rev: 0c00da6a4980
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/store.spec.md
       kind: spec
       rev: 7e6b10905740
@@ -18113,7 +18113,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 7e6b10905740
         at_rev: 7e6b10905740
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/mapx/store_test.go
       kind: test
       rev: f07654fd57a9
@@ -18142,7 +18142,7 @@ nodes:
                 total_lines: 120
                 at_rev: b3b3e4517311
         at_rev: b3b3e4517311
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/migra/format_3.go
       kind: code
       rev: fa65bf14d05e
@@ -18163,7 +18163,7 @@ nodes:
                 total_lines: 26
                 at_rev: fa65bf14d05e
         at_rev: fa65bf14d05e
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/migra/format_4.go
       kind: code
       rev: 9955aad912a8
@@ -18184,7 +18184,7 @@ nodes:
                 total_lines: 14
                 at_rev: 9955aad912a8
         at_rev: 9955aad912a8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/migra/migrate.feature
       kind: feature
       rev: 612dccedcb31
@@ -18214,7 +18214,7 @@ nodes:
                 total_lines: 86
                 at_rev: f0ec8e90fc49
         at_rev: f0ec8e90fc49
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/migra/migrate.spec.md
       kind: spec
       rev: c6e23c56d29d
@@ -18263,7 +18263,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: c6e23c56d29d
         at_rev: c6e23c56d29d
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/migra/migrate_test.go
       kind: test
       rev: 3f605edc380e
@@ -18312,7 +18312,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: fa8463f47241
         at_rev: fa8463f47241
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/migra/migration_steps_test.go
       kind: test
       rev: 62693bf7af99
@@ -18350,7 +18350,7 @@ nodes:
                 total_lines: 32
                 at_rev: 63bf22ece725
         at_rev: 63bf22ece725
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/migra/step.spec.md
       kind: spec
       rev: 6f75101ae0e2
@@ -18383,7 +18383,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 6f75101ae0e2
         at_rev: 6f75101ae0e2
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/migra/step_test.go
       kind: test
       rev: d16ba72cd248
@@ -18422,7 +18422,7 @@ nodes:
                 total_lines: 80
                 at_rev: 189b3544a107
         at_rev: 189b3544a107
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/pack/pack.spec.md
       kind: spec
       rev: c1ec9b93cd1a
@@ -18459,7 +18459,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: c1ec9b93cd1a
         at_rev: c1ec9b93cd1a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/pack/pack_test.go
       kind: test
       rev: 8995f7b61380
@@ -18498,7 +18498,7 @@ nodes:
                 total_lines: 286
                 at_rev: 7dbec17061cf
         at_rev: 7dbec17061cf
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/queue/queue.spec.md
       kind: spec
       rev: b667f73fb344
@@ -18557,7 +18557,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: b667f73fb344
         at_rev: b667f73fb344
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/queue/queue_test.go
       kind: test
       rev: ccab269b3202
@@ -18596,7 +18596,7 @@ nodes:
                 total_lines: 50
                 at_rev: ec357dbf481f
         at_rev: ec357dbf481f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/recode/dialect.spec.md
       kind: spec
       rev: eb0cbf27fef8
@@ -18629,7 +18629,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: eb0cbf27fef8
         at_rev: eb0cbf27fef8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/recode/dialect_test.go
       kind: test
       rev: 4c9d1d134f44
@@ -18668,7 +18668,7 @@ nodes:
                 total_lines: 150
                 at_rev: 03d92f0d6d29
         at_rev: 03d92f0d6d29
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/recode/plan.spec.md
       kind: spec
       rev: eacc72123d2d
@@ -18715,7 +18715,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: eacc72123d2d
         at_rev: eacc72123d2d
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/recode/plan_test.go
       kind: test
       rev: 9895e0c57fa6
@@ -18754,7 +18754,7 @@ nodes:
                 total_lines: 75
                 at_rev: 3f6f75361f71
         at_rev: 3f6f75361f71
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/recode/rewrite.spec.md
       kind: spec
       rev: 071ed39648f1
@@ -18787,7 +18787,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 071ed39648f1
         at_rev: 071ed39648f1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/recode/rewrite_test.go
       kind: test
       rev: ccfacc6369d9
@@ -18826,7 +18826,7 @@ nodes:
                 total_lines: 122
                 at_rev: 7f9b6273533a
         at_rev: 7f9b6273533a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/scan/ignore.spec.md
       kind: spec
       rev: 8ec1e11dd6bd
@@ -18865,7 +18865,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 8ec1e11dd6bd
         at_rev: 8ec1e11dd6bd
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/scan/ignore_test.go
       kind: test
       rev: 20851a79b24e
@@ -18904,7 +18904,7 @@ nodes:
                 total_lines: 56
                 at_rev: 9dad33769628
         at_rev: 9dad33769628
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/scan/progress.spec.md
       kind: spec
       rev: 97827113bd83
@@ -18941,7 +18941,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 97827113bd83
         at_rev: 97827113bd83
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/scan/progress_test.go
       kind: test
       rev: 0fb14f418733
@@ -18980,7 +18980,7 @@ nodes:
                 total_lines: 67
                 at_rev: d1b270e16cd2
         at_rev: d1b270e16cd2
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/scan/region.spec.md
       kind: spec
       rev: 58303a64634f
@@ -19025,7 +19025,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 58303a64634f
         at_rev: 58303a64634f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/scan/region_test.go
       kind: test
       rev: 7f5a704f9ba9
@@ -19068,7 +19068,7 @@ nodes:
                 total_lines: 510
                 at_rev: 3bd82b8e8513
         at_rev: 3bd82b8e8513
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/scan/scan.spec.md
       kind: spec
       rev: 3367ddc4d0dd
@@ -19159,7 +19159,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 3367ddc4d0dd
         at_rev: 3367ddc4d0dd
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/scan/scan_test.go
       kind: test
       rev: 144dfd29f295
@@ -19202,7 +19202,7 @@ nodes:
                 total_lines: 40
                 at_rev: 160758d0fcdc
         at_rev: 160758d0fcdc
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/scan/upstream.spec.md
       kind: spec
       rev: 274b5b2757d8
@@ -19236,7 +19236,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 274b5b2757d8
         at_rev: 274b5b2757d8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/scan/upstream_test.go
       kind: test
       rev: 6b45922bb16b
@@ -19275,7 +19275,7 @@ nodes:
                 total_lines: 57
                 at_rev: e62b6b8c2fb9
         at_rev: e62b6b8c2fb9
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/settings/roles.spec.md
       kind: spec
       rev: dcd29b8a8626
@@ -19306,7 +19306,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: dcd29b8a8626
         at_rev: dcd29b8a8626
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/settings/roles_test.go
       kind: test
       rev: 98e8749c3c11
@@ -19344,7 +19344,7 @@ nodes:
                 total_lines: 75
                 at_rev: 51ac74e59b8f
         at_rev: 51ac74e59b8f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/settings/settings.spec.md
       kind: spec
       rev: 4eea9fea9ee1
@@ -19381,7 +19381,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4eea9fea9ee1
         at_rev: 4eea9fea9ee1
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/settings/settings_test.go
       kind: test
       rev: 63525345f958
@@ -19420,7 +19420,7 @@ nodes:
                 total_lines: 168
                 at_rev: 5dd0f0de502b
         at_rev: 5dd0f0de502b
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/similarity/similarity.spec.md
       kind: spec
       rev: ada29870a523
@@ -19463,7 +19463,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: ada29870a523
         at_rev: ada29870a523
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/similarity/similarity_test.go
       kind: test
       rev: 56fea6c0067d
@@ -19502,7 +19502,7 @@ nodes:
                 total_lines: 88
                 at_rev: bc5ca3de8421
         at_rev: bc5ca3de8421
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/suggestion/suggestion.spec.md
       kind: spec
       rev: 6e592bafe308
@@ -19549,7 +19549,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 6e592bafe308
         at_rev: 6e592bafe308
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/suggestion/suggestion_test.go
       kind: test
       rev: a7d8041b92fa
@@ -19587,7 +19587,7 @@ nodes:
                 total_lines: 6
                 at_rev: 908e12707856
         at_rev: 908e12707856
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/telemetry/config.spec.md
       kind: spec
       rev: 46ae6ce264d3
@@ -19616,7 +19616,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 46ae6ce264d3
         at_rev: 46ae6ce264d3
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/telemetry/config_test.go
       kind: test
       rev: a4800d62c790
@@ -19654,7 +19654,7 @@ nodes:
                 total_lines: 5
                 at_rev: 9244585224fe
         at_rev: 9244585224fe
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/telemetry/event.spec.md
       kind: spec
       rev: 3b426c12cc00
@@ -19681,7 +19681,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 3b426c12cc00
         at_rev: 3b426c12cc00
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/telemetry/event_test.go
       kind: test
       rev: 187d39eda479
@@ -19719,7 +19719,7 @@ nodes:
                 total_lines: 22
                 at_rev: c6f3039294d0
         at_rev: c6f3039294d0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/telemetry/notice.spec.md
       kind: spec
       rev: bcbb6ce2b7cd
@@ -19750,7 +19750,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: bcbb6ce2b7cd
         at_rev: bcbb6ce2b7cd
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/telemetry/notice_test.go
       kind: test
       rev: 036f027606b4
@@ -19788,7 +19788,7 @@ nodes:
                 total_lines: 89
                 at_rev: 2243357dd964
         at_rev: 2243357dd964
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/telemetry/otlp.spec.md
       kind: spec
       rev: e2657d951c5f
@@ -19827,7 +19827,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: e2657d951c5f
         at_rev: e2657d951c5f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/telemetry/otlp_test.go
       kind: test
       rev: 7f105d6624c9
@@ -19866,7 +19866,7 @@ nodes:
                 total_lines: 11
                 at_rev: 805cef961e51
         at_rev: 805cef961e51
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/testsig/code.spec.md
       kind: spec
       rev: 4375cef16d8a
@@ -19899,7 +19899,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4375cef16d8a
         at_rev: 4375cef16d8a
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/testsig/code_test.go
       kind: test
       rev: 8e27da7bec00
@@ -19938,7 +19938,7 @@ nodes:
                 total_lines: 106
                 at_rev: 2f167d50f243
         at_rev: 2f167d50f243
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/testsig/diff.spec.md
       kind: spec
       rev: dfa54caba916
@@ -19977,7 +19977,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: dfa54caba916
         at_rev: dfa54caba916
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/testsig/diff_test.go
       kind: test
       rev: 9fd2eff4cae4
@@ -20016,7 +20016,7 @@ nodes:
                 total_lines: 62
                 at_rev: 352ca9642503
         at_rev: 352ca9642503
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/testsig/junit.spec.md
       kind: spec
       rev: 4fff5b2028b0
@@ -20057,7 +20057,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 4fff5b2028b0
         at_rev: 4fff5b2028b0
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/testsig/junit_test.go
       kind: test
       rev: 412bbff5424f
@@ -20096,7 +20096,7 @@ nodes:
                 total_lines: 78
                 at_rev: a1a5386fc768
         at_rev: a1a5386fc768
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/testsig/lcov.spec.md
       kind: spec
       rev: 0290266c3762
@@ -20137,7 +20137,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 0290266c3762
         at_rev: 0290266c3762
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/testsig/lcov_test.go
       kind: test
       rev: c1e443ce4900
@@ -20176,7 +20176,7 @@ nodes:
                 total_lines: 83
                 at_rev: cb0c10fc0915
         at_rev: cb0c10fc0915
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/testsig/mutation.spec.md
       kind: spec
       rev: 5fa61f8703a8
@@ -20223,7 +20223,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 5fa61f8703a8
         at_rev: 5fa61f8703a8
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/testsig/mutation_gremlins.feature
       kind: feature
       rev: 10c0e8216e5c
@@ -20254,7 +20254,7 @@ nodes:
                 total_lines: 57
                 at_rev: 37e2dcee25f5
         at_rev: 37e2dcee25f5
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/testsig/mutation_gremlins.spec.md
       kind: spec
       rev: 1ac23e40d75f
@@ -20297,7 +20297,7 @@ nodes:
         proven_rev_by_suite:
             .anchors/junit.xml: 1ac23e40d75f
         at_rev: 1ac23e40d75f
-        ingested_at: "2026-09-27T07:59:00-03:00"
+        ingested_at: "2026-09-27T08:23:28-03:00"
     - id: internal/testsig/mutation_gremlins_test.go
       kind: test
       rev: b9ff8fe72801
@@ -22546,8 +22546,8 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: 83fdad85c2e3
-        validated_to_rev: ed74aa56d2c3
-        changed_at: "2026-09-26"
+        validated_to_rev: 57c57e902d63
+        changed_at: "2026-09-27"
         verdict: ok
     - from: SPEC.md
       to: internal/gate/route_exists.spec.md
@@ -22645,7 +22645,7 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: 83fdad85c2e3
-        validated_to_rev: a33828199bfe
+        validated_to_rev: 13d6e743902a
         changed_at: "2026-09-27"
         verdict: ok
     - from: SPEC.md
@@ -24589,8 +24589,8 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: 2ba0ba1e8da9
-        validated_to_rev: ed74aa56d2c3
-        changed_at: "2026-09-26"
+        validated_to_rev: 57c57e902d63
+        changed_at: "2026-09-27"
         verdict: ok
     - from: SPEC_TYPES.md
       to: internal/gate/route_exists.spec.md
@@ -24688,7 +24688,7 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: 2ba0ba1e8da9
-        validated_to_rev: a33828199bfe
+        validated_to_rev: 13d6e743902a
         changed_at: "2026-09-27"
         verdict: ok
     - from: SPEC_TYPES.md
@@ -25317,9 +25317,9 @@ edges:
       type: governs
       origin: declared
       stamp:
-        validated_from_rev: ca7df05bab09
+        validated_from_rev: 03f47631fc1e
         validated_to_rev: 00aa23a3231b
-        changed_at: "2026-09-26"
+        changed_at: "2026-09-27"
         verdict: ok
     - from: STRUCTURE.md
       to: internal/config/config.go
@@ -25335,27 +25335,27 @@ edges:
       type: governs
       origin: declared
       stamp:
-        validated_from_rev: ca7df05bab09
+        validated_from_rev: 03f47631fc1e
         validated_to_rev: 73d80d78a299
-        changed_at: "2026-09-26"
+        changed_at: "2026-09-27"
         verdict: ok
     - from: STRUCTURE.md
       to: internal/config/dialect.go
       type: governs
       origin: declared
       stamp:
-        validated_from_rev: ca7df05bab09
+        validated_from_rev: 03f47631fc1e
         validated_to_rev: "1738143441e9"
-        changed_at: "2026-09-26"
+        changed_at: "2026-09-27"
         verdict: ok
     - from: STRUCTURE.md
       to: internal/config/docs.go
       type: governs
       origin: declared
       stamp:
-        validated_from_rev: ca7df05bab09
+        validated_from_rev: 03f47631fc1e
         validated_to_rev: 6ae3ecebcb0c
-        changed_at: "2026-09-26"
+        changed_at: "2026-09-27"
         verdict: ok
     - from: STRUCTURE.md
       to: internal/config/min_version.go
@@ -25380,18 +25380,18 @@ edges:
       type: governs
       origin: declared
       stamp:
-        validated_from_rev: ca7df05bab09
+        validated_from_rev: 03f47631fc1e
         validated_to_rev: 3cbb6f987969
-        changed_at: "2026-09-26"
+        changed_at: "2026-09-27"
         verdict: ok
     - from: STRUCTURE.md
       to: internal/config/vocabulary.go
       type: governs
       origin: declared
       stamp:
-        validated_from_rev: ca7df05bab09
+        validated_from_rev: 03f47631fc1e
         validated_to_rev: 9bea430cee32
-        changed_at: "2026-09-26"
+        changed_at: "2026-09-27"
         verdict: ok
     - from: TRACEABILITY.md
       to: internal/mapx/build.go
@@ -32526,7 +32526,7 @@ edges:
       type: tested-by
       origin: convention
       stamp:
-        validated_from_rev: 8fc9357d33fc
+        validated_from_rev: ac82e41a83bb
         validated_to_rev: 60318355f5fa
         changed_at: "2026-09-27"
         verdict: ok
@@ -32546,8 +32546,8 @@ edges:
       type: covered-by
       origin: convention
       stamp:
-        validated_from_rev: af3cd5a1dfff
-        validated_to_rev: 8fc9357d33fc
+        validated_from_rev: 9bc238863863
+        validated_to_rev: ac82e41a83bb
         changed_at: "2026-09-27"
         verdict: ok
     - from: internal/gate/identity_consistent.spec.md
@@ -32555,7 +32555,7 @@ edges:
       type: specifies
       origin: convention
       stamp:
-        validated_from_rev: af3cd5a1dfff
+        validated_from_rev: 9bc238863863
         validated_to_rev: 01ad5375b831
         changed_at: "2026-09-27"
         verdict: ok
@@ -33429,9 +33429,9 @@ edges:
       type: tested-by
       origin: convention
       stamp:
-        validated_from_rev: 0edaef22dc4b
+        validated_from_rev: 9d47d0036857
         validated_to_rev: fdafac1338c4
-        changed_at: "2026-09-26"
+        changed_at: "2026-09-27"
         verdict: ok
     - from: internal/gate/plan_source_declared.spec.md
       to: internal/config/config.go
@@ -33450,8 +33450,8 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: 50d4a849e7b2
-        validated_to_rev: 0edaef22dc4b
-        changed_at: "2026-09-26"
+        validated_to_rev: 9d47d0036857
+        changed_at: "2026-09-27"
         verdict: ok
     - from: internal/gate/plan_source_declared.spec.md
       to: internal/gate/plan_source_declared.go
@@ -33516,9 +33516,9 @@ edges:
       type: tested-by
       origin: convention
       stamp:
-        validated_from_rev: 95fbe2d760b3
+        validated_from_rev: 08dbe3b974ef
         validated_to_rev: 469609f110e3
-        changed_at: "2026-09-26"
+        changed_at: "2026-09-27"
         verdict: ok
     - from: internal/gate/progress_honest.spec.md
       to: internal/config/config.go
@@ -33537,8 +33537,8 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: 2b9cec987058
-        validated_to_rev: 95fbe2d760b3
-        changed_at: "2026-09-26"
+        validated_to_rev: 08dbe3b974ef
+        changed_at: "2026-09-27"
         verdict: ok
     - from: internal/gate/progress_honest.spec.md
       to: internal/gate/progress_honest.go
@@ -33939,18 +33939,18 @@ edges:
       type: covered-by
       origin: convention
       stamp:
-        validated_from_rev: ed74aa56d2c3
+        validated_from_rev: 57c57e902d63
         validated_to_rev: 82cf72d89f23
-        changed_at: "2026-09-26"
+        changed_at: "2026-09-27"
         verdict: ok
     - from: internal/gate/route_declared.spec.md
       to: internal/gate/route_declared.go
       type: specifies
       origin: convention
       stamp:
-        validated_from_rev: ed74aa56d2c3
+        validated_from_rev: 57c57e902d63
         validated_to_rev: a96b7a45d184
-        changed_at: "2026-09-26"
+        changed_at: "2026-09-27"
         verdict: ok
     - from: internal/gate/route_declared.spec.md
       to: internal/mapx/model.go
@@ -33959,9 +33959,9 @@ edges:
       method: '`Node`'
       dep: DEP1
       stamp:
-        validated_from_rev: ed74aa56d2c3
+        validated_from_rev: 57c57e902d63
         validated_to_rev: 1d22949d5ff5
-        changed_at: "2026-09-26"
+        changed_at: "2026-09-27"
         verdict: ok
     - from: internal/gate/route_exists.feature
       to: internal/gate/route_exists_test.go
@@ -34502,7 +34502,7 @@ edges:
       method: '`Config`, `TestLevel`, `Accepts`'
       dep: DEP1
       stamp:
-        validated_from_rev: a33828199bfe
+        validated_from_rev: 13d6e743902a
         validated_to_rev: 592638c3d215
         changed_at: "2026-09-27"
         verdict: ok
@@ -34511,7 +34511,7 @@ edges:
       type: covered-by
       origin: convention
       stamp:
-        validated_from_rev: a33828199bfe
+        validated_from_rev: 13d6e743902a
         validated_to_rev: 2dd5b5fc2030
         changed_at: "2026-09-27"
         verdict: ok
@@ -34520,7 +34520,7 @@ edges:
       type: specifies
       origin: convention
       stamp:
-        validated_from_rev: a33828199bfe
+        validated_from_rev: 13d6e743902a
         validated_to_rev: eb4ac9f838da
         changed_at: "2026-09-27"
         verdict: ok
@@ -34531,7 +34531,7 @@ edges:
       method: '`T`'
       dep: DEP2
       stamp:
-        validated_from_rev: a33828199bfe
+        validated_from_rev: 13d6e743902a
         validated_to_rev: d55be95e021c
         changed_at: "2026-09-27"
         verdict: ok
@@ -34542,7 +34542,7 @@ edges:
       method: '`Node`, `KindFeature`'
       dep: DEP3
       stamp:
-        validated_from_rev: a33828199bfe
+        validated_from_rev: 13d6e743902a
         validated_to_rev: 1d22949d5ff5
         changed_at: "2026-09-27"
         verdict: ok

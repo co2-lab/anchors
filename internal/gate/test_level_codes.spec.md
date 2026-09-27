@@ -67,3 +67,10 @@ none — the gate reads only the text and the configuration it is given; a patte
 | DEP1 | `internal/config/config.go` | `Config`, `TestLevel`, `Accepts` | core — the filter per level and what it accepts |
 | DEP2 | `internal/i18n/i18n.go` | `T` | core — the verdict messages |
 | DEP3 | `internal/mapx/model.go` | `Node`, `KindFeature` | core — the feature node |
+
+## Open Decisions
+
+| Code | Question | Who decides | Becomes |
+| --- | --- | --- | --- |
+
+none
