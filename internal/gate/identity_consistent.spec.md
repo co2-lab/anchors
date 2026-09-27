@@ -1,6 +1,6 @@
 <!-- @anchors
   code: IDCND
-  updated_at: 2026-09-26
+  updated_at: 2026-09-27
   layer: gate
 -->
 # IdentityConsistent — a unit's spec identity must match its exposed testID and visual baseline
@@ -66,6 +66,7 @@ a baseline is the physical proof of THIS specific unit, not a pointer to where i
 | `IDCND-B08` | Short testID prefixes of three letters or fewer do not have code shape and pass without accusation. |
 | `IDCND-B09` | The failure verdict cites the conflicting acronyms and their origin files. |
 | `IDCND-B10` | When no orphan testID prefixes or baseline discrepancies exist, the gate passes. |
+| `IDCND-B11` | A baseline of one of the unit's rules (`<Unit>.<CODE>-B04-VR-<variant>.png`) is read by its unit code, the part before the first hyphen: it passes when that is the spec's code and fails when it is another unit's. |
 
 ## Invariants
 

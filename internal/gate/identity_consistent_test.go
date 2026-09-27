@@ -128,6 +128,24 @@ func TestIdentityConsistent_baselineDivergenteReprova(t *testing.T) {
 	}
 }
 
+func TestIdentityConsistent_ruleBaselineReadsTheUnitCode(t *testing.T) {
+	t.Run("IDCND-B11: A baseline of one of the unit's rules is read by its unit code", func(t *testing.T) {})
+	n, g, root := identidadeFixture(t, "SMCS", `<View testID=":smcs-screen" />`, "BDEDX")
+	if err := os.WriteFile(filepath.Join(root, "x.SMCS-B04-VR-high.png"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if v, msg := checkIdentityConsistent("", n, root, g, &config.Config{}); v != Pass {
+		t.Fatalf("a baseline of the unit's own rule must pass: %v (%s)", v, msg)
+	}
+	if err := os.WriteFile(filepath.Join(root, "x.BDEDX-B04-VR-high.png"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	v, msg := checkIdentityConsistent("", n, root, g, &config.Config{})
+	if v != Fail || !strings.Contains(msg, "`BDEDX`") {
+		t.Fatalf("a baseline of another unit's rule must fail naming BDEDX: %v (%s)", v, msg)
+	}
+}
+
 func TestIdentityConsistent_palavraCurtaNaoEhSigla(t *testing.T) {
 	t.Run("IDCND-B08: Short testID prefixes of three letters or fewer pass", func(t *testing.T) {})
 	t.Run("IDCND-X01: Common shorthand prefixes of three letters or fewer are not scrutinized", func(t *testing.T) {})

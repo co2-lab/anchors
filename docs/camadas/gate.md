@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:b9e3ebf8decd0d40 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:1c07669bf0404e51 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate

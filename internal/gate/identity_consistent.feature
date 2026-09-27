@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: IDCND
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-27
 #   layer: feature
 
 @IDCND
@@ -48,6 +48,12 @@ Feature: IdentityConsistent — a unit's spec identity must match its exposed te
     Given a visual regression baseline file alongside the unit whose code differs from the spec
     When the gate confronts it
     Then it returns Fail, because the baseline is the physical proof of this specific unit
+
+  @IDCND-B11 @unit-level
+  Scenario: A baseline of one of the unit's rules is read by its unit code
+    Given a baseline named after a rule of the unit, and another named after a rule of another unit
+    When the gate confronts them
+    Then the unit's own rule baseline passes and the other unit's fails
 
   @IDCND-B08 @unit-level
   Scenario: Short testID prefixes of three letters or fewer pass

@@ -137,16 +137,28 @@ func testIDAcronyms(src string) []string {
 }
 
 // baselineAcronym extrai o código de `<Unidade>.<CODE>-VR-<variante>.png`.
+//
+// The unit code is what comes before the FIRST hyphen. A baseline of one of the unit's
+// rules carries the rule's code, `<Unit>.SMCS-B04-VR-<variant>.png`, and reading
+// everything before `-VR` took `SMCS-B04` for the unit and accused it as another
+// identity. The workaround, `SMCS-VR-B04`, passed here and was read by
+// feature-test-match as a scenario `SMCS-VR` that no feature declares (reported from the
+// reference app, 2026-09-26).
 func baselineAcronym(nome string) string {
 	partes := strings.Split(nome, ".")
 	if len(partes) < 2 {
 		return ""
 	}
 	seg := partes[len(partes)-2] // o segmento imediatamente antes de ".png"
-	if i := strings.Index(seg, "-VR"); i > 0 {
-		return seg[:i]
+	i := strings.Index(seg, "-VR")
+	if i <= 0 {
+		return ""
 	}
-	return ""
+	code := seg[:i]
+	if j := strings.Index(code, "-"); j > 0 {
+		code = code[:j]
+	}
+	return code
 }
 
 func dedupSorted(in []string) []string {
