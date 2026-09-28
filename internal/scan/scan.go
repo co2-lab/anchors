@@ -13,6 +13,7 @@ import (
 	"io/fs"
 	"math"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -1194,3 +1195,63 @@ func extractHeaderLayer(content string) string {
 // HeaderCodeOf is the identity a file declares in its `@anchors` header (`code: XXXX`), or
 // empty. It is what the migration reads to know which unit a plan, flow or action file is.
 func HeaderCodeOf(content string) string { return extractHeaderCode(content) }
+
+// WalkStaged reads the governed files as the git INDEX has them — what the commit being
+// made will record. It is the walk of the tree, corrected where the tree and the index
+// differ: a file with unstaged changes is read as it is staged, one only the index still
+// has is read from it, and an untracked file is left out. The commit hook builds the map
+// from this, so the map it commits is the one a build of the commit will make — not one
+// with somebody else's unstaged edits, or a file the commit does not carry.
+func WalkStaged(root string, cfg *config.Config) ([]File, error) {
+	files, err := Walk(root, cfg)
+	if err != nil {
+		return nil, err
+	}
+	gitList := func(args ...string) ([]string, error) {
+		out, err := exec.Command("git", append([]string{"-C", root}, args...)...).Output()
+		if err != nil {
+			return nil, err
+		}
+		var paths []string
+		for _, p := range strings.Split(string(out), "\x00") {
+			if p != "" {
+				paths = append(paths, filepath.ToSlash(p))
+			}
+		}
+		return paths, nil
+	}
+	untracked, err := gitList("ls-files", "--others", "--exclude-standard", "-z")
+	if err != nil {
+		return nil, err
+	}
+	differ, err := gitList("diff", "--name-only", "--relative", "-z")
+	if err != nil {
+		return nil, err
+	}
+	drop := map[string]bool{}
+	for _, p := range append(untracked, differ...) {
+		drop[p] = true
+	}
+	var out []File
+	for _, f := range files {
+		if !drop[f.Path] {
+			out = append(out, f)
+		}
+	}
+	ig := LoadIgnoreFor(root, cfg)
+	for _, rel := range differ {
+		if ig.SkipFile(rel) || IsProgressFile(rel) || ignoredDirIn(ig, rel) {
+			continue
+		}
+		layer, kind := classify(rel, cfg)
+		if layer == "" {
+			continue
+		}
+		content, err := exec.Command("git", "-C", root, "show", ":./"+rel).Output()
+		if err != nil {
+			continue // not in the index either: the commit does not carry it
+		}
+		out = append(out, fileOf(root, rel, layer, kind, content, cfg))
+	}
+	return out, nil
+}

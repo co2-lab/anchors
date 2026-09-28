@@ -63,8 +63,21 @@ README-only commit does not trigger the monorepo's typecheck.`,
 			// false`. A failure here warns and does not block: the gate still does.
 			if absRoot, err := config.AbsRoot(root); err == nil {
 				cfg, _ := config.Load(filepath.Join(absRoot, config.DefaultFile))
+				var bumped []touchDecision
 				if preCommitTouches(staged, phase, cfg) {
-					printPreCommitTouch(touchRun(absRoot, true, false, gitmeta.Today(), nil))
+					var skipped map[touchSkip][]string
+					var terr error
+					bumped, skipped, terr = touchRun(absRoot, true, false, gitmeta.Today(), nil)
+					printPreCommitTouch(bumped, skipped, terr)
+				}
+				// The map the commit carries is the one a build of the commit makes. A
+				// failure warns and does not block: the map-freshness checks still do.
+				if staged && phase == "pre-commit" {
+					if msg, err := syncMapForCommit(absRoot, cfg, bumped); err != nil {
+						fmt.Printf("· map: not synced with the commit (%v)\n", err)
+					} else if msg != "" {
+						fmt.Println(msg)
+					}
 				}
 			}
 			if staged {

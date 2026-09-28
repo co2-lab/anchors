@@ -106,6 +106,7 @@ heuristic decided.
 | `RPSCR-B31` | The rule tags `@realizes` and `@gated-by`, and the rule a tag belongs to, are read with the code length the project declares (`code_lengths`): a fixed length left the edges of every other length undrawn. |
 | `RPSCR-B32` | A file that matches its own layer's `support` list is marked as support; a file of the layer outside the list, or matching only another layer's list, is not. |
 | `RPSCR-B33` | Given paths, the scan reads only them, each exactly as the walk reads it in the tree, and leaves out one that is ignored, in an ignored directory, the progress file, in no layer, or missing; the governed paths of the tree can be listed without reading any file. (`ScanPaths`, `GovernedPaths`) |
+| `RPSCR-B34` | The staged walk reads the governed files as the git index has them: a file with unstaged changes as it is staged, and no untracked file. (`WalkStaged`) |
 
 ## Invariants
 

@@ -238,3 +238,9 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a tree with a spec, a file in no layer, a spec under node_modules, and a missing path
     When those paths are scanned, and the governed paths are listed
     Then only the spec comes back, equal to what the walk gives, and the listing names the walk's paths
+
+  @RPSCR-B34 @unit-level
+  Scenario: The staged walk reads the index, not the tree
+    Given a repository with a committed spec edited but not staged, a new spec staged, and an untracked spec
+    When the staged walk runs
+    Then the edited spec has its committed revision, the staged one is read, and the untracked one is not

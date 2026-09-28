@@ -444,3 +444,39 @@ func TestApplyStampChanges(t *testing.T) {
 		t.Error("the applied stamp and the snapshot are copies, not shared pointers")
 	}
 }
+
+func TestRebaseRev(t *testing.T) {
+	t.Run("EDSTD-B16: A new revision that proves nothing new keeps what was measured", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{
+			{ID: "a.spec.md", Rev: "r1", Signal: &TestSignal{AtRev: "r1", MutationAtRev: "r1",
+				ProvenRevBySuite: map[string]string{"u": "r1", "old": "r0"},
+				CoverageBySuite:  map[string]SuiteCoverage{"u": {AtRev: "r1"}, "old": {AtRev: "r0"}},
+				MutationByScope:  map[string]MutationScope{"isolated": {AtRev: "r1"}}}},
+			{ID: "a_test.go", Rev: "t1", Signal: &TestSignal{ClosureRev: map[string]string{"a.spec.md": "r1"}}},
+			{ID: "b.spec.md", Rev: "r1"},
+		},
+		Edges: []Edge{{From: "a.spec.md", To: "a_test.go", Stamp: &Stamp{ValidatedFromRev: "r1", ValidatedToRev: "t1"},
+			Julgamentos: []Judgment{{Gate: "g", ValidatedFromRev: "r1", ValidatedToRev: "t1"}}}},
+	}
+	g.RebaseRev("a.spec.md", "r1", "r2")
+	s := g.Nodes[0].Signal
+	if g.Nodes[0].Rev != "r2" || s.AtRev != "r2" || s.MutationAtRev != "r2" || s.ProvenRevBySuite["u"] != "r2" ||
+		s.CoverageBySuite["u"].AtRev != "r2" || s.MutationByScope["isolated"].AtRev != "r2" {
+		t.Errorf("what was measured at r1 moves to r2, got %+v", g.Nodes[0])
+	}
+	if s.ProvenRevBySuite["old"] != "r0" || s.CoverageBySuite["old"].AtRev != "r0" {
+		t.Error("what was measured at another revision stays")
+	}
+	if g.Nodes[1].Signal.ClosureRev["a.spec.md"] != "r2" || g.Nodes[2].Rev != "r1" {
+		t.Error("the closure follows the file; another file with the same revision stays")
+	}
+	e := g.Edges[0]
+	if e.Stamp.ValidatedFromRev != "r2" || e.Stamp.ValidatedToRev != "t1" || e.Julgamentos[0].ValidatedFromRev != "r2" || e.Julgamentos[0].ValidatedToRev != "t1" {
+		t.Errorf("the edge's stamp and judgment follow the file's end only, got %+v", e)
+	}
+	g.RebaseRev("a.spec.md", "r9", "r3")
+	if g.Nodes[0].Rev != "r2" {
+		t.Error("a revision the file is not at moves nothing")
+	}
+}

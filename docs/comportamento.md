@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8a8c9cc0c736350e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e37907399b1f6b61 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2301,6 +2301,16 @@ teste prova.
 - [Reading the backlog changes no issue and no task](camadas/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines) `LCBCL-X01`
 
 - [An issue folder that cannot be listed counts as zero](camadas/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines) `LCBCL-E01`
+
+- [The committed map is the one a build of the commit makes](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B01`
+
+- [A dated file keeps its proofs](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B02`
+
+- [The index, not the tree](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B03`
+
+- [An untracked map is left alone](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B04`
+
+- [A map that cannot be written gives the error back](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-E01`
 
 - [The quality domain registers exactly its eleven commands](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-eleven-commands-under-the-root-command) `QLCMQ-B01`
 
@@ -6526,6 +6536,8 @@ teste prova.
 
 - [The stamp carries the caller's date](camadas/mapa.md#edstd-x01--the-stamp-carries-the-callers-date) `EDSTD-X01`
 
+- [A new revision that proves nothing new keeps what was measured](camadas/mapa.md#edstd-b16--a-new-revision-that-proves-nothing-new-keeps-what-was-measured) `EDSTD-B16`
+
 - [Saving stamps the current format and the running binary's release](camadas/mapa.md#grprg-b01--saving-stamps-the-current-format-and-the-running-binarys-release) `GRPRG-B01`
 
 - [The saved file starts with the fixed comment header](camadas/mapa.md#grprg-b02--the-saved-file-starts-with-the-fixed-comment-header) `GRPRG-B02`
@@ -6703,6 +6715,8 @@ teste prova.
 - [A file in its layer's support list is marked as support](camadas/scan.md#rpscr-b32--a-file-in-its-layers-support-list-is-marked-as-support) `RPSCR-B32`
 
 - [Only the given files are read, as the walk reads them](camadas/scan.md#rpscr-b33--only-the-given-files-are-read-as-the-walk-reads-them) `RPSCR-B33`
+
+- [The staged walk reads the index, not the tree](camadas/scan.md#rpscr-b34--the-staged-walk-reads-the-index-not-the-tree) `RPSCR-B34`
 
 - [Only a marked workflow is owned upstream](camadas/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

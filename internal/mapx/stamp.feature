@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: EDSTD
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @EDSTD
@@ -109,3 +109,9 @@ Feature: EdgeStamping — recording on each relation that it was confronted, wit
     Given a relation to be stamped
     When a round stamps it with the date 2026-09-01
     Then the stamp's date is exactly 2026-09-01
+
+  @EDSTD-B16 @unit-level
+  Scenario: A new revision that proves nothing new keeps what was measured
+    Given a file measured at one revision, with a proof, a coverage, a mutation, a test's closure, a stamp and a judgment, and a coverage of an older revision
+    When the file moves to a new revision
+    Then everything measured at the first moves with it, and the older coverage and the other file stay

@@ -2,6 +2,7 @@ package scan
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -898,5 +899,36 @@ func TestScanPaths_readsOnlyTheGivenFilesAsTheWalk(t *testing.T) {
 	}
 	if !reflect.DeepEqual(paths, want) {
 		t.Errorf("the listing names the walk's paths: %v vs %v", paths, want)
+	}
+}
+
+func TestWalkStaged_readsTheIndex(t *testing.T) {
+	t.Run("RPSCR-B34: The staged walk reads the index, not the tree", func(t *testing.T) {})
+	root := t.TempDir()
+	git := func(args ...string) {
+		t.Helper()
+		if out, err := exec.Command("git", append([]string{"-C", root, "-c", "user.email=t@t", "-c", "user.name=t"}, args...)...).CombinedOutput(); err != nil {
+			t.Skipf("git %v: %v %s", args, err, out)
+		}
+	}
+	git("init", "-q")
+	must(t, writeDeep(filepath.Join(root, "a.spec.md"), "# A v1\n"))
+	git("add", ".")
+	git("commit", "-qm", "base")
+	must(t, writeDeep(filepath.Join(root, "a.spec.md"), "# A v2, not staged\n"))
+	must(t, writeDeep(filepath.Join(root, "b.spec.md"), "# B\n"))
+	git("add", "b.spec.md")
+	must(t, writeDeep(filepath.Join(root, "c.spec.md"), "# C, untracked\n"))
+	cfg := &config.Config{Layers: map[string]config.Layer{"spec": {Pattern: "*.spec.md", Kind: "spec"}}}
+	files, err := WalkStaged(root, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	revs := map[string]string{}
+	for _, f := range files {
+		revs[f.Path] = f.Rev
+	}
+	if revs["a.spec.md"] != ShortHash([]byte("# A v1\n")) || revs["b.spec.md"] == "" || revs["c.spec.md"] != "" || len(revs) != 2 {
+		t.Fatalf("the index: a as committed, b staged, no c; got %v", revs)
 	}
 }

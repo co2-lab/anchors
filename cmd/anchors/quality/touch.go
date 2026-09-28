@@ -53,6 +53,7 @@ type touchDecision struct {
 	From    string // the date it had
 	Skip    touchSkip
 	Content string // the new content, when Bump
+	Old     string // the content before the bump: its revision is the one the map measured
 }
 
 // decideTouch decides one file: `current` is its content now (worktree, or index with
@@ -274,6 +275,7 @@ func touchRun(absRoot string, staged, dryRun bool, date string, exclude []string
 		}
 		base, hasBase := gitShow(absRoot, "HEAD:"+f)
 		d := decideTouch(f, current, base, hasBase, date)
+		d.Old = current
 		if !d.Bump {
 			if d.Skip != skipNoHeader {
 				skipped[d.Skip] = append(skipped[d.Skip], f)

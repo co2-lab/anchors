@@ -313,3 +313,68 @@ func sameStamp(a, b *Stamp) bool {
 	}
 	return *a == *b
 }
+
+// RebaseRev moves a file from one revision to another and carries along everything measured
+// at the first: its signals, proofs, coverage and mutation, the closures of the tests that
+// reach it, and the stamps and judgments of its edges. It is for a change that proves
+// nothing new nor undoes anything proven — the commit hook writing the day into the
+// header's `updated_at`: without it, the map committed right after held the old revision,
+// the next rebuild dropped the file's proofs over a date, and the CI found the committed
+// map different from the one the build makes.
+func (g *Graph) RebaseRev(id, from, to string) {
+	if from == "" || from == to {
+		return
+	}
+	move := func(r *string) {
+		if *r == from {
+			*r = to
+		}
+	}
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
+		if s := n.Signal; s != nil {
+			if n.ID == id {
+				move(&s.AtRev)
+				move(&s.MutationAtRev)
+				for k, v := range s.ProvenRevBySuite {
+					if v == from {
+						s.ProvenRevBySuite[k] = to
+					}
+				}
+				for k, c := range s.CoverageBySuite {
+					move(&c.AtRev)
+					s.CoverageBySuite[k] = c
+				}
+				for k, m := range s.MutationByScope {
+					move(&m.AtRev)
+					s.MutationByScope[k] = m
+				}
+			}
+			if v, ok := s.ClosureRev[id]; ok && v == from {
+				s.ClosureRev[id] = to
+			}
+		}
+		if n.ID == id {
+			move(&n.Rev)
+		}
+	}
+	for i := range g.Edges {
+		e := &g.Edges[i]
+		if e.Stamp != nil {
+			if e.From == id {
+				move(&e.Stamp.ValidatedFromRev)
+			}
+			if e.To == id {
+				move(&e.Stamp.ValidatedToRev)
+			}
+		}
+		for k := range e.Julgamentos {
+			if e.From == id {
+				move(&e.Julgamentos[k].ValidatedFromRev)
+			}
+			if e.To == id {
+				move(&e.Julgamentos[k].ValidatedToRev)
+			}
+		}
+	}
+}

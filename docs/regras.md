@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:b2dd1f6a2636b390 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:504f69b81356c150 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -194,6 +194,8 @@ abra a página dela em `camadas/`.
 ### [HLDCH — DoctorCommand — the global health x-ray, and the repair of the github-mode environment](camadas/comando.md#hldch--doctorcommand--the-global-health-x-ray-and-the-repair-of-the-github-mode-environment)
 
 ### [LCBCL — LocalBacklog — what is still open locally after a full check, said in two lines](camadas/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines)
+
+### [MPSYN — MapSyncForCommit — the commit carries the map a build of the commit makes](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes)
 
 ### [QLCMQ — QualityCommands — the quality domain puts its eleven commands under the root command](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-eleven-commands-under-the-root-command)
 
