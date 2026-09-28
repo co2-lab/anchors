@@ -382,6 +382,46 @@ func TestSectionTitleFollowsTheProjectLanguage(t *testing.T) {
 	}
 }
 
+// The plan was written in Portuguese in every project — body, instructions and the
+// `(depende de …)` of its phases —, and an English plan that followed its own language
+// wrote `(depends on …)`, which the order gate did not read. Its title section also took
+// the SPEC's title body. The whole plan follows `lang:` now, and the dependency phrase it
+// writes is one the gate reads (PHORP-B14).
+func TestPlanFollowsTheProjectLanguage(t *testing.T) {
+	t.Run("NWARN-B09: Section titles and bodies follow the project lexicon, then its language", func(t *testing.T) {})
+	all := map[string]bool{}
+	var order []string
+	for _, s := range planTemplate.sections {
+		all[s.Key] = true
+		order = append(order, s.Key)
+	}
+	for _, c := range []struct {
+		lang      string
+		want      []string
+		forbidden []string
+	}{
+		{"en", []string{"## Objective", "## Rationale", "(depends on PLANX-W01)", "## Out of Scope", "## Definition of Done",
+			"## What This Plan Revises", "One step is missing", "> **Code**: `PLANX`"},
+			[]string{"depende de", "Objetivo", "Motivo", "Fora de escopo", "Falta um passo", "Código", "purpose in one sentence"}},
+		{"es", []string{"## Objetivo", "(depende de PLANX-W01)", "## Fuera de alcance", "Falta un paso, y está en el OTRO archivo"},
+			[]string{"depends on", "Fora de escopo", "Falta um passo", "purpose in one sentence"}},
+		{"pt-BR", []string{"## Objetivo", "(depende de PLANX-W01)", "## Fora de escopo", "Falta um passo, e ele é no OUTRO arquivo"},
+			[]string{"depends on", "Out of Scope", "purpose in one sentence"}},
+	} {
+		out := renderArtifact(planTemplate, "Foundation", "PLANX", "plans/0001.md", t.TempDir(), all, order, &config.Config{Lang: c.lang})
+		for _, w := range c.want {
+			if !strings.Contains(out, w) {
+				t.Errorf("lang=%s: want %q in:\n%s", c.lang, w, out)
+			}
+		}
+		for _, f := range c.forbidden {
+			if strings.Contains(out, f) {
+				t.Errorf("lang=%s: %q comes from another language or another artifact", c.lang, f)
+			}
+		}
+	}
+}
+
 // With no `lang:` declared the framework DEFAULT holds, which is English — not the
 // language of whoever wrote the framework.
 func TestWithoutADeclaredLangTheDefaultIsEnglish(t *testing.T) {

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:6bda93766f29ce3e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:792b167ef88f684f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -264,7 +264,7 @@ teste prova.
 
 - [A state is found by its code](camadas/apoio.md#flmdf--flowmodel--the-questions-a-work-flow-graph-answers-what-comes-next-and-what-is-broken) `FLMDF-B02`
 
-- [A result is a code whose letter is R](camadas/apoio.md#flmdf--flowmodel--the-questions-a-work-flow-graph-answers-what-comes-next-and-what-is-broken) `FLMDF-B05`
+- [A result is a code whose letter is O](camadas/apoio.md#flmdf--flowmodel--the-questions-a-work-flow-graph-answers-what-comes-next-and-what-is-broken) `FLMDF-B05`
 
 - [States keep the file's order and flows are listed once](camadas/apoio.md#flmdf--flowmodel--the-questions-a-work-flow-graph-answers-what-comes-next-and-what-is-broken) `FLMDF-B03`
 
@@ -320,6 +320,16 @@ teste prova.
 
 - [An invalid alias or timestamp pattern fails the scan](camadas/apoio.md#lgscl--logscan--finding-the-occurrences-of-declared-failures-in-the-projects-logs) `LGSCL-E01`
 
+- [The renames of the steps crossed](camadas/apoio.md#mgltr--codeletters--rewriting-the-letter-of-the-codes-of-one-kind-of-unit) `MGLTR-B01`
+
+- [A phase, a step and a result get their new letters](camadas/apoio.md#mgltr--codeletters--rewriting-the-letter-of-the-codes-of-one-kind-of-unit) `MGLTR-B02`
+
+- [Every other code stays](camadas/apoio.md#mgltr--codeletters--rewriting-the-letter-of-the-codes-of-one-kind-of-unit) `MGLTR-B03`
+
+- [The rewrite says what it replaced](camadas/apoio.md#mgltr--codeletters--rewriting-the-letter-of-the-codes-of-one-kind-of-unit) `MGLTR-B04`
+
+- [Rewriting twice changes nothing more](camadas/apoio.md#mgltr--codeletters--rewriting-the-letter-of-the-codes-of-one-kind-of-unit) `MGLTR-B05`
+
 - [The format is the top-level version line, and its absence means format 1](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-B01`
 
 - [A file already at the target is left untouched](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-B02`
@@ -358,6 +368,8 @@ teste prova.
 
 - [Format 3 renames the eight remaining gate names in the configuration](camadas/apoio.md#mgstm--migrationsteps--the-registered-steps-one-per-format-take-any-project-from-format-1-to-the-current-format) `MGSTM-B03`
 
+- [Format 5 renames code letters, not keys](camadas/apoio.md#mgstm--migrationsteps--the-registered-steps-one-per-format-take-any-project-from-format-1-to-the-current-format) `MGSTM-B05`
+
 - [Format 4 renames the four keys that lied about what they hold](camadas/apoio.md#mgstm--migrationsteps--the-registered-steps-one-per-format-take-any-project-from-format-1-to-the-current-format) `MGSTM-B04`
 
 - [The chain from format 1 to the current format has no hole](camadas/apoio.md#mgstm--migrationsteps--the-registered-steps-one-per-format-take-any-project-from-format-1-to-the-current-format) `MGSTM-I01`
@@ -373,6 +385,8 @@ teste prova.
 - [The steps between two formats come in ascending order](camadas/apoio.md#mscmg--migrationstepchain--one-step-per-format-version-chained-in-order-and-a-hole-in-the-chain-is-an-error) `MSCMG-B02`
 
 - [A file already at the target needs no step](camadas/apoio.md#mscmg--migrationstepchain--one-step-per-format-version-chained-in-order-and-a-hole-in-the-chain-is-an-error) `MSCMG-B03`
+
+- [A step may rename code letters by kind](camadas/apoio.md#mscmg--migrationstepchain--one-step-per-format-version-chained-in-order-and-a-hole-in-the-chain-is-an-error) `MSCMG-B05`
 
 - [A key some step renames is reported as renamed](camadas/apoio.md#mscmg--migrationstepchain--one-step-per-format-version-chained-in-order-and-a-hole-in-the-chain-is-an-error) `MSCMG-B04`
 
@@ -1840,6 +1854,8 @@ teste prova.
 
 - [The command reminds of the commit and does not make it](camadas/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-X02`
 
+- [Crossing format 5 rewrites the letters of plans, flows and actions](camadas/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B07`
+
 - [An unknown kind is refused](camadas/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B01`
 
 - [The name and the output path are required](camadas/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B02`
@@ -2801,6 +2817,8 @@ teste prova.
 - [With no source registered, the default gate names are absent, not a failure](camadas/config.md#gtvcg-b01--with-no-source-registered-the-default-gate-names-are-absent-not-a-failure) `GTVCG-B01`
 
 - [With a source registered, the default gate names are the ones it gives](camadas/config.md#gtvcg-b02--with-a-source-registered-the-default-gate-names-are-the-ones-it-gives) `GTVCG-B02`
+
+- [The letters of plans, flows and actions](camadas/config.md#gtvcg-b03--the-letters-of-plans-flows-and-actions) `GTVCG-B03`
 
 - [The answer always comes from the source registered last](camadas/config.md#gtvcg-i01--the-answer-always-comes-from-the-source-registered-last) `GTVCG-I01`
 
@@ -3993,6 +4011,8 @@ teste prova.
 - [With no map a phase or parent reference is not judged](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-E01`
 
 - [A plan missing from disk does not unresolve the phases of the other plans](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-E02`
+
+- [The dependency is read in any supported language](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B14`
 
 - [A raw skeleton fails confrontation](camadas/gate.md#plcfl--placeholderfilled--the-skeleton-the-generator-emits-must-be-filled-in) `PLCFL-B01`
 
@@ -6270,7 +6290,7 @@ teste prova.
 
 - [The newer-map refusal never names the migration command](camadas/mapa.md#mpfrm-b05--the-newer-map-refusal-never-names-the-migration-command) `MPFRM-B05`
 
-- [Exactly formats 2 through 4 are readable](camadas/mapa.md#mpfrm-i01--exactly-formats-2-through-4-are-readable) `MPFRM-I01`
+- [Exactly format 5 is readable](camadas/mapa.md#mpfrm-i01--exactly-format-5-is-readable) `MPFRM-I01`
 
 - [Format 1 is migrated, not read](camadas/mapa.md#mpfrm-x01--format-1-is-migrated-not-read) `MPFRM-X01`
 

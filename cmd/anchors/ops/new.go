@@ -276,12 +276,12 @@ func renderArtifact(t template, name, id, outPath, root string, chosen map[strin
 	// fora do loop.
 	camadaDoArtefato := targetLayer(root, outPath, cfg)
 	for _, s := range sortSections(t, chosen, ordem) {
-		body := strings.NewReplacer("{name}", name, "{id}", id).Replace(sectionBody(s, cfg))
+		body := strings.NewReplacer("{name}", name, "{id}", id).Replace(sectionBody(t.kind, s, cfg))
 		// Traduz o título GENÉRICO para o nome que ESTE projeto usa, quando `rule_types`
 		// declara um. Sem isso o preset emitia "Restrições" num projeto cujas 50 specs
 		// vizinhas escrevem "Modelo de Dado" — duas fontes da própria régua discordando,
 		// e o autor tendo de escolher entre obedecer o template ou os vizinhos.
-		body = translateTitle(body, s, cfg, camadaDoArtefato)
+		body = translateTitle(t.kind, body, s, cfg, camadaDoArtefato)
 		// {TEST_BODY} é resolvido pelo DIALETO: o esqueleto de caso de teste tem sintaxe,
 		// e sintaxe é do projeto (ver testBody em new_templates.go).
 		if strings.Contains(body, "{TEST_BODY}") {
@@ -412,13 +412,13 @@ func printSections(kind string, t template) {
 		// catálogo `section.title.*`, com o literal do catálogo como piso para as seções
 		// que não são `##` (os fragmentos de cabeçalho) e para idioma sem tradução.
 		titulo := s.Title
-		if t := i18n.TIn(i18n.Current(), "section.title."+titleKey(s.Key)); t != "" {
-			titulo = t
+		if tr := i18n.TIn(i18n.Current(), "section.title."+titleKey(t.kind, s.Key)); tr != "" {
+			titulo = tr
 		}
 		fmt.Printf("  [%s] %-12s %s\n", tag, s.Key, titulo)
 		// O Purpose também é traduzido; o literal do catálogo é o piso para idioma sem
 		// tradução, e para seção nova cuja chave ainda não foi escrita.
-		if proposito := sectionPurpose(s); proposito != "" {
+		if proposito := sectionPurpose(t.kind, s); proposito != "" {
 			fmt.Printf("             ↳ %s: %s\n", i18n.T("new.sections.when"), proposito)
 		}
 		if len(s.Variants) > 0 {
@@ -609,8 +609,8 @@ func codeDoHeaderSpec(content string) string {
 //
 // O `\n` vem escapado do JSON (o catálogo guarda a mesma forma que o código-fonte Go
 // escreve), então é desfeito aqui.
-func sectionBody(s section, cfg *config.Config) string {
-	t := i18n.TIn(langOf(cfg), "section.body."+titleKey(s.Key))
+func sectionBody(kind string, s section, cfg *config.Config) string {
+	t := i18n.TIn(langOf(cfg), "section.body."+titleKey(kind, s.Key))
 	if t == "" {
 		return s.Body
 	}
@@ -619,8 +619,8 @@ func sectionBody(s section, cfg *config.Config) string {
 
 // sectionPurpose resolve o "quando usar" da seção no idioma corrente, caindo no literal
 // do catálogo quando não há tradução.
-func sectionPurpose(s section) string {
-	if t := i18n.TIn(i18n.Current(), "section.purpose."+titleKey(s.Key)); t != "" {
+func sectionPurpose(kind string, s section) string {
+	if t := i18n.TIn(i18n.Current(), "section.purpose."+titleKey(kind, s.Key)); t != "" {
 		return t
 	}
 	return s.Purpose
@@ -634,18 +634,22 @@ func langOf(cfg *config.Config) string {
 }
 
 // titleKey converte a chave da seção no sufixo usado no catálogo i18n: as chaves JSON
-// separam palavras por `_`, e as do catálogo de seções por `-`. As do plano ganham o
-// prefixo `plan_` porque colidem com as da spec (`title`, e o `objective` que só o plano
-// tem) — a mesma palavra, seções diferentes.
-func titleKey(k string) string {
-	switch k {
-	case "objective", "why", "phases", "out-of-scope", "done", "revision":
-		return "plan_" + strings.ReplaceAll(k, "-", "_")
+// separam palavras por `_`, e as do catálogo de seções por `-`. TODAS as do plano ganham
+// o prefixo `plan_`, porque a mesma palavra nomeia seções diferentes nos dois tipos.
+//
+// A lista era de chaves, e deixava `title` de fora: o plano gerado recebia o corpo do
+// título de SPEC ("— TODO purpose in one sentence"), e o `section.purpose.phases` escrito
+// para o plano nunca era lido, porque o plano procurava `plan_phases`. Pelo tipo do
+// artefato não há o que esquecer quando uma seção nova entra.
+func titleKey(kind, k string) string {
+	k = strings.ReplaceAll(k, "-", "_")
+	if kind == "plan" {
+		return "plan_" + k
 	}
-	return strings.ReplaceAll(k, "-", "_")
+	return k
 }
 
-func translateTitle(body string, s section, cfg *config.Config, camada string) string {
+func translateTitle(kind, body string, s section, cfg *config.Config, camada string) string {
 	if cfg == nil {
 		return body
 	}
@@ -678,7 +682,7 @@ func translateTitle(body string, s section, cfg *config.Config, camada string) s
 	// (i18n.Default = "en"). Ninguém tropeçou porque os dois projetos que existiam eram
 	// pt-BR: o defeito era invisível para seus únicos usuários.
 	if local == "" {
-		local = i18n.TIn(langOf(cfg), "section.title."+titleKey(s.Key))
+		local = i18n.TIn(langOf(cfg), "section.title."+titleKey(kind, s.Key))
 	}
 	if local == "" {
 		return body

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:895288535f08a9ca — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:3bbf8b4829d00003 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -42,6 +42,8 @@ abra a página dela em `camadas/`.
 ### [INCTA — I18nCatalog — every message a person reads, in the project's language, with a fallback that never goes blank](camadas/apoio.md#incta--i18ncatalog--every-message-a-person-reads-in-the-projects-language-with-a-fallback-that-never-goes-blank)
 
 ### [LGSCL — LogScan — finding the occurrences of declared failures in the project's logs](camadas/apoio.md#lgscl--logscan--finding-the-occurrences-of-declared-failures-in-the-projects-logs)
+
+### [MGLTR — CodeLetters — rewriting the letter of the codes of one kind of unit](camadas/apoio.md#mgltr--codeletters--rewriting-the-letter-of-the-codes-of-one-kind-of-unit)
 
 ### [MGFLM — MigrateFile — takes one project file from its declared format to the current one, renaming only what is a key](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key)
 
