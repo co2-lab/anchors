@@ -72,6 +72,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"rule-uses-declared":              checkRuleUsesDeclared,
 	"rule-uses-resolve":               checkRuleUsesResolve,
 	"rule-uses-implemented":           checkRuleUsesImplemented,
+	"contract-impact":                 checkContractImpact,
 	"single-test-per-unit":            checkSingleTestPerUnit,
 	"presentation-exhaustive":         checkPresentationExhaustive,
 	"presentation-conflict":           checkPresentationConflict,

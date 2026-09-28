@@ -208,3 +208,34 @@ func TestHasUncommittedChangesStillHolds(t *testing.T) {
 		t.Error("a new file in the repo is a pending change")
 	}
 }
+
+func TestAtHead(t *testing.T) {
+	t.Run("GTMTG-B08: A file's content at the last commit", func(t *testing.T) {})
+	dir := t.TempDir()
+	run := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", dir}, args...)...)
+		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+	}
+	run("init", "-q")
+	if err := os.WriteFile(filepath.Join(dir, "a.md"), []byte("v1\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run("add", ".")
+	run("commit", "-q", "-m", "one")
+	if err := os.WriteFile(filepath.Join(dir, "a.md"), []byte("v2\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if got, ok := AtHead(dir, "a.md"); !ok || got != "v1\n" {
+		t.Errorf("the committed version, got %q %v", got, ok)
+	}
+	if _, ok := AtHead(dir, "new.md"); ok {
+		t.Error("a file HEAD does not have has no committed version")
+	}
+	if _, ok := AtHead(t.TempDir(), "a.md"); ok {
+		t.Error("no repository, no committed version")
+	}
+}

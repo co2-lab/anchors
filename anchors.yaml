@@ -611,6 +611,10 @@ gates:
     check: rule-uses-implemented
     on: [spec]
     blocking: false
+  - name: contract-impact
+    check: contract-impact
+    on: [spec]
+    blocking: false
   - name: presentation-exhaustive
     check: presentation-exhaustive
     on: [spec]

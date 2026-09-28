@@ -2,6 +2,7 @@ package quality
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -309,5 +310,45 @@ func TestSelection_onlyWhatTheGateConfronts(t *testing.T) {
 	cfg.Gates[0].On, cfg.Gates[0].Tags = nil, nil
 	if run, _ := selectFiles(g, cfg, "", true, "k", config.Suite{Layer: "unit"}, runSelection{}); len(run) != 3 {
 		t.Errorf("a gate entry with no kinds filters nothing, got %v", run)
+	}
+}
+
+func TestSelection_takesTheTestsOfAChangedField(t *testing.T) {
+	t.Run("SLCTN-B14: The tests of the rules a changed contract field reaches are taken", func(t *testing.T) {})
+	root := t.TempDir()
+	git := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", root}, args...)...)
+		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t", "GIT_CONFIG_GLOBAL=/dev/null")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+	}
+	spec := "## Data contract\n\n| Field | Format |\n| --- | --- |\n| `amount` | cents |\n\n## Rule uses\n\n| Rule | Uses |\n| --- | --- |\n| `PAYMT-B01` | `amount` |\n"
+	write := func(rel, s string) {
+		t.Helper()
+		must := os.MkdirAll(filepath.Join(root, filepath.Dir(rel)), 0o755)
+		if must == nil {
+			must = os.WriteFile(filepath.Join(root, rel), []byte(s), 0o644)
+		}
+		if must != nil {
+			t.Fatal(must)
+		}
+	}
+	git("init", "-q")
+	write("pay.spec.md", spec)
+	write("pay_test.go", "package pay\nfunc TestPay(t *testing.T) { t.Run(\"PAYMT-B01: charges\", func(t *testing.T) {}) }\n")
+	git("add", ".")
+	git("commit", "-q", "-m", "init")
+	write("pay.spec.md", strings.Replace(spec, "cents", "decimal", 1))
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "pay.spec.md", Kind: mapx.KindSpec}, testNode("pay_test.go", 1, 0, true)}}
+	cfg := &config.Config{Dialect: &config.Dialect{Family: "go"}}
+	var run []string
+	out := captureStdout(t, func() { run = withImpactedTests(nil, g, cfg, root, "k", config.Suite{Layer: "unit"}) })
+	if !reflect.DeepEqual(run, []string{"pay_test.go"}) || !strings.Contains(out, "a contract field their rules use changed") {
+		t.Fatalf("the test of the affected rule is taken and said; got %v\n%s", run, out)
+	}
+	if again := withImpactedTests(run, g, cfg, root, "k", config.Suite{Layer: "unit"}); len(again) != 1 {
+		t.Errorf("a test already in the run is not taken twice, got %v", again)
 	}
 }

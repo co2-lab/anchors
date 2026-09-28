@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:72ce4b5cd03998f5 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:b2dd1f6a2636b390 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -242,6 +242,8 @@ abra a página dela em `camadas/`.
 ### [CDLNG — CodeLanguage — the code does not go back to mixing languages](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages)
 
 ### [CRVCD — CodeReferenceValid — cross-referenced requirement codes must resolve to existing units](camadas/gate.md#crvcd--codereferencevalid--cross-referenced-requirement-codes-must-resolve-to-existing-units)
+
+### [CTRIM — ContractImpact — a changed field names the rules that use it, and their tests](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests)
 
 ### [CSDCN — ContractStatusDeclared — the output contract lists the status codes the code really returns, and only those](camadas/gate.md#csdcn--contractstatusdeclared--the-output-contract-lists-the-status-codes-the-code-really-returns-and-only-those)
 

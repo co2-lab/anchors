@@ -1030,5 +1030,7 @@
   "gate.presentation_copy.fail": "texto mostrado al usuario escrito en la regla: %s. El texto vive una vez, en los Mensajes — cite el código del mensaje (`CODE-M01`) en lugar de repetir el texto",
   "gate.presentation_observable.fail": "%s cambian lo que la unidad muestra sin nombrar un elemento al que un test pueda apuntar. Cite, entre comillas invertidas, un identificador de los Identificadores de test de la spec; una apariencia sin objetivo solo se prueba mirando",
   "gate.rule_uses_implemented.skip_no_code": "la spec todavía no gobierna ningún archivo de código",
-  "gate.rule_uses_implemented.fail": "%d campo(s) que una regla dice usar no aparecen en ningún código que la spec gobierna: %s. La regla está huérfana de código — no verifica nada que la implementación toque. Use el campo en el código, o corrija lo que la regla dice usar"
+  "gate.rule_uses_implemented.fail": "%d campo(s) que una regla dice usar no aparecen en ningún código que la spec gobierna: %s. La regla está huérfana de código — no verifica nada que la implementación toque. Use el campo en el código, o corrija lo que la regla dice usar",
+  "gate.contract_impact.item": "`%s` → reglas %s, tests %s",
+  "gate.contract_impact.pending": "un campo cambió desde el último commit, y hay reglas que lo leen — %s. Verifique que cada regla siga valiendo para el campo nuevo, y corra sus tests (`anchors test` ya los incluye)"
 }

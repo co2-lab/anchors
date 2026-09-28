@@ -90,3 +90,9 @@ Feature: RunSelection — a run takes only what is stale and below the minimum, 
     Given a mutation gate on code that excludes the tag resource, and code files tagged resource, logic and none
     When the mutation selection runs, and again with a gate entry that declares no kinds
     Then only the untagged and logic files run, and without kinds every code file runs
+
+  @SLCTN-B14 @unit-level
+  Scenario: The tests of the rules a changed contract field reaches are taken
+    Given a committed spec whose rule a test proves, and the field that rule uses edited
+    When the test selection adds the impacted tests
+    Then the test file is taken, once, and the run says it was added for a changed contract field

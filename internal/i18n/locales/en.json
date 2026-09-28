@@ -1030,5 +1030,7 @@
   "gate.presentation_copy.fail": "text shown to the user is written in the rule: %s. The copy lives once, in the Messages — cite the message code (`CODE-M01`) instead of repeating the text",
   "gate.presentation_observable.fail": "%s change what the unit shows without naming an element a test can point at. Cite, in backticks, an identifier of the spec's Test Identifiers; an appearance with no target is proven only by looking",
   "gate.rule_uses_implemented.skip_no_code": "the spec governs no code file yet",
-  "gate.rule_uses_implemented.fail": "%d field(s) a rule says it uses appear in none of the code the spec governs: %s. The rule is orphan of code — it checks nothing the implementation touches. Use the field in the code, or fix what the rule says it uses"
+  "gate.rule_uses_implemented.fail": "%d field(s) a rule says it uses appear in none of the code the spec governs: %s. The rule is orphan of code — it checks nothing the implementation touches. Use the field in the code, or fix what the rule says it uses",
+  "gate.contract_impact.item": "`%s` → rules %s, tests %s",
+  "gate.contract_impact.pending": "a field changed since the last commit, and rules read it — %s. Check each rule still holds for the new field, and run its tests (`anchors test` takes them)"
 }

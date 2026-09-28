@@ -3,6 +3,7 @@ package quality
 import (
 	"fmt"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -250,7 +251,11 @@ func runSelective(cs suiteCommand, suites []config.Suite, cfg *config.Config, ab
 			if mutation {
 				report = s.Report
 			}
-			run, left := selectFiles(g, cfg, absRoot, mutation, mapcmd.SuiteKey(absRoot, absPath(absRoot, report)), s, picked)
+			key := mapcmd.SuiteKey(absRoot, absPath(absRoot, report))
+			run, left := selectFiles(g, cfg, absRoot, mutation, key, s, picked)
+			if !mutation {
+				run = withImpactedTests(run, g, cfg, absRoot, key, s)
+			}
 			fmt.Printf("[%s%s] selected %d file(s) to run", workspaceLabel(s), s.Layer, len(run))
 			if d := describeLeftOut(left); d != "" {
 				fmt.Printf("; %s", d)
@@ -328,4 +333,29 @@ func argvBatches(s config.Suite, files []string, ceiling int) [][]string {
 		out = append(out, cur)
 	}
 	return out
+}
+
+// withImpactedTests adds to a test run the test files of the rules a changed contract field
+// reaches (`gate.ImpactedTests`) that this suite runs: their own file did not move, and
+// the input of the rule they prove did.
+func withImpactedTests(run []string, g *mapx.Graph, cfg *config.Config, root, key string, suite config.Suite) []string {
+	byID := map[string]mapx.Node{}
+	for _, n := range g.Nodes {
+		byID[n.ID] = n
+	}
+	var added []string
+	for _, t := range gate.ImpactedTests(root, g, cfg) {
+		n, ok := byID[t]
+		if !ok || n.Support || !suite.Covers(t) || !ownedBy(n, key, suite.Layer) || slices.Contains(run, t) {
+			continue
+		}
+		run = append(run, t)
+		added = append(added, t)
+	}
+	if len(added) > 0 {
+		sort.Strings(run)
+		fmt.Printf("[%s%s] %d test file(s) added: a contract field their rules use changed — %s\n",
+			workspaceLabel(suite), suite.Layer, len(added), strings.Join(added, ", "))
+	}
+	return run
 }

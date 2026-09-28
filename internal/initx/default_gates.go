@@ -646,6 +646,10 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Blocking: config.Bool(false), Measures: "the fields a rule says it uses appear in the code the spec governs",
 		})
 		gates = append(gates, config.Gate{
+			Name: "contract-impact", ID: "contract-impact", On: []string{"spec"}, Check: "contract-impact",
+			Blocking: config.Bool(false), Measures: "a field changed since the last commit names the rules that use it, and their tests",
+		})
+		gates = append(gates, config.Gate{
 			Name: "rule-uses-resolve", ID: "rule-uses-resolve", On: []string{"spec"}, Check: "rule-uses-resolve",
 			Blocking: config.Bool(false), Measures: "what a rule says it uses exists in the spec — a declared field, a dependency row",
 		})

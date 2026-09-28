@@ -71,6 +71,7 @@ promove a bloqueante.
 | `rule-uses-declared` | toda regra diz o que usa (Validações, Validações de apresentação, Uso das regras) |
 | `rule-uses-resolve` | o que a regra diz usar existe na spec — um campo declarado, uma linha de dependência |
 | `rule-uses-implemented` | os campos que a regra diz usar aparecem no código que a spec governa — nenhuma regra órfã de código |
+| `contract-impact` | um campo alterado desde o último commit nomeia as regras que o usam e seus testes — o `anchors test` os roda |
 | `presentation-exhaustive` | todo valor de um prop ou estado lido pela apresentação tem aparência decidida |
 | `presentation-conflict` | um prop e uma condição não levam a duas aparências |
 | `presentation-copy-single-source` | o texto que a apresentação mostra é um código de mensagem, não texto repetido na regra |

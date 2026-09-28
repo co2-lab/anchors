@@ -70,6 +70,7 @@ promote to blocking.
 | `rule-uses-declared` | every rule says what it uses (Validations, Presentation validations, Rule uses) |
 | `rule-uses-resolve` | what a rule says it uses exists in the spec — a declared field, a dependency row |
 | `rule-uses-implemented` | the fields a rule says it uses appear in the code the spec governs — no rule orphan of code |
+| `contract-impact` | a field changed since the last commit names the rules that use it and their tests — `anchors test` runs them |
 | `presentation-exhaustive` | every value of a prop or state the presentation reads has an appearance decided |
 | `presentation-conflict` | one prop and one condition do not lead to two appearances |
 | `presentation-copy-single-source` | the text a presentation shows is a message code, not copy repeated in the rule |

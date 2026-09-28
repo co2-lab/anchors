@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GTMTG
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @GTMTG
@@ -60,3 +60,9 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given a folder outside any repository
     When the pending changes of "qualquer.go" are asked
     Then the answer is not known and not changed
+
+  @GTMTG-B08 @unit-level
+  Scenario: A file's content at the last commit
+    Given a repository with a committed file edited since, a new file, and a directory with no repository
+    When the content at HEAD is asked for each
+    Then the committed version comes back for the first, and nothing for the other two

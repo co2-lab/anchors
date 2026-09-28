@@ -123,3 +123,14 @@ func DirtyCount(root string) int {
 	}
 	return len(strings.Split(s, "\n"))
 }
+
+// AtHead returns a file's content as the last commit has it. ok=false when there is no
+// repository, no commit, or the file is not in HEAD (a new file): there is no earlier
+// version to compare with.
+func AtHead(root, rel string) (content string, ok bool) {
+	out, err := exec.Command("git", "-C", root, "show", "HEAD:./"+rel).Output()
+	if err != nil {
+		return "", false
+	}
+	return string(out), true
+}
