@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: NWARN
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @NWARN
@@ -129,3 +129,9 @@ Feature: NewArtifact — a new artifact is born beside its unit, with a resolved
     When its help is read and it runs with the kind widget
     Then the help and the refusal name action, feature, flow, plan, product, spec and test
     And the --out help says it is mandatory and names no default
+
+  @NWARN-B17 @unit-level
+  Scenario: The new artifact enters the map at once
+    Given a project with a configuration and a map
+    When a spec is created with anchors new
+    Then the map has its node, and the output says it was added

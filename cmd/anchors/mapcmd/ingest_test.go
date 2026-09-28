@@ -480,3 +480,29 @@ func TestIngest_aRunStampsTheTreesRevs(t *testing.T) {
 		}
 	}
 }
+
+// The case that blocked a spec whose tests passed: created after the last `map build`, it
+// had no node, and the proof of its first run was dropped.
+func TestIngest_aNewSpecKeepsItsFirstProof(t *testing.T) {
+	t.Run("NGSTI-B17: A spec created after the map build keeps its first proof", func(t *testing.T) {})
+	root := fixtureProject(t)
+	writeProjectFile(t, root, "src/pay.spec.md", "<!-- @anchors\n  code: PAYMX\n-->\n# Pay\n\nPAYMX-B01 — the amount is charged.\n")
+	writeProjectFile(t, root, "src/pay.ts", "export const pay = () => true\n")
+	writeProjectFile(t, root, "src/pay.test.ts", "test('PAYMX-B01: charges', () => {})\n")
+	writeProjectFile(t, root, "reports/junit.xml", `<?xml version="1.0"?>
+<testsuites><testsuite name="pay" file="src/pay.test.ts">
+<testcase name="PAYMX-B01: charges" file="src/pay.test.ts"/>
+</testsuite></testsuites>
+`)
+	ViaAnchorsTest = true
+	err := IngestArtifacts(root, "", filepath.Join(root, "reports/junit.xml"), "", "", "unit", "", "", false)
+	ViaAnchorsTest = false
+	if err != nil {
+		t.Fatal(err)
+	}
+	n := node(t, root, "src/pay.spec.md")
+	if n.Signal == nil || !strings.Contains(strings.Join(n.Signal.ProvenCodes, ","), "PAYMX-B01") {
+		t.Fatalf("the new spec is in the map with its rule proven, got %+v", n.Signal)
+	}
+	node(t, root, "src/pay.test.ts")
+}

@@ -457,6 +457,7 @@ func handleChange(root string, cfg *config.Config, g *mapx.Graph, rel string) {
 	if _, err := os.Stat(filepath.Join(root, rel)); err != nil {
 		return
 	}
+	addIfNew(g, root, filepath.ToSlash(rel), cfg)
 	updateNodeRev(g, root, rel)
 
 	next, reason := queue.SuggestNext(kind)
@@ -680,4 +681,28 @@ func pieceExists(root, rel, peca string, cfg *config.Config) bool {
 	}
 	_, err := os.Stat(filepath.Join(root, caminho))
 	return err == nil
+}
+
+// addIfNew brings a file the map does not know into it, the moment the watcher sees it —
+// the file and its unit read, not the tree (`mapx.AddFilesAt`) —, and reloads the copy the
+// watcher keeps. Before, a file created while the watcher ran had no node until the next
+// `map build`, and whatever reached the map for it was dropped.
+func addIfNew(g *mapx.Graph, root, rel string, cfg *config.Config) {
+	if g == nil {
+		return
+	}
+	for _, n := range g.Nodes {
+		if n.ID == rel {
+			return
+		}
+	}
+	mapPath := filepath.Join(root, mapx.DefaultPath)
+	added, err := mapx.AddFilesAt(root, mapPath, []string{rel}, cfg)
+	if err != nil || len(added) == 0 {
+		return
+	}
+	if fresh, err := mapx.Load(mapPath); err == nil {
+		*g = *fresh
+	}
+	fmt.Printf("● %s [map] — added to the map with its unit\n", rel)
 }

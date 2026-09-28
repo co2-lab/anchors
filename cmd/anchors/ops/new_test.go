@@ -10,6 +10,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/code"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/mapx"
 )
 
 // runNew runs `anchors new` UNDER a root, as the CLI does (a root command with the
@@ -523,5 +524,23 @@ func TestNewHelpTellsTheTruth(t *testing.T) {
 		if err == nil || !strings.Contains(err.Error(), kind) {
 			t.Errorf("the unknown-kind refusal does not name %q: %v", kind, err)
 		}
+	}
+}
+
+func TestNewArtifactEntersTheMap(t *testing.T) {
+	t.Run("NWARN-B17: The new artifact enters the map at once", func(t *testing.T) {})
+	root := t.TempDir()
+	writeFile(t, root, "anchors.yaml", "version: 5\nlayers:\n  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n")
+	writeFile(t, root, "anchors.graph.yaml", "version: 5\nnodes: []\nedges: []\n")
+	err, out := runNew(t, "spec", "Pay", "--root", root, "--out", "src/Pay.spec.md")
+	if err != nil {
+		t.Fatalf("new spec: %v", err)
+	}
+	g, lerr := mapx.Load(filepath.Join(root, "anchors.graph.yaml"))
+	if lerr != nil {
+		t.Fatal(lerr)
+	}
+	if len(g.Nodes) != 1 || g.Nodes[0].ID != "src/Pay.spec.md" || !strings.Contains(out, "added to the map: src/Pay.spec.md") {
+		t.Fatalf("the spec enters the map at once, got %+v\n%s", g.Nodes, out)
 	}
 }

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: WTCHA
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @WTCHA
@@ -122,3 +122,9 @@ Feature: Watch — the background watcher that turns "a file changed" into "ther
     Given the unit "src/pricing.ts"
     When "src/pricing.ts" changes
     Then every file written is under ".anchors/"
+
+  @WTCHA-B16 @unit-level
+  Scenario: A file the watcher sees for the first time enters the map
+    Given a project with a map, and a spec created while the watcher runs
+    When the watcher handles the change
+    Then the map on disk and the watcher's copy have the spec

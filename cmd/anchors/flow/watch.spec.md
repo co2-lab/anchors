@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WTCHA
-  updated_at: 2026-09-26
+  updated_at: 2026-09-28
   layer: comando
 -->
 # Watch — the background watcher that turns "a file changed" into "there is work in the queue"
@@ -66,6 +66,7 @@ unless the unit's layer waives the test.
 | `WTCHA-B13` | A unit whose layer waives the test is reviewed as soon as its code exists, a test beside the code in any supported language closes the triad, and a record with no readable unit does not hold the review. |
 | `WTCHA-B14` | A delivery record is any `.md` directly under `changes/`; one without a unit line is still a delivery. |
 | `WTCHA-B15` | A task's id is the path's slug, the step and a short hash: the same path and step give the same id, another step another id, and no id holds a `/`. |
+| `WTCHA-B16` | A governed file the map does not have enters it the moment the watcher sees it — read alone, with its unit —, and the watcher's copy of the map is reloaded; without a map on disk, nothing is written. |
 
 ## Invariants
 

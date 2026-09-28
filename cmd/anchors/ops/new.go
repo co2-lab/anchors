@@ -186,6 +186,18 @@ the identity by hand.`,
 				}
 			}
 
+			// The artifact enters the map now, with its unit's links — read alone, not the tree.
+			// Before, a new spec had no node until the next `map build`, and the proof of its
+			// first test run was dropped for having nowhere to go.
+			if cfg != nil {
+				if added, err := mapx.AddFilesAt(absRoot, filepath.Join(absRoot, mapx.DefaultPath),
+					[]string{common.RelTo(absRoot, outPath)}, cfg); err != nil {
+					fmt.Printf("  ⚠ not added to the map (%v) — `anchors map build` will\n", err)
+				} else if len(added) > 0 {
+					fmt.Printf("✓ added to the map: %s\n", strings.Join(added, ", "))
+				}
+			}
+
 			fmt.Println("  fill in the sections and run `anchors check --changed " + common.RelTo(absRoot, outPath) + "`")
 			return nil
 		},

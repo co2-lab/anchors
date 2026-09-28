@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b581dde189008790 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:123a986731d4d16d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1052,6 +1052,8 @@ teste prova.
 
 - [Handling a change writes nothing outside the queue](camadas/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue) `WTCHA-X01`
 
+- [A file the watcher sees for the first time enters the map](camadas/comando.md#wtcha--watch--the-background-watcher-that-turns-a-file-changed-into-there-is-work-in-the-queue) `WTCHA-B16`
+
 - [On unix a detached child leads its own process group](camadas/comando.md#wtdmw--watchdaemon--the-watcher-started-in-the-background-survives-the-terminal-that-started-it) `WTDMW-B01`
 
 - [On Windows a detached child is created in a new process group](camadas/comando.md#wtdmw--watchdaemon--the-watcher-started-in-the-background-survives-the-terminal-that-started-it) `WTDMW-B02`
@@ -1355,6 +1357,8 @@ teste prova.
 - [Ingesting a report without a map fails and asks for the map build](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-E05`
 
 - [A test file's run time is the sum of its cases](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B14`
+
+- [A spec created after the map build keeps its first proof](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B17`
 
 - [A run's proofs are stamped with the tree's revs](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B16`
 
@@ -1891,6 +1895,8 @@ teste prova.
 - [A feature references the spec's identity instead of owning one](camadas/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-X01`
 
 - [The help and the unknown-kind refusal name every kind, and --out is mandatory](camadas/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B16`
+
+- [The new artifact enters the map at once](camadas/comando.md#nwarn--newartifact--a-new-artifact-is-born-beside-its-unit-with-a-resolved-identity-and-the-sections-of-the-projects-ruler) `NWARN-B17`
 
 - [The catalog holds seven kinds and each is born by new](camadas/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B01`
 
@@ -6276,6 +6282,8 @@ teste prova.
 
 - [A support file becomes a node marked as support](camadas/mapa.md#grblg-b22--a-support-file-becomes-a-node-marked-as-support) `GRBLG-B22`
 
+- [The edges are in a total order](camadas/mapa.md#grblg-i02--the-edges-are-in-a-total-order) `GRBLG-I02`
+
 - [A test that was never ingested has no verdict](camadas/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 
 - [The test's own change expires its evidence](camadas/mapa.md#evfra-b02--the-tests-own-change-expires-its-evidence) `EVFRA-B02`
@@ -6323,6 +6331,24 @@ teste prova.
 - [The changed node is never in its own lists, even in a cycle](camadas/mapa.md#imanm-i01--the-changed-node-is-never-in-its-own-lists-even-in-a-cycle) `IMANM-I01`
 
 - [The analysis leaves the graph as it was](camadas/mapa.md#imanm-x01--the-analysis-leaves-the-graph-as-it-was) `IMANM-X01`
+
+- [A new file enters with the same nodes and edges the full build gives](camadas/mapa.md#grinc-b01--a-new-file-enters-with-the-same-nodes-and-edges-the-full-build-gives) `GRINC-B01`
+
+- [The derivation links inside the unit are replaced, removals included](camadas/mapa.md#grinc-b02--the-derivation-links-inside-the-unit-are-replaced-removals-included) `GRINC-B02`
+
+- [A new anchor gives its declared code to its derived siblings](camadas/mapa.md#grinc-b03--a-new-anchor-gives-its-declared-code-to-its-derived-siblings) `GRINC-B03`
+
+- [What the new file declares reaches the existing files](camadas/mapa.md#grinc-b04--what-the-new-file-declares-reaches-the-existing-files) `GRINC-B04`
+
+- [A known, ignored or unclassified file adds nothing](camadas/mapa.md#grinc-b05--a-known-ignored-or-unclassified-file-adds-nothing) `GRINC-B05`
+
+- [On disk the addition runs under the lock, and not without a map](camadas/mapa.md#grinc-b06--on-disk-the-addition-runs-under-the-lock-and-not-without-a-map) `GRINC-B06`
+
+- [The anchor that may own a new file is read, for the override its header chooses](camadas/mapa.md#grinc-b07--the-anchor-that-may-own-a-new-file-is-read-for-the-override-its-header-chooses) `GRINC-B07`
+
+- [A relation an existing file declares toward the new one waits for the full build](camadas/mapa.md#grinc-x01--a-relation-an-existing-file-declares-toward-the-new-one-waits-for-the-full-build) `GRINC-X01`
+
+- [A reader that fails changes nothing](camadas/mapa.md#grinc-e01--a-reader-that-fails-changes-nothing) `GRINC-E01`
 
 - [A test node sums its layers and records its revisions](camadas/mapa.md#sgina-b01--a-test-node-sums-its-layers-and-records-its-revisions) `SGINA-B01`
 
@@ -6637,6 +6663,8 @@ teste prova.
 - [Rule tags follow the declared code length](camadas/scan.md#rpscr-b31--rule-tags-follow-the-declared-code-length) `RPSCR-B31`
 
 - [A file in its layer's support list is marked as support](camadas/scan.md#rpscr-b32--a-file-in-its-layers-support-list-is-marked-as-support) `RPSCR-B32`
+
+- [Only the given files are read, as the walk reads them](camadas/scan.md#rpscr-b33--only-the-given-files-are-read-as-the-walk-reads-them) `RPSCR-B33`
 
 - [Only a marked workflow is owned upstream](camadas/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

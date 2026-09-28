@@ -132,6 +132,16 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 				// manual ingestion keeps the map's revs — its report may be older than
 				// the tree.
 				if ViaAnchorsTest {
+					// A file created after the last `map build` has no node, and its proof
+					// had nowhere to go: a new spec's rules were proven and dropped, and
+					// scenario-coverage blocked it. The missing files enter first — read
+					// alone, with their units (`mapx.AddFiles`); the map lock is already held.
+					if paths, perr := scan.GovernedPaths(absRoot, cfg); perr == nil {
+						read := func(ps []string) ([]scan.File, error) { return scan.ScanPaths(absRoot, cfg, ps) }
+						if added, aerr := g.AddFiles(paths, read, cfg, nil); aerr == nil && len(added) > 0 {
+							fmt.Printf("map: %d new file(s) added before the ingestion: %s\n", len(added), strings.Join(added, ", "))
+						}
+					}
 					if files, werr := scan.Walk(absRoot, cfg); werr == nil {
 						revs := make(map[string]string, len(files))
 						for _, f := range files {

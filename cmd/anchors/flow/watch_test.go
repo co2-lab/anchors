@@ -514,3 +514,23 @@ func TestHandleChange_writesNothingOutsideTheQueue(t *testing.T) {
 		}
 	}
 }
+
+func TestHandleChange_aNewFileEntersTheMap(t *testing.T) {
+	t.Run("WTCHA-B16: A file the watcher sees for the first time enters the map", func(t *testing.T) {})
+	root := t.TempDir()
+	cfg := watchCfg()
+	useIgnore(t, root, cfg)
+	if err := mapx.Save(&mapx.Graph{}, filepath.Join(root, mapx.DefaultPath)); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, root, "src/pay.spec.md", "<!-- @anchors\n  code: PAYMX\n-->\n# Pay\n")
+	g := &mapx.Graph{}
+	out := stdoutOf(t, func() { handleChange(root, cfg, g, "src/pay.spec.md") })
+	disk, err := mapx.Load(filepath.Join(root, mapx.DefaultPath))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(disk.Nodes) != 1 || disk.Nodes[0].ID != "src/pay.spec.md" || len(g.Nodes) != 1 || !strings.Contains(out, "added to the map") {
+		t.Fatalf("the spec enters the map on disk and in the watcher's copy, got disk %+v copy %+v\n%s", disk.Nodes, g.Nodes, out)
+	}
+}

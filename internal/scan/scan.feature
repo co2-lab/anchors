@@ -232,3 +232,9 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a test layer whose support list covers its utils folder, and another layer whose support list covers everything
     When the project is scanned
     Then the utils file is support, the flow beside it is not, and the other layer's list marks nothing here
+
+  @RPSCR-B33 @unit-level
+  Scenario: Only the given files are read, as the walk reads them
+    Given a tree with a spec, a file in no layer, a spec under node_modules, and a missing path
+    When those paths are scanned, and the governed paths are listed
+    Then only the spec comes back, equal to what the walk gives, and the listing names the walk's paths

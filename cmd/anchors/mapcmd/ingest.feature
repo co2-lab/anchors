@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: NGSTI
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @NGSTI
@@ -133,6 +133,12 @@ Feature: Ingest — binds the test and log signals the project produced to the n
     Given a JUnit report whose test file has cases timed 0.5 and 0.75 seconds
     When it is ingested
     Then the test node records 1.25 seconds under the report's suite
+
+  @NGSTI-B17 @unit-level
+  Scenario: A spec created after the map build keeps its first proof
+    Given a unit whose spec, code and test were created after the last map build
+    When a run's report proving its rule is ingested
+    Then the spec is in the map with the rule proven
 
   @NGSTI-B16 @unit-level
   Scenario: A run's proofs are stamped with the tree's revs

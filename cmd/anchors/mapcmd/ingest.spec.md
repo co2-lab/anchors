@@ -1,6 +1,6 @@
 <!-- @anchors
   code: NGSTI
-  updated_at: 2026-09-27
+  updated_at: 2026-09-28
   layer: comando
 -->
 # Ingest — binds the test and log signals the project produced to the nodes of the map
@@ -49,6 +49,7 @@ spec declares is reported, never bound to an invented owner.
 | `NGSTI-B13` | Log ingestion reports the failure codes found in the logs that no spec declares. |
 | `NGSTI-B14` | A test file's run time in the report is the sum of its cases' times, kept in the map under the report's suite. |
 | `NGSTI-B16` | An ingestion that follows a run of `anchors test` or `anchors mutation` first takes the revs of the tree as it is now, so a proof of a spec edited after the last `map build` stays fresh once the map is rebuilt; a manual ingestion keeps the map's revs, since its report may be older than the tree. |
+| `NGSTI-B17` | An ingestion that follows a run first adds to the map the governed files it does not have yet — read alone, with their units —, so the proof of a spec created after the last `map build` reaches it. |
 | `NGSTI-B15` | A report's signals are kept under its path relative to the root; a report outside the repository is kept under `external/` and its file name. (`SuiteKey`) |
 
 ## Domain

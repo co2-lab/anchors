@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:0a800c6b19e3eafa — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:6ab741933c0ad896 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -472,6 +472,8 @@ abra a página dela em `camadas/`.
 ### [MPFRM — MapFormat — the map's format number decides whether this binary may read it](camadas/mapa.md#mpfrm--mapformat--the-maps-format-number-decides-whether-this-binary-may-read-it)
 
 ### [IMANM — ImpactAnalysis — what changing one file propagates to, and what it must be confronted against](camadas/mapa.md#imanm--impactanalysis--what-changing-one-file-propagates-to-and-what-it-must-be-confronted-against)
+
+### [GRINC — IncrementalMap — new files enter the map without the tree being read](camadas/mapa.md#grinc--incrementalmap--new-files-enter-the-map-without-the-tree-being-read)
 
 ### [SGINA — SignalIngestion — hanging the runner's results on the map's nodes: executions, proven rules, coverage and mutation](camadas/mapa.md#sgina--signalingestion--hanging-the-runners-results-on-the-maps-nodes-executions-proven-rules-coverage-and-mutation)
 

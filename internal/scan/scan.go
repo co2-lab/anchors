@@ -233,31 +233,109 @@ func Walk(root string, cfg *config.Config) ([]File, error) {
 			}
 			return fmt.Errorf(i18n.T("scan.err_unreadable"), rel, readErr)
 		}
-		out = append(out, File{
-			Path:          rel,
-			Layer:         layer,
-			Kind:          kind,
-			Rev:           shortHash(content),
-			Codes:         extractCodes(content),
-			HeaderCode:    extractHeaderCode(string(content)),
-			HeaderLayer:   extractHeaderLayer(string(content)),
-			Seeds:         extractSeeds(kind, string(content)),
-			Realizes:      extractRealizes(kind, string(content)),
-			GatedBy:       extractGatedBy(kind, string(content)),
-			Needs:         needsFor(kind, content, root, rel),
-			Parent:        parentDe(content),
-			Upstream:      IsUpstreamOwned(rel, content),
-			Support:       excluded(rel, cfg.Layers[layer].Support),
-			Revises:       revisesDe(kind, content, root, rel),
-			NoPropagation: noPropRE.Match(content),
-			SharedCode:    sharedCodeRE.Match(content),
-			Deps:          depsFor(kind, content, root, rel),
-		})
-		// A vendored pipeline's scenario codes are examples in ITS comments — the Anchors
-		// project's vocabulary, not a claim on this project's units. Counting them would
-		// give the file an inferred identity it does not own.
-		if f := &out[len(out)-1]; f.Upstream {
-			f.Codes = nil
+		out = append(out, fileOf(root, rel, layer, kind, content, cfg))
+		return nil
+	})
+	return out, err
+}
+
+// fileOf reads what the map needs from ONE file's content. Every field depends only on the
+// file, the configuration and — for a declared dependency's path — the disk, never on the
+// other files of the tree: that is what lets a new file enter the map without the whole
+// tree being read (`ScanPaths`).
+func fileOf(root, rel, layer, kind string, content []byte, cfg *config.Config) File {
+	f := File{
+		Path:          rel,
+		Layer:         layer,
+		Kind:          kind,
+		Rev:           shortHash(content),
+		Codes:         extractCodes(content),
+		HeaderCode:    extractHeaderCode(string(content)),
+		HeaderLayer:   extractHeaderLayer(string(content)),
+		Seeds:         extractSeeds(kind, string(content)),
+		Realizes:      extractRealizes(kind, string(content)),
+		GatedBy:       extractGatedBy(kind, string(content)),
+		Needs:         needsFor(kind, content, root, rel),
+		Parent:        parentDe(content),
+		Upstream:      IsUpstreamOwned(rel, content),
+		Support:       excluded(rel, cfg.Layers[layer].Support),
+		Revises:       revisesDe(kind, content, root, rel),
+		NoPropagation: noPropRE.Match(content),
+		SharedCode:    sharedCodeRE.Match(content),
+		Deps:          depsFor(kind, content, root, rel),
+	}
+	// A vendored pipeline's scenario codes are examples in ITS comments — the Anchors
+	// project's vocabulary, not a claim on this project's units. Counting them would give
+	// the file an inferred identity it does not own.
+	if f.Upstream {
+		f.Codes = nil
+	}
+	return f
+}
+
+// ScanPaths reads the given files, relative to the root, as `Walk` would read them in the
+// tree — with the same ignore rules, the progress-file exclusion and the layer
+// classification —, and nothing else. A path that is ignored, belongs to no layer or does
+// not exist is left out. It is what the incremental map update reads: the new files and
+// the few existing ones they touch, not the whole tree.
+func ScanPaths(root string, cfg *config.Config, rels []string) ([]File, error) {
+	SetRuleLetters(cfg.RuleLetters())
+	ig := LoadIgnoreFor(root, cfg)
+	var out []File
+	for _, rel := range rels {
+		rel = filepath.ToSlash(rel)
+		if ig.SkipFile(rel) || IsProgressFile(rel) || ignoredDirIn(ig, rel) {
+			continue
+		}
+		layer, kind := classify(rel, cfg)
+		if layer == "" {
+			continue
+		}
+		content, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(rel)))
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				continue
+			}
+			return out, fmt.Errorf(i18n.T("scan.err_unreadable"), rel, err)
+		}
+		out = append(out, fileOf(root, rel, layer, kind, content, cfg))
+	}
+	return out, nil
+}
+
+// ignoredDirIn says whether one of the directories on the path is one the walk skips.
+func ignoredDirIn(ig *Ignore, rel string) bool {
+	parts := strings.Split(rel, "/")
+	for i := 1; i < len(parts); i++ {
+		if ig.SkipDir(parts[i-1], strings.Join(parts[:i], "/")) {
+			return true
+		}
+	}
+	return false
+}
+
+// GovernedPaths lists, without reading them, the files of the tree that belong to a
+// layer — the paths `Walk` would read. Comparing them with the map's nodes tells which
+// files are new without reading any of them.
+func GovernedPaths(root string, cfg *config.Config) ([]string, error) {
+	ig := LoadIgnoreFor(root, cfg)
+	var out []string
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		rel := filepath.ToSlash(mustRel(root, path))
+		if d.IsDir() {
+			if ig.SkipDir(d.Name(), rel) || nestedCheckout(path, rel) {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if ig.SkipFile(rel) || IsProgressFile(rel) {
+			return nil
+		}
+		if layer, _ := classify(rel, cfg); layer != "" {
+			out = append(out, rel)
 		}
 		return nil
 	})

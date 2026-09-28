@@ -3,6 +3,7 @@ package scan
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -865,5 +866,37 @@ func TestWalk_marksSupportFiles(t *testing.T) {
 	}
 	if !got["flows/utils/loginClean.yaml"] || got["flows/screens/login.yaml"] || len(got) != 2 {
 		t.Errorf("only the utils file is support, got %v", got)
+	}
+}
+
+func TestScanPaths_readsOnlyTheGivenFilesAsTheWalk(t *testing.T) {
+	t.Run("RPSCR-B33: Only the given files are read, as the walk reads them", func(t *testing.T) {})
+	root := t.TempDir()
+	must(t, writeDeep(filepath.Join(root, "src", "a.spec.md"), "<!-- @anchors\n  code: AAAAX\n-->\n# A\n\n### AAAAX-B01 — a rule\n"))
+	must(t, writeDeep(filepath.Join(root, "src", "b.spec.md"), "# B\n"))
+	must(t, writeDeep(filepath.Join(root, "README.md"), "# readme\n"))
+	must(t, writeDeep(filepath.Join(root, "node_modules", "x", "c.spec.md"), "# vendored\n"))
+	cfg := &config.Config{Layers: map[string]config.Layer{"spec": {Pattern: "**/*.spec.md", Kind: "spec"}}}
+	walked, err := Walk(root, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := ScanPaths(root, cfg, []string{"src/a.spec.md", "README.md", "node_modules/x/c.spec.md", "src/gone.spec.md"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 1 || !reflect.DeepEqual(got[0], walked[0]) {
+		t.Fatalf("only the spec, as the walk reads it: got %+v, walk %+v", got, walked)
+	}
+	paths, err := GovernedPaths(root, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var want []string
+	for _, f := range walked {
+		want = append(want, f.Path)
+	}
+	if !reflect.DeepEqual(paths, want) {
+		t.Errorf("the listing names the walk's paths: %v vs %v", paths, want)
 	}
 }
