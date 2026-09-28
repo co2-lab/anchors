@@ -508,6 +508,17 @@ func TestChangelogConfig(t *testing.T) {
 	}
 }
 
+func TestGateLetters(t *testing.T) {
+	t.Run("CNFGO-B51: A gate's letters are single letters", func(t *testing.T) {})
+	if _, err := load(t, "version: 1\ngates:\n  - name: g\n    check: rule-uses-declared\n    letters: [v, E]\n"); err != nil {
+		t.Errorf("single letters load: %v", err)
+	}
+	_, err := load(t, "version: 1\ngates:\n  - name: g\n    check: rule-uses-declared\n    letters: [V, VV]\n")
+	if err == nil || !strings.Contains(err.Error(), "gates[g].letters[1]") {
+		t.Errorf("a letter that is not one letter fails naming the gate and the index, got %v", err)
+	}
+}
+
 func TestLoad_languageIsSetAtLoad(t *testing.T) {
 	t.Run("CNFGO-B12: An unsupported language fails the load", func(t *testing.T) {})
 	t.Cleanup(func() { _ = i18n.Set("") })
@@ -1017,7 +1028,7 @@ func TestRuleLetters_declaredOrCanonical(t *testing.T) {
 	if got := c.RuleLetters(); got != "BS" {
 		t.Errorf("RuleLetters() = %q, want BS", got)
 	}
-	if got := (&Config{RuleTypes: []RuleType{{Letter: "XY"}}}).RuleLetters(); got != DefaultRuleLetters || got != "SRVAXBNMDEIQWG" {
+	if got := (&Config{RuleTypes: []RuleType{{Letter: "XY"}}}).RuleLetters(); got != DefaultRuleLetters || got != "SRVAXBNMDEIQWGP" {
 		t.Errorf("with no valid letter RuleLetters() = %q, want the canonical set", got)
 	}
 }

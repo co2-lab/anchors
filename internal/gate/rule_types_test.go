@@ -65,13 +65,13 @@ func TestRuleTypes_conflitoDeLetra(t *testing.T) {
 }
 
 // Este teste travava o Skip — o gate canônico que nunca media nada. Passou a confrontar
-// as letras canônicas: `P` não está em SRVAXBNMD, e uma letra que o engine não reconhece é
+// as letras canônicas: `Z` não está entre elas, e uma letra que o engine não reconhece é
 // invisível para a rastreabilidade, com ou sem vocabulário declarado.
 func TestRuleTypes_semVocabularioUsaAsCanonicas(t *testing.T) {
 	t.Run("RLTYR-B05: With no vocabulary declared the gate confronts the canonical letters", func(t *testing.T) {})
-	v, msg := checkRuleTypes("## X\n| `HOMEX-P01` | x |\n", mapx.Node{}, "", nil, &config.Config{})
+	v, msg := checkRuleTypes("## X\n| `HOMEX-Z01` | x |\n", mapx.Node{}, "", nil, &config.Config{})
 	if v != Fail {
-		t.Errorf("`P` está fora das canônicas e deveria reprovar, got %v", v)
+		t.Errorf("`Z` está fora das canônicas e deveria reprovar, got %v", v)
 	}
 	if !strings.Contains(msg, "canônico") && !strings.Contains(msg, "canonical") {
 		t.Errorf("a mensagem deveria dizer que confronta o vocabulário canônico: %q", msg)
@@ -138,14 +138,14 @@ func TestRuleTypesSpecSemCodigoNaoEhProblemaDaqui(t *testing.T) {
 // diagnóstico para quem lê.
 func TestRuleTypesVereditoNomeiaLetraEOndeDeclarar(t *testing.T) {
 	t.Run("RLTYR-I02: The verdict names the letter and where to declare it", func(t *testing.T) {})
-	// `P` (política) é um tipo que o framework não conhece — o exemplo antes era `I`, que
-	// passou a ser canônica quando se descobriu que o `anchors new` já a emitia.
-	fora := "## Regras\n\n### ABCDX-P01 — política\n\nTexto.\n"
+	// `Z` é um tipo que o framework não conhece — o exemplo foi `I` e depois `P`, e as duas
+	// viraram canônicas (Invariant; Presentation validation, no formato 5).
+	fora := "## Regras\n\n### ABCDX-Z01 — política\n\nTexto.\n"
 	v, msg := checkRuleTypes(fora, mapx.Node{}, "", nil, &config.Config{})
 	if v != Fail {
-		t.Fatalf("`P` não está em %s e deveria reprovar, veio %v", config.DefaultRuleLetters, v)
+		t.Fatalf("`Z` não está em %s e deveria reprovar, veio %v", config.DefaultRuleLetters, v)
 	}
-	if !strings.Contains(msg, "P") {
+	if !strings.Contains(msg, "Z") {
 		t.Errorf("a mensagem não nomeia a LETRA: %s", msg)
 	}
 	if !strings.Contains(msg, "rule_types") {
@@ -157,13 +157,13 @@ func TestRuleTypesVereditoNomeiaLetraEOndeDeclarar(t *testing.T) {
 // com sua seção, passa. As canônicas são o fallback, não um teto.
 func TestRuleTypesVocabularioEExtensivel(t *testing.T) {
 	t.Run("RLTYR-X01: The gate does not decide which letters exist", func(t *testing.T) {})
-	if strings.Contains(config.DefaultRuleLetters, "P") {
-		t.Fatalf("o teste depende de `P` estar FORA das canônicas (%s)", config.DefaultRuleLetters)
+	if strings.Contains(config.DefaultRuleLetters, "Z") {
+		t.Fatalf("o teste depende de `Z` estar FORA das canônicas (%s)", config.DefaultRuleLetters)
 	}
 	cfg := &config.Config{RuleTypes: []config.RuleType{
-		{Letter: "P", Term: "Política", Sections: []string{"Políticas"}},
+		{Letter: "Z", Term: "Política", Sections: []string{"Políticas"}},
 	}}
-	content := "## Políticas\n| `HOMEX-P01` | limite |\n"
+	content := "## Políticas\n| `HOMEX-Z01` | limite |\n"
 
 	if v, msg := checkRuleTypes(content, mapx.Node{}, "", nil, cfg); v != Pass {
 		t.Errorf("letra declarada fora das canônicas deveria passar — o vocabulário é do "+

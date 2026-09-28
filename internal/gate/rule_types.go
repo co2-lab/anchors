@@ -19,7 +19,7 @@ import (
 // Esse é o pior tipo de furo — parece coberto e não está.
 //
 // Confronta três coisas (nesta ordem de gravidade):
-//  1. LETRA NÃO DECLARADA — a spec usa `{CODE}-P01` e `P` não consta no vocabulário.
+//  1. LETRA NÃO DECLARADA — a spec usa `{CODE}-Z01` e `Z` não consta no vocabulário.
 //  2. SEÇÃO SEM LETRA — a spec cataloga regras sob um título que nenhuma letra reivindica.
 //  3. CONFLITO DE LETRA — duas seções DIFERENTES reivindicam a MESMA letra (erro de
 //     configuração; detectado no vocabulário, não no arquivo).

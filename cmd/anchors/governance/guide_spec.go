@@ -68,11 +68,19 @@ A spec is not all alike — it specializes according to what makes the unit vary
    enums (backend↔interface) documented; a computed field points at the function.
 7. Data states — one item per conditional branch / per enum value (empty, error,
    loading, each variant).
-8. Messages — the literal text shown to the user is catalogued ONCE, here. It is the single
+8. Validations (` + "`V`" + `) — a rule that checks a datum: one row per rule, ` + "`| Rule | Field | Condition | Behavior |`" + `.
+9. Presentation validations (` + "`P`" + `) — a rule that changes what the unit SHOWS from a prop or a
+   state: ` + "`| Rule | Prop/State | Condition | Appearance |`" + `. Apart from 8, since both live in one screen.
+10. Rule uses — ties every other rule (behaviours, states, errors, actions) to what it uses:
+   ` + "`| Rule | Uses |`" + `, with fields by name, the spec's own codes and ` + "`DEPn`" + ` rows. Sections 8–10
+   are what say which rules a changed field reaches: the rule's code first, what it uses second.
+   ` + "`rule-uses-declared`" + ` asks every rule to say what it uses (or ` + "`@no-uses: <why>`" + ` on its line), and
+   ` + "`rule-uses-resolve`" + ` asks that what it uses exists in the spec.
+11. Messages — the literal text shown to the user is catalogued ONCE, here. It is the single
    source of copy; rules and actions only REFERENCE the message code, they never duplicate the
    text.
-9. Implementation notes — honest TODOs, decisions, assumed ambiguities.
-10. Change history.
+12. Implementation notes — honest TODOs, decisions, assumed ambiguities.
+13. Change history.
 
 ## Spec rules
 

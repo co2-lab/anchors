@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:3bbf8b4829d00003 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:0a800c6b19e3eafa — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -340,6 +340,8 @@ abra a página dela em `camadas/`.
 ### [RLIMR — RuleImplemented — a spec catalogues rules, and the code shows it realized them](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them)
 
 ### [RLTYR — RuleTypes — the rule VOCABULARY is extensible, but it must be DECLARED](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared)
+
+### [RLUSG — RuleUses — each rule says what it uses, and what it uses exists](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists)
 
 ### [SCASS — ScenarioAsserts — scenario outcome steps must assert concrete verifiable outcomes](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes)
 

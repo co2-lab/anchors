@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: NWTMN
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @NWTMN
@@ -79,3 +79,9 @@ Feature: NewTemplates — the catalog of artifact skeletons: which kinds exist, 
     When they are turned into snake_case
     Then they are "my_name", "http_server", "get_http_code" and "calc_total"
     And the Python test body for "HTTPServer" is "def test_http_server("
+
+  @NWTMN-B12 @unit-level
+  Scenario: The catalog ties rules to what they use
+    Given the spec catalog and its presets
+    When the three sections and the presets are read, and a screen spec is rendered in English
+    Then validations realizes V, presentation-validations P and rule-uses no letter, rule-uses is in every preset, and the screen reads Validations, Presentation validations and Rule uses with the rule code first

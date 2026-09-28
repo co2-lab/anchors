@@ -219,7 +219,7 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
   Scenario: Rule letters come from the declared rule types, or the canonical set
     Given rule types with letters "b", "B", "XY", "s" and "", and a configuration with only an invalid letter
     When the rule letters are read
-    Then the first answers "BS" and the second the canonical SRVAXBNMDEIQWG
+    Then the first answers "BS" and the second the canonical SRVAXBNMDEIQWGP
 
   @CNFGO-B32 @unit-level
   Scenario: A scenario tag maps to every letter that declares it
@@ -352,3 +352,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given no changelog block, a per_version one, one with its own path, and one with an unknown mode
     When each is read and loaded
     Then the defaults are incremental into CHANGELOG.md and per_version into changelog/, the path wins, and the unknown mode fails the load
+
+  @CNFGO-B51 @unit-level
+  Scenario: A gate's letters are single letters
+    Given a gate whose letters are "v" and "E", and one whose letters include "VV"
+    When each configuration is loaded
+    Then the first loads and the second fails naming the gate and the index

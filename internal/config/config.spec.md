@@ -70,6 +70,7 @@ patterns a spec governs.
 | `CNFGO-B47` | A gate's `timeout_ceiling` is a share between 0 and 1, 0.2 when not declared; a value outside that range fails the load. |
 | `CNFGO-B48` | A gate's `no_signal` maps globs of targets to the reason they have nothing to measure; an invalid glob or an empty reason fails the load, and a target matching two globs always gets the reason of the first in sorted order. |
 | `CNFGO-B49` | A suite's `paths` are globs of the files it runs: with none it runs any file, otherwise only a file one of them matches; a glob that is not valid fails the load naming the section, the suite and the index. |
+| `CNFGO-B51` | A gate's `letters` lists rule letters, one letter A to Z each, any case; anything else fails the load naming the gate and the index. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 
 ### Canonical gate declarations
@@ -113,7 +114,7 @@ patterns a spec governs.
 | --- | --- |
 | `CNFGO-B29` | A section title comes from the layer's rename, then the project's, then the framework's default; a blank rename does not count (`SectionTitle`). |
 | `CNFGO-B30` | The placeholder words are the declared ones, trimmed and without blanks, or the templates' single default marker word when none remain (`Placeholders`). |
-| `CNFGO-B31` | The rule letters are the declared rule types' letters, upper-cased, one character each, without repeats, in declaration order; with none valid they are the canonical `SRVAXBNMDEIQWG` (`RuleLetters`). |
+| `CNFGO-B31` | The rule letters are the declared rule types' letters, upper-cased, one character each, without repeats, in declaration order; with none valid they are the canonical `SRVAXBNMDEIQWGP` (`RuleLetters`). |
 | `CNFGO-B32` | A scenario tag maps to every letter whose rule type declares it, ignoring case and surrounding spaces; a tag no rule type declares is reported as unknown (`TagLetters`). |
 | `CNFGO-B33` | The code length pattern, placed after one character class, matches exactly the declared lengths: the one length, the contiguous range, or each of lengths that are not contiguous and nothing between them (`CodeLengthPattern`). |
 | `CNFGO-B41` | A rule type catalogues a section when the section's title is one it declares as requiring a code, ignoring case and surrounding spaces (`RequiresCodeIn`). |

@@ -3,6 +3,7 @@ package ops
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -254,5 +255,40 @@ func TestSnakeCaseOfAUnitName(t *testing.T) {
 	}
 	if body := testBody("python", "HTTPServer", "XXXXX"); !strings.Contains(body, "def test_http_server(") {
 		t.Errorf("the python body must use the snake name:\n%s", body)
+	}
+}
+
+func TestCatalogTiesRulesToWhatTheyUse(t *testing.T) {
+	t.Run("NWTMN-B12: The catalog ties rules to what they use", func(t *testing.T) {})
+	realizes := map[string]string{}
+	for _, s := range specTemplate.sections {
+		realizes[s.Key] = s.Realizes
+	}
+	if realizes["validations"] != "V" || realizes["presentation-validations"] != "P" || realizes["rule-uses"] != "" {
+		t.Errorf("V, P and no letter, got %q %q %q", realizes["validations"], realizes["presentation-validations"], realizes["rule-uses"])
+	}
+	for name, p := range specPresets {
+		if !slices.Contains(p.Sections, "rule-uses") {
+			t.Errorf("preset %s lacks rule-uses", name)
+		}
+	}
+	for name, want := range map[string][]string{"screen": {"validations", "presentation-validations"}, "component": {"presentation-validations"}, "validation": {"validations"}} {
+		for _, w := range want {
+			if !slices.Contains(specPresets[name].Sections, w) {
+				t.Errorf("preset %s lacks %s", name, w)
+			}
+		}
+	}
+	sections, order, err := resolveSectionsWithPreset(specTemplate, "screen", nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	out := renderArtifact(specTemplate, "Pay", "PAYMT", "Pay.spec.md", t.TempDir(), sections, order, &config.Config{Lang: "en"})
+	for _, w := range []string{"## Validations\n\n| Rule | Field | Condition | Behavior |", "| `PAYMT-V01` |",
+		"## Presentation validations\n\n| Rule | Prop/State | Condition | Appearance |", "| `PAYMT-P01` |",
+		"## Rule uses\n\n| Rule | Uses |", "| `PAYMT-B01` |"} {
+		if !strings.Contains(out, w) {
+			t.Errorf("the screen spec lacks %q", w)
+		}
 	}
 }

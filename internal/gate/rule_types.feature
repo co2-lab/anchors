@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RLTYR
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @RLTYR
@@ -10,9 +10,9 @@ Feature: RuleTypes — the rule vocabulary is extensible, but it must be declare
   @RLTYR-B01 @unit-level
   Scenario: A letter that is not declared in the vocabulary fails
     Given a vocabulary declaring the letters S, B and E
-    And a spec cataloguing a rule under the letter P
+    And a spec cataloguing a rule under the letter Z
     When the gate confronts it
-    Then it returns Fail naming the letter P, because a letter the traceability cannot
+    Then it returns Fail naming the letter Z, because a letter the traceability cannot
       see makes the rule look covered when it is not
 
   @RLTYR-B02 @unit-level
@@ -39,7 +39,7 @@ Feature: RuleTypes — the rule vocabulary is extensible, but it must be declare
   @RLTYR-B05 @unit-level
   Scenario: With no vocabulary declared the gate confronts the canonical letters
     Given a project that declares no vocabulary
-    And a spec cataloguing a rule under the letter P, which is outside the canonical set
+    And a spec cataloguing a rule under the letter Z, which is outside the canonical set
     When the gate confronts it
     Then it returns Fail saying it confronts the canonical vocabulary, because a gate that
       Skips forever gives the impression of a defence that does not exist

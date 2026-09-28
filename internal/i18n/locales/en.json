@@ -1000,5 +1000,19 @@
   "section.purpose.plan_phases": "Each phase is a CATALOGUED item (`{id}-W01`), and the order between them is declared — `(depends on {id}-W01)`. Without the code, the order lives in prose and the pipeline does not confront it: the seeded specs are all born available, and the agent takes phase 3's with phase 1 still open. Each spec declares `parent: {id}-W0N` (the phase it belongs to) and `needs:` (what it depends on). PROGRESS does not live here: it lives in the `-progress.md` beside it, because the plan is a DECISION and changing it must mean the decision changed.",
   "section.purpose.plan_out_of_scope": "What someone would reasonably expect from here and will not find, with the place where it is. Without it, the next plan is written assuming the previous one covered it.",
   "section.purpose.plan_done": "What is checked to say the plan closed, in VERIFIABLE terms — a command that runs, a gate that passes. \"It works\" is not a definition of done.",
-  "section.purpose.plan_revision": "Only when this plan REVISES another. Declare `revises: plans/00XX-name.md` in the header, and write here what changes and why. The revised plan is NOT edited — it remains the record of what was decided at the time —, but it gets a notice at the top pointing here, or whoever reads it out of order follows a revised decision."
+  "section.purpose.plan_revision": "Only when this plan REVISES another. Declare `revises: plans/00XX-name.md` in the header, and write here what changes and why. The revised plan is NOT edited — it remains the record of what was decided at the time —, but it gets a notice at the top pointing here, or whoever reads it out of order follows a revised decision.",
+  "section.title.validations": "Validations",
+  "section.title.presentation_validations": "Presentation validations",
+  "section.title.rule_uses": "Rule uses",
+  "section.purpose.validations": "A rule that checks a datum or an input and says what happens when it does not fit. Each row says the FIELD the rule reads, the condition and the behaviour — it is what ties the rule to the contract.",
+  "section.purpose.presentation_validations": "A rule that changes what the unit SHOWS depending on a prop or a state. Each row says what it reads, the condition and the resulting appearance — apart from the data validations, since both live in the same screen.",
+  "section.purpose.rule_uses": "Ties the rules that are not validations — behaviours, states, errors, actions — to what they use: fields by name, the spec's own codes (a state, a message) and rows of the dependencies table (`DEP1`). It is what says which rules a changed field reaches.",
+  "section.body.validations": "## Validations\\n\\n| Rule | Field | Condition | Behavior |\\n| --- | --- | --- | --- |\\n| `{id}-V01` | `TODO: field` | TODO: the condition | TODO: what happens when it does not hold |\\n\\n",
+  "section.body.presentation_validations": "## Presentation validations\\n\\n| Rule | Prop/State | Condition | Appearance |\\n| --- | --- | --- | --- |\\n| `{id}-P01` | `TODO: prop or state` | TODO: the condition | TODO: what changes on screen |\\n\\n",
+  "section.body.rule_uses": "## Rule uses\\n\\n| Rule | Uses |\\n| --- | --- |\\n| `{id}-B01` | TODO: `field`, `{id}-S01`, `DEP1` |\\n\\n",
+  "gate.rule_uses.skip_not_spec": "only a spec has rules that use data",
+  "gate.rule_uses.skip_no_rules": "no rule of the letters asked about",
+  "gate.rule_uses_declared.fail_missing": "%d rule(s) do not say what they use: %s. Give each a row in `Validations`, `Presentation validations` or `Rule uses` — the fields, the spec's codes and the `DEPn` it reads —, or `@no-uses: <why>` on the rule's line. Without it, a field changed in the contract points at no rule",
+  "gate.rule_uses_resolve.skip_no_rows": "the spec does not say what its rules use yet",
+  "gate.rule_uses_resolve.fail_unresolved": "%d use(s) point at nothing the spec declares: %s. A field must be in one of the spec's tables (data contract, domain, props, signature, state shape); a `DEPn` must be a row of the dependencies table. A rule that reads what does not exist validates nothing"
 }

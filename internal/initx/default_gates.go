@@ -635,6 +635,17 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Blocking: config.Bool(false), Measures: "the spec declares what it accepts and who guards the boundary",
 		})
 
+		// The rule and what it uses (Validations, Presentation validations, Rule uses).
+		// Informational: every spec written before these sections existed would fail.
+		gates = append(gates, config.Gate{
+			Name: "rule-uses-declared", ID: "rule-uses-declared", On: []string{"spec"}, Check: "rule-uses-declared",
+			Blocking: config.Bool(false), Measures: "every rule says what it uses — the fields, codes and dependencies it reads",
+		})
+		gates = append(gates, config.Gate{
+			Name: "rule-uses-resolve", ID: "rule-uses-resolve", On: []string{"spec"}, Check: "rule-uses-resolve",
+			Blocking: config.Bool(false), Measures: "what a rule says it uses exists in the spec — a declared field, a dependency row",
+		})
+
 		gates = append(gates, config.Gate{
 			Name: "open-questions-resolved", ID: "open-questions-resolved", On: []string{"spec"}, Check: "open-questions-resolved",
 			Blocking: config.Bool(false), Measures: "the spec has no open question — implementing is not guessing",

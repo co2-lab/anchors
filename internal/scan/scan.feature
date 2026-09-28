@@ -84,9 +84,9 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
 
   @RPSCR-B13 @unit-level
   Scenario: The project's rule letters are recognised
-    Given the text "KVALX-P01" and the default rule letters
-    When the codes are extracted before and after the project declares the letter "P"
-    Then nothing is found before and "KVALX-P01" is found after
+    Given the text "KVALX-Z01" and the default rule letters
+    When the codes are extracted before and after the project declares the letter "Z"
+    Then nothing is found before and "KVALX-Z01" is found after
 
   @RPSCR-B14 @unit-level
   Scenario: The declared identity and the annotations are recorded

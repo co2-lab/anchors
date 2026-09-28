@@ -592,6 +592,18 @@ gates:
   - name: domain-declared
     blocking: true
 
+  # The rule and what it uses (Validations, Presentation validations, Rule uses).
+  # Informational: the specs of this repository were written before the sections existed,
+  # and are brought up as they are touched.
+  - name: rule-uses-declared
+    check: rule-uses-declared
+    on: [spec]
+    blocking: false
+  - name: rule-uses-resolve
+    check: rule-uses-resolve
+    on: [spec]
+    blocking: false
+
   - name: open-questions-resolved
     blocking: true
 

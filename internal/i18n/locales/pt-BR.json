@@ -1000,5 +1000,19 @@
   "section.purpose.plan_phases": "Cada fase é um item CATALOGADO (`{id}-W01`), e a ordem entre elas é declarada — `(depende de {id}-W01)`. Sem o código, a ordem vive em prosa e o pipeline não a confronta: as specs semeadas nascem todas disponíveis, e o agente pega a da fase 3 com a fase 1 em aberto. Cada spec declara `parent: {id}-W0N` (a que fase pertence) e `needs:` (de qual depende). O PROGRESSO não mora aqui: ele vive no `-progress.md` ao lado, porque o plano é DECISÃO e alterá-lo tem de significar que a decisão mudou.",
   "section.purpose.plan_out_of_scope": "O que alguém razoavelmente esperaria daqui e não vai encontrar, com o lugar onde está. Sem isto, o plano seguinte é escrito assumindo que o anterior cobriu.",
   "section.purpose.plan_done": "O que se confere para dizer que o plano fechou, em termos VERIFICÁVEIS — um comando que roda, um gate que passa. \"Está funcionando\" não é definição de pronto.",
-  "section.purpose.plan_revision": "Só quando este plano REVISA outro. Declare `revises: plans/00XX-nome.md` no header, e escreva aqui o que muda e por quê. O plano revisado NÃO é editado — ele continua sendo o registro do que se decidiu na época —, mas ganha no topo um aviso apontando para cá, senão quem o lê fora de ordem segue uma decisão revista."
+  "section.purpose.plan_revision": "Só quando este plano REVISA outro. Declare `revises: plans/00XX-nome.md` no header, e escreva aqui o que muda e por quê. O plano revisado NÃO é editado — ele continua sendo o registro do que se decidiu na época —, mas ganha no topo um aviso apontando para cá, senão quem o lê fora de ordem segue uma decisão revista.",
+  "section.title.validations": "Validações",
+  "section.title.presentation_validations": "Validações de apresentação",
+  "section.title.rule_uses": "Uso das regras",
+  "section.purpose.validations": "Regra que confere um dado ou uma entrada e diz o que acontece quando ele não serve. Cada linha diz o CAMPO que a regra lê, a condição e o comportamento — é o que liga a regra ao contrato.",
+  "section.purpose.presentation_validations": "Regra que muda o que a unidade MOSTRA conforme uma prop ou um estado. Cada linha diz o que ela lê, a condição e a aparência resultante — separada das validações de dado, porque as duas convivem na mesma tela.",
+  "section.purpose.rule_uses": "Liga as regras que não são validação — comportamentos, estados, erros, ações — ao que elas usam: campos pelo nome, códigos da própria spec (um estado, uma mensagem) e linhas da tabela de dependências (`DEP1`). É o que diz quais regras um campo alterado atinge.",
+  "section.body.validations": "## Validações\\n\\n| Regra | Campo | Condição | Comportamento |\\n| --- | --- | --- | --- |\\n| `{id}-V01` | `TODO: campo` | TODO: a condição | TODO: o que acontece quando não vale |\\n\\n",
+  "section.body.presentation_validations": "## Validações de apresentação\\n\\n| Regra | Prop/Estado | Condição | Aparência |\\n| --- | --- | --- | --- |\\n| `{id}-P01` | `TODO: prop ou estado` | TODO: a condição | TODO: o que muda na tela |\\n\\n",
+  "section.body.rule_uses": "## Uso das regras\\n\\n| Regra | Usa |\\n| --- | --- |\\n| `{id}-B01` | TODO: `campo`, `{id}-S01`, `DEP1` |\\n\\n",
+  "gate.rule_uses.skip_not_spec": "só uma spec tem regras que usam dados",
+  "gate.rule_uses.skip_no_rules": "nenhuma regra das letras cobradas",
+  "gate.rule_uses_declared.fail_missing": "%d regra(s) não dizem o que usam: %s. Dê a cada uma uma linha em `Validações`, `Validações de apresentação` ou `Uso das regras` — os campos, os códigos da spec e os `DEPn` que ela lê —, ou `@no-uses: <porquê>` na linha da regra. Sem isso, um campo alterado no contrato não aponta regra nenhuma",
+  "gate.rule_uses_resolve.skip_no_rows": "a spec ainda não diz o que suas regras usam",
+  "gate.rule_uses_resolve.fail_unresolved": "%d uso(s) apontam para algo que a spec não declara: %s. Um campo precisa estar numa das tabelas da spec (contrato de dados, domínio, props, assinatura, shape do estado); um `DEPn` precisa ser linha da tabela de dependências. Regra que lê o que não existe não valida nada"
 }

@@ -152,6 +152,7 @@ lib) reveals that templates **are not independent structures** — they are
 | **Input contract** | what it receives (params / props / request / event / args / inputs) |
 | **Output / effects contract** | what it returns or changes in the world |
 | **Rules / behavior** | pre/post-conditions, invariants |
+| **Rule uses** | what each rule reads: `Validations` (`V`, a condition on a datum), `Presentation validations` (`P`, a prop or state → appearance) and `Rule uses` for the other rules — the rule's code first, what it uses second. It is what says which rules a changed field reaches |
 | **Errors / failures** | how and why it fails (and who signals) |
 | **Dependencies** | which layers it depends on — and which it's **forbidden** to call (the boundaries come from the Structure, `STRUCTURE.md`; the spec just instantiates/narrows them for this target) |
 | **Traceability** | the codes that flow down to feature/test |

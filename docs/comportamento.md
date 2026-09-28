@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:792b167ef88f684f — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b581dde189008790 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1914,6 +1914,8 @@ teste prova.
 
 - [A unit name becomes snake_case with one separator and whole acronyms](camadas/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B11`
 
+- [The catalog ties rules to what they use](camadas/comando.md#nwtmn--newtemplates--the-catalog-of-artifact-skeletons-which-kinds-exist-their-headers-their-sections-and-the-presets-that-pick-them) `NWTMN-B12`
+
 - [The root receives the fifteen operation commands](camadas/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-B01`
 
 - [Each operation command is registered exactly once](camadas/comando.md#oprgp--opsregister--the-operation-commands-reach-the-cli-through-one-registration-point) `OPRGP-I01`
@@ -2703,6 +2705,8 @@ teste prova.
 - [A suite's paths say which files it runs](camadas/config.md#cnfgo-b49--a-suites-paths-say-which-files-it-runs) `CNFGO-B49`
 
 - [The changelog block has defaults and refuses an unknown mode](camadas/config.md#cnfgo-b50--the-changelog-block-has-defaults-and-refuses-an-unknown-mode) `CNFGO-B50`
+
+- [A gate's letters are single letters](camadas/config.md#cnfgo-b51--a-gates-letters-are-single-letters) `CNFGO-B51`
 
 - [The declared containers come back as written, and a missing config has none](camadas/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
@@ -4633,6 +4637,18 @@ teste prova.
 - [The gate does not judge whether the letter suits the rule](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X03`
 
 - [The gate charges traceability, not format](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-X04`
+
+- [The sections are read in any language and by position](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B01`
+
+- [A uses cell lists backticked or comma-separated items](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B02`
+
+- [A rule that does not say what it uses fails](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B03`
+
+- [Nothing to ask about is a skip](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B04`
+
+- [What a rule uses must exist in the spec](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B05`
+
+- [A spec whose rules say nothing yet is a skip](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B06`
 
 - [Non-feature artifacts skip confrontation](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B01`
 

@@ -648,7 +648,7 @@ func normalizeTitle(s string) string {
 // `CRED-V01` so' vale quando `CHKUT-G02`. E' a quarta letra a entrar; as tres metades da
 // decisao (esta lista, o catalogo de secoes, e a copia do `testsig`) foram atualizadas na
 // mesma mudanca, e os dois testes de guarda existem para cobrar exatamente isso.
-var DefaultRuleLetters = "SRVAXBNMDEIQWG"
+var DefaultRuleLetters = "SRVAXBNMDEIQWGP"
 
 // CodeLengths são os comprimentos de código de identidade que o engine reconhece.
 //
@@ -966,6 +966,12 @@ type Gate struct {
 	// never comes. The runner skips a matching target naming the reason. It is declared,
 	// not inferred: the project says which files have no signal and why.
 	NoSignal map[string]string `yaml:"no_signal,omitempty"`
+
+	// Letters — for `rule-uses-declared`: the rule letters whose rules must say what they
+	// use. Empty asks about every rule but an open question's, a plan phase's and a flag
+	// scenario's. It lives on the gate that reads it: which rules read data is the
+	// project's vocabulary, as `rule_types` is.
+	Letters []string `yaml:"letters,omitempty"`
 }
 
 // DefaultTimeoutCeiling is the share of timed-out mutants above which a mutation score is
@@ -1808,6 +1814,11 @@ func (c *Config) validarPadroes() error {
 			}
 			if strings.TrimSpace(reason) == "" {
 				return fmt.Errorf("`gates[%s].no_signal[%q]` has no reason: say why the target has nothing to measure", g.Name, glob)
+			}
+		}
+		for i, l := range g.Letters {
+			if t := strings.ToUpper(strings.TrimSpace(l)); len(t) != 1 || t < "A" || t > "Z" {
+				return fmt.Errorf("`gates[%s].letters[%d]` is %q — a rule letter is one letter, A to Z", g.Name, i, l)
 			}
 		}
 		for level, l := range g.Levels {

@@ -69,6 +69,8 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"code-reference-valid":     checkCodeReferenceValid,
 	"scenario-asserts":         checkScenarioAsserts,
 	"domain-declared":          checkDomainDeclared,
+	"rule-uses-declared":       checkRuleUsesDeclared,
+	"rule-uses-resolve":        checkRuleUsesResolve,
 	// Precisa de `cfg` para ler a própria opção `enforce_section_language` — ver checkSpecSections.
 	"spec-sections":            checkSpecSections,
 	"count-honored":            checkCountHonored,

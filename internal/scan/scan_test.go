@@ -373,14 +373,14 @@ func TestProjectVocabularyIsSeenByTheScan(t *testing.T) {
 	t.Run("RPSCR-B13: The project's rule letters are recognised", func(t *testing.T) {})
 	defer SetRuleLetters(config.DefaultRuleLetters)
 
-	const text = "scenario KVALX-P01: the key is immutable"
+	const text = "scenario KVALX-Z01: the key is immutable"
 	if got := extractCodes([]byte(text)); len(got) != 0 {
-		t.Fatalf("with the canonical vocabulary, `P` is not a valid letter — got %v", got)
+		t.Fatalf("with the canonical vocabulary, `Z` is not a valid letter — got %v", got)
 	}
 
-	SetRuleLetters("SRVAXBNMDEIP") // the project declared `P` for Policy
+	SetRuleLetters("SRVAXBNMDEIZ") // the project declared `Z` for Policy
 	got := extractCodes([]byte(text))
-	if len(got) != 1 || got[0] != "KVALX-P01" {
+	if len(got) != 1 || got[0] != "KVALX-Z01" {
 		t.Errorf("the scan must see the letter DECLARED by the project; got %v", got)
 	}
 }

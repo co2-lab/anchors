@@ -136,6 +136,7 @@ esqueleto comum + um bloco de variação**:
 | **Contrato de entrada** | o que recebe (params / props / request / evento / args / inputs) |
 | **Contrato de saída / efeitos** | o que retorna ou muda no mundo |
 | **Regras / comportamento** | pré/pós-condições, invariantes |
+| **Uso das regras** | o que cada regra lê: `Validações` (`V`, condição sobre um dado), `Validações de apresentação` (`P`, prop ou estado → aparência) e `Uso das regras` para as demais — o código da regra primeiro, o que ela usa depois. É o que diz quais regras um campo alterado atinge |
 | **Erros / falhas** | como e por que falha (e quem sinaliza) |
 | **Dependências** | de que camadas depende — e quais é **proibido** chamar (as fronteiras vêm da Estrutura, `STRUCTURE.md`; a spec apenas as instancia/estreita para este target) |
 | **Rastreabilidade** | os códigos que descem para feature/teste |

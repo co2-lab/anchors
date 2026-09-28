@@ -225,6 +225,31 @@ var specTemplate = template{
 			Feeds:   []string{"scenario-asserts", "feature-test-match"},
 			Body: "## Estados dos Dados\n\n### `TODO: campo`\n\n| Valor | Condição | O que a interface mostra |\n" +
 				"| --- | --- | --- |\n| TODO | TODO | TODO |\n\n"},
+		// AS TRÊS SEÇÕES QUE LIGAM A REGRA AO QUE ELA USA.
+		//
+		// A spec tinha as duas pontas — as regras (efeitos, estados, erros…) e os dados
+		// (contrato, domínio, props) — e nada entre elas: o que cada regra LÊ ficava, quando
+		// ficava, na prosa. Sem essa ligação, um campo mudado no contrato não aponta as
+		// regras que dependem dele, e uma regra pode validar um dado que o contrato nem
+		// oferece. `validations` e `presentation-validations` catalogam regras cuja própria
+		// linha diz o que usam; `rule-uses` liga as outras. Cada linha começa pelo código da
+		// regra e segue com o que ela usa, nessa ordem: é pela POSIÇÃO que o gate lê, e não
+		// pelo nome da coluna, que muda com o idioma.
+		{Key: "validations", Title: "Validações (condição sobre um dado → consequência)", Default: false, Realizes: "V",
+			Purpose: "Regra que confere um dado ou uma entrada e diz o que acontece quando ele não serve. Cada linha diz o CAMPO que a regra lê, a condição e o comportamento — é o que liga a regra ao contrato.",
+			Feeds:   []string{"rule-uses-declared", "rule-uses-resolve"},
+			Body: "## Validações\n\n| Regra | Campo | Condição | Comportamento |\n| --- | --- | --- | --- |\n" +
+				"| `{id}-V01` | `TODO: campo` | TODO: a condição | TODO: o que acontece quando não vale |\n\n"},
+		{Key: "presentation-validations", Title: "Validações de apresentação (prop/estado → aparência)", Default: false, Realizes: "P",
+			Purpose: "Regra que muda o que a unidade MOSTRA conforme uma prop ou um estado. Cada linha diz o que ela lê, a condição e a aparência resultante — separada das validações de dado, porque as duas convivem na mesma tela.",
+			Feeds:   []string{"rule-uses-declared", "rule-uses-resolve"},
+			Body: "## Validações de apresentação\n\n| Regra | Prop/Estado | Condição | Aparência |\n| --- | --- | --- | --- |\n" +
+				"| `{id}-P01` | `TODO: prop ou estado` | TODO: a condição | TODO: o que muda na tela |\n\n"},
+		{Key: "rule-uses", Title: "Uso das regras (o que cada regra lê)", Default: false,
+			Purpose: "Liga as regras que não são validação — comportamentos, estados, erros, ações — ao que elas usam: campos pelo nome, códigos da própria spec (um estado, uma mensagem) e linhas da tabela de dependências (`DEP1`). É o que diz quais regras um campo alterado atinge.",
+			Feeds:   []string{"rule-uses-declared", "rule-uses-resolve"},
+			Body: "## Uso das regras\n\n| Regra | Usa |\n| --- | --- |\n" +
+				"| `{id}-B01` | TODO: `campo`, `{id}-S01`, `DEP1` |\n\n"},
 		// A seção que o `route-declared` cobra. A doutrina do gate é explícita: com termos
 		// genéricos ("Próxima tela", "Menu principal") a aresta de navegação não aponta para
 		// lugar nenhum, e o grafo fica com nós soltos. Por isso o corpo insiste em NOME
@@ -270,9 +295,10 @@ var specTemplate = template{
 		// spec decide é o CONJUNTO DE VALORES aceitos, e ele sobrevive à troca de
 		// linguagem — a sintaxe da união não.
 		// Sem `Realizes`: a tabela de propriedades é um CONTRATO (o que entra), não um
-		// catálogo de regras. Dar-lhe uma letra própria (`P`) fez o teste de letras
-		// canônicas reprovar — e com razão: letra fora do vocabulário nasce invisível para
-		// o `feature-test-match`, que é o pior tipo de furo (parece coberto e não está).
+		// catálogo de regras. Ela chegou a ganhar a letra `P`, que o teste de letras
+		// canônicas reprovou — com razão: letra fora do vocabulário nasce invisível para o
+		// `feature-test-match`. Desde o formato 5, `P` é canônica, e é da seção que usa o
+		// que as props oferecem: `presentation-validations` (prop/estado → aparência).
 		{Key: "props", Title: "Propriedades (a interface pública da unidade)", Default: false,
 			Purpose: "Unidade de COMPOSIÇÃO: tudo que entra e afeta o que ela mostra ou faz. Cada propriedade com os valores que aceita, se é obrigatória e o default. É o contrato com quem a compõe — e o análogo do `domain` para uma unidade de interface.",
 			Feeds:   []string{"dependency-honored"},
@@ -503,11 +529,11 @@ var specPresets = map[string]presetDef{
 		Desc: "função PURA de backend — a assinatura é o contrato",
 		// `constants` já existia no catálogo e NENHUM preset a emitia — seção que ninguém
 		// emite é seção que ninguém escreve, e o limite de negócio vira número mágico.
-		Sections: []string{"title", "overview", "signature", "domain", "effects", "invariants", "constants", "constraints", "deps", "open"},
+		Sections: []string{"title", "overview", "signature", "domain", "effects", "invariants", "constants", "constraints", "rule-uses", "deps", "open"},
 	},
 	"mobile-logic": {
 		Desc:     "regra de negócio do app — entrada/saída + regras catalogadas",
-		Sections: []string{"title", "overview", "contract", "domain", "rules", "invariants", "constraints", "deps", "open"},
+		Sections: []string{"title", "overview", "contract", "domain", "rules", "invariants", "constraints", "rule-uses", "deps", "open"},
 	},
 	"screen": {
 		Desc: "tela navegável — rota, estados observáveis, dados e acesso",
@@ -528,7 +554,7 @@ var specPresets = map[string]presetDef{
 		// ninguém emite é a seção que ninguém escreve. A prova: num projeto nascido com o
 		// preset SEM elas, 25 specs `layer: screen` foram escritas e 24 ficaram sem rota.
 		// Quem não precisar de uma delas tira com `--without`; o caro é o contrário.
-		Sections: []string{"title", "route", "overview", "states", "state-flow", "loading", "rules", "data-contract", "data-states", "messages", "navigation", "auth", "components", "deps", "testids", "a11y", "notes", "open"},
+		Sections: []string{"title", "route", "overview", "states", "state-flow", "loading", "rules", "data-contract", "data-states", "validations", "presentation-validations", "messages", "navigation", "auth", "components", "rule-uses", "deps", "testids", "a11y", "notes", "open"},
 	},
 	"component": {
 		Desc: "componente de UI — props e estados visuais, sem rota",
@@ -541,11 +567,11 @@ var specPresets = map[string]presetDef{
 		// matriz de `variants` depois cruza.
 		//
 		// `callbacks` é o que substitui `navigation` aqui: componente não navega, emite.
-		Sections: []string{"title", "overview", "props", "variants", "states", "callbacks", "slots", "rules", "data-states", "messages", "components", "testids", "a11y", "open"},
+		Sections: []string{"title", "overview", "props", "variants", "states", "callbacks", "slots", "rules", "data-states", "presentation-validations", "messages", "components", "testids", "a11y", "rule-uses", "open"},
 	},
 	"handler": {
 		Desc:     "interface do backend (Lambda/rota) — request/response, auth e erro",
-		Sections: []string{"title", "overview", "contract", "domain", "rules", "auth", "errors", "deps", "open"},
+		Sections: []string{"title", "overview", "contract", "domain", "rules", "auth", "errors", "rule-uses", "deps", "open"},
 	},
 	"schema": {
 		Desc: "interface do DADO — modelos, índices e autorização (quem lê/escreve)",
@@ -555,7 +581,7 @@ var specPresets = map[string]presetDef{
 		//
 		// Medido contra 50 specs de modelo de um projeto real: com este preset, 8 de 8
 		// seções coincidem; com o anterior, 5 de 8 — e as 3 divergentes eram as centrais.
-		Sections: []string{"title", "overview", "domain", "rules", "auth", "constraints", "deps", "notes", "open"},
+		Sections: []string{"title", "overview", "domain", "rules", "auth", "constraints", "rule-uses", "deps", "notes", "open"},
 	},
 	"hook": {
 		Desc: "hook/composable — o que ele faz acontecer e o limite da camada",
@@ -567,25 +593,25 @@ var specPresets = map[string]presetDef{
 		// `signature` fica (13 de 37 a usam), mas depois de `effects`: o que os 37 têm em
 		// comum é dizer O QUE PROVOCAM; a assinatura é detalhe de quem tem contrato
 		// complexo. A ordem das seções é o fio de leitura.
-		Sections: []string{"title", "overview", "effects", "signature", "constraints", "deps", "open"},
+		Sections: []string{"title", "overview", "effects", "signature", "constraints", "rule-uses", "deps", "open"},
 	},
 	"store": {
 		Desc: "estado global (Redux/Zustand/Pinia/MobX) — shape, actions e hidratação",
 		// `selectors` entre `actions` e `hydration`: escreve, lê, persiste — a ordem em que
 		// se pensa um estado global.
-		Sections: []string{"title", "overview", "state-shape", "actions", "selectors", "hydration", "invariants", "constraints", "deps", "open"},
+		Sections: []string{"title", "overview", "state-shape", "actions", "selectors", "hydration", "invariants", "constraints", "rule-uses", "deps", "open"},
 	},
 	"validation": {
 		Desc:     "regra de validação — critérios e a mensagem que o usuário lê",
-		Sections: []string{"title", "overview", "contract", "domain", "rules", "constants", "messages", "deps", "open"},
+		Sections: []string{"title", "overview", "contract", "domain", "rules", "validations", "constants", "messages", "rule-uses", "deps", "open"},
 	},
 	"service": {
 		Desc:     "serviço — operação, dependência externa e como falha",
-		Sections: []string{"title", "overview", "contract", "domain", "rules", "errors", "constraints", "deps", "open"},
+		Sections: []string{"title", "overview", "contract", "domain", "rules", "errors", "constraints", "rule-uses", "deps", "open"},
 	},
 	"repository": {
 		Desc:     "acesso a dado — operações e limites da camada",
-		Sections: []string{"title", "overview", "domain", "effects", "constraints", "errors", "deps", "open"},
+		Sections: []string{"title", "overview", "domain", "effects", "constraints", "errors", "rule-uses", "deps", "open"},
 	},
 }
 

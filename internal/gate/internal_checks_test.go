@@ -894,7 +894,7 @@ func TestRuleLetters_aLetterTheProjectDeclaresIsSeen(t *testing.T) {
 	t.Run("INCHN-B08: Setting the rule letters reconfigures every dependent pattern together", func(t *testing.T) {})
 	defer SetRuleLetters(config.DefaultRuleLetters) // do not leak into other tests
 
-	feature := "@ABCDX-P01 @nivel-unit\n  Cenário: a política vale sempre\n"
+	feature := "@ABCDX-Z01 @nivel-unit\n  Cenário: a política vale sempre\n"
 
 	// before declaring: the letter is not in the vocabulary, so it is not seen — correct.
 	SetRuleLetters(config.DefaultRuleLetters)
@@ -904,11 +904,11 @@ func TestRuleLetters_aLetterTheProjectDeclaresIsSeen(t *testing.T) {
 
 	// after declaring: it is seen.
 	cfg := &config.Config{RuleTypes: []config.RuleType{
-		{Letter: "B", Term: "Behavior"}, {Letter: "P", Term: "Policy"},
+		{Letter: "B", Term: "Behavior"}, {Letter: "Z", Term: "Policy"},
 	}}
 	SetRuleLetters(cfg.RuleLetters())
 	got := parseFeatureScenarios(feature)
-	if len(got) != 1 || got[0].Code != "ABCDX-P01" {
+	if len(got) != 1 || got[0].Code != "ABCDX-Z01" {
 		t.Fatalf("the scenario of the declared letter is still invisible: %+v", got)
 	}
 }
