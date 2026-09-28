@@ -1,6 +1,7 @@
 package mapx
 
 import (
+	"reflect"
 	"slices"
 	"testing"
 )
@@ -712,5 +713,54 @@ func TestMutationStale(t *testing.T) {
 	old := Node{Rev: "r2", Signal: &TestSignal{AtRev: "r1"}}
 	if !old.MutationStale() || (Node{Rev: "r1", Signal: &TestSignal{AtRev: "r1"}}).MutationStale() || (Node{}).MutationStale() {
 		t.Error("with no mutation rev, the shared one decides; with no signal, nothing is stale")
+	}
+}
+
+// A branch the unit suite missed and the integration suite took is taken; a stale suite
+// speaks of other lines and does not take part.
+func TestIngestCoverageSuite_branchUnion(t *testing.T) {
+	t.Run("SGINA-B26: The branches are the union of the fresh suites", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "a.ts", Kind: KindCode, Rev: "r1"}}}
+	g.IngestCoverageSuite(map[string]FileCov{"a.ts": {Covered: 1, Total: 1, Lines: map[int]bool{1: true},
+		Branches: map[string]bool{"10:0:1": false, "3:0:0": true, "3:0:1": false, "3:1:0": true}}}, "unit.info", "t1")
+	g.IngestCoverageSuite(map[string]FileCov{"a.ts": {Covered: 1, Total: 1, Lines: map[int]bool{1: true},
+		Branches: map[string]bool{"3:0:1": true, "10:0:1": false}}}, "it.info", "t2")
+	g.IngestCoverageSuite(map[string]FileCov{"a.ts": {Covered: 1, Total: 1, Lines: map[int]bool{1: true}}}, "lines.info", "t3")
+	s := g.Nodes[0].Signal
+	if s.BranchTotal != 4 || s.BranchMissed != "10:0:1" {
+		t.Errorf("want 4 branches with only 10:0:1 missed, got %d %q", s.BranchTotal, s.BranchMissed)
+	}
+	if got := s.CoverageBySuite["unit.info"].BranchMissed; got != "3:0:1 10:0:1" {
+		t.Errorf("a suite keeps its missed branches in line order, got %q", got)
+	}
+	s.CoverageBySuite["unit.info"] = SuiteCoverage{BranchTotal: 9, BranchMissed: "1:0:0", AtRev: "old"}
+	if total, missed := unionBranches(s.CoverageBySuite, "r1"); total != 2 || missed != "10:0:1" {
+		t.Errorf("a stale suite does not take part, got %d %q", total, missed)
+	}
+	if total, missed := unionBranches(nil, "r1"); total != 0 || missed != "" {
+		t.Errorf("no suite, no branch, got %d %q", total, missed)
+	}
+	g2 := &Graph{Nodes: []Node{{ID: "b.ts", Kind: KindCode, Rev: "r1"}}}
+	g2.IngestCoverage(map[string]FileCov{"b.ts": {Covered: 1, Total: 1, Branches: map[string]bool{"2:0:0": false, "2:0:1": true}}}, "t")
+	if s := g2.Nodes[0].Signal; s.BranchTotal != 2 || s.BranchMissed != "2:0:0" {
+		t.Errorf("with no suite the report's own branches, got %d %q", s.BranchTotal, s.BranchMissed)
+	}
+	ids := []string{"2:10:0", "10:0:0", "2:9:1", "2:9:0"}
+	sortBranchIDs(ids)
+	if !reflect.DeepEqual(ids, []string{"2:9:0", "2:9:1", "2:10:0", "10:0:0"}) {
+		t.Errorf("branch ids sort by number, part by part, got %v", ids)
+	}
+}
+
+func TestIngestMutation_noCoverageLines(t *testing.T) {
+	t.Run("SGINA-B27: The lines of mutants no test ran are recorded", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "a.ts", Kind: KindCode, Rev: "r1"}}}
+	g.IngestMutation(map[string]FileMutation{"a.ts": {Killed: 1, NoCoverage: 3, NoCoverageAt: []int{9, 4, 5}}}, "t")
+	if got := g.Nodes[0].Signal.NoCoverageLines(); !reflect.DeepEqual(got, []int{4, 5, 9}) {
+		t.Errorf("want 4 5 9, got %v", got)
+	}
+	var none *TestSignal
+	if none.NoCoverageLines() != nil {
+		t.Error("no signal, no line")
 	}
 }

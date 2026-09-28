@@ -72,6 +72,7 @@ patterns a spec governs.
 | `CNFGO-B49` | A suite's `paths` are globs of the files it runs: with none it runs any file, otherwise only a file one of them matches; a glob that is not valid fails the load naming the section, the suite and the index. |
 | `CNFGO-B51` | A gate's `letters` lists rule letters, one letter A to Z each, any case; anything else fails the load naming the gate and the index. |
 | `CNFGO-B52` | A gate's `invocations` must each compile and carry a capture group — the first one names the unit the call reaches; one that does not compile, or has no group, fails the load naming the gate and the index. |
+| `CNFGO-B53` | A gate's `min_percent` must be between 0 and 100; outside it fails the load naming the gate, and inside it loads. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 
 ### Canonical gate declarations

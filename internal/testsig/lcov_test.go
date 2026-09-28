@@ -3,6 +3,7 @@ package testsig
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -135,4 +136,20 @@ func TestLCOVEntriesBeforeFirstRecord(t *testing.T) {
 			t.Errorf("a.ts is 0/1, got %d/%d", f.CoveredLines, f.TotalLines)
 		}
 	})
+}
+
+// A line runs while a branch of it never does; the report says so in `BRDA`.
+func TestLCOVBranches(t *testing.T) {
+	t.Run("LCINL-B10: Branch entries record each branch, taken or not", func(t *testing.T) {})
+	rep, err := ParseLCOV(write(t, "b.info", "BRDA:1,0,0,1\nSF:a.ts\nDA:3,1\nBRDA:3,0,0,2\nBRDA:3,0,1,0\nBRDA:12,1,0,-\nBRDA:4,0,0\nBRDA:x,0,0,1\nBRDA:0,0,0,1\nend_of_record\nSF:b.ts\nDA:1,1\nend_of_record\n"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]bool{"3:0:0": true, "3:0:1": false, "12:1:0": false}
+	if got := rep.Files[0].Branches; !reflect.DeepEqual(got, want) {
+		t.Errorf("want %v, got %v", want, got)
+	}
+	if rep.Files[1].Branches != nil {
+		t.Errorf("a record with no branch has none, got %v", rep.Files[1].Branches)
+	}
 }

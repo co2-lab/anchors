@@ -101,6 +101,7 @@ func parseGremlins(b []byte) (*MutationReport, error) {
 				// It used to count as a survivor here while the comment claimed the two
 				// readings agreed — the same file scored 50 from gremlins and 100 from MTE.
 				fm.NoCoverage++
+				fm.NoCoverageAt = append(fm.NoCoverageAt, m.Line)
 			}
 			// NOT VIABLE (não compilou) e RUNNABLE/SKIPPED (não chegaram a rodar) ficam
 			// FORA do denominador: não dizem nada sobre a qualidade do teste. É a mesma

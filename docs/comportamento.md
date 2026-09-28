@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d3167be92ff2514d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a38c97f2570cd66b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2730,6 +2730,8 @@ teste prova.
 
 - [A gate's invocations compile and name the unit through a group](camadas/config.md#cnfgo-b52--a-gates-invocations-compile-and-name-the-unit-through-a-group) `CNFGO-B52`
 
+- [A gate's floor is a percentage](camadas/config.md#cnfgo-b53--a-gates-floor-is-a-percentage) `CNFGO-B53`
+
 - [The declared containers come back as written, and a missing config has none](camadas/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](camadas/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -2785,6 +2787,8 @@ teste prova.
 - [The families say what an assertion is, and a project may declare only its own](camadas/config.md#dlcti-b16--the-families-say-what-an-assertion-is-and-a-project-may-declare-only-its-own) `DLCTI-B16`
 
 - [The families say how code defines a name](camadas/config.md#dlcti-b17--the-families-say-how-code-defines-a-name) `DLCTI-B17`
+
+- [Every examples keyword, in every language, sorted](camadas/config.md#dlcti-b18--every-examples-keyword-in-every-language-sorted) `DLCTI-B18`
 
 - [A trigger naming a layer charges every change in that layer, whatever the unit](camadas/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
@@ -2855,6 +2859,14 @@ teste prova.
 - [The names are not cached: each question asks the registered source again](camadas/config.md#gtvcg-x01--the-names-are-not-cached-each-question-asks-the-registered-source-again) `GTVCG-X01`
 
 ## gate
+
+- [Below the floor fails naming the lines](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B01`
+
+- [A waived branch is left out](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B02`
+
+- [A branch no test reaches is likely dead](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B03`
+
+- [Nothing to measure is skipped or pending](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B04`
 
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B01`
 
@@ -3317,6 +3329,20 @@ teste prova.
 - [The gate does not run the test nor judge whether the change broke it](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X02`
 
 - [The gate does not read the project's configuration](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-X03`
+
+- [A row the tests do not run fails](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B01`
+
+- [A value is a whole token with its case](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B02`
+
+- [A label column is display text](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B03`
+
+- [The rows are the coded outline's tables](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B04`
+
+- [The test's body is read as the assertion gate reads it](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B05`
+
+- [Nothing to confront is skipped](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-B06`
+
+- [Tests that cannot be listed fail the gate with the reason](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run) `EXMCH-E01`
 
 - [An external command exiting with status zero returns Pass](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B01`
 
@@ -4918,6 +4944,8 @@ teste prova.
 
 - [Tests that cannot be listed fail the gate with the reason](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-E01`
 
+- [A test that declares it asserts nothing is left out](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B07`
+
 - [A node that is not a feature is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B01`
 
 - [A project with no filter per level is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B02`
@@ -4949,6 +4977,8 @@ teste prova.
 - [A declared invocation reaches the unit it names](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B06`
 
 - [Nothing to confront is skipped](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B07`
+
+- [A declared way to reach the unit passes](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B08`
 
 - [Non-test artifacts skip confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B01`
 
@@ -6258,6 +6288,8 @@ teste prova.
 
 - [A missing report returns the error](camadas/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-E01`
 
+- [Branch entries record each branch, taken or not](camadas/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-B10`
+
 - [The canonical format is read under each of its names](camadas/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-B01`
 
 - [Killed and timed-out mutants count as killed](camadas/infra.md#mtinm--mutationingest--the-mutation-score-per-file-read-from-a-mutation-testing-elements-report) `MTINM-B02`
@@ -6487,6 +6519,10 @@ teste prova.
 - [The tree's revs replace the map's](camadas/mapa.md#sgina-b24--the-trees-revs-replace-the-maps) `SGINA-B24`
 
 - [A run time Anchors measured is recorded on the node](camadas/mapa.md#sgina-b23--a-run-time-anchors-measured-is-recorded-on-the-node) `SGINA-B23`
+
+- [The branches are the union of the fresh suites](camadas/mapa.md#sgina-b26--the-branches-are-the-union-of-the-fresh-suites) `SGINA-B26`
+
+- [The lines of mutants no test ran are recorded](camadas/mapa.md#sgina-b27--the-lines-of-mutants-no-test-ran-are-recorded) `SGINA-B27`
 
 - [The lock is a file beside the map with its owner](camadas/mapa.md#mplck-b01--the-lock-is-a-file-beside-the-map-with-its-owner) `MPLCK-B01`
 

@@ -651,6 +651,25 @@ gates:
     check: test-ref-matches-unit
     on: [test]
     blocking: false
+  # Go's coverage profile has no branches, so the lcov here lists none and the gate has
+  # nothing to measure; it is declared for the projects whose tools report them.
+  - name: branch-coverage
+    check: branch-coverage
+    on: [code]
+    blocking: false
+    # The same files line-coverage has no signal on: no lcov entry at all.
+    no_signal:
+      "cmd/anchors/governance/guide_{changelog,code,feature,flag,flow,guide,header,plan,product,project,review,spec,tests,work}.go": "the ruler texts are constants: no statement to cover"
+      "cmd/anchors/common/version.go": "version variables set by the linker: no statement to cover"
+      "cmd/anchors/flow/watch_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "internal/daemon/daemon_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "cmd/anchors/quality/budget_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+      "internal/mapx/lock_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
+  - name: examples-match
+    check: examples-match
+    on: [feature]
+    blocking: false
+    labels: true
 
   - name: open-questions-resolved
     blocking: true

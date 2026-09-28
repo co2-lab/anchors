@@ -77,6 +77,8 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"test-has-assertion":              checkTestHasAssertion,
 	"test-exercises-unit":             checkTestExercisesUnit,
 	"test-ref-matches-unit":           checkTestRefMatchesUnit,
+	"branch-coverage":                 checkBranchCoverage,
+	"examples-match":                  checkExamplesMatch,
 	"presentation-exhaustive":         checkPresentationExhaustive,
 	"presentation-conflict":           checkPresentationConflict,
 	"presentation-copy-single-source": checkPresentationCopySingleSource,

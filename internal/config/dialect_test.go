@@ -397,3 +397,23 @@ func TestDialectDefinitionByFamily(t *testing.T) {
 		t.Errorf("a family with no definition leaves it undeclared, got %q", d.Definition)
 	}
 }
+
+func TestGherkinExamplesAlternatives(t *testing.T) {
+	t.Run("DLCTI-B18: Every examples keyword, in every language, sorted", func(t *testing.T) {})
+	got := GherkinExamplesAlternatives()
+	if !sort.StringsAreSorted(got) {
+		t.Errorf("sorted, got %v", got)
+	}
+	seen := map[string]int{}
+	for _, k := range got {
+		seen[k]++
+	}
+	for _, want := range []string{"Examples", "Exemplos", "Ejemplos", "Beispiele", "例"} {
+		if seen[want] != 1 {
+			t.Errorf("%q once, got %d in %v", want, seen[want], got)
+		}
+	}
+	if len(seen) != len(got) {
+		t.Errorf("each keyword once, got %v", got)
+	}
+}

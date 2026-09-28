@@ -73,6 +73,10 @@ type FileMutation struct {
 	// SurvivedAt são as linhas onde um mutante sobreviveu — o que o autor precisa ver
 	// para consertar o teste. Sem isso o score é um número sem ação.
 	SurvivedAt []int
+	// NoCoverageAt are the lines of the mutants no test ran. Together with a branch the
+	// coverage report says no test took on the same line, they point at a branch that is
+	// likely dead: not only untested, but unreachable by what the tests do.
+	NoCoverageAt []int
 }
 
 // mtElements é o subconjunto do schema que nos interessa.
@@ -168,6 +172,7 @@ func parseMTE(b []byte) (*MutationReport, error) {
 			case "nocoverage", "no coverage":
 				// Nenhum teste executou. Contado à parte e fora do score — ver o campo.
 				fm.NoCoverage++
+				fm.NoCoverageAt = append(fm.NoCoverageAt, m.Location.Start.Line)
 			case "timeout":
 				// Timeout é morte por travamento — o teste percebeu a mutação. Contado
 				// também à parte: sob carga, é o que infla o score (ver TimedOut).

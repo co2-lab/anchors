@@ -48,3 +48,9 @@ Feature: TestHasAssertion — every test asserts something in its body
     Given a tests script that fails, and an assertion that does not compile
     When a test file is confronted
     Then the gate fails naming why
+
+  @THSAS-B07 @unit-level
+  Scenario: A test that declares it asserts nothing is left out
+    Given a test with @no-assert and a reason above it, one with it in the body, and one with a bare @no-assert
+    When the file is confronted
+    Then only the bare one fails

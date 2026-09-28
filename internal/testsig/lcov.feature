@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: LCINL
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @LCINL
@@ -78,3 +78,9 @@ Feature: LcovIngest — line coverage per file, and the uncovered lines of a cha
     Given a path where no report exists
     When the report is read
     Then the error says the file does not exist
+
+  @LCINL-B10 @unit-level
+  Scenario: Branch entries record each branch, taken or not
+    Given a record with a branch taken, one with count zero, one never run, a malformed one and one before any file
+    When the report is parsed
+    Then the first three are recorded by line, block and branch with whether they were taken, and the others record nothing

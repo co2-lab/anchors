@@ -1,6 +1,6 @@
 <!-- @anchors
   code: LCINL
-  updated_at: 2026-09-26
+  updated_at: 2026-09-28
   layer: infra
 -->
 # LcovIngest — line coverage per file, and the uncovered lines of a change, read from an lcov report
@@ -30,6 +30,7 @@ change, neither as uncovered nor in the denominator.
 | `LCINL-B07` | A record left without its end-of-record line is closed by the next source-file line or by the end of the report. |
 | `LCINL-B08` | A line-hit entry that carries the optional checksum field is read by its hit count; the checksum does not change whether the line is covered. |
 | `LCINL-B09` | Line-hit and line-total entries before the first source-file line belong to no file and change no file's counts. |
+| `LCINL-B10` | A branch entry (`BRDA:<line>,<block>,<branch>,<taken>`) records the branch by `<line>:<block>:<branch>`, taken when its count is positive and never taken when it is zero or `-`; an entry with another number of fields, a line that is not a positive number, or before the first source-file line records nothing. A record with no branch entry has no branch. |
 
 ## Domain
 

@@ -1,11 +1,17 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:9ca104ba59da2f85 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:fd4d9ef53b87cc88 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 72 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 74 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+
+
+## BRCOV — BranchCoverage — the tests take the branches the code has
+
+
+
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -93,6 +99,12 @@
 
 
 ## EVFRV — EvidenceFresh — the score of this test holds against TODAY's code
+
+
+
+
+
+## EXMCH — ExamplesMatch — every Examples row is a case its tests run
 
 
 

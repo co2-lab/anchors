@@ -66,6 +66,7 @@ written in the configuration file).
 | `DLCTI-B15` | The TS family recognises a `catch` as handling a failure with or without its binding: `catch (e) {` and `catch {`. |
 | `DLCTI-B16` | The Go and TS families say what an assertion is (`tests.assertion`). A project that declares only its assertion keeps the family's way to open a test; one that declares its own pattern or script reads its tests another way and does not take the family's assertion. |
 | `DLCTI-B17` | The Go, TS and Python families say how code defines a name (`definition`) — Go's functions, methods and types, TS's functions, classes and constants bound to an arrow function, Python's `def` and `class` — and a declared one wins over the family's. |
+| `DLCTI-B18` | The recognised keywords that open an outline's examples are those of every language in the table, each once, in alphabetical order (`GherkinExamplesAlternatives`). |
 
 ## Invariants
 

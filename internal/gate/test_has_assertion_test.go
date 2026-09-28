@@ -175,3 +175,18 @@ func TestTestHasAssertion_unlistableTestsFail(t *testing.T) {
 		t.Errorf("an assertion that does not compile fails naming the field, got %v: %s", v, msg)
 	}
 }
+
+func TestTestHasAssertion_declared(t *testing.T) {
+	t.Run("THSAS-B07: A test that declares it asserts nothing is left out", func(t *testing.T) {})
+	src := "\t// @no-assert: only proves the call does not panic\n\tt.Run(\"above\", func(t *testing.T) {\n\t\tf()\n\t})\n" +
+		"\tt.Run(\"inside\", func(t *testing.T) {\n\t\tf() // @no-assert: smoke run of the fixture\n\t})\n" +
+		"\tt.Run(\"bare\", func(t *testing.T) {\n\t\tf() // @no-assert:\n\t})\n"
+	v, msg := runAssertion(t, assertCfg(false, nil), src)
+	if v != Fail || !strings.Contains(msg, "1 test(s)") || !strings.Contains(msg, "8: bare") {
+		t.Errorf("only the bare waiver fails, got %v: %s", v, msg)
+	}
+	first := "t.Run(\"top\", func(t *testing.T) {\n\tf()\n})\n"
+	if v, _ := runAssertion(t, assertCfg(false, nil), first); v != Fail {
+		t.Errorf("a test on the first line has no line above to waive it, got %v", v)
+	}
+}

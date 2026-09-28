@@ -15,6 +15,11 @@ type FileCoverage struct {
 	// Lines: por linha instrumentada, coberta (true) ou não (false). Permite a
 	// cobertura de DIFF — cruzar as linhas mudadas com as descobertas.
 	Lines map[int]bool
+	// Branches: each branch the report lists (`BRDA`), by its identity
+	// `<line>:<block>:<branch>`, taken (true) or never taken (false). A line runs while
+	// one of its branches never does — the `else` no test reaches — and line coverage
+	// cannot see it. Empty when the report lists no branch.
+	Branches map[string]bool
 }
 
 // UncoveredIn devolve, dentre `changed`, as linhas deste arquivo que são
@@ -62,6 +67,7 @@ type CoverageReport struct {
 //	DA:<linha>,<hits>[,<checksum>]  (uma por linha instrumentada)
 //	LF:<total de linhas>   (opcional; se ausente, contamos as DA)
 //	LH:<linhas cobertas>   (opcional)
+//	BRDA:<linha>,<bloco>,<ramo>,<vezes>  (opcional; `-` em vezes = o bloco nunca rodou)
 //	end_of_record
 //
 // Contamos a partir das DA (robusto) e usamos LF/LH se presentes.
@@ -122,6 +128,21 @@ func ParseLCOV(path string) (*CoverageReport, error) {
 					cur.Lines[ln] = covered
 				}
 			}
+		case strings.HasPrefix(line, "BRDA:"):
+			// `BRDA:<line>,<block>,<branch>,<taken>`: `taken` is a count, or `-` when the
+			// block holding the branch never ran. Either zero or `-` is a branch no test took.
+			parts := strings.Split(strings.TrimPrefix(line, "BRDA:"), ",")
+			if cur == nil || len(parts) != 4 {
+				continue
+			}
+			if ln, err := strconv.Atoi(parts[0]); err != nil || ln < 1 {
+				continue
+			}
+			taken, err := strconv.Atoi(parts[3])
+			if cur.Branches == nil {
+				cur.Branches = map[string]bool{}
+			}
+			cur.Branches[parts[0]+":"+parts[1]+":"+parts[2]] = err == nil && taken > 0
 		case strings.HasPrefix(line, "LF:"):
 			lf, _ = strconv.Atoi(strings.TrimPrefix(line, "LF:"))
 		case strings.HasPrefix(line, "LH:"):

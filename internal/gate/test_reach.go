@@ -158,6 +158,10 @@ func definitionOf(cfg *config.Config) *regexp.Regexp {
 
 // ── test-exercises-unit ────────────────────────────────────────────────────
 
+// noUnitImportRE is the waiver of a test that does not reach its unit the way this gate
+// reads, with its reason: `@no-unit-import: <why>`.
+var noUnitImportRE = regexp.MustCompile(`@no-unit-import[^\S\n]*:[^\S\n]*\S+`)
+
 func checkTestExercisesUnit(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Kind != mapx.KindTest || n.Support {
 		return Skip, i18n.T("gate.test_reach.skip_not_test")
@@ -165,6 +169,9 @@ func checkTestExercisesUnit(content string, n mapx.Node, root string, g *mapx.Gr
 	units := testedUnits(g, cfg)[n.ID]
 	if len(units) == 0 {
 		return Skip, i18n.T("gate.test_exercises_unit.skip_no_unit")
+	}
+	if noUnitImportRE.MatchString(content) {
+		return Pass, "" // declared: the test reaches its unit another way, and says why
 	}
 	def := definitionOf(cfg)
 	if def == nil {

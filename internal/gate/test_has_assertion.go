@@ -57,7 +57,14 @@ func checkTestHasAssertion(content string, n mapx.Node, root string, g *mapx.Gra
 	lines := strings.Split(content, "\n")
 	var empty []string
 	for _, t := range mine {
-		if !re.MatchString(testBody(lines, t, labels)) {
+		body := testBody(lines, t, labels)
+		if t.Line >= 2 {
+			body = lines[t.Line-2] + "\n" + body
+		}
+		if noAssertRE.MatchString(body) {
+			continue // declared: the test asserts nothing on purpose, and says why
+		}
+		if !re.MatchString(body) {
 			empty = append(empty, fmt.Sprintf("%d: %s", t.Line, t.Title))
 		}
 	}
@@ -85,6 +92,10 @@ func testBody(lines []string, t testlist.Test, labels bool) string {
 	}
 	return strings.Join(lines[first:last+1], "\n")
 }
+
+// noAssertRE is the waiver of a test with no assertion, with its reason, in the test's
+// body or on the line above it: `@no-assert: <why>`.
+var noAssertRE = regexp.MustCompile(`@no-assert[^\S\n]*:[^\S\n]*\S+`)
 
 var (
 	// opensBlockRE: a line that leaves a block open at its end — a bracket, or a `do`.

@@ -48,3 +48,9 @@ Feature: TestReach — a test reaches the unit it says it tests
     Given a spec node, a support test, a test no unit pairs with, a project with no definition, a test with no ref, and a ref governing no code
     When each is confronted
     Then each is skipped
+
+  @TSRCH-B08 @unit-level
+  Scenario: A declared way to reach the unit passes
+    Given a test that copies the unit and carries @no-unit-import with a reason, and one with a bare @no-unit-import
+    When each is confronted
+    Then the first passes and the second fails

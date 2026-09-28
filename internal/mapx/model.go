@@ -108,8 +108,14 @@ type SuiteCoverage struct {
 	Covered      string `yaml:"covered,omitempty"`
 	// Totals, for a report that gave no per-line detail (LF/LH only): the union cannot be
 	// computed line by line then, and the suite's own counts are what exists.
-	CoveredLines int    `yaml:"covered_lines,omitempty"`
-	TotalLines   int    `yaml:"total_lines,omitempty"`
+	CoveredLines int `yaml:"covered_lines,omitempty"`
+	TotalLines   int `yaml:"total_lines,omitempty"`
+	// BranchTotal is how many branches the suite's report listed for the file, and
+	// BranchMissed the ones it never took, as `<line>:<block>:<branch>` separated by
+	// spaces. Only the missed are kept: a branch the suite lists and does not name as
+	// missed was taken.
+	BranchTotal  int    `yaml:"branch_total,omitempty"`
+	BranchMissed string `yaml:"branch_missed,omitempty"`
 	AtRev        string `yaml:"at_rev,omitempty"`
 }
 
@@ -249,6 +255,11 @@ type TestSignal struct {
 	// ingested after the unit one, OVERWROTE the unit coverage of the same file. Some
 	// directories are only exercised by integration, so the two measure different lines.
 	CoverageBySuite map[string]SuiteCoverage `yaml:"coverage_by_suite,omitempty"`
+	// Branch coverage (lcov `BRDA`), the union over the suites measured at the current
+	// rev: how many branches the file has, and the ones NO suite took (`<line>:<block>:
+	// <branch>`, separated by spaces). Zero total when no report lists branches.
+	BranchTotal  int    `yaml:"branch_total,omitempty"`
+	BranchMissed string `yaml:"branch_missed,omitempty"`
 	// MUTAÇÃO (do formato Mutation Testing Elements, schemaVersion 1.x): quantos
 	// mutantes o teste MATOU. É a única medida objetiva de "o teste prova algo": um
 	// mutante SOBREVIVENTE é uma alteração no código que os testes não perceberam —
@@ -265,6 +276,9 @@ type TestSignal struct {
 	// que execute esta linha?" é pergunta do gate de COBERTURA. Ficam gravados porque a
 	// informação é útil — só não é deste gate.
 	MutantsNoCoverage int `yaml:"mutants_no_coverage,omitempty"`
+	// NoCoverageAt: the lines of those mutants, as ranges, measured at `MutationAtRev`.
+	// A branch never taken on a line where no test ran a mutant either is likely dead.
+	NoCoverageAt string `yaml:"no_coverage_at,omitempty"`
 	// MutantsIgnored são os que a ferramenta descartou antes de rodar (`ignoreStatic`,
 	// `disable`). Ficam FORA do score — não houve experimento —, e existem no sinal para
 	// separar dois 100% que significam coisas diferentes: "tudo foi provado" e "não havia

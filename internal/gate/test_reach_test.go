@@ -176,3 +176,14 @@ func TestTestReach_skips(t *testing.T) {
 		t.Errorf("a ref governing no code is skipped, got %v", v)
 	}
 }
+
+func TestTestReach_declared(t *testing.T) {
+	t.Run("TSRCH-B08: A declared way to reach the unit passes", func(t *testing.T) {})
+	copied := "function charge(a) { return a }\ntest('a', () => expect(charge(1)).toBe(1))\n"
+	if v, msg := exercise(t, reachCfg(), "// @no-unit-import: the unit runs in a worker; the test drives the worker\n"+copied); v != Pass {
+		t.Errorf("a declared test passes, got %v: %s", v, msg)
+	}
+	if v, _ := exercise(t, reachCfg(), "// @no-unit-import:\n"+copied); v != Fail {
+		t.Errorf("a bare waiver waives nothing, got %v", v)
+	}
+}

@@ -364,3 +364,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a gate whose invocation does not compile, one whose invocation has no capture group, and one with a group
     When each configuration is loaded
     Then the first two fail naming the gate and the index, and the third loads
+
+  @CNFGO-B53 @unit-level
+  Scenario: A gate's floor is a percentage
+    Given gates with a min_percent below 0, above 100, and at 80
+    When each configuration is loaded
+    Then the first two fail naming the gate, and the third loads

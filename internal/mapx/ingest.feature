@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SGINA
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @SGINA
@@ -168,3 +168,15 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Given a map with a code file
     When a run time is recorded for it and for a file the map does not have
     Then the file carries the time under the suite and nothing else changes
+
+  @SGINA-B26 @unit-level
+  Scenario: The branches are the union of the fresh suites
+    Given a unit suite missing two branches, an integration suite taking one of them, and a stale suite missing another
+    When both fresh suites are ingested
+    Then the node's total is the largest listed and its missed branch is only the one both fresh suites missed
+
+  @SGINA-B27 @unit-level
+  Scenario: The lines of mutants no test ran are recorded
+    Given a mutation report with mutants no test ran on three lines
+    When it is ingested
+    Then the node reads the same lines back

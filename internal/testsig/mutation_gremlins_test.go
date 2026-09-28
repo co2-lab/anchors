@@ -3,6 +3,7 @@ package testsig
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -174,7 +175,7 @@ func TestGremlinsAgreesWithCanonical(t *testing.T) {
 			t.Fatal(err)
 		}
 		fm := rep.Files["a.go"]
-		if fm.NoCoverage != 1 || fm.Survived != 0 || len(fm.SurvivedAt) != 0 || fm.Score != 100 {
+		if fm.NoCoverage != 1 || fm.Survived != 0 || len(fm.SurvivedAt) != 0 || fm.Score != 100 || !reflect.DeepEqual(fm.NoCoverageAt, []int{2}) {
 			t.Errorf("want 1 no-coverage, no survivor, score 100; got %+v", fm)
 		}
 	})

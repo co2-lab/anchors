@@ -973,7 +973,8 @@ type Gate struct {
 	// project's vocabulary, as `rule_types` is.
 	Letters []string `yaml:"letters,omitempty"`
 
-	// Labels — for `test-has-assertion`: a test whose body is empty is a LABEL naming what
+	// Labels — for the gates that read a test's body (`test-has-assertion`,
+	// `examples-match`): a test whose body is empty is a LABEL naming what
 	// the block around it proves (`t.Run("CODE: title", func(t *testing.T) {})` at the top
 	// of a Go test function), and the block is what must assert. Off, an empty test is a
 	// test with no assertion: in most libraries `it("x", () => {})` is a stub that passes.
@@ -984,6 +985,11 @@ type Gate struct {
 	// each a pattern whose first capture group names the unit reached. Anchors does not
 	// know what a lambda is; the project says how its tests call one.
 	Invocations []string `yaml:"invocations,omitempty"`
+
+	// MinPercent — for `branch-coverage`: the share of branches the tests must take, 0 to
+	// 100. Unset asks for every branch. A layer that needs another floor gets its own
+	// entry, scoped by `tags`.
+	MinPercent *float64 `yaml:"min_percent,omitempty"`
 }
 
 // DefaultTimeoutCeiling is the share of timed-out mutants above which a mutation score is
@@ -1835,6 +1841,9 @@ func (c *Config) validarPadroes() error {
 			if t := strings.ToUpper(strings.TrimSpace(l)); len(t) != 1 || t < "A" || t > "Z" {
 				return fmt.Errorf("`gates[%s].letters[%d]` is %q — a rule letter is one letter, A to Z", g.Name, i, l)
 			}
+		}
+		if g.MinPercent != nil && (*g.MinPercent < 0 || *g.MinPercent > 100) {
+			return fmt.Errorf("`gates[%s].min_percent` must be between 0 and 100, got %v", g.Name, *g.MinPercent)
 		}
 		for i, p := range g.Invocations {
 			if err := check(fmt.Sprintf("gates[%s].invocations[%d]", g.Name, i), p); err != nil {

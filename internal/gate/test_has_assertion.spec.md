@@ -37,6 +37,7 @@ otherwise the body is read by its layout, which every language keeps whatever it
 | `THSAS-B04` | With `labels: true` on the gate, a test opened and closed on its own line with an empty block is a label for the block around it, and that block is what must assert; without it, the empty test is a test with no assertion. |
 | `THSAS-B05` | When the tests source says where a test ends (`end`), its body runs from its line to that one. |
 | `THSAS-B06` | A node that is not a test or is a support file, a project with no tests source or no assertion, and a file where the source lists no test are skipped. |
+| `THSAS-B07` | A test that carries `@no-assert: <why>` in its body or on the line above it is left out; a waiver with no reason waives nothing. |
 
 ## Errors
 

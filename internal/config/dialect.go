@@ -214,6 +214,21 @@ func GherkinThenAlternatives() []string {
 	return out
 }
 
+// GherkinExamplesAlternatives are every way to open an outline's examples table, in every
+// language of the table, sorted. A reader must recognise what any project wrote.
+func GherkinExamplesAlternatives() []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, kw := range gherkinByLang {
+		if kw.Examples != "" && !seen[kw.Examples] {
+			seen[kw.Examples] = true
+			out = append(out, kw.Examples)
+		}
+	}
+	sort.Strings(out)
+	return out
+}
+
 // GherkinFor devolve as palavras-chave do idioma configurado (ou `en`).
 //
 // The lookup ignores case and answers the table's own spelling of the code. It used to

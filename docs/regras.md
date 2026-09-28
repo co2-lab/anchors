@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:e8739b3b4e31d830 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:4677a549bd34aa31 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -239,6 +239,8 @@ abra a página dela em `camadas/`.
 
 ## gate
 
+### [BRCOV — BranchCoverage — the tests take the branches the code has](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has)
+
 ### [CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code)
 
 ### [CDLNG — CodeLanguage — the code does not go back to mixing languages](camadas/gate.md#cdlng--codelanguage--the-code-does-not-go-back-to-mixing-languages)
@@ -268,6 +270,8 @@ abra a página dela em `camadas/`.
 ### [DUPLC — Duplication — no code file holds a block copied from somewhere else](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else)
 
 ### [EVFRV — EvidenceFresh — the score of this test holds against TODAY's code](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code)
+
+### [EXMCH — ExamplesMatch — every Examples row is a case its tests run](camadas/gate.md#exmch--examplesmatch--every-examples-row-is-a-case-its-tests-run)
 
 ### [EXCMX — ExternalCommand — executes external tools via shell passing targets as positional arguments](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments)
 

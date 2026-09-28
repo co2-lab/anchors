@@ -3,6 +3,7 @@ package testsig
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -240,6 +241,9 @@ func TestParseMutationPartialCountsOnlyExecuted(t *testing.T) {
 		t.Fatal(err)
 	}
 	fm := rep.Files["h.ts"]
+	if !reflect.DeepEqual(fm.NoCoverageAt, []int{1, 2}) {
+		t.Errorf("the uncovered mutants' lines are recorded, got %v", fm.NoCoverageAt)
+	}
 
 	if fm.Score != 50 {
 		t.Errorf("score = %.1f, want 50 (1 killed of 2 EXECUTED) — the 2 uncovered "+

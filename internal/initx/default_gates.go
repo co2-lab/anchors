@@ -9,7 +9,7 @@ import "github.com/co2-lab/anchors/internal/config"
 // Ficam informativos mesmo em projeto novo, e o usuário os promove quando a suíte
 // estiver rodando no CI.
 var dependOnIngestedSignal = map[string]bool{
-	"tests-green": true, "line-coverage": true, "coverage-delta": true,
+	"tests-green": true, "line-coverage": true, "coverage-delta": true, "branch-coverage": true,
 	"mutation-score": true, "scenario-coverage": true, "sbom-generated": true,
 	"dependency-vulnerable": true, "no-duplication": true,
 	"license-compatible": true, "circular": true, "deadcode": true, "spellcheck": true,
@@ -569,6 +569,10 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 				Name: "coverage-delta", ID: "coverage-delta", On: []string{"code"}, Check: "coverage-delta",
 				Blocking: config.Bool(false), Measures: "line coverage did not drop vs. the previous ingestion",
 			},
+			config.Gate{
+				Name: "branch-coverage", ID: "branch-coverage", On: []string{"code"}, Check: "branch-coverage",
+				Blocking: config.Bool(false), Measures: "the tests take the branches the lcov lists (BRDA), and none is likely dead",
+			},
 			// mutation-score nasce com o projeto porque é o ÚNICO gate que responde "o
 			// teste prova a linha?" — todos os outros respondem "a linha executou?" ou
 			// "a peça existe?". Medido: um arquivo com 16 testes verdes e cobertura
@@ -681,6 +685,11 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 				Blocking: config.Bool(false), Measures: tg.measures,
 			})
 		}
+
+		gates = append(gates, config.Gate{
+			Name: "examples-match", ID: "examples-match", On: []string{"feature"}, Check: "examples-match",
+			Blocking: config.Bool(false), Measures: "every row of an outline's Examples is run by a test citing the scenario",
+		})
 
 		gates = append(gates, config.Gate{
 			Name: "open-questions-resolved", ID: "open-questions-resolved", On: []string{"spec"}, Check: "open-questions-resolved",

@@ -217,6 +217,7 @@ func (g *Graph) DropExternalSuites() (dropped []string) {
 		if covChanged {
 			c, t := unionCoverage(sig.CoverageBySuite, g.Nodes[i].Rev)
 			sig.CoveredLines, sig.TotalLines, sig.LineCoverage = c, t, 0
+			sig.BranchTotal, sig.BranchMissed = unionBranches(sig.CoverageBySuite, g.Nodes[i].Rev)
 			if t > 0 {
 				sig.LineCoverage = float64(c) / float64(t) * 100
 			}
@@ -259,6 +260,8 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now stri
 				Covered:      encodeRanges(covered),
 				CoveredLines: cov.Covered,
 				TotalLines:   cov.Total,
+				BranchTotal:  len(cov.Branches),
+				BranchMissed: missedBranches(cov.Branches),
 				AtRev:        n.Rev,
 			}
 			if cov.Predates {
@@ -269,6 +272,7 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now stri
 			c, t := unionCoverage(n.Signal.CoverageBySuite, n.Rev)
 			n.Signal.CoveredLines, n.Signal.TotalLines = c, t
 			n.Signal.LineCoverage = percent(c, t)
+			n.Signal.BranchTotal, n.Signal.BranchMissed = unionBranches(n.Signal.CoverageBySuite, n.Rev)
 			n.Signal.AtRev = oldestSuiteRev(n.Signal.CoverageBySuite, n.Rev)
 			n.Signal.IngestedAt = now
 			matched++
@@ -321,6 +325,68 @@ func unionCoverage(bySuite map[string]SuiteCoverage, currentRev string) (covered
 		}
 	}
 	return covered, total
+}
+
+// missedBranches lists the branches never taken, ordered by line, then block, then branch.
+func missedBranches(branches map[string]bool) string {
+	var out []string
+	for id, taken := range branches {
+		if !taken {
+			out = append(out, id)
+		}
+	}
+	sortBranchIDs(out)
+	return strings.Join(out, " ")
+}
+
+// unionBranches is the branch coverage over the suites measured at the current rev: the
+// total the fullest suite lists, and the branches missed by EVERY suite that lists any —
+// a branch one suite took is taken. A suite measured at another rev numbers other lines,
+// and says nothing about these (see unionCoverage).
+func unionBranches(bySuite map[string]SuiteCoverage, currentRev string) (total int, missed string) {
+	var missedIn map[string]int
+	listing := 0
+	for _, sc := range bySuite {
+		if sc.AtRev != currentRev || sc.BranchTotal == 0 {
+			continue
+		}
+		listing++
+		total = max(total, sc.BranchTotal)
+		if missedIn == nil {
+			missedIn = map[string]int{}
+		}
+		for _, id := range strings.Fields(sc.BranchMissed) {
+			missedIn[id]++
+		}
+	}
+	var out []string
+	for id, n := range missedIn {
+		if n == listing {
+			out = append(out, id)
+		}
+	}
+	sortBranchIDs(out)
+	return total, strings.Join(out, " ")
+}
+
+// sortBranchIDs orders `<line>:<block>:<branch>` ids numerically, part by part.
+func sortBranchIDs(ids []string) {
+	key := func(id string) [3]int {
+		var k [3]int
+		for i, p := range strings.SplitN(id, ":", 3) {
+			k[i], _ = strconv.Atoi(p)
+		}
+		return k
+	}
+	sort.Slice(ids, func(i, j int) bool {
+		a, b := key(ids[i]), key(ids[j])
+		for x := range a {
+			if a[x] != b[x] {
+				return a[x] < b[x]
+			}
+		}
+		return ids[i] < ids[j]
+	})
 }
 
 // oldestSuiteRev: the union is only as fresh as its stalest suite (see unionRev).
@@ -470,6 +536,7 @@ func (g *Graph) IngestCoverageSuite(byFile map[string]FileCov, suite, now string
 			n.Signal.CoveredLines = cov.Covered
 			n.Signal.TotalLines = cov.Total
 			n.Signal.LineCoverage = percent(cov.Covered, cov.Total)
+			n.Signal.BranchTotal, n.Signal.BranchMissed = len(cov.Branches), missedBranches(cov.Branches)
 			n.Signal.AtRev = n.Rev
 			n.Signal.IngestedAt = now
 			matched++
@@ -513,6 +580,7 @@ func (g *Graph) IngestMutationScoped(byFile map[string]FileMutation, scope, now 
 			n.Signal.MutantsTimedOut = mu.TimedOut
 			n.Signal.MutationScore = mu.Score
 			n.Signal.MutationLow, n.Signal.MutationHigh = low, high
+			n.Signal.NoCoverageAt = encodeRanges(mu.NoCoverageAt)
 			if scope != "" {
 				if n.Signal.MutationByScope == nil {
 					n.Signal.MutationByScope = map[string]MutationScope{}
@@ -547,6 +615,8 @@ type FileMutation struct {
 	// TimedOut: killed by the time limit, counted apart (see TestSignal.MutantsTimedOut).
 	TimedOut int
 	Score    float64
+	// NoCoverageAt: the lines of the mutants no test ran.
+	NoCoverageAt []int
 }
 
 // FileCov é a cobertura de um arquivo (desacopla o mapx do pacote testsig).
@@ -554,6 +624,9 @@ type FileCov struct {
 	Covered, Total int
 	// Lines: per instrumented line, covered or not. Empty when the report gave only totals.
 	Lines map[int]bool
+	// Branches: per branch (`<line>:<block>:<branch>`), taken or not. Empty when the report
+	// lists no branch.
+	Branches map[string]bool
 	// Predates: the report was written BEFORE the file's current content — its line
 	// numbers describe another text. The entry is kept, with no rev, so it neither joins
 	// the union nor passes for fresh.
@@ -780,4 +853,12 @@ func (g *Graph) RefreshRevs(revs map[string]string) (changed int) {
 		}
 	}
 	return changed
+}
+
+// NoCoverageLines are the lines of the mutants no test ran, as the signal keeps them.
+func (s *TestSignal) NoCoverageLines() []int {
+	if s == nil {
+		return nil
+	}
+	return decodeRanges(s.NoCoverageAt)
 }

@@ -126,3 +126,9 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given Go, TS and Python code defining functions and types, and a project declaring its own definition
     When each family's definition reads the code
     Then it captures the names defined, and the declared one wins
+
+  @DLCTI-B18 @unit-level
+  Scenario: Every examples keyword, in every language, sorted
+    Given the Gherkin table
+    When the examples keywords are listed
+    Then each language's keyword appears once, in alphabetical order

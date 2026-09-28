@@ -430,6 +430,23 @@ func TestLoadChecksTheTestsSource(t *testing.T) {
 	}
 }
 
+func TestGateMinPercentIsAPercentage(t *testing.T) {
+	t.Run("CNFGO-B53: A gate's floor is a percentage", func(t *testing.T) {})
+	gate := func(v string) string {
+		return "version: 1\ngates:\n  - name: br\n    check: branch-coverage\n    on: [code]\n    min_percent: " + v + "\n"
+	}
+	for _, v := range []string{"-1", "100.5"} {
+		if _, err := load(t, gate(v)); err == nil || !strings.Contains(err.Error(), "gates[br].min_percent") {
+			t.Errorf("%s must fail naming the gate, got %v", v, err)
+		}
+	}
+	for _, v := range []string{"0", "80", "100"} {
+		if c, err := load(t, gate(v)); err != nil || c.Gates[0].MinPercent == nil {
+			t.Errorf("%s loads, got %v", v, err)
+		}
+	}
+}
+
 func TestGateInvocationsCompileWithAGroup(t *testing.T) {
 	t.Run("CNFGO-B52: A gate's invocations compile and name the unit through a group", func(t *testing.T) {})
 	gate := func(inv string) string {

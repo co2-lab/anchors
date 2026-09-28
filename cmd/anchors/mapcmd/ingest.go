@@ -220,7 +220,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 				}
 				byFile := map[string]mapx.FileCov{}
 				for _, fc := range rep.Files {
-					byFile[fc.File] = mapx.FileCov{Covered: fc.CoveredLines, Total: fc.TotalLines, Lines: fc.Lines}
+					byFile[fc.File] = mapx.FileCov{Covered: fc.CoveredLines, Total: fc.TotalLines, Lines: fc.Lines, Branches: fc.Branches}
 				}
 				byFile = resolveByFile(g, mapx.KindCode, byFile, absRoot, lcov)
 				markPredating(byFile, absRoot, lcov)
@@ -246,6 +246,7 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 					byFile[file] = mapx.FileMutation{
 						Killed: fm.Killed, Survived: fm.Survived,
 						NoCoverage: fm.NoCoverage, Ignored: fm.Ignored, TimedOut: fm.TimedOut, Score: fm.Score,
+						NoCoverageAt: fm.NoCoverageAt,
 					}
 					sobreviventes += fm.Survived
 				}
