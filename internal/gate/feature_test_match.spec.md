@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FTMFT
-  updated_at: 2026-09-27
+  updated_at: 2026-09-28
   layer: gate
 -->
 # FeatureTestMatch — scenarios in feature must be implemented in test by code and description
@@ -66,6 +66,7 @@ in automated test suites.
 | `FTMFT-B21` | A test's title is read from the project's tests source — its `dialect.tests` pattern or script, or its family's — so how a test opens (`t.Run`, `it.each(table)`, `.only`) is the project's declaration, and a later test citing the same code is not taken for an earlier one's proof. Without a source no title is read, and the description is confronted with the test's body. |
 | `FTMFT-B22` | A support file linked to a feature is not among the tests its scenarios are confronted with. |
 | `FTMFT-B23` | A scenario tag may carry a `#nn` suffix that gives each scenario of one rule its own identity: every code on the tag line keeps its suffix, and a code with no suffix is read as before. |
+| `FTMFT-B24` | Every test that leads with a scenario's code is compared with the scenario, not only the first: another test whose title DIVERGES from it is named as a warning — it cites the code and talks about something else —, while a merely similar one is not, since several tests of a rule name its variations. |
 
 ## Errors
 

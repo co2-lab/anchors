@@ -647,6 +647,11 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		})
 
 		gates = append(gates, config.Gate{
+			Name: "single-test-per-unit", ID: "single-test-per-unit", On: []string{"code"}, Check: "single-test-per-unit",
+			Blocking: config.Bool(false), Measures: "a unit has one test file per test layer, or declares the split with a reason",
+		})
+
+		gates = append(gates, config.Gate{
 			Name: "open-questions-resolved", ID: "open-questions-resolved", On: []string{"spec"}, Check: "open-questions-resolved",
 			Blocking: config.Bool(false), Measures: "the spec has no open question — implementing is not guessing",
 		})

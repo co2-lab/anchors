@@ -1014,5 +1014,12 @@
   "gate.rule_uses.skip_no_rules": "ninguna regla de las letras exigidas",
   "gate.rule_uses_declared.fail_missing": "%d regla(s) no dicen qué usan: %s. Dé a cada una una fila en `Validaciones`, `Validaciones de presentación` o `Uso de las reglas` — los campos, los códigos de la spec y los `DEPn` que lee —, o `@no-uses: <por qué>` en la línea de la regla. Sin eso, un campo modificado en el contrato no apunta a ninguna regla",
   "gate.rule_uses_resolve.skip_no_rows": "la spec todavía no dice qué usan sus reglas",
-  "gate.rule_uses_resolve.fail_unresolved": "%d uso(s) apuntan a algo que la spec no declara: %s. Un campo debe estar en una de las tablas de la spec (contrato de datos, dominio, props, firma, forma del estado); un `DEPn` debe ser fila de la tabla de dependencias. Una regla que lee lo que no existe no valida nada"
+  "gate.rule_uses_resolve.fail_unresolved": "%d uso(s) apuntan a algo que la spec no declara: %s. Un campo debe estar en una de las tablas de la spec (contrato de datos, dominio, props, firma, forma del estado); un `DEPn` debe ser fila de la tabla de dependencias. Una regla que lee lo que no existe no valida nada",
+  "gate.feature_test_match.another_test_diverges": "%s — otro test que lo cita habla de otra cosa: «%s» (divergente, %.0f%%)",
+  "gate.scenario_identity.pending_copied_body": "%d escenario(s) tienen los mismos pasos que otro bajo un título distinto: %s. Dos escenarios que solo difieren en el título prueban lo mismo dos veces — en general un cuerpo copiado y nunca reescrito. Escriba los pasos que el título de este escenario promete",
+  "gate.scenario_identity.copied_item": "%s repite los pasos de %s",
+  "gate.single_test.skip_not_code": "solo un archivo de código es una unidad probada",
+  "gate.single_test.skip_no_test": "ningún archivo de test de esta unidad, según la derivación del proyecto",
+  "gate.single_test.split_item": "capa %s: %s",
+  "gate.single_test.fail_split": "la unidad es probada por más de un archivo en la misma capa — %s. Cada uno parece completo solo, y cuál extender, cuál lee un gate, es una suposición. Únalos, o declare `@split-test: <por qué>` en uno de ellos"
 }

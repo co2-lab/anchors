@@ -67,6 +67,9 @@ promote to blocking.
 | `spec-completa` | the spec has at least one rule, with no placeholder |
 | `spec-feature-match` | each spec rule has a scenario in the feature |
 | `feature-nao-vazia` | the feature has a real scenario |
+| `rule-uses-declared` | every rule says what it uses (Validations, Presentation validations, Rule uses) |
+| `rule-uses-resolve` | what a rule says it uses exists in the spec — a declared field, a dependency row |
+| `scenario-identity` | each scenario is distinguishable: its own code, and steps that are not another's under a new title |
 
 `trinca-completa` prevents Anchors' quietest defect: a lone spec passes **every**
 relational gate — they fail *open*, with no test linked there's nothing to
@@ -111,6 +114,8 @@ state, it's the change without justification.
 | `coverage-delta` | coverage didn't drop with this change |
 | `mutation-score` | if the line changed, would a test break |
 | `scenario-coverage` | each spec scenario has a green test |
+| `feature-test-match` | every test citing a scenario's code talks about that scenario, not only the first one |
+| `single-test-per-unit` | a unit has one test file per test layer, or declares the split with `@split-test` |
 
 **Coverage and mutation are not the same thing**, and confusing them is the
 defect `mutation-score` exists to catch. A recently measured project had **100%

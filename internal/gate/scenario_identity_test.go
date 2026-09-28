@@ -351,3 +351,32 @@ func TestCenarioIdentidadeNaoRenumera(t *testing.T) {
 		t.Errorf("a mensagem deveria ensinar a numeração em vez de aplicá-la: %s", msg)
 	}
 }
+
+// The case from the reference app: nine scenarios whose body was copied from the first and
+// never rewritten, the title saying "does not alert" over steps that end in a finding.
+func TestScenarioIdentity_aCopiedBodyIsReported(t *testing.T) {
+	t.Run("SCIDS-B12: A scenario whose steps copy another's is reported", func(t *testing.T) {})
+	feature := `
+  @AUDTX-B01 @nivel-unit
+  Cenário: renda acima do teto → alerta
+    Dado uma renda de "9000"
+    Então deve sair um finding
+
+  @AUDTX-B02 @nivel-unit
+  Cenário: renda abaixo do teto → não alerta
+    Dado  uma renda de "9000"
+    Então deve   sair um finding
+
+  @AUDTX-B03 @nivel-unit
+  Cenário: renda no teto → alerta
+    Dado uma renda de "5000"
+    Então deve sair um finding
+`
+	v, msg := checkScenarioIdentity(feature, featNode(), "", nil, nil)
+	if v != Pending || !strings.Contains(msg, "AUDTX-B02") || !strings.Contains(msg, "AUDTX-B01") || strings.Contains(msg, "AUDTX-B03") {
+		t.Fatalf("the copy is reported, the variation is not; got %v: %s", v, msg)
+	}
+	if v, _ := checkScenarioIdentity(strings.Replace(feature, "Então deve   sair um finding", "Então nenhum finding sai", 1), featNode(), "", nil, nil); v != Pass {
+		t.Errorf("rewritten steps pass, got %v", v)
+	}
+}

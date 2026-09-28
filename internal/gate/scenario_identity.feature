@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SCIDS
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @SCIDS
@@ -123,3 +123,9 @@ Feature: ScenarioIdentity — two scenarios of the same feature cannot share one
     When the gate confronts it
     Then the feature text is returned untouched, because the suffix carries meaning and a
       rewrite would invalidate every test already bound to the old code
+
+  @SCIDS-B12 @unit-level
+  Scenario: A scenario whose steps copy another's is reported
+    Given a feature where the second scenario repeats the first's steps under another title, and a third differs only in a quoted value
+    When the feature is confronted
+    Then the second is reported as repeating the first, and the third is not

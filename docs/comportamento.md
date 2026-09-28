@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:123a986731d4d16d — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:9e7c174d72502667 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2372,6 +2372,8 @@ teste prova.
 
 - [A selective run without a map is refused](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-E01`
 
+- [A file the gate does not confront is not run for it](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B13`
+
 - [Expired test evidence is listed before the stale edges](camadas/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges) `STEDS-B01`
 
 - [Each expired evidence names why it expired](camadas/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges) `STEDS-B02`
@@ -3430,6 +3432,8 @@ teste prova.
 
 - [A scenario suffix gives each case of a rule its own identity](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B23`
 
+- [Every test that cites the code is compared, not only the first](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B24`
+
 - [Only a check with a registered fixer is fixable](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B01`
 
 - [A stale date on a committed file is rewritten to its last commit date](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B02`
@@ -3557,6 +3561,8 @@ teste prova.
 - [The engine invents neither a map nor a Structure nor a waiver](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-X03`
 
 - [A target declared with nothing to measure is skipped with its reason](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B24`
+
+- [The gate's reach is offered to the runs that choose what to measure](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B25`
 
 - [Confronting an artifact that is not a spec skips](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B01`
 
@@ -4720,6 +4726,8 @@ teste prova.
 
 - [The gate does not renumber the scenarios](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-X04`
 
+- [A scenario whose steps copy another's is reported](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B12`
+
 - [An artifact that is not a feature leaves without a verdict](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B01`
 
 - [With no declared vocabulary the gate leaves without a verdict](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B02`
@@ -4807,6 +4815,12 @@ teste prova.
 - [The gate does not invent what an exported function looks like](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-X01`
 
 - [A single function in isolation is not accused](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently) `SBGRD-X02`
+
+- [Two test files of one unit in one layer fail](camadas/gate.md#sngtu--singletestperunit--a-unit-has-one-test-file-per-test-layer) `SNGTU-B01`
+
+- [A declared split passes](camadas/gate.md#sngtu--singletestperunit--a-unit-has-one-test-file-per-test-layer) `SNGTU-B02`
+
+- [Not code, no test, no map](camadas/gate.md#sngtu--singletestperunit--a-unit-has-one-test-file-per-test-layer) `SNGTU-B03`
 
 - [A requirement no scenario tags is failed and named](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B01`
 

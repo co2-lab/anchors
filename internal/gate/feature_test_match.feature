@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: FTMFT
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @FTMFT
@@ -195,3 +195,9 @@ Feature: FeatureTestMatch — scenarios in feature must be implemented in test b
     When the scenarios are read
     Then each scenario carries its code with its suffix, the second code included
     And a scenario tagged with no suffix is read by its plain code
+
+  @FTMFT-B24 @unit-level
+  Scenario: Every test that cites the code is compared, not only the first
+    Given a scenario whose first test matches, a second test naming a variation, and a third talking about something else
+    When the feature is confronted
+    Then only the third is named as a test that cites the code and talks about something else

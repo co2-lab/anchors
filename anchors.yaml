@@ -603,6 +603,10 @@ gates:
     check: rule-uses-resolve
     on: [spec]
     blocking: false
+  - name: single-test-per-unit
+    check: single-test-per-unit
+    on: [code]
+    blocking: false
 
   - name: open-questions-resolved
     blocking: true

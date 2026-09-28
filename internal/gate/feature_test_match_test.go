@@ -728,3 +728,39 @@ func TestRootCode_separatesRuleFromScenario(t *testing.T) {
 		}
 	}
 }
+
+// The case from the reference app: a logo easter egg carried the code of "open the alerts",
+// behind a test that did open them — and only the first test was ever compared.
+func TestFeatureTestMatch_everyCitingTestIsCompared(t *testing.T) {
+	t.Run("FTMFT-B24: Every test that cites the code is compared, not only the first", func(t *testing.T) {})
+	root := t.TempDir()
+	feat := "business-logic/dedup.feature"
+	test := "__tests__/dedup.test.ts"
+	writeFile(t, root, feat, featureSrc)
+	writeFile(t, root, test, `
+describe('x', () => {
+  it('DDTDX-B01: Duplicata automática quando descrição e valor idênticos', () => {})
+  it('DDTDX-B01: duplicata automática quando descrição e valor idênticos em outra conta', () => {})
+  it('DDTDX-B01: o logo gira ao tocar três vezes no cabeçalho', () => {})
+  it('DDTDX-B02: Repetição real quando valor distinto', () => {})
+})`)
+	g := featureGraph(feat, test)
+	n := mapx.Node{ID: feat, Kind: mapx.KindFeature}
+	v, detail := checkFeatureTestMatch(featureSrc, n, root, g, regimeCfg())
+	if v != Pending || !strings.Contains(detail, "o logo gira") || strings.Contains(detail, "outra conta") {
+		t.Fatalf("only the unrelated test is named, as a warning; got %v: %s", v, detail)
+	}
+
+	// The first test keeps its own ruler (any drift), and is not named again as "another";
+	// a title shared by several codes describes none of them alone.
+	writeFile(t, root, test, `
+describe('x', () => {
+  it('DDTDX-B01: o logo gira ao tocar três vezes no cabeçalho', () => {})
+  it('DDTDX-B01 / DDTDX-B02: tabela de casos variados sem relação', () => {})
+  it('DDTDX-B02: Repetição real quando valor distinto', () => {})
+})`)
+	v, detail = checkFeatureTestMatch(featureSrc, n, root, g, regimeCfg())
+	if v != Pending || strings.Count(detail, "o logo gira") != 0 || strings.Contains(detail, "tabela de casos") || !strings.Contains(detail, "DDTDX-B01 (") {
+		t.Fatalf("the first test drifts under its own ruler only, the shared title is not named; got %v: %s", v, detail)
+	}
+}

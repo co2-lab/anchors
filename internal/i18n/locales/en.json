@@ -1014,5 +1014,12 @@
   "gate.rule_uses.skip_no_rules": "no rule of the letters asked about",
   "gate.rule_uses_declared.fail_missing": "%d rule(s) do not say what they use: %s. Give each a row in `Validations`, `Presentation validations` or `Rule uses` — the fields, the spec's codes and the `DEPn` it reads —, or `@no-uses: <why>` on the rule's line. Without it, a field changed in the contract points at no rule",
   "gate.rule_uses_resolve.skip_no_rows": "the spec does not say what its rules use yet",
-  "gate.rule_uses_resolve.fail_unresolved": "%d use(s) point at nothing the spec declares: %s. A field must be in one of the spec's tables (data contract, domain, props, signature, state shape); a `DEPn` must be a row of the dependencies table. A rule that reads what does not exist validates nothing"
+  "gate.rule_uses_resolve.fail_unresolved": "%d use(s) point at nothing the spec declares: %s. A field must be in one of the spec's tables (data contract, domain, props, signature, state shape); a `DEPn` must be a row of the dependencies table. A rule that reads what does not exist validates nothing",
+  "gate.feature_test_match.another_test_diverges": "%s — another test that cites it talks about something else: «%s» (divergent, %.0f%%)",
+  "gate.scenario_identity.pending_copied_body": "%d scenario(s) have the same steps as another under a different title: %s. Two scenarios that differ only by their title prove one thing twice — usually a body copied and never rewritten. Write the steps this scenario's title promises",
+  "gate.scenario_identity.copied_item": "%s repeats the steps of %s",
+  "gate.single_test.skip_not_code": "only a code file is a unit a test tests",
+  "gate.single_test.skip_no_test": "no test file of this unit, by the project's derivation",
+  "gate.single_test.split_item": "layer %s: %s",
+  "gate.single_test.fail_split": "the unit is tested by more than one file in the same layer — %s. Each looks complete alone, and which one to extend, which one a gate reads, is a guess. Merge them, or declare `@split-test: <why>` in one of them"
 }

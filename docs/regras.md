@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:6ab741933c0ad896 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:64b0062ab1ae3bd8 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -352,6 +352,8 @@ abra a página dela em `camadas/`.
 ### [STASC — ScenarioTypeAligned — scenario classification tags must match the code nature letter](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter)
 
 ### [SBGRD — SiblingGuard — sibling functions treat the same parameter consistently](camadas/gate.md#sbgrd--siblingguard--sibling-functions-treat-the-same-parameter-consistently)
+
+### [SNGTU — SingleTestPerUnit — a unit has one test file per test layer](camadas/gate.md#sngtu--singletestperunit--a-unit-has-one-test-file-per-test-layer)
 
 ### [SFMSP — SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 

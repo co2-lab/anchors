@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCIDS
-  updated_at: 2026-09-19
+  updated_at: 2026-09-28
   layer: gate
 -->
 # ScenarioIdentity — two scenarios of the same feature cannot share one code
@@ -54,6 +54,7 @@ sees what is left.
 | `SCIDS-B09` | A feature with no coded scenario leaves without a verdict — there is nothing to confront, and that absence is another gate's charge. |
 | `SCIDS-B10` | Several repeated codes in one feature are reported TOGETHER, in a stable order, so two runs over the same file produce the same message. |
 | `SCIDS-B11` | Long titles are shortened in the report: the address is the code, and the title only helps recognise which scenario is which. |
+| `SCIDS-B12` | Two scenarios with different codes whose steps are the same — case and spacing aside — are reported, naming the one that repeats the other: they prove one thing twice, usually a body copied and never rewritten. Scenarios that differ only in their quoted values are variations, and a scenario of a single step only states an outcome many triggers share: neither is reported. |
 
 ## Invariants
 

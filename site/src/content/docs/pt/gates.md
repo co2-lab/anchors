@@ -68,6 +68,9 @@ promove a bloqueante.
 | `spec-completa` | a spec tem ao menos uma regra, sem placeholder |
 | `spec-feature-match` | cada regra da spec tem cenário na feature |
 | `feature-nao-vazia` | a feature tem cenário de verdade |
+| `rule-uses-declared` | toda regra diz o que usa (Validações, Validações de apresentação, Uso das regras) |
+| `rule-uses-resolve` | o que a regra diz usar existe na spec — um campo declarado, uma linha de dependência |
+| `scenario-identity` | cada cenário é distinguível: código próprio, e passos que não são os de outro sob título novo |
 
 O `trinca-completa` é o que impede o defeito mais silencioso do Anchors: uma
 spec sozinha atravessa **todos** os gates relacionais — eles falham *aberto*,
@@ -112,6 +115,8 @@ estado do arquivo, é a mudança sem justificativa.
 | `coverage-delta` | a cobertura não caiu com esta mudança |
 | `mutation-score` | se a linha mudasse, algum teste quebraria |
 | `scenario-coverage` | cada cenário da spec tem teste verde |
+| `feature-test-match` | todo teste que cita o código de um cenário fala desse cenário, não só o primeiro |
+| `single-test-per-unit` | uma unidade tem um arquivo de teste por camada de teste, ou declara a divisão com `@split-test` |
 
 **Cobertura e mutação não são a mesma coisa**, e confundi-las é o defeito que o
 `mutation-score` existe para pegar. Um projeto medido recentemente tinha **100%

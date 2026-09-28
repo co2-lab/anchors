@@ -71,6 +71,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"domain-declared":          checkDomainDeclared,
 	"rule-uses-declared":       checkRuleUsesDeclared,
 	"rule-uses-resolve":        checkRuleUsesResolve,
+	"single-test-per-unit":     checkSingleTestPerUnit,
 	// Precisa de `cfg` para ler a própria opção `enforce_section_language` — ver checkSpecSections.
 	"spec-sections":            checkSpecSections,
 	"count-honored":            checkCountHonored,

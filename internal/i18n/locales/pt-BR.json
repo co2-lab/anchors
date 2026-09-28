@@ -1014,5 +1014,12 @@
   "gate.rule_uses.skip_no_rules": "nenhuma regra das letras cobradas",
   "gate.rule_uses_declared.fail_missing": "%d regra(s) não dizem o que usam: %s. Dê a cada uma uma linha em `Validações`, `Validações de apresentação` ou `Uso das regras` — os campos, os códigos da spec e os `DEPn` que ela lê —, ou `@no-uses: <porquê>` na linha da regra. Sem isso, um campo alterado no contrato não aponta regra nenhuma",
   "gate.rule_uses_resolve.skip_no_rows": "a spec ainda não diz o que suas regras usam",
-  "gate.rule_uses_resolve.fail_unresolved": "%d uso(s) apontam para algo que a spec não declara: %s. Um campo precisa estar numa das tabelas da spec (contrato de dados, domínio, props, assinatura, shape do estado); um `DEPn` precisa ser linha da tabela de dependências. Regra que lê o que não existe não valida nada"
+  "gate.rule_uses_resolve.fail_unresolved": "%d uso(s) apontam para algo que a spec não declara: %s. Um campo precisa estar numa das tabelas da spec (contrato de dados, domínio, props, assinatura, shape do estado); um `DEPn` precisa ser linha da tabela de dependências. Regra que lê o que não existe não valida nada",
+  "gate.feature_test_match.another_test_diverges": "%s — outro teste que o cita fala de outra coisa: «%s» (divergente, %.0f%%)",
+  "gate.scenario_identity.pending_copied_body": "%d cenário(s) têm os mesmos passos de outro sob um título diferente: %s. Dois cenários que só diferem no título provam a mesma coisa duas vezes — em geral um corpo copiado e nunca reescrito. Escreva os passos que o título deste cenário promete",
+  "gate.scenario_identity.copied_item": "%s repete os passos de %s",
+  "gate.single_test.skip_not_code": "só um arquivo de código é unidade testada",
+  "gate.single_test.skip_no_test": "nenhum arquivo de teste desta unidade, pela derivação do projeto",
+  "gate.single_test.split_item": "camada %s: %s",
+  "gate.single_test.fail_split": "a unidade é testada por mais de um arquivo na mesma camada — %s. Cada um parece completo sozinho, e qual estender, qual um gate lê, vira chute. Junte-os, ou declare `@split-test: <porquê>` num deles"
 }

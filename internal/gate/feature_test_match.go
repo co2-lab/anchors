@@ -124,6 +124,16 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		//   similar    → mesmo assunto, palavras diferentes: reescreva um dos lados.
 		//   divergente → assuntos diferentes: decida qual dos dois está velho.
 		titulo, compartilhado, temTitulo := titleFor(mine, sc.Code)
+		// EVERY test that cites the code, not only the first. A test tagged with a code whose
+		// scenario it does not exercise passed unseen as long as another test came first: in
+		// the reference app, a logo easter egg carried the code of "open the alerts". The
+		// others are held to a looser ruler than the first — only a DIVERGENT title is said —,
+		// since several tests of one rule legitimately name its variations.
+		for _, other := range otherTitlesFor(mine, sc.Code) {
+			if v, score := similarity.Classify(sc.Title, other, pesos); v == similarity.Divergente {
+				driftDesc = append(driftDesc, i18n.T("gate.feature_test_match.another_test_diverges", sc.Code, other, score*100))
+			}
+		}
 		switch {
 		case temTitulo && !compartilhado:
 			if v, score := similarity.Classify(sc.Title, titulo, pesos); v != similarity.Identico {
@@ -467,6 +477,33 @@ func titleFor(tests []testlist.Test, code string) (title string, shared, ok bool
 
 // leadingCodesRE matches a title that opens with a list of codes containing `code`, and
 // captures the text after the list.
+// otherTitlesFor is the titles of the tests that lead with `code` after the first one —
+// the one titleFor answers —, each without its code, leaving out a title shared with other
+// codes (a table-driven name carries several and describes none alone).
+func otherTitlesFor(tests []testlist.Test, code string) []string {
+	re := leadingCodesRE(code)
+	var out []string
+	first := true
+	for _, t := range tests {
+		m := re.FindStringSubmatch(t.Title)
+		if m == nil {
+			continue
+		}
+		if first {
+			first = false
+			continue
+		}
+		distinct := map[string]bool{}
+		for _, c := range titleCodeRE().FindAllString(t.Title, -1) {
+			distinct[c] = true
+		}
+		if len(distinct) == 1 {
+			out = append(out, strings.TrimSpace(m[1]))
+		}
+	}
+	return out
+}
+
 func leadingCodesRE(code string) *regexp.Regexp {
 	if re, ok := leadingCodesCache[code]; ok {
 		return re
