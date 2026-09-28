@@ -38,6 +38,7 @@ it uses exists in the spec.
 | `RLUSG-B04` | `rule-uses-declared` skips a node that is not a spec, and a spec with no rule of the letters asked about. |
 | `RLUSG-B05` | `rule-uses-resolve` accepts a field the spec declares — the first cell of a row of any of its other tables, or a backticked name in a heading —, a dotted or indexed name by its first segment, a `DEPn` that is a row of the dependencies table, and leaves codes to `code-reference-valid`; it fails naming each use that resolves to nothing, with its rule. |
 | `RLUSG-B06` | `rule-uses-resolve` skips a node that is not a spec, and a spec whose rules do not say what they use yet. |
+| `RLUSG-B07` | `rule-uses-implemented` fails naming each field a rule uses that no code file the spec governs mentions as a whole word — the name, or the first or last segment of a dotted one —; codes and `DEPn` are not fields; a spec with no rule uses, or governing no code, is skipped. |
 
 ## Errors
 
@@ -49,6 +50,7 @@ none — both gates read only the spec's text; what they cannot find is a verdic
 | --- | --- | --- | --- |
 | DEP1 | `internal/i18n/i18n.go` | `AllTranslations` | infra — the sections' titles in every language |
 | DEP2 | `internal/config/config.go` | `SectionTitle`, `Gate` | core — the project's titles and the gate's `letters` |
+| DEP3 | `internal/gate/failure.go` | `governedCode` | gate — the code the spec governs |
 
 ## Open Decisions
 

@@ -42,3 +42,9 @@ Feature: RuleUses — each rule says what it uses, and what it uses exists
     Given a feature node, and a spec with no rule uses
     When rule-uses-resolve confronts them
     Then both are skipped
+
+  @RLUSG-B07 @unit-level
+  Scenario: The fields a rule uses appear in the code the spec governs
+    Given a spec whose rules use a field the code reads, a dotted field whose last segment it reads, a dependency, and a field no code mentions
+    When rule-uses-implemented confronts it, and a spec governing no code
+    Then only the unmentioned field is named, and the spec with no code is skipped

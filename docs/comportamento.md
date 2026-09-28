@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:9e7c174d72502667 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:24e08aa39de2602f — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -4194,6 +4194,16 @@ teste prova.
 
 - [The gate does not interpret what the source is for](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it) `PSDPL-X03`
 
+- [The rows are read by position, and a spec with none is skipped](camadas/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B01`
+
+- [Every declared value has an appearance](camadas/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B02`
+
+- [One prop and one condition lead to one appearance](camadas/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B03`
+
+- [The text shown is a message code, not copy](camadas/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B04`
+
+- [What changes is something a test can point at](camadas/gate.md#prsnt--presentationgates--the-presentation-validations-confronted) `PRSNT-B05`
+
 - [Each gate gets a summary counting its verdicts](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B01`
 
 - [The summary carries the total time and the most expensive run](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node) `PRFLO-B02`
@@ -4661,6 +4671,8 @@ teste prova.
 - [What a rule uses must exist in the spec](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B05`
 
 - [A spec whose rules say nothing yet is a skip](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B06`
+
+- [The fields a rule uses appear in the code the spec governs](camadas/gate.md#rlusg--ruleuses--each-rule-says-what-it-uses-and-what-it-uses-exists) `RLUSG-B07`
 
 - [Non-feature artifacts skip confrontation](camadas/gate.md#scass--scenarioasserts--scenario-outcome-steps-must-assert-concrete-verifiable-outcomes) `SCASS-B01`
 

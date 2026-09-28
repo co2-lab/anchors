@@ -1021,5 +1021,14 @@
   "gate.single_test.skip_not_code": "solo un archivo de código es una unidad probada",
   "gate.single_test.skip_no_test": "ningún archivo de test de esta unidad, según la derivación del proyecto",
   "gate.single_test.split_item": "capa %s: %s",
-  "gate.single_test.fail_split": "la unidad es probada por más de un archivo en la misma capa — %s. Cada uno parece completo solo, y cuál extender, cuál lee un gate, es una suposición. Únalos, o declare `@split-test: <por qué>` en uno de ellos"
+  "gate.single_test.fail_split": "la unidad es probada por más de un archivo en la misma capa — %s. Cada uno parece completo solo, y cuál extender, cuál lee un gate, es una suposición. Únalos, o declare `@split-test: <por qué>` en uno de ellos",
+  "gate.presentation.skip_no_rows": "ninguna validación de presentación para confrontar",
+  "gate.presentation.value_header": "valor|valores",
+  "gate.presentation.otherwise": "cualquier otro|demás|otros valores|en otro caso",
+  "gate.presentation_exhaustive.fail": "valores sin apariencia decidida — %s. Cada valor que el prop o estado puede tomar necesita una fila (o una fila `cualquier otro`); un valor que ninguna fila nombra se ve como la implementación termine haciéndolo",
+  "gate.presentation_conflict.fail": "el mismo prop y la misma condición llevan a dos apariencias: %s. Sin precedencia declarada, la implementación elige una y la spec no dice cuál",
+  "gate.presentation_copy.fail": "texto mostrado al usuario escrito en la regla: %s. El texto vive una vez, en los Mensajes — cite el código del mensaje (`CODE-M01`) en lugar de repetir el texto",
+  "gate.presentation_observable.fail": "%s cambian lo que la unidad muestra sin nombrar un elemento al que un test pueda apuntar. Cite, entre comillas invertidas, un identificador de los Identificadores de test de la spec; una apariencia sin objetivo solo se prueba mirando",
+  "gate.rule_uses_implemented.skip_no_code": "la spec todavía no gobierna ningún archivo de código",
+  "gate.rule_uses_implemented.fail": "%d campo(s) que una regla dice usar no aparecen en ningún código que la spec gobierna: %s. La regla está huérfana de código — no verifica nada que la implementación toque. Use el campo en el código, o corrija lo que la regla dice usar"
 }

@@ -1021,5 +1021,14 @@
   "gate.single_test.skip_not_code": "only a code file is a unit a test tests",
   "gate.single_test.skip_no_test": "no test file of this unit, by the project's derivation",
   "gate.single_test.split_item": "layer %s: %s",
-  "gate.single_test.fail_split": "the unit is tested by more than one file in the same layer — %s. Each looks complete alone, and which one to extend, which one a gate reads, is a guess. Merge them, or declare `@split-test: <why>` in one of them"
+  "gate.single_test.fail_split": "the unit is tested by more than one file in the same layer — %s. Each looks complete alone, and which one to extend, which one a gate reads, is a guess. Merge them, or declare `@split-test: <why>` in one of them",
+  "gate.presentation.skip_no_rows": "no presentation validation to confront",
+  "gate.presentation.value_header": "value|values",
+  "gate.presentation.otherwise": "otherwise|any other|other values|else",
+  "gate.presentation_exhaustive.fail": "values with no appearance decided — %s. Each value the prop or state can take needs a row (or an `otherwise` row); a value no row names looks like whatever the implementation happens to do",
+  "gate.presentation_conflict.fail": "the same prop and condition lead to two appearances: %s. Without a declared precedence, the implementation picks one and the spec does not say which",
+  "gate.presentation_copy.fail": "text shown to the user is written in the rule: %s. The copy lives once, in the Messages — cite the message code (`CODE-M01`) instead of repeating the text",
+  "gate.presentation_observable.fail": "%s change what the unit shows without naming an element a test can point at. Cite, in backticks, an identifier of the spec's Test Identifiers; an appearance with no target is proven only by looking",
+  "gate.rule_uses_implemented.skip_no_code": "the spec governs no code file yet",
+  "gate.rule_uses_implemented.fail": "%d field(s) a rule says it uses appear in none of the code the spec governs: %s. The rule is orphan of code — it checks nothing the implementation touches. Use the field in the code, or fix what the rule says it uses"
 }

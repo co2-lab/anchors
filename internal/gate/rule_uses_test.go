@@ -92,3 +92,22 @@ func TestRuleUsesResolve_skips(t *testing.T) {
 		t.Errorf("no rule uses is skipped, got %v", v)
 	}
 }
+
+func TestRuleUsesImplemented(t *testing.T) {
+	t.Run("RLUSG-B07: The fields a rule uses appear in the code the spec governs", func(t *testing.T) {})
+	root := t.TempDir()
+	writeFile(t, root, "src/pay.ts", "// ghost is only in a comment\nexport const pay = (amount: number, s) => s.balance > amount\n")
+	g := &mapx.Graph{Edges: []mapx.Edge{{From: "src/pay.spec.md", To: "src/pay.ts", Type: mapx.EdgeSpecifies}}}
+	spec := "## Rule uses\n\n| Rule | Uses |\n| --- | --- |\n| `PAYMT-B01` | `amount`, `summary.balance`, `DEP1`, `PAYMT-S01` |\n| `PAYMT-B02` | `ghost` |\n| `PAYMT-B03` | `amounts` |\n| `PAYMT-B04` | `bal` |\n"
+	n := mapx.Node{ID: "src/pay.spec.md", Kind: mapx.KindSpec}
+	v, msg := checkRuleUsesImplemented(spec, n, root, g, nil)
+	if v != Fail || !strings.Contains(msg, "PAYMT-B02 → `ghost`") || !strings.Contains(msg, "PAYMT-B03 → `amounts`") || !strings.Contains(msg, "PAYMT-B04 → `bal`") || strings.Contains(msg, "B01") {
+		t.Fatalf("only the fields no code mentions as a word, got %v: %s", v, msg)
+	}
+	if v, _ := checkRuleUsesImplemented(spec, n, root, &mapx.Graph{}, nil); v != Skip {
+		t.Errorf("a spec governing no code is skipped, got %v", v)
+	}
+	if v, _ := checkRuleUsesImplemented("## Rules\n", n, root, g, nil); v != Skip {
+		t.Errorf("a spec with no rule uses is skipped, got %v", v)
+	}
+}

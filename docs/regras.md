@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:64b0062ab1ae3bd8 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:72ce4b5cd03998f5 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -310,6 +310,8 @@ abra a página dela em `camadas/`.
 ### [PSVPL — PlanSeedsValid — specifications seeded in a plan must target valid governed layers](camadas/gate.md#psvpl--planseedsvalid--specifications-seeded-in-a-plan-must-target-valid-governed-layers)
 
 ### [PSDPL — PlanSourceDeclared — a plan that NAMES a source has to declare who builds it](camadas/gate.md#psdpl--plansourcedeclared--a-plan-that-names-a-source-has-to-declare-who-builds-it)
+
+### [PRSNT — PresentationGates — the presentation validations, confronted](camadas/gate.md#prsnt--presentationgates--the-presentation-validations-confronted)
 
 ### [PRFLO — Profile — the verdicts of a run, gathered per gate and per node](camadas/gate.md#prflo--profile--the-verdicts-of-a-run-gathered-per-gate-and-per-node)
 

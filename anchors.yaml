@@ -607,6 +607,26 @@ gates:
     check: single-test-per-unit
     on: [code]
     blocking: false
+  - name: rule-uses-implemented
+    check: rule-uses-implemented
+    on: [spec]
+    blocking: false
+  - name: presentation-exhaustive
+    check: presentation-exhaustive
+    on: [spec]
+    blocking: false
+  - name: presentation-conflict
+    check: presentation-conflict
+    on: [spec]
+    blocking: false
+  - name: presentation-copy-single-source
+    check: presentation-copy-single-source
+    on: [spec]
+    blocking: false
+  - name: presentation-observable
+    check: presentation-observable
+    on: [spec]
+    blocking: false
 
   - name: open-questions-resolved
     blocking: true

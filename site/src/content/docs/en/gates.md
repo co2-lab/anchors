@@ -69,6 +69,11 @@ promote to blocking.
 | `feature-nao-vazia` | the feature has a real scenario |
 | `rule-uses-declared` | every rule says what it uses (Validations, Presentation validations, Rule uses) |
 | `rule-uses-resolve` | what a rule says it uses exists in the spec — a declared field, a dependency row |
+| `rule-uses-implemented` | the fields a rule says it uses appear in the code the spec governs — no rule orphan of code |
+| `presentation-exhaustive` | every value of a prop or state the presentation reads has an appearance decided |
+| `presentation-conflict` | one prop and one condition do not lead to two appearances |
+| `presentation-copy-single-source` | the text a presentation shows is a message code, not copy repeated in the rule |
+| `presentation-observable` | what a presentation changes is an element a test can point at |
 | `scenario-identity` | each scenario is distinguishable: its own code, and steps that are not another's under a new title |
 
 `trinca-completa` prevents Anchors' quietest defect: a lone spec passes **every**

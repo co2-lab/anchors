@@ -1021,5 +1021,14 @@
   "gate.single_test.skip_not_code": "só um arquivo de código é unidade testada",
   "gate.single_test.skip_no_test": "nenhum arquivo de teste desta unidade, pela derivação do projeto",
   "gate.single_test.split_item": "camada %s: %s",
-  "gate.single_test.fail_split": "a unidade é testada por mais de um arquivo na mesma camada — %s. Cada um parece completo sozinho, e qual estender, qual um gate lê, vira chute. Junte-os, ou declare `@split-test: <porquê>` num deles"
+  "gate.single_test.fail_split": "a unidade é testada por mais de um arquivo na mesma camada — %s. Cada um parece completo sozinho, e qual estender, qual um gate lê, vira chute. Junte-os, ou declare `@split-test: <porquê>` num deles",
+  "gate.presentation.skip_no_rows": "nenhuma validação de apresentação para confrontar",
+  "gate.presentation.value_header": "valor|valores",
+  "gate.presentation.otherwise": "demais|qualquer outro|outros valores|caso contrário|senão",
+  "gate.presentation_exhaustive.fail": "valores sem aparência decidida — %s. Cada valor que o prop ou estado pode assumir precisa de uma linha (ou de uma linha `demais valores`); um valor que nenhuma linha cita aparece do jeito que a implementação calhar de fazer",
+  "gate.presentation_conflict.fail": "o mesmo prop e a mesma condição levam a duas aparências: %s. Sem precedência declarada, a implementação escolhe uma e a spec não diz qual",
+  "gate.presentation_copy.fail": "texto mostrado ao usuário escrito na regra: %s. O texto vive uma vez, nas Mensagens — cite o código da mensagem (`CODE-M01`) em vez de repetir o texto",
+  "gate.presentation_observable.fail": "%s mudam o que a unidade mostra sem nomear um elemento que um teste consiga apontar. Cite, entre crases, um identificador da seção de Identificadores de teste; aparência sem alvo só se prova olhando",
+  "gate.rule_uses_implemented.skip_no_code": "a spec ainda não governa nenhum arquivo de código",
+  "gate.rule_uses_implemented.fail": "%d campo(s) que uma regra diz usar não aparecem em nenhum código que a spec governa: %s. A regra está órfã de código — não confere nada que a implementação toque. Use o campo no código, ou corrija o que a regra diz usar"
 }

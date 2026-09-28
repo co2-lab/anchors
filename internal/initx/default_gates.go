@@ -642,9 +642,25 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Blocking: config.Bool(false), Measures: "every rule says what it uses — the fields, codes and dependencies it reads",
 		})
 		gates = append(gates, config.Gate{
+			Name: "rule-uses-implemented", ID: "rule-uses-implemented", On: []string{"spec"}, Check: "rule-uses-implemented",
+			Blocking: config.Bool(false), Measures: "the fields a rule says it uses appear in the code the spec governs",
+		})
+		gates = append(gates, config.Gate{
 			Name: "rule-uses-resolve", ID: "rule-uses-resolve", On: []string{"spec"}, Check: "rule-uses-resolve",
 			Blocking: config.Bool(false), Measures: "what a rule says it uses exists in the spec — a declared field, a dependency row",
 		})
+
+		for _, pg := range []struct{ name, measures string }{
+			{"presentation-exhaustive", "every value of a prop or state the presentation reads has an appearance decided"},
+			{"presentation-conflict", "one prop and one condition do not lead to two appearances"},
+			{"presentation-copy-single-source", "the text a presentation shows is a message code, not copy repeated in the rule"},
+			{"presentation-observable", "what a presentation changes is an element a test can point at"},
+		} {
+			gates = append(gates, config.Gate{
+				Name: pg.name, ID: pg.name, On: []string{"spec"}, Check: pg.name,
+				Blocking: config.Bool(false), Measures: pg.measures,
+			})
+		}
 
 		gates = append(gates, config.Gate{
 			Name: "single-test-per-unit", ID: "single-test-per-unit", On: []string{"code"}, Check: "single-test-per-unit",

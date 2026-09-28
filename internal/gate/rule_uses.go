@@ -50,8 +50,14 @@ var (
 // ruleUseTitles are the titles the three sections go by: every supported language, and the
 // project's own names for them.
 func ruleUseTitles(cfg *config.Config, layer string) map[string]bool {
+	return sectionTitles(ruleUseSections, cfg, layer)
+}
+
+// sectionTitles are the titles the catalog sections `keys` go by: every supported
+// language, and the project's own names for them (`section_titles`).
+func sectionTitles(keys []string, cfg *config.Config, layer string) map[string]bool {
 	out := map[string]bool{}
-	for _, k := range ruleUseSections {
+	for _, k := range keys {
 		for _, t := range i18n.AllTranslations("section.title." + k) {
 			out[strings.ToLower(t)] = true
 		}
@@ -66,7 +72,12 @@ func ruleUseTitles(cfg *config.Config, layer string) map[string]bool {
 
 // splitRuleUseSections separates a spec into the text of the three sections and the rest.
 func splitRuleUseSections(content string, cfg *config.Config, layer string) (inside, outside []string) {
-	titles := ruleUseTitles(cfg, layer)
+	return splitSections(content, ruleUseSections, cfg, layer)
+}
+
+// splitSections separates a spec into the text of the catalog sections `keys` and the rest.
+func splitSections(content string, keys []string, cfg *config.Config, layer string) (inside, outside []string) {
+	titles := sectionTitles(keys, cfg, layer)
 	in := false
 	for _, l := range strings.Split(content, "\n") {
 		if m := headingRE.FindStringSubmatch(l); m != nil {
@@ -95,7 +106,7 @@ func ruleUsesOf(content string, cfg *config.Config, layer string) []ruleUse {
 		if !strings.HasPrefix(t, "|") || tableDividerR.MatchString(t) {
 			continue
 		}
-		cells := strings.Split(strings.Trim(t, "|"), "|")
+		cells := cellsOf(t)
 		if len(cells) < 2 {
 			continue
 		}
@@ -107,6 +118,29 @@ func ruleUsesOf(content string, cfg *config.Config, layer string) []ruleUse {
 		out = append(out, ruleUse{Rule: rule, Uses: usedItems(used)})
 	}
 	return out
+}
+
+// cellsOf splits a markdown table row into its cells, trimmed of the outer pipes. A pipe
+// escaped as `\|` is text inside a cell — how a table writes a union of values
+// (`'sm' \| 'lg'`) — and does not split it.
+func cellsOf(row string) []string {
+	row = strings.TrimSpace(row)
+	row = strings.TrimSuffix(strings.TrimPrefix(row, "|"), "|")
+	var out []string
+	var cur strings.Builder
+	for i := 0; i < len(row); i++ {
+		switch {
+		case row[i] == '\\' && i+1 < len(row) && row[i+1] == '|':
+			cur.WriteString("\\|")
+			i++
+		case row[i] == '|':
+			out = append(out, cur.String())
+			cur.Reset()
+		default:
+			cur.WriteByte(row[i])
+		}
+	}
+	return append(out, cur.String())
 }
 
 // usedItems splits a uses cell: the backticked items when there are any, else the
@@ -247,7 +281,7 @@ func declaredNames(lines []string) map[string]bool {
 		t := strings.TrimSpace(l)
 		switch {
 		case strings.HasPrefix(t, "|") && !tableDividerR.MatchString(t):
-			cells := strings.Split(strings.Trim(t, "|"), "|")
+			cells := cellsOf(t)
 			if ms := backtickedRE.FindAllStringSubmatch(cells[0], -1); len(ms) > 0 {
 				for _, m := range ms {
 					add(m[1])
@@ -279,4 +313,59 @@ func listCodes(codes []string) string {
 		return strings.Join(codes[:12], ", ") + fmt.Sprintf(" … (+%d)", len(codes)-12)
 	}
 	return strings.Join(codes, ", ")
+}
+
+// rule-uses-implemented: what a rule says it reads, the code the spec governs reads too. A
+// field no code file of the unit mentions leaves the rule orphan of code: declared, maybe
+// tested, and checking nothing the implementation touches. The search is plain text — the
+// field's name as a whole word, or its first or last segment for a dotted name
+// (`summary.balance`) —, so no language is assumed. Codes and dependency rows are not
+// fields, and are left to the other gates.
+func checkRuleUsesImplemented(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
+	if n.Kind != mapx.KindSpec {
+		return Skip, i18n.T("gate.rule_uses.skip_not_spec")
+	}
+	rows := ruleUsesOf(content, cfg, n.Layer)
+	if len(rows) == 0 {
+		return Skip, i18n.T("gate.rule_uses_resolve.skip_no_rows")
+	}
+	code, found := governedCode(n, root, g)
+	if !found {
+		return Skip, i18n.T("gate.rule_uses_implemented.skip_no_code")
+	}
+	codeRE := ruleCodeRE()
+	var orphan []string
+	for _, u := range rows {
+		for _, it := range u.Uses {
+			if codeRE.FindString(it) == it || depRefRE.MatchString(it) {
+				continue
+			}
+			if !mentions(code, it) {
+				orphan = append(orphan, fmt.Sprintf("%s → `%s`", u.Rule, it))
+			}
+		}
+	}
+	if len(orphan) > 0 {
+		return Fail, i18n.T("gate.rule_uses_implemented.fail", len(orphan), strings.Join(orphan, "; "))
+	}
+	return Pass, ""
+}
+
+// mentions says whether the code names the field as a whole word — the name itself, or the
+// first or last segment of a dotted or indexed one.
+func mentions(code, field string) bool {
+	parts := strings.FieldsFunc(field, func(r rune) bool { return r == '.' || r == '[' || r == ']' || r == '(' || r == ')' })
+	candidates := []string{field}
+	if len(parts) > 1 {
+		candidates = append(candidates, parts[0], parts[len(parts)-1])
+	}
+	for _, c := range candidates {
+		if c == "" {
+			continue
+		}
+		if regexp.MustCompile(`(^|[^\p{L}\p{N}_])` + regexp.QuoteMeta(c) + `($|[^\p{L}\p{N}_])`).MatchString(code) {
+			return true
+		}
+	}
+	return false
 }
