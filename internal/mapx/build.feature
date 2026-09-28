@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GRBLG
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @GRBLG
@@ -157,3 +157,9 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Given a scanned test file marked as support and one that is not
     When the map is built
     Then the first node is marked as support, the second is not, and both keep their kind
+
+  @GRBLG-I02 @unit-level
+  Scenario: The edges are in a total order
+    Given a spec with two dependency rows on the same file
+    When the graph is built with the rows in either order
+    Then both graphs list the edges in the same order

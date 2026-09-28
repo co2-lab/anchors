@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRBLG
-  updated_at: 2026-09-27
+  updated_at: 2026-09-28
   layer: mapa
 -->
 # GraphBuild — projecting the declared structure onto the scanned files: one node per file, and the relations between them
@@ -100,6 +100,7 @@ of the nodes whose content did not change.
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
 | `GRBLG-I01` | The same files and configuration always build the same graph, whatever order the files arrive in. | builds from the files in two orders and compares the graphs |
+| `GRBLG-I02` | The edges are in a total order — from, to, type, dependency code, method, origin —, so two graphs with the same edges are written the same whatever order they were built in. | builds the same two dependency rows of one spec on one file in both orders and compares |
 
 ## Constraints
 

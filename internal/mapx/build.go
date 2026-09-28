@@ -630,7 +630,20 @@ func sortGraph(g *Graph) {
 		if g.Edges[i].To != g.Edges[j].To {
 			return g.Edges[i].To < g.Edges[j].To
 		}
-		return g.Edges[i].Type < g.Edges[j].Type
+		// A TOTAL order. Two dependency rows of one spec on one file (`DEP1` and `DEP3` on
+		// `config.go`) tie on from, to and type, and the unstable sort left them in the
+		// order they were built — the same for two full builds, but not for a map a new file
+		// entered incrementally, which then differed from `map build` by order alone.
+		if g.Edges[i].Type != g.Edges[j].Type {
+			return g.Edges[i].Type < g.Edges[j].Type
+		}
+		if g.Edges[i].Dep != g.Edges[j].Dep {
+			return g.Edges[i].Dep < g.Edges[j].Dep
+		}
+		if g.Edges[i].Method != g.Edges[j].Method {
+			return g.Edges[i].Method < g.Edges[j].Method
+		}
+		return g.Edges[i].Origin < g.Edges[j].Origin
 	})
 }
 

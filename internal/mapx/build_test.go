@@ -864,3 +864,20 @@ func TestBuild_carriesTheSupportMark(t *testing.T) {
 		t.Errorf("the support mark must reach the node and the kind stay test, got %+v", by)
 	}
 }
+
+func TestBuild_edgesAreInATotalOrder(t *testing.T) {
+	t.Run("GRBLG-I02: The edges are in a total order", func(t *testing.T) {})
+	for _, deps := range [][]scan.Dep{
+		{{File: "src/Login.tsx", Method: "`m`", Code: "DEP2"}, {File: "src/Login.tsx", Method: "`m`", Code: "DEP1"}}, // only the code differs
+		{{File: "src/Login.tsx", Method: "`b`", Code: "DEP1"}, {File: "src/Login.tsx", Method: "`a`", Code: "DEP1"}}, // only the method differs
+	} {
+		one := testFiles()
+		one[1].Deps = deps
+		two := testFiles()
+		two[1].Deps = []scan.Dep{deps[1], deps[0]}
+		a, b := Build(one, testCfg(), nil), Build(two, testCfg(), nil)
+		if !reflect.DeepEqual(a.Edges, b.Edges) {
+			t.Fatalf("the same edges in another build order are written in another order:\n%+v\n%+v", a.Edges, b.Edges)
+		}
+	}
+}
