@@ -65,12 +65,13 @@ patterns a spec governs.
 | `CNFGO-B42` | A file that declares no code lengths sets the default length, 5, in the engine and the generator's hook, whatever lengths an earlier load in the same process set. |
 | `CNFGO-B43` | The language is set before any other check of the load, so every refusal of the load comes out in the language the file declares; the header `Save` writes on top of the file is in the language of the configuration being saved, English when it declares none (`Save`). |
 | `CNFGO-B44` | A test level declared on a gate (`levels`) accepts every code when it declares nothing, only the codes matching one of `allow` when it declares it, and never a code matching one of `exclude`; a filter pattern that does not compile fails the load naming the gate, the level, the list and the index (`TestLevel.Accepts`). |
-| `CNFGO-B45` | `dialect.tests` that declares both a pattern and a script fails the load, and a tests pattern that does not compile fails it naming `dialect.tests.pattern`. |
+| `CNFGO-B45` | `dialect.tests` that declares both a pattern and a script fails the load, and a tests pattern or assertion that does not compile fails it naming `dialect.tests.pattern` or `dialect.tests.assertion`; a `dialect.definition` that does not compile fails it naming `dialect.definition`. |
 | `CNFGO-B46` | A layer's `support` list is a list of globs among its files; a glob that is not valid fails the load naming the layer and the index. |
 | `CNFGO-B47` | A gate's `timeout_ceiling` is a share between 0 and 1, 0.2 when not declared; a value outside that range fails the load. |
 | `CNFGO-B48` | A gate's `no_signal` maps globs of targets to the reason they have nothing to measure; an invalid glob or an empty reason fails the load, and a target matching two globs always gets the reason of the first in sorted order. |
 | `CNFGO-B49` | A suite's `paths` are globs of the files it runs: with none it runs any file, otherwise only a file one of them matches; a glob that is not valid fails the load naming the section, the suite and the index. |
 | `CNFGO-B51` | A gate's `letters` lists rule letters, one letter A to Z each, any case; anything else fails the load naming the gate and the index. |
+| `CNFGO-B52` | A gate's `invocations` must each compile and carry a capture group — the first one names the unit the call reaches; one that does not compile, or has no group, fails the load naming the gate and the index. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 
 ### Canonical gate declarations

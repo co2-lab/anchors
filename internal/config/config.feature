@@ -70,9 +70,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
 
   @CNFGO-B45 @unit-level
   Scenario: The tests source is one source with a pattern that compiles
-    Given a dialect whose tests declare both a pattern and a script, and one whose tests pattern does not compile
+    Given a dialect whose tests declare both a pattern and a script, and ones whose tests pattern, assertion or definition does not compile
     When each configuration is loaded
-    Then the first fails naming the conflict and the second names dialect.tests.pattern
+    Then the first fails naming the conflict and the others name the field that does not compile
 
   @CNFGO-B44 @unit-level
   Scenario: A test level's code filter accepts by allow and refuses by exclude
@@ -358,3 +358,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a gate whose letters are "v" and "E", and one whose letters include "VV"
     When each configuration is loaded
     Then the first loads and the second fails naming the gate and the index
+
+  @CNFGO-B52 @unit-level
+  Scenario: A gate's invocations compile and name the unit through a group
+    Given a gate whose invocation does not compile, one whose invocation has no capture group, and one with a group
+    When each configuration is loaded
+    Then the first two fail naming the gate and the index, and the third loads

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: TSTLS
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @TSTLS
@@ -72,3 +72,9 @@ Feature: TestList — the project's tests, read the way the project says they ar
     Given a script that writes a reason to stderr and exits with an error
     When the tests are listed through it
     Then an error names the command and the reason
+
+  @TSTLS-B09 @unit-level
+  Scenario: The script may say where a test ends
+    Given a script printing one test with an end and one without, and a pattern reading a file
+    When the tests are listed
+    Then the first carries its end and the others carry none

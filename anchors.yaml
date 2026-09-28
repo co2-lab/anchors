@@ -263,6 +263,10 @@ governs:
 # de aprovar o que nao conferiram.
 dialect:
   family: go
+  # What asserts in a test here: the testing package's failures, and the helpers that fail
+  # the test for it. The family says how a test opens; only the assertions are ours.
+  tests:
+    assertion: '\bt\.(?:Error|Errorf|Fatal|Fatalf|Fail|FailNow)\b|\b(?:wantAll|wantNone|partialEqualsFull|refused)\(t\b'
   # How a handled failure is RECORDED here, for `failure-logged`. A declared list replaces
   # the family's, so the Go defaults are repeated. The last one is this project's own: a
   # gate records a failure by returning `Fail` or `Pending` WITH its message, which the
@@ -630,6 +634,22 @@ gates:
   - name: presentation-observable
     check: presentation-observable
     on: [spec]
+    blocking: false
+  # A test's body is read by its layout; here a test opens with a LABEL
+  # (`t.Run("CODE: title", func(t *testing.T) {})`) and the function around it is what
+  # asserts, so an empty test stands for its block.
+  - name: test-has-assertion
+    check: test-has-assertion
+    on: [test]
+    blocking: false
+    labels: true
+  - name: test-exercises-unit
+    check: test-exercises-unit
+    on: [test]
+    blocking: false
+  - name: test-ref-matches-unit
+    check: test-ref-matches-unit
+    on: [test]
     blocking: false
 
   - name: open-questions-resolved

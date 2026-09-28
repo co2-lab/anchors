@@ -331,3 +331,69 @@ func TestTSFamilyRecognisesCatchWithoutBinding(t *testing.T) {
 		}
 	}
 }
+
+func TestDialectAssertionByFamily(t *testing.T) {
+	t.Run("DLCTI-B16: The families say what an assertion is, and a project may declare only its own", func(t *testing.T) {})
+	goD := (&Config{Dialect: &Dialect{Family: "go"}}).DialectFor()
+	if goD.Tests == nil || !regexp.MustCompile(goD.Tests.Assertion).MatchString(`t.Errorf("x")`) ||
+		regexp.MustCompile(goD.Tests.Assertion).MatchString(`t.Run("x")`) {
+		t.Fatalf("go asserts with t.Errorf and not with t.Run, got %+v", goD.Tests)
+	}
+	tsD := (&Config{Dialect: &Dialect{Family: "ts"}}).DialectFor()
+	for _, a := range []string{"expect(x).toBe(1)", "expect.assertions(1)", "assert(ok)", "assert.equal(a, b)"} {
+		if !regexp.MustCompile(tsD.Tests.Assertion).MatchString(a) {
+			t.Errorf("ts must read %q as an assertion", a)
+		}
+	}
+	onlyAssertion := (&Config{Dialect: &Dialect{Family: "go", Tests: &TestsSource{Assertion: `\bcheck\(`}}}).DialectFor()
+	if onlyAssertion.Tests.Pattern != goD.Tests.Pattern || onlyAssertion.Tests.Assertion != `\bcheck\(` {
+		t.Errorf("declaring only the assertion keeps the family's pattern and the project's assertion, got %+v", onlyAssertion.Tests)
+	}
+	if goD.Tests.Assertion == "" || (&Config{Dialect: &Dialect{Family: "go"}}).DialectFor().Tests.Assertion != goD.Tests.Assertion {
+		t.Error("resolving must not change the family's own assertion")
+	}
+	ownPattern := (&Config{Dialect: &Dialect{Family: "go", Tests: &TestsSource{Pattern: `\bSpec\(`}}}).DialectFor()
+	if ownPattern.Tests.Assertion != "" || ownPattern.Tests.Pattern != `\bSpec\(` {
+		t.Errorf("a project reading its tests its own way takes no assertion from the family, got %+v", ownPattern.Tests)
+	}
+	ownScript := (&Config{Dialect: &Dialect{Family: "ts", Tests: &TestsSource{Script: "node l.mjs"}}}).DialectFor()
+	if ownScript.Tests.Assertion != "" || ownScript.Tests.Pattern != "" {
+		t.Errorf("a project with its own script takes nothing from the family, got %+v", ownScript.Tests)
+	}
+}
+
+func TestDialectDefinitionByFamily(t *testing.T) {
+	t.Run("DLCTI-B17: The families say how code defines a name", func(t *testing.T) {})
+	names := func(family, code string) []string {
+		re := regexp.MustCompile((&Config{Dialect: &Dialect{Family: family}}).DialectFor().Definition)
+		var out []string
+		for _, m := range re.FindAllStringSubmatch(code, -1) {
+			for _, g := range m[1:] {
+				if g != "" {
+					out = append(out, g)
+					break
+				}
+			}
+		}
+		return out
+	}
+	for _, c := range []struct {
+		family, code string
+		want         []string
+	}{
+		{"go", "func Build() {}\nfunc (g *Graph) AddFiles(x int) {}\ntype Graph struct{}\nfunc Map[T any]() {}\n\tfunc inner() {}", []string{"Build", "AddFiles", "Graph", "Map"}},
+		{"ts", "export function calc(a) {}\nexport default async function main() {}\nclass Cart {}\n  const total = (a) => a\nexport const fetchAll = async (x) => x\nconst n = 3\nfunction* gen() {}", []string{"calc", "main", "Cart", "total", "fetchAll", "gen"}},
+		{"python", "def pay(x):\n  async def inner():\nclass Account:", []string{"pay", "inner", "Account"}},
+	} {
+		if got := names(c.family, c.code); !reflect.DeepEqual(got, c.want) {
+			t.Errorf("%s: want %v, got %v", c.family, c.want, got)
+		}
+	}
+	own := (&Config{Dialect: &Dialect{Family: "go", Definition: `(?m)^proc (\w+)`}}).DialectFor()
+	if own.Definition != `(?m)^proc (\w+)` {
+		t.Errorf("the project's definition wins, got %q", own.Definition)
+	}
+	if d := (&Config{Dialect: &Dialect{Family: "rust"}}).DialectFor(); d.Definition != "" {
+		t.Errorf("a family with no definition leaves it undeclared, got %q", d.Definition)
+	}
+}

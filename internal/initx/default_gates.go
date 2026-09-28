@@ -671,6 +671,17 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			Blocking: config.Bool(false), Measures: "a unit has one test file per test layer, or declares the split with a reason",
 		})
 
+		for _, tg := range []struct{ name, measures string }{
+			{"test-has-assertion", "every test asserts something in its body — the project says what an assertion is"},
+			{"test-exercises-unit", "a test reaches the unit it tests, and does not define a copy of it"},
+			{"test-ref-matches-unit", "a test reaches the unit its `ref:` names — by import, a name it defines, or a declared invocation"},
+		} {
+			gates = append(gates, config.Gate{
+				Name: tg.name, ID: tg.name, On: []string{"test"}, Check: tg.name,
+				Blocking: config.Bool(false), Measures: tg.measures,
+			})
+		}
+
 		gates = append(gates, config.Gate{
 			Name: "open-questions-resolved", ID: "open-questions-resolved", On: []string{"spec"}, Check: "open-questions-resolved",
 			Blocking: config.Bool(false), Measures: "the spec has no open question — implementing is not guessing",

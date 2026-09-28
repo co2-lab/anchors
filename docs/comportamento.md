@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e37907399b1f6b61 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d3167be92ff2514d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2728,6 +2728,8 @@ teste prova.
 
 - [A gate's letters are single letters](camadas/config.md#cnfgo-b51--a-gates-letters-are-single-letters) `CNFGO-B51`
 
+- [A gate's invocations compile and name the unit through a group](camadas/config.md#cnfgo-b52--a-gates-invocations-compile-and-name-the-unit-through-a-group) `CNFGO-B52`
+
 - [The declared containers come back as written, and a missing config has none](camadas/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](camadas/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -2779,6 +2781,10 @@ teste prova.
 - [The Go and TS families say how a test is written](camadas/config.md#dlcti-b14--the-go-and-ts-families-say-how-a-test-is-written) `DLCTI-B14`
 
 - [The TS family recognises catch with or without its binding](camadas/config.md#dlcti-b15--the-ts-family-recognises-catch-with-or-without-its-binding) `DLCTI-B15`
+
+- [The families say what an assertion is, and a project may declare only its own](camadas/config.md#dlcti-b16--the-families-say-what-an-assertion-is-and-a-project-may-declare-only-its-own) `DLCTI-B16`
+
+- [The families say how code defines a name](camadas/config.md#dlcti-b17--the-families-say-how-code-defines-a-name) `DLCTI-B17`
 
 - [A trigger naming a layer charges every change in that layer, whatever the unit](camadas/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 
@@ -4898,6 +4904,20 @@ teste prova.
 
 - [Scenarios tagged with a suffix cover the requirement](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario) `SFMSP-B15`
 
+- [A test with no assertion fails, named by its line and title](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B01`
+
+- [The body is the block the test's line opens](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B02`
+
+- [A multi-line literal is text, not layout](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B03`
+
+- [An empty test is a label only when the gate says so](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B04`
+
+- [The source's end bounds the body](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B05`
+
+- [Nothing to measure is skipped](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B06`
+
+- [Tests that cannot be listed fail the gate with the reason](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-E01`
+
 - [A node that is not a feature is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B01`
 
 - [A project with no filter per level is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B02`
@@ -4915,6 +4935,20 @@ teste prova.
 - [Accepted codes pass](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B08`
 
 - [Levels come from the gate's own entries, and two entries add their lists](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B09`
+
+- [A test that names what its unit defines exercises it](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B01`
+
+- [An import of the unit's module reaches it](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B02`
+
+- [A test that defines the unit's names exercises a copy](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B03`
+
+- [Short names are anyone's](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B04`
+
+- [The ref's unit must be reached](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B05`
+
+- [A declared invocation reaches the unit it names](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B06`
+
+- [Nothing to confront is skipped](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests) `TSRCH-B07`
 
 - [Non-test artifacts skip confrontation](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves) `TSTRT-B01`
 
@@ -6131,6 +6165,8 @@ teste prova.
 - [A pattern that does not compile is refused](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-E02`
 
 - [A failing script is an error naming why](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-E03`
+
+- [The script may say where a test ends](camadas/infra.md#tstls--testlist--the-projects-tests-read-the-way-the-project-says-they-are-written) `TSTLS-B09`
 
 - [A rule code of each canonical letter is recognized in a test name](camadas/infra.md#rcgrl--rulecodegrammar--the-grammar-that-recognizes-a-scenario-code-in-a-tests-name-in-the-projects-vocabulary) `RCGRL-B01`
 

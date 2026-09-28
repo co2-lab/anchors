@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:504f69b81356c150 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:e8739b3b4e31d830 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -363,7 +363,11 @@ abra a página dela em `camadas/`.
 
 ### [SFMSP — SpecFeatureMatch — every requirement the spec DEFINES has at least one scenario](camadas/gate.md#sfmsp--specfeaturematch--every-requirement-the-spec-defines-has-at-least-one-scenario)
 
+### [THSAS — TestHasAssertion — every test asserts something in its body](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body)
+
 ### [TLVCD — TestLevelCodes — each scenario references only codes its test level accepts](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts)
+
+### [TSRCH — TestReach — a test reaches the unit it says it tests](camadas/gate.md#tsrch--testreach--a-test-reaches-the-unit-it-says-it-tests)
 
 ### [TSTRT — TestTraceable — a test linked to a feature must declare what scenario it proves](camadas/gate.md#tstrt--testtraceable--a-test-linked-to-a-feature-must-declare-what-scenario-it-proves)
 

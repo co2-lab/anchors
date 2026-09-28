@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSTLS
-  updated_at: 2026-09-27
+  updated_at: 2026-09-28
   layer: infra
 -->
 # TestList — the project's tests, read the way the project says they are written
@@ -41,9 +41,10 @@ to the project root, `line` counted from one, `title` as written.
 | `TSTLS-B03` | A call whose next token is not a string literal is not a test this reading can name, and is left out. |
 | `TSTLS-B04` | The pattern's tests come in file order, then in the order they appear in each file. |
 | `TSTLS-B05` | With a script, the command runs at the project root and the tests are what it prints under the contract. |
-| `TSTLS-B06` | Output outside the contract is refused, naming what is wrong: not a single JSON object, an unknown field, a version other than 1, no `tests`, an empty or non-relative `file`, a `line` below 1, or an empty `title`. (`Parse`) |
+| `TSTLS-B06` | Output outside the contract is refused, naming what is wrong: not a single JSON object, an unknown field, a version other than 1, no `tests`, an empty or non-relative `file`, a `line` below 1, an `end` before its `line`, or an empty `title`. (`Parse`) |
 | `TSTLS-B07` | A `file` in the script's output is read with forward slashes and without redundant segments, so it matches the map's IDs. |
 | `TSTLS-B08` | A source that declares neither a pattern nor a script lists no test and raises no error. |
+| `TSTLS-B09` | The script may say where each test ends (`end`, its last line), and the test carries it; a test without `end`, and every test a pattern reads, carries zero — the end is not known. |
 
 ## Errors
 

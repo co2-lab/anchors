@@ -283,6 +283,19 @@ func importsUnit(code, alvo string, cfg *config.Config) bool {
 	if base == "" {
 		return false
 	}
+	for _, l := range importLines(code, cfg) {
+		if strings.Contains(l, base) {
+			return true
+		}
+	}
+	return false
+}
+
+// importLines are the lines of `code` that import something: the dialect's `import_pattern`
+// when declared, or the forms most languages share (`import`, `require`, `from `, `use `,
+// `using `, `#include`). A name mentioned in a string is not a dependency, so only these
+// lines are read for one.
+func importLines(code string, cfg *config.Config) []string {
 	var reImport *regexp.Regexp
 	if cfg != nil {
 		d := cfg.DialectFor()
@@ -290,28 +303,17 @@ func importsUnit(code, alvo string, cfg *config.Config) bool {
 			reImport = d.Compile(d.ImportPattern)
 		}
 	}
-
-	// O nome tem de aparecer numa LINHA de importação (`import`, `require`, `from `,
-	// `use `, `using `, `#include` ou padrão configurado) — não em qualquer lugar do
-	// arquivo. Um `orgBilling` mencionado numa string não é dependência.
+	var out []string
 	for _, linha := range strings.Split(code, "\n") {
 		l := strings.TrimSpace(linha)
-		isImportLine := false
-		if reImport != nil && reImport.MatchString(l) {
-			isImportLine = true
-		} else if strings.Contains(l, "import") || strings.Contains(l, "require") ||
+		if reImport != nil && reImport.MatchString(l) ||
+			strings.Contains(l, "import") || strings.Contains(l, "require") ||
 			strings.Contains(l, "from ") || strings.HasPrefix(l, "use ") ||
 			strings.HasPrefix(l, "using ") || strings.HasPrefix(l, "#include") {
-			isImportLine = true
-		}
-		if !isImportLine {
-			continue
-		}
-		if strings.Contains(l, base) {
-			return true
+			out = append(out, l)
 		}
 	}
-	return false
+	return out
 }
 
 // unitRule extrai o código da UNIDADE de um código de regra (`SEATX-B01` → `SEAT`).

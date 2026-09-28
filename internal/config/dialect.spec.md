@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DLCTI
-  updated_at: 2026-09-27
+  updated_at: 2026-09-28
   layer: config
 -->
 # Dialect — the lexicon of the project's language, between an agnostic gate and concrete code
@@ -64,6 +64,8 @@ written in the configuration file).
 | `DLCTI-B13` | The Go family recognises both shapes of error handling: `if err != nil` and `if err := f(); err != nil`. The second is the commoner, and matching only the first left the handling of most Go code invisible to the failure gates. |
 | `DLCTI-B14` | The Go and TS families say how a test is written — Go by `t.Run(`, TS by `it`/`test`/`describe`, also as `.only`, `.skip` or `.each(table)` — and a project that declares its own `tests` keeps it over the family's. |
 | `DLCTI-B15` | The TS family recognises a `catch` as handling a failure with or without its binding: `catch (e) {` and `catch {`. |
+| `DLCTI-B16` | The Go and TS families say what an assertion is (`tests.assertion`). A project that declares only its assertion keeps the family's way to open a test; one that declares its own pattern or script reads its tests another way and does not take the family's assertion. |
+| `DLCTI-B17` | The Go, TS and Python families say how code defines a name (`definition`) — Go's functions, methods and types, TS's functions, classes and constants bound to an arrow function, Python's `def` and `class` — and a declared one wins over the family's. |
 
 ## Invariants
 

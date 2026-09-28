@@ -115,12 +115,22 @@ type Dialect struct {
 	// title is the string literal after it) or a `script` the project provides, which
 	// prints the tests under the contract of the `testlist` package. Never both.
 	Tests *TestsSource `yaml:"tests,omitempty"`
+	// Definition recognises a name the code DEFINES — a function, a type, a class — with
+	// the name in a capture group (the first non-empty one). `test-exercises-unit` reads it
+	// on both sides: the names a unit defines are what its test must reach, and the same
+	// name defined again in the test is the unit copied instead of exercised. Which lines
+	// define a name is the language's, so it comes from the family or from the project.
+	Definition string `yaml:"definition,omitempty"`
 }
 
 // TestsSource is how the project's tests are read: a fixed pattern or a script.
 type TestsSource struct {
 	Pattern string `yaml:"pattern,omitempty"`
 	Script  string `yaml:"script,omitempty"`
+	// Assertion recognises an assertion inside a test's body, for `test-has-assertion`:
+	// the test library's own (`expect(`, `t.Errorf`) and the project's helpers that assert.
+	// A test with none passes whatever the code does.
+	Assertion string `yaml:"assertion,omitempty"`
 }
 
 // GherkinKeywords são as palavras-chave da feature no idioma do projeto. Só os idiomas
@@ -262,7 +272,10 @@ var dialectFamilies = map[string]Dialect{
 		},
 		// Jest, Vitest and Mocha: `it`/`test`/`describe`, also modified by `.only`,
 		// `.skip`, or `.each(table)` with the table's parentheses nested one level.
-		Tests: &TestsSource{Pattern: `\b(?:it|test|describe)(?:\.each\s*\((?:[^()]|\([^()]*\))*\)|\.only|\.skip)?\s*\(`},
+		Tests: &TestsSource{Pattern: `\b(?:it|test|describe)(?:\.each\s*\((?:[^()]|\([^()]*\))*\)|\.only|\.skip)?\s*\(`,
+			Assertion: `\bexpect(?:\.\w+)?\s*\(|\bassert(?:\.\w+)?\s*\(`},
+		// Functions, classes, and constants bound to an arrow function, at any depth.
+		Definition: `(?m)^\s*(?:export\s+(?:default\s+)?)?(?:async\s+)?(?:function\*?\s+(\w+)|class\s+(\w+)|(?:const|let|var)\s+(\w+)\s*=\s*(?:async\s*)?(?:\([^)]*\)|\w+)\s*=>)`,
 	},
 	"go": {
 		// Em Go a exportação é a MAIÚSCULA inicial — não uma palavra-chave.
@@ -288,12 +301,15 @@ var dialectFamilies = map[string]Dialect{
 			`\bfmt\.Errorf\(`,
 		},
 		// The standard library: a test names its cases with `t.Run("title", …)`.
-		Tests: &TestsSource{Pattern: `\bt\.Run\(`},
+		Tests: &TestsSource{Pattern: `\bt\.Run\(`, Assertion: `\bt\.(?:Error|Errorf|Fatal|Fatalf|Fail|FailNow)\b`},
+		// Functions, methods and types, at the top level.
+		Definition: `(?m)^(?:func\s+(?:\([^)]*\)\s+)?|type\s+)(\w+)`,
 	},
 	"python": {
 		// Sem palavra-chave de exportação: convenção é o underscore inicial marcar o
 		// privado, então "exportada" = def no nível do módulo sem `_`.
 		ExportedFunc: `(?m)^(?:async\s+)?def\s+([a-zA-Z]\w*)\s*\(`,
+		Definition:   `(?m)^\s*(?:async\s+)?def\s+(\w+)|^\s*class\s+(\w+)`,
 		ParamName:    `(\w+)\s*[:=,)]`,
 		Loop:         `\b(for|while)\b`,
 		Cursor:       `(?i)(next_token|continuation_token|next_cursor|next_page_token|offset)`,
@@ -395,8 +411,22 @@ func (c *Config) DialectFor() Dialect {
 		if len(d.LogPatterns) == 0 {
 			d.LogPatterns = base.LogPatterns
 		}
-		if d.Tests == nil {
+		switch {
+		case d.Tests == nil:
 			d.Tests = base.Tests
+		case base.Tests != nil && d.Tests.Pattern == "" && d.Tests.Script == "":
+			// The project declared only its assertions: the family still says how a test
+			// opens. The family's assertion is not taken when the project reads its tests
+			// its own way — another library asserts another way.
+			t := *d.Tests
+			t.Pattern = base.Tests.Pattern
+			if t.Assertion == "" {
+				t.Assertion = base.Tests.Assertion
+			}
+			d.Tests = &t
+		}
+		if d.Definition == "" {
+			d.Definition = base.Definition
 		}
 	}
 	if d.SetPromise == "" {

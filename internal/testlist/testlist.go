@@ -13,11 +13,12 @@
 //
 // The script's contract, version 1, is a JSON object and nothing else:
 //
-//	{"version": 1, "tests": [{"file": "src/a.test.ts", "line": 12, "title": "…"}]}
+//	{"version": 1, "tests": [{"file": "src/a.test.ts", "line": 12, "end": 30, "title": "…"}]}
 //
 // `file` is relative to the project root, `line` counts from one, `title` is the test's
-// title as written. Any other field, a missing one, or another version is outside the
-// contract and refused, naming what is wrong.
+// title as written. `end`, optional, is the test's last line: the script knows where a
+// test ends, the reading of a pattern only estimates it. Any other field, a missing one,
+// or another version is outside the contract and refused, naming what is wrong.
 package testlist
 
 import (
@@ -38,8 +39,10 @@ const ContractVersion = 1
 
 // Test is one test of the project.
 type Test struct {
-	File  string `json:"file"`
-	Line  int    `json:"line"`
+	File string `json:"file"`
+	Line int    `json:"line"`
+	// End is the test's last line, when the source knows it; zero when it does not.
+	End   int    `json:"end,omitempty"`
 	Title string `json:"title"`
 }
 
@@ -110,6 +113,8 @@ func Parse(b []byte) ([]Test, error) {
 			return nil, fmt.Errorf("tests[%d]: `file` %q is not relative to the project root", i, t.File)
 		case t.Line < 1:
 			return nil, fmt.Errorf("tests[%d]: `line` must count from 1", i)
+		case t.End != 0 && t.End < t.Line:
+			return nil, fmt.Errorf("tests[%d]: `end` is before `line`", i)
 		case strings.TrimSpace(t.Title) == "":
 			return nil, fmt.Errorf("tests[%d]: `title` is empty", i)
 		}

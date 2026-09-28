@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DLCTI
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @DLCTI
@@ -114,3 +114,15 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given a try block closed by catch (e) and one closed by catch with no binding
     When the ts family's handle patterns read them
     Then both are recognised as handling, and a word merely containing catch is not
+
+  @DLCTI-B16 @unit-level
+  Scenario: The families say what an assertion is, and a project may declare only its own
+    Given the Go family, a Go project declaring only its assertion, and one declaring its own tests pattern
+    When each dialect is resolved
+    Then the family asserts with t.Errorf, the second keeps t.Run with its own assertion, and the third takes no assertion from the family
+
+  @DLCTI-B17 @unit-level
+  Scenario: The families say how code defines a name
+    Given Go, TS and Python code defining functions and types, and a project declaring its own definition
+    When each family's definition reads the code
+    Then it captures the names defined, and the declared one wins

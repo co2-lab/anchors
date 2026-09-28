@@ -972,6 +972,18 @@ type Gate struct {
 	// scenario's. It lives on the gate that reads it: which rules read data is the
 	// project's vocabulary, as `rule_types` is.
 	Letters []string `yaml:"letters,omitempty"`
+
+	// Labels — for `test-has-assertion`: a test whose body is empty is a LABEL naming what
+	// the block around it proves (`t.Run("CODE: title", func(t *testing.T) {})` at the top
+	// of a Go test function), and the block is what must assert. Off, an empty test is a
+	// test with no assertion: in most libraries `it("x", () => {})` is a stub that passes.
+	Labels bool `yaml:"labels,omitempty"`
+
+	// Invocations — for `test-ref-matches-unit`: the calls through which a test reaches a
+	// unit without importing it (a function invoked by name, a route called over HTTP),
+	// each a pattern whose first capture group names the unit reached. Anchors does not
+	// know what a lambda is; the project says how its tests call one.
+	Invocations []string `yaml:"invocations,omitempty"`
 }
 
 // DefaultTimeoutCeiling is the share of timed-out mutants above which a mutation score is
@@ -1745,7 +1757,7 @@ func (c *Config) validarPadroes() error {
 			"exported_func": d.ExportedFunc, "param_name": d.ParamName, "loop": d.Loop,
 			"collection_query": d.CollectionQuery, "cursor": d.Cursor, "set_promise": d.SetPromise,
 			"set_slice": d.SetSlice, "http_status": d.HTTPStatus, "http_status_dynamic": d.HTTPStatusDynamic,
-			"import_pattern": d.ImportPattern,
+			"import_pattern": d.ImportPattern, "definition": d.Definition,
 		} {
 			if err := check("dialect."+field, p); err != nil {
 				return err
@@ -1756,6 +1768,9 @@ func (c *Config) validarPadroes() error {
 				return fmt.Errorf("`dialect.tests` declares both a pattern and a script; declare one")
 			}
 			if err := check("dialect.tests.pattern", t.Pattern); err != nil {
+				return err
+			}
+			if err := check("dialect.tests.assertion", t.Assertion); err != nil {
 				return err
 			}
 		}
@@ -1819,6 +1834,14 @@ func (c *Config) validarPadroes() error {
 		for i, l := range g.Letters {
 			if t := strings.ToUpper(strings.TrimSpace(l)); len(t) != 1 || t < "A" || t > "Z" {
 				return fmt.Errorf("`gates[%s].letters[%d]` is %q — a rule letter is one letter, A to Z", g.Name, i, l)
+			}
+		}
+		for i, p := range g.Invocations {
+			if err := check(fmt.Sprintf("gates[%s].invocations[%d]", g.Name, i), p); err != nil {
+				return err
+			}
+			if regexp.MustCompile(p).NumSubexp() == 0 {
+				return fmt.Errorf("`gates[%s].invocations[%d]` has no capture group: the first one names the unit the call reaches", g.Name, i)
 			}
 		}
 		for level, l := range g.Levels {

@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:fa492acc27d52a7b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:9ca104ba59da2f85 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 70 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 72 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## CDCTC — CodeCataloged — what the code EXPORTS must be in the spec, or waived in the code
@@ -380,7 +380,19 @@
 
 
 
+## THSAS — TestHasAssertion — every test asserts something in its body
+
+
+
+
+
 ## TLVCD — TestLevelCodes — each scenario references only codes its test level accepts
+
+
+
+
+
+## TSRCH — TestReach — a test reaches the unit it says it tests
 
 
 

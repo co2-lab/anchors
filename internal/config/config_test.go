@@ -420,6 +420,31 @@ func TestLoadChecksTheTestsSource(t *testing.T) {
 	if _, err := load(t, "version: 1\ndialect:\n  family: go\n  tests:\n    script: \"go run ./scripts/tests\"\n"); err != nil {
 		t.Errorf("a script alone must load: %v", err)
 	}
+	_, err = load(t, "version: 1\ndialect:\n  family: go\n  tests:\n    assertion: \"expect(\"\n")
+	if err == nil || !strings.Contains(err.Error(), "dialect.tests.assertion") {
+		t.Errorf("an assertion that does not compile must fail naming the field, got %v", err)
+	}
+	_, err = load(t, "version: 1\ndialect:\n  family: go\n  definition: \"func (\"\n")
+	if err == nil || !strings.Contains(err.Error(), "dialect.definition") {
+		t.Errorf("a definition that does not compile must fail naming the field, got %v", err)
+	}
+}
+
+func TestGateInvocationsCompileWithAGroup(t *testing.T) {
+	t.Run("CNFGO-B52: A gate's invocations compile and name the unit through a group", func(t *testing.T) {})
+	gate := func(inv string) string {
+		return "version: 1\ngates:\n  - name: reach\n    check: test-ref-matches-unit\n    on: [test]\n    invocations:\n      - 'ok(\\w+)'\n      - '" + inv + "'\n"
+	}
+	if _, err := load(t, gate(`invoke\((`)); err == nil || !strings.Contains(err.Error(), "gates[reach].invocations[1]") {
+		t.Errorf("an invocation that does not compile must fail naming the gate and index, got %v", err)
+	}
+	if _, err := load(t, gate(`invoke\(\w+`)); err == nil || !strings.Contains(err.Error(), "gates[reach].invocations[1]") ||
+		!strings.Contains(err.Error(), "capture group") {
+		t.Errorf("an invocation with no group must fail naming the gate, the index and the group, got %v", err)
+	}
+	if _, err := load(t, gate(`invoke\("(\w+)`)); err != nil {
+		t.Errorf("an invocation with a group loads: %v", err)
+	}
 }
 
 func TestLoadChecksTheSupportGlobs(t *testing.T) {

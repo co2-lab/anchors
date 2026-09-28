@@ -110,6 +110,7 @@ func TestOutputOutsideTheContract(t *testing.T) {
 		{`{"version":1,"tests":[{"file":"../out.ts","line":1,"title":"t"}]}`, "not relative"},
 		{`{"version":1,"tests":[` + ok + `,{"file":"a.ts","line":0,"title":"t"}]}`, "tests[1]: `line` must count from 1"},
 		{`{"version":1,"tests":[{"file":"a.ts","line":1,"title":"  "}]}`, "`title` is empty"},
+		{`{"version":1,"tests":[{"file":"a.ts","line":5,"end":4,"title":"t"}]}`, "tests[0]: `end` is before `line`"},
 	} {
 		if _, err := Parse([]byte(c.out)); err == nil || !strings.Contains(err.Error(), c.why) {
 			t.Errorf("%s: want an error naming %q, got %v", c.out, c.why, err)
@@ -166,5 +167,19 @@ func TestFailingScript(t *testing.T) {
 	_, err := List(t.TempDir(), nil, Source{Script: `echo noise >&2; echo "jest not installed" >&2; exit 3`})
 	if err == nil || !strings.Contains(err.Error(), "jest not installed") || !strings.Contains(err.Error(), "exit status 3") {
 		t.Fatalf("want the command, the exit and the reason named, got %v", err)
+	}
+}
+
+func TestScriptSaysWhereATestEnds(t *testing.T) {
+	t.Run("TSTLS-B09: The script may say where a test ends", func(t *testing.T) {})
+	got, err := Parse([]byte(`{"version":1,"tests":[{"file":"a.ts","line":3,"end":3,"title":"one"},{"file":"a.ts","line":5,"title":"two"}]}`))
+	want := []Test{{File: "a.ts", Line: 3, End: 3, Title: "one"}, {File: "a.ts", Line: 5, Title: "two"}}
+	if err != nil || !reflect.DeepEqual(got, want) {
+		t.Fatalf("want %v, got %v (%v)", want, got, err)
+	}
+	root := write(t, map[string]string{"a_test.go": "t.Run(\"x\", func(t *testing.T) {\n})\n"})
+	listed, err := List(root, []string{"a_test.go"}, Source{Pattern: `\bt\.Run\(`})
+	if err != nil || len(listed) != 1 || listed[0].End != 0 {
+		t.Errorf("a pattern does not know where a test ends, got %v (%v)", listed, err)
 	}
 }
