@@ -1140,3 +1140,20 @@ func TestRunOne_NoSignalSkipsWithTheReason(t *testing.T) {
 		t.Fatalf("another file is still checked, got %v (%s)", r.Verdict, r.Detail)
 	}
 }
+
+func TestApplies_isTheRunnersReach(t *testing.T) {
+	t.Run("GTENG-B25: The gate's reach is offered to the runs that choose what to measure", func(t *testing.T) {})
+	g := config.Gate{On: []string{"code"}, ExcludeTags: []string{"resource"}}
+	for _, c := range []struct {
+		n    mapx.Node
+		want bool
+	}{
+		{mapx.Node{Kind: mapx.KindCode, Tags: []string{"logic"}}, true},
+		{mapx.Node{Kind: mapx.KindCode, Tags: []string{"resource"}}, false},
+		{mapx.Node{Kind: mapx.KindSpec}, false},
+	} {
+		if got := Applies(g, c.n, ""); got != c.want || got != applies(g, c.n, "") {
+			t.Errorf("%+v: want %v, got %v", c.n, c.want, got)
+		}
+	}
+}

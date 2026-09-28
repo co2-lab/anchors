@@ -9,6 +9,7 @@ import (
 
 	"github.com/co2-lab/anchors/cmd/anchors/mapcmd"
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/gate"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -134,18 +135,19 @@ func square(stale, passing bool) fileState {
 // selectFiles picks, for a suite, the files a run takes and counts the ones it leaves out
 // by state. Support files and targets the matching gate declares with nothing to measure
 // (`no_signal`) are never candidates.
-func selectFiles(g *mapx.Graph, cfg *config.Config, mutation bool, key string, suite config.Suite, sel runSelection) (run []string, left map[fileState]int) {
+func selectFiles(g *mapx.Graph, cfg *config.Config, root string, mutation bool, key string, suite config.Suite, sel runSelection) (run []string, left map[fileState]int) {
 	layer := suite.Layer
 	kind, check := mapx.KindTest, "tests-pass"
 	if mutation {
 		kind, check = mapx.KindCode, "mutation-score"
 	}
 	gateOf := config.Gate{}
+	declared := false
 	ceiling := config.DefaultTimeoutCeiling
 	if cfg != nil {
 		for _, gt := range cfg.Gates {
 			if gt.Check == check {
-				gateOf = gt
+				gateOf, declared = gt, true
 				ceiling = gt.TimeoutCeilingOrDefault()
 				break
 			}
@@ -157,6 +159,15 @@ func selectFiles(g *mapx.Graph, cfg *config.Config, mutation bool, key string, s
 			continue
 		}
 		if _, none := gateOf.NoSignalFor(n.ID); none {
+			continue
+		}
+		// A file the gate does not confront is not measured for it: the gate reads no score
+		// there, so a run would spend its slot and the budget for nothing. In the reference
+		// app a budgeted mutation run picked 37 `resource.ts` files the gate excludes by
+		// tag (`exclude_tags: [resource, …]`), each skipped by the script one by one.
+		// A gate entry that names no kind (`on:`) says nothing about its targets, and would
+		// empty the run; only a gate that declares them filters.
+		if declared && len(gateOf.On) > 0 && !gate.Applies(gateOf, n, root) {
 			continue
 		}
 		var st fileState
@@ -239,7 +250,7 @@ func runSelective(cs suiteCommand, suites []config.Suite, cfg *config.Config, ab
 			if mutation {
 				report = s.Report
 			}
-			run, left := selectFiles(g, cfg, mutation, mapcmd.SuiteKey(absRoot, absPath(absRoot, report)), s, picked)
+			run, left := selectFiles(g, cfg, absRoot, mutation, mapcmd.SuiteKey(absRoot, absPath(absRoot, report)), s, picked)
 			fmt.Printf("[%s%s] selected %d file(s) to run", workspaceLabel(s), s.Layer, len(run))
 			if d := describeLeftOut(left); d != "" {
 				fmt.Printf("; %s", d)

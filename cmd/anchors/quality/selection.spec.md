@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SLCTN
-  updated_at: 2026-09-27
+  updated_at: 2026-09-28
   layer: comando
 -->
 # RunSelection — a run takes only what is stale and below the minimum, unless told otherwise
@@ -48,6 +48,7 @@ whole, saying so.
 | `SLCTN-B10` | The selected files run in as few batches as the command-line ceiling allows, each ingested as a partial run; a file longer than the ceiling still runs alone. |
 | `SLCTN-B11` | `--all` runs the suites whole through `run:`; it is refused with `--changed` or with a state flag, and the state flags are refused with `--changed`. |
 | `SLCTN-B12` | A suite that declares `paths:` is handed only the files they cover, test and code files alike; the files outside them are neither run nor counted as left out. |
+| `SLCTN-B13` | A file the matching gate does not confront — outside its `on:` kinds, carrying one of its `exclude_tags`, lacking all of its `tags` — is never run for it; a gate entry that declares no kinds filters nothing. |
 
 ## Errors
 

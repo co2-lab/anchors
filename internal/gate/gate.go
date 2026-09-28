@@ -90,6 +90,11 @@ type Result struct {
 // nenhuma tag de `exclude_tags`, E (se o gate declara tags) carrega ao menos uma delas,
 // E (se declara `requires`) o conteúdo do alvo contém aquele texto. Sem nada disso → só
 // o kind conta.
+// Applies says whether the gate confronts the node — its kinds, its tags and exclude_tags,
+// what it requires. It is the one answer to "is this node the gate's target", shared with
+// the runs that choose what to measure for a gate (`anchors test`, `anchors mutation`).
+func Applies(g config.Gate, n mapx.Node, root string) bool { return applies(g, n, root) }
+
 func applies(g config.Gate, n mapx.Node, root string) bool {
 	if !slices.Contains(g.On, string(n.Kind)) {
 		return false

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SLCTN
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @SLCTN
@@ -84,3 +84,9 @@ Feature: RunSelection — a run takes only what is stale and below the minimum, 
     Given a project whose map was never built
     When a suite with run_changed runs by default
     Then it is refused saying to build the map or to use --all
+
+  @SLCTN-B13 @unit-level
+  Scenario: A file the gate does not confront is not run for it
+    Given a mutation gate on code that excludes the tag resource, and code files tagged resource, logic and none
+    When the mutation selection runs, and again with a gate entry that declares no kinds
+    Then only the untagged and logic files run, and without kinds every code file runs

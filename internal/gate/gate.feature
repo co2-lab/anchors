@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GTENG
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @GTENG
@@ -216,3 +216,9 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given a gate whose no_signal declares a file with a reason
     When the gate runs on that file and on another
     Then the declared file is skipped naming the reason, and the other is checked
+
+  @GTENG-B25 @unit-level
+  Scenario: The gate's reach is offered to the runs that choose what to measure
+    Given a gate on code excluding the label resource, and nodes of each case
+    When each node is asked about through Applies
+    Then code without the label is reached, and a spec or a code node with the label is not
