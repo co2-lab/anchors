@@ -79,7 +79,7 @@ plan is a sequence, not a bucket:
   ## Fase 1 — <name>
   - features/larder/AddItem.spec.md — item registration
   - features/larder/ItemCard.spec.md — item card
-  ## Fase 2 — <name> (depende da Fase 1)
+  ## Phase 2 — <name> (depends on Phase 1)
   - features/larder/ExpiryAlert.spec.md — expiry alert
 
 **PROGRESS DOES NOT LIVE HERE.** It lives in the companion file ending in

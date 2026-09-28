@@ -987,5 +987,6 @@
   "changelog.features": "Features",
   "changelog.bugs": "Bugs fixed",
   "changelog.fixes": "Fixes",
-  "changelog.title": "Technical changelog"
+  "changelog.title": "Technical changelog",
+  "plan.phase.depends_on": "depends on"
 }

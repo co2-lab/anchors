@@ -987,5 +987,6 @@
   "changelog.features": "Funcionalidades",
   "changelog.bugs": "Errores corregidos",
   "changelog.fixes": "Correcciones",
-  "changelog.title": "Registro de cambios técnico"
+  "changelog.title": "Registro de cambios técnico",
+  "plan.phase.depends_on": "depende de|depende del"
 }

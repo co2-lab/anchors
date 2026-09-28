@@ -82,9 +82,8 @@ func checkPhaseOrdered(content string, n mapx.Node, root string, g *mapx.Graph, 
 		pos[f] = i
 	}
 
-	// `depende de` na mesma seção da fase: `### FNDTN-W02 — … (depende de FNDTN-W01)`.
-	dependeRE := regexp.MustCompile(`(?i)depende\s+d[eao]\s+` + "`?" + `([A-Z0-9]` +
-		config.CodeLengthPattern() + `-` + config.PhaseLetter + `\d{2})`)
+	// The dependency in the phase's own section: `### FNDTN-W02 — … (depends on FNDTN-W01)`.
+	dependeRE := dependsOnRE()
 	var erros []string
 	secoes := regexp.MustCompile(`(?m)^#{2,4}\s+`).Split(content, -1)
 	for _, sec := range secoes {
@@ -231,4 +230,30 @@ var level3SectionRE = regexp.MustCompile(`(?m)^#{3}\s+\S.*$`)
 // gate não consegue confrontar por falta de código.
 func hasPhaseLikeSection(content string) bool {
 	return level3SectionRE.MatchString(content)
+}
+
+// dependsOnRE matches a phase's dependency written in ANY supported language: the phrase is
+// the catalog's `plan.phase.depends_on` (`depends on`, `depende de`…), each translation
+// listing its variants separated by `|` — Portuguese contracts the preposition (`depende
+// da`, `depende do`).
+//
+// Only `depende de` was read before, in a plan template that writes English everywhere
+// else: a project whose `lang` is English wrote `(depends on FNDTN-W01)`, the order was
+// not confronted, and the gate passed saying nothing. Any language is read, not only the
+// project's, for the same reason section titles are: a plan written before a `lang`
+// change is still the plan.
+func dependsOnRE() *regexp.Regexp {
+	var alts []string
+	for _, t := range i18n.AllTranslations("plan.phase.depends_on") {
+		for _, v := range strings.Split(t, "|") {
+			if w := strings.Fields(v); len(w) > 0 {
+				for i := range w {
+					w[i] = regexp.QuoteMeta(w[i])
+				}
+				alts = append(alts, strings.Join(w, `\s+`))
+			}
+		}
+	}
+	return regexp.MustCompile(`(?i)(?:` + strings.Join(alts, "|") + `)\s+` + "`?" + `([A-Z0-9]` +
+		config.CodeLengthPattern() + `-` + config.PhaseLetter + `\d{2})`)
 }

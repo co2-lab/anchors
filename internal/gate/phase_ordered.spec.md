@@ -63,6 +63,7 @@ This gate confronts three complementary structural ordering contracts:
 | `PHORP-B11` | When a specification declares phase dependencies that do not exist in any plan, phase existence fails naming the missing phases. |
 | `PHORP-B12` | When an artifact declares an existing artifact code or catalogued phase as parent, parent validation passes. |
 | `PHORP-B13` | When an artifact declares a non-existent parent, self-parenting, or a circular parent chain, parent validation fails. |
+| `PHORP-B14` | A phase's dependency is read in any supported language — `depends on`, `depende de` and its contractions, as the catalog lists them — whatever the project's `lang`, so an English plan's order is confronted as a Portuguese one's is. |
 
 ## Invariants
 

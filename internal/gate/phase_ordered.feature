@@ -138,3 +138,9 @@ Feature: PhaseOrdered — plan phases and phase dependencies must be ordered and
     Given the map lists a plan that is gone from disk, and a plan on disk cataloguing the phase
     When phase existence and parent validation confront references to that phase
     Then both pass
+
+  @PHORP-B14 @unit-level
+  Scenario: The dependency is read in any supported language
+    Given plans whose second phase depends on a later one, written "depends on", "depende da" and "depende del"
+    When each plan is confronted
+    Then each fails naming the phase that comes after, and a plan written "depends on" in the right order passes

@@ -259,3 +259,20 @@ func TestPhaseOrdered_Errors(t *testing.T) {
 		}
 	})
 }
+
+// The template wrote `(depende de …)` in every language, and the gate read only that: an
+// English plan that wrote `(depends on …)` had its order never confronted.
+func TestPhaseOrdered_dependencyInAnyLanguage(t *testing.T) {
+	t.Run("PHORP-B14: The dependency is read in any supported language", func(t *testing.T) {})
+	plano := mapx.Node{Kind: mapx.KindPlan, Code: "FNDTN"}
+	for _, phrase := range []string{"depends on", "Depends  On", "depende da", "depende del"} {
+		backwards := "### FNDTN-W01 — the tree (" + phrase + " FNDTN-W02)\n\n### FNDTN-W02 — the ruler\n"
+		if v, msg := checkPhaseOrdered(backwards, plano, "", nil, nil); v != Fail {
+			t.Errorf("%q: a dependency on a later phase fails, got %v (%s)", phrase, v, msg)
+		}
+	}
+	right := "### FNDTN-W01 — the tree\n\n### FNDTN-W02 — the ruler (depends on FNDTN-W01)\n"
+	if v, msg := checkPhaseOrdered(right, plano, "", nil, nil); v != Pass {
+		t.Errorf("an English plan in the right order passes, got %v (%s)", v, msg)
+	}
+}
