@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACJVD
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors judge --verdict` — registrar o veredito
 
@@ -19,16 +19,16 @@ outro.
 
 ## Resultados
 
-### ACJVD-R01 — APROVADO: o alvo cumpre os pontos de conformidade
+### ACJVD-O01 — APROVADO: o alvo cumpre os pontos de conformidade
 
 Resolve a issue anterior, se havia.
 
-### ACJVD-R02 — REPROVADO: o alvo viola um ou mais pontos
+### ACJVD-O02 — REPROVADO: o alvo viola um ou mais pontos
 
 Abre a issue com o relatório. É por isso que o relatório importa: sem ele, alguém vai
 reprocessar o alvo depois só para descobrir o que consertar.
 
-### ACJVD-R03 — DISPENSADO: o ponto não se aplica a este alvo
+### ACJVD-O03 — DISPENSADO: o ponto não se aplica a este alvo
 
 O terceiro veredito. Existe porque um guia governa vários tipos de alvo, e um ponto
 escrito para tela não se aplica a um modelo — forçar `pass` ou `fail` ali seria afirmar

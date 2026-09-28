@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPSCR
-  updated_at: 2026-09-27
+  updated_at: 2026-09-28
   layer: scan
 -->
 # RepoScan — the repository read as text: which files exist, of which layer, and what each declares
@@ -61,7 +61,7 @@ heuristic decided.
 | --- | --- |
 | `RPSCR-B12` | The rule codes a file owns are those outside `//` line comments and `/* */` block comments, each listed once in order of first appearance. |
 | `RPSCR-B13` | `ScenarioCodeRE`, `SetRuleLetters`: Rule codes are recognised with the rule letters the project declares, not a fixed set. |
-| `RPSCR-B14` | The identity declared on the header's `code:` line is recorded apart from the codes cited in the body, and the `@anchors-shared-code` and `@noPropagation` annotations are recorded as flags. |
+| `RPSCR-B14` | The identity declared on the header's `code:` line is recorded apart from the codes cited in the body, and the `@anchors-shared-code` and `@noPropagation` annotations are recorded as flags; the same reading is offered to other packages (`HeaderCodeOf`). |
 
 ### Header declarations — relations a file declares
 

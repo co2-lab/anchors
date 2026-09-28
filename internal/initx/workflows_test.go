@@ -1464,7 +1464,7 @@ func TestTravaRespeitaOCardDescartado(t *testing.T) {
 
 // A FASE PRECISA SE DISTINGUIR DO CARD no roadmap.
 //
-// Um `## FNDTN-F01 — o CI` é uma SEÇÃO dentro do arquivo do plano: não tem issue, não tem
+// Um `## FNDTN-W01 — o CI` é uma SEÇÃO dentro do arquivo do plano: não tem issue, não tem
 // trinca, e nenhum agente a pega porque não há o que pegar. Medido no projeto de referência:
 // 43 fases, TODAS sem card.
 //

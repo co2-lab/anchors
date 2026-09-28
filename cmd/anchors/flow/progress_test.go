@@ -45,19 +45,19 @@ func TestProgress_oneSectionPerPhaseOfThePlan(t *testing.T) {
 
 ## Phases
 
-### MTUAO-F01 — the tool and the report
+### MTUAO-W01 — the tool and the report
 
 - ` + "`packages/shared/MutationHarness.spec.md`" + `
 
-### MTUAO-F02 — CI ingests the signal (depends on MTUAO-F01)
+### MTUAO-W02 — CI ingests the signal (depends on MTUAO-W01)
 
-## ABCDE-F03 — two
+## ABCDE-W03 — two
 
-#### ABCDE-F04 — four
+#### ABCDE-W04 — four
 
-# ABCDE-F05 — one is the title level
+# ABCDE-W05 — one is the title level
 
-##### ABCDE-F06 — five is below the phases
+##### ABCDE-W06 — five is below the phases
 `
 	dir := t.TempDir()
 	p := filepath.Join(dir, "0017-mutation.md")
@@ -75,19 +75,19 @@ func TestProgress_oneSectionPerPhaseOfThePlan(t *testing.T) {
 	}
 	got := string(b)
 
-	for _, phase := range []string{"MTUAO-F01", "MTUAO-F02", "ABCDE-F03", "ABCDE-F04"} {
+	for _, phase := range []string{"MTUAO-W01", "MTUAO-W02", "ABCDE-W03", "ABCDE-W04"} {
 		if !strings.Contains(got, "## "+phase) {
 			t.Errorf("the section of phase %s is missing:\n%s", phase, got)
 		}
 	}
-	for _, phase := range []string{"ABCDE-F05", "ABCDE-F06"} {
+	for _, phase := range []string{"ABCDE-W05", "ABCDE-W06"} {
 		if strings.Contains(got, phase) {
 			t.Errorf("a level-one or level-five header is not a phase, but %s got a section:\n%s", phase, got)
 		}
 	}
 	// The phase TITLE comes along: without it the file is a list of codes, and whoever opens
 	// it has to go back to the plan to know what each one is about.
-	if !strings.Contains(got, "## MTUAO-F01 — the tool and the report") {
+	if !strings.Contains(got, "## MTUAO-W01 — the tool and the report") {
 		t.Errorf("the phase title was not copied:\n%s", got)
 	}
 	// The checkbox lives HERE, and that is the whole point of the separation.
@@ -101,15 +101,15 @@ func TestProgress_doesNotOverwriteExistingState(t *testing.T) {
 	t.Run("PLPRP-B05: An existing progress file is never overwritten", func(t *testing.T) {})
 	dir := t.TempDir()
 	p := filepath.Join(dir, "0001-x.md")
-	if err := os.WriteFile(p, []byte("# Plan\n\n### ABCDE-F01 — phase\n"), 0o644); err != nil {
+	if err := os.WriteFile(p, []byte("# Plan\n\n### ABCDE-W01 — phase\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	done := "# Progress — ABCDE\n\n## ABCDE-F01\n\n- [x] done\n"
+	done := "# Progress — ABCDE\n\n## ABCDE-W01\n\n- [x] done\n"
 	if err := os.WriteFile(progressPath(p), []byte(done), 0o644); err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := writeInitialProgress(p, "# Plan\n\n### ABCDE-F01 — phase\n", "ABCDE"); err == nil {
+	if _, err := writeInitialProgress(p, "# Plan\n\n### ABCDE-W01 — phase\n", "ABCDE"); err == nil {
 		t.Fatal("it overwrote the existing progress — the `[x]` of whoever worked would be erased")
 	}
 
@@ -150,7 +150,7 @@ func TestProgress_honoursTheProjectsCodeLengths(t *testing.T) {
 	t.Cleanup(func() { config.CodeLengths = original })
 	config.CodeLengths = []int{3}
 
-	plan := "# Plan\n\n### ABC-F01 — short code phase\n"
+	plan := "# Plan\n\n### ABC-W01 — short code phase\n"
 	dir := t.TempDir()
 	p := filepath.Join(dir, "0001-short.md")
 	if err := os.WriteFile(p, []byte(plan), 0o644); err != nil {
@@ -162,7 +162,7 @@ func TestProgress_honoursTheProjectsCodeLengths(t *testing.T) {
 		t.Fatal(err)
 	}
 	b, _ := os.ReadFile(dest)
-	if !strings.Contains(string(b), "## ABC-F01") {
+	if !strings.Contains(string(b), "## ABC-W01") {
 		t.Fatalf("the phase of a project with code_lengths=[3] was not recognised — the gates "+
 			"see it and this command does not:\n%s", b)
 	}
@@ -198,9 +198,9 @@ func TestNewProgress_createsForAnExistingPlan(t *testing.T) {
 -->
 # Platform
 
-### PLTFR-F01 — the contract
+### PLTFR-W01 — the contract
 
-### PLTFR-F02 — access to the sources
+### PLTFR-W02 — access to the sources
 `
 	if err := os.WriteFile(plan, []byte(content), 0o644); err != nil {
 		t.Fatal(err)
@@ -221,7 +221,7 @@ func TestNewProgress_createsForAnExistingPlan(t *testing.T) {
 	if !strings.Contains(got, "# Progress — PLTFR") {
 		t.Errorf("the progress did not inherit the plan's code:\n%s", got)
 	}
-	for _, phase := range []string{"## PLTFR-F01", "## PLTFR-F02"} {
+	for _, phase := range []string{"## PLTFR-W01", "## PLTFR-W02"} {
 		if !strings.Contains(got, phase) {
 			t.Errorf("section %q is missing — the phases come from the plan's headers", phase)
 		}
@@ -238,7 +238,7 @@ func TestNewProgress_refusesAPlanWithoutCode(t *testing.T) {
 	t.Run("PLPRP-E01: A plan without a code is refused", func(t *testing.T) {})
 	root := t.TempDir()
 	plan := filepath.Join(root, "p.md")
-	if err := os.WriteFile(plan, []byte("# Plan without header\n\n### ABCDE-F01 — phase\n"), 0o644); err != nil {
+	if err := os.WriteFile(plan, []byte("# Plan without header\n\n### ABCDE-W01 — phase\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	if err := runNewProgress(t, "--root", root, "--for", "p.md"); err == nil {

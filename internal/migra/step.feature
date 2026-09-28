@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MSCMG
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @MSCMG
@@ -24,6 +24,12 @@ Feature: MigrationStepChain — one step per format version, chained in order, a
     Given the registered steps
     When the steps from format 2 to format 2 are asked for
     Then the answer is an empty list and no error
+
+  @MSCMG-B05 @unit-level
+  Scenario: A step may rename code letters by kind
+    Given a step declaring a letter renamed for plans, and a file on the format before it
+    When the file is migrated through that step
+    Then the step carries the rename and the file only gets the new version
 
   @MSCMG-B04 @unit-level
   Scenario: A key some step renames is reported as renamed

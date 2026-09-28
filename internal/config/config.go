@@ -632,11 +632,11 @@ func normalizeTitle(s string) string {
 // Quem altera `Realizes` no catálogo de seções (`new_templates.go`) tem de conferir esta
 // lista: são as duas metades da mesma decisão, e elas divergiram sem que nada acusasse.
 //
-// `F` (Phase/Fase) é a FASE de um plano — o agrupamento que ordena o trabalho dentro
-// dele. Entrou junto com o `parent:`, e sem ela o gate `rule-types` reprova toda spec
-// que declare `needs: CODE-F01`: o próprio Anchors passaria a recusar a convenção que
-// ele acabou de criar. É a terceira vez que a lista fica para trás de uma letra nova —
-// ver a nota acima sobre conferir as duas metades.
+// `W` (Wave) é a FASE de um plano — o agrupamento que ordena o trabalho dentro dele. Ela
+// entrou como `F` (de *Fase*) junto com o `parent:`, e sem ela o gate `rule-types`
+// reprovava toda spec que declarasse `needs: CODE-F01`. Virou `W` no formato 5: o
+// vocabulário é inglês, e *Phase* daria `P`, que é a *Presentation validation* — ver
+// `PhaseLetter` em vocabulary.go, que registra a decisão.
 //
 // `Q` (Question) é a DECISÃO EM ABERTO. Ela não é uma regra — é a ausência de uma —, e
 // ainda assim precisa de identidade: sem código, a pergunta não vira issue rastreável,
@@ -648,7 +648,7 @@ func normalizeTitle(s string) string {
 // `CRED-V01` so' vale quando `CHKUT-G02`. E' a quarta letra a entrar; as tres metades da
 // decisao (esta lista, o catalogo de secoes, e a copia do `testsig`) foram atualizadas na
 // mesma mudanca, e os dois testes de guarda existem para cobrar exatamente isso.
-var DefaultRuleLetters = "SRVAXBNMDEIQFG"
+var DefaultRuleLetters = "SRVAXBNMDEIQWG"
 
 // CodeLengths são os comprimentos de código de identidade que o engine reconhece.
 //
@@ -2205,7 +2205,7 @@ var RenamedKey func(string) bool
 // Espelha o `mapx.FormatoAtual` e vive aqui para evitar o ciclo de import (o `mapx` usa
 // tipos do `config`). Os dois sobem juntos: uma migração que muda o mapa e a config é um
 // passo só.
-const FormatoAtualDeConfig = 4
+const FormatoAtualDeConfig = 5
 
 // fileVersionRE lê o `version:` de topo sem passar pelo parser — que é justamente
 // quem acabou de recusar o arquivo.

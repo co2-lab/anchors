@@ -43,3 +43,38 @@ func DefaultGateNamesForTest() []string {
 	}
 	return defaultGateNames()
 }
+
+// --- the LETTERS of the artifacts that are not specs ---
+//
+// A code's letter says what the item is: `-B01` a behaviour, `-S01` a state. Specs take
+// theirs from `rule_types` (or the canonical `DefaultRuleLetters`); plans, flows and
+// actions have fixed letters of their own, declared here and read by everything that
+// writes or recognizes them — templates, guides, gates, the flow graph.
+//
+// WHY THESE THREE, AND WHAT THEY REPLACED (decided on 2026-09-28, migrated by format 5):
+//
+//   - A plan's PHASE was `F`, from the Portuguese *Fase*. In English it would be `P`, which
+//     became the canonical letter of *Presentation validations*. It is now `W` — Wave: a
+//     plan delivers in waves, each ordered after the ones it depends on.
+//   - A flow's STEP was `P`, from the Portuguese *Passo*. `S` (Step) was not free: it is a
+//     spec's *State*. It is now `T` — Task: each step fits one action (`Fits: ACHCK`), so it
+//     is the task the flow assigns at that point.
+//   - A RESULT — of an action, or of a flow fitted as a piece inside another — was `R`
+//     (*Result*), the same letter as a spec's *permission* rule —
+//     and as a product doctrine's rule and a plan's revision block (`-R0001`, four digits).
+//     It is now `O` — Outcome.
+//
+// The criterion: the vocabulary is English, and a letter of a non-spec artifact does not
+// reuse a canonical spec letter with another meaning. Only letters no spec uses were
+// candidates. There is NO alias for the old letters, on the precedent of the gate names
+// above: reading both forever never closes, so `anchors migrate` (format 5) rewrites the
+// project's codes once, and the old letters are not read after it.
+const (
+	// PhaseLetter is the letter of a plan's phase: `FNDTN-W01`.
+	PhaseLetter = "W"
+	// StepLetter is the letter of a flow's step: `WORKR-T04`.
+	StepLetter = "T"
+	// OutcomeLetter is the letter of a result, of an action (`ACHCK-O01`) or of a flow
+	// fitted as a piece (`JUDGE-O01`).
+	OutcomeLetter = "O"
+)

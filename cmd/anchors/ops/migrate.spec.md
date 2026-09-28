@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGCMM
-  updated_at: 2026-09-26
+  updated_at: 2026-09-28
   layer: comando
 -->
 # MigrateCommand — the command the format error promises, bringing the map and the config up to this binary's format
@@ -41,6 +41,7 @@ machine makes the next agent migrate again and produce the same diff.
 | `MGCMM-B03` | A file already in the current format is reported as such and left untouched. |
 | `MGCMM-B04` | For each migrated file, the renamed keys are listed in alphabetical order, each with its number of occurrences. |
 | `MGCMM-B05` | With `--dry-run` the command reports what would be migrated, writes nothing, and says that nothing was written. |
+| `MGCMM-B07` | When the project crosses a step that renames code letters, the codes of its plans (files of a `kind: plan` layer), flows (`.flow.md`) and actions (`.action.md`), found by the code their header declares, are rewritten in every versioned text file, each file listed with its rewrites; with `--dry-run` they are listed and not written; codes of other units are not touched, and a second run rewrites nothing. The installed pipelines are not rewritten: the command points to `anchors doctor --fix`, which updates the ones nobody edited. |
 | `MGCMM-B06` | After a real migration the command tells the user to commit it. |
 
 ## Invariants

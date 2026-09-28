@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACGPJ
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors guide project` — a régua da DESCOBERTA
 
@@ -20,7 +20,7 @@ cada resposta, e o que foi DESCARTADO e por quê).
 
 ## Resultados
 
-### ACGPJ-R01 — DESCOBERTA FEITA: PROJECT.md e INSIGHTS.md escritos
+### ACGPJ-O01 — DESCOBERTA FEITA: PROJECT.md e INSIGHTS.md escritos
 
 O projeto tem stack, paradigma e convenções decididos — e o `init` agora tem de onde
 inferir.

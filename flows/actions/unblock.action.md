@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACUNB
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors unblock` — a decisão que GERA trabalho
 
@@ -18,6 +18,6 @@ indefinidamente por alguém que já decidiu.
 
 ## Resultados
 
-### ACUNB-R01 — CARD DE DESBLOQUEIO ABERTO: o bloqueado espera trabalho, não pessoa
+### ACUNB-O01 — CARD DE DESBLOQUEIO ABERTO: o bloqueado espera trabalho, não pessoa
 
 Nasce com `anchors:desbloqueia-<n>`. Quando ele fecha, o bloqueado volta à fila.

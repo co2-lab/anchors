@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACREL
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: o RELEASE — publicar a versão
 
@@ -17,9 +17,9 @@ que não decide nada — ele executa o que a tag já decidiu.
 
 ## Resultados
 
-### ACREL-R01 — PUBLICADO: os binários estão disponíveis
+### ACREL-O01 — PUBLICADO: os binários estão disponíveis
 
-### ACREL-R02 — FALHOU: o build da release quebrou
+### ACREL-O02 — FALHOU: o build da release quebrou
 
 A tag existe e a release não. O conserto é corrigir e re-tagar — apagar a tag publicada
 quebraria quem já a baixou.

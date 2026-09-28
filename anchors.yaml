@@ -12,7 +12,7 @@ lang: en
 # interativo, ou inferir do escaneamento que ele mesmo acabou de fazer (ele JÁ detectou
 # "código em: [cli/internal cli/cmd]" — e não usou; os caminhos daquele dia tinham o
 # prefixo `cli/`, que saiu quando o `go.mod` foi para a raiz).
-version: 4
+version: 5
 # The version floor: `mode: manual` (below) exists from 0.1.190 on. An older binary would
 # refuse to load this file; with the floor it asks to be updated instead.
 min_version: 0.1.190
@@ -431,6 +431,7 @@ derived:
           - "internal/migra/format_2.go"
           - "internal/migra/format_3.go"
           - "internal/migra/format_4.go"
+          - "internal/migra/format_5.go"
         feature: ["{{dir}}/{{name}}.feature"]
         test: ["{{dir}}/{{name}}_test.go"]
 
@@ -749,7 +750,7 @@ gates:
       "cmd/anchors/flow/watch_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
       "cmd/anchors/quality/budget_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
       "internal/mapx/lock_windows.go": "compiled only on Windows; the measurement runs on macOS and Linux"
-      "internal/migra/format_{2,3,4}.go": "rename tables of a format migration: data, no operator to mutate"
+      "internal/migra/format_{2,3,4,5}.go": "rename tables of a format migration: data, no operator to mutate"
 
   - name: line-coverage
     blocking: true

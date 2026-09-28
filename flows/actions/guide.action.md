@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACGDE
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors guide` — ler a régua antes de escrever
 
@@ -15,9 +15,9 @@ contra os quais ele será julgado.
 
 ## Resultados
 
-### ACGDE-R01 — RÉGUA LIDA: quem vai escrever sabe o critério
+### ACGDE-O01 — RÉGUA LIDA: quem vai escrever sabe o critério
 
-### ACGDE-R02 — GUIA SEM PONTOS DE CONFORMIDADE: só há prosa a interpretar
+### ACGDE-O02 — GUIA SEM PONTOS DE CONFORMIDADE: só há prosa a interpretar
 
 O guia existe mas não distilou as regras em itens verificáveis. Julgar por prosa inteira
 "no olho" é o que torna o veredito irreprodutível — dois julgadores, dois resultados.

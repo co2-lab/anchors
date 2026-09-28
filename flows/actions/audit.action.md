@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACAUD
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors audit` — o dossiê de pendências de um arquivo
 
@@ -17,7 +17,7 @@ em vez de voltar a ele três vezes por três achados diferentes.
 
 ## Resultados
 
-### ACAUD-R01 — HÁ PENDÊNCIA: o dossiê lista o que está aberto
+### ACAUD-O01 — HÁ PENDÊNCIA: o dossiê lista o que está aberto
 
-### ACAUD-R02 — NADA ABERTO: o arquivo não tem pendência
+### ACAUD-O02 — NADA ABERTO: o arquivo não tem pendência
 

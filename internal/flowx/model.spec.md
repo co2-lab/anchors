@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLMDF
-  updated_at: 2026-09-26
+  updated_at: 2026-09-28
   layer: apoio
 -->
 # FlowModel — the questions a work-flow graph answers: what comes next, and what is broken
@@ -37,7 +37,7 @@ result is never asked "who reaches you?".
 | `FLMDF-B02` | A state is found by its code, and a code with no state is not found. (`StateByCode`) |
 | `FLMDF-B03` | The states of a flow come in the order its file declares them, never alphabetical, and the flows are listed once each in order of appearance. (`StatesOf`, `Flows`) |
 | `FLMDF-B04` | The entry of a flow is its first declared step that is not a result; a file that declares only results has no entry. (`Entry`) |
-| `FLMDF-B05` | A code is a result when the letter after its hyphen is R. (`IsResult`) |
+| `FLMDF-B05` | A code is a result when the letter after its hyphen is the outcome letter, O (`config.OutcomeLetter`; it was R until format 5). (`IsResult`) |
 | `FLMDF-B06` | The title of an action is the name of the action file that declares its results; an action nobody wrote has none. (`ActionTitle`) |
 | `FLMDF-B07` | A step no transition reaches is unreachable, except the first state of each flow; results are never unreachable. (`Unreachable`) |
 | `FLMDF-B08` | A result that no transition routes is unhandled. (`Unhandled`) |

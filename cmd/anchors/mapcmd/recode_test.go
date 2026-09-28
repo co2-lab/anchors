@@ -148,7 +148,7 @@ func TestRecode_applyKeepsJudgmentsAndFlow(t *testing.T) {
 	}
 	g.Edges[judged].Julgamentos = []mapx.Judgment{{Gate: "atomic", Verdict: "ok"}}
 	g.Edges[judged].Stamp = &mapx.Stamp{Verdict: "ok"}
-	g.Flow = &mapx.FlowGraph{States: []mapx.FlowState{{Code: "WORKR-P01", Title: "pull", Flow: "flows/w.flow.md"}}}
+	g.Flow = &mapx.FlowGraph{States: []mapx.FlowState{{Code: "WORKR-T01", Title: "pull", Flow: "flows/w.flow.md"}}}
 	// An edge between files that do not exist: the rebuild cannot keep it, and its judgment
 	// is lost — which the report must say.
 	g.Edges = append(g.Edges, mapx.Edge{From: "src/ghost.ts", To: "src/ghost.spec.md", Type: g.Edges[judged].Type,

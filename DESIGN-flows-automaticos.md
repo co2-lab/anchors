@@ -55,7 +55,7 @@ digita como comando do Anchors, e o fluxo de entrega termina nele.
 Dispara em mudança de arquivo. Não executa nem chama IA: transforma "mudou" em "há
 trabalho", e enfileira com a próxima etapa sugerida.
 
-É o que sustenta o ciclo do `worker` — o passo `WORKR-P06` (fechar) diz "o vigia já
+É o que sustenta o ciclo do `worker` — o passo `WORKR-T06` (fechar) diz "o vigia já
 enfileirou a próxima etapa", e o vigia não está em fluxo nenhum. Ele é a peça que faz o
 ciclo se fechar sozinho, e está invisível.
 
@@ -68,7 +68,7 @@ que importa é outra, e ela atravessa tudo o que já escrevi.
 
 O caso que a expõe é o `check`. No fluxo `worker` eu escrevi:
 
-    ACHCK-R02  BARRADO → WORKR-P03 (volta a escrever)
+    ACHCK-O02  BARRADO → WORKR-T03 (volta a escrever)
 
 Como se corrigir fosse imediato e o assunto morresse ali. Não morre: cada gate que reprova
 **ABRE UMA ISSUE**, e a issue tem ciclo de vida próprio, com quatro estados declarados no
@@ -152,9 +152,9 @@ Para o segundo, o formato já quase serve: uma sugestão é uma saída como as o
 diferença de que quem decide é humano. O que falta é dizê-lo — uma saída sugerida não é
 uma ordem, e apresentá-la como transição comum faria o fluxo mentir sobre quem manda.
 
-**(a) o resultado aponta para outro FLUXO.** `ACHCK-R02` abriria o fluxo `issue`
+**(a) o resultado aponta para outro FLUXO.** `ACHCK-O02` abriria o fluxo `issue`
 (`todo → doing → done`), e o worker seguiria em paralelo. Simples, e reusa o que existe —
-um fluxo já encaixa como peça (`WORKR-P05` encaixa o `JUDGE` inteiro).
+um fluxo já encaixa como peça (`WORKR-T05` encaixa o `JUDGE` inteiro).
 
 **(b) a transição ganha um tipo**: `→` para "vá para", e algo como `⊕` para "isto também
 abre". O `flow next` passaria a responder duas coisas: para onde EU vou, e o que ficou

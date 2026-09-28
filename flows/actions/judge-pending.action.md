@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACJPN
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors judge --pending` — ver o que aguarda julgamento
 
@@ -15,9 +15,9 @@ pergunta a responder.
 
 ## Resultados
 
-### ACJPN-R01 — HÁ ALVO AGUARDANDO: o guia e a pergunta vêm junto
+### ACJPN-O01 — HÁ ALVO AGUARDANDO: o guia e a pergunta vêm junto
 
-### ACJPN-R02 — NADA AGUARDANDO: nenhum gate de julgamento pendente
+### ACJPN-O02 — NADA AGUARDANDO: nenhum gate de julgamento pendente
 
 Medido: sai com código 0 e manda rodar o `check` para descobrir. Não é erro — é a
 ausência de trabalho deste tipo.

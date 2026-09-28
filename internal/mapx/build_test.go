@@ -214,7 +214,7 @@ func TestAnchorCodeByDerived_linksByTheStem(t *testing.T) {
 func TestNodeCode_upstreamHasNone(t *testing.T) {
 	t.Run("GRBLG-B05: A vendored file has no local identity", func(t *testing.T) {})
 	f := scan.File{Path: ".github/workflows/anchors-board.yml", Upstream: true,
-		HeaderCode: "FNDTN", Codes: []string{"FNDTN-F04"}}
+		HeaderCode: "FNDTN", Codes: []string{"FNDTN-W04"}}
 	if got := nodeCode(f, map[string]string{f.Path: "ABCDX"}); got != "" {
 		t.Fatalf("an upstream-owned file gets no local code, got %q", got)
 	}

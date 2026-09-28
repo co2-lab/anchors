@@ -1017,7 +1017,7 @@ func TestRuleLetters_declaredOrCanonical(t *testing.T) {
 	if got := c.RuleLetters(); got != "BS" {
 		t.Errorf("RuleLetters() = %q, want BS", got)
 	}
-	if got := (&Config{RuleTypes: []RuleType{{Letter: "XY"}}}).RuleLetters(); got != DefaultRuleLetters || got != "SRVAXBNMDEIQFG" {
+	if got := (&Config{RuleTypes: []RuleType{{Letter: "XY"}}}).RuleLetters(); got != DefaultRuleLetters || got != "SRVAXBNMDEIQWG" {
 		t.Errorf("with no valid letter RuleLetters() = %q, want the canonical set", got)
 	}
 }

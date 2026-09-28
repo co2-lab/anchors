@@ -38,7 +38,7 @@ func newDecidedCmd() *cobra.Command {
 		Long: `Closes the cycle of ` + "`escalate --for-user`" + `: the decision came out, was promoted to a
 rule, and the card goes back to the queue.
 
-  anchors decided --card 4 --resolution "PLTFR-R0004: mTLS is built in F03"
+  anchors decided --card 4 --resolution "PLTFR-R0004: mTLS is built in W03"
 
 What it does:
   · removes the label ` + "`" + initx.LabelNeedsUser + "`" + ` from the card (it is what makes the claim skip it)
@@ -55,7 +55,7 @@ the next one to read the plan would not know why it says what it says.`,
 			}
 			if strings.TrimSpace(resolucao) == "" {
 				return fmt.Errorf("provide the --resolution: which revision was born from the decision " +
-					"(e.g.: `--resolution \"PLTFR-R0004: mTLS is built in F03\"`).\n" +
+					"(e.g.: `--resolution \"PLTFR-R0004: mTLS is built in W03\"`).\n" +
 					"   The exit of an open decision is ONE: the answer becomes a RULE, with a code. " +
 					"Without it the card goes back to the queue and the decision is left without a trace")
 			}
@@ -166,7 +166,7 @@ the next one to read the plan would not know why it says what it says.`,
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().StringVar(&card, "card", "", "the card that `escalate --for-user` stopped")
 	cmd.Flags().StringVar(&resolucao, "resolution", "",
-		"the revision born from the decision (e.g.: \"PLTFR-R0004: mTLS is built in F03\")")
+		"the revision born from the decision (e.g.: \"PLTFR-R0004: mTLS is built in W03\")")
 	return cmd
 }
 

@@ -317,7 +317,7 @@ func TestMapMerge_keepsTheOtherSidesFlowAndFailures(t *testing.T) {
 	st := func(code string) mapx.FlowState {
 		return mapx.FlowState{Code: code, Title: code, Flow: "flows/w.flow.md"}
 	}
-	tr := mapx.FlowTransition{From: "WORKR-P01", To: "WORKR-P02", Flow: "flows/w.flow.md"}
+	tr := mapx.FlowTransition{From: "WORKR-T01", To: "WORKR-T02", Flow: "flows/w.flow.md"}
 	node := func(fs ...mapx.FailureSignal) mapx.Node {
 		return mapx.Node{ID: "a.spec.md", Kind: "spec", Rev: "r1", Failures: fs}
 	}
@@ -325,7 +325,7 @@ func TestMapMerge_keepsTheOtherSidesFlowAndFailures(t *testing.T) {
 	for _, c := range []struct {
 		name     string
 		oursFlow *mapx.FlowGraph
-	}{{"our side has no flow", nil}, {"our side has its own flow", &mapx.FlowGraph{States: []mapx.FlowState{st("WORKR-P01")}}}} {
+	}{{"our side has no flow", nil}, {"our side has its own flow", &mapx.FlowGraph{States: []mapx.FlowState{st("WORKR-T01")}}}} {
 		t.Run(c.name, func(t *testing.T) {
 			ours := saveGraph(t, dir, "ours-"+c.name+".yaml", &mapx.Graph{
 				Nodes: []mapx.Node{node(
@@ -339,7 +339,7 @@ func TestMapMerge_keepsTheOtherSidesFlowAndFailures(t *testing.T) {
 					mapx.FailureSignal{Rule: "AAAAA-E02", Count: 7, Last: "2026-09-09"},
 					mapx.FailureSignal{Rule: "AAAAA-E03", Count: 2, Last: "2026-09-02"},
 				)},
-				Flow: &mapx.FlowGraph{States: []mapx.FlowState{st("WORKR-P01"), st("WORKR-P02")}, Transitions: []mapx.FlowTransition{tr}},
+				Flow: &mapx.FlowGraph{States: []mapx.FlowState{st("WORKR-T01"), st("WORKR-T02")}, Transitions: []mapx.FlowTransition{tr}},
 			})
 			if _, err := runMerge(t, ours, ours, theirs); err != nil {
 				t.Fatal(err)

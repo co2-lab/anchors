@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -102,5 +103,57 @@ func TestMigrateBringsBothFilesAndListsTheKeysSorted(t *testing.T) {
 	if b, _ := os.ReadFile(cfgPath); !strings.Contains(string(b), "optional_triad_edges: true") ||
 		!strings.Contains(string(b), fmt.Sprintf("version: %d", mapx.FormatoAtual)) {
 		t.Errorf("anchors.yaml was not migrated:\n%s", b)
+	}
+}
+
+// Format 5 renamed the letters of plans, flows and actions. They live in the project's own
+// files, so the migration rewrites them there — only for the units of those kinds.
+func TestMigrateRewritesTheCodeLettersOfPlansFlowsAndActions(t *testing.T) {
+	t.Run("MGCMM-B07: Crossing format 5 rewrites the letters of plans, flows and actions", func(t *testing.T) {})
+	root := t.TempDir()
+	writeFile(t, root, config.DefaultFile, "version: 4\nlayers:\n  plan:\n    pattern: \"plans/*.md\"\n    kind: plan\n  spec:\n    pattern: \"**/*.spec.md\"\n    kind: spec\n")
+	writeFile(t, root, mapx.DefaultPath, "version: 4\nnodes: []\nedges: []\n")
+	plan := "<!-- @anchors\n  code: PLANA\n-->\n# Plan\n\n### PLANA-F01 — tree\n\n### PLANA-F02 — rules (depende de PLANA-F01)\n"
+	flow := "<!-- @anchors\n  code: FLOWA\n-->\n# Flow\n\n### FLOWA-P01 — confront\n\nFits: `ACTNA`\n\n- `ACTNA-R01` PROMOTABLE → `FLOWA-P02`\n\n### FLOWA-P02 — end\n\n> @terminal\n"
+	action := "<!-- @anchors\n  code: ACTNA\n-->\n# Action\n\n### ACTNA-R01 — PROMOTABLE: ok\n"
+	spec := "<!-- @anchors\n  code: LOGIN\n  needs: PLANA-F02\n-->\n# Login\n\n### LOGIN-R01 — only anonymous\n\nRevision LOGIN-R0001.\n"
+	writeFile(t, root, "plans/0001-foundation.md", plan)
+	writeFile(t, root, "flows/work.flow.md", flow)
+	writeFile(t, root, "flows/actions/check.action.md", action)
+	writeFile(t, root, "src/login.spec.md", spec)
+	read := func(rel string) string { b, _ := os.ReadFile(filepath.Join(root, rel)); return string(b) }
+
+	err, out := runCmd(t, newMigrateCmd(), "--root", root, "--dry-run")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "src/login.spec.md would be rewritten") || !strings.Contains(out, "PLANA-F02 → PLANA-W02  (1)") ||
+		read("plans/0001-foundation.md") != plan {
+		t.Fatalf("the dry run lists the rewrites and writes nothing:\n%s", out)
+	}
+
+	if err, out = runCmd(t, newMigrateCmd(), "--root", root); err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	for rel, want := range map[string]string{
+		"plans/0001-foundation.md":      "### PLANA-W02 — rules (depende de PLANA-W01)",
+		"flows/work.flow.md":            "- `ACTNA-O01` PROMOTABLE → `FLOWA-T02`",
+		"flows/actions/check.action.md": "### ACTNA-O01 — PROMOTABLE",
+		"src/login.spec.md":             "needs: PLANA-W02",
+	} {
+		if !strings.Contains(read(rel), want) {
+			t.Errorf("%s should read %q:\n%s", rel, want, read(rel))
+		}
+	}
+	if !strings.Contains(out, "anchors doctor --fix") {
+		t.Errorf("the migration points to the doctor for the installed pipelines:\n%s", out)
+	}
+	if s := read("src/login.spec.md"); !strings.Contains(s, "### LOGIN-R01 — only anonymous") || !strings.Contains(s, "LOGIN-R0001") {
+		t.Errorf("the spec's own permission and revision stay:\n%s", s)
+	}
+
+	err, out = runCmd(t, newMigrateCmd(), "--root", root)
+	if err != nil || strings.Contains(out, "rewritten") {
+		t.Errorf("a second run rewrites nothing: %v\n%s", err, out)
 	}
 }

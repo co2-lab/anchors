@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MGCMM
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @MGCMM
@@ -65,3 +65,9 @@ Feature: MigrateCommand — the command the format error promises, bringing the 
     Given a map in format 1
     When migrate runs
     Then the output asks the user to commit the migration
+
+  @MGCMM-B07 @unit-level
+  Scenario: Crossing format 5 rewrites the letters of plans, flows and actions
+    Given a format 4 project with a plan, a flow, an action, and a spec citing a phase beside a permission and a revision of its own
+    When migrate runs with --dry-run, then for real, then again
+    Then the dry run lists the rewrites and writes nothing, the real run rewrites the phase, step and result codes wherever cited and leaves the spec's own codes, and the second run rewrites nothing

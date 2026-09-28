@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACINI
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors init` — configurar o projeto
 
@@ -22,9 +22,9 @@ outras nascem dele.
 
 ## Resultados
 
-### ACINI-R01 — ESTRUTURA INFERIDA: o projeto tem código e o disco respondeu
+### ACINI-O01 — ESTRUTURA INFERIDA: o projeto tem código e o disco respondeu
 
-### ACINI-R02 — DIRETÓRIO VAZIO: não há de onde inferir
+### ACINI-O02 — DIRETÓRIO VAZIO: não há de onde inferir
 
 O projeto ainda não existe. Não há camada a propor, nem dialeto a detectar — e a
 Estrutura que saísse daqui seria adivinhação com cara de configuração.

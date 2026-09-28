@@ -51,7 +51,7 @@ var progressItemRE = regexp.MustCompile(
 // quando a fase não semeia nada — é um convite a preencher, e deveria sair quando alguém
 // decide o que a fase faz.
 //
-// Medido no app de referência: ficou no progresso do plano 0017, fase `MTUAO-F02`. E as três
+// Medido no app de referência: ficou no progresso do plano 0017, fase `MTUAO-W02`. E as três
 // direções deste gate não o veem — as duas primeiras confrontam itens que CITAM CAMINHO,
 // e a terceira olha as sementes do plano (aquela fase não semeia).
 //

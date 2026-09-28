@@ -2,6 +2,7 @@ package config
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -64,5 +65,20 @@ func TestDefaultGateNamesForTest_asksTheSourceEachTime(t *testing.T) {
 	DefaultGateNamesForTest()
 	if calls != 2 {
 		t.Fatalf("the source was asked %d times for two questions, want 2", calls)
+	}
+}
+
+func TestArtifactLetters(t *testing.T) {
+	t.Run("GTVCG-B03: The letters of plans, flows and actions", func(t *testing.T) {})
+	if PhaseLetter != "W" || StepLetter != "T" || OutcomeLetter != "O" {
+		t.Fatalf("the letters are W, T and O, got %s %s %s", PhaseLetter, StepLetter, OutcomeLetter)
+	}
+	if !strings.Contains(DefaultRuleLetters, PhaseLetter) {
+		t.Errorf("specs cite phases in needs:, so %s must be canonical: %s", PhaseLetter, DefaultRuleLetters)
+	}
+	for _, l := range []string{StepLetter, OutcomeLetter} {
+		if strings.Contains(DefaultRuleLetters, l) {
+			t.Errorf("%s would mean something else in a spec: %s", l, DefaultRuleLetters)
+		}
 	}
 }

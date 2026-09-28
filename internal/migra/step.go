@@ -36,6 +36,20 @@ type Step struct {
 	// a chave: aqui a chave fica e o VALOR dela vira outro — é o caso dos nomes de gate
 	// gravados dentro dos carimbos de julgamento.
 	RenameValues map[string]map[string]map[string]string
+	// RenameLetters: code letters that changed, by the KIND of unit that owns the codes.
+	// Unlike the keys, these live in the project's own files — plans, flows, actions and
+	// everything that cites them — so the command applies them over the project's text,
+	// not over the two YAML files (`RewriteCodeLetters`).
+	RenameLetters []LetterRename
+}
+
+// LetterRename is a code letter that changed for the units of one kind: every code
+// `<unit>-<From>NN` of a unit of that kind becomes `<unit>-<To>NN`. The kind scopes it:
+// `R` stopped meaning an action's result, and a spec's `-R01` (a permission) is not
+// touched.
+type LetterRename struct {
+	Kind     string // "plan", "flow" or "action"
+	From, To string
 }
 
 // steps são todas as transições conhecidas, uma por formato.

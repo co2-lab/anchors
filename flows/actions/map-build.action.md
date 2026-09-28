@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACMAP
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors map build` — pôr o disco no mapa
 
@@ -18,9 +18,9 @@ leem o MAPA, não o disco. Um arquivo novo só existe para eles depois desta aç
 
 ## Resultados
 
-### ACMAP-R01 — MAPA EM DIA: o grafo reflete o disco
+### ACMAP-O01 — MAPA EM DIA: o grafo reflete o disco
 
-### ACMAP-R02 — CARIMBO PERDIDO: o rebuild não achou um nó que tinha validação
+### ACMAP-O02 — CARIMBO PERDIDO: o rebuild não achou um nó que tinha validação
 
 Aviso, não reprovação: remover um nó legitimamente remove os carimbos dele. O que a ação
 faz é transformar perda silenciosa em perda visível — o laudo de uma revisão adversarial é

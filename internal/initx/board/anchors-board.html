@@ -1108,7 +1108,7 @@ function desenhaArvore(d) {
   // pertencem ao mesmo plano. Inferir uma da outra desenhava as quatro fases de um plano
   // encaixadas como escada.
   //
-  // A fase sem `parent` declarado cai no plano homônimo: `FNDTN-F01` pertence a `FNDTN`,
+  // A fase sem `parent` declarado cai no plano homônimo: `FNDTN-W01` pertence a `FNDTN`,
   // e o código já diz isso. É a única inferência que sobra, e ela é segura porque o
   // código da fase é DERIVADO do plano.
   const filhos = {};
@@ -1488,7 +1488,7 @@ function ordenaPorHierarquia(linhas, d, PASSADO) {
       const base = l ? { ...l } : { i: nos[cod] };
       // A FASE NÃO É TRABALHO, e o desenho precisa dizer isso.
       //
-      // Um `## FNDTN-F01 — o CI` é uma SEÇÃO dentro do arquivo do plano, não um artefato:
+      // Um `## FNDTN-W01 — o CI` é uma SEÇÃO dentro do arquivo do plano, não um artefato:
       // não tem issue, não tem trinca, e nenhum agente a pega porque não há o que pegar.
       // Medido: as 86 fases do projeto de referência, todas sem card.
       //

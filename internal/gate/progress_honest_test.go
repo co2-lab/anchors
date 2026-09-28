@@ -379,8 +379,8 @@ func writeProgress(t *testing.T, plan, progress string) (root, planPath string) 
 // know whether work is missing or the file needs cleaning.
 func TestProgressHonest_accusesTheTODOPlaceholder(t *testing.T) {
 	t.Run("PRHNP-B07: A checkbox item promising no file at all is failed", func(t *testing.T) {})
-	plan := "<!-- @anchors\ncode: MTUAO\n-->\n# Plano 0017\n\n## Fases\n\n### MTUAO-F02 — o CI\n\nEsta fase decide quando a mutação roda.\n"
-	progress := "# Progresso — MTUAO\n\n## MTUAO-F02 — o CI\n\n- [ ] TODO: um item por spec que esta fase semeia\n"
+	plan := "<!-- @anchors\ncode: MTUAO\n-->\n# Plano 0017\n\n## Fases\n\n### MTUAO-W02 — o CI\n\nEsta fase decide quando a mutação roda.\n"
+	progress := "# Progresso — MTUAO\n\n## MTUAO-W02 — o CI\n\n- [ ] TODO: um item por spec que esta fase semeia\n"
 
 	root, planPath := writeProgress(t, plan, progress)
 	n := mapx.Node{ID: planPath, Kind: mapx.KindPlan, Code: "MTUAO"}

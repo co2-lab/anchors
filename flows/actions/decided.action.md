@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACDEC
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors decided` — soltar o card que esperava a decisão
 
@@ -18,4 +18,4 @@ mudou, sem ter de reconstruir a conversa.
 
 ## Resultados
 
-### ACDEC-R01 — CARD LIBERADO: volta à fila com a resolução escrita
+### ACDEC-O01 — CARD LIBERADO: volta à fila com a resolução escrita

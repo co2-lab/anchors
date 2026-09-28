@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACDIS
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors discard` — tirar do quadro o que não faz mais sentido
 
@@ -19,4 +19,4 @@ história.
 
 ## Resultados
 
-### ACDIS-R01 — CARD DESCARTADO: fora do quadro, com a razão registrada
+### ACDIS-O01 — CARD DESCARTADO: fora do quadro, com a razão registrada

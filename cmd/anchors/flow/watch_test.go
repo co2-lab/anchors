@@ -479,7 +479,7 @@ func TestWatchRun_needsConfigAndMap(t *testing.T) {
 		t.Errorf("without anchors.yaml, got %v", err)
 	}
 	writeFile(t, root, "anchors.yaml", "version: 1\nlayers:\n  logic:\n    pattern: \"src/**/*.ts\"\n    kind: code\n")
-	writeFile(t, root, "anchors.graph.yaml", "version: 4\nnodes: [\n")
+	writeFile(t, root, "anchors.graph.yaml", "version: 5\nnodes: [\n")
 	if _, err := runWatchSub(t, "run", "--root", root); err == nil || !strings.Contains(err.Error(), "load map") {
 		t.Errorf("with a broken map, got %v", err)
 	}

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: FLBLF
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @FLBLF
@@ -27,9 +27,9 @@ Feature: FlowBuild — assembling the work-flow graph from the project's flow an
 
   @FLBLF-B04 @unit-level
   Scenario: A line with two codes routes a result
-    Given a step whose section says "- `ACTST-R01` STALE → `FLOWX-P01`"
+    Given a step whose section says "- `ACTST-O01` STALE → `FLOWX-T01`"
     When the flow graph is built
-    Then the step has one transition, on "ACTST-R01", to "FLOWX-P01"
+    Then the step has one transition, on "ACTST-O01", to "FLOWX-T01"
 
   @FLBLF-B05 @unit-level
   Scenario: Terminal is declared, not inferred
@@ -51,7 +51,7 @@ Feature: FlowBuild — assembling the work-flow graph from the project's flow an
 
   @FLBLF-B08 @unit-level
   Scenario: A routed result keeps the prose around its two codes as its condition
-    Given a step whose results are "`ACTST-R01` STALE → `FLOWX-P02`", "`ACTST-R02` BLOCKED -> `FLOWX-P03` when the fix is ready." and "on `ACTST-R03` go to `FLOWX-P04`"
+    Given a step whose results are "`ACTST-O01` STALE → `FLOWX-T02`", "`ACTST-O02` BLOCKED -> `FLOWX-T03` when the fix is ready." and "on `ACTST-O03` go to `FLOWX-T04`"
     When the flow is built
     Then the conditions are "STALE", "BLOCKED when the fix is ready" and "on go to"
 

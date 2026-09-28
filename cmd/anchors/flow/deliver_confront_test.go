@@ -216,7 +216,7 @@ func TestMutationNotMeasured(t *testing.T) {
 		t.Errorf("without a test the subject is another: %q", got)
 	}
 	writeFile(t, root, "src/pricing.test.ts", "x\n")
-	writeFile(t, root, "anchors.graph.yaml", "version: 4\nnodes:\n"+
+	writeFile(t, root, "anchors.graph.yaml", "version: 5\nnodes:\n"+
 		"  - id: src/pricing.ts\n    kind: code\n    rev: a\n    signal:\n      mutants_killed: 3\nedges: []\n")
 	if got := mutationNotMeasured(root, "src/pricing.ts"); got != "" {
 		t.Errorf("a measured unit must not be warned: %q", got)

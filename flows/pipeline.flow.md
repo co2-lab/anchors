@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PIPEL
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Pipeline — do PR aberto à versão publicada
 
@@ -14,48 +14,48 @@ olhando. Por isso cada resultado que barra aponta de volta para o fluxo de quem 
 
 ## Montagem
 
-### PIPEL-P01 — o CI confronta o PR
+### PIPEL-T01 — o CI confronta o PR
 
 Encaixa: `ACCIP` (o CI, que dispara em `pull_request`)
 
 Resultados:
-- `ACCIP-R01` PR VERDE → `PIPEL-P02`
-- `ACCIP-R02` MAPA VELHO → `PIPEL-P05`
-- `ACCIP-R03` GATE REPROVOU → `PIPEL-P05`
-- `ACCIP-R04` ISSUE PARA TRÁS → `PIPEL-P05`
+- `ACCIP-O01` PR VERDE → `PIPEL-T02`
+- `ACCIP-O02` MAPA VELHO → `PIPEL-T05`
+- `ACCIP-O03` GATE REPROVOU → `PIPEL-T05`
+- `ACCIP-O04` ISSUE PARA TRÁS → `PIPEL-T05`
 
-### PIPEL-P02 — o PR está pronto para revisão
+### PIPEL-T02 — o PR está pronto para revisão
 
 O confronto automático passou. O que falta é humano, e não é deste fluxo.
 
 Resultados:
-- `PIPEL-P03` (o PR foi aprovado e mergeado) → `PIPEL-P03`
+- `PIPEL-T03` (o PR foi aprovado e mergeado) → `PIPEL-T03`
 
-### PIPEL-P03 — mergeado na main
+### PIPEL-T03 — mergeado na main
 
 Resultados:
-- `PIPEL-P04` (a tag de versão foi empurrada) → `PIPEL-P04`
+- `PIPEL-T04` (a tag de versão foi empurrada) → `PIPEL-T04`
 
-### PIPEL-P04 — publicar
+### PIPEL-T04 — publicar
 
 Encaixa: `ACREL` (o release, que dispara no push da tag)
 
 Resultados:
-- `ACREL-R01` PUBLICADO → `PIPEL-P06`
-- `ACREL-R02` FALHOU → `PIPEL-P07`
+- `ACREL-O01` PUBLICADO → `PIPEL-T06`
+- `ACREL-O02` FALHOU → `PIPEL-T07`
 
-### PIPEL-P05 — a bola voltou para quem trabalha
+### PIPEL-T05 — a bola voltou para quem trabalha
 
 O pipeline barrou, e ninguém está olhando para ele. Quem tem de agir é quem abriu o PR — e
 o caminho de volta é o fluxo `ENTRG`, corrigindo e commitando de novo.
 
 > @terminal
 
-### PIPEL-P06 — versão publicada
+### PIPEL-T06 — versão publicada
 
 > @terminal
 
-### PIPEL-P07 — a tag existe e a release não
+### PIPEL-T07 — a tag existe e a release não
 
 O conserto é corrigir e re-tagar. Apagar a tag publicada quebraria quem já a baixou.
 

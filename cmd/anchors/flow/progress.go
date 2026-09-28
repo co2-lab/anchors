@@ -58,7 +58,7 @@ func progressPath(plano string) string {
 
 // fasesDoPlano lê os códigos de fase declarados nos cabeçalhos do plano.
 //
-// A fonte é o CABEÇALHO (`### PLTFR-F01 — ...`), a mesma que os gates `fase-existe` e
+// A fonte é o CABEÇALHO (`### PLTFR-W01 — ...`), a mesma que os gates `fase-existe` e
 // `fase-ordenada` já usam. Ler daqui em vez de manter uma segunda lista é o que garante
 // que o progresso fale das fases que existem: uma fase renomeada aparece, uma inventada
 // não.
@@ -73,7 +73,7 @@ func progressPath(plano string) string {
 // pacote, e um regex montado no init congelaria o default.
 func phaseInHeaderRE() *regexp.Regexp {
 	return regexp.MustCompile(`(?m)^#{2,4}[^\S\n]+([A-Z0-9]` +
-		config.CodeLengthPattern() + `-F\d{2})\b[^\S\n]*—?[^\S\n]*(.*)$`)
+		config.CodeLengthPattern() + `-` + config.PhaseLetter + `\d{2})\b[^\S\n]*—?[^\S\n]*(.*)$`)
 }
 
 type planPhase struct {

@@ -39,7 +39,7 @@ func TestMapBuild_keepsTheFlowAndWarnsOfLostStamps(t *testing.T) {
 	t.Run("MPCMM-B02: A rebuild keeps the flow graph", func(t *testing.T) {})
 	root := fixtureProject(t)
 	g := loadMap(t, root)
-	g.Flow = &mapx.FlowGraph{States: []mapx.FlowState{{Code: "WORKR-P01", Title: "pull", Flow: "flows/w.flow.md"}}}
+	g.Flow = &mapx.FlowGraph{States: []mapx.FlowState{{Code: "WORKR-T01", Title: "pull", Flow: "flows/w.flow.md"}}}
 	// A stamp on an edge that the rebuild will not produce: it is lost, and must be told.
 	g.Edges = append(g.Edges, mapx.Edge{From: "guides/LONELY.md", To: "src/gone.ts", Type: mapx.EdgeGoverns,
 		Julgamentos: []mapx.Judgment{{Gate: "review", Verdict: "ok"}}})

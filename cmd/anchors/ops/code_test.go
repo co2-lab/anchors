@@ -20,7 +20,7 @@ func codeProject(t *testing.T, cfg, nodes string) string {
 	t.Helper()
 	root := t.TempDir()
 	writeFile(t, root, config.DefaultFile, cfg)
-	writeFile(t, root, mapx.DefaultPath, "version: 4\nnodes:\n"+nodes+"edges: []\n")
+	writeFile(t, root, mapx.DefaultPath, "version: 5\nnodes:\n"+nodes+"edges: []\n")
 	return root
 }
 
@@ -261,7 +261,7 @@ func mapWithCodes(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
 	p := filepath.Join(dir, "anchors.graph.yaml")
-	const y = `version: 2
+	const y = `version: 5
 nodes:
     - id: apps/mobile/src/features/auth/LoginScreen.spec.md
       kind: spec

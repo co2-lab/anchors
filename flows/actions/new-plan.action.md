@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACNPL
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors new plan` — escrever o arquivo do plano
 
@@ -19,7 +19,7 @@ Por isso a aprovação do usuário vem ANTES de o arquivo existir, e não depois
 
 ## Resultados
 
-### ACNPL-R01 — PLANO SEMEADO: o arquivo existe e a esteira partiu
+### ACNPL-O01 — PLANO SEMEADO: o arquivo existe e a esteira partiu
 
 O vigia enfileirou a primeira tarefa ("specify"). A partir daqui o trabalho flui pela
 fila, e quem executa é o `worker`.

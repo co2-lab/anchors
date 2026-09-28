@@ -30,7 +30,7 @@ func TestCodesInCase_recognizesTheMissingLetters(t *testing.T) {
 		{"ABCDX-E01: example", "ABCDX-E01"},
 		{"ABCDX-I01: invariant", "ABCDX-I01"},
 		{"ABCDX-Q01: open decision", "ABCDX-Q01"},
-		{"ABCDX-F01: phase", "ABCDX-F01"},
+		{"ABCDX-W01: phase", "ABCDX-W01"},
 	} {
 		got := CodesInCase(c.name)
 		if len(got) != 1 || got[0] != c.code {

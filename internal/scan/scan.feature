@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RPSCR
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @RPSCR
@@ -33,7 +33,7 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
 
   @RPSCR-B05 @unit-level
   Scenario: An upstream workflow carries no codes
-    Given a marked workflow ".github/workflows/anchors-board.yml" citing "FNDTN-F04" in a comment and a body line starting with "parent:"
+    Given a marked workflow ".github/workflows/anchors-board.yml" citing "FNDTN-W04" in a comment and a body line starting with "parent:"
     When the repository is walked
     Then the workflow is returned as upstream, with no codes and no parent
 
@@ -96,15 +96,15 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
 
   @RPSCR-B15 @unit-level
   Scenario: The parent is read only inside the header
-    Given a workflow whose body has a "parent:" line, and headers in HTML, line-comment and one-line forms, each followed by a body "parent: NOPE-F09"
+    Given a workflow whose body has a "parent:" line, and headers in HTML, line-comment and one-line forms, each followed by a body "parent: NOPE-W09"
     When the parent of each is read
-    Then the workflow has none, each header's own parent is read, and "NOPE-F09" is never taken
+    Then the workflow has none, each header's own parent is read, and "NOPE-W09" is never taken
 
   @RPSCR-B16 @unit-level
   Scenario: Needs are plan paths for a plan and phase codes for a spec
-    Given a plan needing "`plans/a.md`, plans/b.md" and a spec needing "FNDTN-F02, plans/a.md, FNDTN-B01"
+    Given a plan needing "`plans/a.md`, plans/b.md" and a spec needing "FNDTN-W02, plans/a.md, FNDTN-B01"
     When the needs are read
-    Then the plan needs "plans/a.md" and "plans/b.md", the spec needs only "FNDTN-F02", and a code file needs nothing
+    Then the plan needs "plans/a.md" and "plans/b.md", the spec needs only "FNDTN-W02", and a code file needs nothing
 
   @RPSCR-B17 @unit-level
   Scenario: Only a plan revises
@@ -186,7 +186,7 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
 
   @RPSCR-B30 @unit-level
   Scenario: Header keys are read only inside the header
-    Given a spec whose header declares nothing but whose body has the lines "code: BOGUS", "layer: bogus", "needs: FNDTN-F02, plans/a.md" and "revises: plans/a.md", and a code file whose body has the comment "// dep: a.ts"
+    Given a spec whose header declares nothing but whose body has the lines "code: BOGUS", "layer: bogus", "needs: FNDTN-W02, plans/a.md" and "revises: plans/a.md", and a code file whose body has the comment "// dep: a.ts"
     When its identity, unit layer, needs, revisions and dependencies are read
     Then none of them is taken: no identity, no declared layer, no needs, no revision, no dependency, and the unit layer is the file's layer "spec"
 

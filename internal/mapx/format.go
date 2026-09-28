@@ -26,14 +26,17 @@ import "fmt"
 // Subir por isso tornaria toda adição uma barreira, e o número perderia o significado.
 const (
 	// FormatoAtual é o que este binário ESCREVE.
-	FormatoAtual = 4
+	FormatoAtual = 5
 
 	// FormatoMinimoLegivel é o mais antigo que ele lê sem migrar.
 	//
-	// Hoje é igual ao atual: o formato 1 não é lido, ele é MIGRADO — as chaves em
+	// Igual ao atual desde o formato 5. O 1 já não era lido, era MIGRADO — as chaves em
 	// português (`gerado_por`, `code_declarado`, `julgamentos`) foram renomeadas, e ler os
-	// dois nomes para sempre faria o arquivo nunca se consertar.
-	FormatoMinimoLegivel = 2
+	// dois nomes para sempre faria o arquivo nunca se consertar. O 5 trocou as LETRAS de
+	// plano, fluxo e ação nos arquivos do projeto (ver `config.PhaseLetter`): um mapa de
+	// formato 2 a 4 descreve um projeto cujas fases ainda são `-F01`, que os gates não
+	// reconhecem mais — lido, passaria sem fase nenhuma. Recusado, manda migrar.
+	FormatoMinimoLegivel = 5
 )
 
 // ErroDeFormato distingue "não sei ler isto" de "o arquivo está corrompido".

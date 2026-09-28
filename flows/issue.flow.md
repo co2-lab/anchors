@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ISSUE
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Issue — o trabalho que um gate reprovado deixa para trás
 
@@ -17,20 +17,20 @@ A distinção entre `future` e `todo` é a que sustenta o resto, e a doutrina do
 explica: *"quem olha `todo/` está perguntando 'o que faço agora', e afogar essa lista com
 o que só vence depois é o caminho mais curto para ninguém mais olhar"*.
 
-Encaixa como peça: `WORKR-P04` aponta para cá quando o `check` reprova.
+Encaixa como peça: `WORKR-T04` aponta para cá quando o `check` reprova.
 
 ## Montagem
 
-### ISSUE-P01 — detectada, ninguém pegou
+### ISSUE-T01 — detectada, ninguém pegou
 
 A issue nasceu de um gate reprovado ou de um veredito de julgamento. Está em `todo/`, e a
 pergunta que ela responde é "o que faço agora".
 
 Resultados:
-- `ISSUE-P02` (alguém vai resolver agora) → `ISSUE-P02`
-- `ISSUE-P05` (é dívida com prazo, não vence agora) → `ISSUE-P05`
+- `ISSUE-T02` (alguém vai resolver agora) → `ISSUE-T02`
+- `ISSUE-T05` (é dívida com prazo, não vence agora) → `ISSUE-T05`
 
-### ISSUE-P02 — alguém está resolvendo
+### ISSUE-T02 — alguém está resolvendo
 
 Encaixa: `ACAUD` (`anchors audit <arquivo>`)
 
@@ -38,24 +38,24 @@ Se vai abrir o arquivo, conserte TUDO o que ele tem aberto. Voltar três vezes a
 arquivo por três achados custa três leituras do contexto inteiro.
 
 Resultados:
-- `ACAUD-R01` HÁ PENDÊNCIA → `ISSUE-P03`
-- `ACAUD-R02` NADA ABERTO → `ISSUE-P04`
+- `ACAUD-O01` HÁ PENDÊNCIA → `ISSUE-T03`
+- `ACAUD-O02` NADA ABERTO → `ISSUE-T04`
 
-### ISSUE-P03 — corrigir, e confrontar de novo
+### ISSUE-T03 — corrigir, e confrontar de novo
 
 Encaixa: `ACHCK` (`anchors check --changed`)
 
 Resultados:
-- `ACHCK-R01` PROMOVÍVEL → `ISSUE-P04`
-- `ACHCK-R02` BARRADO → `ISSUE-P03` (ainda não)
+- `ACHCK-O01` PROMOVÍVEL → `ISSUE-T04`
+- `ACHCK-O02` BARRADO → `ISSUE-T03` (ainda não)
 
-### ISSUE-P04 — tratada
+### ISSUE-T04 — tratada
 
 Fato datado: a issue foi para `done/`. O `check` que a abriu, ao rodar de novo, a resolve.
 
 > @terminal
 
-### ISSUE-P05 — dívida assumida, com prazo
+### ISSUE-T05 — dívida assumida, com prazo
 
 Não é `todo` (não é o que se faz agora) nem `done` (não foi feito). É um dever conhecido,
 ainda válido, com um momento declarado para ser cumprido.
@@ -65,6 +65,6 @@ materializava: uma linha visível só para quem abrisse o arquivo, sem estado, s
 paga, sem como vencer.
 
 Resultados:
-- `ISSUE-P01` (o prazo venceu: vira trabalho de agora) → `ISSUE-P01`
+- `ISSUE-T01` (o prazo venceu: vira trabalho de agora) → `ISSUE-T01`
 
 > @terminal

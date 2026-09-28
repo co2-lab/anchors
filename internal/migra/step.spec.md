@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MSCMG
-  updated_at: 2026-09-26
+  updated_at: 2026-09-28
   layer: apoio
 -->
 # MigrationStepChain — one step per format version, chained in order, and a hole in the chain is an error
@@ -46,6 +46,7 @@ typo is not, and telling the two apart keeps the error message trustworthy.
 | `MSCMG-B01` | `Register` keeps the steps sorted by the format they produce, whatever the order they were registered in. |
 | `MSCMG-B02` | `StepsFrom`, asked for the steps from format A to format B, returns the steps producing A+1 through B, in ascending order. |
 | `MSCMG-B03` | A file already at the target format needs no step: the answer is an empty list, not an error. |
+| `MSCMG-B05` | A step may declare code letters renamed by kind of unit, which it does not apply to the YAML files itself (`RenameLetters`, `LetterRename`). |
 | `MSCMG-B04` | `RenamedKey` reports a key as renamed when any registered step renames it in any file; any other key is not. |
 
 ## Invariants

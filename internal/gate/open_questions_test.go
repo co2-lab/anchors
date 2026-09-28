@@ -330,7 +330,7 @@ func TestOpenItems_perguntaSemRegraAindaConta(t *testing.T) {
 //
 //	R  revisão   quebrou o `cobraCodigoNaPergunta` (a coluna Vira traz `-R04`)
 //	F  fase      SILENCIOU a `THMEX-Q01` do app de referência: ela dizia "vira uma revisão
-//	             THMEX-R0001, ou uma spec de decisão no DSSYD-F01", e o `F01` fez a
+//	             THMEX-R0001, ou uma spec de decisão no DSSYD-W01", e o `F01` fez a
 //	             linha parecer de-para. O gate passou `✓1` com a pergunta em aberto
 //	Q  pergunta  faria duas perguntas na mesma linha parecerem de-para
 //
@@ -342,9 +342,9 @@ func TestOpenItems_colunaViraNaoFechaAPergunta(t *testing.T) {
 		// a coluna "Vira" citando REVISÃO — a pergunta continua aberta
 		"| `PARCX-Q01` | UTC ou local? | Produto | `PARCX-R04` |": 1,
 		// citando FASE e revisão — o caso do app de referência
-		"| `THMEX-Q01` | qual lib? | usuário | uma revisão `THMEX-R0001`, ou uma spec no `DSSYD-F01` |": 1,
+		"| `THMEX-Q01` | qual lib? | usuário | uma revisão `THMEX-R0001`, ou uma spec no `DSSYD-W01` |": 1,
 		// citando outra SPEC pelo código de fase dela
-		"| `ABCDE-Q02` | onde isto mora? | usuário | uma spec nova em `WXYZ-F03` |": 1,
+		"| `ABCDE-Q02` | onde isto mora? | usuário | uma spec nova em `WXYZ-W03` |": 1,
 		// e o de-para DE VERDADE, com a regra que nasceu: fecha
 		"- [x] `DTSTD-Q01` — a retenção do PITR → virou `DTSTD-B07`: 35 dias": 0,
 		"| `DTSTD-Q02` — o histórico tem limite | `DTSTD-B08` — não tem |":    0,

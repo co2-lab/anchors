@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ENTRG
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Entrega — do trabalho pronto ao PR aberto
 
@@ -15,42 +15,42 @@ uma máquina. Juntá-los esconderia de quem espera onde a bola está — e "est�
 
 ## Montagem
 
-### ENTRG-P01 — commitar o trabalho
+### ENTRG-T01 — commitar o trabalho
 
 Encaixa: `ACPRC` (o pre-commit, que dispara sozinho)
 
 Não é comando digitado: o gate roda no `git commit`, sobre o que está em stage.
 
 Resultados:
-- `ACPRC-R01` COMMIT PASSOU → `ENTRG-P03`
-- `ACPRC-R04` IGNORADO → `ENTRG-P03`
-- `ACPRC-R02` BARRADO POR GATE → `ENTRG-P02`
-- `ACPRC-R03` BARRADO POR FALTA DE MAPA → `ENTRG-P04`
+- `ACPRC-O01` COMMIT PASSOU → `ENTRG-T03`
+- `ACPRC-O04` IGNORADO → `ENTRG-T03`
+- `ACPRC-O02` BARRADO POR GATE → `ENTRG-T02`
+- `ACPRC-O03` BARRADO POR FALTA DE MAPA → `ENTRG-T04`
 
-### ENTRG-P02 — corrigir o que o gate apontou
+### ENTRG-T02 — corrigir o que o gate apontou
 
 Encaixa: `ACHCK` (`anchors check --changed`)
 
 Resultados:
-- `ACHCK-R01` PROMOVÍVEL → `ENTRG-P01`
-- `ACHCK-R02` BARRADO → `ENTRG-P02`
+- `ACHCK-O01` PROMOVÍVEL → `ENTRG-T01`
+- `ACHCK-O02` BARRADO → `ENTRG-T02`
 
-### ENTRG-P03 — abrir o PR
+### ENTRG-T03 — abrir o PR
 
 O trabalho está commitado. O que vem daqui é do pipeline.
 
 Resultados:
-- `ENTRG-P05` (o PR está aberto) → `ENTRG-P05`
+- `ENTRG-T05` (o PR está aberto) → `ENTRG-T05`
 
-### ENTRG-P04 — pôr o arquivo novo no mapa
+### ENTRG-T04 — pôr o arquivo novo no mapa
 
 Encaixa: `ACMAP` (`anchors map build`)
 
 Resultados:
-- `ACMAP-R01` MAPA EM DIA → `ENTRG-P01`
-- `ACMAP-R02` CARIMBO PERDIDO → `ENTRG-P01`
+- `ACMAP-O01` MAPA EM DIA → `ENTRG-T01`
+- `ACMAP-O02` CARIMBO PERDIDO → `ENTRG-T01`
 
-### ENTRG-P05 — a bola está com o pipeline
+### ENTRG-T05 — a bola está com o pipeline
 
 Daqui em diante quem decide é o CI. O fluxo `PIPEL` descreve o que acontece.
 

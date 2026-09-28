@@ -1,6 +1,7 @@
 package migra
 
 import (
+	"reflect"
 	"strings"
 	"testing"
 
@@ -110,6 +111,27 @@ rule_types:
 		if strings.Contains(text, old) {
 			t.Errorf("the old key %q is still there:\n%s", old, text)
 		}
+	}
+}
+
+func TestFormat5Step_renamesCodeLettersNotKeys(t *testing.T) {
+	t.Run("MGSTM-B05: Format 5 renames code letters, not keys", func(t *testing.T) {})
+	steps, err := StepsFrom(4, 5)
+	if err != nil || len(steps) != 1 {
+		t.Fatalf("one step produces 5, got %v %v", steps, err)
+	}
+	s := steps[0]
+	want := []LetterRename{{"plan", "F", "W"}, {"flow", "P", "T"}, {"flow", "R", "O"}, {"action", "R", "O"}}
+	if !reflect.DeepEqual(s.RenameLetters, want) || len(s.RenameKeys) != 0 || len(s.RenameValues) != 0 {
+		t.Fatalf("letters by kind and no key, got %+v", s)
+	}
+	body := "rule_types:\n    R:\n        sections_require_code: [rules]\n"
+	p := escreve(t, t.TempDir(), "anchors.yaml", "version: 4\n"+body)
+	if _, err := MigrateFile(p, 5, false); err != nil {
+		t.Fatal(err)
+	}
+	if got := string(mustRead(t, p)); got != "version: 5\n"+body {
+		t.Errorf("only the version changes in the file, got:\n%s", got)
 	}
 }
 

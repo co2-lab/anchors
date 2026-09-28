@@ -143,8 +143,10 @@ git push origin main && git push origin v0.1.197
   - `cmd/anchors/ops/new_templates.go` (the section catalog);
   - `internal/testsig/code.go` (`ruleLetters`, a copy by value).
 
-  The guard tests are `TestRuleLetters_naoDivergeDoConfig` and
-  `TestCatalogoNaoUsaLetraForaDasCanonicas`.
+  The guard tests are `TestRuleLetters_doesNotDivergeFromConfig` and
+  `TestCatalogUsesOnlyCanonicalLetters`. The letters of plans, flows and actions (`W`, `T`,
+  `O`) are constants in `internal/config/vocabulary.go`, with the decision that chose them;
+  changing one is a format step in `internal/migra`, never an alias.
 - **Header-like text inside code.** An @anchors header is only the block at the top of the
   file (first 10 lines). Don't write test fixtures that rely on the tool ignoring a
   header-shaped string somewhere else. Keep them in constants, as `touch_test.go` does.

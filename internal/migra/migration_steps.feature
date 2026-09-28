@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MGSTM
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @MGSTM
@@ -27,6 +27,12 @@ Feature: MigrationSteps — the registered steps, one per format, take any proje
     Given a format 2 configuration with "name: regra-implementada" and "check: header-conforme"
     When it is migrated to format 3
     Then it has "name: rule-implemented" and "check: header-valid"
+
+  @MGSTM-B05 @unit-level
+  Scenario: Format 5 renames code letters, not keys
+    Given the registered step that produces format 5, and a configuration on format 4
+    When the step is read and the configuration is migrated to 5
+    Then the step renames plan F to W, flow P to T and R to O, action R to O, no key, and the file only gets version 5
 
   @MGSTM-B04 @unit-level
   Scenario: Format 4 renames the four keys that lied about what they hold

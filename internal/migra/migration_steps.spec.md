@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGSTM
-  updated_at: 2026-09-26
+  updated_at: 2026-09-28
   layer: apoio
 -->
 # MigrationSteps — the registered steps, one per format, take any project from format 1 to the current format
@@ -46,6 +46,7 @@ The steps, and why each exists:
 | `MGSTM-B01` | Format 2 renames the map keys `gerado_por`, `code_declarado` and `julgamentos` to `generated_by`, `code_declared` and `judgments`, and the configuration key `trinca_opcional` to `triad_optional`. |
 | `MGSTM-B02` | Format 2 renames the Portuguese gate names to their English names as the value of `gate` in the map and of `name`, `id` and `check` in the configuration. |
 | `MGSTM-B03` | Format 3 renames the eight remaining Portuguese gate names — among them `regra-implementada` to `rule-implemented` and `header-conforme` to `header-valid` — as the value of `name` and `check` in the configuration. |
+| `MGSTM-B05` | Format 5 renames no key: it renames code letters by kind of unit — a plan's phase `F` to `W`, a flow's step `P` to `T`, a result `R` to `O`, of an action or of a flow fitted as a piece —, applied by the command over the project's files; a file migrated to 5 only gets the new `version:`. |
 | `MGSTM-B04` | Format 4 renames the configuration keys `auto_judgment`, `triad_optional`, `requires_code` and `rule_marking` to `enable_auto_judgment`, `optional_triad_edges`, `sections_require_code` and `rule_marking_policy`. |
 
 ## Invariants

@@ -607,7 +607,7 @@ var headerRevisesRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*revises:\s
 // prosa ("Fase 3 — depende da Fase 2"), e prosa não é confrontável: as specs de um plano
 // nasciam todas disponíveis, e o agente pegava a da fase 3 com a fase 1 em aberto.
 //
-// Na spec o valor é um CÓDIGO (`FNDTN-F02`), não um caminho — a fase não é um arquivo, é
+// Na spec o valor é um CÓDIGO (`FNDTN-W02`), não um caminho — a fase não é um arquivo, é
 // um item catalogado dentro do plano. Por isso a resolução de caminho não se aplica aqui.
 func needsFor(kind string, content []byte, root, rel string) []string {
 	switch kind {
@@ -681,12 +681,12 @@ func extractNeedsCode(content []byte) []string {
 	return out
 }
 
-// phaseCodeRE matches `FNDTN-F02` — the code of a plan phase.
+// phaseCodeRE matches `FNDTN-W02` — the code of a plan phase.
 //
 // Compiled per CALL and not in a `var`: the length comes from `code_lengths`, loaded
 // AFTER the globals — in a `var` it froze the default `[5]` (see `codeRE` in the gate).
 func phaseCodeRE() *regexp.Regexp {
-	return regexp.MustCompile(`^[A-Z0-9]` + config.CodeLengthPattern() + `-F\d{2}$`)
+	return regexp.MustCompile(`^[A-Z0-9]` + config.CodeLengthPattern() + `-` + config.PhaseLetter + `\d{2}$`)
 }
 
 // extractNeeds lê a linha `needs:` e resolve cada caminho relativo à raiz. Só faz
@@ -1077,7 +1077,7 @@ func extractSeeds(kind, content string) []string {
 		}
 		// SEM DIRETÓRIO não é caminho — é o nome do arquivo citado em prosa.
 		//
-		// Uma revisão escreve "o `MutualTls.spec.md` migrou para a PLTFR-F03" ao explicar
+		// Uma revisão escreve "o `MutualTls.spec.md` migrou para a PLTFR-W03" ao explicar
 		// o que mudou, e isso não é a promessa de criar um arquivo: o plano semeia
 		// `packages/infra/MutualTls.spec.md`, com o caminho inteiro.
 		//
@@ -1112,3 +1112,7 @@ func extractHeaderLayer(content string) string {
 	}
 	return ""
 }
+
+// HeaderCodeOf is the identity a file declares in its `@anchors` header (`code: XXXX`), or
+// empty. It is what the migration reads to know which unit a plan, flow or action file is.
+func HeaderCodeOf(content string) string { return extractHeaderCode(content) }

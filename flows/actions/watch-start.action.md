@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACWCH
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors watch start` — pôr a esteira no ar
 
@@ -18,8 +18,8 @@ só, para toda origem — e é o que permite confiar na fila em vez da memória.
 
 ## Resultados
 
-### ACWCH-R01 — VIGIA NO AR: as mudanças viram tarefa
+### ACWCH-O01 — VIGIA NO AR: as mudanças viram tarefa
 
-### ACWCH-R02 — JÁ ESTAVA RODANDO: nada a fazer
+### ACWCH-O02 — JÁ ESTAVA RODANDO: nada a fazer
 
 Não é erro: dois vigias sobre o mesmo projeto enfileirariam a mesma tarefa duas vezes.

@@ -55,18 +55,18 @@ func TestUnhandled_findsTheResultNoFlowRoutes(t *testing.T) {
 	root := t.TempDir()
 	os.MkdirAll(filepath.Join(root, ActionsDir), 0o755)
 	os.WriteFile(filepath.Join(root, Dir, "f"+FlowSuffix), []byte(
-		"### FLOWX-P01 — one step\n\nFits: `ACTST`\n\nResults:\n- `ACTST-R01` FINE → `FLOWX-P02`\n\n"+
-			"### FLOWX-P02 — the end\n\n> @terminal\n"), 0o644)
+		"### FLOWX-T01 — one step\n\nFits: `ACTST`\n\nResults:\n- `ACTST-O01` FINE → `FLOWX-T02`\n\n"+
+			"### FLOWX-T02 — the end\n\n> @terminal\n"), 0o644)
 	os.WriteFile(filepath.Join(root, ActionsDir, "a"+ActionSuffix), []byte(
-		"### ACTST-R01 — FINE: it worked\n\n### ACTST-R02 — BROKEN: nobody routes this one\n"), 0o644)
+		"### ACTST-O01 — FINE: it worked\n\n### ACTST-O02 — BROKEN: nobody routes this one\n"), 0o644)
 
 	g, err := Build(root)
 	if err != nil || g == nil {
 		t.Fatalf("build: %v", err)
 	}
 	got := Unhandled(g)
-	if len(got) != 1 || got[0].Code != "ACTST-R02" {
-		t.Errorf("expected exactly ACTST-R02 unhandled, got %+v", got)
+	if len(got) != 1 || got[0].Code != "ACTST-O02" {
+		t.Errorf("expected exactly ACTST-O02 unhandled, got %+v", got)
 	}
 	// A result is DECLARED by its action, never ARRIVED at: asking it "who reaches you?"
 	// would accuse every result a flow happens not to route.
@@ -83,10 +83,10 @@ func pieceProject(t *testing.T) *mapx.FlowGraph {
 	root := t.TempDir()
 	os.MkdirAll(filepath.Join(root, ActionsDir), 0o755)
 	os.WriteFile(filepath.Join(root, ActionsDir, "check-it"+ActionSuffix), []byte(
-		"### ACTST-R01 — FINE: it worked\n\n### ACTST-R02 — BROKEN: it failed\n"), 0o644)
+		"### ACTST-O01 — FINE: it worked\n\n### ACTST-O02 — BROKEN: it failed\n"), 0o644)
 	os.WriteFile(filepath.Join(root, Dir, "f"+FlowSuffix), []byte(
-		"### FLOWX-P03 — the first step\n\nFits: `ACTST`\n\nResults:\n- `ACTST-R01` FINE → `FLOWX-P01`\n\n"+
-			"### FLOWX-P01 — a later step\n\nExits:\n- `FLOWX-P03` again\n"), 0o644)
+		"### FLOWX-T03 — the first step\n\nFits: `ACTST`\n\nResults:\n- `ACTST-O01` FINE → `FLOWX-T01`\n\n"+
+			"### FLOWX-T01 — a later step\n\nExits:\n- `FLOWX-T03` again\n"), 0o644)
 	g, err := Build(root)
 	if err != nil || g == nil {
 		t.Fatalf("build: %v", err)
@@ -96,15 +96,15 @@ func pieceProject(t *testing.T) *mapx.FlowGraph {
 
 func TestStateByCodeAndIsResult(t *testing.T) {
 	t.Run("FLMDF-B02: A state is found by its code", func(t *testing.T) {})
-	t.Run("FLMDF-B05: A result is a code whose letter is R", func(t *testing.T) {})
+	t.Run("FLMDF-B05: A result is a code whose letter is O", func(t *testing.T) {})
 	g := pieceProject(t)
-	if s, ok := StateByCode(g, "FLOWX-P01"); !ok || s.Title != "a later step" {
-		t.Errorf("StateByCode(FLOWX-P01) = %+v, %v", s, ok)
+	if s, ok := StateByCode(g, "FLOWX-T01"); !ok || s.Title != "a later step" {
+		t.Errorf("StateByCode(FLOWX-T01) = %+v, %v", s, ok)
 	}
-	if _, ok := StateByCode(g, "FLOWX-P99"); ok {
+	if _, ok := StateByCode(g, "FLOWX-T99"); ok {
 		t.Error("a code with no state must not be found")
 	}
-	for code, want := range map[string]bool{"ACTST-R01": true, "FLOWX-P01": false, "DSTRV-N02": false, "FLOWX-XR01": false, "ACTST": false} {
+	for code, want := range map[string]bool{"ACTST-O01": true, "FLOWX-T01": false, "DSTRV-N02": false, "FLOWX-XO01": false, "ACTST": false} {
 		if got := IsResult(code); got != want {
 			t.Errorf("IsResult(%q) = %v, want %v", code, got, want)
 		}
@@ -118,7 +118,7 @@ func TestStatesOfAndFlows_keepTheFileOrder(t *testing.T) {
 	for _, s := range StatesOf(g, "flows/f.flow.md") {
 		codes = append(codes, s.Code)
 	}
-	if want := []string{"FLOWX-P03", "FLOWX-P01"}; !reflect.DeepEqual(codes, want) {
+	if want := []string{"FLOWX-T03", "FLOWX-T01"}; !reflect.DeepEqual(codes, want) {
 		t.Errorf("StatesOf = %v, want the file order %v, never alphabetical", codes, want)
 	}
 	if got, want := Flows(g), []string{"flows/actions/check-it.action.md", "flows/f.flow.md"}; !reflect.DeepEqual(got, want) {
@@ -129,8 +129,8 @@ func TestStatesOfAndFlows_keepTheFileOrder(t *testing.T) {
 func TestEntry_isTheFirstDeclaredStep(t *testing.T) {
 	t.Run("FLMDF-B04: The entry is the first declared step, never a result", func(t *testing.T) {})
 	g := pieceProject(t)
-	if s, ok := Entry(g, "flows/f.flow.md"); !ok || s.Code != "FLOWX-P03" {
-		t.Errorf("Entry(flow) = %+v, %v; want FLOWX-P03", s, ok)
+	if s, ok := Entry(g, "flows/f.flow.md"); !ok || s.Code != "FLOWX-T03" {
+		t.Errorf("Entry(flow) = %+v, %v; want FLOWX-T03", s, ok)
 	}
 	if s, ok := Entry(g, "flows/actions/check-it.action.md"); ok {
 		t.Errorf("an action file declares only results and has no entry step, got %+v", s)

@@ -52,7 +52,7 @@ var fitsRE = regexp.MustCompile("(?im)^\\s*(?:" +
 	")\\s*:\\s*`?([A-Z0-9]{3,6})`?")
 
 // resultLinkRE matches a RESULT being routed to a next step:
-// `- ` + "`ACHCK-R02`" + ` BARRADO → ` + "`WORKR-P03`" + `.
+// `- ` + "`ACHCK-O02`" + ` BARRADO → ` + "`WORKR-T03`" + `.
 //
 // Two codes on one line: the result that arrived, and where it goes. The arrow may be
 // `→`, `->` or nothing — what identifies the destination is being the SECOND code.
@@ -111,7 +111,7 @@ func Build(root string) (*mapx.FlowGraph, error) {
 	sort.Strings(names)
 
 	// The ACTIONS live in a subfolder and enter the SAME graph: they are nodes like the
-	// steps, and the difference is the role, not the structure. A result (`ACHCK-R02`) is
+	// steps, and the difference is the role, not the structure. A result (`ACHCK-O02`) is
 	// the target of a transition just like a step — what changes is who declares it.
 	actionEntries, err := os.ReadDir(filepath.Join(root, ActionsDir))
 	if err != nil && !os.IsNotExist(err) {
@@ -207,7 +207,7 @@ func parse(content, flowPath string) ([]mapx.FlowState, []mapx.FlowTransition) {
 //
 // Only the CODES (and the arrow) go. The first version removed the whole match, which runs
 // from the first code to the second, so the prose between them — `STALE` in
-// "`ACTST-R01` STALE → `FLOWX-P01`", the usual place of the condition — was dropped with
+// "`ACTST-O01` STALE → `FLOWX-T01`", the usual place of the condition — was dropped with
 // them and the routed result had no condition left. The line is one `resultLinkRE` matched.
 func conditionOf(line string) string {
 	m := resultLinkRE.FindStringSubmatchIndex(line)

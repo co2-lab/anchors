@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: PLPRP
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @PLPRP
@@ -15,11 +15,11 @@ Feature: PlanProgress — create a plan's progress file, the state that lives be
 
   @PLPRP-B02 @unit-level
   Scenario: One section per phase declared in the plan's headers
-    Given a plan with the headers "### MTUAO-F01 — the tool and the report" and "### MTUAO-F02 — CI ingests the signal"
-    And the headers "## ABCDE-F03 — two" and "#### ABCDE-F04 — four", and the out-of-range "# ABCDE-F05" and "##### ABCDE-F06"
+    Given a plan with the headers "### MTUAO-W01 — the tool and the report" and "### MTUAO-W02 — CI ingests the signal"
+    And the headers "## ABCDE-W03 — two" and "#### ABCDE-W04 — four", and the out-of-range "# ABCDE-W05" and "##### ABCDE-W06"
     When its progress file is created
-    Then it has the sections "## MTUAO-F01 — the tool and the report", "## MTUAO-F02", "## ABCDE-F03" and "## ABCDE-F04", each with an unchecked item
-    And it has no section for ABCDE-F05 nor ABCDE-F06
+    Then it has the sections "## MTUAO-W01 — the tool and the report", "## MTUAO-W02", "## ABCDE-W03" and "## ABCDE-W04", each with an unchecked item
+    And it has no section for ABCDE-W05 nor ABCDE-W06
 
   @PLPRP-B03 @unit-level
   Scenario: The phase code length follows the project's configuration
@@ -43,7 +43,7 @@ Feature: PlanProgress — create a plan's progress file, the state that lives be
 
   @PLPRP-B06 @unit-level
   Scenario: new progress creates the file for an existing plan
-    Given the plan "plans/0002-platform.md" with the header code PLTFR and phases PLTFR-F01 and PLTFR-F02
+    Given the plan "plans/0002-platform.md" with the header code PLTFR and phases PLTFR-W01 and PLTFR-W02
     When `anchors new progress --for plans/0002-platform.md` runs
     Then "plans/0002-platform-progress.md" exists, titled "# Progress — PLTFR", with the sections of both phases
     And running it again fails

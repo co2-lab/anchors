@@ -490,7 +490,7 @@ type FlowState struct {
 type FlowTransition struct {
 	From string `yaml:"from"`
 	To   string `yaml:"to"`
-	// On é o RESULTADO da ação que dispara esta transição (`ACHCK-R02`).
+	// On é o RESULTADO da ação que dispara esta transição (`ACHCK-O02`).
 	//
 	// Vazio numa transição direta entre passos. Preenchido, é o que liga a peça ao
 	// encaixe: o resultado que a ação declarou, e para onde o fluxo o manda.

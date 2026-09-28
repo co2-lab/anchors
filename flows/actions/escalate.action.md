@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACESC
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors escalate` — abrir a questão que o trabalho encontrou
 
@@ -20,16 +20,16 @@ entre elas muda o que o produto FAZ?"**.
 
 ## Resultados
 
-### ACESC-R01 — CARD COMUM: não impacta a direção
+### ACESC-O01 — CARD COMUM: não impacta a direção
 
 Nasce em "a fazer", entra na fila, um agente pega. Não para ninguém.
 
-### ACESC-R02 — AGUARDANDO O USUÁRIO: impacta a direção
+### ACESC-O02 — AGUARDANDO O USUÁRIO: impacta a direção
 
 Nasce com `anchors:needs-user`, e a reivindicação não entrega o card enquanto a decisão
 não sair.
 
-### ACESC-R03 — AGUARDANDO ENQUADRAMENTO: não se sabe se impacta
+### ACESC-O03 — AGUARDANDO ENQUADRAMENTO: não se sabe se impacta
 
 Nasce igual ao anterior, mas a primeira pergunta do card é outra: *é seu?* Quem lê, se
 concluir que não impacta, devolve à fila em vez de decidir.

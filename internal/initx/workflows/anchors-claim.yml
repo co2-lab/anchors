@@ -356,13 +356,13 @@ jobs:
                 /^ *needs:/ { emNeeds=1; next }
                 /^ *[a-z_]+:/ { emNeeds=0 }
                 emNeeds && /^ *- / && cod == alvo { print $2 }
-              ' /tmp/mapa.yaml | grep -E '^[A-Z0-9]{4,5}(-F[0-9]{2})?$' || true)
+              ' /tmp/mapa.yaml | grep -E '^[A-Z0-9]{4,5}(-W[0-9]{2})?$' || true)
               bloqueado=""
               for d in $deps; do
                 # Uma dependência de FASE está satisfeita quando todo card daquela fase
                 # concluiu. Um card sem nenhum card na fase não bloqueia: não há trabalho
                 # declarado ali para esperar.
-                if echo "$d" | grep -qE -- '-F[0-9]{2}$'; then
+                if echo "$d" | grep -qE -- '-W[0-9]{2}$'; then
                   # `parent` vem DEPOIS de `code` no nó, então o código é guardado e
                   # impresso quando o parent casa.
                   pend=$(awk -v fase="$d" '

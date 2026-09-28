@@ -85,9 +85,9 @@ func TestWalk_progressStaysOutOfTheMap(t *testing.T) {
 	t.Run("RPSCR-B04: A progress companion stays out of the map", func(t *testing.T) {})
 	dir := t.TempDir()
 	must(t, os.MkdirAll(filepath.Join(dir, "plans"), 0o755))
-	plan := "<!-- @anchors\n  code: MTUAO\n  layer: plan\n-->\n# Plan\n\n### MTUAO-F01 — phase\n"
+	plan := "<!-- @anchors\n  code: MTUAO\n  layer: plan\n-->\n# Plan\n\n### MTUAO-W01 — phase\n"
 	must(t, os.WriteFile(filepath.Join(dir, "plans", "0017-mutacao.md"), []byte(plan), 0o644))
-	prog := "# Progress — MTUAO\n\n## MTUAO-F01\n\n- [x] done\n"
+	prog := "# Progress — MTUAO\n\n## MTUAO-W01\n\n- [x] done\n"
 	must(t, os.WriteFile(filepath.Join(dir, "plans", "0017-mutacao-progress.md"), []byte(prog), 0o644))
 
 	// The layer matches BOTH files: that is what makes the test honest. If the glob excluded
@@ -392,6 +392,9 @@ func TestWalk_recordsTheDeclaredIdentityAndFlags(t *testing.T) {
 		"@anchors-shared-code\n@noPropagation\n\n### OWNRX-B01 — a rule\n"
 	must(t, writeDeep(filepath.Join(root, "a.spec.md"), spec))
 	must(t, writeDeep(filepath.Join(root, "b.spec.md"), "# plain\n\n### PLANX-B01 — a rule\n"))
+	if HeaderCodeOf(spec) != "OWNRX" || HeaderCodeOf("# plain\n") != "" {
+		t.Errorf("HeaderCodeOf reads the declared identity, and nothing when none is declared")
+	}
 	cfg := &config.Config{Layers: map[string]config.Layer{"spec": {Pattern: "*.spec.md", Kind: "spec"}}}
 	files, err := Walk(root, cfg)
 	if err != nil {
@@ -423,23 +426,23 @@ func TestParentDe_onlyInsideTheHeader(t *testing.T) {
 	if p := parentDe([]byte(boardWorkflow)); p != "" {
 		t.Errorf("a `parent:` in a workflow's body is not a header declaration, got %q", p)
 	}
-	spec := "<!-- @anchors\n  code: INMTN\n  parent: DTBSA-F01\n  layer: lambdas\n-->\n# InstanceMetrics\n\nparent: NOPE-F09\n"
-	if p := parentDe([]byte(spec)); p != "DTBSA-F01" {
+	spec := "<!-- @anchors\n  code: INMTN\n  parent: DTBSA-W01\n  layer: lambdas\n-->\n# InstanceMetrics\n\nparent: NOPE-W09\n"
+	if p := parentDe([]byte(spec)); p != "DTBSA-W01" {
 		t.Errorf("the header's parent should be read, got %q", p)
 	}
-	code := "// @anchors\n//   ref: PRICX\n//   parent: PRICX-F02\npackage p\n\n// parent: NOPE-F09\n"
-	if p := parentDe([]byte(code)); p != "PRICX-F02" {
+	code := "// @anchors\n//   ref: PRICX\n//   parent: PRICX-W02\npackage p\n\n// parent: NOPE-W09\n"
+	if p := parentDe([]byte(code)); p != "PRICX-W02" {
 		t.Errorf("a line-comment header's parent should be read, got %q", p)
 	}
-	noParent := "<!-- @anchors\n  code: INMTN\n-->\n# InstanceMetrics\n\nparent: NOPE-F09\n"
+	noParent := "<!-- @anchors\n  code: INMTN\n-->\n# InstanceMetrics\n\nparent: NOPE-W09\n"
 	if p := parentDe([]byte(noParent)); p != "" {
 		t.Errorf("the HTML header ends at `-->`, got %q", p)
 	}
-	noParentCode := "// @anchors\n//   ref: PRICX\npackage p\n\n// parent: NOPE-F09\n"
+	noParentCode := "// @anchors\n//   ref: PRICX\npackage p\n\n// parent: NOPE-W09\n"
 	if p := parentDe([]byte(noParentCode)); p != "" {
 		t.Errorf("a line-comment header ends at the first non-comment line, got %q", p)
 	}
-	oneLine := "<!-- @anchors parent: X -->\nparent: NOPE-F09\n"
+	oneLine := "<!-- @anchors parent: X -->\nparent: NOPE-W09\n"
 	if p := parentDe([]byte(oneLine)); p != "" {
 		t.Errorf("a one-line header closes on its own line, got %q", p)
 	}
@@ -453,8 +456,8 @@ func TestNeedsFor_pathsForPlansPhasesForSpecs(t *testing.T) {
 	if got := needsFor("plan", plan, root, "plans/c.md"); strings.Join(got, ",") != "plans/a.md,plans/b.md" {
 		t.Errorf("a plan needs plan paths, got %v", got)
 	}
-	spec := []byte("<!-- @anchors\n  code: SPECX\n  needs: FNDTN-F02, plans/a.md, FNDTN-B01\n-->\n")
-	if got := needsFor("spec", spec, root, "s.spec.md"); strings.Join(got, ",") != "FNDTN-F02" {
+	spec := []byte("<!-- @anchors\n  code: SPECX\n  needs: FNDTN-W02, plans/a.md, FNDTN-B01\n-->\n")
+	if got := needsFor("spec", spec, root, "s.spec.md"); strings.Join(got, ",") != "FNDTN-W02" {
 		t.Errorf("a spec needs only phase codes, got %v", got)
 	}
 	if got := needsFor("code", spec, root, "x.go"); got != nil {
@@ -718,7 +721,7 @@ func TestSeedIgnoresGlobInProse(t *testing.T) {
 
 // A NAME WITHOUT A DIRECTORY is not a path — it is the file cited in prose.
 //
-// A revision writes "the `MutualTls.spec.md` moved to PLTFR-F03" when explaining what
+// A revision writes "the `MutualTls.spec.md` moved to PLTFR-W03" when explaining what
 // changed, and that is not the promise to create a file: the plan seeds
 // `packages/infra/MutualTls.spec.md`, with the whole path.
 //
@@ -728,7 +731,7 @@ func TestSeedIgnoresGlobInProse(t *testing.T) {
 // forever unfulfilled, and the queue handed out impossible work.
 func TestSeedIgnoresNameWithoutDirectory(t *testing.T) {
 	t.Run("RPSCR-B29: A plan seeds only concrete spec and doctrine paths", func(t *testing.T) {})
-	plan := "> **PLTFR-R0004:** the `MutualTls.spec.md` moved to `PLTFR-F03`, and the\n" +
+	plan := "> **PLTFR-R0004:** the `MutualTls.spec.md` moved to `PLTFR-W03`, and the\n" +
 		"> `CertificatePinning.spec.md` stays in 0016.\n\n" +
 		"- [ ] `packages/infra/MutualTls.spec.md` — the mTLS channel\n"
 
@@ -781,7 +784,7 @@ func TestHeaderKeysOnlyInsideHeader(t *testing.T) {
 	root := t.TempDir()
 	must(t, writeDeep(filepath.Join(root, "plans", "a.md"), "x"))
 	must(t, writeDeep(filepath.Join(root, "a.ts"), "x"))
-	body := "<!-- @anchors\n  updated_at: 2026-09-26\n-->\n# T\n\ncode: BOGUS\nlayer: bogus\nneeds: FNDTN-F02, plans/a.md\nrevises: plans/a.md\n"
+	body := "<!-- @anchors\n  updated_at: 2026-09-26\n-->\n# T\n\ncode: BOGUS\nlayer: bogus\nneeds: FNDTN-W02, plans/a.md\nrevises: plans/a.md\n"
 	if got := extractHeaderCode(body); got != "" {
 		t.Errorf("a body `code:` line is not the identity, got %q", got)
 	}

@@ -13,17 +13,17 @@ import (
 // results, a step with a conditional exit, a terminal, a step stuck with no exit, and a
 // step that fits an action nobody wrote.
 const workerFlow = "# Worker\n\n" +
-	"### WORKR-P01 — PULL: take the next card\n\nFits: `ACPUL`\n\nResults:\n" +
-	"- `ACPUL-R01` GOT → `WORKR-P02`\n- `ACPUL-R02` EMPTY → `WORKR-P03`\n\n" +
-	"### WORKR-P02 — WORK: do the \"card\"\n\nFits: `ACGHO`\n\nExits:\n" +
-	"- `WORKR-P03` when the gates are green\n- `WORKR-P04` when a gate is red\n\n" +
-	"### WORKR-P03 — DONE: the work ends\n\n> @terminal\n\n" +
-	"### WORKR-P04 — STUCK: nobody knows where to go\n"
+	"### WORKR-T01 — PULL: take the next card\n\nFits: `ACPUL`\n\nResults:\n" +
+	"- `ACPUL-O01` GOT → `WORKR-T02`\n- `ACPUL-O02` EMPTY → `WORKR-T03`\n\n" +
+	"### WORKR-T02 — WORK: do the \"card\"\n\nFits: `ACGHO`\n\nExits:\n" +
+	"- `WORKR-T03` when the gates are green\n- `WORKR-T04` when a gate is red\n\n" +
+	"### WORKR-T03 — DONE: the work ends\n\n> @terminal\n\n" +
+	"### WORKR-T04 — STUCK: nobody knows where to go\n"
 
 const pullAction = "# pull\n\n" +
-	"### ACPUL-R01 — GOT: a card was served\n\nSugere: `anchors work`, and read the card.\n\n" +
-	"### ACPUL-R02 — EMPTY: the queue is empty\n\n" +
-	"### ACPUL-R03 — BROKEN: nobody routes this one\n"
+	"### ACPUL-O01 — GOT: a card was served\n\nSugere: `anchors work`, and read the card.\n\n" +
+	"### ACPUL-O02 — EMPTY: the queue is empty\n\n" +
+	"### ACPUL-O03 — BROKEN: nobody routes this one\n"
 
 func flowProject(t *testing.T) string {
 	t.Helper()
@@ -44,7 +44,7 @@ func TestFlowBuild_writesTheFlowAndNamesTheHole(t *testing.T) {
 	if !strings.Contains(out, "flow built: 4 step(s), 3 result(s)") {
 		t.Errorf("unexpected counts:\n%s", out)
 	}
-	if !strings.Contains(out, "1 result(s) no flow handles") || !strings.Contains(out, "ACPUL-R03") {
+	if !strings.Contains(out, "1 result(s) no flow handles") || !strings.Contains(out, "ACPUL-O03") {
 		t.Errorf("the unrouted result was not named:\n%s", out)
 	}
 	g := loadMap(t, root)
@@ -86,12 +86,12 @@ func TestFlowNext_theValidExits(t *testing.T) {
 	root := flowProject(t)
 	runCmd(t, newFlowCmd(), "build", "--root", root)
 
-	out := runCmd(t, newFlowCmd(), "next", "workr-p01", "--root", root)
+	out := runCmd(t, newFlowCmd(), "next", "workr-t01", "--root", root)
 	for _, want := range []string{
-		"WORKR-P01 — PULL: take the next card",
+		"WORKR-T01 — PULL: take the next card",
 		"fits: ACPUL (anchors pull)",
 		"valid exits (2):",
-		"ACPUL-R01    → WORKR-P02 (WORK: do the \"card\")",
+		"ACPUL-O01    → WORKR-T02 (WORK: do the \"card\")",
 		"↳ `anchors work`",
 	} {
 		if !strings.Contains(out, want) {
@@ -99,21 +99,21 @@ func TestFlowNext_theValidExits(t *testing.T) {
 		}
 	}
 
-	work := runCmd(t, newFlowCmd(), "next", "WORKR-P02", "--root", root)
+	work := runCmd(t, newFlowCmd(), "next", "WORKR-T02", "--root", root)
 	if !strings.Contains(work, "⚠ no action file declares it") {
 		t.Errorf("a step fitting an unwritten action must say so:\n%s", work)
 	}
-	if !strings.Contains(work, "—            → WORKR-P03") || !strings.Contains(work, "when the gates are green") {
+	if !strings.Contains(work, "—            → WORKR-T03") || !strings.Contains(work, "when the gates are green") {
 		t.Errorf("a conditional exit shows the dash label and its condition:\n%s", work)
 	}
 
-	if done := runCmd(t, newFlowCmd(), "next", "WORKR-P03", "--root", root); !strings.Contains(done, "▣ terminal") {
+	if done := runCmd(t, newFlowCmd(), "next", "WORKR-T03", "--root", root); !strings.Contains(done, "▣ terminal") {
 		t.Errorf("the terminal step must say the work ends:\n%s", done)
 	}
-	if stuck := runCmd(t, newFlowCmd(), "next", "WORKR-P04", "--root", root); !strings.Contains(stuck, "whoever arrives here is stuck") {
+	if stuck := runCmd(t, newFlowCmd(), "next", "WORKR-T04", "--root", root); !strings.Contains(stuck, "whoever arrives here is stuck") {
 		t.Errorf("a step with no exit and no @terminal is the defect to show:\n%s", stuck)
 	}
-	if _, err := runCmdErr(newFlowCmd(), t, "next", "WORKR-P99", "--root", root); err == nil ||
+	if _, err := runCmdErr(newFlowCmd(), t, "next", "WORKR-T99", "--root", root); err == nil ||
 		!strings.Contains(err.Error(), "not in the flow graph") {
 		t.Errorf("an unknown step: got %v", err)
 	}
@@ -130,17 +130,17 @@ func TestFlowShow_drawsTheFlow(t *testing.T) {
 
 	out := runCmd(t, newFlowCmd(), "show", "worker", "--root", root)
 	for _, want := range []string{
-		"● WORKR-P01  PULL: take the next card   [ACPUL]",
-		"├─ ACPUL-R01    → WORKR-P02",
-		"└─ ACPUL-R02    → WORKR-P03",
-		"└─ sempre       → WORKR-P04  when a gate is red",
-		"▣ WORKR-P03  DONE: the work ends",
+		"● WORKR-T01  PULL: take the next card   [ACPUL]",
+		"├─ ACPUL-O01    → WORKR-T02",
+		"└─ ACPUL-O02    → WORKR-T03",
+		"└─ sempre       → WORKR-T04  when a gate is red",
+		"▣ WORKR-T03  DONE: the work ends",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q in:\n%s", want, out)
 		}
 	}
-	if strings.Index(out, "WORKR-P01") > strings.Index(out, "WORKR-P04") {
+	if strings.Index(out, "WORKR-T01") > strings.Index(out, "WORKR-T04") {
 		t.Errorf("the steps must keep the file's order:\n%s", out)
 	}
 	if strings.Contains(out, "● ACPUL") {
@@ -155,11 +155,11 @@ func TestFlowShow_drawsTheFlow(t *testing.T) {
 		!strings.Contains(err.Error(), "anchors flow build") {
 		t.Errorf("a map without a flow must ask for `flow build`, got %v", err)
 	}
-	if _, err := runCmdErr(newFlowCmd(), t, "next", "WORKR-P01", "--root", fixtureProject(t)); err == nil ||
+	if _, err := runCmdErr(newFlowCmd(), t, "next", "WORKR-T01", "--root", fixtureProject(t)); err == nil ||
 		!strings.Contains(err.Error(), "anchors flow build") {
 		t.Errorf("navigating a map without a flow must ask for `flow build`, got %v", err)
 	}
-	if part := runCmd(t, newFlowCmd(), "show", "ork", "--root", root); !strings.Contains(part, "WORKR-P01") {
+	if part := runCmd(t, newFlowCmd(), "show", "ork", "--root", root); !strings.Contains(part, "WORKR-T01") {
 		t.Errorf("a part of the flow's name must select it:\n%s", part)
 	}
 }
@@ -175,14 +175,14 @@ func TestFlowShow_mermaid(t *testing.T) {
 	out := runCmd(t, newFlowCmd(), "show", "--mermaid", "--direction", "lr", "--root", root)
 	for _, want := range []string{
 		"flowchart LR",
-		`WORKR_P01["PULL: take the next card\nACPUL"]`,
-		`WORKR_P02["WORK: do the 'card'\nACGHO"]`,
-		`WORKR_P03(["DONE: the work ends"])`,
-		"WORKR_P01 -->|GOT| WORKR_P02",
-		"WORKR_P01 -->|EMPTY| WORKR_P03",
-		"WORKR_P02 -->|when a gate is red| WORKR_P04",
-		"class WORKR_P01 inicio",
-		"class WORKR_P03 fim",
+		`WORKR_T01["PULL: take the next card\nACPUL"]`,
+		`WORKR_T02["WORK: do the 'card'\nACGHO"]`,
+		`WORKR_T03(["DONE: the work ends"])`,
+		"WORKR_T01 -->|GOT| WORKR_T02",
+		"WORKR_T01 -->|EMPTY| WORKR_T03",
+		"WORKR_T02 -->|when a gate is red| WORKR_T04",
+		"class WORKR_T01 inicio",
+		"class WORKR_T03 fim",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("missing %q in:\n%s", want, out)
@@ -213,7 +213,7 @@ func TestFlow_showAndNextWriteNothing(t *testing.T) {
 	}
 	runCmd(t, newFlowCmd(), "show", "--root", root)
 	runCmd(t, newFlowCmd(), "show", "--mermaid", "--root", root)
-	runCmd(t, newFlowCmd(), "next", "WORKR-P01", "--root", root)
+	runCmd(t, newFlowCmd(), "next", "WORKR-T01", "--root", root)
 	after, _ := os.ReadFile(path)
 	if string(before) != string(after) {
 		t.Error("show or next changed the map")

@@ -293,7 +293,7 @@ jobs:
             # cabeçalho da fase ANTERIOR e avisa cards que a revisão não toca. Medido: 3
             # fases acusadas onde só 2 mudaram.
             fases=$(awk -v cod="$cod" '
-              $0 ~ ("^#+ +" cod "-F[0-9][0-9]") { match($0, cod "-F[0-9][0-9]"); atual=substr($0, RSTART, RLENGTH) }
+              $0 ~ ("^#+ +" cod "-W[0-9][0-9]") { match($0, cod "-W[0-9][0-9]"); atual=substr($0, RSTART, RLENGTH) }
               /\[!WARNING\]|@amended-by/ && atual != "" { print atual }
             ' "$plano" 2>/dev/null | sort -u || true)
             if [ -z "$fases" ]; then

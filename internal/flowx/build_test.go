@@ -105,13 +105,13 @@ func TestBuild_readsThePieceEachStepFits(t *testing.T) {
 	root := t.TempDir()
 	os.MkdirAll(filepath.Join(root, Dir), 0o755)
 	os.WriteFile(filepath.Join(root, Dir, "f"+FlowSuffix), []byte(
-		"### FLOWX-P01 — a step\n\nFits: `ACMAP`\n\n### FLOWX-P02 — no piece\n\n> @terminal\n"), 0o644)
+		"### FLOWX-T01 — a step\n\nFits: `ACMAP`\n\n### FLOWX-T02 — no piece\n\n> @terminal\n"), 0o644)
 	g, _ := Build(root)
-	s, _ := StateByCode(g, "FLOWX-P01")
+	s, _ := StateByCode(g, "FLOWX-T01")
 	if s.Fits != "ACMAP" {
 		t.Errorf("expected the step to fit ACMAP, got %q", s.Fits)
 	}
-	if s2, _ := StateByCode(g, "FLOWX-P02"); s2.Fits != "" {
+	if s2, _ := StateByCode(g, "FLOWX-T02"); s2.Fits != "" {
 		t.Errorf("a step that fits nothing must carry no piece, got %q", s2.Fits)
 	}
 }
@@ -128,21 +128,21 @@ func TestBuild_readsTheSuggestedReaction(t *testing.T) {
 	os.MkdirAll(filepath.Join(root, ActionsDir), 0o755)
 	os.MkdirAll(filepath.Join(root, Dir), 0o755)
 	os.WriteFile(filepath.Join(root, ActionsDir, "a"+ActionSuffix), []byte(
-		"### ACTST-R01 — STALE: the map aged\n\nSugere: `anchors map build`, and confront again.\n\n"+
-			"### ACTST-R02 — FINE: nothing to do\n"), 0o644)
+		"### ACTST-O01 — STALE: the map aged\n\nSugere: `anchors map build`, and confront again.\n\n"+
+			"### ACTST-O02 — FINE: nothing to do\n"), 0o644)
 	os.WriteFile(filepath.Join(root, Dir, "f"+FlowSuffix), []byte(
-		"### FLOWX-P01 — a step\n\nFits: `ACTST`\n\nResults:\n"+
-			"- `ACTST-R01` STALE → `FLOWX-P01`\n- `ACTST-R02` FINE → `FLOWX-P02`\n\n"+
-			"### FLOWX-P02 — done\n\n> @terminal\n"), 0o644)
+		"### FLOWX-T01 — a step\n\nFits: `ACTST`\n\nResults:\n"+
+			"- `ACTST-O01` STALE → `FLOWX-T01`\n- `ACTST-O02` FINE → `FLOWX-T02`\n\n"+
+			"### FLOWX-T02 — done\n\n> @terminal\n"), 0o644)
 
 	g, _ := Build(root)
-	r1, _ := StateByCode(g, "ACTST-R01")
+	r1, _ := StateByCode(g, "ACTST-O01")
 	if r1.Suggests == "" {
 		t.Error("the suggested reaction was not read")
 	}
 	// A result with no suggestion carries none — the field is not filled by inheritance
 	// from the result above it.
-	if r2, _ := StateByCode(g, "ACTST-R02"); r2.Suggests != "" {
+	if r2, _ := StateByCode(g, "ACTST-O02"); r2.Suggests != "" {
 		t.Errorf("a result with no suggestion must carry none, got %q", r2.Suggests)
 	}
 }
@@ -157,9 +157,9 @@ func TestBuild_theFlowKeywordIsTranslated(t *testing.T) {
 	os.MkdirAll(filepath.Join(root, Dir), 0o755)
 	// Written in Spanish — a language this engine has no clause for.
 	os.WriteFile(filepath.Join(root, Dir, "f"+FlowSuffix), []byte(
-		"### FLOWX-P01 — un paso\n\nEncaja: `ACTST`\n\n### FLOWX-P02 — el final\n\n> @terminal\n"), 0o644)
+		"### FLOWX-T01 — un paso\n\nEncaja: `ACTST`\n\n### FLOWX-T02 — el final\n\n> @terminal\n"), 0o644)
 	g, _ := Build(root)
-	s, ok := StateByCode(g, "FLOWX-P01")
+	s, ok := StateByCode(g, "FLOWX-T01")
 	if !ok || s.Fits != "ACTST" {
 		t.Errorf("the keyword must be read in any catalogued language, got %+v", s)
 	}
@@ -171,8 +171,8 @@ func TestBuild_routedResultsAndStrayExits(t *testing.T) {
 	root := t.TempDir()
 	os.MkdirAll(filepath.Join(root, Dir), 0o755)
 	os.WriteFile(filepath.Join(root, Dir, "f"+FlowSuffix), []byte(
-		"- `FLOWX-P09` an exit above every state\n\n"+
-			"### FLOWX-P01 — a step\n\nResults:\n- `ACTST-R01` STALE → `FLOWX-P01`\n"), 0o644)
+		"- `FLOWX-T09` an exit above every state\n\n"+
+			"### FLOWX-T01 — a step\n\nResults:\n- `ACTST-O01` STALE → `FLOWX-T01`\n"), 0o644)
 	g, err := Build(root)
 	if err != nil || g == nil {
 		t.Fatalf("build: %v", err)
@@ -181,8 +181,8 @@ func TestBuild_routedResultsAndStrayExits(t *testing.T) {
 		t.Fatalf("want only the routed result as a transition (the stray exit has no owner), got %+v", g.Transitions)
 	}
 	tr := g.Transitions[0]
-	if tr.From != "FLOWX-P01" || tr.On != "ACTST-R01" || tr.To != "FLOWX-P01" {
-		t.Errorf("routed result = %+v, want from FLOWX-P01 on ACTST-R01 to FLOWX-P01", tr)
+	if tr.From != "FLOWX-T01" || tr.On != "ACTST-O01" || tr.To != "FLOWX-T01" {
+		t.Errorf("routed result = %+v, want from FLOWX-T01 on ACTST-O01 to FLOWX-T01", tr)
 	}
 }
 
@@ -215,10 +215,10 @@ func TestBuild_aRoutedResultKeepsItsCondition(t *testing.T) {
 	root := t.TempDir()
 	os.MkdirAll(filepath.Join(root, Dir), 0o755)
 	os.WriteFile(filepath.Join(root, Dir, "f"+FlowSuffix), []byte(
-		"### FLOWX-P01 — a step\n\nResults:\n"+
-			"- `ACTST-R01` STALE → `FLOWX-P02`\n"+
-			"- `ACTST-R02` BLOCKED -> `FLOWX-P03` when the fix is ready.\n"+
-			"- on `ACTST-R03` go to `FLOWX-P04`\n"), 0o644)
+		"### FLOWX-T01 — a step\n\nResults:\n"+
+			"- `ACTST-O01` STALE → `FLOWX-T02`\n"+
+			"- `ACTST-O02` BLOCKED -> `FLOWX-T03` when the fix is ready.\n"+
+			"- on `ACTST-O03` go to `FLOWX-T04`\n"), 0o644)
 	g, err := Build(root)
 	if err != nil || g == nil || len(g.Transitions) != 3 {
 		t.Fatalf("build: %+v, %v", g, err)
@@ -263,7 +263,7 @@ func TestBuild_aReadFailureIsAnError(t *testing.T) {
 	// An action file that cannot be read.
 	root = projectWithFlow(t, destravar)
 	os.MkdirAll(filepath.Join(root, ActionsDir), 0o755)
-	os.WriteFile(filepath.Join(root, ActionsDir, "locked"+ActionSuffix), []byte("### ACTST-R01 — a result\n"), 0o000)
+	os.WriteFile(filepath.Join(root, ActionsDir, "locked"+ActionSuffix), []byte("### ACTST-O01 — a result\n"), 0o000)
 	if g, err := Build(root); err == nil {
 		t.Errorf("Build with an unreadable action file = %+v, nil; want the error", g)
 	}

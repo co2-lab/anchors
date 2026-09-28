@@ -48,11 +48,11 @@ goes. What it adds is the LINK, and that is where rules stop depending on memory
 
     ## Results
 
-    ### ACHCK-R01 — PROMOTABLE: no blocking gate failed
+    ### ACHCK-O01 — PROMOTABLE: no blocking gate failed
 
-    ### ACHCK-R02 — BARRED: a blocking gate failed
+    ### ACHCK-O02 — BARRED: a blocking gate failed
 
-Each result gets a code (` + "`-R01`" + `, ` + "`-R02`" + `…) and a SHORT NAME in caps
+Each result gets a code (` + "`-O01`" + `, ` + "`-O02`" + `…) and a SHORT NAME in caps
 before the colon — that name is what the arrow carries in the diagram, so it has to be
 readable on its own.
 
@@ -63,13 +63,13 @@ An action whose results were imagined describes a command that does not exist.
 
 ## Writing a FLOW
 
-    ### WORKR-P04 — confront
+    ### WORKR-T04 — confront
 
     Fits: ` + "`ACHCK`" + `
 
     Results:
-    - ` + "`ACHCK-R01`" + ` PROMOTABLE → ` + "`WORKR-P06`" + `
-    - ` + "`ACHCK-R02`" + ` BARRED → ` + "`WORKR-P03`" + ` (back to writing)
+    - ` + "`ACHCK-O01`" + ` PROMOTABLE → ` + "`WORKR-T06`" + `
+    - ` + "`ACHCK-O02`" + ` BARRED → ` + "`WORKR-T03`" + ` (back to writing)
 
 The ` + "`Fits:`" + ` line names the piece. Each result line routes one outcome to the next step.
 The association is POSITIONAL: what comes below a step belongs to it.

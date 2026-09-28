@@ -26,17 +26,17 @@ import (
 // virou trabalho perdido porque a pessoa foi LER o plano; um agente que confiasse no card
 // teria tentado.
 //
-// A fase passa a ser um item CATALOGADO, com código derivado do plano: `FNDTN-F01`. E a
-// spec semeada declara `needs: FNDTN-F02` no header — a mesma palavra que o plano já usa
+// A fase passa a ser um item CATALOGADO, com código derivado do plano: `FNDTN-W01`. E a
+// spec semeada declara `needs: FNDTN-W02` no header — a mesma palavra que o plano já usa
 // para ordem, agora um nível abaixo.
 //
-// A identidade é o que faz a diferença: `F01` não muda quando alguém reescreve o título
+// A identidade é o que faz a diferença: `W01` não muda quando alguém reescreve o título
 // da fase, e é confrontável — "esta spec pode ser trabalhada agora?" vira uma pergunta com
 // resposta, em vez de uma leitura.
 
-// phaseRE casa o cabeçalho de uma fase catalogada: `### FNDTN-F01 — a árvore e o gerenciador`.
+// phaseRE casa o cabeçalho de uma fase catalogada: `### FNDTN-W01 — a árvore e o gerenciador`.
 func phaseRE() *regexp.Regexp {
-	return regexp.MustCompile(`(?m)^#{2,4}\s+([A-Z0-9]` + config.CodeLengthPattern() + `-F\d{2})\b`)
+	return regexp.MustCompile(`(?m)^#{2,4}\s+([A-Z0-9]` + config.CodeLengthPattern() + `-` + config.PhaseLetter + `\d{2})\b`)
 }
 
 // PlanPhases devolve os códigos de fase catalogados no plano, na ordem em que aparecem.
@@ -82,9 +82,9 @@ func checkPhaseOrdered(content string, n mapx.Node, root string, g *mapx.Graph, 
 		pos[f] = i
 	}
 
-	// `depende de` na mesma seção da fase: `### FNDTN-F02 — … (depende de FNDTN-F01)`.
+	// `depende de` na mesma seção da fase: `### FNDTN-W02 — … (depende de FNDTN-W01)`.
 	dependeRE := regexp.MustCompile(`(?i)depende\s+d[eao]\s+` + "`?" + `([A-Z0-9]` +
-		config.CodeLengthPattern() + `-F\d{2})`)
+		config.CodeLengthPattern() + `-` + config.PhaseLetter + `\d{2})`)
 	var erros []string
 	secoes := regexp.MustCompile(`(?m)^#{2,4}\s+`).Split(content, -1)
 	for _, sec := range secoes {
@@ -118,7 +118,7 @@ func checkPhaseOrdered(content string, n mapx.Node, root string, g *mapx.Graph, 
 // checkPhaseExists confronta o `needs:` de uma SPEC contra as fases catalogadas nos planos.
 //
 // É o outro lado do par: `fase-ordenada` cobra a coerência DENTRO do plano, e este cobra
-// que a spec aponte para uma fase que existe. Um `needs: FNDTN-F09` num plano de quatro
+// que a spec aponte para uma fase que existe. Um `needs: FNDTN-W09` num plano de quatro
 // fases é uma dependência que nunca fecha — a spec ficaria bloqueada para sempre, e nada
 // diria por quê.
 func checkPhaseExists(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
@@ -163,7 +163,7 @@ func checkPhaseExists(content string, n mapx.Node, root string, g *mapx.Graph, c
 // item some da árvore (ninguém o contém) ou fica pendurado numa raiz que não deveria
 // existir. É a mesma classe de defeito do `needs` quebrado, e recebe o mesmo tratamento.
 //
-// Aceita como pai o CÓDIGO de um artefato (`FNDTN`) ou de uma fase (`FNDTN-F01`) — a
+// Aceita como pai o CÓDIGO de um artefato (`FNDTN`) ou de uma fase (`FNDTN-W01`) — a
 // hierarquia é livre porque a forma de organizar trabalho varia entre projetos.
 func checkParentValid(content string, n mapx.Node, root string, g *mapx.Graph, cfg *config.Config) (Verdict, string) {
 	if n.Parent == "" {

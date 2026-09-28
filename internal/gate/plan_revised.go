@@ -35,7 +35,7 @@ import (
 //
 //   - o ALERTA do Markdown (`> [!IMPORTANT]`, `> [!WARNING]`) — sintaxe que o GitHub
 //     renderiza, independente de idioma, e que quem escreve markdown já conhece;
-//   - o CÓDIGO do plano e da fase (`FNDTN`, `FNDTN-F01`) — a identidade que o Anchors já
+//   - o CÓDIGO do plano e da fase (`FNDTN`, `FNDTN-W01`) — a identidade que o Anchors já
 //     usa em todo lugar, e que não muda quando alguém reescreve o título.
 //
 // O aviso de topo é um `[!IMPORTANT]` citando o código do plano que revisa; a marcação de

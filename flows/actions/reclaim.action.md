@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ACRCL
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Ação: `anchors reclaim` — devolver as tarefas do worker que morreu
 
@@ -18,8 +18,8 @@ também.
 
 ## Resultados
 
-### ACRCL-R01 — TAREFAS DEVOLVIDAS: a fila volta a alcançá-las
+### ACRCL-O01 — TAREFAS DEVOLVIDAS: a fila volta a alcançá-las
 
-### ACRCL-R02 — NADA PRESO: nenhuma reivindicação órfã
+### ACRCL-O02 — NADA PRESO: nenhuma reivindicação órfã
 
 Não é erro: é a ausência do problema.

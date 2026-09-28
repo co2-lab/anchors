@@ -189,7 +189,7 @@ func TestCodeLanguage_noProjectIdentifierInPortuguese(t *testing.T) {
 // NO GATE MAY DEPEND ON THE WORDING OF A TEXT IN PORTUGUESE.
 //
 // The project is going to be translated, and translation is mechanical substitution —
-// what survives it is the STABLE VOCABULARY (`@no-test`, `TODO`, `FNDTN-F01`,
+// what survives it is the STABLE VOCABULARY (`@no-test`, `TODO`, `FNDTN-W01`,
 // `[decisao-em-aberto]`); what does not survive is prose.
 //
 // The cost of getting this wrong is silent: the gate does not fail, it stops firing. It

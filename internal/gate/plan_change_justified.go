@@ -39,7 +39,7 @@ import (
 
 // revisionRE casa a revisão registrada no arquivo: `FNDTN-R0001: o que mudou e por quê`.
 //
-// O formato segue o vocabulário que já existe (`FNDTN-F04` para fase), e a NUMERAÇÃO é o
+// O formato segue o vocabulário que já existe (`FNDTN-W04` para fase), e a NUMERAÇÃO é o
 // que uma marca solta não daria: dá para ver quantas vezes o documento mudou, e em que
 // ordem. Um `@plan-fix` solto responderia "mudou"; `-R0003` responde "mudou três vezes".
 //

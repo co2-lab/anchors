@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WORKR
-  updated_at: 2026-09-21
+  updated_at: 2026-09-28
 -->
 # Worker — o ciclo de quem executa uma tarefa da fila
 
@@ -18,15 +18,15 @@ ausência de encaixe: o resultado BARRADO não tem ligação para `done`.
 
 ## Montagem
 
-### WORKR-P01 — puxar a próxima tarefa
+### WORKR-T01 — puxar a próxima tarefa
 
 Encaixa: `ACNXT` (`anchors next`)
 
 Resultados:
-- `ACNXT-R01` TAREFA PUXADA → `WORKR-P02`
-- `ACNXT-R02` FILA VAZIA → `WORKR-P07`
+- `ACNXT-O01` TAREFA PUXADA → `WORKR-T02`
+- `ACNXT-O02` FILA VAZIA → `WORKR-T07`
 
-### WORKR-P02 — pôr no mapa o arquivo que a tarefa cita
+### WORKR-T02 — pôr no mapa o arquivo que a tarefa cita
 
 Encaixa: `ACMAP` (`anchors map build`)
 
@@ -35,9 +35,9 @@ desta peça. Sem ela, os dois respondem "não está no mapa" e a rodada se perde
 o motivo.
 
 Resultados:
-- `ACMAP-R01` MAPA EM DIA → `WORKR-P03`
+- `ACMAP-O01` MAPA EM DIA → `WORKR-T03`
 
-### WORKR-P03 — escrever o artefato da etapa
+### WORKR-T03 — escrever o artefato da etapa
 
 Encaixa: `ACWRK` (`anchors work <etapa> --for <alvo>`)
 
@@ -45,41 +45,41 @@ A etapa diz o que se escreve — `specify` a spec, `implement` código e feature
 testes, `verify` nada (só confronta).
 
 Resultados:
-- `ACWRK-R01` ARTEFATO ESCRITO → `WORKR-P04`
-- `ACWRK-R02` ALVO FORA DA ESTRUTURA → `WORKR-P08`
+- `ACWRK-O01` ARTEFATO ESCRITO → `WORKR-T04`
+- `ACWRK-O02` ALVO FORA DA ESTRUTURA → `WORKR-T08`
 
-### WORKR-P04 — confrontar
+### WORKR-T04 — confrontar
 
 Encaixa: `ACHCK` (`anchors check --changed`)
 
 Resultados:
-- `ACHCK-R01` PROMOVÍVEL → `WORKR-P06`
-- `ACHCK-R02` BARRADO → `WORKR-P03` (volta a escrever — e a issue aberta segue no fluxo `ISSUE`)
-- `ACHCK-R03` JULGAMENTO PENDENTE → `WORKR-P05`
-- `ACHCK-R04` FORA DA ESTRUTURA → `WORKR-P08`
-- `ACHCK-R05` MAPA DESATUALIZADO → `WORKR-P02` (refaz o mapa e confronta de novo)
+- `ACHCK-O01` PROMOVÍVEL → `WORKR-T06`
+- `ACHCK-O02` BARRADO → `WORKR-T03` (volta a escrever — e a issue aberta segue no fluxo `ISSUE`)
+- `ACHCK-O03` JULGAMENTO PENDENTE → `WORKR-T05`
+- `ACHCK-O04` FORA DA ESTRUTURA → `WORKR-T08`
+- `ACHCK-O05` MAPA DESATUALIZADO → `WORKR-T02` (refaz o mapa e confronta de novo)
 
-### WORKR-P05 — julgar o que nenhum script computa
+### WORKR-T05 — julgar o que nenhum script computa
 
 Encaixa: o fluxo `JUDGE` inteiro (um fluxo encaixa como peça)
 
 Resultados:
-- `JUDGE-R01` VEREDITO DADO → `WORKR-P04` (confronta de novo)
+- `JUDGE-O01` VEREDITO DADO → `WORKR-T04` (confronta de novo)
 
-### WORKR-P06 — fechar a tarefa
+### WORKR-T06 — fechar a tarefa
 
 Encaixa: `ACDON` (`anchors done <id>`)
 
 Resultados:
-- `ACDON-R01` FECHADA → `WORKR-P09`
-- `ACDON-R02` SEM ID → `WORKR-P06` (a tarefa puxada tem id; use o dele)
+- `ACDON-O01` FECHADA → `WORKR-T09`
+- `ACDON-O02` SEM ID → `WORKR-T06` (a tarefa puxada tem id; use o dele)
 
-### WORKR-P09 — o vigia já enfileirou a próxima etapa
+### WORKR-T09 — o vigia já enfileirou a próxima etapa
 
 Encaixa: `ACWTC` (o vigia, que dispara sozinho)
 
 Este passo não é trabalho de ninguém — ele já aconteceu. Quando o artefato foi salvo em
-`WORKR-P03`, o vigia classificou a mudança e enfileirou a etapa seguinte
+`WORKR-T03`, o vigia classificou a mudança e enfileirou a etapa seguinte
 (spec→implement, feature→test).
 
 Está no fluxo justamente porque é o que faz o ciclo se sustentar. Sem ele desenhado, o
@@ -87,16 +87,16 @@ Está no fluxo justamente porque é o que faz o ciclo se sustentar. Sem ele dese
 substitui essa memória ficaria invisível.
 
 Resultados:
-- `ACWTC-R01` TAREFA ENFILEIRADA → `WORKR-P01` (volta a puxar)
-- `ACWTC-R02` IGNORADO → `WORKR-P01` (a mudança não pedia trabalho; a fila decide)
+- `ACWTC-O01` TAREFA ENFILEIRADA → `WORKR-T01` (volta a puxar)
+- `ACWTC-O02` IGNORADO → `WORKR-T01` (a mudança não pedia trabalho; a fila decide)
 
-### WORKR-P07 — nada a fazer
+### WORKR-T07 — nada a fazer
 
 Não é erro: `anchors next` sai com código 0. Fim legítimo da rodada.
 
 > @terminal
 
-### WORKR-P08 — o alvo não é regido pela Estrutura
+### WORKR-T08 — o alvo não é regido pela Estrutura
 
 Não é "passou". Ou falta declarar a camada, ou o arquivo não devia estar ali — e as duas
 são decisão de quem conhece o projeto, não do worker.

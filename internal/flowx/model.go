@@ -21,6 +21,7 @@
 package flowx
 
 import (
+	"github.com/co2-lab/anchors/internal/config"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/mapx"
@@ -113,7 +114,7 @@ func Flows(g *mapx.FlowGraph) []string {
 // ActionTitle gives the readable name of an ACTION from its code (`ACHCK`).
 //
 // The action's own code is not a node: what lives in the graph are its RESULTS
-// (`ACHCK-R01`…). So the title is taken from the file that declares them — which is also
+// (`ACHCK-O01`…). So the title is taken from the file that declares them — which is also
 // what keeps a step from pointing at a piece nobody wrote.
 func ActionTitle(g *mapx.FlowGraph, action string) (string, bool) {
 	if g == nil {
@@ -155,7 +156,7 @@ func Entry(g *mapx.FlowGraph, flow string) (mapx.FlowState, bool) {
 // "who arrives here?" would accuse every result no flow happens to route.
 func IsResult(code string) bool {
 	_, rest, ok := strings.Cut(code, "-")
-	return ok && strings.HasPrefix(rest, "R")
+	return ok && strings.HasPrefix(rest, config.OutcomeLetter)
 }
 
 // Unreachable returns the STEPS no transition reaches, minus the first of each flow —

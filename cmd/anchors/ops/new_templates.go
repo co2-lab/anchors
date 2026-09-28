@@ -622,18 +622,18 @@ var planTemplate = template{
 			Body: "## Motivo\n\nTODO: o que quebra sem isto, ou o que fica mais caro depois.\n\n"},
 
 		{Key: "phases", Title: "Fases (com código e ordem)", Default: true,
-			Realizes: "F",
-			Purpose: "Cada fase é um item CATALOGADO (`{id}-F01`), e a ordem entre elas é declarada — " +
-				"`(depende de {id}-F01)`. Sem o código, a ordem vive em prosa e o pipeline não a " +
+			Realizes: config.PhaseLetter,
+			Purpose: "Cada fase é um item CATALOGADO (`{id}-W01`), e a ordem entre elas é declarada — " +
+				"`(depende de {id}-W01)`. Sem o código, a ordem vive em prosa e o pipeline não a " +
 				"confronta: as specs semeadas nascem todas disponíveis, e o agente pega a da fase 3 " +
-				"com a fase 1 em aberto. Cada spec declara `parent: {id}-F0N` (a que fase pertence) " +
+				"com a fase 1 em aberto. Cada spec declara `parent: {id}-W0N` (a que fase pertence) " +
 				"e `needs:` (de qual depende). O PROGRESSO não mora aqui: ele vive no " +
 				"`-progress.md` ao lado, porque o plano é DECISÃO e alterá-lo tem de significar " +
 				"que a decisão mudou.",
-			Body: "## Fases\n\n### {id}-F01 — TODO nome da primeira fase\n\n" +
+			Body: "## Fases\n\n### {id}-W01 — TODO nome da primeira fase\n\n" +
 				"TODO: o que esta fase entrega, e as specs que ela semeia.\n\n" +
 				"- `caminho/Unidade.spec.md` — TODO o que ela descreve\n\n" +
-				"### {id}-F02 — TODO nome da segunda fase (depende de {id}-F01)\n\n" +
+				"### {id}-W02 — TODO nome da segunda fase (depende de {id}-W01)\n\n" +
 				"TODO: por que esta fase só começa depois da anterior.\n\n"},
 
 		{Key: "out-of-scope", Title: "Fora de escopo (o que este plano NÃO faz)", Default: true,
@@ -774,10 +774,10 @@ var flowTemplate = template{
 
 		{Key: "flow_steps", Title: "section.title.flow_steps", Default: true,
 			Purpose: "section.purpose.flow_steps",
-			Body: "## Assembly\n\n### {id}-P01 — TODO: what this step does\n\n" +
+			Body: "## Assembly\n\n### {id}-T01 — TODO: what this step does\n\n" +
 				"Fits: `TODO` (the action code)\n\nResults:\n" +
-				"- `TODO-R01` TODO → `{id}-P02`\n\n" +
-				"### {id}-P02 — TODO: where the work ends\n\n> @terminal\n\n"},
+				"- `TODO-O01` TODO → `{id}-T02`\n\n" +
+				"### {id}-T02 — TODO: where the work ends\n\n> @terminal\n\n"},
 	},
 }
 
@@ -800,7 +800,7 @@ var actionTemplate = template{
 
 		{Key: "action_results", Title: "section.title.action_results", Default: true,
 			Purpose: "section.purpose.action_results",
-			Body: "## Results\n\n### {id}-R01 — TODO: SHORT NAME IN CAPS: what happened\n\n" +
-				"### {id}-R02 — TODO\n\n"},
+			Body: "## Results\n\n### {id}-O01 — TODO: SHORT NAME IN CAPS: what happened\n\n" +
+				"### {id}-O02 — TODO\n\n"},
 	},
 }

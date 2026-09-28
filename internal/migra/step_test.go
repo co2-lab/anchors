@@ -1,6 +1,8 @@
 package migra
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -88,6 +90,24 @@ func TestStepsFrom_onlyTheStepsInsideTheInterval(t *testing.T) {
 	}
 	if len(got) != 1 || got[0].To != 3 {
 		t.Errorf("expected only the step producing 3; got %v", got)
+	}
+}
+
+func TestStep_letterRenamesAreNotAppliedToTheYAML(t *testing.T) {
+	t.Run("MSCMG-B05: A step may rename code letters by kind", func(t *testing.T) {})
+	s := Step{To: 5, RenameLetters: []LetterRename{{Kind: "plan", From: "F", To: "W"}}}
+	if s.RenameLetters[0] != (LetterRename{"plan", "F", "W"}) {
+		t.Fatalf("the step carries the rename, got %+v", s.RenameLetters)
+	}
+	p := filepath.Join(t.TempDir(), "anchors.graph.yaml")
+	if err := os.WriteFile(p, []byte("version: 4\nnodes:\n    - id: plans/p.md\n      code: PLANA\n      codes: [PLANA-F01]\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := MigrateFile(p, 5, false); err != nil {
+		t.Fatal(err)
+	}
+	if b, _ := os.ReadFile(p); !strings.Contains(string(b), "version: 5") || !strings.Contains(string(b), "PLANA-F01") {
+		t.Errorf("the YAML step only raises the version; the letters are the command's, got:\n%s", b)
 	}
 }
 

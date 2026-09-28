@@ -269,7 +269,7 @@ mais trabalhoso que corrigir em silêncio, o agente corrige em silêncio.
 > **FNDTN-R0001:** o exemplo citava um pacote que não existe.
 ```
 
-O formato é `{CÓDIGO}-R000N`, e segue o vocabulário que já existe (`FNDTN-F04` para
+O formato é `{CÓDIGO}-R000N`, e segue o vocabulário que já existe (`FNDTN-W04` para
 fase). A **numeração** é o que uma marca solta não daria: `-R0003` responde *"mudou
 três vezes"*, e o gate cobra que seja sequencial — com buraco, ela deixa de
 responder isso.

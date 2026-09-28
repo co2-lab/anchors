@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNFGO
-  updated_at: 2026-09-27
+  updated_at: 2026-09-28
   layer: config
 -->
 # Config — loads the project's anchors.yaml, refuses what it cannot honour, and answers every setting with its default
@@ -113,7 +113,7 @@ patterns a spec governs.
 | --- | --- |
 | `CNFGO-B29` | A section title comes from the layer's rename, then the project's, then the framework's default; a blank rename does not count (`SectionTitle`). |
 | `CNFGO-B30` | The placeholder words are the declared ones, trimmed and without blanks, or the templates' single default marker word when none remain (`Placeholders`). |
-| `CNFGO-B31` | The rule letters are the declared rule types' letters, upper-cased, one character each, without repeats, in declaration order; with none valid they are the canonical `SRVAXBNMDEIQFG` (`RuleLetters`). |
+| `CNFGO-B31` | The rule letters are the declared rule types' letters, upper-cased, one character each, without repeats, in declaration order; with none valid they are the canonical `SRVAXBNMDEIQWG` (`RuleLetters`). |
 | `CNFGO-B32` | A scenario tag maps to every letter whose rule type declares it, ignoring case and surrounding spaces; a tag no rule type declares is reported as unknown (`TagLetters`). |
 | `CNFGO-B33` | The code length pattern, placed after one character class, matches exactly the declared lengths: the one length, the contiguous range, or each of lengths that are not contiguous and nothing between them (`CodeLengthPattern`). |
 | `CNFGO-B41` | A rule type catalogues a section when the section's title is one it declares as requiring a code, ignoring case and surrounding spaces (`RequiresCodeIn`). |

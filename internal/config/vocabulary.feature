@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GTVCG
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @GTVCG
@@ -18,6 +18,12 @@ Feature: GateVocabulary — the list of default gate names, injected into the co
     Given a registered source giving "spec-complete" and "rule-fulfilled"
     When the default gate names are asked for
     Then they are "spec-complete" and "rule-fulfilled"
+
+  @GTVCG-B03 @unit-level
+  Scenario: The letters of plans, flows and actions
+    Given the canonical rule letters
+    When the phase, step and outcome letters are read
+    Then they are W, T and O, only the phase letter is canonical, and step and outcome are no spec letter
 
   @GTVCG-I01 @unit-level
   Scenario: The answer always comes from the source registered last

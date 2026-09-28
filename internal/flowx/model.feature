@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: FLMDF
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @FLMDF
@@ -15,27 +15,27 @@ Feature: FlowModel — the questions a work-flow graph answers: what comes next,
 
   @FLMDF-B02 @unit-level
   Scenario: A state is found by its code
-    Given a flow with the step "FLOWX-P01" titled "a later step"
-    When "FLOWX-P01" and "FLOWX-P99" are looked up
+    Given a flow with the step "FLOWX-T01" titled "a later step"
+    When "FLOWX-T01" and "FLOWX-T99" are looked up
     Then the first is found with its title and the second is not
 
   @FLMDF-B05 @unit-level
-  Scenario: A result is a code whose letter is R
-    Given the codes "ACTST-R01", "FLOWX-P01", "DSTRV-N02", "FLOWX-XR01" and "ACTST"
+  Scenario: A result is a code whose letter is O
+    Given the codes "ACTST-O01", "FLOWX-T01", "DSTRV-N02", "FLOWX-XO01" and "ACTST"
     When each is asked whether it is a result
-    Then "ACTST-R01" is a result and the other four codes are not results
+    Then "ACTST-O01" is a result and the other four codes are not results
 
   @FLMDF-B03 @unit-level
   Scenario: States keep the file's order and flows are listed once
-    Given a flow file declaring "FLOWX-P03" before "FLOWX-P01", and an action file "check-it"
+    Given a flow file declaring "FLOWX-T03" before "FLOWX-T01", and an action file "check-it"
     When the states of the flow and the list of flows are asked
-    Then the states are "FLOWX-P03" then "FLOWX-P01", and the flows are the action file then the flow file
+    Then the states are "FLOWX-T03" then "FLOWX-T01", and the flows are the action file then the flow file
 
   @FLMDF-B04 @unit-level
   Scenario: The entry is the first declared step, never a result
-    Given a flow file whose first step is "FLOWX-P03", and an action file declaring only results
+    Given a flow file whose first step is "FLOWX-T03", and an action file declaring only results
     When the entry of each is asked
-    Then the flow's entry is "FLOWX-P03" and the action file has none
+    Then the flow's entry is "FLOWX-T03" and the action file has none
 
   @FLMDF-B06 @unit-level
   Scenario: An action's title is its file name
@@ -51,9 +51,9 @@ Feature: FlowModel — the questions a work-flow graph answers: what comes next,
 
   @FLMDF-B08 @unit-level
   Scenario: A result no flow routes is unhandled
-    Given an action declaring "ACTST-R01" and "ACTST-R02", and a flow routing only "ACTST-R01"
+    Given an action declaring "ACTST-O01" and "ACTST-O02", and a flow routing only "ACTST-O01"
     When the unhandled results are asked
-    Then the unhandled list holds only "ACTST-R02", the result no flow routes anywhere
+    Then the unhandled list holds only "ACTST-O02", the result no flow routes anywhere
 
   @FLMDF-B09 @unit-level
   Scenario: An exit to a state that does not exist is dangling

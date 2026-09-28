@@ -69,7 +69,10 @@ none
 
 This project does not declare `rule_types`, so the framework's canonical letters hold:
 `S` state, `R` permission, `V` validation, `A` action, `X` constraint, `B` behaviour,
-`N` navigation, `M` message, `D` data. Declaring your own in `rule_types` makes the team's
+`N` navigation, `M` message, `D` data, `E` error, `I` invariant, `Q` open question, `G`
+feature-flag scenario, and `W` a plan's phase (Wave), which specs cite in `needs:`. Flows
+and actions have letters of their own: `T` a step (Task), `O` an action's result
+(Outcome). Declaring your own in `rule_types` makes the team's
 vocabulary count in place of the generic one.
 
 ## The sections

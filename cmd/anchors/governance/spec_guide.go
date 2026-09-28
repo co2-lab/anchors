@@ -91,7 +91,10 @@ func RenderSpecGuide(cfg *config.Config, exemploCode string) string {
 	} else {
 		b.WriteString("This project does not declare `rule_types`, so the framework's canonical letters\n")
 		b.WriteString("apply: `S` state, `R` permission, `V` validation, `A` action, `X` restriction,\n")
-		b.WriteString("`B` behaviour, `N` navigation, `M` message, `D` data. Declaring your own in\n")
+		b.WriteString("`B` behaviour, `N` navigation, `M` message, `D` data, `E` error, `I` invariant,\n")
+		b.WriteString("`Q` open question, `G` feature-flag scenario, and `W` a plan's phase (Wave), which\n")
+		b.WriteString("specs cite in `needs:`. Flows and actions have letters of their own: `T` a step\n")
+		b.WriteString("(Task), `O` an action's result (Outcome). Declaring your own in\n")
 		b.WriteString("`rule_types` makes the team's vocabulary apply in place of the generic one.\n\n")
 	}
 
