@@ -1667,3 +1667,16 @@ func TestMutationScore_UnderLoad(t *testing.T) {
 		t.Fatalf("a failure says how many were killed by the time limit, got %v (%s)", v, msg)
 	}
 }
+
+func TestHeaderConforms_offTheTop(t *testing.T) {
+	t.Run("INCHN-B33: A header below the top fails the header ruler", func(t *testing.T) {})
+	n := mapx.Node{ID: "page.tsx", Kind: mapx.KindCode}
+	low := "'use client'\n// @anchors\n//   ref: PAGEX\n"
+	if v, msg := checkHeaderConforms(low, n); v != Fail || !strings.Contains(msg, "@fixed-header") {
+		t.Errorf("a header below the top fails naming the way out, got %v: %s", v, msg)
+	}
+	fixed := "'use client'\n// @anchors\n//   ref: PAGEX\n//   @fixed-header: the directive must come first\n"
+	if v, msg := checkHeaderConforms(fixed, n); v != Pass {
+		t.Errorf("a declared header passes, got %v: %s", v, msg)
+	}
+}

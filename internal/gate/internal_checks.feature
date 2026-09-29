@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INCHN
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @INCHN
@@ -281,3 +281,9 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     Given a file whose score passes with most of its killed mutants timed out, and one below the floor with few timeouts
     When mutation-score judges them, with the default ceiling and with a declared one
     Then the first is pending as measured under load and says to measure first with no time limit, and the second fails saying how many timed out
+
+  @INCHN-B33 @unit-level
+  Scenario: A header below the top fails the header ruler
+    Given a file whose header follows a directive, and the same file declaring why with @fixed-header
+    When each is confronted with the header ruler
+    Then the first fails saying the block is not the header, and the second passes

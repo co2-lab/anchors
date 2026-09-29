@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b64ae61e09c49932 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:417d12b77d7dff9c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3744,6 +3744,8 @@ teste prova.
 
 - [A mutation score measured under load is not trusted](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B32`
 
+- [A header below the top fails the header ruler](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B33`
+
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
 - [Content matching a forbidden pattern fails, naming line and reason](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B02`
@@ -6815,4 +6817,6 @@ teste prova.
 - [Nothing after the header's comment belongs to it](camadas/scan.md#upowp-i01--nothing-after-the-headers-comment-belongs-to-it) `UPOWP-I01`
 
 - [Only the marker and the directory decide ownership](camadas/scan.md#upowp-x01--only-the-marker-and-the-directory-decide-ownership) `UPOWP-X01`
+
+- [Only a header at the top is the header, unless it says why it stands lower](camadas/scan.md#upowp-b07--only-a-header-at-the-top-is-the-header-unless-it-says-why-it-stands-lower) `UPOWP-B07`
 

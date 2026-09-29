@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: UPOWP
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @UPOWP
@@ -54,3 +54,9 @@ Feature: UpstreamOwnership — which files Anchors still owns in a project, and 
     Given a workflow whose name starts with "anchors-" but whose content lacks the marker
     When ownership is decided
     Then the file is the project's
+
+  @UPOWP-B07 @unit-level
+  Scenario: Only a header at the top is the header, unless it says why it stands lower
+    Given headers after comments and a shebang, one after a directive, one after a directive declaring @fixed-header with a reason, and one with a bare @fixed-header
+    When the header is read
+    Then the first ones and the declared one are headers, and the others are not and are reported off the top

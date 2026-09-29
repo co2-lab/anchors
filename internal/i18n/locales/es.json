@@ -208,6 +208,7 @@
   "gate.header.binary": "archivo binario — la identidad está en el nombre, no en la cabecera",
   "gate.header.executable_script": "guión de prueba ejecutable — la identidad está en el nombre del archivo y en las etiquetas del runner",
   "gate.header.missing_block": "sin bloque de cabecera `@anchors` — todo archivo del grafo debe tener la cabecera estándar al inicio (ver `anchors guide header`).",
+  "gate.header.off_top": "el bloque `@anchors` no está en la parte superior del archivo, y un bloque debajo no se lee como header — el mapa trata este archivo como sin header. Muévalo por encima de todo lo que no sea comentario (un comentario puede ir antes de una directiva como `'use client'`), o declare dentro del bloque por qué debe estar ahí: `@fixed-header: <por qué>`",
   "gate.header.recognized_missing_id": "cabecera `@anchors` sin identidad — archivo de capa reconocida (dao/infra/presentation/domain-types) declara al menos `layer: <layer>` (su identidad mínima, pues no tiene spec). Ver `anchors guide header`.",
   "gate.header.governed_missing_id": "cabecera `@anchors` sin identidad — declare `code: <CÓDIGO>` si este archivo es el DUEÑO (la spec), o `ref: <CÓDIGO>` si referencia la unidad (resto de la tríada: code/feature/test). Ver `anchors guide header`.",
   "gate.spec_sections.no_rules": "spec sin ninguna regla/estado CATALOGADO. Cada regla necesita un código y un lugar estructurado — encabezado `### ABCDX-V01`, fila de tabla `| ABCDX-V01 | ... |`, o viñeta en negrita `- **ABCDX-V01** ...`. (Mención suelta en prosa no cuenta.)",

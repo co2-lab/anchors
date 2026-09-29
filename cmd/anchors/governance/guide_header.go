@@ -155,7 +155,11 @@ silent coverage hole.
 
 ## Header rules
 
-- ALWAYS at the top of the file (before the code), so it is the first thing read.
+- ALWAYS at the top of the file (before the code), so it is the first thing read. Only
+  blank lines, comments and a shebang may come before it: a block below the code is read as
+  text, not as the header (a comment may precede a directive such as 'use client', so the
+  header goes above it). When the language truly demands something before it, declare why
+  inside the block: '@fixed-header: <why>'.
 - code is the only essential marker; the rest is as needed.
 - updated_at is NOT maintained by hand — let Anchors/git take care of it; writing it wrong is
   worse than omitting it (an anchor lying about itself).

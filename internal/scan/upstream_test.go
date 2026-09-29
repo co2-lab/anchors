@@ -89,3 +89,36 @@ func TestIsUpstreamOwned_nameDoesNotCount(t *testing.T) {
 		t.Error("an `anchors-` name without the marker is the project's file")
 	}
 }
+
+func TestAnchorsHeader_onlyAtTheTop(t *testing.T) {
+	t.Run("UPOWP-B07: Only a header at the top is the header, unless it says why it stands lower", func(t *testing.T) {})
+	for _, src := range []string{
+		"#!/usr/bin/env node\n// a note\n\n// @anchors\n//   ref: X\n",
+		"/**\n * @vitest-environment jsdom\n * why the DOM\n */\n// @anchors\n//   ref: X\n",
+		"<!-- a note\nspanning lines\n-->\n<!-- @anchors\n  code: X\n-->\n",
+		"# language: en\n# @anchors\n#   ref: X\n",
+	} {
+		if AnchorsHeader([]byte(src)) == nil || HeaderOffTop([]byte(src)) {
+			t.Errorf("a header after comments only is the header: %q", src)
+		}
+	}
+	low := "'use client'\n// @anchors\n//   ref: X\n"
+	if AnchorsHeader([]byte(low)) != nil || !HeaderOffTop([]byte(low)) {
+		t.Errorf("a header after a directive is not the header, and is reported off the top")
+	}
+	fixed := "'use client'\n// @anchors\n//   ref: X\n//   @fixed-header: the directive must be the first statement\n"
+	if h := AnchorsHeader([]byte(fixed)); !strings.Contains(string(h), "ref: X") || HeaderOffTop([]byte(fixed)) {
+		t.Errorf("a declared header below the top is the header, got %q", h)
+	}
+	bare := "package x\n// @anchors\n//   ref: X\n//   @fixed-header:\n"
+	if AnchorsHeader([]byte(bare)) != nil {
+		t.Error("a bare @fixed-header declares nothing")
+	}
+	example := "// @anchors\n//   layer: real\n\npackage x\nconst g = `\n  // @anchors\n  //   layer: screen\n`\n"
+	if h := string(AnchorsHeader([]byte(example))); !strings.Contains(h, "layer: real") || HeaderOffTop([]byte(example)) {
+		t.Errorf("the top header wins over an example below, got %q", h)
+	}
+	if HeaderOffTop([]byte("package x\n")) {
+		t.Error("a file with no block is not off the top")
+	}
+}

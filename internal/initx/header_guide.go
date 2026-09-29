@@ -90,7 +90,9 @@ func RenderHeaderGuide(preset Preset, moduleNames []string) string {
 	b.WriteString("- `@noPropagation`, `@anchors-shared-code` — honest opt-outs (always with the why alongside).\n\n")
 
 	b.WriteString("## Rules\n\n")
-	b.WriteString("- Always at the TOP of the file.\n")
+	b.WriteString("- Always at the TOP of the file: only blank lines, comments and a shebang before it.\n")
+	b.WriteString("  A block below the code is read as text, not as the header. When the language truly\n")
+	b.WriteString("  demands something first, declare why inside the block: `@fixed-header: <why>`.\n")
 	b.WriteString("- `code` is the mandatory minimum (gate `header-valid`).\n")
 	b.WriteString("- `updated_at` matches the day of the last commit (gate `updated-at-atual`; `--fix` repairs it).\n")
 	b.WriteString("- Opt-out always with a why alongside.\n\n")

@@ -11,6 +11,7 @@ import (
 	"github.com/co2-lab/anchors/internal/gitmeta"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // Checkers internos: verificações que o CLI faz lendo TEXTO (não invoca ferramenta
@@ -415,6 +416,12 @@ func checkHeaderConforms(content string, n mapx.Node) (Verdict, string) {
 	}
 	if !headerBlockRE.MatchString(content) {
 		return Fail, i18n.T("gate.header.missing_block")
+	}
+	// A block below the top, with no reason declared, is not read as the header: the map
+	// takes the file as having none. Passing it here would leave the map without the
+	// identity while this gate said the header was fine.
+	if scan.HeaderOffTop([]byte(content)) {
+		return Fail, i18n.T("gate.header.off_top")
 	}
 	// Camada RECONHECIDA (sem spec): `layer:` é a identidade mínima suficiente.
 	if isRecognizedLayer(n, content) {

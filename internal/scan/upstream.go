@@ -50,31 +50,79 @@ var anchorsOpenerRE = regexp.MustCompile(`@anchors(?:\s|-->|$)`)
 // not a comment for line comments (`//`, `#`, `*`, `--`). Reading a header key over the
 // WHOLE file reads prose and code as declarations — a workflow's jq program with a line
 // `parent: (...)` became a node's parent in the map.
+//
+// The header is at the TOP: before it, only blank lines, comments and a shebang. A block
+// further down is text — an example of a header in a guide, a string in the code — and is
+// not the file's header: `guide_header.go` carried one inside a string, and the map read
+// `layer: screen` as its unit's layer. A file whose header must stand lower (a directive
+// the language wants first) says so inside the block, with the reason:
+// `@fixed-header: <why>`.
 func AnchorsHeader(content []byte) []byte {
 	lines := bytes.Split(content, []byte("\n"))
+	codeBefore, inBlock := false, ""
 	for i, l := range lines {
 		t := strings.TrimSpace(string(l))
-		if !isHeaderComment(t) || !anchorsOpenerRE.MatchString(t) {
+		if isHeaderComment(t) && anchorsOpenerRE.MatchString(t) {
+			end := headerEnd(lines, i, t)
+			block := bytes.Join(lines[i:end], []byte("\n"))
+			if !codeBefore || fixedHeaderRE.Match(block) {
+				return block
+			}
 			continue
 		}
-		end := i + 1
 		switch {
-		case strings.HasPrefix(t, "<!--"):
-			if !strings.Contains(t[strings.Index(t, "@anchors"):], "-->") {
-				end = closingLine(lines, i+1, "-->")
+		case inBlock != "":
+			if strings.Contains(t, inBlock) {
+				inBlock = ""
 			}
-		case strings.HasPrefix(t, "/*"):
-			if !strings.Contains(t, "*/") {
-				end = closingLine(lines, i+1, "*/")
-			}
+		case strings.HasPrefix(t, "/*") && !strings.Contains(t, "*/"):
+			inBlock = "*/"
+		case strings.HasPrefix(t, "<!--") && !strings.Contains(t, "-->"):
+			inBlock = "-->"
+		case t == "" || isHeaderComment(t) || strings.HasPrefix(t, "#!"):
 		default:
-			for end < len(lines) && isHeaderComment(strings.TrimSpace(string(lines[end]))) {
-				end++
-			}
+			codeBefore = true
 		}
-		return bytes.Join(lines[i:end], []byte("\n"))
 	}
 	return nil
+}
+
+// fixedHeaderRE is the declaration of a header that stands below the top, with its reason.
+var fixedHeaderRE = regexp.MustCompile(`@fixed-header[^\S\n]*:[^\S\n]*\S+`)
+
+// HeaderOffTop says whether the file carries an `@anchors` block below the top that does not
+// declare why (`@fixed-header: <why>`) — a header that is not read as one.
+func HeaderOffTop(content []byte) bool {
+	if AnchorsHeader(content) != nil {
+		return false
+	}
+	for _, l := range bytes.Split(content, []byte("\n")) {
+		t := strings.TrimSpace(string(l))
+		if isHeaderComment(t) && anchorsOpenerRE.MatchString(t) {
+			return true
+		}
+	}
+	return false
+}
+
+// headerEnd is the index just past the header block opened on line i.
+func headerEnd(lines [][]byte, i int, t string) int {
+	end := i + 1
+	switch {
+	case strings.HasPrefix(t, "<!--"):
+		if !strings.Contains(t[strings.Index(t, "@anchors"):], "-->") {
+			end = closingLine(lines, i+1, "-->")
+		}
+	case strings.HasPrefix(t, "/*"):
+		if !strings.Contains(t, "*/") {
+			end = closingLine(lines, i+1, "*/")
+		}
+	default:
+		for end < len(lines) && isHeaderComment(strings.TrimSpace(string(lines[end]))) {
+			end++
+		}
+	}
+	return end
 }
 
 // closingLine returns the index just past the line that carries `close`, or the end of the

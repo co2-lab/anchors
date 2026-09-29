@@ -208,6 +208,7 @@
   "gate.header.binary": "binary file — identity is in name, not header",
   "gate.header.executable_script": "executable test script — identity is in file name and runner tags",
   "gate.header.missing_block": "missing `@anchors` header block — every graph file must have standard header at the top (see `anchors guide header`).",
+  "gate.header.off_top": "the `@anchors` block is not at the top of the file, and a block below the top is not read as the header — the map takes this file as having none. Move it above everything but comments (a comment may precede a directive such as `'use client'`), or declare why it must stand there inside the block: `@fixed-header: <why>`",
   "gate.header.recognized_missing_id": "`@anchors` header without identity — recognized layer file (dao/infra/presentation/domain-types) must declare at least `layer: <layer>` (its minimum identity, as it has no spec). See `anchors guide header`.",
   "gate.header.governed_missing_id": "`@anchors` header without identity — declare `code: <CODE>` if this file is OWNER (the spec), or `ref: <CODE>` if referencing unit (rest of triad: code/feature/test). See `anchors guide header`.",
   "gate.spec_sections.no_rules": "spec without any rule/state CATALOGUED. Each rule needs a code and structured place — heading `### ABCDX-V01`, table row `| ABCDX-V01 | ... |`, or bold bullet `- **ABCDX-V01** ...`. (Loose prose mentions do not count.)",

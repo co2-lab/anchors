@@ -45,7 +45,9 @@ In the SPEC (the OWNER of the identity):
 
 ## Rules
 
-- Always at the TOP of the file.
+- Always at the TOP of the file: only blank lines, comments and a shebang before it.
+  A block below the code is read as text, not as the header. When the language truly
+  demands something first, declare why inside the block: `@fixed-header: <why>`.
 - `code` is the mandatory minimum (`header-valid` gate).
 - `updated_at` matches the day of the last commit (`updated-at-atual` gate; `--fix`
   repairs it).
