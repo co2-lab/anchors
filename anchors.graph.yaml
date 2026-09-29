@@ -4922,37 +4922,12 @@ nodes:
         - test
     - id: cmd/anchors/ops/init.go
       kind: code
-      rev: 0630e9107a9e
-      updated_at: "2026-09-26"
+      rev: 662ac98bc70b
+      updated_at: "2026-09-29"
       layer: comando
       tags:
         - cli
         - comando
-      signal:
-        covered_lines: 267
-        total_lines: 311
-        line_coverage: 85.85209003215434
-        prev_line_coverage: 85.85209003215434
-        coverage_by_suite:
-            .anchors/lcov.info:
-                instrumented: 20-35,39-42,45-58,67-69,74-87,94-96,98-110,112-116,121-137,140-152,155-157,163-188,193-206,212-226,229-232,245-255,257-262,264-266,299-309,318-323,328-333,336-341,346-359,363-376,381-392,394,399-418,420,427-440,442,445-465
-                covered: 20-33,39-41,45-58,67-69,74-87,94-96,98-100,103-108,112-116,121-127,132,135,140-146,149-152,155-157,163-186,193-194,197-206,212,224,229-232,245-249,252-255,257,264-266,299-309,318-323,328-333,336-341,346-359,363-376,381-392,394,399-418,427-433,436-440,442,445-465
-                covered_lines: 267
-                total_lines: 311
-                at_rev: 0630e9107a9e
-        mutants_killed: 33
-        mutants_survived: 6
-        mutation_score: 84.61538461538461
-        mutants_no_coverage: 3
-        mutation_by_scope:
-            isolated:
-                killed: 33
-                survived: 6
-                no_coverage: 3
-                score: 84.61538461538461
-                at_rev: 0630e9107a9e
-        at_rev: 0630e9107a9e
-        ingested_at: "2026-09-29T13:45:13-03:00"
     - id: cmd/anchors/ops/init_discover.go
       kind: code
       rev: e5981cb152ad
@@ -20711,40 +20686,13 @@ nodes:
         - feature
     - id: internal/mapx/lock.go
       kind: code
-      rev: 76a358ee679f
-      updated_at: "2026-09-27"
+      rev: 713aa09aee78
+      updated_at: "2026-09-29"
       code: MPLCK
       layer: mapa
       tags:
         - nucleo
         - mapa
-      signal:
-        covered_lines: 64
-        total_lines: 77
-        line_coverage: 83.11688311688312
-        prev_line_coverage: 83.11688311688312
-        coverage_by_suite:
-            .anchors/lcov.info:
-                instrumented: 36,42-56,58-72,74,76-82,88-108,112-118,124-133
-                covered: 36,42-52,56,58-67,72,74,76-82,88-90,93-97,100-105,108,112-118,124-133
-                covered_lines: 64
-                total_lines: 77
-                at_rev: 76a358ee679f
-        mutants_killed: 17
-        mutants_survived: 3
-        mutation_score: 85
-        mutants_no_coverage: 2
-        mutants_timed_out: 1
-        mutation_by_scope:
-            isolated:
-                killed: 17
-                survived: 3
-                no_coverage: 2
-                score: 85
-                at_rev: 76a358ee679f
-        at_rev: 76a358ee679f
-        mutation_at_rev: 76a358ee679f
-        ingested_at: "2026-09-29T13:45:13-03:00"
     - id: internal/mapx/lock.spec.md
       kind: spec
       rev: 331d0a9710c1
@@ -24096,8 +24044,8 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: e058377f5403
-        validated_to_rev: 76a358ee679f
-        changed_at: "2026-09-27"
+        validated_to_rev: 713aa09aee78
+        changed_at: "2026-09-29"
         verdict: ok
     - from: CONCEPT.md
       to: internal/mapx/lock_unix.go
@@ -24267,8 +24215,8 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: 1fed03ec697e
-        validated_to_rev: 76a358ee679f
-        changed_at: "2026-09-27"
+        validated_to_rev: 713aa09aee78
+        changed_at: "2026-09-29"
         verdict: ok
     - from: PROPAGATION.md
       to: internal/mapx/lock_unix.go
@@ -29685,8 +29633,8 @@ edges:
       origin: declared
       stamp:
         validated_from_rev: 3d840fb7c168
-        validated_to_rev: 76a358ee679f
-        changed_at: "2026-09-27"
+        validated_to_rev: 713aa09aee78
+        changed_at: "2026-09-29"
         verdict: ok
     - from: TRACEABILITY.md
       to: internal/mapx/lock_unix.go
@@ -31319,7 +31267,7 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: 548e5cfc374e
-        validated_to_rev: 89faa028de46
+        validated_to_rev: add5a17eb272
         changed_at: "2026-09-29"
         verdict: ok
     - from: cmd/anchors/flow/watch.spec.md
@@ -32066,8 +32014,8 @@ edges:
       dep: DEP3
       stamp:
         validated_from_rev: 88bc7f6617a6
-        validated_to_rev: 76a358ee679f
-        changed_at: "2026-09-28"
+        validated_to_rev: 713aa09aee78
+        changed_at: "2026-09-29"
         verdict: ok
     - from: cmd/anchors/mapcmd/impact.feature
       to: cmd/anchors/mapcmd/impact_test.go
@@ -33126,8 +33074,8 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: cdca6cdf8436
-        validated_to_rev: 0630e9107a9e
-        changed_at: "2026-09-28"
+        validated_to_rev: 662ac98bc70b
+        changed_at: "2026-09-29"
         verdict: ok
     - from: cmd/anchors/ops/init_wizard.spec.md
       to: cmd/anchors/ops/init_discover.go
@@ -33532,8 +33480,8 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: f25b907ac894
-        validated_to_rev: 36d6ea9e67e7
-        changed_at: "2026-09-27"
+        validated_to_rev: 96b6648039b0
+        changed_at: "2026-09-29"
         verdict: ok
     - from: cmd/anchors/quality/budget.spec.md
       to: cmd/anchors/mapcmd/ingest.go
@@ -34071,7 +34019,7 @@ edges:
       dep: DEP3
       stamp:
         validated_from_rev: abf1be99298f
-        validated_to_rev: 76a358ee679f
+        validated_to_rev: 713aa09aee78
         changed_at: "2026-09-29"
         verdict: ok
     - from: cmd/anchors/quality/map_sync.spec.md
@@ -36407,7 +36355,7 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: fbd73b421793
-        validated_to_rev: a907ff7ed5b2
+        validated_to_rev: 8b38553c21be
         changed_at: "2026-09-29"
         verdict: ok
     - from: internal/gate/count_honored.spec.md
@@ -36865,7 +36813,7 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: 559dc37dafa6
-        validated_to_rev: b79a88dc4579
+        validated_to_rev: 36355f4369cd
         changed_at: "2026-09-29"
         verdict: ok
     - from: internal/gate/duplication.spec.md
@@ -39955,7 +39903,7 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: d551aa2f169a
-        validated_to_rev: ce7d47bad7b4
+        validated_to_rev: 866d74694c6d
         changed_at: "2026-09-29"
         verdict: ok
     - from: internal/gate/testid_queried_exists.spec.md
@@ -41774,8 +41722,8 @@ edges:
       dep: DEP3
       stamp:
         validated_from_rev: dc7c28431439
-        validated_to_rev: 76a358ee679f
-        changed_at: "2026-09-28"
+        validated_to_rev: 713aa09aee78
+        changed_at: "2026-09-29"
         verdict: ok
     - from: internal/mapx/incremental.spec.md
       to: internal/scan/scan.go
@@ -41861,8 +41809,8 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: 331d0a9710c1
-        validated_to_rev: 76a358ee679f
-        changed_at: "2026-09-28"
+        validated_to_rev: 713aa09aee78
+        changed_at: "2026-09-29"
         verdict: ok
     - from: internal/mapx/lock.spec.md
       to: internal/mapx/store.go

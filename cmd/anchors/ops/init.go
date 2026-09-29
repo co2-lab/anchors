@@ -3,11 +3,13 @@ package ops
 import (
 	"errors"
 	"fmt"
-	"github.com/co2-lab/anchors/internal/i18n"
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+
+	"github.com/co2-lab/anchors/internal/i18n"
 
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/charmbracelet/huh"
@@ -283,6 +285,9 @@ func runInit(root string) error {
 // [cli/internal cli/cmd]" na tela, e escreveu `layers: {}` — descartou a própria detecção.
 var erroDePrompt bool
 
+// errNoPromptTerminal is what runPrompt returns on Windows with no terminal to ask on.
+var errNoPromptTerminal = errors.New("no terminal to ask on")
+
 // errEndOfInput is what runPrompt returns when a prompt in line mode ran out of input.
 var errEndOfInput = errors.New("end of input: the prompt got no answer")
 
@@ -299,6 +304,12 @@ var errEndOfInput = errors.New("end of input: the prompt got no answer")
 func runPrompt(field huh.Field) error {
 	// The same test huh makes (NewForm) to pick line mode.
 	if os.Getenv("TERM") != "dumb" {
+		// With no terminal, huh fails to open /dev/tty on Unix and the prompt counts as
+		// unanswered. On Windows it opens the console instead and waits there forever —
+		// an `init` with no terminal hung until killed. Refused the same way, up front.
+		if runtime.GOOS == "windows" && !hasTTY() {
+			return errNoPromptTerminal
+		}
 		return field.Run()
 	}
 	in := &eofWatcher{r: os.Stdin}

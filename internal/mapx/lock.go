@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -44,6 +45,7 @@ func Lock(mapPath string) (func(), error) {
 	host, _ := os.Hostname()
 	me := fmt.Sprintf("%d %s", os.Getpid(), host)
 	deadline := time.Now().Add(LockTimeout)
+	var busy error // the last "try again" Windows gave instead of "it exists"
 	for {
 		f, err := os.OpenFile(lp, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
 		if err == nil {
@@ -56,7 +58,18 @@ func Lock(mapPath string) (func(), error) {
 			return func() { _ = os.Remove(lp) }, nil
 		}
 		if !errors.Is(err, fs.ErrExist) {
-			return nil, fmt.Errorf("take the map lock %s: %w", lp, err)
+			// On Windows a lock another writer is deleting at this instant answers
+			// "access denied", not "exists": it is busy, not broken. Four writers at once
+			// failed on it. Wait as for a held lock; if it lasts, that is the error.
+			if runtime.GOOS != "windows" || !errors.Is(err, fs.ErrPermission) {
+				return nil, fmt.Errorf("take the map lock %s: %w", lp, err)
+			}
+			busy = err
+			if time.Now().After(deadline) {
+				return nil, fmt.Errorf("take the map lock %s: %w", lp, busy)
+			}
+			time.Sleep(lockPoll)
+			continue
 		}
 		if lockAbandoned(lp, host) {
 			// Only the lock read as abandoned is removed: if another waiter took it over
