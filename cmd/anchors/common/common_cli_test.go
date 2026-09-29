@@ -53,7 +53,10 @@ func TestRelTo_resolvesToTheNodeID(t *testing.T) {
 	}
 	// Not under the root and not existing: resolved against the CWD, relative to the root.
 	cwd, _ := os.Getwd()
-	want, _ := filepath.Rel(root, filepath.Join(cwd, "ghost.ts"))
+	want, err := filepath.Rel(root, filepath.Join(cwd, "ghost.ts"))
+	if err != nil {
+		want = "ghost.ts" // on another drive (Windows) there is no relative path: kept as given
+	}
 	if got := RelTo(root, "ghost.ts"); got != filepath.ToSlash(want) {
 		t.Errorf("cwd-relative path: got %q, want %q", got, filepath.ToSlash(want))
 	}

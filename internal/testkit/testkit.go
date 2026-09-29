@@ -3,11 +3,14 @@
 package testkit
 
 import (
+	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/shell"
@@ -50,9 +53,13 @@ func capture(t *testing.T, std **os.File, fn func()) string {
 }
 
 // FakeBin writes an executable named `name` into dir that runs the POSIX shell `script`,
-// and returns its path. On Windows a script with no extension does not run, and
-// `exec.LookPath` would find the real tool first; a `name.cmd` beside it runs the script
-// through the shell Git for Windows brings, so the same fake serves every system.
+// and returns its path.
+//
+// On Windows a script with no extension does not run, and `exec.LookPath` would find the
+// real tool first. A `.cmd` wrapper was tried and lost arguments: `cmd.exe` reads `&`, `<`,
+// `>` and `|` inside them — a GitHub URL with `?a=1&b=2` became two commands. So on Windows
+// the fake is `name.exe`, a small launcher built once per test run, which hands its exact
+// argv to the shell Git brings, running the script beside it.
 func FakeBin(t *testing.T, dir, name, script string) string {
 	t.Helper()
 	p := filepath.Join(dir, name)
@@ -68,16 +75,93 @@ func FakeBin(t *testing.T, dir, name, script string) string {
 		if err != nil {
 			t.Skipf("no POSIX shell to run the fake %s: %v", name, err)
 		}
-		wrapper := "@\"" + sh + "\" \"%~dp0" + name + "\" %*\r\n"
-		if err := os.WriteFile(p+".cmd", []byte(wrapper), 0o755); err != nil {
+		exe, err := launcher()
+		if err != nil {
+			t.Fatalf("build the fake launcher: %v", err)
+		}
+		b, err := os.ReadFile(exe)
+		if err != nil {
 			t.Fatal(err)
 		}
+		if err := os.WriteFile(p+".exe", b, 0o755); err != nil {
+			t.Fatal(err)
+		}
+		t.Setenv("ANCHORS_TESTKIT_SH", sh)
 	}
 	return p
+}
+
+// launcherSource runs the script that sits beside it, with the same name and no `.exe`,
+// through the shell named in ANCHORS_TESTKIT_SH, passing every argument as it came.
+const launcherSource = `package main
+
+import (
+	"os"
+	"os/exec"
+	"strings"
+)
+
+func main() {
+	self, err := os.Executable()
+	if err != nil {
+		os.Exit(127)
+	}
+	script := strings.TrimSuffix(self, ".exe")
+	cmd := exec.Command(os.Getenv("ANCHORS_TESTKIT_SH"), append([]string{script}, os.Args[1:]...)...)
+	cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
+	if err := cmd.Run(); err != nil {
+		if ee, ok := err.(*exec.ExitError); ok {
+			os.Exit(ee.ExitCode())
+		}
+		os.Exit(127)
+	}
+}
+`
+
+var (
+	launcherOnce sync.Once
+	launcherPath string
+	launcherErr  error
+)
+
+// launcher builds the fake launcher once per test binary.
+func launcher() (string, error) {
+	launcherOnce.Do(func() {
+		dir, err := os.MkdirTemp("", "anchors-testkit-")
+		if err != nil {
+			launcherErr = err
+			return
+		}
+		src := filepath.Join(dir, "main.go")
+		if err := os.WriteFile(src, []byte(launcherSource), 0o644); err != nil {
+			launcherErr = err
+			return
+		}
+		out := filepath.Join(dir, "launcher.exe")
+		cmd := exec.Command("go", "build", "-o", out, src)
+		cmd.Dir = dir
+		cmd.Env = append(os.Environ(), "GO111MODULE=off")
+		if b, err := cmd.CombinedOutput(); err != nil {
+			launcherErr = fmt.Errorf("%v: %s", err, b)
+			return
+		}
+		launcherPath = out
+	})
+	return launcherPath, launcherErr
 }
 
 // OnPath puts dir first on PATH for the rest of the test.
 func OnPath(t *testing.T, dir string) {
 	t.Helper()
 	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
+}
+
+// SkipWithoutPOSIXPermissions skips a test that needs a file the process cannot read or
+// write, or a file mode kept across a rewrite: Windows does not enforce POSIX permissions
+// (`chmod` only toggles read-only), so there is nothing there to observe.
+func SkipWithoutPOSIXPermissions(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows does not enforce POSIX file permissions")
+	}
 }

@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
@@ -234,6 +236,7 @@ func TestRouteExists_B13_RotaInexistenteFalha(t *testing.T) {
 // An unread registry file may register the route: it never turns into an accusation.
 func TestRouteExists_unreadableRegistryIsPending(t *testing.T) {
 	t.Run("RTEXR-E03: An unreadable registry file leaves the route pending", func(t *testing.T) {})
+	testkit.SkipWithoutPOSIXPermissions(t)
 	if os.Geteuid() == 0 {
 		t.Skip("root reads a chmod 000 file")
 	}

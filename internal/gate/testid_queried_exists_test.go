@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
 )
@@ -269,6 +271,7 @@ func TestQueriedTestIDExists_Errors(t *testing.T) {
 // that might expose it is unread.
 func TestConsultadoExiste_unreadableIsPending(t *testing.T) {
 	t.Run("TQETS-E02: An unreadable flow or source leaves the verdict pending", func(t *testing.T) {})
+	testkit.SkipWithoutPOSIXPermissions(t)
 	if os.Geteuid() == 0 {
 		t.Skip("root reads a chmod 000 file")
 	}

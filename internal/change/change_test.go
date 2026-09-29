@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/testkit"
 )
 
 func TestKeyAndPath(t *testing.T) {
@@ -148,6 +150,7 @@ func TestSavePendingMarkReviewed(t *testing.T) {
 func TestPending_unreadableDirIsAnError(t *testing.T) {
 	t.Run("CHRCC-E01: A changes folder that cannot be read is an error", func(t *testing.T) {})
 	t.Run("CHRCC-E02: A changes folder that cannot be created fails the save", func(t *testing.T) {})
+	testkit.SkipWithoutPOSIXPermissions(t)
 	root := t.TempDir()
 	// changes/ exists as a FILE: ReadDir fails with something other than NotExist.
 	os.WriteFile(filepath.Join(root, Dir), []byte("x"), 0o644)

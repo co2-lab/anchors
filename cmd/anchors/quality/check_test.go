@@ -637,7 +637,7 @@ func TestCheckReadsTheWaiverFromTheCommitMessage(t *testing.T) {
 
 func TestNormalizeChanged(t *testing.T) {
 	t.Run("CGPCH-B04: Changed paths are normalised to the map's form", func(t *testing.T) {})
-	root := filepath.FromSlash("/repo")
+	root := t.TempDir() // a real absolute path on every system (`/repo` has no drive on Windows)
 	got := normalizeChanged([]string{filepath.Join(root, "src", "a.go"), "./b.go", "c/../d.go"}, root)
 	if strings.Join(got, ",") != "src/a.go,b.go,d.go" {
 		t.Errorf("normalizeChanged = %v", got)

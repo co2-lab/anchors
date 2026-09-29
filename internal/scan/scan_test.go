@@ -10,6 +10,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/config"
 )
 
@@ -822,6 +824,7 @@ func TestHeaderKeysOnlyInsideHeader(t *testing.T) {
 // unit and no gate ever saw it — the silence this unit is built against.
 func TestWalk_unreadableFileIsAnError(t *testing.T) {
 	t.Run("RPSCR-E02: A layer file that cannot be read fails the walk", func(t *testing.T) {})
+	testkit.SkipWithoutPOSIXPermissions(t)
 	if os.Geteuid() == 0 {
 		t.Skip("root reads a 0o000 file")
 	}

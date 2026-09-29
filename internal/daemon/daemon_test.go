@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -133,9 +134,15 @@ func TestStop(t *testing.T) {
 	}
 	select {
 	case err := <-done:
+		// Ended from outside: by a signal on Unix (exit code -1), by TerminateProcess on
+		// Windows, whose killed process exits with 1.
+		want := -1
+		if runtime.GOOS == "windows" {
+			want = 1
+		}
 		var ee *exec.ExitError
-		if !errors.As(err, &ee) || ee.ExitCode() != -1 {
-			t.Fatalf("the child must end by a signal, got %v", err)
+		if !errors.As(err, &ee) || ee.ExitCode() != want {
+			t.Fatalf("the child must be ended from outside, got %v", err)
 		}
 	case <-time.After(10 * time.Second):
 		t.Fatal("Stop did not terminate the process")

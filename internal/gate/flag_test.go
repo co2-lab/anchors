@@ -1,11 +1,13 @@
 package gate
 
 import (
-	"github.com/co2-lab/anchors/internal/config"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/testkit"
 
 	"github.com/co2-lab/anchors/internal/mapx"
 )
@@ -448,6 +450,7 @@ func TestFlagScenarioExists_readsEveryDeclaredCodeLength(t *testing.T) {
 // gate never reads.
 func TestFlagScenarioExists_unreadableFlagsIsPendingWithTheCause(t *testing.T) {
 	t.Run("FLSCF-E02: Flags that cannot be read leave the citation Pending, naming the flags folder", func(t *testing.T) {})
+	testkit.SkipWithoutPOSIXPermissions(t)
 	if os.Geteuid() == 0 {
 		t.Skip("root reads a folder without permission")
 	}

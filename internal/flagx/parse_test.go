@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/testkit"
 )
 
 const example = "<!-- @anchors\n  code: CHKUT\n-->\n" + `# Flag: new-checkout
@@ -145,6 +147,7 @@ func TestByCode(t *testing.T) {
 
 func TestLoad_aReadFailureIsAnError(t *testing.T) {
 	t.Run("FLPRF-E02: A flags folder or flag file that cannot be read is an error", func(t *testing.T) {})
+	testkit.SkipWithoutPOSIXPermissions(t)
 	// flags/ exists but is a file: reading it fails with something other than "does not exist".
 	root := t.TempDir()
 	os.WriteFile(filepath.Join(root, Dir), []byte("x"), 0o644)

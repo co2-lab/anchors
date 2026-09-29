@@ -1,0 +1,16 @@
+# LF in every checkout, Windows included.
+#
+# The templates Anchors embeds (`go:embed`) and the fixtures its tests compare byte for byte
+# are text: a CRLF checkout — Git for Windows' default — changed what a Windows build
+# embeds and what the tests read, and they failed there only. The released binaries are
+# built on Linux; this keeps a build or a test run on Windows the same.
+* text=auto eol=lf
+
+# Binary fixtures stay as they are.
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary

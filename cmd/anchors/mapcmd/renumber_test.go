@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/testkit"
 )
 
 type repo struct {
@@ -224,6 +226,7 @@ func TestRenumber_binaryModeAndNothingToDo(t *testing.T) {
 	t.Run("RNMBR-B05: A changed binary file is not rewritten", func(t *testing.T) {})
 	t.Run("RNMBR-B08: A rewritten file keeps its permission bits", func(t *testing.T) {})
 	t.Run("RNMBR-B07: No collision says there is nothing to renumber", func(t *testing.T) {})
+	testkit.SkipWithoutPOSIXPermissions(t)
 	r := forkedRepo(t, true)
 	bin := "PRICX-R0002\x00binary"
 	r.write("blob.bin", bin)

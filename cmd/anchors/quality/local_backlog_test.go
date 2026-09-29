@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/issue"
 	"github.com/co2-lab/anchors/internal/queue"
 )
@@ -133,6 +135,7 @@ func TestLocalBacklogReadsWithoutChanging(t *testing.T) {
 
 func TestLocalBacklogUnlistableFolderCountsZero(t *testing.T) {
 	t.Run("LCBCL-E01: An issue folder that cannot be listed counts as zero", func(t *testing.T) {})
+	testkit.SkipWithoutPOSIXPermissions(t)
 	root := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(root, issue.Dir), 0o755); err != nil {
 		t.Fatal(err)

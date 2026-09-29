@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
 )
@@ -265,6 +267,7 @@ func TestTouch_outsideGitFails(t *testing.T) {
 
 func TestTouch_unreadableCandidateIsSkipped(t *testing.T) {
 	t.Run("HDTHD-E02: A changed file that cannot be read is skipped and named", func(t *testing.T) {})
+	testkit.SkipWithoutPOSIXPermissions(t)
 	if os.Getuid() == 0 {
 		t.Skip("root reads everything")
 	}

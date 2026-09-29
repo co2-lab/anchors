@@ -6,6 +6,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/mapx"
 )
 
@@ -182,6 +184,7 @@ func TestCountIgnoraNumeroNaoDeclarado(t *testing.T) {
 // Only files count, and an unread file never undercounts.
 func TestCountFilesOnlyAndUnreadable(t *testing.T) {
 	t.Run("CNHNC-B14: Only files are counted, never directories", func(t *testing.T) {
+		testkit.SkipWithoutPOSIXPermissions(t)
 		arquivos := map[string]string{"models/A.ts": "x", "models/sub/B.ts": "y"}
 		spec := "# Spec\n<!-- @anchors-count: 1 = models/* -->\n"
 		if v, d := rodaContagem(t, spec, arquivos); v != Pass {

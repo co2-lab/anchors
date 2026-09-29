@@ -1,6 +1,7 @@
 package gate
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -41,8 +42,9 @@ func runsOf(t *testing.T, root string) int {
 
 // clonesReport: a.go:1-30 ≡ b.go:5-34, and c.go:10-30 ≡ c.go:50-70, at `pct` percent.
 func clonesReport(first string, pct string) string {
+	name, _ := json.Marshal(first) // escaped as jscpd writes it: a Windows path carries `\`
 	return `{"duplicates":[
-	  {"lines":30,"firstFile":{"name":"` + first + `","start":1,"end":30},"secondFile":{"name":"pkg/b.go","start":5,"end":34}},
+	  {"lines":30,"firstFile":{"name":` + string(name) + `,"start":1,"end":30},"secondFile":{"name":"pkg/b.go","start":5,"end":34}},
 	  {"lines":21,"firstFile":{"name":"pkg/c.go","start":10,"end":30},"secondFile":{"name":"pkg/c.go","start":50,"end":70}}
 	],"statistics":{"total":{"percentage":` + pct + `}}}`
 }

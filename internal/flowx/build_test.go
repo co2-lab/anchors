@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/testkit"
 )
 
 // The flow that originated the feature, in miniature: an unblocking rotation.
@@ -235,6 +237,7 @@ func TestBuild_aRoutedResultKeepsItsCondition(t *testing.T) {
 
 func TestBuild_aReadFailureIsAnError(t *testing.T) {
 	t.Run("FLBLF-E01: A flows folder, actions folder or flow file that cannot be read is an error", func(t *testing.T) {})
+	testkit.SkipWithoutPOSIXPermissions(t)
 	// flows/ exists but is a file: reading it fails with something other than "does not exist".
 	root := t.TempDir()
 	os.WriteFile(filepath.Join(root, Dir), []byte("x"), 0o644)

@@ -3268,6 +3268,7 @@ func TestFlowSeedingFailures(t *testing.T) {
 		t.Errorf("a folder that cannot be created must fail, got %v", err)
 	}
 
+	testkit.SkipWithoutPOSIXPermissions(t) // what follows needs a folder that refuses writes
 	dir = t.TempDir()
 	wf := filepath.Join(dir, DirWorkflows)
 	if err := os.MkdirAll(wf, 0o755); err != nil {

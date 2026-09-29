@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
 )
@@ -165,6 +167,7 @@ func TestBuildPlan_dialect_legacyWarns(t *testing.T) {
 
 func TestApply_keepsModesAndRenames(t *testing.T) {
 	t.Run("RCPLR-B08: Applying writes each file with its mode and performs the renames", func(t *testing.T) {})
+	testkit.SkipWithoutPOSIXPermissions(t)
 	root := writeProject(t, map[string]string{
 		"Foo.spec.md":          "<!-- @anchors\n  code: ABCDX\n-->\n",
 		"run.tsx":              "// @anchors\n//   ref: ABCDX\n",
