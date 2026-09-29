@@ -1,6 +1,6 @@
 <!-- @anchors
   code: WRQUW
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: comando
 -->
 # WorkQueue — list, pull, close and discard the work, from the local queue or from the board
@@ -63,7 +63,7 @@ decide the product is told to escalate instead of asking whoever runs it.
 | Effect | Description |
 | --- | --- |
 | `WRQUW-B10` | In github mode `next` refuses without `ANCHORS_SESSION`, saying how to set it. |
-| `WRQUW-B11` | The agent's identity on the board is `<host>/<session>`; without a session it falls back to the OS user and says so on standard error. |
+| `WRQUW-B11` | The agent's identity on the board is `<host>/<session>`; without a session it falls back to the OS user — `USER`, or `USERNAME` where Windows keeps it — and says so on standard error. |
 | `WRQUW-B12` | In github mode `next` resumes the card this agent already owns — saying to finish it before taking another — and asks nothing of the claim pipeline. |
 | `WRQUW-B13` | A claim that ends without a card names the run to follow: a timeout says the claim is still pending and that running `next` again waits for it; a successful run with no card says there is no free card; neither is an error. |
 | `WRQUW-B14` | The claimed card is printed with its number, title, state without its prefix, and owner. |

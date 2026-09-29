@@ -3,7 +3,6 @@ package quality
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -13,6 +12,7 @@ import (
 	"github.com/co2-lab/anchors/cmd/anchors/mapcmd"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/shell"
 	"github.com/spf13/cobra"
 )
 
@@ -459,7 +459,10 @@ func buildCommand(run, target string) (string, error) {
 // A saída vai direto para o terminal, sem captura: quem roda teste quer ver o teste
 // rodando, e engolir a saída para reimprimir no fim quebra qualquer barra de progresso.
 func execAtRoot(linha, absRoot string) error {
-	cmd := exec.Command("sh", "-c", linha) //nolint:gosec // o comando é declarado pelo projeto, como no `run:` dos gates
+	cmd, err := shell.Command(linha) // o comando é declarado pelo projeto, como no `run:` dos gates
+	if err != nil {
+		return err
+	}
 	cmd.Dir = absRoot
 	cmd.Stdout, cmd.Stderr, cmd.Stdin = os.Stdout, os.Stderr, os.Stdin
 	return cmd.Run()

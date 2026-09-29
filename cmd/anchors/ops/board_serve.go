@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/co2-lab/anchors/internal/initx"
+	"github.com/itchyny/gojq"
 	"github.com/spf13/cobra"
 )
 
@@ -277,16 +278,16 @@ func coletaCompleta(repo string) ([]byte, error) {
 	// FALHA AQUI NÃO DERRUBA O BOARD. Se o GraphQL recusar — é o limite secundário que
 	// motivou o REST —, os comentários ficam vazios e o board serve o resto. Um board sem
 	// o dono continua sendo melhor que um board sem nada.
-	// O MAPA VAI POR ARQUIVO, e não embutido na expressão.
-	//
-	// A primeira versão o interpolava no jq, e o `exec` recusou: `argument list too long`.
-	// Com 87 cards e trinta comentários cada, o literal passa do limite do sistema — e o
-	// erro aparecia como board VAZIO, não como falha de coleta.
-	//
-	// `--slurpfile` lê o arquivo e o expõe como variável. O `[0]` porque ele sempre entrega
-	// um array dos documentos do arquivo, e o nosso é um objeto só.
-	arqCom, limpaCom := commentsToFile(repo)
-	defer limpaCom()
+	// O MAPA DOS COMENTÁRIOS entra como a variável `$coment` da expressão, no mesmo
+	// formato que o `--slurpfile` do jq entregava: um array com o objeto dentro, daí o
+	// `[0]` na expressão.
+	comentarios := []any{map[string]any{}}
+	if m := commentsOfOpenCards(repo); m != "" && m != "{}" {
+		var v any
+		if json.Unmarshal([]byte(m), &v) == nil {
+			comentarios = []any{v}
+		}
+	}
 	ponte := `[.[] | select(.pull_request == null) | {
 	    number, title, url, body, labels, author: .user,
 	    updatedAt: .updated_at, createdAt: .created_at, closedAt: .closed_at,
@@ -299,33 +300,20 @@ func coletaCompleta(repo string) ([]byte, error) {
 	cru, err := exec.Command("gh", "api", "--paginate",
 		"/repos/"+repo+"/issues?state=all&labels=anchors&per_page=100").Output()
 	if err == nil {
-		//  achata o  que a costura das páginas produz.
-		argvJq := []string{"-c"}
-		if arqCom != "" {
-			argvJq = append(argvJq, "--slurpfile", "coment", arqCom)
-		} else {
-			// SEM O ARQUIVO o jq não conheceria `$coment`, e a expressão inteira falharia
-			// — levando o board a zero itens por falta do DONO, que é o menos importante
-			// do que ele mostra.
-			argvJq = append(argvJq, "--argjson", "coment", "[{}]")
-		}
-		argvJq = append(argvJq, "add | "+ponte)
-		filtro := exec.Command("jq", argvJq...)
-		filtro.Stdin = strings.NewReader("[" + strings.ReplaceAll(string(cru), "][", ",") + "]")
-		var saida []byte
-		saida, err = filtro.Output()
+		// A MESMA expressão do pipeline, executada aqui dentro (gojq, o jq em Go que o
+		// próprio `gh` usa). Chamava o binário `jq`, e ele não vem com o git nem com o
+		// `gh`: sem ele instalado o board caía com "exec: jq not found", em qualquer
+		// sistema. O contrato do `board.json` continua sendo um só.
+		var itens []byte
+		itens, err = runBoardJQ("add | "+ponte, "["+strings.ReplaceAll(string(cru), "][", ",")+"]", comentarios)
 		if err == nil {
-			// `[[...]]` — a costura aninha um nível a mais; o jq já devolve o array final.
-			out := saida
-			items := strings.TrimSpace(string(out))
-			if items == "" {
+			items := strings.TrimSpace(string(itens))
+			if items == "" || items == "null" {
 				items = "[]"
 			}
 			return montaBoard(items, time.Now()), nil
 		}
-		if ee, ok := err.(*exec.ExitError); ok {
-			return nil, fmt.Errorf("filter the board: %w\n  %s", err, strings.TrimSpace(string(ee.Stderr)))
-		}
+		return nil, fmt.Errorf("filter the board: %w", err)
 	}
 	var out []byte
 	if err != nil {
@@ -365,43 +353,6 @@ func montaBoard(items string, agora time.Time) []byte {
 }
 
 var _ = os.Getenv // mantém o import quando o corpo muda
-
-// commentsOfOpenCards devolve, como literal jq, um mapa de número → comentários.
-//
-// O `owner` e o `ownership` do board saem do comentário `anchors-owner:`, e a modal do card
-// mostra a conversa. Sem eles o board local ficava mudo sobre quem está com o quê.
-//
-// GRAPHQL PORQUE O REST PEDIRIA UMA CHAMADA POR CARD. A consulta abaixo traz cem issues com
-// os últimos comentários de cada, e pagina pelo cursor.
-//
-// `last: 30` e não `first`: o que interessa é o comentário MAIS RECENTE — o `anchors-owner`
-// atual, não o primeiro que o card recebeu. Um card com muita conversa teria o dono no fim.
-//
-// DEVOLVE `{}` em qualquer erro, e isso é deliberado: o limite secundário do GraphQL é o
-// que motivou a coleta por REST, e um board sem dono é melhor que um board sem nada.
-// commentsToFile grava o mapa num temporário e devolve o caminho.
-//
-// O jq recebe por `--slurpfile` porque o literal não cabe na linha de comando: medido com
-// 87 cards, o `exec` recusou com `argument list too long` — e o sintoma era o board vazio.
-//
-// Devolve caminho vazio quando não há o que gravar; quem chama trata passando `[{}]`.
-func commentsToFile(repo string) (string, func()) {
-	m := commentsOfOpenCards(repo)
-	if m == "" || m == "{}" {
-		return "", func() {}
-	}
-	f, err := os.CreateTemp("", "anchors-board-coment-*.json")
-	if err != nil {
-		return "", func() {}
-	}
-	if _, err := f.WriteString(m); err != nil {
-		f.Close()
-		os.Remove(f.Name())
-		return "", func() {}
-	}
-	f.Close()
-	return f.Name(), func() { os.Remove(f.Name()) }
-}
 
 func commentsOfOpenCards(repo string) string {
 	partes := strings.SplitN(repo, "/", 2)
@@ -473,4 +424,29 @@ func commentsOfOpenCards(repo string) string {
 		return "{}"
 	}
 	return string(b)
+}
+
+// runBoardJQ runs a jq expression over a JSON document, with `$coment` bound, and returns
+// its single result as JSON.
+func runBoardJQ(expr, input string, coment any) ([]byte, error) {
+	q, err := gojq.Parse(expr)
+	if err != nil {
+		return nil, err
+	}
+	code, err := gojq.Compile(q, gojq.WithVariables([]string{"$coment"}))
+	if err != nil {
+		return nil, err
+	}
+	var doc any
+	if err := json.Unmarshal([]byte(input), &doc); err != nil {
+		return nil, fmt.Errorf("the pages from GitHub are not JSON: %w", err)
+	}
+	v, ok := code.Run(doc, coment).Next()
+	if !ok {
+		return nil, nil
+	}
+	if e, isErr := v.(error); isErr {
+		return nil, e
+	}
+	return json.Marshal(v)
 }

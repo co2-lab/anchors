@@ -35,7 +35,11 @@ import (
 // value is judged apart. Matching only a bare number made `version: 3  # why` and
 // `version: abc` invisible: both read as format 1, and a map then got a SECOND `version:`
 // line inserted above the one it already had.
-var versionRE = regexp.MustCompile(`(?m)^version:[ \t]*([^\s#]*)([ \t]*#.*)?[ \t]*$`)
+//
+// A line may end in `\r\n` (Git for Windows checks files out that way by default): the
+// `\r` is kept apart, in the third group, so the line is found and written back as it was.
+// Without it a current CRLF file read as format 1 and got a second `version:` line.
+var versionRE = regexp.MustCompile(`(?m)^version:[ \t]*([^\s#]*)([ \t]*#[^\r\n]*)?[ \t]*(\r?)$`)
 
 // FormatOf lê a versão de formato declarada no arquivo.
 //
@@ -143,7 +147,7 @@ func MigrateFile(path string, destino int, dryRun bool) (*Result, error) {
 	// acaso contém. Um mapa sem julgamento nenhum ainda é formato 2 depois de migrado, e
 	// deixá-lo em 1 faria a migração rodar de novo a cada comando.
 	if versionRE.MatchString(texto) {
-		texto = versionRE.ReplaceAllString(texto, fmt.Sprintf("version: %d", destino)+"${2}")
+		texto = versionRE.ReplaceAllString(texto, fmt.Sprintf("version: %d", destino)+"${2}${3}")
 	} else {
 		// O arquivo SEM `version:` é de antes de o campo existir. Ele entra logo depois do
 		// cabeçalho de comentário, que é onde o `Save` o escreve — acima dele, sairia do
@@ -156,7 +160,11 @@ func MigrateFile(path string, destino int, dryRun bool) (*Result, error) {
 		for i < len(linhas) && strings.HasPrefix(linhas[i], "#") {
 			i++
 		}
-		linhas = append(linhas[:i], append([]string{fmt.Sprintf("version: %d\n", destino)}, linhas[i:]...)...)
+		eol := "\n"
+		if strings.Contains(texto, "\r\n") {
+			eol = "\r\n" // a CRLF file keeps its line endings
+		}
+		linhas = append(linhas[:i], append([]string{fmt.Sprintf("version: %d", destino) + eol}, linhas[i:]...)...)
 		texto = strings.Join(linhas, "")
 	}
 

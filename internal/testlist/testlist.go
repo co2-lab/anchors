@@ -26,12 +26,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/co2-lab/anchors/internal/shell"
 )
 
 // ContractVersion is the version of the script's output this package reads.
@@ -71,7 +72,10 @@ func List(root string, files []string, src Source) ([]Test, error) {
 
 // runScript runs the project's script at the root and reads its output under the contract.
 func runScript(root, script string) ([]Test, error) {
-	cmd := exec.Command("sh", "-c", script) //nolint:gosec // the command is declared by the project, as a gate's `run:`
+	cmd, err := shell.Command(script) // the command is declared by the project, as a gate's `run:`
+	if err != nil {
+		return nil, fmt.Errorf("the tests script `%s` cannot run: %w", script, err)
+	}
 	cmd.Dir = root
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout, cmd.Stderr = &stdout, &stderr

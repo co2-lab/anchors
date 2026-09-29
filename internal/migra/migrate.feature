@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MGFLM
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @MGFLM
@@ -111,3 +111,9 @@ Feature: MigrateFile — takes one project file from its declared format to the 
     And a format 1 map with "gerado_por: dev"
     When it is migrated to format 3
     Then the answer is an error naming format 3 and the file is unchanged
+
+  @MGFLM-B12 @unit-level
+  Scenario: A CRLF file is read and migrated as it is
+    Given a current map with CRLF line endings, an older one, and one with no version line
+    When their format is read and they are migrated
+    Then the current one reads its version and is untouched, and the others get one version line ending in CRLF

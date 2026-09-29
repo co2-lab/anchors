@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CNFGO
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @CNFGO
@@ -370,3 +370,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given gates with a min_percent below 0, above 100, and at 80
     When each configuration is loaded
     Then the first two fail naming the gate, and the third loads
+
+  @CNFGO-B54 @unit-level
+  Scenario: The declared format is read from a CRLF file
+    Given a configuration whose version line ends in CRLF, with and without a comment
+    When its declared format is read
+    Then it is the number on the line

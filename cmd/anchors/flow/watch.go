@@ -308,14 +308,17 @@ func runWatchLoop(root string, cfg *config.Config, g *mapx.Graph, debounce time.
 					// existem, para não perder trabalho na janela de registro.
 					for _, f := range filesBornIn(ev.Name) {
 						rel, _ := filepath.Rel(root, f)
-						handleChange(root, cfg, g, rel)
+						handleChange(root, cfg, g, filepath.ToSlash(rel))
 					}
 				}
 			}
 			if daemon.IsPaused(p) {
 				continue // pausado: ignora eventos
 			}
+			// The map's IDs use `/` on every system: a native `a\b.ts` on Windows would never
+			// match a node, and would name the same file's task differently than on Unix.
 			rel, _ := filepath.Rel(root, ev.Name)
+			rel = filepath.ToSlash(rel)
 			if pending[rel] != nil {
 				pending[rel].Stop()
 			}

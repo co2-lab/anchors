@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CLRTC
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: comando
 -->
 # CliRoot — every command passes through one root that speaks the project's language and honours the freeze
@@ -47,6 +47,7 @@ leaves printing to the entry point, which prints the error once and decides the 
 | `CLRTC-B05` | The project read for the freeze and the language is the one `--root` points at, when the command has that flag. |
 | `CLRTC-B06` | A top-level `lang:` of the project is applied before the command runs, even when the rest of the file does not parse; a nested or unsupported `lang:` is ignored. |
 | `CLRTC-B07` | The root prints neither the error nor the usage of a failing command. |
+| `CLRTC-B08` | The project's `lang:` is read from a line ending in `\r\n` as from one ending in `\n`. |
 
 ## Invariants
 

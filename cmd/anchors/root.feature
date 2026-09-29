@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CLRTC
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @CLRTC
@@ -61,3 +61,9 @@ Feature: CliRoot — every command passes through one root that speaks the proje
     Given a frozen project with lang pt-BR, and a process in English
     When the real root executes generated-paths
     Then the refusal reads "o projeto está CONGELADO"
+
+  @CLRTC-B08 @unit-level
+  Scenario: The language is read from a CRLF file
+    Given a configuration whose lang line ends in CRLF
+    When the language is read
+    Then it is the one declared

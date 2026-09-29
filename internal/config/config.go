@@ -2255,7 +2255,7 @@ const FormatoAtualDeConfig = 5
 //
 // A trailing comment is part of the line, not of the value: `version: 4  # current` read
 // as "no version" made a current file look like format 1 and advised a migration.
-var fileVersionRE = regexp.MustCompile(`(?m)^version:[ \t]*([0-9]+)[ \t]*(?:#.*)?$`)
+var fileVersionRE = regexp.MustCompile(`(?m)^version:[ \t]*([0-9]+)[ \t]*(?:#[^\r\n]*)?\r?$`)
 
 // fileFormat devolve o formato declarado, ou 1 quando não há `version:`.
 //

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:d7ad2cb890bd187e — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:f1331c288259f2a4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -464,6 +464,8 @@ abra a página dela em `camadas/`.
 ### [RCPLR — RecodePlan — planning and applying the rename of a code across the whole project](camadas/infra.md#rcplr--recodeplan--planning-and-applying-the-rename-of-a-code-across-the-whole-project)
 
 ### [RCRWR — RecodeRewrite — renaming an identity code inside a text, on every surface where it appears](camadas/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears)
+
+### [PSXSH — Shell — the POSIX shell that runs a project's commands](camadas/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands)
 
 ### [TXSMT — TextSimilarity — how close two texts that should be equal are, weighted by what each word discriminates](camadas/infra.md#txsmt--textsimilarity--how-close-two-texts-that-should-be-equal-are-weighted-by-what-each-word-discriminates)
 

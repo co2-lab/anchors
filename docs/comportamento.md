@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:cd0dc62512bd9c42 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a6eecd25d0d4c5fa — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -365,6 +365,8 @@ teste prova.
 - [A version that is not a number is an error and nothing is written](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-E02`
 
 - [A hole in the chain leaves the file untouched](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-E03`
+
+- [A CRLF file is read and migrated as it is](camadas/apoio.md#mgflm--migratefile--takes-one-project-file-from-its-declared-format-to-the-current-one-renaming-only-what-is-a-key) `MGFLM-B12`
 
 - [Format 2 renames the Portuguese keys in their own files](camadas/apoio.md#mgstm--migrationsteps--the-registered-steps-one-per-format-take-any-project-from-format-1-to-the-current-format) `MGSTM-B01`
 
@@ -2622,6 +2624,8 @@ teste prova.
 
 - [The freeze refusal is written in the project language](camadas/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze) `CLRTC-X01`
 
+- [The language is read from a CRLF file](camadas/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze) `CLRTC-B08`
+
 ## config
 
 - [A known extension answers with its line-comment prefixes](camadas/config.md#cmmrc-b01--a-known-extension-answers-with-its-line-comment-prefixes) `CMMRC-B01`
@@ -2759,6 +2763,8 @@ teste prova.
 - [A gate's invocations compile and name the unit through a group](camadas/config.md#cnfgo-b52--a-gates-invocations-compile-and-name-the-unit-through-a-group) `CNFGO-B52`
 
 - [A gate's floor is a percentage](camadas/config.md#cnfgo-b53--a-gates-floor-is-a-percentage) `CNFGO-B53`
+
+- [The declared format is read from a CRLF file](camadas/config.md#cnfgo-b54--the-declared-format-is-read-from-a-crlf-file) `CNFGO-B54`
 
 - [The declared containers come back as written, and a missing config has none](camadas/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
@@ -5366,6 +5372,8 @@ teste prova.
 
 - [A git failure names the command](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-E02`
 
+- [The markers of a CRLF changelog are found](camadas/infra.md#chngl--changelog--the-releases-of-a-project-read-from-its-commits) `CHNGL-B13`
+
 - [Each scope is mirrored to its own file](camadas/infra.md#chlgc--checklog--the-checks-output-mirrored-to-a-file-so-it-can-be-reread-without-re-running) `CHLGC-B01`
 
 - [The header comes first and the output is copied after it](camadas/infra.md#chlgc--checklog--the-checks-output-mirrored-to-a-file-so-it-can-be-reread-without-re-running) `CHLGC-B02`
@@ -6163,6 +6171,14 @@ teste prova.
 - [A text without the old code is left unchanged](camadas/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-I01`
 
 - [Longer codes and neighbours are never touched](camadas/infra.md#rcrwr--recoderewrite--renaming-an-identity-code-inside-a-text-on-every-surface-where-it-appears) `RCRWR-X01`
+
+- [The sh on PATH is the shell](camadas/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands) `PSXSH-B01`
+
+- [On Windows, the shell beside git](camadas/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands) `PSXSH-B02`
+
+- [A command is sh -c with its arguments](camadas/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands) `PSXSH-B03`
+
+- [No shell is an environment error](camadas/infra.md#psxsh--shell--the-posix-shell-that-runs-a-projects-commands) `PSXSH-E01`
 
 - [Words are upper-cased, and one-character and digit-only words are dropped](camadas/infra.md#txsmt--textsimilarity--how-close-two-texts-that-should-be-equal-are-weighted-by-what-each-word-discriminates) `TXSMT-B01`
 

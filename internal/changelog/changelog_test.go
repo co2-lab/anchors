@@ -237,3 +237,11 @@ func TestGit_Error(t *testing.T) {
 		t.Error("log in a non-repository fails")
 	}
 }
+
+func TestWritten_crlf(t *testing.T) {
+	t.Run("CHNGL-B13: The markers of a CRLF changelog are found", func(t *testing.T) {})
+	got := Written("# Changelog\r\n\r\n" + Marker("0.2.0") + "\r\n## 0.2.0\r\n\r\n" + Marker("0.1.0") + "\r\n## 0.1.0\r\n")
+	if !got["0.2.0"] || !got["0.1.0"] || len(got) != 2 {
+		t.Errorf("both markers are found, got %v", got)
+	}
+}

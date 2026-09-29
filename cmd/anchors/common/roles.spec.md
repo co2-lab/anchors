@@ -1,6 +1,6 @@
 <!-- @anchors
   code: ARCGN
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: comando
 -->
 # AgentRoleCLI — who this agent is, and the role it declared, as the commands show and ask it
@@ -25,7 +25,7 @@ back and asked again, never guessed.
 
 | Input | Accepts | Outside the domain | Who guarantees |
 | --- | --- | --- | --- |
-| the session name | `ANCHORS_SESSION`, trimmed; else `USER` | both empty | this unit: falls back to `default` |
+| the session name | `ANCHORS_SESSION`, trimmed; else `USER`; else `USERNAME` (Windows) | all empty | this unit: falls back to `default` |
 | the typed answer | a role name or an abbreviation the settings unit recognises | any other text | this unit: echoes it back and asks again, at most three times |
 | the input stream | a terminal with somebody on the other side | a pipe, the null device, a closed stream | this unit: not interactive; a closed stream while asking is an error |
 | the project settings | a readable settings file with a declared role | a missing or unreadable file | this unit: the agent does not decide the product |
@@ -34,7 +34,7 @@ back and asked again, never guessed.
 
 | Effect | Description |
 | --- | --- |
-| `ARCGN-B01` | `AgentID`: the agent's identity is the machine name and the session joined by a slash; the session is `ANCHORS_SESSION` trimmed, else the `USER` name, else `default`. |
+| `ARCGN-B01` | `AgentID`: the agent's identity is the machine name and the session joined by a slash; the session is `ANCHORS_SESSION` trimmed, else the `USER` name, else the `USERNAME` name (where Windows keeps it), else `default`. |
 | `ARCGN-B02` | `RoleList`: the role list shows every known role with what it does. |
 | `ARCGN-B03` | `PrintRole`: showing a declared role gives its title and what it does, says whether it acts on the escalated cards or must escalate instead, and shows the role's review lens when it has one. |
 | `ARCGN-B04` | `AskRole`: asking for the role accepts the first answer the settings unit recognises, abbreviations included; an unrecognised answer is repeated back in quotes before asking again. |

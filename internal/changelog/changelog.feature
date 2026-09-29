@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CHNGL
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @CHNGL
@@ -90,3 +90,9 @@ Feature: Changelog — the releases of a project, read from its commits
     Given a directory that is not a repository
     When its tags are read
     Then the error names the git command
+
+  @CHNGL-B13 @unit-level
+  Scenario: The markers of a CRLF changelog are found
+    Given a changelog with two release markers and CRLF line endings
+    When the versions it holds are listed
+    Then both are found

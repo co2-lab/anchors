@@ -288,7 +288,8 @@ func Marker(version string) string {
 	return "<!-- anchors:changelog " + version + " -->"
 }
 
-var markerRE = regexp.MustCompile(`(?m)^<!-- anchors:changelog (\S+) -->$`)
+// A line may end in `\r\n` (a CRLF checkout on Windows).
+var markerRE = regexp.MustCompile(`(?m)^<!-- anchors:changelog (\S+) -->\r?$`)
 
 // Written lists the versions a changelog file already holds, by their markers; what is
 // not released yet is `unreleased`.

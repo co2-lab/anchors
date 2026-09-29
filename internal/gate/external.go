@@ -2,12 +2,12 @@ package gate
 
 import (
 	"os"
-	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/shell"
 )
 
 // runExternal invoca um comando externo (jest, eslint, tsc…). O CLI NÃO reimplementa
@@ -111,8 +111,10 @@ func RunExternalArgs(command string, targets []string, root string) (Verdict, st
 // execShell roda UM lote. `sh -c '<script>' sh <alvo...>` → os alvos viram $1..$N
 // (e "$@") dentro do script, sem passar pela tokenização do shell (não é injeção).
 func execShell(script string, targets []string, root string) (string, error) {
-	args := append([]string{"-c", script, "sh"}, targets...)
-	cmd := exec.Command("sh", args...) //nolint:gosec // comando é da config do projeto; os alvos vão como argv, não interpolados
+	cmd, err := shell.Command(script, append([]string{"sh"}, targets...)...) // os alvos vão como argv, não interpolados
+	if err != nil {
+		return err.Error(), err
+	}
 	cmd.Dir = root
 	out, err := cmd.CombinedOutput()
 	return string(out), err

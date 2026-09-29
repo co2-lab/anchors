@@ -335,7 +335,10 @@ func SuiteKey(absRoot, report string) string { return suiteKey(absRoot, report) 
 
 func suiteKey(absRoot, report string) string {
 	rel := relToRoot(absRoot, report)
-	if rel == ".." || strings.HasPrefix(rel, "../") {
+	// Still absolute when no relative path exists — a report on another drive, on
+	// Windows: it is outside the repository too, and keying it by its full path would
+	// give the same suite a different key on every machine.
+	if rel == ".." || strings.HasPrefix(rel, "../") || filepath.IsAbs(filepath.FromSlash(rel)) {
 		return mapx.ExternalSuitePrefix + filepath.Base(report)
 	}
 	return rel

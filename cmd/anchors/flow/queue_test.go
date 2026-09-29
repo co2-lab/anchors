@@ -605,6 +605,12 @@ func TestAgentID_fallbackIsAnnounced(t *testing.T) {
 		t.Errorf("the fallback identity was used silently:\n%q", out)
 	}
 
+	t.Setenv("USER", "")
+	t.Setenv("USERNAME", "bob")
+	if id = agentID(); !strings.HasSuffix(id, "/bob") {
+		t.Errorf("with no USER, the Windows USERNAME, got %q", id)
+	}
+
 	t.Setenv("ANCHORS_SESSION", "devA")
 	out = stderrOf(t, func() { id = agentID() })
 	if !strings.HasSuffix(id, "/devA") || out != "" {

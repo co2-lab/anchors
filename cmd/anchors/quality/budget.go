@@ -13,6 +13,7 @@ import (
 	"github.com/co2-lab/anchors/cmd/anchors/mapcmd"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/shell"
 )
 
 // timedFile is a file with the time its last run took in a suite.
@@ -212,7 +213,11 @@ var stopGrace = 10 * time.Second
 func execUntil(linha, absRoot string, deadline time.Time) (err error, cut bool) {
 	ctx, cancel := context.WithDeadline(context.Background(), deadline)
 	defer cancel()
-	cmd := exec.CommandContext(ctx, "sh", "-c", linha) //nolint:gosec // the command is declared by the project, as a gate's `run:`
+	sh, err := shell.Path()
+	if err != nil {
+		return err, false
+	}
+	cmd := exec.CommandContext(ctx, sh, "-c", linha) //nolint:gosec // the command is declared by the project, as a gate's `run:`
 	cmd.Dir = absRoot
 	cmd.Stdout, cmd.Stderr = os.Stdout, os.Stderr
 	ownProcessGroup(cmd)

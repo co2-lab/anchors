@@ -432,3 +432,29 @@ func TestVersionThatIsNotANumber(t *testing.T) {
 		}
 	})
 }
+
+func TestMigrateFile_crlf(t *testing.T) {
+	t.Run("MGFLM-B12: A CRLF file is read and migrated as it is", func(t *testing.T) {})
+	dir := t.TempDir()
+	current := escreve(t, dir, "a/anchors.graph.yaml", "# header\r\nversion: 2\r\ngerado_por: dev\r\n")
+	if f, err := FormatOf(current); err != nil || f != 2 {
+		t.Fatalf("a CRLF version line is read, got %d %v", f, err)
+	}
+	if r, err := MigrateFile(current, 2, false); err != nil || r.Changed {
+		t.Errorf("a current CRLF file is untouched, got %+v %v", r, err)
+	}
+	older := escreve(t, dir, "b/anchors.graph.yaml", "version: 1 # old\r\nnodes: []\r\n")
+	if _, err := MigrateFile(older, 2, false); err != nil {
+		t.Fatal(err)
+	}
+	if got := string(mustRead(t, older)); strings.Count(got, "version:") != 1 || !strings.Contains(got, "version: 2 # old\r\n") {
+		t.Errorf("the version is stamped in place, keeping CRLF, got %q", got)
+	}
+	none := escreve(t, dir, "c/anchors.graph.yaml", "# header\r\nnodes: []\r\n")
+	if _, err := MigrateFile(none, 2, false); err != nil {
+		t.Fatal(err)
+	}
+	if got := string(mustRead(t, none)); strings.Count(got, "version:") != 1 || !strings.Contains(got, "version: 2\r\n") {
+		t.Errorf("an inserted version ends in CRLF, got %q", got)
+	}
+}

@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"os/exec"
 	"strconv"
 	"strings"
 	"testing"
@@ -194,9 +193,6 @@ func decodeBoard(t *testing.T, b []byte) boardDoc {
 // takes the owner from the `anchors-owner:` comment fetched through GraphQL.
 func TestFullCollectionStitchesPagesAndKeepsTheOwner(t *testing.T) {
 	t.Run("BRSRB-B05: The full sweep stitches pages, drops pull requests and keeps the owner", func(t *testing.T) {})
-	if _, err := exec.LookPath("jq"); err != nil {
-		t.Skip("jq is not installed")
-	}
 	log := fakeBoardGH(t, "")
 	b, err := coletaCompleta("acme/app")
 	if err != nil {
@@ -229,9 +225,6 @@ func TestFullCollectionReportsTheRefusal(t *testing.T) {
 func TestBoardSourceReadsOnlyWhenSomethingChanged(t *testing.T) {
 	t.Run("BRSRB-B02: A read inside the floor does not call the host", func(t *testing.T) {})
 	t.Run("BRSRB-B03: Past the floor the board sweeps only when something newer exists", func(t *testing.T) {})
-	if _, err := exec.LookPath("jq"); err != nil {
-		t.Skip("jq is not installed")
-	}
 	log := fakeBoardGH(t, "2026-09-21T10:00:00Z") // the newest issue is the one already seen
 	sweeps := func() int { return strings.Count(readLog(t, log), "--paginate") }
 
@@ -351,27 +344,25 @@ esac`)
 	if commentsOfOpenCards("acme/app") != "{}" {
 		t.Error("a refused query must yield the empty map, not break the board")
 	}
-	path, cleanup := commentsToFile("acme/app")
-	cleanup()
-	if path != "" {
-		t.Errorf("with no comments there is no file to pass, got %q", path)
-	}
 }
 
-func TestCommentsToFileWritesTheMapAndCleansUp(t *testing.T) {
+func TestRunBoardJQ(t *testing.T) {
 	t.Run("BRSRB-B06: The comments of open cards follow the cursor and failures yield none", func(t *testing.T) {})
-	fakeGH(t, `echo '`+ghOwnerComments+`'`)
-	path, cleanup := commentsToFile("acme/app")
-	if path == "" {
-		t.Fatal("the comments were not written")
+	out, err := runBoardJQ(`[.[] | {n: ., c: ($coment[0][tostring] // [])}]`, "[1,2]", []any{map[string]any{"1": []any{"hi"}}})
+	if err != nil || string(out) != `[{"c":["hi"],"n":1},{"c":[],"n":2}]` {
+		t.Errorf("the comments reach the expression through $coment, got %s %v", out, err)
 	}
-	b, err := os.ReadFile(path)
-	if err != nil || !strings.Contains(string(b), "anchors-owner: alice") {
-		t.Errorf("file = %q, %v", b, err)
+	if _, err := runBoardJQ("[", "[]", nil); err == nil {
+		t.Error("an expression that does not parse is an error")
 	}
-	cleanup()
-	if _, err := os.Stat(path); !os.IsNotExist(err) {
-		t.Error("the cleanup did not remove the temporary file")
+	if _, err := runBoardJQ(".", "not json", nil); err == nil || !strings.Contains(err.Error(), "not JSON") {
+		t.Errorf("pages that are not JSON are an error, got %v", err)
+	}
+	if _, err := runBoardJQ(`error("boom")`, "[]", nil); err == nil || !strings.Contains(err.Error(), "boom") {
+		t.Errorf("an error the expression raises comes back, got %v", err)
+	}
+	if out, err := runBoardJQ("empty", "[]", nil); err != nil || out != nil {
+		t.Errorf("an expression with no result gives nothing, got %s %v", out, err)
 	}
 }
 
@@ -446,9 +437,6 @@ func get(t *testing.T, url string) (*http.Response, string) {
 func TestBoardServeServesThePageAndTheLiveJSON(t *testing.T) {
 	t.Run("BRSRB-B08: The server hands out the published page and the live JSON", func(t *testing.T) {})
 	t.Run("BRSRB-X01: The page is the pipeline's own board page", func(t *testing.T) {})
-	if _, err := exec.LookPath("jq"); err != nil {
-		t.Skip("jq is not installed")
-	}
 	fakeBoardGH(t, "")
 	captureStdout(t, func() {
 		base := serveBoard(t)

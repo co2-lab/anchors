@@ -164,4 +164,5 @@ func applyProjectLang(cmd *cobra.Command) {
 // Por regex e não por parse: este ponto roda antes de tudo, e um YAML inválido não pode
 // impedir o comando de rodar — quem reclama do YAML é o `config.Load`, com a linha e a
 // chave. O `^` exige coluna zero, então um `lang:` aninhado noutro bloco não conta.
-var langNoYAML = regexp.MustCompile(`(?m)^lang:[ \t]*["']?([A-Za-z-]+)["']?[ \t]*$`)
+// A line may end in `\r\n` (a CRLF checkout on Windows).
+var langNoYAML = regexp.MustCompile(`(?m)^lang:[ \t]*["']?([A-Za-z-]+)["']?[ \t\r]*$`)

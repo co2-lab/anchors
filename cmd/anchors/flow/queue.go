@@ -387,6 +387,9 @@ func agentID() string {
 		// mais de um agente precisa declará-lo.
 		sessao = os.Getenv("USER")
 		if sessao == "" {
+			sessao = os.Getenv("USERNAME") // Windows names the user there
+		}
+		if sessao == "" {
 			sessao = "default"
 		}
 		// SAID, not silent. Two agents of the same user on one machine share this

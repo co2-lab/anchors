@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BRSRB
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: comando
 -->
 # BoardServe — the board page served locally with live state, read from the host only when something changed
@@ -45,7 +45,7 @@ data route answers with the error.
 | `BRSRB-B02` | Within the floor after a read, the last read is returned and the host is not called. |
 | `BRSRB-B03` | Past the floor, the command asks for the most recently updated card and sweeps again only when its update time is newer than the newest already served. |
 | `BRSRB-B04` | When a sweep fails after a good read, the good read is served again, without error. |
-| `BRSRB-B05` | The full sweep reads every page of the repository's issues, stitches them, drops pull requests, and takes each card's owner from the comments of the open cards. |
+| `BRSRB-B05` | The full sweep reads every page of the repository's issues, stitches them, drops pull requests, and takes each card's owner from the comments of the open cards; the pipeline's own jq expression runs inside the binary, so no `jq` has to be installed. |
 | `BRSRB-B06` | The comments of the open cards are read page by page following the cursor; a refused or malformed answer, or a repository name without owner and name, yields no comments instead of breaking the board. |
 | `BRSRB-B07` | Without `--repo`, the repository comes from the current clone; the command prints the address, the repository and the floor before serving. |
 | `BRSRB-B08` | The root route serves the published board page as HTML, and the data route serves the board data as JSON that the browser must not cache. |

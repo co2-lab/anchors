@@ -219,3 +219,13 @@ func TestTheFreezeRefusalSpeaksTheProjectLanguage(t *testing.T) {
 		t.Errorf("the root printed on its own (the error must come out once, from main):\n%s", out.String())
 	}
 }
+
+func TestLangNoYAML_crlf(t *testing.T) {
+	t.Run("CLRTC-B08: The language is read from a CRLF file", func(t *testing.T) {})
+	for _, src := range []string{"version: 5\r\nlang: pt-BR\r\n", "lang: \"es\"  \r\n"} {
+		m := langNoYAML.FindSubmatch([]byte(src))
+		if m == nil || (string(m[1]) != "pt-BR" && string(m[1]) != "es") {
+			t.Errorf("%q: the language is read, got %q", src, m)
+		}
+	}
+}

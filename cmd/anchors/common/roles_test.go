@@ -27,6 +27,11 @@ func TestAgentID_sessionFallbacks(t *testing.T) {
 		t.Errorf("falling back to USER: %q", got)
 	}
 	t.Setenv("USER", "")
+	t.Setenv("USERNAME", "bob")
+	if got := AgentID(); got != host+"/bob" {
+		t.Errorf("falling back to USERNAME, as Windows names the user: %q", got)
+	}
+	t.Setenv("USERNAME", "")
 	if got := AgentID(); got != host+"/default" {
 		t.Errorf("falling back to default: %q", got)
 	}

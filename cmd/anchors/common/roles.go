@@ -20,6 +20,9 @@ func AgentID() string {
 	if sessao == "" {
 		sessao = os.Getenv("USER")
 		if sessao == "" {
+			sessao = os.Getenv("USERNAME") // Windows names the user there
+		}
+		if sessao == "" {
 			sessao = "default"
 		}
 	}

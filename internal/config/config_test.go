@@ -1523,3 +1523,12 @@ func TestReaders_nilConfigAnswersDefaults(t *testing.T) {
 		t.Error("a nil workflow must answer main, one approval, and no blocking switches")
 	}
 }
+
+func TestFileFormat_crlf(t *testing.T) {
+	t.Run("CNFGO-B54: The declared format is read from a CRLF file", func(t *testing.T) {})
+	for _, src := range []string{"version: 5\r\nlayers: {}\r\n", "version: 5  # current\r\n", "version: 5\n"} {
+		if got := fileFormat([]byte(src)); got != 5 {
+			t.Errorf("%q: want 5, got %d", src, got)
+		}
+	}
+}

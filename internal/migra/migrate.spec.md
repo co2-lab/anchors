@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MGFLM
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: apoio
 -->
 # MigrateFile — takes one project file from its declared format to the current one, renaming only what is a key
@@ -56,6 +56,7 @@ doctor warn without touching the repository of someone who did not ask.
 | `MGFLM-B09` | The result counts each renamed key, and each renamed `key: value`, by its old form, and reports whether the text changed. |
 | `MGFLM-B10` | A dry run reports what would change, counts included, without writing the file. |
 | `MGFLM-B11` | A top-level `version:` line followed by a comment is read by its number, and raised in place keeping the comment. |
+| `MGFLM-B12` | A file with CRLF line endings (a Windows checkout) is read and written as it is: its `version:` is found, a file at the target is left untouched, and a migrated file gets its `version:` stamped or inserted with `\r\n`, never a second one. |
 
 ## Invariants
 
