@@ -118,7 +118,7 @@ func indexedTargets(root string, targets []string) (out []string, clean func(str
 			out = append(out, t) // @resilient: a copy that cannot be written leaves the tree's file
 			continue
 		}
-		out = append(out, p)
+		out = append(out, filepath.ToSlash(p)) // with `/`, the tool prints the project's path back once the prefix is stripped
 	}
 	if dir == "" {
 		return out, clean, done
