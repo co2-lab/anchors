@@ -115,6 +115,9 @@ func TestRelTo_windowsSeparators(t *testing.T) {
 		t.Skip("`\\` is a separator only on Windows")
 	}
 	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "src"), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	writeFile(t, filepath.Join(root, "src", "a.ts"), "x\n")
 	if got := RelTo(root, `src\a.ts`); got != "src/a.ts" {
 		t.Errorf("a native relative path, got %q", got)

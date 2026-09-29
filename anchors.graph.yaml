@@ -318,7 +318,7 @@ nodes:
         ingested_at: "2026-09-29T14:20:44-03:00"
     - id: cmd/anchors/common/common_cli_test.go
       kind: test
-      rev: 06c90f1d7898
+      rev: 2ce720550ec0
       updated_at: "2026-09-29"
       code: CMCLC
       layer: teste
