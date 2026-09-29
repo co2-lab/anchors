@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e3386a8873dce880 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:4558b446bb80c055 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2770,6 +2770,8 @@ teste prova.
 
 - [The declared format is read from a CRLF file](camadas/config.md#cnfgo-b54--the-declared-format-is-read-from-a-crlf-file) `CNFGO-B54`
 
+- [A gate's workdir is tree or index](camadas/config.md#cnfgo-b55--a-gates-workdir-is-tree-or-index) `CNFGO-B55`
+
 - [The declared containers come back as written, and a missing config has none](camadas/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](camadas/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -3421,6 +3423,10 @@ teste prova.
 - [The gate does not aggregate cross-file state across partitioned batches](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-X02`
 
 - [Under --index a command reads the commit's content](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B14`
+
+- [A workdir index command runs in a copy of the index](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B15`
+
+- [A workdir index command runs in the tree when the tree is the commit](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B16`
 
 - [Every failure gate skips an artifact that is not a spec](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B01`
 

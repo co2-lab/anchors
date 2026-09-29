@@ -990,7 +990,22 @@ type Gate struct {
 	// 100. Unset asks for every branch. A layer that needs another floor gets its own
 	// entry, scoped by `tags`.
 	MinPercent *float64 `yaml:"min_percent,omitempty"`
+
+	// Workdir — for a `run:` gate: where the command runs under `--index` (the commit hook).
+	// `tree` (the default) runs it in the project as it is on disk, and a command that
+	// takes `{{files}}` still gets the index's copy of each file that differs. `index`
+	// runs it in a copy of what the commit records, for a command that reads the project
+	// itself (`tsc`, a test runner): another session's half-done edit in the tree is not
+	// the commit's. The folders git ignores (dependencies, caches) are linked into the
+	// copy, not copied. Outside `--index` the tree is the project, and both are the same.
+	Workdir string `yaml:"workdir,omitempty"`
 }
+
+// A gate's `workdir`: the tree, or a copy of the git index.
+const (
+	WorkdirTree  = "tree"
+	WorkdirIndex = "index"
+)
 
 // DefaultTimeoutCeiling is the share of timed-out mutants above which a mutation score is
 // read as measured under load: 20%. A clean run of this repository's gates had 0.4%.
@@ -1688,6 +1703,9 @@ func (c *Config) validarEnumsDeGate() error {
 				return fmt.Errorf("%s", i18n.T("config.gate.unknown_phase",
 					g.Name, f, PhasePreCommit, PhasePrePush, PhaseCI, PhaseManual))
 			}
+		}
+		if g.Workdir != "" && g.Workdir != WorkdirTree && g.Workdir != WorkdirIndex {
+			return fmt.Errorf("%s", i18n.T("config.gate.unknown_workdir", g.Name, g.Workdir, WorkdirTree, WorkdirIndex))
 		}
 		for _, p := range g.SkipOn {
 			if p != PerspectiveChange && p != PerspectiveAll {

@@ -36,7 +36,7 @@ Executes an external command (such as jest, eslint, or tsc) defined in `anchors.
 | `EXCMX-B01` | An external command exiting with status zero returns `Pass` with empty detail. |
 | `EXCMX-B02` | An external command exiting with non-zero status returns `Fail` containing the trimmed output. |
 | `EXCMX-B03` | If an external command fails with empty output, the failure detail reports that the gate produced no output along with the execution error. |
-| `EXCMX-B04` | When executing for a single node via `runExternal`, it delegates to `RunExternalArgs` passing the node ID as the single target. |
+| `EXCMX-B04` | A gate's command with no `workdir`, or `workdir: tree`, runs in the project root through `RunExternalArgs`, with the node ID as the single target. (`runGateCommand`) |
 | `EXCMX-B05` | The placeholder `{{file}}` in the command template is rewritten to `"$1"` before shell invocation. |
 | `EXCMX-B06` | The placeholder `{{files}}` in the command template is rewritten to `"$@"` before shell invocation. |
 | `EXCMX-B07` | When targets are empty, execution runs exactly once without positional target arguments representing project scope. |
@@ -47,6 +47,8 @@ Executes an external command (such as jest, eslint, or tsc) defined in `anchors.
 | `EXCMX-B12` | For batch or project executions, failure output exceeding 4000 characters is truncated with a truncation marker. |
 | `EXCMX-B13` | Environment variable `ANCHORS_ARGV_MAX` overrides the default argv limit when set to a positive integer. |
 | `EXCMX-B14` | Under `--index`, a target whose file on disk differs from the index is handed to the command as a copy of what the index holds, and the copy's path is shown back as the project's in what the command printed; a target the index does not have is not handed over; a target the same in both goes as it is. (`indexedTargets`) |
+| `EXCMX-B15` | Under `--index`, a `workdir: index` command runs in a copy of the git index, at the project's place in it: a file edited in the tree reads as staged, an untracked file is not there, the folders git ignores are linked in, a link inside one that points back into the project points into the copy, and the copy's paths in the output read as the project's. The copy is made once per run and removed when the gates are done. (`runGateCommand`, `indexWorkdir`, `releaseIndexWorkdir`) |
+| `EXCMX-B16` | A `workdir: index` command runs in the tree itself when there is no `--index`, or when the tree holds nothing the index does not; when the copy cannot be made, the gate is indeterminate and says why, and the command does not run over the tree. (`indexWorkdir`) |
 
 ## Invariants
 
@@ -76,7 +78,7 @@ Each failure the code handles is already stated as a rule of another letter; the
 
 | Code | File | Method | Layer |
 | --- | --- | --- | --- |
-| DEP1 | `internal/mapx/model.go` | `Node` | core — provides the node abstraction and its identifier for per-node execution |
+| DEP1 | `internal/config/config.go` | `Gate` | core — the gate entry whose command runs, and its `workdir` |
 
 ## Open Decisions
 

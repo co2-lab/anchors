@@ -464,6 +464,21 @@ func TestGateInvocationsCompileWithAGroup(t *testing.T) {
 	}
 }
 
+func TestLoadChecksTheWorkdir(t *testing.T) {
+	t.Run("CNFGO-B55: A gate's workdir is tree or index", func(t *testing.T) {})
+	gate := func(w string) string {
+		return "version: 1\ngates:\n  - name: typecheck\n    run: tsc\n    on: [code]\n    workdir: " + w + "\n"
+	}
+	for _, w := range []string{WorkdirTree, WorkdirIndex} {
+		if _, err := load(t, gate(w)); err != nil {
+			t.Errorf("workdir %s loads: %v", w, err)
+		}
+	}
+	if _, err := load(t, gate("checkout")); err == nil || !strings.Contains(err.Error(), `"typecheck"`) || !strings.Contains(err.Error(), `"checkout"`) {
+		t.Errorf("an unknown workdir fails naming the gate and the value, got %v", err)
+	}
+}
+
 func TestLoadChecksTheSupportGlobs(t *testing.T) {
 	t.Run("CNFGO-B46: A layer's support globs must be valid", func(t *testing.T) {})
 	_, err := load(t, "version: 1\nlayers:\n  e2e:\n    pattern: \"flows/**/*.yaml\"\n    kind: test\n    support: [\"flows/utils/**\", \"flows/[a\"]\n")

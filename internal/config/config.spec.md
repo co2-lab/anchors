@@ -74,6 +74,7 @@ patterns a spec governs.
 | `CNFGO-B52` | A gate's `invocations` must each compile and carry a capture group — the first one names the unit the call reaches; one that does not compile, or has no group, fails the load naming the gate and the index. |
 | `CNFGO-B53` | A gate's `min_percent` must be between 0 and 100; outside it fails the load naming the gate, and inside it loads. |
 | `CNFGO-B54` | The file's declared format is read from a `version:` line ending in `\r\n` as from one ending in `\n`, trailing comment included. |
+| `CNFGO-B55` | A gate's `workdir` is `tree` or `index`; any other value fails the load naming the gate and the value. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 
 ### Canonical gate declarations

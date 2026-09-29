@@ -27,9 +27,9 @@ Feature: ExternalCommand — executes external tools via shell passing targets a
 
   @EXCMX-B04 @unit-level
   Scenario: Single node execution delegates to RunExternalArgs
-    Given a node with an identifier
-    When runExternal is called on that node
-    Then it executes RunExternalArgs passing the node ID as single target
+    Given a gate with no workdir and a node with an identifier
+    When the gate's command runs on that node
+    Then it executes RunExternalArgs in the project root passing the node ID as single target
 
   @EXCMX-B05 @unit-level
   Scenario: Placeholder file is rewritten to positional parameter
@@ -120,3 +120,15 @@ Feature: ExternalCommand — executes external tools via shell passing targets a
     Given a target edited on disk and a source that holds another text, a target the same in both, and one the source does not have
     When a command that prints each target's path and content runs
     Then it reads the source's text under the project's path, the unchanged one as it is, and the absent one is not handed over
+
+  @EXCMX-B15 @unit-level
+  Scenario: A workdir index command runs in a copy of the index
+    Given a repository with a staged file edited again in the tree, an untracked file, an ignored folder, and an ignored link back into the project
+    When a workdir index command runs under --index
+    Then it reads the staged text, does not see the untracked file, finds the ignored folder, follows the link into the copy, and prints the project's paths
+
+  @EXCMX-B16 @unit-level
+  Scenario: A workdir index command runs in the tree when the tree is the commit
+    Given a workdir index command
+    When it runs with no index source, or over a tree with nothing the index lacks, or where no copy can be made
+    Then it runs in the project root the first two times, and the third is indeterminate and says why
