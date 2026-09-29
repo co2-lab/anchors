@@ -246,3 +246,19 @@ func TestLock_CannotCreate(t *testing.T) {
 		t.Error("a lock that cannot be created fails at once, not at the timeout")
 	}
 }
+
+// The liveness a takeover rests on, asked of the real system: this process is alive, and
+// a child that has exited is not. On Windows it used to answer "alive" for every pid.
+func TestProcessAlive(t *testing.T) {
+	t.Run("MPLCK-B03: An abandoned lock is taken over, a live one is not", func(t *testing.T) {})
+	if !processAlive(os.Getpid()) {
+		t.Error("this process is alive")
+	}
+	c := exec.Command(os.Args[0], "-test.run=^$")
+	if err := c.Run(); err != nil {
+		t.Fatal(err)
+	}
+	if processAlive(c.Process.Pid) {
+		t.Errorf("a child that exited (pid %d) is not alive", c.Process.Pid)
+	}
+}

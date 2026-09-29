@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -505,4 +506,16 @@ func TestIngest_aNewSpecKeepsItsFirstProof(t *testing.T) {
 		t.Fatalf("the new spec is in the map with its rule proven, got %+v", n.Signal)
 	}
 	node(t, root, "src/pay.test.ts")
+}
+
+// A report on another drive has no path relative to the root: it is external, keyed by its
+// name, the same on every machine.
+func TestSuiteKey_anotherDrive(t *testing.T) {
+	t.Run("NGSTI-B07: The suite key is the report path from the root, or the file name for a report outside the repository", func(t *testing.T) {})
+	if runtime.GOOS != "windows" {
+		t.Skip("drives exist only on Windows")
+	}
+	if got := suiteKey(`C:\work\repo`, `D:\reports\junit.xml`); got != "external/junit.xml" {
+		t.Errorf("a report on another drive is external, got %q", got)
+	}
 }

@@ -3,6 +3,7 @@ package ops
 import (
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -425,5 +426,69 @@ func TestInstalledPrePushWarnsWhenTheMapWriterDiffers(t *testing.T) {
 				t.Errorf("the same version warned:\n%s", out)
 			}
 		})
+	}
+}
+
+// The hooks are bash, and on Windows they run through Git for Windows' own: nothing but a
+// real commit shows they do, with the gates' `sh` behind them.
+func TestHooksRunOnARealCommit(t *testing.T) {
+	t.Run("INHKN-B13: The installed hooks run on a real commit, on every system", func(t *testing.T) {})
+	if testing.Short() {
+		t.Skip("builds the anchors binary")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("no git")
+	}
+	bin := t.TempDir()
+	exe := filepath.Join(bin, "anchors")
+	if runtime.GOOS == "windows" {
+		exe += ".exe"
+	}
+	if out, err := exec.Command("go", "build", "-o", exe, "github.com/co2-lab/anchors/cmd/anchors").CombinedOutput(); err != nil {
+		t.Fatalf("build anchors: %v %s", err, out)
+	}
+	testkit.OnPath(t, bin)
+	root := t.TempDir()
+	run := func(name string, args ...string) (string, error) {
+		c := exec.Command(name, args...)
+		c.Dir = root
+		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t")
+		out, err := c.CombinedOutput()
+		return string(out), err
+	}
+	must := func(name string, args ...string) {
+		t.Helper()
+		if out, err := run(name, args...); err != nil {
+			t.Fatalf("%s %v: %v\n%s", name, args, err, out)
+		}
+	}
+	gates := func(runLine string) string {
+		return "version: 5\nlayers:\n  notes:\n    pattern: \"*.txt\"\n    kind: code\n" +
+			"gates:\n  - name: must-pass\n    on: [code]\n    blocking: true\n    run: \"" + runLine + "\"\n"
+	}
+	must("git", "init", "-q")
+	writeFile(t, root, "anchors.yaml", gates("exit 0"))
+	writeFile(t, root, "a.txt", "one\n")
+	must(exe, "map", "build")
+	must("git", "add", ".")
+	must("git", "commit", "-qm", "chore: base", "--no-verify")
+	if err := runInstallHooks(root, false); err != nil {
+		t.Fatal(err)
+	}
+
+	writeFile(t, root, "anchors.yaml", gates("echo refused-by-the-gate; exit 1"))
+	writeFile(t, root, "a.txt", "two\n")
+	must("git", "add", "anchors.yaml", "a.txt")
+	if out, err := run("git", "commit", "-qm", "chore: refused"); err == nil || !strings.Contains(out, "must-pass") {
+		t.Fatalf("a failing blocking gate refuses the commit through the hook, got %v:\n%s", err, out)
+	}
+
+	writeFile(t, root, "anchors.yaml", gates("exit 0"))
+	must("git", "add", "anchors.yaml")
+	if out, err := run("git", "commit", "-qm", "chore: lands"); err != nil {
+		t.Fatalf("a passing gate lets the commit through, got %v:\n%s", err, out)
+	}
+	if out, _ := run("git", "log", "--oneline"); !strings.Contains(out, "chore: lands") {
+		t.Errorf("the commit landed, log:\n%s", out)
 	}
 }

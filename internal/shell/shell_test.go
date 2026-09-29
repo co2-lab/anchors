@@ -103,3 +103,37 @@ func TestPath_noShell(t *testing.T) {
 		t.Errorf("a command with no shell is the environment error, got %v", err)
 	}
 }
+
+// On a real Windows, with only git on PATH, the shell is found beside it: the default of
+// Git for Windows, where `sh.exe` is not on PATH.
+func TestPath_realGitOnWindows(t *testing.T) {
+	t.Run("PSXSH-B02: On Windows, the shell beside git", func(t *testing.T) {})
+	if runtime.GOOS != "windows" {
+		t.Skip("proves Git for Windows' layout")
+	}
+	git, err := exec.LookPath("git")
+	if err != nil {
+		t.Skip("no git")
+	}
+	t.Setenv("PATH", filepath.Dir(git))
+	sh, err := Path()
+	if err != nil || !strings.HasSuffix(strings.ToLower(sh), "sh.exe") {
+		t.Fatalf("the shell beside git, got %q %v", sh, err)
+	}
+	cmd, err := Command("printf ok")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if out, err := cmd.Output(); err != nil || string(out) != "ok" {
+		t.Errorf("git's shell runs a script, got %q %v", out, err)
+	}
+}
+
+// With nothing on PATH, on any system, the lookup says so as an environment error.
+func TestPath_realEmptyPath(t *testing.T) {
+	t.Run("PSXSH-E01: No shell is an environment error", func(t *testing.T) {})
+	t.Setenv("PATH", t.TempDir())
+	if _, err := Path(); !errors.Is(err, ErrNoShell) {
+		t.Errorf("an empty PATH has no shell, got %v", err)
+	}
+}

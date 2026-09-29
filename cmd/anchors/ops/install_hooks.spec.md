@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INHKN
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: comando
 -->
 # InstallHooks — the git hooks that confront every commit and push with the gates and the freeze, installed without taking a hook the user wrote
@@ -53,6 +53,7 @@ theirs and is not replaced without `--force`.
 | `INHKN-B10` | The installed pre-push refuses a push when the local binary is older than the minimum version the remote's configuration declares, and lets that exact version through. |
 | `INHKN-B11` | The install registers the map and progress merge drivers in the repository's git config and adds their attribute lines to `.gitattributes`. |
 | `INHKN-B12` | The installed pre-push warns, without refusing, when the map on the remote was written by a version other than the local binary, reading the writer from the map's `generated_by:` key or the legacy `gerado_por:`; the same version is silent. |
+| `INHKN-B13` | On a real commit, on Linux, macOS and Windows alike, the installed pre-commit runs the project's blocking gates: a failing one refuses the commit, and a passing one lets it through. |
 
 ## Invariants
 

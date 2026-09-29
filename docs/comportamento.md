@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a6eecd25d0d4c5fa — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d82a074061ca3a49 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1845,6 +1845,8 @@ teste prova.
 - [Outside a repository the error explains what needs git](camadas/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-E02`
 
 - [The pre-push warns when the remote map was written by another version](camadas/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B12`
+
+- [The installed hooks run on a real commit, on every system](camadas/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B13`
 
 - [Both the map and the config reach the current format](camadas/comando.md#mgcmm--migratecommand--the-command-the-format-error-promises-bringing-the-map-and-the-config-up-to-this-binarys-format) `MGCMM-B01`
 

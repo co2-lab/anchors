@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INHKN
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @INHKN
@@ -115,3 +115,9 @@ Feature: InstallHooks — the git hooks that confront every commit and push with
     When a binary of version 1.0.0 pushes
     Then the push succeeds with the warning "was written by 'anchors 0.9.0'"
     And a binary of version 0.9.0 pushes with no such warning
+
+  @INHKN-B13 @unit-level
+  Scenario: The installed hooks run on a real commit, on every system
+    Given a repository with the hooks installed, the anchors of this tree on PATH, and a blocking gate that fails
+    When a commit is made, and made again after the gate passes
+    Then the first is refused and the second lands

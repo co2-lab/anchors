@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -104,5 +105,21 @@ func TestVersion_unstampedBuildSaysDev(t *testing.T) {
 	t.Run("CMCLC-B07: An unstamped build says it is a development build", func(t *testing.T) {})
 	if Version != "dev" || Commit != "none" || Date != "unknown" {
 		t.Errorf("unstamped build reports %q / %q / %q, want dev / none / unknown", Version, Commit, Date)
+	}
+}
+
+// A Windows-native path given on the command line becomes the map's form.
+func TestRelTo_windowsSeparators(t *testing.T) {
+	t.Run("CMCLC-B03: A root-relative path is kept, cleaned", func(t *testing.T) {})
+	if runtime.GOOS != "windows" {
+		t.Skip("`\\` is a separator only on Windows")
+	}
+	root := t.TempDir()
+	writeFile(t, filepath.Join(root, "src", "a.ts"), "x\n")
+	if got := RelTo(root, `src\a.ts`); got != "src/a.ts" {
+		t.Errorf("a native relative path, got %q", got)
+	}
+	if got := RelTo(root, filepath.Join(root, "src", "a.ts")); got != "src/a.ts" {
+		t.Errorf("a native absolute path, got %q", got)
 	}
 }
