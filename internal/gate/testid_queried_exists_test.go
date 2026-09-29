@@ -344,6 +344,7 @@ func TestConsultadoExiste_reportDetails(t *testing.T) {
 		if os.Geteuid() == 0 {
 			t.Skip("root reads through permissions")
 		}
+		testkit.SkipWithoutPOSIXPermissions(t)
 		root, cfg := fixtureConsultado(t, `<View testID=":abcd-tela" />`, "- tapOn:\n    id: ':abcd-tela'\n")
 		locked := filepath.Join(root, "locked")
 		if err := os.Mkdir(locked, 0o000); err != nil {

@@ -333,6 +333,9 @@ func watchReady(t *testing.T) <-chan struct{} {
 // loop (handleChange inside time.AfterFunc) reported the write to the node after return.
 func TestRunWatchLoop_handlesEveryChangeInTheLoop(t *testing.T) {
 	t.Run("WTCHA-I02: A change pending at the signal is handled before the loop returns, and none after", func(t *testing.T) {})
+	if runtime.GOOS == "windows" {
+		t.Skip("the loop ends on SIGTERM, and a process cannot send it to itself on Windows")
+	}
 	root := t.TempDir()
 	cfg := watchCfg()
 	writeFile(t, root, "src/keep.ts", "x\n")

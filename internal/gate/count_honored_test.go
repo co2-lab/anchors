@@ -195,6 +195,7 @@ func TestCountFilesOnlyAndUnreadable(t *testing.T) {
 		if os.Geteuid() == 0 {
 			t.Skip("root reads a chmod 000 file")
 		}
+		testkit.SkipWithoutPOSIXPermissions(t)
 		dir := t.TempDir()
 		os.MkdirAll(filepath.Join(dir, "rules"), 0o755)
 		os.WriteFile(filepath.Join(dir, "rules", "a.go"), []byte("allow\nallow\n"), 0o644)

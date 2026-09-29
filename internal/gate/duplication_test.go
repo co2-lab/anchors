@@ -22,11 +22,18 @@ func fakeJscpd(t *testing.T, root, report string, code int) {
 	t.Cleanup(func() { duplicationCommand = prev; resetDuplicationCache() })
 	duplicationCommand = func(r, outDir string) *exec.Cmd {
 		script := `echo run >> "$1/runs.txt"; echo "fake jscpd done"`
+		// The report goes by FILE, not as an argument: on Windows an argument is
+		// re-parsed on its way to the shell, and the `\\` of a JSON path did not survive.
+		src := ""
 		if report != "" {
-			script += `; printf '%s' "$3" > "$2/jscpd-report.json"`
+			src = filepath.Join(t.TempDir(), "report.json")
+			if err := os.WriteFile(src, []byte(report), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			script += `; cp "$3" "$2/jscpd-report.json"`
 		}
 		script += fmt.Sprintf("; exit %d", code)
-		cmd, err := shell.Command(script, "sh", root, outDir, report)
+		cmd, err := shell.Command(script, "sh", root, outDir, src)
 		if err != nil {
 			t.Skip(err)
 		}

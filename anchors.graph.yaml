@@ -2301,7 +2301,7 @@ nodes:
         - test
     - id: cmd/anchors/flow/watch_test.go
       kind: test
-      rev: 89faa028de46
+      rev: add5a17eb272
       updated_at: "2026-09-29"
       code: WTCHA
       layer: teste
@@ -5948,8 +5948,8 @@ nodes:
         ingested_at: "2026-09-29T13:45:13-03:00"
     - id: cmd/anchors/quality/budget_test.go
       kind: test
-      rev: 36d6ea9e67e7
-      updated_at: "2026-09-27"
+      rev: 96b6648039b0
+      updated_at: "2026-09-29"
       code: BDGRN
       layer: teste
       tags:
@@ -11001,7 +11001,7 @@ nodes:
         ingested_at: "2026-09-29T13:45:13-03:00"
     - id: internal/gate/count_honored_test.go
       kind: test
-      rev: a907ff7ed5b2
+      rev: 8b38553c21be
       updated_at: "2026-09-29"
       code: CNHNC
       layer: teste
@@ -11764,7 +11764,7 @@ nodes:
         ingested_at: "2026-09-29T13:45:13-03:00"
     - id: internal/gate/duplication_test.go
       kind: test
-      rev: b79a88dc4579
+      rev: 36355f4369cd
       updated_at: "2026-09-29"
       code: DUPLC
       layer: teste
@@ -17346,7 +17346,7 @@ nodes:
         ingested_at: "2026-09-29T13:45:13-03:00"
     - id: internal/gate/testid_queried_exists_test.go
       kind: test
-      rev: ce7d47bad7b4
+      rev: 866d74694c6d
       updated_at: "2026-09-29"
       code: TQETS
       layer: teste

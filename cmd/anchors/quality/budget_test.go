@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -86,7 +87,11 @@ func TestBudgetDeadlineStopsTheGroup(t *testing.T) {
 		t.Fatalf("a run that ends in time is not cut, got %v %v", err, cut)
 	}
 
-	// The group gets a TERM first: a tool that restores the source on it gets to.
+	// The group gets a TERM first: a tool that restores the source on it gets to. Windows
+	// has no TERM a command can trap: there the stop is immediate, and this is not asked.
+	if runtime.GOOS == "windows" {
+		return
+	}
 	prev := stopGrace
 	stopGrace = time.Second
 	t.Cleanup(func() { stopGrace = prev })
