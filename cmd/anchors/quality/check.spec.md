@@ -174,6 +174,7 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | `CGPCH-B85` | With `--index` the gates read the project's files as the git index has them — what the commit records —, and a file counts as changed only by its staged changes; outside a repository it fails saying the index could not be read. |
 | `CGPCH-B86` | `--index` with neither `--changed` nor `--all` judges the staged files — the same set `verify --staged` hands over —, and with nothing staged says so and succeeds. |
 | `CGPCH-B87` | Under `--index` a file's date is judged by what the commit records, in every state: an edit left unstaged does not make it changed, a staged change with an old date fails whatever the tree holds, with `--changed` or `--all`, and in a project below the repository's top. |
+| `CGPCH-B88` | Under `--index` the commit is judged with the commit's map — the one staged, when the index has one — and a node whose file the index does not have (untracked, or removed from the index) leaves the map with its edges, so no gate is asked about it and no impact reaches it. (`stagedMap`, `dropAbsentFromIndex`) |
 | `CGPCH-B81` | Times are rounded to what a decision needs: to ten milliseconds from one second up, to a tenth of a millisecond from one millisecond up, and to the microsecond below. |
 
 ## Invariants

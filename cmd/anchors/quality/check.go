@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"sort"
 	"strconv"
@@ -156,6 +157,19 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			g, err := mapx.Load(mapPath)
 			if err != nil {
 				return fmt.Errorf("load map: %w (run `anchors map build`)", err)
+			}
+			// `--index` judges the commit with the commit's map: the one staged — the hook
+			// stages it apart when the tree is ahead, and the map on disk then speaks of the
+			// tree, other sessions' untracked files included. And whatever map it is, a node
+			// whose file the index does not have is not the commit's: it leaves the map with
+			// its edges, so no gate is asked about a file that is not there.
+			if fromIndex {
+				if staged := stagedMap(absRoot, mapPath); staged != nil {
+					g = staged
+				}
+				if err := dropAbsentFromIndex(absRoot, g); err != nil {
+					return fmt.Errorf("--index: read the git index: %w", err)
+				}
 			}
 
 			// BINÁRIO MAIS VELHO QUE O MAPA. Ele não falha — grava o formato que conhece,
@@ -1882,4 +1896,58 @@ func issuesOnFor(cfg *config.Config, recordIssues, inCI bool) bool {
 		return recordIssues || inCI
 	}
 	return true
+}
+
+// stagedMap is the map the index holds, or nil when the index has none (a map git does
+// not track) or it cannot be read.
+func stagedMap(absRoot, mapPath string) *mapx.Graph {
+	rel, err := filepath.Rel(absRoot, mapPath)
+	if err != nil {
+		return nil
+	}
+	out, err := exec.Command("git", "-C", absRoot, "show", ":./"+filepath.ToSlash(rel)).Output()
+	if err != nil {
+		return nil
+	}
+	g, err := mapx.LoadBytes(out, "index:"+filepath.ToSlash(rel))
+	if err != nil {
+		return nil
+	}
+	return g
+}
+
+// dropAbsentFromIndex removes from the map every node whose file the index does not have
+// — untracked, or removed from the index — and the edges that touch one.
+func dropAbsentFromIndex(absRoot string, g *mapx.Graph) error {
+	out, err := exec.Command("git", "-C", absRoot, "ls-files", "--cached", "-z").Output()
+	if err != nil {
+		return err
+	}
+	inIndex := map[string]bool{}
+	for _, p := range strings.Split(string(out), "\x00") {
+		if p != "" {
+			inIndex[filepath.ToSlash(p)] = true
+		}
+	}
+	gone := map[string]bool{}
+	kept := g.Nodes[:0]
+	for _, n := range g.Nodes {
+		if inIndex[n.ID] {
+			kept = append(kept, n)
+			continue
+		}
+		gone[n.ID] = true
+	}
+	if len(gone) == 0 {
+		return nil
+	}
+	g.Nodes = kept
+	edges := g.Edges[:0]
+	for _, e := range g.Edges {
+		if !gone[e.From] && !gone[e.To] {
+			edges = append(edges, e)
+		}
+	}
+	g.Edges = edges
+	return nil
 }

@@ -594,3 +594,9 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a file edited and not staged, and later the same file partly staged with an old date, at the repository's top and below it
     When the check runs over the tree and with --index, by --changed and by --all
     Then over the tree the unstaged edit fails, with --index it does not, and the staged change with the old date fails
+
+  @CGPCH-B88 @unit-level
+  Scenario: Under --index a file the index does not have is not judged
+    Given a map on disk with a node for a file that was never committed and is gone from the tree
+    When the check runs over everything, over the tree and with --index
+    Then over the tree the gate cannot read the file, and with --index the node is not judged

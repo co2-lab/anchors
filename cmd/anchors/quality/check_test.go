@@ -2699,3 +2699,52 @@ func TestCheckIndex_noScopeJudgesTheStaged(t *testing.T) {
 		t.Errorf("with no scope the staged file is judged:\n%s", out)
 	}
 }
+
+// Another session's untracked file in the map on disk — here gone from the tree too — is
+// not the commit's: under --index no gate reads it.
+func TestCheckIndex_absentFilesAreNotJudged(t *testing.T) {
+	t.Run("CGPCH-B88: Under --index a file the index does not have is not judged", func(t *testing.T) {})
+	_, root, _ := indexRepo(t, false)
+	cfg, err := config.Load(filepath.Join(root, "anchors.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	touchWrite(t, root, "src/ghost.ts", "// @anchors\n//   updated_at: 2026-09-01\nexport const g = 1\n")
+	files, _ := scan.Walk(root, cfg)
+	if err := mapx.Save(mapx.Build(files, cfg, gitmeta.AllCommitDates(root)), filepath.Join(root, mapx.DefaultPath)); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Remove(filepath.Join(root, "src/ghost.ts")); err != nil {
+		t.Fatal(err)
+	}
+	_, out := runCheckInChild(t, "--root", root, "--all", "--no-record")
+	if !strings.Contains(out, "src/ghost.ts") {
+		t.Fatalf("over the tree the map's ghost is judged:\n%s", out)
+	}
+	_, out = runCheckInChild(t, "--root", root, "--all", "--no-record", "--index")
+	if strings.Contains(out, "src/ghost.ts") {
+		t.Errorf("under --index a file the index does not have is not judged:\n%s", out)
+	}
+}
+
+func TestStagedMap_readsTheIndex(t *testing.T) {
+	t.Run("CGPCH-B88: Under --index a file the index does not have is not judged", func(t *testing.T) {})
+	_, root, git := indexRepo(t, false)
+	mapPath := filepath.Join(root, mapx.DefaultPath)
+	if stagedMap(root, mapPath) != nil {
+		t.Fatal("a map the index does not hold is not the commit's")
+	}
+	git("add", mapx.DefaultPath)
+	g, _ := mapx.Load(mapPath)
+	g.Nodes = append(g.Nodes, mapx.Node{ID: "src/tree-only.ts", Kind: mapx.KindCode})
+	if err := mapx.Save(g, mapPath); err != nil {
+		t.Fatal(err)
+	}
+	staged := stagedMap(root, mapPath)
+	if staged == nil || staged.Node("src/tree-only.ts") != nil || staged.Node("src/screen.ts") == nil {
+		t.Errorf("the staged map is the index's, not the tree's, got %+v", staged)
+	}
+	if stagedMap(root, filepath.Join(t.TempDir(), "elsewhere.yaml")) != nil {
+		t.Error("a map outside the project is not the commit's")
+	}
+}
