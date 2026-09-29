@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f7e5b8082135d4f0 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b64ae61e09c49932 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3619,6 +3619,12 @@ teste prova.
 - [A target declared with nothing to measure is skipped with its reason](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B24`
 
 - [The gate's reach is offered to the runs that choose what to measure](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B25`
+
+- [A layer the Estrutura does not have fails](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B01`
+
+- [A layer that differs only in case fails naming both](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B02`
+
+- [Nothing to confront is skipped](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B03`
 
 - [Confronting an artifact that is not a spec skips](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline) `IDCND-B01`
 

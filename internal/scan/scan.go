@@ -1192,6 +1192,10 @@ func extractHeaderLayer(content string) string {
 	return ""
 }
 
+// HeaderLayerOf is the layer a file declares in its `@anchors` header (`layer: screen`), or
+// empty: the header block only, never an example further down the text.
+func HeaderLayerOf(content string) string { return extractHeaderLayer(content) }
+
 // HeaderCodeOf is the identity a file declares in its `@anchors` header (`code: XXXX`), or
 // empty. It is what the migration reads to know which unit a plan, flow or action file is.
 func HeaderCodeOf(content string) string { return extractHeaderCode(content) }

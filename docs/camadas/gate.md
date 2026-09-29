@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:2bc112d57e809aab — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:21b761f06d433287 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 74 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 75 unidades e 0 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## BRCOV — BranchCoverage — the tests take the branches the code has
@@ -141,6 +141,12 @@
 
 
 ## GTENG — GateEngine — which gates reach which node, and what the run concludes
+
+
+
+
+
+## HDLYD — HeaderLayerDeclared — the layer a header declares is one the Estrutura has
 
 
 

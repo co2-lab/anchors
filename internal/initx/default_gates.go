@@ -687,6 +687,11 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 		}
 
 		gates = append(gates, config.Gate{
+			Name: "header-layer-declared", ID: "header-layer-declared", On: []string{"spec", "feature", "code", "test"}, Check: "header-layer-declared",
+			Blocking: config.Bool(false), Measures: "the layer a header declares is one the Estrutura has",
+		})
+
+		gates = append(gates, config.Gate{
 			Name: "examples-match", ID: "examples-match", On: []string{"feature"}, Check: "examples-match",
 			Blocking: config.Bool(false), Measures: "every row of an outline's Examples is run by a test citing the scenario",
 		})

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:c54441b1e9a2aeee — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:554bd4f03057a927 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -284,6 +284,8 @@ abra a página dela em `camadas/`.
 ### [FLSCF — FlagScenarios — the scenarios a feature flag declares are written, complete, cited and tested](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested)
 
 ### [GTENG — GateEngine — which gates reach which node, and what the run concludes](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes)
+
+### [HDLYD — HeaderLayerDeclared — the layer a header declares is one the Estrutura has](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has)
 
 ### [IDCND — IdentityConsistent — a unit's spec identity must match its exposed testID and visual baseline](camadas/gate.md#idcnd--identityconsistent--a-units-spec-identity-must-match-its-exposed-testid-and-visual-baseline)
 

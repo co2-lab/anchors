@@ -793,6 +793,9 @@ func TestHeaderKeysOnlyInsideHeader(t *testing.T) {
 	if got := extractHeaderLayer(body); got != "" {
 		t.Errorf("a body `layer:` line is not the unit layer, got %q", got)
 	}
+	if HeaderLayerOf(body) != "" || HeaderLayerOf("<!-- @anchors\n  layer: screen\n-->\n") != "screen" {
+		t.Errorf("HeaderLayerOf reads the header's layer, and nothing from the body")
+	}
 	if got := needsFor("spec", []byte(body), root, "s.spec.md"); got != nil {
 		t.Errorf("a body `needs:` line is not a spec's needs, got %v", got)
 	}

@@ -670,6 +670,10 @@ gates:
     on: [feature]
     blocking: false
     labels: true
+  - name: header-layer-declared
+    check: header-layer-declared
+    on: [spec, feature, code, test]
+    blocking: false
 
   - name: open-questions-resolved
     blocking: true
