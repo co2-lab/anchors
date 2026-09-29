@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GRBLG
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @GRBLG
@@ -163,3 +163,9 @@ Feature: GraphBuild — projecting the declared structure onto the scanned files
     Given a spec with two dependency rows on the same file
     When the graph is built with the rows in either order
     Then both graphs list the edges in the same order
+
+  @GRBLG-B23 @unit-level
+  Scenario: Signals are filled from another map at the same revision
+    Given a map with one node without signal, one with its own, and one at another revision, and a source map with signals for all three
+    When the signals are filled from the source
+    Then only the first gets the source's signal

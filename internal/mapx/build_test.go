@@ -890,3 +890,22 @@ func TestBuild_edgesAreInATotalOrder(t *testing.T) {
 		}
 	}
 }
+
+func TestFillSignals(t *testing.T) {
+	t.Run("GRBLG-B23: Signals are filled from another map at the same revision", func(t *testing.T) {})
+	src := &Graph{Nodes: []Node{
+		{ID: "a", Rev: "r1", Signal: &TestSignal{Passed: 1}, EvidenceKept: []EvidenceKeep{{Reason: "src"}}},
+		{ID: "b", Rev: "r1", Signal: &TestSignal{Passed: 2}},
+		{ID: "c", Rev: "r0", Signal: &TestSignal{Passed: 3}},
+	}}
+	novo := &Graph{Nodes: []Node{{ID: "a", Rev: "r1"}, {ID: "b", Rev: "r1", Signal: &TestSignal{Passed: 9}}, {ID: "c", Rev: "r1"}, {ID: "d", Rev: "r1"}}}
+	FillSignals(novo, src)
+	if s := novo.Nodes[0]; s.Signal == nil || s.Signal.Passed != 1 || len(s.EvidenceKept) != 1 {
+		t.Errorf("a node without signal gets the source's, got %+v", s)
+	}
+	if novo.Nodes[1].Signal.Passed != 9 || novo.Nodes[2].Signal != nil || novo.Nodes[3].Signal != nil {
+		t.Errorf("an own signal stays, another revision and an unknown file get nothing, got %+v", novo.Nodes)
+	}
+	FillSignals(nil, src)
+	FillSignals(novo, nil)
+}

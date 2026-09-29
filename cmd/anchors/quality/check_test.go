@@ -14,6 +14,8 @@ import (
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gate"
+	"github.com/co2-lab/anchors/internal/gitmeta"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/issue"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/queue"
@@ -2626,5 +2628,99 @@ func TestCheck_indexOutsideARepository(t *testing.T) {
 	}
 	if _, err := runQ(t, newCheckCmd(), "--root", dir, "--all", "--no-record", "--index"); err == nil || !strings.Contains(err.Error(), "read the git index") {
 		t.Errorf("outside a repository --index fails saying so, got %v", err)
+	}
+}
+
+const indexYAML = "version: 5\nlayers:\n  code:\n    pattern: \"src/*.ts\"\n    kind: code\ngates:\n  - name: updated-at-atual\n    check: updated-at-atual\n    on: [code]\n    blocking: true\n"
+
+// indexRepo is a project (at `sub` below the repository's top when `below`) with two files
+// committed in the past, dated as committed, and a map built from them.
+func indexRepo(t *testing.T, below bool) (top, root string, git func(args ...string)) {
+	t.Helper()
+	top = t.TempDir()
+	root = top
+	if below {
+		root = filepath.Join(top, "sub")
+	}
+	git = func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", root, "-c", "user.email=t@t", "-c", "user.name=t"}, args...)...)
+		c.Env = append(os.Environ(), "GIT_AUTHOR_DATE=2026-09-01T12:00:00", "GIT_COMMITTER_DATE=2026-09-01T12:00:00")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Skipf("git %v: %v %s", args, err, out)
+		}
+	}
+	touchWrite(t, root, "anchors.yaml", indexYAML)
+	for _, f := range []string{"src/screen.ts", "src/other.ts"} {
+		touchWrite(t, root, f, "// @anchors\n//   updated_at: 2026-09-01\nexport const x = 1\n")
+	}
+	if err := exec.Command("git", "-C", top, "init", "-q").Run(); err != nil {
+		t.Skip("no git")
+	}
+	git("add", ".")
+	git("commit", "-qm", "base")
+	cfg, err := config.Load(filepath.Join(root, "anchors.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	files, _ := scan.Walk(root, cfg)
+	if err := mapx.Save(mapx.Build(files, cfg, gitmeta.AllCommitDates(root)), filepath.Join(root, mapx.DefaultPath)); err != nil {
+		t.Fatal(err)
+	}
+	return top, root, git
+}
+
+func updatedAtFails(out string) bool {
+	return strings.Contains(out, "✗ [BLOCKS] updated-at-atual")
+}
+
+// The case reported from the reference app, simulated in each state a file can be in: the
+// commit is judged by what it records, whatever the tree holds.
+func TestCheckIndex_updatedAtJudgesTheCommit(t *testing.T) {
+	t.Run("CGPCH-B87: Under --index the date is judged by what the commit records, in every staging state", func(t *testing.T) {})
+	for _, below := range []bool{false, true} {
+		_, root, git := indexRepo(t, below)
+		// another session's edit, not staged
+		touchWrite(t, root, "src/screen.ts", "// @anchors\n//   updated_at: 2026-09-01\nexport const x = 2 // elsewhere\n")
+		touchWrite(t, root, "src/other.ts", "// @anchors\n//   updated_at: "+gitmeta.Today()+"\nexport const x = 3\n")
+		git("add", "src/other.ts")
+
+		_, out := runCheckInChild(t, "--root", root, "--changed", "src/screen.ts", "--no-record")
+		if !updatedAtFails(out) {
+			t.Errorf("below=%v: over the tree, the unstaged edit with an old date fails:\n%s", below, out)
+		}
+		for _, args := range [][]string{
+			{"--changed", "src/screen.ts"},
+			{"--all"},
+		} {
+			_, out := runCheckInChild(t, append([]string{"--root", root, "--index", "--no-record"}, args...)...)
+			if updatedAtFails(out) {
+				t.Errorf("below=%v %v: under --index the unstaged edit is not the commit's:\n%s", below, args, out)
+			}
+		}
+
+		// partly staged: the commit itself changes the file, with the old date
+		touchWrite(t, root, "src/screen.ts", "// @anchors\n//   updated_at: 2026-09-01\nexport const x = 4 // staged\n")
+		git("add", "src/screen.ts")
+		touchWrite(t, root, "src/screen.ts", "// @anchors\n//   updated_at: "+gitmeta.Today()+"\nexport const x = 5 // and more, not staged\n")
+		_, out = runCheckInChild(t, "--root", root, "--index", "--changed", "src/screen.ts", "--no-record")
+		if !updatedAtFails(out) {
+			t.Errorf("below=%v: a staged change with the old date fails, whatever the tree says:\n%s", below, out)
+		}
+	}
+}
+
+func TestCheckIndex_noScopeJudgesTheStaged(t *testing.T) {
+	t.Run("CGPCH-B86: --index with no scope judges the staged files", func(t *testing.T) {})
+	_, root, git := indexRepo(t, false)
+	code, out := runCheckInChild(t, "--root", root, "--index", "--no-record")
+	if code != 0 || !strings.Contains(out, i18n.T("verify.nothing_staged")) {
+		t.Errorf("nothing staged says so, got %d:\n%s", code, out)
+	}
+	touchWrite(t, root, "src/other.ts", "// @anchors\n//   updated_at: 2026-09-01\nexport const x = 9\n")
+	git("add", "src/other.ts")
+	_, out = runCheckInChild(t, "--root", root, "--index", "--no-record")
+	if !updatedAtFails(out) || !strings.Contains(out, "src/other.ts") {
+		t.Errorf("with no scope the staged file is judged:\n%s", out)
 	}
 }

@@ -172,6 +172,8 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | `CGPCH-B80` | The slowest targets are listed slowest first, and the list is left out when no target recorded any time. |
 | `CGPCH-B84` | The check stamps the copy of the map it confronted, and carries only the stamps it changed to the map as it is on disk when it records, under the map's lock: what another process wrote meanwhile — an ingestion's signals, another stamp — is kept. |
 | `CGPCH-B85` | With `--index` the gates read the project's files as the git index has them — what the commit records —, and a file counts as changed only by its staged changes; outside a repository it fails saying the index could not be read. |
+| `CGPCH-B86` | `--index` with neither `--changed` nor `--all` judges the staged files — the same set `verify --staged` hands over —, and with nothing staged says so and succeeds. |
+| `CGPCH-B87` | Under `--index` a file's date is judged by what the commit records, in every state: an edit left unstaged does not make it changed, a staged change with an old date fails whatever the tree holds, with `--changed` or `--all`, and in a project below the repository's top. |
 | `CGPCH-B81` | Times are rounded to what a decision needs: to ten milliseconds from one second up, to a tenth of a millisecond from one millisecond up, and to the microsecond below. |
 
 ## Invariants

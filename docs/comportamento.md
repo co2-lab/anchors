@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:db71c5e6013cf322 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:cd0dc62512bd9c42 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2208,6 +2208,10 @@ teste prova.
 
 - [The index flag reads what the commit records](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B85`
 
+- [--index with no scope judges the staged files](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B86`
+
+- [Under --index the date is judged by what the commit records, in every staging state](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B87`
+
 - [The scenarios of one spec are listed as proven or not](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B01`
 
 - [A code another unit owns, cited in prose, is not a declared scenario](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B02`
@@ -2327,6 +2331,10 @@ teste prova.
 - [An untracked map is left alone](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B04`
 
 - [A map that cannot be written gives the error back](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-E01`
+
+- [A file the commit does not change keeps the proofs HEAD had](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B05`
+
+- [With the tree ahead of the commit, the map on disk stays the tree's](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B06`
 
 - [The quality domain registers exactly its twelve commands](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command) `QLCMQ-B01`
 
@@ -6438,6 +6446,8 @@ teste prova.
 
 - [The edges are in a total order](camadas/mapa.md#grblg-i02--the-edges-are-in-a-total-order) `GRBLG-I02`
 
+- [Signals are filled from another map at the same revision](camadas/mapa.md#grblg-b23--signals-are-filled-from-another-map-at-the-same-revision) `GRBLG-B23`
+
 - [A test that was never ingested has no verdict](camadas/mapa.md#evfra-b01--a-test-that-was-never-ingested-has-no-verdict) `EVFRA-B01`
 
 - [The test's own change expires its evidence](camadas/mapa.md#evfra-b02--the-tests-own-change-expires-its-evidence) `EVFRA-B02`
@@ -6835,6 +6845,8 @@ teste prova.
 - [The staged walk reads the index, not the tree](camadas/scan.md#rpscr-b34--the-staged-walk-reads-the-index-not-the-tree) `RPSCR-B34`
 
 - [The index reader reads what the commit records](camadas/scan.md#rpscr-b35--the-index-reader-reads-what-the-commit-records) `RPSCR-B35`
+
+- [The governed files where the tree and the index part](camadas/scan.md#rpscr-b36--the-governed-files-where-the-tree-and-the-index-part) `RPSCR-B36`
 
 - [Only a marked workflow is owned upstream](camadas/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

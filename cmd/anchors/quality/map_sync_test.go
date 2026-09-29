@@ -81,6 +81,16 @@ func (r syncRepo) change(t *testing.T) []touchDecision {
 	return bumped
 }
 
+// stagedMap is the map the commit will record: the index's.
+func (r syncRepo) stagedMap(t *testing.T) *mapx.Graph {
+	t.Helper()
+	g, err := mapx.LoadBytes([]byte(r.git("show", ":"+mapx.DefaultPath)), "index")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return g
+}
+
 func nodeOf(g *mapx.Graph, id string) *mapx.Node {
 	for i := range g.Nodes {
 		if g.Nodes[i].ID == id {
@@ -136,7 +146,7 @@ func TestSyncMap_aDatedFileKeepsItsProofs(t *testing.T) {
 	if _, err := syncMapForCommit(r.root, r.cfg, bumped); err != nil {
 		t.Fatal(err)
 	}
-	g, _ = mapx.Load(filepath.Join(r.root, mapx.DefaultPath))
+	g = r.stagedMap(t)
 	n := nodeOf(g, "src/pay.spec.md")
 	if n == nil || n.Signal == nil || n.Signal.AtRev != n.Rev || n.Rev != scan.ShortHash([]byte(bumped[0].Content)) {
 		t.Fatalf("the proof moves to the dated revision, got %+v", n)
@@ -150,7 +160,7 @@ func TestSyncMap_theIndexNotTheTree(t *testing.T) {
 	if _, err := syncMapForCommit(r.root, r.cfg, bumped); err != nil {
 		t.Fatal(err)
 	}
-	g, _ := mapx.Load(filepath.Join(r.root, mapx.DefaultPath))
+	g := r.stagedMap(t)
 	if n := nodeOf(g, "src/other.ts"); n == nil || n.Rev != scan.ShortHash([]byte("export const other = 1\n")) {
 		t.Errorf("the unstaged edit is not in the map, got %+v", n)
 	}
@@ -184,5 +194,90 @@ func TestSyncMap_aMapThatCannotBeWritten(t *testing.T) {
 	}
 	if _, err := syncMapForCommit(r.root, r.cfg, bumped); err == nil {
 		t.Fatal("a map that cannot be written gives the error back")
+	}
+}
+
+func TestSyncMap_untouchedFilesKeepHeadsProofs(t *testing.T) {
+	t.Run("MPSYN-B05: A file the commit does not change keeps the proofs HEAD had", func(t *testing.T) {})
+	r := newSyncRepo(t, true)
+	mapPath := filepath.Join(r.root, mapx.DefaultPath)
+	// another session edits the proven spec and does not stage it; a map build drops its proof
+	touchWrite(t, r.root, "src/pay.spec.md", "<!-- @anchors\n  code: PAYMX\n  updated_at: 2026-09-01\n-->\n# Pay\n\n### PAYMX-B01 — charges, edited elsewhere\n")
+	old, _ := mapx.Load(mapPath)
+	files, _ := scan.Walk(r.root, r.cfg)
+	g := mapx.Build(files, r.cfg, gitmeta.AllCommitDates(r.root))
+	mapx.PreserveStamps(g, old)
+	if n := nodeOf(g, "src/pay.spec.md"); n.Signal != nil {
+		t.Fatal("the rebuild must have dropped the edited spec's proof")
+	}
+	if err := mapx.Save(g, mapPath); err != nil {
+		t.Fatal(err)
+	}
+	// this commit only carries other.ts
+	touchWrite(t, r.root, "src/other.ts", "export const other = 3\n")
+	r.git("add", "src/other.ts")
+	if msg, err := syncMapForCommit(r.root, r.cfg, nil); err != nil || !strings.Contains(msg, "staged apart") {
+		t.Fatalf("the tree is ahead: the commit's map is staged apart, got %q %v", msg, err)
+	}
+	if n := nodeOf(r.stagedMap(t), "src/pay.spec.md"); n == nil || n.Signal == nil || n.Signal.ProvenCodes[0] != "PAYMX-B01" {
+		t.Errorf("the committed map keeps the spec's proof from HEAD, got %+v", n)
+	}
+}
+
+func TestSyncMap_theTreeKeepsItsMap(t *testing.T) {
+	t.Run("MPSYN-B06: With the tree ahead of the commit, the map on disk stays the tree's", func(t *testing.T) {})
+	r := newSyncRepo(t, true)
+	mapPath := filepath.Join(r.root, mapx.DefaultPath)
+	g, _ := mapx.Load(mapPath)
+	nodeOf(g, "src/other.ts").Signal = &mapx.TestSignal{TotalLines: 1, CoveredLines: 1, AtRev: "tree-rev"}
+	if err := mapx.Save(g, mapPath); err != nil {
+		t.Fatal(err)
+	}
+	bumped := r.change(t)
+	if _, err := syncMapForCommit(r.root, r.cfg, bumped); err != nil {
+		t.Fatal(err)
+	}
+	disk, _ := mapx.Load(mapPath)
+	if n := nodeOf(disk, "src/other.ts"); n.Signal == nil || n.Signal.AtRev != "tree-rev" {
+		t.Errorf("the map on disk keeps what was measured of the tree, got %+v", n.Signal)
+	}
+	if n := nodeOf(r.stagedMap(t), "src/pay.spec.md"); n == nil || n.Rev != scan.ShortHash([]byte(bumped[0].Content)) {
+		t.Errorf("the staged map is the commit's, got %+v", n)
+	}
+
+	clean := newSyncRepo(t, true)
+	touchWrite(t, clean.root, "src/pay.spec.md", "<!-- @anchors\n  code: PAYMX\n  updated_at: 2026-09-01\n-->\n# Pay\n\n### PAYMX-B01 — charges clean\n")
+	clean.git("add", "src/pay.spec.md")
+	if msg, err := syncMapForCommit(clean.root, clean.cfg, nil); err != nil || strings.Contains(msg, "apart") {
+		t.Fatalf("a clean tree writes the map as usual, got %q %v", msg, err)
+	}
+	onDisk, _ := os.ReadFile(filepath.Join(clean.root, mapx.DefaultPath))
+	if staged := clean.git("show", ":"+mapx.DefaultPath); staged != string(onDisk) {
+		t.Error("with a clean tree the map on disk is the one staged")
+	}
+}
+
+func TestSyncMap_stagedApartBelowTheTop(t *testing.T) {
+	t.Run("MPSYN-B06: With the tree ahead of the commit, the map on disk stays the tree's", func(t *testing.T) {})
+	top := t.TempDir()
+	git := func(args ...string) string {
+		t.Helper()
+		out, err := exec.Command("git", append([]string{"-C", top, "-c", "user.email=t@t", "-c", "user.name=t"}, args...)...).CombinedOutput()
+		if err != nil {
+			t.Skipf("git %v: %v %s", args, err, out)
+		}
+		return string(out)
+	}
+	git("init", "-q")
+	git("commit", "-q", "--allow-empty", "-m", "base")
+	g := &mapx.Graph{}
+	if err := os.MkdirAll(filepath.Join(top, "app"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := stageMapBlob(filepath.Join(top, "app"), g); err != nil {
+		t.Fatal(err)
+	}
+	if staged := git("ls-files", "--cached"); strings.TrimSpace(staged) != "app/"+mapx.DefaultPath {
+		t.Errorf("the map is staged in the project's own directory, got %q", staged)
 	}
 }

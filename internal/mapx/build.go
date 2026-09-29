@@ -729,6 +729,32 @@ func preservarSinais(novo, antigo *Graph) {
 	}
 }
 
+// FillSignals gives each node of `novo` that has no signal the one `src` holds for the same
+// file at the same revision, with its declarations of kept evidence. It never replaces a
+// signal `novo` already has: it fills what another source could not carry.
+func FillSignals(novo, src *Graph) {
+	if novo == nil || src == nil {
+		return
+	}
+	byID := make(map[string]*Node, len(src.Nodes))
+	for i := range src.Nodes {
+		byID[src.Nodes[i].ID] = &src.Nodes[i]
+	}
+	for i := range novo.Nodes {
+		n := &novo.Nodes[i]
+		o, ok := byID[n.ID]
+		if !ok || o.Rev != n.Rev {
+			continue
+		}
+		if n.Signal == nil && o.Signal != nil {
+			n.Signal = o.Signal
+		}
+		if len(n.EvidenceKept) == 0 && len(o.EvidenceKept) > 0 {
+			n.EvidenceKept = o.EvidenceKept
+		}
+	}
+}
+
 // expandePadrao devolve os caminhos do mapa que casam o padrão.
 //
 // Sem curinga, é uma busca exata — o caminho existe ou não. Com `*`, casa vários: a spec

@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -978,5 +979,35 @@ func TestIndexReader(t *testing.T) {
 	}
 	if _, err := IndexReader(t.TempDir()); err == nil {
 		t.Error("outside a repository there is no index to read")
+	}
+}
+
+func TestGovernedTreeChanges(t *testing.T) {
+	t.Run("RPSCR-B36: The governed files where the tree and the index part", func(t *testing.T) {})
+	root := t.TempDir()
+	git := func(args ...string) {
+		t.Helper()
+		if out, err := exec.Command("git", append([]string{"-C", root, "-c", "user.email=t@t", "-c", "user.name=t"}, args...)...).CombinedOutput(); err != nil {
+			t.Skipf("git %v: %v %s", args, err, out)
+		}
+	}
+	git("init", "-q")
+	must(t, writeDeep(filepath.Join(root, "a.spec.md"), "# A\n"))
+	must(t, writeDeep(filepath.Join(root, "b.spec.md"), "# B\n"))
+	git("add", ".")
+	git("commit", "-qm", "base")
+	must(t, writeDeep(filepath.Join(root, "a.spec.md"), "# A edited\n"))
+	must(t, writeDeep(filepath.Join(root, "b.spec.md"), "# B staged\n"))
+	git("add", "b.spec.md")
+	must(t, writeDeep(filepath.Join(root, "c.spec.md"), "# C\n"))
+	must(t, writeDeep(filepath.Join(root, "notes.txt"), "x\n"))
+	cfg := &config.Config{Layers: map[string]config.Layer{"spec": {Pattern: "*.spec.md", Kind: "spec"}}}
+	got, err := GovernedTreeChanges(root, cfg)
+	sort.Strings(got)
+	if err != nil || strings.Join(got, ",") != "a.spec.md,c.spec.md" {
+		t.Errorf("want a.spec.md and c.spec.md, got %v %v", got, err)
+	}
+	if _, err := GovernedTreeChanges(t.TempDir(), cfg); err == nil {
+		t.Error("outside a repository the tree cannot be compared")
 	}
 }

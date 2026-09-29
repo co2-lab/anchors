@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPSYN
-  updated_at: 2026-09-28
+  updated_at: 2026-09-29
   layer: comando
 -->
 # MapSyncForCommit — the commit carries the map a build of the commit makes
@@ -30,6 +30,8 @@ stages it.
 | `MPSYN-B01` | After the commit, a full `map build` of the committed files makes exactly the map the hook committed. |
 | `MPSYN-B02` | A file the hook only dated keeps what was measured at its revision — its proofs survive. |
 | `MPSYN-B03` | The map is built from the index: an unstaged edit and an untracked file do not enter it. |
+| `MPSYN-B05` | A file the commit does not change keeps, in the committed map, what HEAD's map measured of it at that revision, when the map on disk no longer holds it — another session's unstaged edit made the map on disk speak of other content. (`FillSignals`) |
+| `MPSYN-B06` | When governed files of the tree differ from the index — unstaged edits, untracked files —, the commit's map goes straight into the index and the map on disk stays the tree's, with what was measured of those edits; with a tree that matches the index, the map on disk is the one staged. |
 | `MPSYN-B04` | A map git does not track, or no map, is left alone and nothing is staged. |
 
 ## Errors

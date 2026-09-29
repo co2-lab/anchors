@@ -250,3 +250,9 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a committed file edited and not staged, a new staged file, an untracked one and an untouched one
     When each is read through the index reader
     Then the edited one reads as committed, the staged one as staged, the untracked one is absent, and the untouched one reads from the tree
+
+  @RPSCR-B36 @unit-level
+  Scenario: The governed files where the tree and the index part
+    Given a governed file edited and not staged, one staged, an untracked governed file and an untracked file of no layer
+    When the tree's changes are listed
+    Then the unstaged and the untracked governed files are listed, and nothing else

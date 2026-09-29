@@ -94,6 +94,7 @@ of the nodes whose content did not change.
 | `GRBLG-B20` | A rebuild (`PreserveStamps`) carries over the stamp and the judgments of every relation that survived with the same type, source and target. |
 | `GRBLG-B21` | A rebuild carries over a node's signal, and its declarations of kept evidence, only when the node's revision did not change. |
 | `GRBLG-B22` | A support file becomes a node marked as support, keeping its kind and its edges like any other node. |
+| `GRBLG-B23` | Filling signals from another map gives each node that has none the signal that map holds for the same file at the same revision, with its declarations of kept evidence; a node that has a signal keeps it, and a file at another revision gets nothing. (`FillSignals`) |
 
 ## Invariants
 

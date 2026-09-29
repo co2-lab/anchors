@@ -68,6 +68,20 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 				defer gate.SetFileSource(read)()
 				defer gate.SetChangedSource(gitmeta.StagedChanges)()
 			}
+			// `--index` with no scope judges the commit being made: the staged files, the
+			// same set `verify --staged` hands over. Without it the check asked for a scope
+			// and judged nothing, which read as a clean result beside a hook that blocked.
+			if fromIndex && !all && len(changed) == 0 {
+				staged, err := stagedFiles(absRoot)
+				if err != nil {
+					return err
+				}
+				if len(staged) == 0 {
+					fmt.Println(i18n.T("verify.nothing_staged"))
+					return nil
+				}
+				changed = staged
+			}
 			// No modo github o achado de gate vira CARD, não arquivo: o `issues/` é a fila do
 			// modo local (mover pasta à mão), e manter os dois faz o board esconder o que os
 			// gates encontraram.

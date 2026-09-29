@@ -1300,3 +1300,24 @@ func IndexReader(root string) (func(rel string) ([]byte, error), error) {
 		return os.ReadFile(filepath.Join(root, rel))
 	}, nil
 }
+
+// GovernedTreeChanges lists the governed files where the tree and the index part: tracked
+// files with unstaged changes, and untracked ones. The commit hook reads it to know whether
+// the map of the commit is also the map of the tree.
+func GovernedTreeChanges(root string, cfg *config.Config) ([]string, error) {
+	untracked, differ, err := stagedDiffs(root)
+	if err != nil {
+		return nil, err
+	}
+	ig := LoadIgnoreFor(root, cfg)
+	var out []string
+	for _, rel := range append(untracked, differ...) {
+		if ig.SkipFile(rel) || IsProgressFile(rel) || ignoredDirIn(ig, rel) {
+			continue
+		}
+		if layer, _ := classify(rel, cfg); layer != "" {
+			out = append(out, rel)
+		}
+	}
+	return out, nil
+}

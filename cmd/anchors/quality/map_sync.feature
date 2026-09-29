@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MPSYN
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @MPSYN
@@ -36,3 +36,15 @@ Feature: MapSyncForCommit — the commit carries the map a build of the commit m
     Given a tracked map whose path has become a directory
     When the map is synced
     Then the error comes back and nothing is staged
+
+  @MPSYN-B05 @unit-level
+  Scenario: A file the commit does not change keeps the proofs HEAD had
+    Given a proven spec edited and not staged by another session, and a map build that dropped its proof
+    When a commit of another file is synced
+    Then the committed map carries the spec's proof from HEAD
+
+  @MPSYN-B06 @unit-level
+  Scenario: With the tree ahead of the commit, the map on disk stays the tree's
+    Given a tree with unstaged edits and a measurement of one of them in the map on disk
+    When the commit is synced
+    Then the staged map is the commit's, the map on disk keeps the measurement, and with a clean tree both are the same

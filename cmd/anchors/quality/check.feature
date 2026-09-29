@@ -582,3 +582,15 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a project outside a repository
     When the check runs with --index
     Then it fails saying the git index could not be read
+
+  @CGPCH-B86 @unit-level
+  Scenario: --index with no scope judges the staged files
+    Given a project with nothing staged, then with one file staged with an old date
+    When the check runs with --index and no scope
+    Then it first says nothing is staged, then judges the staged file
+
+  @CGPCH-B87 @unit-level
+  Scenario: Under --index the date is judged by what the commit records, in every staging state
+    Given a file edited and not staged, and later the same file partly staged with an old date, at the repository's top and below it
+    When the check runs over the tree and with --index, by --changed and by --all
+    Then over the tree the unstaged edit fails, with --index it does not, and the staged change with the old date fails
