@@ -6,10 +6,12 @@ package scan
 
 import (
 	"bytes"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"hash"
 	"io/fs"
 	"math"
 	"os"
@@ -1273,32 +1275,58 @@ func stagedDiffs(root string) (untracked, differ []string, err error) {
 // track does not exist, and every other file is read from the tree, where it is the same.
 // It is what the commit's gates read, so another session's unstaged edit to a spec the
 // commit does not carry cannot bar it.
+//
+// The tree is confronted with the index at each read, not once at the start: another
+// session keeps editing, moving and deleting files while the gates run, and a file listed
+// as unchanged a second ago may be gone by the time a gate reads it. The tree's copy is
+// used only when its blob hash is the index's; otherwise the index's blob is read.
 func IndexReader(root string) (func(rel string) ([]byte, error), error) {
-	untracked, differ, err := stagedDiffs(root)
+	out, err := exec.Command("git", "-C", root, "ls-files", "--stage", "-z").Output()
 	if err != nil {
 		return nil, err
 	}
-	absent, staged := map[string]bool{}, map[string]bool{}
-	for _, p := range untracked {
-		absent[p] = true
-	}
-	for _, p := range differ {
-		staged[p] = true
+	blobs := map[string]string{}
+	for _, entry := range strings.Split(string(out), "\x00") {
+		meta, path, ok := strings.Cut(entry, "\t")
+		if !ok {
+			continue
+		}
+		if f := strings.Fields(meta); len(f) == 3 && f[2] == "0" {
+			blobs[filepath.ToSlash(path)] = f[1]
+		}
 	}
 	return func(rel string) ([]byte, error) {
 		rel = filepath.ToSlash(filepath.Clean(rel))
-		switch {
-		case absent[rel]:
+		id, ok := blobs[rel]
+		if !ok {
 			return nil, &os.PathError{Op: "read", Path: rel, Err: os.ErrNotExist}
-		case staged[rel]:
-			b, err := exec.Command("git", "-C", root, "show", ":./"+rel).Output()
-			if err != nil {
-				return nil, &os.PathError{Op: "read", Path: rel, Err: os.ErrNotExist}
-			}
+		}
+		if b, err := os.ReadFile(filepath.Join(root, rel)); err == nil && blobID(b, len(id)) == id {
 			return b, nil
 		}
-		return os.ReadFile(filepath.Join(root, rel))
+		b, err := exec.Command("git", "-C", root, "cat-file", "blob", id).Output()
+		if err != nil {
+			return nil, &os.PathError{Op: "read", Path: rel, Err: os.ErrNotExist}
+		}
+		return b, nil
 	}, nil
+}
+
+// blobID is git's object id of a blob with this content, in the repository's hash: SHA-1
+// for a 40-digit id, SHA-256 for a 64-digit one. Another length has no id this can match.
+func blobID(content []byte, digits int) string {
+	var h hash.Hash
+	switch digits {
+	case 40:
+		h = sha1.New()
+	case 64:
+		h = sha256.New()
+	default:
+		return ""
+	}
+	fmt.Fprintf(h, "blob %d\x00", len(content))
+	h.Write(content)
+	return hex.EncodeToString(h.Sum(nil))
 }
 
 // GovernedTreeChanges lists the governed files where the tree and the index part: tracked

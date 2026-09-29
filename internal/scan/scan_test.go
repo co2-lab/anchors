@@ -985,6 +985,40 @@ func TestIndexReader(t *testing.T) {
 	}
 }
 
+func TestIndexReader_readsTheTreeAtEachRead(t *testing.T) {
+	t.Run("RPSCR-B37: The index reader confronts the tree at each read", func(t *testing.T) {})
+	root := t.TempDir()
+	git := func(args ...string) {
+		t.Helper()
+		if out, err := exec.Command("git", append([]string{"-C", root, "-c", "user.email=t@t", "-c", "user.name=t"}, args...)...).CombinedOutput(); err != nil {
+			t.Skipf("git %v: %v %s", args, err, out)
+		}
+	}
+	git("init", "-q")
+	must(t, writeDeep(filepath.Join(root, "d", "moved.ts"), "moved\n"))
+	must(t, writeDeep(filepath.Join(root, "edited.ts"), "committed\n"))
+	git("add", ".")
+	git("commit", "-qm", "base")
+	read, err := IndexReader(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// another session, while the gates run
+	must(t, os.Remove(filepath.Join(root, "d", "moved.ts")))
+	must(t, writeDeep(filepath.Join(root, "edited.ts"), "half done\n"))
+	for rel, want := range map[string]string{"d/moved.ts": "moved\n", "edited.ts": "committed\n"} {
+		if b, err := read(rel); err != nil || string(b) != want {
+			t.Errorf("%s reads %q as the index has it, got %q %v", rel, want, b, err)
+		}
+	}
+	if blobID([]byte("x"), 12) != "" {
+		t.Error("an id of no known hash matches nothing")
+	}
+	if got := blobID([]byte("x"), 64); len(got) != 64 {
+		t.Errorf("a SHA-256 repository's id has 64 digits, got %q", got)
+	}
+}
+
 func TestGovernedTreeChanges(t *testing.T) {
 	t.Run("RPSCR-B36: The governed files where the tree and the index part", func(t *testing.T) {})
 	root := t.TempDir()

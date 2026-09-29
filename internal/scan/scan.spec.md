@@ -109,6 +109,7 @@ heuristic decided.
 | `RPSCR-B34` | The staged walk reads the governed files as the git index has them: a file with unstaged changes as it is staged, and no untracked file. (`WalkStaged`) |
 | `RPSCR-B35` | The index reader reads a file as the commit being made records it: a file with unstaged changes as staged, a file git does not track as absent, any other from the tree. (`IndexReader`) |
 | `RPSCR-B36` | The governed files where the tree and the index part are listed: tracked files with unstaged changes and untracked ones, of a governed layer and not ignored. (`GovernedTreeChanges`) |
+| `RPSCR-B37` | The index reader confronts the tree with the index at each read: a file deleted or edited in the tree after the reader was made still reads as the index has it. (`IndexReader`) |
 
 ## Invariants
 

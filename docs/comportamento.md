@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b35ddc08a3958a05 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e3386a8873dce880 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -6869,6 +6869,8 @@ teste prova.
 - [The index reader reads what the commit records](camadas/scan.md#rpscr-b35--the-index-reader-reads-what-the-commit-records) `RPSCR-B35`
 
 - [The governed files where the tree and the index part](camadas/scan.md#rpscr-b36--the-governed-files-where-the-tree-and-the-index-part) `RPSCR-B36`
+
+- [The index reader confronts the tree at each read](camadas/scan.md#rpscr-b37--the-index-reader-confronts-the-tree-at-each-read) `RPSCR-B37`
 
 - [Only a marked workflow is owned upstream](camadas/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 
