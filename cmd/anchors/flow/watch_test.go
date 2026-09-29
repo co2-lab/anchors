@@ -4,9 +4,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
-	"syscall"
 	"testing"
 	"time"
 
@@ -269,6 +269,9 @@ func TestAddTreeToWatcherAndFilesBornIn(t *testing.T) {
 // one in a folder born after the start; the signal ends the loop and cleans the state.
 func TestRunWatchLoop_queuesChangesUntilSignalled(t *testing.T) {
 	t.Run("WTCHA-B07: Files created after the start become tasks until the signal", func(t *testing.T) {})
+	if runtime.GOOS == "windows" {
+		t.Skip("the loop ends on SIGTERM, and a process cannot send it to itself on Windows")
+	}
 	root := t.TempDir()
 	cfg := watchCfg()
 	writeFile(t, root, "src/keep.ts", "x\n")
@@ -290,7 +293,7 @@ func TestRunWatchLoop_queuesChangesUntilSignalled(t *testing.T) {
 		waitFor(t, func() bool { return len(queued(t, root)) >= 2 })
 
 		// the loop owns SIGTERM now; the signal ends it
-		if err := syscall.Kill(os.Getpid(), syscall.SIGTERM); err != nil {
+		if err := signalSelf(); err != nil {
 			t.Fatal(err)
 		}
 		select {
@@ -348,7 +351,7 @@ func TestRunWatchLoop_handlesEveryChangeInTheLoop(t *testing.T) {
 		time.Sleep(100 * time.Millisecond) // fsnotify registration
 		writeFile(t, root, "src/pricing.ts", "export const p = 1\n")
 		time.Sleep(100 * time.Millisecond) // the event is received; its 400ms window is open
-		if err := syscall.Kill(os.Getpid(), syscall.SIGTERM); err != nil {
+		if err := signalSelf(); err != nil {
 			t.Fatal(err)
 		}
 		select {

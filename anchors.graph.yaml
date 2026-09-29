@@ -1882,6 +1882,20 @@ nodes:
       layer: teste
       tags:
         - test
+    - id: cmd/anchors/flow/signal_self_unix_test.go
+      kind: test
+      rev: 2196582a4343
+      updated_at: "2026-09-29"
+      layer: teste
+      tags:
+        - test
+    - id: cmd/anchors/flow/signal_self_windows_test.go
+      kind: test
+      rev: 2754b3eec8e6
+      updated_at: "2026-09-29"
+      layer: teste
+      tags:
+        - test
     - id: cmd/anchors/flow/task_status.feature
       kind: feature
       rev: a9ba1113f37c
@@ -2297,8 +2311,8 @@ nodes:
         - test
     - id: cmd/anchors/flow/watch_test.go
       kind: test
-      rev: 1eaac1cdd8f6
-      updated_at: "2026-09-28"
+      rev: 89faa028de46
+      updated_at: "2026-09-29"
       code: WTCHA
       layer: teste
       tags:

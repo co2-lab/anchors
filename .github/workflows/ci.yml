@@ -92,6 +92,12 @@ jobs:
       - name: Vet
         run: go vet ./...
 
+      # Os TESTES também compilam para Windows? O binário compilava e os testes não
+      # (`syscall.Kill` num teste do watcher) — e ninguém via, porque nada rodava lá. É o
+      # guarda barato: não roda nada, só compila, e pega o erro antes do job de Windows.
+      - name: Os testes compilam para Windows
+        run: GOOS=windows go vet ./...
+
       # `gofmt -l` lista os arquivos fora do padrão e sai com 0 — ele NÃO falha sozinho.
       # Um `run: gofmt -l .` passaria sempre, verde, sem conferir nada: é a família de
       # defeito que este projeto já mediu três vezes (check verde que não fez o trabalho).
@@ -202,3 +208,38 @@ jobs:
             echo "issues registradas por este check:"
             find issues -type f | sed "s/^/  /"
           fi
+
+  # O ANCHORS EM CADA SISTEMA QUE ELE PUBLICA.
+  #
+  # O release gera binários para Linux, macOS e Windows (`.goreleaser.yaml`), e até aqui
+  # só o Linux era testado: os outros dois saíam sem que nada os tivesse executado. O
+  # levantamento de portabilidade achou o que isso escondia — no Windows os testes nem
+  # compilavam, fins de linha CRLF faziam o `migrate` duplicar o `version:`, e o watcher
+  # gravava caminhos com `\`.
+  #
+  # INFORMATIVO por enquanto (`continue-on-error`), pela mesma regra dos gates: nasce
+  # medindo, e passa a barrar quando estiver limpo. Barrar agora deixaria todo PR vermelho
+  # por uma dívida que ele não criou — e um check sempre vermelho ensina a ignorá-lo.
+  portability:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache-dependency-path: go.sum
+      - name: Compila
+        run: go build ./...
+      - name: Vet
+        run: go vet ./...
+      # Sem `-race` e sem `tee /tmp`: o `-race` exige cgo no Windows, e `/tmp` não existe
+      # lá. A pergunta deste job é "roda neste sistema?", não "tem corrida?" — essa o job
+      # do Linux já responde.
+      - name: Testes
+        run: go test ./...
+
