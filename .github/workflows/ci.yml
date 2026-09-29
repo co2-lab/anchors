@@ -217,16 +217,17 @@ jobs:
   # compilavam, fins de linha CRLF faziam o `migrate` duplicar o `version:`, e o watcher
   # gravava caminhos com `\`.
   #
-  # INFORMATIVO por enquanto (`continue-on-error`), pela mesma regra dos gates: nasce
-  # medindo, e passa a barrar quando estiver limpo. Barrar agora deixaria todo PR vermelho
-  # por uma dívida que ele não criou — e um check sempre vermelho ensina a ignorá-lo.
+  # BLOQUEANTE desde que ficou limpo. Nasceu informativo, pela mesma regra dos gates: a
+  # primeira rodada no Windows reprovou 176 testes e travou um pacote por dez minutos, e
+  # barrar ali deixaria todo PR vermelho por uma dívida que ele não criou. Cinco rodadas
+  # depois, os três sistemas passam — e daqui em diante um PR que quebra o Windows ou o
+  # macOS não passa.
   portability:
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest, windows-latest]
     runs-on: ${{ matrix.os }}
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
