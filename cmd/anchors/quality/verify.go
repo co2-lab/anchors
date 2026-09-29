@@ -266,4 +266,3 @@ func subArgs(sub []string, staged bool) []string {
 	}
 	return sub
 }
-

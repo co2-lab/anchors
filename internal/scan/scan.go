@@ -1300,4 +1300,3 @@ func IndexReader(root string) (func(rel string) ([]byte, error), error) {
 		return os.ReadFile(filepath.Join(root, rel))
 	}, nil
 }
-
