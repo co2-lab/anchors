@@ -2,6 +2,7 @@ package doct
 
 import (
 	"fmt"
+	"github.com/co2-lab/anchors/internal/config"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -119,7 +120,7 @@ func TestSpecs_layerComesFromTheSpecHeader(t *testing.T) {
 	if err != nil || len(got) != 1 {
 		t.Fatalf("filtering by `infra` (from the header) found %d (%v), want 1", len(got), err)
 	}
-	if _, err := c.fnSpecs("layer=spec"); err == nil {
+	if got, _ := c.fnSpecs("layer=spec"); len(got) != 0 {
 		t.Error("filtering by the MAP's layer matched something — the header's layer is the one that counts")
 	}
 }
@@ -576,4 +577,49 @@ func TestStale_unhashedMarkerComparesTheBody(t *testing.T) {
 			t.Errorf("an unhashed page with another body is stale, got %v", s)
 		}
 	})
+}
+
+// A container may run layers that have files and no spec yet. The build used to abort on
+// them, and leaving them out of the container made the diagram lie by omission.
+func TestBuild_layersWithoutSpec(t *testing.T) {
+	t.Run("DTCDC-B18: A layer with files and no spec is said, not an error", func(t *testing.T) {})
+	root, g := projetoDeTeste(t, map[string]string{"pkg/GoLive.spec.md": specDeExemplo})
+	g.Nodes = append(g.Nodes, mapx.Node{ID: "web/a.tsx", Kind: mapx.KindCode, Layer: "presentation"},
+		mapx.Node{ID: "web/b.tsx", Kind: mapx.KindCode, Layer: "presentation"})
+	c, err := New(root, g)
+	if err != nil {
+		t.Fatal(err)
+	}
+	c.Config = &config.Config{
+		Layers: map[string]config.Layer{"dao": {}},
+		ContainersDecl: []config.Container{
+			{Name: "web", Layers: []string{"presentation", "dao"}},
+			{Name: "api", Layers: []string{"infra", "presentation"}},
+		},
+	}
+	if got, err := c.fnSpecs("layer=dao"); err != nil || len(got) != 0 {
+		t.Errorf("a declared layer with no spec selects nothing, got %v (%v)", got, err)
+	}
+	if got, err := c.fnSpecs("layer=presentation"); err != nil || len(got) != 0 {
+		t.Errorf("a layer with files in the map selects nothing, got %v (%v)", got, err)
+	}
+	if n := c.fnLayerFiles("presentation"); n != 2 {
+		t.Errorf("presentation has 2 files, got %d", n)
+	}
+	if (&Compiler{}).fnLayerFiles("x") != 0 {
+		t.Error("no map, no file")
+	}
+	c.InitScaffolds(false)
+	if _, err := c.Build(false); err != nil {
+		t.Fatalf("the build must not abort on a layer with no spec: %v", err)
+	}
+	b, _ := readFile(c.Root, "arquitetura.md")
+	for _, want := range []string{
+		"- **presentation** — 2 arquivo(s)", "- **dao** — 0 arquivo(s)", "_Nenhuma camada deste contêiner tem spec ainda:_",
+		"_Nenhuma spec nesta camada — 2 arquivo(s) regido(s)._", `presentation_nospec["2 arquivo(s), nenhuma spec"]`,
+	} {
+		if !strings.Contains(b, want) {
+			t.Errorf("the page lacks %q:\n%s", want, b)
+		}
+	}
 }

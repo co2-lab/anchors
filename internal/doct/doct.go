@@ -254,6 +254,7 @@ func (c *Compiler) Funcs() template.FuncMap {
 		"containers":         c.fnContainers,
 		"internalContainers": c.fnInternalContainers,
 		"orphanLayers":       c.fnOrphanLayers,
+		"layerFiles":         c.fnLayerFiles,
 		"mermaidID":          fnMermaidID,
 	}
 }
@@ -276,6 +277,12 @@ func (c *Compiler) Funcs() template.FuncMap {
 //	specs "screen"         sem o `=`           → Cut falha
 //
 // A terceira é a mais provável, porque é como se escreveria se a API fosse por campo.
+//
+// A camada que EXISTE e não tem spec não é nenhuma das três: a Estrutura a declara (ou o
+// mapa tem arquivos nela), e ela devolve vazio. Errar ali abortava o `docs build` de um
+// projeto que declarou um contêiner com camadas regidas ainda sem spec, e o contorno à mão
+// — tirar a camada do contêiner — fazia o diagrama mentir por omissão. O template diz que
+// ela não tem spec (`layerFiles` conta o que ela tem).
 func (c *Compiler) fnSpecs(filtro ...string) ([]Spec, error) {
 	if len(filtro) == 0 || strings.TrimSpace(filtro[0]) == "" {
 		c.markConsumed(c.specs)
@@ -295,6 +302,9 @@ func (c *Compiler) fnSpecs(filtro ...string) ([]Spec, error) {
 			}
 		}
 		if len(out) == 0 {
+			if c.declaredLayer(valor) {
+				return nil, nil
+			}
 			return nil, fmt.Errorf("no spec in layer %q — existing: %s",
 				valor, strings.Join(c.fnLayers(), ", "))
 		}
@@ -362,6 +372,32 @@ func (c *Compiler) Uncovered() ([]string, error) {
 }
 
 // fnLayers devolve as camadas que TÊM spec, ordenadas.
+// declaredLayer says whether the layer exists in the project even with no spec: the
+// Estrutura declares it, or the map has a file in it.
+func (c *Compiler) declaredLayer(layer string) bool {
+	if c.Config != nil {
+		if _, ok := c.Config.Layers[layer]; ok {
+			return true
+		}
+	}
+	return c.fnLayerFiles(layer) > 0
+}
+
+// fnLayerFiles counts the map's files in a layer — what a layer with no spec still has, so
+// the page can say it instead of leaving the layer out.
+func (c *Compiler) fnLayerFiles(layer string) int {
+	if c.Graph == nil {
+		return 0
+	}
+	n := 0
+	for _, node := range c.Graph.Nodes {
+		if node.Layer == layer {
+			n++
+		}
+	}
+	return n
+}
+
 func (c *Compiler) fnLayers() []string {
 	visto := map[string]bool{}
 	var out []string

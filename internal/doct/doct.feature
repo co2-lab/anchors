@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DTCDC
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @DTCDC
@@ -163,3 +163,9 @@ Feature: DocTemplateCompiler — compiles documentation pages from templates tha
     Given a project without the code NAOEX
     When a template asks for the spec NAOEX
     Then an error names NAOEX
+
+  @DTCDC-B18 @unit-level
+  Scenario: A layer with files and no spec is said, not an error
+    Given a container whose layers are one declared in the Estrutura and one with a file in the map, neither with a spec
+    When the architecture page is built
+    Then the build passes and each layer shows its files and that it has no spec

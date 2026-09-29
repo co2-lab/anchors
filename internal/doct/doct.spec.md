@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DTCDC
-  updated_at: 2026-09-26
+  updated_at: 2026-09-28
   layer: apoio
 -->
 # DocTemplateCompiler — compiles documentation pages from templates that reference the specs' content
@@ -61,6 +61,7 @@ reaches at all.
 | `DTCDC-B13` | A spec header's `updated_at:` line, within the first ten lines, is not part of the stamp; the same line further down is content and is. |
 | `DTCDC-B14` | A page without the generated marker is never reported stale. |
 | `DTCDC-B17` | A page whose generated marker carries no stamp (compiled by an earlier version) is compared by its body below the marker line: stale when the body differs from today's compilation, fresh when it is the same. |
+| `DTCDC-B18` | A layer the project has — the Estrutura declares it, or the map has a file in it — and no spec declares selects nothing instead of failing, and `layerFiles` counts its files in the map, so the architecture page says the layer has no spec instead of the build aborting; a container whose layers have no spec lists them with their files. |
 
 ### Coverage and markers
 
@@ -75,7 +76,7 @@ reaches at all.
 | --- | --- | --- | --- |
 | the map | the spec nodes of a built map | a spec node whose file is not on disk | this unit: construction fails, see `DTCDC-E04` |
 | the templates | Go text templates under `doct/` ending in `.tmpl` | a template that does not parse or execute | this unit: the build fails, see `DTCDC-E03` |
-| a selection filter | empty, `layer=<name>` or `code=<code>` | no `=`, another field, or a value that matches nothing | this unit: the selection fails, see `DTCDC-E01` |
+| a selection filter | empty, `layer=<name>` or `code=<code>` | no `=`, another field, or a value that matches nothing and is no layer of the project | this unit: the selection fails, see `DTCDC-E01` |
 | the compiled folder | pages under `docs/`, generated or handwritten | — | this unit: handwritten pages are skipped |
 
 ## Invariants
@@ -95,7 +96,7 @@ reaches at all.
 
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
-| `DTCDC-E01` | A selection filter has no `=`, names a field other than `layer` or `code`, or matches no spec. | An error saying how to write the filter, the existing layers, or the missing code. | A filter that matched nothing would compile a page missing exactly the section someone wanted, and nobody looks for what they do not know is missing. |
+| `DTCDC-E01` | A selection filter has no `=`, names a field other than `layer` or `code`, or matches no spec and names no layer of the project. | An error saying how to write the filter, the existing layers, or the missing code. | A filter that matched nothing would compile a page missing exactly the section someone wanted, and nobody looks for what they do not know is missing. |
 | `DTCDC-E02` | A template's selection fails during the build. | The build fails and the page is not written. | A half page written before the failure would pass for complete. |
 | `DTCDC-E03` | A template does not parse or does not execute. | The build fails naming the template. | A syntax error must not become half a document. |
 | `DTCDC-E04` | `New`: A spec the map lists is not on disk. | Creating the compiler fails, telling to rebuild the map. | The spec would leave the documentation without a word while the build stayed green. |

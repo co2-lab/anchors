@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a38c97f2570cd66b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b1105de28f4838c9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -145,6 +145,8 @@ teste prova.
 - [A project without templates fails the build and has nothing stale or uncovered](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-E05`
 
 - [Asking one spec by an unknown code fails](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-E06`
+
+- [A layer with files and no spec is said, not an error](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B18`
 
 - [Every known kind has a title, items to cover and a trap](camadas/apoio.md#dcknd--dockinds--what-each-kind-of-project-documentation-must-answer-told-to-the-agent-that-writes-it) `DCKND-B01`
 

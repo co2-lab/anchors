@@ -95,6 +95,7 @@ graph TB
     subgraph {{.ID}}["{{.Name}}"]
 {{range .Layers}}        subgraph {{mermaidID .}}["{{.}}"]
 {{range $u := specs (printf "layer=%s" .)}}            {{mermaidID $u.Code}}["{{$u.Code}}<br/><small>{{$u.Titulo}}</small>"]
+{{else}}            {{mermaidID .}}_nospec["{{layerFiles .}} arquivo(s), nenhuma spec"]
 {{end}}        end
 {{end}}    end
 ```
@@ -103,13 +104,18 @@ graph TB
 #### {{.}}
 
 {{range specs (printf "layer=%s" .)}}- **{{.Code}}** — {{.Titulo}}
+{{else}}_Nenhuma spec nesta camada — {{layerFiles .}} arquivo(s) regido(s)._
 {{end}}{{else}}
 _Este contêiner não declara camadas._
 {{end}}
-{{else}}
+{{else}}{{with .Layers}}
+_Nenhuma camada deste contêiner tem spec ainda:_
+
+{{range .}}- **{{.}}** — {{layerFiles .}} arquivo(s)
+{{end}}{{else}}
 _Nenhuma camada declara unidade que rode aqui. Ou o contêiner não executa código deste
 repositório, ou falta ligá-lo a uma camada em `containers.layers`._
-{{end}}
+{{end}}{{end}}
 {{end}}
 {{with orphanLayers}}
 ### Camadas fora de todo contêiner
