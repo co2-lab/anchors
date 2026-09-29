@@ -2,6 +2,7 @@ package gate
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -1183,5 +1184,41 @@ func TestReadFile_fromTheSource(t *testing.T) {
 	restore()
 	if b, _ := readFile(root, "a.md"); string(b) != "tree" {
 		t.Errorf("with no source the tree is read, got %q", b)
+	}
+}
+
+func TestChangedSource_updatedAt(t *testing.T) {
+	t.Run("GTENG-B27: The gates ask whether a file changed through the source set", func(t *testing.T) {})
+	root := t.TempDir()
+	run := func(args ...string) {
+		t.Helper()
+		c := exec.Command("git", append([]string{"-C", root}, args...)...)
+		c.Env = append(os.Environ(), "GIT_AUTHOR_NAME=t", "GIT_AUTHOR_EMAIL=t@t", "GIT_COMMITTER_NAME=t", "GIT_COMMITTER_EMAIL=t@t",
+			"GIT_CONFIG_GLOBAL=/dev/null", "GIT_AUTHOR_DATE=2026-01-02T12:00:00", "GIT_COMMITTER_DATE=2026-01-02T12:00:00")
+		if out, err := c.CombinedOutput(); err != nil {
+			t.Skipf("git: %v %s", err, out)
+		}
+	}
+	src := "// @anchors\n//   updated_at: 2026-01-02\nx\n"
+	run("init", "-q")
+	if err := os.WriteFile(filepath.Join(root, "a.ts"), []byte(src), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run("add", ".")
+	run("commit", "-q", "-m", "one")
+	if err := os.WriteFile(filepath.Join(root, "a.ts"), []byte(src+"edited\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	n := mapx.Node{ID: "a.ts", Kind: mapx.KindCode}
+	if v, _ := checkUpdatedAt(src, n, root); v != Fail {
+		t.Errorf("asking the tree, an edit not dated today fails, got %v", v)
+	}
+	restore := SetChangedSource(func(string, string) (bool, bool) { return false, true })
+	if v, msg := checkUpdatedAt(src, n, root); v != Pass {
+		t.Errorf("a source that sees no change judges by the last commit, got %v: %s", v, msg)
+	}
+	restore()
+	if v, _ := checkUpdatedAt(src, n, root); v != Fail {
+		t.Errorf("restoring asks the tree again, got %v", v)
 	}
 }

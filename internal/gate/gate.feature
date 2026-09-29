@@ -228,3 +228,9 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given a source that answers another text than the tree
     When a gate reads a file with the source set, and after restoring it
     Then it reads the source's text, then the tree's
+
+  @GTENG-B27 @unit-level
+  Scenario: The gates ask whether a file changed through the source set
+    Given a file dated at its last commit and edited in the tree
+    When updated-at-current confronts it asking the tree, and asking a source that sees no change
+    Then the first fails for an edit not dated today, and the second passes

@@ -249,7 +249,7 @@ func checkUpdatedAt(content string, n mapx.Node, root string) (Verdict, string) 
 	// de um dia anterior). Desempate pela data do SISTEMA: o header deve dizer HOJE
 	// (o dia da alteração em curso). Se disser, ok; senão, o autor esqueceu de
 	// atualizar para o dia em que está mexendo.
-	mudou, sabido := gitmeta.UncommittedChanges(root, n.ID)
+	mudou, sabido := uncommitted(root, n.ID)
 	if !sabido {
 		// Sem git não há como saber se o arquivo mudou NEM qual foi o último commit.
 		// Antes isto caía no ramo "commitado" e devolvia "arquivo sem commit

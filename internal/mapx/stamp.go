@@ -499,14 +499,11 @@ func (g *Graph) KeepEvidence(id, to, reason, at string, lines bool) []string {
 			}
 		}
 	}
-	if n.Signal == nil {
-		n.Signal = &TestSignal{}
-	}
-	n.Signal.EvidenceKept = append(n.Signal.EvidenceKept, EvidenceKeep{
+	n.EvidenceKept = append(n.EvidenceKept, EvidenceKeep{
 		From: strings.Join(carried, " "), To: to, Reason: reason, At: at, Lines: lines,
 	})
-	if k := len(n.Signal.EvidenceKept); k > maxEvidenceKeeps {
-		n.Signal.EvidenceKept = n.Signal.EvidenceKept[k-maxEvidenceKeeps:]
+	if k := len(n.EvidenceKept); k > maxEvidenceKeeps {
+		n.EvidenceKept = n.EvidenceKept[k-maxEvidenceKeeps:]
 	}
 	return carried
 }

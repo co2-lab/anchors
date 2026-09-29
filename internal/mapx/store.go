@@ -2,6 +2,7 @@ package mapx
 
 import (
 	"os"
+	"reflect"
 	"regexp"
 
 	"gopkg.in/yaml.v3"
@@ -80,6 +81,7 @@ func LoadBytes(data []byte, name string) (*Graph, error) {
 	if err := ConfereFormato(path, g.Version); err != nil {
 		return nil, err
 	}
+	dropEmptySignals(&g)
 	return &g, nil
 }
 
@@ -96,4 +98,16 @@ var generatedByLineRE = regexp.MustCompile(`(?m)^generated_by:.*\n`)
 
 func withoutGeneratedBy(b []byte) string {
 	return generatedByLineRE.ReplaceAllString(string(b), "")
+}
+
+// dropEmptySignals turns a signal that holds nothing into no signal. A signal means
+// something was measured, and the gates read its presence that way; an empty one — the
+// record of kept evidence lived in the signal for two releases, and a file with nothing
+// measured got one — made scenario-coverage read "execution ingested, nothing proven".
+func dropEmptySignals(g *Graph) {
+	for i := range g.Nodes {
+		if s := g.Nodes[i].Signal; s != nil && reflect.DeepEqual(*s, TestSignal{}) {
+			g.Nodes[i].Signal = nil
+		}
+	}
 }

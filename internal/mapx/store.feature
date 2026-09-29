@@ -72,3 +72,9 @@ Feature: GraphPersistence — saving and loading the map file without churn and 
     Given the bytes of a current map and of a map in an unreadable format
     When each is read from its bytes
     Then the first gives its graph and the second the format refusal naming where it came from
+
+  @GRPRG-B07 @unit-level
+  Scenario: An empty signal loads as no signal
+    Given a map with a node whose signal is empty and one whose signal was measured
+    When it is loaded
+    Then the first has no signal and the second keeps its own

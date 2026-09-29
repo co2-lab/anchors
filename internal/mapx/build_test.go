@@ -837,9 +837,18 @@ func TestPreserveSignalsOnlyForUnchangedFiles(t *testing.T) {
 	old := &Graph{Nodes: []Node{
 		{ID: "same_test.go", Rev: "r1", Signal: &TestSignal{Passed: 3, AtRev: "r1"}},
 		{ID: "edited_test.go", Rev: "r1", Signal: &TestSignal{Passed: 2, AtRev: "r1"}},
+		{ID: "kept.spec.md", Rev: "r1", EvidenceKept: []EvidenceKeep{{Reason: "only a date"}}},
+		{ID: "moved.spec.md", Rev: "r1", EvidenceKept: []EvidenceKeep{{Reason: "old"}}},
 	}}
-	rebuilt := &Graph{Nodes: []Node{{ID: "same_test.go", Rev: "r1"}, {ID: "edited_test.go", Rev: "r2"}}}
+	rebuilt := &Graph{Nodes: []Node{{ID: "same_test.go", Rev: "r1"}, {ID: "edited_test.go", Rev: "r2"},
+		{ID: "kept.spec.md", Rev: "r1"}, {ID: "moved.spec.md", Rev: "r2"}}}
 	PreserveStamps(rebuilt, old)
+	if k := rebuilt.Nodes[2]; len(k.EvidenceKept) != 1 || k.Signal != nil {
+		t.Errorf("an unchanged file keeps its declarations and gains no signal, got %+v", k)
+	}
+	if k := rebuilt.Nodes[3]; len(k.EvidenceKept) != 0 {
+		t.Errorf("an edited file's declarations speak of another revision, got %+v", k.EvidenceKept)
+	}
 	if s := rebuilt.Nodes[0].Signal; s == nil || s.Passed != 3 {
 		t.Errorf("the unchanged file should keep its signal, got %+v", s)
 	}

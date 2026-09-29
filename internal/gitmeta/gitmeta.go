@@ -87,6 +87,17 @@ func UncommittedChanges(root, rel string) (mudou, sabido bool) {
 	return strings.TrimSpace(string(out)) != "", true
 }
 
+// StagedChanges is UncommittedChanges over the INDEX: whether the commit being made
+// changes the file — staged against HEAD, or added. An unstaged edit does not count: it is
+// not in the commit. known=false outside git.
+func StagedChanges(root, rel string) (changed, known bool) {
+	out, err := exec.Command("git", "-C", root, "diff", "--cached", "--name-only", "--", rel).Output()
+	if err != nil {
+		return false, false
+	}
+	return strings.TrimSpace(string(out)) != "", true
+}
+
 // Head devolve o hash curto do HEAD e o assunto do commit. Serve para carimbar um
 // relatório com a versão do código que ele descreve: sem isso, uma leitura salva
 // não diz sobre QUE código ela fala, e envelhece sem avisar.

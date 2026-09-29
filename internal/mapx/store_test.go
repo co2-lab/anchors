@@ -164,3 +164,14 @@ func TestLoadBytes(t *testing.T) {
 		t.Error("bytes that are not a map are refused")
 	}
 }
+
+func TestLoad_emptySignalIsNoSignal(t *testing.T) {
+	t.Run("GRPRG-B07: An empty signal loads as no signal", func(t *testing.T) {})
+	g, err := LoadBytes([]byte(fmt.Sprintf("version: %d\nnodes:\n  - id: a\n    kind: spec\n    rev: r1\n    signal: {}\n  - id: b\n    kind: test\n    rev: r1\n    signal:\n      passed: 2\nedges: []\n", FormatoAtual)), "m")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if g.Nodes[0].Signal != nil || g.Nodes[1].Signal == nil || g.Nodes[1].Signal.Passed != 2 {
+		t.Errorf("the empty signal is dropped and the measured one kept, got %+v %+v", g.Nodes[0].Signal, g.Nodes[1].Signal)
+	}
+}

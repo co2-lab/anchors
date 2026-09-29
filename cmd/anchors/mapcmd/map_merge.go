@@ -258,6 +258,9 @@ func mergeCommonNodes(nosso, deles *mapx.Graph) {
 		if o.Signal != nil && o.Rev == n.Rev {
 			n.Signal = o.Signal
 		}
+		if len(o.EvidenceKept) > 0 && len(n.EvidenceKept) == 0 && o.Rev == n.Rev {
+			n.EvidenceKept = o.EvidenceKept
+		}
 		n.Failures = mergeFailures(n.Failures, o.Failures)
 	}
 }

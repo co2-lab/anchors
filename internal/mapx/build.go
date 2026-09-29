@@ -709,18 +709,22 @@ func preservarSinais(novo, antigo *Graph) {
 		return
 	}
 	sinais := make(map[string]*TestSignal, len(antigo.Nodes))
+	kept := make(map[string][]EvidenceKeep, len(antigo.Nodes))
 	revs := make(map[string]string, len(antigo.Nodes))
 	for i := range antigo.Nodes {
 		n := &antigo.Nodes[i]
-		if n.Signal != nil {
+		if n.Signal != nil || len(n.EvidenceKept) > 0 {
 			sinais[n.ID] = n.Signal
+			kept[n.ID] = n.EvidenceKept
 			revs[n.ID] = n.Rev
 		}
 	}
+	// The declarations of kept evidence go with the signal: both speak of this revision.
 	for i := range novo.Nodes {
 		n := &novo.Nodes[i]
 		if s, ok := sinais[n.ID]; ok && revs[n.ID] == n.Rev {
 			n.Signal = s
+			n.EvidenceKept = kept[n.ID]
 		}
 	}
 }

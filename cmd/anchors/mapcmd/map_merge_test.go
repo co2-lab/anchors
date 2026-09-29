@@ -362,3 +362,23 @@ func TestMapMerge_keepsTheOtherSidesFlowAndFailures(t *testing.T) {
 		})
 	}
 }
+
+func TestMergeCommonNodes_keptEvidence(t *testing.T) {
+	t.Run("MPMRM-B08: The other side's flow states and transitions and the failures of a shared node reach the merged map", func(t *testing.T) {})
+	ours := &mapx.Graph{Nodes: []mapx.Node{{ID: "a", Rev: "r1"}, {ID: "b", Rev: "r1", EvidenceKept: []mapx.EvidenceKeep{{Reason: "ours"}}}, {ID: "c", Rev: "r2"}}}
+	theirs := &mapx.Graph{Nodes: []mapx.Node{
+		{ID: "a", Rev: "r1", EvidenceKept: []mapx.EvidenceKeep{{Reason: "theirs"}}},
+		{ID: "b", Rev: "r1", EvidenceKept: []mapx.EvidenceKeep{{Reason: "theirs"}}},
+		{ID: "c", Rev: "r1", EvidenceKept: []mapx.EvidenceKeep{{Reason: "other rev"}}},
+	}}
+	mergeCommonNodes(ours, theirs)
+	if k := ours.Nodes[0].EvidenceKept; len(k) != 1 || k[0].Reason != "theirs" {
+		t.Errorf("the other side's declaration comes when ours has none, got %+v", k)
+	}
+	if k := ours.Nodes[1].EvidenceKept; k[0].Reason != "ours" {
+		t.Errorf("ours stays when it has one, got %+v", k)
+	}
+	if len(ours.Nodes[2].EvidenceKept) != 0 {
+		t.Error("a declaration of another revision does not come")
+	}
+}

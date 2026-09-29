@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPMRM
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: comando
 -->
 # MapMerge — the git merge driver that unites two versions of the map instead of merging text
@@ -46,7 +46,7 @@ keeps and how many came from the other side.
 | `MPMRM-B04` | An edge that exists only on the other side is added to the result with the judgments it carries; an edge is identified by its type and its two ends. |
 | `MPMRM-B05` | When only one side has judged an edge both sides share, that side's judgments are in the result, whichever side it is: a side with no judgment on the edge never erases the other's. |
 | `MPMRM-B07` | On an edge both sides share, judgments are joined by gate: a gate only one side judged is kept, and a gate both sides judged keeps the judgment with the latest change date, ours on a tie; the edge's check stamp follows the same rule. |
-| `MPMRM-B08` | A node both sides have gets the other side's observed failures joined by rule (the latest last occurrence wins, ours on a tie), and the other side's test signal when both carry the same revision; the flow graph is the union of both sides' states, by code, and transitions. |
+| `MPMRM-B08` | A node both sides have gets the other side's observed failures joined by rule (the latest last occurrence wins, ours on a tie), and the other side's test signal — and its declarations of kept evidence, when ours has none — when both carry the same revision; the flow graph is the union of both sides' states, by code, and transitions. |
 | `MPMRM-B06` | After writing, the error stream reports how many judgments the result keeps and, when there are more than our side had, how many came from the other side. |
 
 ## Invariants

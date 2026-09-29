@@ -13,7 +13,7 @@
 > `anchors doctor --fix` replaces whole. Decided by the user: those files are upstream-owned.
 >
 > **Revises:** `B22`
-> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B13`, `B14`, `B15`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `B24`, `B25`, `B26`, `I01`, `I02`, `I03`, `X01`, `X02`, `X03`, `E01`
+> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B13`, `B14`, `B15`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `B24`, `B25`, `B26`, `B27`, `I01`, `I02`, `I03`, `X01`, `X02`, `X03`, `E01`
 
 ## Overview
 
@@ -86,6 +86,7 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 | `GTENG-B05` | A gate demanding a mark in the content reaches only the targets whose text carries it — otherwise the pending counter measures the size of the project, not the work. |
 | `GTENG-B25` | The same answer — kinds, labels, exclusions, required mark — is offered to the runs that choose what to measure for a gate, so a run never measures a node the gate would not confront. (`Applies`) |
 | `GTENG-B26` | The gates read the project's files through the source set with `SetFileSource` — the git index in the commit hook —, and from the tree when none is set; the function it returns restores the previous source. |
+| `GTENG-B27` | Whether a file has changes not yet committed is asked through the source set with `SetChangedSource` — the staged changes in the commit hook —, and of the tree when none is set; `updated-at-current` reads it, so a file edited and not staged is judged by its last commit. |
 | `GTENG-B06` | An UNREADABLE target does not apply: better to stop charging than to charge blind. |
 | `GTENG-B07` | A gate with no applicable target does not run at all, so a commit touching one document does not fire a whole-project check. |
 | `GTENG-B08` | A gate whose required binary is absent steps aside and never fails — the gate did not measure, and the missing piece is the tool. |

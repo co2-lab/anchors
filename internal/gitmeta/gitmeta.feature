@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GTMTG
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @GTMTG
@@ -66,3 +66,9 @@ Feature: GitMeta — what git knows about the files: last commit dates, pending 
     Given a repository with a committed file edited since, a new file, and a directory with no repository
     When the content at HEAD is asked for each
     Then the committed version comes back for the first, and nothing for the other two
+
+  @GTMTG-B09 @unit-level
+  Scenario: The commit's own changes, from the index
+    Given a committed file edited and not staged, one staged, and a new one added
+    When each is asked whether the commit changes it
+    Then the unstaged one does not, the other two do, and outside a repository it cannot be told

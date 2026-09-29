@@ -514,7 +514,7 @@ func TestKeepEvidence(t *testing.T) {
 		g.Edges[0].Julgamentos[0].ValidatedFromRev != "r3" || g.Edges[1].Stamp.ValidatedToRev != "r3" {
 		t.Errorf("closures, stamps and judgments follow, got %+v %+v", g.Nodes[2].Signal, g.Edges)
 	}
-	if k := s.EvidenceKept; len(k) != 1 || k[0].From != "r0 r1" || k[0].To != "r3" || k[0].Reason != "only @realizes added" ||
+	if k := g.Nodes[0].EvidenceKept; len(k) != 1 || k[0].From != "r0 r1" || k[0].To != "r3" || k[0].Reason != "only @realizes added" ||
 		k[0].At != "2026-09-29" || k[0].Lines {
 		t.Errorf("the declaration is recorded, got %+v", k)
 	}
@@ -530,24 +530,24 @@ func TestKeepEvidence(t *testing.T) {
 	}
 	g.KeepEvidence("a.ts", "c3", "same lines", "d", true)
 	if c.AtRev != "c3" || c.MutationAtRev != "c3" || c.CoverageBySuite["u"].AtRev != "c3" || c.MutationByScope["isolated"].AtRev != "c3" ||
-		!c.EvidenceKept[1].Lines {
+		!g.Nodes[1].EvidenceKept[1].Lines {
 		t.Errorf("with lines, coverage and mutation move too, got %+v", c)
 	}
 
-	if got := g.KeepEvidence("a.spec.md", "r3", "again", "d", false); got != nil || len(s.EvidenceKept) != 1 {
+	if got := g.KeepEvidence("a.spec.md", "r3", "again", "d", false); got != nil || len(g.Nodes[0].EvidenceKept) != 1 {
 		t.Errorf("nothing at an earlier revision carries and records nothing, got %v", got)
 	}
 	if g.KeepEvidence("nope.md", "x", "r", "d", false) != nil {
 		t.Error("an unknown file is left alone")
 	}
 	bare := &Graph{Nodes: []Node{{ID: "b.ts", Rev: "b1"}, {ID: "b_test.go", Signal: &TestSignal{ClosureRev: map[string]string{"b.ts": "b0"}}}}}
-	if got := bare.KeepEvidence("b.ts", "b2", "r", "d", false); len(got) != 1 || bare.Nodes[0].Signal == nil || len(bare.Nodes[0].Signal.EvidenceKept) != 1 {
-		t.Errorf("a file with no signal of its own still records the declaration, got %v %+v", got, bare.Nodes[0])
+	if got := bare.KeepEvidence("b.ts", "b2", "r", "d", false); len(got) != 1 || bare.Nodes[0].Signal != nil || len(bare.Nodes[0].EvidenceKept) != 1 {
+		t.Errorf("a file with no signal records the declaration on the node and gets no signal, got %v %+v", got, bare.Nodes[0])
 	}
 	for i := 0; i < 7; i++ {
 		g.KeepEvidence("a.spec.md", fmt.Sprintf("r%d", 10+i), fmt.Sprint(i), "d", false)
 	}
-	if k := s.EvidenceKept; len(k) != 5 || k[4].Reason != "6" || k[0].Reason != "2" {
+	if k := g.Nodes[0].EvidenceKept; len(k) != 5 || k[4].Reason != "6" || k[0].Reason != "2" {
 		t.Errorf("the latest five declarations are kept, got %+v", k)
 	}
 }

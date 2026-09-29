@@ -66,6 +66,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 					return fmt.Errorf("--index: read the git index: %w", err)
 				}
 				defer gate.SetFileSource(read)()
+				defer gate.SetChangedSource(gitmeta.StagedChanges)()
 			}
 			// No modo github o achado de gate vira CARD, não arquivo: o `issues/` é a fila do
 			// modo local (mover pasta à mão), e manter os dois faz o board esconder o que os

@@ -41,6 +41,7 @@ understood.
 | `GRPRG-B04` | When anything else changed, the file is rewritten, carrying the release of the binary that is running. |
 | `GRPRG-B05` | Loading a map whose format this binary cannot read returns the format refusal and no graph. |
 | `GRPRG-B06` | A map read from its bytes — the one git keeps at a commit — is read like one from disk, with the same format check, and a refusal names where it came from. (`LoadBytes`) |
+| `GRPRG-B07` | A node's signal that holds nothing is loaded as no signal: a signal means something was measured. |
 
 ## Invariants
 

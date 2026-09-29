@@ -28,7 +28,7 @@ they say it, with the reason recorded.
 
 | Effect | Description |
 | --- | --- |
-| `KPEVD-B01` | Each file's evidence moves to its current content, with the reason recorded on its node, and the command says what it carried; with `--lines` the coverage and mutation go along. (`KeepEvidence` does the moving.) |
+| `KPEVD-B01` | Each file's evidence moves to its current content, with the reason recorded on its node (never as a signal: a file with nothing measured stays unmeasured), and the command says what it carried; with `--lines` the coverage and mutation go along. (`KeepEvidence` does the moving.) |
 | `KPEVD-B02` | When the map was rebuilt after the change and no longer holds the file's evidence, it is taken from the map at HEAD; with no commit or no committed map there is nothing to recover. |
 | `KPEVD-B03` | A file whose evidence is already at its content, or that has none, is said to have nothing to keep, and is left as it was. |
 | `KPEVD-B04` | The `@contract` stamps of the doubles pointing at the files kept are refreshed and listed, under the same declaration. |

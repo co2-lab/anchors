@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+
+	"github.com/co2-lab/anchors/internal/gitmeta"
 )
 
 // WHERE THE GATES READ FILES FROM.
@@ -17,7 +19,36 @@ import (
 var (
 	fileSourceMu sync.RWMutex
 	fileSource   func(rel string) ([]byte, error)
+	// changedSource says whether a file has changes not yet committed; nil asks the tree.
+	changedSource func(root, rel string) (changed, known bool)
 )
+
+// SetChangedSource makes the gates ask whether a file changed through `changed` — the
+// staged changes, in the commit hook — and returns what restores the previous one. Nil
+// asks the tree.
+func SetChangedSource(changed func(root, rel string) (bool, bool)) (restore func()) {
+	fileSourceMu.Lock()
+	prev := changedSource
+	changedSource = changed
+	fileSourceMu.Unlock()
+	return func() {
+		fileSourceMu.Lock()
+		changedSource = prev
+		fileSourceMu.Unlock()
+	}
+}
+
+// uncommitted says whether the file has changes the last commit does not have, as the
+// current source sees them.
+func uncommitted(root, rel string) (changed, known bool) {
+	fileSourceMu.RLock()
+	src := changedSource
+	fileSourceMu.RUnlock()
+	if src != nil {
+		return src(root, rel)
+	}
+	return gitmeta.UncommittedChanges(root, rel)
+}
 
 // SetFileSource makes the gates read project files through `read` (a path relative to the
 // root), and returns what restores the previous source. Nil reads the tree.

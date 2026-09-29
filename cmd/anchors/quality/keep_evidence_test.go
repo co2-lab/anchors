@@ -51,7 +51,7 @@ func TestKeepEvidence_movesWithTheReason(t *testing.T) {
 		t.Fatal(err)
 	}
 	n, rev := keptSignal(t, mapPath)
-	if n.Rev != rev || n.Signal.AtRev != rev || len(n.Signal.ProvenCodes) != 1 || n.Signal.EvidenceKept[0].Reason != "only @realizes added" {
+	if n.Rev != rev || n.Signal.AtRev != rev || len(n.Signal.ProvenCodes) != 1 || n.EvidenceKept[0].Reason != "only @realizes added" {
 		t.Errorf("the proof is at the current content with the reason, got %+v %+v", n, n.Signal)
 	}
 	if !strings.Contains(out, "src/pay.spec.md — evidence kept:") || !strings.Contains(out, "1 file(s) kept their evidence") {

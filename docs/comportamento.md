@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8d2ac914473febcf — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2cc5c9702a7eba57 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3638,6 +3638,8 @@ teste prova.
 
 - [The gates read files from the source set](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B26`
 
+- [The gates ask whether a file changed through the source set](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B27`
+
 - [A layer the Estrutura does not have fails](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B01`
 
 - [A layer that differs only in case fails naming both](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B02`
@@ -5462,6 +5464,8 @@ teste prova.
 
 - [A file's content at the last commit](camadas/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B08`
 
+- [The commit's own changes, from the index](camadas/infra.md#gtmtg--gitmeta--what-git-knows-about-the-files-last-commit-dates-pending-changes-head-dirty-count) `GTMTG-B09`
+
 - [Only an administrator whose protection spares administrators can bypass it](camadas/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B01`
 
 - [Each refusal of the bypass names its reason](camadas/infra.md#aprcp--approvalreachable--the-doctor-says-when-the-required-approval-can-never-be-given-and-how-to-get-out) `APRCP-B02`
@@ -6663,6 +6667,8 @@ teste prova.
 - [Saving into a missing directory returns the write error](camadas/mapa.md#grprg-e04--saving-into-a-missing-directory-returns-the-write-error) `GRPRG-E04`
 
 - [A map read from bytes is read like one from disk](camadas/mapa.md#grprg-b06--a-map-read-from-bytes-is-read-like-one-from-disk) `GRPRG-B06`
+
+- [An empty signal loads as no signal](camadas/mapa.md#grprg-b07--an-empty-signal-loads-as-no-signal) `GRPRG-B07`
 
 - [With code as the anchor a code file tests through its own name](camadas/mapa.md#tsunt-b01--with-code-as-the-anchor-a-code-file-tests-through-its-own-name) `TSUNT-B01`
 

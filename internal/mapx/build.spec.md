@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRBLG
-  updated_at: 2026-09-28
+  updated_at: 2026-09-29
   layer: mapa
 -->
 # GraphBuild — projecting the declared structure onto the scanned files: one node per file, and the relations between them
@@ -92,7 +92,7 @@ of the nodes whose content did not change.
 | --- | --- |
 | `GRBLG-B19` | The nodes are sorted by path and the relations by source, target and type. |
 | `GRBLG-B20` | A rebuild (`PreserveStamps`) carries over the stamp and the judgments of every relation that survived with the same type, source and target. |
-| `GRBLG-B21` | A rebuild carries over a node's signal only when the node's revision did not change. |
+| `GRBLG-B21` | A rebuild carries over a node's signal, and its declarations of kept evidence, only when the node's revision did not change. |
 | `GRBLG-B22` | A support file becomes a node marked as support, keeping its kind and its edges like any other node. |
 
 ## Invariants
