@@ -151,6 +151,15 @@ func refreshStamps(root string, g *mapx.Graph, files []string, dryRun bool) erro
 			return err
 		}
 		if len(found) == 0 {
+			// Handed the TEST instead of the module: say which modules to pass. The stamps
+			// point at modules, and the refresh follows a module's change to the doubles.
+			if b, err := os.ReadFile(filepath.Join(root, rel)); err == nil {
+				if mods := gate.StampedModules(string(b)); len(mods) > 0 {
+					fmt.Printf("%s holds doubles stamped against other modules — refresh those modules, not the test:\n"+
+						"    anchors stamp --refresh %s\n", rel, strings.Join(mods, " "))
+					continue
+				}
+			}
 			fmt.Printf("%s — no double is stamped against a previous version of it.\n", rel)
 			continue
 		}

@@ -598,3 +598,16 @@ func TestMockStamped_Errors(t *testing.T) {
 		}
 	})
 }
+
+func TestStampedModules(t *testing.T) {
+	t.Run("MCSTM-B19: The modules a test's stamps point at", func(t *testing.T) {})
+	test := "// @contract: src/b.ts | export function b( | 3 | 0000aaaa\n" +
+		"// @contract: src/a.ts | export function a( | 2 | 0000bbbb\n" +
+		"// @contract: src/b.ts | export function c( | 1 | 0000cccc\n"
+	if got := StampedModules(test); strings.Join(got, ",") != "src/b.ts,src/a.ts" {
+		t.Errorf("each module once, in order, got %v", got)
+	}
+	if got := StampedModules("it('x')\n"); len(got) != 0 {
+		t.Errorf("no stamp, no module, got %v", got)
+	}
+}

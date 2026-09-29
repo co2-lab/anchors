@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MCSTM
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @MCSTM
@@ -201,3 +201,9 @@ Feature: MockStamped — the double carries the mark of the snippet it replaces,
     Given a map listing a test that no longer exists on disk
     When the tests stamping a module are looked up
     Then that test is left out and no error is raised
+
+  @MCSTM-B19 @unit-level
+  Scenario: The modules a test's stamps point at
+    Given a test with three stamps against two modules, and a file with none
+    When the stamped modules are listed
+    Then the two modules come once each in order, and the other file lists none

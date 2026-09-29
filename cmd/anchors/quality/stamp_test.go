@@ -282,3 +282,20 @@ func TestStampNeverRewritesADivergentStamp(t *testing.T) {
 		t.Error("a divergent stamp must never be rewritten by stamp")
 	}
 }
+
+func TestStampRefreshHandedATest(t *testing.T) {
+	t.Run("CNSTC-B09: The refresh handed a test names the modules to refresh", func(t *testing.T) {})
+	root, mod, test, g := refreshFixture(t, "export function useBalance(id) {\n  return 2\n}\n")
+	before, _ := os.ReadFile(filepath.Join(root, test))
+	out := captureStdout(t, func() {
+		if err := refreshStamps(root, g, []string{test}, false); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if !strings.Contains(out, test+" holds doubles stamped against other modules") || !strings.Contains(out, "anchors stamp --refresh "+mod) {
+		t.Errorf("the refresh names the module and the command:\n%s", out)
+	}
+	if after, _ := os.ReadFile(filepath.Join(root, test)); string(after) != string(before) {
+		t.Error("handed the test, the refresh changes nothing")
+	}
+}

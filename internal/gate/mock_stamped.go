@@ -154,6 +154,20 @@ type declaredStamp struct {
 var stampRE = regexp.MustCompile(
 	`@contract:\s*([^|\n]+?)\s*\|\s*(.+?)\s*\|\s*(\d+)\s*\|\s*([0-9a-f]+)`)
 
+// StampedModules are the modules a test file's `@contract` stamps point at, each once, in
+// the order they first appear — what `stamp --refresh` takes when it is handed the test.
+func StampedModules(content string) []string {
+	var out []string
+	seen := map[string]bool{}
+	for _, s := range declaredStamps(content) {
+		if !seen[s.file] {
+			seen[s.file] = true
+			out = append(out, s.file)
+		}
+	}
+	return out
+}
+
 func declaredStamps(content string) []declaredStamp {
 	var out []declaredStamp
 	for _, m := range stampRE.FindAllStringSubmatch(content, -1) {

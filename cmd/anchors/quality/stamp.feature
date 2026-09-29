@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CNSTC
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @CNSTC
@@ -102,3 +102,9 @@ Feature: StampCommand — writes the missing contract stamps on test doubles, an
     When the stamp command runs over every test
     Then it prints that the gone test could not be read
     And it still writes the stamps of the other tests
+
+  @CNSTC-B09 @unit-level
+  Scenario: The refresh handed a test names the modules to refresh
+    Given a test whose double is stamped against a module that changed
+    When the refresh is handed the test instead of the module
+    Then it names the module and the command, and the stamp is left as it was

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNSTC
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: comando
 -->
 # StampCommand — writes the missing contract stamps on test doubles, and refreshes them after a change
@@ -44,6 +44,7 @@ adjusted in the same commit. A stamp whose member is gone is reported and left a
 | `CNSTC-B06` | When the stamped block has no version in the last commit, the refresh says there is nothing to compare instead of a diff. |
 | `CNSTC-B07` | The refresh in dry run lists the doubles and says nothing was written, leaving the stamps as they were. |
 | `CNSTC-B08` | The block diff lists the lines of the old block missing from the new one, marked as left, then the lines of the new block missing from the old one, marked as came, counting repeated lines. |
+| `CNSTC-B09` | Handed a test file that holds stamps instead of a module, the refresh names the modules its stamps point at and the command to refresh them, and changes nothing. |
 
 ## Invariants
 

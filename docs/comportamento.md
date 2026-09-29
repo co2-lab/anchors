@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2cc5c9702a7eba57 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:db71c5e6013cf322 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2444,6 +2444,8 @@ teste prova.
 
 - [A test of the map that cannot be read is reported and skipped](camadas/comando.md#cnstc--stampcommand--writes-the-missing-contract-stamps-on-test-doubles-and-refreshes-them-after-a-change) `CNSTC-E04`
 
+- [The refresh handed a test names the modules to refresh](camadas/comando.md#cnstc--stampcommand--writes-the-missing-contract-stamps-on-test-doubles-and-refreshes-them-after-a-change) `CNSTC-B09`
+
 - [A directory with no git repository stops at git init](camadas/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step) `PRSTP-B01`
 
 - [Without the git binary status warns and goes on](camadas/comando.md#prstp--projectstatus--where-the-project-stands-in-the-cycle-and-the-one-next-step) `PRSTP-B02`
@@ -3911,6 +3913,8 @@ teste prova.
 - [A stamp with a non-positive line count is not a stamp](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-E01`
 
 - [A test missing from disk is left out of the doubles of a changed module](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-E02`
+
+- [The modules a test's stamps point at](camadas/gate.md#mcstm--mockstamped--the-double-carries-the-mark-of-the-snippet-it-replaces-and-the-gate-recomputes-it) `MCSTM-B19`
 
 - [A double with no tie fails and the verdict names the loose module](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B01`
 

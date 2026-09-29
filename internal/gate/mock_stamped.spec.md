@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCSTM
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: gate
 -->
 # MockStamped — the double carries the mark of the snippet it replaces, and the gate RECOMPUTES it
@@ -66,6 +66,7 @@ the TIE to the real module; this gate demands the recomputable MARK of the snipp
 | `MCSTM-B16` | A double whose module name contains a dot (`@/src/stores/auth.store`) is matched to the stamp of `auth.store.ts`: the specifier is compared as written and without a final extension, and both forms count. Stripping an "extension" from an import specifier cut part of the NAME. |
 | `MCSTM-B17` | WHOEVER CHANGES A MODULE SEES THE DOUBLES IT BREAKS. `TestsStamping` resolves the tests whose stamps point at the module, so `check --changed <module>` brings them into the check and this gate runs on them, naming the module file of each stamp. Without it the drift surfaced to whoever next touched the test, far from the change. |
 | `MCSTM-B18` | `RefreshStamps` (`anchors stamp --refresh <module>`) is how the author of a change updates the stamps: it lists every double stamped against the previous version — test, line, member, old and new hash, and how the stamped block changed from HEAD — and updates those hashes. The list is the work the change created: each double reproduced the old contract, and is adjusted in the same commit. A stamp whose anchor is gone is NOT refreshed, because only a person can say which new line the double now stands for. |
+| `MCSTM-B19` | The modules a test file's stamps point at are listed each once, in the order they first appear; a file with no stamp lists none. (`StampedModules`) |
 
 ## Invariants
 
