@@ -1,6 +1,6 @@
 <!-- @anchors
   code: EXCMX
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: gate
 -->
 # ExternalCommand — executes external tools via shell passing targets as positional arguments
@@ -46,6 +46,7 @@ Executes an external command (such as jest, eslint, or tsc) defined in `anchors.
 | `EXCMX-B11` | For a single target, failure output exceeding 500 characters is truncated with a truncation marker. |
 | `EXCMX-B12` | For batch or project executions, failure output exceeding 4000 characters is truncated with a truncation marker. |
 | `EXCMX-B13` | Environment variable `ANCHORS_ARGV_MAX` overrides the default argv limit when set to a positive integer. |
+| `EXCMX-B14` | Under `--index`, a target whose file on disk differs from the index is handed to the command as a copy of what the index holds, and the copy's path is shown back as the project's in what the command printed; a target the index does not have is not handed over; a target the same in both goes as it is. (`indexedTargets`) |
 
 ## Invariants
 

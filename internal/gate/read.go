@@ -3,6 +3,7 @@ package gate
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/co2-lab/anchors/internal/gitmeta"
@@ -75,4 +76,65 @@ func readFile(root, rel string) ([]byte, error) {
 		}
 	}
 	return os.ReadFile(filepath.Join(root, rel))
+}
+
+// indexedTargets hands an external tool the content the current source holds — the index,
+// under `--index` — for the targets whose file on disk differs from it: each is copied to a
+// temporary folder, at its own relative path, and the tool gets the copy. `clean` turns the
+// copies' paths back into the project's in what the tool printed; `done` removes them. With
+// no source set, or no target that differs, the targets are handed over as they are.
+//
+// A tool reads files by path, and the path is the tree's: another session's unstaged edit
+// to a file in the commit's impact was spell-checked instead of what the commit records.
+func indexedTargets(root string, targets []string) (out []string, clean func(string) string, done func()) {
+	clean, done = func(s string) string { return s }, func() {}
+	fileSourceMu.RLock()
+	src := fileSource
+	fileSourceMu.RUnlock()
+	if src == nil || len(targets) == 0 {
+		return targets, clean, done
+	}
+	var dir string
+	out = make([]string, 0, len(targets))
+	for _, t := range targets {
+		want, err := src(filepath.ToSlash(t))
+		if err != nil {
+			continue // not in the index: not the commit's, and not judged
+		}
+		have, herr := os.ReadFile(filepath.Join(root, t))
+		if herr == nil && string(have) == string(want) {
+			out = append(out, t)
+			continue
+		}
+		if dir == "" {
+			if dir, err = os.MkdirTemp("", "anchors-index-"); err != nil {
+				out = append(out, t) // @resilient: without a place for the copy, the tree's file is the best there is
+				dir = ""
+				continue
+			}
+		}
+		p := filepath.Join(dir, filepath.FromSlash(t))
+		if os.MkdirAll(filepath.Dir(p), 0o755) != nil || os.WriteFile(p, want, 0o644) != nil {
+			out = append(out, t) // @resilient: a copy that cannot be written leaves the tree's file
+			continue
+		}
+		out = append(out, p)
+	}
+	if dir == "" {
+		return out, clean, done
+	}
+	prefixes := []string{dir}
+	if real, err := filepath.EvalSymlinks(dir); err == nil && real != dir {
+		prefixes = append(prefixes, real) // a tool may print the resolved path (/private/var on macOS)
+	}
+	clean = func(s string) string {
+		for _, d := range prefixes {
+			p := d + string(filepath.Separator)
+			s = strings.ReplaceAll(s, p, "")
+			s = strings.ReplaceAll(s, filepath.ToSlash(p), "")
+		}
+		return s
+	}
+	done = func() { _ = os.RemoveAll(dir) }
+	return out, clean, done
 }

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: EXCMX
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @EXCMX
@@ -114,3 +114,9 @@ Feature: ExternalCommand — executes external tools via shell passing targets a
     Given targets split across separate batches
     When RunExternalArgs executes each batch independently
     Then each batch runs in an isolated shell invocation without shared state
+
+  @EXCMX-B14 @unit-level
+  Scenario: Under --index a command reads the commit's content
+    Given a target edited on disk and a source that holds another text, a target the same in both, and one the source does not have
+    When a command that prints each target's path and content runs
+    Then it reads the source's text under the project's path, the unchanged one as it is, and the absent one is not handed over

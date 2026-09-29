@@ -75,9 +75,15 @@ func RunExternalArgs(command string, targets []string, root string) (Verdict, st
 	script := strings.ReplaceAll(command, "{{file}}", `"$1"`)
 	script = strings.ReplaceAll(script, "{{files}}", `"$@"`)
 
+	// Under `--index` a tool reads the commit's content, not the tree's: a target whose
+	// tree differs from the index is handed over as a copy of what the index holds.
+	targets, clean, done := indexedTargets(root, targets)
+	defer done()
+
 	var falhas []string
 	for _, lote := range sliceTargets(targets, argvLimit()-len(script)) {
 		out, err := execShell(script, lote, root)
+		out = clean(out)
 		if err == nil {
 			continue
 		}

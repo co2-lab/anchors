@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:eaedb21d6dac6648 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b35ddc08a3958a05 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3419,6 +3419,8 @@ teste prova.
 - [The gate does not parse or interpret linter diagnostics](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-X01`
 
 - [The gate does not aggregate cross-file state across partitioned batches](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-X02`
+
+- [Under --index a command reads the commit's content](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B14`
 
 - [Every failure gate skips an artifact that is not a spec](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B01`
 

@@ -2,6 +2,7 @@ package gate
 
 import (
 	"fmt"
+	"os"
 	"runtime"
 	"strings"
 	"testing"
@@ -257,5 +258,31 @@ func TestExternal_DoesNotAggregateCrossFileState(t *testing.T) {
 	v, detail := RunExternalArgs("if [ -z \"$SEEN\" ]; then export SEEN=1; exit 0; else exit 1; fi", []string{"a.ts", "b.ts"}, t.TempDir())
 	if v != Pass {
 		t.Fatalf("expected Pass because each batch runs in its own shell, got %v (%s)", v, detail)
+	}
+}
+
+func TestRunExternal_indexedTargets(t *testing.T) {
+	t.Run("EXCMX-B14: Under --index a command reads the commit's content", func(t *testing.T) {})
+	root := t.TempDir()
+	writeFile(t, root, "src/a.ts", "tree text\n")
+	writeFile(t, root, "src/same.ts", "same\n")
+	restore := SetFileSource(func(rel string) ([]byte, error) {
+		switch rel {
+		case "src/a.ts":
+			return []byte("index text\n"), nil
+		case "src/same.ts":
+			return []byte("same\n"), nil
+		}
+		return nil, os.ErrNotExist
+	})
+	defer restore()
+	v, out := RunExternalArgs(`for f in "$@"; do printf '%s=' "$f"; cat "$f"; done; exit 1`, []string{"src/a.ts", "src/same.ts", "src/gone.ts"}, root)
+	if v != Fail || !strings.Contains(out, "src/a.ts=index text") || !strings.Contains(out, "src/same.ts=same") ||
+		strings.Contains(out, "tree text") || strings.Contains(out, "gone") || strings.Contains(out, "anchors-index-") {
+		t.Errorf("the command reads the index under the project's paths, got %v:\n%s", v, out)
+	}
+	restore()
+	if _, out := RunExternalArgs(`cat "$1"; exit 1`, []string{"src/a.ts"}, root); !strings.Contains(out, "tree text") {
+		t.Errorf("with no source the tree is read, got %s", out)
 	}
 }
