@@ -181,6 +181,7 @@ func findRenames(root, old, new string, patterns []string) ([]FileRename, error)
 		if rerr != nil {
 			return nil
 		}
+		rel = filepath.ToSlash(rel) // the project's paths, as the map and the patterns write them
 		if FileMatchesCode(rel, old, patterns) {
 			to := RenameFilePath(rel, old, new)
 			if to != rel {

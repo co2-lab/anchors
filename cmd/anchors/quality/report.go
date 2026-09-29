@@ -88,7 +88,7 @@ func newReportSubCmd(sp reportSpec) *cobra.Command {
 				return err
 			}
 			rel, _ := filepath.Rel(ctx.root, dest)
-			fmt.Printf("report generated: %s\n", rel)
+			fmt.Printf("report generated: %s\n", filepath.ToSlash(rel))
 			return nil
 		},
 	}

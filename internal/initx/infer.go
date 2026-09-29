@@ -83,11 +83,11 @@ func Infer(root string) (*Proposal, error) {
 			mark(stems, stemOf(rel), "test")
 		case isPlan(rel):
 			if p.PlanDir == "" {
-				p.PlanDir = filepath.Dir(rel)
+				p.PlanDir = filepath.ToSlash(filepath.Dir(rel))
 			}
 		case isGuide(rel):
 			if p.GuideDir == "" {
-				p.GuideDir = filepath.Dir(rel)
+				p.GuideDir = filepath.ToSlash(filepath.Dir(rel))
 			}
 			p.GuideFiles = append(p.GuideFiles, rel)
 		case isCode(name):

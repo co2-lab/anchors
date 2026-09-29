@@ -267,7 +267,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 					rel = c
 				}
 				fmt.Println()
-				fmt.Println(i18n.T("check.output_mirrored", rel))
+				fmt.Println(i18n.T("check.output_mirrored", filepath.ToSlash(rel)))
 			}
 
 			// JULGAMENTO PENDENTE BARRA O COMMIT, e só o commit — não o `--all`.

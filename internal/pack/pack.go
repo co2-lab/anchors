@@ -31,6 +31,7 @@ package pack
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -144,7 +145,9 @@ func LoadAll(root string, refs []string, values map[string]string, jurisdictions
 // resolveRef converte a referência em caminho. Nome curto vira `packs/<nome>.yaml`.
 func resolveRef(root, ref string) string {
 	if strings.HasSuffix(ref, ".yaml") || strings.HasSuffix(ref, ".yml") {
-		if filepath.IsAbs(ref) {
+		// `/x.yaml` is absolute to whoever wrote it, also on Windows, where `filepath`
+		// reads it as relative to the current drive and joined it under the root.
+		if filepath.IsAbs(ref) || path.IsAbs(filepath.ToSlash(ref)) {
 			return ref
 		}
 		return filepath.Join(root, ref)

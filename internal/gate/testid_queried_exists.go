@@ -70,6 +70,7 @@ func checkQueriedTestIDExists(_ string, _ mapx.Node, root string, g *mapx.Graph,
 	var fluxoIlegivel []string
 	for _, f := range flows {
 		rel, _ := filepath.Rel(root, f.path)
+		rel = filepath.ToSlash(rel) // named as the project writes its paths, on every system
 		b, err := os.ReadFile(f.path)
 		if err != nil {
 			fluxoIlegivel = append(fluxoIlegivel, rel)
@@ -236,7 +237,7 @@ func projectExposedHandles(root, attr string, cfg *config.Config) (out, unreadab
 	_ = filepath.Walk(root, func(p string, info os.FileInfo, err error) error {
 		if err != nil {
 			if rel, e := filepath.Rel(root, p); e == nil {
-				unreadable = append(unreadable, rel)
+				unreadable = append(unreadable, filepath.ToSlash(rel))
 			}
 			return nil
 		}
@@ -258,7 +259,7 @@ func projectExposedHandles(root, attr string, cfg *config.Config) (out, unreadab
 		b, e := os.ReadFile(p)
 		if e != nil {
 			if rel, e2 := filepath.Rel(root, p); e2 == nil {
-				unreadable = append(unreadable, rel)
+				unreadable = append(unreadable, filepath.ToSlash(rel))
 			}
 			return nil
 		}

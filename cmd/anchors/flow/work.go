@@ -1096,7 +1096,9 @@ func derivedPaths(rel, layer string, cfg *config.Config) (map[string]string, map
 	if cfg.Derived == nil {
 		return files, overridden
 	}
-	dir := filepath.Dir(rel)
+	// `path`, not `filepath`: `rel` is a map ID, with `/` on every system, and the pieces
+	// listed must be too — `filepath.Dir` gave `packages\\infra/X.test.ts` on Windows.
+	dir := path.Dir(rel)
 	// O NOME vem do `mapx`, e não de um corte local.
 	//
 	// `filepath.Ext("X.spec.md")` é `.md`, então cortar por ela deixa `X.spec` — e o
@@ -1107,7 +1109,7 @@ func derivedPaths(rel, layer string, cfg *config.Config) (map[string]string, map
 	name, _ := mapx.StemOfAnchor(rel)
 	// O módulo é o diretório-pai — usado por overrides que agrupam por Lambda/módulo
 	// (ex.: `packages/backend/__tests__/unit/lambdas/{{module}}.test.ts`).
-	module := filepath.Base(dir)
+	module := path.Base(dir)
 	bruto := map[string]string{}
 	for k, v := range cfg.Derived.PadroesDe() {
 		// O PRIMEIRO padrão: este prompt mostra ONDE escrever cada peça, e uma lista de
@@ -1135,7 +1137,7 @@ func derivedPaths(rel, layer string, cfg *config.Config) (map[string]string, map
 	// fazia o prompt prescrever `Tela.test.ts` sob a frase "Não crie a peça em outro
 	// lugar" — um arquivo que, criado, é erro de sintaxe (JSX em `.ts`). O arquivo real
 	// ao lado era `.test.tsx`, e o mapa o resolvia certo: só o prompt mentia.
-	ext := strings.TrimPrefix(filepath.Ext(rel), ".")
+	ext := strings.TrimPrefix(path.Ext(rel), ".")
 	if ext == "" || ext == "md" {
 		ext = "ts" // alvo sem extensão de código (ou uma spec): o default do projeto
 	}

@@ -3,6 +3,7 @@ package mapcmd
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -338,7 +339,7 @@ func suiteKey(absRoot, report string) string {
 	// Still absolute when no relative path exists — a report on another drive, on
 	// Windows: it is outside the repository too, and keying it by its full path would
 	// give the same suite a different key on every machine.
-	if rel == ".." || strings.HasPrefix(rel, "../") || filepath.IsAbs(filepath.FromSlash(rel)) {
+	if rel == ".." || strings.HasPrefix(rel, "../") || filepath.IsAbs(filepath.FromSlash(rel)) || path.IsAbs(rel) {
 		return mapx.ExternalSuitePrefix + filepath.Base(report)
 	}
 	return rel

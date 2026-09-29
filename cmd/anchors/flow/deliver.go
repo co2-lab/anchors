@@ -167,7 +167,7 @@ After this, the watcher queues the review task.`,
 					return fmt.Errorf("write the record: %w", err)
 				}
 				rel, _ := filepath.Rel(absRoot, p)
-				fmt.Printf("✓ delivery recorded: %s\n", rel)
+				fmt.Printf("✓ delivery recorded: %s\n", filepath.ToSlash(rel))
 			}
 
 			// O REVIEW é a etapa que fecha o ciclo, e a que mais some. Medido: um agente
