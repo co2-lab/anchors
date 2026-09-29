@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/shell"
 )
 
 // fakeJscpd stands in for the tool: each run appends a line to runs.txt and writes
@@ -24,7 +25,10 @@ func fakeJscpd(t *testing.T, root, report string, code int) {
 			script += `; printf '%s' "$3" > "$2/jscpd-report.json"`
 		}
 		script += fmt.Sprintf("; exit %d", code)
-		cmd := exec.Command("sh", "-c", script, "sh", root, outDir, report)
+		cmd, err := shell.Command(script, "sh", root, outDir, report)
+		if err != nil {
+			t.Skip(err)
+		}
 		cmd.Dir = r
 		return cmd
 	}

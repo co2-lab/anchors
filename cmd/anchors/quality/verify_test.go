@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/shell"
 )
 
 // `verify` re-executes its own binary as `check`. Under `go test` that binary is the test
@@ -178,7 +179,7 @@ func TestPrintPreCommitTouchWarnsOnFailure(t *testing.T) {
 // to let through.
 func TestExitNotGovernedCrossesTheSubprocess(t *testing.T) {
 	// `sh -c 'exit 3'` reproduces the child's code.
-	err := translateChildOutput(exec.Command("sh", "-c", "exit 3").Run())
+	err := translateChildOutput(shellRun(t, "exit 3"))
 
 	var nr errNotGoverned
 	if !errors.As(err, &nr) {
@@ -189,7 +190,7 @@ func TestExitNotGovernedCrossesTheSubprocess(t *testing.T) {
 // Any other code stays a failure: only 3 has its own handling.
 func TestOtherCodesStayFailures(t *testing.T) {
 	t.Run("VPFVR-E02: Any other failing exit of the child stays a failure", func(t *testing.T) {})
-	err := translateChildOutput(exec.Command("sh", "-c", "exit 1").Run())
+	err := translateChildOutput(shellRun(t, "exit 1"))
 
 	var nr errNotGoverned
 	if errors.As(err, &nr) {
@@ -201,7 +202,7 @@ func TestOtherCodesStayFailures(t *testing.T) {
 }
 
 func TestSuccessReturnsNoError(t *testing.T) {
-	if err := translateChildOutput(exec.Command("sh", "-c", "exit 0").Run()); err != nil {
+	if err := translateChildOutput(shellRun(t, "exit 0")); err != nil {
 		t.Errorf("exit 0 returned an error: %v", err)
 	}
 }
@@ -343,4 +344,14 @@ func TestVerify_stagedReadsTheIndex(t *testing.T) {
 	if got := subArgs(append([]string{}, base...), false); strings.Join(got, " ") != strings.Join(base, " ") {
 		t.Errorf("over the tree nothing is added, got %v", got)
 	}
+}
+
+// shellRun runs a one-line POSIX script through the shell the project's commands use.
+func shellRun(t *testing.T, script string) error {
+	t.Helper()
+	cmd, err := shell.Command(script)
+	if err != nil {
+		t.Skip(err)
+	}
+	return cmd.Run()
 }

@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/health"
 	"github.com/co2-lab/anchors/internal/initx"
@@ -90,9 +92,7 @@ esac
 echo "unexpected gh call: $*" >&2
 exit 2
 `
-	if err := os.WriteFile(filepath.Join(bin, "gh"), []byte(script), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, bin, "gh", script)
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 	return log
 }
@@ -335,9 +335,7 @@ func TestRepairEnvironmentRequiresGHLogin(t *testing.T) {
 	t.Run("HLDCH-E04: The fix with gh not logged in refuses before seeding anything", func(t *testing.T) {})
 	englishOutput(t)
 	bin := t.TempDir()
-	if err := os.WriteFile(filepath.Join(bin, "gh"), []byte("#!/bin/sh\necho 'not logged in'\nexit 1\n"), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, bin, "gh", "#!/bin/sh\necho 'not logged in'\nexit 1\n")
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 	cfg := &config.Config{Workflow: &config.Workflow{Mode: config.ModeGitHub, Repo: "acme/app", Labels: []string{"anchors"}}}
 	dir := t.TempDir()

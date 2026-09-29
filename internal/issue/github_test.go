@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/initx"
 )
 
@@ -61,9 +63,7 @@ func fakeGH(t *testing.T, listJSON, failOn string) (calls func() []string) {
 		script += failOn + ") echo 'HTTP 502' >&2; exit 1 ;;\n"
 	}
 	script += "'issue list'*) cat <<'__EOF__'\n" + listJSON + "\n__EOF__\n;;\nesac\nexit 0\n"
-	if err := os.WriteFile(filepath.Join(dir, "gh"), []byte(script), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, dir, "gh", script)
 	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	return func() []string {
 		b, _ := os.ReadFile(log)

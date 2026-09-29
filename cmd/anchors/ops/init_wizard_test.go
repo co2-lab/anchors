@@ -11,6 +11,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/initx"
@@ -23,22 +25,7 @@ import (
 // pipe buffer and block the test.
 func captureStdout(t *testing.T, fn func()) string {
 	t.Helper()
-	orig := os.Stdout
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	done := make(chan string)
-	go func() {
-		b, _ := io.ReadAll(r)
-		done <- string(b)
-	}()
-	os.Stdout = w
-	defer func() { os.Stdout = orig }()
-	fn()
-	w.Close()
-	os.Stdout = orig
-	return <-done
+	return testkit.CaptureStdout(t, fn)
 }
 
 // skipIfTerminal skips a test that drives the interactive prompts. `huh` opens /dev/tty,
@@ -114,9 +101,7 @@ func fakeGH(t *testing.T, body string) string {
 	dir := t.TempDir()
 	logPath := filepath.Join(dir, "gh.log")
 	script := "#!/bin/bash\necho \"$*\" >> '" + logPath + "'\n" + body + "\n"
-	if err := os.WriteFile(filepath.Join(dir, "gh"), []byte(script), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, dir, "gh", script)
 	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	return logPath
 }

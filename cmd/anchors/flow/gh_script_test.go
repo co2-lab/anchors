@@ -1,13 +1,14 @@
 package flow
 
 import (
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/testkit"
 
 	"github.com/co2-lab/anchors/internal/config"
 )
@@ -50,9 +51,7 @@ func scriptedGH(t *testing.T, rules ...ghRule) (calls func() []string) {
 		s.WriteString("exit " + strconv.Itoa(r.code) + " ;;\n")
 	}
 	s.WriteString("esac\nexit 0\n")
-	if err := os.WriteFile(filepath.Join(dir, "gh"), []byte(s.String()), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, dir, "gh", s.String())
 	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
 	// The agent's own cards are looked up through `gh` when ANCHORS_AGENT is set; a test
 	// that does not ask for it must not inherit the caller's.
@@ -167,31 +166,11 @@ func cfgGitHub() *config.Config {
 // stdoutOf returns what fn printed on standard output.
 func stdoutOf(t *testing.T, fn func()) string {
 	t.Helper()
-	orig := os.Stdout
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	os.Stdout = w
-	fn()
-	w.Close()
-	os.Stdout = orig
-	b, _ := io.ReadAll(r)
-	return string(b)
+	return testkit.CaptureStdout(t, fn)
 }
 
 // stderrOf returns what fn printed on standard error.
 func stderrOf(t *testing.T, fn func()) string {
 	t.Helper()
-	orig := os.Stderr
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	os.Stderr = w
-	fn()
-	w.Close()
-	os.Stderr = orig
-	b, _ := io.ReadAll(r)
-	return string(b)
+	return testkit.CaptureStderr(t, fn)
 }

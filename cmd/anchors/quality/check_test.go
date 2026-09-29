@@ -3,13 +3,14 @@ package quality
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/co2-lab/anchors/internal/testkit"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
@@ -327,21 +328,7 @@ func TestCheckReadsTheWaiverFromTheEnvironment(t *testing.T) {
 
 func captureStderr(t *testing.T, fn func()) string {
 	t.Helper()
-	orig := os.Stderr
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	os.Stderr = w
-	done := make(chan string, 1)
-	go func() {
-		b, _ := io.ReadAll(r)
-		done <- string(b)
-	}()
-	fn()
-	w.Close()
-	os.Stderr = orig
-	return <-done
+	return testkit.CaptureStderr(t, fn)
 }
 
 func TestCheckWarnsAboutRevStaleMapNodesOnChangedOnly(t *testing.T) {
@@ -1383,17 +1370,7 @@ func mustTime(t *testing.T, s string) time.Time {
 // `timing-metrics` flag use it too.)
 func capturaSaida(t *testing.T, fn func()) string {
 	t.Helper()
-	orig := os.Stdout
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	os.Stdout = w
-	fn()
-	w.Close()
-	os.Stdout = orig
-	b, _ := io.ReadAll(r)
-	return string(b)
+	return testkit.CaptureStdout(t, fn)
 }
 
 // THE DEFECT THIS CATCHES: an older binary does not fail — it writes the format it knows
@@ -2272,9 +2249,7 @@ func fakeBoard(t *testing.T) string {
 	bin := t.TempDir()
 	log := filepath.Join(bin, "calls.log")
 	script := "#!/bin/sh\necho \"gh $*\" >> \"" + log + "\"\nexit 1\n"
-	if err := os.WriteFile(filepath.Join(bin, "gh"), []byte(script), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, bin, "gh", script)
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 	return log
 }

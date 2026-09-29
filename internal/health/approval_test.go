@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/i18n"
 )
@@ -82,9 +84,7 @@ func fakeGH(t *testing.T, answers ...ghAnswer) (calls, stdin func() string) {
 		s += "[ -t 0 ] || /bin/cat >> '" + in + "'\nexit " + strconv.Itoa(a.code) + " ;;\n"
 	}
 	s += "esac\necho 'no rule' >&2\nexit 1\n"
-	if err := os.WriteFile(filepath.Join(dir, "gh"), []byte(s), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, dir, "gh", s)
 	t.Setenv("PATH", dir)
 	read := func(p string) func() string {
 		return func() string { b, _ := os.ReadFile(p); return string(b) }

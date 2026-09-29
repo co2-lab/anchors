@@ -8,6 +8,8 @@ import (
 	"testing"
 	"unicode/utf8"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/config"
 )
 
@@ -21,9 +23,7 @@ func fakeGH(t *testing.T, output string, exitCode int) string {
 	writeFile(t, outFile, output)
 	script := "#!/bin/sh\nfor a in \"$@\"; do printf '%s\\n' \"$a\" >> '" + argsFile + "'; done\n" +
 		"cat '" + outFile + "'\nexit " + string(rune('0'+exitCode)) + "\n"
-	if err := os.WriteFile(filepath.Join(dir, "gh"), []byte(script), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, dir, "gh", script)
 	t.Setenv("PATH", dir+string(os.PathListSeparator)+"/bin"+string(os.PathListSeparator)+"/usr/bin")
 	return argsFile
 }

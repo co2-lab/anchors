@@ -3,18 +3,18 @@ package board
 import (
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/shell"
+	"github.com/co2-lab/anchors/internal/testkit"
 )
 
 // fakeGhOnPath puts on the PATH a `gh` running the given shell body.
 func fakeGhOnPath(t *testing.T, body string) {
 	t.Helper()
 	dir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(dir, "gh"), []byte("#!/bin/sh\n"+body+"\n"), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, dir, "gh", "#!/bin/sh\n"+body+"\n")
 	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
 }
 
@@ -49,7 +49,11 @@ func TestAuthHint_namesTheCauseOfCode4(t *testing.T) {
 func TestAuthHint_onlyCode4(t *testing.T) {
 	t.Run("GHRNG-B03: Other failures get no authentication hint", func(t *testing.T) {})
 	for _, code := range []string{"1", "2", "3", "5", "127"} {
-		err := exec.Command("sh", "-c", "exit "+code).Run()
+		cmd, serr := shell.Command("exit " + code)
+		if serr != nil {
+			t.Skip(serr)
+		}
+		err := cmd.Run()
 		if hint := authHint(err, nil); hint != "" {
 			t.Errorf("exit %s got the auth hint:\n%s", code, hint)
 		}

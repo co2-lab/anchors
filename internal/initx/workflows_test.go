@@ -3,16 +3,19 @@ package initx
 import (
 	"embed"
 	"encoding/json"
-	"gopkg.in/yaml.v3"
 	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
 	"sort"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/testkit"
+	"gopkg.in/yaml.v3"
 
 	"github.com/co2-lab/anchors/internal/board"
 	"github.com/co2-lab/anchors/internal/config"
@@ -449,7 +452,7 @@ func TestScriptsDosPipelinesSaoBashValido(t *testing.T) {
 				if strings.TrimSpace(s.Run) == "" {
 					continue
 				}
-				cmd := exec.Command("bash", "-n")
+				cmd := pipelineBash(t, "-n")
 				cmd.Stdin = strings.NewReader(s.Run)
 				if out, err := cmd.CombinedOutput(); err != nil {
 					t.Errorf("%s / %q: script inválido:\n%s", w.Arquivo, s.Name, out)
@@ -2156,11 +2159,9 @@ func runClaim(t *testing.T, env ...string) (string, bool) {
 	if err := os.MkdirAll(bin, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(bin, "gh"), []byte(fakeGH), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, bin, "gh", fakeGH)
 	logFile := filepath.Join(dir, "gh.log")
-	cmd := exec.Command("bash", "-c", script)
+	cmd := pipelineBash(t, "-c", script)
 	cmd.Env = append(os.Environ(),
 		"PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"),
 		"FAKE_LOG="+logFile, "FAKE_CARD=4",
@@ -2408,7 +2409,7 @@ esac`,
 				"sudo":    "exit 0",
 				"anchors": "exit 0",
 			})
-			cmd := exec.Command("bash", "-c", script)
+			cmd := pipelineBash(t, "-c", script)
 			cmd.Dir = dir
 			cmd.Env = append(os.Environ(), "PATH="+path, "GOT="+got)
 			if out, err := cmd.CombinedOutput(); err != nil {
@@ -2550,7 +2551,7 @@ esac
 exit 0`,
 		"sleep": "exit 0",
 	})
-	cmd := exec.Command("bash", "-c", script)
+	cmd := pipelineBash(t, "-c", script)
 	cmd.Dir = work
 	cmd.Env = append(os.Environ(), "PATH="+path, "STATE="+state, "CAN_PUSH="+canPush,
 		"GH_REPO=o/r", "BASE=develop", "GITHUB_STEP_SUMMARY="+filepath.Join(state, "summary"),
@@ -3356,11 +3357,9 @@ func runStale(t *testing.T, env ...string) (out, calls string) {
 	if err := os.MkdirAll(bin, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(bin, "gh"), []byte(staleFakeGH), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, bin, "gh", staleFakeGH)
 	logFile := filepath.Join(dir, "gh.log")
-	cmd := exec.Command("bash", "-c", script)
+	cmd := pipelineBash(t, "-c", script)
 	cmd.Env = append(os.Environ(), "PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"),
 		"FAKE_LOG="+logFile, "GH_REPO=o/r", "LABEL=anchors", "HORAS_ESPERA=2", "HORAS_ANDAMENTO=24", "HORAS_RETRABALHO=1")
 	cmd.Env = append(cmd.Env, env...)
@@ -3527,9 +3526,7 @@ func newGHWorld(t *testing.T) *ghWorld {
 	if err := os.MkdirAll(filepath.Join(dir, "fixtures"), 0o755); err != nil {
 		t.Fatal(err)
 	}
-	if err := os.WriteFile(filepath.Join(dir, "gh"), []byte(reviewFakeGH), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, dir, "gh", reviewFakeGH)
 	return &ghWorld{t: t, dir: dir}
 }
 
@@ -3551,7 +3548,7 @@ func (w *ghWorld) run(script string, env map[string]string) (out, calls, outputs
 	ghOut := filepath.Join(w.dir, "github_output")
 	_ = os.WriteFile(ghOut, nil, 0o644)
 	_ = os.Remove(filepath.Join(w.dir, "calls.log"))
-	cmd := exec.Command("bash", "-c", script)
+	cmd := pipelineBash(w.t, "-c", script)
 	cmd.Env = append(os.Environ(),
 		"PATH="+w.dir+string(os.PathListSeparator)+os.Getenv("PATH"),
 		"GITHUB_OUTPUT="+ghOut,
@@ -4130,4 +4127,15 @@ func TestPRChecksRejectedGoesBackToTheAuthor(t *testing.T) {
 	if strings.Contains(calls, "add-label=anchors:to-do") || strings.Contains(calls, "BODY anchors-owner: agent-a") {
 		t.Errorf("an approval must leave the card for the merge:\n%s", calls)
 	}
+}
+
+// pipelineBash runs a pipeline's script. The pipelines run on ubuntu-latest, and their
+// scripts are Linux bash (GNU tools, `/tmp`, `date +%s`): on Windows there is nothing of
+// theirs to prove, so the test that runs one skips there.
+func pipelineBash(t *testing.T, args ...string) *exec.Cmd {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("the pipelines run on ubuntu-latest: their scripts are Linux bash")
+	}
+	return exec.Command("bash", args...)
 }

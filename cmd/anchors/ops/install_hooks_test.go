@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/config"
 )
 
@@ -285,9 +287,7 @@ verify) exit "${FAKE_VERIFY_STATUS:-0}" ;;
 esac
 exit 0
 `
-	if err := os.WriteFile(filepath.Join(dir, "anchors"), []byte(script), 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, dir, "anchors", script)
 	t.Setenv("PATH", dir+string(os.PathListSeparator)+os.Getenv("PATH"))
 }
 

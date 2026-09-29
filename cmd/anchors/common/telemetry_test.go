@@ -1,13 +1,14 @@
 package common
 
 import (
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/co2-lab/anchors/internal/testkit"
 
 	"github.com/spf13/cobra"
 )
@@ -28,17 +29,7 @@ func isolateTelemetry(t *testing.T) {
 
 func captureStderr(t *testing.T, f func()) string {
 	t.Helper()
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	old := os.Stderr
-	os.Stderr = w
-	defer func() { os.Stderr = old }()
-	f()
-	w.Close()
-	b, _ := io.ReadAll(r)
-	return string(b)
+	return testkit.CaptureStderr(t, f)
 }
 
 func cmdWithRoot(root string) *cobra.Command {

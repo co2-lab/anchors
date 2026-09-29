@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/co2-lab/anchors/internal/testkit"
+
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/spf13/cobra"
 )
@@ -15,21 +17,7 @@ import (
 // with fmt.Printf, not through cmd.OutOrStdout, so the pipe is the only way to read them.
 func captureStdout(t *testing.T, fn func()) string {
 	t.Helper()
-	orig := os.Stdout
-	r, w, err := os.Pipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	os.Stdout = w
-	done := make(chan string)
-	go func() {
-		b, _ := io.ReadAll(r)
-		done <- string(b)
-	}()
-	fn()
-	w.Close()
-	os.Stdout = orig
-	return <-done
+	return testkit.CaptureStdout(t, fn)
 }
 
 // govProject writes a throwaway project: anchors.yaml, the given files, and the map.
