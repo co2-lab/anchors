@@ -113,7 +113,7 @@ func Parse(b []byte) ([]Test, error) {
 		switch {
 		case t.File == "":
 			return nil, fmt.Errorf("tests[%d]: `file` is empty", i)
-		case filepath.IsAbs(t.File) || strings.HasPrefix(path.Clean(filepath.ToSlash(t.File)), "../"):
+		case filepath.IsAbs(t.File) || path.IsAbs(filepath.ToSlash(t.File)) || strings.HasPrefix(path.Clean(filepath.ToSlash(t.File)), "../"):
 			return nil, fmt.Errorf("tests[%d]: `file` %q is not relative to the project root", i, t.File)
 		case t.Line < 1:
 			return nil, fmt.Errorf("tests[%d]: `line` must count from 1", i)

@@ -3,6 +3,7 @@ package flow
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -1195,7 +1196,8 @@ func writeOpenIssues(b *strings.Builder, root, rel string) {
 			if !issueNamesUnit(nome, slug) {
 				continue
 			}
-			achadas = append(achadas, filepath.Join(issue.Dir, string(st), nome))
+			// `/` on every system: the prompt names a path the reader copies, as the map does.
+			achadas = append(achadas, path.Join(issue.Dir, string(st), nome))
 		}
 	}
 	if len(achadas) == 0 {

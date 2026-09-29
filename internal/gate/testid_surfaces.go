@@ -10,6 +10,7 @@ package gate
 
 import (
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -168,8 +169,10 @@ func firstStaticSegment(padrao string) string {
 	if loc := placeholderRE.FindStringIndex(padrao); loc != nil {
 		padrao = padrao[:loc[0]]
 		if padrao != "" && !strings.HasSuffix(padrao, "/") {
-			padrao = filepath.Dir(padrao)
+			padrao = path.Dir(padrao)
 		}
 	}
-	return strings.TrimSuffix(filepath.Clean(padrao), "/")
+	// `path`, not `filepath`: the pattern is written with `/` whatever the system, and
+	// `filepath` turned `e2e/flows` into `e2e\flows` on Windows.
+	return strings.TrimSuffix(path.Clean(padrao), "/")
 }
