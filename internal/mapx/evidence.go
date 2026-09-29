@@ -108,3 +108,6 @@ func (g *Graph) node(id string) *Node {
 	}
 	return nil
 }
+
+// Node is the map's node with this id, or nil.
+func (g *Graph) Node(id string) *Node { return g.node(id) }

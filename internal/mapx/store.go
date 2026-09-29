@@ -59,6 +59,13 @@ func Load(path string) (*Graph, error) {
 	if err != nil {
 		return nil, err
 	}
+	return LoadBytes(data, path)
+}
+
+// LoadBytes reads a map from its bytes — one git keeps, for instance — with the same
+// format check as Load; `name` says where it came from in the errors.
+func LoadBytes(data []byte, name string) (*Graph, error) {
+	path := name
 	var g Graph
 	if err := yaml.Unmarshal(data, &g); err != nil {
 		return nil, err

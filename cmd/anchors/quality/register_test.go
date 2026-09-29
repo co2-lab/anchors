@@ -8,10 +8,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var qualityCommandNames = []string{"check", "coverage", "doctor", "mutation", "report", "stale", "stamp", "status", "test", "touch", "verify"}
+var qualityCommandNames = []string{"check", "coverage", "doctor", "keep-evidence", "mutation", "report", "stale", "stamp", "status", "test", "touch", "verify"}
 
 func TestRegisterAddsExactlyTheQualityCommands(t *testing.T) {
-	t.Run("QLCMQ-B01: The quality domain registers exactly its eleven commands", func(t *testing.T) {})
+	t.Run("QLCMQ-B01: The quality domain registers exactly its twelve commands", func(t *testing.T) {})
 	t.Run("QLCMQ-I01: No two quality commands share a name", func(t *testing.T) {})
 	root := &cobra.Command{Use: "anchors"}
 	Register(root)

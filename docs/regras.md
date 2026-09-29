@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:e01ce49370e17c61 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:83b83a61bdcdb96b — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -193,11 +193,13 @@ abra a página dela em `camadas/`.
 
 ### [HLDCH — DoctorCommand — the global health x-ray, and the repair of the github-mode environment](camadas/comando.md#hldch--doctorcommand--the-global-health-x-ray-and-the-repair-of-the-github-mode-environment)
 
+### [KPEVD — KeepEvidence — a change that proves nothing new keeps the files' evidence](camadas/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence)
+
 ### [LCBCL — LocalBacklog — what is still open locally after a full check, said in two lines](camadas/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines)
 
 ### [MPSYN — MapSyncForCommit — the commit carries the map a build of the commit makes](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes)
 
-### [QLCMQ — QualityCommands — the quality domain puts its eleven commands under the root command](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-eleven-commands-under-the-root-command)
+### [QLCMQ — QualityCommands — the quality domain puts its twelve commands under the root command](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command)
 
 ### [RPRTS — Reports — markdown perspectives on what Anchors already measures, written into docs](camadas/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs)
 

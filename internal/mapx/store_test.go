@@ -2,6 +2,7 @@ package mapx
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -145,5 +146,21 @@ func TestSaveReturnsTheWriteError(t *testing.T) {
 	p := filepath.Join(t.TempDir(), "missing", "anchors.graph.yaml")
 	if err := Save(&Graph{}, p); err == nil {
 		t.Error("a save into a directory that does not exist must return the error")
+	}
+}
+
+func TestLoadBytes(t *testing.T) {
+	t.Run("GRPRG-B06: A map read from bytes is read like one from disk", func(t *testing.T) {})
+	g, err := LoadBytes([]byte(fmt.Sprintf("version: %d\nnodes:\n  - id: a\n    kind: code\n    rev: r1\nedges: []\n", FormatoAtual)), "HEAD:m")
+	if err != nil || len(g.Nodes) != 1 || g.Nodes[0].Rev != "r1" {
+		t.Fatalf("a current map reads, got %+v %v", g, err)
+	}
+	g, err = LoadBytes([]byte("version: 1\nnodes: []\n"), "HEAD:m")
+	var fe *ErroDeFormato
+	if g != nil || !errors.As(err, &fe) || !strings.Contains(err.Error(), "HEAD:m") {
+		t.Errorf("an unreadable format is refused naming where it came from, got %+v %v", g, err)
+	}
+	if _, err := LoadBytes([]byte(":\n-"), "x"); err == nil {
+		t.Error("bytes that are not a map are refused")
 	}
 }

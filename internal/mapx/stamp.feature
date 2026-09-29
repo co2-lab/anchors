@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: EDSTD
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @EDSTD
@@ -115,3 +115,9 @@ Feature: EdgeStamping — recording on each relation that it was confronted, wit
     Given a file measured at one revision, with a proof, a coverage, a mutation, a test's closure, a stamp and a judgment, and a coverage of an older revision
     When the file moves to a new revision
     Then everything measured at the first moves with it, and the older coverage and the other file stay
+
+  @EDSTD-B17 @unit-level
+  Scenario: A declared change keeps what was proven, and the lines only when asked
+    Given a spec proven at two earlier revisions, a code file with coverage and mutation, and a test whose closure holds the spec
+    When their evidence is kept, with and without lines
+    Then the proofs, closures and stamps move to the current revision, the coverage moves only with lines, and each declaration is recorded

@@ -349,6 +349,9 @@ type TestSignal struct {
 	// vencer, e nenhum sinal deles muda — o teste não mudou, mudou o que ele executa.
 	ClosureRev map[string]string `yaml:"closure_rev,omitempty"`
 	IngestedAt string            `yaml:"ingested_at,omitempty"`
+	// EvidenceKept: the latest declarations that the evidence still held after a change
+	// (`anchors keep-evidence`), with the reason — what a reviewer reads to trust it.
+	EvidenceKept []EvidenceKeep `yaml:"evidence_kept,omitempty"`
 }
 
 // LayerExec é o resultado de execução de UMA camada de teste sobre um nó.

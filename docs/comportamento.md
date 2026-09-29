@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:417d12b77d7dff9c — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:18c3f17b9d202ea2 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2290,6 +2290,16 @@ teste prova.
 
 - [The fix with gh not logged in refuses before seeding anything](camadas/comando.md#hldch--doctorcommand--the-global-health-x-ray-and-the-repair-of-the-github-mode-environment) `HLDCH-E04`
 
+- [The evidence moves to the current content with the reason](camadas/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B01`
+
+- [A rebuilt map's lost evidence comes from HEAD](camadas/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B02`
+
+- [Nothing to keep is said](camadas/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B03`
+
+- [The contract stamps are refreshed under the same declaration](camadas/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-B04`
+
+- [A missing reason, file or map fails](camadas/comando.md#kpevd--keepevidence--a-change-that-proves-nothing-new-keeps-the-files-evidence) `KPEVD-E01`
+
 - [The issues in todo and doing are counted, with the user-owned ones apart](camadas/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines) `LCBCL-B01`
 
 - [The pending and claimed tasks are counted](camadas/comando.md#lcbcl--localbacklog--what-is-still-open-locally-after-a-full-check-said-in-two-lines) `LCBCL-B02`
@@ -2314,13 +2324,13 @@ teste prova.
 
 - [A map that cannot be written gives the error back](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-E01`
 
-- [The quality domain registers exactly its eleven commands](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-eleven-commands-under-the-root-command) `QLCMQ-B01`
+- [The quality domain registers exactly its twelve commands](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command) `QLCMQ-B01`
 
-- [Each quality command is reachable by its name](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-eleven-commands-under-the-root-command) `QLCMQ-B02`
+- [Each quality command is reachable by its name](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command) `QLCMQ-B02`
 
-- [No two quality commands share a name](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-eleven-commands-under-the-root-command) `QLCMQ-I01`
+- [No two quality commands share a name](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command) `QLCMQ-I01`
 
-- [Registering the quality commands prints nothing](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-eleven-commands-under-the-root-command) `QLCMQ-X01`
+- [Registering the quality commands prints nothing](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command) `QLCMQ-X01`
 
 - [A single perspective is written to docs or to the chosen file](camadas/comando.md#rprts--reports--markdown-perspectives-on-what-anchors-already-measures-written-into-docs) `RPRTS-B01`
 
@@ -6622,6 +6632,8 @@ teste prova.
 
 - [A new revision that proves nothing new keeps what was measured](camadas/mapa.md#edstd-b16--a-new-revision-that-proves-nothing-new-keeps-what-was-measured) `EDSTD-B16`
 
+- [A declared change keeps what was proven, and the lines only when asked](camadas/mapa.md#edstd-b17--a-declared-change-keeps-what-was-proven-and-the-lines-only-when-asked) `EDSTD-B17`
+
 - [Saving stamps the current format and the running binary's release](camadas/mapa.md#grprg-b01--saving-stamps-the-current-format-and-the-running-binarys-release) `GRPRG-B01`
 
 - [The saved file starts with the fixed comment header](camadas/mapa.md#grprg-b02--the-saved-file-starts-with-the-fixed-comment-header) `GRPRG-B02`
@@ -6641,6 +6653,8 @@ teste prova.
 - [Loading text that is not the map returns the parse error](camadas/mapa.md#grprg-e02--loading-text-that-is-not-the-map-returns-the-parse-error) `GRPRG-E02`
 
 - [Saving into a missing directory returns the write error](camadas/mapa.md#grprg-e04--saving-into-a-missing-directory-returns-the-write-error) `GRPRG-E04`
+
+- [A map read from bytes is read like one from disk](camadas/mapa.md#grprg-b06--a-map-read-from-bytes-is-read-like-one-from-disk) `GRPRG-B06`
 
 - [With code as the anchor a code file tests through its own name](camadas/mapa.md#tsunt-b01--with-code-as-the-anchor-a-code-file-tests-through-its-own-name) `TSUNT-B01`
 

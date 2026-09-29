@@ -1,5 +1,10 @@
 package mapx
 
+import (
+	"sort"
+	"strings"
+)
+
 // A gravação do carimbo (o loop check→carimbo, PROPAGATION §3 + QUALITY §5). O gate
 // roda POR NÓ; o carimbo é POR ARESTA. Esta é a cola: dado o veredito de cada nó
 // confrontado, carimba as arestas cujas DUAS pontas foram confrontadas — porque só
@@ -377,4 +382,153 @@ func (g *Graph) RebaseRev(id, from, to string) {
 			}
 		}
 	}
+}
+
+// EvidenceKeep records that someone who changed a file declared its evidence still holds:
+// the revisions it was measured at, the one it was carried to, why, when, and whether the
+// line-level signals went along.
+type EvidenceKeep struct {
+	From   string `yaml:"from"`
+	To     string `yaml:"to"`
+	Reason string `yaml:"reason"`
+	At     string `yaml:"at"`
+	Lines  bool   `yaml:"lines,omitempty"`
+}
+
+// maxEvidenceKeeps is how many declarations a node keeps: the latest, which is what a
+// reviewer reads.
+const maxEvidenceKeeps = 5
+
+// KeepEvidence carries the evidence of the file `id` to its current revision `to`, because
+// whoever changed it declared, with a reason, that the change does not touch what was
+// proven: a trace annotation, a date, a comment. Anchors cannot tell a metadata edit from a
+// behaviour change in every language; the author can, and says so.
+//
+// What moves: the node's execution and scenario proofs, the stamps and judgments of its
+// edges, and the closure revisions other tests recorded for it. The line-level signals —
+// coverage and mutation, which name lines by number — move only with `lines`: an edit that
+// added or removed lines moved them, and only the author knows. The node's revision becomes
+// `to`. It returns the revisions carried, and records the declaration on the node.
+func (g *Graph) KeepEvidence(id, to, reason, at string, lines bool) []string {
+	i := g.nodeIndex(id)
+	if i < 0 {
+		return nil
+	}
+	n := &g.Nodes[i]
+	n.Rev = to
+	olds := map[string]bool{}
+	add := func(r string) {
+		if r != "" && r != to && r != "unknown" {
+			olds[r] = true
+		}
+	}
+	s := n.Signal
+	lineLevel := s != nil && (len(s.CoverageBySuite) > 0 || s.TotalLines > 0 || s.MutationAtRev != "" || len(s.MutationByScope) > 0)
+	if s != nil {
+		for _, r := range s.ProvenRevBySuite {
+			add(r)
+		}
+		if !lineLevel || lines {
+			add(s.AtRev)
+		}
+		if lines {
+			add(s.MutationAtRev)
+			for _, c := range s.CoverageBySuite {
+				add(c.AtRev)
+			}
+			for _, m := range s.MutationByScope {
+				add(m.AtRev)
+			}
+		}
+	}
+	for _, x := range g.Nodes {
+		if x.Signal != nil {
+			add(x.Signal.ClosureRev[id])
+		}
+	}
+	for _, e := range g.Edges {
+		if e.From != id && e.To != id {
+			continue
+		}
+		if e.Stamp != nil {
+			if e.From == id {
+				add(e.Stamp.ValidatedFromRev)
+			} else {
+				add(e.Stamp.ValidatedToRev)
+			}
+		}
+		for _, j := range e.Julgamentos {
+			if e.From == id {
+				add(j.ValidatedFromRev)
+			} else {
+				add(j.ValidatedToRev)
+			}
+		}
+	}
+	var carried []string
+	for r := range olds {
+		carried = append(carried, r)
+	}
+	sort.Strings(carried)
+	if len(carried) == 0 {
+		return nil
+	}
+	for _, from := range carried {
+		if lines {
+			g.RebaseRev(id, from, to)
+			continue
+		}
+		// Everything RebaseRev moves but the line-level signals, and the node's shared
+		// revision only when it does not stamp them.
+		var keepAt, keepMut string
+		var keepCov map[string]SuiteCoverage
+		var keepScope map[string]MutationScope
+		if s != nil {
+			keepMut = s.MutationAtRev
+			keepCov = cloneCoverage(s.CoverageBySuite)
+			keepScope = cloneScopes(s.MutationByScope)
+			if lineLevel {
+				keepAt = s.AtRev
+			}
+		}
+		g.RebaseRev(id, from, to)
+		if s != nil {
+			s.MutationAtRev, s.CoverageBySuite, s.MutationByScope = keepMut, keepCov, keepScope
+			if lineLevel {
+				s.AtRev = keepAt
+			}
+		}
+	}
+	if n.Signal == nil {
+		n.Signal = &TestSignal{}
+	}
+	n.Signal.EvidenceKept = append(n.Signal.EvidenceKept, EvidenceKeep{
+		From: strings.Join(carried, " "), To: to, Reason: reason, At: at, Lines: lines,
+	})
+	if k := len(n.Signal.EvidenceKept); k > maxEvidenceKeeps {
+		n.Signal.EvidenceKept = n.Signal.EvidenceKept[k-maxEvidenceKeeps:]
+	}
+	return carried
+}
+
+func cloneCoverage(m map[string]SuiteCoverage) map[string]SuiteCoverage {
+	if m == nil {
+		return nil
+	}
+	out := make(map[string]SuiteCoverage, len(m))
+	for k, v := range m {
+		out[k] = v
+	}
+	return out
+}
+
+func cloneScopes(m map[string]MutationScope) map[string]MutationScope {
+	if m == nil {
+		return nil
+	}
+	out := make(map[string]MutationScope, len(m))
+	for k, v := range m {
+		out[k] = v
+	}
+	return out
 }

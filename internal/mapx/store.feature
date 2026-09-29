@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GRPRG
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @GRPRG
@@ -66,3 +66,9 @@ Feature: GraphPersistence — saving and loading the map file without churn and 
     Given a path inside a directory that does not exist
     When a graph is saved there
     Then the write error is returned
+
+  @GRPRG-B06 @unit-level
+  Scenario: A map read from bytes is read like one from disk
+    Given the bytes of a current map and of a map in an unreadable format
+    When each is read from its bytes
+    Then the first gives its graph and the second the format refusal naming where it came from

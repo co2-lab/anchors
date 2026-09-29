@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRPRG
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: mapa
 -->
 # GraphPersistence — saving and loading the map file without churn and without partial reads
@@ -40,6 +40,7 @@ understood.
 | `GRPRG-B03` | When the only difference between the new content and the file on disk is the line naming the binary that wrote it, the file is left untouched. |
 | `GRPRG-B04` | When anything else changed, the file is rewritten, carrying the release of the binary that is running. |
 | `GRPRG-B05` | Loading a map whose format this binary cannot read returns the format refusal and no graph. |
+| `GRPRG-B06` | A map read from its bytes — the one git keeps at a commit — is read like one from disk, with the same format check, and a refusal names where it came from. (`LoadBytes`) |
 
 ## Invariants
 

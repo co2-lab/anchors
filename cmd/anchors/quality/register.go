@@ -15,4 +15,5 @@ func Register(root *cobra.Command) {
 	root.AddCommand(newMutationCmd())
 	root.AddCommand(newStampCmd())
 	root.AddCommand(newTouchCmd())
+	root.AddCommand(newKeepEvidenceCmd())
 }

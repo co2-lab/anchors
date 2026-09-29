@@ -1,6 +1,10 @@
 package mapx
 
-import "testing"
+import (
+	"fmt"
+	"strings"
+	"testing"
+)
 
 // graph: spec(rev a) ──specifies──▶ code(rev b), and code ──tested-by──▶ test(rev c)
 func stampGraph() *Graph {
@@ -478,5 +482,72 @@ func TestRebaseRev(t *testing.T) {
 	g.RebaseRev("a.spec.md", "r9", "r3")
 	if g.Nodes[0].Rev != "r2" {
 		t.Error("a revision the file is not at moves nothing")
+	}
+}
+
+func TestKeepEvidence(t *testing.T) {
+	t.Run("EDSTD-B17: A declared change keeps what was proven, and the lines only when asked", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{
+			{ID: "a.spec.md", Rev: "r2", Signal: &TestSignal{AtRev: "r1",
+				ProvenRevBySuite: map[string]string{"u": "r1", "e2e": "r0"}}},
+			{ID: "a.ts", Rev: "c1", Signal: &TestSignal{AtRev: "c1", MutationAtRev: "c1", TotalLines: 9,
+				CoverageBySuite: map[string]SuiteCoverage{"u": {AtRev: "c1"}},
+				MutationByScope: map[string]MutationScope{"isolated": {AtRev: "c1"}}}},
+			{ID: "a_test.go", Rev: "t1", Signal: &TestSignal{AtRev: "t1", ClosureRev: map[string]string{"a.spec.md": "r1", "a.ts": "c1"}}},
+		},
+		Edges: []Edge{
+			{From: "a.spec.md", To: "a_test.go", Stamp: &Stamp{ValidatedFromRev: "r1", ValidatedToRev: "t1"},
+				Julgamentos: []Judgment{{Gate: "g", ValidatedFromRev: "r0", ValidatedToRev: "t1"}}},
+			{From: "a.ts", To: "a.spec.md", Stamp: &Stamp{ValidatedFromRev: "c1", ValidatedToRev: "r1"}},
+		},
+	}
+	got := g.KeepEvidence("a.spec.md", "r3", "only @realizes added", "2026-09-29", false)
+	if strings.Join(got, ",") != "r0,r1" {
+		t.Errorf("every earlier revision is carried, sorted, got %v", got)
+	}
+	s := g.Nodes[0].Signal
+	if g.Nodes[0].Rev != "r3" || s.AtRev != "r3" || s.ProvenRevBySuite["u"] != "r3" || s.ProvenRevBySuite["e2e"] != "r3" {
+		t.Errorf("the proofs move to the current revision, got %+v", s)
+	}
+	if g.Nodes[2].Signal.ClosureRev["a.spec.md"] != "r3" || g.Edges[0].Stamp.ValidatedFromRev != "r3" ||
+		g.Edges[0].Julgamentos[0].ValidatedFromRev != "r3" || g.Edges[1].Stamp.ValidatedToRev != "r3" {
+		t.Errorf("closures, stamps and judgments follow, got %+v %+v", g.Nodes[2].Signal, g.Edges)
+	}
+	if k := s.EvidenceKept; len(k) != 1 || k[0].From != "r0 r1" || k[0].To != "r3" || k[0].Reason != "only @realizes added" ||
+		k[0].At != "2026-09-29" || k[0].Lines {
+		t.Errorf("the declaration is recorded, got %+v", k)
+	}
+
+	g.KeepEvidence("a.ts", "c2", "a comment reworded", "d", false)
+	c := g.Nodes[1].Signal
+	if g.Nodes[1].Rev != "c2" || c.AtRev != "c1" || c.MutationAtRev != "c1" || c.CoverageBySuite["u"].AtRev != "c1" ||
+		c.MutationByScope["isolated"].AtRev != "c1" {
+		t.Errorf("without lines, coverage and mutation stay, got %+v", c)
+	}
+	if g.Nodes[2].Signal.ClosureRev["a.ts"] != "c2" || g.Edges[1].Stamp.ValidatedFromRev != "c2" {
+		t.Errorf("without lines, the closure and stamps still move")
+	}
+	g.KeepEvidence("a.ts", "c3", "same lines", "d", true)
+	if c.AtRev != "c3" || c.MutationAtRev != "c3" || c.CoverageBySuite["u"].AtRev != "c3" || c.MutationByScope["isolated"].AtRev != "c3" ||
+		!c.EvidenceKept[1].Lines {
+		t.Errorf("with lines, coverage and mutation move too, got %+v", c)
+	}
+
+	if got := g.KeepEvidence("a.spec.md", "r3", "again", "d", false); got != nil || len(s.EvidenceKept) != 1 {
+		t.Errorf("nothing at an earlier revision carries and records nothing, got %v", got)
+	}
+	if g.KeepEvidence("nope.md", "x", "r", "d", false) != nil {
+		t.Error("an unknown file is left alone")
+	}
+	bare := &Graph{Nodes: []Node{{ID: "b.ts", Rev: "b1"}, {ID: "b_test.go", Signal: &TestSignal{ClosureRev: map[string]string{"b.ts": "b0"}}}}}
+	if got := bare.KeepEvidence("b.ts", "b2", "r", "d", false); len(got) != 1 || bare.Nodes[0].Signal == nil || len(bare.Nodes[0].Signal.EvidenceKept) != 1 {
+		t.Errorf("a file with no signal of its own still records the declaration, got %v %+v", got, bare.Nodes[0])
+	}
+	for i := 0; i < 7; i++ {
+		g.KeepEvidence("a.spec.md", fmt.Sprintf("r%d", 10+i), fmt.Sprint(i), "d", false)
+	}
+	if k := s.EvidenceKept; len(k) != 5 || k[4].Reason != "6" || k[0].Reason != "2" {
+		t.Errorf("the latest five declarations are kept, got %+v", k)
 	}
 }
