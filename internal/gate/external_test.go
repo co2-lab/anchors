@@ -396,3 +396,36 @@ func TestRunGateCommand_indexWorkdirFallsToTheTree(t *testing.T) {
 		t.Errorf("no copy is indeterminate and says why, got %v %s", v, out)
 	}
 }
+
+func TestCopyIndex_neverWritesIntoTheTree(t *testing.T) {
+	t.Run("EXCMX-B17: The copy of the index never writes into the tree", func(t *testing.T) {})
+	got := outermost([]string{".claude/", ".claude/settings.local.json", ".claude-x/", "deps/a/", "deps/", "", "z"})
+	if want := []string{".claude", ".claude-x", "deps", "z"}; strings.Join(got, ",") != strings.Join(want, ",") {
+		t.Errorf("only the outermost ignored paths, got %v", got)
+	}
+	top, dir := t.TempDir(), t.TempDir()
+	writeFile(t, top, "cfg/local.json", "tree\n")
+	writeFile(t, dir, "cfg/local.json", "index\n")
+	if err := mirrorIgnored(top, dir, filepath.Join(top, "cfg", "local.json"), filepath.Join(dir, "cfg", "local.json"), mirrorDepth); err != nil {
+		t.Fatal(err)
+	}
+	if b, _ := os.ReadFile(filepath.Join(dir, "cfg", "local.json")); string(b) != "index\n" {
+		t.Errorf("the copy's path keeps the index's content, got %q", b)
+	}
+
+	_, root := indexedRepo(t)
+	writeFile(t, root, "deps/inner/x.txt", "x\n")
+	before, _ := os.ReadDir(filepath.Join(root, "deps"))
+	read, err := scan.IndexReader(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer SetFileSource(read)()
+	defer releaseIndexWorkdir()
+	if _, _, err := indexWorkdir(root); err != nil {
+		t.Fatal(err)
+	}
+	if after, _ := os.ReadDir(filepath.Join(root, "deps")); len(after) != len(before) {
+		t.Errorf("the tree gains nothing, got %d entries in deps, had %d", len(after), len(before))
+	}
+}

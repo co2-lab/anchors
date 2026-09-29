@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: THSAS
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @THSAS
@@ -54,3 +54,9 @@ Feature: TestHasAssertion — every test asserts something in its body
     Given a test with @no-assert and a reason above it, one with it in the body, and one with a bare @no-assert
     When the file is confronted
     Then only the bare one fails
+
+  @THSAS-B08 @unit-level
+  Scenario: A test at a line the content does not have
+    Given a test listed below the last line of the content confronted
+    When the gate reads its body
+    Then it reads an empty body and does not break

@@ -58,7 +58,7 @@ func checkTestHasAssertion(content string, n mapx.Node, root string, g *mapx.Gra
 	var empty []string
 	for _, t := range mine {
 		body := testBody(lines, t, labels)
-		if t.Line >= 2 {
+		if t.Line >= 2 && t.Line-2 < len(lines) {
 			body = lines[t.Line-2] + "\n" + body
 		}
 		if noAssertRE.MatchString(body) {

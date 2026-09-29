@@ -132,3 +132,9 @@ Feature: ExternalCommand — executes external tools via shell passing targets a
     Given a workdir index command
     When it runs with no index source, or over a tree with nothing the index lacks, or where no copy can be made
     Then it runs in the project root the first two times, and the third is indeterminate and says why
+
+  @EXCMX-B17 @unit-level
+  Scenario: The copy of the index never writes into the tree
+    Given git lists an ignored folder and a file inside it, a sibling whose name starts like the folder's, and a path the copy already has
+    When the ignored paths are put into the copy
+    Then the file inside is left to its folder, the sibling is kept, the copy's path keeps its content, and the tree gains nothing

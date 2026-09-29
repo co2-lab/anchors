@@ -38,7 +38,13 @@ func projectTests(root string, g *mapx.Graph, cfg *config.Config) (tests []testl
 			}
 		}
 	}
-	tests, err = testlist.List(root, files, src)
+	// Under `--index` the tests are listed from what the commit records, as the gates read
+	// its files: the lines a test is found at must be lines of the content they index.
+	dir, _, err := indexWorkdir(root)
+	if err != nil {
+		return nil, true, err
+	}
+	tests, err = testlist.List(dir, files, src)
 	ptRoot, ptGraph, ptCfg, ptTests, ptErr, ptOK = root, g, cfg, tests, err, true
 	return tests, true, err
 }

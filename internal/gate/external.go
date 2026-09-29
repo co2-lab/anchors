@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path"
 	"path/filepath"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -258,17 +260,39 @@ func copyIndex(root string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("git ls-files --ignored: %w", err)
 	}
-	for _, rel := range strings.Split(string(ignored), "\x00") {
-		rel = strings.TrimSuffix(rel, "/")
-		if rel == "" {
-			continue
-		}
+	for _, rel := range outermost(strings.Split(string(ignored), "\x00")) {
 		src, dst := filepath.Join(top, filepath.FromSlash(rel)), filepath.Join(dir, filepath.FromSlash(rel))
 		if err := mirrorIgnored(top, dir, src, dst, mirrorDepth); err != nil {
 			return "", err
 		}
 	}
 	return filepath.Join(dir, filepath.FromSlash(prefix)), nil
+}
+
+// outermost keeps the ignored paths no other one contains. git can list a folder and a
+// file inside it both: once the folder is a link to the tree, writing the file into the
+// copy would write it through the link, into the project itself.
+func outermost(paths []string) []string {
+	var clean []string
+	for _, p := range paths {
+		if p = strings.TrimSuffix(p, "/"); p != "" {
+			clean = append(clean, p)
+		}
+	}
+	sort.Strings(clean)
+	kept := map[string]bool{}
+	var out []string
+next:
+	for _, p := range clean {
+		for a := p; a != "."; a = path.Dir(a) {
+			if kept[a] {
+				continue next
+			}
+		}
+		kept[p] = true
+		out = append(out, p)
+	}
+	return out
 }
 
 // mirrorDepth is how deep an ignored folder is looked into for links back into the project:
@@ -280,6 +304,9 @@ const mirrorDepth = 2
 // tree's file, not the commit's. Then the folder is made for real, the link is made again
 // to the same place in the copy, and everything else is linked.
 func mirrorIgnored(top, dir, src, dst string, depth int) error {
+	if _, err := os.Lstat(dst); err == nil {
+		return nil // the index has it — a file git tracks and ignores both: the commit's copy stands
+	}
 	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
 		return err
 	}

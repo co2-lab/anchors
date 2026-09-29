@@ -49,6 +49,7 @@ Executes an external command (such as jest, eslint, or tsc) defined in `anchors.
 | `EXCMX-B14` | Under `--index`, a target whose file on disk differs from the index is handed to the command as a copy of what the index holds, and the copy's path is shown back as the project's in what the command printed; a target the index does not have is not handed over; a target the same in both goes as it is. (`indexedTargets`) |
 | `EXCMX-B15` | Under `--index`, a `workdir: index` command runs in a copy of the git index, at the project's place in it: a file edited in the tree reads as staged, an untracked file is not there, the folders git ignores are linked in, a link inside one that points back into the project points into the copy, and the copy's paths in the output read as the project's. The copy is made once per run and removed when the gates are done. (`runGateCommand`, `indexWorkdir`, `releaseIndexWorkdir`) |
 | `EXCMX-B16` | A `workdir: index` command runs in the tree itself when there is no `--index`, or when the tree holds nothing the index does not; when the copy cannot be made, the gate is indeterminate and says why, and the command does not run over the tree. (`indexWorkdir`) |
+| `EXCMX-B17` | The copy of the index never writes into the tree: an ignored path inside another ignored path is left to its folder, and a path the copy already has — a file git tracks and ignores both — keeps the index's content. (`outermost`, `mirrorIgnored`) |
 
 ## Invariants
 

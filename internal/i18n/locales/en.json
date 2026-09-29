@@ -905,6 +905,7 @@
   "config.gate.unknown_phase": "gate %q: `when: [%q]` is not a phase — use %q, %q, %q or %q",
   "config.gate.unknown_perspective": "gate %q: `skip_on: [%q]` is not a perspective — use %q or %q; an unknown value never matches, so the gate would run where the file says it is skipped",
   "gate.workdir_index_failed": "could not run in a copy of the git index (%s): the tree holds changes the commit does not, so the command was not run over it",
+  "gate.panicked": "the gate broke while measuring (%s) — a defect of Anchors, not of the project: report it",
   "config.gate.unknown_workdir": "gate %q: unknown `workdir: %q` — use %q or %q",
   "config.workflow.github_fields_outside_github": "workflow: `repo`/`labels` only apply under `mode: github` — in local mode they are not read, and leaving them declared makes the file assert an integration that does not exist",
   "config.workflow.github_needs_repo": "workflow: `mode: github` requires `repo: owner/name` — Anchors does not infer it from the git remote on purpose: in a fork, inferring would send the writes to the wrong repository",

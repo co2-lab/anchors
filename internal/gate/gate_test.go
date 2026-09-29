@@ -1222,3 +1222,35 @@ func TestChangedSource_updatedAt(t *testing.T) {
 		t.Errorf("restoring asks the tree again, got %v", v)
 	}
 }
+
+func TestRunWithWaiver_aBrokenGateFailsItsTarget(t *testing.T) {
+	t.Run("GTENG-B28: A gate that breaks fails its target and the check goes on", func(t *testing.T) {})
+	checkersWithGraph["test-breaks"] = func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string) {
+		var lines []string
+		return Pass, lines[3]
+	}
+	defer delete(checkersWithGraph, "test-breaks")
+	root := t.TempDir()
+	writeFile(t, root, "a.go", "package a\n")
+	nodes := []mapx.Node{{ID: "a.go", Kind: mapx.KindCode}}
+	gates := []config.Gate{
+		{Name: "broken", Check: "test-breaks", On: []string{"code"}},
+		{Name: "sound", Check: "test-breaks-not", On: []string{"code"}},
+		{Name: "broken-all", Check: "test-breaks", On: []string{"code"}, Scope: config.ScopeProject},
+	}
+	checkersWithGraph["test-breaks-not"] = func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string) { return Pass, "" }
+	defer delete(checkersWithGraph, "test-breaks-not")
+	results := RunWithWaiver(gates, nodes, root, &mapx.Graph{Nodes: nodes}, &config.Config{}, false, Waiver{})
+	got := map[string]Result{}
+	for _, r := range results {
+		got[r.Gate] = r
+	}
+	for _, name := range []string{"broken", "broken-all"} {
+		if r := got[name]; r.Verdict != Fail || !strings.Contains(r.Detail, "index out of range") || !strings.Contains(r.Detail, "Anchors") {
+			t.Errorf("%s fails saying it broke, got %+v", name, r)
+		}
+	}
+	if got["sound"].Verdict != Pass {
+		t.Errorf("the other gate is still measured, got %+v", got["sound"])
+	}
+}

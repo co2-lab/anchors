@@ -6,6 +6,7 @@
 package gate
 
 import (
+	"fmt"
 	"os/exec"
 	"regexp"
 	"slices"
@@ -243,9 +244,10 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 // O alvo reportado é o próprio gate (não um arquivo): atribuir a falha do `tsc` a um
 // dos 63 arquivos seria mentira — o erro pode estar em qualquer um, ou na relação
 // entre eles. O laudo (stdout da ferramenta) é que nomeia arquivo e linha.
-func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, graph *mapx.Graph, cfg *config.Config) Result {
+func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, graph *mapx.Graph, cfg *config.Config) (r Result) {
 	escopo := g.ScopeForScan(completa)
-	r := Result{Gate: g.Name, Regra: idDoGate(g), Target: "(" + escopo + ")", Blocking: g.IsBlocking()}
+	r = Result{Gate: g.Name, Regra: idDoGate(g), Target: "(" + escopo + ")", Blocking: g.IsBlocking()}
+	defer recoverGate(&r)
 	// Um gate agregado pode ser INTERNO: a pergunta é sobre o conjunto, mas quem
 	// responde é o próprio CLI, não uma ferramenta de fora. É o caso de
 	// `testid-consultado-existe`, que confronta as duas pontas do projeto de uma vez —
@@ -277,8 +279,9 @@ func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, 
 }
 
 // runOne executa um gate contra um alvo — despacha para interno ou externo.
-func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) Result {
-	r := Result{Gate: g.Name, Regra: idDoGate(g), Target: n.ID, Blocking: g.IsBlocking()}
+func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) (r Result) {
+	r = Result{Gate: g.Name, Regra: idDoGate(g), Target: n.ID, Blocking: g.IsBlocking()}
+	defer recoverGate(&r)
 	// The project declared that this gate has nothing to measure on this target, and why.
 	if reason, ok := g.NoSignalFor(n.ID); ok {
 		r.Verdict, r.Detail = Skip, i18n.T("gate.no_signal", reason)
@@ -411,4 +414,12 @@ func idDoGate(g config.Gate) string {
 // pendingNoMap devolve o veredito Pending traduzido quando o grafo relacional não foi carregado.
 func pendingNoMap() (Verdict, string) {
 	return Pending, i18n.T("gate.no_map_loaded")
+}
+
+// recoverGate turns a gate that panicked into that gate's failure on that target: one
+// broken gate — informative, even — took the whole check down, and with it every commit.
+func recoverGate(r *Result) {
+	if p := recover(); p != nil {
+		r.Verdict, r.Detail = Fail, i18n.T("gate.panicked", fmt.Sprint(p))
+	}
 }

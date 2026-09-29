@@ -190,3 +190,21 @@ func TestTestHasAssertion_declared(t *testing.T) {
 		t.Errorf("a test on the first line has no line above to waive it, got %v", v)
 	}
 }
+
+func TestTestHasAssertion_aLineBeyondTheContent(t *testing.T) {
+	t.Run("THSAS-B08: A test at a line the content does not have", func(t *testing.T) {})
+	lines := []string{"one", "two"}
+	for _, line := range []int{3, 4, 50} {
+		if got := testBody(lines, testlist.Test{Line: line}, false); got != "" {
+			t.Errorf("line %d reads an empty body, got %q", line, got)
+		}
+	}
+	resetProjectTestsCache()
+	defer resetProjectTestsCache()
+	root := t.TempDir()
+	writeFile(t, root, "a_test.go", strings.Repeat("\n", 40)+"\tt.Run(\"far\", func(t *testing.T) {})\n")
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a_test.go", Kind: mapx.KindTest}}}
+	if v, msg := checkTestHasAssertion("short\n", g.Nodes[0], root, g, assertCfg(false, nil)); v != Fail || !strings.Contains(msg, "far") {
+		t.Errorf("the test beyond the content is read as empty, not a break, got %v: %s", v, msg)
+	}
+}

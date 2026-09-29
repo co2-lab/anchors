@@ -1,6 +1,6 @@
 <!-- @anchors
   code: THSAS
-  updated_at: 2026-09-28
+  updated_at: 2026-09-29
   layer: gate
 -->
 # TestHasAssertion — every test asserts something in its body
@@ -38,6 +38,7 @@ otherwise the body is read by its layout, which every language keeps whatever it
 | `THSAS-B05` | When the tests source says where a test ends (`end`), its body runs from its line to that one. |
 | `THSAS-B06` | A node that is not a test or is a support file, a project with no tests source or no assertion, and a file where the source lists no test are skipped. |
 | `THSAS-B07` | A test that carries `@no-assert: <why>` in its body or on the line above it is left out; a waiver with no reason waives nothing. |
+| `THSAS-B08` | A test listed at a line the content does not have is read as an empty body, never past the content's end. (`checkTestHasAssertion`, `testBody`) |
 
 ## Errors
 

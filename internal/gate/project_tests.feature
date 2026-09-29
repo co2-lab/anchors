@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: PRJTS
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @PRJTS
@@ -42,3 +42,9 @@ Feature: ProjectTests — the gates read the project's tests through the source 
     Given a map with a test file and a support file, each with a test call
     When the project's tests are read and the test paths are filtered
     Then only the test file's test is read, and the support file leaves the paths
+
+  @PRJTS-B07 @unit-level
+  Scenario: Under --index the tests are listed from the commit
+    Given a test file staged short and edited in the tree with a test far below
+    When the project's tests are listed under --index
+    Then only the staged file's tests are listed, at its lines

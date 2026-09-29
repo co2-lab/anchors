@@ -2,6 +2,7 @@ package gate
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"reflect"
 	"strings"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 	"github.com/co2-lab/anchors/internal/testlist"
 )
 
@@ -124,5 +126,30 @@ func TestProjectTests_SupportIsNotATest(t *testing.T) {
 	}
 	if got := realTests(&mapx.Graph{}, []string{"x_test.go"}); len(got) != 1 {
 		t.Fatalf("with no support file the paths stay, got %v", got)
+	}
+}
+
+func TestProjectTests_underIndexListsTheCommit(t *testing.T) {
+	t.Run("PRJTS-B07: Under --index the tests are listed from the commit", func(t *testing.T) {})
+	_, root := indexedRepo(t)
+	staged := "t.Run(\"staged\", f)\n"
+	writeFile(t, root, "a_test.go", staged)
+	if out, err := exec.Command("git", "-C", root, "add", "a_test.go").CombinedOutput(); err != nil {
+		t.Skipf("git add: %v %s", err, out)
+	}
+	writeFile(t, root, "a_test.go", strings.Repeat("\n", 40)+"t.Run(\"tree only\", f)\n")
+	read, err := scan.IndexReader(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer SetFileSource(read)()
+	defer releaseIndexWorkdir()
+	resetProjectTestsCache()
+	defer resetProjectTestsCache()
+	cfg := &config.Config{Dialect: &config.Dialect{Family: "go", Tests: &config.TestsSource{Pattern: `t\.Run\(`}}}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a_test.go", Kind: mapx.KindTest}}}
+	tests, _, err := projectTests(root, g, cfg)
+	if err != nil || len(tests) != 1 || tests[0].Title != "staged" || tests[0].Line != 1 {
+		t.Errorf("the staged file's test, at its line, got %+v %v", tests, err)
 	}
 }

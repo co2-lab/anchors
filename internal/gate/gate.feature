@@ -234,3 +234,9 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given a file dated at its last commit and edited in the tree
     When updated-at-current confronts it asking the tree, and asking a source that sees no change
     Then the first fails for an edit not dated today, and the second passes
+
+  @GTENG-B28 @unit-level
+  Scenario: A gate that breaks fails its target and the check goes on
+    Given a gate whose check breaks on one target, next to a gate that measures
+    When the gates run
+    Then the broken one fails that target saying it broke, and the other one is measured

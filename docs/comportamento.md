@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:4558b446bb80c055 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:66b7398856eb0301 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3428,6 +3428,8 @@ teste prova.
 
 - [A workdir index command runs in the tree when the tree is the commit](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B16`
 
+- [The copy of the index never writes into the tree](camadas/gate.md#excmx--externalcommand--executes-external-tools-via-shell-passing-targets-as-positional-arguments) `EXCMX-B17`
+
 - [Every failure gate skips an artifact that is not a spec](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B01`
 
 - [A failure rule is read in the heading, table row and bullet forms, not in prose](camadas/gate.md#flrai--failure--the-failure-a-spec-declares-must-be-handled-recorded-and-every-handling-declared) `FLRAI-B02`
@@ -3667,6 +3669,8 @@ teste prova.
 - [The gates read files from the source set](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B26`
 
 - [The gates ask whether a file changed through the source set](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B27`
+
+- [A gate that breaks fails its target and the check goes on](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B28`
 
 - [A layer the Estrutura does not have fails](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B01`
 
@@ -4388,6 +4392,8 @@ teste prova.
 
 - [Support files are not read as tests](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B06`
 
+- [Under --index the tests are listed from the commit](camadas/gate.md#prjts--projecttests--the-gates-read-the-projects-tests-through-the-source-the-project-declares) `PRJTS-B07`
+
 - [Returns an empty list of Promotable gates when profile contains no gates](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B01`
 
 - [An informative gate with passes and zero failures is included](camadas/gate.md#prgtp--promotablegates--identifies-clean-informative-gates-ready-for-promotion-to-blocking) `PRGTP-B02`
@@ -5007,6 +5013,8 @@ teste prova.
 - [Tests that cannot be listed fail the gate with the reason](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-E01`
 
 - [A test that declares it asserts nothing is left out](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B07`
+
+- [A test at a line the content does not have](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B08`
 
 - [A node that is not a feature is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B01`
 
