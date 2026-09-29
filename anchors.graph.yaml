@@ -5359,38 +5359,13 @@ nodes:
         - feature
     - id: cmd/anchors/ops/new.go
       kind: code
-      rev: 98ee8bcb754e
-      updated_at: "2026-09-28"
+      rev: c6c6addfb55b
+      updated_at: "2026-09-29"
       code: NWARN
       layer: comando
       tags:
         - cli
         - comando
-      signal:
-        covered_lines: 435
-        total_lines: 464
-        line_coverage: 93.75
-        prev_line_coverage: 93.75
-        coverage_by_suite:
-            .anchors/lcov.info:
-                instrumented: 24-30,41-71,73-85,99-104,106-110,119-123,126-129,131-144,151-158,160-186,192-198,201-202,205-215,273-301,307-313,315,319-327,329-336,338-341,343,348-367,369-379,381-384,386,392-404,407-411,413,416-422,426-438,442-444,446-457,459-460,465-471,477-487,490-493,495,506-513,515-519,521-523,525-529,531,538-545,547-550,552,560-590,592,598-600,602-606,624-629,634-638,641-645,656-661,664-667,677-684,696-706,714-721,726-736,738-740,745-748,751-754
-                covered: 24-30,41-71,73-83,99-104,106-108,119-123,126-129,131-144,151-158,160-163,166,169-180,183-186,192-194,196-198,201-202,205-215,273-301,307-313,315,319-327,329-336,338-341,343,348-365,369-379,381,386,392-404,407-411,413,416-422,426-438,442-444,446-457,459-460,465-471,477-487,490-493,495,506-511,515-519,521-522,525-529,531,538-545,547-550,552,560-561,564-574,577,580-587,590,598-600,602-605,624-629,634-638,641-645,656-661,664-667,677-684,696-706,714-721,726-736,738-740,745-748,751-754
-                covered_lines: 435
-                total_lines: 464
-                at_rev: 98ee8bcb754e
-        mutants_killed: 100
-        mutants_survived: 13
-        mutation_score: 88.49557522123894
-        mutants_no_coverage: 1
-        mutation_by_scope:
-            isolated:
-                killed: 100
-                survived: 13
-                no_coverage: 1
-                score: 88.49557522123894
-                at_rev: 4b089f8a7106
-        at_rev: 98ee8bcb754e
-        ingested_at: "2026-09-29T13:45:13-03:00"
     - id: cmd/anchors/ops/new.spec.md
       kind: spec
       rev: 8eab29a6527a
@@ -33065,7 +33040,7 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: 1ac09dd5bf9a
-        validated_to_rev: 97161bede8d9
+        validated_to_rev: 1225de885aac
         changed_at: "2026-09-29"
         verdict: ok
     - from: cmd/anchors/ops/init_wizard.spec.md
@@ -33132,7 +33107,7 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: 991d2456024e
-        validated_to_rev: c045990d772d
+        validated_to_rev: e8c83d319095
         changed_at: "2026-09-29"
         verdict: ok
     - from: cmd/anchors/ops/install_hooks.spec.md
@@ -33270,8 +33245,8 @@ edges:
       origin: convention
       stamp:
         validated_from_rev: 8eab29a6527a
-        validated_to_rev: 98ee8bcb754e
-        changed_at: "2026-09-28"
+        validated_to_rev: c6c6addfb55b
+        changed_at: "2026-09-29"
         verdict: ok
     - from: cmd/anchors/ops/new.spec.md
       to: cmd/anchors/ops/new_templates.go
@@ -33312,8 +33287,8 @@ edges:
       dep: DEP2
       stamp:
         validated_from_rev: f9aaad4a1bd6
-        validated_to_rev: 98ee8bcb754e
-        changed_at: "2026-09-28"
+        validated_to_rev: c6c6addfb55b
+        changed_at: "2026-09-29"
         verdict: ok
     - from: cmd/anchors/ops/new_templates.spec.md
       to: cmd/anchors/ops/new_templates.feature

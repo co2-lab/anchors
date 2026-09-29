@@ -100,7 +100,7 @@ the identity by hand.`,
 			if id == "" && kind != "spec" {
 				if ref, origem := refDaSpecIrma(absRoot, out, name); ref != "" {
 					id = ref
-					fmt.Printf("identity: `%s` (read from %s)\n", id, origem)
+					fmt.Printf("identity: `%s` (read from %s)\n", id, filepath.ToSlash(origem))
 				}
 			}
 			if id == "" {
