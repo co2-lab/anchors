@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b1105de28f4838c9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f7e5b8082135d4f0 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2749,6 +2749,8 @@ teste prova.
 - [A layer is an orphan exactly when it has no container](camadas/config.md#cntnr-i01--a-layer-is-an-orphan-exactly-when-it-has-no-container) `CNTNR-I01`
 
 - [With no container declared, no layer is placed by guessing: every layer is an orphan](camadas/config.md#cntnr-x01--with-no-container-declared-no-layer-is-placed-by-guessing-every-layer-is-an-orphan) `CNTNR-X01`
+
+- [A layer that runs no code is never an orphan](camadas/config.md#cntnr-b07--a-layer-that-runs-no-code-is-never-an-orphan) `CNTNR-B07`
 
 - [A project that declares no dialect gets only the naming defaults](camadas/config.md#dlcti-b01--a-project-that-declares-no-dialect-gets-only-the-naming-defaults) `DLCTI-B01`
 

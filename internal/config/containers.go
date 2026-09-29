@@ -95,12 +95,33 @@ func (c *Config) ContainerOfLayer(layer string) string {
 //
 // Serve ao template e ao `doctor`: uma camada fora de todo contêiner é ou uma declaração
 // esquecida, ou uma peça que não roda em lugar nenhum — e as duas merecem ser ditas.
+//
+// Só o CÓDIGO roda num contêiner. Uma camada que a Estrutura declara com outro kind — spec,
+// feature, teste, doc, guia, plano — não roda em lugar nenhum por natureza, e listá-la como
+// fora de contêiner era ruído que ensinava a ignorar a lista. Uma camada que a Estrutura não
+// declara continua na lista: não há como saber o que ela é.
 func (c *Config) OrphanLayers(existentes []string) []string {
 	var out []string
 	for _, l := range existentes {
+		if decl, ok := c.layerDecl(l); ok && decl.Kind != "" && decl.Kind != "code" {
+			continue
+		}
 		if c.ContainerOfLayer(l) == "" {
 			out = append(out, l)
 		}
 	}
 	return out
+}
+
+// layerDecl is the Estrutura's declaration of a layer, by name ignoring case.
+func (c *Config) layerDecl(layer string) (Layer, bool) {
+	if c == nil {
+		return Layer{}, false
+	}
+	for name, l := range c.Layers {
+		if strings.EqualFold(name, strings.TrimSpace(layer)) {
+			return l, true
+		}
+	}
+	return Layer{}, false
 }

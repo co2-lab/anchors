@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CNTNR
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-28
 #   layer: feature
 
 @CNTNR
@@ -54,3 +54,9 @@ Feature: Containers — what runs separately, and which layers run inside each
     Given a configuration with no containers block
     When the orphan layers of the layer "a" are asked for
     Then "a" is an orphan
+
+  @CNTNR-B07 @unit-level
+  Scenario: A layer that runs no code is never an orphan
+    Given layers declared as spec, test and code, one declared with no kind and one not declared, none in a container
+    When the orphan layers are asked for
+    Then only the code layer, the one with no kind and the undeclared one are orphans

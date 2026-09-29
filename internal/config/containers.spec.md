@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNTNR
-  updated_at: 2026-09-26
+  updated_at: 2026-09-28
   layer: config
 -->
 # Containers — what runs separately, and which layers run inside each
@@ -44,12 +44,13 @@ declared, and still claimed by it.
 | `CNTNR-B04` | A layer no container claims has no container, and that is an answer, not an error. |
 | `CNTNR-B05` | The layers of an external container are still claimed by it. |
 | `CNTNR-B06` | The orphan layers are the given ones that no container claims, in the order they were given (`OrphanLayers`). |
+| `CNTNR-B07` | A layer the Estrutura declares with a kind other than `code` — spec, feature, test, doc, guide, plan — runs nowhere by nature and is never an orphan; a layer the Estrutura does not declare, or declares with no kind, stays in. The name is matched ignoring case. |
 
 ## Invariants
 
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
-| `CNTNR-I01` | A layer is an orphan exactly when it has no container: the two answers never disagree about the same layer. | classifies a set of layers both ways and checks every layer is in exactly one of the two answers |
+| `CNTNR-I01` | A layer that runs code is an orphan exactly when it has no container: the two answers never disagree about the same layer. | classifies a set of layers both ways and checks every layer is in exactly one of the two answers |
 
 ## Constraints
 

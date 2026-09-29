@@ -99,3 +99,18 @@ func TestOrphanLayers_agreeWithContainerOfLayer(t *testing.T) {
 		}
 	}
 }
+
+func TestOrphanLayers_onlyWhatRunsCode(t *testing.T) {
+	t.Run("CNTNR-B07: A layer that runs no code is never an orphan", func(t *testing.T) {})
+	c := &Config{Layers: map[string]Layer{
+		"spec": {Kind: "spec"}, "e2e": {Kind: "test"}, "Landing-Component": {Kind: "code"}, "misc": {},
+	}}
+	got := c.OrphanLayers([]string{"spec", "E2E", "landing-component", "misc", "unknown"})
+	if want := []string{"landing-component", "misc", "unknown"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("OrphanLayers = %v, want %v", got, want)
+	}
+	var none *Config
+	if _, ok := none.layerDecl("x"); ok {
+		t.Error("no configuration declares no layer")
+	}
+}
