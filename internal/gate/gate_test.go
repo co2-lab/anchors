@@ -1157,3 +1157,31 @@ func TestApplies_isTheRunnersReach(t *testing.T) {
 		}
 	}
 }
+
+func TestReadFile_fromTheSource(t *testing.T) {
+	t.Run("GTENG-B26: The gates read files from the source set", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "a.md"), []byte("tree"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	var asked string
+	restore := SetFileSource(func(rel string) ([]byte, error) {
+		asked = rel
+		return []byte("index"), nil
+	})
+	if b, err := readFile(root, "./a.md"); err != nil || string(b) != "index" || asked != "a.md" {
+		t.Errorf("the source answers, by the path relative to the root, got %q %v %q", b, err, asked)
+	}
+	inner := SetFileSource(nil)
+	if b, _ := readFile(root, "a.md"); string(b) != "tree" {
+		t.Errorf("a nil source reads the tree, got %q", b)
+	}
+	inner()
+	if b, _ := readFile(root, "a.md"); string(b) != "index" {
+		t.Errorf("restoring brings the previous source back, got %q", b)
+	}
+	restore()
+	if b, _ := readFile(root, "a.md"); string(b) != "tree" {
+		t.Errorf("with no source the tree is read, got %q", b)
+	}
+}

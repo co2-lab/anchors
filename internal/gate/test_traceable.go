@@ -1,8 +1,6 @@
 package gate
 
 import (
-	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -97,7 +95,7 @@ func featureProvenByTest(n mapx.Node, g *mapx.Graph) (string, bool) {
 
 // featureCodes lê os códigos de cenário que a feature declara.
 func featureCodes(root, feature string) []string {
-	b, err := os.ReadFile(filepath.Join(root, feature))
+	b, err := readFile(root, feature)
 	if err != nil {
 		return nil
 	}

@@ -3,7 +3,6 @@ package quality
 import (
 	"errors"
 	"fmt"
-	"github.com/co2-lab/anchors/internal/i18n"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -11,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/co2-lab/anchors/internal/i18n"
 
 	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/cmd/anchors/mapcmd"
@@ -29,7 +30,7 @@ import (
 func newCheckCmd() *cobra.Command {
 	var root, mapPath, phase, category string
 	var changed []string
-	var all, noRecord, recordIssues, fix, deterministic, skipSlow, onlyIssues, showDrift, showTiming bool
+	var all, noRecord, recordIssues, fix, deterministic, skipSlow, onlyIssues, showDrift, showTiming, fromIndex bool
 	var skipRegras string
 	var msgPath string
 	cmd := &cobra.Command{
@@ -56,6 +57,15 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
 			if err != nil {
 				return fmt.Errorf("load config: %w", err)
+			}
+			// `--index`: the gates read the project's files as the git index has them —
+			// what the commit records —, not as the tree does.
+			if fromIndex {
+				read, err := scan.IndexReader(absRoot)
+				if err != nil {
+					return fmt.Errorf("--index: read the git index: %w", err)
+				}
+				defer gate.SetFileSource(read)()
 			}
 			// No modo github o achado de gate vira CARD, não arquivo: o `issues/` é a fila do
 			// modo local (mover pasta à mão), e manter os dois faz o board esconder o que os
@@ -316,6 +326,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().StringVar(&mapPath, "map", "", "path to the map")
+	cmd.Flags().BoolVar(&fromIndex, "index", false, "the gates read the files as the git index has them — what the commit records (the pre-commit mode)")
 	cmd.Flags().StringSliceVar(&changed, "changed", nil, "changed file(s) — repeatable or comma-separated; the gates run ONCE over the union of the impact paths")
 	cmd.Flags().BoolVar(&all, "all", false, "scan every node (the full picture; expensive)")
 	cmd.Flags().BoolVar(&noRecord, "no-record", false, "report only: neither stamps the map nor opens issues")

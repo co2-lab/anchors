@@ -237,7 +237,7 @@ func checkSpecDoctrineExists(content string, n mapx.Node, root string, g *mapx.G
 			if e.Type != mapx.EdgeRealizes {
 				continue
 			}
-			b, err := os.ReadFile(filepath.Join(root, e.To))
+			b, err := readFile(root, e.To)
 			if err != nil {
 				continue
 			}
@@ -324,7 +324,7 @@ func checkDoctrineNotDuplicated(content string, n mapx.Node, root string, g *map
 		if e.Type != mapx.EdgeRealizes {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(root, e.To))
+		b, err := readFile(root, e.To)
 		if err != nil {
 			continue
 		}

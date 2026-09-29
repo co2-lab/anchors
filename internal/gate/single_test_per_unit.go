@@ -1,8 +1,6 @@
 package gate
 
 import (
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -69,7 +67,7 @@ func checkSingleTestPerUnit(content string, n mapx.Node, root string, g *mapx.Gr
 // declaresSplit says whether one of the files declares the split, with its reason.
 func declaresSplit(root string, tests []string) bool {
 	for _, t := range tests {
-		if b, err := os.ReadFile(filepath.Join(root, t)); err == nil && splitTestRE.Match(b) {
+		if b, err := readFile(root, t); err == nil && splitTestRE.Match(b) {
 			return true
 		}
 	}

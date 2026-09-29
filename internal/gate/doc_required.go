@@ -2,7 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -96,7 +95,7 @@ func checkDocRequiredAggregate(_ config.Gate, root string, graph *mapx.Graph, cf
 			pend, visto := byDoc[d.Path]
 			if !visto {
 				pend = &pending{doc: d}
-				b, err := os.ReadFile(filepath.Join(root, d.Path))
+				b, err := readFile(root, d.Path)
 				if err != nil {
 					pend.missing = true
 				} else {
@@ -172,7 +171,7 @@ func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *co
 
 	var missing, silent []string
 	for _, d := range duties {
-		b, err := os.ReadFile(filepath.Join(root, d.Path))
+		b, err := readFile(root, d.Path)
 		if err != nil {
 			missing = append(missing, fmt.Sprintf("%s (%s)", d.Path, d.Kind))
 			continue

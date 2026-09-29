@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -75,7 +74,7 @@ func reachOf(test, unit, root string, cfg *config.Config, def *regexp.Regexp, in
 	if def == nil {
 		return r
 	}
-	b, err := os.ReadFile(filepath.Join(root, unit))
+	b, err := readFile(root, unit)
 	if err != nil {
 		return r // @resilient: an unreadable unit defines nothing this reading can name; the map notices a missing file
 	}

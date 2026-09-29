@@ -6,9 +6,7 @@
 package gate
 
 import (
-	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"slices"
 	"strings"
@@ -138,7 +136,7 @@ func applies(g config.Gate, n mapx.Node, root string) bool {
 	//
 	// Arquivo ilegível NÃO aplica: melhor deixar de cobrar do que cobrar às cegas de
 	// um alvo cujo conteúdo não se conhece.
-	b, err := os.ReadFile(filepath.Join(root, n.ID))
+	b, err := readFile(root, n.ID)
 	if err != nil {
 		return false
 	}

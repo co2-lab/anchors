@@ -2,7 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -106,7 +105,7 @@ func siblingSpecOf(root, rel string) (string, string) {
 		base = base[:i]
 	}
 	cand := filepath.Join(dir, base+".spec.md")
-	b, err := os.ReadFile(filepath.Join(root, cand))
+	b, err := readFile(root, cand)
 	if err != nil {
 		return "", ""
 	}

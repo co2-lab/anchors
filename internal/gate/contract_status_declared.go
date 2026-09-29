@@ -1,8 +1,6 @@
 package gate
 
 import (
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -101,7 +99,7 @@ func checkContractStatusDeclared(content string, n mapx.Node, root string, g *ma
 
 	var corpo strings.Builder
 	for _, cp := range codePaths {
-		b, err := os.ReadFile(filepath.Join(root, cp))
+		b, err := readFile(root, cp)
 		if err != nil {
 			continue
 		}

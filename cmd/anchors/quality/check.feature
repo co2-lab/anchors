@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CGPCH
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @CGPCH
@@ -576,3 +576,9 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     Given a check that read the map, and an ingestion that wrote a signal to the map on disk after it
     When the check records its stamps
     Then the map on disk has the check's stamp and still has the ingestion's signal
+
+  @CGPCH-B85 @unit-level
+  Scenario: The index flag reads what the commit records
+    Given a project outside a repository
+    When the check runs with --index
+    Then it fails saying the git index could not be read

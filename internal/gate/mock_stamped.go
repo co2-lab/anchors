@@ -174,7 +174,7 @@ func declaredStamps(content string) []declaredStamp {
 // Duas ocorrências da mesma linha tornam o alvo ambíguo, e o gate prefere acusar a
 // escolher uma: um carimbo que aponta para "alguma das duas" não prova nada.
 func recomputeStamp(root string, c declaredStamp) (string, error) {
-	b, err := os.ReadFile(filepath.Join(root, c.file))
+	b, err := readFile(root, c.file)
 	if err != nil {
 		return "", fmt.Errorf(i18n.T("gate.mock_stamped.err_module_not_found"), c.file)
 	}
@@ -266,7 +266,7 @@ func TestsStamping(g *mapx.Graph, root, file string) []string {
 		if n.Kind != mapx.KindTest {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(root, n.ID))
+		b, err := readFile(root, n.ID)
 		if err != nil || !strings.Contains(string(b), "@contract:") {
 			continue
 		}

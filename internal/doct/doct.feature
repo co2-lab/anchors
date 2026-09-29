@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DTCDC
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @DTCDC
@@ -169,3 +169,9 @@ Feature: DocTemplateCompiler — compiles documentation pages from templates tha
     Given a container whose layers are one declared in the Estrutura and one with a file in the map, neither with a spec
     When the architecture page is built
     Then the build passes and each layer shows its files and that it has no spec
+
+  @DTCDC-B19 @unit-level
+  Scenario: The compiler reads through its source
+    Given a spec whose tree text differs from what a source answers
+    When the compiler is built with the source and without
+    Then the first reads the source's title and the second the tree's

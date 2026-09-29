@@ -61,7 +61,7 @@ func TestVerifyStagedDelegatesToCheck(t *testing.T) {
 		t.Errorf("the pre-commit dates the staged file before checking it:\n%s", out)
 	}
 	child := strings.Split(readQ(t, argsFile), "\n")
-	want := []string{"check", "--root", root, "--changed", "a.ts", "--phase", "pre-commit", "--deterministic", "--only-issues"}
+	want := []string{"check", "--root", root, "--changed", "a.ts", "--phase", "pre-commit", "--deterministic", "--only-issues", "--index"}
 	if strings.Join(child, " ") != strings.Join(want, " ") {
 		t.Errorf("the child check got %q, want %q", child, want)
 	}
@@ -329,7 +329,18 @@ func TestVerifyStagedUnderAProjectBelowTheRepositoryTop(t *testing.T) {
 		t.Fatal(err)
 	}
 	child := strings.Join(strings.Split(readQ(t, argsFile), "\n"), " ")
-	if want := "check --root " + sub + " --changed x.ts"; child != want {
+	if want := "check --root " + sub + " --changed x.ts --index"; child != want {
 		t.Errorf("the child check got %q, want %q", child, want)
+	}
+}
+
+func TestVerify_stagedReadsTheIndex(t *testing.T) {
+	t.Run("VPFVR-B11: Over the index the check reads the index", func(t *testing.T) {})
+	base := checkArgs("/r", "pre-commit", "", "", []string{"a.md"}, false, false, true)
+	if got := subArgs(append([]string{}, base...), true); got[len(got)-1] != "--index" || len(got) != len(base)+1 {
+		t.Errorf("over the index the check reads the index, got %v", got)
+	}
+	if got := subArgs(append([]string{}, base...), false); strings.Join(got, " ") != strings.Join(base, " ") {
+		t.Errorf("over the tree nothing is added, got %v", got)
 	}
 }

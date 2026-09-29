@@ -86,7 +86,7 @@ func checkProgressHonest(planContent string, n mapx.Node, root string, _ *mapx.G
 	// O companheiro vive ao lado, com sufixo fixo. A definição canônica é do `scan`, que
 	// é quem precisa mantê-lo fora do mapa — repeti-la aqui deixaria as duas divergirem.
 	prog := progressPathOf(n.ID)
-	conteudo, err := os.ReadFile(filepath.Join(root, prog))
+	conteudo, err := readFile(root, prog)
 	if err != nil {
 		// Ausência NÃO é falha deste gate: o plano pode ter nascido antes do mecanismo
 		// (`anchors new progress --for` existe para isso), e acusar aqui misturaria duas

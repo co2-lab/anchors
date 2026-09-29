@@ -1,8 +1,6 @@
 package doct
 
 import (
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -120,7 +118,7 @@ func endsScenario(trim string) bool { return headingGherkinRE.MatchString(trim) 
 func (c *Compiler) fnScenarios(s Spec) []Scenario {
 	var out []Scenario
 	for _, f := range c.featuresOf(s) {
-		b, err := os.ReadFile(filepath.Join(c.Root, f))
+		b, err := c.readRel(f)
 		if err != nil {
 			continue
 		}

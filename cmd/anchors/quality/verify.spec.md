@@ -1,6 +1,6 @@
 <!-- @anchors
   code: VPFVR
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: comando
 -->
 # VerifyPhaseFacade — one invocation per phase, delegated to the check pipeline
@@ -51,6 +51,7 @@ stays a failure.
 | `VPFVR-B08` | A staged file that also has changes outside the index is named as not dated. |
 | `VPFVR-B09` | The phase, the commit message file, the category, the skip-slow and the no-record choices reach the check unchanged. |
 | `VPFVR-B10` | A project root below the repository's top hands the check only its own staged files, named from the project root. |
+| `VPFVR-B11` | Over the index (`--staged`), the check is asked to read the files as the index has them (`--index`), so an unstaged edit — another session's — cannot bar the commit; over the tree it is not. (`subArgs`) |
 
 ## Invariants
 

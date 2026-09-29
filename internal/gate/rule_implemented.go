@@ -65,7 +65,7 @@ func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Grap
 		// existe, e duplicar a cobrança produziria dois gates apontando o mesmo dedo.
 		return Skip, i18n.T("gate.rule_implemented.skip_target_missing")
 	}
-	cod, err := os.ReadFile(filepath.Join(root, alvo))
+	cod, err := readFile(root, alvo)
 	if err != nil {
 		return Pending, i18n.T("gate.rule_implemented.pending_read_target", alvo)
 	}

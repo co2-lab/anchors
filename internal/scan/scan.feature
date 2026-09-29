@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RPSCR
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @RPSCR
@@ -244,3 +244,9 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a repository with a committed spec edited but not staged, a new spec staged, and an untracked spec
     When the staged walk runs
     Then the edited spec has its committed revision, the staged one is read, and the untracked one is not
+
+  @RPSCR-B35 @unit-level
+  Scenario: The index reader reads what the commit records
+    Given a committed file edited and not staged, a new staged file, an untracked one and an untouched one
+    When each is read through the index reader
+    Then the edited one reads as committed, the staged one as staged, the untracked one is absent, and the untouched one reads from the tree

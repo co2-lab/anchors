@@ -1211,24 +1211,7 @@ func WalkStaged(root string, cfg *config.Config) ([]File, error) {
 	if err != nil {
 		return nil, err
 	}
-	gitList := func(args ...string) ([]string, error) {
-		out, err := exec.Command("git", append([]string{"-C", root}, args...)...).Output()
-		if err != nil {
-			return nil, err
-		}
-		var paths []string
-		for _, p := range strings.Split(string(out), "\x00") {
-			if p != "" {
-				paths = append(paths, filepath.ToSlash(p))
-			}
-		}
-		return paths, nil
-	}
-	untracked, err := gitList("ls-files", "--others", "--exclude-standard", "-z")
-	if err != nil {
-		return nil, err
-	}
-	differ, err := gitList("diff", "--name-only", "--relative", "-z")
+	untracked, differ, err := stagedDiffs(root)
 	if err != nil {
 		return nil, err
 	}
@@ -1259,3 +1242,62 @@ func WalkStaged(root string, cfg *config.Config) ([]File, error) {
 	}
 	return out, nil
 }
+
+// stagedDiffs lists where the tree and the index part: the files git does not track, and
+// the tracked ones whose tree content differs from the index.
+func stagedDiffs(root string) (untracked, differ []string, err error) {
+	gitList := func(args ...string) ([]string, error) {
+		out, err := exec.Command("git", append([]string{"-C", root}, args...)...).Output()
+		if err != nil {
+			return nil, err
+		}
+		var paths []string
+		for _, p := range strings.Split(string(out), "\x00") {
+			if p != "" {
+				paths = append(paths, filepath.ToSlash(p))
+			}
+		}
+		return paths, nil
+	}
+	if untracked, err = gitList("ls-files", "--others", "--exclude-standard", "-z"); err != nil {
+		return nil, nil, err
+	}
+	if differ, err = gitList("diff", "--name-only", "--relative", "-z"); err != nil {
+		return nil, nil, err
+	}
+	return untracked, differ, nil
+}
+
+// IndexReader reads the project's files as the git INDEX has them — what the commit being
+// made will record: a file with unstaged changes is read as staged, a file git does not
+// track does not exist, and every other file is read from the tree, where it is the same.
+// It is what the commit's gates read, so another session's unstaged edit to a spec the
+// commit does not carry cannot bar it.
+func IndexReader(root string) (func(rel string) ([]byte, error), error) {
+	untracked, differ, err := stagedDiffs(root)
+	if err != nil {
+		return nil, err
+	}
+	absent, staged := map[string]bool{}, map[string]bool{}
+	for _, p := range untracked {
+		absent[p] = true
+	}
+	for _, p := range differ {
+		staged[p] = true
+	}
+	return func(rel string) ([]byte, error) {
+		rel = filepath.ToSlash(filepath.Clean(rel))
+		switch {
+		case absent[rel]:
+			return nil, &os.PathError{Op: "read", Path: rel, Err: os.ErrNotExist}
+		case staged[rel]:
+			b, err := exec.Command("git", "-C", root, "show", ":./"+rel).Output()
+			if err != nil {
+				return nil, &os.PathError{Op: "read", Path: rel, Err: os.ErrNotExist}
+			}
+			return b, nil
+		}
+		return os.ReadFile(filepath.Join(root, rel))
+	}, nil
+}
+

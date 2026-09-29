@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: VPFVR
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @VPFVR
@@ -108,3 +108,9 @@ Feature: VerifyPhaseFacade — one invocation per phase, delegated to the check 
     Given dating the staged files failed with "boom"
     When the dating result is printed
     Then it prints "· touch: could not date the staged files (boom)"
+
+  @VPFVR-B11 @unit-level
+  Scenario: Over the index the check reads the index
+    Given a verify over the staged files and one over named files
+    When the check's arguments are built
+    Then the first asks for --index and the second does not

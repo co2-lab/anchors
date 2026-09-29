@@ -2,7 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -93,7 +92,7 @@ func GenerateStamps(content, testID, root string, g *mapx.Graph, cfg *config.Con
 			skipped = append(skipped, StampSkipped{module, reason})
 			continue
 		}
-		body, err := os.ReadFile(filepath.Join(root, file))
+		body, err := readFile(root, file)
 		if err != nil {
 			skipped = append(skipped, StampSkipped{module, "the module could not be read: " + file})
 			continue

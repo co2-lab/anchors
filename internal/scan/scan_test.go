@@ -1,6 +1,7 @@
 package scan
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -933,5 +934,49 @@ func TestWalkStaged_readsTheIndex(t *testing.T) {
 	}
 	if revs["a.spec.md"] != ShortHash([]byte("# A v1\n")) || revs["b.spec.md"] == "" || revs["c.spec.md"] != "" || len(revs) != 2 {
 		t.Fatalf("the index: a as committed, b staged, no c; got %v", revs)
+	}
+}
+
+func TestIndexReader(t *testing.T) {
+	t.Run("RPSCR-B35: The index reader reads what the commit records", func(t *testing.T) {})
+	root := t.TempDir()
+	git := func(args ...string) {
+		t.Helper()
+		if out, err := exec.Command("git", append([]string{"-C", root, "-c", "user.email=t@t", "-c", "user.name=t"}, args...)...).CombinedOutput(); err != nil {
+			t.Skipf("git %v: %v %s", args, err, out)
+		}
+	}
+	git("init", "-q")
+	must(t, writeDeep(filepath.Join(root, "a.spec.md"), "# A v1\n"))
+	must(t, writeDeep(filepath.Join(root, "d", "same.md"), "# same\n"))
+	git("add", ".")
+	git("commit", "-qm", "base")
+	must(t, writeDeep(filepath.Join(root, "a.spec.md"), "# A v2, not staged\n"))
+	must(t, writeDeep(filepath.Join(root, "b.spec.md"), "# B\n"))
+	git("add", "b.spec.md")
+	must(t, writeDeep(filepath.Join(root, "c.spec.md"), "# C, untracked\n"))
+	read, err := IndexReader(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for rel, want := range map[string]string{"a.spec.md": "# A v1\n", "./b.spec.md": "# B\n", "d/same.md": "# same\n"} {
+		if b, err := read(rel); err != nil || string(b) != want {
+			t.Errorf("%s reads %q, got %q %v", rel, want, b, err)
+		}
+	}
+	if _, err := read("c.spec.md"); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("an untracked file is absent, got %v", err)
+	}
+	if _, err := read("ghost.md"); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("a file nowhere is absent, got %v", err)
+	}
+	git("rm", "-q", "--cached", "d/same.md")
+	must(t, writeDeep(filepath.Join(root, "d", "same.md"), "# edited\n"))
+	read, _ = IndexReader(root)
+	if _, err := read("d/same.md"); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("a file removed from the index is absent, got %v", err)
+	}
+	if _, err := IndexReader(t.TempDir()); err == nil {
+		t.Error("outside a repository there is no index to read")
 	}
 }

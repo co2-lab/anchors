@@ -2,8 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -64,7 +62,7 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	// une o conteúdo (não-comentário) de todos os testes ligados
 	var testBody, bodyComComentarios strings.Builder
 	for _, tp := range testPaths {
-		b, err := os.ReadFile(filepath.Join(root, tp))
+		b, err := readFile(root, tp)
 		if err != nil {
 			continue
 		}

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:18c3f17b9d202ea2 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:8d2ac914473febcf — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -147,6 +147,8 @@ teste prova.
 - [Asking one spec by an unknown code fails](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-E06`
 
 - [A layer with files and no spec is said, not an error](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B18`
+
+- [The compiler reads through its source](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B19`
 
 - [Every known kind has a title, items to cover and a trap](camadas/apoio.md#dcknd--dockinds--what-each-kind-of-project-documentation-must-answer-told-to-the-agent-that-writes-it) `DCKND-B01`
 
@@ -2204,6 +2206,8 @@ teste prova.
 
 - [The check's stamps do not erase what another process wrote meanwhile](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B84`
 
+- [The index flag reads what the commit records](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B85`
+
 - [The scenarios of one spec are listed as proven or not](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B01`
 
 - [A code another unit owns, cited in prose, is not a declared scenario](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B02`
@@ -2587,6 +2591,8 @@ teste prova.
 - [The staged scope outside a git repository is refused](camadas/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-E04`
 
 - [A dating failure warns and does not stop the verify](camadas/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-E05`
+
+- [Over the index the check reads the index](camadas/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-B11`
 
 - [A frozen project refuses the command, naming it and the reason](camadas/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze) `CLRTC-B01`
 
@@ -3629,6 +3635,8 @@ teste prova.
 - [A target declared with nothing to measure is skipped with its reason](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B24`
 
 - [The gate's reach is offered to the runs that choose what to measure](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B25`
+
+- [The gates read files from the source set](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B26`
 
 - [A layer the Estrutura does not have fails](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B01`
 
@@ -6815,6 +6823,8 @@ teste prova.
 - [Only the given files are read, as the walk reads them](camadas/scan.md#rpscr-b33--only-the-given-files-are-read-as-the-walk-reads-them) `RPSCR-B33`
 
 - [The staged walk reads the index, not the tree](camadas/scan.md#rpscr-b34--the-staged-walk-reads-the-index-not-the-tree) `RPSCR-B34`
+
+- [The index reader reads what the commit records](camadas/scan.md#rpscr-b35--the-index-reader-reads-what-the-commit-records) `RPSCR-B35`
 
 - [Only a marked workflow is owned upstream](camadas/scan.md#upowp-b01--only-a-marked-workflow-is-owned-upstream) `UPOWP-B01`
 

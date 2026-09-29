@@ -104,7 +104,7 @@ README-only commit does not trigger the monorepo's typecheck.`,
 			// `verify` é uma fachada: delega ao MESMO pipeline do `check`, para não
 			// existirem duas verdades sobre o que é passar. O que ele acrescenta é a
 			// fase (e a coleta do staged), não uma segunda régua.
-			return runSubcommand(checkArgs(root, phase, commitMsg, category, changed, all, skipSlow, noRecord))
+			return runSubcommand(subArgs(checkArgs(root, phase, commitMsg, category, changed, all, skipSlow, noRecord), staged))
 		},
 	}
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
@@ -256,3 +256,14 @@ func printPreCommitTouch(bumped []touchDecision, skipped map[touchSkip][]string,
 func preCommitTouches(staged bool, phase string, cfg *config.Config) bool {
 	return staged && phase == "pre-commit" && touchOnPreCommit(cfg)
 }
+
+// subArgs completes the check's arguments: a commit over the index is judged by what it
+// records, so the gates read the files as the index has them, and another session's
+// unstaged edit cannot bar it.
+func subArgs(sub []string, staged bool) []string {
+	if staged {
+		return append(sub, "--index")
+	}
+	return sub
+}
+

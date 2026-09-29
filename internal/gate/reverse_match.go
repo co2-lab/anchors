@@ -2,8 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -155,7 +153,7 @@ func checkFeatureSpecMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	declared := map[string]bool{}
 	states := map[string]bool{}
 	for _, sp := range specPaths {
-		b, err := os.ReadFile(filepath.Join(root, sp))
+		b, err := readFile(root, sp)
 		if err != nil {
 			continue
 		}
@@ -239,7 +237,7 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	declared := map[string]bool{}
 	units := map[string]bool{}
 	for _, fp := range featPaths {
-		b, err := os.ReadFile(filepath.Join(root, fp))
+		b, err := readFile(root, fp)
 		if err != nil {
 			continue
 		}

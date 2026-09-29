@@ -1,8 +1,6 @@
 package gate
 
 import (
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -136,7 +134,7 @@ func checkPhaseExists(content string, n mapx.Node, root string, g *mapx.Graph, c
 		if p.Kind != mapx.KindPlan {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(root, p.ID))
+		b, err := readFile(root, p.ID)
 		if err != nil {
 			continue
 		}
@@ -184,7 +182,7 @@ func checkParentValid(content string, n mapx.Node, root string, g *mapx.Graph, c
 		if o.Kind != mapx.KindPlan {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(root, o.ID))
+		b, err := readFile(root, o.ID)
 		if err != nil {
 			continue
 		}

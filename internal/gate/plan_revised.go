@@ -1,8 +1,6 @@
 package gate
 
 import (
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -119,7 +117,7 @@ func checkPlanRevised(content string, n mapx.Node, root string, g *mapx.Graph, c
 		// permanente, e ruído permanente é o que treina a equipe a ignorar o gate.
 		var semAviso []string
 		for _, alvo := range n.Revises {
-			b, err := os.ReadFile(filepath.Join(root, alvo))
+			b, err := readFile(root, alvo)
 			if err != nil || !topNoticeRE().MatchString(docTop(string(b))) {
 				semAviso = append(semAviso, alvo)
 			}

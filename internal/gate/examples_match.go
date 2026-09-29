@@ -2,8 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -49,7 +47,7 @@ func checkExamplesMatch(content string, n mapx.Node, root string, g *mapx.Graph,
 		if l, ok := files[file]; ok {
 			return l
 		}
-		b, err := os.ReadFile(filepath.Join(root, file))
+		b, err := readFile(root, file)
 		if err != nil {
 			files[file] = nil // @resilient: an unreadable test carries no row; the map notices a missing file
 			return nil

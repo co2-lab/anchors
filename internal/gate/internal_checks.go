@@ -2,8 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -130,7 +128,7 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 }
 
 func runInternal(name string, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) (Verdict, string) {
-	content, err := os.ReadFile(filepath.Join(root, n.ID))
+	content, err := readFile(root, n.ID)
 	if err != nil {
 		return Fail, i18n.T("gate.read_file_failed", err.Error())
 	}
@@ -899,7 +897,7 @@ func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string, cf
 		}
 	}
 	for _, tp := range unread {
-		b, err := os.ReadFile(filepath.Join(root, tp))
+		b, err := readFile(root, tp)
 		if err != nil {
 			continue
 		}

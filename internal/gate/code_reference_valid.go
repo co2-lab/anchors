@@ -1,8 +1,6 @@
 package gate
 
 import (
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -107,7 +105,7 @@ func codeOwners(g *mapx.Graph, root string) map[string]bool {
 		if n.Kind != mapx.KindSpec {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(root, n.ID))
+		b, err := readFile(root, n.ID)
 		if err != nil {
 			continue
 		}

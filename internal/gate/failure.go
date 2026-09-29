@@ -2,8 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -163,7 +161,7 @@ func governedCode(n mapx.Node, root string, g *mapx.Graph) (string, bool) {
 		if e.Type != mapx.EdgeSpecifies {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(root, e.To))
+		b, err := readFile(root, e.To)
 		if err != nil {
 			continue
 		}

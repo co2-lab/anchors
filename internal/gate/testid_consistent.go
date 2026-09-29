@@ -1,7 +1,6 @@
 package gate
 
 import (
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -63,7 +62,7 @@ func checkTestIDCoherent(content string, n mapx.Node, root string, g *mapx.Graph
 		if e.Type != mapx.EdgeSpecifies {
 			continue
 		}
-		if b, err := os.ReadFile(filepath.Join(root, e.To)); err == nil {
+		if b, err := readFile(root, e.To); err == nil {
 			expostos = append(expostos, exposedTestIDs(string(b), attr)...)
 			arquivo = filepath.Base(e.To)
 		}
@@ -181,13 +180,13 @@ func consumingSurfaces(root, specID string, g *mapx.Graph, cfg *config.Config) (
 			continue
 		}
 		// A feature em si: DESCREVE o handle nos cenários.
-		if b, err := os.ReadFile(filepath.Join(root, e.To)); err == nil {
+		if b, err := readFile(root, e.To); err == nil {
 			fs = append(fs, string(b))
 		}
 		// O teste ligado nasce na FEATURE, não na spec — dois saltos.
 		for _, fe := range g.Neighbors(e.To).Out {
 			if fe.Type == mapx.EdgeTestedBy {
-				if b, err := os.ReadFile(filepath.Join(root, fe.To)); err == nil {
+				if b, err := readFile(root, fe.To); err == nil {
 					cs = append(cs, string(b))
 				}
 			}

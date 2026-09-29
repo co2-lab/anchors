@@ -1,8 +1,6 @@
 package gate
 
 import (
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -344,7 +342,7 @@ func provingTest(codigo, root string, g *mapx.Graph) (arquivo string, achou bool
 		if node.Kind != mapx.KindTest {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(root, node.ID))
+		b, err := readFile(root, node.ID)
 		if err != nil {
 			continue
 		}
@@ -411,7 +409,7 @@ func linkedFeatureScenarios(n mapx.Node, root string, g *mapx.Graph) (int, strin
 		if e.Type != mapx.EdgeCoveredBy {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(root, e.To))
+		b, err := readFile(root, e.To)
 		if err != nil {
 			continue
 		}

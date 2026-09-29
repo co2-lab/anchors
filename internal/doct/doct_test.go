@@ -623,3 +623,23 @@ func TestBuild_layersWithoutSpec(t *testing.T) {
 		}
 	}
 }
+
+func TestNewWith_readsThroughTheSource(t *testing.T) {
+	t.Run("DTCDC-B19: The compiler reads through its source", func(t *testing.T) {})
+	root, g := projetoDeTeste(t, map[string]string{"pkg/GoLive.spec.md": specDeExemplo})
+	var asked []string
+	c, err := NewWith(root, g, func(rel string) ([]byte, error) {
+		asked = append(asked, rel)
+		return []byte(strings.Replace(specDeExemplo, "GoLiveChecklist", "FromTheIndex", 1)), nil
+	})
+	if err != nil || !strings.HasPrefix(c.specs[0].Titulo, "FromTheIndex") || asked[0] != "pkg/GoLive.spec.md" {
+		t.Fatalf("the spec is read through the source, got %v %+v %v", err, c.specs, asked)
+	}
+	if b, err := c.readRel("x/y.md"); err != nil || !strings.Contains(string(b), "FromTheIndex") {
+		t.Errorf("every read goes through the source, got %q %v", b, err)
+	}
+	plain, _ := New(root, g)
+	if !strings.HasPrefix(plain.specs[0].Titulo, "GoLiveChecklist") {
+		t.Errorf("without a source the tree is read, got %q", plain.specs[0].Titulo)
+	}
+}

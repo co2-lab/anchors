@@ -2617,3 +2617,14 @@ func TestRecordCheckKeepsWhatAnotherProcessWrote(t *testing.T) {
 		}
 	}
 }
+
+func TestCheck_indexOutsideARepository(t *testing.T) {
+	t.Run("CGPCH-B85: The index flag reads what the commit records", func(t *testing.T) {})
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "anchors.yaml"), []byte("version: 5\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := runQ(t, newCheckCmd(), "--root", dir, "--all", "--no-record", "--index"); err == nil || !strings.Contains(err.Error(), "read the git index") {
+		t.Errorf("outside a repository --index fails saying so, got %v", err)
+	}
+}

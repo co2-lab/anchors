@@ -236,7 +236,7 @@ func tokenAppearsIn(root, glob, token string) (bool, bool) {
 	// identificador à esquerda; à direita, `_` é continuação legítima.
 	re := regexp.MustCompile(`(^|[^A-Za-z0-9_$])` + regexp.QuoteMeta(token) + `([^A-Za-z0-9$]|$)`)
 	for _, m := range matches {
-		b, err := os.ReadFile(filepath.Join(root, m))
+		b, err := readFile(root, m)
 		if err != nil {
 			continue
 		}

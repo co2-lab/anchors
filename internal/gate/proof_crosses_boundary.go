@@ -2,7 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -237,7 +236,7 @@ func checkProofCrossesBoundary(content string, n mapx.Node, root string, g *mapx
 
 	var corpo strings.Builder
 	for _, cp := range codePaths {
-		b, err := os.ReadFile(filepath.Join(root, cp))
+		b, err := readFile(root, cp)
 		if err != nil {
 			continue
 		}

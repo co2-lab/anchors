@@ -3,7 +3,6 @@ package gate
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strconv"
@@ -146,7 +145,7 @@ func countOf(root string, d count) (int, error) {
 	}
 	total := 0
 	for _, f := range arquivos {
-		b, rerr := os.ReadFile(filepath.Join(root, f))
+		b, rerr := readFile(root, f)
 		if rerr != nil {
 			// An unread file would undercount, and the gate would accuse the declared
 			// number of a divergence it never measured.

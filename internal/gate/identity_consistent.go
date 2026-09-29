@@ -66,7 +66,7 @@ func checkIdentityConsistent(content string, n mapx.Node, root string, g *mapx.G
 		if e.Type != mapx.EdgeSpecifies {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(root, e.To))
+		b, err := readFile(root, e.To)
 		if err != nil {
 			continue
 		}

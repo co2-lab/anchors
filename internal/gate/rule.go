@@ -1,9 +1,10 @@
 package gate
 
 import (
-	"github.com/co2-lab/anchors/internal/i18n"
 	"regexp"
 	"strings"
+
+	"github.com/co2-lab/anchors/internal/i18n"
 )
 
 // --- a REGRA dentro do gate ---

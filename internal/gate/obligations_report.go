@@ -1,8 +1,6 @@
 package gate
 
 import (
-	"os"
-	"path/filepath"
 	"sort"
 
 	"github.com/co2-lab/anchors/internal/config"
@@ -43,7 +41,7 @@ func EvaluateObligations(root string, cfg *config.Config, g *mapx.Graph, obs []c
 			// sem Packs: as obrigações já vêm resolvidas de fora
 		}
 		for _, n := range g.Nodes {
-			b, err := os.ReadFile(filepath.Join(root, n.ID))
+			b, err := readFile(root, n.ID)
 			if err != nil {
 				continue
 			}

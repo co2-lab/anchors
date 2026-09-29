@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GTENG
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @GTENG
@@ -222,3 +222,9 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given a gate on code excluding the label resource, and nodes of each case
     When each node is asked about through Applies
     Then code without the label is reached, and a spec or a code node with the label is not
+
+  @GTENG-B26 @unit-level
+  Scenario: The gates read files from the source set
+    Given a source that answers another text than the tree
+    When a gate reads a file with the source set, and after restoring it
+    Then it reads the source's text, then the tree's

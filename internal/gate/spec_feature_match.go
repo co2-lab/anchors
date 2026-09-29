@@ -1,8 +1,6 @@
 package gate
 
 import (
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -84,7 +82,7 @@ func checkSpecFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	// coberta por mais de uma feature; o requisito só precisa estar em alguma).
 	cobertos := map[string]bool{}
 	for _, f := range features {
-		b, err := os.ReadFile(filepath.Join(root, f))
+		b, err := readFile(root, f)
 		if err != nil {
 			continue
 		}

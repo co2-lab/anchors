@@ -2,8 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -309,7 +307,7 @@ func anchorIndexFor(root string, g *mapx.Graph, anchorRE *regexp.Regexp) *anchor
 		if node.Kind != mapx.KindSpec {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(root, node.ID))
+		b, err := readFile(root, node.ID)
 		if err != nil {
 			continue
 		}
@@ -332,7 +330,7 @@ func anchorIndexFor(root string, g *mapx.Graph, anchorRE *regexp.Regexp) *anchor
 		if node.Kind != mapx.KindCode {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(root, node.ID))
+		b, err := readFile(root, node.ID)
 		if err != nil {
 			continue
 		}

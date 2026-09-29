@@ -67,7 +67,7 @@ func staleDocs(root string, g *mapx.Graph) ([]string, error) {
 	if staleOK && staleRoot == root && staleGraph == g {
 		return staleOut, staleErr
 	}
-	c, err := doct.New(root, g)
+	c, err := doct.NewWith(root, g, func(rel string) ([]byte, error) { return readFile(root, rel) })
 	if err != nil {
 		staleRoot, staleGraph, staleOut, staleErr, staleOK = root, g, nil, err, true
 		return nil, err

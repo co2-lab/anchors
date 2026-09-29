@@ -104,7 +104,7 @@ func reportPath(root, p string) string {
 
 // jscpdThreshold reads the `threshold` the project declares in `.jscpd.json`.
 func jscpdThreshold(root string) (float64, bool) {
-	b, err := os.ReadFile(filepath.Join(root, ".jscpd.json"))
+	b, err := readFile(root, ".jscpd.json")
 	if err != nil {
 		return 0, false // @resilient: no `.jscpd.json` is a project that declares no tolerance
 	}

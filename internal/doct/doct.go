@@ -155,10 +155,27 @@ type Compiler struct {
 	// sizeCache memoriza o tamanho de cada recorte — ver `fnSize`, onde esta a medida
 	// que justifica o cache.
 	sizeCache map[string]Size
+	// read reads a project file by its path relative to the root; nil reads the tree.
+	read func(rel string) ([]byte, error)
+}
+
+// readRel reads a project file, by its path relative to the root, through the compiler's
+// source.
+func (c *Compiler) readRel(rel string) ([]byte, error) {
+	if c.read != nil {
+		return c.read(filepath.ToSlash(rel))
+	}
+	return os.ReadFile(filepath.Join(c.Root, rel))
 }
 
 func New(root string, g *mapx.Graph) (*Compiler, error) {
-	c := &Compiler{Root: root, Graph: g, Layout: DefaultLayout()}
+	return NewWith(root, g, nil)
+}
+
+// NewWith is New reading the project's files through `read` (a path relative to the root)
+// — the git index, when a commit is being checked. Nil reads the tree.
+func NewWith(root string, g *mapx.Graph, read func(rel string) ([]byte, error)) (*Compiler, error) {
+	c := &Compiler{Root: root, Graph: g, Layout: DefaultLayout(), read: read}
 	// A Estrutura é OPCIONAL aqui: o erro de carregá-la já é reportado por quem chama o
 	// compilador, e um template que não usa contêineres não deve falhar porque o
 	// `anchors.yaml` não os declara.
@@ -182,7 +199,7 @@ func (c *Compiler) loadSpecs() error {
 		if n.Kind != mapx.KindSpec {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(c.Root, n.ID))
+		b, err := c.readRel(n.ID)
 		if err != nil {
 			// PARA. Uma spec que o mapa conhece e o disco não tem sairia da documentação
 			// sem uma palavra — e o compilado, verde, ficaria sem ela. É o modo de falha
@@ -664,7 +681,7 @@ func (c *Compiler) Stale() ([]string, error) {
 		saida := strings.TrimSuffix(rel, SufixoTemplate)
 		tmplPath := filepath.Join(c.Root, Dir, filepath.FromSlash(rel))
 
-		atual, err := os.ReadFile(filepath.Join(c.Root, OutDir, filepath.FromSlash(saida)))
+		atual, err := c.readRel(filepath.Join(OutDir, filepath.FromSlash(saida)))
 		if err != nil {
 			out = append(out, saida) // não existe: está defasado por ausência
 			continue
@@ -684,7 +701,7 @@ func (c *Compiler) Stale() ([]string, error) {
 		// nada que ele tenha feito. Para elas o caminho antigo continua valendo — compila
 		// e compara — e o proximo `docs build` grava o carimbo.
 		if m := markerHashRE.FindSubmatch(atual); m != nil {
-			b, errT := os.ReadFile(tmplPath)
+			b, errT := c.readRel(filepath.Join(Dir, filepath.FromSlash(rel)))
 			if errT != nil {
 				return nil, errT
 			}

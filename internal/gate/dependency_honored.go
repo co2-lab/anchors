@@ -2,7 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -70,7 +69,7 @@ func checkDependencyHonored(content string, n mapx.Node, root string, g *mapx.Gr
 	// une o conteúdo (não-comentário) do código regido.
 	var codeBody strings.Builder
 	for _, cp := range codePaths {
-		b, err := os.ReadFile(filepath.Join(root, cp))
+		b, err := readFile(root, cp)
 		if err != nil {
 			continue
 		}

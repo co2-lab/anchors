@@ -2,8 +2,6 @@ package gate
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -139,7 +137,7 @@ func dependents(root, specID string, g *mapx.Graph) []specText {
 			continue
 		}
 		seen[e.From] = true
-		if b, err := os.ReadFile(filepath.Join(root, e.From)); err == nil {
+		if b, err := readFile(root, e.From); err == nil {
 			out = append(out, specText{e.From, string(b), kindOf[e.From].Layer})
 		}
 	}
@@ -186,7 +184,7 @@ func ImpactedTests(root string, g *mapx.Graph, cfg *config.Config) []string {
 		if n.Kind != mapx.KindSpec || !gitmeta.HasUncommittedChanges(root, n.ID) {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(root, n.ID))
+		b, err := readFile(root, n.ID)
 		if err != nil {
 			continue
 		}
