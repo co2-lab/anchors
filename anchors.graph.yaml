@@ -5156,7 +5156,7 @@ nodes:
         ingested_at: "2026-09-29T13:45:13-03:00"
     - id: cmd/anchors/ops/init_wizard_test.go
       kind: test
-      rev: 97161bede8d9
+      rev: 1225de885aac
       updated_at: "2026-09-29"
       code: INWZN
       layer: teste
@@ -5255,7 +5255,7 @@ nodes:
         ingested_at: "2026-09-29T13:45:13-03:00"
     - id: cmd/anchors/ops/install_hooks_test.go
       kind: test
-      rev: c045990d772d
+      rev: e8c83d319095
       updated_at: "2026-09-29"
       code: INHKN
       layer: teste

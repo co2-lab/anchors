@@ -4,6 +4,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -104,7 +105,8 @@ func TestInstallHooksWritesTheHooksAndTheMergeDrivers(t *testing.T) {
 		if string(b) != want {
 			t.Errorf("%s does not hold the managed script", name)
 		}
-		if fi, _ := os.Stat(p); fi.Mode()&0o111 == 0 {
+		// Windows has no executable bit; Git for Windows runs a hook without one.
+		if fi, _ := os.Stat(p); runtime.GOOS != "windows" && fi.Mode()&0o111 == 0 {
 			t.Errorf("%s is not executable (%v)", name, fi.Mode())
 		}
 	}

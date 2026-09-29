@@ -728,10 +728,7 @@ func TestOpenAIRunsInTheRootWithoutAShell(t *testing.T) {
 	t.Run("INWZN-B12: A detected AI is opened in the root with the prompt, or declined for the step-by-step", func(t *testing.T) {})
 	root := t.TempDir()
 	prompt := `a "quoted" (prompt) → with $HOME`
-	script := writeFile(t, t.TempDir(), "fake-ai", "#!/bin/sh\npwd > seen-dir\nprintf '%s' \"$1\" > seen-arg\n")
-	if err := os.Chmod(script, 0o755); err != nil {
-		t.Fatal(err)
-	}
+	script := testkit.FakeBin(t, t.TempDir(), "fake-ai", "#!/bin/sh\npwd > seen-dir\nprintf '%s' \"$1\" > seen-arg\n")
 	if err := openAI(root, []string{script, prompt}); err != nil {
 		t.Fatalf("openAI: %v", err)
 	}
@@ -785,10 +782,7 @@ func TestInstructPersonOpensTheDetectedAIWhenAccepted(t *testing.T) {
 	t.Setenv("GEMINI_CLI", "1")
 	t.Setenv("TERM", "dumb") // line-based prompt: reads os.Stdin, never a terminal
 	bin := t.TempDir()
-	fake := writeFile(t, bin, "gemini", "#!/bin/sh\nprintf '%s' \"$1\" > \"$PWD/opened-with\"\n")
-	if err := os.Chmod(fake, 0o755); err != nil {
-		t.Fatal(err)
-	}
+	testkit.FakeBin(t, bin, "gemini", "#!/bin/sh\nprintf '%s' \"$1\" > \"$PWD/opened-with\"\n")
 	t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
 	root := t.TempDir()
 
