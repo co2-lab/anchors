@@ -78,6 +78,14 @@ README-only commit does not trigger the monorepo's typecheck.`,
 					} else if msg != "" {
 						fmt.Println(msg)
 					}
+					// The pages of `docs/` the commit's specs leave out of date, compiled from
+					// them and staged; after the map, which they are compiled against. A failure
+					// warns and does not block: `docs-fresh` still does.
+					if msg, err := syncDocsForCommit(absRoot, cfg); err != nil {
+						fmt.Printf("· docs: not compiled for the commit (%v)\n", err)
+					} else if msg != "" {
+						fmt.Println(msg)
+					}
 				}
 			}
 			if staged {

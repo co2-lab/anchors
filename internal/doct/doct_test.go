@@ -643,3 +643,66 @@ func TestNewWith_readsThroughTheSource(t *testing.T) {
 		t.Errorf("without a source the tree is read, got %q", plain.specs[0].Titulo)
 	}
 }
+
+func TestCompiler_templatesThroughTheSource(t *testing.T) {
+	t.Run("DTCDC-B20: A compiler with a source compiles the templates it holds", func(t *testing.T) {})
+	root, g := projetoDeTeste(t, map[string]string{"pkg/GoLive.spec.md": specDeExemplo})
+	for rel, body := range map[string]string{Dir + "/a.md.tmpl": "tree template\n", Dir + "/b.md.tmpl": "only on disk\n"} {
+		if err := os.MkdirAll(filepath.Join(root, Dir), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, rel), []byte(body), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	c, err := NewWith(root, g, func(rel string) ([]byte, error) {
+		switch rel {
+		case Dir + "/a.md.tmpl":
+			return []byte("index template\n"), nil
+		case "pkg/GoLive.spec.md":
+			return []byte(specDeExemplo), nil
+		}
+		return nil, os.ErrNotExist
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	pages, err := c.Compiled()
+	if err != nil || len(pages) != 1 || pages[0].Path != OutDir+"/a.md" || !strings.Contains(string(pages[0].Content), "index template") {
+		t.Errorf("only the source's template, as the source holds it, got %+v %v", pages, err)
+	}
+}
+
+func TestCompiler_compiledPages(t *testing.T) {
+	t.Run("DTCDC-B21: The pages out of date, compiled without writing", func(t *testing.T) {})
+	root, g := projetoDeTeste(t, map[string]string{"pkg/GoLive.spec.md": specDeExemplo})
+	if err := os.MkdirAll(filepath.Join(root, Dir), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"fresh", "stale", "hand"} {
+		if err := os.WriteFile(filepath.Join(root, Dir, name+".md.tmpl"), []byte(name+" {{range specs}}{{.Code}}{{end}}\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	c, err := New(root, g)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := c.Build(false); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, OutDir, "hand.md"), []byte("by hand\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, Dir, "stale.md.tmpl"), []byte("stale, revised {{range specs}}{{.Code}}{{end}}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	before, _ := os.ReadFile(filepath.Join(root, OutDir, "stale.md"))
+	pages, err := c.Compiled()
+	if err != nil || len(pages) != 1 || pages[0].Path != OutDir+"/stale.md" || !strings.Contains(string(pages[0].Content), "stale, revised GLCGL") {
+		t.Errorf("only the page out of date, compiled, got %+v %v", pages, err)
+	}
+	if after, _ := os.ReadFile(filepath.Join(root, OutDir, "stale.md")); string(after) != string(before) {
+		t.Error("nothing is written")
+	}
+}

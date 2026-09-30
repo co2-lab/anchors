@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DTCDC
-#   updated_at: 2026-09-29
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @DTCDC
@@ -175,3 +175,15 @@ Feature: DocTemplateCompiler — compiles documentation pages from templates tha
     Given a spec whose tree text differs from what a source answers
     When the compiler is built with the source and without
     Then the first reads the source's title and the second the tree's
+
+  @DTCDC-B20 @unit-level
+  Scenario: A compiler with a source compiles the templates it holds
+    Given a template on disk with one text and in the source with another, and a template only on disk
+    When the pages out of date are compiled through the source
+    Then the page comes from the source's template, and the template the source lacks is not compiled
+
+  @DTCDC-B21 @unit-level
+  Scenario: The pages out of date, compiled without writing
+    Given a page out of date, a page up to date, and a page written by hand
+    When the out-of-date pages are compiled
+    Then only the out-of-date one comes back, compiled, and nothing is written

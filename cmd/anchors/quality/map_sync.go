@@ -110,21 +110,9 @@ func stageMapBlob(absRoot string, g *mapx.Graph) error {
 	if err := mapx.Save(g, tmp); err != nil {
 		return err
 	}
-	out, err := exec.Command("git", "-C", absRoot, "hash-object", "-w", tmp).Output()
+	b, err := os.ReadFile(tmp)
 	if err != nil {
-		return fmt.Errorf("write the map blob: %w", err)
+		return err
 	}
-	sha := strings.TrimSpace(string(out))
-	// `--cacheinfo` names the path from the repository's top, not from the directory the
-	// command runs in: a project below the top needs its own prefix, or the map lands in
-	// the top of the repository.
-	prefix, err := exec.Command("git", "-C", absRoot, "rev-parse", "--show-prefix").Output()
-	if err != nil {
-		return fmt.Errorf("locate the project in the repository: %w", err)
-	}
-	path := strings.TrimSpace(string(prefix)) + filepath.ToSlash(mapx.DefaultPath)
-	if err := exec.Command("git", "-C", absRoot, "update-index", "--add", "--cacheinfo", "100644,"+sha+","+path).Run(); err != nil {
-		return fmt.Errorf("stage the map: %w", err)
-	}
-	return nil
+	return stageBlob(absRoot, mapx.DefaultPath, b)
 }

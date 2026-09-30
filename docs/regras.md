@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:38bce3f52f1e02e7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:660e3d960b9ddb06 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -190,6 +190,8 @@ abra a página dela em `camadas/`.
 ### [CGPCH — CheckGatePipeline — confronts the map's nodes against the declared gates, records the verdicts and reports the profile](camadas/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 ### [CVCMC — CoverageCommand — answers the confidence questions from the ingested signals: by scenario, by line, of the diff and the delta](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta)
+
+### [DCSYN — DocsSyncForCommit — the commit carries the pages its specs produce](camadas/comando.md#dcsyn--docssyncforcommit--the-commit-carries-the-pages-its-specs-produce)
 
 ### [HLDCH — DoctorCommand — the global health x-ray, and the repair of the github-mode environment](camadas/comando.md#hldch--doctorcommand--the-global-health-x-ray-and-the-repair-of-the-github-mode-environment)
 

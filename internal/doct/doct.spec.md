@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DTCDC
-  updated_at: 2026-09-29
+  updated_at: 2026-09-30
   layer: apoio
 -->
 # DocTemplateCompiler — compiles documentation pages from templates that reference the specs' content
@@ -63,6 +63,8 @@ reaches at all.
 | `DTCDC-B17` | A page whose generated marker carries no stamp (compiled by an earlier version) is compared by its body below the marker line: stale when the body differs from today's compilation, fresh when it is the same. |
 | `DTCDC-B18` | A layer the project has — the Estrutura declares it, or the map has a file in it — and no spec declares selects nothing instead of failing, and `layerFiles` counts its files in the map, so the architecture page says the layer has no spec instead of the build aborting; a container whose layers have no spec lists them with their files. |
 | `DTCDC-B19` | A compiler built with a source reads the specs, the features, the compiled pages and the templates of the staleness shortcut through it — the git index, when a commit is checked —, and one built without reads the tree. (`NewWith`) |
+| `DTCDC-B20` | A compiler built with a source compiles each template as the source holds it, and a template the source does not hold is not compiled: under the index, a template another session is editing is compiled as the commit records it. (`templates`, `compile`) |
+| `DTCDC-B21` | `Compiled` returns the pages that are out of date, compiled, without writing them; a page up to date is not compiled, and a page written by hand is never among them. (`Compiled`) |
 
 ### Coverage and markers
 

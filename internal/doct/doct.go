@@ -34,6 +34,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sort"
@@ -585,6 +586,13 @@ func (c *Compiler) templates() ([]string, error) {
 		if err != nil {
 			return err
 		}
+		// A template the source does not hold — one the commit does not carry — is not
+		// compiled for it.
+		if c.read != nil {
+			if _, err := c.readRel(filepath.Join(Dir, rel)); err != nil {
+				return nil
+			}
+		}
 		out = append(out, filepath.ToSlash(rel))
 		return nil
 	})
@@ -642,7 +650,13 @@ func withoutHeaderDate(raw string) string {
 }
 
 func (c *Compiler) compile(tmplPath, saida string) ([]byte, error) {
-	b, err := os.ReadFile(tmplPath)
+	// The template is read through the compiler's source, as the specs are: under the index,
+	// a template another session is editing is compiled as the commit records it.
+	relTmpl, errRel := filepath.Rel(c.Root, tmplPath)
+	if errRel != nil {
+		return nil, errRel
+	}
+	b, err := c.readRel(relTmpl)
 	if err != nil {
 		return nil, err
 	}
@@ -730,6 +744,33 @@ func (c *Compiler) Stale() ([]string, error) {
 		if !bytes.Equal(afterFirstLine(atual), afterFirstLine(esperado)) {
 			out = append(out, saida)
 		}
+	}
+	return out, nil
+}
+
+// Page is a page of `docs/` as the templates produce it now: its path relative to the root,
+// and its content.
+type Page struct {
+	Path    string
+	Content []byte
+}
+
+// Compiled compiles the pages that are out of date — the ones `Stale` names — and returns
+// them without writing. A page written by hand is never among them. It is what the
+// pre-commit stages: only what changed is compiled, since a whole build costs seconds.
+func (c *Compiler) Compiled() ([]Page, error) {
+	stale, err := c.Stale()
+	if err != nil {
+		return nil, err
+	}
+	var out []Page
+	for _, saida := range stale {
+		tmpl := filepath.Join(c.Root, Dir, filepath.FromSlash(saida+SufixoTemplate))
+		b, err := c.compile(tmpl, saida)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, Page{Path: path.Join(OutDir, saida), Content: b})
 	}
 	return out, nil
 }

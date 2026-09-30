@@ -30,6 +30,16 @@ type Docs struct {
 	// Required são as documentações obrigatórias. Cada uma nomeia o arquivo, o que ela
 	// existe para responder, e QUANDO precisa ser tocada.
 	Required []DocArtifact `yaml:"required,omitempty"`
+	// PreCommit: the pre-commit phase compiles the pages of `docs/` from the commit's specs
+	// and templates and stages them with the commit, as it does the map. On unless declared
+	// false. Without it, a commit that changes a spec is barred by `docs-fresh` until
+	// someone runs `anchors docs build` by hand.
+	PreCommit *bool `yaml:"pre_commit,omitempty"`
+}
+
+// DocsOnPreCommit says whether the pre-commit compiles and stages the docs.
+func (c *Config) DocsOnPreCommit() bool {
+	return c == nil || c.Docs == nil || c.Docs.PreCommit == nil || *c.Docs.PreCommit
 }
 
 // DocArtifact é uma documentação agregada — um artefato que várias unidades alimentam.

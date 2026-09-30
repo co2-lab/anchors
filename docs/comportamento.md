@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b64d00a0291d4147 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:38554c5e9bf76910 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -149,6 +149,10 @@ teste prova.
 - [A layer with files and no spec is said, not an error](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B18`
 
 - [The compiler reads through its source](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B19`
+
+- [A compiler with a source compiles the templates it holds](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B20`
+
+- [The pages out of date, compiled without writing](camadas/apoio.md#dtcdc--doctemplatecompiler--compiles-documentation-pages-from-templates-that-reference-the-specs-content) `DTCDC-B21`
 
 - [Every known kind has a title, items to cover and a trap](camadas/apoio.md#dcknd--dockinds--what-each-kind-of-project-documentation-must-answer-told-to-the-agent-that-writes-it) `DCKND-B01`
 
@@ -2265,6 +2269,20 @@ teste prova.
 - [A git diff outside a repository explains why and offers the diff file](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-E05`
 
 - [A diff file that cannot be read fails the diff coverage](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-E06`
+
+- [A page left out of date is compiled and staged](camadas/comando.md#dcsyn--docssyncforcommit--the-commit-carries-the-pages-its-specs-produce) `DCSYN-B01`
+
+- [With the tree ahead, the page goes straight into the index](camadas/comando.md#dcsyn--docssyncforcommit--the-commit-carries-the-pages-its-specs-produce) `DCSYN-B02`
+
+- [Nothing to compile, nothing staged](camadas/comando.md#dcsyn--docssyncforcommit--the-commit-carries-the-pages-its-specs-produce) `DCSYN-B03`
+
+- [A page written by hand, or one git ignores, is never touched](camadas/comando.md#dcsyn--docssyncforcommit--the-commit-carries-the-pages-its-specs-produce) `DCSYN-X01`
+
+- [Nothing outside docs is written or staged](camadas/comando.md#dcsyn--docssyncforcommit--the-commit-carries-the-pages-its-specs-produce) `DCSYN-X02`
+
+- [After the sync the gate finds the pages up to date](camadas/comando.md#dcsyn--docssyncforcommit--the-commit-carries-the-pages-its-specs-produce) `DCSYN-I01`
+
+- [A template that does not compile comes back as an error](camadas/comando.md#dcsyn--docssyncforcommit--the-commit-carries-the-pages-its-specs-produce) `DCSYN-E01`
 
 - [The diagnosis is printed grouped by the check that found it](camadas/comando.md#hldch--doctorcommand--the-global-health-x-ray-and-the-repair-of-the-github-mode-environment) `HLDCH-B01`
 
