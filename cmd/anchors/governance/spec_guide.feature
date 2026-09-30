@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SPGDS
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @SPGDS
@@ -51,3 +51,9 @@ Feature: SpecGuide — the project's own spec guide, instantiated with its diale
     Given a project that declares its own rule types
     When the spec guide is rendered
     Then it does not mention the canonical letters
+
+  @SPGDS-B07 @unit-level
+  Scenario: The project guide asks for the four passes before the spec is handed over
+    Given a project configuration
+    When the spec guide is rendered
+    Then it lists the four passes, points to the built-in guide for their questions, and has a defect's rule written before its fix

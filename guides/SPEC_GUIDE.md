@@ -83,6 +83,24 @@ in with `--with <key>` when the unit calls for them. Run
 includes the mutually exclusive ALTERNATIVES (`contract` or `signature`, `rules` or
 `effects`), which is where the wrong choice costs a rewrite.
 
+## Before you hand it over
+
+The spec is what everything else is confronted with: a rule missing here is a scenario,
+a test and a check that will never exist. Write it in four passes (`anchors guide spec`,
+"Writing it", has the questions of each):
+
+1. **Walk every section** and ask what goes in it — every input, every effect and its
+   limit (`X`), every failure, every state shared with another unit.
+2. **Derive the variations** of each rule — values, input states, environments,
+   another actor at the same time — and write each one that changes the behaviour.
+3. **Generalize**: several rules saying one thing about different cases are an
+   invariant (`I`) waiting to be written.
+4. **Review what you wrote**: each rule states the intent, not the mechanism; none is
+   silent about the rest; nothing the unit does is left without a rule.
+
+A defect that reaches you is a rule that was not written: write it, and the invariant it
+is one case of, before the fix.
+
 ## What NOT to do
 
 - **A rule with no code.** With no identity, the feature and the test have nothing to
@@ -109,6 +127,14 @@ includes the mutually exclusive ALTERNATIVES (`contract` or `signature`, `rules`
 - CK6: the mandatory sections are present — header, overview, rules, and open decisions.
 - CK7: when the unit calls for mutually exclusive alternatives, exactly one of each pair
   is present (`contract` or `signature`, `rules` or `effects`), never both.
+- CK8: every section was walked — every input the unit accepts has a rule, every effect
+  its written limit, every failure what the caller sees.
+- CK9: the variations of each rule that change the behaviour are rules of their own, and
+  several rules saying one thing about different cases became an invariant.
+- CK10: each rule states the intent, not the mechanism that implements it, and none is
+  silent about the rest.
+- CK11: a fix carries its rule — the rule the defect broke, and the invariant it is one
+  case of, written before the fix.
 
 ## Specialise this file
 

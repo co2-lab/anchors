@@ -68,6 +68,25 @@ whether the rule ANSWERS the question the code will ask. A spec that says "the s
 must be fast" passes every gate and decides nothing — and whoever implements it will
 invent the threshold.
 
+### Did the spec walk its variations, or stop at the first draft?
+
+The gates prove that code, scenario and test agree with the spec — never that the spec
+said enough. Most defects that reach users are a rule nobody wrote, and they come in
+families: the case reported, and its siblings that arrive one by one. Read the spec as
+` + "`anchors guide spec`" + ` ("Writing it") asks it to be written, and look for what is missing:
+an input no rule mentions, an effect with no written limit, a variation of a rule — an
+empty input, another system, another actor at the same time — that changes the behaviour
+and is not a rule. Several rules saying one thing about different cases are an INVARIANT
+waiting to be written.
+
+### Does the rule state the INTENT, or the mechanism?
+
+A rule that describes how the code does it ("the body ends at the first closer") is
+proven by any test of that code, right or wrong: the triad stays green and wrong
+together. The rule states what must hold ("the body is everything the test runs"). And a
+FIX carries its rule: the defect is a rule that was not written, so the PR that fixes it
+adds the rule — and the invariant it is one case of — with its scenario and its test.
+
 ### Does the code realize the rule, or only cite it?
 
 The ` + "`regra-cumprida`" + ` gate already asks that of an AI, and its verdict is in the
@@ -232,6 +251,13 @@ These are the ones no script reaches.
   declaration aged
 - REV-CK7: a rule that contradicts a SIBLING rule of the same unit was reported — the gates
   confront each rule on its own, and two rules asserting opposite things both pass
+- REV-CK16: the spec walked its variations — every input has a rule, every effect its written
+  limit, and each variation that changes the behaviour (an empty input, another system,
+  another actor at the same time) is a rule; several rules saying one thing are an invariant
+- REV-CK17: each rule states the INTENT, not the mechanism — a rule that describes the code
+  is proven by any test of that code, right or wrong
+- REV-CK18: a fix carries its rule — the PR that fixes a defect adds the rule it broke, and
+  the invariant it is one case of, with scenario and test, not the code change alone
 
 ### The revision (tag: spec, plan)
 

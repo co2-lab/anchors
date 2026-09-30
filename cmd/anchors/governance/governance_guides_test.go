@@ -355,13 +355,13 @@ func TestReviewGuideCarriesAnchoredConformancePoints(t *testing.T) {
 	if !slices.Contains(i18n.AllTranslations("section.title.compliance_points"), strings.TrimPrefix(heading, "## ")) {
 		t.Errorf("%q is not a heading the guide-checklist gate recognises", heading)
 	}
-	for i := 1; i <= 15; i++ {
+	for i := 1; i <= 18; i++ {
 		if code := "REV-CK" + itoa(i) + ":"; !strings.Contains(review, code) {
 			t.Errorf("point %s is missing — the numbering has a gap", code)
 		}
 	}
-	if strings.Contains(review, "REV-CK16:") {
-		t.Error("a 16th point appeared: extend this test and its anchors together")
+	if strings.Contains(review, "REV-CK19:") {
+		t.Error("a 19th point appeared: extend this test and its anchors together")
 	}
 	body := review[:at]
 	anchors := map[string]string{
@@ -377,6 +377,9 @@ func TestReviewGuideCarriesAnchoredConformancePoints(t *testing.T) {
 		"REV-CK13": "change without saying",
 		"REV-CK14": "DO NOT MOVE THE CARD",
 		"REV-CK15": "YOUR VERDICT IS A LINE ON THE PR",
+		"REV-CK16": "walk its variations, or stop at the first draft?",
+		"REV-CK17": "state the INTENT, or the mechanism?",
+		"REV-CK18": "FIX carries its rule",
 	}
 	for ck, anchor := range anchors {
 		if !strings.Contains(body, anchor) {
@@ -545,5 +548,22 @@ func TestChangelogGuideTellsTechnicalFromProduct(t *testing.T) {
 		if !strings.Contains(g, want) {
 			t.Errorf("the changelog guide should say %q", want)
 		}
+	}
+}
+
+func TestGuides_theSpecIsWrittenInFourPasses(t *testing.T) {
+	t.Run("GVGDG-B17: The spec guide asks for four passes and a review", func(t *testing.T) {})
+	g := guideIn(t, "spec")
+	for _, want := range []string{"## Writing it: every section, every variation, then a review",
+		"1. WALK EVERY SECTION", "Every INPUT the unit accepts", "Every EFFECT", "Every FAILURE",
+		"Every STATE the unit reads that another unit also reads",
+		"2. DERIVE THE VARIATIONS", "3. GENERALIZE", "an invariant", "4. REVIEW WHAT YOU WROTE",
+		"the INTENT, or the mechanism", "WHEN A DEFECT REACHES YOU"} {
+		if !strings.Contains(g, want) {
+			t.Errorf("the spec guide should say %q", want)
+		}
+	}
+	if strings.Index(g, "## Writing it") > strings.Index(g, "## Spec rules") {
+		t.Error("the passes come before the spec rules, right after the sections they walk")
 	}
 }

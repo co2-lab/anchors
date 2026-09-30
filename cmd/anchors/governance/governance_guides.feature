@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GVGDG
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @GVGDG
@@ -58,7 +58,7 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     Given the review guide as anchors guide review prints it
     When its conformance points are read
     Then the heading "## Pontos de conformidade" is one the guide-checklist gate recognises
-    And the points run from REV-CK1 to REV-CK15 with no gap, each with its anchor in the prose above the list
+    And the points run from REV-CK1 to REV-CK18 with no gap, each with its anchor in the prose above the list
 
   @GVGDG-B08 @unit-level
   Scenario: The work guide teaches the claim as the first step
@@ -135,3 +135,9 @@ Feature: GovernanceGuides — the guides an agent reads to operate Anchors, and 
     Given the changelog guide
     When it is printed
     Then it says the generated changelog is technical and recommends a product changelog synthesized from it, with bugs but not fixes, and chores only when they matter to the product
+
+  @GVGDG-B17 @unit-level
+  Scenario: The spec guide asks for four passes and a review
+    Given the spec guide
+    When it is read
+    Then it walks every section with its questions, derives the variations, generalizes into invariants, reviews intent against mechanism, and has a defect's rule written before its fix

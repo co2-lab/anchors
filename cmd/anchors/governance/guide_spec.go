@@ -83,6 +83,63 @@ A spec is not all alike — it specializes according to what makes the unit vary
 12. Implementation notes — honest TODOs, decisions, assumed ambiguities.
 13. Change history.
 
+## Writing it: every section, every variation, then a review
+
+The spec is the piece everything else is confronted with. A rule missing here is a
+scenario, a test and a check that will never exist: the gates prove that the code does
+what the spec says, never that the spec said enough. Most defects that reach users are
+a rule nobody wrote. So do not stop at the first draft — write it in four passes.
+
+1. WALK EVERY SECTION. List them (` + "`anchors new spec --list-sections`" + `) and, for
+   each one, ask whether it applies to this unit, and if it does, what goes in it. A
+   section skipped by reflex is where the missing rule hides. Ask in particular:
+   - Every INPUT the unit accepts (argument, flag, parameter, field): which rule says
+     what it does, and what happens to a value outside the domain? An input no rule
+     mentions is an input nobody decided — and the code will decide it by accident.
+   - Every EFFECT (a file written, a command run, a record changed, a message sent):
+     which rule says its limit — where it writes, and what it must NEVER touch? A
+     prohibition is a rule (` + "`X`" + `); a side effect with no written limit is the
+     defect no test of the happy path finds.
+   - Every FAILURE: how the unit fails, and what the caller sees.
+   - Every STATE the unit reads that another unit also reads or writes: which rule says
+     the two agree?
+2. DERIVE THE VARIATIONS. For each rule, ask what varies around it, and write each
+   variation that changes the behaviour as a rule of its own:
+   - each value of an enum, each state of the input — empty, absent, several at once,
+     in another format, changed or removed while the unit works;
+   - each environment the unit runs in — another operating system, another user or
+     process acting at the same time, a file that disappeared;
+   - each combination of options that are not independent.
+   A variation that does NOT change the behaviour is said on the rule ("whatever the
+   order of the files"), so the reader knows it was considered.
+3. GENERALIZE. When a rule is one instance of a wider truth, write the wider truth as
+   an invariant (` + "`I`" + `) and keep the instance as its consequence:
+     ✗ "under --index, this gate reads the staged file"
+     ✓ "under --index, nothing a gate reads comes from the tree" — and this gate's rule
+       is one case of it
+   The invariant covers the variation nobody listed yet: its test runs every case, and
+   the next variation is caught there instead of arriving as the next defect. When
+   several rules say the same thing about different cases, they are an invariant
+   waiting to be written.
+4. REVIEW WHAT YOU WROTE, before the feature is written. Read each rule again and ask:
+   - Does it state the INTENT, or the mechanism that implements it?
+       ✗ "the test's body ends at the first closer back at its indentation"
+       ✓ "the test's body is everything the test runs"
+     A rule that describes the mechanism is proven by any test of that mechanism,
+     right or wrong: the triad stays green and wrong together.
+   - From this rule alone, could someone who never saw the code say what must happen
+     in a case you did not think of?
+   - Is it silent about the rest? "Narrows to the changed files" says nothing of the
+     file that was asked for and left out — say what the user is told.
+   - Is anything the unit does left without a rule? When the code exists, walk it:
+     every branch, every input, every effect.
+   A rule fixed now costs a line; fixed after a defect, it costs the defect.
+
+WHEN A DEFECT REACHES YOU, it is a rule that was not written. Before fixing it, find the
+rule it breaks — and the invariant it is one case of (pass 3) — and write them; then the
+scenarios and the tests, which will fail; then the fix. Fixing the reported case alone
+leaves its siblings to arrive one by one.
+
 ## Spec rules
 
 - It catalogues everything that varies. Each state, validation, action, message and data field

@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:cbf8ab15a2a651f7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b64d00a0291d4147 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1200,6 +1200,8 @@ teste prova.
 
 - [The changelog guide tells the technical changelog from the product one](camadas/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B16`
 
+- [The spec guide asks for four passes and a review](camadas/comando.md#gvgdg--governanceguides--the-guides-an-agent-reads-to-operate-anchors-and-the-contracts-other-code-relies-on) `GVGDG-B17`
+
 - [The board ranks each guide by how many files it governs](camadas/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B01`
 
 - [A map without governance has an empty board](camadas/comando.md#gvrns--governs--who-each-guide-governs-and-how-many-read-from-the-map) `GVRNS-B02`
@@ -1247,6 +1249,8 @@ teste prova.
 - [The guide starts from the command that generates the skeleton](camadas/comando.md#spgds--specguide--the-projects-own-spec-guide-instantiated-with-its-dialect-and-a-complete-example) `SPGDS-B06`
 
 - [A project that declares its rule types is not offered the canonical letters](camadas/comando.md#spgds--specguide--the-projects-own-spec-guide-instantiated-with-its-dialect-and-a-complete-example) `SPGDS-X01`
+
+- [The project guide asks for the four passes before the spec is handed over](camadas/comando.md#spgds--specguide--the-projects-own-spec-guide-instantiated-with-its-dialect-and-a-complete-example) `SPGDS-B07`
 
 - [A failing command prints its error once and exits 1](camadas/comando.md#clmnc--climain--the-entry-point-that-stamps-the-build-identity-prints-a-failure-once-and-turns-it-into-the-exit-code-the-hooks-read) `CLMNC-B01`
 

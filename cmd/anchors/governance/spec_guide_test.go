@@ -100,3 +100,14 @@ func TestSpecGuideWithoutRuleTypesOffersTheCanonical(t *testing.T) {
 		t.Error("without rule_types, the guide has to say which letters hold")
 	}
 }
+
+func TestSpecGuide_asksForTheFourPasses(t *testing.T) {
+	t.Run("SPGDS-B07: The project guide asks for the four passes before the spec is handed over", func(t *testing.T) {})
+	g := RenderSpecGuide(&config.Config{}, "")
+	for _, want := range []string{"## Before you hand it over", "**Walk every section**", "**Derive the variations**",
+		"**Generalize**", "invariant (`I`)", "**Review what you wrote**", "`anchors guide spec`", "before the fix"} {
+		if !strings.Contains(g, want) {
+			t.Errorf("the project spec guide should say %q", want)
+		}
+	}
+}

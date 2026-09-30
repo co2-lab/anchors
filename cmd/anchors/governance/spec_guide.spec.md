@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SPGDS
-  updated_at: 2026-09-26
+  updated_at: 2026-09-30
   layer: comando
 -->
 # SpecGuide — the project's own spec guide, instantiated with its dialect and a complete example
@@ -32,6 +32,7 @@ The central difference from the built-in guide is a COMPLETE EXAMPLE, because no
 | `SPGDS-B04` | When the project declares `rule_types`, the guide lists them as a letter and nature table; otherwise it lists the framework's canonical letters. |
 | `SPGDS-B05` | The code length sentence ("N or M character(s)") appears only when the project declares `code_lengths`. |
 | `SPGDS-B06` | The guide starts from the command that generates the skeleton (`anchors new spec`, and `--list-sections`), before the format. |
+| `SPGDS-B07` | The guide asks, before the spec is handed over, for the four passes — every section, the variations, the invariants, a review of intent against mechanism —, points to `anchors guide spec` for their questions, and says a defect's rule is written before its fix. |
 
 ## Constraints
 
