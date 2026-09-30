@@ -1,6 +1,6 @@
 <!-- @anchors
   code: TSTLS
-  updated_at: 2026-09-28
+  updated_at: 2026-09-29
   layer: infra
 -->
 # TestList — the project's tests, read the way the project says they are written
@@ -45,6 +45,7 @@ to the project root, `line` counted from one, `title` as written.
 | `TSTLS-B07` | A `file` in the script's output is read with forward slashes and without redundant segments, so it matches the map's IDs. |
 | `TSTLS-B08` | A source that declares neither a pattern nor a script lists no test and raises no error. |
 | `TSTLS-B09` | The script may say where each test ends (`end`, its last line), and the test carries it; a test without `end`, and every test a pattern reads, carries zero — the end is not known. |
+| `TSTLS-B10` | A pattern scans the test files through the reader given to `ListFrom` — the git index, under `--index` —, and through the tree when none is given. (`ListFrom`) |
 
 ## Errors
 

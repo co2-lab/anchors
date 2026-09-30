@@ -32,7 +32,7 @@ syntax themselves, and a project on any other library had no title read at all.
 | `PRJTS-B04` | The tests of a set of files come in the order the files are given, and in each file in the order of their lines; tests of other files are left out. |
 | `PRJTS-B05` | An error of the source is returned with the declaration, never taken for a project without tests. |
 | `PRJTS-B06` | Support files are not read as tests, and are dropped from any list of test paths the gates confront. |
-| `PRJTS-B07` | Under `--index` the tests are listed from what the commit records — the same copy of the index a `workdir: index` gate runs in —, so a test's line is a line of the content the gates read. (`projectTests`) |
+| `PRJTS-B07` | Under `--index` a test's line is a line of the content the gates read: a pattern scans the files through the current source, and what a script lists of a file whose tree holds something else than the source is left out. (`projectTests`, `sameAsSource`) |
 
 ## Errors
 
@@ -46,7 +46,7 @@ syntax themselves, and a project on any other library had no title read at all.
 | --- | --- | --- | --- |
 | DEP1 | `internal/config/config.go` | `Config`, `DialectFor` | core — the project's dialect and its `tests` source |
 | DEP2 | `internal/mapx/model.go` | `Graph`, `KindTest` | core — the map's test files |
-| DEP3 | `internal/testlist/testlist.go` | `List`, `Source`, `Test` | infra — reading the tests through a pattern or a script |
+| DEP3 | `internal/testlist/testlist.go` | `ListFrom`, `Source`, `Test` | infra — reading the tests through a pattern or a script |
 
 ## Open Decisions
 

@@ -179,8 +179,6 @@ func RunFull(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Gr
 func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *mapx.Graph, cfg *config.Config, completa bool, disp Waiver) []Result {
 	// A gramática do código de cenário segue o vocabulário do projeto (`rule_types`).
 	SetRuleLetters(cfg.RuleLetters())
-	// The copy of the index `workdir: index` gates ran in goes when the gates are done.
-	defer releaseIndexWorkdir()
 	// índice kind por nó já vem em node.Kind
 	var results []Result
 	for _, g := range gates {
@@ -274,7 +272,7 @@ func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, 
 		}
 	}
 	// project: sem argumentos — a ferramenta já sabe o que olhar.
-	r.Verdict, r.Detail = runGateCommand(g, args, root)
+	r.Verdict, r.Detail = RunExternalArgs(g.Run, args, root)
 	return r
 }
 
@@ -361,7 +359,7 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 			r.Decisão = true
 		}
 	case g.Run != "":
-		r.Verdict, r.Detail = runGateCommand(g, []string{n.ID}, root)
+		r.Verdict, r.Detail = RunExternalArgs(g.Run, []string{n.ID}, root)
 	default:
 		r.Verdict, r.Detail = Pending, i18n.T("gate.no_run_or_check")
 	}

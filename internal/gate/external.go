@@ -1,18 +1,11 @@
 package gate
 
 import (
-	"fmt"
 	"os"
-	"os/exec"
-	"path"
-	"path/filepath"
 	"runtime"
-	"sort"
 	"strconv"
 	"strings"
 
-	"github.com/co2-lab/anchors/internal/config"
-	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/shell"
 )
 
@@ -47,6 +40,19 @@ func argvLimit() int {
 	return 100000
 }
 
+// Um gate `run:` invoca um comando externo (jest, eslint, tsc…). O CLI NÃO reimplementa
+// a ferramenta — roda e lê o exit code (D5: reimplementamos parsing, não ferramentas
+// de teste/lint). O comando do gate vem do anchors.yaml (config do projeto) e pode
+// ser composto (ex.: "cd apps/mobile && jest \"$1\""), por isso roda via `sh -c`.
+//
+// SEGURANÇA: o caminho do alvo NUNCA é interpolado na string do shell — ele é
+// passado como ARGUMENTO POSICIONAL (`$1`), que o shell não reinterpreta. Assim um
+// nome de arquivo com metacaracteres (foo;rm.tsx) é dado puro, não injeção. O
+// comando deve referenciar o alvo como "$1" (com aspas). `{{file}}` é aceito por
+// conveniência e reescrito para "$1" antes de rodar.
+//
+// exit 0 = pass; qualquer outro = fail (com stderr/stdout no detalhe).
+//
 // RunExternalArgs é o motor: roda o comando com N alvos como argumentos posicionais
 // ($1, $2, … e "$@"). Um alvo é o caso por-nó; vários, o `scope: batch`; nenhum, o
 // `scope: project` (a ferramenta olha o projeto inteiro e não recebe alvo).
@@ -143,253 +149,4 @@ func sliceTargets(targets []string, teto int) [][]string {
 		tam += custo
 	}
 	return append(lotes, atual)
-}
-
-// runGateCommand invoca um comando externo (jest, eslint, tsc…). O CLI NÃO reimplementa
-// a ferramenta — roda e lê o exit code (D5: reimplementamos parsing, não ferramentas
-// de teste/lint). O comando do gate vem do anchors.yaml (config do projeto) e pode
-// ser composto (ex.: "cd apps/mobile && jest \"$1\""), por isso roda via `sh -c`.
-//
-// SEGURANÇA: o caminho do alvo NUNCA é interpolado na string do shell — ele é
-// passado como ARGUMENTO POSICIONAL (`$1`), que o shell não reinterpreta. Assim um
-// nome de arquivo com metacaracteres (foo;rm.tsx) é dado puro, não injeção. O
-// comando deve referenciar o alvo como "$1" (com aspas). `{{file}}` é aceito por
-// conveniência e reescrito para "$1" antes de rodar.
-//
-// exit 0 = pass; qualquer outro = fail (com stderr/stdout no detalhe).
-//
-// It runs where the gate's `workdir` says: the tree, or — under `--index`, with
-// `workdir: index` — a copy of what the commit records.
-func runGateCommand(g config.Gate, targets []string, root string) (Verdict, string) {
-	if g.Workdir != config.WorkdirIndex {
-		return RunExternalArgs(g.Run, targets, root)
-	}
-	dir, clean, err := indexWorkdir(root)
-	if err != nil {
-		return Skip, i18n.T("gate.workdir_index_failed", err.Error())
-	}
-	v, out := RunExternalArgs(g.Run, targets, dir)
-	return v, clean(out)
-}
-
-// indexCopy is the copy of the git index this run's `workdir: index` gates share: made
-// once, on the first gate that asks, and removed when the gates are done.
-var indexCopy struct {
-	top, dir string // the repository's top, and where its copy is
-	root     string // the project root the copy was made for, and what it answers
-	answer   string
-	err      error
-}
-
-// indexWorkdir is where a `workdir: index` command runs for the project at root, and what
-// turns the copy's paths in its output back into the project's. With no index source set
-// (no `--index`), or a tree that holds nothing the index does not, it is root itself.
-func indexWorkdir(root string) (dir string, clean func(string) string, err error) {
-	same := func(s string) string { return s }
-	fileSourceMu.RLock()
-	src := fileSource
-	fileSourceMu.RUnlock()
-	if src == nil {
-		return root, same, nil
-	}
-	if indexCopy.root != root {
-		releaseIndexWorkdir()
-		indexCopy.root = root
-		indexCopy.answer, indexCopy.err = copyIndex(root)
-	}
-	if indexCopy.err != nil {
-		return "", same, indexCopy.err
-	}
-	if indexCopy.dir == "" {
-		return root, same, nil
-	}
-	prefixes := []string{indexCopy.dir}
-	if real, err := filepath.EvalSymlinks(indexCopy.dir); err == nil && real != indexCopy.dir {
-		prefixes = append(prefixes, real) // a tool may print the resolved path (/private/var on macOS)
-	}
-	top := indexCopy.top
-	return indexCopy.answer, func(s string) string {
-		for _, d := range prefixes {
-			s = strings.ReplaceAll(s, d, top)
-			s = strings.ReplaceAll(s, filepath.ToSlash(d), filepath.ToSlash(top))
-		}
-		return s
-	}, nil
-}
-
-// releaseIndexWorkdir removes this run's copy of the index.
-func releaseIndexWorkdir() {
-	if indexCopy.dir != "" {
-		_ = os.RemoveAll(indexCopy.dir)
-	}
-	indexCopy.top, indexCopy.dir, indexCopy.root, indexCopy.answer, indexCopy.err = "", "", "", "", nil
-}
-
-// copyIndex writes what the git index holds to a temporary folder and answers where the
-// project root is inside it. When the tree holds nothing the index does not — no unstaged
-// change, no untracked file — nothing is copied and the answer is root itself.
-//
-// The folders and files git ignores are the project's tooling (dependencies, build caches,
-// local settings): they are linked into the copy, not copied, so the command finds them.
-func copyIndex(root string) (string, error) {
-	git := func(args ...string) (string, error) {
-		out, err := exec.Command("git", append([]string{"-C", root}, args...)...).Output()
-		return string(out), err
-	}
-	top, err := git("rev-parse", "--show-toplevel")
-	if err != nil {
-		return "", fmt.Errorf("git rev-parse: %w", err)
-	}
-	top = filepath.Clean(strings.TrimSpace(top))
-	prefix, _ := git("rev-parse", "--show-prefix")
-	prefix = strings.TrimSpace(prefix)
-	if err := exec.Command("git", "-C", top, "diff", "--quiet").Run(); err == nil {
-		if untracked, err := git("ls-files", "--others", "--exclude-standard", "--full-name", "--", ":/"); err == nil && strings.TrimSpace(untracked) == "" {
-			return root, nil // the tree is the commit
-		}
-	}
-	dir, err := os.MkdirTemp("", "anchors-index-")
-	if err != nil {
-		return "", err
-	}
-	indexCopy.top, indexCopy.dir = top, dir
-	if out, err := exec.Command("git", "-C", top, "checkout-index", "--all", "--force", "--prefix="+filepath.ToSlash(dir)+"/").CombinedOutput(); err != nil {
-		return "", fmt.Errorf("git checkout-index: %v %s", err, strings.TrimSpace(string(out)))
-	}
-	ignored, err := exec.Command("git", "-C", top, "ls-files", "--others", "--ignored", "--exclude-standard", "--directory", "-z").Output()
-	if err != nil {
-		return "", fmt.Errorf("git ls-files --ignored: %w", err)
-	}
-	for _, rel := range outermost(strings.Split(string(ignored), "\x00")) {
-		src, dst := filepath.Join(top, filepath.FromSlash(rel)), filepath.Join(dir, filepath.FromSlash(rel))
-		if err := mirrorIgnored(top, dir, src, dst, mirrorDepth); err != nil {
-			return "", err
-		}
-	}
-	return filepath.Join(dir, filepath.FromSlash(prefix)), nil
-}
-
-// outermost keeps the ignored paths no other one contains. git can list a folder and a
-// file inside it both: once the folder is a link to the tree, writing the file into the
-// copy would write it through the link, into the project itself.
-func outermost(paths []string) []string {
-	var clean []string
-	for _, p := range paths {
-		if p = strings.TrimSuffix(p, "/"); p != "" {
-			clean = append(clean, p)
-		}
-	}
-	sort.Strings(clean)
-	kept := map[string]bool{}
-	var out []string
-next:
-	for _, p := range clean {
-		for a := p; a != "."; a = path.Dir(a) {
-			if kept[a] {
-				continue next
-			}
-		}
-		kept[p] = true
-		out = append(out, p)
-	}
-	return out
-}
-
-// mirrorDepth is how deep an ignored folder is looked into for links back into the project:
-// a workspace package is linked as `deps/<name>` or `deps/@scope/<name>`.
-const mirrorDepth = 2
-
-// mirrorIgnored puts the ignored src at dst in the copy. It is a link to src, unless a link
-// inside it (to mirrorDepth levels) points back into the project: that one would reach the
-// tree's file, not the commit's. Then the folder is made for real, the link is made again
-// to the same place in the copy, and everything else is linked.
-func mirrorIgnored(top, dir, src, dst string, depth int) error {
-	if _, err := os.Lstat(dst); err == nil {
-		return nil // the index has it — a file git tracks and ignores both: the commit's copy stands
-	}
-	if err := os.MkdirAll(filepath.Dir(dst), 0o755); err != nil {
-		return err
-	}
-	if depth == 0 || !linksInto(top, src, depth) {
-		return linkTo(src, dst)
-	}
-	if err := os.MkdirAll(dst, 0o755); err != nil {
-		return err
-	}
-	entries, err := os.ReadDir(src)
-	if err != nil {
-		return err
-	}
-	for _, e := range entries {
-		s, d := filepath.Join(src, e.Name()), filepath.Join(dst, e.Name())
-		if target, ok := innerTarget(top, s); ok {
-			rel, _ := filepath.Rel(top, target)
-			if err := linkTo(filepath.Join(dir, rel), d); err != nil {
-				return err
-			}
-			continue
-		}
-		if e.IsDir() {
-			if err := mirrorIgnored(top, dir, s, d, depth-1); err != nil {
-				return err
-			}
-			continue
-		}
-		if err := linkTo(s, d); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// linksInto says whether a link inside src, to depth levels, points into the project.
-func linksInto(top, src string, depth int) bool {
-	entries, err := os.ReadDir(src)
-	if err != nil {
-		return false
-	}
-	for _, e := range entries {
-		s := filepath.Join(src, e.Name())
-		if _, ok := innerTarget(top, s); ok {
-			return true
-		}
-		if e.IsDir() && depth > 1 && linksInto(top, s, depth-1) {
-			return true
-		}
-	}
-	return false
-}
-
-// innerTarget is where the link at p points, when p is a link and it points into the
-// project at top.
-func innerTarget(top, p string) (string, bool) {
-	t, err := os.Readlink(p)
-	if err != nil {
-		return "", false
-	}
-	if !filepath.IsAbs(t) {
-		t = filepath.Join(filepath.Dir(p), t)
-	}
-	t = filepath.Clean(t)
-	rel, err := filepath.Rel(top, t)
-	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-		return "", false
-	}
-	return t, true
-}
-
-// linkTo makes dst point at src: a symbolic link, or on Windows — where one needs a
-// privilege most accounts lack — a junction for a folder.
-func linkTo(src, dst string) error {
-	err := os.Symlink(src, dst)
-	if err == nil || runtime.GOOS != "windows" {
-		return err
-	}
-	if fi, statErr := os.Stat(src); statErr == nil && fi.IsDir() {
-		if out, jerr := exec.Command("cmd", "/c", "mklink", "/J", dst, src).CombinedOutput(); jerr != nil {
-			return fmt.Errorf("mklink /J %s: %v %s", dst, jerr, strings.TrimSpace(string(out)))
-		}
-		return nil
-	}
-	return err
 }

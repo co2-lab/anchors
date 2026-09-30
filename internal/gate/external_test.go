@@ -3,14 +3,9 @@ package gate
 import (
 	"fmt"
 	"os"
-	"os/exec"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"testing"
-
-	"github.com/co2-lab/anchors/internal/config"
-	"github.com/co2-lab/anchors/internal/scan"
 
 	"github.com/co2-lab/anchors/internal/mapx"
 )
@@ -54,14 +49,6 @@ func TestReprovaSemSaidaDizPorQue(t *testing.T) {
 func TestExternal_RunExternalDelegatesWithNodeID(t *testing.T) {
 	t.Run("EXCMX-B04: Single node execution delegates to RunExternalArgs", func(t *testing.T) {})
 	node := mapx.Node{ID: "src/foo.ts"}
-	for _, workdir := range []string{"", config.WorkdirTree} {
-		root := t.TempDir()
-		writeFile(t, root, "here", "")
-		v, detail := runGateCommand(config.Gate{Run: "ls here && echo $1 && exit 1", Workdir: workdir}, []string{node.ID}, root)
-		if v != Fail || !strings.Contains(detail, "src/foo.ts") {
-			t.Fatalf("workdir %q: expected Fail with the node ID, run in the root, got %v %q", workdir, v, detail)
-		}
-	}
 	v, detail := RunExternalArgs("echo $1 && exit 1", []string{node.ID}, t.TempDir())
 	if v != Fail {
 		t.Fatalf("expected Fail, got %v", v)
@@ -297,135 +284,5 @@ func TestRunExternal_indexedTargets(t *testing.T) {
 	restore()
 	if _, out := RunExternalArgs(`cat "$1"; exit 1`, []string{"src/a.ts"}, root); !strings.Contains(out, "tree text") {
 		t.Errorf("with no source the tree is read, got %s", out)
-	}
-}
-
-// indexedRepo is a repository with the project at `app`: `app/a.ts` committed, staged with
-// another text and edited again in the tree; `app/new.ts` untracked; `app/deps` ignored,
-// with a file and a link back to `app/lib`.
-func indexedRepo(t *testing.T) (top, root string) {
-	t.Helper()
-	top = t.TempDir()
-	if real, err := filepath.EvalSymlinks(top); err == nil {
-		top = real
-	}
-	root = filepath.Join(top, "app")
-	git := func(args ...string) {
-		t.Helper()
-		if out, err := exec.Command("git", append([]string{"-C", top, "-c", "user.email=t@t", "-c", "user.name=t"}, args...)...).CombinedOutput(); err != nil {
-			t.Skipf("git %v: %v %s", args, err, out)
-		}
-	}
-	git("init", "-q")
-	writeFile(t, top, ".gitignore", "deps/\n")
-	writeFile(t, root, "a.ts", "committed\n")
-	writeFile(t, root, "lib/x.ts", "lib committed\n")
-	git("add", ".")
-	git("commit", "-qm", "base")
-	writeFile(t, root, "a.ts", "staged\n")
-	git("add", "app/a.ts")
-	writeFile(t, root, "a.ts", "half done\n")
-	writeFile(t, root, "lib/x.ts", "lib half done\n")
-	writeFile(t, root, "new.ts", "untracked\n")
-	writeFile(t, root, "deps/tool.txt", "tool\n")
-	if err := os.Symlink(filepath.Join("..", "lib"), filepath.Join(root, "deps", "lib")); err != nil {
-		t.Skipf("no symbolic links here: %v", err)
-	}
-	return top, root
-}
-
-func TestRunGateCommand_indexWorkdir(t *testing.T) {
-	t.Run("EXCMX-B15: A workdir index command runs in a copy of the index", func(t *testing.T) {})
-	_, root := indexedRepo(t)
-	read, err := scan.IndexReader(root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	restore := SetFileSource(read)
-	defer restore()
-	g := config.Gate{Run: `cat a.ts; cat deps/tool.txt; cat deps/lib/x.ts; ls new.ts; pwd -W 2>/dev/null || pwd; exit 1`, Workdir: config.WorkdirIndex}
-	v, out := runGateCommand(g, nil, root)
-	if v != Fail || !strings.Contains(out, "staged") || strings.Contains(out, "half done") ||
-		!strings.Contains(out, "tool") || !strings.Contains(out, "lib committed") ||
-		strings.Contains(out, "untracked") || !strings.Contains(out, filepath.ToSlash(root)) || strings.Contains(out, "anchors-index-") {
-		t.Errorf("the command runs in the index's copy, at the project's place, got %v:\n%s", v, out)
-	}
-	copyDir := indexCopy.dir
-	if copyDir == "" {
-		t.Fatal("a copy was made")
-	}
-	if _, again := runGateCommand(g, nil, root); indexCopy.dir != copyDir || !strings.Contains(again, "staged") {
-		t.Error("the copy is made once per run")
-	}
-	RunWithWaiver(nil, nil, root, &mapx.Graph{}, &config.Config{}, false, Waiver{})
-	if _, err := os.Stat(copyDir); !os.IsNotExist(err) || indexCopy.dir != "" {
-		t.Errorf("the copy goes when the gates are done, got %v", err)
-	}
-}
-
-func TestRunGateCommand_indexWorkdirFallsToTheTree(t *testing.T) {
-	t.Run("EXCMX-B16: A workdir index command runs in the tree when the tree is the commit", func(t *testing.T) {})
-	g := config.Gate{Run: `cat a.ts; exit 1`, Workdir: config.WorkdirIndex}
-	defer releaseIndexWorkdir()
-	root := t.TempDir()
-	writeFile(t, root, "a.ts", "tree\n")
-	if v, out := runGateCommand(g, nil, root); v != Fail || !strings.Contains(out, "tree") {
-		t.Errorf("with no index source the command runs in the root, got %v %s", v, out)
-	}
-
-	top := t.TempDir()
-	git := func(args ...string) {
-		t.Helper()
-		if out, err := exec.Command("git", append([]string{"-C", top, "-c", "user.email=t@t", "-c", "user.name=t"}, args...)...).CombinedOutput(); err != nil {
-			t.Skipf("git %v: %v %s", args, err, out)
-		}
-	}
-	git("init", "-q")
-	writeFile(t, top, "a.ts", "clean\n")
-	git("add", ".")
-	git("commit", "-qm", "base")
-	restore := SetFileSource(func(rel string) ([]byte, error) { return os.ReadFile(filepath.Join(top, rel)) })
-	defer restore()
-	if v, out := runGateCommand(g, nil, top); v != Fail || !strings.Contains(out, "clean") || indexCopy.dir != "" {
-		t.Errorf("a tree that is the commit is not copied, got %v %s (copy %q)", v, out, indexCopy.dir)
-	}
-	releaseIndexWorkdir()
-
-	notRepo := t.TempDir()
-	if v, out := runGateCommand(g, nil, notRepo); v != Skip || !strings.Contains(out, "git") {
-		t.Errorf("no copy is indeterminate and says why, got %v %s", v, out)
-	}
-}
-
-func TestCopyIndex_neverWritesIntoTheTree(t *testing.T) {
-	t.Run("EXCMX-B17: The copy of the index never writes into the tree", func(t *testing.T) {})
-	got := outermost([]string{".claude/", ".claude/settings.local.json", ".claude-x/", "deps/a/", "deps/", "", "z"})
-	if want := []string{".claude", ".claude-x", "deps", "z"}; strings.Join(got, ",") != strings.Join(want, ",") {
-		t.Errorf("only the outermost ignored paths, got %v", got)
-	}
-	top, dir := t.TempDir(), t.TempDir()
-	writeFile(t, top, "cfg/local.json", "tree\n")
-	writeFile(t, dir, "cfg/local.json", "index\n")
-	if err := mirrorIgnored(top, dir, filepath.Join(top, "cfg", "local.json"), filepath.Join(dir, "cfg", "local.json"), mirrorDepth); err != nil {
-		t.Fatal(err)
-	}
-	if b, _ := os.ReadFile(filepath.Join(dir, "cfg", "local.json")); string(b) != "index\n" {
-		t.Errorf("the copy's path keeps the index's content, got %q", b)
-	}
-
-	_, root := indexedRepo(t)
-	writeFile(t, root, "deps/inner/x.txt", "x\n")
-	before, _ := os.ReadDir(filepath.Join(root, "deps"))
-	read, err := scan.IndexReader(root)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer SetFileSource(read)()
-	defer releaseIndexWorkdir()
-	if _, _, err := indexWorkdir(root); err != nil {
-		t.Fatal(err)
-	}
-	if after, _ := os.ReadDir(filepath.Join(root, "deps")); len(after) != len(before) {
-		t.Errorf("the tree gains nothing, got %d entries in deps, had %d", len(after), len(before))
 	}
 }

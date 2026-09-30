@@ -45,6 +45,6 @@ Feature: ProjectTests — the gates read the project's tests through the source 
 
   @PRJTS-B07 @unit-level
   Scenario: Under --index the tests are listed from the commit
-    Given a test file staged short and edited in the tree with a test far below
-    When the project's tests are listed under --index
-    Then only the staged file's tests are listed, at its lines
+    Given a test file staged short and edited in the tree with a test far below, and one the same in both
+    When the project's tests are listed under --index, by a pattern and by a script
+    Then the pattern lists the staged file's test at its line, and the script's list keeps only the file the same in both

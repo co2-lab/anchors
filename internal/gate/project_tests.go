@@ -1,6 +1,8 @@
 package gate
 
 import (
+	"os"
+	"path/filepath"
 	"sort"
 	"sync"
 
@@ -38,13 +40,20 @@ func projectTests(root string, g *mapx.Graph, cfg *config.Config) (tests []testl
 			}
 		}
 	}
-	// Under `--index` the tests are listed from what the commit records, as the gates read
-	// its files: the lines a test is found at must be lines of the content they index.
-	dir, _, err := indexWorkdir(root)
-	if err != nil {
-		return nil, true, err
+	// Under `--index` a test's line must be a line of the content the gates read: a pattern
+	// scans that content, and what a script lists of a file whose tree is not that content
+	// is left out — its lines are the tree's.
+	fileSourceMu.RLock()
+	source := fileSource
+	fileSourceMu.RUnlock()
+	var read func(string) ([]byte, error)
+	if source != nil {
+		read = func(rel string) ([]byte, error) { return readFile(root, rel) }
 	}
-	tests, err = testlist.List(dir, files, src)
+	tests, err = testlist.ListFrom(root, files, src, read)
+	if source != nil && src.Script != "" && err == nil {
+		tests = sameAsSource(root, tests)
+	}
 	ptRoot, ptGraph, ptCfg, ptTests, ptErr, ptOK = root, g, cfg, tests, err, true
 	return tests, true, err
 }
@@ -141,6 +150,25 @@ func listedFiles(tests []testlist.Test) map[string]bool {
 	out := make(map[string]bool, len(tests))
 	for _, t := range tests {
 		out[t.File] = true
+	}
+	return out
+}
+
+// sameAsSource keeps the tests of the files whose tree holds what the current source does.
+func sameAsSource(root string, tests []testlist.Test) []testlist.Test {
+	same := map[string]bool{}
+	var out []testlist.Test
+	for _, t := range tests {
+		ok, seen := same[t.File]
+		if !seen {
+			want, werr := readFile(root, t.File)
+			have, herr := os.ReadFile(filepath.Join(root, filepath.FromSlash(t.File)))
+			ok = werr == nil && herr == nil && string(want) == string(have)
+			same[t.File] = ok
+		}
+		if ok {
+			out = append(out, t)
+		}
 	}
 	return out
 }

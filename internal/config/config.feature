@@ -376,9 +376,3 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a configuration whose version line ends in CRLF, with and without a comment
     When its declared format is read
     Then it is the number on the line
-
-  @CNFGO-B55 @unit-level
-  Scenario: A gate's workdir is tree or index
-    Given gates with workdir tree, index, and checkout
-    When each configuration is loaded
-    Then the first two load, and the third fails naming the gate and the value

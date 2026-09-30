@@ -183,3 +183,21 @@ func TestScriptSaysWhereATestEnds(t *testing.T) {
 		t.Errorf("a pattern does not know where a test ends, got %v (%v)", listed, err)
 	}
 }
+
+func TestListFrom_readsThroughTheReader(t *testing.T) {
+	t.Run("TSTLS-B10: A pattern scans the files through the reader given", func(t *testing.T) {})
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "a_test.go"), []byte("\n\nt.Run(\"tree\", f)\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	src := Source{Pattern: `t\.Run\(`}
+	read := func(rel string) ([]byte, error) { return []byte("t.Run(\"index\", f)\n"), nil }
+	got, err := ListFrom(root, []string{"a_test.go"}, src, read)
+	if err != nil || len(got) != 1 || got[0].Title != "index" || got[0].Line != 1 {
+		t.Errorf("the reader's test, at its line, got %+v %v", got, err)
+	}
+	got, err = ListFrom(root, []string{"a_test.go"}, src, nil)
+	if err != nil || len(got) != 1 || got[0].Title != "tree" || got[0].Line != 3 {
+		t.Errorf("with no reader the tree's test, got %+v %v", got, err)
+	}
+}

@@ -59,13 +59,20 @@ func (s Source) Declared() bool { return s.Pattern != "" || s.Script != "" }
 // List reads the tests of the given test files (paths relative to root) through the
 // source. A script lists the whole project on its own and the files are not passed to it.
 func List(root string, files []string, src Source) ([]Test, error) {
+	return ListFrom(root, files, src, nil)
+}
+
+// ListFrom is List reading the files a pattern scans through `read` (a path relative to
+// root) — the git index, under `--index` —, so a test's line is a line of the content the
+// gates confront. Nil reads the tree. A script reads the files on its own.
+func ListFrom(root string, files []string, src Source, read func(rel string) ([]byte, error)) ([]Test, error) {
 	switch {
 	case src.Pattern != "" && src.Script != "":
 		return nil, fmt.Errorf("the tests are declared both by a pattern and by a script; declare one")
 	case src.Script != "":
 		return runScript(root, src.Script)
 	case src.Pattern != "":
-		return scanFiles(root, files, src.Pattern)
+		return scanFiles(root, files, src.Pattern, read)
 	}
 	return nil, nil
 }
@@ -131,7 +138,10 @@ func Parse(b []byte) ([]Test, error) {
 // and takes the literal as the test's title. A call whose title is not a literal (a
 // variable, a template with placeholders built elsewhere) is not a test this reading can
 // name, and is left out.
-func scanFiles(root string, files []string, pattern string) ([]Test, error) {
+func scanFiles(root string, files []string, pattern string, read func(rel string) ([]byte, error)) ([]Test, error) {
+	if read == nil {
+		read = func(rel string) ([]byte, error) { return os.ReadFile(filepath.Join(root, rel)) }
+	}
 	re, err := regexp.Compile(pattern)
 	if err != nil {
 		return nil, fmt.Errorf("the tests pattern does not compile: %w", err)
@@ -140,7 +150,7 @@ func scanFiles(root string, files []string, pattern string) ([]Test, error) {
 	sorted := append([]string(nil), files...)
 	sort.Strings(sorted)
 	for _, f := range sorted {
-		b, err := os.ReadFile(filepath.Join(root, f))
+		b, err := read(f)
 		if err != nil {
 			continue // @resilient: a test file that cannot be read has no test this reading can name; the map notices a missing file
 		}

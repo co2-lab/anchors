@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: TSTLS
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @TSTLS
@@ -78,3 +78,9 @@ Feature: TestList — the project's tests, read the way the project says they ar
     Given a script printing one test with an end and one without, and a pattern reading a file
     When the tests are listed
     Then the first carries its end and the others carry none
+
+  @TSTLS-B10 @unit-level
+  Scenario: A pattern scans the files through the reader given
+    Given a test file whose tree and whose reader hold different tests
+    When its tests are listed with the reader, and without one
+    Then the reader's tests are listed with it, and the tree's without

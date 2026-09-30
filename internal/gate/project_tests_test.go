@@ -143,13 +143,56 @@ func TestProjectTests_underIndexListsTheCommit(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer SetFileSource(read)()
-	defer releaseIndexWorkdir()
 	resetProjectTestsCache()
 	defer resetProjectTestsCache()
 	cfg := &config.Config{Dialect: &config.Dialect{Family: "go", Tests: &config.TestsSource{Pattern: `t\.Run\(`}}}
-	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a_test.go", Kind: mapx.KindTest}}}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a_test.go", Kind: mapx.KindTest}, {ID: "b_test.go", Kind: mapx.KindTest}}}
 	tests, _, err := projectTests(root, g, cfg)
 	if err != nil || len(tests) != 1 || tests[0].Title != "staged" || tests[0].Line != 1 {
-		t.Errorf("the staged file's test, at its line, got %+v %v", tests, err)
+		t.Errorf("a pattern scans the staged content, at its lines, got %+v %v", tests, err)
 	}
+
+	// a script reads the tree: what it lists of a file the tree holds otherwise is left out
+	writeFile(t, root, "b_test.go", "t.Run(\"same\", f)\n")
+	if out, err := exec.Command("git", "-C", root, "add", "b_test.go").CombinedOutput(); err != nil {
+		t.Skipf("git add: %v %s", err, out)
+	}
+	read, err = scan.IndexReader(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer SetFileSource(read)()
+	resetProjectTestsCache()
+	script := `printf '{"version":1,"tests":[{"file":"a_test.go","line":41,"title":"tree only"},{"file":"b_test.go","line":1,"title":"same"}]}'`
+	cfg = &config.Config{Dialect: &config.Dialect{Family: "go", Tests: &config.TestsSource{Script: script}}}
+	tests, _, err = projectTests(root, g, cfg)
+	if err != nil || len(tests) != 1 || tests[0].Title != "same" {
+		t.Errorf("only the tests of a file the tree holds as staged, got %+v %v", tests, err)
+	}
+}
+
+// indexedRepo is a repository with the project at `app`: `app/a.ts` committed, staged with
+// another text and edited again in the tree, and `app/new.ts` untracked.
+func indexedRepo(t *testing.T) (top, root string) {
+	t.Helper()
+	top = t.TempDir()
+	if real, err := filepath.EvalSymlinks(top); err == nil {
+		top = real
+	}
+	root = filepath.Join(top, "app")
+	git := func(args ...string) {
+		t.Helper()
+		if out, err := exec.Command("git", append([]string{"-C", top, "-c", "user.email=t@t", "-c", "user.name=t"}, args...)...).CombinedOutput(); err != nil {
+			t.Skipf("git %v: %v %s", args, err, out)
+		}
+	}
+	git("init", "-q")
+	writeFile(t, root, "a.ts", "committed\n")
+	git("add", ".")
+	git("commit", "-qm", "base")
+	writeFile(t, root, "a.ts", "staged\n")
+	git("add", "app/a.ts")
+	writeFile(t, root, "a.ts", "half done\n")
+	writeFile(t, root, "new.ts", "untracked\n")
+	return top, root
 }
