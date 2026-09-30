@@ -1680,3 +1680,29 @@ func TestHeaderConforms_offTheTop(t *testing.T) {
 		t.Errorf("a declared header passes, got %v: %s", v, msg)
 	}
 }
+
+func TestScenarioCoverage_eachVariantMustBeProven(t *testing.T) {
+	t.Run("INCHN-B34: Each variant of a rule must be proven", func(t *testing.T) {})
+	root, _ := rootWithTest(t, "const c = \"CREDX-B01\"\nconst d = \"CREDX-B02\"\nfunc TestX(t *testing.T) {}\n")
+	if err := os.WriteFile(filepath.Join(root, "credx.feature"), []byte("  @CREDX-B01#01\n  Scenario: a\n  @CREDX-B01#02\n  Scenario: b\n  @CREDX-B02\n  Scenario: c\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{{ID: "credx_test.go", Kind: mapx.KindTest}, {ID: "credx.feature", Kind: mapx.KindFeature}},
+		Edges: []mapx.Edge{{From: "credx.spec.md", To: "credx.feature", Type: mapx.EdgeCoveredBy}},
+	}
+	run := func(proven ...string) (Verdict, string) {
+		n := specNodeCoverage()
+		n.Signal = &mapx.TestSignal{ProvenCodes: proven}
+		return checkScenarioCoverage(specWithTwoRequirements, n, root, g, nil)
+	}
+	if v, msg := run("CREDX-B01#01", "CREDX-B02"); v != Fail || !strings.Contains(msg, "CREDX-B01#02") || strings.Contains(msg, "CREDX-B01#01") {
+		t.Errorf("the unproven variant fails, named, got %v: %s", v, msg)
+	}
+	if v, msg := run("CREDX-B01#01", "CREDX-B01#02", "CREDX-B02"); v != Pass {
+		t.Errorf("both variants proven passes, got %v: %s", v, msg)
+	}
+	if v, _ := run("CREDX-B01", "CREDX-B02"); v != Fail {
+		t.Errorf("a proof of the rule alone does not prove its variants, got %v", v)
+	}
+}

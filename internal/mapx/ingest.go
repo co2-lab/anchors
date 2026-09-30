@@ -78,12 +78,21 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 		}
 		// cobertura semântica: dos cenários que ESTE nó declara, quais estão provados?
 		if declared, ok := declaredByNode[n.ID]; ok {
-			var pc []string
+			// A proven code counts for the node when its RULE is one the node declares: the
+			// report names scenarios, with their variant (`RDCH-B02#02`), and the node
+			// declares rules. The variant is kept — the rule is proven only when each of its
+			// scenarios is.
+			rules := make(map[string]bool, len(declared))
 			for _, code := range declared {
-				if proven[code] {
+				rules[scenarioRoot(code)] = true
+			}
+			var pc []string
+			for code := range proven {
+				if rules[scenarioRoot(code)] {
 					pc = append(pc, code)
 				}
 			}
+			sort.Strings(pc)
 			if seen != nil {
 				// PARTIAL: what this run did not see keeps its earlier proof.
 				var antes []string
@@ -95,8 +104,8 @@ func (g *Graph) IngestExecutionSuite(byFile map[string]ExecByFile, proven, seen 
 					}
 				}
 				tocou := false
-				for _, code := range declared {
-					if seen[code] {
+				for code := range seen {
+					if rules[scenarioRoot(code)] {
 						tocou = true
 						break
 					}
@@ -861,4 +870,12 @@ func (s *TestSignal) NoCoverageLines() []int {
 		return nil
 	}
 	return decodeRanges(s.NoCoverageAt)
+}
+
+// scenarioRoot is the rule a scenario code belongs to: `RDCH-B02#02` → `RDCH-B02`.
+func scenarioRoot(code string) string {
+	if i := strings.IndexByte(code, '#'); i > 0 {
+		return code[:i]
+	}
+	return code
 }

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SGINA
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @SGINA
@@ -180,3 +180,9 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Given a mutation report with mutants no test ran on three lines
     When it is ingested
     Then the node reads the same lines back
+
+  @SGINA-B28 @unit-level
+  Scenario: A proven variant is kept on the node that declares its rule
+    Given a spec declaring a rule, and a run proving one variant of it and a code of another unit
+    When the run is ingested
+    Then the spec keeps the variant it proved, and nothing of the other unit

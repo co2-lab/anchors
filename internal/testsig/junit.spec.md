@@ -1,6 +1,6 @@
 <!-- @anchors
   code: JUIJN
-  updated_at: 2026-09-27
+  updated_at: 2026-09-30
   layer: infra
 -->
 # JUnitIngest — the run's outcome per test case, and the scenario codes each case proves, read from a JUnit report
@@ -32,6 +32,7 @@ case's NAME by the rule code grammar, in the project's vocabulary.
 | `JUIJN-B08` | `CodesInCase`: Every code a case's name mentions is extracted, in the vocabulary the project declared. |
 | `JUIJN-B09` | A file that is not a JUnit report is read as a report with no cases: nothing is proven by it. |
 | `JUIJN-B10` | Each case carries its run time in seconds from its `time` attribute; a missing, malformed or negative time reads as 0. |
+| `JUIJN-B11` | The codes a report proves and sees carry the variant a case names (`CODE-B02#02`): a case of one variant never stands for its sibling. (`ScenarioCodesInCase`, `PassedCodes`, `SeenCodes`) |
 
 ## Domain
 
@@ -45,6 +46,7 @@ case's NAME by the rule code grammar, in the project's vocabulary.
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
 | `JUIJN-I01` | Every proven code is also a seen code: a run cannot prove what it did not measure. | reads a report of passed, failed and skipped cases and verifies the proven codes are contained in the seen codes |
+| `JUIJN-I02` | A scenario is proven only by a case that ran, passed, and names exactly that scenario: a skipped or failed case proves nothing, and a variant is never proven by its sibling or by its rule. | reads a report where one variant passes and its sibling is skipped, and verifies only the passing variant is proven |
 
 ## Constraints
 

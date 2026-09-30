@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: FLSCF
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @FLSCF
@@ -139,3 +139,9 @@ Feature: FlagScenarios — the scenarios a feature flag declares are written, co
     Given a project whose tests script exits with an error
     When flag-covered runs
     Then it fails naming the script's error
+
+  @FLSCF-B19 @unit-level
+  Scenario: A flag scenario is green only by its own proof
+    Given a flag whose scenarios are proven only through a variant of the first one
+    When flag coverage confronts it
+    Then the first scenario is not green, as no case proved exactly it

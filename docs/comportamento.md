@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2e78e4bc63abbba9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:aa9d99a0a7592efb — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2272,6 +2272,8 @@ teste prova.
 
 - [A diff file that cannot be read fails the diff coverage](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-E06`
 
+- [The report counts a rule proven by all its variants](camadas/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B15`
+
 - [A page left out of date is compiled and staged](camadas/comando.md#dcsyn--docssyncforcommit--the-commit-carries-the-pages-its-specs-produce) `DCSYN-B01`
 
 - [With the tree ahead, the page goes straight into the index](camadas/comando.md#dcsyn--docssyncforcommit--the-commit-carries-the-pages-its-specs-produce) `DCSYN-B02`
@@ -3626,6 +3628,8 @@ teste prova.
 
 - [A failing tests source fails flag-covered naming the error](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-E03`
 
+- [A flag scenario is green only by its own proof](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B19`
+
 - [A gate reaches only the kinds it declares](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B01`
 
 - [A gate that names labels reaches only the nodes carrying one](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B02`
@@ -3821,6 +3825,8 @@ teste prova.
 - [A mutation score measured under load is not trusted](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B32`
 
 - [A header below the top fails the header ruler](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B33`
+
+- [Each variant of a rule must be proven](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B34`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -6324,6 +6330,10 @@ teste prova.
 
 - [An identity too long or glued to a longer word is not a code](camadas/infra.md#rcgrl--rulecodegrammar--the-grammar-that-recognizes-a-scenario-code-in-a-tests-name-in-the-projects-vocabulary) `RCGRL-X01`
 
+- [A scenario code keeps its variant](camadas/infra.md#rcgrl--rulecodegrammar--the-grammar-that-recognizes-a-scenario-code-in-a-tests-name-in-the-projects-vocabulary) `RCGRL-B07`
+
+- [A rule is proven only when each of its scenarios is](camadas/infra.md#rcgrl--rulecodegrammar--the-grammar-that-recognizes-a-scenario-code-in-a-tests-name-in-the-projects-vocabulary) `RCGRL-B08`
+
 - [Added lines are recorded under the file of the new-file header](camadas/infra.md#dcldf--diffchangedlines--which-lines-of-which-files-a-change-added-read-from-a-unified-diff) `DCLDF-B01`
 
 - [A hunk header sets the starting line of the new side](camadas/infra.md#dcldf--diffchangedlines--which-lines-of-which-files-a-change-added-read-from-a-unified-diff) `DCLDF-B02`
@@ -6373,6 +6383,10 @@ teste prova.
 - [An unreadable report returns the read error](camadas/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report) `JUIJN-E01`
 
 - [Each case carries its run time](camadas/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report) `JUIJN-B10`
+
+- [The proven and seen codes carry the variant](camadas/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report) `JUIJN-B11`
+
+- [A scenario is proven only by its own passing case](camadas/infra.md#juijn--junitingest--the-runs-outcome-per-test-case-and-the-scenario-codes-each-case-proves-read-from-a-junit-report) `JUIJN-I02`
 
 - [Each record becomes one file's coverage in report order](camadas/infra.md#lcinl--lcovingest--line-coverage-per-file-and-the-uncovered-lines-of-a-change-read-from-an-lcov-report) `LCINL-B01`
 
@@ -6635,6 +6649,8 @@ teste prova.
 - [The branches are the union of the fresh suites](camadas/mapa.md#sgina-b26--the-branches-are-the-union-of-the-fresh-suites) `SGINA-B26`
 
 - [The lines of mutants no test ran are recorded](camadas/mapa.md#sgina-b27--the-lines-of-mutants-no-test-ran-are-recorded) `SGINA-B27`
+
+- [A proven variant is kept on the node that declares its rule](camadas/mapa.md#sgina-b28--a-proven-variant-is-kept-on-the-node-that-declares-its-rule) `SGINA-B28`
 
 - [The lock is a file beside the map with its owner](camadas/mapa.md#mplck-b01--the-lock-is-a-file-beside-the-map-with-its-owner) `MPLCK-B01`
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FLSCF
-  updated_at: 2026-09-27
+  updated_at: 2026-09-30
   layer: gate
 -->
 # FlagScenarios — the scenarios a feature flag declares are written, complete, cited and tested
@@ -83,6 +83,7 @@ must not have, and the value changes per user and per minute. The gates confront
 | `FLSCF-B16` | A scenario a test names but that is not proven fails with a different message: written but not ingested when no execution was ingested, written and not passing when it was. |
 | `FLSCF-B17` | A `@gated-by` citation is read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a citation of a 7-character scenario is confronted. |
 | `FLSCF-B18` | When the project says how its tests are written, a flag scenario is written in a file the source lists tests in only when a test TITLE cites its code; without a source, or in a file the source lists no test in, a code anywhere in the file outside comments counts. |
+| `FLSCF-B19` | A flag scenario is green only when a case proved exactly it: a variant `#NN` of it proves the variant, and a case of another variant does not stand for it. (`checkFlagCovered`) |
 
 ## Invariants
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INCHN
-  updated_at: 2026-09-28
+  updated_at: 2026-09-30
   layer: gate
 -->
 # InternalChecks — the registry that routes a declared check name to a function
@@ -82,6 +82,7 @@ looked at.
 | `INCHN-B13` | A file of a RECOGNIZED layer passes the header ruler with the layer alone, because it has neither an owning spec nor a sibling to reference. |
 | `INCHN-B14` | A BINARY file steps aside from the header ruler: there is no comment syntax in an image, and charging one would bar every visual baseline commit. |
 | `INCHN-B33` | A governed file whose `@anchors` block stands below the top without `@fixed-header: <why>` fails the header ruler saying the block is not read as the header, and how to fix it. |
+| `INCHN-B34` | `scenario-coverage` counts a rule proven only when every scenario the spec's features declare for it is proven — each variant `#NN` a scenario of its own —, and names each variant left unproven: a skipped `#02` is not proven by the green `#01` beside it, nor by a proof recorded for the rule alone. (`checkScenarioCoverage`, `specScenarios`) |
 | `INCHN-B15` | An executable test script steps aside too, by a different path: its format belongs to the runner, and its identity is in the file name. |
 | `INCHN-B16` | A guide with no compliance-points section, or with the section and no item in it, fails — the AI judgment gate would otherwise fall back on vague heuristics. |
 | `INCHN-B17` | When the project says how its tests are written, `scenario-coverage` counts a scenario as written in a file the source lists tests in only when a test TITLE cites its code; without a source, or in a file the source lists no test in, a code anywhere in the file outside comments counts. |

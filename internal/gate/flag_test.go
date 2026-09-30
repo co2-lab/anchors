@@ -512,3 +512,13 @@ func TestFlagCovered_FileTheSourceDoesNotDescribe(t *testing.T) {
 		t.Fatalf("in a file the source lists no test in, the code in it counts as written, got %s", msg)
 	}
 }
+
+func TestFlagCovered_onlyItsOwnProof(t *testing.T) {
+	t.Run("FLSCF-B19: A flag scenario is green only by its own proof", func(t *testing.T) {})
+	n := flagNode()
+	n.Signal = &mapx.TestSignal{ProvenCodes: []string{"CHKUT-G01#02", "CHKUT-G02", "CHKUT-G03"}}
+	g := &mapx.Graph{Nodes: []mapx.Node{n}}
+	if v, msg := checkFlagCovered(completeFlag, n, "", g, nil); v != Fail || !strings.Contains(msg, "CHKUT-G01") {
+		t.Errorf("a variant nobody declared does not prove the scenario, got %v: %s", v, msg)
+	}
+}

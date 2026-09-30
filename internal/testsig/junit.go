@@ -121,9 +121,24 @@ func caseCodeRE() *regexp.Regexp {
 	caseCodeMu.Lock()
 	defer caseCodeMu.Unlock()
 	if key := ruleLetters + "\x00" + codeLenPattern; key != caseCodeKey || caseCodeVal == nil {
-		caseCodeKey, caseCodeVal = key, mustCodeRE()
+		caseCodeKey, caseCodeVal, caseScenarioVal = key, mustCodeRE(), mustScenarioRE()
 	}
 	return caseCodeVal
+}
+
+var caseScenarioVal *regexp.Regexp
+
+func caseScenarioRE() *regexp.Regexp {
+	caseCodeRE()
+	caseCodeMu.Lock()
+	defer caseCodeMu.Unlock()
+	return caseScenarioVal
+}
+
+// ScenarioCodesInCase are the scenario codes a case's name mentions, each with its variant
+// suffix when it carries one (`RDCH-B02#02`).
+func ScenarioCodesInCase(name string) []string {
+	return caseScenarioRE().FindAllString(name, -1)
 }
 
 // CodesInCase devolve os códigos de cenário mencionados no nome de um caso.
@@ -139,7 +154,7 @@ func (r *ExecReport) PassedCodes() map[string]bool {
 		if c.Failed || c.Skipped {
 			continue
 		}
-		for _, code := range CodesInCase(c.Name) {
+		for _, code := range ScenarioCodesInCase(c.Name) {
 			out[strings.ToUpper(code)] = true
 		}
 	}
@@ -152,7 +167,7 @@ func (r *ExecReport) PassedCodes() map[string]bool {
 func (r *ExecReport) SeenCodes() map[string]bool {
 	out := map[string]bool{}
 	for _, c := range r.Cases {
-		for _, code := range CodesInCase(c.Name) {
+		for _, code := range ScenarioCodesInCase(c.Name) {
 			out[strings.ToUpper(code)] = true
 		}
 	}

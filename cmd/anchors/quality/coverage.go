@@ -104,12 +104,7 @@ func coverageForSpec(g *mapx.Graph, root, specID string) error {
 		fmt.Printf("%s declares no scenario codes (nothing to cover)\n", specID)
 		return nil
 	}
-	proven := map[string]bool{}
-	if node.Signal != nil {
-		for _, c := range node.Signal.ProvenCodes {
-			proven[c] = true
-		}
-	}
+	proven := provenRules(g, root, *node)
 	sort.Strings(declared)
 	provados, faltando := 0, []string{}
 	fmt.Printf("coverage by scenario — %s:\n\n", specID)
@@ -147,12 +142,7 @@ func coveragePanorama(g *mapx.Graph, root string, threshold float64) error {
 		if len(declared) == 0 {
 			continue
 		}
-		proven := map[string]bool{}
-		if n.Signal != nil {
-			for _, c := range n.Signal.ProvenCodes {
-				proven[c] = true
-			}
-		}
+		proven := provenRules(g, root, n)
 		var missing []string
 		for _, c := range declared {
 			if !proven[c] {
@@ -480,4 +470,23 @@ func codesInFileOfUnit(path, unit string) ([]string, error) {
 		}
 	}
 	return out, nil
+}
+
+// provenRules are the rules of the spec its signal proves: a rule is proven when each
+// scenario its features declare — each variant `#NN` — is (see testsig.RulesProven).
+func provenRules(g *mapx.Graph, root string, n mapx.Node) map[string]bool {
+	var proven []string
+	if n.Signal != nil {
+		proven = n.Signal.ProvenCodes
+	}
+	var scenarios []string
+	for _, e := range g.Edges {
+		if e.Type != mapx.EdgeCoveredBy || e.From != n.ID {
+			continue
+		}
+		if b, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(e.To))); err == nil {
+			scenarios = append(scenarios, testsig.FeatureScenarios(string(b))...)
+		}
+	}
+	return testsig.RulesProven(proven, scenarios)
 }

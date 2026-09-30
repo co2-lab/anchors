@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RCGRL
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @RCGRL
@@ -54,3 +54,15 @@ Feature: RuleCodeGrammar — the grammar that recognizes a scenario code in a te
     Given the test names "XABCDXY-B01 too long" and "abcABCDX-B01 glued"
     When the codes are read from them
     Then no code is recognized
+
+  @RCGRL-B07 @unit-level
+  Scenario: A scenario code keeps its variant
+    Given a case name and a feature citing a scenario with a variant and one without
+    When their codes are read
+    Then the variant is kept, the rule is the code without it, and each tag comes once
+
+  @RCGRL-B08 @unit-level
+  Scenario: A rule is proven only when each of its scenarios is
+    Given a rule with two variants of which one is proven, a rule with both proven, and a rule no feature declares
+    When the proven rules are read
+    Then the first is not proven and names its missing variant, the second is, and the third is proven by its own code

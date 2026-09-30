@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RCGRL
-  updated_at: 2026-09-26
+  updated_at: 2026-09-30
   layer: infra
 -->
 # RuleCodeGrammar — the grammar that recognizes a scenario code in a test's name, in the project's vocabulary
@@ -34,6 +34,8 @@ through two setters, and an empty value leaves the current vocabulary in place.
 | `RCGRL-B04` | `SetRuleLetters`: Declaring the rule letters replaces the vocabulary: a declared letter is recognized, and a letter outside the declaration is not. |
 | `RCGRL-B05` | `SetCodeLenPattern`: Declaring the code length replaces the accepted identity length: an identity of a newly declared length is recognized. |
 | `RCGRL-B06` | An empty declaration of letters or of length keeps the vocabulary that was in place: a configuration that declares nothing changes nothing. |
+| `RCGRL-B07` | A scenario code keeps its variant suffix (`CODE-B02#02`) and its rule is the code without it (`ScenarioRoot`); a feature's scenario tags are read with their variants, each once (`FeatureScenarios`). |
+| `RCGRL-B08` | A rule is proven when every scenario its features declare is proven — its own code when a scenario carries no variant, each `#NN` when they do; a rule no feature declares a scenario of is proven by its own code or any variant; the declared scenarios of a rule left unproven are named in order. (`RulesProven`, `UnprovenScenarios`) |
 
 ## Domain
 

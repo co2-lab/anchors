@@ -210,3 +210,22 @@ func TestParseJUnitCaseTime(t *testing.T) {
 		t.Fatalf("want %v, got %v", want, got)
 	}
 }
+
+func TestExecReport_variantsAreScenarios(t *testing.T) {
+	rep := &ExecReport{Cases: []CaseResult{
+		{Name: "RDCHX-B02#01: unit", File: "a.test.ts"},
+		{Name: "RDCHX-B02#02: integration", File: "a.test.ts", Skipped: true},
+	}}
+	t.Run("JUIJN-B11: The proven and seen codes carry the variant", func(t *testing.T) {
+		passed, seen := rep.PassedCodes(), rep.SeenCodes()
+		if !passed["RDCHX-B02#01"] || passed["RDCHX-B02#02"] || !seen["RDCHX-B02#02"] {
+			t.Errorf("the variant is kept, the skipped one seen and not proven, got %v %v", passed, seen)
+		}
+	})
+	t.Run("JUIJN-I02: A scenario is proven only by its own passing case", func(t *testing.T) {
+		passed := rep.PassedCodes()
+		if len(passed) != 1 || passed["RDCHX-B02"] || passed["RDCHX-B02#02"] {
+			t.Errorf("only the passing variant is proven, got %v", passed)
+		}
+	})
+}

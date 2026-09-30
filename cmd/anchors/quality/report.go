@@ -229,10 +229,7 @@ func renderTests(ctx reportCtx) string {
 		}
 		measuredSpecs++
 		declMeasured += len(declared)
-		proven := map[string]bool{}
-		for _, c := range n.Signal.ProvenCodes {
-			proven[c] = true
-		}
+		proven := provenRules(g, root, n)
 		var missing []string
 		for _, c := range declared {
 			if proven[c] {

@@ -133,3 +133,33 @@ func TestCodeForms(t *testing.T) {
 		}
 	})
 }
+
+func TestScenarioCodes_keepTheVariant(t *testing.T) {
+	t.Run("RCGRL-B07: A scenario code keeps its variant", func(t *testing.T) {})
+	if got := ScenarioCodesInCase("RDCHX-B02#02: under integration; and RDCHX-B03"); len(got) != 2 || got[0] != "RDCHX-B02#02" || got[1] != "RDCHX-B03" {
+		t.Errorf("the variant is kept, got %v", got)
+	}
+	if ScenarioRoot("RDCHX-B02#02") != "RDCHX-B02" || ScenarioRoot("RDCHX-B03") != "RDCHX-B03" {
+		t.Error("the rule is the code without its variant")
+	}
+	feature := "  @RDCHX-B02#01 @unit-level\n  @RDCHX-B02#02 @integration-level\n  @RDCHX-B03\n  @RDCHX-B03\n"
+	if got := FeatureScenarios(feature); len(got) != 3 || got[1] != "RDCHX-B02#02" {
+		t.Errorf("each tag once, with its variant, got %v", got)
+	}
+}
+
+func TestRulesProven_eachScenario(t *testing.T) {
+	t.Run("RCGRL-B08: A rule is proven only when each of its scenarios is", func(t *testing.T) {})
+	declared := []string{"RDCHX-B02#01", "RDCHX-B02#02", "RDCHX-B03#01", "RDCHX-B03#02"}
+	proven := []string{"RDCHX-B02#01", "RDCHX-B03#01", "RDCHX-B03#02", "RDCHX-B04"}
+	got := RulesProven(proven, declared)
+	if got["RDCHX-B02"] || !got["RDCHX-B03"] || !got["RDCHX-B04"] {
+		t.Errorf("B02 misses a variant, B03 has both, B04 is declared by no feature, got %v", got)
+	}
+	if m := UnprovenScenarios("RDCHX-B02", proven, declared); len(m) != 1 || m[0] != "RDCHX-B02#02" {
+		t.Errorf("the missing variant is named, got %v", m)
+	}
+	if RulesProven([]string{"RDCHX-B02"}, declared)["RDCHX-B02"] {
+		t.Error("the rule's own code does not prove the variants its features declare")
+	}
+}

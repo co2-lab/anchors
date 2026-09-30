@@ -478,3 +478,26 @@ func TestCoverageDiffIsDeterministic(t *testing.T) {
 		}
 	}
 }
+
+func TestCoverage_countsARuleByAllItsVariants(t *testing.T) {
+	t.Run("CVCMC-B15: The report counts a rule proven by all its variants", func(t *testing.T) {})
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{
+			{ID: "v.spec.md", Kind: mapx.KindSpec, Code: "VVVVX", Signal: &mapx.TestSignal{ProvenCodes: []string{"VVVVX-B01#01"}}},
+			{ID: "v.feature", Kind: mapx.KindFeature},
+		},
+		Edges: []mapx.Edge{{From: "v.spec.md", To: "v.feature", Type: mapx.EdgeCoveredBy}},
+	}
+	files := map[string]string{
+		"v.spec.md": "<!-- @anchors\n  code: VVVVX\n-->\n# V\n\n### VVVVX-B01 — does it\n",
+		"v.feature": "  @VVVVX-B01#01\n  Scenario: a\n  @VVVVX-B01#02\n  Scenario: b\n",
+	}
+	dir := qProject(t, "version: 2\nlayers: {}\n", files, g)
+	out, err := runQ(t, newCoverageCmd(), "--root", dir, "v.spec.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "✗ VVVVX-B01 — no passing test") {
+		t.Errorf("the rule with an unproven variant has no passing test:\n%s", out)
+	}
+}

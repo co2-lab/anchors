@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INCHN
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @INCHN
@@ -287,3 +287,9 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     Given a file whose header follows a directive, and the same file declaring why with @fixed-header
     When each is confronted with the header ruler
     Then the first fails saying the block is not the header, and the second passes
+
+  @INCHN-B34 @unit-level
+  Scenario: Each variant of a rule must be proven
+    Given a spec whose feature declares two variants of a rule, a test naming the rule, and a proof of the first variant only
+    When scenario coverage confronts the spec, then with both variants proven, then with a proof of the rule alone
+    Then the first fails naming the second variant, the second passes, and the third fails

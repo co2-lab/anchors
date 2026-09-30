@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: JUIJN
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @JUIJN
@@ -84,3 +84,15 @@ Feature: JUnitIngest — the run's outcome per test case, and the scenario codes
     Given cases timed 0.25 and 3 seconds, one with no time, one with a malformed time and one with a negative time
     When the report is read
     Then the first two carry their seconds and the others carry 0
+
+  @JUIJN-B11 @unit-level
+  Scenario: The proven and seen codes carry the variant
+    Given a report with a case of a variant that passes and one of its sibling that is skipped
+    When the proven and the seen codes are read
+    Then both carry the variant, and the skipped one is seen and not proven
+
+  @JUIJN-I02 @unit-level
+  Scenario: A scenario is proven only by its own passing case
+    Given a report where one variant passes and its sibling is skipped
+    When the proven codes are read
+    Then only the passing variant is proven, and neither the sibling nor the bare rule is

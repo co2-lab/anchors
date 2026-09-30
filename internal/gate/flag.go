@@ -10,6 +10,7 @@ import (
 	"github.com/co2-lab/anchors/internal/flagx"
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/testsig"
 )
 
 // --- the FLAG AXIS: the scenarios a flag's value opens ---
@@ -262,11 +263,17 @@ func checkFlagCovered(content string, n mapx.Node, root string, g *mapx.Graph, c
 	// ingestion crosses the proven codes with the ones the node DECLARES, and the flag
 	// declares its own. Looking for the signal on test nodes was the wrong reading — no
 	// test file "declares" a flag scenario, so there was never a signal where it looked.
-	green := map[string]bool{}
+	// A scenario is green when it, and each of its variants, is proven — as
+	// `scenario-coverage` reads a rule.
 	ingested := n.Signal != nil
+	var provenCodes []string
 	if ingested {
-		for _, c := range n.Signal.ProvenCodes {
-			green[c] = true
+		provenCodes = n.Signal.ProvenCodes
+	}
+	green := testsig.RulesProven(provenCodes, scenarioCodes(f))
+	for _, c := range provenCodes {
+		if strings.Contains(c, "#") {
+			green[c] = true // a variant scenario is green when it itself is proven
 		}
 	}
 	written, err := codesNamedByTests(scenarioCodes(f), root, g, n.ID, cfg)

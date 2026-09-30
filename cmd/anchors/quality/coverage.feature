@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CVCMC
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @CVCMC
@@ -148,3 +148,9 @@ Feature: CoverageCommand — answers the confidence questions from the ingested 
     Given a diff file path that does not exist
     When the coverage command runs for that diff file
     Then it fails
+
+  @CVCMC-B15 @unit-level
+  Scenario: The report counts a rule proven by all its variants
+    Given a spec whose feature declares two variants of its rule, with only the first proven
+    When the coverage of the spec is reported
+    Then the rule is reported without a passing test

@@ -764,3 +764,13 @@ func TestIngestMutation_noCoverageLines(t *testing.T) {
 		t.Error("no signal, no line")
 	}
 }
+
+func TestIngestSuite_keepsTheVariant(t *testing.T) {
+	t.Run("SGINA-B28: A proven variant is kept on the node that declares its rule", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{{ID: "a.spec.md", Kind: KindSpec, Rev: "r1"}}}
+	declared := map[string][]string{"a.spec.md": {"AAAAX-B02"}}
+	g.IngestExecutionSuite(nil, map[string]bool{"AAAAX-B02#01": true, "BBBBX-B01": true}, nil, declared, "unit", "junit.xml", "t1")
+	if got := g.Nodes[0].Signal; got == nil || len(got.ProvenCodes) != 1 || got.ProvenCodes[0] != "AAAAX-B02#01" {
+		t.Errorf("the spec keeps its proven variant and nothing else, got %+v", got)
+	}
+}

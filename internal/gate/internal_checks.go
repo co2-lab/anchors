@@ -10,6 +10,7 @@ import (
 	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
 	"github.com/co2-lab/anchors/internal/scan"
+	"github.com/co2-lab/anchors/internal/testsig"
 )
 
 // Checkers internos: verificações que o CLI faz lendo TEXTO (não invoca ferramenta
@@ -796,13 +797,16 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 	// It is the same ruler as `flag-covered`, and for the same reason: the fix for "no test"
 	// is writing one; the fix for "written and not run" is running the suite. A verdict
 	// that does not tell them apart sends the reader down the wrong path half the time.
-	proven := map[string]bool{}
+	// A rule is proven when EVERY scenario its features declare is — each variant `#NN` a
+	// scenario of its own. Read by the rule alone, a skipped `#02` was "proven" by the green
+	// `#01` beside it, and a suite that never ran passed as run.
 	ingested := n.Signal != nil
+	var provenCodes []string
 	if ingested {
-		for _, c := range n.Signal.ProvenCodes {
-			proven[c] = true
-		}
+		provenCodes = n.Signal.ProvenCodes
 	}
+	scenarios := specScenarios(root, g, n.ID)
+	proven := testsig.RulesProven(provenCodes, scenarios)
 	written, err := codesNamedByTests(declared, root, g, n.ID, cfg)
 	if err != nil {
 		return Fail, i18n.T("gate.tests_source.failed", err)
@@ -819,7 +823,11 @@ func checkScenarioCoverage(content string, n mapx.Node, root string, g *mapx.Gra
 		case proven[code]:
 			// proven: nothing to charge
 		case written[code]:
-			notGreen = append(notGreen, code)
+			if missing := testsig.UnprovenScenarios(code, provenCodes, scenarios); len(missing) > 0 {
+				notGreen = append(notGreen, missing...)
+			} else {
+				notGreen = append(notGreen, code)
+			}
 		default:
 			noTest = append(noTest, code)
 		}
@@ -1162,3 +1170,23 @@ func isBinary(content string) bool {
 // O vocabulário é o mesmo do gate `placeholder-preenchido`, e é universal: nenhum projeto
 // traduz `TODO`. A frase que vem depois dele ("descrever", "describe", "escribir") pode
 // mudar com o idioma do template, e por isso não entra na régua.
+
+// specScenarios are the scenario codes the features covering the spec declare, with their
+// variants — what each rule of the spec must have proven.
+func specScenarios(root string, g *mapx.Graph, specID string) []string {
+	if g == nil {
+		return nil
+	}
+	var out []string
+	for _, e := range g.Edges {
+		if e.Type != mapx.EdgeCoveredBy || e.From != specID {
+			continue
+		}
+		b, err := readFile(root, e.To)
+		if err != nil {
+			continue // @resilient: an unreadable feature declares nothing; the map notices a missing file
+		}
+		out = append(out, testsig.FeatureScenarios(string(b))...)
+	}
+	return out
+}
