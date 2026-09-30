@@ -352,3 +352,22 @@ func TestSelection_takesTheTestsOfAChangedField(t *testing.T) {
 		t.Errorf("a test already in the run is not taken twice, got %v", again)
 	}
 }
+
+func TestSelection_readsTheFileAsItIsNow(t *testing.T) {
+	t.Run("SLCTN-B15: A file edited since the map was built is read as it is now", func(t *testing.T) {})
+	g := &mapx.Graph{Nodes: []mapx.Node{testNode("a_test.go", 1, 0, true), testNode("b_test.go", 1, 0, true)}}
+	dir := budgetProject(t, "tests", "sh run.sh {{files}}", g)
+	if out, err := runQ(t, newTestCmd(), "--root", dir); err != nil || !strings.Contains(out, "nothing to run") {
+		t.Fatalf("at the map's revisions both are fresh and passing, got %v\n%s", err, out)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "a_test.go"), []byte("package a // edited\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := runQ(t, newTestCmd(), "--root", dir)
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out)
+	}
+	if got := readLog(t, dir); !reflect.DeepEqual(got, []string{"a_test.go"}) || !strings.Contains(out, "1 fresh and passing") {
+		t.Errorf("the edited test runs as never measured and the other is left out, got %v\n%s", got, out)
+	}
+}

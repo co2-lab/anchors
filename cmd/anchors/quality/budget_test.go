@@ -11,6 +11,7 @@ import (
 
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 func timedNode(id string, kind mapx.Kind, bySuite map[string]float64) mapx.Node {
@@ -136,8 +137,21 @@ func budgetProject(t *testing.T, section, runChanged string, g *mapx.Graph) stri
     run_changed: "` + runChanged + `"
 ` + report + "\n"
 	files := map[string]string{"run.sh": budgetRunner, "mut.sh": budgetMutator, "out/.keep": ""}
-	for _, n := range g.Nodes {
+	// The run reads each file's revision from its content: a node measured at its own rev
+	// keeps being so under the file's real one.
+	rev := scan.ShortHash([]byte("package a\n"))
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
 		files[n.ID] = "package a\n"
+		if s := n.Signal; s != nil {
+			if s.AtRev == n.Rev {
+				s.AtRev = rev
+			}
+			if s.MutationAtRev == n.Rev {
+				s.MutationAtRev = rev
+			}
+		}
+		n.Rev = rev
 	}
 	return qProject(t, yaml, files, g)
 }

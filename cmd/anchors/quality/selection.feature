@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SLCTN
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @SLCTN
@@ -96,3 +96,9 @@ Feature: RunSelection — a run takes only what is stale and below the minimum, 
     Given a committed spec whose rule a test proves, and the field that rule uses edited
     When the test selection adds the impacted tests
     Then the test file is taken, once, and the run says it was added for a changed contract field
+
+  @SLCTN-B15 @unit-level
+  Scenario: A file edited since the map was built is read as it is now
+    Given two passing tests measured at their revisions in the map, one of them edited on disk after the map was built
+    When the default run selects
+    Then the edited one runs as never measured, and the other is left out as fresh and passing

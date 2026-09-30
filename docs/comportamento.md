@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a83dfe60b1e3a0bd — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:cacaaac10e20b559 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2415,6 +2415,8 @@ teste prova.
 - [A file the gate does not confront is not run for it](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B13`
 
 - [The tests of the rules a changed contract field reaches are taken](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B14`
+
+- [A file edited since the map was built is read as it is now](camadas/comando.md#slctn--runselection--a-run-takes-only-what-is-stale-and-below-the-minimum-unless-told-otherwise) `SLCTN-B15`
 
 - [Expired test evidence is listed before the stale edges](camadas/comando.md#steds--staleedges--lists-the-confrontation-debt-expired-test-evidence-and-stale-edges) `STEDS-B01`
 

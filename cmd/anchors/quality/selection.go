@@ -2,6 +2,7 @@ package quality
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"slices"
 	"sort"
@@ -12,6 +13,7 @@ import (
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gate"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // fileState is where a file stands for a suite, read from the signal the map keeps.
@@ -118,6 +120,23 @@ func mutationState(n mapx.Node, ceiling float64) fileState {
 	}
 	passing := ran == 0 || s.MutationScore >= floor
 	return square(stale, passing)
+}
+
+// currentRevs reads the map as a build would leave it now: each node at the revision of its
+// file as it is, and a file edited since the last build without the result of its old
+// version — `map build` drops it. A test edited and not yet built read as the version that
+// passed, "stale but passing", and the default run left out the edit it never ran.
+func currentRevs(g *mapx.Graph, root string) {
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
+		b, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(n.ID)))
+		if err != nil {
+			continue
+		}
+		if rev := scan.ShortHash(b); rev != n.Rev {
+			n.Rev, n.Signal, n.EvidenceKept = rev, nil, nil
+		}
+	}
 }
 
 func square(stale, passing bool) fileState {
@@ -241,6 +260,7 @@ func runSelective(cs suiteCommand, suites []config.Suite, cfg *config.Config, ab
 		if err != nil {
 			return fmt.Errorf("load map: %w (run `anchors map build`, or `--all` to run the suites whole)", err)
 		}
+		currentRevs(g, absRoot)
 		for _, s := range subset {
 			if budget > 0 {
 				if err := budgetRunnable(cs, s); err != nil {
