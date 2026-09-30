@@ -105,12 +105,13 @@ func newTouchCmd() *cobra.Command {
 	var staged, dryRun bool
 	var exclude []string
 	cmd := &cobra.Command{
-		Use:   "touch",
+		Use:   "touch [files or folders...]",
 		Short: "Bump `updated_at` in the @anchors header of the files that changed",
 		Long: `Writes the day's date into the ` + "`updated_at`" + ` of the @anchors header of every
 file that changed — the date the ` + "`updated-at-current`" + ` gate charges.
 
   anchors touch                 files changed in the worktree vs HEAD (new files too)
+  anchors touch a.ts docs/      only those, among the changed files
   anchors touch --staged        files in the index vs HEAD, re-staged after (for a pre-commit)
   anchors touch --dry-run       says what it would bump
   anchors touch --exclude 'docs/**' --date 2026-09-25
@@ -133,7 +134,15 @@ After a ` + "`stamp --refresh`" + `, order does not matter: a ` + "`@contract`" 
 			if date == "" {
 				date = gitmeta.Today()
 			}
-			bumped, skipped, err := touchRun(absRoot, staged, dryRun, date, exclude)
+			// Named files narrow the touch to them: several agents share one tree, and a date
+			// bumped on another's file ages the evidence of that file.
+			var only []string
+			if len(args) > 0 {
+				if only, err = touchPaths(absRoot, args); err != nil {
+					return err
+				}
+			}
+			bumped, skipped, err := touchRun(absRoot, staged, dryRun, date, exclude, only)
 			if err != nil {
 				return err
 			}
@@ -247,13 +256,16 @@ func excludedBy(f string, globs []string) bool {
 // touchRun bumps the changed files (worktree, or index with staged) and says what it did.
 // The project's `touch.exclude` adds to exclude. Shared by `anchors touch` and the
 // pre-commit phase of `anchors verify`.
-func touchRun(absRoot string, staged, dryRun bool, date string, exclude []string) ([]touchDecision, map[touchSkip][]string, error) {
+func touchRun(absRoot string, staged, dryRun bool, date string, exclude, only []string) ([]touchDecision, map[touchSkip][]string, error) {
 	if cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile)); err == nil && cfg.Touch != nil {
 		exclude = append(append([]string{}, exclude...), cfg.Touch.Exclude...)
 	}
 	files, err := touchCandidates(absRoot, staged)
 	if err != nil {
 		return nil, nil, err
+	}
+	if only != nil {
+		files = within(files, only)
 	}
 	var bumped []touchDecision
 	skipped := map[touchSkip][]string{}
@@ -387,4 +399,37 @@ func isHeaderComment(t string) bool {
 		}
 	}
 	return false
+}
+
+// touchPaths turns the paths named on the command line — relative to where the command
+// runs, or absolute — into the project root's, with forward slashes. A path outside the
+// project is an error: nothing there is the project's to date.
+func touchPaths(absRoot string, args []string) ([]string, error) {
+	out := make([]string, 0, len(args))
+	for _, a := range args {
+		abs, err := filepath.Abs(a)
+		if err != nil {
+			return nil, err
+		}
+		rel, err := filepath.Rel(absRoot, abs)
+		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return nil, fmt.Errorf("%s is outside the project (%s)", a, absRoot)
+		}
+		out = append(out, filepath.ToSlash(rel))
+	}
+	return out, nil
+}
+
+// within keeps the files that are one of the paths, or under one of them.
+func within(files, paths []string) []string {
+	var out []string
+	for _, f := range files {
+		for _, p := range paths {
+			if p == "." || f == p || strings.HasPrefix(f, strings.TrimSuffix(p, "/")+"/") {
+				out = append(out, f)
+				break
+			}
+		}
+	}
+	return out
 }

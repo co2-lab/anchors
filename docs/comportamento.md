@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e48ad34b7692ebb3 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a83dfe60b1e3a0bd — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2573,6 +2573,8 @@ teste prova.
 - [Outside a git repository touch fails](camadas/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-E01`
 
 - [A changed file that cannot be read is skipped and named](camadas/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-E02`
+
+- [Named files narrow the touch to them](camadas/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B14`
 
 - [The staged scope is the added, copied, modified and renamed files of the index](camadas/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-B01`
 

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: HDTHD
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-29
 #   layer: feature
 
 @HDTHD
@@ -111,3 +111,9 @@ Feature: HeaderDateTouch — bumps the header date of the files that changed, an
     Given a repository where a.ts and b.ts changed and b.ts cannot be read
     When touch runs
     Then b.ts is skipped as unreadable and a.ts is bumped
+
+  @HDTHD-B14 @unit-level
+  Scenario: Named files narrow the touch to them
+    Given three changed files, one of them in a folder
+    When the touch names one file and the folder, then a path outside the project, then nothing
+    Then only the named file and the folder's file are dated, the outside path is an error, and with nothing named all three are

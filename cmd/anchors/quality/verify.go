@@ -67,7 +67,7 @@ README-only commit does not trigger the monorepo's typecheck.`,
 				if preCommitTouches(staged, phase, cfg) {
 					var skipped map[touchSkip][]string
 					var terr error
-					bumped, skipped, terr = touchRun(absRoot, true, false, gitmeta.Today(), nil)
+					bumped, skipped, terr = touchRun(absRoot, true, false, gitmeta.Today(), nil, nil)
 					printPreCommitTouch(bumped, skipped, terr)
 				}
 				// The map the commit carries is the one a build of the commit makes. A

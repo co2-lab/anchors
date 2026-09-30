@@ -178,7 +178,7 @@ func TestTouch_stagedInAPartialCommit(t *testing.T) {
 	}
 	t.Setenv("GIT_INDEX_FILE", temp)
 
-	if _, _, err := touchRun(root, true, false, "2026-09-25", nil); err != nil {
+	if _, _, err := touchRun(root, true, false, "2026-09-25", nil, nil); err != nil {
 		t.Fatal(err)
 	}
 	for _, idx := range []string{temp, real} {
@@ -355,5 +355,38 @@ func TestTouch_projectRootBelowTheRepositoryTop(t *testing.T) {
 	}
 	if strings.Contains(out, "a.ts") {
 		t.Errorf("a file outside the project root is not the project's:\n%s", out)
+	}
+}
+
+func TestTouch_namedFilesNarrowIt(t *testing.T) {
+	t.Run("HDTHD-B14: Named files narrow the touch to them", func(t *testing.T) {})
+	root := touchRepo(t)
+	for _, f := range []string{"a.ts", "b.ts", "gen/c.ts"} {
+		touchWrite(t, root, f, touchHeader+"export const x = 2\n")
+	}
+	t.Chdir(root)
+	cmd := newTouchCmd()
+	cmd.SetArgs([]string{"a.ts", filepath.Join(root, "gen"), "--date", "2026-09-25"})
+	var err error
+	testkit.CaptureStdout(t, func() { err = cmd.Execute() })
+	if err != nil {
+		t.Fatal(err)
+	}
+	for f, dated := range map[string]bool{"a.ts": true, "gen/c.ts": true, "b.ts": false} {
+		b, _ := os.ReadFile(filepath.Join(root, filepath.FromSlash(f)))
+		if strings.Contains(string(b), "2026-09-25") != dated {
+			t.Errorf("%s dated %v, want %v:\n%s", f, !dated, dated, b)
+		}
+	}
+	cmd = newTouchCmd()
+	cmd.SetArgs([]string{filepath.Join(t.TempDir(), "x.ts")})
+	cmd.SilenceUsage, cmd.SilenceErrors = true, true
+	testkit.CaptureStdout(t, func() { err = cmd.Execute() })
+	if err == nil || !strings.Contains(err.Error(), "outside the project") {
+		t.Errorf("a path outside the project is an error, got %v", err)
+	}
+	bumped, _, err := touchRun(root, false, true, "2026-09-26", nil, nil)
+	if err != nil || len(bumped) != 3 {
+		t.Errorf("with nothing named every changed file is a candidate, got %d %v", len(bumped), err)
 	}
 }

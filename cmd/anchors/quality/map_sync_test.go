@@ -74,7 +74,7 @@ func (r syncRepo) change(t *testing.T) []touchDecision {
 	r.git("add", "src/pay.spec.md")
 	touchWrite(t, r.root, "src/other.ts", "export const other = 2 // not staged\n")
 	touchWrite(t, r.root, "src/new.ts", "export const fresh = 1\n")
-	bumped, _, err := touchRun(r.root, true, false, gitmeta.Today(), nil)
+	bumped, _, err := touchRun(r.root, true, false, gitmeta.Today(), nil, nil)
 	if err != nil || len(bumped) != 1 {
 		t.Fatalf("the hook dates the staged spec, got %+v %v", bumped, err)
 	}

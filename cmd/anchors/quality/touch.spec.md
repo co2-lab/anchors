@@ -1,6 +1,6 @@
 <!-- @anchors
   code: HDTHD
-  updated_at: 2026-09-26
+  updated_at: 2026-09-29
   layer: comando
 -->
 # HeaderDateTouch — bumps the header date of the files that changed, and only of those
@@ -53,6 +53,7 @@ would bump. The installed pre-commit runs this bump by default; the project can 
 | `HDTHD-B11` | Without a date the day of the run is written. |
 | `HDTHD-B12` | The pre-commit bump is on unless the project turns it off. |
 | `HDTHD-B13` | A project root below the repository's top considers only its own files, named from the project root, in both the worktree and the staged modes. |
+| `HDTHD-B14` | Files or folders named on the command line narrow the touch to the changed files among them — a path relative to where the command runs, or absolute; one outside the project is an error. With none named, every changed file is a candidate. (`touchPaths`, `within`) |
 
 ## Invariants
 
