@@ -163,7 +163,7 @@ The base defaults to ` + "`origin/<integration_branch>`" + ` (or the local branc
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().StringVar(&base, "base", "", "the ref the branch merges into (default: origin/<integration_branch>)")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show what would be renumbered, without writing")
-	return cmd
+	return common.TakesFiles(cmd)
 }
 
 // defaultBase is where the branch merges: the remote copy of the integration branch when it

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CLRTC
-  updated_at: 2026-09-29
+  updated_at: 2026-09-30
   layer: comando
 -->
 # CliRoot — every command passes through one root that speaks the project's language and honours the freeze
@@ -54,6 +54,7 @@ leaves printing to the entry point, which prints the error once and decides the 
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
 | `CLRTC-I01` | Every `anchors <command>` that the work guide and the pipeline workflows teach is a registered command. | collects the registered names and confronts every command the guide and the workflows cite |
+| `CLRTC-I02` | Every command that takes several files — a usage that names files and repeats them, such as `<file>...` — reads them as every other does, through `TakesFiles`: separate arguments or a comma-separated list. | walks every registered command and confronts each whose usage takes several files with the mark `TakesFiles` leaves |
 
 ## Constraints
 

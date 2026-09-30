@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CLRTC
-#   updated_at: 2026-09-29
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @CLRTC
@@ -67,3 +67,9 @@ Feature: CliRoot — every command passes through one root that speaks the proje
     Given a configuration whose lang line ends in CRLF
     When the language is read
     Then it is the one declared
+
+  @CLRTC-I02 @unit-level
+  Scenario: Every command that takes several files reads them the same way
+    Given every registered command
+    When the ones whose usage takes several files are confronted with the mark of the shared reading
+    Then each carries it

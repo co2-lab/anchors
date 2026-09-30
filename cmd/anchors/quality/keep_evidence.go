@@ -115,7 +115,7 @@ unproven.`,
 	cmd.Flags().StringVar(&root, "root", ".", "project root")
 	cmd.Flags().StringVar(&reason, "reason", "", "why the change proves nothing new (required)")
 	cmd.Flags().BoolVar(&lines, "lines", false, "also keep coverage and mutation: no line moved")
-	return cmd
+	return common.TakesFiles(cmd)
 }
 
 // headMap is the map as HEAD has it, or nil when git has none.

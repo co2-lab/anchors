@@ -12,6 +12,7 @@ import (
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/spf13/cobra"
 
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"github.com/co2-lab/anchors/internal/config"
 	"github.com/co2-lab/anchors/internal/gitmeta"
 )
@@ -168,7 +169,7 @@ After a ` + "`stamp --refresh`" + `, order does not matter: a ` + "`@contract`" 
 	cmd.Flags().StringArrayVar(&exclude, "exclude", nil, "glob of files never to bump (repeatable; adds to `touch.exclude`)")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "say what would be bumped, without writing")
 	cmd.Flags().Bool("changed", true, "the files changed in the worktree vs HEAD (the default)")
-	return cmd
+	return common.TakesFiles(cmd)
 }
 
 // touchCandidates lists the files to consider: changed vs HEAD in the worktree (plus the

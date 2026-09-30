@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/spf13/cobra"
 )
 
 // The message names the path that is not governed, so whoever reads it knows WHICH file the
@@ -124,5 +125,22 @@ func TestRelTo_windowsSeparators(t *testing.T) {
 	}
 	if got := RelTo(root, filepath.Join(root, "src", "a.ts")); got != "src/a.ts" {
 		t.Errorf("a native absolute path, got %q", got)
+	}
+}
+
+func TestFileArgs_theListOfFiles(t *testing.T) {
+	t.Run("CMCLC-B08: A list of files is read the same way by every command", func(t *testing.T) {})
+	want := []string{"a.ts", "b.ts", "c.ts"}
+	if got := FileArgs([]string{"a.ts", "b.ts, ,c.ts", "a.ts"}); strings.Join(got, "|") != strings.Join(want, "|") {
+		t.Errorf("each file once, in order, got %v", got)
+	}
+	var seen []string
+	cmd := TakesFiles(&cobra.Command{Use: "x <file>...", RunE: func(_ *cobra.Command, args []string) error { seen = args; return nil }})
+	cmd.SetArgs([]string{"a.ts,b.ts", "c.ts"})
+	if err := cmd.Execute(); err != nil || strings.Join(seen, "|") != strings.Join(want, "|") {
+		t.Errorf("the command gets the files, got %v %v", seen, err)
+	}
+	if cmd.Annotations[FilesAnnotation] != "true" {
+		t.Error("the command is marked as taking files")
 	}
 }

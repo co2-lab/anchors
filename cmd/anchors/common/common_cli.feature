@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CMCLC
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @CMCLC
@@ -60,3 +60,9 @@ Feature: CommonCLI — the contract every command shares: how a path becomes a n
     Given the relative root "relroot" and the absolute argument "/abs/x"
     When the argument is resolved
     Then the result is "/abs/x"
+
+  @CMCLC-B08 @unit-level
+  Scenario: A list of files is read the same way by every command
+    Given arguments with a file, a comma-separated list with blanks, and a file named twice
+    When they are read as files, directly and through a command that takes files
+    Then each file comes once, in order, and the command is marked as taking files

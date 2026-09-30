@@ -136,7 +136,7 @@ hand. With --dry-run it only lists.`,
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "say what would be written, without writing")
 	cmd.Flags().StringSliceVar(&refresh, "refresh", nil,
 		"after changing this file: list the doubles stamped against its previous version and update their stamps")
-	return cmd
+	return common.TakesFiles(cmd)
 }
 
 // refreshStamps is `anchors stamp --refresh <file>`: for each changed file, the doubles

@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"github.com/co2-lab/anchors/cmd/anchors/common"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -227,5 +228,30 @@ func TestLangNoYAML_crlf(t *testing.T) {
 		if m == nil || (string(m[1]) != "pt-BR" && string(m[1]) != "es") {
 			t.Errorf("%q: the language is read, got %q", src, m)
 		}
+	}
+}
+
+func TestEveryCommandTakesFilesTheSameWay(t *testing.T) {
+	t.Run("CLRTC-I02: Every command that takes several files reads them the same way", func(t *testing.T) {})
+	// several files: a usage that names files and repeats them — `<file>...`, `[spec files...]`;
+	// `[layers...]` or `<card>...` are other lists.
+	takesFiles := regexp.MustCompile(`(?i)file[^.\]>]*[\]>]?\.\.\.|files?[^\]>]*\.\.\.`)
+	var multi int
+	var walk func(*cobra.Command)
+	walk = func(c *cobra.Command) {
+		if takesFiles.MatchString(c.Use) {
+			multi++
+			if c.Annotations[common.FilesAnnotation] != "true" {
+				t.Errorf("`anchors %s` takes several files and does not read them through common.TakesFiles: "+
+					"a list that works on another command fails on this one", c.CommandPath())
+			}
+		}
+		for _, sub := range c.Commands() {
+			walk(sub)
+		}
+	}
+	walk(newRootCmd())
+	if multi < 4 {
+		t.Fatalf("found %d command(s) taking several files — keep-evidence, touch, stamp and renumber at least; the walk broke", multi)
 	}
 }

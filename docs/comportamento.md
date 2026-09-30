@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:38554c5e9bf76910 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:2e78e4bc63abbba9 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -549,6 +549,8 @@ teste prova.
 - [Root-relative and absolute names of one file resolve to one node](camadas/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is) `CMCLC-I01`
 
 - [A path that cannot be related to the root is kept as given](camadas/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is) `CMCLC-E01`
+
+- [A list of files is read the same way by every command](camadas/comando.md#cmclc--commoncli--the-contract-every-command-shares-how-a-path-becomes-a-node-how-not-governed-is-signalled-what-the-binary-says-it-is) `CMCLC-B08`
 
 - [A value passed under the old name reaches the current flag](camadas/comando.md#flalf--flagaliases--a-renamed-command-flag-keeps-answering-to-its-old-name) `FLALF-B01`
 
@@ -2657,6 +2659,8 @@ teste prova.
 - [The freeze refusal is written in the project language](camadas/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze) `CLRTC-X01`
 
 - [The language is read from a CRLF file](camadas/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze) `CLRTC-B08`
+
+- [Every command that takes several files reads them the same way](camadas/comando.md#clrtc--cliroot--every-command-passes-through-one-root-that-speaks-the-projects-language-and-honours-the-freeze) `CLRTC-I02`
 
 ## config
 
