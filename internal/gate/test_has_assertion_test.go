@@ -208,3 +208,23 @@ func TestTestHasAssertion_aLineBeyondTheContent(t *testing.T) {
 		t.Errorf("the test beyond the content is read as empty, not a break, got %v: %s", v, msg)
 	}
 }
+
+func TestTestHasAssertion_aCloserThatOpensGoesOn(t *testing.T) {
+	t.Run("THSAS-B09: A closer that opens again goes on with the block", func(t *testing.T) {})
+	src := "it.each([\n  [1, 2],\n  [3, 4],\n])('adds %i', async (a, b) => {\n  expect(a + 1).toBe(b)\n})\nafter()\n"
+	lines := strings.Split(src, "\n")
+	if got := blockEnd(lines, 0); got != 5 {
+		t.Errorf("the table closes into the body, and the block ends at its closer, got line %d", got)
+	}
+	asConst := strings.Replace(src, "])(", "] as const)(", 1)
+	if got := blockEnd(strings.Split(asConst, "\n"), 0); got != 5 {
+		t.Errorf("a table closed `as const` goes on too, got line %d", got)
+	}
+	branch := strings.Split("if (x) {\n  a()\n} else {\n  b()\n}\nc()\n", "\n")
+	if got := blockEnd(branch, 0); got != 4 {
+		t.Errorf("an else goes on with the block, got line %d", got)
+	}
+	if body := testBody(lines, testlist.Test{Line: 1}, false); !strings.Contains(body, "expect(a + 1)") || strings.Contains(body, "after()") {
+		t.Errorf("the body holds the assertion after the table, and stops at its closer, got:\n%s", body)
+	}
+}

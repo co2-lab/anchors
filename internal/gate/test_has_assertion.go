@@ -131,7 +131,10 @@ func blockEnd(lines []string, i int) int {
 		if !bracket {
 			return j - 1
 		}
-		if closesBlockRE.MatchString(lines[j]) {
+		// A line that closes and opens again goes on with the block: the table of an
+		// `it.each([` closes into the test's own body (`])('title', () => {`), and a
+		// `} else {` into the next branch. Only a closer that opens nothing ends it.
+		if closesBlockRE.MatchString(lines[j]) && !opensBlockRE.MatchString(lines[j]) {
 			return j
 		}
 	}

@@ -153,7 +153,7 @@ After a ` + "`stamp --refresh`" + `, order does not matter: a ` + "`@contract`" 
 			for _, d := range bumped {
 				fmt.Printf("  %s %s  (%s → %s)\n", verb, d.File, d.From, date)
 			}
-			for _, why := range []touchSkip{skipDateOnly, skipUnchanged, skipAlready, skipExcluded, skipUnstaged, skipUnreadable} {
+			for _, why := range []touchSkip{skipDateOnly, skipUnchanged, skipAlready, skipExcluded, skipUnstaged, skipUnreadable, skipNoHeader} {
 				for _, f := range skipped[why] {
 					fmt.Printf("  skipped %s — %s\n", f, why)
 				}
@@ -265,7 +265,7 @@ func touchRun(absRoot string, staged, dryRun bool, date string, exclude, only []
 		return nil, nil, err
 	}
 	if only != nil {
-		files = within(files, only)
+		files = named(absRoot, within(files, only), only)
 	}
 	var bumped []touchDecision
 	skipped := map[touchSkip][]string{}
@@ -289,7 +289,7 @@ func touchRun(absRoot string, staged, dryRun bool, date string, exclude, only []
 		d := decideTouch(f, current, base, hasBase, date)
 		d.Old = current
 		if !d.Bump {
-			if d.Skip != skipNoHeader {
+			if d.Skip != skipNoHeader || only != nil {
 				skipped[d.Skip] = append(skipped[d.Skip], f)
 			}
 			continue
@@ -432,4 +432,25 @@ func within(files, paths []string) []string {
 		}
 	}
 	return out
+}
+
+// named adds to the changed files among the named paths the named files that are not
+// among them: each one asked for by name gets a verdict — "no change from HEAD", "could
+// not be read" — instead of vanishing from the list. A named folder brings only its
+// changed files.
+func named(absRoot string, files, paths []string) []string {
+	seen := make(map[string]bool, len(files))
+	for _, f := range files {
+		seen[f] = true
+	}
+	for _, p := range paths {
+		if fi, err := os.Stat(filepath.Join(absRoot, filepath.FromSlash(p))); err == nil && fi.IsDir() {
+			continue
+		}
+		if !seen[p] {
+			seen[p] = true
+			files = append(files, p)
+		}
+	}
+	return files
 }

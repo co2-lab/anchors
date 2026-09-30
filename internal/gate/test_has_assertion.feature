@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: THSAS
-#   updated_at: 2026-09-29
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @THSAS
@@ -60,3 +60,9 @@ Feature: TestHasAssertion — every test asserts something in its body
     Given a test listed below the last line of the content confronted
     When the gate reads its body
     Then it reads an empty body and does not break
+
+  @THSAS-B09 @unit-level
+  Scenario: A closer that opens again goes on with the block
+    Given a parameterised test whose table spans several lines and closes into the test's body, and an if with an else
+    When the body of each is read
+    Then the body runs to the closer that opens nothing, and holds the assertion after the table

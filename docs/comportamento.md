@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:cacaaac10e20b559 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:cbf8ab15a2a651f7 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2578,6 +2578,8 @@ teste prova.
 
 - [Named files narrow the touch to them](camadas/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B14`
 
+- [Every named file gets a verdict](camadas/comando.md#hdthd--headerdatetouch--bumps-the-header-date-of-the-files-that-changed-and-only-of-those) `HDTHD-B15`
+
 - [The staged scope is the added, copied, modified and renamed files of the index](camadas/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-B01`
 
 - [Nothing staged has nothing to verify](camadas/comando.md#vpfvr--verifyphasefacade--one-invocation-per-phase-delegated-to-the-check-pipeline) `VPFVR-B02`
@@ -5011,6 +5013,8 @@ teste prova.
 - [A test that declares it asserts nothing is left out](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B07`
 
 - [A test at a line the content does not have](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B08`
+
+- [A closer that opens again goes on with the block](camadas/gate.md#thsas--testhasassertion--every-test-asserts-something-in-its-body) `THSAS-B09`
 
 - [A node that is not a feature is skipped](camadas/gate.md#tlvcd--testlevelcodes--each-scenario-references-only-codes-its-test-level-accepts) `TLVCD-B01`
 

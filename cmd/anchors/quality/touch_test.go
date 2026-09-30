@@ -390,3 +390,36 @@ func TestTouch_namedFilesNarrowIt(t *testing.T) {
 		t.Errorf("with nothing named every changed file is a candidate, got %d %v", len(bumped), err)
 	}
 }
+
+func TestTouch_everyNamedFileGetsAVerdict(t *testing.T) {
+	t.Run("HDTHD-B15: Every named file gets a verdict", func(t *testing.T) {})
+	root := touchRepo(t)
+	touchWrite(t, root, "a.ts", touchHeader+"export const x = 2\n")
+	touchWrite(t, root, "plain.ts", "export const y = 1\n")
+	bumped, skipped, err := touchRun(root, false, false, "2026-09-25", nil, []string{"a.ts", "b.ts", "plain.ts", "nope.ts", "gen"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(bumped) != 1 || bumped[0].File != "a.ts" {
+		t.Errorf("the changed file is dated, got %+v", bumped)
+	}
+	if got := skipped[skipUnchanged]; len(got) != 1 || got[0] != "b.ts" {
+		t.Errorf("the unchanged file says so, got %v", skipped)
+	}
+	if got := skipped[skipUnreadable]; len(got) != 1 || got[0] != "nope.ts" {
+		t.Errorf("the missing file says so, got %v", skipped)
+	}
+	if got := skipped[skipNoHeader]; len(got) != 1 || got[0] != "plain.ts" {
+		t.Errorf("the named file with no header says so, got %v", skipped)
+	}
+	if _, skipped, _ := touchRun(root, false, true, "2026-09-25", nil, nil); len(skipped[skipNoHeader]) != 0 {
+		t.Errorf("with nothing named a file with no header stays unlisted, got %v", skipped[skipNoHeader])
+	}
+	for _, list := range skipped {
+		for _, f := range list {
+			if strings.HasPrefix(f, "gen") {
+				t.Errorf("an unchanged folder brings nothing, got %s", f)
+			}
+		}
+	}
+}

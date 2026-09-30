@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: HDTHD
-#   updated_at: 2026-09-29
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @HDTHD
@@ -117,3 +117,9 @@ Feature: HeaderDateTouch — bumps the header date of the files that changed, an
     Given three changed files, one of them in a folder
     When the touch names one file and the folder, then a path outside the project, then nothing
     Then only the named file and the folder's file are dated, the outside path is an error, and with nothing named all three are
+
+  @HDTHD-B15 @unit-level
+  Scenario: Every named file gets a verdict
+    Given a changed file, a file with no change from HEAD, a changed file with no header, and a path that does not exist
+    When the touch names all four
+    Then the changed one is dated, the unchanged one is reported with no change from HEAD, the one with no header as such, and the missing one as unreadable
