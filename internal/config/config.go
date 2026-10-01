@@ -120,8 +120,12 @@ type Config struct {
 	Recode         *Recode      `yaml:"recode,omitempty"`  // convenções de projeto p/ `anchors recode`
 	// Tests e Mutation declaram COMO este projeto produz sinal de teste: o comando é
 	// do projeto, a amarração ao mapa é do Anchors. Ver Suite.
-	Tests    []Suite `yaml:"tests,omitempty"`
-	Mutation []Suite `yaml:"mutation,omitempty"`
+	// Severity is the project's default `severity` for its BLOCKING gates: each level a
+	// gate entry does not declare takes it from here. Unset, a blocking gate blocks its
+	// failures and informs the rest; an informative gate informs all three either way.
+	Severity *Severity `yaml:"severity,omitempty"`
+	Tests    []Suite   `yaml:"tests,omitempty"`
+	Mutation []Suite   `yaml:"mutation,omitempty"`
 	// Logs diz ONDE estão os logs — e só isso, porque só isso é preciso.
 	//
 	// O FORMATO não entra aqui, e a razão é o que torna a varredura possível sem ditar
@@ -1035,6 +1039,58 @@ func actionRank(a string) int {
 	return -1
 }
 
+// applyProjectSeverity gives each blocking gate the project's default `severity` for the
+// levels its entry does not declare. The project default is checked on its own first: a
+// state it names must exist, and its levels keep their order.
+func (c *Config) applyProjectSeverity() error {
+	if c.Severity == nil {
+		return nil
+	}
+	probe := Gate{Name: "severity (the project default)", Blocking: Bool(true), Severity: c.Severity}
+	if err := probe.checkSeverity(); err != nil {
+		return err
+	}
+	for i := range c.Gates {
+		g := &c.Gates[i]
+		if !g.IsBlocking() {
+			continue
+		}
+		merged := Severity{}
+		if g.Severity != nil {
+			merged = *g.Severity
+		}
+		if merged.Fail == "" {
+			merged.Fail = c.Severity.Fail
+		}
+		if merged.Divergence == "" {
+			merged.Divergence = c.Severity.Divergence
+		}
+		if merged.Pending == "" {
+			merged.Pending = c.Severity.Pending
+		}
+		g.Severity = &merged
+	}
+	return nil
+}
+
+// checkSeverity refuses an unknown state and a level stronger than a more serious one.
+func (g Gate) checkSeverity() error {
+	if g.Severity == nil {
+		return nil
+	}
+	for _, l := range [][2]string{{LevelFail, g.Severity.Fail}, {LevelDivergence, g.Severity.Divergence}, {LevelPending, g.Severity.Pending}} {
+		if l[1] != "" && actionRank(l[1]) < 0 {
+			return fmt.Errorf("%s", i18n.T("config.gate.unknown_severity", g.Name, l[0], l[1], ActionBlock, ActionInform, ActionIgnore))
+		}
+	}
+	if actionRank(g.ActionFor(LevelDivergence)) > actionRank(g.ActionFor(LevelFail)) ||
+		actionRank(g.ActionFor(LevelPending)) > actionRank(g.ActionFor(LevelDivergence)) {
+		return fmt.Errorf("%s", i18n.T("config.gate.severity_order", g.Name,
+			g.ActionFor(LevelFail), g.ActionFor(LevelDivergence), g.ActionFor(LevelPending)))
+	}
+	return nil
+}
+
 // ActionFor is what a verdict of this level does on this gate: the level's declared state,
 // or, undeclared, a failure blocks on a blocking gate and everything else informs — a
 // divergence and a pending item are reported, and bar only where the project says so.
@@ -1657,6 +1713,9 @@ func Load(path string) (*Config, error) {
 	if err := c.validarPadroes(); err != nil {
 		return nil, fmt.Errorf("%s: %w", filepath.Base(path), err)
 	}
+	if err := c.applyProjectSeverity(); err != nil {
+		return nil, err
+	}
 	if err := c.validarEnumsDeGate(); err != nil {
 		return nil, err
 	}
@@ -1750,17 +1809,8 @@ func (c *Config) validarEnumsDeGate() error {
 					g.Name, f, PhasePreCommit, PhasePrePush, PhaseCI, PhaseManual))
 			}
 		}
-		if g.Severity != nil {
-			for _, l := range [][2]string{{LevelFail, g.Severity.Fail}, {LevelDivergence, g.Severity.Divergence}, {LevelPending, g.Severity.Pending}} {
-				if l[1] != "" && actionRank(l[1]) < 0 {
-					return fmt.Errorf("%s", i18n.T("config.gate.unknown_severity", g.Name, l[0], l[1], ActionBlock, ActionInform, ActionIgnore))
-				}
-			}
-			if actionRank(g.ActionFor(LevelDivergence)) > actionRank(g.ActionFor(LevelFail)) ||
-				actionRank(g.ActionFor(LevelPending)) > actionRank(g.ActionFor(LevelDivergence)) {
-				return fmt.Errorf("%s", i18n.T("config.gate.severity_order", g.Name,
-					g.ActionFor(LevelFail), g.ActionFor(LevelDivergence), g.ActionFor(LevelPending)))
-			}
+		if err := g.checkSeverity(); err != nil {
+			return err
 		}
 		for _, p := range g.SkipOn {
 			if p != PerspectiveChange && p != PerspectiveAll {

@@ -382,3 +382,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a blocking and an informative gate declaring no severity, one declaring divergence inform and pending ignore, one with pending stronger than divergence, and one with an unknown state
     When each is loaded and asked what each level does
     Then the blocking one blocks failures and informs the rest, the informative one informs all, the ordered one takes its states, and the other two fail the load naming the gate
+
+  @CNFGO-B56 @unit-level
+  Scenario: A project-wide severity is the default of its blocking gates
+    Given a project declaring divergence and pending block, a blocking gate that declares nothing, one that declares pending inform, an informative gate, and a project default naming an unknown state
+    When each configuration is loaded
+    Then the first gate blocks all three levels, the second informs its pending items, the informative gate informs, and the unknown state fails the load

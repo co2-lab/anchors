@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:80c24da2ef13136a — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:d5f15775d141054d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2811,6 +2811,8 @@ teste prova.
 - [The declared format is read from a CRLF file](camadas/config.md#cnfgo-b54--the-declared-format-is-read-from-a-crlf-file) `CNFGO-B54`
 
 - [Each verdict level of a gate takes a state, in order](camadas/config.md#cnfgo-b55--each-verdict-level-of-a-gate-takes-a-state-in-order) `CNFGO-B55`
+
+- [A project-wide severity is the default of its blocking gates](camadas/config.md#cnfgo-b56--a-project-wide-severity-is-the-default-of-its-blocking-gates) `CNFGO-B56`
 
 - [The declared containers come back as written, and a missing config has none](camadas/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 

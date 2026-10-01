@@ -1567,3 +1567,38 @@ func TestGate_severity(t *testing.T) {
 		t.Errorf("an unknown state is refused naming it, got %v", err)
 	}
 }
+
+func TestProjectSeverity_isTheBlockingGatesDefault(t *testing.T) {
+	t.Run("CNFGO-B56: A project-wide severity is the default of its blocking gates", func(t *testing.T) {})
+	yaml := "version: 1\nseverity:\n  divergence: block\n  pending: block\ngates:\n" +
+		"  - name: a\n    check: tests-pass\n    on: [test]\n    blocking: true\n" +
+		"  - name: b\n    check: tests-pass\n    on: [test]\n    blocking: true\n    severity:\n      pending: inform\n" +
+		"  - name: c\n    check: tests-pass\n    on: [test]\n"
+	cfg, err := load(t, yaml)
+	if err != nil {
+		t.Fatal(err)
+	}
+	by := map[string]Gate{}
+	for _, g := range cfg.Gates {
+		by[g.Name] = g
+	}
+	if by["a"].ActionFor(LevelDivergence) != ActionBlock || by["a"].ActionFor(LevelPending) != ActionBlock {
+		t.Error("a blocking gate that declares nothing takes the project default")
+	}
+	if by["b"].ActionFor(LevelDivergence) != ActionBlock || by["b"].ActionFor(LevelPending) != ActionInform {
+		t.Error("a level the entry declares keeps its own, the others take the default")
+	}
+	if by["c"].ActionFor(LevelDivergence) != ActionInform || by["c"].ActionFor(LevelFail) != ActionInform {
+		t.Error("an informative gate is not touched")
+	}
+	if _, err := load(t, "version: 1\nseverity:\n  pending: hold\n"); err == nil || !strings.Contains(err.Error(), `"hold"`) {
+		t.Errorf("an unknown state in the project default is refused, got %v", err)
+	}
+	if _, err := load(t, "version: 1\nseverity:\n  pending: block\n"); err == nil || !strings.Contains(err.Error(), "project default") {
+		t.Errorf("a project default that breaks the order is refused as the project's, got %v", err)
+	}
+	broken := "version: 1\nseverity:\n  divergence: block\n  pending: block\ngates:\n  - name: d\n    check: tests-pass\n    on: [test]\n    blocking: true\n    severity:\n      divergence: inform\n"
+	if _, err := load(t, broken); err == nil || !strings.Contains(err.Error(), `"d"`) {
+		t.Errorf("a gate whose merged levels break the order fails naming it, got %v", err)
+	}
+}
