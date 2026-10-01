@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTENG
-  updated_at: 2026-09-30
+  updated_at: 2026-10-01
   layer: gate
 -->
 # GateEngine — which gates reach which node, and what the run concludes
@@ -13,7 +13,7 @@
 > `anchors doctor --fix` replaces whole. Decided by the user: those files are upstream-owned.
 >
 > **Revises:** `B22`
-> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B13`, `B14`, `B15`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `B24`, `B25`, `B26`, `B27`, `B28`, `I01`, `I02`, `I03`, `X01`, `X02`, `X03`, `E01`
+> **Checked:** `B01`, `B02`, `B03`, `B04`, `B05`, `B06`, `B07`, `B08`, `B09`, `B13`, `B14`, `B15`, `B16`, `B17`, `B18`, `B19`, `B20`, `B21`, `B24`, `B25`, `B26`, `B27`, `B28`, `I01`, `I02`, `I03`, `I05`, `X01`, `X02`, `X03`, `E01`
 
 ## Overview
 
@@ -116,6 +116,7 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 | `GTENG-I02` | Skip, Pending and Fail are three different answers and never collapse into two. Each says something the others do not: the gate does not apply, the gate could not measure, the gate measured and the target failed. | runs a gate with a missing tool and one that measured and failed, and verifies the verdicts differ |
 | `GTENG-I03` | The verdict of a waived target is Skip WITH the reason written, never silence. It leaves the failure tally without leaving the report — that is the difference between waiving and hiding. | waives a target and verifies the verdict carries the declared reason |
 | `GTENG-I04` | The reported target of an aggregate gate is the SCOPE, never one of the files. Blaming one of many files for a verdict about the set would be a statement the engine cannot support. | runs an aggregate gate over several nodes and verifies the reported target |
+| `GTENG-I05` | Under an index source (`--index`), no internal gate reads the tree: every project file a gate reads comes through `readFile`, so a commit is judged by what it records whatever the tree holds. | runs every registered internal checker over one project twice, the index the same both times — with the tree full of other text, then equal to the index — and fails naming each checker whose verdict moved |
 
 ## Constraints
 

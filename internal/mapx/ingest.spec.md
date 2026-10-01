@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SGINA
-  updated_at: 2026-09-30
+  updated_at: 2026-10-01
   layer: mapa
 -->
 # SignalIngestion — hanging the runner's results on the map's nodes: executions, proven rules, coverage and mutation
@@ -99,6 +99,7 @@ instead — an under-estimate, never a double count.
 | `SGINA-B27` | A mutation ingestion records the lines of the mutants no test ran, as ranges, read back as the same lines. (`NoCoverageLines`) |
 | `SGINA-B28` | A proven scenario code counts for the node that declares its rule, and is kept with its variant (`CODE-B02#02`): the node records which scenarios of its rules were proven, not only the rules. (`IngestExecutionSuite`) |
 | `SGINA-B29` | A code file a coverage report lists — with lines or with none — records the revision it was listed at; a code file a whole run of its suite left out of the report records the revision it was omitted at, unless a report listed it at that revision. (`IngestCoverageSuite`, `MarkCoverageOmitted`) |
+| `SGINA-B30` | A suite that ran none of a file's lines at the current revision leaves the file's line and branch coverage when another suite ran it: its instrumented lines and branches say nothing about which run; with no suite having run the file, the coverage is none of its lines. (`unionCoverage`, `unionBranches`) |
 | `SGINA-B24` | The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. (`RefreshRevs`) |
 | `SGINA-B23` | A run time Anchors measured itself is recorded on the node under the suite; a node the map does not have is ignored. (`RecordRunSeconds`) |
 

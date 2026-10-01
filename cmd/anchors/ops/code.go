@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -110,6 +111,17 @@ uses them, choose the code by hand and validate it with --check.`,
 			}
 
 			fmt.Printf("✓ free code: %s\n", unique)
+			// An argument shaped like a code is often a check asked the wrong way: an agent
+			// ran `anchors code ABCD` to learn whether ABCD was free and read the suggestion as
+			// the answer. The answer comes too — the name may also be an acronym, so the
+			// suggestion stays.
+			if c := args[0]; codeShapeRE().MatchString(c) {
+				if who, ok := owners[c]; ok {
+					fmt.Printf("  note: %s looks like a code, not a unit name — %s is already used by %s (`--check %s` checks a code)\n", c, c, strings.Join(who, ", "), c)
+				} else {
+					fmt.Printf("  note: %s looks like a code, not a unit name — %s is free (`--check %s` checks a code)\n", c, c, c)
+				}
+			}
 			if prefix != "" {
 				fmt.Printf("  (module prefix '%s' from the Structure + distinctive of '%s')\n", prefix, name)
 			}
@@ -598,4 +610,10 @@ func revisesByFile(mapPath string) map[string][]string {
 		}
 	}
 	return out
+}
+
+// codeShapeRE is an identity code's shape in this project: capitals and digits, at a
+// length `code_lengths` allows.
+func codeShapeRE() *regexp.Regexp {
+	return regexp.MustCompile(`^[A-Z0-9]` + config.CodeLengthPattern() + `$`)
 }

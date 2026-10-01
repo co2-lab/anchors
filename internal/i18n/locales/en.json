@@ -229,6 +229,7 @@
   "gate.no_coverage_baseline": "no coverage baseline (ingest twice to compare)",
   "gate.coverage_dropped": "coverage dropped %.0f%% → %.0f%% (%.0f points)",
   "gate.mutation.no_signal": "no mutation signal ingested — line coverage says line EXECUTED, not that someone verified the result. Run mutation tool for your stack (Stryker/PIT/Infection/mutmut) and `anchors ingest --mutation <report>`",
+  "gate.mutation.nothing_to_mutate": "the mutation tool measured this file at its revision and generated no mutant — there is nothing to mutate",
   "gate.mutation.stale": "stale mutation signal (file changed since ingestion — reingest)",
   "gate.mutation.stale_above_floor": "stale mutation signal, last measured at %.0f%% (floor %.0f%%): not remeasured on every change — `anchors mutation --include-passing` measures it again",
   "gate.mutation.isolated_failed": "ISOLATED mutation score %.0f%% < %.0f%% — %s. %d mutant(s) survive unit's own test; %s",

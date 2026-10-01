@@ -803,3 +803,30 @@ func TestIngestCoverage_listedAndOmitted(t *testing.T) {
 		t.Errorf("a later report that lists it clears the omission, got %+v", by)
 	}
 }
+
+func TestIngestCoverage_aSuiteThatRanNothingLeavesTheUnion(t *testing.T) {
+	t.Run("SGINA-B30: A suite that ran none of a file's lines leaves its coverage", func(t *testing.T) {})
+	lines := func(from, to int, hit bool) map[int]bool {
+		out := map[int]bool{}
+		for l := from; l <= to; l++ {
+			out[l] = hit
+		}
+		return out
+	}
+	g := &Graph{Nodes: []Node{{ID: "src/rec.ts", Kind: KindCode, Rev: "r1"}}}
+	g.IngestCoverageSuite(map[string]FileCov{"src/rec.ts": {Covered: 61, Total: 61, Lines: lines(1, 61, true),
+		Branches: map[string]bool{"3:0:0": true, "3:0:1": false}}}, "unit", "t1")
+	g.IngestCoverageSuite(map[string]FileCov{"src/rec.ts": {Covered: 0, Total: 100, Lines: lines(1, 100, false),
+		Branches: map[string]bool{"9:0:0": false}}}, "integration", "t2")
+	if s := g.Nodes[0].Signal; s.BranchMissed != "3:0:1" {
+		t.Errorf("the branch the unit suite missed stays missed, got %q", s.BranchMissed)
+	}
+	if s := g.Nodes[0].Signal; s.CoveredLines != 61 || s.TotalLines != 61 || s.LineCoverage != 100 {
+		t.Errorf("the suite that ran nothing leaves the union: got %d/%d (%.0f%%)", s.CoveredLines, s.TotalLines, s.LineCoverage)
+	}
+	h := &Graph{Nodes: []Node{{ID: "src/rec.ts", Kind: KindCode, Rev: "r1"}}}
+	h.IngestCoverageSuite(map[string]FileCov{"src/rec.ts": {Covered: 0, Total: 40, Lines: lines(1, 40, false)}}, "unit", "t1")
+	if s := h.Nodes[0].Signal; s.CoveredLines != 0 || s.TotalLines == 0 {
+		t.Errorf("with no suite having run it, the coverage is none of its lines, got %d/%d", s.CoveredLines, s.TotalLines)
+	}
+}

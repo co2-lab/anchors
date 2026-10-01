@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INCHN
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @INCHN
@@ -305,3 +305,9 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     Given a file listed by the coverage report with no line, a file a whole run of its suite left out, and a file never measured
     When line coverage confronts each
     Then the first is skipped, the second is a divergence, and the third is pending
+
+  @INCHN-B37 @unit-level
+  Scenario: A file the mutation tool measured with no mutant has nothing to mutate
+    Given a file listed by the mutation report at its revision with no mutant, one listed so at an older revision, and one never listed
+    When mutation-score confronts each
+    Then the first is skipped, and the others are pending

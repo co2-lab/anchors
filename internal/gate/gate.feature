@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GTENG
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @GTENG
@@ -238,3 +238,9 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Given a gate whose check breaks on one target, next to a gate that measures
     When the gates run
     Then the broken one fails that target saying it broke, and the other one is measured
+
+  @GTENG-I05 @unit-level
+  Scenario: Under an index source no gate reads the tree
+    Given a project whose index holds one content, and every registered internal checker
+    When each runs with the tree full of other text, and again with the tree equal to the index
+    Then no verdict moves between the two runs

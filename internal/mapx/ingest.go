@@ -309,9 +309,23 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now stri
 // stale through `oldestSuiteRev`; it just says nothing about the current lines.
 func unionCoverage(bySuite map[string]SuiteCoverage, currentRev string) (covered, total int) {
 	fresh := map[string]SuiteCoverage{}
+	ran := false
 	for s, sc := range bySuite {
 		if sc.AtRev == currentRev {
 			fresh[s] = sc
+			ran = ran || sc.CoveredLines > 0
+		}
+	}
+	// A suite that ran NONE of the file's lines says nothing about which of them run: when
+	// another suite ran the file, it leaves the union. Two suites instrument a file their own
+	// way (another transformer counts other lines), and the lines of the suite that never ran
+	// it only grew the total — 61 of 61 lines covered by unit read as 60% beside an
+	// integration report with LH:0 for the file.
+	if ran {
+		for s, sc := range fresh {
+			if sc.CoveredLines == 0 {
+				delete(fresh, s)
+			}
 		}
 	}
 	bySuite = fresh
@@ -358,8 +372,15 @@ func missedBranches(branches map[string]bool) string {
 func unionBranches(bySuite map[string]SuiteCoverage, currentRev string) (total int, missed string) {
 	var missedIn map[string]int
 	listing := 0
+	// As for lines: a suite that ran none of the file's lines leaves the union when another
+	// ran it. Counted, its branch ids — its own instrumentation — made the branches the
+	// other suite missed "taken somewhere".
+	ran := false
 	for _, sc := range bySuite {
-		if sc.AtRev != currentRev || sc.BranchTotal == 0 {
+		ran = ran || (sc.AtRev == currentRev && sc.CoveredLines > 0)
+	}
+	for _, sc := range bySuite {
+		if sc.AtRev != currentRev || sc.BranchTotal == 0 || (ran && sc.CoveredLines == 0) {
 			continue
 		}
 		listing++

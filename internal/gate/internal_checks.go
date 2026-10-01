@@ -1037,6 +1037,12 @@ func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 	// novo daria o mesmo resultado.
 	if n.Signal == nil || (n.Signal.MutantsKilled == 0 && n.Signal.MutantsSurvived == 0 &&
 		n.Signal.MutantsIgnored == 0 && n.Signal.MutantsNoCoverage == 0) {
+		// The tool LISTED the file at this revision and generated no mutant — an alias, a
+		// re-export (`export const A = B`): it was measured, and there is nothing to mutate.
+		// Never listed, it was never measured.
+		if n.Signal != nil && n.Signal.MutationAtRev != "" && n.Signal.MutationAtRev == n.Rev {
+			return Skip, i18n.T("gate.mutation.nothing_to_mutate")
+		}
 		return Pending, i18n.T("gate.mutation.no_signal")
 	}
 	if n.MutationStale() {

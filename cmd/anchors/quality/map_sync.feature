@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MPSYN
-#   updated_at: 2026-09-29
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @MPSYN
@@ -48,3 +48,9 @@ Feature: MapSyncForCommit — the commit carries the map a build of the commit m
     Given a tree with unstaged edits and a measurement of one of them in the map on disk
     When the commit is synced
     Then the staged map is the commit's, the map on disk keeps the measurement, and with a clean tree both are the same
+
+  @MPSYN-B07 @unit-level
+  Scenario: What was measured after the last commit survives the next one
+    Given a map on disk with coverage measured after HEAD for an unchanged file and for a new file, and the new file staged
+    When the pre-commit syncs the map
+    Then both keep what was measured, in the committed map and in the map on disk

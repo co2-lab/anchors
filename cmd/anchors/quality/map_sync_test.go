@@ -281,3 +281,42 @@ func TestSyncMap_stagedApartBelowTheTop(t *testing.T) {
 		t.Errorf("the map is staged in the project's own directory, got %q", staged)
 	}
 }
+
+func TestSyncMap_keepsWhatWasMeasuredSinceHead(t *testing.T) {
+	t.Run("MPSYN-B07: What was measured after the last commit survives the next one", func(t *testing.T) {})
+	r := newSyncRepo(t, true)
+	mapPath := filepath.Join(r.root, mapx.DefaultPath)
+	// a new file, measured before it is staged, and an unchanged one measured after HEAD
+	touchWrite(t, r.root, "src/new.ts", "export const fresh = 1\n")
+	files, _ := scan.Walk(r.root, r.cfg)
+	g := mapx.Build(files, r.cfg, gitmeta.AllCommitDates(r.root))
+	for i := range g.Nodes {
+		switch g.Nodes[i].ID {
+		case "src/new.ts", "src/other.ts":
+			g.Nodes[i].Signal = &mapx.TestSignal{CoveredLines: 1, TotalLines: 1, LineCoverage: 100, AtRev: g.Nodes[i].Rev, CoverageRev: g.Nodes[i].Rev}
+		}
+	}
+	if err := mapx.Save(g, mapPath); err != nil {
+		t.Fatal(err)
+	}
+	r.git("add", "src/new.ts")
+	if _, err := syncMapForCommit(r.root, r.cfg, nil); err != nil {
+		t.Fatal(err)
+	}
+	for _, m := range []*mapx.Graph{r.stagedMap(t), loadedMap(t, mapPath)} {
+		for _, id := range []string{"src/new.ts", "src/other.ts"} {
+			if n := nodeOf(m, id); n == nil || n.Signal == nil || n.Signal.TotalLines != 1 {
+				t.Errorf("%s keeps what was measured of its content since HEAD, got %+v", id, n)
+			}
+		}
+	}
+}
+
+func loadedMap(t *testing.T, path string) *mapx.Graph {
+	t.Helper()
+	g, err := mapx.Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return g
+}

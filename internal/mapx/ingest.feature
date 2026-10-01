@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SGINA
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @SGINA
@@ -192,3 +192,9 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Given a coverage report listing one file with lines and one with none, and a third file the suite covers that it does not list
     When the report is ingested and the omitted files are marked
     Then the first two record the revision they were listed at, and the third the revision it was omitted at
+
+  @SGINA-B30 @unit-level
+  Scenario: A suite that ran none of a file's lines leaves its coverage
+    Given a file whose unit suite covered all its lines and whose integration suite instrumented other lines and ran none
+    When both are ingested
+    Then the file's coverage is the unit suite's, and with neither having run it the coverage is none

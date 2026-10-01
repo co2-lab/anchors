@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CDCMC
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @CDCMC
@@ -119,3 +119,9 @@ Feature: CodeCommand — a new unit gets an identity code that no other unit in 
     When code list --check runs
     Then the output has "anchors recode WLTX" followed by the canonical code, and never "--fix"
     And the command declares no --fix flag
+
+  @CDCMC-B15 @unit-level
+  Scenario: A name shaped like a code also gets that code's status
+    Given a map where one code is taken
+    When a code is generated for that taken code's shape, for a free code's shape, and for a unit name
+    Then the first two also say the code is taken or free and point at --check, and the unit name gets no note

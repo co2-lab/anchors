@@ -1,9 +1,11 @@
 package gate
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"testing"
@@ -1257,5 +1259,90 @@ func TestRunWithWaiver_aBrokenGateFailsItsTarget(t *testing.T) {
 	}
 	if got["sound"].Verdict != Pass {
 		t.Errorf("the other gate is still measured, got %+v", got["sound"])
+	}
+}
+
+// The --index invariant: under an index source, no gate reads the tree. Every registered
+// internal checker runs over the same project twice, the index holding the same content
+// both times — first with the tree full of other text, then with the tree equal to the
+// index. A checker whose verdict moves between the two read the tree.
+func TestIndexInvariant_noGateReadsTheTree(t *testing.T) {
+	t.Run("GTENG-I05: Under an index source no gate reads the tree", func(t *testing.T) {})
+	index := map[string]string{
+		"src/pay.spec.md": "<!-- @anchors\n  code: PAYMX\n  updated_at: 2026-09-01\n  layer: billing\n-->\n# Pay\n\n## Overview\n\nCharges.\n\n## Rules\n\n### PAYMX-B01 — charges the amount\n\n## Open Decisions\n\nnone\n",
+		"src/pay.feature": "# @anchors\n#   ref: PAYMX\nFeature: Pay\n\n  @PAYMX-B01 @unit-level\n  Scenario: charges the amount\n    Given an amount\n    When it is charged\n    Then it is charged\n",
+		"src/pay.test.ts": "// @anchors\n//   ref: PAYMX\nimport { pay } from './pay'\nit('PAYMX-B01: charges the amount', () => { expect(pay(1)).toBe(1) })\n",
+		"src/pay.ts":      "// @anchors\n//   ref: PAYMX\n//   layer: billing\nexport const pay = (n: number) => n // PAYMX-B01\n",
+	}
+	nodes := []mapx.Node{
+		{ID: "src/pay.spec.md", Kind: mapx.KindSpec, Code: "PAYMX", Rev: "s"},
+		{ID: "src/pay.feature", Kind: mapx.KindFeature, Code: "PAYMX", Rev: "f"},
+		{ID: "src/pay.test.ts", Kind: mapx.KindTest, Code: "PAYMX", Rev: "t"},
+		{ID: "src/pay.ts", Kind: mapx.KindCode, Code: "PAYMX", Rev: "c"},
+	}
+	g := &mapx.Graph{Nodes: nodes, Edges: []mapx.Edge{
+		{From: "src/pay.spec.md", To: "src/pay.feature", Type: mapx.EdgeCoveredBy},
+		{From: "src/pay.feature", To: "src/pay.test.ts", Type: mapx.EdgeTestedBy},
+		{From: "src/pay.spec.md", To: "src/pay.ts", Type: mapx.EdgeSpecifies},
+	}}
+	cfg := &config.Config{Dialect: &config.Dialect{Family: "ts"}}
+	root := t.TempDir()
+	write := func(tree func(rel, content string) string) {
+		for rel, c := range index {
+			writeFile(t, root, rel, tree(rel, c))
+		}
+	}
+	defer SetFileSource(func(rel string) ([]byte, error) {
+		if c, ok := index[filepath.ToSlash(rel)]; ok {
+			return []byte(c), nil
+		}
+		return nil, os.ErrNotExist
+	})()
+	defer SetChangedSource(func(string, string) (bool, bool) { return false, true })()
+	names := map[string]bool{}
+	for n := range internalCheckers {
+		names[n] = true
+	}
+	for n := range checkersWithRoot {
+		names[n] = true
+	}
+	for n := range checkersWithGraph {
+		names[n] = true
+	}
+	run := func() map[string]string {
+		out := map[string]string{}
+		for name := range names {
+			for _, n := range nodes {
+				func() {
+					defer func() {
+						if p := recover(); p != nil {
+							out[name+" @ "+n.ID] = fmt.Sprint("panic: ", p)
+						}
+					}()
+					resetProjectTestsCache()
+					resetDocsCache()
+					v, d := runInternal(name, n, root, g, cfg)
+					out[name+" @ "+n.ID] = string(v) + " " + d
+				}()
+			}
+		}
+		return out
+	}
+	write(func(rel, _ string) string { return "something else entirely, on disk only\n" })
+	onGarbage := run()
+	write(func(_, c string) string { return c })
+	onIndex := run()
+	var readers []string
+	for k, v := range onIndex {
+		if onGarbage[k] != v {
+			readers = append(readers, k+"\n    tree≠index: "+onGarbage[k]+"\n    tree=index: "+v)
+		}
+	}
+	sort.Strings(readers)
+	for _, r := range readers {
+		t.Errorf("reads the tree under an index source: %s", r)
+	}
+	if len(onIndex) < 50 {
+		t.Fatalf("only %d confrontations ran — the walk over the checkers broke", len(onIndex))
 	}
 }

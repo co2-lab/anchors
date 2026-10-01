@@ -1757,3 +1757,18 @@ func TestLineCoverage_nothingToCover(t *testing.T) {
 		}
 	}
 }
+
+func TestMutationScore_nothingToMutate(t *testing.T) {
+	t.Run("INCHN-B37: A file the mutation tool measured with no mutant has nothing to mutate", func(t *testing.T) {})
+	listed := mapx.Node{Kind: mapx.KindCode, Rev: "r1", Signal: &mapx.TestSignal{MutationAtRev: "r1", MutationScore: 100}}
+	if v, msg := checkMutationScore("", listed); v != Skip || !strings.Contains(msg, "nothing to mutate") {
+		t.Errorf("listed with no mutant at its revision is skipped, got %v: %s", v, msg)
+	}
+	old := mapx.Node{Kind: mapx.KindCode, Rev: "r2", Signal: &mapx.TestSignal{MutationAtRev: "r1", MutationScore: 100}}
+	if v, _ := checkMutationScore("", old); v != Pending {
+		t.Errorf("listed at an older revision is not known now, got %v", v)
+	}
+	if v, _ := checkMutationScore("", mapx.Node{Kind: mapx.KindCode, Rev: "r1"}); v != Pending {
+		t.Errorf("never listed is pending, got %v", v)
+	}
+}

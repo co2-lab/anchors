@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e002166a82d82689 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:efbde911f0f9372c — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1646,6 +1646,8 @@ teste prova.
 
 - [The length check points each divergence to anchors recode, and there is no --fix](camadas/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B14`
 
+- [A name shaped like a code also gets that code's status](camadas/comando.md#cdcmc--codecommand--a-new-unit-gets-an-identity-code-that-no-other-unit-in-the-map-already-owns-and-the-codes-in-use-are-listed-from-the-map) `CDCMC-B15`
+
 - [The subject is the first line that is neither blank nor a comment](camadas/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-B01`
 
 - [Messages git generates pass](camadas/comando.md#cmmsc--commitmsg--the-commit-subject-is-confronted-with-the-format-the-changelog-will-read-before-the-commit-exists) `CMMSC-B02`
@@ -2369,6 +2371,8 @@ teste prova.
 - [A file the commit does not change keeps the proofs HEAD had](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B05`
 
 - [With the tree ahead of the commit, the map on disk stays the tree's](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B06`
+
+- [What was measured after the last commit survives the next one](camadas/comando.md#mpsyn--mapsyncforcommit--the-commit-carries-the-map-a-build-of-the-commit-makes) `MPSYN-B07`
 
 - [The quality domain registers exactly its twelve commands](camadas/comando.md#qlcmq--qualitycommands--the-quality-domain-puts-its-twelve-commands-under-the-root-command) `QLCMQ-B01`
 
@@ -3710,6 +3714,8 @@ teste prova.
 
 - [A gate that breaks fails its target and the check goes on](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B28`
 
+- [Under an index source no gate reads the tree](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-I05`
+
 - [A layer the Estrutura does not have fails](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B01`
 
 - [A layer that differs only in case fails naming both](camadas/gate.md#hdlyd--headerlayerdeclared--the-layer-a-header-declares-is-one-the-estrutura-has) `HDLYD-B02`
@@ -3841,6 +3847,8 @@ teste prova.
 - [The header's layer is read as the project declares it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B35`
 
 - [A file with nothing to cover is not pending](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B36`
+
+- [A file the mutation tool measured with no mutant has nothing to mutate](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B37`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -6675,6 +6683,8 @@ teste prova.
 - [A proven variant is kept on the node that declares its rule](camadas/mapa.md#sgina-b28--a-proven-variant-is-kept-on-the-node-that-declares-its-rule) `SGINA-B28`
 
 - [A file the coverage report lists, or leaves out, says so](camadas/mapa.md#sgina-b29--a-file-the-coverage-report-lists-or-leaves-out-says-so) `SGINA-B29`
+
+- [A suite that ran none of a file's lines leaves its coverage](camadas/mapa.md#sgina-b30--a-suite-that-ran-none-of-a-files-lines-leaves-its-coverage) `SGINA-B30`
 
 - [The lock is a file beside the map with its owner](camadas/mapa.md#mplck-b01--the-lock-is-a-file-beside-the-map-with-its-owner) `MPLCK-B01`
 

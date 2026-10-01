@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CDCMC
-  updated_at: 2026-09-26
+  updated_at: 2026-10-01
   layer: comando
 -->
 # CodeCommand — a new unit gets an identity code that no other unit in the map already owns, and the codes in use are listed from the map
@@ -59,6 +59,7 @@ rename rewrites the whole project and deserves its own dry-run.
 | `CDCMC-B12` | A map with no identity node makes `list` say so and point at `anchors map build`. |
 | `CDCMC-B13` | Every run reads its codes, owning files and declared identities from its own map: a second run in the same process never inherits what a previous map declared. |
 | `CDCMC-B14` | When the length check accuses codes, it ends with the exact `anchors recode <old> <new>` command for each one, to be reviewed in its dry-run and applied with `--apply`; the check itself changes nothing and has no `--fix`. |
+| `CDCMC-B15` | A name shaped like an identity code — capitals and digits at a length `code_lengths` allows — still gets its suggestion, and the command also says whether that code is free or who uses it, pointing at `--check`; a name with lower case gets no such note. (`codeShapeRE`) |
 
 ## Invariants
 

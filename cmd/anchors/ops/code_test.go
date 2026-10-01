@@ -438,3 +438,20 @@ func TestCodeListCheckPointsToRecodeNotToAMissingFix(t *testing.T) {
 		t.Errorf("want the exact recode command %q in:\n%s", want, out)
 	}
 }
+
+func TestCode_aCodeShapedNameGetsItsStatus(t *testing.T) {
+	t.Run("CDCMC-B15: A name shaped like a code also gets that code's status", func(t *testing.T) {})
+	root := codeProject(t, "version: 1\n", `    - id: src/auth/Login.spec.md
+      kind: spec
+      code: LOGNS
+`)
+	if _, out := runCode(t, "--root", root, "LOGNS"); !strings.Contains(out, "LOGNS is already used by src/auth") || !strings.Contains(out, "--check LOGNS") {
+		t.Errorf("a taken code-shaped name says who uses it:\n%s", out)
+	}
+	if _, out := runCode(t, "--root", root, "FREEX"); !strings.Contains(out, "FREEX is free") {
+		t.Errorf("a free code-shaped name says it is free:\n%s", out)
+	}
+	if _, out := runCode(t, "--root", root, "Spacer"); strings.Contains(out, "looks like a code") {
+		t.Errorf("a unit name gets no note:\n%s", out)
+	}
+}
