@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: MCTYM
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @MCTYM
@@ -156,3 +156,9 @@ Feature: MockTyped — every test double must derive from the module it replaces
     Given a test that mocks a module and no map built
     When the gate confronts the test
     Then it returns Pending with the no-map message
+
+  @MCTYM-B13 @unit-level
+  Scenario: A factory on the next line is still read, tie and all
+    Given a double whose module and factory sit on the lines after the call opens, once annotated and once not
+    When the gate confronts each
+    Then the annotated one passes and the one with no annotation is charged

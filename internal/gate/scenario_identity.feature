@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SCIDS
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @SCIDS
@@ -48,10 +48,10 @@ Feature: ScenarioIdentity — two scenarios of the same feature cannot share one
     Then it returns Pass, because a rule with several scenarios is the common case
 
   @SCIDS-B07 @unit-level
-  Scenario: The verdict is Pending and never a failure
+  Scenario: The verdict is a divergence and never a failure
     Given a feature carrying repeated scenario codes
     When the gate confronts it
-    Then the verdict is Pending, because numbering is a migration and the gate is born over
+    Then the verdict is a divergence, because numbering is a migration and the gate is born over
       a base that did not know the notation
 
   @SCIDS-B08 @unit-level

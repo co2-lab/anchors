@@ -223,7 +223,7 @@ func TestTriggerDeclared_reportDetails(t *testing.T) {
 		}
 	})
 
-	t.Run("TRDCT-B12: Every error is aggregated in the verdict", func(t *testing.T) {
+	t.Run("TRDCT-B12: Multiple vocabulary errors are sorted deterministically and all aggregated in the verdict", func(t *testing.T) {
 		content := "declare `carries: pii` and `renders: face`\n" +
 			"a obrigação `lgpd-inexistente` e a obrigação `lgpd-outra`\n"
 		v, msg := checkTriggerDeclared(content, spec, t.TempDir(), nil, cfg)

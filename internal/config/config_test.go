@@ -1532,3 +1532,30 @@ func TestFileFormat_crlf(t *testing.T) {
 		}
 	}
 }
+
+func TestGate_severity(t *testing.T) {
+	t.Run("CNFGO-B55: Each verdict level of a gate takes a state, in order", func(t *testing.T) {})
+	on, off := true, false
+	blocking, informative := Gate{Blocking: &on}, Gate{Blocking: &off}
+	for _, l := range []string{LevelFail, LevelDivergence, LevelPending} {
+		if blocking.ActionFor(l) != ActionBlock || informative.ActionFor(l) != ActionInform {
+			t.Errorf("%s: unset, a level follows blocking", l)
+		}
+	}
+	g := Gate{Blocking: &on, Severity: &Severity{Divergence: ActionInform, Pending: ActionIgnore}}
+	if g.ActionFor(LevelFail) != ActionBlock || g.ActionFor(LevelDivergence) != ActionInform || g.ActionFor(LevelPending) != ActionIgnore {
+		t.Errorf("a declared level takes its state, got %s %s %s", g.ActionFor(LevelFail), g.ActionFor(LevelDivergence), g.ActionFor(LevelPending))
+	}
+	gate := func(sev string) string {
+		return "version: 1\ngates:\n  - name: tests\n    check: tests-pass\n    on: [test]\n    blocking: true\n    severity:\n" + sev
+	}
+	if _, err := load(t, gate("      divergence: inform\n      pending: ignore\n")); err != nil {
+		t.Errorf("an ordered severity loads: %v", err)
+	}
+	if _, err := load(t, gate("      divergence: inform\n      pending: block\n")); err == nil || !strings.Contains(err.Error(), `"tests"`) {
+		t.Errorf("a pending stronger than the divergence is refused naming the gate, got %v", err)
+	}
+	if _, err := load(t, gate("      fail: warn\n")); err == nil || !strings.Contains(err.Error(), `"warn"`) {
+		t.Errorf("an unknown state is refused naming it, got %v", err)
+	}
+}

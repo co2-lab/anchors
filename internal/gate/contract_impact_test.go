@@ -84,14 +84,14 @@ func TestContractImpact_rulesAndTests(t *testing.T) {
 }
 
 func TestContractImpact_gate(t *testing.T) {
-	t.Run("CTRIM-B03: The gate is pending with the impact, and passes without", func(t *testing.T) {})
+	t.Run("CTRIM-B03: The gate is divergence with the impact, and passes without", func(t *testing.T) {})
 	root, g, cfg := impactRepo(t)
 	n := mapx.Node{ID: "src/pay.spec.md", Kind: mapx.KindSpec}
 	if v, msg := checkContractImpact(paySpec, n, root, g, cfg); v != Pass {
 		t.Errorf("unchanged passes, got %v: %s", v, msg)
 	}
 	v, msg := checkContractImpact(edited(root, t), n, root, g, cfg)
-	if v != Pending || !strings.Contains(msg, "`amount`") || !strings.Contains(msg, "CHKOT-B01") || !strings.Contains(msg, "src/pay_test.go") {
+	if v != Diverge || !strings.Contains(msg, "`amount`") || !strings.Contains(msg, "CHKOT-B01") || !strings.Contains(msg, "src/pay_test.go") {
 		t.Fatalf("pending naming the field, its rules and tests; got %v: %s", v, msg)
 	}
 	if v, _ := checkContractImpact(paySpec, mapx.Node{Kind: mapx.KindFeature}, root, g, cfg); v != Skip {

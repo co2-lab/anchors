@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: PHORP
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @PHORP
@@ -26,10 +26,10 @@ Feature: PhaseOrdered — plan phases and phase dependencies must be ordered and
     Then it returns Skip, treating phase structuring as optional for simple plans
 
   @PHORP-B04 @unit-level
-  Scenario: Plans with phase-like sections lacking codes return Pending
+  Scenario: Plans with phase-like sections lacking codes return Diverge
     Given a plan dividing work into level-three sections without catalogued codes
     When phase ordering confronts it
-    Then it returns Pending, reminding the author to give identity codes to phases
+    Then it returns a divergence, reminding the author to give identity codes to phases
 
   @PHORP-B05 @unit-level
   Scenario: Plans declaring valid backward phase dependencies pass

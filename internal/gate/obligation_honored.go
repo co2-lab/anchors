@@ -120,7 +120,7 @@ func checkObligationHonored(content string, n mapx.Node, root string, g *mapx.Gr
 	}
 	if len(violated) == 0 {
 		sort.Strings(pending)
-		return Pending, i18n.T("gate.obligation_honored.pending_only", strings.Join(pending, "; "))
+		return Diverge, i18n.T("gate.obligation_honored.pending_only", strings.Join(pending, "; ")) + " " + DeclaredMarker
 	}
 	sort.Strings(violated)
 	msg := i18n.T("gate.obligation_honored.fail_unfulfilled", strings.Join(violated, "; "))

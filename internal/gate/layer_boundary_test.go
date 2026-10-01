@@ -80,7 +80,7 @@ func TestLayerBoundarySeveridade(t *testing.T) {
 	código := "import { x } from '@/legacy/thing'\n"
 
 	warn := cfgComFronteiras(config.Boundary{Layer: "screens", Forbid: `@/legacy`, Severity: "warn"})
-	if v, d := rodaFronteira(t, "src/screens/Home.ts", código, warn); v != Pending {
+	if v, d := rodaFronteira(t, "src/screens/Home.ts", código, warn); v != Diverge {
 		t.Fatalf("regra em migração registra sem reprovar, foi %s (%s)", v, d)
 	}
 

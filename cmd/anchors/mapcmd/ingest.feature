@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: NGSTI
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @NGSTI
@@ -151,3 +151,9 @@ Feature: Ingest — binds the test and log signals the project produced to the n
     Given a report inside the repository and one outside it
     When the key of each is read
     Then the first is its path from the root and the second is external/ and its file name
+
+  @NGSTI-B18 @unit-level
+  Scenario: A suite's whole coverage run marks the files it left out
+    Given a suite declaring its lcov report over the source files, and a file of types the report does not list
+    When the report is ingested as a whole run, and again as a partial one in another project
+    Then the whole run marks the file of types as omitted and says so, and the partial run marks nothing

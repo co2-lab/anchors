@@ -145,7 +145,7 @@ func TestSpecRealizesDoctrine_declaredPassesAndTbdDefers(t *testing.T) {
 	if v, msg := checkSpecRealizesDoctrine("### CREDT-V01 — a rule    @realizes LIMIT-R03\n", n, "", nil, cfg); v != Pass {
 		t.Errorf("a declared rule must pass: %v (%s)", v, msg)
 	}
-	if v, msg := checkSpecRealizesDoctrine("### CREDT-V01 — a rule    @TBD: doctrine being written\n", n, "", nil, cfg); v != Pending {
+	if v, msg := checkSpecRealizesDoctrine("### CREDT-V01 — a rule    @TBD: doctrine being written\n", n, "", nil, cfg); v != Diverge {
 		t.Errorf("`@TBD` must be debt, not failure: %v (%s)", v, msg)
 	}
 }
@@ -159,7 +159,7 @@ func TestSpecRealizesDoctrine_declaredPassesAndTbdDefers(t *testing.T) {
 // answered. `open-questions-resolved` is the gate that charges a `-Q`, and it charges the
 // right thing: that someone DECIDES.
 func TestDoctrineRealized_openQuestionIsNotARule(t *testing.T) {
-	t.Run("DCTRN-B12: Unrealized rules that are all deferred with TBD are Pending", func(t *testing.T) {})
+	t.Run("DCTRN-B12: Unrealized rules that are all deferred with TBD are Diverge", func(t *testing.T) {})
 	t.Run("DCTRN-B13: An open question is not a rule to realize", func(t *testing.T) {})
 	doctrine := "### LIMIT-R03 — a rule    @TBD: not realized yet\n\n" +
 		"| `LIMIT-Q01` | what should happen when the limit changes mid-flow? | product | a rule |\n"
@@ -171,7 +171,7 @@ func TestDoctrineRealized_openQuestionIsNotARule(t *testing.T) {
 	if strings.Contains(msg, "LIMIT-Q01") {
 		t.Errorf("an open question must not be charged for a realizer: %s", msg)
 	}
-	if v != Pending || !strings.Contains(msg, "LIMIT-R03") {
+	if v != Diverge || !strings.Contains(msg, "LIMIT-R03") {
 		t.Errorf("only the deferred rule remains, so this is debt and not failure: %v (%s)", v, msg)
 	}
 }
@@ -229,10 +229,10 @@ func TestPlanDoctrineExists(t *testing.T) {
 	})
 
 	t.Run("a missing doctrine on a @TBD line is debt", func(t *testing.T) {
-		t.Run("DCTRN-B06: A missing doctrine cited on a TBD line is Pending, naming it", func(t *testing.T) {})
+		t.Run("DCTRN-B06: A missing doctrine cited on a TBD line is a divergence, naming it", func(t *testing.T) {})
 		root := planWithDoctrines(t)
 		v, msg := checkPlanDoctrineExists("seeds `product/a.doctrine.md` @TBD: written next cycle\n", plan, root, nil, nil)
-		if v != Pending || !strings.Contains(msg, "product/a.doctrine.md") {
+		if v != Diverge || !strings.Contains(msg, "product/a.doctrine.md") {
 			t.Errorf("got %v (%s)", v, msg)
 		}
 	})
@@ -421,7 +421,7 @@ func TestDoctrineTBD_needsAReasonOutsideBackticks(t *testing.T) {
 	plan := mapx.Node{ID: "plans/p.plan.md", Kind: mapx.KindPlan}
 	root := planWithDoctrines(t)
 	for content, want := range map[string]Verdict{
-		"seeds `product/a.doctrine.md` @TBD: written next cycle\n":          Pending,
+		"seeds `product/a.doctrine.md` @TBD: written next cycle\n":          Diverge,
 		"seeds `product/a.doctrine.md` @TBD\n":                              Fail,
 		"seeds `product/a.doctrine.md`, the `@TBD: later` waiver is gone\n": Fail,
 	} {

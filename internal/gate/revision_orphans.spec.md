@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RVORP
-  updated_at: 2026-09-26
+  updated_at: 2026-09-30
   layer: gate
 -->
 # RevisionOrphans — the rules a revision changed the meaning of, without saying so
@@ -51,6 +51,8 @@ This gate operates in distinct territory from neighbouring gates:
 | `RVORP-B05` | When a sibling rule shares significant vocabulary with a revised rule and appears in neither `Revises:` nor `Checked:`, the gate reports it as an orphan, naming the shared terms. |
 | `RVORP-B06` | When every vocabulary-sharing sibling appears in `Revises:` or `Checked:`, the gate passes. |
 | `RVORP-B07` | When a rule appears in `Checked:`, it leaves the accusation without asserting that it is correct — only that somebody read it. |
+| `RVORP-B08` | A rule's title is its heading — or, with none, its first definition —, never a later line that names it: a row of a usage table lists what the rule reads, and taken as the title it made every rule reading the same field a sibling. (`ruleTitles`) |
+| `RVORP-B09` | A revision whose `Revises:` declares, with its reason, that it revised no rule (`none — <why>`, in any supported language) is an answer: with no code revised and such a declaration, the spec passes; a declaration with no reason declares nothing, and its reason is not read for codes. (`revisedCodes`) |
 | `RVORP-I01` | A rule never accuses itself: the revised rule is excluded from its own orphan candidates. |
 | `RVORP-X01` | Negations and waiver comments are stripped from a rule title before comparison: they are not what the rule asserts. |
 

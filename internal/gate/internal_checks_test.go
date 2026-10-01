@@ -19,11 +19,11 @@ func TestHeaderConforme_binarioNaoCarregaCabecalho(t *testing.T) {
 	// commit de baseline visual. A identidade dele está no NOME do arquivo, que é o
 	// que o `identity-consistent` confronta.
 	png := "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00"
-	if v, msg := checkHeaderConforms(png, mapx.Node{ID: "X.ABCDX-VR-loaded.png", Kind: mapx.KindTest}); v != Skip {
+	if v, msg := checkHeaderConforms(png, mapx.Node{ID: "X.ABCDX-VR-loaded.png", Kind: mapx.KindTest}, nil); v != Skip {
 		t.Errorf("binário não carrega cabeçalho: %v (%s)", v, msg)
 	}
 	// Texto sem header continua reprovando — a dispensa é só para binário.
-	if v, _ := checkHeaderConforms("const x = 1\n", mapx.Node{ID: "x.ts", Kind: mapx.KindCode}); v != Fail {
+	if v, _ := checkHeaderConforms("const x = 1\n", mapx.Node{ID: "x.ts", Kind: mapx.KindCode}, nil); v != Fail {
 		t.Errorf("arquivo de texto sem header deve reprovar: %v", v)
 	}
 }
@@ -531,7 +531,7 @@ func TestHeaderSemBlocoReprova(t *testing.T) {
 	t.Run("INCHN-B11: A governed file with no identity block fails the header ruler", func(t *testing.T) {})
 
 	if v, _ := checkHeaderConforms("const x = 1 // nada aqui\n",
-		mapx.Node{ID: "x.ts", Kind: mapx.KindCode, Tags: []string{"business-logic"}}); v != Fail {
+		mapx.Node{ID: "x.ts", Kind: mapx.KindCode, Tags: []string{"business-logic"}}, nil); v != Fail {
 		t.Error("sem bloco de cabeçalho, a camada regida reprova")
 	}
 }
@@ -542,13 +542,13 @@ func TestHeaderRegidoExigePosseOuReferencia(t *testing.T) {
 	t.Run("INCHN-B12: A governed file passes with ownership or with reference, never with layer alone", func(t *testing.T) {})
 
 	regida := mapx.Node{ID: "x.ts", Kind: mapx.KindCode, Tags: []string{"business-logic"}}
-	if v, _ := checkHeaderConforms("// @anchors\n//   code: LGNNX\nconst x = 1\n", regida); v != Pass {
+	if v, _ := checkHeaderConforms("// @anchors\n//   code: LGNNX\nconst x = 1\n", regida, nil); v != Pass {
 		t.Error("posse (code) tem de passar")
 	}
-	if v, _ := checkHeaderConforms("// @anchors\n//   ref: LGNNX\nconst x = 1\n", regida); v != Pass {
+	if v, _ := checkHeaderConforms("// @anchors\n//   ref: LGNNX\nconst x = 1\n", regida, nil); v != Pass {
 		t.Error("referência (ref) tem de passar")
 	}
-	if v, _ := checkHeaderConforms("// @anchors\n//   layer: business-logic\nconst x = 1\n", regida); v != Fail {
+	if v, _ := checkHeaderConforms("// @anchors\n//   layer: business-logic\nconst x = 1\n", regida, nil); v != Fail {
 		t.Error("só layer NÃO basta numa camada regida")
 	}
 }
@@ -559,11 +559,11 @@ func TestHeaderReconhecidoPassaComLayer(t *testing.T) {
 	t.Run("INCHN-B13: A file of a recognised layer passes with the layer alone", func(t *testing.T) {})
 
 	reconhecida := mapx.Node{ID: "dao.ts", Kind: mapx.KindCode, Tags: []string{"frontend", "presentation"}}
-	if v, _ := checkHeaderConforms("// @anchors\n//   layer: presentation\n", reconhecida); v != Pass {
+	if v, _ := checkHeaderConforms("// @anchors\n//   layer: presentation\n", reconhecida, nil); v != Pass {
 		t.Error("camada reconhecida passa com a layer sozinha")
 	}
 	// Mas SEM identidade nenhuma ela também reprova — a dispensa é da forma, não do dever.
-	if v, _ := checkHeaderConforms("// @anchors\n//   updated_at: x\n", reconhecida); v != Fail {
+	if v, _ := checkHeaderConforms("// @anchors\n//   updated_at: x\n", reconhecida, nil); v != Fail {
 		t.Error("reconhecida sem layer/code/ref ainda reprova")
 	}
 }
@@ -574,7 +574,7 @@ func TestHeaderDispensaBinario(t *testing.T) {
 	t.Run("INCHN-B14: A binary file steps aside from the header ruler", func(t *testing.T) {})
 
 	png := "\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00"
-	if v, _ := checkHeaderConforms(png, mapx.Node{ID: "X.ABCDX-VR-loaded.png", Kind: mapx.KindTest}); v != Skip {
+	if v, _ := checkHeaderConforms(png, mapx.Node{ID: "X.ABCDX-VR-loaded.png", Kind: mapx.KindTest}, nil); v != Skip {
 		t.Error("binário não carrega cabeçalho")
 	}
 }
@@ -585,12 +585,12 @@ func TestHeaderDispensaRoteiroExecutavel(t *testing.T) {
 	t.Run("INCHN-B15: An executable test script steps aside by a different path", func(t *testing.T) {})
 
 	roteiro := mapx.Node{ID: "flows/ABCDX-A01.yaml", Kind: mapx.KindTest}
-	if v, _ := checkHeaderConforms("steps:\n  - open: /login\n", roteiro); v != Skip {
+	if v, _ := checkHeaderConforms("steps:\n  - open: /login\n", roteiro, nil); v != Skip {
 		t.Error("o roteiro do runner tem a identidade no NOME, e não carrega cabeçalho nosso")
 	}
 	// Mas um teste em linguagem de programação continua cobrado.
 	emGo := mapx.Node{ID: "x_test.go", Kind: mapx.KindTest}
-	if v, _ := checkHeaderConforms("package x\n", emGo); v != Fail {
+	if v, _ := checkHeaderConforms("package x\n", emGo, nil); v != Fail {
 		t.Error("teste em código nosso continua cobrado")
 	}
 }
@@ -717,7 +717,7 @@ func TestCheckerInternoNaoDependeDeFerramentaInstalada(t *testing.T) {
 		t.Error("o checker de texto tem de responder sem PATH algum")
 	}
 	if v, _ := checkHeaderConforms("// @anchors\n//   code: LGNNX\n",
-		mapx.Node{ID: "x.ts", Kind: mapx.KindCode}); v != Pass {
+		mapx.Node{ID: "x.ts", Kind: mapx.KindCode}, nil); v != Pass {
 		t.Error("a régua de cabeçalho é textual e não pode depender do que está instalado")
 	}
 }
@@ -729,7 +729,7 @@ func TestRegistroNaoJulgaSeOTextoEstaCerto(t *testing.T) {
 
 	// Cabeçalho presente e conforme; o conteúdo, absurdo para qualquer revisor.
 	absurdo := "// @anchors\n//   code: LGNNX\n// esta unidade faz exatamente o oposto do que diz\n"
-	if v, msg := checkHeaderConforms(absurdo, mapx.Node{ID: "x.ts", Kind: mapx.KindCode}); v != Pass {
+	if v, msg := checkHeaderConforms(absurdo, mapx.Node{ID: "x.ts", Kind: mapx.KindCode}, nil); v != Pass {
 		t.Errorf("a régua é presença e forma, não qualidade: %v — %s", v, msg)
 	}
 }
@@ -1129,7 +1129,7 @@ func TestScenarioCoverage_honoursTheLayersTestedByOptOut(t *testing.T) {
 // that always passes (or always fails) says nothing. Each case below pins one of them.
 func TestMutationScore(t *testing.T) {
 	t.Run("INCHN-B23: Mutation score passes at the threshold and fails below it naming the survivors", func(t *testing.T) {})
-	t.Run("INCHN-B24: A missing or stale mutation signal is pending", func(t *testing.T) {})
+	t.Run("INCHN-B24: A missing or stale mutation signal is pending, unless it met the floor", func(t *testing.T) {})
 	i18n.Set("pt-BR")
 	t.Cleanup(func() { i18n.Set(i18n.Default) })
 	cases := []struct {
@@ -1174,20 +1174,25 @@ func TestMutationScore(t *testing.T) {
 // current one — the same rule as the other ingested signals, and the most misleading: the
 // number looks good.
 func TestMutationScoreStale(t *testing.T) {
-	t.Run("INCHN-B24: A missing or stale mutation signal is pending", func(t *testing.T) {})
+	t.Run("INCHN-B24: A missing or stale mutation signal is pending, unless it met the floor", func(t *testing.T) {})
 	n := mapx.Node{Kind: mapx.KindCode, Rev: "r2",
 		Signal: &mapx.TestSignal{MutantsKilled: 100, MutationScore: 100, AtRev: "r1"}}
 	v, d := checkMutationScore("", n)
-	if v != Pending {
-		t.Fatalf("a perfect score from an old revision should be Pending, was %s", v)
+	if v != Skip || !strings.Contains(d, "stale") || !strings.Contains(d, "--include-passing") {
+		t.Fatalf("a score of an old revision that met the floor does not block, and says how to remeasure; got %s: %q", v, d)
 	}
-	if !strings.Contains(d, "stale") {
-		t.Fatalf("the detail does not explain the staleness: %q", d)
+	low := mapx.Node{Kind: mapx.KindCode, Rev: "r2",
+		Signal: &mapx.TestSignal{MutantsKilled: 40, MutantsSurvived: 60, MutationScore: 40, AtRev: "r1"}}
+	if v, d := checkMutationScore("", low); v != Pending || !strings.Contains(d, "stale") {
+		t.Errorf("a stale score below the floor stays pending, got %s: %q", v, d)
 	}
-	covered := mapx.Node{Kind: mapx.KindCode, Rev: "r2",
-		Signal: &mapx.TestSignal{MutantsKilled: 100, MutationScore: 100, AtRev: "r2", MutationAtRev: "r1"}}
-	if v, _ := checkMutationScore("", covered); v != Pending {
-		t.Errorf("a coverage ingestion at the new rev does not make an old mutation current, got %s", v)
+	loaded := mapx.Node{Kind: mapx.KindCode, Rev: "r2",
+		Signal: &mapx.TestSignal{MutantsKilled: 50, MutantsTimedOut: 40, MutationScore: 100, AtRev: "r1"}}
+	if v, _ := checkMutationScore("", loaded); v != Pending {
+		t.Errorf("a stale score measured under load was never trusted and stays pending, got %s", v)
+	}
+	if v, _ := checkMutationScore("", mapx.Node{Kind: mapx.KindCode}); v != Pending {
+		t.Errorf("no signal is pending, got %s", v)
 	}
 }
 
@@ -1208,7 +1213,7 @@ func nodeWithScore(score, low, high float64, survived int) mapx.Node {
 // TestMutationRange_belowAcceptableFails — the bottom range is the only one that bars.
 func TestMutationRange_belowAcceptableFails(t *testing.T) {
 	t.Run("INCHN-B23: Mutation score passes at the threshold and fails below it naming the survivors", func(t *testing.T) {})
-	t.Run("INCHN-B25: A score between acceptable and desirable is pending, not failed", func(t *testing.T) {})
+	t.Run("INCHN-B25: A score between acceptable and desirable is divergence, not failed", func(t *testing.T) {})
 	v, detail := checkMutationScore("", nodeWithScore(56, 70, 90, 142))
 	if v != Fail {
 		t.Fatalf("56%% with a minimum of 70%% must fail; got %v", v)
@@ -1222,14 +1227,14 @@ func TestMutationRange_belowAcceptableFails(t *testing.T) {
 // and it still shows. If this became Fail it would be a threshold of 90 in disguise — and
 // the distinction between "must not" and "could be better" would be lost.
 func TestMutationRange_betweenAcceptableAndDesirableDoesNotBar(t *testing.T) {
-	t.Run("INCHN-B25: A score between acceptable and desirable is pending, not failed", func(t *testing.T) {})
+	t.Run("INCHN-B25: A score between acceptable and desirable is divergence, not failed", func(t *testing.T) {})
 	i18n.Set("pt-BR")
 	t.Cleanup(func() { i18n.Set(i18n.Default) })
 	v, detail := checkMutationScore("", nodeWithScore(75, 70, 90, 30))
 	if v == Fail {
 		t.Fatalf("75%% is above the acceptable (70%%) — it must not fail")
 	}
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("the middle range has to SHOW (Pending), not vanish; got %v", v)
 	}
 	if !strings.Contains(detail, "aceitável") || !strings.Contains(detail, "desejável") {
@@ -1238,11 +1243,18 @@ func TestMutationRange_betweenAcceptableAndDesirableDoesNotBar(t *testing.T) {
 	if !strings.Contains(detail, "15") {
 		t.Errorf("saying HOW MUCH is left is what makes the warning actionable: %q", detail)
 	}
+	// On a blocking gate it informs: the project's own floor accepts the score.
+	on := true
+	r := Result{Verdict: v, Detail: detail}
+	markSeverity(config.Gate{Blocking: &on}, &r)
+	if r.Blocks() || r.Action != config.ActionInform {
+		t.Errorf("an accepted score informs and never bars, got %+v", r)
+	}
 }
 
 // TestMutationRange_aboveDesirablePassesClean — no noise for whoever already got there.
 func TestMutationRange_aboveDesirablePassesClean(t *testing.T) {
-	t.Run("INCHN-B25: A score between acceptable and desirable is pending, not failed", func(t *testing.T) {})
+	t.Run("INCHN-B25: A score between acceptable and desirable is divergence, not failed", func(t *testing.T) {})
 	v, detail := checkMutationScore("", nodeWithScore(92, 70, 90, 5))
 	if v != Pass || detail != "" {
 		t.Errorf("92%% with a desirable of 90%% passes clean; got %v %q", v, detail)
@@ -1252,7 +1264,7 @@ func TestMutationRange_aboveDesirablePassesClean(t *testing.T) {
 // TestMutationRange_withoutDesirableFallsBackToOneThreshold — no project is forced to
 // adopt the concept. With no `high` in the report, the gate behaves as before.
 func TestMutationRange_withoutDesirableFallsBackToOneThreshold(t *testing.T) {
-	t.Run("INCHN-B25: A score between acceptable and desirable is pending, not failed", func(t *testing.T) {})
+	t.Run("INCHN-B25: A score between acceptable and desirable is divergence, not failed", func(t *testing.T) {})
 	if v, _ := checkMutationScore("", nodeWithScore(75, 70, 0, 30)); v != Pass {
 		t.Errorf("with no desirable declared, 75%% above the minimum passes clean; got %v", v)
 	}
@@ -1274,7 +1286,7 @@ func TestMutationRange_rulerComesFromTheReportNotTheEngine(t *testing.T) {
 // TestMutationRange_invalidDesirableIsIgnored — `high` below `low` is a project
 // misconfiguration; the gate must not turn it into an impossible range that always fails.
 func TestMutationRange_invalidDesirableIsIgnored(t *testing.T) {
-	t.Run("INCHN-B25: A score between acceptable and desirable is pending, not failed", func(t *testing.T) {})
+	t.Run("INCHN-B25: A score between acceptable and desirable is divergence, not failed", func(t *testing.T) {})
 	if v, _ := checkMutationScore("", nodeWithScore(75, 70, 50, 30)); v != Pass {
 		t.Errorf("a desirable below the acceptable is incoherent and must be ignored; got %v", v)
 	}
@@ -1604,7 +1616,7 @@ func TestNewTemplate_specIsBornConforming(t *testing.T) {
 		"## Visão Geral\nTODO: o que a unidade faz e para quem.\n\n" +
 		"## Regras\n\n### LGNOX-B01 — TODO regra\nDescreva o comportamento (não a implementação).\n\n"
 
-	if v, msg := checkHeaderConforms(spec, mapx.Node{ID: "x/Login.spec.md", Kind: "spec"}); v != Pass {
+	if v, msg := checkHeaderConforms(spec, mapx.Node{ID: "x/Login.spec.md", Kind: "spec"}, nil); v != Pass {
 		t.Fatalf("the spec from `new` fails header-valid: %s", msg)
 	}
 	if v, msg := checkSpecSections(spec, mapx.Node{ID: "x/Login.spec.md"}, "", nil, nil); v != Pass {
@@ -1618,7 +1630,7 @@ func TestNewTemplate_featureIsBornConforming(t *testing.T) {
 		"\n@LGNOX\nFuncionalidade: Login\n\n" +
 		"  @LGNOX-B01 @nivel-unit @P2\n  Cenário: TODO\n    Dado TODO\n    Quando TODO\n    Então o efeito LGNOX-B01 se verifica\n\n"
 
-	if v, msg := checkHeaderConforms(feat, newTemplateHeaderNode(mapx.KindFeature)); v != Pass {
+	if v, msg := checkHeaderConforms(feat, newTemplateHeaderNode(mapx.KindFeature), nil); v != Pass {
 		t.Fatalf("the feature from `new` fails header-valid: %s", msg)
 	}
 	// non-empty: the feature has content beyond the header.
@@ -1632,7 +1644,7 @@ func TestNewTemplate_testIsBornConforming(t *testing.T) {
 	test := "// @anchors\n//   ref: LGNOX\n//   updated_at: TODO\n//   layer: test\n" +
 		"\ndescribe('Login', () => {\n  it('[LGNOX-B01] TODO', () => {\n    // TODO\n  })\n})\n"
 
-	if v, msg := checkHeaderConforms(test, newTemplateHeaderNode(mapx.KindTest)); v != Pass {
+	if v, msg := checkHeaderConforms(test, newTemplateHeaderNode(mapx.KindTest), nil); v != Pass {
 		t.Fatalf("the test from `new` fails header-valid: %s", msg)
 	}
 }
@@ -1646,7 +1658,7 @@ func TestMutationScore_UnderLoad(t *testing.T) {
 	}
 	// 74 of 78 killed, 65 of them by the time limit: the reference app's measurement.
 	v, msg := checkMutationScoreUnderLoad("", node(74, 4, 65), "", nil, nil)
-	if v != Pending || !strings.Contains(msg, "65") || !strings.Contains(msg, "no time limit") {
+	if v != Pending || !strings.Contains(msg, "65") || !strings.Contains(msg, "fewer workers") || !strings.Contains(msg, "no time limit") {
 		t.Fatalf("above the ceiling the score is pending, saying to measure with no time limit, got %v (%s)", v, msg)
 	}
 	// Exactly at the ceiling (20 of 100) the score still decides.
@@ -1672,11 +1684,11 @@ func TestHeaderConforms_offTheTop(t *testing.T) {
 	t.Run("INCHN-B33: A header below the top fails the header ruler", func(t *testing.T) {})
 	n := mapx.Node{ID: "page.tsx", Kind: mapx.KindCode}
 	low := "'use client'\n// @anchors\n//   ref: PAGEX\n"
-	if v, msg := checkHeaderConforms(low, n); v != Fail || !strings.Contains(msg, "@fixed-header") {
+	if v, msg := checkHeaderConforms(low, n, nil); v != Fail || !strings.Contains(msg, "@fixed-header") {
 		t.Errorf("a header below the top fails naming the way out, got %v: %s", v, msg)
 	}
 	fixed := "'use client'\n// @anchors\n//   ref: PAGEX\n//   @fixed-header: the directive must come first\n"
-	if v, msg := checkHeaderConforms(fixed, n); v != Pass {
+	if v, msg := checkHeaderConforms(fixed, n, nil); v != Pass {
 		t.Errorf("a declared header passes, got %v: %s", v, msg)
 	}
 }
@@ -1704,5 +1716,44 @@ func TestScenarioCoverage_eachVariantMustBeProven(t *testing.T) {
 	}
 	if v, _ := run("CREDX-B01", "CREDX-B02"); v != Fail {
 		t.Errorf("a proof of the rule alone does not prove its variants, got %v", v)
+	}
+}
+
+func TestHeaderValid_readsTheDeclaredLayer(t *testing.T) {
+	t.Run("INCHN-B35: The header's layer is read as the project declares it", func(t *testing.T) {})
+	cfg := &config.Config{Layers: map[string]config.Layer{
+		"shared-data": {Regime: "declarativo"},
+		"billing":     {Regime: "regra"},
+	}}
+	test := mapx.Node{ID: "src/legal/terms.test.ts", Kind: mapx.KindTest}
+	if v, msg := checkHeaderConforms("// @anchors\n//   layer: shared-data\n", test, cfg); v != Pass {
+		t.Errorf("a declarative layer the project named gives the identity, got %v: %s", v, msg)
+	}
+	if v, _ := checkHeaderConforms("// @anchors\n//   layer: billing\n", test, cfg); v != Fail {
+		t.Errorf("a layer with another regime still asks for code or ref, got %v", v)
+	}
+	if v, _ := checkHeaderConforms("// @anchors\n//   layer: shared-data\n", test, nil); v != Fail {
+		t.Errorf("control: without the Structure the name alone is not canonical, got %v", v)
+	}
+}
+
+func TestLineCoverage_nothingToCover(t *testing.T) {
+	t.Run("INCHN-B36: A file with nothing to cover is not pending", func(t *testing.T) {})
+	listed := mapx.Node{Kind: mapx.KindCode, Rev: "r1", Signal: &mapx.TestSignal{CoverageRev: "r1"}}
+	omitted := mapx.Node{Kind: mapx.KindCode, Rev: "r1", Signal: &mapx.TestSignal{CoverageOmitted: "r1"}}
+	oldOmission := mapx.Node{Kind: mapx.KindCode, Rev: "r2", Signal: &mapx.TestSignal{CoverageOmitted: "r1"}}
+	for _, check := range []func(string, mapx.Node) (Verdict, string){checkLineCoverage, checkCoverageDelta} {
+		if v, _ := check("", listed); v != Skip {
+			t.Errorf("listed with no line is skipped, got %v", v)
+		}
+		if v, msg := check("", omitted); v != Diverge || !strings.Contains(msg, "collect") {
+			t.Errorf("omitted by a whole run is a divergence naming both causes, got %v: %s", v, msg)
+		}
+		if v, _ := check("", oldOmission); v != Pending {
+			t.Errorf("an omission at another revision is not known now, got %v", v)
+		}
+		if v, _ := check("", mapx.Node{Kind: mapx.KindCode}); v != Pending {
+			t.Errorf("never measured is pending, got %v", v)
+		}
 	}
 }

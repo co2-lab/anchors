@@ -233,6 +233,16 @@ func IngestArtifacts(absRoot, mapPath, junit, lcov, mutation, layer, scope, suit
 				}
 				m := g.IngestCoverageSuite(byFile, key, now)
 				fmt.Printf("coverage: %d file(s) in the lcov, %d code node(s) matched\n", len(rep.Files), m)
+				// A whole run of the suite that declares this report: the files it covers and
+				// the report left out are recorded as omitted — the coverage gates tell that
+				// from "never measured". A partial run lists only what it ran.
+				if !partial {
+					if s, ok := suiteOfLcov(absRoot, lcov); ok {
+						if n := g.MarkCoverageOmitted(byFile, s.Covers); n > 0 {
+							fmt.Printf("coverage: %d file(s) the suite covers are not in its report (no instrumentable line, or outside what the tool collects)\n", n)
+						}
+					}
+				}
 				dropExternal(g, key, partial)
 			}
 
@@ -521,4 +531,29 @@ func markPredating(byFile map[string]mapx.FileCov, absRoot, report string) {
 			byFile[file] = cov
 		}
 	}
+}
+
+// suiteOfLcov is the declared test suite whose `lcov:` is this report.
+func suiteOfLcov(absRoot, lcov string) (config.Suite, bool) {
+	cfg, err := config.Load(filepath.Join(absRoot, config.DefaultFile))
+	if err != nil {
+		return config.Suite{}, false
+	}
+	want := filepath.Clean(lcov)
+	if !filepath.IsAbs(want) {
+		want = filepath.Join(absRoot, want)
+	}
+	for _, s := range cfg.Tests {
+		if s.Lcov == "" {
+			continue
+		}
+		p := s.Lcov
+		if !filepath.IsAbs(p) {
+			p = filepath.Join(absRoot, p)
+		}
+		if filepath.Clean(p) == filepath.Clean(want) {
+			return s, true
+		}
+	}
+	return config.Suite{}, false
 }

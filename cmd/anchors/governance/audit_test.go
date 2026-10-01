@@ -136,7 +136,7 @@ func TestPrintAuditCountsOnlyActionableItems(t *testing.T) {
 	results := []gate.Result{
 		{Gate: "ok", Target: "a.go", Verdict: gate.Pass},
 		{Gate: "skipped", Target: "a.go", Verdict: gate.Skip},
-		{Gate: "diverges", Target: "a.spec.md", Verdict: gate.Pending, Detail: "one\ntwo"},
+		{Gate: "diverges", Target: "a.spec.md", Verdict: gate.Diverge, Detail: "one\ntwo"},
 	}
 	rep := health.Report{Findings: []health.Finding{
 		{Check: "orphan", Subject: "a.go", Severity: health.Warn, Detail: "no edges"},
@@ -155,7 +155,7 @@ func TestPrintAuditCountsOnlyActionableItems(t *testing.T) {
 		"  ⚠ [doctor:orphan] no edges",
 		"  ℹ [doctor:hint] just a note",
 		"○ a.spec.md (impact)",
-		"  ~ [gate] diverges — one\n",
+		"  ⚠ [gate] diverges — one\n",
 		"1 actionable pending item(s)",
 	} {
 		if !strings.Contains(out, want) {

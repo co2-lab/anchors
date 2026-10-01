@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -100,7 +101,7 @@ func TestDuplication_ThresholdTolerates(t *testing.T) {
 	}
 	fakeJscpd(t, root, clonesReport("pkg/a.go", "3.5"), 0)
 	v, msg := checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, nil)
-	if v != Pending || !strings.Contains(msg, "pkg/b.go:5-34") {
+	if v != Diverge || !strings.Contains(msg, "pkg/b.go:5-34") {
 		t.Fatalf("at the threshold the clones are reported, not failed, got %v (%s)", v, msg)
 	}
 	fakeJscpd(t, root, clonesReport("pkg/a.go", "3.6"), 1)
@@ -167,5 +168,13 @@ func TestDuplication_NoReportIsPending(t *testing.T) {
 	v, msg = checkDuplication("", dupNode("pkg/a.go"), root, &mapx.Graph{}, nil)
 	if v != Pending || !strings.Contains(msg, "unreadable") {
 		t.Fatalf("an unreadable report must be Pending, got %v (%s)", v, msg)
+	}
+}
+
+func TestDuplication_pinnedRelease(t *testing.T) {
+	t.Run("DUPLC-B08: The gate runs a pinned jscpd release", func(t *testing.T) {})
+	cmd := duplicationCommand(t.TempDir(), t.TempDir())
+	if !regexp.MustCompile(`^jscpd@\d+\.\d+\.\d+$`).MatchString(cmd.Args[2]) {
+		t.Errorf("the package carries an exact version, got %v", cmd.Args)
 	}
 }

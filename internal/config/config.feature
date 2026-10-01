@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CNFGO
-#   updated_at: 2026-09-29
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @CNFGO
@@ -376,3 +376,9 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a configuration whose version line ends in CRLF, with and without a comment
     When its declared format is read
     Then it is the number on the line
+
+  @CNFGO-B55 @unit-level
+  Scenario: Each verdict level of a gate takes a state, in order
+    Given a blocking and an informative gate declaring no severity, one declaring divergence inform and pending ignore, one with pending stronger than divergence, and one with an unknown state
+    When each is loaded and asked what each level does
+    Then the first follow their blocking, the ordered one takes its states, and the other two fail the load naming the gate

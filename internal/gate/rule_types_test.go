@@ -211,7 +211,7 @@ func TestRuleTypesNaoCobraFormato(t *testing.T) {
 // A seção declarada `requires_code` com tabela preenchida e nenhum código é o furo
 // por onde o cenário fica sem âncora — e acaba emprestando o código de outra seção.
 func TestSecaoQueExigeCodigoSemCodigoEhAchado(t *testing.T) {
-	t.Run("RLTYR-B09: A section declared as rule-cataloguing and filled without a code is Pending", func(t *testing.T) {})
+	t.Run("RLTYR-B09: A section declared as rule-cataloguing and filled without a code is a divergence", func(t *testing.T) {})
 	v, msg := checkRuleTypes(`# Spec
 
 ## Eventos / Callbacks
@@ -221,7 +221,7 @@ func TestSecaoQueExigeCodigoSemCodigoEhAchado(t *testing.T) {
 | `+"`onPress`"+` | Tap na linha | —       |
 `, specNode(), "", nil, cfgComRequires())
 
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("veredito %v (%s), queria Pending", v, msg)
 	}
 	if !strings.Contains(msg, "Eventos / Callbacks") {
@@ -298,7 +298,7 @@ func TestSecaoSemCodigoEhOndeOCenarioPerdeAAncora(t *testing.T) {
 	semCodigo := "# Spec\n\n## Eventos / Callbacks\n\n| Evento | Quando |\n| --- | --- |\n" +
 		"| `onPress` | Tap na linha |\n"
 	v, msg := checkRuleTypes(semCodigo, specNode(), "", nil, cfgComRequires())
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("a seção preenchida sem código deveria ser reportada, veio %v (%s)", v, msg)
 	}
 	if !strings.Contains(msg, "Eventos / Callbacks") {

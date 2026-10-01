@@ -123,7 +123,7 @@ func checkPlanRevised(content string, n mapx.Node, root string, g *mapx.Graph, c
 			}
 		}
 		if len(semAviso) > 0 {
-			return Pending, i18n.T("gate.plan_revised.pending_target_not_notified",
+			return Diverge, i18n.T("gate.plan_revised.pending_target_not_notified",
 				strings.Join(semAviso, ", "), semAviso[0], n.ID)
 		}
 		return Skip, i18n.T("gate.plan_revised.skip_no_plans_revise_this")
@@ -139,7 +139,7 @@ func checkPlanRevised(content string, n mapx.Node, root string, g *mapx.Graph, c
 	// plano pode ser revisado por inteiro), e transformar isso em reprovação obrigaria a
 	// inventar marcação onde ela não cabe.
 	if topNoticeRE().MatchString(docTop(content)) && !changedByRE().MatchString(content) {
-		return Pending, i18n.T("gate.plan_revised.pending_parts_not_marked",
+		return Diverge, i18n.T("gate.plan_revised.pending_parts_not_marked",
 			strings.Join(revisores, ", "), revisores[0], revisores[0])
 	}
 

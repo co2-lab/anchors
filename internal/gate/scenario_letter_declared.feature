@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SCLTR
-#   updated_at: 2026-09-20
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @SCLTR
@@ -36,7 +36,7 @@ Feature: ScenarioLetterDeclared — the letter of a scenario code exists in the 
   Scenario: A letter outside the vocabulary is undetermined, not a failure
     Given a feature whose scenario code carries a letter the project never declared
     When the gate confronts it
-    Then it returns Pending, because the nature may deserve declaring and that decision
+    Then it returns a divergence, because the nature may deserve declaring and that decision
       is not the gate's
 
   @SCLTR-B06 @unit-level

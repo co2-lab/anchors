@@ -642,7 +642,7 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn, 
 		// cumprido. `future/` e não `todo/` porque quem lê `todo/` pergunta "o que faço
 		// AGORA" — afogar essa lista com o que só vence depois é o caminho mais curto
 		// para ninguém mais olhar nenhuma das duas.
-		if r.Verdict == gate.Pending {
+		if r.Verdict == gate.Diverge {
 			// DECISÃO EM ABERTO vira issue em `todo/`, e não em `future/`: ela só é
 			// resolvida se alguém a VIR e a levar a quem decide. `future/` é o que vence
 			// depois — a pergunta não vence, ela trava quem for implementar.
@@ -690,7 +690,7 @@ func recordCheck(root, mapPath string, g *mapx.Graph, p gate.Profile, issuesOn, 
 		}
 		switch r.Verdict {
 		case gate.Fail:
-			if r.Blocking { // só fail BLOQUEANTE vira issue (informativo não barra nem registra)
+			if r.Blocks() { // só fail BLOQUEANTE vira issue (informativo não barra nem registra)
 				vivas[iss.Key()] = true
 				created, at, err := issue.Open(root, iss)
 				if err != nil {
@@ -943,7 +943,7 @@ func nameWidth(nomes []string) int {
 // obrigaria a coluna dos fails a reservar três casas para nada. Cada coluna com
 // a sua mantém os números alinhados à direita — que é o que permite compará-los
 // a olho — sem esticar a tabela.
-type counterWidths struct{ pass, fail, drift, skip, judge int }
+type counterWidths struct{ pass, fail, drift, pend, skip, judge int }
 
 func places(n int) int { return len(fmt.Sprint(n)) }
 
@@ -960,6 +960,7 @@ func computeWidths(p gate.Profile) counterWidths {
 	}
 	for nome, s := range p.ByGate {
 		d := driftCount(p, nome)
+		pd := pendingCount(p, nome)
 		w.pass = max(w.pass, s.Pass)
 		w.fail = max(w.fail, s.Fail)
 		// `max` não serve para o drift: `casas(0)` é 1, e a coluna ganharia
@@ -968,7 +969,10 @@ func computeWidths(p gate.Profile) counterWidths {
 		if d > 0 {
 			w.drift = max(w.drift, d)
 		}
-		w.skip = max(w.skip, s.Skip+s.Pending-d)
+		if pd > 0 {
+			w.pend = max(w.pend, pd)
+		}
+		w.skip = max(w.skip, s.Skip+s.Pending-pd)
 		w.judge = max(w.judge, s.Judge)
 	}
 	return w
@@ -985,17 +989,21 @@ func computeWidths(p gate.Profile) counterWidths {
 //     inteira sem drift.
 //
 // `largura == 0` é o sinal de "a tabela não tem drift nenhum".
-func driftColumn(drift, largura int) string {
+func driftColumn(drift, largura int) string { return statColumn("⚠", drift, largura) }
+
+// statColumn is a counter cell of the table for a symbol that exists only when some gate
+// has it (the ⚠ of divergences, the ? of pending items); see driftColumn.
+func statColumn(symbol string, n, largura int) string {
 	if largura == 0 {
 		return ""
 	}
-	if drift == 0 {
+	if n == 0 {
 		// `len("⚠")` são 3 BYTES, mas o símbolo ocupa 1 coluna no terminal.
 		// Usar `len` aqui reservava dois espaços a mais e desalinhava justamente
 		// as linhas que o branco existia para alinhar.
 		return strings.Repeat(" ", largura+1)
 	}
-	return fmt.Sprintf("⚠%*d", largura, drift)
+	return fmt.Sprintf("%s%*d", symbol, largura, n)
 }
 
 // separador some junto com a coluna: sem isso, a tabela sem drift ficaria com
@@ -1010,7 +1018,7 @@ func driftSeparator(largura int) string {
 // cleanGate: passou em tudo que olhou e não deixou nada pendente. É o gate que
 // não pede nada de ninguém — o candidato a sumir sob `--only-issues`.
 func cleanGate(s gate.GateSummary, drift int) bool {
-	return s.Fail == 0 && drift == 0 && s.Skip+s.Pending == 0 && s.Judge == 0
+	return s.Fail == 0 && drift == 0 && s.Diverge == 0 && s.Skip+s.Pending == 0 && s.Judge == 0
 }
 
 // printDrift lista as pendências agrupadas por GATE e, dentro dele, por MOTIVO.
@@ -1107,6 +1115,9 @@ func printLegenda(p gate.Profile, w counterWidths) {
 	}
 	if w.drift > 0 {
 		partes = append(partes, "⚠  "+i18n.T("check.legend.warn"))
+	}
+	if w.pend > 0 {
+		partes = append(partes, "?  "+i18n.T("check.legend.pending"))
 	}
 	partes = append(partes, "~  "+i18n.T("check.legend.skip"))
 	if temJudge {
@@ -1411,7 +1422,8 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 		// do teste divergiu). Somar tudo num número faz o drift parecer benigno — e é
 		// o oposto: é a única categoria acionável do balde. Separamos em ⚠.
 		drift := driftCount(p, name)
-		if onlyIssues && cleanGate(s, drift) {
+		pend := pendingCount(p, name)
+		if onlyIssues && cleanGate(s, drift+pend) {
 			limpos++
 			continue
 		}
@@ -1419,10 +1431,11 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 		// drift empurrava o `~` para a esquerda só nelas, e a coluna passava a
 		// existir em dois lugares na mesma tabela — que é o pior caso: o olho
 		// desce a lista comparando números que não estão na mesma vertical.
-		fmt.Printf("  %-*s  %-11s  ✓%*d  ✗%*d%s%s  ~%*d\n", wn, name, tag,
+		fmt.Printf("  %-*s  %-11s  ✓%*d  ✗%*d%s%s%s%s  ~%*d\n", wn, name, tag,
 			w.pass, s.Pass, w.fail, s.Fail,
 			driftSeparator(w.drift), driftColumn(drift, w.drift),
-			w.skip, s.Skip+s.Pending-drift)
+			driftSeparator(w.pend), statColumn("?", pend, w.pend),
+			w.skip, s.Skip+s.Pending-pend)
 	}
 	// O gate omitido continua tendo rodado, e o número diz isso. Sem esta linha o
 	// `--only-issues` pareceria uma varredura menor, e não a mesma varredura com a
@@ -1445,6 +1458,7 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 	// para os endereços.
 	if showDrift {
 		printDrift(driftResults(p))
+		printPending(pendingResults(p))
 	}
 
 	// Motivo dos `~` (skip/pending). O contador sozinho não diz nada — quem lê fica em
@@ -1465,10 +1479,20 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 	// divergences recorded:" over the failures alone: it read as N issues PLUS the
 	// divergences, and the divergences (⚠, which do not block) were not in the number at
 	// all. Nor is every failure an issue (in manual mode none is written).
-	if drifts := len(driftResults(p)); len(p.Failures) > 0 || drifts > 0 {
+	// Every finding that bars the promotion is listed, whatever its level; the divergences
+	// and pending items that only inform are counted, and `--show-drift` lists them.
+	drifts, pendings := len(driftResults(p)), len(pendingResults(p))
+	if len(p.Failures) > 0 || drifts > 0 || pendings > 0 {
+		var listed []gate.Result
+		listed = append(listed, p.Failures...)
+		for _, r := range p.Results {
+			if (r.Verdict == gate.Diverge || r.Verdict == gate.Pending) && r.Blocks() {
+				listed = append(listed, r)
+			}
+		}
 		bloqueiam := 0
-		for _, r := range p.Failures {
-			if r.Blocking {
+		for _, r := range listed {
+			if r.Blocks() {
 				bloqueiam++
 			}
 		}
@@ -1477,13 +1501,14 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 			dica = i18n.T("check.drift_hint_above")
 		}
 		fmt.Println()
-		fmt.Println(i18n.T("check.findings_summary", len(p.Failures), bloqueiam, len(p.Failures)-bloqueiam, drifts, dica))
-		for _, r := range p.Failures {
+		fmt.Println(i18n.T("check.findings_summary", len(p.Failures), bloqueiam, len(listed)-bloqueiam, drifts, pendings, dica))
+		for _, r := range listed {
 			mark := i18n.T("check.tag.informative")
-			if r.Blocking {
+			if r.Blocks() {
 				mark = i18n.T("check.tag.blocks_mark")
 			}
-			fmt.Printf("  ✗ [%s] %s @ %s\n", mark, r.Gate, r.Target)
+			symbol := map[gate.Verdict]string{gate.Fail: "✗", gate.Diverge: "⚠", gate.Pending: "?"}[r.Verdict]
+			fmt.Printf("  %s [%s] %s @ %s\n", symbol, mark, r.Gate, r.Target)
 			if r.Detail != "" {
 				fmt.Print(indent(r.Detail, "      "))
 			}
@@ -1511,10 +1536,10 @@ func printProfile(p gate.Profile, onlyIssues, showDrift bool) {
 	// aberto" no rodapé. Contá-los à parte é o que separa "conforme" de "não medido".
 	naoConfrontado := 0
 	for _, r := range p.Results {
-		if r.Verdict == gate.Fail && !r.Blocking {
+		if r.Verdict == gate.Fail && !r.Blocks() && !r.Ignored() {
 			informativos++
 		}
-		if r.Verdict == gate.Pending && r.Detail != "" {
+		if r.Verdict == gate.Diverge && !r.Ignored() {
 			drift++
 		}
 		if r.Verdict == gate.Skip {
@@ -1680,11 +1705,39 @@ const maxResultsForSkipDetail = 40
 func driftResults(p gate.Profile) []gate.Result {
 	var out []gate.Result
 	for _, r := range p.Results {
-		if r.Verdict == gate.Pending && r.Detail != "" {
+		if r.Verdict == gate.Diverge && !r.Ignored() {
 			out = append(out, r)
 		}
 	}
 	return out
+}
+
+// pendingResults are the pending items with a reason — the gate had something to confront
+// and could not measure it —, not ignored. A pending item with no reason is a `~`.
+func pendingResults(p gate.Profile) []gate.Result {
+	var out []gate.Result
+	for _, r := range p.Results {
+		if r.Verdict == gate.Pending && r.Detail != "" && !r.Ignored() {
+			out = append(out, r)
+		}
+	}
+	return out
+}
+
+// printPending lists the pending items as printDrift lists the divergences, under their
+// own heading.
+func printPending(pendings []gate.Result) {
+	if len(pendings) == 0 {
+		return
+	}
+	fmt.Println()
+	fmt.Println(i18n.T("check.pending_summary", len(pendings)))
+	for _, r := range pendings {
+		fmt.Printf("  ? %s @ %s\n", r.Gate, r.Target)
+		if r.Detail != "" {
+			fmt.Print(indent(r.Detail, "      "))
+		}
+	}
 }
 
 // skipReasons devolve os resultados indeterminados (skip/pending) QUE TÊM motivo
@@ -1773,7 +1826,18 @@ func driftCount(p gate.Profile, gateName string) int {
 		// DRIFT é PENDING com motivo: o gate OLHOU e algo divergiu, mas não barra.
 		// Skip com motivo é o oposto — o gate não se aplica ("não é uma tela"), e
 		// contá-lo como drift inflaria o número com ruído benigno.
-		if r.Verdict == gate.Pending && r.Detail != "" {
+		if r.Verdict == gate.Diverge && !r.Ignored() {
+			n++
+		}
+	}
+	return n
+}
+
+// pendingCount counts a gate's pending items with a reason, not ignored — the `?` column.
+func pendingCount(p gate.Profile, gateName string) int {
+	n := 0
+	for _, r := range p.Results {
+		if r.Gate == gateName && r.Verdict == gate.Pending && r.Detail != "" && !r.Ignored() {
 			n++
 		}
 	}

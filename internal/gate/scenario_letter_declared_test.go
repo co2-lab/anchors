@@ -16,7 +16,7 @@ func cfgLetras() *config.Config {
 }
 
 func TestCenarioLetraDeclarada_acusaLetraInventada(t *testing.T) {
-	t.Run("SCLTR-B05: a letter outside the vocabulary is undetermined, not a failure", func(t *testing.T) {})
+	t.Run("SCLTR-B05: A letter outside the vocabulary is undetermined, not a failure", func(t *testing.T) {})
 	t.Run("SCLTR-B06: The verdict names the letters that are outside and the codes carrying them", func(t *testing.T) {})
 	t.Run("SCLTR-I03: a valid letter is never named in the verdict", func(t *testing.T) {})
 	t.Run("SCLTR-I01: the scan is over the shape of a code, never over the vocabulary", func(t *testing.T) {})
@@ -35,7 +35,7 @@ Funcionalidade: Recorrências
 `
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
 	v, detail := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras())
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("esperava Pending, veio %v: %s", v, detail)
 	}
 	if !strings.Contains(detail, "SG") || !strings.Contains(detail, "RCRRX-SG05") {
@@ -121,7 +121,7 @@ func TestScenarioLetterDeclared_I02_codeLengthReadPerCall(t *testing.T) {
 	feat := "@ABCDEFG-SG01\nScenario: x\n"
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
 	v, detail := checkScenarioLetterDeclared(feat, n, "", nil, cfgLetras())
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("a 7-char code must be recognised once the project declares length 7; got %v (%s)", v, detail)
 	}
 	if !strings.Contains(detail, "ABCDEFG-SG01") {

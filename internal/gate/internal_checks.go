@@ -26,7 +26,6 @@ var internalCheckers = map[string]func(content string, n mapx.Node) (Verdict, st
 	"line-coverage":       checkLineCoverage,
 	"coverage-delta":      checkCoverageDelta,
 	"tests-pass":          checkTestsPass,
-	"header-valid":        checkHeaderConforms,
 	"route-declared":      checkRouteDeclared,
 }
 
@@ -85,7 +84,10 @@ var checkersWithGraph = map[string]func(content string, n mapx.Node, root string
 	"presentation-copy-single-source": checkPresentationCopySingleSource,
 	"presentation-observable":         checkPresentationObservable,
 	// Precisa de `cfg` para ler a própria opção `enforce_section_language` — ver checkSpecSections.
-	"spec-sections":            checkSpecSections,
+	"spec-sections": checkSpecSections,
+	"header-valid": func(content string, n mapx.Node, _ string, _ *mapx.Graph, cfg *config.Config) (Verdict, string) {
+		return checkHeaderConforms(content, n, cfg)
+	},
 	"count-honored":            checkCountHonored,
 	"trigger-declared":         checkTriggerDeclared,
 	"route-exists":             checkRouteExists,
@@ -392,7 +394,7 @@ func isExecutableScript(n mapx.Node) bool {
 	return strings.HasSuffix(n.ID, ".yaml") || strings.HasSuffix(n.ID, ".yml")
 }
 
-func checkHeaderConforms(content string, n mapx.Node) (Verdict, string) {
+func checkHeaderConforms(content string, n mapx.Node, cfg *config.Config) (Verdict, string) {
 	// Arquivo BINÁRIO não carrega cabeçalho — não há sintaxe de comentário num PNG.
 	// A identidade dele está no NOME (`<Unidade>.<CODE>-VR-<variante>.png`), que é o
 	// que o `identity-consistent` confronta. Cobrar header aqui exigiria o impossível
@@ -422,8 +424,11 @@ func checkHeaderConforms(content string, n mapx.Node) (Verdict, string) {
 	if scan.HeaderOffTop([]byte(content)) {
 		return Fail, i18n.T("gate.header.off_top")
 	}
-	// Camada RECONHECIDA (sem spec): `layer:` é a identidade mínima suficiente.
-	if isRecognizedLayer(n, content) {
+	// Camada RECONHECIDA (sem spec): `layer:` é a identidade mínima suficiente. The layer is
+	// read as the project declares it: a test node carries no regime of its own, and by the
+	// name alone only the canonical names passed — a declarative layer the project named
+	// otherwise (`shared-data`) failed "no identity".
+	if isRecognizedLayerCfg(n, content, cfg) {
 		if !headerLayerRE.MatchString(content) &&
 			!headerCodeRE().MatchString(content) && !headerRefRE().MatchString(content) {
 			return Fail, i18n.T("gate.header.recognized_missing_id")
@@ -919,9 +924,32 @@ func codesNamedByTests(codes []string, root string, g *mapx.Graph, id string, cf
 	return written, nil
 }
 
+// coverageAbsence answers the coverage gates for a file the coverage report has no line
+// of, when that is known: listed with no instrumentable line at its revision, it has
+// nothing to cover (Skip); left out of a whole run of a suite that covers it, it is a
+// divergence — a tool omits a file with no instrumentable line (istanbul, types alone), and
+// it omits as well a file outside what it collects. Never listed and never omitted, it is
+// not known, and the gate says it was never measured.
+func coverageAbsence(n mapx.Node) (Verdict, string, bool) {
+	s := n.Signal
+	if s == nil || s.TotalLines > 0 {
+		return "", "", false
+	}
+	switch {
+	case s.CoverageRev != "" && s.CoverageRev == n.Rev:
+		return Skip, i18n.T("gate.coverage.no_instrumentable"), true
+	case s.CoverageOmitted != "" && s.CoverageOmitted == n.Rev:
+		return Diverge, i18n.T("gate.coverage.omitted"), true
+	}
+	return "", "", false
+}
+
 // line-coverage: a cobertura de linha do nó de código está >= 70%? (limiar fixo por
 // ora — poderia vir da config). Pending se não ingerida.
 func checkLineCoverage(_ string, n mapx.Node) (Verdict, string) {
+	if v, msg, ok := coverageAbsence(n); ok {
+		return v, msg
+	}
 	if n.Signal == nil || n.Signal.TotalLines == 0 {
 		return Pending, i18n.T("gate.no_line_coverage")
 	}
@@ -939,6 +967,9 @@ func checkLineCoverage(_ string, n mapx.Node) (Verdict, string) {
 // anterior? Pega a regressão de cobertura (código pode estar coberto no diff mas ter
 // derrubado a cobertura de outra parte). Pending se não há baseline.
 func checkCoverageDelta(_ string, n mapx.Node) (Verdict, string) {
+	if v, msg, ok := coverageAbsence(n); ok {
+		return v, msg
+	}
 	if n.Signal == nil || n.Signal.PrevLineCoverage == 0 {
 		return Pending, i18n.T("gate.no_coverage_baseline")
 	}
@@ -1009,6 +1040,18 @@ func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 		return Pending, i18n.T("gate.mutation.no_signal")
 	}
 	if n.MutationStale() {
+		// Mutation is measured out of the commit, and it is slow: a file whose last score
+		// met the floor is not remeasured on every change (the default run leaves it out).
+		// Its stale score says "to measure again", not "could not measure": it does not
+		// block. Below the floor, or never trusted, it stays pending.
+		floor := n.Signal.MutationLow
+		if floor <= 0 {
+			floor = 70
+		}
+		if ran := n.Signal.MutantsKilled + n.Signal.MutantsSurvived; ran > 0 && n.Signal.MutationScore >= floor &&
+			float64(n.Signal.MutantsTimedOut)/float64(ran) <= config.DefaultTimeoutCeiling {
+			return Skip, i18n.T("gate.mutation.stale_above_floor", n.Signal.MutationScore, floor)
+		}
 		return Pending, i18n.T("gate.mutation.stale")
 	}
 	// Nenhum mutante EXECUTADO: o score é 100 por construção (ver ParseMutation) e não há
@@ -1084,7 +1127,7 @@ func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 				compareDelta(delta))
 		}
 		if faixa := middleRange(iso.Score, threshold, desejavel, iso.Survived); faixa != "" {
-			return Pending, faixa + " — " + ctx
+			return Diverge, faixa + " — " + ctx + " " + AdvisoryMarker
 		}
 		return Pass, ""
 	}
@@ -1094,7 +1137,7 @@ func checkMutationScore(_ string, n mapx.Node) (Verdict, string) {
 			n.Signal.MutationScore, threshold, n.Signal.MutantsSurvived)
 	}
 	if faixa := middleRange(n.Signal.MutationScore, threshold, desejavel, n.Signal.MutantsSurvived); faixa != "" {
-		return Pending, faixa
+		return Diverge, faixa + " " + AdvisoryMarker
 	}
 	return Pass, ""
 }

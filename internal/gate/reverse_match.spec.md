@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RVMTR
-  updated_at: 2026-09-27
+  updated_at: 2026-09-30
   layer: gate
 -->
 # ReverseMatch — every scenario still has its rule, and every proven code still has its scenario
@@ -56,10 +56,11 @@ the visual baseline, revision codes, and other units' codes cited to build fixtu
 
 | Effect | Description |
 | --- | --- |
-| `RVMTR-B10` | The gate skips a node that is not a test, and a test no feature exercises is Pending. |
+| `RVMTR-B10` | The gate skips a node that is not a test, and a test no feature exercises, saying the link is `triad-complete`'s to charge: there is nothing to confront. |
 | `RVMTR-B11` | When the features it exercises declare no coded scenario, the gate is Pending. |
 | `RVMTR-B12` | A code the test names that no exercised feature declares as a scenario fails the gate, naming the code. |
-| `RVMTR-B13` | A scenario declared as a numbered variant makes its rule a declared scenario for the test. |
+| `RVMTR-B13` | A test that names a rule bare where its feature declares that rule only as numbered variants fails, naming it: each variant is proven on its own, and a proof of the bare rule proves none of them. A feature that declares the bare scenario too takes it. |
+| `RVMTR-B18` | A test that names a variant its feature does not declare — `CODE-B03#01` under a feature declaring `@CODE-B03` alone — fails, naming it: the proof counts by the scenario it names, and this one no feature declares. |
 | `RVMTR-B14` | A revision code named by the test is not read as a rule and is not charged. |
 | `RVMTR-B15` | A data state a spec defines with the unit prefix is read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, `TREXXXX-DS-data-present` defines `DS-data-present`. |
 | `RVMTR-B16` | A support file is not confronted as a test (Skip, saying why): it proves no scenario, so there is no feature to link it to. |

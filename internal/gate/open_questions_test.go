@@ -31,7 +31,7 @@ func TestOpenQuestionsSoCobraQuemAbriu(t *testing.T) {
 	// `anchors new` já a emite fechada com `nenhuma` — então a ausência é dívida (spec
 	// anterior à prática) ou apagamento, e nenhum sinal separa os dois. `Skip` diria "não
 	// se aplica", e um gate bloqueante com ✓0 ✗0 ~586 parece vigiar e não vigia.
-	if v, msg := rodaAberto(t, semSeção); v != Pending {
+	if v, msg := rodaAberto(t, semSeção); v != Diverge {
 		t.Fatalf("spec sem a seção deveria ser Pending (dívida nomeada), foi %s: %s", v, msg)
 	}
 
@@ -42,7 +42,7 @@ func TestOpenQuestionsSoCobraQuemAbriu(t *testing.T) {
   não respondeu.
 `
 	v, d := rodaAberto(t, comPergunta)
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("spec com pergunta aberta deveria reprovar, foi %s", v)
 	}
 	if !strings.Contains(d, "Arredondamento") {
@@ -90,7 +90,7 @@ func TestOpenQuestionsItemResolvidoNaoBloqueia(t *testing.T) {
 
 	misto := spec + "- Fuso horário do vencimento: UTC ou local do usuário?\n"
 	v, d := rodaAberto(t, misto)
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("um item ainda aberto deveria reprovar, foi %s", v)
 	}
 	if !strings.Contains(d, "1 decisão") && !strings.Contains(d, "1 open decision") {
@@ -133,7 +133,7 @@ func TestOpenQuestionsTabela(t *testing.T) {
 
 	comLinha := vazia + "| Fuso do vencimento: UTC ou local? | Produto | `PARCX-R04` |\n"
 	v, d := rodaAberto(t, comLinha)
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("linha de tabela é pendência, foi %s", v)
 	}
 	if !strings.Contains(d, "Fuso") {
@@ -172,7 +172,7 @@ func TestOpenQuestionsAceitaVariacoesDoTitulo(t *testing.T) {
 	for _, tt := range títulos {
 		t.Run(tt, func(t *testing.T) {
 			spec := "# Spec\n\n" + tt + "\n\n- Pergunta que ninguém respondeu\n"
-			if v, d := rodaAberto(t, spec); v != Pending {
+			if v, d := rodaAberto(t, spec); v != Diverge {
 				t.Fatalf("título %q não foi reconhecido (veredito %s: %s)", tt, v, d)
 			}
 		})
@@ -203,7 +203,7 @@ func TestOpenQuestions_cobraCodigoNaPergunta(t *testing.T) {
 	// SEM código na primeira célula: achado próprio, distinto de "há pendência".
 	anonima := base + "| | Fuso do vencimento: UTC ou local? | Produto | `PARCX-R04` |\n"
 	v, d := rodaAberto(t, anonima)
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("pergunta anônima é pendência, foi %s", v)
 	}
 	if !strings.Contains(d, "SEM CÓDIGO") && !strings.Contains(d, "WITHOUT CODE") {
@@ -213,7 +213,7 @@ func TestOpenQuestions_cobraCodigoNaPergunta(t *testing.T) {
 	// COM código: volta a ser a pendência normal, e a mensagem traz código E assunto.
 	comCodigo := base + "| `PARCX-Q01` | Fuso do vencimento: UTC ou local? | Produto | `PARCX-R04` |\n"
 	v, d = rodaAberto(t, comCodigo)
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("pergunta identificada continua sendo pendência, foi %s", v)
 	}
 	if strings.Contains(d, "SEM CÓDIGO") || strings.Contains(d, "WITHOUT CODE") {
@@ -264,7 +264,7 @@ func TestOpenQuestions_tituloVemDaConfig(t *testing.T) {
 	// O GATE, e não só o contador, respeita o título: ele recebia o cfg na assinatura e
 	// passava nil adiante — a correção não alcançaria o caminho principal.
 	cfgEs := &config.Config{SectionTitles: config.SectionTitles{"open": "Decisiones pendientes"}}
-	if v, d := checkOpenQuestions(espanhol, mapx.Node{Kind: mapx.KindSpec}, "", nil, cfgEs); v != Pending || !strings.Contains(d, "PARCX-Q01") {
+	if v, d := checkOpenQuestions(espanhol, mapx.Node{Kind: mapx.KindSpec}, "", nil, cfgEs); v != Diverge || !strings.Contains(d, "PARCX-Q01") {
 		t.Errorf("o gate deveria achar a seção declarada e nomear a pergunta: %s — %s", v, d)
 	}
 
@@ -378,7 +378,7 @@ func TestOpenQuestions_naoJulgaSeAPerguntaEhBoa(t *testing.T) {
 	trivial := "# Spec\n\n## Decisões em aberto\n\n" +
 		"| Código | Pergunta | Quem decide | Vira |\n| --- | --- | --- | --- |\n" +
 		"| `PARCX-Q01` | A vírgula do rótulo fica antes ou depois? | Produto | |\n"
-	if v, _ := rodaAberto(t, trivial); v != Pending {
+	if v, _ := rodaAberto(t, trivial); v != Diverge {
 		t.Errorf("o gate julgou o mérito da pergunta; a régua é a EXISTÊNCIA do item: %v", v)
 	}
 }
@@ -386,10 +386,10 @@ func TestOpenQuestions_naoJulgaSeAPerguntaEhBoa(t *testing.T) {
 // Exigir a seção de toda spec transformaria instrumento em ritual. Quem não abriu não é
 // cobrado — e quem não tem dúvida gasta uma palavra declarando isso.
 func TestOpenQuestions_ausenciaDaSecaoEhPendenciaQueEnsinaASaida(t *testing.T) {
-	t.Run("OPQSP-X02: A spec with no section is a pending item, and the verdict teaches the way out", func(t *testing.T) {})
+	t.Run("OPQSP-X02: A spec with no section is a divergence item, and the verdict teaches the way out", func(t *testing.T) {})
 	semSecao := "# Spec\n\n## Regras\n\n### PARCX-B01 — algo\n"
 	v, d := rodaAberto(t, semSecao)
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("a ausência da seção é pendência, não reprovação nem aprovação: %v (%s)", v, d)
 	}
 	// E o veredito tem de ENSINAR a saída: registrar a dívida sem dizer como fechá-la

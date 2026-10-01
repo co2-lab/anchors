@@ -1,6 +1,6 @@
 <!-- @anchors
   code: OBHNB
-  updated_at: 2026-09-26
+  updated_at: 2026-09-30
   layer: gate
 -->
 # ObligationHonored — the cross-cutting duty that lives OUTSIDE the unit
@@ -52,7 +52,7 @@ points at, triggered by an attribute the node itself declares.
 | `OBHNB-B03` | A node without the trigger attribute contracts no obligation: the duty is charged by what the node declares about itself, not by what it might resemble. |
 | `OBHNB-B04` | A waiver WITH a written reason exempts the node; the same waiver without one does not, because that is what separates the honest exception from silence. |
 | `OBHNB-B05` | A project that declares no obligation is skipped: there is nothing to confront, and inventing duties would charge what nobody committed to. |
-| `OBHNB-B06` | An acknowledged DEBT, with the when written down, yields Pending — it is a record, visible in the report, never an exemption. |
+| `OBHNB-B06` | An acknowledged DEBT, with the when written down, yields a divergence — it is a record, visible in the report, never an exemption. |
 | `OBHNB-B07` | A bare debt marker, with no when, keeps failing: it assumes no debt, it only hides better. |
 | `OBHNB-B08` | Waiver and debt stay distinct: only the waiver resolves the duty, because the debt is still owed. |
 | `OBHNB-B09` | The failing verdict OFFERS the three ways out — fulfil, waive with a reason, or acknowledge the debt with a when. |

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RLTYR
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @RLTYR
@@ -65,11 +65,11 @@ Feature: RuleTypes — the rule vocabulary is extensible, but it must be declare
     Then it returns Fail, because the first cell is where a definition lives
 
   @RLTYR-B09 @unit-level
-  Scenario: A section declared as rule-cataloguing and filled without a code is Pending
+  Scenario: A section declared as rule-cataloguing and filled without a code is a divergence
     Given a vocabulary declaring "Eventos / Callbacks" as requiring a code
     And a spec whose section of that name carries a filled table and no code at all
     When the gate confronts it
-    Then it returns Pending naming the section, because a row that asserts something
+    Then it returns a divergence naming the section, because a row that asserts something
       verifiable and carries no code leaves the scenario with nothing to cite
 
   @RLTYR-B10 @unit-level

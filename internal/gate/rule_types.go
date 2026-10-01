@@ -119,7 +119,7 @@ func checkRuleTypes(content string, n mapx.Node, root string, g *mapx.Graph, cfg
 	// código, e os cenários que provavam esses eventos emprestaram o código do
 	// estado vizinho (um `-S` regendo comportamento).
 	if msg := sectionsWithoutCode(content, cfg.RuleTypes); msg != "" {
-		return Pending, msg
+		return Diverge, msg
 	}
 	return Pass, ""
 }

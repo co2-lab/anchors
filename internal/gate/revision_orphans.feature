@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RVORP
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @RVORP
@@ -62,3 +62,15 @@ Feature: RevisionOrphans — the rules a revision changed the meaning of, withou
     Given a spec where every rule title carries the same domain word
     When the gate confronts it
     Then that word does not by itself make a rule an orphan
+
+  @RVORP-B08 @unit-level
+  Scenario: A rule's title is its heading, not its usage row
+    Given a spec whose rules read the same field in a usage table, and a revision of one of them
+    When the revision is confronted
+    Then the sibling reading the same field is not reported, since the titles are the headings
+
+  @RVORP-B09 @unit-level
+  Scenario: A revision that revised no rule says so
+    Given a revision declaring it revised no rule with its reason, one declaring it with no reason, and one whose reason cites a code
+    When each spec is confronted
+    Then the first and the third pass, and the second is pending

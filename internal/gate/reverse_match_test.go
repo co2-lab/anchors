@@ -148,15 +148,15 @@ func TestTestFeatureMatch_doesNotChargeAnotherUnitsCode(t *testing.T) {
 }
 
 func TestTestFeatureMatch_skips(t *testing.T) {
-	t.Run("RVMTR-B10: test-feature-match skips what is not a test, and a test no feature exercises is Pending", func(t *testing.T) {})
+	t.Run("RVMTR-B10: test-feature-match skips what is not a test, and a test no feature exercises", func(t *testing.T) {})
 	t.Run("RVMTR-I01: Neither gate answers Pass when it had nothing to match against", func(t *testing.T) {})
 	notTest := mapx.Node{ID: "x.feature", Kind: mapx.KindFeature}
 	if v, _ := checkTestFeatureMatch("", notTest, "", nil, nil); v != Skip {
 		t.Errorf("not a test and the verdict was %v", v)
 	}
 	noEdge := &mapx.Graph{Nodes: []mapx.Node{testNodeRev()}}
-	if v, _ := checkTestFeatureMatch("it('x')", testNodeRev(), t.TempDir(), noEdge, nil); v != Pending {
-		t.Errorf("with no linked feature Pending was expected, got %v", v)
+	if v, msg := checkTestFeatureMatch("it('x')", testNodeRev(), t.TempDir(), noEdge, nil); v != Skip || !strings.Contains(msg, "triad") {
+		t.Errorf("with no linked feature there is nothing to confront, got %v: %s", v, msg)
 	}
 }
 
@@ -198,12 +198,24 @@ func TestFeatureSpecMatch_variantOfMissingRuleIsReported(t *testing.T) {
 }
 
 func TestTestFeatureMatch_variantIsNotAnotherRule(t *testing.T) {
-	t.Run("RVMTR-B13: A rule declared as a variant is a declared scenario for the test", func(t *testing.T) {})
+	t.Run("RVMTR-B13: A test naming the bare rule where the feature declares its variants", func(t *testing.T) {})
 	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B01#01\n  Scenario: slice\n")
-	test := "it('UNITX-B01 exercises the rule', () => {})\n"
+	bare := "it('UNITX-B01 exercises the rule', () => {})\n"
+	if v, msg := checkTestFeatureMatch(bare, testNodeRev(), root, g, nil); v != Fail || !strings.Contains(msg, "UNITX-B01") || !strings.Contains(msg, "variant") {
+		t.Errorf("the bare rule proves none of its variants, got %v / %s", v, msg)
+	}
+	named := "it('UNITX-B01#01 exercises the slice', () => {})\n"
+	if v, msg := checkTestFeatureMatch(named, testNodeRev(), root, g, nil); v != Pass {
+		t.Errorf("naming the declared variant passes, got %v / %s", v, msg)
+	}
+}
 
-	if v, msg := checkTestFeatureMatch(test, testNodeRev(), root, g, nil); v != Pass {
-		t.Errorf("the test proves B01, which the feature declares as a variant: %v / %s", v, msg)
+func TestTestFeatureMatch_undeclaredVariant(t *testing.T) {
+	t.Run("RVMTR-B18: A test naming a variant its feature does not declare", func(t *testing.T) {})
+	root, g := withFeature(t, "@UNITX\nFeature: X\n\n  @UNITX-B03\n  Scenario Outline: each example\n")
+	test := "it.each(rows)('UNITX-B03#01 first example', () => {})\n"
+	if v, msg := checkTestFeatureMatch(test, testNodeRev(), root, g, nil); v != Fail || !strings.Contains(msg, "UNITX-B03#01") {
+		t.Errorf("an undeclared variant fails, named, got %v / %s", v, msg)
 	}
 }
 
@@ -384,13 +396,15 @@ func TestTestFeatureMatch_DeclarativeUnit(t *testing.T) {
 		{ID: "screens/home.test.tsx", Kind: mapx.KindTest},
 		{ID: "orphan.test.ts", Kind: mapx.KindTest},
 	}}
-	for id, want := range map[string]Verdict{"utils/fmt.test.ts": Skip, "screens/home.test.tsx": Pending, "orphan.test.ts": Pending} {
+	for id, want := range map[string]Verdict{"utils/fmt.test.ts": Skip, "screens/home.test.tsx": Skip, "orphan.test.ts": Skip} {
 		v, msg := checkTestFeatureMatch("", mapx.Node{ID: id, Kind: mapx.KindTest}, "", g, cfg)
 		if v != want {
 			t.Errorf("%s: want %v, got %v (%s)", id, want, v, msg)
 		}
-		if want == Skip && !strings.Contains(msg, "declarativo") {
-			t.Errorf("%s: the skip must say the unit is declarative, got %s", id, msg)
+		// the declarative unit's test is skipped for being one; the others because the link is
+		// the triad's to charge
+		if wantDecl := id == "utils/fmt.test.ts"; strings.Contains(msg, "declarativo") != wantDecl {
+			t.Errorf("%s: only the declarative unit's skip says it is declarative, got %s", id, msg)
 		}
 	}
 }

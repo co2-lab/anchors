@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: TRCMT
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @TRCMT
@@ -100,8 +100,8 @@ Feature: TriadComplete — the pieces that realise a spec EXIST
   Scenario: A piece declared TO BE DEVELOPED leaves the verdict undetermined
     Given a spec declaring `@TBD` for a piece it has not written yet, with the reason
     When the gate confronts it
-    Then it returns Pending and never Pass, because `@TBD` is DEBT while `@no-<piece>`
-      is a permanent waiver — treating them alike erased the pending work from the radar
+    Then it returns a divergence and never Pass, because `@TBD` is DEBT while `@no-<piece>`
+      is a permanent waiver — treating them alike erased the divergence work from the radar
       for the honest declaration of whoever assumed it
 
   @TRCMT-X02 @unit-level

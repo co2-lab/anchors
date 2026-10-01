@@ -98,6 +98,7 @@ instead — an under-estimate, never a double count.
 | `SGINA-B26` | A coverage ingestion records the file's branches: with a suite, each suite keeps how many it listed and the ones it never took, and the node's branches are the union over the suites measured at its current revision — the largest total, and the branches every listing suite missed; with no suite, the report's own. A suite that lists no branch, or measured another revision, does not take part. (`unionBranches`) |
 | `SGINA-B27` | A mutation ingestion records the lines of the mutants no test ran, as ranges, read back as the same lines. (`NoCoverageLines`) |
 | `SGINA-B28` | A proven scenario code counts for the node that declares its rule, and is kept with its variant (`CODE-B02#02`): the node records which scenarios of its rules were proven, not only the rules. (`IngestExecutionSuite`) |
+| `SGINA-B29` | A code file a coverage report lists — with lines or with none — records the revision it was listed at; a code file a whole run of its suite left out of the report records the revision it was omitted at, unless a report listed it at that revision. (`IngestCoverageSuite`, `MarkCoverageOmitted`) |
 | `SGINA-B24` | The revs the tree has now replace the map's, by path; a node the tree does not give keeps its rev, and the count of changed nodes is returned. (`RefreshRevs`) |
 | `SGINA-B23` | A run time Anchors measured itself is recorded on the node under the suite; a node the map does not have is ignored. (`RecordRunSeconds`) |
 

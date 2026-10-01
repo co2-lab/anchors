@@ -90,7 +90,7 @@ func checkScenarioTypeAligned(content string, n mapx.Node, _ string, _ *mapx.Gra
 		return Pass, ""
 	}
 	sort.Strings(achados)
-	return Pending, i18n.T("gate.scenario_type_aligned.pending_mismatched_types",
+	return Diverge, i18n.T("gate.scenario_type_aligned.pending_mismatched_types",
 		len(achados), strings.Join(achados, "; "))
 }
 

@@ -31,6 +31,9 @@ func checkBranchCoverage(content string, n mapx.Node, root string, g *mapx.Graph
 	if n.Kind != mapx.KindCode {
 		return Skip, i18n.T("gate.branch_coverage.skip_not_code")
 	}
+	if v, msg, ok := coverageAbsence(n); ok {
+		return v, msg
+	}
 	if n.Signal == nil || n.Signal.TotalLines == 0 {
 		return Pending, i18n.T("gate.no_line_coverage")
 	}

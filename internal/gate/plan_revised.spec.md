@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PLRVP
-  updated_at: 2026-09-26
+  updated_at: 2026-09-30
   layer: gate
 -->
 # PlanRevised — mutual revision visibility between superseded and revising plans
@@ -39,11 +39,11 @@ This gate operates in distinct territory from neighbouring gates:
 | `PLRVP-B02` | When the map graph is nil, confrontation yields a pending verdict because revision relationships cannot be resolved. |
 | `PLRVP-B03` | When a plan neither revises another plan nor is revised by any plan, the gate skips confrontation. |
 | `PLRVP-B04` | When a revising plan declares a revision target that does not exist in the map graph, the gate fails. |
-| `PLRVP-B05` | When a revising plan targets an existing plan whose file lacks a top revision notice, the revising plan receives a pending reminder. |
-| `PLRVP-B06` | When a revising plan targets a plan whose file already contains the top revision notice, the pending reminder clears. |
+| `PLRVP-B05` | When a revising plan targets an existing plan whose file lacks a top revision notice, the revising plan receives a divergence reminder. |
+| `PLRVP-B06` | When a revising plan targets a plan whose file already contains the top revision notice, the divergence reminder clears. |
 | `PLRVP-B07` | When a revised plan lacks a top revision notice, the gate fails, reporting the revising plan identifier. |
 | `PLRVP-B08` | When a revised plan places the revision notice past the first 40 lines, the gate fails because the warning arrives too late. |
-| `PLRVP-B09` | When a revised plan has a top revision notice within the first 40 lines but no section amendment markers, the gate returns a pending verdict. |
+| `PLRVP-B09` | When a revised plan has a top revision notice within the first 40 lines but no section amendment markers, the gate returns a divergence verdict. |
 | `PLRVP-B10` | When a revised plan contains both a top revision notice in the first 40 lines and section amendment markers, the gate passes. |
 | `PLRVP-B11` | Both markdown alert blocks and metadata revision directives are accepted as valid notices and section amendments. |
 
@@ -52,8 +52,8 @@ This gate operates in distinct territory from neighbouring gates:
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
 | `PLRVP-I01` | The top revision notice must reside within the first 40 lines of the revised document so that readers following top-down reading order encounter the warning before acting on obsolete decisions. | confronts a plan with notice placed after line 40 and verifies it fails |
-| `PLRVP-I02` | A missing section amendment marker on a revised plan results in a Pending verdict rather than a hard Fail, accommodating whole-plan revisions where individual sections cannot be cleanly partitioned. | confronts a revised plan with top notice but no section markers and verifies it returns Pending |
-| `PLRVP-I03` | The pending reminder on a revising plan clears as soon as the revised target file contains the required top notice, preventing permanent noise from training teams to disregard gate output. | provides the revised file with top notice and verifies the revising plan clears pending |
+| `PLRVP-I02` | A missing section amendment marker on a revised plan results in a divergence verdict rather than a hard Fail, accommodating whole-plan revisions where individual sections cannot be cleanly partitioned. | confronts a revised plan with top notice but no section markers and verifies it returns a divergence |
+| `PLRVP-I03` | The divergence reminder on a revising plan clears as soon as the revised target file contains the required top notice, preventing permanent noise from training teams to disregard gate output. | provides the revised file with top notice and verifies the revising plan clears pending |
 
 ## Constraints
 
@@ -70,7 +70,7 @@ Each failure the code handles is already stated as a rule of another letter; the
 | Code | Condition | Result | Why |
 | --- | --- | --- | --- |
 | `PLRVP-E01` | REF[PLRVP-B02]: with no map the revision links cannot be resolved, and B02 answers Pending | — | — |
-| `PLRVP-E02` | REF[PLRVP-B05]: a revised plan whose file cannot be read carries no notice, which B05 answers with the pending reminder | — | — |
+| `PLRVP-E02` | REF[PLRVP-B05]: a revised plan whose file cannot be read carries no notice, which B05 answers with the divergence reminder | — | — |
 
 ## Dependencies
 

@@ -128,13 +128,19 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		// others are held to a looser ruler than the first — only a DIVERGENT title is said —,
 		// since several tests of one rule legitimately name its variations.
 		for _, other := range otherTitlesFor(mine, sc.Code) {
-			if v, score := similarity.Classify(sc.Title, other, pesos); v == similarity.Divergente {
+			if titleCovers(sc.Title, other) {
+				continue
+			}
+			if v, score := similarity.Classify(sc.Title, withoutPlaceholders(other), pesos); v == similarity.Divergente {
 				driftDesc = append(driftDesc, i18n.T("gate.feature_test_match.another_test_diverges", sc.Code, other, score*100))
 			}
 		}
 		switch {
 		case temTitulo && !compartilhado:
-			if v, score := similarity.Classify(sc.Title, titulo, pesos); v != similarity.Identico {
+			if titleCovers(sc.Title, titulo) {
+				break
+			}
+			if v, score := similarity.Classify(sc.Title, withoutPlaceholders(titulo), pesos); v != similarity.Identico {
 				driftDesc = append(driftDesc, fmt.Sprintf("%s (%s, %.0f%%)", sc.Code, verdictLabel(v), score*100))
 			}
 		case !descriptionMatches(sc.Title, bodyNorm):
@@ -169,10 +175,44 @@ func checkFeatureTestMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		sort.Strings(driftDesc)
 		// descrição divergente é AVISO (Pending), não Fail: o código casa (rastreável),
 		// mas o texto do teste não reflete o cenário — o autor pode ter mudado os passos.
-		return Pending, i18n.T("gate.feature_test_match.pending_description_diverges",
+		return Diverge, i18n.T("gate.feature_test_match.pending_description_diverges",
 			len(driftDesc), strings.Join(driftDesc, ", "))
 	}
 	return Pass, ""
+}
+
+// titleCovers says whether a test's title says what the scenario's title says: the same
+// words, in order — case and punctuation aside —, optionally followed by detail
+// (`<title> — <detail>`, `<title> (<detail>)`, `<title>: <detail>`). A table-driven
+// test's placeholders (`%s`, `%d`, `$name`, `${name}`) are not words of the title. The
+// ruler stays equality of what the scenario asserts: a test that says it and more says it;
+// one that says something else does not.
+func titleCovers(scenario, test string) bool {
+	want, got := titleWords(withoutPlaceholders(scenario)), titleWords(withoutPlaceholders(test))
+	if len(want) == 0 || len(got) < len(want) {
+		return false
+	}
+	for i, w := range want {
+		if got[i] != w {
+			return false
+		}
+	}
+	return true
+}
+
+// tablePlaceholderRE is a placeholder of a parameterised title: printf verbs (`%s`, `%d`,
+// `%#`), `$name` / `${name}` interpolations, and an outline's `<name>`.
+var tablePlaceholderRE = regexp.MustCompile(`%[#a-zA-Z%]|\$\{[^}]*\}|\$[A-Za-z_][A-Za-z0-9_.]*|<[A-Za-z_][\w -]*>`)
+
+// withoutPlaceholders drops a table-driven test's placeholders from its title.
+func withoutPlaceholders(title string) string { return tablePlaceholderRE.ReplaceAllString(title, " ") }
+
+var titleWordRE = regexp.MustCompile(`[\p{L}\p{N}]+`)
+
+// titleWords are a title's runs of letters and digits, in lower case.
+func titleWords(s string) []string {
+	ws := titleWordRE.FindAllString(strings.ToLower(s), -1)
+	return ws
 }
 
 type featureScenario struct {

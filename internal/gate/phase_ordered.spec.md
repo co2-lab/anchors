@@ -1,6 +1,6 @@
 <!-- @anchors
   code: PHORP
-  updated_at: 2026-09-28
+  updated_at: 2026-09-30
   layer: gate
 -->
 # PhaseOrdered — plan phases and phase dependencies must be ordered and consistent
@@ -53,7 +53,7 @@ This gate confronts three complementary structural ordering contracts:
 | `PHORP-B01` | The `PlanPhases` function extracts catalogued phase codes from plan headers in appearance order. |
 | `PHORP-B02` | When the confronted node is not of kind plan, phase ordering skips confrontation. |
 | `PHORP-B03` | When a plan contains no phase headings, phase ordering skips confrontation. |
-| `PHORP-B04` | When a plan contains phase-like sections without catalogued phase codes, phase ordering returns Pending. |
+| `PHORP-B04` | When a plan contains phase-like sections without catalogued phase codes, phase ordering returns a divergence. |
 | `PHORP-B05` | When plan phases declare valid backward dependencies on preceding phases, phase ordering passes. |
 | `PHORP-B06` | When a plan defines duplicate phase codes, phase ordering fails. |
 | `PHORP-B07` | When a phase declares a dependency on a phase code not catalogued in the plan, phase ordering fails. |

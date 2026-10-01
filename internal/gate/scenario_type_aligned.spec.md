@@ -1,6 +1,6 @@
 <!-- @anchors
   code: STASC
-  updated_at: 2026-09-19
+  updated_at: 2026-09-30
   layer: gate
 -->
 # ScenarioTypeAligned — scenario classification tags must match the code nature letter
@@ -64,9 +64,9 @@ here respects projects that did not request this check.
 | `STASC-B07` | When every recognized scenario tag aligns with its code's rule letter, the gate passes. |
 | `STASC-B08` | A scenario tag declared under multiple rule letters passes if any of its mapped letters matches the code's letter. |
 | `STASC-B09` | When a scenario is co-tagged with multiple codes, a tag matching any of those codes passes. |
-| `STASC-B10` | When a recognized scenario tag disagrees with the code's rule letter, the gate returns Pending. |
-| `STASC-B11` | The Pending message cites the mismatched code, rule letter, tag name, allowed letters, and shortened scenario title. |
-| `STASC-B12` | Multiple mismatch findings are sorted deterministically and reported together in the Pending verdict. |
+| `STASC-B10` | When a recognized scenario tag disagrees with the code's rule letter, the gate returns a divergence. |
+| `STASC-B11` | The Diverge message cites the mismatched code, rule letter, tag name, allowed letters, and shortened scenario title. |
+| `STASC-B12` | Multiple mismatch findings are sorted deterministically and reported together in the divergence verdict. |
 
 ## Invariants
 
@@ -74,7 +74,7 @@ here respects projects that did not request this check.
 | --- | --- | --- |
 | `STASC-I01` | Scenario classification alignment is evaluated exclusively on feature files; non-feature nodes skip to keep confrontation scoped to where tags reside. | confronts non-feature nodes and verifies the verdict is Skip |
 | `STASC-I02` | Without configured tag mappings, the gate stays silent to prevent false positives across different localization languages. | confronts a feature when configuration has no tag mappings and verifies it skips |
-| `STASC-I03` | Type disagreements return Pending rather than Fail because inherited divergence requires manual editorial judgment rather than mechanical fixes. | confronts a feature with mismatched tags and verifies the verdict is Pending |
+| `STASC-I03` | Type disagreements return Diverge rather than Fail because inherited divergence requires manual editorial judgment rather than mechanical fixes. | confronts a feature with mismatched tags and verifies the verdict is a divergence |
 | `STASC-I04` | Co-tagged scenarios with multiple requirement codes accept tags matching any attached code to prevent false defects on valid multi-requirement scenarios. | confronts a scenario with secondary code matching the tag and verifies it passes |
 
 ## Constraints

@@ -257,6 +257,9 @@ func (g *Graph) ingestCoverageBySuite(byFile map[string]FileCov, suite, now stri
 			if n.Signal.CoverageBySuite == nil {
 				n.Signal.CoverageBySuite = map[string]SuiteCoverage{}
 			}
+			if !cov.Predates {
+				n.Signal.CoverageRev, n.Signal.CoverageOmitted = n.Rev, ""
+			}
 			var instrumented, covered []int
 			for line, hit := range cov.Lines {
 				instrumented = append(instrumented, line)
@@ -545,6 +548,7 @@ func (g *Graph) IngestCoverageSuite(byFile map[string]FileCov, suite, now string
 			n.Signal.CoveredLines = cov.Covered
 			n.Signal.TotalLines = cov.Total
 			n.Signal.LineCoverage = percent(cov.Covered, cov.Total)
+			n.Signal.CoverageRev, n.Signal.CoverageOmitted = n.Rev, ""
 			n.Signal.BranchTotal, n.Signal.BranchMissed = len(cov.Branches), missedBranches(cov.Branches)
 			n.Signal.AtRev = n.Rev
 			n.Signal.IngestedAt = now
@@ -878,4 +882,27 @@ func scenarioRoot(code string) string {
 		return code[:i]
 	}
 	return code
+}
+
+// MarkCoverageOmitted records, on each code file the suite covers (`covers`) that the
+// coverage report left out, that a whole run of the suite omitted it at its current
+// revision — unless another report already listed it at this revision. It returns how
+// many were marked.
+func (g *Graph) MarkCoverageOmitted(byFile map[string]FileCov, covers func(id string) bool) (marked int) {
+	for i := range g.Nodes {
+		n := &g.Nodes[i]
+		if n.Kind != KindCode || n.Support || !covers(n.ID) {
+			continue
+		}
+		if _, ok := matchReport(n.ID, byFile); ok {
+			continue
+		}
+		if n.Signal != nil && n.Signal.CoverageRev == n.Rev {
+			continue
+		}
+		ensureSignal(n)
+		n.Signal.CoverageOmitted = n.Rev
+		marked++
+	}
+	return marked
 }

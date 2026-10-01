@@ -285,7 +285,7 @@ dialect:
   log_patterns:
     - '\b(?:log|logger|slog)\.(?:Error|Warn|Fatal|Printf|Print)\b'
     - '\bfmt\.Errorf\('
-    - '\breturn\s+(?:Fail|Pending),\s'
+    - '\breturn\s+(?:Fail|Pending|Diverge),\s'
     # Outside the gates a failure is handled by giving it BACK to the caller, which prints
     # it — `return err`, `return nil, err`. Propagating is not swallowing: the silence
     # failure-logged exists to catch is a handled failure that returns nothing about it.

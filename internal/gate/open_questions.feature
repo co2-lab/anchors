@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: OPQSP
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @OPQSP
@@ -81,10 +81,10 @@ Feature: OpenQuestions — a spec with an open question is not ready to implemen
       exists, or it does not; judging the merit of a doubt belongs to another gate
 
   @OPQSP-X02 @unit-level
-  Scenario: A spec with no section is a pending item, and the verdict teaches the way out
+  Scenario: A spec with no section is a divergence item, and the verdict teaches the way out
     Given a spec with rules catalogued and no open-decisions section at all
     When the gate confronts it
-    Then it returns Pending, because the absence does not tell "everything was decided"
+    Then it returns a divergence, because the absence does not tell "everything was decided"
       apart from "the section was deleted"
     And the verdict says how to close it: declare that there is no question, or write
       what is not yet decided

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GTENG
-#   updated_at: 2026-09-29
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @GTENG
@@ -102,12 +102,10 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
     Then it returns Pending naming the omission, rather than passing in silence
 
   @GTENG-B15 @unit-level
-  Scenario: Only the pending item that says a decision is still to take bars promotion
-    Given one pending item marked as a decision still to take and another that merely
-      had nothing to confront
-    When each is produced
-    Then only the first is marked as barring promotion, because treating them alike
-      failed four hundred and eleven nodes at once
+  Scenario: Each verdict level does what the gate's severity says
+    Given a divergence, a pending item, and a divergence the project declared, from a blocking gate
+    When the gate declares no severity, then pending inform, then pending ignore
+    Then first the divergence and the pending item bar and the declared one informs, then only the divergence bars, then the pending item is ignored
 
   @GTENG-B16 @unit-level
   Scenario: Only the obligations gate produces assumed debt

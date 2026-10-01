@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: LYBNL
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @LYBNL
@@ -40,7 +40,7 @@ Feature: LayerBoundary — a layer does not reach what is not its own
   Scenario: Severity warn records without failing, and the default is error
     Given a boundary marked severity warn and a file that violates it
     When the gate confronts it
-    Then it returns Pending, and the same boundary with no severity returns Fail,
+    Then it returns a divergence, and the same boundary with no severity returns Fail,
       because the default is error and warn is the per-rule maturation
 
   @LYBNL-B06 @unit-level

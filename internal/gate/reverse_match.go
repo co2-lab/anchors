@@ -231,10 +231,14 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		if testsDeclarativeUnit(n, g, cfg) {
 			return Skip, i18n.T("gate.test_feature.skip_declarative_unit")
 		}
-		return Pending, i18n.T("gate.test_feature.pending_no_feature")
+		// Nothing to confront: the link itself is `triad-complete`'s to charge. A Pending here
+		// would block the promotion over a question this gate does not ask.
+		return Skip, i18n.T("gate.test_feature.skip_no_feature")
 	}
 
 	declared := map[string]bool{}
+	scenarios := map[string]bool{} // the codes as declared, variant included
+	withVariants := map[string]bool{}
 	units := map[string]bool{}
 	for _, fp := range featPaths {
 		b, err := readFile(root, fp)
@@ -244,6 +248,10 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		for _, sc := range parseFeatureScenarios(string(b)) {
 			for _, c := range sc.Codes {
 				declared[withoutVariant(c)] = true
+				scenarios[c] = true
+				if c != withoutVariant(c) {
+					withVariants[withoutVariant(c)] = true
+				}
 				if u, _, ok := strings.Cut(c, "-"); ok {
 					units[u] = true
 				}
@@ -258,9 +266,14 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 	// a REFERENCE, not proof.
 	body := stripLineComments(content)
 
-	var orphans []string
+	var orphans, strayVariants, bareRules []string
 	seen := map[string]bool{}
-	for _, m := range anyCodeRE.FindAllString(body, -1) {
+	for _, loc := range anyCodeRE.FindAllStringIndex(body, -1) {
+		m := body[loc[0]:loc[1]]
+		cited := m
+		if v := variantSuffixRE.FindString(body[loc[1]:]); v != "" {
+			cited = m + v
+		}
 		// A REVISION IS NOT A RULE, and no scenario is charged for it.
 		//
 		// `JDDTJ-R0002` is a revision — four digits —, and `anyCodeRE` matches `R00`
@@ -281,19 +294,47 @@ func checkTestFeatureMatch(content string, n mapx.Node, root string, g *mapx.Gra
 		if !ok || !units[u] {
 			continue
 		}
-		if declared[rule] || seen[rule] {
+		if !declared[rule] {
+			if !seen[rule] {
+				seen[rule] = true
+				orphans = append(orphans, m)
+			}
 			continue
 		}
-		seen[rule] = true
-		orphans = append(orphans, m)
+		// The rule is declared; the SCENARIO must be too. A proof is counted by the scenario
+		// it names, variant included: a test naming `CODE-B03#01` under a feature that
+		// declares `@CODE-B03` alone — or naming the bare rule under one that declares its
+		// variants — is written, runs green, and proves nothing.
+		switch {
+		case cited != rule && !scenarios[cited] && !seen[cited]:
+			seen[cited] = true
+			strayVariants = append(strayVariants, cited)
+		case cited == rule && withVariants[rule] && !scenarios[rule] && !seen[cited]:
+			seen[cited] = true
+			bareRules = append(bareRules, cited)
+		}
 	}
-	if len(orphans) == 0 {
+	if len(orphans)+len(strayVariants)+len(bareRules) == 0 {
 		return Pass, ""
 	}
-	sort.Strings(orphans)
-	return Fail, fmt.Sprintf(i18n.T("gate.test_feature.orphan"),
-		len(orphans), strings.Join(orphans, ", "))
+	var parts []string
+	if len(orphans) > 0 {
+		sort.Strings(orphans)
+		parts = append(parts, fmt.Sprintf(i18n.T("gate.test_feature.orphan"), len(orphans), strings.Join(orphans, ", ")))
+	}
+	if len(strayVariants) > 0 {
+		sort.Strings(strayVariants)
+		parts = append(parts, i18n.T("gate.test_feature.stray_variant", len(strayVariants), strings.Join(strayVariants, ", ")))
+	}
+	if len(bareRules) > 0 {
+		sort.Strings(bareRules)
+		parts = append(parts, i18n.T("gate.test_feature.bare_rule", len(bareRules), strings.Join(bareRules, ", ")))
+	}
+	return Fail, strings.Join(parts, "\n")
 }
+
+// variantSuffixRE is a scenario variant right after a code: `#02`.
+var variantSuffixRE = regexp.MustCompile(`^#\d{2}\b`)
 
 // testsDeclarativeUnit says whether the test's unit under test lies wholly in layers of
 // `regime: declarativo`. Such a unit originates no rule and has no feature by the

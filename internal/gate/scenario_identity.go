@@ -53,12 +53,12 @@ func checkScenarioIdentity(content string, n mapx.Node, _ string, _ *mapx.Graph,
 	}
 	if len(repetidos) > 0 {
 		sort.Strings(repetidos)
-		return Pending, i18n.T("gate.scenario_identity.pending_repeated_codes",
+		return Diverge, i18n.T("gate.scenario_identity.pending_repeated_codes",
 			len(repetidos), strings.Join(repetidos, "; "),
 			firstCode(repetidos), firstCode(repetidos))
 	}
 	if copies := copiedBodies(content); len(copies) > 0 {
-		return Pending, i18n.T("gate.scenario_identity.pending_copied_body", len(copies), strings.Join(copies, "; "))
+		return Diverge, i18n.T("gate.scenario_identity.pending_copied_body", len(copies), strings.Join(copies, "; "))
 	}
 	return Pass, ""
 }

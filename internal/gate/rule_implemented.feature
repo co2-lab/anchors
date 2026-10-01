@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RLIMR
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @RLIMR
@@ -24,15 +24,15 @@ Feature: RuleImplemented — the spec catalogues rules, and the code shows it re
     Then it returns Pass, because the declaration is the answer the gate asked for
 
   @RLIMR-B03 @unit-level
-  Scenario: A unit that predates the practice is a pending item, not a failure
+  Scenario: A unit that predates the practice is a divergence item, not a failure
     Given a spec whose rules carry no mark anywhere in the code
     And the project does not declare that it requires marking
     When the gate confronts it
-    Then it returns Pending
+    Then it returns a divergence
     And the verdict NAMES the debt, instead of pretending approval
 
   @RLIMR-B04 @unit-level
-  Scenario: Declaring the requirement turns the pending item into a failure
+  Scenario: Declaring the requirement turns the divergence item into a failure
     Given the same unmarked spec
     And the project declares in its Structure that marking is required
     When the gate confronts it

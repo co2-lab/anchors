@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DUPLC
-  updated_at: 2026-09-27
+  updated_at: 2026-09-30
   layer: gate
 -->
 # Duplication — no code file holds a block copied from somewhere else
@@ -52,10 +52,11 @@ duplicated lines the project tolerates.
 | `DUPLC-B01` | A file that takes part in no clone passes. |
 | `DUPLC-B02` | A file that takes part in a clone fails, naming for each clone its own lines, the other file and that file's lines, whichever side of the clone it is on. |
 | `DUPLC-B03` | A clone inside a single file is described by its two line ranges alone. |
-| `DUPLC-B04` | When `.jscpd.json` declares a `threshold` and the project's duplicated percentage is at or under it, the file's clones are reported as Pending, not failed; over it they fail. |
+| `DUPLC-B04` | When `.jscpd.json` declares a `threshold` and the project's duplicated percentage is at or under it, the file's clones are reported as Diverge, not failed; over it they fail. |
 | `DUPLC-B05` | Without a declared `threshold`, any clone fails, whatever jscpd's exit code. |
 | `DUPLC-B06` | jscpd runs once per scan: the same root and map reuse the report, and a new map runs it again. |
 | `DUPLC-B07` | An absolute path in the report is read relative to the project root. |
+| `DUPLC-B08` | The gate runs a pinned jscpd release, not whatever is newest: a release that cannot run where the project runs does not silently stop the measuring. (`jscpdPackage`, `duplicationCommand`) |
 
 ## Errors
 

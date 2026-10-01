@@ -109,7 +109,7 @@ func checkPlanDoctrineExists(content string, n mapx.Node, root string, g *mapx.G
 	}
 	if len(deferred) > 0 {
 		sort.Strings(deferred)
-		return Pending, fmt.Sprintf(i18n.T("gate.plan_doctrine_exists.deferred"), len(deferred), strings.Join(deferred, ", "))
+		return Diverge, fmt.Sprintf(i18n.T("gate.plan_doctrine_exists.deferred"), len(deferred), strings.Join(deferred, ", ")) + " " + DeclaredMarker
 	}
 	if len(seen) == 0 {
 		return Skip, i18n.T("gate.plan_doctrine_exists.skip_none")
@@ -187,7 +187,7 @@ func checkDoctrineRealized(content string, n mapx.Node, root string, g *mapx.Gra
 		return Fail, fmt.Sprintf(i18n.T("gate.doctrine_realized.unrealized"), len(unrealized), strings.Join(unrealized, ", "))
 	}
 	sort.Strings(owed)
-	return Pending, fmt.Sprintf(i18n.T("gate.doctrine_realized.deferred"), len(owed), strings.Join(owed, ", "))
+	return Diverge, fmt.Sprintf(i18n.T("gate.doctrine_realized.deferred"), len(owed), strings.Join(owed, ", ")) + " " + DeclaredMarker
 }
 
 // --- does the doctrine the SPEC cites exist? ---
@@ -511,7 +511,7 @@ func checkSpecRealizesDoctrine(content string, n mapx.Node, root string, g *mapx
 		return Fail, fmt.Sprintf(i18n.T("gate.spec_realizes_doctrine.missing"), len(naked), strings.Join(naked, ", "))
 	}
 	if len(deferred) > 0 {
-		return Pending, fmt.Sprintf(i18n.T("gate.spec_realizes_doctrine.deferred"), len(deferred))
+		return Diverge, fmt.Sprintf(i18n.T("gate.spec_realizes_doctrine.deferred"), len(deferred)) + " " + DeclaredMarker
 	}
 	return Pass, ""
 }

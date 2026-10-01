@@ -101,13 +101,13 @@ func TestDispensaDeclaradaFechaAConta(t *testing.T) {
 // prática. Medido no repositório de origem: 3.114 regras em 590 unidades. Acusá-las
 // reprovaria 98% do projeto, e um gate assim é desligado no primeiro dia.
 func TestUnidadeAnteriorAPraticaEhPendencia(t *testing.T) {
-	t.Run("RLIMR-B03: A unit that predates the practice is a pending item, not a failure", func(t *testing.T) {})
+	t.Run("RLIMR-B03: A unit that predates the practice is a divergence item, not a failure", func(t *testing.T) {})
 	root := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(root, "v.ts"), []byte("export const f = 1\n"), 0o644))
 	spec := "<!-- @anchors\n  code: ANTGX\n-->\n| `ANTGX-B01` | faz algo |\n| `ANTGX-B02` | faz outro |\n"
 
 	v, msg := checkRuleImplemented(spec, mapx.Node{Kind: mapx.KindSpec, ID: "v.spec.md"}, root, nil, nil)
-	if v != Pending {
+	if v != Diverge {
 		t.Errorf("nenhuma regra declarada = dívida de migração (Pending); veio %v (%s)", v, msg)
 	}
 	if !strings.Contains(msg, "anterior à prática") && !strings.Contains(msg, "precedes") {
@@ -140,7 +140,7 @@ func must(t *testing.T, err error) {
 // um CRUD sem seleção; o gate VIU a regra ausente, caiu no ramo de migração e devolveu
 // pendência. O defeito atravessou os 44 gates.
 func TestRegraImplementada_marcacaoExigidaVenceAPendencia(t *testing.T) {
-	t.Run("RLIMR-B04: Declaring the requirement turns the pending item into a failure", func(t *testing.T) {})
+	t.Run("RLIMR-B04: Declaring the requirement turns the divergence item into a failure", func(t *testing.T) {})
 	root := t.TempDir()
 	must(t, os.WriteFile(filepath.Join(root, "u.ts"), []byte(
 		"export const useStore = () => ({ addAccount() {} })\n"), 0o644))
@@ -148,7 +148,7 @@ func TestRegraImplementada_marcacaoExigidaVenceAPendencia(t *testing.T) {
 	n := mapx.Node{Kind: mapx.KindSpec, ID: "u.spec.md"}
 
 	// Sem declaração: migração em curso, pendência (o comportamento de hoje).
-	if v, _ := checkRuleImplemented(spec, n, root, nil, nil); v != Pending {
+	if v, _ := checkRuleImplemented(spec, n, root, nil, nil); v != Diverge {
 		t.Errorf("sem `rule_marking` a dívida é pendência: %v", v)
 	}
 

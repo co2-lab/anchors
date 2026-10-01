@@ -44,12 +44,12 @@ func TestPhaseOrdered_B03_PlanoSemFasesPula(t *testing.T) {
 }
 
 func TestPhaseOrdered_B04_FaseEmProsaFicaPendente(t *testing.T) {
-	t.Run("PHORP-B04: Plans with phase-like sections lacking codes return Pending", func(t *testing.T) {})
+	t.Run("PHORP-B04: Plans with phase-like sections lacking codes return Diverge", func(t *testing.T) {})
 	t.Run("PHORP-I04: Phase detection identifies level-three sections regardless of language", func(t *testing.T) {})
 	plano := mapx.Node{Kind: mapx.KindPlan, Code: "FNDTN"}
 	prosa := "## Fases\n\n### Fase 1 — a árvore\n\n### Fase 2 — depende da Fase 1\n"
 	v, msg := checkPhaseOrdered(prosa, plano, "", nil, nil)
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("fase em prosa deve retornar Pending; veio %v (%s)", v, msg)
 	}
 	if !strings.Contains(msg, "FNDTN") {

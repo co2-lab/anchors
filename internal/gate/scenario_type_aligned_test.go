@@ -168,8 +168,8 @@ Funcionalidade: Banner
 }
 
 func TestScenarioTypeAligned_AcusaTagQueDiscordaDaLetra(t *testing.T) {
-	t.Run("STASC-B10: A scenario tag disagreeing with the code rule letter returns Pending", func(t *testing.T) {})
-	t.Run("STASC-I03: Mismatched scenario types return Pending rather than Fail", func(t *testing.T) {})
+	t.Run("STASC-B10: A scenario tag disagreeing with the code rule letter returns a divergence", func(t *testing.T) {})
+	t.Run("STASC-I03: Mismatched scenario types return Diverge rather than Fail", func(t *testing.T) {})
 	t.Run("STASC-X02: The gate does not decide whether tag or code is erroneous", func(t *testing.T) {})
 	codeS01 := "LGSTX" + "-S01"
 	feat := `# language: pt
@@ -182,7 +182,7 @@ Funcionalidade: Seção
 `
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
 	v, detail := checkScenarioTypeAligned(feat, n, "", nil, cfgComTags())
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("esperava Pending, veio %v: %s", v, detail)
 	}
 	if !strings.Contains(detail, codeS01) || !strings.Contains(detail, "comportamento") {
@@ -191,7 +191,7 @@ Funcionalidade: Seção
 }
 
 func TestScenarioTypeAligned_DetalhesDoVereditoPending(t *testing.T) {
-	t.Run("STASC-B11: The Pending verdict cites details of the type divergence", func(t *testing.T) {})
+	t.Run("STASC-B11: The Diverge verdict cites details of the type divergence", func(t *testing.T) {})
 	codeS01 := "LGSTX" + "-S01"
 	tituloLongo := "Um titulo deliberadamente longo para testar a abreviacao de texto pelo formatador"
 	feat := `# language: pt
@@ -204,7 +204,7 @@ Funcionalidade: Detalhes
 `
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
 	v, detail := checkScenarioTypeAligned(feat, n, "", nil, cfgComTags())
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("esperava Pending, veio %v: %s", v, detail)
 	}
 	if !strings.Contains(detail, codeS01) {
@@ -241,7 +241,7 @@ Funcionalidade: Multiplos
 `
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
 	v, detail := checkScenarioTypeAligned(feat, n, "", nil, cfgComTags())
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("esperava Pending, veio %v: %s", v, detail)
 	}
 	if !strings.Contains(detail, "2") {

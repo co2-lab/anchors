@@ -353,7 +353,7 @@ jest.mock('@gorhom/bottom-sheet', () => ({ BottomSheet: 'View' }))`
 // `[^=]*` crossed line breaks and gave the spy the factory of a LATER mock; measured in
 // the reference app, 3 of 4 "loose doubles" were exactly this.
 func TestMockTyped_spyIsNotAnotherMocksFactory(t *testing.T) {
-	t.Run("MCTYM-B06: A spy mock is not charged with a later mock's factory", func(t *testing.T) {})
+	t.Run("MCTYM-X05: A double with no factory is not charged", func(t *testing.T) {})
 	src := `vi.mock('src/a', { spy: true })
 vi.mock('src/b', (): Partial<typeof import('src/b')> => ({
   algo: vi.fn(),
@@ -367,7 +367,7 @@ vi.mock('src/b', (): Partial<typeof import('src/b')> => ({
 // still counts. Without the `\s*` before the group, the break would drop the match and
 // the annotated double would pass as having no factory.
 func TestMockTyped_factoryOnTheNextLine(t *testing.T) {
-	t.Run("MCTYM-B07: A factory on the next line is still read, tie and all", func(t *testing.T) {})
+	t.Run("MCTYM-B13: A factory on the next line is still read, tie and all", func(t *testing.T) {})
 	annotated := `vi.mock(
   'src/a',
   (): Partial<typeof import('src/a')> => ({ x: vi.fn() }),

@@ -3,6 +3,7 @@ package mapx
 import (
 	"reflect"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -772,5 +773,33 @@ func TestIngestSuite_keepsTheVariant(t *testing.T) {
 	g.IngestExecutionSuite(nil, map[string]bool{"AAAAX-B02#01": true, "BBBBX-B01": true}, nil, declared, "unit", "junit.xml", "t1")
 	if got := g.Nodes[0].Signal; got == nil || len(got.ProvenCodes) != 1 || got.ProvenCodes[0] != "AAAAX-B02#01" {
 		t.Errorf("the spec keeps its proven variant and nothing else, got %+v", got)
+	}
+}
+
+func TestIngestCoverage_listedAndOmitted(t *testing.T) {
+	t.Run("SGINA-B29: A file the coverage report lists, or leaves out, says so", func(t *testing.T) {})
+	g := &Graph{Nodes: []Node{
+		{ID: "src/a.ts", Kind: KindCode, Rev: "ra"}, {ID: "src/empty.ts", Kind: KindCode, Rev: "re"},
+		{ID: "src/types.ts", Kind: KindCode, Rev: "rt"}, {ID: "other/x.ts", Kind: KindCode, Rev: "rx"},
+	}}
+	byFile := map[string]FileCov{"src/a.ts": {Covered: 1, Total: 2}, "src/empty.ts": {}}
+	g.IngestCoverageSuite(byFile, "unit", "t1")
+	covers := func(id string) bool { return strings.HasPrefix(id, "src/") }
+	if n := g.MarkCoverageOmitted(byFile, covers); n != 1 {
+		t.Errorf("only the covered file the report left out is marked, got %d", n)
+	}
+	by := map[string]*TestSignal{}
+	for i := range g.Nodes {
+		by[g.Nodes[i].ID] = g.Nodes[i].Signal
+	}
+	if by["src/a.ts"].CoverageRev != "ra" || by["src/empty.ts"].CoverageRev != "re" || by["src/empty.ts"].TotalLines != 0 {
+		t.Errorf("a listed file records its revision, with lines or with none: %+v %+v", by["src/a.ts"], by["src/empty.ts"])
+	}
+	if by["src/types.ts"] == nil || by["src/types.ts"].CoverageOmitted != "rt" || by["other/x.ts"] != nil {
+		t.Errorf("the omitted file the suite covers records its revision, and nothing else: %+v %+v", by["src/types.ts"], by["other/x.ts"])
+	}
+	g.IngestCoverageSuite(map[string]FileCov{"src/types.ts": {Covered: 1, Total: 1}}, "integration", "t2")
+	if by := g.Node("src/types.ts").Signal; by.CoverageOmitted != "" || by.CoverageRev != "rt" {
+		t.Errorf("a later report that lists it clears the omission, got %+v", by)
 	}
 }

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: BRCOV
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @BRCOV
@@ -30,3 +30,9 @@ Feature: BranchCoverage — the tests take the branches the code has
     Given a spec, a code file with no coverage, one with stale coverage, and one whose coverage has no branch
     When each is confronted
     Then the spec and the branchless file are skipped, and the other two are pending
+
+  @BRCOV-B05 @unit-level
+  Scenario: Branch coverage reads a file with nothing to cover as line coverage does
+    Given a file listed with no line, and a file a whole run of its suite left out
+    When branch coverage confronts each
+    Then the first is skipped and the second is a divergence

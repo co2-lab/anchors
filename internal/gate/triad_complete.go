@@ -145,7 +145,7 @@ func checkTriadComplete(content string, n mapx.Node, root string, g *mapx.Graph,
 	}
 	if len(owed) > 0 {
 		sort.Strings(owed)
-		return Pending, i18n.T("gate.triad.to_be_developed", len(owed), strings.Join(owed, ", "))
+		return Diverge, i18n.T("gate.triad.to_be_developed", len(owed), strings.Join(owed, ", ")) + " " + DeclaredMarker
 	}
 	return Pass, ""
 }

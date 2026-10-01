@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RLTYR
-  updated_at: 2026-09-19
+  updated_at: 2026-09-30
   layer: gate
 -->
 # RuleTypes — the rule VOCABULARY is extensible, but it must be DECLARED
@@ -52,7 +52,7 @@ exist.
 | `RLTYR-B06` | A heading that IS the rule code itself is not a category section: it is the rule's own header, and is not charged. |
 | `RLTYR-B07` | A section that merely CITES codes belonging to other sections does not catalogue rules, and claims no letter. |
 | `RLTYR-B08` | A section that DEFINES a code in the first cell of a table does catalogue rules, and is charged. |
-| `RLTYR-B09` | A section the project declared as `sections_require_code` that is FILLED and carries no code returns Pending, naming the section. |
+| `RLTYR-B09` | A section the project declared as `sections_require_code` that is FILLED and carries no code returns a divergence, naming the section. |
 | `RLTYR-B10` | A section whose table already carries the code is not charged. |
 | `RLTYR-B11` | A declared section that is NOT in `sections_require_code` is not charged: it merely enumerates values, and demanding a rule of an index would invent a duty. |
 | `RLTYR-B12` | A project that does not use `sections_require_code` changes no behaviour — the ruler is born opt-in, or it would accuse an entire existing base at once. |

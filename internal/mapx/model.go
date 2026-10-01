@@ -260,6 +260,14 @@ type TestSignal struct {
 	// ingested after the unit one, OVERWROTE the unit coverage of the same file. Some
 	// directories are only exercised by integration, so the two measure different lines.
 	CoverageBySuite map[string]SuiteCoverage `yaml:"coverage_by_suite,omitempty"`
+	// CoverageRev is the file's revision when a coverage report last LISTED it — with lines
+	// or with none (`LF:0`): a file listed with no instrumentable line was measured and has
+	// nothing to cover.
+	CoverageRev string `yaml:"coverage_rev,omitempty"`
+	// CoverageOmitted is the file's revision when a whole run of a suite that covers it
+	// left it out of its coverage report. A tool may omit a file with no instrumentable line
+	// (istanbul, a file of types alone) — or the file may be outside what the tool collects.
+	CoverageOmitted string `yaml:"coverage_omitted,omitempty"`
 	// Branch coverage (lcov `BRDA`), the union over the suites measured at the current
 	// rev: how many branches the file has, and the ones NO suite took (`<line>:<block>:
 	// <branch>`, separated by spaces). Zero total when no report lists branches.

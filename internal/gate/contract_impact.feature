@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CTRIM
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @CTRIM
@@ -20,10 +20,10 @@ Feature: ContractImpact — a changed field names the rules that use it, and the
     Then the impact names every rule and the test file
 
   @CTRIM-B03 @unit-level
-  Scenario: The gate is pending with the impact, and passes without
+  Scenario: The gate is divergence with the impact, and passes without
     Given the spec with amount changed, the spec unchanged, and a feature node
     When contract-impact confronts each
-    Then it is pending naming the field, passes, and skips
+    Then it is divergence naming the field, passes, and skips
 
   @CTRIM-B04 @unit-level
   Scenario: The impacted tests are listed for the selection

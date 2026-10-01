@@ -134,12 +134,12 @@ func TestObligation_aMensagemOfereceAsTresSaidas(t *testing.T) {
 // deixou de existir), e deixar vermelho confunde dívida assumida com esquecimento, que é
 // justamente a distinção que o pilar existe para preservar.
 func TestObligation_dividaAssumidaComQuandoEhPendente(t *testing.T) {
-	t.Run("OBHNB-B06: An acknowledged debt with a written when yields Pending", func(t *testing.T) {})
+	t.Run("OBHNB-B06: An acknowledged debt with a written when yields a divergence", func(t *testing.T) {})
 	root := tmpRoot(t, "// nada aqui\n")
 	comQuando := "<!-- @anchors\n  code: MTENX\n  carries: pii\n" +
 		"  obligation_pending: pii-purgavel — o handler nasce na fase 2 do plano\n-->\n# x\n"
 	v, d := checkObligationHonored(comQuando, obligNode(), root, nil, obligCfg())
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("dívida assumida deveria ser Pendente, foi %s (%s)", v, d)
 	}
 	if (!strings.Contains(d, "DÍVIDA ASSUMIDA") && !strings.Contains(d, "ASSUMED DEBT")) || !strings.Contains(d, "fase 2") {

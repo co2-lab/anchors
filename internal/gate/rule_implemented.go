@@ -117,7 +117,7 @@ func checkRuleImplemented(content string, n mapx.Node, root string, g *mapx.Grap
 	}
 
 	if len(faltando) == len(regras) && !hasAnyDeclaration(content, texto, regras) {
-		return Pending, i18n.T("gate.rule_implemented.pending_migration", len(regras), unidade)
+		return Diverge, i18n.T("gate.rule_implemented.pending_migration", len(regras), unidade)
 	}
 	sort.Strings(faltando)
 	mostra := faltando

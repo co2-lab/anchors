@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DCTRN
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @DCTRN
@@ -39,10 +39,10 @@ Feature: Doctrine — the vertical axis: product doctrine exists, is realized, a
     Then it returns Fail naming "product/b.doctrine.md, product/z.doctrine.md" with the count 2
 
   @DCTRN-B06 @unit-level
-  Scenario: A missing doctrine cited on a TBD line is Pending, naming it
+  Scenario: A missing doctrine cited on a TBD line is a divergence, naming it
     Given a plan line citing the missing "product/a.doctrine.md" with "@TBD: written next cycle"
     When plan-doctrine-exists confronts the plan
-    Then it returns Pending naming "product/a.doctrine.md"
+    Then it returns a divergence naming "product/a.doctrine.md"
 
   @DCTRN-B07 @unit-level
   Scenario: A citation with no directory, or of a template, seeds nothing
@@ -77,10 +77,10 @@ Feature: Doctrine — the vertical axis: product doctrine exists, is realized, a
     Then it returns Fail naming "LIMIT-R02" and not "LIMIT-R01"
 
   @DCTRN-B12 @unit-level
-  Scenario: Unrealized rules that are all deferred with TBD are Pending
+  Scenario: Unrealized rules that are all deferred with TBD are Diverge
     Given a doctrine whose only rule "LIMIT-R03" carries "@TBD: not realized yet"
     When doctrine-realized confronts it with no realizer
-    Then it returns Pending naming "LIMIT-R03"
+    Then it returns a divergence naming "LIMIT-R03"
 
   @DCTRN-B13 @unit-level
   Scenario: An open question is not a rule to realize
@@ -183,7 +183,7 @@ Feature: Doctrine — the vertical axis: product doctrine exists, is realized, a
   Scenario: A rule deferred with TBD is debt, not failure
     Given a spec of a demanding layer whose rule carries "@TBD: doctrine being written"
     When spec-realizes-doctrine confronts it
-    Then it returns Pending
+    Then it returns a divergence
 
   @DCTRN-B30 @unit-level
   Scenario: A realizes tag after a blank line declares nothing for the rule above

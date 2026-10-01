@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: OBHNB
-#   updated_at: 2026-09-26
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @OBHNB
@@ -45,11 +45,11 @@ Feature: ObligationHonored — the cross-cutting duty that lives OUTSIDE the uni
     Then it returns Skip, because inventing duties would charge what nobody committed to
 
   @OBHNB-B06 @unit-level
-  Scenario: An acknowledged debt with a written when yields Pending
+  Scenario: An acknowledged debt with a written when yields a divergence
     Given a node that carries the trigger and is absent from the purge script
     And a debt declaration naming the obligation and the phase in which it will be paid
     When the gate confronts it
-    Then it returns Pending carrying that commitment, because the duty still holds and the
+    Then it returns a divergence carrying that commitment, because the duty still holds and the
       record must stay visible in the report
 
   @OBHNB-B07 @unit-level

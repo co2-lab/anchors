@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RLIMR
-  updated_at: 2026-09-26
+  updated_at: 2026-09-30
   layer: gate
 -->
 # RuleImplemented — a spec catalogues rules, and the code shows it realized them
@@ -47,8 +47,8 @@ DECLARES, rule by rule, whether it has code.
 | --- | --- |
 | `RLIMR-B01` | A spec whose rules do not appear in the code is ACCUSED, and the verdict names which ones were left without realization. |
 | `RLIMR-B02` | A rule waived with a written reason settles the account: the declaration counts as the answer, and what it waives stops being charged. |
-| `RLIMR-B03` | A unit that predates the practice becomes PENDING, not a failure — while the project does not declare that it requires the marking. |
-| `RLIMR-B04` | Once the requirement is declared in the Structure, the pending item becomes a failure: it is the act of saying "the migration ended here". |
+| `RLIMR-B03` | A unit that predates the practice becomes a DIVERGENCE, not a failure — while the project does not declare that it requires the marking. |
+| `RLIMR-B04` | Once the requirement is declared in the Structure, the divergence becomes a failure: it is the act of saying "the migration ended here". |
 | `RLIMR-B05` | A spec with no linked code is not this gate's subject: without the piece on the other side there is no confrontation to make. |
 | `RLIMR-B06` | The waiver may name the rule it covers, or count for all of them when it names none. |
 

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GTENG
-  updated_at: 2026-09-29
+  updated_at: 2026-09-30
   layer: gate
 -->
 # GateEngine — which gates reach which node, and what the run concludes
@@ -97,7 +97,7 @@ restricted to codes must leave the gate RUNNING to confront everybody else.
 | `GTENG-B12` | A judgment gate reads the stamp left by an earlier judgement and turns it into the verdict, so work already done stops being invisible. |
 | `GTENG-B13` | A judgement recorded as waived becomes Skip and never Pass, because the gate did not measure and Pass would assert an approval nobody gave. |
 | `GTENG-B14` | A gate declaring neither a command nor a check answers undetermined, naming the omission. |
-| `GTENG-B15` | A pending item that says "there is a decision still to take" bars promotion, and a pending item that says "I had nothing to confront" does not. |
+| `GTENG-B15` | Each verdict level does what the gate's `severity` says — `block` bars the promotion, `inform` reports without barring, `ignore` only counts —; unset, a blocking gate blocks every level and an informative gate informs. A divergence the project declared (`[declared]`: a debt with its deadline, a rule `@TBD`), or one its own threshold accepts (`[advisory]`: a mutation score above the floor), informs and never bars. "Nothing to confront" is not a level: it is Skip. (`markSeverity`, `Result.Blocks`, `Result.Ignored`) |
 | `GTENG-B16` | Only the obligations gate produces ASSUMED DEBT, and only that pending item carries a deadline into the record. |
 | `GTENG-B17` | The engine reconfigures the code grammar from the project's vocabulary before running anything. |
 | `GTENG-B18` | `Run` is the entry point that confronts the gates with the map alone, delegating with no Structure — the relational checkers then read absence as "no mapping declared". |

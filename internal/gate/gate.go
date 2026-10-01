@@ -25,7 +25,8 @@ const (
 	Pass    Verdict = "pass"    // passou
 	Fail    Verdict = "fail"    // reprovou → issue (bloqueia se o gate é blocking)
 	Skip    Verdict = "skip"    // não se aplica a este alvo
-	Pending Verdict = "pending" // gate interno ainda não implementado / indeterminado
+	Pending Verdict = "pending" // had something to confront and could not measure it
+	Diverge Verdict = "diverge" // measured and found something short of wrong
 	Judge   Verdict = "judge"   // gate de JULGAMENTO POR IA: aguarda veredito de uma IA
 )
 
@@ -43,8 +44,12 @@ type Result struct {
 	Regra    string
 	Target   string // nó confrontado (ID)
 	Verdict  Verdict
-	Blocking bool   // se este gate bloqueia (da config)
-	Detail   string // mensagem (por que falhou, etc.)
+	Blocking bool // se este gate bloqueia (da config)
+	// Action is what this verdict does, from the gate's `severity` for its level: `block`,
+	// `inform` or `ignore`. Empty on a result built outside a gate run; `Blocks` then reads
+	// `Blocking` alone.
+	Action string
+	Detail string // mensagem (por que falhou, etc.)
 	// Divida marca o Pending que é DÍVIDA ASSUMIDA — um dever conhecido, ainda válido,
 	// com um momento declarado para ser pago (`obligation_pending: <nome> — <quando>`).
 	//
@@ -67,12 +72,8 @@ type Result struct {
 	// Separado de Detail porque quem lê a issue quer saber QUANDO ela vence sem
 	// reprocessar o laudo inteiro do gate.
 	Prazo string
-	// Impede marca a PENDÊNCIA que impede a promoção — "há decisão por tomar", não "não
-	// tive o que confrontar". Os dois casos usam o veredito `Pending`, e só o primeiro
-	// deveria barrar: medido num repositório real, tratar todos igual reprovou 411 nós
-	// de uma vez (410 eram gates sem sinal ingerido).
-	//
-	// Quem sabe a diferença é o gate, que sabe o que mediu.
+	// Impede marks a divergence or pending item whose level's state is `block`
+	// (`markSeverity`). "Nothing to confront" is not pending — it is Skip.
 	Impede bool
 	// Duracao e' o tempo de parede desta confrontacao — o gate contra ESTE alvo, ou
 	// contra o conjunto quando o escopo e' agregado.
@@ -245,6 +246,7 @@ func RunWithWaiver(gates []config.Gate, nodes []mapx.Node, root string, graph *m
 func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, graph *mapx.Graph, cfg *config.Config) (r Result) {
 	escopo := g.ScopeForScan(completa)
 	r = Result{Gate: g.Name, Regra: idDoGate(g), Target: "(" + escopo + ")", Blocking: g.IsBlocking()}
+	defer markSeverity(g, &r)
 	defer recoverGate(&r)
 	// Um gate agregado pode ser INTERNO: a pergunta é sobre o conjunto, mas quem
 	// responde é o próprio CLI, não uma ferramenta de fora. É o caso de
@@ -279,6 +281,7 @@ func runAggregate(g config.Gate, alvos []mapx.Node, root string, completa bool, 
 // runOne executa um gate contra um alvo — despacha para interno ou externo.
 func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *config.Config) (r Result) {
 	r = Result{Gate: g.Name, Regra: idDoGate(g), Target: n.ID, Blocking: g.IsBlocking()}
+	defer markSeverity(g, &r)
 	defer recoverGate(&r)
 	// The project declared that this gate has nothing to measure on this target, and why.
 	if reason, ok := g.NoSignalFor(n.ID); ok {
@@ -334,7 +337,7 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 		// DÍVIDA ASSUMIDA é o Pending que tem dono e vencimento — e o único que vira
 		// trabalho registrado (issue em `future/`). Só o gate de obrigações a produz; os
 		// demais Pending são "não tive o que confrontar", que não é dívida de ninguém.
-		if r.Verdict == Pending && g.Check == "obligation-honored" {
+		if r.Verdict == Diverge && g.Check == "obligation-honored" {
 			r.Divida = true
 			r.Prazo = declaredDeadlines(r.Detail)
 		}
@@ -349,7 +352,7 @@ func runOne(g config.Gate, n mapx.Node, root string, graph *mapx.Graph, cfg *con
 		// A distinção sai do próprio gate, pelo MARCADOR que ele põe no laudo. Antes era
 		// por prosa ("que a spec ainda NÃO tomou"), e isso quebraria na tradução do
 		// laudo — sem erro, sem aviso: o gate simplesmente pararia de barrar.
-		if r.Verdict == Pending && g.Check == "open-questions-resolved" &&
+		if r.Verdict == Diverge && g.Check == "open-questions-resolved" &&
 			strings.Contains(r.Detail, OpenDecisionMarker) {
 			r.Impede = true
 			// E vira ISSUE. A mesma distinção decide as duas coisas: "há decisão por
@@ -421,3 +424,57 @@ func recoverGate(r *Result) {
 		r.Verdict, r.Detail = Fail, i18n.T("gate.panicked", fmt.Sprint(p))
 	}
 }
+
+// DeclaredMarker marks, in a verdict's detail, a divergence the project declared on
+// purpose — a debt with its deadline (`obligation_pending`), a rule `@TBD` —: it is
+// reported and never bars.
+const DeclaredMarker = "[declared]"
+
+// AdvisoryMarker marks, in a verdict's detail, a divergence the project's own threshold
+// accepts — a mutation score above the floor and below the desirable —: it is reported and
+// never bars. A project that wants it to bar raises the threshold, and below it the verdict
+// is a failure.
+const AdvisoryMarker = "[advisory]"
+
+// markSeverity gives the result the state its level has on the gate (`severity`): a
+// blocking gate that had something to confront and could not measure it — a test never
+// run, a signal of another version — does not certify the promotion unless the project
+// says so.
+func markSeverity(g config.Gate, r *Result) {
+	level := ""
+	switch r.Verdict {
+	case Fail:
+		level = config.LevelFail
+	case Diverge:
+		level = config.LevelDivergence
+	case Pending:
+		level = config.LevelPending
+	default:
+		return
+	}
+	r.Action = g.ActionFor(level)
+	// A finding the project DECLARED — a debt with its deadline, a rule marked `@TBD` —, or
+	// one its own threshold accepts, is known: it informs, and never bars the promotion.
+	if r.Action == config.ActionBlock && (strings.Contains(r.Detail, DeclaredMarker) || strings.Contains(r.Detail, AdvisoryMarker)) {
+		r.Action = config.ActionInform
+	}
+	if r.Action == config.ActionBlock && r.Verdict != Fail {
+		r.Impede = true
+	}
+}
+
+// Blocks says whether the result bars the promotion: its level's state is `block`. A result
+// built outside a gate run carries no state, and blocks as a blocking gate's failure or its
+// impeding pending item.
+func (r Result) Blocks() bool {
+	switch r.Action {
+	case config.ActionBlock:
+		return true
+	case config.ActionInform, config.ActionIgnore:
+		return false
+	}
+	return r.Blocking && (r.Verdict == Fail || ((r.Verdict == Pending || r.Verdict == Diverge) && r.Impede))
+}
+
+// Ignored says whether the result is counted and not reported: its level's state is `ignore`.
+func (r Result) Ignored() bool { return r.Action == config.ActionIgnore }

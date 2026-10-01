@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:aa9d99a0a7592efb — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:e002166a82d82689 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1379,6 +1379,8 @@ teste prova.
 - [A run's proofs are stamped with the tree's revs](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B16`
 
 - [A report's signals are kept under its path from the root](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B15`
+
+- [A suite's whole coverage run marks the files it left out](camadas/comando.md#ngsti--ingest--binds-the-test-and-log-signals-the-project-produced-to-the-nodes-of-the-map) `NGSTI-B18`
 
 - [The legacy spelling of the waiver is a waiver all the way to the stamp](camadas/comando.md#jdgue--judge--records-an-ais-verdict-on-a-judgment-gate-with-the-same-bookkeeping-as-a-deterministic-gate) `JDGUE-B01`
 
@@ -2804,6 +2806,8 @@ teste prova.
 
 - [The declared format is read from a CRLF file](camadas/config.md#cnfgo-b54--the-declared-format-is-read-from-a-crlf-file) `CNFGO-B54`
 
+- [Each verdict level of a gate takes a state, in order](camadas/config.md#cnfgo-b55--each-verdict-level-of-a-gate-takes-a-state-in-order) `CNFGO-B55`
+
 - [The declared containers come back as written, and a missing config has none](camadas/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
 - [The internal containers are the declared ones without the external, in declared order](camadas/config.md#cntnr-b02--the-internal-containers-are-the-declared-ones-without-the-external-in-declared-order) `CNTNR-B02`
@@ -2942,6 +2946,8 @@ teste prova.
 
 - [Nothing to measure is skipped or pending](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B04`
 
+- [Branch coverage reads a file with nothing to cover as line coverage does](camadas/gate.md#brcov--branchcoverage--the-tests-take-the-branches-the-code-has) `BRCOV-B05`
+
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B01`
 
 - [An exported symbol the spec never names fails, and the verdict names it](camadas/gate.md#cdctc--codecataloged--what-the-code-exports-must-be-in-the-spec-or-waived-in-the-code) `CDCTC-B02`
@@ -3042,7 +3048,7 @@ teste prova.
 
 - [A changed field names its rules, here and in the dependents, and their tests](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B02`
 
-- [The gate is pending with the impact, and passes without](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B03`
+- [The gate is divergence with the impact, and passes without](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B03`
 
 - [The impacted tests are listed for the selection](camadas/gate.md#ctrim--contractimpact--a-changed-field-names-the-rules-that-use-it-and-their-tests) `CTRIM-B04`
 
@@ -3274,7 +3280,7 @@ teste prova.
 
 - [A plan citing missing doctrines fails, naming each once, in order](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B05`
 
-- [A missing doctrine cited on a TBD line is Pending, naming it](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B06`
+- [A missing doctrine cited on a TBD line is a divergence, naming it](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B06`
 
 - [A citation with no directory, or of a template, seeds nothing](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B07`
 
@@ -3286,7 +3292,7 @@ teste prova.
 
 - [The unrealized rules of a doctrine fail, and only they are named](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B11`
 
-- [Unrealized rules that are all deferred with TBD are Pending](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B12`
+- [Unrealized rules that are all deferred with TBD are Diverge](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B12`
 
 - [An open question is not a rule to realize](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B13`
 
@@ -3371,6 +3377,8 @@ teste prova.
 - [An absolute path in the report is read relative to the root](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B07`
 
 - [No report leaves the check Pending naming why](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-E01`
+
+- [The gate runs a pinned jscpd release](camadas/gate.md#duplc--duplication--no-code-file-holds-a-block-copied-from-somewhere-else) `DUPLC-B08`
 
 - [An artifact that is not a test leaves without a verdict](camadas/gate.md#evfrv--evidencefresh--the-score-of-this-test-holds-against-todays-code) `EVFRV-B01`
 
@@ -3542,7 +3550,7 @@ teste prova.
 
 - [Non-unit surfaces are left to their respective gates](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X02`
 
-- [Minor description drift does not block promotion](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X03`
+- [Minor description drift is a divergence, not a failure](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-X03`
 
 - [An unmapped regime tag does not exempt a scenario](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B18`
 
@@ -3561,6 +3569,8 @@ teste prova.
 - [A scenario suffix gives each case of a rule its own identity](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B23`
 
 - [Every test that cites the code is compared, not only the first](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B24`
+
+- [A test title that says the scenario's title and more matches it](camadas/gate.md#ftmft--featuretestmatch--scenarios-in-feature-must-be-implemented-in-test-by-code-and-description) `FTMFT-B25`
 
 - [Only a check with a registered fixer is fixable](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B01`
 
@@ -3658,7 +3668,7 @@ teste prova.
 
 - [A gate declaring neither a command nor a check is undetermined](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B14`
 
-- [Only the pending item that says a decision is still to take bars promotion](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B15`
+- [Each verdict level does what the gate's severity says](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B15`
 
 - [Only the obligations gate produces assumed debt](camadas/gate.md#gteng--gateengine--which-gates-reach-which-node-and-what-the-run-concludes) `GTENG-B16`
 
@@ -3806,9 +3816,9 @@ teste prova.
 
 - [Mutation score passes at the threshold and fails below it naming the survivors](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B23`
 
-- [A missing or stale mutation signal is pending](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B24`
+- [A missing or stale mutation signal is pending, unless it met the floor](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B24`
 
-- [A score between acceptable and desirable is pending, not failed](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B25`
+- [A score between acceptable and desirable is divergence, not failed](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B25`
 
 - [The mutation thresholds come from the report](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B26`
 
@@ -3827,6 +3837,10 @@ teste prova.
 - [A header below the top fails the header ruler](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B33`
 
 - [Each variant of a rule must be proven](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B34`
+
+- [The header's layer is read as the project declares it](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B35`
+
+- [A file with nothing to cover is not pending](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B36`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -4018,6 +4032,8 @@ teste prova.
 
 - [With no map the verdict is pending, not an external-only skip](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-E02`
 
+- [A factory on the next line is still read, tie and all](camadas/gate.md#mctym--mocktyped--every-test-double-must-derive-from-the-module-it-replaces) `MCTYM-B13`
+
 - [A node that carries the trigger and is absent from the demanded file fails](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B01`
 
 - [A node that carries the trigger and does appear passes](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B02`
@@ -4028,7 +4044,7 @@ teste prova.
 
 - [A project with no declared obligation is skipped](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B05`
 
-- [An acknowledged debt with a written when yields Pending](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B06`
+- [An acknowledged debt with a written when yields a divergence](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B06`
 
 - [A bare debt marker keeps failing](camadas/gate.md#obhnb--obligationhonored--the-cross-cutting-duty-that-lives-outside-the-unit) `OBHNB-B07`
 
@@ -4104,7 +4120,7 @@ teste prova.
 
 - [The gate does not judge whether the question is good](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-X01`
 
-- [A spec with no section is a pending item, and the verdict teaches the way out](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-X02`
+- [A spec with no section is a divergence item, and the verdict teaches the way out](camadas/gate.md#opqsp--openquestions--a-spec-with-an-open-question-is-not-ready-to-implement) `OPQSP-X02`
 
 - [A limit received from the caller passes](camadas/gate.md#pgnhn--paginationhonored--what-promises-a-set-does-not-return-the-first-page-in-silence) `PGNHN-B01`
 
@@ -4138,7 +4154,7 @@ teste prova.
 
 - [Plans without phase headings skip confrontation](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B03`
 
-- [Plans with phase-like sections lacking codes return Pending](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B04`
+- [Plans with phase-like sections lacking codes return Diverge](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B04`
 
 - [Plans declaring valid backward phase dependencies pass](camadas/gate.md#phorp--phaseordered--plan-phases-and-phase-dependencies-must-be-ordered-and-consistent) `PHORP-B05`
 
@@ -4248,15 +4264,15 @@ teste prova.
 
 - [Declaring a revision target that does not exist in the map fails](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B04`
 
-- [A revising plan receives a pending reminder when the target lacks a top notice](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B05`
+- [A revising plan receives a divergence reminder when the target lacks a top notice](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B05`
 
-- [The pending reminder on a revising plan clears once the target carries the notice](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B06`
+- [The divergence reminder on a revising plan clears once the target carries the notice](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B06`
 
 - [A revised plan lacking a top revision notice fails](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B07`
 
 - [A revised plan placing the revision notice after line 40 fails](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B08`
 
-- [A revised plan with top notice but no section amendment markers returns pending](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B09`
+- [A revised plan with top notice but no section amendment markers returns divergence](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B09`
 
 - [A revised plan with top notice and marked section amendments passes](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-B10`
 
@@ -4264,9 +4280,9 @@ teste prova.
 
 - [Revision notices must be placed within the first 40 lines](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I01`
 
-- [Missing section amendment markers yield pending rather than failure](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I02`
+- [Missing section amendment markers yield divergence rather than failure](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I02`
 
-- [The pending reminder clears once the revised plan is notified](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I03`
+- [The divergence reminder clears once the revised plan is notified](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-I03`
 
 - [Language neutrality allows markdown alerts and metadata directives](camadas/gate.md#plrvp--planrevised--mutual-revision-visibility-between-superseded-and-revising-plans) `PLRVP-X01`
 
@@ -4584,13 +4600,13 @@ teste prova.
 
 - [The rules of every covering spec count together](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B09`
 
-- [test-feature-match skips what is not a test, and a test no feature exercises is Pending](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B10`
+- [test-feature-match skips what is not a test, and a test no feature exercises](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B10`
 
 - [A linked feature with no coded scenario leaves test-feature-match Pending](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B11`
 
 - [A code the test names that no scenario declares fails](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B12`
 
-- [A rule declared as a variant is a declared scenario for the test](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B13`
+- [A test naming the bare rule where the feature declares its variants](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B13`
 
 - [A revision code is not charged as a rule](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B14`
 
@@ -4607,6 +4623,8 @@ teste prova.
 - [A support file is not confronted as a test](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B16`
 
 - [A test of a declarative unit is not charged a feature](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B17`
+
+- [A test naming a variant its feature does not declare](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B18`
 
 - [Non-spec artifacts skip confrontation](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B01`
 
@@ -4625,6 +4643,10 @@ teste prova.
 - [A revised rule is never its own orphan](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-I01`
 
 - [Terms shared by the whole unit do not discriminate](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-X01`
+
+- [A rule's title is its heading, not its usage row](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B08`
+
+- [A revision that revised no rule says so](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B09`
 
 - [A revision the branch added whose number the base already uses moves to the next free number](camadas/gate.md#rvrnr--revisionrenumber--the-revisions-a-branch-added-move-to-a-free-number-when-the-base-took-theirs) `RVRNR-B01`
 
@@ -4754,9 +4776,9 @@ teste prova.
 
 - [A rule waived with a written reason closes the account](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B02`
 
-- [A unit that predates the practice is a pending item, not a failure](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B03`
+- [A unit that predates the practice is a divergence item, not a failure](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B03`
 
-- [Declaring the requirement turns the pending item into a failure](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B04`
+- [Declaring the requirement turns the divergence item into a failure](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B04`
 
 - [A spec with no linked code is not this gate's subject](camadas/gate.md#rlimr--ruleimplemented--a-spec-catalogues-rules-and-the-code-shows-it-realized-them) `RLIMR-B05`
 
@@ -4788,7 +4810,7 @@ teste prova.
 
 - [A section that defines a code in the first table cell is charged](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B08`
 
-- [A section declared as rule-cataloguing and filled without a code is Pending](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B09`
+- [A section declared as rule-cataloguing and filled without a code is a divergence](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B09`
 
 - [A section whose table already carries the code is not charged](camadas/gate.md#rltyr--ruletypes--the-rule-vocabulary-is-extensible-but-it-must-be-declared) `RLTYR-B10`
 
@@ -4866,7 +4888,7 @@ teste prova.
 
 - [Distinct codes pass](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B06`
 
-- [The verdict is Pending and never a failure](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B07`
+- [The verdict is a divergence and never a failure](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B07`
 
 - [An artifact that is not a feature leaves without a verdict](camadas/gate.md#scids--scenarioidentity--two-scenarios-of-the-same-feature-cannot-share-one-code) `SCIDS-B08`
 
@@ -4932,9 +4954,9 @@ teste prova.
 
 - [A multi-coded scenario passes when a tag matches any code](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B09`
 
-- [A scenario tag disagreeing with the code rule letter returns Pending](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B10`
+- [A scenario tag disagreeing with the code rule letter returns a divergence](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B10`
 
-- [The Pending verdict cites details of the type divergence](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B11`
+- [The Diverge verdict cites details of the type divergence](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B11`
 
 - [Multiple mismatch findings are sorted deterministically](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-B12`
 
@@ -4942,7 +4964,7 @@ teste prova.
 
 - [Absence of tag mappings prevents speculative enforcement](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I02`
 
-- [Mismatched scenario types return Pending rather than Fail](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I03`
+- [Mismatched scenario types return Diverge rather than Fail](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I03`
 
 - [Secondary requirement codes prevent false mismatch reporting](camadas/gate.md#stasc--scenariotypealigned--scenario-classification-tags-must-match-the-code-nature-letter) `STASC-I04`
 
@@ -6651,6 +6673,8 @@ teste prova.
 - [The lines of mutants no test ran are recorded](camadas/mapa.md#sgina-b27--the-lines-of-mutants-no-test-ran-are-recorded) `SGINA-B27`
 
 - [A proven variant is kept on the node that declares its rule](camadas/mapa.md#sgina-b28--a-proven-variant-is-kept-on-the-node-that-declares-its-rule) `SGINA-B28`
+
+- [A file the coverage report lists, or leaves out, says so](camadas/mapa.md#sgina-b29--a-file-the-coverage-report-lists-or-leaves-out-says-so) `SGINA-B29`
 
 - [The lock is a file beside the map with its owner](camadas/mapa.md#mplck-b01--the-lock-is-a-file-beside-the-map-with-its-owner) `MPLCK-B01`
 

@@ -26,7 +26,7 @@ func TestCenarioIdentidadeAcusaCodigoRepetido(t *testing.T) {
 	if v == Pass {
 		t.Fatalf("código repetido passou (%s)", msg)
 	}
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("veredito %v, queria Pending", v)
 	}
 }
@@ -136,7 +136,7 @@ func TestCenarioIdentidadeNaoAcusaCodigoUnico(t *testing.T) {
 // PENDING e não FAIL: numerar cenários é migração, e o gate nasce sobre uma base que
 // não conhecia a notação. Reprovar travaria o projeto inteiro de uma vez.
 func TestCenarioIdentidadeEhPendenteNaoReprovacao(t *testing.T) {
-	t.Run("SCIDS-B07: The verdict is Pending and never a failure", func(t *testing.T) {})
+	t.Run("SCIDS-B07: The verdict is a divergence and never a failure", func(t *testing.T) {})
 	v, _ := checkScenarioIdentity(`
   @USBPX-B01 @nivel-unit
   Cenário: primeiro
@@ -147,7 +147,7 @@ func TestCenarioIdentidadeEhPendenteNaoReprovacao(t *testing.T) {
 	if v == Fail {
 		t.Fatal("o gate reprovou — numerar cenários é migração, e isso travaria a base inteira")
 	}
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("veredito %v, queria Pending", v)
 	}
 }
@@ -292,7 +292,7 @@ func TestCenarioIdentidadeNaoJulgaOsComportamentos(t *testing.T) {
 	difer, _ := checkScenarioIdentity("\n  @USBPX-B01\n  Cenário: salva no banco\n\n  @USBPX-B01\n  Cenário: envia um email\n",
 		featNode(), "", nil, nil)
 
-	if mesmo != Pending || difer != Pending {
+	if mesmo != Diverge || difer != Diverge {
 		t.Fatalf("o gate distinguiu os casos: mesmo=%s difer=%s (%s)", mesmo, difer, msgMesmo)
 	}
 }
@@ -373,7 +373,7 @@ func TestScenarioIdentity_aCopiedBodyIsReported(t *testing.T) {
     Então deve sair um finding
 `
 	v, msg := checkScenarioIdentity(feature, featNode(), "", nil, nil)
-	if v != Pending || !strings.Contains(msg, "AUDTX-B02") || !strings.Contains(msg, "AUDTX-B01") || strings.Contains(msg, "AUDTX-B03") {
+	if v != Diverge || !strings.Contains(msg, "AUDTX-B02") || !strings.Contains(msg, "AUDTX-B01") || strings.Contains(msg, "AUDTX-B03") {
 		t.Fatalf("the copy is reported, the variation is not; got %v: %s", v, msg)
 	}
 	if v, _ := checkScenarioIdentity(strings.Replace(feature, "Então deve   sair um finding", "Então nenhum finding sai", 1), featNode(), "", nil, nil); v != Pass {

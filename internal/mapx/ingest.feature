@@ -186,3 +186,9 @@ Feature: SignalIngestion — hanging the runner's results on the map's nodes
     Given a spec declaring a rule, and a run proving one variant of it and a code of another unit
     When the run is ingested
     Then the spec keeps the variant it proved, and nothing of the other unit
+
+  @SGINA-B29 @unit-level
+  Scenario: A file the coverage report lists, or leaves out, says so
+    Given a coverage report listing one file with lines and one with none, and a third file the suite covers that it does not list
+    When the report is ingested and the omitted files are marked
+    Then the first two record the revision they were listed at, and the third the revision it was omitted at

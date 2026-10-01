@@ -214,5 +214,5 @@ func checkContractImpact(content string, n mapx.Node, root string, g *mapx.Graph
 		}
 		items = append(items, fmt.Sprintf(i18n.T("gate.contract_impact.item"), imp.Field, strings.Join(imp.Rules, ", "), tests))
 	}
-	return Pending, i18n.T("gate.contract_impact.pending", strings.Join(items, "; "))
+	return Diverge, i18n.T("gate.contract_impact.pending", strings.Join(items, "; "))
 }

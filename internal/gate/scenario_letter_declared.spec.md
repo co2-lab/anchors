@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCLTR
-  updated_at: 2026-09-20
+  updated_at: 2026-09-30
   layer: gate
 -->
 # ScenarioLetterDeclared — the letter of a scenario code exists in the vocabulary
@@ -47,7 +47,7 @@ work for whoever knows the domain.
 | `SCLTR-B02` | With no declared vocabulary the gate leaves without a verdict — with nothing to compare against, every letter would be either all valid or all invented, and both answers are noise. |
 | `SCLTR-B03` | A feature carrying no scenario code at all leaves without a verdict: there is nothing to judge. |
 | `SCLTR-B04` | Every letter found inside the declared vocabulary passes. |
-| `SCLTR-B05` | A letter outside the vocabulary is reported as UNDETERMINED, never as a failure — the nature may deserve declaring, and that decision is not the gate's. |
+| `SCLTR-B05` | A letter outside the vocabulary is reported as a DIVERGENCE, never as a failure — the nature may deserve declaring, and that decision is not the gate's. |
 | `SCLTR-B06` | The verdict NAMES the letters that are outside and the codes that carry them, because that is what the reader needs in order to choose between declaring and remapping. |
 | `SCLTR-B07` | Codes sharing one unknown letter are grouped into a SINGLE line — eight scenarios with the same invented letter are one finding, not eight. |
 

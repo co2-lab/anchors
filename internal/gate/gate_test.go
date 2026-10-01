@@ -183,7 +183,7 @@ func TestInternalCheckers(t *testing.T) {
 func TestHeaderConformeRecognizedLayer(t *testing.T) {
 	presentation := mapx.Node{Kind: mapx.KindCode, Tags: []string{"frontend", "presentation"}}
 	regida := mapx.Node{Kind: mapx.KindCode, Tags: []string{"frontend", "business-logic"}}
-	fn := internalCheckers["header-valid"]
+	fn := func(content string, n mapx.Node) (Verdict, string) { return checkHeaderConforms(content, n, nil) }
 
 	// reconhecida com só `layer:` → PASSA
 	if v, _ := fn("// @anchors\n//   layer: presentation\n", presentation); v != Pass {
@@ -207,7 +207,7 @@ func TestHeaderConformeTestOfRecognizedLayer(t *testing.T) {
 	// um TESTE de arquivo de camada reconhecida é classificado kind:test (perde a tag
 	// da camada), mas declara layer:presentation no header → deve passar com layer.
 	testNode := mapx.Node{Kind: mapx.KindTest, Tags: []string{"test"}}
-	fn := internalCheckers["header-valid"]
+	fn := func(content string, n mapx.Node) (Verdict, string) { return checkHeaderConforms(content, n, nil) }
 	if v, _ := fn("// @anchors\n//   layer: presentation\nimport x", testNode); v != Pass {
 		t.Error("teste de presentation (kind:test) com layer no header deveria passar")
 	}
@@ -486,52 +486,57 @@ func TestGateDeclaredWithRunExecutesCommandEvenWhenCanonicalHasCheck(t *testing.
 	}
 }
 
-// Só a pendência que diz "há decisão POR TOMAR" impede a promoção. A que diz "não tive o
-// que confrontar" não: medido num repositório real, tratar todos igual reprovou 411 nós
-// de uma vez, e 410 eram gates sem sinal ingerido.
+// Each verdict level does what the gate's `severity` says: by default a blocking gate's
+// divergence and pending item bar the promotion, and a project can make a level inform.
 func TestSoADecisaoPorTomarImpedeAPromocao(t *testing.T) {
-	t.Run("GTENG-B15: Only the pending item that says a decision is still to take bars promotion", func(t *testing.T) {})
+	t.Run("GTENG-B15: Each verdict level does what the gate's severity says", func(t *testing.T) {})
 
 	root := t.TempDir()
-	comDecisao, semDecisao := "com.spec.md", "sem.spec.md"
+	comDecisao, semMedir, declarado := "com.spec.md", "sem.spec.md", "decl.spec.md"
 
-	// Um checker de teste no lugar do real: o que se confronta aqui é a LEITURA que o
-	// motor faz do marcador, não o gate de decisões em aberto.
 	orig := checkersWithGraph["open-questions-resolved"]
 	checkersWithGraph["open-questions-resolved"] = func(_ string, n mapx.Node, _ string,
 		_ *mapx.Graph, _ *config.Config) (Verdict, string) {
-		if n.ID == comDecisao {
-			return Pending, "há pergunta aberta " + OpenDecisionMarker
+		switch n.ID {
+		case comDecisao:
+			return Diverge, "há pergunta aberta " + OpenDecisionMarker
+		case declarado:
+			return Diverge, "dívida com prazo " + DeclaredMarker
 		}
-		return Pending, "a seção nem existe — dívida de migração"
+		return Pending, "não medi"
 	}
 	t.Cleanup(func() { checkersWithGraph["open-questions-resolved"] = orig })
 
-	for _, f := range []string{comDecisao, semDecisao} {
+	for _, f := range []string{comDecisao, semMedir, declarado} {
 		if err := os.WriteFile(filepath.Join(root, f), []byte("texto\n"), 0o644); err != nil {
 			t.Fatal(err)
 		}
 	}
-	g := config.Gate{Name: "decisões", ID: "open-questions-resolved", On: []string{"spec"},
-		Check: "open-questions-resolved"}
-	res := RunWithConfig([]config.Gate{g}, []mapx.Node{
-		{ID: comDecisao, Kind: mapx.KindSpec},
-		{ID: semDecisao, Kind: mapx.KindSpec},
-	}, root, nil, nil)
-
-	porAlvo := map[string]Result{}
-	for _, r := range res {
-		porAlvo[r.Target] = r
+	nodes := []mapx.Node{{ID: comDecisao, Kind: mapx.KindSpec}, {ID: semMedir, Kind: mapx.KindSpec}, {ID: declarado, Kind: mapx.KindSpec}}
+	run := func(g config.Gate) map[string]Result {
+		out := map[string]Result{}
+		for _, r := range RunWithConfig([]config.Gate{g}, nodes, root, nil, nil) {
+			out[r.Target] = r
+		}
+		return out
 	}
-	if !porAlvo[comDecisao].Impede {
-		t.Error("`há decisão por tomar` tem de IMPEDIR a promoção")
+	on := true
+	g := config.Gate{Name: "decisões", ID: "open-questions-resolved", On: []string{"spec"}, Check: "open-questions-resolved", Blocking: &on}
+	got := run(g)
+	if !got[comDecisao].Blocks() || !got[semMedir].Blocks() {
+		t.Error("by default a blocking gate's divergence and pending item bar the promotion")
 	}
-	if porAlvo[semDecisao].Impede {
-		t.Error("`não tive o que confrontar` NÃO pode impedir — foi o que reprovou 411 nós")
+	if got[declarado].Blocks() || got[declarado].Action != config.ActionInform {
+		t.Errorf("a divergence the project declared informs and never bars, got %+v", got[declarado])
 	}
-	// E os dois usam o MESMO veredito: a distinção sai do campo, não do veredito.
-	if porAlvo[comDecisao].Verdict != Pending || porAlvo[semDecisao].Verdict != Pending {
-		t.Error("os dois casos são Pending; quem os separa é o campo, não o veredito")
+	g.Severity = &config.Severity{Pending: config.ActionInform}
+	got = run(g)
+	if !got[comDecisao].Blocks() || got[semMedir].Blocks() {
+		t.Error("with pending: inform only the divergence bars")
+	}
+	g.Severity = &config.Severity{Pending: config.ActionIgnore}
+	if got = run(g); !got[semMedir].Ignored() {
+		t.Error("with pending: ignore the pending item is ignored")
 	}
 }
 
@@ -549,7 +554,7 @@ func TestSoOGateDeObrigacoesProduzDivida(t *testing.T) {
 	laudo := "[migracao-de-schema] pendente — DÍVIDA ASSUMIDA: até a virada do trimestre"
 
 	devolvePending := func(string, mapx.Node, string, *mapx.Graph, *config.Config) (Verdict, string) {
-		return Pending, laudo
+		return Diverge, laudo
 	}
 	origObr := checkersWithGraph["obligation-honored"]
 	origOutro := checkersWithGraph["docs-fresh"]

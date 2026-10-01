@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DUPLC
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @DUPLC
@@ -29,7 +29,7 @@ Feature: Duplication — no code file holds a block copied from somewhere else
   Scenario: Clones within the declared threshold are reported, over it they fail
     Given a .jscpd.json that declares a threshold
     When the project's duplicated percentage is at the threshold, and then over it
-    Then the file's clones are Pending, and then they fail
+    Then the file's clones are Diverge, and then they fail
 
   @DUPLC-B05 @unit-level
   Scenario: Without a declared threshold any clone fails whatever the exit code
@@ -54,3 +54,9 @@ Feature: Duplication — no code file holds a block copied from somewhere else
     Given a jscpd run that writes no report, and one that writes a report that is not JSON
     When the check judges a file
     Then it returns Pending naming the reason, never Pass or Fail
+
+  @DUPLC-B08 @unit-level
+  Scenario: The gate runs a pinned jscpd release
+    Given the command the gate builds to run jscpd
+    When its arguments are read
+    Then the package carries an exact version

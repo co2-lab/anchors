@@ -55,7 +55,7 @@ func checkDuplication(_ string, n mapx.Node, root string, g *mapx.Graph, _ *conf
 	mine = dedupSorted(mine)
 	list := strings.Join(mine, "\n")
 	if threshold, ok := jscpdThreshold(root); ok && rep.Statistics.Total.Percentage <= threshold {
-		return Pending, i18n.T("gate.duplication.within_threshold",
+		return Diverge, i18n.T("gate.duplication.within_threshold",
 			rep.Statistics.Total.Percentage, threshold, list)
 	}
 	return Fail, i18n.T("gate.duplication.clones", len(mine), list)
@@ -117,10 +117,17 @@ func jscpdThreshold(root string) (float64, bool) {
 	return *c.Threshold, true
 }
 
+// jscpdPackage is the jscpd release the gate runs, pinned. Unpinned, `npx` fetched the
+// newest, and jscpd 5.4.0 (2026-09-30) needs a per-platform package `npx` does not install:
+// it printed an install hint, wrote no report, and every file of every project read "the
+// duplication was not measured". A new release is adopted by changing this line, after
+// running it on a real project.
+const jscpdPackage = "jscpd@5.3.3"
+
 // duplicationCommand builds the jscpd run that writes its JSON report into outDir. It is
 // a variable so the tests can stand in for the tool.
 var duplicationCommand = func(root, outDir string) *exec.Cmd {
-	cmd := exec.Command("npx", "--yes", "jscpd", ".", "--reporters", "json", "--output", outDir, "--silent")
+	cmd := exec.Command("npx", "--yes", jscpdPackage, ".", "--reporters", "json", "--output", outDir, "--silent")
 	cmd.Dir = root
 	return cmd
 }

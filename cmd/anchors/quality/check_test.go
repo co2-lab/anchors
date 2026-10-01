@@ -231,8 +231,8 @@ func TestRecordCheck_passResolvesAndPendingOpensDecisionOrDebt(t *testing.T) {
 	}
 	p := gate.Profile{Results: []gate.Result{
 		{Gate: "header-conforms", Target: "a.ts", Verdict: gate.Pass},
-		{Gate: "open-questions-resolved", Target: "b.spec.md", Verdict: gate.Pending, Decisão: true, Detail: "who decides?"},
-		{Gate: "debt-declared", Target: "a.ts", Verdict: gate.Pending, Divida: true, Prazo: "next sprint", Detail: "debt"},
+		{Gate: "open-questions-resolved", Target: "b.spec.md", Verdict: gate.Diverge, Decisão: true, Detail: "who decides?"},
+		{Gate: "debt-declared", Target: "a.ts", Verdict: gate.Diverge, Divida: true, Prazo: "next sprint", Detail: "debt"},
 		{Gate: "undetermined", Target: "a.ts", Verdict: gate.Pending, Detail: "nothing to say"},
 	}}
 	out := captureStdout(t, func() {
@@ -401,7 +401,7 @@ func TestPrintProfileFooterSaysWhatIsStillOpen(t *testing.T) {
 		want string
 	}{
 		{"informative failure", gate.Profile{Passed: true, Results: []gate.Result{info}, Failures: []gate.Result{info}}, "INFORMATIVE finding(s) open"},
-		{"divergence", gate.Profile{Passed: true, Results: []gate.Result{{Gate: "g", Target: "a", Verdict: gate.Pending, Detail: "x"}}}, "1 PENDING item(s) open"},
+		{"divergence", gate.Profile{Passed: true, Results: []gate.Result{{Gate: "g", Target: "a", Verdict: gate.Diverge, Detail: "x"}}}, "1 DIVERGENCE(S) open"},
 		{"not confronted", gate.Profile{Passed: true, Results: []gate.Result{{Gate: "g", Target: "a", Verdict: gate.Skip}}}, "1 confrontation(s) DID NOT HAPPEN"},
 		{"clean", gate.Profile{Passed: true, Results: []gate.Result{{Gate: "g", Target: "a", Verdict: gate.Pass}}}, "all gates passed, no open findings"},
 		{"blocked", gate.Profile{Blocked: []gate.Result{{Gate: "g"}}, Results: []gate.Result{info}, Failures: []gate.Result{info}}, "✗ blocked — 1 blocking gate(s) failed (+1 informative finding(s))"},
@@ -413,12 +413,12 @@ func TestPrintProfileFooterSaysWhatIsStillOpen(t *testing.T) {
 	}
 
 	// the pending items ride along with the informative findings only when there are any
-	drift := gate.Result{Gate: "g", Target: "b", Verdict: gate.Pending, Detail: "x"}
+	drift := gate.Result{Gate: "g", Target: "b", Verdict: gate.Diverge, Detail: "x"}
 	withDrift := footer(gate.Profile{Passed: true, Results: []gate.Result{info, drift}, Failures: []gate.Result{info}})
-	if !strings.Contains(withDrift, "(+1 pending item(s)") {
+	if !strings.Contains(withDrift, "(+1 divergence(s)") {
 		t.Errorf("informative findings with a pending item must count it:\n%s", withDrift)
 	}
-	if out := footer(gate.Profile{Passed: true, Results: []gate.Result{info}, Failures: []gate.Result{info}}); strings.Contains(out, "pending item(s) —") {
+	if out := footer(gate.Profile{Passed: true, Results: []gate.Result{info}, Failures: []gate.Result{info}}); strings.Contains(out, "divergence(s) —") {
 		t.Errorf("informative findings with no pending item must not mention pending items:\n%s", out)
 	}
 	// a failed check with no informative finding says only the blocking count
@@ -1432,11 +1432,11 @@ func TestFindingsSummaryCountsEveryKind(t *testing.T) {
 	englishOutput(t)
 	block := gate.Result{Gate: "g1", Target: "a", Verdict: gate.Fail, Blocking: true}
 	info := gate.Result{Gate: "g2", Target: "b", Verdict: gate.Fail}
-	drift := gate.Result{Gate: "g3", Target: "c", Verdict: gate.Pending, Detail: "diverged"}
+	drift := gate.Result{Gate: "g3", Target: "c", Verdict: gate.Diverge, Detail: "diverged"}
 	p := gate.Profile{Results: []gate.Result{block, info, info, drift}, Failures: []gate.Result{block, info, info}}
 
 	out := captureStdout(t, func() { printProfile(p, false, false) })
-	for _, want := range []string{"3 failure(s) — 1 blocking, 2 informative — and 1 divergence(s)", "--show-drift"} {
+	for _, want := range []string{"3 failure(s) — 1 blocking, 2 informative — plus 1 divergence(s)", "--show-drift"} {
 		if !strings.Contains(out, want) {
 			t.Errorf("the summary should say %q:\n%s", want, out)
 		}
@@ -1446,7 +1446,7 @@ func TestFindingsSummaryCountsEveryKind(t *testing.T) {
 	out = captureStdout(t, func() {
 		printProfile(gate.Profile{Results: []gate.Result{info}, Failures: []gate.Result{info}}, false, false)
 	})
-	if !strings.Contains(out, "1 failure(s) — 0 blocking, 1 informative — and 0 divergence(s)") {
+	if !strings.Contains(out, "1 failure(s) — 0 blocking, 1 informative — plus 0 divergence(s)") {
 		t.Errorf("failures alone must still be counted:\n%s", out)
 	}
 	if strings.Contains(out, "issue(s) — divergences recorded") {
@@ -1456,7 +1456,7 @@ func TestFindingsSummaryCountsEveryKind(t *testing.T) {
 	// Only divergences: still counted, with no failure list.
 	out = captureStdout(t, func() { printProfile(gate.Profile{Results: []gate.Result{drift}}, false, false) })
 	if !strings.Contains(out, "0 failure(s)") || !strings.Contains(out, "1 divergence(s)") {
-		t.Errorf("divergences alone must still be counted:\n%s", out)
+		t.Errorf("pending items alone must still be counted:\n%s", out)
 	}
 }
 
@@ -1518,12 +1518,12 @@ func TestWidthIsPerColumn(t *testing.T) {
 	if w := computeWidths(profileOf(gate.GateSummary{Gate: "a", Pending: 100})); w.skip != 3 {
 		t.Errorf("skip: %d, want 3 (because of 100 pending)", w.skip)
 	}
-	allDrift := profileOf(gate.GateSummary{Gate: "a", Pending: 12})
+	allDrift := profileOf(gate.GateSummary{Gate: "a", Diverge: 12})
 	for i := 0; i < 12; i++ {
-		allDrift.Results = append(allDrift.Results, gate.Result{Gate: "a", Verdict: gate.Pending, Detail: "diverged", Target: fmt.Sprint(i)})
+		allDrift.Results = append(allDrift.Results, gate.Result{Gate: "a", Verdict: gate.Diverge, Detail: "diverged", Target: fmt.Sprint(i)})
 	}
 	if w := computeWidths(allDrift); w.skip != 1 || w.drift != 2 {
-		t.Errorf("skip %d / drift %d, want 1 / 2 (the twelve pending are drift)", w.skip, w.drift)
+		t.Errorf("skip %d / drift %d, want 1 / 2 (the twelve are divergences)", w.skip, w.drift)
 	}
 }
 
@@ -1647,7 +1647,7 @@ func TestSkipColumnDoesNotMoveWithOrWithoutDrift(t *testing.T) {
 	// `driftCount` reads Results: without them the ⚠ column would not even exist, and the
 	// test would measure the wrong table.
 	p.Results = []gate.Result{
-		{Gate: "with-drift", Verdict: gate.Pending, Detail: "diverged", Target: "x"},
+		{Gate: "with-drift", Verdict: gate.Diverge, Detail: "diverged", Target: "x"},
 	}
 	if without, with := driftColumn(0, 3), driftColumn(407, 3); len([]rune(without)) != len([]rune(with)) {
 		t.Errorf("⚠ cell with different widths: without=%d runes, with=%d runes (%q vs %q)",
@@ -1721,7 +1721,7 @@ func TestShowDriftDoesNotInheritTheSkipCut(t *testing.T) {
 		})
 	}
 	p.Results = append(p.Results, gate.Result{
-		Gate: "layer-boundary", Verdict: gate.Pending,
+		Gate: "layer-boundary", Verdict: gate.Diverge,
 		Detail: "boundary being migrated", Target: "AlertSheet.tsx",
 	})
 
@@ -1761,7 +1761,7 @@ func TestShowDriftListsAllWithNoCap(t *testing.T) {
 	p := profileOf(gate.GateSummary{Gate: "g", Pass: 1, Pending: n})
 	for i := 0; i < n; i++ {
 		p.Results = append(p.Results, gate.Result{
-			Gate: "g", Verdict: gate.Pending, Detail: "diverged",
+			Gate: "g", Verdict: gate.Diverge, Detail: "diverged",
 			Target: fmt.Sprintf("target-%03d", i),
 		})
 	}
@@ -1784,7 +1784,7 @@ func TestWithoutShowDriftNoDetailIsListed(t *testing.T) {
 	t.Run("CGPCH-B50: Without show-drift only the counter appears", func(t *testing.T) {})
 	p := profileOf(gate.GateSummary{Gate: "g", Pass: 1, Pending: 1})
 	p.Results = append(p.Results, gate.Result{
-		Gate: "g", Verdict: gate.Pending, Detail: "diverged", Target: "single-target",
+		Gate: "g", Verdict: gate.Diverge, Detail: "diverged", Target: "single-target",
 	})
 	out := captureProfile(t, func() { printProfile(p, false, false) })
 
@@ -1830,7 +1830,7 @@ func TestDriftGroupsARepeatedReason(t *testing.T) {
 	p := gate.Profile{ByGate: map[string]gate.GateSummary{}}
 	for i := 0; i < 50; i++ {
 		p.Results = append(p.Results, gate.Result{
-			Gate: "mutation-score", Verdict: gate.Pending,
+			Gate: "mutation-score", Verdict: gate.Diverge,
 			Detail: "no mutation signal ingested", Target: fmt.Sprintf("target-%02d", i),
 		})
 	}
@@ -1868,7 +1868,7 @@ func TestDriftDoesNotGroupUniqueReasons(t *testing.T) {
 	p := gate.Profile{ByGate: map[string]gate.GateSummary{}}
 	for i := 0; i < 3; i++ {
 		p.Results = append(p.Results, gate.Result{
-			Gate: "feature-test-match", Verdict: gate.Pending,
+			Gate: "feature-test-match", Verdict: gate.Diverge,
 			Detail: fmt.Sprintf("scenario %d diverges", i), Target: fmt.Sprintf("f%d.feature", i),
 		})
 	}
@@ -1891,11 +1891,11 @@ func TestDriftHeadingCountsGates(t *testing.T) {
 	p := gate.Profile{ByGate: map[string]gate.GateSummary{}}
 	for _, g := range []string{"a", "b", "a", "c"} {
 		p.Results = append(p.Results, gate.Result{
-			Gate: g, Verdict: gate.Pending, Detail: "x", Target: "t",
+			Gate: g, Verdict: gate.Diverge, Detail: "x", Target: "t",
 		})
 	}
 	out := captureProfile(t, func() { printDrift(driftResults(p)) })
-	if !strings.Contains(out, "4 pending item(s) in 3 gate(s)") {
+	if !strings.Contains(out, "4 divergence(s) in 3 gate(s)") {
 		t.Errorf("wrong heading:\n%s", out)
 	}
 }
@@ -2287,11 +2287,11 @@ func TestCheckRecordsOnTheBoardInGitHubMode(t *testing.T) {
 
 func TestTableIndeterminateCounterLeavesTheDriftOut(t *testing.T) {
 	t.Run("CGPCH-B78: The indeterminate counter is the skipped and pending less the drift", func(t *testing.T) {})
-	p := profileOf(gate.GateSummary{Gate: "g", Pass: 1, Skip: 1, Pending: 2})
-	p.Results = []gate.Result{{Gate: "g", Verdict: gate.Pending, Detail: "diverged", Target: "x"}}
+	p := profileOf(gate.GateSummary{Gate: "g", Pass: 1, Skip: 1, Pending: 1, Diverge: 1})
+	p.Results = []gate.Result{{Gate: "g", Verdict: gate.Diverge, Detail: "diverged", Target: "x"}}
 	out := captureProfile(t, func() { printProfile(p, false, false) })
 	if !strings.Contains(out, "⚠1  ~2\n") {
-		t.Errorf("one skip and two pending, one of them drift: ⚠1 and ~2:\n%s", out)
+		t.Errorf("one skip, one pending with no reason and one divergence: ⚠1 and ~2:\n%s", out)
 	}
 }
 

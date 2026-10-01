@@ -1,6 +1,6 @@
 <!-- @anchors
   code: SCIDS
-  updated_at: 2026-09-28
+  updated_at: 2026-09-30
   layer: gate
 -->
 # ScenarioIdentity — two scenarios of the same feature cannot share one code
@@ -49,7 +49,7 @@ sees what is left.
 | `SCIDS-B04` | The report teaches the way out with the project's OWN repeated code as the example, not a generic one. |
 | `SCIDS-B05` | The SUFFIX gives each scenario its own identity: numbered, two scenarios of one rule pass. |
 | `SCIDS-B06` | Distinct codes pass — a rule with several scenarios is the common case and must not be accused. |
-| `SCIDS-B07` | The verdict is PENDING and never a failure: numbering is a migration, and the gate is born over a base that did not know the notation. |
+| `SCIDS-B07` | The verdict is a DIVERGENCE and never a failure: numbering is a migration, and the gate is born over a base that did not know the notation. |
 | `SCIDS-B08` | An artifact that is not a feature leaves without a verdict: only a feature carries scenarios. |
 | `SCIDS-B09` | A feature with no coded scenario leaves without a verdict — there is nothing to confront, and that absence is another gate's charge. |
 | `SCIDS-B10` | Several repeated codes in one feature are reported TOGETHER, in a stable order, so two runs over the same file produce the same message. |

@@ -519,3 +519,25 @@ func TestSuiteKey_anotherDrive(t *testing.T) {
 		t.Errorf("a report on another drive is external, got %q", got)
 	}
 }
+
+func TestIngest_suiteCoverageMarksOmitted(t *testing.T) {
+	t.Run("NGSTI-B18: A suite's whole coverage run marks the files it left out", func(t *testing.T) {})
+	suite := "tests:\n  - layer: test\n    run: \"true\"\n    lcov: reports/lcov.info\n    paths: [\"src/**\"]\n"
+	setup := func() string {
+		root := fixtureProjectWith(t, suite, fixtureSpec)
+		writeProjectFile(t, root, "src/types.ts", "export interface Payload { id: string }\n")
+		runCmd(t, newMapCmd(), "build", "--root", root)
+		writeProjectFile(t, root, "reports/lcov.info", lcovReport)
+		return root
+	}
+	root := setup()
+	out := runCmd(t, newIngestCmd(), "--root", root, "--lcov", filepath.Join(root, "reports/lcov.info"))
+	if s := node(t, root, "src/types.ts").Signal; s == nil || s.CoverageOmitted == "" || !strings.Contains(out, "not in its report") {
+		t.Errorf("the whole run marks the file of types as omitted and says so, got %+v\n%s", s, out)
+	}
+	root = setup()
+	runCmd(t, newIngestCmd(), "--root", root, "--lcov", filepath.Join(root, "reports/lcov.info"), "--partial")
+	if s := node(t, root, "src/types.ts").Signal; s != nil && s.CoverageOmitted != "" {
+		t.Errorf("a partial run marks nothing, got %+v", s)
+	}
+}

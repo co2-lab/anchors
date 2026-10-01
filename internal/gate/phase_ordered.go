@@ -66,7 +66,7 @@ func checkPhaseOrdered(content string, n mapx.Node, root string, g *mapx.Graph, 
 		// gate nunca disparava — e foi assim que o plano da Plataforma passou meses com
 		// `### Fase 1` sem código, com a ordem existindo só para quem lê.
 		if hasPhaseLikeSection(content) {
-			return Pending, i18n.T("gate.phase_ordered.pending_phase_like_no_code", strings.ToUpper(n.Code))
+			return Diverge, i18n.T("gate.phase_ordered.pending_phase_like_no_code", strings.ToUpper(n.Code))
 		}
 		return Skip, i18n.T("gate.phase_ordered.skip_no_phases")
 	}

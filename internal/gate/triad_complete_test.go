@@ -442,13 +442,13 @@ func TestTrincaCompleta_naoJulgaAQualidadeDasPecas(t *testing.T) {
 // `@TBD: code,feature,test` came out GREEN, indistinguishable from a complete triad —
 // erasing from the radar exactly the work that remains.
 func TestTriadComplete_tbdIsDebtNotWaiver(t *testing.T) {
-	t.Run("TRCMT-B08: a piece declared TO BE DEVELOPED leaves the verdict undetermined", func(t *testing.T) {})
+	t.Run("TRCMT-B08: A piece declared TO BE DEVELOPED leaves the verdict undetermined", func(t *testing.T) {})
 	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: mapx.KindSpec}}}
 	n := mapx.Node{ID: "a.spec.md", Kind: mapx.KindSpec}
 
 	tbd := "<!-- @anchors\n  @TBD: code,feature,test — o handler vem na fase 2\n-->\n# X\n"
 	v, msg := checkTriadComplete(tbd, n, t.TempDir(), g, nil)
-	if v != Pending {
+	if v != Diverge {
 		t.Errorf("@TBD devia ser Pending (divida), veio %v (%s)", v, msg)
 	}
 

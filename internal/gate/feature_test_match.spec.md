@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FTMFT
-  updated_at: 2026-09-28
+  updated_at: 2026-09-30
   layer: gate
 -->
 # FeatureTestMatch — scenarios in feature must be implemented in test by code and description
@@ -51,7 +51,7 @@ in automated test suites.
 | `FTMFT-B06` | A scenario whose code is completely absent from the test body fails. |
 | `FTMFT-B07` | A scenario code appearing only within comments does not count as implemented and fails. |
 | `FTMFT-B08` | When scenario codes match and titles are identical, the gate passes. |
-| `FTMFT-B09` | When scenario codes match but test descriptions drift, the gate issues a Pending warning. |
+| `FTMFT-B09` | When scenario codes match but test descriptions drift, the gate issues a divergence. |
 | `FTMFT-B10` | Test titles containing quotes or nested delimiters are parsed completely without truncation. |
 | `FTMFT-B11` | Multiple sibling scenario codes cited in a single test title are extracted and attributed cleanly. |
 | `FTMFT-B12` | A test title shared among sibling scenarios does not require strict single-title equality. |
@@ -67,6 +67,7 @@ in automated test suites.
 | `FTMFT-B22` | A support file linked to a feature is not among the tests its scenarios are confronted with. |
 | `FTMFT-B23` | A scenario tag may carry a `#nn` suffix that gives each scenario of one rule its own identity: every code on the tag line keeps its suffix, and a code with no suffix is read as before. |
 | `FTMFT-B24` | Every test that leads with a scenario's code is compared with the scenario, not only the first: another test whose title DIVERGES from it is named as a warning — it cites the code and talks about something else —, while a merely similar one is not, since several tests of a rule name its variations. |
+| `FTMFT-B25` | A test title matches its scenario when its words begin with the scenario title's words, in order — case and punctuation aside —, optionally followed by detail; the placeholders of a parameterised title — a table-driven test's `%s`, `%d`, `$name`, `${name}`, an outline's `<name>` — are words of neither title. The same words in another order, or fewer, still diverge. (`titleCovers`) |
 
 ## Errors
 
@@ -80,7 +81,7 @@ in automated test suites.
 | Rule | Always holds | How it is proven |
 | --- | --- | --- |
 | `FTMFT-I01` | Absence of scenario code in test implementation is always a Failure. | confronts a test missing a scenario code and verifies it returns Fail |
-| `FTMFT-I02` | Descriptive divergence with valid code presence is always a Warning (Pending), never a Failure. | confronts a test with matching code but divergent description and verifies it returns Pending |
+| `FTMFT-I02` | Descriptive divergence with valid code presence is always a Warning (Diverge), never a Failure. | confronts a test with matching code but divergent description and verifies it returns a divergence |
 | `FTMFT-I03` | Comments are strictly separated: excluded when verifying code implementation, included when verifying semantic description. | confronts a scenario code present only in comments and verifies it fails |
 
 ## Constraints
@@ -89,7 +90,7 @@ in automated test suites.
 | --- | --- | --- |
 | `FTMFT-X01` | Does not execute test suites or inspect test execution results. | This gate performs static structural and textual analysis; test execution signals are handled by test runners and ingested via `anchors ingest`. |
 | `FTMFT-X02` | Does not confront E2E or visual regression scenarios. | Non-unit testing surfaces inhabit different directories and runners, governed by dedicated surfaces. |
-| `FTMFT-X03` | Does not fail tests for minor natural language variations in test titles. | Human scenario language and implementation code descriptions naturally vary; classifying drift as warning prevents disruption while preserving traceability. |
+| `FTMFT-X03` | Does not fail tests for minor natural language variations in test titles. | Human scenario language and implementation code descriptions naturally vary; classifying drift as a divergence — whose state the gate's `severity` decides — prevents disruption while preserving traceability. |
 
 ## Dependencies
 

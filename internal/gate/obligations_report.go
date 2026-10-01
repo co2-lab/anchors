@@ -59,7 +59,7 @@ func EvaluateObligations(root string, cfg *config.Config, g *mapx.Graph, obs []c
 			switch v {
 			case Pass:
 				st.Fulfilled++
-			case Pending:
+			case Diverge:
 				st.Debt++
 			default:
 				st.Missing = append(st.Missing, n.ID)

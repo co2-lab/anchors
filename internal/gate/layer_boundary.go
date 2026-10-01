@@ -105,7 +105,7 @@ func checkLayerBoundary(content string, n mapx.Node, root string, g *mapx.Graph,
 	// o projeto marca `severity: warn` no que ainda está migrando, sem desligar o gate
 	// inteiro nem perder o registro.
 	if len(erros) == 0 {
-		return Pending, i18n.T("gate.layer_boundary.warn_pending", joinUpTo(avisos, 5))
+		return Diverge, i18n.T("gate.layer_boundary.warn_pending", joinUpTo(avisos, 5))
 	}
 	msg := i18n.T("gate.layer_boundary.violation", joinUpTo(erros, 5))
 	if len(avisos) > 0 {

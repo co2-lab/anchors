@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCTRN
-  updated_at: 2026-09-26
+  updated_at: 2026-09-30
   layer: gate
 -->
 # Doctrine — the vertical axis: product doctrine exists, is realized, and is never copied
@@ -61,7 +61,7 @@ rule to realize.
 | `DCTRN-B03` | An artifact that is not a plan is skipped. |
 | `DCTRN-B04` | A plan whose cited doctrines all exist on disk passes. |
 | `DCTRN-B05` | A plan citing doctrines that do not exist fails, naming each missing doctrine once, in order, with their count. |
-| `DCTRN-B06` | A missing doctrine cited on a line deferred with `@TBD` is Pending, naming it, instead of failing. |
+| `DCTRN-B06` | A missing doctrine cited on a line deferred with `@TBD` is a divergence, naming it, instead of failing. |
 | `DCTRN-B07` | Only a doctrine path with a directory seeds a doctrine; a bare file name in prose, or a template file, seeds nothing, and a plan that seeds nothing is skipped. |
 
 ### doctrine-realized
@@ -72,7 +72,7 @@ rule to realize.
 | `DCTRN-B09` | A doctrine that catalogues no rule is skipped. |
 | `DCTRN-B10` | A doctrine whose every rule has an incoming realizes edge naming it passes. |
 | `DCTRN-B11` | A doctrine with unrealized rules fails, naming only the unrealized ones. |
-| `DCTRN-B12` | When every unrealized rule is deferred with `@TBD` on its own line, the doctrine is Pending, naming them. |
+| `DCTRN-B12` | When every unrealized rule is deferred with `@TBD` on its own line, the doctrine is a divergence, naming them. |
 | `DCTRN-B13` | An open question (`-Q`) is not a rule, and is never charged for a realizer. |
 
 ### spec-doctrine-exists
@@ -104,7 +104,7 @@ rule to realize.
 | `DCTRN-B26` | A spec whose layer does not require doctrine is skipped. |
 | `DCTRN-B27` | Where the layer requires doctrine, a rule with no `@realizes` fails, naming it. |
 | `DCTRN-B28` | A rule that declares what it realizes passes, whether the tag sits on the rule's line or on the lines right below it. |
-| `DCTRN-B29` | A rule deferred with `@TBD` is Pending, not failure. |
+| `DCTRN-B29` | A rule deferred with `@TBD` is a divergence, not failure. |
 | `DCTRN-B30` | A blank line ends the rule a tag belongs to: a `@realizes` after a blank line declares nothing for the rule above. |
 | `DCTRN-B31` | The demanding layer is resolved from the target the spec describes: the layers of the code its specifies edges reach, or, before that code exists, the layer the target's path would have. |
 | `DCTRN-B32` | A catalogued rule and a `@realizes` citation are read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a 7-character rule and citation are read. |

@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: FTMFT
-#   updated_at: 2026-09-28
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @FTMFT
@@ -59,7 +59,7 @@ Feature: FeatureTestMatch — scenarios in feature must be implemented in test b
   Scenario: Tests with matching codes but drifting descriptions issue a warning
     Given linked tests implementing feature codes with divergent description text
     When the gate confronts the artifact
-    Then it returns Pending, issuing an informative warning without blocking
+    Then it returns a divergence, issuing an informative warning without blocking
 
   @FTMFT-B10 @unit-level
   Scenario: Test titles containing quotes are parsed without truncation
@@ -119,7 +119,7 @@ Feature: FeatureTestMatch — scenarios in feature must be implemented in test b
   Scenario: Descriptive divergence is always an informative warning
     Given a scenario with matching code and differing description
     When the gate confronts the artifact
-    Then it produces a Pending verdict, ensuring text variation does not block delivery
+    Then it produces a Diverge verdict, ensuring text variation does not block delivery
 
   @FTMFT-I03 @unit-level
   Scenario: Code presence ignores comments while description matching reads them
@@ -140,10 +140,10 @@ Feature: FeatureTestMatch — scenarios in feature must be implemented in test b
     Then it bypasses them, delegating enforcement to surface-specific checkers
 
   @FTMFT-X03 @unit-level
-  Scenario: Minor description drift does not block promotion
+  Scenario: Minor description drift is a divergence, not a failure
     Given minor phrasing variations between scenario and test
     When the gate confronts the artifact
-    Then it emits a warning instead of failing the check
+    Then it reports a divergence instead of failing the check, and the gate's severity says whether it blocks
 
   @FTMFT-B18 @unit-level
   Scenario: An unmapped regime tag does not exempt a scenario
@@ -201,3 +201,9 @@ Feature: FeatureTestMatch — scenarios in feature must be implemented in test b
     Given a scenario whose first test matches, a second test naming a variation, and a third talking about something else
     When the feature is confronted
     Then only the third is named as a test that cites the code and talks about something else
+
+  @FTMFT-B25 @unit-level
+  Scenario: A test title that says the scenario's title and more matches it
+    Given scenarios and tests titled with the scenario's title followed by detail, with a table-driven placeholder, and with the same words in another order
+    When the gate confronts the feature
+    Then the first two match, and the last one diverges

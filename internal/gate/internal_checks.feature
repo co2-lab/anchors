@@ -222,16 +222,16 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     And the others pass
 
   @INCHN-B24 @unit-level
-  Scenario: A missing or stale mutation signal is pending
-    Given a file with no mutation signal, and a file whose perfect score was measured at an older revision
+  Scenario: A missing or stale mutation signal is pending, unless it met the floor
+    Given a file with no mutation signal, and files whose score was measured at an older revision above the floor, below it, and under load
     When mutation-score confronts each
-    Then both are pending, the first saying what to ingest and the second that the signal is stale
+    Then the one above the floor does not block and says how to remeasure, and the others are pending
 
   @INCHN-B25 @unit-level
-  Scenario: A score between acceptable and desirable is pending, not failed
+  Scenario: A score between acceptable and desirable is divergence, not failed
     Given an acceptable threshold of 70 and a desirable one of 90
     When mutation-score confronts scores of 75 and 92
-    Then 75 is pending, naming both ranges and the 15 points left, and 92 passes clean
+    Then 75 is divergence, naming both ranges and the 15 points left, and 92 passes clean
     And with no desirable threshold, or one below the acceptable, 75 passes
 
   @INCHN-B26 @unit-level
@@ -293,3 +293,15 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     Given a spec whose feature declares two variants of a rule, a test naming the rule, and a proof of the first variant only
     When scenario coverage confronts the spec, then with both variants proven, then with a proof of the rule alone
     Then the first fails naming the second variant, the second passes, and the third fails
+
+  @INCHN-B35 @unit-level
+  Scenario: The header's layer is read as the project declares it
+    Given test files whose header names only a layer, one the project declares declarative under its own name and one it declares with another regime
+    When header-valid confronts each
+    Then the first passes on its layer, and the second asks for a code or a ref
+
+  @INCHN-B36 @unit-level
+  Scenario: A file with nothing to cover is not pending
+    Given a file listed by the coverage report with no line, a file a whole run of its suite left out, and a file never measured
+    When line coverage confronts each
+    Then the first is skipped, the second is a divergence, and the third is pending

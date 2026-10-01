@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: PLRVP
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @PLRVP
@@ -32,18 +32,18 @@ Feature: PlanRevised — mutual revision visibility between superseded and revis
     Then it returns Fail, citing the absent target plan
 
   @PLRVP-B05 @unit-level
-  Scenario: A revising plan receives a pending reminder when the target lacks a top notice
+  Scenario: A revising plan receives a divergence reminder when the target lacks a top notice
     Given a revising plan that declares an existing target plan
     And the target plan file does not contain a top revision notice
     When the gate confronts the revising plan
-    Then it returns Pending, reminding the author to write the revision notice on the target plan
+    Then it returns a divergence, reminding the author to write the revision notice on the target plan
 
   @PLRVP-B06 @unit-level
-  Scenario: The pending reminder on a revising plan clears once the target carries the notice
+  Scenario: The divergence reminder on a revising plan clears once the target carries the notice
     Given a revising plan that declares an existing target plan
     And the target plan file contains the required top revision notice
     When the gate confronts the revising plan
-    Then it returns Skip, clearing the pending reminder
+    Then it returns Skip, clearing the divergence reminder
 
   @PLRVP-B07 @unit-level
   Scenario: A revised plan lacking a top revision notice fails
@@ -60,12 +60,12 @@ Feature: PlanRevised — mutual revision visibility between superseded and revis
     Then it returns Fail, because the notice was placed too late to inform top-down readers
 
   @PLRVP-B09 @unit-level
-  Scenario: A revised plan with top notice but no section amendment markers returns pending
+  Scenario: A revised plan with top notice but no section amendment markers returns divergence
     Given a plan that is revised by another plan in the map graph
     And the plan contains a top revision notice within the first 40 lines
     And the plan contains no section amendment markers
     When the gate confronts the revised plan
-    Then it returns Pending, indicating that specific affected sections must be marked
+    Then it returns a divergence, indicating that specific affected sections must be marked
 
   @PLRVP-B10 @unit-level
   Scenario: A revised plan with top notice and marked section amendments passes
@@ -88,16 +88,16 @@ Feature: PlanRevised — mutual revision visibility between superseded and revis
     Then it returns Fail, upholding the invariant that top-down readers encounter warnings first
 
   @PLRVP-I02 @unit-level
-  Scenario: Missing section amendment markers yield pending rather than failure
+  Scenario: Missing section amendment markers yield divergence rather than failure
     Given a revised plan having a top notice but lacking section-level markings
     When the gate confronts it
-    Then it returns Pending instead of Fail, allowing whole-plan revisions to proceed
+    Then it returns a divergence instead of Fail, allowing whole-plan revisions to proceed
 
   @PLRVP-I03 @unit-level
-  Scenario: The pending reminder clears once the revised plan is notified
+  Scenario: The divergence reminder clears once the revised plan is notified
     Given a revising plan whose target plan file receives the top revision notice
     When the gate confronts the revising plan
-    Then it clears the pending reminder, preventing permanent noise
+    Then it clears the divergence reminder, preventing permanent noise
 
   @PLRVP-X01 @unit-level
   Scenario: Language neutrality allows markdown alerts and metadata directives

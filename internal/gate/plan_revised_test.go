@@ -60,7 +60,7 @@ func TestRevisesParaPlanoInexistente(t *testing.T) {
 }
 
 func TestQuemRevisaEhLembradoDoAviso(t *testing.T) {
-	t.Run("PLRVP-B05: A revising plan receives a pending reminder when the target lacks a top notice", func(t *testing.T) {})
+	t.Run("PLRVP-B05: A revising plan receives a divergence reminder when the target lacks a top notice", func(t *testing.T) {})
 	antigo := mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan}
 	novo := mapx.Node{ID: "plans/0007.md", Kind: mapx.KindPlan,
 		Revises: []string{"plans/0001.md"}}
@@ -69,7 +69,7 @@ func TestQuemRevisaEhLembradoDoAviso(t *testing.T) {
 	// O plano REVISOR recebe o lembrete — é pendência, não falha: ele não fez nada de
 	// errado, só falta um passo que está noutro arquivo.
 	v, msg := checkPlanRevised("# Plano 0007\n", novo, "", g, nil)
-	if v != Pending {
+	if v != Diverge {
 		t.Fatalf("quem revisa deveria receber PENDING com o lembrete; veio %v", v)
 	}
 	if !strings.Contains(msg, "plans/0001.md") || !strings.Contains(msg, "@revised-by") {
@@ -78,8 +78,8 @@ func TestQuemRevisaEhLembradoDoAviso(t *testing.T) {
 }
 
 func TestLembreteSomeQuandoOAvisoExiste(t *testing.T) {
-	t.Run("PLRVP-B06: The pending reminder on a revising plan clears once the target carries the notice", func(t *testing.T) {})
-	t.Run("PLRVP-I03: The pending reminder clears once the revised plan is notified", func(t *testing.T) {})
+	t.Run("PLRVP-B06: The divergence reminder on a revising plan clears once the target carries the notice", func(t *testing.T) {})
+	t.Run("PLRVP-I03: The divergence reminder clears once the revised plan is notified", func(t *testing.T) {})
 	root := t.TempDir()
 	if err := os.MkdirAll(filepath.Join(root, "plans"), 0o755); err != nil {
 		t.Fatal(err)
@@ -94,7 +94,7 @@ func TestLembreteSomeQuandoOAvisoExiste(t *testing.T) {
 		[]byte("# Plano 0001\n\n## Objetivo\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
-	if v, _ := checkPlanRevised("# Plano 0007\n", novo, root, g, nil); v != Pending {
+	if v, _ := checkPlanRevised("# Plano 0007\n", novo, root, g, nil); v != Diverge {
 		t.Fatalf("sem o aviso, o revisor deveria receber o lembrete; veio %v", v)
 	}
 
@@ -142,15 +142,15 @@ func TestPlanoRevisadoAvisoTardeFalha(t *testing.T) {
 }
 
 func TestPlanoRevisadoSoTopoEhPendencia(t *testing.T) {
-	t.Run("PLRVP-B09: A revised plan with top notice but no section amendment markers returns pending", func(t *testing.T) {})
-	t.Run("PLRVP-I02: Missing section amendment markers yield pending rather than failure", func(t *testing.T) {})
+	t.Run("PLRVP-B09: A revised plan with top notice but no section amendment markers returns divergence", func(t *testing.T) {})
+	t.Run("PLRVP-I02: Missing section amendment markers yield divergence rather than failure", func(t *testing.T) {})
 	antigo := mapx.Node{ID: "plans/0001.md", Kind: mapx.KindPlan, Code: "ANT" + "GO"}
 	novo := mapx.Node{ID: "plans/0007.md", Kind: mapx.KindPlan, Code: "NOV" + "OO",
 		Revises: []string{"plans/0001.md"}}
 	g := &mapx.Graph{Nodes: []mapx.Node{antigo, novo}}
 
 	soTopo := "# Plano 0001\n\n> `@revised-by: plans/0007.md` — a fase 2 mudou de ordem.\n\n## Objetivo\n"
-	if v, msg := checkPlanRevised(soTopo, antigo, "", g, nil); v != Pending {
+	if v, msg := checkPlanRevised(soTopo, antigo, "", g, nil); v != Diverge {
 		t.Errorf("aviso de topo sem marcar as partes é pendência; veio %v (%s)", v, msg)
 	}
 }

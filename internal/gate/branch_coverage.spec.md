@@ -1,6 +1,6 @@
 <!-- @anchors
   code: BRCOV
-  updated_at: 2026-09-28
+  updated_at: 2026-09-30
   layer: gate
 -->
 # BranchCoverage — the tests take the branches the code has
@@ -36,6 +36,7 @@ nothing the tests do reaches it.
 | `BRCOV-B02` | A branch on a line carrying `@no-branch: <why>`, or on the line after it, is left out of the missed; a waiver with no reason waives nothing. |
 | `BRCOV-B03` | A missed branch on a line where the mutation, measured at the node's revision, found a mutant no test ran fails as likely dead, naming the lines — whatever the floor. A mutation measured at another revision says nothing about these lines. |
 | `BRCOV-B04` | A node that is not code is skipped; a node with no coverage, or coverage of another revision, is pending; a coverage with no branch is skipped. |
+| `BRCOV-B05` | A file a coverage report listed with no instrumentable line is skipped, and one a whole run of its suite left out of the report is a divergence, as `line-coverage` reads them. (`coverageAbsence`) |
 
 ## Errors
 

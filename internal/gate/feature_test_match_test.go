@@ -171,7 +171,7 @@ describe('Login', () => {
 func TestFeatureTestMatch_descriptionDrift(t *testing.T) {
 	t.Run("FTMFT-B09: Tests with matching codes but drifting descriptions issue a warning", func(t *testing.T) {})
 	t.Run("FTMFT-I02: Descriptive divergence is always an informative warning", func(t *testing.T) {})
-	t.Run("FTMFT-X03: Minor description drift does not block promotion", func(t *testing.T) {})
+	t.Run("FTMFT-X03: Minor description drift is a divergence, not a failure", func(t *testing.T) {})
 	root := t.TempDir()
 	feat := "business-logic/dedup.feature"
 	test := "__tests__/dedup.test.ts"
@@ -185,7 +185,7 @@ describe('x', () => {
 	g := featureGraph(feat, test)
 	n := mapx.Node{ID: feat, Kind: mapx.KindFeature}
 	v, detail := checkFeatureTestMatch(featureSrc, n, root, g, regimeCfg())
-	if v != Pending {
+	if v != Diverge {
 		t.Errorf("esperava Pending (drift de descrição), veio %v: %s", v, detail)
 	}
 }
@@ -747,7 +747,7 @@ describe('x', () => {
 	g := featureGraph(feat, test)
 	n := mapx.Node{ID: feat, Kind: mapx.KindFeature}
 	v, detail := checkFeatureTestMatch(featureSrc, n, root, g, regimeCfg())
-	if v != Pending || !strings.Contains(detail, "o logo gira") || strings.Contains(detail, "outra conta") {
+	if v != Diverge || !strings.Contains(detail, "o logo gira") || strings.Contains(detail, "outra conta") {
 		t.Fatalf("only the unrelated test is named, as a warning; got %v: %s", v, detail)
 	}
 
@@ -760,7 +760,26 @@ describe('x', () => {
   it('DDTDX-B02: Repetição real quando valor distinto', () => {})
 })`)
 	v, detail = checkFeatureTestMatch(featureSrc, n, root, g, regimeCfg())
-	if v != Pending || strings.Count(detail, "o logo gira") != 0 || strings.Contains(detail, "tabela de casos") || !strings.Contains(detail, "DDTDX-B01 (") {
+	if v != Diverge || strings.Count(detail, "o logo gira") != 0 || strings.Contains(detail, "tabela de casos") || !strings.Contains(detail, "DDTDX-B01 (") {
 		t.Fatalf("the first test drifts under its own ruler only, the shared title is not named; got %v: %s", v, detail)
+	}
+}
+
+func TestFeatureTestMatch_titleAndMore(t *testing.T) {
+	t.Run("FTMFT-B25: A test title that says the scenario's title and more matches it", func(t *testing.T) {})
+	for test, want := range map[string]bool{
+		"O login trava após três tentativas — sandbox": true,
+		"O login trava após três tentativas (backend)": true,
+		"O login trava após três tentativas: com %s":   true,
+		"O login trava após $count tentativas":         false,
+		"Após três tentativas o login trava":           false,
+		"O login":                                      false,
+	} {
+		if got := titleCovers("O login trava após três tentativas", test); got != want {
+			t.Errorf("%q covers the scenario: got %v, want %v", test, got, want)
+		}
+	}
+	if !titleCovers("Cada <formato> é aceito", "Cada %s é aceito") {
+		t.Error("an outline's parameter and a table placeholder are not words of either title")
 	}
 }

@@ -23,6 +23,18 @@
 # measured under load, measure it once with a large coefficient (100) to learn how long a
 # mutant really takes, as the gate says.
 #
+# `--workers`: gremlins runs one mutant per CPU at once, and a package whose tests build
+# binaries and call git (cmd/anchors/quality, ~20s alone) adds its own load to a machine
+# other sessions share — measured: 11 of 21 mutants of keep_evidence.go timed out with 10
+# workers, 0 of 21 with 2. The default is a quarter of the CPUs; ANCHORS_MUTATION_WORKERS
+# overrides it. (The larger cause was the test cache, below.)
+#
+# `GOFLAGS=-count=1`: gremlins sets each mutant's time limit from its coverage run, and
+# with Go's test cache warm that run is answered from the cache in milliseconds — the limit
+# came out a fraction of what the package's tests take, and almost every mutant of a slow
+# package "timed out". Measured on cmd/anchors/quality/map_sync.go: 15 of 18 timed out with
+# the cache (1 worker, coefficient 30); 15 killed, 3 lived, 0 timed out without it.
+#
 # Usage: scripts/anchors-mutation.sh [package-dir | file.go ...]   (default: every package)
 set -uo pipefail
 
@@ -54,6 +66,8 @@ else
 fi
 
 coefficient="${ANCHORS_MUTATION_TIMEOUT_COEFFICIENT:-10}"
+cpus="$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)"
+workers="${ANCHORS_MUTATION_WORKERS:-$(( cpus / 4 > 0 ? cpus / 4 : 1 ))}"
 i=0
 for entry in "${pkgs[@]}"; do
   i=$((i + 1))
@@ -68,7 +82,7 @@ for entry in "${pkgs[@]}"; do
     done
   fi
   echo "[$i/${#pkgs[@]}] $entry"
-  if ! gremlins unleash "./$pkg" "${excludes[@]}" --timeout-coefficient "$coefficient" --output "$tmp/raw.json" >"$tmp/log" 2>&1; then
+  if ! GOFLAGS="${GOFLAGS:+$GOFLAGS }-count=1" gremlins unleash "./$pkg" "${excludes[@]}" --timeout-coefficient "$coefficient" --workers "$workers" --output "$tmp/raw.json" >"$tmp/log" 2>&1; then
     echo "  gremlins failed on $pkg:" >&2
     tail -5 "$tmp/log" >&2
     continue

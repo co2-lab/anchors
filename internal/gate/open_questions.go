@@ -68,8 +68,10 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 		// leitor entende "não se aplica"; um gate BLOQUEANTE com ✓0 ✗0 ~586 parece
 		// vigilante e não vigia nada.
 		//
-		// Não IMPEDE (ver `Result.Impede`): dívida de migração não barra promoção.
-		return Pending, i18n.T("gate.open_questions.pending_no_section")
+		// A divergence: it bars on a blocking gate unless the project's `severity` says
+		// otherwise — the section is mandatory, and a project migrating older specs declares
+		// `severity: {divergence: inform}` on this gate while it brings them up.
+		return Diverge, i18n.T("gate.open_questions.pending_no_section")
 	}
 
 	itens := openItems(corpo)
@@ -89,7 +91,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 		}
 	}
 	if len(anonimos) > 0 {
-		return Pending, i18n.T("gate.open_questions.pending_anonymous", len(anonimos), strings.Join(anonimos, ", "))
+		return Diverge, i18n.T("gate.open_questions.pending_anonymous", len(anonimos), strings.Join(anonimos, ", "))
 	}
 
 	var nums []string
@@ -132,7 +134,7 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 	//
 	// Marcador e não campo novo porque a assinatura do check é `(Verdict, string)` e é
 	// compartilhada por dezenas de gates; mudá-la para um caso obrigaria a tocar todos.
-	return Pending, i18n.T("gate.open_questions.pending_decisions", len(itens), strings.Join(nums, ", "))
+	return Diverge, i18n.T("gate.open_questions.pending_decisions", len(itens), strings.Join(nums, ", "))
 }
 
 // seçãoDecisõesEmAberto extrai o corpo da seção.

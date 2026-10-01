@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RVMTR
-#   updated_at: 2026-09-27
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @RVMTR
@@ -62,10 +62,10 @@ Feature: ReverseMatch — every scenario still has its rule, and every proven co
     Then it returns Pass
 
   @RVMTR-B10 @unit-level
-  Scenario: test-feature-match skips what is not a test, and a test no feature exercises is Pending
+  Scenario: test-feature-match skips what is not a test, and a test no feature exercises
     Given a feature node, and in turn a test of unit UNITX that no feature exercises
     When test-feature-match confronts each
-    Then the first returns Skip and the second Pending
+    Then both are skipped, the second saying the link is the triad's to charge
 
   @RVMTR-B11 @unit-level
   Scenario: A linked feature with no coded scenario leaves test-feature-match Pending
@@ -80,10 +80,10 @@ Feature: ReverseMatch — every scenario still has its rule, and every proven co
     Then it returns Fail naming UNITX-B10
 
   @RVMTR-B13 @unit-level
-  Scenario: A rule declared as a variant is a declared scenario for the test
-    Given a feature declaring UNITX-B01#01, and a test naming UNITX-B01
-    When test-feature-match confronts the test
-    Then it returns Pass
+  Scenario: A test naming the bare rule where the feature declares its variants
+    Given a feature declaring UNITX-B01#01, a test naming UNITX-B01, and one naming UNITX-B01#01
+    When test-feature-match confronts each
+    Then the first fails naming UNITX-B01, and the second passes
 
   @RVMTR-B14 @unit-level
   Scenario: A revision code is not charged as a rule
@@ -132,3 +132,9 @@ Feature: ReverseMatch — every scenario still has its rule, and every proven co
     Given tests with no feature linked, found beside their code by the derivation: one of a declarative util, one of a governed screen, and one with no unit
     When test-feature-match judges them
     Then the first is skipped saying its unit is declarative, and the others stay pending
+
+  @RVMTR-B18 @unit-level
+  Scenario: A test naming a variant its feature does not declare
+    Given a feature declaring UNITX-B03 alone, and a test naming UNITX-B03#01
+    When test-feature-match confronts the test
+    Then it fails naming UNITX-B03#01

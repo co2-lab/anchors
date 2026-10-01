@@ -99,3 +99,15 @@ func TestBranchCoverage_nothingToMeasure(t *testing.T) {
 		t.Errorf("coverage with no branch is skipped, got %v", v)
 	}
 }
+
+func TestBranchCoverage_nothingToCover(t *testing.T) {
+	t.Run("BRCOV-B05: Branch coverage reads a file with nothing to cover as line coverage does", func(t *testing.T) {})
+	listed := mapx.Node{Kind: mapx.KindCode, Rev: "r1", Signal: &mapx.TestSignal{CoverageRev: "r1"}}
+	omitted := mapx.Node{Kind: mapx.KindCode, Rev: "r1", Signal: &mapx.TestSignal{CoverageOmitted: "r1"}}
+	if v, _ := checkBranchCoverage("", listed, "", nil, nil); v != Skip {
+		t.Errorf("listed with no line is skipped, got %v", v)
+	}
+	if v, _ := checkBranchCoverage("", omitted, "", nil, nil); v != Diverge {
+		t.Errorf("omitted is a divergence, got %v", v)
+	}
+}

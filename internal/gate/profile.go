@@ -24,7 +24,8 @@ type GateSummary struct {
 	Pass     int
 	Fail     int
 	Skip     int
-	Pending  int
+	Pending  int // could not measure
+	Diverge  int // measured and found something short of wrong
 	Judge    int // aguardando julgamento de IA
 	// Duracao e' o tempo somado de todas as confrontacoes deste gate, e Pior e' a mais
 	// cara delas.
@@ -49,23 +50,25 @@ func Aggregate(results []Result) Profile {
 			s.Pass++
 		case Fail:
 			s.Fail++
-			p.Failures = append(p.Failures, r)
-			if r.Blocking {
+			if !r.Ignored() {
+				p.Failures = append(p.Failures, r)
+			}
+			if r.Blocks() {
 				p.Blocked = append(p.Blocked, r)
 				p.Passed = false
 			}
 		case Skip:
 			s.Skip++
-		case Pending:
-			s.Pending++
-			// Pendência NÃO barra por si — e a medição mostra por quê: num repositório real,
-			// fazer `Pending` barrar em gate bloqueante reprovou 411 nós de uma vez. O
-			// `feature-test-match` (bloqueante) tem 410 pendências que significam "não tive o
-			// que confrontar", não "há decisão por tomar".
-			//
-			// São dois sentidos no mesmo veredito, e só o segundo deveria impedir a promoção.
-			// Quem distingue é o GATE, que sabe o que mediu — ver `Impede`.
-			if r.Blocking && r.Impede {
+		case Pending, Diverge:
+			if r.Verdict == Diverge {
+				s.Diverge++
+			} else {
+				s.Pending++
+			}
+			// A divergence or a pending item bars when its level's state is `block` (the gate's
+			// `severity`, see `markSeverity`). "Nothing to confront" is Skip, not Pending — when
+			// it was Pending, making Pending block failed 411 nodes at once.
+			if r.Blocks() {
 				p.Blocked = append(p.Blocked, r)
 				p.Passed = false
 			}
@@ -105,7 +108,7 @@ func (p Profile) NodeVerdicts() []NodeVerdict {
 		// The same test `Aggregate` uses to block promotion: a blocking gate's Fail, or
 		// its Pending marked `Impede`. Only the Fail was counted here, so a node whose
 		// impeding pending refused the promotion was stamped as not failed on the map.
-		if r.Blocking && (r.Verdict == Fail || (r.Verdict == Pending && r.Impede)) {
+		if r.Blocks() {
 			failed[r.Target] = true
 		}
 	}

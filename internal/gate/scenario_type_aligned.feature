@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: STASC
-#   updated_at: 2026-09-19
+#   updated_at: 2026-09-30
 #   layer: feature
 
 @STASC
@@ -64,22 +64,22 @@ Feature: ScenarioTypeAligned — scenario classification tags must match the cod
     Then it returns Pass, recognizing valid co-tagging across requirements
 
   @STASC-B10 @unit-level
-  Scenario: A scenario tag disagreeing with the code rule letter returns Pending
+  Scenario: A scenario tag disagreeing with the code rule letter returns a divergence
     Given a scenario whose classification tag contradicts the letter of its identity code
     When the gate confronts it
-    Then it returns Pending, recording the divergence for manual review
+    Then it returns a divergence, recording the divergence for manual review
 
   @STASC-B11 @unit-level
-  Scenario: The Pending verdict cites details of the type divergence
+  Scenario: The Diverge verdict cites details of the type divergence
     Given a scenario with mismatched classification tag and code letter
     When the gate confronts it
-    Then it returns Pending with details naming the code, letter, tag, allowed letters, and title
+    Then it returns a divergence with details naming the code, letter, tag, allowed letters, and title
 
   @STASC-B12 @unit-level
   Scenario: Multiple mismatch findings are sorted deterministically
     Given a feature file containing multiple scenario classification mismatches
     When the gate confronts it
-    Then it returns Pending with findings sorted in deterministic order
+    Then it returns a divergence with findings sorted in deterministic order
 
   @STASC-I01 @unit-level
   Scenario: Classification alignment is evaluated only on feature artifacts
@@ -94,10 +94,10 @@ Feature: ScenarioTypeAligned — scenario classification tags must match the cod
     Then it returns Skip, preventing false positives across different language conventions
 
   @STASC-I03 @unit-level
-  Scenario: Mismatched scenario types return Pending rather than Fail
+  Scenario: Mismatched scenario types return Diverge rather than Fail
     Given a feature with mismatched scenario tags
     When the gate confronts it
-    Then it returns Pending, treating discrepancies as inherited debt requiring judgment
+    Then it returns a divergence, treating discrepancies as inherited debt requiring judgment
 
   @STASC-I04 @unit-level
   Scenario: Secondary requirement codes prevent false mismatch reporting

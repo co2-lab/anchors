@@ -259,3 +259,35 @@ func TestTrimTitleOfATableRow(t *testing.T) {
 		t.Errorf("trimTitle of a table row = %q", got)
 	}
 }
+
+func TestRevisionOrphans_titleIsTheHeading(t *testing.T) {
+	t.Run("RVORP-B08: A rule's title is its heading, not its usage row", func(t *testing.T) {})
+	spec := "> **NTCNN-R0001:** o limite mudou.\n>\n> **Revises:** `B01`\n\n" +
+		"### NTCNN-B01 — O limite do saque é diário\n\n### NTCNN-B02 — O extrato lista as entregas\n\n" +
+		"## Rule uses\n\n| Rule | Uses |\n| --- | --- |\n| `NTCNN-B01` | `userId`, `amount`, DEP1 |\n| `NTCNN-B02` | `userId`, `amount`, DEP1 |\n"
+	if got := ruleTitles(spec)["B01"]; !strings.HasPrefix(got, "### NTCNN-B01") {
+		t.Errorf("the heading is the title, got %q", got)
+	}
+	if v, msg := checkRevisionOrphans(spec, specNodeRev(), "", nil, nil); v != Pass {
+		t.Errorf("a sibling sharing only the usage row is not an orphan, got %v: %s", v, msg)
+	}
+}
+
+func TestRevisionOrphans_revisedNoRule(t *testing.T) {
+	t.Run("RVORP-B09: A revision that revised no rule says so", func(t *testing.T) {})
+	spec := func(revises string) string {
+		return "> **NTCNN-R0001:** acrescenta a tabela de uso.\n>\n> **Revises:** " + revises + "\n\n### NTCNN-B01 — uma regra\n\n### NTCNN-B03 — outra\n"
+	}
+	if v, msg := checkRevisionOrphans(spec("none — only the usage table was added"), specNodeRev(), "", nil, nil); v != Pass {
+		t.Errorf("a declared revision of no rule passes, got %v: %s", v, msg)
+	}
+	if v, _ := checkRevisionOrphans(spec("nenhuma — o texto exibido mudou, nenhuma regra o afirma"), specNodeRev(), "", nil, nil); v != Pass {
+		t.Errorf("the declaration reads in Portuguese too, got %v", v)
+	}
+	if v, _ := checkRevisionOrphans(spec("none"), specNodeRev(), "", nil, nil); v != Pending {
+		t.Errorf("a declaration with no reason declares nothing, got %v", v)
+	}
+	if v, msg := checkRevisionOrphans(spec("none — the B03 text did not change"), specNodeRev(), "", nil, nil); v != Pass {
+		t.Errorf("the reason is not read for codes, got %v: %s", v, msg)
+	}
+}

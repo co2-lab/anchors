@@ -990,6 +990,66 @@ type Gate struct {
 	// 100. Unset asks for every branch. A layer that needs another floor gets its own
 	// entry, scoped by `tags`.
 	MinPercent *float64 `yaml:"min_percent,omitempty"`
+
+	// Severity — what each level of this gate's verdict does: a FAIL (the gate measured and
+	// the target is wrong), a DIVERGENCE (it measured and found something short of wrong),
+	// a PENDING (it had something to confront and could not measure it). Each is `block`
+	// (bars the promotion and is a finding), `inform` (a finding that does not bar) or
+	// `ignore` (counted, not reported). Unset, every level follows `blocking`: all `block`
+	// on a blocking gate, all `inform` on the others. A level is never stronger than a
+	// more serious one: pending ≤ divergence ≤ fail.
+	Severity *Severity `yaml:"severity,omitempty"`
+}
+
+// Severity is the state of each verdict level of a gate (see Gate.Severity).
+type Severity struct {
+	Fail       string `yaml:"fail,omitempty"`
+	Divergence string `yaml:"divergence,omitempty"`
+	Pending    string `yaml:"pending,omitempty"`
+}
+
+// The states a verdict level takes, from the strongest.
+const (
+	ActionBlock  = "block"
+	ActionInform = "inform"
+	ActionIgnore = "ignore"
+)
+
+// The verdict levels, from the most serious.
+const (
+	LevelFail       = "fail"
+	LevelDivergence = "divergence"
+	LevelPending    = "pending"
+)
+
+// actionRank orders the states: a higher rank is stronger.
+func actionRank(a string) int {
+	switch a {
+	case ActionBlock:
+		return 2
+	case ActionInform:
+		return 1
+	case ActionIgnore:
+		return 0
+	}
+	return -1
+}
+
+// ActionFor is what a verdict of this level does on this gate: the level's declared state,
+// or, undeclared, the gate's `blocking` (`block` when blocking, `inform` otherwise).
+func (g Gate) ActionFor(level string) string {
+	def := ActionInform
+	if g.IsBlocking() {
+		def = ActionBlock
+	}
+	if g.Severity == nil {
+		return def
+	}
+	v := map[string]string{LevelFail: g.Severity.Fail, LevelDivergence: g.Severity.Divergence, LevelPending: g.Severity.Pending}[level]
+	if v == "" {
+		return def
+	}
+	return v
 }
 
 // DefaultTimeoutCeiling is the share of timed-out mutants above which a mutation score is
@@ -1687,6 +1747,18 @@ func (c *Config) validarEnumsDeGate() error {
 			if !fases[f] {
 				return fmt.Errorf("%s", i18n.T("config.gate.unknown_phase",
 					g.Name, f, PhasePreCommit, PhasePrePush, PhaseCI, PhaseManual))
+			}
+		}
+		if g.Severity != nil {
+			for _, l := range [][2]string{{LevelFail, g.Severity.Fail}, {LevelDivergence, g.Severity.Divergence}, {LevelPending, g.Severity.Pending}} {
+				if l[1] != "" && actionRank(l[1]) < 0 {
+					return fmt.Errorf("%s", i18n.T("config.gate.unknown_severity", g.Name, l[0], l[1], ActionBlock, ActionInform, ActionIgnore))
+				}
+			}
+			if actionRank(g.ActionFor(LevelDivergence)) > actionRank(g.ActionFor(LevelFail)) ||
+				actionRank(g.ActionFor(LevelPending)) > actionRank(g.ActionFor(LevelDivergence)) {
+				return fmt.Errorf("%s", i18n.T("config.gate.severity_order", g.Name,
+					g.ActionFor(LevelFail), g.ActionFor(LevelDivergence), g.ActionFor(LevelPending)))
 			}
 		}
 		for _, p := range g.SkipOn {

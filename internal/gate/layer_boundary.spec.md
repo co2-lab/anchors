@@ -1,6 +1,6 @@
 <!-- @anchors
   code: LYBNL
-  updated_at: 2026-09-26
+  updated_at: 2026-09-30
   layer: gate
 -->
 # LayerBoundary — a layer does not reach what is not its own
@@ -47,7 +47,7 @@ a distant list nobody revisits.
 | `LYBNL-B02` | Content matching a forbidden pattern FAILS, and the verdict names the LINE and the REASON — a prohibition with no motive turns into ritual. |
 | `LYBNL-B03` | A rule scoped to a layer charges only that layer: the same import in a hook is legitimate. |
 | `LYBNL-B04` | A rule with no `layer` holds for ALL code — that is how a global prohibition is declared (raw clock, literal colour, console log). |
-| `LYBNL-B05` | `severity: warn` records without failing; the default severity is `error`. |
+| `LYBNL-B05` | `severity: warn` records a divergence without failing; the default severity is `error`. |
 | `LYBNL-B06` | `@allow-boundary: <reason>` on the line waives THAT line — acknowledged debt stays visible and dated where it lives. |
 | `LYBNL-B07` | The waiver also holds in the comment ON THE LINE ABOVE: in many languages an import has nowhere to carry a readable end-of-line comment, and demanding it inline would push the author not to declare at all. |
 | `LYBNL-B08` | A BARE marker, with no written reason, does not waive — it would be a silent way to quiet the gate. |

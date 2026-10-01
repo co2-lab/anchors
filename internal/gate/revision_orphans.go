@@ -91,7 +91,7 @@ func checkRevisionOrphans(content string, n mapx.Node, root string, g *mapx.Grap
 	// `R0002` rewrote. Reading it the neighbour's way, the gate reported `B07` as an unknown
 	// code — a false positive on the very rule that motivated it.
 	titleByShort := ruleTitles(content)
-	revised := codesIn(revisesRE(), content)
+	revised, declaredNone := revisedCodes(content)
 	checked := codesIn(checkedRE(), content)
 	// No rules AND nothing revised: nothing to confront. With a `Revises:` naming codes,
 	// a spec whose rules were not recognised is exactly the case B04 exists for — every
@@ -114,6 +114,12 @@ func checkRevisionOrphans(content string, n mapx.Node, root string, g *mapx.Grap
 	// The charge comes from `plan-change-justified`, which anchors on `--changed`: a NEW
 	// revision is born under the new ruler, and that is where the field becomes required.
 	if len(revised) == 0 {
+		// Every revision that says what it revised declares, with its reason, that it
+		// revised no rule — it added a usage table, a test, a waiver, text no rule asserts.
+		// That is an answer, not an absence: there is no sibling to have orphaned.
+		if declaredNone {
+			return Pass, ""
+		}
 		return Pending, fmt.Sprintf(i18n.T("gate.revision_orphans.no_revises"), len(revs))
 	}
 
@@ -180,6 +186,34 @@ func checkRevisionOrphans(content string, n mapx.Node, root string, g *mapx.Grap
 }
 
 // codesIn gathers the short codes a field lists, across all its occurrences.
+// revisedCodes are the rule codes the revisions' `Revises:` fields name, and whether one of
+// them declares, with its reason, that the revision revised no rule (`Revises: none — <why>`,
+// in any supported language). A declaration with no reason declares nothing, and a reason is
+// not read for codes: "none — the B03 text did not change" names no revised rule.
+func revisedCodes(content string) (codes map[string]bool, declaredNone bool) {
+	codes = map[string]bool{}
+	none := noneKeywordRE()
+	for _, m := range revisesRE().FindAllStringSubmatch(content, -1) {
+		if d := none.FindStringSubmatch(m[1]); d != nil {
+			if strings.TrimSpace(d[1]) != "" {
+				declaredNone = true
+			}
+			continue
+		}
+		for _, r := range ruleRefRE.FindAllStringSubmatch(m[1], -1) {
+			codes[r[1]] = true
+		}
+	}
+	return codes, declaredNone
+}
+
+// noneKeywordRE matches a `Revises:` value that declares no rule revised: the keyword, then
+// a separator and the reason (captured).
+func noneKeywordRE() *regexp.Regexp {
+	return regexp.MustCompile(`(?i)^[\s*_` + "`" + `]*(?:` + strings.Join(escapeKeywords(i18n.AllTranslations("revision.keyword.none")), "|") +
+		`)\b[\s*_` + "`" + `]*(?:[—–:\-,;]+\s*(.*))?$`)
+}
+
 func codesIn(re *regexp.Regexp, content string) map[string]bool {
 	out := map[string]bool{}
 	for _, m := range re.FindAllStringSubmatch(content, -1) {
@@ -215,10 +249,19 @@ func ruleTitles(content string) map[string]string {
 		if !ok {
 			continue
 		}
+		// The rule's HEADING is its title; with none, its first definition. A later line
+		// that names the code — a row of the usage table — lists what the rule reads
+		// (`moves`, `DEP1`, `userId`), and taken as the title it made every rule that reads
+		// the same field a "sibling".
+		if prev, seen := out[short]; seen && (isHeadingLine(prev) || !isHeadingLine(line)) {
+			continue
+		}
 		out[short] = line
 	}
 	return out
 }
+
+func isHeadingLine(l string) bool { return strings.HasPrefix(strings.TrimSpace(l), "#") }
 
 // termsOf reduces a title to its vocabulary, as a SET.
 //

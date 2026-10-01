@@ -106,7 +106,7 @@ func printAudit(target string, withImpact bool, nodes []mapx.Node, results []gat
 		if r.Verdict == gate.Pass || r.Verdict == gate.Skip {
 			continue
 		}
-		mark := map[gate.Verdict]string{gate.Fail: "✗", gate.Pending: "~", gate.Judge: "⏳"}[r.Verdict]
+		mark := map[gate.Verdict]string{gate.Fail: "✗", gate.Diverge: "⚠", gate.Pending: "?", gate.Judge: "⏳"}[r.Verdict]
 		line := fmt.Sprintf("  %s [gate] %s — %s", mark, r.Gate, firstLineAudit(r.Detail))
 		byNode[r.Target] = append(byNode[r.Target], line)
 		if r.Verdict == gate.Fail {

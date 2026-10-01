@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CTRIM
-  updated_at: 2026-09-28
+  updated_at: 2026-09-30
   layer: gate
 -->
 # ContractImpact — a changed field names the rules that use it, and their tests
@@ -30,7 +30,7 @@ when its own file did not move.
 | --- | --- |
 | `CTRIM-B01` | A field whose row differs from the spec at HEAD, or that HEAD had and the spec no longer has, is changed; a field only the new version has is not. (`ContractImpacts`, `Impact`) |
 | `CTRIM-B02` | A changed field names the rules that use it — by name or first segment — in this spec and in the specs that depend on the code it governs, and the test files whose titles cite those rules; a changed field no rule uses names nothing. |
-| `CTRIM-B03` | `contract-impact` is pending with each changed field, its rules and its tests; with no impact it passes, and a node that is not a spec is skipped. |
+| `CTRIM-B03` | `contract-impact` is a divergence with each changed field, its rules and its tests; with no impact it passes, and a node that is not a spec is skipped. |
 | `CTRIM-B04` | The test files every impacted rule reaches, across the specs with uncommitted changes, are listed for the test selection, which adds those its suite runs. (`ImpactedTests`) |
 
 ## Errors

@@ -79,7 +79,7 @@ func checkScenarioLetterDeclared(content string, n mapx.Node, _ string, _ *mapx.
 		sort.Strings(cods)
 		partes = append(partes, i18n.T("gate.scenario_letter_declared.part_letter_in", l, strings.Join(cods, ", ")))
 	}
-	return Pending, i18n.T("gate.scenario_letter_declared.pending_undeclared_letters",
+	return Diverge, i18n.T("gate.scenario_letter_declared.pending_undeclared_letters",
 		len(letras), strings.Join(partes, "; "))
 }
 

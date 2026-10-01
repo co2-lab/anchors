@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CGPCH
-  updated_at: 2026-09-29
+  updated_at: 2026-09-30
   layer: comando
 -->
 # CheckGatePipeline — confronts the map's nodes against the declared gates, records the verdicts and reports the profile
@@ -137,7 +137,7 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | `CGPCH-B41` | Each counter column has its own width, that of its largest number. |
 | `CGPCH-B42` | The pass, fail, skip and judgment columns are at least 1 wide; the drift column is 0 wide when no gate has drift. |
 | `CGPCH-B43` | When no gate has drift, the drift column and its separator are absent from every line. |
-| `CGPCH-B78` | A gate's indeterminate counter is its skipped and pending results less its drift, which the drift column counts apart. |
+| `CGPCH-B78` | A gate's indeterminate counter (`~`) is its skipped results and its pending items with no reason; its divergences (`⚠`) and its pending items with a reason (`?`) each have a column of their own. |
 | `CGPCH-B44` | An empty drift cell is as many terminal columns wide as a filled one: the symbol plus the digits. |
 | `CGPCH-B45` | A gate is clean when it has no failure, no drift, nothing skipped or pending and nothing awaiting judgment. |
 | `CGPCH-B46` | By default every gate appears in the table, clean or not. |
@@ -151,7 +151,7 @@ timing-metrics flag's own spec; what the measurement shows is stated here.
 | `CGPCH-B54` | In the drift listing, a reason shared by several targets is written once, followed by the count and one target per line. |
 | `CGPCH-B55` | In the drift listing, targets with distinct reasons are listed one by one, each with its reason. |
 | `CGPCH-B56` | The drift listing's heading counts the items and the gates they are in. |
-| `CGPCH-B57` | The findings heading counts the failures, split into blocking and informative, and the divergences, and says how to list the divergences. |
+| `CGPCH-B57` | The findings heading counts the failures, split into blocking and informative, the divergences and the pending items, lists every finding that bars the promotion whatever its level, and says how to list the others. |
 | `CGPCH-B82` | Under the findings heading each failure is listed with its blocking or informative mark, its gate and its target, and its detail indented below when it has one; with neither failure nor divergence there is no findings heading. |
 | `CGPCH-B58` | The last line says what is still open even when the check passes: informative findings, pending items, confrontations that did not happen, or nothing; a failed check says how many blocking gates failed and how many informative findings came with them. |
 | `CGPCH-B83` | An informative gate that passed and failed nothing is named as ready to become blocking; when no gate is, nothing is said. |

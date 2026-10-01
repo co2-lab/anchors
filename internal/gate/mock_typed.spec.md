@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MCTYM
-  updated_at: 2026-09-26
+  updated_at: 2026-09-30
   layer: gate
 -->
 # MockTyped — every test double must DERIVE from the module it replaces
@@ -62,6 +62,7 @@ there is no structural type to lean on.
 | `MCTYM-B10` | The third-party exemption is not an escape hatch: one OWN loose double among third-party ones still fails, and only the own one is named. |
 | `MCTYM-B11` | A relative import that resolves to a node of the map is an own module like any other — the criterion is the graph, not the shape of the specifier. |
 | `MCTYM-B12` | Another ecosystem's dialect is charged the same way once declared, with its own detection pattern and its own tie shape. |
+| `MCTYM-B13` | A double whose call is broken over several lines — the module and the factory on the lines after the opening, as a formatter writes it — is read as one written on a single line: an annotated factory passes, and one with no annotation is charged. |
 
 ## Invariants
 
