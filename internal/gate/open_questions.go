@@ -68,9 +68,9 @@ func checkOpenQuestions(content string, n mapx.Node, root string, g *mapx.Graph,
 		// leitor entende "não se aplica"; um gate BLOQUEANTE com ✓0 ✗0 ~586 parece
 		// vigilante e não vigia nada.
 		//
-		// A divergence: it bars on a blocking gate unless the project's `severity` says
-		// otherwise — the section is mandatory, and a project migrating older specs declares
-		// `severity: {divergence: inform}` on this gate while it brings them up.
+		// A divergence: it informs, unless the project declares `severity: {divergence:
+		// block}` — the section is mandatory, and a project that wants its absence to bar
+		// says so.
 		return Diverge, i18n.T("gate.open_questions.pending_no_section")
 	}
 

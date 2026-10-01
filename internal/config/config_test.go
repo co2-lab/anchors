@@ -1537,9 +1537,17 @@ func TestGate_severity(t *testing.T) {
 	t.Run("CNFGO-B55: Each verdict level of a gate takes a state, in order", func(t *testing.T) {})
 	on, off := true, false
 	blocking, informative := Gate{Blocking: &on}, Gate{Blocking: &off}
+	if blocking.ActionFor(LevelFail) != ActionBlock {
+		t.Error("unset, a blocking gate blocks its failures")
+	}
+	for _, l := range []string{LevelDivergence, LevelPending} {
+		if blocking.ActionFor(l) != ActionInform {
+			t.Errorf("%s: unset, a blocking gate informs it", l)
+		}
+	}
 	for _, l := range []string{LevelFail, LevelDivergence, LevelPending} {
-		if blocking.ActionFor(l) != ActionBlock || informative.ActionFor(l) != ActionInform {
-			t.Errorf("%s: unset, a level follows blocking", l)
+		if informative.ActionFor(l) != ActionInform {
+			t.Errorf("%s: unset, an informative gate informs it", l)
 		}
 	}
 	g := Gate{Blocking: &on, Severity: &Severity{Divergence: ActionInform, Pending: ActionIgnore}}

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: CNFGO
-  updated_at: 2026-09-30
+  updated_at: 2026-10-01
   layer: config
 -->
 # Config — loads the project's anchors.yaml, refuses what it cannot honour, and answers every setting with its default
@@ -74,7 +74,7 @@ patterns a spec governs.
 | `CNFGO-B52` | A gate's `invocations` must each compile and carry a capture group — the first one names the unit the call reaches; one that does not compile, or has no group, fails the load naming the gate and the index. |
 | `CNFGO-B53` | A gate's `min_percent` must be between 0 and 100; outside it fails the load naming the gate, and inside it loads. |
 | `CNFGO-B54` | The file's declared format is read from a `version:` line ending in `\r\n` as from one ending in `\n`, trailing comment included. |
-| `CNFGO-B55` | Each verdict level of a gate — `fail`, `divergence`, `pending` — takes a state under `severity`: `block`, `inform` or `ignore`; unset, a level follows `blocking` (`block` on a blocking gate, `inform` on the others). A level stronger than a more serious one (pending ≤ divergence ≤ fail) or an unknown state fails the load naming the gate. (`ActionFor`) |
+| `CNFGO-B55` | Each verdict level of a gate — `fail`, `divergence`, `pending` — takes a state under `severity`: `block`, `inform` or `ignore`; unset, a blocking gate blocks its failures and informs its divergences and pending items, and an informative gate informs all three. A level stronger than a more serious one (pending ≤ divergence ≤ fail) or an unknown state fails the load naming the gate. (`ActionFor`) |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 
 ### Canonical gate declarations

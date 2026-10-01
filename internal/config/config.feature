@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: CNFGO
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-01
 #   layer: feature
 
 @CNFGO
@@ -381,4 +381,4 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
   Scenario: Each verdict level of a gate takes a state, in order
     Given a blocking and an informative gate declaring no severity, one declaring divergence inform and pending ignore, one with pending stronger than divergence, and one with an unknown state
     When each is loaded and asked what each level does
-    Then the first follow their blocking, the ordered one takes its states, and the other two fail the load naming the gate
+    Then the blocking one blocks failures and informs the rest, the informative one informs all, the ordered one takes its states, and the other two fail the load naming the gate

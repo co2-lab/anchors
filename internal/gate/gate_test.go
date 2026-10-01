@@ -525,16 +525,23 @@ func TestSoADecisaoPorTomarImpedeAPromocao(t *testing.T) {
 	on := true
 	g := config.Gate{Name: "decisões", ID: "open-questions-resolved", On: []string{"spec"}, Check: "open-questions-resolved", Blocking: &on}
 	got := run(g)
-	if !got[comDecisao].Blocks() || !got[semMedir].Blocks() {
-		t.Error("by default a blocking gate's divergence and pending item bar the promotion")
+	if got[semMedir].Blocks() || got[semMedir].Action != config.ActionInform {
+		t.Errorf("by default a blocking gate's pending item informs, got %+v", got[semMedir])
+	}
+	if !got[comDecisao].Blocks() {
+		t.Error("an open decision bars by default on a blocking gate")
 	}
 	if got[declarado].Blocks() || got[declarado].Action != config.ActionInform {
 		t.Errorf("a divergence the project declared informs and never bars, got %+v", got[declarado])
 	}
-	g.Severity = &config.Severity{Pending: config.ActionInform}
+	g.Severity = &config.Severity{Divergence: config.ActionBlock, Pending: config.ActionBlock}
 	got = run(g)
-	if !got[comDecisao].Blocks() || got[semMedir].Blocks() {
-		t.Error("with pending: inform only the divergence bars")
+	if !got[semMedir].Blocks() || got[declarado].Blocks() {
+		t.Error("declared, pending blocks; a declared divergence still never bars")
+	}
+	g.Severity = &config.Severity{Divergence: config.ActionInform}
+	if got = run(g); got[comDecisao].Blocks() {
+		t.Error("a project that declares divergence inform lets the open decision inform")
 	}
 	g.Severity = &config.Severity{Pending: config.ActionIgnore}
 	if got = run(g); !got[semMedir].Ignored() {

@@ -995,9 +995,9 @@ type Gate struct {
 	// the target is wrong), a DIVERGENCE (it measured and found something short of wrong),
 	// a PENDING (it had something to confront and could not measure it). Each is `block`
 	// (bars the promotion and is a finding), `inform` (a finding that does not bar) or
-	// `ignore` (counted, not reported). Unset, every level follows `blocking`: all `block`
-	// on a blocking gate, all `inform` on the others. A level is never stronger than a
-	// more serious one: pending ≤ divergence ≤ fail.
+	// `ignore` (counted, not reported). Unset, a blocking gate blocks its failures and
+	// informs its divergences and pending items; an informative gate informs all three. A
+	// level is never stronger than a more serious one: pending ≤ divergence ≤ fail.
 	Severity *Severity `yaml:"severity,omitempty"`
 }
 
@@ -1036,10 +1036,11 @@ func actionRank(a string) int {
 }
 
 // ActionFor is what a verdict of this level does on this gate: the level's declared state,
-// or, undeclared, the gate's `blocking` (`block` when blocking, `inform` otherwise).
+// or, undeclared, a failure blocks on a blocking gate and everything else informs — a
+// divergence and a pending item are reported, and bar only where the project says so.
 func (g Gate) ActionFor(level string) string {
 	def := ActionInform
-	if g.IsBlocking() {
+	if g.IsBlocking() && level == LevelFail {
 		def = ActionBlock
 	}
 	if g.Severity == nil {
