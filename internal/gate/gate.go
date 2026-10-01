@@ -453,13 +453,6 @@ func markSeverity(g config.Gate, r *Result) {
 		return
 	}
 	r.Action = g.ActionFor(level)
-	// A decision still to take bars by default on a blocking gate, as it always did:
-	// whoever implements would guess the answer. The project changes it by declaring the
-	// divergence level.
-	if r.Verdict == Diverge && g.IsBlocking() && strings.Contains(r.Detail, OpenDecisionMarker) &&
-		(g.Severity == nil || g.Severity.Divergence == "") {
-		r.Action = config.ActionBlock
-	}
 	// A finding the project DECLARED — a debt with its deadline, a rule marked `@TBD` —, or
 	// one its own threshold accepts, is known: it informs, and never bars the promotion.
 	if r.Action == config.ActionBlock && (strings.Contains(r.Detail, DeclaredMarker) || strings.Contains(r.Detail, AdvisoryMarker)) {

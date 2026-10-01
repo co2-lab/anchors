@@ -104,8 +104,8 @@ Feature: GateEngine — which gates reach which node, and what the run concludes
   @GTENG-B15 @unit-level
   Scenario: Each verdict level does what the gate's severity says
     Given an open decision, a pending item, and a divergence the project declared, from a blocking gate
-    When the gate declares no severity, then divergence and pending block, then divergence inform, then pending ignore
-    Then first only the open decision bars, then the pending item bars too and the declared one never does, then the open decision informs, then the pending item is ignored
+    When the gate declares no severity, then divergence and pending block, then pending ignore
+    Then first none bars, then the open decision and the pending item bar and the declared one never does, then the pending item is ignored
 
   @GTENG-B16 @unit-level
   Scenario: Only the obligations gate produces assumed debt
