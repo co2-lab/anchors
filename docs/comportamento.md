@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:ca88a30e0d14ef41 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a2dd931a7813cf35 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1576,6 +1576,20 @@ teste prova.
 
 - [An unreadable spec given by hand is refused naming it](layers/comando.md#rnmbr--renumber--moves-the-revisions-a-branch-added-when-the-base-already-took-their-number) `RNMBR-E03`
 
+- [Pending lists what is to review with its question](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review) `RVCMR-B01`
+
+- [A review with no findings records who looked and opens no issue](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review) `RVCMR-B02`
+
+- [A review with findings records them and opens the issue](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review) `RVCMR-B03`
+
+- [In manual mode the findings write no issue unless asked](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review) `RVCMR-B04`
+
+- [A review record always names who reviewed](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review) `RVCMR-I01`
+
+- [There is no waived](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review) `RVCMR-X01`
+
+- [A wrong target, gate or no reviewer refuses the record](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review) `RVCMR-E01`
+
 - [The live payload says it is live and stamps the read time](layers/comando.md#brsrb--boardserve--the-board-page-served-locally-with-live-state-read-from-the-host-only-when-something-changed) `BRSRB-B01`
 
 - [A read inside the floor does not call the host](layers/comando.md#brsrb--boardserve--the-board-page-served-locally-with-live-state-read-from-the-host-only-when-something-changed) `BRSRB-B02`
@@ -2254,6 +2268,8 @@ teste prova.
 
 - [A check with no phase leaves out a gate declared for manual alone](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B89`
 
+- [The check says how many targets of its scope are to review](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile) `CGPCH-B90`
+
 - [The scenarios of one spec are listed as proven or not](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B01`
 
 - [A code another unit owns, cited in prose, is not a declared scenario](layers/comando.md#cvcmc--coveragecommand--answers-the-confidence-questions-from-the-ingested-signals-by-scenario-by-line-of-the-diff-and-the-delta) `CVCMC-B02`
@@ -2839,6 +2855,8 @@ teste prova.
 - [Coverage floors are percentages, and each one says why](layers/config.md#cnfgo-b57--coverage-floors-are-percentages-and-each-one-says-why) `CNFGO-B57`
 
 - [A field is declared when its path holds a value](layers/config.md#cnfgo-b58--a-field-is-declared-when-its-path-holds-a-value) `CNFGO-B58`
+
+- [A gate's review asks its own question, else the gate's](layers/config.md#cnfgo-b59--a-gates-review-asks-its-own-question-else-the-gates) `CNFGO-B59`
 
 - [The declared containers come back as written, and a missing config has none](layers/config.md#cntnr-b01--the-declared-containers-come-back-as-written-and-a-missing-config-has-none) `CNTNR-B01`
 
@@ -4668,6 +4686,16 @@ teste prova.
 
 - [A test naming a variant its feature does not declare](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario) `RVMTR-B18`
 
+- [The targets of a reviewed gate with no review at their revision are to review](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-B01`
+
+- [A gate with no review has nothing to review, and a named gate lists its own](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-B02`
+
+- [A change to a reviewed target makes it to review again](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-B03`
+
+- [Listing what is to review changes no verdict](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-I01`
+
+- [The list never blocks](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision) `RVDUR-X01`
+
 - [Non-spec artifacts skip confrontation](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B01`
 
 - [A spec with no revision has nothing to confront](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so) `RVORP-B02`
@@ -5878,6 +5906,8 @@ teste prova.
 
 - [The mock dialect judgment presupposes the pattern it asks about](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B18`
 
+- [rule-fulfilled is judged and marked to review](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B19`
+
 - [The local board page is the published page](layers/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B01`
 
 - [The collect expression comes out of the pipeline](layers/infra.md#brexb--boardexposure--hand-the-local-board-the-same-page-and-the-same-collect-contract-the-pipeline-publishes) `BREXB-B02`
@@ -6797,6 +6827,16 @@ teste prova.
 - [The order does not depend on how nodes are stored](layers/mapa.md#grqrg-i01--the-order-does-not-depend-on-how-nodes-are-stored) `GRQRG-I01`
 
 - [Queries leave the graph as it was](layers/mapa.md#grqrg-x01--queries-leave-the-graph-as-it-was) `GRQRG-X01`
+
+- [A review holds only at the revision it looked at](layers/mapa.md#mprvm-b01--a-review-holds-only-at-the-revision-it-looked-at) `MPRVM-B01`
+
+- [Recording a review replaces the same gate's and keeps the others](layers/mapa.md#mprvm-b02--recording-a-review-replaces-the-same-gates-and-keeps-the-others) `MPRVM-B02`
+
+- [A rebuild keeps the reviews whatever the revision](layers/mapa.md#mprvm-b03--a-rebuild-keeps-the-reviews-whatever-the-revision) `MPRVM-B03`
+
+- [A node holds at most one review per gate](layers/mapa.md#mprvm-i01--a-node-holds-at-most-one-review-per-gate) `MPRVM-I01`
+
+- [Who reviewed is kept as given](layers/mapa.md#mprvm-x01--who-reviewed-is-kept-as-given) `MPRVM-X01`
 
 - [Only relations with both ends confronted are stamped](layers/mapa.md#edstd-b01--only-relations-with-both-ends-confronted-are-stamped) `EDSTD-B01`
 

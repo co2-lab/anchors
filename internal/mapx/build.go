@@ -665,6 +665,7 @@ func PreserveStamps(novo, antigo *Graph) {
 	if novo == nil || antigo == nil {
 		return
 	}
+	preserveReviews(novo, antigo)
 	carimbos := make(map[string]*Stamp, len(antigo.Edges))
 	// Os julgamentos de IA seguem o mesmo caminho do carimbo: reconstruir o mapa não
 	// pode apagar quem já leu. Sem isto, um `map build` entre o `judge` e o `check`

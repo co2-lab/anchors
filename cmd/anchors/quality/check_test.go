@@ -2768,3 +2768,16 @@ func TestFilterGatesLeavesManualOnlyGatesToTheManualPhase(t *testing.T) {
 		t.Errorf("--phase manual: %v, want both", got)
 	}
 }
+
+func TestPrintReviewsDue_countsTheScope(t *testing.T) {
+	t.Run("CGPCH-B90: The check says how many targets of its scope are to review", func(t *testing.T) {})
+	cfg := &config.Config{Gates: []config.Gate{{Name: "rule-fulfilled", On: []string{"spec"}, Review: &config.Review{Ask: "look"}}}}
+	g := &mapx.Graph{Nodes: []mapx.Node{{ID: "a.spec.md", Kind: mapx.KindSpec, Rev: "r"}, {ID: "b.spec.md", Kind: mapx.KindSpec, Rev: "r"}}}
+	out := captureStdout(t, func() { printReviewsDue(cfg, g, t.TempDir(), g.Nodes[:1]) })
+	if !strings.Contains(out, "1 target(s) to review") || !strings.Contains(out, "anchors review --pending") {
+		t.Errorf("one in scope is to review:\n%s", out)
+	}
+	if out := captureStdout(t, func() { printReviewsDue(&config.Config{}, g, t.TempDir(), g.Nodes) }); strings.TrimSpace(out) != "" {
+		t.Errorf("nothing due prints nothing:\n%s", out)
+	}
+}

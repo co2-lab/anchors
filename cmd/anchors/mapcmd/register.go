@@ -8,6 +8,7 @@ func Register(root *cobra.Command) {
 	root.AddCommand(newImpactCmd())
 	root.AddCommand(newIngestCmd())
 	root.AddCommand(newJudgeCmd())
+	root.AddCommand(newReviewCmd())
 	root.AddCommand(newRecodeCmd())
 	root.AddCommand(newRenumberCmd())
 	root.AddCommand(newFlowCmd())

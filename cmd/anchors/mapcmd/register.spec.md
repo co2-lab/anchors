@@ -1,6 +1,6 @@
 <!-- @anchors
   code: MPRGM
-  updated_at: 2026-09-26
+  updated_at: 2026-10-02
   layer: comando
 -->
 # MapRegister — hangs the map domain's commands on the root command
@@ -13,7 +13,7 @@ The command line is assembled by domain: each domain package registers its own c
 the root, and the root knows only the domains. This unit is the map domain's registration.
 It hangs the eight commands that read or write the map on the root: building and showing the
 map, the impact query, the ingestion of test and log signals, the judgment record, the code
-rename, the revision renumbering, the work flows and the review of observed failures.
+rename, the revision renumbering, the work flows, the review of observed failures and the reviews of gates that declare `review:`.
 
 The registration holds no logic of its own; what it guarantees is that each of those
 commands is reachable by its name from the root, and that the map domain adds nothing else.
@@ -22,7 +22,7 @@ commands is reachable by its name from the root, and that the map domain adds no
 
 | Effect | Description |
 | --- | --- |
-| `MPRGM-B01` | After registration, each of map, impact, ingest, judge, recode, renumber, flow and failures is reachable from the root by its name. |
+| `MPRGM-B01` | After registration, each of map, impact, ingest, judge, review, recode, renumber, flow and failures is reachable from the root by its name. |
 
 ## Domain
 
@@ -52,6 +52,7 @@ none — registration adds commands to the root and handles no failure; a comman
 | DEP6 | `cmd/anchors/mapcmd/renumber.go` | `newRenumberCmd` | comando — the renumber command |
 | DEP7 | `cmd/anchors/mapcmd/flow.go` | `newFlowCmd` | comando — the flow command |
 | DEP8 | `cmd/anchors/mapcmd/failures.go` | `newFailuresCmd` | comando — the failures command |
+| DEP9 | `cmd/anchors/mapcmd/review.go` | `newReviewCmd` | comando — the review command |
 
 ## Open Decisions
 

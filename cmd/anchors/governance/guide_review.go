@@ -116,6 +116,22 @@ running on every PR. The earlier version printed only the count ("3 targets awai
 judgment"), and a count is not an address — whoever reviewed knew there was work and not
 which, where, or what to ask.
 
+### What is marked TO REVIEW?
+
+A gate that declares ` + "`review:`" + ` marks its targets to review, apart from its verdict: the
+agent's judgment of what it wrote still finds real bugs, and a second look is another
+thing. ` + "`anchors review --pending`" + ` lists them with the question; a target stays there until a
+review is recorded at its current revision, and a change to it puts it back.
+
+Record what you looked at, with who you are:
+
+    anchors review <target> --gate <g> --by human:<you>
+    anchors review <target> --gate <g> --by agent:<vendor>/<model> --findings "<report>"
+
+The product is FINDINGS, not a stamp: each one — what, WHERE (file:line), why — goes to the
+issue, and becomes a failing test and a fix, or is dismissed with its reason. There is no
+` + "`waived`" + `: a review that did not happen is still due.
+
 ### Was what sits under ` + "`@TBD`" + ` judged, or rubber-stamped?
 
 A spec that declares ` + "`@TBD: code`" + ` states that the code does not exist yet — and that is the

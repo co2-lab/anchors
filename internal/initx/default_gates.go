@@ -118,6 +118,13 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 					"code RUNS, not about what the comment claims. When failing it, PROPOSE the " +
 					"fix as a patch." +
 					tbdInstruction("the code"),
+				// The marks were put by the agents who wrote the code: their own judgment of
+				// them still finds real bugs, and it is a different thing from a second look.
+				// So the gate is judged AND marked to review (reported from baas-proxy).
+				Review: &config.Review{Ask: "Look again at what an agent decided: does each " +
+					"marked snippet do what its rule says, and does the rule cover what the " +
+					"code does? Record each finding — what, where (file:line), why — to become " +
+					"a failing test and a fix, or dismiss it with the reason."},
 			},
 			// O vocabulário de letras do código é do PROJETO (`rule_types`), mas o gate
 			// que impede conflito e letra não declarada é universal: uma letra fora do

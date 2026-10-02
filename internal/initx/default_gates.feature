@@ -162,3 +162,9 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     Given the default gates of a project with tests
     When the mock gates are inspected
     Then mock-detect-covers-dialect and mock-stamped presuppose derived.mock_detect, and mock-typed presupposes derived.mock_contract
+
+  @DFGTD-B19 @unit-level
+  Scenario: rule-fulfilled is judged and marked to review
+    Given the default gates of a project with specs and code
+    When rule-fulfilled is inspected
+    Then it measures by judgment and declares a review with its own question

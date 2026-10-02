@@ -841,6 +841,16 @@ type Gate struct {
 	// project waived it in `dialect.opt_out`.
 	Presupposes []string `yaml:"presupposes,omitempty"`
 
+	// Review — the gate's targets are also marked TO REVIEW, apart from how the gate
+	// measures. A judgment answers a question with a verdict that stamps the map; a review
+	// is a second look at what an agent decided, and its product is FINDINGS — each one a
+	// failing test and then a fix, or dismissed with a reason —, recorded with who
+	// reviewed. The two live side by side on the same gate: an agent's judgment of its own
+	// marks still finds real bugs, and a reviewer's look is another thing (reported from
+	// baas-proxy). A target is to review until a review is recorded at its current
+	// revision; a change to it makes the review due again. It informs and never blocks.
+	Review *Review `yaml:"review,omitempty"`
+
 	// NeedsTool é o BINÁRIO externo sem o qual este gate não tem como medir nada.
 	//
 	// Sem ele, ferramenta ausente virava REPROVAÇÃO: o `sh` sai 127, o gate não produz
@@ -1127,6 +1137,25 @@ func (g Gate) ActionFor(level string) string {
 		return def
 	}
 	return v
+}
+
+// Review is a gate's review: what the reviewer is asked to look at.
+type Review struct {
+	// Ask is the reviewer's question; empty, the gate's own `ask` or `measures` says it.
+	Ask string `yaml:"ask,omitempty"`
+}
+
+// ReviewAsk is the question a reviewer of this gate's targets answers.
+func (g Gate) ReviewAsk() string {
+	switch {
+	case g.Review == nil:
+		return ""
+	case g.Review.Ask != "":
+		return g.Review.Ask
+	case g.Ask != "":
+		return g.Ask
+	}
+	return g.Measures
 }
 
 // CoverageFloor is the line-coverage floor of the files a glob matches, and why it differs.
@@ -2134,6 +2163,9 @@ func mergeCanonical(g Gate) Gate {
 	// inherits what the question presupposes.
 	if len(g.Presupposes) == 0 {
 		g.Presupposes = base.Presupposes
+	}
+	if g.Review == nil {
+		g.Review = base.Review
 	}
 	// A ferramenta exigida vem do canônico junto com o `run:` que a usa — os dois
 	// descrevem o MESMO comando, e herdar um sem o outro produziria o pior estado

@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:c4fe1e892b1ea2ba — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:d66ebbc02e3ac386 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 75 unidades e 1272 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 76 unidades e 1277 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## BRCOV — BranchCoverage — the tests take the branches the code has
@@ -2996,6 +2996,22 @@ the visual baseline, revision codes, and other units' codes cited to build fixtu
 - **RVMTR-X02** — A code the test names only in a comment is not a claim of proof.
 
 - **RVMTR-E01** — A linked spec or feature cannot be read.
+
+
+## RVDUR — ReviewsDue — the targets of a reviewed gate that no review covers at their current revision
+
+A gate that declares `review:` marks its targets to review, apart from how it measures: a judgment gate still asks its question and stamps its verdict, and the same targets are to review until a reviewer looks. A target is to review when the gate applies to it and no review is recorded at its current revision. The list informs and never blocks; the project decides when the reviewer comes.
+
+
+- **RVDUR-B01** — The targets to review (`ReviewsDue`) are, for every gate that declares `review:`, each node the gate applies to with no review recorded at its current revision, with the gate's review question (`ReviewAsk`); ordered by gate and target.
+
+- **RVDUR-B02** — A gate with no `review:` has nothing to review, and naming a gate lists that gate's alone.
+
+- **RVDUR-B03** — A change to a reviewed target makes it to review again.
+
+- **RVDUR-I01** — Listing what is to review changes no verdict: a judged and reviewed gate's judgment is asked with or without its review.
+
+- **RVDUR-X01** — The list never blocks.
 
 
 ## RVORP — RevisionOrphans — the rules a revision changed the meaning of, without saying so

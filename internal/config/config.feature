@@ -402,3 +402,10 @@ Feature: Config — loads the project's anchors.yaml, refuses what it cannot hon
     Given a configuration with derived.mock_detect set and derived.mock_contract empty
     When each path is asked
     Then derived.mock_detect is declared, derived.mock_contract and an unknown path are not
+
+  @CNFGO-B59 @unit-level
+  Scenario: A gate's review asks its own question, else the gate's
+    Given a gate with a review asking "look again", a gate with an empty review and an ask, and a gate with no review
+    When their review questions are asked
+    Then the first asks "look again", the second asks its gate's ask, and the third has none
+    And an entry with no review takes the canonical gate's

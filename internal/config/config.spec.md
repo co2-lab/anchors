@@ -78,6 +78,7 @@ patterns a spec governs.
 | `CNFGO-B56` | A project-wide `severity` is the default of every blocking gate: each level a gate entry does not declare takes the project's state, and a level the entry declares keeps its own; informative gates are not touched. The project default is refused if it names an unknown state or breaks the order, and a gate whose merged levels break the order fails the load naming it. (`applyProjectSeverity`) |
 | `CNFGO-B57` | A gate's `min_coverage` and each `coverage_floors` floor is a percentage from 0 to 100, and every floor carries a `why`; anything else is refused at load, naming the gate and the field. |
 | `CNFGO-B58` | `Declares` says whether the configuration holds a non-empty value at a dotted path of anchors.yaml (`derived.mock_detect`); a gate entry with no `presupposes` takes the canonical one, with the question it presupposes for. |
+| `CNFGO-B59` | A gate may declare `review:` apart from how it measures; its review question (`ReviewAsk`) is the review's own `ask`, else the gate's `ask`, else what it `measures`, and a gate with no `review:` has none; an entry with no `review:` takes the canonical one. |
 | `CNFGO-B50` | The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both. |
 
 ### Canonical gate declarations

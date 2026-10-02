@@ -561,3 +561,16 @@ func TestMockDialectJudgmentPresupposesThePattern(t *testing.T) {
 		t.Errorf("not among the default gates: %v", want)
 	}
 }
+
+func TestRuleFulfilledIsJudgedAndReviewed(t *testing.T) {
+	t.Run("DFGTD-B19: rule-fulfilled is judged and marked to review", func(t *testing.T) {})
+	for _, g := range DefaultGates(allArtifacts(), false) {
+		if g.Name == "rule-fulfilled" {
+			if !g.IsJudgment() || g.Review == nil || g.Review.Ask == "" {
+				t.Errorf("rule-fulfilled should be judged and reviewed: %+v", g)
+			}
+			return
+		}
+	}
+	t.Fatal("rule-fulfilled is not among the default gates")
+}

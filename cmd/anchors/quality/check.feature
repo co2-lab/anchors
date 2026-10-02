@@ -607,3 +607,10 @@ Feature: CheckGatePipeline — confronts the map's nodes against the declared ga
     When the gates are filtered for a check with no phase, then for --phase manual
     Then the first check keeps only the gate with no phase
     And the manual check keeps both
+
+  @CGPCH-B90 @unit-level
+  Scenario: The check says how many targets of its scope are to review
+    Given a reviewed gate with two specs to review, one of them in the check's scope
+    When the review line is printed
+    Then it says one target is to review and how to list them
+    And with nothing due it prints nothing

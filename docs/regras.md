@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:71f2d5470d7bd6e7 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:e41ba49df957f981 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1705,7 +1705,7 @@ abra a página dela em `camadas/`.
 
 ### [MPRGM — MapRegister — hangs the map domain's commands on the root command](layers/comando.md#mprgm--mapregister--hangs-the-map-domains-commands-on-the-root-command)
 
-- [MPRGM-B01 — After registration, each of map, impact, ingest, judge, recode, renumber, flow and failures is reachable from the root by its name.](layers/comando.md#mprgm--mapregister--hangs-the-map-domains-commands-on-the-root-command)
+- [MPRGM-B01 — After registration, each of map, impact, ingest, judge, review, recode, renumber, flow and failures is reachable from the root by its name.](layers/comando.md#mprgm--mapregister--hangs-the-map-domains-commands-on-the-root-command)
 
 - [MPRGM-X01 — The map domain registers no command outside its own eight.](layers/comando.md#mprgm--mapregister--hangs-the-map-domains-commands-on-the-root-command)
 
@@ -1738,6 +1738,22 @@ abra a página dela em `camadas/`.
 - [RNMBR-E02 — The base has no merge base with the current branch.](layers/comando.md#rnmbr--renumber--moves-the-revisions-a-branch-added-when-the-base-already-took-their-number)
 
 - [RNMBR-E03 — A spec file given on the command line cannot be read.](layers/comando.md#rnmbr--renumber--moves-the-revisions-a-branch-added-when-the-base-already-took-their-number)
+
+### [RVCMR — ReviewCommand — record a review with who looked and what they found, or list what is to review](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review)
+
+- [RVCMR-B01 — `--pending` lists what is to review, grouped by gate with its question, and how to record each; with nothing due it says so.](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review)
+
+- [RVCMR-B02 — A review with no findings is recorded on the target at its current revision, with who reviewed, and opens no issue.](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review)
+
+- [RVCMR-B03 — A review with findings is recorded the same way, marked as having found something, and opens the target's issue for the gate with the report — reopening it when it was closed.](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review)
+
+- [RVCMR-B04 — In manual mode a review with findings writes no issue unless `--record-issues` asks, and prints the report.](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review)
+
+- [RVCMR-I01 — A review record always names who reviewed.](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review)
+
+- [RVCMR-X01 — Offers no `waived`.](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review)
+
+- [RVCMR-E01 — The target is not in the map, the gate declares no `review:`, or no reviewer is given.](layers/comando.md#rvcmr--reviewcommand--record-a-review-with-who-looked-and-what-they-found-or-list-what-is-to-review)
 
 ### [BRSRB — BoardServe — the board page served locally with live state, read from the host only when something changed](layers/comando.md#brsrb--boardserve--the-board-page-served-locally-with-live-state-read-from-the-host-only-when-something-changed)
 
@@ -2300,6 +2316,8 @@ abra a página dela em `camadas/`.
 - [CGPCH-B07 — Only the gates of the requested phase and category are charged; when none is left, the check says so and runs nothing.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B89 — A check with no phase leaves out a gate declared for `manual` alone (CNFGO-B20): it runs, and a judgment gate queues its questions, only under `--phase manual`.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
+
+- [CGPCH-B90 — After the table, the check says how many targets of its scope are to review (RVDUR-B01), as a line of its own that informs and never blocks, and says nothing when none is due.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
 - [CGPCH-B08 — A gate that declares no perspective to skip runs both on the full sweep and on changed files.](layers/comando.md#cgpch--checkgatepipeline--confronts-the-maps-nodes-against-the-declared-gates-records-the-verdicts-and-reports-the-profile)
 
@@ -3032,6 +3050,8 @@ abra a página dela em `camadas/`.
 - [CNFGO-B57 — A gate's `min_coverage` and each `coverage_floors` floor is a percentage from 0 to 100, and every floor carries a `why`; anything else is refused at load, naming the gate and the field.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B58 — `Declares` says whether the configuration holds a non-empty value at a dotted path of anchors.yaml (`derived.mock_detect`); a gate entry with no `presupposes` takes the canonical one, with the question it presupposes for.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
+
+- [CNFGO-B59 — A gate may declare `review:` apart from how it measures; its review question (`ReviewAsk`) is the review's own `ask`, else the gate's `ask`, else what it `measures`, and a gate with no `review:` has none; an entry with no `review:` takes the canonical one.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
 - [CNFGO-B50 — The `changelog` block is written `incremental` into `CHANGELOG.md` when it declares nothing, and into `changelog/` when its mode is `per_version`; a declared path wins; a mode outside `incremental` and `per_version` fails the load naming both.](layers/config.md#cnfgo--config--loads-the-projects-anchorsyaml-refuses-what-it-cannot-honour-and-answers-every-setting-with-its-default)
 
@@ -5145,6 +5165,18 @@ abra a página dela em `camadas/`.
 
 - [RVMTR-E01 — A linked spec or feature cannot be read.](camadas/gate.md#rvmtr--reversematch--every-scenario-still-has-its-rule-and-every-proven-code-still-has-its-scenario)
 
+### [RVDUR — ReviewsDue — the targets of a reviewed gate that no review covers at their current revision](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision)
+
+- [RVDUR-B01 — The targets to review (`ReviewsDue`) are, for every gate that declares `review:`, each node the gate applies to with no review recorded at its current revision, with the gate's review question (`ReviewAsk`); ordered by gate and target.](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision)
+
+- [RVDUR-B02 — A gate with no `review:` has nothing to review, and naming a gate lists that gate's alone.](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision)
+
+- [RVDUR-B03 — A change to a reviewed target makes it to review again.](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision)
+
+- [RVDUR-I01 — Listing what is to review changes no verdict: a judged and reviewed gate's judgment is asked with or without its review.](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision)
+
+- [RVDUR-X01 — The list never blocks.](camadas/gate.md#rvdur--reviewsdue--the-targets-of-a-reviewed-gate-that-no-review-covers-at-their-current-revision)
+
 ### [RVORP — RevisionOrphans — the rules a revision changed the meaning of, without saying so](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so)
 
 - [RVORP-B01 — When the confronted node is not a spec, the gate skips confrontation.](camadas/gate.md#rvorp--revisionorphans--the-rules-a-revision-changed-the-meaning-of-without-saying-so)
@@ -6473,6 +6505,8 @@ abra a página dela em `camadas/`.
 
 - [DFGTD-B18 — The mock gates name the field each one reads: `mock-detect-covers-dialect` and `mock-stamped` presuppose `derived.mock_detect`, `mock-typed` presupposes `derived.mock_contract`; where it is not declared nothing is asked or measured (GTENG-B29), and the doctor names it (DCTRO-B27).](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
+- [DFGTD-B19 — `rule-fulfilled` is judged and also marked to review: the marks it judges were put by the agents who wrote the code, and a second look is a different thing from their judgment.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
+
 - [DFGTD-I01 — The list of seeded gates, and its order, does not change with the age of the project; only the maturation state does.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-I02 — Every gate of the full catalog has a unique name, and its id is its name.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
@@ -7496,6 +7530,18 @@ abra a página dela em `camadas/`.
 - [GRQRG-I01 — The parents-first order does not depend on the order the nodes are stored in: ties are always broken alphabetically.](layers/mapa.md#grqrg--graphqueries--read-only-questions-over-the-loaded-map-who-governs-what-neighbours-orphans-counts-and-a-parents-first-order)
 
 - [GRQRG-X01 — The queries never change the graph.](layers/mapa.md#grqrg--graphqueries--read-only-questions-over-the-loaded-map-who-governs-what-neighbours-orphans-counts-and-a-parents-first-order)
+
+### [MPRVM — MapReview — the reviews recorded on a node, and which of them still holds](layers/mapa.md#mprvm--mapreview--the-reviews-recorded-on-a-node-and-which-of-them-still-holds)
+
+- [MPRVM-B01 — A node's review for a gate holds (`ReviewOf`) only when it was recorded at the node's current revision; a review of another revision, of another gate, or of a node not in the map does not.](layers/mapa.md#mprvm--mapreview--the-reviews-recorded-on-a-node-and-which-of-them-still-holds)
+
+- [MPRVM-B02 — Recording a review (`RecordReview`) stamps it with the node's current revision and replaces the node's earlier review for the same gate, keeping the other gates' reviews; recording on a node not in the map records nothing and says so.](layers/mapa.md#mprvm--mapreview--the-reviews-recorded-on-a-node-and-which-of-them-still-holds)
+
+- [MPRVM-B03 — A rebuild keeps each node's reviews, whatever its revision. (`PreserveStamps`)](layers/mapa.md#mprvm--mapreview--the-reviews-recorded-on-a-node-and-which-of-them-still-holds)
+
+- [MPRVM-I01 — A node holds at most one review per gate.](layers/mapa.md#mprvm--mapreview--the-reviews-recorded-on-a-node-and-which-of-them-still-holds)
+
+- [MPRVM-X01 — Does not grade who reviewed.](layers/mapa.md#mprvm--mapreview--the-reviews-recorded-on-a-node-and-which-of-them-still-holds)
 
 ### [EDSTD — EdgeStamping — recording on each relation that it was confronted, with what result, and since when](layers/mapa.md#edstd--edgestamping--recording-on-each-relation-that-it-was-confronted-with-what-result-and-since-when)
 

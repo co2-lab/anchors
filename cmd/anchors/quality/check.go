@@ -231,6 +231,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			printProfile(profile, onlyIssues, showDrift)
 			reportTiming(showTiming, profile)
 			warnGatesWithoutTarget(cfg.Gates, profile)
+			printReviewsDue(cfg, g, absRoot, nodes)
 
 			// THE JUDGMENT BRIEF IS A REPORT, NOT A RECORD — which is why it comes BEFORE
 			// `!noRecord`.
@@ -373,6 +374,26 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 	cmd.Flags().BoolVar(&showDrift, "show-drift", false, "lists ALL the pending items (⚠) with the address of each one; without the flag, only the table counter")
 	cmd.Flags().BoolVar(&showTiming, "timing", false, "measures how long each gate took, and names the slowest targets — to find what makes a scan expensive")
 	return cmd
+}
+
+// printReviewsDue says how many targets of this check's scope are to review, apart from
+// the gates' verdicts: a review informs and never blocks, so it is a line of its own and
+// never one of the table's counts.
+func printReviewsDue(cfg *config.Config, g *mapx.Graph, root string, nodes []mapx.Node) {
+	inScope := make(map[string]bool, len(nodes))
+	for _, n := range nodes {
+		inScope[n.ID] = true
+	}
+	due := 0
+	for _, d := range gate.ReviewsDue(cfg, g, root, "") {
+		if inScope[d.Target] {
+			due++
+		}
+	}
+	if due > 0 {
+		fmt.Println()
+		fmt.Println(i18n.T("check.reviews_due", due))
+	}
 }
 
 // filterGates aplica a CATEGORIZAÇÃO: fase, natureza, custo e perspectiva. Cada eixo é

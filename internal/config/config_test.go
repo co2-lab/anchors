@@ -1644,3 +1644,22 @@ func TestDeclaresAFieldByPath(t *testing.T) {
 		t.Errorf("an entry with no presupposes takes the canonical one, got %v", got)
 	}
 }
+
+func TestGateReviewAsk(t *testing.T) {
+	t.Run("CNFGO-B59: A gate's review asks its own question, else the gate's", func(t *testing.T) {})
+	if got := (Gate{Review: &Review{Ask: "look again"}, Ask: "q"}).ReviewAsk(); got != "look again" {
+		t.Errorf("own ask: %q", got)
+	}
+	if got := (Gate{Review: &Review{}, Ask: "q"}).ReviewAsk(); got != "q" {
+		t.Errorf("the gate's ask: %q", got)
+	}
+	if got := (Gate{Ask: "q"}).ReviewAsk(); got != "" {
+		t.Errorf("no review, no question: %q", got)
+	}
+	prev := canonicalGate
+	t.Cleanup(func() { canonicalGate = prev })
+	canonicalGate = func(name string) (Gate, bool) { return Gate{Name: "g", Review: &Review{Ask: "c"}}, name == "g" }
+	if got := mergeCanonical(Gate{Name: "g"}); got.Review == nil || got.Review.Ask != "c" {
+		t.Errorf("an entry with no review takes the canonical one: %+v", got.Review)
+	}
+}

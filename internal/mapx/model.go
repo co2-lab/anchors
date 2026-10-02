@@ -194,6 +194,10 @@ type Node struct {
 	// Signal — sinais de qualidade INGERIDOS do runner (o Anchors não roda o teste;
 	// consome o artefato que o projeto já gera). Preenchido por `anchors ingest`.
 	Signal *TestSignal `yaml:"signal,omitempty"`
+	// Reviews — the reviews recorded on this node, one per gate: at which revision, by
+	// whom, and whether they found something. A review holds while the node keeps that
+	// revision; recorded by `anchors review`, kept across rebuilds as history.
+	Reviews []Review `yaml:"reviews,omitempty"`
 	// Failures — as OCORRÊNCIAS de falha observadas em produção, por regra `-E`.
 	//
 	// Ingeridas, nunca lidas: o Anchors não tem acesso ao log de ninguém, e parsear
@@ -425,6 +429,19 @@ type Stamp struct {
 //
 // Guarda as revs das pontas pelo mesmo motivo do Stamp: o veredito envelhece se o
 // alvo mudar, e aí volta a ser pergunta.
+// Review is one review of a node for a gate.
+type Review struct {
+	Gate string `yaml:"gate"`
+	// Rev is the node's revision the review looked at.
+	Rev string `yaml:"rev"`
+	// By is who reviewed, as they said it (`human:ana`, `agent:<vendor>/<model>`): the
+	// record keeps it and does not grade it.
+	By string `yaml:"by"`
+	At string `yaml:"at"`
+	// Findings says the review found something, which went to an issue.
+	Findings bool `yaml:"findings,omitempty"`
+}
+
 type Judgment struct {
 	Gate             string `yaml:"gate"`
 	Verdict          string `yaml:"verdict"` // ok | issue

@@ -16,7 +16,7 @@ func TestRegister_addsTheMapDomainCommands(t *testing.T) {
 	root := &cobra.Command{Use: "anchors"}
 	Register(root)
 
-	want := []string{"failures", "flow", "impact", "ingest", "judge", "map", "recode", "renumber"}
+	want := []string{"failures", "flow", "impact", "ingest", "judge", "map", "recode", "renumber", "review"}
 	for _, name := range want {
 		c, _, err := root.Find([]string{name})
 		if err != nil || c == nil || c.Name() != name {
