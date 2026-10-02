@@ -9515,14 +9515,12 @@ nodes:
         ingested_at: "2026-10-02T10:22:47-03:00"
     - id: internal/daemon/daemon_windows.go
       kind: code
-      rev: fafb5dc2b6be
+      rev: 83d5ec9d7599
       updated_at: "2026-10-02"
       layer: infra
       tags:
         - infra
       regime: comportamental
-      signal:
-        coverage_omitted: fafb5dc2b6be
     - id: internal/doct/anchor.feature
       kind: feature
       rev: 138cd490cdbc
