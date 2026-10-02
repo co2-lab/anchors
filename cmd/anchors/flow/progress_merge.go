@@ -40,7 +40,7 @@ Not meant to be run by hand. Configure git to call it:
   # .gitattributes (no repositório)
   *-progress.md merge=anchors-progress
 
-  # uma vez por clone
+  # once per clone
   git config merge.anchors-progress.name "anchors: unites the progress of the plans"
   git config merge.anchors-progress.driver "anchors merge-progress %O %A %B"
 

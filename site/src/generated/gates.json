@@ -1,0 +1,524 @@
+[
+  {
+    "label": "The Unit \u0026 Structure",
+    "translations": {
+      "pt": "A Unidade e Estrutura",
+      "pt-BR": "A Unidade e Estrutura"
+    },
+    "collapsed": true,
+    "items": [
+      {
+        "label": "unit-complete",
+        "slug": "docs/gates/unit-complete"
+      },
+      {
+        "label": "spec-has-code",
+        "slug": "docs/gates/spec-has-code"
+      },
+      {
+        "label": "spec-complete",
+        "slug": "docs/gates/spec-complete"
+      },
+      {
+        "label": "feature-not-empty",
+        "slug": "docs/gates/feature-not-empty"
+      },
+      {
+        "label": "spec-feature-match",
+        "slug": "docs/gates/spec-feature-match"
+      },
+      {
+        "label": "feature-spec-match",
+        "slug": "docs/gates/feature-spec-match"
+      },
+      {
+        "label": "feature-test-match",
+        "slug": "docs/gates/feature-test-match"
+      },
+      {
+        "label": "test-feature-match",
+        "slug": "docs/gates/test-feature-match"
+      },
+      {
+        "label": "scenario-identity",
+        "slug": "docs/gates/scenario-identity"
+      },
+      {
+        "label": "scenario-asserts",
+        "slug": "docs/gates/scenario-asserts"
+      },
+      {
+        "label": "scenario-type-aligned",
+        "slug": "docs/gates/scenario-type-aligned"
+      },
+      {
+        "label": "scenario-letter-declared",
+        "slug": "docs/gates/scenario-letter-declared"
+      },
+      {
+        "label": "code-reference-valid",
+        "slug": "docs/gates/code-reference-valid"
+      },
+      {
+        "label": "code-cataloged",
+        "slug": "docs/gates/code-cataloged"
+      },
+      {
+        "label": "placeholder-filled",
+        "slug": "docs/gates/placeholder-filled"
+      },
+      {
+        "label": "header-valid",
+        "slug": "docs/gates/header-valid"
+      },
+      {
+        "label": "header-layer-declared",
+        "slug": "docs/gates/header-layer-declared"
+      },
+      {
+        "label": "ref-resolves",
+        "slug": "docs/gates/ref-resolves"
+      },
+      {
+        "label": "examples-match",
+        "slug": "docs/gates/examples-match"
+      }
+    ]
+  },
+  {
+    "label": "Presentation \u0026 UI",
+    "translations": {
+      "pt": "Apresentação e Telas",
+      "pt-BR": "Apresentação e Telas"
+    },
+    "collapsed": true,
+    "items": [
+      {
+        "label": "presentation-exhaustive",
+        "slug": "docs/gates/presentation-exhaustive"
+      },
+      {
+        "label": "presentation-conflict",
+        "slug": "docs/gates/presentation-conflict"
+      },
+      {
+        "label": "presentation-copy-single-source",
+        "slug": "docs/gates/presentation-copy-single-source"
+      },
+      {
+        "label": "presentation-observable",
+        "slug": "docs/gates/presentation-observable"
+      },
+      {
+        "label": "identity-consistent",
+        "slug": "docs/gates/identity-consistent"
+      },
+      {
+        "label": "testid-consistent",
+        "slug": "docs/gates/testid-consistent"
+      },
+      {
+        "label": "testid-queried-exists",
+        "slug": "docs/gates/testid-queried-exists"
+      },
+      {
+        "label": "vr-baseline",
+        "slug": "docs/gates/vr-baseline"
+      }
+    ]
+  },
+  {
+    "label": "Doctrine \u0026 Feature Flags",
+    "translations": {
+      "pt": "Doutrina e Feature Flags",
+      "pt-BR": "Doutrina e Feature Flags"
+    },
+    "collapsed": true,
+    "items": [
+      {
+        "label": "spec-doctrine-exists",
+        "slug": "docs/gates/spec-doctrine-exists"
+      },
+      {
+        "label": "plan-doctrine-exists",
+        "slug": "docs/gates/plan-doctrine-exists"
+      },
+      {
+        "label": "doctrine-realized",
+        "slug": "docs/gates/doctrine-realized"
+      },
+      {
+        "label": "doctrine-not-duplicated",
+        "slug": "docs/gates/doctrine-not-duplicated"
+      },
+      {
+        "label": "spec-realizes-doctrine",
+        "slug": "docs/gates/spec-realizes-doctrine"
+      },
+      {
+        "label": "flag-scenario-grammar",
+        "slug": "docs/gates/flag-scenario-grammar"
+      },
+      {
+        "label": "flag-scenarios-complete",
+        "slug": "docs/gates/flag-scenarios-complete"
+      },
+      {
+        "label": "flag-scenario-exists",
+        "slug": "docs/gates/flag-scenario-exists"
+      },
+      {
+        "label": "flag-scenario-governs",
+        "slug": "docs/gates/flag-scenario-governs"
+      },
+      {
+        "label": "flag-covered",
+        "slug": "docs/gates/flag-covered"
+      }
+    ]
+  },
+  {
+    "label": "Test Doubles \u0026 Mocks",
+    "translations": {
+      "pt": "Dublês e Mocks",
+      "pt-BR": "Dublês e Mocks"
+    },
+    "collapsed": true,
+    "items": [
+      {
+        "label": "mock-stamped",
+        "slug": "docs/gates/mock-stamped"
+      },
+      {
+        "label": "mock-typed",
+        "slug": "docs/gates/mock-typed"
+      },
+      {
+        "label": "mock-detect-covers-dialect",
+        "slug": "docs/gates/mock-detect-covers-dialect"
+      }
+    ]
+  },
+  {
+    "label": "Failure \u0026 Governance",
+    "translations": {
+      "pt": "Falhas e Governança",
+      "pt-BR": "Falhas e Governança"
+    },
+    "collapsed": true,
+    "items": [
+      {
+        "label": "failure-declared",
+        "slug": "docs/gates/failure-declared"
+      },
+      {
+        "label": "failure-handled",
+        "slug": "docs/gates/failure-handled"
+      },
+      {
+        "label": "failure-logged",
+        "slug": "docs/gates/failure-logged"
+      },
+      {
+        "label": "region-pair-honored",
+        "slug": "docs/gates/region-pair-honored"
+      },
+      {
+        "label": "rule-types",
+        "slug": "docs/gates/rule-types"
+      },
+      {
+        "label": "rule-implemented",
+        "slug": "docs/gates/rule-implemented"
+      },
+      {
+        "label": "marker-parity",
+        "slug": "docs/gates/marker-parity"
+      },
+      {
+        "label": "obligation-honored",
+        "slug": "docs/gates/obligation-honored"
+      },
+      {
+        "label": "updated-at-atual",
+        "slug": "docs/gates/updated-at-atual"
+      },
+      {
+        "label": "guide-checklist",
+        "slug": "docs/gates/guide-checklist"
+      },
+      {
+        "label": "docs-fresh",
+        "slug": "docs/gates/docs-fresh"
+      },
+      {
+        "label": "docs-covered",
+        "slug": "docs/gates/docs-covered"
+      },
+      {
+        "label": "doc-required",
+        "slug": "docs/gates/doc-required"
+      },
+      {
+        "label": "doc-self-contained",
+        "slug": "docs/gates/doc-self-contained"
+      }
+    ]
+  },
+  {
+    "label": "Architectural Boundaries",
+    "translations": {
+      "pt": "Fronteiras Arquiteturais",
+      "pt-BR": "Fronteiras Arquiteturais"
+    },
+    "collapsed": true,
+    "items": [
+      {
+        "label": "layer-boundary",
+        "slug": "docs/gates/layer-boundary"
+      },
+      {
+        "label": "sibling-guard",
+        "slug": "docs/gates/sibling-guard"
+      },
+      {
+        "label": "proof-crosses-boundary",
+        "slug": "docs/gates/proof-crosses-boundary"
+      },
+      {
+        "label": "circular",
+        "slug": "docs/gates/circular"
+      },
+      {
+        "label": "deadcode",
+        "slug": "docs/gates/deadcode"
+      }
+    ]
+  },
+  {
+    "label": "AI Judgment \u0026 Review",
+    "translations": {
+      "pt": "Julgamento por IA e Review",
+      "pt-BR": "Julgamento por IA e Review"
+    },
+    "collapsed": true,
+    "items": [
+      {
+        "label": "rule-fulfilled",
+        "slug": "docs/gates/rule-fulfilled"
+      },
+      {
+        "label": "no-test-proof-real",
+        "slug": "docs/gates/no-test-proof-real"
+      }
+    ]
+  },
+  {
+    "label": "Planning \u0026 Progress",
+    "translations": {
+      "pt": "Planejamento e Progresso",
+      "pt-BR": "Planejamento e Progresso"
+    },
+    "collapsed": true,
+    "items": [
+      {
+        "label": "phase-exists",
+        "slug": "docs/gates/phase-exists"
+      },
+      {
+        "label": "phase-ordered",
+        "slug": "docs/gates/phase-ordered"
+      },
+      {
+        "label": "parent-valid",
+        "slug": "docs/gates/parent-valid"
+      },
+      {
+        "label": "plan-seeds-valid",
+        "slug": "docs/gates/plan-seeds-valid"
+      },
+      {
+        "label": "plan-source-declared",
+        "slug": "docs/gates/plan-source-declared"
+      },
+      {
+        "label": "plan-revised",
+        "slug": "docs/gates/plan-revised"
+      },
+      {
+        "label": "plan-change-justified",
+        "slug": "docs/gates/plan-change-justified"
+      },
+      {
+        "label": "open-questions-resolved",
+        "slug": "docs/gates/open-questions-resolved"
+      },
+      {
+        "label": "progress-honest",
+        "slug": "docs/gates/progress-honest"
+      },
+      {
+        "label": "revision-orphans",
+        "slug": "docs/gates/revision-orphans"
+      }
+    ]
+  },
+  {
+    "label": "Proof \u0026 Execution",
+    "translations": {
+      "pt": "Prova e Execução",
+      "pt-BR": "Prova e Execução"
+    },
+    "collapsed": true,
+    "items": [
+      {
+        "label": "tests-green",
+        "slug": "docs/gates/tests-green"
+      },
+      {
+        "label": "test-has-assertion",
+        "slug": "docs/gates/test-has-assertion"
+      },
+      {
+        "label": "test-exercises-unit",
+        "slug": "docs/gates/test-exercises-unit"
+      },
+      {
+        "label": "test-ref-matches-unit",
+        "slug": "docs/gates/test-ref-matches-unit"
+      },
+      {
+        "label": "evidence-fresh",
+        "slug": "docs/gates/evidence-fresh"
+      },
+      {
+        "label": "line-coverage",
+        "slug": "docs/gates/line-coverage"
+      },
+      {
+        "label": "branch-coverage",
+        "slug": "docs/gates/branch-coverage"
+      },
+      {
+        "label": "coverage-delta",
+        "slug": "docs/gates/coverage-delta"
+      },
+      {
+        "label": "mutation-score",
+        "slug": "docs/gates/mutation-score"
+      },
+      {
+        "label": "scenario-coverage",
+        "slug": "docs/gates/scenario-coverage"
+      },
+      {
+        "label": "single-test-per-unit",
+        "slug": "docs/gates/single-test-per-unit"
+      },
+      {
+        "label": "test-level-codes",
+        "slug": "docs/gates/test-level-codes"
+      },
+      {
+        "label": "test-traceable",
+        "slug": "docs/gates/test-traceable"
+      }
+    ]
+  },
+  {
+    "label": "Security \u0026 Hygiene",
+    "translations": {
+      "pt": "Segurança e Higiene",
+      "pt-BR": "Segurança e Higiene"
+    },
+    "collapsed": true,
+    "items": [
+      {
+        "label": "no-secret-leaked",
+        "slug": "docs/gates/no-secret-leaked"
+      },
+      {
+        "label": "dependency-vulnerable",
+        "slug": "docs/gates/dependency-vulnerable"
+      },
+      {
+        "label": "sbom-generated",
+        "slug": "docs/gates/sbom-generated"
+      },
+      {
+        "label": "license-compatible",
+        "slug": "docs/gates/license-compatible"
+      },
+      {
+        "label": "no-duplication",
+        "slug": "docs/gates/no-duplication"
+      },
+      {
+        "label": "spellcheck",
+        "slug": "docs/gates/spellcheck"
+      }
+    ]
+  },
+  {
+    "label": "Rules Usage \u0026 Contracts",
+    "translations": {
+      "pt": "Uso de Regras e Contratos",
+      "pt-BR": "Uso de Regras e Contratos"
+    },
+    "collapsed": true,
+    "items": [
+      {
+        "label": "rule-uses-declared",
+        "slug": "docs/gates/rule-uses-declared"
+      },
+      {
+        "label": "rule-uses-resolve",
+        "slug": "docs/gates/rule-uses-resolve"
+      },
+      {
+        "label": "rule-uses-implemented",
+        "slug": "docs/gates/rule-uses-implemented"
+      },
+      {
+        "label": "contract-impact",
+        "slug": "docs/gates/contract-impact"
+      },
+      {
+        "label": "contract-status-declared",
+        "slug": "docs/gates/contract-status-declared"
+      },
+      {
+        "label": "domain-declared",
+        "slug": "docs/gates/domain-declared"
+      },
+      {
+        "label": "count-honored",
+        "slug": "docs/gates/count-honored"
+      },
+      {
+        "label": "pagination-honored",
+        "slug": "docs/gates/pagination-honored"
+      },
+      {
+        "label": "route-declared",
+        "slug": "docs/gates/route-declared"
+      },
+      {
+        "label": "route-exists",
+        "slug": "docs/gates/route-exists"
+      },
+      {
+        "label": "dependency-honored",
+        "slug": "docs/gates/dependency-honored"
+      },
+      {
+        "label": "trigger-declared",
+        "slug": "docs/gates/trigger-declared"
+      },
+      {
+        "label": "value-anchored",
+        "slug": "docs/gates/value-anchored"
+      }
+    ]
+  }
+]

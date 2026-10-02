@@ -1,0 +1,226 @@
+[
+  {
+    "label": "anchors audit",
+    "slug": "docs/cli/commands/audit"
+  },
+  {
+    "label": "anchors backfill-labels",
+    "slug": "docs/cli/commands/backfill-labels"
+  },
+  {
+    "label": "anchors board",
+    "slug": "docs/cli/commands/board"
+  },
+  {
+    "label": "anchors changelog",
+    "slug": "docs/cli/commands/changelog"
+  },
+  {
+    "label": "anchors check",
+    "slug": "docs/cli/commands/check"
+  },
+  {
+    "label": "anchors code",
+    "slug": "docs/cli/commands/code"
+  },
+  {
+    "label": "anchors commit-msg",
+    "slug": "docs/cli/commands/commit-msg"
+  },
+  {
+    "label": "anchors compliance",
+    "slug": "docs/cli/commands/compliance"
+  },
+  {
+    "label": "anchors coverage",
+    "slug": "docs/cli/commands/coverage"
+  },
+  {
+    "label": "anchors decided",
+    "slug": "docs/cli/commands/decided"
+  },
+  {
+    "label": "anchors deliver",
+    "slug": "docs/cli/commands/deliver"
+  },
+  {
+    "label": "anchors discard",
+    "slug": "docs/cli/commands/discard"
+  },
+  {
+    "label": "anchors docs",
+    "slug": "docs/cli/commands/docs"
+  },
+  {
+    "label": "anchors doctor",
+    "slug": "docs/cli/commands/doctor"
+  },
+  {
+    "label": "anchors done",
+    "slug": "docs/cli/commands/done"
+  },
+  {
+    "label": "anchors drop",
+    "slug": "docs/cli/commands/drop"
+  },
+  {
+    "label": "anchors escalate",
+    "slug": "docs/cli/commands/escalate"
+  },
+  {
+    "label": "anchors failures",
+    "slug": "docs/cli/commands/failures"
+  },
+  {
+    "label": "anchors flow",
+    "slug": "docs/cli/commands/flow"
+  },
+  {
+    "label": "anchors freeze",
+    "slug": "docs/cli/commands/freeze"
+  },
+  {
+    "label": "anchors generated-paths",
+    "slug": "docs/cli/commands/generated-paths"
+  },
+  {
+    "label": "anchors governs",
+    "slug": "docs/cli/commands/governs"
+  },
+  {
+    "label": "anchors guide",
+    "slug": "docs/cli/commands/guide"
+  },
+  {
+    "label": "anchors impact",
+    "slug": "docs/cli/commands/impact"
+  },
+  {
+    "label": "anchors ingest",
+    "slug": "docs/cli/commands/ingest"
+  },
+  {
+    "label": "anchors init",
+    "slug": "docs/cli/commands/init"
+  },
+  {
+    "label": "anchors install-hooks",
+    "slug": "docs/cli/commands/install-hooks"
+  },
+  {
+    "label": "anchors judge",
+    "slug": "docs/cli/commands/judge"
+  },
+  {
+    "label": "anchors keep-evidence",
+    "slug": "docs/cli/commands/keep-evidence"
+  },
+  {
+    "label": "anchors map",
+    "slug": "docs/cli/commands/map"
+  },
+  {
+    "label": "anchors merge-progress",
+    "slug": "docs/cli/commands/merge-progress"
+  },
+  {
+    "label": "anchors migrate",
+    "slug": "docs/cli/commands/migrate"
+  },
+  {
+    "label": "anchors mutation",
+    "slug": "docs/cli/commands/mutation"
+  },
+  {
+    "label": "anchors new",
+    "slug": "docs/cli/commands/new"
+  },
+  {
+    "label": "anchors next",
+    "slug": "docs/cli/commands/next"
+  },
+  {
+    "label": "anchors pr-body",
+    "slug": "docs/cli/commands/pr-body"
+  },
+  {
+    "label": "anchors queue",
+    "slug": "docs/cli/commands/queue"
+  },
+  {
+    "label": "anchors reclaim",
+    "slug": "docs/cli/commands/reclaim"
+  },
+  {
+    "label": "anchors recode",
+    "slug": "docs/cli/commands/recode"
+  },
+  {
+    "label": "anchors renumber",
+    "slug": "docs/cli/commands/renumber"
+  },
+  {
+    "label": "anchors report",
+    "slug": "docs/cli/commands/report"
+  },
+  {
+    "label": "anchors review",
+    "slug": "docs/cli/commands/review"
+  },
+  {
+    "label": "anchors settings",
+    "slug": "docs/cli/commands/settings"
+  },
+  {
+    "label": "anchors stale",
+    "slug": "docs/cli/commands/stale"
+  },
+  {
+    "label": "anchors stamp",
+    "slug": "docs/cli/commands/stamp"
+  },
+  {
+    "label": "anchors status",
+    "slug": "docs/cli/commands/status"
+  },
+  {
+    "label": "anchors suggest",
+    "slug": "docs/cli/commands/suggest"
+  },
+  {
+    "label": "anchors synthesize",
+    "slug": "docs/cli/commands/synthesize"
+  },
+  {
+    "label": "anchors task-status",
+    "slug": "docs/cli/commands/task-status"
+  },
+  {
+    "label": "anchors test",
+    "slug": "docs/cli/commands/test"
+  },
+  {
+    "label": "anchors thaw",
+    "slug": "docs/cli/commands/thaw"
+  },
+  {
+    "label": "anchors touch",
+    "slug": "docs/cli/commands/touch"
+  },
+  {
+    "label": "anchors unblock",
+    "slug": "docs/cli/commands/unblock"
+  },
+  {
+    "label": "anchors verify",
+    "slug": "docs/cli/commands/verify"
+  },
+  {
+    "label": "anchors watch",
+    "slug": "docs/cli/commands/watch"
+  },
+  {
+    "label": "anchors work",
+    "slug": "docs/cli/commands/work"
+  }
+]

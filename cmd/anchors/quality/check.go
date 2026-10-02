@@ -375,7 +375,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 	cmd.Flags().StringVar(&skipRegras, "skip-rule", "",
 		"waives rules in this run: `id=reason[,id=reason]`. The reason is mandatory")
 	cmd.Flags().StringVar(&msgPath, "commit-msg", "",
-		"path to the commit message file, from which to read the `[skip-regra@CODIGO: motivo]` markers")
+		"path to the commit message file, from which to read the `[skip-<gate>@<CODE>: reason]` markers")
 	cmd.Flags().BoolVar(&onlyIssues, "only-issues", false, "omits from the table the gates that passed everything and left no pending item (the total remains in the footer)")
 	cmd.Flags().BoolVar(&showDrift, "show-drift", false, "lists ALL the pending items (⚠) with the address of each one; without the flag, only the table counter")
 	cmd.Flags().BoolVar(&showTiming, "timing", false, "measures how long each gate took, and names the slowest targets — to find what makes a scan expensive")
