@@ -279,6 +279,34 @@ func TestGoHandlePatternsSeeBothShapes(t *testing.T) {
 	}
 }
 
+// GORM keeps the error in a field and Go code returns sentinel errors; neither carries the
+// word `err`, and a repository that handled and propagated both failed the failure gates.
+func TestGoPatternsSeeFieldAndSentinelErrors(t *testing.T) {
+	t.Run("DLCTI-B19: The Go family sees an error in a field and a sentinel error", func(t *testing.T) {})
+	d := (&Config{Dialect: &Dialect{Family: "go"}}).DialectFor()
+	any := func(pats []string, line string) bool {
+		for _, p := range pats {
+			if regexp.MustCompile(p).MatchString(line) {
+				return true
+			}
+		}
+		return false
+	}
+	for _, line := range []string{"if result.Error != nil {", "return ErrWalletLinkNotFound"} {
+		if !any(d.HandlePatterns, line) {
+			t.Errorf("the Go handle patterns must see %q", line)
+		}
+	}
+	for _, line := range []string{"return nil, result.Error", "return nil, ErrWalletLinkNotFound"} {
+		if !any(d.LogPatterns, line) {
+			t.Errorf("the Go log patterns must see %q", line)
+		}
+	}
+	if any(d.LogPatterns, "return e.Error()") {
+		t.Error("turning the error into text is not propagating it")
+	}
+}
+
 func TestFamiliesSayHowATestIsWritten(t *testing.T) {
 	t.Run("DLCTI-B14: The Go and TS families say how a test is written", func(t *testing.T) {})
 	re := func(family string) *regexp.Regexp {

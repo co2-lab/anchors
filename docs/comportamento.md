@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:b8425a38b58950d9 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:a1f788ba339cf459 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -2879,6 +2879,8 @@ teste prova.
 - [The families say how code defines a name](camadas/config.md#dlcti-b17--the-families-say-how-code-defines-a-name) `DLCTI-B17`
 
 - [Every examples keyword, in every language, sorted](camadas/config.md#dlcti-b18--every-examples-keyword-in-every-language-sorted) `DLCTI-B18`
+
+- [The Go family sees an error in a field and a sentinel error](camadas/config.md#dlcti-b19--the-go-family-sees-an-error-in-a-field-and-a-sentinel-error) `DLCTI-B19`
 
 - [A trigger naming a layer charges every change in that layer, whatever the unit](camadas/config.md#dcrqa-b01--a-trigger-naming-a-layer-charges-every-change-in-that-layer-whatever-the-unit) `DCRQA-B01`
 

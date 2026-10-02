@@ -310,10 +310,23 @@ var dialectFamilies = map[string]Dialect{
 			`\brecover\(\)`,
 			`==\s*nil\s*\{`,
 			`\berrors\.(?:Is|As)\(`,
+			// An error held in a FIELD, not a variable: GORM's `if result.Error != nil`.
+			// The `err` word above never saw it, and a repository that handled every
+			// failure of its queries failed `failure-handled` (reported from baas-proxy).
+			`\.Error\s*!=\s*nil`,
+			// A sentinel error returned: `return ErrNotFound`, `return nil, ErrX`. The
+			// failure becomes a value the caller decides on — handled here.
+			`\breturn\b[^\n]*\bErr[A-Z]\w*`,
 		},
 		LogPatterns: []string{
 			`\b(?:log|logger|slog)\.(?:Error|Warn|Fatal|Printf|Print)\b`,
 			`\bfmt\.Errorf\(`,
+			// Propagating is recording in Go, like `fmt.Errorf`: the error goes up to whoever
+			// logs it. Two shapes the patterns above missed — the error field returned
+			// (`return nil, result.Error`, never `e.Error()`, which turns it into text) and
+			// the sentinel returned.
+			`\breturn\b[^\n]*\.Error\s*(?:$|[,;)}])`,
+			`\breturn\b[^\n]*\bErr[A-Z]\w*`,
 		},
 		// The standard library: a test names its cases with `t.Run("title", …)`.
 		Tests: &TestsSource{Pattern: `\bt\.Run\(`, Assertion: `\bt\.(?:Error|Errorf|Fatal|Fatalf|Fail|FailNow)\b`},

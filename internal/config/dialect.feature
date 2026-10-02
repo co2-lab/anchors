@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DLCTI
-#   updated_at: 2026-09-28
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @DLCTI
@@ -132,3 +132,11 @@ Feature: Dialect — the lexicon of the project's language, between an agnostic 
     Given the Gherkin table
     When the examples keywords are listed
     Then each language's keyword appears once, in alphabetical order
+
+  @DLCTI-B19 @unit-level
+  Scenario: The Go family sees an error in a field and a sentinel error
+    Given the Go family
+    When its handle and log patterns are matched
+    Then "if result.Error != nil {" and "return ErrWalletLinkNotFound" are handling
+    And "return nil, result.Error" and "return nil, ErrWalletLinkNotFound" are recording
+    And "return e.Error()" is not recording

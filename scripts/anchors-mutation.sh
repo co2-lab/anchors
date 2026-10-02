@@ -88,6 +88,18 @@ for entry in "${pkgs[@]}"; do
     continue
   fi
   grep -E 'Test efficacy' "$tmp/log" | sed 's/^/  /'
+  # Nothing to mutate (a file of data tables, say): gremlins succeeds and writes no
+  # report. That is an answer, not a failure — the file is listed with no mutation, which
+  # the ingest reads as "nothing to mutate", instead of the run ending with no report.
+  if [ ! -s "$tmp/raw.json" ]; then
+    echo "  nothing to mutate"
+    targets=()
+    if [ "$entry" != "$pkg" ]; then targets=("${entry#*|}"); else
+      for f in "$pkg"/*.go; do case "$f" in *_test.go) ;; *) targets+=("$(basename "$f")") ;; esac; done
+    fi
+    printf '%s\n' "${targets[@]}" | jq -R -s --arg mod "$(go list -m)" \
+      '{go_module: $mod, files: (split("\n") | map(select(. != "") | {file_name: ., mutations: []}))}' >"$tmp/raw.json"
+  fi
   jq --arg dir "$pkg" '.files |= map(.file_name = ($dir + "/" + .file_name))' \
     "$tmp/raw.json" >"$tmp/pkg-$i.json"
 done

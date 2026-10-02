@@ -74,8 +74,12 @@ A spec is not all alike — it specializes according to what makes the unit vary
 10. Rule uses — ties every other rule (behaviours, states, errors, actions) to what it uses:
    ` + "`| Rule | Uses |`" + `, with fields by name, the spec's own codes and ` + "`DEPn`" + ` rows. Sections 8–10
    are what say which rules a changed field reaches: the rule's code first, what it uses second.
-   ` + "`rule-uses-declared`" + ` asks every rule to say what it uses (or ` + "`@no-uses: <why>`" + ` on its line), and
-   ` + "`rule-uses-resolve`" + ` asks that what it uses exists in the spec. When a field (or a state) changes,
+   ` + "`rule-uses-declared`" + ` asks every rule to say what it uses; a rule that uses nothing carries
+   ` + "`@no-uses: <why>`" + ` on the rule's OWN row, where the rule is declared — not in the Rule uses
+   table, which only lists rules that do use something. ` + "`rule-uses-resolve`" + ` asks that each use
+   exists in the spec: a field is the FIRST CELL of a row of another table of the spec (Validations,
+   Domain, a contract table…) or a backticked name in a heading — a name written only in prose does
+   not resolve. When a field (or a state) changes,
    ` + "`contract-impact`" + ` names the rules that use it and their tests, and ` + "`anchors test`" + ` runs them.
 11. Messages — the literal text shown to the user is catalogued ONCE, here. It is the single
    source of copy; rules and actions only REFERENCE the message code, they never duplicate the
