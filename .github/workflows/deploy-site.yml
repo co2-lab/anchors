@@ -33,7 +33,10 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
+          # `--branch main` is the project's PRODUCTION branch: any other name is a
+          # preview, and every deploy since the first went to the `production.` alias
+          # while anchors.co2lab.io kept a month-old manual deploy.
           npx wrangler pages deploy site/dist \
             --project-name anchors-site \
-            --branch production \
+            --branch main \
             --commit-dirty=true
