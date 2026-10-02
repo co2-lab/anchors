@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DTCDC
-  updated_at: 2026-09-30
+  updated_at: 2026-10-02
   layer: apoio
 -->
 # DocTemplateCompiler — compiles documentation pages from templates that reference the specs' content
@@ -49,7 +49,9 @@ reaches at all.
 | `DTCDC-B06` | A spec's layer is the `layer:` line of its own header when it has one, and the map's layer otherwise. |
 | `DTCDC-B07` | The layers offered to templates are the distinct layers that have specs, sorted. |
 | `DTCDC-B08` | A section is the text under a second-level heading of that exact name, without the heading, up to the next second-level heading; deeper headings inside it do not end it, and a missing section is empty. |
-| `DTCDC-B09` | A spec's rules are its third-level headings shaped as a rule code, a dash and a title, each with the body up to the next rule heading or second-level heading. |
+| `DTCDC-B09` | A rule written as a heading — a rule code, a dash and a title — has its body up to the next rule or second-level heading. |
+| `DTCDC-B11` | A section asked by a title the section catalog knows, and absent under that exact title, is the same section under its title in another language of the catalog (`Visão Geral` finds `Overview`); a title outside the catalog finds only itself. |
+| `DTCDC-B12` | A spec's rules are read in the three catalogued forms — heading, table row, bold bullet — with the map's rule definition; only the spec's own codes, each at its first definition, so a Rule uses row does not repeat a rule; a table row's title is the cell after the code and its body the cells after that, and only a heading rule is marked as having a heading of its own. |
 | `DTCDC-B10` | A rule's title carries no HTML comment, even one written on the heading line, while the title's words stay. |
 
 ### Freshness

@@ -1061,6 +1061,12 @@ func gatedByRE() *regexp.Regexp {
 	return regexp.MustCompile("@gated-by\\s+`?([A-Z0-9]" + config.CodeLengthPattern() + "-G[0-9]{2})`?")
 }
 
+// RuleDefinitionRE is the line that defines a rule, in any of the three catalogued forms
+// (heading, table row, bold bullet), capturing its code. Exported so the documentation
+// compiler reads a spec's rules the way the map does — a reader of its own saw only the
+// heading form, and a spec written in tables came out with no rule at all.
+func RuleDefinitionRE() *regexp.Regexp { return localRuleRE() }
+
 // localRuleRE acha o codigo da regra DESTA spec numa linha — as tres formas catalogadas
 // (cabecalho, linha de tabela, bullet-negrito).
 func localRuleRE() *regexp.Regexp {

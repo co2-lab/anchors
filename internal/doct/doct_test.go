@@ -163,6 +163,47 @@ func TestRules_returnsEachRuleSeparately(t *testing.T) {
 	}
 }
 
+// A template asks for "Visão Geral" and an English spec writes "Overview": the title is read
+// as the section it names, in any language of the catalog.
+func TestSection_findsTheSameSectionUnderAnotherLanguage(t *testing.T) {
+	t.Run("DTCDC-B11: A section asked by its title in one language is found under another", func(t *testing.T) {})
+	s := Spec{raw: "# X\n\n## Overview\n\nwhat it does\n\n## Effects\n\n| Effect | Description |\n"}
+	if got := fnSection(s, "Visão Geral"); got != "what it does" {
+		t.Errorf("Visão Geral on an English spec = %q, want the Overview", got)
+	}
+	if got := fnSection(s, "Visión General"); got != "what it does" {
+		t.Errorf("Visión General on an English spec = %q", got)
+	}
+	if got := fnSection(s, "Fora de escopo"); got != "" {
+		t.Errorf("a title outside the catalog finds only itself, got %q", got)
+	}
+}
+
+// A spec written in tables and bullets has rules too; the index listed none of them.
+func TestRules_readsTheThreeForms(t *testing.T) {
+	t.Run("DTCDC-B12: The rules are read in the three catalogued forms, the spec's own codes at their first definition", func(t *testing.T) {})
+	raw := "# X\n\n## Effects\n\n| Effect | Description |\n| --- | --- |\n" +
+		"| `PSXSH-B01` | a table rule <!-- @no-mark: x --> |\n" +
+		"| `OTHER-B01` | another spec's code |\n\n" +
+		"- **PSXSH-B02** — a bullet rule\n\n" +
+		"### PSXSH-B03 — a heading rule\n\nits body\n\n" +
+		"## Rule uses\n\n| Rule | Uses |\n| --- | --- |\n| `PSXSH-B01` | `field` |\n"
+	rs := fnRules(Spec{Code: "PSXSH", raw: raw})
+	if len(rs) != 3 {
+		t.Fatalf("rules = %+v, want B01, B02 and B03 once each", rs)
+	}
+	want := []Rule{
+		{Code: "PSXSH-B01", Titulo: "a table rule"},
+		{Code: "PSXSH-B02", Titulo: "a bullet rule"},
+		{Code: "PSXSH-B03", Titulo: "a heading rule", Corpo: "its body", Heading: true},
+	}
+	for i, w := range want {
+		if rs[i] != w {
+			t.Errorf("rule %d = %+v, want %+v", i, rs[i], w)
+		}
+	}
+}
+
 // The compiled page carries the MARKER: whoever opens it knows editing it loses the work.
 func TestBuild_writesTheMarker(t *testing.T) {
 	t.Run("DTCDC-B02: The compiled page opens with the generated marker, its template path and a stamp", func(t *testing.T) {})
@@ -613,10 +654,10 @@ func TestBuild_layersWithoutSpec(t *testing.T) {
 	if _, err := c.Build(false); err != nil {
 		t.Fatalf("the build must not abort on a layer with no spec: %v", err)
 	}
-	b, _ := readFile(c.Root, "arquitetura.md")
+	b, _ := readFile(c.Root, "architecture.md")
 	for _, want := range []string{
-		"- **presentation** — 2 arquivo(s)", "- **dao** — 0 arquivo(s)", "_Nenhuma camada deste contêiner tem spec ainda:_",
-		"_Nenhuma spec nesta camada — 2 arquivo(s) regido(s)._", `presentation_nospec["2 arquivo(s), nenhuma spec"]`,
+		"- **presentation** — 2 file(s)", "- **dao** — 0 file(s)", "_No layer of this container has a spec yet:_",
+		"_No spec in this layer — 2 governed file(s)._", `presentation_nospec["2 file(s), no spec"]`,
 	} {
 		if !strings.Contains(b, want) {
 			t.Errorf("the page lacks %q:\n%s", want, b)

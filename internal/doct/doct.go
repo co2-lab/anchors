@@ -42,7 +42,9 @@ import (
 	"text/template"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/mapx"
+	"github.com/co2-lab/anchors/internal/scan"
 )
 
 // Dir é onde os templates vivem.
@@ -130,6 +132,9 @@ type Rule struct {
 	Code   string
 	Titulo string
 	Corpo  string
+	// Heading says the rule is written as its own heading, so a page that renders the
+	// spec's sections gives it an anchor; a table row or a bullet has none.
+	Heading bool
 }
 
 // Compiler compila os templates de um projeto.
@@ -148,6 +153,8 @@ type Compiler struct {
 	// compilador e nao num retorno porque quem as pede sao as funcoes de template,
 	// chamadas de dentro do `Execute` — nao ha por onde devolver.
 	consumed map[string]bool
+	// layerDirs is the folder of each layer's page template, read once (`fnLayerPage`).
+	layerDirs map[string]string
 	// Os INDICES do grafo, montados uma vez (ver `buildIndexes`). O grafo nao muda
 	// durante a compilacao, e reconstruir a resposta a cada consulta era o que fazia uma
 	// compilacao completa custar 7.7s.
@@ -254,7 +261,7 @@ func (c *Compiler) Funcs() template.FuncMap {
 		// MkDocs e Starlight compartilham; `layerPage` monta o caminho da página de
 		// camada num lugar só, para que mover a pasta não quebre todos os links.
 		"anchor":    fnAnchor,
-		"layerPage": fnLayerPage,
+		"layerPage": c.fnLayerPage,
 		// O LINK de uma regra/cenário conhece o FORMATO da página de destino: onde a
 		// camada é grande a página resume, e a âncora da regra não existe lá.
 		"ruleLink":     c.fnRuleLink,
@@ -447,7 +454,23 @@ func (c *Compiler) fnSpecByCode(code string) (*Spec, error) {
 // pode ser `##` num documento por camada e `###` num agrupado por seção. Devolver o
 // cabeçalho junto obrigaria o template a removê-lo.
 func fnSection(s Spec, nome string) string {
-	return sliceSection(s.raw, "## ", nome)
+	if out, ok := sliceSectionOK(s.raw, "## ", nome); ok {
+		return out
+	}
+	// The same section under another language's title. A template asks for
+	// "Visão Geral" and an English spec writes "Overview": an exact match left every
+	// overview of the page empty. The catalog the gates use names the section in every
+	// language; the template's title is read as the section it names.
+	key, _ := i18n.SectionKeyFor(nome)
+	if key == "" {
+		return ""
+	}
+	for _, t := range i18n.AllTranslations(key) {
+		if out, ok := sliceSectionOK(s.raw, "## ", t); ok {
+			return out
+		}
+	}
+	return ""
 }
 
 // sliceSection devolve o corpo de um heading até o próximo heading do MESMO nível.
@@ -455,16 +478,23 @@ func fnSection(s Spec, nome string) string {
 // Do mesmo nível e não de qualquer nível: uma seção `## Regras` contém `### CODE-B01`, e
 // cortar no primeiro `###` devolveria a seção vazia.
 func sliceSection(raw, prefixo, nome string) string {
+	out, _ := sliceSectionOK(raw, prefixo, nome)
+	return out
+}
+
+// sliceSectionOK is sliceSection that also says whether the heading exists — an empty
+// section and a missing one are different answers to whoever looks under another title.
+func sliceSectionOK(raw, prefixo, nome string) (string, bool) {
 	linhas := strings.Split(raw, "\n")
 	inicio := -1
 	for i, l := range linhas {
-		if strings.TrimSpace(l) == prefixo+nome {
+		if strings.EqualFold(strings.TrimSpace(l), prefixo+nome) {
 			inicio = i + 1
 			break
 		}
 	}
 	if inicio < 0 {
-		return ""
+		return "", false
 	}
 	fim := len(linhas)
 	for i := inicio; i < len(linhas); i++ {
@@ -473,49 +503,72 @@ func sliceSection(raw, prefixo, nome string) string {
 			break
 		}
 	}
-	return strings.TrimSpace(strings.Join(linhas[inicio:fim], "\n"))
+	return strings.TrimSpace(strings.Join(linhas[inicio:fim], "\n")), true
 }
-
-// ruleRE casa a definição de uma regra: `### GLCGL-B01 — o título`.
-var ruleRE = regexp.MustCompile(`(?m)^###\s+([A-Z0-9]{4,5}-[A-Z]\d{2})\s*[—–-]\s*(.+?)\s*$`)
 
 // fnRules devolve as regras individuais de uma spec: código, título e corpo.
 //
 // Existe além do `section` porque a visão por seção quer as regras SOLTAS — "todas as
 // regras do sistema" é uma lista de itens, não a concatenação de seções `## Regras`.
+//
+// The rules are read in the three catalogued forms — heading, table row, bold bullet —
+// with the definition the map uses (`scan.RuleDefinitionRE`). A reader of its own saw only
+// headings, and a spec written in tables (Effects, Errors, Invariants) came out of the
+// index with no rule (reported from baas-proxy; this repository's PSXSH was one).
+//
+// Only the spec's OWN codes, each at its first definition: a later row naming the code —
+// the Rule uses table — lists what the rule reads, and is not where the rule is said.
 func fnRules(s Spec) []Rule {
-	ms := ruleRE.FindAllStringSubmatchIndex(s.raw, -1)
+	re := scan.RuleDefinitionRE()
+	linhas := strings.Split(s.raw, "\n")
 	var out []Rule
-	for i, m := range ms {
-		fim := len(s.raw)
-		if i+1 < len(ms) {
-			fim = ms[i+1][0]
+	seen := map[string]bool{}
+	for i, l := range linhas {
+		m := re.FindStringSubmatch(l)
+		if m == nil || seen[m[1]] || (s.Code != "" && !strings.HasPrefix(m[1], s.Code+"-")) {
+			continue
 		}
-		// Um heading de nível MAIOR (`## Invariantes`) também encerra a regra.
-		corpo := s.raw[m[1]:fim]
-		if j := strings.Index(corpo, "\n## "); j >= 0 {
-			corpo = corpo[:j]
+		seen[m[1]] = true
+		heading := strings.HasPrefix(strings.TrimSpace(l), "#")
+		resto := l[strings.Index(l, m[1])+len(m[1]):]
+		// O TÍTULO É RÓTULO DE LINK, e comentário HTML não pertence a ele.
+		//
+		// A linha da regra pode carregar a dispensa — `### ABCDE-B01 — o que ela diz
+		// <!-- @no-mark: razão -->` —, e o gate a aceita ali de propósito (ver `FRMTT-I02`).
+		// Mas o compilado usa este texto como o rótulo entre colchetes, e o resultado era
+		// ilegível. MEDIDO no projeto de referência (#647): 57 ocorrências no
+		// `docs/regras.md`. A dispensa continua onde estava: ela é lida do RAW pelos gates.
+		resto = comentarioHTMLRE.ReplaceAllString(resto, "")
+		var titulo, corpo string
+		switch {
+		case heading:
+			titulo = strings.TrimSpace(strings.TrimLeft(strings.TrimSpace(resto), "—–-"))
+			// The body runs to the next rule or to a higher heading.
+			fim := len(linhas)
+			for k := i + 1; k < len(linhas); k++ {
+				if strings.HasPrefix(linhas[k], "## ") || re.MatchString(linhas[k]) {
+					fim = k
+					break
+				}
+			}
+			corpo = strings.TrimSpace(strings.Join(linhas[i+1:fim], "\n"))
+		case strings.HasPrefix(strings.TrimSpace(l), "|"):
+			// A table row: the cell after the code says the rule, the rest qualifies it.
+			var cells []string
+			for _, c := range strings.Split(strings.Trim(strings.TrimSpace(resto), "`|"), "|") {
+				if c = strings.TrimSpace(c); c != "" && c != "—" {
+					cells = append(cells, c)
+				}
+			}
+			if len(cells) > 0 {
+				titulo = cells[0]
+				corpo = strings.Join(cells[1:], " — ")
+			}
+		default:
+			// A bold bullet: `- **CODE-B01** — what it says`.
+			titulo = strings.TrimSpace(strings.TrimLeft(strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(resto), "**")), "—–-:"))
 		}
-		out = append(out, Rule{
-			Code: s.raw[m[2]:m[3]],
-			// O TÍTULO É RÓTULO DE LINK, e comentário HTML não pertence a ele.
-			//
-			// O heading de uma regra pode carregar a dispensa na própria linha —
-			// `### ABCDE-B01 — o que ela diz <!-- @no-mark: razão -->` —, e o gate a
-			// aceita ali de propósito (ver `FRMTT-I02`: à direita do símbolo é onde o
-			// formatador não a move). Mas o compilado usa este texto como o rótulo entre
-			// colchetes, e o resultado era ilegível:
-			//
-			//	- [DSHBR-B01 — a escolha de fixar <!-- @no-mark: ... -->](camadas/...)
-			//
-			// MEDIDO no projeto de referência (#647): 57 ocorrências no `docs/regras.md`,
-			// espalhadas por todas as camadas — não é defeito de uma spec, é do gerador.
-			//
-			// A dispensa continua onde estava: ela é lida do RAW pelos gates, e este corte
-			// é só do rótulo. O `Corpo` também não a leva, porque começa depois do heading.
-			Titulo: strings.TrimSpace(comentarioHTMLRE.ReplaceAllString(s.raw[m[4]:m[5]], "")),
-			Corpo:  strings.TrimSpace(corpo),
-		})
+		out = append(out, Rule{Code: m[1], Titulo: strings.TrimSpace(titulo), Corpo: corpo, Heading: heading})
 	}
 	return out
 }

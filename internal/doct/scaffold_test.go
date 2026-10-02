@@ -16,16 +16,16 @@ func TestScaffolds_allHaveNameAndBody(t *testing.T) {
 	t.Run("DCSCD-B01: The three fixed templates each have a name, a body and what they answer", func(t *testing.T) {})
 	t.Run("DCSCD-B02: A layer's page template is named after the layer", func(t *testing.T) {})
 	var names []string
-	for _, s := range Scaffolds() {
+	for _, s := range Scaffolds("en") {
 		names = append(names, s.Nome)
 	}
-	if strings.Join(names, ",") != "arquitetura.md.tmpl,comportamento.md.tmpl,regras.md.tmpl" {
+	if strings.Join(names, ",") != "architecture.md.tmpl,behavior.md.tmpl,rules.md.tmpl" {
 		t.Errorf("fixed scaffolds = %v, want architecture, behaviour and rules", names)
 	}
-	if got := ScaffoldLayer("infra").Nome; got != "camadas/infra.md.tmpl" {
-		t.Errorf("layer scaffold name = %q, want camadas/infra.md.tmpl", got)
+	if got := ScaffoldLayer("infra", "en").Nome; got != "layers/infra.md.tmpl" {
+		t.Errorf("layer scaffold name = %q, want layers/infra.md.tmpl", got)
 	}
-	all := append(Scaffolds(), ScaffoldLayer("infra"))
+	all := append(Scaffolds("en"), ScaffoldLayer("infra", "en"))
 	for i, s := range all {
 		if strings.TrimSpace(s.Nome) == "" {
 			t.Errorf("scaffold #%d has no name (why: %q)", i, s.Porque)
@@ -50,11 +50,11 @@ func TestInitScaffolds_writesFixedAndPerLayer(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		want := "arquitetura.md.tmpl,comportamento.md.tmpl,regras.md.tmpl,camadas/infra.md.tmpl"
+		want := "architecture.md.tmpl,behavior.md.tmpl,rules.md.tmpl,layers/infra.md.tmpl"
 		if strings.Join(written, ",") != want {
 			t.Errorf("written = %v, want %s", written, want)
 		}
-		for _, s := range append(Scaffolds(), ScaffoldLayer("infra")) {
+		for _, s := range append(Scaffolds("en"), ScaffoldLayer("infra", "en")) {
 			b, err := os.ReadFile(filepath.Join(root, Dir, s.Nome))
 			if err != nil {
 				t.Fatal(err)
@@ -101,7 +101,7 @@ func TestInitScaffolds_theSkeletonCompiles(t *testing.T) {
 	}
 
 	// The CONTENT goes into the LAYER page — it is the one the index promises.
-	b, err := os.ReadFile(filepath.Join(root, OutDir, "camadas", "infra.md"))
+	b, err := os.ReadFile(filepath.Join(root, OutDir, "layers", "infra.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -111,11 +111,11 @@ func TestInitScaffolds_theSkeletonCompiles(t *testing.T) {
 
 	// And the index POINTS there, with an anchor that exists. A link that does not resolve
 	// is the worst defect of an index: it is clickable, and the browser stays put.
-	idx, err := os.ReadFile(filepath.Join(root, OutDir, "comportamento.md"))
+	idx, err := os.ReadFile(filepath.Join(root, OutDir, "behavior.md"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	target := "camadas/infra.md#" + GitHubAnchor("GLCGL-B01 — item sem artefato não passa")
+	target := "layers/infra.md#" + GitHubAnchor("GLCGL-B01 — item sem artefato não passa")
 	if !strings.Contains(string(idx), target) {
 		t.Errorf("the index does not point at `%s`:\n%s", target, idx)
 	}
@@ -135,7 +135,7 @@ func TestInitScaffolds_bigLayerSummarizes(t *testing.T) {
 		if _, err := c.Build(false); err != nil {
 			t.Fatal(err)
 		}
-		b, err := os.ReadFile(filepath.Join(root, OutDir, "camadas", "infra.md"))
+		b, err := os.ReadFile(filepath.Join(root, OutDir, "layers", "infra.md"))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -163,7 +163,7 @@ func TestInitScaffolds_doesNotOverwriteWithoutForce(t *testing.T) {
 	c, _ := New(root, g)
 	c.InitScaffolds(false)
 
-	target := filepath.Join(root, Dir, "arquitetura.md"+SufixoTemplate)
+	target := filepath.Join(root, Dir, "architecture.md"+SufixoTemplate)
 	edited := "{{/* edited by the team */}}\n# Our architecture\n"
 	os.WriteFile(target, []byte(edited), 0o644)
 
@@ -215,7 +215,7 @@ func TestBuild_theC4FollowsTheModel(t *testing.T) {
 	if _, err := c.Build(false); err != nil {
 		t.Fatal(err)
 	}
-	b, err := readFile(c.Root, "arquitetura.md")
+	b, err := readFile(c.Root, "architecture.md")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -249,8 +249,44 @@ func TestBuild_noContainerDeclaredWarns(t *testing.T) {
 	if _, err := c.Build(false); err != nil {
 		t.Fatal(err)
 	}
-	b, _ := readFile(c.Root, "arquitetura.md")
-	if !strings.Contains(b, "Nenhum contêiner declarado") {
+	b, _ := readFile(c.Root, "architecture.md")
+	if !strings.Contains(b, "No container declared") {
 		t.Errorf("the page does not say that the declaration is missing:\n%s", b)
+	}
+}
+
+// The pages are the project's readers', in the project's language: names, headings, the
+// layer folder and the section titles the page asks for. They were Portuguese whatever
+// `lang:` declared.
+func TestScaffolds_speakTheProjectLanguage(t *testing.T) {
+	t.Run("DCSCD-B09: The templates are named and written in the project's language", func(t *testing.T) {})
+	for lang, want := range map[string]struct{ names, layer, heading, overview string }{
+		"en":    {"architecture,behavior,rules", "layers/infra.md.tmpl", "# Architecture", `{{section . "Overview"}}`},
+		"pt-BR": {"arquitetura,comportamento,regras", "camadas/infra.md.tmpl", "# Arquitetura", `{{section . "Visão Geral"}}`},
+		"es":    {"arquitectura,comportamiento,reglas", "capas/infra.md.tmpl", "# Arquitectura", `{{section . "Visión General"}}`},
+	} {
+		var names []string
+		fixed := Scaffolds(lang)
+		for _, s := range fixed {
+			names = append(names, strings.TrimSuffix(s.Nome, ".md"+SufixoTemplate))
+		}
+		if strings.Join(names, ",") != want.names {
+			t.Errorf("%s: names = %v, want %s", lang, names, want.names)
+		}
+		if !strings.HasPrefix(fixed[0].Corpo, want.heading+"\n") {
+			t.Errorf("%s: the architecture page should open with %q", lang, want.heading)
+		}
+		layer := ScaffoldLayer("infra", lang)
+		if layer.Nome != want.layer || !strings.Contains(layer.Corpo, want.overview) {
+			t.Errorf("%s: layer page %q should ask %s", lang, layer.Nome, want.overview)
+		}
+		for _, s := range append(fixed, layer) {
+			if strings.Contains(s.Corpo, "«") {
+				t.Errorf("%s: %s keeps an unfilled key", lang, s.Nome)
+			}
+		}
+	}
+	if Scaffolds("fr")[0].Nome != "architecture.md"+SufixoTemplate {
+		t.Error("a language with no table falls back to English")
 	}
 }

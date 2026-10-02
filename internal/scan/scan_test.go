@@ -1048,3 +1048,24 @@ func TestGovernedTreeChanges(t *testing.T) {
 		t.Error("outside a repository the tree cannot be compared")
 	}
 }
+
+// The documentation compiler reads a spec's rules with this definition; a reader of its own
+// saw only headings, and a spec written in tables had no rule in the index.
+func TestRuleDefinitionRE_theThreeForms(t *testing.T) {
+	t.Run("RPSCR-B38: A rule is defined in any of the three forms", func(t *testing.T) {})
+	re := RuleDefinitionRE()
+	for line, want := range map[string]string{
+		"### ABCDE-B01 — x":   "ABCDE-B01",
+		"| `ABCDE-B02` | y |": "ABCDE-B02",
+		"- **ABCDE-B03** — z": "ABCDE-B03",
+		"as ABCDE-B04 says":   "",
+	} {
+		got := ""
+		if m := re.FindStringSubmatch(line); m != nil {
+			got = m[1]
+		}
+		if got != want {
+			t.Errorf("%q defines %q, want %q", line, got, want)
+		}
+	}
+}

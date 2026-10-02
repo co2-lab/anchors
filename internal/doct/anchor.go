@@ -1,6 +1,7 @@
 package doct
 
 import (
+	"path"
 	"sort"
 	"strings"
 	"unicode"
@@ -48,9 +49,51 @@ func fnAnchor(heading string) string { return GitHubAnchor(heading) }
 // fnLayerPage devolve o caminho da página de uma camada, relativo a `docs/`.
 //
 // Existe para que o template não monte o caminho com `printf`: um índice em `docs/` e as
-// páginas em `docs/camadas/` já são dois níveis, e a primeira vez que alguém mover a pasta
+// páginas numa subpasta já são dois níveis, e a primeira vez que alguém mover a pasta
 // todos os links quebram de uma vez. Aqui há um lugar só para consertar.
-func fnLayerPage(layer string) string { return "camadas/" + layer + ".md" }
+//
+// The folder is where the project keeps the layer's template — `doct/<folder>/<layer>.md`
+// becomes `docs/<folder>/<layer>.md`, so the link points at the page that is compiled. It
+// was fixed as `camadas/`, and a project whose pages live in `layers/` got an index of
+// broken links (reported from baas-proxy). With no template for the layer, the folder is
+// the one `anchors docs init` seeds for the project's language.
+func (c *Compiler) fnLayerPage(layer string) string {
+	if c.layerDirs == nil {
+		c.layerDirs = map[string]string{}
+		if tmpls, err := c.templates(); err == nil {
+			for _, rel := range tmpls {
+				dir, base := path.Split(rel)
+				if dir != "" {
+					c.layerDirs[strings.TrimSuffix(base, ".md"+SufixoTemplate)] = strings.TrimSuffix(dir, "/")
+				}
+			}
+		}
+	}
+	if dir, ok := c.layerDirs[layer]; ok {
+		return dir + "/" + layer + ".md"
+	}
+	return LayerDir(c.lang()) + "/" + layer + ".md"
+}
+
+// LayerDir is the folder of the layer pages in a language: `layers` in English, `camadas`
+// in Portuguese, `capas` in Spanish.
+func LayerDir(lang string) string {
+	switch {
+	case strings.HasPrefix(lang, "pt"):
+		return "camadas"
+	case strings.HasPrefix(lang, "es"):
+		return "capas"
+	}
+	return "layers"
+}
+
+// lang is the project's language, English when it declares none.
+func (c *Compiler) lang() string {
+	if c.Config != nil && c.Config.Lang != "" {
+		return c.Config.Lang
+	}
+	return "en"
+}
 
 // fnRuleLink devolve o link COMPLETO para uma regra, âncora incluída.
 //
@@ -67,8 +110,10 @@ func fnLayerPage(layer string) string { return "camadas/" + layer + ".md" }
 // heading próprio, o link leva a ela; onde não tem, leva à UNIDADE que a contém — que é
 // onde o leitor a encontra de qualquer jeito, e é uma promessa que a página cumpre.
 func (c *Compiler) fnRuleLink(layer string, s Spec, r Rule) string {
-	destino := fnLayerPage(layer)
-	if c.layerIsBig(layer) {
+	destino := c.fnLayerPage(layer)
+	// A rule written as a table row or a bullet has no heading of its own on the page, in
+	// any layout: the link goes to its unit, where the reader finds the row.
+	if c.layerIsBig(layer) || !r.Heading {
 		return destino + "#" + GitHubAnchor(s.Code+" — "+s.Titulo)
 	}
 	return destino + "#" + GitHubAnchor(r.Code+" — "+r.Titulo)
@@ -80,7 +125,7 @@ func (c *Compiler) fnRuleLink(layer string, s Spec, r Rule) string {
 // O link leva à unidade, e o índice diz onde o cenário está definido — o que é verdade, e
 // é mais do que um link para lugar nenhum diria.
 func (c *Compiler) fnScenarioLink(layer string, sc Scenario) string {
-	destino := fnLayerPage(layer)
+	destino := c.fnLayerPage(layer)
 	if !c.layerIsBig(layer) {
 		return destino + "#" + GitHubAnchor(sc.Code+" — "+sc.Titulo)
 	}

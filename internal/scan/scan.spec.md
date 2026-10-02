@@ -1,6 +1,6 @@
 <!-- @anchors
   code: RPSCR
-  updated_at: 2026-09-29
+  updated_at: 2026-10-02
   layer: scan
 -->
 # RepoScan — the repository read as text: which files exist, of which layer, and what each declares
@@ -110,6 +110,7 @@ heuristic decided.
 | `RPSCR-B35` | The index reader reads a file as the commit being made records it: a file with unstaged changes as staged, a file git does not track as absent, any other from the tree. (`IndexReader`) |
 | `RPSCR-B36` | The governed files where the tree and the index part are listed: tracked files with unstaged changes and untracked ones, of a governed layer and not ignored. (`GovernedTreeChanges`) |
 | `RPSCR-B37` | The index reader confronts the tree with the index at each read: a file deleted or edited in the tree after the reader was made still reads as the index has it. (`IndexReader`) |
+| `RPSCR-B38` | `RuleDefinitionRE` matches a line that defines a rule in any of the three forms — a heading, a table row whose first cell is the code, a bold bullet — and captures the code; a code cited in prose is not a definition. |
 
 ## Invariants
 

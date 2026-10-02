@@ -169,16 +169,41 @@ func compilerWithLayout(t *testing.T, big bool) *Compiler {
 
 func TestRuleLink(t *testing.T) {
 	t.Run("DCLND-B02: A rule's link points at the rule on a small layer and at its unit on a big one", func(t *testing.T) {
-		r := Rule{Code: "GLCGL-B01", Titulo: "r"}
+		r := Rule{Code: "GLCGL-B01", Titulo: "r", Heading: true}
 		small := compilerWithLayout(t, false)
-		if got := small.fnRuleLink("infra", small.specs[0], r); got != "camadas/infra.md#glcgl-b01--r" {
+		if got := small.fnRuleLink("infra", small.specs[0], r); got != "layers/infra.md#glcgl-b01--r" {
 			t.Errorf("small layer: %q, want the rule's own heading", got)
 		}
 		big := compilerWithLayout(t, true)
 		s := big.specs[0]
-		want := "camadas/infra.md#" + GitHubAnchor(s.Code+" — "+s.Titulo)
+		want := "layers/infra.md#" + GitHubAnchor(s.Code+" — "+s.Titulo)
 		if got := big.fnRuleLink("infra", s, r); got != want {
 			t.Errorf("big layer: %q, want the unit's heading %q", got, want)
+		}
+		// A rule written as a table row has no heading on the page: even a small layer
+		// links to its unit.
+		row := Rule{Code: "GLCGL-B02", Titulo: "row"}
+		if got := small.fnRuleLink("infra", small.specs[0], row); got != want {
+			t.Errorf("table rule on a small layer: %q, want the unit's heading %q", got, want)
+		}
+	})
+}
+
+func TestLayerPageFollowsTheTemplateFolder(t *testing.T) {
+	t.Run("DCLND-B09: A layer's page is in the folder of its template, or the project language's folder", func(t *testing.T) {
+		c := compilerWithLayout(t, false)
+		if got := c.fnLayerPage("infra"); got != "layers/infra.md" {
+			t.Errorf("no template, no lang: %q, want layers/infra.md", got)
+		}
+		escreveTemplate(t, c.Root, "paginas/infra.md"+SufixoTemplate, "x")
+		c.layerDirs = nil
+		if got := c.fnLayerPage("infra"); got != "paginas/infra.md" {
+			t.Errorf("template in paginas/: %q, want paginas/infra.md", got)
+		}
+		for lang, want := range map[string]string{"pt-BR": "camadas", "es": "capas", "en": "layers"} {
+			if got := LayerDir(lang); got != want {
+				t.Errorf("LayerDir(%s) = %q, want %q", lang, got, want)
+			}
 		}
 	})
 }
@@ -189,19 +214,19 @@ func TestScenarioLink(t *testing.T) {
 		unknown := Scenario{Code: "NOPEX-B01", Titulo: "u", Spec: "NOPEX"}
 
 		small := compilerWithLayout(t, false)
-		if got := small.fnScenarioLink("infra", known); got != "camadas/infra.md#glcgl-b01--s" {
+		if got := small.fnScenarioLink("infra", known); got != "layers/infra.md#glcgl-b01--s" {
 			t.Errorf("small layer, known: %q", got)
 		}
-		if got := small.fnScenarioLink("infra", unknown); got != "camadas/infra.md#nopex-b01--u" {
+		if got := small.fnScenarioLink("infra", unknown); got != "layers/infra.md#nopex-b01--u" {
 			t.Errorf("small layer, unknown spec: %q", got)
 		}
 
 		big := compilerWithLayout(t, true)
 		s := big.specs[0]
-		if got := big.fnScenarioLink("infra", known); got != "camadas/infra.md#"+GitHubAnchor(s.Code+" — "+s.Titulo) {
+		if got := big.fnScenarioLink("infra", known); got != "layers/infra.md#"+GitHubAnchor(s.Code+" — "+s.Titulo) {
 			t.Errorf("big layer, known: %q, want the unit's heading", got)
 		}
-		if got := big.fnScenarioLink("infra", unknown); got != "camadas/infra.md" {
+		if got := big.fnScenarioLink("infra", unknown); got != "layers/infra.md" {
 			t.Errorf("big layer, unknown spec: %q, want the bare page", got)
 		}
 	})

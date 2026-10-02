@@ -3,6 +3,9 @@ package doct
 import (
 	"os"
 	"path/filepath"
+	"strings"
+
+	"github.com/co2-lab/anchors/internal/i18n"
 )
 
 // --- a ESTRUTURA da documentação ---
@@ -59,183 +62,20 @@ func cerca(lang string) string { return "```" + lang }
 // é que ninguém precise inventar a organização do zero — inventar a cada projeto é como
 // se chega a uma documentação onde cada página segue uma lógica diferente, e quem lê tem
 // de descobrir a lógica antes de achar o que procura.
-func Scaffolds() []Scaffold {
+//
+// IN THE PROJECT'S LANGUAGE. The pages are read by the project's readers, so what they
+// show — headings, paragraphs, diagram labels, the notes of an empty state — and the page
+// names follow `lang:`. They were Portuguese whatever the project declared (reported from
+// baas-proxy). The notes to whoever edits the template (`{{/* … */}}`) are in English, like
+// everything else Anchors writes into a project's files. The skeleton is ONE, and the
+// language is a table of texts over it: three copies of the template would drift apart on
+// the first fix applied to one of them.
+func Scaffolds(lang string) []Scaffold {
+	t := scaffoldTextFor(lang)
 	return []Scaffold{
-		{
-			Nome:   "arquitetura.md" + SufixoTemplate,
-			Porque: "COMO o sistema é montado — o C4: contexto, contêineres, e um nível 3 por contêiner",
-			Corpo: `# Arquitetura
-
-{{/* O C4 COMO O C4 É.
-
-     A regra central do modelo é que cada nível AMPLIA UMA CAIXA do anterior. O nível 3
-     é o zoom de UM contêiner — não do sistema. Um diagrama de componentes misturando o
-     app, a API e a infraestrutura não é nível 3 de coisa nenhuma: é a falha que o C4
-     existe para evitar, um desenho só com tudo dentro.
-
-     CONTÊINER é o que executa ou armazena dado — aplicação, serviço, BANCO, fila,
-     sistema de arquivos. Não é sinônimo de "processo que escrevemos": o banco é
-     contêiner, aparece no nível 2 com o protocolo da conversa, e sendo de terceiro não
-     ganha nível 3 — não temos componentes lá dentro.
-
-     MERMAID, e não imagem: o GitHub o renderiza nativamente. Um PNG exportado de uma
-     ferramenta de desenho ficaria fora do controle de versão útil — o diff não diz o
-     que mudou, e o arquivo-fonte acaba noutro lugar, ou some.
-
-     Os níveis 1 e 2 são escritos à mão AQUI: descrevem o sistema inteiro, e nenhuma
-     spec sozinha os conhece. O nível 3 vem dos contêineres declarados na Estrutura. */}}
-
-## Nível 1 — Contexto
-
-O sistema como uma caixa só: quem o usa, e com que sistemas externos ele fala.
-
-` + cerca("mermaid") + `
-graph TB
-    user["Pessoa<br/><small>quem usa o sistema</small>"]
-    sys["O SISTEMA<br/><small>o que este repositório constrói</small>"]
-    ext["Sistema externo<br/><small>de onde vêm os dados</small>"]
-
-    user -->|"usa"| sys
-    sys -->|"consulta"| ext
-
-    classDef pessoa fill:#08427b,stroke:#052e56,color:#fff
-    classDef sistema fill:#1168bd,stroke:#0b4884,color:#fff
-    classDef externo fill:#999,stroke:#6b6b6b,color:#fff
-    class user pessoa
-    class sys sistema
-    class ext externo
-` + cerca("") + `
-
-<!-- FORA deste nível: como o sistema é montado por dentro. Isso é o nível 2. -->
-
-## Nível 2 — Contêineres
-
-O zoom da caixa "O SISTEMA": o que roda ou armazena separado, e **com que protocolo cada
-par conversa**. O protocolo é o que diz o que acontece quando a conversa falha.
-
-{{/* As caixas vêm da declaração de contêineres da Estrutura; o BANCO está entre elas,
-     porque contêiner é o que executa OU ARMAZENA dado. As setas e os protocolos vêm de
-     "talks", na mesma declaração. */}}
-` + cerca("mermaid") + `
-graph TB
-    user["Pessoa"]
-
-    subgraph sistema["O SISTEMA"]
-{{range containers}}{{if not .External}}        {{.ID}}["{{.Name}}<br/><small>{{.Description}}</small>"]
-{{end}}{{end}}    end
-
-{{range containers}}{{if .External}}    {{.ID}}["{{.Name}}<br/><small>{{.Description}}</small>"]
-{{end}}{{end}}
-{{range containers}}{{$de := .ID}}{{range .Talks}}    {{$de}} -->|"{{.Protocol}}{{if .Why}}<br/>{{.Why}}{{end}}"| {{mermaidID .To}}
-{{end}}{{end}}
-    classDef pessoa fill:#08427b,stroke:#052e56,color:#fff
-    classDef conteiner fill:#438dd5,stroke:#2e6295,color:#fff
-    classDef externo fill:#999,stroke:#6b6b6b,color:#fff
-    class user pessoa
-{{range containers}}{{if .External}}    class {{.ID}} externo
-{{else}}    class {{.ID}} conteiner
-{{end}}{{end}}
-` + cerca("") + `
-{{if not containers}}
-> **Nenhum contêiner declarado.** O nível 2 e os de nível 3 saem vazios até a Estrutura
-> declarar o que roda separado. Ver o bloco de contêineres no ` + crase + `anchors.yaml` + crase + `.
-{{end}}
-
-<!-- FORA deste nível: as peças DENTRO de cada contêiner. Isso é o nível 3 — e há um
-     diagrama por contêiner, porque cada nível amplia UMA caixa do anterior. -->
-
-## Nível 3 — Componentes
-
-Um diagrama **por contêiner**: cada um amplia uma caixa do nível 2. Os externos não
-aparecem aqui — não temos componentes dentro deles, e desenhá-los afirmaria um
-conhecimento que não temos.
-{{range internalContainers}}
-### {{.Name}}
-
-{{.Description}}
-
-{{if .Units}}
-` + cerca("mermaid") + `
-graph TB
-    subgraph {{.ID}}["{{.Name}}"]
-{{range .Layers}}        subgraph {{mermaidID .}}["{{.}}"]
-{{range $u := specs (printf "layer=%s" .)}}            {{mermaidID $u.Code}}["{{$u.Code}}<br/><small>{{$u.Titulo}}</small>"]
-{{else}}            {{mermaidID .}}_nospec["{{layerFiles .}} arquivo(s), nenhuma spec"]
-{{end}}        end
-{{end}}    end
-` + cerca("") + `
-
-{{range .Layers}}
-#### {{.}}
-
-{{range specs (printf "layer=%s" .)}}- **{{.Code}}** — {{.Titulo}}
-{{else}}_Nenhuma spec nesta camada — {{layerFiles .}} arquivo(s) regido(s)._
-{{end}}{{else}}
-_Este contêiner não declara camadas._
-{{end}}
-{{else}}{{with .Layers}}
-_Nenhuma camada deste contêiner tem spec ainda:_
-
-{{range .}}- **{{.}}** — {{layerFiles .}} arquivo(s)
-{{end}}{{else}}
-_Nenhuma camada declara unidade que rode aqui. Ou o contêiner não executa código deste
-repositório, ou falta ligá-lo a uma camada em ` + "`containers.layers`" + `._
-{{end}}{{end}}
-{{end}}
-{{with orphanLayers}}
-### Camadas fora de todo contêiner
-
-Estas camadas existem no projeto e nenhum contêiner as declara — não aparecem em diagrama
-de nível 3 nenhum. Ou falta declará-las, ou elas não rodam em lugar nenhum:
-
-{{range .}}- ` + crase + `{{.}}` + crase + `
-{{end}}{{end}}
-
-## Nível 4 — Código
-
-<!-- Só onde houver algo não óbvio. O mapa que o Anchors mantém já é a versão de
-     máquina, e repeti-lo aqui seria duplicação sem leitor. -->
-
-_Nada a destacar por enquanto._
-`,
-		},
-		{
-			Nome:   "comportamento.md" + SufixoTemplate,
-			Porque: "O QUE ACONTECE — índice dos cenários, que levam ao conteúdo na página da camada",
-			Corpo: `# Comportamento
-
-Todos os cenários do sistema. Cada um leva à unidade que o define.
-
-Um cenário descreve o que o sistema faz numa situação — vem da feature, e é o mesmo que o
-teste prova.
-{{range $l := layers}}
-## {{$l}}
-{{range allScenarios (printf "layer=%s" $l)}}
-- [{{.Titulo}}]({{scenarioLink $l .}}) ` + crase + `{{.Code}}` + crase + `
-{{else}}
-_Nenhum cenário ainda: as unidades desta camada não têm feature._
-{{end}}{{end}}
-`,
-		},
-		{
-			Nome:   "regras.md" + SufixoTemplate,
-			Porque: "AS REGRAS de todo o sistema — índice que atravessa as camadas",
-			Corpo: `# Regras
-
-Todas as regras do sistema, de todas as unidades. Cada uma leva ao texto na página da sua
-camada.
-
-Para ver uma camada inteira de uma vez — com a visão geral de cada unidade e os cenários —
-abra a página dela em ` + crase + `camadas/` + crase + `.
-{{range $l := layers}}
-## {{$l}}
-{{range $s := specs (printf "layer=%s" $l)}}
-### [{{$s.Code}} — {{$s.Titulo}}]({{layerPage $l}}#{{anchor (printf "%s — %s" $s.Code $s.Titulo)}})
-{{range rules $s}}
-- [{{.Code}} — {{.Titulo}}]({{ruleLink $l $s .}})
-{{end}}{{end}}{{end}}
-`,
-		},
+		{Nome: t["arch.file"] + ".md" + SufixoTemplate, Porque: t["arch.why"], Corpo: t.fill(archBody)},
+		{Nome: t["behavior.file"] + ".md" + SufixoTemplate, Porque: t["behavior.why"], Corpo: t.fill(behaviorBody)},
+		{Nome: t["rules.file"] + ".md" + SufixoTemplate, Porque: t["rules.why"], Corpo: t.fill(rulesBody)},
 	}
 }
 
@@ -243,64 +83,406 @@ abra a página dela em ` + crase + `camadas/` + crase + `.
 //
 // Uma por camada, e não uma página com todas: é a que alguém abre para saber o que existe
 // em `screens`, e uma página única faria essa pessoa rolar por tudo o que não é screen.
-func ScaffoldLayer(camada string) Scaffold {
+func ScaffoldLayer(camada, lang string) Scaffold {
+	t := scaffoldTextFor(lang)
 	f := `"layer=` + camada + `"`
+	body := strings.NewReplacer("«filter»", f, "«layer»", camada).Replace(t.fill(layerBody))
 	return Scaffold{
-		Nome:   "camadas/" + camada + ".md" + SufixoTemplate,
-		Porque: "o que existe na camada `" + camada + "`, com o conteúdo de cada unidade",
-		Corpo: `# Camada: ` + camada + `
+		Nome:   LayerDir(lang) + "/" + camada + ".md" + SufixoTemplate,
+		Porque: strings.ReplaceAll(t["layer.why"], "«layer»", camada),
+		Corpo:  body,
+	}
+}
 
-{{/* O FORMATO vem do LAYOUT, decidido uma vez no ` + crase + `docs build` + crase + ` e igual para todas
-     as páginas — esta, o índice de regras e o de comportamento.
+// scaffoldText is the visible text of the skeleton in one language, by key.
+type scaffoldText map[string]string
 
-     Não há limiar escrito aqui, de propósito. A primeira versão deixava cada template
-     escolher o seu, e o resultado foi medido: 483 de 812 links quebrados, porque a
-     página resumia por um critério e os links eram montados por outro.
+// fill puts the language's texts into a skeleton: `«key»` becomes the text, and the
+// section titles become the language's titles from the section catalog.
+func (t scaffoldText) fill(skeleton string) string {
+	out := skeleton
+	// Until nothing changes: a text may carry another key (`«layers.dir»` inside the
+	// rules intro), and map order decides which is replaced first.
+	for prev := ""; prev != out; {
+		prev = out
+		for k, v := range t {
+			out = strings.ReplaceAll(out, "«"+k+"»", v)
+		}
+	}
+	return strings.NewReplacer("``", crase, "«fence-mermaid»", cerca("mermaid"), "«fence-gherkin»", cerca("gherkin"), "«fence»", cerca("")).Replace(out)
+}
 
-     Para mudar o corte deste projeto:  anchors docs build --max-units 30
+// scaffoldTextFor is the table of a language, English for one with no table. The section
+// titles come from the catalog the gates use, so the page asks for the sections the
+// project's specs write.
+func scaffoldTextFor(lang string) scaffoldText {
+	base := scaffoldTexts["en"]
+	l := "en"
+	switch {
+	case strings.HasPrefix(lang, "pt"):
+		l = "pt-BR"
+	case strings.HasPrefix(lang, "es"):
+		l = "es"
+	}
+	t := scaffoldText{}
+	for k, v := range base {
+		t[k] = v
+	}
+	for k, v := range scaffoldTexts[l] {
+		t[k] = v
+	}
+	for _, k := range []string{"overview", "rules", "effects", "invariants"} {
+		t["section."+k] = i18n.TIn(l, "section.title."+k)
+	}
+	t["layers.dir"] = LayerDir(l)
+	return t
+}
 
-     O que muda é o que CABE na página, nunca em quantos arquivos a camada se parte:
-     dividir ao cruzar um limiar quebraria todo link externo no dia em que a unidade
-     seguinte entrasse. */}}
-{{if big ` + f + `}}
-> {{layout.Describe (size ` + f + `)}}
+const archBody = `# «arch.title»
 
-{{range specs ` + f + `}}
+{{/* THE C4 AS THE C4 IS.
+
+     The model's central rule is that each level ZOOMS INTO ONE BOX of the previous one.
+     Level 3 is the zoom of ONE container — not of the system. A component diagram mixing
+     the app, the API and the infrastructure is level 3 of nothing: it is the failure the
+     C4 exists to avoid, one drawing with everything inside.
+
+     A CONTAINER is what runs or stores data — application, service, DATABASE, queue, file
+     system. It is not a synonym of "a process we wrote": the database is a container, it
+     shows at level 2 with the protocol of the conversation, and being a third party's it
+     gets no level 3 — we have no components inside it.
+
+     MERMAID, not an image: GitHub renders it natively. A PNG exported from a drawing tool
+     would sit outside useful version control — the diff does not say what changed, and the
+     source file ends up elsewhere, or is lost.
+
+     Levels 1 and 2 are written by hand HERE: they describe the whole system, and no spec
+     alone knows them. Level 3 comes from the containers declared in the configuration. */}}
+
+## «arch.l1»
+
+«arch.l1.desc»
+
+«fence-mermaid»
+graph TB
+    user["«arch.person»<br/><small>«arch.person.desc»</small>"]
+    sys["«arch.system»<br/><small>«arch.system.desc»</small>"]
+    ext["«arch.external»<br/><small>«arch.external.desc»</small>"]
+
+    user -->|"«arch.uses»"| sys
+    sys -->|"«arch.queries»"| ext
+
+    classDef person fill:#08427b,stroke:#052e56,color:#fff
+    classDef system fill:#1168bd,stroke:#0b4884,color:#fff
+    classDef external fill:#999,stroke:#6b6b6b,color:#fff
+    class user person
+    class sys system
+    class ext external
+«fence»
+
+<!-- «arch.l1.out» -->
+
+## «arch.l2»
+
+«arch.l2.desc»
+
+{{/* The boxes come from the containers declared in the configuration; the DATABASE is
+     among them, because a container is what runs OR STORES data. The arrows and the
+     protocols come from "talks", in the same declaration. */}}
+«fence-mermaid»
+graph TB
+    user["«arch.person»"]
+
+    subgraph sistema["«arch.system»"]
+{{range containers}}{{if not .External}}        {{.ID}}["{{.Name}}<br/><small>{{.Description}}</small>"]
+{{end}}{{end}}    end
+
+{{range containers}}{{if .External}}    {{.ID}}["{{.Name}}<br/><small>{{.Description}}</small>"]
+{{end}}{{end}}
+{{range containers}}{{$de := .ID}}{{range .Talks}}    {{$de}} -->|"{{.Protocol}}{{if .Why}}<br/>{{.Why}}{{end}}"| {{mermaidID .To}}
+{{end}}{{end}}
+    classDef person fill:#08427b,stroke:#052e56,color:#fff
+    classDef container fill:#438dd5,stroke:#2e6295,color:#fff
+    classDef external fill:#999,stroke:#6b6b6b,color:#fff
+    class user person
+{{range containers}}{{if .External}}    class {{.ID}} external
+{{else}}    class {{.ID}} container
+{{end}}{{end}}
+«fence»
+{{if not containers}}
+> «arch.no_containers»
+{{end}}
+
+<!-- «arch.l2.out» -->
+
+## «arch.l3»
+
+«arch.l3.desc»
+{{range internalContainers}}
+### {{.Name}}
+
+{{.Description}}
+
+{{if .Units}}
+«fence-mermaid»
+graph TB
+    subgraph {{.ID}}["{{.Name}}"]
+{{range .Layers}}        subgraph {{mermaidID .}}["{{.}}"]
+{{range $u := specs (printf "layer=%s" .)}}            {{mermaidID $u.Code}}["{{$u.Code}}<br/><small>{{$u.Titulo}}</small>"]
+{{else}}            {{mermaidID .}}_nospec["{{layerFiles .}} «arch.files_no_spec»"]
+{{end}}        end
+{{end}}    end
+«fence»
+
+{{range .Layers}}
+#### {{.}}
+
+{{range specs (printf "layer=%s" .)}}- **{{.Code}}** — {{.Titulo}}
+{{else}}_«arch.layer_no_spec.a» {{layerFiles .}} «arch.layer_no_spec.b»_
+{{end}}{{else}}
+_«arch.container_no_layers»_
+{{end}}
+{{else}}{{with .Layers}}
+_«arch.no_layer_has_spec»_
+
+{{range .}}- **{{.}}** — {{layerFiles .}} «arch.files»
+{{end}}{{else}}
+_«arch.no_unit_runs_here»_
+{{end}}{{end}}
+{{end}}
+{{with orphanLayers}}
+### «arch.orphans»
+
+«arch.orphans.desc»
+
+{{range .}}- ` + "``" + `{{.}}` + "``" + `
+{{end}}{{end}}
+
+## «arch.l4»
+
+<!-- «arch.l4.note» -->
+
+_«arch.l4.empty»_
+`
+
+const behaviorBody = `# «behavior.title»
+
+«behavior.intro»
+{{range $l := layers}}
+## {{$l}}
+{{range allScenarios (printf "layer=%s" $l)}}
+- [{{.Titulo}}]({{scenarioLink $l .}}) ` + "``" + `{{.Code}}` + "``" + `
+{{else}}
+_«behavior.none»_
+{{end}}{{end}}
+`
+
+const rulesBody = `# «rules.title»
+
+«rules.intro»
+{{range $l := layers}}
+## {{$l}}
+{{range $s := specs (printf "layer=%s" $l)}}
+### [{{$s.Code}} — {{$s.Titulo}}]({{layerPage $l}}#{{anchor (printf "%s — %s" $s.Code $s.Titulo)}})
+{{range rules $s}}
+- [{{.Code}} — {{.Titulo}}]({{ruleLink $l $s .}})
+{{end}}{{end}}{{end}}
+`
+
+const layerBody = `# «layer.title» «layer»
+
+{{/* The FORMAT comes from the LAYOUT, decided once in ` + "``" + `docs build` + "``" + ` and the same for every
+     page — this one, the rules index and the behaviour index.
+
+     There is no threshold written here, on purpose. The first version let each template
+     pick its own, and the result was measured: 483 of 812 links broken, because the page
+     summarised by one criterion and the links were built by another.
+
+     To change this project's cut:  anchors docs build --max-units 30
+
+     What changes is what FITS on the page, never how many files the layer splits into:
+     splitting on crossing a threshold would break every external link the day the next
+     unit came in. */}}
+{{if big «filter»}}
+> {{layout.Describe (size «filter»)}}
+
+{{range specs «filter»}}
 ## {{.Code}} — {{.Titulo}}
 
-{{section . "Visão Geral"}}
+{{section . "«section.overview»"}}
 
 {{range rules .}}
 - **{{.Code}}** — {{.Titulo}}
 {{end}}
 {{end}}
 {{else}}
-{{range specs ` + f + `}}
+{{range specs «filter»}}
 ## {{.Code}} — {{.Titulo}}
 
-{{section . "Visão Geral"}}
+{{section . "«section.overview»"}}
 
-{{/* As seções Regras e Invariantes trazem os próprios headings de regra, e por isso
-     NÃO ganham um rótulo aqui: um heading "Regras" seguido dos headings das regras as
-     põe no mesmo nível, e o índice do documento lista o rótulo como irmão do que ele
-     contém. */}}
-{{section . "Regras"}}
+{{/* The rule sections carry their own rule headings, and so get NO label here: a
+     heading over the rule headings puts them at the same level, and the document's table
+     of contents lists the label as a sibling of what it holds. Both spec formats are
+     asked for — the older one's rules section, the current one's effects — and a
+     section the spec does not have is empty. */}}
+{{section . "«section.rules»"}}
 
-{{section . "Invariantes"}}
-{{/* Cada cenário é um HEADING, e não um item de lista: é para ele que o índice de
-     comportamento aponta, e âncora só existe onde há heading. Um índice cujo link não
-     resolve é pior que não ter índice — ele parece funcionar. */}}
+{{section . "«section.effects»"}}
+
+{{section . "«section.invariants»"}}
+{{/* Each scenario is a HEADING, not a list item: it is what the behaviour index points
+     at, and an anchor only exists where there is a heading. An index whose link does not
+     resolve is worse than no index — it looks like it works. */}}
 {{range scenarios .}}
 #### {{.Code}} — {{.Titulo}}
 
-` + cerca("gherkin") + `
+«fence-gherkin»
 {{.Corpo}}
-` + cerca("") + `
+«fence»
 {{end}}
 {{end}}
 {{end}}
-`,
-	}
+`
+
+// scaffoldTexts are the visible texts of the skeleton, per language. English is the base:
+// a key a language lacks falls back to it.
+var scaffoldTexts = map[string]scaffoldText{
+	"en": {
+		"arch.file":                "architecture",
+		"arch.why":                 "HOW the system is built — the C4: context, containers, and one level 3 per container",
+		"arch.title":               "Architecture",
+		"arch.l1":                  "Level 1 — Context",
+		"arch.l1.desc":             "The system as a single box: who uses it, and which external systems it talks to.",
+		"arch.person":              "Person",
+		"arch.person.desc":         "who uses the system",
+		"arch.system":              "THE SYSTEM",
+		"arch.system.desc":         "what this repository builds",
+		"arch.external":            "External system",
+		"arch.external.desc":       "where the data comes from",
+		"arch.uses":                "uses",
+		"arch.queries":             "queries",
+		"arch.l1.out":              "OUTSIDE this level: how the system is built inside. That is level 2.",
+		"arch.l2":                  "Level 2 — Containers",
+		"arch.l2.desc":             "The zoom into the box \"THE SYSTEM\": what runs or stores data apart, and **which protocol each\npair talks**. The protocol is what says what happens when the conversation fails.",
+		"arch.no_containers":       "**No container declared.** Level 2 and the level 3 ones stay empty until the configuration\n> declares what runs apart. See the containers block in ``anchors.yaml``.",
+		"arch.l2.out":              "OUTSIDE this level: the pieces INSIDE each container. That is level 3 — and there is one\n     diagram per container, because each level zooms into ONE box of the previous one.",
+		"arch.l3":                  "Level 3 — Components",
+		"arch.l3.desc":             "One diagram **per container**: each zooms into one box of level 2. External containers do\nnot show here — we have no components inside them, and drawing them would claim a\nknowledge we do not have.",
+		"arch.files_no_spec":       "file(s), no spec",
+		"arch.layer_no_spec.a":     "No spec in this layer —",
+		"arch.layer_no_spec.b":     "governed file(s).",
+		"arch.container_no_layers": "This container declares no layer.",
+		"arch.no_layer_has_spec":   "No layer of this container has a spec yet:",
+		"arch.files":               "file(s)",
+		"arch.no_unit_runs_here":   "No layer declares a unit that runs here. Either the container runs no code of this\nrepository, or it still has to be tied to a layer in ``containers.layers``.",
+		"arch.orphans":             "Layers outside every container",
+		"arch.orphans.desc":        "These layers exist in the project and no container declares them — they show in no level 3\ndiagram. Either they still have to be declared, or they run nowhere:",
+		"arch.l4":                  "Level 4 — Code",
+		"arch.l4.note":             "Only where there is something not obvious. The map Anchors keeps is already the machine\n     version, and repeating it here would be duplication with no reader.",
+		"arch.l4.empty":            "Nothing to highlight for now.",
+		"behavior.file":            "behavior",
+		"behavior.why":             "WHAT HAPPENS — the index of the scenarios, which lead to the content on the layer's page",
+		"behavior.title":           "Behavior",
+		"behavior.intro":           "Every scenario of the system. Each one leads to the unit that defines it.\n\nA scenario describes what the system does in a situation — it comes from the feature, and it\nis what the test proves.",
+		"behavior.none":            "No scenario yet: the units of this layer have no feature.",
+		"rules.file":               "rules",
+		"rules.why":                "THE RULES of the whole system — an index across the layers",
+		"rules.title":              "Rules",
+		"rules.intro":              "Every rule of the system, from every unit. Each one leads to its text on its layer's page.\n\nTo see a whole layer at once — with each unit's overview and its scenarios — open its page\nin ``«layers.dir»/``.",
+		"layer.why":                "what exists in the layer `«layer»`, with the content of each unit",
+		"layer.title":              "Layer:",
+	},
+	"pt-BR": {
+		"arch.file":                "arquitetura",
+		"arch.why":                 "COMO o sistema é montado — o C4: contexto, contêineres, e um nível 3 por contêiner",
+		"arch.title":               "Arquitetura",
+		"arch.l1":                  "Nível 1 — Contexto",
+		"arch.l1.desc":             "O sistema como uma caixa só: quem o usa, e com que sistemas externos ele fala.",
+		"arch.person":              "Pessoa",
+		"arch.person.desc":         "quem usa o sistema",
+		"arch.system":              "O SISTEMA",
+		"arch.system.desc":         "o que este repositório constrói",
+		"arch.external":            "Sistema externo",
+		"arch.external.desc":       "de onde vêm os dados",
+		"arch.uses":                "usa",
+		"arch.queries":             "consulta",
+		"arch.l1.out":              "FORA deste nível: como o sistema é montado por dentro. Isso é o nível 2.",
+		"arch.l2":                  "Nível 2 — Contêineres",
+		"arch.l2.desc":             "O zoom da caixa \"O SISTEMA\": o que roda ou armazena separado, e **com que protocolo cada\npar conversa**. O protocolo é o que diz o que acontece quando a conversa falha.",
+		"arch.no_containers":       "**Nenhum contêiner declarado.** O nível 2 e os de nível 3 saem vazios até a Estrutura\n> declarar o que roda separado. Ver o bloco de contêineres no ``anchors.yaml``.",
+		"arch.l2.out":              "FORA deste nível: as peças DENTRO de cada contêiner. Isso é o nível 3 — e há um\n     diagrama por contêiner, porque cada nível amplia UMA caixa do anterior.",
+		"arch.l3":                  "Nível 3 — Componentes",
+		"arch.l3.desc":             "Um diagrama **por contêiner**: cada um amplia uma caixa do nível 2. Os externos não\naparecem aqui — não temos componentes dentro deles, e desenhá-los afirmaria um\nconhecimento que não temos.",
+		"arch.files_no_spec":       "arquivo(s), nenhuma spec",
+		"arch.layer_no_spec.a":     "Nenhuma spec nesta camada —",
+		"arch.layer_no_spec.b":     "arquivo(s) regido(s).",
+		"arch.container_no_layers": "Este contêiner não declara camadas.",
+		"arch.no_layer_has_spec":   "Nenhuma camada deste contêiner tem spec ainda:",
+		"arch.files":               "arquivo(s)",
+		"arch.no_unit_runs_here":   "Nenhuma camada declara unidade que rode aqui. Ou o contêiner não executa código deste\nrepositório, ou falta ligá-lo a uma camada em ``containers.layers``.",
+		"arch.orphans":             "Camadas fora de todo contêiner",
+		"arch.orphans.desc":        "Estas camadas existem no projeto e nenhum contêiner as declara — não aparecem em diagrama\nde nível 3 nenhum. Ou falta declará-las, ou elas não rodam em lugar nenhum:",
+		"arch.l4":                  "Nível 4 — Código",
+		"arch.l4.note":             "Só onde houver algo não óbvio. O mapa que o Anchors mantém já é a versão de\n     máquina, e repeti-lo aqui seria duplicação sem leitor.",
+		"arch.l4.empty":            "Nada a destacar por enquanto.",
+		"behavior.file":            "comportamento",
+		"behavior.why":             "O QUE ACONTECE — índice dos cenários, que levam ao conteúdo na página da camada",
+		"behavior.title":           "Comportamento",
+		"behavior.intro":           "Todos os cenários do sistema. Cada um leva à unidade que o define.\n\nUm cenário descreve o que o sistema faz numa situação — vem da feature, e é o mesmo que o\nteste prova.",
+		"behavior.none":            "Nenhum cenário ainda: as unidades desta camada não têm feature.",
+		"rules.file":               "regras",
+		"rules.why":                "AS REGRAS de todo o sistema — índice que atravessa as camadas",
+		"rules.title":              "Regras",
+		"rules.intro":              "Todas as regras do sistema, de todas as unidades. Cada uma leva ao texto na página da sua\ncamada.\n\nPara ver uma camada inteira de uma vez — com a visão geral de cada unidade e os cenários —\nabra a página dela em ``«layers.dir»/``.",
+		"layer.why":                "o que existe na camada `«layer»`, com o conteúdo de cada unidade",
+		"layer.title":              "Camada:",
+	},
+	"es": {
+		"arch.file":                "arquitectura",
+		"arch.why":                 "CÓMO está montado el sistema — el C4: contexto, contenedores, y un nivel 3 por contenedor",
+		"arch.title":               "Arquitectura",
+		"arch.l1":                  "Nivel 1 — Contexto",
+		"arch.l1.desc":             "El sistema como una sola caja: quién lo usa, y con qué sistemas externos habla.",
+		"arch.person":              "Persona",
+		"arch.person.desc":         "quien usa el sistema",
+		"arch.system":              "EL SISTEMA",
+		"arch.system.desc":         "lo que este repositorio construye",
+		"arch.external":            "Sistema externo",
+		"arch.external.desc":       "de donde vienen los datos",
+		"arch.uses":                "usa",
+		"arch.queries":             "consulta",
+		"arch.l1.out":              "FUERA de este nivel: cómo está montado el sistema por dentro. Eso es el nivel 2.",
+		"arch.l2":                  "Nivel 2 — Contenedores",
+		"arch.l2.desc":             "El zoom de la caja \"EL SISTEMA\": lo que corre o almacena por separado, y **con qué protocolo\nconversa cada par**. El protocolo es lo que dice qué pasa cuando la conversación falla.",
+		"arch.no_containers":       "**Ningún contenedor declarado.** El nivel 2 y los de nivel 3 salen vacíos hasta que la\n> configuración declare lo que corre por separado. Ver el bloque de contenedores en ``anchors.yaml``.",
+		"arch.l2.out":              "FUERA de este nivel: las piezas DENTRO de cada contenedor. Eso es el nivel 3 — y hay un\n     diagrama por contenedor, porque cada nivel amplía UNA caja del anterior.",
+		"arch.l3":                  "Nivel 3 — Componentes",
+		"arch.l3.desc":             "Un diagrama **por contenedor**: cada uno amplía una caja del nivel 2. Los externos no\naparecen aquí — no tenemos componentes dentro de ellos, y dibujarlos afirmaría un\nconocimiento que no tenemos.",
+		"arch.files_no_spec":       "archivo(s), ninguna spec",
+		"arch.layer_no_spec.a":     "Ninguna spec en esta capa —",
+		"arch.layer_no_spec.b":     "archivo(s) regido(s).",
+		"arch.container_no_layers": "Este contenedor no declara capas.",
+		"arch.no_layer_has_spec":   "Ninguna capa de este contenedor tiene spec todavía:",
+		"arch.files":               "archivo(s)",
+		"arch.no_unit_runs_here":   "Ninguna capa declara una unidad que corra aquí. O el contenedor no ejecuta código de este\nrepositorio, o falta ligarlo a una capa en ``containers.layers``.",
+		"arch.orphans":             "Capas fuera de todo contenedor",
+		"arch.orphans.desc":        "Estas capas existen en el proyecto y ningún contenedor las declara — no aparecen en ningún\ndiagrama de nivel 3. O falta declararlas, o no corren en ningún lugar:",
+		"arch.l4":                  "Nivel 4 — Código",
+		"arch.l4.note":             "Solo donde haya algo no obvio. El mapa que Anchors mantiene ya es la versión de\n     máquina, y repetirlo aquí sería duplicación sin lector.",
+		"arch.l4.empty":            "Nada que destacar por ahora.",
+		"behavior.file":            "comportamiento",
+		"behavior.why":             "LO QUE PASA — índice de los escenarios, que llevan al contenido en la página de la capa",
+		"behavior.title":           "Comportamiento",
+		"behavior.intro":           "Todos los escenarios del sistema. Cada uno lleva a la unidad que lo define.\n\nUn escenario describe lo que el sistema hace en una situación — viene de la feature, y es lo\nmismo que el test prueba.",
+		"behavior.none":            "Ningún escenario todavía: las unidades de esta capa no tienen feature.",
+		"rules.file":               "reglas",
+		"rules.why":                "LAS REGLAS de todo el sistema — índice que atraviesa las capas",
+		"rules.title":              "Reglas",
+		"rules.intro":              "Todas las reglas del sistema, de todas las unidades. Cada una lleva al texto en la página de\nsu capa.\n\nPara ver una capa entera de una vez — con la visión general de cada unidad y los escenarios —\nabre su página en ``«layers.dir»/``.",
+		"layer.why":                "lo que existe en la capa `«layer»`, con el contenido de cada unidad",
+		"layer.title":              "Capa:",
+	},
 }
 
 // InitScaffolds escreve os templates iniciais, inclusive uma página por camada existente.
@@ -308,9 +490,9 @@ func ScaffoldLayer(camada string) Scaffold {
 // NÃO sobrescreve sem `--force`: um template já editado carrega a moldura que o time
 // escreveu, e refazê-la a cada `init` seria apagar exatamente a parte que não é gerada.
 func (c *Compiler) InitScaffolds(force bool) (escritos, pulados []string, err error) {
-	todos := Scaffolds()
+	todos := Scaffolds(c.lang())
 	for _, l := range c.fnLayers() {
-		todos = append(todos, ScaffoldLayer(l))
+		todos = append(todos, ScaffoldLayer(l, c.lang()))
 	}
 	for _, s := range todos {
 		destino := filepath.Join(c.Root, Dir, s.Nome)

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCSCD
-  updated_at: 2026-09-26
+  updated_at: 2026-10-02
   layer: apoio
 -->
 # DocScaffolds — the starting templates `anchors docs init` proposes, one page per question and per layer
@@ -29,12 +29,13 @@ comment saying what question the page answers, where whoever edits it will read 
 | Effect | Description |
 | --- | --- |
 | `DCSCD-B01` | `Scaffolds`: There are three fixed page templates — architecture, behaviour and rules — each with a template name, a body and a sentence saying what the page answers. |
-| `DCSCD-B02` | `ScaffoldLayer`: A layer's page template is named after the layer inside the `camadas/` folder. |
+| `DCSCD-B02` | `ScaffoldLayer`: A layer's page template is named after the layer inside the layer folder of the project's language (`LayerDir`, DCLND-B09). |
 | `DCSCD-B03` | Init writes the three fixed templates plus one layer page for each layer that has specs, each one opening with a template comment carrying the sentence of what the page answers. |
 | `DCSCD-B04` | An existing template is not rewritten unless forced; it is reported as skipped. Forced, it is rewritten. |
 | `DCSCD-B05` | On a small layer, the layer page carries each scenario's steps under a heading of its own, and the behaviour index links to that heading. |
 | `DCSCD-B06` | On a big layer, the layer page carries the layout's summary sentence and each unit's overview and rule list, without the scenarios' steps. |
 | `DCSCD-B07` | The architecture page shows the protocol of every declared conversation, lists external containers at level 2, and gives a level 3 section to each internal container only. |
+| `DCSCD-B09` | The templates are in the project's language: their names (`architecture`, `arquitetura`, `arquitectura`…), what they show — headings, paragraphs, diagram labels, empty-state notes — and the section titles the layer page asks for, which are the language's titles in the section catalog; a language with no table gets English, and no template keeps an unfilled text. The notes to whoever edits a template are in English. |
 | `DCSCD-B08` | When no container is declared, the architecture page says so instead of leaving empty diagrams. |
 
 ## Domain

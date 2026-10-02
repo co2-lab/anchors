@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DCSCD
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @DCSCD
@@ -17,8 +17,8 @@ Feature: DocScaffolds — the starting templates `anchors docs init` proposes, o
   @DCSCD-B02 @unit-level
   Scenario: A layer's page template is named after the layer
     Given the layer "infra"
-    When its page scaffold is built
-    Then its name is "camadas/infra.md.tmpl"
+    When its page scaffold is built in English
+    Then its name is "layers/infra.md.tmpl"
 
   @DCSCD-B03 @unit-level
   Scenario: Init writes the fixed templates and one page per layer, each opening with its purpose
@@ -78,3 +78,11 @@ Feature: DocScaffolds — the starting templates `anchors docs init` proposes, o
     Given a project root where a file already occupies the templates folder's name
     When init runs
     Then it returns an error and reports no template written
+
+  @DCSCD-B09 @unit-level
+  Scenario: The templates are named and written in the project's language
+    Given the languages en, pt-BR and es
+    When the scaffolds are built in each
+    Then they are named architecture, behavior and rules; arquitetura, comportamento and regras; arquitectura, comportamiento and reglas
+    And the architecture page opens with the language's heading, and the layer page lives in layers/, camadas/ or capas/ and asks for the language's overview title
+    And no template keeps an unfilled text, and a language with no table gets English

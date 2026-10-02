@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DCLND
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @DCLND
@@ -17,15 +17,16 @@ Feature: DocLinks — the anchors, links, sizes and layer arrows the documentati
   Scenario: A rule's link points at the rule on a small layer and at its unit on a big one
     Given the rule "GLCGL-B01 — r" of the unit "GLCGL — GoLive" in layer "infra"
     When its link is built with the layer small and then big
-    Then the first ends in "camadas/infra.md#glcgl-b01--r"
+    Then the first ends in "layers/infra.md#glcgl-b01--r"
     And the second ends in the anchor of the unit's heading
+    And a rule written as a table row links to the unit's heading even on the small layer
 
   @DCLND-B03 @unit-level
   Scenario: A scenario's link falls back to the unit, then to the bare page, on a big layer
     Given a scenario of the unit "GLCGL" and a scenario whose spec is unknown, in layer "infra"
     When their links are built with the layer small and then big
     Then on the small layer each points at its own scenario heading
-    And on the big layer the first points at the unit's heading and the second at "camadas/infra.md"
+    And on the big layer the first points at the unit's heading and the second at "layers/infra.md"
 
   @DCLND-B04 @unit-level
   Scenario: A selection's size counts units, rules, lines and scenarios, and is remembered per selection
@@ -69,3 +70,11 @@ Feature: DocLinks — the anchors, links, sizes and layer arrows the documentati
     Given a layout whose cut-off is changed after the compiler was created
     When a template asks whether a selection is big
     Then the answer follows the compiler's layout
+
+  @DCLND-B09 @unit-level
+  Scenario: A layer's page is in the folder of its template, or the project language's folder
+    Given a project with no template for the layer infra and no language
+    When the page of infra is asked
+    Then it is layers/infra.md
+    And with the template doct/paginas/infra.md.tmpl it is paginas/infra.md
+    And the language folders are camadas for pt-BR, capas for es and layers for en

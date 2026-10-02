@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: RPSCR
-#   updated_at: 2026-09-29
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @RPSCR
@@ -262,3 +262,10 @@ Feature: RepoScan — the repository read as text: which files exist, of which l
     Given a committed file deleted from the tree and another edited, both after the index reader was made
     When each is read through the index reader
     Then both read as the index has them
+
+  @RPSCR-B38 @unit-level
+  Scenario: A rule is defined in any of the three forms
+    Given the lines "### ABCDE-B01 — x", "| `ABCDE-B02` | y |", "- **ABCDE-B03** — z" and "as ABCDE-B04 says"
+    When each is matched as a rule definition
+    Then the first three define ABCDE-B01, ABCDE-B02 and ABCDE-B03
+    And the prose line defines nothing

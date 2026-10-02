@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DTCDC
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @DTCDC
@@ -187,3 +187,17 @@ Feature: DocTemplateCompiler — compiles documentation pages from templates tha
     Given a page out of date, a page up to date, and a page written by hand
     When the out-of-date pages are compiled
     Then only the out-of-date one comes back, compiled, and nothing is written
+
+  @DTCDC-B11 @unit-level
+  Scenario: A section asked by its title in one language is found under another
+    Given an English spec with an "Overview" section
+    When the sections "Visão Geral" and "Visión General" are cut
+    Then both give the Overview's text
+    And "Fora de escopo", outside the catalog, gives nothing
+
+  @DTCDC-B12 @unit-level
+  Scenario: The rules are read in the three catalogued forms, the spec's own codes at their first definition
+    Given a spec with a table rule B01, a bullet rule B02, a heading rule B03, another spec's code in a table, and B01 again in a Rule uses table
+    When its rules are listed
+    Then there are B01, B02 and B03, once each, with their titles
+    And only B03 has a heading of its own, with its body

@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCLND
-  updated_at: 2026-09-26
+  updated_at: 2026-10-02
   layer: apoio
 -->
 # DocLinks — the anchors, links, sizes and layer arrows the documentation templates are given
@@ -32,7 +32,8 @@ diagram nodes identifiers the diagram language can parse.
 | Effect | Description |
 | --- | --- |
 | `DCLND-B01` | `GitHubAnchor`: A heading's anchor is its text trimmed and lower-cased, keeping letters and digits (accented ones included), turning each space, hyphen and underscore into a hyphen, and dropping every other character. |
-| `DCLND-B02` | A rule's link goes to its layer's page, at the rule's own heading when the layer is small and at the heading of the unit that holds it when the layer is big. |
+| `DCLND-B02` | A rule's link goes to its layer's page, at the rule's own heading when the layer is small and the rule is written as a heading, and at the heading of the unit that holds it when the layer is big or the rule is a table row or a bullet. |
+| `DCLND-B09` | A layer's page (`layerPage`) is in the folder that holds the layer's template under `doct/`; with no template for the layer, in the folder of the project's language (`LayerDir`: `layers`, `camadas`, `capas`). |
 | `DCLND-B03` | A scenario's link goes to its layer's page, at the scenario's heading when the layer is small, at its unit's heading when the layer is big, and at the bare page when the layer is big and the scenario's spec is unknown. |
 | `DCLND-B04` | The size of a selection counts its units, their rules, their spec lines and their scenarios, and is remembered per selection, so asking again returns the same answer and two selections never share one. |
 | `DCLND-B05` | The size of a selection that matches no spec is zero, not an error, and such a selection is never big. |
