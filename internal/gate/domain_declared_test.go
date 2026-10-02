@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DMDCD
+
 package gate
 
 import (

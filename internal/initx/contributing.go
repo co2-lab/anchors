@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CNGDC
+
 package initx
 
 import (

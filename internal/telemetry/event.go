@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TLEVT
+
 // Package telemetry emite os EVENTOS DE DECISÃO do Anchors.
 //
 // POR QUE EXISTE. O que um agente decide é invisível depois que o comando termina. Medido

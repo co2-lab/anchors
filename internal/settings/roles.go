@@ -1,3 +1,6 @@
+// @anchors
+//   ref: AGRLG
+
 package settings
 
 import (

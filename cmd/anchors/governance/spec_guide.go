@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SPGDS
+
 package governance
 
 import (

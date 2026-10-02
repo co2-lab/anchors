@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CDCTC
+
 package gate
 
 import (

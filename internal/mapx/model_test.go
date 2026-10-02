@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GRMDG
+
 package mapx
 
 import (

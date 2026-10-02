@@ -1,3 +1,6 @@
+// @anchors
+//   ref: LYBNL
+
 package gate
 
 import (

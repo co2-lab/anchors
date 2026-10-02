@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DFGTD
+
 package initx
 
 import (
@@ -399,7 +402,7 @@ func TestConfigLoadCompletesACanonicalGate(t *testing.T) {
 }
 
 func TestSpecsSeedHeaderValid(t *testing.T) {
-	t.Run("DFGTD-B16: Choosing specs seeds header-valid on specs and features", func(t *testing.T) {})
+	t.Run("DFGTD-B16: Choosing specs seeds header-valid on every governed kind", func(t *testing.T) {})
 	var hv *config.Gate
 	for _, g := range DefaultGates(map[string]bool{"spec": true}, false) {
 		if g.Name == "header-valid" {
@@ -410,8 +413,8 @@ func TestSpecsSeedHeaderValid(t *testing.T) {
 	if hv == nil {
 		t.Fatal("choosing specs must seed header-valid")
 	}
-	if hv.Check != "header-valid" || strings.Join(hv.On, ",") != "spec,feature" || hv.Blocking == nil || *hv.Blocking {
-		t.Errorf("header-valid must run its check on spec and feature, informative, got %+v", *hv)
+	if hv.Check != "header-valid" || strings.Join(hv.On, ",") != "spec,feature,code,test,guide,doc,plan,product,flag" || hv.Blocking == nil || *hv.Blocking {
+		t.Errorf("header-valid must run its check on every governed kind, informative, got %+v", *hv)
 	}
 	p := filepath.Join(t.TempDir(), "anchors.yaml")
 	if err := os.WriteFile(p, []byte("version: 1\ngates:\n  - name: header-valid\n"), 0o644); err != nil {
@@ -421,8 +424,8 @@ func TestSpecsSeedHeaderValid(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := strings.Join(c.Gates[0].On, ","); got != "spec,feature" {
-		t.Errorf("a bare header-valid must inherit on: spec,feature, got %q", got)
+	if got := strings.Join(c.Gates[0].On, ","); got != "spec,feature,code,test,guide,doc,plan,product,flag" {
+		t.Errorf("a bare header-valid must inherit the canonical on:, got %q", got)
 	}
 }
 
@@ -586,8 +589,8 @@ func TestCatalogCarriesTheUnitCheckers(t *testing.T) {
 			t.Errorf("%s is not in the catalog", want)
 		}
 	}
-	if g := byName["scenario-letter-declared"]; len(g.Presupposes) != 1 || g.Presupposes[0] != "rule_types" {
-		t.Errorf("scenario-letter-declared presupposes %v", g.Presupposes)
+	if g := byName["scenario-type-aligned"]; len(g.Presupposes) != 1 || g.Presupposes[0] != "rule_types" {
+		t.Errorf("scenario-type-aligned presupposes %v", g.Presupposes)
 	}
 	if g := byName["route-declared"]; len(g.Tags) != 1 || g.Tags[0] != "screen" {
 		t.Errorf("route-declared tags %v", g.Tags)
@@ -607,7 +610,7 @@ func TestSeedForRelatesAndPresupposes(t *testing.T) {
 			t.Errorf("%s should be seeded", want)
 		}
 	}
-	for _, not := range []string{"scenario-letter-declared", "route-declared"} {
+	for _, not := range []string{"scenario-type-aligned", "route-declared"} {
 		if seeded[not] {
 			t.Errorf("%s should not be seeded", not)
 		}

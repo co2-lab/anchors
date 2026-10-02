@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RFRSR
+
 package gate
 
 import (

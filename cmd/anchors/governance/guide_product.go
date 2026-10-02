@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // productGuide é a régua da DOUTRINA DE PRODUTO — a regra que atravessa alvos. Este guia

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GRINC
+
 package mapx
 
 import (

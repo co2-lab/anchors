@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doutrina
+-->
+
 # Anchors — Pilar de Rastreabilidade
 
 > Este documento define o **pilar de Rastreabilidade** (Traceability) do Anchors.

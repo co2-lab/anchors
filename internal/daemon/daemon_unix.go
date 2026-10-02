@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DMRND
+
 //go:build !windows
 
 package daemon

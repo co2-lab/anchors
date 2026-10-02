@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVRNS
+
 package governance
 
 import (

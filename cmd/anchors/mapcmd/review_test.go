@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RVCMR
+
 package mapcmd
 
 import (

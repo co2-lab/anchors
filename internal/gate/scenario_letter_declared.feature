@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: SCLTR
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @SCLTR
@@ -14,11 +14,10 @@ Feature: ScenarioLetterDeclared — the letter of a scenario code exists in the 
     Then it returns Skip, because scenario codes live in features
 
   @SCLTR-B02 @unit-level
-  Scenario: With no declared vocabulary the gate leaves without a verdict
+  Scenario: With no declared vocabulary the canonical letters apply
     Given a project that declares no rule types
-    When the gate confronts a feature carrying scenario codes
-    Then it returns Skip, because with nothing to compare against every letter would be
-      either all valid or all invented, and both answers are noise
+    When the gate confronts a feature carrying a canonical code and an invented one
+    Then the canonical one passes and the invented one is reported, as on the spec side
 
   @SCLTR-B03 @unit-level
   Scenario: A feature carrying no scenario code leaves without a verdict

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CLWTC
+
 package board
 
 import (

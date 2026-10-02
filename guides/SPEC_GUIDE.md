@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: guide-distribuido
+-->
+
 # Spec guide — how to write a `.spec.md` in this project
 
 > Seeded by `anchors init`. It is the built-in ruler (`anchors guide spec`) instantiated

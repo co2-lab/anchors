@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SBGRD
+
 package gate
 
 import (

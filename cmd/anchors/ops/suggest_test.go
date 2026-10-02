@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SGCMS
+
 package ops
 
 import (

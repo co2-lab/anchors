@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: UPOWP
-#   updated_at: 2026-09-28
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @UPOWP
@@ -60,3 +60,10 @@ Feature: UpstreamOwnership — which files Anchors still owns in a project, and 
     Given headers after comments and a shebang, one after a directive, one after a directive declaring @fixed-header with a reason, and one with a bare @fixed-header
     When the header is read
     Then the first ones and the declared one are headers, and the others are not and are reported off the top
+
+  @UPOWP-B08 @unit-level
+  Scenario: Only a comment whose first word is @anchors opens the header
+    Given a package comment that names the header in its prose, and no header
+    When the header is read
+    Then there is none
+    And a comment opening with @anchors at the top opens it

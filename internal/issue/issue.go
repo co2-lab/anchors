@@ -1,3 +1,6 @@
+// @anchors
+//   ref: ISLFS
+
 // Package issue materializa as issues do Anchors (CONCEPT §5): o registro de uma
 // divergência que sobrevive à sessão. Uma issue é um arquivo markdown; seu ESTADO é
 // a pasta em que vive (todo/doing/done — imutável, mover = mudar de estado). Três

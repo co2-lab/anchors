@@ -1,3 +1,6 @@
+// @anchors
+//   ref: USSTS
+
 // Package settings guarda a configuração LOCAL do agente — o que é dele e não do projeto.
 //
 // A distinção é a razão de o pacote existir. O `anchors.yaml` é a Estrutura: versionada,

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GSRGH
+
 package doct
 
 import (

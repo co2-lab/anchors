@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doutrina
+-->
+
 # Anchors — Catálogo de Tipos de Spec
 
 > Catálogo de referência que acompanha o pilar de [`SPEC.md`](./SPEC.md). Enquanto o

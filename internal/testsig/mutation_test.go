@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MTINM
+
 package testsig
 
 import (

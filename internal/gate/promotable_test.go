@@ -1,3 +1,6 @@
+// @anchors
+//   ref: PRGTP
+
 package gate
 
 import "testing"

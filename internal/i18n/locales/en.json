@@ -507,6 +507,7 @@
   "gate.feature_test_match.verdict_similar": "similar",
   "gate.feature_test_match.verdict_borderline": "borderline",
   "gate.feature_test_match.verdict_divergent": "divergent",
+  "gate.fix.header_written": "header written (%s)",
   "gate.fix.updated_at_fixed": "updated_at set to the commit date",
   "gate.fix.write_failed": "failed to write: %v",
   "gate.trigger_declared.skip_not_spec": "trigger vocabulary is taught by spec — that is what author reads",

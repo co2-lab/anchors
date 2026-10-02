@@ -1,3 +1,6 @@
+// @anchors
+//   ref: LCINL
+
 package testsig
 
 import (

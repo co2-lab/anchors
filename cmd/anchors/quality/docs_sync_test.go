@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DCSYN
+
 package quality
 
 import (

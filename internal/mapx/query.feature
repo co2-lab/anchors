@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GRQRG
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @GRQRG
@@ -66,3 +66,9 @@ Feature: GraphQueries — read-only questions over the loaded map
     Given a graph
     When every query is run over it
     Then the graph is identical to its state before
+
+  @GRQRG-B09 @unit-level
+  Scenario: A node's unit codes come from its identity edges
+    Given a spec PAYMT that specifies pay.go and is covered by pay.feature, which tests pay_test.go, and a spec SHARE that also specifies pay.go
+    When the unit codes are asked
+    Then pay.go has PAYMT and SHARE, pay_test.go has PAYMT, and a node no spec reaches has none

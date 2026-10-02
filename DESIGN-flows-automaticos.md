@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: desenho
+-->
+
 # Os gatilhos que não são comando digitado — levantamento
 
 > Correção ao `DESIGN-flows-do-anchors.md`. Aquele levantamento mapeou os 50 comandos e

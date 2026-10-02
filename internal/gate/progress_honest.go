@@ -1,3 +1,6 @@
+// @anchors
+//   ref: PRHNP
+
 package gate
 
 import (

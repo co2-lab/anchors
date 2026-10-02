@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: desenho
+-->
+
 # Flow-driven work — o trabalho DIRIGIDO por fluxo
 
 > Documento de DESENHO, anterior à implementação. A funcionalidade nasce ISOLADA; as

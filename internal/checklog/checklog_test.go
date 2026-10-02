@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CHLGC
+
 package checklog
 
 import (

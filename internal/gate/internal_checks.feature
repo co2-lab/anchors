@@ -324,3 +324,10 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     Given an SQL migration whose header is written with "--" comments, carrying ref and layer
     When header-valid confronts it
     Then it passes, as the same header written with "//" does
+
+  @INCHN-B40 @unit-level
+  Scenario: The header is the block at the top, and a file of no unit is identified by its layer
+    Given a Go file with no header whose code holds a header in a string
+    When header-valid confronts it
+    Then it fails as having no header
+    And a guide, a document and a test support file with only `layer:` in their header pass

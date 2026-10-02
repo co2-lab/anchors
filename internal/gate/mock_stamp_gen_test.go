@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MKSTP
+
 package gate
 
 import (

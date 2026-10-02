@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TSRCH
+
 package gate
 
 import (

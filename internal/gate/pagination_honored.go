@@ -1,3 +1,6 @@
+// @anchors
+//   ref: PGNHN
+
 package gate
 
 import (

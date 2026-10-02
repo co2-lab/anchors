@@ -1,3 +1,6 @@
+// @anchors
+//   ref: PRFLP
+
 package scan
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GRQRG
+
 package mapx
 
 import "sort"
@@ -189,5 +192,48 @@ func (g *Graph) TopoOrder() []Node {
 		sort.Slice(rest, func(i, j int) bool { return rest[i].ID < rest[j].ID })
 		out = append(out, rest...)
 	}
+	return out
+}
+
+// UnitCodesOf are the codes of the specs a node belongs to, by the identity edges: the
+// spec that specifies a code file or is covered by a feature, and through a feature the
+// spec of a test it tests. A file shared by several units gets every code, sorted; a node
+// no spec reaches gets none.
+func (g *Graph) UnitCodesOf(id string) []string {
+	code := map[string]string{}
+	for _, n := range g.Nodes {
+		if n.Kind == KindSpec && n.Code != "" {
+			code[n.ID] = n.Code
+		}
+	}
+	var direct []string // specs reaching the node in one edge
+	var features []string
+	for _, e := range g.Edges {
+		if e.To != id {
+			continue
+		}
+		switch e.Type {
+		case EdgeSpecifies, EdgeCoveredBy:
+			direct = append(direct, e.From)
+		case EdgeTestedBy:
+			features = append(features, e.From)
+		}
+	}
+	for _, f := range features {
+		for _, e := range g.Edges {
+			if e.To == f && e.Type == EdgeCoveredBy {
+				direct = append(direct, e.From)
+			}
+		}
+	}
+	seen := map[string]bool{}
+	var out []string
+	for _, s := range direct {
+		if c, ok := code[s]; ok && !seen[c] {
+			seen[c] = true
+			out = append(out, c)
+		}
+	}
+	sort.Strings(out)
 	return out
 }

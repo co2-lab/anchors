@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // specGuide é a régua universal da fase ESPECIFICAR. Destila a doutrina agnóstica de

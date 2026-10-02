@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CMCLC
+
 package common
 
 var (

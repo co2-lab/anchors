@@ -1,3 +1,6 @@
+// @anchors
+//   ref: UPOWP
+
 package scan
 
 import (
@@ -120,5 +123,16 @@ func TestAnchorsHeader_onlyAtTheTop(t *testing.T) {
 	}
 	if HeaderOffTop([]byte("package x\n")) {
 		t.Error("a file with no block is not off the top")
+	}
+}
+
+func TestAnchorsHeader_firstWordOpensIt(t *testing.T) {
+	t.Run("UPOWP-B08: Only a comment whose first word is @anchors opens the header", func(t *testing.T) {})
+	prose := "// Package recode renames a code across the header @anchors (code:/ref:), the\n// derived codes and the mentions.\npackage recode\n"
+	if AnchorsHeader([]byte(prose)) != nil {
+		t.Error("prose naming the header is no header")
+	}
+	if AnchorsHeader([]byte("// @anchors\n//   ref: RCRWR\n\npackage recode\n")) == nil {
+		t.Error("a comment opening with @anchors opens the header")
 	}
 }

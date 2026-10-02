@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MGSTM
+
 package migra
 
 // FORMATO 2 — as chaves e os nomes de gate passam a inglês.

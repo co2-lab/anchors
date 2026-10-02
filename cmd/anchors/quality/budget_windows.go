@@ -1,3 +1,6 @@
+// @anchors
+//   ref: BDGRN
+
 //go:build windows
 
 package quality

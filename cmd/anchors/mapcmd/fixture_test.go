@@ -1,3 +1,6 @@
+// @anchors
+//   layer: teste
+
 package mapcmd
 
 import (

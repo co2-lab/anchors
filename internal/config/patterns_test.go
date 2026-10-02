@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DRPTD
+
 package config
 
 import (

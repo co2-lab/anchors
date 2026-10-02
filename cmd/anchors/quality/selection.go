@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SLCTN
+
 package quality
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CGPCH
+
 package quality
 
 import (
@@ -196,7 +199,7 @@ garbage). Without that mode, judge becomes invisible (it neither bars nor record
 			// --fix: aplica os reparos automáticos (self-healer) ANTES de confrontar,
 			// para que o check seguinte já reflita o conserto.
 			if fix {
-				fixes := gate.Fix(cfg.Gates, nodes, absRoot)
+				fixes := gate.Fix(cfg.Gates, nodes, absRoot, g)
 				n := 0
 				for _, fr := range fixes {
 					if fr.Fixed {

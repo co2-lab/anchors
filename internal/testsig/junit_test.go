@@ -1,3 +1,6 @@
+// @anchors
+//   ref: JUIJN
+
 package testsig
 
 import (

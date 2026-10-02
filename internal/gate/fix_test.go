@@ -1,3 +1,6 @@
+// @anchors
+//   ref: FXIXX
+
 package gate
 
 import (
@@ -61,7 +64,7 @@ func TestFix_rewritesAStaleDateToTheCommitDate(t *testing.T) {
 	dir := fixRepo(t, rel, "<!-- @anchors\n  updated_at: 2020-01-01\n-->\nbody\n")
 	nodes := []mapx.Node{{ID: rel, Kind: mapx.KindSpec}}
 
-	got := Fix([]config.Gate{fixGate()}, nodes, dir)
+	got := Fix([]config.Gate{fixGate()}, nodes, dir, nil)
 
 	if len(got) != 1 || !got[0].Fixed || got[0].Gate != "updated-at" || got[0].Target != rel {
 		t.Fatalf("expected one successful fix of %s, got %+v", rel, got)
@@ -84,7 +87,7 @@ func TestFix_detailIsTranslated(t *testing.T) {
 	} {
 		i18n.Set(lang)
 		dir := fixRepo(t, rel, "<!-- @anchors\n  updated_at: 2020-01-01\n-->\n")
-		got := Fix([]config.Gate{fixGate()}, []mapx.Node{{ID: rel, Kind: mapx.KindSpec}}, dir)
+		got := Fix([]config.Gate{fixGate()}, []mapx.Node{{ID: rel, Kind: mapx.KindSpec}}, dir, nil)
 		if len(got) != 1 || got[0].Detail != want || want == "" || strings.HasPrefix(want, "gate.fix.") {
 			t.Errorf("[%s] detail %+v, want %q", lang, got, want)
 		}
@@ -100,7 +103,7 @@ func TestFix_leavesACorrectDateAlone(t *testing.T) {
 	content := "<!-- @anchors\n  updated_at: 2024-03-05\n-->\n"
 	dir := fixRepo(t, rel, content)
 
-	if got := Fix([]config.Gate{fixGate()}, []mapx.Node{{ID: rel, Kind: mapx.KindSpec}}, dir); len(got) != 0 {
+	if got := Fix([]config.Gate{fixGate()}, []mapx.Node{{ID: rel, Kind: mapx.KindSpec}}, dir, nil); len(got) != 0 {
 		t.Errorf("a date that already matches the commit is not a fix: %+v", got)
 	}
 }
@@ -114,7 +117,7 @@ func TestFix_skipsGatesWithoutFixerNodesOutOfScopeAndMissingFiles(t *testing.T) 
 		{ID: rel, Kind: mapx.KindCode},            // the gate is not `on` code
 		{ID: "gone.spec.md", Kind: mapx.KindSpec}, // not on disk
 	}
-	if got := Fix([]config.Gate{other, fixGate()}, nodes, dir); len(got) != 0 {
+	if got := Fix([]config.Gate{other, fixGate()}, nodes, dir, nil); len(got) != 0 {
 		t.Errorf("nothing applies, nothing is fixed: %+v", got)
 	}
 	if b, _ := os.ReadFile(filepath.Join(dir, rel)); string(b) != "<!-- @anchors\n  updated_at: 2020-01-01\n-->\n" {
@@ -135,7 +138,7 @@ func TestFix_reportsAFailedWrite(t *testing.T) {
 	}
 	t.Cleanup(func() { _ = os.Chmod(path, 0o644) })
 
-	got := Fix([]config.Gate{fixGate()}, []mapx.Node{{ID: rel, Kind: mapx.KindSpec}}, dir)
+	got := Fix([]config.Gate{fixGate()}, []mapx.Node{{ID: rel, Kind: mapx.KindSpec}}, dir, nil)
 
 	if len(got) != 1 || got[0].Fixed || got[0].Detail == "" {
 		t.Fatalf("a write that fails is reported as not fixed, with the cause: %+v", got)
@@ -196,4 +199,45 @@ func TestFixUpdatedAt(t *testing.T) {
 			t.Errorf("no commit and no edit: nothing to compare against: %q %v", got, changed)
 		}
 	})
+}
+
+func TestFixMissingHeader_fromTheMap(t *testing.T) {
+	t.Run("FXIXX-B09: The fix writes the missing header from the map", func(t *testing.T) {})
+	g := &mapx.Graph{
+		Nodes: []mapx.Node{
+			{ID: "src/pay.spec.md", Kind: mapx.KindSpec, Code: "PAYMT"},
+			{ID: "src/pay.feature", Kind: mapx.KindFeature},
+			{ID: "src/pay.go", Kind: mapx.KindCode},
+			{ID: "src/pay_test.go", Kind: mapx.KindTest},
+		},
+		Edges: []mapx.Edge{
+			{From: "src/pay.spec.md", To: "src/pay.go", Type: mapx.EdgeSpecifies},
+			{From: "src/pay.spec.md", To: "src/pay.feature", Type: mapx.EdgeCoveredBy},
+			{From: "src/pay.feature", To: "src/pay_test.go", Type: mapx.EdgeTestedBy},
+		},
+	}
+	cases := []struct {
+		n      mapx.Node
+		in     string
+		prefix string
+	}{
+		{mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode}, "package src\n", "// @anchors\n//   ref: PAYMT\n\npackage src\n"},
+		{mapx.Node{ID: "src/pay_test.go", Kind: mapx.KindTest}, "package src\n", "// @anchors\n//   ref: PAYMT\n\n"},
+		{mapx.Node{ID: "guides/A.md", Kind: mapx.KindGuide, Layer: "guide"}, "# A\n", "<!-- @anchors\n  layer: guide\n-->\n\n# A\n"},
+		{mapx.Node{ID: "src/pay.go", Kind: mapx.KindCode}, "// @anchors\n//   updated_at: 2026-01-01\npackage src\n", "// @anchors\n//   ref: PAYMT\n//   updated_at: 2026-01-01\n"},
+	}
+	for _, c := range cases {
+		out, changed, _ := fixMissingHeader(c.in, c.n, "", g)
+		if !changed || !strings.HasPrefix(out, c.prefix) {
+			t.Errorf("%s: got %q, want it to start with %q", c.n.ID, out, c.prefix)
+		}
+	}
+	sh := mapx.Node{ID: "src/run.sh", Kind: mapx.KindCode}
+	gs := &mapx.Graph{Nodes: []mapx.Node{{ID: "s.spec.md", Kind: mapx.KindSpec, Code: "RUNXX"}, sh}, Edges: []mapx.Edge{{From: "s.spec.md", To: "src/run.sh", Type: mapx.EdgeSpecifies}}}
+	if out, _, _ := fixMissingHeader("#!/bin/sh\necho hi\n", sh, "", gs); !strings.HasPrefix(out, "#!/bin/sh\n# @anchors\n#   ref: RUNXX\n") {
+		t.Errorf("the shebang stays first: %q", out)
+	}
+	if _, changed, _ := fixMissingHeader("package x\n", mapx.Node{ID: "x/orphan.go", Kind: mapx.KindCode}, "", g); changed {
+		t.Error("a file of no unit is left as it is")
+	}
 }

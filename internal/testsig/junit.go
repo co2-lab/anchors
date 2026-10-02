@@ -1,3 +1,6 @@
+// @anchors
+//   ref: JUIJN
+
 // Package testsig ingere SINAIS de qualidade de teste que o projeto já gera — o
 // Anchors NÃO roda o teste, consome o artefato do runner (JUnit para execução, lcov
 // para cobertura). Mantém o agnosticismo (D3): qualquer stack que emita esses

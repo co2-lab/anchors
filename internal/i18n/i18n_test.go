@@ -1,3 +1,6 @@
+// @anchors
+//   ref: INCTA
+
 package i18n
 
 import (

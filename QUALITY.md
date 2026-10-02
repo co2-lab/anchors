@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doutrina
+-->
+
 # Anchors — Pilar de Qualidade
 
 > Este documento define o **pilar de Qualidade** do Anchors. Ele pressupõe o

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // flagGuide is the ruler for FEATURE FLAGS — the scenarios a flag's value opens. It lives

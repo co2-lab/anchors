@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RVRNR
+
 package gate
 
 import (

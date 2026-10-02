@@ -1,3 +1,6 @@
+// @anchors
+//   ref: INCHN
+
 package gate
 
 import (
@@ -279,13 +282,6 @@ func checkUpdatedAt(content string, n mapx.Node, root string) (Verdict, string) 
 	return Pass, ""
 }
 
-// header-valid: o arquivo tem o BLOCO DE CABEÇALHO do Anchors (`@anchors`) com o
-// mínimo obrigatório — a identidade (`code:`). O guide de header (anchors guide
-// header) é a régua; este gate verifica presença + mínimo. Agnóstico de dialeto de
-// comentário (só procura os marcadores no texto). Detalhes extras (updated_at, tags)
-// são opcionais — o gate só cobra o piso.
-var headerBlockRE = regexp.MustCompile(`@anchors\b`)
-
 // identidade no header: `code:` (posse — o dono, ex.: a spec) OU `ref:` (referência —
 // o resto da unidade aponta o código da unidade que realiza/cobre/prova). Um dos dois
 // é obrigatório para camadas REGIDAS; qual depende do papel do arquivo. Camadas
@@ -394,6 +390,11 @@ func isExecutableScript(n mapx.Node) bool {
 	return strings.HasSuffix(n.ID, ".yaml") || strings.HasSuffix(n.ID, ".yml")
 }
 
+// header-valid: o arquivo tem o BLOCO DE CABEÇALHO do Anchors (`@anchors`) no topo, com o
+// mínimo obrigatório — a identidade (`code:`, `ref:`, ou `layer:` onde não há unidade). O
+// guide de header (anchors guide header) é a régua; este gate verifica presença + mínimo,
+// em qualquer dialeto de comentário. Detalhes extras (updated_at, tags) são opcionais — o
+// gate só cobra o piso.
 func checkHeaderConforms(content string, n mapx.Node, cfg *config.Config) (Verdict, string) {
 	// Arquivo BINÁRIO não carrega cabeçalho — não há sintaxe de comentário num PNG.
 	// A identidade dele está no NOME (`<Unidade>.<CODE>-VR-<variante>.png`), que é o
@@ -415,14 +416,30 @@ func checkHeaderConforms(content string, n mapx.Node, cfg *config.Config) (Verdi
 	if isExecutableScript(n) {
 		return Skip, i18n.T("gate.header.executable_script")
 	}
-	if !headerBlockRE.MatchString(content) {
+	// The header is the block AT THE TOP, read as the map reads it (`scan.AnchorsHeader`):
+	// an `@anchors` further down — a fixture in a test, a template, a message — is text.
+	// Read over the whole file, a code file with the word in a string had "a header
+	// without identity", and one with none at the top passed the block test.
+	block := scan.AnchorsHeader([]byte(content))
+	if block == nil {
+		// A block below the top, with no reason declared, is not read as the header: the
+		// map takes the file as having none.
+		if scan.HeaderOffTop([]byte(content)) {
+			return Fail, i18n.T("gate.header.off_top")
+		}
 		return Fail, i18n.T("gate.header.missing_block")
 	}
-	// A block below the top, with no reason declared, is not read as the header: the map
-	// takes the file as having none. Passing it here would leave the map without the
-	// identity while this gate said the header was fine.
-	if scan.HeaderOffTop([]byte(content)) {
-		return Fail, i18n.T("gate.header.off_top")
+	content = string(block)
+	// A guide or a document belongs to no unit: no spec owns it and it points at none, so
+	// its minimal honest identity is the layer it is in — the same as a recognized layer's.
+	// A test SUPPORT file — helpers and fixtures shared by other tests — belongs to no
+	// single unit either.
+	if n.Kind == mapx.KindGuide || n.Kind == mapx.KindDoc || n.Support {
+		if !headerLayerRE.MatchString(content) &&
+			!headerCodeRE().MatchString(content) && !headerRefRE().MatchString(content) {
+			return Fail, i18n.T("gate.header.recognized_missing_id")
+		}
+		return Pass, ""
 	}
 	// Camada RECONHECIDA (sem spec): `layer:` é a identidade mínima suficiente. The layer is
 	// read as the project declares it: a test node carries no regime of its own, and by the

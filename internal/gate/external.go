@@ -1,3 +1,6 @@
+// @anchors
+//   ref: EXCMX
+
 package gate
 
 import (

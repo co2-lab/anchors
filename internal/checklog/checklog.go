@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CHLGC
+
 // Package checklog espelha a saída do `anchors check` num arquivo, para que ela
 // possa ser RELIDA sem re-executar.
 //

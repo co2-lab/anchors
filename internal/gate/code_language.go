@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CDLNG
+
 package gate
 
 import (

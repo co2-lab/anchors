@@ -1,3 +1,6 @@
+// @anchors
+//   ref: LGSCL
+
 package logscan
 
 import (

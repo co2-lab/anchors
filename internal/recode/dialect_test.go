@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RCDLR
+
 package recode
 
 import "testing"

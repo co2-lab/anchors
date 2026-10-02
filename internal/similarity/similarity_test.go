@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TXSMT
+
 package similarity
 
 import (

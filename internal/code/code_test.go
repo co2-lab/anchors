@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CDGNC
+
 package code
 
 import (

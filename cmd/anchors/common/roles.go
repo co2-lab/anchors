@@ -1,3 +1,6 @@
+// @anchors
+//   ref: ARCGN
+
 package common
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: ININT
+
 package ops
 
 import (

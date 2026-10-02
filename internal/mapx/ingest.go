@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SGINA
+
 package mapx
 
 import (

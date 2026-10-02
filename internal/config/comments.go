@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CMMRC
+
 // Package config carrega os defaults embutidos e a config do projeto.
 package config
 

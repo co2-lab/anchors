@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CNTNR
+
 package config
 
 import "strings"

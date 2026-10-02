@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DCCVD
+
 package gate
 
 import (

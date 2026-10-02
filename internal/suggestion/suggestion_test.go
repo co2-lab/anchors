@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SGSTS
+
 package suggestion
 
 import (

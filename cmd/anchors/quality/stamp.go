@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CNSTC
+
 package quality
 
 import (

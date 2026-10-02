@@ -1,3 +1,6 @@
+// @anchors
+//   ref: IDCND
+
 package gate
 
 import (

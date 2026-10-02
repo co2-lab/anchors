@@ -1,3 +1,6 @@
+// @anchors
+//   ref: FLSCF
+
 package gate
 
 import (

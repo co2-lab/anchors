@@ -1,6 +1,6 @@
 <!-- @anchors
   code: GRQRG
-  updated_at: 2026-09-26
+  updated_at: 2026-10-02
   layer: mapa
 -->
 # GraphQueries — read-only questions over the loaded map: who governs what, neighbours, orphans, counts and a parents-first order
@@ -42,6 +42,7 @@ Every answer here is computed from the graph in memory. Nothing is written and n
 | `GRQRG-B06` | In the parents-first order, the source of every governs, specifies, covered-by or tested-by edge comes before its target. |
 | `GRQRG-B07` | Edges of any other type impose no precedence: nodes linked only by them keep the alphabetical order. |
 | `GRQRG-B08` | Nodes caught in a cycle are not dropped: they are appended after the rest, in alphabetical order. |
+| `GRQRG-B09` | A node's unit codes (`UnitCodesOf`) are the codes of the specs that specify it or are covered by it, and, through a feature that tests it, that feature's spec; every one, sorted; none when no spec reaches it. |
 
 ## Invariants
 

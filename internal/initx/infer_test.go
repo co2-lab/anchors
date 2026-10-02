@@ -1,3 +1,6 @@
+// @anchors
+//   ref: INPRN
+
 package initx
 
 import (

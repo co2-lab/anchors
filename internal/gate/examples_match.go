@@ -1,3 +1,6 @@
+// @anchors
+//   ref: EXMCH
+
 package gate
 
 import (

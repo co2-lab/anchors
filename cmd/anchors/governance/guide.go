@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RPHRG
+
 package gate
 
 import (

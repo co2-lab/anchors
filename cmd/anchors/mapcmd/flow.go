@@ -1,3 +1,6 @@
+// @anchors
+//   ref: FLWOX
+
 package mapcmd
 
 import (

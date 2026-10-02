@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DLCTI
+
 package config
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: QLCMQ
+
 package quality
 
 import "github.com/spf13/cobra"

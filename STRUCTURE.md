@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doutrina
+-->
+
 # Anchors — Pilar de Estrutura de Projeto
 
 > Este documento define o **pilar de Estrutura de Projeto** do Anchors. Ele

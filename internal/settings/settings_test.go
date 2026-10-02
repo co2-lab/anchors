@@ -1,3 +1,6 @@
+// @anchors
+//   ref: USSTS
+
 package settings
 
 import (

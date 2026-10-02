@@ -507,6 +507,7 @@
   "gate.feature_test_match.verdict_similar": "similar",
   "gate.feature_test_match.verdict_borderline": "limítrofe",
   "gate.feature_test_match.verdict_divergent": "divergente",
+  "gate.fix.header_written": "cabeçalho escrito (%s)",
   "gate.fix.updated_at_fixed": "updated_at corrigido para a data do commit",
   "gate.fix.write_failed": "falha ao escrever: %v",
   "gate.trigger_declared.skip_not_spec": "o vocabulário de gatilho é ensinado pela spec — é ela que o autor lê",

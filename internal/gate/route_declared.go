@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RTDCL
+
 package gate
 
 import (

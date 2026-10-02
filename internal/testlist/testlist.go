@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TSTLS
+
 // Package testlist reads the project's tests: which tests exist, in which file, on which
 // line, and under which title.
 //

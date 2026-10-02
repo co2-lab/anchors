@@ -1,3 +1,6 @@
+// @anchors
+//   ref: C4CNC
+
 package doct
 
 import (

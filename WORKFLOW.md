@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doutrina
+-->
+
 # Anchors — Fluxo de trabalho: local ou GitHub
 
 > **Estado: desenho.** A configuração (`workflow.mode`) e sua validação existem e têm

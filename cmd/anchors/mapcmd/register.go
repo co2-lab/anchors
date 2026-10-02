@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MPRGM
+
 package mapcmd
 
 import "github.com/spf13/cobra"

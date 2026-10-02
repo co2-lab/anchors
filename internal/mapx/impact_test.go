@@ -1,3 +1,6 @@
+// @anchors
+//   ref: IMANM
+
 package mapx
 
 import (

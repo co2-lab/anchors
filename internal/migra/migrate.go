@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MGFLM
+
 // Package migra leva um projeto do formato ANTIGO do mapa para o atual.
 //
 // POR QUE EXISTE. As chaves de YAML do produto estão em inglês — `lang` traduz o que se

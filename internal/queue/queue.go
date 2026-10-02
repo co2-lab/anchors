@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TSQUT
+
 // Package queue é a fila de tarefas do Anchors: o mecanismo que desacopla "algo
 // mudou" de "alguém trabalha nisso". O watcher ENFILEIRA (Enqueue) quando classifica
 // uma mudança; um worker PUXA (Claim) o próximo item, executa um passo, e marca DONE.

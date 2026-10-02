@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CDGNC
+
 // Package code gera e valida o código de identidade de uma unidade (TRACEABILITY
 // §3). Implementa a doutrina universal do SPEC_GUIDE do app de referência:
 //

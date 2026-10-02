@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: FXIXX
-#   updated_at: 2026-09-26
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @FXIXX
@@ -78,3 +78,10 @@ Feature: Fix — the self-healer that applies the mechanical, safe repairs of `c
     Given a committed spec whose updated_at is stale
     When the fixer repairs it in an English and in a Portuguese project
     Then the detail of the repair is the English text in the first and the Portuguese text in the second
+
+  @FXIXX-B09 @unit-level
+  Scenario: The fix writes the missing header from the map
+    Given a code file its spec specifies, a test its feature tests, a guide, a script with a shebang, a header with no identity, and a code file of no unit
+    When the header fix runs
+    Then the code and the test get the ref of their unit, the guide its layer, the script's header goes below the shebang, the identity-less header gets its line
+    And the code file of no unit is left as it is

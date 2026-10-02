@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doc
+-->
+
 <div align="center">
 
 # ⚓ Anchors

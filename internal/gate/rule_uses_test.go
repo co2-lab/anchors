@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RLUSG
+
 package gate
 
 import (

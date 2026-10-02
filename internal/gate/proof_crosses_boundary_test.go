@@ -1,3 +1,6 @@
+// @anchors
+//   ref: PCBPR
+
 package gate
 
 import (

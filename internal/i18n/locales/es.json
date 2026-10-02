@@ -507,6 +507,7 @@
   "gate.feature_test_match.verdict_similar": "similar",
   "gate.feature_test_match.verdict_borderline": "limítrofe",
   "gate.feature_test_match.verdict_divergent": "divergente",
+  "gate.fix.header_written": "cabecera escrita (%s)",
   "gate.fix.updated_at_fixed": "updated_at corregido a la fecha del commit",
   "gate.fix.write_failed": "error al escribir: %v",
   "gate.trigger_declared.skip_not_spec": "el vocabulario del disparador es enseñado por la spec — es lo que el autor lee",

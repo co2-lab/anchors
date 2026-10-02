@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // testGuide é a régua universal do artefato TEST: a prova executável dos cenários.

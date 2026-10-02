@@ -1,3 +1,6 @@
+// @anchors
+//   ref: PLCFL
+
 package gate
 
 import (

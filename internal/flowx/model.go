@@ -1,3 +1,6 @@
+// @anchors
+//   ref: FLMDF
+
 // Package flowx builds and traverses the graph of WORK FLOWS — the states a task passes
 // through and the valid transitions between them.
 //

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RVMTR
+
 package gate
 
 import (

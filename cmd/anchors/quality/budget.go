@@ -1,3 +1,6 @@
+// @anchors
+//   ref: BDGRN
+
 package quality
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SPSCS
+
 package health
 
 import (

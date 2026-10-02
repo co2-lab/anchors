@@ -1,3 +1,6 @@
+// @anchors
+//   ref: OBPCB
+
 // Package pack carrega CONJUNTOS DE OBRIGAÇÕES distribuíveis — o mecanismo que torna a
 // conformidade plugável em vez de reescrita por projeto.
 //

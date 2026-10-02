@@ -1,3 +1,6 @@
+// @anchors
+//   ref: FLGRF
+
 // Package flagx reads the CONDITION of a feature-flag scenario.
 //
 // The grammar is FIXED, and that is the whole point of the decision behind it: prose in

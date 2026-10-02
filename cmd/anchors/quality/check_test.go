@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CGPCH
+
 package quality
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SCIGS
+
 package scan
 
 import (

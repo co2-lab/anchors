@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MGFLM
+
 package migra
 
 import (

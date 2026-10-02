@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doutrina
+-->
+
 # Anchors — Pilar de Spec
 
 > Este documento define o **pilar de Spec** do Anchors. Ele pressupõe o mecanismo

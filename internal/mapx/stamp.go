@@ -1,3 +1,6 @@
+// @anchors
+//   ref: EDSTD
+
 package mapx
 
 import (

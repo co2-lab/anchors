@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MPLCK
+
 package mapx
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RCRWR
+
 // Package recode renomeia um CÓDIGO de identidade (ex.: TCDTX → TCTXX) e o propaga por
 // todas as superfícies textuais onde ele aparece: o header @anchors (code:/ref:), os
 // scenario-codes derivados (CODEX-B01, CODEX-S02, CODE-DS-*, CODEX-VR…) e as menções nuas

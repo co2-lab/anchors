@@ -1,3 +1,6 @@
+// @anchors
+//   ref: JDGUE
+
 package mapcmd
 
 import (

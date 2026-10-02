@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GTVCG
+
 package config
 
 // --- o VOCABULÁRIO em inglês ---

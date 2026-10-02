@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DCOXX
+
 package doct
 
 import (

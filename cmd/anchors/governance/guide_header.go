@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // headerGuide é a régua UNIVERSAL e MANDATÓRIA do bloco de cabeçalho de arquivo — o

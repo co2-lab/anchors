@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DCKND
+
 package doct
 
 import (

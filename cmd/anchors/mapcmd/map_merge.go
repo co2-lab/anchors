@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MPMRM
+
 package mapcmd
 
 import (

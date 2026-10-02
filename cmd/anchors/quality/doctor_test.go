@@ -1,3 +1,6 @@
+// @anchors
+//   ref: HLDCH
+
 package quality
 
 import (

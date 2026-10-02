@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MPLCK
+
 //go:build !windows
 
 package mapx

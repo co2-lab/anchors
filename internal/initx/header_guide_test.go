@@ -1,3 +1,6 @@
+// @anchors
+//   ref: HDGDH
+
 package initx
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MGCMM
+
 package ops
 
 import (

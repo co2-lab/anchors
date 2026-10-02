@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TICTS
+
 // Superfícies CONSUMIDORAS do testID: onde procurar quem se apoia no handle — o teste
 // ligado pela unidade, o teste vizinho (compartilhado ou do pai) e os flows de ponta a
 // ponta, que vivem fora do grafo.

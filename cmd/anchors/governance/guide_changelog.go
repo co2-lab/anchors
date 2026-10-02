@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // changelogGuide is the ruler for the two changelogs: the TECHNICAL one `anchors changelog`

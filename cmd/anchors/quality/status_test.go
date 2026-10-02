@@ -1,3 +1,6 @@
+// @anchors
+//   ref: PRSTP
+
 package quality
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: ARCHR
+
 package initx
 
 import (

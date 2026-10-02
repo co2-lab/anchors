@@ -1,3 +1,6 @@
+// @anchors
+//   ref: INHKN
+
 package ops
 
 import (

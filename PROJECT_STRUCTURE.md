@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doc
+-->
+
 # Estrutura do Projeto Anchors
 
 > Este documento descreve a **planta da casa** do próprio repositório `anchors`,

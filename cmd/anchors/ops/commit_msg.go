@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CMMSC
+
 package ops
 
 import (

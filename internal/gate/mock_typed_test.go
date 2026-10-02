@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MCTYM
+
 package gate
 
 import (

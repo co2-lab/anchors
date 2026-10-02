@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // projectGuide é a régua da fase DESCOBRIR — a passada que faltava: o projeto que

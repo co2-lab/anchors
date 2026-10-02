@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:1bb8f516257e4f46 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:4d87ac981e0c4104 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -4031,6 +4031,8 @@ abra a página dela em `camadas/`.
 
 - [FXIXX-B08 — The detail of each repair (fixed, or a write that failed) is written in the project's language, through i18n.](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
+- [FXIXX-B09 — `--fix` writes the header a governed file lacks, at its top after any shebang: the `ref:` of the units the map ties it to (`UnitCodesOf`), or the `layer:` of a guide, a document or a test support file; to a header at the top with no identity it adds that line below `@anchors`, changing nothing written; a file with an identity, with no unit and no such layer, binary, or an executable script is left as it is. (`fixMissingHeader`)](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
+
 - [FXIXX-I01 — A repair replaces only the date inside the field; every other byte of the file stays as it was.](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
 
 - [FXIXX-X01 — Does not create a missing `updated_at` field; it only corrects the value of one that exists.](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix)
@@ -4260,6 +4262,8 @@ abra a página dela em `camadas/`.
 - [INCHN-B38 — `line-coverage` holds a code file to the floor of the first glob of the gate's `coverage_floors` that matches it, in name order, and otherwise to its `min_coverage`, 70% when undeclared; a file below a glob's floor fails naming the glob and its reason. (`CoverageFloorFor`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 - [INCHN-B39 — A header line is read in every comment dialect the map reads — `//`, `#`, `--`, `<!--` and a block comment's ` * ` (`config.HeaderLinePrefix`): a `-- ref: CODE` header has its identity.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
+
+- [INCHN-B40 — `header-valid` reads the header as the map does — the `@anchors` block at the top (`scan.AnchorsHeader`) —, so an `@anchors` further down, in a string or an example, is neither the header nor its identity; and a guide, a document or a test support file, which belong to no unit, have their identity in `layer:` alone.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 - [INCHN-B15 — An executable test script steps aside too, by a different path: its format belongs to the runner, and its identity is in the file name.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
@@ -5503,7 +5507,7 @@ abra a página dela em `camadas/`.
 
 - [SCLTR-B01 — An artifact that is not a feature leaves without a verdict: scenario codes live in features.](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary)
 
-- [SCLTR-B02 — With no declared vocabulary the gate leaves without a verdict — with nothing to compare against, every letter would be either all valid or all invented, and both answers are noise.](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary)
+- [SCLTR-B02 — With no declared vocabulary the letters are the canonical ones (`RuleLetters`), as on the spec side (RLTYR-B05): a canonical letter passes and any other is reported.](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary)
 
 - [SCLTR-B03 — A feature carrying no scenario code at all leaves without a verdict: there is nothing to judge.](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary)
 
@@ -6511,7 +6515,7 @@ abra a página dela em `camadas/`.
 
 - [DFGTD-B15 — The gate names registered for the vocabulary check (`RegisterGateNames`) are the full catalog, in catalog order.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
-- [DFGTD-B16 — Choosing specs seeds `header-valid`, informative, on specs and features: the artifacts whose identity lives in the `@anchors` header. A bare `- name: header-valid` in a configuration inherits that `on:`.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
+- [DFGTD-B16 — Choosing specs seeds `header-valid`, informative, on every kind Anchors governs — spec, feature, code, test, guide, doc, plan, product and flag —: every governed file carries the `@anchors` header. A bare `- name: header-valid` in a configuration inherits that `on:`.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-B17 — `no-duplication` is seeded as the native `duplication` check on code files, needing `npx`: one verdict per file read from jscpd's report, not a project-wide command judged by its exit code.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
@@ -6519,7 +6523,7 @@ abra a página dela em `camadas/`.
 
 - [DFGTD-B19 — `rule-fulfilled` is judged and also marked to review: the marks it judges were put by the agents who wrote the code, and a second look is a different thing from their judgment.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
-- [DFGTD-B20 — The catalog carries the checkers that measure a kind of the unit and had no canonical gate — among them `evidence-fresh`, `feature-test-match`, `rule-implemented`, `scenario-identity`, `scenario-letter-declared`, `placeholder-filled` and `updated-at-atual` — each on the kinds it measures, with the field it presupposes when it needs one, and the UI ones scoped by the `screen` and `component` tags.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
+- [DFGTD-B20 — The catalog carries the checkers that measure a kind of the unit and had no canonical gate — among them `evidence-fresh`, `feature-test-match`, `rule-implemented`, `scenario-identity`, `scenario-letter-declared`, `placeholder-filled` and `updated-at-atual` — each on the kinds it measures, with the field it presupposes when it needs one (`scenario-type-aligned` the `rule_types` tags), and the UI ones scoped by the `screen` and `component` tags.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
 - [DFGTD-B21 — Init seeds (`SeedFor`) the default gates related to the project — a declared layer of a kind they measure, with their tags, or a kind the project chose and has no layer of yet — whose presupposed fields the configuration declares; a gate over an undeclared field is not seeded.](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog)
 
@@ -7543,6 +7547,8 @@ abra a página dela em `camadas/`.
 
 - [GRQRG-B08 — Nodes caught in a cycle are not dropped: they are appended after the rest, in alphabetical order.](layers/mapa.md#grqrg--graphqueries--read-only-questions-over-the-loaded-map-who-governs-what-neighbours-orphans-counts-and-a-parents-first-order)
 
+- [GRQRG-B09 — A node's unit codes (`UnitCodesOf`) are the codes of the specs that specify it or are covered by it, and, through a feature that tests it, that feature's spec; every one, sorted; none when no spec reaches it.](layers/mapa.md#grqrg--graphqueries--read-only-questions-over-the-loaded-map-who-governs-what-neighbours-orphans-counts-and-a-parents-first-order)
+
 - [GRQRG-I01 — The parents-first order does not depend on the order the nodes are stored in: ties are always broken alphabetically.](layers/mapa.md#grqrg--graphqueries--read-only-questions-over-the-loaded-map-who-governs-what-neighbours-orphans-counts-and-a-parents-first-order)
 
 - [GRQRG-X01 — The queries never change the graph.](layers/mapa.md#grqrg--graphqueries--read-only-questions-over-the-loaded-map-who-governs-what-neighbours-orphans-counts-and-a-parents-first-order)
@@ -7820,6 +7826,8 @@ abra a página dela em `camadas/`.
 - [UPOWP-B06 — A header comment that never closes runs to the end of the file.](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
 
 - [UPOWP-B07 — The header is at the TOP: only blank lines, comments — line comments and the insides of `/* */` and `` blocks — and a shebang may precede it. A block below any other line is not the header unless it declares inside `@fixed-header: <why>`; a bare `@fixed-header` declares nothing. `HeaderOffTop` says a file carries such an undeclared block and no header.](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
+
+- [UPOWP-B08 — A comment opens the header only when `@anchors` is its first word, right after the comment marker; prose that names the header does not.](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
 
 - [UPOWP-I01 — Nothing after the header's comment is part of the header, whichever of the comment forms opened it.](layers/scan.md#upowp--upstreamownership--which-files-anchors-still-owns-in-a-project-and-where-a-files-anchors-header-begins-and-ends)
 

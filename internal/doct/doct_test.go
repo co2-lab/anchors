@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DTCDC
+
 package doct
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: ISLFS
+
 package issue
 
 import (

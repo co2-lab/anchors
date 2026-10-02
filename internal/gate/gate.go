@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GTENG
+
 // Package gate executa os gates de qualidade sobre um conjunto de nós — o pipeline
 // (QUALITY §5). Cada gate confronta os alvos que casam seu `on` e devolve um
 // veredito. A dupla saída (issue + bloqueio) é derivada do veredito + do campo

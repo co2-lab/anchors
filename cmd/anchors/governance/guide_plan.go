@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // planGuide é a régua da fase PLANEJAR (Planejamento — a origem do movimento). Um

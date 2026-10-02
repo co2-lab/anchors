@@ -1,3 +1,6 @@
+// @anchors
+//   ref: LGSCL
+
 // Package logscan scans the project's logs and identifies OCCURRENCES of declared failure.
 //
 // THE LOG FORMAT DOES NOT MATTER, and that is what makes scanning possible without

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: LCBCL
+
 package quality
 
 import (

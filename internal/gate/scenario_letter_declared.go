@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SCLTR
+
 package gate
 
 import (
@@ -33,12 +36,13 @@ func checkScenarioLetterDeclared(content string, n mapx.Node, _ string, _ *mapx.
 	if n.Kind != mapx.KindFeature {
 		return Skip, ""
 	}
-	if cfg == nil || len(cfg.RuleTypes) == 0 {
-		return Skip, i18n.T("gate.scenario_letter_declared.skip_no_rule_types")
-	}
+	// The letters are the project's `rule_types`, or the canonical ones when it declares
+	// none — the same fallback the spec side reads (RLTYR-B05). A project on the canonical
+	// vocabulary had to copy it into its configuration to have its scenarios confronted
+	// (reported from baas-proxy).
 	validas := map[string]bool{}
-	for _, rt := range cfg.RuleTypes {
-		validas[strings.ToUpper(strings.TrimSpace(rt.Letter))] = true
+	for _, l := range cfg.RuleLetters() {
+		validas[string(l)] = true
 	}
 
 	// NÃO usa parseFeatureScenarios: o regex dele é montado com as letras DECLARADAS,

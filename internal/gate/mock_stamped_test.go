@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MCSTM
+
 package gate
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SNGTU
+
 package gate
 
 import (

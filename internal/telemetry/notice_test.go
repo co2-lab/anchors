@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TLNTT
+
 package telemetry
 
 import (

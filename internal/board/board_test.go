@@ -1,3 +1,6 @@
+// @anchors
+//   ref: BRCRB
+
 package board
 
 import (

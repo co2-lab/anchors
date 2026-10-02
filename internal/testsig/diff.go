@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DCLDF
+
 package testsig
 
 import (

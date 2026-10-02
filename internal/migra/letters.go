@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MGLTR
+
 package migra
 
 import (

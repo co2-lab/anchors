@@ -1,3 +1,6 @@
+// @anchors
+//   ref: OBHNB
+
 package gate
 
 import (

@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: desenho
+-->
+
 # Os fluxos que o Anchors já tem — levantamento
 
 > Levantamento anterior à escrita. O que o Anchors executa hoje, onde há DECISÃO, e o que

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TLEVT
+
 package telemetry
 
 import (

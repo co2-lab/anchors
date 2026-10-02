@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CLGCM
+
 package ops
 
 import (

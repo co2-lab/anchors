@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DCCMD
+
 package ops
 
 import (

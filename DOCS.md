@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doc
+-->
+
 # Anchors — A Documentação
 
 > A unidade cobre o que está **dentro** de uma unidade. Este documento é sobre o que fica

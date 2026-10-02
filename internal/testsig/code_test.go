@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RCGRL
+
 package testsig
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TSUNT
+
 package mapx
 
 import (

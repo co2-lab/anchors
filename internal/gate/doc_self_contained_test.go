@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DSCDC
+
 package gate
 
 import (

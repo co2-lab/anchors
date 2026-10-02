@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RLTYR
+
 package gate
 
 import (

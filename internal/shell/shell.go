@@ -1,3 +1,6 @@
+// @anchors
+//   ref: PSXSH
+
 // Package shell finds the POSIX shell that runs the commands a project declares — a gate's
 // `run:`, a suite's `run:`, a tests `script:`. They are written in POSIX shell (`"$@"`,
 // `&&`, `VAR=x cmd`), so they need `sh` on every system.

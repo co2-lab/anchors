@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MGSTM
+
 package migra
 
 // FORMAT 5 — the letters of the artifacts that are not specs, in English.

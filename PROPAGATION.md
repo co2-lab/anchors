@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doutrina
+-->
+
 # Anchors — Pilar de Propagação
 
 > Este documento define o **pilar de Propagação** do Anchors. Ele pressupõe o

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GTMTG
+
 // Package gitmeta lê metadados do git de um arquivo — hoje, a data do último commit
 // que o tocou. É a fonte de verdade para o carimbo de alteração (updated_at): mais
 // confiável que uma data mantida à mão, que sempre desatualiza.

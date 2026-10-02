@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DCSCD
+
 package doct
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SCLTE
+
 package flow
 
 import (

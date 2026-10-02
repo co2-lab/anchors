@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doc
+-->
+
 # Anchors CLI — decisões e levantamento
 
 Registro das decisões de arquitetura do CLI do Anchors e o levantamento de comandos

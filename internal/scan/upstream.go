@@ -1,3 +1,6 @@
+// @anchors
+//   ref: UPOWP
+
 package scan
 
 import (
@@ -38,9 +41,11 @@ func IsUpstreamOwned(rel string, content []byte) bool {
 	return bytes.Contains(content, []byte(UpstreamMarker))
 }
 
-// anchorsOpenerRE finds the token that opens the header: `@anchors`, and not
-// `@anchors-shared-code` nor a mention in backticks.
-var anchorsOpenerRE = regexp.MustCompile(`@anchors(?:\s|-->|$)`)
+// anchorsOpenerRE finds the token that opens the header: `@anchors` as the FIRST word of the
+// comment, and not `@anchors-shared-code`, a mention in backticks, nor prose that names
+// the header — a package comment saying "the header @anchors (code:/ref:)" was read as the
+// header, and a header fix wrote the unit's `ref:` into the middle of that prose.
+var anchorsOpenerRE = regexp.MustCompile(`^(?://|#|/\*+|\*|--|<!--)\s*@anchors(?:\s|-->|$)`)
 
 // AnchorsHeader returns the text of the file's `@anchors` header block, or nil when the file
 // has none.

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SCIDS
+
 package gate
 
 import (

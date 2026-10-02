@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: guide-distribuido
+-->
+
 # Header guide — project
 
 > The block of markings at the top of EVERY file in this project. Seeded by

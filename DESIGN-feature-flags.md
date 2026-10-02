@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: desenho
+-->
+
 # Feature flags — o cenário por valor, e o que ele governa
 
 > IMPLEMENTADO. Este documento fica como o registro do desenho e das decisões —

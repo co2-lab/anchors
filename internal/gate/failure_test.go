@@ -1,3 +1,6 @@
+// @anchors
+//   ref: FLRAI
+
 package gate
 
 import (

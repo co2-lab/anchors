@@ -1,3 +1,6 @@
+// @anchors
+//   ref: PRSNT
+
 package gate
 
 import (

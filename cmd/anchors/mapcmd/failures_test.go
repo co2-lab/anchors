@@ -1,3 +1,6 @@
+// @anchors
+//   ref: FLRSA
+
 package mapcmd
 
 import (

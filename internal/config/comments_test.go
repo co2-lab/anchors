@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CMMRC
+
 package config
 
 import (

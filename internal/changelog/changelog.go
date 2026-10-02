@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CHNGL
+
 // Package changelog builds a project's changelog from its commits.
 //
 // The commits are the source, written in Conventional Commits (the `commit-msg` hook keeps

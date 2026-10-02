@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GTVCG
+
 package config
 
 import (

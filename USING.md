@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doc
+-->
+
 # Usando o Anchors
 
 > Documentação de USO. O `README.md` e os 11 documentos de pilar (`SPEC.md`,

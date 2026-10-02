@@ -1,3 +1,6 @@
+// @anchors
+//   ref: NWARN
+
 package ops
 
 import (

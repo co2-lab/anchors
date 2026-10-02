@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DMSTD
+
 // Package daemon gerencia o watcher em background: daemonização (re-exec
 // desanexado), PID file, log, e o flag de pausa. Mantém o terminal livre — o
 // `start` retorna o controle imediatamente.

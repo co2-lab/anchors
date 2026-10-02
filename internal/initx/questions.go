@@ -1,3 +1,6 @@
+// @anchors
+//   ref: INQSN
+
 package initx
 
 import (

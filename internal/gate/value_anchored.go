@@ -1,3 +1,6 @@
+// @anchors
+//   ref: VLANV
+
 package gate
 
 import (

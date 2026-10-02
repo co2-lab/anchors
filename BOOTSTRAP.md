@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doc
+-->
+
 # Anchors — Bootstrap: do diretório vazio ao projeto governado
 
 > **Estado: em construção.** A fase DESCOBRIR (`anchors guide project`) e a etapa de git

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CTRIM
+
 package gate
 
 import (

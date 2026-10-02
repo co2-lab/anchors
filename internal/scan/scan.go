@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RPSCR
+
 // Package scan percorre o repositório lendo TEXTO (nunca parseando código) e
 // extrai os fatos de que o mapa precisa: que arquivos existem, de que CAMADA (pela
 // Estrutura declarada, não por regra fixa), e que código de cenário cada um

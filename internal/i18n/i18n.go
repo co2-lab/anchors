@@ -1,3 +1,6 @@
+// @anchors
+//   ref: INCTA
+
 // Package i18n é o catálogo de mensagens do Anchors.
 //
 // O produto é multi-idioma: o projeto declara `lang:` no `anchors.yaml`, e toda mensagem

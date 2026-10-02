@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DCDDE
+
 package flow
 
 import (

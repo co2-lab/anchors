@@ -1,3 +1,6 @@
+// @anchors
+//   ref: PRGTP
+
 package gate
 
 // --- maturação: o gate informativo que já está limpo (QUALITY §7) ---

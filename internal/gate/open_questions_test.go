@@ -1,3 +1,6 @@
+// @anchors
+//   ref: OPQSP
+
 package gate
 
 // Item em aberto dá PENDING, não FAIL: declarar o que a spec ainda não decidiu é o

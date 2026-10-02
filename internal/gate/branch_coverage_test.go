@@ -1,3 +1,6 @@
+// @anchors
+//   ref: BRCOV
+
 package gate
 
 import (

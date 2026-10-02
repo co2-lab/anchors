@@ -1,7 +1,11 @@
+// @anchors
+//   ref: GRQRG
+
 package mapx
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -199,5 +203,31 @@ func TestQueriesLeaveTheGraphUntouched(t *testing.T) {
 	g.TopoOrder()
 	if !reflect.DeepEqual(g, before) {
 		t.Errorf("a query changed the graph:\nbefore %+v\nafter  %+v", before, g)
+	}
+}
+
+func TestUnitCodesOf(t *testing.T) {
+	t.Run("GRQRG-B09: A node's unit codes come from its identity edges", func(t *testing.T) {})
+	g := &Graph{
+		Nodes: []Node{
+			{ID: "pay.spec.md", Kind: KindSpec, Code: "PAYMT"},
+			{ID: "share.spec.md", Kind: KindSpec, Code: "SHARE"},
+			{ID: "pay.feature", Kind: KindFeature}, {ID: "pay.go", Kind: KindCode}, {ID: "pay_test.go", Kind: KindTest}, {ID: "lone.go", Kind: KindCode},
+		},
+		Edges: []Edge{
+			{From: "pay.spec.md", To: "pay.go", Type: EdgeSpecifies},
+			{From: "share.spec.md", To: "pay.go", Type: EdgeSpecifies},
+			{From: "pay.spec.md", To: "pay.feature", Type: EdgeCoveredBy},
+			{From: "pay.feature", To: "pay_test.go", Type: EdgeTestedBy},
+		},
+	}
+	if got := strings.Join(g.UnitCodesOf("pay.go"), ","); got != "PAYMT,SHARE" {
+		t.Errorf("pay.go: %s", got)
+	}
+	if got := strings.Join(g.UnitCodesOf("pay_test.go"), ","); got != "PAYMT" {
+		t.Errorf("pay_test.go: %s", got)
+	}
+	if got := g.UnitCodesOf("lone.go"); len(got) != 0 {
+		t.Errorf("lone.go: %v", got)
 	}
 }

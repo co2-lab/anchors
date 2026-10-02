@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // reviewGuide é a régua de quem REVISA um PR. Ele existe porque o `claim` entrega cards

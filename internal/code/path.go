@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CFPCD
+
 package code
 
 import (

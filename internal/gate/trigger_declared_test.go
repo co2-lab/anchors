@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TRDCT
+
 package gate
 
 import (

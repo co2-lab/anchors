@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DFGTD
+
 package initx
 
 import "github.com/co2-lab/anchors/internal/config"
@@ -53,7 +56,10 @@ func DefaultGates(chosen map[string]bool, projetoNovo bool) []config.Gate {
 			// `on:` and measured nothing. Code and tests are left out: they take their
 			// identity from co-location, not from a header.
 			config.Gate{
-				Name: "header-valid", ID: "header-valid", On: []string{"spec", "feature"}, Check: "header-valid",
+				// EVERY file Anchors governs carries the header, as the seeded header guide
+				// says: on spec and feature alone, code and test went unchecked, and every
+				// gate that reads a code file's `ref:` or `layer:` was left with nothing.
+				Name: "header-valid", ID: "header-valid", On: []string{"spec", "feature", "code", "test", "guide", "doc", "plan", "product", "flag"}, Check: "header-valid",
 				Blocking: config.Bool(false), Measures: "the @anchors header carries the artifact's identity",
 			},
 			// A spec sozinha atravessa TODOS os gates relacionais — eles falham ABERTO
@@ -975,8 +981,7 @@ func catalogChecks(chosen map[string]bool, projetoNovo bool) []config.Gate {
 	add("feature", config.Gate{Name: "scenario-identity", On: []string{"feature"},
 		Measures: "each scenario code identifies one scenario: no code repeated and no body copied under another title"})
 	add("feature", config.Gate{Name: "scenario-letter-declared", On: []string{"feature"},
-		Presupposes: []string{"rule_types"},
-		Measures:    "every scenario code's letter is a letter declared in `rule_types`"})
+		Measures: "every scenario code's letter is a rule letter — the project's `rule_types`, or the canonical ones"})
 	add("feature", config.Gate{Name: "scenario-type-aligned", On: []string{"feature"},
 		Presupposes: []string{"rule_types"},
 		Measures:    "a scenario's nature tag agrees with the letter of its code"})

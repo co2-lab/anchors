@@ -1,3 +1,6 @@
+// @anchors
+//   ref: STASC
+
 package gate
 
 import (

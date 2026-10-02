@@ -1,3 +1,6 @@
+// @anchors
+//   ref: THSAS
+
 package gate
 
 import (

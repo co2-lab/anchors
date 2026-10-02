@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doc
+-->
+
 # Anchors — Pilar de Planejamento
 
 > Este documento define o **pilar de Planejamento** do Anchors. Ele pressupõe o

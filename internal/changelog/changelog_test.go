@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CHNGL
+
 package changelog
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DCRQD
+
 package gate
 
 import (

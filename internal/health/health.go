@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DCTRO
+
 // Package health é o validador de saúde do ecossistema (QUALITY §5.2) — a visão
 // GLOBAL. Diferente dos gates (que confrontam nó contra critério, incremental), o
 // health varre o mapa + a config + o disco e caça as pontas SISTÊMICAS: integridade

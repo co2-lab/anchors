@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MNVRM
+
 package config
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GRMDG
+
 // Package mapx modela e persiste o mapa de dependências — o anchors.graph.yaml.
 //
 // O mapa é a materialização do grafo (CONCEPT §3) e o artefato-dono da

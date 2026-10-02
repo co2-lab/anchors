@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RPSCR
+
 package scan
 
 import (

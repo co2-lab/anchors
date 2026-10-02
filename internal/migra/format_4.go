@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MGSTM
+
 package migra
 
 // FORMATO 4 — quatro chaves cujo NOME mentia sobre o que elas guardam.

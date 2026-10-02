@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GRING
+
 package testsig
 
 import (

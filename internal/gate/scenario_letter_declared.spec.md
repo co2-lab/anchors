@@ -1,11 +1,19 @@
 <!-- @anchors
   code: SCLTR
-  updated_at: 2026-10-01
+  updated_at: 2026-10-02
   layer: gate
 -->
 # ScenarioLetterDeclared — the letter of a scenario code exists in the vocabulary
 
 > **Code**: `SCLTR`
+
+> **SCLTR-R0001:** with no declared vocabulary the canonical letters apply. The gate used to
+> leave without a verdict, and a project on the canonical vocabulary had to copy it into its
+> configuration to have its scenarios confronted, while the spec side already fell back to
+> the canonical letters (RLTYR-B05). Decided by the user (reported from baas-proxy).
+>
+> **Revises:** `B02`
+> **Checked:** `B01`, `B03`, `B04`, `B05`, `B06`, `B07`, `I01`, `I02`, `I03`, `X01`, `X02`
 
 ## Overview
 
@@ -44,7 +52,7 @@ work for whoever knows the domain.
 | Effect | Description |
 | --- | --- |
 | `SCLTR-B01` | An artifact that is not a feature leaves without a verdict: scenario codes live in features. |
-| `SCLTR-B02` | With no declared vocabulary the gate leaves without a verdict — with nothing to compare against, every letter would be either all valid or all invented, and both answers are noise. |
+| `SCLTR-B02` | With no declared vocabulary the letters are the canonical ones (`RuleLetters`), as on the spec side (RLTYR-B05): a canonical letter passes and any other is reported. |
 | `SCLTR-B03` | A feature carrying no scenario code at all leaves without a verdict: there is nothing to judge. |
 | `SCLTR-B04` | Every letter found inside the declared vocabulary passes. |
 | `SCLTR-B05` | A letter outside the vocabulary is reported as a DIVERGENCE, never as a failure — the nature may deserve declaring, and that decision is not the gate's. |

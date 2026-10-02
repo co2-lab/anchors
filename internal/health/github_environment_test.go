@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GHEGT
+
 package health
 
 import (

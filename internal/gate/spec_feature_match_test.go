@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SFMSP
+
 package gate
 
 import (

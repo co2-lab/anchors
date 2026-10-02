@@ -1,3 +1,6 @@
+// @anchors
+//   ref: QLCMQ
+
 package quality
 
 import (

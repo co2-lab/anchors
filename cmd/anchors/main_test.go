@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CLMNC
+
 package main
 
 import (

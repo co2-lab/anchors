@@ -1,3 +1,6 @@
+// @anchors
+//   ref: BCLBB
+
 package flow
 
 import (

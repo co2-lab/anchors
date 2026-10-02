@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // featureGuide é a régua universal do artefato FEATURE: os cenários de comportamento

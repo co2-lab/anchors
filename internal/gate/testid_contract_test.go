@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TICTS
+
 package gate
 
 import (

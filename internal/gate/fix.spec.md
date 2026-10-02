@@ -1,6 +1,6 @@
 <!-- @anchors
   code: FXIXX
-  updated_at: 2026-09-26
+  updated_at: 2026-10-02
   layer: gate
 -->
 # Fix — the self-healer that applies the mechanical, safe repairs of `check --fix`
@@ -43,6 +43,7 @@ reported. Each repair written, or attempted and failed, is returned for the call
 | `FXIXX-B06` | Outside a git repository the file is left untouched: there is no right date to find. |
 | `FXIXX-B07` | A file that was never committed and has no pending edit is left untouched: there is nothing to compare against. |
 | `FXIXX-B08` | The detail of each repair (fixed, or a write that failed) is written in the project's language, through i18n. |
+| `FXIXX-B09` | `--fix` writes the header a governed file lacks, at its top after any shebang: the `ref:` of the units the map ties it to (`UnitCodesOf`), or the `layer:` of a guide, a document or a test support file; to a header at the top with no identity it adds that line below `@anchors`, changing nothing written; a file with an identity, with no unit and no such layer, binary, or an executable script is left as it is. (`fixMissingHeader`) |
 
 ## Invariants
 

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TICTS
+
 // Helpers de testID: reconhecer o handle nas duas pontas que o ESCREVEM — o código
 // (JSX/atributo) e a spec (tabela de inventário).
 //

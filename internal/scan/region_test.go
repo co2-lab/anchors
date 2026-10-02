@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SRRGS
+
 package scan
 
 import "testing"

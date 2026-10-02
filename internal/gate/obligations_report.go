@@ -1,3 +1,6 @@
+// @anchors
+//   ref: BLGTN
+
 package gate
 
 import (

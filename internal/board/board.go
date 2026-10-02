@@ -1,3 +1,6 @@
+// @anchors
+//   ref: BRCRB
+
 // Package board reivindica trabalho no BOARD do repositório — as issues, no `mode: github`.
 //
 // POR QUE ISTO EXISTE. O `workflow.mode` é excludente por decisão declarada no

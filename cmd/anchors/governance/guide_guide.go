@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // guideGuide é a régua de como escrever um GUIDE — o meta-guide. Um guide é a régua

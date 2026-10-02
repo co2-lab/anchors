@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SCASS
+
 package gate
 
 import (

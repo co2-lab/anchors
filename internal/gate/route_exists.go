@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RTEXR
+
 package gate
 
 import (

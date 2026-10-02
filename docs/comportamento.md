@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:459f36ba4e6474ba — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:1cdf428488e86bf4 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3654,6 +3654,8 @@ teste prova.
 
 - [The repair detail is written in the project's language](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B08`
 
+- [The fix writes the missing header from the map](camadas/gate.md#fxixx--fix--the-self-healer-that-applies-the-mechanical-safe-repairs-of-check---fix) `FXIXX-B09`
+
 - [The flag gates skip what is not a flag, and a flag with no scenario](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B01`
 
 - [A flag whose every condition is in the grammar passes](camadas/gate.md#flscf--flagscenarios--the-scenarios-a-feature-flag-declares-are-written-complete-cited-and-tested) `FLSCF-B02`
@@ -3911,6 +3913,8 @@ teste prova.
 - [Line coverage is held to the gate's floor, or a glob's floor with its reason](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B38`
 
 - [A header in a double-dash comment has its identity](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B39`
+
+- [The header is the block at the top, and a file of no unit is identified by its layer](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B40`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 
@@ -4994,7 +4998,7 @@ teste prova.
 
 - [An artifact that is not a feature leaves without a verdict](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B01`
 
-- [With no declared vocabulary the gate leaves without a verdict](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B02`
+- [With no declared vocabulary the canonical letters apply](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B02`
 
 - [A feature carrying no scenario code leaves without a verdict](camadas/gate.md#scltr--scenarioletterdeclared--the-letter-of-a-scenario-code-exists-in-the-vocabulary) `SCLTR-B03`
 
@@ -5908,7 +5912,7 @@ teste prova.
 
 - [The gate names registered for the vocabulary check are the full catalog](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B15`
 
-- [Choosing specs seeds header-valid on specs and features](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B16`
+- [Choosing specs seeds header-valid on every governed kind](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B16`
 
 - [no-duplication is the native duplication check on code files](layers/infra.md#dfgtd--defaultgates--the-gates-a-project-is-born-with-by-artifact-and-by-project-age-and-the-canonical-gate-catalog) `DFGTD-B17`
 
@@ -6844,6 +6848,8 @@ teste prova.
 
 - [Queries leave the graph as it was](layers/mapa.md#grqrg-x01--queries-leave-the-graph-as-it-was) `GRQRG-X01`
 
+- [A node's unit codes come from its identity edges](layers/mapa.md#grqrg-b09--a-nodes-unit-codes-come-from-its-identity-edges) `GRQRG-B09`
+
 - [A review holds only at the revision it looked at](layers/mapa.md#mprvm-b01--a-review-holds-only-at-the-revision-it-looked-at) `MPRVM-B01`
 
 - [Recording a review replaces the same gate's and keeps the others](layers/mapa.md#mprvm-b02--recording-a-review-replaces-the-same-gates-and-keeps-the-others) `MPRVM-B02`
@@ -7101,4 +7107,6 @@ teste prova.
 - [Only the marker and the directory decide ownership](layers/scan.md#upowp-x01--only-the-marker-and-the-directory-decide-ownership) `UPOWP-X01`
 
 - [Only a header at the top is the header, unless it says why it stands lower](layers/scan.md#upowp-b07--only-a-header-at-the-top-is-the-header-unless-it-says-why-it-stands-lower) `UPOWP-B07`
+
+- [Only a comment whose first word is @anchors opens the header](layers/scan.md#upowp-b08--only-a-comment-whose-first-word-is-anchors-opens-the-header) `UPOWP-B08`
 

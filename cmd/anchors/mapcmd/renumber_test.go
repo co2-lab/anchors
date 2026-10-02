@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RNMBR
+
 package mapcmd
 
 import (

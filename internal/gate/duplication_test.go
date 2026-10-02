@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DUPLC
+
 package gate
 
 import (

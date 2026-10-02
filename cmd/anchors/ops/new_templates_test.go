@@ -1,3 +1,6 @@
+// @anchors
+//   ref: NWTMN
+
 package ops
 
 import (

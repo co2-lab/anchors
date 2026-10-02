@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TSTRT
+
 package gate
 
 import (

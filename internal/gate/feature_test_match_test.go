@@ -1,3 +1,6 @@
+// @anchors
+//   ref: FTMFT
+
 package gate
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: PRJTS
+
 package gate
 
 import (

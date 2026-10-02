@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doutrina
+-->
+
 # Anchors — Conceito
 
 > **Anchors** é um framework de continuidade para desenvolvimento assistido por IA.

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TXSMT
+
 // Package similarity mede o quanto dois textos falam da MESMA coisa, ponderando
 // cada palavra pelo quanto ela DISCRIMINA dentro de um conjunto.
 //

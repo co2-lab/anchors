@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: desenho
+-->
+
 # `product/` — a regra que atravessa alvos
 
 > Documento de DESENHO, anterior à implementação. Registra o problema medido, o desenho

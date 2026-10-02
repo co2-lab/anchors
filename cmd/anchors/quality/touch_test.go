@@ -1,3 +1,6 @@
+// @anchors
+//   ref: HDTHD
+
 package quality
 
 import (

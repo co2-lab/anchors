@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DTCDC
+
 // Package doct compila DOCUMENTAÇÃO a partir de templates que referenciam as specs.
 //
 // O PROBLEMA. Uma documentação útil mostra o conteúdo, não uma lista de links — "abrir

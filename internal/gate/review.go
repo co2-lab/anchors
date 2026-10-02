@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RVDUR
+
 package gate
 
 import (

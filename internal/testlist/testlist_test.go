@@ -1,3 +1,6 @@
+// @anchors
+//   ref: TSTLS
+
 package testlist
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SCLTR
+
 package gate
 
 import (
@@ -82,17 +85,17 @@ func TestScenarioLetterDeclared_B01_skipsNonFeature(t *testing.T) {
 	}
 }
 
-// SCLTR-B02: with no declared vocabulary every letter would be either all valid or all
-// invented — both answers are noise, so the gate declines to judge.
-func TestScenarioLetterDeclared_B02_skipsWithoutVocabulary(t *testing.T) {
-	t.Run("SCLTR-B02: with no declared vocabulary the gate leaves without a verdict", func(t *testing.T) {})
-	feat := "@ABCDX-SG01\nScenario: x\n"
+// SCLTR-B02: with no declared vocabulary the canonical letters apply, as on the spec side.
+func TestScenarioLetterDeclared_B02_canonicalLettersWithoutVocabulary(t *testing.T) {
+	t.Run("SCLTR-B02: With no declared vocabulary the canonical letters apply", func(t *testing.T) {})
 	n := mapx.Node{ID: "a.feature", Kind: mapx.KindFeature}
-	if v, _ := checkScenarioLetterDeclared(feat, n, "", nil, &config.Config{}); v != Skip {
-		t.Errorf("empty vocabulary: expected Skip, got %v", v)
-	}
-	if v, _ := checkScenarioLetterDeclared(feat, n, "", nil, nil); v != Skip {
-		t.Errorf("nil config: expected Skip, got %v", v)
+	for _, cfg := range []*config.Config{{}, nil} {
+		if v, msg := checkScenarioLetterDeclared("@ABCDX-B01\nScenario: x\n", n, "", nil, cfg); v != Pass {
+			t.Errorf("a canonical letter passes with no vocabulary: %v (%s)", v, msg)
+		}
+		if v, _ := checkScenarioLetterDeclared("@ABCDX-K01\nScenario: x\n", n, "", nil, cfg); v == Pass || v == Skip {
+			t.Errorf("an invented letter is reported with no vocabulary: %v", v)
+		}
 	}
 }
 

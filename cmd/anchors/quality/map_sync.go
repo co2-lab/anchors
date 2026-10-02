@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MPSYN
+
 package quality
 
 import (

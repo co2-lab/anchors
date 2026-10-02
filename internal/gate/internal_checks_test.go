@@ -1,3 +1,6 @@
+// @anchors
+//   ref: INCHN
+
 package gate
 
 import (
@@ -1814,5 +1817,25 @@ func TestHeaderValid_readsADoubleDashHeader(t *testing.T) {
 		if v, msg := checkersWithGraph["header-valid"](header, n, "", nil, nil); v == Fail {
 			t.Errorf("a valid header fails: %s\n%s", msg, header)
 		}
+	}
+}
+
+func TestHeaderValid_readsTheTopBlockAndLayerForNoUnit(t *testing.T) {
+	t.Run("INCHN-B40: The header is the block at the top, and a file of no unit is identified by its layer", func(t *testing.T) {})
+	hv := checkersWithGraph["header-valid"]
+	code := mapx.Node{ID: "pkg/guide.go", Kind: mapx.KindCode}
+	inString := "package pkg\n\nconst example = `\n// @anchors\n//   layer: x\n`\n"
+	if v, _ := hv(inString, code, "", nil, nil); v != Fail {
+		t.Errorf("a header in a string is no header: %v", v)
+	}
+	layerOnly := "<!-- @anchors\n  layer: guide\n-->\n\n# Guide\n"
+	for _, n := range []mapx.Node{{ID: "g/A.md", Kind: mapx.KindGuide}, {ID: "D.md", Kind: mapx.KindDoc}} {
+		if v, msg := hv(layerOnly, n, "", nil, nil); v != Pass {
+			t.Errorf("%s with layer only: %v (%s)", n.Kind, v, msg)
+		}
+	}
+	support := mapx.Node{ID: "pkg/helpers_test.go", Kind: mapx.KindTest, Support: true}
+	if v, msg := hv("// @anchors\n//   layer: test\n\npackage pkg\n", support, "", nil, nil); v != Pass {
+		t.Errorf("a support file with layer only: %v (%s)", v, msg)
 	}
 }

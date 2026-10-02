@@ -1,3 +1,6 @@
+// @anchors
+//   ref: FLPRF
+
 package flagx
 
 import (

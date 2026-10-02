@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GHRNG
+
 package board
 
 import (

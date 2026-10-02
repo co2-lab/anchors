@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MSCMG
+
 package migra
 
 import (

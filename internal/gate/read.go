@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GTENG
+
 package gate
 
 import (

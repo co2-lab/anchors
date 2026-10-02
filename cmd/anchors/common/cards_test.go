@@ -1,3 +1,6 @@
+// @anchors
+//   ref: AGCRG
+
 package common
 
 import (

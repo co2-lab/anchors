@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MGSTM
+
 package migra
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: STEDS
+
 package quality
 
 import (

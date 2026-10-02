@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CNFGO
+
 package config
 
 import (

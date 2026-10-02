@@ -1,3 +1,6 @@
+// @anchors
+//   ref: EVFRV
+
 package gate
 
 import (

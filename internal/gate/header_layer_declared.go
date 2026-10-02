@@ -1,3 +1,6 @@
+// @anchors
+//   ref: HDLYD
+
 package gate
 
 import (

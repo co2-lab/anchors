@@ -1,3 +1,6 @@
+// @anchors
+//   ref: FLWRF
+
 package initx
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: STPRS
+
 package quality
 
 import (

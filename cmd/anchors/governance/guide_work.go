@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // workGuide é a régua de quem PEGA UM CARD. Ele responde ao que o card não cabe dizer

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CLRTC
+
 package main
 
 import (

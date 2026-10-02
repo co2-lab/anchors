@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GVGDG
+
 package governance
 
 // codeGuide é a régua universal do artefato CÓDIGO: como implementar guiado pela

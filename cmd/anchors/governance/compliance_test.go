@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CMPLN
+
 package governance
 
 import (

@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: desenho
+-->
+
 # Falhas — declarar, tratar, registrar, e descobrir de onde vêm
 
 > As três camadas estão IMPLEMENTADAS. Este documento fica como o registro do desenho e

@@ -1,11 +1,11 @@
-<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:92f1047438c45716 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/camadas/gate.md.tmpl — inputs:7f55560995dbb936 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Camada: gate
 
 
 
-> Esta camada tem 76 unidades e 1280 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
+> Esta camada tem 76 unidades e 1282 regras — acima do corte de 20 unidades / 2000 linhas, então esta página traz o RESUMO de cada unidade. O texto completo está na spec.
 
 
 ## BRCOV — BranchCoverage — the tests take the branches the code has
@@ -1167,6 +1167,8 @@ reported. Each repair written, or attempted and failed, is returned for the call
 
 - **FXIXX-B08** — The detail of each repair (fixed, or a write that failed) is written in the project's language, through i18n.
 
+- **FXIXX-B09** — `--fix` writes the header a governed file lacks, at its top after any shebang: the `ref:` of the units the map ties it to (`UnitCodesOf`), or the `layer:` of a guide, a document or a test support file; to a header at the top with no identity it adds that line below `@anchors`, changing nothing written; a file with an identity, with no unit and no such layer, binary, or an executable script is left as it is. (`fixMissingHeader`)
+
 - **FXIXX-I01** — A repair replaces only the date inside the field; every other byte of the file stays as it was.
 
 - **FXIXX-X01** — Does not create a missing `updated_at` field; it only corrects the value of one that exists.
@@ -1552,6 +1554,8 @@ looked at.
 - **INCHN-B38** — `line-coverage` holds a code file to the floor of the first glob of the gate's `coverage_floors` that matches it, in name order, and otherwise to its `min_coverage`, 70% when undeclared; a file below a glob's floor fails naming the glob and its reason. (`CoverageFloorFor`)
 
 - **INCHN-B39** — A header line is read in every comment dialect the map reads — `//`, `#`, `--`, `<!--` and a block comment's ` * ` (`config.HeaderLinePrefix`): a `-- ref: CODE` header has its identity.
+
+- **INCHN-B40** — `header-valid` reads the header as the map does — the `@anchors` block at the top (`scan.AnchorsHeader`) —, so an `@anchors` further down, in a string or an example, is neither the header nor its identity; and a guide, a document or a test support file, which belong to no unit, have their identity in `layer:` alone.
 
 - **INCHN-B15** — An executable test script steps aside too, by a different path: its format belongs to the runner, and its identity is in the file name.
 
@@ -3577,7 +3581,7 @@ work for whoever knows the domain.
 
 - **SCLTR-B01** — An artifact that is not a feature leaves without a verdict: scenario codes live in features.
 
-- **SCLTR-B02** — With no declared vocabulary the gate leaves without a verdict — with nothing to compare against, every letter would be either all valid or all invented, and both answers are noise.
+- **SCLTR-B02** — With no declared vocabulary the letters are the canonical ones (`RuleLetters`), as on the spec side (RLTYR-B05): a canonical letter passes and any other is reported.
 
 - **SCLTR-B03** — A feature carrying no scenario code at all leaves without a verdict: there is nothing to judge.
 

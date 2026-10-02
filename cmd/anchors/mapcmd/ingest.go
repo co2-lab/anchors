@@ -1,3 +1,6 @@
+// @anchors
+//   ref: NGSTI
+
 package mapcmd
 
 import (

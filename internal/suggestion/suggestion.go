@@ -1,3 +1,6 @@
+// @anchors
+//   ref: SGSTS
+
 // Package suggestion materializa uma CORREÇÃO PROPOSTA que ainda não foi aplicada.
 //
 // Os gates até aqui só sabem ACUSAR: dizem que o carimbo divergiu, que falta amarra,

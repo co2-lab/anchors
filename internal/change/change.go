@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CHRCC
+
 // Package change materializa o REGISTRO DE ENTREGA: o que um agente diz ter feito, ao
 // terminar uma etapa. É a peça que faltava para fechar o ciclo de vida — sem ela, o
 // trabalho acabava quando o código nascia, e ninguém confrontava o que foi entregue.

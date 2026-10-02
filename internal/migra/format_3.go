@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MGSTM
+
 package migra
 
 // FORMATO 3 — os OITO nomes de gate que o formato 2 deixou para trás.

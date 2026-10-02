@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DCFRD
+
 package gate
 
 import (

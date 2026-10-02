@@ -1,3 +1,6 @@
+// @anchors
+//   ref: PSXSH
+
 package shell
 
 import (

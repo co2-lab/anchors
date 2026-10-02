@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: guide-distribuido
+-->
+
 # Guia de Gates Externos por Ecossistema
 
 > Este guia documenta como configurar os **gates externos de qualidade, segurança e governança** no Anchors para diferentes ecossistemas e plataformas.

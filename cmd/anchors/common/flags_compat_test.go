@@ -1,3 +1,6 @@
+// @anchors
+//   ref: FLALF
+
 package common
 
 import (

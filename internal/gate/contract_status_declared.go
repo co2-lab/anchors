@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CSDCN
+
 package gate
 
 import (

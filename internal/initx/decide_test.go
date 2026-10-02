@@ -1,3 +1,6 @@
+// @anchors
+//   ref: INDCN
+
 package initx
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: BLCNB
+
 package initx
 
 import (

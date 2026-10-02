@@ -133,10 +133,10 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     Then they are the same names in the same order
 
   @DFGTD-B16 @unit-level
-  Scenario: Choosing specs seeds header-valid on specs and features
+  Scenario: Choosing specs seeds header-valid on every governed kind
     Given a project that chooses specs
     When the default gates are seeded
-    Then header-valid is among them, informative, on specs and features
+    Then header-valid is among them, informative, on spec, feature, code, test, guide, doc, plan, product and flag
     And a configuration naming header-valid alone inherits that on
 
   @DFGTD-B17 @unit-level
@@ -174,11 +174,11 @@ Feature: DefaultGates — the gates a project is born with, by artifact and by p
     Given every artifact chosen
     When the default gates are listed
     Then evidence-fresh, feature-test-match, rule-implemented, scenario-identity, scenario-letter-declared, placeholder-filled and updated-at-atual are among them
-    And scenario-letter-declared presupposes rule_types, and route-declared is scoped by the screen tag
+    And scenario-type-aligned presupposes rule_types, and route-declared is scoped by the screen tag
 
   @DFGTD-B21 @unit-level
   Scenario: Init seeds what relates to the project and has its premise
     Given a project with spec, feature and test layers and no rule_types, that chose code with no code layer yet
     When the default gates are filtered for it
     Then feature-test-match and the security gates over code are seeded
-    And scenario-letter-declared, presupposing rule_types, and route-declared, scoped by the screen tag, are not
+    And scenario-type-aligned, presupposing rule_types, and route-declared, scoped by the screen tag, are not

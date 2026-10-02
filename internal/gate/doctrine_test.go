@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DCTRN
+
 package gate
 
 import (

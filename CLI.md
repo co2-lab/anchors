@@ -1,3 +1,7 @@
+<!-- @anchors
+  layer: doc
+-->
+
 # anchors — CLI
 
 CLI único do framework Anchors, em Go. Exercita o ciclo de vida do Anchors e é

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: RCDEO
+
 package mapcmd
 
 import (

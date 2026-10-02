@@ -1,3 +1,6 @@
+// @anchors
+//   ref: INPRN
+
 // Package initx infere uma proposta de Estrutura (config.Config) escaneando o
 // projeto de forma DETERMINÍSTICA — sem IA (ver DECISIONS: o CLI não embute modelo;
 // a tarefa é estrutural). A proposta alimenta o fluxo interativo do `anchors init`,

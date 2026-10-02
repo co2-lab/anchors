@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GHIGT
+
 package issue
 
 import (

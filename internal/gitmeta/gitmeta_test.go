@@ -1,3 +1,6 @@
+// @anchors
+//   ref: GTMTG
+
 package gitmeta
 
 import (

@@ -1,3 +1,6 @@
+// @anchors
+//   ref: DEPHN
+
 package gate
 
 import (

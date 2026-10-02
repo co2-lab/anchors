@@ -1,3 +1,6 @@
+// @anchors
+//   ref: MPCTI
+
 package mapcmd
 
 import (

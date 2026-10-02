@@ -1,3 +1,6 @@
+// @anchors
+//   ref: CVCMC
+
 package quality
 
 import (
