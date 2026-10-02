@@ -54,8 +54,11 @@ func isolateGit(t *testing.T) {
 	if _, err := exec.LookPath("git"); err != nil {
 		t.Skip("git is not installed")
 	}
+	// No automatic gc nor maintenance: either runs DETACHED after a commit and writes into
+	// `.git` while the test's temporary folder is removed — "directory not empty" failed a
+	// CI run of a test that had passed.
 	global := filepath.Join(t.TempDir(), "gitconfig")
-	if err := os.WriteFile(global, nil, 0o644); err != nil {
+	if err := os.WriteFile(global, []byte("[gc]\n\tauto = 0\n\tautoDetach = false\n[maintenance]\n\tauto = false\n"), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	t.Setenv("GIT_CONFIG_GLOBAL", global)
