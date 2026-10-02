@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DCRQD
-#   updated_at: 2026-09-27
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @DCRQD
@@ -103,3 +103,9 @@ Feature: DocRequired — the aggregated document the unit must feed
     And a document that a reviewer would consider obviously required
     When the gate confronts the unit
     Then it returns Pass, because inventing duties would charge what nobody committed to
+
+  @DCRQD-B10 @unit-level
+  Scenario: A YAML comment is not a Markdown heading
+    Given an openapi.yaml with a "# generated" comment and the unit's code in an x-anchors-unit field
+    When the unit's mention is looked for
+    Then it counts, because the comment is no heading and the document has no sections

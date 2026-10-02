@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:edb1fbbc2c35a5f6 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:1bb8f516257e4f46 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -3567,6 +3567,8 @@ abra a página dela em `camadas/`.
 
 - [DCRQD-B09 — In a document that has sections, the unit counts as documented only when a section TITLE names it, by code or by file name: a mention in the body of another section, or in a note, does not count, nor does the title of another unit whose name contains this one's; a document with no section still counts by mention.](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed)
 
+- [DCRQD-B10 — Sections and headings are read only in a Markdown document (`.md`, `.markdown`, `.mdx`); in any other — a YAML, an OpenAPI, a script — a line opening with `#` is a comment, the document has no sections, and a mention of the unit in its body counts.](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed)
+
 - [DCRQD-I01 — The duty starts from the SPEC, not from the code. The spec is what declares the unit; starting from the code would charge the duty of a file that merely realises it.](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed)
 
 - [DCRQD-I02 — The layer used is the UNIT's, not the node's. A spec node always has layer `spec`; reading it would charge every spec of the project the same duty, or none.](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed)
@@ -3742,6 +3744,8 @@ abra a página dela em `camadas/`.
 - [DCTRN-B31 — The demanding layer is resolved from the target the spec describes: the layers of the code its specifies edges reach, or, before that code exists, the layer the target's path would have.](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied)
 
 - [DCTRN-B32 — A catalogued rule and a `@realizes` citation are read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a 7-character rule and citation are read.](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied)
+
+- [DCTRN-B33 — Each rule is charged once, at its first line — a Rule uses row naming it does not repeat it —, and only a rule to realize is charged: an open question (`Q`), a plan phase and a flag scenario (`G`) realize no doctrine, the letters `rule-uses-declared` leaves out.](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied)
 
 - [DCTRN-I01 — Only a realizes edge realizes a doctrine rule: an edge of any other type that carries a rule code never counts.](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied)
 
@@ -4254,6 +4258,8 @@ abra a página dela em `camadas/`.
 - [INCHN-B37 — `mutation-score` skips a file the mutation tool listed at its current revision with no mutant — an alias, a re-export: it was measured and has nothing to mutate —; a file never listed, or listed at another revision, stays pending.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 - [INCHN-B38 — `line-coverage` holds a code file to the floor of the first glob of the gate's `coverage_floors` that matches it, in name order, and otherwise to its `min_coverage`, 70% when undeclared; a file below a glob's floor fails naming the glob and its reason. (`CoverageFloorFor`)](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
+
+- [INCHN-B39 — A header line is read in every comment dialect the map reads — `//`, `#`, `--`, `<!--` and a block comment's ` * ` (`config.HeaderLinePrefix`): a `-- ref: CODE` header has its identity.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 
 - [INCHN-B15 — An executable test script steps aside too, by a different path: its format belongs to the runner, and its identity is in the file name.](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function)
 

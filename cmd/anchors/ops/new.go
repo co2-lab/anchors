@@ -596,7 +596,7 @@ func refDaSpecIrma(root, outPath, name string) (string, string) {
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
 func specHeaderCodeRE() *regexp.Regexp {
-	return regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
+	return regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
 }
 
 func codeDoHeaderSpec(content string) string {

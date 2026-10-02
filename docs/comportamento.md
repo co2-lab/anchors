@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:f5b2df926b75b972 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:459f36ba4e6474ba — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -3248,6 +3248,8 @@ teste prova.
 
 - [The gate does not decide which documents are mandatory](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-X02`
 
+- [A YAML comment is not a Markdown heading](camadas/gate.md#dcrqd--docrequired--the-aggregated-document-the-unit-must-feed) `DCRQD-B10`
+
 - [A reference that brings the passage it announces passes](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B01`
 
 - [A reference that only points is accused](camadas/gate.md#dscdc--docselfcontained--the-spec-has-to-stand-on-its-own) `DSCDC-B02`
@@ -3395,6 +3397,8 @@ teste prova.
 - [A resolved doctrine that cannot be read confirms none of its rules](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-E01`
 
 - [Doctrine rules and realizes tags are read at the code length the project declares](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B32`
+
+- [A rule is charged once, and an open question is no rule to realize](camadas/gate.md#dctrn--doctrine--the-vertical-axis-product-doctrine-exists-is-realized-and-is-never-copied) `DCTRN-B33`
 
 - [An artifact that is not a spec leaves without a verdict](camadas/gate.md#dmdcd--domaindeclared--the-spec-declares-what-the-unit-accepts-and-who-blocks-the-invalid) `DMDCD-B01`
 
@@ -3905,6 +3909,8 @@ teste prova.
 - [A file the mutation tool measured with no mutant has nothing to mutate](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B37`
 
 - [Line coverage is held to the gate's floor, or a glob's floor with its reason](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B38`
+
+- [A header in a double-dash comment has its identity](camadas/gate.md#inchn--internalchecks--the-registry-that-routes-a-declared-check-name-to-a-function) `INCHN-B39`
 
 - [An artifact that is not code leaves without a verdict](camadas/gate.md#lybnl--layerboundary--a-layer-does-not-reach-what-is-not-its-own) `LYBNL-B01`
 

@@ -324,14 +324,14 @@ func TestDocRequired_mentionInTheBodyDoesNotCountAsDocumentation(t *testing.T) {
 		"## Nota — este catálogo cresce por card\n\n" +
 		"Faltam entrada para `MTCRM` e `CHRTS`; cada um recebe a sua quando o gate sinalizar.\n"
 
-	if !mentionsUnit(doc, "STBDS", "StatusBadge.spec.md") {
+	if !mentionsUnit(doc, "docs/components.md", "STBDS", "StatusBadge.spec.md") {
 		t.Error("the unit WITH its own section stopped counting — false negative")
 	}
-	if mentionsUnit(doc, "MTCRM", "MetricCard.spec.md") {
+	if mentionsUnit(doc, "docs/components.md", "MTCRM", "MetricCard.spec.md") {
 		t.Error("a citation in the body and a mention in a note counted as documentation — " +
 			"it is the defect that left MetricCard without an entry for weeks")
 	}
-	if mentionsUnit(doc, "CHRTS", "Charts.spec.md") {
+	if mentionsUnit(doc, "docs/components.md", "CHRTS", "Charts.spec.md") {
 		t.Error("a mention only in the note counted as documentation")
 	}
 }
@@ -342,7 +342,7 @@ func TestDocRequired_titleNamingTheFileCounts(t *testing.T) {
 	t.Run("DCRQD-B04: A mention by the file name also counts", func(t *testing.T) {})
 	t.Run("DCRQD-B09: In a document with sections only a title of its own documents the unit", func(t *testing.T) {})
 	doc := "## `apps/mobile/src/components/MetricCard.spec.md`\n\nO cartão de número.\n"
-	if !mentionsUnit(doc, "MTCRM", "apps/mobile/src/components/MetricCard.spec.md") {
+	if !mentionsUnit(doc, "docs/components.md", "MTCRM", "apps/mobile/src/components/MetricCard.spec.md") {
 		t.Error("a title naming the FILE did not count — the real catalogue writes it that way")
 	}
 }
@@ -356,7 +356,7 @@ func TestDocRequired_documentWithoutSectionsStillCountsByMention(t *testing.T) {
 	t.Run("DCRQD-B04: A mention by the file name also counts", func(t *testing.T) {})
 	t.Run("DCRQD-B09: In a document with sections only a title of its own documents the unit", func(t *testing.T) {})
 	yaml := "openapi: 3.1.0\npaths:\n  /services:\n    get:\n      operationId: ServiceList\n"
-	if !mentionsUnit(yaml, "SRLSS", "ServiceList.spec.md") {
+	if !mentionsUnit(yaml, "openapi.yaml", "SRLSS", "ServiceList.spec.md") {
 		t.Error("in a document without sections the mention stopped counting — OpenAPI has no " +
 			"Markdown titles, and charging a section there demands a structure the format lacks")
 	}
@@ -366,7 +366,20 @@ func TestDocRequired_documentWithoutSectionsStillCountsByMention(t *testing.T) {
 func TestDocRequired_titleOfAnotherUnitDoesNotCount(t *testing.T) {
 	t.Run("DCRQD-B09: In a document with sections only a title of its own documents the unit", func(t *testing.T) {})
 	doc := "## `MetricCardList.spec.md` (`MTCLS`)\n\nA lista de cartões.\n"
-	if mentionsUnit(doc, "MTCRM", "MetricCard.spec.md") {
+	if mentionsUnit(doc, "docs/components.md", "MTCRM", "MetricCard.spec.md") {
 		t.Error("the title of `MetricCardList` counted as documentation of `MetricCard`")
+	}
+}
+
+// A YAML comment opens with `#`; read as a Markdown heading it turned an OpenAPI into a
+// sectioned document, and the unit's mention in its body stopped counting.
+func TestDocRequired_aYAMLCommentIsNoHeading(t *testing.T) {
+	t.Run("DCRQD-B10: A YAML comment is not a Markdown heading", func(t *testing.T) {})
+	yaml := "# generated from the handlers\nopenapi: 3.1.0\npaths:\n  /wallets:\n    get:\n      x-anchors-unit: GQCHG\n"
+	if !mentionsUnit(yaml, "docs/openapi.yaml", "GQCHG", "src/handlers/wallets.go") {
+		t.Error("the mention in a YAML body counts, its comment is no heading")
+	}
+	if mentionsUnit("# Overview\n\nGQCHG appears in the prose\n", "docs/api.md", "GQCHG", "src/handlers/wallets.go") {
+		t.Error("a Markdown document with sections still needs a section of the unit's own")
 	}
 }

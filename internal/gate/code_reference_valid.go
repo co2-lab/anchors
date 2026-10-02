@@ -82,7 +82,7 @@ func refCodeRE() *regexp.Regexp {
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
 func headerCodeCaptureRE() *regexp.Regexp {
-	return regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
+	return regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
 }
 
 func headerCode(content string) string {

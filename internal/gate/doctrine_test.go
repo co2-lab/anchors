@@ -559,3 +559,14 @@ func TestDoctrine_readsEveryDeclaredCodeLength(t *testing.T) {
 		t.Errorf("ruleTexts[CREDITS-V01] = %q, want the rule's text", got)
 	}
 }
+
+func TestSpecRealizesDoctrine_eachRuleOnceAndNoQuestion(t *testing.T) {
+	t.Run("DCTRN-B33: A rule is charged once, and an open question is no rule to realize", func(t *testing.T) {})
+	cfg := &config.Config{Layers: map[string]config.Layer{"screen": {RequiresDoctrine: true}}}
+	spec := "### CCHCN-B03 — a rule with no declaration\n\n| Rule | Uses |\n| --- | --- |\n| `CCHCN-B03` | `field` |\n\n### CCHCN-Q01 — still to decide\n"
+	n := mapx.Node{ID: "x.spec.md", Kind: mapx.KindSpec, Tags: []string{"screen"}}
+	v, msg := checkSpecRealizesDoctrine(spec, n, "", nil, cfg)
+	if v != Fail || strings.Count(msg, "CCHCN-B03") != 1 || strings.Contains(msg, "CCHCN-Q01") {
+		t.Errorf("B03 once and no Q01: %v (%s)", v, msg)
+	}
+}

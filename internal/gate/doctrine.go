@@ -492,10 +492,19 @@ func checkSpecRealizesDoctrine(content string, n mapx.Node, root string, g *mapx
 		declared[r.from] = true
 	}
 	var naked []string
+	// Each rule once, at its first line: a later line naming the code — the Rule uses
+	// table — listed it a second time. And only what is a rule to realize: an open
+	// question, a plan phase and a flag scenario realize no doctrine, the same letters
+	// `rule-uses-declared` leaves out (reported from baas-proxy).
+	seen := map[string]bool{}
 	ruleRE := doctrineRuleRE()
 	for _, line := range strings.Split(content, "\n") {
 		m := ruleRE.FindStringSubmatch(line)
-		if m == nil {
+		if m == nil || seen[m[1]] {
+			continue
+		}
+		seen[m[1]] = true
+		if defaultUsesExempt[ruleLetter(m[1])] {
 			continue
 		}
 		if tbdLineRE.MatchString(line) {
@@ -514,6 +523,15 @@ func checkSpecRealizesDoctrine(content string, n mapx.Node, root string, g *mapx
 		return Diverge, fmt.Sprintf(i18n.T("gate.spec_realizes_doctrine.deferred"), len(deferred)) + " " + DeclaredMarker
 	}
 	return Pass, ""
+}
+
+// ruleLetter is the letter of a rule code: `CCHCN-B03` → `B`, `PLAN-W01` → `W`.
+func ruleLetter(code string) string {
+	_, rest, ok := strings.Cut(code, "-")
+	if !ok {
+		return ""
+	}
+	return strings.TrimRight(rest, "0123456789")
 }
 
 // layerRequiresDoctrine answers whether the unit's layer demands `@realizes`.

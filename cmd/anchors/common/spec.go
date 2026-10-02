@@ -12,7 +12,7 @@ import (
 )
 
 func SpecHeaderCodeRE() *regexp.Regexp {
-	return regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
+	return regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
 }
 
 // CodeDoHeaderSpec extrai o código de identidade do header de uma spec.

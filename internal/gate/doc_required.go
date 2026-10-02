@@ -104,7 +104,7 @@ func checkDocRequiredAggregate(_ config.Gate, root string, graph *mapx.Graph, cf
 				byDoc[d.Path] = pend
 				order = append(order, d.Path)
 			}
-			if !pend.missing && !mentionsUnit(pend.content, n.Code, n.ID) {
+			if !pend.missing && !mentionsUnit(pend.content, d.Path, n.Code, n.ID) {
 				pend.unmentioned = append(pend.unmentioned, n.Code)
 			}
 		}
@@ -176,7 +176,7 @@ func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *co
 			missing = append(missing, fmt.Sprintf("%s (%s)", d.Path, d.Kind))
 			continue
 		}
-		if n.Code != "" && !mentionsUnit(string(b), n.Code, n.ID) {
+		if n.Code != "" && !mentionsUnit(string(b), d.Path, n.Code, n.ID) {
 			silent = append(silent, fmt.Sprintf("%s (%s)", d.Path, d.Kind))
 		}
 	}
@@ -211,7 +211,7 @@ func checkDocRequired(_ string, n mapx.Node, root string, _ *mapx.Graph, cfg *co
 // Deliberadamente grosseiro: não entende YAML, não entende Markdown, não valida conteúdo.
 // Ele separa "não documentado" de "documentado" — e a qualidade do que está escrito é
 // trabalho de revisão, não de gate.
-func mentionsUnit(doc, code, id string) bool {
+func mentionsUnit(doc, docPath, code, id string) bool {
 	// A MENÇÃO NUMA NOTA NÃO CONTA — e o caso que obrigou isto é quase cômico.
 	//
 	// No projeto de referência o `componentes.md` tinha uma nota listando os componentes
@@ -228,13 +228,17 @@ func mentionsUnit(doc, code, id string) bool {
 	// segue sendo trabalho de revisão. A distinção é só uma: menção DENTRO de um bloco de
 	// nota não conta; em qualquer outro lugar, conta como antes.
 	// A SEÇÃO PRÓPRIA é a resposta forte: quem documenta abre uma seção para a unidade.
-	if hasOwnSection(doc, code, id) {
+	// A heading is Markdown's: in a YAML, an OpenAPI or a script `#` opens a comment, and
+	// read as a heading it turned the whole file into "sections", so the unit's mention in
+	// the body (`x-anchors-unit: CODE`) stopped counting (reported from baas-proxy).
+	markdown := isMarkdown(docPath)
+	if markdown && hasOwnSection(doc, code, id) {
 		return true
 	}
 	// SEM SEÇÃO, só conta o documento que não TEM seções — um OpenAPI, um YAML, um
 	// arquivo de prosa corrida. Ali a menção é tudo o que existe, e cobrar título seria
 	// exigir uma estrutura que o formato não tem.
-	if hasAnyHeading(doc) {
+	if markdown && hasAnyHeading(doc) {
 		return false
 	}
 	if code != "" && strings.Contains(doc, code) {
@@ -316,6 +320,15 @@ func headingLevel(l string) int {
 // Um `openapi.yaml` não tem títulos Markdown, e exigir uma seção por unidade ali seria
 // cobrar uma estrutura que o formato não tem — foi por isso que a menção existe como rede
 // secundária desde o início. A distinção mantém esse caso funcionando como antes.
+// isMarkdown says whether a document is Markdown, where `#` opens a heading.
+func isMarkdown(path string) bool {
+	switch strings.ToLower(filepath.Ext(path)) {
+	case ".md", ".markdown", ".mdx":
+		return true
+	}
+	return false
+}
+
 func hasAnyHeading(doc string) bool {
 	for _, l := range strings.Split(doc, "\n") {
 		if headingLevel(l) > 0 {

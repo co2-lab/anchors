@@ -73,7 +73,7 @@ func placeholderREs(markers []string) placeholderRegexps {
 	}
 	words := strings.Join(quoted, "|")
 	r := placeholderRegexps{
-		field: regexp.MustCompile(`(?mi)^\s*(?://|#|<!--|\*)?\s*([a-z_]+):\s*(` + words + `|<[^>]+>)\s*$`),
+		field: regexp.MustCompile(`(?mi)` + config.HeaderLinePrefix + `([a-z_]+):\s*(` + words + `|<[^>]+>)\s*$`),
 		cell:  regexp.MustCompile(`(?m)^\s*\|[^|\n]*\|[^|\n]*\b(?:` + words + `)\b[^|\n]*\|`),
 		title: regexp.MustCompile(`(?m)^(?:#{1,6}\s+.*—\s*(?:` + words + `)\b.*|(?:` + words + `)[: ].*)$`),
 	}

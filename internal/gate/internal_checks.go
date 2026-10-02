@@ -294,17 +294,17 @@ var headerBlockRE = regexp.MustCompile(`@anchors\b`)
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
 func headerCodeRE() *regexp.Regexp {
-	return regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*code:\s*[A-Z0-9]` + config.CodeLengthPattern() + `\b`)
+	return regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `code:\s*[A-Z0-9]` + config.CodeLengthPattern() + `\b`)
 }
 
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
 func headerRefRE() *regexp.Regexp {
-	return regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*ref:\s*[A-Z0-9]` + config.CodeLengthPattern() + `\b`)
+	return regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `ref:\s*[A-Z0-9]` + config.CodeLengthPattern() + `\b`)
 }
 
-var headerLayerRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*layer:\s*\S+`)
+var headerLayerRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `layer:\s*\S+`)
 
 // recognizedLayers são as tags de camadas RECONHECIDAS — declaradas na Estrutura só
 // para sair do escrutínio de spec (dao/infra/presentation/domain-types e afins). Um
@@ -315,7 +315,7 @@ var recognizedLayers = map[string]bool{
 }
 
 // headerLayerValueRE captura o VALOR do `layer:` declarado no header.
-var headerLayerValueRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*layer:\s*(\S+)`)
+var headerLayerValueRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `layer:\s*(\S+)`)
 
 // isRecognizedLayer decide se o arquivo pertence a uma layer reconhecida — pela tag
 // do nó OU pelo `layer:` DECLARADO no header. O header importa porque um TESTE de um

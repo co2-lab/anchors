@@ -385,7 +385,7 @@ func Classify(rel string, cfg *config.Config) (layer, kind string) {
 //
 // The comment prefix is part of the line: a code file's header writes `//   layer: x`
 // (or `#`, `--`, ` * `), and without the prefix the layer a code file declared was never read.
-var headerLayerRE = regexp.MustCompile(`(?m)^\s*(?://|#|--|\*)?\s*layer:\s*([a-zA-Z0-9_-]+)`)
+var headerLayerRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `layer:\s*([a-zA-Z0-9_-]+)`)
 
 // LayerOfUnit devolve a camada da UNIDADE a que um arquivo pertence — não a do arquivo.
 //
@@ -646,11 +646,11 @@ var depCodeRE = regexp.MustCompile(`^DEP\d+$`)
 // headerDepRE captura a linha `dep:` do cabeçalho @anchors (camadas reconhecidas sem
 // spec declaram aqui os ARQUIVOS de que dependem — a "Tabela de Dependências inline",
 // já que não têm .spec.md). Aceita 1+ caminhos separados por vírgula.
-var headerDepRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*dep:\s*(.+)$`)
+var headerDepRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `dep:\s*(.+)$`)
 
 // headerNeedsRE captura a linha `needs:` do cabeçalho @anchors de um PLANO: os planos
 // que precisam terminar antes deste começar. Aceita 1+ caminhos separados por vírgula.
-var headerNeedsRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*needs:\s*(.+)$`)
+var headerNeedsRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `needs:\s*(.+)$`)
 
 // headerParentRE captura a linha `parent:` — QUEM É O PAI deste artefato.
 //
@@ -660,7 +660,7 @@ var headerNeedsRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*needs:\s*(.+
 //
 // Enquanto só havia `needs`, a árvore inferia o pai a partir da ordem, e desenhava as
 // quatro fases de um plano encaixadas uma na outra como uma escada.
-var headerParentRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*parent:\s*(.+)$`)
+var headerParentRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `parent:\s*(.+)$`)
 
 // headerRevisesRE captura `revises:` — o plano que REVISA outro.
 //
@@ -677,7 +677,7 @@ var headerParentRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*parent:\s*(
 // O custo do segundo é a leitura fora de ordem — quem abre o plano antigo não sabe que
 // existe um mais novo. Por isso o `revises` é confrontado por gate: o plano revisado
 // ganha um aviso no topo apontando para quem o revisou.
-var headerRevisesRE = regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*revises:\s*(.+)$`)
+var headerRevisesRE = regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `revises:\s*(.+)$`)
 
 // needsFor lê `needs:` de um PLANO (caminhos de outros planos) ou de uma SPEC (o CÓDIGO
 // da fase que precisa fechar antes).
@@ -1030,7 +1030,7 @@ func ShortHash(b []byte) string { return shortHash(b) }
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
 func headerCodeRE() *regexp.Regexp {
-	return regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
+	return regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
 }
 
 // extractHeaderCode devolve a identidade DECLARADA, ou vazio se o header não a declara.

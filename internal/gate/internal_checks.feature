@@ -318,3 +318,9 @@ Feature: InternalChecks — the registry that routes a declared check name to a 
     When line-coverage confronts it with no floor declared, then with min_coverage 50
     Then it fails against 70%, then passes
     And with coverage_floors "cmd/**" at 80 because "the entry point is proven by the boot test", a file under cmd/ at 60% fails naming the glob and the reason
+
+  @INCHN-B39 @unit-level
+  Scenario: A header in a double-dash comment has its identity
+    Given an SQL migration whose header is written with "--" comments, carrying ref and layer
+    When header-valid confronts it
+    Then it passes, as the same header written with "//" does

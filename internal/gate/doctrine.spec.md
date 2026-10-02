@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCTRN
-  updated_at: 2026-10-01
+  updated_at: 2026-10-02
   layer: gate
 -->
 # Doctrine — the vertical axis: product doctrine exists, is realized, and is never copied
@@ -108,6 +108,7 @@ rule to realize.
 | `DCTRN-B30` | A blank line ends the rule a tag belongs to: a `@realizes` after a blank line declares nothing for the rule above. |
 | `DCTRN-B31` | The demanding layer is resolved from the target the spec describes: the layers of the code its specifies edges reach, or, before that code exists, the layer the target's path would have. |
 | `DCTRN-B32` | A catalogued rule and a `@realizes` citation are read at the code lengths the project declares (`code_lengths`), not a fixed range: with a declared length of 7, a 7-character rule and citation are read. |
+| `DCTRN-B33` | Each rule is charged once, at its first line — a Rule uses row naming it does not repeat it —, and only a rule to realize is charged: an open question (`Q`), a plan phase and a flag scenario (`G`) realize no doctrine, the letters `rule-uses-declared` leaves out. |
 
 ## Invariants
 

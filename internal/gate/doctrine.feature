@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: DCTRN
-#   updated_at: 2026-09-30
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @DCTRN
@@ -223,3 +223,9 @@ Feature: Doctrine — the vertical axis: product doctrine exists, is realized, a
     Given a project that declares code length 7
     When a rule "CREDITS-V01" with a line "@realizes LIMITED-R03" below it is parsed
     Then the tag pairs "CREDITS-V01" with "LIMITED-R03", and the rule's text is read
+
+  @DCTRN-B33 @unit-level
+  Scenario: A rule is charged once, and an open question is no rule to realize
+    Given a demanding layer and a spec with the rule B03 with no realizes tag, B03 again in a Rule uses row, and the open question Q01
+    When spec-realizes-doctrine confronts it
+    Then it fails naming B03 once, and not Q01

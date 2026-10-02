@@ -1779,6 +1779,13 @@ var canonicalGate func(name string) (Gate, bool)
 // SetCanonicalGateResolver registra a fonte das declarações canônicas de gate.
 func SetCanonicalGateResolver(f func(name string) (Gate, bool)) { canonicalGate = f }
 
+// HeaderLinePrefix is how a line of the `@anchors` header begins, in any comment dialect:
+// `//`, `#`, `--` (SQL, Lua, Haskell), `<!--` and a block comment's ` * `. It is ONE
+// definition: the header was read by nineteen copies of this prefix, and the gate's lacked
+// `--` while the map's had it — a valid `-- ref: X` header failed `header-valid` as having
+// no identity (reported from baas-proxy).
+const HeaderLinePrefix = `^\s*(?://|#|--|<!--|\*)?\s*`
+
 // gateCatalog lists every canonical gate; injected by the package that owns the catalog,
 // for the same reason as canonicalGate.
 var gateCatalog func() []Gate

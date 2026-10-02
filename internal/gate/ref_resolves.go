@@ -83,14 +83,14 @@ func codeExistsInGraph(g *mapx.Graph, code string) bool {
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
 func refHeaderRE() *regexp.Regexp {
-	return regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*ref:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
+	return regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `ref:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
 }
 
 // Compilado por CHAMADA e não em `var`: o comprimento do código vem da config do
 // projeto (`code_lengths`), carregada DEPOIS dos globais. Um `var` congelaria o
 // default e a declaração do projeto não teria efeito.
 func specCodeRE() *regexp.Regexp {
-	return regexp.MustCompile(`(?m)^\s*(?://|#|<!--|\*)?\s*code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
+	return regexp.MustCompile(`(?m)` + config.HeaderLinePrefix + `code:\s*([A-Z0-9]` + config.CodeLengthPattern() + `)\b`)
 }
 
 // siblingSpecOf acha a spec co-localizada com o arquivo e devolve (caminho, código dela).

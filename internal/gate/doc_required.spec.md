@@ -1,6 +1,6 @@
 <!-- @anchors
   code: DCRQD
-  updated_at: 2026-09-27
+  updated_at: 2026-10-02
   layer: gate
 -->
 # DocRequired — the aggregated document the unit must feed
@@ -50,6 +50,7 @@ the gate.
 | `DCRQD-B07` | A layer with no trigger declared is not charged, even when the document exists. |
 | `DCRQD-B08` | Aggregated, the verdict is ONE PER DOCUMENT, not one per unit. |
 | `DCRQD-B09` | In a document that has sections, the unit counts as documented only when a section TITLE names it, by code or by file name: a mention in the body of another section, or in a note, does not count, nor does the title of another unit whose name contains this one's; a document with no section still counts by mention. |
+| `DCRQD-B10` | Sections and headings are read only in a Markdown document (`.md`, `.markdown`, `.mdx`); in any other — a YAML, an OpenAPI, a script — a line opening with `#` is a comment, the document has no sections, and a mention of the unit in its body counts. |
 
 ## Invariants
 

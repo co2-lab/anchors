@@ -144,7 +144,7 @@ func headerHasAttr(content, attr string) bool {
 	if !ok {
 		return false
 	}
-	re := regexp.MustCompile(`(?mi)^\s*(?://|#|<!--|\*)?\s*` +
+	re := regexp.MustCompile(`(?mi)` + config.HeaderLinePrefix + `` +
 		regexp.QuoteMeta(strings.TrimSpace(k)) + `:\s*` +
 		regexp.QuoteMeta(strings.TrimSpace(v)) + `\s*$`)
 	return re.MatchString(headerOf(content))
@@ -164,7 +164,7 @@ func waiverFor(content, obligation string) string {
 // Compartilhado por `obligation_waived` (dispensa) e `obligation_pending` (dívida
 // assumida): as duas são declarações que só valem COM justificativa escrita.
 func declarationWithReason(content, campo, obligation string) string {
-	re := regexp.MustCompile(`(?mi)^\s*(?://|#|<!--|\*)?\s*` + regexp.QuoteMeta(campo) + `:\s*` +
+	re := regexp.MustCompile(`(?mi)` + config.HeaderLinePrefix + `` + regexp.QuoteMeta(campo) + `:\s*` +
 		regexp.QuoteMeta(obligation) + `\s*(?:—|\s-\s)\s*(\S.*?)\s*$`)
 	if m := re.FindStringSubmatch(headerOf(content)); m != nil {
 		return m[1]
@@ -250,7 +250,7 @@ func tokenAppearsIn(root, glob, token string) (bool, bool) {
 // headerAttr lê o valor de um atributo livre do header `@anchors` (ex.:
 // `identified_as: TRANSACTIONS_TABLE_NAME`). Vazio se não declarado.
 func headerAttr(content, key string) string {
-	re := regexp.MustCompile(`(?mi)^\s*(?://|#|<!--|\*)?\s*` + regexp.QuoteMeta(key) + `:\s*(\S+)\s*$`)
+	re := regexp.MustCompile(`(?mi)` + config.HeaderLinePrefix + `` + regexp.QuoteMeta(key) + `:\s*(\S+)\s*$`)
 	if m := re.FindStringSubmatch(headerOf(content)); m != nil {
 		return m[1]
 	}

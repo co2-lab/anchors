@@ -1800,3 +1800,19 @@ func TestLineCoverage_theGatesFloor(t *testing.T) {
 		t.Errorf("a file no glob matches keeps the gate's floor, got %v", v)
 	}
 }
+
+// SQL, Lua and Haskell comment with `--`; the map read that header and the gate did not,
+// so a valid migration header failed as "header without identity" (reported from
+// baas-proxy).
+func TestHeaderValid_readsADoubleDashHeader(t *testing.T) {
+	t.Run("INCHN-B39: A header in a double-dash comment has its identity", func(t *testing.T) {})
+	n := mapx.Node{ID: "migrations/001.sql", Kind: mapx.KindCode}
+	for _, header := range []string{
+		"-- @anchors\n--   ref: MGRTN\n--   layer: migration\nCREATE TABLE x();\n",
+		"// @anchors\n//   ref: MGRTN\n//   layer: migration\n",
+	} {
+		if v, msg := checkersWithGraph["header-valid"](header, n, "", nil, nil); v == Fail {
+			t.Errorf("a valid header fails: %s\n%s", msg, header)
+		}
+	}
+}
