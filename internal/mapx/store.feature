@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: GRPRG
-#   updated_at: 2026-09-29
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @GRPRG
@@ -30,6 +30,12 @@ Feature: GraphPersistence — saving and loading the map file without churn and 
     Given a map saved by release 0.1.10 and then re-saved unchanged by release dev
     When a node is added and the graph is saved by release dev
     Then the file is rewritten and says generated_by dev
+
+  @GRPRG-B08 @unit-level
+  Scenario: A later release restamps an unchanged map, an earlier one does not
+    Given a map saved by release 0.1.248
+    When the same graph is saved by release 0.1.258, then by 0.1.250 and by dev
+    Then the file says generated_by 0.1.258 and keeps it
 
   @GRPRG-B05 @unit-level
   Scenario: Loading a map in an unreadable format is refused

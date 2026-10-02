@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:1cdf428488e86bf4 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:1419038c1944cdac — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -6905,6 +6905,8 @@ teste prova.
 - [A save that changes only the writer's release leaves the file untouched](layers/mapa.md#grprg-b03--a-save-that-changes-only-the-writers-release-leaves-the-file-untouched) `GRPRG-B03`
 
 - [A real change rewrites the file with the running release](layers/mapa.md#grprg-b04--a-real-change-rewrites-the-file-with-the-running-release) `GRPRG-B04`
+
+- [A later release restamps an unchanged map, an earlier one does not](layers/mapa.md#grprg-b08--a-later-release-restamps-an-unchanged-map-an-earlier-one-does-not) `GRPRG-B08`
 
 - [Loading a map in an unreadable format is refused](layers/mapa.md#grprg-b05--loading-a-map-in-an-unreadable-format-is-refused) `GRPRG-B05`
 

@@ -57,6 +57,26 @@ func TestGeneratedByAloneDoesNotRewriteTheMap(t *testing.T) {
 	}
 }
 
+// A LATER RELEASE STAMPS ITSELF. With only B03, `check` warned "written by 0.1.248, this
+// is 0.1.258 — run `map build`", and `map build` wrote nothing: the warning could not be
+// cleared. Measured on a project after `map build` and `migrate` on the newer release.
+func TestLaterReleaseRestampsAnUnchangedMap(t *testing.T) {
+	t.Run("GRPRG-B08: A later release restamps an unchanged map, an earlier one does not", func(t *testing.T) {})
+	p := filepath.Join(t.TempDir(), "anchors.graph.yaml")
+	g := &Graph{Version: FormatoAtual, Nodes: []Node{{ID: "a", Rev: "r1"}}}
+	defer func(old string) { GeneratedBy = old }(GeneratedBy)
+	for _, v := range []string{"0.1.248", "0.1.258", "0.1.250", "dev"} {
+		GeneratedBy = v
+		if err := Save(g, p); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if got := generatedByOnDisk(p); got != "0.1.258" {
+		t.Errorf("generated_by = %q, want 0.1.258: the later release stamps itself, and an "+
+			"earlier one or dev never takes it back", got)
+	}
+}
+
 // The FORMAT belongs to whoever WRITES. A `Graph{}` with no version used to be saved as
 // `version: 0`, which reads back as "format 1: needs migrating" — a file born asking for a
 // migration to the format it is already in.

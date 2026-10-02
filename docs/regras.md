@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:4d87ac981e0c4104 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:4bc2dc687f77373d — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -7614,6 +7614,8 @@ abra a página dela em `camadas/`.
 - [GRPRG-B03 — When the only difference between the new content and the file on disk is the line naming the binary that wrote it, the file is left untouched.](layers/mapa.md#grprg--graphpersistence--saving-and-loading-the-map-file-without-churn-and-without-partial-reads)
 
 - [GRPRG-B04 — When anything else changed, the file is rewritten, carrying the release of the binary that is running.](layers/mapa.md#grprg--graphpersistence--saving-and-loading-the-map-file-without-churn-and-without-partial-reads)
+
+- [GRPRG-B08 — A release LATER than the one the file names rewrites it even when nothing else changed, so the stale-binary warning can be cleared with `anchors map build`; an earlier release, or one that is not a release (`dev`), does not.](layers/mapa.md#grprg--graphpersistence--saving-and-loading-the-map-file-without-churn-and-without-partial-reads)
 
 - [GRPRG-B05 — Loading a map whose format this binary cannot read returns the format refusal and no graph.](layers/mapa.md#grprg--graphpersistence--saving-and-loading-the-map-file-without-churn-and-without-partial-reads)
 

@@ -7,7 +7,9 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"strings"
 
+	"github.com/co2-lab/anchors/internal/config"
 	"gopkg.in/yaml.v3"
 )
 
@@ -51,7 +53,14 @@ func Save(g *Graph, path string) error {
 	// A comparação é com o arquivo COMPLETO, header incluído. A primeira versão comparava
 	// só o YAML contra o arquivo em disco — e como o disco tem o header, nunca eram
 	// iguais: a guarda não guardava nada, e só o teste isolado mostrou.
-	if equalIgnoringGeneratedBy(path, completo) {
+	//
+	// A NEWER RELEASE is the exception: it stamps itself even when nothing else changed.
+	// Otherwise the map kept the release that last changed it, and the `check` warning
+	// ("written by 0.1.248, this is 0.1.258 — run `map build` with the new one") could not
+	// be cleared: `map build` wrote nothing, so the warning stayed. An older release never
+	// restamps, and neither does `dev`, which no release orders against — so the field
+	// still cannot oscillate.
+	if equalIgnoringGeneratedBy(path, completo) && !newerRelease(GeneratedBy, generatedByOnDisk(path)) {
 		return nil
 	}
 	return os.WriteFile(path, completo, 0o644)
@@ -98,6 +107,26 @@ func equalIgnoringGeneratedBy(path string, novo []byte) bool {
 }
 
 var generatedByLineRE = regexp.MustCompile(`(?m)^generated_by:.*\n`)
+
+// generatedByOnDisk is the release the map on disk says wrote it; empty when there is none.
+func generatedByOnDisk(path string) string {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	m := generatedByLineRE.Find(b)
+	if m == nil {
+		return ""
+	}
+	return strings.Trim(strings.TrimSpace(strings.TrimPrefix(string(m), "generated_by:")), `"'`)
+}
+
+// newerRelease says whether `running` is a release later than `stored`. Either one not
+// being a release (`dev`, empty) answers no.
+func newerRelease(running, stored string) bool {
+	o, err := config.VersionOrder(running, stored)
+	return err == nil && o > 0
+}
 
 func withoutGeneratedBy(b []byte) string {
 	return generatedByLineRE.ReplaceAllString(string(b), "")
