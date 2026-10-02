@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INWZN
-#   updated_at: 2026-10-01
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @INWZN
@@ -184,3 +184,9 @@ Feature: InitWizard — the interactive init walks a person from an unconfigured
     Given a repository with a go.mod and every question answered
     When the init runs
     Then it prints how go tests emit the reports ingest reads
+
+  @INWZN-B25 @unit-level
+  Scenario: Accepting the gates tells to write gate steps in the project's language
+    Given a repository with a go.mod and every question answered, the default gates accepted
+    When the init runs
+    Then it prints that a gate step is written in the project's language, not in shell, with `go run ./tools/gates <gate>`

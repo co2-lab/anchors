@@ -487,6 +487,7 @@ func TestRunInitWritesWhatTheAnswersChose(t *testing.T) {
 	t.Run("INWZN-B22: The code-layer question is preceded by the note on layers", func(t *testing.T) {})
 	t.Run("INWZN-B23: CONTRIBUTING.md is seeded when absent, and an existing one is shown, not touched", func(t *testing.T) {})
 	t.Run("INWZN-B24: The family's coverage hint is printed", func(t *testing.T) {})
+	t.Run("INWZN-B25: Accepting the gates tells to write gate steps in the project's language", func(t *testing.T) {})
 	resetPromptError(t)
 	root := repoWithCode(t)
 	writeFile(t, root, "go.mod", "module x\n")
@@ -526,6 +527,9 @@ func TestRunInitWritesWhatTheAnswersChose(t *testing.T) {
 	}
 	if !strings.Contains(out, initx.CoverageHint("go")) {
 		t.Errorf("the go coverage hint was not printed:\n%s", out)
+	}
+	if !strings.Contains(out, "not in shell") || !strings.Contains(out, "go run ./tools/gates <gate>") {
+		t.Errorf("accepting the gates should tell to write gate steps in the project's language:\n%s", out)
 	}
 }
 

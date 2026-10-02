@@ -303,8 +303,49 @@
 
 ---
 
+## 4. O passo do gate na língua do projeto, não em shell
+
+Um gate com `run:` que chama UMA ferramenta (`gitleaks git …`, `osv-scanner scan …`) fica
+como está: a ferramenta é a mesma em todo sistema. Quando o gate precisa de mais — filtrar,
+ler o JSON da ferramenta, agregar, decidir o veredito —, escreva esse passo **na língua do
+projeto**, e não num script de shell:
+
+| Família | Como o `run:` chama o passo |
+|---|---|
+| Go | `go run ./tools/gates <gate>` |
+| Node / TypeScript | `node tools/gates.mjs <gate>` |
+| Python | `python -m tools.gates <gate>` |
+| Rust | `cargo run --bin gates -- <gate>` |
+
+**Por quê, medido.** O shell lê a plataforma, e cada plataforma responde diferente:
+
+- o `sed` do macOS (BSD) não entende `\s` — um `sed -E 's/\s+$//'` não tirava nada, e a lista
+  de permitidos nunca casava;
+- `2>&1` mistura o ruído da ferramenta aos achados — as mensagens de download do `go run` e o
+  `ld: warning` do linker do macOS entravam na saída lida como resultado, e o conversor de
+  JUnit saía com erro sem teste nenhum falhando;
+- o Windows não tem `sh` sem o git instalado, e um script que lê JSON ainda depende de `jq` ou
+  `python3`.
+
+Escrito na língua do projeto, o passo roda igual em macOS, Linux e Windows com o toolchain
+que o projeto já exige, e passa por lint e teste como o resto do código. As ferramentas
+externas continuam fixadas por versão (`go install módulo@versão`, `npx pacote@versão`).
+
+Regras que valem para o passo, qualquer que seja a língua:
+
+- **A saída de erro da ferramenta fica separada** da saída que o passo lê: aviso não é achado.
+- **Ferramenta ausente PULA o gate dizendo que pulou** (e como instalar) — nunca aprova.
+- **Uma saída que o passo não consegue ler não é aprovação**: diga que não mediu.
+- **Um passo que não executou o que diz medir falha** — um teste renomeado faz o `go test -run`
+  responder "no tests to run" com sucesso, e o gate passa medindo nada.
+
+O próprio Anchors segue isto: os passos dos gates dele estão em `tools/gates` (Go).
+
+---
+
 ## Compliance points
 
 - CK1: external quality and security gates declare appropriate scope (`batch` vs `project`) matching the external tool's capability.
 - CK2: tools that require external binaries declare `needs_tool` and `install_hint` so missing dependencies are not reported as rule failures.
 - CK3: security and safety gates that cannot be safely retrofitted or undone start as blocking gates.
+- CK4: a gate step that does more than call one tool is written in the project's language, not in shell, keeps the tool's error stream apart from what it reads, and never passes what it did not measure.

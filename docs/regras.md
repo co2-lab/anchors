@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/regras.md.tmpl — inputs:731346b43d399e7b — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/regras.md.tmpl — inputs:7d8ca42a8b5d9b8e — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Regras
@@ -1973,6 +1973,8 @@ abra a página dela em `camadas/`.
 
 - [ININT-B11 — With the contributing answer yes (the default), a project with no `CONTRIBUTING.md` gets one rendered from the written configuration, and the success JSON says it was written; an existing one stays byte for byte, and the success JSON carries the section that would be added. `--contributing=false` touches nothing.](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers)
 
+- [ININT-B12 — When the default gates are seeded, the success JSON carries `gate_scripts`: a gate step doing more than calling one tool is written in the project's language, with the family's example; with no gates seeded it carries none.](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers)
+
 - [ININT-I01 — Either every answer is accepted and the file is written, or nothing is written.](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers)
 
 - [ININT-X01 — The non-interactive mode never prompts: every exchange is JSON on standard output.](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers)
@@ -2026,6 +2028,8 @@ abra a página dela em `camadas/`.
 - [INWZN-B23 — Accepting the contributing guide seeds `CONTRIBUTING.md` from the written configuration when the project has none; an existing one stays byte for byte, and the init prints the section that would be added.](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave)
 
 - [INWZN-B24 — When the language family has a coverage hint, the init prints how its tests emit the reports `anchors ingest` reads.](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave)
+
+- [INWZN-B25 — Accepting the default gates prints that a gate step doing more than calling one tool is written in the project's language, not in shell, with the family's example (INCTN-B11).](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave)
 
 - [INWZN-I01 — When any prompt of the init cannot run, the init writes no configuration and no guide, creates no repository and no commit, and fails naming `--non-interactive`.](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave)
 
@@ -6608,6 +6612,8 @@ abra a página dela em `camadas/`.
 - [INCTN-B08 — A test file's unit name is its name without the convention's prefix and suffix.](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates)
 
 - [INCTN-B10 — A family's coverage hint (`CoverageHint`) says how its test runner emits the JUnit and lcov reports `anchors ingest` reads; a family with no hint, or no family, gets none.](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates)
+
+- [INCTN-B11 — A family's gate script example (`GateScriptExample`) is how a gate step that does more than call one tool runs in the family's own language (`go run ./tools/gates <gate>` for go, `node tools/gates.mjs <gate>` for ts, `python -m tools.gates <gate>` for python); a family with no example gets the generic advice of a program in the project's own language.](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates)
 
 - [INCTN-B09 — With no test convention read from the project, the conventions are its family's default; with neither, there are none and no template.](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates)
 

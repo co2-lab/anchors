@@ -180,6 +180,7 @@ func runInit(root string) error {
 			if chosenArtifacts["test"] {
 				fmt.Println(i18n.T("init.test_gates_note"))
 			}
+			fmt.Println(i18n.T("init.gate_scripts_note", initx.GateScriptExample(p.Family)))
 		}
 	}
 

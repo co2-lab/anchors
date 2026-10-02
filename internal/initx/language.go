@@ -100,6 +100,33 @@ var coverageHints = map[string]string{
 // family with no hint.
 func CoverageHint(family string) string { return coverageHints[family] }
 
+// gateScripts are how a family runs a gate step written in its own language.
+var gateScripts = map[string]string{
+	"go":     "go run ./tools/gates <gate>",
+	"ts":     "node tools/gates.mjs <gate>",
+	"python": "python -m tools.gates <gate>",
+	"ruby":   "ruby tools/gates.rb <gate>",
+	"rust":   "cargo run --bin gates -- <gate>",
+	"java":   "a JBang or Gradle task: `gradle gates -Pgate=<gate>`",
+	"kotlin": "a Gradle task: `gradle gates -Pgate=<gate>`",
+	"csharp": "dotnet run --project tools/Gates -- <gate>",
+	"php":    "php tools/gates.php <gate>",
+}
+
+// GateScriptExample is how a gate step that does more than call one tool is written in the
+// family's language, so it runs the same on every system; a family with no example gets
+// the generic advice.
+//
+// Shell is what breaks there: BSD sed has no `\s`, `2>&1` mixes a tool's noise into the
+// findings, and Windows has no `sh` (reported from baas-proxy, whose scripts copied from
+// this repository broke on macOS).
+func GateScriptExample(family string) string {
+	if s, ok := gateScripts[family]; ok {
+		return s
+	}
+	return "a program in the project's own language"
+}
+
 // testConventionOf is the convention a file name follows, if it is a test file.
 func testConventionOf(name string) (TestConvention, bool) {
 	for _, c := range testConventions {

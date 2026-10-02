@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: INCTN
-#   updated_at: 2026-10-01
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @INCTN
@@ -46,6 +46,13 @@ Feature: InitCatalogs — the language dialect catalog and the @TBD instruction 
     When their coverage hints are asked
     Then the go hint names lcov and junit, and the python hint names pytest
     And a family with no hint, and no family, get none
+
+  @INCTN-B11 @unit-level
+  Scenario: A family's gate script runs in its own language
+    Given the families go, ts and python, and one with no example
+    When their gate script example is asked
+    Then go runs `go run ./tools/gates <gate>`, ts `node tools/gates.mjs <gate>` and python `python -m tools.gates <gate>`
+    And the family with no example is told to write a program in the project's own language
 
   @INCTN-I02 @unit-level
   Scenario: The @TBD instruction demands checking that the @TBD is still true

@@ -153,6 +153,9 @@ layers:
     pattern: "**/*_test.go"
     kind: test
     tags: [test]
+    # The gate steps' own tests: tools/ is the repository's tooling, no unit of the
+    # product, and its tests prove no scenario of a spec.
+    exclude: ["tools/**"]
     # Test files that hold only helpers and fixtures shared by other tests: no Test
     # function of their own, no scenario to prove. They stay in the map (a change to a
     # helper still reaches the tests that use it); the gates that judge a test skip them.
@@ -440,9 +443,14 @@ derived:
         feature: ["{{dir}}/{{name}}.feature"]
         test: ["{{dir}}/{{name}}_test.go"]
 
+# THE GATE STEPS ARE GO, not shell: `go run ./tools/gates <gate>`. A shell script reads the
+# platform — BSD sed has no `\s`, `2>&1` mixed a tool's noise into its findings, Windows
+# has no `sh` — and leaned on jq and python3; the Go program runs the same on the three
+# systems with the toolchain the project already needs, and is vetted and tested with it.
+# The external tools (gitleaks, osv-scanner, gremlins…) stay what they were.
 tests:
   - layer: unit
-    run: "bash scripts/anchors-test.sh"
+    run: "go run ./tools/gates test"
     junit: ".anchors/junit.xml"
     lcov: ".anchors/lcov.info"
 
@@ -453,11 +461,11 @@ tests:
 # package's mutants face only its own tests.
 mutation:
   - layer: unit
-    # Every package, one gremlins run each, merged with full paths (see the script).
-    run: "bash scripts/anchors-mutation.sh"
+    # Every package, one gremlins run each, merged with full paths (see tools/gates).
+    run: "go run ./tools/gates mutation"
     # One file at a time, for `anchors mutation --budget` (the script mutates only the
     # files it is given, excluding their package siblings).
-    run_changed: "bash scripts/anchors-mutation.sh {{files}}"
+    run_changed: "go run ./tools/gates mutation {{files}}"
     report: ".anchors/mutation.json"
     scope: isolated
 
@@ -472,7 +480,7 @@ gates:
     on: [code, test, doc, spec, feature, guide, plan]
     scope: batch
     scope_full: project
-    run: "bash scripts/anchors-secrets.sh"
+    run: "go run ./tools/gates secrets"
     needs_tool: gitleaks
     install_hint: "brew install gitleaks"
     blocking: true
@@ -484,7 +492,7 @@ gates:
   - name: dependency-vulnerable
     on: [code]
     scope: project
-    run: "bash scripts/anchors-deps-vuln.sh"
+    run: "go run ./tools/gates deps-vuln"
     needs_tool: osv-scanner
     install_hint: "brew install osv-scanner"
     blocking: true
@@ -496,7 +504,7 @@ gates:
   - name: license-compatible
     on: [code]
     scope: project
-    run: "bash scripts/anchors-licenses.sh"
+    run: "go run ./tools/gates licenses"
     needs_tool: go-licenses
     install_hint: "go install github.com/google/go-licenses@latest"
     blocking: true
@@ -508,7 +516,7 @@ gates:
   - name: sbom-generated
     on: [code]
     scope: project
-    run: "bash scripts/anchors-sbom.sh"
+    run: "go run ./tools/gates sbom"
     needs_tool: syft
     install_hint: "brew install syft"
     blocking: true
@@ -521,7 +529,7 @@ gates:
     on: [code]
     scope: batch
     scope_full: project
-    run: "bash scripts/anchors-semgrep.sh {{files}}"
+    run: "go run ./tools/gates semgrep {{files}}"
     needs_tool: semgrep
     install_hint: "brew install semgrep"
     blocking: true
@@ -872,7 +880,7 @@ gates:
   - name: code-language
     on: [code]
     scope: project
-    run: "bash scripts/anchors-language.sh"
+    run: "go run ./tools/gates language"
     blocking: true
     when: [pre-commit, pre-push, ci]
     category: consistency

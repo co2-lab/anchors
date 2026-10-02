@@ -1,4 +1,4 @@
-<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:dda419830fba6628 — DO NOT EDIT: run `anchors docs build` -->
+<!-- anchors:generated from doct/comportamento.md.tmpl — inputs:ce224f2fa5d3da42 — DO NOT EDIT: run `anchors docs build` -->
 
 
 # Comportamento
@@ -1792,6 +1792,8 @@ teste prova.
 
 - [CONTRIBUTING.md is seeded when absent, and an existing one is left as it is](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B11`
 
+- [Seeding the gates tells to write gate steps in the project's language](layers/comando.md#inint--initnoninteractive--the-init-that-an-agent-answers-with-flags-it-asks-in-json-and-writes-only-a-complete-valid-set-of-answers) `ININT-B12`
+
 - [An existing config is kept when the overwrite is not confirmed](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B01`
 
 - [A ready repository makes the git step silent](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B02`
@@ -1843,6 +1845,8 @@ teste prova.
 - [CONTRIBUTING.md is seeded when absent, and an existing one is shown, not touched](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B23`
 
 - [The family's coverage hint is printed](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B24`
+
+- [Accepting the gates tells to write gate steps in the project's language](layers/comando.md#inwzn--initwizard--the-interactive-init-walks-a-person-from-an-unconfigured-directory-to-a-reviewed-anchorsyaml-and-writes-nothing-on-answers-nobody-gave) `INWZN-B25`
 
 - [The hooks go where git looks for them](layers/comando.md#inhkn--installhooks--the-git-hooks-that-confront-every-commit-and-push-with-the-gates-and-the-freeze-installed-without-taking-a-hook-the-user-wrote) `INHKN-B01`
 
@@ -5991,6 +5995,8 @@ teste prova.
 - [With no convention read, the family default is used](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B09`
 
 - [A family's coverage hint names the reports ingest reads](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B10`
+
+- [A family's gate script runs in its own language](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-B11`
 
 - [The @TBD instruction demands checking that the @TBD is still true](layers/infra.md#inctn--initcatalogs--the-language-dialect-catalog-and-the-tbd-instruction-that-init-seeds-into-judgment-gates) `INCTN-I02`
 

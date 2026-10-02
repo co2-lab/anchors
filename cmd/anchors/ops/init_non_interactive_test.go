@@ -312,3 +312,22 @@ func TestNonInteractiveGovernsReachesTheFile(t *testing.T) {
 		t.Errorf("governs written = %v, want %v", got, want)
 	}
 }
+
+// A project copying a shell gate script inherits the platform's traps; the answer that
+// seeds the gates says to write a gate step in the project's language.
+func TestNonInteractiveSeedingGatesAdvisesTheProjectLanguage(t *testing.T) {
+	t.Run("ININT-B12: Seeding the gates tells to write gate steps in the project's language", func(t *testing.T) {})
+	root := t.TempDir()
+	writeFile(t, root, "go.mod", "module x\n")
+	err, doc, out := runNonInteractive(t, root, "--artifacts=spec")
+	if err != nil || doc["escrito"] != true {
+		t.Fatalf("init: %v\n%s", err, out)
+	}
+	if note, _ := doc["gate_scripts"].(string); !strings.Contains(note, "go run ./tools/gates <gate>") || !strings.Contains(note, "shell") {
+		t.Errorf("gate_scripts = %q", doc["gate_scripts"])
+	}
+	other := t.TempDir()
+	if err, doc, out := runNonInteractive(t, other, "--artifacts=spec", "--gates=false"); err != nil || doc["gate_scripts"] != nil {
+		t.Errorf("no gates seeded, no gate_scripts: %v %v\n%s", err, doc["gate_scripts"], out)
+	}
+}

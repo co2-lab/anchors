@@ -1,7 +1,7 @@
 # language: en
 # @anchors
 #   ref: ININT
-#   updated_at: 2026-10-01
+#   updated_at: 2026-10-02
 #   layer: feature
 
 @ININT
@@ -93,3 +93,10 @@ Feature: InitNonInteractive — the init that an agent answers with flags: it as
     Then CONTRIBUTING.md exists, names the spec-first order, and the success JSON says it was written
     And in a project whose CONTRIBUTING.md says "ours", the file still says only "ours" and the success JSON carries the section that would be added
     And with --contributing=false no CONTRIBUTING.md is written
+
+  @ININT-B12 @unit-level
+  Scenario: Seeding the gates tells to write gate steps in the project's language
+    Given a project with a go.mod
+    When init runs with --artifacts=spec, gates seeded by default
+    Then the success JSON's gate_scripts names `go run ./tools/gates <gate>` and shell
+    And with --gates=false it carries no gate_scripts

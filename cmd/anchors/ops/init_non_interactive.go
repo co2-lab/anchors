@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/co2-lab/anchors/internal/config"
+	"github.com/co2-lab/anchors/internal/i18n"
 	"github.com/co2-lab/anchors/internal/initx"
 	"github.com/spf13/cobra"
 )
@@ -143,6 +144,9 @@ func runInitNonInteractive(cmd *cobra.Command, root string, f *flagsInit, aceita
 	if contributing != nil {
 		out["contributing"] = contributing
 	}
+	if sim, _ := answerValue(status, "gates").(bool); sim {
+		out["gate_scripts"] = i18n.T("init.gate_scripts_note", initx.GateScriptExample(p.Family))
+	}
 	return emitJSON(out)
 }
 
@@ -266,6 +270,16 @@ func nextStepAfter(root string, p *initx.Proposal) string {
 			"interview with the user before writing any code"
 	}
 	return "`anchors map build` — without the map, no file exists for the gates"
+}
+
+// answerValue is the value the answer `id` ended with, given or defaulted.
+func answerValue(status []initx.StatusResposta, id string) any {
+	for _, s := range status {
+		if s.ID == id {
+			return s.Valor
+		}
+	}
+	return nil
 }
 
 // usedDefault says whether the answer `id` was not given and fell back to its default.

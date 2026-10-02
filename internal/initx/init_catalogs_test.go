@@ -60,6 +60,18 @@ func TestCoverageHintByFamily(t *testing.T) {
 	}
 }
 
+func TestGateScriptExampleByFamily(t *testing.T) {
+	t.Run("INCTN-B11: A family's gate script runs in its own language", func(t *testing.T) {})
+	for fam, want := range map[string]string{
+		"go": "go run ./tools/gates <gate>", "ts": "node tools/gates.mjs <gate>", "python": "python -m tools.gates <gate>",
+		"cobol": "a program in the project's own language",
+	} {
+		if got := GateScriptExample(fam); got != want {
+			t.Errorf("%s: %q, want %q", fam, got, want)
+		}
+	}
+}
+
 func TestNoConventionIsShadowed(t *testing.T) {
 	t.Run("INCTN-I03: No convention of the catalog is shadowed by a shorter one", func(t *testing.T) {})
 	for i, a := range testConventions {

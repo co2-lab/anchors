@@ -1,6 +1,6 @@
 <!-- @anchors
   code: INCTN
-  updated_at: 2026-10-01
+  updated_at: 2026-10-02
   layer: infra
 -->
 # InitCatalogs — the language dialect catalog and the @TBD instruction that init seeds into judgment gates
@@ -44,6 +44,7 @@ reads as the continuation of the question.
 | `INCTN-B07` | A convention's glob (`Glob`) is `**/` with its prefix, `*` and its suffix; its template (`Template`) is `{{dir}}/` with its prefix, `{{name}}` and its suffix. |
 | `INCTN-B08` | A test file's unit name is its name without the convention's prefix and suffix. |
 | `INCTN-B10` | A family's coverage hint (`CoverageHint`) says how its test runner emits the JUnit and lcov reports `anchors ingest` reads; a family with no hint, or no family, gets none. |
+| `INCTN-B11` | A family's gate script example (`GateScriptExample`) is how a gate step that does more than call one tool runs in the family's own language (`go run ./tools/gates <gate>` for go, `node tools/gates.mjs <gate>` for ts, `python -m tools.gates <gate>` for python); a family with no example gets the generic advice of a program in the project's own language. |
 | `INCTN-B09` | With no test convention read from the project, the conventions are its family's default; with neither, there are none and no template. |
 
 ## Invariants
